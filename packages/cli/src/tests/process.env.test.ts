@@ -1,6 +1,6 @@
-import { describe, expect, test, beforeEach, afterEach, vi } from "vitest";
 import { ProsopoEnvError } from "@prosopo/common";
-import { getAddress, getPassword, getSecret, getDB } from "../process.env.js";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { getAddress, getDB, getPassword, getSecret } from "../process.env.js";
 
 describe("process.env", () => {
 	const originalEnv = process.env;
@@ -16,31 +16,35 @@ describe("process.env", () => {
 
 	describe("getAddress", () => {
 		test("should return address for default PROVIDER", () => {
-			process.env.PROSOPO_PROVIDER_ADDRESS = "5GrwvaEF5zXb26Fz9rcQpDWS57CERrH4kYWwymqL8";
+			process.env.PROSOPO_PROVIDER_ADDRESS =
+				"5GrwvaEF5zXb26Fz9rcQpDWS57CERrH4kYWwymqL8";
 			const result = getAddress();
 			expect(result).toBe("5GrwvaEF5zXb26Fz9rcQpDWS57CERrH4kYWwymqL8");
 		});
 
 		test("should return address for specified who parameter", () => {
-			process.env.PROSOPO_ADMIN_ADDRESS = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty";
+			process.env.PROSOPO_ADMIN_ADDRESS =
+				"5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty";
 			const result = getAddress("admin");
 			expect(result).toBe("5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty");
 		});
 
 		test("should handle uppercase who parameter", () => {
-			process.env.PROSOPO_USER_ADDRESS = "5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJpX9pVb9Yj";
+			process.env.PROSOPO_USER_ADDRESS =
+				"5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJpX9pVb9Yj";
 			const result = getAddress("USER");
 			expect(result).toBe("5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJpX9pVb9Yj");
 		});
 
 		test("should handle lowercase who parameter", () => {
-			process.env.PROSOPO_CLIENT_ADDRESS = "5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY";
+			process.env.PROSOPO_CLIENT_ADDRESS =
+				"5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY";
 			const result = getAddress("client");
 			expect(result).toBe("5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY");
 		});
 
 		test("should return undefined when address is not set", () => {
-			delete process.env.PROSOPO_PROVIDER_ADDRESS;
+			process.env.PROSOPO_PROVIDER_ADDRESS = undefined;
 			const result = getAddress();
 			expect(result).toBeUndefined();
 		});
@@ -66,7 +70,7 @@ describe("process.env", () => {
 		});
 
 		test("should return undefined when password is not set", () => {
-			delete process.env.PROSOPO_PROVIDER_ACCOUNT_PASSWORD;
+			process.env.PROSOPO_PROVIDER_ACCOUNT_PASSWORD = undefined;
 			const result = getPassword();
 			expect(result).toBeUndefined();
 		});
@@ -80,24 +84,24 @@ describe("process.env", () => {
 		});
 
 		test("should return seed when mnemonic is not set", () => {
-			delete process.env.PROSOPO_PROVIDER_MNEMONIC;
+			process.env.PROSOPO_PROVIDER_MNEMONIC = undefined;
 			process.env.PROSOPO_PROVIDER_SEED = "test seed";
 			const result = getSecret();
 			expect(result).toBe("test seed");
 		});
 
 		test("should return URI when mnemonic and seed are not set", () => {
-			delete process.env.PROSOPO_PROVIDER_MNEMONIC;
-			delete process.env.PROSOPO_PROVIDER_SEED;
+			process.env.PROSOPO_PROVIDER_MNEMONIC = undefined;
+			process.env.PROSOPO_PROVIDER_SEED = undefined;
 			process.env.PROSOPO_PROVIDER_URI = "//Alice";
 			const result = getSecret();
 			expect(result).toBe("//Alice");
 		});
 
 		test("should return JSON when mnemonic, seed, and URI are not set", () => {
-			delete process.env.PROSOPO_PROVIDER_MNEMONIC;
-			delete process.env.PROSOPO_PROVIDER_SEED;
-			delete process.env.PROSOPO_PROVIDER_URI;
+			process.env.PROSOPO_PROVIDER_MNEMONIC = undefined;
+			process.env.PROSOPO_PROVIDER_SEED = undefined;
+			process.env.PROSOPO_PROVIDER_URI = undefined;
 			process.env.PROSOPO_PROVIDER_JSON = '{"encoded":"test"}';
 			const result = getSecret();
 			expect(result).toBe('{"encoded":"test"}');
@@ -111,7 +115,7 @@ describe("process.env", () => {
 		});
 
 		test("should prioritize seed over URI", () => {
-			delete process.env.PROSOPO_PROVIDER_MNEMONIC;
+			process.env.PROSOPO_PROVIDER_MNEMONIC = undefined;
 			process.env.PROSOPO_PROVIDER_SEED = "seed";
 			process.env.PROSOPO_PROVIDER_URI = "//Alice";
 			const result = getSecret();
@@ -119,10 +123,10 @@ describe("process.env", () => {
 		});
 
 		test("should return undefined when no secret is set", () => {
-			delete process.env.PROSOPO_PROVIDER_MNEMONIC;
-			delete process.env.PROSOPO_PROVIDER_SEED;
-			delete process.env.PROSOPO_PROVIDER_URI;
-			delete process.env.PROSOPO_PROVIDER_JSON;
+			process.env.PROSOPO_PROVIDER_MNEMONIC = undefined;
+			process.env.PROSOPO_PROVIDER_SEED = undefined;
+			process.env.PROSOPO_PROVIDER_URI = undefined;
+			process.env.PROSOPO_PROVIDER_JSON = undefined;
 			const result = getSecret();
 			expect(result).toBeUndefined();
 		});
@@ -142,7 +146,7 @@ describe("process.env", () => {
 		});
 
 		test("should throw ProsopoEnvError when database host is not set", () => {
-			delete process.env.PROSOPO_DATABASE_HOST;
+			process.env.PROSOPO_DATABASE_HOST = undefined;
 			expect(() => getDB()).toThrow(ProsopoEnvError);
 			expect(() => getDB()).toThrow("DATABASE_HOST_UNDEFINED");
 		});
@@ -154,8 +158,3 @@ describe("process.env", () => {
 		});
 	});
 });
-
-
-
-
-

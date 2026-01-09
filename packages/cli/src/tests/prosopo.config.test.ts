@@ -1,6 +1,10 @@
-import { describe, expect, test, beforeEach, afterEach, vi } from "vitest";
-import { EnvironmentTypesSchema, ClientApiPaths, AdminApiPaths, PublicApiPaths } from "@prosopo/types";
-import type { ProsopoConfigOutput } from "@prosopo/types";
+import {
+	AdminApiPaths,
+	ClientApiPaths,
+	EnvironmentTypesSchema,
+	PublicApiPaths,
+} from "@prosopo/types";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import getConfig from "../prosopo.config.js";
 
 // Mock dependencies
@@ -8,10 +12,16 @@ const mockRateLimitConfig = {
 	[ClientApiPaths.GetImageCaptchaChallenge]: { windowMs: 60000, limit: 30 },
 	[ClientApiPaths.GetPowCaptchaChallenge]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.SubmitImageCaptchaSolution]: { windowMs: 60000, limit: 60 },
-	[ClientApiPaths.GetFrictionlessCaptchaChallenge]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.GetFrictionlessCaptchaChallenge]: {
+		windowMs: 60000,
+		limit: 60,
+	},
 	[ClientApiPaths.SubmitPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.VerifyPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
-	[ClientApiPaths.VerifyImageCaptchaSolutionDapp]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.VerifyImageCaptchaSolutionDapp]: {
+		windowMs: 60000,
+		limit: 60,
+	},
 	[ClientApiPaths.GetProviderStatus]: { windowMs: 60000, limit: 60 },
 	[PublicApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
@@ -40,7 +50,6 @@ vi.mock("../process.env.js", () => ({
 	}),
 }));
 
-
 describe("prosopo.config", () => {
 	const originalEnv = process.env;
 
@@ -48,9 +57,11 @@ describe("prosopo.config", () => {
 		process.env = { ...originalEnv };
 		// Set minimal required env vars
 		process.env.PROSOPO_DATABASE_HOST = "localhost";
-		process.env.PROSOPO_PROVIDER_ADDRESS = "5GrwvaEF5zXb26Fz9rcQpDWS57CERrH4kYWwymqL8";
+		process.env.PROSOPO_PROVIDER_ADDRESS =
+			"5GrwvaEF5zXb26Fz9rcQpDWS57CERrH4kYWwymqL8";
 		process.env.PROSOPO_PROVIDER_MNEMONIC = "test mnemonic";
-		process.env.PROSOPO_ADMIN_ADDRESS = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty";
+		process.env.PROSOPO_ADMIN_ADDRESS =
+			"5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty";
 		process.env.PROSOPO_ADMIN_MNEMONIC = "admin mnemonic";
 		process.env.PROSOPO_IPAPI_KEY = "test-key";
 		process.env.PROSOPO_IPAPI_URL = "https://ipapi.example.com";
@@ -73,7 +84,7 @@ describe("prosopo.config", () => {
 		});
 
 		test("should use default log level when not set", () => {
-			delete process.env.PROSOPO_LOG_LEVEL;
+			process.env.PROSOPO_LOG_LEVEL = undefined;
 			const config = getConfig();
 			expect(config.logLevel).toBe("info");
 		});
@@ -85,19 +96,23 @@ describe("prosopo.config", () => {
 		});
 
 		test("should use default environment when not set", () => {
-			delete process.env.PROSOPO_DEFAULT_ENVIRONMENT;
+			process.env.PROSOPO_DEFAULT_ENVIRONMENT = undefined;
 			const config = getConfig();
-			expect(config.defaultEnvironment).toBe(EnvironmentTypesSchema.enum.development);
+			expect(config.defaultEnvironment).toBe(
+				EnvironmentTypesSchema.enum.development,
+			);
 		});
 
 		test("should use custom environment when set", () => {
 			process.env.PROSOPO_DEFAULT_ENVIRONMENT = "production";
 			const config = getConfig();
-			expect(config.defaultEnvironment).toBe(EnvironmentTypesSchema.enum.production);
+			expect(config.defaultEnvironment).toBe(
+				EnvironmentTypesSchema.enum.production,
+			);
 		});
 
 		test("should use default host when CADDY_DOMAIN not set", () => {
-			delete process.env.CADDY_DOMAIN;
+			process.env.CADDY_DOMAIN = undefined;
 			// Set a default host value since schema requires it
 			process.env.CADDY_DOMAIN = "localhost";
 			const config = getConfig();
@@ -111,13 +126,15 @@ describe("prosopo.config", () => {
 		});
 
 		test("should use default MongoDB URI when env vars not set", () => {
-			delete process.env.PROSOPO_DATABASE_PROTOCOL;
-			delete process.env.PROSOPO_DATABASE_PASSWORD;
-			delete process.env.PROSOPO_DATABASE_USERNAME;
-			delete process.env.PROSOPO_DATABASE_PORT;
+			process.env.PROSOPO_DATABASE_PROTOCOL = undefined;
+			process.env.PROSOPO_DATABASE_PASSWORD = undefined;
+			process.env.PROSOPO_DATABASE_USERNAME = undefined;
+			process.env.PROSOPO_DATABASE_PORT = undefined;
 			const config = getConfig();
 			expect(config.database.development.endpoint).toContain("mongodb://");
-			expect(config.database.development.endpoint).toContain("root:root@localhost:27017");
+			expect(config.database.development.endpoint).toContain(
+				"root:root@localhost:27017",
+			);
 		});
 
 		test("should use custom MongoDB URI when env vars set", () => {
@@ -127,7 +144,9 @@ describe("prosopo.config", () => {
 			process.env.PROSOPO_DATABASE_HOST = "db.example.com";
 			process.env.PROSOPO_DATABASE_PORT = "27018";
 			const config = getConfig();
-			expect(config.database.development.endpoint).toContain("mongodb://user:pass@db.example.com:27018");
+			expect(config.database.development.endpoint).toContain(
+				"mongodb://user:pass@db.example.com:27018",
+			);
 		});
 
 		test("should handle mongodb+srv protocol", () => {
@@ -137,12 +156,14 @@ describe("prosopo.config", () => {
 			process.env.PROSOPO_DATABASE_HOST = "cluster.mongodb.net";
 			const config = getConfig();
 			expect(config.database.development.endpoint).toContain("mongodb+srv://");
-			expect(config.database.development.endpoint).toContain("?retryWrites=true&w=majority");
+			expect(config.database.development.endpoint).toContain(
+				"?retryWrites=true&w=majority",
+			);
 			expect(config.database.development.endpoint).not.toContain(":27017");
 		});
 
 		test("should use default server port when not set", () => {
-			delete process.env.PROSOPO_API_PORT;
+			process.env.PROSOPO_API_PORT = undefined;
 			const config = getConfig();
 			expect(config.server?.port).toBe(9229);
 		});
@@ -154,7 +175,7 @@ describe("prosopo.config", () => {
 		});
 
 		test("should use default base URL when not set", () => {
-			delete process.env.PROSOPO_API_BASE_URL;
+			process.env.PROSOPO_API_BASE_URL = undefined;
 			const config = getConfig();
 			expect(config.server?.baseURL).toBe("http://localhost");
 		});
@@ -166,7 +187,7 @@ describe("prosopo.config", () => {
 		});
 
 		test("should use default proxy count when not set", () => {
-			delete process.env.PROSOPO_PROXY_COUNT;
+			process.env.PROSOPO_PROXY_COUNT = undefined;
 			const config = getConfig();
 			expect(config.proxyCount).toBe(0);
 		});
@@ -190,7 +211,7 @@ describe("prosopo.config", () => {
 		});
 
 		test("should return empty object when L_RULES not set", () => {
-			delete process.env.L_RULES;
+			process.env.L_RULES = undefined;
 			const config = getConfig();
 			expect(config.lRules).toEqual({});
 		});
@@ -201,7 +222,12 @@ describe("prosopo.config", () => {
 		});
 
 		test("should use custom admin parameter", () => {
-			const config = getConfig(undefined, undefined, "PROVIDER", "CUSTOM_ADMIN");
+			const config = getConfig(
+				undefined,
+				undefined,
+				"PROVIDER",
+				"CUSTOM_ADMIN",
+			);
 			expect(config.authAccount.address).toBe("test-CUSTOM_ADMIN-address");
 		});
 
@@ -216,9 +242,9 @@ describe("prosopo.config", () => {
 		});
 
 		test("should use empty strings for mongo URIs when not set", () => {
-			delete process.env.PROSOPO_MONGO_EVENTS_URI;
-			delete process.env.PROSOPO_MONGO_CAPTCHA_URI;
-			delete process.env.PROSOPO_MONGO_CLIENT_URI;
+			process.env.PROSOPO_MONGO_EVENTS_URI = undefined;
+			process.env.PROSOPO_MONGO_CAPTCHA_URI = undefined;
+			process.env.PROSOPO_MONGO_CLIENT_URI = undefined;
 			const config = getConfig();
 			expect(config.mongoEventsUri).toBe("");
 			expect(config.mongoCaptchaUri).toBe("");
@@ -234,8 +260,8 @@ describe("prosopo.config", () => {
 		});
 
 		test("should use empty strings for redis when not set", () => {
-			delete process.env.REDIS_CONNECTION_URL;
-			delete process.env.REDIS_CONNECTION_PASSWORD;
+			process.env.REDIS_CONNECTION_URL = undefined;
+			process.env.REDIS_CONNECTION_PASSWORD = undefined;
 			const config = getConfig();
 			expect(config.redisConnection.url).toBe("");
 			expect(config.redisConnection.password).toBe("");
@@ -246,9 +272,15 @@ describe("prosopo.config", () => {
 			process.env.CLIENT_LIST_SCHEDULE = "0 */6 * * *";
 			process.env.CLIENT_ENTROPY_SCHEDULE = "0 12 * * *";
 			const config = getConfig();
-			expect(config.scheduledTasks?.captchaScheduler?.schedule).toBe("0 0 * * *");
-			expect(config.scheduledTasks?.clientListScheduler?.schedule).toBe("0 */6 * * *");
-			expect(config.scheduledTasks?.clientEntropyScheduler?.schedule).toBe("0 12 * * *");
+			expect(config.scheduledTasks?.captchaScheduler?.schedule).toBe(
+				"0 0 * * *",
+			);
+			expect(config.scheduledTasks?.clientListScheduler?.schedule).toBe(
+				"0 */6 * * *",
+			);
+			expect(config.scheduledTasks?.clientEntropyScheduler?.schedule).toBe(
+				"0 12 * * *",
+			);
 		});
 
 		test("should include IP API config when set", () => {
@@ -292,4 +324,3 @@ describe("prosopo.config", () => {
 		});
 	});
 });
-

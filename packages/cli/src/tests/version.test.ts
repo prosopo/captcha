@@ -1,7 +1,7 @@
-import { describe, expect, test, vi, beforeEach } from "vitest";
-import { LogLevel, getLogger } from "@prosopo/common";
+import { LogLevel, type getLogger } from "@prosopo/common";
 import type { KeyringPair } from "@prosopo/types";
 import type { ProsopoConfigOutput } from "@prosopo/types";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import commandVersion from "../commands/version.js";
 
 describe("version command", () => {
@@ -54,9 +54,7 @@ describe("version command", () => {
 			logger: mockLogger,
 		});
 		command.handler();
-		expect(mockLogger.info).toHaveBeenCalledWith(
-			expect.any(Function),
-		);
+		expect(mockLogger.info).toHaveBeenCalledWith(expect.any(Function));
 		const logCall = mockLogger.info as ReturnType<typeof vi.fn>;
 		const logFn = logCall.mock.calls[0][0];
 		const result = logFn();
@@ -65,8 +63,3 @@ describe("version command", () => {
 		expect(typeof result.data.version).toBe("string");
 	});
 });
-
-
-
-
-

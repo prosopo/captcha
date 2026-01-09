@@ -1,5 +1,5 @@
-import { describe, expect, test, vi } from "vitest";
 import { ProsopoEnvError } from "@prosopo/common";
+import { describe, expect, test, vi } from "vitest";
 import type { ArgumentsCamelCase } from "yargs";
 
 // Mock encodeStringAddress to return the input address before importing validators
@@ -9,9 +9,9 @@ vi.mock("@prosopo/provider", () => ({
 
 import {
 	validateAddress,
+	validateScheduleExpression,
 	validateSiteKey,
 	validateValue,
-	validateScheduleExpression,
 } from "../commands/validators.js";
 
 describe("validators", () => {
@@ -147,8 +147,3 @@ describe("validators", () => {
 		});
 	});
 });
-
-
-
-
-

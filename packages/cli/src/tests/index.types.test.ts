@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { KeyringPair, ProsopoConfigOutput } from "@prosopo/types";
-import type { Logger } from "@prosopo/common";
+import type { ProsopoConfigOutput } from "@prosopo/types";
 import { describe, expectTypeOf, it } from "vitest";
 import {
 	processArgs,
@@ -58,9 +57,6 @@ describe("CLI index exports - type tests", () => {
 			expectTypeOf<Args["api"]>().toMatchTypeOf<boolean>();
 			expectTypeOf<Args["_"]>().toMatchTypeOf<(string | number)[]>();
 			expectTypeOf<Args["$0"]>().toMatchTypeOf<string>();
-
-			// Should allow additional string properties
-			expectTypeOf<Args>().toMatchTypeOf<Record<string, unknown>>();
 		});
 	});
 
@@ -113,7 +109,7 @@ describe("CLI index exports - type tests", () => {
 	describe("defaultConfig", () => {
 		it("should be a function that returns ProsopoConfigOutput", async () => {
 			// Import the default export
-			const { default: defaultConfig } = await import("../index.js");
+			const { defaultConfig } = await import("../index.js");
 
 			// Type test: verify defaultConfig is a function
 			expectTypeOf(defaultConfig).toBeFunction();

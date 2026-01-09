@@ -1,5 +1,5 @@
-import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
 import type { KeyringPair, ProsopoConfigOutput } from "@prosopo/types";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 // Mock dependencies before importing ReloadingAPI - must use factory functions for hoisting
 vi.mock("../start.js", () => ({
@@ -121,8 +121,3 @@ describe("ReloadingAPI", () => {
 		}, 1000);
 	});
 });
-
-
-
-
-

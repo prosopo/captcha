@@ -1,6 +1,6 @@
-import { describe, expect, test, vi, beforeEach } from "vitest";
 import type { KeyringPair } from "@prosopo/types";
 import type { ProsopoConfigOutput } from "@prosopo/types";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { processArgs } from "../argv.js";
 
 // Mock the commands module
@@ -81,7 +81,12 @@ describe("argv", () => {
 
 	test("should process args with default api false", async () => {
 		const args = ["node", "cli.js"];
-		const result = await processArgs(args, mockPair, mockAuthAccount, mockConfig);
+		const result = await processArgs(
+			args,
+			mockPair,
+			mockAuthAccount,
+			mockConfig,
+		);
 		expect(result).toHaveProperty("api");
 		expect(result).toHaveProperty("_");
 		expect(result).toHaveProperty("$0");
@@ -89,24 +94,34 @@ describe("argv", () => {
 
 	test("should process args with api flag", async () => {
 		const args = ["node", "cli.js", "--api"];
-		const result = await processArgs(args, mockPair, mockAuthAccount, mockConfig);
+		const result = await processArgs(
+			args,
+			mockPair,
+			mockAuthAccount,
+			mockConfig,
+		);
 		expect(result).toHaveProperty("api");
 	});
 
 	test("should process args with adminApi flag", async () => {
 		const args = ["node", "cli.js", "--adminApi"];
-		const result = await processArgs(args, mockPair, mockAuthAccount, mockConfig);
+		const result = await processArgs(
+			args,
+			mockPair,
+			mockAuthAccount,
+			mockConfig,
+		);
 		expect(result).toHaveProperty("adminApi");
 	});
 
 	test("should process args with command", async () => {
 		const args = ["node", "cli.js", "version"];
-		const result = await processArgs(args, mockPair, mockAuthAccount, mockConfig);
+		const result = await processArgs(
+			args,
+			mockPair,
+			mockAuthAccount,
+			mockConfig,
+		);
 		expect(result).toHaveProperty("_");
 	});
 });
-
-
-
-
-

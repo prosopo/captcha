@@ -26,7 +26,8 @@ describe("provider bundle", () => {
 		await execPromise(`cd ${rootDir} && NODE_ENV=production npm run bundle`);
 
 		// Set minimum required environment variables for config validation
-		const mnemonic = "test test test test test test test test test test test junk";
+		const mnemonic =
+			"test test test test test test test test test test test junk";
 		const envVars = [
 			"CADDY_DOMAIN=localhost",
 			"PROSOPO_IPAPI_KEY=test",

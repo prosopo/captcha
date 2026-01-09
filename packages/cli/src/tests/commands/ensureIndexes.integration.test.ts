@@ -48,7 +48,7 @@ describe("ensureIndexes command - integration", () => {
 		const [authMnemonic, authAddress] = await generateMnemonic();
 
 		// Create test configuration with real MongoDB URI
-		const config: ProsopoConfigOutput = {
+		const config = {
 			logLevel: LogLevel.enum.info,
 			account: {
 				address: providerAddress,
@@ -71,7 +71,7 @@ describe("ensureIndexes command - integration", () => {
 					endpoint: "wss://archive.substrate.network",
 				},
 			},
-		} as ProsopoConfigOutput;
+		} as any as ProsopoConfigOutput;
 
 		// Create keyring pairs
 		const pair = getPair(config.account.secret, config.account.address);
@@ -98,7 +98,7 @@ describe("ensureIndexes command - integration", () => {
 		const [providerMnemonic, providerAddress] = await generateMnemonic();
 
 		// Create test configuration without MongoDB URI
-		const config: ProsopoConfigOutput = {
+		const config = {
 			logLevel: LogLevel.enum.info,
 			account: {
 				address: providerAddress,
@@ -114,7 +114,7 @@ describe("ensureIndexes command - integration", () => {
 					endpoint: "wss://archive.substrate.network",
 				},
 			},
-		} as ProsopoConfigOutput;
+		} as any as ProsopoConfigOutput;
 
 		const pair = getPair(config.account.secret, config.account.address);
 		const logger: ReturnType<typeof getLogger> = getLogger(

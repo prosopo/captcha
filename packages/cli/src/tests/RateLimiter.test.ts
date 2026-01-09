@@ -1,5 +1,5 @@
-import { describe, expect, test, beforeEach, afterEach, vi } from "vitest";
-import { ClientApiPaths, AdminApiPaths, PublicApiPaths } from "@prosopo/types";
+import { AdminApiPaths, ClientApiPaths, PublicApiPaths } from "@prosopo/types";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { getRateLimitConfig } from "../RateLimiter.js";
 
 describe("RateLimiter", () => {
@@ -9,7 +9,10 @@ describe("RateLimiter", () => {
 		process.env = { ...originalEnv };
 		// Clear all rate limit env vars
 		Object.keys(process.env).forEach((key) => {
-			if (key.startsWith("PROSOPO_") && (key.includes("_WINDOW") || key.includes("_LIMIT"))) {
+			if (
+				key.startsWith("PROSOPO_") &&
+				(key.includes("_WINDOW") || key.includes("_LIMIT"))
+			) {
 				delete process.env[key];
 			}
 		});
@@ -27,7 +30,9 @@ describe("RateLimiter", () => {
 			expect(config).toHaveProperty(ClientApiPaths.SubmitImageCaptchaSolution);
 			expect(config).toHaveProperty(ClientApiPaths.SubmitPowCaptchaSolution);
 			expect(config).toHaveProperty(ClientApiPaths.VerifyPowCaptchaSolution);
-			expect(config).toHaveProperty(ClientApiPaths.VerifyImageCaptchaSolutionDapp);
+			expect(config).toHaveProperty(
+				ClientApiPaths.VerifyImageCaptchaSolutionDapp,
+			);
 			expect(config).toHaveProperty(ClientApiPaths.GetProviderStatus);
 			expect(config).toHaveProperty(PublicApiPaths.GetProviderDetails);
 			expect(config).toHaveProperty(ClientApiPaths.SubmitUserEvents);
@@ -35,7 +40,9 @@ describe("RateLimiter", () => {
 			expect(config).toHaveProperty(AdminApiPaths.UpdateDetectorKey);
 			expect(config).toHaveProperty(AdminApiPaths.RemoveDetectorKey);
 			expect(config).toHaveProperty(AdminApiPaths.ToggleMaintenanceMode);
-			expect(config).toHaveProperty(ClientApiPaths.GetFrictionlessCaptchaChallenge);
+			expect(config).toHaveProperty(
+				ClientApiPaths.GetFrictionlessCaptchaChallenge,
+			);
 		});
 
 		test("should include windowMs and limit for each path", () => {
@@ -49,7 +56,9 @@ describe("RateLimiter", () => {
 		test("should use environment variable for windowMs when set", () => {
 			process.env.PROSOPO_GET_IMAGE_CAPTCHA_CHALLENGE_WINDOW = "60000";
 			const config = getRateLimitConfig();
-			expect(config[ClientApiPaths.GetImageCaptchaChallenge].windowMs).toBe("60000");
+			expect(config[ClientApiPaths.GetImageCaptchaChallenge].windowMs).toBe(
+				"60000",
+			);
 		});
 
 		test("should use environment variable for limit when set", () => {
@@ -60,8 +69,12 @@ describe("RateLimiter", () => {
 
 		test("should use undefined when environment variables are not set", () => {
 			const config = getRateLimitConfig();
-			expect(config[ClientApiPaths.GetImageCaptchaChallenge].windowMs).toBeUndefined();
-			expect(config[ClientApiPaths.GetImageCaptchaChallenge].limit).toBeUndefined();
+			expect(
+				config[ClientApiPaths.GetImageCaptchaChallenge].windowMs,
+			).toBeUndefined();
+			expect(
+				config[ClientApiPaths.GetImageCaptchaChallenge].limit,
+			).toBeUndefined();
 		});
 
 		test("should handle all client API paths", () => {
@@ -70,10 +83,16 @@ describe("RateLimiter", () => {
 			process.env.PROSOPO_SUBMIT_IMAGE_CAPTCHA_SOLUTION_WINDOW = "120000";
 			process.env.PROSOPO_SUBMIT_IMAGE_CAPTCHA_SOLUTION_LIMIT = "200";
 			const config = getRateLimitConfig();
-			expect(config[ClientApiPaths.GetPowCaptchaChallenge].windowMs).toBe("30000");
+			expect(config[ClientApiPaths.GetPowCaptchaChallenge].windowMs).toBe(
+				"30000",
+			);
 			expect(config[ClientApiPaths.GetPowCaptchaChallenge].limit).toBe("50");
-			expect(config[ClientApiPaths.SubmitImageCaptchaSolution].windowMs).toBe("120000");
-			expect(config[ClientApiPaths.SubmitImageCaptchaSolution].limit).toBe("200");
+			expect(config[ClientApiPaths.SubmitImageCaptchaSolution].windowMs).toBe(
+				"120000",
+			);
+			expect(config[ClientApiPaths.SubmitImageCaptchaSolution].limit).toBe(
+				"200",
+			);
 		});
 
 		test("should handle admin API paths", () => {
@@ -97,8 +116,3 @@ describe("RateLimiter", () => {
 		});
 	});
 });
-
-
-
-
-

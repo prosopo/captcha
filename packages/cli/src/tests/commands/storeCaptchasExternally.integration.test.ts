@@ -16,19 +16,15 @@ import { LogLevel, getLogger } from "@prosopo/common";
 import { ProviderEnvironment } from "@prosopo/env";
 import { generateMnemonic, getPair } from "@prosopo/keyring";
 import type { ProsopoConfigOutput } from "@prosopo/types";
-import { afterAll, beforeAll, describe, expect, test } from "vitest";
-import commandEnsureExternalIndexes from "../../commands/ensureExternalIndexes.js";
-import {
-	TestContainers,
-	setupTestContainers,
-	teardownTestContainers,
-} from "../testcontainers.js";
+import { describe, expect, test, beforeAll, afterAll } from "vitest";
+import commandStoreCaptchasExternally from "../../commands/storeCaptchasExternally.js";
+import { TestContainers, setupTestContainers, teardownTestContainers } from "../testcontainers.js";
 
 /**
- * Integration test for ensureExternalIndexes command using real MongoDB container
- * This tests the actual external database index creation functionality
+ * Integration test for storeCaptchasExternally command using real MongoDB container
+ * This tests the actual external storage of captcha commitments for billing
  */
-describe("ensureExternalIndexes command - integration", () => {
+describe("storeCaptchasExternally command - integration", () => {
 	let mongoUri: string;
 
 	beforeAll(async () => {
@@ -42,7 +38,7 @@ describe("ensureExternalIndexes command - integration", () => {
 		await teardownTestContainers();
 	}, 30000);
 
-	test("should successfully create external database indexes", async () => {
+	test("should successfully store captcha commitments externally", async () => {
 		// Generate proper mnemonics for key pairs
 		const [providerMnemonic, providerAddress] = await generateMnemonic();
 
@@ -78,11 +74,11 @@ describe("ensureExternalIndexes command - integration", () => {
 		// Create logger
 		const logger: ReturnType<typeof getLogger> = getLogger(
 			LogLevel.enum.info,
-			"cli.ensure_external_indexes_integration",
+			"cli.store_captchas_integration",
 		);
 
-		// Execute the ensure external indexes command
-		const command = commandEnsureExternalIndexes(pair, config, { logger });
+		// Execute the store captchas externally command
+		const command = commandStoreCaptchasExternally(pair, config, { logger });
 
 		// This should not throw an error - the command handles environment setup internally
 		await expect(command.handler()).resolves.not.toThrow();
@@ -114,11 +110,11 @@ describe("ensureExternalIndexes command - integration", () => {
 		const pair = getPair(config.account.secret, config.account.address);
 		const logger: ReturnType<typeof getLogger> = getLogger(
 			LogLevel.enum.error,
-			"cli.ensure_external_indexes_error_test",
+			"cli.store_captchas_error_test",
 		);
 
 		// Execute the command - this should handle the error gracefully
-		const command = commandEnsureExternalIndexes(pair, config, { logger });
+		const command = commandStoreCaptchasExternally(pair, config, { logger });
 
 		// The command should not throw, but log an error
 		await expect(command.handler()).resolves.not.toThrow();

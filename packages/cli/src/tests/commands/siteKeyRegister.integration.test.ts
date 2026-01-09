@@ -16,19 +16,15 @@ import { LogLevel, getLogger } from "@prosopo/common";
 import { ProviderEnvironment } from "@prosopo/env";
 import { generateMnemonic, getPair } from "@prosopo/keyring";
 import type { ProsopoConfigOutput } from "@prosopo/types";
-import { afterAll, beforeAll, describe, expect, test } from "vitest";
-import commandEnsureExternalIndexes from "../../commands/ensureExternalIndexes.js";
-import {
-	TestContainers,
-	setupTestContainers,
-	teardownTestContainers,
-} from "../testcontainers.js";
+import { describe, expect, test, beforeAll, afterAll } from "vitest";
+import commandSiteKeyRegister from "../../commands/siteKeyRegister.js";
+import { TestContainers, setupTestContainers, teardownTestContainers } from "../testcontainers.js";
 
 /**
- * Integration test for ensureExternalIndexes command using real MongoDB container
- * This tests the actual external database index creation functionality
+ * Integration test for siteKeyRegister command using real MongoDB container
+ * This tests the actual site key registration functionality with database operations
  */
-describe("ensureExternalIndexes command - integration", () => {
+describe("siteKeyRegister command - integration", () => {
 	let mongoUri: string;
 
 	beforeAll(async () => {
@@ -42,7 +38,7 @@ describe("ensureExternalIndexes command - integration", () => {
 		await teardownTestContainers();
 	}, 30000);
 
-	test("should successfully create external database indexes", async () => {
+	test("should successfully register a site key", async () => {
 		// Generate proper mnemonics for key pairs
 		const [providerMnemonic, providerAddress] = await generateMnemonic();
 
@@ -78,14 +74,25 @@ describe("ensureExternalIndexes command - integration", () => {
 		// Create logger
 		const logger: ReturnType<typeof getLogger> = getLogger(
 			LogLevel.enum.info,
-			"cli.ensure_external_indexes_integration",
+			"cli.site_key_register_integration",
 		);
 
-		// Execute the ensure external indexes command
-		const command = commandEnsureExternalIndexes(pair, config, { logger });
+		// Execute the site key register command with test parameters
+		const command = commandSiteKeyRegister(pair, config, { logger });
+
+		// Mock argv for the command handler
+		const argv = {
+			sitekey: "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+			tier: "free" as const,
+			captcha_type: "image",
+			frictionless_threshold: 0.5,
+			pow_difficulty: 1000,
+			domains: ["example.com"],
+			image_threshold: 0.8,
+		};
 
 		// This should not throw an error - the command handles environment setup internally
-		await expect(command.handler()).resolves.not.toThrow();
+		await expect(command.handler(argv as any)).resolves.not.toThrow();
 	}, 30000); // 30 second timeout for database operations
 
 	test("should handle missing mongoCaptchaUri gracefully", async () => {
@@ -114,13 +121,17 @@ describe("ensureExternalIndexes command - integration", () => {
 		const pair = getPair(config.account.secret, config.account.address);
 		const logger: ReturnType<typeof getLogger> = getLogger(
 			LogLevel.enum.error,
-			"cli.ensure_external_indexes_error_test",
+			"cli.site_key_register_error_test",
 		);
 
-		// Execute the command - this should handle the error gracefully
-		const command = commandEnsureExternalIndexes(pair, config, { logger });
+		// Execute the command with test parameters
+		const command = commandSiteKeyRegister(pair, config, { logger });
+		const argv = {
+			sitekey: "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+			tier: "free" as const,
+		};
 
 		// The command should not throw, but log an error
-		await expect(command.handler()).resolves.not.toThrow();
+		await expect(command.handler(argv as any)).resolves.not.toThrow();
 	}, 30000);
 });

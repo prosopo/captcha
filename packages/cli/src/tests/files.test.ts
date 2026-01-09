@@ -1,7 +1,7 @@
 import fs from "node:fs";
-import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
 import { ProsopoCliError } from "@prosopo/common";
-import { loadJSONFile, writeJSONFile, readFile } from "../files.js";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { loadJSONFile, readFile, writeJSONFile } from "../files.js";
 
 describe("files", () => {
 	const testFilePath = "/tmp/test-file.json";
@@ -101,8 +101,3 @@ describe("files", () => {
 		});
 	});
 });
-
-
-
-
-

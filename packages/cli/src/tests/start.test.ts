@@ -1,7 +1,7 @@
-import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
 import type { Server } from "node:net";
 import { ProviderEnvironment } from "@prosopo/env";
 import type { KeyringPair } from "@prosopo/types";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { start } from "../start.js";
 
 // Mock dependencies
@@ -14,7 +14,9 @@ vi.mock("../prosopo.config.js", () => ({
 	default: vi.fn().mockReturnValue({
 		logLevel: "info",
 		server: { port: 9229 },
-		authAccount: { address: "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty" },
+		authAccount: {
+			address: "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+		},
 	}),
 }));
 
@@ -176,7 +178,8 @@ describe("start", () => {
 	});
 
 	test("should start scheduled tasks when configured", async () => {
-		const { storeCaptchasExternally, getClientList, setClientEntropy } = await import("@prosopo/provider");
+		const { storeCaptchasExternally, getClientList, setClientEntropy } =
+			await import("@prosopo/provider");
 		mockEnv.config = {
 			scheduledTasks: {
 				captchaScheduler: { schedule: "0 0 * * *" },
@@ -192,7 +195,8 @@ describe("start", () => {
 	});
 
 	test("should not start scheduled tasks when not configured", async () => {
-		const { storeCaptchasExternally, getClientList, setClientEntropy } = await import("@prosopo/provider");
+		const { storeCaptchasExternally, getClientList, setClientEntropy } =
+			await import("@prosopo/provider");
 		mockEnv.config = {
 			scheduledTasks: {},
 		} as any;
@@ -206,7 +210,9 @@ describe("start", () => {
 	test("should handle errors in scheduled tasks gracefully", async () => {
 		const { storeCaptchasExternally } = await import("@prosopo/provider");
 		const mockError = new Error("Scheduler error");
-		(storeCaptchasExternally as ReturnType<typeof vi.fn>).mockRejectedValueOnce(mockError);
+		(storeCaptchasExternally as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+			mockError,
+		);
 
 		mockEnv.config = {
 			scheduledTasks: {
@@ -223,4 +229,3 @@ describe("start", () => {
 		expect(typeof server.close).toBe("function");
 	});
 });
-
