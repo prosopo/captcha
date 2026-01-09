@@ -36,5 +36,20 @@ export default function () {
 	config.test = config.test || {};
 	config.test.environment = "jsdom";
 	config.test.globals = true;
+	config.test.coverage = {
+		enabled: true,
+		include: ["src/**/*.ts", "src/**/*.js", "src/**/*.tsx", "src/**/*.jsx"],
+		exclude: [
+			"src/tests/**/*",
+			"src/**/*.d.ts",
+			"src/**/*.test.ts",
+			"src/**/*.spec.ts",
+			"src/**/*.test.tsx",
+			"src/**/*.spec.tsx",
+		],
+	};
+	config.test.typecheck = {
+		enabled: true,
+	};
 	return config;
 }
