@@ -13,7 +13,12 @@
 // limitations under the License.
 
 import { hexToU8a, isHex } from "@polkadot/util";
-import { type Logger, ProsopoEnvError, getLogger } from "@prosopo/common";
+import {
+	type Logger,
+	ProsopoApiError,
+	ProsopoEnvError,
+	getLogger,
+} from "@prosopo/common";
 import type { KeyringPair } from "@prosopo/types";
 import type { JWTVerifyResult } from "@prosopo/util-crypto";
 import type { NextFunction, Request, Response } from "express";
@@ -178,5 +183,43 @@ describe("authMiddleware", () => {
 				context: { i18n: mockReq.i18n, code: 401 },
 			}),
 		});
+	});
+
+	it("should return 401 if JWT is empty after Bearer removal", async () => {
+		const mockLogger = {
+			debug: vi.fn().mockImplementation(loggerOuter.debug.bind(loggerOuter)),
+			log: vi.fn().mockImplementation(loggerOuter.log.bind(loggerOuter)),
+			info: vi.fn().mockImplementation(loggerOuter.info.bind(loggerOuter)),
+			error: vi.fn().mockImplementation(loggerOuter.error.bind(loggerOuter)),
+			trace: vi.fn().mockImplementation(loggerOuter.trace.bind(loggerOuter)),
+			fatal: vi.fn().mockImplementation(loggerOuter.fatal.bind(loggerOuter)),
+			warn: vi.fn().mockImplementation(loggerOuter.warn.bind(loggerOuter)),
+		} as unknown as Logger;
+		const mockReq = {
+			url: "/v1/prosopo/provider/captcha/image",
+			originalUrl: "/v1/prosopo/provider/captcha/image",
+			headers: {
+				Authorization: "Bearer ",
+			},
+			logger: mockLogger,
+		} as unknown as Request;
+
+		const mockRes = {
+			status: vi.fn().mockReturnThis(),
+			json: vi.fn(),
+		} as unknown as Response;
+
+		const mockNext = vi.fn() as unknown as NextFunction;
+
+		const middleware = authMiddleware(mockEnv.pair, mockEnv.authAccount);
+		await middleware(mockReq, mockRes, mockNext);
+
+		expect(mockNext).not.toHaveBeenCalled();
+		expect(mockRes.status).toHaveBeenCalledWith(401);
+		expect(mockRes.json).toHaveBeenCalledWith({
+			error: "Unauthorized",
+			message: expect.any(ProsopoApiError),
+		});
+		expect(mockLogger.error).toHaveBeenCalled();
 	});
 });
