@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import type { CaptchaResponseBody } from "@prosopo/types";
+import { CaptchaItemTypes } from "@prosopo/types";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import CaptchaComponent from "./CaptchaComponent.js";
@@ -32,16 +33,18 @@ vi.mock("@prosopo/locale", async () => {
 describe("CaptchaComponent", () => {
 	const createMockChallenge = (captchaCount: number): CaptchaResponseBody => ({
 		captchas: Array.from({ length: captchaCount }, (_, i) => ({
+			captchaId: `captcha-${i}`,
+			captchaContentId: `content-${i}`,
 			items: [
 				{
 					hash: `hash-${i}-0`,
 					data: `data:image/png;base64,image${i}-0`,
-					type: "image" as const,
+					type: CaptchaItemTypes.Image,
 				},
 				{
 					hash: `hash-${i}-1`,
 					data: `data:image/png;base64,image${i}-1`,
-					type: "image" as const,
+					type: CaptchaItemTypes.Image,
 				},
 			],
 			target: `target-${i}`,

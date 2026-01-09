@@ -17,6 +17,7 @@ import type {
 	ProcaptchaCallbacks,
 	ProcaptchaClientConfigInput,
 } from "@prosopo/types";
+import { ModeEnum } from "@prosopo/types";
 import { render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import Procaptcha from "./Procaptcha.js";
@@ -45,7 +46,7 @@ describe("Procaptcha", () => {
 		solutionThreshold: 80,
 		dappName: "TestDapp",
 		theme: "light",
-		mode: "visible",
+		mode: ModeEnum.visible,
 	});
 
 	const createMockI18n = (): Ti18n =>

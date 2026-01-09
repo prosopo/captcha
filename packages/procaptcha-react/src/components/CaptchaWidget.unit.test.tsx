@@ -14,16 +14,19 @@
 
 import { ProsopoDatasetError } from "@prosopo/common";
 import type { Captcha } from "@prosopo/types";
+import { CaptchaItemTypes } from "@prosopo/types";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { CaptchaWidget } from "./CaptchaWidget.js";
 
 describe("CaptchaWidget", () => {
 	const createMockChallenge = (itemCount: number): Captcha => ({
+		captchaId: "test-captcha-id",
+		captchaContentId: "test-content-id",
 		items: Array.from({ length: itemCount }, (_, i) => ({
 			hash: `hash-${i}`,
 			data: `data:image/png;base64,image${i}`,
-			type: "image" as const,
+			type: CaptchaItemTypes.Image,
 		})),
 		target: "test target",
 		salt: "salt",
@@ -295,11 +298,13 @@ describe("CaptchaWidget", () => {
 
 	it("should throw error when item hash is missing", () => {
 		const challenge: Captcha = {
+			captchaId: "test-captcha-id",
+			captchaContentId: "test-content-id",
 			items: [
 				{
 					hash: "",
 					data: "data:image/png;base64,image",
-					type: "image" as const,
+					type: CaptchaItemTypes.Image,
 				},
 			],
 			target: "test",

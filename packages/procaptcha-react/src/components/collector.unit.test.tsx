@@ -66,7 +66,10 @@ describe("Collector", () => {
 	it("should call onProcessData when account is provided and sendData is true", () => {
 		const onProcessData = vi.fn();
 		const account: Account = {
-			address: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			account: {
+				address: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				name: "test",
+			},
 		};
 		render(
 			<Collector
@@ -95,7 +98,10 @@ describe("Collector", () => {
 	it("should call onProcessData with stored events when account is provided", () => {
 		const onProcessData = vi.fn();
 		const account: Account = {
-			address: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			account: {
+				address: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				name: "test",
+			},
 		};
 		render(
 			<Collector
@@ -118,7 +124,10 @@ describe("Collector", () => {
 	it("should handle sendData being false", () => {
 		const onProcessData = vi.fn();
 		const account: Account = {
-			address: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			account: {
+				address: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				name: "test",
+			},
 		};
 		render(
 			<Collector
@@ -135,7 +144,10 @@ describe("Collector", () => {
 	it("should update when account changes", () => {
 		const onProcessData = vi.fn();
 		const account1: Account = {
-			address: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			account: {
+				address: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				name: "test1",
+			},
 		};
 		const { rerender } = render(
 			<Collector
@@ -147,7 +159,10 @@ describe("Collector", () => {
 		expect(onProcessData).toHaveBeenCalled();
 
 		const account2: Account = {
-			address: "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+			account: {
+				address: "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+				name: "test2",
+			},
 		};
 		onProcessData.mockClear();
 		rerender(
@@ -163,7 +178,10 @@ describe("Collector", () => {
 	it("should handle onProcessData function changes", () => {
 		const onProcessData1 = vi.fn();
 		const account: Account = {
-			address: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			account: {
+				address: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				name: "test",
+			},
 		};
 		const { rerender } = render(
 			<Collector

@@ -445,11 +445,7 @@ describe("ProcaptchaWidget", () => {
 		i18n.changeLanguage.mockClear();
 
 		render(
-			<ProcaptchaWidget
-				config={config}
-				callbacks={callbacks}
-				i18n={i18n}
-			/>,
+			<ProcaptchaWidget config={config} callbacks={callbacks} i18n={i18n} />,
 		);
 
 		// Wait for changeLanguage to be called on provided i18n
@@ -495,7 +491,7 @@ describe("ProcaptchaWidget", () => {
 			dappName: "TestDapp",
 			theme: "light",
 			mode: "visible",
-		};
+		} as const;
 		const callbacks: ProcaptchaCallbacks = {
 			onHuman: vi.fn(),
 		};
@@ -504,8 +500,9 @@ describe("ProcaptchaWidget", () => {
 		// Should throw an error due to invalid account address
 		expect(() => {
 			render(
+				// @ts-expect-error Testing invalid config
 				<ProcaptchaWidget
-					config={invalidConfig as any}
+					config={invalidConfig}
 					callbacks={callbacks}
 					i18n={i18n}
 				/>,

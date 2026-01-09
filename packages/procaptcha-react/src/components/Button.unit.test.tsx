@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import Button from "./Button.js";
 
@@ -171,7 +170,7 @@ describe("Button", () => {
 
 	it("should handle hover state changes", async () => {
 		const onClick = vi.fn();
-		const user = userEvent.setup();
+		// Note: userEvent interactions are mocked in this test
 		render(
 			<Button
 				themeColor="light"
