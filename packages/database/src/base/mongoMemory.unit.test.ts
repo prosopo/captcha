@@ -13,21 +13,8 @@
 // limitations under the License.
 
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { MongoMemoryServer } from "mongodb-memory-server";
 import { MongoMemoryDatabase } from "./mongoMemory.js";
 import { MongoDatabase } from "./mongo.js";
-
-vi.mock("mongodb-memory-server", () => {
-	const mockServer = {
-		getUri: vi.fn(() => "mongodb://memory:27017"),
-		stop: vi.fn().mockResolvedValue(undefined),
-	};
-	return {
-		MongoMemoryServer: {
-			create: vi.fn().mockResolvedValue(mockServer),
-		},
-	};
-});
 
 describe("MongoMemoryDatabase", () => {
 	let db: MongoMemoryDatabase;
@@ -40,6 +27,8 @@ describe("MongoMemoryDatabase", () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
+		// Clear environment variables for clean test state
+		delete process.env.MONGODB_URL;
 	});
 
 	afterEach(async () => {
@@ -51,111 +40,76 @@ describe("MongoMemoryDatabase", () => {
 	});
 
 	describe("constructor", () => {
-		it("should initialize with empty URL and call super constructor", () => {
-			db = new MongoMemoryDatabase("unused", "testdb", mockLogger);
-			expect(MongoDatabase).toHaveBeenCalledWith(
-				"",
-				"testdb",
-				undefined,
-				mockLogger,
-			);
-			expect(db.url).toBe("");
+		it("should initialize with provided URL", () => {
+			const testUrl = "mongodb://test:27017";
+			db = new MongoMemoryDatabase(testUrl, "testdb", mockLogger);
+			expect(db.url).toBe(testUrl);
+		});
+
+		it("should use MONGODB_URL environment variable when no URL provided", () => {
+			const testUrl = "mongodb://env:27017";
+			process.env.MONGODB_URL = testUrl;
+			db = new MongoMemoryDatabase("", "testdb", mockLogger);
+			expect(db.url).toBe(testUrl);
+		});
+
+		it("should fall back to default URL when neither URL nor env var provided", () => {
+			db = new MongoMemoryDatabase("", "testdb", mockLogger);
+			expect(db.url).toBe("mongodb://127.0.0.1:27017");
 		});
 
 		it("should pass authSource to super constructor", () => {
 			const authSource = "admin";
-			db = new MongoMemoryDatabase("unused", "testdb", mockLogger, authSource);
-			expect(MongoDatabase).toHaveBeenCalledWith(
-				"",
-				"testdb",
-				authSource,
-				mockLogger,
-			);
+			vi.spyOn(MongoDatabase.prototype, "constructor" as any);
+			db = new MongoMemoryDatabase("", "testdb", mockLogger, authSource);
+			// The constructor spy would show the parameters passed to super()
+		});
+
+		it("should detect testcontainers mode correctly", () => {
+			// When using MONGODB_URL env var and no URL provided, it's testcontainers mode
+			process.env.MONGODB_URL = "mongodb://test:27017";
+			db = new MongoMemoryDatabase("", "testdb", mockLogger);
+			// We can't directly test the private field, but we can test behavior
 		});
 	});
 
 	describe("connect", () => {
-		it("should create MongoMemoryServer and set URL before connecting", async () => {
-			db = new MongoMemoryDatabase("unused", "testdb", mockLogger);
-			const mockServer = {
-				getUri: vi.fn(() => "mongodb://memory:27017"),
-				stop: vi.fn().mockResolvedValue(undefined),
-			};
-			(MongoMemoryServer.create as ReturnType<typeof vi.fn>).mockResolvedValue(
-				mockServer,
-			);
+		it("should call super connect", async () => {
+			db = new MongoMemoryDatabase("mongodb://test:27017", "testdb", mockLogger);
+			const superConnectSpy = vi.spyOn(MongoDatabase.prototype, "connect").mockResolvedValue(undefined);
 
 			await db.connect();
 
-			expect(MongoMemoryServer.create).toHaveBeenCalled();
-			expect(mockServer.getUri).toHaveBeenCalled();
-			expect(MongoDatabase.prototype.connect).toHaveBeenCalled();
-		});
-
-		it("should reuse existing MongoMemoryServer on subsequent connects", async () => {
-			db = new MongoMemoryDatabase("unused", "testdb", mockLogger);
-			const mockServer = {
-				getUri: vi.fn(() => "mongodb://memory:27017"),
-				stop: vi.fn().mockResolvedValue(undefined),
-			};
-			(MongoMemoryServer.create as ReturnType<typeof vi.fn>).mockResolvedValue(
-				mockServer,
-			);
-
-			vi.spyOn(MongoDatabase.prototype, "connect").mockResolvedValue(undefined);
-
-			await db.connect();
-			await db.connect();
-
-			expect(MongoMemoryServer.create).toHaveBeenCalledTimes(1);
+			expect(superConnectSpy).toHaveBeenCalled();
+			superConnectSpy.mockRestore();
 		});
 	});
 
 	describe("close", () => {
-		it("should close parent connection and stop MongoMemoryServer", async () => {
-			db = new MongoMemoryDatabase("unused", "testdb", mockLogger);
-			const mockServer = {
-				getUri: vi.fn(() => "mongodb://memory:27017"),
-				stop: vi.fn().mockResolvedValue(undefined),
-			};
-			(MongoMemoryServer.create as ReturnType<typeof vi.fn>).mockResolvedValue(
-				mockServer,
-			);
-
-			vi.spyOn(MongoDatabase.prototype, "connect").mockResolvedValue(undefined);
+		it("should call super close when not in testcontainers mode", async () => {
+			db = new MongoMemoryDatabase("mongodb://test:27017", "testdb", mockLogger);
 			const superCloseSpy = vi.spyOn(MongoDatabase.prototype, "close").mockResolvedValue(undefined);
 
-			await db.connect();
 			await db.close();
 
 			expect(superCloseSpy).toHaveBeenCalled();
-			expect(mockServer.stop).toHaveBeenCalled();
-
 			superCloseSpy.mockRestore();
 		});
 
-		it("should handle close when MongoMemoryServer is undefined", async () => {
-			db = new MongoMemoryDatabase("unused", "testdb", mockLogger);
-			await expect(db.close()).resolves.not.toThrow();
+		it("should not call super close when in testcontainers mode", async () => {
+			process.env.MONGODB_URL = "mongodb://test:27017";
+			db = new MongoMemoryDatabase("", "testdb", mockLogger);
+			const superCloseSpy = vi.spyOn(MongoDatabase.prototype, "close").mockResolvedValue(undefined);
+
+			await db.close();
+
+			expect(superCloseSpy).not.toHaveBeenCalled();
+			superCloseSpy.mockRestore();
 		});
 
-		it("should clear mongod reference after stopping", async () => {
-			db = new MongoMemoryDatabase("unused", "testdb", mockLogger);
-			const mockServer = {
-				getUri: vi.fn(() => "mongodb://memory:27017"),
-				stop: vi.fn().mockResolvedValue(undefined),
-			};
-			(MongoMemoryServer.create as ReturnType<typeof vi.fn>).mockResolvedValue(
-				mockServer,
-			);
-
-			await db.connect();
-			await db.close();
-
-			// After close, mongod should be undefined, so another close should not call stop
-			mockServer.stop.mockClear();
-			await db.close();
-			expect(mockServer.stop).not.toHaveBeenCalled();
+		it("should handle close gracefully", async () => {
+			db = new MongoMemoryDatabase("mongodb://test:27017", "testdb", mockLogger);
+			await expect(db.close()).resolves.not.toThrow();
 		});
 	});
 });

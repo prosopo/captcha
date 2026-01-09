@@ -31,7 +31,16 @@ if (fs.existsSync(envFile)) {
 
 dotenv.config({ path: envPath });
 
-export default ViteTestConfig();
+const config = ViteTestConfig();
+
+export default {
+	...config,
+	test: {
+		...config.test,
+		setupFiles: ["./src/test-setup.ts"],
+		testTimeout: 60000, // 60 seconds for container tests
+	},
+};
 
 
 

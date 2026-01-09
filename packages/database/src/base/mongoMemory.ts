@@ -12,33 +12,39 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { Logger } from "@prosopo/common";
-import { MongoMemoryServer } from "mongodb-memory-server";
 import { MongoDatabase } from "./mongo.js";
 
+/**
+ * MongoMemoryDatabase is now a wrapper around MongoDatabase that uses testcontainers
+ * or environment-provided MongoDB URL for testing. It maintains backward compatibility
+ * with the old MongoMemoryServer approach.
+ */
 export class MongoMemoryDatabase extends MongoDatabase {
-	protected override _url = "";
-	private mongod: MongoMemoryServer | undefined;
+	private isTestContainerMode = false;
 
 	constructor(
-		_url: string, // this param is unused, but kept for compatibility
+		url: string, // Can be empty for testcontainers mode or a real MongoDB URL
 		dbname: string,
 		logger: Logger,
 		authSource?: string,
 	) {
-		super("", dbname, authSource, logger); // temporarily use empty URL, will set it later in connect()
+		// Use provided URL or fall back to testcontainers environment variable
+		const mongoUrl = url || process.env.MONGODB_URL || "mongodb://127.0.0.1:27017";
+		super(mongoUrl, dbname, authSource, logger);
+
+		// If no URL was provided and we're using MONGODB_URL, we're in testcontainers mode
+		this.isTestContainerMode = !url && !!process.env.MONGODB_URL;
 	}
 
 	override async connect(): Promise<void> {
-		if (!this.mongod) {
-			this.mongod = await MongoMemoryServer.create();
-			this._url = this.mongod.getUri();
-		}
 		await super.connect();
 	}
 
 	override async close(): Promise<void> {
-		await super.close();
-		await this.mongod?.stop();
-		this.mongod = undefined;
+		// In testcontainers mode, we don't close the connection as the container
+		// will be managed by the test setup/teardown
+		if (!this.isTestContainerMode) {
+			await super.close();
+		}
 	}
 }
