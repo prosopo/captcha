@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,14 +36,14 @@ interface CheckboxProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 	loading: boolean;
 }
 
-const checkboxBefore = css`{
+const checkboxBefore = css`
     &:before {
-        content: '""';
+        content: "";
         position: absolute;
         height: 100%;
         width: 100%;
     }
-}`;
+`;
 
 const baseStyle: CSSProperties = {
 	width: "28px",
@@ -180,7 +180,7 @@ export const Checkbox: FC<CheckboxProps> = ({
 				/>
 			)}
 			{error ? (
-				<ResponsiveLabel htmFor={id}>
+				<ResponsiveLabel htmlFor={id}>
 					<a
 						css={{
 							color: theme.palette.error.main,
@@ -191,7 +191,7 @@ export const Checkbox: FC<CheckboxProps> = ({
 					</a>
 				</ResponsiveLabel>
 			) : (
-				<ResponsiveLabel htmFor={id}>{labelText}</ResponsiveLabel>
+				<ResponsiveLabel htmlFor={id}>{labelText}</ResponsiveLabel>
 			)}
 		</span>
 	);

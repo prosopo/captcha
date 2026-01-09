@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -82,7 +82,14 @@ export default function (tsConfigPath?: string) {
 		},
 		test: {
 			//root: getRootDir(),
-			reporters: ["basic"],
+			reporters: [
+				[
+					"default",
+					{
+						summary: false,
+					},
+				],
+			],
 			include: [include],
 			watch: false,
 			exclude: ["**/node_modules/**", "**/dist/**"],

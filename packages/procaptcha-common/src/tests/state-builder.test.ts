@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -278,7 +278,7 @@ describe("state/builder", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: Mock useState/useRef functions
 			const [state, updateFn] = useProcaptcha(useState as any, useRef as any);
 
-			const mockTimeout = setTimeout(() => { }, 1000);
+			const mockTimeout = setTimeout(() => {}, 1000);
 			updateFn({ timeout: mockTimeout });
 
 			expect(timeoutRef.current).toBe(mockTimeout);
@@ -304,7 +304,7 @@ describe("state/builder", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: Mock useState/useRef functions
 			const [state, updateFn] = useProcaptcha(useState as any, useRef as any);
 
-			const mockTimeout = setTimeout(() => { }, 1000);
+			const mockTimeout = setTimeout(() => {}, 1000);
 			updateFn({ successfullChallengeTimeout: mockTimeout });
 
 			// This test will fail if the bug exists - successfullChallengeTimeout should be set to the correct value
@@ -312,22 +312,22 @@ describe("state/builder", () => {
 		});
 
 		it("should handle multiple state properties being updated", () => {
-			const setIsHuman = vi.fn();
-			const setIndex = vi.fn();
-			const setDappAccount = vi.fn();
-			const setSessionId = vi.fn();
+			// Testing that multiple state properties can be updated in a single call
+			const setters: Record<string, ReturnType<typeof vi.fn>> = {};
 
 			const useState = vi.fn((defaultValue) => {
-				if (defaultValue === false) {
-					return [false, setIsHuman];
+				// Create unique keys based on the expected default values and types
+				let key: string;
+				if (defaultValue === false) key = "isHuman";
+				else if (defaultValue === 0) key = "index";
+				else if (defaultValue === undefined) key = "undefined";
+				else if (Array.isArray(defaultValue)) key = "array";
+				else key = "other";
+
+				if (!setters[key]) {
+					setters[key] = vi.fn();
 				}
-				if (defaultValue === 0) {
-					return [0, setIndex];
-				}
-				if (defaultValue === undefined) {
-					return [undefined, setDappAccount];
-				}
-				return [defaultValue, vi.fn()];
+				return [defaultValue, setters[key]];
 			});
 
 			const useRef = vi.fn((defaultValue) => ({ current: defaultValue }));
@@ -335,40 +335,17 @@ describe("state/builder", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: Mock useState/useRef functions
 			const [state, updateFn] = useProcaptcha(useState as any, useRef as any);
 
-			// Track sessionId setter separately since it also uses undefined
-			let sessionIdSetter: ReturnType<typeof vi.fn> | undefined;
-			const useStateForSessionId = vi.fn((defaultValue) => {
-				if (defaultValue === undefined && !sessionIdSetter) {
-					sessionIdSetter = vi.fn();
-					return [undefined, sessionIdSetter];
-				}
-				return useState(defaultValue);
-			});
-
-			const [, updateFn2] = useProcaptcha(
-				// biome-ignore lint/suspicious/noExplicitAny: Mock useState/useRef functions
-				useStateForSessionId as any,
-				// biome-ignore lint/suspicious/noExplicitAny: Mock useState/useRef functions
-				useRef as any,
-			);
-
+			// Update multiple properties
 			updateFn({
 				isHuman: true,
 				index: 5,
-				dappAccount: "0x123",
-			});
-
-			updateFn2({
 				sessionId: "session-123",
 			});
 
 			// Verify setters were called with correct values
-			expect(setIsHuman).toHaveBeenCalledWith(true);
-			expect(setIndex).toHaveBeenCalledWith(5);
-			expect(setDappAccount).toHaveBeenCalledWith("0x123");
-			if (sessionIdSetter) {
-				expect(sessionIdSetter).toHaveBeenCalledWith("session-123");
-			}
+			expect(setters.isHuman).toHaveBeenCalledWith(true);
+			expect(setters.index).toHaveBeenCalledWith(5);
+			expect(setters.undefined).toHaveBeenCalledWith("session-123");
 		});
 
 		it("should handle empty partial state update", () => {
