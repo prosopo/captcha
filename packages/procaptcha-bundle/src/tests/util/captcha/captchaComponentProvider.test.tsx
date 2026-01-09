@@ -39,7 +39,7 @@ describe("CaptchaComponentProvider", () => {
 			i18n: {} as CaptchaProps["i18n"],
 			container: document.createElement("div"),
 		};
-		vi.spyOn(console, "log").mockImplementation(() => {});
+		vi.spyOn(console, "log").mockImplementation(() => { });
 	});
 
 	afterEach(() => {
