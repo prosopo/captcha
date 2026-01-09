@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,8 +26,8 @@ import {
 	ProsopoTxQueueError,
 	isZodError,
 	unwrapError,
-} from "./src/error.js";
-import { getLogger } from "./src/logger.js";
+} from "../error.js";
+import { getLogger } from "../logger.js";
 
 describe("ProsopoError classes", () => {
 	let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
@@ -81,7 +81,7 @@ describe("ProsopoError classes", () => {
 			});
 
 			expect(consoleErrorSpy).toHaveBeenCalled();
-			const logOutput = consoleErrorSpy.mock.calls[0][0];
+			const logOutput = consoleErrorSpy.mock.calls[0]?.[0] as string;
 			const parsed = JSON.parse(logOutput);
 			expect(parsed.data.errorType).toBe("CustomError");
 		});
@@ -362,7 +362,11 @@ describe("unwrapError", () => {
 		const zodError = new ZodError([]);
 		// Mock ZodError with string message that parses to object with API.UNKNOWN key (should be replaced with API.INVALID_BODY)
 		Object.defineProperty(zodError, "message", {
-			value: JSON.stringify({ code: 400, message: "Invalid data", key: "API.UNKNOWN" }),
+			value: JSON.stringify({
+				code: 400,
+				message: "Invalid data",
+				key: "API.UNKNOWN",
+			}),
 			writable: true,
 		});
 
@@ -379,7 +383,11 @@ describe("unwrapError", () => {
 		const zodError = new ZodError([]);
 		// Mock ZodError with string message that parses to object with a different key (should be preserved)
 		Object.defineProperty(zodError, "message", {
-			value: JSON.stringify({ code: 400, message: "Invalid data", key: "API.CUSTOM_ERROR" }),
+			value: JSON.stringify({
+				code: 400,
+				message: "Invalid data",
+				key: "API.CUSTOM_ERROR",
+			}),
 			writable: true,
 		});
 

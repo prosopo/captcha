@@ -302,7 +302,7 @@ describe("NativeLogger", () => {
 			logger.info(() => ({ msg: "test", data: { key: "value" } }));
 
 			expect(consoleInfoSpy).toHaveBeenCalledOnce();
-			const call = consoleInfoSpy.mock.calls[0][0];
+			const call = consoleInfoSpy.mock.calls[0]?.[0] as string;
 			const parsed = JSON.parse(call);
 			expect(parsed.msg).toBe("test");
 			expect(parsed.data).toEqual({ key: "value" });
@@ -316,7 +316,7 @@ describe("NativeLogger", () => {
 			logger.error(() => ({ err: error }));
 
 			expect(consoleErrorSpy).toHaveBeenCalledOnce();
-			const call = consoleErrorSpy.mock.calls[0][0];
+			const call = consoleErrorSpy.mock.calls[0]?.[0] as string;
 			const parsed = JSON.parse(call);
 			expect(parsed.err).toBe("test error");
 			expect(parsed.errData.name).toBe("Error");
@@ -331,7 +331,7 @@ describe("NativeLogger", () => {
 			logger.error(() => ({ err: error }));
 
 			expect(consoleErrorSpy).toHaveBeenCalledOnce();
-			const call = consoleErrorSpy.mock.calls[0][0];
+			const call = consoleErrorSpy.mock.calls[0]?.[0] as string;
 			const parsed = JSON.parse(call);
 			expect(parsed.errData.stack).toBeDefined();
 		});
@@ -345,7 +345,7 @@ describe("NativeLogger", () => {
 			logger.error(() => ({ err: error }));
 
 			expect(consoleErrorSpy).toHaveBeenCalledOnce();
-			const call = consoleErrorSpy.mock.calls[0][0];
+			const call = consoleErrorSpy.mock.calls[0]?.[0] as string;
 			const parsed = JSON.parse(call);
 			expect(parsed.errData.stack).toBeUndefined();
 		});
@@ -384,7 +384,7 @@ describe("NativeLogger", () => {
 			childLogger.info(() => ({ msg: "test message" }));
 
 			expect(consoleInfoSpy).toHaveBeenCalledOnce();
-			const call = consoleInfoSpy.mock.calls[0][0];
+			const call = consoleInfoSpy.mock.calls[0]?.[0] as string;
 			const parsed = JSON.parse(call);
 			expect(parsed.data.userId).toBe("123");
 		});
@@ -398,7 +398,7 @@ describe("NativeLogger", () => {
 			childLogger.info(() => ({ msg: "test", data: { action: "login" } }));
 
 			expect(consoleInfoSpy).toHaveBeenCalledOnce();
-			const call = consoleInfoSpy.mock.calls[0][0];
+			const call = consoleInfoSpy.mock.calls[0]?.[0] as string;
 			const parsed = JSON.parse(call);
 			expect(parsed.data.userId).toBe("123");
 			expect(parsed.data.action).toBe("login");
@@ -450,11 +450,11 @@ describe("NativeLogger", () => {
 			logger.setPrintStack(true);
 
 			const cause = new Error("cause error");
-			const error = new Error("main error", { cause });
+			const error = Object.assign(new Error("main error"), { cause });
 			logger.error(() => ({ err: error }));
 
 			expect(consoleErrorSpy).toHaveBeenCalledOnce();
-			const call = consoleErrorSpy.mock.calls[0][0];
+			const call = consoleErrorSpy.mock.calls[0]?.[0] as string;
 			const parsed = JSON.parse(call);
 			expect(parsed.errData.cause).toBeDefined();
 		});
@@ -471,7 +471,7 @@ describe("NativeLogger", () => {
 			logger.error(() => ({ err: error }));
 
 			expect(consoleErrorSpy).toHaveBeenCalledOnce();
-			const call = consoleErrorSpy.mock.calls[0][0];
+			const call = consoleErrorSpy.mock.calls[0]?.[0] as string;
 			const parsed = JSON.parse(call);
 			expect(parsed.errData.code).toBe(500);
 			expect(parsed.errData.details).toBe("additional info");
@@ -485,7 +485,7 @@ describe("NativeLogger", () => {
 			logger.error(() => ({ err: "string error" }));
 
 			expect(consoleErrorSpy).toHaveBeenCalledOnce();
-			const call = consoleErrorSpy.mock.calls[0][0];
+			const call = consoleErrorSpy.mock.calls[0]?.[0] as string;
 			const parsed = JSON.parse(call);
 			expect(parsed.err).toBe("string error");
 		});
@@ -494,11 +494,13 @@ describe("NativeLogger", () => {
 			const logger = new NativeLogger("test");
 			logger.setLogLevel(ErrorLevel);
 
-			const error = Object.assign(new Error("main message"), { msg: "duplicate message" });
+			const error = Object.assign(new Error("main message"), {
+				msg: "duplicate message",
+			});
 			logger.error(() => ({ err: error }));
 
 			expect(consoleErrorSpy).toHaveBeenCalledOnce();
-			const call = consoleErrorSpy.mock.calls[0][0];
+			const call = consoleErrorSpy.mock.calls[0]?.[0] as string;
 			const parsed = JSON.parse(call);
 			expect(parsed.err).toBe("main message");
 			expect(parsed.errData.msg).toBe("duplicate message");
@@ -508,11 +510,13 @@ describe("NativeLogger", () => {
 			const logger = new NativeLogger("test");
 			logger.setLogLevel(ErrorLevel);
 
-			const error = Object.assign(new Error("main error"), { cause: "string cause" });
+			const error = Object.assign(new Error("main error"), {
+				cause: "string cause",
+			});
 			logger.error(() => ({ err: error }));
 
 			expect(consoleErrorSpy).toHaveBeenCalledOnce();
-			const call = consoleErrorSpy.mock.calls[0][0];
+			const call = consoleErrorSpy.mock.calls[0]?.[0] as string;
 			const parsed = JSON.parse(call);
 			expect(parsed.errData.cause).toBe("string cause");
 		});
@@ -523,12 +527,12 @@ describe("NativeLogger", () => {
 
 			const error = Object.assign(new Error("main error"), {
 				status: "error",
-				statusCode: 500
+				statusCode: 500,
 			});
 			logger.error(() => ({ err: error }));
 
 			expect(consoleErrorSpy).toHaveBeenCalledOnce();
-			const call = consoleErrorSpy.mock.calls[0][0];
+			const call = consoleErrorSpy.mock.calls[0]?.[0] as string;
 			const parsed = JSON.parse(call);
 			expect(parsed.errData.status).toBe("error");
 			expect(parsed.errData.statusCode).toBe(500);
@@ -544,10 +548,9 @@ describe("NativeLogger", () => {
 			logger.info(() => ({ data: { value: bigInt } }));
 
 			expect(consoleInfoSpy).toHaveBeenCalledOnce();
-			const call = consoleInfoSpy.mock.calls[0][0];
+			const call = consoleInfoSpy.mock.calls[0]?.[0] as string;
 			const parsed = JSON.parse(call);
 			expect(parsed.data.value).toBe(bigInt.toString());
 		});
-
 	});
 });
