@@ -118,6 +118,11 @@ export const getCidrFromNumericIpRange = (
 	startIp: bigint,
 	endIp: bigint,
 ): string | undefined => {
+	// Handle invalid ranges where start > end gracefully
+	if (startIp > endIp) {
+		return undefined;
+	}
+
 	const ipRange = new IpRange(
 		IpAddress.of(getStringIpFromNumeric(startIp)),
 		IpAddress.of(getStringIpFromNumeric(endIp)),
