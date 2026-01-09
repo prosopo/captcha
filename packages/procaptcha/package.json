@@ -16,7 +16,9 @@
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --project tsconfig.types.json",
-		"test": "NODE_ENV=${NODE_ENV:-test}; vitest run --config ./vite.test.config.ts"
+		"test:unit": "NODE_ENV=${NODE_ENV:-test}; TEST_TYPE=unit vitest run --config ./vite.test.config.ts",
+		"test:integration": "NODE_ENV=${NODE_ENV:-test}; TEST_TYPE=integration vitest run --config ./vite.test.config.ts",
+		"test": "npm run test:unit && npm run test:integration"
 	},
 	"exports": {
 		".": {
@@ -55,7 +57,10 @@
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
 		"vite": "6.4.1",
-		"vitest": "3.2.4"
+		"vitest": "3.2.4",
+		"testcontainers": "^10.13.2",
+		"@testcontainers/redis": "^0.6.0",
+		"@testcontainers/mongodb": "^0.4.0"
 	},
 	"keywords": [],
 	"repository": {

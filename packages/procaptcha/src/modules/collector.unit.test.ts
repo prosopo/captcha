@@ -98,14 +98,18 @@ describe("collector", () => {
 			const standaloneDiv = document.createElement("div");
 			document.body.appendChild(standaloneDiv);
 
-			expect(() => {
-				startCollector(
-					setMouseEvents,
-					setTouchEvents,
-					setKeyboardEvents,
-					standaloneDiv,
-				);
-			}).not.toThrow();
+			// Mock addEventListener to verify it's not called
+			const addEventListenerSpy = vi.spyOn(standaloneDiv, "addEventListener");
+
+			startCollector(
+				setMouseEvents,
+				setTouchEvents,
+				setKeyboardEvents,
+				standaloneDiv,
+			);
+
+			// Should not attempt to add event listeners when no form is found
+			expect(addEventListenerSpy).not.toHaveBeenCalled();
 
 			document.body.removeChild(standaloneDiv);
 		});

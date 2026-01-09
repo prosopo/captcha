@@ -54,7 +54,7 @@ describe("ProsopoCaptchaApi", () => {
 			build: vi.fn(),
 			root: { hash: "mock-commitment-id" },
 		};
-		vi.mocked(CaptchaMerkleTree).mockImplementation(() => mockTree as any);
+		vi.mocked(CaptchaMerkleTree).mockImplementation(() => mockTree);
 
 		mockProviderApi = {
 			getCaptchaChallenge: vi.fn(),

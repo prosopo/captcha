@@ -82,7 +82,7 @@ describe("Manager", () => {
 	let mockUpdateState: ReturnType<typeof buildUpdateState>;
 	let mockEvents: ReturnType<typeof getDefaultEvents>;
 	let mockExtensionLoader: typeof ExtensionLoader;
-	let mockProviderApi: any;
+	let mockProviderApi: { getCaptchaChallenge: any; submitCaptchaSolution: any };
 	let mockCaptchaApi: ProsopoCaptchaApi;
 
 	beforeEach(() => {
@@ -199,10 +199,10 @@ describe("Manager", () => {
 		vi.mocked(hashToHex).mockReturnValue("hashed-hex");
 		vi.mocked(encodeProcaptchaOutput).mockReturnValue("encoded-output");
 
-		global.window = {
+		(global as any).window = {
 			clearTimeout: vi.fn(),
-			setTimeout: vi.fn().mockReturnValue(123) as any,
-		} as any;
+			setTimeout: vi.fn().mockReturnValue(123),
+		};
 	});
 
 	afterEach(() => {
@@ -236,7 +236,7 @@ describe("Manager", () => {
 					url: "https://provider.example.com",
 					datasetId: "dataset-1",
 				},
-			} as any);
+			});
 
 			vi.mocked(providerRetry).mockImplementation(async (fn) => {
 				await fn();
@@ -324,7 +324,7 @@ describe("Manager", () => {
 					url: "https://provider.example.com",
 					datasetId: "dataset-1",
 				},
-			} as any);
+			});
 
 			vi.mocked(providerRetry).mockImplementation(async (fn) => {
 				await fn();
@@ -368,7 +368,7 @@ describe("Manager", () => {
 					url: "https://provider.example.com",
 					datasetId: "dataset-1",
 				},
-			} as any);
+			});
 
 			vi.mocked(providerRetry).mockImplementation(async (fn) => {
 				try {
@@ -667,6 +667,54 @@ describe("Manager", () => {
 			expect(mockState.isHuman).toBe(false);
 			expect(mockEvents.onFailed).toHaveBeenCalled();
 		});
+
+		it("should handle getAccount error when no account in state", async () => {
+			// Test the getAccount error path - it should be caught by providerRetry
+			mockState.account = undefined;
+
+			vi.mocked(providerRetry).mockImplementation(async (fn) => {
+				try {
+					await fn();
+				} catch (err) {
+					// Error is caught by providerRetry - this is expected behavior
+					expect(err).toBeDefined();
+				}
+			});
+
+			const manager = Manager(
+				mockConfig,
+				mockState,
+				mockOnStateUpdate,
+				mockCallbacks,
+			);
+
+			// The submit should complete (error is handled internally)
+			await expect(manager.submit()).resolves.toBeUndefined();
+		});
+
+		it("should handle getDappAccount error when no dappAccount in state", async () => {
+			// Test the getDappAccount error path - it should be caught by providerRetry
+			mockState.dappAccount = undefined;
+
+			vi.mocked(providerRetry).mockImplementation(async (fn) => {
+				try {
+					await fn();
+				} catch (err) {
+					// Error is caught by providerRetry - this is expected behavior
+					expect(err).toBeDefined();
+				}
+			});
+
+			const manager = Manager(
+				mockConfig,
+				mockState,
+				mockOnStateUpdate,
+				mockCallbacks,
+			);
+
+			// The submit should complete (error is handled internally)
+			await expect(manager.submit()).resolves.toBeUndefined();
+		});
 	});
 
 	describe("cancel", () => {
@@ -735,7 +783,7 @@ describe("Manager", () => {
 					url: "https://provider.example.com",
 					datasetId: "dataset-1",
 				},
-			} as any);
+			});
 
 			vi.mocked(providerRetry).mockImplementation(async (fn) => {
 				await fn();

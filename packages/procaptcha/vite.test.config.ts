@@ -51,5 +51,15 @@ export default function () {
 	config.test.typecheck = {
 		enabled: true,
 	};
+
+	// Configure test patterns based on TEST_TYPE environment variable
+	const testType = process.env.TEST_TYPE || "unit";
+	if (testType === "integration") {
+		config.test.include = ["src/**/*.integration.test.ts"];
+		config.test.environment = "jsdom"; // Integration tests also run in jsdom for browser APIs
+	} else {
+		config.test.include = ["src/**/*.unit.test.ts"];
+		config.test.environment = "jsdom"; // Unit tests run in jsdom
+	}
 	return config;
 }
