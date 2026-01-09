@@ -38,7 +38,14 @@ export const startTestRedisContainer =
 			return containerPromise;
 		}
 		containerPromise = new RedisContainer("redis/redis-stack-server:latest")
-			.withCommand(["--requirepass", "root"])
+			.withCommand([
+				"--requirepass", "root",
+				"--loadmodule", "/opt/redis-stack/lib/redisearch.so",
+				"--maxmemory", "128mb", // Limit memory usage
+				"--tcp-keepalive", "0"  // Disable keepalive for faster shutdown
+			])
+			.withStartupTimeout(90000) // 90 seconds for Redis Stack
+			.withEnvironment({ "REDIS_STACK_SKIP_TESTS": "1" }) // Skip tests during startup
 			.start();
 		container = await containerPromise;
 		return container;
@@ -62,4 +69,42 @@ export const createTestRedisConnection = async (
 		password: "root",
 		logger: logger || mockLogger,
 	});
+};
+
+export const createBasicTestRedisConnection = async (
+	logger?: Logger,
+): Promise<RedisConnection> => {
+	const redisContainer = await startBasicTestRedisContainer();
+	const connectionUrl = redisContainer.getConnectionUrl();
+	return connectToRedis({
+		url: connectionUrl,
+		password: "root",
+		logger: logger || mockLogger,
+	});
+};
+
+let basicContainer: StartedRedisContainer | undefined;
+let basicContainerPromise: Promise<StartedRedisContainer> | undefined;
+
+export const startBasicTestRedisContainer = async (): Promise<StartedRedisContainer> => {
+	if (basicContainer) {
+		return basicContainer;
+	}
+	if (basicContainerPromise) {
+		return basicContainerPromise;
+	}
+	basicContainerPromise = new RedisContainer("redis:7-alpine")
+		.withPassword("root")
+		.withStartupTimeout(30000) // 30 seconds for basic Redis
+		.start();
+	basicContainer = await basicContainerPromise;
+	return basicContainer;
+};
+
+export const stopBasicTestRedisContainer = async (): Promise<void> => {
+	if (basicContainer) {
+		await basicContainer.stop();
+		basicContainer = undefined;
+		basicContainerPromise = undefined;
+	}
 };
