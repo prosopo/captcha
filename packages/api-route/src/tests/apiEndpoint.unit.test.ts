@@ -30,6 +30,7 @@ describe("ApiEndpoint", () => {
 			class UserEndpoint implements ApiEndpoint<typeof Schema> {
 				async processRequest(
 					args: z.infer<typeof Schema>,
+					logger?: Logger,
 				): Promise<ApiEndpointResponse> {
 					return {
 						status: ApiEndpointResponseStatus.SUCCESS,
@@ -63,6 +64,7 @@ describe("ApiEndpoint", () => {
 			class NestedEndpoint implements ApiEndpoint<typeof Schema> {
 				async processRequest(
 					args: z.infer<typeof Schema>,
+					logger?: Logger,
 				): Promise<ApiEndpointResponse> {
 					return {
 						status: ApiEndpointResponseStatus.SUCCESS,
@@ -101,6 +103,7 @@ describe("ApiEndpoint", () => {
 			class ArrayEndpoint implements ApiEndpoint<typeof Schema> {
 				async processRequest(
 					args: z.infer<typeof Schema>,
+					logger?: Logger,
 				): Promise<ApiEndpointResponse> {
 					return {
 						status: ApiEndpointResponseStatus.SUCCESS,
@@ -134,6 +137,7 @@ describe("ApiEndpoint", () => {
 			class OptionalFieldsEndpoint implements ApiEndpoint<typeof Schema> {
 				async processRequest(
 					args: z.infer<typeof Schema>,
+					logger?: Logger,
 				): Promise<ApiEndpointResponse> {
 					return {
 						status: ApiEndpointResponseStatus.SUCCESS,
@@ -177,6 +181,7 @@ describe("ApiEndpoint", () => {
 			class UnionEndpoint implements ApiEndpoint<typeof Schema> {
 				async processRequest(
 					args: z.infer<typeof Schema>,
+					logger?: Logger,
 				): Promise<ApiEndpointResponse> {
 					return {
 						status: ApiEndpointResponseStatus.SUCCESS,
@@ -235,7 +240,7 @@ describe("ApiEndpoint", () => {
 
 			class LoggerOnlyEndpoint implements ApiEndpoint<undefined> {
 				async processRequest(logger?: Logger): Promise<ApiEndpointResponse> {
-					logger?.info("Processing request");
+					logger?.info(() => ({ msg: "Processing request" }));
 					return { status: ApiEndpointResponseStatus.SUCCESS };
 				}
 
@@ -247,7 +252,9 @@ describe("ApiEndpoint", () => {
 			const endpoint = new LoggerOnlyEndpoint();
 			await endpoint.processRequest(mockLogger);
 
-			expect(mockLogger.info).toHaveBeenCalledWith("Processing request");
+			expect(mockLogger.info).toHaveBeenCalledWith(expect.any(Function));
+			const logFn = vi.mocked(mockLogger.info).mock.calls[0]?.[0];
+			expect(logFn?.()).toEqual({ msg: "Processing request" });
 		});
 	});
 
@@ -256,7 +263,9 @@ describe("ApiEndpoint", () => {
 			const Schema = z.object({ value: z.string() });
 
 			class SuccessEndpoint implements ApiEndpoint<typeof Schema> {
-				async processRequest(): Promise<ApiEndpointResponse> {
+				async processRequest(
+					args: z.infer<typeof Schema>,
+				): Promise<ApiEndpointResponse> {
 					return { status: ApiEndpointResponseStatus.SUCCESS };
 				}
 
@@ -278,6 +287,7 @@ describe("ApiEndpoint", () => {
 			class FailingEndpoint implements ApiEndpoint<typeof Schema> {
 				async processRequest(
 					args: z.infer<typeof Schema>,
+					logger?: Logger,
 				): Promise<ApiEndpointResponse> {
 					if (args.value === "fail") {
 						return {
@@ -310,6 +320,7 @@ describe("ApiEndpoint", () => {
 			class ProcessingEndpoint implements ApiEndpoint<typeof Schema> {
 				async processRequest(
 					args: z.infer<typeof Schema>,
+					logger?: Logger,
 				): Promise<ApiEndpointResponse> {
 					return {
 						status: ApiEndpointResponseStatus.PROCESSING,
@@ -349,9 +360,11 @@ describe("ApiEndpoint", () => {
 					args: z.infer<typeof Schema>,
 					logger?: Logger,
 				): Promise<ApiEndpointResponse> {
-					logger?.info(`Starting operation: ${args.operation}`);
-					logger?.debug("Processing...");
-					logger?.info("Operation completed");
+					logger?.info(() => ({
+						msg: `Starting operation: ${args.operation}`,
+					}));
+					logger?.debug(() => ({ msg: "Processing..." }));
+					logger?.info(() => ({ msg: "Operation completed" }));
 					return { status: ApiEndpointResponseStatus.SUCCESS };
 				}
 
@@ -363,9 +376,20 @@ describe("ApiEndpoint", () => {
 			const endpoint = new LoggingEndpoint();
 			await endpoint.processRequest({ operation: "test" }, mockLogger);
 
-			expect(mockLogger.info).toHaveBeenCalledWith("Starting operation: test");
-			expect(mockLogger.debug).toHaveBeenCalledWith("Processing...");
-			expect(mockLogger.info).toHaveBeenCalledWith("Operation completed");
+			expect(mockLogger.info).toHaveBeenCalledTimes(2);
+			expect(mockLogger.debug).toHaveBeenCalledTimes(1);
+
+			// Check first info call
+			const firstInfoFn = vi.mocked(mockLogger.info).mock.calls[0]?.[0];
+			expect(firstInfoFn?.()).toEqual({ msg: "Starting operation: test" });
+
+			// Check debug call
+			const debugFn = vi.mocked(mockLogger.debug).mock.calls[0]?.[0];
+			expect(debugFn?.()).toEqual({ msg: "Processing..." });
+
+			// Check second info call
+			const secondInfoFn = vi.mocked(mockLogger.info).mock.calls[1]?.[0];
+			expect(secondInfoFn?.()).toEqual({ msg: "Operation completed" });
 		});
 
 		it("should log errors", async () => {
@@ -384,7 +408,7 @@ describe("ApiEndpoint", () => {
 					logger?: Logger,
 				): Promise<ApiEndpointResponse> {
 					if (args.value === "error") {
-						logger?.error("Invalid value provided");
+						logger?.error(() => ({ msg: "Invalid value provided" }));
 						return {
 							status: ApiEndpointResponseStatus.FAIL,
 							error: "Invalid value",
@@ -401,7 +425,9 @@ describe("ApiEndpoint", () => {
 			const endpoint = new ErrorLoggingEndpoint();
 			await endpoint.processRequest({ value: "error" }, mockLogger);
 
-			expect(mockLogger.error).toHaveBeenCalledWith("Invalid value provided");
+			expect(mockLogger.error).toHaveBeenCalledWith(expect.any(Function));
+			const errorFn = vi.mocked(mockLogger.error).mock.calls[0]?.[0];
+			expect(errorFn?.()).toEqual({ msg: "Invalid value provided" });
 		});
 
 		it("should log warnings", async () => {
@@ -420,7 +446,7 @@ describe("ApiEndpoint", () => {
 					logger?: Logger,
 				): Promise<ApiEndpointResponse> {
 					if (args.value < 0) {
-						logger?.warn("Negative value provided");
+						logger?.warn(() => ({ msg: "Negative value provided" }));
 					}
 					return {
 						status: ApiEndpointResponseStatus.SUCCESS,
@@ -436,7 +462,9 @@ describe("ApiEndpoint", () => {
 			const endpoint = new WarningEndpoint();
 			await endpoint.processRequest({ value: -5 }, mockLogger);
 
-			expect(mockLogger.warn).toHaveBeenCalledWith("Negative value provided");
+			expect(mockLogger.warn).toHaveBeenCalledWith(expect.any(Function));
+			const warnFn = vi.mocked(mockLogger.warn).mock.calls[0]?.[0];
+			expect(warnFn?.()).toEqual({ msg: "Negative value provided" });
 		});
 
 		it("should work without logger provided", async () => {
@@ -447,7 +475,9 @@ describe("ApiEndpoint", () => {
 					args: z.infer<typeof Schema>,
 					logger?: Logger,
 				): Promise<ApiEndpointResponse> {
-					logger?.info("This will not throw if logger is undefined");
+					logger?.info(() => ({
+						msg: "This will not throw if logger is undefined",
+					}));
 					return {
 						status: ApiEndpointResponseStatus.SUCCESS,
 						data: { value: args.value },
@@ -478,6 +508,7 @@ describe("ApiEndpoint", () => {
 			class TransformEndpoint implements ApiEndpoint<typeof Schema> {
 				async processRequest(
 					args: z.infer<typeof Schema>,
+					logger?: Logger,
 				): Promise<ApiEndpointResponse> {
 					return {
 						status: ApiEndpointResponseStatus.SUCCESS,
@@ -507,6 +538,7 @@ describe("ApiEndpoint", () => {
 			class CalculationEndpoint implements ApiEndpoint<typeof Schema> {
 				async processRequest(
 					args: z.infer<typeof Schema>,
+					logger?: Logger,
 				): Promise<ApiEndpointResponse> {
 					const sum = args.numbers.reduce((a, b) => a + b, 0);
 					const avg = sum / args.numbers.length;
@@ -544,6 +576,7 @@ describe("ApiEndpoint", () => {
 			class FilterMapEndpoint implements ApiEndpoint<typeof Schema> {
 				async processRequest(
 					args: z.infer<typeof Schema>,
+					logger?: Logger,
 				): Promise<ApiEndpointResponse> {
 					const activeItems = args.items
 						.filter((item) => item.active)
@@ -580,6 +613,7 @@ describe("ApiEndpoint", () => {
 			class AsyncDelayEndpoint implements ApiEndpoint<typeof Schema> {
 				async processRequest(
 					args: z.infer<typeof Schema>,
+					logger?: Logger,
 				): Promise<ApiEndpointResponse> {
 					await new Promise((resolve) => setTimeout(resolve, args.delay));
 					return {
@@ -609,6 +643,7 @@ describe("ApiEndpoint", () => {
 			class SequentialEndpoint implements ApiEndpoint<typeof Schema> {
 				async processRequest(
 					args: z.infer<typeof Schema>,
+					logger?: Logger,
 				): Promise<ApiEndpointResponse> {
 					const results: string[] = [];
 
@@ -645,6 +680,7 @@ describe("ApiEndpoint", () => {
 			class ParallelEndpoint implements ApiEndpoint<typeof Schema> {
 				async processRequest(
 					args: z.infer<typeof Schema>,
+					logger?: Logger,
 				): Promise<ApiEndpointResponse> {
 					const promises = args.tasks.map(async (task) => {
 						await new Promise((resolve) => setTimeout(resolve, 10));
@@ -684,6 +720,7 @@ describe("ApiEndpoint", () => {
 
 				async processRequest(
 					args: z.infer<typeof Schema>,
+					logger?: Logger,
 				): Promise<ApiEndpointResponse> {
 					this.counter += args.value;
 					return {
@@ -717,6 +754,7 @@ describe("ApiEndpoint", () => {
 
 				async processRequest(
 					args: z.infer<typeof Schema>,
+					logger?: Logger,
 				): Promise<ApiEndpointResponse> {
 					this.count += args.increment;
 					return {
@@ -752,6 +790,7 @@ describe("ApiEndpoint", () => {
 			class TypedEndpoint implements ApiEndpoint<typeof Schema> {
 				async processRequest(
 					args: z.infer<typeof Schema>,
+					logger?: Logger,
 				): Promise<ApiEndpointResponse> {
 					return { status: ApiEndpointResponseStatus.SUCCESS };
 				}
@@ -798,6 +837,7 @@ describe("ApiEndpoint", () => {
 			class ThrowingEndpoint implements ApiEndpoint<typeof Schema> {
 				async processRequest(
 					args: z.infer<typeof Schema>,
+					logger?: Logger,
 				): Promise<ApiEndpointResponse> {
 					if (args.value === "throw") {
 						throw new Error("Test error");
@@ -826,6 +866,7 @@ describe("ApiEndpoint", () => {
 			class ErrorResponseEndpoint implements ApiEndpoint<typeof Schema> {
 				async processRequest(
 					args: z.infer<typeof Schema>,
+					logger?: Logger,
 				): Promise<ApiEndpointResponse> {
 					if (args.value === "error") {
 						return {
@@ -869,6 +910,7 @@ describe("ApiEndpoint", () => {
 			class DeepNestedEndpoint implements ApiEndpoint<typeof Schema> {
 				async processRequest(
 					args: z.infer<typeof Schema>,
+					logger?: Logger,
 				): Promise<ApiEndpointResponse> {
 					return {
 						status: ApiEndpointResponseStatus.SUCCESS,
@@ -908,6 +950,7 @@ describe("ApiEndpoint", () => {
 			class TupleEndpoint implements ApiEndpoint<typeof Schema> {
 				async processRequest(
 					args: z.infer<typeof Schema>,
+					logger?: Logger,
 				): Promise<ApiEndpointResponse> {
 					return {
 						status: ApiEndpointResponseStatus.SUCCESS,
@@ -942,6 +985,7 @@ describe("ApiEndpoint", () => {
 			class DiscriminatedUnionEndpoint implements ApiEndpoint<typeof Schema> {
 				async processRequest(
 					args: z.infer<typeof Schema>,
+					logger?: Logger,
 				): Promise<ApiEndpointResponse> {
 					if (args.type === "user") {
 						return {

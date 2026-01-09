@@ -33,6 +33,7 @@ describe("ApiRoutes", () => {
 			class TestEndpoint implements ApiEndpoint<typeof TestSchema> {
 				async processRequest(
 					args: z.infer<typeof TestSchema>,
+					logger?: Logger,
 				): Promise<ApiEndpointResponse> {
 					return {
 						status: ApiEndpointResponseStatus.SUCCESS,
@@ -49,8 +50,8 @@ describe("ApiRoutes", () => {
 				"/test": new TestEndpoint(),
 			};
 
-			expect(routes["/test"]).toBeInstanceOf(TestEndpoint);
-			expect(routes["/test"].getRequestArgsSchema()).toBe(TestSchema);
+			expect(routes["/test"]!).toBeInstanceOf(TestEndpoint);
+			expect(routes["/test"]?.getRequestArgsSchema()).toBe(TestSchema);
 		});
 
 		it("should support multiple routes with different schemas", () => {
@@ -58,7 +59,10 @@ describe("ApiRoutes", () => {
 			const Schema2 = z.object({ b: z.number() });
 
 			class Endpoint1 implements ApiEndpoint<typeof Schema1> {
-				async processRequest(): Promise<ApiEndpointResponse> {
+				async processRequest(
+					args: z.infer<typeof Schema1>,
+					logger?: Logger,
+				): Promise<ApiEndpointResponse> {
 					return { status: ApiEndpointResponseStatus.SUCCESS };
 				}
 
@@ -68,7 +72,10 @@ describe("ApiRoutes", () => {
 			}
 
 			class Endpoint2 implements ApiEndpoint<typeof Schema2> {
-				async processRequest(): Promise<ApiEndpointResponse> {
+				async processRequest(
+					args: z.infer<typeof Schema2>,
+					logger?: Logger,
+				): Promise<ApiEndpointResponse> {
 					return { status: ApiEndpointResponseStatus.SUCCESS };
 				}
 
@@ -83,8 +90,8 @@ describe("ApiRoutes", () => {
 			};
 
 			expect(Object.keys(routes)).toHaveLength(2);
-			expect(routes["/endpoint1"]).toBeInstanceOf(Endpoint1);
-			expect(routes["/endpoint2"]).toBeInstanceOf(Endpoint2);
+			expect(routes["/endpoint1"]!).toBeInstanceOf(Endpoint1);
+			expect(routes["/endpoint2"]!).toBeInstanceOf(Endpoint2);
 		});
 
 		it("should support endpoints without schemas", () => {
@@ -102,7 +109,7 @@ describe("ApiRoutes", () => {
 				"/no-args": new NoArgsEndpoint(),
 			};
 
-			expect(routes["/no-args"].getRequestArgsSchema()).toBeUndefined();
+			expect(routes["/no-args"]?.getRequestArgsSchema()).toBeUndefined();
 		});
 
 		it("should support empty route collections", () => {
@@ -114,7 +121,10 @@ describe("ApiRoutes", () => {
 			const TestSchema = z.object({ value: z.string() });
 
 			class TestEndpoint implements ApiEndpoint<typeof TestSchema> {
-				async processRequest(): Promise<ApiEndpointResponse> {
+				async processRequest(
+					args: z.infer<typeof TestSchema>,
+					logger?: Logger,
+				): Promise<ApiEndpointResponse> {
 					return { status: ApiEndpointResponseStatus.SUCCESS };
 				}
 
@@ -129,16 +139,19 @@ describe("ApiRoutes", () => {
 				"/api/search?q=test": new TestEndpoint(),
 			};
 
-			expect(routes["/api/v1/users/:id"]).toBeInstanceOf(TestEndpoint);
-			expect(routes["/api/v2/posts/*"]).toBeInstanceOf(TestEndpoint);
-			expect(routes["/api/search?q=test"]).toBeInstanceOf(TestEndpoint);
+			expect(routes["/api/v1/users/:id"]!).toBeInstanceOf(TestEndpoint);
+			expect(routes["/api/v2/posts/*"]!).toBeInstanceOf(TestEndpoint);
+			expect(routes["/api/search?q=test"]!).toBeInstanceOf(TestEndpoint);
 		});
 
 		it("should support routes with empty string keys", () => {
 			const TestSchema = z.object({ value: z.string() });
 
 			class TestEndpoint implements ApiEndpoint<typeof TestSchema> {
-				async processRequest(): Promise<ApiEndpointResponse> {
+				async processRequest(
+					args: z.infer<typeof TestSchema>,
+					logger?: Logger,
+				): Promise<ApiEndpointResponse> {
 					return { status: ApiEndpointResponseStatus.SUCCESS };
 				}
 
@@ -151,14 +164,17 @@ describe("ApiRoutes", () => {
 				"": new TestEndpoint(),
 			};
 
-			expect(routes[""]).toBeInstanceOf(TestEndpoint);
+			expect(routes[""]!).toBeInstanceOf(TestEndpoint);
 		});
 
 		it("should support routes with very long keys", () => {
 			const TestSchema = z.object({ value: z.string() });
 
 			class TestEndpoint implements ApiEndpoint<typeof TestSchema> {
-				async processRequest(): Promise<ApiEndpointResponse> {
+				async processRequest(
+					args: z.infer<typeof TestSchema>,
+					logger?: Logger,
+				): Promise<ApiEndpointResponse> {
 					return { status: ApiEndpointResponseStatus.SUCCESS };
 				}
 
@@ -172,7 +188,7 @@ describe("ApiRoutes", () => {
 				[longKey]: new TestEndpoint(),
 			};
 
-			expect(routes[longKey]).toBeInstanceOf(TestEndpoint);
+			expect(routes[longKey]!).toBeInstanceOf(TestEndpoint);
 		});
 	});
 
@@ -183,6 +199,7 @@ describe("ApiRoutes", () => {
 			class TestEndpoint implements ApiEndpoint<typeof TestSchema> {
 				async processRequest(
 					args: z.infer<typeof TestSchema>,
+					logger?: Logger,
 				): Promise<ApiEndpointResponse> {
 					return {
 						status: ApiEndpointResponseStatus.SUCCESS,
@@ -199,7 +216,7 @@ describe("ApiRoutes", () => {
 				"/test": new TestEndpoint(),
 			};
 
-			const result = await routes["/test"].processRequest({ value: "hello" });
+			const result = await routes["/test"]?.processRequest({ value: "hello" });
 			expect(result.status).toBe(ApiEndpointResponseStatus.SUCCESS);
 			expect(result.data).toEqual({ received: "hello" });
 		});
@@ -218,7 +235,7 @@ describe("ApiRoutes", () => {
 					args: z.infer<typeof TestSchema>,
 					logger?: Logger,
 				): Promise<ApiEndpointResponse> {
-					logger?.info("Processing request");
+					logger?.info(() => ({ msg: "Processing request" }));
 					return { status: ApiEndpointResponseStatus.SUCCESS };
 				}
 
@@ -231,8 +248,10 @@ describe("ApiRoutes", () => {
 				"/test": new TestEndpoint(),
 			};
 
-			await routes["/test"].processRequest({ value: "test" }, mockLogger);
-			expect(mockLogger.info).toHaveBeenCalledWith("Processing request");
+			await routes["/test"]?.processRequest({ value: "test" }, mockLogger);
+			expect(mockLogger.info).toHaveBeenCalledWith(expect.any(Function));
+			const logFn = vi.mocked(mockLogger.info).mock.calls[0]?.[0];
+			expect(logFn()).toEqual({ msg: "Processing request" });
 		});
 
 		it("should handle endpoint returning error status", async () => {
@@ -255,7 +274,9 @@ describe("ApiRoutes", () => {
 				"/failing": new FailingEndpoint(),
 			};
 
-			const result = await routes["/failing"].processRequest({ value: "test" });
+			const result = await routes["/failing"]?.processRequest({
+				value: "test",
+			});
 			expect(result.status).toBe(ApiEndpointResponseStatus.FAIL);
 			expect(result.error).toBe("Something went wrong");
 		});
@@ -280,7 +301,7 @@ describe("ApiRoutes", () => {
 				"/processing": new ProcessingEndpoint(),
 			};
 
-			const result = await routes["/processing"].processRequest({
+			const result = await routes["/processing"]?.processRequest({
 				value: "test",
 			});
 			expect(result.status).toBe(ApiEndpointResponseStatus.PROCESSING);
@@ -294,7 +315,10 @@ describe("ApiRoutes", () => {
 			const TestSchema = z.object({ value: z.string() });
 
 			class TestEndpoint implements ApiEndpoint<typeof TestSchema> {
-				async processRequest(): Promise<ApiEndpointResponse> {
+				async processRequest(
+					args: z.infer<typeof TestSchema>,
+					logger?: Logger,
+				): Promise<ApiEndpointResponse> {
 					return { status: ApiEndpointResponseStatus.SUCCESS };
 				}
 
@@ -318,7 +342,10 @@ describe("ApiRoutesProvider", () => {
 			const TestSchema = z.object({ value: z.string() });
 
 			class TestEndpoint implements ApiEndpoint<typeof TestSchema> {
-				async processRequest(): Promise<ApiEndpointResponse> {
+				async processRequest(
+					args: z.infer<typeof TestSchema>,
+					logger?: Logger,
+				): Promise<ApiEndpointResponse> {
 					return { status: ApiEndpointResponseStatus.SUCCESS };
 				}
 
@@ -338,7 +365,7 @@ describe("ApiRoutesProvider", () => {
 			const provider = new TestRoutesProvider();
 			const routes = provider.getRoutes();
 
-			expect(routes["/test"]).toBeInstanceOf(TestEndpoint);
+			expect(routes["/test"]!).toBeInstanceOf(TestEndpoint);
 		});
 
 		it("should return multiple routes from provider", () => {
@@ -346,7 +373,10 @@ describe("ApiRoutesProvider", () => {
 			const Schema2 = z.object({ b: z.number() });
 
 			class Endpoint1 implements ApiEndpoint<typeof Schema1> {
-				async processRequest(): Promise<ApiEndpointResponse> {
+				async processRequest(
+					args: z.infer<typeof Schema1>,
+					logger?: Logger,
+				): Promise<ApiEndpointResponse> {
 					return { status: ApiEndpointResponseStatus.SUCCESS };
 				}
 
@@ -356,7 +386,10 @@ describe("ApiRoutesProvider", () => {
 			}
 
 			class Endpoint2 implements ApiEndpoint<typeof Schema2> {
-				async processRequest(): Promise<ApiEndpointResponse> {
+				async processRequest(
+					args: z.infer<typeof Schema2>,
+					logger?: Logger,
+				): Promise<ApiEndpointResponse> {
 					return { status: ApiEndpointResponseStatus.SUCCESS };
 				}
 
@@ -379,9 +412,9 @@ describe("ApiRoutesProvider", () => {
 			const routes = provider.getRoutes();
 
 			expect(Object.keys(routes)).toHaveLength(3);
-			expect(routes["/route1"]).toBeInstanceOf(Endpoint1);
-			expect(routes["/route2"]).toBeInstanceOf(Endpoint2);
-			expect(routes["/route3"]).toBeInstanceOf(Endpoint2);
+			expect(routes["/route1"]!).toBeInstanceOf(Endpoint1);
+			expect(routes["/route2"]!).toBeInstanceOf(Endpoint2);
+			expect(routes["/route3"]!).toBeInstanceOf(Endpoint2);
 		});
 
 		it("should return empty routes from provider", () => {
@@ -429,9 +462,9 @@ describe("ApiRoutesProvider", () => {
 			const routes = provider.getRoutes();
 
 			expect(Object.keys(routes)).toHaveLength(3);
-			expect(routes["/endpoint1"]).toBeInstanceOf(DynamicEndpoint);
-			expect(routes["/endpoint2"]).toBeInstanceOf(DynamicEndpoint);
-			expect(routes["/endpoint3"]).toBeInstanceOf(DynamicEndpoint);
+			expect(routes["/endpoint1"]!).toBeInstanceOf(DynamicEndpoint);
+			expect(routes["/endpoint2"]!).toBeInstanceOf(DynamicEndpoint);
+			expect(routes["/endpoint3"]!).toBeInstanceOf(DynamicEndpoint);
 		});
 	});
 
@@ -442,6 +475,7 @@ describe("ApiRoutesProvider", () => {
 			class TestEndpoint implements ApiEndpoint<typeof TestSchema> {
 				async processRequest(
 					args: z.infer<typeof TestSchema>,
+					logger?: Logger,
 				): Promise<ApiEndpointResponse> {
 					return {
 						status: ApiEndpointResponseStatus.SUCCESS,
@@ -464,7 +498,7 @@ describe("ApiRoutesProvider", () => {
 
 			const provider = new TestRoutesProvider();
 			const routes = provider.getRoutes();
-			const result = await routes["/echo"].processRequest({ value: "test" });
+			const result = await routes["/echo"]?.processRequest({ value: "test" });
 
 			expect(result.status).toBe(ApiEndpointResponseStatus.SUCCESS);
 			expect(result.data).toEqual({ echo: "test" });
@@ -505,9 +539,9 @@ describe("ApiRouteLimit", () => {
 				{ windowMs: 3600000, limit: 1000 },
 			];
 
-			expect(limits[0].windowMs).toBe(1000); // 1 second
-			expect(limits[1].windowMs).toBe(60000); // 1 minute
-			expect(limits[2].windowMs).toBe(3600000); // 1 hour
+			expect(limits[0]?.windowMs).toBe(1000); // 1 second
+			expect(limits[1]?.windowMs).toBe(60000); // 1 minute
+			expect(limits[2]?.windowMs).toBe(3600000); // 1 hour
 		});
 
 		it("should support various limit values", () => {
@@ -517,9 +551,9 @@ describe("ApiRouteLimit", () => {
 				{ windowMs: 60000, limit: 1000 },
 			];
 
-			expect(limits[0].limit).toBe(1);
-			expect(limits[1].limit).toBe(100);
-			expect(limits[2].limit).toBe(1000);
+			expect(limits[0]?.limit).toBe(1);
+			expect(limits[1]?.limit).toBe(100);
+			expect(limits[2]?.limit).toBe(1000);
 		});
 	});
 
