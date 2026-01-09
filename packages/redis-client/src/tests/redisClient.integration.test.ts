@@ -32,6 +32,8 @@ import {
 	stopTestRedisContainer,
 } from "./testRedisConnection.js";
 
+// Integration tests for Redis connection functionality
+// Tests the connectToRedis function with real Redis containers
 describe("connectToRedis", () => {
 	let mockLogger: Logger;
 	let connection: RedisConnection;
@@ -68,6 +70,7 @@ describe("connectToRedis", () => {
 		vi.clearAllMocks();
 	});
 
+	// Test that connectToRedis returns an object with the expected RedisConnection interface
 	test("returns connection with correct interface", () => {
 		expect(connection).toHaveProperty("isReady");
 		expect(connection).toHaveProperty("getClient");
@@ -77,6 +80,7 @@ describe("connectToRedis", () => {
 		expect(typeof connection.getAwaitingTimeMs).toBe("function");
 	});
 
+	// Test that isReady returns true after successful Redis connection
 	test("isReady returns true after connection", () => {
 		expect(connection.isReady()).toBe(true);
 	});

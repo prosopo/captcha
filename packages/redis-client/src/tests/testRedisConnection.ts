@@ -37,15 +37,14 @@ export const startTestRedisContainer =
 		if (containerPromise) {
 			return containerPromise;
 		}
-		containerPromise = new RedisContainer("redis/redis-stack-server:latest")
-			.withCommand([
-				"--requirepass", "root",
-				"--loadmodule", "/opt/redis-stack/lib/redisearch.so",
-				"--maxmemory", "128mb", // Limit memory usage
-				"--tcp-keepalive", "0"  // Disable keepalive for faster shutdown
-			])
-			.withStartupTimeout(90000) // 90 seconds for Redis Stack
-			.withEnvironment({ "REDIS_STACK_SKIP_TESTS": "1" }) // Skip tests during startup
+		containerPromise = new RedisContainer("redis/redis-stack:7.2.0-v10")
+			.withPassword("root")
+			.withExposedPorts(6379)
+			.withStartupTimeout(120000) // 2 minutes for Redis Stack
+			.withEnvironment({
+				REDIS_ARGS:
+					"--loadmodule /opt/redis-stack/lib/redisearch.so --maxmemory 128mb",
+			})
 			.start();
 		container = await containerPromise;
 		return container;
@@ -86,20 +85,21 @@ export const createBasicTestRedisConnection = async (
 let basicContainer: StartedRedisContainer | undefined;
 let basicContainerPromise: Promise<StartedRedisContainer> | undefined;
 
-export const startBasicTestRedisContainer = async (): Promise<StartedRedisContainer> => {
-	if (basicContainer) {
+export const startBasicTestRedisContainer =
+	async (): Promise<StartedRedisContainer> => {
+		if (basicContainer) {
+			return basicContainer;
+		}
+		if (basicContainerPromise) {
+			return basicContainerPromise;
+		}
+		basicContainerPromise = new RedisContainer("redis:7-alpine")
+			.withPassword("root")
+			.withStartupTimeout(30000) // 30 seconds for basic Redis
+			.start();
+		basicContainer = await basicContainerPromise;
 		return basicContainer;
-	}
-	if (basicContainerPromise) {
-		return basicContainerPromise;
-	}
-	basicContainerPromise = new RedisContainer("redis:7-alpine")
-		.withPassword("root")
-		.withStartupTimeout(30000) // 30 seconds for basic Redis
-		.start();
-	basicContainer = await basicContainerPromise;
-	return basicContainer;
-};
+	};
 
 export const stopBasicTestRedisContainer = async (): Promise<void> => {
 	if (basicContainer) {

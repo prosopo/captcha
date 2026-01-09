@@ -31,7 +31,8 @@ dotenv.config({ path: envPath });
 
 const config = ViteTestConfig();
 if (config.test) {
-	config.test.testTimeout = 300000;
-	config.test.hookTimeout = 300000;
+	// Optimized timeouts for Redis container tests
+	config.test.testTimeout = 10000; // 10 seconds for individual tests
+	config.test.hookTimeout = 120000; // 2 minutes for setup/teardown (Redis Stack container startup)
 }
 export default config;
