@@ -34,6 +34,7 @@ describe("ProcaptchaComponent", () => {
 	});
 
 	it("should render a div element", () => {
+		// Test that the component creates a wrapper div element for the captcha
 		const { container } = render(ProcaptchaComponent, {
 			props: {
 				siteKey: "test-site-key",
@@ -44,6 +45,8 @@ describe("ProcaptchaComponent", () => {
 	});
 
 	it("should call renderProcaptcha with element and options after mount", async () => {
+		// Test integration: component should call the underlying renderProcaptcha function
+		// with the wrapper element and all provided options after Svelte's tick
 		const options: ProcaptchaRenderOptions = {
 			siteKey: "test-site-key",
 		};
@@ -228,5 +231,107 @@ describe("ProcaptchaComponent", () => {
 		const div = container.querySelector("div");
 		expect(div?.getAttribute("data-custom")).toBe("custom-value");
 		expect(div?.getAttribute("data-another")).toBe("another-value");
+	});
+
+	it("should support all valid ProcaptchaRenderOptions combinations", async () => {
+		// Test integration: component should pass through all possible ProcaptchaRenderOptions
+		// including complex combinations of callbacks, themes, and web3 settings
+		const comprehensiveOptions: ProcaptchaRenderOptions = {
+			siteKey: "test-site-key",
+			theme: "dark",
+			captchaType: "pow",
+			language: "es",
+			size: "compact",
+			web3: true,
+			userAccountAddress: "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+			callback: () => {},
+			"expired-callback": () => {},
+			"error-callback": () => {},
+			"open-callback": () => {},
+			"close-callback": () => {},
+		};
+
+		render(ProcaptchaComponent, {
+			props: comprehensiveOptions,
+		});
+
+		await waitFor(() => {
+			expect(renderProcaptcha).toHaveBeenCalled();
+		});
+
+		const [, renderOptions] = vi.mocked(renderProcaptcha).mock.calls[0];
+		expect(renderOptions).toEqual(comprehensiveOptions);
+	});
+
+	it("should merge htmlAttributes with component styles", () => {
+		// Test that htmlAttributes work alongside any future component styles
+		const htmlAttributes = {
+			class: "custom-class",
+			style: "color: red;",
+			"data-testid": "procaptcha",
+		};
+
+		const { container } = render(ProcaptchaComponent, {
+			props: {
+				siteKey: "test-site-key",
+				htmlAttributes,
+			},
+		});
+
+		const div = container.querySelector("div");
+		expect(div?.getAttribute("class")).toBe("custom-class");
+		expect(div?.getAttribute("style")).toBe("color: red;");
+		expect(div?.getAttribute("data-testid")).toBe("procaptcha");
+	});
+
+	it("should handle complex htmlAttributes combinations", () => {
+		// Test various HTML attribute combinations
+		const htmlAttributes = {
+			id: "procaptcha-widget",
+			class: "captcha-wrapper dark-theme",
+			"data-site-key": "test-site-key",
+			"aria-label": "Procaptcha verification",
+			role: "region",
+			tabindex: -1,
+			style: "margin: 10px; padding: 5px;",
+		};
+
+		const { container } = render(ProcaptchaComponent, {
+			props: {
+				siteKey: "test-site-key",
+				htmlAttributes,
+			},
+		});
+
+		const div = container.querySelector("div");
+		expect(div?.getAttribute("id")).toBe("procaptcha-widget");
+		expect(div?.getAttribute("class")).toBe("captcha-wrapper dark-theme");
+		expect(div?.getAttribute("data-site-key")).toBe("test-site-key");
+		expect(div?.getAttribute("aria-label")).toBe("Procaptcha verification");
+		expect(div?.getAttribute("role")).toBe("region");
+		expect(div?.getAttribute("tabindex")).toBe("-1");
+		expect(div?.getAttribute("style")).toBe("margin: 10px; padding: 5px;");
+	});
+
+	it("should handle boolean and number attributes in htmlAttributes", () => {
+		const htmlAttributes = {
+			disabled: true,
+			hidden: false,
+			"data-count": 42,
+			contenteditable: "true",
+		};
+
+		const { container } = render(ProcaptchaComponent, {
+			props: {
+				siteKey: "test-site-key",
+				htmlAttributes,
+			},
+		});
+
+		const div = container.querySelector("div");
+		expect(div?.getAttribute("disabled")).toBe("true");
+		expect(div?.hasAttribute("hidden")).toBe(false); // false values are not set
+		expect(div?.getAttribute("data-count")).toBe("42");
+		expect(div?.getAttribute("contenteditable")).toBe("true");
 	});
 });
