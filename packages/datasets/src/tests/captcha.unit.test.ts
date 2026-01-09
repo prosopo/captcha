@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -286,7 +286,7 @@ describe("CAPTCHA FUNCTIONS", async () => {
 	});
 
 	test("Matching captcha solutions are correctly compared, returning true", () => {
-		expect(compareCaptchaSolutions(RECEIVED, STORED, MOCK_ITEMS.length, 0.8)).to
+		expect(compareCaptchaSolutions(RECEIVED, STORED, 0.8)).to
 			.be.true;
 	});
 
@@ -300,7 +300,7 @@ describe("CAPTCHA FUNCTIONS", async () => {
 			at(STORED, 1),
 		];
 
-		expect(compareCaptchaSolutions(RECEIVED, stored, MOCK_ITEMS.length, 0.8)).to
+		expect(compareCaptchaSolutions(RECEIVED, stored, 0.8)).to
 			.be.false;
 	});
 
@@ -331,7 +331,7 @@ describe("CAPTCHA FUNCTIONS", async () => {
 			at(STORED, 0),
 		];
 
-		expect(compareCaptchaSolutions(received, stored, MOCK_ITEMS.length, 0.8)).to
+		expect(compareCaptchaSolutions(received, stored, 0.8)).to
 			.be.false;
 	});
 
@@ -500,6 +500,7 @@ describe("CAPTCHA FUNCTIONS", async () => {
 	test("parseCaptchaAssets resolves asset URL when assetsResolver is provided", () => {
 		const mockResolver = {
 			resolveAsset: (url: string) => ({
+				URI: url,
 				getURL: () => `resolved-${url}`,
 			}),
 		};
@@ -532,6 +533,7 @@ describe("CAPTCHA FUNCTIONS", async () => {
 	test("parseCaptchaAssets handles image type items", () => {
 		const mockResolver = {
 			resolveAsset: (url: string) => ({
+				URI: url,
 				getURL: () => `resolved-${url}`,
 			}),
 		};
@@ -545,5 +547,34 @@ describe("CAPTCHA FUNCTIONS", async () => {
 		const result = parseCaptchaAssets(item, mockResolver);
 		expect(result.data).to.equal("resolved-image-url");
 		expect(result.type).to.equal(item.type);
+	});
+
+	test("matchItemsToSolutions returns empty array when items is undefined", () => {
+		// Testing the uncovered line: if (!items) { return []; }
+		const result = matchItemsToSolutions([0, 1], undefined);
+		expect(result).to.deep.equal([]);
+	});
+
+	test("matchItemsToSolutions throws error for invalid hex solution not in items", () => {
+		// Testing the uncovered lines: throw new ProsopoDatasetError("CAPTCHA.INVALID_ITEM_HASH");
+		const items: Item[] = [
+			{ type: CaptchaItemTypes.Text, data: "item1", hash: "0xhash1" },
+			{ type: CaptchaItemTypes.Text, data: "item2", hash: "0xhash2" },
+		];
+
+		expect(() => {
+			matchItemsToSolutions(["0xinvalid"], items);
+		}).to.throw();
+	});
+
+	test("matchItemsToSolutions throws error for invalid solution type", () => {
+		// Testing the uncovered line: throw new ProsopoDatasetError("CAPTCHA.INVALID_SOLUTION_TYPE");
+		const items: Item[] = [
+			{ type: CaptchaItemTypes.Text, data: "item1", hash: "0xhash1" },
+		];
+
+		expect(() => {
+			matchItemsToSolutions(["invalid" as any], items);
+		}).to.throw();
 	});
 });

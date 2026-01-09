@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,11 +21,13 @@ import {
 import { at } from "@prosopo/util";
 import { hexHashArray } from "@prosopo/util-crypto";
 import { beforeAll, describe, expect, test } from "vitest";
+import type { MerkleProof } from "@prosopo/types";
 import {
 	CaptchaMerkleTree,
 	computeCaptchaHash,
 	computeItemHash,
 	matchItemsToSolutions,
+	verifyProof,
 } from "../index.js";
 
 async function getDataset(): Promise<Dataset> {
@@ -256,5 +258,27 @@ describe("DATASETS MERKLE TREE", async () => {
 
 		expect(root).to.not.be.undefined;
 		expect(root.hash).to.be.a("string");
+	});
+
+	test("proof throws error when layer is undefined", () => {
+		// Testing the uncovered error handling when layer is undefined
+		const tree = new CaptchaMerkleTree();
+
+		// Build tree and then manually corrupt it to trigger the error
+		tree.build(["1", "2", "3"]);
+		// @ts-expect-error - Manually corrupting internal state for testing
+		tree.layers[0] = undefined;
+
+		expect(() => {
+			tree.proof("1");
+		}).to.throw();
+	});
+
+	test("verifyProof handles exceptions gracefully", () => {
+		// Testing the uncovered catch block in verifyProof
+		const invalidProof = null as unknown as MerkleProof; // Invalid proof that will cause an exception
+
+		const result = verifyProof("leaf", invalidProof);
+		expect(result).to.be.false;
 	});
 });

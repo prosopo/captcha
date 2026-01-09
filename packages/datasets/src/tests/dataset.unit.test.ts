@@ -1,5 +1,5 @@
 import path from "node:path";
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,7 @@ import path from "node:path";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { ProsopoEnvError } from "@prosopo/common";
 import {
 	type Captcha,
 	CaptchaItemTypes,
@@ -273,8 +274,10 @@ describe("DATASET FUNCTIONS", async () => {
 	});
 
 	test("addSolutionHashesToDataset handles already hashed solutions", () => {
-		const item1Hash = "0xf50c63a914dac984e8e0ad16673f0c7224422d439ec19342d89ea985bc439040";
-		const item2Hash = "0xb22ba232374e4970ff72533bd84a0f4a86a31323518448a7820d08639bdec2f5";
+		const item1Hash =
+			"0xf50c63a914dac984e8e0ad16673f0c7224422d439ec19342d89ea985bc439040";
+		const item2Hash =
+			"0xb22ba232374e4970ff72533bd84a0f4a86a31323518448a7820d08639bdec2f5";
 		const datasetRaw: DatasetRaw = {
 			format: CaptchaTypes.SelectAll,
 			captchas: [
@@ -455,16 +458,17 @@ describe("DATASET FUNCTIONS", async () => {
 
 		const result = await buildDataset(datasetRaw);
 
-		expect(result.captchas[0]?.captchaId).to.be.a("string");
-		expect(result.captchas[0]?.captchaContentId).to.be.a("string");
-		expect(result.captchas[0]?.datasetId).to.be.a("string");
-		expect(result.captchas[0]?.datasetContentId).to.be.a("string");
+		const captcha = result.captchas[0] as Captcha;
+		expect(captcha.captchaId).to.be.a("string");
+		expect(captcha.captchaContentId).to.be.a("string");
+		expect(captcha.datasetId).to.be.a("string");
+		expect(captcha.datasetContentId).to.be.a("string");
 		expect(result.datasetId).to.be.a("string");
 		expect(result.datasetContentId).to.be.a("string");
 		expect(result.solutionTree).to.be.an("array");
 		expect(result.contentTree).to.be.an("array");
-		expect(result.captchas[0]?.datasetId).to.equal(result.datasetId);
-		expect(result.captchas[0]?.datasetContentId).to.equal(
+		expect(captcha.datasetId).to.equal(result.datasetId);
+		expect(captcha.datasetContentId).to.equal(
 			result.datasetContentId,
 		);
 	});
@@ -503,11 +507,58 @@ describe("DATASET FUNCTIONS", async () => {
 		const result = await buildDataset(datasetRaw);
 
 		expect(result.captchas).to.have.length(2);
-		expect(result.captchas[0]?.captchaId).to.not.equal(
-			result.captchas[1]?.captchaId,
-		);
-		expect(result.captchas[0]?.datasetId).to.equal(
-			result.captchas[1]?.datasetId,
-		);
+		const captcha0 = result.captchas[0] as Captcha;
+		const captcha1 = result.captchas[1] as Captcha;
+		expect(captcha0.captchaId).to.not.equal(captcha1.captchaId);
+		expect(captcha0.datasetId).to.equal(captcha1.datasetId);
+	});
+
+	test("validateDatasetContent handles captchas without captchaId", async () => {
+		// Testing the uncovered lines when captcha doesn't have captchaId
+		const dataset: Dataset = {
+			format: CaptchaTypes.SelectAll,
+			captchas: [
+				{
+					items: [
+						{
+							type: CaptchaItemTypes.Text,
+							data: "item1",
+							hash: "0xhash1",
+						},
+					],
+					target: "test",
+					salt: "0x01",
+					solution: [],
+				},
+			],
+		};
+
+		const result = await validateDatasetContent(dataset);
+		expect(result).to.be.false; // Should return false when captchaRaw is not found
+	});
+
+	test("buildCaptchaTree throws error on hash computation failure", async () => {
+		// Testing the uncovered error handling in buildCaptchaTree
+		const dataset: Dataset = {
+			format: CaptchaTypes.SelectAll,
+			captchas: [
+				{
+					items: [
+						{
+							type: CaptchaItemTypes.Text,
+							data: "item1",
+							hash: "", // Missing hash will cause computeCaptchaHash to throw
+						},
+					],
+					target: "test",
+					salt: "0x01",
+					solution: [],
+				},
+			],
+		};
+
+		await expect(
+			buildCaptchaTree(dataset, false, false, false),
+		).rejects.toThrow(ProsopoEnvError);
 	});
 });
