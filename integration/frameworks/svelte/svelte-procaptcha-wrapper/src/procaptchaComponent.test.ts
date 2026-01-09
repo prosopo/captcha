@@ -176,7 +176,7 @@ describe("ProcaptchaComponent", () => {
 			"expired-callback": expiredCallback,
 			"error-callback": errorCallback,
 			"open-callback": "window.open",
-			"close-callback": () => {},
+			"close-callback": () => { },
 		};
 
 		render(ProcaptchaComponent, {
@@ -244,11 +244,11 @@ describe("ProcaptchaComponent", () => {
 			size: "compact",
 			web3: true,
 			userAccountAddress: "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
-			callback: () => {},
-			"expired-callback": () => {},
-			"error-callback": () => {},
-			"open-callback": () => {},
-			"close-callback": () => {},
+			callback: () => { },
+			"expired-callback": () => { },
+			"error-callback": () => { },
+			"open-callback": () => { },
+			"close-callback": () => { },
 		};
 
 		render(ProcaptchaComponent, {
