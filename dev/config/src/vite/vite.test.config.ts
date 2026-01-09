@@ -33,13 +33,13 @@ export default function (tsConfigPath?: string) {
 	// Determine coverage include paths based on current working directory
 	const cwd = process.cwd();
 	const isRunningFromPackage =
-		cwd.includes("/packages/") && cwd.includes("/src") === false;
+		(cwd.includes("/packages/") || cwd.includes("/dev/")) && cwd.includes("/src") === false;
 
 	// If running from a package directory, include local src files
 	// If running from repo root, include all package src files
 	const coverageInclude = isRunningFromPackage
 		? ["src/**/*.ts", "src/**/*.js", "src/**/*.tsx", "src/**/*.jsx"]
-		: ["packages/*/src/**", "captcha/packages/*/src/**"];
+		: ["packages/*/src/**", "dev/*/src/**", "captcha/packages/*/src/**"];
 
 	const coverageExclude = isRunningFromPackage
 		? [
