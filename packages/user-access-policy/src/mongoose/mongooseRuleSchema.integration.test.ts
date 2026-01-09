@@ -43,7 +43,7 @@ describe("accessRuleMongooseSchema Integration Tests", () => {
 		const connectionString = mongoContainer.getConnectionString();
 
 		// Wait for MongoDB to be ready
-		await new Promise(resolve => setTimeout(resolve, 2000));
+		await new Promise((resolve) => setTimeout(resolve, 2000));
 
 		connection = await mongoose.connect(connectionString);
 

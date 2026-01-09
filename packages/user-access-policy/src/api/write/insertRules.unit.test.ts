@@ -12,12 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { LogLevel, getLogger } from "@prosopo/common";
 import { ApiEndpointResponseStatus } from "@prosopo/api-route";
-import { describe, expect, it, vi, beforeEach } from "vitest";
-import type { AccessRulesWriter } from "#policy/rulesStorage.js";
-import { InsertRulesEndpoint } from "#policy/api/write/insertRules.js";
+import { LogLevel, type getLogger } from "@prosopo/common";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+    InsertRulesEndpoint,
+    type InsertRulesGroup,
+} from "#policy/api/write/insertRules.js";
 import { AccessPolicyType } from "#policy/rule.js";
+import type { AccessRulesWriter } from "#policy/rulesStorage.js";
 
 describe("InsertRulesEndpoint", () => {
     let mockAccessRulesWriter: AccessRulesWriter;
@@ -42,7 +45,7 @@ describe("InsertRulesEndpoint", () => {
             error: vi.fn(),
             warn: vi.fn(),
             getLogLevel: vi.fn().mockReturnValue(LogLevel.enum.info),
-        } as any;
+        } as ReturnType<typeof getLogger>;
 
         endpoint = new InsertRulesEndpoint(mockAccessRulesWriter, mockLogger);
     });
@@ -93,15 +96,12 @@ describe("InsertRulesEndpoint", () => {
             const mockInsertedIds = ["rule1", "rule2", "rule3"];
             mockAccessRulesWriter.insertRules.mockResolvedValue(mockInsertedIds);
 
-            const input: any[] = [
+            const input: InsertRulesGroup[] = [
                 {
                     accessPolicy: {
                         type: AccessPolicyType.Block,
                     },
-                    userScopes: [
-                        { userId: "user1" },
-                        { userId: "user2" },
-                    ],
+                    userScopes: [{ userId: "user1" }, { userId: "user2" }],
                     policyScopes: [{ clientId: "client1" }],
                 },
             ];
@@ -140,16 +140,13 @@ describe("InsertRulesEndpoint", () => {
             const mockInsertedIds = ["rule1", "rule2"];
             mockAccessRulesWriter.insertRules.mockResolvedValue(mockInsertedIds);
 
-            const input: any[] = [
+            const input: InsertRulesGroup[] = [
                 {
                     accessPolicy: {
                         type: AccessPolicyType.Restrict,
                     },
                     userScopes: [{ userId: "user1" }],
-                    policyScopes: [
-                        { clientId: "client1" },
-                        { clientId: "client2" },
-                    ],
+                    policyScopes: [{ clientId: "client1" }, { clientId: "client2" }],
                 },
             ];
 
@@ -179,7 +176,7 @@ describe("InsertRulesEndpoint", () => {
             const mockInsertedIds = ["rule1"];
             mockAccessRulesWriter.insertRules.mockResolvedValue(mockInsertedIds);
 
-            const input: any[] = [
+            const input: InsertRulesGroup[] = [
                 {
                     accessPolicy: {
                         type: AccessPolicyType.Block,
@@ -206,7 +203,7 @@ describe("InsertRulesEndpoint", () => {
             const mockInsertedIds = ["rule1"];
             mockAccessRulesWriter.insertRules.mockResolvedValue(mockInsertedIds);
 
-            const input: any[] = [
+            const input: InsertRulesGroup[] = [
                 {
                     accessPolicy: {
                         type: AccessPolicyType.Block,
@@ -232,9 +229,11 @@ describe("InsertRulesEndpoint", () => {
         });
 
         it("should return fail status when insertRules throws an error", async () => {
-            mockAccessRulesWriter.insertRules.mockRejectedValue(new Error("Database error"));
+            mockAccessRulesWriter.insertRules.mockRejectedValue(
+                new Error("Database error"),
+            );
 
-            const input: any[] = [
+            const input: InsertRulesGroup[] = [
                 {
                     accessPolicy: {
                         type: AccessPolicyType.Block,
@@ -256,10 +255,11 @@ describe("InsertRulesEndpoint", () => {
         it("should return processing status when request takes longer than 5 seconds", async () => {
             // Mock a slow insertRules operation
             mockAccessRulesWriter.insertRules.mockImplementation(
-                () => new Promise(resolve => setTimeout(() => resolve(["rule1"]), 6000))
+                () =>
+                    new Promise((resolve) => setTimeout(() => resolve(["rule1"]), 6000)),
             );
 
-            const input: any[] = [
+            const input: InsertRulesGroup[] = [
                 {
                     accessPolicy: {
                         type: AccessPolicyType.Block,
@@ -277,9 +277,11 @@ describe("InsertRulesEndpoint", () => {
 
         it("should log detailed error information when log level is debug", async () => {
             mockLogger.getLogLevel.mockReturnValue(LogLevel.enum.debug);
-            mockAccessRulesWriter.insertRules.mockRejectedValue(new Error("Database error"));
+            mockAccessRulesWriter.insertRules.mockRejectedValue(
+                new Error("Database error"),
+            );
 
-            const input: any[] = [
+            const input: InsertRulesGroup[] = [
                 {
                     accessPolicy: {
                         type: AccessPolicyType.Block,
@@ -302,7 +304,7 @@ describe("InsertRulesEndpoint", () => {
                 .mockResolvedValueOnce(["group1-rule1", "group1-rule2"])
                 .mockResolvedValueOnce(["group2-rule1"]);
 
-            const groups: any[] = [
+            const groups: InsertRulesGroup[] = [
                 {
                     accessPolicy: { type: AccessPolicyType.Block },
                     userScopes: [{ userId: "user1" }],
@@ -313,7 +315,11 @@ describe("InsertRulesEndpoint", () => {
                 },
             ];
 
-            const result = await (endpoint as any).createRuleGroups(groups);
+            const result = await (
+                endpoint as unknown as {
+                    createRuleGroups: (groups: InsertRulesGroup[]) => Promise<string[]>;
+                }
+            ).createRuleGroups(groups);
 
             expect(result).toEqual(["group1-rule1", "group1-rule2", "group2-rule1"]);
             expect(mockAccessRulesWriter.insertRules).toHaveBeenCalledTimes(2);
@@ -324,7 +330,7 @@ describe("InsertRulesEndpoint", () => {
         it("should create rules for single group with multiple user scopes and policy scopes", async () => {
             mockAccessRulesWriter.insertRules.mockResolvedValue(["rule1", "rule2"]);
 
-            const group: any = {
+            const group: InsertRulesGroup = {
                 accessPolicy: {
                     type: AccessPolicyType.Block,
                     description: "Block rule",
@@ -333,15 +339,16 @@ describe("InsertRulesEndpoint", () => {
                     { userId: "user1", userAgentHash: "hash1" },
                     { userId: "user2", userAgentHash: "hash2" },
                 ],
-                policyScopes: [
-                    { clientId: "client1" },
-                    { clientId: "client2" },
-                ],
+                policyScopes: [{ clientId: "client1" }, { clientId: "client2" }],
                 groupId: "group123",
                 expiresUnixTimestamp: 1234567890,
             };
 
-            const result = await (endpoint as any).createRulesGroup(group);
+            const result = await (
+                endpoint as unknown as {
+                    createRulesGroup: (group: InsertRulesGroup) => Promise<string[]>;
+                }
+            ).createRulesGroup(group);
 
             expect(result).toEqual(["rule1", "rule2"]);
 
@@ -396,13 +403,17 @@ describe("InsertRulesEndpoint", () => {
         it("should handle group with no policy scopes", async () => {
             mockAccessRulesWriter.insertRules.mockResolvedValue(["rule1"]);
 
-            const group: any = {
+            const group: InsertRulesGroup = {
                 accessPolicy: { type: AccessPolicyType.Restrict },
                 userScopes: [{ userId: "user1" }],
                 // No policyScopes
             };
 
-            const result = await (endpoint as any).createRulesGroup(group);
+            const result = await (
+                endpoint as unknown as {
+                    createRulesGroup: (group: InsertRulesGroup) => Promise<string[]>;
+                }
+            ).createRulesGroup(group);
 
             expect(mockAccessRulesWriter.insertRules).toHaveBeenCalledWith([
                 {
