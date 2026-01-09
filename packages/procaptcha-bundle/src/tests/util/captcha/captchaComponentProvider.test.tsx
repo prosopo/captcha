@@ -18,17 +18,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CaptchaComponentProvider } from "../../../util/captcha/captchaComponentProvider.js";
 import type { CaptchaProps } from "../../../util/captcha/captchaProps.js";
 
-vi.mock("../../../util/captcha/components/frictionlessCaptcha.js", () => ({
-	FrictionlessCaptcha: vi.fn(() => <div>FrictionlessCaptcha</div>),
-}));
-
-vi.mock("../../../util/captcha/components/imageCaptcha.js", () => ({
-	ImageCaptcha: vi.fn(() => <div>ImageCaptcha</div>),
-}));
-
-vi.mock("../../../util/captcha/components/powCaptcha.js", () => ({
-	PowCaptcha: vi.fn(() => <div>PowCaptcha</div>),
-}));
+vi.mock("../../../util/captcha/components/frictionlessCaptcha.js");
+vi.mock("../../../util/captcha/components/imageCaptcha.js");
+vi.mock("../../../util/captcha/components/powCaptcha.js");
 
 describe("CaptchaComponentProvider", () => {
 	let dom: JSDOM;
@@ -56,30 +48,39 @@ describe("CaptchaComponentProvider", () => {
 		(global as any).document = undefined;
 	});
 
-	it("should return FrictionlessCaptcha component for frictionless type", () => {
+	it("should return FrictionlessCaptcha component for frictionless type", async () => {
+		const { FrictionlessCaptcha } = await import("../../../util/captcha/components/frictionlessCaptcha.js");
+
 		const component = provider.getCaptchaComponent(
 			CaptchaType.frictionless,
 			mockProps,
 		);
 
 		expect(component).toBeDefined();
+		expect(component.type).toBe(FrictionlessCaptcha);
 		expect(console.log).toHaveBeenCalledWith("rendering frictionless");
 	});
 
-	it("should return ImageCaptcha component for image type", () => {
+	it("should return ImageCaptcha component for image type", async () => {
+		const { ImageCaptcha } = await import("../../../util/captcha/components/imageCaptcha.js");
+
 		const component = provider.getCaptchaComponent(
 			CaptchaType.image,
 			mockProps,
 		);
 
 		expect(component).toBeDefined();
+		expect(component.type).toBe(ImageCaptcha);
 		expect(console.log).toHaveBeenCalledWith("rendering image");
 	});
 
-	it("should return PowCaptcha component for pow type", () => {
+	it("should return PowCaptcha component for pow type", async () => {
+		const { PowCaptcha } = await import("../../../util/captcha/components/powCaptcha.js");
+
 		const component = provider.getCaptchaComponent(CaptchaType.pow, mockProps);
 
 		expect(component).toBeDefined();
+		expect(component.type).toBe(PowCaptcha);
 		expect(console.log).toHaveBeenCalledWith("rendering pow");
 	});
 
@@ -89,12 +90,13 @@ describe("CaptchaComponentProvider", () => {
 		}).toThrow("Not Implemented");
 	});
 
-	it("should pass props correctly to component", () => {
+	it("should pass props correctly to component", async () => {
 		const component = provider.getCaptchaComponent(
 			CaptchaType.frictionless,
 			mockProps,
 		);
 
 		expect(component).toBeDefined();
+		expect(component.props).toEqual(mockProps);
 	});
 });
