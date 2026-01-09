@@ -209,6 +209,58 @@ describe("i18n integration tests", () => {
 		}, 10000);
 	});
 
+	describe("loadI18next caching and functionality", () => {
+		test("should return cached instance on multiple calls", async () => {
+			// First call
+			const i18n1 = await loadI18next(true);
+			await new Promise((resolve) => {
+				if (i18n1.isInitialized) {
+					resolve(undefined);
+				} else {
+					i18n1.on("initialized", resolve);
+				}
+			});
+
+			// Second call should return the same instance
+			const i18n2 = await loadI18next(true);
+
+			expect(i18n1).toBe(i18n2);
+			expect(i18n1.isInitialized).toBe(true);
+		}, 10000);
+
+		test("should work with both backend and frontend calls", async () => {
+			// Test backend
+			const backendI18n = await loadI18next(true);
+			await new Promise((resolve) => {
+				if (backendI18n.isInitialized) {
+					resolve(undefined);
+				} else {
+					backendI18n.on("initialized", resolve);
+				}
+			});
+
+			// Test frontend - should return same instance
+			const frontendI18n = await loadI18next(false);
+
+			expect(backendI18n.isInitialized).toBe(true);
+			expect(frontendI18n.isInitialized).toBe(true);
+
+			// They should be the same instance (cached)
+			expect(backendI18n).toBe(frontendI18n);
+		}, 10000);
+
+		test("should handle loadI18next promise resolution correctly", async () => {
+			const i18nPromise = loadI18next(true);
+			expect(i18nPromise).toBeInstanceOf(Promise);
+
+			const i18n = await i18nPromise;
+			expect(i18n).toBeDefined();
+			expect(typeof i18n).toBe("object");
+			expect(i18n).toHaveProperty("t");
+			expect(i18n).toHaveProperty("changeLanguage");
+		}, 10000);
+	});
+
 	describe("Middleware integration", () => {
 		test("should export i18nMiddleware function", async () => {
 			// Import the middleware
