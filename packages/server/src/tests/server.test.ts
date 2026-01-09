@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -161,8 +161,20 @@ describe("ProsopoServer", () => {
 			const server = new ProsopoServer(mockConfig, mockPair);
 			const token = "test-token";
 			const timeouts: CaptchaTimeoutOutput = {
-				image: { cachedTimeout: 300000 },
-				pow: { cachedTimeout: 600000 },
+				image: {
+					challengeTimeout: 30000,
+					solutionTimeout: 300000,
+					verifiedTimeout: 300000,
+					cachedTimeout: 300000,
+				},
+				pow: {
+					verifiedTimeout: 600000,
+					solutionTimeout: 600000,
+					cachedTimeout: 600000,
+				},
+				contract: {
+					maxVerifiedTime: 86400000,
+				},
 			};
 			const providerUrl = "http://provider.example.com";
 			const timestamp = Date.now() - 1000; // 1 second ago
@@ -201,8 +213,20 @@ describe("ProsopoServer", () => {
 			const server = new ProsopoServer(mockConfig, mockPair);
 			const token = "test-token";
 			const timeouts: CaptchaTimeoutOutput = {
-				image: { cachedTimeout: 300000 },
-				pow: { cachedTimeout: 600000 },
+				image: {
+					challengeTimeout: 30000,
+					solutionTimeout: 300000,
+					verifiedTimeout: 300000,
+					cachedTimeout: 300000,
+				},
+				pow: {
+					verifiedTimeout: 600000,
+					solutionTimeout: 600000,
+					cachedTimeout: 600000,
+				},
+				contract: {
+					maxVerifiedTime: 86400000,
+				},
 			};
 			const providerUrl = "http://provider.example.com";
 			const timestamp = Date.now() - 1000; // 1 second ago
@@ -244,8 +268,20 @@ describe("ProsopoServer", () => {
 			const server = new ProsopoServer(mockConfig, mockPair);
 			const token = "test-token";
 			const timeouts: CaptchaTimeoutOutput = {
-				image: { cachedTimeout: 300000 },
-				pow: { cachedTimeout: 600000 },
+				image: {
+					challengeTimeout: 30000,
+					solutionTimeout: 300000,
+					verifiedTimeout: 300000,
+					cachedTimeout: 300000,
+				},
+				pow: {
+					verifiedTimeout: 600000,
+					solutionTimeout: 600000,
+					cachedTimeout: 600000,
+				},
+				contract: {
+					maxVerifiedTime: 86400000,
+				},
 			};
 			const providerUrl = "http://provider.example.com";
 			const timestamp = Date.now() - 400000; // older than timeout
@@ -268,8 +304,20 @@ describe("ProsopoServer", () => {
 			const server = new ProsopoServer(mockConfig, mockPair);
 			const token = "test-token";
 			const timeouts: CaptchaTimeoutOutput = {
-				image: { cachedTimeout: 300000 },
-				pow: { cachedTimeout: 600000 },
+				image: {
+					challengeTimeout: 30000,
+					solutionTimeout: 300000,
+					verifiedTimeout: 300000,
+					cachedTimeout: 300000,
+				},
+				pow: {
+					verifiedTimeout: 600000,
+					solutionTimeout: 600000,
+					cachedTimeout: 600000,
+				},
+				contract: {
+					maxVerifiedTime: 86400000,
+				},
 			};
 			const providerUrl = "http://provider.example.com";
 			const timestamp = Date.now() - 700000; // older than timeout
@@ -294,8 +342,20 @@ describe("ProsopoServer", () => {
 			const server = new ProsopoServer(mockConfig, mockPair);
 			const token = "test-token";
 			const timeouts: CaptchaTimeoutOutput = {
-				image: { cachedTimeout: 300000 },
-				pow: { cachedTimeout: 600000 },
+				image: {
+					challengeTimeout: 30000,
+					solutionTimeout: 300000,
+					verifiedTimeout: 300000,
+					cachedTimeout: 300000,
+				},
+				pow: {
+					verifiedTimeout: 600000,
+					solutionTimeout: 600000,
+					cachedTimeout: 600000,
+				},
+				contract: {
+					maxVerifiedTime: 86400000,
+				},
 			};
 			const providerUrl = "http://provider.example.com";
 			const timestamp = 0;
@@ -317,8 +377,20 @@ describe("ProsopoServer", () => {
 			const server = new ProsopoServer(mockConfig, mockPair);
 			const token = "test-token";
 			const timeouts: CaptchaTimeoutOutput = {
-				image: { cachedTimeout: 300000 },
-				pow: { cachedTimeout: 600000 },
+				image: {
+					challengeTimeout: 30000,
+					solutionTimeout: 300000,
+					verifiedTimeout: 300000,
+					cachedTimeout: 300000,
+				},
+				pow: {
+					verifiedTimeout: 600000,
+					solutionTimeout: 600000,
+					cachedTimeout: 600000,
+				},
+				contract: {
+					maxVerifiedTime: 86400000,
+				},
 			};
 			const providerUrl = "http://provider.example.com";
 			const timestamp = 0;
@@ -342,8 +414,20 @@ describe("ProsopoServer", () => {
 			const server = new ProsopoServer(mockConfig); // no pair
 			const token = "test-token";
 			const timeouts: CaptchaTimeoutOutput = {
-				image: { cachedTimeout: 300000 },
-				pow: { cachedTimeout: 600000 },
+				image: {
+					challengeTimeout: 30000,
+					solutionTimeout: 300000,
+					verifiedTimeout: 300000,
+					cachedTimeout: 300000,
+				},
+				pow: {
+					verifiedTimeout: 600000,
+					solutionTimeout: 600000,
+					cachedTimeout: 600000,
+				},
+				contract: {
+					maxVerifiedTime: 86400000,
+				},
 			};
 			const providerUrl = "http://provider.example.com";
 			const timestamp = Date.now();
@@ -358,8 +442,20 @@ describe("ProsopoServer", () => {
 			const server = new ProsopoServer(mockConfig, mockPair);
 			const token = "test-token";
 			const timeouts: CaptchaTimeoutOutput = {
-				image: { cachedTimeout: 300000 },
-				pow: { cachedTimeout: 600000 },
+				image: {
+					challengeTimeout: 30000,
+					solutionTimeout: 300000,
+					verifiedTimeout: 300000,
+					cachedTimeout: 300000,
+				},
+				pow: {
+					verifiedTimeout: 600000,
+					solutionTimeout: 600000,
+					cachedTimeout: 600000,
+				},
+				contract: {
+					maxVerifiedTime: 86400000,
+				},
 			};
 			const providerUrl = "http://provider.example.com";
 			const timestamp = Date.now() - 1000;
