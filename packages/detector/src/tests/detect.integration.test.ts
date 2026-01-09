@@ -14,7 +14,7 @@
 
 import type { Account, RandomProvider } from "@prosopo/types";
 import { describe, expect, it, vi } from "vitest";
-import { detect } from "../index.ts";
+import { detect } from "../index.js";
 
 describe("detect integration tests", () => {
 	/**

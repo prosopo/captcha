@@ -34,9 +34,11 @@ if (typeof window !== "undefined") {
 
 // Mock HTMLCanvasElement.getContext for jsdom
 if (typeof HTMLCanvasElement !== "undefined") {
-	HTMLCanvasElement.prototype.getContext = function (
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	(HTMLCanvasElement.prototype as any).getContext = function (
 		contextId: string,
-		options?: CanvasRenderingContext2DSettings,
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		options?: any,
 	): RenderingContext | null {
 		if (contextId === "2d") {
 			// Return a minimal mock 2D context that satisfies the interface

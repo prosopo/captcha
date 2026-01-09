@@ -13,6 +13,7 @@
 // limitations under the License.
 
 // Import the default export from the obfuscated JavaScript file
+// @ts-expect-error - obfuscated code may not have proper TypeScript exports
 import detectDefault from "./index.js";
 
 // Re-export as a named export to match the TypeScript declaration
