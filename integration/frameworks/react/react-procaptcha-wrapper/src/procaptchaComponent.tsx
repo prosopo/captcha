@@ -26,7 +26,7 @@ import {
 } from "react";
 
 type ProcaptchaComponentProperties = ProcaptchaRenderOptions & {
-	htmlAttributes: DetailedHTMLProps<
+	htmlAttributes?: DetailedHTMLProps<
 		HTMLAttributes<HTMLDivElement>,
 		HTMLDivElement
 	>;

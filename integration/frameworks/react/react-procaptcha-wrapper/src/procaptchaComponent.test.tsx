@@ -135,7 +135,7 @@ describe("ProcaptchaComponent", () => {
 			expect(mockRenderProcaptcha).toHaveBeenCalledTimes(1);
 		});
 
-		const callArgs = mockRenderProcaptcha.mock.calls[0];
+		const callArgs = mockRenderProcaptcha.mock.calls[0]!;
 		expect(callArgs[1]).toMatchObject({
 			siteKey: "test-site-key",
 			theme: "dark",
@@ -165,7 +165,7 @@ describe("ProcaptchaComponent", () => {
 			expect(mockRenderProcaptcha).toHaveBeenCalledTimes(1);
 		});
 
-		const callArgs = mockRenderProcaptcha.mock.calls[0];
+		const callArgs = mockRenderProcaptcha.mock.calls[0]!;
 		expect(callArgs[1].callback).toBe(callback);
 		expect(callArgs[1]["expired-callback"]).toBe(callback);
 		expect(callArgs[1]["error-callback"]).toBe(callback);
@@ -187,7 +187,7 @@ describe("ProcaptchaComponent", () => {
 			expect(mockRenderProcaptcha).toHaveBeenCalledTimes(1);
 		});
 
-		const callArgs = mockRenderProcaptcha.mock.calls[0];
+		const callArgs = mockRenderProcaptcha.mock.calls[0]!;
 		expect(callArgs[1].callback).toBe("onSuccess");
 		expect(callArgs[1]["expired-callback"]).toBe("onExpired");
 	});
@@ -220,7 +220,7 @@ describe("ProcaptchaComponent", () => {
 			expect(mockRenderProcaptcha).toHaveBeenCalledTimes(2);
 		});
 
-		expect(mockRenderProcaptcha.mock.calls[1][1]).toMatchObject({
+		expect(mockRenderProcaptcha.mock.calls[1]![1]).toMatchObject({
 			siteKey: "updated-site-key",
 			theme: "dark",
 		});
@@ -255,7 +255,7 @@ describe("ProcaptchaComponent", () => {
 			expect(mockRenderProcaptcha).toHaveBeenCalledTimes(1);
 		});
 
-		const callArgs = mockRenderProcaptcha.mock.calls[0];
+		const callArgs = mockRenderProcaptcha.mock.calls[0]!;
 		expect(callArgs[1].siteKey).toBe("minimal-key");
 	});
 
@@ -288,7 +288,7 @@ describe("ProcaptchaComponent", () => {
 			expect(mockRenderProcaptcha).toHaveBeenCalledTimes(1);
 		});
 
-		const callArgs = mockRenderProcaptcha.mock.calls[0];
+		const callArgs = mockRenderProcaptcha.mock.calls[0]!;
 		expect(callArgs[1]).toMatchObject({
 			siteKey: "test-site-key",
 			theme: "light",

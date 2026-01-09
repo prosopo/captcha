@@ -37,7 +37,7 @@ describe("index exports", () => {
 	});
 
 	it("exports ProcaptchaLanguages type", () => {
-		expectTypeOf<ProcaptchaLanguages>().toMatchTypeOf<string>();
+		expectTypeOf<ProcaptchaLanguages>().toMatchTypeOf<string | undefined>();
 	});
 
 	it("ProcaptchaComponent accepts correct parameter types", () => {
