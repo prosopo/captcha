@@ -13,57 +13,74 @@
 // limitations under the License.
 
 import type { NextFunction, Request, Response } from "express";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { robotsMiddleware } from "../../../api/robotsMiddleware.js";
 
 describe("robotsMiddleware", () => {
-	it("sets security headers and calls next", () => {
-		const mockReq = {} as Request;
-		const mockRes = {
+	let mockReq: Request;
+	let mockRes: Response;
+	let mockNext: NextFunction;
+
+	beforeEach(() => {
+		vi.clearAllMocks();
+
+		mockReq = {} as Request;
+
+		mockRes = {
 			setHeader: vi.fn(),
 		} as unknown as Response;
-		const mockNext = vi.fn() as NextFunction;
 
+		mockNext = vi.fn() as NextFunction;
+	});
+
+	it("should return a middleware function", () => {
 		const middleware = robotsMiddleware();
-		middleware(mockReq, mockRes, mockNext);
 
-		expect(mockRes.setHeader).toHaveBeenCalledWith(
-			"Strict-Transport-Security",
-			"max-age=31536000;",
-		);
-		expect(mockRes.setHeader).toHaveBeenCalledWith(
-			"X-XSS-Protection",
-			"1; mode=block",
-		);
-		expect(mockRes.setHeader).toHaveBeenCalledWith(
-			"X-Frame-Options",
-			"DENY",
-		);
+		expect(middleware).toBeDefined();
+		expect(typeof middleware).toBe("function");
+	});
+
+	it("should set all required security headers", async () => {
+		const middleware = robotsMiddleware();
+
+		await middleware(mockReq, mockRes, mockNext);
+
+		expect(mockRes.setHeader).toHaveBeenCalledWith("Strict-Transport-Security", "max-age=31536000;");
+		expect(mockRes.setHeader).toHaveBeenCalledWith("X-XSS-Protection", "1; mode=block");
+		expect(mockRes.setHeader).toHaveBeenCalledWith("X-Frame-Options", "DENY");
 		expect(mockRes.setHeader).toHaveBeenCalledWith("X-Robots-Tag", "none");
+		expect(mockRes.setHeader).toHaveBeenCalledTimes(4);
+	});
+
+	it("should call next() to continue the middleware chain", async () => {
+		const middleware = robotsMiddleware();
+
+		await middleware(mockReq, mockRes, mockNext);
+
+		expect(mockNext).toHaveBeenCalledWith();
+		expect(mockNext).toHaveBeenCalledTimes(1);
+	});
+
+	it("should set headers in the correct order", async () => {
+		const middleware = robotsMiddleware();
+
+		await middleware(mockReq, mockRes, mockNext);
+
+		// Verify the order of header setting
+		expect(mockRes.setHeader).toHaveBeenNthCalledWith(1, "Strict-Transport-Security", "max-age=31536000;");
+		expect(mockRes.setHeader).toHaveBeenNthCalledWith(2, "X-XSS-Protection", "1; mode=block");
+		expect(mockRes.setHeader).toHaveBeenNthCalledWith(3, "X-Frame-Options", "DENY");
+		expect(mockRes.setHeader).toHaveBeenNthCalledWith(4, "X-Robots-Tag", "none");
+	});
+
+	it("should be synchronous and call next immediately", () => {
+		const middleware = robotsMiddleware();
+
+		// Test that the middleware is synchronous
+		const result = middleware(mockReq, mockRes, mockNext);
+
+		expect(result).toBeUndefined(); // Express middleware doesn't return anything
+
 		expect(mockNext).toHaveBeenCalled();
 	});
-
-	it("sets all required headers", () => {
-		const mockReq = {} as Request;
-		const setHeaderCalls: Array<[string, string]> = [];
-		const mockRes = {
-			setHeader: vi.fn((name: string, value: string) => {
-				setHeaderCalls.push([name, value]);
-			}),
-		} as unknown as Response;
-		const mockNext = vi.fn() as NextFunction;
-
-		const middleware = robotsMiddleware();
-		middleware(mockReq, mockRes, mockNext);
-
-		expect(setHeaderCalls).toHaveLength(4);
-		expect(setHeaderCalls).toContainEqual([
-			"Strict-Transport-Security",
-			"max-age=31536000;",
-		]);
-		expect(setHeaderCalls).toContainEqual(["X-XSS-Protection", "1; mode=block"]);
-		expect(setHeaderCalls).toContainEqual(["X-Frame-Options", "DENY"]);
-		expect(setHeaderCalls).toContainEqual(["X-Robots-Tag", "none"]);
-	});
 });
-
