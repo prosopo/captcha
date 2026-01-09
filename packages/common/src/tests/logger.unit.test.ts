@@ -154,11 +154,11 @@ describe("NativeLogger", () => {
 	let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
 
 	beforeEach(() => {
-		consoleInfoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
-		consoleDebugSpy = vi.spyOn(console, "debug").mockImplementation(() => {});
-		consoleTraceSpy = vi.spyOn(console, "trace").mockImplementation(() => {});
-		consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-		consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+		consoleInfoSpy = vi.spyOn(console, "info").mockImplementation(() => { });
+		consoleDebugSpy = vi.spyOn(console, "debug").mockImplementation(() => { });
+		consoleTraceSpy = vi.spyOn(console, "trace").mockImplementation(() => { });
+		consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
+		consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => { });
 	});
 
 	afterEach(() => {
