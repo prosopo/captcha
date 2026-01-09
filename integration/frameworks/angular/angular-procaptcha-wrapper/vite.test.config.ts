@@ -19,5 +19,17 @@ export default function () {
 	config.test = config.test || {};
 	config.test.environment = "jsdom";
 	config.test.globals = true;
+
+	// Ensure coverage is enabled with proper configuration
+	config.test.coverage = config.test.coverage || {};
+	config.test.coverage.enabled = true;
+	config.test.coverage.reporter = ["text", "json", "html"];
+	config.test.coverage.all = true;
+	config.test.coverage.include = ["src/**/*.ts"];
+
+	// Ensure type checking is enabled
+	config.test.typecheck = config.test.typecheck || {};
+	config.test.typecheck.enabled = true;
+
 	return config;
 }

@@ -73,11 +73,18 @@ describe("ProcaptchaComponent", () => {
 
 	describe("component initialization", () => {
 		it("should initialize with default htmlAttributes as empty object", () => {
+			// Testing that the component initializes with empty htmlAttributes by default
 			expect(component.htmlAttributes).toEqual({});
 		});
 
 		it("should have elementRef injected", () => {
+			// Testing that the ElementRef dependency injection works correctly
 			expect(component.elementRef).toBeDefined();
+		});
+
+		it("should have nativeElement available through elementRef", () => {
+			// Testing that the injected ElementRef provides access to the native DOM element
+			expect(component.elementRef.nativeElement).toBeInstanceOf(HTMLElement);
 		});
 	});
 
@@ -300,62 +307,135 @@ describe("ProcaptchaComponent", () => {
 			});
 		});
 
-		it("should update HTML attributes when htmlAttributes changes", async () => {
+		it("should call renderProcaptcha even when it rejects", async () => {
+			// Testing that renderProcaptcha is called even when it fails
 			const settings: ProcaptchaRenderOptions = {
 				siteKey: "test-site-key",
 			};
 			component.settings = settings;
-			component.htmlAttributes = {
-				id: "initial-id",
-			};
-			mockRenderProcaptcha.mockResolvedValue(undefined);
+			mockRenderProcaptcha.mockRejectedValue(new Error("Render failed"));
 
+			// The component doesn't handle errors, but should still attempt to render
 			component.ngOnInit();
 
 			await vi.waitFor(() => {
-				expect(mockNativeElement.setAttribute).toHaveBeenCalledWith(
-					"id",
-					"initial-id",
-				);
-			});
-
-			component.htmlAttributes = {
-				id: "updated-id",
-				class: "new-class",
-			};
-			vi.clearAllMocks();
-			mockRenderProcaptcha.mockResolvedValue(undefined);
-
-			component.ngOnChanges();
-
-			await vi.waitFor(() => {
-				expect(mockNativeElement.setAttribute).toHaveBeenCalledWith(
-					"id",
-					"updated-id",
-				);
-				expect(mockNativeElement.setAttribute).toHaveBeenCalledWith(
-					"class",
-					"new-class",
+				expect(mockRenderProcaptcha).toHaveBeenCalledWith(
+					mockNativeElement,
+					settings,
 				);
 			});
 		});
 	});
 
-	describe("type safety", () => {
-		it("should accept ProcaptchaRenderOptions type for settings", () => {
-			const settings: ProcaptchaRenderOptions = {
-				siteKey: "test-site-key",
-			};
-			component.settings = settings;
-			expect(component.settings).toBe(settings);
+	it("should update HTML attributes when htmlAttributes changes", async () => {
+		const settings: ProcaptchaRenderOptions = {
+			siteKey: "test-site-key",
+		};
+		component.settings = settings;
+		component.htmlAttributes = {
+			id: "initial-id",
+		};
+		mockRenderProcaptcha.mockResolvedValue(undefined);
+
+		component.ngOnInit();
+
+		await vi.waitFor(() => {
+			expect(mockNativeElement.setAttribute).toHaveBeenCalledWith(
+				"id",
+				"initial-id",
+			);
 		});
 
-		it("should accept object type for htmlAttributes", () => {
-			const htmlAttributes: { [key: string]: string } = {
-				id: "test",
-			};
-			component.htmlAttributes = htmlAttributes;
-			expect(component.htmlAttributes).toBe(htmlAttributes);
+		component.htmlAttributes = {
+			id: "updated-id",
+			class: "new-class",
+		};
+		vi.clearAllMocks();
+		mockRenderProcaptcha.mockResolvedValue(undefined);
+
+		component.ngOnChanges();
+
+		await vi.waitFor(() => {
+			expect(mockNativeElement.setAttribute).toHaveBeenCalledWith(
+				"id",
+				"updated-id",
+			);
+			expect(mockNativeElement.setAttribute).toHaveBeenCalledWith(
+				"class",
+				"new-class",
+			);
 		});
+	});
+});
+
+describe("type safety", () => {
+	let typeComponent: ProcaptchaComponent;
+
+	beforeEach(() => {
+		// Create a simple component instance for type testing
+		typeComponent = new ProcaptchaComponent();
+	});
+
+	it("should accept ProcaptchaRenderOptions type for settings", () => {
+		// Testing that the settings property accepts the correct ProcaptchaRenderOptions type
+		const settings: ProcaptchaRenderOptions = {
+			siteKey: "test-site-key",
+		};
+		typeComponent.settings = settings;
+		expect(typeComponent.settings).toBe(settings);
+	});
+
+	it("should accept object type for htmlAttributes", () => {
+		// Testing that htmlAttributes accepts the correct object type with string values
+		const htmlAttributes: { [key: string]: string } = {
+			id: "test",
+		};
+		typeComponent.htmlAttributes = htmlAttributes;
+		expect(typeComponent.htmlAttributes).toBe(htmlAttributes);
+	});
+
+	it("should accept all valid ProcaptchaRenderOptions properties", () => {
+		// Testing comprehensive type safety for all ProcaptchaRenderOptions properties
+		const settings: ProcaptchaRenderOptions = {
+			siteKey: "test-site-key",
+			theme: "dark",
+			captchaType: "frictionless",
+			callback: vi.fn(),
+			"challenge-valid-length": "300",
+			"chalexpired-callback": vi.fn(),
+			"expired-callback": vi.fn(),
+			"open-callback": vi.fn(),
+			"close-callback": vi.fn(),
+			"error-callback": vi.fn(),
+			"failed-callback": vi.fn(),
+			"reset-callback": vi.fn(),
+			language: "en",
+			size: "invisible",
+			web3: true,
+			userAccountAddress: "0x123...",
+		};
+		typeComponent.settings = settings;
+		expect(typeComponent.settings).toBe(settings);
+	});
+
+	it("should accept string callbacks in ProcaptchaRenderOptions", () => {
+		// Testing that callback properties can be strings (for global function references)
+		const settings: ProcaptchaRenderOptions = {
+			siteKey: "test-site-key",
+			callback: "window.myCallback",
+			"error-callback": "window.handleError",
+		};
+		typeComponent.settings = settings;
+		expect(typeComponent.settings.callback).toBe("window.myCallback");
+	});
+
+	it("should accept numeric strings for challenge-valid-length", () => {
+		// Testing that challenge-valid-length accepts string values representing numbers
+		const settings: ProcaptchaRenderOptions = {
+			siteKey: "test-site-key",
+			"challenge-valid-length": "600",
+		};
+		typeComponent.settings = settings;
+		expect(typeComponent.settings["challenge-valid-length"]).toBe("600");
 	});
 });
