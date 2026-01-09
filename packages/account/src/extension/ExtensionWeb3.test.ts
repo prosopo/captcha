@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -84,6 +84,7 @@ describe("ExtensionWeb3", () => {
 
 			vi.mocked(cryptoWaitReady).mockImplementation(async () => {
 				callOrder.push("cryptoWaitReady");
+				return void 0 as any;
 			});
 
 			vi.mocked(web3Enable).mockImplementation(async () => {
@@ -104,7 +105,7 @@ describe("ExtensionWeb3", () => {
 			const { web3Enable } = await import("@polkadot/extension-dapp");
 			const { cryptoWaitReady } = await import("@polkadot/util-crypto");
 
-			vi.mocked(cryptoWaitReady).mockResolvedValue(undefined);
+			vi.mocked(cryptoWaitReady).mockResolvedValue(void 0 as any);
 			vi.mocked(web3Enable).mockResolvedValue([]);
 
 			await expect(extensionWeb3.getAccount(mockConfig)).rejects.toThrow(
@@ -135,7 +136,7 @@ describe("ExtensionWeb3", () => {
 				},
 			};
 
-			vi.mocked(cryptoWaitReady).mockResolvedValue(undefined);
+			vi.mocked(cryptoWaitReady).mockResolvedValue(void 0 as any);
 			// biome-ignore lint/suspicious/noExplicitAny: Mock object for testing
 			vi.mocked(web3Enable).mockResolvedValue([mockExtension] as any);
 
@@ -181,7 +182,7 @@ describe("ExtensionWeb3", () => {
 				},
 			};
 
-			vi.mocked(cryptoWaitReady).mockResolvedValue(undefined);
+			vi.mocked(cryptoWaitReady).mockResolvedValue(void 0 as any);
 			vi.mocked(web3Enable).mockResolvedValue([
 				mockExtension1,
 				mockExtension2,
@@ -230,7 +231,7 @@ describe("ExtensionWeb3", () => {
 				},
 			};
 
-			vi.mocked(cryptoWaitReady).mockResolvedValue(undefined);
+			vi.mocked(cryptoWaitReady).mockResolvedValue(void 0 as any);
 			// biome-ignore lint/suspicious/noExplicitAny: Mock object for testing
 			vi.mocked(web3Enable).mockResolvedValue([mockExtension] as any);
 
@@ -271,7 +272,7 @@ describe("ExtensionWeb3", () => {
 				},
 			};
 
-			vi.mocked(cryptoWaitReady).mockResolvedValue(undefined);
+			vi.mocked(cryptoWaitReady).mockResolvedValue(void 0 as any);
 			vi.mocked(web3Enable).mockResolvedValue([
 				mockExtension1,
 				mockExtension2,
@@ -304,7 +305,7 @@ describe("ExtensionWeb3", () => {
 				},
 			};
 
-			vi.mocked(cryptoWaitReady).mockResolvedValue(undefined);
+			vi.mocked(cryptoWaitReady).mockResolvedValue(void 0 as any);
 			// biome-ignore lint/suspicious/noExplicitAny: Mock object for testing
 			vi.mocked(web3Enable).mockResolvedValue([mockExtension] as any);
 
@@ -338,7 +339,7 @@ describe("ExtensionWeb3", () => {
 				},
 			};
 
-			vi.mocked(cryptoWaitReady).mockResolvedValue(undefined);
+			vi.mocked(cryptoWaitReady).mockResolvedValue(void 0 as any);
 			// biome-ignore lint/suspicious/noExplicitAny: Mock object for testing
 			vi.mocked(web3Enable).mockResolvedValue([mockExtension] as any);
 
@@ -374,7 +375,7 @@ describe("ExtensionWeb3", () => {
 				},
 			};
 
-			vi.mocked(cryptoWaitReady).mockResolvedValue(undefined);
+			vi.mocked(cryptoWaitReady).mockResolvedValue(void 0 as any);
 			vi.mocked(web3Enable).mockResolvedValue([
 				mockExtension1,
 				mockExtension2,
@@ -419,7 +420,7 @@ describe("ExtensionWeb3", () => {
 				},
 			};
 
-			vi.mocked(cryptoWaitReady).mockResolvedValue(undefined);
+			vi.mocked(cryptoWaitReady).mockResolvedValue(void 0 as any);
 			vi.mocked(web3Enable).mockResolvedValue([
 				mockExtension1,
 				mockExtension2,
@@ -437,7 +438,7 @@ describe("ExtensionWeb3", () => {
 			const { web3Enable } = await import("@polkadot/extension-dapp");
 			const { cryptoWaitReady } = await import("@polkadot/util-crypto");
 
-			vi.mocked(cryptoWaitReady).mockResolvedValue(undefined);
+			vi.mocked(cryptoWaitReady).mockResolvedValue(void 0 as any);
 			vi.mocked(web3Enable).mockRejectedValue(new Error("Extension error"));
 
 			await expect(extensionWeb3.getAccount(mockConfig)).rejects.toThrow(
@@ -467,7 +468,7 @@ describe("ExtensionWeb3", () => {
 				},
 			};
 
-			vi.mocked(cryptoWaitReady).mockResolvedValue(undefined);
+			vi.mocked(cryptoWaitReady).mockResolvedValue(void 0 as any);
 			// biome-ignore lint/suspicious/noExplicitAny: Mock object for testing
 			vi.mocked(web3Enable).mockResolvedValue([mockExtension] as any);
 
