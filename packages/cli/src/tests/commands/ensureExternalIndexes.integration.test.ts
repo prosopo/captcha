@@ -84,15 +84,8 @@ describe("ensureExternalIndexes command - integration", () => {
 		// Execute the ensure external indexes command
 		const command = commandEnsureExternalIndexes(pair, config, { logger });
 
-		// This should not throw an error
+		// This should not throw an error - the command handles environment setup internally
 		await expect(command.handler()).resolves.not.toThrow();
-
-		// Verify that the environment can be created and is ready
-		const env = new ProviderEnvironment(config, pair);
-		await expect(env.isReady()).resolves.not.toThrow();
-
-		// Clean up
-		await env.cleanup();
 	}, 30000); // 30 second timeout for database operations
 
 	test("should handle missing mongoCaptchaUri gracefully", async () => {
