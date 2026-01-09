@@ -17,4 +17,3 @@ import detectDefault from "./index.js";
 
 // Re-export as a named export to match the TypeScript declaration
 export const detect = detectDefault;
-

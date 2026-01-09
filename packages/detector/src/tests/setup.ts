@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { TextDecoder, TextEncoder } from "util";
+import { TextDecoder, TextEncoder } from "node:util";
 
 // Ensure TextDecoder and TextEncoder are available globally for the obfuscated code
 // The obfuscated code may reference these in various ways, so we set them on multiple globals
@@ -28,19 +28,25 @@ if (typeof globalThis.TextEncoder === "undefined") {
 
 // Also ensure they're available on window if it exists
 if (typeof window !== "undefined") {
-	(window as any).TextDecoder = textDecoder;
-	(window as any).TextEncoder = textEncoder;
+	(window as unknown as Record<string, unknown>).TextDecoder = textDecoder;
+	(window as unknown as Record<string, unknown>).TextEncoder = textEncoder;
 }
 
 // Mock HTMLCanvasElement.getContext for jsdom
 if (typeof HTMLCanvasElement !== "undefined") {
 	HTMLCanvasElement.prototype.getContext = function (
 		contextId: string,
-		...args: unknown[]
-	) {
+		options?: any
+	): RenderingContext | null {
 		if (contextId === "2d") {
-			// Return a minimal mock 2D context
-			return {
+			// Return a minimal mock 2D context that satisfies the interface
+			const mockContext = {
+				// CanvasRenderingContext2D properties
+				canvas: this,
+				getContextAttributes: () => ({}),
+				globalAlpha: 1,
+				globalCompositeOperation: "source-over",
+				drawImage: () => {},
 				getParameter: (param: string) => {
 					if (param === "VENDOR") return "Mock Vendor";
 					if (param === "RENDERER") return "Mock Renderer";
@@ -48,10 +54,10 @@ if (typeof HTMLCanvasElement !== "undefined") {
 				},
 				VENDOR: "Mock Vendor",
 				RENDERER: "Mock Renderer",
-			} as CanvasRenderingContext2D;
+			};
+			return mockContext as unknown as CanvasRenderingContext2D;
 		}
 		// For other context types, return null
 		return null;
 	};
 }
-

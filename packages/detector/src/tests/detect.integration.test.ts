@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,18 +29,10 @@ describe("detect integration tests", () => {
 		};
 
 		const mockProvider: RandomProvider = {
+			providerAccount: "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
 			provider: {
 				url: "http://localhost:9229",
-				fee: 1000,
-				payee: "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
-				address: "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
 				datasetId: "0x1234567890abcdef",
-				serviceOrigin: "http://localhost:9229",
-			},
-			dataset: {
-				datasetId: "0x1234567890abcdef",
-				datasetIdContent: "0x1234567890abcdef",
-				format: "SelectAll",
 			},
 		};
 
@@ -80,7 +72,7 @@ describe("detect integration tests", () => {
 	it("should handle missing or invalid parameters gracefully", async () => {
 		// Test with undefined environment
 		const result1 = await detect(
-			undefined as any,
+			undefined as unknown as Record<string, unknown>,
 			vi.fn(),
 			document.createElement("div"),
 			vi.fn(),
@@ -91,7 +83,7 @@ describe("detect integration tests", () => {
 		const result2 = await detect(
 			{},
 			vi.fn(),
-			null as any,
+			null as unknown as HTMLElement,
 			vi.fn(),
 			vi.fn(),
 		);
@@ -99,7 +91,7 @@ describe("detect integration tests", () => {
 		// Test with invalid getRandomProvider function
 		const result3 = await detect(
 			{},
-			null as any,
+			null as unknown as () => Promise<unknown>,
 			document.createElement("div"),
 			vi.fn(),
 			vi.fn(),
@@ -189,18 +181,10 @@ describe("detect integration tests", () => {
 	it("should return correctly typed result structure", async () => {
 		const mockEnvironment = { API_URL: "http://localhost:9229" };
 		const mockProvider: RandomProvider = {
+			providerAccount: "test-provider-account",
 			provider: {
 				url: "http://localhost:9229",
-				fee: 1000,
-				payee: "test-payee",
-				address: "test-address",
 				datasetId: "test-dataset-id",
-				serviceOrigin: "http://localhost:9229",
-			},
-			dataset: {
-				datasetId: "test-dataset-id",
-				datasetIdContent: "test-dataset-content",
-				format: "SelectAll",
 			},
 		};
 
