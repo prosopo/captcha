@@ -117,6 +117,16 @@ describe("MongoDatabase", () => {
 		it("should throw ProsopoDBError when connection is undefined", () => {
 			db = new MongoDatabase("mongodb://localhost:27017");
 			expect(() => db.getConnection()).toThrow(ProsopoDBError);
+			expect(() => db.getConnection()).toThrow("DATABASE.CONNECTION_UNDEFINED");
+		});
+
+		it("should return the same connection instance consistently", () => {
+			db = new MongoDatabase("mongodb://localhost:27017");
+			db.connection = mockConnection;
+			const conn1 = db.getConnection();
+			const conn2 = db.getConnection();
+			expect(conn1).toBe(conn2);
+			expect(conn1).toBe(mockConnection);
 		});
 	});
 
@@ -207,6 +217,56 @@ describe("MongoDatabase", () => {
 
 			await expect(connectPromise).rejects.toThrow("Connection failed");
 			expect(db.connected).toBe(false);
+		});
+
+		it("should handle multiple concurrent connection attempts with error", async () => {
+			db = new MongoDatabase("mongodb://localhost:27017");
+			const error = new Error("Connection failed");
+			let errorCallback: (err: Error) => void;
+			(mockConnection.once as ReturnType<typeof vi.fn>).mockImplementation(
+				(event: string, callback: (err?: Error) => void) => {
+					if (event === "error") {
+						errorCallback = callback as (err: Error) => void;
+					}
+				},
+			);
+
+			const connect1 = db.connect();
+			const connect2 = db.connect();
+			const connect3 = db.connect();
+
+			setTimeout(() => {
+				if (errorCallback!) {
+					errorCallback(error);
+				}
+			}, 10);
+
+			await expect(connect1).rejects.toThrow("Connection failed");
+			await expect(connect2).rejects.toThrow("Connection failed");
+			await expect(connect3).rejects.toThrow("Connection failed");
+			expect(db.connected).toBe(false);
+		});
+
+		it("should handle connection timeouts gracefully", async () => {
+			db = new MongoDatabase("mongodb://timeout-host:27017");
+			const error = new Error("Connection timeout");
+			let errorCallback: (err: Error) => void;
+			(mockConnection.once as ReturnType<typeof vi.fn>).mockImplementation(
+				(event: string, callback: (err?: Error) => void) => {
+					if (event === "error") {
+						errorCallback = callback as (err: Error) => void;
+					}
+				},
+			);
+
+			const connectPromise = db.connect();
+			setTimeout(() => {
+				if (errorCallback!) {
+					errorCallback(error);
+				}
+			}, 10);
+
+			await expect(connectPromise).rejects.toThrow("Connection timeout");
 		});
 
 		it("should set up disconnected event handler", async () => {
@@ -354,6 +414,24 @@ describe("MongoDatabase", () => {
 		it("should handle close when connection is undefined", async () => {
 			db = new MongoDatabase("mongodb://localhost:27017");
 			await expect(db.close()).resolves.not.toThrow();
+		});
+
+		it("should handle connection close errors gracefully", async () => {
+			db = new MongoDatabase("mongodb://localhost:27017");
+			db.connection = mockConnection;
+			const error = new Error("Close failed");
+			mockConnection.close = vi.fn().mockRejectedValue(error);
+
+			await expect(db.close()).resolves.not.toThrow();
+		});
+
+		it("should reset connection state after close", async () => {
+			db = new MongoDatabase("mongodb://localhost:27017");
+			db.connection = mockConnection;
+			db.connected = true;
+
+			await db.close();
+			expect(db.connected).toBe(false);
 		});
 	});
 

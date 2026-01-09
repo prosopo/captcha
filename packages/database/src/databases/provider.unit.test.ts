@@ -424,6 +424,23 @@ describe("ProviderDatabase", () => {
 				db.getRandomCaptcha(true, datasetId, 1),
 			).rejects.toThrow(ProsopoDBError);
 		});
+
+		it("should return empty array when requesting zero captchas", async () => {
+			const datasetId = "0x1234" as Hash;
+			const result = await db.getRandomCaptcha(true, datasetId, 0);
+			expect(result).toEqual([]);
+		});
+
+		it("should handle large size requests", async () => {
+			const datasetId = "0x1234" as Hash;
+			const docs = [{ captchaId: "captcha1" }];
+
+			mockModels.captcha.aggregate = vi.fn().mockResolvedValue(docs);
+
+			const result = await db.getRandomCaptcha(true, datasetId, 100);
+			expect(result).toHaveLength(1);
+			expect(mockModels.captcha.aggregate).toHaveBeenCalled();
+		});
 	});
 
 	describe("getCaptchaById", () => {
@@ -444,6 +461,20 @@ describe("ProviderDatabase", () => {
 			expect(result![0]).not.toHaveProperty("_id");
 		});
 
+		it("should return single captcha when one ID provided", async () => {
+			const captchaIds = ["captcha1"];
+			const docs = [{ _id: "id1", captchaId: "captcha1" }];
+
+			mockModels.captcha.find = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue(docs),
+			});
+
+			const result = await db.getCaptchaById(captchaIds);
+
+			expect(result).toHaveLength(1);
+			expect(result![0].captchaId).toBe("captcha1");
+		});
+
 		it("should throw error when no captcha found", async () => {
 			const captchaIds = ["captcha1"];
 			mockModels.captcha.find = vi.fn().mockReturnValue({
@@ -453,6 +484,16 @@ describe("ProviderDatabase", () => {
 			await expect(db.getCaptchaById(captchaIds)).rejects.toThrow(
 				ProsopoDBError,
 			);
+			await expect(db.getCaptchaById(captchaIds)).rejects.toThrow("DATABASE.CAPTCHA_GET_FAILED");
+		});
+
+		it("should handle empty captcha IDs array", async () => {
+			const captchaIds: string[] = [];
+			mockModels.captcha.find = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue([]),
+			});
+
+			await expect(db.getCaptchaById(captchaIds)).rejects.toThrow(ProsopoDBError);
 		});
 	});
 
@@ -884,6 +925,27 @@ describe("ProviderDatabase", () => {
 				ProsopoDBError,
 			);
 		});
+
+		it("should update captcha with additional fields", async () => {
+			const captcha: Captcha = {
+				captchaId: "captcha1",
+				captchaContentId: "content1",
+				solved: true,
+			} as Captcha;
+			const datasetId = "0x1234" as Hash;
+
+			await db.updateCaptcha(captcha, datasetId);
+
+			expect(mockModels.captcha.updateOne).toHaveBeenCalledWith(
+				{ captchaId: "captcha1", datasetId },
+				expect.objectContaining({
+					captchaId: "captcha1",
+					captchaContentId: "content1",
+					solved: true,
+				}),
+				{ upsert: false },
+			);
+		});
 	});
 
 	describe("removeCaptchas", () => {
@@ -895,6 +957,34 @@ describe("ProviderDatabase", () => {
 			expect(mockModels.captcha.deleteMany).toHaveBeenCalledWith({
 				captchaId: { $in: captchaIds },
 			});
+		});
+
+		it("should handle single captcha removal", async () => {
+			const captchaIds = ["captcha1"];
+
+			await db.removeCaptchas(captchaIds);
+
+			expect(mockModels.captcha.deleteMany).toHaveBeenCalledWith({
+				captchaId: { $in: captchaIds },
+			});
+		});
+
+		it("should handle empty array", async () => {
+			const captchaIds: string[] = [];
+
+			await db.removeCaptchas(captchaIds);
+
+			expect(mockModels.captcha.deleteMany).toHaveBeenCalledWith({
+				captchaId: { $in: [] },
+			});
+		});
+
+		it("should handle errors during removal", async () => {
+			const captchaIds = ["captcha1"];
+			const error = new Error("Delete failed");
+			mockModels.captcha.deleteMany = vi.fn().mockRejectedValue(error);
+
+			await expect(db.removeCaptchas(captchaIds)).rejects.toThrow(ProsopoDBError);
 		});
 	});
 
