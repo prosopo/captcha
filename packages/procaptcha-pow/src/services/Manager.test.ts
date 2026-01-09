@@ -162,6 +162,8 @@ describe("Manager", () => {
 
     describe("resetState", () => {
         it("should reset state to default values", () => {
+            // Test that resetState properly clears all state properties to their initial values
+            // This ensures the captcha can be restarted cleanly after errors or completion
             mockState.isHuman = true;
             mockState.loading = true;
             mockState.showModal = true;
@@ -186,6 +188,8 @@ describe("Manager", () => {
         });
 
         it("should call onReset callback", () => {
+            // Test that the onReset callback is invoked when state is reset
+            // This allows UI components to react to captcha resets
             const manager = Manager(
                 mockConfig,
                 mockState,
@@ -199,6 +203,8 @@ describe("Manager", () => {
         });
 
         it("should call frictionless restart if provided when onFailed is called", () => {
+            // Test that frictionless restart function is called during reset
+            // This handles the special case where frictionless state needs to be restarted
             const mockRestart = vi.fn();
             const frictionlessState: FrictionlessState = {
                 provider: {
@@ -229,6 +235,8 @@ describe("Manager", () => {
         });
 
         it("should clear timeout if set", () => {
+            // Test that active timeouts are properly cleared during reset
+            // This prevents memory leaks and ensures clean state transitions
             const mockTimeout = setTimeout(() => { }, 1000);
             mockState.timeout = mockTimeout;
             window.clearTimeout = vi.fn();
@@ -246,6 +254,8 @@ describe("Manager", () => {
         });
 
         it("should clear successful challenge timeout if set", () => {
+            // Test that successful challenge timeouts are cleared during reset
+            // This ensures expired challenges don't trigger callbacks after reset
             const mockTimeout = setTimeout(() => { }, 1000);
             mockState.successfullChallengeTimeout = mockTimeout;
             window.clearTimeout = vi.fn();
@@ -265,6 +275,8 @@ describe("Manager", () => {
 
     describe("start", () => {
         it("should return early if already loading", async () => {
+            // Test that start() prevents concurrent execution when already in progress
+            // This prevents multiple simultaneous captcha attempts and race conditions
             mockState.loading = true;
 
             const manager = Manager(
@@ -280,6 +292,8 @@ describe("Manager", () => {
         });
 
         it("should return early if already human", async () => {
+            // Test that start() exits early if user is already verified
+            // This prevents unnecessary API calls and improves performance
             mockState.isHuman = true;
 
             const manager = Manager(
@@ -295,6 +309,8 @@ describe("Manager", () => {
         });
 
         it("should throw error if account not found in web3 mode", async () => {
+            // Test error handling when user account is missing in web3 mode
+            // This ensures proper validation before attempting captcha verification
             mockConfig.web2 = false;
             mockConfig.userAccountAddress = undefined;
 
@@ -319,6 +335,8 @@ describe("Manager", () => {
         });
 
         it("should use frictionless provider if provided", async () => {
+            // Test that frictionless state takes precedence over random provider selection
+            // This ensures seamless integration with frictionless captcha flow
             const frictionlessState: FrictionlessState = {
                 provider: {
                     provider: {
@@ -379,6 +397,8 @@ describe("Manager", () => {
         });
 
         it("should handle challenge error", async () => {
+            // Test error handling when provider API returns an error in challenge response
+            // This ensures proper error propagation and state management
             const { ExtensionLoader } = await import("@prosopo/procaptcha-common");
             vi.mocked(ExtensionLoader).mockReturnValue(
                 class MockExtension {
@@ -422,6 +442,8 @@ describe("Manager", () => {
         });
 
         it("should handle challenge error without key", async () => {
+            // Test error handling when challenge error lacks a specific error key
+            // This ensures fallback error handling works correctly
             const { ExtensionLoader } = await import("@prosopo/procaptcha-common");
             vi.mocked(ExtensionLoader).mockReturnValue(
                 class MockExtension {
@@ -460,6 +482,8 @@ describe("Manager", () => {
         });
 
         it("should throw error if signer not found", async () => {
+            // Test validation that signer extension is available for signing operations
+            // This ensures cryptographic operations can be performed
             const { ExtensionLoader } = await import("@prosopo/procaptcha-common");
             vi.mocked(ExtensionLoader).mockReturnValue(
                 class MockExtension {
@@ -496,6 +520,8 @@ describe("Manager", () => {
         });
 
         it("should throw error if signRaw not available", async () => {
+            // Test validation that signRaw method is available on the signer
+            // This ensures the signing interface is properly implemented
             const { ExtensionLoader } = await import("@prosopo/procaptcha-common");
             vi.mocked(ExtensionLoader).mockReturnValue(
                 class MockExtension {
@@ -533,6 +559,8 @@ describe("Manager", () => {
         });
 
         it("should successfully complete captcha flow", async () => {
+            // Test the complete happy path of captcha verification
+            // This ensures all steps work together: challenge -> solve -> verify -> callback
             const { ExtensionLoader } = await import("@prosopo/procaptcha-common");
             const mockSigner = {
                 signRaw: vi.fn().mockResolvedValue({
@@ -588,6 +616,8 @@ describe("Manager", () => {
         });
 
         it("should call onFailed when verification fails", async () => {
+            // Test that failed verification triggers the onFailed callback
+            // This ensures proper error handling and user feedback
             const { ExtensionLoader } = await import("@prosopo/procaptcha-common");
             const mockSigner = {
                 signRaw: vi.fn().mockResolvedValue({
@@ -641,6 +671,8 @@ describe("Manager", () => {
         });
 
         it("should create salt with coordinates when provided", async () => {
+            // Test that mouse/touch coordinates are embedded in the salt for additional entropy
+            // This enhances security by making solutions location-specific
             const { ExtensionLoader } = await import("@prosopo/procaptcha-common");
             const mockSigner = {
                 signRaw: vi.fn().mockResolvedValue({
@@ -706,6 +738,8 @@ describe("Manager", () => {
         });
 
         it("should not create salt when coordinates not provided", async () => {
+            // Test that default coordinates (0,0) are used when no user interaction coordinates are available
+            // This ensures the PoW still works even without coordinate data
             const { ExtensionLoader } = await import("@prosopo/procaptcha-common");
             const mockSigner = {
                 signRaw: vi.fn().mockResolvedValue({
@@ -766,6 +800,8 @@ describe("Manager", () => {
         });
 
         it("should increment attemptCount on start", async () => {
+            // Test that each captcha attempt is tracked for analytics and retry logic
+            // This helps monitor user engagement and potential abuse patterns
             mockState.attemptCount = 5;
 
             const { ExtensionLoader } = await import("@prosopo/procaptcha-common");
@@ -820,6 +856,8 @@ describe("Manager", () => {
         });
 
         it("should set valid challenge timeout on successful verification", async () => {
+            // Test that successful verification sets up a timeout to expire the human status
+            // This ensures users must re-verify after the configured time period
             const { ExtensionLoader } = await import("@prosopo/procaptcha-common");
             const mockSigner = {
                 signRaw: vi.fn().mockResolvedValue({
@@ -879,6 +917,8 @@ describe("Manager", () => {
         });
 
         it("should use account from state if available", async () => {
+            // Test that account from state takes precedence over config account
+            // This prevents account switching mid-captcha and ensures consistency
             mockState.account = {
                 account: { address: "stateAccount123" },
             };
@@ -939,6 +979,8 @@ describe("Manager", () => {
         });
 
         it("should throw error if dappAccount not found", async () => {
+            // Test validation that dapp account is configured before starting captcha
+            // This ensures the captcha is properly associated with the requesting application
             mockState.dappAccount = undefined;
 
             const { ExtensionLoader } = await import("@prosopo/procaptcha-common");
@@ -985,6 +1027,8 @@ describe("Manager", () => {
         });
 
         it("should throw error if account not found in state when calling getAccount", async () => {
+            // Test validation that account exists in state when needed for API calls
+            // This ensures account data is available when required for verification
             mockState.account = undefined;
             mockState.dappAccount = "dappAccount123";
 

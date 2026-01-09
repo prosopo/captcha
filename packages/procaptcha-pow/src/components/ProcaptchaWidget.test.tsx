@@ -136,12 +136,16 @@ describe("ProcaptchaWidget", () => {
 	});
 
 	it("should render Checkbox component in normal mode", () => {
+		// Test that the widget renders the checkbox UI in normal (visible) mode
+		// This ensures the main user interaction element is displayed correctly
 		render(<ProcaptchaWidget {...mockProps} />);
 		const checkbox = screen.getByTestId("checkbox");
 		expect(checkbox).toBeTruthy();
 	});
 
 	it("should return null in invisible mode", () => {
+		// Test that invisible mode renders no UI elements
+		// This ensures programmatic-only captcha operation works correctly
 		const propsInvisible = {
 			...mockProps,
 			config: {
@@ -154,6 +158,8 @@ describe("ProcaptchaWidget", () => {
 	});
 
 	it("should set up event listener for invisible mode", () => {
+		// Test that invisible mode sets up the procaptcha:execute event listener
+		// This enables programmatic triggering of captcha verification
 		const addEventListenerSpy = vi.spyOn(document, "addEventListener");
 		const propsInvisible = {
 			...mockProps,
@@ -189,6 +195,8 @@ describe("ProcaptchaWidget", () => {
 	});
 
 	it("should clean up event listener on unmount in invisible mode", () => {
+		// Test that event listeners are properly removed on component unmount
+		// This prevents memory leaks and ensures clean component lifecycle
 		const removeEventListenerSpy = vi.spyOn(document, "removeEventListener");
 		const propsInvisible = {
 			...mockProps,
@@ -209,7 +217,8 @@ describe("ProcaptchaWidget", () => {
 	});
 
 	it("should handle errors from manager.start in invisible mode", async () => {
-		// Test that async errors from manager.start are caught and logged
+		// Test that async errors from manager.start are caught and logged to console
+		// This ensures error visibility in invisible mode where UI feedback isn't available
 		const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 		const testError = new Error("Test manager error");
 
@@ -237,6 +246,8 @@ describe("ProcaptchaWidget", () => {
 	});
 
 	it("should call manager.start with coordinates on checkbox click", async () => {
+		// Test that checkbox clicks trigger captcha verification with mouse coordinates
+		// This ensures user interaction coordinates are captured for security
 		const user = userEvent.setup();
 		render(<ProcaptchaWidget {...mockProps} />);
 
@@ -249,6 +260,8 @@ describe("ProcaptchaWidget", () => {
 	});
 
 	it("should capture mouse coordinates from click event", async () => {
+		// Test that mouse coordinates are extracted from trusted click events
+		// This ensures coordinate data is properly passed to the manager
 		render(<ProcaptchaWidget {...mockProps} />);
 
 		const checkbox = screen.getByTestId("checkbox");
@@ -273,6 +286,8 @@ describe("ProcaptchaWidget", () => {
 	});
 
 	it("should capture touch coordinates from touch event", async () => {
+		// Test that touch coordinates are extracted from trusted touch events
+		// This ensures mobile touch interactions are properly handled
 		render(<ProcaptchaWidget {...mockProps} />);
 
 		const checkbox = screen.getByTestId("checkbox");
@@ -300,6 +315,8 @@ describe("ProcaptchaWidget", () => {
 	});
 
 	it("should not capture coordinates from non-trusted events", async () => {
+		// Test that coordinates are only captured from trusted DOM events
+		// This prevents spoofed coordinates from compromising security
 		render(<ProcaptchaWidget {...mockProps} />);
 
 		const checkbox = screen.getByTestId("checkbox");
@@ -323,6 +340,8 @@ describe("ProcaptchaWidget", () => {
 	});
 
 	it("should not call manager.start if already loading", async () => {
+		// Test that rapid clicks don't trigger multiple concurrent verifications
+		// This prevents race conditions and duplicate API calls
 		const user = userEvent.setup();
 		render(<ProcaptchaWidget {...mockProps} />);
 
@@ -376,6 +395,8 @@ describe("ProcaptchaWidget", () => {
 	});
 
 	it("should change language when config.language changes", async () => {
+		// Test that language configuration changes trigger i18n updates
+		// This ensures the widget responds to language configuration changes
 		const mockChangeLanguage = vi.fn(() => Promise.resolve({}));
 		const propsWithI18n = {
 			...mockProps,
@@ -415,6 +436,8 @@ describe("ProcaptchaWidget", () => {
 	});
 
 	it("should call frictionlessState.restart on NO_SESSION_FOUND error", async () => {
+		// Test that NO_SESSION_FOUND errors trigger frictionless state restart
+		// This ensures seamless recovery in frictionless captcha flows
 		const mockRestart = vi.fn();
 		const frictionlessState = {
 			provider: {
@@ -503,6 +526,8 @@ describe("ProcaptchaWidget", () => {
 	});
 
 	it("should use dark theme when config.theme is dark", () => {
+		// Test that dark theme is applied when configured
+		// This ensures the widget adapts to dark mode applications
 		const propsDark = {
 			...mockProps,
 			config: {
@@ -531,6 +556,8 @@ describe("ProcaptchaWidget", () => {
 	});
 
 	it("should display empty string when translation not ready", async () => {
+		// Test that empty text is shown when translations are not ready
+		// This prevents displaying untranslated keys to users
 		const { useTranslation } = await import("@prosopo/locale");
 		vi.mocked(useTranslation).mockReturnValue({
 			t: vi.fn((key: string) => key),
