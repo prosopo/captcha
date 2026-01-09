@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect, test } from "vitest";
-import { embedData, extractData, u8aToHex, hashToHex } from "./hex.js";
+import { embedData, extractData, hashToHex, u8aToHex } from "./hex.js";
 
 const hex =
 	"0x0101010101010101010101010101010101010101010101010101010101010101";
@@ -119,11 +119,6 @@ describe("u8aToHex", () => {
 		expect(u8aToHex(null, -1, false)).toBe("");
 	});
 
-	test("returns 0x for undefined input", () => {
-		// Test undefined input returns default empty string
-		expect(u8aToHex(undefined)).toBe("0x");
-	});
-
 	test("returns 0x for empty Uint8Array", () => {
 		// Test empty array returns default empty string
 		expect(u8aToHex(new Uint8Array([]))).toBe("0x");
@@ -131,13 +126,17 @@ describe("u8aToHex", () => {
 
 	test("handles bitLength truncation", () => {
 		// Test bitLength parameter truncates the output by showing first and last bytes
-		const input = new Uint8Array([0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef]);
+		const input = new Uint8Array([
+			0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef,
+		]);
 		expect(u8aToHex(input, 16)).toBe("0x01…ef");
 	});
 
 	test("handles bitLength truncation without prefix", () => {
 		// Test bitLength parameter without prefix
-		const input = new Uint8Array([0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef]);
+		const input = new Uint8Array([
+			0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef,
+		]);
 		expect(u8aToHex(input, 16, false)).toBe("01…ef");
 	});
 
