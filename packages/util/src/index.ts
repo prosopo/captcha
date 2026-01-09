@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 export * from "./util.js";
-export * from "./ofLen.js";
 export * from "./lodash.js";
 export * from "./isMain.js";
 export * from "./solverService.js";
