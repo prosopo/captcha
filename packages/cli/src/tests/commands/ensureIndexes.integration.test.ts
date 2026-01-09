@@ -14,11 +14,15 @@
 
 import { LogLevel, getLogger } from "@prosopo/common";
 import { ProviderEnvironment } from "@prosopo/env";
-import { getPair } from "@prosopo/keyring";
-import type { KeyringPair, ProsopoConfigOutput } from "@prosopo/types";
-import { describe, expect, test, beforeAll, afterAll } from "vitest";
+import { generateMnemonic, getPair } from "@prosopo/keyring";
+import type { ProsopoConfigOutput } from "@prosopo/types";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import commandEnsureIndexes from "../../commands/ensureIndexes.js";
-import { TestContainers, setupTestContainers, teardownTestContainers } from "../testcontainers.js";
+import {
+	TestContainers,
+	setupTestContainers,
+	teardownTestContainers,
+} from "../testcontainers.js";
 
 /**
  * Integration test for ensureIndexes command using real MongoDB container
@@ -39,16 +43,20 @@ describe("ensureIndexes command - integration", () => {
 	}, 30000);
 
 	test("should successfully create database indexes", async () => {
+		// Generate proper mnemonics for key pairs
+		const [providerMnemonic, providerAddress] = await generateMnemonic();
+		const [authMnemonic, authAddress] = await generateMnemonic();
+
 		// Create test configuration with real MongoDB URI
 		const config: ProsopoConfigOutput = {
 			logLevel: LogLevel.enum.info,
 			account: {
-				address: "5GrwvaEF5zXb26Fz9rcQpDWS57CERrH4kYWwymqL8",
-				secret: "0x1234567890abcdef",
+				address: providerAddress,
+				secret: providerMnemonic,
 			},
 			authAccount: {
-				address: "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
-				secret: "0xabcdef1234567890",
+				address: authAddress,
+				secret: authMnemonic,
 			},
 			server: {
 				port: 9229,
@@ -73,7 +81,10 @@ describe("ensureIndexes command - integration", () => {
 		);
 
 		// Create logger
-		const logger = getLogger(LogLevel.enum.info, "cli.ensure_indexes_integration");
+		const logger: ReturnType<typeof getLogger> = getLogger(
+			LogLevel.enum.info,
+			"cli.ensure_indexes_integration",
+		);
 
 		// Execute the ensure indexes command
 		const command = commandEnsureIndexes(pair, config, { logger });
@@ -90,12 +101,15 @@ describe("ensureIndexes command - integration", () => {
 	}, 30000); // 30 second timeout for database operations
 
 	test("should handle missing mongoCaptchaUri gracefully", async () => {
+		// Generate proper mnemonic for key pair
+		const [providerMnemonic, providerAddress] = await generateMnemonic();
+
 		// Create test configuration without MongoDB URI
 		const config: ProsopoConfigOutput = {
 			logLevel: LogLevel.enum.info,
 			account: {
-				address: "5GrwvaEF5zXb26Fz9rcQpDWS57CERrH4kYWwymqL8",
-				secret: "0x1234567890abcdef",
+				address: providerAddress,
+				secret: providerMnemonic,
 			},
 			// mongoCaptchaUri is intentionally omitted
 			database: {
@@ -110,7 +124,10 @@ describe("ensureIndexes command - integration", () => {
 		} as ProsopoConfigOutput;
 
 		const pair = getPair(config.account.secret, config.account.address);
-		const logger = getLogger(LogLevel.enum.error, "cli.ensure_indexes_error_test");
+		const logger: ReturnType<typeof getLogger> = getLogger(
+			LogLevel.enum.error,
+			"cli.ensure_indexes_error_test",
+		);
 
 		// Execute the command - this should handle the error gracefully
 		const command = commandEnsureIndexes(pair, config, { logger });
