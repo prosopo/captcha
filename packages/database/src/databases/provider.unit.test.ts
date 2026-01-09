@@ -233,8 +233,8 @@ describe("ProviderDatabase", () => {
 						captchaId: "captcha1",
 						captchaContentId: "content1",
 						items: [],
-						target: [],
-						salt: "salt1",
+						target: "target1",
+						salt: "salt1salt1salt1salt1salt1salt1salt1", // 34+ characters
 						solution: ["sol1"],
 					},
 				],
