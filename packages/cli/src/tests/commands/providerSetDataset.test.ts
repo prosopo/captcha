@@ -1,7 +1,7 @@
-import { describe, expect, test, vi, beforeEach } from "vitest";
-import { LogLevel, getLogger } from "@prosopo/common";
+import { LogLevel, type getLogger } from "@prosopo/common";
 import type { KeyringPair } from "@prosopo/types";
 import type { ProsopoConfigOutput } from "@prosopo/types";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import commandProviderSetDataset from "../../commands/providerSetDataset.js";
 
 // Mock dependencies
@@ -82,8 +82,11 @@ describe("providerSetDataset command", () => {
 		await command.handler(argv as any);
 
 		expect(loadJSONFile).toHaveBeenCalledWith("/path/to/file.json");
-		const tasksInstance = (Tasks as ReturnType<typeof vi.fn>).mock.results[0].value;
-		expect(tasksInstance.datasetManager.providerSetDatasetFromFile).toHaveBeenCalledWith({
+		const tasksInstance = (Tasks as ReturnType<typeof vi.fn>).mock.results[0]
+			.value;
+		expect(
+			tasksInstance.datasetManager.providerSetDatasetFromFile,
+		).toHaveBeenCalledWith({
 			test: "data",
 		});
 	});
@@ -125,4 +128,3 @@ describe("providerSetDataset command", () => {
 		});
 	});
 });
-

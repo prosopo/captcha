@@ -1,7 +1,7 @@
-import { describe, expect, test, vi, beforeEach } from "vitest";
-import { LogLevel, getLogger } from "@prosopo/common";
+import { LogLevel, type getLogger } from "@prosopo/common";
 import type { KeyringPair } from "@prosopo/types";
 import type { ProsopoConfigOutput } from "@prosopo/types";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import commandStoreCaptchasExternally from "../../commands/storeCaptchasExternally.js";
 
 // Mock dependencies
@@ -52,7 +52,9 @@ describe("storeCaptchasExternally command", () => {
 		expect(command).toHaveProperty("describe");
 		expect(command).toHaveProperty("handler");
 		expect(command.command).toBe("store_captchas");
-		expect(command.describe).toBe("Store captcha records externally for billing purposes");
+		expect(command.describe).toBe(
+			"Store captcha records externally for billing purposes",
+		);
 		expect(typeof command.handler).toBe("function");
 	});
 
@@ -73,33 +75,37 @@ describe("storeCaptchasExternally command", () => {
 		const { Tasks } = await import("@prosopo/provider");
 		const command = commandStoreCaptchasExternally(mockPair, mockConfig);
 		await command.handler();
-		const tasksInstance = (Tasks as ReturnType<typeof vi.fn>).mock.results[0].value;
-		expect(tasksInstance.clientTaskManager.storeCommitmentsExternal).toHaveBeenCalled();
+		const tasksInstance = (Tasks as ReturnType<typeof vi.fn>).mock.results[0]
+			.value;
+		expect(
+			tasksInstance.clientTaskManager.storeCommitmentsExternal,
+		).toHaveBeenCalled();
 	});
 
-		test("should handle errors gracefully", async () => {
-			const { ProviderEnvironment } = await import("@prosopo/env");
-			const { Tasks } = await import("@prosopo/provider");
-			const mockError = new Error("Storage error");
-			const mockEnvLogger = {
-				error: vi.fn(),
-			};
-			(ProviderEnvironment as ReturnType<typeof vi.fn>).mockImplementationOnce(() => ({
+	test("should handle errors gracefully", async () => {
+		const { ProviderEnvironment } = await import("@prosopo/env");
+		const { Tasks } = await import("@prosopo/provider");
+		const mockError = new Error("Storage error");
+		const mockEnvLogger = {
+			error: vi.fn(),
+		};
+		(ProviderEnvironment as ReturnType<typeof vi.fn>).mockImplementationOnce(
+			() => ({
 				isReady: vi.fn().mockResolvedValue(undefined),
 				logger: mockEnvLogger,
-			}));
-			(Tasks as ReturnType<typeof vi.fn>).mockImplementationOnce(() => ({
-				clientTaskManager: {
-					storeCommitmentsExternal: vi.fn().mockRejectedValue(mockError),
-				},
-			}));
+			}),
+		);
+		(Tasks as ReturnType<typeof vi.fn>).mockImplementationOnce(() => ({
+			clientTaskManager: {
+				storeCommitmentsExternal: vi.fn().mockRejectedValue(mockError),
+			},
+		}));
 
-			const command = commandStoreCaptchasExternally(mockPair, mockConfig, {
-				logger: mockLogger,
-			});
-			await command.handler();
-			// Error should be caught and logged by env.logger
-			expect(mockEnvLogger.error).toHaveBeenCalled();
+		const command = commandStoreCaptchasExternally(mockPair, mockConfig, {
+			logger: mockLogger,
 		});
+		await command.handler();
+		// Error should be caught and logged by env.logger
+		expect(mockEnvLogger.error).toHaveBeenCalled();
+	});
 });
-

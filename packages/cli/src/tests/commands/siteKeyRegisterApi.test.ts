@@ -1,8 +1,8 @@
-import { describe, expect, test, vi, beforeEach } from "vitest";
-import { LogLevel, getLogger } from "@prosopo/common";
+import { LogLevel, type getLogger } from "@prosopo/common";
 import { Tier } from "@prosopo/types";
 import type { KeyringPair } from "@prosopo/types";
 import type { ProsopoConfigOutput } from "@prosopo/types";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import commandSiteKeyRegisterApi from "../../commands/siteKeyRegisterApi.js";
 
 // Mock dependencies
@@ -58,7 +58,11 @@ describe("siteKeyRegisterApi command", () => {
 	});
 
 	test("should return command structure with correct properties", () => {
-		const command = commandSiteKeyRegisterApi(mockPair, mockAuthAccount, mockConfig);
+		const command = commandSiteKeyRegisterApi(
+			mockPair,
+			mockAuthAccount,
+			mockConfig,
+		);
 		expect(command).toHaveProperty("command");
 		expect(command).toHaveProperty("describe");
 		expect(command).toHaveProperty("handler");
@@ -72,9 +76,14 @@ describe("siteKeyRegisterApi command", () => {
 	});
 
 	test("should use provided logger", async () => {
-		const command = commandSiteKeyRegisterApi(mockPair, mockAuthAccount, mockConfig, {
-			logger: mockLogger,
-		});
+		const command = commandSiteKeyRegisterApi(
+			mockPair,
+			mockAuthAccount,
+			mockConfig,
+			{
+				logger: mockLogger,
+			},
+		);
 		const argv = {
 			sitekey: "5GrwvaEF5zXb26Fz9rcQpDWS57CERrH4kYWwymqL8",
 			tier: Tier.Free,
@@ -90,7 +99,11 @@ describe("siteKeyRegisterApi command", () => {
 	});
 
 	test("should create default logger when not provided", async () => {
-		const command = commandSiteKeyRegisterApi(mockPair, mockAuthAccount, mockConfig);
+		const command = commandSiteKeyRegisterApi(
+			mockPair,
+			mockAuthAccount,
+			mockConfig,
+		);
 		const argv = {
 			sitekey: "5GrwvaEF5zXb26Fz9rcQpDWS57CERrH4kYWwymqL8",
 			tier: Tier.Free,
@@ -106,7 +119,11 @@ describe("siteKeyRegisterApi command", () => {
 
 	test("should create ProviderApi and call registerSiteKey", async () => {
 		const { ProviderApi } = await import("@prosopo/api");
-		const command = commandSiteKeyRegisterApi(mockPair, mockAuthAccount, mockConfig);
+		const command = commandSiteKeyRegisterApi(
+			mockPair,
+			mockAuthAccount,
+			mockConfig,
+		);
 		const argv = {
 			sitekey: "5GrwvaEF5zXb26Fz9rcQpDWS57CERrH4kYWwymqL8",
 			tier: Tier.Free,
@@ -119,8 +136,12 @@ describe("siteKeyRegisterApi command", () => {
 		};
 		await command.handler(argv as any);
 
-		expect(ProviderApi).toHaveBeenCalledWith("https://api.example.com", mockPair.address);
-		const apiInstance = (ProviderApi as ReturnType<typeof vi.fn>).mock.results[0].value;
+		expect(ProviderApi).toHaveBeenCalledWith(
+			"https://api.example.com",
+			mockPair.address,
+		);
+		const apiInstance = (ProviderApi as ReturnType<typeof vi.fn>).mock
+			.results[0].value;
 		expect(apiInstance.registerSiteKey).toHaveBeenCalled();
 		expect(mockAuthAccount.sign).toHaveBeenCalled();
 	});
@@ -132,9 +153,14 @@ describe("siteKeyRegisterApi command", () => {
 			registerSiteKey: vi.fn().mockRejectedValue(mockError),
 		}));
 
-		const command = commandSiteKeyRegisterApi(mockPair, mockAuthAccount, mockConfig, {
-			logger: mockLogger,
-		});
+		const command = commandSiteKeyRegisterApi(
+			mockPair,
+			mockAuthAccount,
+			mockConfig,
+			{
+				logger: mockLogger,
+			},
+		);
 		const argv = {
 			sitekey: "5GrwvaEF5zXb26Fz9rcQpDWS57CERrH4kYWwymqL8",
 			tier: Tier.Free,
@@ -150,20 +176,44 @@ describe("siteKeyRegisterApi command", () => {
 	});
 
 	test("builder should configure options correctly", () => {
-		const command = commandSiteKeyRegisterApi(mockPair, mockAuthAccount, mockConfig);
+		const command = commandSiteKeyRegisterApi(
+			mockPair,
+			mockAuthAccount,
+			mockConfig,
+		);
 		const mockYargs = {
 			positional: vi.fn().mockReturnThis(),
 			option: vi.fn().mockReturnThis(),
 		};
 		command.builder(mockYargs as any);
-		expect(mockYargs.positional).toHaveBeenCalledWith("sitekey", expect.any(Object));
-		expect(mockYargs.positional).toHaveBeenCalledWith("tier", expect.any(Object));
+		expect(mockYargs.positional).toHaveBeenCalledWith(
+			"sitekey",
+			expect.any(Object),
+		);
+		expect(mockYargs.positional).toHaveBeenCalledWith(
+			"tier",
+			expect.any(Object),
+		);
 		expect(mockYargs.option).toHaveBeenCalledWith("url", expect.any(Object));
-		expect(mockYargs.option).toHaveBeenCalledWith("captcha_type", expect.any(Object));
-		expect(mockYargs.option).toHaveBeenCalledWith("domains", expect.any(Object));
-		expect(mockYargs.option).toHaveBeenCalledWith("frictionless_threshold", expect.any(Object));
-		expect(mockYargs.option).toHaveBeenCalledWith("pow_difficulty", expect.any(Object));
-		expect(mockYargs.option).toHaveBeenCalledWith("image_threshold", expect.any(Object));
+		expect(mockYargs.option).toHaveBeenCalledWith(
+			"captcha_type",
+			expect.any(Object),
+		);
+		expect(mockYargs.option).toHaveBeenCalledWith(
+			"domains",
+			expect.any(Object),
+		);
+		expect(mockYargs.option).toHaveBeenCalledWith(
+			"frictionless_threshold",
+			expect.any(Object),
+		);
+		expect(mockYargs.option).toHaveBeenCalledWith(
+			"pow_difficulty",
+			expect.any(Object),
+		);
+		expect(mockYargs.option).toHaveBeenCalledWith(
+			"image_threshold",
+			expect.any(Object),
+		);
 	});
 });
-
