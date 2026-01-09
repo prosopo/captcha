@@ -42,7 +42,7 @@ describe("useTranslation", () => {
 					t: mockT,
 					i18n: mockI18n,
 					ready: true,
-				} as UseTranslationResponse<"translation", unknown>;
+				} as unknown as UseTranslationResponse<"translation", unknown>;
 			},
 		);
 
@@ -82,7 +82,7 @@ describe("useTranslation", () => {
 					t: mockT,
 					i18n: mockI18n,
 					ready: true,
-				} as UseTranslationResponse<"translation", unknown>;
+				} as unknown as UseTranslationResponse<"translation", unknown>;
 			},
 		);
 
@@ -95,9 +95,9 @@ describe("useTranslation", () => {
 		}));
 
 		const useTranslation = (await import("../useTranslation.js")).default;
-		const options: UseTranslationOptions<"translation"> = {
+		const options = {
 			keyPrefix: "WIDGET",
-		};
+		} as unknown as UseTranslationOptions<"translation">;
 		const result = useTranslation(options);
 
 		expect(mockUseTranslationDefault).toHaveBeenCalledWith("translation", {
@@ -124,7 +124,7 @@ describe("useTranslation", () => {
 					t: mockT,
 					i18n: mockI18n,
 					ready: true,
-				} as UseTranslationResponse<"translation", unknown>;
+				} as unknown as UseTranslationResponse<"translation", unknown>;
 			},
 		);
 
