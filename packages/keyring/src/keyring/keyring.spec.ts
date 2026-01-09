@@ -368,6 +368,30 @@ describe("Keyring", () => {
 				keyring.createFromJson(json);
 			}).toThrow(/Unknown crypto type/);
 		});
+
+		it("throws error when cryptoType is undefined in version 0", () => {
+			const keyring = new Keyring();
+			const json: KeyringPair$Json = {
+				address: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				encoded: "",
+				encoding: {
+					content: "pkcs8",
+					type: "none",
+					version: "0",
+				},
+				meta: {},
+			};
+			expect(() => {
+				keyring.createFromJson(json);
+			}).toThrow(/cryptoType is undefined/);
+		});
+
+		it("throws error for ethereum type in URI", () => {
+			const keyring = new Keyring();
+			expect(() => {
+				keyring.addFromUri(DEV_PHRASE, {}, "ethereum");
+			}).toThrow(/Not implemented - Prosopo Keyring supports sr25519 only/);
+		});
 	});
 
 	describe("createFromPair", () => {

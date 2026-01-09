@@ -21,4 +21,21 @@ describe("encode", (): void => {
 	it("returns encoded PKCS8 when passphrase supplied", (): void => {
 		expect(keyring.alice.encodePkcs8("testing")).toHaveLength(ENCODED_LENGTH);
 	}, 30000);
+
+	it("throws error when secretKey is not provided", (): void => {
+		// Create a pair with undefined secretKey to test error handling
+		const pair = keyring.alice;
+		// Temporarily modify the pair to have no secret key
+		const originalSecretKey = pair.isLocked;
+		pair.lock(); // This makes secretKey undefined
+
+		expect(() => {
+			pair.encodePkcs8();
+		}).toThrow("Expected a valid secretKey to be passed to encode");
+
+		// Restore the original state
+		if (!originalSecretKey) {
+			pair.unlock();
+		}
+	});
 });
