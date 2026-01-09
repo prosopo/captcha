@@ -81,21 +81,21 @@ describe("solvePoW", () => {
 	});
 
 	test("returns known solutions", () => {
-		const inputs = ["abc", "def", "ghi"]
-		const diffs = [3, 4, 5]
-		const solutions = [13843, 81184, 310094]
+		const inputs = ["abc", "def", "ghi"];
+		const diffs = [3, 4, 5];
+		const solutions = [13843, 81184, 310094];
 
 		for (let i = 0; i < inputs.length; i++) {
 			// for each precomputed input/output
-			const input = inputs[i] || ""
-			const diff = diffs[i] || 0
-			const sol = solutions[i]
+			const input = inputs[i] || "";
+			const diff = diffs[i] || 0;
+			const sol = solutions[i];
 
 			// do the pow
-			const ans = solvePoW(input, diff)
+			const ans = solvePoW(input, diff);
 
 			// compare answer to expected solution
-			expect(ans).toBe(sol)
+			expect(ans).toBe(sol);
 		}
 	});
 

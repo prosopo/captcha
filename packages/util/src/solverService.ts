@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { sha256 } from "@noble/hashes/sha256";
-import { fileURLToPath } from "url";
 
 export const solvePoW = (data: string, difficulty: number): number => {
 	let nonce = 0;
