@@ -84,7 +84,7 @@ export function getTsConfigs(
 		if (references) {
 			const ignore =
 				ignorePatterns && ignorePatterns.length > 0
-					? new RegExp(`${ignorePatterns.join("|")}`)
+					? new RegExp(`${ignorePatterns.map((r) => r.source).join("|")}`)
 					: undefined;
 			if (includeInitialTsConfig) {
 				tsConfigs.push(tsConfigPath);
@@ -93,7 +93,7 @@ export function getTsConfigs(
 			// ignore the packages we don't want to bundle
 			const filteredReferences = references.filter(
 				(reference: ProjectReference) =>
-					ignore ? !ignore.test(reference.path) : false,
+					ignore ? !ignore.test(reference.path) : true,
 			);
 			// for each reference, get the tsconfig paths - recursively calling this function
 			for (const reference of filteredReferences) {
