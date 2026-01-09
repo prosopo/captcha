@@ -26,21 +26,29 @@ export const authMiddleware = (
 		try {
 			const jwt = extractJWT(req);
 
-			let error: ProsopoApiError | undefined;
+			let jwtError: string | undefined;
 
-			if (authAccount?.jwtVerify(jwt).isValid) {
+			const authAccountResult = authAccount?.jwtVerify(jwt);
+			if (authAccountResult?.isValid) {
 				next();
 				return;
 			}
+			if (authAccountResult && !authAccountResult.isValid) {
+				jwtError = authAccountResult.error || "Invalid JWT for auth account";
+			}
 
-			if (pair?.jwtVerify(jwt).isValid) {
+			const pairResult = pair?.jwtVerify(jwt);
+			if (pairResult?.isValid) {
 				next();
 				return;
+			}
+			if (pairResult && !pairResult.isValid) {
+				jwtError = pairResult.error || "Invalid JWT for pair";
 			}
 
 			res.status(401).json({
-				error: new ProsopoEnvError(error || "API.UNAUTHORIZED", {
-					context: { i18n: req.i18n, code: 401 },
+				error: new ProsopoEnvError("API.UNAUTHORIZED", {
+					context: { i18n: req.i18n, code: 401, jwtError },
 				}),
 			});
 			return;

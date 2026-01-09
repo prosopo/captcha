@@ -133,6 +133,7 @@ describe("authMiddleware", () => {
 		vi.mocked(hexToU8a).mockReturnValue(new Uint8Array());
 		vi.mocked(mockPair.jwtVerify).mockReturnValue({
 			isValid: false,
+			error: "Invalid JWT for pair",
 		} as unknown as JWTVerifyResult);
 
 		const middleware = authMiddleware(mockEnv.pair, mockEnv.authAccount);
@@ -142,7 +143,7 @@ describe("authMiddleware", () => {
 		expect(mockRes.status).toHaveBeenCalledWith(401);
 		expect(mockRes.json).toHaveBeenCalledWith({
 			error: new ProsopoEnvError("API.UNAUTHORIZED", {
-				context: { i18n: mockReq.i18n, code: 401 },
+				context: { i18n: mockReq.i18n, code: 401, jwtError: "Invalid JWT for pair" },
 			}),
 		});
 	});
