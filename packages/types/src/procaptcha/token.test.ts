@@ -88,6 +88,23 @@ describe("procaptcha token", () => {
 			expect(token).toMatch(/^0x[0-9a-f]+$/i);
 		});
 
+		it("encodes procaptcha output with user signature having only requestHash", () => {
+			const output: ProcaptchaOutput = {
+				[ApiParams.dapp]: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				[ApiParams.user]: "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+				[ApiParams.timestamp]: "1234567890",
+				[ApiParams.signature]: {
+					[ApiParams.provider]: {},
+					[ApiParams.user]: {
+						[ApiParams.requestHash]: "0x9abc",
+					},
+				},
+			};
+
+			const token = encodeProcaptchaOutput(output);
+			expect(token).toMatch(/^0x[0-9a-f]+$/i);
+		});
+
 		it("produces consistent output for same input", () => {
 			const output: ProcaptchaOutput = {
 				[ApiParams.dapp]: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
