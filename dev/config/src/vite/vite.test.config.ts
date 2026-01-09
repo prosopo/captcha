@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,30 +34,35 @@ export default function (tsConfigPath?: string) {
 	const cwd = process.cwd();
 	const isRunningFromPackage =
 		cwd.includes("/packages/") && cwd.includes("/src") === false;
+	const isRunningFromDevPackage =
+		cwd.includes("/dev/") && cwd.includes("/src") === false;
 
 	// If running from a package directory, include local src files
 	// If running from repo root, include all package src files
 	const coverageInclude = isRunningFromPackage
 		? ["src/**/*.ts", "src/**/*.js", "src/**/*.tsx", "src/**/*.jsx"]
-		: ["packages/*/src/**", "captcha/packages/*/src/**"];
+		: isRunningFromDevPackage
+			? ["src/**/*.ts", "src/**/*.js", "src/**/*.tsx", "src/**/*.jsx"]
+			: ["packages/*/src/**", "dev/*/src/**", "captcha/packages/*/src/**"];
 
-	const coverageExclude = isRunningFromPackage
-		? [
-				"src/tests/**/*",
-				"src/**/*.d.ts",
-				"src/**/*.test.ts",
-				"src/**/*.spec.ts",
-				"src/**/*.test.tsx",
-				"src/**/*.spec.tsx",
-			]
-		: [
-				"**/tests/**/*",
-				"**/*.d.ts",
-				"**/*.test.*",
-				"**/*.spec.*",
-				"**/node_modules/**",
-				"**/dist/**",
-			];
+	const coverageExclude =
+		isRunningFromPackage || isRunningFromDevPackage
+			? [
+					"src/tests/**/*",
+					"src/**/*.d.ts",
+					"src/**/*.test.ts",
+					"src/**/*.spec.ts",
+					"src/**/*.test.tsx",
+					"src/**/*.spec.tsx",
+				]
+			: [
+					"**/tests/**/*",
+					"**/*.d.ts",
+					"**/*.test.*",
+					"**/*.spec.*",
+					"**/node_modules/**",
+					"**/dist/**",
+				];
 	const include = `src/**/*${testTypeGlob}.@(test|spec).@(mts|cts|mjs|cjs|js|ts|tsx|jsx)`;
 	const plugins = [
 		VitePluginSourcemapExclude({ excludeNodeModules: true }),
