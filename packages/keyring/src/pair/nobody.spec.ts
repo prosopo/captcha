@@ -22,7 +22,9 @@ describe("nobody", () => {
 
 		// Check basic properties
 		expect(pair).toBeDefined();
-		expect(pair.address).toBe("5C4hrfjw9DjXZTzV3MwzrrAr9P1MJhSrvWGWqi1eSuyUpnhM");
+		expect(pair.address).toBe(
+			"5C4hrfjw9DjXZTzV3MwzrrAr9P1MJhSrvWGWqi1eSuyUpnhM",
+		);
 		expect(pair.type).toBe("sr25519");
 		expect(pair.isLocked).toBe(true);
 		expect(pair.meta.name).toBe("nobody");

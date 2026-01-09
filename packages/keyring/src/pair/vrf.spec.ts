@@ -77,7 +77,11 @@ describe("Pair VRF (Verifiable Random Function)", () => {
 			// Test VRF verification with a valid signature
 			const message = "test message for VRF verification";
 			const signature = keyring.alice.vrfSign(message);
-			const isValid = keyring.alice.vrfVerify(message, signature, keyring.alice.publicKey);
+			const isValid = keyring.alice.vrfVerify(
+				message,
+				signature,
+				keyring.alice.publicKey,
+			);
 
 			expect(isValid).toBe(true);
 		});
@@ -87,7 +91,12 @@ describe("Pair VRF (Verifiable Random Function)", () => {
 			const message = "test message";
 			const context = "test context";
 			const signature = keyring.alice.vrfSign(message, context);
-			const isValid = keyring.alice.vrfVerify(message, signature, keyring.alice.publicKey, context);
+			const isValid = keyring.alice.vrfVerify(
+				message,
+				signature,
+				keyring.alice.publicKey,
+				context,
+			);
 
 			expect(isValid).toBe(true);
 		});
@@ -98,7 +107,13 @@ describe("Pair VRF (Verifiable Random Function)", () => {
 			const context = "test context";
 			const extra = "extra data";
 			const signature = keyring.alice.vrfSign(message, context, extra);
-			const isValid = keyring.alice.vrfVerify(message, signature, keyring.alice.publicKey, context, extra);
+			const isValid = keyring.alice.vrfVerify(
+				message,
+				signature,
+				keyring.alice.publicKey,
+				context,
+				extra,
+			);
 
 			expect(isValid).toBe(true);
 		});
@@ -107,7 +122,11 @@ describe("Pair VRF (Verifiable Random Function)", () => {
 			// Test VRF verification with Uint8Array message
 			const message = new Uint8Array([1, 2, 3, 4, 5]);
 			const signature = keyring.alice.vrfSign(message);
-			const isValid = keyring.alice.vrfVerify(message, signature, keyring.alice.publicKey);
+			const isValid = keyring.alice.vrfVerify(
+				message,
+				signature,
+				keyring.alice.publicKey,
+			);
 
 			expect(isValid).toBe(true);
 		});
@@ -116,7 +135,11 @@ describe("Pair VRF (Verifiable Random Function)", () => {
 			// Test VRF verification using string address instead of Uint8Array
 			const message = "test message";
 			const signature = keyring.alice.vrfSign(message);
-			const isValid = keyring.alice.vrfVerify(message, signature, keyring.alice.address);
+			const isValid = keyring.alice.vrfVerify(
+				message,
+				signature,
+				keyring.alice.address,
+			);
 
 			expect(isValid).toBe(true);
 		});
@@ -130,7 +153,11 @@ describe("Pair VRF (Verifiable Random Function)", () => {
 			const invalidSignature = new Uint8Array(validSignature);
 			invalidSignature[0] = invalidSignature[0] === 0 ? 1 : 0;
 
-			const isValid = keyring.alice.vrfVerify(message, invalidSignature, keyring.alice.publicKey);
+			const isValid = keyring.alice.vrfVerify(
+				message,
+				invalidSignature,
+				keyring.alice.publicKey,
+			);
 
 			expect(isValid).toBe(false);
 		});
@@ -141,7 +168,11 @@ describe("Pair VRF (Verifiable Random Function)", () => {
 			const wrongMessage = "wrong message";
 			const signature = keyring.alice.vrfSign(originalMessage);
 
-			const isValid = keyring.alice.vrfVerify(wrongMessage, signature, keyring.alice.publicKey);
+			const isValid = keyring.alice.vrfVerify(
+				wrongMessage,
+				signature,
+				keyring.alice.publicKey,
+			);
 
 			expect(isValid).toBe(false);
 		});
@@ -151,7 +182,11 @@ describe("Pair VRF (Verifiable Random Function)", () => {
 			const message = "test message";
 			const signature = keyring.alice.vrfSign(message);
 
-			const isValid = keyring.alice.vrfVerify(message, signature, keyring.bob.publicKey);
+			const isValid = keyring.alice.vrfVerify(
+				message,
+				signature,
+				keyring.bob.publicKey,
+			);
 
 			expect(isValid).toBe(false);
 		});
@@ -163,7 +198,12 @@ describe("Pair VRF (Verifiable Random Function)", () => {
 			const wrongContext = "wrong context";
 			const signature = keyring.alice.vrfSign(message, context);
 
-			const isValid = keyring.alice.vrfVerify(message, signature, keyring.alice.publicKey, wrongContext);
+			const isValid = keyring.alice.vrfVerify(
+				message,
+				signature,
+				keyring.alice.publicKey,
+				wrongContext,
+			);
 
 			expect(isValid).toBe(false);
 		});
@@ -176,7 +216,13 @@ describe("Pair VRF (Verifiable Random Function)", () => {
 			const wrongExtra = "wrong extra";
 			const signature = keyring.alice.vrfSign(message, context, extra);
 
-			const isValid = keyring.alice.vrfVerify(message, signature, keyring.alice.publicKey, context, wrongExtra);
+			const isValid = keyring.alice.vrfVerify(
+				message,
+				signature,
+				keyring.alice.publicKey,
+				context,
+				wrongExtra,
+			);
 
 			expect(isValid).toBe(false);
 		});
@@ -199,7 +245,13 @@ describe("Pair VRF (Verifiable Random Function)", () => {
 				for (const context of contexts) {
 					for (const extra of extras) {
 						const signature = keyring.alice.vrfSign(message, context, extra);
-						const isValid = keyring.alice.vrfVerify(message, signature, keyring.alice.publicKey, context, extra);
+						const isValid = keyring.alice.vrfVerify(
+							message,
+							signature,
+							keyring.alice.publicKey,
+							context,
+							extra,
+						);
 
 						expect(isValid).toBe(true);
 					}

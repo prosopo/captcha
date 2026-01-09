@@ -13,10 +13,10 @@
 // limitations under the License.
 
 import type {
+	KeyringInstance,
 	KeyringPair,
 	KeyringPair$Json,
 	KeyringPair$Meta,
-	KeyringInstance,
 } from "@prosopo/types";
 import { describe, expect, it } from "vitest";
 import { Keyring } from "./keyring/keyring.js";
@@ -79,10 +79,18 @@ describe("Type Safety Tests", () => {
 			expect(typeof jwt).toBe("string");
 
 			// Test method parameter types
-			const isValid: boolean = pair.verify("message", signature, pair.publicKey);
+			const isValid: boolean = pair.verify(
+				"message",
+				signature,
+				pair.publicKey,
+			);
 			expect(typeof isValid).toBe("boolean");
 
-			const isVrfValid: boolean = pair.vrfVerify("message", vrfSignature, pair.publicKey);
+			const isVrfValid: boolean = pair.vrfVerify(
+				"message",
+				vrfSignature,
+				pair.publicKey,
+			);
 			expect(typeof isVrfValid).toBe("boolean");
 		});
 
@@ -147,9 +155,9 @@ describe("Type Safety Tests", () => {
 
 			const publicKeys = keyring.getPublicKeys();
 			expect(Array.isArray(publicKeys)).toBe(true);
-			publicKeys.forEach((key) => {
+			for (const key of publicKeys) {
 				expect(key).toBeInstanceOf(Uint8Array);
-			});
+			}
 
 			const address: string = keyring.encodeAddress(new Uint8Array(32));
 			expect(typeof address).toBe("string");
