@@ -19,7 +19,6 @@ export * from "./table.js";
 export * from "./url.js";
 export * from "./at.js";
 export * from "./get.js";
-export * from "./merge.js";
 export * from "./choice.js";
 export * from "./permutations.js";
 export * from "./version.js";
