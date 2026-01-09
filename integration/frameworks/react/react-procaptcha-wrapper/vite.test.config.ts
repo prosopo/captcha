@@ -38,5 +38,18 @@ export default function () {
 	config.test = config.test || {};
 	config.test.environment = "jsdom";
 	config.test.globals = true;
+	// Override coverage configuration for this integration package
+	config.test.coverage = {
+		enabled: true,
+		include: ["src/**/*.ts", "src/**/*.tsx"],
+		exclude: [
+			"src/**/*.test.ts",
+			"src/**/*.test.tsx",
+			"src/**/*.d.ts",
+			"src/tests/**/*",
+			"**/node_modules/**",
+			"**/dist/**",
+		],
+	};
 	return config;
 }
