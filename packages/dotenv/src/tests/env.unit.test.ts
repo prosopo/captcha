@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,9 +38,11 @@ describe("env", () => {
 
 	describe("getEnv", () => {
 		it("types", () => {
-			// Check return type is string
+			// Test that getEnv returns a string type
 			const result: string = getEnv();
 			expect(typeof result).toBe("string");
+			// Test that it returns a non-empty string
+			expect(result.length).toBeGreaterThan(0);
 		});
 
 		it("should return 'development' when NODE_ENV is not set", () => {
@@ -83,11 +85,12 @@ describe("env", () => {
 	describe("getEnvFile", () => {
 		beforeEach(() => {
 			mockFs.existsSync = vi.fn();
-			mockFs.readFileSync = vi.fn();
+			mockFs.readFileSync = vi.fn().mockReturnValue("some content");
 		});
 
 		it("types", () => {
-			// Check parameter types and return type
+			// Test type safety for all parameter combinations of getEnvFile
+			// All parameters are optional and return type is string
 			const result1: string = getEnvFile();
 			const result2: string = getEnvFile("rootDir");
 			const result3: string = getEnvFile("rootDir", "filename");
@@ -98,11 +101,20 @@ describe("env", () => {
 				"filepath",
 				"nodeEnv",
 			);
+
+			// Verify all results are strings and contain expected path components
 			expect(typeof result1).toBe("string");
 			expect(typeof result2).toBe("string");
 			expect(typeof result3).toBe("string");
 			expect(typeof result4).toBe("string");
 			expect(typeof result5).toBe("string");
+
+			// Test that results contain the filename component
+			expect(result1).toContain(".env");
+			expect(result2).toContain(".env");
+			expect(result3).toContain("filename");
+			expect(result4).toContain("filename");
+			expect(result5).toContain("filename");
 		});
 
 		it("should return path when file exists in rootDir", () => {
@@ -306,12 +318,14 @@ describe("env", () => {
 	describe("loadEnv", () => {
 		beforeEach(() => {
 			mockFs.existsSync = vi.fn();
-			mockFs.readFileSync = vi.fn();
+			mockFs.readFileSync = vi.fn().mockReturnValue("some content");
 			mockDotenv.config = vi.fn();
 		});
 
 		it("types", () => {
-			// Check parameter types and return type
+			// Test type safety for all parameter combinations of loadEnv
+			// Parameters: rootDir?, filename?, filePath?, nodeEnv?, override?
+			// Return type: string (the env file path)
 			mockFs.existsSync.mockReturnValue(true);
 			mockDotenv.config.mockReturnValue({ parsed: {} });
 
@@ -330,14 +344,24 @@ describe("env", () => {
 				"filename",
 				"filePath",
 				"nodeEnv",
-				true,
+				true, // override parameter
 			);
+
+			// Verify all results are strings representing file paths
 			expect(typeof result1).toBe("string");
 			expect(typeof result2).toBe("string");
 			expect(typeof result3).toBe("string");
 			expect(typeof result4).toBe("string");
 			expect(typeof result5).toBe("string");
 			expect(typeof result6).toBe("string");
+
+			// Verify paths contain expected components
+			expect(result1).toContain(".env");
+			expect(result2).toContain("rootDir");
+			expect(result3).toContain("filename");
+			expect(result4).toContain("filename");
+			expect(result5).toContain("filename");
+			expect(result6).toContain("filename");
 		});
 
 		it("should load env file with default parameters", () => {
