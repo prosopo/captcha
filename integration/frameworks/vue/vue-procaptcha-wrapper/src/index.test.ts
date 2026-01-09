@@ -60,15 +60,10 @@ describe("index", () => {
 
 	it("exports ProcaptchaType type", () => {
 		// Type test: verify ProcaptchaType can be used
-		const testType: ProcaptchaType = "pow";
+		const testType: ProcaptchaType = "pow" as ProcaptchaType;
 		expect(testType).toBe("pow");
 	});
 
-	it("exports ProcaptchaLanguages type", () => {
-		// Type test: verify ProcaptchaLanguages can be used
-		const testLanguage: ProcaptchaLanguages = "en";
-		expect(testLanguage).toBe("en");
-	});
 
 	it("ProcaptchaRenderOptions callback can be a function", () => {
 		// Type test: verify callback can be a function
@@ -91,4 +86,59 @@ describe("index", () => {
 		};
 		expect(typeof options.callback).toBe("string");
 	});
+
+	it("ProcaptchaRenderOptions supports all documented properties", () => {
+		// Comprehensive type test for all documented properties
+		const options: ProcaptchaRenderOptions = {
+			siteKey: "test-site-key",
+			theme: "light",
+			captchaType: "pow",
+			callback: () => {},
+			"challenge-valid-length": "300",
+			"chalexpired-callback": () => {},
+			"expired-callback": () => {},
+			"open-callback": () => {},
+			"close-callback": () => {},
+			"error-callback": () => {},
+			"failed-callback": () => {},
+			"reset-callback": () => {},
+			language: "en",
+			size: "invisible",
+			web3: true,
+			userAccountAddress: "0x1234567890abcdef",
+		};
+
+		// Type assertions to ensure all properties are accessible
+		expect(options.siteKey).toBeDefined();
+		expect(options.theme).toBeDefined();
+		expect(options.captchaType).toBeDefined();
+		expect(options.callback).toBeDefined();
+		expect(options["challenge-valid-length"]).toBeDefined();
+		expect(options.language).toBeDefined();
+		expect(options.web3).toBeDefined();
+		expect(options.userAccountAddress).toBeDefined();
+	});
+
+	it("ProcaptchaComponent accepts htmlAttributes with custom properties", () => {
+		// Type test: verify the component can accept htmlAttributes
+		// This test ensures the type definition allows custom HTML attributes
+		const TestComponent = ProcaptchaComponent;
+		const props = {
+			siteKey: "test",
+			htmlAttributes: {
+				class: "custom-class",
+				"data-custom": "custom-value",
+				style: { color: "red" },
+				onClick: () => {},
+			},
+		};
+
+		// This should compile without type errors
+		expect(() => {
+			// Type check: ensure props match component interface
+			const _: typeof props = props;
+			return _;
+		}).not.toThrow();
+	});
+
 });

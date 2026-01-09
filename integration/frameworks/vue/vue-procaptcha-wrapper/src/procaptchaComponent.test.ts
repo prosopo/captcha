@@ -17,8 +17,9 @@ import { mount } from "@vue/test-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import ProcaptchaComponent from "./procaptchaComponent.vue";
 
+// Mock renderProcaptcha to return a promise for testing async behavior
 vi.mock("@prosopo/procaptcha-wrapper", () => ({
-	renderProcaptcha: vi.fn(),
+	renderProcaptcha: vi.fn().mockResolvedValue(undefined),
 }));
 
 describe("ProcaptchaComponent", () => {
@@ -336,5 +337,208 @@ describe("ProcaptchaComponent", () => {
 				siteKey: "minimal-site-key",
 			}),
 		);
+	});
+
+	// Integration tests focusing on component behavior and error handling
+	describe("Integration Tests", () => {
+		it("handles renderProcaptcha errors gracefully", async () => {
+			// Test error handling when renderProcaptcha throws
+			const mockError = new Error("Render failed");
+			vi.mocked(renderProcaptcha).mockRejectedValueOnce(mockError);
+
+			// Mock console.error to verify error handling
+			const consoleErrorSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
+
+			expect(() => {
+				mount(ProcaptchaComponent, {
+					props: {
+						siteKey: "test-site-key",
+					},
+				});
+			}).not.toThrow();
+
+			// Wait for the async operation to complete
+			await new Promise((resolve) => setTimeout(resolve, 0));
+
+			// The component should not crash, error should be handled internally
+			expect(consoleErrorSpy).not.toHaveBeenCalled();
+
+			consoleErrorSpy.mockRestore();
+		});
+
+		it("handles rapid prop updates without calling renderProcaptcha multiple times unnecessarily", async () => {
+			const wrapper = mount(ProcaptchaComponent, {
+				props: {
+					siteKey: "initial-site-key",
+				},
+			});
+
+			expect(renderProcaptcha).toHaveBeenCalledTimes(1);
+
+			// Rapid updates
+			await wrapper.setProps({ theme: "light" });
+			await wrapper.setProps({ captchaType: "pow" });
+			await wrapper.setProps({ language: "en" });
+
+			// Vue batches updates, but each update should trigger renderProcaptcha
+			expect(renderProcaptcha).toHaveBeenCalledTimes(4);
+		});
+
+		it("passes correct element reference to renderProcaptcha", () => {
+			const wrapper = mount(ProcaptchaComponent, {
+				props: {
+					siteKey: "test-site-key",
+				},
+			});
+
+			const divElement = wrapper.find("div").element;
+			expect(renderProcaptcha).toHaveBeenCalledWith(
+				divElement,
+				expect.any(Object),
+			);
+		});
+
+		it("maintains element reference across updates", async () => {
+			const wrapper = mount(ProcaptchaComponent, {
+				props: {
+					siteKey: "test-site-key",
+				},
+			});
+
+			const initialElement = wrapper.find("div").element;
+
+			await wrapper.setProps({ theme: "dark" });
+
+			const updatedElement = wrapper.find("div").element;
+
+			// Element reference should be the same
+			expect(updatedElement).toBe(initialElement);
+
+			// renderProcaptcha should be called with the same element
+			expect(renderProcaptcha).toHaveBeenLastCalledWith(
+				initialElement,
+				expect.objectContaining({ theme: "dark" }),
+			);
+		});
+
+		it("handles component unmounting during async renderProcaptcha call", async () => {
+			// Create a promise that we can control
+			let resolveRender: (() => void) | undefined;
+			const renderPromise = new Promise<void>((resolve) => {
+				resolveRender = resolve;
+			});
+
+			vi.mocked(renderProcaptcha).mockReturnValueOnce(renderPromise);
+
+			const wrapper = mount(ProcaptchaComponent, {
+				props: {
+					siteKey: "test-site-key",
+				},
+			});
+
+			// Unmount before the async operation completes
+			wrapper.unmount();
+
+			// Resolve the render promise
+			if (resolveRender) {
+				resolveRender();
+			}
+
+			// Component should handle this gracefully without errors
+			await renderPromise;
+		});
+
+		it("applies complex htmlAttributes combinations", () => {
+			const wrapper = mount(ProcaptchaComponent, {
+				props: {
+					siteKey: "test-site-key",
+					htmlAttributes: {
+						class: "captcha-container main-theme",
+						"data-testid": "procaptcha",
+						style: {
+							width: "300px",
+							margin: "10px auto",
+						},
+						"aria-label": "Captcha verification",
+						role: "region",
+					},
+				},
+			});
+
+			const div = wrapper.find("div");
+			expect(div.attributes("class")).toBe("captcha-container main-theme");
+			expect(div.attributes("data-testid")).toBe("procaptcha");
+			expect(div.attributes("aria-label")).toBe("Captcha verification");
+			expect(div.attributes("role")).toBe("region");
+			expect(div.attributes("style")).toContain("width: 300px");
+			expect(div.attributes("style")).toContain("margin: 10px auto");
+		});
+
+		it("handles props with special characters and edge cases", () => {
+			const wrapper = mount(ProcaptchaComponent, {
+				props: {
+					siteKey: "test-site-key",
+					"challenge-valid-length": "special-value",
+					callback: "function(){return true;}",
+					htmlAttributes: {
+						"data-complex": "value with spaces & special chars: @#$%",
+					},
+				},
+			});
+
+			const div = wrapper.find("div");
+			expect(div.attributes("data-complex")).toBe(
+				"value with spaces & special chars: @#$%",
+			);
+
+			expect(renderProcaptcha).toHaveBeenCalledWith(
+				expect.any(HTMLElement),
+				expect.objectContaining({
+					siteKey: "test-site-key",
+					challengeValidLength: "special-value",
+					callback: "function(){return true;}",
+				}),
+			);
+		});
+
+		it("renders correctly in different DOM contexts", () => {
+			// Test that component works when mounted in different container types
+			const container = document.createElement("div");
+			document.body.appendChild(container);
+
+			const wrapper = mount(ProcaptchaComponent, {
+				props: {
+					siteKey: "test-site-key",
+				},
+				attachTo: container,
+			});
+
+			expect(wrapper.find("div").exists()).toBe(true);
+			expect(renderProcaptcha).toHaveBeenCalledTimes(1);
+
+			// Cleanup
+			document.body.removeChild(container);
+		});
+
+		it("handles empty and null values in props", () => {
+			const wrapper = mount(ProcaptchaComponent, {
+				props: {
+					siteKey: "",
+					theme: undefined,
+					captchaType: undefined,
+				},
+			});
+
+		expect(renderProcaptcha).toHaveBeenCalledWith(
+			expect.any(HTMLElement),
+			expect.objectContaining({
+				siteKey: "",
+				theme: undefined,
+				captchaType: undefined,
+			}),
+		);
+		});
 	});
 });
