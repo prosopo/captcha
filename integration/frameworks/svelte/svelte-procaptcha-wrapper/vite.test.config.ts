@@ -43,5 +43,12 @@ export default defineConfig({
     test: {
         ...baseConfig.test,
         environment: "jsdom",
+        coverage: {
+            ...baseConfig.test.coverage,
+            include: [
+                ...(baseConfig.test.coverage?.include || []),
+                "src/**/*.svelte",
+            ],
+        },
     },
 });
