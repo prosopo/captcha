@@ -98,9 +98,11 @@ export const main = async () => {
 	});
 
 	// only run server if locations have been specified
-	app.listen(env.port, () => {
+	const server = app.listen(env.port, () => {
 		console.info(`File server running on port ${env.port}`);
 	});
+
+	return server;
 };
 
 //if main process
