@@ -12,16 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import express from "express";
-import { beforeEach, describe, expect, it } from "vitest";
-import { z } from "zod";
 import type { ApiRoutes, ApiRoutesProvider } from "@prosopo/api-route";
 import type { Logger } from "@prosopo/common";
+import { getLogger } from "@prosopo/common";
+import type { ProviderEnvironment } from "@prosopo/env";
+import express from "express";
+import supertest from "supertest";
+import { beforeEach, describe, expect, it } from "vitest";
+import { z } from "zod";
 import { ApiExpressRouterFactory } from "../../apiExpressRouterFactory.js";
 import { ApiExpressDefaultEndpointAdapter } from "../../endpointAdapter/apiExpressDefaultEndpointAdapter.js";
 import { requestLoggerMiddleware } from "../../middlewares/requestLoggerMiddleware.js";
-import { getLogger } from "@prosopo/common";
-import supertest from "supertest";
 
 describe("ApiExpressRouterFactory Integration Tests", () => {
 	let app: express.Application;
@@ -34,7 +35,11 @@ describe("ApiExpressRouterFactory Integration Tests", () => {
 		app.use(express.json());
 
 		logger = getLogger("info", "test");
-		app.use(requestLoggerMiddleware({ config: { logLevel: "error" } } as any));
+		app.use(
+			requestLoggerMiddleware({
+				config: { logLevel: "error" },
+			} as ProviderEnvironment),
+		);
 
 		factory = new ApiExpressRouterFactory();
 		adapter = new ApiExpressDefaultEndpointAdapter(logger, 500);
@@ -130,11 +135,15 @@ describe("ApiExpressRouterFactory Integration Tests", () => {
 		it("should handle request validation errors", async () => {
 			// Testing schema validation - this covers error handling in the endpoint adapter
 			const strictEndpoint = {
-				getRequestArgsSchema: () => z.object({
-					requiredField: z.string(),
-					numberField: z.number().min(0),
-				}),
-				processRequest: async (args: any) => ({
+				getRequestArgsSchema: () =>
+					z.object({
+						requiredField: z.string(),
+						numberField: z.number().min(0),
+					}),
+				processRequest: async (args: {
+					requiredField: string;
+					numberField: number;
+				}) => ({
 					status: "success" as const,
 					data: args,
 				}),
@@ -273,7 +282,7 @@ describe("ApiExpressRouterFactory Integration Tests", () => {
 				.expect(500);
 
 			expect(response.text).toBe("An internal server error occurred.");
-			expect(response.headers['content-type']).toContain('text/plain');
+			expect(response.headers["content-type"]).toContain("text/plain");
 		});
 	});
 

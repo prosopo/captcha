@@ -12,16 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { ApiRoutesProvider } from "@prosopo/api-route";
 import type { LogLevel } from "@prosopo/common";
-import type { KeyringPair } from "@prosopo/types";
 import type { NextFunction, Request, Response, Router } from "express";
-import { describe, it, expectTypeOf } from "vitest";
+import { describe, expectTypeOf, it } from "vitest";
 import {
+	type ApiExpressEndpointAdapter,
 	apiExpressRouterFactory,
 	createApiExpressDefaultEndpointAdapter,
-	type ApiExpressEndpointAdapter,
 } from "../../index.js";
-import type { ApiRoutesProvider } from "@prosopo/api-route";
 
 describe("index exports - type tests", () => {
 	describe("apiExpressRouterFactory", () => {
@@ -35,7 +34,9 @@ describe("index exports - type tests", () => {
 				.toMatchTypeOf<ApiExpressEndpointAdapter>();
 
 			// Type test: verify createRouter returns Router
-			expectTypeOf(apiExpressRouterFactory.createRouter).returns.toMatchTypeOf<Router>();
+			expectTypeOf(
+				apiExpressRouterFactory.createRouter,
+			).returns.toMatchTypeOf<Router>();
 		});
 	});
 
@@ -52,7 +53,9 @@ describe("index exports - type tests", () => {
 				.toMatchTypeOf<number | undefined>();
 
 			// Type test: verify return type is ApiExpressEndpointAdapter
-			expectTypeOf(createApiExpressDefaultEndpointAdapter).returns.toMatchTypeOf<ApiExpressEndpointAdapter>();
+			expectTypeOf(
+				createApiExpressDefaultEndpointAdapter,
+			).returns.toMatchTypeOf<ApiExpressEndpointAdapter>();
 		});
 
 		it("should return ApiExpressEndpointAdapter with correct handleRequest signature", () => {
@@ -86,4 +89,3 @@ describe("index exports - type tests", () => {
 		});
 	});
 });
-
