@@ -66,4 +66,3 @@ describe("choice", () => {
 		expect(result).toHaveLength(3);
 	});
 });
-

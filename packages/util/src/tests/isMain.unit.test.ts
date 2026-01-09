@@ -25,4 +25,3 @@ describe("isMain", () => {
 		expect(result).toBe(false);
 	});
 });
-

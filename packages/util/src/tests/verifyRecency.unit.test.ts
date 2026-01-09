@@ -48,4 +48,3 @@ describe("verifyRecency", () => {
 		expect(verifyRecency(challenge, 2000000)).toBe(true);
 	});
 });
-
