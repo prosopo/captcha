@@ -12,117 +12,188 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type Logger, ProsopoApiError } from "@prosopo/common";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { ProsopoApiError } from "@prosopo/common";
+import type { Logger } from "@prosopo/common";
+import { validateAddress } from "@prosopo/util-crypto";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { validateAddr, validateSiteKey } from "../../../api/validateAddress.js";
-import * as utilCrypto from "@prosopo/util-crypto";
 
 vi.mock("@prosopo/util-crypto", () => ({
-    validateAddress: vi.fn(),
+	validateAddress: vi.fn(),
 }));
 
 describe("validateSiteKey", () => {
-    beforeEach(() => {
-        vi.clearAllMocks();
-    });
+	let mockLogger: Logger;
 
-    it("calls validateAddr with correct translation key", () => {
-        vi.mocked(utilCrypto.validateAddress).mockReturnValue(true);
+	beforeEach(() => {
+		vi.clearAllMocks();
+		mockLogger = {
+			error: vi.fn(),
+			info: vi.fn(),
+			debug: vi.fn(),
+			warn: vi.fn(),
+		} as unknown as Logger;
+	});
 
-        expect(() => validateSiteKey("5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY")).not.toThrow();
-        expect(utilCrypto.validateAddress).toHaveBeenCalledWith(
-            "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
-            false,
-            42,
-        );
-    });
+	it("should validate site key using validateAddr", () => {
+		const siteKey = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
 
-    it("throws ProsopoApiError when address is invalid", () => {
-        vi.mocked(utilCrypto.validateAddress).mockReturnValue(false);
+		vi.mocked(validateAddress).mockReturnValue(true);
 
-        expect(() => validateSiteKey("invalid")).toThrow(ProsopoApiError);
-    });
+		expect(() => validateSiteKey(siteKey, mockLogger)).not.toThrow();
+		expect(validateAddress).toHaveBeenCalledWith(siteKey, false, 42);
+	});
 
-    it("throws ProsopoApiError when validateAddress throws", () => {
-        vi.mocked(utilCrypto.validateAddress).mockImplementation(() => {
-            throw new Error("Invalid address");
-        });
+	it("should throw error for invalid site key", () => {
+		const invalidSiteKey = "invalid-site-key";
 
-        expect(() => validateSiteKey("invalid")).toThrow(ProsopoApiError);
-    });
+		vi.mocked(validateAddress).mockReturnValue(false);
+
+		expect(() => validateSiteKey(invalidSiteKey, mockLogger)).toThrow(ProsopoApiError);
+		expect(validateAddress).toHaveBeenCalledWith(invalidSiteKey, false, 42);
+	});
+
+	it("should work without logger", () => {
+		const siteKey = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
+
+		vi.mocked(validateAddress).mockReturnValue(true);
+
+		expect(() => validateSiteKey(siteKey)).not.toThrow();
+		expect(validateAddress).toHaveBeenCalledWith(siteKey, false, 42);
+	});
 });
 
 describe("validateAddr", () => {
-    beforeEach(() => {
-        vi.clearAllMocks();
-    });
+	let mockLogger: Logger;
 
-    it("does not throw when address is valid", () => {
-        vi.mocked(utilCrypto.validateAddress).mockReturnValue(true);
+	beforeEach(() => {
+		vi.clearAllMocks();
+		mockLogger = {
+			error: vi.fn(),
+			info: vi.fn(),
+			debug: vi.fn(),
+			warn: vi.fn(),
+		} as unknown as Logger;
+	});
 
-        expect(() =>
-            validateAddr("5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"),
-        ).not.toThrow();
-    });
+	it("should validate successfully for valid address", () => {
+		const validAddress = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
 
-    it("throws ProsopoApiError with default translation key when address is invalid", () => {
-        vi.mocked(utilCrypto.validateAddress).mockReturnValue(false);
+		vi.mocked(validateAddress).mockReturnValue(true);
 
-        expect(() => validateAddr("invalid")).toThrow(ProsopoApiError);
-        try {
-            validateAddr("invalid");
-        } catch (err: unknown) {
-            expect(err).toBeInstanceOf(ProsopoApiError);
-            if (err instanceof ProsopoApiError) {
-                expect(err.translationKey).toBe("CONTRACT.INVALID_ADDRESS");
-            }
-        }
-    });
+		expect(() => validateAddr(validAddress, "CONTRACT.INVALID_ADDRESS", mockLogger)).not.toThrow();
+		expect(validateAddress).toHaveBeenCalledWith(validAddress, false, 42);
+	});
 
-    it("throws ProsopoApiError with custom translation key", () => {
-        vi.mocked(utilCrypto.validateAddress).mockReturnValue(false);
+	it("should throw ProsopoApiError for invalid address", () => {
+		const invalidAddress = "invalid-address";
 
-        expect(() =>
-            validateAddr("invalid", "API.INVALID_SITE_KEY"),
-        ).toThrow(ProsopoApiError);
-        try {
-            validateAddr("invalid", "API.INVALID_SITE_KEY");
-        } catch (err: unknown) {
-            expect(err).toBeInstanceOf(ProsopoApiError);
-            if (err instanceof ProsopoApiError) {
-                expect(err.translationKey).toBe("API.INVALID_SITE_KEY");
-            }
-        }
-    });
+		vi.mocked(validateAddress).mockReturnValue(false);
 
-    it("throws ProsopoApiError when validateAddress throws", () => {
-        vi.mocked(utilCrypto.validateAddress).mockImplementation(() => {
-            throw new Error("Invalid address");
-        });
+		expect(() => validateAddr(invalidAddress, "CONTRACT.INVALID_ADDRESS", mockLogger)).toThrow(ProsopoApiError);
 
-        expect(() => validateAddr("invalid")).toThrow(ProsopoApiError);
-    });
+		try {
+			validateAddr(invalidAddress, "CONTRACT.INVALID_ADDRESS", mockLogger);
+		} catch (error) {
+			expect(error).toBeInstanceOf(ProsopoApiError);
+			expect((error as ProsopoApiError).context).toEqual({
+				code: 400,
+				siteKey: invalidAddress,
+			});
+		}
+	});
 
-    it("passes logger to ProsopoApiError", () => {
-        const mockLogger = {
-            error: vi.fn(),
-        } as unknown as Logger;
-        vi.mocked(utilCrypto.validateAddress).mockReturnValue(false);
+	it("should use default translation key when not provided", () => {
+		const invalidAddress = "invalid-address";
 
-        expect(() => validateAddr("invalid", "CONTRACT.INVALID_ADDRESS", mockLogger)).toThrow(ProsopoApiError);
-    });
+		vi.mocked(validateAddress).mockReturnValue(false);
 
-    it("includes address in error context", () => {
-        vi.mocked(utilCrypto.validateAddress).mockReturnValue(false);
+		expect(() => validateAddr(invalidAddress)).toThrow(ProsopoApiError);
 
-        try {
-            validateAddr("test-address");
-        } catch (err: unknown) {
-            expect(err).toBeInstanceOf(ProsopoApiError);
-            if (err instanceof ProsopoApiError) {
-                expect(err.context?.siteKey).toBe("test-address");
-            }
-        }
-    });
+		try {
+			validateAddr(invalidAddress);
+		} catch (error) {
+			expect(error).toBeInstanceOf(ProsopoApiError);
+			expect((error as ProsopoApiError).context).toEqual({
+				code: 400,
+				siteKey: invalidAddress,
+			});
+		}
+	});
+
+	it("should handle crypto validation throwing an error", () => {
+		const address = "some-address";
+		const cryptoError = new Error("Crypto validation failed");
+
+		vi.mocked(validateAddress).mockImplementation(() => {
+			throw cryptoError;
+		});
+
+		expect(() => validateAddr(address, "CONTRACT.INVALID_ADDRESS", mockLogger)).toThrow(ProsopoApiError);
+
+		try {
+			validateAddr(address, "CONTRACT.INVALID_ADDRESS", mockLogger);
+		} catch (error) {
+			expect(error).toBeInstanceOf(ProsopoApiError);
+			expect((error as ProsopoApiError).context).toEqual({
+				code: 400,
+				siteKey: address,
+			});
+		}
+	});
+
+	it("should work without logger parameter", () => {
+		const validAddress = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
+
+		vi.mocked(validateAddress).mockReturnValue(true);
+
+		expect(() => validateAddr(validAddress)).not.toThrow();
+		expect(validateAddress).toHaveBeenCalledWith(validAddress, false, 42);
+	});
+
+	it("should validate with different translation keys", () => {
+		const invalidAddress = "invalid-address";
+		const customTranslationKey = "API.INVALID_USER";
+
+		vi.mocked(validateAddress).mockReturnValue(false);
+
+		expect(() => validateAddr(invalidAddress, customTranslationKey, mockLogger)).toThrow(ProsopoApiError);
+		expect(validateAddress).toHaveBeenCalledWith(invalidAddress, false, 42);
+	});
+
+	it("should handle empty address string", () => {
+		const emptyAddress = "";
+
+		vi.mocked(validateAddress).mockReturnValue(false);
+
+		expect(() => validateAddr(emptyAddress, "CONTRACT.INVALID_ADDRESS", mockLogger)).toThrow(ProsopoApiError);
+		expect(validateAddress).toHaveBeenCalledWith(emptyAddress, false, 42);
+	});
+
+	it("should handle null address", () => {
+		const nullAddress = null as any;
+
+		vi.mocked(validateAddress).mockReturnValue(false);
+
+		expect(() => validateAddr(nullAddress, "CONTRACT.INVALID_ADDRESS", mockLogger)).toThrow(ProsopoApiError);
+		expect(validateAddress).toHaveBeenCalledWith(nullAddress, false, 42);
+	});
+
+	it("should validate hex addresses", () => {
+		const hexAddress = "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d";
+
+		vi.mocked(validateAddress).mockReturnValue(true);
+
+		expect(() => validateAddr(hexAddress, "CONTRACT.INVALID_ADDRESS", mockLogger)).not.toThrow();
+		expect(validateAddress).toHaveBeenCalledWith(hexAddress, false, 42);
+	});
+
+	it("should validate base58 addresses", () => {
+		const base58Address = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty";
+
+		vi.mocked(validateAddress).mockReturnValue(true);
+
+		expect(() => validateAddr(base58Address, "CONTRACT.INVALID_ADDRESS", mockLogger)).not.toThrow();
+		expect(validateAddress).toHaveBeenCalledWith(base58Address, false, 42);
+	});
 });
-
