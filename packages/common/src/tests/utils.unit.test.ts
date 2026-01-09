@@ -25,10 +25,23 @@ describe("utils types", () => {
 
 			type TestKeys = Keys<TestType>;
 
-			// Verify Keys creates a partial record where all properties are optional
 			expectTypeOf<TestKeys>().toMatchTypeOf<{
 				required?: unknown;
 				optional?: unknown;
+			}>();
+		});
+
+		it("should work with nested types", () => {
+			type NestedType = {
+				nested: {
+					value: string;
+				};
+			};
+
+			type NestedKeys = Keys<NestedType>;
+
+			expectTypeOf<NestedKeys>().toMatchTypeOf<{
+				nested?: unknown;
 			}>();
 		});
 	});
@@ -42,10 +55,23 @@ describe("utils types", () => {
 
 			type TestAllKeys = AllKeys<TestType>;
 
-			// Verify AllKeys creates a record where all properties are required
 			expectTypeOf<TestAllKeys>().toMatchTypeOf<{
 				prop1: unknown;
 				prop2: unknown;
+			}>();
+		});
+
+		it("should enforce all required properties", () => {
+			type TestType = {
+				required: string;
+				optional?: number;
+			};
+
+			type TestAllKeys = AllKeys<TestType>;
+
+			expectTypeOf<TestAllKeys>().toMatchTypeOf<{
+				required: unknown;
+				optional: unknown;
 			}>();
 		});
 	});
@@ -56,7 +82,6 @@ describe("utils types", () => {
 
 			type EnumRecord = AllEnumValues<StringEnum>;
 
-			// Verify AllEnumValues creates a record with enum values as keys
 			expectTypeOf<EnumRecord>().toMatchTypeOf<{
 				value1: unknown;
 				value2: unknown;
@@ -69,11 +94,20 @@ describe("utils types", () => {
 
 			type EnumRecord = AllEnumValues<NumberEnum>;
 
-			// Verify AllEnumValues works with number types
 			expectTypeOf<EnumRecord>().toMatchTypeOf<{
 				1: unknown;
 				2: unknown;
 				3: unknown;
+			}>();
+		});
+
+		it("should work with single value enum", () => {
+			type SingleEnum = "only";
+
+			type EnumRecord = AllEnumValues<SingleEnum>;
+
+			expectTypeOf<EnumRecord>().toMatchTypeOf<{
+				only: unknown;
 			}>();
 		});
 	});
