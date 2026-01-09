@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import { afterAll, beforeAll, describe, test } from "vitest";
 import { Flatten } from "../commands/flatten.js";
 import { GenerateV1 } from "../commands/generateV1.js";
 import { GenerateV2 } from "../commands/generateV2.js";
+import { Get } from "../commands/get.js";
 import { Labels } from "../commands/labels.js";
 import { Relocate } from "../commands/relocate.js";
 import { Resize } from "../commands/resize.js";
@@ -337,5 +338,46 @@ describe("dataset commands", () => {
 		if (hierCount !== flatCount) {
 			throw new Error(`expected ${hierCount} images but found ${flatCount}`);
 		}
+	});
+
+	test("gets urls", async () => {
+		// Test the Get command by creating a data file with URLs and testing URL retrieval
+		const input = `${testResultsDir}/get_test_data.json`;
+		const dataWithUrls = {
+			items: [
+				{
+					data: "https://httpbin.org/status/200",
+					type: "image",
+					label: "test",
+					hash: "test1"
+				},
+				{
+					data: "https://httpbin.org/status/404",
+					type: "image",
+					label: "test",
+					hash: "test2"
+				},
+				{
+					data: `${__dirname}/data/flat/data.json`, // local file path that exists
+					type: "image",
+					label: "test",
+					hash: "test3"
+				}
+			]
+		};
+
+		// Write test data file
+		fs.writeFileSync(input, JSON.stringify(dataWithUrls, null, 2));
+
+		// Run the Get command
+		const get = new Get();
+		get.logger.setLogLevel("error");
+
+		// The Get command tests HTTP URLs and local file paths
+		// We expect it to attempt to fetch/check all URLs
+		// Some will succeed (httpbin.org/status/200, local file), some will fail (httpbin.org/status/404)
+		await get.exec({
+			input,
+		});
 	});
 });

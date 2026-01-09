@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -101,7 +101,7 @@ export default function (tsConfigPath?: string) {
 					isolate: true,
 				},
 			},
-			testTimeout: 10000,
+			testTimeout: 120000,
 		},
 		plugins: plugins,
 	});
