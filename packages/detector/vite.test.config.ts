@@ -38,5 +38,18 @@ export default function () {
 	if (!config.test.setupFiles.includes("./src/tests/setup.ts")) {
 		config.test.setupFiles.push("./src/tests/setup.ts");
 	}
+
+	// Enable coverage reporting with detailed configuration
+	config.test.coverage = config.test.coverage || {};
+	config.test.coverage.reporter = ["text", "json", "html"];
+	config.test.coverage.thresholds = {
+		global: {
+			statements: 90,
+			branches: 80,
+			functions: 90,
+			lines: 90,
+		},
+	};
+
 	return config;
 }

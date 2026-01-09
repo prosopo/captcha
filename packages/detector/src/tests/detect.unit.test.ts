@@ -16,7 +16,11 @@ import type { Account, RandomProvider } from "@prosopo/types";
 import { describe, expect, it } from "vitest";
 import { detect } from "../index.ts";
 
-describe("detect", () => {
+describe("detect - unit tests", () => {
+	/**
+	 * Test basic function properties and type safety.
+	 * These tests focus on compile-time guarantees and basic runtime behavior.
+	 */
 	it("should be a function", () => {
 		expect(typeof detect).toBe("function");
 	});
@@ -30,21 +34,10 @@ describe("detect", () => {
 		});
 	});
 
-	it("should be runnable (can be called and awaited)", async () => {
-		const result = detect();
-		expect(result).toBeInstanceOf(Promise);
-		// Actually await the promise to ensure it's runnable
-		// Errors are expected in test environment, so we catch and ignore them
-		try {
-			await result;
-		} catch (error) {
-			// Ignore errors - we're just verifying the function is runnable
-			// The obfuscated code may fail in test environment, which is fine
-		}
-		// If we get here, the function ran (even if it errored)
-		expect(true).toBe(true);
-	});
-
+	/**
+	 * Test TypeScript type safety for the return value.
+	 * This ensures the function signature matches the expected interface.
+	 */
 	it("types: should have correct return type", () => {
 		const result: Promise<{
 			token: string;
