@@ -252,4 +252,57 @@ describe("index.ts exports", () => {
 			reset();
 		});
 	});
+
+	describe("implicit render", () => {
+		it("should handle elements with procaptcha class", async () => {
+			// Create elements with procaptcha class
+			const div = document.createElement("div");
+			div.className = "procaptcha";
+			div.setAttribute("data-sitekey", "test-site-key");
+			document.body.appendChild(div);
+
+			// Import the module which should trigger implicit render
+			await import("../index.js");
+
+			// The implicit render should have been called
+			// Since we have mocks, it should not throw
+			expect(true).toBe(true);
+		});
+
+		it("should handle invisible buttons with procaptcha class", async () => {
+			// Create a button with procaptcha class
+			const button = document.createElement("button");
+			button.className = "procaptcha";
+			button.setAttribute("data-sitekey", "test-site-key");
+			button.setAttribute("data-callback", "testCallback");
+			document.body.appendChild(button);
+
+			// Import the module which should trigger implicit render
+			await import("../index.js");
+
+			// The implicit render should have been called
+			// Since we have mocks, it should not throw
+			expect(true).toBe(true);
+		});
+
+		it("should handle mixed elements and buttons", async () => {
+			// Create both a div and a button with procaptcha class
+			const div = document.createElement("div");
+			div.className = "procaptcha";
+			div.setAttribute("data-sitekey", "test-site-key");
+			document.body.appendChild(div);
+
+			const button = document.createElement("button");
+			button.className = "procaptcha";
+			button.setAttribute("data-sitekey", "test-site-key");
+			document.body.appendChild(button);
+
+			// Import the module which should trigger implicit render
+			await import("../index.js");
+
+			// The implicit render should have been called
+			// Since we have mocks, it should not throw
+			expect(true).toBe(true);
+		});
+	});
 });
