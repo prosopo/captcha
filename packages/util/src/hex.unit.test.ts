@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect, test } from "vitest";
-import { embedData, extractData } from "./hex.js";
+import { embedData, extractData, u8aToHex, hashToHex } from "./hex.js";
 
 const hex =
 	"0x0101010101010101010101010101010101010101010101010101010101010101";
@@ -93,5 +93,91 @@ describe("extractData", () => {
 	test("it extracts data from the start and end of the string 4", () => {
 		const result = extractData(embedData(hex, [99999, 99999]));
 		expect(result).to.deep.equal([99999, 99999]);
+	});
+});
+
+describe("u8aToHex", () => {
+	test("converts Uint8Array to hex string with 0x prefix", () => {
+		// Test basic conversion with default prefixed output
+		const input = new Uint8Array([0x68, 0x65, 0x6c, 0x6c, 0x6f]);
+		expect(u8aToHex(input)).toBe("0x68656c6c6f");
+	});
+
+	test("converts Uint8Array to hex string without prefix when specified", () => {
+		// Test conversion without prefix
+		const input = new Uint8Array([0x68, 0x65, 0x6c, 0x6c, 0x6f]);
+		expect(u8aToHex(input, -1, false)).toBe("68656c6c6f");
+	});
+
+	test("returns 0x for null input", () => {
+		// Test null input returns default empty string
+		expect(u8aToHex(null)).toBe("0x");
+	});
+
+	test("returns empty string without prefix for null input", () => {
+		// Test null input without prefix
+		expect(u8aToHex(null, -1, false)).toBe("");
+	});
+
+	test("returns 0x for undefined input", () => {
+		// Test undefined input returns default empty string
+		expect(u8aToHex(undefined)).toBe("0x");
+	});
+
+	test("returns 0x for empty Uint8Array", () => {
+		// Test empty array returns default empty string
+		expect(u8aToHex(new Uint8Array([]))).toBe("0x");
+	});
+
+	test("handles bitLength truncation", () => {
+		// Test bitLength parameter truncates the output by showing first and last bytes
+		const input = new Uint8Array([0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef]);
+		expect(u8aToHex(input, 16)).toBe("0x01…ef");
+	});
+
+	test("handles bitLength truncation without prefix", () => {
+		// Test bitLength parameter without prefix
+		const input = new Uint8Array([0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef]);
+		expect(u8aToHex(input, 16, false)).toBe("01…ef");
+	});
+
+	test("handles bitLength truncation with different values", () => {
+		// Test bitLength that results in different truncation
+		const input = new Uint8Array([0x01, 0x23, 0x45, 0x67]);
+		expect(u8aToHex(input, 12)).toBe("0x01…67");
+	});
+});
+
+describe("hashToHex", () => {
+	test("converts number array to hex string", () => {
+		// Test conversion of number array (typical hash representation)
+		const hash = [0x68, 0x65, 0x6c, 0x6c, 0x6f];
+		expect(hashToHex(hash)).toBe("0x68656c6c6f");
+	});
+
+	test("converts string hash directly", () => {
+		// Test that string hashes are returned as-is
+		const hash = "0x68656c6c6f";
+		expect(hashToHex(hash)).toBe("0x68656c6c6f");
+	});
+
+	test("handles empty number array", () => {
+		// Test empty array input
+		const hash: number[] = [];
+		expect(hashToHex(hash)).toBe("0x");
+	});
+
+	test("handles single element number array", () => {
+		// Test single element array
+		const hash = [0xff];
+		expect(hashToHex(hash)).toBe("0xff");
+	});
+
+	test("handles large number arrays", () => {
+		// Test larger arrays typical of cryptographic hashes
+		const hash = Array.from({ length: 32 }, (_, i) => i % 256);
+		const result = hashToHex(hash);
+		expect(result).toMatch(/^0x[0-9a-f]+$/);
+		expect(result.length).toBe(2 + 32 * 2); // 0x + 64 hex chars
 	});
 });
