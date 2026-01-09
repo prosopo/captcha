@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import stream from "node:stream";
 import express from "express";
 import sharp from "sharp";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
@@ -28,15 +27,7 @@ import sharp from "sharp";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import {
-	afterEach,
-	beforeEach,
-	describe,
-	expect,
-	expectTypeOf,
-	it,
-	vi,
-} from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { main } from "../index.js";
 
 vi.mock("express", () => {
@@ -142,5 +133,4 @@ describe("main", () => {
 		});
 		expect(sharpInstance?.toBuffer).toHaveBeenCalled();
 	});
-
 });

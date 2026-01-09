@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import express from "express";
 import fs from "node:fs";
 import path from "node:path";
+import express from "express";
+import type { Request, Response } from "express";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { getEnv, main } from "../index.js";
+import { main } from "../index.js";
 
 // Store original environment and server instance
 const originalEnv = process.env;
@@ -71,9 +72,11 @@ describe("main integration", () => {
 
 	it("should proxy requests to remote servers", async () => {
 		// Start a mock remote server
-		const mockRemoteServer = await new Promise<ReturnType<ReturnType<typeof main>>>((resolve) => {
+		const mockRemoteServer = await new Promise<
+			ReturnType<ReturnType<typeof main>>
+		>((resolve) => {
 			const app = express();
-			app.get("/remote-file.txt", (req: any, res: any) => {
+			app.get("/remote-file.txt", (req: Request, res: Response) => {
 				res.send("Remote content");
 			});
 			const server = app.listen(0, () => resolve(server));
@@ -81,11 +84,14 @@ describe("main integration", () => {
 
 		try {
 			const remoteAddress = mockRemoteServer.address();
-			const remotePort = typeof remoteAddress === "string" ? remoteAddress : remoteAddress?.port;
+			const remotePort =
+				typeof remoteAddress === "string" ? remoteAddress : remoteAddress?.port;
 
 			process.env.PROSOPO_FILE_SERVER_PORT = "0";
 			process.env.PROSOPO_FILE_SERVER_PATHS = "[]";
-			process.env.PROSOPO_FILE_SERVER_REMOTES = JSON.stringify([`http://localhost:${remotePort}`]);
+			process.env.PROSOPO_FILE_SERVER_REMOTES = JSON.stringify([
+				`http://localhost:${remotePort}`,
+			]);
 			process.env.PROSOPO_FILE_SERVER_RESIZE = undefined;
 			process.env.PROSOPO_LOG_LEVEL = undefined;
 			process.env.NODE_ENV = undefined;
@@ -126,17 +132,21 @@ describe("main integration", () => {
 
 	it("should fallback to next remote when first remote returns 404", async () => {
 		// Start two mock remote servers - first returns 404, second returns content
-		const mockRemoteServer1 = await new Promise<ReturnType<ReturnType<typeof main>>>((resolve) => {
+		const mockRemoteServer1 = await new Promise<
+			ReturnType<ReturnType<typeof main>>
+		>((resolve) => {
 			const app = express();
-			app.get("/test.txt", (req: any, res: any) => {
+			app.get("/test.txt", (req: Request, res: Response) => {
 				res.status(404).send("Not found on server 1");
 			});
 			const server = app.listen(0, () => resolve(server));
 		});
 
-		const mockRemoteServer2 = await new Promise<ReturnType<ReturnType<typeof main>>>((resolve) => {
+		const mockRemoteServer2 = await new Promise<
+			ReturnType<ReturnType<typeof main>>
+		>((resolve) => {
 			const app = express();
-			app.get("/test.txt", (req: any, res: any) => {
+			app.get("/test.txt", (req: Request, res: Response) => {
 				res.send("Content from server 2");
 			});
 			const server = app.listen(0, () => resolve(server));
@@ -144,14 +154,23 @@ describe("main integration", () => {
 
 		try {
 			const remoteAddress1 = mockRemoteServer1.address();
-			const remotePort1 = typeof remoteAddress1 === "string" ? remoteAddress1 : remoteAddress1?.port;
+			const remotePort1 =
+				typeof remoteAddress1 === "string"
+					? remoteAddress1
+					: remoteAddress1?.port;
 
 			const remoteAddress2 = mockRemoteServer2.address();
-			const remotePort2 = typeof remoteAddress2 === "string" ? remoteAddress2 : remoteAddress2?.port;
+			const remotePort2 =
+				typeof remoteAddress2 === "string"
+					? remoteAddress2
+					: remoteAddress2?.port;
 
 			process.env.PROSOPO_FILE_SERVER_PORT = "0";
 			process.env.PROSOPO_FILE_SERVER_PATHS = "[]";
-			process.env.PROSOPO_FILE_SERVER_REMOTES = JSON.stringify([`http://localhost:${remotePort1}`, `http://localhost:${remotePort2}`]);
+			process.env.PROSOPO_FILE_SERVER_REMOTES = JSON.stringify([
+				`http://localhost:${remotePort1}`,
+				`http://localhost:${remotePort2}`,
+			]);
 			process.env.PROSOPO_FILE_SERVER_RESIZE = undefined;
 			process.env.PROSOPO_LOG_LEVEL = undefined;
 			process.env.NODE_ENV = undefined;
@@ -171,5 +190,4 @@ describe("main integration", () => {
 			await new Promise((resolve) => mockRemoteServer2.close(resolve));
 		}
 	});
-
 });
