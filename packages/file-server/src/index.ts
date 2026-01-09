@@ -70,17 +70,32 @@ export const main = async () => {
 			try {
 				const result = await fetch(`${remote}${req.url}`);
 				if (result.status !== 200) {
-					console.warn("not found", remote, req.url, req.statusCode);
+					console.warn("not found", remote, req.url, result.status);
 					continue;
 				}
 				console.info("found", remote, req.url);
 				const imgTmp = await result.arrayBuffer();
 				img = Buffer.from(imgTmp);
 
-				// Forward content-type header from remote response
+				// Forward important headers from remote response
 				const contentType = result.headers.get('content-type');
 				if (contentType) {
 					res.setHeader('Content-Type', contentType);
+				}
+
+				const contentLength = result.headers.get('content-length');
+				if (contentLength) {
+					res.setHeader('Content-Length', contentLength);
+				}
+
+				const lastModified = result.headers.get('last-modified');
+				if (lastModified) {
+					res.setHeader('Last-Modified', lastModified);
+				}
+
+				const cacheControl = result.headers.get('cache-control');
+				if (cacheControl) {
+					res.setHeader('Cache-Control', cacheControl);
 				}
 			} catch (error) {
 				console.warn("error", remote, req.url, error);

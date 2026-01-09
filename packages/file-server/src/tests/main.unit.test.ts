@@ -106,7 +106,15 @@ describe("main", () => {
 			status: 200,
 			arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(8)),
 			headers: {
-				get: vi.fn().mockReturnValue('image/jpeg'),
+				get: vi.fn((header: string) => {
+					switch (header) {
+						case 'content-type': return 'image/jpeg';
+						case 'content-length': return '1024';
+						case 'last-modified': return 'Wed, 21 Oct 2023 07:28:00 GMT';
+						case 'cache-control': return 'max-age=3600';
+						default: return null;
+					}
+				}),
 			},
 		};
 		vi.mocked(global.fetch).mockResolvedValue(mockResponse as unknown as Response);
@@ -131,7 +139,14 @@ describe("main", () => {
 		}
 
 		expect(mockResponse.headers.get).toHaveBeenCalledWith('content-type');
+		expect(mockResponse.headers.get).toHaveBeenCalledWith('content-length');
+		expect(mockResponse.headers.get).toHaveBeenCalledWith('last-modified');
+		expect(mockResponse.headers.get).toHaveBeenCalledWith('cache-control');
+
 		expect(mockRes.setHeader).toHaveBeenCalledWith('Content-Type', 'image/jpeg');
+		expect(mockRes.setHeader).toHaveBeenCalledWith('Content-Length', '1024');
+		expect(mockRes.setHeader).toHaveBeenCalledWith('Last-Modified', 'Wed, 21 Oct 2023 07:28:00 GMT');
+		expect(mockRes.setHeader).toHaveBeenCalledWith('Cache-Control', 'max-age=3600');
 
 		expect(sharp).toHaveBeenCalled();
 		const sharpInstance = vi.mocked(sharp).mock.results[0]?.value;
