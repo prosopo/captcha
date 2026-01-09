@@ -36,7 +36,7 @@ if (typeof window !== "undefined") {
 if (typeof HTMLCanvasElement !== "undefined") {
 	HTMLCanvasElement.prototype.getContext = function (
 		contextId: string,
-		options?: any
+		options?: CanvasRenderingContext2DSettings,
 	): RenderingContext | null {
 		if (contextId === "2d") {
 			// Return a minimal mock 2D context that satisfies the interface

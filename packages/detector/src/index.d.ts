@@ -14,10 +14,17 @@
 
 import type { Account, RandomProvider } from "@prosopo/types";
 
-export function detect(): Promise<{
+export function detect(
+	environment: Record<string, unknown>,
+	getRandomProvider: () => Promise<RandomProvider>,
+	container?: HTMLElement,
+	restartFn?: () => void,
+	accountGetter?: () => Promise<Account>
+): Promise<{
 	token: string;
 	encryptHeadHash: string;
-	provider: RandomProvider;
-	userAccount: Account;
+	shadowDomCleanup: () => void;
+	provider?: RandomProvider;
+	userAccount?: Account;
 }>;
 //# sourceMappingURL=index.d.ts.map
