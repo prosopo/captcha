@@ -41,13 +41,18 @@ export class ProcaptchaComponent {
 	}
 
 	private render(): void {
-		for (const attr in this.htmlAttributes) {
-			this.elementRef.nativeElement.setAttribute(
-				attr,
-				this.htmlAttributes[attr],
-			);
+		// Clear existing attributes to prevent accumulation when htmlAttributes changes
+		const element = this.elementRef.nativeElement;
+		const attributes = Array.from(element.attributes);
+		for (const attr of attributes) {
+			element.removeAttribute((attr as Attr).name);
 		}
 
-		renderProcaptcha(this.elementRef.nativeElement, this.settings);
+		// Set new attributes
+		for (const attr in this.htmlAttributes) {
+			element.setAttribute(attr, this.htmlAttributes[attr]);
+		}
+
+		renderProcaptcha(element, this.settings);
 	}
 }

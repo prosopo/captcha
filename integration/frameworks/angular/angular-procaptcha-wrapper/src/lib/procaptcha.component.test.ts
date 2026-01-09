@@ -60,6 +60,13 @@ describe("ProcaptchaComponent", () => {
 		// Create a mock native element
 		mockNativeElement = document.createElement("div");
 		mockNativeElement.setAttribute = vi.fn();
+		mockNativeElement.removeAttribute = vi.fn();
+		// Mock the attributes property to return an empty array-like object
+		Object.defineProperty(mockNativeElement, "attributes", {
+			value: [],
+			writable: true,
+			configurable: true,
+		});
 
 		// Create a mock ElementRef
 		mockElementRef = {
@@ -363,6 +370,53 @@ describe("ProcaptchaComponent", () => {
 			expect(mockNativeElement.setAttribute).toHaveBeenCalledWith(
 				"class",
 				"new-class",
+			);
+		});
+	});
+
+	it("should clear old HTML attributes when htmlAttributes changes", async () => {
+		// Testing that old attributes are removed when htmlAttributes changes
+		const settings: ProcaptchaRenderOptions = {
+			siteKey: "test-site-key",
+		};
+		component.settings = settings;
+
+		// Set initial attributes and simulate existing DOM attributes
+		component.htmlAttributes = {
+			id: "initial-id",
+			"data-old": "old-value",
+		};
+		// Mock existing attributes on the element
+		mockNativeElement.attributes = [{ name: "id" }, { name: "data-old" }];
+		mockRenderProcaptcha.mockResolvedValue(undefined);
+		component.ngOnInit();
+
+		// Change to different attributes
+		component.htmlAttributes = {
+			class: "new-class",
+			"data-new": "new-value",
+		};
+		// Update mock to reflect current attributes before clearing
+		mockNativeElement.attributes = [{ name: "id" }, { name: "data-old" }];
+		vi.clearAllMocks();
+		mockRenderProcaptcha.mockResolvedValue(undefined);
+
+		component.ngOnChanges();
+
+		await vi.waitFor(() => {
+			// Verify old attributes are removed
+			expect(mockNativeElement.removeAttribute).toHaveBeenCalledWith("id");
+			expect(mockNativeElement.removeAttribute).toHaveBeenCalledWith(
+				"data-old",
+			);
+			// Verify new attributes are set
+			expect(mockNativeElement.setAttribute).toHaveBeenCalledWith(
+				"class",
+				"new-class",
+			);
+			expect(mockNativeElement.setAttribute).toHaveBeenCalledWith(
+				"data-new",
+				"new-value",
 			);
 		});
 	});
