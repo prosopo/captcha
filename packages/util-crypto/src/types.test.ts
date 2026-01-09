@@ -20,6 +20,8 @@
  */
 
 import { describe, expect, expectTypeOf, it } from "vitest";
+import { validateAddress } from "./address/index.js";
+import { isBase32 } from "./base32/index.js";
 import type {
 	JWT,
 	JWTHeader,
@@ -29,8 +31,6 @@ import type {
 	Seedpair,
 	VerifyResult,
 } from "./types.js";
-import { validateAddress } from "./address/index.js";
-import { isBase32 } from "./base32/index.js";
 
 describe("Type Guards", () => {
 	// Test type guards that narrow types at runtime
@@ -87,7 +87,9 @@ describe("Type Relationships", () => {
 
 		// VerifyResult should not be assignable to JWTVerifyResult (missing payload)
 		// This tests that the extension relationship is one-way
-		expectTypeOf(verifyResult as any).not.toHaveProperty("payload");
+		expectTypeOf(verifyResult as Record<string, unknown>).not.toHaveProperty(
+			"payload",
+		);
 	});
 
 	it("JWT is a branded string type", () => {
@@ -104,7 +106,12 @@ describe("Type Relationships", () => {
 describe("Union Types", () => {
 	// Test union type constraints
 	it("KeypairType only allows specific string literals", () => {
-		const validTypes: KeypairType[] = ["ed25519", "sr25519", "ecdsa", "ethereum"];
+		const validTypes: KeypairType[] = [
+			"ed25519",
+			"sr25519",
+			"ecdsa",
+			"ethereum",
+		];
 
 		for (const type of validTypes) {
 			expectTypeOf(type).toEqualTypeOf<KeypairType>();

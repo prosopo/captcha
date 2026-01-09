@@ -90,7 +90,7 @@ describe("jsonDecrypt", (): void => {
 			...encrypted,
 			encoding: {
 				...encrypted.encoding,
-				type: "scrypt" as any,
+				type: "scrypt",
 			},
 		};
 

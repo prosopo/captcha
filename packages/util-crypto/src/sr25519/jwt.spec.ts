@@ -139,22 +139,22 @@ describe("sr25519jwtParts", (): void => {
 	});
 
 	it("throws error when JWT has invalid number of parts", (): void => {
-		expect(() => sr25519jwtParts("invalid.jwt" as any)).toThrow(
+		expect(() => sr25519jwtParts("invalid.jwt" as JWT)).toThrow(
 			"Invalid JWT format, expected 3 parts, found 2",
 		);
-		expect(() => sr25519jwtParts("one.two.three.four" as any)).toThrow(
+		expect(() => sr25519jwtParts("one.two.three.four" as JWT)).toThrow(
 			"Invalid JWT format, expected 3 parts, found 4",
 		);
 	});
 
 	it("throws error when JWT parts are empty", (): void => {
-		expect(() => sr25519jwtParts(".." as any)).toThrow(
+		expect(() => sr25519jwtParts(".." as JWT)).toThrow(
 			"Invalid JWT format, parts cannot be empty",
 		);
-		expect(() => sr25519jwtParts("header.." as any)).toThrow(
+		expect(() => sr25519jwtParts("header.." as JWT)).toThrow(
 			"Invalid JWT format, parts cannot be empty",
 		);
-		expect(() => sr25519jwtParts(".payload." as any)).toThrow(
+		expect(() => sr25519jwtParts(".payload." as JWT)).toThrow(
 			"Invalid JWT format, parts cannot be empty",
 		);
 	});
