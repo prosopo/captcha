@@ -14,6 +14,7 @@
 
 import type { ProcaptchaClientConfigOutput } from "@prosopo/types";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { u8aToHex } from "@prosopo/util";
 import { ExtensionWeb2 } from "./ExtensionWeb2.js";
 
 // Mock only getFingerprint since it requires browser environment
@@ -39,7 +40,9 @@ describe("ExtensionWeb2 Integration", () => {
 	});
 
 	describe("getAccount", () => {
-		it("should return an account with extension", async () => {
+		it("should create and return a complete account object with extension", async () => {
+			// Test that getAccount returns an object with both account and extension properties
+			// This tests the integration of account creation and extension setup
 			const result = await extensionWeb2.getAccount(mockConfig);
 
 			expect(result).toHaveProperty("account");
@@ -50,7 +53,9 @@ describe("ExtensionWeb2 Integration", () => {
 			expect(result.account.address.length).toBeGreaterThan(0);
 		});
 
-		it("should create extension with functional accounts.get", async () => {
+		it("should create extension with functional accounts.get method", async () => {
+			// Test that the created extension has a working accounts.get method
+			// This tests the mock extension implementation returns valid account data
 			const result = await extensionWeb2.getAccount(mockConfig);
 			expect(result.extension).toBeDefined();
 			if (!result.extension) {
@@ -64,7 +69,9 @@ describe("ExtensionWeb2 Integration", () => {
 			expect(accounts[0]).toHaveProperty("name");
 		});
 
-		it("should create extension with functional accounts.subscribe", async () => {
+		it("should create extension with functional accounts.subscribe method", async () => {
+			// Test that the created extension has a working accounts.subscribe method
+			// This tests the mock extension subscription functionality
 			const result = await extensionWeb2.getAccount(mockConfig);
 			expect(result.extension).toBeDefined();
 			if (!result.extension) {
@@ -76,7 +83,9 @@ describe("ExtensionWeb2 Integration", () => {
 			expect(() => unsubscribe()).not.toThrow();
 		});
 
-		it("should create signer with functional signRaw", async () => {
+		it("should create signer with functional signRaw method", async () => {
+			// Test that the created extension has a working signer.signRaw method
+			// This tests the integration of keypair signing with the mock signer interface
 			const result = await extensionWeb2.getAccount(mockConfig);
 			expect(result.extension).toBeDefined();
 			if (!result.extension) {
@@ -84,7 +93,7 @@ describe("ExtensionWeb2 Integration", () => {
 			}
 			const payload = {
 				address: result.account.address,
-				data: new Uint8Array([1, 2, 3, 4, 5]),
+				data: u8aToHex(new Uint8Array([1, 2, 3, 4, 5])),
 				type: "bytes" as const,
 			};
 
@@ -100,13 +109,15 @@ describe("ExtensionWeb2 Integration", () => {
 			expect(signResult.signature.startsWith("0x")).toBe(true);
 		});
 
-		it("should sign same data", async () => {
+		it("should sign same data consistently", async () => {
+			// Test that signing the same data multiple times produces the same signature
+			// This tests the deterministic nature of the signing process
 			const result = await extensionWeb2.getAccount(mockConfig);
 
 			const data = new Uint8Array([1, 2, 3]);
 			const payload = {
 				address: result.account.address,
-				data,
+				data: u8aToHex(data),
 				type: "bytes" as const,
 			};
 
@@ -127,16 +138,18 @@ describe("ExtensionWeb2 Integration", () => {
 		});
 
 		it("should sign different data with different signatures", async () => {
+			// Test that signing different data produces different signatures
+			// This tests the cryptographic integrity of the signing process
 			const result = await extensionWeb2.getAccount(mockConfig);
 
 			const payload1 = {
 				address: result.account.address,
-				data: new Uint8Array([1, 2, 3]),
+				data: u8aToHex(new Uint8Array([1, 2, 3])),
 				type: "bytes" as const,
 			};
 			const payload2 = {
 				address: result.account.address,
-				data: new Uint8Array([4, 5, 6]),
+				data: u8aToHex(new Uint8Array([4, 5, 6])),
 				type: "bytes" as const,
 			};
 
@@ -156,6 +169,8 @@ describe("ExtensionWeb2 Integration", () => {
 		});
 
 		it("should create consistent account for same fingerprint", async () => {
+			// Test that the same fingerprint produces the same account
+			// This tests the deterministic account generation from browser entropy
 			const result1 = await extensionWeb2.getAccount(mockConfig);
 			const result2 = await extensionWeb2.getAccount(mockConfig);
 
@@ -164,6 +179,8 @@ describe("ExtensionWeb2 Integration", () => {
 		});
 
 		it("should use sr25519 keypair type", async () => {
+			// Test that accounts are created with the correct cryptographic keypair type
+			// This tests the integration with the Prosopo keyring using sr25519
 			const result = await extensionWeb2.getAccount(mockConfig);
 
 			expect(result.account.address).toBeDefined();
@@ -171,6 +188,8 @@ describe("ExtensionWeb2 Integration", () => {
 		});
 
 		it("should create extension with correct name and version", async () => {
+			// Test that the created extension has the expected metadata
+			// This tests the mock extension configuration
 			const result = await extensionWeb2.getAccount(mockConfig);
 
 			expect(result.extension).toBeDefined();
@@ -185,11 +204,13 @@ describe("ExtensionWeb2 Integration", () => {
 
 	describe("extends Extension", () => {
 		it("should be instance of Extension", async () => {
+			// Test that ExtensionWeb2 properly implements the Extension interface
 			const { Extension } = await import("./Extension.js");
 			expect(extensionWeb2).toBeInstanceOf(Extension);
 		});
 
 		it("should implement getAccount method", () => {
+			// Test that ExtensionWeb2 provides the required getAccount method
 			expect(extensionWeb2.getAccount).toBeDefined();
 			expect(typeof extensionWeb2.getAccount).toBe("function");
 		});
