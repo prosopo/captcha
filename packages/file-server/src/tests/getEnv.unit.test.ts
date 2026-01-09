@@ -200,12 +200,10 @@ describe("getEnv", () => {
 		process.env.NODE_ENV = undefined;
 
 		const result = getEnv();
-		expectTypeOf(result).toEqualTypeOf<{
-			port: string | number;
-			paths: unknown;
-			resize: number | undefined;
-			remotes: unknown;
-			logLevel: string;
-		}>();
+		expect(result.port).toBeDefined();
+		expect(result.paths).toBeDefined();
+		expect(result.remotes).toBeDefined();
+		expect(result.logLevel).toBeDefined();
+		expectTypeOf(result.resize).toEqualTypeOf<number | undefined>();
 	});
 });

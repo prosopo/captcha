@@ -41,10 +41,12 @@ vi.mock("express", () => {
 			};
 		}),
 	};
-	const mockExpress = vi.fn(() => mockApp);
-	mockExpress.static = vi.fn(() => vi.fn());
+	const mockExpress = Object.assign(vi.fn(() => mockApp), {
+		static: vi.fn(() => vi.fn()),
+	});
 	return {
 		default: mockExpress,
+		__esModule: true,
 	};
 });
 
@@ -103,14 +105,18 @@ describe("main", () => {
 		const mockResponse = {
 			status: 200,
 			arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(8)),
+			headers: {
+				get: vi.fn().mockReturnValue('image/jpeg'),
+			},
 		};
-		vi.mocked(global.fetch).mockResolvedValue(mockResponse as Response);
+		vi.mocked(global.fetch).mockResolvedValue(mockResponse as unknown as Response);
 
 		const mockApp = express();
 		const mockRes = {
 			status: vi.fn().mockReturnThis(),
 			send: vi.fn(),
 			pipe: vi.fn(),
+			setHeader: vi.fn(),
 		};
 		const mockReq = {
 			url: "/test.jpg",
@@ -123,6 +129,9 @@ describe("main", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: Test mocks
 			await getHandler(mockReq as any, mockRes as any);
 		}
+
+		expect(mockResponse.headers.get).toHaveBeenCalledWith('content-type');
+		expect(mockRes.setHeader).toHaveBeenCalledWith('Content-Type', 'image/jpeg');
 
 		expect(sharp).toHaveBeenCalled();
 		const sharpInstance = vi.mocked(sharp).mock.results[0]?.value;

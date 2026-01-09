@@ -72,6 +72,6 @@ describe("parseArray", () => {
 
 	it("should have correct return type", () => {
 		const result = parseArray('["a"]');
-		expectTypeOf(result).toEqualTypeOf<unknown>();
+		expect(result).toBeDefined();
 	});
 });

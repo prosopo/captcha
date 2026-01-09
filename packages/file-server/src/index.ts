@@ -76,6 +76,12 @@ export const main = async () => {
 				console.info("found", remote, req.url);
 				const imgTmp = await result.arrayBuffer();
 				img = Buffer.from(imgTmp);
+
+				// Forward content-type header from remote response
+				const contentType = result.headers.get('content-type');
+				if (contentType) {
+					res.setHeader('Content-Type', contentType);
+				}
 			} catch (error) {
 				console.warn("error", remote, req.url, error);
 				continue;

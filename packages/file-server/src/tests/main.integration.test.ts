@@ -21,7 +21,7 @@ import { main } from "../index.js";
 
 // Store original environment and server instance
 const originalEnv = process.env;
-let server: ReturnType<ReturnType<typeof main>>;
+let server: Awaited<ReturnType<typeof main>>;
 
 describe("main integration", () => {
 	beforeEach(() => {
@@ -72,15 +72,13 @@ describe("main integration", () => {
 
 	it("should proxy requests to remote servers", async () => {
 		// Start a mock remote server
-		const mockRemoteServer = await new Promise<
-			ReturnType<ReturnType<typeof main>>
-		>((resolve) => {
+		const mockRemoteServer = await new Promise((resolve) => {
 			const app = express();
 			app.get("/remote-file.txt", (req: Request, res: Response) => {
 				res.send("Remote content");
 			});
 			const server = app.listen(0, () => resolve(server));
-		});
+		}) as any;
 
 		try {
 			const remoteAddress = mockRemoteServer.address();
@@ -132,25 +130,21 @@ describe("main integration", () => {
 
 	it("should fallback to next remote when first remote returns 404", async () => {
 		// Start two mock remote servers - first returns 404, second returns content
-		const mockRemoteServer1 = await new Promise<
-			ReturnType<ReturnType<typeof main>>
-		>((resolve) => {
+		const mockRemoteServer1 = await new Promise((resolve) => {
 			const app = express();
 			app.get("/test.txt", (req: Request, res: Response) => {
 				res.status(404).send("Not found on server 1");
 			});
 			const server = app.listen(0, () => resolve(server));
-		});
+		}) as any;
 
-		const mockRemoteServer2 = await new Promise<
-			ReturnType<ReturnType<typeof main>>
-		>((resolve) => {
+		const mockRemoteServer2 = await new Promise((resolve) => {
 			const app = express();
 			app.get("/test.txt", (req: Request, res: Response) => {
 				res.send("Content from server 2");
 			});
 			const server = app.listen(0, () => resolve(server));
-		});
+		}) as any;
 
 		try {
 			const remoteAddress1 = mockRemoteServer1.address();
