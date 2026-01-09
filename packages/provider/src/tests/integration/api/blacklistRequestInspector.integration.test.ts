@@ -93,8 +93,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					},
 				},
 				redisConnection: {
-					host: redisHost,
-					port: redisPort,
+					url: `redis://:${encodeURIComponent("root")}@${redisHost}:${redisPort}`,
 					password: "root",
 					indexName: randomAsHex(16),
 				},
