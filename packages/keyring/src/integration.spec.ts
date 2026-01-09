@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { KeyringPair$Json } from "@prosopo/types";
 import { describe, expect, it } from "vitest";
 import { Keyring } from "./keyring/keyring.js";
 
@@ -22,7 +23,8 @@ describe("Keyring Integration Tests", () => {
 			const keyring = new Keyring();
 
 			// Add a pair from mnemonic
-			const mnemonic = "bottom drive obey lake curtain smoke basket hold race lonely fit walk";
+			const mnemonic =
+				"bottom drive obey lake curtain smoke basket hold race lonely fit walk";
 			const pair = keyring.addFromMnemonic(mnemonic, { name: "test-pair" });
 
 			// Verify the pair was added
@@ -61,7 +63,11 @@ describe("Keyring Integration Tests", () => {
 			// Verify the imported pair works the same
 			expect(importedPair.address).toBe(pair.address);
 			const newSignature = importedPair.sign(message);
-			const isNewValid = importedPair.verify(message, newSignature, importedPair.publicKey);
+			const isNewValid = importedPair.verify(
+				message,
+				newSignature,
+				importedPair.publicKey,
+			);
 			expect(isNewValid).toBe(true);
 		});
 
@@ -152,11 +158,17 @@ describe("Keyring Integration Tests", () => {
 			const signature1 = childPair1.sign(message);
 			const signature2 = childPair2.sign(message);
 
-			expect(childPair1.verify(message, signature1, childPair1.publicKey)).toBe(true);
-			expect(childPair2.verify(message, signature2, childPair2.publicKey)).toBe(true);
+			expect(childPair1.verify(message, signature1, childPair1.publicKey)).toBe(
+				true,
+			);
+			expect(childPair2.verify(message, signature2, childPair2.publicKey)).toBe(
+				true,
+			);
 
 			// Verify master key can verify child signatures (same key hierarchy)
-			expect(masterPair.verify(message, signature1, childPair1.publicKey)).toBe(true);
+			expect(masterPair.verify(message, signature1, childPair1.publicKey)).toBe(
+				true,
+			);
 		});
 
 		it("should handle JWT operations", () => {
@@ -167,7 +179,7 @@ describe("Keyring Integration Tests", () => {
 
 			// Create JWT
 			const payload = { userId: "123", role: "admin" };
-			const jwt = pair.jwtIssue({ expiresIn: "1h" }, payload);
+			const jwt = pair.jwtIssue({ expiresIn: 3600 }, payload); // 1 hour in seconds
 
 			expect(jwt).toBeDefined();
 			expect(typeof jwt).toBe("string");
@@ -221,8 +233,12 @@ describe("Keyring Integration Tests", () => {
 			expect(pair.isLocked).toBe(true);
 
 			// Should not be able to sign when locked
-			expect(() => pair.sign("test")).toThrow("Cannot sign with a locked key pair");
-			expect(() => pair.vrfSign("test")).toThrow("Cannot sign with a locked key pair");
+			expect(() => pair.sign("test")).toThrow(
+				"Cannot sign with a locked key pair",
+			);
+			expect(() => pair.vrfSign("test")).toThrow(
+				"Cannot sign with a locked key pair",
+			);
 
 			// Unlock the pair
 			pair.unlock();
@@ -268,7 +284,7 @@ describe("Keyring Integration Tests", () => {
 			expect(() => keyring.addFromUri("invalid mnemonic phrase")).toThrow();
 
 			// Try to create from invalid JSON
-			expect(() => keyring.createFromJson({} as any)).toThrow();
+			expect(() => keyring.createFromJson({} as KeyringPair$Json)).toThrow();
 		});
 
 		it("should handle locked pair operations", () => {

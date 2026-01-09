@@ -27,14 +27,12 @@ describe("Keyring", () => {
 
 		it("throws error for unsupported keyring type", () => {
 			expect(() => {
-				// @ts-expect-error - Testing invalid type
-				new Keyring({ type: "ed25519" });
+				new Keyring({ type: "ed25519" as any });
 			}).toThrow(/Expected a keyring type of either 'sr25519'/);
 		});
 
 		it("defaults to sr25519 when type is undefined", () => {
-			// @ts-expect-error - Testing undefined type
-			const keyring = new Keyring({ type: undefined });
+			const keyring = new Keyring({ type: undefined as any });
 			expect(keyring.type).toBe("sr25519");
 		});
 	});
@@ -318,7 +316,7 @@ describe("Keyring", () => {
 				encoded: "",
 				encoding: {
 					content: "pkcs8",
-					type: "none",
+					type: ["none"],
 					version: "0",
 				},
 				meta: {},
@@ -376,7 +374,7 @@ describe("Keyring", () => {
 				encoded: "",
 				encoding: {
 					content: "pkcs8",
-					type: "none",
+					type: ["none"],
 					version: "0",
 				},
 				meta: {},

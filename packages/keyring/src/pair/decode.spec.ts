@@ -42,7 +42,8 @@ describe("decode", (): void => {
 		const dividerStart = 16 + 32 + 1; // header + secret + divider position
 		if (dividerStart + 4 < invalidEncoded.length) {
 			for (let i = 0; i < 4; i++) {
-				invalidEncoded[dividerStart + i] = invalidEncoded[dividerStart + i] === 0 ? 255 : 0;
+				invalidEncoded[dividerStart + i] =
+					invalidEncoded[dividerStart + i] === 0 ? 255 : 0;
 			}
 		}
 
