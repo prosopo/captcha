@@ -24,6 +24,8 @@
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --project tsconfig.types.json",
 		"test": "NODE_ENV=${NODE_ENV:-test}; vitest run --config ./vite.test.config.ts",
+		"test:unit": "NODE_ENV=${NODE_ENV:-test}; TEST_TYPE=unit vitest run --config ./vite.test.config.ts",
+		"test:integration": "NODE_ENV=${NODE_ENV:-test}; TEST_TYPE=integration vitest run --config ./vite.test.config.ts",
 		"cli": "node ./dist/js/cli.js"
 	},
 	"type": "module",
