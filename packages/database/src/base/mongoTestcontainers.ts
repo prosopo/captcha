@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { Logger } from "@prosopo/common";
-import { MongoDBContainer, StartedMongoDBContainer } from "@testcontainers/mongodb";
+import {
+	MongoDBContainer,
+	type StartedMongoDBContainer,
+} from "@testcontainers/mongodb";
 import { MongoDatabase } from "./mongo.js";
 
 export class MongoTestcontainersDatabase extends MongoDatabase {
@@ -32,7 +35,10 @@ export class MongoTestcontainersDatabase extends MongoDatabase {
 		if (!this.containerStarted) {
 			this.container = await new MongoDBContainer().start();
 			// Override the protected _url property
-			(this as any)._url = this.container.getConnectionString();
+			Object.defineProperty(this, "_url", {
+				value: this.container.getConnectionString(),
+				writable: true,
+			});
 			this.containerStarted = true;
 		}
 		await super.connect();
