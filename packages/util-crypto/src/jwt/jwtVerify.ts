@@ -13,7 +13,7 @@ export const jwtVerify = (jwt: JWT, publicKey: Uint8Array): JWTVerifyResult => {
 	}
 
 	const [headerPart, payloadPart, sigPart] = parts;
-	if (!headerPart || !payloadPart || !sigPart) {
+	if (!headerPart || !payloadPart) {
 		throw new Error("Invalid JWT format (empty part)");
 	}
 
