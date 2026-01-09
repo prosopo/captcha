@@ -194,6 +194,35 @@ describe("HttpClientBase", () => {
 			expect(result).toEqual(mockResponse);
 		});
 
+		test("handles RequestInfo as Request object with invalid URL gracefully", async () => {
+			const mockResponse = { data: "fallback" };
+			// Create a mock Request object with an invalid URL to test error handling
+			const invalidRequest = {
+				url: "invalid-url",
+				method: "GET",
+			} as unknown as Request;
+
+			vi.mocked(global.fetch).mockResolvedValueOnce({
+				ok: true,
+				json: async () => mockResponse,
+				headers: new Headers({ "content-type": "application/json" }),
+				url: `${baseURL}${prefix}invalid-url`,
+				status: 200,
+				statusText: "OK",
+				redirected: false,
+				type: "basic" as ResponseType,
+			} as unknown as Response);
+
+			const result = await client.testFetch(invalidRequest);
+
+			// Should fall back to treating the URL as a string path
+			expect(global.fetch).toHaveBeenCalledWith(
+				`${baseURL}${prefix}invalid-url`,
+				undefined,
+			);
+			expect(result).toEqual(mockResponse);
+		});
+
 		test("handles empty string input", async () => {
 			const mockResponse = { data: "test" };
 			vi.mocked(global.fetch).mockResolvedValueOnce({
@@ -478,6 +507,39 @@ describe("HttpClientBase", () => {
 			const expectedPathname = new URL(request.url).pathname;
 			expect(global.fetch).toHaveBeenCalledWith(
 				`${baseURL}${prefix}${expectedPathname}`,
+				expect.objectContaining({
+					method: "POST",
+					body: JSON.stringify(requestBody),
+				}),
+			);
+			expect(result).toEqual(mockResponse);
+		});
+
+		test("handles RequestInfo as Request object with invalid URL gracefully in post", async () => {
+			const requestBody = { data: "test" };
+			const mockResponse = { success: true };
+			// Create a mock Request object with an invalid URL to test error handling
+			const invalidRequest = {
+				url: "invalid-url",
+				method: "POST",
+			} as unknown as Request;
+
+			vi.mocked(global.fetch).mockResolvedValueOnce({
+				ok: true,
+				json: async () => mockResponse,
+				headers: new Headers({ "content-type": "application/json" }),
+				url: `${baseURL}${prefix}invalid-url`,
+				status: 200,
+				statusText: "OK",
+				redirected: false,
+				type: "basic" as ResponseType,
+			} as unknown as Response);
+
+			const result = await client.testPost(invalidRequest, requestBody);
+
+			// Should fall back to treating the URL as a string path
+			expect(global.fetch).toHaveBeenCalledWith(
+				`${baseURL}${prefix}invalid-url`,
 				expect.objectContaining({
 					method: "POST",
 					body: JSON.stringify(requestBody),

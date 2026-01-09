@@ -22,10 +22,19 @@ export class HttpClientBase {
 
 	protected async fetch<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
 		try {
-			const url =
-				typeof input === "string"
-					? this.baseURL + input
-					: this.baseURL + new URL(input.url).pathname;
+			let url: string;
+			if (typeof input === "string") {
+				url = this.baseURL + input;
+			} else {
+				// For Request objects, extract the pathname from the URL
+				try {
+					url = this.baseURL + new URL(input.url).pathname;
+				} catch (urlError) {
+					// If URL parsing fails, fall back to treating it as a string
+					// This shouldn't happen with valid Request objects, but provides safety
+					url = this.baseURL + input.url;
+				}
+			}
 			const response = await fetch(url, init);
 			if (
 				!response.ok &&
@@ -51,10 +60,19 @@ export class HttpClientBase {
 			...(init?.headers || {}),
 		};
 		try {
-			const url =
-				typeof input === "string"
-					? this.baseURL + input
-					: this.baseURL + new URL(input.url).pathname;
+			let url: string;
+			if (typeof input === "string") {
+				url = this.baseURL + input;
+			} else {
+				// For Request objects, extract the pathname from the URL
+				try {
+					url = this.baseURL + new URL(input.url).pathname;
+				} catch (urlError) {
+					// If URL parsing fails, fall back to treating it as a string
+					// This shouldn't happen with valid Request objects, but provides safety
+					url = this.baseURL + input.url;
+				}
+			}
 			const response = await fetch(url, {
 				method: "POST",
 				body: JSON.stringify(body),
