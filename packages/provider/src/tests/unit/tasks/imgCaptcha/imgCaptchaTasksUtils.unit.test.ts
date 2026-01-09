@@ -21,16 +21,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { buildTreeAndGetCommitmentId } from "../../../../tasks/imgCaptcha/imgCaptchaTasksUtils.js";
 
 vi.mock("@prosopo/datasets", () => ({
-	CaptchaMerkleTree: vi.fn().mockImplementation(() => {
-		const mockTree = {
-			build: vi.fn(() => {
-				mockTree.root = { hash: "mockedRootHash" };
-			}),
-			root: { hash: "mockedRootHash" },
-			getRoot: vi.fn().mockReturnValue({ hash: "mockedRootHash" }),
-		};
-		return mockTree;
-	}),
+	CaptchaMerkleTree: vi.fn().mockImplementation(() => ({
+		build: vi.fn(function (this: any) {
+			this.root = { hash: "mockedRootHash" };
+		}),
+		root: null, // Initially null, set by build
+		getRoot: vi.fn().mockReturnValue({ hash: "mockedRootHash" }),
+	})),
 	computeCaptchaSolutionHash: vi.fn(),
 }));
 
@@ -66,11 +63,13 @@ describe("buildTreeAndGetCommitmentId", () => {
 	});
 
 	it("should throw an error if commitmentId does not exist", () => {
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(CaptchaMerkleTree as any).mockImplementation(() => ({
+		// Override the mock for this specific test
+		const originalMock = vi.mocked(CaptchaMerkleTree);
+		vi.mocked(CaptchaMerkleTree).mockImplementationOnce(() => ({
 			build: vi.fn(),
 			root: { hash: null },
-		}));
+			getRoot: vi.fn().mockReturnValue({ hash: null }),
+		} as any));
 
 		expect(() => buildTreeAndGetCommitmentId(mockCaptchaSolutions)).toThrow(
 			new ProsopoEnvError(
@@ -83,5 +82,8 @@ describe("buildTreeAndGetCommitmentId", () => {
 				},
 			),
 		);
+
+		// Restore the original mock
+		vi.mocked(CaptchaMerkleTree).mockImplementation(originalMock.getMockImplementation()!);
 	});
 });

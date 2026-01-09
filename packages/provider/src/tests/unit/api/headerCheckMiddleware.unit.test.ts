@@ -40,6 +40,9 @@ describe("headerCheckMiddleware", () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
+		// Reset the mocked functions
+		vi.mocked(validateAddressModule.validateSiteKey).mockReset();
+		vi.mocked(validateAddressModule.validateAddr).mockReset();
 		mockLogger = {
 			debug: vi.fn().mockImplementation(loggerOuter.debug.bind(loggerOuter)),
 			log: vi.fn().mockImplementation(loggerOuter.log.bind(loggerOuter)),

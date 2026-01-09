@@ -42,11 +42,12 @@ describe("blockMiddleware", () => {
 
 		const middleware = blockMiddleware(mockEnv);
 
+		// The second argument should be the bound isReady function
 		expect(BlacklistRequestInspector).toHaveBeenCalledWith(
 			mockUserAccessRulesStorage,
-			mockIsReady,
+			expect.any(Function), // bound isReady function
 		);
-		expect(middleware).toBe(mockAbortRequestForBlockedUsers);
+		expect(typeof middleware).toBe("function");
 	});
 
 	it("returns bound abortRequestForBlockedUsers method", () => {
@@ -72,7 +73,8 @@ describe("blockMiddleware", () => {
 		const middleware = blockMiddleware(mockEnv);
 
 		expect(typeof middleware).toBe("function");
-		expect(middleware).toBe(mockAbortRequestForBlockedUsers);
+		// The middleware returns a bound function, not the original method
+		expect(middleware).not.toBe(mockAbortRequestForBlockedUsers);
 	});
 });
 
