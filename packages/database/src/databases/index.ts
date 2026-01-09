@@ -14,6 +14,7 @@
 import { DatabaseTypes } from "@prosopo/types";
 import { MongoDatabase } from "../base/mongo.js";
 import { MongoMemoryDatabase } from "../base/mongoMemory.js";
+import { MongoTestcontainersDatabase } from "../base/mongoTestcontainers.js";
 import { CaptchaDatabase } from "./captcha.js";
 import { ClientDatabase } from "./client.js";
 import { ProviderDatabase } from "./provider.js";
@@ -26,4 +27,5 @@ export const Databases = {
 	[DatabaseTypes.Values.client]: ClientDatabase,
 	[DatabaseTypes.Values.captcha]: CaptchaDatabase,
 	[DatabaseTypes.Values.mongoMemory]: MongoMemoryDatabase,
+	[DatabaseTypes.Values.mongoTestcontainers]: MongoTestcontainersDatabase,
 };

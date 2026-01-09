@@ -60,6 +60,7 @@ const LogLevel = zEnum([
 export const DatabaseTypes = zEnum([
 	"mongo",
 	"mongoMemory",
+	"mongoTestcontainers",
 	"provider",
 	"client",
 	"captcha",
