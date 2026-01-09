@@ -25,7 +25,9 @@
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --project tsconfig.types.json",
-		"test": "NODE_ENV=${NODE_ENV:-test}; vitest run --config ./vite.test.config.ts"
+		"test": "npm run test:unit",
+		"test:unit": "NODE_ENV=${NODE_ENV:-test}; TEST_TYPE=unit vitest run --config ./vite.test.config.ts",
+		"test:integration": "NODE_ENV=${NODE_ENV:-test}; TEST_TYPE=integration vitest run --config ./vite.test.config.ts"
 	},
 	"browserslist": ["> 0.5%, last 2 versions, not dead"],
 	"dependencies": {
@@ -56,6 +58,7 @@
 		"dotenv": "16.4.5",
 		"jsdom": "25.0.0",
 		"npm-run-all": "4.1.5",
+		"testcontainers": "^10.7.2",
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
