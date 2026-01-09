@@ -139,12 +139,11 @@ export type PoWChallengeId =
 // biome-ignore lint/suspicious/noExplicitAny: TODO fix
 export const PowChallengeIdSchema = custom<PoWChallengeId>((val: any) => {
 	const valSplit = val.split(POW_SEPARATOR);
-	try {
-		Number.parseInt(valSplit[0]);
-		return valSplit.length === 4;
-	} catch (e) {
+	if (valSplit.length !== 4) {
 		return false;
 	}
+	const timestamp = Number.parseInt(valSplit[0], 10);
+	return !Number.isNaN(timestamp) && Number.isFinite(timestamp);
 });
 
 export interface CaptchaSolution {

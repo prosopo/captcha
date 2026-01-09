@@ -354,6 +354,11 @@ describe("captcha schemas", () => {
 			const challengeId = `1234567890${POW_SEPARATOR}userAccount${POW_SEPARATOR}dappAccount${POW_SEPARATOR}extra`;
 			expect(() => PowChallengeIdSchema.parse(challengeId)).not.toThrow();
 		});
+
+		it("rejects challenge ID with non-numeric timestamp in 4-part format", () => {
+			const invalidId = `not-a-number${POW_SEPARATOR}userAccount${POW_SEPARATOR}dappAccount${POW_SEPARATOR}extra`;
+			expect(() => PowChallengeIdSchema.parse(invalidId)).toThrow();
+		});
 	});
 
 	describe("enums", () => {
