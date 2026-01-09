@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, expect, it, beforeEach, afterEach } from "vitest";
+import { describe, expect, it, beforeAll, afterAll, beforeEach, afterEach } from "vitest";
+import { MongoDBContainer, type StartedMongoDBContainer } from "testcontainers";
 import { MongoDatabase } from "./mongo.js";
 import { getLogger } from "@prosopo/common";
 
@@ -21,12 +22,28 @@ import { getLogger } from "@prosopo/common";
  * These tests verify actual database connectivity and operations.
  */
 describe("MongoDatabase - Integration", () => {
+	let mongoContainer: StartedMongoDBContainer;
 	let db: MongoDatabase;
 	const logger = getLogger("info", "mongo.integration.test");
 
+	beforeAll(async () => {
+		// Start MongoDB container for this test suite
+		mongoContainer = await new MongoDBContainer("mongo:7.0")
+			.withExposedPorts(27017)
+			.start();
+	}, 60000);
+
+	afterAll(async () => {
+		if (mongoContainer) {
+			await mongoContainer.stop().catch(() => {
+				// Ignore cleanup errors
+			});
+		}
+	}, 30000);
+
 	beforeEach(() => {
 		// Use testcontainers MongoDB instance
-		const mongoUrl = process.env.MONGODB_URL || "mongodb://127.0.0.1:27017";
+		const mongoUrl = mongoContainer.getConnectionString();
 		db = new MongoDatabase(mongoUrl, "testdb", undefined, logger);
 	});
 

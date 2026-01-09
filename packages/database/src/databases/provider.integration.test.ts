@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,24 +12,50 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, expect, it, beforeEach, afterEach } from "vitest";
+import { describe, expect, it, beforeAll, afterAll, beforeEach, afterEach } from "vitest";
+import { MongoDBContainer, GenericContainer, type StartedMongoDBContainer, type StartedTestContainer } from "testcontainers";
 import { ProviderDatabase } from "./provider.js";
 import type { Dataset, Captcha, SolutionRecord } from "@prosopo/types-database";
 import { getLogger } from "@prosopo/common";
-import { connectToRedis, setupRedisIndex } from "@prosopo/redis-client";
 
 /**
  * Integration tests for ProviderDatabase that use real MongoDB and Redis connections via testcontainers.
  * These tests verify actual database operations with real data.
  */
 describe("ProviderDatabase - Integration", () => {
+	let mongoContainer: StartedMongoDBContainer;
+	let redisContainer: StartedTestContainer;
 	let db: ProviderDatabase;
 	const logger = getLogger("info", "provider.integration.test");
 
+	beforeAll(async () => {
+		// Start containers for this test suite
+		mongoContainer = await new MongoDBContainer("mongo:7.0")
+			.withExposedPorts(27017)
+			.start();
+
+		redisContainer = await new GenericContainer("redis:7.2")
+			.withExposedPorts(6379)
+			.start();
+	}, 60000);
+
+	afterAll(async () => {
+		if (mongoContainer) {
+			await mongoContainer.stop().catch(() => {
+				// Ignore cleanup errors
+			});
+		}
+		if (redisContainer) {
+			await redisContainer.stop().catch(() => {
+				// Ignore cleanup errors
+			});
+		}
+	}, 30000);
+
 	beforeEach(async () => {
 		// Use testcontainers instances
-		const mongoUrl = process.env.MONGODB_URL || "mongodb://127.0.0.1:27017";
-		const redisUrl = process.env.REDIS_URL || "redis://127.0.0.1:6379";
+		const mongoUrl = mongoContainer.getConnectionString();
+		const redisUrl = `redis://${redisContainer.getHost()}:${redisContainer.getMappedPort(6379)}`;
 
 		db = new ProviderDatabase({
 			mongo: {
