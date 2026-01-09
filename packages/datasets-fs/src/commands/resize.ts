@@ -1,12 +1,4 @@
-import fs from "node:fs";
-import { blake2b } from "@noble/hashes/blake2b";
-import { ProsopoDatasetError, ProsopoEnvError } from "@prosopo/common";
-import { type Data, DataSchema, type Item } from "@prosopo/types";
-import { u8aToHex } from "@prosopo/util";
-import { lodash } from "@prosopo/util/lodash";
-import cliProgress from "cli-progress";
-import sharp from "sharp";
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +11,14 @@ import sharp from "sharp";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import fs from "node:fs";
+import { blake2b } from "@noble/hashes/blake2b";
+import { ProsopoDatasetError, ProsopoEnvError } from "@prosopo/common";
+import { type Data, DataSchema, type Item } from "@prosopo/types";
+import { u8aToHex } from "@prosopo/util";
+import { lodash } from "@prosopo/util/lodash";
+import cliProgress from "cli-progress";
+import sharp from "sharp";
 import * as z from "zod";
 import {
 	InputOutputArgsSchema,

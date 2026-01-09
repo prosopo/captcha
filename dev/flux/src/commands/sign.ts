@@ -1,9 +1,4 @@
-import { u8aToHex } from "@polkadot/util";
-import { base58Decode, base64Encode } from "@polkadot/util-crypto";
-import type { Keypair } from "@polkadot/util-crypto/types";
-import { LogLevel, type Logger, getLogger } from "@prosopo/common";
-import type { ArgumentsCamelCase, Argv } from "yargs";
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +11,11 @@ import type { ArgumentsCamelCase, Argv } from "yargs";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { u8aToHex } from "@polkadot/util";
+import { base58Decode, base64Encode } from "@polkadot/util-crypto";
+import type { Keypair } from "@polkadot/util-crypto/types";
+import { LogLevel, type Logger, getLogger } from "@prosopo/common";
+import type { ArgumentsCamelCase, Argv } from "yargs";
 import * as z from "zod";
 import { sign } from "../lib/sep256k1Sign.js";
 import { getPrivateKey, getPublicKey } from "./process.env.js";

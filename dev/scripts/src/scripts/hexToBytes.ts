@@ -1,5 +1,4 @@
-import { hexToU8a } from "@polkadot/util";
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +11,7 @@ import { hexToU8a } from "@polkadot/util";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { hexToU8a } from "@polkadot/util";
 import { at } from "@prosopo/util";
 
 const arg = at(process.argv.slice(2), 0).trim();

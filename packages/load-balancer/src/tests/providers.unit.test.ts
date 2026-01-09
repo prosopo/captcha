@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,18 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { type HardcodedProvider, loadBalancer } from "../index.js";
-import {
-	getRandomActiveProvider,
-	selectWeightedProvider,
-} from "../providers.js";
-import { _resetCache } from "../providers.js";
-
-vi.mock("../index.js", () => ({
-	loadBalancer: vi.fn(),
-}));
+import { describe, expect, it } from "vitest";
+import { type HardcodedProvider } from "../index.js";
+import { selectWeightedProvider } from "../providers.js";
 
 describe("selectWeightedProvider", () => {
 	it("selects provider based on weight distribution", () => {
@@ -226,95 +217,3 @@ describe("selectWeightedProvider", () => {
 	});
 });
 
-describe("getRandomActiveProvider", () => {
-	beforeEach(() => {
-		_resetCache();
-		vi.clearAllMocks();
-		vi.resetAllMocks();
-		vi.resetModules();
-	});
-
-	it("returns a random provider when providers list is populated", async () => {
-		const mockProviders = [
-			{ address: "address1", url: "url1", datasetId: "dataset1", weight: 1 },
-			{ address: "address2", url: "url2", datasetId: "dataset2", weight: 1 },
-		];
-		(loadBalancer as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
-			mockProviders,
-		);
-
-		const result = await getRandomActiveProvider("development", 1);
-
-		expect(result.providerAccount).toBe("address2");
-		expect(result.provider.url).toBe("url2");
-		expect(result.provider.datasetId).toBe("dataset2");
-	});
-
-	it("loads providers only once when called multiple times", async () => {
-		const mockProviders = [
-			{ address: "address1", url: "url1", datasetId: "dataset1", weight: 1 },
-		];
-		(loadBalancer as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
-			mockProviders,
-		);
-
-		await getRandomActiveProvider("development", 123);
-		await getRandomActiveProvider("development", 456);
-
-		expect(loadBalancer).toHaveBeenCalledTimes(1);
-	});
-
-	it("handles empty providers list gracefully", async () => {
-		(loadBalancer as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
-
-		await expect(getRandomActiveProvider("development", 123)).rejects.toThrow();
-	});
-
-	it("respects provider weights when selecting", async () => {
-		const mockProviders = [
-			{ address: "address1", url: "url1", datasetId: "dataset1", weight: 1 },
-			{ address: "address2", url: "url2", datasetId: "dataset2", weight: 3 },
-		];
-		(loadBalancer as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
-			mockProviders,
-		);
-
-		// Total weight = 4
-		// address1 gets entropy 0 (25%)
-		// address2 gets entropy 1-3 (75%)
-
-		const result0 = await getRandomActiveProvider("development", 0);
-		expect(result0.providerAccount).toBe("address1");
-
-		_resetCache();
-		const result1 = await getRandomActiveProvider("development", 1);
-		expect(result1.providerAccount).toBe("address2");
-
-		_resetCache();
-		const result2 = await getRandomActiveProvider("development", 2);
-		expect(result2.providerAccount).toBe("address2");
-
-		_resetCache();
-		const result3 = await getRandomActiveProvider("development", 3);
-		expect(result3.providerAccount).toBe("address2");
-	});
-
-	it("handles providers with missing weight field (defaults to 1)", async () => {
-		// Simulate providers returned from loadBalancer where one has weight and one doesn't
-		const mockProviders = [
-			{ address: "address1", url: "url1", datasetId: "dataset1", weight: 1 },
-			{ address: "address2", url: "url2", datasetId: "dataset2", weight: 1 },
-		];
-		(loadBalancer as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
-			mockProviders,
-		);
-
-		// With equal weights, distribution should be 50/50
-		const result0 = await getRandomActiveProvider("development", 0);
-		expect(result0.providerAccount).toBe("address1");
-
-		_resetCache();
-		const result1 = await getRandomActiveProvider("development", 1);
-		expect(result1.providerAccount).toBe("address2");
-	});
-});

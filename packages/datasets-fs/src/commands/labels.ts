@@ -1,8 +1,4 @@
-import fs from "node:fs";
-import { ProsopoDatasetError } from "@prosopo/common";
-import { LabelledDataSchema, type LabelledItem } from "@prosopo/types";
-import { lodash } from "@prosopo/util/lodash";
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +11,10 @@ import { lodash } from "@prosopo/util/lodash";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import fs from "node:fs";
+import { ProsopoDatasetError } from "@prosopo/common";
+import { LabelledDataSchema, type LabelledItem } from "@prosopo/types";
+import { lodash } from "@prosopo/util/lodash";
 import type * as z from "zod";
 import {
 	InputOutputArgsSchema,

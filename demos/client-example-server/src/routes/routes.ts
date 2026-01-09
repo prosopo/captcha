@@ -1,6 +1,4 @@
-import type { ProsopoServerConfigOutput } from "@prosopo/types";
-import express from "express";
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,6 +11,8 @@ import express from "express";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import type { ProsopoServerConfigOutput } from "@prosopo/types";
+import express from "express";
 import type { Connection } from "mongoose";
 import { isAuth, login, signup } from "../controllers/auth.js";
 
