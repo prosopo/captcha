@@ -37,11 +37,10 @@ export default function () {
 	config.test.globals = true;
 
 	// Add testcontainers setup for integration tests
-	if (process.env.TEST_TYPE === 'integration') {
-		config.test.globalSetup = './src/tests/setup/integration.setup.ts';
+	if (process.env.TEST_TYPE === "integration") {
+		config.test.globalSetup = "./src/tests/setup/integration.setup.ts";
 		config.test.environment = "node"; // Use node environment for integration tests
 	}
 
 	return config;
 }
-
