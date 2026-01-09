@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -139,7 +139,6 @@ export function sortAndComputeHashes(
 export function compareCaptchaSolutions(
 	received: CaptchaSolution[],
 	solutions: SolutionRecord[],
-	totalImages: number,
 	threshold: number,
 ): boolean {
 	// Sort both arrays by captchaId
@@ -184,9 +183,11 @@ export function compareCaptchaSolutions(
 			(solution) => !sortedReceivedSolution.includes(solution),
 		).length;
 
-		// Calculate correctness percentage
+		// Calculate correctness percentage based on target solution size
+		// This ensures each captcha is evaluated based on its own correct answers
 		const totalIncorrect = incorrectCount + missingCount;
-		const percentageCorrect = 1 - totalIncorrect / totalImages;
+		const targetSolutionSize = targetSolution.length;
+		const percentageCorrect = targetSolutionSize > 0 ? 1 - totalIncorrect / targetSolutionSize : 0;
 
 		// Return whether solution meets threshold
 		return percentageCorrect >= threshold;
