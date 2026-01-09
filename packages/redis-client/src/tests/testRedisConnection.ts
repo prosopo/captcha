@@ -37,14 +37,9 @@ export const startTestRedisContainer =
 		if (containerPromise) {
 			return containerPromise;
 		}
-		containerPromise = new RedisContainer("redis/redis-stack:7.2.0-v10")
+		containerPromise = new RedisContainer("redis:7.2")
 			.withPassword("root")
 			.withExposedPorts(6379)
-			.withStartupTimeout(120000) // 2 minutes for Redis Stack
-			.withEnvironment({
-				REDIS_ARGS:
-					"--loadmodule /opt/redis-stack/lib/redisearch.so --maxmemory 128mb",
-			})
 			.start();
 		container = await containerPromise;
 		return container;
