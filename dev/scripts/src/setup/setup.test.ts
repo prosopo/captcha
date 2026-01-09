@@ -12,15 +12,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { getEnvFile } from "@prosopo/dotenv";
-import { getRootDir } from "@prosopo/workspace";
 import fse from "fs-extra";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { updateEnvFile } from "./setup.js";
 
+// Mock all external dependencies
 vi.mock("fs-extra");
-vi.mock("@prosopo/dotenv");
-vi.mock("@prosopo/workspace");
+vi.mock("@prosopo/dotenv", () => ({
+	getEnvFile: vi.fn(),
+}));
+vi.mock("@prosopo/workspace", () => ({
+	getRootDir: vi.fn(),
+}));
+vi.mock("@prosopo/cli", () => ({
+	defaultConfig: vi.fn(),
+	getSecret: vi.fn(),
+}));
+vi.mock("@prosopo/common", () => ({
+	LogLevel: { enum: { info: "info" } },
+	ProsopoEnvError: class extends Error {},
+	getLogger: vi.fn(),
+}));
+vi.mock("@prosopo/env", () => ({
+	ProviderEnvironment: vi.fn(),
+}));
+vi.mock("@prosopo/keyring", () => ({
+	generateMnemonic: vi.fn(),
+	getDefaultSiteKeys: vi.fn(),
+	getPair: vi.fn(),
+}));
+vi.mock("../util/index.js");
+
+import { updateEnvFile } from "./setup.js";
 
 describe("updateEnvFile", () => {
 	beforeEach(() => {

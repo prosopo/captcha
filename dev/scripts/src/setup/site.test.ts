@@ -12,12 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Tasks } from "@prosopo/provider";
 import { CaptchaType, Tier } from "@prosopo/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { registerSiteKey } from "./site.js";
 
-vi.mock("@prosopo/provider");
+// Mock the entire @prosopo/provider module
+vi.mock("@prosopo/provider", () => ({
+	Tasks: vi.fn(),
+}));
+
+import { registerSiteKey } from "./site.js";
 
 describe("registerSiteKey", () => {
 	const mockEnv = {

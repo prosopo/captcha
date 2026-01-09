@@ -1,9 +1,16 @@
-import { Tasks } from "@prosopo/provider";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { setupProvider } from "./provider.js";
 
-vi.mock("@prosopo/provider");
-vi.mock("@prosopo/datasets");
+// Mock the entire @prosopo/provider module
+vi.mock("@prosopo/provider", () => ({
+	Tasks: vi.fn(),
+}));
+
+// Mock @prosopo/datasets
+vi.mock("@prosopo/datasets", () => ({
+	datasetWithSolutionHashes: [],
+}));
+
+import { setupProvider } from "./provider.js";
 
 describe("setupProvider", () => {
 	const mockEnv = {

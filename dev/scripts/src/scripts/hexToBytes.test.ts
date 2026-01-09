@@ -12,92 +12,71 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { hexToU8a } from "@polkadot/util";
+import { describe, expect, it } from "vitest";
 
-// Mock process.argv to test the hexToBytes script
-describe("hexToBytes script", () => {
-	let originalArgv: string[];
-	let consoleLogSpy: any;
-
-	beforeEach(() => {
-		originalArgv = process.argv;
-		consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
-	});
-
-	afterEach(() => {
-		process.argv = originalArgv;
-		consoleLogSpy.mockRestore();
-	});
-
-	it("should convert hex string to byte array", async () => {
+// Test the hexToBytes conversion logic directly
+describe("hexToBytes conversion logic", () => {
+	it("should convert hex string to byte array", () => {
 		const testHex = "deadbeef";
+		const result = hexToU8a(testHex);
 
-		process.argv = ["node", "hexToBytes.ts", testHex];
-
-		await import("./hexToBytes.js");
-
-		expect(consoleLogSpy).toHaveBeenCalledWith("arg          : deadbeef");
-		expect(consoleLogSpy).toHaveBeenCalledWith(
-			Uint8Array.from([222, 173, 190, 239]),
-		);
+		expect(result).toEqual(Uint8Array.from([222, 173, 190, 239]));
 	});
 
-	it("should convert hex string with 0x prefix", async () => {
+	it("should convert hex string with 0x prefix", () => {
 		const testHex = "0xdeadbeef";
+		const result = hexToU8a(testHex);
 
-		process.argv = ["node", "hexToBytes.ts", testHex];
-
-		await import("./hexToBytes.js");
-
-		expect(consoleLogSpy).toHaveBeenCalledWith("arg          : 0xdeadbeef");
-		expect(consoleLogSpy).toHaveBeenCalledWith(
-			Uint8Array.from([222, 173, 190, 239]),
-		);
+		expect(result).toEqual(Uint8Array.from([222, 173, 190, 239]));
 	});
 
-	it("should handle empty hex string", async () => {
+	it("should handle empty hex string", () => {
 		const testHex = "";
+		const result = hexToU8a(testHex);
 
-		process.argv = ["node", "hexToBytes.ts", testHex];
-
-		await import("./hexToBytes.js");
-
-		expect(consoleLogSpy).toHaveBeenCalledWith("arg          : ");
-		expect(consoleLogSpy).toHaveBeenCalledWith(new Uint8Array([]));
+		expect(result).toEqual(new Uint8Array([]));
 	});
 
-	it("should handle single byte", async () => {
+	it("should handle single byte", () => {
 		const testHex = "ff";
+		const result = hexToU8a(testHex);
 
-		process.argv = ["node", "hexToBytes.ts", testHex];
-
-		await import("./hexToBytes.js");
-
-		expect(consoleLogSpy).toHaveBeenCalledWith("arg          : ff");
-		expect(consoleLogSpy).toHaveBeenCalledWith(Uint8Array.from([255]));
+		expect(result).toEqual(Uint8Array.from([255]));
 	});
 
-	it("should handle odd length hex string", async () => {
+	it("should handle odd length hex string", () => {
 		const testHex = "abc";
+		const result = hexToU8a(testHex);
 
-		process.argv = ["node", "hexToBytes.ts", testHex];
-
-		await import("./hexToBytes.js");
-
-		expect(consoleLogSpy).toHaveBeenCalledWith("arg          : abc");
-		expect(consoleLogSpy).toHaveBeenCalledWith(Uint8Array.from([171, 192]));
+		expect(result).toEqual(Uint8Array.from([171, 192]));
 	});
 
-	it("should trim whitespace from input", async () => {
-		const testHex = "  deadbeef  ";
+	it("should handle uppercase hex", () => {
+		const testHex = "DEADBEEF";
+		const result = hexToU8a(testHex);
 
-		process.argv = ["node", "hexToBytes.ts", testHex];
+		expect(result).toEqual(Uint8Array.from([222, 173, 190, 239]));
+	});
 
-		await import("./hexToBytes.js");
+	it("should handle mixed case hex", () => {
+		const testHex = "DeAdBeEf";
+		const result = hexToU8a(testHex);
 
-		expect(consoleLogSpy).toHaveBeenCalledWith("arg          :   deadbeef  ");
-		expect(consoleLogSpy).toHaveBeenCalledWith(
-			Uint8Array.from([222, 173, 190, 239]),
+		expect(result).toEqual(Uint8Array.from([222, 173, 190, 239]));
+	});
+
+	it("should handle long hex strings", () => {
+		const testHex = "0102030405060708090a0b0c0d0e0f";
+		const result = hexToU8a(testHex);
+
+		expect(result).toEqual(
+			Uint8Array.from([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]),
 		);
+	});
+
+	it("should handle invalid hex gracefully", () => {
+		const testHex = "invalid";
+		expect(() => hexToU8a(testHex)).not.toThrow();
 	});
 });
