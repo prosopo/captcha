@@ -40,6 +40,8 @@
 	"devDependencies": {
 		"@prosopo/config": "3.2.1",
 		"@types/node": "22.10.2",
+		"@types/supertest": "^6.0.2",
+		"supertest": "^7.0.0",
 		"vitest": "3.2.4"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",

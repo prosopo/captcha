@@ -68,6 +68,7 @@ describe("ApiExpressDefaultEndpointAdapter", () => {
                 json: vi.fn(),
                 status: vi.fn().mockReturnThis(),
                 send: vi.fn(),
+                set: vi.fn().mockReturnThis(),
             } as unknown as Response;
 
             const mockNext = vi.fn() as unknown as NextFunction;
@@ -107,6 +108,7 @@ describe("ApiExpressDefaultEndpointAdapter", () => {
                 json: vi.fn(),
                 status: vi.fn().mockReturnThis(),
                 send: vi.fn(),
+                set: vi.fn().mockReturnThis(),
             } as unknown as Response;
 
             const mockNext = vi.fn() as unknown as NextFunction;
@@ -149,6 +151,7 @@ describe("ApiExpressDefaultEndpointAdapter", () => {
                 json: vi.fn(),
                 status: vi.fn().mockReturnThis(),
                 send: vi.fn(),
+                set: vi.fn().mockReturnThis(),
             } as unknown as Response;
 
             const mockNext = vi.fn() as unknown as NextFunction;
@@ -186,6 +189,7 @@ describe("ApiExpressDefaultEndpointAdapter", () => {
                 json: vi.fn(),
                 status: vi.fn().mockReturnThis(),
                 send: vi.fn(),
+                set: vi.fn().mockReturnThis(),
             } as unknown as Response;
 
             const mockNext = vi.fn() as unknown as NextFunction;
@@ -225,6 +229,7 @@ describe("ApiExpressDefaultEndpointAdapter", () => {
                 json: vi.fn(),
                 status: vi.fn().mockReturnThis(),
                 send: vi.fn(),
+                set: vi.fn().mockReturnThis(),
             } as unknown as Response;
 
             const mockNext = vi.fn() as unknown as NextFunction;
@@ -266,6 +271,7 @@ describe("ApiExpressDefaultEndpointAdapter", () => {
                 json: vi.fn(),
                 status: vi.fn().mockReturnThis(),
                 send: vi.fn(),
+                set: vi.fn().mockReturnThis(),
             } as unknown as Response;
 
             const mockNext = vi.fn() as unknown as NextFunction;
@@ -302,6 +308,7 @@ describe("ApiExpressDefaultEndpointAdapter", () => {
                 json: vi.fn(),
                 status: vi.fn().mockReturnThis(),
                 send: vi.fn(),
+                set: vi.fn().mockReturnThis(),
             } as unknown as Response;
 
             const mockNext = vi.fn() as unknown as NextFunction;
@@ -342,6 +349,7 @@ describe("ApiExpressDefaultEndpointAdapter", () => {
                 json: vi.fn(),
                 status: vi.fn().mockReturnThis(),
                 send: vi.fn(),
+                set: vi.fn().mockReturnThis(),
             } as unknown as Response;
 
             const mockNext = vi.fn() as unknown as NextFunction;
