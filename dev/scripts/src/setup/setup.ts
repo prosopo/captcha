@@ -78,7 +78,7 @@ async function copyEnvFile() {
 function updateEnvFileVar(source: string, name: string, value: string) {
 	const lines = source.split('\n');
 	const envVarRegex = new RegExp(`^(${name}=)(.*)$`);
-	
+
 	for (let i = 0; i < lines.length; i++) {
 		const match = lines[i].match(envVarRegex);
 		if (match) {
@@ -86,7 +86,7 @@ function updateEnvFileVar(source: string, name: string, value: string) {
 			return lines.join('\n');
 		}
 	}
-	
+
 	return `${source}\n${name}=${value}`;
 }
 
@@ -179,12 +179,12 @@ export async function setup(provider: boolean, sites: boolean) {
 				const envVarNames =
 					siteKey.settings.captchaType === "image"
 						? [
-								"PROSOPO_SITE_KEY",
-								`PROSOPO_SITE_KEY_${siteKey.settings.captchaType.toUpperCase()}`,
-							]
+							"PROSOPO_SITE_KEY",
+							`PROSOPO_SITE_KEY_${siteKey.settings.captchaType.toUpperCase()}`,
+						]
 						: [
-								`PROSOPO_SITE_KEY_${siteKey.settings.captchaType.toUpperCase()}`,
-							];
+							`PROSOPO_SITE_KEY_${siteKey.settings.captchaType.toUpperCase()}`,
+						];
 
 				await updateEnvFiles(envVarNames, siteKey.pair.address, env.logger);
 			}
