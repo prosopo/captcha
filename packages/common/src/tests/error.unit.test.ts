@@ -358,6 +358,40 @@ describe("unwrapError", () => {
 		});
 	});
 
+	it("should handle ZodError with string message containing object", () => {
+		const zodError = new ZodError([]);
+		// Mock ZodError with string message that parses to object with API.UNKNOWN key (should be replaced with API.INVALID_BODY)
+		Object.defineProperty(zodError, "message", {
+			value: JSON.stringify({ code: 400, message: "Invalid data", key: "API.UNKNOWN" }),
+			writable: true,
+		});
+
+		const unwrapped = unwrapError(zodError, mockI18n);
+
+		expect(unwrapped.jsonError).toEqual({
+			code: 400,
+			message: "Invalid data",
+			key: "API.INVALID_BODY",
+		});
+	});
+
+	it("should handle ZodError with string message containing object with non-UNKNOWN key", () => {
+		const zodError = new ZodError([]);
+		// Mock ZodError with string message that parses to object with a different key (should be preserved)
+		Object.defineProperty(zodError, "message", {
+			value: JSON.stringify({ code: 400, message: "Invalid data", key: "API.CUSTOM_ERROR" }),
+			writable: true,
+		});
+
+		const unwrapped = unwrapError(zodError, mockI18n);
+
+		expect(unwrapped.jsonError).toEqual({
+			code: 400,
+			message: "Invalid data",
+			key: "API.CUSTOM_ERROR",
+		});
+	});
+
 	it("should default to code 400 for errors without code", () => {
 		const error = new Error("Basic error");
 

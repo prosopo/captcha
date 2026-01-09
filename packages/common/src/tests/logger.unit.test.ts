@@ -489,6 +489,50 @@ describe("NativeLogger", () => {
 			const parsed = JSON.parse(call);
 			expect(parsed.err).toBe("string error");
 		});
+
+		it("should handle error object with both message and msg properties", () => {
+			const logger = new NativeLogger("test");
+			logger.setLogLevel(ErrorLevel);
+
+			const error = Object.assign(new Error("main message"), { msg: "duplicate message" });
+			logger.error(() => ({ err: error }));
+
+			expect(consoleErrorSpy).toHaveBeenCalledOnce();
+			const call = consoleErrorSpy.mock.calls[0][0];
+			const parsed = JSON.parse(call);
+			expect(parsed.err).toBe("main message");
+			expect(parsed.errData.msg).toBe("duplicate message");
+		});
+
+		it("should handle error with non-Error cause", () => {
+			const logger = new NativeLogger("test");
+			logger.setLogLevel(ErrorLevel);
+
+			const error = Object.assign(new Error("main error"), { cause: "string cause" });
+			logger.error(() => ({ err: error }));
+
+			expect(consoleErrorSpy).toHaveBeenCalledOnce();
+			const call = consoleErrorSpy.mock.calls[0][0];
+			const parsed = JSON.parse(call);
+			expect(parsed.errData.cause).toBe("string cause");
+		});
+
+		it("should handle error with status and statusCode properties", () => {
+			const logger = new NativeLogger("test");
+			logger.setLogLevel(ErrorLevel);
+
+			const error = Object.assign(new Error("main error"), {
+				status: "error",
+				statusCode: 500
+			});
+			logger.error(() => ({ err: error }));
+
+			expect(consoleErrorSpy).toHaveBeenCalledOnce();
+			const call = consoleErrorSpy.mock.calls[0][0];
+			const parsed = JSON.parse(call);
+			expect(parsed.errData.status).toBe("error");
+			expect(parsed.errData.statusCode).toBe(500);
+		});
 	});
 
 	describe("BigInt handling in logs", () => {
@@ -504,5 +548,6 @@ describe("NativeLogger", () => {
 			const parsed = JSON.parse(call);
 			expect(parsed.data.value).toBe(bigInt.toString());
 		});
+
 	});
 });

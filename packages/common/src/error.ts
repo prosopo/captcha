@@ -233,9 +233,13 @@ export const unwrapError = (
 		if (typeof err.message === "object") {
 			jsonError = err.message;
 		} else {
-			jsonError.message = JSON.parse(err.message);
-			jsonError.key =
-				jsonError.key !== "API.UNKNOWN" ? jsonError.key : "API.INVALID_BODY";
+			const parsedMessage = JSON.parse(err.message);
+			jsonError.message = parsedMessage.message || parsedMessage;
+			if (parsedMessage.key) {
+				jsonError.key = parsedMessage.key !== "API.UNKNOWN" ? parsedMessage.key : "API.INVALID_BODY";
+			} else {
+				jsonError.key = jsonError.key !== "API.UNKNOWN" ? jsonError.key : "API.INVALID_BODY";
+			}
 			code = 400;
 		}
 	}
