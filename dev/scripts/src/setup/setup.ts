@@ -76,10 +76,17 @@ async function copyEnvFile() {
 }
 
 function updateEnvFileVar(source: string, name: string, value: string) {
-	const envVar = new RegExp(`.*(${name}=)(.*)`, "g");
-	if (envVar.test(source)) {
-		return source.replace(envVar, `$1${value}`);
+	const lines = source.split('\n');
+	const envVarRegex = new RegExp(`^(${name}=)(.*)$`);
+	
+	for (let i = 0; i < lines.length; i++) {
+		const match = lines[i].match(envVarRegex);
+		if (match) {
+			lines[i] = `${name}=${value}`;
+			return lines.join('\n');
+		}
 	}
+	
 	return `${source}\n${name}=${value}`;
 }
 

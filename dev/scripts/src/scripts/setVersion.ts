@@ -32,11 +32,10 @@ const parseVersion = (version: string) => {
 		if (parts.length !== 3) {
 			throw new Error();
 		}
-		let [major, minor, patch] = parts;
-		major = Number.parseInt(major ?? "").toString();
-		minor = Number.parseInt(minor ?? "").toString();
-		patch = Number.parseInt(patch ?? "").toString();
-		if (major === "NaN" || minor === "NaN" || patch === "NaN") {
+		const major = Number.parseInt(parts[0] ?? "");
+		const minor = Number.parseInt(parts[1] ?? "");
+		const patch = Number.parseInt(parts[2] ?? "");
+		if (Number.isNaN(major) || Number.isNaN(minor) || Number.isNaN(patch)) {
 			throw new Error();
 		}
 		return `${major}.${minor}.${patch}`;
@@ -167,8 +166,8 @@ export default async function setVersion(versionIn: string, ignore?: string[]) {
 					for (const [key, value] of Object.entries(obj)) {
 						if (value.path) {
 							// trace path to get version
-							path.join(value.path, "Cargo.toml");
-							const depContent = fs.readFileSync(pth, "utf8");
+							const depPath = path.join(value.path, "Cargo.toml");
+							const depContent = fs.readFileSync(depPath, "utf8");
 							const depTomlContent = parse(depContent);
 							value.version = depTomlContent.version;
 						}

@@ -66,13 +66,12 @@ describe("bytesToHex conversion logic", () => {
 
 		const byteArray = arg.split(",").map((x) => Number.parseInt(x));
 		// When parsing empty string, Number.parseInt("") returns NaN
-		// The original code handles this by filtering out NaN values
-		const validBytes = byteArray.filter((x) => !Number.isNaN(x));
-		const hex = Array.from(validBytes, (byte) =>
+		// NaN & 0xff = 0, so it produces "00"
+		const hex = Array.from(byteArray, (byte) =>
 			`0${(byte & 0xff).toString(16)}`.slice(-2),
 		).join("");
 
-		expect(hex).toBe("");
+		expect(hex).toBe("00");
 	});
 
 	it("should trim whitespace from input", () => {
