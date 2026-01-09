@@ -74,6 +74,9 @@ describe("collector", () => {
             expect(eventTypes).toContain("keydown");
             expect(eventTypes).toContain("keyup");
             expect(eventTypes).toContain("touchstart");
+            expect(eventTypes).toContain("touchend");
+            expect(eventTypes).toContain("touchcancel");
+            expect(eventTypes).toContain("touchmove");
         });
 
         it("should find form when container is inside form", () => {
