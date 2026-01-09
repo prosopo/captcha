@@ -34,5 +34,6 @@ export default function () {
 	config.test = config.test || {};
 	config.test.environment = "jsdom";
 	config.test.globals = true;
+	config.test.setupFiles = [];
 	return config;
 }
