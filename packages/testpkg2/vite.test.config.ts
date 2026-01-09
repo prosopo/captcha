@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,7 +13,25 @@
 // limitations under the License.
 
 import { ViteTestConfig } from "@prosopo/config";
+import { defineConfig } from "vitest/config";
 
 process.env.NODE_ENV = "test";
 
-export default ViteTestConfig();
+// Get the base config from the shared config
+const baseConfig = ViteTestConfig();
+
+// Override the test configuration to support integration tests
+export default defineConfig({
+	...baseConfig,
+	test: {
+		...baseConfig.test,
+		// Allow longer timeouts for integration tests
+		testTimeout: 60000, // 60 seconds
+		// Separate unit and integration tests
+		include: [
+			"src/**/*.unit.test.ts",
+			"src/**/*.integration.test.ts",
+			"src/**/*.test.ts",
+		],
+	},
+});
