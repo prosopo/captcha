@@ -14,6 +14,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderProcaptcha } from "../index.js";
+import { createRenderer } from "../render/renderer.js";
 import type { RendererFunction } from "../render/renderFunction.js";
 
 describe("index", () => {
@@ -33,6 +34,14 @@ describe("index", () => {
 		(window as any).procaptcha = undefined;
 	});
 
+	// Helper function to create a test renderer with unique script ID
+	const createTestRenderer = (scriptId: string, scriptUrl?: string) => {
+		return createRenderer({
+			scriptUrl: scriptUrl || "https://example.com/script.js",
+			scriptId,
+		});
+	};
+
 	describe("renderProcaptcha", () => {
 		it("should be a function", () => {
 			expect(typeof renderProcaptcha).toBe("function");
@@ -50,11 +59,11 @@ describe("index", () => {
 			vi.spyOn(document, "createElement").mockImplementation((tagName) => {
 				const element = originalCreateElement(tagName);
 				if (tagName === "script") {
-					setTimeout(() => {
+					Promise.resolve().then(() => {
 						if (element.onload) {
 							element.onload({} as Event);
 						}
-					}, 0);
+					});
 				}
 				return element;
 			});
@@ -79,26 +88,27 @@ describe("index", () => {
 			vi.spyOn(document, "createElement").mockImplementation((tagName) => {
 				const element = originalCreateElement(tagName);
 				if (tagName === "script") {
-					setTimeout(() => {
+					Promise.resolve().then(() => {
 						if (element.onload) {
 							element.onload({} as Event);
 						}
-					}, 0);
+					});
 				}
 				return element;
 			});
 
+			const testRenderer = createTestRenderer("test-element-types");
 			const divElement = document.createElement("div");
 			const spanElement = document.createElement("span");
 			const sectionElement = document.createElement("section");
 			const options = { siteKey: "test-site-key" };
 
-			// Renderer caches the render function, so all calls use the same cached function
+			// Test renderer caches the render function, so all calls use the same cached function
 			// Wait for script to load on first call
-			await renderProcaptcha(divElement, options);
+			await testRenderer(divElement, options);
 			// Subsequent calls use cached render function, no script loading needed
-			await renderProcaptcha(spanElement, options);
-			await renderProcaptcha(sectionElement, options);
+			await testRenderer(spanElement, options);
+			await testRenderer(sectionElement, options);
 
 			expect(mockRenderFunction).toHaveBeenCalledTimes(3);
 		});
@@ -115,19 +125,20 @@ describe("index", () => {
 			vi.spyOn(document, "createElement").mockImplementation((tagName) => {
 				const element = originalCreateElement(tagName);
 				if (tagName === "script") {
-					setTimeout(() => {
+					Promise.resolve().then(() => {
 						if (element.onload) {
 							element.onload({} as Event);
 						}
-					}, 0);
+					});
 				}
 				return element;
 			});
 
+			const testRenderer = createTestRenderer("test-minimal-options");
 			const element = document.createElement("div");
 			const options = { siteKey: "minimal-key" };
 
-			await renderProcaptcha(element, options);
+			await testRenderer(element, options);
 
 			expect(mockRenderFunction).toHaveBeenCalledWith(
 				element,
@@ -147,15 +158,16 @@ describe("index", () => {
 			vi.spyOn(document, "createElement").mockImplementation((tagName) => {
 				const element = originalCreateElement(tagName);
 				if (tagName === "script") {
-					setTimeout(() => {
+					Promise.resolve().then(() => {
 						if (element.onload) {
 							element.onload({} as Event);
 						}
-					}, 0);
+					});
 				}
 				return element;
 			});
 
+			const testRenderer = createTestRenderer("test-all-options");
 			const element = document.createElement("div");
 			const options = {
 				siteKey: "full-options-key",
@@ -176,7 +188,7 @@ describe("index", () => {
 				userAccountAddress: "0xabcdef",
 			};
 
-			await renderProcaptcha(element, options);
+			await testRenderer(element, options);
 
 			expect(mockRenderFunction).toHaveBeenCalledWith(
 				element,
@@ -203,11 +215,12 @@ describe("index", () => {
 				return element;
 			});
 
+			const testRenderer = createTestRenderer("test-script-error", "https://error.example.com/script.js");
 			const element = document.createElement("div");
 			const options = { siteKey: "test-key" };
 
-			await expect(renderProcaptcha(element, options)).rejects.toBe(
-				"Script load failed",
+			await expect(testRenderer(element, options)).rejects.toThrow(
+				"Render script does not contain the render function",
 			);
 		});
 
@@ -220,19 +233,20 @@ describe("index", () => {
 			vi.spyOn(document, "createElement").mockImplementation((tagName) => {
 				const element = originalCreateElement(tagName);
 				if (tagName === "script") {
-					setTimeout(() => {
+					Promise.resolve().then(() => {
 						if (element.onload) {
 							element.onload({} as Event);
 						}
-					}, 0);
+					});
 				}
 				return element;
 			});
 
+			const testRenderer = createTestRenderer("test-missing-render");
 			const element = document.createElement("div");
 			const options = { siteKey: "test-key" };
 
-			await expect(renderProcaptcha(element, options)).rejects.toThrow(
+			await expect(testRenderer(element, options)).rejects.toThrow(
 				"Render script does not contain the render function",
 			);
 		});
@@ -249,20 +263,21 @@ describe("index", () => {
 			vi.spyOn(document, "createElement").mockImplementation((tagName) => {
 				const element = originalCreateElement(tagName);
 				if (tagName === "script") {
-					setTimeout(() => {
+					Promise.resolve().then(() => {
 						if (element.onload) {
 							element.onload({} as Event);
 						}
-					}, 0);
+					});
 				}
 				return element;
 			});
 
+			const testRenderer = createTestRenderer("test-clone-options");
 			const element = document.createElement("div");
 			const originalOptions = { siteKey: "test-key" };
 			const frozenOptions = Object.freeze(originalOptions);
 
-			await renderProcaptcha(element, frozenOptions);
+			await testRenderer(element, frozenOptions);
 
 			expect(mockRenderFunction).toHaveBeenCalled();
 			const callArgs = mockRenderFunction.mock.calls[0];

@@ -24,6 +24,8 @@ export const renderProcaptcha: RendererFunction = createRenderer({
 	scriptId: import.meta.env.VITE_RENDER_SCRIPT_ID,
 });
 
+export { createRenderer };
+
 export type {
 	ProcaptchaRenderOptions,
 	CaptchaType as ProcaptchaType,
