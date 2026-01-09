@@ -313,6 +313,31 @@ describe("ProsopoServer", () => {
 			expect(result.status).toBe("API.USER_NOT_VERIFIED_TIME_EXPIRED");
 		});
 
+		it("returns time expired error when PoW captcha timestamp is 0", async () => {
+			const server = new ProsopoServer(mockConfig, mockPair);
+			const token = "test-token";
+			const timeouts: CaptchaTimeoutOutput = {
+				image: { cachedTimeout: 300000 },
+				pow: { cachedTimeout: 600000 },
+			};
+			const providerUrl = "http://provider.example.com";
+			const timestamp = 0;
+			const user = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty";
+			const challenge = "test-challenge";
+
+			const result = await server.verifyProvider(
+				token,
+				timeouts,
+				providerUrl,
+				timestamp,
+				user,
+				challenge,
+			);
+
+			expect(result.verified).toBe(false);
+			expect(result.status).toBe("API.USER_NOT_VERIFIED_TIME_EXPIRED");
+		});
+
 		it("throws ProsopoContractError when pair is not set and cannot sign", async () => {
 			const server = new ProsopoServer(mockConfig); // no pair
 			const token = "test-token";
