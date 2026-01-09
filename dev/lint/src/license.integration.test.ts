@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -137,7 +137,8 @@ describe("license integration", () => {
 		it("should replace old license when fix is true", async () => {
 			// Create a TypeScript file with an old license header
 			const filePath = path.join(tempDir, "test.ts");
-			const oldLicense = `// Copyright (C) 2020 Prosopo Procaptcha.  If not, see <http://www.gnu.org/licenses/>.`;
+			const oldLicense =
+				"// Copyright (C) 2020 Prosopo Procaptcha.  If not, see <http://www.gnu.org/licenses/>.";
 			const fileContent = `${oldLicense}\n\nconst x = 1;`;
 			fs.writeFileSync(filePath, fileContent);
 

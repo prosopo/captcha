@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,9 +47,9 @@ describe("engines integration", () => {
 
 			const command = buildEnginesCommand();
 
-			await expect(
-				command.handler({ pkg: pkgPath }),
-			).rejects.toThrow("is not a workspace");
+			await expect(command.handler({ pkg: pkgPath })).rejects.toThrow(
+				"is not a workspace",
+			);
 		});
 
 		it("should throw error when engines are missing from workspace", async () => {
@@ -66,9 +66,7 @@ describe("engines integration", () => {
 
 			const command = buildEnginesCommand();
 
-			await expect(
-				command.handler({ pkg: pkgPath }),
-			).rejects.toThrow();
+			await expect(command.handler({ pkg: pkgPath })).rejects.toThrow();
 		});
 
 		it("should throw error when package has mismatched node version", async () => {
@@ -109,9 +107,9 @@ describe("engines integration", () => {
 
 			const command = buildEnginesCommand();
 
-			await expect(
-				command.handler({ pkg: workspacePkgPath }),
-			).rejects.toThrow("has node version");
+			await expect(command.handler({ pkg: workspacePkgPath })).rejects.toThrow(
+				"has node version",
+			);
 		});
 
 		it("should pass when all engines match", async () => {

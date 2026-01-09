@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,9 +47,9 @@ describe("testCheck integration", () => {
 
 			const command = buildTestCheckCommand();
 
-			await expect(
-				command.handler({ pkg: pkgPath }),
-			).rejects.toThrow("is not a workspace");
+			await expect(command.handler({ pkg: pkgPath })).rejects.toThrow(
+				"is not a workspace",
+			);
 		});
 
 		it("should pass when package has test script and test files", async () => {
@@ -87,7 +87,10 @@ describe("testCheck integration", () => {
 			const srcDir = path.join(testPkgDir, "src");
 			fs.mkdirSync(srcDir);
 			const testFilePath = path.join(srcDir, "example.test.ts");
-			fs.writeFileSync(testFilePath, 'describe("test", () => { it("passes", () => {}); });');
+			fs.writeFileSync(
+				testFilePath,
+				'describe("test", () => { it("passes", () => {}); });',
+			);
 
 			const command = buildTestCheckCommand();
 
@@ -166,9 +169,9 @@ describe("testCheck integration", () => {
 
 			const command = buildTestCheckCommand();
 
-			await expect(
-				command.handler({ pkg: workspacePkgPath }),
-			).rejects.toThrow("has a test script but no test files");
+			await expect(command.handler({ pkg: workspacePkgPath })).rejects.toThrow(
+				"has a test script but no test files",
+			);
 		});
 
 		it("should throw error when package has test files but no test script", async () => {
@@ -203,13 +206,16 @@ describe("testCheck integration", () => {
 			const srcDir = path.join(testPkgDir, "src");
 			fs.mkdirSync(srcDir);
 			const testFilePath = path.join(srcDir, "example.test.ts");
-			fs.writeFileSync(testFilePath, 'describe("test", () => { it("passes", () => {}); });');
+			fs.writeFileSync(
+				testFilePath,
+				'describe("test", () => { it("passes", () => {}); });',
+			);
 
 			const command = buildTestCheckCommand();
 
-			await expect(
-				command.handler({ pkg: workspacePkgPath }),
-			).rejects.toThrow("has test files but no test script");
+			await expect(command.handler({ pkg: workspacePkgPath })).rejects.toThrow(
+				"has test files but no test script",
+			);
 		});
 
 		it("should check multiple test file patterns", async () => {
@@ -246,9 +252,18 @@ describe("testCheck integration", () => {
 			// Create src directory with different test file patterns
 			const srcDir = path.join(testPkgDir, "src");
 			fs.mkdirSync(srcDir);
-			fs.writeFileSync(path.join(srcDir, "example.test.ts"), 'describe("test", () => {});');
-			fs.writeFileSync(path.join(srcDir, "example.spec.ts"), 'describe("spec", () => {});');
-			fs.writeFileSync(path.join(srcDir, "example.test.tsx"), 'describe("tsx test", () => {});');
+			fs.writeFileSync(
+				path.join(srcDir, "example.test.ts"),
+				'describe("test", () => {});',
+			);
+			fs.writeFileSync(
+				path.join(srcDir, "example.spec.ts"),
+				'describe("spec", () => {});',
+			);
+			fs.writeFileSync(
+				path.join(srcDir, "example.test.tsx"),
+				'describe("tsx test", () => {});',
+			);
 
 			const command = buildTestCheckCommand();
 

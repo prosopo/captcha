@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,8 @@ export default function (tsConfigPath?: string) {
 	// Determine coverage include paths based on current working directory
 	const cwd = process.cwd();
 	const isRunningFromPackage =
-		(cwd.includes("/packages/") || cwd.includes("/dev/")) && cwd.includes("/src") === false;
+		(cwd.includes("/packages/") || cwd.includes("/dev/")) &&
+		cwd.includes("/src") === false;
 
 	// If running from a package directory, include local src files
 	// If running from repo root, include all package src files
@@ -49,12 +50,15 @@ export default function (tsConfigPath?: string) {
 				"src/**/*.spec.ts",
 				"src/**/*.test.tsx",
 				"src/**/*.spec.tsx",
+				"src/**/*.integration.test.ts",
+				"src/**/*.integration.test.tsx",
 			]
 		: [
 				"**/tests/**/*",
 				"**/*.d.ts",
 				"**/*.test.*",
 				"**/*.spec.*",
+				"**/*.integration.test.*",
 				"**/node_modules/**",
 				"**/dist/**",
 			];

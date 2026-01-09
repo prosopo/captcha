@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,15 +41,14 @@ describe("workflowNames integration", () => {
 
 			// Create a workflow file with matching name
 			const workflowPath = path.join(workflowsDir, "test-workflow.yml");
-			const workflowContent = "name: test-workflow\non: push\njobs:\n  test:\n    runs-on: ubuntu-latest\n";
+			const workflowContent =
+				"name: test-workflow\non: push\njobs:\n  test:\n    runs-on: ubuntu-latest\n";
 			fs.writeFileSync(workflowPath, workflowContent);
 
 			const command = buildWorkflowNamesCommand();
 
 			// Should not throw
-			await expect(
-				command.handler({ root: tempDir }),
-			).resolves.not.toThrow();
+			await expect(command.handler({ root: tempDir })).resolves.not.toThrow();
 		});
 
 		it("should throw error when workflow name does not match filename", async () => {
@@ -59,14 +58,15 @@ describe("workflowNames integration", () => {
 
 			// Create a workflow file with non-matching name
 			const workflowPath = path.join(workflowsDir, "test-workflow.yml");
-			const workflowContent = "name: different-name\non: push\njobs:\n  test:\n    runs-on: ubuntu-latest\n";
+			const workflowContent =
+				"name: different-name\non: push\njobs:\n  test:\n    runs-on: ubuntu-latest\n";
 			fs.writeFileSync(workflowPath, workflowContent);
 
 			const command = buildWorkflowNamesCommand();
 
-			await expect(
-				command.handler({ root: tempDir }),
-			).rejects.toThrow("has name");
+			await expect(command.handler({ root: tempDir })).rejects.toThrow(
+				"has name",
+			);
 		});
 
 		it("should throw error when no name found in workflow", async () => {
@@ -76,14 +76,15 @@ describe("workflowNames integration", () => {
 
 			// Create a workflow file without name
 			const workflowPath = path.join(workflowsDir, "test-workflow.yml");
-			const workflowContent = "on: push\njobs:\n  test:\n    runs-on: ubuntu-latest\n";
+			const workflowContent =
+				"on: push\njobs:\n  test:\n    runs-on: ubuntu-latest\n";
 			fs.writeFileSync(workflowPath, workflowContent);
 
 			const command = buildWorkflowNamesCommand();
 
-			await expect(
-				command.handler({ root: tempDir }),
-			).rejects.toThrow("No name found in workflow file");
+			await expect(command.handler({ root: tempDir })).rejects.toThrow(
+				"No name found in workflow file",
+			);
 		});
 
 		it("should handle yaml extension", async () => {
@@ -95,15 +96,14 @@ describe("workflowNames integration", () => {
 			// Note: The code uses path.basename(pth, ".yml") which only removes .yml, not .yaml
 			// So for .yaml files, the name must include the .yaml extension
 			const workflowPath = path.join(workflowsDir, "test-workflow.yaml");
-			const workflowContent = "name: test-workflow.yaml\non: push\njobs:\n  test:\n    runs-on: ubuntu-latest\n";
+			const workflowContent =
+				"name: test-workflow.yaml\non: push\njobs:\n  test:\n    runs-on: ubuntu-latest\n";
 			fs.writeFileSync(workflowPath, workflowContent);
 
 			const command = buildWorkflowNamesCommand();
 
 			// Should not throw
-			await expect(
-				command.handler({ root: tempDir }),
-			).resolves.not.toThrow();
+			await expect(command.handler({ root: tempDir })).resolves.not.toThrow();
 		});
 
 		it("should handle multiple workflow files", async () => {
@@ -113,20 +113,20 @@ describe("workflowNames integration", () => {
 
 			// Create first workflow file
 			const workflow1Path = path.join(workflowsDir, "workflow1.yml");
-			const workflow1Content = "name: workflow1\non: push\njobs:\n  test:\n    runs-on: ubuntu-latest\n";
+			const workflow1Content =
+				"name: workflow1\non: push\njobs:\n  test:\n    runs-on: ubuntu-latest\n";
 			fs.writeFileSync(workflow1Path, workflow1Content);
 
 			// Create second workflow file
 			const workflow2Path = path.join(workflowsDir, "workflow2.yml");
-			const workflow2Content = "name: workflow2\non: pull_request\njobs:\n  build:\n    runs-on: ubuntu-latest\n";
+			const workflow2Content =
+				"name: workflow2\non: pull_request\njobs:\n  build:\n    runs-on: ubuntu-latest\n";
 			fs.writeFileSync(workflow2Path, workflow2Content);
 
 			const command = buildWorkflowNamesCommand();
 
 			// Should not throw
-			await expect(
-				command.handler({ root: tempDir }),
-			).resolves.not.toThrow();
+			await expect(command.handler({ root: tempDir })).resolves.not.toThrow();
 		});
 
 		it("should handle name with whitespace", async () => {
@@ -136,15 +136,14 @@ describe("workflowNames integration", () => {
 
 			// Create a workflow file with name containing trailing whitespace
 			const workflowPath = path.join(workflowsDir, "test-workflow.yml");
-			const workflowContent = "name: test-workflow  \non: push\njobs:\n  test:\n    runs-on: ubuntu-latest\n";
+			const workflowContent =
+				"name: test-workflow  \non: push\njobs:\n  test:\n    runs-on: ubuntu-latest\n";
 			fs.writeFileSync(workflowPath, workflowContent);
 
 			const command = buildWorkflowNamesCommand();
 
 			// Should not throw
-			await expect(
-				command.handler({ root: tempDir }),
-			).resolves.not.toThrow();
+			await expect(command.handler({ root: tempDir })).resolves.not.toThrow();
 		});
 	});
 });

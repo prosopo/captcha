@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,9 +47,9 @@ describe("json integration", () => {
 
 			const command = buildJsonCommand();
 
-			await expect(
-				command.handler({ pkg: pkgPath }),
-			).rejects.toThrow("is not a workspace");
+			await expect(command.handler({ pkg: pkgPath })).rejects.toThrow(
+				"is not a workspace",
+			);
 		});
 
 		it("should validate valid JSON files", async () => {
@@ -105,9 +105,9 @@ describe("json integration", () => {
 
 			const command = buildJsonCommand();
 
-			await expect(
-				command.handler({ pkg: workspacePkgPath }),
-			).rejects.toThrow("Unable to parse");
+			await expect(command.handler({ pkg: workspacePkgPath })).rejects.toThrow(
+				"Unable to parse",
+			);
 		});
 
 		it("should read gitignore when it exists", async () => {
@@ -158,7 +158,10 @@ describe("json integration", () => {
 			const testPkg1Dir = path.join(packagesDir, "pkg1");
 			fs.mkdirSync(testPkg1Dir);
 			const json1Path = path.join(testPkg1Dir, "config.json");
-			fs.writeFileSync(json1Path, JSON.stringify({ name: "pkg1", version: "1.0.0" }));
+			fs.writeFileSync(
+				json1Path,
+				JSON.stringify({ name: "pkg1", version: "1.0.0" }),
+			);
 
 			// Package 2
 			const testPkg2Dir = path.join(packagesDir, "pkg2");
