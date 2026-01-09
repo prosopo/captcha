@@ -39,27 +39,44 @@ const implicitRender = async () => {
 		document.getElementsByClassName("procaptcha"),
 	).filter((element) => element.tagName.toLowerCase() !== "button");
 
-	// Set siteKey from renderOptions or from the first element's data-sitekey attribute
+	// Group elements by siteKey and web3 attribute, then process each group
 	if (elements.length) {
-		const siteKey = at(elements, 0).getAttribute("data-sitekey");
-		const web3 = at(elements, 0).getAttribute("data-web3");
-		if (!siteKey) {
-			console.error("No site key found");
-			return;
+		// Group elements by their siteKey and web3 settings
+		const elementGroups = new Map<string, { elements: Element[], web3: string | null }>();
+
+		for (const element of elements) {
+			const siteKey = element.getAttribute("data-sitekey");
+			const web3 = element.getAttribute("data-web3");
+
+			if (!siteKey) {
+				console.error("No site key found for element", element);
+				continue;
+			}
+
+			const groupKey = `${siteKey}:${web3 || 'false'}`;
+			if (!elementGroups.has(groupKey)) {
+				elementGroups.set(groupKey, { elements: [], web3 });
+			}
+			elementGroups.get(groupKey)!.elements.push(element);
 		}
 
-		const captchaType = getCaptchaType(elements);
+		// Process each group of elements with the same siteKey and web3 setting
+		for (const [groupKey, { elements: groupElements, web3 }] of elementGroups) {
+			const siteKey = groupElements[0].getAttribute("data-sitekey")!; // We know this exists
 
-		const root = await widgetFactory.createWidgets(
-			elements,
-			{
-				captchaType: captchaType,
-				siteKey: siteKey,
-			},
-			!(web3 === "true"),
-		);
+			const captchaType = getCaptchaType(groupElements);
 
-		procaptchaRoots.push(...root);
+			const root = await widgetFactory.createWidgets(
+				groupElements,
+				{
+					captchaType: captchaType,
+					siteKey: siteKey,
+				},
+				!(web3 === "true"),
+			);
+
+			procaptchaRoots.push(...root);
+		}
 	}
 
 	// Check for invisible mode indicators (procaptcha class on buttons)
