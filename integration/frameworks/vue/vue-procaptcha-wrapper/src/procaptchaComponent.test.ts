@@ -41,7 +41,7 @@ describe("ProcaptchaComponent", () => {
 		expect(wrapper.find("div").exists()).toBe(true);
 	});
 
-	it("calls renderProcaptcha on mount with correct props", () => {
+	it("calls renderProcaptcha on mount with correct props", async () => {
 		const props = {
 			siteKey: "test-site-key",
 			theme: "light" as const,
@@ -51,6 +51,9 @@ describe("ProcaptchaComponent", () => {
 		mount(ProcaptchaComponent, {
 			props,
 		});
+
+		// Wait for async render to complete
+		await new Promise(resolve => setTimeout(resolve, 0));
 
 		expect(renderProcaptcha).toHaveBeenCalledTimes(1);
 		expect(renderProcaptcha).toHaveBeenCalledWith(
@@ -70,12 +73,17 @@ describe("ProcaptchaComponent", () => {
 			},
 		});
 
+		// Wait for initial render
+		await new Promise(resolve => setTimeout(resolve, 0));
 		expect(renderProcaptcha).toHaveBeenCalledTimes(1);
 
 		await wrapper.setProps({
 			siteKey: "updated-site-key",
 			theme: "dark",
 		});
+
+		// Wait for update render
+		await new Promise(resolve => setTimeout(resolve, 0));
 
 		expect(renderProcaptcha).toHaveBeenCalledTimes(2);
 		expect(renderProcaptcha).toHaveBeenLastCalledWith(
@@ -124,7 +132,7 @@ describe("ProcaptchaComponent", () => {
 		expect(style).toContain("height: 200px");
 	});
 
-	it("handles empty htmlAttributes", () => {
+	it("handles empty htmlAttributes", async () => {
 		const wrapper = mount(ProcaptchaComponent, {
 			props: {
 				siteKey: "test-site-key",
@@ -132,22 +140,26 @@ describe("ProcaptchaComponent", () => {
 			},
 		});
 
+		await new Promise(resolve => setTimeout(resolve, 0));
+
 		expect(wrapper.find("div").exists()).toBe(true);
 		expect(renderProcaptcha).toHaveBeenCalledTimes(1);
 	});
 
-	it("handles undefined htmlAttributes", () => {
+	it("handles undefined htmlAttributes", async () => {
 		const wrapper = mount(ProcaptchaComponent, {
 			props: {
 				siteKey: "test-site-key",
 			},
 		});
 
+		await new Promise(resolve => setTimeout(resolve, 0));
+
 		expect(wrapper.find("div").exists()).toBe(true);
 		expect(renderProcaptcha).toHaveBeenCalledTimes(1);
 	});
 
-	it("passes all ProcaptchaRenderOptions props to renderProcaptcha", () => {
+	it("passes all ProcaptchaRenderOptions props to renderProcaptcha", async () => {
 		const callback = vi.fn();
 		const chalexpiredCallback = vi.fn();
 		const expiredCallback = vi.fn();
@@ -178,6 +190,8 @@ describe("ProcaptchaComponent", () => {
 			},
 		});
 
+		await new Promise(resolve => setTimeout(resolve, 0));
+
 		// Vue converts kebab-case props to camelCase when passed to the component
 		// and htmlAttributes is included in the properties object
 		expect(renderProcaptcha).toHaveBeenCalledWith(
@@ -203,7 +217,7 @@ describe("ProcaptchaComponent", () => {
 		);
 	});
 
-	it("handles callback as string", () => {
+	it("handles callback as string", async () => {
 		const props = {
 			siteKey: "test-site-key",
 			callback: "window.myCallback",
@@ -212,6 +226,8 @@ describe("ProcaptchaComponent", () => {
 		mount(ProcaptchaComponent, {
 			props,
 		});
+
+		await new Promise(resolve => setTimeout(resolve, 0));
 
 		expect(renderProcaptcha).toHaveBeenCalledWith(
 			expect.any(HTMLElement),
@@ -222,7 +238,7 @@ describe("ProcaptchaComponent", () => {
 		);
 	});
 
-	it("handles callback as function", () => {
+	it("handles callback as function", async () => {
 		const callback = vi.fn();
 		const props = {
 			siteKey: "test-site-key",
@@ -233,6 +249,8 @@ describe("ProcaptchaComponent", () => {
 			props,
 		});
 
+		await new Promise(resolve => setTimeout(resolve, 0));
+
 		expect(renderProcaptcha).toHaveBeenCalledWith(
 			expect.any(HTMLElement),
 			expect.objectContaining({
@@ -242,7 +260,7 @@ describe("ProcaptchaComponent", () => {
 		);
 	});
 
-	it("does not call renderProcaptcha if wrapper element is null", () => {
+	it("does not call renderProcaptcha if wrapper element is null", async () => {
 		// This test verifies the component handles the case where wrapper.value is null
 		// In practice, this shouldn't happen in normal usage, but we test the guard clause
 		const wrapper = mount(ProcaptchaComponent, {
@@ -250,6 +268,8 @@ describe("ProcaptchaComponent", () => {
 				siteKey: "test-site-key",
 			},
 		});
+
+		await new Promise(resolve => setTimeout(resolve, 0));
 
 		// The component should still call renderProcaptcha because the element exists
 		expect(renderProcaptcha).toHaveBeenCalledTimes(1);
@@ -268,15 +288,19 @@ describe("ProcaptchaComponent", () => {
 			},
 		});
 
+		await new Promise(resolve => setTimeout(resolve, 0));
 		expect(renderProcaptcha).toHaveBeenCalledTimes(1);
 
 		await wrapper.setProps({ theme: "light" });
+		await new Promise(resolve => setTimeout(resolve, 0));
 		expect(renderProcaptcha).toHaveBeenCalledTimes(2);
 
 		await wrapper.setProps({ captchaType: "pow" });
+		await new Promise(resolve => setTimeout(resolve, 0));
 		expect(renderProcaptcha).toHaveBeenCalledTimes(3);
 
 		await wrapper.setProps({ language: "en" });
+		await new Promise(resolve => setTimeout(resolve, 0));
 		expect(renderProcaptcha).toHaveBeenCalledTimes(4);
 	});
 
@@ -296,7 +320,7 @@ describe("ProcaptchaComponent", () => {
 		expect(div.attributes("data-another")).toBe("another-value");
 	});
 
-	it("merges htmlAttributes with other props correctly", () => {
+	it("merges htmlAttributes with other props correctly", async () => {
 		const wrapper = mount(ProcaptchaComponent, {
 			props: {
 				siteKey: "test-site-key",
@@ -306,6 +330,8 @@ describe("ProcaptchaComponent", () => {
 				},
 			},
 		});
+
+		await new Promise(resolve => setTimeout(resolve, 0));
 
 		// htmlAttributes should be applied to the div
 		expect(wrapper.find("div").attributes("class")).toBe("my-class");
@@ -324,12 +350,14 @@ describe("ProcaptchaComponent", () => {
 		);
 	});
 
-	it("handles minimal props with only siteKey", () => {
+	it("handles minimal props with only siteKey", async () => {
 		mount(ProcaptchaComponent, {
 			props: {
 				siteKey: "minimal-site-key",
 			},
 		});
+
+		await new Promise(resolve => setTimeout(resolve, 0));
 
 		expect(renderProcaptcha).toHaveBeenCalledWith(
 			expect.any(HTMLElement),
@@ -362,8 +390,8 @@ describe("ProcaptchaComponent", () => {
 			// Wait for the async operation to complete
 			await new Promise((resolve) => setTimeout(resolve, 0));
 
-			// The component should not crash, error should be handled internally
-			expect(consoleErrorSpy).not.toHaveBeenCalled();
+			// The component should log the error but not crash
+			expect(consoleErrorSpy).toHaveBeenCalledWith('Procaptcha render error:', mockError);
 
 			consoleErrorSpy.mockRestore();
 		});
@@ -375,23 +403,31 @@ describe("ProcaptchaComponent", () => {
 				},
 			});
 
+			await new Promise(resolve => setTimeout(resolve, 0));
 			expect(renderProcaptcha).toHaveBeenCalledTimes(1);
 
-			// Rapid updates
+			// Rapid updates - each should cancel the previous and start a new render
 			await wrapper.setProps({ theme: "light" });
-			await wrapper.setProps({ captchaType: "pow" });
-			await wrapper.setProps({ language: "en" });
+			await new Promise(resolve => setTimeout(resolve, 0));
+			expect(renderProcaptcha).toHaveBeenCalledTimes(2);
 
-			// Vue batches updates, but each update should trigger renderProcaptcha
+			await wrapper.setProps({ captchaType: "pow" });
+			await new Promise(resolve => setTimeout(resolve, 0));
+			expect(renderProcaptcha).toHaveBeenCalledTimes(3);
+
+			await wrapper.setProps({ language: "en" });
+			await new Promise(resolve => setTimeout(resolve, 0));
 			expect(renderProcaptcha).toHaveBeenCalledTimes(4);
 		});
 
-		it("passes correct element reference to renderProcaptcha", () => {
+		it("passes correct element reference to renderProcaptcha", async () => {
 			const wrapper = mount(ProcaptchaComponent, {
 				props: {
 					siteKey: "test-site-key",
 				},
 			});
+
+			await new Promise(resolve => setTimeout(resolve, 0));
 
 			const divElement = wrapper.find("div").element;
 			expect(renderProcaptcha).toHaveBeenCalledWith(
@@ -476,7 +512,7 @@ describe("ProcaptchaComponent", () => {
 			expect(div.attributes("style")).toContain("margin: 10px auto");
 		});
 
-		it("handles props with special characters and edge cases", () => {
+		it("handles props with special characters and edge cases", async () => {
 			const wrapper = mount(ProcaptchaComponent, {
 				props: {
 					siteKey: "test-site-key",
@@ -487,6 +523,8 @@ describe("ProcaptchaComponent", () => {
 					},
 				},
 			});
+
+			await new Promise(resolve => setTimeout(resolve, 0));
 
 			const div = wrapper.find("div");
 			expect(div.attributes("data-complex")).toBe(
@@ -503,7 +541,7 @@ describe("ProcaptchaComponent", () => {
 			);
 		});
 
-		it("renders correctly in different DOM contexts", () => {
+		it("renders correctly in different DOM contexts", async () => {
 			// Test that component works when mounted in different container types
 			const container = document.createElement("div");
 			document.body.appendChild(container);
@@ -515,6 +553,8 @@ describe("ProcaptchaComponent", () => {
 				attachTo: container,
 			});
 
+			await new Promise(resolve => setTimeout(resolve, 0));
+
 			expect(wrapper.find("div").exists()).toBe(true);
 			expect(renderProcaptcha).toHaveBeenCalledTimes(1);
 
@@ -522,7 +562,7 @@ describe("ProcaptchaComponent", () => {
 			document.body.removeChild(container);
 		});
 
-		it("handles empty and null values in props", () => {
+		it("handles empty and null values in props", async () => {
 			const wrapper = mount(ProcaptchaComponent, {
 				props: {
 					siteKey: "",
@@ -531,14 +571,16 @@ describe("ProcaptchaComponent", () => {
 				},
 			});
 
-		expect(renderProcaptcha).toHaveBeenCalledWith(
-			expect.any(HTMLElement),
-			expect.objectContaining({
-				siteKey: "",
-				theme: undefined,
-				captchaType: undefined,
-			}),
-		);
+			await new Promise(resolve => setTimeout(resolve, 0));
+
+			expect(renderProcaptcha).toHaveBeenCalledWith(
+				expect.any(HTMLElement),
+				expect.objectContaining({
+					siteKey: "",
+					theme: undefined,
+					captchaType: undefined,
+				}),
+			);
 		});
 	});
 });
