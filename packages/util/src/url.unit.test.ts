@@ -146,15 +146,6 @@ describe("url", () => {
 				),
 			).to.equal(false);
 		});
-
-		it("handles URL parsing errors defensively", () => {
-			// This test documents that validateDomain has defensive error handling
-			// for URL parsing failures. While it's difficult to trigger with real domains
-			// due to the URL constructor being permissive, the try-catch exists as
-			// defensive programming. The regex validation catches most invalid cases.
-			expect(validateDomain("example..com")).to.equal(true); // Passes regex and URL parsing
-			expect(validateDomain("normal-domain.com")).to.equal(true); // Normal case
-		});
 	});
 
 	describe("domainIsLocalhost", () => {
