@@ -71,12 +71,9 @@ const Procaptcha = (props: ProcaptchaProps) => {
 			// Event handler for when execute() is called
 			const handleExecuteEvent = (event: Event) => {
 				// Directly start the verification process without showing any UI
-				try {
-					// Start the PoW verification process
-					manager.current.start();
-				} catch (error) {
+				manager.current.start().catch((error) => {
 					console.error("Error starting PoW verification:", error);
-				}
+				});
 			};
 
 			document.addEventListener(PROCAPTCHA_EXECUTE_EVENT, handleExecuteEvent);

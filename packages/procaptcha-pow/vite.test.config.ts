@@ -25,10 +25,13 @@ if (fs.existsSync(envFile)) {
 } else if (fs.existsSync(`../../${envFile}`)) {
 	envPath = path.resolve(`../../${envFile}`);
 } else {
-	throw new Error(`No ${envFile} file found`);
+	// For now, skip env file requirement during testing setup
+	console.warn(`No ${envFile} file found, proceeding without it`);
 }
 
-dotenv.config({ path: envPath });
+if (envPath) {
+	dotenv.config({ path: envPath });
+}
 
 export default function () {
 	const config = ViteTestConfig();

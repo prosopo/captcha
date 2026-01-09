@@ -208,6 +208,34 @@ describe("ProcaptchaWidget", () => {
 		);
 	});
 
+	it("should handle errors from manager.start in invisible mode", async () => {
+		// Test that async errors from manager.start are caught and logged
+		const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+		const testError = new Error("Test manager error");
+
+		mockManager.start.mockRejectedValue(testError);
+
+		const propsInvisible = {
+			...mockProps,
+			config: {
+				...mockProps.config,
+				mode: ModeEnum.invisible,
+			},
+		};
+
+		render(<ProcaptchaWidget {...propsInvisible} />);
+
+		const event = new Event("procaptcha:execute");
+		document.dispatchEvent(event);
+
+		// Wait for the async error handling to complete
+		await waitFor(() => {
+			expect(consoleErrorSpy).toHaveBeenCalledWith("Error starting PoW verification:", testError);
+		});
+
+		consoleErrorSpy.mockRestore();
+	});
+
 	it("should call manager.start with coordinates on checkbox click", async () => {
 		const user = userEvent.setup();
 		render(<ProcaptchaWidget {...mockProps} />);
