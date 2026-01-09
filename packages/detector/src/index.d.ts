@@ -15,15 +15,15 @@
 import type { Account, RandomProvider } from "@prosopo/types";
 
 export function detect(
-	environment: Record<string, unknown>,
-	getRandomProvider: () => Promise<RandomProvider>,
+	environment?: Record<string, unknown>,
+	getRandomProvider?: () => Promise<RandomProvider>,
 	container?: HTMLElement,
 	restartFn?: () => void,
 	accountGetter?: () => Promise<Account>
 ): Promise<{
 	token: string;
 	encryptHeadHash: string;
-	shadowDomCleanup: () => void;
+	shadowDomCleanup?: () => void;
 	provider?: RandomProvider;
 	userAccount?: Account;
 }>;
