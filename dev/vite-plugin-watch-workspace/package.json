@@ -33,8 +33,10 @@
 		"@prosopo/config": "3.2.1",
 		"@types/debug": "4.1.12",
 		"@types/node": "24.2.1",
+		"@vitest/coverage-v8": "3.2.4",
 		"typescript": "5.6.2",
-		"vite": "6.4.1"
+		"vite": "6.4.1",
+		"vitest": "3.2.4"
 	},
 	"peerDependencies": {
 		"vite": "^6.0.0"
