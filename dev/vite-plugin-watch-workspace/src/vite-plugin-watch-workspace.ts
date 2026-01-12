@@ -83,16 +83,22 @@ const getFilesAndTsConfigs = async (
 ): Promise<ExternalFile<FilePath, TsConfigPath, PackageDirPath>[]> => {
 	const packagePath = path.resolve(workspacePath, packageDir);
 	const tsConfigPath = path.resolve(packagePath, "tsconfig.json");
+	console.log("DEBUG: getFilesAndTsConfigs - packagePath:", packagePath);
+	console.log("DEBUG: getFilesAndTsConfigs - tsConfigPath:", tsConfigPath);
+	console.log("DEBUG: getFilesAndTsConfigs - tsConfig exists:", fs.existsSync(tsConfigPath));
 	// check whether the user has passed a glob
 	const currentPackageGlob = currentPackage.includes("*")
 		? currentPackage
 		: `${currentPackage}/**/*`;
+	console.log("DEBUG: getFilesAndTsConfigs - currentPackageGlob:", currentPackageGlob);
 	const tsconfig = getTsConfigFollowExtends(tsConfigPath);
 	const rootDir = tsconfig.compilerOptions.rootDir ?? ".";
+	console.log("DEBUG: getFilesAndTsConfigs - rootDir:", rootDir);
+	console.log("DEBUG: getFilesAndTsConfigs - files in src dir:", fs.readdirSync(path.resolve(packagePath, rootDir)));
+	const pattern = path.resolve(packagePath, `${rootDir}/**/*.(${fileTypes.join("|")})`);
+	console.log("DEBUG: getFilesAndTsConfigs - search pattern:", pattern);
 	const files = await fg(
-		fg.convertPathToPattern(
-			path.resolve(packagePath, `${rootDir}/**/*.(${fileTypes.join("|")})`),
-		),
+		pattern,
 		{
 			ignore: [
 				"**/node_modules/**",
@@ -101,6 +107,7 @@ const getFilesAndTsConfigs = async (
 			],
 		},
 	);
+	console.log("DEBUG: getFilesAndTsConfigs - found files:", files);
 	// keep the tsconfig path beside each file to avoid looking for file ids in arrays later
 	return files.map((file: string) => [file, tsConfigPath, packageDir]);
 };
@@ -263,7 +270,7 @@ export const VitePluginWatchWorkspace = async (
 			});
 		},
 		async handleHotUpdate({ file, server }) {
-			log(`File', ${file}`);
+			log(`File ${file}`);
 
 			const fileConfig = externalFiles[file];
 			if (!fileConfig) {
