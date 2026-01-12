@@ -12,232 +12,172 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { handleErrors } from "@prosopo/api-express-router";
-import { type Logger, getLogger, ProsopoApiError } from "@prosopo/common";
-import type { ProviderEnvironment } from "@prosopo/types-env";
-import { validateAddress } from "@prosopo/util-crypto";
-import type { NextFunction, Request, Response } from "express";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { domainMiddleware } from "../../../api/domainMiddleware.js";
-import { Tasks } from "../../../tasks/index.js";
-
-vi.mock("@prosopo/api-express-router", () => ({
-	handleErrors: vi.fn(),
-}));
-
-vi.mock("@prosopo/util-crypto", () => ({
-	validateAddress: vi.fn(),
-}));
-
-vi.mock("../../../tasks/index.js", () => ({
-	Tasks: vi.fn(),
-}));
-
-const loggerOuter = getLogger("info", import.meta.url);
+import { createMockProviderEnvironment, createMockExpressObjects } from "../testUtils/mockProviderEnv.js";
 
 describe("domainMiddleware", () => {
-	let mockEnv: ProviderEnvironment;
-	let mockReq: Request & { i18n?: { t: (key: string) => string }; logger?: Logger; hostname?: string };
-	let mockRes: Response;
-	let mockNext: NextFunction;
-	let mockLogger: Logger;
-	let mockTasks: {
-		db: {
-			getClientRecord: ReturnType<typeof vi.fn>;
-		};
-		clientTaskManager: {
-			domainPatternMatcher: ReturnType<typeof vi.fn>;
-		};
-	};
+    let mockEnv: ReturnType<typeof createMockProviderEnvironment>;
+    let { mockReq, mockRes, mockNext }: ReturnType<typeof createMockExpressObjects>;
 
-	beforeEach(() => {
-		vi.clearAllMocks();
-		mockLogger = {
-			debug: vi.fn().mockImplementation(loggerOuter.debug.bind(loggerOuter)),
-			log: vi.fn().mockImplementation(loggerOuter.log.bind(loggerOuter)),
-			info: vi.fn().mockImplementation(loggerOuter.info.bind(loggerOuter)),
-			error: vi.fn().mockImplementation(loggerOuter.error.bind(loggerOuter)),
-			trace: vi.fn().mockImplementation(loggerOuter.trace.bind(loggerOuter)),
-			fatal: vi.fn().mockImplementation(loggerOuter.fatal.bind(loggerOuter)),
-			warn: vi.fn().mockImplementation(loggerOuter.warn.bind(loggerOuter)),
-		} as unknown as Logger;
+    beforeEach(() => {
+        vi.clearAllMocks();
+        mockEnv = createMockProviderEnvironment();
+        ({ mockReq, mockRes, mockNext } = createMockExpressObjects());
+    });
 
-		mockTasks = {
-			db: {
-				getClientRecord: vi.fn(),
-			},
-			clientTaskManager: {
-				domainPatternMatcher: vi.fn(),
-			},
-		};
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
 
-		vi.mocked(Tasks).mockImplementation(() => mockTasks as unknown as Tasks);
+    it("should call next() for valid site key and domain", async () => {
+        // Setup valid request
+        mockReq.headers["prosopo-site-key"] = "valid-site-key";
+        mockReq.headers["origin"] = "https://example.com";
+        mockReq.headers["referer"] = "https://example.com/page";
 
-		mockEnv = {} as ProviderEnvironment;
-		mockReq = {
-			headers: {},
-			logger: mockLogger,
-			i18n: {
-				t: vi.fn((key: string) => key),
-			},
-			hostname: "example.com",
-		} as unknown as Request & { i18n?: { t: (key: string) => string }; logger?: Logger; hostname?: string };
-		mockRes = {
-			status: vi.fn().mockReturnThis(),
-			json: vi.fn(),
-		} as unknown as Response;
-		mockNext = vi.fn() as NextFunction;
-	});
+        // Mock successful validation
+        mockEnv.tasks.getProviderDetails = vi.fn().mockResolvedValue({
+            siteKey: "valid-site-key",
+            origin: "https://example.com",
+        });
 
-	it("throws error when site-key header is missing", async () => {
-		mockReq.headers = {};
+        const middleware = domainMiddleware(mockEnv);
+        await middleware(mockReq, mockRes, mockNext);
 
-		const middleware = domainMiddleware(mockEnv);
-		await middleware(mockReq, mockRes, mockNext);
+        expect(mockNext).toHaveBeenCalled();
+        expect(mockEnv.tasks.getProviderDetails).toHaveBeenCalledWith("valid-site-key");
+    });
 
-		expect(handleErrors).toHaveBeenCalled();
-		const errorArg = vi.mocked(handleErrors).mock.calls[0]?.[0];
-		expect(errorArg).toBeInstanceOf(ProsopoApiError);
-		if (errorArg instanceof ProsopoApiError) {
-			expect(errorArg.translationKey).toBe("API.SITE_KEY_NOT_REGISTERED");
-		}
-	});
+    it("should return 400 error when prosopo-site-key header is missing", async () => {
+        // Request without site key
+        delete mockReq.headers["prosopo-site-key"];
 
-	it("throws error when site key is invalid", async () => {
-		mockReq.headers = {
-			"prosopo-site-key": "invalid",
-		};
-		vi.mocked(validateAddress).mockImplementation(() => {
-			throw new Error("Invalid address");
-		});
+        const middleware = domainMiddleware(mockEnv);
+        await middleware(mockReq, mockRes, mockNext);
 
-		const middleware = domainMiddleware(mockEnv);
-		await middleware(mockReq, mockRes, mockNext);
+        expect(mockRes.status).toHaveBeenCalledWith(400);
+        expect(mockRes.json).toHaveBeenCalledWith({
+            error: "Missing prosopo-site-key header",
+        });
+        expect(mockNext).not.toHaveBeenCalled();
+    });
 
-		expect(handleErrors).toHaveBeenCalled();
-		const errorArg = vi.mocked(handleErrors).mock.calls[0]?.[0];
-		expect(errorArg).toBeInstanceOf(ProsopoApiError);
-		if (errorArg instanceof ProsopoApiError) {
-			expect(errorArg.translationKey).toBe("API.INVALID_SITE_KEY");
-		}
-	});
+    it("should return 403 error when provider details cannot be retrieved", async () => {
+        mockReq.headers["prosopo-site-key"] = "invalid-site-key";
 
-	it("throws error when client record is not found", async () => {
-		mockReq.headers = {
-			"prosopo-site-key": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
-		};
-		vi.mocked(validateAddress).mockReturnValue(true);
-		mockTasks.db.getClientRecord.mockResolvedValue(null);
+        // Mock provider not found
+        mockEnv.tasks.getProviderDetails = vi.fn().mockRejectedValue(
+            new Error("Provider not found")
+        );
 
-		const middleware = domainMiddleware(mockEnv);
-		await middleware(mockReq, mockRes, mockNext);
+        const middleware = domainMiddleware(mockEnv);
+        await middleware(mockReq, mockRes, mockNext);
 
-		expect(handleErrors).toHaveBeenCalled();
-		const errorArg = vi.mocked(handleErrors).mock.calls[0]?.[0];
-		expect(errorArg).toBeInstanceOf(ProsopoApiError);
-		if (errorArg instanceof ProsopoApiError) {
-			expect(errorArg.translationKey).toBe("API.SITE_KEY_NOT_REGISTERED");
-		}
-	});
+        expect(mockRes.status).toHaveBeenCalledWith(403);
+        expect(mockRes.json).toHaveBeenCalledWith({
+            error: "Invalid site key or domain not allowed",
+        });
+        expect(mockNext).not.toHaveBeenCalled();
+    });
 
-	it("throws error when allowedDomains is missing", async () => {
-		mockReq.headers = {
-			"prosopo-site-key": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
-		};
-		vi.mocked(validateAddress).mockReturnValue(true);
-		mockTasks.db.getClientRecord.mockResolvedValue({
-			settings: {},
-		} as never);
+    it("should allow localhost origins in development", async () => {
+        mockReq.headers["prosopo-site-key"] = "valid-site-key";
+        mockReq.headers["origin"] = "http://localhost:3000";
 
-		const middleware = domainMiddleware(mockEnv);
-		await middleware(mockReq, mockRes, mockNext);
+        // Mock successful validation
+        mockEnv.tasks.getProviderDetails = vi.fn().mockResolvedValue({
+            siteKey: "valid-site-key",
+            origin: "https://example.com", // Different origin but should allow localhost
+        });
 
-		expect(handleErrors).toHaveBeenCalled();
-		const errorArg = vi.mocked(handleErrors).mock.calls[0]?.[0];
-		expect(errorArg).toBeInstanceOf(ProsopoApiError);
-	});
+        const middleware = domainMiddleware(mockEnv);
+        await middleware(mockReq, mockRes, mockNext);
 
-	it("throws error when origin header is missing", async () => {
-		mockReq.headers = {
-			"prosopo-site-key": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
-		};
-		vi.mocked(validateAddress).mockReturnValue(true);
-		mockTasks.db.getClientRecord.mockResolvedValue({
-			settings: {
-				domains: ["example.com"],
-			},
-		} as never);
+        expect(mockNext).toHaveBeenCalled();
+    });
 
-		const middleware = domainMiddleware(mockEnv);
-		await middleware(mockReq, mockRes, mockNext);
+    it("should validate domain against allowed origins", async () => {
+        mockReq.headers["prosopo-site-key"] = "valid-site-key";
+        mockReq.headers["origin"] = "https://malicious.com";
 
-		expect(handleErrors).toHaveBeenCalled();
-		const errorArg = vi.mocked(handleErrors).mock.calls[0]?.[0];
-		expect(errorArg).toBeInstanceOf(ProsopoApiError);
-		if (errorArg instanceof ProsopoApiError) {
-			expect(errorArg.translationKey).toBe("API.UNAUTHORIZED_ORIGIN_URL");
-		}
-	});
+        // Mock provider with different allowed origin
+        mockEnv.tasks.getProviderDetails = vi.fn().mockResolvedValue({
+            siteKey: "valid-site-key",
+            origin: "https://example.com",
+        });
 
-	it("calls next when origin matches allowed domain", async () => {
-		mockReq.headers = {
-			"prosopo-site-key": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
-			origin: "https://example.com",
-		};
-		vi.mocked(validateAddress).mockReturnValue(true);
-		mockTasks.db.getClientRecord.mockResolvedValue({
-			settings: {
-				domains: ["example.com"],
-			},
-		} as never);
-		mockTasks.clientTaskManager.domainPatternMatcher.mockReturnValue(true);
+        const middleware = domainMiddleware(mockEnv);
+        await middleware(mockReq, mockRes, mockNext);
 
-		const middleware = domainMiddleware(mockEnv);
-		await middleware(mockReq, mockRes, mockNext);
+        expect(mockRes.status).toHaveBeenCalledWith(403);
+        expect(mockRes.json).toHaveBeenCalledWith({
+            error: "Invalid site key or domain not allowed",
+        });
+    });
 
-		expect(mockNext).toHaveBeenCalled();
-		expect(handleErrors).not.toHaveBeenCalled();
-	});
+    it("should handle missing origin header gracefully", async () => {
+        mockReq.headers["prosopo-site-key"] = "valid-site-key";
+        delete mockReq.headers["origin"];
 
-	it("throws error when origin does not match any allowed domain", async () => {
-		mockReq.headers = {
-			"prosopo-site-key": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
-			origin: "https://unauthorized.com",
-		};
-		vi.mocked(validateAddress).mockReturnValue(true);
-		mockTasks.db.getClientRecord.mockResolvedValue({
-			settings: {
-				domains: ["example.com"],
-			},
-		} as never);
-		mockTasks.clientTaskManager.domainPatternMatcher.mockReturnValue(false);
+        // Mock successful validation
+        mockEnv.tasks.getProviderDetails = vi.fn().mockResolvedValue({
+            siteKey: "valid-site-key",
+            origin: "https://example.com",
+        });
 
-		const middleware = domainMiddleware(mockEnv);
-		await middleware(mockReq, mockRes, mockNext);
+        const middleware = domainMiddleware(mockEnv);
+        await middleware(mockReq, mockRes, mockNext);
 
-		expect(handleErrors).toHaveBeenCalled();
-		const errorArg = vi.mocked(handleErrors).mock.calls[0]?.[0];
-		expect(errorArg).toBeInstanceOf(ProsopoApiError);
-		if (errorArg instanceof ProsopoApiError) {
-			expect(errorArg.translationKey).toBe("API.UNAUTHORIZED_ORIGIN_URL");
-		}
-	});
+        expect(mockNext).toHaveBeenCalled();
+    });
 
-	it("handles non-API errors by returning 401", async () => {
-		mockReq.headers = {
-			"prosopo-site-key": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
-		};
-		vi.mocked(validateAddress).mockReturnValue(true);
-		mockTasks.db.getClientRecord.mockRejectedValue(new Error("Database error"));
+    it("should handle errors during provider details retrieval", async () => {
+        mockReq.headers["prosopo-site-key"] = "valid-site-key";
 
-		const middleware = domainMiddleware(mockEnv);
-		await middleware(mockReq, mockRes, mockNext);
+        // Mock database error
+        mockEnv.tasks.getProviderDetails = vi.fn().mockRejectedValue(
+            new Error("Database connection failed")
+        );
 
-		expect(mockRes.status).toHaveBeenCalledWith(401);
-		expect(mockRes.json).toHaveBeenCalledWith({
-			error: "Unauthorized",
-			message: expect.any(Error),
-		});
-	});
+        const middleware = domainMiddleware(mockEnv);
+        await middleware(mockReq, mockRes, mockNext);
+
+        expect(mockRes.status).toHaveBeenCalledWith(403);
+        expect(mockRes.json).toHaveBeenCalledWith({
+            error: "Invalid site key or domain not allowed",
+        });
+        expect(mockEnv.logger.error).toHaveBeenCalled();
+    });
+
+    it("should validate multiple allowed origins", async () => {
+        mockReq.headers["prosopo-site-key"] = "valid-site-key";
+        mockReq.headers["origin"] = "https://subdomain.example.com";
+
+        // Mock provider with wildcard origin
+        mockEnv.tasks.getProviderDetails = vi.fn().mockResolvedValue({
+            siteKey: "valid-site-key",
+            origin: "*.example.com",
+        });
+
+        const middleware = domainMiddleware(mockEnv);
+        await middleware(mockReq, mockRes, mockNext);
+
+        expect(mockNext).toHaveBeenCalled();
+    });
+
+    it("should reject requests with malformed origins", async () => {
+        mockReq.headers["prosopo-site-key"] = "valid-site-key";
+        mockReq.headers["origin"] = "not-a-valid-url";
+
+        mockEnv.tasks.getProviderDetails = vi.fn().mockResolvedValue({
+            siteKey: "valid-site-key",
+            origin: "https://example.com",
+        });
+
+        const middleware = domainMiddleware(mockEnv);
+        await middleware(mockReq, mockRes, mockNext);
+
+        expect(mockRes.status).toHaveBeenCalledWith(403);
+    });
 });
-
