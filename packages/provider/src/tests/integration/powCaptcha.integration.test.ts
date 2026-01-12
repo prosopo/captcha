@@ -182,7 +182,6 @@ describe("PoW Integration Tests", () => {
 				{
 					method: "POST",
 					headers: {
-						Connection: "close",
 						"Content-Type": "application/json",
 						Origin: origin,
 						"Prosopo-Site-Key": siteKey,
