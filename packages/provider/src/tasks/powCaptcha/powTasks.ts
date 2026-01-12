@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import {
 	type RequestHeaders,
 } from "@prosopo/types";
 import type {
+	BehavioralDataPacked,
 	IProviderDatabase,
 	PoWCaptchaRecord,
 } from "@prosopo/types-database";
@@ -174,6 +175,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		userTimestampSignature: string,
 		ipAddress: IPAddress,
 		headers: RequestHeaders,
+		behavioralData?: string,
 		salt?: string,
 	): Promise<boolean> {
 		// Check signatures before doing DB reads to avoid unnecessary network connections
@@ -259,6 +261,55 @@ export class PowCaptchaManager extends CaptchaManager {
 			userTimestampSignature,
 			coords,
 		);
+
+		// Process behavioral data if provided
+		if (behavioralData) {
+			try {
+				// Get decryption keys: detector keys from DB first, then env var as fallback
+				const decryptKeys = [
+					// Process DB keys first, then env var key last as env key will likely be invalid
+					...(await this.getDetectorKeys()),
+					process.env.BOT_DECRYPTION_KEY,
+				];
+
+				// Decrypt the behavioral data directly to packed format
+				const packedData = await this.decryptBehavioralDataPacked(
+					behavioralData,
+					decryptKeys,
+				);
+
+				if (packedData) {
+					const dappAccount = at(challengeSplit, 2);
+					// Log behavioral analytics using packed data counts
+					this.logger?.info(() => ({
+						msg: "Behavioral analysis completed",
+						data: {
+							userAccount,
+							dappAccount,
+							challenge,
+							mouseEventsCount: packedData.c1.length,
+							touchEventsCount: packedData.c2.length,
+							clickEventsCount: packedData.c3.length,
+							deviceCapability: packedData.d,
+							captchaResult: correct ? "passed" : "failed",
+						},
+					}));
+
+					// Store the packed data directly to database
+					await this.db.updatePowCaptchaRecord(challenge, {
+						behavioralDataPacked: packedData,
+						deviceCapability: packedData.d,
+					});
+				}
+			} catch (error) {
+				this.logger?.error(() => ({
+					msg: "Failed to process behavioral data",
+					err: error,
+				}));
+				// Don't fail the captcha if behavioral analysis fails
+			}
+		}
+
 		return correct;
 	}
 
@@ -415,5 +466,80 @@ export class PowCaptchaManager extends CaptchaManager {
 		}
 
 		return { verified: true, ...(score ? { score } : {}) };
+	}
+
+	/**
+	 * Decrypts behavioral data in packed format
+	 * @param encryptedData - The encrypted behavioral data
+	 * @param decryptKeys - Array of possible decryption keys to try
+	 * @returns Packed behavioral data in {c1, c2, c3, d} format, or null if decryption fails
+	 */
+	private async decryptBehavioralDataPacked(
+		encryptedData: string,
+		decryptKeys: (string | undefined)[],
+	): Promise<BehavioralDataPacked | null> {
+		const decryptBehavioralData = (
+			await import("../detection/decodeBehavior.js")
+		).default;
+
+		const validKeys = decryptKeys.filter((k) => k);
+
+		if (validKeys.length === 0) {
+			this.logger?.error(() => ({
+				msg: "No decryption keys provided for behavioral data",
+			}));
+			return null;
+		}
+
+		// Try each key until one succeeds
+		for (const [keyIndex, key] of validKeys.entries()) {
+			try {
+				this.logger?.debug(() => ({
+					msg: "Attempting to decrypt behavioral data",
+					data: {
+						keyIndex: keyIndex + 1,
+						totalKeys: validKeys.length,
+					},
+				}));
+
+				// Decrypt and parse the JSON - data from client is already in packed format: {c1, c2, c3, d}
+				const result = (await decryptBehavioralData(
+					encryptedData,
+					key,
+				)) as unknown as BehavioralDataPacked;
+
+				this.logger?.info(() => ({
+					msg: "Behavioral data decrypted successfully",
+					data: {
+						keyIndex: keyIndex + 1,
+						c1Length: result.c1?.length || 0,
+						c2Length: result.c2?.length || 0,
+						c3Length: result.c3?.length || 0,
+						deviceCapability: result.d,
+					},
+				}));
+
+				return result;
+			} catch (error) {
+				this.logger?.debug(() => ({
+					msg: "Failed to decrypt with key, trying next",
+					data: {
+						keyIndex: keyIndex + 1,
+						totalKeys: validKeys.length,
+						err: error,
+					},
+				}));
+				// Continue to next key
+			}
+		}
+
+		// All keys failed
+		this.logger?.error(() => ({
+			msg: "Failed to decrypt behavioral data with all available keys",
+			data: {
+				totalKeysAttempted: validKeys.length,
+			},
+		}));
+		return null;
 	}
 }

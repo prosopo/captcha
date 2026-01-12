@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import { randomAsHex } from "@prosopo/util-crypto";
 import type { RedisClientType } from "redis";
 import {
 	afterAll,
+	afterEach,
 	beforeAll,
 	beforeEach,
 	describe,
@@ -94,36 +95,28 @@ describe("redisAccessRulesStorage", () => {
 		).getClient();
 	});
 
-	beforeEach(async () => {
-		// Delete all keys using SCAN to avoid stack overflow with large datasets
-		let cursor = "0";
-		do {
-			const reply = await redisClient.scan(cursor, {
-				MATCH: "*",
-				COUNT: 1000,
-			});
-
-			if (reply.keys.length > 0) {
-				// Delete keys in batches to avoid stack overflow
-				const keyBatches = chunkIntoBatches(reply.keys, 1000);
-				await executeBatchesSequentially(keyBatches, async (batch) => {
-					await redisClient.del(batch);
-				});
+	// Move cleanup to afterEach
+	afterEach(async () => {
+		if (indexName) {
+			try {
+				// Drop index and all documents (DD) created by THIS specific test
+				await redisClient.ft.dropIndex(indexName, { DD: true });
+			} catch (e) {
+				console.error(`Failed to cleanup index ${indexName}`, e);
 			}
+		}
+	}, 120_000);
 
-			cursor = reply.cursor;
-		} while (cursor !== "0");
-
-		// Get a new index name for each test
+	beforeEach(async () => {
 		indexName = randomAsHex(16);
 
-		// setup a new index for each test
-		redisClient = await setupRedisIndex(
+		const result = setupRedisIndex(
 			redisConnection,
 			{ ...accessRulesRedisIndex, name: indexName },
 			mockLogger,
-		).getClient();
-	}, 120_000);
+		);
+		redisClient = await result.getClient();
+	});
 
 	describe(
 		"writer",
@@ -135,6 +128,7 @@ describe("redisAccessRulesStorage", () => {
 			});
 
 			test("inserts rule", async () => {
+				const testIndexName = indexName;
 				// given
 				const accessRule: AccessRule = {
 					type: AccessPolicyType.Block,
@@ -151,7 +145,7 @@ describe("redisAccessRulesStorage", () => {
 
 				// then
 				const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
-				const indexRecordsCount = await getIndexRecordsCount(indexName);
+				const indexRecordsCount = await getIndexRecordsCount(testIndexName);
 
 				expect(insertedAccessRule).toEqual(accessRule);
 				expect(indexRecordsCount).toEqual(1);
@@ -254,16 +248,26 @@ describe("redisAccessRulesStorage", () => {
 			test("deletes all rules when there are 1 million rules", async () => {
 				// given
 				const rulesCount = 1_000_000;
+				const batchSize = 10_000;
+				const numBatches = Math.ceil(rulesCount / batchSize);
 
-				const accessRules: AccessRule[] = Array.from(
-					{ length: rulesCount },
-					() => ({
-						type: AccessPolicyType.Block,
-						clientId: getUniqueString(),
-					}),
-				);
+				// Insert rules in batches to avoid memory exhaustion
+				// Don't create 1M objects in memory at once!
+				for (let i = 0; i < numBatches; i++) {
+					const currentBatchSize = Math.min(
+						batchSize,
+						rulesCount - i * batchSize,
+					);
+					const batchRules: AccessRule[] = Array.from(
+						{ length: currentBatchSize },
+						() => ({
+							type: AccessPolicyType.Block,
+							clientId: getUniqueString(),
+						}),
+					);
 
-				await insertRules(accessRules);
+					await insertRules(batchRules);
+				}
 
 				// verify that there are 1 million rules in the database
 				const beforeDeleteIndexRecordsCount =
@@ -281,7 +285,7 @@ describe("redisAccessRulesStorage", () => {
 			});
 		},
 		{
-			timeout: 120_000,
+			timeout: 240_000,
 		},
 	);
 

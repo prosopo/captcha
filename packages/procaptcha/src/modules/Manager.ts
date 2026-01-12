@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -283,6 +283,9 @@ export function Manager(
 					data: stringToHex(challenge[ApiParams.timestamp]),
 					type: "bytes",
 				});
+
+				// TODO: Add behavioral data collection for image captcha when API supports it
+				// (Currently only PoW captcha submission accepts behavioral data)
 
 				// send the commitment to the provider
 				const submission: TCaptchaSubmitResult =

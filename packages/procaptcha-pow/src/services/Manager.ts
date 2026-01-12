@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -90,8 +90,6 @@ export const Manager = (
 			...configInput,
 		};
 
-		console.log("Using config:", config);
-
 		// overwrite the account in use with the one in state if it exists. Reduces likelihood of bugs where the user
 		// changes account in the middle of the captcha process.
 		if (state.account) {
@@ -180,7 +178,6 @@ export const Manager = (
 
 				// use the passed in account (could be web3) or create a new account
 				const user = await selectAccount();
-				console.log("User", user);
 				const userAccount = user.account.address;
 
 				// set the account created or injected by the extension
@@ -263,6 +260,41 @@ export const Manager = (
 						type: "bytes",
 					});
 
+					let encryptedBehavioralData: string | undefined;
+
+					// Collect and encrypt behavioral data before submission
+					if (
+						frictionlessState?.encryptBehavioralData &&
+						(frictionlessState?.behaviorCollector1 ||
+							frictionlessState?.behaviorCollector2 ||
+							frictionlessState?.behaviorCollector3)
+					) {
+						try {
+							const behavioralData = {
+								collector1:
+									frictionlessState.behaviorCollector1?.getData() || [],
+								collector2:
+									frictionlessState.behaviorCollector2?.getData() || [],
+								collector3:
+									frictionlessState.behaviorCollector3?.getData() || [],
+								deviceCapability:
+									frictionlessState.deviceCapability || "unknown",
+							};
+
+							// Pack the behavioral data before stringifying
+							const dataToEncrypt = frictionlessState.packBehavioralData
+								? frictionlessState.packBehavioralData(behavioralData)
+								: behavioralData;
+
+							encryptedBehavioralData =
+								await frictionlessState.encryptBehavioralData(
+									JSON.stringify(dataToEncrypt),
+								);
+						} catch {
+							// Silently ignore behavioral data errors - captcha should still work
+						}
+					}
+
 					const verifiedSolution = await providerApi.submitPowCaptchaSolution(
 						challenge,
 						getAccount().account.account.address,
@@ -270,6 +302,7 @@ export const Manager = (
 						solution,
 						userTimestampSignature.signature.toString(),
 						config.captchas.pow.verifiedTimeout,
+						encryptedBehavioralData,
 						salt,
 					);
 					if (verifiedSolution[ApiParams.verified]) {

@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -58,6 +58,7 @@ export type ApiJsonError = {
 	message: string;
 	key?: string;
 	code: number;
+	data?: Record<string, unknown>;
 };
 
 export const ApiPrefix = "/v1/prosopo" as const;
@@ -355,6 +356,7 @@ export const SubmitPowCaptchaSolutionBody = object({
 	[ApiParams.verifiedTimeout]: number()
 		.optional()
 		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
+	[ApiParams.behavioralData]: string().optional(),
 	[ApiParams.salt]: string().optional(),
 });
 

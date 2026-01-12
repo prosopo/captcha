@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -156,6 +156,7 @@ export default class ProviderApi
 		nonce: number,
 		userTimestampSignature: string,
 		timeout?: number,
+		behavioralData?: string,
 		salt?: string,
 	): Promise<PowCaptchaSolutionResponse> {
 		const body = SubmitPowCaptchaSolutionBody.parse({
@@ -173,6 +174,7 @@ export default class ProviderApi
 					[ApiParams.timestamp]: userTimestampSignature,
 				},
 			},
+			...(behavioralData && { [ApiParams.behavioralData]: behavioralData }),
 			...(salt && { [ApiParams.salt]: salt }),
 		});
 		return this.post(ClientApiPaths.SubmitPowCaptchaSolution, body, {
