@@ -85,28 +85,33 @@ const getFilesAndTsConfigs = async (
 	const tsConfigPath = path.resolve(packagePath, "tsconfig.json");
 	console.log("DEBUG: getFilesAndTsConfigs - packagePath:", packagePath);
 	console.log("DEBUG: getFilesAndTsConfigs - tsConfigPath:", tsConfigPath);
-	console.log("DEBUG: getFilesAndTsConfigs - tsConfig exists:", fs.existsSync(tsConfigPath));
+	console.log(
+		"DEBUG: getFilesAndTsConfigs - tsConfig exists:",
+		fs.existsSync(tsConfigPath),
+	);
 	// check whether the user has passed a glob
 	const currentPackageGlob = currentPackage.includes("*")
 		? currentPackage
 		: `${currentPackage}/**/*`;
-	console.log("DEBUG: getFilesAndTsConfigs - currentPackageGlob:", currentPackageGlob);
+	console.log(
+		"DEBUG: getFilesAndTsConfigs - currentPackageGlob:",
+		currentPackageGlob,
+	);
 	const tsconfig = getTsConfigFollowExtends(tsConfigPath);
 	const rootDir = tsconfig.compilerOptions.rootDir ?? ".";
 	console.log("DEBUG: getFilesAndTsConfigs - rootDir:", rootDir);
-	console.log("DEBUG: getFilesAndTsConfigs - files in src dir:", fs.readdirSync(path.resolve(packagePath, rootDir)));
-	const pattern = path.resolve(packagePath, `${rootDir}/**/*.(${fileTypes.join("|")})`);
-	console.log("DEBUG: getFilesAndTsConfigs - search pattern:", pattern);
-	const files = await fg(
-		pattern,
-		{
-			ignore: [
-				"**/node_modules/**",
-				currentPackageGlob,
-				...(ignorePaths || []),
-			],
-		},
+	console.log(
+		"DEBUG: getFilesAndTsConfigs - files in src dir:",
+		fs.readdirSync(path.resolve(packagePath, rootDir)),
 	);
+	const pattern = path.resolve(
+		packagePath,
+		`${rootDir}/**/*.(${fileTypes.join("|")})`,
+	);
+	console.log("DEBUG: getFilesAndTsConfigs - search pattern:", pattern);
+	const files = await fg(pattern, {
+		ignore: ["**/node_modules/**", currentPackageGlob, ...(ignorePaths || [])],
+	});
 	console.log("DEBUG: getFilesAndTsConfigs - found files:", files);
 	// keep the tsconfig path beside each file to avoid looking for file ids in arrays later
 	return files.map((file: string) => [file, tsConfigPath, packageDir]);
@@ -252,6 +257,8 @@ const getOutFile = (outdir: string, file: string, fileExtension: string) => {
  *  - ignorePaths: paths or globs to ignore (optional)
  * @constructor
  */
+export type { VitePluginWatchExternalOptions };
+
 export const VitePluginWatchWorkspace = async (
 	config: VitePluginWatchExternalOptions,
 	// biome-ignore lint/suspicious/noExplicitAny: TODO replace any
