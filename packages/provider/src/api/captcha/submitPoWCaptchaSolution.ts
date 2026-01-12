@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -58,8 +58,16 @@ export default (env: ProviderEnvironment) =>
 			);
 		}
 
-		const { challenge, signature, nonce, verifiedTimeout, dapp, user, salt } =
-			parsed;
+		const {
+			challenge,
+			signature,
+			nonce,
+			verifiedTimeout,
+			dapp,
+			user,
+			behavioralData,
+			salt,
+		} = parsed;
 
 		validateSiteKey(dapp);
 		validateAddr(user);
@@ -85,6 +93,7 @@ export default (env: ProviderEnvironment) =>
 				signature.user.timestamp,
 				getIPAddress(req.ip || ""),
 				flatten(req.headers),
+				behavioralData,
 				salt,
 			);
 			const response: PowCaptchaSolutionResponse = { status: "ok", verified };
