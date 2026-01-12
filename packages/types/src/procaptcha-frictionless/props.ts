@@ -13,8 +13,10 @@
 // limitations under the License.
 import type { ProcaptchaClientConfigOutput } from "../config/config.js";
 import type {
+	BehavioralData,
 	ClickEventPoint,
 	MouseMovementPoint,
+	PackedBehavioralData,
 	TouchEventPoint,
 } from "../procaptcha/behavioral.js";
 import type { Account } from "../procaptcha/manager.js";
@@ -48,7 +50,7 @@ export type BotDetectionFunctionResult = GetFrictionlessCaptchaResponse & {
 	};
 	deviceCapability?: string;
 	encryptBehavioralData?: (data: string) => Promise<string>;
-	packBehavioralData?: (data: string) => Promise<string>;
+	packBehavioralData?: (data: BehavioralData) => PackedBehavioralData;
 };
 
 export type BotDetectionFunction = (
