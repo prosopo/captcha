@@ -45,8 +45,14 @@ describe("robotsMiddleware", () => {
 
 		await middleware(mockReq, mockRes, mockNext);
 
-		expect(mockRes.setHeader).toHaveBeenCalledWith("Strict-Transport-Security", "max-age=31536000;");
-		expect(mockRes.setHeader).toHaveBeenCalledWith("X-XSS-Protection", "1; mode=block");
+		expect(mockRes.setHeader).toHaveBeenCalledWith(
+			"Strict-Transport-Security",
+			"max-age=31536000;",
+		);
+		expect(mockRes.setHeader).toHaveBeenCalledWith(
+			"X-XSS-Protection",
+			"1; mode=block",
+		);
 		expect(mockRes.setHeader).toHaveBeenCalledWith("X-Frame-Options", "DENY");
 		expect(mockRes.setHeader).toHaveBeenCalledWith("X-Robots-Tag", "none");
 		expect(mockRes.setHeader).toHaveBeenCalledTimes(4);
@@ -67,10 +73,26 @@ describe("robotsMiddleware", () => {
 		await middleware(mockReq, mockRes, mockNext);
 
 		// Verify the order of header setting
-		expect(mockRes.setHeader).toHaveBeenNthCalledWith(1, "Strict-Transport-Security", "max-age=31536000;");
-		expect(mockRes.setHeader).toHaveBeenNthCalledWith(2, "X-XSS-Protection", "1; mode=block");
-		expect(mockRes.setHeader).toHaveBeenNthCalledWith(3, "X-Frame-Options", "DENY");
-		expect(mockRes.setHeader).toHaveBeenNthCalledWith(4, "X-Robots-Tag", "none");
+		expect(mockRes.setHeader).toHaveBeenNthCalledWith(
+			1,
+			"Strict-Transport-Security",
+			"max-age=31536000;",
+		);
+		expect(mockRes.setHeader).toHaveBeenNthCalledWith(
+			2,
+			"X-XSS-Protection",
+			"1; mode=block",
+		);
+		expect(mockRes.setHeader).toHaveBeenNthCalledWith(
+			3,
+			"X-Frame-Options",
+			"DENY",
+		);
+		expect(mockRes.setHeader).toHaveBeenNthCalledWith(
+			4,
+			"X-Robots-Tag",
+			"none",
+		);
 	});
 
 	it("should be synchronous and call next immediately", () => {

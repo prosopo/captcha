@@ -13,9 +13,9 @@
 // limitations under the License.
 
 import type { DetectorResult } from "@prosopo/types";
-import { describe, expect, it, vi, beforeEach } from "vitest";
-import { getBotScore } from "../../../../tasks/detection/getBotScore.js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as decodePayloadModule from "../../../../tasks/detection/decodePayload.js";
+import { getBotScore } from "../../../../tasks/detection/getBotScore.js";
 
 vi.mock("../../../../tasks/detection/decodePayload.js", () => ({
 	default: vi.fn(),
@@ -166,4 +166,3 @@ describe("getBotScore", () => {
 		);
 	});
 });
-

@@ -16,7 +16,7 @@ import { handleErrors } from "@prosopo/api-express-router";
 import { type Logger, getLogger } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { headerCheckMiddleware } from "../../../api/headerCheckMiddleware.js";
 import * as validateAddressModule from "../../../api/validateAddress.js";
 
@@ -178,4 +178,3 @@ describe("headerCheckMiddleware", () => {
 		expect(mockNext).not.toHaveBeenCalled();
 	});
 });
-

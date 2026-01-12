@@ -65,11 +65,14 @@ describe("buildTreeAndGetCommitmentId", () => {
 	it("should throw an error if commitmentId does not exist", () => {
 		// Override the mock for this specific test
 		const originalMock = vi.mocked(CaptchaMerkleTree);
-		vi.mocked(CaptchaMerkleTree).mockImplementationOnce(() => ({
-			build: vi.fn(),
-			root: { hash: null },
-			getRoot: vi.fn().mockReturnValue({ hash: null }),
-		} as any));
+		vi.mocked(CaptchaMerkleTree).mockImplementationOnce(
+			() =>
+				({
+					build: vi.fn(),
+					root: { hash: null },
+					getRoot: vi.fn().mockReturnValue({ hash: null }),
+				}) as any,
+		);
 
 		expect(() => buildTreeAndGetCommitmentId(mockCaptchaSolutions)).toThrow(
 			new ProsopoEnvError(
@@ -84,6 +87,8 @@ describe("buildTreeAndGetCommitmentId", () => {
 		);
 
 		// Restore the original mock
-		vi.mocked(CaptchaMerkleTree).mockImplementation(originalMock.getMockImplementation()!);
+		vi.mocked(CaptchaMerkleTree).mockImplementation(
+			originalMock.getMockImplementation()!,
+		);
 	});
 });

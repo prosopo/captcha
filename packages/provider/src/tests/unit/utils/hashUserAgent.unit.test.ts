@@ -17,7 +17,8 @@ import { hashUserAgent } from "../../../utils/hashUserAgent.js";
 
 describe("hashUserAgent", () => {
 	it("should return a 32-character hex string", () => {
-		const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36";
+		const userAgent =
+			"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36";
 		const result = hashUserAgent(userAgent);
 
 		expect(result).toHaveLength(32);
@@ -58,7 +59,8 @@ describe("hashUserAgent", () => {
 	});
 
 	it("should handle special characters", () => {
-		const specialUserAgent = "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0; !@#$%^&*())";
+		const specialUserAgent =
+			"Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0; !@#$%^&*())";
 		const result = hashUserAgent(specialUserAgent);
 
 		expect(result).toHaveLength(32);
@@ -66,7 +68,8 @@ describe("hashUserAgent", () => {
 	});
 
 	it("should handle unicode characters", () => {
-		const unicodeUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0 🌟";
+		const unicodeUserAgent =
+			"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0 🌟";
 		const result = hashUserAgent(unicodeUserAgent);
 
 		expect(result).toHaveLength(32);

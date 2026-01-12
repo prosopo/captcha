@@ -49,7 +49,9 @@ describe("validateSiteKey", () => {
 
 		vi.mocked(validateAddress).mockReturnValue(false);
 
-		expect(() => validateSiteKey(invalidSiteKey, mockLogger)).toThrow(ProsopoApiError);
+		expect(() => validateSiteKey(invalidSiteKey, mockLogger)).toThrow(
+			ProsopoApiError,
+		);
 		expect(validateAddress).toHaveBeenCalledWith(invalidSiteKey, false, 42);
 	});
 
@@ -81,7 +83,9 @@ describe("validateAddr", () => {
 
 		vi.mocked(validateAddress).mockReturnValue(true);
 
-		expect(() => validateAddr(validAddress, "CONTRACT.INVALID_ADDRESS", mockLogger)).not.toThrow();
+		expect(() =>
+			validateAddr(validAddress, "CONTRACT.INVALID_ADDRESS", mockLogger),
+		).not.toThrow();
 		expect(validateAddress).toHaveBeenCalledWith(validAddress, false, 42);
 	});
 
@@ -90,7 +94,9 @@ describe("validateAddr", () => {
 
 		vi.mocked(validateAddress).mockReturnValue(false);
 
-		expect(() => validateAddr(invalidAddress, "CONTRACT.INVALID_ADDRESS", mockLogger)).toThrow(ProsopoApiError);
+		expect(() =>
+			validateAddr(invalidAddress, "CONTRACT.INVALID_ADDRESS", mockLogger),
+		).toThrow(ProsopoApiError);
 
 		try {
 			validateAddr(invalidAddress, "CONTRACT.INVALID_ADDRESS", mockLogger);
@@ -129,7 +135,9 @@ describe("validateAddr", () => {
 			throw cryptoError;
 		});
 
-		expect(() => validateAddr(address, "CONTRACT.INVALID_ADDRESS", mockLogger)).toThrow(ProsopoApiError);
+		expect(() =>
+			validateAddr(address, "CONTRACT.INVALID_ADDRESS", mockLogger),
+		).toThrow(ProsopoApiError);
 
 		try {
 			validateAddr(address, "CONTRACT.INVALID_ADDRESS", mockLogger);
@@ -157,7 +165,9 @@ describe("validateAddr", () => {
 
 		vi.mocked(validateAddress).mockReturnValue(false);
 
-		expect(() => validateAddr(invalidAddress, customTranslationKey, mockLogger)).toThrow(ProsopoApiError);
+		expect(() =>
+			validateAddr(invalidAddress, customTranslationKey, mockLogger),
+		).toThrow(ProsopoApiError);
 		expect(validateAddress).toHaveBeenCalledWith(invalidAddress, false, 42);
 	});
 
@@ -166,7 +176,9 @@ describe("validateAddr", () => {
 
 		vi.mocked(validateAddress).mockReturnValue(false);
 
-		expect(() => validateAddr(emptyAddress, "CONTRACT.INVALID_ADDRESS", mockLogger)).toThrow(ProsopoApiError);
+		expect(() =>
+			validateAddr(emptyAddress, "CONTRACT.INVALID_ADDRESS", mockLogger),
+		).toThrow(ProsopoApiError);
 		expect(validateAddress).toHaveBeenCalledWith(emptyAddress, false, 42);
 	});
 
@@ -175,16 +187,21 @@ describe("validateAddr", () => {
 
 		vi.mocked(validateAddress).mockReturnValue(false);
 
-		expect(() => validateAddr(nullAddress, "CONTRACT.INVALID_ADDRESS", mockLogger)).toThrow(ProsopoApiError);
+		expect(() =>
+			validateAddr(nullAddress, "CONTRACT.INVALID_ADDRESS", mockLogger),
+		).toThrow(ProsopoApiError);
 		expect(validateAddress).toHaveBeenCalledWith(nullAddress, false, 42);
 	});
 
 	it("should validate hex addresses", () => {
-		const hexAddress = "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d";
+		const hexAddress =
+			"0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d";
 
 		vi.mocked(validateAddress).mockReturnValue(true);
 
-		expect(() => validateAddr(hexAddress, "CONTRACT.INVALID_ADDRESS", mockLogger)).not.toThrow();
+		expect(() =>
+			validateAddr(hexAddress, "CONTRACT.INVALID_ADDRESS", mockLogger),
+		).not.toThrow();
 		expect(validateAddress).toHaveBeenCalledWith(hexAddress, false, 42);
 	});
 
@@ -193,7 +210,9 @@ describe("validateAddr", () => {
 
 		vi.mocked(validateAddress).mockReturnValue(true);
 
-		expect(() => validateAddr(base58Address, "CONTRACT.INVALID_ADDRESS", mockLogger)).not.toThrow();
+		expect(() =>
+			validateAddr(base58Address, "CONTRACT.INVALID_ADDRESS", mockLogger),
+		).not.toThrow();
 		expect(validateAddress).toHaveBeenCalledWith(base58Address, false, 42);
 	});
 });

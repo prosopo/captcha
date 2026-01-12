@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { ApiEndpointResponseStatus } from "@prosopo/api-route";
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	ApiToggleMaintenanceModeEndpoint,
 	getMaintenanceMode,
@@ -22,11 +22,11 @@ import {
 
 describe("getMaintenanceMode", () => {
 	beforeEach(() => {
-		delete process.env.MAINTENANCE_MODE;
+		process.env.MAINTENANCE_MODE = undefined;
 	});
 
 	afterEach(() => {
-		delete process.env.MAINTENANCE_MODE;
+		process.env.MAINTENANCE_MODE = undefined;
 	});
 
 	it("returns false when MAINTENANCE_MODE is not set", () => {
@@ -56,11 +56,11 @@ describe("getMaintenanceMode", () => {
 
 describe("setMaintenanceMode", () => {
 	beforeEach(() => {
-		delete process.env.MAINTENANCE_MODE;
+		process.env.MAINTENANCE_MODE = undefined;
 	});
 
 	afterEach(() => {
-		delete process.env.MAINTENANCE_MODE;
+		process.env.MAINTENANCE_MODE = undefined;
 	});
 
 	it("sets MAINTENANCE_MODE to 'true' when enabled is true", () => {
@@ -84,7 +84,7 @@ describe("ApiToggleMaintenanceModeEndpoint", () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
-		delete process.env.MAINTENANCE_MODE;
+		process.env.MAINTENANCE_MODE = undefined;
 		mockLogger = {
 			info: vi.fn(),
 		};
@@ -92,7 +92,7 @@ describe("ApiToggleMaintenanceModeEndpoint", () => {
 	});
 
 	afterEach(() => {
-		delete process.env.MAINTENANCE_MODE;
+		process.env.MAINTENANCE_MODE = undefined;
 	});
 
 	it("returns success status when toggling maintenance mode", async () => {
@@ -122,9 +122,7 @@ describe("ApiToggleMaintenanceModeEndpoint", () => {
 		setMaintenanceMode(false);
 		await endpoint.processRequest({ enabled: true }, mockLogger as never);
 
-		expect(mockLogger.info).toHaveBeenCalledWith(
-			expect.any(Function),
-		);
+		expect(mockLogger.info).toHaveBeenCalledWith(expect.any(Function));
 		const logCall = mockLogger.info.mock.calls.find(
 			(call) =>
 				typeof call[0] === "function" &&
@@ -138,4 +136,3 @@ describe("ApiToggleMaintenanceModeEndpoint", () => {
 		expect(schema).toBeDefined();
 	});
 });
-

@@ -151,7 +151,10 @@ describe("checkLangRules", () => {
 				de: 8,
 			},
 		} as ProsopoConfigOutput;
-		const result = checkLangRules(config, "fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5");
+		const result = checkLangRules(
+			config,
+			"fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5",
+		);
 		expect(result).toBe(23); // fr (5) + en (10) + de (8) = 23
 	});
 
@@ -217,7 +220,7 @@ describe("checkLangRules", () => {
 			},
 		} as ProsopoConfigOutput;
 
-		const longAcceptLanguage = "en,".repeat(100) + "fr";
+		const longAcceptLanguage = `${"en,".repeat(100)}fr`;
 		const result = checkLangRules(config, longAcceptLanguage);
 		expect(result).toBe(100); // 100 occurrences of 'en'
 	});

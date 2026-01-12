@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { ApiEndpointResponseStatus } from "@prosopo/api-route";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiUpdateDetectorKeyEndpoint } from "../../../../api/admin/apiUpdateDetectorKeyEndpoint.js";
 
 describe("ApiUpdateDetectorKeyEndpoint", () => {
@@ -35,9 +35,7 @@ describe("ApiUpdateDetectorKeyEndpoint", () => {
 			info: vi.fn(),
 			error: vi.fn(),
 		};
-		endpoint = new ApiUpdateDetectorKeyEndpoint(
-			mockClientTaskManager as never,
-		);
+		endpoint = new ApiUpdateDetectorKeyEndpoint(mockClientTaskManager as never);
 	});
 
 	it("returns success status with active detector keys", async () => {
@@ -49,10 +47,7 @@ describe("ApiUpdateDetectorKeyEndpoint", () => {
 		);
 
 		expect(result.status).toBe(ApiEndpointResponseStatus.SUCCESS);
-		expect(result.data).toHaveProperty("activeDetectorKeys", [
-			"key1",
-			"key2",
-		]);
+		expect(result.data).toHaveProperty("activeDetectorKeys", ["key1", "key2"]);
 	});
 
 	it("calls updateDetectorKey with correct parameters", async () => {
@@ -110,4 +105,3 @@ describe("ApiUpdateDetectorKeyEndpoint", () => {
 		expect(schema).toBeDefined();
 	});
 });
-

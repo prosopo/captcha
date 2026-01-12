@@ -14,8 +14,8 @@
 
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { describe, expect, it, vi } from "vitest";
-import { blockMiddleware } from "../../../api/block.js";
 import { BlacklistRequestInspector } from "../../../api/blacklistRequestInspector.js";
+import { blockMiddleware } from "../../../api/block.js";
 
 vi.mock("../../../api/blacklistRequestInspector.js");
 
@@ -26,7 +26,9 @@ describe("blockMiddleware", () => {
 			set: vi.fn(),
 		};
 		const mockDb = {
-			getUserAccessRulesStorage: vi.fn().mockReturnValue(mockUserAccessRulesStorage),
+			getUserAccessRulesStorage: vi
+				.fn()
+				.mockReturnValue(mockUserAccessRulesStorage),
 		};
 		const mockIsReady = vi.fn();
 		const mockEnv = {
@@ -38,7 +40,9 @@ describe("blockMiddleware", () => {
 		const mockBlacklistRequestInspector = {
 			abortRequestForBlockedUsers: mockAbortRequestForBlockedUsers,
 		};
-		vi.mocked(BlacklistRequestInspector).mockReturnValue(mockBlacklistRequestInspector as any);
+		vi.mocked(BlacklistRequestInspector).mockReturnValue(
+			mockBlacklistRequestInspector as any,
+		);
 
 		const middleware = blockMiddleware(mockEnv);
 
@@ -56,7 +60,9 @@ describe("blockMiddleware", () => {
 			set: vi.fn(),
 		};
 		const mockDb = {
-			getUserAccessRulesStorage: vi.fn().mockReturnValue(mockUserAccessRulesStorage),
+			getUserAccessRulesStorage: vi
+				.fn()
+				.mockReturnValue(mockUserAccessRulesStorage),
 		};
 		const mockIsReady = vi.fn();
 		const mockEnv = {
@@ -68,7 +74,9 @@ describe("blockMiddleware", () => {
 		const mockBlacklistRequestInspector = {
 			abortRequestForBlockedUsers: mockAbortRequestForBlockedUsers,
 		};
-		vi.mocked(BlacklistRequestInspector).mockReturnValue(mockBlacklistRequestInspector as any);
+		vi.mocked(BlacklistRequestInspector).mockReturnValue(
+			mockBlacklistRequestInspector as any,
+		);
 
 		const middleware = blockMiddleware(mockEnv);
 
@@ -77,4 +85,3 @@ describe("blockMiddleware", () => {
 		expect(middleware).not.toBe(mockAbortRequestForBlockedUsers);
 	});
 });
-

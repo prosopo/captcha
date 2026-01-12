@@ -15,7 +15,10 @@
 import { ProsopoApiError } from "@prosopo/common";
 import { signatureVerify } from "@prosopo/util-crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { checkPowSignature, validateSolution } from "../../../../tasks/powCaptcha/powTasksUtils.js";
+import {
+	checkPowSignature,
+	validateSolution,
+} from "../../../../tasks/powCaptcha/powTasksUtils.js";
 
 vi.mock("@prosopo/util-crypto", () => ({
 	signatureVerify: vi.fn(),
@@ -94,11 +97,13 @@ describe("checkPowSignature", () => {
 			isValid: true,
 		} as any);
 
-		expect(() => checkPowSignature(validMessage, validSignature, validAddress)).not.toThrow();
+		expect(() =>
+			checkPowSignature(validMessage, validSignature, validAddress),
+		).not.toThrow();
 		expect(signatureVerify).toHaveBeenCalledWith(
-			`0x${Buffer.from(validMessage, 'utf8').toString('hex')}`,
+			`0x${Buffer.from(validMessage, "utf8").toString("hex")}`,
 			validSignature,
-			validAddress
+			validAddress,
 		);
 	});
 
@@ -107,7 +112,9 @@ describe("checkPowSignature", () => {
 			isValid: false,
 		} as any);
 
-		expect(() => checkPowSignature(validMessage, validSignature, validAddress)).toThrow(ProsopoApiError);
+		expect(() =>
+			checkPowSignature(validMessage, validSignature, validAddress),
+		).toThrow(ProsopoApiError);
 
 		try {
 			checkPowSignature(validMessage, validSignature, validAddress);
@@ -131,13 +138,29 @@ describe("checkPowSignature", () => {
 			isValid: false,
 		} as any);
 
-		expect(() => checkPowSignature(validMessage, validSignature, validAddress, signatureType)).toThrow(ProsopoApiError);
+		expect(() =>
+			checkPowSignature(
+				validMessage,
+				validSignature,
+				validAddress,
+				signatureType,
+			),
+		).toThrow(ProsopoApiError);
 
 		try {
-			checkPowSignature(validMessage, validSignature, validAddress, signatureType);
+			checkPowSignature(
+				validMessage,
+				validSignature,
+				validAddress,
+				signatureType,
+			);
 		} catch (error) {
-			expect((error as ProsopoApiError).context.ERROR).toBe(`Signature is invalid for this message: ${signatureType}`);
-			expect((error as ProsopoApiError).context.signatureType).toBe(signatureType);
+			expect((error as ProsopoApiError).context.ERROR).toBe(
+				`Signature is invalid for this message: ${signatureType}`,
+			);
+			expect((error as ProsopoApiError).context.signatureType).toBe(
+				signatureType,
+			);
 		}
 	});
 
@@ -147,39 +170,47 @@ describe("checkPowSignature", () => {
 			isValid: true,
 		} as any);
 
-		expect(() => checkPowSignature(emptyMessage, validSignature, validAddress)).not.toThrow();
+		expect(() =>
+			checkPowSignature(emptyMessage, validSignature, validAddress),
+		).not.toThrow();
 		expect(signatureVerify).toHaveBeenCalledWith(
 			expect.stringContaining(emptyMessage),
 			validSignature,
-			validAddress
+			validAddress,
 		);
 	});
 
 	it("should handle hex address format", () => {
-		const hexAddress = "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d";
+		const hexAddress =
+			"0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d";
 		vi.mocked(signatureVerify).mockReturnValue({
 			isValid: true,
 		} as any);
 
-		expect(() => checkPowSignature(validMessage, validSignature, hexAddress)).not.toThrow();
+		expect(() =>
+			checkPowSignature(validMessage, validSignature, hexAddress),
+		).not.toThrow();
 		expect(signatureVerify).toHaveBeenCalledWith(
 			expect.any(String),
 			validSignature,
-			hexAddress
+			hexAddress,
 		);
 	});
 
 	it("should handle different signature formats", () => {
-		const hexSignature = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
+		const hexSignature =
+			"0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
 		vi.mocked(signatureVerify).mockReturnValue({
 			isValid: true,
 		} as any);
 
-		expect(() => checkPowSignature(validMessage, hexSignature, validAddress)).not.toThrow();
+		expect(() =>
+			checkPowSignature(validMessage, hexSignature, validAddress),
+		).not.toThrow();
 		expect(signatureVerify).toHaveBeenCalledWith(
 			expect.any(String),
 			hexSignature,
-			validAddress
+			validAddress,
 		);
 	});
 
@@ -202,7 +233,9 @@ describe("checkPowSignature", () => {
 			isValid: true,
 		} as any);
 
-		expect(() => checkPowSignature(unicodeMessage, validSignature, validAddress)).not.toThrow();
+		expect(() =>
+			checkPowSignature(unicodeMessage, validSignature, validAddress),
+		).not.toThrow();
 
 		const callArgs = vi.mocked(signatureVerify).mock.calls[0];
 		expect(callArgs[0]).toMatch(/^0x/);
@@ -214,7 +247,9 @@ describe("checkPowSignature", () => {
 			isValid: true,
 		} as any);
 
-		expect(() => checkPowSignature(longMessage, validSignature, validAddress)).not.toThrow();
+		expect(() =>
+			checkPowSignature(longMessage, validSignature, validAddress),
+		).not.toThrow();
 	});
 
 	it("should provide detailed error context", () => {

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { ApiEndpointResponseStatus } from "@prosopo/api-route";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiRemoveDetectorKeyEndpoint } from "../../../../api/admin/apiRemoveDetectorKeyEndpoint.js";
 
 describe("ApiRemoveDetectorKeyEndpoint", () => {
@@ -35,9 +35,7 @@ describe("ApiRemoveDetectorKeyEndpoint", () => {
 			info: vi.fn(),
 			error: vi.fn(),
 		};
-		endpoint = new ApiRemoveDetectorKeyEndpoint(
-			mockClientTaskManager as never,
-		);
+		endpoint = new ApiRemoveDetectorKeyEndpoint(mockClientTaskManager as never);
 	});
 
 	it("returns success status when detector key is removed", async () => {
@@ -103,4 +101,3 @@ describe("ApiRemoveDetectorKeyEndpoint", () => {
 		expect(schema).toBeDefined();
 	});
 });
-

@@ -99,7 +99,10 @@ describe("constructPairList", () => {
 		const input = [4, 3, 2, 1];
 		const result = constructPairList(input);
 
-		expect(result).toEqual([[4, 3], [2, 1]]);
+		expect(result).toEqual([
+			[4, 3],
+			[2, 1],
+		]);
 	});
 });
 
@@ -113,7 +116,11 @@ describe("containsIdenticalPairs", () => {
 
 	it("should return false for single list with unique pairs", () => {
 		const input: [number, number][][] = [
-			[[1, 2], [3, 4], [5, 6]],
+			[
+				[1, 2],
+				[3, 4],
+				[5, 6],
+			],
 		];
 		const result = containsIdenticalPairs(input);
 
@@ -122,9 +129,18 @@ describe("containsIdenticalPairs", () => {
 
 	it("should return false for multiple lists with unique pairs", () => {
 		const input: [number, number][][] = [
-			[[1, 2], [3, 4]],
-			[[5, 6], [7, 8]],
-			[[9, 10], [11, 12]],
+			[
+				[1, 2],
+				[3, 4],
+			],
+			[
+				[5, 6],
+				[7, 8],
+			],
+			[
+				[9, 10],
+				[11, 12],
+			],
 		];
 		const result = containsIdenticalPairs(input);
 
@@ -133,7 +149,11 @@ describe("containsIdenticalPairs", () => {
 
 	it("should return true for single list with identical pairs", () => {
 		const input: [number, number][][] = [
-			[[1, 2], [1, 2], [3, 4]],
+			[
+				[1, 2],
+				[1, 2],
+				[3, 4],
+			],
 		];
 		const result = containsIdenticalPairs(input);
 
@@ -142,8 +162,14 @@ describe("containsIdenticalPairs", () => {
 
 	it("should return true for multiple lists with identical pairs", () => {
 		const input: [number, number][][] = [
-			[[1, 2], [3, 4]],
-			[[1, 2], [5, 6]], // [1,2] appears twice across lists
+			[
+				[1, 2],
+				[3, 4],
+			],
+			[
+				[1, 2],
+				[5, 6],
+			], // [1,2] appears twice across lists
 		];
 		const result = containsIdenticalPairs(input);
 
@@ -152,9 +178,18 @@ describe("containsIdenticalPairs", () => {
 
 	it("should return true when same pair appears in different lists", () => {
 		const input: [number, number][][] = [
-			[[1, 2], [3, 4]],
-			[[5, 6], [1, 2]], // [1,2] appears again
-			[[7, 8], [9, 10]],
+			[
+				[1, 2],
+				[3, 4],
+			],
+			[
+				[5, 6],
+				[1, 2],
+			], // [1,2] appears again
+			[
+				[7, 8],
+				[9, 10],
+			],
 		];
 		const result = containsIdenticalPairs(input);
 
@@ -163,7 +198,11 @@ describe("containsIdenticalPairs", () => {
 
 	it("should return true when pair appears multiple times in same list", () => {
 		const input: [number, number][][] = [
-			[[1, 2], [1, 2], [1, 2]], // [1,2] appears three times
+			[
+				[1, 2],
+				[1, 2],
+				[1, 2],
+			], // [1,2] appears three times
 		];
 		const result = containsIdenticalPairs(input);
 
@@ -172,7 +211,10 @@ describe("containsIdenticalPairs", () => {
 
 	it("should treat pairs as ordered (different order are not identical)", () => {
 		const input: [number, number][][] = [
-			[[1, 2], [2, 1]], // These are considered different pairs
+			[
+				[1, 2],
+				[2, 1],
+			], // These are considered different pairs
 		];
 		const result = containsIdenticalPairs(input);
 
@@ -181,7 +223,10 @@ describe("containsIdenticalPairs", () => {
 
 	it("should handle zero values", () => {
 		const input: [number, number][][] = [
-			[[0, 0], [0, 0]],
+			[
+				[0, 0],
+				[0, 0],
+			],
 		];
 		const result = containsIdenticalPairs(input);
 
@@ -190,7 +235,10 @@ describe("containsIdenticalPairs", () => {
 
 	it("should handle negative values", () => {
 		const input: [number, number][][] = [
-			[[-1, -2], [-1, -2]],
+			[
+				[-1, -2],
+				[-1, -2],
+			],
 		];
 		const result = containsIdenticalPairs(input);
 
@@ -199,7 +247,10 @@ describe("containsIdenticalPairs", () => {
 
 	it("should handle floating point values", () => {
 		const input: [number, number][][] = [
-			[[1.5, 2.5], [1.5, 2.5]],
+			[
+				[1.5, 2.5],
+				[1.5, 2.5],
+			],
 		];
 		const result = containsIdenticalPairs(input);
 
@@ -208,7 +259,11 @@ describe("containsIdenticalPairs", () => {
 
 	it("should return false when pairs differ by order (they are different pairs)", () => {
 		const input: [number, number][][] = [
-			[[1, 2], [2, 1], [3, 4]], // [1,2] and [2,1] are different pairs
+			[
+				[1, 2],
+				[2, 1],
+				[3, 4],
+			], // [1,2] and [2,1] are different pairs
 		];
 		const result = containsIdenticalPairs(input);
 
@@ -216,11 +271,7 @@ describe("containsIdenticalPairs", () => {
 	});
 
 	it("should handle mixed empty and non-empty lists", () => {
-		const input: [number, number][][] = [
-			[],
-			[[1, 2]],
-			[],
-		];
+		const input: [number, number][][] = [[], [[1, 2]], []];
 		const result = containsIdenticalPairs(input);
 
 		expect(result).toBe(false);

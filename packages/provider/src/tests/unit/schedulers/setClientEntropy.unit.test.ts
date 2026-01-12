@@ -15,7 +15,7 @@
 import { type Logger, getLogger } from "@prosopo/common";
 import { ProviderEnvironment } from "@prosopo/env";
 import type { KeyringPair } from "@prosopo/types";
-import { ScheduledTaskNames, type ProsopoConfigOutput } from "@prosopo/types";
+import { type ProsopoConfigOutput, ScheduledTaskNames } from "@prosopo/types";
 import { CronJob } from "cron";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { setClientEntropy } from "../../../schedulers/setClientEntropy.js";
@@ -110,10 +110,7 @@ describe("setClientEntropy", () => {
 	it("creates CronJob with correct schedule", async () => {
 		await setClientEntropy(mockPair, "0 0 * * *", mockConfig);
 
-		expect(CronJob).toHaveBeenCalledWith(
-			"0 0 * * *",
-			expect.any(Function),
-		);
+		expect(CronJob).toHaveBeenCalledWith("0 0 * * *", expect.any(Function));
 	});
 
 	it("starts the cron job", async () => {
@@ -142,7 +139,9 @@ describe("setClientEntropy", () => {
 		const onTick = cronJobCall?.[1] as () => Promise<void>;
 		await onTick();
 
-		expect(mockTasks.clientTaskManager.calculateClientEntropy).toHaveBeenCalled();
+		expect(
+			mockTasks.clientTaskManager.calculateClientEntropy,
+		).toHaveBeenCalled();
 	});
 
 	it("does not execute calculateClientEntropy when task is already running", async () => {
@@ -154,7 +153,9 @@ describe("setClientEntropy", () => {
 		const onTick = cronJobCall?.[1] as () => Promise<void>;
 		await onTick();
 
-		expect(mockTasks.clientTaskManager.calculateClientEntropy).not.toHaveBeenCalled();
+		expect(
+			mockTasks.clientTaskManager.calculateClientEntropy,
+		).not.toHaveBeenCalled();
 	});
 
 	it("handles errors in calculateClientEntropy", async () => {
@@ -167,7 +168,8 @@ describe("setClientEntropy", () => {
 		const onTick = cronJobCall?.[1] as () => Promise<void>;
 		await onTick();
 
-		expect(mockTasks.clientTaskManager.calculateClientEntropy).toHaveBeenCalled();
+		expect(
+			mockTasks.clientTaskManager.calculateClientEntropy,
+		).toHaveBeenCalled();
 	});
 });
-

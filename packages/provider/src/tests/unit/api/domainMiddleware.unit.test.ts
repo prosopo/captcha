@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { domainMiddleware } from "../../../api/domainMiddleware.js";
-import { createMockProviderEnvironment, createMockExpressObjects } from "../testUtils/mockProviderEnv.js";
+import { createMockExpressObjects, createMockProviderEnvironment } from "../testUtils/mockProviderEnv.js";
 
 describe("domainMiddleware", () => {
     let mockEnv: ReturnType<typeof createMockProviderEnvironment>;
@@ -33,8 +33,8 @@ describe("domainMiddleware", () => {
     it("should call next() for valid site key and domain", async () => {
         // Setup valid request
         mockReq.headers["prosopo-site-key"] = "valid-site-key";
-        mockReq.headers["origin"] = "https://example.com";
-        mockReq.headers["referer"] = "https://example.com/page";
+        mockReq.headers.origin = "https://example.com";
+        mockReq.headers.referer = "https://example.com/page";
 
         // Mock successful validation
         mockEnv.tasks.getProviderDetails = vi.fn().mockResolvedValue({
@@ -51,7 +51,7 @@ describe("domainMiddleware", () => {
 
     it("should return 400 error when prosopo-site-key header is missing", async () => {
         // Request without site key
-        delete mockReq.headers["prosopo-site-key"];
+        mockReq.headers["prosopo-site-key"] = undefined;
 
         const middleware = domainMiddleware(mockEnv);
         await middleware(mockReq, mockRes, mockNext);
@@ -83,7 +83,7 @@ describe("domainMiddleware", () => {
 
     it("should allow localhost origins in development", async () => {
         mockReq.headers["prosopo-site-key"] = "valid-site-key";
-        mockReq.headers["origin"] = "http://localhost:3000";
+        mockReq.headers.origin = "http://localhost:3000";
 
         // Mock successful validation
         mockEnv.tasks.getProviderDetails = vi.fn().mockResolvedValue({
@@ -99,7 +99,7 @@ describe("domainMiddleware", () => {
 
     it("should validate domain against allowed origins", async () => {
         mockReq.headers["prosopo-site-key"] = "valid-site-key";
-        mockReq.headers["origin"] = "https://malicious.com";
+        mockReq.headers.origin = "https://malicious.com";
 
         // Mock provider with different allowed origin
         mockEnv.tasks.getProviderDetails = vi.fn().mockResolvedValue({
@@ -118,7 +118,7 @@ describe("domainMiddleware", () => {
 
     it("should handle missing origin header gracefully", async () => {
         mockReq.headers["prosopo-site-key"] = "valid-site-key";
-        delete mockReq.headers["origin"];
+        mockReq.headers.origin = undefined;
 
         // Mock successful validation
         mockEnv.tasks.getProviderDetails = vi.fn().mockResolvedValue({
@@ -152,7 +152,7 @@ describe("domainMiddleware", () => {
 
     it("should validate multiple allowed origins", async () => {
         mockReq.headers["prosopo-site-key"] = "valid-site-key";
-        mockReq.headers["origin"] = "https://subdomain.example.com";
+        mockReq.headers.origin = "https://subdomain.example.com";
 
         // Mock provider with wildcard origin
         mockEnv.tasks.getProviderDetails = vi.fn().mockResolvedValue({
@@ -168,7 +168,7 @@ describe("domainMiddleware", () => {
 
     it("should reject requests with malformed origins", async () => {
         mockReq.headers["prosopo-site-key"] = "valid-site-key";
-        mockReq.headers["origin"] = "not-a-valid-url";
+        mockReq.headers.origin = "not-a-valid-url";
 
         mockEnv.tasks.getProviderDetails = vi.fn().mockResolvedValue({
             siteKey: "valid-site-key",

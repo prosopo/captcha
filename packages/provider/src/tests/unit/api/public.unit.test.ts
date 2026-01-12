@@ -15,7 +15,6 @@
 import { handleErrors } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/env";
-import { PublicApiPaths } from "@prosopo/types";
 import { version } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -58,7 +57,9 @@ describe("publicRouter", () => {
 
 		mockDb = {
 			getRedisConnection: vi.fn().mockReturnValue(mockRedisConnection),
-			getRedisAccessRulesConnection: vi.fn().mockReturnValue(mockRedisAccessRulesConnection),
+			getRedisAccessRulesConnection: vi
+				.fn()
+				.mockReturnValue(mockRedisAccessRulesConnection),
 		};
 
 		mockEnv = {
@@ -114,12 +115,16 @@ describe("publicRouter", () => {
 						{
 							actor: "General",
 							isReady: redisConnection.isReady(),
-							awaitingTimeSeconds: Math.ceil(redisConnection.getAwaitingTimeMs() / 1000),
+							awaitingTimeSeconds: Math.ceil(
+								redisConnection.getAwaitingTimeMs() / 1000,
+							),
 						},
 						{
 							actor: "UAP",
 							isReady: redisAccessRulesConnection.isReady(),
-							awaitingTimeSeconds: Math.ceil(redisAccessRulesConnection.getAwaitingTimeMs() / 1000),
+							awaitingTimeSeconds: Math.ceil(
+								redisAccessRulesConnection.getAwaitingTimeMs() / 1000,
+							),
 						},
 					],
 				};
@@ -197,9 +202,7 @@ describe("publicRouter", () => {
 		);
 
 		// Verify next was called with ProsopoApiError
-		expect(mockNext).toHaveBeenCalledWith(
-			expect.any(ProsopoApiError),
-		);
+		expect(mockNext).toHaveBeenCalledWith(expect.any(ProsopoApiError));
 
 		const error = mockNext.mock.calls[0][0] as ProsopoApiError;
 		expect(error).toBeInstanceOf(ProsopoApiError);
@@ -210,8 +213,8 @@ describe("publicRouter", () => {
 
 		// Check that handleErrors was registered by inspecting the router
 		const layers = (router as any).stack || [];
-		const errorHandlerLayer = layers.find((layer: any) =>
-			layer.handle === handleErrors
+		const errorHandlerLayer = layers.find(
+			(layer: any) => layer.handle === handleErrors,
 		);
 
 		expect(errorHandlerLayer).toBeDefined();
@@ -237,12 +240,16 @@ describe("publicRouter", () => {
 						{
 							actor: "General",
 							isReady: redisConnection.isReady(),
-							awaitingTimeSeconds: Math.ceil(redisConnection.getAwaitingTimeMs() / 1000),
+							awaitingTimeSeconds: Math.ceil(
+								redisConnection.getAwaitingTimeMs() / 1000,
+							),
 						},
 						{
 							actor: "UAP",
 							isReady: redisAccessRulesConnection.isReady(),
-							awaitingTimeSeconds: Math.ceil(redisAccessRulesConnection.getAwaitingTimeMs() / 1000),
+							awaitingTimeSeconds: Math.ceil(
+								redisAccessRulesConnection.getAwaitingTimeMs() / 1000,
+							),
 						},
 					],
 				};

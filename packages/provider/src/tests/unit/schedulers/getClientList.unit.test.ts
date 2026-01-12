@@ -15,7 +15,7 @@
 import { type Logger, getLogger } from "@prosopo/common";
 import { ProviderEnvironment } from "@prosopo/env";
 import type { KeyringPair } from "@prosopo/types";
-import { ScheduledTaskNames, type ProsopoConfigOutput } from "@prosopo/types";
+import { type ProsopoConfigOutput, ScheduledTaskNames } from "@prosopo/types";
 import { CronJob } from "cron";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getClientList } from "../../../schedulers/getClientList.js";
@@ -110,10 +110,7 @@ describe("getClientList", () => {
 	it("creates CronJob with correct schedule", async () => {
 		await getClientList(mockPair, "0 0 * * *", mockConfig);
 
-		expect(CronJob).toHaveBeenCalledWith(
-			"0 0 * * *",
-			expect.any(Function),
-		);
+		expect(CronJob).toHaveBeenCalledWith("0 0 * * *", expect.any(Function));
 	});
 
 	it("starts the cron job", async () => {
@@ -170,4 +167,3 @@ describe("getClientList", () => {
 		expect(mockTasks.clientTaskManager.getClientList).toHaveBeenCalled();
 	});
 });
-

@@ -14,7 +14,7 @@
 
 import type { IncomingHttpHeaders } from "node:http";
 import { describe, expect, it, vi } from "vitest";
-import { getJA4, DEFAULT_JA4 } from "../../../api/ja4Middleware.js";
+import { DEFAULT_JA4, getJA4 } from "../../../api/ja4Middleware.js";
 
 vi.mock("@prosopo/util-crypto", () => ({
 	randomAsHex: vi.fn().mockReturnValue("0123456789abcdef0123456789abcdef"),
@@ -155,7 +155,9 @@ describe("getJA4", () => {
 	});
 
 	it("should handle errors during TLS parsing", async () => {
-		vi.mocked(await import("read-tls-client-hello")).readTlsClientHello.mockRejectedValueOnce(new Error("Parse error"));
+		vi.mocked(
+			await import("read-tls-client-hello"),
+		).readTlsClientHello.mockRejectedValueOnce(new Error("Parse error"));
 
 		const validClientHello = Buffer.alloc(10);
 		validClientHello[5] = 0x01;

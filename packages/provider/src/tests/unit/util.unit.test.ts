@@ -17,17 +17,18 @@ import { ScheduledTaskNames, ScheduledTaskStatus } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-	encodeStringAddress,
-	shuffleArray,
 	checkIfTaskIsRunning,
+	encodeStringAddress,
 	getIPAddress,
 	getIPAddressFromBigInt,
+	shuffleArray,
 } from "../../util.js";
 
 describe("encodeStringAddress", () => {
 	it("should encode a valid hex address", () => {
 		// Use a valid Polkadot address format
-		const hexAddress = "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d";
+		const hexAddress =
+			"0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d";
 		const result = encodeStringAddress(hexAddress);
 		expect(result).toBeDefined();
 		expect(typeof result).toBe("string");
@@ -42,8 +43,12 @@ describe("encodeStringAddress", () => {
 
 	it("should throw ProsopoContractError for invalid address", () => {
 		const invalidAddress = "invalid-address";
-		expect(() => encodeStringAddress(invalidAddress)).toThrow(ProsopoContractError);
-		expect(() => encodeStringAddress(invalidAddress)).toThrow("CONTRACT.INVALID_ADDRESS");
+		expect(() => encodeStringAddress(invalidAddress)).toThrow(
+			ProsopoContractError,
+		);
+		expect(() => encodeStringAddress(invalidAddress)).toThrow(
+			"CONTRACT.INVALID_ADDRESS",
+		);
 	});
 });
 
@@ -102,7 +107,10 @@ describe("checkIfTaskIsRunning", () => {
 	it("should return false when no running task exists", async () => {
 		vi.mocked(mockDb.getLastScheduledTaskStatus).mockResolvedValue(null);
 
-		const result = await checkIfTaskIsRunning(ScheduledTaskNames.StoreCommitmentsExternal, mockDb);
+		const result = await checkIfTaskIsRunning(
+			ScheduledTaskNames.StoreCommitmentsExternal,
+			mockDb,
+		);
 
 		expect(result).toBe(false);
 		expect(mockDb.getLastScheduledTaskStatus).toHaveBeenCalledWith(
@@ -119,7 +127,10 @@ describe("checkIfTaskIsRunning", () => {
 
 		vi.mocked(mockDb.getLastScheduledTaskStatus).mockResolvedValue(oldTask);
 
-		const result = await checkIfTaskIsRunning(ScheduledTaskNames.StoreCommitmentsExternal, mockDb);
+		const result = await checkIfTaskIsRunning(
+			ScheduledTaskNames.StoreCommitmentsExternal,
+			mockDb,
+		);
 
 		expect(result).toBe(false);
 		expect(mockDb.getLastScheduledTaskStatus).toHaveBeenCalledTimes(1);
@@ -135,7 +146,10 @@ describe("checkIfTaskIsRunning", () => {
 		vi.mocked(mockDb.getLastScheduledTaskStatus).mockResolvedValue(recentTask);
 		vi.mocked(mockDb.getScheduledTaskStatus).mockResolvedValue(null); // Not completed
 
-		const result = await checkIfTaskIsRunning(ScheduledTaskNames.StoreCommitmentsExternal, mockDb);
+		const result = await checkIfTaskIsRunning(
+			ScheduledTaskNames.StoreCommitmentsExternal,
+			mockDb,
+		);
 
 		expect(result).toBe(true);
 		expect(mockDb.getScheduledTaskStatus).toHaveBeenCalledWith(
@@ -157,7 +171,10 @@ describe("checkIfTaskIsRunning", () => {
 		vi.mocked(mockDb.getLastScheduledTaskStatus).mockResolvedValue(recentTask);
 		vi.mocked(mockDb.getScheduledTaskStatus).mockResolvedValue(completedTask);
 
-		const result = await checkIfTaskIsRunning(ScheduledTaskNames.StoreCommitmentsExternal, mockDb);
+		const result = await checkIfTaskIsRunning(
+			ScheduledTaskNames.StoreCommitmentsExternal,
+			mockDb,
+		);
 
 		expect(result).toBe(false);
 		expect(mockDb.getScheduledTaskStatus).toHaveBeenCalledWith(

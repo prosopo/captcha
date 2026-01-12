@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { ApiEndpointResponseStatus } from "@prosopo/api-route";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiRegisterSiteKeyEndpoint } from "../../../../api/admin/apiRegisterSiteKeyEndpoint.js";
 
 describe("ApiRegisterSiteKeyEndpoint", () => {
@@ -33,9 +33,7 @@ describe("ApiRegisterSiteKeyEndpoint", () => {
 		mockLogger = {
 			info: vi.fn(),
 		};
-		endpoint = new ApiRegisterSiteKeyEndpoint(
-			mockClientTaskManager as never,
-		);
+		endpoint = new ApiRegisterSiteKeyEndpoint(mockClientTaskManager as never);
 	});
 
 	it("returns success status when site key is registered", async () => {
@@ -71,10 +69,7 @@ describe("ApiRegisterSiteKeyEndpoint", () => {
 		const siteKey = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
 		const tier = 1;
 
-		await endpoint.processRequest(
-			{ siteKey, tier },
-			mockLogger as never,
-		);
+		await endpoint.processRequest({ siteKey, tier }, mockLogger as never);
 
 		expect(mockClientTaskManager.registerSiteKey).toHaveBeenCalledWith(
 			siteKey,
@@ -100,4 +95,3 @@ describe("ApiRegisterSiteKeyEndpoint", () => {
 		expect(schema).toBeDefined();
 	});
 });
-

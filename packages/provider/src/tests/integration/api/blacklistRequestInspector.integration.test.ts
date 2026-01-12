@@ -24,8 +24,16 @@ import {
 } from "@prosopo/user-access-policy";
 import { getIPAddressFromBigInt } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
-import { GenericContainer, StartedTestContainer } from "testcontainers";
-import { beforeAll, afterAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { GenericContainer, type StartedTestContainer } from "testcontainers";
+import {
+	afterAll,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
 import { getPrioritisedAccessRule } from "../../../api/blacklistRequestInspector.js";
 
 describe("blacklistRequestInspector Integration Tests", () => {
