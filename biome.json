@@ -20,9 +20,10 @@
 			"**/*.css"
 		],
 		"ignore": [
-			"./packages/detector/src/index.js",
+			"./packages/detector/src/*",
 			"*.bundle.js",
-			"./packages/provider/src/tasks/detection/decodePayload.js"
+			"./packages/provider/src/tasks/detection/decodePayload.js",
+			"./packages/provider/src/tasks/detection/decodeBehavior.js"
 		]
 	},
 	"linter": {

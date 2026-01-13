@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/user-access-policy",
-	"version": "3.5.36",
+	"version": "3.5.37",
 	"type": "module",
 	"engines": {
 		"node": "^24",

@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -108,7 +108,11 @@ export const ContextTypeSchema = z.nativeEnum(ContextType);
 // Individual context configuration
 export const ContextConfigSchema = z.object({
 	type: ContextTypeSchema,
-	threshold: number().optional().default(contextAwareThresholdDefault),
+	threshold: number()
+		.min(Number((contextAwareThresholdDefault - 0.2).toFixed(2)))
+		.max(Number((contextAwareThresholdDefault + 0.2).toFixed(2)))
+		.optional()
+		.default(contextAwareThresholdDefault),
 });
 
 export type IContextConfig = z.infer<typeof ContextConfigSchema>;
@@ -129,14 +133,24 @@ export type IContextAware = z.infer<typeof ContextAwareSchema>;
 
 export const ClientSettingsSchema = object({
 	captchaType: CaptchaTypeSpec.optional().default(captchaTypeDefault),
-	domains: array(string())
-		.optional()
-		.default([...domainsDefault]),
+	domains: array(string()).min(1),
 	frictionlessThreshold: number()
+		.min(0)
+		.max(1)
 		.optional()
 		.default(frictionlessThresholdDefault),
-	powDifficulty: number().optional().default(powDifficultyDefault),
-	imageThreshold: number().optional().default(imageThresholdDefault),
+	powDifficulty: number()
+		.int()
+		.positive()
+		.min(1)
+		.max(10)
+		.optional()
+		.default(powDifficultyDefault),
+	imageThreshold: number()
+		.min(0)
+		.max(1)
+		.optional()
+		.default(imageThresholdDefault),
 	ipValidationRules: IPValidationRulesSchema.optional(),
 	disallowWebView: boolean().optional().default(false).optional(),
 	contextAware: ContextAwareSchema.optional(),

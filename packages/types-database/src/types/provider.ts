@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -128,6 +128,20 @@ export const parseMongooseCompositeIpAddress = (
 	};
 };
 
+/**
+ * Packed behavioral data format for efficient storage
+ * c1: Mouse movement data (packed with delta encoding)
+ * c2: Touch event data (packed with delta encoding)
+ * c3: Click event data (packed with delta encoding)
+ * d: Device capability string
+ */
+export interface BehavioralDataPacked {
+	c1: unknown[];
+	c2: unknown[];
+	c3: unknown[];
+	d: string;
+}
+
 export interface StoredCaptcha {
 	result: {
 		status: CaptchaStatus;
@@ -149,6 +163,13 @@ export interface StoredCaptcha {
 	lastUpdatedTimestamp?: Date;
 	sessionId?: string;
 	coords?: [number, number][][];
+	// Legacy fields - kept for backward compatibility with existing data
+	mouseEvents?: Array<Record<string, unknown>>;
+	touchEvents?: Array<Record<string, unknown>>;
+	clickEvents?: Array<Record<string, unknown>>;
+	// Current behavioral data storage format (packed)
+	deviceCapability?: string;
+	behavioralDataPacked?: BehavioralDataPacked;
 }
 
 export interface UserCommitment extends Commit, StoredCaptcha {
@@ -265,11 +286,26 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 		required: false,
 	},
 	coords: { type: [[[Number]]], required: false },
+	// Legacy fields - kept for backward compatibility with existing data
+	mouseEvents: { type: [Object], required: false },
+	touchEvents: { type: [Object], required: false },
+	clickEvents: { type: [Object], required: false },
+	// Current behavioral data storage format (packed)
+	deviceCapability: { type: String, required: false },
+	behavioralDataPacked: {
+		type: {
+			c1: { type: [Schema.Types.Mixed], required: true },
+			c2: { type: [Schema.Types.Mixed], required: true },
+			c3: { type: [Schema.Types.Mixed], required: true },
+			d: { type: String, required: true },
+		},
+		required: false,
+	},
 });
 
 // Set an index on the captchaId field, ascending
 PoWCaptchaRecordSchema.index({ challenge: 1 });
-PoWCaptchaRecordSchema.index({ storedAtTimestamp: 1, lastUpdatedTimestamp: 1 });
+PoWCaptchaRecordSchema.index({ lastUpdatedTimestamp: 1 });
 PoWCaptchaRecordSchema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
 PoWCaptchaRecordSchema.index({ "ipAddress.lower": 1 });
 PoWCaptchaRecordSchema.index({ "ipAddress.upper": 1 });
@@ -314,7 +350,6 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 // Set an index on the commitment id field, descending
 UserCommitmentRecordSchema.index({ id: -1 });
 UserCommitmentRecordSchema.index({
-	storedAtTimestamp: 1,
 	lastUpdatedTimestamp: 1,
 });
 UserCommitmentRecordSchema.index({ userAccount: 1, dappAccount: 1 });

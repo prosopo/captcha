@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import type {
 import {
 	accessPolicyInput,
 	policyScopeInput,
+	sanitizeAccessPolicy,
 } from "#policy/ruleInput/policyInput.js";
 import {
 	type UserScopeInput,
@@ -145,10 +146,12 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 	): Promise<string[]> {
 		const ruleEntries: AccessRuleEntry[] = [];
 		const policyScopes = group.policyScopes || [];
+		// Sanitize the access policy to remove unnecessary fields from block policies
+		const sanitizedPolicy = sanitizeAccessPolicy(group.accessPolicy);
 
 		for (const userScope of group.userScopes) {
 			const ruleBase: AccessRule = {
-				...group.accessPolicy,
+				...sanitizedPolicy,
 				...userScope,
 				...(group.groupId ? { groupId: group.groupId } : {}),
 			};

@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,6 +36,12 @@ describe("buildTreeAndGetCommitmentId", () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
+		// Reset the mock implementation to the default state to ensure test isolation
+		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+		(CaptchaMerkleTree as any).mockImplementation(() => ({
+			build: vi.fn(),
+			root: { hash: "mockedRootHash" },
+		}));
 	});
 
 	it("should build a tree and return the commitmentId", () => {
