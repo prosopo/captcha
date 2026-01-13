@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -583,6 +583,195 @@ describe("PowCaptchaManager", () => {
 			);
 
 			expect(result.verified).toBe(true);
+		});
+	});
+
+	describe("verifyPowCaptchaSolution with behavioral data", () => {
+		beforeEach(() => {
+			// Add getDetectorKeys mock to db
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db as any).getDetectorKeys = vi.fn(() =>
+				Promise.resolve(["test-detector-key"]),
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db as any).updatePowCaptchaRecord = vi.fn(() => Promise.resolve());
+		});
+
+		it("should process behavioral data when provided", async () => {
+			const requestedAtTimestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${requestedAtTimestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${pair.address}`;
+			const difficulty = 4;
+			const providerSignature = "testSignature";
+			const userSignature = "testTimestampSignature";
+			const nonce = 12345;
+			const timeout = 1000;
+			const ipAddress = getIPAddress("1.1.1.1");
+			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
+			const behavioralData = "encrypted-behavioral-data";
+
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				difficulty,
+				dappAccount: pair.address,
+				userAccount,
+				requestedAtTimestamp: new Date(requestedAtTimestamp),
+				result: { status: CaptchaStatus.pending },
+				userSubmitted: false,
+				serverChecked: false,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers,
+				ja4: "ja4",
+				providerSignature,
+				lastUpdatedTimestamp: new Date(),
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(verifyRecency as any).mockImplementation(() => true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(checkPowSignature as any).mockImplementation(() => true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(validateSolution as any).mockImplementation(() => true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.updatePowCaptchaRecordResult as any).mockResolvedValue(true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(true);
+
+			const result = await powCaptchaManager.verifyPowCaptchaSolution(
+				challenge,
+				providerSignature,
+				nonce,
+				timeout,
+				userSignature,
+				ipAddress,
+				headers,
+				behavioralData,
+				undefined, // salt (optional)
+			);
+
+			expect(result).toBe(true);
+		});
+
+		it("should handle behavioral data decryption failure gracefully", async () => {
+			const requestedAtTimestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${requestedAtTimestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${pair.address}`;
+			const difficulty = 4;
+			const providerSignature = "testSignature";
+			const userSignature = "testTimestampSignature";
+			const nonce = 12345;
+			const timeout = 1000;
+			const ipAddress = getIPAddress("1.1.1.1");
+			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
+			const behavioralData = "invalid-encrypted-data";
+
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				difficulty,
+				dappAccount: pair.address,
+				userAccount,
+				requestedAtTimestamp: new Date(requestedAtTimestamp),
+				result: { status: CaptchaStatus.pending },
+				userSubmitted: false,
+				serverChecked: false,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers,
+				ja4: "ja4",
+				providerSignature,
+				lastUpdatedTimestamp: new Date(),
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(verifyRecency as any).mockImplementation(() => true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(checkPowSignature as any).mockImplementation(() => true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(validateSolution as any).mockImplementation(() => true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.updatePowCaptchaRecordResult as any).mockResolvedValue(true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(true);
+
+			// Should still return true even if behavioral data processing fails
+			const result = await powCaptchaManager.verifyPowCaptchaSolution(
+				challenge,
+				providerSignature,
+				nonce,
+				timeout,
+				userSignature,
+				ipAddress,
+				headers,
+				behavioralData,
+				undefined, // salt (optional)
+			);
+
+			expect(result).toBe(true);
+		});
+
+		it("should work without behavioral data", async () => {
+			const requestedAtTimestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${requestedAtTimestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${pair.address}`;
+			const difficulty = 4;
+			const providerSignature = "testSignature";
+			const userSignature = "testTimestampSignature";
+			const nonce = 12345;
+			const timeout = 1000;
+			const ipAddress = getIPAddress("1.1.1.1");
+			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
+
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				difficulty,
+				dappAccount: pair.address,
+				userAccount,
+				requestedAtTimestamp: new Date(requestedAtTimestamp),
+				result: { status: CaptchaStatus.pending },
+				userSubmitted: false,
+				serverChecked: false,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers,
+				ja4: "ja4",
+				providerSignature,
+				lastUpdatedTimestamp: new Date(),
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(verifyRecency as any).mockImplementation(() => true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(checkPowSignature as any).mockImplementation(() => true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(validateSolution as any).mockImplementation(() => true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.updatePowCaptchaRecordResult as any).mockResolvedValue(true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(true);
+
+			const result = await powCaptchaManager.verifyPowCaptchaSolution(
+				challenge,
+				providerSignature,
+				nonce,
+				timeout,
+				userSignature,
+				ipAddress,
+				headers,
+				undefined, // no behavioral data
+				undefined, // salt (optional)
+			);
+
+			expect(result).toBe(true);
 		});
 	});
 });

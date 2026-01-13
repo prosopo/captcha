@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -214,6 +214,8 @@ export const unwrapError = (
 		jsonError.key =
 			contextTranslationKey || err.translationKey || "API.UNKNOWN";
 		jsonError.message = i18n.t(err.message);
+		jsonError.data = err.context.data as Record<string, unknown> | undefined;
+
 		const contextCode =
 			typeof err.context.code === "number" ? err.context.code : undefined;
 		code = contextCode ?? jsonError.code;

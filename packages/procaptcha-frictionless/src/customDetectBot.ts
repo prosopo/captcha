@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,8 +19,11 @@ import { ExtensionLoader } from "@prosopo/procaptcha-common";
 import type {
 	Account,
 	BotDetectionFunction,
+	ClickEventPoint,
+	MouseMovementPoint,
 	ProcaptchaClientConfigOutput,
 	RandomProvider,
+	TouchEventPoint,
 } from "@prosopo/types";
 import type { BotDetectionFunctionResult } from "@prosopo/types";
 import { DetectorLoader } from "./detectorLoader.js";
@@ -68,6 +71,27 @@ const customDetectBot: BotDetectionFunction = async (
 		token: string;
 		provider?: RandomProvider;
 		encryptHeadHash: string;
+		mouseTracker?: {
+			start: () => void;
+			stop: () => void;
+			getData: () => MouseMovementPoint[];
+			clear: () => void;
+		};
+		touchTracker?: {
+			start: () => void;
+			stop: () => void;
+			getData: () => TouchEventPoint[];
+			clear: () => void;
+		};
+		clickTracker?: {
+			start: () => void;
+			stop: () => void;
+			getData: () => ClickEventPoint[];
+			clear: () => void;
+		};
+		hasTouchSupport?: string;
+		encryptBehavioralData?: (data: string) => Promise<string>;
+		packBehavioralData?: (data: string) => Promise<string>;
 		userAccount: Account;
 	};
 
@@ -107,6 +131,13 @@ const customDetectBot: BotDetectionFunction = async (
 		status: captcha.status,
 		userAccount: userAccount,
 		error: captcha.error,
+		// Map specific trackers to generic behavioral collectors
+		behaviorCollector1: detectionResult.mouseTracker,
+		behaviorCollector2: detectionResult.touchTracker,
+		behaviorCollector3: detectionResult.clickTracker,
+		deviceCapability: detectionResult.hasTouchSupport,
+		encryptBehavioralData: detectionResult.encryptBehavioralData,
+		packBehavioralData: detectionResult.packBehavioralData,
 	};
 };
 
