@@ -17,7 +17,7 @@
 	},
 	"scripts": {
 		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
-"build:cross-env": "vite build --config vite.esm.config.ts",
+		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --project tsconfig.types.json",
 		"bundle": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.config.ts --mode $NODE_ENV",
