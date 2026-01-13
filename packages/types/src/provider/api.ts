@@ -360,7 +360,7 @@ export const SubmitPowCaptchaSolutionBody = object({
 	[ApiParams.salt]: string().optional(),
 });
 
-export type SubmitPowCaptchaSolutionBodyType = zInfer<
+export type SubmitPowCaptchaSolutionBodyType = input<
 	typeof SubmitPowCaptchaSolutionBody
 >;
 

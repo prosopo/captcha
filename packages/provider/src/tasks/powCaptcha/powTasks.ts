@@ -45,6 +45,7 @@ import {
 } from "../../compositeIpAddress.js";
 import { deepValidateIpAddress } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
+import type { BehavioralDataResult } from "../detection/decodeBehavior.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
 
@@ -272,33 +273,41 @@ export class PowCaptchaManager extends CaptchaManager {
 					process.env.BOT_DECRYPTION_KEY,
 				];
 
-				// Decrypt the behavioral data directly to packed format
-				const packedData = await this.decryptBehavioralDataPacked(
+				// Decrypt the behavioral data (returns unpacked format)
+				const decryptedData = await this.decryptBehavioralData(
 					behavioralData,
 					decryptKeys,
 				);
 
-				if (packedData) {
+				if (decryptedData) {
 					const dappAccount = at(challengeSplit, 2);
-					// Log behavioral analytics using packed data counts
+					// Log behavioral analytics using unpacked data counts
 					this.logger?.info(() => ({
 						msg: "Behavioral analysis completed",
 						data: {
 							userAccount,
 							dappAccount,
 							challenge,
-							mouseEventsCount: packedData.c1.length,
-							touchEventsCount: packedData.c2.length,
-							clickEventsCount: packedData.c3.length,
-							deviceCapability: packedData.d,
+							mouseEventsCount: decryptedData.collector1?.length || 0,
+							touchEventsCount: decryptedData.collector2?.length || 0,
+							clickEventsCount: decryptedData.collector3?.length || 0,
+							deviceCapability: decryptedData.deviceCapability,
 							captchaResult: correct ? "passed" : "failed",
 						},
 					}));
 
-					// Store the packed data directly to database
+					// Convert to packed format for storage
+					const packedData: BehavioralDataPacked = {
+						c1: decryptedData.collector1 || [],
+						c2: decryptedData.collector2 || [],
+						c3: decryptedData.collector3 || [],
+						d: decryptedData.deviceCapability,
+					};
+
+					// Store the packed data to database
 					await this.db.updatePowCaptchaRecord(challenge, {
 						behavioralDataPacked: packedData,
-						deviceCapability: packedData.d,
+						deviceCapability: decryptedData.deviceCapability,
 					});
 				}
 			} catch (error) {
@@ -469,15 +478,15 @@ export class PowCaptchaManager extends CaptchaManager {
 	}
 
 	/**
-	 * Decrypts behavioral data in packed format
+	 * Decrypts behavioral data
 	 * @param encryptedData - The encrypted behavioral data
 	 * @param decryptKeys - Array of possible decryption keys to try
-	 * @returns Packed behavioral data in {c1, c2, c3, d} format, or null if decryption fails
+	 * @returns Decrypted behavioral data in unpacked format, or null if decryption fails
 	 */
-	private async decryptBehavioralDataPacked(
+	private async decryptBehavioralData(
 		encryptedData: string,
 		decryptKeys: (string | undefined)[],
-	): Promise<BehavioralDataPacked | null> {
+	): Promise<BehavioralDataResult | null> {
 		const decryptBehavioralData = (
 			await import("../detection/decodeBehavior.js")
 		).default;
@@ -502,20 +511,17 @@ export class PowCaptchaManager extends CaptchaManager {
 					},
 				}));
 
-				// Decrypt and parse the JSON - data from client is already in packed format: {c1, c2, c3, d}
-				const result = (await decryptBehavioralData(
-					encryptedData,
-					key,
-				)) as unknown as BehavioralDataPacked;
+				// Decrypt behavioral data - returns unpacked format: {collector1, collector2, collector3, deviceCapability, timestamp}
+				const result = await decryptBehavioralData(encryptedData, key);
 
 				this.logger?.info(() => ({
 					msg: "Behavioral data decrypted successfully",
 					data: {
 						keyIndex: keyIndex + 1,
-						c1Length: result.c1?.length || 0,
-						c2Length: result.c2?.length || 0,
-						c3Length: result.c3?.length || 0,
-						deviceCapability: result.d,
+						c1Length: result.collector1?.length || 0,
+						c2Length: result.collector2?.length || 0,
+						c3Length: result.collector3?.length || 0,
+						deviceCapability: result.deviceCapability,
 					},
 				}));
 
