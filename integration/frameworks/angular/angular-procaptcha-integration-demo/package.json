@@ -16,7 +16,7 @@
 	},
 	"dependencies": {
 		"@angular/common": "^20.3.9",
-		"@angular/core": "^20.3.9",
+		"@angular/core": "^20.3.16",
 		"@angular/platform-browser": "^20.3.9",
 		"@angular/router": "^20.3.9",
 		"@prosopo/angular-procaptcha-wrapper": "1.1.43"
