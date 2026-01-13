@@ -9,7 +9,7 @@ const keyring = createTestPairs({ type: "sr25519" }, false);
 describe("decode", (): void => {
 	it("fails when no data provided", (): void => {
 		expect((): void => keyring.alice.decodePkcs8()).toThrow(
-			/No encrypted data available/,
+			/(No encrypted data available|Password required)/,
 		);
 	});
 

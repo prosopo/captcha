@@ -17,13 +17,8 @@ import { ProsopoEnvError } from "@prosopo/common";
 import { getRandomActiveProvider } from "@prosopo/load-balancer";
 import { ExtensionLoader } from "@prosopo/procaptcha-common";
 import type {
-	Account,
 	BotDetectionFunction,
-	ClickEventPoint,
-	MouseMovementPoint,
 	ProcaptchaClientConfigOutput,
-	RandomProvider,
-	TouchEventPoint,
 } from "@prosopo/types";
 import type { BotDetectionFunctionResult } from "@prosopo/types";
 import { DetectorLoader } from "./detectorLoader.js";
@@ -61,39 +56,13 @@ const customDetectBot: BotDetectionFunction = async (
 	const ext = new (await ExtensionLoader(config.web2))();
 
 	const detect = await DetectorLoader();
-	const detectionResult = (await detect(
+	const detectionResult = await detect(
 		config.defaultEnvironment,
 		getRandomActiveProvider,
 		container,
 		restartFn,
 		() => ext.getAccount(config),
-	)) as {
-		token: string;
-		provider?: RandomProvider;
-		encryptHeadHash: string;
-		mouseTracker?: {
-			start: () => void;
-			stop: () => void;
-			getData: () => MouseMovementPoint[];
-			clear: () => void;
-		};
-		touchTracker?: {
-			start: () => void;
-			stop: () => void;
-			getData: () => TouchEventPoint[];
-			clear: () => void;
-		};
-		clickTracker?: {
-			start: () => void;
-			stop: () => void;
-			getData: () => ClickEventPoint[];
-			clear: () => void;
-		};
-		hasTouchSupport?: string;
-		encryptBehavioralData?: (data: string) => Promise<string>;
-		packBehavioralData?: (data: string) => Promise<string>;
-		userAccount: Account;
-	};
+	);
 
 	const userAccount = detectionResult.userAccount;
 
