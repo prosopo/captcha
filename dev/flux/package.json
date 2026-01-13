@@ -37,7 +37,7 @@
 		"@prosopo/dotenv": "3.0.32",
 		"@prosopo/util": "3.2.4",
 		"openpgp": "5.11.3",
-		"qs": "6.13.0",
+		"qs": "6.14.1",
 		"socket.io-client": "4.7.5",
 		"varuint-bitcoin": "1.1.2",
 		"yargs": "17.7.2",
