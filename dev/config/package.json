@@ -28,7 +28,6 @@
 		"node-polyfill-webpack-plugin": "4.1.0",
 		"rollup": "4.52.5",
 		"rollup-plugin-import-css": "4.1.1",
-		"rollup-plugin-visualizer": "6.0.5",
 		"terser-webpack-plugin": "5.3.14",
 		"vite-plugin-no-bundle": "4.0.0",
 		"vite-tsconfig-paths": "5.1.4"
