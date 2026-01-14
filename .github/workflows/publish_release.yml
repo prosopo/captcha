@@ -72,6 +72,7 @@ jobs:
       - name: Build packages
         run: |
           echo "Building all packages in production mode"
+          NODE_ENV=production npm run build:all:tsc
           NODE_ENV=production npm run build:all
           NODE_ENV=production npm run build:all:cjs
 

@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -182,7 +182,6 @@ describe("PoW Integration Tests", () => {
 				{
 					method: "POST",
 					headers: {
-						Connection: "close",
 						"Content-Type": "application/json",
 						Origin: origin,
 						"Prosopo-Site-Key": siteKey,
@@ -197,7 +196,7 @@ describe("PoW Integration Tests", () => {
 			const challenge = challengeBody.challenge;
 			const difficulty = challengeBody.difficulty;
 			const signature = challengeBody.signature;
-			const nonce = solvePoW(challenge, difficulty);
+			const nonce = await solvePoW(challenge, difficulty);
 
 			const verifiedTimeout = 120000;
 			const submitBody: SubmitPowCaptchaSolutionBodyType = {

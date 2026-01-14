@@ -17,7 +17,8 @@
 	},
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
+		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --project tsconfig.types.json",
@@ -30,6 +31,7 @@
 		"@prosopo/env": "3.2.34",
 		"@prosopo/locale": "3.1.27",
 		"@prosopo/types": "3.7.2",
+		"@prosopo/util-crypto": "13.5.28",
 		"dotenv": "16.4.5",
 		"express": "4.21.2",
 		"i18next": "24.1.0",

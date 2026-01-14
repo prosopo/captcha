@@ -8,7 +8,8 @@
 		"./src/**/*.ts",
 		"./src/**/*.json",
 		"./src/**/*.d.ts",
-		"./src/**/*.tsx"
+		"./src/**/*.tsx",
+		"custom.d.ts"
 	],
 	"references": [
 		{

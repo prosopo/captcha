@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { hexToU8a, isHex } from "@polkadot/util";
+import { hexToU8a } from "@polkadot/util";
 import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
 import type { KeyringPair } from "@prosopo/types";
+import type { JWT } from "@prosopo/util-crypto";
 import type { NextFunction, Request, Response } from "express";
 
 export const authMiddleware = (
@@ -23,36 +24,24 @@ export const authMiddleware = (
 ) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			const { signature, timestamp } = extractHeaders(req);
+			const jwt = extractJWT(req);
 
 			let error: ProsopoApiError | undefined;
 
-			if (authAccount) {
-				try {
-					verifySignature(signature, timestamp, authAccount);
-					next();
-					return;
-				} catch (e: unknown) {
-					// need to fall through to the verifySignature check
-					req.logger.warn(() => ({
-						err: e,
-						data: {
-							account: authAccount?.address,
-						},
-					}));
-					error = e as ProsopoApiError;
-				}
+			if (authAccount?.jwtVerify(jwt).isValid) {
+				next();
+				return;
 			}
 
-			if (pair) {
-				verifySignature(signature, timestamp, pair);
+			if (pair?.jwtVerify(jwt).isValid) {
 				next();
 				return;
 			}
 
 			res.status(401).json({
-				error: "Unauthorized",
-				message: new ProsopoEnvError(error || "CONTRACT.CANNOT_FIND_KEYPAIR"),
+				error: new ProsopoEnvError(error || "API.UNAUTHORIZED", {
+					context: { i18n: req.i18n, code: 401 },
+				}),
 			});
 			return;
 		} catch (err) {
@@ -63,43 +52,24 @@ export const authMiddleware = (
 	};
 };
 
-const extractHeaders = (req: Request) => {
-	const signature = req.headers.signature as string;
-	const timestamp = req.headers.timestamp as string;
+const extractJWT = (req: Request) => {
+	const authHeader = req.headers.Authorization || req.headers.authorization;
 
-	if (!timestamp) {
-		throw new ProsopoApiError("GENERAL.INVALID_TIMESTAMP", {
-			context: { error: "Missing timestamp", code: 400 },
+	if (!authHeader || typeof authHeader !== "string") {
+		throw new ProsopoApiError("GENERAL.MISSING_AUTH_HEADER", {
+			context: { error: "Missing Authorization header", code: 401 },
 		});
 	}
 
-	if (!signature) {
-		throw new ProsopoApiError("GENERAL.INVALID_SIGNATURE", {
-			context: { error: "Missing signature", code: 400 },
+	const jwt = authHeader.replace("Bearer ", "");
+
+	if (!jwt) {
+		throw new ProsopoApiError("GENERAL.INVALID_JWT", {
+			context: { error: "Missing JWT", code: 400 },
 		});
 	}
 
-	if (
-		Array.isArray(signature) ||
-		Array.isArray(timestamp) ||
-		!isHex(signature)
-	) {
-		throw new ProsopoApiError("CONTRACT.INVALID_DATA_FORMAT", {
-			context: { error: "Invalid header format", code: 400 },
-		});
-	}
-
-	// check if timestamp is from the last 5 minutes
-	const now = new Date().getTime();
-	const ts = Number.parseInt(timestamp);
-
-	if (now - ts > 300000) {
-		throw new ProsopoApiError("GENERAL.INVALID_TIMESTAMP", {
-			context: { error: "Timestamp is too old", code: 400 },
-		});
-	}
-
-	return { signature, timestamp };
+	return jwt as JWT;
 };
 
 export const verifySignature = (

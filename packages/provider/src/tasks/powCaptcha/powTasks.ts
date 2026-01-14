@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import {
 	type RequestHeaders,
 } from "@prosopo/types";
 import type {
+	BehavioralDataPacked,
 	IProviderDatabase,
 	PoWCaptchaRecord,
 } from "@prosopo/types-database";
@@ -44,6 +45,7 @@ import {
 } from "../../compositeIpAddress.js";
 import { deepValidateIpAddress } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
+import type { BehavioralDataResult } from "../detection/decodeBehavior.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
 
@@ -174,6 +176,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		userTimestampSignature: string,
 		ipAddress: IPAddress,
 		headers: RequestHeaders,
+		behavioralData?: string,
 		salt?: string,
 	): Promise<boolean> {
 		// Check signatures before doing DB reads to avoid unnecessary network connections
@@ -259,6 +262,63 @@ export class PowCaptchaManager extends CaptchaManager {
 			userTimestampSignature,
 			coords,
 		);
+
+		// Process behavioral data if provided
+		if (behavioralData) {
+			try {
+				// Get decryption keys: detector keys from DB first, then env var as fallback
+				const decryptKeys = [
+					// Process DB keys first, then env var key last as env key will likely be invalid
+					...(await this.getDetectorKeys()),
+					process.env.BOT_DECRYPTION_KEY,
+				];
+
+				// Decrypt the behavioral data (returns unpacked format)
+				const decryptedData = await this.decryptBehavioralData(
+					behavioralData,
+					decryptKeys,
+				);
+
+				if (decryptedData) {
+					const dappAccount = at(challengeSplit, 2);
+					// Log behavioral analytics using unpacked data counts
+					this.logger?.info(() => ({
+						msg: "Behavioral analysis completed",
+						data: {
+							userAccount,
+							dappAccount,
+							challenge,
+							mouseEventsCount: decryptedData.collector1?.length || 0,
+							touchEventsCount: decryptedData.collector2?.length || 0,
+							clickEventsCount: decryptedData.collector3?.length || 0,
+							deviceCapability: decryptedData.deviceCapability,
+							captchaResult: correct ? "passed" : "failed",
+						},
+					}));
+
+					// Convert to packed format for storage
+					const packedData: BehavioralDataPacked = {
+						c1: decryptedData.collector1 || [],
+						c2: decryptedData.collector2 || [],
+						c3: decryptedData.collector3 || [],
+						d: decryptedData.deviceCapability,
+					};
+
+					// Store the packed data to database
+					await this.db.updatePowCaptchaRecord(challenge, {
+						behavioralDataPacked: packedData,
+						deviceCapability: decryptedData.deviceCapability,
+					});
+				}
+			} catch (error) {
+				this.logger?.error(() => ({
+					msg: "Failed to process behavioral data",
+					err: error,
+				}));
+				// Don't fail the captcha if behavioral analysis fails
+			}
+		}
+
 		return correct;
 	}
 
@@ -433,5 +493,77 @@ export class PowCaptchaManager extends CaptchaManager {
 		}
 
 		return { verified: true, ...(score ? { score } : {}) };
+	}
+
+	/**
+	 * Decrypts behavioral data
+	 * @param encryptedData - The encrypted behavioral data
+	 * @param decryptKeys - Array of possible decryption keys to try
+	 * @returns Decrypted behavioral data in unpacked format, or null if decryption fails
+	 */
+	private async decryptBehavioralData(
+		encryptedData: string,
+		decryptKeys: (string | undefined)[],
+	): Promise<BehavioralDataResult | null> {
+		const decryptBehavioralData = (
+			await import("../detection/decodeBehavior.js")
+		).default;
+
+		const validKeys = decryptKeys.filter((k) => k);
+
+		if (validKeys.length === 0) {
+			this.logger?.error(() => ({
+				msg: "No decryption keys provided for behavioral data",
+			}));
+			return null;
+		}
+
+		// Try each key until one succeeds
+		for (const [keyIndex, key] of validKeys.entries()) {
+			try {
+				this.logger?.debug(() => ({
+					msg: "Attempting to decrypt behavioral data",
+					data: {
+						keyIndex: keyIndex + 1,
+						totalKeys: validKeys.length,
+					},
+				}));
+
+				// Decrypt behavioral data - returns unpacked format: {collector1, collector2, collector3, deviceCapability, timestamp}
+				const result = await decryptBehavioralData(encryptedData, key);
+
+				this.logger?.info(() => ({
+					msg: "Behavioral data decrypted successfully",
+					data: {
+						keyIndex: keyIndex + 1,
+						c1Length: result.collector1?.length || 0,
+						c2Length: result.collector2?.length || 0,
+						c3Length: result.collector3?.length || 0,
+						deviceCapability: result.deviceCapability,
+					},
+				}));
+
+				return result;
+			} catch (error) {
+				this.logger?.debug(() => ({
+					msg: "Failed to decrypt with key, trying next",
+					data: {
+						keyIndex: keyIndex + 1,
+						totalKeys: validKeys.length,
+						err: error,
+					},
+				}));
+				// Continue to next key
+			}
+		}
+
+		// All keys failed
+		this.logger?.error(() => ({
+			msg: "Failed to decrypt behavioral data with all available keys",
+			data: {
+				totalKeysAttempted: validKeys.length,
+			},
+		}));
+		return null;
 	}
 }

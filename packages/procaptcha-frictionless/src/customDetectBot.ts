@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,10 +17,8 @@ import { ProsopoEnvError } from "@prosopo/common";
 import { getRandomActiveProvider } from "@prosopo/load-balancer";
 import { ExtensionLoader } from "@prosopo/procaptcha-common";
 import type {
-	Account,
 	BotDetectionFunction,
 	ProcaptchaClientConfigOutput,
-	RandomProvider,
 } from "@prosopo/types";
 import type { BotDetectionFunctionResult } from "@prosopo/types";
 import { DetectorLoader } from "./detectorLoader.js";
@@ -58,18 +56,13 @@ const customDetectBot: BotDetectionFunction = async (
 	const ext = new (await ExtensionLoader(config.web2))();
 
 	const detect = await DetectorLoader();
-	const detectionResult = (await detect(
+	const detectionResult = await detect(
 		config.defaultEnvironment,
 		getRandomActiveProvider,
 		container,
 		restartFn,
 		() => ext.getAccount(config),
-	)) as {
-		token: string;
-		provider?: RandomProvider;
-		encryptHeadHash: string;
-		userAccount: Account;
-	};
+	);
 
 	const userAccount = detectionResult.userAccount;
 
@@ -107,6 +100,13 @@ const customDetectBot: BotDetectionFunction = async (
 		status: captcha.status,
 		userAccount: userAccount,
 		error: captcha.error,
+		// Map specific trackers to generic behavioral collectors
+		behaviorCollector1: detectionResult.mouseTracker,
+		behaviorCollector2: detectionResult.touchTracker,
+		behaviorCollector3: detectionResult.clickTracker,
+		deviceCapability: detectionResult.hasTouchSupport,
+		encryptBehavioralData: detectionResult.encryptBehavioralData,
+		packBehavioralData: detectionResult.packBehavioralData,
 	};
 };
 

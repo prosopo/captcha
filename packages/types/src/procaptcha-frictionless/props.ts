@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { ProcaptchaClientConfigOutput } from "../config/config.js";
+import type {
+	BehavioralData,
+	ClickEventPoint,
+	MouseMovementPoint,
+	PackedBehavioralData,
+	TouchEventPoint,
+} from "../procaptcha/behavioral.js";
 import type { Account } from "../procaptcha/manager.js";
 import type { ProcaptchaProps } from "../procaptcha/props.js";
 import type {
@@ -19,9 +26,31 @@ import type {
 	RandomProvider,
 } from "../provider/api.js";
 
+// Generic behavioral data collectors for analytics
 export type BotDetectionFunctionResult = GetFrictionlessCaptchaResponse & {
 	provider: RandomProvider;
 	userAccount: Account;
+	behaviorCollector1?: {
+		start: () => void;
+		stop: () => void;
+		getData: () => MouseMovementPoint[];
+		clear: () => void;
+	};
+	behaviorCollector2?: {
+		start: () => void;
+		stop: () => void;
+		getData: () => TouchEventPoint[];
+		clear: () => void;
+	};
+	behaviorCollector3?: {
+		start: () => void;
+		stop: () => void;
+		getData: () => ClickEventPoint[];
+		clear: () => void;
+	};
+	deviceCapability?: string;
+	encryptBehavioralData?: (data: string) => Promise<string>;
+	packBehavioralData?: (data: BehavioralData) => PackedBehavioralData;
 };
 
 export type BotDetectionFunction = (
