@@ -388,7 +388,7 @@ export class PowCaptchaManager extends CaptchaManager {
 
 		const recent = verifyRecency(challenge, timeout);
 		if (!recent) {
-			await this.db.updatePowCaptchaRecord(challenge, {
+			await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
 				result: {
 					status: CaptchaStatus.disapproved,
 					reason: "API.TIMESTAMP_TOO_OLD",
@@ -418,7 +418,7 @@ export class PowCaptchaManager extends CaptchaManager {
 							policy: blockPolicy,
 						},
 					}));
-					await this.db.updatePowCaptchaRecord(challenge, {
+					await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
 						result: {
 							status: CaptchaStatus.disapproved,
 							reason: "API.ACCESS_POLICY_BLOCK",
@@ -466,7 +466,7 @@ export class PowCaptchaManager extends CaptchaManager {
 						distanceKm: ipValidation.distanceKm,
 					},
 				}));
-				await this.db.updatePowCaptchaRecord(challenge, {
+				await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
 					result: {
 						status: CaptchaStatus.disapproved,
 						reason: "API.FAILED_IP_VALIDATION",
