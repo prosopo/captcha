@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/workspace",
-	"version": "3.1.19",
+	"version": "3.1.20",
 	"description": "Prosopo workspace library",
 	"type": "module",
 	"main": "dist/index.js",
@@ -27,7 +27,7 @@
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
 	"devDependencies": {
-		"@prosopo/config": "3.2.1",
+		"@prosopo/config": "3.3.0",
 		"@types/node": "22.10.2",
 		"del-cli": "6.0.0"
 	},

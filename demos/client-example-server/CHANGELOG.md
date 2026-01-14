@@ -1,5 +1,25 @@
 # @prosopo/client-example-server
 
+## 2.7.56
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+- Updated dependencies [a53526b]
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [7543d17]
+- Updated dependencies [3acc333]
+  - @prosopo/util@3.2.5
+  - @prosopo/keyring@2.9.0
+  - @prosopo/types@3.8.0
+  - @prosopo/common@3.1.28
+  - @prosopo/dotenv@3.0.33
+  - @prosopo/server@2.9.52
+
 ## 2.7.55
 ### Patch Changes
 

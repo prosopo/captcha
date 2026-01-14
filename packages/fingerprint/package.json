@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/fingerprint",
-	"version": "2.6.27",
+	"version": "2.6.28",
 	"description": "Provider fingerprint",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -38,7 +38,7 @@
 		"@fingerprintjs/fingerprintjs": "3.4.2"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.2.1",
+		"@prosopo/config": "3.3.0",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "3.2.4",
 		"concurrently": "9.0.1",

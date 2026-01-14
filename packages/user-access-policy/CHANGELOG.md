@@ -1,5 +1,29 @@
 # @prosopo/user-access-policy
 
+## 3.6.0
+### Minor Changes
+
+- 17854a7: fix deleteAll endpoint throwing a recursion limit when too many rules are in redis
+
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+- Updated dependencies [a53526b]
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [7543d17]
+- Updated dependencies [3acc333]
+  - @prosopo/util@3.2.5
+  - @prosopo/types@3.8.0
+  - @prosopo/redis-client@1.0.13
+  - @prosopo/api-route@2.6.36
+  - @prosopo/common@3.1.28
+  - @prosopo/api@3.1.41
+
 ## 3.5.37
 ### Patch Changes
 

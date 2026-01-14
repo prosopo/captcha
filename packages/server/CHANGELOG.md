@@ -1,5 +1,25 @@
 # @prosopo/server
 
+## 2.9.52
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+- Updated dependencies [a53526b]
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [7543d17]
+- Updated dependencies [3acc333]
+  - @prosopo/util@3.2.5
+  - @prosopo/keyring@2.9.0
+  - @prosopo/types@3.8.0
+  - @prosopo/load-balancer@2.8.17
+  - @prosopo/common@3.1.28
+  - @prosopo/api@3.1.41
+
 ## 2.9.51
 ### Patch Changes
 

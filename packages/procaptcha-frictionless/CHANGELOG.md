@@ -1,5 +1,36 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.8.31
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 7543d17: mouse movements bot stopping
+- 3acc333: Release 3.3.0
+- Updated dependencies [a53526b]
+- Updated dependencies [f3cf586]
+- Updated dependencies [3acc333]
+- Updated dependencies [3acc333]
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [6a4d57d]
+- Updated dependencies [7543d17]
+- Updated dependencies [fe9fe22]
+- Updated dependencies [3acc333]
+- Updated dependencies [4ac7ef0]
+  - @prosopo/procaptcha-pow@2.8.31
+  - @prosopo/procaptcha-common@2.9.23
+  - @prosopo/detector@3.4.0
+  - @prosopo/types@3.8.0
+  - @prosopo/procaptcha-react@2.9.27
+  - @prosopo/widget-skeleton@2.7.13
+  - @prosopo/load-balancer@2.8.17
+  - @prosopo/common@3.1.28
+  - @prosopo/locale@3.1.28
+  - @prosopo/api@3.1.41
+
 ## 2.8.30
 ### Patch Changes
 

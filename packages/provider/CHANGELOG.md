@@ -1,5 +1,50 @@
 # @prosopo/provider
 
+## 3.15.0
+### Minor Changes
+
+- 6a4d57d: Move account creation into worker
+
+### Patch Changes
+
+- a53526b: enhance/pow-client-solution
+- 3acc333: Update pow record at verify
+- 3acc333: Add JWT issuance to keypairs
+- 0a38892: feat/cross-os-testing
+- 3acc333: ip parsing
+- a8faa9a: bump license year
+- 7543d17: mouse movements bot stopping
+- fe9fe22: adding api returns
+- 3acc333: Release 3.3.0
+- 4ac7ef0: Fixing provider side typing of collectors
+- Updated dependencies [a53526b]
+- Updated dependencies [3acc333]
+- Updated dependencies [3acc333]
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [17854a7]
+- Updated dependencies [7543d17]
+- Updated dependencies [fe9fe22]
+- Updated dependencies [3acc333]
+  - @prosopo/util@3.2.5
+  - @prosopo/types-database@4.1.5
+  - @prosopo/database@3.6.6
+  - @prosopo/api-express-router@3.0.47
+  - @prosopo/util-crypto@13.5.29
+  - @prosopo/keyring@2.9.0
+  - @prosopo/types@3.8.0
+  - @prosopo/user-access-policy@3.6.0
+  - @prosopo/load-balancer@2.8.17
+  - @prosopo/api-route@2.6.36
+  - @prosopo/types-env@2.7.59
+  - @prosopo/datasets@3.0.55
+  - @prosopo/common@3.1.28
+  - @prosopo/locale@3.1.28
+  - @prosopo/api@3.1.41
+  - @prosopo/env@3.2.35
+
 ## 3.14.7
 ### Patch Changes
 
