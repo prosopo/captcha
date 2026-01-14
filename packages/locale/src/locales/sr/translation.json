@@ -17,6 +17,8 @@
 		"MISSING_QUERY_PARAMETERS": "متغيرات الاستعلام المفقودة",
 		"MISSING_AUTHORIZATION_HEADER": "رأس التفويض المفقود",
 		"TIMESTAMP_TOO_OLD": "الطابع الزمني قديم جدًا",
+		"FAILED_IP_VALIDATION": "Провера IP-а није успела",
+		"ACCESS_POLICY_BLOCK": "Приступ блокиран политиком",
 		"FORBIDDEN": "ممنوع",
 		"PROVIDER_VERIFY_FAILED": "فشل التحقق من المزود",
 		"UNAUTHORIZED": "غير مصرح",

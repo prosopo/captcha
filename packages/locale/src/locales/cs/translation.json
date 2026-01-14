@@ -17,6 +17,8 @@
 		"MISSING_QUERY_PARAMETERS": "Chybějící parametry dotazu",
 		"MISSING_AUTHORIZATION_HEADER": "Chybějící hlavička autorizace",
 		"TIMESTAMP_TOO_OLD": "Příliš starý časový údaj",
+		"FAILED_IP_VALIDATION": "Ověření IP selhalo",
+		"ACCESS_POLICY_BLOCK": "Přístup blokován zásadami",
 		"FORBIDDEN": "Zakázáno",
 		"PROVIDER_VERIFY_FAILED": "Ověření poskytovatele selhalo",
 		"UNAUTHORIZED": "Neoprávněný",

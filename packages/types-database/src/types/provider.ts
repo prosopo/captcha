@@ -309,6 +309,7 @@ PoWCaptchaRecordSchema.index({ lastUpdatedTimestamp: 1 });
 PoWCaptchaRecordSchema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
 PoWCaptchaRecordSchema.index({ "ipAddress.lower": 1 });
 PoWCaptchaRecordSchema.index({ "ipAddress.upper": 1 });
+PoWCaptchaRecordSchema.index({ "result.reason": 1 });
 
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	userAccount: { type: String, required: true },
@@ -355,6 +356,7 @@ UserCommitmentRecordSchema.index({
 UserCommitmentRecordSchema.index({ userAccount: 1, dappAccount: 1 });
 UserCommitmentRecordSchema.index({ "ipAddress.lower": 1 });
 UserCommitmentRecordSchema.index({ "ipAddress.upper": 1 });
+UserCommitmentRecordSchema.index({ "result.reason": 1 });
 
 export const DatasetRecordSchema = new Schema<DatasetWithIds>({
 	contentTree: { type: [[String]], required: true },

@@ -83,6 +83,7 @@ describe("PowCaptchaManager", () => {
 			storePowCaptchaRecord: vi.fn(),
 			getPowCaptchaRecordByChallenge: vi.fn(),
 			updatePowCaptchaRecordResult: vi.fn(),
+			updatePowCaptchaRecord: vi.fn(),
 			markDappUserPoWCommitmentsChecked: vi.fn(),
 		} as unknown as IProviderDatabase;
 
