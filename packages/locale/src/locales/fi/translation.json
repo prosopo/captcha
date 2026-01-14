@@ -42,8 +42,8 @@
 		"MISSING_QUERY_PARAMETERS": "Puuttuvia kyselyparametreja",
 		"MISSING_AUTHORIZATION_HEADER": "Puuttuva valtuutusotsake",
 		"TIMESTAMP_TOO_OLD": "Aikaleima liian vanha",
-"FAILED_IP_VALIDATION": "IP-vahvistus epäonnistui",
-"ACCESS_POLICY_BLOCK": "Pääsy estetty käytännön mukaan",
+		"FAILED_IP_VALIDATION": "IP-vahvistus epäonnistui",
+		"ACCESS_POLICY_BLOCK": "Pääsy estetty käytännön mukaan",
 		"FORBIDDEN": "Kielletty",
 		"PROVIDER_VERIFY_FAILED": "Palveluntarjoajan tarkistus epäonnistui"
 	},
