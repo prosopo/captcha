@@ -1,5 +1,12 @@
 # @prosopo/client-bundle-example
 
+## 2.10.12
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+
 ## 2.10.11
 ### Patch Changes
 

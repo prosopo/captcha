@@ -1,5 +1,16 @@
 # @prosopo/react-procaptcha-wrapper
 
+## 1.1.44
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+- Updated dependencies [0a38892]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [3acc333]
+  - @prosopo/procaptcha-wrapper@2.6.46
+
 ## 1.1.43
 ### Patch Changes
 

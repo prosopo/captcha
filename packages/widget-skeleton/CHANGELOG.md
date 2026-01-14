@@ -1,5 +1,12 @@
 # @prosopo/widget-skeleton
 
+## 2.7.13
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+
 ## 2.7.12
 ### Patch Changes
 

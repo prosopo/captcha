@@ -1,5 +1,24 @@
 # @prosopo/procaptcha-common
 
+## 2.9.23
+### Patch Changes
+
+- f3cf586: fix/widget-parent-detection
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [6a4d57d]
+- Updated dependencies [7543d17]
+- Updated dependencies [3acc333]
+  - @prosopo/types@3.8.0
+  - @prosopo/widget-skeleton@2.7.13
+  - @prosopo/load-balancer@2.8.17
+  - @prosopo/account@2.8.0
+
 ## 2.9.22
 ### Patch Changes
 

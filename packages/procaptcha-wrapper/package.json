@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-wrapper",
-	"version": "2.6.45",
+	"version": "2.6.46",
 	"type": "module",
 	"engines": {
 		"node": "^24",
@@ -24,11 +24,11 @@
 		"typecheck": "tsc --project tsconfig.types.json"
 	},
 	"dependencies": {
-		"@prosopo/types": "3.7.2",
-		"@prosopo/locale": "3.1.27"
+		"@prosopo/types": "3.8.0",
+		"@prosopo/locale": "3.1.28"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.2.1",
+		"@prosopo/config": "3.3.0",
 		"@types/node": "22.10.2",
 		"del-cli": "6.0.0"
 	},
