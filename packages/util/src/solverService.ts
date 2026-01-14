@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,7 +13,13 @@
 // limitations under the License.
 import { sha256 } from "@noble/hashes/sha256";
 
-export const solvePoW = (data: string, difficulty: number): number => {
+// batching prevents complete lock of Browser renders during resolution
+const BATCH_SIZE = 1_000;
+
+export const solvePoW = async (
+	data: string,
+	difficulty: number,
+): Promise<number> => {
 	let nonce = 0;
 	const prefix = "0".repeat(difficulty);
 
@@ -26,6 +32,11 @@ export const solvePoW = (data: string, difficulty: number): number => {
 		}
 
 		nonce += 1;
+
+		if (0 === nonce % BATCH_SIZE) {
+			// browser handles UI rendering between Macrotasks
+			await newMacrotask();
+		}
 	}
 };
 
@@ -33,3 +44,19 @@ const bufferToHex = (buffer: Uint8Array): string =>
 	Array.from(buffer)
 		.map((byte) => byte.toString(16).padStart(2, "0"))
 		.join("");
+
+/**
+ * Usage:
+ *   await newMacrotask();
+ *
+ * Sequence (simplified):
+ *   1. setTimeout creates a Macro_task, the function returns the mastered Promise
+ *   2. "await" suspends your code flow
+ *   3. The engine drains the current Micro_task queue
+ *   4. => Browser performs renders
+ *   5. ...The created Macro_task runs (for sure after the ones scheduled before)
+ *   6. The Promise resolves, and it creates a Micro_task for your suspended code.
+ *   7. The Micro_task runs and execution continues after the "await" line.
+ */
+const newMacrotask = async () =>
+	new Promise((resolve) => setTimeout(resolve, 0));

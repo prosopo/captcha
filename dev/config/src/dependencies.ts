@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,10 +19,13 @@ import util from "node:util";
 import type { ProjectReference } from "typescript";
 
 const exec = util.promisify(child_process.exec);
-// find a tScOnFiG.json file
-const tsConfigRegex = /\/[A-Za-z.]*\.json$/;
 const peerDepsRegex = /UNMET\sOPTIONAL\sDEPENDENCY\s+(@*[\w\-/.]+)@/;
 const depsRegex = /\s+(@*[\w\-/.]+)@/;
+
+const getTsconfigDir = (tsConfigPath: string): string =>
+	".json" === path.extname(tsConfigPath)
+		? path.dirname(tsConfigPath)
+		: tsConfigPath;
 
 async function getPackageDir(packageName: string): Promise<string> {
 	let pkg = packageName;
@@ -53,7 +56,7 @@ function getReferenceTsConfigPath(
 ) {
 	// remove tsconfig.*.json from the path and get the path to the new directory via the reference path
 	let refTSConfigPath = path.resolve(
-		initialTsConfigPath.replace(tsConfigRegex, ""),
+		getTsconfigDir(initialTsConfigPath),
 		reference.path,
 	);
 	if (!refTSConfigPath.endsWith(".json")) {
@@ -134,7 +137,7 @@ export async function getExternalsFromReferences(
 	const promises: Promise<string>[] = [];
 	for (const refTsConfigPath of tsConfigPaths) {
 		const packageJsonPath = path.resolve(
-			refTsConfigPath.replace(tsConfigRegex, ""),
+			getTsconfigDir(refTsConfigPath),
 			"package.json",
 		);
 		promises.push(
@@ -144,18 +147,15 @@ export async function getExternalsFromReferences(
 					if (err) {
 						reject(err);
 					}
-					fs.readFile(
-						new URL(packageJsonPath, import.meta.url),
-						(err, buffer) => {
-							if (err) {
-								reject(err);
-							} else {
-								const packageJson = JSON.parse(buffer.toString());
-								const pkg = packageJson.name;
-								resolve(pkg);
-							}
-						},
-					);
+					fs.readFile(packageJsonPath, (err, buffer) => {
+						if (err) {
+							reject(err);
+						} else {
+							const packageJson = JSON.parse(buffer.toString());
+							const pkg = packageJson.name;
+							resolve(pkg);
+						}
+					});
 				});
 			}),
 		);

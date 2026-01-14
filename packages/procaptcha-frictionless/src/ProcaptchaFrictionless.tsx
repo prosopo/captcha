@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -167,6 +167,11 @@ export const ProcaptchaFrictionless = ({
 					sessionId: result.sessionId,
 					userAccount: result.userAccount,
 					restart, // Pass restart function
+					behaviorCollector1: result.behaviorCollector1,
+					behaviorCollector2: result.behaviorCollector2,
+					behaviorCollector3: result.behaviorCollector3,
+					deviceCapability: result.deviceCapability,
+					encryptBehavioralData: result.encryptBehavioralData,
 				};
 
 				if (result.captchaType === "image") {

@@ -12,7 +12,8 @@ Common:
 Client-side (browser):
 
 * `procaptcha-bundle` - Displaying captcha widget
-    - `procaptcha-frictionless` (Dynamic CAPTCHA that does client-side detection to determine whether to serve PoW/Image)
+    - `procaptcha-frictionless` (Dynamic CAPTCHA that does client-side detection to determine whether to serve
+      PoW/Image)
     - `procaptcha-react` (image)
     - `procaptcha-pow` (Proof-of-Work)
 
@@ -52,7 +53,7 @@ If your IDE supports `biome` (directly, or via plugin), you can configure it to 
 * Lint checks: `npm run lint`
 * Lint formatting fixes: `npm run lint-fix`
 
-## 4. Running Tests (locally)
+## 4. Local setup
 
 ### 4.1) Environment Setup
 
@@ -92,7 +93,9 @@ siteKeys, etc.
 NODE_ENV="test" npm run setup
 ```
 
-### 4.4) Running all the unit tests
+## 5. Local tests
+
+### 5.1) Unit tests
 
 Launch services:
 
@@ -114,12 +117,12 @@ npm run test
 Tip: You can also run package-related unit tests individually, by running `npm run test` inside the target package
 folder.
 
-### 4.5) Running E2E Bundle Tests
+### 5.2) E2E Bundle Tests
 
 Launch services:
 
 ```
-npm run -w @prosopo/client-example-server build && NODE_ENV=test npm run start:server
+npm run -w @prosopo/client-example-server build ; NODE_ENV=test npm run start:server
 NODE_ENV=test npm run start:provider:admin
 NODE_ENV="development" npm -w @prosopo/procaptcha-bundle run bundle
 NODE_ENV=test npm run start:bundle
@@ -129,4 +132,22 @@ Run tests:
 
 ```
 NODE_ENV=test npm -w @prosopo/cypress-shared run cypress:open:client-bundle-example
+```
+
+## 6. Local playground (demo)
+
+```
+# demo
+npm run start:bundle
+
+# server (if you need verification)
+NODE_ENV=test npm run start:provider:admin
+
+# bundle
+turbo run build --filter @prosopo/procaptcha-bundle...; 
+NODE_ENV=development npm -w @prosopo/procaptcha-bundle run bundle; 
+npm -w @prosopo/procaptcha-bundle run serve
+
+# visit
+http://localhost:9232/pow-explicit.html
 ```

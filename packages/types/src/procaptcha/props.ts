@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,13 +15,42 @@
 import type { Ti18n } from "@prosopo/locale";
 import type { ProcaptchaClientConfigInput } from "../config/index.js";
 import type { RandomProvider } from "../provider/api.js";
+import type {
+	BehavioralData,
+	ClickEventPoint,
+	MouseMovementPoint,
+	PackedBehavioralData,
+	TouchEventPoint,
+} from "./behavioral.js";
 import type { Account, Callbacks } from "./manager.js";
 
+// Generic behavioral data collectors for analytics
 export type FrictionlessState = {
 	provider: RandomProvider;
 	userAccount: Account;
 	restart: () => void;
 	sessionId?: string;
+	behaviorCollector1?: {
+		start: () => void;
+		stop: () => void;
+		getData: () => MouseMovementPoint[];
+		clear: () => void;
+	};
+	behaviorCollector2?: {
+		start: () => void;
+		stop: () => void;
+		getData: () => TouchEventPoint[];
+		clear: () => void;
+	};
+	behaviorCollector3?: {
+		start: () => void;
+		stop: () => void;
+		getData: () => ClickEventPoint[];
+		clear: () => void;
+	};
+	deviceCapability?: string;
+	encryptBehavioralData?: (data: string) => Promise<string>;
+	packBehavioralData?: (data: BehavioralData) => PackedBehavioralData;
 };
 
 export type ProcaptchaCallbacks = Partial<Callbacks>;
