@@ -234,7 +234,7 @@ export class PowCaptchaManager extends CaptchaManager {
 				challenge,
 				{
 					status: CaptchaStatus.disapproved,
-					reason: "CAPTCHA.INVALID_TIMESTAMP",
+					reason: "API.TIMESTAMP_TOO_OLD",
 				},
 				false, //serverchecked
 				true, // usersubmitted
