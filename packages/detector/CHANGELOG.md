@@ -1,5 +1,10 @@
 # @prosopo/detector
 
+## 3.4.1
+### Patch Changes
+
+- 15254a3: Key cycle
+
 ## 3.4.0
 ### Minor Changes
 
