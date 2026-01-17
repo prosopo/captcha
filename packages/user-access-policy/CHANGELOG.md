@@ -1,5 +1,10 @@
 # @prosopo/user-access-policy
 
+## 3.6.1
+### Patch Changes
+
+- ed87b6f: Fix authentication in uaps
+
 ## 3.6.0
 ### Minor Changes
 

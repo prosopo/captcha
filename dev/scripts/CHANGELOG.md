@@ -1,5 +1,14 @@
 # @prosopo/scripts
 
+## 3.1.46
+### Patch Changes
+
+  - @prosopo/cli@3.5.21
+  - @prosopo/provider@3.15.2
+  - @prosopo/env@3.2.36
+  - @prosopo/datasets@3.0.56
+  - @prosopo/types-env@2.7.60
+
 ## 3.1.45
 ### Patch Changes
 
