@@ -82,7 +82,7 @@ services:
     volumes:
       - /data/db:/data/db
     ports:
-      - '27017:27017'
+      - '127.0.0.1:27017:27017'
     env_file:
       - ../.env.1.${NODE_ENV}
     networks:
@@ -156,7 +156,7 @@ services:
       - ./data:/data # mount a volume for data persistence
       - ./redis.conf:/redis-stack.conf
     ports:
-      - '6379:6379' # DB
+      - '127.0.0.1:6379:6379' # DB
     networks:
       internal:
         ipv4_address: 172.18.0.8
