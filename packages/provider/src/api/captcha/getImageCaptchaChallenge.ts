@@ -67,7 +67,22 @@ export default (
 			);
 		}
 
-		const { datasetId, user, dapp, sessionId } = parsed;
+		const { user, dapp, sessionId } = parsed;
+
+		const datasetId = env.datasetId;
+
+		if (!datasetId) {
+			return next(
+				new ProsopoApiError("API.BAD_REQUEST", {
+					context: {
+						code: 400,
+						error: "No dataset available. Please upload a dataset first.",
+					},
+					i18n: req.i18n,
+					logger: req.logger,
+				}),
+			);
+		}
 
 		validateSiteKey(dapp);
 		validateAddr(user);

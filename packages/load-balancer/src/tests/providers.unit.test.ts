@@ -36,9 +36,7 @@ describe("getRandomActiveProvider", () => {
 			"5EjTA28bKSbFPPyMbUjNtArxyqjwq38r1BapVmLZShaqEedV",
 		);
 		expect(result.provider.url).toBe("http://localhost:9229");
-		expect(result.provider.datasetId).toBe(
-			"0x9f460e81ac9c71b486f796a21bb36e2263694756a6621134d110da217fd3ef25",
-		);
+		expect(result.provider).not.toHaveProperty("datasetId");
 	});
 
 	it("returns DNS-based URL for staging environment", async () => {
@@ -58,7 +56,7 @@ describe("getRandomActiveProvider", () => {
 
 		expect(result.providerAccount).toBe("address1");
 		expect(result.provider.url).toBe("https://staging.pronode.prosopo.io");
-		expect(result.provider.datasetId).toBe("dataset1");
+		expect(result.provider).not.toHaveProperty("datasetId");
 	});
 
 	it("returns DNS-based URL for production environment", async () => {
@@ -78,7 +76,7 @@ describe("getRandomActiveProvider", () => {
 
 		expect(result.providerAccount).toBe("address1");
 		expect(result.provider.url).toBe("https://pronode.prosopo.io");
-		expect(result.provider.datasetId).toBe("dataset1");
+		expect(result.provider).not.toHaveProperty("datasetId");
 	});
 
 	it("loads providers only once when called multiple times", async () => {
@@ -154,8 +152,9 @@ describe("getRandomActiveProvider", () => {
 
 		// Should use the first provider's account info
 		expect(result.providerAccount).toBe("mainAccount");
-		expect(result.provider.datasetId).toBe("mainDataset");
-		// But URL should be DNS-based
+		// URL should be DNS-based
 		expect(result.provider.url).toBe("https://pronode.prosopo.io");
+		// datasetId should not be included
+		expect(result.provider).not.toHaveProperty("datasetId");
 	});
 });

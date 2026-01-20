@@ -41,13 +41,11 @@ export const getRandomActiveProvider = async (
 			providerAccount: "5EjTA28bKSbFPPyMbUjNtArxyqjwq38r1BapVmLZShaqEedV",
 			provider: {
 				url: "http://localhost:9229",
-				datasetId:
-					"0x9f460e81ac9c71b486f796a21bb36e2263694756a6621134d110da217fd3ef25",
 			},
 		};
 	}
 
-	// Get provider list to extract account and datasetId info
+	// Get provider list to extract account info
 	if (cachedProviders.length === 0) {
 		cachedProviders = await loadBalancer(env);
 	}
@@ -68,7 +66,6 @@ export const getRandomActiveProvider = async (
 		providerAccount: firstProvider.address,
 		provider: {
 			url: dnsUrl,
-			datasetId: firstProvider.datasetId,
 		},
 	};
 };
