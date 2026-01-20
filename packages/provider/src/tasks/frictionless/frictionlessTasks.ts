@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/common";
-import { getRandomActiveProvider } from "@prosopo/load-balancer";
 import {
 	ApiParams,
 	CaptchaType,
@@ -131,7 +130,6 @@ export class FrictionlessManager extends CaptchaManager {
 		await this.db.storeSessionRecord(sessionRecord);
 		return sessionRecord;
 	}
-
 
 	async sendImageCaptcha(
 		params?: Partial<ImageCaptchaSessionParams>,
@@ -393,8 +391,7 @@ export class FrictionlessManager extends CaptchaManager {
 		const baseBotScoreUndefined = baseBotScore === undefined;
 		const timestampUndefined = timestamp === undefined;
 		const undefinedCount =
-			Number(baseBotScoreUndefined) +
-			Number(timestampUndefined);
+			Number(baseBotScoreUndefined) + Number(timestampUndefined);
 		if (undefinedCount > 0) {
 			this.logger.error(() => ({
 				msg: "Error decrypting score: baseBotScore or timestamp is undefined",
