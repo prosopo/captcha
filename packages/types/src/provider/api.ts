@@ -38,11 +38,6 @@ import {
 	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
 } from "../config/timeouts.js";
 import {
-	DecisionMachineLanguage,
-	DecisionMachineRuntime,
-	DecisionMachineScope,
-} from "../decisionMachine/index.js";
-import {
 	type Captcha,
 	CaptchaSolutionSchema,
 	type DappAccount,
@@ -51,6 +46,11 @@ import {
 	PowChallengeIdSchema,
 	type UserAccount,
 } from "../datasets/index.js";
+import {
+	DecisionMachineLanguage,
+	DecisionMachineRuntime,
+	DecisionMachineScope,
+} from "../decisionMachine/index.js";
 import {
 	type ChallengeSignature,
 	ProcaptchaTokenSpec,

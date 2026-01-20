@@ -17,8 +17,8 @@ import { type Logger, ProsopoApiError } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import {
 	type ContextType,
-	DecisionMachineLanguage,
-	DecisionMachineRuntime,
+	type DecisionMachineLanguage,
+	type DecisionMachineRuntime,
 	DecisionMachineScope,
 	type IUserSettings,
 	type ProsopoConfigOutput,
@@ -413,7 +413,11 @@ export class ClientTaskManager {
 		language?: DecisionMachineLanguage,
 		name?: string,
 		version?: string,
-	): Promise<{ scope: DecisionMachineScope; dappAccount?: string; updatedAt: string }> {
+	): Promise<{
+		scope: DecisionMachineScope;
+		dappAccount?: string;
+		updatedAt: string;
+	}> {
 		if (scope === DecisionMachineScope.Dapp && !dappAccount) {
 			throw new ProsopoApiError("API.BAD_REQUEST", {
 				context: { scope, dappAccount },

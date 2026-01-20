@@ -17,7 +17,10 @@ import {
 	DecisionMachineRuntime,
 	DecisionMachineScope,
 } from "@prosopo/types";
-import type { DecisionMachineArtifact, IProviderDatabase } from "@prosopo/types-database";
+import type {
+	DecisionMachineArtifact,
+	IProviderDatabase,
+} from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DecisionMachineRunner } from "../../../../tasks/decisionMachine/decisionMachineRunner.js";
 
@@ -104,7 +107,7 @@ describe("DecisionMachineRunner", () => {
 
 	it("defaults to allow on invalid output", async () => {
 		const artifact = buildArtifact(
-			'module.exports = () => ({ nope: true });',
+			"module.exports = () => ({ nope: true });",
 			DecisionMachineScope.Global,
 		);
 		(db.getDecisionMachineArtifact as unknown as ReturnType<typeof vi.fn>)
@@ -124,7 +127,7 @@ describe("DecisionMachineRunner", () => {
 	it("defaults to allow on timeout", async () => {
 		vi.useFakeTimers();
 		const artifact = buildArtifact(
-			'module.exports = () => new Promise(() => {});',
+			"module.exports = () => new Promise(() => {});",
 			DecisionMachineScope.Global,
 		);
 		(db.getDecisionMachineArtifact as unknown as ReturnType<typeof vi.fn>)

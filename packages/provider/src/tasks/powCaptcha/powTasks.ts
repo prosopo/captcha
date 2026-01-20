@@ -18,7 +18,7 @@ import type { Logger } from "@prosopo/common";
 import type { KeyringPair, ProsopoConfigOutput } from "@prosopo/types";
 import {
 	DecisionMachineDecision,
-	DecisionMachineInput,
+	type DecisionMachineInput,
 } from "@prosopo/types";
 import {
 	ApiParams,

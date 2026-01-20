@@ -33,6 +33,7 @@ import {
 	type DatasetWithIds,
 	type DatasetWithIdsAndTree,
 	DatasetWithIdsAndTreeSchema,
+	type DecisionMachineScope,
 	type Hash,
 	type PoWChallengeComponents,
 	type PoWChallengeId,
@@ -41,7 +42,6 @@ import {
 	type ScheduledTaskResult,
 	type ScheduledTaskStatus,
 	type StoredStatus,
-	DecisionMachineScope,
 	StoredStatusNames,
 } from "@prosopo/types";
 import type {
@@ -55,8 +55,8 @@ import {
 	type ClientRecord,
 	ClientRecordSchema,
 	DatasetRecordSchema,
-	DecisionMachineArtifactRecordSchema,
 	type DecisionMachineArtifact,
+	DecisionMachineArtifactRecordSchema,
 	DetectorRecordSchema,
 	type DetectorSchema,
 	type IProviderDatabase,

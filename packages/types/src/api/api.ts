@@ -14,6 +14,11 @@
 
 import type { IUserSettings, Tier } from "../client/index.js";
 import type { CaptchaSolution } from "../datasets/index.js";
+import type {
+	DecisionMachineLanguage,
+	DecisionMachineRuntime,
+	DecisionMachineScope,
+} from "../decisionMachine/index.js";
 import type { ProcaptchaToken, StoredEvents } from "../procaptcha/index.js";
 import type {
 	ApiResponse,
@@ -27,11 +32,6 @@ import type {
 	RandomProvider,
 	UpdateProviderClientsResponse,
 } from "../provider/index.js";
-import type {
-	DecisionMachineLanguage,
-	DecisionMachineRuntime,
-	DecisionMachineScope,
-} from "../decisionMachine/index.js";
 
 export interface ProviderApiInterface {
 	getCaptchaChallenge(

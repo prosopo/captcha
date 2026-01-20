@@ -16,8 +16,8 @@ import vm from "node:vm";
 import type { Logger } from "@prosopo/common";
 import {
 	DecisionMachineDecision,
-	DecisionMachineInput,
-	DecisionMachineOutput,
+	type DecisionMachineInput,
+	type DecisionMachineOutput,
 	DecisionMachineOutputSchema,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
@@ -28,9 +28,11 @@ import type {
 } from "@prosopo/types-database";
 
 const LOAD_TIMEOUT_MS =
-	Number.parseInt(process.env.DECISION_MACHINE_LOAD_TIMEOUT_MS ?? "", 10) || 1000;
+	Number.parseInt(process.env.DECISION_MACHINE_LOAD_TIMEOUT_MS ?? "", 10) ||
+	1000;
 const EXEC_TIMEOUT_MS =
-	Number.parseInt(process.env.DECISION_MACHINE_EXEC_TIMEOUT_MS ?? "", 10) || 2000;
+	Number.parseInt(process.env.DECISION_MACHINE_EXEC_TIMEOUT_MS ?? "", 10) ||
+	2000;
 
 const DEFAULT_DECISION: DecisionMachineOutput = {
 	decision: DecisionMachineDecision.Allow,
@@ -110,7 +112,9 @@ export class DecisionMachineRunner {
 		}
 
 		const decision = await this.withTimeout(
-			Promise.resolve((decideFn as (args: DecisionMachineInput) => unknown)(input)),
+			Promise.resolve(
+				(decideFn as (args: DecisionMachineInput) => unknown)(input),
+			),
 			EXEC_TIMEOUT_MS,
 		);
 		const parsed = DecisionMachineOutputSchema.safeParse(decision);
@@ -127,7 +131,10 @@ export class DecisionMachineRunner {
 	): Promise<T> {
 		let timeoutId: NodeJS.Timeout | undefined;
 		const timeoutPromise = new Promise<never>((_, reject) => {
-			timeoutId = setTimeout(() => reject(new Error("Decision machine timeout")), timeoutMs);
+			timeoutId = setTimeout(
+				() => reject(new Error("Decision machine timeout")),
+				timeoutMs,
+			);
 		});
 
 		try {
