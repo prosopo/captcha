@@ -22,59 +22,53 @@ export function _resetCache() {
 }
 
 /**
- * Selects a weighted random provider using the entropy value.
- * Providers with higher weights are more likely to be selected.
+ * Gets the DNS-based provider URL for the given environment.
+ * Uses single DNS endpoint with latency-based routing at the DNS level.
  *
- * @param providers - Array of providers with weights
- * @param entropy - Random seed value for deterministic selection
- * @returns Selected provider
+ * @param env - The environment (development, staging, production)
+ * @param _entropy - (Deprecated) Previously used for provider selection, now ignored as DNS handles load balancing
+ * @returns Provider URL and account information
  */
-export function selectWeightedProvider(
-	providers: HardcodedProvider[],
-	entropy: number,
-): HardcodedProvider {
-	if (providers.length === 0) {
-		throw new Error("No providers available");
-	}
-
-	const totalWeight = providers.reduce((sum, p) => sum + p.weight, 0);
-
-	// Use entropy to generate a value between 0 and totalWeight-1
-	const randomValue = entropy % totalWeight;
-
-	// Select provider based on cumulative weight
-	let cumulativeWeight = 0;
-	for (const provider of providers) {
-		cumulativeWeight += provider.weight;
-		if (randomValue < cumulativeWeight) {
-			return provider;
-		}
-	}
-
-	// Fallback (should never reach here)
-	const selectedProvider = providers[providers.length - 1];
-	if (!selectedProvider) {
-		throw new Error("No providers available");
-	}
-	return selectedProvider;
-}
-
 export const getRandomActiveProvider = async (
 	env: EnvironmentTypes,
-	entropy: number,
+	_entropy?: number,
 ): Promise<RandomProvider> => {
+	// DNS handles the load balancing now, entropy parameter is ignored
+
+	if (env === "development") {
+		// Development uses localhost
+		return {
+			providerAccount: "5EjTA28bKSbFPPyMbUjNtArxyqjwq38r1BapVmLZShaqEedV",
+			provider: {
+				url: "http://localhost:9229",
+				datasetId:
+					"0x9f460e81ac9c71b486f796a21bb36e2263694756a6621134d110da217fd3ef25",
+			},
+		};
+	}
+
+	// Get provider list to extract account and datasetId info
 	if (cachedProviders.length === 0) {
-		// only get the providers JSON once
 		cachedProviders = await loadBalancer(env);
 	}
 
-	const randomProviderObj = selectWeightedProvider(cachedProviders, entropy);
+	// Use the first provider's account info (they should all be the same cluster)
+	const firstProvider = cachedProviders[0];
+	if (!firstProvider) {
+		throw new Error("No providers available");
+	}
+
+	// Use DNS-based endpoint
+	const dnsUrl =
+		env === "staging"
+			? "https://staging.pronode.prosopo.io"
+			: "https://pronode.prosopo.io";
 
 	return {
-		providerAccount: randomProviderObj.address,
+		providerAccount: firstProvider.address,
 		provider: {
-			url: randomProviderObj.url,
-			datasetId: randomProviderObj.datasetId,
+			url: dnsUrl,
+			datasetId: firstProvider.datasetId,
 		},
 	};
 };
