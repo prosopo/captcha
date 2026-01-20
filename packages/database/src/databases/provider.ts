@@ -41,6 +41,7 @@ import {
 	type ScheduledTaskResult,
 	type ScheduledTaskStatus,
 	type StoredStatus,
+	DecisionMachineScope,
 	StoredStatusNames,
 } from "@prosopo/types";
 import type {
@@ -54,6 +55,8 @@ import {
 	type ClientRecord,
 	ClientRecordSchema,
 	DatasetRecordSchema,
+	DecisionMachineArtifactRecordSchema,
+	type DecisionMachineArtifact,
 	DetectorRecordSchema,
 	type DetectorSchema,
 	type IProviderDatabase,
@@ -103,6 +106,7 @@ enum TableNames {
 	client = "client",
 	session = "session",
 	detector = "detector",
+	decisionMachine = "decisionMachine",
 	clientContextEntropy = "clientContextEntropy",
 }
 
@@ -161,6 +165,11 @@ const PROVIDER_TABLES = [
 		collectionName: TableNames.detector,
 		modelName: "Detector",
 		schema: DetectorRecordSchema,
+	},
+	{
+		collectionName: TableNames.decisionMachine,
+		modelName: "DecisionMachine",
+		schema: DecisionMachineArtifactRecordSchema,
 	},
 	{
 		collectionName: TableNames.clientContextEntropy,
@@ -1814,6 +1823,51 @@ export class ProviderDatabase
 			.lean<DetectorSchema[]>(); // Improve performance by returning a plain object
 
 		return (keyRecords || []).map((record) => record.detectorKey);
+	}
+
+	async upsertDecisionMachineArtifact(
+		artifact: DecisionMachineArtifact,
+	): Promise<void> {
+		const now = new Date();
+		const dappAccount = artifact.dappAccount ?? null;
+		const filter = {
+			scope: artifact.scope,
+			dappAccount,
+		};
+
+		await this.tables?.decisionMachine.updateOne(
+			filter,
+			{
+				$set: {
+					scope: artifact.scope,
+					dappAccount,
+					runtime: artifact.runtime,
+					language: artifact.language,
+					source: artifact.source,
+					name: artifact.name,
+					version: artifact.version,
+					updatedAt: now,
+				},
+				$setOnInsert: {
+					createdAt: now,
+				},
+			},
+			{ upsert: true },
+		);
+	}
+
+	async getDecisionMachineArtifact(
+		scope: DecisionMachineScope,
+		dappAccount?: string,
+	): Promise<DecisionMachineArtifact | undefined> {
+		const filter = {
+			scope,
+			dappAccount: dappAccount ?? null,
+		};
+		const doc = await this.tables?.decisionMachine
+			.findOne(filter)
+			.lean<DecisionMachineArtifact>();
+		return doc ? doc : undefined;
 	}
 
 	/**

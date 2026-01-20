@@ -3,7 +3,11 @@
 	"compilerOptions": {
 		"rootDir": "./src",
 		"outDir": "./dist",
-		"allowJs": true
+		"allowJs": true,
+		"baseUrl": ".",
+		"paths": {
+			"@prosopo/decision-machine": ["../../../packages/decision-machine/src/index.ts"]
+		}
 	},
 	"include": [
 		"src",
@@ -46,6 +50,9 @@
 		},
 		{
 			"path": "../types"
+		},
+		{
+			"path": "../../../packages/decision-machine"
 		},
 		{
 			"path": "../types-database"

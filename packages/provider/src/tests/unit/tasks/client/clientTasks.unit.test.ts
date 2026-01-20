@@ -14,6 +14,9 @@
 import { type Logger, getLogger } from "@prosopo/common";
 import {
 	ContextType,
+	DecisionMachineLanguage,
+	DecisionMachineRuntime,
+	DecisionMachineScope,
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
 	type ScheduledTaskResult,
@@ -218,6 +221,7 @@ describe("ClientTaskManager", () => {
 				Array(100).fill("11111111"), // Return 100 samples to meet SAMPLE_SIZE requirement
 			),
 			setClientContextEntropy: vi.fn(),
+			upsertDecisionMachineArtifact: vi.fn(),
 		} as unknown as IProviderDatabase;
 
 		// captchaDB = {
@@ -729,6 +733,33 @@ describe("ClientTaskManager", () => {
 				ContextType.Webview,
 				"11111111",
 			);
+		});
+	});
+
+	describe("Decision machine updates", () => {
+		it("should store decision machine artifacts with global scope", async () => {
+			const result = await clientTaskManager.updateDecisionMachine(
+				DecisionMachineScope.Global,
+				DecisionMachineRuntime.Node,
+				'module.exports = () => ({ decision: "allow" });',
+				undefined,
+				DecisionMachineLanguage.JavaScript,
+				"dm",
+				"1.0.0",
+			);
+
+			expect(providerDB.upsertDecisionMachineArtifact).toHaveBeenCalled();
+			expect(result.scope).toBe(DecisionMachineScope.Global);
+		});
+
+		it("should reject dapp scope without dapp account", async () => {
+			await expect(
+				clientTaskManager.updateDecisionMachine(
+					DecisionMachineScope.Dapp,
+					DecisionMachineRuntime.Node,
+					'module.exports = () => ({ decision: "allow" });',
+				),
+			).rejects.toThrow();
 		});
 	});
 });

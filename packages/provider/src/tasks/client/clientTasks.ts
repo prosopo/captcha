@@ -17,6 +17,9 @@ import { type Logger, ProsopoApiError } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import {
 	type ContextType,
+	DecisionMachineLanguage,
+	DecisionMachineRuntime,
+	DecisionMachineScope,
 	type IUserSettings,
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
@@ -400,6 +403,42 @@ export class ClientTaskManager {
 			});
 		}
 		await this.providerDB.removeDetectorKey(detectorKey, expirationInSeconds);
+	}
+
+	async updateDecisionMachine(
+		scope: DecisionMachineScope,
+		runtime: DecisionMachineRuntime,
+		source: string,
+		dappAccount?: string,
+		language?: DecisionMachineLanguage,
+		name?: string,
+		version?: string,
+	): Promise<{ scope: DecisionMachineScope; dappAccount?: string; updatedAt: string }> {
+		if (scope === DecisionMachineScope.Dapp && !dappAccount) {
+			throw new ProsopoApiError("API.BAD_REQUEST", {
+				context: { scope, dappAccount },
+				logger: this.logger,
+			});
+		}
+
+		const now = new Date();
+		await this.providerDB.upsertDecisionMachineArtifact({
+			scope,
+			dappAccount,
+			runtime,
+			language,
+			source,
+			name,
+			version,
+			createdAt: now,
+			updatedAt: now,
+		});
+
+		return {
+			scope,
+			dappAccount,
+			updatedAt: now.toISOString(),
+		};
 	}
 
 	/**

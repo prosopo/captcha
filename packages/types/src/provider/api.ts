@@ -38,6 +38,11 @@ import {
 	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
 } from "../config/timeouts.js";
 import {
+	DecisionMachineLanguage,
+	DecisionMachineRuntime,
+	DecisionMachineScope,
+} from "../decisionMachine/index.js";
+import {
 	type Captcha,
 	CaptchaSolutionSchema,
 	type DappAccount,
@@ -114,6 +119,7 @@ export enum AdminApiPaths {
 	UpdateDetectorKey = "/v1/prosopo/provider/admin/detector/update",
 	RemoveDetectorKey = "/v1/prosopo/provider/admin/detector/remove",
 	ToggleMaintenanceMode = "/v1/prosopo/provider/admin/maintenance/toggle",
+	UpdateDecisionMachine = "/v1/prosopo/provider/admin/decision-machine/update",
 }
 
 export type CombinedApiPaths = ClientApiPaths | AdminApiPaths;
@@ -139,6 +145,7 @@ export const ProviderDefaultRateLimits = {
 	[AdminApiPaths.UpdateDetectorKey]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.RemoveDetectorKey]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.ToggleMaintenanceMode]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.UpdateDecisionMachine]: { windowMs: 60000, limit: 5 },
 };
 
 type RateLimit = {
@@ -279,6 +286,14 @@ export interface UpdateDetectorKeyResponse extends ApiResponse {
 	};
 }
 
+export interface UpdateDecisionMachineResponse extends ApiResponse {
+	data: {
+		scope: DecisionMachineScope;
+		dappAccount?: string;
+		updatedAt: string;
+	};
+}
+
 export interface ImageVerificationResponse extends VerificationResponse {
 	[ApiParams.commitmentId]?: Hash;
 }
@@ -393,6 +408,18 @@ export const UpdateDetectorKeyBody = object({
 	[ApiParams.detectorKey]: string(),
 });
 
+export const UpdateDecisionMachineBody = object({
+	[ApiParams.decisionMachineScope]: nativeEnum(DecisionMachineScope),
+	[ApiParams.decisionMachineRuntime]: nativeEnum(DecisionMachineRuntime),
+	[ApiParams.decisionMachineSource]: string(),
+	[ApiParams.decisionMachineLanguage]: nativeEnum(
+		DecisionMachineLanguage,
+	).optional(),
+	[ApiParams.decisionMachineName]: string().optional(),
+	[ApiParams.decisionMachineVersion]: string().optional(),
+	[ApiParams.dapp]: string().optional(),
+});
+
 export const RemoveDetectorKeyBodySpec = object({
 	[ApiParams.detectorKey]: string(),
 	[ApiParams.expirationInSeconds]: number().positive().optional(),
@@ -411,6 +438,10 @@ export const ToggleMaintenanceModeBody = object({
 
 export type ToggleMaintenanceModeBodyOutput = output<
 	typeof ToggleMaintenanceModeBody
+>;
+
+export type UpdateDecisionMachineBodyTypeOutput = output<
+	typeof UpdateDecisionMachineBody
 >;
 
 export type RegisterSitekeyBodyTypeOutput = output<typeof RegisterSitekeyBody>;

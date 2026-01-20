@@ -17,6 +17,10 @@ import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
 import type { Logger } from "@prosopo/common";
 import type { KeyringPair, ProsopoConfigOutput } from "@prosopo/types";
 import {
+	DecisionMachineDecision,
+	DecisionMachineInput,
+} from "@prosopo/types";
+import {
 	ApiParams,
 	type CaptchaResult,
 	CaptchaStatus,
@@ -45,6 +49,7 @@ import {
 } from "../../compositeIpAddress.js";
 import { deepValidateIpAddress } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
+import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import type { BehavioralDataResult } from "../detection/decodeBehavior.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
@@ -66,6 +71,7 @@ const DEFAULT_POW_DIFFICULTY = 4;
 
 export class PowCaptchaManager extends CaptchaManager {
 	POW_SEPARATOR: string;
+	private decisionMachineRunner: DecisionMachineRunner;
 
 	constructor(
 		db: IProviderDatabase,
@@ -75,6 +81,7 @@ export class PowCaptchaManager extends CaptchaManager {
 	) {
 		super(db, pair, config, logger);
 		this.POW_SEPARATOR = POW_SEPARATOR;
+		this.decisionMachineRunner = new DecisionMachineRunner(db);
 	}
 
 	/**
@@ -246,6 +253,7 @@ export class PowCaptchaManager extends CaptchaManager {
 
 		const correct = validateSolution(nonce, challenge, difficulty);
 
+		let finalVerified = correct;
 		let result: CaptchaResult = { status: CaptchaStatus.approved };
 		if (!correct) {
 			result = {
@@ -253,15 +261,6 @@ export class PowCaptchaManager extends CaptchaManager {
 				reason: "CAPTCHA.INVALID_SOLUTION",
 			};
 		}
-
-		await this.db.updatePowCaptchaRecordResult(
-			challenge,
-			result,
-			false,
-			true,
-			userTimestampSignature,
-			coords,
-		);
 
 		// Process behavioral data if provided
 		if (behavioralData) {
@@ -309,6 +308,28 @@ export class PowCaptchaManager extends CaptchaManager {
 						behavioralDataPacked: packedData,
 						deviceCapability: decryptedData.deviceCapability,
 					});
+
+					if (correct) {
+						const decisionInput: DecisionMachineInput = {
+							userAccount,
+							dappAccount,
+							challenge,
+							captchaResult: "passed",
+							behavioralDataPacked: packedData,
+							deviceCapability: decryptedData.deviceCapability,
+						};
+						const decision = await this.decisionMachineRunner.decide(
+							decisionInput,
+							this.logger,
+						);
+						if (decision.decision === DecisionMachineDecision.Deny) {
+							finalVerified = false;
+							result = {
+								status: CaptchaStatus.disapproved,
+								reason: "CAPTCHA.INVALID_SOLUTION",
+							};
+						}
+					}
 				}
 			} catch (error) {
 				this.logger?.error(() => ({
@@ -319,7 +340,16 @@ export class PowCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		return correct;
+		await this.db.updatePowCaptchaRecordResult(
+			challenge,
+			result,
+			false,
+			true,
+			userTimestampSignature,
+			coords,
+		);
+
+		return finalVerified;
 	}
 
 	/**
