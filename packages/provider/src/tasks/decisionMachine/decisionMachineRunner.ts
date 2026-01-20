@@ -27,8 +27,10 @@ import type {
 	IProviderDatabase,
 } from "@prosopo/types-database";
 
-const LOAD_TIMEOUT_MS = 50;
-const EXEC_TIMEOUT_MS = 50;
+const LOAD_TIMEOUT_MS =
+	Number.parseInt(process.env.DECISION_MACHINE_LOAD_TIMEOUT_MS ?? "", 10) || 1000;
+const EXEC_TIMEOUT_MS =
+	Number.parseInt(process.env.DECISION_MACHINE_EXEC_TIMEOUT_MS ?? "", 10) || 2000;
 
 const DEFAULT_DECISION: DecisionMachineOutput = {
 	decision: DecisionMachineDecision.Allow,
