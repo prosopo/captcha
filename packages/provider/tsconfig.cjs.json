@@ -2,11 +2,7 @@
 	"extends": "../../tsconfig.cjs.json",
 	"compilerOptions": {
 		"rootDir": "./src",
-		"outDir": "./dist/cjs",
-		"baseUrl": ".",
-		"paths": {
-			"@prosopo/decision-machine": ["../../../packages/decision-machine/src/index.ts"]
-		}
+		"outDir": "./dist/cjs"
 	},
 	"include": [
 		"./src/**/*.ts",
@@ -44,9 +40,6 @@
 		},
 		{
 			"path": "../types/tsconfig.cjs.json"
-		},
-		{
-			"path": "../../../packages/decision-machine/tsconfig.cjs.json"
 		},
 		{
 			"path": "../types-database/tsconfig.cjs.json"
