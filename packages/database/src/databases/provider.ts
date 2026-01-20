@@ -1867,7 +1867,7 @@ export class ProviderDatabase
 		const doc = await this.tables?.decisionMachine
 			.findOne(filter)
 			.lean<DecisionMachineArtifact>();
-		return doc ? doc : undefined;
+		return doc;
 	}
 
 	/**
