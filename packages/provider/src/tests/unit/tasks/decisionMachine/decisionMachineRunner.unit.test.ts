@@ -125,7 +125,6 @@ describe("DecisionMachineRunner", () => {
 	});
 
 	it("defaults to allow on timeout", async () => {
-		vi.useFakeTimers();
 		const artifact = buildArtifact(
 			"module.exports = () => new Promise(() => {});",
 			DecisionMachineScope.Global,
@@ -134,17 +133,13 @@ describe("DecisionMachineRunner", () => {
 			.mockResolvedValueOnce(undefined)
 			.mockResolvedValueOnce(artifact);
 
-		const decidePromise = runner.decide({
+		const result = await runner.decide({
 			userAccount: "user",
 			dappAccount: "dapp",
 			challenge: "challenge",
 			captchaResult: "passed",
 		});
 
-		await vi.advanceTimersByTimeAsync(60);
-		const result = await decidePromise;
-
 		expect(result.decision).toBe(DecisionMachineDecision.Allow);
-		vi.useRealTimers();
-	});
+	}, 5000);
 });
