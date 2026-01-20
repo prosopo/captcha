@@ -64,7 +64,6 @@ describe("decryptPayload", () => {
 				return {
 					baseBotScore: 1,
 					timestamp: Date.now(),
-					providerSelectEntropy: 1,
 				};
 			}),
 		}));
@@ -81,7 +80,6 @@ describe("decryptPayload", () => {
 		expect(result).toEqual({
 			baseBotScore: 1,
 			timestamp: expect.any(Number),
-			providerSelectEntropy: 1,
 			userId: undefined,
 			userAgent: undefined,
 			webView: false,
@@ -115,7 +113,6 @@ describe("decryptPayload", () => {
 		expect(result).toEqual({
 			baseBotScore: 1,
 			timestamp: expect.any(Number),
-			providerSelectEntropy: fmImport.DEFAULT_ENTROPY - 1,
 			userId: undefined,
 			userAgent: undefined,
 			webView: false,
@@ -152,7 +149,6 @@ describe("decryptPayload", () => {
 		expect(result).toEqual({
 			baseBotScore: 1,
 			timestamp: expect.any(Number),
-			providerSelectEntropy: fmImport.DEFAULT_ENTROPY + 1,
 			userId: undefined,
 			userAgent: undefined,
 			webView: false,
@@ -193,7 +189,6 @@ describe("decryptPayload", () => {
 		expect(result).toEqual({
 			baseBotScore: 1,
 			timestamp: expect.any(Number),
-			providerSelectEntropy: fmImport.DEFAULT_ENTROPY - 3,
 			userId: undefined,
 			userAgent: undefined,
 			webView: false,

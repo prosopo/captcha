@@ -58,7 +58,6 @@ const customDetectBot: BotDetectionFunction = async (
 	const detect = await DetectorLoader();
 	const detectionResult = await detect(
 		config.defaultEnvironment,
-		getRandomActiveProvider,
 		container,
 		restartFn,
 		() => ext.getAccount(config),
@@ -70,12 +69,11 @@ const customDetectBot: BotDetectionFunction = async (
 		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
 	}
 
-	// Get random active provider with timeout
-	const provider = detectionResult.provider;
-
-	if (!provider) {
-		throw new Error("Provider Selection Failed");
-	}
+	// Get provider from DNS-based endpoint (no random selection needed)
+	const provider = await getRandomActiveProvider(
+		config.defaultEnvironment,
+		0, // entropy not used for selection anymore, DNS handles it
+	);
 
 	const providerApi = new ProviderApi(
 		provider.provider.url,

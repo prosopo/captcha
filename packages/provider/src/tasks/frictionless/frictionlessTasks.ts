@@ -34,18 +34,7 @@ import { checkLangRules } from "../../rules/lang.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { getBotScore } from "../detection/getBotScore.js";
 
-const getDefaultEntropy = (): number => {
-	if (process.env.PROSOPO_ENTROPY) {
-		const parsed = Number.parseInt(process.env.PROSOPO_ENTROPY);
-		if (!Number.isNaN(parsed)) {
-			return parsed;
-		}
-		// ignore invalid value and return default
-	}
-	return 13337;
-};
 const DEFAULT_MAX_TIMESTAMP_AGE = 60 * 10 * 1000; // 10 minutes
-export const DEFAULT_ENTROPY = getDefaultEntropy();
 
 const getSessionIDPrefix = (host?: string): string => {
 	return host ? host.replace(".prosopo.io", "") : "local";
@@ -88,7 +77,6 @@ export class FrictionlessManager extends CaptchaManager {
 			score: params.score,
 			threshold: params.threshold,
 			scoreComponents: params.scoreComponents,
-			providerSelectEntropy: params.providerSelectEntropy,
 			ipAddress: params.ipAddress,
 			webView: params.webView ?? false,
 			iFrame: params.iFrame ?? false,
@@ -112,7 +100,6 @@ export class FrictionlessManager extends CaptchaManager {
 		score: number,
 		threshold: number,
 		scoreComponents: ScoreComponents,
-		providerSelectEntropy: number,
 		ipAddress: CompositeIpAddress,
 		captchaType: CaptchaType,
 		solvedImagesCount?: number,
@@ -130,7 +117,6 @@ export class FrictionlessManager extends CaptchaManager {
 			score,
 			threshold,
 			scoreComponents,
-			providerSelectEntropy,
 			ipAddress,
 			captchaType,
 			solvedImagesCount,
@@ -146,27 +132,6 @@ export class FrictionlessManager extends CaptchaManager {
 		return sessionRecord;
 	}
 
-	async hostVerified(entropy: number) {
-		const chosen = await getRandomActiveProvider(
-			this.config.defaultEnvironment,
-			entropy,
-		);
-
-		const domain = new URL(chosen.provider.url).hostname;
-		this.logger.info(() => ({
-			data: { entropy, host: this.config.host, domain },
-		}));
-
-		if (domain !== this.config.host) {
-			this.logger.info(() => ({
-				msg: "Host mismatch",
-				data: { expected: this.config.host, got: domain, entropy },
-			}));
-			return { verified: false, domain };
-		}
-
-		return { verified: true, domain };
-	}
 
 	async sendImageCaptcha(
 		params?: Partial<ImageCaptchaSessionParams>,
@@ -177,7 +142,6 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.score === undefined ||
 			effectiveParams.threshold === undefined ||
 			!effectiveParams.scoreComponents ||
-			effectiveParams.providerSelectEntropy === undefined ||
 			!effectiveParams.ipAddress
 		) {
 			throw new Error(
@@ -190,7 +154,6 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.score,
 			effectiveParams.threshold,
 			effectiveParams.scoreComponents,
-			effectiveParams.providerSelectEntropy,
 			effectiveParams.ipAddress,
 			CaptchaType.image,
 			effectiveParams.solvedImagesCount,
@@ -217,7 +180,6 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.score === undefined ||
 			effectiveParams.threshold === undefined ||
 			!effectiveParams.scoreComponents ||
-			effectiveParams.providerSelectEntropy === undefined ||
 			!effectiveParams.ipAddress
 		) {
 			throw new Error(
@@ -230,7 +192,6 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.score,
 			effectiveParams.threshold,
 			effectiveParams.scoreComponents,
-			effectiveParams.providerSelectEntropy,
 			effectiveParams.ipAddress,
 			CaptchaType.pow,
 			undefined,
@@ -374,7 +335,6 @@ export class FrictionlessManager extends CaptchaManager {
 		// if we run out of keys and the score is still not decrypted, throw an error
 		let baseBotScore: number | undefined;
 		let timestamp: number | undefined;
-		let providerSelectEntropy: number | undefined;
 		let userId: string | undefined;
 		let userAgent: string | undefined;
 		let webView: boolean | undefined;
@@ -393,7 +353,6 @@ export class FrictionlessManager extends CaptchaManager {
 				decryptedHeadHash = decrypted.decryptedHeadHash || "";
 				const s = decrypted.baseBotScore;
 				const t = decrypted.timestamp;
-				const p = decrypted.providerSelectEntropy;
 				const a = decrypted.userId;
 				const u = decrypted.userAgent;
 				const w = decrypted.isWebView;
@@ -404,7 +363,6 @@ export class FrictionlessManager extends CaptchaManager {
 						key: this.redactKeyForLogging(key),
 						baseBotScore: s,
 						timestamp: t,
-						entropy: p,
 						userId: a,
 						userAgent: u,
 						webView: w,
@@ -413,7 +371,6 @@ export class FrictionlessManager extends CaptchaManager {
 				}));
 				baseBotScore = s;
 				timestamp = t;
-				providerSelectEntropy = p;
 				userId = a;
 				userAgent = u;
 				webView = w;
@@ -427,7 +384,6 @@ export class FrictionlessManager extends CaptchaManager {
 					}));
 					baseBotScore = 1;
 					timestamp = 0;
-					providerSelectEntropy = DEFAULT_ENTROPY + 1;
 					decryptedHeadHash = "";
 					decryptionFailed = true;
 				}
@@ -436,18 +392,15 @@ export class FrictionlessManager extends CaptchaManager {
 
 		const baseBotScoreUndefined = baseBotScore === undefined;
 		const timestampUndefined = timestamp === undefined;
-		const providerSelectEntropyUndefined = providerSelectEntropy === undefined;
 		const undefinedCount =
 			Number(baseBotScoreUndefined) +
-			Number(timestampUndefined) +
-			Number(providerSelectEntropyUndefined);
+			Number(timestampUndefined);
 		if (undefinedCount > 0) {
 			this.logger.error(() => ({
-				msg: "Error decrypting score: baseBotScore or timestamp or providerSelectEntropy is undefined",
+				msg: "Error decrypting score: baseBotScore or timestamp is undefined",
 			}));
 			baseBotScore = 1;
 			timestamp = 0;
-			providerSelectEntropy = DEFAULT_ENTROPY - undefinedCount;
 			decryptedHeadHash = "";
 			decryptionFailed = true;
 		}
@@ -456,7 +409,6 @@ export class FrictionlessManager extends CaptchaManager {
 			data: {
 				baseBotScore: baseBotScore,
 				timestamp: timestamp,
-				entropy: providerSelectEntropy,
 				userId,
 				userAgent,
 				webView,
@@ -470,7 +422,6 @@ export class FrictionlessManager extends CaptchaManager {
 		return {
 			baseBotScore: Number(baseBotScore),
 			timestamp: Number(timestamp),
-			providerSelectEntropy: Number(providerSelectEntropy),
 			userId,
 			userAgent,
 			webView: webView || false,

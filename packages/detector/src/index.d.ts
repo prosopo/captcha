@@ -17,12 +17,10 @@ import { ClickEventPoint } from '@prosopo/types';
 import { EnvironmentTypes } from '@prosopo/types';
 import { MouseMovementPoint } from '@prosopo/types';
 import { PackedBehavioralData } from '@prosopo/types';
-import { RandomProvider } from '@prosopo/types';
 import { TouchEventPoint } from '@prosopo/types';
 
-declare const detect: (env: EnvironmentTypes, randomProviderSelectorFn: RandomProviderSelectorFn, container: HTMLElement | undefined, restart: () => void, accountGenerator: () => Promise<Account>) => Promise<{
+declare const detect: (env: EnvironmentTypes, container: HTMLElement | undefined, restart: () => void, accountGenerator: () => Promise<Account>) => Promise<{
     token: string;
-    provider?: RandomProvider;
     shadowDomCleanup: () => void;
     encryptHeadHash: string;
     mouseTracker?: {
