@@ -59,8 +59,8 @@ describe("providers", () => {
 			const result = await getProcaptchaRandomActiveProvider("development");
 
 			expect(mockGetRandomValues).toHaveBeenCalledWith(expect.any(Uint8Array));
-			// Entropy is passed (550 = sum of mockRandomValues) but ignored by DNS-based load balancing
-			expect(getRandomActiveProvider).toHaveBeenCalledWith("development", 550);
+			// DNS-based load balancing - no entropy parameter needed
+			expect(getRandomActiveProvider).toHaveBeenCalledWith("development");
 			expect(result).toEqual({ providerUrl: "https://test-provider.com" });
 		});
 

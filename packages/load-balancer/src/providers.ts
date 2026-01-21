@@ -26,14 +26,12 @@ export function _resetCache() {
  * Uses single DNS endpoint with latency-based routing at the DNS level.
  *
  * @param env - The environment (development, staging, production)
- * @param _entropy - (Deprecated) Previously used for provider selection, now ignored as DNS handles load balancing
  * @returns Provider URL and account information
  */
 export const getRandomActiveProvider = async (
 	env: EnvironmentTypes,
-	_entropy?: number,
 ): Promise<RandomProvider> => {
-	// DNS handles the load balancing now, entropy parameter is ignored
+	// DNS handles the load balancing now
 
 	if (env === "development") {
 		// Development uses localhost

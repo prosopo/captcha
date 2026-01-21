@@ -106,28 +106,6 @@ describe("getRandomActiveProvider", () => {
 		);
 	});
 
-	it("accepts entropy parameter for backward compatibility but ignores it", async () => {
-		const mockProviders = [
-			{
-				address: "address1",
-				url: "https://pronode1.prosopo.io",
-				datasetId: "dataset1",
-				weight: 1,
-			},
-		];
-		(loadBalancer as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
-			mockProviders,
-		);
-
-		// Both calls should return the same DNS URL regardless of entropy
-		const result1 = await getRandomActiveProvider("production", 0);
-		_resetCache();
-		const result2 = await getRandomActiveProvider("production", 999);
-
-		expect(result1.provider.url).toBe("https://pronode.prosopo.io");
-		expect(result2.provider.url).toBe("https://pronode.prosopo.io");
-		expect(result1.provider.url).toBe(result2.provider.url);
-	});
 
 	it("uses account info from first provider in the list", async () => {
 		const mockProviders = [
