@@ -53,7 +53,7 @@ http://:9090 {
 	metrics /metrics
 }
 
-{$CADDY_DOMAIN}, {$CADDY_GLOBAL_DOMAIN} {
+*.pronode.prosopo.io {
 	# DNS-01 Challenge with Bunny
 	tls {
 		dns bunny {$BUNNY_API_KEY}
