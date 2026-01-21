@@ -18,9 +18,6 @@
 			"path": "../../dev/config/tsconfig.json"
 		},
 		{
-			"path": "../load-balancer"
-		},
-		{
 			"path": "../types"
 		},
 		{

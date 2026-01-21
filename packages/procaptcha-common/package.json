@@ -35,7 +35,6 @@
 		"@emotion/react": "11.11.1",
 		"@emotion/styled": "11.11.0",
 		"@prosopo/account": "2.8.0",
-		"@prosopo/load-balancer": "2.8.17",
 		"@prosopo/types": "3.8.0",
 		"@prosopo/widget-skeleton": "2.7.13",
 		"react": "18.3.1"
