@@ -67,9 +67,10 @@ export default (
 			);
 		}
 
-		const { user, dapp, sessionId } = parsed;
+		const { datasetId: clientDatasetId, user, dapp, sessionId } = parsed;
 
-		const datasetId = env.datasetId;
+		// Use client-provided datasetId if available, otherwise use provider's default
+		const datasetId = clientDatasetId || env.datasetId;
 
 		if (!datasetId) {
 			return next(

@@ -83,6 +83,10 @@ const buildReqRes = (body: unknown, ip = "127.0.0.1") => {
 	return { req, res, next };
 };
 
+vi.mock("../../../utils/hashUserAgent.js", () => ({
+	hashUserAgent: vi.fn((ua: string) => "844bc172f032bdd2d0baae3536c1d66c"),
+}));
+
 vi.mock("../../../tasks/index.js", async () => {
 	const actual = await vi.importActual("../../../tasks/index.js");
 	return {
@@ -242,6 +246,8 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 
 		const body = { token: "t", headHash: "hh", dapp: "site1", user: "u" };
 		const { req, res, next } = buildReqRes(body);
+		// Set headers to match the decrypted payload
+		req.headers["prosopo-user"] = "u";
 
 		// Act
 		// biome-ignore lint/suspicious/noExplicitAny: mock request
