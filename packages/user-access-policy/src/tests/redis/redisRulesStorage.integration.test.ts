@@ -978,6 +978,76 @@ describe("redisAccessRulesStorage", () => {
 			// then
 			expect(foundAccessRules).toEqual([combinedAccessRule]);
 		});
+
+		test("finds rules by countryCode with exact match", async () => {
+			// given
+			const countryCode1 = "US";
+			const countryCode2 = "GB";
+
+			const countryCodeAccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: "clientId",
+				countryCode: countryCode1,
+			};
+			const otherCountryCodeAccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: "clientId",
+				countryCode: countryCode2,
+			};
+
+			await insertRules([countryCodeAccessRule, otherCountryCodeAccessRule]);
+
+			// when
+			const foundAccessRules = await accessRulesReader.findRules({
+				policyScope: {
+					clientId: "clientId",
+				},
+				policyScopeMatch: FilterScopeMatch.Exact,
+				userScope: {
+					countryCode: countryCode1,
+				},
+				userScopeMatch: FilterScopeMatch.Exact,
+			});
+
+			// then
+			expect(foundAccessRules).toEqual([countryCodeAccessRule]);
+		});
+
+		test("finds rules by combined countryCode and userId with exact match", async () => {
+			// given
+			const countryCode1 = "US";
+			const userId1 = "user123";
+
+			const combinedAccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: "clientId",
+				countryCode: countryCode1,
+				userId: userId1,
+			};
+			const countryCodeOnlyAccessRule: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				clientId: "clientId",
+				countryCode: countryCode1,
+			};
+
+			await insertRules([combinedAccessRule, countryCodeOnlyAccessRule]);
+
+			// when
+			const foundAccessRules = await accessRulesReader.findRules({
+				policyScope: {
+					clientId: "clientId",
+				},
+				policyScopeMatch: FilterScopeMatch.Exact,
+				userScope: {
+					countryCode: countryCode1,
+					userId: userId1,
+				},
+				userScopeMatch: FilterScopeMatch.Exact,
+			});
+
+			// then
+			expect(foundAccessRules).toEqual([combinedAccessRule]);
+		});
 	});
 
 	afterAll(async () => {

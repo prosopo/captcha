@@ -318,6 +318,7 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 		rateLimits: ApiPathRateLimits.default(ProviderDefaultRateLimits),
 		proxyCount: number().optional().default(0),
 		lRules: record(string(), number()).optional(),
+		maxmindDbPath: string().optional(),
 		authAccount: object({
 			address: string().optional(),
 			secret: string().optional(),

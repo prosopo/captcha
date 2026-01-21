@@ -25,9 +25,23 @@ import { flatten } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import { getCompositeIpAddress } from "../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../express.js";
+import { GeolocationService } from "../../services/geolocation.js";
 import { Tasks } from "../../tasks/index.js";
 import { getRequestUserScope } from "../blacklistRequestInspector.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
+
+// Singleton geolocation service instance
+let geolocationService: GeolocationService | null = null;
+
+const getGeolocationService = (env: ProviderEnvironment): GeolocationService => {
+	if (!geolocationService) {
+		geolocationService = new GeolocationService(
+			env.config.maxmindDbPath,
+			env.logger,
+		);
+	}
+	return geolocationService;
+};
 
 export default (
 	env: ProviderEnvironment,
@@ -72,11 +86,18 @@ export default (
 				);
 			}
 
+			// Get country code for geoblocking
+			const geoService = getGeolocationService(env);
+			const countryCode = await geoService.getCountryCode(req.ip || "");
+
 			const userScope = getRequestUserScope(
 				flatten(req.headers),
 				req.ja4,
 				req.ip,
 				user,
+				undefined, // headHash
+				undefined, // coords
+				countryCode,
 			);
 			const userAccessPolicy = (
 				await tasks.powCaptchaManager.getPrioritisedAccessPolicies(
