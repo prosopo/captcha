@@ -51,10 +51,10 @@ http://:9090 {
 	}
 	redir @httpOnly https://{host}{uri} permanent
 
-	# Configure TLS
-	tls {
-		protocols tls1.2 tls1.3
-	}
+	# Configure TLS with DNS-01 challenge
+    tls {
+        dns bunny {$BUNNY_API_KEY}
+    }
 
 
 	handle /robots.txt {

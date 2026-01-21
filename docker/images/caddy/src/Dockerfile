@@ -3,7 +3,9 @@ RUN apk update && apk add gcc g++ make libpcap-dev libpcap
 RUN CGO_ENABLED=1 xcaddy build \
     --with github.com/mholt/caddy-ratelimit \
     --with github.com/prosopo/chaddy \
-    --with github.com/lolPants/caddy-requestid
+    --with github.com/lolPants/caddy-requestid \
+    --with github.com/caddy-dns/bunny
+
 FROM caddy:2
 RUN apk update && apk add libpcap
 RUN apk add --no-cache curl
@@ -11,4 +13,3 @@ RUN apk add --no-cache curl
 RUN mkdir -p /srv/static && \
     echo -e "User-agent: *\nDisallow: /" > /srv/static/robots.txt
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy
-
