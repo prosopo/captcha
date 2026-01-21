@@ -44,7 +44,6 @@ export const getProcaptchaRandomActiveProvider = async (
 		providerAccount: "provider-dns-endpoint", // Placeholder, actual provider determined by DNS
 		provider: {
 			url,
-			datasetId: "default",
 		},
 	};
 };
