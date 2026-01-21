@@ -8,20 +8,15 @@
 	# Shared storage via Upstash Redis
 	# The plugin handles the rediss:// scheme for TLS automatically
 	storage redis {
-		host "{$UPSTASH_REDIS_HOST}"
-		port {$UPSTASH_REDIS_PORT}
-		password "{$UPSTASH_REDIS_PASSWORD}"
+		# Use the full URL directly
+		# address "{$UPSTASH_REDIS_URL}"
 
-		# In gamalan/caddy-tlsredis, 'aes' enables TLS/SSL
-		# Use "true" or "1" depending on the specific sub-version
-		aes "true"
+		# Or if you prefer split variables:
+		 address "{$UPSTASH_REDIS_HOST}:{$UPSTASH_REDIS_PORT}"
+		 password "{$UPSTASH_REDIS_PASSWORD}"
+		 tls_enabled "true"
 
-		# Ensure this is set to 0 for Upstash
-		db 0
-
-		# If your URL contains the password, you don't need 'password' here.
-		# Otherwise, use: password "{$UPSTASH_REDIS_PASSWORD}"
-		key_prefix "caddy_prosopo_global"
+		key_prefix "caddy_prosopo"
 	}
 
 	# Use Let's Encrypt production
