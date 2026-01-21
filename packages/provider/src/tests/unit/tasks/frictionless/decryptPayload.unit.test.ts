@@ -118,7 +118,7 @@ describe("decryptPayload", () => {
 			webView: false,
 			iFrame: false,
 			decryptedHeadHash: "",
-			decryptionFailed: true,
+			decryptionFailed: false, // Decryption succeeds when baseBotScore and timestamp are defined
 		});
 	});
 	it("should set values for the payload when there are keys but they fail to decrypt", async () => {

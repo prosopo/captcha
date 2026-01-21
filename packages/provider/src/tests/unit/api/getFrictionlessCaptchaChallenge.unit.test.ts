@@ -227,7 +227,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue({
 			baseBotScore: 0,
 			timestamp: Date.now(),
-			userId: "user123",
+			userId: "u",
 			userAgent: "844bc172f032bdd2d0baae3536c1d66c",
 			webView: true,
 			iFrame: false,
