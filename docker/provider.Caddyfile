@@ -11,6 +11,7 @@
 	# Email for ACME account
 	email {$CADDY_ACME_EMAIL:admin@prosopo.io}
 
+
     admin {$CADDY_ADMIN_API::2020} # set the admin api to run on localhost:2020 (default is 2019 which can conflict with caddy daemon)
 
 	# Caddy must be told custom rate_limit module its order
@@ -53,11 +54,6 @@ http://:9090 {
 	# Configure TLS
 	tls {
 		protocols tls1.2 tls1.3
-		# Only use HTTP-01 challenge (disable TLS-ALPN-01)
-		# This is required for multi-server setups where TLS-ALPN-01 causes coordination issues
-		issuer acme {
-			challenges http-01
-		}
 	}
 
 
