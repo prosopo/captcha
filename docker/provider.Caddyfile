@@ -5,14 +5,20 @@
 	https_port 443
 	auto_https {$CADDY_AUTO_HTTPS:disable_redirects}
 
+	# Shared storage via Upstash Redis
+	# The plugin handles the rediss:// scheme for TLS automatically
+	storage redis {
+		address "{$UPSTASH_REDIS_URL}"
+		# If your URL contains the password, you don't need 'password' here.
+		# Otherwise, use: password "{$UPSTASH_REDIS_PASSWORD}"
+		key_prefix "caddy_prosopo_global"
+	}
+
 	# Use Let's Encrypt production
 	acme_ca https://acme-v02.api.letsencrypt.org/directory
-
-	# Email for ACME account
 	email {$CADDY_ACME_EMAIL:admin@prosopo.io}
 
-
-    admin {$CADDY_ADMIN_API::2020} # set the admin api to run on localhost:2020 (default is 2019 which can conflict with caddy daemon)
+	admin {$CADDY_ADMIN_API::2020} # set the admin api to run on localhost:2020 (default is 2019 which can conflict with caddy daemon)
 
 	# Caddy must be told custom rate_limit module its order
 	order rate_limit before basicauth
@@ -43,19 +49,20 @@ http://:9090 {
 }
 
 {$CADDY_DOMAIN}, {$CADDY_GLOBAL_DOMAIN} {
+	# DNS-01 Challenge with Bunny
+	tls {
+		dns bunny {$BUNNY_API_KEY}
+		# Vital for Bunny DNS propagation across all edge locations
+		propagation_delay 60s
+		# Optional: ensure we prioritize the wildcard over individual certs
+	}
 
-	# Redirect HTTP to HTTPS, but allow ACME challenges through
+	# Redirect HTTP to HTTPS
 	@httpOnly {
 		protocol http
 		not path /.well-known/acme-challenge/*
 	}
 	redir @httpOnly https://{host}{uri} permanent
-
-	# Configure TLS with DNS-01 challenge
-    tls {
-        dns bunny {$BUNNY_API_KEY}
-    }
-
 
 	handle /robots.txt {
 		uri strip_prefix / # removes leading /, so it looks directly in root
