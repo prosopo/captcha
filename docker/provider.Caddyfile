@@ -18,7 +18,7 @@
 
 		# Ensure this is set to 0 for Upstash
 		db 0
-    
+
 		# If your URL contains the password, you don't need 'password' here.
 		# Otherwise, use: password "{$UPSTASH_REDIS_PASSWORD}"
 		key_prefix "caddy_prosopo_global"
