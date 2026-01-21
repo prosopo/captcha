@@ -13,57 +13,40 @@
 // limitations under the License.
 
 import type { EnvironmentTypes, RandomProvider } from "@prosopo/types";
-import { type HardcodedProvider, loadBalancer } from "./index.js";
-
-let cachedProviders: HardcodedProvider[] = [];
-
-export function _resetCache() {
-	cachedProviders = [];
-}
 
 /**
  * Gets the DNS-based provider URL for the given environment.
  * Uses single DNS endpoint with latency-based routing at the DNS level.
+ * Frontend uses this for simple provider access without needing the full provider list.
  *
  * @param env - The environment (development, staging, production)
- * @returns Provider URL and account information
+ * @returns Provider URL and placeholder account information
  */
 export const getRandomActiveProvider = async (
 	env: EnvironmentTypes,
 ): Promise<RandomProvider> => {
-	// DNS handles the load balancing now
+	// DNS handles the load balancing now - no need to fetch provider list for frontend
 
-	if (env === "development") {
-		// Development uses localhost
-		return {
-			providerAccount: "5EjTA28bKSbFPPyMbUjNtArxyqjwq38r1BapVmLZShaqEedV",
-			provider: {
-				url: "http://localhost:9229",
-			},
-		};
+	let url: string;
+
+	switch (env) {
+		case "development":
+			url = "http://localhost:9229";
+			break;
+		case "staging":
+			url = "https://staging.pronode.prosopo.io";
+			break;
+		case "production":
+			url = "https://pronode.prosopo.io";
+			break;
+		default:
+			url = "http://localhost:9229";
 	}
-
-	// Get provider list to extract account info
-	if (cachedProviders.length === 0) {
-		cachedProviders = await loadBalancer(env);
-	}
-
-	// Use the first provider's account info (they should all be the same cluster)
-	const firstProvider = cachedProviders[0];
-	if (!firstProvider) {
-		throw new Error("No providers available");
-	}
-
-	// Use DNS-based endpoint
-	const dnsUrl =
-		env === "staging"
-			? "https://staging.pronode.prosopo.io"
-			: "https://pronode.prosopo.io";
 
 	return {
-		providerAccount: firstProvider.address,
+		providerAccount: "dns-load-balanced-provider", // Placeholder - actual provider determined by DNS
 		provider: {
-			url: dnsUrl,
+			url,
 		},
 	};
 };
