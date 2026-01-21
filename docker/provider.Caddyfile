@@ -57,9 +57,13 @@ http://:9090 {
 	# DNS-01 Challenge with Bunny
 	tls {
 		dns bunny {$BUNNY_API_KEY}
-		# Vital for Bunny DNS propagation across all edge locations
-		propagation_delay 60s
-		# Optional: ensure we prioritize the wildcard over individual certs
+		# 1. Increase the wait time to give Bunny more time to sync
+		propagation_delay 120s
+		# 2. Increase the timeout for the internal propagation check
+		propagation_timeout 300s
+		# 3. (Optional but recommended) Bypass Caddy's internal resolver
+		# so it doesn't fail just because it can't see its own record yet
+		resolvers 1.1.1.1
 	}
 
 	# Redirect HTTP to HTTPS
