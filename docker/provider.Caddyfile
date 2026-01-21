@@ -33,13 +33,13 @@ http://:9090 {
 	metrics /metrics
 }
 
-{$CADDY_DOMAIN} {
+{$CADDY_DOMAIN}, {$CADDY_GLOBAL_DOMAIN} {
 
     @httpOnly {
         protocol http
     }
     redir @httpOnly https://{host}{uri}
-	
+
 	handle /robots.txt {
 		uri strip_prefix / # removes leading /, so it looks directly in root
 		root * /srv/static
