@@ -70,9 +70,7 @@ const customDetectBot: BotDetectionFunction = async (
 	}
 
 	// Get provider from DNS-based endpoint
-	const provider = await getRandomActiveProvider(
-		config.defaultEnvironment,
-	);
+	const provider = await getRandomActiveProvider(config.defaultEnvironment);
 
 	const providerApi = new ProviderApi(
 		provider.provider.url,

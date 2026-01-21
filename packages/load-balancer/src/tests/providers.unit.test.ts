@@ -106,7 +106,6 @@ describe("getRandomActiveProvider", () => {
 		);
 	});
 
-
 	it("uses account info from first provider in the list", async () => {
 		const mockProviders = [
 			{
