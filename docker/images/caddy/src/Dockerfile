@@ -5,7 +5,7 @@ RUN CGO_ENABLED=1 xcaddy build \
     --with github.com/prosopo/chaddy \
     --with github.com/lolPants/caddy-requestid \
     --with github.com/caddy-dns/bunny \
-    --with github.com/gamalan/caddy-tlsredis
+    --with github.com/pberkel/caddy-storage-redis
 
 FROM caddy:2
 RUN apk update && apk add libpcap

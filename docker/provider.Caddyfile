@@ -12,9 +12,9 @@
 		# address "{$UPSTASH_REDIS_URL}"
 
 		# Or if you prefer split variables:
-		 address "{$UPSTASH_REDIS_HOST}:{$UPSTASH_REDIS_PORT}"
-		 password "{$UPSTASH_REDIS_PASSWORD}"
-		 tls_enabled "true"
+		address "{$UPSTASH_REDIS_HOST}:{$UPSTASH_REDIS_PORT}"
+		password "{$UPSTASH_REDIS_PASSWORD}"
+		tls_enabled "true"
 
 		key_prefix "caddy_prosopo"
 	}
