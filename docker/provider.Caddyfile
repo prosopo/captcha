@@ -8,7 +8,9 @@
 	# Shared storage via Upstash Redis
 	# The plugin handles the rediss:// scheme for TLS automatically
 	storage redis {
-		address "{$UPSTASH_REDIS_URL}"
+		host "{$UPSTASH_REDIS_HOST}"
+        port {$UPSTASH_REDIS_PORT}
+        password "{$UPSTASH_REDIS_PASSWORD}"
 		# If your URL contains the password, you don't need 'password' here.
 		# Otherwise, use: password "{$UPSTASH_REDIS_PASSWORD}"
 		key_prefix "caddy_prosopo_global"
