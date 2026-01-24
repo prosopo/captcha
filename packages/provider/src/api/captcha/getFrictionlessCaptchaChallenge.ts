@@ -20,7 +20,10 @@ import {
 } from "@prosopo/types";
 import type { ScoreComponents } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import type { AccessRulesStorage } from "@prosopo/user-access-policy";
+import {
+	AccessPolicyType,
+	type AccessRulesStorage,
+} from "@prosopo/user-access-policy";
 import { compareBinaryStrings, flatten } from "@prosopo/util";
 import type { NextFunction, Response } from "express";
 import type { Request } from "express";
@@ -236,8 +239,21 @@ export default (
 				)
 			)[0];
 
-			// If the user or IP address has an image captcha config defined, send an image captcha
 			if (userAccessPolicy) {
+				if (userAccessPolicy.type === AccessPolicyType.Block) {
+					return next(
+						new ProsopoApiError("API.FORBIDDEN", {
+							context: {
+								code: 403,
+								siteKey: dapp,
+								user,
+							},
+							i18n: req.i18n,
+							logger: req.logger,
+						}),
+					);
+				}
+
 				const scoreUpdate = tasks.frictionlessManager.scoreIncreaseAccessPolicy(
 					userAccessPolicy,
 					baseBotScore,
