@@ -220,6 +220,7 @@ export default (
 				webView,
 				iFrame,
 				decryptedHeadHash,
+				siteKey: dapp,
 			});
 
 			// Check if the IP address is blocked
