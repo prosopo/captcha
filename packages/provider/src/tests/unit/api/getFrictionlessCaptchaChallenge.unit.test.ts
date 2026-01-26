@@ -483,7 +483,7 @@ describe("getFrictionlessCaptchaChallenge - access policy blocking", () => {
 
 		// Assert: next should be called with a ProsopoApiError
 		expect(next).toHaveBeenCalledTimes(1);
-		const errorArg = (next as MockFn).mock.calls[0][0];
+		const errorArg = (next as MockFn).mock.calls[0]?.[0];
 
 		// Verify it's a ProsopoApiError with correct properties
 		expect(errorArg).toBeInstanceOf(ProsopoApiError);
