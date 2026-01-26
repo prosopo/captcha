@@ -87,6 +87,7 @@ export default (
 						webView: false,
 						iFrame: false,
 						decryptedHeadHash: "",
+						siteKey: dapp,
 					}),
 				);
 			}
@@ -254,6 +255,7 @@ export default (
 							solvedImagesCount: userAccessPolicy.solvedImagesCount,
 							userSitekeyIpHash,
 							reason: FrictionlessReason.USER_ACCESS_POLICY,
+							siteKey: dapp,
 						}),
 					);
 				}
@@ -262,6 +264,7 @@ export default (
 						await tasks.frictionlessManager.sendPowCaptcha({
 							userSitekeyIpHash,
 							reason: FrictionlessReason.USER_ACCESS_POLICY,
+							siteKey: dapp,
 						}),
 					);
 				}
@@ -458,6 +461,7 @@ export default (
 			return res.json(
 				await tasks.frictionlessManager.sendPowCaptcha({
 					userSitekeyIpHash,
+					siteKey: dapp,
 				}),
 			);
 		} catch (err) {
