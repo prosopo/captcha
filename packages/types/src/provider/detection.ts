@@ -14,7 +14,6 @@
 export type DetectorResult = {
 	score: number;
 	timestamp: number;
-	providerSelectEntropy: number;
 	userId: string;
 	userAgent: string;
 	isWebView?: boolean;

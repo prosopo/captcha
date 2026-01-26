@@ -37,6 +37,7 @@ export class Environment implements ProsopoEnvironment {
 	authAccount: KeyringPair | undefined;
 	envId: string | undefined;
 	ready = false;
+	datasetId: string | undefined;
 
 	constructor(
 		config: ProsopoConfigOutput,
@@ -132,6 +133,29 @@ export class Environment implements ProsopoEnvironment {
 				await this.db.connect();
 				this.logger.info(() => ({ msg: "Connected to db" }));
 			}
+
+			// Set the default datasetId to the most recently uploaded dataset
+			if (this.db && !this.datasetId) {
+				try {
+					this.datasetId = await this.db.getMostRecentDatasetId();
+					if (this.datasetId) {
+						this.logger.info(() => ({
+							msg: "Default dataset ID set",
+							data: { datasetId: this.datasetId },
+						}));
+					} else {
+						this.logger.warn(() => ({
+							msg: "No datasets found in database. Image captchas will not work until a dataset is uploaded.",
+						}));
+					}
+				} catch (err) {
+					this.logger.warn(() => ({
+						msg: "Failed to get most recent dataset ID",
+						data: { error: err },
+					}));
+				}
+			}
+
 			this.ready = true;
 		} catch (err) {
 			throw new ProsopoEnvError("GENERAL.ENVIRONMENT_NOT_READY", {

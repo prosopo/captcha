@@ -15,8 +15,6 @@
 import type { DetectorResult } from "@prosopo/types";
 import getBotScoreFromPayload from "./decodePayload.js";
 
-const DEFAULT_ENTROPY = 13837;
-
 export const getBotScore = async (
 	payload: string,
 	headHash: string,
@@ -29,7 +27,6 @@ export const getBotScore = async (
 	)) as DetectorResult;
 	const baseBotScore: number = result.score;
 	const timestamp: number = result.timestamp;
-	const providerSelectEntropy: number = result.providerSelectEntropy;
 	const userId: string = result.userId;
 	const userAgent: string = result.userAgent;
 	const isWebView: boolean = result.isWebView ?? false;
@@ -40,14 +37,12 @@ export const getBotScore = async (
 		return {
 			baseBotScore: 1,
 			timestamp: 0,
-			providerSelectEntropy: DEFAULT_ENTROPY,
 		};
 	}
 
 	return {
 		baseBotScore,
 		timestamp,
-		providerSelectEntropy,
 		userId,
 		userAgent,
 		isWebView,

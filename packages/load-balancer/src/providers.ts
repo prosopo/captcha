@@ -13,68 +13,40 @@
 // limitations under the License.
 
 import type { EnvironmentTypes, RandomProvider } from "@prosopo/types";
-import { type HardcodedProvider, loadBalancer } from "./index.js";
-
-let cachedProviders: HardcodedProvider[] = [];
-
-export function _resetCache() {
-	cachedProviders = [];
-}
 
 /**
- * Selects a weighted random provider using the entropy value.
- * Providers with higher weights are more likely to be selected.
+ * Gets the DNS-based provider URL for the given environment.
+ * Uses single DNS endpoint with latency-based routing at the DNS level.
+ * Frontend uses this for simple provider access without needing the full provider list.
  *
- * @param providers - Array of providers with weights
- * @param entropy - Random seed value for deterministic selection
- * @returns Selected provider
+ * @param env - The environment (development, staging, production)
+ * @returns Provider URL and placeholder account information
  */
-export function selectWeightedProvider(
-	providers: HardcodedProvider[],
-	entropy: number,
-): HardcodedProvider {
-	if (providers.length === 0) {
-		throw new Error("No providers available");
-	}
-
-	const totalWeight = providers.reduce((sum, p) => sum + p.weight, 0);
-
-	// Use entropy to generate a value between 0 and totalWeight-1
-	const randomValue = entropy % totalWeight;
-
-	// Select provider based on cumulative weight
-	let cumulativeWeight = 0;
-	for (const provider of providers) {
-		cumulativeWeight += provider.weight;
-		if (randomValue < cumulativeWeight) {
-			return provider;
-		}
-	}
-
-	// Fallback (should never reach here)
-	const selectedProvider = providers[providers.length - 1];
-	if (!selectedProvider) {
-		throw new Error("No providers available");
-	}
-	return selectedProvider;
-}
-
 export const getRandomActiveProvider = async (
 	env: EnvironmentTypes,
-	entropy: number,
 ): Promise<RandomProvider> => {
-	if (cachedProviders.length === 0) {
-		// only get the providers JSON once
-		cachedProviders = await loadBalancer(env);
+	// DNS handles the load balancing now - no need to fetch provider list for frontend
+
+	let url: string;
+
+	switch (env) {
+		case "development":
+			url = "http://localhost:9229";
+			break;
+		case "staging":
+			url = "https://staging.pronode.prosopo.io";
+			break;
+		case "production":
+			url = "https://pronode.prosopo.io";
+			break;
+		default:
+			url = "http://localhost:9229";
 	}
 
-	const randomProviderObj = selectWeightedProvider(cachedProviders, entropy);
-
 	return {
-		providerAccount: randomProviderObj.address,
+		providerAccount: "dns-load-balanced-provider", // Placeholder - actual provider determined by DNS
 		provider: {
-			url: randomProviderObj.url,
-			datasetId: randomProviderObj.datasetId,
+			url,
 		},
 	};
 };
