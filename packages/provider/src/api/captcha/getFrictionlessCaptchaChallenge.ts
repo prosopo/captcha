@@ -301,6 +301,7 @@ export default (
 						),
 						userSitekeyIpHash,
 						reason: FrictionlessReason.USER_AGENT_MISMATCH,
+						siteKey: dapp,
 					}),
 				);
 			}
@@ -368,6 +369,7 @@ export default (
 									solvedImagesCount: getRoundsFromSimScore(sim),
 									userSitekeyIpHash,
 									reason: FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED,
+									siteKey: dapp,
 								}),
 							);
 						}
@@ -394,6 +396,7 @@ export default (
 						solvedImagesCount: env.config.captchas.solved.count * 2,
 						userSitekeyIpHash,
 						reason: FrictionlessReason.WEBVIEW_DETECTED,
+						siteKey: dapp,
 					}),
 				);
 			}
@@ -418,6 +421,7 @@ export default (
 						),
 						userSitekeyIpHash,
 						reason: FrictionlessReason.OLD_TIMESTAMP,
+						siteKey: dapp,
 					}),
 				);
 			}
@@ -454,6 +458,7 @@ export default (
 						solvedImagesCount: env.config.captchas.solved.count,
 						userSitekeyIpHash,
 						reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
+						siteKey: dapp,
 					}),
 				);
 			}
