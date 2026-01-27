@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -193,13 +193,13 @@ describe("Demo Keys Utility Functions", () => {
 	describe("Demo Key Constants", () => {
 		it("should have correct DEMO_KEY_ALWAYS_PASS value", () => {
 			expect(DEMO_KEY_ALWAYS_PASS).toBe(
-				"5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy",
 			);
 		});
 
 		it("should have correct DEMO_KEY_ALWAYS_FAIL value", () => {
 			expect(DEMO_KEY_ALWAYS_FAIL).toBe(
-				"5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw",
+				"5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL",
 			);
 		});
 
