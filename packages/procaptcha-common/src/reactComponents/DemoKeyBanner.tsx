@@ -55,7 +55,7 @@ export const DemoKeyBanner: FC<DemoKeyBannerProps> = ({ behavior }) => {
 
 	return (
 		<div css={bannerStyles} data-testid="demo-key-banner">
-			⚠️ DEMO ({behaviorText}) •{" "}
+			DEMO MODE ({behaviorText}) •{" "}
 			<a
 				href={`${docsUrl}/demo-keys`}
 				target="_blank"

@@ -94,7 +94,7 @@ export function logDemoKeyUsage(
 	action: string,
 ): void {
 	logger.warn(() => ({
-		msg: "⚠️ DEMO KEY IN USE - NOT FOR PRODUCTION",
+		msg: "DEMO MODE IN USE - NOT FOR PRODUCTION",
 		data: {
 			siteKey,
 			behavior,
