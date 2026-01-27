@@ -20,6 +20,7 @@ import type { NextFunction, Request, Response } from "express";
 import type { TFunction } from "i18next";
 import { ZodError } from "zod";
 import { Tasks } from "../tasks/index.js";
+import { getDemoKeyBehavior, logDemoKeyUsage } from "../utils/demoKeys.js";
 
 export const domainMiddleware = (env: ProviderEnvironment) => {
 	const tasks = new Tasks(env);
@@ -33,6 +34,22 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 					"No sitekey provided",
 					req.logger,
 				);
+
+			// Handle demo keys - bypass all validation
+			// Demo keys are hardcoded test keys that don't require database registration
+			const demoKeyBehavior = getDemoKeyBehavior(siteKey);
+			if (demoKeyBehavior) {
+				logDemoKeyUsage(
+					req.logger,
+					siteKey,
+					demoKeyBehavior,
+					"domain_middleware_bypass",
+				);
+
+				// Skip all validation and continue to endpoint
+				next();
+				return;
+			}
 
 			try {
 				validateAddress(siteKey, false, 42);

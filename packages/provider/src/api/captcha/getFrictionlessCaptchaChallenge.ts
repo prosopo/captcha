@@ -169,19 +169,8 @@ export default (
 
 			let botScore = baseBotScore + lScore;
 
-			const clientRecord = await tasks.db.getClientRecord(dapp);
-
-			if (!clientRecord) {
-				return next(
-					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-						context: { code: 400, siteKey: dapp },
-						i18n: req.i18n,
-						logger: req.logger,
-					}),
-				);
-			}
-
 			// Handle demo key - always pass
+			// Check demo keys BEFORE checking site key registration
 			if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysPass)) {
 				logDemoKeyUsage(
 					req.logger,
@@ -251,6 +240,18 @@ export default (
 					await tasks.frictionlessManager.sendPowCaptcha({
 						powDifficulty: 1,
 						userSitekeyIpHash,
+					}),
+				);
+			}
+
+			const clientRecord = await tasks.db.getClientRecord(dapp);
+
+			if (!clientRecord) {
+				return next(
+					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
+						context: { code: 400, siteKey: dapp },
+						i18n: req.i18n,
+						logger: req.logger,
 					}),
 				);
 			}

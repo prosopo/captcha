@@ -104,14 +104,18 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	if (config.mode === ModeEnum.invisible) {
 		// Return demo banner for invisible mode if using demo key
 		if (demoKeyBehavior) {
-			return <DemoKeyBanner behavior={demoKeyBehavior} />;
+			return (
+				<div style={{ position: "relative" }}>
+					<DemoKeyBanner behavior={demoKeyBehavior} />
+				</div>
+			);
 		}
 		// Return null for invisible mode - no UI needed
 		return null;
 	}
 
 	return (
-		<div>
+		<div style={{ position: "relative" }}>
 			{demoKeyBehavior && <DemoKeyBanner behavior={demoKeyBehavior} />}
 			<Checkbox
 				checked={state.isHuman}

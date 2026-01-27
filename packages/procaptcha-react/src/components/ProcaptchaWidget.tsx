@@ -110,7 +110,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 
 	if (config.mode === "invisible") {
 		return (
-			<div>
+			<div style={{ position: "relative" }}>
 				{demoKeyBehavior && <DemoKeyBanner behavior={demoKeyBehavior} />}
 				<Modal show={state.showModal}>
 					{state.challenge ? (
@@ -132,7 +132,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 	}
 
 	return (
-		<div className={"image-captcha"}>
+		<div className={"image-captcha"} style={{ position: "relative" }}>
 			{demoKeyBehavior && <DemoKeyBanner behavior={demoKeyBehavior} />}
 			<Modal show={state.showModal}>
 				{state.challenge ? (

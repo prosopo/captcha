@@ -81,6 +81,39 @@ export default (env: ProviderEnvironment) =>
 		validateSiteKey(dapp);
 		validateAddr(user);
 
+		// Handle demo key - always pass
+		// Check demo keys BEFORE checking site key registration
+		if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysPass)) {
+			logDemoKeyUsage(
+				req.logger,
+				dapp,
+				DemoKeyBehavior.AlwaysPass,
+				"pow_captcha_solution",
+			);
+
+			const response: PowCaptchaSolutionResponse = {
+				status: "ok",
+				verified: true,
+			};
+			return res.json(response);
+		}
+
+		// Handle demo key - always fail
+		if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysFail)) {
+			logDemoKeyUsage(
+				req.logger,
+				dapp,
+				DemoKeyBehavior.AlwaysFail,
+				"pow_captcha_solution",
+			);
+
+			const response: PowCaptchaSolutionResponse = {
+				status: "ok",
+				verified: false,
+			};
+			return res.json(response);
+		}
+
 		try {
 			const clientRecord = await tasks.db.getClientRecord(dapp);
 
@@ -92,38 +125,6 @@ export default (env: ProviderEnvironment) =>
 						logger: req.logger,
 					}),
 				);
-			}
-
-			// Handle demo key - always pass
-			if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysPass)) {
-				logDemoKeyUsage(
-					req.logger,
-					dapp,
-					DemoKeyBehavior.AlwaysPass,
-					"pow_captcha_solution",
-				);
-
-				const response: PowCaptchaSolutionResponse = {
-					status: "ok",
-					verified: true,
-				};
-				return res.json(response);
-			}
-
-			// Handle demo key - always fail
-			if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysFail)) {
-				logDemoKeyUsage(
-					req.logger,
-					dapp,
-					DemoKeyBehavior.AlwaysFail,
-					"pow_captcha_solution",
-				);
-
-				const response: PowCaptchaSolutionResponse = {
-					status: "ok",
-					verified: false,
-				};
-				return res.json(response);
 			}
 
 			const verified = await tasks.powCaptchaManager.verifyPowCaptchaSolution(

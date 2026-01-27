@@ -20,25 +20,29 @@ interface DemoKeyBannerProps {
 }
 
 const bannerStyles = css`
-	width: 100%;
-	background-color: #dc2626;
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	background-color: rgba(220, 38, 38, 0.95);
 	color: white;
-	padding: 6px 12px;
-	font-size: 12px;
+	padding: 2px 6px;
+	font-size: 9px;
 	font-weight: 700;
 	text-align: center;
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-	line-height: 1.5;
-	border: 2px solid #991b1b;
-	border-radius: 4px;
-	margin-bottom: 8px;
+	line-height: 1.3;
+	border-bottom: 1px solid #991b1b;
+	z-index: 1000;
+	pointer-events: none;
 `;
 
 const linkStyles = css`
 	color: #fef3c7;
 	text-decoration: underline;
 	font-weight: 700;
+	pointer-events: auto;
 	&:hover {
 		color: #fde68a;
 		text-decoration: none;
@@ -46,20 +50,19 @@ const linkStyles = css`
 `;
 
 export const DemoKeyBanner: FC<DemoKeyBannerProps> = ({ behavior }) => {
-	const behaviorText =
-		behavior === "always_pass" ? "ALWAYS PASS" : "ALWAYS FAIL";
+	const behaviorText = behavior === "always_pass" ? "PASS" : "FAIL";
 	const docsUrl = process.env.PROSOPO_DOCS_URL || "https://docs.prosopo.io";
 
 	return (
 		<div css={bannerStyles} data-testid="demo-key-banner">
-			⚠️ DEMO MODE ({behaviorText}) - NOT FOR PRODUCTION •{" "}
+			⚠️ DEMO ({behaviorText}) •{" "}
 			<a
 				href={`${docsUrl}/demo-keys`}
 				target="_blank"
 				rel="noopener noreferrer"
 				css={linkStyles}
 			>
-				Learn More
+				Info
 			</a>
 		</div>
 	);

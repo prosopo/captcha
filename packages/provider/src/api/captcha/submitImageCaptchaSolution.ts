@@ -75,6 +75,41 @@ export default (
 		validateSiteKey(dapp);
 		validateAddr(user);
 
+		// Handle demo key - always pass
+		// Check demo keys BEFORE checking site key registration
+		if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysPass)) {
+			logDemoKeyUsage(
+				req.logger,
+				dapp,
+				DemoKeyBehavior.AlwaysPass,
+				"image_captcha_solution",
+			);
+
+			const result: CaptchaSolutionResponse = {
+				status: "ok",
+				captchas: [],
+				verified: true,
+			};
+			return res.json(result);
+		}
+
+		// Handle demo key - always fail
+		if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysFail)) {
+			logDemoKeyUsage(
+				req.logger,
+				dapp,
+				DemoKeyBehavior.AlwaysFail,
+				"image_captcha_solution",
+			);
+
+			const result: CaptchaSolutionResponse = {
+				status: "ok",
+				captchas: [],
+				verified: false,
+			};
+			return res.json(result);
+		}
+
 		try {
 			const clientRecord = await tasks.db.getClientRecord(parsed.dapp);
 
@@ -86,40 +121,6 @@ export default (
 						logger: req.logger,
 					}),
 				);
-			}
-
-			// Handle demo key - always pass
-			if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysPass)) {
-				logDemoKeyUsage(
-					req.logger,
-					dapp,
-					DemoKeyBehavior.AlwaysPass,
-					"image_captcha_solution",
-				);
-
-				const result: CaptchaSolutionResponse = {
-					status: "ok",
-					captchas: [],
-					verified: true,
-				};
-				return res.json(result);
-			}
-
-			// Handle demo key - always fail
-			if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysFail)) {
-				logDemoKeyUsage(
-					req.logger,
-					dapp,
-					DemoKeyBehavior.AlwaysFail,
-					"image_captcha_solution",
-				);
-
-				const result: CaptchaSolutionResponse = {
-					status: "ok",
-					captchas: [],
-					verified: false,
-				};
-				return res.json(result);
 			}
 
 			const result: DappUserSolutionResult =
