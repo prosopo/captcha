@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/testpkg2",
-	"version": "1.0.29",
+	"version": "1.0.31",
 	"description": "Test package for testing deploys, releases, etc",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -18,7 +18,8 @@
 	},
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
+		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --project tsconfig.types.json"
 	},
@@ -34,7 +35,7 @@
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"sideEffects": false,
 	"devDependencies": {
-		"@prosopo/config": "3.1.25",
+		"@prosopo/config": "3.3.0",
 		"@types/node": "22.10.2",
 		"del-cli": "6.0.0"
 	}

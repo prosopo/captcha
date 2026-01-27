@@ -17,6 +17,8 @@
 		"MISSING_QUERY_PARAMETERS": "缺少查询参数",
 		"MISSING_AUTHORIZATION_HEADER": "缺少授权头",
 		"TIMESTAMP_TOO_OLD": "时间戳过旧",
+		"FAILED_IP_VALIDATION": "IP验证失败",
+		"ACCESS_POLICY_BLOCK": "访问被策略阻止",
 		"FORBIDDEN": "禁止",
 		"PROVIDER_VERIFY_FAILED": "提供商验证失败",
 		"UNAUTHORIZED": "未授权",

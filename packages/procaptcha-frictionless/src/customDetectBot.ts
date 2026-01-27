@@ -19,7 +19,6 @@ import { ExtensionLoader } from "@prosopo/procaptcha-common";
 import type {
 	BotDetectionFunction,
 	ProcaptchaClientConfigOutput,
-	RandomProvider,
 } from "@prosopo/types";
 import type { BotDetectionFunctionResult } from "@prosopo/types";
 import { DetectorLoader } from "./detectorLoader.js";
@@ -55,16 +54,17 @@ const customDetectBot: BotDetectionFunction = async (
 	restartFn: () => void,
 ): Promise<BotDetectionFunctionResult> => {
 	const ext = new (await ExtensionLoader(config.web2))();
-	const userAccount = await ext.getAccount(config);
 
 	const detect = await DetectorLoader();
-	const detectionResult = (await detect(
+	const detectionResult = await detect(
 		config.defaultEnvironment,
 		getRandomActiveProvider,
 		container,
 		restartFn,
-		userAccount.account.address,
-	)) as { token: string; provider?: RandomProvider; encryptHeadHash: string };
+		() => ext.getAccount(config),
+	);
+
+	const userAccount = detectionResult.userAccount;
 
 	if (!config.account.address) {
 		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
@@ -100,6 +100,13 @@ const customDetectBot: BotDetectionFunction = async (
 		status: captcha.status,
 		userAccount: userAccount,
 		error: captcha.error,
+		// Map specific trackers to generic behavioral collectors
+		behaviorCollector1: detectionResult.mouseTracker,
+		behaviorCollector2: detectionResult.touchTracker,
+		behaviorCollector3: detectionResult.clickTracker,
+		deviceCapability: detectionResult.hasTouchSupport,
+		encryptBehavioralData: detectionResult.encryptBehavioralData,
+		packBehavioralData: detectionResult.packBehavioralData,
 	};
 };
 

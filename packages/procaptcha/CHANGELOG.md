@@ -1,5 +1,86 @@
 # @prosopo/procaptcha
 
+## 2.9.28
+### Patch Changes
+
+  - @prosopo/datasets@3.0.56
+
+## 2.9.27
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 7543d17: mouse movements bot stopping
+- 3acc333: Release 3.3.0
+- Updated dependencies [a53526b]
+- Updated dependencies [f3cf586]
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [7543d17]
+- Updated dependencies [3acc333]
+  - @prosopo/util@3.2.5
+  - @prosopo/procaptcha-common@2.9.23
+  - @prosopo/util-crypto@13.5.29
+  - @prosopo/types@3.8.0
+  - @prosopo/datasets@3.0.55
+  - @prosopo/common@3.1.28
+  - @prosopo/api@3.1.41
+
+## 2.9.26
+### Patch Changes
+
+  - @prosopo/datasets@3.0.54
+
+## 2.9.25
+### Patch Changes
+
+  - @prosopo/datasets@3.0.53
+
+## 2.9.24
+### Patch Changes
+
+- Updated dependencies [141e462]
+  - @prosopo/types@3.7.2
+  - @prosopo/api@3.1.40
+  - @prosopo/datasets@3.0.52
+  - @prosopo/procaptcha-common@2.9.22
+
+## 2.9.23
+### Patch Changes
+
+- Updated dependencies [345b25b]
+  - @prosopo/types@3.7.1
+  - @prosopo/api@3.1.39
+  - @prosopo/datasets@3.0.51
+  - @prosopo/procaptcha-common@2.9.21
+
+## 2.9.22
+### Patch Changes
+
+- Updated dependencies [ce70a2b]
+- Updated dependencies [c2b940f]
+- Updated dependencies [f6b5094]
+  - @prosopo/types@3.7.0
+  - @prosopo/api@3.1.38
+  - @prosopo/common@3.1.27
+  - @prosopo/datasets@3.0.50
+  - @prosopo/procaptcha-common@2.9.20
+
+## 2.9.21
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/api@3.1.37
+  - @prosopo/common@3.1.26
+  - @prosopo/datasets@3.0.49
+  - @prosopo/procaptcha-common@2.9.19
+  - @prosopo/types@3.6.4
+  - @prosopo/util@3.2.4
+  - @prosopo/util-crypto@13.5.28
+
 ## 2.9.20
 ### Patch Changes
 

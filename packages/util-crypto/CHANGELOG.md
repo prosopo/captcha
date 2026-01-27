@@ -1,5 +1,18 @@
 # @prosopo/util-crypto
 
+## 13.5.29
+### Patch Changes
+
+- 3acc333: Add JWT issuance to keypairs
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+
+## 13.5.28
+### Patch Changes
+
+- 7d5eb3f: bump
+
 ## 13.5.27
 ### Patch Changes
 

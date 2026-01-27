@@ -1,5 +1,85 @@
 # @prosopo/api-express-router
 
+## 3.0.48
+### Patch Changes
+
+  - @prosopo/env@3.2.36
+
+## 3.0.47
+### Patch Changes
+
+- 3acc333: Add JWT issuance to keypairs
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 7543d17: mouse movements bot stopping
+- 3acc333: Release 3.3.0
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [7543d17]
+- Updated dependencies [fe9fe22]
+- Updated dependencies [3acc333]
+  - @prosopo/util-crypto@13.5.29
+  - @prosopo/types@3.8.0
+  - @prosopo/api-route@2.6.36
+  - @prosopo/common@3.1.28
+  - @prosopo/locale@3.1.28
+  - @prosopo/env@3.2.35
+
+## 3.0.46
+### Patch Changes
+
+  - @prosopo/env@3.2.34
+
+## 3.0.45
+### Patch Changes
+
+  - @prosopo/env@3.2.33
+
+## 3.0.44
+### Patch Changes
+
+  - @prosopo/env@3.2.32
+
+## 3.0.43
+### Patch Changes
+
+- Updated dependencies [141e462]
+  - @prosopo/types@3.7.2
+  - @prosopo/env@3.2.31
+
+## 3.0.42
+### Patch Changes
+
+- Updated dependencies [345b25b]
+  - @prosopo/types@3.7.1
+  - @prosopo/env@3.2.30
+
+## 3.0.41
+### Patch Changes
+
+- Updated dependencies [ce70a2b]
+- Updated dependencies [c2b940f]
+- Updated dependencies [f6b5094]
+- Updated dependencies [e01227b]
+  - @prosopo/types@3.7.0
+  - @prosopo/locale@3.1.27
+  - @prosopo/common@3.1.27
+  - @prosopo/env@3.2.29
+  - @prosopo/api-route@2.6.35
+
+## 3.0.40
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/api-route@2.6.34
+  - @prosopo/common@3.1.26
+  - @prosopo/env@3.2.28
+  - @prosopo/locale@3.1.26
+  - @prosopo/types@3.6.4
+
 ## 3.0.39
 ### Patch Changes
 

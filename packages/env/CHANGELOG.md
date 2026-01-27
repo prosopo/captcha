@@ -1,5 +1,91 @@
 # @prosopo/env
 
+## 3.2.36
+### Patch Changes
+
+  - @prosopo/database@3.6.7
+  - @prosopo/types-env@2.7.60
+
+## 3.2.35
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+- Updated dependencies [3acc333]
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [7543d17]
+- Updated dependencies [3acc333]
+  - @prosopo/database@3.6.6
+  - @prosopo/util-crypto@13.5.29
+  - @prosopo/keyring@2.9.0
+  - @prosopo/types@3.8.0
+  - @prosopo/types-env@2.7.59
+  - @prosopo/common@3.1.28
+
+## 3.2.34
+### Patch Changes
+
+  - @prosopo/database@3.6.5
+  - @prosopo/types-env@2.7.58
+
+## 3.2.33
+### Patch Changes
+
+  - @prosopo/database@3.6.4
+  - @prosopo/types-env@2.7.57
+
+## 3.2.32
+### Patch Changes
+
+- Updated dependencies [9ab5f11]
+  - @prosopo/database@3.6.3
+
+## 3.2.31
+### Patch Changes
+
+- Updated dependencies [141e462]
+  - @prosopo/types@3.7.2
+  - @prosopo/database@3.6.2
+  - @prosopo/keyring@2.8.43
+  - @prosopo/types-env@2.7.56
+
+## 3.2.30
+### Patch Changes
+
+- Updated dependencies [345b25b]
+  - @prosopo/database@3.6.1
+  - @prosopo/types@3.7.1
+  - @prosopo/types-env@2.7.55
+  - @prosopo/keyring@2.8.42
+
+## 3.2.29
+### Patch Changes
+
+- Updated dependencies [ce70a2b]
+- Updated dependencies [c2b940f]
+- Updated dependencies [f6b5094]
+  - @prosopo/types@3.7.0
+  - @prosopo/database@3.6.0
+  - @prosopo/common@3.1.27
+  - @prosopo/keyring@2.8.41
+  - @prosopo/types-env@2.7.54
+
+## 3.2.28
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/common@3.1.26
+  - @prosopo/database@3.5.6
+  - @prosopo/keyring@2.8.40
+  - @prosopo/types@3.6.4
+  - @prosopo/types-env@2.7.53
+  - @prosopo/util-crypto@13.5.28
+
 ## 3.2.27
 ### Patch Changes
 

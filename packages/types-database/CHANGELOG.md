@@ -1,5 +1,96 @@
 # @prosopo/types-database
 
+## 4.1.6
+### Patch Changes
+
+- Updated dependencies [ed87b6f]
+  - @prosopo/user-access-policy@3.6.1
+
+## 4.1.5
+### Patch Changes
+
+- 3acc333: Update pow record at verify
+- 3acc333: Fix type
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 7543d17: mouse movements bot stopping
+- fe9fe22: adding api returns
+- 3acc333: Release 3.3.0
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [17854a7]
+- Updated dependencies [7543d17]
+- Updated dependencies [fe9fe22]
+- Updated dependencies [3acc333]
+  - @prosopo/types@3.8.0
+  - @prosopo/user-access-policy@3.6.0
+  - @prosopo/common@3.1.28
+  - @prosopo/locale@3.1.28
+
+## 4.1.4
+### Patch Changes
+
+- Updated dependencies [378a896]
+- Updated dependencies [90fddd8]
+  - @prosopo/user-access-policy@3.5.37
+
+## 4.1.3
+### Patch Changes
+
+- Updated dependencies [7c475dc]
+  - @prosopo/user-access-policy@3.5.36
+
+## 4.1.2
+### Patch Changes
+
+- Updated dependencies [141e462]
+  - @prosopo/types@3.7.2
+  - @prosopo/user-access-policy@3.5.35
+
+## 4.1.1
+### Patch Changes
+
+- 345b25b: pow coord
+- Updated dependencies [345b25b]
+  - @prosopo/types@3.7.1
+  - @prosopo/user-access-policy@3.5.34
+
+## 4.1.0
+### Minor Changes
+
+- ce70a2b: Add context-aware entropy calculation for WebView and default contexts
+  
+  - Added ContextType enum to distinguish between WebView and default browser contexts
+  - Implemented context-specific entropy calculation and storage
+  - Created clientContextEntropy collection with automatic timestamp management
+  - Removed legacy clientEntropy table in favor of context-specific approach
+  - Added helper functions for context determination and threshold retrieval
+  - Included comprehensive unit tests for context validation logic
+
+### Patch Changes
+
+- c2b940f: Properly save context type settings
+- Updated dependencies [ce70a2b]
+- Updated dependencies [c2b940f]
+- Updated dependencies [f6b5094]
+- Updated dependencies [e01227b]
+  - @prosopo/types@3.7.0
+  - @prosopo/locale@3.1.27
+  - @prosopo/common@3.1.27
+  - @prosopo/user-access-policy@3.5.33
+
+## 4.0.6
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/common@3.1.26
+  - @prosopo/locale@3.1.26
+  - @prosopo/types@3.6.4
+  - @prosopo/user-access-policy@3.5.32
+
 ## 4.0.5
 ### Patch Changes
 

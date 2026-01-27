@@ -17,6 +17,8 @@
 		"MISSING_QUERY_PARAMETERS": "Brakujące parametry zapytania",
 		"MISSING_AUTHORIZATION_HEADER": "Brak nagłówka autoryzacji",
 		"TIMESTAMP_TOO_OLD": "Zbyt stary znacznik czasu",
+		"FAILED_IP_VALIDATION": "Walidacja IP nie powiodła się",
+		"ACCESS_POLICY_BLOCK": "Dostęp zablokowany przez zasady",
 		"FORBIDDEN": "Zabronione",
 		"PROVIDER_VERIFY_FAILED": "Weryfikacja dostawcy nie powiodła się",
 		"UNAUTHORIZED": "Nieautoryzowany",

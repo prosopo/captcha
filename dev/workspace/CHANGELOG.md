@@ -1,5 +1,17 @@
 # @prosopo/workspace
 
+## 3.1.20
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+
+## 3.1.19
+### Patch Changes
+
+- 7d5eb3f: bump
+
 ## 3.1.18
 ### Patch Changes
 

@@ -32,3 +32,4 @@ export { getIPAddress } from "./ip.js";
 export * from "./fetchWithEtag.js";
 export * from "./binaryString.js";
 export * from "./demoKeys.js";
+export * from "./date.js";

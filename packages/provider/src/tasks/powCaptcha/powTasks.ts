@@ -26,9 +26,19 @@ import {
 	type PoWChallengeId,
 	type RequestHeaders,
 } from "@prosopo/types";
-import type { IProviderDatabase } from "@prosopo/types-database";
+import type {
+	BehavioralDataPacked,
+	IProviderDatabase,
+	PoWCaptchaRecord,
+} from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import { at, verifyRecency } from "@prosopo/util";
+import {
+	type AccessPolicy,
+	AccessPolicyType,
+	type AccessRulesStorage,
+} from "@prosopo/user-access-policy";
+import { at, extractData, verifyRecency } from "@prosopo/util";
+import { getRequestUserScope } from "../../api/blacklistRequestInspector.js";
 import {
 	getCompositeIpAddress,
 	getIpAddressFromComposite,
@@ -39,8 +49,22 @@ import {
 	shouldBypassForDemoKey,
 } from "../../utils/demoKeys.js";
 import { CaptchaManager } from "../captchaManager.js";
+import type { BehavioralDataResult } from "../detection/decodeBehavior.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
+
+/**
+ * Finds a hard block policy from access policies.
+ * A hard block is a Block policy without a captchaType specified.
+ * Policies with captchaType are for captcha type selection, not hard blocking.
+ */
+const findHardBlockPolicy = (
+	accessPolicies: AccessPolicy[],
+): AccessPolicy | undefined => {
+	return accessPolicies.find(
+		(policy) => policy.type === AccessPolicyType.Block && !policy.captchaType,
+	);
+};
 
 const DEFAULT_POW_DIFFICULTY = 4;
 
@@ -55,6 +79,53 @@ export class PowCaptchaManager extends CaptchaManager {
 	) {
 		super(db, pair, config, logger);
 		this.POW_SEPARATOR = POW_SEPARATOR;
+	}
+
+	/**
+	 * Checks if a user should be hard blocked based on access policies
+	 * Only checks for Block policies without captchaType
+	 *
+	 * @returns The blocking policy if user should be blocked, undefined otherwise
+	 */
+	private async checkForHardBlock(
+		userAccessRulesStorage: AccessRulesStorage,
+		challengeRecord: PoWCaptchaRecord,
+		userAccount: string,
+		headers: RequestHeaders,
+		coords?: [number, number][][],
+	): Promise<AccessPolicy | undefined> {
+		// Get headHash from session record if available
+		let headHash: string | undefined;
+		if (challengeRecord.sessionId) {
+			const sessionRecord = await this.db.getSessionRecordBySessionId(
+				challengeRecord.sessionId,
+			);
+			headHash = sessionRecord?.decryptedHeadHash;
+		}
+
+		// Serialize coords to string for querying
+		const coordsString = coords ? JSON.stringify(coords) : undefined;
+
+		const ipAddressRecord = getIpAddressFromComposite(
+			challengeRecord.ipAddress,
+		);
+
+		const userScope = getRequestUserScope(
+			headers,
+			challengeRecord.ja4,
+			ipAddressRecord.address,
+			userAccount,
+			headHash,
+			coordsString,
+		);
+
+		const accessPolicies = await this.getPrioritisedAccessPolicies(
+			userAccessRulesStorage,
+			challengeRecord.dappAccount,
+			userScope,
+		);
+
+		return findHardBlockPolicy(accessPolicies);
 	}
 
 	/**
@@ -99,6 +170,7 @@ export class PowCaptchaManager extends CaptchaManager {
 	 * @param {string} userTimestampSignature
 	 * @param ipAddress
 	 * @param headers
+	 * @param salt
 	 */
 	async verifyPowCaptchaSolution(
 		challenge: PoWChallengeId,
@@ -108,6 +180,8 @@ export class PowCaptchaManager extends CaptchaManager {
 		userTimestampSignature: string,
 		ipAddress: IPAddress,
 		headers: RequestHeaders,
+		behavioralData?: string,
+		salt?: string,
 	): Promise<boolean> {
 		// Extract dapp from challenge for demo key check
 		const challengeSplit = challenge.split(this.POW_SEPARATOR);
@@ -165,6 +239,24 @@ export class PowCaptchaManager extends CaptchaManager {
 
 		const difficulty = challengeRecord.difficulty;
 
+		// Extract coordinates from salt if provided
+		let coords: [number, number][][] | undefined;
+		if (salt) {
+			try {
+				const extractedData = extractData(salt);
+				// Convert extracted data to coordinate pairs
+				if (extractedData.length >= 2) {
+					coords = [[[extractedData[0], extractedData[1]] as [number, number]]];
+				}
+			} catch (error) {
+				this.logger.warn(() => ({
+					msg: "Failed to extract coordinates from salt",
+					error,
+					salt,
+				}));
+			}
+		}
+
 		if (!verifyRecency(challenge, timeout)) {
 			await this.db.updatePowCaptchaRecordResult(
 				challenge,
@@ -175,6 +267,7 @@ export class PowCaptchaManager extends CaptchaManager {
 				false, //serverchecked
 				true, // usersubmitted
 				userTimestampSignature,
+				coords,
 			);
 			return false;
 		}
@@ -195,7 +288,65 @@ export class PowCaptchaManager extends CaptchaManager {
 			false,
 			true,
 			userTimestampSignature,
+			coords,
 		);
+
+		// Process behavioral data if provided
+		if (behavioralData) {
+			try {
+				// Get decryption keys: detector keys from DB first, then env var as fallback
+				const decryptKeys = [
+					// Process DB keys first, then env var key last as env key will likely be invalid
+					...(await this.getDetectorKeys()),
+					process.env.BOT_DECRYPTION_KEY,
+				];
+
+				// Decrypt the behavioral data (returns unpacked format)
+				const decryptedData = await this.decryptBehavioralData(
+					behavioralData,
+					decryptKeys,
+				);
+
+				if (decryptedData) {
+					const dappAccount = at(challengeSplit, 2);
+					// Log behavioral analytics using unpacked data counts
+					this.logger?.info(() => ({
+						msg: "Behavioral analysis completed",
+						data: {
+							userAccount,
+							dappAccount,
+							challenge,
+							mouseEventsCount: decryptedData.collector1?.length || 0,
+							touchEventsCount: decryptedData.collector2?.length || 0,
+							clickEventsCount: decryptedData.collector3?.length || 0,
+							deviceCapability: decryptedData.deviceCapability,
+							captchaResult: correct ? "passed" : "failed",
+						},
+					}));
+
+					// Convert to packed format for storage
+					const packedData: BehavioralDataPacked = {
+						c1: decryptedData.collector1 || [],
+						c2: decryptedData.collector2 || [],
+						c3: decryptedData.collector3 || [],
+						d: decryptedData.deviceCapability,
+					};
+
+					// Store the packed data to database
+					await this.db.updatePowCaptchaRecord(challenge, {
+						behavioralDataPacked: packedData,
+						deviceCapability: decryptedData.deviceCapability,
+					});
+				}
+			} catch (error) {
+				this.logger?.error(() => ({
+					msg: "Failed to process behavioral data",
+					err: error,
+				}));
+				// Don't fail the captcha if behavioral analysis fails
+			}
+		}
+
 		return correct;
 	}
 
@@ -206,7 +357,9 @@ export class PowCaptchaManager extends CaptchaManager {
 	 * @param {string} dappAccount - the dapp that is requesting the captcha
 	 * @param {string} challenge - the starting string for the PoW challenge
 	 * @param {number} timeout - the time in milliseconds since the Provider was selected to provide the PoW captcha
-	 * @param ip
+	 * @param env - provider environment
+	 * @param ip - optional IP address for validation
+	 * @param userAccessRulesStorage - storage for querying user access policies
 	 */
 	async serverVerifyPowCaptchaSolution(
 		dappAccount: string,
@@ -214,6 +367,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		timeout: number,
 		env: ProviderEnvironment,
 		ip?: string,
+		userAccessRulesStorage?: AccessRulesStorage,
 	): Promise<{ verified: boolean; score?: number }> {
 		const notVerifiedResponse = { verified: false };
 
@@ -262,7 +416,50 @@ export class PowCaptchaManager extends CaptchaManager {
 
 		const recent = verifyRecency(challenge, timeout);
 		if (!recent) {
+			await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
+				result: {
+					status: CaptchaStatus.disapproved,
+					reason: "API.TIMESTAMP_TOO_OLD",
+				},
+			});
 			return notVerifiedResponse;
+		}
+
+		// Check user access policies for hard blocks
+		if (userAccessRulesStorage) {
+			try {
+				const blockPolicy = await this.checkForHardBlock(
+					userAccessRulesStorage,
+					challengeRecord,
+					challengeRecord.userAccount,
+					challengeRecord.headers,
+					challengeRecord.coords,
+				);
+
+				if (blockPolicy) {
+					this.logger.info(() => ({
+						msg: "User blocked by access policy in server PoW verification",
+						data: {
+							challenge,
+							userAccount: challengeRecord.userAccount,
+							dappAccount,
+							policy: blockPolicy,
+						},
+					}));
+					await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
+						result: {
+							status: CaptchaStatus.disapproved,
+							reason: "API.ACCESS_POLICY_BLOCK",
+						},
+					});
+					return notVerifiedResponse;
+				}
+			} catch (error) {
+				this.logger.warn(() => ({
+					msg: "Failed to check user access policies in server PoW verification",
+					error,
+				}));
+			}
 		}
 
 		if (ip) {
@@ -297,6 +494,12 @@ export class PowCaptchaManager extends CaptchaManager {
 						distanceKm: ipValidation.distanceKm,
 					},
 				}));
+				await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
+					result: {
+						status: CaptchaStatus.disapproved,
+						reason: "API.FAILED_IP_VALIDATION",
+					},
+				});
 				return notVerifiedResponse;
 			}
 		}
@@ -318,5 +521,77 @@ export class PowCaptchaManager extends CaptchaManager {
 		}
 
 		return { verified: true, ...(score ? { score } : {}) };
+	}
+
+	/**
+	 * Decrypts behavioral data
+	 * @param encryptedData - The encrypted behavioral data
+	 * @param decryptKeys - Array of possible decryption keys to try
+	 * @returns Decrypted behavioral data in unpacked format, or null if decryption fails
+	 */
+	private async decryptBehavioralData(
+		encryptedData: string,
+		decryptKeys: (string | undefined)[],
+	): Promise<BehavioralDataResult | null> {
+		const decryptBehavioralData = (
+			await import("../detection/decodeBehavior.js")
+		).default;
+
+		const validKeys = decryptKeys.filter((k) => k);
+
+		if (validKeys.length === 0) {
+			this.logger?.error(() => ({
+				msg: "No decryption keys provided for behavioral data",
+			}));
+			return null;
+		}
+
+		// Try each key until one succeeds
+		for (const [keyIndex, key] of validKeys.entries()) {
+			try {
+				this.logger?.debug(() => ({
+					msg: "Attempting to decrypt behavioral data",
+					data: {
+						keyIndex: keyIndex + 1,
+						totalKeys: validKeys.length,
+					},
+				}));
+
+				// Decrypt behavioral data - returns unpacked format: {collector1, collector2, collector3, deviceCapability, timestamp}
+				const result = await decryptBehavioralData(encryptedData, key);
+
+				this.logger?.info(() => ({
+					msg: "Behavioral data decrypted successfully",
+					data: {
+						keyIndex: keyIndex + 1,
+						c1Length: result.collector1?.length || 0,
+						c2Length: result.collector2?.length || 0,
+						c3Length: result.collector3?.length || 0,
+						deviceCapability: result.deviceCapability,
+					},
+				}));
+
+				return result;
+			} catch (error) {
+				this.logger?.debug(() => ({
+					msg: "Failed to decrypt with key, trying next",
+					data: {
+						keyIndex: keyIndex + 1,
+						totalKeys: validKeys.length,
+						err: error,
+					},
+				}));
+				// Continue to next key
+			}
+		}
+
+		// All keys failed
+		this.logger?.error(() => ({
+			msg: "Failed to decrypt behavioral data with all available keys",
+			data: {
+				totalKeysAttempted: validKeys.length,
+			},
+		}));
+		return null;
 	}
 }

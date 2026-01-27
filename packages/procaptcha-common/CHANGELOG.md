@@ -1,5 +1,60 @@
 # @prosopo/procaptcha-common
 
+## 2.9.23
+### Patch Changes
+
+- f3cf586: fix/widget-parent-detection
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [6a4d57d]
+- Updated dependencies [7543d17]
+- Updated dependencies [3acc333]
+  - @prosopo/types@3.8.0
+  - @prosopo/widget-skeleton@2.7.13
+  - @prosopo/load-balancer@2.8.17
+  - @prosopo/account@2.8.0
+
+## 2.9.22
+### Patch Changes
+
+- Updated dependencies [141e462]
+  - @prosopo/types@3.7.2
+  - @prosopo/account@2.7.46
+  - @prosopo/load-balancer@2.8.16
+
+## 2.9.21
+### Patch Changes
+
+- Updated dependencies [345b25b]
+  - @prosopo/types@3.7.1
+  - @prosopo/account@2.7.45
+  - @prosopo/load-balancer@2.8.15
+
+## 2.9.20
+### Patch Changes
+
+- Updated dependencies [ce70a2b]
+- Updated dependencies [c2b940f]
+- Updated dependencies [f6b5094]
+  - @prosopo/types@3.7.0
+  - @prosopo/account@2.7.44
+  - @prosopo/load-balancer@2.8.14
+
+## 2.9.19
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/account@2.7.43
+  - @prosopo/load-balancer@2.8.13
+  - @prosopo/types@3.6.4
+  - @prosopo/widget-skeleton@2.7.12
+
 ## 2.9.18
 ### Patch Changes
 

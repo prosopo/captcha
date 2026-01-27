@@ -96,6 +96,8 @@ describe("transformRule", () => {
 		ja4Hash: "js4Hash",
 		clientId: "client",
 		userId: "user",
+		headHash: "headHash",
+		coords: "[[1,2]]",
 	} satisfies AccessRule;
 
 	it("should transform access rule record into rule", () => {

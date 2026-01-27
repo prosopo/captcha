@@ -44,6 +44,8 @@ export type UserAttributes = {
 	ja4Hash?: string;
 	headersHash?: string;
 	userAgentHash?: string;
+	headHash?: string;
+	coords?: string;
 };
 
 export type UserScope = UserAttributes & UserIp;

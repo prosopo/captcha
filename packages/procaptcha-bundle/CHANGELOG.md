@@ -1,5 +1,125 @@
 # @prosopo/procaptcha-bundle
 
+## 3.3.2
+### Patch Changes
+
+  - @prosopo/procaptcha-react@2.9.28
+  - @prosopo/procaptcha-frictionless@2.8.33
+
+## 3.3.1
+### Patch Changes
+
+  - @prosopo/procaptcha-frictionless@2.8.32
+
+## 3.3.0
+### Minor Changes
+
+- 1ee3d80: More API fixes
+- 6a4d57d: Move account creation into worker
+
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+- Updated dependencies [a53526b]
+- Updated dependencies [f3cf586]
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [7543d17]
+- Updated dependencies [fe9fe22]
+- Updated dependencies [3acc333]
+  - @prosopo/procaptcha-pow@2.8.31
+  - @prosopo/util@3.2.5
+  - @prosopo/procaptcha-common@2.9.23
+  - @prosopo/types@3.8.0
+  - @prosopo/procaptcha-frictionless@2.8.31
+  - @prosopo/procaptcha-react@2.9.27
+  - @prosopo/widget-skeleton@2.7.13
+  - @prosopo/dotenv@3.0.33
+  - @prosopo/locale@3.1.28
+
+## 3.2.18
+### Patch Changes
+
+  - @prosopo/procaptcha-react@2.9.26
+  - @prosopo/procaptcha-frictionless@2.8.30
+
+## 3.2.17
+### Patch Changes
+
+  - @prosopo/procaptcha-frictionless@2.8.29
+
+## 3.2.16
+### Patch Changes
+
+  - @prosopo/procaptcha-react@2.9.25
+  - @prosopo/procaptcha-frictionless@2.8.28
+
+## 3.2.15
+### Patch Changes
+
+- caf53e2: Async user creation
+- Updated dependencies [caf53e2]
+  - @prosopo/procaptcha-frictionless@2.8.27
+
+## 3.2.14
+### Patch Changes
+
+  - @prosopo/procaptcha-frictionless@2.8.26
+
+## 3.2.13
+### Patch Changes
+
+- Updated dependencies [141e462]
+  - @prosopo/procaptcha-pow@2.8.30
+  - @prosopo/types@3.7.2
+  - @prosopo/procaptcha-common@2.9.22
+  - @prosopo/procaptcha-frictionless@2.8.25
+  - @prosopo/procaptcha-react@2.9.24
+
+## 3.2.12
+### Patch Changes
+
+- Updated dependencies [345b25b]
+  - @prosopo/procaptcha-pow@2.8.29
+  - @prosopo/types@3.7.1
+  - @prosopo/procaptcha-frictionless@2.8.24
+  - @prosopo/procaptcha-common@2.9.21
+  - @prosopo/procaptcha-react@2.9.23
+
+## 3.2.11
+### Patch Changes
+
+- Updated dependencies [ce70a2b]
+- Updated dependencies [c2b940f]
+- Updated dependencies [f6b5094]
+- Updated dependencies [e01227b]
+  - @prosopo/types@3.7.0
+  - @prosopo/locale@3.1.27
+  - @prosopo/procaptcha-common@2.9.20
+  - @prosopo/procaptcha-frictionless@2.8.23
+  - @prosopo/procaptcha-pow@2.8.28
+  - @prosopo/procaptcha-react@2.9.22
+  - @prosopo/dotenv@3.0.32
+
+## 3.2.10
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/dotenv@3.0.31
+  - @prosopo/locale@3.1.26
+  - @prosopo/procaptcha-common@2.9.19
+  - @prosopo/procaptcha-frictionless@2.8.22
+  - @prosopo/procaptcha-pow@2.8.27
+  - @prosopo/procaptcha-react@2.9.21
+  - @prosopo/types@3.6.4
+  - @prosopo/util@3.2.4
+  - @prosopo/widget-skeleton@2.7.12
+
 ## 3.2.9
 ### Patch Changes
 

@@ -58,6 +58,7 @@ export type ApiJsonError = {
 	message: string;
 	key?: string;
 	code: number;
+	data?: Record<string, unknown>;
 };
 
 export const ApiPrefix = "/v1/prosopo" as const;
@@ -355,9 +356,11 @@ export const SubmitPowCaptchaSolutionBody = object({
 	[ApiParams.verifiedTimeout]: number()
 		.optional()
 		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
+	[ApiParams.behavioralData]: string().optional(),
+	[ApiParams.salt]: string().optional(),
 });
 
-export type SubmitPowCaptchaSolutionBodyType = zInfer<
+export type SubmitPowCaptchaSolutionBodyType = input<
 	typeof SubmitPowCaptchaSolutionBody
 >;
 

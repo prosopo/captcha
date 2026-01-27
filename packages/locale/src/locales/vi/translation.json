@@ -17,6 +17,8 @@
 		"MISSING_QUERY_PARAMETERS": "Thiếu tham số truy vấn",
 		"MISSING_AUTHORIZATION_HEADER": "Thiếu tiêu đề ủy quyền",
 		"TIMESTAMP_TOO_OLD": "Mốc thời gian quá cũ",
+		"FAILED_IP_VALIDATION": "Xác thực IP thất bại",
+		"ACCESS_POLICY_BLOCK": "Truy cập bị chặn bởi chính sách",
 		"FORBIDDEN": "Bị cấm",
 		"PROVIDER_VERIFY_FAILED": "Xác thực nhà cung cấp không thành công",
 		"UNAUTHORIZED": "Không được phép",

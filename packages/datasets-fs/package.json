@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/datasets-fs",
-	"version": "3.0.38",
+	"version": "3.0.43",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
@@ -10,7 +10,8 @@
 	},
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
+		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --project tsconfig.types.json",
@@ -29,11 +30,11 @@
 	},
 	"dependencies": {
 		"@noble/hashes": "1.8.0",
-		"@prosopo/common": "3.1.25",
-		"@prosopo/types": "3.6.3",
-		"@prosopo/util": "3.2.3",
-		"@prosopo/util-crypto": "13.5.27",
-		"@prosopo/workspace": "3.1.18",
+		"@prosopo/common": "3.1.28",
+		"@prosopo/types": "3.8.0",
+		"@prosopo/util": "3.2.5",
+		"@prosopo/util-crypto": "13.5.29",
+		"@prosopo/workspace": "3.1.20",
 		"bcrypt": "6.0.0",
 		"cli-progress": "3.12.0",
 		"sharp": "0.33.5",
@@ -41,7 +42,7 @@
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.1.25",
+		"@prosopo/config": "3.3.0",
 		"@types/bcrypt": "5.0.2",
 		"@types/cli-progress": "3.11.6",
 		"@types/node": "22.10.2",

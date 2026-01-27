@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/server",
-	"version": "2.9.47",
+	"version": "2.9.52",
 	"description": "NodeJS package for server side communication with the prosopo captcha client",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -18,7 +18,8 @@
 	},
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
+		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --project tsconfig.types.json"
@@ -35,16 +36,16 @@
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"sideEffects": false,
 	"dependencies": {
-		"@prosopo/api": "3.1.36",
-		"@prosopo/common": "3.1.25",
-		"@prosopo/keyring": "2.8.39",
-		"@prosopo/load-balancer": "2.8.12",
-		"@prosopo/types": "3.6.3",
-		"@prosopo/util": "3.2.3",
+		"@prosopo/api": "3.1.41",
+		"@prosopo/common": "3.1.28",
+		"@prosopo/keyring": "2.9.0",
+		"@prosopo/load-balancer": "2.8.17",
+		"@prosopo/types": "3.8.0",
+		"@prosopo/util": "3.2.5",
 		"i18next": "24.1.0"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.1.25",
+		"@prosopo/config": "3.3.0",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "3.2.4",
 		"concurrently": "9.0.1",

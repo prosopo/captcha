@@ -1,10 +1,11 @@
 {
 	"name": "@prosopo/config",
-	"version": "3.1.25",
+	"version": "3.3.0",
 	"description": "Prosopo config library",
 	"type": "module",
 	"scripts": {
-		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
+		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
@@ -28,7 +29,6 @@
 		"node-polyfill-webpack-plugin": "4.1.0",
 		"rollup": "4.52.5",
 		"rollup-plugin-import-css": "4.1.1",
-		"rollup-plugin-visualizer": "6.0.5",
 		"terser-webpack-plugin": "5.3.14",
 		"vite-plugin-no-bundle": "4.0.0",
 		"vite-tsconfig-paths": "5.1.4"

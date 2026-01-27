@@ -67,7 +67,16 @@ export default (env: ProviderEnvironment) =>
 			);
 		}
 
-		const { challenge, signature, nonce, verifiedTimeout, dapp, user } = parsed;
+		const {
+			challenge,
+			signature,
+			nonce,
+			verifiedTimeout,
+			dapp,
+			user,
+			behavioralData,
+			salt,
+		} = parsed;
 
 		validateSiteKey(dapp);
 		validateAddr(user);
@@ -125,6 +134,8 @@ export default (env: ProviderEnvironment) =>
 				signature.user.timestamp,
 				getIPAddress(req.ip || ""),
 				flatten(req.headers),
+				behavioralData,
+				salt,
 			);
 			const response: PowCaptchaSolutionResponse = { status: "ok", verified };
 			return res.json(response);

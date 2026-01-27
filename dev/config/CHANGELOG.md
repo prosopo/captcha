@@ -1,5 +1,37 @@
 # @prosopo/config
 
+## 3.3.0
+### Minor Changes
+
+- 6a4d57d: Move account creation into worker
+
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- fa98e0a: make vitest run in shuffle mode
+- 3acc333: Release 3.3.0
+
+## 3.2.1
+### Patch Changes
+
+- 55fa825: Reinstate npm ls
+
+## 3.2.0
+### Minor Changes
+
+- 30a2102: Remove problematic getDependencies step
+
+## 3.1.27
+### Patch Changes
+
+- e01227b: add turbo
+
+## 3.1.26
+### Patch Changes
+
+- 7d5eb3f: bump
+
 ## 3.1.25
 ### Patch Changes
 

@@ -1,5 +1,17 @@
 # @prosopo/gh-actions
 
+## 2.6.29
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+
+## 2.6.28
+### Patch Changes
+
+- 7d5eb3f: bump
+
 ## 2.6.27
 ### Patch Changes
 

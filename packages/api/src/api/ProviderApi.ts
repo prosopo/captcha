@@ -156,6 +156,8 @@ export default class ProviderApi
 		nonce: number,
 		userTimestampSignature: string,
 		timeout?: number,
+		behavioralData?: string,
+		salt?: string,
 	): Promise<PowCaptchaSolutionResponse> {
 		const body = SubmitPowCaptchaSolutionBody.parse({
 			[ApiParams.challenge]: challenge.challenge,
@@ -172,6 +174,8 @@ export default class ProviderApi
 					[ApiParams.timestamp]: userTimestampSignature,
 				},
 			},
+			...(behavioralData && { [ApiParams.behavioralData]: behavioralData }),
+			...(salt && { [ApiParams.salt]: salt }),
 		});
 		return this.post(ClientApiPaths.SubmitPowCaptchaSolution, body, {
 			headers: {
@@ -257,23 +261,20 @@ export default class ProviderApi
 		siteKey: string,
 		tier: Tier,
 		settings: IUserSettings,
-		timestamp: string,
-		signature: string,
+		jwt: string,
 	): Promise<ApiResponse> {
 		const body: RegisterSitekeyBodyTypeOutput = { siteKey, tier, settings };
 		return this.post(AdminApiPaths.SiteKeyRegister, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
-				timestamp,
-				signature,
+				Authorization: `Bearer ${jwt}`,
 			},
 		});
 	}
 
 	public updateDetectorKey(
 		detectorKey: string,
-		timestamp: string,
-		signature: string,
+		jwt: string,
 	): Promise<UpdateDetectorKeyResponse> {
 		return this.post(
 			AdminApiPaths.UpdateDetectorKey,
@@ -281,8 +282,7 @@ export default class ProviderApi
 			{
 				headers: {
 					"Prosopo-Site-Key": this.account,
-					timestamp,
-					signature,
+					Authorization: `Bearer ${jwt}`,
 				},
 			},
 		);
@@ -290,8 +290,7 @@ export default class ProviderApi
 
 	public removeDetectorKey(
 		detectorKey: string,
-		timestamp: string,
-		signature: string,
+		jwt: string,
 		expirationInSeconds?: number,
 	): Promise<ApiResponse> {
 		return this.post(
@@ -303,8 +302,7 @@ export default class ProviderApi
 			{
 				headers: {
 					"Prosopo-Site-Key": this.account,
-					timestamp,
-					signature,
+					Authorization: `Bearer ${jwt}`,
 				},
 			},
 		);

@@ -284,6 +284,9 @@ export function Manager(
 					type: "bytes",
 				});
 
+				// TODO: Add behavioral data collection for image captcha when API supports it
+				// (Currently only PoW captcha submission accepts behavioral data)
+
 				// send the commitment to the provider
 				const submission: TCaptchaSubmitResult =
 					await captchaApi.submitCaptchaSolution(

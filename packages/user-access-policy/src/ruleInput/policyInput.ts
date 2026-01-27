@@ -37,6 +37,15 @@ export const accessPolicyInput = z.object({
 	frictionlessScore: z.coerce.number().optional(),
 } satisfies AllKeys<AccessPolicy>) satisfies ZodType<AccessPolicy>;
 
+// Sanitize block policies by removing captchaType and solvedImagesCount
+export const sanitizeAccessPolicy = (policy: AccessPolicy): AccessPolicy => {
+	if (policy.type === AccessPolicyType.Block) {
+		const { captchaType, solvedImagesCount, ...blockPolicy } = policy;
+		return blockPolicy;
+	}
+	return policy;
+};
+
 export const policyScopeInput = z.object({
 	clientId: z.coerce.string().optional(),
 } satisfies AllKeys<PolicyScope>) satisfies ZodType<PolicyScope>;

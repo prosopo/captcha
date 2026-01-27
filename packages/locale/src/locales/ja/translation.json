@@ -316,6 +316,8 @@
 		"MISSING_QUERY_PARAMETERS": "クエリパラメータが見つかりません",
 		"MISSING_AUTHORIZATION_HEADER": "認証ヘッダーが見つかりません",
 		"TIMESTAMP_TOO_OLD": "タイムスタンプが古すぎます",
+		"FAILED_IP_VALIDATION": "IP検証に失敗しました",
+		"ACCESS_POLICY_BLOCK": "ポリシーによりアクセスがブロックされました",
 		"FORBIDDEN": "禁止されています",
 		"PROVIDER_VERIFY_FAILED": "プロバイダーの検証に失敗しました",
 		"UNAUTHORIZED": "未承認",

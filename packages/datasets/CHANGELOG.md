@@ -1,5 +1,77 @@
 # @prosopo/datasets
 
+## 3.0.56
+### Patch Changes
+
+  - @prosopo/types-database@4.1.6
+
+## 3.0.55
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+- Updated dependencies [a53526b]
+- Updated dependencies [3acc333]
+- Updated dependencies [3acc333]
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [7543d17]
+- Updated dependencies [fe9fe22]
+- Updated dependencies [3acc333]
+  - @prosopo/util@3.2.5
+  - @prosopo/types-database@4.1.5
+  - @prosopo/util-crypto@13.5.29
+  - @prosopo/types@3.8.0
+  - @prosopo/common@3.1.28
+
+## 3.0.54
+### Patch Changes
+
+  - @prosopo/types-database@4.1.4
+
+## 3.0.53
+### Patch Changes
+
+  - @prosopo/types-database@4.1.3
+
+## 3.0.52
+### Patch Changes
+
+- Updated dependencies [141e462]
+  - @prosopo/types@3.7.2
+  - @prosopo/types-database@4.1.2
+
+## 3.0.51
+### Patch Changes
+
+- Updated dependencies [345b25b]
+  - @prosopo/types-database@4.1.1
+  - @prosopo/types@3.7.1
+
+## 3.0.50
+### Patch Changes
+
+- Updated dependencies [ce70a2b]
+- Updated dependencies [c2b940f]
+- Updated dependencies [f6b5094]
+  - @prosopo/types@3.7.0
+  - @prosopo/types-database@4.1.0
+  - @prosopo/common@3.1.27
+
+## 3.0.49
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/common@3.1.26
+  - @prosopo/types@3.6.4
+  - @prosopo/types-database@4.0.6
+  - @prosopo/util@3.2.4
+  - @prosopo/util-crypto@13.5.28
+
 ## 3.0.48
 ### Patch Changes
 

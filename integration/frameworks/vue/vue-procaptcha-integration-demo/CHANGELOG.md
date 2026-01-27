@@ -1,5 +1,40 @@
 # @prosopo/vue-procaptcha-integration-demo
 
+## 1.1.44
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+- Updated dependencies [0a38892]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [3acc333]
+  - @prosopo/vue-procaptcha-wrapper@1.1.44
+
+## 1.1.43
+### Patch Changes
+
+  - @prosopo/vue-procaptcha-wrapper@1.1.43
+
+## 1.1.42
+### Patch Changes
+
+  - @prosopo/vue-procaptcha-wrapper@1.1.42
+
+## 1.1.41
+### Patch Changes
+
+- e01227b: add turbo
+- Updated dependencies [e01227b]
+  - @prosopo/vue-procaptcha-wrapper@1.1.41
+
+## 1.1.40
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/vue-procaptcha-wrapper@1.1.40
+
 ## 1.1.39
 ### Patch Changes
 

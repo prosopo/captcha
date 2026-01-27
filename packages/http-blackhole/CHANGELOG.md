@@ -1,5 +1,17 @@
 # @prosopo/http-blackhole
 
+## 1.0.26
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+
+## 1.0.25
+### Patch Changes
+
+- 7d5eb3f: bump
+
 ## 1.0.24
 ### Patch Changes
 

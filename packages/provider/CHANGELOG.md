@@ -1,5 +1,207 @@
 # @prosopo/provider
 
+## 3.15.2
+### Patch Changes
+
+- Updated dependencies [ed87b6f]
+  - @prosopo/user-access-policy@3.6.1
+  - @prosopo/database@3.6.7
+  - @prosopo/types-database@4.1.6
+  - @prosopo/env@3.2.36
+  - @prosopo/datasets@3.0.56
+  - @prosopo/types-env@2.7.60
+  - @prosopo/api-express-router@3.0.48
+
+## 3.15.1
+### Patch Changes
+
+- 15254a3: Key cycle
+
+## 3.15.0
+### Minor Changes
+
+- 6a4d57d: Move account creation into worker
+
+### Patch Changes
+
+- a53526b: enhance/pow-client-solution
+- 3acc333: Update pow record at verify
+- 3acc333: Add JWT issuance to keypairs
+- 0a38892: feat/cross-os-testing
+- 3acc333: ip parsing
+- a8faa9a: bump license year
+- 7543d17: mouse movements bot stopping
+- fe9fe22: adding api returns
+- 3acc333: Release 3.3.0
+- 4ac7ef0: Fixing provider side typing of collectors
+- Updated dependencies [a53526b]
+- Updated dependencies [3acc333]
+- Updated dependencies [3acc333]
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [17854a7]
+- Updated dependencies [7543d17]
+- Updated dependencies [fe9fe22]
+- Updated dependencies [3acc333]
+  - @prosopo/util@3.2.5
+  - @prosopo/types-database@4.1.5
+  - @prosopo/database@3.6.6
+  - @prosopo/api-express-router@3.0.47
+  - @prosopo/util-crypto@13.5.29
+  - @prosopo/keyring@2.9.0
+  - @prosopo/types@3.8.0
+  - @prosopo/user-access-policy@3.6.0
+  - @prosopo/load-balancer@2.8.17
+  - @prosopo/api-route@2.6.36
+  - @prosopo/types-env@2.7.59
+  - @prosopo/datasets@3.0.55
+  - @prosopo/common@3.1.28
+  - @prosopo/locale@3.1.28
+  - @prosopo/api@3.1.41
+  - @prosopo/env@3.2.35
+
+## 3.14.7
+### Patch Changes
+
+- 41f8a82: Export userscope fn
+- Updated dependencies [378a896]
+- Updated dependencies [90fddd8]
+  - @prosopo/user-access-policy@3.5.37
+  - @prosopo/database@3.6.5
+  - @prosopo/types-database@4.1.4
+  - @prosopo/env@3.2.34
+  - @prosopo/datasets@3.0.54
+  - @prosopo/types-env@2.7.58
+  - @prosopo/api-express-router@3.0.46
+
+## 3.14.6
+### Patch Changes
+
+- c6faa77: Fix
+
+## 3.14.5
+### Patch Changes
+
+- 7c475dc: Add headHash and coords fields to user access policies, and implement user access policy checks in server-side PoW verification
+- Updated dependencies [7c475dc]
+  - @prosopo/user-access-policy@3.5.36
+  - @prosopo/database@3.6.4
+  - @prosopo/types-database@4.1.3
+  - @prosopo/env@3.2.33
+  - @prosopo/datasets@3.0.53
+  - @prosopo/types-env@2.7.57
+  - @prosopo/api-express-router@3.0.45
+
+## 3.14.4
+### Patch Changes
+
+- Updated dependencies [9ab5f11]
+  - @prosopo/database@3.6.3
+  - @prosopo/env@3.2.32
+  - @prosopo/api-express-router@3.0.44
+
+## 3.14.3
+### Patch Changes
+
+- ea5f1f8: Fix detectors
+
+## 3.14.2
+### Patch Changes
+
+- Updated dependencies [141e462]
+  - @prosopo/types@3.7.2
+  - @prosopo/api@3.1.40
+  - @prosopo/api-express-router@3.0.43
+  - @prosopo/database@3.6.2
+  - @prosopo/datasets@3.0.52
+  - @prosopo/env@3.2.31
+  - @prosopo/keyring@2.8.43
+  - @prosopo/load-balancer@2.8.16
+  - @prosopo/types-database@4.1.2
+  - @prosopo/types-env@2.7.56
+  - @prosopo/user-access-policy@3.5.35
+
+## 3.14.1
+### Patch Changes
+
+- b5b21f8: Reduce Sample Size
+- 345b25b: pow coord
+- 1fd84de: Make sure session Ids are unique
+- Updated dependencies [345b25b]
+  - @prosopo/types-database@4.1.1
+  - @prosopo/database@3.6.1
+  - @prosopo/types@3.7.1
+  - @prosopo/api@3.1.39
+  - @prosopo/datasets@3.0.51
+  - @prosopo/types-env@2.7.55
+  - @prosopo/env@3.2.30
+  - @prosopo/api-express-router@3.0.42
+  - @prosopo/keyring@2.8.42
+  - @prosopo/load-balancer@2.8.15
+  - @prosopo/user-access-policy@3.5.34
+
+## 3.14.0
+### Minor Changes
+
+- ce70a2b: Add context-aware entropy calculation for WebView and default contexts
+  
+  - Added ContextType enum to distinguish between WebView and default browser contexts
+  - Implemented context-specific entropy calculation and storage
+  - Created clientContextEntropy collection with automatic timestamp management
+  - Removed legacy clientEntropy table in favor of context-specific approach
+  - Added helper functions for context determination and threshold retrieval
+  - Included comprehensive unit tests for context validation logic
+
+### Patch Changes
+
+- c2b940f: Properly save context type settings
+- 5ad6f48: Fix detect webview iphones
+- f6b5094: Allow different context to override default
+- e3a8948: Run job for pro+ only
+- e01227b: add turbo
+- Updated dependencies [ce70a2b]
+- Updated dependencies [c2b940f]
+- Updated dependencies [f6b5094]
+- Updated dependencies [e01227b]
+  - @prosopo/types@3.7.0
+  - @prosopo/types-database@4.1.0
+  - @prosopo/database@3.6.0
+  - @prosopo/locale@3.1.27
+  - @prosopo/api@3.1.38
+  - @prosopo/api-express-router@3.0.41
+  - @prosopo/common@3.1.27
+  - @prosopo/datasets@3.0.50
+  - @prosopo/env@3.2.29
+  - @prosopo/keyring@2.8.41
+  - @prosopo/load-balancer@2.8.14
+  - @prosopo/types-env@2.7.54
+  - @prosopo/user-access-policy@3.5.33
+  - @prosopo/api-route@2.6.35
+
+## 3.13.7
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/api@3.1.37
+  - @prosopo/api-express-router@3.0.40
+  - @prosopo/api-route@2.6.34
+  - @prosopo/common@3.1.26
+  - @prosopo/database@3.5.6
+  - @prosopo/datasets@3.0.49
+  - @prosopo/env@3.2.28
+  - @prosopo/keyring@2.8.40
+  - @prosopo/load-balancer@2.8.13
+  - @prosopo/locale@3.1.26
+  - @prosopo/types@3.6.4
+  - @prosopo/types-database@4.0.6
+  - @prosopo/types-env@2.7.53
+  - @prosopo/user-access-policy@3.5.32
+  - @prosopo/util@3.2.4
+  - @prosopo/util-crypto@13.5.28
+
 ## 3.13.6
 ### Patch Changes
 

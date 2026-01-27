@@ -17,6 +17,8 @@
 		"MISSING_QUERY_PARAMETERS": "Faltan parámetros de consulta",
 		"MISSING_AUTHORIZATION_HEADER": "Falta la cabecera de autorización",
 		"TIMESTAMP_TOO_OLD": "Marca de tiempo demasiado antigua",
+		"FAILED_IP_VALIDATION": "La validación de IP falló",
+		"ACCESS_POLICY_BLOCK": "Acceso bloqueado por política",
 		"FORBIDDEN": "Prohibido",
 		"PROVIDER_VERIFY_FAILED": "Fallo en la verificación del proveedor",
 		"UNAUTHORIZED": "No autorizado",

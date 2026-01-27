@@ -28,6 +28,7 @@ import { randomAsHex } from "@prosopo/util-crypto";
 import type { RedisClientType } from "redis";
 import {
 	afterAll,
+	afterEach,
 	beforeAll,
 	beforeEach,
 	describe,
@@ -94,22 +95,27 @@ describe("redisAccessRulesStorage", () => {
 		).getClient();
 	});
 
-	beforeEach(async () => {
-		const keys = await redisClient.keys("*");
-
-		if (keys.length > 0) {
-			await redisClient.del(keys);
+	// Move cleanup to afterEach
+	afterEach(async () => {
+		if (indexName) {
+			try {
+				// Drop index and all documents (DD) created by THIS specific test
+				await redisClient.ft.dropIndex(indexName, { DD: true });
+			} catch (e) {
+				console.error(`Failed to cleanup index ${indexName}`, e);
+			}
 		}
+	}, 120_000);
 
-		// Get a new index name for each test
+	beforeEach(async () => {
 		indexName = randomAsHex(16);
 
-		// setup a new index for each test
-		redisClient = await setupRedisIndex(
+		const result = setupRedisIndex(
 			redisConnection,
 			{ ...accessRulesRedisIndex, name: indexName },
 			mockLogger,
-		).getClient();
+		);
+		redisClient = await result.getClient();
 	});
 
 	describe(
@@ -122,6 +128,7 @@ describe("redisAccessRulesStorage", () => {
 			});
 
 			test("inserts rule", async () => {
+				const testIndexName = indexName;
 				// given
 				const accessRule: AccessRule = {
 					type: AccessPolicyType.Block,
@@ -138,7 +145,7 @@ describe("redisAccessRulesStorage", () => {
 
 				// then
 				const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
-				const indexRecordsCount = await getIndexRecordsCount(indexName);
+				const indexRecordsCount = await getIndexRecordsCount(testIndexName);
 
 				expect(insertedAccessRule).toEqual(accessRule);
 				expect(indexRecordsCount).toEqual(1);
@@ -164,7 +171,7 @@ describe("redisAccessRulesStorage", () => {
 				await accessRulesWriter.insertRules([
 					{
 						rule: accessRule,
-						expiresUnixTimestamp: expirationTimestamp,
+						expiresUnixTimestamp: expirationTimestampInSeconds,
 					},
 				]);
 				const ruleKey = getAccessRuleRedisKey(accessRule);
@@ -238,31 +245,47 @@ describe("redisAccessRulesStorage", () => {
 				expect(indexRecordsCount).toBe(0);
 			});
 
-			test("deletes all rules when there is 1 million of rules", async () => {
+			test("deletes all rules when there are 1 million rules", async () => {
 				// given
 				const rulesCount = 1_000_000;
+				const batchSize = 10_000;
+				const numBatches = Math.ceil(rulesCount / batchSize);
 
-				const accessRules: AccessRule[] = Array.from(
-					{ length: rulesCount },
-					() => ({
-						type: AccessPolicyType.Block,
-						clientId: getUniqueString(),
-					}),
-				);
+				// Insert rules in batches to avoid memory exhaustion
+				// Don't create 1M objects in memory at once!
+				for (let i = 0; i < numBatches; i++) {
+					const currentBatchSize = Math.min(
+						batchSize,
+						rulesCount - i * batchSize,
+					);
+					const batchRules: AccessRule[] = Array.from(
+						{ length: currentBatchSize },
+						() => ({
+							type: AccessPolicyType.Block,
+							clientId: getUniqueString(),
+						}),
+					);
 
-				await insertRules(accessRules);
+					await insertRules(batchRules);
+				}
+
+				// verify that there are 1 million rules in the database
+				const beforeDeleteIndexRecordsCount =
+					await getIndexRecordsCount(indexName);
+				expect(beforeDeleteIndexRecordsCount).toBe(rulesCount);
 
 				// when
 				await accessRulesWriter.deleteAllRules();
 
 				// then
-				const indexRecordsCount = await getIndexRecordsCount(indexName);
+				const afterDeleteIndexRecordsCount =
+					await getIndexRecordsCount(indexName);
 
-				expect(indexRecordsCount).toBe(0);
+				expect(afterDeleteIndexRecordsCount).toBe(0);
 			});
 		},
 		{
-			timeout: 120_000,
+			timeout: 240_000,
 		},
 	);
 
@@ -376,7 +399,8 @@ describe("redisAccessRulesStorage", () => {
 			};
 			const johnHeaderAccessRule: AccessRule = {
 				type: AccessPolicyType.Block,
-				headersHash: "chrome",
+				headersHash:
+					"00110110100001111101001101100101101101001000011111010011011001010101000110000111110100110110010111010100100011011101101010000011",
 			};
 			const globalJa4AccessRule: AccessRule = {
 				type: AccessPolicyType.Block,
@@ -430,7 +454,8 @@ describe("redisAccessRulesStorage", () => {
 
 			const johnHeaderAccessRule: AccessRule = {
 				type: AccessPolicyType.Block,
-				headersHash: "chrome",
+				headersHash:
+					"00110110100001111101001101100101101101001000011111010011011001010101000110000111110100110110010111010100100011011101101010000011",
 			};
 
 			const globalTargetAccessRule: AccessRule = {
@@ -848,6 +873,110 @@ describe("redisAccessRulesStorage", () => {
 
 			const foundAccessRules = await accessRulesReader.findRules(query);
 			expect(foundAccessRules).toEqual([accessRule, ipRangeAccessRule]);
+		});
+
+		test("finds rules by headHash with exact match", async () => {
+			// given
+			const headHash1 = "abc123def456";
+			const headHash2 = "xyz789ghi012";
+
+			const headHashAccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: "clientId",
+				headHash: headHash1,
+			};
+			const otherHeadHashAccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: "clientId",
+				headHash: headHash2,
+			};
+
+			await insertRules([headHashAccessRule, otherHeadHashAccessRule]);
+
+			// when
+			const foundAccessRules = await accessRulesReader.findRules({
+				policyScope: {
+					clientId: "clientId",
+				},
+				policyScopeMatch: FilterScopeMatch.Exact,
+				userScope: {
+					headHash: headHash1,
+				},
+				userScopeMatch: FilterScopeMatch.Exact,
+			});
+
+			// then
+			expect(foundAccessRules).toEqual([headHashAccessRule]);
+		});
+
+		test("finds rules by coords with exact match", async () => {
+			// given
+			const coords1 = "[[[100,200]]]";
+			const coords2 = "[[[300,400]]]";
+
+			const coordsAccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: "clientId",
+				coords: coords1,
+			};
+			const otherCoordsAccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: "clientId",
+				coords: coords2,
+			};
+
+			await insertRules([coordsAccessRule, otherCoordsAccessRule]);
+
+			// when
+			const foundAccessRules = await accessRulesReader.findRules({
+				policyScope: {
+					clientId: "clientId",
+				},
+				policyScopeMatch: FilterScopeMatch.Exact,
+				userScope: {
+					coords: coords1,
+				},
+				userScopeMatch: FilterScopeMatch.Exact,
+			});
+
+			// then
+			expect(foundAccessRules).toEqual([coordsAccessRule]);
+		});
+
+		test("finds rules by combined headHash and coords with exact match", async () => {
+			// given
+			const headHash1 = "abc123def456";
+			const coords1 = "[[[100,200]]]";
+
+			const combinedAccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: "clientId",
+				headHash: headHash1,
+				coords: coords1,
+			};
+			const headHashOnlyAccessRule: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				clientId: "clientId",
+				headHash: headHash1,
+			};
+
+			await insertRules([combinedAccessRule, headHashOnlyAccessRule]);
+
+			// when
+			const foundAccessRules = await accessRulesReader.findRules({
+				policyScope: {
+					clientId: "clientId",
+				},
+				policyScopeMatch: FilterScopeMatch.Exact,
+				userScope: {
+					headHash: headHash1,
+					coords: coords1,
+				},
+				userScopeMatch: FilterScopeMatch.Exact,
+			});
+
+			// then
+			expect(foundAccessRules).toEqual([combinedAccessRule]);
 		});
 	});
 

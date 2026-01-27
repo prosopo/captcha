@@ -1,5 +1,85 @@
 # @prosopo/procaptcha-react
 
+## 2.9.28
+### Patch Changes
+
+  - @prosopo/procaptcha@2.9.28
+
+## 2.9.27
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+- Updated dependencies [a53526b]
+- Updated dependencies [f3cf586]
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [7543d17]
+- Updated dependencies [fe9fe22]
+- Updated dependencies [3acc333]
+  - @prosopo/util@3.2.5
+  - @prosopo/procaptcha-common@2.9.23
+  - @prosopo/types@3.8.0
+  - @prosopo/widget-skeleton@2.7.13
+  - @prosopo/procaptcha@2.9.27
+  - @prosopo/common@3.1.28
+  - @prosopo/locale@3.1.28
+
+## 2.9.26
+### Patch Changes
+
+  - @prosopo/procaptcha@2.9.26
+
+## 2.9.25
+### Patch Changes
+
+  - @prosopo/procaptcha@2.9.25
+
+## 2.9.24
+### Patch Changes
+
+- Updated dependencies [141e462]
+  - @prosopo/types@3.7.2
+  - @prosopo/procaptcha@2.9.24
+  - @prosopo/procaptcha-common@2.9.22
+
+## 2.9.23
+### Patch Changes
+
+- Updated dependencies [345b25b]
+  - @prosopo/types@3.7.1
+  - @prosopo/procaptcha@2.9.23
+  - @prosopo/procaptcha-common@2.9.21
+
+## 2.9.22
+### Patch Changes
+
+- Updated dependencies [ce70a2b]
+- Updated dependencies [c2b940f]
+- Updated dependencies [f6b5094]
+- Updated dependencies [e01227b]
+  - @prosopo/types@3.7.0
+  - @prosopo/locale@3.1.27
+  - @prosopo/common@3.1.27
+  - @prosopo/procaptcha@2.9.22
+  - @prosopo/procaptcha-common@2.9.20
+
+## 2.9.21
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/common@3.1.26
+  - @prosopo/locale@3.1.26
+  - @prosopo/procaptcha@2.9.21
+  - @prosopo/procaptcha-common@2.9.19
+  - @prosopo/types@3.6.4
+  - @prosopo/util@3.2.4
+  - @prosopo/widget-skeleton@2.7.12
+
 ## 2.9.20
 ### Patch Changes
 

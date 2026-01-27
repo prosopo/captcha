@@ -1,5 +1,83 @@
 # @prosopo/user-access-policy
 
+## 3.6.1
+### Patch Changes
+
+- ed87b6f: Fix authentication in uaps
+
+## 3.6.0
+### Minor Changes
+
+- 17854a7: fix deleteAll endpoint throwing a recursion limit when too many rules are in redis
+
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+- Updated dependencies [a53526b]
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [7543d17]
+- Updated dependencies [3acc333]
+  - @prosopo/util@3.2.5
+  - @prosopo/types@3.8.0
+  - @prosopo/redis-client@1.0.13
+  - @prosopo/api-route@2.6.36
+  - @prosopo/common@3.1.28
+  - @prosopo/api@3.1.41
+
+## 3.5.37
+### Patch Changes
+
+- 378a896: Fix: Remove captchaType and solvedImagesCount from block access policies. Block policies should not store these fields as they are only relevant for restrict policies that present captcha challenges.
+- 90fddd8: Fix UAP expiry timestamp handling: missing propagation and unit conversion. Timestamps are now correctly propagated when policyScopes are present, and milliseconds are properly converted to seconds for Redis expireAt.
+
+## 3.5.36
+### Patch Changes
+
+- 7c475dc: Add headHash and coords fields to user access policies, and implement user access policy checks in server-side PoW verification
+
+## 3.5.35
+### Patch Changes
+
+- Updated dependencies [141e462]
+  - @prosopo/types@3.7.2
+  - @prosopo/api@3.1.40
+
+## 3.5.34
+### Patch Changes
+
+- Updated dependencies [345b25b]
+  - @prosopo/types@3.7.1
+  - @prosopo/api@3.1.39
+
+## 3.5.33
+### Patch Changes
+
+- Updated dependencies [ce70a2b]
+- Updated dependencies [c2b940f]
+- Updated dependencies [f6b5094]
+  - @prosopo/types@3.7.0
+  - @prosopo/api@3.1.38
+  - @prosopo/common@3.1.27
+  - @prosopo/api-route@2.6.35
+  - @prosopo/redis-client@1.0.12
+
+## 3.5.32
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/api@3.1.37
+  - @prosopo/api-route@2.6.34
+  - @prosopo/common@3.1.26
+  - @prosopo/redis-client@1.0.11
+  - @prosopo/types@3.6.4
+  - @prosopo/util@3.2.4
+
 ## 3.5.31
 ### Patch Changes
 

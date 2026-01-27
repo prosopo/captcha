@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/account",
-	"version": "2.7.42",
+	"version": "2.8.0",
 	"description": "Services and Utils for Prosopo account gen and management",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -28,8 +28,9 @@
 	},
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
-		"build:tsc": "tsc --build --verbose",
+		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
+		"build:cross-env": "vite build --config vite.esm.config.ts",
+		"build:tsc": "npm run typecheck && npm run build",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --project tsconfig.types.json"
 	},
@@ -49,15 +50,15 @@
 		"@polkadot/extension-inject": "0.62.3",
 		"@polkadot/util": "13.5.7",
 		"@polkadot/util-crypto": "13.5.7",
-		"@prosopo/common": "3.1.25",
-		"@prosopo/fingerprint": "2.6.26",
-		"@prosopo/keyring": "2.8.39",
-		"@prosopo/types": "3.6.3",
-		"@prosopo/util": "3.2.3",
-		"@prosopo/util-crypto": "13.5.27"
+		"@prosopo/common": "3.1.28",
+		"@prosopo/fingerprint": "2.6.28",
+		"@prosopo/keyring": "2.9.0",
+		"@prosopo/types": "3.8.0",
+		"@prosopo/util": "3.2.5",
+		"@prosopo/util-crypto": "13.5.29"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.1.25",
+		"@prosopo/config": "3.3.0",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "3.2.4",
 		"concurrently": "9.0.1",

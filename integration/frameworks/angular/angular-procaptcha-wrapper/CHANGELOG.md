@@ -1,5 +1,37 @@
 # @prosopo/angular-procaptcha-wrapper
 
+## 1.1.44
+### Patch Changes
+
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+- Updated dependencies [0a38892]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [3acc333]
+  - @prosopo/procaptcha-wrapper@2.6.46
+
+## 1.1.43
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.45
+
+## 1.1.42
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.44
+
+## 1.1.41
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.43
+
+## 1.1.40
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/procaptcha-wrapper@2.6.42
+
 ## 1.1.39
 ### Patch Changes
 

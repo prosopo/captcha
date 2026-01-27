@@ -27,6 +27,8 @@ const userAttributesSchema: SchemaDefinition<UserAttributesRecord> = {
 	ja4Hash: { type: String, required: false },
 	userAgent: { type: String, required: false },
 	headersHash: { type: String, required: false },
+	headHash: { type: String, required: false },
+	coords: { type: String, required: false },
 } satisfies AllKeys<UserAttributesRecord>;
 
 const userIpSchema: SchemaDefinition<UserIpRecord> = {

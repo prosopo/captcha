@@ -33,8 +33,9 @@ import {
 	type ProcaptchaStateUpdateFn,
 	encodeProcaptchaOutput,
 } from "@prosopo/types";
-import { sleep } from "@prosopo/util";
+import { embedData, sleep } from "@prosopo/util";
 import { solvePoW } from "@prosopo/util";
+import { randomAsHex } from "@prosopo/util-crypto";
 
 export const Manager = (
 	configInput: ProcaptchaClientConfigInput,
@@ -88,8 +89,6 @@ export const Manager = (
 			userAccountAddress: configInput.userAccountAddress || "",
 			...configInput,
 		};
-
-		console.log("Using config:", config);
 
 		// overwrite the account in use with the one in state if it exists. Reduces likelihood of bugs where the user
 		// changes account in the middle of the captcha process.
@@ -147,7 +146,7 @@ export const Manager = (
 		updateState({ successfullChallengeTimeout });
 	};
 
-	const start = async () => {
+	const start = async (x = 0, y = 0) => {
 		await providerRetry(
 			async () => {
 				if (state.loading) {
@@ -179,7 +178,6 @@ export const Manager = (
 
 				// use the passed in account (could be web3) or create a new account
 				const user = await selectAccount();
-				console.log("User", user);
 				const userAccount = user.account.address;
 
 				// set the account created or injected by the extension
@@ -231,7 +229,22 @@ export const Manager = (
 						},
 					});
 				} else {
-					const solution = solvePoW(challenge.challenge, challenge.difficulty);
+					const solution = await solvePoW(
+						challenge.challenge,
+						challenge.difficulty,
+					);
+
+					// Create salt with encoded coordinates if coordinates are provided
+					let salt: string | undefined;
+					if (x !== undefined && y !== undefined) {
+						const coords = [x, y];
+						const randomSalt = randomAsHex(
+							coords
+								.map((coord) => coord.toString(16).length + 4)
+								.reduce((acc, curr) => acc + curr, 0),
+						);
+						salt = embedData(randomSalt, coords);
+					}
 
 					const signer = user.extension?.signer;
 
@@ -250,6 +263,41 @@ export const Manager = (
 						type: "bytes",
 					});
 
+					let encryptedBehavioralData: string | undefined;
+
+					// Collect and encrypt behavioral data before submission
+					if (
+						frictionlessState?.encryptBehavioralData &&
+						(frictionlessState?.behaviorCollector1 ||
+							frictionlessState?.behaviorCollector2 ||
+							frictionlessState?.behaviorCollector3)
+					) {
+						try {
+							const behavioralData = {
+								collector1:
+									frictionlessState.behaviorCollector1?.getData() || [],
+								collector2:
+									frictionlessState.behaviorCollector2?.getData() || [],
+								collector3:
+									frictionlessState.behaviorCollector3?.getData() || [],
+								deviceCapability:
+									frictionlessState.deviceCapability || "unknown",
+							};
+
+							// Pack the behavioral data before stringifying
+							const dataToEncrypt = frictionlessState.packBehavioralData
+								? frictionlessState.packBehavioralData(behavioralData)
+								: behavioralData;
+
+							encryptedBehavioralData =
+								await frictionlessState.encryptBehavioralData(
+									JSON.stringify(dataToEncrypt),
+								);
+						} catch {
+							// Silently ignore behavioral data errors - captcha should still work
+						}
+					}
+
 					const verifiedSolution = await providerApi.submitPowCaptchaSolution(
 						challenge,
 						getAccount().account.account.address,
@@ -257,6 +305,8 @@ export const Manager = (
 						solution,
 						userTimestampSignature.signature.toString(),
 						config.captchas.pow.verifiedTimeout,
+						encryptedBehavioralData,
+						salt,
 					);
 					if (verifiedSolution[ApiParams.verified]) {
 						updateState({
