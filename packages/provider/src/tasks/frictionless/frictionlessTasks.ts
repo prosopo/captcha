@@ -93,6 +93,7 @@ export class FrictionlessManager extends CaptchaManager {
 			webView: params.webView ?? false,
 			iFrame: params.iFrame ?? false,
 			decryptedHeadHash: params.decryptedHeadHash,
+			siteKey: params.siteKey,
 		};
 	}
 
@@ -115,6 +116,7 @@ export class FrictionlessManager extends CaptchaManager {
 		providerSelectEntropy: number,
 		ipAddress: CompositeIpAddress,
 		captchaType: CaptchaType,
+		siteKey: string,
 		solvedImagesCount?: number,
 		powDifficulty?: number,
 		userSitekeyIpHash?: string,
@@ -140,6 +142,7 @@ export class FrictionlessManager extends CaptchaManager {
 			iFrame,
 			decryptedHeadHash,
 			reason,
+			siteKey,
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);
@@ -178,7 +181,8 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.threshold === undefined ||
 			!effectiveParams.scoreComponents ||
 			effectiveParams.providerSelectEntropy === undefined ||
-			!effectiveParams.ipAddress
+			!effectiveParams.ipAddress ||
+			effectiveParams.siteKey === undefined
 		) {
 			throw new Error(
 				"Session parameters must be set before calling sendImageCaptcha",
@@ -193,6 +197,7 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.providerSelectEntropy,
 			effectiveParams.ipAddress,
 			CaptchaType.image,
+			effectiveParams.siteKey,
 			effectiveParams.solvedImagesCount,
 			undefined,
 			effectiveParams.userSitekeyIpHash,
@@ -218,7 +223,8 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.threshold === undefined ||
 			!effectiveParams.scoreComponents ||
 			effectiveParams.providerSelectEntropy === undefined ||
-			!effectiveParams.ipAddress
+			!effectiveParams.ipAddress ||
+			effectiveParams.siteKey === undefined
 		) {
 			throw new Error(
 				"Session parameters must be set before calling sendPowCaptcha",
@@ -233,6 +239,7 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.providerSelectEntropy,
 			effectiveParams.ipAddress,
 			CaptchaType.pow,
+			effectiveParams.siteKey,
 			undefined,
 			effectiveParams.powDifficulty,
 			effectiveParams.userSitekeyIpHash,
