@@ -14,7 +14,11 @@
 
 import { loadI18next, useTranslation } from "@prosopo/locale";
 import { buildUpdateState, useProcaptcha } from "@prosopo/procaptcha-common";
-import { Checkbox } from "@prosopo/procaptcha-common";
+import {
+	Checkbox,
+	DemoKeyBanner,
+	getDemoKeyBehavior,
+} from "@prosopo/procaptcha-common";
 import { ModeEnum, type ProcaptchaProps } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { useEffect, useRef, useState } from "react";
@@ -37,6 +41,9 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	const manager = useRef(
 		Manager(config, state, updateState, callbacks, frictionlessState),
 	);
+
+	// Check if using a demo key
+	const demoKeyBehavior = getDemoKeyBehavior(config.account.address || "");
 
 	useEffect(() => {
 		if (config.language) {
@@ -95,52 +102,63 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	}, [config.mode]);
 
 	if (config.mode === ModeEnum.invisible) {
+		// Return demo banner for invisible mode if using demo key
+		if (demoKeyBehavior) {
+			return (
+				<div style={{ position: "relative" }}>
+					<DemoKeyBanner behavior={demoKeyBehavior} />
+				</div>
+			);
+		}
 		// Return null for invisible mode - no UI needed
 		return null;
 	}
 
 	return (
-		<Checkbox
-			checked={state.isHuman}
-			theme={theme}
-			onChange={async (event: React.MouseEvent | React.TouchEvent) => {
-				if (loading) {
-					return;
-				}
-				setLoading(true);
+		<div style={{ position: "relative" }}>
+			{demoKeyBehavior && <DemoKeyBanner behavior={demoKeyBehavior} />}
+			<Checkbox
+				checked={state.isHuman}
+				theme={theme}
+				onChange={async (event: React.MouseEvent | React.TouchEvent) => {
+					if (loading) {
+						return;
+					}
+					setLoading(true);
 
-				// Capture click coordinates
-				let x = 0;
-				let y = 0;
+					// Capture click coordinates
+					let x = 0;
+					let y = 0;
 
-				// Try to get coordinates from the change event's underlying mouse event
-				// The original mouse event might be available in the event chain
-				const mouseOrTouchEvent = event.nativeEvent;
-				if (!mouseOrTouchEvent.isTrusted) {
-					// Don't capture coordinates for non-trusted events
-				} else if (
-					"touches" in mouseOrTouchEvent &&
-					mouseOrTouchEvent.touches.length > 0 &&
-					mouseOrTouchEvent.touches[0]
-				) {
-					x = mouseOrTouchEvent.touches[0].clientX;
-					y = mouseOrTouchEvent.touches[0].clientY;
-				} else if (
-					"clientX" in mouseOrTouchEvent &&
-					"clientY" in mouseOrTouchEvent
-				) {
-					x = mouseOrTouchEvent.clientX;
-					y = mouseOrTouchEvent.clientY;
-				}
+					// Try to get coordinates from the change event's underlying mouse event
+					// The original mouse event might be available in the event chain
+					const mouseOrTouchEvent = event.nativeEvent;
+					if (!mouseOrTouchEvent.isTrusted) {
+						// Don't capture coordinates for non-trusted events
+					} else if (
+						"touches" in mouseOrTouchEvent &&
+						mouseOrTouchEvent.touches.length > 0 &&
+						mouseOrTouchEvent.touches[0]
+					) {
+						x = mouseOrTouchEvent.touches[0].clientX;
+						y = mouseOrTouchEvent.touches[0].clientY;
+					} else if (
+						"clientX" in mouseOrTouchEvent &&
+						"clientY" in mouseOrTouchEvent
+					) {
+						x = mouseOrTouchEvent.clientX;
+						y = mouseOrTouchEvent.clientY;
+					}
 
-				await manager.current.start(x, y);
-				setLoading(false);
-			}}
-			labelText={isTranslationReady ? t("WIDGET.I_AM_HUMAN") : ""}
-			error={state.error?.message}
-			aria-label="human checkbox"
-			loading={loading}
-		/>
+					await manager.current.start(x, y);
+					setLoading(false);
+				}}
+				labelText={isTranslationReady ? t("WIDGET.I_AM_HUMAN") : ""}
+				error={state.error?.message}
+				aria-label="human checkbox"
+				loading={loading}
+			/>
+		</div>
 	);
 };
 

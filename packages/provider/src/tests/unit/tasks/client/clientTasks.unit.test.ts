@@ -254,7 +254,7 @@ describe("ClientTaskManager", () => {
 		];
 		const mockPoWCommitments: Pick<PoWCaptchaStored, "challenge">[] = [
 			{
-				challenge: "1234567___userAccount___dappAccount",
+				challenge: "1234567___userAccount___dappAccount___123456",
 			},
 		];
 
@@ -305,7 +305,7 @@ describe("ClientTaskManager", () => {
 			"challenge" | "lastUpdatedTimestamp" | "storedAtTimestamp"
 		>[] = [
 			{
-				challenge: "1234567___userAccount___dappAccount",
+				challenge: "1234567___userAccount___dappAccount___123456",
 				// PoW commitments were stored at time 3
 				lastUpdatedTimestamp: new Date(3),
 				storedAtTimestamp: new Date(1),

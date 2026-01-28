@@ -22,6 +22,11 @@ import { flatten, getIPAddress } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/tasks.js";
+import {
+	DemoKeyBehavior,
+	logDemoKeyUsage,
+	shouldBypassForDemoKey,
+} from "../../utils/demoKeys.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 
@@ -49,6 +54,10 @@ export default (env: ProviderEnvironment) =>
 		try {
 			parsed = SubmitPowCaptchaSolutionBody.parse(req.body);
 		} catch (err) {
+			req.logger.error(() => ({
+				msg: "PoW captcha solution validation error",
+				error: err,
+			}));
 			return next(
 				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
 					context: { code: 400, error: err, body: req.body },
@@ -71,6 +80,39 @@ export default (env: ProviderEnvironment) =>
 
 		validateSiteKey(dapp);
 		validateAddr(user);
+
+		// Handle demo key - always pass
+		// Check demo keys BEFORE checking site key registration
+		if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysPass)) {
+			logDemoKeyUsage(
+				req.logger,
+				dapp,
+				DemoKeyBehavior.AlwaysPass,
+				"pow_captcha_solution",
+			);
+
+			const response: PowCaptchaSolutionResponse = {
+				status: "ok",
+				verified: true,
+			};
+			return res.json(response);
+		}
+
+		// Handle demo key - always fail
+		if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysFail)) {
+			logDemoKeyUsage(
+				req.logger,
+				dapp,
+				DemoKeyBehavior.AlwaysFail,
+				"pow_captcha_solution",
+			);
+
+			const response: PowCaptchaSolutionResponse = {
+				status: "ok",
+				verified: false,
+			};
+			return res.json(response);
+		}
 
 		try {
 			const clientRecord = await tasks.db.getClientRecord(dapp);

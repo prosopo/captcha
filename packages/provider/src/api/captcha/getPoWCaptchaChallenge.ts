@@ -18,6 +18,7 @@ import {
 	GetPowCaptchaChallengeRequestBody,
 	type GetPowCaptchaChallengeRequestBodyTypeOutput,
 	type GetPowCaptchaResponse,
+	type PoWChallengeId,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
@@ -26,6 +27,11 @@ import type { NextFunction, Request, Response } from "express";
 import { getCompositeIpAddress } from "../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
+import {
+	DemoKeyBehavior,
+	logDemoKeyUsage,
+	shouldBypassForDemoKey,
+} from "../../utils/demoKeys.js";
 import { getRequestUserScope } from "../blacklistRequestInspector.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 
@@ -58,6 +64,65 @@ export default (
 
 		validateSiteKey(dapp);
 		validateAddr(user);
+
+		// Handle demo key - always pass (trivial difficulty)
+		// Check demo keys BEFORE checking site key registration
+		if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysPass)) {
+			logDemoKeyUsage(
+				req.logger,
+				dapp,
+				DemoKeyBehavior.AlwaysPass,
+				"pow_captcha_challenge",
+			);
+
+			const timestamp = Date.now();
+			const nonce = Math.floor(Math.random() * 1000000);
+			const challengeId =
+				`${timestamp}___${user}___${dapp}___${nonce}` as PoWChallengeId;
+
+			const response: GetPowCaptchaResponse = {
+				[ApiParams.status]: "ok",
+				[ApiParams.challenge]: challengeId,
+				[ApiParams.difficulty]: 1, // Trivially solvable
+				[ApiParams.timestamp]: timestamp.toString(),
+				[ApiParams.signature]: {
+					[ApiParams.provider]: {
+						[ApiParams.challenge]: "demo_provider_challenge",
+					},
+				},
+			};
+
+			return res.json(response);
+		}
+
+		// Handle demo key - always fail (impossible difficulty)
+		if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysFail)) {
+			logDemoKeyUsage(
+				req.logger,
+				dapp,
+				DemoKeyBehavior.AlwaysFail,
+				"pow_captcha_challenge",
+			);
+
+			const timestamp = Date.now();
+			const nonce = Math.floor(Math.random() * 1000000);
+			const challengeId =
+				`${timestamp}___${user}___${dapp}___${nonce}` as PoWChallengeId;
+
+			const response: GetPowCaptchaResponse = {
+				[ApiParams.status]: "ok",
+				[ApiParams.challenge]: challengeId,
+				[ApiParams.difficulty]: 1, // Very easy, will fail later in flow
+				[ApiParams.timestamp]: timestamp.toString(),
+				[ApiParams.signature]: {
+					[ApiParams.provider]: {
+						[ApiParams.challenge]: "demo_provider_challenge",
+					},
+				},
+			};
+
+			return res.json(response);
+		}
 
 		try {
 			const clientSettings = await tasks.db.getClientRecord(dapp);
@@ -148,6 +213,10 @@ export default (
 					requestedAtTimestamp: challenge.requestedAtTimestamp,
 					userAccount: user,
 					dappAccount: dapp,
+					nonce: Number.parseInt(
+						challenge.challenge.split("___")[3] ?? "2",
+						10,
+					),
 				},
 				challenge.difficulty,
 				challenge.providerSignature,

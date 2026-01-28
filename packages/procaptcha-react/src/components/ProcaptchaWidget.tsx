@@ -16,7 +16,12 @@
 
 import { loadI18next, useTranslation } from "@prosopo/locale";
 import { Manager } from "@prosopo/procaptcha";
-import { Checkbox, useProcaptcha } from "@prosopo/procaptcha-common";
+import {
+	Checkbox,
+	DemoKeyBanner,
+	getDemoKeyBehavior,
+	useProcaptcha,
+} from "@prosopo/procaptcha-common";
 import { ProcaptchaConfigSchema, type ProcaptchaProps } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { useEffect, useRef, useState } from "react";
@@ -42,6 +47,9 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 		frictionlessState,
 	);
 	const theme = "light" === props.config.theme ? lightTheme : darkTheme;
+
+	// Check if using a demo key
+	const demoKeyBehavior = getDemoKeyBehavior(config.account.address || "");
 
 	useEffect(() => {
 		if (config.language) {
@@ -102,26 +110,30 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 
 	if (config.mode === "invisible") {
 		return (
-			<Modal show={state.showModal}>
-				{state.challenge ? (
-					<CaptchaComponent
-						challenge={state.challenge}
-						index={state.index}
-						solutions={state.solutions}
-						onSubmit={manager.submit}
-						onCancel={manager.cancel}
-						onClick={manager.select}
-						onNext={manager.nextRound}
-						onReload={manager.reload}
-						themeColor={config.theme ?? "light"}
-					/>
-				) : null}
-			</Modal>
+			<div style={{ position: "relative" }}>
+				{demoKeyBehavior && <DemoKeyBanner behavior={demoKeyBehavior} />}
+				<Modal show={state.showModal}>
+					{state.challenge ? (
+						<CaptchaComponent
+							challenge={state.challenge}
+							index={state.index}
+							solutions={state.solutions}
+							onSubmit={manager.submit}
+							onCancel={manager.cancel}
+							onClick={manager.select}
+							onNext={manager.nextRound}
+							onReload={manager.reload}
+							themeColor={config.theme ?? "light"}
+						/>
+					) : null}
+				</Modal>
+			</div>
 		);
 	}
 
 	return (
-		<div className={"image-captcha"}>
+		<div className={"image-captcha"} style={{ position: "relative" }}>
+			{demoKeyBehavior && <DemoKeyBanner behavior={demoKeyBehavior} />}
 			<Modal show={state.showModal}>
 				{state.challenge ? (
 					<CaptchaComponent

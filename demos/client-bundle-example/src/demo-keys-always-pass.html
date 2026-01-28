@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <link href="https://cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
+    <link href="styles/field.css" rel="stylesheet" type="text/css"/>
+
+    <script src="index.js"></script>
+    <title>Demo Keys - Always Pass</title>
+    <link href="styles/captcha.css" rel="stylesheet" type="text/css"/>
+    <style>
+        .demo-section {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .demo-section h3 {
+            margin-top: 0;
+            color: #4CAF50;
+        }
+        .demo-key-info {
+            background: #fff;
+            border-left: 4px solid #4CAF50;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: monospace;
+        }
+        .demo-key-warning {
+            background: #fff3cd;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .demo-key-warning strong {
+            color: #ff5722;
+        }
+        .explanation {
+            background: #e8f5e9;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .explanation h2 {
+            margin-top: 0;
+            color: #2E7D32;
+        }
+        .code-box {
+            background: #263238;
+            color: #aed581;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+    </style>
+    <script type="module">
+        window.addEventListener('load', () => {
+            updateCaptchaStatus('Page loaded - Always Pass Demo Key initialized', 'info');
+        });
+
+        window.onCaptchaFailed = function () {
+            console.log('Challenge failed');
+            updateCaptchaStatus('Challenge failed - This should NOT happen with Always Pass key!', 'error');
+        }
+
+        window.onCaptchaVerified = (output) => {
+            console.log('Challenge passed', output);
+            updateCaptchaStatus('✅ Challenge passed successfully! (Expected behavior)', 'success');
+            updateCaptchaStatus(`Token generated: ${output.substring(0, 15)}...`, 'success');
+        }
+
+        window.onCaptchaExpired = () => {
+            console.log('Challenge expired');
+            updateCaptchaStatus('Challenge expired - please try again', 'warning');
+        }
+    </script>
+    <script id="procaptchaScript" type="module" src="%VITE_BUNDLE_URL%" async defer></script>
+</head>
+<body>
+
+<div class="mui-container">
+    <h1>✅ Demo Key - Always Pass</h1>
+
+    <div class="explanation">
+        <h2>About This Demo Key</h2>
+        <p>
+            The "Always Pass" demo key provides trivial CAPTCHA challenges that automatically verify successfully.
+            This is useful for testing success flows and UI states without requiring complex provider setup.
+        </p>
+
+        <div class="demo-key-info">
+            <strong>Site Key:</strong> 5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy (Dave)
+        </div>
+
+        <div class="demo-key-warning">
+            <strong>⚠️ WARNING:</strong> This is a demo key for development/testing only.
+            It is automatically disabled in production environments.
+            A red warning banner will be displayed on the widget.
+        </div>
+
+        <h3>Expected Behavior</h3>
+        <ul>
+            <li>CAPTCHA presents a trivial PoW challenge with difficulty 1</li>
+            <li>Solution automatically verifies as successful</li>
+            <li><code>onCaptchaVerified</code> callback is triggered</li>
+            <li>Red warning banner appears at the bottom of the widget</li>
+        </ul>
+    </div>
+
+    <!-- CAPTCHA Status Display will be injected by the status-log-injector plugin -->
+
+    <div class="demo-section">
+        <h3>✅ Test Form - Always Pass</h3>
+        <p>Submit this form to test the Always Pass demo key behavior:</p>
+
+        <form class="mui-form">
+            <div class="mui-textfield mui-textfield--float-label">
+                <label for="name-pass">Name</label>
+                <input id="name-pass" type="text" name="name" placeholder="Enter any name"/>
+            </div>
+            <div class="mui-textfield mui-textfield--float-label">
+                <label for="email-pass">Email</label>
+                <input id="email-pass" type="email" name="email" placeholder="test@example.com"/>
+            </div>
+            <div class="mui-textfield mui-textfield--float-label">
+                <div
+                    class="procaptcha"
+                    data-theme="light"
+                    data-sitekey="5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy"
+                    data-failed-callback="onCaptchaFailed"
+                    data-callback="onCaptchaVerified"
+                    data-expired-callback="onCaptchaExpired"
+                    data-captcha-type="frictionless"
+                ></div>
+            </div>
+            <button type="submit" class="mui-btn mui-btn--raised" onclick="event.preventDefault(); updateCaptchaStatus('Form submitted with Always Pass key', 'success');">
+                Submit
+            </button>
+        </form>
+    </div>
+
+    <div class="explanation">
+        <h2>Usage Example</h2>
+        <div class="code-box">
+&lt;div class="procaptcha"<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;data-sitekey="5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy"<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;data-callback="onSuccess"<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;data-failed-callback="onFailure"<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;data-captcha-type="frictionless"<br/>
+&gt;&lt;/div&gt;
+        </div>
+    </div>
+</div>
+</body>
+</html>

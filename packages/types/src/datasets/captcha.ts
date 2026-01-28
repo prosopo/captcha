@@ -134,12 +134,13 @@ export type DatasetID = string;
 export const POW_SEPARATOR = "___";
 
 export type PoWChallengeId =
-	`${Timestamp}${typeof POW_SEPARATOR}${UserAccount}${typeof POW_SEPARATOR}${DappAccount}`;
+	`${Timestamp}${typeof POW_SEPARATOR}${UserAccount}${typeof POW_SEPARATOR}${DappAccount}${typeof POW_SEPARATOR}${number}`;
 
-// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-export const PowChallengeIdSchema = custom<PoWChallengeId>((val: any) => {
+export const PowChallengeIdSchema = custom<PoWChallengeId>((val: string) => {
 	const valSplit = val.split(POW_SEPARATOR);
 	try {
+		if (!valSplit[0]) return false;
+
 		Number.parseInt(valSplit[0]);
 		return valSplit.length === 4;
 	} catch (e) {
@@ -158,6 +159,7 @@ export type PoWChallengeComponents = {
 	requestedAtTimestamp: Timestamp;
 	userAccount: UserAccount;
 	dappAccount: DappAccount;
+	nonce: number;
 };
 
 export interface PoWCaptcha {
