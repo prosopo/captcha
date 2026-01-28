@@ -75,9 +75,7 @@ describe("GeolocationService", () => {
 
 		it("should handle initialization errors gracefully", async () => {
 			const { Reader } = await import("@maxmind/geoip2-node");
-			vi.mocked(Reader.open).mockRejectedValueOnce(
-				new Error("File not found"),
-			);
+			vi.mocked(Reader.open).mockRejectedValueOnce(new Error("File not found"));
 
 			const service = new GeolocationService("/path/to/nonexistent.mmdb");
 			await service.initialize();

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Logger } from "@prosopo/common";
 import type { ReaderModel } from "@maxmind/geoip2-node";
+import type { Logger } from "@prosopo/common";
 
 export interface GeolocationResult {
 	countryCode?: string;

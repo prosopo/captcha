@@ -45,7 +45,9 @@ import {
 // Singleton geolocation service instance
 let geolocationService: GeolocationService | null = null;
 
-const getGeolocationService = (env: ProviderEnvironment): GeolocationService => {
+const getGeolocationService = (
+	env: ProviderEnvironment,
+): GeolocationService => {
 	if (!geolocationService) {
 		geolocationService = new GeolocationService(
 			env.config.maxmindDbPath,

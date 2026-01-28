@@ -35,7 +35,13 @@ export const getRequestUserScope = (
 	countryCode?: string,
 ): Pick<
 	UserScopeRecord,
-	"userId" | "ja4Hash" | "userAgent" | "ip" | "headHash" | "coords" | "countryCode"
+	| "userId"
+	| "ja4Hash"
+	| "userAgent"
+	| "ip"
+	| "headHash"
+	| "coords"
+	| "countryCode"
 > => {
 	const userAgent = requestHeaders["user-agent"]
 		? requestHeaders["user-agent"].toString()
