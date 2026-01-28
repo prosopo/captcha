@@ -572,6 +572,17 @@ DetectorRecordSchema.index({ createdAt: 1 }, { unique: true });
 // TTL index for automatic cleanup of expired keys
 DetectorRecordSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
+/**
+ * Decision machine artifact stored in the database.
+ * The combination of scope + dappAccount uniquely identifies one artifact.
+ *
+ * Examples:
+ * - Global scope: { scope: "global", dappAccount: null }
+ * - Dapp scope: { scope: "dapp", dappAccount: "0x123..." }
+ *
+ * Future scope extensions (e.g., device type) would add additional fields
+ * to this composite key to maintain uniqueness.
+ */
 export type DecisionMachineArtifact = {
 	scope: DecisionMachineScope;
 	dappAccount?: string;
@@ -610,6 +621,7 @@ export const DecisionMachineArtifactRecordSchema =
 		createdAt: { type: Date, required: true },
 		updatedAt: { type: Date, required: true },
 	});
+// Unique index: one artifact per (scope, dappAccount) combination
 DecisionMachineArtifactRecordSchema.index(
 	{ scope: 1, dappAccount: 1 },
 	{ unique: true },

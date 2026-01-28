@@ -1825,6 +1825,15 @@ export class ProviderDatabase
 		return (keyRecords || []).map((record) => record.detectorKey);
 	}
 
+	/**
+	 * Stores a decision machine artifact with a unique scope identifier.
+	 *
+	 * The combination of scope + dappAccount uniquely identifies a single artifact:
+	 * - Global scope: One artifact per provider (dappAccount is null)
+	 * - Dapp scope: One artifact per dapp account (dappAccount is specified)
+	 *
+	 * @param artifact - The decision machine artifact to store
+	 */
 	async upsertDecisionMachineArtifact(
 		artifact: DecisionMachineArtifact,
 	): Promise<void> {
@@ -1856,6 +1865,13 @@ export class ProviderDatabase
 		);
 	}
 
+	/**
+	 * Retrieves a single decision machine artifact by scope and optional dapp account.
+	 *
+	 * @param scope - The scope level (Global or Dapp)
+	 * @param dappAccount - Required for Dapp scope, unused for Global scope
+	 * @returns The matching artifact, or undefined if not found
+	 */
 	async getDecisionMachineArtifact(
 		scope: DecisionMachineScope,
 		dappAccount?: string,

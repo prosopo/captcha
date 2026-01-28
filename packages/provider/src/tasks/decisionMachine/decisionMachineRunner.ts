@@ -41,12 +41,20 @@ const DEFAULT_DECISION: DecisionMachineOutput = {
 export class DecisionMachineRunner {
 	constructor(private readonly db: IProviderDatabase) {}
 
+	/**
+	 * Evaluates a single decision machine artifact and returns a decision.
+	 * Only one decision machine is selected and executed per request based on scope priority.
+	 *
+	 * @param input - The decision machine input containing user, dapp, and behavioral data
+	 * @param logger - Optional logger for warnings and errors
+	 * @returns A decision (allow/deny) with optional metadata
+	 */
 	async decide(
 		input: DecisionMachineInput,
 		logger?: Logger,
 	): Promise<DecisionMachineOutput> {
 		try {
-			const artifact = await this.getActiveArtifact(input.dappAccount);
+			const artifact = await this.selectArtifact(input.dappAccount);
 			if (!artifact) {
 				return DEFAULT_DECISION;
 			}
@@ -71,9 +79,19 @@ export class DecisionMachineRunner {
 		}
 	}
 
-	private async getActiveArtifact(
+	/**
+	 * Selects a single decision machine artifact based on scope priority.
+	 * Currently supports two scopes with the following priority:
+	 *   1. Dapp-specific: Custom decision machine for a specific dapp account
+	 *   2. Global: Default decision machine applied to all dapps
+	 *
+	 * @param dappAccount - The dapp account identifier to check for dapp-specific artifacts
+	 * @returns The single highest-priority artifact, or undefined if none exists
+	 */
+	private async selectArtifact(
 		dappAccount: string,
 	): Promise<DecisionMachineArtifact | undefined> {
+		// Check for dapp-specific artifact first (highest priority)
 		const dappArtifact = await this.db.getDecisionMachineArtifact(
 			DecisionMachineScope.Dapp,
 			dappAccount,
@@ -82,6 +100,7 @@ export class DecisionMachineRunner {
 			return dappArtifact;
 		}
 
+		// Fall back to global artifact (lower priority)
 		return this.db.getDecisionMachineArtifact(DecisionMachineScope.Global);
 	}
 
