@@ -29,6 +29,7 @@ const userAttributesSchema: SchemaDefinition<UserAttributesRecord> = {
 	headersHash: { type: String, required: false },
 	headHash: { type: String, required: false },
 	coords: { type: String, required: false },
+	countryCode: { type: String, required: false },
 } satisfies AllKeys<UserAttributesRecord>;
 
 const userIpSchema: SchemaDefinition<UserIpRecord> = {
