@@ -239,9 +239,19 @@ export default (
 				siteKey: dapp,
 			});
 
-			// Get country code for geoblocking
-			const geoService = getGeolocationService(env);
-			const countryCode = await geoService.getCountryCode(req.ip || "");
+			// Get country code for geoblocking (skip if env is incomplete)
+			let countryCode: string | undefined;
+			if (env?.config?.maxmindDbPath) {
+				try {
+					const geoService = getGeolocationService(env);
+					countryCode = await geoService.getCountryCode(req.ip || "");
+				} catch (err) {
+					req.logger?.warn?.(() => ({
+						err,
+						msg: "Failed to resolve geolocation; skipping geoblocking",
+					}));
+				}
+			}
 
 			// Check if the IP address is blocked
 			const userScope = getRequestUserScope(
