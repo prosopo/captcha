@@ -14,6 +14,11 @@
 
 import type { IUserSettings, Tier } from "../client/index.js";
 import type { CaptchaSolution } from "../datasets/index.js";
+import type {
+	DecisionMachineLanguage,
+	DecisionMachineRuntime,
+	DecisionMachineScope,
+} from "../decisionMachine/index.js";
 import type { ProcaptchaToken, StoredEvents } from "../procaptcha/index.js";
 import type {
 	ApiResponse,
@@ -77,5 +82,15 @@ export interface ProviderApiInterface {
 		detectorKey: string,
 		jwt: string,
 		expirationInSeconds?: number,
+	): Promise<ApiResponse>;
+	updateDecisionMachine(
+		scope: DecisionMachineScope,
+		runtime: DecisionMachineRuntime,
+		source: string,
+		jwt: string,
+		dappAccount?: string,
+		language?: DecisionMachineLanguage,
+		name?: string,
+		version?: string,
 	): Promise<ApiResponse>;
 }
