@@ -505,6 +505,7 @@ export type Session = {
 	webView: boolean;
 	iFrame: boolean;
 	decryptedHeadHash: string;
+	siteKey?: string;
 	reason?: string;
 };
 
@@ -536,6 +537,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	webView: { type: Boolean, required: true, default: false },
 	iFrame: { type: Boolean, required: true, default: false },
 	decryptedHeadHash: { type: String, required: false, default: "" },
+	siteKey: { type: String, required: false },
 	reason: { type: String, required: false },
 });
 
@@ -545,6 +547,14 @@ SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
 SessionRecordSchema.index({ userSitekeyIpHash: 1 });
 SessionRecordSchema.index({ providerSelectEntropy: 1 });
 SessionRecordSchema.index({ token: 1 });
+SessionRecordSchema.index({ siteKey: 1 }, { background: true, sparse: true });
+// Compound indexes for session aggregation queries
+SessionRecordSchema.index({
+	createdAt: 1,
+	captchaType: 1,
+	"scoreComponents.baseScore": 1,
+});
+SessionRecordSchema.index({ createdAt: 1, deleted: 1 });
 
 export type DetectorKey = {
 	detectorKey: string;
