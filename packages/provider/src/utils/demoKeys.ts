@@ -79,7 +79,6 @@ export function shouldBypassForDemoKey(
 	siteKey: string,
 	behavior: DemoKeyBehavior,
 ): boolean {
-	console.log("shouldBypassForDemoKey", siteKey, behavior, areDemoKeysEnabled());
 	const keyBehavior = getDemoKeyBehavior(siteKey);
 	return keyBehavior === behavior;
 }
