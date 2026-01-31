@@ -13,7 +13,14 @@
 // limitations under the License.
 
 import { type TranslationKey, TranslationKeysSchema } from "@prosopo/locale";
-import { CaptchaType, ContextType, Tier } from "@prosopo/types";
+import {
+	CaptchaType,
+	ContextType,
+	DecisionMachineLanguage,
+	DecisionMachineRuntime,
+	DecisionMachineScope,
+	Tier,
+} from "@prosopo/types";
 import {
 	type Captcha,
 	type CaptchaResult,
@@ -565,6 +572,62 @@ DetectorRecordSchema.index({ createdAt: 1 }, { unique: true });
 // TTL index for automatic cleanup of expired keys
 DetectorRecordSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
+/**
+ * Decision machine artifact stored in the database.
+ * The combination of scope + dappAccount uniquely identifies one artifact.
+ *
+ * Examples:
+ * - Global scope: { scope: "global", dappAccount: null }
+ * - Dapp scope: { scope: "dapp", dappAccount: "0x123..." }
+ *
+ * Future scope extensions (e.g., device type) would add additional fields
+ * to this composite key to maintain uniqueness.
+ */
+export type DecisionMachineArtifact = {
+	scope: DecisionMachineScope;
+	dappAccount?: string;
+	runtime: DecisionMachineRuntime;
+	language?: DecisionMachineLanguage;
+	source: string;
+	name?: string;
+	version?: string;
+	createdAt: Date;
+	updatedAt: Date;
+};
+
+export type DecisionMachineArtifactRecord = mongoose.Document &
+	DecisionMachineArtifact;
+export const DecisionMachineArtifactRecordSchema =
+	new Schema<DecisionMachineArtifactRecord>({
+		scope: {
+			type: String,
+			enum: Object.values(DecisionMachineScope),
+			required: true,
+		},
+		dappAccount: { type: String, required: false, default: null },
+		runtime: {
+			type: String,
+			enum: Object.values(DecisionMachineRuntime),
+			required: true,
+		},
+		language: {
+			type: String,
+			enum: Object.values(DecisionMachineLanguage),
+			required: false,
+		},
+		source: { type: String, required: true },
+		name: { type: String, required: false },
+		version: { type: String, required: false },
+		createdAt: { type: Date, required: true },
+		updatedAt: { type: Date, required: true },
+	});
+// Unique index: one artifact per (scope, dappAccount) combination
+DecisionMachineArtifactRecordSchema.index(
+	{ scope: 1, dappAccount: 1 },
+	{ unique: true },
+);
+DecisionMachineArtifactRecordSchema.index({ updatedAt: -1 });
+
 export type ClientContextEntropy = {
 	account: string;
 	contextType: ContextType;
@@ -803,6 +866,15 @@ export interface IProviderDatabase extends IDatabase {
 		detectorKey: string,
 		expirationInSeconds?: number,
 	): Promise<void>;
+
+	upsertDecisionMachineArtifact(
+		artifact: DecisionMachineArtifact,
+	): Promise<void>;
+
+	getDecisionMachineArtifact(
+		scope: DecisionMachineScope,
+		dappAccount?: string,
+	): Promise<DecisionMachineArtifact | undefined>;
 
 	setClientContextEntropy(
 		account: string,
