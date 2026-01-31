@@ -1,5 +1,20 @@
 # @prosopo/cli
 
+## 3.5.22
+### Patch Changes
+
+- f52a5c1: Adding decision machine to provider for behavior detection
+- Updated dependencies [261f89f]
+- Updated dependencies [f52a5c1]
+- Updated dependencies [4299cae]
+  - @prosopo/provider@3.16.0
+  - @prosopo/types@3.8.1
+  - @prosopo/api@3.1.42
+  - @prosopo/env@3.2.37
+  - @prosopo/api-express-router@3.0.49
+  - @prosopo/keyring@2.9.1
+  - @prosopo/user-access-policy@3.6.2
+
 ## 3.5.21
 ### Patch Changes
 

@@ -1,5 +1,28 @@
 # @prosopo/provider
 
+## 3.16.0
+### Minor Changes
+
+- 4299cae: Adding site key to session records
+
+### Patch Changes
+
+- 261f89f: Actually set the site key
+- f52a5c1: Adding decision machine to provider for behavior detection
+- Updated dependencies [f52a5c1]
+- Updated dependencies [4299cae]
+  - @prosopo/types-database@4.2.0
+  - @prosopo/database@3.6.8
+  - @prosopo/types@3.8.1
+  - @prosopo/api@3.1.42
+  - @prosopo/datasets@3.0.57
+  - @prosopo/types-env@2.7.61
+  - @prosopo/env@3.2.37
+  - @prosopo/api-express-router@3.0.49
+  - @prosopo/keyring@2.9.1
+  - @prosopo/load-balancer@2.8.18
+  - @prosopo/user-access-policy@3.6.2
+
 ## 3.15.2
 ### Patch Changes
 

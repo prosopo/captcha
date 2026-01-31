@@ -1,5 +1,15 @@
 # @prosopo/database
 
+## 3.6.8
+### Patch Changes
+
+- f52a5c1: Adding decision machine to provider for behavior detection
+- Updated dependencies [f52a5c1]
+- Updated dependencies [4299cae]
+  - @prosopo/types-database@4.2.0
+  - @prosopo/types@3.8.1
+  - @prosopo/user-access-policy@3.6.2
+
 ## 3.6.7
 ### Patch Changes
 
