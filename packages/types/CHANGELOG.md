@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 3.8.1
+### Patch Changes
+
+- f52a5c1: Adding decision machine to provider for behavior detection
+
 ## 3.8.0
 ### Minor Changes
 
