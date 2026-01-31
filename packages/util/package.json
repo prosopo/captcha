@@ -38,7 +38,7 @@
 		"@noble/hashes": "1.8.0",
 		"dotenv": "16.4.5",
 		"ip-address": "10.0.1",
-		"lodash": "4.17.21",
+		"lodash": "4.17.23",
 		"seedrandom": "3.0.5"
 	},
 	"devDependencies": {
