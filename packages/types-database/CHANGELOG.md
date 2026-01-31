@@ -1,5 +1,17 @@
 # @prosopo/types-database
 
+## 4.2.0
+### Minor Changes
+
+- 4299cae: Adding site key to session records
+
+### Patch Changes
+
+- f52a5c1: Adding decision machine to provider for behavior detection
+- Updated dependencies [f52a5c1]
+  - @prosopo/types@3.8.1
+  - @prosopo/user-access-policy@3.6.2
+
 ## 4.1.6
 ### Patch Changes
 
