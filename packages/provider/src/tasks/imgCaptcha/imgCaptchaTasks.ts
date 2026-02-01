@@ -611,43 +611,45 @@ export class ImgCaptchaManager extends CaptchaManager {
 				}
 			}
 		}
-		// Captcha solution is correct, now check decision machine
-		const decisionInput: DecisionMachineInput = {
-			userAccount: solution.userAccount,
-			dappAccount: solution.dappAccount,
-			captchaResult: "passed",
-			headers: solution.headers,
-			captchaType: CaptchaType.image,
-		};
+		if (isApproved) {
+			// Captcha solution is correct, now check decision machine
+			const decisionInput: DecisionMachineInput = {
+				userAccount: solution.userAccount,
+				dappAccount: solution.dappAccount,
+				captchaResult: "passed",
+				headers: solution.headers,
+				captchaType: CaptchaType.image,
+			};
 
-		try {
-			const decision = await this.decisionMachineRunner.decide(
-				decisionInput,
-				this.logger,
-			);
-			if (decision.decision === DecisionMachineDecision.Deny) {
-				if (commitmentId) {
-					// commitmentId should always be present
-					await this.db.disapproveDappUserCommitment(
-						commitmentId,
-						decision.reason || "CAPTCHA.DECISION_MACHINE_DENIED",
-					);
-					// log
-					this.logger?.info(() => ({
-						msg: "Decision machine denied user verification",
-						data: {
-							commitmentId: commitmentId,
-							reason: decision.reason,
-						},
-					}));
-					isApproved = false;
+			try {
+				const decision = await this.decisionMachineRunner.decide(
+					decisionInput,
+					this.logger,
+				);
+				if (decision.decision === DecisionMachineDecision.Deny) {
+					if (commitmentId) {
+						// commitmentId should always be present
+						await this.db.disapproveDappUserCommitment(
+							commitmentId,
+							decision.reason || "CAPTCHA.DECISION_MACHINE_DENIED",
+						);
+						// log
+						this.logger?.info(() => ({
+							msg: "Decision machine denied user verification",
+							data: {
+								commitmentId: commitmentId,
+								reason: decision.reason,
+							},
+						}));
+						isApproved = false;
+					}
 				}
+			} catch (error) {
+				this.logger?.error(() => ({
+					msg: "Failed to process decision machine",
+					err: error,
+				}));
 			}
-		} catch (error) {
-			this.logger?.error(() => ({
-				msg: "Failed to process decision machine",
-				err: error,
-			}));
 		}
 
 		return {
