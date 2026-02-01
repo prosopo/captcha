@@ -17,6 +17,8 @@
 		"MISSING_QUERY_PARAMETERS": "Hiányzó lekérdezési paraméterek",
 		"MISSING_AUTHORIZATION_HEADER": "Hiányzó azonosítási fejléc",
 		"TIMESTAMP_TOO_OLD": "Az időbélyeg túl régi",
+		"FAILED_IP_VALIDATION": "Az IP-ellenőrzés sikertelen",
+		"ACCESS_POLICY_BLOCK": "A hozzáférést a szabályzat letiltotta",
 		"FORBIDDEN": "tiltott",
 		"PROVIDER_VERIFY_FAILED": "Szolgáltató ellenőrzése sikertelen",
 		"UNAUTHORIZED": "Unauthorized",

@@ -1,5 +1,54 @@
 # @prosopo/types-database
 
+## 4.2.1
+### Patch Changes
+
+- 9633e58: Add captcha type to decision machine and run on image verification"
+- Updated dependencies [9633e58]
+  - @prosopo/types@3.8.2
+  - @prosopo/user-access-policy@3.6.3
+
+## 4.2.0
+### Minor Changes
+
+- 4299cae: Adding site key to session records
+
+### Patch Changes
+
+- f52a5c1: Adding decision machine to provider for behavior detection
+- Updated dependencies [f52a5c1]
+  - @prosopo/types@3.8.1
+  - @prosopo/user-access-policy@3.6.2
+
+## 4.1.6
+### Patch Changes
+
+- Updated dependencies [ed87b6f]
+  - @prosopo/user-access-policy@3.6.1
+
+## 4.1.5
+### Patch Changes
+
+- 3acc333: Update pow record at verify
+- 3acc333: Fix type
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 7543d17: mouse movements bot stopping
+- fe9fe22: adding api returns
+- 3acc333: Release 3.3.0
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [17854a7]
+- Updated dependencies [7543d17]
+- Updated dependencies [fe9fe22]
+- Updated dependencies [3acc333]
+  - @prosopo/types@3.8.0
+  - @prosopo/user-access-policy@3.6.0
+  - @prosopo/common@3.1.28
+  - @prosopo/locale@3.1.28
+
 ## 4.1.4
 ### Patch Changes
 

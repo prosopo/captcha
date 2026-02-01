@@ -1,5 +1,15 @@
 # @prosopo/redis-client
 
+## 1.0.13
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- Updated dependencies [0a38892]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [3acc333]
+  - @prosopo/common@3.1.28
+
 ## 1.0.12
 ### Patch Changes
 

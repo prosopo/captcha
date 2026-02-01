@@ -1,5 +1,69 @@
 # @prosopo/provider-mock
 
+## 2.8.49
+### Patch Changes
+
+- Updated dependencies [9633e58]
+  - @prosopo/types-database@4.2.1
+  - @prosopo/provider@3.16.1
+  - @prosopo/types@3.8.2
+  - @prosopo/database@3.6.9
+  - @prosopo/api-express-router@3.0.50
+
+## 2.8.48
+### Patch Changes
+
+- Updated dependencies [261f89f]
+- Updated dependencies [f52a5c1]
+- Updated dependencies [4299cae]
+  - @prosopo/provider@3.16.0
+  - @prosopo/types-database@4.2.0
+  - @prosopo/database@3.6.8
+  - @prosopo/types@3.8.1
+  - @prosopo/api-express-router@3.0.49
+
+## 2.8.47
+### Patch Changes
+
+  - @prosopo/database@3.6.7
+  - @prosopo/provider@3.15.2
+  - @prosopo/types-database@4.1.6
+  - @prosopo/api-express-router@3.0.48
+
+## 2.8.46
+### Patch Changes
+
+- Updated dependencies [15254a3]
+  - @prosopo/provider@3.15.1
+
+## 2.8.45
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+- Updated dependencies [a53526b]
+- Updated dependencies [3acc333]
+- Updated dependencies [3acc333]
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [3acc333]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [6a4d57d]
+- Updated dependencies [7543d17]
+- Updated dependencies [fe9fe22]
+- Updated dependencies [3acc333]
+- Updated dependencies [4ac7ef0]
+  - @prosopo/provider@3.15.0
+  - @prosopo/types-database@4.1.5
+  - @prosopo/database@3.6.6
+  - @prosopo/api-express-router@3.0.47
+  - @prosopo/types@3.8.0
+  - @prosopo/common@3.1.28
+  - @prosopo/dotenv@3.0.33
+  - @prosopo/locale@3.1.28
+
 ## 2.8.44
 ### Patch Changes
 

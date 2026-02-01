@@ -1,5 +1,47 @@
 # @prosopo/types-env
 
+## 2.7.62
+### Patch Changes
+
+- Updated dependencies [9633e58]
+  - @prosopo/types-database@4.2.1
+  - @prosopo/types@3.8.2
+  - @prosopo/keyring@2.9.2
+
+## 2.7.61
+### Patch Changes
+
+- Updated dependencies [f52a5c1]
+- Updated dependencies [4299cae]
+  - @prosopo/types-database@4.2.0
+  - @prosopo/types@3.8.1
+  - @prosopo/keyring@2.9.1
+
+## 2.7.60
+### Patch Changes
+
+  - @prosopo/types-database@4.1.6
+
+## 2.7.59
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+- Updated dependencies [3acc333]
+- Updated dependencies [3acc333]
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [7543d17]
+- Updated dependencies [fe9fe22]
+- Updated dependencies [3acc333]
+  - @prosopo/types-database@4.1.5
+  - @prosopo/keyring@2.9.0
+  - @prosopo/types@3.8.0
+  - @prosopo/common@3.1.28
+
 ## 2.7.58
 ### Patch Changes
 

@@ -18,9 +18,14 @@ enum CaptchaType {
 	image = "image",
 	pow = "pow",
 	frictionless = "frictionless",
-	invisible = "invisible",
 }
 
 const CaptchaTypeSchema = z.nativeEnum(CaptchaType);
 
-export { CaptchaType, CaptchaTypeSchema };
+// Decision machines only work with pow and image captcha types (not frictionless)
+const DecisionMachineCaptchaTypeSchema = z.union([
+	z.literal(CaptchaType.pow),
+	z.literal(CaptchaType.image),
+]);
+
+export { CaptchaType, CaptchaTypeSchema, DecisionMachineCaptchaTypeSchema };

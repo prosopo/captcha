@@ -1,5 +1,81 @@
 # @prosopo/cli
 
+## 3.5.23
+### Patch Changes
+
+- Updated dependencies [9633e58]
+  - @prosopo/provider@3.16.1
+  - @prosopo/types@3.8.2
+  - @prosopo/api@3.1.43
+  - @prosopo/api-express-router@3.0.50
+  - @prosopo/env@3.2.38
+  - @prosopo/keyring@2.9.2
+  - @prosopo/user-access-policy@3.6.3
+
+## 3.5.22
+### Patch Changes
+
+- f52a5c1: Adding decision machine to provider for behavior detection
+- Updated dependencies [261f89f]
+- Updated dependencies [f52a5c1]
+- Updated dependencies [4299cae]
+  - @prosopo/provider@3.16.0
+  - @prosopo/types@3.8.1
+  - @prosopo/api@3.1.42
+  - @prosopo/env@3.2.37
+  - @prosopo/api-express-router@3.0.49
+  - @prosopo/keyring@2.9.1
+  - @prosopo/user-access-policy@3.6.2
+
+## 3.5.21
+### Patch Changes
+
+- Updated dependencies [ed87b6f]
+  - @prosopo/user-access-policy@3.6.1
+  - @prosopo/provider@3.15.2
+  - @prosopo/env@3.2.36
+  - @prosopo/api-express-router@3.0.48
+
+## 3.5.20
+### Patch Changes
+
+- Updated dependencies [15254a3]
+  - @prosopo/provider@3.15.1
+
+## 3.5.19
+### Patch Changes
+
+- 3acc333: Fix route ordering
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+- Updated dependencies [a53526b]
+- Updated dependencies [3acc333]
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [3acc333]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [17854a7]
+- Updated dependencies [6a4d57d]
+- Updated dependencies [7543d17]
+- Updated dependencies [fe9fe22]
+- Updated dependencies [3acc333]
+- Updated dependencies [4ac7ef0]
+  - @prosopo/provider@3.15.0
+  - @prosopo/util@3.2.5
+  - @prosopo/api-express-router@3.0.47
+  - @prosopo/util-crypto@13.5.29
+  - @prosopo/keyring@2.9.0
+  - @prosopo/types@3.8.0
+  - @prosopo/user-access-policy@3.6.0
+  - @prosopo/common@3.1.28
+  - @prosopo/dotenv@3.0.33
+  - @prosopo/locale@3.1.28
+  - @prosopo/workspace@3.1.20
+  - @prosopo/api@3.1.41
+  - @prosopo/env@3.2.35
+
 ## 3.5.18
 ### Patch Changes
 

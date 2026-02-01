@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-common",
-	"version": "2.9.22",
+	"version": "2.9.25",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "dist/index.js",
@@ -21,7 +21,8 @@
 	"source": "./src/index.ts",
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
+		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --project tsconfig.types.json",
@@ -33,14 +34,14 @@
 	"dependencies": {
 		"@emotion/react": "11.11.1",
 		"@emotion/styled": "11.11.0",
-		"@prosopo/account": "2.7.46",
-		"@prosopo/load-balancer": "2.8.16",
-		"@prosopo/types": "3.7.2",
-		"@prosopo/widget-skeleton": "2.7.12",
+		"@prosopo/account": "2.8.2",
+		"@prosopo/load-balancer": "2.8.19",
+		"@prosopo/types": "3.8.2",
+		"@prosopo/widget-skeleton": "2.7.13",
 		"react": "18.3.1"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.2.1",
+		"@prosopo/config": "3.3.0",
 		"@types/jsdom": "21.1.7",
 		"@types/node": "22.10.2",
 		"@types/react": "18.3.1",

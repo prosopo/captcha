@@ -17,6 +17,11 @@ import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
 import type { Logger } from "@prosopo/common";
 import type { KeyringPair, ProsopoConfigOutput } from "@prosopo/types";
 import {
+	CaptchaType,
+	DecisionMachineDecision,
+	type DecisionMachineInput,
+} from "@prosopo/types";
+import {
 	ApiParams,
 	type CaptchaResult,
 	CaptchaStatus,
@@ -27,6 +32,7 @@ import {
 	type RequestHeaders,
 } from "@prosopo/types";
 import type {
+	BehavioralDataPacked,
 	IProviderDatabase,
 	PoWCaptchaRecord,
 } from "@prosopo/types-database";
@@ -44,6 +50,8 @@ import {
 } from "../../compositeIpAddress.js";
 import { deepValidateIpAddress } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
+import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
+import type { BehavioralDataResult } from "../detection/decodeBehavior.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
 
@@ -64,6 +72,7 @@ const DEFAULT_POW_DIFFICULTY = 4;
 
 export class PowCaptchaManager extends CaptchaManager {
 	POW_SEPARATOR: string;
+	private decisionMachineRunner: DecisionMachineRunner;
 
 	constructor(
 		db: IProviderDatabase,
@@ -73,6 +82,7 @@ export class PowCaptchaManager extends CaptchaManager {
 	) {
 		super(db, pair, config, logger);
 		this.POW_SEPARATOR = POW_SEPARATOR;
+		this.decisionMachineRunner = new DecisionMachineRunner(db);
 	}
 
 	/**
@@ -174,6 +184,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		userTimestampSignature: string,
 		ipAddress: IPAddress,
 		headers: RequestHeaders,
+		behavioralData?: string,
 		salt?: string,
 	): Promise<boolean> {
 		// Check signatures before doing DB reads to avoid unnecessary network connections
@@ -251,6 +262,62 @@ export class PowCaptchaManager extends CaptchaManager {
 			};
 		}
 
+		// Process behavioral data if provided
+		if (behavioralData) {
+			try {
+				// Get decryption keys: detector keys from DB first, then env var as fallback
+				const decryptKeys = [
+					// Process DB keys first, then env var key last as env key will likely be invalid
+					...(await this.getDetectorKeys()),
+					process.env.BOT_DECRYPTION_KEY,
+				];
+
+				// Decrypt the behavioral data (returns unpacked format)
+				const decryptedData = await this.decryptBehavioralData(
+					behavioralData,
+					decryptKeys,
+				);
+
+				if (decryptedData) {
+					const dappAccount = at(challengeSplit, 2);
+					// Log behavioral analytics using unpacked data counts
+					this.logger?.info(() => ({
+						msg: "Behavioral analysis completed",
+						data: {
+							userAccount,
+							dappAccount,
+							challenge,
+							mouseEventsCount: decryptedData.collector1?.length || 0,
+							touchEventsCount: decryptedData.collector2?.length || 0,
+							clickEventsCount: decryptedData.collector3?.length || 0,
+							deviceCapability: decryptedData.deviceCapability,
+							captchaResult: correct ? "passed" : "failed",
+						},
+					}));
+
+					// Convert to packed format for storage
+					const packedData: BehavioralDataPacked = {
+						c1: decryptedData.collector1 || [],
+						c2: decryptedData.collector2 || [],
+						c3: decryptedData.collector3 || [],
+						d: decryptedData.deviceCapability,
+					};
+
+					// Store the packed data to database
+					await this.db.updatePowCaptchaRecord(challenge, {
+						behavioralDataPacked: packedData,
+						deviceCapability: decryptedData.deviceCapability,
+					});
+				}
+			} catch (error) {
+				this.logger?.error(() => ({
+					msg: "Failed to process behavioral data",
+					err: error,
+				}));
+				// Don't fail the captcha if behavioral analysis fails
+			}
+		}
+
 		await this.db.updatePowCaptchaRecordResult(
 			challenge,
 			result,
@@ -259,6 +326,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			userTimestampSignature,
 			coords,
 		);
+
 		return correct;
 	}
 
@@ -328,6 +396,12 @@ export class PowCaptchaManager extends CaptchaManager {
 
 		const recent = verifyRecency(challenge, timeout);
 		if (!recent) {
+			await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
+				result: {
+					status: CaptchaStatus.disapproved,
+					reason: "API.TIMESTAMP_TOO_OLD",
+				},
+			});
 			return notVerifiedResponse;
 		}
 
@@ -352,6 +426,12 @@ export class PowCaptchaManager extends CaptchaManager {
 							policy: blockPolicy,
 						},
 					}));
+					await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
+						result: {
+							status: CaptchaStatus.disapproved,
+							reason: "API.ACCESS_POLICY_BLOCK",
+						},
+					});
 					return notVerifiedResponse;
 				}
 			} catch (error) {
@@ -394,6 +474,12 @@ export class PowCaptchaManager extends CaptchaManager {
 						distanceKm: ipValidation.distanceKm,
 					},
 				}));
+				await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
+					result: {
+						status: CaptchaStatus.disapproved,
+						reason: "API.FAILED_IP_VALIDATION",
+					},
+				});
 				return notVerifiedResponse;
 			}
 		}
@@ -414,6 +500,134 @@ export class PowCaptchaManager extends CaptchaManager {
 			}
 		}
 
+		// We know solution is correct by this point. Run decision machine evaluation to process additional checks.
+		try {
+			const decisionInput: DecisionMachineInput = {
+				userAccount: challengeRecord.userAccount,
+				dappAccount: challengeRecord.dappAccount,
+				captchaResult: "passed",
+				headers: challengeRecord.headers,
+				captchaType: CaptchaType.pow,
+				behavioralDataPacked: challengeRecord.behavioralDataPacked,
+				deviceCapability: challengeRecord.deviceCapability,
+			};
+
+			const decision = await this.decisionMachineRunner.decide(
+				decisionInput,
+				this.logger,
+			);
+
+			if (decision.decision === DecisionMachineDecision.Deny) {
+				this.logger.info(() => ({
+					msg: "Decision machine denied PoW captcha in server verification",
+					data: {
+						challenge,
+						userAccount: challengeRecord.userAccount,
+						dappAccount,
+						reason: decision.reason,
+						score: decision.score,
+						tags: decision.tags,
+					},
+				}));
+
+				await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
+					result: {
+						status: CaptchaStatus.disapproved,
+						reason: decision.reason || "CAPTCHA.DECISION_MACHINE_DENIED",
+					},
+				});
+				return notVerifiedResponse;
+			}
+
+			this.logger.debug(() => ({
+				msg: "Decision machine allowed PoW captcha",
+				data: {
+					challenge,
+					reason: decision.reason,
+					score: decision.score,
+					tags: decision.tags,
+				},
+			}));
+		} catch (error) {
+			this.logger?.error(() => ({
+				msg: "Failed to run decision machine in server PoW verification",
+				err: error,
+			}));
+			// Don't fail the captcha if decision machine fails - default to allow
+		}
+
 		return { verified: true, ...(score ? { score } : {}) };
+	}
+
+	/**
+	 * Decrypts behavioral data
+	 * @param encryptedData - The encrypted behavioral data
+	 * @param decryptKeys - Array of possible decryption keys to try
+	 * @returns Decrypted behavioral data in unpacked format, or null if decryption fails
+	 */
+	private async decryptBehavioralData(
+		encryptedData: string,
+		decryptKeys: (string | undefined)[],
+	): Promise<BehavioralDataResult | null> {
+		const decryptBehavioralData = (
+			await import("../detection/decodeBehavior.js")
+		).default;
+
+		const validKeys = decryptKeys.filter((k) => k);
+
+		if (validKeys.length === 0) {
+			this.logger?.error(() => ({
+				msg: "No decryption keys provided for behavioral data",
+			}));
+			return null;
+		}
+
+		// Try each key until one succeeds
+		for (const [keyIndex, key] of validKeys.entries()) {
+			try {
+				this.logger?.debug(() => ({
+					msg: "Attempting to decrypt behavioral data",
+					data: {
+						keyIndex: keyIndex + 1,
+						totalKeys: validKeys.length,
+					},
+				}));
+
+				// Decrypt behavioral data - returns unpacked format: {collector1, collector2, collector3, deviceCapability, timestamp}
+				const result = await decryptBehavioralData(encryptedData, key);
+
+				this.logger?.info(() => ({
+					msg: "Behavioral data decrypted successfully",
+					data: {
+						keyIndex: keyIndex + 1,
+						c1Length: result.collector1?.length || 0,
+						c2Length: result.collector2?.length || 0,
+						c3Length: result.collector3?.length || 0,
+						deviceCapability: result.deviceCapability,
+					},
+				}));
+
+				return result;
+			} catch (error) {
+				this.logger?.debug(() => ({
+					msg: "Failed to decrypt with key, trying next",
+					data: {
+						keyIndex: keyIndex + 1,
+						totalKeys: validKeys.length,
+						err: error,
+					},
+				}));
+				// Continue to next key
+			}
+		}
+
+		// All keys failed
+		this.logger?.error(() => ({
+			msg: "Failed to decrypt behavioral data with all available keys",
+			data: {
+				totalKeysAttempted: validKeys.length,
+			},
+		}));
+		return null;
 	}
 }

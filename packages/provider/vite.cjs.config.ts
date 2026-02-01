@@ -1,4 +1,3 @@
-import path from "node:path";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,11 +11,24 @@ import path from "node:path";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ViteCommonJSConfig } from "@prosopo/config";
 
-export default function () {
-	return ViteCommonJSConfig(
+import path from "node:path";
+import { ViteCommonJSConfig, VitePluginCopy } from "@prosopo/config";
+import { mergeConfig } from "vite";
+
+export default async function () {
+	const baseConfig = await ViteCommonJSConfig(
 		path.basename("."),
 		path.resolve("./tsconfig.json"),
 	);
+
+	return mergeConfig(baseConfig, {
+		plugins: [
+			VitePluginCopy({
+				srcDir: "src",
+				destDir: "dist/cjs",
+				include: ["**/detection/*.js"],
+			}),
+		],
+	});
 }

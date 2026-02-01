@@ -1,5 +1,12 @@
 # @prosopo/testpkg2
 
+## 1.0.31
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+
 ## 1.0.30
 ### Patch Changes
 

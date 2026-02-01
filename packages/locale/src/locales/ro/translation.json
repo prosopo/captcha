@@ -17,6 +17,8 @@
 		"MISSING_QUERY_PARAMETERS": "Parametrii de interogare lipsesc",
 		"MISSING_AUTHORIZATION_HEADER": "Header de autorizare lipsa",
 		"TIMESTAMP_TOO_OLD": "Marca de timp prea veche",
+		"FAILED_IP_VALIDATION": "Validarea IP a eșuat",
+		"ACCESS_POLICY_BLOCK": "Acces blocat de politică",
 		"FORBIDDEN": "Interzis",
 		"PROVIDER_VERIFY_FAILED": "Verificarea furnizorului a esuat",
 		"UNAUTHORIZED": "Neautorizat",

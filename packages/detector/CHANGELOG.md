@@ -1,5 +1,44 @@
 # @prosopo/detector
 
+## 3.4.3
+### Patch Changes
+
+- Updated dependencies [9633e58]
+  - @prosopo/types@3.8.2
+
+## 3.4.2
+### Patch Changes
+
+- Updated dependencies [f52a5c1]
+  - @prosopo/types@3.8.1
+
+## 3.4.1
+### Patch Changes
+
+- 15254a3: Key cycle
+
+## 3.4.0
+### Minor Changes
+
+- 6a4d57d: Move account creation into worker
+
+### Patch Changes
+
+- 3acc333: Update pow record at verify
+- 3acc333: Fix type
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 7543d17: mouse movements bot stopping
+- 3acc333: Release 3.3.0
+- 4ac7ef0: Fixing provider side typing of collectors
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [7543d17]
+- Updated dependencies [3acc333]
+  - @prosopo/types@3.8.0
+
 ## 3.3.24
 ### Patch Changes
 

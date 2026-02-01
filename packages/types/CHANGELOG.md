@@ -1,5 +1,37 @@
 # @prosopo/types
 
+## 3.8.2
+### Patch Changes
+
+- 9633e58: Add captcha type to decision machine and run on image verification"
+
+## 3.8.1
+### Patch Changes
+
+- f52a5c1: Adding decision machine to provider for behavior detection
+
+## 3.8.0
+### Minor Changes
+
+- 1ee3d80: More API fixes
+
+### Patch Changes
+
+- 3acc333: Add JWT issuance to keypairs
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 7543d17: mouse movements bot stopping
+- 3acc333: Release 3.3.0
+- Updated dependencies [a53526b]
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [fe9fe22]
+- Updated dependencies [3acc333]
+  - @prosopo/util@3.2.5
+  - @prosopo/util-crypto@13.5.29
+  - @prosopo/locale@3.1.28
+
 ## 3.7.2
 ### Patch Changes
 

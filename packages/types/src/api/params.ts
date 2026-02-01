@@ -53,5 +53,13 @@ export enum ApiParams {
 	expirationInSeconds = "expirationInSeconds",
 	enabled = "enabled",
 	headHash = "headHash",
+	behavioralData = "behavioralData",
+	decisionMachineScope = "decisionMachineScope",
+	decisionMachineRuntime = "decisionMachineRuntime",
+	decisionMachineSource = "decisionMachineSource",
+	decisionMachineLanguage = "decisionMachineLanguage",
+	decisionMachineName = "decisionMachineName",
+	decisionMachineVersion = "decisionMachineVersion",
+	decisionMachineCaptchaType = "decisionMachineCaptchaType",
 	salt = "salt",
 }

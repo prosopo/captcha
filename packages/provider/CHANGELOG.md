@@ -1,5 +1,107 @@
 # @prosopo/provider
 
+## 3.16.1
+### Patch Changes
+
+- 9633e58: Add captcha type to decision machine and run on image verification"
+- Updated dependencies [9633e58]
+  - @prosopo/types-database@4.2.1
+  - @prosopo/types@3.8.2
+  - @prosopo/api@3.1.43
+  - @prosopo/database@3.6.9
+  - @prosopo/datasets@3.0.58
+  - @prosopo/types-env@2.7.62
+  - @prosopo/api-express-router@3.0.50
+  - @prosopo/env@3.2.38
+  - @prosopo/keyring@2.9.2
+  - @prosopo/load-balancer@2.8.19
+  - @prosopo/user-access-policy@3.6.3
+
+## 3.16.0
+### Minor Changes
+
+- 4299cae: Adding site key to session records
+
+### Patch Changes
+
+- 261f89f: Actually set the site key
+- f52a5c1: Adding decision machine to provider for behavior detection
+- Updated dependencies [f52a5c1]
+- Updated dependencies [4299cae]
+  - @prosopo/types-database@4.2.0
+  - @prosopo/database@3.6.8
+  - @prosopo/types@3.8.1
+  - @prosopo/api@3.1.42
+  - @prosopo/datasets@3.0.57
+  - @prosopo/types-env@2.7.61
+  - @prosopo/env@3.2.37
+  - @prosopo/api-express-router@3.0.49
+  - @prosopo/keyring@2.9.1
+  - @prosopo/load-balancer@2.8.18
+  - @prosopo/user-access-policy@3.6.2
+
+## 3.15.2
+### Patch Changes
+
+- Updated dependencies [ed87b6f]
+  - @prosopo/user-access-policy@3.6.1
+  - @prosopo/database@3.6.7
+  - @prosopo/types-database@4.1.6
+  - @prosopo/env@3.2.36
+  - @prosopo/datasets@3.0.56
+  - @prosopo/types-env@2.7.60
+  - @prosopo/api-express-router@3.0.48
+
+## 3.15.1
+### Patch Changes
+
+- 15254a3: Key cycle
+
+## 3.15.0
+### Minor Changes
+
+- 6a4d57d: Move account creation into worker
+
+### Patch Changes
+
+- a53526b: enhance/pow-client-solution
+- 3acc333: Update pow record at verify
+- 3acc333: Add JWT issuance to keypairs
+- 0a38892: feat/cross-os-testing
+- 3acc333: ip parsing
+- a8faa9a: bump license year
+- 7543d17: mouse movements bot stopping
+- fe9fe22: adding api returns
+- 3acc333: Release 3.3.0
+- 4ac7ef0: Fixing provider side typing of collectors
+- Updated dependencies [a53526b]
+- Updated dependencies [3acc333]
+- Updated dependencies [3acc333]
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [17854a7]
+- Updated dependencies [7543d17]
+- Updated dependencies [fe9fe22]
+- Updated dependencies [3acc333]
+  - @prosopo/util@3.2.5
+  - @prosopo/types-database@4.1.5
+  - @prosopo/database@3.6.6
+  - @prosopo/api-express-router@3.0.47
+  - @prosopo/util-crypto@13.5.29
+  - @prosopo/keyring@2.9.0
+  - @prosopo/types@3.8.0
+  - @prosopo/user-access-policy@3.6.0
+  - @prosopo/load-balancer@2.8.17
+  - @prosopo/api-route@2.6.36
+  - @prosopo/types-env@2.7.59
+  - @prosopo/datasets@3.0.55
+  - @prosopo/common@3.1.28
+  - @prosopo/locale@3.1.28
+  - @prosopo/api@3.1.41
+  - @prosopo/env@3.2.35
+
 ## 3.14.7
 ### Patch Changes
 

@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-wrapper",
-	"version": "2.6.45",
+	"version": "2.6.48",
 	"type": "module",
 	"engines": {
 		"node": "^24",
@@ -17,17 +17,18 @@
 	},
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
+		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --project tsconfig.types.json"
 	},
 	"dependencies": {
-		"@prosopo/types": "3.7.2",
-		"@prosopo/locale": "3.1.27"
+		"@prosopo/types": "3.8.2",
+		"@prosopo/locale": "3.1.28"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.2.1",
+		"@prosopo/config": "3.3.0",
 		"@types/node": "22.10.2",
 		"del-cli": "6.0.0"
 	},

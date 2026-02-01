@@ -1,5 +1,19 @@
 # @prosopo/flux
 
+## 2.6.39
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+- Updated dependencies [a53526b]
+- Updated dependencies [0a38892]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [3acc333]
+  - @prosopo/util@3.2.5
+  - @prosopo/common@3.1.28
+  - @prosopo/dotenv@3.0.33
+
 ## 2.6.38
 ### Patch Changes
 

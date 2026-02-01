@@ -23,6 +23,7 @@ import {
 	type RequestHeaders,
 } from "@prosopo/types";
 import type {
+	BehavioralDataPacked,
 	IProviderDatabase,
 	PoWCaptchaStored,
 	Session,
@@ -83,6 +84,7 @@ describe("PowCaptchaManager", () => {
 			storePowCaptchaRecord: vi.fn(),
 			getPowCaptchaRecordByChallenge: vi.fn(),
 			updatePowCaptchaRecordResult: vi.fn(),
+			updatePowCaptchaRecord: vi.fn(),
 			markDappUserPoWCommitmentsChecked: vi.fn(),
 		} as unknown as IProviderDatabase;
 
@@ -583,6 +585,234 @@ describe("PowCaptchaManager", () => {
 			);
 
 			expect(result.verified).toBe(true);
+		});
+	});
+
+	describe("serverVerifyPowCaptchaSolution with decision machine", () => {
+		it("should allow when decision machine returns allow", async () => {
+			const dappAccount = "dappAccount";
+			const timestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
+			const timeout = 1000;
+			const ipAddress = getIPAddress("1.1.1.1");
+			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
+			const behavioralDataPacked: BehavioralDataPacked = {
+				c1: [1, 2, 3],
+				c2: [4, 5, 6],
+				c3: [7, 8, 9],
+				d: "test-device",
+			};
+
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				difficulty: 4,
+				dappAccount,
+				userAccount,
+				requestedAtTimestamp: new Date(timestamp),
+				result: { status: CaptchaStatus.approved },
+				userSubmitted: true,
+				serverChecked: false,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers,
+				ja4: "ja4",
+				providerSignature: "testSignature",
+				lastUpdatedTimestamp: new Date(),
+				behavioralDataPacked,
+				deviceCapability: "test-device",
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(verifyRecency as any).mockImplementation(() => true);
+
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				timeout,
+				mockEnv,
+			);
+
+			expect(result.verified).toBe(true);
+		});
+
+		it("should deny when decision machine returns deny", async () => {
+			const dappAccount = "dappAccount";
+			const timestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
+			const timeout = 1000;
+			const ipAddress = getIPAddress("1.1.1.1");
+			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
+			const behavioralDataPacked: BehavioralDataPacked = {
+				c1: [1, 2, 3],
+				c2: [4, 5, 6],
+				c3: [7, 8, 9],
+				d: "suspicious-device",
+			};
+
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				difficulty: 4,
+				dappAccount,
+				userAccount,
+				requestedAtTimestamp: new Date(timestamp),
+				result: { status: CaptchaStatus.approved },
+				userSubmitted: true,
+				serverChecked: false,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers,
+				ja4: "ja4",
+				providerSignature: "testSignature",
+				lastUpdatedTimestamp: new Date(),
+				behavioralDataPacked,
+				deviceCapability: "suspicious-device",
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.updatePowCaptchaRecord as any).mockResolvedValue(undefined);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(verifyRecency as any).mockImplementation(() => true);
+
+			// Mock decision machine to deny based on device capability
+			const originalDecide =
+				// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+				(powCaptchaManager as any).decisionMachineRunner.decide;
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(powCaptchaManager as any).decisionMachineRunner.decide = vi
+				.fn()
+				.mockResolvedValue({
+					decision: "deny",
+					reason: "Suspicious device detected",
+					score: 0,
+				});
+
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				timeout,
+				mockEnv,
+			);
+
+			expect(result.verified).toBe(false);
+
+			// Restore original decision machine
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(powCaptchaManager as any).decisionMachineRunner.decide = originalDecide;
+		});
+
+		it("should allow when no behavioral data is present (no decision machine run)", async () => {
+			const dappAccount = "dappAccount";
+			const timestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
+			const timeout = 1000;
+			const ipAddress = getIPAddress("1.1.1.1");
+			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
+
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				difficulty: 4,
+				dappAccount,
+				userAccount,
+				requestedAtTimestamp: new Date(timestamp),
+				result: { status: CaptchaStatus.approved },
+				userSubmitted: true,
+				serverChecked: false,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers,
+				ja4: "ja4",
+				providerSignature: "testSignature",
+				lastUpdatedTimestamp: new Date(),
+				// No behavioralDataPacked - decision machine should not run
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(verifyRecency as any).mockImplementation(() => true);
+
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				timeout,
+				mockEnv,
+			);
+
+			expect(result.verified).toBe(true);
+		});
+
+		it("should default to allow if decision machine fails", async () => {
+			const dappAccount = "dappAccount";
+			const timestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
+			const timeout = 1000;
+			const ipAddress = getIPAddress("1.1.1.1");
+			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
+			const behavioralDataPacked: BehavioralDataPacked = {
+				c1: [1, 2, 3],
+				c2: [4, 5, 6],
+				c3: [7, 8, 9],
+				d: "test-device",
+			};
+
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				difficulty: 4,
+				dappAccount,
+				userAccount,
+				requestedAtTimestamp: new Date(timestamp),
+				result: { status: CaptchaStatus.approved },
+				userSubmitted: true,
+				serverChecked: false,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers,
+				ja4: "ja4",
+				providerSignature: "testSignature",
+				lastUpdatedTimestamp: new Date(),
+				behavioralDataPacked,
+				deviceCapability: "test-device",
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(verifyRecency as any).mockImplementation(() => true);
+
+			// Mock decision machine to throw an error
+			const originalDecide =
+				// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+				(powCaptchaManager as any).decisionMachineRunner.decide;
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(powCaptchaManager as any).decisionMachineRunner.decide = vi
+				.fn()
+				.mockRejectedValue(new Error("Decision machine error"));
+
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				timeout,
+				mockEnv,
+			);
+
+			// Should default to allow on error
+			expect(result.verified).toBe(true);
+
+			// Restore original decision machine
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(powCaptchaManager as any).decisionMachineRunner.decide = originalDecide;
 		});
 	});
 });
