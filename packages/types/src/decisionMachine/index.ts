@@ -57,7 +57,6 @@ export type DecisionMachineBehavioralDataPacked = {
 export type DecisionMachineInput = {
 	userAccount: string;
 	dappAccount: string;
-	challenge: string;
 	captchaResult: "passed" | "failed";
 	headers: Record<string, string | string[] | undefined>;
 	captchaType?: CaptchaType;

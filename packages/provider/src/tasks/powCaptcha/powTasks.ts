@@ -254,7 +254,6 @@ export class PowCaptchaManager extends CaptchaManager {
 
 		const correct = validateSolution(nonce, challenge, difficulty);
 
-		let finalVerified = correct;
 		let result: CaptchaResult = { status: CaptchaStatus.approved };
 		if (!correct) {
 			result = {
@@ -309,30 +308,6 @@ export class PowCaptchaManager extends CaptchaManager {
 						behavioralDataPacked: packedData,
 						deviceCapability: decryptedData.deviceCapability,
 					});
-
-					if (correct) {
-						const decisionInput: DecisionMachineInput = {
-							userAccount,
-							dappAccount,
-							challenge,
-							captchaResult: "passed",
-							headers: challengeRecord.headers,
-							captchaType: CaptchaType.pow,
-							behavioralDataPacked: packedData,
-							deviceCapability: decryptedData.deviceCapability,
-						};
-						const decision = await this.decisionMachineRunner.decide(
-							decisionInput,
-							this.logger,
-						);
-						if (decision.decision === DecisionMachineDecision.Deny) {
-							finalVerified = false;
-							result = {
-								status: CaptchaStatus.disapproved,
-								reason: "CAPTCHA.DECISION_MACHINE_DENIED",
-							};
-						}
-					}
 				}
 			} catch (error) {
 				this.logger?.error(() => ({
@@ -352,7 +327,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			coords,
 		);
 
-		return finalVerified;
+		return correct;
 	}
 
 	/**
@@ -523,6 +498,62 @@ export class PowCaptchaManager extends CaptchaManager {
 					},
 				}));
 			}
+		}
+
+		// Run decision machine evaluation
+		try {
+			const decisionInput: DecisionMachineInput = {
+				userAccount: challengeRecord.userAccount,
+				dappAccount: challengeRecord.dappAccount,
+				captchaResult: "passed",
+				headers: challengeRecord.headers,
+				captchaType: CaptchaType.pow,
+				behavioralDataPacked: challengeRecord.behavioralDataPacked,
+				deviceCapability: challengeRecord.deviceCapability,
+			};
+
+			const decision = await this.decisionMachineRunner.decide(
+				decisionInput,
+				this.logger,
+			);
+
+			if (decision.decision === DecisionMachineDecision.Deny) {
+				this.logger.info(() => ({
+					msg: "Decision machine denied PoW captcha in server verification",
+					data: {
+						challenge,
+						userAccount: challengeRecord.userAccount,
+						dappAccount,
+						reason: decision.reason,
+						score: decision.score,
+						tags: decision.tags,
+					},
+				}));
+
+				await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
+					result: {
+						status: CaptchaStatus.disapproved,
+						reason: decision.reason || "CAPTCHA.DECISION_MACHINE_DENIED",
+					},
+				});
+				return notVerifiedResponse;
+			}
+
+			this.logger.debug(() => ({
+				msg: "Decision machine allowed PoW captcha",
+				data: {
+					challenge,
+					reason: decision.reason,
+					score: decision.score,
+					tags: decision.tags,
+				},
+			}));
+		} catch (error) {
+			this.logger?.error(() => ({
+				msg: "Failed to run decision machine in server PoW verification",
+				err: error,
+			}));
+			// Don't fail the captcha if decision machine fails - default to allow
 		}
 
 		return { verified: true, ...(score ? { score } : {}) };

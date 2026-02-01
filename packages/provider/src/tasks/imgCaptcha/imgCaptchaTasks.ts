@@ -336,48 +336,14 @@ export class ImgCaptchaManager extends CaptchaManager {
 					pendingRecord.threshold,
 				)
 			) {
-				// Captcha solution is correct, now check decision machine
-				let finalVerified = true;
-				const decisionInput: DecisionMachineInput = {
-					userAccount,
-					dappAccount,
-					challenge: requestHash,
-					captchaResult: "passed",
-					headers,
-					captchaType: CaptchaType.image,
-				};
-
-				try {
-					const decision = await this.decisionMachineRunner.decide(
-						decisionInput,
-						this.logger,
-					);
-					if (decision.decision === DecisionMachineDecision.Deny) {
-						finalVerified = false;
-						await this.db.disapproveDappUserCommitment(
-							commitmentId,
-							"CAPTCHA.DECISION_MACHINE_DENIED",
-							pairs,
-						);
-					} else {
-						await this.db.approveDappUserCommitment(commitmentId, pairs);
-					}
-				} catch (error) {
-					this.logger?.error(() => ({
-						msg: "Failed to process decision machine",
-						err: error,
-					}));
-					// Don't fail the captcha if decision machine fails
-					await this.db.approveDappUserCommitment(commitmentId, pairs);
-				}
-
 				response = {
 					captchas: captchaIds.map((id) => ({
 						captchaId: id,
-						proof: finalVerified ? tree.proof(id) : [[]],
+						proof: tree.proof(id),
 					})),
-					verified: finalVerified,
+					verified: true,
 				};
+				await this.db.approveDappUserCommitment(commitmentId, pairs);
 			} else {
 				await this.db.disapproveDappUserCommitment(
 					commitmentId,
@@ -608,7 +574,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		const isApproved = solution.result.status === CaptchaStatus.approved;
+		let isApproved = solution.result.status === CaptchaStatus.approved;
 
 		let score: number | undefined;
 		if (solution.sessionId) {
@@ -644,6 +610,44 @@ export class ImgCaptchaManager extends CaptchaManager {
 					//return { status: "API.USER_NOT_VERIFIED", verified: false };
 				}
 			}
+		}
+		// Captcha solution is correct, now check decision machine
+		const decisionInput: DecisionMachineInput = {
+			userAccount: solution.userAccount,
+			dappAccount: solution.dappAccount,
+			captchaResult: "passed",
+			headers: solution.headers,
+			captchaType: CaptchaType.image,
+		};
+
+		try {
+			const decision = await this.decisionMachineRunner.decide(
+				decisionInput,
+				this.logger,
+			);
+			if (decision.decision === DecisionMachineDecision.Deny) {
+				if (commitmentId) {
+					// commitmentId should always be present
+					await this.db.disapproveDappUserCommitment(
+						commitmentId,
+						decision.reason || "CAPTCHA.DECISION_MACHINE_DENIED",
+					);
+					// log
+					this.logger?.info(() => ({
+						msg: "Decision machine denied user verification",
+						data: {
+							commitmentId: commitmentId,
+							reason: decision.reason,
+						},
+					}));
+					isApproved = false;
+				}
+			}
+		} catch (error) {
+			this.logger?.error(() => ({
+				msg: "Failed to process decision machine",
+				err: error,
+			}));
 		}
 
 		return {

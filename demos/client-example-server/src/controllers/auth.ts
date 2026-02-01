@@ -130,7 +130,7 @@ const signup = async (
 			req.headers["x-client-ip"]?.toString() || NO_IP,
 		);
 
-		if (verified) {
+		if (verified === true) {
 			// salt
 			const salt = randomAsHex(32);
 			// !!!DUMMY CODE!!! - Do not use in production. Use bcrypt or similar for password hashing.

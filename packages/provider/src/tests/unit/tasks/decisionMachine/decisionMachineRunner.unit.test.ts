@@ -62,7 +62,6 @@ describe("DecisionMachineRunner", () => {
 		const result = await runner.decide({
 			userAccount: "user",
 			dappAccount: "dapp",
-			challenge: "challenge",
 			captchaResult: "passed",
 			headers: {},
 		});
@@ -83,7 +82,6 @@ describe("DecisionMachineRunner", () => {
 		const result = await runner.decide({
 			userAccount: "user",
 			dappAccount: "dapp",
-			challenge: "challenge",
 			captchaResult: "passed",
 			headers: {},
 		});
@@ -103,7 +101,6 @@ describe("DecisionMachineRunner", () => {
 		const result = await runner.decide({
 			userAccount: "user",
 			dappAccount: "dapp",
-			challenge: "challenge",
 			captchaResult: "passed",
 			headers: {},
 		});
@@ -123,7 +120,6 @@ describe("DecisionMachineRunner", () => {
 		const result = await runner.decide({
 			userAccount: "user",
 			dappAccount: "dapp",
-			challenge: "challenge",
 			captchaResult: "passed",
 			headers: {},
 		});
@@ -143,7 +139,6 @@ describe("DecisionMachineRunner", () => {
 		const result = await runner.decide({
 			userAccount: "user",
 			dappAccount: "dapp",
-			challenge: "challenge",
 			captchaResult: "passed",
 			headers: {},
 		});
@@ -165,7 +160,6 @@ describe("DecisionMachineRunner", () => {
 		const result = await runner.decide({
 			userAccount: "user",
 			dappAccount: "dapp",
-			challenge: "challenge",
 			captchaResult: "passed",
 			headers: {},
 			captchaType: CaptchaType.pow,
@@ -188,7 +182,6 @@ describe("DecisionMachineRunner", () => {
 		const result = await runner.decide({
 			userAccount: "user",
 			dappAccount: "dapp",
-			challenge: "challenge",
 			captchaResult: "passed",
 			headers: {},
 			captchaType: CaptchaType.image,
@@ -211,7 +204,6 @@ describe("DecisionMachineRunner", () => {
 		const result = await runner.decide({
 			userAccount: "user",
 			dappAccount: "dapp",
-			challenge: "challenge",
 			captchaResult: "passed",
 			headers: {},
 			captchaType: CaptchaType.image,
