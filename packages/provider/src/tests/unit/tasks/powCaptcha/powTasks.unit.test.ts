@@ -23,6 +23,7 @@ import {
 	type RequestHeaders,
 } from "@prosopo/types";
 import type {
+	BehavioralDataPacked,
 	IProviderDatabase,
 	PoWCaptchaStored,
 	Session,
@@ -587,192 +588,231 @@ describe("PowCaptchaManager", () => {
 		});
 	});
 
-	describe("verifyPowCaptchaSolution with behavioral data", () => {
-		beforeEach(() => {
-			// Add getDetectorKeys mock to db
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(db as any).getDetectorKeys = vi.fn(() =>
-				Promise.resolve(["test-detector-key"]),
-			);
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(db as any).updatePowCaptchaRecord = vi.fn(() => Promise.resolve());
-		});
-
-		it("should process behavioral data when provided", async () => {
-			const requestedAtTimestamp = 123456789;
+	describe("serverVerifyPowCaptchaSolution with decision machine", () => {
+		it("should allow when decision machine returns allow", async () => {
+			const dappAccount = "dappAccount";
+			const timestamp = 123456789;
 			const userAccount = "testUserAccount";
-			const challenge: PoWChallengeId = `${requestedAtTimestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${pair.address}`;
-			const difficulty = 4;
-			const providerSignature = "testSignature";
-			const userSignature = "testTimestampSignature";
-			const nonce = 12345;
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
 			const timeout = 1000;
 			const ipAddress = getIPAddress("1.1.1.1");
 			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
-			const behavioralData = "encrypted-behavioral-data";
+			const behavioralDataPacked: BehavioralDataPacked = {
+				c1: [1, 2, 3],
+				c2: [4, 5, 6],
+				c3: [7, 8, 9],
+				d: "test-device",
+			};
 
 			const challengeRecord: PoWCaptchaStored = {
 				challenge,
-				difficulty,
-				dappAccount: pair.address,
+				difficulty: 4,
+				dappAccount,
 				userAccount,
-				requestedAtTimestamp: new Date(requestedAtTimestamp),
-				result: { status: CaptchaStatus.pending },
-				userSubmitted: false,
+				requestedAtTimestamp: new Date(timestamp),
+				result: { status: CaptchaStatus.approved },
+				userSubmitted: true,
 				serverChecked: false,
 				ipAddress: getCompositeIpAddress(ipAddress),
 				headers,
 				ja4: "ja4",
-				providerSignature,
+				providerSignature: "testSignature",
 				lastUpdatedTimestamp: new Date(),
+				behavioralDataPacked,
+				deviceCapability: "test-device",
 			};
 
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(verifyRecency as any).mockImplementation(() => true);
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(checkPowSignature as any).mockImplementation(() => true);
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(validateSolution as any).mockImplementation(() => true);
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
 				challengeRecord,
 			);
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(db.updatePowCaptchaRecordResult as any).mockResolvedValue(true);
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(true);
+			(verifyRecency as any).mockImplementation(() => true);
 
-			const result = await powCaptchaManager.verifyPowCaptchaSolution(
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
 				challenge,
-				providerSignature,
-				nonce,
 				timeout,
-				userSignature,
-				ipAddress,
-				headers,
-				behavioralData,
-				undefined, // salt (optional)
+				mockEnv,
 			);
 
-			expect(result).toBe(true);
+			expect(result.verified).toBe(true);
 		});
 
-		it("should handle behavioral data decryption failure gracefully", async () => {
-			const requestedAtTimestamp = 123456789;
+		it("should deny when decision machine returns deny", async () => {
+			const dappAccount = "dappAccount";
+			const timestamp = 123456789;
 			const userAccount = "testUserAccount";
-			const challenge: PoWChallengeId = `${requestedAtTimestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${pair.address}`;
-			const difficulty = 4;
-			const providerSignature = "testSignature";
-			const userSignature = "testTimestampSignature";
-			const nonce = 12345;
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
 			const timeout = 1000;
 			const ipAddress = getIPAddress("1.1.1.1");
 			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
-			const behavioralData = "invalid-encrypted-data";
+			const behavioralDataPacked: BehavioralDataPacked = {
+				c1: [1, 2, 3],
+				c2: [4, 5, 6],
+				c3: [7, 8, 9],
+				d: "suspicious-device",
+			};
 
 			const challengeRecord: PoWCaptchaStored = {
 				challenge,
-				difficulty,
-				dappAccount: pair.address,
+				difficulty: 4,
+				dappAccount,
 				userAccount,
-				requestedAtTimestamp: new Date(requestedAtTimestamp),
-				result: { status: CaptchaStatus.pending },
-				userSubmitted: false,
+				requestedAtTimestamp: new Date(timestamp),
+				result: { status: CaptchaStatus.approved },
+				userSubmitted: true,
 				serverChecked: false,
 				ipAddress: getCompositeIpAddress(ipAddress),
 				headers,
 				ja4: "ja4",
-				providerSignature,
+				providerSignature: "testSignature",
 				lastUpdatedTimestamp: new Date(),
+				behavioralDataPacked,
+				deviceCapability: "suspicious-device",
 			};
 
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(verifyRecency as any).mockImplementation(() => true);
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(checkPowSignature as any).mockImplementation(() => true);
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(validateSolution as any).mockImplementation(() => true);
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
 				challengeRecord,
 			);
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(db.updatePowCaptchaRecordResult as any).mockResolvedValue(true);
+			(db.updatePowCaptchaRecord as any).mockResolvedValue(undefined);
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(true);
+			(verifyRecency as any).mockImplementation(() => true);
 
-			// Should still return true even if behavioral data processing fails
-			const result = await powCaptchaManager.verifyPowCaptchaSolution(
+			// Mock decision machine to deny based on device capability
+			const originalDecide =
+				// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+				(powCaptchaManager as any).decisionMachineRunner.decide;
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(powCaptchaManager as any).decisionMachineRunner.decide = vi
+				.fn()
+				.mockResolvedValue({
+					decision: "deny",
+					reason: "Suspicious device detected",
+					score: 0,
+				});
+
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
 				challenge,
-				providerSignature,
-				nonce,
 				timeout,
-				userSignature,
-				ipAddress,
-				headers,
-				behavioralData,
-				undefined, // salt (optional)
+				mockEnv,
 			);
 
-			expect(result).toBe(true);
+			expect(result.verified).toBe(false);
+
+			// Restore original decision machine
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(powCaptchaManager as any).decisionMachineRunner.decide = originalDecide;
 		});
 
-		it("should work without behavioral data", async () => {
-			const requestedAtTimestamp = 123456789;
+		it("should allow when no behavioral data is present (no decision machine run)", async () => {
+			const dappAccount = "dappAccount";
+			const timestamp = 123456789;
 			const userAccount = "testUserAccount";
-			const challenge: PoWChallengeId = `${requestedAtTimestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${pair.address}`;
-			const difficulty = 4;
-			const providerSignature = "testSignature";
-			const userSignature = "testTimestampSignature";
-			const nonce = 12345;
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
 			const timeout = 1000;
 			const ipAddress = getIPAddress("1.1.1.1");
 			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
 
 			const challengeRecord: PoWCaptchaStored = {
 				challenge,
-				difficulty,
-				dappAccount: pair.address,
+				difficulty: 4,
+				dappAccount,
 				userAccount,
-				requestedAtTimestamp: new Date(requestedAtTimestamp),
-				result: { status: CaptchaStatus.pending },
-				userSubmitted: false,
+				requestedAtTimestamp: new Date(timestamp),
+				result: { status: CaptchaStatus.approved },
+				userSubmitted: true,
 				serverChecked: false,
 				ipAddress: getCompositeIpAddress(ipAddress),
 				headers,
 				ja4: "ja4",
-				providerSignature,
+				providerSignature: "testSignature",
 				lastUpdatedTimestamp: new Date(),
+				// No behavioralDataPacked - decision machine should not run
 			};
 
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(verifyRecency as any).mockImplementation(() => true);
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(checkPowSignature as any).mockImplementation(() => true);
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(validateSolution as any).mockImplementation(() => true);
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
 				challengeRecord,
 			);
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(db.updatePowCaptchaRecordResult as any).mockResolvedValue(true);
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(true);
+			(verifyRecency as any).mockImplementation(() => true);
 
-			const result = await powCaptchaManager.verifyPowCaptchaSolution(
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
 				challenge,
-				providerSignature,
-				nonce,
 				timeout,
-				userSignature,
-				ipAddress,
-				headers,
-				undefined, // no behavioral data
-				undefined, // salt (optional)
+				mockEnv,
 			);
 
-			expect(result).toBe(true);
+			expect(result.verified).toBe(true);
+		});
+
+		it("should default to allow if decision machine fails", async () => {
+			const dappAccount = "dappAccount";
+			const timestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
+			const timeout = 1000;
+			const ipAddress = getIPAddress("1.1.1.1");
+			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
+			const behavioralDataPacked: BehavioralDataPacked = {
+				c1: [1, 2, 3],
+				c2: [4, 5, 6],
+				c3: [7, 8, 9],
+				d: "test-device",
+			};
+
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				difficulty: 4,
+				dappAccount,
+				userAccount,
+				requestedAtTimestamp: new Date(timestamp),
+				result: { status: CaptchaStatus.approved },
+				userSubmitted: true,
+				serverChecked: false,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers,
+				ja4: "ja4",
+				providerSignature: "testSignature",
+				lastUpdatedTimestamp: new Date(),
+				behavioralDataPacked,
+				deviceCapability: "test-device",
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(verifyRecency as any).mockImplementation(() => true);
+
+			// Mock decision machine to throw an error
+			const originalDecide =
+				// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+				(powCaptchaManager as any).decisionMachineRunner.decide;
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(powCaptchaManager as any).decisionMachineRunner.decide = vi
+				.fn()
+				.mockRejectedValue(new Error("Decision machine error"));
+
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				timeout,
+				mockEnv,
+			);
+
+			// Should default to allow on error
+			expect(result.verified).toBe(true);
+
+			// Restore original decision machine
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(powCaptchaManager as any).decisionMachineRunner.decide = originalDecide;
 		});
 	});
 });
