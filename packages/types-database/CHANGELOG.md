@@ -1,5 +1,13 @@
 # @prosopo/types-database
 
+## 4.2.1
+### Patch Changes
+
+- 9633e58: Add captcha type to decision machine and run on image verification"
+- Updated dependencies [9633e58]
+  - @prosopo/types@3.8.2
+  - @prosopo/user-access-policy@3.6.3
+
 ## 4.2.0
 ### Minor Changes
 

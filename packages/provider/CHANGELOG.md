@@ -1,5 +1,22 @@
 # @prosopo/provider
 
+## 3.16.1
+### Patch Changes
+
+- 9633e58: Add captcha type to decision machine and run on image verification"
+- Updated dependencies [9633e58]
+  - @prosopo/types-database@4.2.1
+  - @prosopo/types@3.8.2
+  - @prosopo/api@3.1.43
+  - @prosopo/database@3.6.9
+  - @prosopo/datasets@3.0.58
+  - @prosopo/types-env@2.7.62
+  - @prosopo/api-express-router@3.0.50
+  - @prosopo/env@3.2.38
+  - @prosopo/keyring@2.9.2
+  - @prosopo/load-balancer@2.8.19
+  - @prosopo/user-access-policy@3.6.3
+
 ## 3.16.0
 ### Minor Changes
 
