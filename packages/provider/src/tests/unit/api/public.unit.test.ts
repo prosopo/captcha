@@ -30,9 +30,13 @@ vi.mock("@prosopo/util", () => ({
 
 describe("publicRouter", () => {
 	let mockEnv: ProviderEnvironment;
+	// biome-ignore lint/suspicious/noExplicitAny: tests
 	let mockDb: any;
+	// biome-ignore lint/suspicious/noExplicitAny: tests
 	let mockRedisConnection: any;
+	// biome-ignore lint/suspicious/noExplicitAny: tests
 	let mockRedisAccessRulesConnection: any;
+	// biome-ignore lint/suspicious/noExplicitAny: tests
 	let mockLogger: any;
 	let mockReq: Request;
 	let mockRes: Response;
@@ -204,6 +208,7 @@ describe("publicRouter", () => {
 		// Verify next was called with ProsopoApiError
 		expect(mockNext).toHaveBeenCalledWith(expect.any(ProsopoApiError));
 
+		// @ts-ignore
 		const error = mockNext.mock.calls[0][0] as ProsopoApiError;
 		expect(error).toBeInstanceOf(ProsopoApiError);
 	});
@@ -212,9 +217,10 @@ describe("publicRouter", () => {
 		const router = publicRouter(mockEnv);
 
 		// Check that handleErrors was registered by inspecting the router
+		// biome-ignore lint/suspicious/noExplicitAny: tests
 		const layers = (router as any).stack || [];
 		const errorHandlerLayer = layers.find(
-			(layer: any) => layer.handle === handleErrors,
+			(layer: { handle: typeof handleErrors }) => layer.handle === handleErrors,
 		);
 
 		expect(errorHandlerLayer).toBeDefined();

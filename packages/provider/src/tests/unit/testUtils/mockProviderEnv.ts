@@ -213,28 +213,28 @@ export function createMockProviderEnvironment(): ProviderEnvironment {
 		},
 	};
 
-    // Mock client task manager
-    const mockClientTaskManager = {
-        registerSiteKey: vi.fn(),
-        updateDetectorKey: vi.fn(),
-        removeDetectorKey: vi.fn(),
-    };
+	// Mock client task manager
+	const mockClientTaskManager = {
+		registerSiteKey: vi.fn(),
+		updateDetectorKey: vi.fn(),
+		removeDetectorKey: vi.fn(),
+	};
 
-    // Mock tasks
-    const mockTasks = {
-        clientTaskManager: mockClientTaskManager,
-        getImageCaptcha: vi.fn(),
-        submitImageCaptchaSolution: vi.fn(),
-        getPoWCaptcha: vi.fn(),
-        submitPoWCaptchaSolution: vi.fn(),
-        getFrictionlessCaptcha: vi.fn(),
-        getDataset: vi.fn(),
-        getRandomCaptcha: vi.fn(),
-        getCaptchaChallenge: vi.fn(),
-        validateCaptchaSolution: vi.fn(),
-        getProviderDetails: vi.fn(),
-        getBotScore: vi.fn(),
-    };
+	// Mock tasks
+	const mockTasks = {
+		clientTaskManager: mockClientTaskManager,
+		getImageCaptcha: vi.fn(),
+		submitImageCaptchaSolution: vi.fn(),
+		getPoWCaptcha: vi.fn(),
+		submitPoWCaptchaSolution: vi.fn(),
+		getFrictionlessCaptcha: vi.fn(),
+		getDataset: vi.fn(),
+		getRandomCaptcha: vi.fn(),
+		getCaptchaChallenge: vi.fn(),
+		validateCaptchaSolution: vi.fn(),
+		getProviderDetails: vi.fn(),
+		getBotScore: vi.fn(),
+	};
 
 	// Mock keyring pair
 	const mockPair = {

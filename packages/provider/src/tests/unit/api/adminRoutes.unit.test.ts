@@ -22,9 +22,13 @@ import {
 
 describe("Admin Routes Provider", () => {
 	let mockEnv: ReturnType<typeof createMockProviderEnvironment>;
+	// biome-ignore lint/suspicious/noExplicitAny: tests
 	let mockReq: any;
+	// biome-ignore lint/suspicious/noExplicitAny: tests
 	let mockRes: any;
+	// biome-ignore lint/suspicious/noExplicitAny: tests
 	let mockNext: any;
+	// biome-ignore lint/suspicious/noExplicitAny: tests
 	let mockLogger: any;
 
 	beforeEach(() => {
@@ -107,7 +111,7 @@ describe("Admin Routes Provider", () => {
 
 			const endpoint = routes[AdminApiPaths.SiteKeyRegister];
 			expect(endpoint).toBeDefined();
-			expect(typeof endpoint.processRequest).toBe("function");
+			expect(typeof endpoint?.processRequest).toBe("function");
 		});
 
 		it("should handle validation errors in site key registration", async () => {
@@ -118,10 +122,15 @@ describe("Admin Routes Provider", () => {
 			expect(endpoint).toBeDefined();
 
 			// Invalid site key should cause validation error
-			await expect(endpoint.processRequest({
-				siteKey: "invalid-site-key",
-				origin: "https://example.com",
-			}, mockLogger)).rejects.toThrow();
+			await expect(
+				endpoint?.processRequest(
+					{
+						siteKey: "invalid-site-key",
+						origin: "https://example.com",
+					},
+					mockLogger,
+				),
+			).rejects.toThrow();
 		});
 	});
 
@@ -133,7 +142,10 @@ describe("Admin Routes Provider", () => {
 			const endpoint = routes[AdminApiPaths.ToggleMaintenanceMode];
 			expect(endpoint).toBeDefined();
 
-			const result = await endpoint.processRequest({ enabled: true }, mockLogger);
+			const result = await endpoint?.processRequest(
+				{ enabled: true },
+				mockLogger,
+			);
 			expect(result).toBeDefined();
 		});
 	});
@@ -147,10 +159,13 @@ describe("Admin Routes Provider", () => {
 			expect(endpoint).toBeDefined();
 
 			// Test that the endpoint can be called (validation happens internally)
-			const result = await endpoint.processRequest({
-				detectorKey: "some-detector-key",
-				action: "add",
-			}, mockLogger);
+			const result = await endpoint?.processRequest(
+				{
+					detectorKey: "some-detector-key",
+					action: "add",
+				},
+				mockLogger,
+			);
 
 			expect(result).toBeDefined();
 		});
@@ -163,9 +178,12 @@ describe("Admin Routes Provider", () => {
 			expect(endpoint).toBeDefined();
 
 			// Test that the endpoint can be called (validation happens internally)
-			const result = await endpoint.processRequest({
-				detectorKey: "some-detector-key"
-			}, mockLogger);
+			const result = await endpoint?.processRequest(
+				{
+					detectorKey: "some-detector-key",
+				},
+				mockLogger,
+			);
 
 			expect(result).toBeDefined();
 		});
@@ -174,11 +192,13 @@ describe("Admin Routes Provider", () => {
 	describe("Error Handling", () => {
 		it("should handle database connection errors", async () => {
 			// Mock database disconnection
+			// @ts-ignore
 			mockEnv.db.isConnected = vi.fn().mockReturnValue(false);
 
 			const adminRoutes = createApiAdminRoutesProvider(mockEnv);
 			expect(adminRoutes).toBeDefined();
 
+			// @ts-ignore
 			expect(mockEnv.db.isConnected()).toBe(false);
 		});
 	});

@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, it, expect, vi } from "vitest";
+import { IpAddressType } from "@prosopo/types-database";
+import { describe, expect, it } from "vitest";
 import {
 	getCompositeIpAddress,
 	getIpAddressFromComposite,
 } from "../../compositeIpAddress.js";
-import { IpAddressType } from "@prosopo/types-database";
 
 describe("compositeIpAddress", () => {
 	describe("getCompositeIpAddress", () => {
@@ -138,6 +138,7 @@ describe("compositeIpAddress", () => {
 		it("should handle composite with undefined upper/lower gracefully", () => {
 			const composite = {
 				type: IpAddressType.v4,
+				// biome-ignore lint/suspicious/noExplicitAny: tests
 			} as any;
 
 			const result = getIpAddressFromComposite(composite);
@@ -200,7 +201,9 @@ describe("compositeIpAddress", () => {
 		});
 
 		it("should handle IPv6 all ones", () => {
-			const result = getCompositeIpAddress("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff");
+			const result = getCompositeIpAddress(
+				"ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff",
+			);
 
 			expect(result).toEqual({
 				lower: 18446744073709551615n, // 2^64 - 1
@@ -208,6 +211,5 @@ describe("compositeIpAddress", () => {
 				type: IpAddressType.v6,
 			});
 		});
-
 	});
 });

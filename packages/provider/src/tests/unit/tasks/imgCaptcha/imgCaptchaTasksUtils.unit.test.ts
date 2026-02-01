@@ -22,6 +22,7 @@ import { buildTreeAndGetCommitmentId } from "../../../../tasks/imgCaptcha/imgCap
 
 vi.mock("@prosopo/datasets", () => ({
 	CaptchaMerkleTree: vi.fn().mockImplementation(() => ({
+		// biome-ignore lint/suspicious/noExplicitAny: tests
 		build: vi.fn(function (this: any) {
 			this.root = { hash: "mockedRootHash" };
 		}),
@@ -77,6 +78,7 @@ describe("buildTreeAndGetCommitmentId", () => {
 					build: vi.fn(),
 					root: { hash: null },
 					getRoot: vi.fn().mockReturnValue({ hash: null }),
+					// biome-ignore lint/suspicious/noExplicitAny: tests
 				}) as any,
 		);
 
@@ -94,6 +96,7 @@ describe("buildTreeAndGetCommitmentId", () => {
 
 		// Restore the original mock
 		vi.mocked(CaptchaMerkleTree).mockImplementation(
+			// biome-ignore lint/style/noNonNullAssertion: tests
 			originalMock.getMockImplementation()!,
 		);
 	});

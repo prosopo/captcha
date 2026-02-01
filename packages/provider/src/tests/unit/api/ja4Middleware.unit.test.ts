@@ -144,6 +144,7 @@ describe("getJA4", () => {
 
 		const headers = {
 			"x-tls-clienthello": validClientHello.toString("base64"),
+			// biome-ignore lint/suspicious/noExplicitAny: tests
 			"x-tls-version": 123 as any, // Non-string value
 		} as IncomingHttpHeaders;
 
@@ -176,6 +177,7 @@ describe("getJA4", () => {
 		const originalNodeEnv = process.env.NODE_ENV;
 		process.env.NODE_ENV = "production";
 
+		// biome-ignore lint/suspicious/noExplicitAny: tests
 		const result = await getJA4(null as any);
 
 		expect(result.ja4PlusFingerprint).toBe(DEFAULT_JA4);
@@ -191,6 +193,7 @@ describe("getJA4", () => {
 		const mockLogger = { debug: vi.fn(), error: vi.fn() };
 		const headers = {} as IncomingHttpHeaders;
 
+		// @ts-ignore
 		await getJA4(headers, mockLogger);
 
 		// Even with empty headers, debug is called for first bytes
@@ -206,6 +209,7 @@ describe("ja4Middleware", () => {
 		const { ja4Middleware } = await import("../../../api/ja4Middleware.js");
 		const mockEnv = {};
 
+		// @ts-ignore
 		const middleware = ja4Middleware(mockEnv);
 
 		expect(typeof middleware).toBe("function");

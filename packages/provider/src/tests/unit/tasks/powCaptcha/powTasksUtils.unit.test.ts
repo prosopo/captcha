@@ -95,6 +95,7 @@ describe("checkPowSignature", () => {
 	it("should not throw for valid signature", () => {
 		vi.mocked(signatureVerify).mockReturnValue({
 			isValid: true,
+			// biome-ignore lint/suspicious/noExplicitAny: tests
 		} as any);
 
 		expect(() =>
@@ -110,6 +111,7 @@ describe("checkPowSignature", () => {
 	it("should throw ProsopoApiError for invalid signature", () => {
 		vi.mocked(signatureVerify).mockReturnValue({
 			isValid: false,
+			// biome-ignore lint/suspicious/noExplicitAny: tests
 		} as any);
 
 		expect(() =>
@@ -136,6 +138,7 @@ describe("checkPowSignature", () => {
 		const signatureType = "sr25519";
 		vi.mocked(signatureVerify).mockReturnValue({
 			isValid: false,
+			// biome-ignore lint/suspicious/noExplicitAny: tests
 		} as any);
 
 		expect(() =>
@@ -155,10 +158,10 @@ describe("checkPowSignature", () => {
 				signatureType,
 			);
 		} catch (error) {
-			expect((error as ProsopoApiError).context.ERROR).toBe(
+			expect((error as ProsopoApiError).context?.ERROR).toBe(
 				`Signature is invalid for this message: ${signatureType}`,
 			);
-			expect((error as ProsopoApiError).context.signatureType).toBe(
+			expect((error as ProsopoApiError).context?.signatureType).toBe(
 				signatureType,
 			);
 		}
@@ -168,6 +171,7 @@ describe("checkPowSignature", () => {
 		const emptyMessage = "";
 		vi.mocked(signatureVerify).mockReturnValue({
 			isValid: true,
+			// biome-ignore lint/suspicious/noExplicitAny: tests
 		} as any);
 
 		expect(() =>
@@ -185,6 +189,7 @@ describe("checkPowSignature", () => {
 			"0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d";
 		vi.mocked(signatureVerify).mockReturnValue({
 			isValid: true,
+			// biome-ignore lint/suspicious/noExplicitAny: tests
 		} as any);
 
 		expect(() =>
@@ -202,6 +207,7 @@ describe("checkPowSignature", () => {
 			"0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
 		vi.mocked(signatureVerify).mockReturnValue({
 			isValid: true,
+			// biome-ignore lint/suspicious/noExplicitAny: tests
 		} as any);
 
 		expect(() =>
@@ -217,13 +223,16 @@ describe("checkPowSignature", () => {
 	it("should call signatureVerify with hex-encoded message", () => {
 		vi.mocked(signatureVerify).mockReturnValue({
 			isValid: true,
+			// biome-ignore lint/suspicious/noExplicitAny: tests
 		} as any);
 
 		checkPowSignature(validMessage, validSignature, validAddress);
 
 		// Verify that the message was hex-encoded (should start with 0x)
 		const callArgs = vi.mocked(signatureVerify).mock.calls[0];
+		// @ts-ignore
 		expect(callArgs[0]).toMatch(/^0x/);
+		// @ts-ignore
 		expect(callArgs[0]).toContain("74657374206d657373616765"); // hex encoding of "test message"
 	});
 
@@ -231,6 +240,7 @@ describe("checkPowSignature", () => {
 		const unicodeMessage = "Hello 🌟 World!";
 		vi.mocked(signatureVerify).mockReturnValue({
 			isValid: true,
+			// biome-ignore lint/suspicious/noExplicitAny: tests
 		} as any);
 
 		expect(() =>
@@ -238,6 +248,7 @@ describe("checkPowSignature", () => {
 		).not.toThrow();
 
 		const callArgs = vi.mocked(signatureVerify).mock.calls[0];
+		// @ts-ignore
 		expect(callArgs[0]).toMatch(/^0x/);
 	});
 
@@ -245,6 +256,7 @@ describe("checkPowSignature", () => {
 		const longMessage = "A".repeat(10000);
 		vi.mocked(signatureVerify).mockReturnValue({
 			isValid: true,
+			// biome-ignore lint/suspicious/noExplicitAny: tests
 		} as any);
 
 		expect(() =>
@@ -259,17 +271,18 @@ describe("checkPowSignature", () => {
 
 		vi.mocked(signatureVerify).mockReturnValue({
 			isValid: false,
+			// biome-ignore lint/suspicious/noExplicitAny: tests
 		} as any);
 
 		try {
 			checkPowSignature(customMessage, customSignature, customAddress, "ecdsa");
 		} catch (error) {
 			const apiError = error as ProsopoApiError;
-			expect(apiError.context.failedFuncName).toBe("checkPowSignature");
-			expect(apiError.context.address).toBe(customAddress);
-			expect(apiError.context.message).toBe(customMessage);
-			expect(apiError.context.signature).toBe(customSignature);
-			expect(apiError.context.signatureType).toBe("ecdsa");
+			expect(apiError.context?.failedFuncName).toBe("checkPowSignature");
+			expect(apiError.context?.address).toBe(customAddress);
+			expect(apiError.context?.message).toBe(customMessage);
+			expect(apiError.context?.signature).toBe(customSignature);
+			expect(apiError.context?.signatureType).toBe("ecdsa");
 		}
 	});
 });

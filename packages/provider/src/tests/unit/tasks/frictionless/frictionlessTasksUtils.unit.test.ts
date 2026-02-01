@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { timestampDecayFunction } from "../../../../tasks/frictionless/frictionlessTasksUtils.js";
 
 describe("frictionlessTasksUtils", () => {
@@ -57,7 +57,7 @@ describe("frictionlessTasksUtils", () => {
 		});
 
 		it("should handle very old timestamps", () => {
-			const veryOldTimestamp = mockNow - (24 * 60 * 60 * 1000); // 24 hours ago
+			const veryOldTimestamp = mockNow - 24 * 60 * 60 * 1000; // 24 hours ago
 			const result = timestampDecayFunction(veryOldTimestamp, false);
 			expect(result).toBe(12);
 		});

@@ -183,6 +183,7 @@ describe("validateAddr", () => {
 	});
 
 	it("should handle null address", () => {
+		// biome-ignore lint/suspicious/noExplicitAny: tests
 		const nullAddress = null as any;
 
 		vi.mocked(validateAddress).mockReturnValue(false);

@@ -138,9 +138,11 @@ describe("headerCheckMiddleware", () => {
 		const middleware = headerCheckMiddleware(mockEnv);
 		await middleware(mockReq, mockRes, mockNext);
 
+		// biome-ignore lint/suspicious/noExplicitAny: tests
 		expect((mockReq as any).user).toBe(
 			"5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
 		);
+		// biome-ignore lint/suspicious/noExplicitAny: tests
 		expect((mockReq as any).siteKey).toBe(
 			"5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
 		);

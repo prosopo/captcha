@@ -151,6 +151,7 @@ describe("ignoreMiddleware", () => {
 	it("should handle undefined originalUrl", () => {
 		const middleware = ignoreMiddleware();
 
+		// biome-ignore lint/suspicious/noExplicitAny: tests
 		(mockReq as any).originalUrl = undefined;
 
 		expect(() => middleware(mockReq, mockRes, mockNext)).toThrow();

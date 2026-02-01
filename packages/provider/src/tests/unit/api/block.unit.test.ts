@@ -41,6 +41,7 @@ describe("blockMiddleware", () => {
 			abortRequestForBlockedUsers: mockAbortRequestForBlockedUsers,
 		};
 		vi.mocked(BlacklistRequestInspector).mockReturnValue(
+			// biome-ignore lint/suspicious/noExplicitAny: tests
 			mockBlacklistRequestInspector as any,
 		);
 
@@ -75,6 +76,7 @@ describe("blockMiddleware", () => {
 			abortRequestForBlockedUsers: mockAbortRequestForBlockedUsers,
 		};
 		vi.mocked(BlacklistRequestInspector).mockReturnValue(
+			// biome-ignore lint/suspicious/noExplicitAny: tests
 			mockBlacklistRequestInspector as any,
 		);
 
