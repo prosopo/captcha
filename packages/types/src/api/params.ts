@@ -60,5 +60,6 @@ export enum ApiParams {
 	decisionMachineLanguage = "decisionMachineLanguage",
 	decisionMachineName = "decisionMachineName",
 	decisionMachineVersion = "decisionMachineVersion",
+	decisionMachineCaptchaType = "decisionMachineCaptchaType",
 	salt = "salt",
 }

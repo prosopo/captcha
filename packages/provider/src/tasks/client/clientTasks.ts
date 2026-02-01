@@ -17,6 +17,7 @@ import { type Logger, ProsopoApiError } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import {
 	type ContextType,
+	type DecisionMachineCaptchaType,
 	type DecisionMachineLanguage,
 	type DecisionMachineRuntime,
 	DecisionMachineScope,
@@ -413,6 +414,7 @@ export class ClientTaskManager {
 		language?: DecisionMachineLanguage,
 		name?: string,
 		version?: string,
+		captchaType?: DecisionMachineCaptchaType,
 	): Promise<{
 		scope: DecisionMachineScope;
 		dappAccount?: string;
@@ -434,6 +436,7 @@ export class ClientTaskManager {
 			source,
 			name,
 			version,
+			captchaType,
 			createdAt: now,
 			updatedAt: now,
 		});

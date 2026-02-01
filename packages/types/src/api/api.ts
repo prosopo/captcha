@@ -11,10 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 import type { IUserSettings, Tier } from "../client/index.js";
 import type { CaptchaSolution } from "../datasets/index.js";
 import type {
+	DecisionMachineCaptchaType,
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
@@ -92,5 +92,6 @@ export interface ProviderApiInterface {
 		language?: DecisionMachineLanguage,
 		name?: string,
 		version?: string,
+		captchaType?: DecisionMachineCaptchaType,
 	): Promise<ApiResponse>;
 }

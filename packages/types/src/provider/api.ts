@@ -31,7 +31,10 @@ import {
 	type infer as zInfer,
 } from "zod";
 import { ApiParams } from "../api/params.js";
-import type { CaptchaType } from "../client/captchaType/captchaType.js";
+import {
+	type CaptchaType,
+	DecisionMachineCaptchaTypeSchema,
+} from "../client/captchaType/captchaType.js";
 import { ClientSettingsSchema, Tier } from "../client/index.js";
 import {
 	DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED,
@@ -417,6 +420,8 @@ export const UpdateDecisionMachineBody = object({
 	).optional(),
 	[ApiParams.decisionMachineName]: string().optional(),
 	[ApiParams.decisionMachineVersion]: string().optional(),
+	[ApiParams.decisionMachineCaptchaType]:
+		DecisionMachineCaptchaTypeSchema.optional(),
 	[ApiParams.dapp]: string().optional(),
 });
 
