@@ -500,7 +500,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		// We know solution in correct by this point. Run decision machine evaluation to process additional checks.
+		// We know solution is correct by this point. Run decision machine evaluation to process additional checks.
 		try {
 			const decisionInput: DecisionMachineInput = {
 				userAccount: challengeRecord.userAccount,

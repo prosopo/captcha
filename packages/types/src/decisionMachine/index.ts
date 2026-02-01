@@ -59,7 +59,7 @@ export type DecisionMachineInput = {
 	dappAccount: string;
 	captchaResult: "passed" | "failed";
 	headers: Record<string, string | string[] | undefined>;
-	captchaType?: CaptchaType;
+	captchaType?: CaptchaType.pow | CaptchaType.image
 	behavioralDataPacked?: DecisionMachineBehavioralDataPacked;
 	deviceCapability?: string;
 };
@@ -78,7 +78,7 @@ export type DecisionMachineArtifact = {
 	name?: string;
 	version?: string;
 	createdAt: string;
-	captchaType?: CaptchaType;
+	captchaType?: CaptchaType.pow | CaptchaType.image
 };
 
 export const DecisionMachineOutputSchema = z.object({

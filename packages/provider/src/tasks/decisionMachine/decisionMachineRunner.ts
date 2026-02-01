@@ -15,6 +15,7 @@
 import vm from "node:vm";
 import type { Logger } from "@prosopo/common";
 import {
+	CaptchaType,
 	DecisionMachineDecision,
 	type DecisionMachineInput,
 	type DecisionMachineOutput,
@@ -98,7 +99,7 @@ export class DecisionMachineRunner {
 	 */
 	private async selectArtifact(
 		dappAccount: string,
-		captchaType?: string,
+		captchaType?: CaptchaType.image | CaptchaType.pow | undefined
 	): Promise<DecisionMachineArtifact | undefined> {
 		// Check for dapp-specific artifact first (highest priority)
 		const dappArtifact = await this.db.getDecisionMachineArtifact(
