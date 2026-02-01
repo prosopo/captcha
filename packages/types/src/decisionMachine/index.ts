@@ -13,6 +13,8 @@
 // limitations under the License.
 
 import { z } from "zod";
+import type { CaptchaType } from "../client/index.js";
+import { CaptchaTypeSchema } from "../client/index.js";
 
 export enum DecisionMachineRuntime {
 	Node = "node",
@@ -57,6 +59,8 @@ export type DecisionMachineInput = {
 	dappAccount: string;
 	challenge: string;
 	captchaResult: "passed" | "failed";
+	headers: Record<string, string | string[] | undefined>;
+	captchaType?: CaptchaType;
 	behavioralDataPacked?: DecisionMachineBehavioralDataPacked;
 	deviceCapability?: string;
 };
@@ -75,6 +79,7 @@ export type DecisionMachineArtifact = {
 	name?: string;
 	version?: string;
 	createdAt: string;
+	captchaType?: CaptchaType;
 };
 
 export const DecisionMachineOutputSchema = z.object({
@@ -91,4 +96,5 @@ export const DecisionMachineArtifactSchema = z.object({
 	name: z.string().optional(),
 	version: z.string().optional(),
 	createdAt: z.string(),
+	captchaType: CaptchaTypeSchema.optional(),
 });

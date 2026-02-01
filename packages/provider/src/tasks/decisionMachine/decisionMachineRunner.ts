@@ -54,7 +54,10 @@ export class DecisionMachineRunner {
 		logger?: Logger,
 	): Promise<DecisionMachineOutput> {
 		try {
-			const artifact = await this.selectArtifact(input.dappAccount);
+			const artifact = await this.selectArtifact(
+				input.dappAccount,
+				input.captchaType,
+			);
 			if (!artifact) {
 				return DEFAULT_DECISION;
 			}
@@ -85,23 +88,60 @@ export class DecisionMachineRunner {
 	 *   1. Dapp-specific: Custom decision machine for a specific dapp account
 	 *   2. Global: Default decision machine applied to all dapps
 	 *
+	 * Decision machines can optionally specify a captchaType filter:
+	 *   - If artifact has no captchaType: runs on all captcha types
+	 *   - If artifact has captchaType: only runs on matching captcha type
+	 *
 	 * @param dappAccount - The dapp account identifier to check for dapp-specific artifacts
+	 * @param captchaType - The captcha type to filter by (optional)
 	 * @returns The single highest-priority artifact, or undefined if none exists
 	 */
 	private async selectArtifact(
 		dappAccount: string,
+		captchaType?: string,
 	): Promise<DecisionMachineArtifact | undefined> {
 		// Check for dapp-specific artifact first (highest priority)
 		const dappArtifact = await this.db.getDecisionMachineArtifact(
 			DecisionMachineScope.Dapp,
 			dappAccount,
 		);
-		if (dappArtifact) {
+		if (dappArtifact && this.matchesCaptchaType(dappArtifact, captchaType)) {
 			return dappArtifact;
 		}
 
 		// Fall back to global artifact (lower priority)
-		return this.db.getDecisionMachineArtifact(DecisionMachineScope.Global);
+		const globalArtifact = await this.db.getDecisionMachineArtifact(
+			DecisionMachineScope.Global,
+		);
+		if (
+			globalArtifact &&
+			this.matchesCaptchaType(globalArtifact, captchaType)
+		) {
+			return globalArtifact;
+		}
+
+		return undefined;
+	}
+
+	/**
+	 * Checks if a decision machine artifact matches the requested captcha type.
+	 * - If artifact has no captchaType filter: matches all captcha types
+	 * - If artifact has captchaType filter: only matches if types are equal
+	 *
+	 * @param artifact - The decision machine artifact to check
+	 * @param captchaType - The captcha type to match against (optional)
+	 * @returns True if the artifact should run for this captcha type
+	 */
+	private matchesCaptchaType(
+		artifact: DecisionMachineArtifact,
+		captchaType?: string,
+	): boolean {
+		// If artifact has no captchaType filter, it runs on all captcha types
+		if (!artifact.captchaType) {
+			return true;
+		}
+		// If artifact has captchaType filter, it only runs on matching type
+		return artifact.captchaType === captchaType;
 	}
 
 	private async executeNodeMachine(

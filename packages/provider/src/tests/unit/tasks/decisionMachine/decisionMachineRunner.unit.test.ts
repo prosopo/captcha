@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import {
+	CaptchaType,
 	DecisionMachineDecision,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
@@ -28,6 +29,7 @@ const buildArtifact = (
 	source: string,
 	scope: DecisionMachineScope,
 	dappAccount?: string,
+	captchaType?: CaptchaType,
 ): DecisionMachineArtifact => {
 	const now = new Date();
 	return {
@@ -35,6 +37,7 @@ const buildArtifact = (
 		dappAccount,
 		runtime: DecisionMachineRuntime.Node,
 		source,
+		captchaType,
 		createdAt: now,
 		updatedAt: now,
 	};
@@ -61,6 +64,7 @@ describe("DecisionMachineRunner", () => {
 			dappAccount: "dapp",
 			challenge: "challenge",
 			captchaResult: "passed",
+			headers: {},
 		});
 
 		expect(result.decision).toBe(DecisionMachineDecision.Allow);
@@ -81,6 +85,7 @@ describe("DecisionMachineRunner", () => {
 			dappAccount: "dapp",
 			challenge: "challenge",
 			captchaResult: "passed",
+			headers: {},
 		});
 
 		expect(result.decision).toBe(DecisionMachineDecision.Deny);
@@ -100,6 +105,7 @@ describe("DecisionMachineRunner", () => {
 			dappAccount: "dapp",
 			challenge: "challenge",
 			captchaResult: "passed",
+			headers: {},
 		});
 
 		expect(result.decision).toBe(DecisionMachineDecision.Deny);
@@ -119,6 +125,7 @@ describe("DecisionMachineRunner", () => {
 			dappAccount: "dapp",
 			challenge: "challenge",
 			captchaResult: "passed",
+			headers: {},
 		});
 
 		expect(result.decision).toBe(DecisionMachineDecision.Allow);
@@ -138,8 +145,79 @@ describe("DecisionMachineRunner", () => {
 			dappAccount: "dapp",
 			challenge: "challenge",
 			captchaResult: "passed",
+			headers: {},
 		});
 
 		expect(result.decision).toBe(DecisionMachineDecision.Allow);
 	}, 5000);
+
+	it("runs decision machine without captchaType filter on any captcha type", async () => {
+		const artifact = buildArtifact(
+			'module.exports = () => ({ decision: "deny" });',
+			DecisionMachineScope.Global,
+			undefined,
+			undefined, // no captchaType filter
+		);
+		(db.getDecisionMachineArtifact as unknown as ReturnType<typeof vi.fn>)
+			.mockResolvedValueOnce(undefined)
+			.mockResolvedValueOnce(artifact);
+
+		const result = await runner.decide({
+			userAccount: "user",
+			dappAccount: "dapp",
+			challenge: "challenge",
+			captchaResult: "passed",
+			headers: {},
+			captchaType: CaptchaType.pow,
+		});
+
+		expect(result.decision).toBe(DecisionMachineDecision.Deny);
+	});
+
+	it("runs decision machine with matching captchaType filter", async () => {
+		const artifact = buildArtifact(
+			'module.exports = () => ({ decision: "deny" });',
+			DecisionMachineScope.Global,
+			undefined,
+			CaptchaType.image,
+		);
+		(db.getDecisionMachineArtifact as unknown as ReturnType<typeof vi.fn>)
+			.mockResolvedValueOnce(undefined)
+			.mockResolvedValueOnce(artifact);
+
+		const result = await runner.decide({
+			userAccount: "user",
+			dappAccount: "dapp",
+			challenge: "challenge",
+			captchaResult: "passed",
+			headers: {},
+			captchaType: CaptchaType.image,
+		});
+
+		expect(result.decision).toBe(DecisionMachineDecision.Deny);
+	});
+
+	it("skips decision machine with non-matching captchaType filter", async () => {
+		const artifact = buildArtifact(
+			'module.exports = () => ({ decision: "deny" });',
+			DecisionMachineScope.Global,
+			undefined,
+			CaptchaType.pow,
+		);
+		(db.getDecisionMachineArtifact as unknown as ReturnType<typeof vi.fn>)
+			.mockResolvedValueOnce(undefined)
+			.mockResolvedValueOnce(artifact);
+
+		const result = await runner.decide({
+			userAccount: "user",
+			dappAccount: "dapp",
+			challenge: "challenge",
+			captchaResult: "passed",
+			headers: {},
+			captchaType: CaptchaType.image,
+		});
+
+		// Should default to allow because artifact doesn't match captcha type
+		expect(result.decision).toBe(DecisionMachineDecision.Allow);
+	});
 });

@@ -21,6 +21,7 @@ import {
 	type CaptchaSolution,
 	type CaptchaSolutionBodyType,
 	type CaptchaSolutionResponse,
+	type CaptchaType,
 	ClientApiPaths,
 	type DecisionMachineLanguage,
 	type DecisionMachineRuntime,
@@ -301,6 +302,7 @@ export default class ProviderApi
 		language?: DecisionMachineLanguage,
 		name?: string,
 		version?: string,
+		captchaType?: CaptchaType,
 	): Promise<ApiResponse> {
 		return this.post(
 			AdminApiPaths.UpdateDecisionMachine,
@@ -311,6 +313,7 @@ export default class ProviderApi
 				[ApiParams.decisionMachineLanguage]: language,
 				[ApiParams.decisionMachineName]: name,
 				[ApiParams.decisionMachineVersion]: version,
+				[ApiParams.decisionMachineCaptchaType]: captchaType,
 				[ApiParams.dapp]: dappAccount,
 			}),
 			{

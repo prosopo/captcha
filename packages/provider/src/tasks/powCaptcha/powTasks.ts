@@ -17,6 +17,7 @@ import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
 import type { Logger } from "@prosopo/common";
 import type { KeyringPair, ProsopoConfigOutput } from "@prosopo/types";
 import {
+	CaptchaType,
 	DecisionMachineDecision,
 	type DecisionMachineInput,
 } from "@prosopo/types";
@@ -315,6 +316,8 @@ export class PowCaptchaManager extends CaptchaManager {
 							dappAccount,
 							challenge,
 							captchaResult: "passed",
+							headers: challengeRecord.headers,
+							captchaType: CaptchaType.pow,
 							behavioralDataPacked: packedData,
 							deviceCapability: decryptedData.deviceCapability,
 						};

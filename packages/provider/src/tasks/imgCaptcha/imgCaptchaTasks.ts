@@ -25,8 +25,11 @@ import {
 	type Captcha,
 	type CaptchaSolution,
 	CaptchaStatus,
+	CaptchaType,
 	DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
 	type DappUserSolutionResult,
+	DecisionMachineDecision,
+	type DecisionMachineInput,
 	type Hash,
 	type IPAddress,
 	type ImageVerificationResponse,
@@ -51,11 +54,14 @@ import { constructPairList, containsIdenticalPairs } from "../../pairs.js";
 import { checkLangRules } from "../../rules/lang.js";
 import { deepValidateIpAddress, shuffleArray } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
+import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { FrictionlessReason } from "../frictionless/frictionlessTasks.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
 
 export class ImgCaptchaManager extends CaptchaManager {
+	private decisionMachineRunner: DecisionMachineRunner;
+
 	constructor(
 		db: IProviderDatabase,
 		pair: KeyringPair,
@@ -64,6 +70,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 	) {
 		super(db, pair, config, logger);
 		this.config = config;
+		this.decisionMachineRunner = new DecisionMachineRunner(db);
 	}
 
 	async getCaptchaWithProof(
@@ -329,14 +336,48 @@ export class ImgCaptchaManager extends CaptchaManager {
 					pendingRecord.threshold,
 				)
 			) {
+				// Captcha solution is correct, now check decision machine
+				let finalVerified = true;
+				const decisionInput: DecisionMachineInput = {
+					userAccount,
+					dappAccount,
+					challenge: requestHash,
+					captchaResult: "passed",
+					headers,
+					captchaType: CaptchaType.image,
+				};
+
+				try {
+					const decision = await this.decisionMachineRunner.decide(
+						decisionInput,
+						this.logger,
+					);
+					if (decision.decision === DecisionMachineDecision.Deny) {
+						finalVerified = false;
+						await this.db.disapproveDappUserCommitment(
+							commitmentId,
+							"CAPTCHA.DECISION_MACHINE_DENIED",
+							pairs,
+						);
+					} else {
+						await this.db.approveDappUserCommitment(commitmentId, pairs);
+					}
+				} catch (error) {
+					this.logger?.error(() => ({
+						msg: "Failed to process decision machine",
+						err: error,
+					}));
+					// Don't fail the captcha if decision machine fails
+					await this.db.approveDappUserCommitment(commitmentId, pairs);
+				}
+
 				response = {
 					captchas: captchaIds.map((id) => ({
 						captchaId: id,
-						proof: tree.proof(id),
+						proof: finalVerified ? tree.proof(id) : [[]],
 					})),
-					verified: true,
+					verified: finalVerified,
 				};
-				await this.db.approveDappUserCommitment(commitmentId, pairs);
 			} else {
 				await this.db.disapproveDappUserCommitment(
 					commitmentId,

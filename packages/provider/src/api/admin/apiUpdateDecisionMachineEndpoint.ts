@@ -42,6 +42,7 @@ class ApiUpdateDecisionMachineEndpoint
 				decisionMachineLanguage,
 				decisionMachineName,
 				decisionMachineVersion,
+				decisionMachineCaptchaType,
 				dapp,
 			} = args;
 
@@ -58,6 +59,7 @@ class ApiUpdateDecisionMachineEndpoint
 				decisionMachineLanguage,
 				decisionMachineName,
 				decisionMachineVersion,
+				decisionMachineCaptchaType,
 			);
 
 			logger.info(() => ({
