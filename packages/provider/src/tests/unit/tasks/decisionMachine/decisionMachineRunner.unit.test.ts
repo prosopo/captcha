@@ -14,6 +14,7 @@
 
 import {
 	CaptchaType,
+	type DecisionMachineCaptchaType,
 	DecisionMachineDecision,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
@@ -29,7 +30,7 @@ const buildArtifact = (
 	source: string,
 	scope: DecisionMachineScope,
 	dappAccount?: string,
-	captchaType?: CaptchaType,
+	captchaType?: DecisionMachineCaptchaType,
 ): DecisionMachineArtifact => {
 	const now = new Date();
 	return {

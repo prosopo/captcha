@@ -591,7 +591,7 @@ export type DecisionMachineArtifact = {
 	source: string;
 	name?: string;
 	version?: string;
-	captchaType?: CaptchaType;
+	captchaType?: CaptchaType.pow | CaptchaType.image;
 	createdAt: Date;
 	updatedAt: Date;
 };
@@ -621,7 +621,7 @@ export const DecisionMachineArtifactRecordSchema =
 		version: { type: String, required: false },
 		captchaType: {
 			type: String,
-			enum: Object.values(CaptchaType),
+			enum: [CaptchaType.pow, CaptchaType.image],
 			required: false,
 		},
 		createdAt: { type: Date, required: true },

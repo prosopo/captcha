@@ -16,8 +16,8 @@ import { createPrivateKey } from "node:crypto";
 import { type Logger, ProsopoApiError } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import {
-	type CaptchaType,
 	type ContextType,
+	type DecisionMachineCaptchaType,
 	type DecisionMachineLanguage,
 	type DecisionMachineRuntime,
 	DecisionMachineScope,
@@ -414,7 +414,7 @@ export class ClientTaskManager {
 		language?: DecisionMachineLanguage,
 		name?: string,
 		version?: string,
-		captchaType?: CaptchaType,
+		captchaType?: DecisionMachineCaptchaType,
 	): Promise<{
 		scope: DecisionMachineScope;
 		dappAccount?: string;

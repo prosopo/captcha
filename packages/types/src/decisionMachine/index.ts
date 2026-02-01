@@ -13,8 +13,10 @@
 // limitations under the License.
 
 import { z } from "zod";
-import type { CaptchaType } from "../client/index.js";
-import { CaptchaTypeSchema } from "../client/index.js";
+import {
+	type CaptchaType,
+	DecisionMachineCaptchaTypeSchema,
+} from "../client/captchaType/captchaType.js";
 
 export enum DecisionMachineRuntime {
 	Node = "node",
@@ -59,7 +61,7 @@ export type DecisionMachineInput = {
 	dappAccount: string;
 	captchaResult: "passed" | "failed";
 	headers: Record<string, string | string[] | undefined>;
-	captchaType?: CaptchaType.pow | CaptchaType.image
+	captchaType?: CaptchaType.pow | CaptchaType.image;
 	behavioralDataPacked?: DecisionMachineBehavioralDataPacked;
 	deviceCapability?: string;
 };
@@ -71,6 +73,8 @@ export type DecisionMachineOutput = {
 	tags?: string[];
 };
 
+export type DecisionMachineCaptchaType = CaptchaType.pow | CaptchaType.image;
+
 export type DecisionMachineArtifact = {
 	runtime: DecisionMachineRuntime;
 	source: string;
@@ -78,7 +82,7 @@ export type DecisionMachineArtifact = {
 	name?: string;
 	version?: string;
 	createdAt: string;
-	captchaType?: CaptchaType.pow | CaptchaType.image
+	captchaType?: DecisionMachineCaptchaType;
 };
 
 export const DecisionMachineOutputSchema = z.object({
@@ -95,5 +99,5 @@ export const DecisionMachineArtifactSchema = z.object({
 	name: z.string().optional(),
 	version: z.string().optional(),
 	createdAt: z.string(),
-	captchaType: CaptchaTypeSchema.optional(),
+	captchaType: DecisionMachineCaptchaTypeSchema.optional(),
 });
