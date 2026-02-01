@@ -329,7 +329,7 @@ export class PowCaptchaManager extends CaptchaManager {
 							finalVerified = false;
 							result = {
 								status: CaptchaStatus.disapproved,
-								reason: "CAPTCHA.INVALID_SOLUTION",
+								reason: "CAPTCHA.DECISION_MACHINE_DENIED",
 							};
 						}
 					}
