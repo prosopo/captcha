@@ -149,11 +149,14 @@ describe("getBotScore", () => {
 	});
 
 	it("calls decodePayload without privateKey when not provided", async () => {
-		const mockResult: DetectorResult = {
+		const mockResult = {
 			score: 0.5,
 			timestamp: 1234567890,
 			providerSelectEntropy: 12345,
-		};
+			userId: "",
+			userAgent: "",
+			decryptedHeadHash: "",
+		} as DetectorResult;
 
 		vi.mocked(decodePayloadModule.default).mockResolvedValue(mockResult);
 

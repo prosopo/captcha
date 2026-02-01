@@ -13,8 +13,9 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/common";
-import type { Database } from "@prosopo/database";
-import type { CaptchaMerkleTree } from "@prosopo/datasets";
+import type { ProviderDatabase } from "@prosopo/database";
+import type { Keyring } from "@prosopo/keyring";
+import type { KeyringPair, ProsopoConfigOutput } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { RedisClientType } from "@redis/client";
 import { vi } from "vitest";
@@ -32,8 +33,7 @@ export function createMockProviderEnvironment(): ProviderEnvironment {
 		warn: vi.fn(),
 		error: vi.fn(),
 		with: vi.fn().mockReturnThis(),
-		child: vi.fn().mockReturnThis(),
-	};
+	} as unknown as Logger;
 
 	// Mock database storages
 	const mockUserAccessRulesStorage = {
@@ -105,21 +105,12 @@ export function createMockProviderEnvironment(): ProviderEnvironment {
 	};
 
 	// Mock database
-	const mockDatabase: Database = {
+	const mockDatabase: ProviderDatabase = {
 		connect: vi.fn(),
-		disconnect: vi.fn(),
-		isConnected: vi.fn().mockReturnValue(true),
-		getCaptchaStorage: vi.fn().mockReturnValue(mockCaptchaStorage),
-		getDatasetStorage: vi.fn().mockReturnValue(mockDatasetStorage),
-		getProviderStorage: vi.fn().mockReturnValue(mockProviderStorage),
-		getUserStorage: vi.fn().mockReturnValue(mockUserStorage),
 		getUserAccessRulesStorage: vi
 			.fn()
 			.mockReturnValue(mockUserAccessRulesStorage),
-		getCollection: vi.fn(),
-		getCollections: vi.fn(),
-		getStats: vi.fn(),
-	};
+	} as unknown as ProviderDatabase;
 
 	// Mock Redis client
 	const mockRedisClient: RedisClientType = {
@@ -211,7 +202,7 @@ export function createMockProviderEnvironment(): ProviderEnvironment {
 				powCaptcha: "pow-captcha-queue",
 			},
 		},
-	};
+	} as unknown as ProsopoConfigOutput;
 
 	// Mock client task manager
 	const mockClientTaskManager = {
@@ -242,7 +233,7 @@ export function createMockProviderEnvironment(): ProviderEnvironment {
 		publicKey: new Uint8Array(32),
 		sign: vi.fn(),
 		verify: vi.fn(),
-	};
+	} as unknown as KeyringPair;
 
 	// Mock keyring
 	const mockKeyring = {
@@ -250,34 +241,21 @@ export function createMockProviderEnvironment(): ProviderEnvironment {
 		addFromSeed: vi.fn().mockReturnValue(mockPair),
 		getPairs: vi.fn().mockReturnValue([mockPair]),
 		getPair: vi.fn().mockReturnValue(mockPair),
-	};
+	} as unknown as Keyring;
 
 	// Create the mock environment
 	const mockEnv: ProviderEnvironment = {
 		config: mockConfig,
 		logger: mockLogger,
 		db: mockDatabase,
-		redis: mockRedisClient,
-		tasks: mockTasks,
 		pair: mockPair,
 		keyring: mockKeyring,
 		defaultEnvironment: "development" as const,
 		assetsResolver: undefined,
 		authAccount: mockPair,
 		getDb: vi.fn().mockReturnValue(mockDatabase),
-		getRedis: vi.fn().mockReturnValue(mockRedisClient),
-		getLogger: vi.fn().mockReturnValue(mockLogger),
-		getConfig: vi.fn().mockReturnValue(mockConfig),
-		getTasks: vi.fn().mockReturnValue(mockTasks),
 		isReady: vi.fn().mockResolvedValue(undefined),
 		importDatabase: vi.fn().mockResolvedValue(undefined),
-		getCaptchaMerkleTree: vi.fn().mockImplementation(() => {
-			return {
-				build: vi.fn(),
-				root: { hash: "mock-root-hash" },
-				getRoot: vi.fn().mockReturnValue({ hash: "mock-root-hash" }),
-			} as unknown as CaptchaMerkleTree;
-		}),
 	};
 
 	return mockEnv;

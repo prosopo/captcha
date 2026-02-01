@@ -14,7 +14,10 @@
 
 import { ProsopoContractError, ProsopoEnvError } from "@prosopo/common";
 import { ScheduledTaskNames, ScheduledTaskStatus } from "@prosopo/types";
-import type { IProviderDatabase } from "@prosopo/types-database";
+import type {
+	IProviderDatabase,
+	ScheduledTaskRecord,
+} from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	checkIfTaskIsRunning,
@@ -105,7 +108,7 @@ describe("checkIfTaskIsRunning", () => {
 	});
 
 	it("should return false when no running task exists", async () => {
-		vi.mocked(mockDb.getLastScheduledTaskStatus).mockResolvedValue(null);
+		vi.mocked(mockDb.getLastScheduledTaskStatus).mockResolvedValue(undefined);
 
 		const result = await checkIfTaskIsRunning(
 			ScheduledTaskNames.StoreCommitmentsExternal,
@@ -123,7 +126,7 @@ describe("checkIfTaskIsRunning", () => {
 		const oldTask = {
 			_id: "task-id",
 			datetime: new Date(Date.now() - 1000 * 60 * 3), // 3 minutes ago
-		};
+		} as unknown as ScheduledTaskRecord;
 
 		vi.mocked(mockDb.getLastScheduledTaskStatus).mockResolvedValue(oldTask);
 
@@ -141,10 +144,10 @@ describe("checkIfTaskIsRunning", () => {
 		const recentTask = {
 			_id: "task-id",
 			datetime: new Date(Date.now() - 1000 * 60), // 1 minute ago
-		};
+		} as unknown as ScheduledTaskRecord;
 
 		vi.mocked(mockDb.getLastScheduledTaskStatus).mockResolvedValue(recentTask);
-		vi.mocked(mockDb.getScheduledTaskStatus).mockResolvedValue(null); // Not completed
+		vi.mocked(mockDb.getScheduledTaskStatus).mockResolvedValue(undefined); // Not completed
 
 		const result = await checkIfTaskIsRunning(
 			ScheduledTaskNames.StoreCommitmentsExternal,
@@ -162,11 +165,11 @@ describe("checkIfTaskIsRunning", () => {
 		const recentTask = {
 			_id: "task-id",
 			datetime: new Date(Date.now() - 1000 * 30), // 30 seconds ago
-		};
+		} as unknown as ScheduledTaskRecord;
 		const completedTask = {
 			_id: "completed-id",
 			status: ScheduledTaskStatus.Completed,
-		};
+		} as unknown as ScheduledTaskRecord;
 
 		vi.mocked(mockDb.getLastScheduledTaskStatus).mockResolvedValue(recentTask);
 		vi.mocked(mockDb.getScheduledTaskStatus).mockResolvedValue(completedTask);

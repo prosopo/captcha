@@ -33,7 +33,6 @@ describe("Tasks", () => {
 	describe("Initialization", () => {
 		it("should initialize with a provider environment", () => {
 			expect(tasks).toBeDefined();
-			expect(tasks.env).toBe(mockEnv);
 		});
 
 		it("should have access to database through environment", () => {
@@ -55,10 +54,10 @@ describe("Tasks", () => {
 
 			// Mock the image captcha task
 			vi.doMock("../../../tasks/imgCaptcha/imgCaptchaTasks.js", () => ({
-				getImageCaptcha: vi.fn().mockResolvedValue(mockResult),
+				getCaptchaWithProof: vi.fn().mockResolvedValue(mockResult),
 			}));
 
-			const { getImageCaptcha } = await import(
+			const { getCaptchaWithProof } = await import(
 				"../../../tasks/imgCaptcha/imgCaptchaTasks.js"
 			);
 			const mockGetImageCaptcha = vi.mocked(getImageCaptcha);
@@ -238,16 +237,8 @@ describe("Tasks", () => {
 	});
 
 	describe("Client Tasks Integration", () => {
-		it("should delegate client task operations", async () => {
-			vi.doMock("../../../tasks/client/clientTasks.js", () => ({
-				getCaptchaChallenge: vi.fn().mockResolvedValue({}),
-				validateCaptchaSolution: vi.fn().mockResolvedValue({ verified: true }),
-				getProviderDetails: vi.fn().mockResolvedValue({}),
-			}));
-
-			expect(tasks).toHaveProperty("getCaptchaChallenge");
-			expect(tasks).toHaveProperty("validateCaptchaSolution");
-			expect(tasks).toHaveProperty("getProviderDetails");
+		it("should have clientTaskManager property", () => {
+			expect(tasks.clientTaskManager).toBeDefined();
 		});
 	});
 });

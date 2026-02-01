@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { ApiEndpointResponseStatus } from "@prosopo/api-route";
+import { CaptchaType, Tier } from "@prosopo/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiRegisterSiteKeyEndpoint } from "../../../../api/admin/apiRegisterSiteKeyEndpoint.js";
 
@@ -40,7 +41,7 @@ describe("ApiRegisterSiteKeyEndpoint", () => {
 		const result = await endpoint.processRequest(
 			{
 				siteKey: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
-				tier: 1,
+				tier: Tier.Free,
 			},
 			mockLogger as never,
 		);
@@ -50,8 +51,14 @@ describe("ApiRegisterSiteKeyEndpoint", () => {
 
 	it("calls registerSiteKey with correct parameters", async () => {
 		const siteKey = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
-		const tier = 2;
-		const settings = { domains: ["example.com"] };
+		const tier = Tier.Professional;
+		const settings = {
+			domains: ["example.com"],
+			captchaType: CaptchaType.pow,
+			frictionlessThreshold: 0.5,
+			powDifficulty: 100000,
+			imageThreshold: 0.5,
+		};
 
 		await endpoint.processRequest(
 			{ siteKey, tier, settings },
@@ -67,7 +74,7 @@ describe("ApiRegisterSiteKeyEndpoint", () => {
 
 	it("uses empty settings when settings not provided", async () => {
 		const siteKey = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
-		const tier = 1;
+		const tier = Tier.Free;
 
 		await endpoint.processRequest({ siteKey, tier }, mockLogger as never);
 
@@ -82,7 +89,7 @@ describe("ApiRegisterSiteKeyEndpoint", () => {
 		await endpoint.processRequest(
 			{
 				siteKey: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
-				tier: 1,
+				tier: Tier.Free,
 			},
 			mockLogger as never,
 		);

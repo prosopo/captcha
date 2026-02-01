@@ -18,13 +18,13 @@ import { checkLangRules } from "../../../rules/lang.js";
 
 describe("checkLangRules", () => {
 	it("should return 0 when lRules is undefined", () => {
-		const config = {} as ProsopoConfigOutput;
+		const config = {} as unknown as ProsopoConfigOutput;
 		const result = checkLangRules(config, "en-US,en;q=0.9");
 		expect(result).toBe(0);
 	});
 
 	it("should return 0 when lRules is null", () => {
-		const config = { lRules: null } as ProsopoConfigOutput;
+		const config = { lRules: null } as unknown as ProsopoConfigOutput;
 		const result = checkLangRules(config, "en-US,en;q=0.9");
 		expect(result).toBe(0);
 	});
@@ -32,7 +32,7 @@ describe("checkLangRules", () => {
 	it("should return 0 when lRules is empty", () => {
 		const config = {
 			lRules: {},
-		} as ProsopoConfigOutput;
+		} as unknown as ProsopoConfigOutput;
 		const result = checkLangRules(config, "en-US,en;q=0.9");
 		expect(result).toBe(0);
 	});
@@ -42,7 +42,7 @@ describe("checkLangRules", () => {
 			lRules: {
 				en: 10,
 			},
-		} as ProsopoConfigOutput;
+		} as unknown as ProsopoConfigOutput;
 		const result = checkLangRules(config, "en-US,en;q=0.9");
 		expect(result).toBe(10);
 	});
@@ -53,7 +53,7 @@ describe("checkLangRules", () => {
 				en: 10,
 				fr: 5,
 			},
-		} as ProsopoConfigOutput;
+		} as unknown as ProsopoConfigOutput;
 		const result = checkLangRules(config, "en-US,fr;q=0.8");
 		expect(result).toBe(5);
 	});
@@ -64,7 +64,7 @@ describe("checkLangRules", () => {
 				en: 10,
 				fr: 5,
 			},
-		} as ProsopoConfigOutput;
+		} as unknown as ProsopoConfigOutput;
 		const result = checkLangRules(config, "fr,en");
 		expect(result).toBe(15);
 	});
@@ -75,7 +75,7 @@ describe("checkLangRules", () => {
 				"en-US": 10,
 				en: 5,
 			},
-		} as ProsopoConfigOutput;
+		} as unknown as ProsopoConfigOutput;
 		const result = checkLangRules(config, "en-US,en;q=0.9");
 		expect(result).toBe(15);
 	});
@@ -85,7 +85,7 @@ describe("checkLangRules", () => {
 			lRules: {
 				en: 10,
 			},
-		} as ProsopoConfigOutput;
+		} as unknown as ProsopoConfigOutput;
 		const result = checkLangRules(config, "en;q=0.9");
 		expect(result).toBe(10);
 	});
@@ -96,7 +96,7 @@ describe("checkLangRules", () => {
 				en: 10,
 				fr: 5,
 			},
-		} as ProsopoConfigOutput;
+		} as unknown as ProsopoConfigOutput;
 		const result = checkLangRules(config, "de,es;q=0.8");
 		expect(result).toBe(0);
 	});
@@ -106,7 +106,7 @@ describe("checkLangRules", () => {
 			lRules: {
 				en: 10,
 			},
-		} as ProsopoConfigOutput;
+		} as unknown as ProsopoConfigOutput;
 		const result = checkLangRules(config, "en");
 		expect(result).toBe(10);
 	});
@@ -116,7 +116,7 @@ describe("checkLangRules", () => {
 			lRules: {
 				en: 10,
 			},
-		} as ProsopoConfigOutput;
+		} as unknown as ProsopoConfigOutput;
 		const result = checkLangRules(config, "");
 		expect(result).toBe(0);
 	});
@@ -127,7 +127,7 @@ describe("checkLangRules", () => {
 				en: 10,
 				fr: 5,
 			},
-		} as ProsopoConfigOutput;
+		} as unknown as ProsopoConfigOutput;
 		const result = checkLangRules(config, " en , fr ");
 		expect(result).toBe(15);
 	});
@@ -138,7 +138,7 @@ describe("checkLangRules", () => {
 				en: 10,
 				fr: 5,
 			},
-		} as ProsopoConfigOutput;
+		} as unknown as ProsopoConfigOutput;
 		const result = checkLangRules(config, "en;q=0.9,fr;q=0.8");
 		expect(result).toBe(15);
 	});
@@ -150,7 +150,7 @@ describe("checkLangRules", () => {
 				fr: 5,
 				de: 8,
 			},
-		} as ProsopoConfigOutput;
+		} as unknown as ProsopoConfigOutput;
 		const result = checkLangRules(
 			config,
 			"fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5",
@@ -163,7 +163,7 @@ describe("checkLangRules", () => {
 			lRules: {
 				en: 10,
 			},
-		} as ProsopoConfigOutput;
+		} as unknown as ProsopoConfigOutput;
 		const result = checkLangRules(config, "en;q=,fr;q=0.8");
 		expect(result).toBe(10); // 'en' should still match
 	});
@@ -173,7 +173,7 @@ describe("checkLangRules", () => {
 			lRules: {
 				en: 10,
 			},
-		} as ProsopoConfigOutput;
+		} as unknown as ProsopoConfigOutput;
 		const result = checkLangRules(config, "en,en;q=0.9,en;q=0.8");
 		expect(result).toBe(30); // Should count each occurrence
 	});
@@ -183,7 +183,7 @@ describe("checkLangRules", () => {
 			lRules: {
 				en: 10,
 			},
-		} as ProsopoConfigOutput;
+		} as unknown as ProsopoConfigOutput;
 		const result = checkLangRules(config, "en,,fr,");
 		expect(result).toBe(10);
 	});
@@ -195,7 +195,7 @@ describe("checkLangRules", () => {
 				zh: 10,
 				en: 5,
 			},
-		} as ProsopoConfigOutput;
+		} as unknown as ProsopoConfigOutput;
 		const result = checkLangRules(config, "zh-CN,zh;q=0.9,en;q=0.8");
 		expect(result).toBe(30); // zh-CN (15) + zh (10) + en (5) = 30
 	});
@@ -205,7 +205,7 @@ describe("checkLangRules", () => {
 			lRules: {
 				en: 10,
 			},
-		} as ProsopoConfigOutput;
+		} as unknown as ProsopoConfigOutput;
 
 		// @ts-ignore - Testing invalid input
 		expect(checkLangRules(config, null)).toBe(0);
@@ -218,7 +218,7 @@ describe("checkLangRules", () => {
 			lRules: {
 				en: 1,
 			},
-		} as ProsopoConfigOutput;
+		} as unknown as ProsopoConfigOutput;
 
 		const longAcceptLanguage = `${"en,".repeat(100)}fr`;
 		const result = checkLangRules(config, longAcceptLanguage);
@@ -231,7 +231,7 @@ describe("checkLangRules", () => {
 				en: 10,
 				EN: 5,
 			},
-		} as ProsopoConfigOutput;
+		} as unknown as ProsopoConfigOutput;
 
 		expect(checkLangRules(config, "en")).toBe(10);
 		expect(checkLangRules(config, "EN")).toBe(5);
@@ -244,7 +244,7 @@ describe("checkLangRules", () => {
 				"en-US": 15,
 				en: 10,
 			},
-		} as ProsopoConfigOutput;
+		} as unknown as ProsopoConfigOutput;
 
 		const result = checkLangRules(config, "en-US-posix,en-US;q=0.9,en;q=0.8");
 		expect(result).toBe(45); // 20 + 15 + 10
