@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 3.8.2
+### Patch Changes
+
+- 9633e58: Add captcha type to decision machine and run on image verification"
+
 ## 3.8.1
 ### Patch Changes
 
