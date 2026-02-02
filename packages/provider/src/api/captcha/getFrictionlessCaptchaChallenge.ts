@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoApiError, type Logger } from "@prosopo/common";
+import { ProsopoApiError } from "@prosopo/common";
 import {
 	ApiParams,
 	CaptchaType,
@@ -35,6 +35,7 @@ import { timestampDecayFunction } from "../../tasks/frictionless/frictionlessTas
 import { Tasks } from "../../tasks/index.js";
 import { hashUserAgent } from "../../utils/hashUserAgent.js";
 import { hashUserIp } from "../../utils/hashUserIp.js";
+import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 import { getRequestUserScope } from "../blacklistRequestInspector.js";
 import {
@@ -66,40 +67,6 @@ const getRoundsFromSimScore = (simScore: number) => {
 	if (simScore >= 0.6) return 6;
 	if (simScore >= 0.5) return 7;
 	return 8;
-};
-
-const normalizeRequestIp = (rawIp: unknown, logger: Logger): string => {
-	let normalizedIp = "";
-	const rawType = typeof rawIp;
-	const rawCtor =
-		rawIp && rawType === "object"
-			? (rawIp as { constructor?: { name?: string } }).constructor?.name
-			: undefined;
-	const addressProp =
-		rawIp && rawType === "object"
-			? (rawIp as { address?: unknown }).address
-			: undefined;
-
-	if (rawType === "string") {
-		normalizedIp = rawIp as string;
-	} else if (typeof addressProp === "string") {
-		normalizedIp = addressProp;
-	} else if (rawIp != null) {
-		normalizedIp = String(rawIp);
-	}
-
-	logger.debug(() => ({
-		msg: "Normalized request IP",
-		data: {
-			rawIpType: rawType,
-			rawIpCtor: rawCtor,
-			rawIpString: rawType === "string" ? rawIp : undefined,
-			addressPropType: typeof addressProp,
-			normalizedIp,
-		},
-	}));
-
-	return normalizedIp;
 };
 
 export default (
