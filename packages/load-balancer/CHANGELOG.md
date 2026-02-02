@@ -1,5 +1,11 @@
 # @prosopo/load-balancer
 
+## 2.8.20
+### Patch Changes
+
+- Updated dependencies [bd6995b]
+  - @prosopo/types@3.8.3
+
 ## 2.8.19
 ### Patch Changes
 

@@ -1,5 +1,24 @@
 # @prosopo/provider
 
+## 3.16.2
+### Patch Changes
+
+- 664e5bd: add unit tests
+- b19da6d: Shared CLI start fn
+- bd6995b: Adding UAP based geoblocking rules
+- Updated dependencies [bd6995b]
+  - @prosopo/user-access-policy@3.6.4
+  - @prosopo/types@3.8.3
+  - @prosopo/database@3.6.10
+  - @prosopo/types-database@4.2.2
+  - @prosopo/api@3.1.44
+  - @prosopo/api-express-router@3.0.51
+  - @prosopo/datasets@3.0.59
+  - @prosopo/env@3.2.39
+  - @prosopo/keyring@2.9.3
+  - @prosopo/load-balancer@2.8.20
+  - @prosopo/types-env@2.7.63
+
 ## 3.16.1
 ### Patch Changes
 

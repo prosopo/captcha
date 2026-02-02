@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-bundle",
-	"version": "3.3.4",
+	"version": "3.3.5",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "dist/index.js",
@@ -36,15 +36,17 @@
 		"serve": "NODE_ENV=${NODE_ENV:-development}; vite serve --config vite.serve.config.ts --mode $NODE_ENV --host",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
 	},
-	"browserslist": ["> 0.5%, last 2 versions, not dead"],
+	"browserslist": [
+		"> 0.5%, last 2 versions, not dead"
+	],
 	"dependencies": {
 		"@prosopo/dotenv": "3.0.33",
 		"@prosopo/locale": "3.1.28",
-		"@prosopo/procaptcha-common": "2.9.25",
-		"@prosopo/procaptcha-frictionless": "2.8.35",
-		"@prosopo/procaptcha-pow": "2.8.33",
-		"@prosopo/procaptcha-react": "2.9.30",
-		"@prosopo/types": "3.8.2",
+		"@prosopo/procaptcha-common": "2.9.26",
+		"@prosopo/procaptcha-frictionless": "2.8.36",
+		"@prosopo/procaptcha-pow": "2.8.34",
+		"@prosopo/procaptcha-react": "2.9.31",
+		"@prosopo/types": "3.8.3",
 		"@prosopo/util": "3.2.5",
 		"@prosopo/widget-skeleton": "2.7.13",
 		"dotenv": "16.4.5",

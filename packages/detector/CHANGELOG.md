@@ -1,5 +1,12 @@
 # @prosopo/detector
 
+## 3.4.4
+### Patch Changes
+
+- bd6995b: Adding UAP based geoblocking rules
+- Updated dependencies [bd6995b]
+  - @prosopo/types@3.8.3
+
 ## 3.4.3
 ### Patch Changes
 
