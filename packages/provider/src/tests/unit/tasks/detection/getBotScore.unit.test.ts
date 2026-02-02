@@ -64,7 +64,7 @@ describe("getBotScore", () => {
 			score: undefined,
 			timestamp: 1234567890,
 			providerSelectEntropy: 12345,
-		};
+		} as unknown as DetectorResult;
 
 		vi.mocked(decodePayloadModule.default).mockResolvedValue(mockResult);
 
@@ -82,7 +82,7 @@ describe("getBotScore", () => {
 			score: 0.5,
 			timestamp: 1234567890,
 			providerSelectEntropy: 12345,
-		};
+		} as unknown as DetectorResult;
 
 		vi.mocked(decodePayloadModule.default).mockResolvedValue(mockResult);
 
@@ -106,7 +106,7 @@ describe("getBotScore", () => {
 			timestamp: 1234567890,
 			providerSelectEntropy: 12345,
 			isWebView: undefined,
-		};
+		} as unknown as DetectorResult;
 
 		vi.mocked(decodePayloadModule.default).mockResolvedValue(mockResult);
 
@@ -121,7 +121,7 @@ describe("getBotScore", () => {
 			timestamp: 1234567890,
 			providerSelectEntropy: 12345,
 			isIframe: undefined,
-		};
+		} as unknown as DetectorResult;
 
 		vi.mocked(decodePayloadModule.default).mockResolvedValue(mockResult);
 
@@ -135,7 +135,7 @@ describe("getBotScore", () => {
 			score: 0.5,
 			timestamp: 1234567890,
 			providerSelectEntropy: 12345,
-		};
+		} as unknown as DetectorResult;
 
 		vi.mocked(decodePayloadModule.default).mockResolvedValue(mockResult);
 
