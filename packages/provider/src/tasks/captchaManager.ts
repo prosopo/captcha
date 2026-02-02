@@ -28,12 +28,11 @@ import type {
 	Session,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import {
-	type AccessPolicy,
-	AccessPolicyType,
-	type AccessRulesStorage,
-	type UserScope,
-	type UserScopeRecord,
+import type {
+	AccessPolicy,
+	AccessRulesStorage,
+	UserScope,
+	UserScopeRecord,
 } from "@prosopo/user-access-policy";
 import { getPrioritisedAccessRule } from "../api/blacklistRequestInspector.js";
 
@@ -89,34 +88,22 @@ export class CaptchaManager {
 		}));
 
 		// User Access Policies override default behaviour
-		if (userAccessPolicy) {
-			if (userAccessPolicy.type === AccessPolicyType.Block) {
-				this.logger.warn(() => ({
-					msg: "User is blocked by access policy",
-					data: {
-						account: clientSettings.account,
-					},
-				}));
-				return {
-					valid: false,
-					reason: "API.USER_BLOCKED",
-					type: requestedCaptchaType,
-				};
-			}
-			if (userAccessPolicy.captchaType !== requestedCaptchaType) {
-				this.logger.warn(() => ({
-					msg: "Invalid captcha type for user access policy",
-					data: {
-						account: clientSettings.account,
-						captchaType: userAccessPolicy.captchaType,
-					},
-				}));
-				return {
-					valid: false,
-					reason: "API.INCORRECT_CAPTCHA_TYPE",
-					type: requestedCaptchaType,
-				};
-			}
+		if (
+			userAccessPolicy &&
+			userAccessPolicy.captchaType !== requestedCaptchaType
+		) {
+			this.logger.warn(() => ({
+				msg: "Invalid captcha type for user access policy",
+				data: {
+					account: clientSettings.account,
+					captchaType: userAccessPolicy.captchaType,
+				},
+			}));
+			return {
+				valid: false,
+				reason: "API.INCORRECT_CAPTCHA_TYPE",
+				type: requestedCaptchaType,
+			};
 		}
 		// Session ID
 
