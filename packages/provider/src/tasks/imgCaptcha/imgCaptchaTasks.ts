@@ -25,8 +25,11 @@ import {
 	type Captcha,
 	type CaptchaSolution,
 	CaptchaStatus,
+	CaptchaType,
 	DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
 	type DappUserSolutionResult,
+	DecisionMachineDecision,
+	type DecisionMachineInput,
 	type Hash,
 	type IPAddress,
 	type ImageVerificationResponse,
@@ -51,11 +54,14 @@ import { constructPairList, containsIdenticalPairs } from "../../pairs.js";
 import { checkLangRules } from "../../rules/lang.js";
 import { deepValidateIpAddress, shuffleArray } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
+import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { FrictionlessReason } from "../frictionless/frictionlessTasks.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
 
 export class ImgCaptchaManager extends CaptchaManager {
+	private decisionMachineRunner: DecisionMachineRunner;
+
 	constructor(
 		db: IProviderDatabase,
 		pair: KeyringPair,
@@ -64,6 +70,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 	) {
 		super(db, pair, config, logger);
 		this.config = config;
+		this.decisionMachineRunner = new DecisionMachineRunner(db);
 	}
 
 	async getCaptchaWithProof(
@@ -567,7 +574,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		const isApproved = solution.result.status === CaptchaStatus.approved;
+		let isApproved = solution.result.status === CaptchaStatus.approved;
 
 		let score: number | undefined;
 		if (solution.sessionId) {
@@ -602,6 +609,46 @@ export class ImgCaptchaManager extends CaptchaManager {
 					}));
 					//return { status: "API.USER_NOT_VERIFIED", verified: false };
 				}
+			}
+		}
+		if (isApproved) {
+			// Captcha solution is correct, now check decision machine
+			const decisionInput: DecisionMachineInput = {
+				userAccount: solution.userAccount,
+				dappAccount: solution.dappAccount,
+				captchaResult: "passed",
+				headers: solution.headers,
+				captchaType: CaptchaType.image,
+			};
+
+			try {
+				const decision = await this.decisionMachineRunner.decide(
+					decisionInput,
+					this.logger,
+				);
+				if (decision.decision === DecisionMachineDecision.Deny) {
+					if (commitmentId) {
+						// commitmentId should always be present
+						await this.db.disapproveDappUserCommitment(
+							commitmentId,
+							decision.reason || "CAPTCHA.DECISION_MACHINE_DENIED",
+						);
+						// log
+						this.logger?.info(() => ({
+							msg: "Decision machine denied user verification",
+							data: {
+								commitmentId: commitmentId,
+								reason: decision.reason,
+							},
+						}));
+						isApproved = false;
+					}
+				}
+			} catch (error) {
+				this.logger?.error(() => ({
+					msg: "Failed to process decision machine",
+					err: error,
+				}));
 			}
 		}
 

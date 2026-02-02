@@ -21,7 +21,11 @@ import {
 	type CaptchaSolution,
 	type CaptchaSolutionBodyType,
 	type CaptchaSolutionResponse,
+	type CaptchaType,
 	ClientApiPaths,
+	type DecisionMachineLanguage,
+	type DecisionMachineRuntime,
+	type DecisionMachineScope,
 	type GetFrictionlessCaptchaResponse,
 	type GetPowCaptchaChallengeRequestBodyType,
 	type GetPowCaptchaResponse,
@@ -41,6 +45,7 @@ import {
 	SubmitPowCaptchaSolutionBody,
 	type Tier,
 	ToggleMaintenanceModeBody,
+	UpdateDecisionMachineBody,
 	UpdateDetectorKeyBody,
 	type UpdateDetectorKeyResponse,
 	type UpdateProviderClientsResponse,
@@ -279,6 +284,38 @@ export default class ProviderApi
 		return this.post(
 			AdminApiPaths.UpdateDetectorKey,
 			UpdateDetectorKeyBody.parse({ detectorKey }),
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					Authorization: `Bearer ${jwt}`,
+				},
+			},
+		);
+	}
+
+	public updateDecisionMachine(
+		scope: DecisionMachineScope,
+		runtime: DecisionMachineRuntime,
+		source: string,
+		jwt: string,
+		dappAccount?: string,
+		language?: DecisionMachineLanguage,
+		name?: string,
+		version?: string,
+		captchaType?: CaptchaType,
+	): Promise<ApiResponse> {
+		return this.post(
+			AdminApiPaths.UpdateDecisionMachine,
+			UpdateDecisionMachineBody.parse({
+				[ApiParams.decisionMachineScope]: scope,
+				[ApiParams.decisionMachineRuntime]: runtime,
+				[ApiParams.decisionMachineSource]: source,
+				[ApiParams.decisionMachineLanguage]: language,
+				[ApiParams.decisionMachineName]: name,
+				[ApiParams.decisionMachineVersion]: version,
+				[ApiParams.decisionMachineCaptchaType]: captchaType,
+				[ApiParams.dapp]: dappAccount,
+			}),
 			{
 				headers: {
 					"Prosopo-Site-Key": this.account,

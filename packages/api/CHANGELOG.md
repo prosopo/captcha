@@ -1,5 +1,12 @@
 # @prosopo/api
 
+## 3.1.42
+### Patch Changes
+
+- f52a5c1: Adding decision machine to provider for behavior detection
+- Updated dependencies [f52a5c1]
+  - @prosopo/types@3.8.1
+
 ## 3.1.41
 ### Patch Changes
 
