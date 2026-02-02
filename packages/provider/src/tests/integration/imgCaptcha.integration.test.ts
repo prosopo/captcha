@@ -61,8 +61,13 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { dummyUserAccount } from "./mocks/solvedTestCaptchas.js";
 
 const solutions = datasetWithSolutionHashes;
-const baseUrl = "http://localhost:9229";
 const userAccount = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty";
+
+// Function to get a random available port
+function getRandomPort(): number {
+	// Use a random port in the range 10000-60000 to avoid conflicts
+	return Math.floor(Math.random() * 50000) + 10000;
+}
 
 const getClientApiPathsExcludingVerify = () => {
 	const paths = Object.values(ClientApiPaths).filter(
@@ -193,8 +198,14 @@ describe("Image Captcha Integration Tests", () => {
 	let dappAccount: string;
 	let mnemonic: string;
 	let tasks: Tasks;
+	let testPort: number;
+	let baseUrl: string;
 
 	beforeAll(async () => {
+		// Get a unique port for this test suite
+		testPort = getRandomPort();
+		baseUrl = `http://localhost:${testPort}`;
+
 		// Start MongoDB container
 		mongoContainer = await new GenericContainer("mongo:6.0.17")
 			.withExposedPorts(27017)
@@ -220,7 +231,7 @@ describe("Image Captcha Integration Tests", () => {
 
 		const config = ProsopoConfigSchema.parse({
 			defaultEnvironment: "development",
-			host: "http://localhost:9229",
+			host: `http://localhost:${testPort}`,
 			account: {
 				secret:
 					process.env.PROVIDER_MNEMONIC ||
@@ -250,7 +261,7 @@ describe("Image Captcha Integration Tests", () => {
 			},
 			server: {
 				baseURL: "http://localhost",
-				port: 9229,
+				port: testPort,
 			},
 		});
 
@@ -270,7 +281,10 @@ describe("Image Captcha Integration Tests", () => {
 
 		// Start the provider API server
 		// This mimics the CLI start functionality
-		server = await startProviderApi(env, 9229);
+		env.logger.info(() => ({
+			msg: `Starting provider API on port ${testPort}`,
+		}));
+		server = await startProviderApi(env, testPort);
 	});
 
 	beforeEach(async () => {
@@ -486,11 +500,12 @@ describe("Image Captcha Integration Tests", () => {
 
 	describe("SubmitImageCaptchaSolution", () => {
 		it("should verify a correctly completed image captcha as true", async () => {
+			// Use dummyUserAccount for signing, but dappAccount (registered in beforeEach) as the site key
 			const pair = getPair(dummyUserAccount.seed, undefined, "sr25519", 42);
-			await registerSiteKeyInDb(env, pair.address, CaptchaType.image);
-
 			const userAccount = dummyUserAccount.address;
 			const origin = "http://localhost";
+
+			// Get captcha challenge using the site key registered in beforeEach
 			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
 			const getImgCaptchaBody: CaptchaRequestBodyType = {
 				[ApiParams.dapp]: dappAccount,
@@ -512,35 +527,35 @@ describe("Image Captcha Integration Tests", () => {
 
 			const data = (await response.json()) as CaptchaResponseBody;
 
-			const solvedCaptchas = datasetWithSolutionHashes.captchas.map(
-				(captcha, index) => ({
-					captchaContentId: captcha.captchaContentId,
-					solution: captcha.solution
+			// Create a map of solutions from the dataset for quick lookup
+			const solutionMap = new Map(
+				datasetWithSolutionHashes.captchas.map((captcha) => [
+					captcha.captchaContentId,
+					captcha.solution
 						? captcha.solution.map((s) => s.toString())
 						: captcha.solution,
+				]),
+			);
+
+			// Map the returned captchas to their solutions
+			const temp = data.captchas.map((captcha, index) => {
+				const solution = solutionMap.get(captcha.captchaContentId);
+				if (!solution) {
+					throw new Error(
+						`Solution not found for captchaContentId: ${captcha.captchaContentId}`,
+					);
+				}
+
+				return {
+					captchaContentId: captcha.captchaContentId,
+					captchaId: captcha.captchaId,
 					salt: embedData(randomAsHex(), [
 						1 + index,
 						2 + index,
 						3 + index,
 						4 + index,
 					]),
-				}),
-			);
-
-			const temp = data.captchas.map((captcha) => {
-				const solvedCaptcha = solvedCaptchas.find(
-					(solvedCaptcha) =>
-						solvedCaptcha.captchaContentId === captcha.captchaContentId,
-				);
-				if (!solvedCaptcha || !solvedCaptcha.solution) {
-					throw new Error("wtf?");
-				}
-
-				return {
-					captchaContentId: captcha.captchaContentId,
-					captchaId: captcha.captchaId,
-					salt: solvedCaptcha.salt,
-					solution: solvedCaptcha.solution,
+					solution: solution,
 				};
 			});
 
