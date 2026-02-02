@@ -136,5 +136,6 @@ export default function getConfig(
 			apiKey: process.env.PROSOPO_IPAPI_KEY,
 			baseUrl: process.env.PROSOPO_IPAPI_URL,
 		},
+		maxmindDbPath: process.env.MAXMIND_DB_PATH,
 	} as ProsopoConfigInput);
 }

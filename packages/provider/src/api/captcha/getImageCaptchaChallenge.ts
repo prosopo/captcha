@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoApiError, type Logger } from "@prosopo/common";
 import { parseCaptchaAssets } from "@prosopo/datasets";
 import {
 	ApiParams,
@@ -47,6 +47,40 @@ const getGeolocationService = (
 	return geolocationService;
 };
 
+const normalizeRequestIp = (rawIp: unknown, logger: Logger): string => {
+	let normalizedIp = "";
+	const rawType = typeof rawIp;
+	const rawCtor =
+		rawIp && rawType === "object"
+			? (rawIp as { constructor?: { name?: string } }).constructor?.name
+			: undefined;
+	const addressProp =
+		rawIp && rawType === "object"
+			? (rawIp as { address?: unknown }).address
+			: undefined;
+
+	if (rawType === "string") {
+		normalizedIp = rawIp as string;
+	} else if (typeof addressProp === "string") {
+		normalizedIp = addressProp;
+	} else if (rawIp != null) {
+		normalizedIp = String(rawIp);
+	}
+
+	logger.debug(() => ({
+		msg: "Normalized request IP",
+		data: {
+			rawIpType: rawType,
+			rawIpCtor: rawCtor,
+			rawIpString: rawType === "string" ? rawIp : undefined,
+			addressPropType: typeof addressProp,
+			normalizedIp,
+		},
+	}));
+
+	return normalizedIp;
+};
+
 export default (
 	env: ProviderEnvironment,
 	userAccessRulesStorage: AccessRulesStorage,
@@ -59,7 +93,8 @@ export default (
 		const tasks = new Tasks(env, req.logger);
 		let parsed: CaptchaRequestBodyTypeOutput;
 
-		if (!req.ip) {
+		const normalizedIp = normalizeRequestIp(req.ip, req.logger);
+		if (!normalizedIp) {
 			return next(
 				new ProsopoApiError("API.BAD_REQUEST", {
 					context: { code: 400, error: "IP address not found" },
@@ -69,7 +104,7 @@ export default (
 			);
 		}
 
-		const ipAddress = getIPAddress(req.ip || "");
+		const ipAddress = getIPAddress(normalizedIp);
 
 		try {
 			parsed = CaptchaRequestBody.parse(req.body);
@@ -103,12 +138,12 @@ export default (
 
 			// Get country code for geoblocking
 			const geoService = getGeolocationService(env);
-			const countryCode = await geoService.getCountryCode(req.ip || "");
-
+			const countryCode = await geoService.getCountryCode(normalizedIp);
+			
 			const userScope = getRequestUserScope(
 				flatten(req.headers),
 				req.ja4,
-				req.ip,
+				normalizedIp,
 				user,
 				undefined, // headHash
 				undefined, // coords
@@ -133,7 +168,7 @@ export default (
 				env,
 				sessionId,
 				userAccessPolicy,
-				req.ip,
+				normalizedIp,
 			);
 
 			if (!valid) {
