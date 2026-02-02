@@ -528,13 +528,14 @@ describe("Image Captcha Integration Tests", () => {
 			const data = (await response.json()) as CaptchaResponseBody;
 
 			// Create a map of solutions from the dataset for quick lookup
-			const solutionMap = new Map(
-				datasetWithSolutionHashes.captchas.map((captcha) => [
-					captcha.captchaContentId,
-					captcha.solution
-						? captcha.solution.map((s) => s.toString())
-						: captcha.solution,
-				]),
+			const solutionMap = new Map<string, string[]>(
+				// @ts-ignore
+				datasetWithSolutionHashes.captchas
+					.filter((captcha) => captcha.solution)
+					.map((captcha) => [
+						captcha.captchaContentId,
+						captcha.solution?.map((s) => s.toString() as string),
+					]),
 			);
 
 			// Map the returned captchas to their solutions

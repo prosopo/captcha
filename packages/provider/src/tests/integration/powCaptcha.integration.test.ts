@@ -23,11 +23,7 @@ import {
 import { parseLogLevel } from "@prosopo/common";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import { ProviderEnvironment } from "@prosopo/env";
-import {
-	generateMnemonic,
-	getDefaultProviders,
-	getPair,
-} from "@prosopo/keyring";
+import { generateMnemonic, getPair } from "@prosopo/keyring";
 import { i18nMiddleware } from "@prosopo/locale";
 import {
 	Tasks,
@@ -57,7 +53,7 @@ import {
 	Tier,
 } from "@prosopo/types";
 import { AccessRuleApiRoutes } from "@prosopo/user-access-policy/api";
-import { at, u8aToHex } from "@prosopo/util";
+import { u8aToHex } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
 import cors from "cors";
 import express from "express";
@@ -245,7 +241,6 @@ describe("PoW Integration Tests", () => {
 	let tasks: Tasks;
 	let testPort: number;
 	let baseUrl: string;
-	const adminPair = at(getDefaultProviders(), 0).pair;
 
 	beforeAll(async () => {
 		// Get a unique port for this test suite
@@ -631,9 +626,8 @@ describe("PoW Integration Tests", () => {
 		const userId = userPair.address;
 		const origin = "http://localhost";
 		const siteKey = "5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw";
-		const adminPair = at(getDefaultProviders(), 0).pair;
 
-		await registerSiteKey(siteKey, CaptchaType.image, adminPair);
+		await registerSiteKeyInDb(env, siteKey, CaptchaType.image);
 
 		const captchaRes = await fetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
 			method: "POST",
@@ -658,9 +652,8 @@ describe("PoW Integration Tests", () => {
 		const userId = userPair.address;
 		const origin = "http://localhost";
 		// Create a new site key to avoid conflicts with other tests
-		const [mnemonic, dapp] = await generateMnemonic();
-		const adminPair = at(getDefaultProviders(), 0).pair;
-		await registerSiteKey(dapp, CaptchaType.frictionless, adminPair);
+		const [_mnemonic, dapp] = await generateMnemonic();
+		await registerSiteKeyInDb(env, dapp, CaptchaType.frictionless);
 
 		const captchaRes = await fetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
 			method: "POST",
