@@ -12,15 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { Server } from "node:net";
 import { stringToU8a, u8aToHex } from "@polkadot/util";
+import {
+	apiExpressRouterFactory,
+	authMiddleware,
+	createApiExpressDefaultEndpointAdapter,
+	requestLoggerMiddleware,
+} from "@prosopo/api-express-router";
+import { parseLogLevel } from "@prosopo/common";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import { ProviderEnvironment } from "@prosopo/env";
+import { generateMnemonic, getPair } from "@prosopo/keyring";
+import { i18nMiddleware } from "@prosopo/locale";
 import {
-	generateMnemonic,
-	getDefaultProviders,
-	getPair,
-} from "@prosopo/keyring";
-import { Tasks } from "@prosopo/provider";
+	Tasks,
+	blockMiddleware,
+	createApiAdminRoutesProvider,
+	domainMiddleware,
+	headerCheckMiddleware,
+	ignoreMiddleware,
+	ja4Middleware,
+	prosopoRouter,
+	prosopoVerifyRouter,
+	publicRouter,
+	robotsMiddleware,
+} from "@prosopo/provider";
 import {
 	ApiParams,
 	type CaptchaRequestBodyType,
@@ -34,8 +51,11 @@ import {
 	ProsopoConfigSchema,
 	Tier,
 } from "@prosopo/types";
-import { at, embedData } from "@prosopo/util";
+import { AccessRuleApiRoutes } from "@prosopo/user-access-policy/api";
+import { embedData } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
+import cors from "cors";
+import express from "express";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { dummyUserAccount } from "./mocks/solvedTestCaptchas.js";
@@ -43,6 +63,105 @@ import { dummyUserAccount } from "./mocks/solvedTestCaptchas.js";
 const solutions = datasetWithSolutionHashes;
 const baseUrl = "http://localhost:9229";
 const userAccount = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty";
+
+const getClientApiPathsExcludingVerify = () => {
+	const paths = Object.values(ClientApiPaths).filter(
+		(path) => path.indexOf("verify") === -1,
+	);
+	return paths as ClientApiPaths[];
+};
+
+/**
+ * Start the provider API server
+ * This mimics the CLI start functionality but uses the test environment
+ */
+async function startProviderApi(
+	env: ProviderEnvironment,
+	port: number,
+): Promise<Server> {
+	env.logger.info(() => ({ msg: "Starting Prosopo API for tests" }));
+
+	const apiApp = express();
+	const apiPort = port;
+
+	const apiEndpointAdapter = createApiExpressDefaultEndpointAdapter(
+		parseLogLevel(env.config.logLevel),
+	);
+	const apiRuleRoutesProvider = new AccessRuleApiRoutes(
+		env.getDb().getUserAccessRulesStorage(),
+		env.logger,
+	);
+	const apiAdminRoutesProvider = createApiAdminRoutesProvider(env);
+
+	const clientPathsExcludingVerify = getClientApiPathsExcludingVerify();
+
+	// https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
+	apiApp.set("trust proxy", 1);
+
+	apiApp.use(cors());
+	apiApp.use(express.json({ limit: "50mb" }));
+
+	// Put this first so that no middleware runs on it
+	apiApp.use(publicRouter(env));
+
+	// Rate limiting disabled for tests
+	const i18Middleware = await i18nMiddleware({});
+	apiApp.use(robotsMiddleware());
+	apiApp.use(ignoreMiddleware());
+	apiApp.use(requestLoggerMiddleware(env));
+	apiApp.use(i18Middleware);
+	apiApp.use(ja4Middleware(env));
+
+	// Run Header check middleware on all client routes
+	apiApp.use(clientPathsExcludingVerify, headerCheckMiddleware(env));
+
+	// Specify verify router before the blocking middlewares
+	apiApp.use(prosopoVerifyRouter(env));
+
+	//  Admin routes - do not put after block middleware as this can block admin requests
+	env.logger.info(() => ({ msg: "Enabling admin auth middleware" }));
+	apiApp.use(
+		"/v1/prosopo/provider/admin",
+		authMiddleware(env.pair, env.authAccount),
+	);
+	const userAccessRuleRoutes = apiRuleRoutesProvider.getRoutes();
+	for (const userAccessRuleRoute in userAccessRuleRoutes) {
+		apiApp.use(userAccessRuleRoute, authMiddleware(env.pair, env.authAccount));
+	}
+	apiApp.use(
+		apiExpressRouterFactory.createRouter(
+			apiRuleRoutesProvider,
+			apiEndpointAdapter,
+		),
+	);
+	apiApp.use(
+		apiExpressRouterFactory.createRouter(
+			apiAdminRoutesProvider,
+			// unlike the default one, it should have errorStatusCode as 400
+			createApiExpressDefaultEndpointAdapter(
+				parseLogLevel(env.config.logLevel),
+				400,
+			),
+		),
+	);
+
+	// Blocking middleware will run on any routes defined after this point
+	apiApp.use(blockMiddleware(env));
+
+	// Domain middleware will run on any routes beginning with "/v1/prosopo/provider/client/" past this point
+	apiApp.use("/v1/prosopo/provider/client/", domainMiddleware(env));
+	apiApp.use(prosopoRouter(env));
+
+	return new Promise((resolve) => {
+		const server = apiApp.listen(apiPort, () => {
+			env.logger.info(() => ({
+				data: { apiPort },
+				msg: "Prosopo test API listening",
+			}));
+			resolve(server);
+		});
+	});
+}
 
 /**
  * Register a site key directly in the database using Tasks
@@ -70,10 +189,10 @@ describe("Image Captcha Integration Tests", () => {
 	let env: ProviderEnvironment;
 	let mongoContainer: StartedTestContainer;
 	let redisContainer: StartedTestContainer;
+	let server: Server;
 	let dappAccount: string;
 	let mnemonic: string;
 	let tasks: Tasks;
-	const adminPair = at(getDefaultProviders(), 0).pair;
 
 	beforeAll(async () => {
 		// Start MongoDB container
@@ -129,6 +248,10 @@ describe("Image Captcha Integration Tests", () => {
 				baseUrl: "https://dummyUrl.com",
 				apiKey: "dummyKey",
 			},
+			server: {
+				baseURL: "http://localhost",
+				port: 9229,
+			},
 		});
 
 		env = new ProviderEnvironment(config);
@@ -144,6 +267,10 @@ describe("Image Captcha Integration Tests", () => {
 		tasks = new Tasks(env);
 		env.logger.info(() => ({ msg: "Setting up provider dataset" }));
 		await tasks.datasetManager.providerSetDataset(datasetWithSolutionHashes);
+
+		// Start the provider API server
+		// This mimics the CLI start functionality
+		server = await startProviderApi(env, 9229);
 	});
 
 	beforeEach(async () => {
@@ -153,6 +280,14 @@ describe("Image Captcha Integration Tests", () => {
 	});
 
 	afterAll(async () => {
+		if (server) {
+			await new Promise<void>((resolve, reject) => {
+				server.close((err) => {
+					if (err) reject(err);
+					else resolve();
+				});
+			});
+		}
 		if (env) {
 			await env.getDb().close();
 		}
