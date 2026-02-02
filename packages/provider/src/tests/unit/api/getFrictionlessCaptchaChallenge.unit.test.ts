@@ -58,11 +58,16 @@ type MockReq = {
 	ja4: Record<string, unknown>;
 	logger: Record<string, unknown>;
 	i18n: { t: (s: string) => string };
+	requestId?: string;
+	path?: string;
+	method?: string;
 };
 
 type MockRes = {
 	json: (v: unknown) => Promise<unknown>;
 	status: (code: number) => MockRes;
+	on: (event: string, handler: () => void) => MockRes;
+	statusCode?: number;
 };
 
 // Helper to build req/res/next
@@ -74,14 +79,52 @@ const buildReqRes = (body: unknown, ip = "127.0.0.1") => {
 		ja4: {},
 		logger: mockLogger,
 		i18n: { t: (s: string) => s },
+		requestId: "test-request-id",
+		path: "/frictionless",
+		method: "POST",
 	};
 	const res: MockRes = {
 		json: vi.fn(async (v: unknown) => v),
 		status: vi.fn().mockReturnThis(),
+		on: vi.fn().mockReturnThis(),
+		statusCode: 200,
 	} as unknown as MockRes;
 	const next = vi.fn();
 	return { req, res, next };
 };
+
+// Mock the normalizeRequestIp utility
+vi.mock("../../../utils/normalizeRequestIp.js", () => ({
+	normalizeRequestIp: vi.fn((ip: unknown) => String(ip)),
+}));
+
+// Mock the hashUserAgent utility
+vi.mock("../../../utils/hashUserAgent.js", () => ({
+	hashUserAgent: vi.fn((ua: string) => "844bc172f032bdd2d0baae3536c1d66c"),
+}));
+
+// Mock the hashUserIp utility
+vi.mock("../../../utils/hashUserIp.js", () => ({
+	hashUserIp: vi.fn(
+		(user: string, ip: string, sitekey: string) =>
+			`hash-${user}-${ip}-${sitekey}`,
+	),
+}));
+
+// Mock getMaintenanceMode
+vi.mock("../../../api/admin/apiToggleMaintenanceModeEndpoint.js", () => ({
+	getMaintenanceMode: vi.fn(() => false),
+}));
+
+// Mock getRequestUserScope
+vi.mock("../../../api/blacklistRequestInspector.js", () => ({
+	getRequestUserScope: vi.fn(() => ({})),
+}));
+
+// Mock getCompositeIpAddress
+vi.mock("../../../compositeIpAddress.js", () => ({
+	getCompositeIpAddress: vi.fn((ip: string) => ip),
+}));
 
 vi.mock("../../../tasks/index.js", async () => {
 	const actual = await vi.importActual("../../../tasks/index.js");
