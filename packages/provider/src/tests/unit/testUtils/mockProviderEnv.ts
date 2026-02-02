@@ -256,6 +256,7 @@ export function createMockProviderEnvironment(): ProviderEnvironment {
 		getDb: vi.fn().mockReturnValue(mockDatabase),
 		isReady: vi.fn().mockResolvedValue(undefined),
 		importDatabase: vi.fn().mockResolvedValue(undefined),
+		tasks: mockTasks,
 	};
 
 	return mockEnv;

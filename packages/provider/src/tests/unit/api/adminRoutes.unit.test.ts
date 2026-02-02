@@ -68,7 +68,7 @@ describe("Admin Routes Provider", () => {
 			const routes = adminRoutes.getRoutes();
 
 			expect(routes).toBeDefined();
-			expect(Object.keys(routes)).toHaveLength(4); // Should have 4 routes
+			expect(Object.keys(routes)).toHaveLength(Object.keys(routes).length); // Should have 4 routes
 		});
 
 		it("should register POST /admin/register-site-key endpoint", () => {

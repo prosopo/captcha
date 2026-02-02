@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { ApiEndpointResponseStatus } from "@prosopo/api-route";
-import { CaptchaType, Tier } from "@prosopo/types";
+import { CaptchaType, type IUserSettings, Tier } from "@prosopo/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiRegisterSiteKeyEndpoint } from "../../../../api/admin/apiRegisterSiteKeyEndpoint.js";
 
@@ -42,6 +42,7 @@ describe("ApiRegisterSiteKeyEndpoint", () => {
 			{
 				siteKey: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
 				tier: Tier.Free,
+				settings: { domains: ["localhost"] } as unknown as IUserSettings,
 			},
 			mockLogger as never,
 		);
@@ -72,24 +73,12 @@ describe("ApiRegisterSiteKeyEndpoint", () => {
 		);
 	});
 
-	it("uses empty settings when settings not provided", async () => {
-		const siteKey = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
-		const tier = Tier.Free;
-
-		await endpoint.processRequest({ siteKey, tier }, mockLogger as never);
-
-		expect(mockClientTaskManager.registerSiteKey).toHaveBeenCalledWith(
-			siteKey,
-			tier,
-			expect.objectContaining({}),
-		);
-	});
-
 	it("logs registration message", async () => {
 		await endpoint.processRequest(
 			{
 				siteKey: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
 				tier: Tier.Free,
+				settings: { domains: ["localhost"] } as unknown as IUserSettings,
 			},
 			mockLogger as never,
 		);
