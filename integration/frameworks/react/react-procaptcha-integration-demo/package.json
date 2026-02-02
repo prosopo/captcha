@@ -20,7 +20,7 @@
 		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --project tsconfig.types.json",
-		"bundle": "echo 'Bundling react-procaptcha-integration-demo'",
+		"bundle": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.config.ts --mode $NODE_ENV",
 		"dev": "NODE_ENV=${NODE_ENV:-development}; vite dev --port=9330 --mode=$NODE_ENV",
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo"
 	},
