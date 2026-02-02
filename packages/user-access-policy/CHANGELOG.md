@@ -1,5 +1,13 @@
 # @prosopo/user-access-policy
 
+## 3.6.4
+### Patch Changes
+
+- bd6995b: Adding UAP based geoblocking rules
+- Updated dependencies [bd6995b]
+  - @prosopo/types@3.8.3
+  - @prosopo/api@3.1.44
+
 ## 3.6.3
 ### Patch Changes
 

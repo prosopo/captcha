@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 3.8.3
+### Patch Changes
+
+- bd6995b: Adding UAP based geoblocking rules
+
 ## 3.8.2
 ### Patch Changes
 
