@@ -24,13 +24,29 @@ import {
 } from "@prosopo/user-access-policy";
 import { getIPAddressFromBigInt } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
-import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { GenericContainer, type StartedTestContainer } from "testcontainers";
+import {
+	afterAll,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
 import { getPrioritisedAccessRule } from "../../../api/blacklistRequestInspector.js";
 
 describe("blacklistRequestInspector Integration Tests", () => {
+	/**
+	 * Tests the getPrioritisedAccessRule function with real MongoDB and Redis containers.
+	 * This integration test verifies that access rules are correctly retrieved and prioritized
+	 * from the database, testing the complete data flow from storage to rule evaluation.
+	 */
 	describe("getPrioritisedAccessRule", () => {
 		let env: ProviderEnvironment;
 		let accessRulesStorage: AccessRulesStorage;
+		let mongoContainer: StartedTestContainer;
+		let redisContainer: StartedTestContainer;
 		const userAgent1 = "testuseragent1";
 		const userAgent2 = "testuseragent2";
 		const userAgent3 = "testuseragent3";
@@ -40,6 +56,29 @@ describe("blacklistRequestInspector Integration Tests", () => {
 		let siteKeyMnemonic: string;
 
 		beforeAll(async () => {
+			// Start MongoDB container
+			mongoContainer = await new GenericContainer("mongo:6.0.17")
+				.withExposedPorts(27017)
+				.withEnvironment({
+					MONGO_INITDB_ROOT_USERNAME: "root",
+					MONGO_INITDB_ROOT_PASSWORD: "root",
+					MONGO_INITDB_DATABASE: "prosopo_test",
+				})
+				.start();
+
+			// Start Redis container
+			redisContainer = await new GenericContainer("redis/redis-stack:latest")
+				.withExposedPorts(6379)
+				.withEnvironment({
+					REDIS_ARGS: "--requirepass root",
+				})
+				.start();
+
+			const mongoHost = mongoContainer.getHost();
+			const mongoPort = mongoContainer.getMappedPort(27017);
+			const redisHost = redisContainer.getHost();
+			const redisPort = redisContainer.getMappedPort(6379);
+
 			const config = ProsopoConfigSchema.parse({
 				defaultEnvironment: "development",
 				host: "http://localhost:9229",
@@ -56,18 +95,22 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				database: {
 					development: {
 						type: DatabaseTypes.enum.provider,
-						endpoint: "mongodb://127.0.0.1:27017",
-						dbname: process.env.PROSOPO_DATABASE_NAME || "prosopo_test",
-						authSource: process.env.PROSOPO_DATABASE_AUTH_SOURCE,
+						endpoint: `mongodb://root:root@${mongoHost}:${mongoPort}`,
+						dbname: "prosopo_test",
+						authSource: "admin",
 					},
+				},
+				redisConnection: {
+					url: `redis://:${encodeURIComponent("root")}@${redisHost}:${redisPort}`,
+					password: "root",
+					indexName: randomAsHex(16),
 				},
 				ipApi: {
 					baseUrl: "https://dummyUrl.com",
 					apiKey: "dummyKey",
 				},
 			});
-			// ensure no crossover issues with the index name and other tests
-			config.redisConnection.indexName = randomAsHex(16);
+
 			env = new ProviderEnvironment(config);
 			await env.isReady();
 
@@ -676,6 +719,18 @@ describe("blacklistRequestInspector Integration Tests", () => {
 
 			expect(result).toHaveLength(1);
 			expect(result[0]?.type).toBe(AccessPolicyType.Block);
+		});
+
+		afterAll(async () => {
+			if (env) {
+				await env.getDb().close();
+			}
+			if (mongoContainer) {
+				await mongoContainer.stop();
+			}
+			if (redisContainer) {
+				await redisContainer.stop();
+			}
 		});
 	});
 });

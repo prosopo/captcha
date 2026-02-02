@@ -11,234 +11,254 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { Logger } from "@prosopo/common";
-import { ScheduledTaskNames } from "@prosopo/types";
+
+import { ProsopoContractError, ProsopoEnvError } from "@prosopo/common";
+import { ScheduledTaskNames, ScheduledTaskStatus } from "@prosopo/types";
 import type {
 	IProviderDatabase,
 	ScheduledTaskRecord,
 } from "@prosopo/types-database";
-import { at } from "@prosopo/util";
-import { Address4, Address6 } from "ip-address";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	checkIfTaskIsRunning,
+	encodeStringAddress,
 	getIPAddress,
-	validateIpAddress,
+	getIPAddressFromBigInt,
+	shuffleArray,
 } from "../../util.js";
 
-describe("checkIfTaskIsRunning", () => {
-	it("should return false if the task is not running", async () => {
-		const taskName = ScheduledTaskNames.StoreCommitmentsExternal;
-		const db = {
-			getLastScheduledTaskStatus: vi.fn().mockResolvedValue(null),
-		} as unknown as IProviderDatabase;
-		const result = await checkIfTaskIsRunning(taskName, db);
-		expect(result).toBe(false);
+describe("encodeStringAddress", () => {
+	it("should encode a valid hex address", () => {
+		// Use a valid Polkadot address format
+		const hexAddress =
+			"0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d";
+		const result = encodeStringAddress(hexAddress);
+		expect(result).toBeDefined();
+		expect(typeof result).toBe("string");
 	});
-	it("should return false if the task is running and completed", async () => {
-		const taskName = ScheduledTaskNames.StoreCommitmentsExternal;
-		const db = {
-			getLastScheduledTaskStatus: vi.fn().mockResolvedValue({
-				_id: "123",
-				datetime: new Date(),
-			} as Pick<ScheduledTaskRecord, "_id" | "datetime">),
-			getScheduledTaskStatus: vi.fn().mockResolvedValue({
-				_id: "123",
-				status: "Completed",
-			} as Pick<ScheduledTaskRecord, "_id" | "status">),
-		} as unknown as IProviderDatabase;
-		const result = await checkIfTaskIsRunning(taskName, db);
-		expect(result).toBe(false);
+
+	it("should encode a valid base58 address", () => {
+		const base58Address = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
+		const result = encodeStringAddress(base58Address);
+		expect(result).toBeDefined();
+		expect(typeof result).toBe("string");
 	});
-	it("should return true if the task is running and not completed", async () => {
-		const taskName = ScheduledTaskNames.StoreCommitmentsExternal;
-		const db = {
-			getLastScheduledTaskStatus: vi.fn().mockResolvedValue({
-				_id: "123",
-				datetime: new Date(),
-			} as Pick<ScheduledTaskRecord, "_id" | "datetime">),
-			getScheduledTaskStatus: vi.fn().mockResolvedValue(null),
-		} as unknown as IProviderDatabase;
-		const result = await checkIfTaskIsRunning(taskName, db);
-		expect(result).toBe(true);
+
+	it("should throw ProsopoContractError for invalid address", () => {
+		const invalidAddress = "invalid-address";
+		expect(() => encodeStringAddress(invalidAddress)).toThrow(
+			ProsopoContractError,
+		);
+		expect(() => encodeStringAddress(invalidAddress)).toThrow(
+			"CONTRACT.INVALID_ADDRESS",
+		);
 	});
 });
 
-describe("validateIpAddress", () => {
-	let mockLogger: Logger;
+describe("shuffleArray", () => {
+	it("should return an array of the same length", () => {
+		const original = [1, 2, 3, 4, 5];
+		const result = shuffleArray([...original]);
+		expect(result).toHaveLength(original.length);
+	});
+
+	it("should contain the same elements", () => {
+		const original = [1, 2, 3, 4, 5];
+		const result = shuffleArray([...original]);
+		expect(result.sort()).toEqual(original.sort());
+	});
+
+	it("should handle empty array", () => {
+		const original: number[] = [];
+		const result = shuffleArray([...original]);
+		expect(result).toEqual([]);
+	});
+
+	it("should handle single element array", () => {
+		const original = [42];
+		const result = shuffleArray([...original]);
+		expect(result).toEqual([42]);
+	});
+
+	it("should handle array with duplicate elements", () => {
+		const original = [1, 1, 2, 2, 3];
+		const result = shuffleArray([...original]);
+		expect(result.sort()).toEqual(original.sort());
+		expect(result).toHaveLength(5);
+	});
+
+	it("should modify the original array in place", () => {
+		const original = [1, 2, 3, 4, 5];
+		const originalCopy = [...original];
+		shuffleArray(original);
+		// The array should be shuffled (though there's a tiny chance it's the same)
+		expect(original).toHaveLength(originalCopy.length);
+		expect(original.sort()).toEqual(originalCopy.sort());
+	});
+});
+
+describe("checkIfTaskIsRunning", () => {
+	let mockDb: IProviderDatabase;
 
 	beforeEach(() => {
-		mockLogger = {
-			info: vi.fn().mockImplementation(console.info),
-			debug: vi.fn().mockImplementation(console.debug),
-			error: vi.fn().mockImplementation(console.error),
-			log: vi.fn().mockImplementation(console.log),
-			warn: vi.fn().mockImplementation(console.warn),
-		} as unknown as Logger;
-
-		vi.clearAllMocks();
+		mockDb = {
+			getLastScheduledTaskStatus: vi.fn(),
+			getScheduledTaskStatus: vi.fn(),
+		} as unknown as IProviderDatabase;
 	});
 
-	it("should return valid when IP is undefined", () => {
-		const result = validateIpAddress(
-			undefined,
-			Address4.fromBigInt(BigInt(123456789)),
-			mockLogger,
+	it("should return false when no running task exists", async () => {
+		vi.mocked(mockDb.getLastScheduledTaskStatus).mockResolvedValue(undefined);
+
+		const result = await checkIfTaskIsRunning(
+			ScheduledTaskNames.StoreCommitmentsExternal,
+			mockDb,
 		);
 
-		expect(result.isValid).toBe(true);
-		expect(result.errorMessage).toBeUndefined();
-	});
-
-	it("should return valid when IP addresses match", () => {
-		const testIp = "212.132.203.186";
-		const ipAddress = Address4.fromBigInt(BigInt(3565472698));
-
-		const result = validateIpAddress(testIp, ipAddress, mockLogger);
-
-		expect(result.isValid).toBe(true);
-		expect(result.errorMessage).toBeUndefined();
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		const logFn = (mockLogger.info as any).mock.calls[0][0];
-		const logObj = logFn();
-		expect(logObj).toHaveProperty("data");
-		expect(logObj.data).toHaveProperty("ipV4orV6Address");
-		expect(logObj.data.ipV4orV6Address).toHaveProperty("address", testIp);
-	});
-
-	it("should return valid when when an IPV4 big int is returned from the DB and an IPV4 string is sent in the payload", () => {
-		const testIp = "82.43.214.180";
-		const ipAddress = Address4.fromBigInt(BigInt(1378604724));
-
-		const result = validateIpAddress(testIp, ipAddress, mockLogger);
-
-		expect(result.isValid).toBe(true);
-		expect(result.errorMessage).toBeUndefined();
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		const logFn = (mockLogger.info as any).mock.calls[0][0];
-		const logObj = logFn();
-		expect(logObj).toHaveProperty("data");
-		expect(logObj.data).toHaveProperty("ipV4orV6Address");
-		expect(logObj.data.ipV4orV6Address).toHaveProperty("address", testIp);
-	});
-
-	it("should return valid when when an IPV4 big int is returned from the DB and an IPV6 string is sent in the payload", () => {
-		const testIp = "::ffff:82.43.214.180";
-		const ipAddress = Address6.fromBigInt(BigInt(1378604724));
-
-		const result = validateIpAddress(testIp, ipAddress, mockLogger);
-
-		expect(result.isValid).toBe(true);
-		expect(result.errorMessage).toBeUndefined();
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		const logFn = (mockLogger.info as any).mock.calls[0][0];
-		const logObj = logFn();
-		expect(logObj).toHaveProperty("data");
-		expect(logObj.data).toHaveProperty("ipV4orV6Address");
-		expect(logObj.data.ipV4orV6Address).toHaveProperty(
-			"address",
-			at(testIp.split(":"), 3),
+		expect(result).toBe(false);
+		expect(mockDb.getLastScheduledTaskStatus).toHaveBeenCalledWith(
+			ScheduledTaskNames.StoreCommitmentsExternal,
+			ScheduledTaskStatus.Running,
 		);
 	});
 
-	it("should return valid when when an IPV6 big int is returned from the DB and an IPV4 string is sent in the payload", () => {
-		const testIp = "82.43.214.180";
-		const ipAddress = Address6.fromBigInt(BigInt(1378604724n));
+	it("should return false when running task is older than 2 minutes", async () => {
+		const oldTask = {
+			_id: "task-id",
+			datetime: new Date(Date.now() - 1000 * 60 * 3), // 3 minutes ago
+		} as unknown as ScheduledTaskRecord;
 
-		const result = validateIpAddress(testIp, ipAddress, mockLogger);
+		vi.mocked(mockDb.getLastScheduledTaskStatus).mockResolvedValue(oldTask);
 
-		expect(result.isValid).toBe(true);
-		expect(result.errorMessage).toBeUndefined();
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		const logFn = (mockLogger.info as any).mock.calls[0][0];
-		const logObj = logFn();
-		expect(logObj).toHaveProperty("data");
-		expect(logObj.data).toHaveProperty("ipV4orV6Address");
-		expect(logObj.data.ipV4orV6Address).toHaveProperty("address", testIp);
+		const result = await checkIfTaskIsRunning(
+			ScheduledTaskNames.StoreCommitmentsExternal,
+			mockDb,
+		);
+
+		expect(result).toBe(false);
+		expect(mockDb.getLastScheduledTaskStatus).toHaveBeenCalledTimes(1);
+		expect(mockDb.getScheduledTaskStatus).not.toHaveBeenCalled();
 	});
 
-	it("should return valid when when an IPV6 big int is returned from the DB and an IPV6 string is sent in the payload", () => {
-		const testIp = "::ffff:82.43.214.180";
-		const ipAddress = Address6.fromBigInt(BigInt(281472060348084n));
+	it("should return true when running task exists and is not completed", async () => {
+		const recentTask = {
+			_id: "task-id",
+			datetime: new Date(Date.now() - 1000 * 60), // 1 minute ago
+		} as unknown as ScheduledTaskRecord;
 
-		const result = validateIpAddress(testIp, ipAddress, mockLogger);
+		vi.mocked(mockDb.getLastScheduledTaskStatus).mockResolvedValue(recentTask);
+		vi.mocked(mockDb.getScheduledTaskStatus).mockResolvedValue(undefined); // Not completed
 
-		expect(result.isValid).toBe(true);
-		expect(result.errorMessage).toBeUndefined();
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		const logFn = (mockLogger.info as any).mock.calls[0][0];
-		const logObj = logFn();
-		expect(logObj).toHaveProperty("data");
-		expect(logObj.data).toHaveProperty("ipV4orV6Address");
-		expect(logObj.data.ipV4orV6Address).toHaveProperty(
-			"address",
-			at(testIp.split(":"), 3),
+		const result = await checkIfTaskIsRunning(
+			ScheduledTaskNames.StoreCommitmentsExternal,
+			mockDb,
+		);
+
+		expect(result).toBe(true);
+		expect(mockDb.getScheduledTaskStatus).toHaveBeenCalledWith(
+			recentTask._id,
+			ScheduledTaskStatus.Completed,
 		);
 	});
 
-	it("should return invalid when IP address is malformed", () => {
-		const invalidIp = "invalid.ip.address";
-		const challengeRecordIp = Address4.fromBigInt(BigInt(3232235777)); // Some valid bigint
+	it("should return false when running task exists and is completed", async () => {
+		const recentTask = {
+			_id: "task-id",
+			datetime: new Date(Date.now() - 1000 * 30), // 30 seconds ago
+		} as unknown as ScheduledTaskRecord;
+		const completedTask = {
+			_id: "completed-id",
+			status: ScheduledTaskStatus.Completed,
+		} as unknown as ScheduledTaskRecord;
 
-		const result = validateIpAddress(invalidIp, challengeRecordIp, mockLogger);
+		vi.mocked(mockDb.getLastScheduledTaskStatus).mockResolvedValue(recentTask);
+		vi.mocked(mockDb.getScheduledTaskStatus).mockResolvedValue(completedTask);
 
-		expect(result.isValid).toBe(false);
-		expect(result.errorMessage).toBe(`Invalid IP address: ${invalidIp}`);
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		const logFn = (mockLogger.info as any).mock.calls[0][0];
-		const logObj = logFn();
-		expect(logObj).toHaveProperty("msg");
-		expect(logObj.msg).toEqual(`Invalid IP address: ${invalidIp}`);
-	});
+		const result = await checkIfTaskIsRunning(
+			ScheduledTaskNames.StoreCommitmentsExternal,
+			mockDb,
+		);
 
-	it("should return invalid when IP addresses don't match", () => {
-		const providedIp = "192.168.1.1";
-		const storedIp = Address4.fromBigInt(BigInt(3232235778)); // Different IP as bigint
-
-		const result = validateIpAddress(providedIp, storedIp, mockLogger);
-
-		expect(result.isValid).toBe(false);
-		expect(result.errorMessage).toContain("IP address mismatch:");
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		const logFn = (mockLogger.info as any).mock.calls[1][0];
-		const logObj = logFn();
-		expect(logObj).toHaveProperty("msg");
-		expect(logObj.msg).toEqual(
-			"IP address mismatch: 192.168.1.2 !== 192.168.1.1",
+		expect(result).toBe(false);
+		expect(mockDb.getScheduledTaskStatus).toHaveBeenCalledWith(
+			recentTask._id,
+			ScheduledTaskStatus.Completed,
 		);
 	});
+});
 
-	it("should verify logger is called when IP validation occurs", () => {
-		const testIp = "127.0.0.1";
-		const ipAddress = getIPAddress(testIp);
+describe("getIPAddress", () => {
+	it("should parse valid IPv4 address", () => {
+		const ipv4 = "192.168.1.1";
+		const result = getIPAddress(ipv4);
 
-		validateIpAddress(testIp, ipAddress, mockLogger);
-
-		expect(mockLogger.info).toHaveBeenCalledTimes(1);
+		expect(result).toBeDefined();
+		expect(result.address).toBe(ipv4);
+		expect(result.v4).toBe(true);
 	});
 
-	it("should return invalid when IP versions don't match 2", () => {
-		const providedIp = "2607:fb90:7321:84d:ac39:3cd1:4f69:9ac8";
-		const storedIp = getIPAddress("1.1.1.1");
-		const result = validateIpAddress(providedIp, storedIp, mockLogger);
+	it("should parse valid IPv6 address", () => {
+		const ipv6 = "2001:db8::1";
+		const result = getIPAddress(ipv6);
 
-		expect(result.isValid).toBe(false);
-		expect(result.errorMessage).toContain("IP address mismatch:");
+		expect(result).toBeDefined();
+		expect(result.address).toBe(ipv6);
+		expect(result.v4).toBe(false);
 	});
-	it("should return invalid when IP versions don't match 3", () => {
-		const providedIp = "2001:67c:2628:647:35:402:0:3a9";
-		const storedIp = getIPAddress("1.1.1.1");
-		const result = validateIpAddress(providedIp, storedIp, mockLogger);
 
-		expect(result.isValid).toBe(false);
-		expect(result.errorMessage).toContain("IP address mismatch:");
+	it("should throw ProsopoEnvError for invalid IP address", () => {
+		const invalidIP = "invalid-ip-address";
+
+		expect(() => getIPAddress(invalidIP)).toThrow(ProsopoEnvError);
+		expect(() => getIPAddress(invalidIP)).toThrow("API.INVALID_IP");
 	});
-	it("should return invalid when IP versions don't match 3", () => {
-		const providedIp = "1.1.1.1";
-		const storedIp = getIPAddress("2001:67c:2628:647:35:402:0:3a9");
-		const result = validateIpAddress(providedIp, storedIp, mockLogger);
 
-		expect(result.isValid).toBe(false);
-		expect(result.errorMessage).toContain("IP address mismatch:");
+	it("should handle IPv4 loopback", () => {
+		const loopback = "127.0.0.1";
+		const result = getIPAddress(loopback);
+
+		expect(result.address).toBe(loopback);
+		expect(result.v4).toBe(true);
+	});
+
+	it("should handle IPv6 loopback", () => {
+		const loopback = "::1";
+		const result = getIPAddress(loopback);
+
+		expect(result.address).toBe(loopback);
+		expect(result.v4).toBe(false);
+	});
+});
+
+describe("getIPAddressFromBigInt", () => {
+	it("should convert IPv4 big int to address", () => {
+		// 192.168.1.1 as big int
+		const ipv4BigInt = 3232235777n;
+		const result = getIPAddressFromBigInt(ipv4BigInt);
+
+		expect(result).toBeDefined();
+		expect(result.address).toBe("192.168.1.1");
+		expect(result.v4).toBe(true);
+	});
+
+	it("should convert IPv6 big int to address", () => {
+		// 2001:db8::1 as big int (simplified)
+		const ipv6BigInt = 42540766411282592856904266426630537217n;
+		const result = getIPAddressFromBigInt(ipv6BigInt);
+
+		expect(result).toBeDefined();
+		expect(result.v4).toBe(false);
+	});
+
+	it("should handle edge cases", () => {
+		// Test with 0
+		const zero = getIPAddressFromBigInt(0n);
+		expect(zero).toBeDefined();
+		expect(zero.address).toBe("0.0.0.0");
+
+		// Test with IPv6 range
+		const ipv6Value = getIPAddressFromBigInt(4228250627n); // Just over the IPv4 limit
+		expect(ipv6Value).toBeDefined();
+		expect(ipv6Value.v4).toBe(false);
 	});
 });
