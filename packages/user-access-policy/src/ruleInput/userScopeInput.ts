@@ -30,6 +30,7 @@ const userAttributesSchema = z.object({
 	userAgentHash: z.coerce.string().optional(),
 	headHash: z.coerce.string().optional(),
 	coords: z.coerce.string().optional(),
+	countryCode: z.coerce.string().optional(),
 } satisfies AllKeys<UserAttributes>) satisfies ZodType<UserAttributes>;
 
 const userAttributesInput = z

@@ -121,6 +121,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			userAccount,
 			headHash,
 			coordsString,
+			undefined, // countryCode - could be stored in challenge record in future
 		);
 
 		const accessPolicies = await this.getPrioritisedAccessPolicies(

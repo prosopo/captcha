@@ -26,6 +26,7 @@ import type { NextFunction, Response } from "express";
 import type { Request } from "express";
 import { getCompositeIpAddress } from "../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../express.js";
+import { GeolocationService } from "../../services/geolocation.js";
 import {
 	FrictionlessManager,
 	FrictionlessReason,
@@ -34,12 +35,28 @@ import { timestampDecayFunction } from "../../tasks/frictionless/frictionlessTas
 import { Tasks } from "../../tasks/index.js";
 import { hashUserAgent } from "../../utils/hashUserAgent.js";
 import { hashUserIp } from "../../utils/hashUserIp.js";
+import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 import { getRequestUserScope } from "../blacklistRequestInspector.js";
 import {
 	determineContextType,
 	getContextThreshold,
 } from "./contextAwareValidation.js";
+
+// Singleton geolocation service instance
+let geolocationService: GeolocationService | null = null;
+
+const getGeolocationService = (
+	env: ProviderEnvironment,
+): GeolocationService => {
+	if (!geolocationService) {
+		geolocationService = new GeolocationService(
+			env.config.maxmindDbPath,
+			env.logger,
+		);
+	}
+	return geolocationService;
+};
 
 const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
 
@@ -62,9 +79,36 @@ export default (
 		next: NextFunction,
 	) => {
 		try {
+			res.on("finish", () => {
+				req.logger.info(() => ({
+					msg: "Frictionless response finished",
+					data: {
+						requestId: req.requestId,
+						status: res.statusCode,
+						path: req.path,
+						method: req.method,
+					},
+				}));
+			});
+
 			const tasks = new Tasks(env, req.logger);
 			const { token, headHash, dapp, user } =
 				GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
+			const normalizedIp = normalizeRequestIp(req.ip, req.logger);
+
+			req.logger.info(() => ({
+				msg: "Frictionless handler entry",
+				data: {
+					requestId: req.requestId,
+					token,
+					user,
+					dapp,
+					normalizedIp,
+					ja4: req.ja4,
+					path: req.path,
+					method: req.method,
+				},
+			}));
 
 			// If in maintenance mode, store dummy token and send PoW captcha
 			if (getMaintenanceMode()) {
@@ -83,7 +127,7 @@ export default (
 							baseScore: 0,
 						},
 						providerSelectEntropy: 0,
-						ipAddress: getCompositeIpAddress(req.ip || ""),
+						ipAddress: getCompositeIpAddress(normalizedIp),
 						webView: false,
 						iFrame: false,
 						decryptedHeadHash: "",
@@ -114,7 +158,7 @@ export default (
 			}
 
 			// Calculate the hash for this user-IP-sitekey combination
-			const userSitekeyIpHash = hashUserIp(user, req.ip || "", dapp);
+			const userSitekeyIpHash = hashUserIp(user, normalizedIp, dapp);
 
 			const existingSession =
 				await tasks.db.getSessionByuserSitekeyIpHash(userSitekeyIpHash);
@@ -126,6 +170,15 @@ export default (
 						userSitekeyIpHash,
 						sessionId: existingSession.sessionId,
 						captchaType: existingSession.captchaType,
+					},
+				}));
+				req.logger.info(() => ({
+					msg: "Frictionless decision",
+					data: {
+						requestId: req.requestId,
+						decision: "reuse_session",
+						captchaType: existingSession.captchaType,
+						sessionId: existingSession.sessionId,
 					},
 				}));
 				return res.json({
@@ -207,7 +260,7 @@ export default (
 				...(lScore && { lScore }),
 			};
 
-			const ipAddress = getCompositeIpAddress(req.ip || "");
+			const ipAddress = getCompositeIpAddress(normalizedIp);
 
 			// Set common session parameters on the frictionless manager
 			tasks.frictionlessManager.setSessionParams({
@@ -223,12 +276,34 @@ export default (
 				siteKey: dapp,
 			});
 
+			// Get country code for geoblocking (skip if env is incomplete)
+			let countryCode: string | undefined;
+			if (env?.config?.maxmindDbPath) {
+				try {
+					const geoService = getGeolocationService(env);
+					countryCode = await geoService.getCountryCode(normalizedIp);
+					req.logger?.debug?.(() => ({
+						msg: "Resolved country code for geoblocking",
+						countryCode,
+						ip: normalizedIp,
+					}));
+				} catch (err) {
+					req.logger?.warn?.(() => ({
+						err,
+						msg: "Failed to resolve geolocation; skipping geoblocking",
+					}));
+				}
+			}
+
 			// Check if the IP address is blocked
 			const userScope = getRequestUserScope(
 				flatten(req.headers),
 				req.ja4,
-				req.ip,
+				normalizedIp,
 				user,
+				undefined, // headHash
+				undefined, // coords
+				countryCode,
 			);
 			const userAccessPolicy = (
 				await tasks.frictionlessManager.getPrioritisedAccessPolicies(
@@ -240,6 +315,16 @@ export default (
 
 			// If the user or IP address has an image captcha config defined, send an image captcha
 			if (userAccessPolicy) {
+				req.logger.info(() => ({
+					msg: "User access policy matched",
+					data: {
+						requestId: req.requestId,
+						policy: userAccessPolicy,
+						captchaType: userAccessPolicy.captchaType,
+						userScope,
+					},
+				}));
+
 				const scoreUpdate = tasks.frictionlessManager.scoreIncreaseAccessPolicy(
 					userAccessPolicy,
 					baseBotScore,
@@ -251,6 +336,14 @@ export default (
 				tasks.frictionlessManager.updateScore(botScore, scoreComponents);
 
 				if (userAccessPolicy.captchaType === CaptchaType.image) {
+					req.logger.info(() => ({
+						msg: "Frictionless decision",
+						data: {
+							requestId: req.requestId,
+							decision: "user_access_policy",
+							captchaType: CaptchaType.image,
+						},
+					}));
 					return res.json(
 						await tasks.frictionlessManager.sendImageCaptcha({
 							solvedImagesCount: userAccessPolicy.solvedImagesCount,
@@ -261,6 +354,14 @@ export default (
 					);
 				}
 				if (userAccessPolicy.captchaType === CaptchaType.pow) {
+					req.logger.info(() => ({
+						msg: "Frictionless decision",
+						data: {
+							requestId: req.requestId,
+							decision: "user_access_policy",
+							captchaType: CaptchaType.pow,
+						},
+					}));
 					return res.json(
 						await tasks.frictionlessManager.sendPowCaptcha({
 							userSitekeyIpHash,
@@ -293,6 +394,14 @@ export default (
 					},
 				}));
 
+				req.logger.info(() => ({
+					msg: "Frictionless decision",
+					data: {
+						requestId: req.requestId,
+						decision: "user_agent_mismatch",
+						captchaType: CaptchaType.image,
+					},
+				}));
 				return res.json(
 					await tasks.frictionlessManager.sendImageCaptcha({
 						solvedImagesCount: timestampDecayFunction(
@@ -364,6 +473,16 @@ export default (
 						const sim = compareBinaryStrings(decryptedHeadHash, clientEntropy);
 						const isValidContext = sim >= threshold;
 						if (!isValidContext) {
+							req.logger.info(() => ({
+								msg: "Frictionless decision",
+								data: {
+									requestId: req.requestId,
+									decision: "context_aware_failed",
+									captchaType: CaptchaType.image,
+									sim,
+									threshold,
+								},
+							}));
 							return res.json(
 								await tasks.frictionlessManager.sendImageCaptcha({
 									solvedImagesCount: getRoundsFromSimScore(sim),
@@ -391,6 +510,14 @@ export default (
 				scoreComponents = scoreUpdate.scoreComponents;
 				tasks.frictionlessManager.updateScore(botScore, scoreComponents);
 
+				req.logger.info(() => ({
+					msg: "Frictionless decision",
+					data: {
+						requestId: req.requestId,
+						decision: "webview_detected",
+						captchaType: CaptchaType.image,
+					},
+				}));
 				return res.json(
 					await tasks.frictionlessManager.sendImageCaptcha({
 						solvedImagesCount: env.config.captchas.solved.count * 2,
@@ -413,6 +540,14 @@ export default (
 				scoreComponents = scoreUpdate.scoreComponents;
 				tasks.frictionlessManager.updateScore(botScore, scoreComponents);
 
+				req.logger.info(() => ({
+					msg: "Frictionless decision",
+					data: {
+						requestId: req.requestId,
+						decision: "timestamp_too_old",
+						captchaType: CaptchaType.image,
+					},
+				}));
 				return res.json(
 					await tasks.frictionlessManager.sendImageCaptcha({
 						solvedImagesCount: timestampDecayFunction(
@@ -453,6 +588,14 @@ export default (
 						token,
 					},
 				}));
+				req.logger.info(() => ({
+					msg: "Frictionless decision",
+					data: {
+						requestId: req.requestId,
+						decision: "bot_score_above_threshold",
+						captchaType: CaptchaType.image,
+					},
+				}));
 				return res.json(
 					await tasks.frictionlessManager.sendImageCaptcha({
 						solvedImagesCount: env.config.captchas.solved.count,
@@ -464,6 +607,14 @@ export default (
 			}
 
 			// Otherwise, send a PoW captcha
+			req.logger.info(() => ({
+				msg: "Frictionless decision",
+				data: {
+					requestId: req.requestId,
+					decision: "default_pow",
+					captchaType: CaptchaType.pow,
+				},
+			}));
 			return res.json(
 				await tasks.frictionlessManager.sendPowCaptcha({
 					userSitekeyIpHash,

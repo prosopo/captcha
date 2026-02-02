@@ -25,9 +25,26 @@ import { flatten } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import { getCompositeIpAddress } from "../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../express.js";
+import { GeolocationService } from "../../services/geolocation.js";
 import { Tasks } from "../../tasks/index.js";
+import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
 import { getRequestUserScope } from "../blacklistRequestInspector.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
+
+// Singleton geolocation service instance
+let geolocationService: GeolocationService | null = null;
+
+const getGeolocationService = (
+	env: ProviderEnvironment,
+): GeolocationService => {
+	if (!geolocationService) {
+		geolocationService = new GeolocationService(
+			env.config.maxmindDbPath,
+			env.logger,
+		);
+	}
+	return geolocationService;
+};
 
 export default (
 	env: ProviderEnvironment,
@@ -72,11 +89,25 @@ export default (
 				);
 			}
 
+			const normalizedIp = normalizeRequestIp(req.ip, req.logger);
+			if (!normalizedIp) {
+				req.logger.warn(() => ({
+					msg: "Request missing IP; geoblocking will be skipped",
+				}));
+			}
+
+			// Get country code for geoblocking
+			const geoService = getGeolocationService(env);
+			const countryCode = await geoService.getCountryCode(normalizedIp);
+
 			const userScope = getRequestUserScope(
 				flatten(req.headers),
 				req.ja4,
-				req.ip,
+				normalizedIp,
 				user,
+				undefined, // headHash
+				undefined, // coords
+				countryCode,
 			);
 			const userAccessPolicy = (
 				await tasks.powCaptchaManager.getPrioritisedAccessPolicies(
@@ -97,7 +128,7 @@ export default (
 				env,
 				sessionId,
 				userAccessPolicy,
-				req.ip,
+				normalizedIp,
 			);
 
 			if (!valid) {
@@ -151,7 +182,7 @@ export default (
 				},
 				challenge.difficulty,
 				challenge.providerSignature,
-				getCompositeIpAddress(req.ip || ""),
+				getCompositeIpAddress(normalizedIp),
 				flatten(req.headers),
 				req.ja4,
 				validSessionId,
