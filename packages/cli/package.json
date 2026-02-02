@@ -33,7 +33,6 @@
 	"dependencies": {
 		"@polkadot/types-codec": "16.4.9",
 		"@prosopo/api": "3.1.43",
-		"@prosopo/api-express-router": "3.0.50",
 		"@prosopo/common": "3.1.28",
 		"@prosopo/dotenv": "3.0.33",
 		"@prosopo/env": "3.2.38",
@@ -41,14 +40,10 @@
 		"@prosopo/locale": "3.1.28",
 		"@prosopo/provider": "3.16.1",
 		"@prosopo/types": "3.8.2",
-		"@prosopo/user-access-policy": "3.6.3",
 		"@prosopo/util": "3.2.5",
-		"@prosopo/util-crypto": "13.5.29",
 		"@prosopo/workspace": "3.1.20",
-		"cors": "2.8.5",
 		"cron-parser": "4.9.0",
 		"dotenv": "16.4.5",
-		"express-rate-limit": "7.4.0",
 		"yargs": "17.7.2",
 		"zod": "3.23.8"
 	},

@@ -41,6 +41,7 @@
 		"@prosopo/util-crypto": "13.5.29",
 		"cron": "3.1.7",
 		"express": "4.21.2",
+		"express-rate-limit": "7.4.0",
 		"geolib": "3.3.4",
 		"i18next": "24.1.0",
 		"ip-address": "10.0.1",
