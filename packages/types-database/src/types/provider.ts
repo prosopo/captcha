@@ -507,6 +507,7 @@ export type Session = {
 	decryptedHeadHash: string;
 	siteKey?: string;
 	reason?: string;
+	blocked?: boolean;
 };
 
 export type SessionRecord = mongoose.Document & Session;
@@ -539,10 +540,12 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	decryptedHeadHash: { type: String, required: false, default: "" },
 	siteKey: { type: String, required: false },
 	reason: { type: String, required: false },
+	blocked: { type: Boolean, required: false },
 });
 
 SessionRecordSchema.index({ createdAt: 1 });
 SessionRecordSchema.index({ deleted: 1 });
+SessionRecordSchema.index({ blocked: 1 });
 SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
 SessionRecordSchema.index({ userSitekeyIpHash: 1 });
 SessionRecordSchema.index({ providerSelectEntropy: 1 });

@@ -335,6 +335,26 @@ export default (
 				scoreComponents = scoreUpdate.scoreComponents;
 				tasks.frictionlessManager.updateScore(botScore, scoreComponents);
 
+				// If the user access policy is a block, send an image captcha
+				if (userAccessPolicy.type === "block") {
+					req.logger.info(() => ({
+						msg: "Frictionless decision",
+						data: {
+							requestId: req.requestId,
+							decision: "block",
+							captchaType: CaptchaType.image,
+						},
+					}));
+					await tasks.frictionlessManager.registerBlockedSession({
+						solvedImagesCount: env.config.captchas.solved.count,
+						userSitekeyIpHash,
+						reason: FrictionlessReason.ACCESS_POLICY_BLOCK,
+						siteKey: dapp,
+					});
+
+					return res.status(401).json({ error: "Unauthorized" });
+				}
+
 				if (userAccessPolicy.captchaType === CaptchaType.image) {
 					req.logger.info(() => ({
 						msg: "Frictionless decision",
