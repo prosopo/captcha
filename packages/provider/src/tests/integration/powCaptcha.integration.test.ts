@@ -14,30 +14,10 @@
 
 import type { Server } from "node:net";
 import { sha256 } from "@noble/hashes/sha256";
-import {
-	apiExpressRouterFactory,
-	authMiddleware,
-	createApiExpressDefaultEndpointAdapter,
-	requestLoggerMiddleware,
-} from "@prosopo/api-express-router";
-import { parseLogLevel } from "@prosopo/common";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import { ProviderEnvironment } from "@prosopo/env";
 import { generateMnemonic, getPair } from "@prosopo/keyring";
-import { i18nMiddleware } from "@prosopo/locale";
-import {
-	Tasks,
-	blockMiddleware,
-	createApiAdminRoutesProvider,
-	domainMiddleware,
-	headerCheckMiddleware,
-	ignoreMiddleware,
-	ja4Middleware,
-	prosopoRouter,
-	prosopoVerifyRouter,
-	publicRouter,
-	robotsMiddleware,
-} from "@prosopo/provider";
+import { Tasks, startProviderApi } from "@prosopo/provider";
 import {
 	ApiParams,
 	CaptchaType,
@@ -52,11 +32,8 @@ import {
 	type SubmitPowCaptchaSolutionBodyType,
 	Tier,
 } from "@prosopo/types";
-import { AccessRuleApiRoutes } from "@prosopo/user-access-policy/api";
 import { u8aToHex } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
-import cors from "cors";
-import express from "express";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { dummyUserAccount } from "./mocks/solvedTestCaptchas.js";
@@ -69,105 +46,6 @@ const userId = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty";
 function getRandomPort(): number {
 	// Use a random port in the range 10000-60000 to avoid conflicts
 	return Math.floor(Math.random() * 50000) + 10000;
-}
-
-const getClientApiPathsExcludingVerify = () => {
-	const paths = Object.values(ClientApiPaths).filter(
-		(path) => path.indexOf("verify") === -1,
-	);
-	return paths as ClientApiPaths[];
-};
-
-/**
- * Start the provider API server
- * This mimics the CLI start functionality but uses the test environment
- */
-async function startProviderApi(
-	env: ProviderEnvironment,
-	port: number,
-): Promise<Server> {
-	env.logger.info(() => ({ msg: "Starting Prosopo API for tests" }));
-
-	const apiApp = express();
-	const apiPort = port;
-
-	const apiEndpointAdapter = createApiExpressDefaultEndpointAdapter(
-		parseLogLevel(env.config.logLevel),
-	);
-	const apiRuleRoutesProvider = new AccessRuleApiRoutes(
-		env.getDb().getUserAccessRulesStorage(),
-		env.logger,
-	);
-	const apiAdminRoutesProvider = createApiAdminRoutesProvider(env);
-
-	const clientPathsExcludingVerify = getClientApiPathsExcludingVerify();
-
-	// https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
-	apiApp.set("trust proxy", 1);
-
-	apiApp.use(cors());
-	apiApp.use(express.json({ limit: "50mb" }));
-
-	// Put this first so that no middleware runs on it
-	apiApp.use(publicRouter(env));
-
-	// Rate limiting disabled for tests
-	const i18Middleware = await i18nMiddleware({});
-	apiApp.use(robotsMiddleware());
-	apiApp.use(ignoreMiddleware());
-	apiApp.use(requestLoggerMiddleware(env));
-	apiApp.use(i18Middleware);
-	apiApp.use(ja4Middleware(env));
-
-	// Run Header check middleware on all client routes
-	apiApp.use(clientPathsExcludingVerify, headerCheckMiddleware(env));
-
-	// Specify verify router before the blocking middlewares
-	apiApp.use(prosopoVerifyRouter(env));
-
-	//  Admin routes - do not put after block middleware as this can block admin requests
-	env.logger.info(() => ({ msg: "Enabling admin auth middleware" }));
-	apiApp.use(
-		"/v1/prosopo/provider/admin",
-		authMiddleware(env.pair, env.authAccount),
-	);
-	const userAccessRuleRoutes = apiRuleRoutesProvider.getRoutes();
-	for (const userAccessRuleRoute in userAccessRuleRoutes) {
-		apiApp.use(userAccessRuleRoute, authMiddleware(env.pair, env.authAccount));
-	}
-	apiApp.use(
-		apiExpressRouterFactory.createRouter(
-			apiRuleRoutesProvider,
-			apiEndpointAdapter,
-		),
-	);
-	apiApp.use(
-		apiExpressRouterFactory.createRouter(
-			apiAdminRoutesProvider,
-			// unlike the default one, it should have errorStatusCode as 400
-			createApiExpressDefaultEndpointAdapter(
-				parseLogLevel(env.config.logLevel),
-				400,
-			),
-		),
-	);
-
-	// Blocking middleware will run on any routes defined after this point
-	apiApp.use(blockMiddleware(env));
-
-	// Domain middleware will run on any routes beginning with "/v1/prosopo/provider/client/" past this point
-	apiApp.use("/v1/prosopo/provider/client/", domainMiddleware(env));
-	apiApp.use(prosopoRouter(env));
-
-	return new Promise((resolve) => {
-		const server = apiApp.listen(apiPort, () => {
-			env.logger.info(() => ({
-				data: { apiPort },
-				msg: "Prosopo test API listening",
-			}));
-			resolve(server);
-		});
-	});
 }
 
 /**
@@ -325,7 +203,7 @@ describe("PoW Integration Tests", () => {
 		env.logger.info(() => ({
 			msg: `Starting provider API on port ${testPort}`,
 		}));
-		server = await startProviderApi(env, testPort);
+		server = await startProviderApi(env, true, testPort);
 	});
 
 	afterAll(async () => {
