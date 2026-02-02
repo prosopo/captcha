@@ -17,7 +17,6 @@ import type { ProviderDatabase } from "@prosopo/database";
 import type { Keyring } from "@prosopo/keyring";
 import type { KeyringPair, ProsopoConfigOutput } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import type { RedisClientType } from "@redis/client";
 import { vi } from "vitest";
 
 /**
@@ -48,62 +47,6 @@ export function createMockProviderEnvironment(): ProviderEnvironment {
 		storeRateLimitData: vi.fn(),
 	};
 
-	const mockCaptchaStorage = {
-		get: vi.fn(),
-		getAll: vi.fn(),
-		store: vi.fn(),
-		remove: vi.fn(),
-		count: vi.fn(),
-		getRandom: vi.fn(),
-		getById: vi.fn(),
-		getByIds: vi.fn(),
-		storeBatch: vi.fn(),
-		getExpired: vi.fn(),
-		removeExpired: vi.fn(),
-		getByDatasetId: vi.fn(),
-		getByDatasetIdAndIds: vi.fn(),
-		getPending: vi.fn(),
-		getSolved: vi.fn(),
-		storeOrUpdate: vi.fn(),
-		getUnsolved: vi.fn(),
-		getCaptchaSolution: vi.fn(),
-	};
-
-	const mockDatasetStorage = {
-		get: vi.fn(),
-		getAll: vi.fn(),
-		store: vi.fn(),
-		remove: vi.fn(),
-		count: vi.fn(),
-		getByDatasetId: vi.fn(),
-		getByDatasetIdAndIds: vi.fn(),
-		storeBatch: vi.fn(),
-		getRandom: vi.fn(),
-		getByFormat: vi.fn(),
-		getByContentType: vi.fn(),
-	};
-
-	const mockProviderStorage = {
-		get: vi.fn(),
-		getAll: vi.fn(),
-		store: vi.fn(),
-		remove: vi.fn(),
-		count: vi.fn(),
-		getBySiteKey: vi.fn(),
-		getByOwner: vi.fn(),
-		getByServiceOrigin: vi.fn(),
-	};
-
-	const mockUserStorage = {
-		get: vi.fn(),
-		getAll: vi.fn(),
-		store: vi.fn(),
-		remove: vi.fn(),
-		count: vi.fn(),
-		getByAccount: vi.fn(),
-		getById: vi.fn(),
-	};
-
 	// Mock database
 	const mockDatabase: ProviderDatabase = {
 		connect: vi.fn(),
@@ -111,42 +54,6 @@ export function createMockProviderEnvironment(): ProviderEnvironment {
 			.fn()
 			.mockReturnValue(mockUserAccessRulesStorage),
 	} as unknown as ProviderDatabase;
-
-	// Mock Redis client
-	const mockRedisClient: RedisClientType = {
-		connect: vi.fn(),
-		disconnect: vi.fn(),
-		isOpen: true,
-		isReady: true,
-		ping: vi.fn(),
-		get: vi.fn(),
-		set: vi.fn(),
-		del: vi.fn(),
-		expire: vi.fn(),
-		ttl: vi.fn(),
-		exists: vi.fn(),
-		incr: vi.fn(),
-		hGet: vi.fn(),
-		hSet: vi.fn(),
-		hDel: vi.fn(),
-		hGetAll: vi.fn(),
-		lPush: vi.fn(),
-		lPop: vi.fn(),
-		lRange: vi.fn(),
-		sAdd: vi.fn(),
-		sRem: vi.fn(),
-		sMembers: vi.fn(),
-		sIsMember: vi.fn(),
-		publish: vi.fn(),
-		subscribe: vi.fn(),
-		unsubscribe: vi.fn(),
-		pSubscribe: vi.fn(),
-		pUnsubscribe: vi.fn(),
-		on: vi.fn(),
-		off: vi.fn(),
-		once: vi.fn(),
-		emit: vi.fn(),
-	} as unknown as RedisClientType;
 
 	// Mock configuration
 	const mockConfig = {
@@ -204,29 +111,6 @@ export function createMockProviderEnvironment(): ProviderEnvironment {
 		},
 	} as unknown as ProsopoConfigOutput;
 
-	// Mock client task manager
-	const mockClientTaskManager = {
-		registerSiteKey: vi.fn(),
-		updateDetectorKey: vi.fn(),
-		removeDetectorKey: vi.fn(),
-	};
-
-	// Mock tasks
-	const mockTasks = {
-		clientTaskManager: mockClientTaskManager,
-		getImageCaptcha: vi.fn(),
-		submitImageCaptchaSolution: vi.fn(),
-		getPoWCaptcha: vi.fn(),
-		submitPoWCaptchaSolution: vi.fn(),
-		getFrictionlessCaptcha: vi.fn(),
-		getDataset: vi.fn(),
-		getRandomCaptcha: vi.fn(),
-		getCaptchaChallenge: vi.fn(),
-		validateCaptchaSolution: vi.fn(),
-		getProviderDetails: vi.fn(),
-		getBotScore: vi.fn(),
-	};
-
 	// Mock keyring pair
 	const mockPair = {
 		address: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
@@ -256,7 +140,6 @@ export function createMockProviderEnvironment(): ProviderEnvironment {
 		getDb: vi.fn().mockReturnValue(mockDatabase),
 		isReady: vi.fn().mockResolvedValue(undefined),
 		importDatabase: vi.fn().mockResolvedValue(undefined),
-		tasks: mockTasks,
 	};
 
 	return mockEnv;
