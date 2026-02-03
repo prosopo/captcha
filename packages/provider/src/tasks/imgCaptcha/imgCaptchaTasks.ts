@@ -449,11 +449,11 @@ export class ImgCaptchaManager extends CaptchaManager {
 	/*
 	 * Get dapp user solution from database
 	 */
-	async getDappUserCommitmentById(
+	async getImageCaptchaById(
 		commitmentId: string,
-	): Promise<UserCommitment> {
+	): Promise<ImageCaptcha> {
 		const dappUserSolution =
-			await this.db.getDappUserCommitmentById(commitmentId);
+			await this.db.getImageCaptchaById(commitmentId);
 		if (!dappUserSolution) {
 			throw new ProsopoEnvError("CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND", {
 				context: {
@@ -496,7 +496,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 	): Promise<ImageVerificationResponse> {
 		const solution = await (commitmentId
 			? this.getImageCaptchaById(commitmentId)
-			: this.getDappUserCommitmentByAccount(user, dapp));
+			: this.getImageCaptchaByAccount(user, dapp));
 
 		// No solution exists
 		if (!solution) {
