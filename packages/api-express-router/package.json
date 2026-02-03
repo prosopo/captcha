@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/api-express-router",
-	"version": "3.0.51",
+	"version": "3.0.52",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"type": "module",
@@ -28,7 +28,7 @@
 		"@polkadot/util": "13.5.7",
 		"@prosopo/api-route": "2.6.36",
 		"@prosopo/common": "3.1.28",
-		"@prosopo/env": "3.2.39",
+		"@prosopo/env": "3.2.40",
 		"@prosopo/locale": "3.1.28",
 		"@prosopo/types": "3.8.3",
 		"@prosopo/util-crypto": "13.5.29",

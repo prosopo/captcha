@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/types-database",
-	"version": "4.2.2",
+	"version": "4.2.3",
 	"description": "Types for prosopo database",
 	"type": "module",
 	"main": "dist/index.js",
