@@ -1,5 +1,10 @@
 # @prosopo/types-database
 
+## 4.2.3
+### Patch Changes
+
+- 8dad7f3: Implement frictionless blocks
+
 ## 4.2.2
 ### Patch Changes
 

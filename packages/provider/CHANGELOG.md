@@ -1,5 +1,17 @@
 # @prosopo/provider
 
+## 3.16.3
+### Patch Changes
+
+- 8dad7f3: Implement frictionless blocks
+- Updated dependencies [8dad7f3]
+  - @prosopo/types-database@4.2.3
+  - @prosopo/database@3.6.11
+  - @prosopo/datasets@3.0.60
+  - @prosopo/types-env@2.7.64
+  - @prosopo/env@3.2.40
+  - @prosopo/api-express-router@3.0.52
+
 ## 3.16.2
 ### Patch Changes
 
