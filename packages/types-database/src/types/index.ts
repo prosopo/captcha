@@ -16,3 +16,4 @@ export * from "./provider.js";
 export * from "./client.js";
 export * from "./captcha.js";
 export * from "./userAgent.js";
+export * from "./request.js";

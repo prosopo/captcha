@@ -95,8 +95,8 @@ describe("DatasetManager", () => {
 
 		providerDB = {
 			storeDataset: vi.fn(),
-			getUnstoredDappUserCommitments: vi.fn().mockResolvedValue([]),
-			markDappUserCommitmentsStored: vi.fn(),
+			getUnstoredImageCaptchas: vi.fn().mockResolvedValue([]),
+			markImageCaptchasStored: vi.fn(),
 			markDappUserPoWCommitmentsStored: vi.fn(),
 			getUnstoredDappUserPoWCommitments: vi.fn().mockResolvedValue([]),
 			createScheduledTaskStatus: vi.fn(
