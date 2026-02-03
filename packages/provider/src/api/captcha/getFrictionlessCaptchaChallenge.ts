@@ -335,7 +335,7 @@ export default (
 				scoreComponents = scoreUpdate.scoreComponents;
 				tasks.frictionlessManager.updateScore(botScore, scoreComponents);
 
-				// If the user access policy is a block, send an image captcha
+				// If the user access policy is a block, return a 401
 				if (userAccessPolicy.type === "block") {
 					req.logger.info(() => ({
 						msg: "Frictionless decision",
