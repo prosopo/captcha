@@ -39,9 +39,9 @@ import {
 } from "@prosopo/types";
 import type {
 	ClientRecord,
+	ImageCaptcha,
+	ImageCaptchaRecord,
 	IProviderDatabase,
-	PendingCaptchaRequest,
-	UserCommitment,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { at, extractData } from "@prosopo/util";
@@ -158,7 +158,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			.reduce((a, b) => a + b, 0);
 		const deadlineTs = timeLimit + currentTime;
 
-		await this.db.storePendingImageCommitment(
+		await this.db.storeImageCaptchaChallenge(
 			userAccount,
 			requestHash,
 			salt,
@@ -248,7 +248,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			verified: false,
 		};
 
-		const pendingRecord = await this.db.getPendingImageCommitment(requestHash);
+		const pendingRecord = await this.db.getImageCaptchaByRequestHash(requestHash);
 
 		const unverifiedCaptchaIds = captchas.map((captcha) => captcha.captchaId);
 		const pendingRequest = await this.validateDappUserSolutionRequestIsPending(
@@ -258,6 +258,14 @@ export class ImgCaptchaManager extends CaptchaManager {
 			unverifiedCaptchaIds,
 		);
 		if (pendingRequest) {
+			// pendingRecord is guaranteed to be defined here since validateDappUserSolutionRequestIsPending
+			// only returns true when pendingRecord exists
+			if (!pendingRecord) {
+				throw new ProsopoEnvError("CAPTCHA.INVALID_CAPTCHA_ID", {
+					context: { failedFuncName: this.dappUserSolution.name },
+				});
+			}
+
 			const { storedCaptchas, receivedCaptchas, captchaIds } =
 				await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas);
 
@@ -277,8 +285,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 			// Only do stuff if the request is in the local DB
 			// prevent this request hash from being used twice
-			await this.db.updatePendingImageCommitmentStatus(requestHash);
-			const commit: UserCommitment = {
+			await this.db.updateImageCaptcha(pendingRecord.id as string, {
+				pending: false,
+			});
+			const commit: ImageCaptcha = {
 				id: commitmentId,
 				userAccount: userAccount,
 				dappAccount,
@@ -294,7 +304,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				sessionId: pendingRecord.sessionId,
 				ja4,
 			};
-			await this.db.storeUserImageCaptchaSolution(receivedCaptchas, commit);
+			await this.db.storeImageCaptchaSolution(receivedCaptchas, commit);
 
 			const solutionRecords = await Promise.all(
 				storedCaptchas.map(async (captcha) => {
@@ -313,7 +323,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			const totalImages = storedCaptchas[0]?.items.length || 0;
 
 			if (containsIdenticalPairs(pairs)) {
-				await this.db.disapproveDappUserCommitment(
+				await this.db.disapproveImageCaptcha(
 					commitmentId,
 					"CAPTCHA.INVALID_SOLUTION",
 					pairs,
@@ -333,7 +343,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 					receivedCaptchas,
 					solutionRecords,
 					totalImages,
-					pendingRecord.threshold,
+					pendingRecord.threshold ?? 0.8,
 				)
 			) {
 				response = {
@@ -343,9 +353,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 					})),
 					verified: true,
 				};
-				await this.db.approveDappUserCommitment(commitmentId, pairs);
+				await this.db.approveImageCaptcha(commitmentId, pairs);
 			} else {
-				await this.db.disapproveDappUserCommitment(
+				await this.db.disapproveImageCaptcha(
 					commitmentId,
 					"CAPTCHA.INVALID_SOLUTION",
 					pairs,
@@ -409,13 +419,13 @@ export class ImgCaptchaManager extends CaptchaManager {
 	/**
 	 * Validate that a Dapp User is responding to their own pending captcha request
 	 * @param {string} requestHash
-	 * @param {PendingCaptchaRequest} pendingRecord
+	 * @param {ImageCaptchaRecord | undefined} pendingRecord
 	 * @param {string} userAccount
 	 * @param {string[]} captchaIds
 	 */
 	async validateDappUserSolutionRequestIsPending(
 		requestHash: string,
-		pendingRecord: PendingCaptchaRequest,
+		pendingRecord: ImageCaptchaRecord | undefined,
 		userAccount: string,
 		captchaIds: string[],
 	): Promise<boolean> {
@@ -428,7 +438,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			return false;
 		}
 
-		if (pendingRecord.deadlineTimestamp < currentTime) {
+		if ((pendingRecord.deadlineTimestamp?.getTime() ?? 0) < currentTime) {
 			// deadline for responding to the captcha has expired
 			this.logger.info(() => ({
 				msg: "Deadline for responding to captcha has expired",
@@ -439,7 +449,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			const pendingHashComputed = computePendingRequestHash(
 				captchaIds,
 				userAccount,
-				pendingRecord.salt,
+				pendingRecord.salt ?? "",
 			);
 			return requestHash === pendingHashComputed;
 		}
@@ -447,17 +457,14 @@ export class ImgCaptchaManager extends CaptchaManager {
 	}
 
 	/*
-	 * Get dapp user solution from database
+	 * Get image captcha by ID from database
 	 */
-	async getDappUserCommitmentById(
-		commitmentId: string,
-	): Promise<UserCommitment> {
-		const dappUserSolution =
-			await this.db.getDappUserCommitmentById(commitmentId);
+	async getImageCaptchaById(commitmentId: string): Promise<ImageCaptcha> {
+		const dappUserSolution = await this.db.getImageCaptchaById(commitmentId);
 		if (!dappUserSolution) {
 			throw new ProsopoEnvError("CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND", {
 				context: {
-					failedFuncName: this.getDappUserCommitmentById.name,
+					failedFuncName: this.getImageCaptchaById.name,
 					commitmentId: commitmentId,
 				},
 			});
@@ -466,17 +473,17 @@ export class ImgCaptchaManager extends CaptchaManager {
 	}
 
 	/* Check if dapp user has verified solution in cache */
-	async getDappUserCommitmentByAccount(
+	async getImageCaptchaByAccount(
 		userAccount: string,
 		dappAccount: string,
-	): Promise<UserCommitment | undefined> {
-		const dappUserSolutions = await this.db.getDappUserCommitmentByAccount(
+	): Promise<ImageCaptcha | undefined> {
+		const dappUserSolutions = await this.db.getImageCaptchaByAccount(
 			userAccount,
 			dappAccount,
 		);
 		if (dappUserSolutions.length > 0) {
 			for (const dappUserSolution of dappUserSolutions) {
-				if (dappUserSolution.result.status === CaptchaStatus.approved) {
+				if (dappUserSolution.result?.status === CaptchaStatus.approved) {
 					return dappUserSolution;
 				}
 			}
@@ -495,8 +502,8 @@ export class ImgCaptchaManager extends CaptchaManager {
 		contextAwareEnabled = false,
 	): Promise<ImageVerificationResponse> {
 		const solution = await (commitmentId
-			? this.getDappUserCommitmentById(commitmentId)
-			: this.getDappUserCommitmentByAccount(user, dapp));
+			? this.getImageCaptchaById(commitmentId)
+			: this.getImageCaptchaByAccount(user, dapp));
 
 		// No solution exists
 		if (!solution) {
@@ -514,7 +521,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			return { status: "API.USER_ALREADY_VERIFIED", verified: false };
 		}
 
-		await this.db.markDappUserCommitmentsChecked([solution.id]);
+		await this.db.markImageCaptchasChecked([solution.id as string]);
 		// -- END WARNING --
 
 		// A solution exists but is disapproved
@@ -547,7 +554,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 			const ipValidationRules = clientRecord?.settings?.ipValidationRules;
 
-			await this.db.updateDappUserCommitment(solution.id, {
+			await this.db.updateImageCaptcha(solution.id as string, {
 				providedIp: getCompositeIpAddress(ip),
 			});
 
@@ -574,7 +581,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		let isApproved = solution.result.status === CaptchaStatus.approved;
+		let isApproved = solution.result?.status === CaptchaStatus.approved;
 
 		let score: number | undefined;
 		if (solution.sessionId) {
@@ -615,9 +622,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 			// Captcha solution is correct, now check decision machine
 			const decisionInput: DecisionMachineInput = {
 				userAccount: solution.userAccount,
-				dappAccount: solution.dappAccount,
+				dappAccount: solution.dappAccount ?? "",
 				captchaResult: "passed",
-				headers: solution.headers,
+				headers: solution.headers ?? {},
 				captchaType: CaptchaType.image,
 			};
 
@@ -629,7 +636,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				if (decision.decision === DecisionMachineDecision.Deny) {
 					if (commitmentId) {
 						// commitmentId should always be present
-						await this.db.disapproveDappUserCommitment(
+						await this.db.disapproveImageCaptcha(
 							commitmentId,
 							decision.reason || "CAPTCHA.DECISION_MACHINE_DENIED",
 						);
@@ -655,7 +662,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		return {
 			status: isApproved ? "API.USER_VERIFIED" : "API.USER_NOT_VERIFIED",
 			verified: isApproved,
-			commitmentId: solution.id.toString(),
+			commitmentId: (solution.id ?? "").toString(),
 			...(score && { score }),
 		};
 	}

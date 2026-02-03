@@ -13,3 +13,4 @@
 // limitations under the License.
 export * from "./types/index.js";
 export type { PendingCaptchaRequest } from "./provider/pendingCaptchaRequest.js";
+export * from "./utils/headerDelta.js";

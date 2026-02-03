@@ -29,10 +29,10 @@ import {
 } from "@prosopo/types";
 import type {
 	ClientRecord,
+	ImageCaptcha,
 	IProviderDatabase,
 	PoWCaptchaStored,
 	SessionRecord,
-	UserCommitment,
 } from "@prosopo/types-database";
 import { majorityAverage, parseUrl } from "@prosopo/util";
 import { validateSiteKey } from "../../api/validateAddress.js";
@@ -115,10 +115,7 @@ export class ClientTaskManager {
 
 			await this.processBatchesWithCursor(
 				async (skip: number) =>
-					await this.providerDB.getUnstoredDappUserCommitments(
-						BATCH_SIZE,
-						skip,
-					),
+					await this.providerDB.getUnstoredImageCaptchas(BATCH_SIZE, skip),
 				async (batch) => {
 					const filteredBatch = lastTask?.updated
 						? batch.filter((commitment) => this.isRecordUpdated(commitment))
@@ -126,8 +123,8 @@ export class ClientTaskManager {
 
 					if (filteredBatch.length > 0) {
 						await captchaDB.saveCaptchas([], filteredBatch, []);
-						await this.providerDB.markDappUserCommitmentsStored(
-							filteredBatch.map((commitment) => commitment.id),
+						await this.providerDB.markImageCaptchasStored(
+							filteredBatch.map((commitment) => commitment.id as string),
 						);
 					}
 					processedCommitments += filteredBatch.length;
@@ -500,7 +497,7 @@ export class ClientTaskManager {
 	}
 
 	private isRecordUpdated(
-		record: UserCommitment | PoWCaptchaStored | SessionRecord,
+		record: ImageCaptcha | PoWCaptchaStored | SessionRecord,
 	): boolean {
 		const { lastUpdatedTimestamp, storedAtTimestamp } = record;
 		return (

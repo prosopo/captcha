@@ -49,6 +49,9 @@ import type {
 	SessionRecord,
 } from "@prosopo/types-database";
 import {
+	type CaptchaRequest,
+	type CaptchaRequestRecord,
+	CaptchaRequestRecordSchema,
 	CaptchaRecordSchema,
 	type ClientContextEntropyRecord,
 	ClientContextEntropyRecordSchema,
@@ -59,14 +62,19 @@ import {
 	DecisionMachineArtifactRecordSchema,
 	DetectorRecordSchema,
 	type DetectorSchema,
+	type ImageCaptcha,
+	type ImageCaptchaRecord,
+	ImageCaptchaRecordSchema,
+	ImageCaptchaSchema,
 	type IProviderDatabase,
 	type IUserDataSlim,
 	type PendingCaptchaRequest,
-	type PendingCaptchaRequestMongoose,
-	PendingRecordSchema,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
 	type PoWCaptchaStored,
+	type RequestIdCounterRecord,
+	RequestIdCounterSchema,
+	RequestType,
 	type ScheduledTask,
 	type ScheduledTaskRecord,
 	ScheduledTaskRecordSchema,
@@ -77,10 +85,6 @@ import {
 	SolutionRecordSchema,
 	type StoredCaptcha,
 	type Tables,
-	type UserCommitment,
-	type UserCommitmentRecord,
-	UserCommitmentRecordSchema,
-	UserCommitmentSchema,
 	type UserSolutionRecord,
 	UserSolutionRecordSchema,
 } from "@prosopo/types-database";
@@ -98,9 +102,8 @@ enum TableNames {
 	captcha = "captcha",
 	dataset = "dataset",
 	solution = "solution",
-	commitment = "commitment",
+	commitment = "commitment", // Keep collection name for data compatibility (ImageCaptcha)
 	usersolution = "usersolution",
-	pending = "pending",
 	scheduler = "scheduler",
 	powcaptcha = "powcaptcha",
 	client = "client",
@@ -108,6 +111,9 @@ enum TableNames {
 	detector = "detector",
 	decisionMachine = "decisionMachine",
 	clientContextEntropy = "clientContextEntropy",
+	// Phase 2: Unified requests collection
+	requests = "requests",
+	requestIdCounter = "requestIdCounter",
 }
 
 const PROVIDER_TABLES = [
@@ -133,18 +139,13 @@ const PROVIDER_TABLES = [
 	},
 	{
 		collectionName: TableNames.commitment,
-		modelName: "UserCommitment",
-		schema: UserCommitmentRecordSchema,
+		modelName: "ImageCaptcha",
+		schema: ImageCaptchaRecordSchema,
 	},
 	{
 		collectionName: TableNames.usersolution,
 		modelName: "UserSolution",
 		schema: UserSolutionRecordSchema,
-	},
-	{
-		collectionName: TableNames.pending,
-		modelName: "Pending",
-		schema: PendingRecordSchema,
 	},
 	{
 		collectionName: TableNames.scheduler,
@@ -175,6 +176,17 @@ const PROVIDER_TABLES = [
 		collectionName: TableNames.clientContextEntropy,
 		modelName: "ClientContextEntropy",
 		schema: ClientContextEntropyRecordSchema,
+	},
+	// Phase 2: Unified requests collection
+	{
+		collectionName: TableNames.requests,
+		modelName: "CaptchaRequest",
+		schema: CaptchaRequestRecordSchema,
+	},
+	{
+		collectionName: TableNames.requestIdCounter,
+		modelName: "RequestIdCounter",
+		schema: RequestIdCounterSchema,
 	},
 ];
 
@@ -644,16 +656,17 @@ export class ProviderDatabase
 	/**
 	 * @description Store a Dapp User's captcha solution commitment
 	 */
-	async storeUserImageCaptchaSolution(
+	async storeImageCaptchaSolution(
 		captchas: CaptchaSolution[],
-		commit: UserCommitment,
+		commit: ImageCaptcha,
 	): Promise<void> {
-		const commitmentRecord = UserCommitmentSchema.parse({
+		const commitmentRecord = ImageCaptchaSchema.parse({
 			...commit,
+			pending: false, // Mark as no longer pending when solution is stored
 			lastUpdatedTimestamp: new Date(),
 		});
 		if (captchas.length) {
-			const filter: Pick<UserCommitmentRecord, "id"> = {
+			const filter: Pick<ImageCaptchaRecord, "id"> = {
 				id: commit.id,
 			};
 			await this.tables?.commitment.updateOne(filter, commitmentRecord, {
@@ -681,6 +694,14 @@ export class ProviderDatabase
 			}));
 			await this.tables?.usersolution.bulkWrite(ops);
 		}
+	}
+
+	/** @deprecated Use storeImageCaptchaSolution instead */
+	async storeUserImageCaptchaSolution(
+		captchas: CaptchaSolution[],
+		commit: ImageCaptcha,
+	): Promise<void> {
+		return this.storeImageCaptchaSolution(captchas, commit);
 	}
 
 	/**
@@ -902,31 +923,36 @@ export class ProviderDatabase
 		);
 	}
 
-	/** @description Get serverChecked Dapp User image captcha commitments from the commitments table
+	/** @description Get serverChecked image captchas from the commitments table
 	 */
-	async getCheckedDappUserCommitments(): Promise<UserCommitmentRecord[]> {
+	async getCheckedImageCaptchas(): Promise<ImageCaptchaRecord[]> {
 		const filter: {
-			[key in keyof Pick<UserCommitmentRecord, "serverChecked">]: boolean;
+			[key in keyof Pick<ImageCaptchaRecord, "serverChecked">]: boolean;
 		} = { [StoredStatusNames.serverChecked]: true };
 		const docs = await this.tables?.commitment
 			.find(filter)
-			.lean<UserCommitmentRecord[]>();
+			.lean<ImageCaptchaRecord[]>();
 		return docs || [];
 	}
 
-	/** @description Get Dapp User captcha commitments from the commitments table that have not been counted towards the
+	/** @deprecated Use getCheckedImageCaptchas instead */
+	async getCheckedDappUserCommitments(): Promise<ImageCaptchaRecord[]> {
+		return this.getCheckedImageCaptchas();
+	}
+
+	/** @description Get image captchas from the commitments table that have not been counted towards the
 	 * client's total
 	 */
-	async getUnstoredDappUserCommitments(
+	async getUnstoredImageCaptchas(
 		limit = 1000,
 		skip = 0,
-	): Promise<UserCommitmentRecord[]> {
+	): Promise<ImageCaptchaRecord[]> {
 		const filterNoStoredTimestamp: {
 			[key in keyof Pick<PoWCaptchaRecord, "storedAtTimestamp">]: {
 				$exists: boolean;
 			};
 		} = { storedAtTimestamp: { $exists: false } };
-		const docs = await this.tables?.commitment.aggregate<UserCommitmentRecord>([
+		const docs = await this.tables?.commitment.aggregate<ImageCaptchaRecord>([
 			{
 				$match: {
 					$or: [
@@ -952,9 +978,17 @@ export class ProviderDatabase
 		return docs || [];
 	}
 
-	/** @description Mark a list of captcha commits as stored
+	/** @deprecated Use getUnstoredImageCaptchas instead */
+	async getUnstoredDappUserCommitments(
+		limit = 1000,
+		skip = 0,
+	): Promise<ImageCaptchaRecord[]> {
+		return this.getUnstoredImageCaptchas(limit, skip);
+	}
+
+	/** @description Mark a list of image captchas as stored
 	 */
-	async markDappUserCommitmentsStored(commitmentIds: Hash[]): Promise<void> {
+	async markImageCaptchasStored(commitmentIds: Hash[]): Promise<void> {
 		const updateDoc: Pick<StoredCaptcha, "storedAtTimestamp"> = {
 			storedAtTimestamp: new Date(),
 		};
@@ -965,9 +999,14 @@ export class ProviderDatabase
 		);
 	}
 
-	/** @description Mark a list of captcha commits as checked
+	/** @deprecated Use markImageCaptchasStored instead */
+	async markDappUserCommitmentsStored(commitmentIds: Hash[]): Promise<void> {
+		return this.markImageCaptchasStored(commitmentIds);
+	}
+
+	/** @description Mark a list of image captchas as checked
 	 */
-	async markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void> {
+	async markImageCaptchasChecked(commitmentIds: Hash[]): Promise<void> {
 		const updateDoc: Pick<
 			StoredCaptcha,
 			"serverChecked" | "lastUpdatedTimestamp"
@@ -983,14 +1022,27 @@ export class ProviderDatabase
 		);
 	}
 
-	/** @description Update an image captcha commitment
+	/** @deprecated Use markImageCaptchasChecked instead */
+	async markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void> {
+		return this.markImageCaptchasChecked(commitmentIds);
+	}
+
+	/** @description Update an image captcha
 	 */
+	async updateImageCaptcha(
+		commitmentId: Hash,
+		updates: Partial<ImageCaptcha>,
+	) {
+		const filter: Pick<ImageCaptchaRecord, "id"> = { id: commitmentId };
+		await this.tables?.commitment.updateOne(filter, { $set: updates });
+	}
+
+	/** @deprecated Use updateImageCaptcha instead */
 	async updateDappUserCommitment(
 		commitmentId: Hash,
-		updates: Partial<UserCommitment>,
+		updates: Partial<ImageCaptcha>,
 	) {
-		const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
-		await this.tables?.commitment.updateOne(filter, updates);
+		return this.updateImageCaptcha(commitmentId, updates);
 	}
 
 	/**
@@ -1248,9 +1300,10 @@ export class ProviderDatabase
 	}
 
 	/**
-	 * @description Store a Dapp User's pending record
+	 * @description Store an image captcha challenge (pending record)
+	 * Creates an ImageCaptcha record with pending=true, to be updated when the user submits a solution
 	 */
-	async storePendingImageCommitment(
+	async storeImageCaptchaChallenge(
 		userAccount: string,
 		requestHash: string,
 		salt: string,
@@ -1263,53 +1316,95 @@ export class ProviderDatabase
 		if (!isHex(requestHash)) {
 			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
 				context: {
-					failedFuncName: this.storePendingImageCommitment.name,
+					failedFuncName: this.storeImageCaptchaChallenge.name,
 					requestHash,
 				},
 			});
 		}
-		const pendingRecord: PendingCaptchaRequestMongoose = {
-			accountId: userAccount,
+		const challengeRecord: Partial<ImageCaptcha> = {
+			userAccount,
 			pending: true,
 			salt,
 			requestHash,
-			deadlineTimestamp,
+			deadlineTimestamp: new Date(deadlineTimestamp),
 			requestedAtTimestamp: new Date(requestedAtTimestamp),
 			ipAddress,
 			sessionId,
 			threshold,
 		};
-		await this.tables?.pending.updateOne(
+		await this.tables?.commitment.updateOne(
 			{ requestHash: requestHash },
-			{ $set: pendingRecord },
+			{ $set: challengeRecord },
 			{ upsert: true },
 		);
 	}
 
-	/**
-	 * @description Get a Dapp user's pending record
-	 */
-	async getPendingImageCommitment(
+	/** @deprecated Use storeImageCaptchaChallenge instead */
+	async storePendingImageCommitment(
+		userAccount: string,
 		requestHash: string,
-	): Promise<PendingCaptchaRequest> {
+		salt: string,
+		deadlineTimestamp: number,
+		requestedAtTimestamp: number,
+		ipAddress: CompositeIpAddress,
+		threshold: number,
+		sessionId?: string,
+	): Promise<void> {
+		return this.storeImageCaptchaChallenge(
+			userAccount,
+			requestHash,
+			salt,
+			deadlineTimestamp,
+			requestedAtTimestamp,
+			ipAddress,
+			threshold,
+			sessionId,
+		);
+	}
+
+	/**
+	 * @description Get an image captcha challenge by request hash
+	 */
+	async getImageCaptchaByRequestHash(
+		requestHash: string,
+	): Promise<ImageCaptchaRecord | undefined> {
 		if (!isHex(requestHash)) {
 			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
 				context: {
-					failedFuncName: this.getPendingImageCommitment.name,
+					failedFuncName: this.getImageCaptchaByRequestHash.name,
 					requestHash,
 				},
 			});
 		}
-		// @ts-ignore
-		const filter: Pick<PendingCaptchaRequest, "requestHash"> = {
-			[ApiParams.requestHash]: requestHash,
+		const filter: Pick<ImageCaptchaRecord, "requestHash"> = {
+			requestHash,
 		};
 
-		const doc: PendingCaptchaRequest | null | undefined =
-			await this.tables?.pending.findOne(filter).lean<PendingCaptchaRequest>();
+		const doc: ImageCaptchaRecord | null | undefined =
+			await this.tables?.commitment.findOne(filter).lean<ImageCaptchaRecord>();
 
-		if (doc) {
-			return doc;
+		return doc || undefined;
+	}
+
+	/** @deprecated Use getImageCaptchaByRequestHash instead */
+	async getPendingImageCommitment(
+		requestHash: string,
+	): Promise<PendingCaptchaRequest> {
+		const record = await this.getImageCaptchaByRequestHash(requestHash);
+
+		if (record) {
+			// Convert ImageCaptchaRecord to PendingCaptchaRequest format for backward compatibility
+			return {
+				accountId: record.userAccount,
+				pending: record.pending ?? false,
+				salt: record.salt ?? "",
+				requestHash: record.requestHash ?? "",
+				deadlineTimestamp: record.deadlineTimestamp?.getTime() ?? 0,
+				requestedAtTimestamp: record.requestedAtTimestamp,
+				ipAddress: record.ipAddress,
+				sessionId: record.sessionId,
+				threshold: record.threshold ?? 0.8,
+			};
 		}
 
 		throw new ProsopoDBError("DATABASE.PENDING_RECORD_NOT_FOUND", {
@@ -1320,9 +1415,7 @@ export class ProviderDatabase
 		});
 	}
 
-	/**
-	 * @description Mark a pending request as used
-	 */
+	/** @deprecated Use updateImageCaptcha with requestHash filter instead */
 	async updatePendingImageCommitmentStatus(requestHash: string): Promise<void> {
 		if (!isHex(requestHash)) {
 			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
@@ -1333,18 +1426,14 @@ export class ProviderDatabase
 			});
 		}
 
-		// @ts-ignore
-		const filter: Pick<PendingCaptchaRequest, [ApiParams.requestHash]> = {
-			[ApiParams.requestHash]: requestHash,
-		};
-		await this.tables?.pending.updateOne<PendingCaptchaRequest>(
-			filter,
+		await this.tables?.commitment.updateOne(
+			{ requestHash },
 			{
 				$set: {
-					[CaptchaStatus.pending]: false,
+					pending: false,
 				},
 			},
-			{ upsert: true },
+			{ upsert: false },
 		);
 	}
 
@@ -1494,52 +1583,67 @@ export class ProviderDatabase
 	}
 
 	/**
-	 * @description Get dapp user commitment by user account
+	 * @description Get image captcha by ID
 	 * @param commitmentId
 	 */
-	async getDappUserCommitmentById(
+	async getImageCaptchaById(
 		commitmentId: string,
-	): Promise<UserCommitmentRecord | undefined> {
-		const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
+	): Promise<ImageCaptchaRecord | undefined> {
+		const filter: Pick<ImageCaptchaRecord, "id"> = { id: commitmentId };
 		const commitmentCursor = this.tables?.commitment
 			?.findOne(filter)
-			.lean<UserCommitmentRecord>();
+			.lean<ImageCaptchaRecord>();
 
 		const doc = await commitmentCursor;
 
 		return doc ? doc : undefined;
 	}
 
+	/** @deprecated Use getImageCaptchaById instead */
+	async getDappUserCommitmentById(
+		commitmentId: string,
+	): Promise<ImageCaptchaRecord | undefined> {
+		return this.getImageCaptchaById(commitmentId);
+	}
+
 	/**
-	 * @description Get dapp user commitment by user account
+	 * @description Get image captcha by user account
 	 * @param {string} userAccount
 	 * @param {string} dappAccount
 	 */
-	async getDappUserCommitmentByAccount(
+	async getImageCaptchaByAccount(
 		userAccount: string,
 		dappAccount: string,
-	): Promise<UserCommitmentRecord[]> {
-		const filter: Pick<UserCommitmentRecord, "userAccount" | "dappAccount"> = {
+	): Promise<ImageCaptchaRecord[]> {
+		const filter: Pick<ImageCaptchaRecord, "userAccount" | "dappAccount"> = {
 			userAccount,
 			dappAccount,
 		};
 		const project = { _id: 0 };
 		const sort = { sort: { _id: -1 } };
-		const docs: UserCommitmentRecord[] | null | undefined =
+		const docs: ImageCaptchaRecord[] | null | undefined =
 			await this.tables?.commitment
 				// sort by most recent first to avoid old solutions being used in development
 				?.find(filter, project, sort)
-				.lean<UserCommitmentRecord[]>();
+				.lean<ImageCaptchaRecord[]>();
 
-		return docs ? (docs as UserCommitmentRecord[]) : [];
+		return docs ? (docs as ImageCaptchaRecord[]) : [];
+	}
+
+	/** @deprecated Use getImageCaptchaByAccount instead */
+	async getDappUserCommitmentByAccount(
+		userAccount: string,
+		dappAccount: string,
+	): Promise<ImageCaptchaRecord[]> {
+		return this.getImageCaptchaByAccount(userAccount, dappAccount);
 	}
 
 	/**
-	 * @description Approve a dapp user's solution
+	 * @description Approve an image captcha solution
 	 * @param {string[]} commitmentId
 	 * @param coords
 	 */
-	async approveDappUserCommitment(
+	async approveImageCaptcha(
 		commitmentId: string,
 		coords?: [number, number][][],
 	): Promise<void> {
@@ -1553,7 +1657,7 @@ export class ProviderDatabase
 				lastUpdatedTimestamp: new Date(),
 				...(coords ? { coords } : {}),
 			};
-			const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
+			const filter: Pick<ImageCaptchaRecord, "id"> = { id: commitmentId };
 			await this.tables?.commitment
 				?.findOneAndUpdate(filter, { $set: updateDoc }, { upsert: false })
 				.lean();
@@ -1564,13 +1668,21 @@ export class ProviderDatabase
 		}
 	}
 
+	/** @deprecated Use approveImageCaptcha instead */
+	async approveDappUserCommitment(
+		commitmentId: string,
+		coords?: [number, number][][],
+	): Promise<void> {
+		return this.approveImageCaptcha(commitmentId, coords);
+	}
+
 	/**
-	 * @description Disapprove a dapp user's solution
+	 * @description Disapprove an image captcha solution
 	 * @param {string} commitmentId
 	 * @param coords
 	 * @param reason
 	 */
-	async disapproveDappUserCommitment(
+	async disapproveImageCaptcha(
 		commitmentId: string,
 		reason?: TranslationKey,
 		coords?: [number, number][][],
@@ -1585,7 +1697,7 @@ export class ProviderDatabase
 				...(coords ? { coords } : {}),
 			};
 
-			const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
+			const filter: Pick<ImageCaptchaRecord, "id"> = { id: commitmentId };
 			await this.tables?.commitment
 				?.findOneAndUpdate(filter, { $set: updateDoc }, { upsert: false })
 				.lean();
@@ -1594,6 +1706,15 @@ export class ProviderDatabase
 				context: { error: err, commitmentId },
 			});
 		}
+	}
+
+	/** @deprecated Use disapproveImageCaptcha instead */
+	async disapproveDappUserCommitment(
+		commitmentId: string,
+		reason?: TranslationKey,
+		coords?: [number, number][][],
+	): Promise<void> {
+		return this.disapproveImageCaptcha(commitmentId, reason, coords);
 	}
 
 	/**
@@ -1617,10 +1738,10 @@ export class ProviderDatabase
 	}
 
 	/**
-	 * @description Flag dapp users' commitments as used by calculated solution
+	 * @description Flag image captchas as used by calculated solution
 	 * @param {string[]} commitmentIds
 	 */
-	async flagProcessedDappUserCommitments(commitmentIds: Hash[]): Promise<void> {
+	async flagProcessedImageCaptchas(commitmentIds: Hash[]): Promise<void> {
 		try {
 			const distinctCommitmentIds = [...new Set(commitmentIds)];
 			await this.tables?.commitment
@@ -1635,6 +1756,11 @@ export class ProviderDatabase
 				context: { error: err, commitmentIds },
 			});
 		}
+	}
+
+	/** @deprecated Use flagProcessedImageCaptchas instead */
+	async flagProcessedDappUserCommitments(commitmentIds: Hash[]): Promise<void> {
+		return this.flagProcessedImageCaptchas(commitmentIds);
 	}
 
 	/**
@@ -2009,5 +2135,124 @@ export class ProviderDatabase
 				}),
 			)
 		).filter((headHash): headHash is string => headHash !== undefined);
+	}
+
+	// ==========================================
+	// Phase 2: Unified Requests Collection Methods
+	// ==========================================
+
+	/**
+	 * Get the next sequential request ID using atomic counter
+	 */
+	async getNextRequestId(): Promise<number> {
+		const result = await this.tables?.requestIdCounter.findOneAndUpdate(
+			{ name: "requestId" },
+			{ $inc: { seq: 1 } },
+			{ upsert: true, returnDocument: "after" },
+		);
+
+		if (!result) {
+			throw new ProsopoDBError("DATABASE.UNKNOWN", {
+				context: {
+					failedFuncName: this.getNextRequestId.name,
+					message: "Failed to get next request ID",
+				},
+			});
+		}
+
+		return result.seq;
+	}
+
+	/**
+	 * Store a request in the unified requests collection
+	 */
+	async storeRequest(request: CaptchaRequest): Promise<void> {
+		await this.tables?.requests.create(request);
+	}
+
+	/**
+	 * Get a request by its unique request ID
+	 */
+	async getRequestById(
+		requestId: number,
+	): Promise<CaptchaRequestRecord | undefined> {
+		const doc = await this.tables?.requests
+			.findOne({ requestId })
+			.lean<CaptchaRequestRecord>();
+		return doc || undefined;
+	}
+
+	/**
+	 * Get all requests for a session, ordered by creation time
+	 */
+	async getRequestsBySessionId(
+		sessionId: string,
+	): Promise<CaptchaRequestRecord[]> {
+		const docs = await this.tables?.requests
+			.find({ sessionId })
+			.sort({ createdAt: 1 })
+			.lean<CaptchaRequestRecord[]>();
+		return docs || [];
+	}
+
+	/**
+	 * Get the request chain starting from a given request ID
+	 * Follows previousRequestId links backwards to build the chain
+	 */
+	async getRequestChain(requestId: number): Promise<CaptchaRequestRecord[]> {
+		const chain: CaptchaRequestRecord[] = [];
+		let currentId: number | undefined = requestId;
+
+		while (currentId !== undefined) {
+			const request = await this.getRequestById(currentId);
+			if (!request) break;
+
+			chain.unshift(request); // Add to beginning to maintain order
+			currentId = request.previousRequestId;
+		}
+
+		return chain;
+	}
+
+	/**
+	 * Get the session request for a given session ID
+	 */
+	async getSessionRequest(
+		sessionId: string,
+	): Promise<CaptchaRequestRecord | undefined> {
+		const doc = await this.tables?.requests
+			.findOne({
+				sessionId,
+				requestType: RequestType.session,
+			})
+			.lean<CaptchaRequestRecord>();
+		return doc || undefined;
+	}
+
+	/**
+	 * Mark requests as stored externally
+	 */
+	async markRequestsStored(requestIds: number[]): Promise<void> {
+		const now = new Date();
+		await this.tables?.requests.updateMany(
+			{ requestId: { $in: requestIds } },
+			{ $set: { storedAtTimestamp: now, lastUpdatedTimestamp: now } },
+		);
+	}
+
+	/**
+	 * Get unstored requests for external storage
+	 */
+	async getUnstoredRequests(
+		limit: number,
+		skip: number,
+	): Promise<CaptchaRequestRecord[]> {
+		const docs = await this.tables?.requests
+			.find({ storedAtTimestamp: { $exists: false } })
+			.sort({ createdAt: 1 })
+			.skip(skip)
+			.limit(limit)
+			.lean<CaptchaRequestRecord[]>();
+		return docs || [];
 	}
 }

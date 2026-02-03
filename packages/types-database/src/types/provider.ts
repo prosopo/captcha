@@ -62,6 +62,7 @@ import {
 import type { PendingCaptchaRequest } from "../provider/pendingCaptchaRequest.js";
 import { UserSettingsSchema } from "./client.js";
 import type { IDatabase } from "./mongo.js";
+import type { CaptchaRequest, CaptchaRequestRecord } from "./request.js";
 import type { UserAgentInfo } from "./userAgent.js";
 
 export type IUserDataSlim = Pick<IUserData, "account" | "settings" | "tier">;
@@ -179,9 +180,18 @@ export interface StoredCaptcha {
 	behavioralDataPacked?: BehavioralDataPacked;
 }
 
-export interface UserCommitment extends Commit, StoredCaptcha {
+export interface ImageCaptcha extends Commit, StoredCaptcha {
 	userSignature: string;
+	// Pending challenge fields (populated before solution submission)
+	pending?: boolean;
+	requestHash?: string;
+	salt?: string;
+	// Note: deadlineTimestamp is inherited from StoredCaptcha as Date type
+	threshold?: number;
 }
+
+/** @deprecated Use ImageCaptcha instead */
+export type UserCommitment = ImageCaptcha;
 
 export interface PoWCaptchaStored
 	extends Omit<PoWCaptchaUser, "requestedAtTimestamp">,
@@ -193,7 +203,7 @@ const CaptchaResultSchema = object({
 	error: string().optional(),
 }) satisfies ZodType<CaptchaResult>;
 
-export const UserCommitmentSchema = object({
+export const ImageCaptchaSchema = object({
 	userAccount: string(),
 	dappAccount: string(),
 	datasetId: string(),
@@ -212,7 +222,16 @@ export const UserCommitmentSchema = object({
 	lastUpdatedTimestamp: date().optional(),
 	sessionId: string().optional(),
 	coords: array(array(array(number()))).optional(),
+	// Pending challenge fields
+	pending: boolean().optional(),
+	requestHash: string().optional(),
+	salt: string().optional(),
+	deadlineTimestamp: number().optional(),
+	threshold: number().optional(),
 });
+
+/** @deprecated Use ImageCaptchaSchema instead */
+export const UserCommitmentSchema = ImageCaptchaSchema;
 
 export interface SolutionRecord extends CaptchaSolution {
 	datasetId: string;
@@ -256,7 +275,10 @@ CaptchaRecordSchema.index({ datasetId: 1, solved: 1 });
 
 export type PoWCaptchaRecord = mongoose.Document & PoWCaptchaStored;
 
-export type UserCommitmentRecord = mongoose.Document & UserCommitment;
+export type ImageCaptchaRecord = mongoose.Document & ImageCaptcha;
+
+/** @deprecated Use ImageCaptchaRecord instead */
+export type UserCommitmentRecord = ImageCaptchaRecord;
 
 export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	challenge: { type: String, required: true },
@@ -318,14 +340,14 @@ PoWCaptchaRecordSchema.index({ "ipAddress.lower": 1 });
 PoWCaptchaRecordSchema.index({ "ipAddress.upper": 1 });
 PoWCaptchaRecordSchema.index({ "result.reason": 1 });
 
-export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
+export const ImageCaptchaRecordSchema = new Schema<ImageCaptchaRecord>({
 	userAccount: { type: String, required: true },
-	dappAccount: { type: String, required: true },
-	providerAccount: { type: String, required: true },
-	datasetId: { type: String, required: true },
-	id: { type: String, required: true },
+	dappAccount: { type: String, required: false },
+	providerAccount: { type: String, required: false },
+	datasetId: { type: String, required: false },
+	id: { type: String, required: false },
 	result: {
-		status: { type: String, enum: CaptchaStatus, required: true },
+		status: { type: String, enum: CaptchaStatus, required: false },
 		reason: {
 			type: String,
 			enum: TranslationKeysSchema.options,
@@ -338,11 +360,11 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 		type: new Schema(CompositeIpAddressRecordSchemaObj, { _id: false }),
 		required: false,
 	},
-	headers: { type: Object, required: true },
-	ja4: { type: String, required: true },
-	userSignature: { type: String, required: true },
-	userSubmitted: { type: Boolean, required: true },
-	serverChecked: { type: Boolean, required: true },
+	headers: { type: Object, required: false },
+	ja4: { type: String, required: false },
+	userSignature: { type: String, required: false },
+	userSubmitted: { type: Boolean, required: false },
+	serverChecked: { type: Boolean, required: false },
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
 	requestedAtTimestamp: { type: Date, required: true },
 	lastUpdatedTimestamp: { type: Date, required: false },
@@ -354,16 +376,28 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 		required: false,
 	},
 	coords: { type: [[[Number]]], required: false },
+	// Pending challenge fields (merged from PendingRecordSchema)
+	pending: { type: Boolean, required: false, default: false },
+	requestHash: { type: String, required: false },
+	salt: { type: String, required: false },
+	deadlineTimestamp: { type: Number, required: false },
+	threshold: { type: Number, required: false, default: 0.8 },
 });
 // Set an index on the commitment id field, descending
-UserCommitmentRecordSchema.index({ id: -1 });
-UserCommitmentRecordSchema.index({
+ImageCaptchaRecordSchema.index({ id: -1 });
+ImageCaptchaRecordSchema.index({
 	lastUpdatedTimestamp: 1,
 });
-UserCommitmentRecordSchema.index({ userAccount: 1, dappAccount: 1 });
-UserCommitmentRecordSchema.index({ "ipAddress.lower": 1 });
-UserCommitmentRecordSchema.index({ "ipAddress.upper": 1 });
-UserCommitmentRecordSchema.index({ "result.reason": 1 });
+ImageCaptchaRecordSchema.index({ userAccount: 1, dappAccount: 1 });
+ImageCaptchaRecordSchema.index({ "ipAddress.lower": 1 });
+ImageCaptchaRecordSchema.index({ "ipAddress.upper": 1 });
+ImageCaptchaRecordSchema.index({ "result.reason": 1 });
+// New indexes for pending record functionality
+ImageCaptchaRecordSchema.index({ requestHash: -1 });
+ImageCaptchaRecordSchema.index({ pending: 1, deadlineTimestamp: 1 });
+
+/** @deprecated Use ImageCaptchaRecordSchema instead */
+export const UserCommitmentRecordSchema = ImageCaptchaRecordSchema;
 
 export const DatasetRecordSchema = new Schema<DatasetWithIds>({
 	contentTree: { type: [[String]], required: true },
@@ -412,13 +446,19 @@ UserSolutionRecordSchema.index({ captchaId: 1 });
 // Set an index on the commitment id field, descending
 UserSolutionRecordSchema.index({ commitmentId: -1 });
 
-export const UserCommitmentWithSolutionsSchema = UserCommitmentSchema.extend({
+export const ImageCaptchaWithSolutionsSchema = ImageCaptchaSchema.extend({
 	captchas: array(UserSolutionSchema),
 });
 
-export type UserCommitmentWithSolutions = zInfer<
-	typeof UserCommitmentWithSolutionsSchema
+export type ImageCaptchaWithSolutions = zInfer<
+	typeof ImageCaptchaWithSolutionsSchema
 >;
+
+/** @deprecated Use ImageCaptchaWithSolutionsSchema instead */
+export const UserCommitmentWithSolutionsSchema = ImageCaptchaWithSolutionsSchema;
+
+/** @deprecated Use ImageCaptchaWithSolutions instead */
+export type UserCommitmentWithSolutions = ImageCaptchaWithSolutions;
 
 export type PendingCaptchaRequestMongoose = PendingCaptchaRequest;
 
@@ -694,11 +734,33 @@ export interface IProviderDatabase extends IDatabase {
 		datasetId: Hash | string | Uint8Array,
 	): Promise<DatasetBase>;
 
-	storeUserImageCaptchaSolution(
+	storeImageCaptchaSolution(
 		captchas: CaptchaSolution[],
-		commit: UserCommitment,
+		commit: ImageCaptcha,
 	): Promise<void>;
 
+	storeImageCaptchaChallenge(
+		userAccount: string,
+		requestHash: string,
+		salt: string,
+		deadlineTimestamp: number,
+		requestedAtTimestamp: number,
+		ipAddress: CompositeIpAddress,
+		threshold: number,
+		sessionId?: string,
+	): Promise<void>;
+
+	getImageCaptchaByRequestHash(
+		requestHash: string,
+	): Promise<ImageCaptchaRecord | undefined>;
+
+	/** @deprecated Use storeImageCaptchaSolution instead */
+	storeUserImageCaptchaSolution(
+		captchas: CaptchaSolution[],
+		commit: ImageCaptcha,
+	): Promise<void>;
+
+	/** @deprecated Use storeImageCaptchaChallenge instead */
 	storePendingImageCommitment(
 		userAccount: string,
 		requestHash: string,
@@ -710,10 +772,12 @@ export interface IProviderDatabase extends IDatabase {
 		sessionId?: string,
 	): Promise<void>;
 
+	/** @deprecated Use getImageCaptchaByRequestHash instead */
 	getPendingImageCommitment(
 		requestHash: string,
 	): Promise<PendingCaptchaRequest>;
 
+	/** @deprecated Use updateImageCaptcha instead */
 	updatePendingImageCommitmentStatus(requestHash: string): Promise<void>;
 
 	getAllCaptchasByDatasetId(
@@ -738,40 +802,85 @@ export interface IProviderDatabase extends IDatabase {
 		commitmentId: string,
 	): Promise<UserSolutionRecord | undefined>;
 
+	getImageCaptchaById(
+		commitmentId: string,
+	): Promise<ImageCaptcha | undefined>;
+
+	getImageCaptchaByAccount(
+		userAccount: string,
+		dappAccount: string,
+	): Promise<ImageCaptchaRecord[]>;
+
+	approveImageCaptcha(
+		commitmentId: string,
+		coords?: [number, number][][],
+	): Promise<void>;
+
+	disapproveImageCaptcha(
+		commitmentId: string,
+		reason?: TranslationKey,
+		coords?: [number, number][][],
+	): Promise<void>;
+
+	getCheckedImageCaptchas(): Promise<ImageCaptchaRecord[]>;
+
+	getUnstoredImageCaptchas(
+		limit?: number,
+		skip?: number,
+	): Promise<ImageCaptchaRecord[]>;
+
+	markImageCaptchasStored(commitmentIds: Hash[]): Promise<void>;
+
+	markImageCaptchasChecked(commitmentIds: Hash[]): Promise<void>;
+
+	updateImageCaptcha(
+		commitmentId: Hash,
+		updates: Partial<ImageCaptcha>,
+	): Promise<void>;
+
+	/** @deprecated Use getImageCaptchaById instead */
 	getDappUserCommitmentById(
 		commitmentId: string,
-	): Promise<UserCommitment | undefined>;
+	): Promise<ImageCaptcha | undefined>;
 
+	/** @deprecated Use getImageCaptchaByAccount instead */
 	getDappUserCommitmentByAccount(
 		userAccount: string,
 		dappAccount: string,
-	): Promise<UserCommitmentRecord[]>;
+	): Promise<ImageCaptchaRecord[]>;
 
+	/** @deprecated Use approveImageCaptcha instead */
 	approveDappUserCommitment(
 		commitmentId: string,
 		coords?: [number, number][][],
 	): Promise<void>;
 
+	/** @deprecated Use disapproveImageCaptcha instead */
 	disapproveDappUserCommitment(
 		commitmentId: string,
 		reason?: TranslationKey,
 		coords?: [number, number][][],
 	): Promise<void>;
 
-	getCheckedDappUserCommitments(): Promise<UserCommitmentRecord[]>;
+	/** @deprecated Use getCheckedImageCaptchas instead */
+	getCheckedDappUserCommitments(): Promise<ImageCaptchaRecord[]>;
 
+	/** @deprecated Use getUnstoredImageCaptchas instead */
 	getUnstoredDappUserCommitments(
 		limit?: number,
 		skip?: number,
-	): Promise<UserCommitmentRecord[]>;
+	): Promise<ImageCaptchaRecord[]>;
 
+	/** @deprecated Use markImageCaptchasStored instead */
 	markDappUserCommitmentsStored(commitmentIds: Hash[]): Promise<void>;
 
+	/** @deprecated Use markImageCaptchasChecked instead */
 	markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void>;
 
+	/** @deprecated Use updateImageCaptcha instead */
 	updateDappUserCommitment(
 		commitmentId: Hash,
-		updates: Partial<UserCommitment>,
+		updates: Partial<ImageCaptcha>,
 	): Promise<void>;
 
 	getUnstoredDappUserPoWCommitments(
@@ -785,6 +894,9 @@ export interface IProviderDatabase extends IDatabase {
 
 	flagProcessedDappUserSolutions(captchaIds: Hash[]): Promise<void>;
 
+	flagProcessedImageCaptchas(commitmentIds: Hash[]): Promise<void>;
+
+	/** @deprecated Use flagProcessedImageCaptchas instead */
 	flagProcessedDappUserCommitments(commitmentIds: Hash[]): Promise<void>;
 
 	getLastScheduledTaskStatus(
@@ -901,4 +1013,52 @@ export interface IProviderDatabase extends IDatabase {
 		siteKey: string,
 		contextType: ContextType,
 	): Promise<string[]>;
+
+	// ==========================================
+	// Unified Requests Collection Methods
+	// ==========================================
+
+	/**
+	 * Get the next sequential request ID using atomic counter
+	 */
+	getNextRequestId(): Promise<number>;
+
+	/**
+	 * Store a request in the unified requests collection
+	 */
+	storeRequest(request: CaptchaRequest): Promise<void>;
+
+	/**
+	 * Get a request by its unique request ID
+	 */
+	getRequestById(requestId: number): Promise<CaptchaRequestRecord | undefined>;
+
+	/**
+	 * Get all requests for a session, ordered by creation time
+	 */
+	getRequestsBySessionId(sessionId: string): Promise<CaptchaRequestRecord[]>;
+
+	/**
+	 * Get the request chain starting from a given request ID
+	 * Follows previousRequestId links backwards to build the chain
+	 */
+	getRequestChain(requestId: number): Promise<CaptchaRequestRecord[]>;
+
+	/**
+	 * Get the session request for a given session ID
+	 */
+	getSessionRequest(sessionId: string): Promise<CaptchaRequestRecord | undefined>;
+
+	/**
+	 * Mark requests as stored externally
+	 */
+	markRequestsStored(requestIds: number[]): Promise<void>;
+
+	/**
+	 * Get unstored requests for external storage
+	 */
+	getUnstoredRequests(
+		limit: number,
+		skip: number,
+	): Promise<CaptchaRequestRecord[]>;
 }
