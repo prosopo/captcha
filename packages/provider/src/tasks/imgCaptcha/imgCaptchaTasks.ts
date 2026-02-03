@@ -39,9 +39,9 @@ import {
 } from "@prosopo/types";
 import type {
 	ClientRecord,
+	ImageCaptcha,
 	IProviderDatabase,
 	PendingCaptchaRequest,
-	UserCommitment,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { at, extractData } from "@prosopo/util";
@@ -278,7 +278,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			// Only do stuff if the request is in the local DB
 			// prevent this request hash from being used twice
 			await this.db.updatePendingImageCommitmentStatus(requestHash);
-			const commit: UserCommitment = {
+			const commit: ImageCaptcha = {
 				id: commitmentId,
 				userAccount: userAccount,
 				dappAccount,
@@ -294,7 +294,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				sessionId: pendingRecord.sessionId,
 				ja4,
 			};
-			await this.db.storeUserImageCaptchaSolution(receivedCaptchas, commit);
+			await this.db.storeImageCaptchaSolution(receivedCaptchas, commit);
 
 			const solutionRecords = await Promise.all(
 				storedCaptchas.map(async (captcha) => {
@@ -313,7 +313,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			const totalImages = storedCaptchas[0]?.items.length || 0;
 
 			if (containsIdenticalPairs(pairs)) {
-				await this.db.disapproveDappUserCommitment(
+				await this.db.disapproveImageCaptcha(
 					commitmentId,
 					"CAPTCHA.INVALID_SOLUTION",
 					pairs,
@@ -343,9 +343,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 					})),
 					verified: true,
 				};
-				await this.db.approveDappUserCommitment(commitmentId, pairs);
+				await this.db.approveImageCaptcha(commitmentId, pairs);
 			} else {
-				await this.db.disapproveDappUserCommitment(
+				await this.db.disapproveImageCaptcha(
 					commitmentId,
 					"CAPTCHA.INVALID_SOLUTION",
 					pairs,
@@ -457,7 +457,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		if (!dappUserSolution) {
 			throw new ProsopoEnvError("CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND", {
 				context: {
-					failedFuncName: this.getDappUserCommitmentById.name,
+					failedFuncName: this.getImageCaptchaById.name,
 					commitmentId: commitmentId,
 				},
 			});
@@ -466,11 +466,11 @@ export class ImgCaptchaManager extends CaptchaManager {
 	}
 
 	/* Check if dapp user has verified solution in cache */
-	async getDappUserCommitmentByAccount(
+	async getImageCaptchaByAccount(
 		userAccount: string,
 		dappAccount: string,
-	): Promise<UserCommitment | undefined> {
-		const dappUserSolutions = await this.db.getDappUserCommitmentByAccount(
+	): Promise<ImageCaptcha | undefined> {
+		const dappUserSolutions = await this.db.getImageCaptchaByAccount(
 			userAccount,
 			dappAccount,
 		);
@@ -495,7 +495,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		contextAwareEnabled = false,
 	): Promise<ImageVerificationResponse> {
 		const solution = await (commitmentId
-			? this.getDappUserCommitmentById(commitmentId)
+			? this.getImageCaptchaById(commitmentId)
 			: this.getDappUserCommitmentByAccount(user, dapp));
 
 		// No solution exists
@@ -514,7 +514,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			return { status: "API.USER_ALREADY_VERIFIED", verified: false };
 		}
 
-		await this.db.markDappUserCommitmentsChecked([solution.id]);
+		await this.db.markImageCaptchasChecked([solution.id]);
 		// -- END WARNING --
 
 		// A solution exists but is disapproved
@@ -547,7 +547,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 			const ipValidationRules = clientRecord?.settings?.ipValidationRules;
 
-			await this.db.updateDappUserCommitment(solution.id, {
+			await this.db.updateImageCaptcha(solution.id, {
 				providedIp: getCompositeIpAddress(ip),
 			});
 
@@ -629,7 +629,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				if (decision.decision === DecisionMachineDecision.Deny) {
 					if (commitmentId) {
 						// commitmentId should always be present
-						await this.db.disapproveDappUserCommitment(
+						await this.db.disapproveImageCaptcha(
 							commitmentId,
 							decision.reason || "CAPTCHA.DECISION_MACHINE_DENIED",
 						);

@@ -16,13 +16,13 @@ import { type Logger, ProsopoDBError, getLogger } from "@prosopo/common";
 import {
 	type CaptchaProperties,
 	type ICaptchaDatabase,
+	type ImageCaptchaRecord,
 	type PoWCaptchaRecord,
+	StoredImageCaptchaRecordSchema,
 	StoredPoWCaptchaRecordSchema,
 	type StoredSession,
 	StoredSessionRecordSchema,
-	StoredUserCommitmentRecordSchema,
 	type Tables,
-	type UserCommitmentRecord,
 } from "@prosopo/types-database";
 import type { RootFilterQuery } from "mongoose";
 import { MongoDatabase } from "../base/index.js";
@@ -32,8 +32,10 @@ const logger = getLogger("info", import.meta.url);
 enum TableNames {
 	frictionlessToken = "frictionlessToken",
 	session = "session",
-	commitment = "commitment",
+	imagecaptcha = "imagecaptcha",
 	powcaptcha = "powcaptcha",
+	// Legacy collection name (deprecated)
+	commitment = "commitment",
 }
 
 const CAPTCHA_TABLES = [
@@ -48,9 +50,9 @@ const CAPTCHA_TABLES = [
 		schema: StoredPoWCaptchaRecordSchema,
 	},
 	{
-		collectionName: TableNames.commitment,
-		modelName: "UserCommitment",
-		schema: StoredUserCommitmentRecordSchema,
+		collectionName: TableNames.imagecaptcha,
+		modelName: "ImageCaptcha",
+		schema: StoredImageCaptchaRecordSchema,
 	},
 ];
 
@@ -125,7 +127,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 
 	async saveCaptchas(
 		sessionEvents: StoredSession[],
-		imageCaptchaEvents: UserCommitmentRecord[],
+		imageCaptchaEvents: ImageCaptchaRecord[],
 		powCaptchaEvents: PoWCaptchaRecord[],
 	) {
 		await this.connect();
@@ -150,7 +152,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		}
 
 		if (imageCaptchaEvents.length) {
-			const result = await this.tables.commitment.bulkWrite(
+			const result = await this.tables.imagecaptcha.bulkWrite(
 				imageCaptchaEvents.map((doc) => {
 					// remove the _id field to avoid problems when upserting
 					const { _id, ...safeDoc } = doc;
@@ -205,16 +207,16 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		filter: RootFilterQuery<CaptchaProperties> = {},
 		limit = 100,
 	): Promise<{
-		userCommitmentRecords: UserCommitmentRecord[];
+		imageCaptchaRecords: ImageCaptchaRecord[];
 		powCaptchaRecords: PoWCaptchaRecord[];
 	}> {
 		await this.connect();
 
 		try {
-			const commitmentResults = await this.tables.commitment
+			const commitmentResults = await this.tables.imagecaptcha
 				.find(filter)
 				.limit(limit)
-				.lean<UserCommitmentRecord[]>();
+				.lean<ImageCaptchaRecord[]>();
 
 			const powCaptchaResults = await this.tables.powcaptcha
 				.find(filter)
@@ -222,7 +224,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 				.lean<PoWCaptchaRecord[]>();
 
 			return {
-				userCommitmentRecords: commitmentResults,
+				imageCaptchaRecords: commitmentResults,
 				powCaptchaRecords: powCaptchaResults,
 			};
 		} catch (error) {
