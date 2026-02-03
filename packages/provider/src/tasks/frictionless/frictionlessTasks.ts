@@ -54,6 +54,7 @@ const getSessionIDPrefix = (host?: string): string => {
 export enum FrictionlessReason {
 	CONTEXT_AWARE_VALIDATION_FAILED = "CONTEXT_AWARE_VALIDATION_FAILED",
 	USER_ACCESS_POLICY = "USER_ACCESS_POLICY",
+	ACCESS_POLICY_BLOCK = "ACCESS_POLICY_BLOCK",
 	USER_AGENT_MISMATCH = "USER_AGENT_MISMATCH",
 	OLD_TIMESTAMP = "OLD_TIMESTAMP",
 	BOT_SCORE_ABOVE_THRESHOLD = "BOT_SCORE_ABOVE_THRESHOLD",
@@ -124,6 +125,8 @@ export class FrictionlessManager extends CaptchaManager {
 		iFrame = false,
 		decryptedHeadHash = "",
 		reason?: FrictionlessReason,
+		blocked?: boolean,
+		deleted?: boolean,
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
@@ -143,6 +146,8 @@ export class FrictionlessManager extends CaptchaManager {
 			decryptedHeadHash,
 			reason,
 			siteKey,
+			blocked,
+			deleted,
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);
@@ -204,8 +209,10 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.webView ?? false,
 			effectiveParams.iFrame ?? false,
 			effectiveParams.decryptedHeadHash,
-			effectiveParams.reason as FrictionlessReason | undefined,
+			effectiveParams.reason as FrictionlessReason,
+			effectiveParams.blocked,
 		);
+
 		return {
 			[ApiParams.captchaType]: CaptchaType.image,
 			[ApiParams.sessionId]: sessionRecord.sessionId,
@@ -253,6 +260,45 @@ export class FrictionlessManager extends CaptchaManager {
 			[ApiParams.sessionId]: sessionRecord.sessionId,
 			[ApiParams.status]: "ok",
 		};
+	}
+
+	async registerBlockedSession(
+		params?: Partial<ImageCaptchaSessionParams>,
+	): Promise<void> {
+		const effectiveParams = { ...this.sessionParams, ...params };
+		if (
+			!effectiveParams.token ||
+			effectiveParams.score === undefined ||
+			effectiveParams.threshold === undefined ||
+			!effectiveParams.scoreComponents ||
+			effectiveParams.providerSelectEntropy === undefined ||
+			!effectiveParams.ipAddress ||
+			effectiveParams.siteKey === undefined
+		) {
+			throw new Error(
+				"Session parameters must be set before calling registerBlockedSession",
+			);
+		}
+
+		await this.createSession(
+			effectiveParams.token,
+			effectiveParams.score,
+			effectiveParams.threshold,
+			effectiveParams.scoreComponents,
+			effectiveParams.providerSelectEntropy,
+			effectiveParams.ipAddress,
+			CaptchaType.image,
+			effectiveParams.siteKey,
+			effectiveParams.solvedImagesCount,
+			undefined,
+			effectiveParams.userSitekeyIpHash,
+			effectiveParams.webView ?? false,
+			effectiveParams.iFrame ?? false,
+			effectiveParams.decryptedHeadHash,
+			effectiveParams.reason as FrictionlessReason,
+			true,
+			true,
+		);
 	}
 
 	scoreIncreaseAccessPolicy(

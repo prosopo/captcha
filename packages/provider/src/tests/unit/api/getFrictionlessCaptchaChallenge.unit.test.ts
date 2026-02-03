@@ -15,6 +15,7 @@
 import { ContextType } from "@prosopo/types";
 import { type Mock, beforeEach, describe, expect, it, vi } from "vitest";
 import getHandler from "../../../api/captcha/getFrictionlessCaptchaChallenge.js";
+import { FrictionlessReason } from "../../../tasks/frictionless/frictionlessTasks.js";
 
 // Minimal typed mocks to avoid `any`
 type MockFn = ReturnType<typeof vi.fn>;
@@ -27,6 +28,7 @@ type MockTasks = {
 		getClientContextEntropy: MockFn;
 		sendImageCaptcha: MockFn;
 		sendPowCaptcha: MockFn;
+		registerBlockedSession: MockFn;
 		getPrioritisedAccessPolicies: MockFn;
 		isValidRequest: MockFn;
 		scoreIncreaseAccessPolicy: MockFn;
@@ -139,6 +141,7 @@ vi.mock("../../../tasks/index.js", async () => {
 					getClientContextEntropy: vi.fn(),
 					sendImageCaptcha: vi.fn().mockResolvedValue({ type: "image" }),
 					sendPowCaptcha: vi.fn().mockResolvedValue({ type: "pow" }),
+					registerBlockedSession: vi.fn(),
 					getPrioritisedAccessPolicies: vi.fn().mockResolvedValue([]),
 					isValidRequest: vi.fn().mockResolvedValue({ valid: true }),
 					scoreIncreaseAccessPolicy: vi.fn(
@@ -184,8 +187,15 @@ vi.mock("../../../tasks/index.js", async () => {
 import { Tasks } from "../../../tasks/index.js";
 
 describe("getFrictionlessCaptchaChallenge - context selection", () => {
+	const mockEnv = {
+		config: {
+			captchas: {
+				solved: { count: 5 },
+			},
+		},
+	};
 	// biome-ignore lint/suspicious/noExplicitAny: mock request
-	const handler = getHandler({} as any, {} as any);
+	const handler = getHandler(mockEnv as any, {} as any);
 
 	let tasksInstance: MockTasks;
 
@@ -197,6 +207,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			getClientContextEntropy: vi.fn(),
 			sendImageCaptcha: vi.fn().mockResolvedValue({ type: "image" }),
 			sendPowCaptcha: vi.fn().mockResolvedValue({ type: "pow" }),
+			registerBlockedSession: vi.fn(),
 			getPrioritisedAccessPolicies: vi.fn().mockResolvedValue([]),
 			isValidRequest: vi.fn().mockResolvedValue({ valid: true }),
 			scoreIncreaseAccessPolicy: vi.fn(
@@ -405,5 +416,72 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		expect(
 			tasksInstance.frictionlessManager.getClientContextEntropy,
 		).toHaveBeenCalledWith("site3", ContextType.Webview);
+	});
+
+	it("returns 401 when blocked by access policy", async () => {
+		const clientRecord = {
+			account: "siteBlocked",
+			settings: {
+				frictionlessThreshold: 0.5,
+				disallowWebView: false,
+			},
+		};
+		tasksInstance.db.getClientRecord.mockResolvedValue(clientRecord);
+
+		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue({
+			baseBotScore: 0,
+			timestamp: Date.now(),
+			providerSelectEntropy: 0,
+			userId: "u",
+			userAgent: "844bc172f032bdd2d0baae3536c1d66c",
+			webView: false,
+			iFrame: false,
+			decryptedHeadHash: "abc",
+			decryptionFailed: false,
+		});
+
+		// Mock blocked policy
+		tasksInstance.frictionlessManager.getPrioritisedAccessPolicies.mockResolvedValue(
+			[
+				{
+					type: "block",
+					captchaType: "image",
+					solvedImagesCount: 2,
+				},
+			],
+		);
+
+		const body = {
+			token: "tBlocked",
+			headHash: "hhBlocked",
+			dapp: "siteBlocked",
+			user: "u",
+		};
+		const { req, res, next } = buildReqRes(body);
+
+		// biome-ignore lint/suspicious/noExplicitAny: mock request
+		await handler(req as any, res as any, next);
+
+		// Check if next was called (which would indicate an error was thrown before success)
+		if (next.mock.calls.length > 0) {
+			console.error(
+				"next called with:",
+				JSON.stringify(next.mock.calls, null, 2),
+			);
+		}
+
+		expect(next).not.toHaveBeenCalled();
+		expect(res.status).toHaveBeenCalledWith(401);
+		expect(res.json).toHaveBeenCalledWith(
+			expect.objectContaining({ error: "Unauthorized" }),
+		);
+		expect(
+			tasksInstance.frictionlessManager.registerBlockedSession,
+		).toHaveBeenCalledWith(
+			expect.objectContaining({
+				siteKey: "siteBlocked",
+				reason: FrictionlessReason.ACCESS_POLICY_BLOCK,
+			}),
+		);
 	});
 });
