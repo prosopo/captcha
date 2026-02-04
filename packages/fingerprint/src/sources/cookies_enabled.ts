@@ -1,3 +1,16 @@
+// Copyright 2021-2026 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 /**
  * navigator.cookieEnabled cannot detect custom or nuanced cookie blocking configurations. For example, when blocking
  * cookies via the Advanced Privacy Settings in IE9, it always returns true. And there have been issues in the past with
@@ -6,24 +19,25 @@
  * @see https://github.com/Modernizr/Modernizr/blob/master/feature-detects/cookies.js Taken from here
  */
 export default function areCookiesEnabled(): boolean {
-  const d = document
+	const d = document;
 
-  // Taken from here: https://github.com/Modernizr/Modernizr/blob/master/feature-detects/cookies.js
-  // navigator.cookieEnabled cannot detect custom or nuanced cookie blocking configurations. For example, when blocking
-  // cookies via the Advanced Privacy Settings in IE9, it always returns true. And there have been issues in the past
-  // with site-specific exceptions. Don't rely on it.
+	// Taken from here: https://github.com/Modernizr/Modernizr/blob/master/feature-detects/cookies.js
+	// navigator.cookieEnabled cannot detect custom or nuanced cookie blocking configurations. For example, when blocking
+	// cookies via the Advanced Privacy Settings in IE9, it always returns true. And there have been issues in the past
+	// with site-specific exceptions. Don't rely on it.
 
-  // try..catch because some in situations `document.cookie` is exposed but throws a
-  // SecurityError if you try to access it; e.g. documents created from data URIs
-  // or in sandboxed iframes (depending on flags/context)
-  try {
-    // Create cookie
-    d.cookie = 'cookietest=1; SameSite=Strict;'
-    const result = d.cookie.indexOf('cookietest=') !== -1
-    // Delete cookie
-    d.cookie = 'cookietest=1; SameSite=Strict; expires=Thu, 01-Jan-1970 00:00:01 GMT'
-    return result
-  } catch (e) {
-    return false
-  }
+	// try..catch because some in situations `document.cookie` is exposed but throws a
+	// SecurityError if you try to access it; e.g. documents created from data URIs
+	// or in sandboxed iframes (depending on flags/context)
+	try {
+		// Create cookie
+		d.cookie = "cookietest=1; SameSite=Strict;";
+		const result = d.cookie.indexOf("cookietest=") !== -1;
+		// Delete cookie
+		d.cookie =
+			"cookietest=1; SameSite=Strict; expires=Thu, 01-Jan-1970 00:00:01 GMT";
+		return result;
+	} catch (e) {
+		return false;
+	}
 }

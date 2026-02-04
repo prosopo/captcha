@@ -1,38 +1,62 @@
-export type MaybePromise<T> = Promise<T> | T
+// Copyright 2021-2026 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+export type MaybePromise<T> = Promise<T> | T;
 
-export function wait<T = void>(durationMs: number, resolveWith?: T): Promise<T> {
-  return new Promise((resolve) => setTimeout(resolve, durationMs, resolveWith))
+export function wait<T = void>(
+	durationMs: number,
+	resolveWith?: T,
+): Promise<T> {
+	return new Promise((resolve) => setTimeout(resolve, durationMs, resolveWith));
 }
 
 /**
  * Allows asynchronous actions and microtasks to happen.
  */
 function releaseEventLoop(): Promise<void> {
-  // Don't use setTimeout because Chrome throttles it in some cases causing very long agent execution:
-  // https://stackoverflow.com/a/6032591/1118709
-  // https://github.com/chromium/chromium/commit/0295dd09496330f3a9103ef7e543fa9b6050409b
-  // Reusing a MessageChannel object gives no noticeable benefits
-  return new Promise((resolve) => {
-    const channel = new MessageChannel()
-    channel.port1.onmessage = () => resolve()
-    channel.port2.postMessage(null)
-  })
+	// Don't use setTimeout because Chrome throttles it in some cases causing very long agent execution:
+	// https://stackoverflow.com/a/6032591/1118709
+	// https://github.com/chromium/chromium/commit/0295dd09496330f3a9103ef7e543fa9b6050409b
+	// Reusing a MessageChannel object gives no noticeable benefits
+	return new Promise((resolve) => {
+		const channel = new MessageChannel();
+		channel.port1.onmessage = () => resolve();
+		channel.port2.postMessage(null);
+	});
 }
 
-export function requestIdleCallbackIfAvailable(fallbackTimeout: number, deadlineTimeout = Infinity): Promise<void> {
-  const { requestIdleCallback } = window
-  if (requestIdleCallback) {
-    // The function `requestIdleCallback` loses the binding to `window` here.
-    // `globalThis` isn't always equal `window` (see https://github.com/fingerprintjs/fingerprintjs/issues/683).
-    // Therefore, an error can occur. `call(window,` prevents the error.
-    return new Promise((resolve) => requestIdleCallback.call(window, () => resolve(), { timeout: deadlineTimeout }))
-  } else {
-    return wait(Math.min(fallbackTimeout, deadlineTimeout))
-  }
+export function requestIdleCallbackIfAvailable(
+	fallbackTimeout: number,
+	deadlineTimeout = Number.POSITIVE_INFINITY,
+): Promise<void> {
+	const { requestIdleCallback } = window;
+	if (requestIdleCallback) {
+		// The function `requestIdleCallback` loses the binding to `window` here.
+		// `globalThis` isn't always equal `window` (see https://github.com/fingerprintjs/fingerprintjs/issues/683).
+		// Therefore, an error can occur. `call(window,` prevents the error.
+		return new Promise((resolve) =>
+			requestIdleCallback.call(window, () => resolve(), {
+				timeout: deadlineTimeout,
+			}),
+		);
+	}
+	return wait(Math.min(fallbackTimeout, deadlineTimeout));
 }
 
-export function isPromise<T>(value: PromiseLike<T> | unknown): value is PromiseLike<T> {
-  return !!value && typeof (value as PromiseLike<T>).then === 'function'
+export function isPromise<T>(
+	value: PromiseLike<T> | unknown,
+): value is PromiseLike<T> {
+	return !!value && typeof (value as PromiseLike<T>).then === "function";
 }
 
 /**
@@ -49,22 +73,24 @@ export function isPromise<T>(value: PromiseLike<T> | unknown): value is PromiseL
  * returns the control back to the code.
  */
 export function awaitIfAsync<TResult, TError = unknown>(
-  action: () => MaybePromise<TResult>,
-  callback: (...args: [success: true, result: TResult] | [success: false, error: TError]) => unknown,
+	action: () => MaybePromise<TResult>,
+	callback: (
+		...args: [success: true, result: TResult] | [success: false, error: TError]
+	) => unknown,
 ): void {
-  try {
-    const returnedValue = action()
-    if (isPromise(returnedValue)) {
-      returnedValue.then(
-        (result) => callback(true, result),
-        (error: TError) => callback(false, error),
-      )
-    } else {
-      callback(true, returnedValue)
-    }
-  } catch (error) {
-    callback(false, error as TError)
-  }
+	try {
+		const returnedValue = action();
+		if (isPromise(returnedValue)) {
+			returnedValue.then(
+				(result) => callback(true, result),
+				(error: TError) => callback(false, error),
+			);
+		} else {
+			callback(true, returnedValue);
+		}
+	} catch (error) {
+		callback(false, error as TError);
+	}
 }
 
 /**
@@ -73,24 +99,24 @@ export function awaitIfAsync<TResult, TError = unknown>(
  * This function allows running many synchronous tasks such way that asynchronous tasks can run too in background.
  */
 export async function mapWithBreaks<T, U>(
-  items: readonly T[],
-  callback: (item: T, index: number) => U,
-  loopReleaseInterval = 16,
+	items: readonly T[],
+	callback: (item: T, index: number) => U,
+	loopReleaseInterval = 16,
 ): Promise<U[]> {
-  const results = Array<U>(items.length)
-  let lastLoopReleaseTime = Date.now()
+	const results = Array<U>(items.length);
+	let lastLoopReleaseTime = Date.now();
 
-  for (let i = 0; i < items.length; ++i) {
-    results[i] = callback(items[i], i)
+	for (let i = 0; i < items.length; ++i) {
+		results[i] = callback(items[i], i);
 
-    const now = Date.now()
-    if (now >= lastLoopReleaseTime + loopReleaseInterval) {
-      lastLoopReleaseTime = now
-      await releaseEventLoop()
-    }
-  }
+		const now = Date.now();
+		if (now >= lastLoopReleaseTime + loopReleaseInterval) {
+			lastLoopReleaseTime = now;
+			await releaseEventLoop();
+		}
+	}
 
-  return results
+	return results;
 }
 
 /**
@@ -100,7 +126,9 @@ export async function mapWithBreaks<T, U>(
  *
  * Otherwise, promise emits a console warning unless it has a `catch` listener.
  */
-export function suppressUnhandledRejectionWarning<T extends PromiseLike<unknown>>(promise: T): T {
-  promise.then(undefined, () => undefined)
-  return promise
+export function suppressUnhandledRejectionWarning<
+	T extends PromiseLike<unknown>,
+>(promise: T): T {
+	promise.then(undefined, () => undefined);
+	return promise;
 }

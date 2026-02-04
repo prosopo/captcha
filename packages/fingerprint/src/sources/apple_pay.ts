@@ -1,19 +1,32 @@
-import { isAnyParentCrossOrigin } from '../utils/dom'
+// Copyright 2021-2026 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+import { isAnyParentCrossOrigin } from "../utils/dom";
 
-export const enum ApplePayState {
-  /* Apple Pay is disabled on the user device. Seems like it's never returned on iOS (based on few observations). */
-  Disabled = 0,
-  /** Apple Pay is enabled on the user device */
-  Enabled = 1,
-  /** The browser doesn't have the API to work with Apple Pay */
-  NoAPI = -1,
-  /** Using Apple Pay isn't allowed because the page context isn't secure (not HTTPS) */
-  NotAvailableInInsecureContext = -2,
-  /**
-   * Using Apple Pay isn't allowed because the code runs in a frame,
-   * and the frame origin doesn't match all parent page origins.
-   */
-  NotAvailableInFrame = -3,
+export enum ApplePayState {
+	/* Apple Pay is disabled on the user device. Seems like it's never returned on iOS (based on few observations). */
+	Disabled = 0,
+	/** Apple Pay is enabled on the user device */
+	Enabled = 1,
+	/** The browser doesn't have the API to work with Apple Pay */
+	NoAPI = -1,
+	/** Using Apple Pay isn't allowed because the page context isn't secure (not HTTPS) */
+	NotAvailableInInsecureContext = -2,
+	/**
+	 * Using Apple Pay isn't allowed because the code runs in a frame,
+	 * and the frame origin doesn't match all parent page origins.
+	 */
+	NotAvailableInFrame = -3,
 }
 
 /**
@@ -21,21 +34,23 @@ export const enum ApplePayState {
  * project. Turning it into a union is a simple and an elegant solution.
  */
 export default function getApplePayState(): 0 | 1 | -1 | -2 | -3 {
-  const { ApplePaySession } = window
+	const { ApplePaySession } = window;
 
-  if (typeof ApplePaySession?.canMakePayments !== 'function') {
-    return ApplePayState.NoAPI
-  }
+	if (typeof ApplePaySession?.canMakePayments !== "function") {
+		return ApplePayState.NoAPI;
+	}
 
-  if (willPrintConsoleError()) {
-    return ApplePayState.NotAvailableInFrame
-  }
+	if (willPrintConsoleError()) {
+		return ApplePayState.NotAvailableInFrame;
+	}
 
-  try {
-    return ApplePaySession.canMakePayments() ? ApplePayState.Enabled : ApplePayState.Disabled
-  } catch (error) {
-    return getStateFromError(error)
-  }
+	try {
+		return ApplePaySession.canMakePayments()
+			? ApplePayState.Enabled
+			: ApplePayState.Disabled;
+	} catch (error) {
+		return getStateFromError(error);
+	}
 }
 
 /**
@@ -50,13 +65,19 @@ export default function getApplePayState(): 0 | 1 | -1 | -2 | -3 {
  *   navigator.permissions.query({ name: ‘payment-handler' })
  *   document.featurePolicy
  */
-const willPrintConsoleError = isAnyParentCrossOrigin
+const willPrintConsoleError = isAnyParentCrossOrigin;
 
-export function getStateFromError(error: unknown): ApplePayState.NotAvailableInInsecureContext {
-  // See full expected error messages in the test
-  if (error instanceof Error && error.name === 'InvalidAccessError' && /\bfrom\b.*\binsecure\b/i.test(error.message)) {
-    return ApplePayState.NotAvailableInInsecureContext
-  }
+export function getStateFromError(
+	error: unknown,
+): ApplePayState.NotAvailableInInsecureContext {
+	// See full expected error messages in the test
+	if (
+		error instanceof Error &&
+		error.name === "InvalidAccessError" &&
+		/\bfrom\b.*\binsecure\b/i.test(error.message)
+	) {
+		return ApplePayState.NotAvailableInInsecureContext;
+	}
 
-  throw error
+	throw error;
 }

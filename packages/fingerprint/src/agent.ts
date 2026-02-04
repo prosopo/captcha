@@ -1,109 +1,123 @@
+// Copyright 2021-2026 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 // FingerprintJS version (from the original package)
-const version = '5.0.1'
-import { requestIdleCallbackIfAvailable } from './utils/async'
-import { UnknownComponents } from './utils/entropy_source'
-import { x64hash128 } from './utils/hashing'
-import { errorToObject } from './utils/misc'
-import loadBuiltinSources, { BuiltinComponents } from './sources'
-import getConfidence, { Confidence } from './confidence'
+const version = "5.0.1";
+import getConfidence, { type Confidence } from "./confidence";
+import loadBuiltinSources, { type BuiltinComponents } from "./sources";
+import { requestIdleCallbackIfAvailable } from "./utils/async";
+import type { UnknownComponents } from "./utils/entropy_source";
+import { x64hash128 } from "./utils/hashing";
+import { errorToObject } from "./utils/misc";
 
 /**
  * Options for Fingerprint class loading
  */
 export interface LoadOptions {
-  /**
-   * When browser doesn't support `requestIdleCallback` a `setTimeout` will be used. This number is only for Safari and
-   * old Edge, because Chrome/Blink based browsers support `requestIdleCallback`. The value is in milliseconds.
-   * @default 50
-   */
-  delayFallback?: number
-  /**
-   * Whether to print debug messages to the console.
-   * Required to ease investigations of problems.
-   */
-  debug?: boolean
-  /**
-   * Set `false` to disable the unpersonalized AJAX request that the agent sends to collect installation statistics.
-   * It's always disabled in the version published to the FingerprintJS CDN.
-   */
-  monitoring?: boolean
+	/**
+	 * When browser doesn't support `requestIdleCallback` a `setTimeout` will be used. This number is only for Safari and
+	 * old Edge, because Chrome/Blink based browsers support `requestIdleCallback`. The value is in milliseconds.
+	 * @default 50
+	 */
+	delayFallback?: number;
+	/**
+	 * Whether to print debug messages to the console.
+	 * Required to ease investigations of problems.
+	 */
+	debug?: boolean;
+	/**
+	 * Set `false` to disable the unpersonalized AJAX request that the agent sends to collect installation statistics.
+	 * It's always disabled in the version published to the FingerprintJS CDN.
+	 */
+	monitoring?: boolean;
 }
 
 /**
  * Options for getting visitor identifier
  */
 export interface GetOptions {
-  /**
-   * Whether to print debug messages to the console.
-   *
-   * @deprecated Use the `debug` option of `load()` instead
-   */
-  debug?: boolean
+	/**
+	 * Whether to print debug messages to the console.
+	 *
+	 * @deprecated Use the `debug` option of `load()` instead
+	 */
+	debug?: boolean;
 }
 
 /**
  * Result of getting a visitor identifier
  */
 export interface GetResult {
-  /**
-   * The visitor identifier
-   */
-  visitorId: string
-  /**
-   * A confidence score that tells how much the agent is sure about the visitor identifier
-   */
-  confidence: Confidence
-  /**
-   * List of components that has formed the visitor identifier.
-   *
-   * Warning! The type of this property is specific but out of Semantic Versioning, i.e. may have incompatible changes
-   * within a major version. If you want to avoid breaking changes, treat the property as having type
-   * `UnknownComponents` that is more generic but guarantees backward compatibility within a major version.
-   */
-  components: BuiltinComponents
-  /**
-   * The fingerprinting algorithm version
-   *
-   * @see https://github.com/fingerprintjs/fingerprintjs#version-policy For more details
-   */
-  version: string
+	/**
+	 * The visitor identifier
+	 */
+	visitorId: string;
+	/**
+	 * A confidence score that tells how much the agent is sure about the visitor identifier
+	 */
+	confidence: Confidence;
+	/**
+	 * List of components that has formed the visitor identifier.
+	 *
+	 * Warning! The type of this property is specific but out of Semantic Versioning, i.e. may have incompatible changes
+	 * within a major version. If you want to avoid breaking changes, treat the property as having type
+	 * `UnknownComponents` that is more generic but guarantees backward compatibility within a major version.
+	 */
+	components: BuiltinComponents;
+	/**
+	 * The fingerprinting algorithm version
+	 *
+	 * @see https://github.com/fingerprintjs/fingerprintjs#version-policy For more details
+	 */
+	version: string;
 }
 
 /**
  * Agent object that can get visitor identifier
  */
 export interface Agent {
-  /**
-   * Gets the visitor identifier
-   */
-  get(options?: Readonly<GetOptions>): Promise<GetResult>
+	/**
+	 * Gets the visitor identifier
+	 */
+	get(options?: Readonly<GetOptions>): Promise<GetResult>;
 }
 
 function componentsToCanonicalString(components: UnknownComponents) {
-  let result = ''
-  for (const componentKey of Object.keys(components).sort()) {
-    const component = components[componentKey]
-    const value = 'error' in component ? 'error' : JSON.stringify(component.value)
-    result += `${result ? '|' : ''}${componentKey.replace(/([:|\\])/g, '\\$1')}:${value}`
-  }
-  return result
+	let result = "";
+	for (const componentKey of Object.keys(components).sort()) {
+		const component = components[componentKey];
+		const value =
+			"error" in component ? "error" : JSON.stringify(component.value);
+		result += `${result ? "|" : ""}${componentKey.replace(/([:|\\])/g, "\\$1")}:${value}`;
+	}
+	return result;
 }
 
 export function componentsToDebugString(components: UnknownComponents): string {
-  return JSON.stringify(
-    components,
-    (_key, value) => {
-      if (value instanceof Error) {
-        return errorToObject(value)
-      }
-      return value
-    },
-    2,
-  )
+	return JSON.stringify(
+		components,
+		(_key, value) => {
+			if (value instanceof Error) {
+				return errorToObject(value);
+			}
+			return value;
+		},
+		2,
+	);
 }
 
 export function hashComponents(components: UnknownComponents): string {
-  return x64hash128(componentsToCanonicalString(components))
+	return x64hash128(componentsToCanonicalString(components));
 }
 
 /**
@@ -111,26 +125,26 @@ export function hashComponents(components: UnknownComponents): string {
  * Designed for optimisation.
  */
 function makeLazyGetResult(components: BuiltinComponents): GetResult {
-  let visitorIdCache: string | undefined
+	let visitorIdCache: string | undefined;
 
-  // This function runs very fast, so there is no need to make it lazy
-  const confidence = getConfidence(components)
+	// This function runs very fast, so there is no need to make it lazy
+	const confidence = getConfidence(components);
 
-  // A plain class isn't used because its getters and setters aren't enumerable.
-  return {
-    get visitorId(): string {
-      if (visitorIdCache === undefined) {
-        visitorIdCache = hashComponents(this.components)
-      }
-      return visitorIdCache
-    },
-    set visitorId(visitorId: string) {
-      visitorIdCache = visitorId
-    },
-    confidence,
-    components,
-    version,
-  }
+	// A plain class isn't used because its getters and setters aren't enumerable.
+	return {
+		get visitorId(): string {
+			if (visitorIdCache === undefined) {
+				visitorIdCache = hashComponents(this.components);
+			}
+			return visitorIdCache;
+		},
+		set visitorId(visitorId: string) {
+			visitorIdCache = visitorId;
+		},
+		confidence,
+		components,
+		version,
+	};
 }
 
 /**
@@ -140,8 +154,8 @@ function makeLazyGetResult(components: BuiltinComponents): GetResult {
  * and https://github.com/fingerprintjs/fingerprintjs/commit/945633e7c5f67ae38eb0fea37349712f0e669b18
  */
 export function prepareForSources(delayFallback = 50): Promise<void> {
-  // A proper deadline is unknown. Let it be twice the fallback timeout so that both cases have the same average time.
-  return requestIdleCallbackIfAvailable(delayFallback, delayFallback * 2)
+	// A proper deadline is unknown. Let it be twice the fallback timeout so that both cases have the same average time.
+	return requestIdleCallbackIfAvailable(delayFallback, delayFallback * 2);
 }
 
 /**
@@ -151,19 +165,22 @@ export function prepareForSources(delayFallback = 50): Promise<void> {
  * A factory function is used instead of a class to shorten the attribute names in the minified code.
  * Native private class fields could've been used, but TypeScript doesn't allow them with `"target": "es5"`.
  */
-function makeAgent(getComponents: () => Promise<BuiltinComponents>, debug?: boolean): Agent {
-  const creationTime = Date.now()
+function makeAgent(
+	getComponents: () => Promise<BuiltinComponents>,
+	debug?: boolean,
+): Agent {
+	const creationTime = Date.now();
 
-  return {
-    async get(options) {
-      const startTime = Date.now()
-      const components = await getComponents()
-      const result = makeLazyGetResult(components)
+	return {
+		async get(options) {
+			const startTime = Date.now();
+			const components = await getComponents();
+			const result = makeLazyGetResult(components);
 
-      if (debug || options?.debug) {
-        // console.log is ok here because it's under a debug clause
-        // eslint-disable-next-line no-console
-        console.log(`Copy the text below to get the debug data:
+			if (debug || options?.debug) {
+				// console.log is ok here because it's under a debug clause
+				// eslint-disable-next-line no-console
+				console.log(`Copy the text below to get the debug data:
 
 \`\`\`
 version: ${result.version}
@@ -171,42 +188,48 @@ userAgent: ${navigator.userAgent}
 timeBetweenLoadAndGet: ${startTime - creationTime}
 visitorId: ${result.visitorId}
 components: ${componentsToDebugString(components)}
-\`\`\``)
-      }
+\`\`\``);
+			}
 
-      return result
-    },
-  }
+			return result;
+		},
+	};
 }
 
 /**
  * Sends an unpersonalized AJAX request to collect installation statistics
  */
 function monitor() {
-  // The FingerprintJS CDN (https://github.com/fingerprintjs/cdn) replaces `window.__fpjs_d_m` with `true`
-  if (window.__fpjs_d_m || Math.random() >= 0.001) {
-    return
-  }
-  try {
-    const request = new XMLHttpRequest()
-    request.open('get', `https://m1.openfpcdn.io/fingerprintjs/v${version}/npm-monitoring`, true)
-    request.send()
-  } catch (error) {
-    // console.error is ok here because it's an unexpected error handler
-    // eslint-disable-next-line no-console
-    console.error(error)
-  }
+	// The FingerprintJS CDN (https://github.com/fingerprintjs/cdn) replaces `window.__fpjs_d_m` with `true`
+	if (window.__fpjs_d_m || Math.random() >= 0.001) {
+		return;
+	}
+	try {
+		const request = new XMLHttpRequest();
+		request.open(
+			"get",
+			`https://m1.openfpcdn.io/fingerprintjs/v${version}/npm-monitoring`,
+			true,
+		);
+		request.send();
+	} catch (error) {
+		// console.error is ok here because it's an unexpected error handler
+		// eslint-disable-next-line no-console
+		console.error(error);
+	}
 }
 
 /**
  * Builds an instance of Agent and waits a delay required for a proper operation.
  */
-export async function load(options: Readonly<LoadOptions> = {}): Promise<Agent> {
-  const { delayFallback, debug, monitoring = true } = options
-  if (monitoring) {
-    monitor()
-  }
-  await prepareForSources(delayFallback)
-  const getComponents = loadBuiltinSources({ cache: {}, debug })
-  return makeAgent(getComponents, debug)
+export async function load(
+	options: Readonly<LoadOptions> = {},
+): Promise<Agent> {
+	const { delayFallback, debug, monitoring = true } = options;
+	if (monitoring) {
+		monitor();
+	}
+	await prepareForSources(delayFallback);
+	const getComponents = loadBuiltinSources({ cache: {}, debug });
+	return makeAgent(getComponents, debug);
 }
