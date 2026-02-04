@@ -2,7 +2,13 @@
 	"extends": "../../tsconfig.esm.json",
 	"compilerOptions": {
 		"rootDir": "./src",
-		"outDir": "./dist"
+		"outDir": "./dist",
+		"module": "esnext",
+		"moduleResolution": "bundler",
+		"noUncheckedIndexedAccess": false,
+		"noFallthroughCasesInSwitch": false,
+		"strict": false,
+		"isolatedModules": false
 	},
 	"include": [
 		"src",

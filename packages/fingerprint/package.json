@@ -1,7 +1,7 @@
 {
 	"name": "@prosopo/fingerprint",
 	"version": "2.6.28",
-	"description": "Provider fingerprint",
+	"description": "Browser fingerprinting library (vendored from fingerprintjs)",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"type": "module",
@@ -34,9 +34,6 @@
 		"url": "https://github.com/prosopo/captcha/issues"
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
-	"dependencies": {
-		"@fingerprintjs/fingerprintjs": "3.4.2"
-	},
 	"devDependencies": {
 		"@prosopo/config": "3.3.0",
 		"@types/node": "22.10.2",
