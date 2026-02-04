@@ -42,7 +42,9 @@ export type UnknownSources<TOptions> = Record<
 /**
  * Converts an entropy source type into the component type
  */
+// biome-ignore lint/suspicious/noExplicitAny: Required for type inference in generic utility type
 export type SourceValue<TSource extends Source<any, any>> =
+	// biome-ignore lint/suspicious/noExplicitAny: Required for type inference in generic utility type
 	TSource extends Source<any, infer T> ? T : never;
 
 /**
@@ -70,6 +72,7 @@ export type UnknownComponents = Record<string, Component<unknown>>;
  * Warning for package users:
  * This type is out of Semantic Versioning, i.e. can change unexpectedly. Usage is at your own risk.
  */
+// biome-ignore lint/suspicious/noExplicitAny: Required for generic utility type that works with any source options
 export type SourcesToComponents<TSources extends UnknownSources<any>> = {
 	[K in keyof TSources]: Component<SourceValue<TSources[K]>>;
 };
@@ -192,6 +195,7 @@ export function loadSources<
 		for (let index = 0; index < includedSources.length; ++index) {
 			components[includedSources[index]] = componentArray[
 				index
+				// biome-ignore lint/suspicious/noExplicitAny: Dynamic component assignment requires type assertion
 			] as Component<any>;
 		}
 

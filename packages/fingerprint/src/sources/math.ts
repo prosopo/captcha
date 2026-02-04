@@ -50,10 +50,10 @@ export default function getMathFingerprint(): Record<string, number> {
 
 	// Note: constant values are empirical
 	return {
-		acos: acos(0.123124234234234242),
+		acos: acos(0.12312423423423424),
 		acosh: acosh(1e308),
 		acoshPf: acoshPf(1e154), // 1e308 will not work for polyfill
-		asin: asin(0.123124234234234242),
+		asin: asin(0.12312423423423424),
 		asinh: asinh(1),
 		asinhPf: asinhPf(1),
 		atanh: atanh(0.5),

@@ -239,10 +239,9 @@ export function getWebGLContext(cache: Options["cache"]) {
 	const canvas = document.createElement("canvas");
 	let context: CanvasContext | undefined;
 
-	canvas.addEventListener(
-		"webglCreateContextError",
-		() => (context = undefined),
-	);
+	canvas.addEventListener("webglCreateContextError", () => {
+		context = undefined;
+	});
 
 	for (const type of ["webgl", "experimental-webgl"]) {
 		try {
@@ -283,7 +282,7 @@ function getShaderPrecision(
 }
 
 function getConstantsFromPrototype<K>(obj: K): Array<Extract<keyof K, string>> {
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// biome-ignore lint/suspicious/noExplicitAny: Required to access prototype keys
 	const keys = Object.keys((obj as any).__proto__) as Array<keyof K>;
 	return keys.filter(isConstantLike);
 }
