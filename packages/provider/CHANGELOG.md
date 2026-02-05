@@ -1,5 +1,10 @@
 # @prosopo/provider
 
+## 3.16.4
+### Patch Changes
+
+- 3a58d06: Don't fail on IP comparison fail
+
 ## 3.16.3
 ### Patch Changes
 
