@@ -86,6 +86,7 @@ describe("PowCaptchaManager", () => {
 			updatePowCaptchaRecordResult: vi.fn(),
 			updatePowCaptchaRecord: vi.fn(),
 			markDappUserPoWCommitmentsChecked: vi.fn(),
+			getClientRecord: vi.fn(),
 		} as unknown as IProviderDatabase;
 
 		pair = {
@@ -813,6 +814,297 @@ describe("PowCaptchaManager", () => {
 			// Restore original decision machine
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(powCaptchaManager as any).decisionMachineRunner.decide = originalDecide;
+		});
+	});
+
+	describe("IP Validation Guard Conditions", () => {
+		it("should skip IP validation when ipValidationRules is undefined", async () => {
+			const dappAccount = "testDappAccount";
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `123456789${POW_SEPARATOR}userAccount${POW_SEPARATOR}${pair.address}`;
+			const timeout = 1000;
+			const ip = "1.1.1.1";
+
+			const challengeRecord: PoWCaptchaStored = {
+				dappAccount,
+				userAccount,
+				result: { status: CaptchaStatus.approved },
+				userSubmitted: true,
+				challenge,
+				serverChecked: false,
+				difficulty: 4,
+				requestedAtTimestamp: new Date(),
+				ipAddress: getCompositeIpAddress(ip),
+				headers: { a: "1", b: "2", c: "3" },
+				ja4: "ja4",
+				providerSignature: "testSignature",
+				lastUpdatedTimestamp: new Date(),
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getClientRecord as any).mockResolvedValue({
+				settings: {
+					// ipValidationRules is undefined
+				},
+			});
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(checkPowSignature as any).mockReturnValue(true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(validateSolution as any).mockReturnValue(true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(verifyRecency as any).mockImplementation(() => true);
+
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				timeout,
+				mockEnv,
+				ip,
+			);
+
+			// Should succeed without IP validation
+			expect(result.verified).toBe(true);
+			// updatePowCaptchaRecord should only be called once for providedIp, not for IP validation failure
+			expect(db.updatePowCaptchaRecord).toHaveBeenCalledWith(challenge, {
+				providedIp: getCompositeIpAddress(ip),
+			});
+		});
+
+		it("should skip IP validation when ipValidationRules.enabled is false", async () => {
+			const dappAccount = pair.address;
+			const challenge: PoWChallengeId = `123456789${POW_SEPARATOR}userAccount${POW_SEPARATOR}${pair.address}`;
+			const timeout = 1000;
+			const ip = "1.1.1.1";
+
+			const challengeRecord: PoWCaptchaStored = {
+				userAccount: "userAccount",
+				challenge,
+				serverChecked: false,
+				difficulty: 4,
+				dappAccount,
+				result: {
+					status: CaptchaStatus.approved,
+				},
+				requestedAtTimestamp: new Date(),
+				ipAddress: getCompositeIpAddress(ip),
+				headers: { a: "1", b: "2", c: "3" },
+				ja4: "ja4",
+				providerSignature: "testSignature",
+				userSubmitted: true,
+				lastUpdatedTimestamp: new Date(),
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getClientRecord as any).mockResolvedValue({
+				settings: {
+					ipValidationRules: {
+						enabled: false, // Explicitly disabled
+						actions: {
+							countryChangeAction: "reject",
+							cityChangeAction: "reject",
+						},
+					},
+				},
+			});
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(checkPowSignature as any).mockReturnValue(true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(validateSolution as any).mockReturnValue(true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(verifyRecency as any).mockImplementation(() => true);
+
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				timeout,
+				mockEnv,
+				ip,
+			);
+
+			// Should succeed without IP validation even though rules are configured
+			expect(result.verified).toBe(true);
+			expect(db.updatePowCaptchaRecord).toHaveBeenCalledWith(challenge, {
+				providedIp: getCompositeIpAddress(ip),
+			});
+		});
+
+		it("should skip IP validation when ipValidationRules.enabled is undefined", async () => {
+			const dappAccount = pair.address;
+			const challenge: PoWChallengeId = `123456789${POW_SEPARATOR}userAccount${POW_SEPARATOR}${pair.address}`;
+			const timeout = 1000;
+			const ip = "1.1.1.1";
+
+			const challengeRecord: PoWCaptchaStored = {
+				dappAccount,
+				challenge,
+				serverChecked: false,
+				difficulty: 4,
+				result: {
+					status: CaptchaStatus.approved,
+				},
+				requestedAtTimestamp: new Date(),
+				ipAddress: getCompositeIpAddress(ip),
+				userAccount: "userAccount",
+				headers: { a: "1", b: "2", c: "3" },
+				ja4: "ja4",
+				providerSignature: "testSignature",
+				userSubmitted: true,
+				lastUpdatedTimestamp: new Date(),
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getClientRecord as any).mockResolvedValue({
+				settings: {
+					ipValidationRules: {
+						// enabled field is missing/undefined
+						actions: {
+							countryChangeAction: "reject",
+							cityChangeAction: "reject",
+						},
+					},
+				},
+			});
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(checkPowSignature as any).mockReturnValue(true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(validateSolution as any).mockReturnValue(true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(verifyRecency as any).mockImplementation(() => true);
+
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				timeout,
+				mockEnv,
+				ip,
+			);
+
+			// Should succeed without IP validation when enabled is undefined
+			expect(result.verified).toBe(true);
+			expect(db.updatePowCaptchaRecord).toHaveBeenCalledWith(challenge, {
+				providedIp: getCompositeIpAddress(ip),
+			});
+		});
+
+		it("should skip IP validation when clientRecord is null", async () => {
+			const dappAccount = pair.address;
+			const challenge: PoWChallengeId = `123456789${POW_SEPARATOR}userAccount${POW_SEPARATOR}${pair.address}`;
+			const timeout = 1000;
+			const ip = "1.1.1.1";
+
+			const challengeRecord: PoWCaptchaStored = {
+				dappAccount,
+				challenge,
+				serverChecked: false,
+				difficulty: 4,
+				result: {
+					status: CaptchaStatus.approved,
+				},
+				requestedAtTimestamp: new Date(),
+				ipAddress: getCompositeIpAddress(ip),
+				userAccount: "userAccount",
+				headers: { a: "1", b: "2", c: "3" },
+				ja4: "ja4",
+				providerSignature: "testSignature",
+				userSubmitted: true,
+				lastUpdatedTimestamp: new Date(),
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getClientRecord as any).mockResolvedValue(null);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(checkPowSignature as any).mockReturnValue(true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(validateSolution as any).mockReturnValue(true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(verifyRecency as any).mockImplementation(() => true);
+
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				timeout,
+				mockEnv,
+				ip,
+			);
+
+			// Should succeed without IP validation when client record is null
+			expect(result.verified).toBe(true);
+			expect(db.updatePowCaptchaRecord).toHaveBeenCalledWith(challenge, {
+				providedIp: getCompositeIpAddress(ip),
+			});
+		});
+
+		it("should skip IP validation when no IP is provided", async () => {
+			const dappAccount = pair.address;
+			const challenge: PoWChallengeId = `123456789${POW_SEPARATOR}userAccount${POW_SEPARATOR}${pair.address}`;
+			const timeout = 1000;
+
+			const challengeRecord: PoWCaptchaStored = {
+				dappAccount,
+				challenge,
+				serverChecked: false,
+				difficulty: 4,
+				result: {
+					status: CaptchaStatus.approved,
+				},
+				requestedAtTimestamp: new Date(),
+				ipAddress: getCompositeIpAddress("1.1.1.1"),
+				userAccount: "userAccount",
+				headers: { a: "1", b: "2", c: "3" },
+				ja4: "ja4",
+				providerSignature: "testSignature",
+				userSubmitted: true,
+				lastUpdatedTimestamp: new Date(),
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getClientRecord as any).mockResolvedValue({
+				settings: {
+					ipValidationRules: {
+						enabled: true,
+						actions: {
+							countryChangeAction: "reject",
+						},
+					},
+				},
+			});
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(checkPowSignature as any).mockReturnValue(true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(validateSolution as any).mockReturnValue(true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(verifyRecency as any).mockImplementation(() => true);
+
+			// No IP provided
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				timeout,
+				mockEnv,
+			);
+
+			// Should succeed - no IP provided means IP validation is skipped
+			expect(result.verified).toBe(true);
 		});
 	});
 });
