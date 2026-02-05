@@ -281,7 +281,6 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue({
 			baseBotScore: 0,
 			timestamp: Date.now(),
-			providerSelectEntropy: 0,
 			userId: "u",
 			userAgent: "844bc172f032bdd2d0baae3536c1d66c",
 			webView: true,
@@ -297,6 +296,8 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 
 		const body = { token: "t", headHash: "hh", dapp: "site1", user: "u" };
 		const { req, res, next } = buildReqRes(body);
+		// Set headers to match the decrypted payload
+		req.headers["prosopo-user"] = "u";
 
 		// Act
 		// biome-ignore lint/suspicious/noExplicitAny: mock request
@@ -312,7 +313,6 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValueOnce({
 			baseBotScore: 0,
 			timestamp: Date.now(),
-			providerSelectEntropy: 0,
 			userId: "u",
 			userAgent: "844bc172f032bdd2d0baae3536c1d66c",
 			webView: false,
@@ -352,7 +352,6 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue({
 			baseBotScore: 0,
 			timestamp: Date.now(),
-			providerSelectEntropy: 0,
 			userId: "u",
 			userAgent: "844bc172f032bdd2d0baae3536c1d66c",
 			webView: true, // even if webView true
@@ -396,7 +395,6 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue({
 			baseBotScore: 0,
 			timestamp: Date.now(),
-			providerSelectEntropy: 0,
 			userId: "u",
 			userAgent: "844bc172f032bdd2d0baae3536c1d66c",
 			webView: false, // even if webView false

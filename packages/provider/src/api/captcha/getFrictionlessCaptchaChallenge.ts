@@ -126,7 +126,6 @@ export default (
 						scoreComponents: {
 							baseScore: 0,
 						},
-						providerSelectEntropy: 0,
 						ipAddress: getCompositeIpAddress(normalizedIp),
 						webView: false,
 						iFrame: false,
@@ -195,7 +194,6 @@ export default (
 			const {
 				baseBotScore,
 				timestamp,
-				providerSelectEntropy,
 				userId,
 				userAgent,
 				webView,
@@ -209,7 +207,6 @@ export default (
 				data: {
 					baseBotScore,
 					timestamp,
-					providerSelectEntropy,
 					userId,
 					userAgent,
 					webView,
@@ -268,7 +265,6 @@ export default (
 				score: botScore,
 				threshold: botThreshold,
 				scoreComponents,
-				providerSelectEntropy,
 				ipAddress,
 				webView,
 				iFrame,
@@ -579,23 +575,6 @@ export default (
 						siteKey: dapp,
 					}),
 				);
-			}
-
-			// If the host is not verified, send an image captcha
-			const hostVerified = await tasks.frictionlessManager.hostVerified(
-				providerSelectEntropy,
-			);
-			if (!hostVerified.verified) {
-				const scoreUpdate =
-					tasks.frictionlessManager.scoreIncreaseUnverifiedHost(
-						hostVerified.domain,
-						baseBotScore,
-						botScore,
-						scoreComponents,
-					);
-				botScore = scoreUpdate.score;
-				scoreComponents = scoreUpdate.scoreComponents;
-				tasks.frictionlessManager.updateScore(botScore, scoreComponents);
 			}
 
 			// If the bot score is greater than the threshold, send an image captcha

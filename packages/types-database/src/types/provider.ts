@@ -493,7 +493,6 @@ export type Session = {
 	score: number;
 	threshold: number;
 	scoreComponents: ScoreComponents;
-	providerSelectEntropy: number;
 	ipAddress: CompositeIpAddress;
 	captchaType: CaptchaType;
 	solvedImagesCount?: number;
@@ -526,7 +525,6 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 		unverifiedHost: { type: Number, required: false },
 		webView: { type: Number, required: false },
 	},
-	providerSelectEntropy: { type: Number, required: true },
 	ipAddress: CompositeIpAddressRecordSchemaObj,
 	captchaType: { type: String, enum: CaptchaType, required: true },
 	solvedImagesCount: { type: Number, required: false },
@@ -548,7 +546,6 @@ SessionRecordSchema.index({ deleted: 1 });
 SessionRecordSchema.index({ blocked: 1 });
 SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
 SessionRecordSchema.index({ userSitekeyIpHash: 1 });
-SessionRecordSchema.index({ providerSelectEntropy: 1 });
 SessionRecordSchema.index({ token: 1 });
 SessionRecordSchema.index({ siteKey: 1 }, { background: true, sparse: true });
 // Compound indexes for session aggregation queries

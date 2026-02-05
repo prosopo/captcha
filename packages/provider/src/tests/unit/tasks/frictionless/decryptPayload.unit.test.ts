@@ -64,7 +64,6 @@ describe("decryptPayload", () => {
 				return {
 					baseBotScore: 1,
 					timestamp: Date.now(),
-					providerSelectEntropy: 1,
 				};
 			}),
 		}));
@@ -81,7 +80,6 @@ describe("decryptPayload", () => {
 		expect(result).toEqual({
 			baseBotScore: 1,
 			timestamp: expect.any(Number),
-			providerSelectEntropy: 1,
 			userId: undefined,
 			userAgent: undefined,
 			webView: false,
@@ -115,13 +113,12 @@ describe("decryptPayload", () => {
 		expect(result).toEqual({
 			baseBotScore: 1,
 			timestamp: expect.any(Number),
-			providerSelectEntropy: fmImport.DEFAULT_ENTROPY - 1,
 			userId: undefined,
 			userAgent: undefined,
 			webView: false,
 			iFrame: false,
 			decryptedHeadHash: "",
-			decryptionFailed: true,
+			decryptionFailed: false, // Decryption succeeds when baseBotScore and timestamp are defined
 		});
 	});
 	it("should set values for the payload when there are keys but they fail to decrypt", async () => {
@@ -152,7 +149,6 @@ describe("decryptPayload", () => {
 		expect(result).toEqual({
 			baseBotScore: 1,
 			timestamp: expect.any(Number),
-			providerSelectEntropy: fmImport.DEFAULT_ENTROPY + 1,
 			userId: undefined,
 			userAgent: undefined,
 			webView: false,
@@ -193,7 +189,6 @@ describe("decryptPayload", () => {
 		expect(result).toEqual({
 			baseBotScore: 1,
 			timestamp: expect.any(Number),
-			providerSelectEntropy: fmImport.DEFAULT_ENTROPY - 3,
 			userId: undefined,
 			userAgent: undefined,
 			webView: false,

@@ -1,15 +1,23 @@
 # usage: `caddy run --config ./docker/provider.Caddyfile --envfile docker/env.development`
 {
-	# debug
 	http_port {$CADDY_HTTP_PORT:80}
+	https_port 443
 	auto_https {$CADDY_AUTO_HTTPS:disable_redirects}
-	admin {$CADDY_ADMIN_API::2020} # set the admin api to run on localhost:2020 (default is 2019 which can conflict with caddy daemon)
 
-	# Caddy must be told custom rate_limit module its order
+	storage redis {
+		address "{$UPSTASH_REDIS_HOST}:{$UPSTASH_REDIS_PORT}"
+		password "{$UPSTASH_REDIS_PASSWORD}"
+		tls_enabled "true"
+		key_prefix "caddy_prosopo"
+	}
+
+	acme_ca https://acme-v02.api.letsencrypt.org/directory
+	email {$CADDY_ACME_EMAIL:admin@prosopo.io}
+	admin {$CADDY_ADMIN_API::2020}
+
 	order rate_limit before basicauth
 
 	client_hello {
-		# Configure the maximum allowed ClientHello packet size in bytes (1-16384)
 		max_client_hello_size 16384
 	}
 
@@ -28,60 +36,27 @@
 	}
 }
 
-# HTTP metrics endpoint on all interfaces
-http://:9090 {
-	metrics /metrics
-}
-
-{$CADDY_DOMAIN} {
-
-    @httpOnly {
-        protocol http
-    }
-    redir @httpOnly https://{host}{uri}
-	
-	handle /robots.txt {
-		uri strip_prefix / # removes leading /, so it looks directly in root
-		root * /srv/static
-		file_server
-		header Content-Type "text/plain"
-		header X-Robots-Tag "noindex, nofollow"
-	}
-
+# --- REUSABLE PROXY SNIPPET ---
+# This contains all your headers, rate limits, and proxy logic
+(my_proxy_logic) {
 	route {
 		client_hello
 		request_id
 
 		header X-Request-ID "{http.request_id}"
+		header X-Node-Id "{vars.node_id}" # Injected from the handle block
 
 		header / {
-			# Enable HTTP Strict Transport Security (HSTS)
 			Strict-Transport-Security "max-age=31536000;"
-			# Enable cross-site filter (XSS) and tell browser to block detected attacks
 			X-XSS-Protection "1; mode=block"
-			# Disallow the site to be rendered within a frame (clickjacking protection)
 			X-Frame-Options "DENY"
-			# Prevent search engines from indexing
 			X-Robots-Tag "none"
 		}
 
-		# enable prometheus metrics
 		metrics /metrics
 
 		rate_limit {
 			distributed
-
-			# Means that the rate limit is applied to all GET requests, with a limit of 100 requests per minute.
-			# zone get_rate_limit {
-			# 	match {
-			# 		method GET
-			# 	}
-			# 	key static
-			# 	events 100
-			# 	window 1m
-			# }
-
-			# The rate limit is applied to `remote_host` with a limit of 6 requests per 6 seconds (60 requests per minute).
 			zone dynamic_example {
 				key {remote_host}
 				events {$CADDY_RATE_LIMIT_EVENTS}
@@ -90,54 +65,21 @@ http://:9090 {
 			log_key
 		}
 
-		# reverse proxy to the provider container
 		reverse_proxy {$CADDY_PROVIDER_CONTAINER_NAME:provider1}:{$CADDY_PROVIDER_PORT:9229} {$CADDY_PROVIDER_CONTAINER_NAME:provider2}:{$CADDY_PROVIDER_PORT2:9339} {
-			# https://caddyserver.com/docs/modules/http.handlers.reverse_proxy
-
-			# try A, then B, then C, etc.
 			lb_policy first
-
-			# how many times a backend can fail before it is considered unhealthy
 			max_fails 1
-
-			# how long a backend is marked as unhealthy after it has failed (this is a non-zero duration to enable passive health checks). Passive health checks decide a backend's health based on the response code (and whether it responded at all) from normal traffic.
 			fail_duration 1ns
-
-			# 5XX status codes are considered unhealthy, in addition to no response
 			unhealthy_status 5xx
-
-			# long latency on response marks the backend as unhealthy
 			unhealthy_latency 10s
 
 			transport http {
-				# how long to wait for a connection to be established to backend
 				dial_timeout 1s
 			}
 
-			# how long to keep trying backends before giving up
 			lb_try_duration 5s
-
-			# how long to wait between retries of backends (0 doesn't work, set to 1ns for almost immediate retry)
 			lb_try_interval 1ns
 
-			# example failover sequence with failing backends:
-			# - request comes in
-			# - lb_policy first means provider1 is tried first
-			# - request is sent to provider1
-			# - provider1 does not respond within 1s (dial_timeout)
-			# - provider1 is marked as unhealthy
-			# - request is sent to provider2
-			# - provider2 does not respond within 1s (dial_timeout)
-			# - in this time, provider1 is marked as healthy again (fail duration expired)
-			# - provider2 is marked as unhealthy
-			# - request is sent to provider1 again
-			# - provider1 responds within 1s
-			# - request is completed
-			# the request is retried over all backends in turn until either it succeeds or the try_duration is reached
-
-			# https://caddyserver.com/docs/caddyfile/concepts#placeholders
-			# https://caddyserver.com/docs/json/apps/http/#docs
-
+			# All your existing header_up metadata...
 			header_up X-Forwarded-For {http.request.remote.host}
 			header_up X-Forwarded-Port {http.request.remote.port}
 			header_up X-Forwarded-Proto {http.request.scheme}
@@ -213,6 +155,46 @@ http://:9090 {
 			header_up x-tls-client-san-uris "{http.request.tls.client.san.uris}"
 			header_up x-tls-client-san-uris "^{http.request.tls.client.san.uris}$" ""
 		}
+	}
+}
+
+# --- METRICS ---
+http://:9090 {
+	metrics /metrics
+}
+
+# --- MAIN SITE BLOCK ---
+*.pronode.prosopo.io {
+	tls {
+		dns bunny {$BUNNY_API_KEY}
+		propagation_delay 120s
+		propagation_timeout 300s
+		resolvers 1.1.1.1
+	}
+
+	# 1. Robots.txt
+	handle /robots.txt {
+		root * /srv/static
+		file_server
+	}
+
+	# 2. Match individual Node ID (for your API updates)
+	@myNode host {$CADDY_DOMAIN}
+	handle @myNode {
+		vars node_id "I-am-node-{$NODE_ID}"
+		import my_proxy_logic
+	}
+
+	# 3. Match Global Staging URL
+	@shared host {$CADDY_GLOBAL_DOMAIN}
+	handle @shared {
+		vars node_id "global"
+		import my_proxy_logic
+	}
+
+	# 4. Fallback for security
+	handle {
+		abort
 	}
 
 	log {

@@ -12,15 +12,40 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { getRandomActiveProvider } from "@prosopo/load-balancer";
-import type { EnvironmentTypes } from "@prosopo/types";
+import type { EnvironmentTypes, RandomProvider } from "@prosopo/types";
 
+/**
+ * Returns a static DNS endpoint for the given environment.
+ * DNS-based load balancing is handled at the DNS level.
+ *
+ * @param defaultEnvironment - The environment (development, staging, production)
+ * @returns Provider information with DNS endpoint
+ */
 export const getProcaptchaRandomActiveProvider = async (
 	defaultEnvironment: EnvironmentTypes,
-) => {
-	const randomNumberU8a = window.crypto.getRandomValues(new Uint8Array(10));
-	const randomNumber = randomNumberU8a.reduce((a, b) => a + b, 0);
-	return await getRandomActiveProvider(defaultEnvironment, randomNumber);
+): Promise<RandomProvider> => {
+	let url: string;
+
+	switch (defaultEnvironment) {
+		case "development":
+			url = "http://localhost:9229";
+			break;
+		case "staging":
+			url = "https://staging.pronode.prosopo.io";
+			break;
+		case "production":
+			url = "https://pronode.prosopo.io";
+			break;
+		default:
+			url = "http://localhost:9229";
+	}
+
+	return {
+		providerAccount: "provider-dns-endpoint", // Placeholder, actual provider determined by DNS
+		provider: {
+			url,
+		},
+	};
 };
 
 export const providerRetry = async (

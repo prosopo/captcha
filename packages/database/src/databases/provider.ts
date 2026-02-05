@@ -615,6 +615,20 @@ export class ProviderDatabase
 	}
 
 	/**
+	 * @description Get the most recently uploaded dataset ID
+	 */
+	async getMostRecentDatasetId(): Promise<string | undefined> {
+		const dataset = await this.tables?.dataset
+			.findOne()
+			.sort({ _id: -1 }) // Sort by _id descending to get most recent
+			.lean<DatasetBase>();
+
+		const datasetId = dataset?.datasetId;
+		// Ensure we return string | undefined, not Hash (which can be string | number[])
+		return typeof datasetId === "string" ? datasetId : undefined;
+	}
+
+	/**
 	 * @description Get a dataset by Id
 	 */
 	async getDatasetDetails(datasetId: Hash): Promise<DatasetBase> {

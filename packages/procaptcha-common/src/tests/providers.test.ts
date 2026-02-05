@@ -12,77 +12,40 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
 	getProcaptchaRandomActiveProvider,
 	providerRetry,
 } from "../providers.js";
 
-// Mock the load-balancer module
-vi.mock("@prosopo/load-balancer", () => ({
-	getRandomActiveProvider: vi.fn(),
-}));
-
 describe("providers", () => {
 	describe("getProcaptchaRandomActiveProvider", () => {
-		// biome-ignore lint/suspicious/noExplicitAny: Store original crypto function
-		let originalGetRandomValues: any;
-
-		beforeEach(() => {
-			originalGetRandomValues = global.window.crypto.getRandomValues.bind(
-				global.window.crypto,
-			);
-		});
-
-		afterEach(() => {
-			global.window.crypto.getRandomValues = originalGetRandomValues;
-		});
-
-		it("should generate random values and call getRandomActiveProvider", async () => {
-			// Mock window.crypto.getRandomValues
-			const mockRandomValues = new Uint8Array([
-				10, 20, 30, 40, 50, 60, 70, 80, 90, 100,
-			]);
-			const mockGetRandomValues = vi.fn(() => mockRandomValues);
-			// biome-ignore lint/suspicious/noExplicitAny: Mock crypto API
-			global.window.crypto.getRandomValues = mockGetRandomValues as any;
-
-			// Mock the getRandomActiveProvider import
-			const { getRandomActiveProvider } = await import(
-				"@prosopo/load-balancer"
-			);
-			vi.mocked(getRandomActiveProvider).mockResolvedValue({
-				providerUrl: "https://test-provider.com",
-				// biome-ignore lint/suspicious/noExplicitAny: Mock return type
-			} as any);
-
+		it("should return localhost for development environment", async () => {
 			const result = await getProcaptchaRandomActiveProvider("development");
 
-			expect(mockGetRandomValues).toHaveBeenCalledWith(expect.any(Uint8Array));
-			expect(getRandomActiveProvider).toHaveBeenCalledWith("development", 550); // sum of mockRandomValues
-			expect(result).toEqual({ providerUrl: "https://test-provider.com" });
+			expect(result.providerAccount).toBe("provider-dns-endpoint");
+			expect(result.provider.url).toBe("http://localhost:9229");
 		});
 
-		it("should use different random values on each call", async () => {
-			let callCount = 0;
-			const mockGetRandomValues = vi.fn((arr: Uint8Array) => {
-				callCount++;
-				arr.fill(callCount);
-				return arr;
-			});
-			// biome-ignore lint/suspicious/noExplicitAny: Mock crypto API
-			global.window.crypto.getRandomValues = mockGetRandomValues as any;
+		it("should return staging DNS URL for staging environment", async () => {
+			const result = await getProcaptchaRandomActiveProvider("staging");
 
-			const { getRandomActiveProvider } = await import(
-				"@prosopo/load-balancer"
-			);
-			// biome-ignore lint/suspicious/noExplicitAny: Mock return type
-			vi.mocked(getRandomActiveProvider).mockResolvedValue({} as any);
+			expect(result.providerAccount).toBe("provider-dns-endpoint");
+			expect(result.provider.url).toBe("https://staging.pronode.prosopo.io");
+		});
 
-			await getProcaptchaRandomActiveProvider("development");
-			await getProcaptchaRandomActiveProvider("development");
+		it("should return production DNS URL for production environment", async () => {
+			const result = await getProcaptchaRandomActiveProvider("production");
 
-			expect(mockGetRandomValues).toHaveBeenCalledTimes(2);
+			expect(result.providerAccount).toBe("provider-dns-endpoint");
+			expect(result.provider.url).toBe("https://pronode.prosopo.io");
+		});
+
+		it("should return consistent results when called multiple times", async () => {
+			const result1 = await getProcaptchaRandomActiveProvider("staging");
+			const result2 = await getProcaptchaRandomActiveProvider("staging");
+
+			expect(result1).toEqual(result2);
 		});
 	});
 

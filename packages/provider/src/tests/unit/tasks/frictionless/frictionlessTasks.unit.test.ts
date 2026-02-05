@@ -125,7 +125,6 @@ describe("Frictionless Task Manager", () => {
 			const mockScore = 0.5;
 			const mockThreshold = 0.7;
 			const mockScoreComponents = { baseScore: 0.5 };
-			const mockEntropy = 12345;
 			const mockIpAddress = getCompositeIpAddress("127.0.0.1");
 			const mockSiteKey = "mockSiteKey";
 
@@ -137,7 +136,6 @@ describe("Frictionless Task Manager", () => {
 				mockScore,
 				mockThreshold,
 				mockScoreComponents,
-				mockEntropy,
 				mockIpAddress,
 				CaptchaType.image,
 				mockSiteKey,
@@ -159,7 +157,6 @@ describe("Frictionless Task Manager", () => {
 			const mockScore = 0.5;
 			const mockThreshold = 0.7;
 			const mockScoreComponents = { baseScore: 0.5 };
-			const mockEntropy = 12345;
 			const mockIpAddress = getCompositeIpAddress("127.0.0.1");
 			const mockSiteKey = "mockSiteKey";
 
@@ -171,7 +168,6 @@ describe("Frictionless Task Manager", () => {
 				score: mockScore,
 				threshold: mockThreshold,
 				scoreComponents: mockScoreComponents,
-				providerSelectEntropy: mockEntropy,
 				ipAddress: mockIpAddress,
 				webView: false,
 				iFrame: false,
@@ -193,7 +189,6 @@ describe("Frictionless Task Manager", () => {
 			const mockScore = 0.5;
 			const mockThreshold = 0.7;
 			const mockScoreComponents = { baseScore: 0.5 };
-			const mockEntropy = 12345;
 			const mockIpAddress = getCompositeIpAddress("127.0.0.1");
 			const mockSiteKey = "mockSiteKey";
 
@@ -205,7 +200,6 @@ describe("Frictionless Task Manager", () => {
 				score: mockScore,
 				threshold: mockThreshold,
 				scoreComponents: mockScoreComponents,
-				providerSelectEntropy: mockEntropy,
 				ipAddress: mockIpAddress,
 				webView: false,
 				iFrame: false,
