@@ -41,6 +41,11 @@ import type { ClientRecord, Tables } from "./provider.js";
 export type UserDataRecord = mongoose.Document & IUserData;
 
 export const IPValidationRulesSchema = new Schema({
+	enabled: {
+		type: Boolean,
+		default: false,
+		required: true,
+	},
 	actions: {
 		countryChangeAction: {
 			type: Schema.Types.Mixed,
