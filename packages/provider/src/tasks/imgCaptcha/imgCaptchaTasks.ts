@@ -551,26 +551,28 @@ export class ImgCaptchaManager extends CaptchaManager {
 				providedIp: getCompositeIpAddress(ip),
 			});
 
-			const ipValidation = await deepValidateIpAddress(
-				ip,
-				solutionIpAddress,
-				this.logger,
-				env.config.ipApi.apiKey,
-				env.config.ipApi.baseUrl,
-				ipValidationRules,
-			);
+			if (ipValidationRules?.enabled === true) {
+				const ipValidation = await deepValidateIpAddress(
+					ip,
+					solutionIpAddress,
+					this.logger,
+					env.config.ipApi.apiKey,
+					env.config.ipApi.baseUrl,
+					ipValidationRules,
+				);
 
-			if (!ipValidation.isValid) {
-				this.logger.error(() => ({
-					msg: "IP validation failed for image captcha",
-					data: {
-						ip,
-						solutionIp: solutionIpAddress.address,
-						error: ipValidation.errorMessage,
-						distanceKm: ipValidation.distanceKm,
-					},
-				}));
-				return { status: "API.USER_NOT_VERIFIED", verified: false };
+				if (!ipValidation.isValid) {
+					this.logger.error(() => ({
+						msg: "IP validation failed for image captcha",
+						data: {
+							ip,
+							solutionIp: solutionIpAddress.address,
+							error: ipValidation.errorMessage,
+							distanceKm: ipValidation.distanceKm,
+						},
+					}));
+					return { status: "API.USER_NOT_VERIFIED", verified: false };
+				}
 			}
 		}
 
