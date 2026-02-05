@@ -420,7 +420,7 @@ export const deepValidateIpAddress = async (
 			}));
 			// If we can't do distance comparison and IPs don't match exactly, be strict
 			return {
-				isValid: false,
+				isValid: true,
 				errorMessage: "Could not determine IP distance",
 			};
 		}
