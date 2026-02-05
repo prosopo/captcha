@@ -126,6 +126,7 @@ describe("Frictionless Task Manager", () => {
 			const mockThreshold = 0.7;
 			const mockScoreComponents = { baseScore: 0.5 };
 			const mockIpAddress = getCompositeIpAddress("127.0.0.1");
+			const mockSiteKey = "mockSiteKey";
 
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.storeSessionRecord as any).mockResolvedValue(undefined);
@@ -137,6 +138,7 @@ describe("Frictionless Task Manager", () => {
 				mockScoreComponents,
 				mockIpAddress,
 				CaptchaType.image,
+				mockSiteKey,
 			);
 
 			expect(session).toHaveProperty("sessionId");
@@ -145,6 +147,8 @@ describe("Frictionless Task Manager", () => {
 			expect(session).toHaveProperty("threshold", mockThreshold);
 			expect(session).toHaveProperty("captchaType", CaptchaType.image);
 			expect(session).toHaveProperty("createdAt");
+			expect(session).toHaveProperty("ipAddress", mockIpAddress);
+			expect(session).toHaveProperty("siteKey", mockSiteKey);
 			expect(db.storeSessionRecord).toHaveBeenCalledWith(session);
 		});
 
@@ -154,6 +158,7 @@ describe("Frictionless Task Manager", () => {
 			const mockThreshold = 0.7;
 			const mockScoreComponents = { baseScore: 0.5 };
 			const mockIpAddress = getCompositeIpAddress("127.0.0.1");
+			const mockSiteKey = "mockSiteKey";
 
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.storeSessionRecord as any).mockResolvedValue(undefined);
@@ -167,6 +172,7 @@ describe("Frictionless Task Manager", () => {
 				webView: false,
 				iFrame: false,
 				decryptedHeadHash: "",
+				siteKey: mockSiteKey,
 			});
 
 			const response = await frictionlessTaskManager.sendImageCaptcha({
@@ -184,6 +190,7 @@ describe("Frictionless Task Manager", () => {
 			const mockThreshold = 0.7;
 			const mockScoreComponents = { baseScore: 0.5 };
 			const mockIpAddress = getCompositeIpAddress("127.0.0.1");
+			const mockSiteKey = "mockSiteKey";
 
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.storeSessionRecord as any).mockResolvedValue(undefined);
@@ -197,6 +204,7 @@ describe("Frictionless Task Manager", () => {
 				webView: false,
 				iFrame: false,
 				decryptedHeadHash: "",
+				siteKey: mockSiteKey,
 			});
 
 			const response = await frictionlessTaskManager.sendPowCaptcha({

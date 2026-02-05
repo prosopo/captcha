@@ -1,4 +1,3 @@
-import path from "node:path";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,11 +22,6 @@ import connectionFactory from "./utils/connection.js";
 import memoryServerSetup from "./utils/database.js";
 
 loadEnv();
-
-export function getEnvFile(filename = ".env", filepath = "./") {
-	const env = process.env.NODE_ENV || "development";
-	return path.join(filepath, `${filename}.${env}`);
-}
 
 enum ProsopoVerificationType {
 	api = "api",

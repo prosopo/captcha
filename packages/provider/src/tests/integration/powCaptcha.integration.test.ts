@@ -12,31 +12,63 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { Server } from "node:net";
 import { sha256 } from "@noble/hashes/sha256";
-import {
-	generateMnemonic,
-	getDefaultProviders,
-	getPair,
-} from "@prosopo/keyring";
+import { datasetWithSolutionHashes } from "@prosopo/datasets";
+import { ProviderEnvironment } from "@prosopo/env";
+import { generateMnemonic, getPair } from "@prosopo/keyring";
+import { Tasks, startProviderApi } from "@prosopo/provider";
 import {
 	ApiParams,
 	CaptchaType,
 	ClientApiPaths,
+	ClientSettingsSchema,
+	DatabaseTypes,
 	type GetPowCaptchaChallengeRequestBodyType,
 	type GetPowCaptchaResponse,
 	type KeyringPair,
 	type PowCaptchaSolutionResponse,
+	ProsopoConfigSchema,
 	type SubmitPowCaptchaSolutionBodyType,
+	Tier,
 } from "@prosopo/types";
-import { at, u8aToHex } from "@prosopo/util";
-import { beforeEach, describe, expect, it } from "vitest";
+import { u8aToHex } from "@prosopo/util";
+import { randomAsHex } from "@prosopo/util-crypto";
+import { GenericContainer, type StartedTestContainer } from "testcontainers";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { dummyUserAccount } from "./mocks/solvedTestCaptchas.js";
-import { registerSiteKey } from "./registerSitekey.js";
 
-// Define the endpoint path and base URL
-const baseUrl = "http://localhost:9229";
+// Define the endpoint paths
 const getPowCaptchaChallengePath = ClientApiPaths.GetPowCaptchaChallenge;
 const userId = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty";
+
+// Function to get a random available port
+function getRandomPort(): number {
+	// Use a random port in the range 10000-60000 to avoid conflicts
+	return Math.floor(Math.random() * 50000) + 10000;
+}
+
+/**
+ * Register a site key directly in the database using Tasks
+ * This mimics the setup script's registerSiteKey functionality
+ */
+async function registerSiteKeyInDb(
+	env: ProviderEnvironment,
+	siteKey: string,
+	captchaType: CaptchaType,
+): Promise<void> {
+	const tasks = new Tasks(env);
+	await tasks.clientTaskManager.registerSiteKey(
+		siteKey,
+		Tier.Free,
+		ClientSettingsSchema.parse({
+			captchaType,
+			domains: ["localhost", "0.0.0.0", "127.0.0.0", "example.com"],
+			frictionlessThreshold: 0.5,
+			powDifficulty: 4,
+		}),
+	);
+}
 
 const bufferToHex = (buffer: Uint8Array): string =>
 	Array.from(buffer)
@@ -80,17 +112,130 @@ const failPoW = (data: string, difficulty: number): number => {
 };
 
 describe("PoW Integration Tests", () => {
+	let env: ProviderEnvironment;
+	let mongoContainer: StartedTestContainer;
+	let redisContainer: StartedTestContainer;
+	let server: Server;
+	let tasks: Tasks;
+	let testPort: number;
+	let baseUrl: string;
+
+	beforeAll(async () => {
+		// Get a unique port for this test suite
+		testPort = getRandomPort();
+		baseUrl = `http://localhost:${testPort}`;
+
+		// Start MongoDB container
+		mongoContainer = await new GenericContainer("mongo:6.0.17")
+			.withExposedPorts(27017)
+			.withEnvironment({
+				MONGO_INITDB_ROOT_USERNAME: "root",
+				MONGO_INITDB_ROOT_PASSWORD: "root",
+				MONGO_INITDB_DATABASE: "prosopo_test",
+			})
+			.start();
+
+		// Start Redis container
+		redisContainer = await new GenericContainer("redis/redis-stack:latest")
+			.withExposedPorts(6379)
+			.withEnvironment({
+				REDIS_ARGS: "--requirepass root",
+			})
+			.start();
+
+		const mongoHost = mongoContainer.getHost();
+		const mongoPort = mongoContainer.getMappedPort(27017);
+		const redisHost = redisContainer.getHost();
+		const redisPort = redisContainer.getMappedPort(6379);
+
+		const config = ProsopoConfigSchema.parse({
+			defaultEnvironment: "development",
+			host: `http://localhost:${testPort}`,
+			account: {
+				secret:
+					process.env.PROVIDER_MNEMONIC ||
+					"puppy cream effort carbon despair leg pyramid cotton endorse immense drill peasant",
+			},
+			authAccount: {
+				secret:
+					process.env.ADMIN_MNEMONIC ||
+					"puppy cream effort carbon despair leg pyramid cotton endorse immense drill peasant",
+			},
+			database: {
+				development: {
+					type: DatabaseTypes.enum.provider,
+					endpoint: `mongodb://root:root@${mongoHost}:${mongoPort}`,
+					dbname: "prosopo_test",
+					authSource: "admin",
+				},
+			},
+			redisConnection: {
+				url: `redis://:${encodeURIComponent("root")}@${redisHost}:${redisPort}`,
+				password: "root",
+				indexName: randomAsHex(16),
+			},
+			ipApi: {
+				baseUrl: "https://dummyUrl.com",
+				apiKey: "dummyKey",
+			},
+			server: {
+				baseURL: "http://localhost",
+				port: testPort,
+			},
+		});
+
+		env = new ProviderEnvironment(config);
+		await env.isReady();
+
+		const db = env.getDb();
+
+		// wait until Redis is ready
+		await db.getRedisAccessRulesConnection().getClient();
+
+		// Setup provider dataset - this is critical for the tests to work
+		// This mimics the setup script's setupProvider functionality
+		tasks = new Tasks(env);
+		env.logger.info(() => ({ msg: "Setting up provider dataset" }));
+		await tasks.datasetManager.providerSetDataset(datasetWithSolutionHashes);
+
+		// Start the provider API server
+		// This mimics the CLI start functionality
+		env.logger.info(() => ({
+			msg: `Starting provider API on port ${testPort}`,
+		}));
+		server = await startProviderApi(env, true, testPort);
+	});
+
+	afterAll(async () => {
+		if (server) {
+			await new Promise<void>((resolve, reject) => {
+				server.close((err) => {
+					if (err) reject(err);
+					else resolve();
+				});
+			});
+		}
+		if (env) {
+			await env.getDb().close();
+		}
+		if (mongoContainer) {
+			await mongoContainer.stop();
+		}
+		if (redisContainer) {
+			await redisContainer.stop();
+		}
+	});
+
 	describe("GetPowCaptchaChallenge", () => {
 		let siteKeyMnemonic: string;
 		let siteKey: string;
 		let userMnemonic: string;
 		let userId: string;
-		const adminPair = at(getDefaultProviders(), 0).pair;
+
 		beforeEach(async () => {
 			// Create a new site key to avoid conflicts with other tests
 			[siteKeyMnemonic, siteKey] = await generateMnemonic();
-
-			await registerSiteKey(siteKey, CaptchaType.pow, adminPair);
+			await registerSiteKeyInDb(env, siteKey, CaptchaType.pow);
 			[userMnemonic, userId] = await generateMnemonic();
 		});
 
@@ -162,12 +307,11 @@ describe("PoW Integration Tests", () => {
 		let userMnemonic: string;
 		let userPair: KeyringPair;
 		let userId: string;
-		const adminPair = at(getDefaultProviders(), 0).pair;
+
 		beforeEach(async () => {
 			// Create a new site key to avoid conflicts with other tests
 			[siteKeyMnemonic, siteKey] = await generateMnemonic();
-
-			await registerSiteKey(siteKey, CaptchaType.pow, adminPair);
+			await registerSiteKeyInDb(env, siteKey, CaptchaType.pow);
 			[userMnemonic, userId] = await generateMnemonic();
 			userPair = getPair(userMnemonic);
 		});
@@ -360,9 +504,8 @@ describe("PoW Integration Tests", () => {
 		const userId = userPair.address;
 		const origin = "http://localhost";
 		const siteKey = "5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw";
-		const adminPair = at(getDefaultProviders(), 0).pair;
 
-		await registerSiteKey(siteKey, CaptchaType.image, adminPair);
+		await registerSiteKeyInDb(env, siteKey, CaptchaType.image);
 
 		const captchaRes = await fetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
 			method: "POST",
@@ -387,9 +530,8 @@ describe("PoW Integration Tests", () => {
 		const userId = userPair.address;
 		const origin = "http://localhost";
 		// Create a new site key to avoid conflicts with other tests
-		const [mnemonic, dapp] = await generateMnemonic();
-		const adminPair = at(getDefaultProviders(), 0).pair;
-		await registerSiteKey(dapp, CaptchaType.frictionless, adminPair);
+		const [_mnemonic, dapp] = await generateMnemonic();
+		await registerSiteKeyInDb(env, dapp, CaptchaType.frictionless);
 
 		const captchaRes = await fetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
 			method: "POST",

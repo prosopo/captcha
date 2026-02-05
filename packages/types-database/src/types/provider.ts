@@ -13,7 +13,14 @@
 // limitations under the License.
 
 import { type TranslationKey, TranslationKeysSchema } from "@prosopo/locale";
-import { CaptchaType, ContextType, Tier } from "@prosopo/types";
+import {
+	CaptchaType,
+	ContextType,
+	DecisionMachineLanguage,
+	DecisionMachineRuntime,
+	DecisionMachineScope,
+	Tier,
+} from "@prosopo/types";
 import {
 	type Captcha,
 	type CaptchaResult,
@@ -497,7 +504,9 @@ export type Session = {
 	webView: boolean;
 	iFrame: boolean;
 	decryptedHeadHash: string;
+	siteKey?: string;
 	reason?: string;
+	blocked?: boolean;
 };
 
 export type SessionRecord = mongoose.Document & Session;
@@ -527,14 +536,25 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	webView: { type: Boolean, required: true, default: false },
 	iFrame: { type: Boolean, required: true, default: false },
 	decryptedHeadHash: { type: String, required: false, default: "" },
+	siteKey: { type: String, required: false },
 	reason: { type: String, required: false },
+	blocked: { type: Boolean, required: false },
 });
 
 SessionRecordSchema.index({ createdAt: 1 });
 SessionRecordSchema.index({ deleted: 1 });
+SessionRecordSchema.index({ blocked: 1 });
 SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
 SessionRecordSchema.index({ userSitekeyIpHash: 1 });
 SessionRecordSchema.index({ token: 1 });
+SessionRecordSchema.index({ siteKey: 1 }, { background: true, sparse: true });
+// Compound indexes for session aggregation queries
+SessionRecordSchema.index({
+	createdAt: 1,
+	captchaType: 1,
+	"scoreComponents.baseScore": 1,
+});
+SessionRecordSchema.index({ createdAt: 1, deleted: 1 });
 
 export type DetectorKey = {
 	detectorKey: string;
@@ -551,6 +571,68 @@ export const DetectorRecordSchema = new Schema<DetectorSchema>({
 DetectorRecordSchema.index({ createdAt: 1 }, { unique: true });
 // TTL index for automatic cleanup of expired keys
 DetectorRecordSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+
+/**
+ * Decision machine artifact stored in the database.
+ * The combination of scope + dappAccount uniquely identifies one artifact.
+ *
+ * Examples:
+ * - Global scope: { scope: "global", dappAccount: null }
+ * - Dapp scope: { scope: "dapp", dappAccount: "0x123..." }
+ *
+ * Future scope extensions (e.g., device type) would add additional fields
+ * to this composite key to maintain uniqueness.
+ */
+export type DecisionMachineArtifact = {
+	scope: DecisionMachineScope;
+	dappAccount?: string;
+	runtime: DecisionMachineRuntime;
+	language?: DecisionMachineLanguage;
+	source: string;
+	name?: string;
+	version?: string;
+	captchaType?: CaptchaType.pow | CaptchaType.image;
+	createdAt: Date;
+	updatedAt: Date;
+};
+
+export type DecisionMachineArtifactRecord = mongoose.Document &
+	DecisionMachineArtifact;
+export const DecisionMachineArtifactRecordSchema =
+	new Schema<DecisionMachineArtifactRecord>({
+		scope: {
+			type: String,
+			enum: Object.values(DecisionMachineScope),
+			required: true,
+		},
+		dappAccount: { type: String, required: false, default: null },
+		runtime: {
+			type: String,
+			enum: Object.values(DecisionMachineRuntime),
+			required: true,
+		},
+		language: {
+			type: String,
+			enum: Object.values(DecisionMachineLanguage),
+			required: false,
+		},
+		source: { type: String, required: true },
+		name: { type: String, required: false },
+		version: { type: String, required: false },
+		captchaType: {
+			type: String,
+			enum: [CaptchaType.pow, CaptchaType.image],
+			required: false,
+		},
+		createdAt: { type: Date, required: true },
+		updatedAt: { type: Date, required: true },
+	});
+// Unique index: one artifact per (scope, dappAccount) combination
+DecisionMachineArtifactRecordSchema.index(
+	{ scope: 1, dappAccount: 1 },
+	{ unique: true },
+);
+DecisionMachineArtifactRecordSchema.index({ updatedAt: -1 });
 
 export type ClientContextEntropy = {
 	account: string;
@@ -790,6 +872,15 @@ export interface IProviderDatabase extends IDatabase {
 		detectorKey: string,
 		expirationInSeconds?: number,
 	): Promise<void>;
+
+	upsertDecisionMachineArtifact(
+		artifact: DecisionMachineArtifact,
+	): Promise<void>;
+
+	getDecisionMachineArtifact(
+		scope: DecisionMachineScope,
+		dappAccount?: string,
+	): Promise<DecisionMachineArtifact | undefined>;
 
 	setClientContextEntropy(
 		account: string,

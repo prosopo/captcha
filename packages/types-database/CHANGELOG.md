@@ -1,5 +1,37 @@
 # @prosopo/types-database
 
+## 4.2.3
+### Patch Changes
+
+- 8dad7f3: Implement frictionless blocks
+
+## 4.2.2
+### Patch Changes
+
+- Updated dependencies [bd6995b]
+  - @prosopo/user-access-policy@3.6.4
+  - @prosopo/types@3.8.3
+
+## 4.2.1
+### Patch Changes
+
+- 9633e58: Add captcha type to decision machine and run on image verification"
+- Updated dependencies [9633e58]
+  - @prosopo/types@3.8.2
+  - @prosopo/user-access-policy@3.6.3
+
+## 4.2.0
+### Minor Changes
+
+- 4299cae: Adding site key to session records
+
+### Patch Changes
+
+- f52a5c1: Adding decision machine to provider for behavior detection
+- Updated dependencies [f52a5c1]
+  - @prosopo/types@3.8.1
+  - @prosopo/user-access-policy@3.6.2
+
 ## 4.1.6
 ### Patch Changes
 

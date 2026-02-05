@@ -1,5 +1,33 @@
 # @prosopo/datasets
 
+## 3.0.60
+### Patch Changes
+
+- Updated dependencies [8dad7f3]
+  - @prosopo/types-database@4.2.3
+
+## 3.0.59
+### Patch Changes
+
+- Updated dependencies [bd6995b]
+  - @prosopo/types@3.8.3
+  - @prosopo/types-database@4.2.2
+
+## 3.0.58
+### Patch Changes
+
+- Updated dependencies [9633e58]
+  - @prosopo/types-database@4.2.1
+  - @prosopo/types@3.8.2
+
+## 3.0.57
+### Patch Changes
+
+- Updated dependencies [f52a5c1]
+- Updated dependencies [4299cae]
+  - @prosopo/types-database@4.2.0
+  - @prosopo/types@3.8.1
+
 ## 3.0.56
 ### Patch Changes
 

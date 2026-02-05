@@ -17,6 +17,11 @@ import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
 import type { Logger } from "@prosopo/common";
 import type { KeyringPair, ProsopoConfigOutput } from "@prosopo/types";
 import {
+	CaptchaType,
+	DecisionMachineDecision,
+	type DecisionMachineInput,
+} from "@prosopo/types";
+import {
 	ApiParams,
 	type CaptchaResult,
 	CaptchaStatus,
@@ -45,6 +50,7 @@ import {
 } from "../../compositeIpAddress.js";
 import { deepValidateIpAddress } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
+import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import type { BehavioralDataResult } from "../detection/decodeBehavior.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
@@ -66,6 +72,7 @@ const DEFAULT_POW_DIFFICULTY = 4;
 
 export class PowCaptchaManager extends CaptchaManager {
 	POW_SEPARATOR: string;
+	private decisionMachineRunner: DecisionMachineRunner;
 
 	constructor(
 		db: IProviderDatabase,
@@ -75,6 +82,7 @@ export class PowCaptchaManager extends CaptchaManager {
 	) {
 		super(db, pair, config, logger);
 		this.POW_SEPARATOR = POW_SEPARATOR;
+		this.decisionMachineRunner = new DecisionMachineRunner(db);
 	}
 
 	/**
@@ -113,6 +121,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			userAccount,
 			headHash,
 			coordsString,
+			undefined, // countryCode - could be stored in challenge record in future
 		);
 
 		const accessPolicies = await this.getPrioritisedAccessPolicies(
@@ -254,15 +263,6 @@ export class PowCaptchaManager extends CaptchaManager {
 			};
 		}
 
-		await this.db.updatePowCaptchaRecordResult(
-			challenge,
-			result,
-			false,
-			true,
-			userTimestampSignature,
-			coords,
-		);
-
 		// Process behavioral data if provided
 		if (behavioralData) {
 			try {
@@ -318,6 +318,15 @@ export class PowCaptchaManager extends CaptchaManager {
 				// Don't fail the captcha if behavioral analysis fails
 			}
 		}
+
+		await this.db.updatePowCaptchaRecordResult(
+			challenge,
+			result,
+			false,
+			true,
+			userTimestampSignature,
+			coords,
+		);
 
 		return correct;
 	}
@@ -490,6 +499,62 @@ export class PowCaptchaManager extends CaptchaManager {
 					},
 				}));
 			}
+		}
+
+		// We know solution is correct by this point. Run decision machine evaluation to process additional checks.
+		try {
+			const decisionInput: DecisionMachineInput = {
+				userAccount: challengeRecord.userAccount,
+				dappAccount: challengeRecord.dappAccount,
+				captchaResult: "passed",
+				headers: challengeRecord.headers,
+				captchaType: CaptchaType.pow,
+				behavioralDataPacked: challengeRecord.behavioralDataPacked,
+				deviceCapability: challengeRecord.deviceCapability,
+			};
+
+			const decision = await this.decisionMachineRunner.decide(
+				decisionInput,
+				this.logger,
+			);
+
+			if (decision.decision === DecisionMachineDecision.Deny) {
+				this.logger.info(() => ({
+					msg: "Decision machine denied PoW captcha in server verification",
+					data: {
+						challenge,
+						userAccount: challengeRecord.userAccount,
+						dappAccount,
+						reason: decision.reason,
+						score: decision.score,
+						tags: decision.tags,
+					},
+				}));
+
+				await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
+					result: {
+						status: CaptchaStatus.disapproved,
+						reason: decision.reason || "CAPTCHA.DECISION_MACHINE_DENIED",
+					},
+				});
+				return notVerifiedResponse;
+			}
+
+			this.logger.debug(() => ({
+				msg: "Decision machine allowed PoW captcha",
+				data: {
+					challenge,
+					reason: decision.reason,
+					score: decision.score,
+					tags: decision.tags,
+				},
+			}));
+		} catch (error) {
+			this.logger?.error(() => ({
+				msg: "Failed to run decision machine in server PoW verification",
+				err: error,
+			}));
+			// Don't fail the captcha if decision machine fails - default to allow
 		}
 
 		return { verified: true, ...(score ? { score } : {}) };

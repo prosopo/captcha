@@ -1,5 +1,25 @@
 # @prosopo/api
 
+## 3.1.44
+### Patch Changes
+
+- Updated dependencies [bd6995b]
+  - @prosopo/types@3.8.3
+
+## 3.1.43
+### Patch Changes
+
+- 9633e58: Add captcha type to decision machine and run on image verification"
+- Updated dependencies [9633e58]
+  - @prosopo/types@3.8.2
+
+## 3.1.42
+### Patch Changes
+
+- f52a5c1: Adding decision machine to provider for behavior detection
+- Updated dependencies [f52a5c1]
+  - @prosopo/types@3.8.1
+
 ## 3.1.41
 ### Patch Changes
 

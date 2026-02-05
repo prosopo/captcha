@@ -1,5 +1,38 @@
 # @prosopo/env
 
+## 3.2.40
+### Patch Changes
+
+  - @prosopo/database@3.6.11
+  - @prosopo/types-env@2.7.64
+
+## 3.2.39
+### Patch Changes
+
+- Updated dependencies [bd6995b]
+  - @prosopo/types@3.8.3
+  - @prosopo/database@3.6.10
+  - @prosopo/keyring@2.9.3
+  - @prosopo/types-env@2.7.63
+
+## 3.2.38
+### Patch Changes
+
+- Updated dependencies [9633e58]
+  - @prosopo/types@3.8.2
+  - @prosopo/database@3.6.9
+  - @prosopo/types-env@2.7.62
+  - @prosopo/keyring@2.9.2
+
+## 3.2.37
+### Patch Changes
+
+- Updated dependencies [f52a5c1]
+  - @prosopo/database@3.6.8
+  - @prosopo/types@3.8.1
+  - @prosopo/types-env@2.7.61
+  - @prosopo/keyring@2.9.1
+
 ## 3.2.36
 ### Patch Changes
 
