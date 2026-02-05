@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 3.8.4
+### Patch Changes
+
+- d2431cd: Allow IP validation rules to be disabled
+
 ## 3.8.3
 ### Patch Changes
 

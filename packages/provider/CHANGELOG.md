@@ -1,5 +1,24 @@
 # @prosopo/provider
 
+## 3.16.5
+### Patch Changes
+
+- 4c08158: Skip ip validation unit tests
+- d2431cd: Allow IP validation rules to be disabled
+- Updated dependencies [4c08158]
+- Updated dependencies [d2431cd]
+  - @prosopo/types-database@4.2.4
+  - @prosopo/types@3.8.4
+  - @prosopo/database@3.6.12
+  - @prosopo/datasets@3.0.61
+  - @prosopo/types-env@2.7.65
+  - @prosopo/api@3.1.45
+  - @prosopo/api-express-router@3.0.53
+  - @prosopo/env@3.2.41
+  - @prosopo/keyring@2.9.4
+  - @prosopo/load-balancer@2.8.21
+  - @prosopo/user-access-policy@3.6.5
+
 ## 3.16.4
 ### Patch Changes
 

@@ -1,5 +1,12 @@
 # @prosopo/account
 
+## 2.8.4
+### Patch Changes
+
+- Updated dependencies [d2431cd]
+  - @prosopo/types@3.8.4
+  - @prosopo/keyring@2.9.4
+
 ## 2.8.3
 ### Patch Changes
 

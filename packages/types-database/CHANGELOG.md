@@ -1,5 +1,14 @@
 # @prosopo/types-database
 
+## 4.2.4
+### Patch Changes
+
+- 4c08158: Skip ip validation unit tests
+- d2431cd: Allow IP validation rules to be disabled
+- Updated dependencies [d2431cd]
+  - @prosopo/types@3.8.4
+  - @prosopo/user-access-policy@3.6.5
+
 ## 4.2.3
 ### Patch Changes
 
