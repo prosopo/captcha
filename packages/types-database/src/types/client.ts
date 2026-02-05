@@ -13,18 +13,24 @@
 // limitations under the License.
 
 import {
+	CaptchaType,
 	ContextType,
 	type IUserData,
 	type IUserSettings,
 	type Timestamp,
 	abuseScoreThresholdDefault,
 	abuseScoreThresholdExceedActionDefault,
+	captchaTypeDefault,
 	cityChangeActionDefault,
 	contextAwareThresholdDefault,
 	countryChangeActionDefault,
 	distanceExceedActionDefault,
 	distanceThresholdKmDefault,
+	domainsDefault,
+	frictionlessThresholdDefault,
+	imageThresholdDefault,
 	ispChangeActionDefault,
+	powDifficultyDefault,
 	requireAllConditionsDefault,
 } from "@prosopo/types";
 import mongoose from "mongoose";
@@ -99,12 +105,25 @@ export const IPValidationRulesSchema = new Schema({
 });
 
 export const UserSettingsSchema = new Schema({
-	captchaType: String,
-	frictionlessThreshold: Number,
-	powDifficulty: Number,
-	imageThreshold: Number,
+	captchaType: {
+		type: String,
+		enum: CaptchaType,
+		default: captchaTypeDefault,
+	},
+	frictionlessThreshold: {
+		type: Number,
+		default: frictionlessThresholdDefault,
+	},
+	powDifficulty: { type: Number, default: powDifficultyDefault },
+	imageThreshold: {
+		type: Number,
+		default: imageThresholdDefault,
+	},
 	ipValidationRules: IPValidationRulesSchema,
-	domains: [String],
+	domains: {
+		type: [String],
+		default: domainsDefault,
+	},
 	disallowWebView: {
 		type: Boolean,
 		default: false,

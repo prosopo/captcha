@@ -62,6 +62,7 @@ const IPValidationSchema = object({
 });
 
 export const IPValidationRulesSchema = object({
+	enabled: boolean().optional().default(false),
 	actions: object({
 		countryChangeAction: IPValidationActionSchema.optional().default(
 			countryChangeActionDefault,
