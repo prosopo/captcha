@@ -13,7 +13,7 @@
 // limitations under the License.
 
 const FingerprintJSImport = async () =>
-	(await import("@fingerprintjs/fingerprintjs")).default;
+	(await import("@prosopo/fingerprintjs")).default;
 
 export const getFingerprint = async () => {
 	const FingerprintJS = await FingerprintJSImport();
