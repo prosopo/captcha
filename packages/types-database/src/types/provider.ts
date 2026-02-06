@@ -59,7 +59,6 @@ import {
 	string,
 	type infer as zInfer,
 } from "zod";
-import type { PendingCaptchaRequest } from "../provider/pendingCaptchaRequest.js";
 import { UserSettingsSchema } from "./client.js";
 import type { IDatabase } from "./mongo.js";
 import type { UserAgentInfo } from "./userAgent.js";
@@ -156,7 +155,6 @@ export interface StoredCaptcha {
 		error?: string;
 	};
 	requestedAtTimestamp: Date;
-	deadlineTimestamp?: Date;
 	ipAddress: CompositeIpAddress;
 	providedIp?: CompositeIpAddress;
 	headers: RequestHeaders;
@@ -164,6 +162,7 @@ export interface StoredCaptcha {
 	userSubmitted: boolean;
 	serverChecked: boolean;
 	geolocation?: string;
+	countryCode?: string;
 	vpn?: boolean;
 	parsedUserAgentInfo?: UserAgentInfo;
 	storedAtTimestamp?: Date;
@@ -180,8 +179,25 @@ export interface StoredCaptcha {
 }
 
 export interface UserCommitment extends Commit, StoredCaptcha {
+	pending: boolean;
 	userSignature: string;
+	salt: string;
+	requestHash: string;
+	threshold: number;
+	deadlineTimestamp: Date;
 }
+
+export type PendingImageCaptchaRequest = {
+	dappAccount: string;
+	pending: boolean;
+	salt: string;
+	requestHash: string;
+	deadlineTimestamp: Date;
+	requestedAtTimestamp: Date;
+	ipAddress: CompositeIpAddress;
+	sessionId?: string;
+	threshold: number;
+};
 
 export interface PoWCaptchaStored
 	extends Omit<PoWCaptchaUser, "requestedAtTimestamp">,
@@ -286,6 +302,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	serverChecked: { type: Boolean, required: true },
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
 	geolocation: { type: String, required: false },
+	countryCode: { type: String, required: false },
 	vpn: { type: Boolean, required: false },
 	parsedUserAgentInfo: { type: Object, required: false },
 	sessionId: {
@@ -317,6 +334,7 @@ PoWCaptchaRecordSchema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
 PoWCaptchaRecordSchema.index({ "ipAddress.lower": 1 });
 PoWCaptchaRecordSchema.index({ "ipAddress.upper": 1 });
 PoWCaptchaRecordSchema.index({ "result.reason": 1 });
+PoWCaptchaRecordSchema.index({ countryCode: 1 });
 
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	userAccount: { type: String, required: true },
@@ -347,6 +365,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	requestedAtTimestamp: { type: Date, required: true },
 	lastUpdatedTimestamp: { type: Date, required: false },
 	geolocation: { type: String, required: false },
+	countryCode: { type: String, required: false },
 	vpn: { type: Boolean, required: false },
 	parsedUserAgentInfo: { type: Object, required: false },
 	sessionId: {
@@ -354,6 +373,12 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 		required: false,
 	},
 	coords: { type: [[[Number]]], required: false },
+	// Pending request fields for image captcha workflow
+	pending: { type: Boolean, required: true },
+	salt: { type: String, required: true },
+	requestHash: { type: String, required: true },
+	deadlineTimestamp: { type: Date, required: true },
+	threshold: { type: Number, required: true },
 });
 // Set an index on the commitment id field, descending
 UserCommitmentRecordSchema.index({ id: -1 });
@@ -364,6 +389,9 @@ UserCommitmentRecordSchema.index({ userAccount: 1, dappAccount: 1 });
 UserCommitmentRecordSchema.index({ "ipAddress.lower": 1 });
 UserCommitmentRecordSchema.index({ "ipAddress.upper": 1 });
 UserCommitmentRecordSchema.index({ "result.reason": 1 });
+UserCommitmentRecordSchema.index({ countryCode: 1 });
+UserCommitmentRecordSchema.index({ requestHash: -1 });
+UserCommitmentRecordSchema.index({ pending: 1 });
 
 export const DatasetRecordSchema = new Schema<DatasetWithIds>({
 	contentTree: { type: [[String]], required: true },
@@ -419,25 +447,6 @@ export const UserCommitmentWithSolutionsSchema = UserCommitmentSchema.extend({
 export type UserCommitmentWithSolutions = zInfer<
 	typeof UserCommitmentWithSolutionsSchema
 >;
-
-export type PendingCaptchaRequestMongoose = PendingCaptchaRequest;
-
-export const PendingRecordSchema = new Schema<PendingCaptchaRequestMongoose>({
-	accountId: { type: String, required: true },
-	pending: { type: Boolean, required: true },
-	salt: { type: String, required: true },
-	requestHash: { type: String, required: true },
-	deadlineTimestamp: { type: Number, required: true }, // unix timestamp
-	requestedAtTimestamp: { type: Date, required: true, expires: ONE_WEEK },
-	ipAddress: CompositeIpAddressRecordSchemaObj,
-	sessionId: {
-		type: String,
-		required: false,
-	},
-	threshold: { type: Number, required: true, default: 0.8 },
-});
-// Set an index on the requestHash field, descending
-PendingRecordSchema.index({ requestHash: -1 });
 
 export const ScheduledTaskSchema = object({
 	processName: nativeEnum(ScheduledTaskNames),
@@ -508,6 +517,7 @@ export type Session = {
 	siteKey?: string;
 	reason?: string;
 	blocked?: boolean;
+	countryCode?: string;
 };
 
 export type SessionRecord = mongoose.Document & Session;
@@ -541,6 +551,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	siteKey: { type: String, required: false },
 	reason: { type: String, required: false },
 	blocked: { type: Boolean, required: false },
+	countryCode: { type: String, required: false },
 });
 
 SessionRecordSchema.index({ createdAt: 1 });
@@ -703,16 +714,17 @@ export interface IProviderDatabase extends IDatabase {
 		userAccount: string,
 		requestHash: string,
 		salt: string,
-		deadlineTimestamp: number,
-		requestedAtTimestamp: number,
+		deadlineTimestamp: Date,
+		requestedAtTimestamp: Date,
 		ipAddress: CompositeIpAddress,
 		threshold: number,
 		sessionId?: string,
+		countryCode?: string,
 	): Promise<void>;
 
 	getPendingImageCommitment(
 		requestHash: string,
-	): Promise<PendingCaptchaRequest>;
+	): Promise<PendingImageCaptchaRequest>;
 
 	updatePendingImageCommitmentStatus(requestHash: string): Promise<void>;
 
@@ -820,6 +832,7 @@ export interface IProviderDatabase extends IDatabase {
 		serverChecked?: boolean,
 		userSubmitted?: boolean,
 		userSignature?: string,
+		countryCode?: string,
 	): Promise<void>;
 
 	getPowCaptchaRecordByChallenge(

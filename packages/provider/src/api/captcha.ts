@@ -44,7 +44,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	 * Receives solved CAPTCHA challenges from the user, stores to database, and checks against solution commitment
 	 */
 	router.post(ClientApiPaths.SubmitImageCaptchaSolution, (req, res, next) =>
-		submitImageCaptchaSolution(env, userAccessRulesStorage)(req, res, next),
+		submitImageCaptchaSolution(env)(req, res, next),
 	);
 
 	/**

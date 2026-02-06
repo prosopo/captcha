@@ -262,20 +262,6 @@ export default (
 
 			const ipAddress = getCompositeIpAddress(normalizedIp);
 
-			// Set common session parameters on the frictionless manager
-			tasks.frictionlessManager.setSessionParams({
-				token,
-				score: botScore,
-				threshold: botThreshold,
-				scoreComponents,
-				providerSelectEntropy,
-				ipAddress,
-				webView,
-				iFrame,
-				decryptedHeadHash,
-				siteKey: dapp,
-			});
-
 			// Get country code for geoblocking (skip if env is incomplete)
 			let countryCode: string | undefined;
 			if (env?.config?.maxmindDbPath) {
@@ -294,6 +280,21 @@ export default (
 					}));
 				}
 			}
+
+			// Set common session parameters on the frictionless manager
+			tasks.frictionlessManager.setSessionParams({
+				token,
+				score: botScore,
+				threshold: botThreshold,
+				scoreComponents,
+				providerSelectEntropy,
+				ipAddress,
+				webView,
+				iFrame,
+				decryptedHeadHash,
+				siteKey: dapp,
+				countryCode,
+			});
 
 			// Check if the IP address is blocked
 			const userScope = getRequestUserScope(
@@ -350,6 +351,7 @@ export default (
 						userSitekeyIpHash,
 						reason: FrictionlessReason.ACCESS_POLICY_BLOCK,
 						siteKey: dapp,
+						countryCode,
 					});
 
 					return res.status(401).json({ error: "Unauthorized" });
@@ -370,6 +372,7 @@ export default (
 							userSitekeyIpHash,
 							reason: FrictionlessReason.USER_ACCESS_POLICY,
 							siteKey: dapp,
+							countryCode,
 						}),
 					);
 				}
@@ -387,6 +390,7 @@ export default (
 							userSitekeyIpHash,
 							reason: FrictionlessReason.USER_ACCESS_POLICY,
 							siteKey: dapp,
+							countryCode,
 						}),
 					);
 				}
@@ -431,6 +435,7 @@ export default (
 						userSitekeyIpHash,
 						reason: FrictionlessReason.USER_AGENT_MISMATCH,
 						siteKey: dapp,
+						countryCode,
 					}),
 				);
 			}
@@ -509,6 +514,7 @@ export default (
 									userSitekeyIpHash,
 									reason: FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED,
 									siteKey: dapp,
+									countryCode,
 								}),
 							);
 						}
@@ -544,6 +550,7 @@ export default (
 						userSitekeyIpHash,
 						reason: FrictionlessReason.WEBVIEW_DETECTED,
 						siteKey: dapp,
+						countryCode,
 					}),
 				);
 			}
@@ -577,6 +584,7 @@ export default (
 						userSitekeyIpHash,
 						reason: FrictionlessReason.OLD_TIMESTAMP,
 						siteKey: dapp,
+						countryCode,
 					}),
 				);
 			}
@@ -622,6 +630,7 @@ export default (
 						userSitekeyIpHash,
 						reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
 						siteKey: dapp,
+						countryCode,
 					}),
 				);
 			}
@@ -639,6 +648,7 @@ export default (
 				await tasks.frictionlessManager.sendPowCaptcha({
 					userSitekeyIpHash,
 					siteKey: dapp,
+					countryCode,
 				}),
 			);
 		} catch (err) {

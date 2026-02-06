@@ -166,6 +166,18 @@ export default (
 				},
 			};
 
+			// Get countryCode from session if available, otherwise from geolocation
+			let countryCodeToStore: string | undefined;
+			if (validSessionId) {
+				const sessionRecord =
+					await tasks.db.getSessionRecordBySessionId(validSessionId);
+				countryCodeToStore = sessionRecord?.countryCode;
+			}
+			// If not available from session, use the one we got for access policy
+			if (!countryCodeToStore) {
+				countryCodeToStore = countryCode;
+			}
+
 			const taskData =
 				await tasks.imgCaptchaManager.getRandomCaptchasAndRequestHash(
 					datasetId,
@@ -174,6 +186,7 @@ export default (
 					captchaConfig,
 					clientRecord.settings.imageThreshold ?? 0.8,
 					validSessionId,
+					countryCodeToStore,
 				);
 			const captchaResponse: CaptchaResponseBody = {
 				[ApiParams.status]: "ok",
