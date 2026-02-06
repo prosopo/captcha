@@ -983,7 +983,10 @@ export class ProviderDatabase
 		updates: Partial<UserCommitment>,
 	) {
 		const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
-		await this.tables?.commitment.updateOne(filter, updates);
+		await this.tables?.commitment.updateOne(filter, {
+			...updates,
+			lastUpdatedAtTimestamp: new Date(),
+		});
 	}
 
 	/**
