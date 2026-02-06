@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/env",
-	"version": "3.2.41",
+	"version": "3.2.42",
 	"description": "Path env prosopo environment",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -26,10 +26,10 @@
 	},
 	"dependencies": {
 		"@prosopo/common": "3.1.28",
-		"@prosopo/database": "3.6.12",
+		"@prosopo/database": "3.7.0",
 		"@prosopo/keyring": "2.9.4",
 		"@prosopo/types": "3.8.4",
-		"@prosopo/types-env": "2.7.65",
+		"@prosopo/types-env": "2.7.66",
 		"@prosopo/util-crypto": "13.5.29",
 		"dotenv": "16.4.5"
 	},
