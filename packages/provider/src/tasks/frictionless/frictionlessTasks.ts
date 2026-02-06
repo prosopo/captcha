@@ -95,6 +95,7 @@ export class FrictionlessManager extends CaptchaManager {
 			iFrame: params.iFrame ?? false,
 			decryptedHeadHash: params.decryptedHeadHash,
 			siteKey: params.siteKey,
+			countryCode: params.countryCode,
 		};
 	}
 
@@ -127,6 +128,7 @@ export class FrictionlessManager extends CaptchaManager {
 		reason?: FrictionlessReason,
 		blocked?: boolean,
 		deleted?: boolean,
+		countryCode?: string,
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
@@ -148,6 +150,7 @@ export class FrictionlessManager extends CaptchaManager {
 			siteKey,
 			blocked,
 			deleted,
+			countryCode,
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);
@@ -211,6 +214,8 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.decryptedHeadHash,
 			effectiveParams.reason as FrictionlessReason,
 			effectiveParams.blocked,
+			undefined,
+			effectiveParams.countryCode,
 		);
 
 		return {
@@ -254,6 +259,9 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.iFrame ?? false,
 			effectiveParams.decryptedHeadHash,
 			effectiveParams.reason as FrictionlessReason | undefined,
+			undefined,
+			undefined,
+			effectiveParams.countryCode,
 		);
 		return {
 			[ApiParams.captchaType]: CaptchaType.pow,
@@ -298,6 +306,7 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.reason as FrictionlessReason,
 			true,
 			true,
+			effectiveParams.countryCode,
 		);
 	}
 

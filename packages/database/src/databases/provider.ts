@@ -21,7 +21,6 @@ import {
 	setupRedisIndex,
 } from "@prosopo/redis-client";
 import {
-	ApiParams,
 	type Captcha,
 	type CaptchaResult,
 	type CaptchaSolution,
@@ -46,6 +45,7 @@ import {
 } from "@prosopo/types";
 import type {
 	CompositeIpAddress,
+	PendingImageCaptchaRequest,
 	SessionRecord,
 } from "@prosopo/types-database";
 import {
@@ -61,9 +61,6 @@ import {
 	type DetectorSchema,
 	type IProviderDatabase,
 	type IUserDataSlim,
-	type PendingCaptchaRequest,
-	type PendingCaptchaRequestMongoose,
-	PendingRecordSchema,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
 	type PoWCaptchaStored,
@@ -100,7 +97,6 @@ enum TableNames {
 	solution = "solution",
 	commitment = "commitment",
 	usersolution = "usersolution",
-	pending = "pending",
 	scheduler = "scheduler",
 	powcaptcha = "powcaptcha",
 	client = "client",
@@ -140,11 +136,6 @@ const PROVIDER_TABLES = [
 		collectionName: TableNames.usersolution,
 		modelName: "UserSolution",
 		schema: UserSolutionRecordSchema,
-	},
-	{
-		collectionName: TableNames.pending,
-		modelName: "Pending",
-		schema: PendingRecordSchema,
 	},
 	{
 		collectionName: TableNames.scheduler,
@@ -712,6 +703,7 @@ export class ProviderDatabase
 		userSubmitted = false,
 		storedStatus: StoredStatus = StoredStatusNames.notStored,
 		userSignature?: string,
+		countryCode?: string,
 	): Promise<void> {
 		const tables = this.getTables();
 
@@ -731,6 +723,7 @@ export class ProviderDatabase
 			userSignature,
 			lastUpdatedTimestamp: new Date(),
 			sessionId,
+			countryCode,
 		};
 
 		try {
@@ -1254,11 +1247,12 @@ export class ProviderDatabase
 		userAccount: string,
 		requestHash: string,
 		salt: string,
-		deadlineTimestamp: number,
-		requestedAtTimestamp: number,
+		deadlineTimestamp: Date,
+		requestedAtTimestamp: Date,
 		ipAddress: CompositeIpAddress,
 		threshold: number,
 		sessionId?: string,
+		countryCode?: string,
 	): Promise<void> {
 		if (!isHex(requestHash)) {
 			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
@@ -1268,18 +1262,30 @@ export class ProviderDatabase
 				},
 			});
 		}
-		const pendingRecord: PendingCaptchaRequestMongoose = {
-			accountId: userAccount,
+		const pendingRecord = {
+			userAccount,
 			pending: true,
 			salt,
 			requestHash,
 			deadlineTimestamp,
-			requestedAtTimestamp: new Date(requestedAtTimestamp),
+			requestedAtTimestamp,
 			ipAddress,
 			sessionId,
 			threshold,
+			countryCode,
+			// Placeholder fields required by schema but not needed for pending state
+			dappAccount: "",
+			providerAccount: "",
+			datasetId: "",
+			id: requestHash, // Use requestHash as id for pending records
+			result: { status: CaptchaStatus.pending },
+			headers: {},
+			ja4: "",
+			userSignature: "",
+			userSubmitted: false,
+			serverChecked: false,
 		};
-		await this.tables?.pending.updateOne(
+		await this.tables?.commitment.updateOne(
 			{ requestHash: requestHash },
 			{ $set: pendingRecord },
 			{ upsert: true },
@@ -1287,11 +1293,11 @@ export class ProviderDatabase
 	}
 
 	/**
-	 * @description Get a Dapp user's pending record
+	 * @description Get a user's pending record
 	 */
 	async getPendingImageCommitment(
 		requestHash: string,
-	): Promise<PendingCaptchaRequest> {
+	): Promise<PendingImageCaptchaRequest> {
 		if (!isHex(requestHash)) {
 			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
 				context: {
@@ -1300,16 +1306,26 @@ export class ProviderDatabase
 				},
 			});
 		}
-		// @ts-ignore
-		const filter: Pick<PendingCaptchaRequest, "requestHash"> = {
-			[ApiParams.requestHash]: requestHash,
-		};
 
-		const doc: PendingCaptchaRequest | null | undefined =
-			await this.tables?.pending.findOne(filter).lean<PendingCaptchaRequest>();
+		const doc = await this.tables?.commitment
+			.findOne({
+				requestHash: requestHash,
+				pending: true,
+			})
+			.lean<UserCommitmentRecord>();
 
 		if (doc) {
-			return doc;
+			return {
+				dappAccount: doc.dappAccount,
+				pending: doc.pending,
+				salt: doc.salt,
+				requestHash: doc.requestHash,
+				deadlineTimestamp: doc.deadlineTimestamp,
+				requestedAtTimestamp: doc.requestedAtTimestamp,
+				ipAddress: doc.ipAddress,
+				sessionId: doc.sessionId,
+				threshold: doc.threshold,
+			};
 		}
 
 		throw new ProsopoDBError("DATABASE.PENDING_RECORD_NOT_FOUND", {
@@ -1333,18 +1349,13 @@ export class ProviderDatabase
 			});
 		}
 
-		// @ts-ignore
-		const filter: Pick<PendingCaptchaRequest, [ApiParams.requestHash]> = {
-			[ApiParams.requestHash]: requestHash,
-		};
-		await this.tables?.pending.updateOne<PendingCaptchaRequest>(
-			filter,
+		await this.tables?.commitment.updateOne(
+			{ requestHash: requestHash },
 			{
 				$set: {
-					[CaptchaStatus.pending]: false,
+					pending: false,
 				},
 			},
-			{ upsert: true },
 		);
 	}
 

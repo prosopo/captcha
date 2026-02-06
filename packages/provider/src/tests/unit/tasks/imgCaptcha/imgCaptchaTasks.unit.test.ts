@@ -28,7 +28,7 @@ import {
 import {
 	type IProviderDatabase,
 	IpAddressType,
-	type PendingCaptchaRequest,
+	type PendingImageCaptchaRequest,
 	type UserCommitment,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -399,7 +399,7 @@ describe("ImgCaptchaManager", () => {
 			salt: "salt",
 			deadlineTimestamp: timestamp,
 			currentBlockNumber: 0,
-		} as unknown as PendingCaptchaRequest;
+		} as unknown as PendingImageCaptchaRequest;
 		const userAccount = "userAccount";
 		const captchaIds = ["captcha1"];
 		// biome-ignore lint/suspicious/noExplicitAny: tests
@@ -426,7 +426,7 @@ describe("ImgCaptchaManager", () => {
 			salt: "salt",
 			deadlineTimestamp: timestamp,
 			currentBlockNumber: 0,
-		} as unknown as PendingCaptchaRequest;
+		} as unknown as PendingImageCaptchaRequest;
 		const userAccount = "userAccount";
 		const captchaIds = ["captcha1"];
 
@@ -450,7 +450,7 @@ describe("ImgCaptchaManager", () => {
 
 	it("should get dapp user commitment by ID", async () => {
 		const commitmentId = "commitmentId";
-		const dappUserCommitment: UserCommitment = {
+		const dappUserCommitment: Partial<UserCommitment> = {
 			id: "commitmentId",
 			userAccount: "userAccount",
 			dappAccount: "dappAccount",
@@ -499,7 +499,7 @@ describe("ImgCaptchaManager", () => {
 	it("should get dapp user commitment by account", async () => {
 		const userAccount = "userAccount";
 		const dappAccount = "dappAccount";
-		const dappUserCommitments: UserCommitment[] = [
+		const dappUserCommitments: Partial<UserCommitment>[] = [
 			{
 				id: "commitmentId",
 				userAccount,
@@ -519,7 +519,7 @@ describe("ImgCaptchaManager", () => {
 				headers: { a: "1", b: "2", c: "3" },
 				ja4: "ja4",
 				lastUpdatedTimestamp: new Date(),
-			},
+			} as Partial<UserCommitment>,
 		];
 		// biome-ignore lint/suspicious/noExplicitAny: tests
 		(db.getDappUserCommitmentByAccount as any).mockResolvedValue(
@@ -559,7 +559,7 @@ describe("ImgCaptchaManager", () => {
 			const ipAddress = getIPAddress("1.1.1.1");
 			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
 
-			const commitment: UserCommitment = {
+			const commitment: Partial<UserCommitment> = {
 				id: commitmentId,
 				userAccount,
 				dappAccount,
@@ -631,7 +631,7 @@ describe("ImgCaptchaManager", () => {
 			const ipAddress = getIPAddress("1.1.1.1");
 			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
 
-			const commitment: UserCommitment = {
+			const commitment: Partial<UserCommitment> = {
 				id: commitmentId,
 				userAccount,
 				dappAccount,
@@ -688,7 +688,7 @@ describe("ImgCaptchaManager", () => {
 			const ipAddress = getIPAddress("1.1.1.1");
 			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
 
-			const commitment: UserCommitment = {
+			const commitment: Partial<UserCommitment> = {
 				id: commitmentId,
 				userAccount,
 				dappAccount,
