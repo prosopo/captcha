@@ -1277,7 +1277,7 @@ export class ProviderDatabase
 			dappAccount: "",
 			providerAccount: "",
 			datasetId: "",
-			id: requestHash, // Use requestHash as id for pending records
+			id: "", // id is populated by the user's solution record when the user submits a solution, so we can leave it blank here
 			result: { status: CaptchaStatus.pending },
 			headers: {},
 			ja4: "",
