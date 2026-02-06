@@ -1,5 +1,10 @@
 # @prosopo/api-express-router
 
+## 3.0.54
+### Patch Changes
+
+  - @prosopo/env@3.2.42
+
 ## 3.0.53
 ### Patch Changes
 

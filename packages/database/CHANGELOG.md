@@ -1,5 +1,15 @@
 # @prosopo/database
 
+## 3.7.0
+### Minor Changes
+
+- 3feeea4: Store geolocation. Remove pending image captcha collection
+
+### Patch Changes
+
+- Updated dependencies [3feeea4]
+  - @prosopo/types-database@4.3.0
+
 ## 3.6.12
 ### Patch Changes
 
