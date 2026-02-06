@@ -391,13 +391,13 @@ describe("ImgCaptchaManager", () => {
 
 	it("should validate dapp user solution request is pending", async () => {
 		const requestHash = "requestHash";
-		const timestamp = Date.now() + 10000;
+		const deadlineTimestamp = new Date(Date.now() + 10000);
 		const pendingRecord = {
 			requestHash: "requestHash",
 			userAccount: "userAccount",
 			datasetId: "datasetId",
 			salt: "salt",
-			deadlineTimestamp: timestamp,
+			deadlineTimestamp: deadlineTimestamp,
 			currentBlockNumber: 0,
 		} as unknown as PendingImageCaptchaRequest;
 		const userAccount = "userAccount";
@@ -418,13 +418,13 @@ describe("ImgCaptchaManager", () => {
 
 	it("should return false if deadline has expired", async () => {
 		const requestHash = "requestHash";
-		const timestamp = Date.now() - 10000;
+		const deadline = new Date(Date.now() - 10000);
 		const pendingRecord = {
 			requestHash: "requestHash",
 			userAccount: "userAccount",
 			datasetId: "datasetId",
 			salt: "salt",
-			deadlineTimestamp: timestamp,
+			deadlineTimestamp: deadline,
 			currentBlockNumber: 0,
 		} as unknown as PendingImageCaptchaRequest;
 		const userAccount = "userAccount";
