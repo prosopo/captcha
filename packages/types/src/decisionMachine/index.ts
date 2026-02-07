@@ -64,6 +64,7 @@ export type DecisionMachineInput = {
 	captchaType?: CaptchaType.pow | CaptchaType.image;
 	behavioralDataPacked?: DecisionMachineBehavioralDataPacked;
 	deviceCapability?: string;
+	countryCode?: string;
 };
 
 export type DecisionMachineOutput = {

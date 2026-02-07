@@ -18,6 +18,7 @@ import type { KeyringPair } from "@prosopo/types";
 import type { AssetsResolver, EnvironmentTypes } from "@prosopo/types";
 import type { ProsopoBasicConfigOutput } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
+import type { IGeolocationService } from "./geolocation.js";
 
 export interface ProsopoEnvironment {
 	config: ProsopoBasicConfigOutput;
@@ -28,6 +29,7 @@ export interface ProsopoEnvironment {
 	keyring: Keyring;
 	pair: KeyringPair | undefined;
 	authAccount: KeyringPair | undefined;
+	geolocationService: IGeolocationService;
 	getDb(): IProviderDatabase;
 	isReady(): Promise<void>;
 	importDatabase(): Promise<void>;

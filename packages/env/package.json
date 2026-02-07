@@ -25,6 +25,7 @@
 		"typecheck": "tsc --project tsconfig.types.json"
 	},
 	"dependencies": {
+		"@maxmind/geoip2-node": "5.0.0",
 		"@prosopo/common": "3.1.28",
 		"@prosopo/database": "3.7.0",
 		"@prosopo/keyring": "2.9.4",

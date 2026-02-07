@@ -25,6 +25,7 @@ import type { AssetsResolver, EnvironmentTypes } from "@prosopo/types";
 import type { ProsopoConfigOutput } from "@prosopo/types";
 import type { ProsopoEnvironment } from "@prosopo/types-env";
 import { randomAsHex } from "@prosopo/util-crypto";
+import { GeolocationService } from "./geolocation.js";
 
 export class Environment implements ProsopoEnvironment {
 	config: ProsopoConfigOutput;
@@ -36,6 +37,7 @@ export class Environment implements ProsopoEnvironment {
 	pair: KeyringPair | undefined;
 	authAccount: KeyringPair | undefined;
 	envId: string | undefined;
+	geolocationService: GeolocationService;
 	ready = false;
 
 	constructor(
@@ -57,12 +59,20 @@ export class Environment implements ProsopoEnvironment {
 		});
 		if (this.pair) this.keyring.addPair(this.pair);
 		this.envId = randomAsHex(32).slice(0, 32);
+
+		// Initialize GeolocationService
+		this.geolocationService = new GeolocationService(
+			this.config.maxmindDbPath,
+			this.logger,
+		);
+
 		this.logger.info(() => ({
 			msg: "Environment initialized",
 			data: {
 				envId: this.envId,
 				defaultEnvironment: this.defaultEnvironment,
 				logLevel: this.config.logLevel,
+				maxmindDbPath: this.config.maxmindDbPath || "not configured",
 			},
 		}));
 	}
@@ -132,6 +142,8 @@ export class Environment implements ProsopoEnvironment {
 				await this.db.connect();
 				this.logger.info(() => ({ msg: "Connected to db" }));
 			}
+			// Initialize MaxMind geolocation database
+			await this.geolocationService.initialize();
 			this.ready = true;
 		} catch (err) {
 			throw new ProsopoEnvError("GENERAL.ENVIRONMENT_NOT_READY", {
