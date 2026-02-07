@@ -14,12 +14,13 @@
 
 import type { ReaderModel } from "@maxmind/geoip2-node";
 import type { Logger } from "@prosopo/common";
+import type { IGeolocationService } from "@prosopo/types-env";
 
 export interface GeolocationResult {
 	countryCode?: string;
 }
 
-export class GeolocationService {
+export class GeolocationService implements IGeolocationService {
 	private reader: ReaderModel | null = null;
 	private initPromise: Promise<void> | null = null;
 	private dbPath: string | undefined;

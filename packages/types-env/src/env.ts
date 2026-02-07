@@ -13,12 +13,12 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/common";
-import type { GeolocationService } from "@prosopo/env";
 import type { Keyring } from "@prosopo/keyring";
 import type { KeyringPair } from "@prosopo/types";
 import type { AssetsResolver, EnvironmentTypes } from "@prosopo/types";
 import type { ProsopoBasicConfigOutput } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
+import type { IGeolocationService } from "./geolocation.js";
 
 export interface ProsopoEnvironment {
 	config: ProsopoBasicConfigOutput;
@@ -29,7 +29,7 @@ export interface ProsopoEnvironment {
 	keyring: Keyring;
 	pair: KeyringPair | undefined;
 	authAccount: KeyringPair | undefined;
-	geolocationService: GeolocationService;
+	geolocationService: IGeolocationService;
 	getDb(): IProviderDatabase;
 	isReady(): Promise<void>;
 	importDatabase(): Promise<void>;
