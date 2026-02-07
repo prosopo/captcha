@@ -14,3 +14,4 @@
 
 export * from "./env.js";
 export * from "./provider.js";
+export * from "./geolocation.js";

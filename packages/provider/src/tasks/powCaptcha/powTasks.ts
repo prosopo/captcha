@@ -513,6 +513,7 @@ export class PowCaptchaManager extends CaptchaManager {
 				captchaType: CaptchaType.pow,
 				behavioralDataPacked: challengeRecord.behavioralDataPacked,
 				deviceCapability: challengeRecord.deviceCapability,
+				countryCode: challengeRecord.countryCode,
 			};
 
 			const decision = await this.decisionMachineRunner.decide(

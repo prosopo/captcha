@@ -104,8 +104,8 @@ export default (
 			}
 
 			// Get country code for geoblocking
-			const geoService = getGeolocationService(env);
-			const countryCode = await geoService.getCountryCode(normalizedIp);
+			const countryCode =
+				await env.geolocationService.getCountryCode(normalizedIp);
 
 			const userScope = getRequestUserScope(
 				flatten(req.headers),
