@@ -1866,11 +1866,9 @@ export class ProviderDatabase
 		const filter: Pick<ClientRecord, "account"> = { account };
 		const doc = await this.tables?.client
 			.findOne(filter, {
-				projection: {
-					account: 1,
-					settings: 1,
-					tier: 1,
-				},
+				account: 1,
+				settings: 1,
+				tier: 1,
 			})
 			.lean<ClientRecord>();
 		return doc ? doc : undefined;
