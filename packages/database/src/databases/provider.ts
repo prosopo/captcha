@@ -1260,13 +1260,6 @@ export class ProviderDatabase
 				{
 					$limit: limit,
 				},
-				{
-					$project: {
-						sessionId: 1,
-						storedAtTimestamp: 1,
-						lastUpdatedTimestamp: 1,
-					},
-				},
 			])
 			.then((docs) => docs || []);
 	}
