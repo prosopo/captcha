@@ -557,12 +557,10 @@ export class ProviderDatabase
 		} = { captchaId: { $in: captchaId } };
 		const cursor = this.tables?.captcha
 			.find<Captcha>(filter, {
-				projection: {
-					_id: 0,
-					captchaId: 1,
-					datasetId: 1,
-					items: 1,
-				},
+				_id: 0,
+				captchaId: 1,
+				datasetId: 1,
+				items: 1,
 			})
 			.lean<(Captcha & { _id: unknown })[]>();
 		const docs = await cursor;
