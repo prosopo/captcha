@@ -1148,14 +1148,12 @@ export class ProviderDatabase
 		const filter: Pick<SessionRecord, "sessionId"> = { sessionId };
 		const doc = await this.tables.session
 			.findOne(filter, {
-				projection: {
-					sessionId: 1,
-					countryCode: 1,
-					scoreComponents: 1,
-					webView: 1,
-					reason: 1,
-					decryptedHeadHash: 1,
-				},
+				sessionId: 1,
+				countryCode: 1,
+				scoreComponents: 1,
+				webView: 1,
+				reason: 1,
+				decryptedHeadHash: 1,
 			})
 			.lean<Session>();
 		return doc || undefined;
