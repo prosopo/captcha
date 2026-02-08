@@ -441,11 +441,7 @@ export class ProviderDatabase
 	): Promise<SolutionRecord | null> {
 		const filter: Pick<SolutionRecord, "captchaId"> = { captchaId };
 		const doc = await this.tables?.solution
-			.findOne(filter, {
-				projection: {
-					solution: 1,
-				},
-			})
+			.findOne(filter)
 			.lean<SolutionRecord>();
 		return doc || null;
 	}
