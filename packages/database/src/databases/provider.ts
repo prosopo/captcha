@@ -1586,6 +1586,10 @@ export class ProviderDatabase
 					requestedAtTimestamp: 1,
 					ipAddress: 1,
 					sessionId: 1,
+					userAccount: 1,
+					dappAccount: 1,
+					headers: 1,
+					countryCode: 1,
 				},
 			})
 			.lean<UserCommitmentRecord>();
