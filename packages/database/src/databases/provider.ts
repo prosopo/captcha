@@ -789,24 +789,22 @@ export class ProviderDatabase
 			const record: PoWCaptchaRecord | null | undefined =
 				await this.tables.powcaptcha
 					.findOne(filter, {
-						projection: {
-							challenge: 1,
-							userAccount: 1,
-							dappAccount: 1,
-							requestedAtTimestamp: 1,
-							ipAddress: 1,
-							headers: 1,
-							ja4: 1,
-							result: 1,
-							difficulty: 1,
-							sessionId: 1,
-							countryCode: 1,
-							deviceCapability: 1,
-							behavioralDataPacked: 1,
-							serverChecked: 1,
-							userSubmitted: 1,
-							coords: 1,
-						},
+						challenge: 1,
+						userAccount: 1,
+						dappAccount: 1,
+						requestedAtTimestamp: 1,
+						ipAddress: 1,
+						headers: 1,
+						ja4: 1,
+						result: 1,
+						difficulty: 1,
+						sessionId: 1,
+						countryCode: 1,
+						deviceCapability: 1,
+						behavioralDataPacked: 1,
+						serverChecked: 1,
+						userSubmitted: 1,
+						coords: 1,
 					})
 					.lean<PoWCaptchaRecord>();
 			if (record) {
