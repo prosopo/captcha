@@ -965,13 +965,6 @@ export class ProviderDatabase
 			{
 				$limit: limit,
 			},
-			{
-				$project: {
-					id: 1,
-					storedAtTimestamp: 1,
-					lastUpdatedTimestamp: 1,
-				},
-			},
 		]);
 		return docs || [];
 	}
