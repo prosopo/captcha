@@ -441,7 +441,11 @@ export class ProviderDatabase
 	): Promise<SolutionRecord | null> {
 		const filter: Pick<SolutionRecord, "captchaId"> = { captchaId };
 		const doc = await this.tables?.solution
-			.findOne(filter)
+			.findOne(filter, {
+				projection: {
+					solution: 1,
+				},
+			})
 			.lean<SolutionRecord>();
 		return doc || null;
 	}
@@ -556,7 +560,14 @@ export class ProviderDatabase
 			[key in keyof Pick<Captcha, "captchaId">]: { $in: string[] };
 		} = { captchaId: { $in: captchaId } };
 		const cursor = this.tables?.captcha
-			.find<Captcha>(filter)
+			.find<Captcha>(filter, {
+				projection: {
+					_id: 0,
+					captchaId: 1,
+					datasetId: 1,
+					items: 1,
+				},
+			})
 			.lean<(Captcha & { _id: unknown })[]>();
 		const docs = await cursor;
 
@@ -776,7 +787,28 @@ export class ProviderDatabase
 				[key in keyof Pick<PoWCaptchaRecord, "challenge">]: string;
 			} = { challenge };
 			const record: PoWCaptchaRecord | null | undefined =
-				await this.tables.powcaptcha.findOne(filter).lean<PoWCaptchaRecord>();
+				await this.tables.powcaptcha
+					.findOne(filter, {
+						projection: {
+							challenge: 1,
+							userAccount: 1,
+							dappAccount: 1,
+							requestedAtTimestamp: 1,
+							ipAddress: 1,
+							headers: 1,
+							ja4: 1,
+							result: 1,
+							difficulty: 1,
+							sessionId: 1,
+							countryCode: 1,
+							deviceCapability: 1,
+							behavioralDataPacked: 1,
+							serverChecked: 1,
+							userSubmitted: 1,
+							coords: 1,
+						},
+					})
+					.lean<PoWCaptchaRecord>();
 			if (record) {
 				this.logger.info(() => ({
 					data: { challenge },
@@ -941,6 +973,13 @@ export class ProviderDatabase
 			{
 				$limit: limit,
 			},
+			{
+				$project: {
+					id: 1,
+					storedAtTimestamp: 1,
+					lastUpdatedTimestamp: 1,
+				},
+			},
 		]);
 		return docs || [];
 	}
@@ -1039,6 +1078,13 @@ export class ProviderDatabase
 			{
 				$limit: limit,
 			},
+			{
+				$project: {
+					challenge: 1,
+					storedAtTimestamp: 1,
+					lastUpdatedTimestamp: 1,
+				},
+			},
 		]);
 		return docs || [];
 	}
@@ -1100,7 +1146,18 @@ export class ProviderDatabase
 		sessionId: string,
 	): Promise<Session | undefined> {
 		const filter: Pick<SessionRecord, "sessionId"> = { sessionId };
-		const doc = await this.tables.session.findOne(filter).lean<Session>();
+		const doc = await this.tables.session
+			.findOne(filter, {
+				projection: {
+					sessionId: 1,
+					countryCode: 1,
+					scoreComponents: 1,
+					webView: 1,
+					reason: 1,
+					decryptedHeadHash: 1,
+				},
+			})
+			.lean<Session>();
 		return doc || undefined;
 	}
 
@@ -1226,6 +1283,13 @@ export class ProviderDatabase
 				},
 				{
 					$limit: limit,
+				},
+				{
+					$project: {
+						sessionId: 1,
+						storedAtTimestamp: 1,
+						lastUpdatedTimestamp: 1,
+					},
 				},
 			])
 			.then((docs) => docs || []);
@@ -1516,7 +1580,16 @@ export class ProviderDatabase
 	): Promise<UserCommitmentRecord | undefined> {
 		const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
 		const commitmentCursor = this.tables?.commitment
-			?.findOne(filter)
+			?.findOne(filter, {
+				projection: {
+					id: 1,
+					result: 1,
+					serverChecked: 1,
+					requestedAtTimestamp: 1,
+					ipAddress: 1,
+					sessionId: 1,
+				},
+			})
 			.lean<UserCommitmentRecord>();
 
 		const doc = await commitmentCursor;
@@ -1537,7 +1610,10 @@ export class ProviderDatabase
 			userAccount,
 			dappAccount,
 		};
-		const project = { _id: 0 };
+		const project = {
+			_id: 0,
+			result: 1,
+		};
 		const sort = { sort: { _id: -1 } };
 		const docs: UserCommitmentRecord[] | null | undefined =
 			await this.tables?.commitment
@@ -1788,7 +1864,15 @@ export class ProviderDatabase
 	 */
 	async getClientRecord(account: string): Promise<ClientRecord | undefined> {
 		const filter: Pick<ClientRecord, "account"> = { account };
-		const doc = await this.tables?.client.findOne(filter).lean<ClientRecord>();
+		const doc = await this.tables?.client
+			.findOne(filter, {
+				projection: {
+					account: 1,
+					settings: 1,
+					tier: 1,
+				},
+			})
+			.lean<ClientRecord>();
 		return doc ? doc : undefined;
 	}
 
