@@ -23,28 +23,12 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import { flatten } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
-import { GeolocationService } from "../../../../env/src/services/geolocation.js";
 import { getCompositeIpAddress } from "../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
 import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
 import { getRequestUserScope } from "../blacklistRequestInspector.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
-
-// Singleton geolocation service instance
-let geolocationService: GeolocationService | null = null;
-
-const getGeolocationService = (
-	env: ProviderEnvironment,
-): GeolocationService => {
-	if (!geolocationService) {
-		geolocationService = new GeolocationService(
-			env.config.maxmindDbPath,
-			env.logger,
-		);
-	}
-	return geolocationService;
-};
 
 export default (
 	env: ProviderEnvironment,
