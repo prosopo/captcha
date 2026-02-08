@@ -1070,13 +1070,6 @@ export class ProviderDatabase
 			{
 				$limit: limit,
 			},
-			{
-				$project: {
-					challenge: 1,
-					storedAtTimestamp: 1,
-					lastUpdatedTimestamp: 1,
-				},
-			},
 		]);
 		return docs || [];
 	}
