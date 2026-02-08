@@ -27,26 +27,10 @@ import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import { flatten, getIPAddress } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../express.js";
-import { GeolocationService } from "../../services/geolocation.js";
 import { Tasks } from "../../tasks/index.js";
 import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
 import { getRequestUserScope } from "../blacklistRequestInspector.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
-
-// Singleton geolocation service instance
-let geolocationService: GeolocationService | null = null;
-
-const getGeolocationService = (
-	env: ProviderEnvironment,
-): GeolocationService => {
-	if (!geolocationService) {
-		geolocationService = new GeolocationService(
-			env.config.maxmindDbPath,
-			env.logger,
-		);
-	}
-	return geolocationService;
-};
 
 export default (
 	env: ProviderEnvironment,

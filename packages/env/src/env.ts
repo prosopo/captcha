@@ -25,7 +25,7 @@ import type { AssetsResolver, EnvironmentTypes } from "@prosopo/types";
 import type { ProsopoConfigOutput } from "@prosopo/types";
 import type { ProsopoEnvironment } from "@prosopo/types-env";
 import { randomAsHex } from "@prosopo/util-crypto";
-import { GeolocationService } from "./geolocation.js";
+import { GeolocationService } from "./services/geolocation.js";
 
 export class Environment implements ProsopoEnvironment {
 	config: ProsopoConfigOutput;
