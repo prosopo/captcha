@@ -645,6 +645,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				captchaResult: "passed",
 				headers: solution.headers,
 				captchaType: CaptchaType.image,
+				countryCode: solution.countryCode,
 			};
 
 			try {

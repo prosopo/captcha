@@ -26,7 +26,6 @@ import type { NextFunction, Response } from "express";
 import type { Request } from "express";
 import { getCompositeIpAddress } from "../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../express.js";
-import { GeolocationService } from "../../services/geolocation.js";
 import {
 	FrictionlessManager,
 	FrictionlessReason,
@@ -42,21 +41,6 @@ import {
 	determineContextType,
 	getContextThreshold,
 } from "./contextAwareValidation.js";
-
-// Singleton geolocation service instance
-let geolocationService: GeolocationService | null = null;
-
-const getGeolocationService = (
-	env: ProviderEnvironment,
-): GeolocationService => {
-	if (!geolocationService) {
-		geolocationService = new GeolocationService(
-			env.config.maxmindDbPath,
-			env.logger,
-		);
-	}
-	return geolocationService;
-};
 
 const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
 
@@ -266,8 +250,8 @@ export default (
 			let countryCode: string | undefined;
 			if (env?.config?.maxmindDbPath) {
 				try {
-					const geoService = getGeolocationService(env);
-					countryCode = await geoService.getCountryCode(normalizedIp);
+					countryCode =
+						await env.geolocationService.getCountryCode(normalizedIp);
 					req.logger?.debug?.(() => ({
 						msg: "Resolved country code for geoblocking",
 						countryCode,

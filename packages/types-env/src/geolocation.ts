@@ -12,6 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export * from "./env.js";
-export * from "./provider.js";
-export * from "./services/geolocation.js";
+export interface IGeolocationService {
+	/**
+	 * Initialize the MaxMind Reader.
+	 * This can be called at startup or will be lazy-initialized on first lookup.
+	 */
+	initialize(): Promise<void>;
+
+	/**
+	 * Lookup the country code for an IP address.
+	 * Returns undefined if lookup fails (permissive).
+	 */
+	getCountryCode(ip: string): Promise<string | undefined>;
+
+	/**
+	 * Check if the geolocation service is available.
+	 */
+	isAvailable(): boolean;
+}
