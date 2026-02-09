@@ -1107,4 +1107,412 @@ describe("PowCaptchaManager", () => {
 			expect(result.verified).toBe(true);
 		});
 	});
+
+	describe("Decision machine with no-cache header and no behavioral data", () => {
+		it("should deny when no-cache header is present and no behavioral data exists", async () => {
+			const dappAccount = "5EZVvsHMrKCFKp5NYNoTyDjTjetoVo1Z4UNNbTwJf1GfN6Xm";
+			const timestamp = 1770650564052;
+			const userAccount = "5CBFuSD5rgzhwVLLtDsA1WbLVkfrrAMEHdbiBBuZ78QvcEpv";
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}${POW_SEPARATOR}351147`;
+			const timeout = 1000;
+			const ipAddress = getIPAddress("81.159.254.145");
+
+			// Headers matching the user's real-world scenario
+			const headers: RequestHeaders = {
+				host: "pronode2.prosopo.io",
+				"user-agent":
+					"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+				"content-length": "182",
+				accept: "*/*",
+				"accept-encoding": "gzip, deflate, br, zstd",
+				"accept-language": "de,de-DE;q=0.9,en;q=0.8",
+				"cache-control": "no-cache", // This is the key header
+				"content-type": "application/json",
+				dnt: "1",
+				origin: "https://www.twickets.live",
+				pragma: "no-cache",
+				priority: "u=1, i",
+				"prosopo-site-key": dappAccount,
+				"prosopo-user": userAccount,
+				referer: "https://www.twickets.live/",
+				"sec-ch-ua":
+					'"Google Chrome";v="126", "Chromium";v="126", "Not_A Brand";v="24"',
+				"sec-ch-ua-mobile": "?0",
+				"sec-ch-ua-platform": '"Windows"',
+				"sec-fetch-dest": "empty",
+				"sec-fetch-mode": "cors",
+				"sec-fetch-site": "cross-site",
+			};
+
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				difficulty: 4,
+				dappAccount,
+				userAccount,
+				requestedAtTimestamp: new Date(timestamp),
+				result: { status: CaptchaStatus.approved },
+				userSubmitted: true,
+				serverChecked: false,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers,
+				ja4: "t13d1516h2_8daaf6152771_02713d6af862",
+				providerSignature: "testSignature",
+				lastUpdatedTimestamp: new Date(),
+				sessionId: "pronode2-6d5deeee-78f1-4af0-97b3-f070037438dd",
+				// NOTE: No behavioralDataPacked - this is key to the test
+			};
+
+			// Decision machine source code matching the user's actual decision machine
+			const decisionMachineSource = `
+/**
+ * Decision machine for blocking German requests with no-cache header
+ */
+
+function checkNoCacheNoBehavioural(headers, behavioralDataPacked) {
+	const cacheControl =
+		"cache-control" in headers ? headers["cache-control"] : "";
+
+	const hasNoCache = cacheControl.toLowerCase().includes("no-cache");
+
+	const hasNoBehavioralData =
+		!behavioralDataPacked || behavioralDataPacked === "0";
+
+	if (hasNoCache && hasNoBehavioralData) {
+		return {
+			decision: "deny",
+			reason: "no-cache request with no behavioral data",
+			score: 0,
+			tags: ["blocked"],
+		};
+	}
+
+	return null;
+}
+
+module.exports = (input) => {
+	const {
+		userAccount,
+		dappAccount,
+		captchaResult,
+		headers,
+		captchaType,
+		countryCode,
+		behavioralDataPacked,
+	} = input;
+
+	const noCacheNoBehavioural = checkNoCacheNoBehavioural(
+		headers,
+		behavioralDataPacked,
+	);
+	if (noCacheNoBehavioural) {
+		return noCacheNoBehavioural;
+	}
+
+	if (captchaResult === "passed") {
+		return {
+			decision: "allow",
+			reason: "Captcha verification successful",
+			score: 100,
+			tags: [\`captcha-type:\${captchaType || "unknown"}\`],
+		};
+	}
+
+	return {
+		decision: "deny",
+		reason: "Captcha verification failed",
+		score: 0,
+		tags: ["blocked"],
+	};
+};
+`;
+
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.updatePowCaptchaRecord as any).mockResolvedValue(undefined);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(verifyRecency as any).mockImplementation(() => true);
+
+			// Mock the decision machine runner to use the real decision machine source
+			const originalDecide =
+				// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+				(powCaptchaManager as any).decisionMachineRunner.decide;
+
+			// Create a mock that executes the actual decision machine code
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(powCaptchaManager as any).decisionMachineRunner.decide = async (
+				// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+				input: any,
+			) => {
+				// Execute the decision machine source code
+
+				const module = { exports: {} };
+				// biome-ignore lint/security/noGlobalEval: This is a test
+				const decideFn = eval(
+					`(function() { ${decisionMachineSource}; return module.exports; })()`,
+				);
+				return decideFn(input);
+			};
+
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				timeout,
+				mockEnv,
+			);
+
+			// The captcha should be DENIED because:
+			// 1. cache-control header contains "no-cache"
+			// 2. No behavioral data is present (behavioralDataPacked is undefined)
+			expect(result.verified).toBe(false);
+			expect(db.updatePowCaptchaRecord).toHaveBeenCalledWith(challenge, {
+				result: {
+					status: CaptchaStatus.disapproved,
+					reason: "no-cache request with no behavioral data",
+				},
+			});
+
+			// Restore original decision machine
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(powCaptchaManager as any).decisionMachineRunner.decide = originalDecide;
+		});
+
+		it("should allow when no-cache header is present but behavioral data exists", async () => {
+			const dappAccount = "5EZVvsHMrKCFKp5NYNoTyDjTjetoVo1Z4UNNbTwJf1GfN6Xm";
+			const timestamp = 1770650564052;
+			const userAccount = "5CBFuSD5rgzhwVLLtDsA1WbLVkfrrAMEHdbiBBuZ78QvcEpv";
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}${POW_SEPARATOR}351147`;
+			const timeout = 1000;
+			const ipAddress = getIPAddress("81.159.254.145");
+
+			const headers: RequestHeaders = {
+				"cache-control": "no-cache",
+				"user-agent": "Mozilla/5.0",
+			};
+
+			const behavioralDataPacked: BehavioralDataPacked = {
+				c1: [1, 2, 3],
+				c2: [4, 5, 6],
+				c3: [7, 8, 9],
+				d: "test-device",
+			};
+
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				difficulty: 4,
+				dappAccount,
+				userAccount,
+				requestedAtTimestamp: new Date(timestamp),
+				result: { status: CaptchaStatus.approved },
+				userSubmitted: true,
+				serverChecked: false,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers,
+				ja4: "t13d1516h2_8daaf6152771_02713d6af862",
+				providerSignature: "testSignature",
+				lastUpdatedTimestamp: new Date(),
+				behavioralDataPacked, // Has behavioral data
+				deviceCapability: "test-device",
+			};
+
+			const decisionMachineSource = `
+function checkNoCacheNoBehavioural(headers, behavioralDataPacked) {
+	const cacheControl =
+		"cache-control" in headers ? headers["cache-control"] : "";
+	const hasNoCache = cacheControl.toLowerCase().includes("no-cache");
+	const hasNoBehavioralData =
+		!behavioralDataPacked || behavioralDataPacked === "0";
+
+	if (hasNoCache && hasNoBehavioralData) {
+		return {
+			decision: "deny",
+			reason: "no-cache request with no behavioral data",
+			score: 0,
+			tags: ["blocked"],
+		};
+	}
+	return null;
+}
+
+module.exports = (input) => {
+	const noCacheNoBehavioural = checkNoCacheNoBehavioural(
+		input.headers,
+		input.behavioralDataPacked,
+	);
+	if (noCacheNoBehavioural) {
+		return noCacheNoBehavioural;
+	}
+
+	if (input.captchaResult === "passed") {
+		return {
+			decision: "allow",
+			reason: "Captcha verification successful",
+			score: 100,
+			tags: [\`captcha-type:\${input.captchaType || "unknown"}\`],
+		};
+	}
+
+	return {
+		decision: "deny",
+		reason: "Captcha verification failed",
+		score: 0,
+		tags: ["blocked"],
+	};
+};
+`;
+
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(verifyRecency as any).mockImplementation(() => true);
+
+			const originalDecide =
+				// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+				(powCaptchaManager as any).decisionMachineRunner.decide;
+
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(powCaptchaManager as any).decisionMachineRunner.decide = async (
+				// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+				input: any,
+			) => {
+				const module = { exports: {} };
+				// biome-ignore lint/security/noGlobalEval: This is a test
+				const decideFn = eval(
+					`(function() { ${decisionMachineSource}; return module.exports; })()`,
+				);
+				return decideFn(input);
+			};
+
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				timeout,
+				mockEnv,
+			);
+
+			// Should be allowed because behavioral data exists
+			expect(result.verified).toBe(true);
+
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(powCaptchaManager as any).decisionMachineRunner.decide = originalDecide;
+		});
+
+		it("should allow when behavioral data is missing but no no-cache header", async () => {
+			const dappAccount = "5EZVvsHMrKCFKp5NYNoTyDjTjetoVo1Z4UNNbTwJf1GfN6Xm";
+			const timestamp = 1770650564052;
+			const userAccount = "5CBFuSD5rgzhwVLLtDsA1WbLVkfrrAMEHdbiBBuZ78QvcEpv";
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}${POW_SEPARATOR}351147`;
+			const timeout = 1000;
+			const ipAddress = getIPAddress("81.159.254.145");
+
+			const headers: RequestHeaders = {
+				"user-agent": "Mozilla/5.0",
+				// No cache-control header
+			};
+
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				difficulty: 4,
+				dappAccount,
+				userAccount,
+				requestedAtTimestamp: new Date(timestamp),
+				result: { status: CaptchaStatus.approved },
+				userSubmitted: true,
+				serverChecked: false,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers,
+				ja4: "t13d1516h2_8daaf6152771_02713d6af862",
+				providerSignature: "testSignature",
+				lastUpdatedTimestamp: new Date(),
+				// No behavioralDataPacked
+			};
+
+			const decisionMachineSource = `
+function checkNoCacheNoBehavioural(headers, behavioralDataPacked) {
+	const cacheControl =
+		"cache-control" in headers ? headers["cache-control"] : "";
+	const hasNoCache = cacheControl.toLowerCase().includes("no-cache");
+	const hasNoBehavioralData =
+		!behavioralDataPacked || behavioralDataPacked === "0";
+
+	if (hasNoCache && hasNoBehavioralData) {
+		return {
+			decision: "deny",
+			reason: "no-cache request with no behavioral data",
+			score: 0,
+			tags: ["blocked"],
+		};
+	}
+	return null;
+}
+
+module.exports = (input) => {
+	const noCacheNoBehavioural = checkNoCacheNoBehavioural(
+		input.headers,
+		input.behavioralDataPacked,
+	);
+	if (noCacheNoBehavioural) {
+		return noCacheNoBehavioural;
+	}
+
+	if (input.captchaResult === "passed") {
+		return {
+			decision: "allow",
+			reason: "Captcha verification successful",
+			score: 100,
+			tags: [\`captcha-type:\${input.captchaType || "unknown"}\`],
+		};
+	}
+
+	return {
+		decision: "deny",
+		reason: "Captcha verification failed",
+		score: 0,
+		tags: ["blocked"],
+	};
+};
+`;
+
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(verifyRecency as any).mockImplementation(() => true);
+
+			const originalDecide =
+				// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+				(powCaptchaManager as any).decisionMachineRunner.decide;
+
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(powCaptchaManager as any).decisionMachineRunner.decide = async (
+				// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+				input: any,
+			) => {
+				const module = { exports: {} };
+				// biome-ignore lint/security/noGlobalEval: This is a test
+				const decideFn = eval(
+					`(function() { ${decisionMachineSource}; return module.exports; })()`,
+				);
+				return decideFn(input);
+			};
+
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				timeout,
+				mockEnv,
+			);
+
+			// Should be allowed because no-cache header is missing
+			expect(result.verified).toBe(true);
+
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(powCaptchaManager as any).decisionMachineRunner.decide = originalDecide;
+		});
+	});
 });

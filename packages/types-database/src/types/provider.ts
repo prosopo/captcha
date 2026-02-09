@@ -19,6 +19,7 @@ import {
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
+	PowChallengeIdSchema,
 	Tier,
 } from "@prosopo/types";
 import {
@@ -57,6 +58,7 @@ import {
 	number,
 	object,
 	string,
+	tuple,
 	type infer as zInfer,
 } from "zod";
 import { UserSettingsSchema } from "./client.js";
@@ -187,22 +189,6 @@ export interface UserCommitment extends Commit, StoredCaptcha {
 	deadlineTimestamp: Date;
 }
 
-export type PendingImageCaptchaRequest = {
-	dappAccount: string;
-	pending: boolean;
-	salt: string;
-	requestHash: string;
-	deadlineTimestamp: Date;
-	requestedAtTimestamp: Date;
-	ipAddress: CompositeIpAddress;
-	sessionId?: string;
-	threshold: number;
-};
-
-export interface PoWCaptchaStored
-	extends Omit<PoWCaptchaUser, "requestedAtTimestamp">,
-		StoredCaptcha {}
-
 const CaptchaResultSchema = object({
 	status: nativeEnum(CaptchaStatus),
 	reason: TranslationKeysSchema.optional(),
@@ -227,8 +213,111 @@ export const UserCommitmentSchema = object({
 	requestedAtTimestamp: date(),
 	lastUpdatedTimestamp: date().optional(),
 	sessionId: string().optional(),
-	coords: array(array(array(number()))).optional(),
+	coords: array(array(tuple([number(), number()]))).optional(),
+	// Pending request fields for image captcha workflow
+	pending: boolean(),
+	salt: string(),
+	requestHash: string(),
+	deadlineTimestamp: date(),
+	threshold: number(),
+}) satisfies ZodType<UserCommitment>;
+
+// Zod schema for ScoreComponents
+export const ScoreComponentsSchema = object({
+	baseScore: number(),
+	lScore: number().optional(),
+	timeout: number().optional(),
+	accessPolicy: number().optional(),
+	unverifiedHost: number().optional(),
+	webView: number().optional(),
 });
+
+// Zod schema for Session
+export const SessionSchema = object({
+	sessionId: string(),
+	createdAt: date(),
+	token: string(),
+	score: number(),
+	threshold: number(),
+	scoreComponents: ScoreComponentsSchema,
+	providerSelectEntropy: number(),
+	ipAddress: CompositeIpAddressSchema,
+	captchaType: nativeEnum(CaptchaType),
+	solvedImagesCount: number().optional(),
+	powDifficulty: number().optional(),
+	storedAtTimestamp: date().optional(),
+	lastUpdatedTimestamp: date().optional(),
+	deleted: boolean().optional(),
+	userSitekeyIpHash: string().optional(),
+	webView: boolean(),
+	iFrame: boolean(),
+	decryptedHeadHash: string(),
+	siteKey: string().optional(),
+	reason: string().optional(),
+	blocked: boolean().optional(),
+	countryCode: string().optional(),
+}) satisfies ZodType<Session>;
+
+// Zod schema for BehavioralDataPacked
+const BehavioralDataPackedSchema = object({
+	c1: array(any()),
+	c2: array(any()),
+	c3: array(any()),
+	d: string(),
+});
+
+// Zod schema for PoWCaptchaStored
+// PoWCaptchaStored = PoWCaptchaUser (minus requestedAtTimestamp) + StoredCaptcha
+// Note: challenge uses PowChallengeIdSchema for runtime validation
+// The PoWCaptchaStored interface enforces the PoWChallengeId template literal type at compile time
+export const PoWCaptchaStoredSchema = object({
+	// From PoWCaptchaUser (extends PoWCaptcha)
+	challenge: PowChallengeIdSchema,
+	difficulty: number(),
+	providerSignature: string(),
+	userSignature: string().optional(),
+	score: number().optional(),
+	userAccount: string(),
+	dappAccount: string(),
+	// From StoredCaptcha
+	result: CaptchaResultSchema,
+	requestedAtTimestamp: date(),
+	ipAddress: CompositeIpAddressSchema,
+	providedIp: CompositeIpAddressSchema.optional(),
+	headers: object({}).catchall(string()),
+	ja4: string(),
+	userSubmitted: boolean(),
+	serverChecked: boolean(),
+	geolocation: string().optional(),
+	countryCode: string().optional(),
+	vpn: boolean().optional(),
+	parsedUserAgentInfo: any().optional(),
+	storedAtTimestamp: date().optional(),
+	lastUpdatedTimestamp: date().optional(),
+	sessionId: string().optional(),
+	coords: array(array(tuple([number(), number()]))).optional(),
+	mouseEvents: array(object({}).catchall(any())).optional(),
+	touchEvents: array(object({}).catchall(any())).optional(),
+	clickEvents: array(object({}).catchall(any())).optional(),
+	deviceCapability: string().optional(),
+	behavioralDataPacked: BehavioralDataPackedSchema.optional(),
+}) satisfies ZodType<PoWCaptchaStored>;
+
+export type PendingImageCaptchaRequest = {
+	dappAccount: string;
+	pending: boolean;
+	salt: string;
+	requestHash: string;
+	deadlineTimestamp: Date;
+	requestedAtTimestamp: Date;
+	ipAddress: CompositeIpAddress;
+	sessionId?: string;
+	threshold: number;
+};
+
+export interface PoWCaptchaStored
+	extends Omit<PoWCaptchaUser, "requestedAtTimestamp">,
+		StoredCaptcha {}
 
 export interface SolutionRecord extends CaptchaSolution {
 	datasetId: string;
