@@ -1,5 +1,17 @@
 # @prosopo/database
 
+## 3.8.0
+### Minor Changes
+
+- d329e63: Use projections to speed up queries
+
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+  - @prosopo/types@3.9.0
+  - @prosopo/types-database@4.3.1
+  - @prosopo/user-access-policy@3.6.6
+
 ## 3.7.0
 ### Minor Changes
 

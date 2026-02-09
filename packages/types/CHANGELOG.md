@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 3.9.0
+### Minor Changes
+
+- ff58a70: Load the geolocation service at startup only
+
 ## 3.8.4
 ### Patch Changes
 

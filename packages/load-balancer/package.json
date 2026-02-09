@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/load-balancer",
-	"version": "2.8.21",
+	"version": "2.8.22",
 	"description": "Provider load balancer",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -37,7 +37,7 @@
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
 		"@prosopo/common": "3.1.28",
-		"@prosopo/types": "3.8.4",
+		"@prosopo/types": "3.9.0",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {

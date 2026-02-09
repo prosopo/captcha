@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/react-procaptcha-integration-demo",
-	"version": "1.1.48",
+	"version": "1.1.49",
 	"type": "module",
 	"engines": {
 		"node": "^24",
@@ -25,7 +25,7 @@
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo"
 	},
 	"dependencies": {
-		"@prosopo/react-procaptcha-wrapper": "1.1.48",
+		"@prosopo/react-procaptcha-wrapper": "1.1.49",
 		"react": "18.3.1",
 		"react-dom": "18.3.1"
 	},
