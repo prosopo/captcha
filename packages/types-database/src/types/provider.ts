@@ -191,7 +191,7 @@ export interface UserCommitment extends Commit, StoredCaptcha {
 
 const CaptchaResultSchema = object({
 	status: nativeEnum(CaptchaStatus),
-	reason: TranslationKeysSchema.optional(),
+	reason: string().optional(), // Should be translation key but DecisionMachines submit random strings as reason, so we can't validate against TranslationKeysSchema here
 	error: string().optional(),
 }) satisfies ZodType<CaptchaResult>;
 
@@ -414,6 +414,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 		},
 		required: false,
 	},
+	providerSignature: { type: String, required: true },
 });
 
 // Set an index on the captchaId field, ascending
