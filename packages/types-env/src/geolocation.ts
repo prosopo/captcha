@@ -12,17 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ApiParams } from "@prosopo/types";
-import type { CompositeIpAddress } from "../types/index.js";
+export interface IGeolocationService {
+	/**
+	 * Initialize the MaxMind Reader.
+	 * This can be called at startup or will be lazy-initialized on first lookup.
+	 */
+	initialize(): Promise<void>;
 
-export interface PendingCaptchaRequest {
-	accountId: string;
-	pending: boolean;
-	salt: string;
-	[ApiParams.requestHash]: string;
-	deadlineTimestamp: number; // unix timestamp
-	requestedAtTimestamp: Date;
-	ipAddress: CompositeIpAddress;
-	sessionId?: string;
-	threshold: number;
+	/**
+	 * Lookup the country code for an IP address.
+	 * Returns undefined if lookup fails (permissive).
+	 */
+	getCountryCode(ip: string): Promise<string | undefined>;
+
+	/**
+	 * Check if the geolocation service is available.
+	 */
+	isAvailable(): boolean;
 }

@@ -1,5 +1,22 @@
 # @prosopo/procaptcha-pow
 
+## 2.8.36
+### Patch Changes
+
+- 592adf1: Don't make people wait so long for a new session
+- Updated dependencies [ff58a70]
+  - @prosopo/types@3.9.0
+  - @prosopo/api@3.1.46
+  - @prosopo/procaptcha-common@2.9.28
+
+## 2.8.35
+### Patch Changes
+
+- Updated dependencies [d2431cd]
+  - @prosopo/types@3.8.4
+  - @prosopo/api@3.1.45
+  - @prosopo/procaptcha-common@2.9.27
+
 ## 2.8.34
 ### Patch Changes
 

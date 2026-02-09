@@ -1,5 +1,36 @@
 # @prosopo/database
 
+## 3.8.0
+### Minor Changes
+
+- d329e63: Use projections to speed up queries
+
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+  - @prosopo/types@3.9.0
+  - @prosopo/types-database@4.3.1
+  - @prosopo/user-access-policy@3.6.6
+
+## 3.7.0
+### Minor Changes
+
+- 3feeea4: Store geolocation. Remove pending image captcha collection
+
+### Patch Changes
+
+- Updated dependencies [3feeea4]
+  - @prosopo/types-database@4.3.0
+
+## 3.6.12
+### Patch Changes
+
+- Updated dependencies [4c08158]
+- Updated dependencies [d2431cd]
+  - @prosopo/types-database@4.2.4
+  - @prosopo/types@3.8.4
+  - @prosopo/user-access-policy@3.6.5
+
 ## 3.6.11
 ### Patch Changes
 

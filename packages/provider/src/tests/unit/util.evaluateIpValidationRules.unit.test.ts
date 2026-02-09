@@ -31,6 +31,7 @@ const mockLogger = {
 
 describe("evaluateIpValidationRules", () => {
 	const baseRules: IIPValidationRules = {
+		enabled: true,
 		actions: {
 			countryChangeAction: IPValidationAction.Flag,
 			cityChangeAction: IPValidationAction.Allow,
@@ -267,6 +268,7 @@ describe("evaluateIpValidationRules", () => {
 
 	it("returns no flag if one condition is true but requireAllConditions is true", () => {
 		const requireAllRules: IIPValidationRules = {
+			enabled: true,
 			actions: {
 				countryChangeAction: IPValidationAction.Reject,
 				cityChangeAction: IPValidationAction.Allow,

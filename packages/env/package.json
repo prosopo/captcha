@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/env",
-	"version": "3.2.40",
+	"version": "3.3.0",
 	"description": "Path env prosopo environment",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -22,14 +22,16 @@
 		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --project tsconfig.types.json"
+		"typecheck": "tsc --project tsconfig.types.json",
+		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
 	},
 	"dependencies": {
+		"@maxmind/geoip2-node": "5.0.0",
 		"@prosopo/common": "3.1.28",
-		"@prosopo/database": "3.6.11",
-		"@prosopo/keyring": "2.9.3",
-		"@prosopo/types": "3.8.3",
-		"@prosopo/types-env": "2.7.64",
+		"@prosopo/database": "3.8.0",
+		"@prosopo/keyring": "2.9.5",
+		"@prosopo/types": "3.9.0",
+		"@prosopo/types-env": "2.8.0",
 		"@prosopo/util-crypto": "13.5.29",
 		"dotenv": "16.4.5"
 	},

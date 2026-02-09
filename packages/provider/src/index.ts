@@ -31,3 +31,4 @@ export * from "./api/robotsMiddleware.js";
 export * from "./compositeIpAddress.js";
 export * from "./services/ipComparison.js";
 export * from "./api/blacklistRequestInspector.js";
+export { FrictionlessReason } from "./tasks/frictionless/frictionlessTasks.js";

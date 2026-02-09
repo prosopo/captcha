@@ -19,7 +19,6 @@ import {
 	computePendingRequestHash,
 	parseAndSortCaptchaSolutions,
 } from "@prosopo/datasets";
-import type { KeyringPair } from "@prosopo/types";
 import {
 	ApiParams,
 	type Captcha,
@@ -33,6 +32,7 @@ import {
 	type Hash,
 	type IPAddress,
 	type ImageVerificationResponse,
+	type KeyringPair,
 	type ProsopoCaptchaCountConfigSchemaOutput,
 	type ProsopoConfigOutput,
 	type RequestHeaders,
@@ -40,7 +40,7 @@ import {
 import type {
 	ClientRecord,
 	IProviderDatabase,
-	PendingCaptchaRequest,
+	PendingImageCaptchaRequest,
 	UserCommitment,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -100,6 +100,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		captchaConfig: ProsopoCaptchaCountConfigSchemaOutput,
 		threshold: number,
 		sessionId?: string,
+		countryCode?: string,
 	): Promise<{
 		captchas: Captcha[];
 		requestHash: string;
@@ -156,17 +157,18 @@ export class ImgCaptchaManager extends CaptchaManager {
 			// if 2 captchas with 30s time limit, this will add to 1 minute (30s * 2)
 			.map((captcha) => captcha.timeLimitMs || DEFAULT_IMAGE_CAPTCHA_TIMEOUT)
 			.reduce((a, b) => a + b, 0);
-		const deadlineTs = timeLimit + currentTime;
+		const deadlineDate = new Date(timeLimit + currentTime);
 
 		await this.db.storePendingImageCommitment(
 			userAccount,
 			requestHash,
 			salt,
-			deadlineTs,
-			currentTime,
+			deadlineDate,
+			new Date(currentTime),
 			getCompositeIpAddress(ipAddress),
 			threshold,
 			sessionId,
+			countryCode,
 		);
 		return {
 			captchas,
@@ -188,6 +190,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 	 * @param ipAddress
 	 * @param headers
 	 * @param ja4
+	 * @param countryCode
 	 * @return {Promise<DappUserSolutionResult>} result containing the contract event
 	 */
 	async dappUserSolution(
@@ -201,6 +204,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		ipAddress: IPAddress,
 		headers: RequestHeaders,
 		ja4: string,
+		countryCodeFallback?: string,
 	): Promise<DappUserSolutionResult> {
 		// check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
 		const verification = signatureVerify(
@@ -278,6 +282,20 @@ export class ImgCaptchaManager extends CaptchaManager {
 			// Only do stuff if the request is in the local DB
 			// prevent this request hash from being used twice
 			await this.db.updatePendingImageCommitmentStatus(requestHash);
+
+			// Get countryCode from session if available, otherwise use fallback
+			let countryCode: string | undefined;
+			if (pendingRecord.sessionId) {
+				const sessionRecord = await this.db.getSessionRecordBySessionId(
+					pendingRecord.sessionId,
+				);
+				countryCode = sessionRecord?.countryCode;
+			}
+			// If not available from session, use the fallback from geolocation
+			if (!countryCode) {
+				countryCode = countryCodeFallback;
+			}
+
 			const commit: UserCommitment = {
 				id: commitmentId,
 				userAccount: userAccount,
@@ -293,6 +311,12 @@ export class ImgCaptchaManager extends CaptchaManager {
 				headers,
 				sessionId: pendingRecord.sessionId,
 				ja4,
+				countryCode,
+				pending: false,
+				salt: pendingRecord.salt,
+				requestHash: pendingRecord[ApiParams.requestHash],
+				threshold: pendingRecord.threshold,
+				deadlineTimestamp: pendingRecord.deadlineTimestamp,
 			};
 			await this.db.storeUserImageCaptchaSolution(receivedCaptchas, commit);
 
@@ -409,17 +433,17 @@ export class ImgCaptchaManager extends CaptchaManager {
 	/**
 	 * Validate that a Dapp User is responding to their own pending captcha request
 	 * @param {string} requestHash
-	 * @param {PendingCaptchaRequest} pendingRecord
+	 * @param {PendingImageCaptchaRequest} pendingRecord
 	 * @param {string} userAccount
 	 * @param {string[]} captchaIds
 	 */
 	async validateDappUserSolutionRequestIsPending(
 		requestHash: string,
-		pendingRecord: PendingCaptchaRequest,
+		pendingRecord: PendingImageCaptchaRequest,
 		userAccount: string,
 		captchaIds: string[],
 	): Promise<boolean> {
-		const currentTime = Date.now();
+		const currentTime = new Date();
 		// only proceed if there is a pending record
 		if (!pendingRecord) {
 			this.logger.info(() => ({
@@ -551,26 +575,28 @@ export class ImgCaptchaManager extends CaptchaManager {
 				providedIp: getCompositeIpAddress(ip),
 			});
 
-			const ipValidation = await deepValidateIpAddress(
-				ip,
-				solutionIpAddress,
-				this.logger,
-				env.config.ipApi.apiKey,
-				env.config.ipApi.baseUrl,
-				ipValidationRules,
-			);
+			if (ipValidationRules?.enabled === true) {
+				const ipValidation = await deepValidateIpAddress(
+					ip,
+					solutionIpAddress,
+					this.logger,
+					env.config.ipApi.apiKey,
+					env.config.ipApi.baseUrl,
+					ipValidationRules,
+				);
 
-			if (!ipValidation.isValid) {
-				this.logger.error(() => ({
-					msg: "IP validation failed for image captcha",
-					data: {
-						ip,
-						solutionIp: solutionIpAddress.address,
-						error: ipValidation.errorMessage,
-						distanceKm: ipValidation.distanceKm,
-					},
-				}));
-				return { status: "API.USER_NOT_VERIFIED", verified: false };
+				if (!ipValidation.isValid) {
+					this.logger.error(() => ({
+						msg: "IP validation failed for image captcha",
+						data: {
+							ip,
+							solutionIp: solutionIpAddress.address,
+							error: ipValidation.errorMessage,
+							distanceKm: ipValidation.distanceKm,
+						},
+					}));
+					return { status: "API.USER_NOT_VERIFIED", verified: false };
+				}
 			}
 		}
 
@@ -619,6 +645,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				captchaResult: "passed",
 				headers: solution.headers,
 				captchaType: CaptchaType.image,
+				countryCode: solution.countryCode,
 			};
 
 			try {

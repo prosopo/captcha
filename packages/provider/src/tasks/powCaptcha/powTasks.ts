@@ -456,32 +456,34 @@ export class PowCaptchaManager extends CaptchaManager {
 				providedIp: getCompositeIpAddress(ip),
 			});
 
-			const ipValidation = await deepValidateIpAddress(
-				ip,
-				challengeIpAddress,
-				this.logger,
-				env.config.ipApi.apiKey,
-				env.config.ipApi.baseUrl,
-				ipValidationRules,
-			);
+			if (ipValidationRules?.enabled === true) {
+				const ipValidation = await deepValidateIpAddress(
+					ip,
+					challengeIpAddress,
+					this.logger,
+					env.config.ipApi.apiKey,
+					env.config.ipApi.baseUrl,
+					ipValidationRules,
+				);
 
-			if (!ipValidation.isValid) {
-				this.logger.error(() => ({
-					msg: "IP validation failed for PoW captcha",
-					data: {
-						ip,
-						challengeIp: challengeIpAddress.address,
-						error: ipValidation.errorMessage,
-						distanceKm: ipValidation.distanceKm,
-					},
-				}));
-				await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
-					result: {
-						status: CaptchaStatus.disapproved,
-						reason: "API.FAILED_IP_VALIDATION",
-					},
-				});
-				return notVerifiedResponse;
+				if (!ipValidation.isValid) {
+					this.logger.error(() => ({
+						msg: "IP validation failed for PoW captcha",
+						data: {
+							ip,
+							challengeIp: challengeIpAddress.address,
+							error: ipValidation.errorMessage,
+							distanceKm: ipValidation.distanceKm,
+						},
+					}));
+					await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
+						result: {
+							status: CaptchaStatus.disapproved,
+							reason: "API.FAILED_IP_VALIDATION",
+						},
+					});
+					return notVerifiedResponse;
+				}
 			}
 		}
 
@@ -511,6 +513,7 @@ export class PowCaptchaManager extends CaptchaManager {
 				captchaType: CaptchaType.pow,
 				behavioralDataPacked: challengeRecord.behavioralDataPacked,
 				deviceCapability: challengeRecord.deviceCapability,
+				countryCode: challengeRecord.countryCode,
 			};
 
 			const decision = await this.decisionMachineRunner.decide(

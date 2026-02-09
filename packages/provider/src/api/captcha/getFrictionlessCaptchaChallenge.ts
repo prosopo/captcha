@@ -26,7 +26,6 @@ import type { NextFunction, Response } from "express";
 import type { Request } from "express";
 import { getCompositeIpAddress } from "../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../express.js";
-import { GeolocationService } from "../../services/geolocation.js";
 import {
 	FrictionlessManager,
 	FrictionlessReason,
@@ -42,21 +41,6 @@ import {
 	determineContextType,
 	getContextThreshold,
 } from "./contextAwareValidation.js";
-
-// Singleton geolocation service instance
-let geolocationService: GeolocationService | null = null;
-
-const getGeolocationService = (
-	env: ProviderEnvironment,
-): GeolocationService => {
-	if (!geolocationService) {
-		geolocationService = new GeolocationService(
-			env.config.maxmindDbPath,
-			env.logger,
-		);
-	}
-	return geolocationService;
-};
 
 const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
 
@@ -262,26 +246,12 @@ export default (
 
 			const ipAddress = getCompositeIpAddress(normalizedIp);
 
-			// Set common session parameters on the frictionless manager
-			tasks.frictionlessManager.setSessionParams({
-				token,
-				score: botScore,
-				threshold: botThreshold,
-				scoreComponents,
-				providerSelectEntropy,
-				ipAddress,
-				webView,
-				iFrame,
-				decryptedHeadHash,
-				siteKey: dapp,
-			});
-
 			// Get country code for geoblocking (skip if env is incomplete)
 			let countryCode: string | undefined;
 			if (env?.config?.maxmindDbPath) {
 				try {
-					const geoService = getGeolocationService(env);
-					countryCode = await geoService.getCountryCode(normalizedIp);
+					countryCode =
+						await env.geolocationService.getCountryCode(normalizedIp);
 					req.logger?.debug?.(() => ({
 						msg: "Resolved country code for geoblocking",
 						countryCode,
@@ -294,6 +264,21 @@ export default (
 					}));
 				}
 			}
+
+			// Set common session parameters on the frictionless manager
+			tasks.frictionlessManager.setSessionParams({
+				token,
+				score: botScore,
+				threshold: botThreshold,
+				scoreComponents,
+				providerSelectEntropy,
+				ipAddress,
+				webView,
+				iFrame,
+				decryptedHeadHash,
+				siteKey: dapp,
+				countryCode,
+			});
 
 			// Check if the IP address is blocked
 			const userScope = getRequestUserScope(
@@ -350,6 +335,7 @@ export default (
 						userSitekeyIpHash,
 						reason: FrictionlessReason.ACCESS_POLICY_BLOCK,
 						siteKey: dapp,
+						countryCode,
 					});
 
 					return res.status(401).json({ error: "Unauthorized" });
@@ -370,6 +356,7 @@ export default (
 							userSitekeyIpHash,
 							reason: FrictionlessReason.USER_ACCESS_POLICY,
 							siteKey: dapp,
+							countryCode,
 						}),
 					);
 				}
@@ -387,6 +374,7 @@ export default (
 							userSitekeyIpHash,
 							reason: FrictionlessReason.USER_ACCESS_POLICY,
 							siteKey: dapp,
+							countryCode,
 						}),
 					);
 				}
@@ -431,6 +419,7 @@ export default (
 						userSitekeyIpHash,
 						reason: FrictionlessReason.USER_AGENT_MISMATCH,
 						siteKey: dapp,
+						countryCode,
 					}),
 				);
 			}
@@ -509,6 +498,7 @@ export default (
 									userSitekeyIpHash,
 									reason: FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED,
 									siteKey: dapp,
+									countryCode,
 								}),
 							);
 						}
@@ -544,6 +534,7 @@ export default (
 						userSitekeyIpHash,
 						reason: FrictionlessReason.WEBVIEW_DETECTED,
 						siteKey: dapp,
+						countryCode,
 					}),
 				);
 			}
@@ -577,6 +568,7 @@ export default (
 						userSitekeyIpHash,
 						reason: FrictionlessReason.OLD_TIMESTAMP,
 						siteKey: dapp,
+						countryCode,
 					}),
 				);
 			}
@@ -622,6 +614,7 @@ export default (
 						userSitekeyIpHash,
 						reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
 						siteKey: dapp,
+						countryCode,
 					}),
 				);
 			}
@@ -639,6 +632,7 @@ export default (
 				await tasks.frictionlessManager.sendPowCaptcha({
 					userSitekeyIpHash,
 					siteKey: dapp,
+					countryCode,
 				}),
 			);
 		} catch (err) {

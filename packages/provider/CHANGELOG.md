@@ -1,5 +1,60 @@
 # @prosopo/provider
 
+## 3.18.0
+### Minor Changes
+
+- ff58a70: Load the geolocation service at startup only
+
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+- Updated dependencies [d329e63]
+  - @prosopo/types-env@2.8.0
+  - @prosopo/types@3.9.0
+  - @prosopo/env@3.3.0
+  - @prosopo/database@3.8.0
+  - @prosopo/api@3.1.46
+  - @prosopo/api-express-router@3.0.55
+  - @prosopo/datasets@3.0.63
+  - @prosopo/keyring@2.9.5
+  - @prosopo/load-balancer@2.8.22
+  - @prosopo/types-database@4.3.1
+  - @prosopo/user-access-policy@3.6.6
+
+## 3.17.0
+### Minor Changes
+
+- 3feeea4: Store geolocation. Remove pending image captcha collection
+
+### Patch Changes
+
+- Updated dependencies [3feeea4]
+  - @prosopo/types-database@4.3.0
+  - @prosopo/database@3.7.0
+  - @prosopo/datasets@3.0.62
+  - @prosopo/types-env@2.7.66
+  - @prosopo/env@3.2.42
+  - @prosopo/api-express-router@3.0.54
+
+## 3.16.5
+### Patch Changes
+
+- 4c08158: Skip ip validation unit tests
+- d2431cd: Allow IP validation rules to be disabled
+- Updated dependencies [4c08158]
+- Updated dependencies [d2431cd]
+  - @prosopo/types-database@4.2.4
+  - @prosopo/types@3.8.4
+  - @prosopo/database@3.6.12
+  - @prosopo/datasets@3.0.61
+  - @prosopo/types-env@2.7.65
+  - @prosopo/api@3.1.45
+  - @prosopo/api-express-router@3.0.53
+  - @prosopo/env@3.2.41
+  - @prosopo/keyring@2.9.4
+  - @prosopo/load-balancer@2.8.21
+  - @prosopo/user-access-policy@3.6.5
+
 ## 3.16.4
 ### Patch Changes
 

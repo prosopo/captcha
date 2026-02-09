@@ -21,7 +21,6 @@ import {
 	setupRedisIndex,
 } from "@prosopo/redis-client";
 import {
-	ApiParams,
 	type Captcha,
 	type CaptchaResult,
 	type CaptchaSolution,
@@ -46,6 +45,7 @@ import {
 } from "@prosopo/types";
 import type {
 	CompositeIpAddress,
+	PendingImageCaptchaRequest,
 	SessionRecord,
 } from "@prosopo/types-database";
 import {
@@ -61,9 +61,6 @@ import {
 	type DetectorSchema,
 	type IProviderDatabase,
 	type IUserDataSlim,
-	type PendingCaptchaRequest,
-	type PendingCaptchaRequestMongoose,
-	PendingRecordSchema,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
 	type PoWCaptchaStored,
@@ -100,7 +97,6 @@ enum TableNames {
 	solution = "solution",
 	commitment = "commitment",
 	usersolution = "usersolution",
-	pending = "pending",
 	scheduler = "scheduler",
 	powcaptcha = "powcaptcha",
 	client = "client",
@@ -140,11 +136,6 @@ const PROVIDER_TABLES = [
 		collectionName: TableNames.usersolution,
 		modelName: "UserSolution",
 		schema: UserSolutionRecordSchema,
-	},
-	{
-		collectionName: TableNames.pending,
-		modelName: "Pending",
-		schema: PendingRecordSchema,
 	},
 	{
 		collectionName: TableNames.scheduler,
@@ -565,7 +556,12 @@ export class ProviderDatabase
 			[key in keyof Pick<Captcha, "captchaId">]: { $in: string[] };
 		} = { captchaId: { $in: captchaId } };
 		const cursor = this.tables?.captcha
-			.find<Captcha>(filter)
+			.find<Captcha>(filter, {
+				_id: 0,
+				captchaId: 1,
+				datasetId: 1,
+				items: 1,
+			})
 			.lean<(Captcha & { _id: unknown })[]>();
 		const docs = await cursor;
 
@@ -712,6 +708,7 @@ export class ProviderDatabase
 		userSubmitted = false,
 		storedStatus: StoredStatus = StoredStatusNames.notStored,
 		userSignature?: string,
+		countryCode?: string,
 	): Promise<void> {
 		const tables = this.getTables();
 
@@ -731,6 +728,7 @@ export class ProviderDatabase
 			userSignature,
 			lastUpdatedTimestamp: new Date(),
 			sessionId,
+			countryCode,
 		};
 
 		try {
@@ -783,7 +781,26 @@ export class ProviderDatabase
 				[key in keyof Pick<PoWCaptchaRecord, "challenge">]: string;
 			} = { challenge };
 			const record: PoWCaptchaRecord | null | undefined =
-				await this.tables.powcaptcha.findOne(filter).lean<PoWCaptchaRecord>();
+				await this.tables.powcaptcha
+					.findOne(filter, {
+						challenge: 1,
+						userAccount: 1,
+						dappAccount: 1,
+						requestedAtTimestamp: 1,
+						ipAddress: 1,
+						headers: 1,
+						ja4: 1,
+						result: 1,
+						difficulty: 1,
+						sessionId: 1,
+						countryCode: 1,
+						deviceCapability: 1,
+						behavioralDataPacked: 1,
+						serverChecked: 1,
+						userSubmitted: 1,
+						coords: 1,
+					})
+					.lean<PoWCaptchaRecord>();
 			if (record) {
 				this.logger.info(() => ({
 					data: { challenge },
@@ -990,7 +1007,10 @@ export class ProviderDatabase
 		updates: Partial<UserCommitment>,
 	) {
 		const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
-		await this.tables?.commitment.updateOne(filter, updates);
+		await this.tables?.commitment.updateOne(filter, {
+			...updates,
+			lastUpdatedAtTimestamp: new Date(),
+		});
 	}
 
 	/**
@@ -1104,7 +1124,16 @@ export class ProviderDatabase
 		sessionId: string,
 	): Promise<Session | undefined> {
 		const filter: Pick<SessionRecord, "sessionId"> = { sessionId };
-		const doc = await this.tables.session.findOne(filter).lean<Session>();
+		const doc = await this.tables.session
+			.findOne(filter, {
+				sessionId: 1,
+				countryCode: 1,
+				scoreComponents: 1,
+				webView: 1,
+				reason: 1,
+				decryptedHeadHash: 1,
+			})
+			.lean<Session>();
 		return doc || undefined;
 	}
 
@@ -1254,11 +1283,12 @@ export class ProviderDatabase
 		userAccount: string,
 		requestHash: string,
 		salt: string,
-		deadlineTimestamp: number,
-		requestedAtTimestamp: number,
+		deadlineTimestamp: Date,
+		requestedAtTimestamp: Date,
 		ipAddress: CompositeIpAddress,
 		threshold: number,
 		sessionId?: string,
+		countryCode?: string,
 	): Promise<void> {
 		if (!isHex(requestHash)) {
 			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
@@ -1268,18 +1298,30 @@ export class ProviderDatabase
 				},
 			});
 		}
-		const pendingRecord: PendingCaptchaRequestMongoose = {
-			accountId: userAccount,
+		const pendingRecord = {
+			userAccount,
 			pending: true,
 			salt,
 			requestHash,
 			deadlineTimestamp,
-			requestedAtTimestamp: new Date(requestedAtTimestamp),
+			requestedAtTimestamp,
 			ipAddress,
 			sessionId,
 			threshold,
+			countryCode,
+			// Placeholder fields required by schema but not needed for pending state
+			dappAccount: "",
+			providerAccount: "",
+			datasetId: "",
+			id: "", // id is populated by the user's solution record when the user submits a solution, so we can leave it blank here
+			result: { status: CaptchaStatus.pending },
+			headers: {},
+			ja4: "",
+			userSignature: "",
+			userSubmitted: false,
+			serverChecked: false,
 		};
-		await this.tables?.pending.updateOne(
+		await this.tables?.commitment.updateOne(
 			{ requestHash: requestHash },
 			{ $set: pendingRecord },
 			{ upsert: true },
@@ -1287,11 +1329,11 @@ export class ProviderDatabase
 	}
 
 	/**
-	 * @description Get a Dapp user's pending record
+	 * @description Get a user's pending record
 	 */
 	async getPendingImageCommitment(
 		requestHash: string,
-	): Promise<PendingCaptchaRequest> {
+	): Promise<PendingImageCaptchaRequest> {
 		if (!isHex(requestHash)) {
 			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
 				context: {
@@ -1300,16 +1342,26 @@ export class ProviderDatabase
 				},
 			});
 		}
-		// @ts-ignore
-		const filter: Pick<PendingCaptchaRequest, "requestHash"> = {
-			[ApiParams.requestHash]: requestHash,
-		};
 
-		const doc: PendingCaptchaRequest | null | undefined =
-			await this.tables?.pending.findOne(filter).lean<PendingCaptchaRequest>();
+		const doc = await this.tables?.commitment
+			.findOne({
+				requestHash: requestHash,
+				pending: true,
+			})
+			.lean<UserCommitmentRecord>();
 
 		if (doc) {
-			return doc;
+			return {
+				dappAccount: doc.dappAccount,
+				pending: doc.pending,
+				salt: doc.salt,
+				requestHash: doc.requestHash,
+				deadlineTimestamp: doc.deadlineTimestamp,
+				requestedAtTimestamp: doc.requestedAtTimestamp,
+				ipAddress: doc.ipAddress,
+				sessionId: doc.sessionId,
+				threshold: doc.threshold,
+			};
 		}
 
 		throw new ProsopoDBError("DATABASE.PENDING_RECORD_NOT_FOUND", {
@@ -1333,18 +1385,13 @@ export class ProviderDatabase
 			});
 		}
 
-		// @ts-ignore
-		const filter: Pick<PendingCaptchaRequest, [ApiParams.requestHash]> = {
-			[ApiParams.requestHash]: requestHash,
-		};
-		await this.tables?.pending.updateOne<PendingCaptchaRequest>(
-			filter,
+		await this.tables?.commitment.updateOne(
+			{ requestHash: requestHash },
 			{
 				$set: {
-					[CaptchaStatus.pending]: false,
+					pending: false,
 				},
 			},
-			{ upsert: true },
 		);
 	}
 
@@ -1502,7 +1549,20 @@ export class ProviderDatabase
 	): Promise<UserCommitmentRecord | undefined> {
 		const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
 		const commitmentCursor = this.tables?.commitment
-			?.findOne(filter)
+			?.findOne(filter, {
+				projection: {
+					id: 1,
+					result: 1,
+					serverChecked: 1,
+					requestedAtTimestamp: 1,
+					ipAddress: 1,
+					sessionId: 1,
+					userAccount: 1,
+					dappAccount: 1,
+					headers: 1,
+					countryCode: 1,
+				},
+			})
 			.lean<UserCommitmentRecord>();
 
 		const doc = await commitmentCursor;
@@ -1523,7 +1583,10 @@ export class ProviderDatabase
 			userAccount,
 			dappAccount,
 		};
-		const project = { _id: 0 };
+		const project = {
+			_id: 0,
+			result: 1,
+		};
 		const sort = { sort: { _id: -1 } };
 		const docs: UserCommitmentRecord[] | null | undefined =
 			await this.tables?.commitment
@@ -1774,7 +1837,13 @@ export class ProviderDatabase
 	 */
 	async getClientRecord(account: string): Promise<ClientRecord | undefined> {
 		const filter: Pick<ClientRecord, "account"> = { account };
-		const doc = await this.tables?.client.findOne(filter).lean<ClientRecord>();
+		const doc = await this.tables?.client
+			.findOne(filter, {
+				account: 1,
+				settings: 1,
+				tier: 1,
+			})
+			.lean<ClientRecord>();
 		return doc ? doc : undefined;
 	}
 
