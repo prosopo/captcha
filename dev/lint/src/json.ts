@@ -82,10 +82,10 @@ const json = async (args: {
 		]);
 	// glob the json files
 	// hardcoded ignores forked fpjs
-	const hardcodedIgnores = [
-		"**/packages/fingerprintjs/**",
-	];
-	const jsonPaths = fg.globSync(globs, { ignore: [...ignorePaths, ...hardcodedIgnores] });
+	const hardcodedIgnores = ["**/packages/fingerprintjs/**"];
+	const jsonPaths = fg.globSync(globs, {
+		ignore: [...ignorePaths, ...hardcodedIgnores],
+	});
 	for (const jsonPath of jsonPaths) {
 		console.log("Checking", jsonPath);
 		const content = fs.readFileSync(jsonPath, "utf8");
