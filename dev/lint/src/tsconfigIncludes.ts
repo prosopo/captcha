@@ -86,7 +86,10 @@ const checkTsconfigIncludes = (args: {
 		.parse(pkgJson.workspaces)
 		.map((g) => `${path.dirname(args.pkg)}/${g}/tsconfig{,.+}.json`);
 	const tsconfigPaths = fg.globSync(globs, {
-		ignore: ["**packages/docs**"],
+		ignore: [
+			"**packages/docs**",
+			"**/packages/fingerprintjs/**",
+		],
 	});
 	for (const tsconfigPath of tsconfigPaths) {
 		console.log("Checking", tsconfigPath);

@@ -81,7 +81,11 @@ const json = async (args: {
 			`!${path.dirname(args.pkg)}/${g}/**/node_modules/**`,
 		]);
 	// glob the json files
-	const jsonPaths = fg.globSync(globs, { ignore: ignorePaths });
+	// hardcoded ignores forked fpjs
+	const hardcodedIgnores = [
+		"**/packages/fingerprintjs/**",
+	];
+	const jsonPaths = fg.globSync(globs, { ignore: [...ignorePaths, ...hardcodedIgnores] });
 	for (const jsonPath of jsonPaths) {
 		console.log("Checking", jsonPath);
 		const content = fs.readFileSync(jsonPath, "utf8");
