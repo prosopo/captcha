@@ -1,5 +1,16 @@
 # @prosopo/provider-mock
 
+## 2.8.55
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+- Updated dependencies [d329e63]
+  - @prosopo/provider@3.18.0
+  - @prosopo/types@3.9.0
+  - @prosopo/database@3.8.0
+  - @prosopo/api-express-router@3.0.55
+  - @prosopo/types-database@4.3.1
+
 ## 2.8.54
 ### Patch Changes
 

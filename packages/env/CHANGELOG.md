@@ -1,5 +1,19 @@
 # @prosopo/env
 
+## 3.3.0
+### Minor Changes
+
+- ff58a70: Load the geolocation service at startup only
+
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+- Updated dependencies [d329e63]
+  - @prosopo/types-env@2.8.0
+  - @prosopo/types@3.9.0
+  - @prosopo/database@3.8.0
+  - @prosopo/keyring@2.9.5
+
 ## 3.2.42
 ### Patch Changes
 

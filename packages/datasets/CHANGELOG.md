@@ -1,5 +1,12 @@
 # @prosopo/datasets
 
+## 3.0.63
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+  - @prosopo/types@3.9.0
+  - @prosopo/types-database@4.3.1
+
 ## 3.0.62
 ### Patch Changes
 

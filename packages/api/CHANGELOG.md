@@ -1,5 +1,11 @@
 # @prosopo/api
 
+## 3.1.46
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+  - @prosopo/types@3.9.0
+
 ## 3.1.45
 ### Patch Changes
 
