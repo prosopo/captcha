@@ -34,7 +34,7 @@ import {
 	type AccessRulesStorage,
 } from "@prosopo/user-access-policy";
 import { getIPAddress, verifyRecency } from "@prosopo/util";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getCompositeIpAddress } from "../../../../compositeIpAddress.js";
 import { PowCaptchaManager } from "../../../../tasks/powCaptcha/powTasks.js";
 import {
@@ -78,6 +78,31 @@ describe("PowCaptchaManager", () => {
 	let pair: KeyringPair;
 	let powCaptchaManager: PowCaptchaManager;
 	let mockEnv: ProviderEnvironment;
+	// biome-ignore lint/suspicious/noExplicitAny: Test helper needs flexibility
+	let originalDecide: any;
+
+	/**
+	 * Helper function to safely monkey-patch decisionMachineRunner.decide
+	 * Guarantees restoration even if test assertions fail
+	 */
+	// biome-ignore lint/suspicious/noExplicitAny: Test helper needs flexibility
+	const mockDecisionMachine = (mockFn: any) => {
+		// biome-ignore lint/suspicious/noExplicitAny: Test helper needs flexibility
+		originalDecide = (powCaptchaManager as any).decisionMachineRunner.decide;
+		// biome-ignore lint/suspicious/noExplicitAny: Test helper needs flexibility
+		(powCaptchaManager as any).decisionMachineRunner.decide = mockFn;
+	};
+
+	/**
+	 * Restore the original decisionMachineRunner.decide implementation
+	 */
+	const restoreDecisionMachine = () => {
+		if (originalDecide) {
+			// biome-ignore lint/suspicious/noExplicitAny: Test helper needs flexibility
+			(powCaptchaManager as any).decisionMachineRunner.decide = originalDecide;
+			originalDecide = undefined;
+		}
+	};
 
 	beforeEach(() => {
 		db = {
@@ -107,6 +132,11 @@ describe("PowCaptchaManager", () => {
 		powCaptchaManager = new PowCaptchaManager(db, pair, mockEnv.config);
 
 		vi.clearAllMocks();
+	});
+
+	afterEach(() => {
+		// Always restore monkey-patched methods to prevent test pollution
+		restoreDecisionMachine();
 	});
 
 	describe("getPowCaptchaChallenge", () => {
@@ -684,30 +714,26 @@ describe("PowCaptchaManager", () => {
 			(verifyRecency as any).mockImplementation(() => true);
 
 			// Mock decision machine to deny based on device capability
-			const originalDecide =
-				// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-				(powCaptchaManager as any).decisionMachineRunner.decide;
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(powCaptchaManager as any).decisionMachineRunner.decide = vi
-				.fn()
-				.mockResolvedValue({
+			mockDecisionMachine(
+				vi.fn().mockResolvedValue({
 					decision: "deny",
 					reason: "Suspicious device detected",
 					score: 0,
-				});
-
-			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
-				dappAccount,
-				challenge,
-				timeout,
-				mockEnv,
+				}),
 			);
 
-			expect(result.verified).toBe(false);
+			try {
+				const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+					dappAccount,
+					challenge,
+					timeout,
+					mockEnv,
+				);
 
-			// Restore original decision machine
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(powCaptchaManager as any).decisionMachineRunner.decide = originalDecide;
+				expect(result.verified).toBe(false);
+			} finally {
+				restoreDecisionMachine();
+			}
 		});
 
 		it("should allow when no behavioral data is present (no decision machine run)", async () => {
@@ -794,27 +820,23 @@ describe("PowCaptchaManager", () => {
 			(verifyRecency as any).mockImplementation(() => true);
 
 			// Mock decision machine to throw an error
-			const originalDecide =
-				// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-				(powCaptchaManager as any).decisionMachineRunner.decide;
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(powCaptchaManager as any).decisionMachineRunner.decide = vi
-				.fn()
-				.mockRejectedValue(new Error("Decision machine error"));
-
-			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
-				dappAccount,
-				challenge,
-				timeout,
-				mockEnv,
+			mockDecisionMachine(
+				vi.fn().mockRejectedValue(new Error("Decision machine error")),
 			);
 
-			// Should default to allow on error
-			expect(result.verified).toBe(true);
+			try {
+				const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+					dappAccount,
+					challenge,
+					timeout,
+					mockEnv,
+				);
 
-			// Restore original decision machine
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(powCaptchaManager as any).decisionMachineRunner.decide = originalDecide;
+				// Should default to allow on error
+				expect(result.verified).toBe(true);
+			} finally {
+				restoreDecisionMachine();
+			}
 		});
 	});
 
@@ -1240,47 +1262,38 @@ module.exports = (input) => {
 			(verifyRecency as any).mockImplementation(() => true);
 
 			// Mock the decision machine runner to use the real decision machine source
-			const originalDecide =
-				// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-				(powCaptchaManager as any).decisionMachineRunner.decide;
-
 			// Create a mock that executes the actual decision machine code
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(powCaptchaManager as any).decisionMachineRunner.decide = async (
-				// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-				input: any,
-			) => {
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock needs flexibility
+			mockDecisionMachine(async (input: any) => {
 				// Execute the decision machine source code
-
-				const module = { exports: {} };
 				// biome-ignore lint/security/noGlobalEval: This is a test
 				const decideFn = eval(
-					`(function() { ${decisionMachineSource}; return module.exports; })()`,
+					`(function() { const module = { exports: {} }; ${decisionMachineSource}; return module.exports; })()`,
 				);
 				return decideFn(input);
-			};
-
-			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
-				dappAccount,
-				challenge,
-				timeout,
-				mockEnv,
-			);
-
-			// The captcha should be DENIED because:
-			// 1. cache-control header contains "no-cache"
-			// 2. No behavioral data is present (behavioralDataPacked is undefined)
-			expect(result.verified).toBe(false);
-			expect(db.updatePowCaptchaRecord).toHaveBeenCalledWith(challenge, {
-				result: {
-					status: CaptchaStatus.disapproved,
-					reason: "no-cache request with no behavioral data",
-				},
 			});
 
-			// Restore original decision machine
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(powCaptchaManager as any).decisionMachineRunner.decide = originalDecide;
+			try {
+				const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+					dappAccount,
+					challenge,
+					timeout,
+					mockEnv,
+				);
+
+				// The captcha should be DENIED because:
+				// 1. cache-control header contains "no-cache"
+				// 2. No behavioral data is present (behavioralDataPacked is undefined)
+				expect(result.verified).toBe(false);
+				expect(db.updatePowCaptchaRecord).toHaveBeenCalledWith(challenge, {
+					result: {
+						status: CaptchaStatus.disapproved,
+						reason: "no-cache request with no behavioral data",
+					},
+				});
+			} finally {
+				restoreDecisionMachine();
+			}
 		});
 
 		it("should allow when no-cache header is present but behavioral data exists", async () => {
@@ -1374,35 +1387,28 @@ module.exports = (input) => {
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(verifyRecency as any).mockImplementation(() => true);
 
-			const originalDecide =
-				// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-				(powCaptchaManager as any).decisionMachineRunner.decide;
-
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(powCaptchaManager as any).decisionMachineRunner.decide = async (
-				// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-				input: any,
-			) => {
-				const module = { exports: {} };
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock needs flexibility
+			mockDecisionMachine(async (input: any) => {
 				// biome-ignore lint/security/noGlobalEval: This is a test
 				const decideFn = eval(
-					`(function() { ${decisionMachineSource}; return module.exports; })()`,
+					`(function() { const module = { exports: {} }; ${decisionMachineSource}; return module.exports; })()`,
 				);
 				return decideFn(input);
-			};
+			});
 
-			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
-				dappAccount,
-				challenge,
-				timeout,
-				mockEnv,
-			);
+			try {
+				const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+					dappAccount,
+					challenge,
+					timeout,
+					mockEnv,
+				);
 
-			// Should be allowed because behavioral data exists
-			expect(result.verified).toBe(true);
-
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(powCaptchaManager as any).decisionMachineRunner.decide = originalDecide;
+				// Should be allowed because behavioral data exists
+				expect(result.verified).toBe(true);
+			} finally {
+				restoreDecisionMachine();
+			}
 		});
 
 		it("should allow when behavioral data is missing but no no-cache header", async () => {
@@ -1488,35 +1494,28 @@ module.exports = (input) => {
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(verifyRecency as any).mockImplementation(() => true);
 
-			const originalDecide =
-				// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-				(powCaptchaManager as any).decisionMachineRunner.decide;
-
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(powCaptchaManager as any).decisionMachineRunner.decide = async (
-				// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-				input: any,
-			) => {
-				const module = { exports: {} };
+			// biome-ignore lint/suspicious/noExplicitAny: Test mock needs flexibility
+			mockDecisionMachine(async (input: any) => {
 				// biome-ignore lint/security/noGlobalEval: This is a test
 				const decideFn = eval(
-					`(function() { ${decisionMachineSource}; return module.exports; })()`,
+					`(function() { const module = { exports: {} }; ${decisionMachineSource}; return module.exports; })()`,
 				);
 				return decideFn(input);
-			};
+			});
 
-			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
-				dappAccount,
-				challenge,
-				timeout,
-				mockEnv,
-			);
+			try {
+				const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+					dappAccount,
+					challenge,
+					timeout,
+					mockEnv,
+				);
 
-			// Should be allowed because no-cache header is missing
-			expect(result.verified).toBe(true);
-
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(powCaptchaManager as any).decisionMachineRunner.decide = originalDecide;
+				// Should be allowed because no-cache header is missing
+				expect(result.verified).toBe(true);
+			} finally {
+				restoreDecisionMachine();
+			}
 		});
 	});
 });
