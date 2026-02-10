@@ -65,7 +65,7 @@
 		"vite-plugin-node-polyfills": "0.24.0",
 		"vite-tsconfig-paths": "5.1.4",
 		"vitest": "3.2.4",
-		"webpack": "5.102.1",
+		"webpack": "5.104.1",
 		"webpack-cli": "5.1.4",
 		"webpack-dev-server": "5.2.2"
 	},
