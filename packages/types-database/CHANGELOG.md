@@ -1,5 +1,10 @@
 # @prosopo/types-database
 
+## 4.3.2
+### Patch Changes
+
+- fa95c5f: zod types for db records
+
 ## 4.3.1
 ### Patch Changes
 

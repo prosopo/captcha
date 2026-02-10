@@ -1,5 +1,13 @@
 # @prosopo/database
 
+## 3.8.1
+### Patch Changes
+
+- ced9f41: Fix incorrect projection
+- fa95c5f: zod types for db records
+- Updated dependencies [fa95c5f]
+  - @prosopo/types-database@4.3.2
+
 ## 3.8.0
 ### Minor Changes
 

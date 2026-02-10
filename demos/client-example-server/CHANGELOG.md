@@ -1,5 +1,10 @@
 # @prosopo/client-example-server
 
+## 2.7.62
+### Patch Changes
+
+- ced9f41: Fix incorrect projection
+
 ## 2.7.61
 ### Patch Changes
 

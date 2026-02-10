@@ -1,5 +1,18 @@
 # @prosopo/provider
 
+## 3.18.1
+### Patch Changes
+
+- fa95c5f: zod types for db records
+- Updated dependencies [ced9f41]
+- Updated dependencies [fa95c5f]
+  - @prosopo/database@3.8.1
+  - @prosopo/types-database@4.3.2
+  - @prosopo/env@3.3.1
+  - @prosopo/datasets@3.0.64
+  - @prosopo/types-env@2.8.1
+  - @prosopo/api-express-router@3.0.56
+
 ## 3.18.0
 ### Minor Changes
 

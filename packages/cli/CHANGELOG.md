@@ -1,5 +1,12 @@
 # @prosopo/cli
 
+## 3.5.30
+### Patch Changes
+
+- Updated dependencies [fa95c5f]
+  - @prosopo/provider@3.18.1
+  - @prosopo/env@3.3.1
+
 ## 3.5.29
 ### Patch Changes
 
