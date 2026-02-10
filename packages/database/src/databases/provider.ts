@@ -693,6 +693,7 @@ export class ProviderDatabase
 	 * @param userSubmitted
 	 * @param storedStatus
 	 * @param userSignature
+	 * @param countryCode
 	 * @returns {Promise<void>} A promise that resolves when the record is added.
 	 */
 	async storePowCaptchaRecord(
