@@ -23,7 +23,7 @@ import {
 import { at } from "@prosopo/util";
 import Chainable = Cypress.Chainable;
 import { getPair } from "@prosopo/keyring";
-import type { SolutionRecord } from "@prosopo/types-database";
+import type { SolutionRecord } from "@prosopo/types";
 
 declare global {
 	namespace Cypress {
