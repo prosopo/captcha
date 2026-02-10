@@ -87,6 +87,7 @@ describe("PowCaptchaManager", () => {
 			updatePowCaptchaRecord: vi.fn(),
 			markDappUserPoWCommitmentsChecked: vi.fn(),
 			getClientRecord: vi.fn(),
+			getSessionRecordBySessionId: vi.fn(),
 		} as unknown as IProviderDatabase;
 
 		pair = {
@@ -1225,6 +1226,9 @@ module.exports = (input) => {
 	};
 };
 `;
+
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getSessionRecordBySessionId as any).mockResolvedValue(undefined);
 
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
