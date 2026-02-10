@@ -1528,7 +1528,7 @@ export class ProviderDatabase
 		const filter: Pick<UserSolutionRecord, "commitmentId"> = {
 			commitmentId: commitmentId,
 		};
-		const project = { projection: { _id: 0 } };
+		const project = { _id: 0 };
 		const cursor = this.tables?.usersolution?.findOne(filter, project).lean();
 		const doc = await cursor;
 
@@ -1551,18 +1551,16 @@ export class ProviderDatabase
 		const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
 		const commitmentCursor = this.tables?.commitment
 			?.findOne(filter, {
-				projection: {
-					id: 1,
-					result: 1,
-					serverChecked: 1,
-					requestedAtTimestamp: 1,
-					ipAddress: 1,
-					sessionId: 1,
-					userAccount: 1,
-					dappAccount: 1,
-					headers: 1,
-					countryCode: 1,
-				},
+				id: 1,
+				result: 1,
+				serverChecked: 1,
+				requestedAtTimestamp: 1,
+				ipAddress: 1,
+				sessionId: 1,
+				userAccount: 1,
+				dappAccount: 1,
+				headers: 1,
+				countryCode: 1,
 			})
 			.lean<UserCommitmentRecord>();
 

@@ -20,10 +20,10 @@ import { getPair } from "@prosopo/keyring";
 import { ProsopoServer } from "@prosopo/server";
 import {
 	ApiParams,
+	ProcaptchaResponse,
 	type ProcaptchaToken,
 	type ProsopoServerConfigOutput,
 } from "@prosopo/types";
-import { ProcaptchaResponse } from "@prosopo/types";
 import { at } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import jwt, { type JwtPayload } from "jsonwebtoken";
@@ -88,7 +88,7 @@ const verify = async (
 	// verify using the TypeScript library
 	const verified = await prosopoServer.isVerified(token);
 	console.log(verified);
-	return verified;
+	return verified[ApiParams.verified];
 };
 
 const signup = async (
