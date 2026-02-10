@@ -14,14 +14,12 @@
 
 import {
 	CaptchaType,
+	type DecisionMachineArtifact,
 	DecisionMachineDecision,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
 } from "@prosopo/types";
-import type {
-	DecisionMachineArtifact,
-	IProviderDatabase,
-} from "@prosopo/types-database";
+import type { IProviderDatabase } from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DecisionMachineRunner } from "../../../../tasks/decisionMachine/decisionMachineRunner.js";
 

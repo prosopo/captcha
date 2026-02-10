@@ -15,28 +15,35 @@
 import { type TranslationKey, TranslationKeysSchema } from "@prosopo/locale";
 import {
 	CaptchaType,
+	type ClientContextEntropy,
+	type CompositeIpAddress,
 	ContextType,
+	type DecisionMachineArtifact,
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
-	PowChallengeIdSchema,
+	type DetectorKey,
+	IpAddressType,
+	type PendingImageCaptchaRequest,
+	type PoWCaptchaStored,
+	type Session,
+	type SolutionRecord,
 	Tier,
+	type UserCommitment,
+	type UserSolutionSchema,
 } from "@prosopo/types";
 import {
 	type Captcha,
 	type CaptchaResult,
 	type CaptchaSolution,
-	CaptchaSolutionSchema,
 	type CaptchaStates,
 	CaptchaStatus,
-	type Commit,
 	type Dataset,
 	type DatasetBase,
 	type DatasetWithIds,
 	type Hash,
 	type IUserData,
 	type Item,
-	type PoWCaptchaUser,
 	type PoWChallengeComponents,
 	type PoWChallengeId,
 	type RequestHeaders,
@@ -47,23 +54,9 @@ import {
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import type mongoose from "mongoose";
 import { type Document, type Model, type ObjectId, Schema } from "mongoose";
-import {
-	type ZodType,
-	any,
-	array,
-	bigint,
-	boolean,
-	date,
-	nativeEnum,
-	number,
-	object,
-	string,
-	tuple,
-	type infer as zInfer,
-} from "zod";
+import { any, date, nativeEnum, object, type infer as zInfer } from "zod";
 import { UserSettingsSchema } from "./client.js";
 import type { IDatabase } from "./mongo.js";
-import type { UserAgentInfo } from "./userAgent.js";
 
 export type IUserDataSlim = Pick<IUserData, "account" | "settings" | "tier">;
 
@@ -73,7 +66,6 @@ const ONE_HOUR = 60 * 60;
 const ONE_DAY = ONE_HOUR * 24;
 const ONE_WEEK = ONE_DAY * 7;
 const ONE_MONTH = ONE_WEEK * 4;
-const TEN_MINUTES = 10 * 60;
 
 export const ClientRecordSchema = new Schema<ClientRecord>({
 	account: String,
@@ -82,24 +74,6 @@ export const ClientRecordSchema = new Schema<ClientRecord>({
 });
 // Set an index on the account field, ascending
 ClientRecordSchema.index({ account: 1 });
-
-export enum IpAddressType {
-	v4 = "v4",
-	v6 = "v6",
-}
-
-export interface CompositeIpAddress {
-	// mongoose accepts "BigInt", but returns "number" from the DB
-	lower: number | bigint; // IPv4 OR Low IPv6 Bits
-	upper?: number | bigint; // High IPv6 Bits
-	type: IpAddressType;
-}
-
-export const CompositeIpAddressSchema = object({
-	lower: bigint(),
-	upper: bigint().optional(),
-	type: nativeEnum(IpAddressType),
-});
 
 export const CompositeIpAddressRecordSchemaObj = {
 	lower: {
@@ -121,21 +95,6 @@ export const CompositeIpAddressRecordSchemaObj = {
 	type: { type: String, enum: IpAddressType, required: true },
 };
 
-export type MongooseCompositeIpAddress = {
-	lower: { $numberDecimal: string };
-	upper?: { $numberDecimal: string };
-	type: IpAddressType;
-};
-export const parseMongooseCompositeIpAddress = (
-	ip: MongooseCompositeIpAddress,
-): CompositeIpAddress => {
-	return {
-		lower: BigInt(ip.lower.$numberDecimal ?? ip.lower),
-		upper: ip.upper ? BigInt(ip.upper?.$numberDecimal ?? ip.upper) : undefined,
-		type: ip.type,
-	};
-};
-
 /**
  * Packed behavioral data format for efficient storage
  * c1: Mouse movement data (packed with delta encoding)
@@ -143,186 +102,10 @@ export const parseMongooseCompositeIpAddress = (
  * c3: Click event data (packed with delta encoding)
  * d: Device capability string
  */
-export interface BehavioralDataPacked {
-	c1: unknown[];
-	c2: unknown[];
-	c3: unknown[];
-	d: string;
-}
 
-export interface StoredCaptcha {
-	result: {
-		status: CaptchaStatus;
-		reason?: TranslationKey;
-		error?: string;
-	};
-	requestedAtTimestamp: Date;
-	ipAddress: CompositeIpAddress;
-	providedIp?: CompositeIpAddress;
-	headers: RequestHeaders;
-	ja4: string;
-	userSubmitted: boolean;
-	serverChecked: boolean;
-	geolocation?: string;
-	countryCode?: string;
-	vpn?: boolean;
-	parsedUserAgentInfo?: UserAgentInfo;
-	storedAtTimestamp?: Date;
-	lastUpdatedTimestamp?: Date;
-	sessionId?: string;
-	coords?: [number, number][][];
-	// Legacy fields - kept for backward compatibility with existing data
-	mouseEvents?: Array<Record<string, unknown>>;
-	touchEvents?: Array<Record<string, unknown>>;
-	clickEvents?: Array<Record<string, unknown>>;
-	// Current behavioral data storage format (packed)
-	deviceCapability?: string;
-	behavioralDataPacked?: BehavioralDataPacked;
-}
+export type PoWCaptchaRecord = mongoose.Document & PoWCaptchaStored;
 
-export interface UserCommitment extends Commit, StoredCaptcha {
-	pending: boolean;
-	userSignature: string;
-	salt: string;
-	requestHash: string;
-	threshold: number;
-	deadlineTimestamp: Date;
-}
-
-const CaptchaResultSchema = object({
-	status: nativeEnum(CaptchaStatus),
-	reason: string().optional(), // Should be translation key but DecisionMachines submit random strings as reason, so we can't validate against TranslationKeysSchema here
-	error: string().optional(),
-}) satisfies ZodType<CaptchaResult>;
-
-export const UserCommitmentSchema = object({
-	userAccount: string(),
-	dappAccount: string(),
-	datasetId: string(),
-	providerAccount: string(),
-	id: string(),
-	result: CaptchaResultSchema,
-	userSignature: string(),
-	ipAddress: CompositeIpAddressSchema,
-	providedIp: CompositeIpAddressSchema.optional(),
-	headers: object({}).catchall(string()),
-	ja4: string(),
-	userSubmitted: boolean(),
-	serverChecked: boolean(),
-	storedAtTimestamp: date().optional(),
-	requestedAtTimestamp: date(),
-	lastUpdatedTimestamp: date().optional(),
-	sessionId: string().optional(),
-	coords: array(array(tuple([number(), number()]))).optional(),
-	// Pending request fields for image captcha workflow
-	pending: boolean(),
-	salt: string(),
-	requestHash: string(),
-	deadlineTimestamp: date(),
-	threshold: number(),
-}) satisfies ZodType<UserCommitment>;
-
-// Zod schema for ScoreComponents
-export const ScoreComponentsSchema = object({
-	baseScore: number(),
-	lScore: number().optional(),
-	timeout: number().optional(),
-	accessPolicy: number().optional(),
-	unverifiedHost: number().optional(),
-	webView: number().optional(),
-});
-
-// Zod schema for Session
-export const SessionSchema = object({
-	sessionId: string(),
-	createdAt: date(),
-	token: string(),
-	score: number(),
-	threshold: number(),
-	scoreComponents: ScoreComponentsSchema,
-	providerSelectEntropy: number(),
-	ipAddress: CompositeIpAddressSchema,
-	captchaType: nativeEnum(CaptchaType),
-	solvedImagesCount: number().optional(),
-	powDifficulty: number().optional(),
-	storedAtTimestamp: date().optional(),
-	lastUpdatedTimestamp: date().optional(),
-	deleted: boolean().optional(),
-	userSitekeyIpHash: string().optional(),
-	webView: boolean(),
-	iFrame: boolean(),
-	decryptedHeadHash: string(),
-	siteKey: string().optional(),
-	reason: string().optional(),
-	blocked: boolean().optional(),
-	countryCode: string().optional(),
-}) satisfies ZodType<Session>;
-
-// Zod schema for BehavioralDataPacked
-const BehavioralDataPackedSchema = object({
-	c1: array(any()),
-	c2: array(any()),
-	c3: array(any()),
-	d: string(),
-});
-
-// Zod schema for PoWCaptchaStored
-// PoWCaptchaStored = PoWCaptchaUser (minus requestedAtTimestamp) + StoredCaptcha
-// Note: challenge uses PowChallengeIdSchema for runtime validation
-// The PoWCaptchaStored interface enforces the PoWChallengeId template literal type at compile time
-export const PoWCaptchaStoredSchema = object({
-	// From PoWCaptchaUser (extends PoWCaptcha)
-	challenge: PowChallengeIdSchema,
-	difficulty: number(),
-	providerSignature: string(),
-	userSignature: string().optional(),
-	score: number().optional(),
-	userAccount: string(),
-	dappAccount: string(),
-	// From StoredCaptcha
-	result: CaptchaResultSchema,
-	requestedAtTimestamp: date(),
-	ipAddress: CompositeIpAddressSchema,
-	providedIp: CompositeIpAddressSchema.optional(),
-	headers: object({}).catchall(string()),
-	ja4: string(),
-	userSubmitted: boolean(),
-	serverChecked: boolean(),
-	geolocation: string().optional(),
-	countryCode: string().optional(),
-	vpn: boolean().optional(),
-	parsedUserAgentInfo: any().optional(),
-	storedAtTimestamp: date().optional(),
-	lastUpdatedTimestamp: date().optional(),
-	sessionId: string().optional(),
-	coords: array(array(tuple([number(), number()]))).optional(),
-	mouseEvents: array(object({}).catchall(any())).optional(),
-	touchEvents: array(object({}).catchall(any())).optional(),
-	clickEvents: array(object({}).catchall(any())).optional(),
-	deviceCapability: string().optional(),
-	behavioralDataPacked: BehavioralDataPackedSchema.optional(),
-}) satisfies ZodType<PoWCaptchaStored>;
-
-export type PendingImageCaptchaRequest = {
-	dappAccount: string;
-	pending: boolean;
-	salt: string;
-	requestHash: string;
-	deadlineTimestamp: Date;
-	requestedAtTimestamp: Date;
-	ipAddress: CompositeIpAddress;
-	sessionId?: string;
-	threshold: number;
-};
-
-export interface PoWCaptchaStored
-	extends Omit<PoWCaptchaUser, "requestedAtTimestamp">,
-		StoredCaptcha {}
-
-export interface SolutionRecord extends CaptchaSolution {
-	datasetId: string;
-	datasetContentId: string;
-}
+export type UserCommitmentRecord = mongoose.Document & UserCommitment;
 
 export type Tables<E extends string | number | symbol> = {
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
@@ -330,8 +113,6 @@ export type Tables<E extends string | number | symbol> = {
 };
 
 export const CaptchaRecordSchema = new Schema<Captcha>({
-	captchaId: { type: String, required: true },
-	captchaContentId: { type: String, required: true },
 	assetURI: { type: String, required: false },
 	datasetId: { type: String, required: true },
 	datasetContentId: { type: String, required: true },
@@ -358,10 +139,6 @@ CaptchaRecordSchema.index({ captchaId: 1 });
 CaptchaRecordSchema.index({ datasetId: 1 });
 // Set an index on the datasetId and solved fields, ascending
 CaptchaRecordSchema.index({ datasetId: 1, solved: 1 });
-
-export type PoWCaptchaRecord = mongoose.Document & PoWCaptchaStored;
-
-export type UserCommitmentRecord = mongoose.Document & UserCommitment;
 
 export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	challenge: { type: String, required: true },
@@ -504,12 +281,6 @@ export const SolutionRecordSchema = new Schema<SolutionRecord>({
 // Set an index on the captchaId field, ascending
 SolutionRecordSchema.index({ captchaId: 1 });
 
-export const UserSolutionSchema = CaptchaSolutionSchema.extend({
-	processed: boolean(),
-	checked: boolean(),
-	commitmentId: string(),
-	createdAt: date(),
-});
 export type UserSolutionRecord = mongoose.Document &
 	zInfer<typeof UserSolutionSchema>;
 export const UserSolutionRecordSchema = new Schema<UserSolutionRecord>(
@@ -529,14 +300,6 @@ export const UserSolutionRecordSchema = new Schema<UserSolutionRecord>(
 UserSolutionRecordSchema.index({ captchaId: 1 });
 // Set an index on the commitment id field, descending
 UserSolutionRecordSchema.index({ commitmentId: -1 });
-
-export const UserCommitmentWithSolutionsSchema = UserCommitmentSchema.extend({
-	captchas: array(UserSolutionSchema),
-});
-
-export type UserCommitmentWithSolutions = zInfer<
-	typeof UserCommitmentWithSolutionsSchema
->;
 
 export const ScheduledTaskSchema = object({
 	processName: nativeEnum(ScheduledTaskNames),
@@ -574,41 +337,6 @@ export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskMongoose>({
 ScheduledTaskRecordSchema.index({ processName: 1 });
 ScheduledTaskRecordSchema.index({ processName: 1, status: 1 });
 ScheduledTaskRecordSchema.index({ _id: 1, status: 1 });
-
-export interface ScoreComponents {
-	baseScore: number;
-	lScore?: number;
-	timeout?: number;
-	accessPolicy?: number;
-	unverifiedHost?: number;
-	webView?: number;
-}
-
-// Session now includes all frictionless token fields
-export type Session = {
-	sessionId: string;
-	createdAt: Date;
-	token: string;
-	score: number;
-	threshold: number;
-	scoreComponents: ScoreComponents;
-	providerSelectEntropy: number;
-	ipAddress: CompositeIpAddress;
-	captchaType: CaptchaType;
-	solvedImagesCount?: number;
-	powDifficulty?: number;
-	storedAtTimestamp?: Date;
-	lastUpdatedTimestamp?: Date;
-	deleted?: boolean;
-	userSitekeyIpHash?: string;
-	webView: boolean;
-	iFrame: boolean;
-	decryptedHeadHash: string;
-	siteKey?: string;
-	reason?: string;
-	blocked?: boolean;
-	countryCode?: string;
-};
 
 export type SessionRecord = mongoose.Document & Session;
 
@@ -660,12 +388,6 @@ SessionRecordSchema.index({
 });
 SessionRecordSchema.index({ createdAt: 1, deleted: 1 });
 
-export type DetectorKey = {
-	detectorKey: string;
-	createdAt: Date;
-	expiresAt?: Date;
-};
-
 export type DetectorSchema = mongoose.Document & DetectorKey;
 export const DetectorRecordSchema = new Schema<DetectorSchema>({
 	createdAt: { type: Date, required: true },
@@ -675,30 +397,6 @@ export const DetectorRecordSchema = new Schema<DetectorSchema>({
 DetectorRecordSchema.index({ createdAt: 1 }, { unique: true });
 // TTL index for automatic cleanup of expired keys
 DetectorRecordSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-
-/**
- * Decision machine artifact stored in the database.
- * The combination of scope + dappAccount uniquely identifies one artifact.
- *
- * Examples:
- * - Global scope: { scope: "global", dappAccount: null }
- * - Dapp scope: { scope: "dapp", dappAccount: "0x123..." }
- *
- * Future scope extensions (e.g., device type) would add additional fields
- * to this composite key to maintain uniqueness.
- */
-export type DecisionMachineArtifact = {
-	scope: DecisionMachineScope;
-	dappAccount?: string;
-	runtime: DecisionMachineRuntime;
-	language?: DecisionMachineLanguage;
-	source: string;
-	name?: string;
-	version?: string;
-	captchaType?: CaptchaType.pow | CaptchaType.image;
-	createdAt: Date;
-	updatedAt: Date;
-};
 
 export type DecisionMachineArtifactRecord = mongoose.Document &
 	DecisionMachineArtifact;
@@ -738,13 +436,6 @@ DecisionMachineArtifactRecordSchema.index(
 );
 DecisionMachineArtifactRecordSchema.index({ updatedAt: -1 });
 
-export type ClientContextEntropy = {
-	account: string;
-	contextType: ContextType;
-	entropy: string;
-	createdAt: Date;
-	updatedAt: Date;
-};
 export type ClientContextEntropyRecord = mongoose.Document &
 	ClientContextEntropy;
 export const ClientContextEntropyRecordSchema =

@@ -19,13 +19,13 @@ import {
 	CaptchaType,
 	type KeyringPair,
 	type ProsopoConfigOutput,
+	type Session,
 	Tier,
 } from "@prosopo/types";
 import type {
 	ClientRecord,
 	IProviderDatabase,
 	IUserDataSlim,
-	Session,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type {

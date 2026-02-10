@@ -23,6 +23,7 @@ import {
 } from "@prosopo/types";
 import {
 	ApiParams,
+	type BehavioralDataPacked,
 	type CaptchaResult,
 	CaptchaStatus,
 	type IPAddress,
@@ -32,7 +33,6 @@ import {
 	type RequestHeaders,
 } from "@prosopo/types";
 import type {
-	BehavioralDataPacked,
 	IProviderDatabase,
 	PoWCaptchaRecord,
 } from "@prosopo/types-database";

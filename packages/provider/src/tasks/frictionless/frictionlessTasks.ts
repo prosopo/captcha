@@ -17,17 +17,15 @@ import { getRandomActiveProvider } from "@prosopo/load-balancer";
 import {
 	ApiParams,
 	CaptchaType,
+	type CompositeIpAddress,
 	type ContextType,
 	type GetFrictionlessCaptchaResponse,
 	type KeyringPair,
 	type ProsopoConfigOutput,
+	type ScoreComponents,
+	type Session,
 } from "@prosopo/types";
-import type {
-	CompositeIpAddress,
-	IProviderDatabase,
-	ScoreComponents,
-	Session,
-} from "@prosopo/types-database";
+import type { IProviderDatabase } from "@prosopo/types-database";
 import type { AccessPolicy } from "@prosopo/user-access-policy";
 import { v4 as uuidv4 } from "uuid";
 import { checkLangRules } from "../../rules/lang.js";

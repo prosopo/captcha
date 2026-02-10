@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { IpAddressType } from "@prosopo/types-database";
+import { IpAddressType } from "@prosopo/types";
 import { describe, expect, it } from "vitest";
 import {
 	getCompositeIpAddress,

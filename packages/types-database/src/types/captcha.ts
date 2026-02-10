@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { PoWCaptcha } from "@prosopo/types";
+import type { PoWCaptcha, UserCommitment } from "@prosopo/types";
 import { type RootFilterQuery, Schema } from "mongoose";
 import type { IDatabase } from "./mongo.js";
 import {
@@ -20,7 +20,6 @@ import {
 	PoWCaptchaRecordSchema,
 	type SessionRecord,
 	SessionRecordSchema,
-	type UserCommitment,
 	type UserCommitmentRecord,
 	UserCommitmentRecordSchema,
 } from "./provider.js";

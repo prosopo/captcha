@@ -22,17 +22,17 @@ import {
 	type DecisionMachineRuntime,
 	DecisionMachineScope,
 	type IUserSettings,
+	type PoWCaptchaStored,
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
 	ScheduledTaskStatus,
 	Tier,
+	type UserCommitment,
 } from "@prosopo/types";
 import type {
 	ClientRecord,
 	IProviderDatabase,
-	PoWCaptchaStored,
 	SessionRecord,
-	UserCommitment,
 } from "@prosopo/types-database";
 import { majorityAverage, parseUrl } from "@prosopo/util";
 import { validateSiteKey } from "../../api/validateAddress.js";

@@ -33,16 +33,13 @@ import {
 	type IPAddress,
 	type ImageVerificationResponse,
 	type KeyringPair,
+	type PendingImageCaptchaRequest,
 	type ProsopoCaptchaCountConfigSchemaOutput,
 	type ProsopoConfigOutput,
 	type RequestHeaders,
+	type UserCommitment,
 } from "@prosopo/types";
-import type {
-	ClientRecord,
-	IProviderDatabase,
-	PendingImageCaptchaRequest,
-	UserCommitment,
-} from "@prosopo/types-database";
+import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { at, extractData } from "@prosopo/util";
 import { randomAsHex, signatureVerify } from "@prosopo/util-crypto";

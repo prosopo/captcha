@@ -16,14 +16,11 @@ import { type Logger, getLogger } from "@prosopo/common";
 import {
 	ContextType,
 	type KeyringPair,
+	type Session,
 	contextAwareThresholdDefault,
 } from "@prosopo/types";
 import { CaptchaType, type IUserSettings, Tier } from "@prosopo/types";
-import type {
-	ClientRecord,
-	IProviderDatabase,
-	Session,
-} from "@prosopo/types-database";
+import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CaptchaManager } from "../../../tasks/captchaManager.js";

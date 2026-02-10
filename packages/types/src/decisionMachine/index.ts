@@ -76,7 +76,9 @@ export type DecisionMachineOutput = {
 
 export type DecisionMachineCaptchaType = CaptchaType.pow | CaptchaType.image;
 
-export type DecisionMachineArtifact = {
+// This is the API configuration type (used for uploads/API calls)
+// The database storage type is DecisionMachineArtifact in provider/database.ts
+export type DecisionMachineConfig = {
 	runtime: DecisionMachineRuntime;
 	source: string;
 	language?: DecisionMachineLanguage;
@@ -93,7 +95,7 @@ export const DecisionMachineOutputSchema = z.object({
 	tags: z.array(z.string()).optional(),
 });
 
-export const DecisionMachineArtifactSchema = z.object({
+export const DecisionMachineConfigSchema = z.object({
 	runtime: z.nativeEnum(DecisionMachineRuntime),
 	source: z.string(),
 	language: z.nativeEnum(DecisionMachineLanguage).optional(),
