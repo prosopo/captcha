@@ -376,8 +376,6 @@ export type DetectorKey = {
  * Future scope extensions (e.g., device type) would add additional fields
  * to this composite key to maintain uniqueness.
  *
- * Note: This is the database storage type with Date objects.
- * The API type DecisionMachineArtifact (in decisionMachine/index.ts) uses string dates.
  */
 export type DecisionMachineArtifact = {
 	scope: DecisionMachineScope;
