@@ -113,6 +113,8 @@ export type Tables<E extends string | number | symbol> = {
 };
 
 export const CaptchaRecordSchema = new Schema<Captcha>({
+	captchaId: { type: String, required: true },
+	captchaContentId: { type: String, required: true },
 	assetURI: { type: String, required: false },
 	datasetId: { type: String, required: true },
 	datasetContentId: { type: String, required: true },
