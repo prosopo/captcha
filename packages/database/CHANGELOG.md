@@ -1,5 +1,20 @@
 # @prosopo/database
 
+## 3.9.0
+### Minor Changes
+
+- ad6d622: Separate types from mongoose schemas to avoid bundling mongoose in frontend
+
+### Patch Changes
+
+- ced9f41: Fix incorrect projection
+- fa95c5f: zod types for db records
+- Updated dependencies [ad6d622]
+- Updated dependencies [fa95c5f]
+  - @prosopo/types-database@4.4.0
+  - @prosopo/types@3.10.0
+  - @prosopo/user-access-policy@3.6.7
+
 ## 3.8.0
 ### Minor Changes
 
