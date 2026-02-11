@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 3.10.0
+### Minor Changes
+
+- ad6d622: Separate types from mongoose schemas to avoid bundling mongoose in frontend
+
 ## 3.9.0
 ### Minor Changes
 

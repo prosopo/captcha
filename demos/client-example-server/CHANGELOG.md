@@ -1,5 +1,14 @@
 # @prosopo/client-example-server
 
+## 2.7.62
+### Patch Changes
+
+- ced9f41: Fix incorrect projection
+- Updated dependencies [ad6d622]
+  - @prosopo/types@3.10.0
+  - @prosopo/keyring@2.9.6
+  - @prosopo/server@2.9.58
+
 ## 2.7.61
 ### Patch Changes
 

@@ -1,5 +1,12 @@
 # @prosopo/user-access-policy
 
+## 3.6.7
+### Patch Changes
+
+- Updated dependencies [ad6d622]
+  - @prosopo/types@3.10.0
+  - @prosopo/api@3.1.47
+
 ## 3.6.6
 ### Patch Changes
 
