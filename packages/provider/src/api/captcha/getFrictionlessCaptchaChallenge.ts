@@ -18,7 +18,7 @@ import {
 	ContextType,
 	GetFrictionlessCaptchaChallengeRequestBody,
 } from "@prosopo/types";
-import type { ScoreComponents } from "@prosopo/types-database";
+import type { ScoreComponents } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import { compareBinaryStrings, flatten } from "@prosopo/util";

@@ -15,19 +15,17 @@
 import { stringToHex, u8aToHex } from "@polkadot/util";
 import {
 	ApiParams,
+	type BehavioralDataPacked,
 	CaptchaStatus,
 	CaptchaType,
 	type KeyringPair,
 	POW_SEPARATOR,
+	type PoWCaptchaStored,
 	type PoWChallengeId,
 	type RequestHeaders,
+	type Session,
 } from "@prosopo/types";
-import type {
-	BehavioralDataPacked,
-	IProviderDatabase,
-	PoWCaptchaStored,
-	Session,
-} from "@prosopo/types-database";
+import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import {
 	AccessPolicyType,

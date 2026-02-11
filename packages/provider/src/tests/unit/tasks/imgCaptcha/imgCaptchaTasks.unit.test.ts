@@ -23,14 +23,12 @@ import {
 	type Captcha,
 	type CaptchaSolution,
 	CaptchaStatus,
-	type RequestHeaders,
-} from "@prosopo/types";
-import {
-	type IProviderDatabase,
 	IpAddressType,
 	type PendingImageCaptchaRequest,
+	type RequestHeaders,
 	type UserCommitment,
-} from "@prosopo/types-database";
+} from "@prosopo/types";
+import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { getIPAddress } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
