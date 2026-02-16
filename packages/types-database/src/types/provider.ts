@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { AllKeys } from "@prosopo/common";
 import { type TranslationKey, TranslationKeysSchema } from "@prosopo/locale";
 import {
 	CaptchaType,
@@ -372,7 +373,8 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	reason: { type: String, required: false },
 	blocked: { type: Boolean, required: false },
 	countryCode: { type: String, required: false },
-});
+	headers: { type: Object, required: false },
+} satisfies AllKeys<Session>);
 
 SessionRecordSchema.index({ createdAt: 1 });
 SessionRecordSchema.index({ deleted: 1 });
