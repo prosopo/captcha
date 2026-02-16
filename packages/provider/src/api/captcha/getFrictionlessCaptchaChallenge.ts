@@ -265,6 +265,8 @@ export default (
 				}
 			}
 
+			const flatHeaders = flatten(req.headers);
+
 			// Set common session parameters on the frictionless manager
 			tasks.frictionlessManager.setSessionParams({
 				token,
@@ -278,6 +280,7 @@ export default (
 				decryptedHeadHash,
 				siteKey: dapp,
 				countryCode,
+				headers: flatHeaders,
 			});
 
 			// Check if the IP address is blocked
@@ -336,6 +339,7 @@ export default (
 						reason: FrictionlessReason.ACCESS_POLICY_BLOCK,
 						siteKey: dapp,
 						countryCode,
+						headers: flatHeaders,
 					});
 
 					return res.status(401).json({ error: "Unauthorized" });
@@ -357,6 +361,7 @@ export default (
 							reason: FrictionlessReason.USER_ACCESS_POLICY,
 							siteKey: dapp,
 							countryCode,
+							headers: flatHeaders,
 						}),
 					);
 				}
@@ -375,6 +380,7 @@ export default (
 							reason: FrictionlessReason.USER_ACCESS_POLICY,
 							siteKey: dapp,
 							countryCode,
+							headers: flatHeaders,
 						}),
 					);
 				}
@@ -420,6 +426,7 @@ export default (
 						reason: FrictionlessReason.USER_AGENT_MISMATCH,
 						siteKey: dapp,
 						countryCode,
+						headers: flatHeaders,
 					}),
 				);
 			}
@@ -499,6 +506,7 @@ export default (
 									reason: FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED,
 									siteKey: dapp,
 									countryCode,
+									headers: flatHeaders,
 								}),
 							);
 						}
@@ -535,6 +543,7 @@ export default (
 						reason: FrictionlessReason.WEBVIEW_DETECTED,
 						siteKey: dapp,
 						countryCode,
+						headers: flatHeaders,
 					}),
 				);
 			}
@@ -569,6 +578,7 @@ export default (
 						reason: FrictionlessReason.OLD_TIMESTAMP,
 						siteKey: dapp,
 						countryCode,
+						headers: flatHeaders,
 					}),
 				);
 			}
@@ -615,6 +625,7 @@ export default (
 						reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
 						siteKey: dapp,
 						countryCode,
+						headers: flatHeaders,
 					}),
 				);
 			}
@@ -633,6 +644,7 @@ export default (
 					userSitekeyIpHash,
 					siteKey: dapp,
 					countryCode,
+					headers: flatHeaders,
 				}),
 			);
 		} catch (err) {

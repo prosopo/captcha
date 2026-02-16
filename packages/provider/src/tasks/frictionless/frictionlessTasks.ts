@@ -22,6 +22,7 @@ import {
 	type GetFrictionlessCaptchaResponse,
 	type KeyringPair,
 	type ProsopoConfigOutput,
+	type RequestHeaders,
 	type ScoreComponents,
 	type Session,
 } from "@prosopo/types";
@@ -94,6 +95,7 @@ export class FrictionlessManager extends CaptchaManager {
 			decryptedHeadHash: params.decryptedHeadHash,
 			siteKey: params.siteKey,
 			countryCode: params.countryCode,
+			headers: params.headers,
 		};
 	}
 
@@ -127,6 +129,7 @@ export class FrictionlessManager extends CaptchaManager {
 		blocked?: boolean,
 		deleted?: boolean,
 		countryCode?: string,
+		headers?: RequestHeaders,
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
@@ -149,6 +152,7 @@ export class FrictionlessManager extends CaptchaManager {
 			blocked,
 			deleted,
 			countryCode,
+			headers,
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);
@@ -214,6 +218,7 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.blocked,
 			undefined,
 			effectiveParams.countryCode,
+			effectiveParams.headers,
 		);
 
 		return {
@@ -260,6 +265,7 @@ export class FrictionlessManager extends CaptchaManager {
 			undefined,
 			undefined,
 			effectiveParams.countryCode,
+			effectiveParams.headers,
 		);
 		return {
 			[ApiParams.captchaType]: CaptchaType.pow,
@@ -305,6 +311,7 @@ export class FrictionlessManager extends CaptchaManager {
 			true,
 			true,
 			effectiveParams.countryCode,
+			effectiveParams.headers,
 		);
 	}
 

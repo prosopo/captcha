@@ -248,6 +248,7 @@ export const SessionSchema = object({
 	reason: string().optional(),
 	blocked: boolean().optional(),
 	countryCode: string().optional(),
+	headers: object({}).catchall(string()),
 }) satisfies ZodType<Session>;
 
 // Session now includes all frictionless token fields
@@ -274,6 +275,7 @@ export type Session = {
 	reason?: string;
 	blocked?: boolean;
 	countryCode?: string;
+	headers?: RequestHeaders;
 };
 
 // Zod schema for BehavioralDataPacked
