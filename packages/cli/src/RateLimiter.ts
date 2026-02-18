@@ -75,5 +75,21 @@ export const getRateLimitConfig = () => {
 			windowMs: process.env.PROSOPO_GET_FR_CAPTCHA_CHALLENGE_WINDOW,
 			limit: process.env.PROSOPO_GET_FR_CAPTCHA_CHALLENGE_LIMIT,
 		},
+		[AdminApiPaths.GetDecisionMachine]: {
+			windowMs: process.env.PROSOPO_GET_DECISION_MACHINE_WINDOW,
+			limit: process.env.PROSOPO_GET_DECISION_MACHINE_LIMIT,
+		},
+		[AdminApiPaths.GetAllDecisionMachines]: {
+			windowMs: process.env.PROSOPO_GET_ALL_DECISION_MACHINES_WINDOW,
+			limit: process.env.PROSOPO_GET_ALL_DECISION_MACHINES_LIMIT,
+		},
+		[AdminApiPaths.RemoveAllDecisionMachines]: {
+			windowMs: process.env.PROSOPO_REMOVE_ALL_DECISION_MACHINES_WINDOW,
+			limit: process.env.PROSOPO_REMOVE_ALL_DECISION_MACHINES_LIMIT,
+		},
+		[AdminApiPaths.RemoveDecisionMachine]: {
+			windowMs: process.env.PROSOPO_REMOVE_DECISION_MACHINE_WINDOW,
+			limit: process.env.PROSOPO_REMOVE_DECISION_MACHINE_LIMIT,
+		},
 	};
 };

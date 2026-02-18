@@ -325,6 +325,58 @@ export default class ProviderApi
 		);
 	}
 
+	public getAllDecisionMachines(jwt: string): Promise<ApiResponse> {
+		return this.post(
+			AdminApiPaths.GetAllDecisionMachines,
+			{},
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					Authorization: `Bearer ${jwt}`,
+				},
+			},
+		);
+	}
+
+	public getDecisionMachine(id: string, jwt: string): Promise<ApiResponse> {
+		return this.post(
+			AdminApiPaths.GetDecisionMachine,
+			{ id },
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					Authorization: `Bearer ${jwt}`,
+				},
+			},
+		);
+	}
+
+	public removeDecisionMachine(id: string, jwt: string): Promise<ApiResponse> {
+		return this.post(
+			AdminApiPaths.RemoveDecisionMachine,
+			{ id },
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					Authorization: `Bearer ${jwt}`,
+				},
+			},
+		);
+	}
+
+	public removeAllDecisionMachines(jwt: string): Promise<ApiResponse> {
+		return this.post(
+			AdminApiPaths.RemoveAllDecisionMachines,
+			{},
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					Authorization: `Bearer ${jwt}`,
+				},
+			},
+		);
+	}
+
 	public removeDetectorKey(
 		detectorKey: string,
 		jwt: string,

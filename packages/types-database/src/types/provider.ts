@@ -681,6 +681,18 @@ export interface IProviderDatabase extends IDatabase {
 		dappAccount?: string,
 	): Promise<DecisionMachineArtifact | undefined>;
 
+	getAllDecisionMachineArtifacts(): Promise<
+		(DecisionMachineArtifact & { _id: string })[]
+	>;
+
+	getDecisionMachineArtifactById(
+		id: string,
+	): Promise<(DecisionMachineArtifact & { _id: string }) | undefined>;
+
+	removeDecisionMachineArtifact(id: string): Promise<boolean>;
+
+	removeAllDecisionMachineArtifacts(): Promise<number>;
+
 	setClientContextEntropy(
 		account: string,
 		contextType: ContextType,
