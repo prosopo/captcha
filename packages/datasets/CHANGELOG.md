@@ -1,5 +1,11 @@
 # @prosopo/datasets
 
+## 3.1.1
+### Patch Changes
+
+- Updated dependencies [cde7550]
+  - @prosopo/types@3.10.1
+
 ## 3.1.0
 ### Minor Changes
 

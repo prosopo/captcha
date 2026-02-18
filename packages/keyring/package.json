@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/keyring",
-	"version": "2.9.6",
+	"version": "2.9.7",
 	"description": "Keypair generator for Prosopo",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -39,7 +39,7 @@
 		"@polkadot/util": "13.5.7",
 		"@polkadot/util-crypto": "13.5.7",
 		"@prosopo/common": "3.1.28",
-		"@prosopo/types": "3.10.0",
+		"@prosopo/types": "3.10.1",
 		"@prosopo/util": "3.2.5",
 		"@prosopo/util-crypto": "13.5.29",
 		"dotenv": "16.4.5"
