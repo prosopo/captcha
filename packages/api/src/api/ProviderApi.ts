@@ -57,7 +57,7 @@ import {
 	GetDecisionMachineBody,
 	RemoveAllDecisionMachinesBody,
 	RemoveDecisionMachineBody,
-} from "../../../types/src";
+} from "@prosopo/types";
 import { ApiClient } from "./apiClient.js";
 
 export default class ProviderApi

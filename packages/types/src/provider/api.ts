@@ -449,12 +449,12 @@ export const RemoveAllDecisionMachinesBody = object({});
 export const DecisionMachineSummarySchema = object({
 	_id: string(),
 	scope: nativeEnum(DecisionMachineScope),
-	dappAccount: string().optional(),
+	dappAccount: string().nullish(),
 	runtime: nativeEnum(DecisionMachineRuntime),
-	language: nativeEnum(DecisionMachineLanguage).optional(),
-	name: string().optional(),
-	version: string().optional(),
-	captchaType: DecisionMachineCaptchaTypeSchema.optional(),
+	language: nativeEnum(DecisionMachineLanguage).nullish(),
+	name: string().nullish(),
+	version: string().nullish(),
+	captchaType: DecisionMachineCaptchaTypeSchema.nullish(),
 	createdAt: string(),
 	updatedAt: string(),
 });

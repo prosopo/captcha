@@ -411,7 +411,7 @@ export const DecisionMachineArtifactRecordSchema =
 			enum: Object.values(DecisionMachineScope),
 			required: true,
 		},
-		dappAccount: { type: String, required: false, default: null },
+		dappAccount: { type: String, required: false },
 		runtime: {
 			type: String,
 			enum: Object.values(DecisionMachineRuntime),

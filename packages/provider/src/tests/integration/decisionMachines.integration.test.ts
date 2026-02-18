@@ -268,11 +268,11 @@ describe("Decision Machine Database Integration Tests", () => {
 			expect(getAllResponse.status).toBe(200);
 
 			const rawResponse = await getAllResponse.text();
-			console.log("getAllDecisionMachines response:", rawResponse);
 
-			const machines = JSON.parse(
-				rawResponse,
-			) as GetAllDecisionMachinesResponseType;
+			const parsedResponse = JSON.parse(rawResponse);
+
+			const machines =
+				parsedResponse.data as GetAllDecisionMachinesResponseType;
 
 			// Verify that at least one machine exists
 			expect(Array.isArray(machines)).toBe(true);
@@ -317,8 +317,8 @@ describe("Decision Machine Database Integration Tests", () => {
 				},
 			);
 
-			const machines =
-				(await getAllResponse.json()) as GetAllDecisionMachinesResponseType;
+			const machines = (await getAllResponse.json())
+				.data as GetAllDecisionMachinesResponseType;
 			expect(machines.length).toBeGreaterThan(0);
 
 			// MongoDB ObjectId is a 24-character hex string
@@ -346,8 +346,8 @@ describe("Decision Machine Database Integration Tests", () => {
 				},
 			);
 
-			const allMachines =
-				(await getAllResponse.json()) as GetAllDecisionMachinesResponseType;
+			const allMachines = (await getAllResponse.json())
+				.data as GetAllDecisionMachinesResponseType;
 			expect(allMachines.length).toBeGreaterThan(0);
 
 			const firstMachine = allMachines[0];
@@ -371,8 +371,8 @@ describe("Decision Machine Database Integration Tests", () => {
 
 			expect(getByIdResponse.status).toBe(200);
 
-			const machine =
-				(await getByIdResponse.json()) as GetDecisionMachineResponseType;
+			const machine = (await getByIdResponse.json())
+				.data as GetDecisionMachineResponseType;
 
 			// Verify _id is present and matches
 			expect(machine).toHaveProperty("_id");
@@ -429,8 +429,8 @@ describe("Decision Machine Database Integration Tests", () => {
 				},
 			);
 
-			const machines1 =
-				(await getAllResponse1.json()) as GetAllDecisionMachinesResponseType;
+			const machines1 = (await getAllResponse1.json())
+				.data as GetAllDecisionMachinesResponseType;
 			const newMachine1 = machines1.find((m) => m.name === uniqueName);
 			expect(newMachine1).toBeDefined();
 			const machineId = newMachine1?._id;
@@ -452,8 +452,8 @@ describe("Decision Machine Database Integration Tests", () => {
 				},
 			);
 
-			const machineById =
-				(await getByIdResponse.json()) as GetDecisionMachineResponseType;
+			const machineById = (await getByIdResponse.json())
+				.data as GetDecisionMachineResponseType;
 			expect(machineById._id).toBe(machineId);
 
 			// Get all machines again and verify the ID is consistent
@@ -470,8 +470,8 @@ describe("Decision Machine Database Integration Tests", () => {
 				},
 			);
 
-			const machines2 =
-				(await getAllResponse2.json()) as GetAllDecisionMachinesResponseType;
+			const machines2 = (await getAllResponse2.json())
+				.data as GetAllDecisionMachinesResponseType;
 			const newMachine2 = machines2.find((m) => m.name === uniqueName);
 			expect(newMachine2?._id).toBe(machineId);
 		});
@@ -509,8 +509,8 @@ describe("Decision Machine Database Integration Tests", () => {
 				},
 			);
 
-			const machines =
-				(await getAllResponse.json()) as GetAllDecisionMachinesResponseType;
+			const machines = (await getAllResponse.json())
+				.data as GetAllDecisionMachinesResponseType;
 			const machineToDelete = machines.find((m) => m.name === deleteTestName);
 			expect(machineToDelete).toBeDefined();
 			const machineId = machineToDelete?._id;
@@ -532,8 +532,8 @@ describe("Decision Machine Database Integration Tests", () => {
 			);
 
 			expect(deleteResponse.status).toBe(200);
-			const deleteResult =
-				(await deleteResponse.json()) as RemoveDecisionMachineResponseType;
+			const deleteResult = (await deleteResponse.json())
+				.data as RemoveDecisionMachineResponseType;
 			expect(deleteResult.success).toBe(true);
 			expect(deleteResult.deletedId).toBe(machineId);
 
@@ -553,7 +553,8 @@ describe("Decision Machine Database Integration Tests", () => {
 				},
 			);
 
-			expect(verifyResponse.status).toBe(400); // Should fail - machine not found
+			const jsonResponse = await verifyResponse.json();
+			expect(jsonResponse.status).toBe("FAIL"); // Should fail - machine not found
 		});
 	});
 });
