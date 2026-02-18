@@ -1,5 +1,13 @@
 # @prosopo/detector
 
+## 3.4.9
+### Patch Changes
+
+- ce4f831: patch for some mobile devices
+- 4de47f5: Catcher update
+- Updated dependencies [93fa086]
+  - @prosopo/types@3.10.2
+
 ## 3.4.8
 ### Patch Changes
 

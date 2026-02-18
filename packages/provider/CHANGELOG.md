@@ -1,5 +1,24 @@
 # @prosopo/provider
 
+## 3.19.2
+### Patch Changes
+
+- ce4f831: patch for some mobile devices
+- 93fa086: Add decision engine endpoints
+- 4de47f5: Catcher update
+- Updated dependencies [93fa086]
+  - @prosopo/types-database@4.4.2
+  - @prosopo/database@3.9.2
+  - @prosopo/types@3.10.2
+  - @prosopo/api@3.1.49
+  - @prosopo/types-env@2.8.3
+  - @prosopo/env@3.3.3
+  - @prosopo/api-express-router@3.0.58
+  - @prosopo/datasets@3.1.2
+  - @prosopo/keyring@2.9.8
+  - @prosopo/load-balancer@2.8.25
+  - @prosopo/user-access-policy@3.6.9
+
 ## 3.19.1
 ### Patch Changes
 
