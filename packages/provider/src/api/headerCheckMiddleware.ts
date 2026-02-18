@@ -36,6 +36,15 @@ export const headerCheckMiddleware = (env: ProviderEnvironment) => {
 
 			validateAddr(user, undefined, req.logger);
 
+			req.user = user;
+			req.siteKey = siteKey;
+
+			// Attach site key and user to the request logger
+			req.logger = req.logger.with({
+				user,
+				siteKey,
+			});
+
 			next();
 		} catch (err) {
 			return handleErrors(err as Error, req, res, next);

@@ -34,8 +34,6 @@ export function requestLoggerMiddleware(env: ProviderEnvironment) {
 		const user = getHeaderValue(req, "prosopo-user");
 		const siteKey = getHeaderValue(req, "prosopo-site-key");
 		const sessionId = req.body?.sessionId ? req.body.sessionId : null;
-		req.user = user;
-		req.siteKey = siteKey;
 
 		// Attach site key and user to the request logger
 		req.logger = req.logger.with({
