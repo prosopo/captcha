@@ -17,12 +17,22 @@ import type { ProviderEnvironment } from "@prosopo/env";
 import type { NextFunction, Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 
+const getHeaderValue = (
+	req: Request,
+	headerName: string,
+): string | undefined => {
+	if (headerName in req.headers && req.headers[headerName]) {
+		return req.headers[headerName].toString();
+	}
+	return undefined;
+};
+
 export function requestLoggerMiddleware(env: ProviderEnvironment) {
 	return (req: Request, res: Response, next: NextFunction) => {
 		const requestId =
 			(req.headers["x-request-id"] as string) || `e-${uuidv4()}`; // use prefix to differentiate from other IDs
-		const user = req.headers["prosopo-user"] as string;
-		const siteKey = req.headers["prosopo-site-key"] as string;
+		const user = getHeaderValue(req, "prosopo-user");
+		const siteKey = getHeaderValue(req, "prosopo-site-key");
 		const sessionId = req.body?.sessionId ? req.body.sessionId : null;
 		req.user = user;
 		req.siteKey = siteKey;
