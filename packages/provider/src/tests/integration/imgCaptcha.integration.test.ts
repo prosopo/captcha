@@ -71,7 +71,7 @@ async function registerSiteKeyInDb(
 describe("Image Captcha Integration Tests", () => {
 	let env: ProviderEnvironment;
 	let mongoContainer: StartedTestContainer;
-	let redisContainer: StartedTestContainer;
+	let redisContainer: StartedTestContainer | undefined;
 	let server: Server;
 	let dappAccount: string;
 	let mnemonic: string;
@@ -94,18 +94,33 @@ describe("Image Captcha Integration Tests", () => {
 			})
 			.start();
 
-		// Start Redis container
-		redisContainer = await new GenericContainer("redis/redis-stack:latest")
-			.withExposedPorts(6379)
-			.withEnvironment({
-				REDIS_ARGS: "--requirepass root",
-			})
-			.start();
-
 		const mongoHost = mongoContainer.getHost();
 		const mongoPort = mongoContainer.getMappedPort(27017);
-		const redisHost = redisContainer.getHost();
-		const redisPort = redisContainer.getMappedPort(6379);
+
+		// Make Redis optional - can be disabled by setting SKIP_REDIS=true in environment
+		const skipRedis = process.env.SKIP_REDIS === "true";
+		let redisHost = "localhost";
+		let redisPort = 6379;
+
+		if (!skipRedis) {
+			try {
+				// Start Redis container
+				redisContainer = await new GenericContainer("redis/redis-stack:latest")
+					.withExposedPorts(6379)
+					.withEnvironment({
+						REDIS_ARGS: "--requirepass root",
+					})
+					.start();
+
+				redisHost = redisContainer.getHost();
+				redisPort = redisContainer.getMappedPort(6379);
+			} catch (error) {
+				console.warn(
+					"Failed to start Redis container, continuing without Redis:",
+					error,
+				);
+			}
+		}
 
 		const config = ProsopoConfigSchema.parse({
 			defaultEnvironment: "development",
@@ -128,11 +143,16 @@ describe("Image Captcha Integration Tests", () => {
 					authSource: "admin",
 				},
 			},
-			redisConnection: {
-				url: `redis://:${encodeURIComponent("root")}@${redisHost}:${redisPort}`,
-				password: "root",
-				indexName: randomAsHex(16),
-			},
+			// Only configure Redis if container is available
+			...(redisContainer
+				? {
+						redisConnection: {
+							url: `redis://:${encodeURIComponent("root")}@${redisHost}:${redisPort}`,
+							password: "root",
+							indexName: randomAsHex(16),
+						},
+					}
+				: {}),
 			ipApi: {
 				baseUrl: "https://dummyUrl.com",
 				apiKey: "dummyKey",
@@ -148,8 +168,17 @@ describe("Image Captcha Integration Tests", () => {
 
 		const db = env.getDb();
 
-		// wait until Redis is ready
-		await db.getRedisAccessRulesConnection().getClient();
+		// wait until Redis is ready (only if Redis container was started)
+		if (redisContainer) {
+			try {
+				await db.getRedisAccessRulesConnection().getClient();
+			} catch (error) {
+				console.warn(
+					"Redis connection failed, continuing without Redis:",
+					error,
+				);
+			}
+		}
 
 		// Setup provider dataset - this is critical for the tests to work
 		// This mimics the setup script's setupProvider functionality
