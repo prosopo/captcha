@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 3.10.2
+### Patch Changes
+
+- 93fa086: Add decision engine endpoints
+
 ## 3.10.1
 ### Patch Changes
 

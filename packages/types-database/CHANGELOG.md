@@ -1,5 +1,13 @@
 # @prosopo/types-database
 
+## 4.4.2
+### Patch Changes
+
+- 93fa086: Add decision engine endpoints
+- Updated dependencies [93fa086]
+  - @prosopo/types@3.10.2
+  - @prosopo/user-access-policy@3.6.9
+
 ## 4.4.1
 ### Patch Changes
 

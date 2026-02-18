@@ -1,5 +1,18 @@
 # @prosopo/cli
 
+## 3.5.32
+### Patch Changes
+
+- 93fa086: Add decision engine endpoints
+- Updated dependencies [ce4f831]
+- Updated dependencies [93fa086]
+- Updated dependencies [4de47f5]
+  - @prosopo/provider@3.19.2
+  - @prosopo/types@3.10.2
+  - @prosopo/api@3.1.49
+  - @prosopo/env@3.3.3
+  - @prosopo/keyring@2.9.8
+
 ## 3.5.31
 ### Patch Changes
 
