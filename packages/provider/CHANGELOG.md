@@ -1,5 +1,22 @@
 # @prosopo/provider
 
+## 3.19.1
+### Patch Changes
+
+- cde7550: enhance/frictionless-headers-db-field
+- Updated dependencies [cde7550]
+  - @prosopo/types-database@4.4.1
+  - @prosopo/types@3.10.1
+  - @prosopo/database@3.9.1
+  - @prosopo/types-env@2.8.2
+  - @prosopo/api@3.1.48
+  - @prosopo/api-express-router@3.0.57
+  - @prosopo/datasets@3.1.1
+  - @prosopo/env@3.3.2
+  - @prosopo/keyring@2.9.7
+  - @prosopo/load-balancer@2.8.24
+  - @prosopo/user-access-policy@3.6.8
+
 ## 3.19.0
 ### Minor Changes
 
