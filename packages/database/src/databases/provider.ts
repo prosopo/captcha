@@ -1953,6 +1953,58 @@ export class ProviderDatabase
 	}
 
 	/**
+	 * Retrieves all decision machine artifacts.
+	 *
+	 * @returns Array of all decision machine artifacts
+	 */
+	async getAllDecisionMachineArtifacts(): Promise<
+		(DecisionMachineArtifact & { _id: string })[]
+	> {
+		const docs = await this.tables?.decisionMachine
+			.find({})
+			.lean<(DecisionMachineArtifact & { _id: string })[]>();
+		return docs ?? [];
+	}
+
+	/**
+	 * Retrieves a single decision machine artifact by MongoDB ObjectId.
+	 *
+	 * @param id - The MongoDB ObjectId as a string
+	 * @returns The matching artifact, or undefined if not found
+	 */
+	async getDecisionMachineArtifactById(
+		id: string,
+	): Promise<(DecisionMachineArtifact & { _id: string }) | undefined> {
+		const doc = await this.tables?.decisionMachine
+			.findById(id)
+			.lean<DecisionMachineArtifact & { _id: string }>();
+		return doc ?? undefined;
+	}
+
+	/**
+	 * Removes a decision machine artifact by MongoDB ObjectId.
+	 *
+	 * @param id - The MongoDB ObjectId as a string
+	 * @returns true if deleted, false if not found
+	 */
+	async removeDecisionMachineArtifact(id: string): Promise<boolean> {
+		const result = await this.tables?.decisionMachine.deleteOne({
+			_id: id,
+		});
+		return (result?.deletedCount ?? 0) > 0;
+	}
+
+	/**
+	 * Removes all decision machine artifacts.
+	 *
+	 * @returns The number of artifacts deleted
+	 */
+	async removeAllDecisionMachineArtifacts(): Promise<number> {
+		const result = await this.tables?.decisionMachine.deleteMany({});
+		return result?.deletedCount ?? 0;
+	}
+
+	/**
 	 * @description set client context-specific entropy
 	 */
 	async setClientContextEntropy(

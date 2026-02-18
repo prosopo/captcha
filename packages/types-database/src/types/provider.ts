@@ -411,7 +411,7 @@ export const DecisionMachineArtifactRecordSchema =
 			enum: Object.values(DecisionMachineScope),
 			required: true,
 		},
-		dappAccount: { type: String, required: false, default: null },
+		dappAccount: { type: String, required: false },
 		runtime: {
 			type: String,
 			enum: Object.values(DecisionMachineRuntime),
@@ -682,6 +682,18 @@ export interface IProviderDatabase extends IDatabase {
 		scope: DecisionMachineScope,
 		dappAccount?: string,
 	): Promise<DecisionMachineArtifact | undefined>;
+
+	getAllDecisionMachineArtifacts(): Promise<
+		(DecisionMachineArtifact & { _id: string })[]
+	>;
+
+	getDecisionMachineArtifactById(
+		id: string,
+	): Promise<(DecisionMachineArtifact & { _id: string }) | undefined>;
+
+	removeDecisionMachineArtifact(id: string): Promise<boolean>;
+
+	removeAllDecisionMachineArtifacts(): Promise<number>;
 
 	setClientContextEntropy(
 		account: string,

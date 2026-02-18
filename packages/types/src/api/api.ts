@@ -94,4 +94,8 @@ export interface ProviderApiInterface {
 		version?: string,
 		captchaType?: DecisionMachineCaptchaType,
 	): Promise<ApiResponse>;
+	getAllDecisionMachines(jwt: string): Promise<ApiResponse>;
+	getDecisionMachine(id: string, jwt: string): Promise<ApiResponse>;
+	removeDecisionMachine(id: string, jwt: string): Promise<ApiResponse>;
+	removeAllDecisionMachines(jwt: string): Promise<ApiResponse>;
 }
