@@ -21,14 +21,25 @@ export function requestLoggerMiddleware(env: ProviderEnvironment) {
 	return (req: Request, res: Response, next: NextFunction) => {
 		const requestId =
 			(req.headers["x-request-id"] as string) || `e-${uuidv4()}`; // use prefix to differentiate from other IDs
-
+		const user = req.headers["prosopo-user"] as string;
+		const siteKey = req.headers["prosopo-site-key"] as string;
 		const sessionId = req.body?.sessionId ? req.body.sessionId : null;
+		req.user = user;
+		req.siteKey = siteKey;
+
+		// Attach site key and user to the request logger
+		req.logger = req.logger.with({
+			user,
+			siteKey,
+		});
 
 		const logger = getLogger(
 			parseLogLevel(env.config.logLevel),
 			"request-logger",
 		).with({
 			requestId,
+			...(user ? { user } : {}),
+			...(siteKey ? { siteKey } : {}),
 			...(sessionId ? { sessionId } : {}),
 		});
 
