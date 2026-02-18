@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 3.10.1
+### Patch Changes
+
+- cde7550: enhance/frictionless-headers-db-field
+
 ## 3.10.0
 ### Minor Changes
 

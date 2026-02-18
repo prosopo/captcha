@@ -1,5 +1,13 @@
 # @prosopo/types-database
 
+## 4.4.1
+### Patch Changes
+
+- cde7550: enhance/frictionless-headers-db-field
+- Updated dependencies [cde7550]
+  - @prosopo/types@3.10.1
+  - @prosopo/user-access-policy@3.6.8
+
 ## 4.4.0
 ### Minor Changes
 
