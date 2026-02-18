@@ -52,6 +52,12 @@ import {
 	type VerificationResponse,
 	type VerifySolutionBodyTypeInput,
 } from "@prosopo/types";
+import {
+	GetAllDecisionMachinesBody,
+	GetDecisionMachineBody,
+	RemoveAllDecisionMachinesBody,
+	RemoveDecisionMachineBody,
+} from "../../../types/src";
 import { ApiClient } from "./apiClient.js";
 
 export default class ProviderApi
@@ -328,7 +334,7 @@ export default class ProviderApi
 	public getAllDecisionMachines(jwt: string): Promise<ApiResponse> {
 		return this.post(
 			AdminApiPaths.GetAllDecisionMachines,
-			{},
+			GetAllDecisionMachinesBody.parse({}),
 			{
 				headers: {
 					"Prosopo-Site-Key": this.account,
@@ -341,7 +347,7 @@ export default class ProviderApi
 	public getDecisionMachine(id: string, jwt: string): Promise<ApiResponse> {
 		return this.post(
 			AdminApiPaths.GetDecisionMachine,
-			{ id },
+			GetDecisionMachineBody.parse({ id }),
 			{
 				headers: {
 					"Prosopo-Site-Key": this.account,
@@ -354,7 +360,7 @@ export default class ProviderApi
 	public removeDecisionMachine(id: string, jwt: string): Promise<ApiResponse> {
 		return this.post(
 			AdminApiPaths.RemoveDecisionMachine,
-			{ id },
+			RemoveDecisionMachineBody.parse({ id }),
 			{
 				headers: {
 					"Prosopo-Site-Key": this.account,
@@ -367,7 +373,7 @@ export default class ProviderApi
 	public removeAllDecisionMachines(jwt: string): Promise<ApiResponse> {
 		return this.post(
 			AdminApiPaths.RemoveAllDecisionMachines,
-			{},
+			RemoveAllDecisionMachinesBody.parse({}),
 			{
 				headers: {
 					"Prosopo-Site-Key": this.account,
