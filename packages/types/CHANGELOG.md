@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 3.11.0
+### Minor Changes
+
+- 7f6ffc5: Store behavioural for image challenges
+
 ## 3.10.2
 ### Patch Changes
 

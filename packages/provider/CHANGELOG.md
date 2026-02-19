@@ -1,5 +1,27 @@
 # @prosopo/provider
 
+## 3.20.0
+### Minor Changes
+
+- 7f6ffc5: Store behavioural for image challenges
+
+### Patch Changes
+
+- ca7f4ad: Attach site key and user to logger earlier
+- Updated dependencies [ca7f4ad]
+- Updated dependencies [7f6ffc5]
+  - @prosopo/api-express-router@3.0.59
+  - @prosopo/types@3.11.0
+  - @prosopo/api@3.2.0
+  - @prosopo/database@3.9.3
+  - @prosopo/datasets@3.1.3
+  - @prosopo/env@3.3.4
+  - @prosopo/keyring@2.9.9
+  - @prosopo/load-balancer@2.8.26
+  - @prosopo/types-database@4.4.3
+  - @prosopo/types-env@2.8.4
+  - @prosopo/user-access-policy@3.6.10
+
 ## 3.19.3
 ### Patch Changes
 

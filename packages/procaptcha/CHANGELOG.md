@@ -1,5 +1,18 @@
 # @prosopo/procaptcha
 
+## 2.10.0
+### Minor Changes
+
+- 7f6ffc5: Store behavioural for image challenges
+
+### Patch Changes
+
+- Updated dependencies [7f6ffc5]
+  - @prosopo/types@3.11.0
+  - @prosopo/api@3.2.0
+  - @prosopo/datasets@3.1.3
+  - @prosopo/procaptcha-common@2.9.32
+
 ## 2.9.38
 ### Patch Changes
 

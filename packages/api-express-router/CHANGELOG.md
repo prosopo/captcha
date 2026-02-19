@@ -1,5 +1,13 @@
 # @prosopo/api-express-router
 
+## 3.0.59
+### Patch Changes
+
+- ca7f4ad: Attach site key and user to logger earlier
+- Updated dependencies [7f6ffc5]
+  - @prosopo/types@3.11.0
+  - @prosopo/env@3.3.4
+
 ## 3.0.58
 ### Patch Changes
 
