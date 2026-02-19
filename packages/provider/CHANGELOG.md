@@ -1,5 +1,10 @@
 # @prosopo/provider
 
+## 3.19.3
+### Patch Changes
+
+- bca43e5: catcher updates
+
 ## 3.19.2
 ### Patch Changes
 
