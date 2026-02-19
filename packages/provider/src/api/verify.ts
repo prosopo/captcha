@@ -124,6 +124,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						ip,
 						clientRecord.settings.disallowWebView,
 						clientRecord.settings.contextAware?.enabled,
+						userAccessRulesStorage,
 					);
 
 				req.logger.debug(() => ({ data: { response } }));
