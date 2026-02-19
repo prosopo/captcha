@@ -19,22 +19,42 @@ import {
 	CaptchaType,
 	type KeyringPair,
 	type ProsopoConfigOutput,
+	type RequestHeaders,
 	type Session,
-	Tier,
+	Tier, UserCommitment,
 } from "@prosopo/types";
 import type {
 	ClientRecord,
 	IProviderDatabase,
 	IUserDataSlim,
+	PoWCaptchaRecord,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import type {
-	AccessPolicy,
-	AccessRulesStorage,
-	UserScope,
-	UserScopeRecord,
+import {
+	type AccessPolicy,
+	AccessPolicyType,
+	type AccessRulesStorage,
+	type UserScope,
+	type UserScopeRecord,
 } from "@prosopo/user-access-policy";
-import { getPrioritisedAccessRule } from "../api/blacklistRequestInspector.js";
+import {
+	getPrioritisedAccessRule,
+	getRequestUserScope,
+} from "../api/blacklistRequestInspector.js";
+import { getIpAddressFromComposite } from "../compositeIpAddress.js";
+
+/**
+ * Finds a hard block policy from access policies.
+ * A hard block is a Block policy without a captchaType specified.
+ * Policies with captchaType are for captcha type selection, not hard blocking.
+ */
+const findHardBlockPolicy = (
+	accessPolicies: AccessPolicy[],
+): AccessPolicy | undefined => {
+	return accessPolicies.find(
+		(policy) => policy.type === AccessPolicyType.Block && !policy.captchaType,
+	);
+};
 
 export class CaptchaManager {
 	pair: KeyringPair;
@@ -244,6 +264,124 @@ export class CaptchaManager {
 
 	async getDetectorKeys(): Promise<string[]> {
 		return await this.db.getDetectorKeys();
+	}
+
+	async decryptBehavioralData(
+		encryptedData: string,
+		decryptKeys: (string | undefined)[],
+	): Promise<
+		import("./detection/decodeBehavior.js").BehavioralDataResult | null
+	> {
+		const decryptBehavioralData = (
+			await import("./detection/decodeBehavior.js")
+		).default;
+
+		const validKeys = decryptKeys.filter((k) => k);
+
+		if (validKeys.length === 0) {
+			this.logger?.error(() => ({
+				msg: "No decryption keys provided for behavioral data",
+			}));
+			return null;
+		}
+
+		// Try each key until one succeeds
+		for (const [keyIndex, key] of validKeys.entries()) {
+			try {
+				this.logger?.debug(() => ({
+					msg: "Attempting to decrypt behavioral data",
+					data: {
+						keyIndex: keyIndex + 1,
+						totalKeys: validKeys.length,
+					},
+				}));
+
+				// Decrypt behavioral data - returns unpacked format: {collector1, collector2, collector3, deviceCapability, timestamp}
+				const result = await decryptBehavioralData(encryptedData, key);
+
+				this.logger?.info(() => ({
+					msg: "Behavioral data decrypted successfully",
+					data: {
+						keyIndex: keyIndex + 1,
+						c1Length: result.collector1?.length || 0,
+						c2Length: result.collector2?.length || 0,
+						c3Length: result.collector3?.length || 0,
+						deviceCapability: result.deviceCapability,
+					},
+				}));
+
+				return result;
+			} catch (error) {
+				this.logger?.debug(() => ({
+					msg: "Failed to decrypt with key, trying next",
+					data: {
+						keyIndex: keyIndex + 1,
+						totalKeys: validKeys.length,
+						err: error,
+					},
+				}));
+				// Continue to next key
+			}
+		}
+
+		// All keys failed
+		this.logger?.error(() => ({
+			msg: "Failed to decrypt behavioral data with all available keys",
+			data: {
+				totalKeysAttempted: validKeys.length,
+			},
+		}));
+
+		return null;
+	}
+
+	/**
+	 * Checks if a user should be hard blocked based on access policies
+	 * Only checks for Block policies without captchaType
+	 *
+	 * @returns The blocking policy if user should be blocked, undefined otherwise
+	 */
+	async checkForHardBlock(
+		userAccessRulesStorage: AccessRulesStorage,
+		challengeRecord: PoWCaptchaRecord | UserCommitment,
+		userAccount: string,
+		headers: RequestHeaders,
+		coords?: [number, number][][],
+		countryCode?: string,
+	): Promise<AccessPolicy | undefined> {
+		// Get headHash from session record if available
+		let headHash: string | undefined;
+		if (challengeRecord.sessionId) {
+			const sessionRecord = await this.db.getSessionRecordBySessionId(
+				challengeRecord.sessionId,
+			);
+			headHash = sessionRecord?.decryptedHeadHash;
+		}
+
+		// Serialize coords to string for querying
+		const coordsString = coords ? JSON.stringify(coords) : undefined;
+
+		const ipAddressRecord = getIpAddressFromComposite(
+			challengeRecord.ipAddress,
+		);
+
+		const userScope = getRequestUserScope(
+			headers,
+			challengeRecord.ja4,
+			ipAddressRecord.address,
+			userAccount,
+			headHash,
+			coordsString,
+			countryCode,
+		);
+
+		const accessPolicies = await this.getPrioritisedAccessPolicies(
+			userAccessRulesStorage,
+			challengeRecord.dappAccount,
+			userScope,
+		);
+
+		return findHardBlockPolicy(accessPolicies);
 	}
 
 	static canClientSeeScore(tier: Tier, score?: number) {

@@ -178,6 +178,14 @@ const CaptchaResultSchema = object({
 	error: string().optional(),
 }) satisfies ZodType<CaptchaResult>;
 
+// Zod schema for BehavioralDataPacked
+const BehavioralDataPackedSchema = object({
+	c1: array(any()),
+	c2: array(any()),
+	c3: array(any()),
+	d: string(),
+});
+
 export const UserCommitmentSchema = object({
 	userAccount: string(),
 	dappAccount: string(),
@@ -203,6 +211,9 @@ export const UserCommitmentSchema = object({
 	requestHash: string(),
 	deadlineTimestamp: date(),
 	threshold: number(),
+	// Behavioral data fields
+	deviceCapability: string().optional(),
+	behavioralDataPacked: BehavioralDataPackedSchema.optional(),
 }) satisfies ZodType<UserCommitment>;
 
 // Zod schema for ScoreComponents
@@ -277,14 +288,6 @@ export type Session = {
 	countryCode?: string;
 	headers?: RequestHeaders;
 };
-
-// Zod schema for BehavioralDataPacked
-const BehavioralDataPackedSchema = object({
-	c1: array(any()),
-	c2: array(any()),
-	c3: array(any()),
-	d: string(),
-});
 
 // Zod schema for PoWCaptchaStored
 // PoWCaptchaStored = PoWCaptchaUser (minus requestedAtTimestamp) + StoredCaptcha

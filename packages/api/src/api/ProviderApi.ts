@@ -94,6 +94,7 @@ export default class ProviderApi
 		timestamp: string,
 		providerRequestHashSignature: string,
 		userTimestampSignature: string,
+		behavioralData?: string,
 	): Promise<CaptchaSolutionResponse> {
 		const body: CaptchaSolutionBodyType = {
 			[ApiParams.user]: userAccount,
@@ -109,6 +110,7 @@ export default class ProviderApi
 					[ApiParams.requestHash]: providerRequestHashSignature,
 				},
 			},
+			...(behavioralData && { [ApiParams.behavioralData]: behavioralData }),
 		};
 		return this.post(ClientApiPaths.SubmitImageCaptchaSolution, body, {
 			headers: {

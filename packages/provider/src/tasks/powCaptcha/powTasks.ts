@@ -32,18 +32,10 @@ import {
 	type PoWChallengeId,
 	type RequestHeaders,
 } from "@prosopo/types";
-import type {
-	IProviderDatabase,
-	PoWCaptchaRecord,
-} from "@prosopo/types-database";
+import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import {
-	type AccessPolicy,
-	AccessPolicyType,
-	type AccessRulesStorage,
-} from "@prosopo/user-access-policy";
+import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import { at, extractData, verifyRecency } from "@prosopo/util";
-import { getRequestUserScope } from "../../api/blacklistRequestInspector.js";
 import {
 	getCompositeIpAddress,
 	getIpAddressFromComposite,
@@ -51,22 +43,8 @@ import {
 import { deepValidateIpAddress } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
-import type { BehavioralDataResult } from "../detection/decodeBehavior.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
-
-/**
- * Finds a hard block policy from access policies.
- * A hard block is a Block policy without a captchaType specified.
- * Policies with captchaType are for captcha type selection, not hard blocking.
- */
-const findHardBlockPolicy = (
-	accessPolicies: AccessPolicy[],
-): AccessPolicy | undefined => {
-	return accessPolicies.find(
-		(policy) => policy.type === AccessPolicyType.Block && !policy.captchaType,
-	);
-};
 
 const DEFAULT_POW_DIFFICULTY = 4;
 
@@ -83,54 +61,6 @@ export class PowCaptchaManager extends CaptchaManager {
 		super(db, pair, config, logger);
 		this.POW_SEPARATOR = POW_SEPARATOR;
 		this.decisionMachineRunner = new DecisionMachineRunner(db);
-	}
-
-	/**
-	 * Checks if a user should be hard blocked based on access policies
-	 * Only checks for Block policies without captchaType
-	 *
-	 * @returns The blocking policy if user should be blocked, undefined otherwise
-	 */
-	private async checkForHardBlock(
-		userAccessRulesStorage: AccessRulesStorage,
-		challengeRecord: PoWCaptchaRecord,
-		userAccount: string,
-		headers: RequestHeaders,
-		coords?: [number, number][][],
-	): Promise<AccessPolicy | undefined> {
-		// Get headHash from session record if available
-		let headHash: string | undefined;
-		if (challengeRecord.sessionId) {
-			const sessionRecord = await this.db.getSessionRecordBySessionId(
-				challengeRecord.sessionId,
-			);
-			headHash = sessionRecord?.decryptedHeadHash;
-		}
-
-		// Serialize coords to string for querying
-		const coordsString = coords ? JSON.stringify(coords) : undefined;
-
-		const ipAddressRecord = getIpAddressFromComposite(
-			challengeRecord.ipAddress,
-		);
-
-		const userScope = getRequestUserScope(
-			headers,
-			challengeRecord.ja4,
-			ipAddressRecord.address,
-			userAccount,
-			headHash,
-			coordsString,
-			undefined, // countryCode - could be stored in challenge record in future
-		);
-
-		const accessPolicies = await this.getPrioritisedAccessPolicies(
-			userAccessRulesStorage,
-			challengeRecord.dappAccount,
-			userScope,
-		);
-
-		return findHardBlockPolicy(accessPolicies);
 	}
 
 	/**
@@ -415,6 +345,7 @@ export class PowCaptchaManager extends CaptchaManager {
 					challengeRecord.userAccount,
 					challengeRecord.headers,
 					challengeRecord.coords,
+					challengeRecord.geolocation,
 				);
 
 				if (blockPolicy) {
@@ -561,77 +492,5 @@ export class PowCaptchaManager extends CaptchaManager {
 		}
 
 		return { verified: true, ...(score ? { score } : {}) };
-	}
-
-	/**
-	 * Decrypts behavioral data
-	 * @param encryptedData - The encrypted behavioral data
-	 * @param decryptKeys - Array of possible decryption keys to try
-	 * @returns Decrypted behavioral data in unpacked format, or null if decryption fails
-	 */
-	private async decryptBehavioralData(
-		encryptedData: string,
-		decryptKeys: (string | undefined)[],
-	): Promise<BehavioralDataResult | null> {
-		const decryptBehavioralData = (
-			await import("../detection/decodeBehavior.js")
-		).default;
-
-		const validKeys = decryptKeys.filter((k) => k);
-
-		if (validKeys.length === 0) {
-			this.logger?.error(() => ({
-				msg: "No decryption keys provided for behavioral data",
-			}));
-			return null;
-		}
-
-		// Try each key until one succeeds
-		for (const [keyIndex, key] of validKeys.entries()) {
-			try {
-				this.logger?.debug(() => ({
-					msg: "Attempting to decrypt behavioral data",
-					data: {
-						keyIndex: keyIndex + 1,
-						totalKeys: validKeys.length,
-					},
-				}));
-
-				// Decrypt behavioral data - returns unpacked format: {collector1, collector2, collector3, deviceCapability, timestamp}
-				const result = await decryptBehavioralData(encryptedData, key);
-
-				this.logger?.info(() => ({
-					msg: "Behavioral data decrypted successfully",
-					data: {
-						keyIndex: keyIndex + 1,
-						c1Length: result.collector1?.length || 0,
-						c2Length: result.collector2?.length || 0,
-						c3Length: result.collector3?.length || 0,
-						deviceCapability: result.deviceCapability,
-					},
-				}));
-
-				return result;
-			} catch (error) {
-				this.logger?.debug(() => ({
-					msg: "Failed to decrypt with key, trying next",
-					data: {
-						keyIndex: keyIndex + 1,
-						totalKeys: validKeys.length,
-						err: error,
-					},
-				}));
-				// Continue to next key
-			}
-		}
-
-		// All keys failed
-		this.logger?.error(() => ({
-			msg: "Failed to decrypt behavioral data with all available keys",
-			data: {
-				totalKeysAttempted: validKeys.length,
-			},
-		}));
-		return null;
 	}
 }
