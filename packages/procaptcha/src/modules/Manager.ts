@@ -284,8 +284,36 @@ export function Manager(
 					type: "bytes",
 				});
 
-				// TODO: Add behavioral data collection for image captcha when API supports it
-				// (Currently only PoW captcha submission accepts behavioral data)
+				let encryptedBehavioralData: string | undefined;
+
+				// Collect and encrypt behavioral data before submission
+				if (
+					frictionlessState?.encryptBehavioralData &&
+					(frictionlessState?.behaviorCollector1 ||
+						frictionlessState?.behaviorCollector2 ||
+						frictionlessState?.behaviorCollector3)
+				) {
+					try {
+						const behavioralData = {
+							collector1: frictionlessState.behaviorCollector1?.getData() || [],
+							collector2: frictionlessState.behaviorCollector2?.getData() || [],
+							collector3: frictionlessState.behaviorCollector3?.getData() || [],
+							deviceCapability: frictionlessState.deviceCapability || "unknown",
+						};
+
+						// Pack the behavioral data before stringifying
+						const dataToEncrypt = frictionlessState.packBehavioralData
+							? frictionlessState.packBehavioralData(behavioralData)
+							: behavioralData;
+
+						encryptedBehavioralData =
+							await frictionlessState.encryptBehavioralData(
+								JSON.stringify(dataToEncrypt),
+							);
+					} catch {
+						// Silently ignore behavioral data errors - captcha should still work
+					}
+				}
 
 				// send the commitment to the provider
 				const submission: TCaptchaSubmitResult =
@@ -295,6 +323,7 @@ export function Manager(
 						captchaSolution,
 						challenge.timestamp,
 						challenge.signature.provider.requestHash,
+						encryptedBehavioralData,
 					);
 
 				// mark as is human if solution has been approved

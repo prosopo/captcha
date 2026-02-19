@@ -91,6 +91,7 @@ export default (env: ProviderEnvironment) =>
 					getIPAddress(req.ip || ""),
 					flatten(req.headers),
 					req.ja4,
+					parsed[ApiParams.behavioralData],
 				);
 
 			const returnValue: CaptchaSolutionResponse = {

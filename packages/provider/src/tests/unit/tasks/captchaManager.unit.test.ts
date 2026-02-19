@@ -15,6 +15,7 @@
 import { type Logger, getLogger } from "@prosopo/common";
 import {
 	ContextType,
+	IpAddressType,
 	type KeyringPair,
 	type Session,
 	contextAwareThresholdDefault,
@@ -22,8 +23,18 @@ import {
 import { CaptchaType, type IUserSettings, Tier } from "@prosopo/types";
 import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import {
+	type AccessPolicy,
+	AccessPolicyType,
+	type AccessRulesStorage,
+} from "@prosopo/user-access-policy";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CaptchaManager } from "../../../tasks/captchaManager.js";
+import type { BehavioralDataResult } from "../../../tasks/detection/decodeBehavior.js";
+
+vi.mock("../../../tasks/detection/decodeBehavior.js", () => ({
+	default: vi.fn(),
+}));
 
 const loggerOuter = getLogger("info", import.meta.url);
 
@@ -506,6 +517,176 @@ describe("CaptchaManager", () => {
 				status: "translated",
 				verified: true,
 			});
+		});
+	});
+
+	describe("decryptBehavioralData", () => {
+		// biome-ignore lint/suspicious/noExplicitAny: tests
+		let decryptFn: any;
+
+		beforeEach(async () => {
+			// Get the mocked default export
+			const mod = await import("../../../tasks/detection/decodeBehavior.js");
+			decryptFn = mod.default;
+			vi.mocked(decryptFn).mockReset();
+		});
+
+		it("should return null when no decryption keys are provided", async () => {
+			const result = await captchaManager.decryptBehavioralData(
+				"encryptedData",
+				[],
+			);
+			expect(result).toBeNull();
+			expect(decryptFn).not.toHaveBeenCalled();
+		});
+
+		it("should return null when all provided keys are undefined", async () => {
+			const result = await captchaManager.decryptBehavioralData(
+				"encryptedData",
+				[undefined, undefined],
+			);
+			expect(result).toBeNull();
+			expect(decryptFn).not.toHaveBeenCalled();
+		});
+
+		it("should return the result when the first valid key succeeds", async () => {
+			const mockResult: BehavioralDataResult = {
+				collector1: [{ event: "click" }],
+				collector2: [],
+				collector3: [],
+				deviceCapability: "desktop",
+				timestamp: 1000,
+			};
+			vi.mocked(decryptFn).mockResolvedValue(mockResult);
+
+			const result = await captchaManager.decryptBehavioralData(
+				"encryptedData",
+				["key1", "key2"],
+			);
+			expect(result).toEqual(mockResult);
+			expect(decryptFn).toHaveBeenCalledTimes(1);
+			expect(decryptFn).toHaveBeenCalledWith("encryptedData", "key1");
+		});
+
+		it("should try the next key when the first key fails", async () => {
+			const mockResult: BehavioralDataResult = {
+				collector1: [],
+				collector2: [],
+				collector3: [],
+				deviceCapability: "mobile",
+				timestamp: 2000,
+			};
+			vi.mocked(decryptFn)
+				.mockRejectedValueOnce(new Error("bad key"))
+				.mockResolvedValueOnce(mockResult);
+
+			const result = await captchaManager.decryptBehavioralData(
+				"encryptedData",
+				["badKey", "goodKey"],
+			);
+			expect(result).toEqual(mockResult);
+			expect(decryptFn).toHaveBeenCalledTimes(2);
+			expect(decryptFn).toHaveBeenNthCalledWith(1, "encryptedData", "badKey");
+			expect(decryptFn).toHaveBeenNthCalledWith(2, "encryptedData", "goodKey");
+		});
+
+		it("should return null when all valid keys fail", async () => {
+			vi.mocked(decryptFn).mockRejectedValue(new Error("decrypt failed"));
+
+			const result = await captchaManager.decryptBehavioralData(
+				"encryptedData",
+				["key1", "key2"],
+			);
+			expect(result).toBeNull();
+			expect(decryptFn).toHaveBeenCalledTimes(2);
+		});
+	});
+
+	describe("checkForHardBlock", () => {
+		const compositeIp = { lower: 2130706433n, type: IpAddressType.v4 }; // 127.0.0.1
+		const mockHeaders = { "user-agent": "test-agent" };
+		// biome-ignore lint/suspicious/noExplicitAny: tests
+		const mockChallengeRecord: any = {
+			sessionId: undefined,
+			ipAddress: compositeIp,
+			ja4: "test-ja4",
+			dappAccount: "dappAccount",
+		};
+
+		beforeEach(() => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db as any).getSessionRecordBySessionId = vi.fn().mockResolvedValue(null);
+		});
+
+		it("should return undefined when there are no matching policies", async () => {
+			vi.spyOn(
+				captchaManager,
+				"getPrioritisedAccessPolicies",
+			).mockResolvedValue([]);
+
+			const result = await captchaManager.checkForHardBlock(
+				{} as AccessRulesStorage,
+				mockChallengeRecord,
+				"userAccount",
+				mockHeaders,
+			);
+			expect(result).toBeUndefined();
+		});
+
+		it("should return undefined for a Block policy that has a captchaType (captcha-type selector, not hard block)", async () => {
+			const blockWithCaptchaType: AccessPolicy = {
+				type: AccessPolicyType.Block,
+				captchaType: CaptchaType.image,
+			};
+			vi.spyOn(
+				captchaManager,
+				"getPrioritisedAccessPolicies",
+			).mockResolvedValue([blockWithCaptchaType]);
+
+			const result = await captchaManager.checkForHardBlock(
+				{} as AccessRulesStorage,
+				mockChallengeRecord,
+				"userAccount",
+				mockHeaders,
+			);
+			expect(result).toBeUndefined();
+		});
+
+		it("should return the policy for a Block policy without a captchaType (hard block)", async () => {
+			const hardBlockPolicy: AccessPolicy = {
+				type: AccessPolicyType.Block,
+				description: "hard block",
+			};
+			vi.spyOn(
+				captchaManager,
+				"getPrioritisedAccessPolicies",
+			).mockResolvedValue([hardBlockPolicy]);
+
+			const result = await captchaManager.checkForHardBlock(
+				{} as AccessRulesStorage,
+				mockChallengeRecord,
+				"userAccount",
+				mockHeaders,
+			);
+			expect(result).toEqual(hardBlockPolicy);
+		});
+
+		it("should return undefined for a Restrict policy without captchaType (not a Block policy)", async () => {
+			const restrictPolicy: AccessPolicy = {
+				type: AccessPolicyType.Restrict,
+			};
+			vi.spyOn(
+				captchaManager,
+				"getPrioritisedAccessPolicies",
+			).mockResolvedValue([restrictPolicy]);
+
+			const result = await captchaManager.checkForHardBlock(
+				{} as AccessRulesStorage,
+				mockChallengeRecord,
+				"userAccount",
+				mockHeaders,
+			);
+			expect(result).toBeUndefined();
 		});
 	});
 });

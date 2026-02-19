@@ -45,6 +45,7 @@ export interface ProviderApiInterface {
 		timestamp: string,
 		providerRequestHashSignature: string,
 		userRequestHashSignature: string,
+		behavioralData?: string,
 	): Promise<CaptchaSolutionResponse>;
 	verifyDappUser(
 		token: ProcaptchaToken,

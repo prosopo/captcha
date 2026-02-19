@@ -258,6 +258,7 @@ export const CaptchaSolutionBody = object({
 		[ApiParams.user]: TimestampSignatureSchema,
 		[ApiParams.provider]: RequestHashSignatureSchema,
 	}),
+	[ApiParams.behavioralData]: string().optional(),
 });
 
 export type CaptchaSolutionBodyType = zInfer<typeof CaptchaSolutionBody>;

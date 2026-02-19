@@ -21,6 +21,7 @@ import {
 } from "@prosopo/datasets";
 import {
 	ApiParams,
+	type BehavioralDataPacked,
 	type Captcha,
 	type CaptchaSolution,
 	CaptchaStatus,
@@ -41,6 +42,7 @@ import {
 } from "@prosopo/types";
 import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import { at, extractData } from "@prosopo/util";
 import { randomAsHex, signatureVerify } from "@prosopo/util-crypto";
 import {
@@ -187,7 +189,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 	 * @param ipAddress
 	 * @param headers
 	 * @param ja4
-	 * @param countryCode
+	 * @param behavioralData
 	 * @return {Promise<DappUserSolutionResult>} result containing the contract event
 	 */
 	async dappUserSolution(
@@ -201,7 +203,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		ipAddress: IPAddress,
 		headers: RequestHeaders,
 		ja4: string,
-		countryCodeFallback?: string,
+		behavioralData?: string,
 	): Promise<DappUserSolutionResult> {
 		// check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
 		const verification = signatureVerify(
@@ -288,9 +290,57 @@ export class ImgCaptchaManager extends CaptchaManager {
 				);
 				countryCode = sessionRecord?.countryCode;
 			}
-			// If not available from session, use the fallback from geolocation
-			if (!countryCode) {
-				countryCode = countryCodeFallback;
+
+			// Process behavioral data if provided
+			let behavioralDataPacked: BehavioralDataPacked | undefined;
+			let deviceCapability: string | undefined;
+			if (behavioralData) {
+				try {
+					// Get decryption keys: detector keys from DB first, then env var as fallback
+					const decryptKeys = [
+						// Process DB keys first, then env var key last as env key will likely be invalid
+						...(await this.getDetectorKeys()),
+						process.env.BOT_DECRYPTION_KEY,
+					];
+
+					// Decrypt the behavioral data (returns unpacked format)
+					const decryptedData = await this.decryptBehavioralData(
+						behavioralData,
+						decryptKeys,
+					);
+
+					if (decryptedData) {
+						// Log behavioral analytics using unpacked data counts
+						this.logger?.info(() => ({
+							msg: "Behavioral analysis completed",
+							data: {
+								userAccount,
+								dappAccount,
+								requestHash,
+								mouseEventsCount: decryptedData.collector1?.length || 0,
+								touchEventsCount: decryptedData.collector2?.length || 0,
+								clickEventsCount: decryptedData.collector3?.length || 0,
+								deviceCapability: decryptedData.deviceCapability,
+							},
+						}));
+
+						// Convert to packed format for storage
+						behavioralDataPacked = {
+							c1: decryptedData.collector1 || [],
+							c2: decryptedData.collector2 || [],
+							c3: decryptedData.collector3 || [],
+							d: decryptedData.deviceCapability,
+						};
+
+						deviceCapability = decryptedData.deviceCapability;
+					}
+				} catch (error) {
+					this.logger?.error(() => ({
+						msg: "Failed to process behavioral data",
+						err: error,
+					}));
+					// Don't fail the captcha if behavioral analysis fails
+				}
 			}
 
 			const commit: UserCommitment = {
@@ -314,6 +364,8 @@ export class ImgCaptchaManager extends CaptchaManager {
 				requestHash: pendingRecord[ApiParams.requestHash],
 				threshold: pendingRecord.threshold,
 				deadlineTimestamp: pendingRecord.deadlineTimestamp,
+				...(behavioralDataPacked && { behavioralDataPacked }),
+				...(deviceCapability && { deviceCapability }),
 			};
 			await this.db.storeUserImageCaptchaSolution(receivedCaptchas, commit);
 
@@ -514,6 +566,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		ip?: string,
 		disallowWebView?: boolean,
 		contextAwareEnabled = false,
+		userAccessRulesStorage?: AccessRulesStorage,
 	): Promise<ImageVerificationResponse> {
 		const solution = await (commitmentId
 			? this.getDappUserCommitmentById(commitmentId)
@@ -559,6 +612,46 @@ export class ImgCaptchaManager extends CaptchaManager {
 				status: "API.USER_NOT_VERIFIED_TIME_EXPIRED",
 				verified: false,
 			};
+		}
+
+		// Check user access policies for hard blocks
+		if (userAccessRulesStorage) {
+			try {
+				const blockPolicy = await this.checkForHardBlock(
+					userAccessRulesStorage,
+					solution,
+					solution.userAccount,
+					solution.headers,
+					solution.coords,
+					solution.geolocation,
+				);
+
+				if (blockPolicy) {
+					this.logger.info(() => ({
+						msg: "User blocked by access policy in server PoW verification",
+						data: {
+							userAccount: solution.userAccount,
+							dappAccount: solution.dappAccount,
+							policy: blockPolicy,
+						},
+					}));
+					await this.db.updateDappUserCommitment(solution.id, {
+						result: {
+							status: CaptchaStatus.disapproved,
+							reason: "API.ACCESS_POLICY_BLOCK",
+						},
+					});
+					return {
+						status: "API.USER_BLOCKED",
+						verified: false,
+					};
+				}
+			} catch (error) {
+				this.logger.warn(() => ({
+					msg: "Failed to check user access policies in server Image verification",
+					error,
+				}));
+			}
 		}
 
 		if (ip) {
@@ -642,7 +735,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				captchaResult: "passed",
 				headers: solution.headers,
 				captchaType: CaptchaType.image,
-				countryCode: solution.countryCode,
+				countryCode: solution.geolocation,
 			};
 
 			try {
