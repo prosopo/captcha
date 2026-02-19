@@ -1,5 +1,10 @@
 # @prosopo/detector
 
+## 3.4.10
+### Patch Changes
+
+- bca43e5: catcher updates
+
 ## 3.4.9
 ### Patch Changes
 
