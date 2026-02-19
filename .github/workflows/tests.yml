@@ -100,6 +100,7 @@ jobs:
       - name: Start services and run tests
         env:
           NX_PARALLEL: "1"
+          SKIP_REDIS: "true"
         run: |
           npx concurrently \
             "NODE_ENV=test npm run start:provider" \
