@@ -29,8 +29,8 @@ import {
 	type AccessRulesStorage,
 } from "@prosopo/user-access-policy";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { BehavioralDataResult } from "../../../tasks/detection/decodeBehavior.js";
 import { CaptchaManager } from "../../../tasks/captchaManager.js";
+import type { BehavioralDataResult } from "../../../tasks/detection/decodeBehavior.js";
 
 vi.mock("../../../tasks/detection/decodeBehavior.js", () => ({
 	default: vi.fn(),
@@ -526,9 +526,7 @@ describe("CaptchaManager", () => {
 
 		beforeEach(async () => {
 			// Get the mocked default export
-			const mod = await import(
-				"../../../tasks/detection/decodeBehavior.js"
-			);
+			const mod = await import("../../../tasks/detection/decodeBehavior.js");
 			decryptFn = mod.default;
 			vi.mocked(decryptFn).mockReset();
 		});
@@ -588,16 +586,8 @@ describe("CaptchaManager", () => {
 			);
 			expect(result).toEqual(mockResult);
 			expect(decryptFn).toHaveBeenCalledTimes(2);
-			expect(decryptFn).toHaveBeenNthCalledWith(
-				1,
-				"encryptedData",
-				"badKey",
-			);
-			expect(decryptFn).toHaveBeenNthCalledWith(
-				2,
-				"encryptedData",
-				"goodKey",
-			);
+			expect(decryptFn).toHaveBeenNthCalledWith(1, "encryptedData", "badKey");
+			expect(decryptFn).toHaveBeenNthCalledWith(2, "encryptedData", "goodKey");
 		});
 
 		it("should return null when all valid keys fail", async () => {
