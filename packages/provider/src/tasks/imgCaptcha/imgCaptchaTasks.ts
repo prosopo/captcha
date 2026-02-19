@@ -648,7 +648,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				}
 			} catch (error) {
 				this.logger.warn(() => ({
-					msg: "Failed to check user access policies in server PoW verification",
+					msg: "Failed to check user access policies in server Image verification",
 					error,
 				}));
 			}
@@ -735,7 +735,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				captchaResult: "passed",
 				headers: solution.headers,
 				captchaType: CaptchaType.image,
-				countryCode: solution.countryCode,
+				countryCode: solution.geolocation,
 			};
 
 			try {
