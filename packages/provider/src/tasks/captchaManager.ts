@@ -21,7 +21,8 @@ import {
 	type ProsopoConfigOutput,
 	type RequestHeaders,
 	type Session,
-	Tier, UserCommitment,
+	Tier,
+	type UserCommitment,
 } from "@prosopo/types";
 import type {
 	ClientRecord,
