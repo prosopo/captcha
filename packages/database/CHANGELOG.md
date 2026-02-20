@@ -1,5 +1,11 @@
 # @prosopo/database
 
+## 3.9.4
+### Patch Changes
+
+- Updated dependencies [90033e9]
+  - @prosopo/types-database@4.4.4
+
 ## 3.9.3
 ### Patch Changes
 

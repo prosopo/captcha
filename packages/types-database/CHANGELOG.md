@@ -1,5 +1,10 @@
 # @prosopo/types-database
 
+## 4.4.4
+### Patch Changes
+
+- 90033e9: Add missing schema field
+
 ## 4.4.3
 ### Patch Changes
 

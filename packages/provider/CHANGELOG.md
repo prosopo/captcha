@@ -1,5 +1,15 @@
 # @prosopo/provider
 
+## 3.20.1
+### Patch Changes
+
+- Updated dependencies [90033e9]
+  - @prosopo/types-database@4.4.4
+  - @prosopo/database@3.9.4
+  - @prosopo/types-env@2.8.5
+  - @prosopo/env@3.3.5
+  - @prosopo/api-express-router@3.0.60
+
 ## 3.20.0
 ### Minor Changes
 
