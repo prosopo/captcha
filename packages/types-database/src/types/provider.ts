@@ -179,10 +179,6 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 		required: false,
 	},
 	coords: { type: [[[Number]]], required: false },
-	// Legacy fields - kept for backward compatibility with existing data
-	mouseEvents: { type: [Object], required: false },
-	touchEvents: { type: [Object], required: false },
-	clickEvents: { type: [Object], required: false },
 	// Current behavioral data storage format (packed)
 	deviceCapability: { type: String, required: false },
 	behavioralDataPacked: {
@@ -249,6 +245,17 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	requestHash: { type: String, required: true },
 	deadlineTimestamp: { type: Date, required: true },
 	threshold: { type: Number, required: true },
+	// Current behavioral data storage format (packed)
+	deviceCapability: { type: String, required: false },
+	behavioralDataPacked: {
+		type: {
+			c1: { type: [Schema.Types.Mixed], required: true },
+			c2: { type: [Schema.Types.Mixed], required: true },
+			c3: { type: [Schema.Types.Mixed], required: true },
+			d: { type: String, required: true },
+		},
+		required: false,
+	},
 });
 // Set an index on the commitment id field, descending
 UserCommitmentRecordSchema.index({ id: -1 });
