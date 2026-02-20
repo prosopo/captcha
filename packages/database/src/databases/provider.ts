@@ -798,7 +798,7 @@ export class ProviderDatabase
 						serverChecked: 1,
 						userSubmitted: 1,
 						coords: 1,
-					})
+					} as { [key in keyof Partial<PoWCaptchaRecord>]: 1 })
 					.lean<PoWCaptchaRecord>();
 			if (record) {
 				this.logger.info(() => ({
@@ -1559,7 +1559,7 @@ export class ProviderDatabase
 				dappAccount: 1,
 				headers: 1,
 				countryCode: 1,
-			})
+			} as { [key in keyof Partial<UserCommitmentRecord>]: 1 })
 			.lean<UserCommitmentRecord>();
 
 		const doc = await commitmentCursor;

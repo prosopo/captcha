@@ -279,7 +279,7 @@ export default (
 				iFrame,
 				decryptedHeadHash,
 				siteKey: dapp,
-				geolocation: countryCode,
+				countryCode,
 				headers: flatHeaders,
 			});
 
@@ -338,7 +338,7 @@ export default (
 						userSitekeyIpHash,
 						reason: FrictionlessReason.ACCESS_POLICY_BLOCK,
 						siteKey: dapp,
-						geolocation: countryCode,
+						countryCode,
 						headers: flatHeaders,
 					});
 
@@ -360,7 +360,7 @@ export default (
 							userSitekeyIpHash,
 							reason: FrictionlessReason.USER_ACCESS_POLICY,
 							siteKey: dapp,
-							geolocation: countryCode,
+							countryCode,
 							headers: flatHeaders,
 						}),
 					);
@@ -379,7 +379,7 @@ export default (
 							userSitekeyIpHash,
 							reason: FrictionlessReason.USER_ACCESS_POLICY,
 							siteKey: dapp,
-							geolocation: countryCode,
+							countryCode,
 							headers: flatHeaders,
 						}),
 					);
@@ -425,7 +425,7 @@ export default (
 						userSitekeyIpHash,
 						reason: FrictionlessReason.USER_AGENT_MISMATCH,
 						siteKey: dapp,
-						geolocation: countryCode,
+						countryCode,
 						headers: flatHeaders,
 					}),
 				);
@@ -505,7 +505,7 @@ export default (
 									userSitekeyIpHash,
 									reason: FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED,
 									siteKey: dapp,
-									geolocation: countryCode,
+									countryCode,
 									headers: flatHeaders,
 								}),
 							);
@@ -542,7 +542,7 @@ export default (
 						userSitekeyIpHash,
 						reason: FrictionlessReason.WEBVIEW_DETECTED,
 						siteKey: dapp,
-						geolocation: countryCode,
+						countryCode,
 						headers: flatHeaders,
 					}),
 				);
@@ -577,7 +577,7 @@ export default (
 						userSitekeyIpHash,
 						reason: FrictionlessReason.OLD_TIMESTAMP,
 						siteKey: dapp,
-						geolocation: countryCode,
+						countryCode,
 						headers: flatHeaders,
 					}),
 				);
@@ -624,7 +624,7 @@ export default (
 						userSitekeyIpHash,
 						reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
 						siteKey: dapp,
-						geolocation: countryCode,
+						countryCode,
 						headers: flatHeaders,
 					}),
 				);
@@ -643,7 +643,7 @@ export default (
 				await tasks.frictionlessManager.sendPowCaptcha({
 					userSitekeyIpHash,
 					siteKey: dapp,
-					geolocation: countryCode,
+					countryCode,
 					headers: flatHeaders,
 				}),
 			);

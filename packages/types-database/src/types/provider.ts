@@ -171,6 +171,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	serverChecked: { type: Boolean, required: true },
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
 	geolocation: { type: String, required: false },
+	countryCode: { type: String, required: false },
 	vpn: { type: Boolean, required: false },
 	parsedUserAgentInfo: { type: Object, required: false },
 	sessionId: {
@@ -199,7 +200,7 @@ PoWCaptchaRecordSchema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
 PoWCaptchaRecordSchema.index({ "ipAddress.lower": 1 });
 PoWCaptchaRecordSchema.index({ "ipAddress.upper": 1 });
 PoWCaptchaRecordSchema.index({ "result.reason": 1 });
-PoWCaptchaRecordSchema.index({ geolocation: 1 });
+PoWCaptchaRecordSchema.index({ countryCode: 1 });
 
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	userAccount: { type: String, required: true },
@@ -230,6 +231,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	requestedAtTimestamp: { type: Date, required: true },
 	lastUpdatedTimestamp: { type: Date, required: false },
 	geolocation: { type: String, required: false },
+	countryCode: { type: String, required: false },
 	vpn: { type: Boolean, required: false },
 	parsedUserAgentInfo: { type: Object, required: false },
 	sessionId: {
@@ -264,7 +266,7 @@ UserCommitmentRecordSchema.index({ userAccount: 1, dappAccount: 1 });
 UserCommitmentRecordSchema.index({ "ipAddress.lower": 1 });
 UserCommitmentRecordSchema.index({ "ipAddress.upper": 1 });
 UserCommitmentRecordSchema.index({ "result.reason": 1 });
-UserCommitmentRecordSchema.index({ geolocation: 1 });
+UserCommitmentRecordSchema.index({ countryCode: 1 });
 UserCommitmentRecordSchema.index({ requestHash: -1 });
 UserCommitmentRecordSchema.index({ pending: 1 });
 
@@ -378,6 +380,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	reason: { type: String, required: false },
 	blocked: { type: Boolean, required: false },
 	geolocation: { type: String, required: false },
+	countryCode: { type: String, required: false },
 	headers: { type: Object, required: false },
 } satisfies AllKeys<Session>);
 

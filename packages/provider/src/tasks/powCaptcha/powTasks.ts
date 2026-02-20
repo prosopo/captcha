@@ -345,7 +345,7 @@ export class PowCaptchaManager extends CaptchaManager {
 					challengeRecord.userAccount,
 					challengeRecord.headers,
 					challengeRecord.coords,
-					challengeRecord.geolocation,
+					challengeRecord.countryCode,
 				);
 
 				if (blockPolicy) {
@@ -444,7 +444,7 @@ export class PowCaptchaManager extends CaptchaManager {
 				captchaType: CaptchaType.pow,
 				behavioralDataPacked: challengeRecord.behavioralDataPacked,
 				deviceCapability: challengeRecord.deviceCapability,
-				countryCode: challengeRecord.geolocation,
+				countryCode: challengeRecord.countryCode,
 			};
 
 			const decision = await this.decisionMachineRunner.decide(
