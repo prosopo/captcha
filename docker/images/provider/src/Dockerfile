@@ -11,8 +11,8 @@ COPY ./packages/locale/dist/locales/ ./locales/
 
 # download the GeoLite2 databases into the same directory
 RUN curl -L -o GeoLite2-Country.mmdb https://git.io/GeoLite2-Country.mmdb
-RUN curl -L -o GeoLite2-Country.mmdb https://git.io/GeoLite2-City.mmdb
-RUN curl -L -o GeoLite2-Country.mmdb https://git.io/GeoLite2-ASN.mmdb
+RUN curl -L -o GeoLite2-City.mmdb https://git.io/GeoLite2-City.mmdb
+RUN curl -L -o GeoLite2-ASN.mmdb https://git.io/GeoLite2-ASN.mmdb
 
 # make the provider cli executable
 # create a package.json file for the provider cli to force it to run in module mode and set the binary for npx

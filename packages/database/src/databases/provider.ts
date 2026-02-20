@@ -47,7 +47,6 @@ import {
 	type Session,
 	type SolutionRecord,
 	type StoredCaptcha,
-	type StoredStatus,
 	StoredStatusNames,
 	type UserCommitment,
 	UserCommitmentSchema,
@@ -705,7 +704,6 @@ export class ProviderDatabase
 		sessionId?: string,
 		serverChecked = false,
 		userSubmitted = false,
-		storedStatus: StoredStatus = StoredStatusNames.notStored,
 		userSignature?: string,
 		countryCode?: string,
 	): Promise<void> {
@@ -737,7 +735,7 @@ export class ProviderDatabase
 					challenge,
 					userSubmitted,
 					serverChecked,
-					storedStatus,
+					countryCode,
 				},
 				msg: "PowCaptcha record added successfully",
 			}));
@@ -748,7 +746,7 @@ export class ProviderDatabase
 					challenge,
 					userSubmitted,
 					serverChecked,
-					storedStatus,
+					countryCode,
 				},
 				logger: this.logger,
 			});
