@@ -1,5 +1,10 @@
 # @prosopo/provider
 
+## 3.20.2
+### Patch Changes
+
+- 31af9cf: Use correct country code var
+
 ## 3.20.1
 ### Patch Changes
 
