@@ -345,7 +345,7 @@ export class PowCaptchaManager extends CaptchaManager {
 					challengeRecord.userAccount,
 					challengeRecord.headers,
 					challengeRecord.coords,
-					challengeRecord.geolocation,
+					challengeRecord.countryCode,
 				);
 
 				if (blockPolicy) {

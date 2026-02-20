@@ -259,6 +259,7 @@ export const SessionSchema = object({
 	reason: string().optional(),
 	blocked: boolean().optional(),
 	countryCode: string().optional(),
+	geolocation: string().optional(),
 	headers: object({}).catchall(string()),
 }) satisfies ZodType<Session>;
 
@@ -286,6 +287,7 @@ export type Session = {
 	reason?: string;
 	blocked?: boolean;
 	countryCode?: string;
+	geolocation?: string;
 	headers?: RequestHeaders;
 };
 

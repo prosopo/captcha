@@ -94,6 +94,7 @@ export class FrictionlessManager extends CaptchaManager {
 			iFrame: params.iFrame ?? false,
 			decryptedHeadHash: params.decryptedHeadHash,
 			siteKey: params.siteKey,
+			geolocation: params.geolocation,
 			countryCode: params.countryCode,
 			headers: params.headers,
 		};

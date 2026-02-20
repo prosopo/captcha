@@ -379,6 +379,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	siteKey: { type: String, required: false },
 	reason: { type: String, required: false },
 	blocked: { type: Boolean, required: false },
+	geolocation: { type: String, required: false },
 	countryCode: { type: String, required: false },
 	headers: { type: Object, required: false },
 } satisfies AllKeys<Session>);

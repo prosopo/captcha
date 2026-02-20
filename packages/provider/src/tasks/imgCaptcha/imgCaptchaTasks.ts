@@ -623,7 +623,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 					solution.userAccount,
 					solution.headers,
 					solution.coords,
-					solution.geolocation,
+					solution.countryCode,
 				);
 
 				if (blockPolicy) {
@@ -735,7 +735,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				captchaResult: "passed",
 				headers: solution.headers,
 				captchaType: CaptchaType.image,
-				countryCode: solution.geolocation,
+				countryCode: solution.countryCode,
 			};
 
 			try {
