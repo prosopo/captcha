@@ -142,7 +142,6 @@ export interface StoredCaptcha {
 	userSubmitted: boolean;
 	serverChecked: boolean;
 	geolocation?: string;
-	countryCode?: string;
 	vpn?: boolean;
 	parsedUserAgentInfo?: UserAgentInfo;
 	storedAtTimestamp?: Date;
@@ -258,7 +257,7 @@ export const SessionSchema = object({
 	siteKey: string().optional(),
 	reason: string().optional(),
 	blocked: boolean().optional(),
-	countryCode: string().optional(),
+	geolocation: string().optional(),
 	headers: object({}).catchall(string()),
 }) satisfies ZodType<Session>;
 
@@ -285,7 +284,7 @@ export type Session = {
 	siteKey?: string;
 	reason?: string;
 	blocked?: boolean;
-	countryCode?: string;
+	geolocation?: string;
 	headers?: RequestHeaders;
 };
 
@@ -312,7 +311,6 @@ export const PoWCaptchaStoredSchema = object({
 	userSubmitted: boolean(),
 	serverChecked: boolean(),
 	geolocation: string().optional(),
-	countryCode: string().optional(),
 	vpn: boolean().optional(),
 	parsedUserAgentInfo: any().optional(),
 	storedAtTimestamp: date().optional(),
