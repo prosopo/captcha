@@ -1,5 +1,11 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.8.46
+### Patch Changes
+
+- Updated dependencies [5444635]
+  - @prosopo/detector@3.4.12
+
 ## 2.8.45
 ### Patch Changes
 

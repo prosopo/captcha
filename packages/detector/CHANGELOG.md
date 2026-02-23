@@ -1,5 +1,10 @@
 # @prosopo/detector
 
+## 3.4.12
+### Patch Changes
+
+- 5444635: New ob code
+
 ## 3.4.11
 ### Patch Changes
 
