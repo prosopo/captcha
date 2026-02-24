@@ -42,6 +42,7 @@ import type {
 	DecisionMachineRuntime,
 	DecisionMachineScope,
 } from "../decisionMachine/index.js";
+import type { IPInfoResponse } from "../api/ipapi.js";
 import type { RequestHeaders } from "./api.js";
 
 export interface BrowserInfo {
@@ -144,6 +145,7 @@ export interface StoredCaptcha {
 	geolocation?: string;
 	countryCode?: string;
 	vpn?: boolean;
+	ipInfo?: IPInfoResponse;
 	parsedUserAgentInfo?: UserAgentInfo;
 	storedAtTimestamp?: Date;
 	lastUpdatedTimestamp?: Date;

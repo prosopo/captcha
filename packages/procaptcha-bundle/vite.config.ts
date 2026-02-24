@@ -67,6 +67,7 @@ const translationKeys = Object.keys(
 
 // Merge with generic frontend config
 export default defineConfig(async ({ command, mode }) => {
+	console.log({mode})
 	const frontendConfig = await ViteFrontendConfig(
 		packageName,
 		bundleName,
