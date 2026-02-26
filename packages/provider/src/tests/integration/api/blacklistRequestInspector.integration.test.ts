@@ -81,7 +81,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 
 			const config = ProsopoConfigSchema.parse({
 				defaultEnvironment: "development",
-				host: "http://localhost:9229",
+				host: "https://localhost:9229",
 				account: {
 					secret:
 						process.env.PROVIDER_MNEMONIC ||
