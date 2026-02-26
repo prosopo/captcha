@@ -21,12 +21,12 @@ export const chunkIntoBatches = <Item>(
 	);
 
 export type ExecuteBatches<Batch, Response> = (
-	batches: Batch[],
+	batches: readonly Batch[],
 	handler: (batch: Batch, index: number) => Promise<Response>,
 ) => Promise<Response[]>;
 
 export const executeBatchesSequentially = (async <Batch, Response>(
-	batches: Batch[],
+	batches: readonly Batch[],
 	handler: (batch: Batch, index: number) => Promise<Response>,
 ): Promise<Response[]> => {
 	const results: Response[] = [];
@@ -41,7 +41,7 @@ export const executeBatchesSequentially = (async <Batch, Response>(
 }) satisfies ExecuteBatches<unknown, unknown>;
 
 export const executeBatchesInParallel = (async <Batch, Response>(
-	batches: Batch[],
+	batches: readonly Batch[],
 	handler: (batch: Batch, index: number) => Promise<Response>,
 ): Promise<Response[]> =>
 	Promise.all(batches.map(handler))) satisfies ExecuteBatches<unknown, unknown>;

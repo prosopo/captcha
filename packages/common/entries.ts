@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export * from "./error.js";
-export * from "./logger.js";
-export * from "./utils/utils.js";
-export * from "./utils/batches.js";
+export const entries: Record<string, string> = {
+	".index": "src/index.ts",
+	"utils/.export": "src/utils/.export.ts",
+};

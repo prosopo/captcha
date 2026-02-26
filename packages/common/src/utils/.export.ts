@@ -12,19 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, expect, it } from "vitest";
-import { chunkIntoBatches } from "../batches.js";
-
-describe("chunkIntoBatches", () => {
-	it("should chunk into batches", () => {
-		const batches = chunkIntoBatches([1, 2, 3], 2);
-
-		expect(batches).toEqual([[1, 2], [3]]);
-	});
-
-	it("should handle the empty items case", () => {
-		const batches = chunkIntoBatches([], 2);
-
-		expect(batches).toEqual([]);
-	});
-});
+export * from "./objectUtils.js";
+// todo these are still in the main namespace for back compatibility
+// export * from "./batches.js";
+// export * from "./utils.js";
