@@ -14,6 +14,11 @@
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js",
 			"require": "./dist/cjs/index.cjs"
+		},
+		"./utils": {
+			"types": "./dist/utils/.export.d.ts",
+			"import": "./dist/utils/.export.js",
+			"require": "./dist/cjs/utils/.export.cjs"
 		}
 	},
 	"scripts": {

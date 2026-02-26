@@ -9,7 +9,8 @@
 		"src/**/*.json",
 		"src/**/*.ts",
 		"src/**/*.tsx",
-		"src/**/*.d.ts"
+		"src/**/*.d.ts",
+		"src/**/.*.ts"
 	],
 	"references": [
 		{
