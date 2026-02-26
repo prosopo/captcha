@@ -31,7 +31,7 @@ import { randomAsHex } from "@prosopo/util-crypto";
 import { beforeEach, describe, expect, it } from "vitest";
 import { registerSiteKey } from "./registerSitekey.js";
 
-const baseUrl = "http://localhost:9229";
+const baseUrl = "https://localhost:9229";
 const solutions = datasetWithSolutionHashes;
 
 describe("IP Validation Integration Tests", () => {
