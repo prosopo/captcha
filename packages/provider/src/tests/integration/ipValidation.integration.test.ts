@@ -31,7 +31,8 @@ import { randomAsHex } from "@prosopo/util-crypto";
 import { beforeEach, describe, expect, it } from "vitest";
 import { registerSiteKey } from "./registerSitekey.js";
 
-const baseUrl = "https://localhost:9229";
+// Use environment variable for base URL, defaulting to HTTP
+const baseUrl = process.env.PROSOPO_SERVER_URL || "http://localhost:9228";
 const solutions = datasetWithSolutionHashes;
 
 describe("IP Validation Integration Tests", () => {
