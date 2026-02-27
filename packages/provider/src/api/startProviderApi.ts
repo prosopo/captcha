@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import fs from "node:fs";
+import https from "node:https";
 import type { Server } from "node:net";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import {
 	apiExpressRouterFactory,
 	authMiddleware,
@@ -46,6 +50,11 @@ import { ja4Middleware } from "./ja4Middleware.js";
 import { publicRouter } from "./public.js";
 import { robotsMiddleware } from "./robotsMiddleware.js";
 import { prosopoVerifyRouter } from "./verify.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const certPath = path.resolve(__dirname, "../../../../certs");
+const keyPath = path.join(certPath, "server.key");
+const crtPath = path.join(certPath, "server.crt");
 
 /**
  * Get client API paths excluding verify endpoints
@@ -245,6 +254,24 @@ export async function startProviderApi(
 	// Domain middleware will run on any routes beginning with "/v1/prosopo/provider/client/" past this point
 	apiApp.use("/v1/prosopo/provider/client/", domainMiddleware(env));
 	apiApp.use(prosopoRouter(env));
+
+	// Check if certificates exist and create HTTPS server if available
+	const useTls = fs.existsSync(keyPath) && fs.existsSync(crtPath);
+
+	if (useTls) {
+		env.logger.info(() => ({ msg: "Starting Provider API with HTTPS" }));
+		const httpsOptions = {
+			key: fs.readFileSync(keyPath),
+			cert: fs.readFileSync(crtPath),
+		};
+		const httpsServer = https.createServer(httpsOptions, apiApp);
+		return httpsServer.listen(apiPort, () => {
+			env.logger.info(() => ({
+				data: { apiPort, protocol: "https" },
+				msg: "Prosopo app listening with HTTPS",
+			}));
+		});
+	}
 
 	return apiApp.listen(apiPort, () => {
 		env.logger.info(() => ({

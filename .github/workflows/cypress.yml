@@ -61,6 +61,13 @@ jobs:
         with:
           npm_ci_args: '--include=dev'
 
+      # setup certs
+      - name: Setup certs
+        run: |
+          ./setup-certs.sh
+          ./install-certs.sh
+          echo "NODE_EXTRA_CA_CERTS=$(pwd)/certs/server.crt" >> $GITHUB_ENV
+
       - name: Setup env
         run: |
           set -euxo pipefail # stop on errors, print commands, fail on pipe fails
@@ -71,6 +78,14 @@ jobs:
           cp dev/scripts/env.test dev/scripts/.env.test
           cp dev/scripts/env.test packages/cli/.env.test
           cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
+          
+          # Update URLs to use HTTPS since certificates are present
+          sed -i 's|http://localhost|https://localhost|g' demos/client-bundle-example/.env.test
+          sed -i 's|http://localhost|https://localhost|g' .env.test
+          sed -i 's|http://localhost|https://localhost|g' dev/scripts/.env.test
+          sed -i 's|http://localhost|https://localhost|g' packages/cli/.env.test
+          sed -i 's|http://localhost|https://localhost|g' packages/procaptcha-bundle/.env.test
+          
           echo NODE_ENV: "$NODE_ENV"
 
       # build all packages in workspace

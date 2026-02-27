@@ -32,11 +32,12 @@
             window.onLoggedIn = (token) => {
                 updateCaptchaStatus('Logged in, fetching private resource', 'info');
                 const url = new URL("/private", config.serverUrl).href;
+                const origin = new URL(window.location.href).origin;
                 console.log("getting private resource with token ", token, "at", url);
                 fetch(url, {
                     method: "GET",
                     headers: {
-                        Origin: "http://localhost:9232", // TODO: change this to env var
+                        Origin: `${origin}`,
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${token}`,
                     },
@@ -179,8 +180,23 @@
 </div>
 <script type="module">
     (async () => {
+
+        // Use the current page's protocol and host, but get the port from the env var
+        const protocol = window.location.protocol;
+        const host = window.location.hostname; // Use the same hostname as the page
+
+        // Extract port from VITE_BUNDLE_URL (default to 9269 if not specified)
+        const envBundleUrl = import.meta.env.VITE_BUNDLE_URL || 'https://localhost:9269/procaptcha.bundle.js';
+        console.log('Environment Bundle URL:', envBundleUrl);
+        const bundleUrlObj = new URL(envBundleUrl);
+        const bundlePort = bundleUrlObj.port || '9269';
+        const bundlePath = bundleUrlObj.pathname;
+
+        const bundleUrl = `${protocol}//${host}:${bundlePort}${bundlePath}`;
+        console.log('Bundle URL:', bundleUrl);
+
         // Pattern to avoid race condition between Procaptcha script loading and Procaptcha render function call
-        const {render} = await import(import.meta.env.VITE_BUNDLE_URL);
+        const {render} = await import(bundleUrl);
 
         // Define a callback function to be called when the CAPTCHA is verified
         function onCaptchaVerified(output) {
