@@ -257,7 +257,7 @@ function registerSiteKey(
 	return cy.then(() => {
 		const pair = getPair(Cypress.env("PROSOPO_PROVIDER_MNEMONIC"));
 		const jwt = pair.jwtIssue();
-		const adminSiteKeyURL = `http://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
+		const adminSiteKeyURL = `https://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
 
 		const settings: IUserSettings = {
 			captchaType: captchaType || baseCaptchaType,

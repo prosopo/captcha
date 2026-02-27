@@ -50,7 +50,7 @@ export function getDefaultProviders(): IProviderAccount[] {
 	);
 	return [
 		{
-			url: "http://localhost:9229",
+			url: "https://localhost:9229",
 			pair: pair,
 			address: pair.address,
 			datasetFile: "./dev/data/captchas.json",
