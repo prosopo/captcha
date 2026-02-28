@@ -26,7 +26,7 @@
 	},
 	"dependencies": {
 		"@prosopo/svelte-procaptcha-wrapper": "1.1.54",
-		"svelte": "^5.0.0"
+		"svelte": "^5.53.5"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.3.0",
