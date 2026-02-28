@@ -35,7 +35,6 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
-		"@fingerprintjs/fingerprintjs": "file:../fingerprintjs",
 		"@prosopo/fingerprintjs": "5.1.0"
 	},
 	"devDependencies": {
