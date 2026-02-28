@@ -27,6 +27,7 @@ import {
 	tuple,
 	type infer as zInfer,
 } from "zod";
+import type { IPInfoResponse } from "../api/ipapi.js";
 import { CaptchaType } from "../client/index.js";
 import type { ContextType } from "../client/settings.js";
 import {
@@ -42,7 +43,6 @@ import type {
 	DecisionMachineRuntime,
 	DecisionMachineScope,
 } from "../decisionMachine/index.js";
-import type { IPInfoResponse } from "../api/ipapi.js";
 import type { RequestHeaders } from "./api.js";
 
 export interface BrowserInfo {
