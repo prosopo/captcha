@@ -1,5 +1,22 @@
 # @prosopo/provider
 
+## 3.20.4
+### Patch Changes
+
+- 8148587: Clustering
+- Updated dependencies [8148587]
+  - @prosopo/types-database@4.4.5
+  - @prosopo/types@3.11.1
+  - @prosopo/database@3.9.5
+  - @prosopo/types-env@2.8.6
+  - @prosopo/api@3.2.1
+  - @prosopo/api-express-router@3.0.61
+  - @prosopo/datasets@3.1.4
+  - @prosopo/env@3.3.6
+  - @prosopo/keyring@2.9.10
+  - @prosopo/load-balancer@2.8.27
+  - @prosopo/user-access-policy@3.6.11
+
 ## 3.20.3
 ### Patch Changes
 

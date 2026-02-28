@@ -1,5 +1,10 @@
 # @prosopo/vue-procaptcha-integration-demo
 
+## 1.1.54
+### Patch Changes
+
+  - @prosopo/vue-procaptcha-wrapper@1.1.54
+
 ## 1.1.53
 ### Patch Changes
 
