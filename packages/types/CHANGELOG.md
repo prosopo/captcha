@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 3.11.1
+### Patch Changes
+
+- 8148587: Clustering
+
 ## 3.11.0
 ### Minor Changes
 

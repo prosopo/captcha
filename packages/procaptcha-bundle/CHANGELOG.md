@@ -1,5 +1,16 @@
 # @prosopo/procaptcha-bundle
 
+## 3.3.16
+### Patch Changes
+
+- 8148587: Clustering
+- Updated dependencies [8148587]
+  - @prosopo/types@3.11.1
+  - @prosopo/procaptcha-frictionless@2.8.47
+  - @prosopo/procaptcha-common@2.9.33
+  - @prosopo/procaptcha-pow@2.8.41
+  - @prosopo/procaptcha-react@2.9.40
+
 ## 3.3.15
 ### Patch Changes
 
