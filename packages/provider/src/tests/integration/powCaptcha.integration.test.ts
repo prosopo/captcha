@@ -37,7 +37,7 @@ import { randomAsHex } from "@prosopo/util-crypto";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { dummyUserAccount } from "./mocks/solvedTestCaptchas.js";
-import {testFetch} from "./testFetch.js";
+import { testFetch } from "./testFetch.js";
 
 // Define the endpoint paths
 const getPowCaptchaChallengePath = ClientApiPaths.GetPowCaptchaChallenge;
@@ -276,17 +276,20 @@ describe("PoW Integration Tests", () => {
 				user: userId,
 				dapp: siteKey,
 			};
-			const response = await testFetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
-				method: "POST",
-				headers: {
-					Connection: "close",
-					"Content-Type": "application/json",
-					Origin: origin,
-					"Prosopo-Site-Key": siteKey,
-					"Prosopo-User": userId,
+			const response = await testFetch(
+				`${baseUrl}${getPowCaptchaChallengePath}`,
+				{
+					method: "POST",
+					headers: {
+						Connection: "close",
+						"Content-Type": "application/json",
+						Origin: origin,
+						"Prosopo-Site-Key": siteKey,
+						"Prosopo-User": userId,
+					},
+					body: JSON.stringify(body),
 				},
-				body: JSON.stringify(body),
-			});
+			);
 
 			expect(response.status).toBe(200);
 
@@ -300,33 +303,39 @@ describe("PoW Integration Tests", () => {
 		});
 
 		it("should return an error if origin header is not provided", async () => {
-			const response = await testFetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
-				method: "POST",
-				headers: {
-					Connection: "close",
-					"Content-Type": "application/json",
-					"Prosopo-Site-Key": siteKey,
-					"Prosopo-User": userId,
+			const response = await testFetch(
+				`${baseUrl}${getPowCaptchaChallengePath}`,
+				{
+					method: "POST",
+					headers: {
+						Connection: "close",
+						"Content-Type": "application/json",
+						"Prosopo-Site-Key": siteKey,
+						"Prosopo-User": userId,
+					},
+					body: JSON.stringify({ user: userId, dapp: siteKey }),
 				},
-				body: JSON.stringify({ user: userId, dapp: siteKey }),
-			});
+			);
 
 			expect(response.status).toBe(400);
 		});
 
 		it("should return an error if origin header is not valid", async () => {
 			const origin = "https://notallowed.com";
-			const response = await testFetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
-				method: "POST",
-				headers: {
-					Connection: "close",
-					"Content-Type": "application/json",
-					Origin: origin,
-					"Prosopo-Site-Key": siteKey,
-					"Prosopo-User": userId,
+			const response = await testFetch(
+				`${baseUrl}${getPowCaptchaChallengePath}`,
+				{
+					method: "POST",
+					headers: {
+						Connection: "close",
+						"Content-Type": "application/json",
+						Origin: origin,
+						"Prosopo-Site-Key": siteKey,
+						"Prosopo-User": userId,
+					},
+					body: JSON.stringify({ user: userId, dapp: siteKey }),
 				},
-				body: JSON.stringify({ user: userId, dapp: siteKey }),
-			});
+			);
 
 			expect(response.status).toBe(400);
 			expect(response.statusText).toBe("Bad Request");
@@ -512,17 +521,20 @@ describe("PoW Integration Tests", () => {
 		const origin = "https://localhost";
 		const invalidSiteKey = "junk";
 
-		const captchaRes = await testFetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
-			method: "POST",
-			headers: {
-				Connection: "close",
-				"Content-Type": "application/json",
-				Origin: origin,
-				"Prosopo-Site-Key": invalidSiteKey,
-				"Prosopo-User": userId,
+		const captchaRes = await testFetch(
+			`${baseUrl}${getPowCaptchaChallengePath}`,
+			{
+				method: "POST",
+				headers: {
+					Connection: "close",
+					"Content-Type": "application/json",
+					Origin: origin,
+					"Prosopo-Site-Key": invalidSiteKey,
+					"Prosopo-User": userId,
+				},
+				body: JSON.stringify({ user: userId, dapp: invalidSiteKey }),
 			},
-			body: JSON.stringify({ user: userId, dapp: invalidSiteKey }),
-		});
+		);
 
 		const challengeBody = (await captchaRes.json()) as GetPowCaptchaResponse;
 
@@ -538,17 +550,20 @@ describe("PoW Integration Tests", () => {
 
 		await registerSiteKeyInDb(env, siteKey, CaptchaType.image);
 
-		const captchaRes = await testFetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
-			method: "POST",
-			headers: {
-				Connection: "close",
-				"Content-Type": "application/json",
-				Origin: origin,
-				"Prosopo-Site-Key": siteKey,
-				"Prosopo-User": userId,
+		const captchaRes = await testFetch(
+			`${baseUrl}${getPowCaptchaChallengePath}`,
+			{
+				method: "POST",
+				headers: {
+					Connection: "close",
+					"Content-Type": "application/json",
+					Origin: origin,
+					"Prosopo-Site-Key": siteKey,
+					"Prosopo-User": userId,
+				},
+				body: JSON.stringify({ user: userId, dapp: siteKey }),
 			},
-			body: JSON.stringify({ user: userId, dapp: siteKey }),
-		});
+		);
 
 		const challengeBody = (await captchaRes.json()) as GetPowCaptchaResponse;
 
@@ -564,17 +579,20 @@ describe("PoW Integration Tests", () => {
 		const [_mnemonic, dapp] = await generateMnemonic();
 		await registerSiteKeyInDb(env, dapp, CaptchaType.frictionless);
 
-		const captchaRes = await testFetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
-			method: "POST",
-			headers: {
-				Connection: "close",
-				"Content-Type": "application/json",
-				Origin: origin,
-				"Prosopo-Site-Key": dapp,
-				"Prosopo-User": userId,
+		const captchaRes = await testFetch(
+			`${baseUrl}${getPowCaptchaChallengePath}`,
+			{
+				method: "POST",
+				headers: {
+					Connection: "close",
+					"Content-Type": "application/json",
+					Origin: origin,
+					"Prosopo-Site-Key": dapp,
+					"Prosopo-User": userId,
+				},
+				body: JSON.stringify({ user: userId, dapp }),
 			},
-			body: JSON.stringify({ user: userId, dapp }),
-		});
+		);
 
 		const challengeBody = (await captchaRes.json()) as GetPowCaptchaResponse;
 

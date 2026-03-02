@@ -35,7 +35,7 @@ import {
 import { randomAsHex } from "@prosopo/util-crypto";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import {testFetch} from "./testFetch.js";
+import { testFetch } from "./testFetch.js";
 
 // Function to get a random available port
 function getRandomPort(): number {
