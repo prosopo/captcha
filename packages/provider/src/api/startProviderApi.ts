@@ -57,6 +57,14 @@ const keyPath = path.join(certPath, "server.key");
 const crtPath = path.join(certPath, "server.crt");
 
 /**
+ * Check if TLS certificates are available
+ * @returns True if both key and cert files exist
+ */
+export const isTlsAvailable = (): boolean => {
+	return fs.existsSync(keyPath) && fs.existsSync(crtPath);
+};
+
+/**
  * Get client API paths excluding verify endpoints
  * @returns Array of ClientApiPaths excluding verify routes
  */

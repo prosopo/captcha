@@ -17,7 +17,7 @@ import { stringToU8a, u8aToHex } from "@polkadot/util";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import { ProviderEnvironment } from "@prosopo/env";
 import { generateMnemonic, getPair } from "@prosopo/keyring";
-import { Tasks, startProviderApi } from "@prosopo/provider";
+import { Tasks, isTlsAvailable, startProviderApi } from "@prosopo/provider";
 import {
 	ApiParams,
 	type CaptchaRequestBodyType,
@@ -36,6 +36,7 @@ import { randomAsHex } from "@prosopo/util-crypto";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { dummyUserAccount } from "./mocks/solvedTestCaptchas.js";
+import {testFetch} from "./testFetch.js";
 
 const solutions = datasetWithSolutionHashes;
 const userAccount = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty";
@@ -82,7 +83,8 @@ describe("Image Captcha Integration Tests", () => {
 	beforeAll(async () => {
 		// Get a unique port for this test suite
 		testPort = getRandomPort();
-		baseUrl = `https://localhost:${testPort}`;
+		const protocol = isTlsAvailable() ? "https" : "http";
+		baseUrl = `${protocol}://localhost:${testPort}`;
 
 		// Start MongoDB container
 		mongoContainer = await new GenericContainer("mongo:6.0.17")
@@ -124,7 +126,7 @@ describe("Image Captcha Integration Tests", () => {
 
 		const config = ProsopoConfigSchema.parse({
 			defaultEnvironment: "development",
-			host: `https://localhost:${testPort}`,
+			host: `${protocol}://localhost:${testPort}`,
 			account: {
 				secret:
 					process.env.PROVIDER_MNEMONIC ||
@@ -158,7 +160,7 @@ describe("Image Captcha Integration Tests", () => {
 				apiKey: "dummyKey",
 			},
 			server: {
-				baseURL: "https://localhost",
+				baseURL: `${protocol}://localhost`,
 				port: testPort,
 			},
 		});
@@ -230,7 +232,7 @@ describe("Image Captcha Integration Tests", () => {
 				[ApiParams.datasetId]: solutions.datasetId,
 			};
 
-			const response = await fetch(getImageCaptchaURL, {
+			const response = await testFetch(getImageCaptchaURL, {
 				method: "POST",
 				body: JSON.stringify(getImgCaptchaBody),
 				headers: {
@@ -257,7 +259,7 @@ describe("Image Captcha Integration Tests", () => {
 				[ApiParams.datasetId]: solutions.datasetId,
 			};
 
-			const response = await fetch(getImageCaptchaURL, {
+			const response = await testFetch(getImageCaptchaURL, {
 				method: "POST",
 				body: JSON.stringify(body),
 				headers: {
@@ -284,7 +286,7 @@ describe("Image Captcha Integration Tests", () => {
 				[ApiParams.datasetId]: solutions.datasetId,
 			};
 
-			const response = await fetch(getImageCaptchaURL, {
+			const response = await testFetch(getImageCaptchaURL, {
 				method: "POST",
 				body: JSON.stringify(body),
 				headers: {
@@ -310,7 +312,7 @@ describe("Image Captcha Integration Tests", () => {
 				[ApiParams.user]: userAccount,
 				[ApiParams.datasetId]: datasetId,
 			};
-			const response = await fetch(getImageCaptchaURL, {
+			const response = await testFetch(getImageCaptchaURL, {
 				method: "POST",
 				body: JSON.stringify(body),
 				headers: {
@@ -333,7 +335,7 @@ describe("Image Captcha Integration Tests", () => {
 				[ApiParams.user]: userAccount,
 				[ApiParams.datasetId]: solutions.datasetId,
 			};
-			const response = await fetch(getImageCaptchaURL, {
+			const response = await testFetch(getImageCaptchaURL, {
 				method: "POST",
 				body: JSON.stringify(body),
 				headers: {
@@ -359,7 +361,7 @@ describe("Image Captcha Integration Tests", () => {
 				[ApiParams.user]: userAccount,
 				[ApiParams.datasetId]: solutions.datasetId,
 			};
-			const response = await fetch(getImageCaptchaURL, {
+			const response = await testFetch(getImageCaptchaURL, {
 				method: "POST",
 				body: JSON.stringify(body),
 				headers: {
@@ -387,7 +389,7 @@ describe("Image Captcha Integration Tests", () => {
 			[ApiParams.user]: userAccount,
 			[ApiParams.datasetId]: solutions.datasetId,
 		};
-		const response = await fetch(getImageCaptchaURL, {
+		const response = await testFetch(getImageCaptchaURL, {
 			method: "POST",
 			body: JSON.stringify(body),
 			headers: {
@@ -419,7 +421,7 @@ describe("Image Captcha Integration Tests", () => {
 				[ApiParams.user]: userAccount,
 				[ApiParams.datasetId]: solutions.datasetId,
 			};
-			const response = await fetch(getImageCaptchaURL, {
+			const response = await testFetch(getImageCaptchaURL, {
 				method: "POST",
 				body: JSON.stringify(getImgCaptchaBody),
 				headers: {
@@ -483,7 +485,7 @@ describe("Image Captcha Integration Tests", () => {
 				[ApiParams.user]: userAccount,
 			};
 
-			const solveThatCaptcha = await fetch(
+			const solveThatCaptcha = await testFetch(
 				`${baseUrl}${ClientApiPaths.SubmitImageCaptchaSolution}`,
 				{
 					method: "POST",

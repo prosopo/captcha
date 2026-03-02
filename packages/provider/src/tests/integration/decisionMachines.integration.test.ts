@@ -16,7 +16,7 @@ import type { Server } from "node:net";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import { ProviderEnvironment } from "@prosopo/env";
 import { generateMnemonic, getPair } from "@prosopo/keyring";
-import { Tasks, startProviderApi } from "@prosopo/provider";
+import { Tasks, isTlsAvailable, startProviderApi } from "@prosopo/provider";
 import {
 	AdminApiPaths,
 	ApiParams,
@@ -35,6 +35,7 @@ import {
 import { randomAsHex } from "@prosopo/util-crypto";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import {testFetch} from "./testFetch.js";
 
 // Function to get a random available port
 function getRandomPort(): number {
@@ -79,7 +80,8 @@ describe("Decision Machine Database Integration Tests", () => {
 	beforeAll(async () => {
 		// Get a unique port for this test suite
 		testPort = getRandomPort();
-		baseUrl = `http://localhost:${testPort}`;
+		const protocol = isTlsAvailable() ? "https" : "http";
+		baseUrl = `${protocol}://localhost:${testPort}`;
 
 		// Start MongoDB container
 		mongoContainer = await new GenericContainer("mongo:6.0.17")
@@ -121,7 +123,7 @@ describe("Decision Machine Database Integration Tests", () => {
 
 		const config = ProsopoConfigSchema.parse({
 			defaultEnvironment: "development",
-			host: `http://localhost:${testPort}`,
+			host: `${protocol}://localhost:${testPort}`,
 			account: {
 				secret:
 					process.env.PROVIDER_MNEMONIC ||
@@ -155,7 +157,7 @@ describe("Decision Machine Database Integration Tests", () => {
 				apiKey: "dummyKey",
 			},
 			server: {
-				baseURL: "http://localhost",
+				baseURL: `${protocol}://localhost`,
 				port: testPort,
 			},
 		});
@@ -251,7 +253,7 @@ describe("Decision Machine Database Integration Tests", () => {
 				}
 			`;
 
-			const createResponse = await fetch(
+			const createResponse = await testFetch(
 				`${baseUrl}${AdminApiPaths.UpdateDecisionMachine}`,
 				{
 					method: "POST",
@@ -275,7 +277,7 @@ describe("Decision Machine Database Integration Tests", () => {
 			expect(createResponse.status).toBe(200);
 
 			// Get all decision machines
-			const getAllResponse = await fetch(
+			const getAllResponse = await testFetch(
 				`${baseUrl}${AdminApiPaths.GetAllDecisionMachines}`,
 				{
 					method: "POST",
@@ -327,7 +329,7 @@ describe("Decision Machine Database Integration Tests", () => {
 		});
 
 		it("should return valid MongoDB ObjectId format for _id in getAllDecisionMachines", async () => {
-			const getAllResponse = await fetch(
+			const getAllResponse = await testFetch(
 				`${baseUrl}${AdminApiPaths.GetAllDecisionMachines}`,
 				{
 					method: "POST",
@@ -356,7 +358,7 @@ describe("Decision Machine Database Integration Tests", () => {
 	describe("getDecisionMachineArtifactById - _id field tests", () => {
 		it("should return _id when getting a specific decision machine by ID", async () => {
 			// First, get all machines to get an ID
-			const getAllResponse = await fetch(
+			const getAllResponse = await testFetch(
 				`${baseUrl}${AdminApiPaths.GetAllDecisionMachines}`,
 				{
 					method: "POST",
@@ -377,7 +379,7 @@ describe("Decision Machine Database Integration Tests", () => {
 			expect(firstMachine?._id).toBeDefined();
 
 			// Get specific decision machine by ID
-			const getByIdResponse = await fetch(
+			const getByIdResponse = await testFetch(
 				`${baseUrl}${AdminApiPaths.GetDecisionMachine}`,
 				{
 					method: "POST",
@@ -422,7 +424,7 @@ describe("Decision Machine Database Integration Tests", () => {
 				}
 			`;
 
-			await fetch(`${baseUrl}${AdminApiPaths.UpdateDecisionMachine}`, {
+			await testFetch(`${baseUrl}${AdminApiPaths.UpdateDecisionMachine}`, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -439,7 +441,7 @@ describe("Decision Machine Database Integration Tests", () => {
 			});
 
 			// Get all machines and find our new one
-			const getAllResponse1 = await fetch(
+			const getAllResponse1 = await testFetch(
 				`${baseUrl}${AdminApiPaths.GetAllDecisionMachines}`,
 				{
 					method: "POST",
@@ -460,7 +462,7 @@ describe("Decision Machine Database Integration Tests", () => {
 			expect(machineId).toBeDefined();
 
 			// Get the same machine by ID
-			const getByIdResponse = await fetch(
+			const getByIdResponse = await testFetch(
 				`${baseUrl}${AdminApiPaths.GetDecisionMachine}`,
 				{
 					method: "POST",
@@ -480,7 +482,7 @@ describe("Decision Machine Database Integration Tests", () => {
 			expect(machineById._id).toBe(machineId);
 
 			// Get all machines again and verify the ID is consistent
-			const getAllResponse2 = await fetch(
+			const getAllResponse2 = await testFetch(
 				`${baseUrl}${AdminApiPaths.GetAllDecisionMachines}`,
 				{
 					method: "POST",
@@ -502,7 +504,7 @@ describe("Decision Machine Database Integration Tests", () => {
 		it("should handle delete operations using _id correctly", async () => {
 			// Create a machine to delete
 			const deleteTestName = `Delete Test ${Date.now()}`;
-			await fetch(`${baseUrl}${AdminApiPaths.UpdateDecisionMachine}`, {
+			await testFetch(`${baseUrl}${AdminApiPaths.UpdateDecisionMachine}`, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -519,7 +521,7 @@ describe("Decision Machine Database Integration Tests", () => {
 			});
 
 			// Get all machines to find the ID
-			const getAllResponse = await fetch(
+			const getAllResponse = await testFetch(
 				`${baseUrl}${AdminApiPaths.GetAllDecisionMachines}`,
 				{
 					method: "POST",
@@ -539,7 +541,7 @@ describe("Decision Machine Database Integration Tests", () => {
 			const machineId = machineToDelete?._id;
 
 			// Delete using _id
-			const deleteResponse = await fetch(
+			const deleteResponse = await testFetch(
 				`${baseUrl}${AdminApiPaths.RemoveDecisionMachine}`,
 				{
 					method: "POST",
@@ -561,7 +563,7 @@ describe("Decision Machine Database Integration Tests", () => {
 			expect(deleteResult.deletedId).toBe(machineId);
 
 			// Verify it's actually deleted
-			const verifyResponse = await fetch(
+			const verifyResponse = await testFetch(
 				`${baseUrl}${AdminApiPaths.GetDecisionMachine}`,
 				{
 					method: "POST",

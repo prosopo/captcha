@@ -17,7 +17,7 @@ import { sha256 } from "@noble/hashes/sha256";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import { ProviderEnvironment } from "@prosopo/env";
 import { generateMnemonic, getPair } from "@prosopo/keyring";
-import { Tasks, startProviderApi } from "@prosopo/provider";
+import { Tasks, isTlsAvailable, startProviderApi } from "@prosopo/provider";
 import {
 	ApiParams,
 	CaptchaType,
@@ -37,6 +37,7 @@ import { randomAsHex } from "@prosopo/util-crypto";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { dummyUserAccount } from "./mocks/solvedTestCaptchas.js";
+import {testFetch} from "./testFetch.js";
 
 // Define the endpoint paths
 const getPowCaptchaChallengePath = ClientApiPaths.GetPowCaptchaChallenge;
@@ -123,7 +124,8 @@ describe("PoW Integration Tests", () => {
 	beforeAll(async () => {
 		// Get a unique port for this test suite
 		testPort = getRandomPort();
-		baseUrl = `https://localhost:${testPort}`;
+		const protocol = isTlsAvailable() ? "https" : "http";
+		baseUrl = `${protocol}://localhost:${testPort}`;
 
 		// Start MongoDB container
 		mongoContainer = await new GenericContainer("mongo:6.0.17")
@@ -165,7 +167,7 @@ describe("PoW Integration Tests", () => {
 
 		const config = ProsopoConfigSchema.parse({
 			defaultEnvironment: "development",
-			host: `https://localhost:${testPort}`,
+			host: `${protocol}://localhost:${testPort}`,
 			account: {
 				secret:
 					process.env.PROVIDER_MNEMONIC ||
@@ -199,7 +201,7 @@ describe("PoW Integration Tests", () => {
 				apiKey: "dummyKey",
 			},
 			server: {
-				baseURL: "https://localhost",
+				baseURL: `${protocol}://localhost`,
 				port: testPort,
 			},
 		});
@@ -274,7 +276,7 @@ describe("PoW Integration Tests", () => {
 				user: userId,
 				dapp: siteKey,
 			};
-			const response = await fetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
+			const response = await testFetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
 				method: "POST",
 				headers: {
 					Connection: "close",
@@ -298,7 +300,7 @@ describe("PoW Integration Tests", () => {
 		});
 
 		it("should return an error if origin header is not provided", async () => {
-			const response = await fetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
+			const response = await testFetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
 				method: "POST",
 				headers: {
 					Connection: "close",
@@ -314,7 +316,7 @@ describe("PoW Integration Tests", () => {
 
 		it("should return an error if origin header is not valid", async () => {
 			const origin = "https://notallowed.com";
-			const response = await fetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
+			const response = await testFetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
 				method: "POST",
 				headers: {
 					Connection: "close",
@@ -350,7 +352,7 @@ describe("PoW Integration Tests", () => {
 				user: userId,
 				dapp: siteKey,
 			};
-			const captchaRes = await fetch(
+			const captchaRes = await testFetch(
 				`${baseUrl}${getPowCaptchaChallengePath}`,
 				{
 					method: "POST",
@@ -388,7 +390,7 @@ describe("PoW Integration Tests", () => {
 				user: userPair.address,
 				dapp: siteKey,
 			};
-			const response = await fetch(
+			const response = await testFetch(
 				`${baseUrl}${ClientApiPaths.SubmitPowCaptchaSolution}`,
 				{
 					method: "POST",
@@ -414,7 +416,7 @@ describe("PoW Integration Tests", () => {
 		it("should return false for incorrectly completed PoW captcha", async () => {
 			const origin = "https://localhost";
 
-			const captchaRes = await fetch(
+			const captchaRes = await testFetch(
 				`${baseUrl}${getPowCaptchaChallengePath}`,
 				{
 					method: "POST",
@@ -453,7 +455,7 @@ describe("PoW Integration Tests", () => {
 				user: userPair.address,
 				dapp: siteKey,
 			};
-			const response = await fetch(
+			const response = await testFetch(
 				`${baseUrl}${ClientApiPaths.SubmitPowCaptchaSolution}`,
 				{
 					method: "POST",
@@ -481,7 +483,7 @@ describe("PoW Integration Tests", () => {
 			const userId = userPair.address;
 			const origin = "https://localhost";
 
-			const captchaRes = await fetch(
+			const captchaRes = await testFetch(
 				`${baseUrl}${getPowCaptchaChallengePath}`,
 				{
 					method: "POST",
@@ -510,7 +512,7 @@ describe("PoW Integration Tests", () => {
 		const origin = "https://localhost";
 		const invalidSiteKey = "junk";
 
-		const captchaRes = await fetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
+		const captchaRes = await testFetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
 			method: "POST",
 			headers: {
 				Connection: "close",
@@ -536,7 +538,7 @@ describe("PoW Integration Tests", () => {
 
 		await registerSiteKeyInDb(env, siteKey, CaptchaType.image);
 
-		const captchaRes = await fetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
+		const captchaRes = await testFetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
 			method: "POST",
 			headers: {
 				Connection: "close",
@@ -562,7 +564,7 @@ describe("PoW Integration Tests", () => {
 		const [_mnemonic, dapp] = await generateMnemonic();
 		await registerSiteKeyInDb(env, dapp, CaptchaType.frictionless);
 
-		const captchaRes = await fetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
+		const captchaRes = await testFetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
 			method: "POST",
 			headers: {
 				Connection: "close",
