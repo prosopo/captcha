@@ -86,6 +86,9 @@ jobs:
           sed -i 's|http://localhost|https://localhost|g' packages/cli/.env.test
           sed -i 's|http://localhost|https://localhost|g' packages/procaptcha-bundle/.env.test
           
+          # Change PROSOPO_VERIFICATION_TYPE to local
+          sed -i '/^PROSOPO_VERIFICATION_TYPE=/s/=.*/=local/' demos/client-example-server/.env.test
+          
           echo NODE_ENV: "$NODE_ENV"
 
       # build all packages in workspace
