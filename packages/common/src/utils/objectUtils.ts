@@ -106,7 +106,7 @@ export const filterObjectEntries = <ObjectType extends object>(
 		getObjectEntries(object).filter(([key, value]) => predicate(value, key)),
 	);
 
-export const countObjectEntries = (object: object) =>
+export const countObjectEntries = (object: object): number =>
 	Object.keys(object).length;
 
 export const isObject = <ValueType>(
