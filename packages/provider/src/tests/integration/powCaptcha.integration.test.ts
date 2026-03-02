@@ -123,7 +123,7 @@ describe("PoW Integration Tests", () => {
 	beforeAll(async () => {
 		// Get a unique port for this test suite
 		testPort = getRandomPort();
-		baseUrl = `http://localhost:${testPort}`;
+		baseUrl = `https://localhost:${testPort}`;
 
 		// Start MongoDB container
 		mongoContainer = await new GenericContainer("mongo:6.0.17")
@@ -165,7 +165,7 @@ describe("PoW Integration Tests", () => {
 
 		const config = ProsopoConfigSchema.parse({
 			defaultEnvironment: "development",
-			host: `http://localhost:${testPort}`,
+			host: `https://localhost:${testPort}`,
 			account: {
 				secret:
 					process.env.PROVIDER_MNEMONIC ||
@@ -199,7 +199,7 @@ describe("PoW Integration Tests", () => {
 				apiKey: "dummyKey",
 			},
 			server: {
-				baseURL: "http://localhost",
+				baseURL: "https://localhost",
 				port: testPort,
 			},
 		});
@@ -269,7 +269,7 @@ describe("PoW Integration Tests", () => {
 		});
 
 		it("should supply a PoW challenge to a Dapp User", async () => {
-			const origin = "http://localhost";
+			const origin = "https://localhost";
 			const body: GetPowCaptchaChallengeRequestBodyType = {
 				user: userId,
 				dapp: siteKey,
@@ -313,7 +313,7 @@ describe("PoW Integration Tests", () => {
 		});
 
 		it("should return an error if origin header is not valid", async () => {
-			const origin = "http://notallowed.com";
+			const origin = "https://notallowed.com";
 			const response = await fetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
 				method: "POST",
 				headers: {
@@ -345,7 +345,7 @@ describe("PoW Integration Tests", () => {
 			userPair = getPair(userMnemonic);
 		});
 		it("should verify a correctly completed PoW captcha as true", async () => {
-			const origin = "http://localhost";
+			const origin = "https://localhost";
 			const requestBody: GetPowCaptchaChallengeRequestBodyType = {
 				user: userId,
 				dapp: siteKey,
@@ -412,7 +412,7 @@ describe("PoW Integration Tests", () => {
 		});
 
 		it("should return false for incorrectly completed PoW captcha", async () => {
-			const origin = "http://localhost";
+			const origin = "https://localhost";
 
 			const captchaRes = await fetch(
 				`${baseUrl}${getPowCaptchaChallengePath}`,
@@ -479,7 +479,7 @@ describe("PoW Integration Tests", () => {
 			const [_mnemonic, unregisteredAccount] = await generateMnemonic();
 			const userPair = getPair(dummyUserAccount.seed, undefined, "sr25519", 42);
 			const userId = userPair.address;
-			const origin = "http://localhost";
+			const origin = "https://localhost";
 
 			const captchaRes = await fetch(
 				`${baseUrl}${getPowCaptchaChallengePath}`,
@@ -507,7 +507,7 @@ describe("PoW Integration Tests", () => {
 	});
 
 	it("should return an error for an invalid site key", async () => {
-		const origin = "http://localhost";
+		const origin = "https://localhost";
 		const invalidSiteKey = "junk";
 
 		const captchaRes = await fetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
@@ -531,7 +531,7 @@ describe("PoW Integration Tests", () => {
 	it("should return an error if the captcha type is set to image", async () => {
 		const userPair = getPair(dummyUserAccount.seed, undefined, "sr25519");
 		const userId = userPair.address;
-		const origin = "http://localhost";
+		const origin = "https://localhost";
 		const siteKey = "5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw";
 
 		await registerSiteKeyInDb(env, siteKey, CaptchaType.image);
@@ -557,7 +557,7 @@ describe("PoW Integration Tests", () => {
 	it("should return an error if the captcha type is set to frictionless and no sessionID is sent", async () => {
 		const userPair = getPair(dummyUserAccount.seed, undefined, "sr25519");
 		const userId = userPair.address;
-		const origin = "http://localhost";
+		const origin = "https://localhost";
 		// Create a new site key to avoid conflicts with other tests
 		const [_mnemonic, dapp] = await generateMnemonic();
 		await registerSiteKeyInDb(env, dapp, CaptchaType.frictionless);

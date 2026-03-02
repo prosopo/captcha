@@ -55,7 +55,7 @@ describe("IP Validation Integration Tests", () => {
 
 	describe("Frictionless captcha with IP validation", () => {
 		it("should allow image captcha request from same IP after frictionless flow", async () => {
-			const origin = "http://localhost";
+			const origin = "https://localhost";
 			const initialIP = "127.0.0.1";
 
 			// Step 1: Get frictionless captcha
