@@ -356,7 +356,37 @@ describe("Decision Machine Database Integration Tests", () => {
 
 	describe("getDecisionMachineArtifactById - _id field tests", () => {
 		it("should return _id when getting a specific decision machine by ID", async () => {
-			// First, get all machines to get an ID
+			// Create a test decision machine first
+			const testSource = `
+			export default function decide(input) {
+				return { decision: 'allow', reason: 'Test get by ID' };
+			}
+		`;
+
+			const createResponse = await fetch(
+				`${baseUrl}${AdminApiPaths.UpdateDecisionMachine}`,
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						"Prosopo-Site-Key": dappAccount,
+						Authorization: `Bearer ${adminJwt}`,
+					},
+					body: JSON.stringify({
+						[ApiParams.decisionMachineScope]: DecisionMachineScope.Global,
+						[ApiParams.decisionMachineRuntime]: DecisionMachineRuntime.Node,
+						[ApiParams.decisionMachineSource]: testSource,
+						[ApiParams.decisionMachineLanguage]:
+							DecisionMachineLanguage.JavaScript,
+						[ApiParams.decisionMachineName]: `Test Machine ${Date.now()}`,
+						[ApiParams.decisionMachineVersion]: "1.0.0",
+					}),
+				},
+			);
+
+			expect(createResponse.status).toBe(200);
+
+			// Get all machines to get the ID of the machine we just created
 			const getAllResponse = await fetch(
 				`${baseUrl}${AdminApiPaths.GetAllDecisionMachines}`,
 				{
