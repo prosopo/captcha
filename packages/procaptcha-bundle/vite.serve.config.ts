@@ -15,9 +15,10 @@
 // vite.config.js
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 
-const __dirname = path.dirname(new URL(import.meta.url).pathname);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const certPath = path.resolve(__dirname, "../../certs");
 const keyPath = path.join(certPath, "server.key");
 const crtPath = path.join(certPath, "server.crt");

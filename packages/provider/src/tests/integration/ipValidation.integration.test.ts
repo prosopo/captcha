@@ -32,7 +32,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { registerSiteKey } from "./registerSitekey.js";
 
 // Use environment variable for base URL, defaulting to HTTP
-const baseUrl = process.env.PROSOPO_SERVER_URL || "http://localhost:9228";
+const baseUrl = process.env.PROSOPO_SERVER_URL || "https://localhost:9228";
 const solutions = datasetWithSolutionHashes;
 
 describe("IP Validation Integration Tests", () => {

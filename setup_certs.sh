@@ -18,6 +18,15 @@ if [ -f "$CERT_DIR/server.crt" ] && [ -f "$CERT_DIR/server.key" ]; then
     echo "✅ Certificates already exist"
     echo "   - Certificate: $CERT_DIR/server.crt"
     echo "   - Private Key: $CERT_DIR/server.key"
+
+    # Ensure symlinks exist for serverless-offline compatibility
+    if [ ! -L "$CERT_DIR/cert.pem" ] || [ ! -L "$CERT_DIR/key.pem" ]; then
+        echo "   - Creating symlinks for serverless-offline..."
+        ln -sf server.crt "$CERT_DIR/cert.pem"
+        ln -sf server.key "$CERT_DIR/key.pem"
+        echo "   - Symlinks created: cert.pem -> server.crt, key.pem -> server.key"
+    fi
+
     echo ""
     echo "Certificate details:"
     openssl x509 -in "$CERT_DIR/server.crt" -text -noout | grep -A 2 "Subject:" || true
@@ -81,10 +90,15 @@ openssl req -x509 -newkey rsa:4096 -nodes \
 # Clean up the temporary config file
 rm -f "$CERT_DIR/openssl.cnf"
 
+# Create symlinks for serverless-offline compatibility (expects cert.pem and key.pem)
+ln -sf server.crt "$CERT_DIR/cert.pem"
+ln -sf server.key "$CERT_DIR/key.pem"
+
 echo ""
 echo "✅ Certificates generated successfully!"
 echo "   - Certificate: $CERT_DIR/server.crt"
 echo "   - Private Key: $CERT_DIR/server.key"
+echo "   - Symlinks: cert.pem -> server.crt, key.pem -> server.key"
 echo ""
 echo "🌐 Certificate includes:"
 echo "   - localhost (127.0.0.1, ::1)"
@@ -108,6 +122,10 @@ echo ""
 echo "   🔧 Provider Backend:"
 echo "      - https://localhost:9229"
 echo "      - https://$LOCAL_IP:9229"
+echo ""
+echo "   ⚡ AWS Serverless API (serverless-offline):"
+echo "      - https://localhost:9235/development/"
+echo "      - https://$LOCAL_IP:9235/development/"
 echo ""
 echo "✅ All services can now use HTTPS!"
 

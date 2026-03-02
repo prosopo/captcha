@@ -14,6 +14,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { loadEnv } from "@prosopo/dotenv";
 import { type UserConfig, defineConfig } from "vite";
 import explanationInjector from "./src/plugins/explanation-injector.js";
@@ -23,7 +24,7 @@ import statusLogInjector from "./src/plugins/status-log-injector.js";
 
 loadEnv();
 
-const __dirname = path.dirname(new URL(import.meta.url).pathname);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const certPath = path.resolve(__dirname, "../../certs");
 const keyPath = path.join(certPath, "server.key");
 const crtPath = path.join(certPath, "server.crt");
