@@ -1,5 +1,10 @@
 # @prosopo/client-bundle-example
 
+## 2.10.13
+### Patch Changes
+
+- 8148587: Clustering
+
 ## 2.10.12
 ### Patch Changes
 

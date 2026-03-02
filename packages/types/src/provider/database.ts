@@ -27,6 +27,7 @@ import {
 	tuple,
 	type infer as zInfer,
 } from "zod";
+import type { IPInfoResponse } from "../api/ipapi.js";
 import { CaptchaType } from "../client/index.js";
 import type { ContextType } from "../client/settings.js";
 import {
@@ -144,6 +145,7 @@ export interface StoredCaptcha {
 	geolocation?: string;
 	countryCode?: string;
 	vpn?: boolean;
+	ipInfo?: IPInfoResponse;
 	parsedUserAgentInfo?: UserAgentInfo;
 	storedAtTimestamp?: Date;
 	lastUpdatedTimestamp?: Date;

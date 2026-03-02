@@ -1,5 +1,12 @@
 # @prosopo/detector
 
+## 3.4.13
+### Patch Changes
+
+- 8148587: Clustering
+- Updated dependencies [8148587]
+  - @prosopo/types@3.11.1
+
 ## 3.4.12
 ### Patch Changes
 
