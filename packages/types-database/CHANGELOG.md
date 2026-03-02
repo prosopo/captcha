@@ -1,5 +1,13 @@
 # @prosopo/types-database
 
+## 4.4.5
+### Patch Changes
+
+- 8148587: Clustering
+- Updated dependencies [8148587]
+  - @prosopo/types@3.11.1
+  - @prosopo/user-access-policy@3.6.11
+
 ## 4.4.4
 ### Patch Changes
 

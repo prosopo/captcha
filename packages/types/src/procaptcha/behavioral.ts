@@ -19,6 +19,9 @@ export interface MouseMovementPoint {
 	x: number;
 	y: number;
 	timestamp: number;
+	pauseDuration?: number;
+	isDirectionChange?: boolean;
+	velocity?: number;
 }
 
 /**
@@ -29,8 +32,16 @@ export interface TouchEventPoint {
 	y: number;
 	timestamp: number;
 	eventType: "touchstart" | "touchmove" | "touchend" | "touchcancel";
-	touchCount: number; // Number of simultaneous touches
-	force?: number; // Touch pressure (if available)
+	touchCount: number;
+	force?: number;
+	touchId?: number;
+	radiusX?: number;
+	radiusY?: number;
+	rotationAngle?: number;
+	forceDelta?: number;
+	forceVelocity?: number;
+	swipeVelocity?: number;
+	swipeDirection?: string;
 }
 
 /**
@@ -41,11 +52,16 @@ export interface ClickEventPoint {
 	y: number;
 	timestamp: number;
 	eventType: "mousedown" | "mouseup" | "click" | "dblclick" | "contextmenu";
-	button: number; // 0 = left, 1 = middle, 2 = right
-	targetElement?: string; // Tag name of clicked element
-	ctrlKey?: boolean; // Was Ctrl held during click
-	shiftKey?: boolean; // Was Shift held during click
-	altKey?: boolean; // Was Alt held during click
+	button: number;
+	targetElement?: string;
+	ctrlKey?: boolean;
+	altKey?: boolean;
+	shiftKey?: boolean;
+	hoverDuration?: number;
+	timeSinceLastClick?: number;
+	clickSequenceIndex?: number;
+	isRapidClick?: boolean;
+	distanceFromTarget?: number;
 }
 
 /**

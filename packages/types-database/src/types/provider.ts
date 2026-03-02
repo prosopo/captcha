@@ -173,6 +173,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	geolocation: { type: String, required: false },
 	countryCode: { type: String, required: false },
 	vpn: { type: Boolean, required: false },
+	ipInfo: { type: Object, required: false },
 	parsedUserAgentInfo: { type: Object, required: false },
 	sessionId: {
 		type: String,
