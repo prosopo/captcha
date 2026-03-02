@@ -35,7 +35,6 @@ import {
 import { randomAsHex } from "@prosopo/util-crypto";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { testFetch } from "./testFetch.js";
 
 // Function to get a random available port
 function getRandomPort(): number {
@@ -253,7 +252,7 @@ describe("Decision Machine Database Integration Tests", () => {
 				}
 			`;
 
-			const createResponse = await testFetch(
+			const createResponse = await fetch(
 				`${baseUrl}${AdminApiPaths.UpdateDecisionMachine}`,
 				{
 					method: "POST",
@@ -277,7 +276,7 @@ describe("Decision Machine Database Integration Tests", () => {
 			expect(createResponse.status).toBe(200);
 
 			// Get all decision machines
-			const getAllResponse = await testFetch(
+			const getAllResponse = await fetch(
 				`${baseUrl}${AdminApiPaths.GetAllDecisionMachines}`,
 				{
 					method: "POST",
@@ -329,7 +328,7 @@ describe("Decision Machine Database Integration Tests", () => {
 		});
 
 		it("should return valid MongoDB ObjectId format for _id in getAllDecisionMachines", async () => {
-			const getAllResponse = await testFetch(
+			const getAllResponse = await fetch(
 				`${baseUrl}${AdminApiPaths.GetAllDecisionMachines}`,
 				{
 					method: "POST",
@@ -358,7 +357,7 @@ describe("Decision Machine Database Integration Tests", () => {
 	describe("getDecisionMachineArtifactById - _id field tests", () => {
 		it("should return _id when getting a specific decision machine by ID", async () => {
 			// First, get all machines to get an ID
-			const getAllResponse = await testFetch(
+			const getAllResponse = await fetch(
 				`${baseUrl}${AdminApiPaths.GetAllDecisionMachines}`,
 				{
 					method: "POST",
@@ -379,7 +378,7 @@ describe("Decision Machine Database Integration Tests", () => {
 			expect(firstMachine?._id).toBeDefined();
 
 			// Get specific decision machine by ID
-			const getByIdResponse = await testFetch(
+			const getByIdResponse = await fetch(
 				`${baseUrl}${AdminApiPaths.GetDecisionMachine}`,
 				{
 					method: "POST",
@@ -424,7 +423,7 @@ describe("Decision Machine Database Integration Tests", () => {
 				}
 			`;
 
-			await testFetch(`${baseUrl}${AdminApiPaths.UpdateDecisionMachine}`, {
+			await fetch(`${baseUrl}${AdminApiPaths.UpdateDecisionMachine}`, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -441,7 +440,7 @@ describe("Decision Machine Database Integration Tests", () => {
 			});
 
 			// Get all machines and find our new one
-			const getAllResponse1 = await testFetch(
+			const getAllResponse1 = await fetch(
 				`${baseUrl}${AdminApiPaths.GetAllDecisionMachines}`,
 				{
 					method: "POST",
@@ -462,7 +461,7 @@ describe("Decision Machine Database Integration Tests", () => {
 			expect(machineId).toBeDefined();
 
 			// Get the same machine by ID
-			const getByIdResponse = await testFetch(
+			const getByIdResponse = await fetch(
 				`${baseUrl}${AdminApiPaths.GetDecisionMachine}`,
 				{
 					method: "POST",
@@ -482,7 +481,7 @@ describe("Decision Machine Database Integration Tests", () => {
 			expect(machineById._id).toBe(machineId);
 
 			// Get all machines again and verify the ID is consistent
-			const getAllResponse2 = await testFetch(
+			const getAllResponse2 = await fetch(
 				`${baseUrl}${AdminApiPaths.GetAllDecisionMachines}`,
 				{
 					method: "POST",
@@ -504,7 +503,7 @@ describe("Decision Machine Database Integration Tests", () => {
 		it("should handle delete operations using _id correctly", async () => {
 			// Create a machine to delete
 			const deleteTestName = `Delete Test ${Date.now()}`;
-			await testFetch(`${baseUrl}${AdminApiPaths.UpdateDecisionMachine}`, {
+			await fetch(`${baseUrl}${AdminApiPaths.UpdateDecisionMachine}`, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -521,7 +520,7 @@ describe("Decision Machine Database Integration Tests", () => {
 			});
 
 			// Get all machines to find the ID
-			const getAllResponse = await testFetch(
+			const getAllResponse = await fetch(
 				`${baseUrl}${AdminApiPaths.GetAllDecisionMachines}`,
 				{
 					method: "POST",
@@ -541,7 +540,7 @@ describe("Decision Machine Database Integration Tests", () => {
 			const machineId = machineToDelete?._id;
 
 			// Delete using _id
-			const deleteResponse = await testFetch(
+			const deleteResponse = await fetch(
 				`${baseUrl}${AdminApiPaths.RemoveDecisionMachine}`,
 				{
 					method: "POST",
@@ -563,7 +562,7 @@ describe("Decision Machine Database Integration Tests", () => {
 			expect(deleteResult.deletedId).toBe(machineId);
 
 			// Verify it's actually deleted
-			const verifyResponse = await testFetch(
+			const verifyResponse = await fetch(
 				`${baseUrl}${AdminApiPaths.GetDecisionMachine}`,
 				{
 					method: "POST",

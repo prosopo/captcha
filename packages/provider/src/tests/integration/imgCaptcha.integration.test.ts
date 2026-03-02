@@ -36,7 +36,6 @@ import { randomAsHex } from "@prosopo/util-crypto";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { dummyUserAccount } from "./mocks/solvedTestCaptchas.js";
-import { testFetch } from "./testFetch.js";
 
 const solutions = datasetWithSolutionHashes;
 const userAccount = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty";
@@ -232,7 +231,7 @@ describe("Image Captcha Integration Tests", () => {
 				[ApiParams.datasetId]: solutions.datasetId,
 			};
 
-			const response = await testFetch(getImageCaptchaURL, {
+			const response = await fetch(getImageCaptchaURL, {
 				method: "POST",
 				body: JSON.stringify(getImgCaptchaBody),
 				headers: {
@@ -259,7 +258,7 @@ describe("Image Captcha Integration Tests", () => {
 				[ApiParams.datasetId]: solutions.datasetId,
 			};
 
-			const response = await testFetch(getImageCaptchaURL, {
+			const response = await fetch(getImageCaptchaURL, {
 				method: "POST",
 				body: JSON.stringify(body),
 				headers: {
@@ -286,7 +285,7 @@ describe("Image Captcha Integration Tests", () => {
 				[ApiParams.datasetId]: solutions.datasetId,
 			};
 
-			const response = await testFetch(getImageCaptchaURL, {
+			const response = await fetch(getImageCaptchaURL, {
 				method: "POST",
 				body: JSON.stringify(body),
 				headers: {
@@ -312,7 +311,7 @@ describe("Image Captcha Integration Tests", () => {
 				[ApiParams.user]: userAccount,
 				[ApiParams.datasetId]: datasetId,
 			};
-			const response = await testFetch(getImageCaptchaURL, {
+			const response = await fetch(getImageCaptchaURL, {
 				method: "POST",
 				body: JSON.stringify(body),
 				headers: {
@@ -335,7 +334,7 @@ describe("Image Captcha Integration Tests", () => {
 				[ApiParams.user]: userAccount,
 				[ApiParams.datasetId]: solutions.datasetId,
 			};
-			const response = await testFetch(getImageCaptchaURL, {
+			const response = await fetch(getImageCaptchaURL, {
 				method: "POST",
 				body: JSON.stringify(body),
 				headers: {
@@ -361,7 +360,7 @@ describe("Image Captcha Integration Tests", () => {
 				[ApiParams.user]: userAccount,
 				[ApiParams.datasetId]: solutions.datasetId,
 			};
-			const response = await testFetch(getImageCaptchaURL, {
+			const response = await fetch(getImageCaptchaURL, {
 				method: "POST",
 				body: JSON.stringify(body),
 				headers: {
@@ -389,7 +388,7 @@ describe("Image Captcha Integration Tests", () => {
 			[ApiParams.user]: userAccount,
 			[ApiParams.datasetId]: solutions.datasetId,
 		};
-		const response = await testFetch(getImageCaptchaURL, {
+		const response = await fetch(getImageCaptchaURL, {
 			method: "POST",
 			body: JSON.stringify(body),
 			headers: {
@@ -421,7 +420,7 @@ describe("Image Captcha Integration Tests", () => {
 				[ApiParams.user]: userAccount,
 				[ApiParams.datasetId]: solutions.datasetId,
 			};
-			const response = await testFetch(getImageCaptchaURL, {
+			const response = await fetch(getImageCaptchaURL, {
 				method: "POST",
 				body: JSON.stringify(getImgCaptchaBody),
 				headers: {
@@ -485,7 +484,7 @@ describe("Image Captcha Integration Tests", () => {
 				[ApiParams.user]: userAccount,
 			};
 
-			const solveThatCaptcha = await testFetch(
+			const solveThatCaptcha = await fetch(
 				`${baseUrl}${ClientApiPaths.SubmitImageCaptchaSolution}`,
 				{
 					method: "POST",
