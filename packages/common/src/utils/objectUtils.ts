@@ -108,3 +108,7 @@ export const filterObjectEntries = <ObjectType extends object>(
 
 export const countObjectEntries = (object: object) =>
 	Object.keys(object).length;
+
+export const isObject = <ValueType>(
+	value: ValueType,
+): value is Extract<ValueType, object> => Object === value?.constructor;
