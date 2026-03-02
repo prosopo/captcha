@@ -94,7 +94,7 @@ export default defineConfig(({ command, mode }) => {
 	// Check if certificates exist
 	const useTls = fs.existsSync(keyPath) && fs.existsSync(crtPath);
 
-	console.log({useTls})
+	console.log({ useTls });
 
 	return {
 		watch: false,
