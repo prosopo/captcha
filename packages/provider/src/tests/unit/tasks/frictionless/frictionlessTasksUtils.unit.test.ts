@@ -34,7 +34,7 @@ describe("frictionlessTasksUtils", () => {
 			expect(result).toBe(6);
 		});
 
-				it("should return 5 when decryption failed but max rounds is set to 5", () => {
+		it("should return 5 when decryption failed but max rounds is set to 5", () => {
 			const result = timestampDecayFunction(mockNow - 1000, true, 5);
 			expect(result).toBe(5);
 		});

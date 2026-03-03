@@ -86,7 +86,7 @@ export default (
 					demandOption: false,
 					desc: "Image threshold for settings",
 				} as const)
-						.option("image_max_rounds", {
+				.option("image_max_rounds", {
 					type: "number" as const,
 					demandOption: false,
 					desc: "Max image rounds",
@@ -103,7 +103,7 @@ export default (
 					domains,
 					pow_difficulty,
 					image_threshold,
-					image_max_rounds
+					image_max_rounds,
 				} = SiteKeyRegisterApiCommandArgsSpec.parse(argv);
 				const api = new ProviderApi(url as string, pair.address);
 				const jwt = pair.jwtIssue();
