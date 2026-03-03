@@ -81,8 +81,14 @@ async function main() {
 		res.sendStatus(200);
 	});
 
-	if (!process.env.MONGO_URI && process.env.NODE_ENV !== "development" && process.env.NODE_ENV !== "test") {
-		throw new Error("Cannot run mongo memory in non-development environment");
+	if (
+		!process.env.MONGO_URI &&
+		process.env.NODE_ENV !== "development" &&
+		process.env.NODE_ENV !== "test"
+	) {
+		throw new Error(
+			"Cannot run mongo memory when NODE_ENV is neither development nor test",
+		);
 	}
 	logger.info(() => ({ msg: process.env.MONGO_URI }));
 	const uri = process.env.MONGO_URI || (await memoryServerSetup());
