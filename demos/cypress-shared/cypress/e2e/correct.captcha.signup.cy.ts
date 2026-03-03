@@ -115,7 +115,7 @@ describe("Captchas", () => {
 		expect("@button").to.have.length.gte(1);
 
 		cy.elementExists("button[type='button']:nth-of-type(2)").then(
-			(confirmBtn: Element | null) => {
+			(confirmBtn) => {
 				if (confirmBtn) {
 					cy.wrap(confirmBtn).click();
 				}

@@ -1062,22 +1062,22 @@ export const datasetWithSolutionHashes = {
 					data: "https://prosopo.github.io/demo-datasets/img/test_image_png_52.png",
 					type: "image",
 				},
-			{
-				hash: "0xc0d85d32dffcbf5803e198c30f8fb09fdc9483d799a37383e89011da233744e0",
-				data: "https://prosopo.github.io/demo-datasets/img/test_image_png_78.png",
-				type: "image",
-			},
-			{
-				hash: "0x1a8d88f76f5f01251695a8e488f676dc970f1e2f7ab8af43b12d2b03b5ae54",
-				data: "https://prosopo.github.io/demo-datasets/img/test_image_png_93.png",
-				type: "image",
-			},
-			{
-				hash: "0xacac4785d2d7e298af5479c771f3e3035207a47c814901a8c1c788ebee2c73e6",
-				data: "https://prosopo.github.io/demo-datasets/img/test_image_png_70.png",
-				type: "image",
-			},
-		],
+				{
+					hash: "0xc0d85d32dffcbf5803e198c30f8fb09fdc9483d799a37383e89011da233744e0",
+					data: "https://prosopo.github.io/demo-datasets/img/test_image_png_78.png",
+					type: "image",
+				},
+				{
+					hash: "0x1a8d88f76f5f01251695a8e488f676dc970f1e2f7ab8af43b12d2b03b5ae54",
+					data: "https://prosopo.github.io/demo-datasets/img/test_image_png_93.png",
+					type: "image",
+				},
+				{
+					hash: "0xacac4785d2d7e298af5479c771f3e3035207a47c814901a8c1c788ebee2c73e6",
+					data: "https://prosopo.github.io/demo-datasets/img/test_image_png_70.png",
+					type: "image",
+				},
+			],
 			target: "dog",
 			solution: [
 				"0x68a2e06743e929bcfc69a298ed1222d4e098aa19850ef0a3d758136aa3862de6",
