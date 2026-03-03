@@ -138,10 +138,12 @@ export default (
 
 			const captchaConfig: ProsopoCaptchaCountConfigSchemaOutput = {
 				solved: {
-					count:
+					count: Math.min(
 						solvedImagesCount ||
-						userAccessPolicy?.solvedImagesCount ||
-						env.config.captchas.solved.count,
+							userAccessPolicy?.solvedImagesCount ||
+							env.config.captchas.solved.count,
+						clientRecord.settings.imageMaxRounds,
+					),
 				},
 				unsolved: {
 					count:

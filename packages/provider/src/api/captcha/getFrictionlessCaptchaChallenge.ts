@@ -334,7 +334,7 @@ export default (
 						},
 					}));
 					await tasks.frictionlessManager.registerBlockedSession({
-						solvedImagesCount: env.config.captchas.solved.count,
+						solvedImagesCount: clientRecord.settings.imageMaxRounds,
 						userSitekeyIpHash,
 						reason: FrictionlessReason.ACCESS_POLICY_BLOCK,
 						siteKey: dapp,
@@ -356,7 +356,12 @@ export default (
 					}));
 					return res.json(
 						await tasks.frictionlessManager.sendImageCaptcha({
-							solvedImagesCount: userAccessPolicy.solvedImagesCount,
+							solvedImagesCount: userAccessPolicy.solvedImagesCount
+								? Math.min(
+										userAccessPolicy.solvedImagesCount,
+										clientRecord.settings.imageMaxRounds,
+									)
+								: clientRecord.settings.imageMaxRounds,
 							userSitekeyIpHash,
 							reason: FrictionlessReason.USER_ACCESS_POLICY,
 							siteKey: dapp,
@@ -421,6 +426,7 @@ export default (
 						solvedImagesCount: timestampDecayFunction(
 							timestamp,
 							decryptionFailed,
+							clientRecord.settings.imageMaxRounds,
 						),
 						userSitekeyIpHash,
 						reason: FrictionlessReason.USER_AGENT_MISMATCH,
@@ -501,7 +507,10 @@ export default (
 							}));
 							return res.json(
 								await tasks.frictionlessManager.sendImageCaptcha({
-									solvedImagesCount: getRoundsFromSimScore(sim),
+									solvedImagesCount: Math.min(
+										getRoundsFromSimScore(sim),
+										clientRecord.settings.imageMaxRounds,
+									),
 									userSitekeyIpHash,
 									reason: FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED,
 									siteKey: dapp,
@@ -538,7 +547,10 @@ export default (
 				}));
 				return res.json(
 					await tasks.frictionlessManager.sendImageCaptcha({
-						solvedImagesCount: env.config.captchas.solved.count * 2,
+						solvedImagesCount: Math.min(
+							env.config.captchas.solved.count * 2,
+							clientRecord.settings.imageMaxRounds,
+						),
 						userSitekeyIpHash,
 						reason: FrictionlessReason.WEBVIEW_DETECTED,
 						siteKey: dapp,
@@ -573,6 +585,7 @@ export default (
 						solvedImagesCount: timestampDecayFunction(
 							timestamp,
 							decryptionFailed,
+							clientRecord.settings.imageMaxRounds,
 						),
 						userSitekeyIpHash,
 						reason: FrictionlessReason.OLD_TIMESTAMP,
@@ -620,7 +633,10 @@ export default (
 				}));
 				return res.json(
 					await tasks.frictionlessManager.sendImageCaptcha({
-						solvedImagesCount: env.config.captchas.solved.count,
+						solvedImagesCount: Math.min(
+							env.config.captchas.solved.count,
+							clientRecord.settings.imageMaxRounds,
+						),
 						userSitekeyIpHash,
 						reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
 						siteKey: dapp,

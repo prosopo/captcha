@@ -85,6 +85,11 @@ export default (
 					type: "number" as const,
 					demandOption: false,
 					desc: "Image threshold for settings",
+				} as const)
+						.option("image_max_rounds", {
+					type: "number" as const,
+					demandOption: false,
+					desc: "Max image rounds",
 				} as const),
 		handler: async (argv: ArgumentsCamelCase) => {
 			try {
@@ -98,6 +103,7 @@ export default (
 					domains,
 					pow_difficulty,
 					image_threshold,
+					image_max_rounds
 				} = SiteKeyRegisterApiCommandArgsSpec.parse(argv);
 				const api = new ProviderApi(url as string, pair.address);
 				const jwt = pair.jwtIssue();
@@ -110,6 +116,7 @@ export default (
 						domains: domains || [],
 						powDifficulty: pow_difficulty as number,
 						imageThreshold: image_threshold as number,
+						imageMaxRounds: image_max_rounds as number,
 						disallowWebView: false,
 					},
 					jwt,

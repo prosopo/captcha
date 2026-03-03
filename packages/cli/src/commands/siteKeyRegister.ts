@@ -37,6 +37,7 @@ export const SiteKeyRegisterCommandArgsSpec = z.object({
 	pow_difficulty: z.number(),
 	domains: z.array(z.string()),
 	image_threshold: z.number().max(1).min(0),
+	image_max_rounds: z.number().int().positive(),
 });
 
 export default (
@@ -99,6 +100,7 @@ export default (
 					pow_difficulty,
 					domains,
 					image_threshold,
+					image_max_rounds,
 				} = SiteKeyRegisterCommandArgsSpec.parse(argv);
 				const tasks = new Tasks(env);
 				await tasks.clientTaskManager.registerSiteKey(sitekey, tier, {
@@ -107,6 +109,7 @@ export default (
 					domains: domains || [],
 					powDifficulty: pow_difficulty as number,
 					imageThreshold: image_threshold as number,
+					imageMaxRounds: image_max_rounds as number,
 					disallowWebView: false,
 					contextAware: {
 						enabled: false,

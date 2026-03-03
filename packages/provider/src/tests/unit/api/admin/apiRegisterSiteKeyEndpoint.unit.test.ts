@@ -59,6 +59,7 @@ describe("ApiRegisterSiteKeyEndpoint", () => {
 			frictionlessThreshold: 0.5,
 			powDifficulty: 100000,
 			imageThreshold: 0.5,
+			imageMaxRounds: 3
 		};
 
 		await endpoint.processRequest(

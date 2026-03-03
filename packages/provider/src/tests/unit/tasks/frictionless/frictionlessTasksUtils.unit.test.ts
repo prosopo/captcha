@@ -30,19 +30,24 @@ describe("frictionlessTasksUtils", () => {
 		});
 
 		it("should return 6 when decryption failed", () => {
-			const result = timestampDecayFunction(mockNow - 1000, true);
+			const result = timestampDecayFunction(mockNow - 1000, true, 6);
 			expect(result).toBe(6);
+		});
+
+				it("should return 5 when decryption failed but max rounds is set to 5", () => {
+			const result = timestampDecayFunction(mockNow - 1000, true, 5);
+			expect(result).toBe(5);
 		});
 
 		it("should return 12 when timestamp is more than 1 hour old", () => {
 			const oldTimestamp = mockNow - 3600001; // Just over 1 hour ago
-			const result = timestampDecayFunction(oldTimestamp, false);
+			const result = timestampDecayFunction(oldTimestamp, false, 12);
 			expect(result).toBe(12);
 		});
 
 		it("should return a number for recent timestamps", () => {
 			const recentTimestamp = mockNow - 1000; // 1 second ago
-			const result = timestampDecayFunction(recentTimestamp, false);
+			const result = timestampDecayFunction(recentTimestamp, false, 12);
 			expect(typeof result).toBe("number");
 			expect(result).toBeGreaterThanOrEqual(2);
 			expect(result).toBeLessThanOrEqual(12);
@@ -50,7 +55,7 @@ describe("frictionlessTasksUtils", () => {
 
 		it("should return a number for older timestamps within 1 hour", () => {
 			const thirtyMinOld = mockNow - 1800000; // 30 minutes ago
-			const result = timestampDecayFunction(thirtyMinOld, false);
+			const result = timestampDecayFunction(thirtyMinOld, false, 12);
 			expect(typeof result).toBe("number");
 			expect(result).toBeGreaterThanOrEqual(2);
 			expect(result).toBeLessThanOrEqual(12);
@@ -58,13 +63,13 @@ describe("frictionlessTasksUtils", () => {
 
 		it("should handle very old timestamps", () => {
 			const veryOldTimestamp = mockNow - 24 * 60 * 60 * 1000; // 24 hours ago
-			const result = timestampDecayFunction(veryOldTimestamp, false);
+			const result = timestampDecayFunction(veryOldTimestamp, false, 12);
 			expect(result).toBe(12);
 		});
 
 		it("should handle future timestamps", () => {
 			const futureTimestamp = mockNow + 10000; // 10 seconds in future
-			const result = timestampDecayFunction(futureTimestamp, false);
+			const result = timestampDecayFunction(futureTimestamp, false, 12);
 			expect(typeof result).toBe("number");
 			expect(result).toBeGreaterThanOrEqual(2);
 			expect(result).toBeLessThanOrEqual(12);
