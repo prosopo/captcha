@@ -37,7 +37,7 @@ export const SiteKeyRegisterCommandArgsSpec = z.object({
 	pow_difficulty: z.number(),
 	domains: z.array(z.string()),
 	image_threshold: z.number().max(1).min(0),
-	image_max_rounds: z.number().int().positive(),
+	image_max_rounds: z.number().int().positive().optional().default(4),
 });
 
 export default (
@@ -87,6 +87,11 @@ export default (
 					type: "number" as const,
 					demandOption: false,
 					desc: "Image threshold for settings",
+				} as const)
+				.option("image_max_rounds", {
+					type: "number" as const,
+					demandOption: false,
+					desc: "Image max rounds for settings",
 				} as const),
 		handler: async (argv: ArgumentsCamelCase) => {
 			try {
