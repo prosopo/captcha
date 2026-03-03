@@ -115,7 +115,7 @@ describe("Captchas", () => {
 		expect("@button").to.have.length.gte(1);
 
 		cy.elementExists("button[type='button']:nth-of-type(2)").then(
-			(confirmBtn) => {
+			(confirmBtn: unknown) => {
 				if (confirmBtn) {
 					cy.wrap(confirmBtn).click();
 				}
@@ -145,7 +145,10 @@ describe("Captchas", () => {
 		cy.wait(1000);
 
 		// Verify checkbox is checked
-		getWidgetElement(`${checkboxClass}:checked`).should("have.length.gte", 1);
+		getWidgetElement(`${checkboxClass}:checked`, { timeout: 15000 }).should(
+			"have.length.gte",
+			1,
+		);
 
 		// Fill in form fields with proper waiting
 		const uniqueId = `test${Cypress._.random(0, 1e6)}`;

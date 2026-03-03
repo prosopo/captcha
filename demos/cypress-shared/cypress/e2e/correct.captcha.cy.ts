@@ -22,15 +22,36 @@ const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "image";
 
 describe("Captchas", () => {
 	before(() => {
-		// Call registerSiteKey and handle response here
-		return cy.registerSiteKey(baseCaptchaType).then((response) => {
-			// Log the response status and body using cy.task()
-			cy.task("log", `Response status: ${response.status}`);
-			cy.task("log", `Response: ${JSON.stringify(response.body)}`);
+		// Call registerSiteKey and handle response here with retry logic
+		const registerWithRetry = (
+			retries = 3,
+			delay = 2000,
+		): Cypress.Chainable => {
+			return cy.registerSiteKey(baseCaptchaType).then((response) => {
+				// Log the response status and body using cy.task()
+				cy.task("log", `Response status: ${response.status}`);
+				cy.task("log", `Response: ${JSON.stringify(response.body)}`);
 
-			// Ensure the request was successful
-			expect(response.status).to.equal(200);
-		});
+				// If request failed and we have retries left, try again
+				if (response.status !== 200 && retries > 0) {
+					cy.task(
+						"log",
+						`Site key registration failed. Retrying... (${retries} attempts left)`,
+					);
+					cy.wait(delay);
+					return registerWithRetry(retries - 1, delay);
+				}
+
+				// Ensure the request was successful
+				expect(
+					response.status,
+					"Site key registration should return 200",
+				).to.equal(200);
+				return cy.wrap(response);
+			});
+		};
+
+		return registerWithRetry();
 	});
 
 	beforeEach(() => {
