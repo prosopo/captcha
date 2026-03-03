@@ -13,6 +13,6 @@
 // limitations under the License.
 
 export const entries: Record<string, string> = {
-	"index.js": "src/index.ts",
-	"utils/.export.js": "src/utils/.export.ts",
+	index: "src/index.ts",
+	"utils/.export": "src/utils/.export.ts",
 };
