@@ -134,16 +134,28 @@ export default defineConfig(async ({ command, mode }) => {
 		plugins: [
 			{
 				name: "copy-dir",
+				generateBundle() {
+					// Ensure the output directory structure exists before Rollup writes files
+					const bundleDir = `${workspaceRoot}/packages/procaptcha-bundle/dist/bundle`;
+					if (!fs.existsSync(bundleDir)) {
+						fs.mkdirSync(bundleDir, { recursive: true });
+					}
+				},
 				async writeBundle() {
 					if (copyDir) {
-						const containingFolder = path.dirname(copyDir.destDir);
-						if (!fs.existsSync(containingFolder)) {
-							fs.mkdirSync(containingFolder, { recursive: true });
+						try {
+							// Ensure the destination directory exists (including all parent directories)
+							if (!fs.existsSync(copyDir.destDir)) {
+								fs.mkdirSync(copyDir.destDir, { recursive: true });
+							}
+							console.log(`Copying ${copyDir.srcDir} to ${copyDir.destDir}`);
+							fs.cpSync(copyDir.srcDir, copyDir.destDir, {
+								recursive: true,
+							});
+						} catch (error) {
+							console.error(`Error copying locales: ${error}`);
+							// Don't throw to avoid breaking the build
 						}
-						console.log(`Copying ${copyDir.srcDir} to ${copyDir.destDir}`);
-						fs.cpSync(copyDir.srcDir, copyDir.destDir, {
-							recursive: true,
-						});
 					}
 				},
 			},

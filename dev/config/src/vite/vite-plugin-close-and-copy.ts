@@ -64,13 +64,17 @@ const clearOutputDirJS = (__dirname: string, destDir: string) =>
 		});
 
 const copyBundle = (__dirname: string, srcDir: string, destDir: string) => {
-	console.info(
-		"Copying",
-		path.resolve(__dirname, srcDir),
-		"to",
-		path.resolve(__dirname, destDir),
-	);
-	fs.cpSync(path.resolve(__dirname, srcDir), path.resolve(__dirname, destDir), {
+	const srcPath = path.resolve(__dirname, srcDir);
+	const destPath = path.resolve(__dirname, destDir);
+
+	// Check if source directory exists before attempting to copy
+	if (!fs.existsSync(srcPath)) {
+		console.warn(`Source directory does not exist: ${srcPath}. Skipping copy.`);
+		return;
+	}
+
+	console.info("Copying", srcPath, "to", destPath);
+	fs.cpSync(srcPath, destPath, {
 		recursive: true,
 	});
 };
