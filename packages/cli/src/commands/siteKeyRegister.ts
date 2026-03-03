@@ -19,6 +19,7 @@ import {
 	ContextType,
 	type KeyringPair,
 	contextAwareThresholdDefault,
+	imageMaxRoundsDefault,
 } from "@prosopo/types";
 import {
 	CaptchaTypeSpec,
@@ -37,7 +38,12 @@ export const SiteKeyRegisterCommandArgsSpec = z.object({
 	pow_difficulty: z.number(),
 	domains: z.array(z.string()),
 	image_threshold: z.number().max(1).min(0),
-	image_max_rounds: z.number().int().positive().optional().default(4),
+	image_max_rounds: z
+		.number()
+		.int()
+		.positive()
+		.optional()
+		.default(imageMaxRoundsDefault),
 });
 
 export default (
