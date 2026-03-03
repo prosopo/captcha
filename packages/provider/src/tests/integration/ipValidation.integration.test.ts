@@ -30,6 +30,7 @@ import { at } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
 import { beforeEach, describe, expect, it } from "vitest";
 import { registerSiteKey } from "./registerSitekey.js";
+import { testFetch } from "./testUtils.js";
 
 // Use environment variables from config - matches server config in prosopo.config.ts
 const apiBaseUrl = process.env.PROSOPO_API_BASE_URL || "https://localhost";
@@ -70,7 +71,7 @@ describe("IP Validation Integration Tests", () => {
 					[ApiParams.headHash]: randomAsHex(16),
 				};
 
-			const responseFrictionless = await fetch(getFrictionlessCaptchaUrl, {
+			const responseFrictionless = await testFetch(getFrictionlessCaptchaUrl, {
 				method: "POST",
 				body: JSON.stringify(getFrictionlessCaptchaBody),
 				headers: {
@@ -85,7 +86,13 @@ describe("IP Validation Integration Tests", () => {
 
 			expect(responseFrictionless.status).toBe(200);
 			const dataFrictionless = await responseFrictionless.json();
+			console.log("Frictionless response:", dataFrictionless);
 			expect(dataFrictionless).toHaveProperty("sessionId");
+			expect(dataFrictionless).toHaveProperty("captchaType");
+
+			// The test expects an image captcha to be returned from the frictionless flow
+			// because the timestamp will be 0 (very old) when decryption fails
+			expect(dataFrictionless.captchaType).toBe(CaptchaType.image);
 
 			// Step 2: Request image captcha from same IP
 			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
@@ -96,7 +103,7 @@ describe("IP Validation Integration Tests", () => {
 				[ApiParams.sessionId]: dataFrictionless.sessionId,
 			};
 
-			const responseImage = await fetch(getImageCaptchaURL, {
+			const responseImage = await testFetch(getImageCaptchaURL, {
 				method: "POST",
 				body: JSON.stringify(getImgCaptchaBody),
 				headers: {

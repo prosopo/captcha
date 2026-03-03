@@ -21,6 +21,7 @@ import {
 	type CaptchaResponseBody,
 	CaptchaType,
 	type ProsopoCaptchaCountConfigSchemaOutput,
+	imageMaxRoundsDefault,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
@@ -138,10 +139,12 @@ export default (
 
 			const captchaConfig: ProsopoCaptchaCountConfigSchemaOutput = {
 				solved: {
-					count:
+					count: Math.min(
 						solvedImagesCount ||
-						userAccessPolicy?.solvedImagesCount ||
-						env.config.captchas.solved.count,
+							userAccessPolicy?.solvedImagesCount ||
+							env.config.captchas.solved.count,
+						clientRecord.settings.imageMaxRounds ?? imageMaxRoundsDefault,
+					),
 				},
 				unsolved: {
 					count:

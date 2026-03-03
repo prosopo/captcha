@@ -44,6 +44,7 @@ const defaultUserSettings: IUserSettings = {
 	captchaType: CaptchaType.frictionless,
 	powDifficulty: 4,
 	imageThreshold: 0.8,
+	imageMaxRounds: 3,
 	disallowWebView: false,
 	contextAware: {
 		enabled: false,
