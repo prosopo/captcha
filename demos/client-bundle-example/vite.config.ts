@@ -14,6 +14,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { loadEnv } from "@prosopo/dotenv";
 import { type UserConfig, defineConfig } from "vite";
 import explanationInjector from "./src/plugins/explanation-injector.js";
@@ -22,6 +23,11 @@ import navigationInjector from "./src/plugins/navigation-injector.js";
 import statusLogInjector from "./src/plugins/status-log-injector.js";
 
 loadEnv();
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const certPath = path.resolve(__dirname, "../../certs");
+const keyPath = path.join(certPath, "server.key");
+const crtPath = path.join(certPath, "server.crt");
 
 // Function to copy contents of a directory to another directory
 function copyDirContents(src: string, dest: string) {
@@ -86,12 +92,23 @@ function moveDirectoryContents(
 }
 
 export default defineConfig(({ command, mode }) => {
+	// Check if certificates exist
+	const useTls = fs.existsSync(keyPath) && fs.existsSync(crtPath);
+
+	console.log({ useTls });
+
 	return {
 		watch: false,
 		mode: "development",
 		server: {
 			host: true,
 			cors: true,
+			https: useTls
+				? {
+						key: fs.readFileSync(keyPath),
+						cert: fs.readFileSync(crtPath),
+					}
+				: undefined,
 		},
 		define: {
 			"import.meta.env.PROSOPO_SITE_KEY": JSON.stringify(

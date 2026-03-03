@@ -79,9 +79,15 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			const redisHost = redisContainer.getHost();
 			const redisPort = redisContainer.getMappedPort(6379);
 
+			// Use environment variables from config - matches server config in prosopo.config.ts
+			const apiBaseUrl =
+				process.env.PROSOPO_API_BASE_URL || "https://localhost";
+			const apiPort = process.env.PROSOPO_API_PORT || "9229";
+			const host = `${apiBaseUrl}:${apiPort}`;
+
 			const config = ProsopoConfigSchema.parse({
 				defaultEnvironment: "development",
-				host: "http://localhost:9229",
+				host,
 				account: {
 					secret:
 						process.env.PROVIDER_MNEMONIC ||

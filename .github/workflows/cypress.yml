@@ -61,6 +61,13 @@ jobs:
         with:
           npm_ci_args: '--include=dev'
 
+      # setup certs
+      - name: Setup certs
+        run: |
+          ./setup_certs.sh
+          ./install_cert.sh
+          echo "NODE_EXTRA_CA_CERTS=$(pwd)/certs/server.crt" >> $GITHUB_ENV
+
       - name: Setup env
         run: |
           set -euxo pipefail # stop on errors, print commands, fail on pipe fails
@@ -71,6 +78,17 @@ jobs:
           cp dev/scripts/env.test dev/scripts/.env.test
           cp dev/scripts/env.test packages/cli/.env.test
           cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
+          
+          # Update URLs to use HTTPS since certificates are present
+          sed -i 's|http://localhost|https://localhost|g' demos/client-bundle-example/.env.test
+          sed -i 's|http://localhost|https://localhost|g' .env.test
+          sed -i 's|http://localhost|https://localhost|g' dev/scripts/.env.test
+          sed -i 's|http://localhost|https://localhost|g' packages/cli/.env.test
+          sed -i 's|http://localhost|https://localhost|g' packages/procaptcha-bundle/.env.test
+          
+          # Change PROSOPO_VERIFICATION_TYPE to local
+          sed -i '/^PROSOPO_VERIFICATION_TYPE=/s/=.*/=local/' demos/client-example-server/.env.test
+          
           echo NODE_ENV: "$NODE_ENV"
 
       # build all packages in workspace

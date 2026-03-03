@@ -16,7 +16,7 @@ import type { Server } from "node:net";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import { ProviderEnvironment } from "@prosopo/env";
 import { generateMnemonic, getPair } from "@prosopo/keyring";
-import { Tasks, startProviderApi } from "@prosopo/provider";
+import { Tasks, isTlsAvailable, startProviderApi } from "@prosopo/provider";
 import {
 	AdminApiPaths,
 	ApiParams,
@@ -79,7 +79,8 @@ describe("Decision Machine Database Integration Tests", () => {
 	beforeAll(async () => {
 		// Get a unique port for this test suite
 		testPort = getRandomPort();
-		baseUrl = `http://localhost:${testPort}`;
+		const protocol = isTlsAvailable() ? "https" : "http";
+		baseUrl = `${protocol}://localhost:${testPort}`;
 
 		// Start MongoDB container
 		mongoContainer = await new GenericContainer("mongo:6.0.17")
@@ -121,7 +122,7 @@ describe("Decision Machine Database Integration Tests", () => {
 
 		const config = ProsopoConfigSchema.parse({
 			defaultEnvironment: "development",
-			host: `http://localhost:${testPort}`,
+			host: `${protocol}://localhost:${testPort}`,
 			account: {
 				secret:
 					process.env.PROVIDER_MNEMONIC ||
@@ -155,7 +156,7 @@ describe("Decision Machine Database Integration Tests", () => {
 				apiKey: "dummyKey",
 			},
 			server: {
-				baseURL: "http://localhost",
+				baseURL: `${protocol}://localhost`,
 				port: testPort,
 			},
 		});
@@ -355,7 +356,37 @@ describe("Decision Machine Database Integration Tests", () => {
 
 	describe("getDecisionMachineArtifactById - _id field tests", () => {
 		it("should return _id when getting a specific decision machine by ID", async () => {
-			// First, get all machines to get an ID
+			// Create a test decision machine first
+			const testSource = `
+			export default function decide(input) {
+				return { decision: 'allow', reason: 'Test get by ID' };
+			}
+		`;
+
+			const createResponse = await fetch(
+				`${baseUrl}${AdminApiPaths.UpdateDecisionMachine}`,
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						"Prosopo-Site-Key": dappAccount,
+						Authorization: `Bearer ${adminJwt}`,
+					},
+					body: JSON.stringify({
+						[ApiParams.decisionMachineScope]: DecisionMachineScope.Global,
+						[ApiParams.decisionMachineRuntime]: DecisionMachineRuntime.Node,
+						[ApiParams.decisionMachineSource]: testSource,
+						[ApiParams.decisionMachineLanguage]:
+							DecisionMachineLanguage.JavaScript,
+						[ApiParams.decisionMachineName]: `Test Machine ${Date.now()}`,
+						[ApiParams.decisionMachineVersion]: "1.0.0",
+					}),
+				},
+			);
+
+			expect(createResponse.status).toBe(200);
+
+			// Get all machines to get the ID of the machine we just created
 			const getAllResponse = await fetch(
 				`${baseUrl}${AdminApiPaths.GetAllDecisionMachines}`,
 				{
