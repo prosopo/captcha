@@ -139,7 +139,6 @@ function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
 				cy.task("log", `Checkbox is disabled: ${$checkbox.is(":disabled")}`);
 				cy.task("log", `Checkbox checked state: ${$checkbox.is(":checked")}`);
 				cy.wrap($checkbox).realClick();
-				cy.task("log", "Real click dispatched via CDP!");
 			});
 
 		return cy

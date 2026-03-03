@@ -86,7 +86,7 @@ describe("Captchas", () => {
 				}
 			},
 		);
-		// puts the client-example demo in the signup state. Does not exist in the client-bundle-example
+
 		cy.clickIAmHuman().then(() => {
 			// Make sure the images are loaded
 			cy.captchaImages().then(() => {
@@ -95,11 +95,13 @@ describe("Captchas", () => {
 					cy.log("in each function");
 					// Click correct images and submit the solution
 					cy.clickCorrectCaptchaImages(captcha);
-					cy.wait(500);
+					cy.wait(800);
 				});
 
 				// wait for solution http request to complete
 				cy.wait("@postSolution");
+
+				cy.wait(500);
 
 				// Get checked checkboxes
 				getWidgetElement(`${checkboxClass}:checked`).should(
