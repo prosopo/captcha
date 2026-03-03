@@ -28,6 +28,7 @@ import {
 	distanceThresholdKmDefault,
 	domainsDefault,
 	frictionlessThresholdDefault,
+	imageMaxRoundsDefault,
 	imageThresholdDefault,
 	ispChangeActionDefault,
 	powDifficultyDefault,
@@ -123,6 +124,10 @@ export const UserSettingsSchema = new Schema({
 	imageThreshold: {
 		type: Number,
 		default: imageThresholdDefault,
+	},
+	imageMaxRounds: {
+		type: Number,
+		default: imageMaxRoundsDefault,
 	},
 	ipValidationRules: IPValidationRulesSchema,
 	domains: {

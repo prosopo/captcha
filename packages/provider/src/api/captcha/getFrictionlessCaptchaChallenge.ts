@@ -421,6 +421,11 @@ export default (
 						captchaType: CaptchaType.image,
 					},
 				}));
+				console.log({
+					decryptionFailed,
+					timestamp,
+					maxRounds: clientRecord.settings.imageMaxRounds,
+				});
 				return res.json(
 					await tasks.frictionlessManager.sendImageCaptcha({
 						solvedImagesCount: timestampDecayFunction(

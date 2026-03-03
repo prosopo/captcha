@@ -35,7 +35,8 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
-		"@prosopo/types": "3.11.1"
+		"@prosopo/types": "3.11.1",
+		"undici": "5.29.0"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.3.0",

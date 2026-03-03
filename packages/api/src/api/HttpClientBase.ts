@@ -11,7 +11,20 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { Agent } from "undici";
 import { HttpError } from "./HttpError.js";
+
+// Create an Agent that ignores certificate validation in development/test
+const isDevelopmentOrTest =
+	process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";
+
+const httpsAgent = isDevelopmentOrTest
+	? new Agent({
+			connect: {
+				rejectUnauthorized: false,
+			},
+		})
+	: undefined;
 
 export class HttpClientBase {
 	protected readonly baseURL: string;
@@ -22,7 +35,10 @@ export class HttpClientBase {
 
 	protected async fetch<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
 		try {
-			const response = await fetch(this.baseURL + input, init);
+			const response = await fetch(this.baseURL + input, {
+				...init,
+				...(httpsAgent && { dispatcher: httpsAgent }),
+			});
 			if (
 				!response.ok &&
 				// Only throw an error if the response is not JSON and not a 400 error
@@ -52,6 +68,7 @@ export class HttpClientBase {
 				body: JSON.stringify(body),
 				...init,
 				headers,
+				...(httpsAgent && { dispatcher: httpsAgent }),
 			});
 			if (
 				!response.ok &&
