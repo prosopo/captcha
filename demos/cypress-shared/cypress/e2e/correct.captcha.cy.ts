@@ -55,14 +55,24 @@ describe("Captchas", () => {
 		console.log(`Visiting page: ${page}`);
 
 		// visit the base URL specified on command line when running cypress
-		return cy.visit(page).then(() => {
-			// Wait for the procaptcha script to be loaded
-			// This ensures tests work with both async and non-async script loading
-			cy.waitForProcaptchaScript();
-			getWidgetElement(checkboxClass).should("be.visible");
-			// wrap the solutions to make them available to the tests
-			cy.wrap(solutions).as("solutions");
-		});
+		return cy
+			.visit(page, {
+				timeout: 30000,
+				failOnStatusCode: false, // Don't fail immediately on non-2xx status codes
+			})
+			.then(() => {
+				// Wait for the procaptcha script to be loaded
+				// This ensures tests work with both async and non-async script loading
+				cy.waitForProcaptchaScript();
+
+				// Wait for widget to be visible with longer timeout for CI
+				getWidgetElement(checkboxClass, { timeout: 15000 }).should(
+					"be.visible",
+				);
+
+				// wrap the solutions to make them available to the tests
+				cy.wrap(solutions).as("solutions");
+			});
 	});
 
 	after(() => {
@@ -110,25 +120,34 @@ describe("Captchas", () => {
 			.then((console) => {
 				cy.spy(console, "log").as("log");
 			});
-		cy.clickIAmHuman().then(() => {
-			// Make sure the images are loaded
-			cy.captchaImages().then(() => {
-				// Solve the captchas
-				cy.get("@captchas")
-					.each((captcha: Captcha) => {
-						cy.log("in each function");
-						// Click correct images and submit the solution
-						cy.clickCorrectCaptchaImages(captcha);
-						// wait a bit for the next captcha to load before clicking correct images
-						cy.wait(500);
-					})
-					.then(() => {
-						// Get inputs of type checkbox
-						getWidgetElement(checkboxClass).first().should("be.checked");
-					});
-			});
+
+		// Click "I am human" button
+		cy.clickIAmHuman();
+
+		// Wait for images to load
+		cy.captchaImages();
+
+		// Solve the captchas
+		cy.get("@captchas").each((captcha: Captcha) => {
+			cy.log(`Solving captcha: ${captcha.captchaContentId}`);
+			// Click correct images and submit the solution
+			cy.clickCorrectCaptchaImages(captcha);
+			// wait a bit for the next captcha to load before clicking correct images
+			cy.wait(800); // Increased wait time for CI
 		});
+
+		// Wait for solution to be processed
+		cy.wait(1000);
+
+		// Verify checkbox is checked
+		getWidgetElement(checkboxClass, { timeout: 10000 })
+			.first()
+			.should("be.checked");
+
 		// check the logs by going through all recorded calls
-		cy.get("@log").should("have.been.calledWith", "Challenge passed");
+		cy.get("@log", { timeout: 5000 }).should(
+			"have.been.calledWith",
+			"Challenge passed",
+		);
 	});
 });

@@ -15,9 +15,9 @@ import type { DatasetWithIdsAndTree } from "@prosopo/types";
 
 export const datasetWithSolutionHashes = {
 	datasetId:
-		"0x9f460e81ac9c71b486f796a21bb36e2263694756a6621134d110da217fd3ef25",
+		"0x7984714b92d61fd92fd6a7bc9b56b729481470bcc771c19c382ec679acf02e67",
 	datasetContentId:
-		"0x3a2dbbf5610f04f54581843db3adf7e0fadc02cdb8e42e30b028c850e0603165",
+		"0xbaf4a0be4dc53421a668ed106ff1dd5397444a531cc2101e96f4b3807e99291c",
 	format: "SelectAll",
 	contentTree: [
 		[
@@ -58,7 +58,7 @@ export const datasetWithSolutionHashes = {
 			"0x917afb2ea5ed801defd5ed3f1fddf636bca14e37e7418934612c781ceb13e013",
 			"0xe3ae5147692d38fbe62aa786dcc0b4c5031fbff200bf1a4261fd0ab2c687d9a2",
 		],
-		["0x3a2dbbf5610f04f54581843db3adf7e0fadc02cdb8e42e30b028c850e0603165"],
+		["0xbaf4a0be4dc53421a668ed106ff1dd5397444a531cc2101e96f4b3807e99291c"],
 	],
 	solutionTree: [
 		[
@@ -99,7 +99,7 @@ export const datasetWithSolutionHashes = {
 			"0x0e92e9e630844d5c8b6afaf2145303ee0a8c419ce68ec44bbc16246ed2571b74",
 			"0x0397a2316b1372f4fb9062c63b4a2ac43cb7eb8a580d5dd6fd3cb556f501e747",
 		],
-		["0x9f460e81ac9c71b486f796a21bb36e2263694756a6621134d110da217fd3ef25"],
+		["0x7984714b92d61fd92fd6a7bc9b56b729481470bcc771c19c382ec679acf02e67"],
 	],
 	captchas: [
 		{
@@ -936,7 +936,7 @@ export const datasetWithSolutionHashes = {
 					type: "image",
 				},
 				{
-					hash: "0x020202020202020202020202020202021a8d88f76f5f01251695a8e488f676dc970f1e2f7ab8af43b12d2b03b5ae54",
+					hash: "0x021a8d88f76f5f01251695a8e488f676dc970f1e2f7ab8af43b12d2b03b5ae54",
 					data: "https://prosopo.github.io/demo-datasets/img/test_image_png_93.png",
 					type: "image",
 				},
@@ -948,7 +948,7 @@ export const datasetWithSolutionHashes = {
 			],
 			target: "cat",
 			solution: [
-				"0x020202020202020202020202020202021a8d88f76f5f01251695a8e488f676dc970f1e2f7ab8af43b12d2b03b5ae54",
+				"0x021a8d88f76f5f01251695a8e488f676dc970f1e2f7ab8af43b12d2b03b5ae54",
 				"0x15a422800b166cde2e9d5ac4ab76bf06909737d7896246a5662f341b8b4f02dc",
 				"0xc0d85d32dffcbf5803e198c30f8fb09fdc9483d799a37383e89011da233744e0",
 			],

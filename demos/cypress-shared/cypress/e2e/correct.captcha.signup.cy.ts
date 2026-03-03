@@ -22,15 +22,36 @@ const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "image";
 
 describe("Captchas", () => {
 	before(() => {
-		// Call registerSiteKey and handle response here
-		return cy.registerSiteKey(baseCaptchaType).then((response) => {
-			// Log the response status and body using cy.task()
-			cy.task("log", `Response status: ${response.status}`);
-			cy.task("log", `Response: ${JSON.stringify(response.body)}`);
+		// Call registerSiteKey and handle response here with retry logic
+		const registerWithRetry = (
+			retries = 3,
+			delay = 2000,
+		): Cypress.Chainable => {
+			return cy.registerSiteKey(baseCaptchaType).then((response) => {
+				// Log the response status and body using cy.task()
+				cy.task("log", `Response status: ${response.status}`);
+				cy.task("log", `Response: ${JSON.stringify(response.body)}`);
 
-			// Ensure the request was successful
-			expect(response.status).to.equal(200);
-		});
+				// If request failed and we have retries left, try again
+				if (response.status !== 200 && retries > 0) {
+					cy.task(
+						"log",
+						`Site key registration failed. Retrying... (${retries} attempts left)`,
+					);
+					cy.wait(delay);
+					return registerWithRetry(retries - 1, delay);
+				}
+
+				// Ensure the request was successful
+				expect(
+					response.status,
+					"Site key registration should return 200",
+				).to.equal(200);
+				return cy.wrap(response);
+			});
+		};
+
+		return registerWithRetry();
 	});
 
 	beforeEach(() => {
@@ -51,14 +72,24 @@ describe("Captchas", () => {
 		cy.intercept("/dummy").as("dummy");
 
 		// visit the base URL specified on command line when running cypress
-		return cy.visit(Cypress.env("default_page")).then(() => {
-			// Wait for the procaptcha script to be loaded
-			// This ensures tests work with both async and non-async script loading
-			cy.waitForProcaptchaScript();
-			getWidgetElement(checkboxClass).should("be.visible");
-			// wrap the solutions to make them available to the tests
-			cy.wrap(solutions).as("solutions");
-		});
+		return cy
+			.visit(Cypress.env("default_page"), {
+				timeout: 30000,
+				failOnStatusCode: false, // Don't fail immediately on non-2xx status codes
+			})
+			.then(() => {
+				// Wait for the procaptcha script to be loaded
+				// This ensures tests work with both async and non-async script loading
+				cy.waitForProcaptchaScript();
+
+				// Wait for widget to be visible with longer timeout for CI
+				getWidgetElement(checkboxClass, { timeout: 15000 }).should(
+					"be.visible",
+				);
+
+				// wrap the solutions to make them available to the tests
+				cy.wrap(solutions).as("solutions");
+			});
 	});
 
 	after(() => {
@@ -77,59 +108,97 @@ describe("Captchas", () => {
 	});
 
 	it("Selecting the correct images passes the captcha and signs up the user", () => {
+		// Set up signup intercept early
+		cy.intercept("POST", "/signup").as("signup");
+
 		cy.get("button").as("button");
 		expect("@button").to.have.length.gte(1);
+
 		cy.elementExists("button[type='button']:nth-of-type(2)").then(
-			(confirmBtn) => {
+			(confirmBtn: Element | null) => {
 				if (confirmBtn) {
 					cy.wrap(confirmBtn).click();
 				}
 			},
 		);
 
-		cy.clickIAmHuman().then(() => {
-			// Make sure the images are loaded
-			cy.captchaImages().then(() => {
-				// Solve the captchas
-				cy.get("@captchas").each((captcha: Captcha) => {
-					cy.log("in each function");
-					// Click correct images and submit the solution
-					cy.clickCorrectCaptchaImages(captcha);
-					cy.wait(800);
-				});
+		// Click "I am human" button
+		cy.clickIAmHuman();
 
-				// wait for solution http request to complete
-				cy.wait("@postSolution");
+		// Wait for images to load with timeout
+		cy.captchaImages();
 
-				cy.wait(500);
+		// Solve the captchas
+		cy.get("@captchas").each((captcha: Captcha) => {
+			cy.log(`Solving captcha: ${captcha.captchaContentId}`);
+			// Click correct images and submit the solution
+			cy.clickCorrectCaptchaImages(captcha);
+			cy.wait(1000);
+		});
 
-				// Get checked checkboxes
-				getWidgetElement(`${checkboxClass}:checked`).should(
-					"have.length.gte",
-					1,
-				);
+		// Wait for solution http request to complete with timeout
+		cy.wait("@postSolution", { timeout: 15000 })
+			.its("response.statusCode")
+			.should("be.oneOf", [200, 201]);
 
-				const uniqueId = `test${Cypress._.random(0, 1e6)}`;
-				cy.get('input[type="password"]').type("password");
-				cy.get('input[id="email"]').type(`${uniqueId}@prosopo.io`);
-				cy.get('input[id="name"]').type("test");
+		// Give the UI time to update
+		cy.wait(1000);
 
-				cy.intercept("POST", "/signup").as("signup");
+		// Verify checkbox is checked
+		getWidgetElement(`${checkboxClass}:checked`).should("have.length.gte", 1);
 
-				cy.get('button[data-cy="submit-button"]').first().realClick();
+		// Fill in form fields with proper waiting
+		const uniqueId = `test${Cypress._.random(0, 1e6)}`;
 
-				cy.wait("@signup").then((interception) => {
-					const body = interception.response?.body;
-					console.log("body", body);
+		cy.get('input[id="name"]', { timeout: 10000 })
+			.should("be.visible")
+			.clear()
+			.type("test", { delay: 50 });
 
-					// Check if body exists before destructuring
-					expect(body, "Response body should exist").to.exist;
-					expect(body, "Response body should not be null").to.not.be.null;
+		cy.get('input[id="email"]', { timeout: 10000 })
+			.should("be.visible")
+			.clear()
+			.type(`${uniqueId}@prosopo.io`, { delay: 50 });
 
-					const { message } = body;
-					expect(message).to.equal("user created");
-				});
-			});
+		cy.get('input[type="password"]', { timeout: 10000 })
+			.should("be.visible")
+			.clear()
+			.type("password", { delay: 50 });
+
+		// Ensure the submit button is visible and enabled
+		cy.get('button[data-cy="submit-button"]', { timeout: 10000 })
+			.first()
+			.should("be.visible")
+			.should("not.be.disabled");
+
+		// Click submit button
+		cy.get('button[data-cy="submit-button"]').first().realClick();
+
+		// Wait for signup response with extended timeout and proper error handling
+		cy.wait("@signup", { timeout: 20000 }).then((interception) => {
+			cy.task(
+				"log",
+				`Signup response status: ${interception.response?.statusCode}`,
+			);
+
+			// Verify response exists
+			expect(interception.response, "Signup response should exist").to.exist;
+			expect(
+				interception.response?.statusCode,
+				"Signup should return 200 or 201",
+			).to.be.oneOf([200, 201]);
+
+			const body = interception.response?.body;
+			cy.task("log", `Signup response body: ${JSON.stringify(body)}`);
+
+			// Check if body exists before destructuring
+			expect(body, "Response body should exist").to.exist;
+			expect(body, "Response body should not be null").to.not.be.null;
+
+			const { message } = body;
+			expect(message, "Message should indicate user was created").to.equal(
+				"user created",
+			);
 		});
 	});
 });
