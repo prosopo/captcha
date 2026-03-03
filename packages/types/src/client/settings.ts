@@ -152,7 +152,7 @@ export const ClientSettingsSchema = object({
 		.max(1)
 		.optional()
 		.default(imageThresholdDefault),
-	imageMaxRounds: number().int().positive().optional().default(4),
+	imageMaxRounds: number().int().min(2).optional().default(4),
 	ipValidationRules: IPValidationRulesSchema.optional(),
 	disallowWebView: boolean().optional().default(false).optional(),
 	contextAware: ContextAwareSchema.optional(),
