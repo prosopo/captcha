@@ -51,7 +51,18 @@ describe("Captchas", () => {
 	});
 
 	after(() => {
-		return cy.registerSiteKey(CaptchaType.image);
+		// Re-register the site key to reset state for subsequent test runs
+		// Using failOnStatusCode: false in the command, so this won't throw
+		cy.registerSiteKey(CaptchaType.image).then((response) => {
+			if (response.status === 200) {
+				cy.task("log", "Site key successfully re-registered");
+			} else {
+				cy.task(
+					"log",
+					`Warning: Could not re-register site key. Status: ${response.status}`,
+				);
+			}
+		});
 	});
 
 	it("Captchas load when 'I am human' is pressed", () => {

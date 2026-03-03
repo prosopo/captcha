@@ -20,6 +20,7 @@ import { getPair } from "@prosopo/keyring";
 import { ProsopoServer } from "@prosopo/server";
 import {
 	ApiParams,
+	type KeyringPair,
 	ProcaptchaResponse,
 	type ProcaptchaToken,
 	type ProsopoServerConfigOutput,
@@ -35,6 +36,7 @@ const SubscribeBodySpec = ProcaptchaResponse.merge(
 	z.object({
 		email: z.string().email(),
 		password: z.string(),
+		siteKey: z.string(),
 	}),
 );
 
@@ -107,13 +109,29 @@ const signup = async (
 			email: { $eq: req.body.email },
 		});
 		const payload = SubscribeBodySpec.parse(req.body);
-		const pair = await getPair(config.account.secret);
+		// get the procaptcha-response token
+		const token = payload[ApiParams.procaptchaResponse];
+		const siteKey = payload[ApiParams.siteKey];
+
+		let pair: KeyringPair | undefined;
+		for (const captchaType of ["pow", "image", "frictionless"]) {
+			pair = getPair(`${config.account.secret}//${captchaType}`);
+			console.log(`Checking pair for ${captchaType}: ${pair.address}`);
+			if (pair.address === siteKey) {
+				break;
+			}
+		}
+
+		if (!pair || pair.address !== siteKey) {
+			throw new Error(
+				`Site key does not match the server configuration: Provided ${siteKey} vs Server ${pair?.address}`,
+			);
+		}
+
 		const prosopoServer = new ProsopoServer(config, pair);
 		if (dbUser) {
 			return res.status(409).json({ message: "email already exists" });
 		}
-		// get the procaptcha-response token
-		const token = payload[ApiParams.procaptchaResponse];
 
 		if (!config.account.secret) {
 			throw new ProsopoEnvError("GENERAL.MNEMONIC_UNDEFINED", {

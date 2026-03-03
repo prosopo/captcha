@@ -62,7 +62,18 @@ describe("Captchas", () => {
 	});
 
 	after(() => {
-		cy.registerSiteKey(baseCaptchaType);
+		// Re-register the site key to reset state for subsequent test runs
+		// Using failOnStatusCode: false in the command, so this won't throw
+		cy.registerSiteKey(baseCaptchaType).then((response) => {
+			if (response.status === 200) {
+				cy.task("log", "Site key successfully re-registered");
+			} else {
+				cy.task(
+					"log",
+					`Warning: Could not re-register site key. Status: ${response.status}`,
+				);
+			}
+		});
 	});
 
 	it("Selecting the correct images passes the captcha and signs up the user", () => {
@@ -84,6 +95,7 @@ describe("Captchas", () => {
 					cy.log("in each function");
 					// Click correct images and submit the solution
 					cy.clickCorrectCaptchaImages(captcha);
+					cy.wait(500);
 				});
 
 				// wait for solution http request to complete
@@ -102,11 +114,16 @@ describe("Captchas", () => {
 
 				cy.intercept("POST", "/signup").as("signup");
 
-				cy.get('button[data-cy="submit-button"]').first().click();
+				cy.get('button[data-cy="submit-button"]').first().realClick();
 
 				cy.wait("@signup").then((interception) => {
 					const body = interception.response?.body;
 					console.log("body", body);
+
+					// Check if body exists before destructuring
+					expect(body, "Response body should exist").to.exist;
+					expect(body, "Response body should not be null").to.not.be.null;
+
 					const { message } = body;
 					expect(message).to.equal("user created");
 				});

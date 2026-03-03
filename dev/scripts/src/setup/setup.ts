@@ -52,8 +52,8 @@ function getDefaultProvider(): IProviderAccount {
 	const host = process.env.PROSOPO_PROVIDER_HOST || "localhost";
 	return {
 		url: process.env.PROSOPO_API_PORT
-			? `http://${host}:${process.env.PROSOPO_API_PORT}`
-			: `http://${host}:9229`,
+			? `https://${host}:${process.env.PROSOPO_API_PORT}`
+			: `https://${host}:9229`,
 		datasetFile: getDatasetFilePath(),
 		address: process.env.PROSOPO_PROVIDER_ADDRESS || "",
 		secret: getSecret(),

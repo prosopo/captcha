@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /// <reference types="cypress" />
+import "cypress-real-events";
 
 import {
 	AdminApiPaths,
@@ -121,7 +122,28 @@ function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
 		cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
 			"getCaptcha",
 		);
-		getWidgetElement(checkboxClass, { timeout: 12000 }).first().click();
+
+		// Log for debugging
+		cy.task("log", `Looking for checkbox with selector: ${checkboxClass}`);
+
+		// Wait for checkbox to exist and be visible
+		getWidgetElement(checkboxClass, { timeout: 12000 })
+			.should("exist")
+			.should("be.visible")
+			.should("not.be.disabled")
+			.first()
+			.then(($checkbox) => {
+				// Log checkbox details for debugging
+				cy.task("log", `Found checkbox: ${$checkbox.length} element(s)`);
+				cy.task("log", `Checkbox is visible: ${$checkbox.is(":visible")}`);
+				cy.task("log", `Checkbox is disabled: ${$checkbox.is(":disabled")}`);
+				cy.task("log", `Checkbox checked state: ${$checkbox.is(":checked")}`);
+
+				// Use cypress-real-events to create truly trusted browser events
+				// This uses Chrome DevTools Protocol to trigger real clicks with e.isTrusted = true
+				cy.wrap($checkbox).realClick();
+				cy.task("log", "Real click dispatched via CDP!");
+			});
 
 		return cy
 			.wait("@getCaptcha", { timeout: 36000 })
@@ -206,15 +228,28 @@ function getSelectors(captcha: Captcha) {
 function clickCorrectCaptchaImages(
 	captcha: Captcha,
 ): Chainable<JQuery<HTMLElement>> {
+	// Set up intercept BEFORE clicking anything
+	cy.intercept("POST", "**/prosopo/provider/client/solution").as(
+		"postSolution",
+	);
+
 	return cy.captchaImages().then(() => {
 		cy.getSelectors(captcha).then((selectors: string[]) => {
 			console.log("captchaId", captcha.captchaId, "selectors", selectors);
-			// Click the correct images
+			// Click the correct images using realClick for trusted events
 			getWidgetElement(selectors.join(", ")).then((elements) => {
 				if (elements.length > 0) {
-					cy.wrap(elements).click({ multiple: true });
+					// Click each image individually with realClick
+					cy.wrap(elements).each(($img) => {
+						cy.wrap($img).realClick();
+						cy.wait(100); // Small wait between clicks
+					});
+				} else {
+					console.log("No images to select");
 				}
-				console.log("No images to select");
+				// Wait for images to be selected
+				cy.wait(500);
+				// Click next button
 				cy.clickNextButton();
 			});
 		});
@@ -222,12 +257,15 @@ function clickCorrectCaptchaImages(
 }
 
 function clickNextButton() {
-	cy.intercept("POST", "**/prosopo/provider/client/solution").as(
-		"postSolution",
-	);
-	// Go to the next captcha or submit solution
-	getWidgetElement('button[data-cy="button-next"]').click({ force: true });
-	cy.wait(0);
+	// Ensure button exists and is visible before clicking
+	return getWidgetElement('button[data-cy="button-next"]')
+		.should("exist")
+		.should("be.visible")
+		.then(($btn) => {
+			cy.task("log", "Next button found and visible, clicking...");
+			cy.wrap($btn).realClick();
+			cy.task("log", "Next button clicked!");
+		});
 }
 
 function elementExists(selector: string) {
@@ -270,6 +308,7 @@ function registerSiteKey(
 		};
 
 		// Use cy.request() to ensure Cypress correctly queues the request
+		// Set retryOnNetworkFailure to false to handle connection errors gracefully
 		return cy.request({
 			method: "POST",
 			url: adminSiteKeyURL,
@@ -283,6 +322,8 @@ function registerSiteKey(
 				settings,
 			},
 			failOnStatusCode: false, // Allow handling of non-200 responses manually
+			retryOnNetworkFailure: false, // Don't retry on network failures
+			timeout: 10000, // 10 second timeout
 		});
 	});
 }

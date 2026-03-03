@@ -76,6 +76,7 @@
                     email: document.getElementById('email').value,
                     name: document.getElementById('name').value,
                     password: document.getElementById('password').value,
+                    siteKey: import.meta.env.PROSOPO_SITE_KEY_FRICTIONLESS,
                     "procaptcha-response": procaptchaToken,
                 };
                 const url = new URL('signup', import.meta.env.PROSOPO_SERVER_URL).href;

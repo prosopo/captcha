@@ -26,6 +26,8 @@ env:
   CARGO_TERM_COLOR: always
   NODE_OPTIONS: "--max-old-space-size=4096"
   NODE_ENV: "test"
+  # Required for self-signed HTTPS certificates in test environment
+  NODE_TLS_REJECT_UNAUTHORIZED: "0"
 
 defaults:
   run:
@@ -66,7 +68,6 @@ jobs:
         run: |
           ./setup_certs.sh
           ./install_cert.sh
-          echo "NODE_EXTRA_CA_CERTS=$(pwd)/certs/server.crt" >> $GITHUB_ENV
 
       - name: Setup env
         run: |
@@ -78,17 +79,17 @@ jobs:
           cp dev/scripts/env.test dev/scripts/.env.test
           cp dev/scripts/env.test packages/cli/.env.test
           cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
-          
+
           # Update URLs to use HTTPS since certificates are present
           sed -i 's|http://localhost|https://localhost|g' demos/client-bundle-example/.env.test
           sed -i 's|http://localhost|https://localhost|g' .env.test
           sed -i 's|http://localhost|https://localhost|g' dev/scripts/.env.test
           sed -i 's|http://localhost|https://localhost|g' packages/cli/.env.test
           sed -i 's|http://localhost|https://localhost|g' packages/procaptcha-bundle/.env.test
-          
+
           # Change PROSOPO_VERIFICATION_TYPE to local
           sed -i '/^PROSOPO_VERIFICATION_TYPE=/s/=.*/=local/' demos/client-example-server/.env.test
-          
+
           echo NODE_ENV: "$NODE_ENV"
 
       # build all packages in workspace
@@ -110,19 +111,19 @@ jobs:
 
       - name: Run the cypress tests on client-bundle-example
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:image" --success "first" --kill-others
+          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:image" --kill-others-on-fail
 
       - name: Run the cypress tests on client-bundle-example explicit rendering with frictionless captcha
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionless" --success "first" --kill-others
+          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionless" --kill-others-on-fail
 
       - name: Run the cypress tests on client-bundle-example explicit rendering with pow captcha
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:pow" --success "first" --kill-others
+          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:pow" --kill-others-on-fail
 
       - name: Run the cypress tests on client-bundle-example explicit rendering with invisible captcha
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:invisible" --success "first" --kill-others
+          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:invisible" --kill-others-on-fail
 
       # after the test run completes store videos and any screenshots
       - uses: actions/upload-artifact@v4

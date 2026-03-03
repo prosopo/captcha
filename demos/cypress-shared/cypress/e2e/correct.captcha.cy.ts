@@ -66,7 +66,18 @@ describe("Captchas", () => {
 	});
 
 	after(() => {
-		return cy.registerSiteKey(baseCaptchaType);
+		// Re-register the site key to reset state for subsequent test runs
+		// Using failOnStatusCode: false in the command, so this won't throw
+		cy.registerSiteKey(baseCaptchaType).then((response) => {
+			if (response.status === 200) {
+				cy.task("log", "Site key successfully re-registered");
+			} else {
+				cy.task(
+					"log",
+					`Warning: Could not re-register site key. Status: ${response.status}`,
+				);
+			}
+		});
 	});
 
 	it("Selecting the incorrect images fails the captcha", () => {
@@ -82,6 +93,8 @@ describe("Captchas", () => {
 					cy.log("in each function");
 					// Click correct images and submit the solution
 					cy.clickNextButton();
+					// wait a bit for the next captcha to load before clicking incorrect images
+					cy.wait(500);
 				});
 			});
 			getWidgetElement(checkboxClass).first().should("not.be.checked");
@@ -106,6 +119,8 @@ describe("Captchas", () => {
 						cy.log("in each function");
 						// Click correct images and submit the solution
 						cy.clickCorrectCaptchaImages(captcha);
+						// wait a bit for the next captcha to load before clicking correct images
+						cy.wait(500);
 					})
 					.then(() => {
 						// Get inputs of type checkbox
