@@ -265,6 +265,7 @@ function registerSiteKey(
 			frictionlessThreshold: 0.5,
 			powDifficulty: 2,
 			imageThreshold: 0.8,
+			imageMaxRounds: 3,
 			disallowWebView: false,
 		};
 
