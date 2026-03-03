@@ -149,12 +149,13 @@ describe("Captchas", () => {
 		cy.captchaImages();
 
 		// Solve the captchas
-		cy.get("@captchas").each((captcha: Captcha) => {
-			cy.log(`Solving captcha: ${captcha.captchaContentId}`);
+		cy.get("@captchas").each((captcha: Captcha, index: number) => {
+			cy.log(`Solving captcha ${index + 1}: ${captcha.captchaContentId}`);
 			// Click correct images and submit the solution
 			cy.clickCorrectCaptchaImages(captcha);
-			// wait a bit for the next captcha to load before clicking correct images
-			cy.wait(800); // Increased wait time for CI
+			// Wait for the next captcha to fully load before continuing
+			// This is critical for CICD where the second round can be slower
+			cy.wait(1200); // Increased wait time for CI to ensure next captcha loads
 		});
 
 		// Wait for solution to be processed

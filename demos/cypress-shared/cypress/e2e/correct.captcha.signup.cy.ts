@@ -129,11 +129,12 @@ describe("Captchas", () => {
 		cy.captchaImages();
 
 		// Solve the captchas
-		cy.get("@captchas").each((captcha: Captcha) => {
-			cy.log(`Solving captcha: ${captcha.captchaContentId}`);
+		cy.get("@captchas").each((captcha: Captcha, index: number) => {
+			cy.log(`Solving captcha ${index + 1}: ${captcha.captchaContentId}`);
 			// Click correct images and submit the solution
 			cy.clickCorrectCaptchaImages(captcha);
-			cy.wait(1000);
+			// Wait for the next captcha to fully load before continuing
+			cy.wait(1200);
 		});
 
 		// Wait for solution http request to complete with timeout

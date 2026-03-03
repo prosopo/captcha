@@ -171,24 +171,28 @@ function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
 }
 
 function captchaImages(): Cypress.Chainable<JQuery<HTMLElement>> {
-	return getWidgetElement(".prosopo-modalInner p").then(($p) => {
-		const $pWithText = $p.filter((index, el) => {
-			return Cypress.$(el).text().includes("all containing");
-		});
+	// Wait for the modal to be visible first
+	return getWidgetElement(".prosopo-modalInner p", { timeout: 10000 })
+		.should("be.visible")
+		.then(($p) => {
+			const $pWithText = $p.filter((index, el) => {
+				return Cypress.$(el).text().includes("all containing");
+			});
 
-		cy.wrap($pWithText)
-			.should("be.visible")
-			.parent()
-			.parent()
-			.parent()
-			.parent()
-			.children()
-			.next()
-			.children()
-			.first()
-			.children()
-			.as("captchaImages");
-	});
+			cy.wrap($pWithText)
+				.should("be.visible")
+				.parent()
+				.parent()
+				.parent()
+				.parent()
+				.children()
+				.next()
+				.children()
+				.first()
+				.children()
+				.should("have.length.gte", 1) // Ensure at least one image exists
+				.as("captchaImages");
+		});
 }
 
 function getSelectors(captcha: Captcha) {
@@ -229,23 +233,42 @@ function clickCorrectCaptchaImages(
 		"postSolution",
 	);
 
+	// Wait for images to be loaded and ready
+	// This ensures images are fully rendered before we try to interact with them
+	cy.wait(500); // Give DOM time to update after previous round
+
 	return cy.captchaImages().then(() => {
+		// Additional wait to ensure captcha images are fully loaded
+		cy.wait(300);
+
 		cy.getSelectors(captcha).then((selectors: string[]) => {
 			console.log("captchaId", captcha.captchaId, "selectors", selectors);
-			getWidgetElement(selectors.join(", ")).then((elements) => {
-				if (elements.length > 0) {
-					cy.wrap(elements).each(($img) => {
-						cy.wrap($img).realClick();
-						cy.wait(100); // Small wait between clicks
+
+			// Ensure the selector elements exist before trying to click them
+			if (selectors.length > 0) {
+				// Wait for the specific images to be visible
+				getWidgetElement(selectors.join(", "), { timeout: 5000 })
+					.should("be.visible")
+					.then((elements) => {
+						if (elements.length > 0) {
+							cy.wrap(elements).each(($img) => {
+								cy.wrap($img).realClick();
+								cy.wait(100); // Small wait between clicks
+							});
+						} else {
+							console.log("No images to select");
+						}
+						// Wait for images to be selected
+						cy.wait(500);
+						// Click next button
+						cy.clickNextButton();
 					});
-				} else {
-					console.log("No images to select");
-				}
-				// Wait for images to be selected
+			} else {
+				console.log("No selectors found for this captcha");
+				// Still click next button even if no images to select
 				cy.wait(500);
-				// Click next button
 				cy.clickNextButton();
-			});
+			}
 		});
 	});
 }
