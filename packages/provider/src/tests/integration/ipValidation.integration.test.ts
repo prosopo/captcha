@@ -31,7 +31,10 @@ import { randomAsHex } from "@prosopo/util-crypto";
 import { beforeEach, describe, expect, it } from "vitest";
 import { registerSiteKey } from "./registerSitekey.js";
 
-const baseUrl = "http://localhost:9229";
+// Use environment variables from config - matches server config in prosopo.config.ts
+const apiBaseUrl = process.env.PROSOPO_API_BASE_URL || "https://localhost";
+const apiPort = process.env.PROSOPO_API_PORT || "9229";
+const baseUrl = `${apiBaseUrl}:${apiPort}`;
 const solutions = datasetWithSolutionHashes;
 
 describe("IP Validation Integration Tests", () => {
@@ -54,7 +57,7 @@ describe("IP Validation Integration Tests", () => {
 
 	describe("Frictionless captcha with IP validation", () => {
 		it("should allow image captcha request from same IP after frictionless flow", async () => {
-			const origin = "http://localhost";
+			const origin = "https://localhost";
 			const initialIP = "127.0.0.1";
 
 			// Step 1: Get frictionless captcha

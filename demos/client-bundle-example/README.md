@@ -9,6 +9,8 @@ This project is a _minimal_ example demonstrating how to include the Prosopo Pro
 Run these commands from the root of the [captcha](https://github.com/prosopo/captcha) repo:
 
 ```bash
+./setup-certs.sh && \
+./install_cert.sh && \
 cp dev/scripts/env.development dev/scripts/.env.development && \
 cp dev/scripts/env.development packages/procaptcha-bundle/.env.development && \
 docker compose --file ./docker/docker-compose.development.yml up -d && \
@@ -22,5 +24,5 @@ NODE_ENV=development npm run start:all
 
 ### 2. Visit the App
 
-The app is now running in development mode. Open [http://localhost:9232](http://localhost:9232) to view it in the
+The app is now running in development mode. Open [https://localhost:9232](http://localhost:9232) to view it in the
 browser.

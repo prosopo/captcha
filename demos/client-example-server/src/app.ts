@@ -1,3 +1,7 @@
+import fs from "node:fs";
+import https from "node:https";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,6 +44,8 @@ async function main() {
 	const verifyEndpoint =
 		process.env.PROSOPO_VERIFY_ENDPOINT ||
 		`https://${apiPrefix}api.prosopo.io/siteverify`;
+
+	console.log({ verifyEndpoint });
 
 	const verifyType: ProsopoVerificationType = Object.keys(
 		ProsopoVerificationType,
@@ -103,7 +109,33 @@ async function main() {
 
 	logger.info(() => ({ msg: "Listening on port", data: { port } }));
 
-	app.listen(port);
+	// Setup HTTPS if enabled (for e2e testing and local development)
+	const useHttps = process.env.USE_HTTPS === "true";
+
+	if (useHttps) {
+		try {
+			const __filename = fileURLToPath(import.meta.url);
+			const __dirname = path.dirname(__filename);
+			const certsDir = path.resolve(__dirname, "../../../certs");
+
+			const httpsOptions = {
+				key: fs.readFileSync(path.join(certsDir, "server.key")),
+				cert: fs.readFileSync(path.join(certsDir, "server.crt")),
+			};
+
+			https.createServer(httpsOptions, app).listen(port, () => {
+				logger.info(() => ({ msg: `HTTPS server started on port ${port}` }));
+			});
+		} catch (err) {
+			logger.error(() => ({
+				err,
+				msg: "Failed to start HTTPS server. Make sure certificates exist in captcha/certs. Run ./setup_certs.sh",
+			}));
+			throw err;
+		}
+	} else {
+		app.listen(port);
+	}
 }
 
 main()

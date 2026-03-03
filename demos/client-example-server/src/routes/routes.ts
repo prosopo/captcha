@@ -40,6 +40,10 @@ function getRoutes(
 		res.status(200).json({ message: "here is your public resource" });
 	});
 
+	router.get("/health", (req, res) => {
+		res.status(200).json({ status: "ok" });
+	});
+
 	// will match any other path
 	router.use("/", (req, res) => {
 		res.status(404).json({ error: "page not found" });

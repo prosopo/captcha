@@ -17,7 +17,7 @@ import { stringToU8a, u8aToHex } from "@polkadot/util";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import { ProviderEnvironment } from "@prosopo/env";
 import { generateMnemonic, getPair } from "@prosopo/keyring";
-import { Tasks, startProviderApi } from "@prosopo/provider";
+import { Tasks, isTlsAvailable, startProviderApi } from "@prosopo/provider";
 import {
 	ApiParams,
 	type CaptchaRequestBodyType,
@@ -82,7 +82,8 @@ describe("Image Captcha Integration Tests", () => {
 	beforeAll(async () => {
 		// Get a unique port for this test suite
 		testPort = getRandomPort();
-		baseUrl = `http://localhost:${testPort}`;
+		const protocol = isTlsAvailable() ? "https" : "http";
+		baseUrl = `${protocol}://localhost:${testPort}`;
 
 		// Start MongoDB container
 		mongoContainer = await new GenericContainer("mongo:6.0.17")
@@ -124,7 +125,7 @@ describe("Image Captcha Integration Tests", () => {
 
 		const config = ProsopoConfigSchema.parse({
 			defaultEnvironment: "development",
-			host: `http://localhost:${testPort}`,
+			host: `${protocol}://localhost:${testPort}`,
 			account: {
 				secret:
 					process.env.PROVIDER_MNEMONIC ||
@@ -158,7 +159,7 @@ describe("Image Captcha Integration Tests", () => {
 				apiKey: "dummyKey",
 			},
 			server: {
-				baseURL: "http://localhost",
+				baseURL: `${protocol}://localhost`,
 				port: testPort,
 			},
 		});
@@ -222,7 +223,7 @@ describe("Image Captcha Integration Tests", () => {
 
 	describe("GetImageCaptchaChallenge", () => {
 		it("should supply an image captcha challenge to a Dapp User", async () => {
-			const origin = "http://localhost";
+			const origin = "https://localhost";
 			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
 			const getImgCaptchaBody: CaptchaRequestBodyType = {
 				[ApiParams.dapp]: dappAccount,
@@ -248,7 +249,7 @@ describe("Image Captcha Integration Tests", () => {
 		});
 
 		it("should not supply an image captcha challenge to a Dapp User if the site key is not registered", async () => {
-			const origin = "http://localhost";
+			const origin = "https://localhost";
 			const [_mnemonic, unregisteredAccount] = await generateMnemonic();
 			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
 			const body: CaptchaRequestBodyType = {
@@ -276,7 +277,7 @@ describe("Image Captcha Integration Tests", () => {
 
 		it("should not supply an image captcha challenge to a Dapp User if an invalid site key is provided", async () => {
 			const invalidSiteKey = "junk";
-			const origin = "http://localhost";
+			const origin = "https://localhost";
 			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
 			const body: CaptchaRequestBodyType = {
 				[ApiParams.dapp]: invalidSiteKey,
@@ -303,7 +304,7 @@ describe("Image Captcha Integration Tests", () => {
 
 		it("should fail if datasetID is incorrect", async () => {
 			const datasetId = "thewrongdsetId";
-			const origin = "http://localhost";
+			const origin = "https://localhost";
 			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
 			const body: CaptchaRequestBodyType = {
 				[ApiParams.dapp]: dappAccount,
@@ -324,7 +325,7 @@ describe("Image Captcha Integration Tests", () => {
 			expect(response.status).toBe(500);
 		});
 		it("should return an error if the captcha type is set to pow", async () => {
-			const origin = "http://localhost";
+			const origin = "https://localhost";
 			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
 
 			await registerSiteKeyInDb(env, dappAccount, CaptchaType.pow);
@@ -351,7 +352,7 @@ describe("Image Captcha Integration Tests", () => {
 			expect(data.error?.code).toBe(400);
 		});
 		it("should return a translated error if the captcha type is set to pow and the language is set to es", async () => {
-			const origin = "http://localhost";
+			const origin = "https://localhost";
 			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
 			await registerSiteKeyInDb(env, dappAccount, CaptchaType.pow);
 			const body: CaptchaRequestBodyType = {
@@ -379,7 +380,7 @@ describe("Image Captcha Integration Tests", () => {
 		});
 	});
 	it("should return an error if the captcha type is set to frictionless and no sessionID is sent", async () => {
-		const origin = "http://localhost";
+		const origin = "https://localhost";
 		const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
 		await registerSiteKeyInDb(env, dappAccount, CaptchaType.frictionless);
 		const body: CaptchaRequestBodyType = {
@@ -410,7 +411,7 @@ describe("Image Captcha Integration Tests", () => {
 			// Use dummyUserAccount for signing, but dappAccount (registered in beforeEach) as the site key
 			const pair = getPair(dummyUserAccount.seed, undefined, "sr25519", 42);
 			const userAccount = dummyUserAccount.address;
-			const origin = "http://localhost";
+			const origin = "https://localhost";
 
 			// Get captcha challenge using the site key registered in beforeEach
 			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;

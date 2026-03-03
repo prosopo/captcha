@@ -58,10 +58,6 @@ export interface ClickEventPoint {
 	altKey?: boolean;
 	shiftKey?: boolean;
 	hoverDuration?: number;
-	timeSinceLastClick?: number;
-	clickSequenceIndex?: number;
-	isRapidClick?: boolean;
-	distanceFromTarget?: number;
 }
 
 /**
