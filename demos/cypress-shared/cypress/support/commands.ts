@@ -138,9 +138,6 @@ function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
 				cy.task("log", `Checkbox is visible: ${$checkbox.is(":visible")}`);
 				cy.task("log", `Checkbox is disabled: ${$checkbox.is(":disabled")}`);
 				cy.task("log", `Checkbox checked state: ${$checkbox.is(":checked")}`);
-
-				// Use cypress-real-events to create truly trusted browser events
-				// This uses Chrome DevTools Protocol to trigger real clicks with e.isTrusted = true
 				cy.wrap($checkbox).realClick();
 				cy.task("log", "Real click dispatched via CDP!");
 			});
@@ -236,10 +233,8 @@ function clickCorrectCaptchaImages(
 	return cy.captchaImages().then(() => {
 		cy.getSelectors(captcha).then((selectors: string[]) => {
 			console.log("captchaId", captcha.captchaId, "selectors", selectors);
-			// Click the correct images using realClick for trusted events
 			getWidgetElement(selectors.join(", ")).then((elements) => {
 				if (elements.length > 0) {
-					// Click each image individually with realClick
 					cy.wrap(elements).each(($img) => {
 						cy.wrap($img).realClick();
 						cy.wait(100); // Small wait between clicks

@@ -126,7 +126,6 @@ describe("Captchas", () => {
 			"getCaptcha",
 		);
 
-		// Use realClick() for trusted events
 		cy.task("log", "Clicking checkbox with realClick...");
 		checkbox.first().realClick();
 
@@ -180,7 +179,6 @@ describe("Captchas", () => {
 		cy.clickIAmHuman().then(() => {
 			cy.wait(2000);
 			cy.captchaImages().then(() => {
-				// Use realClick() for trusted events
 				cy.get("@captchaImages").first().realClick();
 				cy.get("@captchaImages")
 					.first()
