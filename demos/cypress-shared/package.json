@@ -48,13 +48,13 @@
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --project tsconfig.types.json",
-		"cypress:open:client-bundle-example:image": "CAPTCHA_TYPE=image CYPRESS_BASE_URL='http://localhost:9232' cypress open --config-file cypress.image.config.js",
-		"cypress:run:client-bundle-example:image": "CAPTCHA_TYPE=image CYPRESS_BASE_URL='http://localhost:9232' cypress run --browser chrome --config-file cypress.image.config.js",
-		"cypress:open:client-bundle-example:frictionless": "CAPTCHA_TYPE=frictionless CYPRESS_BASE_URL='http://localhost:9232' cypress open --config-file cypress.frictionless.config.js",
-		"cypress:run:client-bundle-example:frictionless": "CAPTCHA_TYPE=frictionless CYPRESS_BASE_URL='http://localhost:9232' cypress run --config-file cypress.frictionless.config.js --browser chrome",
-		"cypress:open:client-bundle-example:pow": "CAPTCHA_TYPE=pow CYPRESS_BASE_URL='http://localhost:9232' cypress open --config-file cypress.pow.config.js",
-		"cypress:run:client-bundle-example:pow": "CAPTCHA_TYPE=pow CYPRESS_BASE_URL='http://localhost:9232' cypress run --config-file cypress.pow.config.js --browser chrome",
-		"cypress:open:client-bundle-example:invisible": "CAPTCHA_TYPE=image CYPRESS_BASE_URL='http://localhost:9232' cypress open --config-file cypress.invisible.config.js",
-		"cypress:run:client-bundle-example:invisible": "CAPTCHA_TYPE=image CYPRESS_BASE_URL='http://localhost:9232' cypress run --config-file cypress.invisible.config.js --browser chrome"
+		"cypress:open:client-bundle-example:image": "CAPTCHA_TYPE=image CYPRESS_BASE_URL='https://localhost:9232' cypress open --config-file cypress.image.config.js",
+		"cypress:run:client-bundle-example:image": "CAPTCHA_TYPE=image CYPRESS_BASE_URL='https://localhost:9232' cypress run --browser chrome --config-file cypress.image.config.js",
+		"cypress:open:client-bundle-example:frictionless": "CAPTCHA_TYPE=frictionless CYPRESS_BASE_URL='https://localhost:9232' cypress open --config-file cypress.frictionless.config.js",
+		"cypress:run:client-bundle-example:frictionless": "CAPTCHA_TYPE=frictionless CYPRESS_BASE_URL='https://localhost:9232' cypress run --config-file cypress.frictionless.config.js --browser chrome",
+		"cypress:open:client-bundle-example:pow": "CAPTCHA_TYPE=pow CYPRESS_BASE_URL='https://localhost:9232' cypress open --config-file cypress.pow.config.js",
+		"cypress:run:client-bundle-example:pow": "CAPTCHA_TYPE=pow CYPRESS_BASE_URL='https://localhost:9232' cypress run --config-file cypress.pow.config.js --browser chrome",
+		"cypress:open:client-bundle-example:invisible": "CAPTCHA_TYPE=image CYPRESS_BASE_URL='https://localhost:9232' cypress open --config-file cypress.invisible.config.js",
+		"cypress:run:client-bundle-example:invisible": "CAPTCHA_TYPE=image CYPRESS_BASE_URL='https://localhost:9232' cypress run --config-file cypress.invisible.config.js --browser chrome"
 	}
 }
