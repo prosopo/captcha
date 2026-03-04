@@ -76,7 +76,7 @@ describe("Captchas", () => {
 		cy.wait(500);
 
 		// Click the submit button
-		cy.get('[data-cy="submit-button"]').click();
+		cy.get('[data-cy="submit-button"]').realClick();
 
 		// Wait for the captcha to load
 		cy.wait(2000);

@@ -117,7 +117,7 @@ describe("Captchas", () => {
 		cy.elementExists("button[type='button']:nth-of-type(2)").then(
 			(confirmBtn: unknown) => {
 				if (confirmBtn) {
-					cy.wrap(confirmBtn).click();
+					cy.wrap(confirmBtn).realClick();
 				}
 			},
 		);

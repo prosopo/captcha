@@ -84,7 +84,7 @@ describe("Proof of Work CAPTCHA", () => {
 			"powCaptcha",
 		);
 
-		getWidgetElement(checkboxClass, { timeout: 12000 }).first().click();
+		getWidgetElement(checkboxClass, { timeout: 12000 }).first().realClick();
 
 		return cy
 			.wait("@powCaptcha", { timeout: 36000 })
@@ -112,7 +112,7 @@ describe("Proof of Work CAPTCHA", () => {
 			"powVerify",
 		);
 
-		getWidgetElement(checkboxClass, { timeout: 12000 }).first().click();
+		getWidgetElement(checkboxClass, { timeout: 12000 }).first().realClick();
 
 		cy.wait("@powCaptcha", { timeout: 12000 })
 			.its("response")
