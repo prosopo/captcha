@@ -128,6 +128,7 @@ export const UserSettingsSchema = new Schema({
 	imageMaxRounds: {
 		type: Number,
 		default: imageMaxRoundsDefault,
+		required: false,
 	},
 	ipValidationRules: IPValidationRulesSchema,
 	domains: {

@@ -64,7 +64,7 @@ export const loadBalancer = async (
 				address: "5EjTA28bKSbFPPyMbUjNtArxyqjwq38r1BapVmLZShaqEedV",
 				url: "https://localhost:9229",
 				datasetId:
-					"0x9f460e81ac9c71b486f796a21bb36e2263694756a6621134d110da217fd3ef25",
+					"0x7984714b92d61fd92fd6a7bc9b56b729481470bcc771c19c382ec679acf02e67",
 				weight: 1,
 			},
 		];
