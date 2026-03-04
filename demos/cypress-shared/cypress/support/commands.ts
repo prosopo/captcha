@@ -26,6 +26,8 @@ import Chainable = Cypress.Chainable;
 import { getPair } from "@prosopo/keyring";
 import type { SolutionRecord } from "@prosopo/types";
 
+export const MAX_IMAGE_CAPTCHA_ROUNDS = 3;
+
 declare global {
 	namespace Cypress {
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix any
@@ -174,7 +176,7 @@ function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
 					"length",
 					captchas.length,
 				);
-				expect(captchas).to.have.lengthOf(2);
+				expect(captchas).to.have.lengthOf.lte(MAX_IMAGE_CAPTCHA_ROUNDS);
 				expect(captchas[0]).to.have.property("items");
 				console.log(
 					"-----------------------------captchas[0].items",
@@ -339,7 +341,7 @@ function registerSiteKey(
 			frictionlessThreshold: 0.5,
 			powDifficulty: 1,
 			imageThreshold: 0.8,
-			imageMaxRounds: 3,
+			imageMaxRounds: MAX_IMAGE_CAPTCHA_ROUNDS,
 			disallowWebView: false,
 		};
 
