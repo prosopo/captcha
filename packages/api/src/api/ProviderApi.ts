@@ -26,6 +26,7 @@ import {
 	type DecisionMachineLanguage,
 	type DecisionMachineRuntime,
 	type DecisionMachineScope,
+	type FingerprintLeafProof,
 	type GetFrictionlessCaptchaResponse,
 	type GetPowCaptchaChallengeRequestBodyType,
 	type GetPowCaptchaResponse,
@@ -95,7 +96,15 @@ export default class ProviderApi
 		providerRequestHashSignature: string,
 		userTimestampSignature: string,
 		behavioralData?: string,
+		fingerprintProofs?: FingerprintLeafProof[],
 	): Promise<CaptchaSolutionResponse> {
+		console.debug(
+			"-----\n\n[FP-MERKLE] ProviderApi.submitCaptchaSolution: sending image captcha solution",
+			"\n  hasFingerprintProofs:", !!fingerprintProofs,
+			"\n  proofsCount:", fingerprintProofs?.length ?? 0,
+			"\n  leafIndices:", fingerprintProofs?.map((p) => p.leafIndex),
+			"\n\n-----",
+		);
 		const body: CaptchaSolutionBodyType = {
 			[ApiParams.user]: userAccount,
 			[ApiParams.dapp]: this.account,
@@ -111,6 +120,9 @@ export default class ProviderApi
 				},
 			},
 			...(behavioralData && { [ApiParams.behavioralData]: behavioralData }),
+			...(fingerprintProofs && {
+				[ApiParams.fingerprintProofs]: fingerprintProofs,
+			}),
 		};
 		return this.post(ClientApiPaths.SubmitImageCaptchaSolution, body, {
 			headers: {
@@ -171,7 +183,15 @@ export default class ProviderApi
 		timeout?: number,
 		behavioralData?: string,
 		salt?: string,
+		fingerprintProofs?: FingerprintLeafProof[],
 	): Promise<PowCaptchaSolutionResponse> {
+		console.debug(
+			"-----\n\n[FP-MERKLE] ProviderApi.submitPowCaptchaSolution: sending PoW solution",
+			"\n  hasFingerprintProofs:", !!fingerprintProofs,
+			"\n  proofsCount:", fingerprintProofs?.length ?? 0,
+			"\n  leafIndices:", fingerprintProofs?.map((p) => p.leafIndex),
+			"\n\n-----",
+		);
 		const body = SubmitPowCaptchaSolutionBody.parse({
 			[ApiParams.challenge]: challenge.challenge,
 			[ApiParams.difficulty]: challenge.difficulty,
@@ -189,6 +209,9 @@ export default class ProviderApi
 			},
 			...(behavioralData && { [ApiParams.behavioralData]: behavioralData }),
 			...(salt && { [ApiParams.salt]: salt }),
+			...(fingerprintProofs && {
+				[ApiParams.fingerprintProofs]: fingerprintProofs,
+			}),
 		});
 		return this.post(ClientApiPaths.SubmitPowCaptchaSolution, body, {
 			headers: {

@@ -315,6 +315,28 @@ export function Manager(
 					}
 				}
 
+				// Generate fingerprint proofs if requested
+				console.debug(
+					"-----\n\n[FP-MERKLE] Image Manager: checking for fingerprintProofRequest in challenge",
+					"\n  hasProofRequest:", !!challenge.fingerprintProofRequest,
+					"\n  hasGenerateProofs:", !!frictionlessState?.generateFingerprintProofs,
+					"\n\n-----",
+				);
+				const fingerprintProofs =
+					challenge.fingerprintProofRequest &&
+					frictionlessState?.generateFingerprintProofs
+						? frictionlessState.generateFingerprintProofs(
+								challenge.fingerprintProofRequest.requestedLeaves,
+							)
+						: undefined;
+				console.debug(
+					"-----\n\n[FP-MERKLE] Image Manager: fingerprint proofs result",
+					"\n  generated:", !!fingerprintProofs,
+					"\n  count:", fingerprintProofs?.length ?? 0,
+					"\n  leafIndices:", fingerprintProofs?.map((p) => p.leafIndex),
+					"\n\n-----",
+				);
+
 				// send the commitment to the provider
 				const submission: TCaptchaSubmitResult =
 					await captchaApi.submitCaptchaSolution(
@@ -324,6 +346,7 @@ export function Manager(
 						challenge.timestamp,
 						challenge.signature.provider.requestHash,
 						encryptedBehavioralData,
+						fingerprintProofs,
 					);
 
 				// mark as is human if solution has been approved

@@ -29,6 +29,7 @@ import { flatten, getIPAddress } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
+import { generateFingerprintProofRequest } from "../../tasks/fingerprint/fingerprintProofRequest.js";
 import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
 import { getRequestUserScope } from "../blacklistRequestInspector.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
@@ -175,6 +176,17 @@ export default (
 					validSessionId,
 					countryCodeToStore,
 				);
+			const fingerprintProofRequest = generateFingerprintProofRequest(4);
+			req.logger.debug(() => ({
+				msg: "-----\n\n[FP-MERKLE] getImageCaptchaChallenge: generated fingerprintProofRequest\n\n-----",
+				data: {
+					requestedLeaves: fingerprintProofRequest.requestedLeaves,
+					numLeaves: fingerprintProofRequest.requestedLeaves.length,
+					user,
+					dapp,
+				},
+			}));
+
 			const captchaResponse: CaptchaResponseBody = {
 				[ApiParams.status]: "ok",
 				[ApiParams.captchas]: taskData.captchas.map((captcha: Captcha) => ({
@@ -191,6 +203,7 @@ export default (
 						[ApiParams.requestHash]: taskData.signedRequestHash,
 					},
 				},
+				[ApiParams.fingerprintProofRequest]: fingerprintProofRequest,
 			};
 			req.logger.info(() => ({
 				msg: "Image captcha challenge issued",

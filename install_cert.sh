@@ -29,6 +29,13 @@ else
 fi
 
 echo "🖥️  Detected OS: $OS"
+
+# Detect WSL2
+IS_WSL=false
+if grep -qi microsoft /proc/version 2>/dev/null; then
+    IS_WSL=true
+    echo "🐧 Detected WSL2 environment - will also install to Windows certificate store"
+fi
 echo ""
 
 case "$OS" in
@@ -80,16 +87,31 @@ case "$OS" in
             echo ""
         fi
 
-        echo "🔄 For browsers:"
-        echo "   - Chrome/Edge: Close ALL Chrome windows and restart"
-        echo "     IMPORTANT: Use 'killall chrome chromium google-chrome' to ensure all processes are closed"
-        echo "   - Firefox: You may need to manually import the certificate"
-        echo "     Settings → Privacy & Security → Certificates → View Certificates → Import"
+        # Install into Windows certificate store if running under WSL2
+        if [ "$IS_WSL" = true ]; then
+            echo "🪟 Installing certificate into Windows trust store for Chrome/Edge..."
+            CERT_WIN_PATH=$(wslpath -w "$CERT_FILE")
+            if powershell.exe -Command "Import-Certificate -FilePath '$CERT_WIN_PATH' -CertStoreLocation 'Cert:\CurrentUser\Root'" > /dev/null 2>&1; then
+                echo "   ✅ Certificate installed in Windows Current User Trusted Root CAs"
+            else
+                echo "   ❌ Failed to install certificate into Windows store"
+                echo "   Try manually: powershell.exe -Command \"Import-Certificate -FilePath '$CERT_WIN_PATH' -CertStoreLocation 'Cert:\\CurrentUser\\Root'\""
+            fi
+            echo ""
+            echo "🔄 Restart Chrome/Edge on Windows for changes to take effect"
+            echo "   IMPORTANT: Close ALL browser windows and check Task Manager for lingering processes"
+        else
+            echo "🔄 For browsers:"
+            echo "   - Chrome/Edge: Close ALL Chrome windows and restart"
+            echo "     IMPORTANT: Use 'killall chrome chromium google-chrome' to ensure all processes are closed"
+            echo "   - Firefox: You may need to manually import the certificate"
+            echo "     Settings → Privacy & Security → Certificates → View Certificates → Import"
+            echo ""
+            echo "💡 To verify Chrome trusts the certificate:"
+            echo "   certutil -L -d sql:\$HOME/.pki/nssdb | grep 'Prosopo Dev'"
+        fi
         echo ""
         echo "⚠️  You MUST completely close and restart your browser for changes to take effect"
-        echo ""
-        echo "💡 To verify Chrome trusts the certificate:"
-        echo "   certutil -L -d sql:\$HOME/.pki/nssdb | grep 'Prosopo Dev'"
         ;;
 
     arch|manjaro)

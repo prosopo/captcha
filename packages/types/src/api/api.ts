@@ -19,6 +19,7 @@ import type {
 	DecisionMachineRuntime,
 	DecisionMachineScope,
 } from "../decisionMachine/index.js";
+import type { FingerprintLeafProof } from "../procaptcha/fingerprint.js";
 import type { ProcaptchaToken, StoredEvents } from "../procaptcha/index.js";
 import type {
 	ApiResponse,
@@ -46,6 +47,7 @@ export interface ProviderApiInterface {
 		providerRequestHashSignature: string,
 		userRequestHashSignature: string,
 		behavioralData?: string,
+		fingerprintProofs?: FingerprintLeafProof[],
 	): Promise<CaptchaSolutionResponse>;
 	verifyDappUser(
 		token: ProcaptchaToken,
@@ -64,7 +66,9 @@ export interface ProviderApiInterface {
 		nonce: number,
 		userTimestampSignature: string,
 		timeout?: number,
+		behavioralData?: string,
 		salt?: string,
+		fingerprintProofs?: FingerprintLeafProof[],
 	): Promise<PowCaptchaSolutionResponse>;
 	submitUserEvents(
 		events: StoredEvents,

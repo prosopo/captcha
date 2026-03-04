@@ -19,6 +19,7 @@ import type {
 	PackedBehavioralData,
 	TouchEventPoint,
 } from "../procaptcha/behavioral.js";
+import type { FingerprintLeafProof } from "../procaptcha/fingerprint.js";
 import type { Account } from "../procaptcha/manager.js";
 import type { ProcaptchaProps } from "../procaptcha/props.js";
 import type {
@@ -51,6 +52,9 @@ export type BotDetectionFunctionResult = GetFrictionlessCaptchaResponse & {
 	deviceCapability?: string;
 	encryptBehavioralData?: (data: string) => Promise<string>;
 	packBehavioralData?: (data: BehavioralData) => PackedBehavioralData;
+	generateFingerprintProofs?: (
+		requestedLeaves: number[],
+	) => FingerprintLeafProof[];
 };
 
 export type BotDetectionFunction = (

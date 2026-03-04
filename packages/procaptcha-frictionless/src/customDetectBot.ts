@@ -18,6 +18,7 @@ import { getRandomActiveProvider } from "@prosopo/load-balancer";
 import { ExtensionLoader } from "@prosopo/procaptcha-common";
 import type {
 	BotDetectionFunction,
+	FingerprintLeafProof,
 	ProcaptchaClientConfigOutput,
 } from "@prosopo/types";
 import type { BotDetectionFunctionResult } from "@prosopo/types";
@@ -64,6 +65,34 @@ const customDetectBot: BotDetectionFunction = async (
 		() => ext.getAccount(config),
 	);
 
+	// Capture fingerprint proof generation for web2 mode
+	let generateFingerprintProofs:
+		| ((requestedLeaves: number[]) => FingerprintLeafProof[])
+		| undefined;
+	if (
+		config.web2 &&
+		"generateFingerprintProofs" in ext &&
+		typeof ext.generateFingerprintProofs === "function"
+	) {
+		console.debug(
+			"-----\n\n[FP-MERKLE] customDetectBot: web2 mode, wiring up generateFingerprintProofs from ExtensionWeb2\n\n-----",
+		);
+		generateFingerprintProofs = (requestedLeaves: number[]) =>
+			(
+				ext as unknown as {
+					generateFingerprintProofs: (
+						requestedLeaves: number[],
+					) => FingerprintLeafProof[];
+				}
+			).generateFingerprintProofs(requestedLeaves);
+	} else {
+		console.debug(
+			"-----\n\n[FP-MERKLE] customDetectBot: generateFingerprintProofs NOT available (web2:",
+			config.web2,
+			")\n\n-----",
+		);
+	}
+
 	const userAccount = detectionResult.userAccount;
 
 	if (!config.account.address) {
@@ -107,6 +136,7 @@ const customDetectBot: BotDetectionFunction = async (
 		deviceCapability: detectionResult.hasTouchSupport,
 		encryptBehavioralData: detectionResult.encryptBehavioralData,
 		packBehavioralData: detectionResult.packBehavioralData,
+		generateFingerprintProofs,
 	};
 };
 

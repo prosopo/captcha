@@ -51,6 +51,7 @@
 		"@polkadot/util": "13.5.7",
 		"@polkadot/util-crypto": "13.5.7",
 		"@prosopo/common": "3.1.28",
+		"@prosopo/datasets": "3.1.4",
 		"@prosopo/fingerprint": "2.6.28",
 		"@prosopo/keyring": "2.9.10",
 		"@prosopo/types": "3.11.1",

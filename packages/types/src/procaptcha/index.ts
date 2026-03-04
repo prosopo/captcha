@@ -19,3 +19,4 @@ export * from "./manager.js";
 export * from "./props.js";
 export * from "./token.js";
 export * from "./utils.js";
+export * from "./fingerprint.js";

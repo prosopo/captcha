@@ -19,6 +19,7 @@ import {
 	type GetPowCaptchaChallengeRequestBodyTypeOutput,
 	type GetPowCaptchaResponse,
 } from "@prosopo/types";
+import { generateFingerprintProofRequest } from "../../tasks/fingerprint/fingerprintProofRequest.js";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import { flatten } from "@prosopo/util";
@@ -188,6 +189,17 @@ export default (
 				countryCodeToStore,
 			);
 
+			const fingerprintProofRequest = generateFingerprintProofRequest(3);
+			req.logger.debug(() => ({
+				msg: "-----\n\n[FP-MERKLE] getPoWCaptchaChallenge: generated fingerprintProofRequest\n\n-----",
+				data: {
+					requestedLeaves: fingerprintProofRequest.requestedLeaves,
+					numLeaves: fingerprintProofRequest.requestedLeaves.length,
+					user,
+					dapp,
+				},
+			}));
+
 			const getPowCaptchaResponse: GetPowCaptchaResponse = {
 				[ApiParams.status]: "ok",
 				[ApiParams.challenge]: challenge.challenge,
@@ -198,6 +210,7 @@ export default (
 						[ApiParams.challenge]: challenge.providerSignature,
 					},
 				},
+				[ApiParams.fingerprintProofRequest]: fingerprintProofRequest,
 			};
 
 			req.logger.info(() => ({

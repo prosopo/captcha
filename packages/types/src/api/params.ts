@@ -62,4 +62,6 @@ export enum ApiParams {
 	decisionMachineVersion = "decisionMachineVersion",
 	decisionMachineCaptchaType = "decisionMachineCaptchaType",
 	salt = "salt",
+	fingerprintProofRequest = "fingerprintProofRequest",
+	fingerprintProofs = "fingerprintProofs",
 }

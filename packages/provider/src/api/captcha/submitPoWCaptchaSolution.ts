@@ -21,6 +21,7 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import { flatten, getIPAddress } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../express.js";
+import { verifyFingerprintProofs } from "../../tasks/fingerprint/fingerprintVerification.js";
 import { Tasks } from "../../tasks/tasks.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
@@ -67,6 +68,7 @@ export default (env: ProviderEnvironment) =>
 			user,
 			behavioralData,
 			salt,
+			fingerprintProofs,
 		} = parsed;
 
 		validateSiteKey(dapp);
@@ -83,6 +85,57 @@ export default (env: ProviderEnvironment) =>
 						logger: req.logger,
 					}),
 				);
+			}
+
+			// Verify fingerprint proofs if provided
+			req.logger.debug(() => ({
+				msg: "-----\n\n[FP-MERKLE] submitPoWCaptchaSolution: checking fingerprint proofs\n\n-----",
+				data: {
+					hasFingerprintProofs: !!fingerprintProofs,
+					proofsCount: fingerprintProofs?.length ?? 0,
+					leafIndices: fingerprintProofs?.map((p) => p.leafIndex),
+					user,
+					dapp,
+				},
+			}));
+			if (fingerprintProofs && fingerprintProofs.length > 0) {
+				req.logger.debug(() => ({
+					msg: "-----\n\n[FP-MERKLE] submitPoWCaptchaSolution: verifying proofs now\n\n-----",
+					data: {
+						proofDetails: fingerprintProofs.map((p) => ({
+							leafIndex: p.leafIndex,
+							valuePreview: p.value.slice(0, 50),
+							proofLayers: p.proof.length,
+						})),
+					},
+				}));
+				const proofResult = verifyFingerprintProofs(fingerprintProofs);
+				if (!proofResult.valid) {
+					req.logger.warn(() => ({
+						msg: "-----\n\n[FP-MERKLE] submitPoWCaptchaSolution: VERIFICATION FAILED\n\n-----",
+						data: {
+							error: proofResult.error,
+							user,
+							dapp,
+							challenge,
+						},
+					}));
+				} else {
+					req.logger.debug(() => ({
+						msg: "-----\n\n[FP-MERKLE] submitPoWCaptchaSolution: VERIFICATION SUCCESS\n\n-----",
+						data: {
+							merkleRoot: proofResult.merkleRoot,
+							proofsCount: fingerprintProofs.length,
+							user,
+							dapp,
+						},
+					}));
+				}
+			} else {
+				req.logger.debug(() => ({
+					msg: "-----\n\n[FP-MERKLE] submitPoWCaptchaSolution: no fingerprint proofs provided, skipping verification\n\n-----",
+					data: { user, dapp },
+				}));
 			}
 
 			const verified = await tasks.powCaptchaManager.verifyPowCaptchaSolution(

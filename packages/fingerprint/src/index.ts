@@ -12,12 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { GetResult } from "@prosopo/fingerprintjs";
+
 const FingerprintJSImport = async () =>
 	(await import("@prosopo/fingerprintjs")).default;
 
-export const getFingerprint = async () => {
+export interface FingerprintCollectionResult {
+	visitorId: string;
+	components: GetResult["components"];
+}
+
+export const getFingerprint = async (): Promise<FingerprintCollectionResult> => {
 	const FingerprintJS = await FingerprintJSImport();
 	const fp = await FingerprintJS.load();
 	const result = await fp.get();
-	return result.visitorId;
+	return {
+		visitorId: result.visitorId,
+		components: result.components,
+	};
 };

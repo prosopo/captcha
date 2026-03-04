@@ -298,6 +298,28 @@ export const Manager = (
 						}
 					}
 
+					// Generate fingerprint proofs if requested
+					console.debug(
+						"-----\n\n[FP-MERKLE] PoW Manager: checking for fingerprintProofRequest in challenge",
+						"\n  hasProofRequest:", !!challenge.fingerprintProofRequest,
+						"\n  hasGenerateProofs:", !!frictionlessState?.generateFingerprintProofs,
+						"\n\n-----",
+					);
+					const fingerprintProofs =
+						challenge.fingerprintProofRequest &&
+						frictionlessState?.generateFingerprintProofs
+							? frictionlessState.generateFingerprintProofs(
+									challenge.fingerprintProofRequest.requestedLeaves,
+								)
+							: undefined;
+					console.debug(
+						"-----\n\n[FP-MERKLE] PoW Manager: fingerprint proofs result",
+						"\n  generated:", !!fingerprintProofs,
+						"\n  count:", fingerprintProofs?.length ?? 0,
+						"\n  leafIndices:", fingerprintProofs?.map((p) => p.leafIndex),
+						"\n\n-----",
+					);
+
 					const verifiedSolution = await providerApi.submitPowCaptchaSolution(
 						challenge,
 						getAccount().account.account.address,
@@ -307,6 +329,7 @@ export const Manager = (
 						config.captchas.pow.verifiedTimeout,
 						encryptedBehavioralData,
 						salt,
+						fingerprintProofs,
 					);
 					if (verifiedSolution[ApiParams.verified]) {
 						updateState({

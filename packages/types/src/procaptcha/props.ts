@@ -22,6 +22,10 @@ import type {
 	PackedBehavioralData,
 	TouchEventPoint,
 } from "./behavioral.js";
+import type {
+	FingerprintLeafProof,
+	FingerprintMerkleState,
+} from "./fingerprint.js";
 import type { Account, Callbacks } from "./manager.js";
 
 // Generic behavioral data collectors for analytics
@@ -51,6 +55,10 @@ export type FrictionlessState = {
 	deviceCapability?: string;
 	encryptBehavioralData?: (data: string) => Promise<string>;
 	packBehavioralData?: (data: BehavioralData) => PackedBehavioralData;
+	fingerprintMerkleState?: FingerprintMerkleState;
+	generateFingerprintProofs?: (
+		requestedLeaves: number[],
+	) => FingerprintLeafProof[];
 };
 
 export type ProcaptchaCallbacks = Partial<Callbacks>;

@@ -16,6 +16,7 @@ import type { ProviderApiInterface } from "../api/index.js";
 import type { CaptchaSolution } from "../datasets/index.js";
 import type { CaptchaResponseBody, RandomProvider } from "../provider/index.js";
 import type { TCaptchaSubmitResult } from "./client.js";
+import type { FingerprintLeafProof } from "./fingerprint.js";
 
 export interface ProcaptchaApiInterface {
 	userAccount: string;
@@ -30,6 +31,7 @@ export interface ProcaptchaApiInterface {
 		timestamp: string,
 		providerRequestHashSignature: string,
 		behavioralData?: string,
+		fingerprintProofs?: FingerprintLeafProof[],
 	): Promise<TCaptchaSubmitResult>;
 	getCaptchaChallenge(sessionId?: string): Promise<CaptchaResponseBody>;
 }

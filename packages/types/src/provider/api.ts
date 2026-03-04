@@ -57,6 +57,8 @@ import {
 } from "../decisionMachine/index.js";
 import {
 	type ChallengeSignature,
+	type FingerprintProofRequest,
+	FingerprintProofsSchema,
 	ProcaptchaTokenSpec,
 	type RequestHashSignature,
 	RequestHashSignatureSchema,
@@ -246,6 +248,7 @@ export interface CaptchaResponseBody extends ApiResponse {
 	[ApiParams.signature]: {
 		[ApiParams.provider]: RequestHashSignature;
 	};
+	[ApiParams.fingerprintProofRequest]?: FingerprintProofRequest;
 }
 
 export const CaptchaSolutionBody = object({
@@ -259,6 +262,7 @@ export const CaptchaSolutionBody = object({
 		[ApiParams.provider]: RequestHashSignatureSchema,
 	}),
 	[ApiParams.behavioralData]: string().optional(),
+	[ApiParams.fingerprintProofs]: FingerprintProofsSchema.optional(),
 });
 
 export type CaptchaSolutionBodyType = zInfer<typeof CaptchaSolutionBody>;
@@ -318,11 +322,13 @@ export interface GetPowCaptchaResponse extends ApiResponse {
 	[ApiParams.signature]: {
 		[ApiParams.provider]: ChallengeSignature;
 	};
+	[ApiParams.fingerprintProofRequest]?: FingerprintProofRequest;
 }
 
 export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 	[ApiParams.captchaType]: CaptchaType.pow | CaptchaType.image;
 	[ApiParams.sessionId]?: string;
+	[ApiParams.fingerprintProofRequest]?: FingerprintProofRequest;
 }
 
 export interface PowCaptchaSolutionResponse extends ApiResponse {
@@ -386,6 +392,7 @@ export const SubmitPowCaptchaSolutionBody = object({
 		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 	[ApiParams.behavioralData]: string().optional(),
 	[ApiParams.salt]: string().optional(),
+	[ApiParams.fingerprintProofs]: FingerprintProofsSchema.optional(),
 });
 
 export type SubmitPowCaptchaSolutionBodyType = input<
