@@ -32,15 +32,17 @@ declare global {
 		interface Chainable<Subject = any> {
 			clickIAmHuman(): Cypress.Chainable<Captcha[]>;
 
+			clickCheckbox(): Cypress.Chainable<JQuery<HTMLElement>>;
+
 			captchaImages(): Cypress.Chainable<JQuery<HTMLElement>>;
 
 			clickCorrectCaptchaImages(
 				captcha: Captcha,
 			): Chainable<JQuery<HTMLElement>>;
 
-			getSelectors(captcha: Captcha): Cypress.Chainable<string[]>;
+			getSelectors(captcha: Captcha): Chainable<string[]>;
 
-			clickNextButton(): Cypress.Chainable<void>;
+			clickNextButton(): Chainable<JQuery<HTMLElement>>;
 
 			elementExists(element: string): Chainable<Subject>;
 
@@ -114,6 +116,23 @@ function waitForProcaptchaScript(): Cypress.Chainable<void> {
 			checkForProcaptcha();
 		});
 	});
+}
+
+function clickCheckbox(): Cypress.Chainable<JQuery<HTMLElement>> {
+	// Wait for checkbox to exist and be visible
+	return getWidgetElement(checkboxClass, { timeout: 12000 })
+		.should("exist")
+		.should("be.visible")
+		.should("not.be.disabled")
+		.first()
+		.then(($checkbox) => {
+			// Log checkbox details for debugging
+			cy.task("log", `Found checkbox: ${$checkbox.length} element(s)`);
+			cy.task("log", `Checkbox is visible: ${$checkbox.is(":visible")}`);
+			cy.task("log", `Checkbox is disabled: ${$checkbox.is(":disabled")}`);
+			cy.task("log", `Checkbox checked state: ${$checkbox.is(":checked")}`);
+			cy.wrap($checkbox).realClick();
+		});
 }
 
 function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
@@ -195,7 +214,7 @@ function captchaImages(): Cypress.Chainable<JQuery<HTMLElement>> {
 		});
 }
 
-function getSelectors(captcha: Captcha) {
+function getSelectors(captcha: Captcha): Chainable<string[]> {
 	cy.wrap({ captcha })
 		.then(({ captcha }) => {
 			cy.get<SolutionRecord[]>("@solutions").then((solutions) => {
@@ -222,7 +241,7 @@ function getSelectors(captcha: Captcha) {
 			});
 		})
 		.as("selectors");
-	return cy.get("@selectors");
+	return cy.get("@selectors") as unknown as Chainable<string[]>;
 }
 
 function clickCorrectCaptchaImages(
@@ -273,7 +292,7 @@ function clickCorrectCaptchaImages(
 	});
 }
 
-function clickNextButton() {
+function clickNextButton(): Chainable<JQuery<HTMLElement>> {
 	// Ensure button exists and is visible before clicking
 	return getWidgetElement('button[data-cy="button-next"]')
 		.should("exist")
@@ -318,7 +337,7 @@ function registerSiteKey(
 			captchaType: captchaType || baseCaptchaType,
 			domains: ["0.0.0.0", "localhost", "*"],
 			frictionlessThreshold: 0.5,
-			powDifficulty: 2,
+			powDifficulty: 1,
 			imageThreshold: 0.8,
 			imageMaxRounds: 3,
 			disallowWebView: false,
@@ -345,13 +364,12 @@ function registerSiteKey(
 	});
 }
 
-Cypress.Commands.addAll({
-	clickIAmHuman,
-	captchaImages,
-	clickCorrectCaptchaImages,
-	getSelectors,
-	clickNextButton,
-	elementExists,
-	registerSiteKey,
-	waitForProcaptchaScript,
-});
+Cypress.Commands.add("clickIAmHuman", clickIAmHuman);
+Cypress.Commands.add("clickCheckbox", clickCheckbox);
+Cypress.Commands.add("captchaImages", captchaImages);
+Cypress.Commands.add("clickCorrectCaptchaImages", clickCorrectCaptchaImages);
+Cypress.Commands.add("getSelectors", getSelectors);
+Cypress.Commands.add("clickNextButton", clickNextButton);
+Cypress.Commands.add("elementExists", elementExists);
+Cypress.Commands.add("registerSiteKey", registerSiteKey);
+Cypress.Commands.add("waitForProcaptchaScript", waitForProcaptchaScript);

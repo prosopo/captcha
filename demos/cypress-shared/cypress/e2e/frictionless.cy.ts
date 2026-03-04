@@ -76,30 +76,39 @@ describe("Captchas", () => {
 
 	it("An error is returned if captcha type is set to pow and frictionless is used in the widget", () => {
 		expect(baseCaptchaType).to.not.equal(CaptchaType.pow);
-		cy.registerSiteKey(baseCaptchaType, CaptchaType.pow).then((response) => {
-			// Log the response status and body using cy.task()
-			cy.task("log", `Response status: ${response.status}`);
-			cy.task("log", `Response: ${JSON.stringify(response.body)}`);
 
-			// Ensure the request was successful
-			expect(response.status).to.equal(200);
-		});
-		cy.visit(Cypress.env("default_page"));
-
-		// Wait for the procaptcha script to be loaded after navigation
-		cy.waitForProcaptchaScript();
-
-		cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
+		// Set up intercept before visiting the page
+		cy.intercept("POST", "**/prosopo/provider/client/captcha/image**").as(
 			"getCaptcha",
 		);
 
 		return cy
-			.wait("@getCaptcha", { timeout: 36000 })
-			.its("response")
+			.registerSiteKey(baseCaptchaType, CaptchaType.pow)
 			.then((response) => {
-				expect(response).to.not.be.undefined;
-				expect(response?.statusCode).to.equal(400);
-				expect(response?.body).to.have.property("error");
+				// Log the response status and body using cy.task()
+				cy.task("log", `Response status: ${response.status}`);
+				cy.task("log", `Response: ${JSON.stringify(response.body)}`);
+
+				// Ensure the request was successful
+				expect(response.status).to.equal(200);
+			})
+			.then(() => {
+				// Only visit the page after site key registration is complete
+				cy.visit(Cypress.env("default_page"));
+
+				// Wait for the procaptcha script to be loaded after navigation
+				cy.waitForProcaptchaScript();
+
+				cy.clickCheckbox();
+
+				return cy
+					.wait("@getCaptcha", { timeout: 36000 })
+					.its("response")
+					.then((response) => {
+						expect(response).to.not.be.undefined;
+						expect(response?.statusCode).to.equal(400);
+						expect(response?.body).to.have.property("error");
+					});
 			});
 	});
 
