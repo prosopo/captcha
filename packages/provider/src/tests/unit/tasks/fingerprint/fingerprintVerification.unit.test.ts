@@ -76,7 +76,7 @@ describe("verifyFingerprintProofs", () => {
 		const { tree, leafHashes, componentValues, merkleRoot } =
 			buildTestTree(testValues);
 		const proof = makeProof(tree, leafHashes, componentValues, 0);
-		const result = verifyFingerprintProofs([proof]);
+		const result = verifyFingerprintProofs([proof], [0]);
 		expect(result.valid).to.be.true;
 		expect(result.merkleRoot).to.equal(merkleRoot);
 		expect(result.error).to.be.undefined;
@@ -90,15 +90,23 @@ describe("verifyFingerprintProofs", () => {
 			makeProof(tree, leafHashes, componentValues, 3),
 			makeProof(tree, leafHashes, componentValues, 7),
 		];
-		const result = verifyFingerprintProofs(proofs);
+		const result = verifyFingerprintProofs(proofs, [0, 3, 7]);
 		expect(result.valid).to.be.true;
 		expect(result.merkleRoot).to.equal(merkleRoot);
 	});
 
 	it("returns valid=false for empty proofs array", () => {
-		const result = verifyFingerprintProofs([]);
+		const result = verifyFingerprintProofs([], [0, 1]);
 		expect(result.valid).to.be.false;
 		expect(result.error).to.equal("No fingerprint proofs provided");
+	});
+
+	it("returns valid=false for empty requestedLeaves", () => {
+		const { tree, leafHashes, componentValues } = buildTestTree(testValues);
+		const proof = makeProof(tree, leafHashes, componentValues, 0);
+		const result = verifyFingerprintProofs([proof], []);
+		expect(result.valid).to.be.false;
+		expect(result.error).to.equal("No leaves were requested");
 	});
 
 	it("returns valid=false when proof value is tampered", () => {
@@ -106,7 +114,7 @@ describe("verifyFingerprintProofs", () => {
 		const proof = makeProof(tree, leafHashes, componentValues, 2);
 		// Tamper with the value — hash won't match
 		proof.value = JSON.stringify("TAMPERED");
-		const result = verifyFingerprintProofs([proof]);
+		const result = verifyFingerprintProofs([proof], [2]);
 		expect(result.valid).to.be.false;
 		expect(result.error).to.include("Invalid Merkle proof");
 	});
@@ -118,7 +126,7 @@ describe("verifyFingerprintProofs", () => {
 		if (proof.proof[0] && proof.proof[0][1]) {
 			proof.proof[0][1] = "0xdeadbeef";
 		}
-		const result = verifyFingerprintProofs([proof]);
+		const result = verifyFingerprintProofs([proof], [1]);
 		expect(result.valid).to.be.false;
 	});
 
@@ -138,10 +146,10 @@ describe("verifyFingerprintProofs", () => {
 			tree2Data.tree,
 			tree2Data.leafHashes,
 			tree2Data.componentValues,
-			0,
+			1,
 		);
 
-		const result = verifyFingerprintProofs([proof1, proof2]);
+		const result = verifyFingerprintProofs([proof1, proof2], [0, 1]);
 		expect(result.valid).to.be.false;
 		expect(result.error).to.include("Inconsistent Merkle roots");
 	});
@@ -149,10 +157,11 @@ describe("verifyFingerprintProofs", () => {
 	it("verifies proofs for all leaves in a tree", () => {
 		const { tree, leafHashes, componentValues, merkleRoot } =
 			buildTestTree(testValues);
-		const proofs = testValues.map((_, i) =>
+		const allIndices = testValues.map((_, i) => i);
+		const proofs = allIndices.map((i) =>
 			makeProof(tree, leafHashes, componentValues, i),
 		);
-		const result = verifyFingerprintProofs(proofs);
+		const result = verifyFingerprintProofs(proofs, allIndices);
 		expect(result.valid).to.be.true;
 		expect(result.merkleRoot).to.equal(merkleRoot);
 	});
@@ -163,7 +172,7 @@ describe("verifyFingerprintProofs", () => {
 		const { tree, leafHashes, componentValues } =
 			buildTestTree(["single-value"]);
 		const proof = makeProof(tree, leafHashes, componentValues, 0);
-		const result = verifyFingerprintProofs([proof]);
+		const result = verifyFingerprintProofs([proof], [0]);
 		expect(result.valid).to.be.false;
 	});
 
@@ -176,7 +185,7 @@ describe("verifyFingerprintProofs", () => {
 			makeProof(tree, leafHashes, componentValues, 0),
 			makeProof(tree, leafHashes, componentValues, 1),
 		];
-		const result = verifyFingerprintProofs(proofs);
+		const result = verifyFingerprintProofs(proofs, [0, 1]);
 		expect(result.valid).to.be.true;
 		expect(result.merkleRoot).to.equal(merkleRoot);
 	});
@@ -191,7 +200,45 @@ describe("verifyFingerprintProofs", () => {
 			makeProof(tree, leafHashes, componentValues, 0),
 			makeProof(tree, leafHashes, componentValues, 2),
 		];
-		const result = verifyFingerprintProofs(proofs);
+		const result = verifyFingerprintProofs(proofs, [0, 2]);
+		expect(result.valid).to.be.true;
+		expect(result.merkleRoot).to.equal(merkleRoot);
+	});
+
+	it("returns valid=false when submitted leaves don't match requested leaves", () => {
+		const { tree, leafHashes, componentValues } = buildTestTree(testValues);
+		// Client proves leaves 0 and 1, but provider requested 2 and 3
+		const proofs = [
+			makeProof(tree, leafHashes, componentValues, 0),
+			makeProof(tree, leafHashes, componentValues, 1),
+		];
+		const result = verifyFingerprintProofs(proofs, [2, 3]);
+		expect(result.valid).to.be.false;
+		expect(result.error).to.include("Proof leaf indices do not match");
+	});
+
+	it("returns valid=false when client sends wrong number of proofs", () => {
+		const { tree, leafHashes, componentValues } = buildTestTree(testValues);
+		// Client proves 2 leaves but provider requested 3
+		const proofs = [
+			makeProof(tree, leafHashes, componentValues, 0),
+			makeProof(tree, leafHashes, componentValues, 1),
+		];
+		const result = verifyFingerprintProofs(proofs, [0, 1, 2]);
+		expect(result.valid).to.be.false;
+		expect(result.error).to.include("Expected 3 proofs but received 2");
+	});
+
+	it("validates even when requestedLeaves are in different order than proofs", () => {
+		const { tree, leafHashes, componentValues, merkleRoot } =
+			buildTestTree(testValues);
+		// Proofs in order [7, 3, 0] but requested as [0, 3, 7]
+		const proofs = [
+			makeProof(tree, leafHashes, componentValues, 7),
+			makeProof(tree, leafHashes, componentValues, 3),
+			makeProof(tree, leafHashes, componentValues, 0),
+		];
+		const result = verifyFingerprintProofs(proofs, [0, 3, 7]);
 		expect(result.valid).to.be.true;
 		expect(result.merkleRoot).to.equal(merkleRoot);
 	});

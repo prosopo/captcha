@@ -98,13 +98,6 @@ export default class ProviderApi
 		behavioralData?: string,
 		fingerprintProofs?: FingerprintLeafProof[],
 	): Promise<CaptchaSolutionResponse> {
-		console.debug(
-			"-----\n\n[FP-MERKLE] ProviderApi.submitCaptchaSolution: sending image captcha solution",
-			"\n  hasFingerprintProofs:", !!fingerprintProofs,
-			"\n  proofsCount:", fingerprintProofs?.length ?? 0,
-			"\n  leafIndices:", fingerprintProofs?.map((p) => p.leafIndex),
-			"\n\n-----",
-		);
 		const body: CaptchaSolutionBodyType = {
 			[ApiParams.user]: userAccount,
 			[ApiParams.dapp]: this.account,
@@ -185,13 +178,6 @@ export default class ProviderApi
 		salt?: string,
 		fingerprintProofs?: FingerprintLeafProof[],
 	): Promise<PowCaptchaSolutionResponse> {
-		console.debug(
-			"-----\n\n[FP-MERKLE] ProviderApi.submitPowCaptchaSolution: sending PoW solution",
-			"\n  hasFingerprintProofs:", !!fingerprintProofs,
-			"\n  proofsCount:", fingerprintProofs?.length ?? 0,
-			"\n  leafIndices:", fingerprintProofs?.map((p) => p.leafIndex),
-			"\n\n-----",
-		);
 		const body = SubmitPowCaptchaSolutionBody.parse({
 			[ApiParams.challenge]: challenge.challenge,
 			[ApiParams.difficulty]: challenge.difficulty,

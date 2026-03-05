@@ -191,6 +191,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 		},
 		required: false,
 	},
+	fingerprintRequestedLeaves: { type: [Number], required: false },
 	providerSignature: { type: String, required: true },
 });
 
@@ -257,6 +258,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 		},
 		required: false,
 	},
+	fingerprintRequestedLeaves: { type: [Number], required: false },
 });
 // Set an index on the commitment id field, descending
 UserCommitmentRecordSchema.index({ id: -1 });
@@ -514,6 +516,7 @@ export interface IProviderDatabase extends IDatabase {
 		threshold: number,
 		sessionId?: string,
 		countryCode?: string,
+		fingerprintRequestedLeaves?: number[],
 	): Promise<void>;
 
 	getPendingImageCommitment(
@@ -627,6 +630,7 @@ export interface IProviderDatabase extends IDatabase {
 		userSubmitted?: boolean,
 		userSignature?: string,
 		countryCode?: string,
+		fingerprintRequestedLeaves?: number[],
 	): Promise<void>;
 
 	getPowCaptchaRecordByChallenge(

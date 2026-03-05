@@ -106,3 +106,21 @@ export interface FingerprintMerkleState {
 	leafHashes: string[];
 	componentValues: string[]; // JSON.stringify'd values, indexed same as leafHashes
 }
+
+/**
+ * Result status for validating a fingerprint leaf value.
+ * - "valid": value matches expected type and range
+ * - "suspicious": correct type but unusual value
+ * - "invalid": wrong type, structure, or unparseable
+ */
+export type LeafValidationStatus = "valid" | "suspicious" | "invalid";
+
+/**
+ * Validation result for a single fingerprint leaf value.
+ */
+export interface LeafValidationResult {
+	leafIndex: number;
+	sourceName: string;
+	status: LeafValidationStatus;
+	reason: string;
+}

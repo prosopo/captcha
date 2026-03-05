@@ -32,7 +32,6 @@ import { v4 as uuidv4 } from "uuid";
 import { checkLangRules } from "../../rules/lang.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { getBotScore } from "../detection/getBotScore.js";
-import { generateFingerprintProofRequest } from "../fingerprint/fingerprintProofRequest.js";
 
 const getDefaultEntropy = (): number => {
 	if (process.env.PROSOPO_ENTROPY) {
@@ -223,19 +222,10 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.headers,
 		);
 
-		const fpRequest = generateFingerprintProofRequest(4);
-		this.logger.debug(() => ({
-			msg: "-----\n\n[FP-MERKLE] sendImageCaptcha: attaching fingerprintProofRequest to frictionless image response\n\n-----",
-			data: {
-				requestedLeaves: fpRequest.requestedLeaves,
-				sessionId: sessionRecord.sessionId,
-			},
-		}));
 		return {
 			[ApiParams.captchaType]: CaptchaType.image,
 			[ApiParams.sessionId]: sessionRecord.sessionId,
 			[ApiParams.status]: "ok",
-			[ApiParams.fingerprintProofRequest]: fpRequest,
 		};
 	}
 
@@ -278,19 +268,10 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.countryCode,
 			effectiveParams.headers,
 		);
-		const fpRequest = generateFingerprintProofRequest(3);
-		this.logger.debug(() => ({
-			msg: "-----\n\n[FP-MERKLE] sendPowCaptcha: attaching fingerprintProofRequest to frictionless PoW response\n\n-----",
-			data: {
-				requestedLeaves: fpRequest.requestedLeaves,
-				sessionId: sessionRecord.sessionId,
-			},
-		}));
 		return {
 			[ApiParams.captchaType]: CaptchaType.pow,
 			[ApiParams.sessionId]: sessionRecord.sessionId,
 			[ApiParams.status]: "ok",
-			[ApiParams.fingerprintProofRequest]: fpRequest,
 		};
 	}
 

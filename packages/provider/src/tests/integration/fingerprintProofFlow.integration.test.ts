@@ -95,8 +95,11 @@ describe("Fingerprint Proof End-to-End Flow", () => {
 		const proofs = generateProofs(proofRequest.requestedLeaves);
 		expect(proofs).to.have.lengthOf(3);
 
-		// 4. Provider verifies the proofs
-		const result = verifyFingerprintProofs(proofs);
+		// 4. Provider verifies the proofs against the requested leaves
+		const result = verifyFingerprintProofs(
+			proofs,
+			proofRequest.requestedLeaves,
+		);
 		expect(result.valid).to.be.true;
 		expect(result.merkleRoot).to.equal(merkleState.merkleRoot);
 	});
@@ -118,7 +121,10 @@ describe("Fingerprint Proof End-to-End Flow", () => {
 		const proof2 = client2.generateProofs([proofRequest.requestedLeaves[1]!]);
 		const mixedProofs = [...proof1, ...proof2];
 
-		const result = verifyFingerprintProofs(mixedProofs);
+		const result = verifyFingerprintProofs(
+			mixedProofs,
+			proofRequest.requestedLeaves,
+		);
 		expect(result.valid).to.be.false;
 		expect(result.error).to.include("Inconsistent Merkle roots");
 	});
@@ -133,7 +139,10 @@ describe("Fingerprint Proof End-to-End Flow", () => {
 		// Tamper with first proof's value
 		proofs[0]!.value = JSON.stringify("tampered-value");
 
-		const result = verifyFingerprintProofs(proofs);
+		const result = verifyFingerprintProofs(
+			proofs,
+			proofRequest.requestedLeaves,
+		);
 		expect(result.valid).to.be.false;
 		expect(result.error).to.include("Invalid Merkle proof");
 	});
@@ -145,7 +154,7 @@ describe("Fingerprint Proof End-to-End Flow", () => {
 		// Verify every single leaf one by one
 		for (let i = 0; i < FINGERPRINT_SOURCE_COUNT; i++) {
 			const proofs = generateProofs([i]);
-			const result = verifyFingerprintProofs(proofs);
+			const result = verifyFingerprintProofs(proofs, [i]);
 			expect(result.valid).to.be.true;
 			expect(result.merkleRoot).to.equal(merkleState.merkleRoot);
 		}
@@ -161,7 +170,7 @@ describe("Fingerprint Proof End-to-End Flow", () => {
 		);
 		const proofs = generateProofs(allLeaves);
 
-		const result = verifyFingerprintProofs(proofs);
+		const result = verifyFingerprintProofs(proofs, allLeaves);
 		expect(result.valid).to.be.true;
 		expect(result.merkleRoot).to.equal(merkleState.merkleRoot);
 	});
@@ -202,7 +211,10 @@ describe("Fingerprint Proof End-to-End Flow", () => {
 		const proofRequest = generateFingerprintProofRequest(3);
 		const proofs = generateProofs(proofRequest.requestedLeaves);
 
-		const result = verifyFingerprintProofs(proofs);
+		const result = verifyFingerprintProofs(
+			proofs,
+			proofRequest.requestedLeaves,
+		);
 		expect(result.valid).to.be.true;
 		expect(result.merkleRoot).to.equal(merkleState.merkleRoot);
 	});
@@ -226,5 +238,33 @@ describe("Fingerprint Proof End-to-End Flow", () => {
 			const expectedHash = hexHash(merkleState.componentValues[i]!);
 			expect(merkleState.leafHashes[i]).to.equal(expectedHash);
 		}
+	});
+
+	it("rejects proofs for wrong leaves (client proves different leaves than requested)", () => {
+		const mockData = generateMockFingerprintData();
+		const { generateProofs } = simulateClientSide(mockData);
+
+		// Provider requests leaves [0, 1, 2]
+		const requestedLeaves = [0, 1, 2];
+		// Client proves leaves [3, 4, 5] instead
+		const proofs = generateProofs([3, 4, 5]);
+
+		const result = verifyFingerprintProofs(proofs, requestedLeaves);
+		expect(result.valid).to.be.false;
+		expect(result.error).to.include("Proof leaf indices do not match");
+	});
+
+	it("rejects when client sends fewer proofs than requested", () => {
+		const mockData = generateMockFingerprintData();
+		const { generateProofs } = simulateClientSide(mockData);
+
+		// Provider requests 3 leaves
+		const requestedLeaves = [5, 10, 15];
+		// Client only proves 2
+		const proofs = generateProofs([5, 10]);
+
+		const result = verifyFingerprintProofs(proofs, requestedLeaves);
+		expect(result.valid).to.be.false;
+		expect(result.error).to.include("Expected 3 proofs but received 2");
 	});
 });

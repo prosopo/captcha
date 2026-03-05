@@ -706,6 +706,7 @@ export class ProviderDatabase
 		userSubmitted = false,
 		userSignature?: string,
 		countryCode?: string,
+		fingerprintRequestedLeaves?: number[],
 	): Promise<void> {
 		const tables = this.getTables();
 
@@ -726,6 +727,7 @@ export class ProviderDatabase
 			lastUpdatedTimestamp: new Date(),
 			sessionId,
 			countryCode,
+			fingerprintRequestedLeaves,
 		};
 
 		try {
@@ -1286,6 +1288,7 @@ export class ProviderDatabase
 		threshold: number,
 		sessionId?: string,
 		countryCode?: string,
+		fingerprintRequestedLeaves?: number[],
 	): Promise<void> {
 		if (!isHex(requestHash)) {
 			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
@@ -1306,6 +1309,7 @@ export class ProviderDatabase
 			sessionId,
 			threshold,
 			countryCode,
+			fingerprintRequestedLeaves,
 			// Placeholder fields required by schema but not needed for pending state
 			dappAccount: "",
 			providerAccount: "",

@@ -100,6 +100,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		threshold: number,
 		sessionId?: string,
 		countryCode?: string,
+		fingerprintRequestedLeaves?: number[],
 	): Promise<{
 		captchas: Captcha[];
 		requestHash: string;
@@ -168,6 +169,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			threshold,
 			sessionId,
 			countryCode,
+			fingerprintRequestedLeaves,
 		);
 		return {
 			captchas,

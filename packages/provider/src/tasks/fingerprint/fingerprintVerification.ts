@@ -19,22 +19,50 @@ import { hexHash } from "@prosopo/util-crypto";
 /**
  * Verifies fingerprint Merkle proofs submitted by the client.
  *
- * For each proof:
- * 1. Hash the raw value to get the leaf hash
- * 2. Verify the Merkle proof path leads to a consistent root
- * 3. Ensure all proofs point to the same Merkle root
+ * Validates that:
+ * 1. The client proved exactly the leaves that were requested
+ * 2. Each proof's hash matches its value
+ * 3. Each Merkle proof path is valid
+ * 4. All proofs point to the same Merkle root
  *
  * @param proofs - Array of leaf proofs from the client
- * @param userAccount - The user's account address (derived from Merkle root)
+ * @param requestedLeaves - The leaf indices the provider originally requested
  * @returns Object with verification result and the Merkle root if valid
  */
-export function verifyFingerprintProofs(proofs: FingerprintLeafProof[]): {
+export function verifyFingerprintProofs(
+	proofs: FingerprintLeafProof[],
+	requestedLeaves: number[],
+): {
 	valid: boolean;
 	merkleRoot?: string;
 	error?: string;
 } {
+	if (requestedLeaves.length === 0) {
+		return { valid: false, error: "No leaves were requested" };
+	}
+
 	if (proofs.length === 0) {
 		return { valid: false, error: "No fingerprint proofs provided" };
+	}
+
+	// Validate that the submitted leaf indices exactly match the requested ones
+	const submittedIndices = proofs.map((p) => p.leafIndex).sort((a, b) => a - b);
+	const sortedRequested = [...requestedLeaves].sort((a, b) => a - b);
+
+	if (submittedIndices.length !== sortedRequested.length) {
+		return {
+			valid: false,
+			error: `Expected ${sortedRequested.length} proofs but received ${submittedIndices.length}`,
+		};
+	}
+
+	for (let i = 0; i < sortedRequested.length; i++) {
+		if (submittedIndices[i] !== sortedRequested[i]) {
+			return {
+				valid: false,
+				error: `Proof leaf indices do not match requested leaves. Expected [${sortedRequested.join(",")}], got [${submittedIndices.join(",")}]`,
+			};
+		}
 	}
 
 	let expectedRoot: string | undefined;
@@ -68,7 +96,7 @@ export function verifyFingerprintProofs(proofs: FingerprintLeafProof[]): {
 		} else if (expectedRoot !== proofRoot) {
 			return {
 				valid: false,
-				error: `Inconsistent Merkle roots across proofs`,
+				error: "Inconsistent Merkle roots across proofs",
 			};
 		}
 	}

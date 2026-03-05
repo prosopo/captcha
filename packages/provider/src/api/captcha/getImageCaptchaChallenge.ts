@@ -166,6 +166,17 @@ export default (
 				countryCodeToStore = countryCode;
 			}
 
+			const fingerprintProofRequest = generateFingerprintProofRequest();
+			req.logger.debug(() => ({
+				msg: "Generated fingerprintProofRequest",
+				data: {
+					requestedLeaves: fingerprintProofRequest.requestedLeaves,
+					numLeaves: fingerprintProofRequest.requestedLeaves.length,
+					user,
+					dapp,
+				},
+			}));
+
 			const taskData =
 				await tasks.imgCaptchaManager.getRandomCaptchasAndRequestHash(
 					datasetId,
@@ -175,17 +186,8 @@ export default (
 					clientRecord.settings.imageThreshold ?? 0.8,
 					validSessionId,
 					countryCodeToStore,
+					fingerprintProofRequest.requestedLeaves,
 				);
-			const fingerprintProofRequest = generateFingerprintProofRequest(4);
-			req.logger.debug(() => ({
-				msg: "-----\n\n[FP-MERKLE] getImageCaptchaChallenge: generated fingerprintProofRequest\n\n-----",
-				data: {
-					requestedLeaves: fingerprintProofRequest.requestedLeaves,
-					numLeaves: fingerprintProofRequest.requestedLeaves.length,
-					user,
-					dapp,
-				},
-			}));
 
 			const captchaResponse: CaptchaResponseBody = {
 				[ApiParams.status]: "ok",

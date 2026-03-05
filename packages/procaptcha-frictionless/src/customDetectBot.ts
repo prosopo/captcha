@@ -74,9 +74,6 @@ const customDetectBot: BotDetectionFunction = async (
 		"generateFingerprintProofs" in ext &&
 		typeof ext.generateFingerprintProofs === "function"
 	) {
-		console.debug(
-			"-----\n\n[FP-MERKLE] customDetectBot: web2 mode, wiring up generateFingerprintProofs from ExtensionWeb2\n\n-----",
-		);
 		generateFingerprintProofs = (requestedLeaves: number[]) =>
 			(
 				ext as unknown as {
@@ -85,12 +82,6 @@ const customDetectBot: BotDetectionFunction = async (
 					) => FingerprintLeafProof[];
 				}
 			).generateFingerprintProofs(requestedLeaves);
-	} else {
-		console.debug(
-			"-----\n\n[FP-MERKLE] customDetectBot: generateFingerprintProofs NOT available (web2:",
-			config.web2,
-			")\n\n-----",
-		);
 	}
 
 	const userAccount = detectionResult.userAccount;

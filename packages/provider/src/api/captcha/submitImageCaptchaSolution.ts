@@ -23,6 +23,7 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import { flatten, getIPAddress } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../express.js";
+import { validateFingerprintLeafValues } from "../../tasks/fingerprint/fingerprintLeafValidation.js";
 import { verifyFingerprintProofs } from "../../tasks/fingerprint/fingerprintVerification.js";
 import { Tasks } from "../../tasks/index.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
@@ -67,53 +68,76 @@ export default (env: ProviderEnvironment) =>
 		validateSiteKey(dapp);
 		validateAddr(user);
 
-		// Verify fingerprint proofs if provided
-		req.logger.debug(() => ({
-			msg: "-----\n\n[FP-MERKLE] submitImageCaptchaSolution: checking fingerprint proofs\n\n-----",
-			data: {
-				hasFingerprintProofs: !!fingerprintProofs,
-				proofsCount: fingerprintProofs?.length ?? 0,
-				leafIndices: fingerprintProofs?.map((p) => p.leafIndex),
-				user,
-				dapp,
-			},
-		}));
-		if (fingerprintProofs && fingerprintProofs.length > 0) {
-			req.logger.debug(() => ({
-				msg: "-----\n\n[FP-MERKLE] submitImageCaptchaSolution: verifying proofs now\n\n-----",
-				data: {
-					proofDetails: fingerprintProofs.map((p) => ({
-						leafIndex: p.leafIndex,
-						valuePreview: p.value.slice(0, 50),
-						proofLayers: p.proof.length,
-					})),
-				},
-			}));
-			const proofResult = verifyFingerprintProofs(fingerprintProofs);
+		// Retrieve the pending record to get the requested fingerprint leaves
+		let requestedLeaves: number[] | undefined;
+		try {
+			const pendingRecord = await tasks.db.getPendingImageCommitment(
+				parsed[ApiParams.requestHash],
+			);
+			requestedLeaves = pendingRecord?.fingerprintRequestedLeaves;
+		} catch {
+			// Pending record may not exist yet or may have expired — continue without
+		}
+
+		// Verify fingerprint proofs — reject if invalid
+		if (requestedLeaves && requestedLeaves.length > 0) {
+			if (!fingerprintProofs || fingerprintProofs.length === 0) {
+				req.logger.warn(() => ({
+					msg: "[FP-MERKLE] submitImageCaptchaSolution: proofs requested but not provided",
+					data: { requestedLeaves, user, dapp },
+				}));
+				const result: CaptchaSolutionResponse = {
+					status: "ok",
+					captchas: [],
+					verified: false,
+				};
+				return res.json(result);
+			}
+
+			const proofResult = verifyFingerprintProofs(
+				fingerprintProofs,
+				requestedLeaves,
+			);
 			if (!proofResult.valid) {
 				req.logger.warn(() => ({
-					msg: "-----\n\n[FP-MERKLE] submitImageCaptchaSolution: VERIFICATION FAILED\n\n-----",
-					data: {
-						error: proofResult.error,
-						user,
-						dapp,
-					},
+					msg: "[FP-MERKLE] submitImageCaptchaSolution: Merkle verification failed",
+					data: { error: proofResult.error, user, dapp },
 				}));
-			} else {
-				req.logger.debug(() => ({
-					msg: "-----\n\n[FP-MERKLE] submitImageCaptchaSolution: VERIFICATION SUCCESS\n\n-----",
-					data: {
-						merkleRoot: proofResult.merkleRoot,
-						proofsCount: fingerprintProofs.length,
-						user,
-						dapp,
-					},
+				const result: CaptchaSolutionResponse = {
+					status: "ok",
+					captchas: [],
+					verified: false,
+				};
+				return res.json(result);
+			}
+
+			const leafValidationResults = validateFingerprintLeafValues(fingerprintProofs);
+			const invalidLeaves = leafValidationResults.filter((r) => r.status === "invalid");
+			const suspiciousLeaves = leafValidationResults.filter((r) => r.status === "suspicious");
+
+			if (invalidLeaves.length > 0) {
+				req.logger.warn(() => ({
+					msg: "[FP-MERKLE] submitImageCaptchaSolution: invalid leaf values detected",
+					data: { invalidLeaves, user, dapp },
+				}));
+				const result: CaptchaSolutionResponse = {
+					status: "ok",
+					captchas: [],
+					verified: false,
+				};
+				return res.json(result);
+			}
+
+			if (suspiciousLeaves.length > 0) {
+				req.logger.warn(() => ({
+					msg: "[FP-MERKLE] submitImageCaptchaSolution: suspicious leaf values",
+					data: { suspiciousLeaves, user, dapp },
 				}));
 			}
-		} else {
+
 			req.logger.debug(() => ({
-				msg: "-----\n\n[FP-MERKLE] submitImageCaptchaSolution: no fingerprint proofs provided, skipping verification\n\n-----",
-				data: { user, dapp },
+				msg: "[FP-MERKLE] submitImageCaptchaSolution: fingerprint verification passed",
+				data: { merkleRoot: proofResult.merkleRoot, user, dapp },
 			}));
 		}
 

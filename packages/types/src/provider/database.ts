@@ -158,6 +158,8 @@ export interface StoredCaptcha {
 	// Current behavioral data storage format (packed)
 	deviceCapability?: string;
 	behavioralDataPacked?: BehavioralDataPacked;
+	// Fingerprint proof: which leaf indices the provider requested
+	fingerprintRequestedLeaves?: number[];
 }
 
 export interface UserCommitment extends StoredCaptcha {
@@ -216,6 +218,7 @@ export const UserCommitmentSchema = object({
 	// Behavioral data fields
 	deviceCapability: string().optional(),
 	behavioralDataPacked: BehavioralDataPackedSchema.optional(),
+	fingerprintRequestedLeaves: array(number()).optional(),
 }) satisfies ZodType<UserCommitment>;
 
 // Zod schema for ScoreComponents
@@ -328,6 +331,7 @@ export const PoWCaptchaStoredSchema = object({
 	clickEvents: array(object({}).catchall(any())).optional(),
 	deviceCapability: string().optional(),
 	behavioralDataPacked: BehavioralDataPackedSchema.optional(),
+	fingerprintRequestedLeaves: array(number()).optional(),
 }) satisfies ZodType<PoWCaptchaStored>;
 
 export type PendingImageCaptchaRequest = {
@@ -340,6 +344,7 @@ export type PendingImageCaptchaRequest = {
 	ipAddress: CompositeIpAddress;
 	sessionId?: string;
 	threshold: number;
+	fingerprintRequestedLeaves?: number[];
 };
 
 export interface PoWCaptchaStored

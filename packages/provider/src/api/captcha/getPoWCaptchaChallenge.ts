@@ -170,6 +170,17 @@ export default (
 				countryCodeToStore = countryCode;
 			}
 
+			const fingerprintProofRequest = generateFingerprintProofRequest(3);
+			req.logger.debug(() => ({
+				msg: "Generated fingerprintProofRequest",
+				data: {
+					requestedLeaves: fingerprintProofRequest.requestedLeaves,
+					numLeaves: fingerprintProofRequest.requestedLeaves.length,
+					user,
+					dapp,
+				},
+			}));
+
 			await tasks.db.storePowCaptchaRecord(
 				challenge.challenge,
 				{
@@ -187,18 +198,8 @@ export default (
 				undefined,
 				undefined,
 				countryCodeToStore,
+				fingerprintProofRequest.requestedLeaves,
 			);
-
-			const fingerprintProofRequest = generateFingerprintProofRequest(3);
-			req.logger.debug(() => ({
-				msg: "-----\n\n[FP-MERKLE] getPoWCaptchaChallenge: generated fingerprintProofRequest\n\n-----",
-				data: {
-					requestedLeaves: fingerprintProofRequest.requestedLeaves,
-					numLeaves: fingerprintProofRequest.requestedLeaves.length,
-					user,
-					dapp,
-				},
-			}));
 
 			const getPowCaptchaResponse: GetPowCaptchaResponse = {
 				[ApiParams.status]: "ok",

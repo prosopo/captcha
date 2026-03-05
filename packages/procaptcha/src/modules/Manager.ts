@@ -315,13 +315,7 @@ export function Manager(
 					}
 				}
 
-				// Generate fingerprint proofs if requested
-				console.debug(
-					"-----\n\n[FP-MERKLE] Image Manager: checking for fingerprintProofRequest in challenge",
-					"\n  hasProofRequest:", !!challenge.fingerprintProofRequest,
-					"\n  hasGenerateProofs:", !!frictionlessState?.generateFingerprintProofs,
-					"\n\n-----",
-				);
+				// Generate fingerprint proofs if requested by the provider
 				const fingerprintProofs =
 					challenge.fingerprintProofRequest &&
 					frictionlessState?.generateFingerprintProofs
@@ -329,13 +323,6 @@ export function Manager(
 								challenge.fingerprintProofRequest.requestedLeaves,
 							)
 						: undefined;
-				console.debug(
-					"-----\n\n[FP-MERKLE] Image Manager: fingerprint proofs result",
-					"\n  generated:", !!fingerprintProofs,
-					"\n  count:", fingerprintProofs?.length ?? 0,
-					"\n  leafIndices:", fingerprintProofs?.map((p) => p.leafIndex),
-					"\n\n-----",
-				);
 
 				// send the commitment to the provider
 				const submission: TCaptchaSubmitResult =

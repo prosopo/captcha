@@ -72,11 +72,6 @@ export class ExtensionWeb2 extends Extension {
 	public generateFingerprintProofs(
 		requestedLeaves: number[],
 	): FingerprintLeafProof[] {
-		console.debug(
-			"-----\n\n[FP-MERKLE] generateFingerprintProofs: provider requested leaves:",
-			requestedLeaves,
-			"\n\n-----",
-		);
 		if (!this.merkleTree || !this.merkleState) {
 			throw new Error(
 				"Fingerprint Merkle tree not initialized. Call getAccount() first.",
@@ -103,14 +98,6 @@ export class ExtensionWeb2 extends Extension {
 				proof,
 			};
 		});
-		console.debug(
-			"-----\n\n[FP-MERKLE] generateFingerprintProofs: generated",
-			proofs.length,
-			"proofs",
-			"\n  leafIndices:", proofs.map((p) => p.leafIndex),
-			"\n  merkleRoot:", this.merkleState.merkleRoot,
-			"\n\n-----",
-		);
 		return proofs;
 	}
 
@@ -153,15 +140,7 @@ export class ExtensionWeb2 extends Extension {
 	private async createAccount(
 		config: ProcaptchaClientConfigOutput,
 	): Promise<AccountWithKeyPair> {
-		console.debug(
-			"-----\n\n[FP-MERKLE] createAccount: collecting fingerprint components\n\n-----",
-		);
 		const fingerprintResult = await getFingerprint();
-		console.debug(
-			"-----\n\n[FP-MERKLE] createAccount: fingerprint collected, building Merkle tree from",
-			FINGERPRINT_SOURCE_NAMES.length,
-			"components\n\n-----",
-		);
 
 		// Build Merkle tree from individual component hashes
 		const componentValues: string[] = [];
@@ -190,13 +169,6 @@ export class ExtensionWeb2 extends Extension {
 		const tree = new CaptchaMerkleTree();
 		tree.build(leafHashes);
 		const merkleRoot = tree.getRoot().hash;
-		console.debug(
-			"-----\n\n[FP-MERKLE] createAccount: Merkle tree built successfully",
-			"\n  merkleRoot:", merkleRoot,
-			"\n  leafCount:", leafHashes.length,
-			"\n  sampleLeafHashes:", leafHashes.slice(0, 3),
-			"\n\n-----",
-		);
 
 		// Store tree and state for later proof generation
 		this.merkleTree = tree;
@@ -228,12 +200,6 @@ export class ExtensionWeb2 extends Extension {
 		});
 		const keypair = keyring.addFromMnemonic(mnemonic);
 		const address = keypair.address;
-		console.debug(
-			"-----\n\n[FP-MERKLE] createAccount: account derived from Merkle root",
-			"\n  address:", address,
-			"\n  merkleRoot:", merkleRoot,
-			"\n\n-----",
-		);
 		return {
 			address,
 			name: address,
