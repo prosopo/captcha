@@ -19,13 +19,13 @@ import {
 	type GetPowCaptchaChallengeRequestBodyTypeOutput,
 	type GetPowCaptchaResponse,
 } from "@prosopo/types";
-import { generateFingerprintProofRequest } from "../../tasks/fingerprint/fingerprintProofRequest.js";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import { flatten } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import { getCompositeIpAddress } from "../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../express.js";
+import { generateFingerprintProofRequest } from "../../tasks/fingerprint/fingerprintProofRequest.js";
 import { Tasks } from "../../tasks/index.js";
 import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
 import { getRequestUserScope } from "../blacklistRequestInspector.js";

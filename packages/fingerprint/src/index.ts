@@ -22,12 +22,13 @@ export interface FingerprintCollectionResult {
 	components: GetResult["components"];
 }
 
-export const getFingerprint = async (): Promise<FingerprintCollectionResult> => {
-	const FingerprintJS = await FingerprintJSImport();
-	const fp = await FingerprintJS.load();
-	const result = await fp.get();
-	return {
-		visitorId: result.visitorId,
-		components: result.components,
+export const getFingerprint =
+	async (): Promise<FingerprintCollectionResult> => {
+		const FingerprintJS = await FingerprintJSImport();
+		const fp = await FingerprintJS.load();
+		const result = await fp.get();
+		return {
+			visitorId: result.visitorId,
+			components: result.components,
+		};
 	};
-};

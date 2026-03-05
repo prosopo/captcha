@@ -85,9 +85,9 @@ function validateFonts(
 	name: string,
 	v: unknown,
 ): LeafValidationResult {
-	if (!isStringArray(v))
-		return invalid(idx, name, "expected string[]");
-	if (v.length > 70) return suspicious(idx, name, `font count ${v.length} > 70`);
+	if (!isStringArray(v)) return invalid(idx, name, "expected string[]");
+	if (v.length > 70)
+		return suspicious(idx, name, `font count ${v.length} > 70`);
 	return valid(idx, name);
 }
 
@@ -97,8 +97,7 @@ function validateDomBlockers(
 	v: unknown,
 ): LeafValidationResult {
 	if (v === null) return valid(idx, name);
-	if (!isStringArray(v))
-		return invalid(idx, name, "expected string[] or null");
+	if (!isStringArray(v)) return invalid(idx, name, "expected string[] or null");
 	return valid(idx, name);
 }
 
@@ -119,7 +118,8 @@ function validateFontPreferences(
 	];
 	for (const key of requiredKeys) {
 		if (!(key in v)) return invalid(idx, name, `missing key "${key}"`);
-		if (!isNumber(v[key])) return invalid(idx, name, `"${key}" is not a number`);
+		if (!isNumber(v[key]))
+			return invalid(idx, name, `"${key}" is not a number`);
 	}
 	return valid(idx, name);
 }
@@ -207,9 +207,7 @@ function validateColorDepth(
 	return invalid(idx, name, `colorDepth ${v} is not a positive integer`);
 }
 
-const KNOWN_DEVICE_MEMORY = new Set([
-	0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128,
-]);
+const KNOWN_DEVICE_MEMORY = new Set([0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128]);
 
 function validateDeviceMemory(
 	idx: number,
@@ -249,8 +247,7 @@ function validateHardwareConcurrency(
 ): LeafValidationResult {
 	if (v === null) return valid(idx, name);
 	if (!isNumber(v)) return invalid(idx, name, "expected number or null");
-	if (!isPositiveInt(v))
-		return invalid(idx, name, "expected positive integer");
+	if (!isPositiveInt(v)) return invalid(idx, name, "expected positive integer");
 	if (v > 1024) return suspicious(idx, name, `concurrency ${v} > 1024`);
 	return valid(idx, name);
 }
@@ -472,7 +469,11 @@ function validateAudioBaseLatency(
 	const specialCodes = new Set([-1, -2, -3]);
 	if (specialCodes.has(v)) return valid(idx, name);
 	if (!Number.isFinite(v) || v < 0)
-		return invalid(idx, name, "expected non-negative finite number or special code");
+		return invalid(
+			idx,
+			name,
+			"expected non-negative finite number or special code",
+		);
 	return valid(idx, name);
 }
 
@@ -544,8 +545,7 @@ function validateWebGlExtensions(
 	if (!isObject(v)) return invalid(idx, name, "expected object or number");
 	for (const key of WEBGL_EXTENSIONS_ARRAY_KEYS) {
 		if (!(key in v)) return invalid(idx, name, `missing key "${key}"`);
-		if (!isArray(v[key]))
-			return invalid(idx, name, `"${key}" is not an array`);
+		if (!isArray(v[key])) return invalid(idx, name, `"${key}" is not an array`);
 	}
 	return valid(idx, name);
 }

@@ -111,9 +111,14 @@ export default (env: ProviderEnvironment) =>
 				return res.json(result);
 			}
 
-			const leafValidationResults = validateFingerprintLeafValues(fingerprintProofs);
-			const invalidLeaves = leafValidationResults.filter((r) => r.status === "invalid");
-			const suspiciousLeaves = leafValidationResults.filter((r) => r.status === "suspicious");
+			const leafValidationResults =
+				validateFingerprintLeafValues(fingerprintProofs);
+			const invalidLeaves = leafValidationResults.filter(
+				(r) => r.status === "invalid",
+			);
+			const suspiciousLeaves = leafValidationResults.filter(
+				(r) => r.status === "suspicious",
+			);
 
 			if (invalidLeaves.length > 0) {
 				req.logger.warn(() => ({

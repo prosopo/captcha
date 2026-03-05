@@ -123,7 +123,7 @@ describe("verifyFingerprintProofs", () => {
 		const { tree, leafHashes, componentValues } = buildTestTree(testValues);
 		const proof = makeProof(tree, leafHashes, componentValues, 1);
 		// Corrupt a hash in the proof path
-		if (proof.proof[0] && proof.proof[0][1]) {
+		if (proof.proof[0]?.[1]) {
 			proof.proof[0][1] = "0xdeadbeef";
 		}
 		const result = verifyFingerprintProofs([proof], [1]);
@@ -169,8 +169,9 @@ describe("verifyFingerprintProofs", () => {
 	it("returns invalid for a degenerate 1-leaf tree (verifyProof limitation)", () => {
 		// A 1-leaf Merkle tree produces a degenerate proof that verifyProof
 		// cannot validate. In practice we always have 41 leaves.
-		const { tree, leafHashes, componentValues } =
-			buildTestTree(["single-value"]);
+		const { tree, leafHashes, componentValues } = buildTestTree([
+			"single-value",
+		]);
 		const proof = makeProof(tree, leafHashes, componentValues, 0);
 		const result = verifyFingerprintProofs([proof], [0]);
 		expect(result.valid).to.be.false;

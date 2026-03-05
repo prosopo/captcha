@@ -19,12 +19,6 @@ import { hexHash } from "@prosopo/util-crypto";
 /**
  * Verifies fingerprint Merkle proofs submitted by the client.
  *
- * Validates that:
- * 1. The client proved exactly the leaves that were requested
- * 2. Each proof's hash matches its value
- * 3. Each Merkle proof path is valid
- * 4. All proofs point to the same Merkle root
- *
  * @param proofs - Array of leaf proofs from the client
  * @param requestedLeaves - The leaf indices the provider originally requested
  * @returns Object with verification result and the Merkle root if valid

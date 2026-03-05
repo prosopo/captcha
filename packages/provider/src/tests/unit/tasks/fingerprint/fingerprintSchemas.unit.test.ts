@@ -52,11 +52,7 @@ describe("Fingerprint Zod Schemas", () => {
 			const input = {
 				leafIndex: 3,
 				value: JSON.stringify("test-value"),
-				proof: [
-					["0xabc", "0xdef"],
-					["0x123", "0x456"],
-					["0xroot"],
-				],
+				proof: [["0xabc", "0xdef"], ["0x123", "0x456"], ["0xroot"]],
 			};
 			const result = FingerprintLeafProofSchema.parse(input);
 			expect(result.leafIndex).to.equal(3);

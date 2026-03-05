@@ -62,8 +62,7 @@ export const FINGERPRINT_SOURCE_NAMES = [
 	"webGlExtensions",
 ] as const;
 
-export type FingerprintSourceName =
-	(typeof FINGERPRINT_SOURCE_NAMES)[number];
+export type FingerprintSourceName = (typeof FINGERPRINT_SOURCE_NAMES)[number];
 
 export const FINGERPRINT_SOURCE_COUNT = FINGERPRINT_SOURCE_NAMES.length;
 

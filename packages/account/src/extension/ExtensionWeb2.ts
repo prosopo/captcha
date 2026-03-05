@@ -152,11 +152,7 @@ export class ExtensionWeb2 extends Extension {
 			// so we must guard against components with value: undefined
 			// (e.g. osCpu on browsers where navigator.oscpu is deprecated)
 			let valueStr: string;
-			if (
-				component &&
-				"value" in component &&
-				component.value !== undefined
-			) {
+			if (component && "value" in component && component.value !== undefined) {
 				valueStr = JSON.stringify(component.value);
 			} else {
 				valueStr = "error";

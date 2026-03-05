@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { FingerprintLeafProof, LeafValidationResult } from "@prosopo/types";
+import type {
+	FingerprintLeafProof,
+	LeafValidationResult,
+} from "@prosopo/types";
 import { describe, expect, it } from "vitest";
 import {
 	validateFingerprintLeafValues,
@@ -140,9 +143,7 @@ describe("validateLeafValue", () => {
 		});
 
 		it("out-of-range value → suspicious", () => {
-			expectSuspicious(
-				validateLeafValue(4, JSON.stringify([0, 0, 20000, 0])),
-			);
+			expectSuspicious(validateLeafValue(4, JSON.stringify([0, 0, 20000, 0])));
 		});
 	});
 
@@ -159,10 +160,7 @@ describe("validateLeafValue", () => {
 
 		it("missing key → invalid", () => {
 			expectInvalid(
-				validateLeafValue(
-					5,
-					JSON.stringify({ winding: true, geometry: "h" }),
-				),
+				validateLeafValue(5, JSON.stringify({ winding: true, geometry: "h" })),
 			);
 		});
 
@@ -248,9 +246,7 @@ describe("validateLeafValue", () => {
 		});
 
 		it("very large → suspicious", () => {
-			expectSuspicious(
-				validateLeafValue(10, JSON.stringify([200000, 1080])),
-			);
+			expectSuspicious(validateLeafValue(10, JSON.stringify([200000, 1080])));
 		});
 	});
 
@@ -275,9 +271,7 @@ describe("validateLeafValue", () => {
 
 	describe("12: timezone", () => {
 		it("valid non-empty string", () => {
-			expectValid(
-				validateLeafValue(12, JSON.stringify("America/New_York")),
-			);
+			expectValid(validateLeafValue(12, JSON.stringify("America/New_York")));
 		});
 
 		it("empty string → invalid", () => {
@@ -406,9 +400,7 @@ describe("validateLeafValue", () => {
 		});
 
 		it("unknown vendor → suspicious", () => {
-			expectSuspicious(
-				validateLeafValue(21, JSON.stringify("Unknown Vendor")),
-			);
+			expectSuspicious(validateLeafValue(21, JSON.stringify("Unknown Vendor")));
 		});
 
 		it("wrong type → invalid", () => {
@@ -418,9 +410,7 @@ describe("validateLeafValue", () => {
 
 	describe("22: vendorFlavors", () => {
 		it("known flavors → valid", () => {
-			expectValid(
-				validateLeafValue(22, JSON.stringify(["chrome", "safari"])),
-			);
+			expectValid(validateLeafValue(22, JSON.stringify(["chrome", "safari"])));
 			expectValid(validateLeafValue(22, JSON.stringify([])));
 		});
 
@@ -453,9 +443,7 @@ describe("validateLeafValue", () => {
 		});
 
 		it("unknown gamut → suspicious", () => {
-			expectSuspicious(
-				validateLeafValue(24, JSON.stringify("display-p3")),
-			);
+			expectSuspicious(validateLeafValue(24, JSON.stringify("display-p3")));
 		});
 
 		it("wrong type → invalid", () => {
@@ -550,7 +538,7 @@ describe("validateLeafValue", () => {
 			log1p: 0.69,
 			powPI: 1.22,
 			cbrt: 1.44,
-			log10: 0.30,
+			log10: 0.3,
 		};
 
 		it("valid math object", () => {

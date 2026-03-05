@@ -100,7 +100,10 @@ export default (env: ProviderEnvironment) =>
 						msg: "[FP-MERKLE] submitPoWCaptchaSolution: proofs requested but not provided",
 						data: { requestedLeaves, user, dapp },
 					}));
-					const response: PowCaptchaSolutionResponse = { status: "ok", verified: false };
+					const response: PowCaptchaSolutionResponse = {
+						status: "ok",
+						verified: false,
+					};
 					return res.json(response);
 				}
 
@@ -113,20 +116,31 @@ export default (env: ProviderEnvironment) =>
 						msg: "[FP-MERKLE] submitPoWCaptchaSolution: Merkle verification failed",
 						data: { error: proofResult.error, user, dapp, challenge },
 					}));
-					const response: PowCaptchaSolutionResponse = { status: "ok", verified: false };
+					const response: PowCaptchaSolutionResponse = {
+						status: "ok",
+						verified: false,
+					};
 					return res.json(response);
 				}
 
-				const leafValidationResults = validateFingerprintLeafValues(fingerprintProofs);
-				const invalidLeaves = leafValidationResults.filter((r) => r.status === "invalid");
-				const suspiciousLeaves = leafValidationResults.filter((r) => r.status === "suspicious");
+				const leafValidationResults =
+					validateFingerprintLeafValues(fingerprintProofs);
+				const invalidLeaves = leafValidationResults.filter(
+					(r) => r.status === "invalid",
+				);
+				const suspiciousLeaves = leafValidationResults.filter(
+					(r) => r.status === "suspicious",
+				);
 
 				if (invalidLeaves.length > 0) {
 					req.logger.warn(() => ({
 						msg: "[FP-MERKLE] submitPoWCaptchaSolution: invalid leaf values detected",
 						data: { invalidLeaves, user, dapp },
 					}));
-					const response: PowCaptchaSolutionResponse = { status: "ok", verified: false };
+					const response: PowCaptchaSolutionResponse = {
+						status: "ok",
+						verified: false,
+					};
 					return res.json(response);
 				}
 

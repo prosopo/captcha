@@ -117,8 +117,12 @@ describe("Fingerprint Proof End-to-End Flow", () => {
 		const proofRequest = generateFingerprintProofRequest(2);
 
 		// Mix proofs: one from client1, one from client2
-		const proof1 = client1.generateProofs([proofRequest.requestedLeaves[0]!]);
-		const proof2 = client2.generateProofs([proofRequest.requestedLeaves[1]!]);
+		const [leaf0, leaf1] = proofRequest.requestedLeaves;
+		if (leaf0 === undefined || leaf1 === undefined) {
+			throw new Error("Expected 2 requested leaves");
+		}
+		const proof1 = client1.generateProofs([leaf0]);
+		const proof2 = client2.generateProofs([leaf1]);
 		const mixedProofs = [...proof1, ...proof2];
 
 		const result = verifyFingerprintProofs(
@@ -137,7 +141,11 @@ describe("Fingerprint Proof End-to-End Flow", () => {
 		const proofs = generateProofs(proofRequest.requestedLeaves);
 
 		// Tamper with first proof's value
-		proofs[0]!.value = JSON.stringify("tampered-value");
+		const firstProof = proofs[0];
+		if (!firstProof) {
+			throw new Error("Expected at least one proof");
+		}
+		firstProof.value = JSON.stringify("tampered-value");
 
 		const result = verifyFingerprintProofs(
 			proofs,
@@ -235,7 +243,11 @@ describe("Fingerprint Proof End-to-End Flow", () => {
 		const { merkleState } = simulateClientSide(mockData);
 
 		for (let i = 0; i < FINGERPRINT_SOURCE_COUNT; i++) {
-			const expectedHash = hexHash(merkleState.componentValues[i]!);
+			const componentValue = merkleState.componentValues[i];
+			if (componentValue === undefined) {
+				throw new Error(`Missing component value at index ${i}`);
+			}
+			const expectedHash = hexHash(componentValue);
 			expect(merkleState.leafHashes[i]).to.equal(expectedHash);
 		}
 	});
