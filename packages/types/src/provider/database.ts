@@ -226,6 +226,7 @@ export const ScoreComponentsSchema = object({
 	accessPolicy: number().optional(),
 	unverifiedHost: number().optional(),
 	webView: number().optional(),
+	triggeredDetectors: array(number()).optional(),
 });
 
 export interface ScoreComponents {
@@ -235,6 +236,7 @@ export interface ScoreComponents {
 	accessPolicy?: number;
 	unverifiedHost?: number;
 	webView?: number;
+	triggeredDetectors?: number[];
 }
 
 // Zod schema for Session
@@ -263,6 +265,7 @@ export const SessionSchema = object({
 	countryCode: string().optional(),
 	geolocation: string().optional(),
 	headers: object({}).catchall(string()),
+	triggeredDetectors: array(number()).optional(),
 }) satisfies ZodType<Session>;
 
 // Session now includes all frictionless token fields
@@ -291,6 +294,7 @@ export type Session = {
 	countryCode?: string;
 	geolocation?: string;
 	headers?: RequestHeaders;
+	triggeredDetectors?: number[];
 };
 
 // Zod schema for PoWCaptchaStored

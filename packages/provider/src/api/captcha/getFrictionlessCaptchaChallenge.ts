@@ -186,6 +186,7 @@ export default (
 				iFrame,
 				decryptedHeadHash,
 				decryptionFailed,
+				triggeredDetectors,
 			} = await tasks.frictionlessManager.decryptPayload(token, headHash);
 
 			req.logger.debug(() => ({
@@ -242,6 +243,8 @@ export default (
 			let scoreComponents: ScoreComponents = {
 				baseScore: baseBotScore,
 				...(lScore && { lScore }),
+				...(triggeredDetectors &&
+					triggeredDetectors.length > 0 && { triggeredDetectors }),
 			};
 
 			const ipAddress = getCompositeIpAddress(normalizedIp);
@@ -281,6 +284,7 @@ export default (
 				siteKey: dapp,
 				countryCode,
 				headers: flatHeaders,
+				triggeredDetectors,
 			});
 
 			// Check if the IP address is blocked

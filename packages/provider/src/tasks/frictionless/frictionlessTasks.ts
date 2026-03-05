@@ -97,6 +97,7 @@ export class FrictionlessManager extends CaptchaManager {
 			geolocation: params.geolocation,
 			countryCode: params.countryCode,
 			headers: params.headers,
+			triggeredDetectors: params.triggeredDetectors,
 		};
 	}
 
@@ -131,6 +132,7 @@ export class FrictionlessManager extends CaptchaManager {
 		deleted?: boolean,
 		countryCode?: string,
 		headers?: RequestHeaders,
+		triggeredDetectors?: number[],
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
@@ -154,6 +156,7 @@ export class FrictionlessManager extends CaptchaManager {
 			deleted,
 			countryCode,
 			headers,
+			triggeredDetectors,
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);
@@ -220,6 +223,7 @@ export class FrictionlessManager extends CaptchaManager {
 			undefined,
 			effectiveParams.countryCode,
 			effectiveParams.headers,
+			effectiveParams.triggeredDetectors,
 		);
 
 		return {
@@ -267,6 +271,7 @@ export class FrictionlessManager extends CaptchaManager {
 			undefined,
 			effectiveParams.countryCode,
 			effectiveParams.headers,
+			effectiveParams.triggeredDetectors,
 		);
 		return {
 			[ApiParams.captchaType]: CaptchaType.pow,
@@ -313,6 +318,7 @@ export class FrictionlessManager extends CaptchaManager {
 			true,
 			effectiveParams.countryCode,
 			effectiveParams.headers,
+			effectiveParams.triggeredDetectors,
 		);
 	}
 
@@ -449,6 +455,7 @@ export class FrictionlessManager extends CaptchaManager {
 		let iFrame: boolean | undefined;
 		let decryptedHeadHash = "";
 		let decryptionFailed = false;
+		let triggeredDetectors: number[] | undefined;
 		for (const [keyIndex, key] of decryptKeys.entries()) {
 			try {
 				this.logger.info(() => ({
@@ -466,6 +473,7 @@ export class FrictionlessManager extends CaptchaManager {
 				const u = decrypted.userAgent;
 				const w = decrypted.isWebView;
 				const i = decrypted.isIframe;
+				const td = decrypted.triggeredDetectors;
 				this.logger.debug(() => ({
 					msg: "Successfully decrypted score",
 					data: {
@@ -486,6 +494,7 @@ export class FrictionlessManager extends CaptchaManager {
 				userAgent = u;
 				webView = w;
 				iFrame = i;
+				triggeredDetectors = td;
 				break;
 			} catch (err) {
 				// check if the next index exists, if not, log an error
@@ -545,6 +554,7 @@ export class FrictionlessManager extends CaptchaManager {
 			iFrame: iFrame || false,
 			decryptedHeadHash,
 			decryptionFailed,
+			triggeredDetectors,
 		};
 	}
 

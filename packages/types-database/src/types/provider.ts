@@ -364,6 +364,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 		accessPolicy: { type: Number, required: false },
 		unverifiedHost: { type: Number, required: false },
 		webView: { type: Number, required: false },
+		triggeredDetectors: { type: [Number], required: false },
 	},
 	providerSelectEntropy: { type: Number, required: true },
 	ipAddress: CompositeIpAddressRecordSchemaObj,
@@ -383,6 +384,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	geolocation: { type: String, required: false },
 	countryCode: { type: String, required: false },
 	headers: { type: Object, required: false },
+	triggeredDetectors: { type: [Number], required: false },
 } satisfies AllKeys<Session>);
 
 SessionRecordSchema.index({ createdAt: 1 });
