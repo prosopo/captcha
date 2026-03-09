@@ -1,5 +1,28 @@
 # @prosopo/provider
 
+## 3.21.0
+### Minor Changes
+
+- feaca02: Max image rounds
+
+### Patch Changes
+
+- 759d4e6: Dynamic server secrets for client example server
+- 676c5f2: Use HTTPS in developmentwq
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/load-balancer@2.8.28
+  - @prosopo/keyring@2.9.11
+  - @prosopo/types@3.12.0
+  - @prosopo/env@3.3.7
+  - @prosopo/types-env@2.8.7
+  - @prosopo/api@3.2.2
+  - @prosopo/api-express-router@3.0.62
+  - @prosopo/database@3.9.6
+  - @prosopo/datasets@3.1.5
+  - @prosopo/types-database@4.4.6
+  - @prosopo/user-access-policy@3.6.12
+
 ## 3.20.4
 ### Patch Changes
 
