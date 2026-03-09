@@ -1,5 +1,16 @@
 # @prosopo/server
 
+## 2.9.63
+### Patch Changes
+
+- 676c5f2: Use HTTPS in developmentwq
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/load-balancer@2.8.28
+  - @prosopo/keyring@2.9.11
+  - @prosopo/types@3.12.0
+  - @prosopo/api@3.2.2
+
 ## 2.9.62
 ### Patch Changes
 
