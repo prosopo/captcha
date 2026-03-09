@@ -45,7 +45,7 @@ async function main() {
 		process.env.PROSOPO_VERIFY_ENDPOINT ||
 		`https://${apiPrefix}api.prosopo.io/siteverify`;
 
-	console.log({ verifyEndpoint });
+	logger.info(() => ({ data: { verifyEndpoint } }));
 
 	const verifyType: ProsopoVerificationType = Object.keys(
 		ProsopoVerificationType,
@@ -81,8 +81,14 @@ async function main() {
 		res.sendStatus(200);
 	});
 
-	if (!process.env.MONGO_URI && process.env.NODE_ENV !== "development") {
-		throw new Error("Cannot run mongo memory in non-development environment");
+	if (
+		!process.env.MONGO_URI &&
+		process.env.NODE_ENV !== "development" &&
+		process.env.NODE_ENV !== "test"
+	) {
+		throw new Error(
+			"Cannot run mongo memory when NODE_ENV is neither development nor test",
+		);
 	}
 	logger.info(() => ({ msg: process.env.MONGO_URI }));
 	const uri = process.env.MONGO_URI || (await memoryServerSetup());
@@ -109,32 +115,25 @@ async function main() {
 
 	logger.info(() => ({ msg: "Listening on port", data: { port } }));
 
-	// Setup HTTPS if enabled (for e2e testing and local development)
-	const useHttps = process.env.USE_HTTPS === "true";
+	try {
+		const __filename = fileURLToPath(import.meta.url);
+		const __dirname = path.dirname(__filename);
+		const certsDir = path.resolve(__dirname, "../../../certs");
 
-	if (useHttps) {
-		try {
-			const __filename = fileURLToPath(import.meta.url);
-			const __dirname = path.dirname(__filename);
-			const certsDir = path.resolve(__dirname, "../../../certs");
+		const httpsOptions = {
+			key: fs.readFileSync(path.join(certsDir, "server.key")),
+			cert: fs.readFileSync(path.join(certsDir, "server.crt")),
+		};
 
-			const httpsOptions = {
-				key: fs.readFileSync(path.join(certsDir, "server.key")),
-				cert: fs.readFileSync(path.join(certsDir, "server.crt")),
-			};
-
-			https.createServer(httpsOptions, app).listen(port, () => {
-				logger.info(() => ({ msg: `HTTPS server started on port ${port}` }));
-			});
-		} catch (err) {
-			logger.error(() => ({
-				err,
-				msg: "Failed to start HTTPS server. Make sure certificates exist in captcha/certs. Run ./setup_certs.sh",
-			}));
-			throw err;
-		}
-	} else {
-		app.listen(port);
+		https.createServer(httpsOptions, app).listen(port, () => {
+			logger.info(() => ({ msg: `HTTPS server started on port ${port}` }));
+		});
+	} catch (err) {
+		logger.error(() => ({
+			err,
+			msg: "Failed to start HTTPS server. Make sure certificates exist in captcha/certs. Run ./setup_certs.sh",
+		}));
+		throw err;
 	}
 }
 

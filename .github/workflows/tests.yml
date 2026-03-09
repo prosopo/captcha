@@ -119,7 +119,7 @@ jobs:
         run: |
           npx concurrently \
             "NODE_ENV=test npm run start:provider" \
-            "sleep 10s && NODE_ENV=test npm run test:all" \
+            "sleep 10s && NODE_TLS_REJECT_UNAUTHORIZED=0 NODE_ENV=test npm run test:all" \
             --success "first" --kill-others
 
       - run: docker compose --file ./docker/docker-compose.test.yml down

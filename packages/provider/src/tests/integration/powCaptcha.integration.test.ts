@@ -51,6 +51,7 @@ function getRandomPort(): number {
 /**
  * Register a site key directly in the database using Tasks
  * This mimics the setup script's registerSiteKey functionality
+ * Uses a low difficulty for testing purposes to speed up tests that require solving the captcha
  */
 async function registerSiteKeyInDb(
 	env: ProviderEnvironment,
@@ -65,7 +66,7 @@ async function registerSiteKeyInDb(
 			captchaType,
 			domains: ["localhost", "0.0.0.0", "127.0.0.0", "example.com"],
 			frictionlessThreshold: 0.5,
-			powDifficulty: 4,
+			powDifficulty: 1,
 		}),
 	);
 }

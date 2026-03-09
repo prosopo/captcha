@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /// <reference types="cypress" />
+import "cypress-real-events";
 
 import {
 	AdminApiPaths,
@@ -25,11 +26,15 @@ import Chainable = Cypress.Chainable;
 import { getPair } from "@prosopo/keyring";
 import type { SolutionRecord } from "@prosopo/types";
 
+export const MAX_IMAGE_CAPTCHA_ROUNDS = 3;
+
 declare global {
 	namespace Cypress {
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix any
 		interface Chainable<Subject = any> {
 			clickIAmHuman(): Cypress.Chainable<Captcha[]>;
+
+			clickCheckbox(): Cypress.Chainable<JQuery<HTMLElement>>;
 
 			captchaImages(): Cypress.Chainable<JQuery<HTMLElement>>;
 
@@ -37,9 +42,9 @@ declare global {
 				captcha: Captcha,
 			): Chainable<JQuery<HTMLElement>>;
 
-			getSelectors(captcha: Captcha): Cypress.Chainable<string[]>;
+			getSelectors(captcha: Captcha): Chainable<string[]>;
 
-			clickNextButton(): Cypress.Chainable<void>;
+			clickNextButton(): Chainable<JQuery<HTMLElement>>;
 
 			elementExists(element: string): Chainable<Subject>;
 
@@ -115,13 +120,47 @@ function waitForProcaptchaScript(): Cypress.Chainable<void> {
 	});
 }
 
+function clickCheckbox(): Cypress.Chainable<JQuery<HTMLElement>> {
+	// Wait for checkbox to exist and be visible
+	return getWidgetElement(checkboxClass, { timeout: 12000 })
+		.should("exist")
+		.should("be.visible")
+		.should("not.be.disabled")
+		.first()
+		.then(($checkbox) => {
+			// Log checkbox details for debugging
+			cy.task("log", `Found checkbox: ${$checkbox.length} element(s)`);
+			cy.task("log", `Checkbox is visible: ${$checkbox.is(":visible")}`);
+			cy.task("log", `Checkbox is disabled: ${$checkbox.is(":disabled")}`);
+			cy.task("log", `Checkbox checked state: ${$checkbox.is(":checked")}`);
+			cy.wrap($checkbox).realClick();
+		});
+}
+
 function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
 	// First wait for the procaptcha script to be loaded
 	return cy.waitForProcaptchaScript().then(() => {
 		cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
 			"getCaptcha",
 		);
-		getWidgetElement(checkboxClass, { timeout: 12000 }).first().click();
+
+		// Log for debugging
+		cy.task("log", `Looking for checkbox with selector: ${checkboxClass}`);
+
+		// Wait for checkbox to exist and be visible
+		getWidgetElement(checkboxClass, { timeout: 12000 })
+			.should("exist")
+			.should("be.visible")
+			.should("not.be.disabled")
+			.first()
+			.then(($checkbox) => {
+				// Log checkbox details for debugging
+				cy.task("log", `Found checkbox: ${$checkbox.length} element(s)`);
+				cy.task("log", `Checkbox is visible: ${$checkbox.is(":visible")}`);
+				cy.task("log", `Checkbox is disabled: ${$checkbox.is(":disabled")}`);
+				cy.task("log", `Checkbox checked state: ${$checkbox.is(":checked")}`);
+				cy.wrap($checkbox).realClick();
+			});
 
 		return cy
 			.wait("@getCaptcha", { timeout: 36000 })
@@ -137,7 +176,7 @@ function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
 					"length",
 					captchas.length,
 				);
-				expect(captchas).to.have.lengthOf(2);
+				expect(captchas).to.have.lengthOf.lte(MAX_IMAGE_CAPTCHA_ROUNDS);
 				expect(captchas[0]).to.have.property("items");
 				console.log(
 					"-----------------------------captchas[0].items",
@@ -153,27 +192,31 @@ function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
 }
 
 function captchaImages(): Cypress.Chainable<JQuery<HTMLElement>> {
-	return getWidgetElement(".prosopo-modalInner p").then(($p) => {
-		const $pWithText = $p.filter((index, el) => {
-			return Cypress.$(el).text().includes("all containing");
-		});
+	// Wait for the modal to be visible first
+	return getWidgetElement(".prosopo-modalInner p", { timeout: 10000 })
+		.should("be.visible")
+		.then(($p) => {
+			const $pWithText = $p.filter((index, el) => {
+				return Cypress.$(el).text().includes("all containing");
+			});
 
-		cy.wrap($pWithText)
-			.should("be.visible")
-			.parent()
-			.parent()
-			.parent()
-			.parent()
-			.children()
-			.next()
-			.children()
-			.first()
-			.children()
-			.as("captchaImages");
-	});
+			cy.wrap($pWithText)
+				.should("be.visible")
+				.parent()
+				.parent()
+				.parent()
+				.parent()
+				.children()
+				.next()
+				.children()
+				.first()
+				.children()
+				.should("have.length.gte", 1) // Ensure at least one image exists
+				.as("captchaImages");
+		});
 }
 
-function getSelectors(captcha: Captcha) {
+function getSelectors(captcha: Captcha): Chainable<string[]> {
 	cy.wrap({ captcha })
 		.then(({ captcha }) => {
 			cy.get<SolutionRecord[]>("@solutions").then((solutions) => {
@@ -200,34 +243,67 @@ function getSelectors(captcha: Captcha) {
 			});
 		})
 		.as("selectors");
-	return cy.get("@selectors");
+	return cy.get("@selectors") as unknown as Chainable<string[]>;
 }
 
 function clickCorrectCaptchaImages(
 	captcha: Captcha,
 ): Chainable<JQuery<HTMLElement>> {
+	// Set up intercept BEFORE clicking anything
+	cy.intercept("POST", "**/prosopo/provider/client/solution").as(
+		"postSolution",
+	);
+
+	// Wait for images to be loaded and ready
+	// This ensures images are fully rendered before we try to interact with them
+	cy.wait(500); // Give DOM time to update after previous round
+
 	return cy.captchaImages().then(() => {
+		// Additional wait to ensure captcha images are fully loaded
+		cy.wait(300);
+
 		cy.getSelectors(captcha).then((selectors: string[]) => {
 			console.log("captchaId", captcha.captchaId, "selectors", selectors);
-			// Click the correct images
-			getWidgetElement(selectors.join(", ")).then((elements) => {
-				if (elements.length > 0) {
-					cy.wrap(elements).click({ multiple: true });
-				}
-				console.log("No images to select");
+
+			// Ensure the selector elements exist before trying to click them
+			if (selectors.length > 0) {
+				// Wait for the specific images to be visible
+				getWidgetElement(selectors.join(", "), { timeout: 5000 })
+					.should("be.visible")
+					.then((elements) => {
+						if (elements.length > 0) {
+							cy.wrap(elements).each(($img) => {
+								cy.wrap($img).realClick();
+								cy.wait(100); // Small wait between clicks
+							});
+						} else {
+							console.log("No images to select");
+						}
+						// Wait for images to be selected
+						cy.wait(500);
+						// Click next button
+						cy.clickNextButton();
+					});
+			} else {
+				console.log("No selectors found for this captcha");
+				// Still click next button even if no images to select
+				cy.wait(500);
 				cy.clickNextButton();
-			});
+			}
 		});
 	});
 }
 
-function clickNextButton() {
-	cy.intercept("POST", "**/prosopo/provider/client/solution").as(
-		"postSolution",
-	);
-	// Go to the next captcha or submit solution
-	getWidgetElement('button[data-cy="button-next"]').click({ force: true });
-	cy.wait(0);
+function clickNextButton(): Chainable<JQuery<HTMLElement>> {
+	// Ensure button exists and is visible before clicking
+	return getWidgetElement('button[data-cy="button-next"]')
+		.should("exist")
+		.should("be.visible")
+		.then(($btn) => {
+			cy.task("log", "Next button found and visible, clicking...");
+			cy.wrap($btn).realClick();
+			cy.task("log", "Next button clicked!");
+		});
 }
 
 function elementExists(selector: string) {
@@ -263,12 +339,14 @@ function registerSiteKey(
 			captchaType: captchaType || baseCaptchaType,
 			domains: ["0.0.0.0", "localhost", "*"],
 			frictionlessThreshold: 0.5,
-			powDifficulty: 2,
+			powDifficulty: 1,
 			imageThreshold: 0.8,
+			imageMaxRounds: MAX_IMAGE_CAPTCHA_ROUNDS,
 			disallowWebView: false,
 		};
 
 		// Use cy.request() to ensure Cypress correctly queues the request
+		// Set retryOnNetworkFailure to false to handle connection errors gracefully
 		return cy.request({
 			method: "POST",
 			url: adminSiteKeyURL,
@@ -282,17 +360,18 @@ function registerSiteKey(
 				settings,
 			},
 			failOnStatusCode: false, // Allow handling of non-200 responses manually
+			retryOnNetworkFailure: false, // Don't retry on network failures
+			timeout: 10000, // 10 second timeout
 		});
 	});
 }
 
-Cypress.Commands.addAll({
-	clickIAmHuman,
-	captchaImages,
-	clickCorrectCaptchaImages,
-	getSelectors,
-	clickNextButton,
-	elementExists,
-	registerSiteKey,
-	waitForProcaptchaScript,
-});
+Cypress.Commands.add("clickIAmHuman", clickIAmHuman);
+Cypress.Commands.add("clickCheckbox", clickCheckbox);
+Cypress.Commands.add("captchaImages", captchaImages);
+Cypress.Commands.add("clickCorrectCaptchaImages", clickCorrectCaptchaImages);
+Cypress.Commands.add("getSelectors", getSelectors);
+Cypress.Commands.add("clickNextButton", clickNextButton);
+Cypress.Commands.add("elementExists", elementExists);
+Cypress.Commands.add("registerSiteKey", registerSiteKey);
+Cypress.Commands.add("waitForProcaptchaScript", waitForProcaptchaScript);

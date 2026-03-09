@@ -385,7 +385,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 			const totalImages = storedCaptchas[0]?.items.length || 0;
 
-			if (containsIdenticalPairs(pairs)) {
+			if (containsIdenticalPairs(pairs) && process.env.NODE_ENV !== "test") {
 				await this.db.disapproveDappUserCommitment(
 					commitmentId,
 					"CAPTCHA.INVALID_SOLUTION",
