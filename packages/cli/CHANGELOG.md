@@ -1,5 +1,21 @@
 # @prosopo/cli
 
+## 3.6.0
+### Minor Changes
+
+- feaca02: Max image rounds
+
+### Patch Changes
+
+- Updated dependencies [759d4e6]
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/provider@3.21.0
+  - @prosopo/keyring@2.9.11
+  - @prosopo/types@3.12.0
+  - @prosopo/env@3.3.7
+  - @prosopo/api@3.2.2
+
 ## 3.5.38
 ### Patch Changes
 

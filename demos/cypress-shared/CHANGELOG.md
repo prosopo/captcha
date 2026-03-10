@@ -1,5 +1,13 @@
 # @prosopo/cypress-shared
 
+## 2.8.59
+### Patch Changes
+
+- 676c5f2: Use HTTPS in developmentwq
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/types@3.12.0
+
 ## 2.8.58
 ### Patch Changes
 
