@@ -19,6 +19,7 @@ import {
 	setClientEntropy,
 	startProviderApi,
 	storeCaptchasExternally,
+	updateSpamEmailDomainsScheduler,
 } from "@prosopo/provider";
 import type { KeyringPair } from "@prosopo/types";
 import { getDB, getSecret } from "./process.env.js";
@@ -96,6 +97,22 @@ export async function start(
 					}));
 				},
 			);
+		}
+
+		const cronSpamEmailDomains =
+			env.config.scheduledTasks?.spamEmailDomainsScheduler?.schedule;
+		if (cronSpamEmailDomains) {
+			updateSpamEmailDomainsScheduler(
+				env.pair,
+				cronSpamEmailDomains,
+				env.config,
+			).catch((err) => {
+				env.logger.error(() => ({
+					msg: "Failed to start spam email domains scheduler",
+					err,
+					context: { failedFuncName: updateSpamEmailDomainsScheduler.name },
+				}));
+			});
 		}
 	}
 

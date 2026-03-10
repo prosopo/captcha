@@ -49,6 +49,17 @@ const getLRules = () => {
 	}
 };
 
+const getSpamEmailDomainsUrls = (): string[] | undefined => {
+	if (!process.env.SPAM_EMAIL_DOMAINS_URLS) {
+		return undefined;
+	}
+	try {
+		return JSON.parse(process.env.SPAM_EMAIL_DOMAINS_URLS);
+	} catch (e) {
+		return undefined;
+	}
+};
+
 const getHost = (): string | undefined => {
 	const importMeta = import.meta as { env?: { VITE_CADDY_DOMAIN: string } };
 	return process.env.CADDY_DOMAIN || importMeta.env?.VITE_CADDY_DOMAIN;
@@ -125,8 +136,12 @@ export default function getConfig(
 			clientEntropyScheduler: {
 				schedule: process.env.CLIENT_ENTROPY_SCHEDULE,
 			},
+			spamEmailDomainsScheduler: {
+				schedule: process.env.SPAM_EMAIL_DOMAINS_SCHEDULE,
+			},
 		},
 		lRules: getLRules(),
+		spamEmailDomainsUrls: getSpamEmailDomainsUrls(),
 		authAccount: {
 			address: getAddress(admin),
 			password: getPassword(admin),

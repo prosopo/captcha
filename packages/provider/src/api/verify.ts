@@ -86,7 +86,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			}
 
 			// We don't want to expose any other errors to the client except for specific situations
-			const { dappSignature, token, ip, maxVerifiedTime } = parsed;
+			const { dappSignature, token, ip, maxVerifiedTime, email } = parsed;
 			try {
 				// This can error if the token is invalid
 				const { user, dapp, timestamp, commitmentId } =
@@ -235,6 +235,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						env,
 						ip,
 						userAccessRulesStorage,
+						email,
 					);
 
 				const verificationResponse: VerificationResponse =

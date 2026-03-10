@@ -11,6 +11,7 @@
 		"ACCESS_POLICY_BLOCK": "Η πρόσβαση αποκλείστηκε από την πολιτική",
 		"FORBIDDEN": "Απαγορεύεται",
 		"PROVIDER_VERIFY_FAILED": "Αποτυχία επαλήθευσης παρόχου",
+		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
 		"CAPTCHA_FAILED": "Απάντησες λανθασμένα ένα ή περισσότερα captchas. Παρακαλώ δοκίμασε ξανά",
 		"CAPTCHA_PASSED": "Απάντησες σωστά στα captchas",
 		"BAD_REQUEST": "Μη έγκυρο αίτημα",

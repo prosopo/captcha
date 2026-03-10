@@ -21,6 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Åtkomst blockerad av policy",
 		"FORBIDDEN": "Förbjuden",
 		"PROVIDER_VERIFY_FAILED": "Leverantörsverifiering misslyckades",
+		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
 		"UNAUTHORIZED": "Obehörig",
 		"MISSING_BODY": "Saknad kropp",
 		"NO_CONTENT_TYPE_HEADER": "Ingen innehållstypshuvud. Antogs JSON-kodad kropp men misslyckades med att tolka.",

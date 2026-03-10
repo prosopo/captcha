@@ -13,6 +13,7 @@
 // limitations under the License.
 export { default as commandProviderSetDataset } from "./providerSetDataset.js";
 export { default as commandStoreCaptchasExternally } from "./storeCaptchasExternally.js";
+export { default as commandUpdateSpamEmailDomains } from "./updateSpamEmailDomains.js";
 export { default as commandVersion } from "./version.js";
 export { default as commandSiteKeyRegister } from "./siteKeyRegister.js";
 export { default as commandSiteKeyRegisterApi } from "./siteKeyRegisterApi.js";
