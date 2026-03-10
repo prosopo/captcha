@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 3.12.1
+### Patch Changes
+
+- a90eb54: We know WHAT happens but we don't know WHY happens
+
 ## 3.12.0
 ### Minor Changes
 

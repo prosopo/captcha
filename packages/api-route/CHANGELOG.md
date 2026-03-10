@@ -1,5 +1,11 @@
 # @prosopo/api-route
 
+## 2.6.37
+### Patch Changes
+
+- Updated dependencies [c5ee492]
+  - @prosopo/common@3.1.29
+
 ## 2.6.36
 ### Patch Changes
 
