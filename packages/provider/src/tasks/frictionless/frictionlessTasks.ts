@@ -167,7 +167,10 @@ export class FrictionlessManager extends CaptchaManager {
 		);
 
 		const domain = new URL(chosen.provider.url).hostname;
-		const configDomain =  this.config.host.indexOf('http') > -1 ? new URL(this.config.host).hostname : this.config.host;
+		const configDomain =
+			this.config.host.indexOf("http") > -1
+				? new URL(this.config.host).hostname
+				: this.config.host;
 		this.logger.info(() => ({
 			data: { entropy, host: this.config.host, domain },
 		}));
@@ -483,17 +486,6 @@ export class FrictionlessManager extends CaptchaManager {
 						triggeredDetectors: td,
 					},
 				}));
-				console.log({
-						key: this.redactKeyForLogging(key),
-						baseBotScore: s,
-						timestamp: t,
-						entropy: p,
-						userId: a,
-						userAgent: u,
-						webView: w,
-						iFrame: i,
-						triggeredDetectors: td,
-					})
 				baseBotScore = s;
 				timestamp = t;
 				providerSelectEntropy = p;
