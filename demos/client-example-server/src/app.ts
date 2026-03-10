@@ -45,7 +45,7 @@ async function main() {
 		process.env.PROSOPO_VERIFY_ENDPOINT ||
 		`https://${apiPrefix}api.prosopo.io/siteverify`;
 
-	console.log({ verifyEndpoint });
+	logger.info(() => ({ data: { verifyEndpoint } }));
 
 	const verifyType: ProsopoVerificationType = Object.keys(
 		ProsopoVerificationType,

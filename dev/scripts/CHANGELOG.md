@@ -1,5 +1,36 @@
 # @prosopo/scripts
 
+## 3.1.65
+### Patch Changes
+
+- Updated dependencies [c5ee492]
+- Updated dependencies [a90eb54]
+  - @prosopo/common@3.1.29
+  - @prosopo/provider@3.21.1
+  - @prosopo/types@3.12.1
+  - @prosopo/cli@3.6.1
+  - @prosopo/datasets@3.1.6
+  - @prosopo/dotenv@3.0.34
+  - @prosopo/env@3.3.8
+  - @prosopo/keyring@2.9.12
+  - @prosopo/types-env@2.8.8
+
+## 3.1.64
+### Patch Changes
+
+- 676c5f2: Use HTTPS in developmentwq
+- c1d738f: Update env for tests
+- Updated dependencies [759d4e6]
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/provider@3.21.0
+  - @prosopo/keyring@2.9.11
+  - @prosopo/types@3.12.0
+  - @prosopo/cli@3.6.0
+  - @prosopo/env@3.3.7
+  - @prosopo/types-env@2.8.7
+  - @prosopo/datasets@3.1.5
+
 ## 3.1.63
 ### Patch Changes
 

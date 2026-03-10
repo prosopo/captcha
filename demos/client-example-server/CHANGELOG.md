@@ -1,5 +1,28 @@
 # @prosopo/client-example-server
 
+## 2.7.68
+### Patch Changes
+
+- Updated dependencies [c5ee492]
+- Updated dependencies [a90eb54]
+  - @prosopo/common@3.1.29
+  - @prosopo/types@3.12.1
+  - @prosopo/dotenv@3.0.34
+  - @prosopo/keyring@2.9.12
+  - @prosopo/server@2.9.64
+
+## 2.7.67
+### Patch Changes
+
+- 759d4e6: Dynamic server secrets for client example server
+- 676c5f2: Use HTTPS in developmentwq
+- c1d738f: Update env for tests
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/keyring@2.9.11
+  - @prosopo/server@2.9.63
+  - @prosopo/types@3.12.0
+
 ## 2.7.66
 ### Patch Changes
 

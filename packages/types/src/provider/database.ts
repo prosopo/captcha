@@ -226,6 +226,7 @@ export const ScoreComponentsSchema = object({
 	accessPolicy: number().optional(),
 	unverifiedHost: number().optional(),
 	webView: number().optional(),
+	triggeredDetectors: array(number()).optional(),
 });
 
 export interface ScoreComponents {
@@ -235,6 +236,7 @@ export interface ScoreComponents {
 	accessPolicy?: number;
 	unverifiedHost?: number;
 	webView?: number;
+	triggeredDetectors?: number[];
 }
 
 // Zod schema for Session

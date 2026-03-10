@@ -167,14 +167,18 @@ export class FrictionlessManager extends CaptchaManager {
 		);
 
 		const domain = new URL(chosen.provider.url).hostname;
+		const configDomain =
+			this.config.host.indexOf("http") > -1
+				? new URL(this.config.host).hostname
+				: this.config.host;
 		this.logger.info(() => ({
 			data: { entropy, host: this.config.host, domain },
 		}));
 
-		if (domain !== this.config.host) {
+		if (domain !== configDomain) {
 			this.logger.info(() => ({
 				msg: "Host mismatch",
-				data: { expected: this.config.host, got: domain, entropy },
+				data: { expected: configDomain, got: domain, entropy },
 			}));
 			return { verified: false, domain };
 		}
@@ -449,6 +453,7 @@ export class FrictionlessManager extends CaptchaManager {
 		let iFrame: boolean | undefined;
 		let decryptedHeadHash = "";
 		let decryptionFailed = false;
+		let triggeredDetectors: number[] | undefined;
 		for (const [keyIndex, key] of decryptKeys.entries()) {
 			try {
 				this.logger.info(() => ({
@@ -466,6 +471,7 @@ export class FrictionlessManager extends CaptchaManager {
 				const u = decrypted.userAgent;
 				const w = decrypted.isWebView;
 				const i = decrypted.isIframe;
+				const td = decrypted.triggeredDetectors;
 				this.logger.debug(() => ({
 					msg: "Successfully decrypted score",
 					data: {
@@ -477,6 +483,7 @@ export class FrictionlessManager extends CaptchaManager {
 						userAgent: u,
 						webView: w,
 						iFrame: i,
+						triggeredDetectors: td,
 					},
 				}));
 				baseBotScore = s;
@@ -486,6 +493,7 @@ export class FrictionlessManager extends CaptchaManager {
 				userAgent = u;
 				webView = w;
 				iFrame = i;
+				triggeredDetectors = td;
 				break;
 			} catch (err) {
 				// check if the next index exists, if not, log an error
@@ -545,6 +553,7 @@ export class FrictionlessManager extends CaptchaManager {
 			iFrame: iFrame || false,
 			decryptedHeadHash,
 			decryptionFailed,
+			triggeredDetectors,
 		};
 	}
 
