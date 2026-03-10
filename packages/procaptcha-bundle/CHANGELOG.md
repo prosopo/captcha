@@ -1,5 +1,17 @@
 # @prosopo/procaptcha-bundle
 
+## 3.3.17
+### Patch Changes
+
+- 676c5f2: Use HTTPS in developmentwq
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/types@3.12.0
+  - @prosopo/procaptcha-frictionless@2.8.48
+  - @prosopo/procaptcha-common@2.9.34
+  - @prosopo/procaptcha-pow@2.8.42
+  - @prosopo/procaptcha-react@2.9.41
+
 ## 3.3.16
 ### Patch Changes
 

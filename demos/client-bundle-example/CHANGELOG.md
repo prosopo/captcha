@@ -1,5 +1,11 @@
 # @prosopo/client-bundle-example
 
+## 2.10.14
+### Patch Changes
+
+- 676c5f2: Use HTTPS in developmentwq
+- c1d738f: Update env for tests
+
 ## 2.10.13
 ### Patch Changes
 

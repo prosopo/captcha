@@ -1,5 +1,14 @@
 # @prosopo/types
 
+## 3.12.0
+### Minor Changes
+
+- feaca02: Max image rounds
+
+### Patch Changes
+
+- 676c5f2: Use HTTPS in developmentwq
+
 ## 3.11.1
 ### Patch Changes
 
