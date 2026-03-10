@@ -97,7 +97,6 @@ export class FrictionlessManager extends CaptchaManager {
 			geolocation: params.geolocation,
 			countryCode: params.countryCode,
 			headers: params.headers,
-			triggeredDetectors: params.triggeredDetectors,
 		};
 	}
 
@@ -132,7 +131,6 @@ export class FrictionlessManager extends CaptchaManager {
 		deleted?: boolean,
 		countryCode?: string,
 		headers?: RequestHeaders,
-		triggeredDetectors?: number[],
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
@@ -156,7 +154,6 @@ export class FrictionlessManager extends CaptchaManager {
 			deleted,
 			countryCode,
 			headers,
-			triggeredDetectors,
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);
@@ -170,14 +167,15 @@ export class FrictionlessManager extends CaptchaManager {
 		);
 
 		const domain = new URL(chosen.provider.url).hostname;
+		const configDomain =  this.config.host.indexOf('http') > -1 ? new URL(this.config.host).hostname : this.config.host;
 		this.logger.info(() => ({
 			data: { entropy, host: this.config.host, domain },
 		}));
 
-		if (domain !== this.config.host) {
+		if (domain !== configDomain) {
 			this.logger.info(() => ({
 				msg: "Host mismatch",
-				data: { expected: this.config.host, got: domain, entropy },
+				data: { expected: configDomain, got: domain, entropy },
 			}));
 			return { verified: false, domain };
 		}
@@ -223,7 +221,6 @@ export class FrictionlessManager extends CaptchaManager {
 			undefined,
 			effectiveParams.countryCode,
 			effectiveParams.headers,
-			effectiveParams.triggeredDetectors,
 		);
 
 		return {
@@ -271,7 +268,6 @@ export class FrictionlessManager extends CaptchaManager {
 			undefined,
 			effectiveParams.countryCode,
 			effectiveParams.headers,
-			effectiveParams.triggeredDetectors,
 		);
 		return {
 			[ApiParams.captchaType]: CaptchaType.pow,
@@ -318,7 +314,6 @@ export class FrictionlessManager extends CaptchaManager {
 			true,
 			effectiveParams.countryCode,
 			effectiveParams.headers,
-			effectiveParams.triggeredDetectors,
 		);
 	}
 
@@ -485,8 +480,20 @@ export class FrictionlessManager extends CaptchaManager {
 						userAgent: u,
 						webView: w,
 						iFrame: i,
+						triggeredDetectors: td,
 					},
 				}));
+				console.log({
+						key: this.redactKeyForLogging(key),
+						baseBotScore: s,
+						timestamp: t,
+						entropy: p,
+						userId: a,
+						userAgent: u,
+						webView: w,
+						iFrame: i,
+						triggeredDetectors: td,
+					})
 				baseBotScore = s;
 				timestamp = t;
 				providerSelectEntropy = p;

@@ -384,7 +384,6 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	geolocation: { type: String, required: false },
 	countryCode: { type: String, required: false },
 	headers: { type: Object, required: false },
-	triggeredDetectors: { type: [Number], required: false },
 } satisfies AllKeys<Session>);
 
 SessionRecordSchema.index({ createdAt: 1 });

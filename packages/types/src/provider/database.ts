@@ -265,7 +265,6 @@ export const SessionSchema = object({
 	countryCode: string().optional(),
 	geolocation: string().optional(),
 	headers: object({}).catchall(string()),
-	triggeredDetectors: array(number()).optional(),
 }) satisfies ZodType<Session>;
 
 // Session now includes all frictionless token fields
@@ -294,7 +293,6 @@ export type Session = {
 	countryCode?: string;
 	geolocation?: string;
 	headers?: RequestHeaders;
-	triggeredDetectors?: number[];
 };
 
 // Zod schema for PoWCaptchaStored

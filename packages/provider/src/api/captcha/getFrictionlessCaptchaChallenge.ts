@@ -284,7 +284,6 @@ export default (
 				siteKey: dapp,
 				countryCode,
 				headers: flatHeaders,
-				triggeredDetectors,
 			});
 
 			// Check if the IP address is blocked
