@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/dotenv",
-	"version": "3.0.33",
+	"version": "3.0.34",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"exports": {
@@ -28,7 +28,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@prosopo/common": "3.1.28",
+		"@prosopo/common": "3.1.29",
 		"dotenv": "16.4.5"
 	},
 	"devDependencies": {

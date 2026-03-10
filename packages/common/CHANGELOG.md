@@ -1,5 +1,10 @@
 # @prosopo/common
 
+## 3.1.29
+### Patch Changes
+
+- c5ee492: fix/portal-traffic-report
+
 ## 3.1.28
 ### Patch Changes
 
