@@ -1,5 +1,10 @@
 # @prosopo/provider
 
+## 3.21.2
+### Patch Changes
+
+- f5c8725: Fix bug with chrome on ios
+
 ## 3.21.1
 ### Patch Changes
 

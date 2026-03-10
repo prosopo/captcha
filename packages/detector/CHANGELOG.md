@@ -1,5 +1,10 @@
 # @prosopo/detector
 
+## 3.4.16
+### Patch Changes
+
+- f5c8725: Fix bug with chrome on ios
+
 ## 3.4.15
 ### Patch Changes
 

@@ -24,7 +24,7 @@
 		"typecheck": "tsc --project tsconfig.types.json",
 		"start": "NODE_ENV=${NODE_ENV:-development}; vite serve ./src --port 9232 --config vite.config.ts --mode=$NODE_ENV"
 	},
-	"version": "2.10.14",
+	"version": "2.10.15",
 	"devDependencies": {
 		"@emotion/cache": "11.11.0",
 		"@prosopo/config": "3.3.0",
