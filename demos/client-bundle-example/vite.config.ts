@@ -99,7 +99,7 @@ export default defineConfig(({ command, mode }) => {
 
 	return {
 		watch: false,
-		mode: "development",
+		mode,
 		server: {
 			host: true,
 			cors: true,
