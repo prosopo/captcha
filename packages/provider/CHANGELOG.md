@@ -1,5 +1,25 @@
 # @prosopo/provider
 
+## 3.21.1
+### Patch Changes
+
+- a90eb54: We know WHAT happens but we don't know WHY happens
+- Updated dependencies [c5ee492]
+- Updated dependencies [a90eb54]
+  - @prosopo/common@3.1.29
+  - @prosopo/types-database@4.4.7
+  - @prosopo/types@3.12.1
+  - @prosopo/api-express-router@3.0.63
+  - @prosopo/api-route@2.6.37
+  - @prosopo/database@3.9.7
+  - @prosopo/datasets@3.1.6
+  - @prosopo/env@3.3.8
+  - @prosopo/keyring@2.9.12
+  - @prosopo/load-balancer@2.8.29
+  - @prosopo/types-env@2.8.8
+  - @prosopo/user-access-policy@3.6.13
+  - @prosopo/api@3.2.3
+
 ## 3.21.0
 ### Minor Changes
 

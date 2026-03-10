@@ -1,5 +1,15 @@
 # @prosopo/types-database
 
+## 4.4.7
+### Patch Changes
+
+- a90eb54: We know WHAT happens but we don't know WHY happens
+- Updated dependencies [c5ee492]
+- Updated dependencies [a90eb54]
+  - @prosopo/common@3.1.29
+  - @prosopo/types@3.12.1
+  - @prosopo/user-access-policy@3.6.13
+
 ## 4.4.6
 ### Patch Changes
 
