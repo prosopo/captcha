@@ -13,7 +13,6 @@
 // limitations under the License.
 import fs from "node:fs";
 import path from "node:path";
-import type { Logger } from "@prosopo/common";
 import { fetchWithETag } from "./fetchWithEtag.js";
 
 export const ensureDirExists = (cacheDir: string): void => {
@@ -118,10 +117,17 @@ export function getCachedFilePath(
 	return filePath ? path.join(cacheDir, filePath) : null;
 }
 
+type LogObj = (msg: () => { msg: string }) => void;
+
 export const cacheFile = async (
 	cacheDir: string,
 	url: string,
-	logger: Logger,
+	logger: {
+		debug: LogObj;
+		info: LogObj;
+		warn: LogObj;
+		error: LogObj;
+	},
 	filePrefix: `${string}-`,
 	fileType: `.${string}` = ".txt",
 ) => {
