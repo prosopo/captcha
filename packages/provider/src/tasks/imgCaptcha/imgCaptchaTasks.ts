@@ -567,6 +567,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		disallowWebView?: boolean,
 		contextAwareEnabled = false,
 		userAccessRulesStorage?: AccessRulesStorage,
+		email?: string,
 	): Promise<ImageVerificationResponse> {
 		const solution = await (commitmentId
 			? this.getDappUserCommitmentById(commitmentId)
@@ -649,6 +650,31 @@ export class ImgCaptchaManager extends CaptchaManager {
 			} catch (error) {
 				this.logger.warn(() => ({
 					msg: "Failed to check user access policies in server Image verification",
+					error,
+				}));
+			}
+		}
+
+		// Check email domain against spam list if email is provided
+		if (email) {
+			try {
+				const isSpam = await this.checkSpamEmail(email);
+				if (isSpam) {
+					this.logger.info(() => ({
+						msg: "Spam email domain detected in server image verification",
+						data: { commitmentId, dapp, email },
+					}));
+					if (commitmentId) {
+						await this.db.disapproveDappUserCommitment(
+							commitmentId,
+							"API.SPAM_EMAIL_DOMAIN",
+						);
+					}
+					return { status: "API.USER_NOT_VERIFIED", verified: false };
+				}
+			} catch (error) {
+				this.logger.warn(() => ({
+					msg: "Failed to check spam email domain in server image verification",
 					error,
 				}));
 			}

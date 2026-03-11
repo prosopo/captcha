@@ -385,6 +385,29 @@ export class CaptchaManager {
 		return findHardBlockPolicy(accessPolicies);
 	}
 
+	/**
+	 * Checks if the provided email address has a domain in the spam email domain list.
+	 * Returns true if the email domain is spam (i.e. should be blocked), false otherwise.
+	 */
+	async checkSpamEmail(email: string): Promise<boolean> {
+		const parts = email.split("@");
+		const domain = parts[1];
+		if (!domain) {
+			return true;
+		}
+		try {
+			const record = await this.db.getSpamEmailDomain(domain.toLowerCase());
+			return record !== null;
+		} catch (error) {
+			this.logger.warn(() => ({
+				msg: "Failed to check spam email domain",
+				error,
+				email,
+			}));
+			return false;
+		}
+	}
+
 	static canClientSeeScore(tier: Tier, score?: number) {
 		return score && tier && tier !== Tier.Free;
 	}
