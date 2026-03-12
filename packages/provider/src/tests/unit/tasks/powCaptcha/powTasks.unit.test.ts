@@ -2144,13 +2144,12 @@ module.exports = (input) => {
 			// biome-ignore lint/suspicious/noExplicitAny: test mock
 			(db.updateSessionRecord as any) = vi.fn().mockResolvedValue(undefined);
 
-			const result =
-				await powCaptchaManager.serverVerifyPowCaptchaSolution(
-					dappAccount,
-					challenge,
-					1000,
-					mockEnv,
-				);
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				1000,
+				mockEnv,
+			);
 
 			expect(result.verified).toBe(true);
 			expect(db.updateSessionRecord).toHaveBeenCalledWith(sessionId, {
@@ -2185,13 +2184,12 @@ module.exports = (input) => {
 			// biome-ignore lint/suspicious/noExplicitAny: test mock
 			(db.updateSessionRecord as any) = vi.fn().mockResolvedValue(undefined);
 
-			const result =
-				await powCaptchaManager.serverVerifyPowCaptchaSolution(
-					dappAccount,
-					challenge,
-					1000,
-					mockEnv,
-				);
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				1000,
+				mockEnv,
+			);
 
 			expect(result.verified).toBe(false);
 			expect(db.updateSessionRecord).toHaveBeenCalledWith(sessionId, {

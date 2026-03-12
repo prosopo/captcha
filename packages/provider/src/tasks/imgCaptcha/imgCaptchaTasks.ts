@@ -806,10 +806,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 						const dmReason =
 							decision.reason || "CAPTCHA.DECISION_MACHINE_DENIED";
 						// commitmentId should always be present
-						await this.db.disapproveDappUserCommitment(
-							commitmentId,
-							dmReason,
-						);
+						await this.db.disapproveDappUserCommitment(commitmentId, dmReason);
 						// log
 						this.logger?.info(() => ({
 							msg: "Decision machine denied user verification",
