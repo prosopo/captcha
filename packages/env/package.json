@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/env",
-	"version": "3.3.8",
+	"version": "3.3.9",
 	"description": "Path env prosopo environment",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -27,11 +27,11 @@
 	},
 	"dependencies": {
 		"@maxmind/geoip2-node": "5.0.0",
-		"@prosopo/common": "3.1.29",
-		"@prosopo/database": "3.9.7",
-		"@prosopo/keyring": "2.9.12",
-		"@prosopo/types": "3.12.1",
-		"@prosopo/types-env": "2.8.8",
+		"@prosopo/common": "3.1.30",
+		"@prosopo/database": "3.9.8",
+		"@prosopo/keyring": "2.9.13",
+		"@prosopo/types": "3.12.2",
+		"@prosopo/types-env": "2.8.9",
 		"@prosopo/util-crypto": "13.5.29",
 		"dotenv": "16.4.5"
 	},

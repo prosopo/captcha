@@ -1,5 +1,13 @@
 # @prosopo/datasets
 
+## 3.1.7
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/types@3.12.2
+  - @prosopo/util@3.2.6
+  - @prosopo/common@3.1.30
+
 ## 3.1.6
 ### Patch Changes
 

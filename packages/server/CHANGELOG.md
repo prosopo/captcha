@@ -1,5 +1,17 @@
 # @prosopo/server
 
+## 2.9.65
+### Patch Changes
+
+- adb89a6: Disposable email checking
+- Updated dependencies [adb89a6]
+  - @prosopo/types@3.12.2
+  - @prosopo/util@3.2.6
+  - @prosopo/api@3.2.4
+  - @prosopo/common@3.1.30
+  - @prosopo/keyring@2.9.13
+  - @prosopo/load-balancer@2.8.30
+
 ## 2.9.64
 ### Patch Changes
 

@@ -1,5 +1,27 @@
 # @prosopo/provider
 
+## 3.21.3
+### Patch Changes
+
+- dbcd098: Fix bug with chrome on ios
+- adb89a6: Disposable email checking
+- Updated dependencies [adb89a6]
+  - @prosopo/types-database@4.4.8
+  - @prosopo/database@3.9.8
+  - @prosopo/locale@3.1.29
+  - @prosopo/types@3.12.2
+  - @prosopo/util@3.2.6
+  - @prosopo/api@3.2.4
+  - @prosopo/types-env@2.8.9
+  - @prosopo/env@3.3.9
+  - @prosopo/api-express-router@3.0.64
+  - @prosopo/common@3.1.30
+  - @prosopo/datasets@3.1.7
+  - @prosopo/keyring@2.9.13
+  - @prosopo/load-balancer@2.8.30
+  - @prosopo/user-access-policy@3.6.14
+  - @prosopo/api-route@2.6.38
+
 ## 3.21.2
 ### Patch Changes
 
