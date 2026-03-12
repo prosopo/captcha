@@ -660,9 +660,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 			try {
 				const isSpam = await this.checkSpamEmail(email);
 				if (isSpam) {
+					const emailDomain = email.split("@")[1] || "unknown";
 					this.logger.info(() => ({
 						msg: "Spam email domain detected in server image verification",
-						data: { commitmentId, dapp, email },
+						data: { commitmentId, dapp, emailDomain },
 					}));
 					if (commitmentId) {
 						await this.db.disapproveDappUserCommitment(

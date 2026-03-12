@@ -380,9 +380,10 @@ export class PowCaptchaManager extends CaptchaManager {
 			try {
 				const isSpam = await this.checkSpamEmail(email);
 				if (isSpam) {
+					const emailDomain = email.split("@")[1] || "unknown";
 					this.logger.info(() => ({
 						msg: "Spam email domain detected in server PoW verification",
-						data: { challenge, dappAccount, email },
+						data: { challenge, dappAccount, emailDomain },
 					}));
 					await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
 						result: {

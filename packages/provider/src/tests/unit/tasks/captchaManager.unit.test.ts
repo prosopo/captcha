@@ -698,19 +698,38 @@ describe("CaptchaManager", () => {
 			vi.clearAllMocks();
 		});
 
-		it("should return true when email domain is missing (invalid email format)", async () => {
+		it("should check database for single-word domains without @", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getSpamEmailDomain as any).mockResolvedValue(null);
+
 			const result = await captchaManager.checkSpamEmail("invalid-email");
-			expect(result).toBe(true);
-			expect(db.getSpamEmailDomain).not.toHaveBeenCalled();
+			expect(result).toBe(false);
+			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("invalid-email");
 		});
 
-		it("should return true when email has no @ symbol", async () => {
-			const result = await captchaManager.checkSpamEmail("notemail.com");
+		it("should handle domain-only format (without @)", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getSpamEmailDomain as any).mockResolvedValue({
+				domain: "spammydomain.com",
+			});
+
+			const result = await captchaManager.checkSpamEmail("spammydomain.com");
 			expect(result).toBe(true);
-			expect(db.getSpamEmailDomain).not.toHaveBeenCalled();
+			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("spammydomain.com");
 		});
 
-		it("should return true when email domain is in spam list", async () => {
+		it("should handle @domain.com format", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getSpamEmailDomain as any).mockResolvedValue({
+				domain: "spammydomain.com",
+			});
+
+			const result = await captchaManager.checkSpamEmail("@spammydomain.com");
+			expect(result).toBe(true);
+			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("spammydomain.com");
+		});
+
+		it("should handle user@domain.com format", async () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.getSpamEmailDomain as any).mockResolvedValue({
 				domain: "spammydomain.com",
@@ -773,19 +792,18 @@ describe("CaptchaManager", () => {
 			expect(logger.warn).toHaveBeenCalled();
 		});
 
-		it("should treat email with multiple @ symbols as invalid", async () => {
+		it("should handle email with multiple @ symbols by taking last part", async () => {
 			// Emails cannot have more than one @ symbol per RFC 5321
-			// The current implementation splits on @ and takes parts[1]
-			// For "user@name@example.com", parts[1] would be "name" (not a valid domain)
+			// The current implementation splits on @ and takes the last part
+			// For "user@name@example.com", the last part is "example.com"
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.getSpamEmailDomain as any).mockResolvedValue(null);
 
 			const result = await captchaManager.checkSpamEmail(
 				"user@name@example.com",
 			);
-			// Even though this is invalid email format, the implementation will check "name"
 			expect(result).toBe(false);
-			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("name");
+			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("example.com");
 		});
 
 		it("should handle email with trailing @", async () => {

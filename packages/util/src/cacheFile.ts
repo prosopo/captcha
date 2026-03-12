@@ -23,9 +23,9 @@ export const ensureDirExists = (cacheDir: string): void => {
 
 function sanitizeETagForFilename(etag: string): string {
 	// Handle W/"etag" or "etag" format
-	// Remove W/ prefix and quotes, replace invalid filename characters
+	// Encode W/ prefix as W_ to preserve weak ETag indicator, remove quotes, replace invalid filename characters
 	return etag
-		.replace(/^W\//, "") // Remove W/ prefix
+		.replace(/^W\//, "W_") // Encode W/ prefix as W_ to preserve weak ETag indicator
 		.replace(/"/g, "") // Remove quotes
 		.replace(/[/\\:*?"<>|]/g, "_"); // Replace invalid filename characters with underscore
 }

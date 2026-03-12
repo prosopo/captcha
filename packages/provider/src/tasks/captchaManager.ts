@@ -388,15 +388,37 @@ export class CaptchaManager {
 	/**
 	 * Checks if the provided email address has a domain in the spam email domain list.
 	 * Returns true if the email domain is spam (i.e. should be blocked), false otherwise.
+	 * Handles formats: user@domain.com, @domain.com, domain.com
 	 */
 	async checkSpamEmail(email: string): Promise<boolean> {
-		const parts = email.split("@");
-		const domain = parts[1];
-		if (!domain) {
-			return true;
+		// Trim whitespace
+		const trimmedEmail = email.trim();
+
+		if (!trimmedEmail) {
+			return true; // Empty email is spam
 		}
+
+		// Extract domain from email
+		let domain: string;
+		if (trimmedEmail.includes("@")) {
+			// Handle user@domain.com or @domain.com
+			const parts = trimmedEmail.split("@");
+			// Take the last part after @ (handles multiple @ signs)
+			domain = parts[parts.length - 1] || "";
+		} else {
+			// Handle domain.com directly
+			domain = trimmedEmail;
+		}
+
+		// Validate domain is not empty
+		if (!domain || domain.trim() === "") {
+			return true; // Invalid domain is spam
+		}
+
 		try {
-			const record = await this.db.getSpamEmailDomain(domain.toLowerCase());
+			const record = await this.db.getSpamEmailDomain(
+				domain.toLowerCase().trim(),
+			);
 			return record !== null;
 		} catch (error) {
 			this.logger.warn(() => ({
