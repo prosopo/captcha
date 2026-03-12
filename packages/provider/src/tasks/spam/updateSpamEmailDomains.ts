@@ -17,7 +17,7 @@ import { ScheduledTaskNames, ScheduledTaskStatus } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { cacheFile, validateDomain } from "@prosopo/util";
 
-const CACHE_FILE_PREFIX = "spam-email-domains-";
+const CACHE_FILE_PREFIX = "spam-email-domains";
 const CACHE_FILE_TYPE = ".txt";
 
 export const updateSpamEmailDomains = async (
