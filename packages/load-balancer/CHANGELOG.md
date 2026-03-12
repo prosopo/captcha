@@ -1,5 +1,12 @@
 # @prosopo/load-balancer
 
+## 2.8.30
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/types@3.12.2
+  - @prosopo/common@3.1.30
+
 ## 2.8.29
 ### Patch Changes
 

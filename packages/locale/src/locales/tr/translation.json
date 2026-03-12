@@ -21,6 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Erişim politika tarafından engellendi",
 		"FORBIDDEN": "Forbidden",
 		"PROVIDER_VERIFY_FAILED": "Provider verification failed",
+		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
 		"UNAUTHORIZED": "Yetkisiz",
 		"MISSING_BODY": "Eksik gövde",
 		"NO_CONTENT_TYPE_HEADER": "İçerik tipi başlığı yok. JSON kodlu gövde varsayılmış ancak ayrıştırılamadı.",

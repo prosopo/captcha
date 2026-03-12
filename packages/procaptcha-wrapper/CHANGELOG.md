@@ -1,5 +1,12 @@
 # @prosopo/procaptcha-wrapper
 
+## 2.6.59
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/locale@3.1.29
+  - @prosopo/types@3.12.2
+
 ## 2.6.58
 ### Patch Changes
 

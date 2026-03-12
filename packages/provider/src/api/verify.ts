@@ -86,7 +86,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			}
 
 			// We don't want to expose any other errors to the client except for specific situations
-			const { dappSignature, token, ip, maxVerifiedTime } = parsed;
+			const { dappSignature, token, ip, maxVerifiedTime, email } = parsed;
 			try {
 				// This can error if the token is invalid
 				const { user, dapp, timestamp, commitmentId } =
@@ -125,6 +125,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						clientRecord.settings.disallowWebView,
 						clientRecord.settings.contextAware?.enabled,
 						userAccessRulesStorage,
+						email,
 					);
 
 				req.logger.debug(() => ({ data: { response } }));
@@ -191,7 +192,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 
 			// We don't want to expose any other errors to the client
 			try {
-				const { token, dappSignature, verifiedTimeout, ip } = parsed;
+				const { token, dappSignature, verifiedTimeout, ip, email } = parsed;
 
 				// This can error if the token is invalid
 				const { dapp, user, timestamp, challenge } =
@@ -235,6 +236,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						env,
 						ip,
 						userAccessRulesStorage,
+						email,
 					);
 
 				const verificationResponse: VerificationResponse =

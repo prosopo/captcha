@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/util",
-	"version": "3.2.5",
+	"version": "3.2.6",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
@@ -22,7 +22,7 @@
 	"type": "module",
 	"exports": {
 		".": {
-			"types": "dist/index.d.ts",
+			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js",
 			"require": "./dist/cjs/index.cjs"
 		},
@@ -36,7 +36,6 @@
 	"types": "dist/index.d.ts",
 	"dependencies": {
 		"@noble/hashes": "1.8.0",
-		"dotenv": "16.4.5",
 		"ip-address": "10.0.1",
 		"lodash": "4.17.21",
 		"seedrandom": "3.0.5"
@@ -49,6 +48,7 @@
 		"@vitest/coverage-v8": "3.2.4",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
+		"dotenv": "16.4.5",
 		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",

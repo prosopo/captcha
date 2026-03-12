@@ -58,6 +58,7 @@ import { type Document, type Model, type ObjectId, Schema } from "mongoose";
 import { any, date, nativeEnum, object, type infer as zInfer } from "zod";
 import { UserSettingsSchema } from "./client.js";
 import type { IDatabase } from "./mongo.js";
+import type { SpamEmailDomainRecord } from "./spamEmailDomain.js";
 
 export type IUserDataSlim = Pick<IUserData, "account" | "settings" | "tier">;
 
@@ -748,4 +749,11 @@ export interface IProviderDatabase extends IDatabase {
 		siteKey: string,
 		contextType: ContextType,
 	): Promise<string[]>;
+
+	getSpamEmailDomain(domain: string): Promise<SpamEmailDomainRecord | null>;
+
+	bulkUpdateSpamEmailDomains(
+		domains: Array<{ filter: { domain: string }; update: { domain: string } }>,
+		upsert: boolean,
+	): Promise<void>;
 }

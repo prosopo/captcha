@@ -294,6 +294,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		env: ProviderEnvironment,
 		ip?: string,
 		userAccessRulesStorage?: AccessRulesStorage,
+		email?: string,
 	): Promise<{ verified: boolean; score?: number }> {
 		const notVerifiedResponse = { verified: false };
 
@@ -398,6 +399,32 @@ export class PowCaptchaManager extends CaptchaManager {
 			} catch (error) {
 				this.logger.warn(() => ({
 					msg: "Failed to check user access policies in server PoW verification",
+					error,
+				}));
+			}
+		}
+
+		// Check email domain against spam list if email is provided
+		if (email) {
+			try {
+				const isSpam = await this.checkSpamEmail(email);
+				if (isSpam) {
+					const emailDomain = email.split("@")[1] || "unknown";
+					this.logger.info(() => ({
+						msg: "Spam email domain detected in server PoW verification",
+						data: { challenge, dappAccount, emailDomain },
+					}));
+					await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
+						result: {
+							status: CaptchaStatus.disapproved,
+							reason: "API.SPAM_EMAIL_DOMAIN",
+						},
+					});
+					return notVerifiedResponse;
+				}
+			} catch (error) {
+				this.logger.warn(() => ({
+					msg: "Failed to check spam email domain in server PoW verification",
 					error,
 				}));
 			}

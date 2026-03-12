@@ -320,6 +320,7 @@
 		"ACCESS_POLICY_BLOCK": "नीति द्वारा पहुंच अवरुद्ध",
 		"FORBIDDEN": "नषध",
 		"PROVIDER_VERIFY_FAILED": "परदत सतयपन वफल हआ",
+		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
 		"UNAUTHORIZED": "अनधकत",
 		"MISSING_BODY": "शरर गयब ह",
 		"NO_CONTENT_TYPE_HEADER": "कई समगर परकर शरषक नह ह। मन गय JSON एनकड ह सकत ह लकन टकड करन म असफल।",

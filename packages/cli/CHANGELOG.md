@@ -1,5 +1,21 @@
 # @prosopo/cli
 
+## 3.6.3
+### Patch Changes
+
+- adb89a6: Disposable email checking
+- Updated dependencies [dbcd098]
+- Updated dependencies [adb89a6]
+  - @prosopo/provider@3.21.3
+  - @prosopo/locale@3.1.29
+  - @prosopo/types@3.12.2
+  - @prosopo/util@3.2.6
+  - @prosopo/api@3.2.4
+  - @prosopo/env@3.3.9
+  - @prosopo/common@3.1.30
+  - @prosopo/keyring@2.9.13
+  - @prosopo/dotenv@3.0.35
+
 ## 3.6.2
 ### Patch Changes
 

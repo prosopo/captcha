@@ -1,5 +1,18 @@
 # @prosopo/procaptcha-bundle
 
+## 3.3.20
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/locale@3.1.29
+  - @prosopo/types@3.12.2
+  - @prosopo/util@3.2.6
+  - @prosopo/procaptcha-frictionless@2.8.51
+  - @prosopo/procaptcha-pow@2.8.44
+  - @prosopo/procaptcha-react@2.9.43
+  - @prosopo/procaptcha-common@2.9.36
+  - @prosopo/dotenv@3.0.35
+
 ## 3.3.19
 ### Patch Changes
 

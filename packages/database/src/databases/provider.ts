@@ -72,6 +72,8 @@ import {
 	ScheduledTaskSchema,
 	SessionRecordSchema,
 	SolutionRecordSchema,
+	type SpamEmailDomainRecord,
+	SpamEmailDomainRecordSchema,
 	type Tables,
 	type UserCommitmentRecord,
 	UserCommitmentRecordSchema,
@@ -101,6 +103,7 @@ enum TableNames {
 	detector = "detector",
 	decisionMachine = "decisionMachine",
 	clientContextEntropy = "clientContextEntropy",
+	spamEmailDomain = "spamEmailDomain",
 }
 
 const PROVIDER_TABLES = [
@@ -163,6 +166,11 @@ const PROVIDER_TABLES = [
 		collectionName: TableNames.clientContextEntropy,
 		modelName: "ClientContextEntropy",
 		schema: ClientContextEntropyRecordSchema,
+	},
+	{
+		collectionName: TableNames.spamEmailDomain,
+		modelName: "SpamEmailDomain",
+		schema: SpamEmailDomainRecordSchema,
 	},
 ];
 
@@ -2145,5 +2153,41 @@ export class ProviderDatabase
 				}),
 			)
 		).filter((headHash): headHash is string => headHash !== undefined);
+	}
+
+	async getSpamEmailDomain(
+		domain: string,
+	): Promise<SpamEmailDomainRecord | null> {
+		if (!this.tables?.spamEmailDomain) {
+			throw new ProsopoDBError("DATABASE.DATABASE_IMPORT_ERROR", {
+				context: { failedFuncName: this.getSpamEmailDomain.name },
+			});
+		}
+		return this.tables.spamEmailDomain
+			.findOne({ domain })
+			.exec() as Promise<SpamEmailDomainRecord | null>;
+	}
+
+	async bulkUpdateSpamEmailDomains(
+		domains: Array<{ filter: { domain: string }; update: { domain: string } }>,
+		upsert: boolean,
+	): Promise<void> {
+		if (!this.tables?.spamEmailDomain) {
+			throw new ProsopoDBError("DATABASE.DATABASE_IMPORT_ERROR", {
+				context: { failedFuncName: this.bulkUpdateSpamEmailDomains.name },
+			});
+		}
+
+		const bulkOps = domains.map((op) => ({
+			updateOne: {
+				filter: op.filter,
+				update: { $set: op.update },
+				upsert,
+			},
+		}));
+
+		if (bulkOps.length > 0) {
+			await this.tables.spamEmailDomain.bulkWrite(bulkOps);
+		}
 	}
 }

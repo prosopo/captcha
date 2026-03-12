@@ -1,5 +1,12 @@
 # @prosopo/detector
 
+## 3.4.17
+### Patch Changes
+
+- dbcd098: Fix bug with chrome on ios
+- Updated dependencies [adb89a6]
+  - @prosopo/types@3.12.2
+
 ## 3.4.16
 ### Patch Changes
 
