@@ -169,6 +169,7 @@ describe("ImgCaptchaManager", () => {
 			getDappUserCommitmentByAccount: vi.fn(),
 			markDappUserCommitmentsChecked: vi.fn(),
 			getSessionRecordBySessionId: vi.fn(),
+			updateSessionRecord: vi.fn(),
 		} as unknown as IProviderDatabase;
 
 		pair = {
@@ -751,6 +752,182 @@ describe("ImgCaptchaManager", () => {
 			);
 
 			// Restore original decision machine
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(imgCaptchaManager as any).decisionMachineRunner.decide = originalDecide;
+		});
+	});
+
+	describe("session result tracking for verifyImageCaptchaSolution", () => {
+		const ipAddress = getIPAddress("1.1.1.1");
+		const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
+		const sessionId = "test-session-for-result";
+
+		it("should update session as serverChecked and approved on successful verification", async () => {
+			const userAccount = "userAccount";
+			const dappAccount = "dappAccount";
+			const commitmentId = "commitmentId";
+
+			const commitment: Partial<UserCommitment> = {
+				id: commitmentId,
+				userAccount,
+				dappAccount,
+				result: { status: CaptchaStatus.approved },
+				userSubmitted: true,
+				serverChecked: false,
+				requestedAtTimestamp: new Date(),
+				ipAddress: {
+					lower: ipAddress.bigInt(),
+					upper: 0n,
+					type: IpAddressType.v4,
+				},
+				headers,
+				ja4: "ja4",
+				lastUpdatedTimestamp: new Date(),
+				sessionId,
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getDappUserCommitmentById as any).mockResolvedValue(commitment);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getSessionRecordBySessionId as any).mockResolvedValue(undefined);
+
+			// Mock decision machine to allow
+			const originalDecide =
+				// biome-ignore lint/suspicious/noExplicitAny: tests
+				(imgCaptchaManager as any).decisionMachineRunner.decide;
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(imgCaptchaManager as any).decisionMachineRunner.decide = vi
+				.fn()
+				.mockResolvedValue({ decision: "allow" });
+
+			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
+				userAccount,
+				dappAccount,
+				commitmentId,
+				mockEnv,
+			);
+
+			expect(result.verified).toBe(true);
+			expect(db.updateSessionRecord).toHaveBeenCalledWith(sessionId, {
+				serverChecked: true,
+				result: { status: CaptchaStatus.approved },
+			});
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(imgCaptchaManager as any).decisionMachineRunner.decide = originalDecide;
+		});
+
+		it("should update session as serverChecked and disapproved when decision machine denies", async () => {
+			const userAccount = "userAccount";
+			const dappAccount = "dappAccount";
+			const commitmentId = "commitmentId";
+
+			const commitment: Partial<UserCommitment> = {
+				id: commitmentId,
+				userAccount,
+				dappAccount,
+				result: { status: CaptchaStatus.approved },
+				userSubmitted: true,
+				serverChecked: false,
+				requestedAtTimestamp: new Date(),
+				ipAddress: {
+					lower: ipAddress.bigInt(),
+					upper: 0n,
+					type: IpAddressType.v4,
+				},
+				headers,
+				ja4: "ja4",
+				lastUpdatedTimestamp: new Date(),
+				sessionId,
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getDappUserCommitmentById as any).mockResolvedValue(commitment);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getSessionRecordBySessionId as any).mockResolvedValue(undefined);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.disapproveDappUserCommitment as any) = vi
+				.fn()
+				.mockResolvedValue(undefined);
+
+			// Mock decision machine to deny
+			const originalDecide =
+				// biome-ignore lint/suspicious/noExplicitAny: tests
+				(imgCaptchaManager as any).decisionMachineRunner.decide;
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(imgCaptchaManager as any).decisionMachineRunner.decide = vi
+				.fn()
+				.mockResolvedValue({
+					decision: "deny",
+					reason: "Suspicious",
+				});
+
+			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
+				userAccount,
+				dappAccount,
+				commitmentId,
+				mockEnv,
+			);
+
+			expect(result.verified).toBe(false);
+			expect(db.updateSessionRecord).toHaveBeenCalledWith(sessionId, {
+				serverChecked: true,
+				result: {
+					status: CaptchaStatus.disapproved,
+					reason: "Suspicious",
+				},
+			});
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(imgCaptchaManager as any).decisionMachineRunner.decide = originalDecide;
+		});
+
+		it("should not update session when commitment has no sessionId", async () => {
+			const userAccount = "userAccount";
+			const dappAccount = "dappAccount";
+			const commitmentId = "commitmentId";
+
+			const commitment: Partial<UserCommitment> = {
+				id: commitmentId,
+				userAccount,
+				dappAccount,
+				result: { status: CaptchaStatus.approved },
+				userSubmitted: true,
+				serverChecked: false,
+				requestedAtTimestamp: new Date(),
+				ipAddress: {
+					lower: ipAddress.bigInt(),
+					upper: 0n,
+					type: IpAddressType.v4,
+				},
+				headers,
+				ja4: "ja4",
+				lastUpdatedTimestamp: new Date(),
+				// No sessionId
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getDappUserCommitmentById as any).mockResolvedValue(commitment);
+
+			// Mock decision machine to allow
+			const originalDecide =
+				// biome-ignore lint/suspicious/noExplicitAny: tests
+				(imgCaptchaManager as any).decisionMachineRunner.decide;
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(imgCaptchaManager as any).decisionMachineRunner.decide = vi
+				.fn()
+				.mockResolvedValue({ decision: "allow" });
+
+			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
+				userAccount,
+				dappAccount,
+				commitmentId,
+				mockEnv,
+			);
+
+			expect(result.verified).toBe(true);
+			expect(db.updateSessionRecord).not.toHaveBeenCalled();
+
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(imgCaptchaManager as any).decisionMachineRunner.decide = originalDecide;
 		});

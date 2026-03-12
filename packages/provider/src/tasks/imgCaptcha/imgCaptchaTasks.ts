@@ -391,6 +391,15 @@ export class ImgCaptchaManager extends CaptchaManager {
 					"CAPTCHA.INVALID_SOLUTION",
 					pairs,
 				);
+				if (pendingRecord.sessionId) {
+					await this.db.updateSessionRecord(pendingRecord.sessionId, {
+						userSubmitted: true,
+						result: {
+							status: CaptchaStatus.disapproved,
+							reason: "CAPTCHA.INVALID_SOLUTION",
+						},
+					});
+				}
 				response = {
 					captchas: captchaIds.map((id) => ({
 						captchaId: id,
@@ -417,12 +426,27 @@ export class ImgCaptchaManager extends CaptchaManager {
 					verified: true,
 				};
 				await this.db.approveDappUserCommitment(commitmentId, pairs);
+				if (pendingRecord.sessionId) {
+					await this.db.updateSessionRecord(pendingRecord.sessionId, {
+						userSubmitted: true,
+						result: { status: CaptchaStatus.approved },
+					});
+				}
 			} else {
 				await this.db.disapproveDappUserCommitment(
 					commitmentId,
 					"CAPTCHA.INVALID_SOLUTION",
 					pairs,
 				);
+				if (pendingRecord.sessionId) {
+					await this.db.updateSessionRecord(pendingRecord.sessionId, {
+						userSubmitted: true,
+						result: {
+							status: CaptchaStatus.disapproved,
+							reason: "CAPTCHA.INVALID_SOLUTION",
+						},
+					});
+				}
 				response = {
 					captchas: captchaIds.map((id) => ({
 						captchaId: id,
@@ -628,19 +652,26 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 				if (blockPolicy) {
 					this.logger.info(() => ({
-						msg: "User blocked by access policy in server PoW verification",
+						msg: "User blocked by access policy in server image verification",
 						data: {
 							userAccount: solution.userAccount,
 							dappAccount: solution.dappAccount,
 							policy: blockPolicy,
 						},
 					}));
+					const blockedResult = {
+						status: CaptchaStatus.disapproved,
+						reason: "API.ACCESS_POLICY_BLOCK" as const,
+					};
 					await this.db.updateDappUserCommitment(solution.id, {
-						result: {
-							status: CaptchaStatus.disapproved,
-							reason: "API.ACCESS_POLICY_BLOCK",
-						},
+						result: blockedResult,
 					});
+					if (solution.sessionId) {
+						await this.db.updateSessionRecord(solution.sessionId, {
+							serverChecked: true,
+							result: blockedResult,
+						});
+					}
 					return {
 						status: "API.USER_BLOCKED",
 						verified: false,
@@ -745,10 +776,12 @@ export class ImgCaptchaManager extends CaptchaManager {
 				);
 				if (decision.decision === DecisionMachineDecision.Deny) {
 					if (commitmentId) {
+						const dmReason =
+							decision.reason || "CAPTCHA.DECISION_MACHINE_DENIED";
 						// commitmentId should always be present
 						await this.db.disapproveDappUserCommitment(
 							commitmentId,
-							decision.reason || "CAPTCHA.DECISION_MACHINE_DENIED",
+							dmReason,
 						);
 						// log
 						this.logger?.info(() => ({
@@ -758,6 +791,15 @@ export class ImgCaptchaManager extends CaptchaManager {
 								reason: decision.reason,
 							},
 						}));
+						if (solution.sessionId) {
+							await this.db.updateSessionRecord(solution.sessionId, {
+								serverChecked: true,
+								result: {
+									status: CaptchaStatus.disapproved,
+									reason: dmReason,
+								},
+							});
+						}
 						isApproved = false;
 					}
 				}
@@ -767,6 +809,14 @@ export class ImgCaptchaManager extends CaptchaManager {
 					err: error,
 				}));
 			}
+		}
+
+		// Update session with final server verification result (if not already updated by deny paths above)
+		if (isApproved && solution.sessionId) {
+			await this.db.updateSessionRecord(solution.sessionId, {
+				serverChecked: true,
+				result: { status: CaptchaStatus.approved },
+			});
 		}
 
 		return {

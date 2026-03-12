@@ -111,6 +111,7 @@ describe("PowCaptchaManager", () => {
 			markDappUserPoWCommitmentsChecked: vi.fn(),
 			getClientRecord: vi.fn(),
 			getSessionRecordBySessionId: vi.fn(),
+			updateSessionRecord: vi.fn(),
 		} as unknown as IProviderDatabase;
 
 		pair = {
@@ -1514,6 +1515,304 @@ module.exports = (input) => {
 			} finally {
 				restoreDecisionMachine();
 			}
+		});
+	});
+
+	describe("session result tracking", () => {
+		const ipAddress = getIPAddress("1.1.1.1");
+		const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
+		const sessionId = "test-session-for-result";
+
+		it("should update session with approved result after successful user submission", async () => {
+			const timestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${pair.address}`;
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				difficulty: 4,
+				dappAccount: pair.address,
+				userAccount,
+				requestedAtTimestamp: new Date(timestamp),
+				result: { status: CaptchaStatus.pending },
+				userSubmitted: false,
+				serverChecked: false,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers,
+				ja4: "ja4",
+				providerSignature: "sig",
+				lastUpdatedTimestamp: new Date(),
+				sessionId,
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: test mock
+			(verifyRecency as any).mockImplementation(() => true);
+			// biome-ignore lint/suspicious/noExplicitAny: test mock
+			(checkPowSignature as any).mockImplementation(() => true);
+			// biome-ignore lint/suspicious/noExplicitAny: test mock
+			(validateSolution as any).mockImplementation(() => true);
+			// biome-ignore lint/suspicious/noExplicitAny: test mock
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: test mock
+			(db.updatePowCaptchaRecordResult as any).mockResolvedValue(undefined);
+			// biome-ignore lint/suspicious/noExplicitAny: test mock
+			(db.updateSessionRecord as any) = vi.fn().mockResolvedValue(undefined);
+
+			await powCaptchaManager.verifyPowCaptchaSolution(
+				challenge,
+				"sig",
+				12345,
+				1000,
+				"userSig",
+				ipAddress,
+				headers,
+			);
+
+			expect(db.updateSessionRecord).toHaveBeenCalledWith(sessionId, {
+				userSubmitted: true,
+				result: { status: CaptchaStatus.approved },
+			});
+		});
+
+		it("should update session with disapproved result after failed user submission", async () => {
+			const timestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${pair.address}`;
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				difficulty: 4,
+				dappAccount: pair.address,
+				userAccount,
+				requestedAtTimestamp: new Date(timestamp),
+				result: { status: CaptchaStatus.pending },
+				userSubmitted: false,
+				serverChecked: false,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers,
+				ja4: "ja4",
+				providerSignature: "sig",
+				lastUpdatedTimestamp: new Date(),
+				sessionId,
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: test mock
+			(verifyRecency as any).mockImplementation(() => true);
+			// biome-ignore lint/suspicious/noExplicitAny: test mock
+			(checkPowSignature as any).mockImplementation(() => true);
+			// biome-ignore lint/suspicious/noExplicitAny: test mock
+			(validateSolution as any).mockImplementation(() => false);
+			// biome-ignore lint/suspicious/noExplicitAny: test mock
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: test mock
+			(db.updatePowCaptchaRecordResult as any).mockResolvedValue(undefined);
+			// biome-ignore lint/suspicious/noExplicitAny: test mock
+			(db.updateSessionRecord as any) = vi.fn().mockResolvedValue(undefined);
+
+			await powCaptchaManager.verifyPowCaptchaSolution(
+				challenge,
+				"sig",
+				12345,
+				1000,
+				"userSig",
+				ipAddress,
+				headers,
+			);
+
+			expect(db.updateSessionRecord).toHaveBeenCalledWith(sessionId, {
+				userSubmitted: true,
+				result: {
+					status: CaptchaStatus.disapproved,
+					reason: "CAPTCHA.INVALID_SOLUTION",
+				},
+			});
+		});
+
+		it("should update session with disapproved result on timeout during user submission", async () => {
+			const timestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${pair.address}`;
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				difficulty: 4,
+				dappAccount: pair.address,
+				userAccount,
+				requestedAtTimestamp: new Date(timestamp),
+				result: { status: CaptchaStatus.pending },
+				userSubmitted: false,
+				serverChecked: false,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers,
+				ja4: "ja4",
+				providerSignature: "sig",
+				lastUpdatedTimestamp: new Date(),
+				sessionId,
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: test mock
+			(verifyRecency as any).mockImplementation(() => false);
+			// biome-ignore lint/suspicious/noExplicitAny: test mock
+			(checkPowSignature as any).mockImplementation(() => true);
+			// biome-ignore lint/suspicious/noExplicitAny: test mock
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: test mock
+			(db.updatePowCaptchaRecordResult as any).mockResolvedValue(undefined);
+			// biome-ignore lint/suspicious/noExplicitAny: test mock
+			(db.updateSessionRecord as any) = vi.fn().mockResolvedValue(undefined);
+
+			await powCaptchaManager.verifyPowCaptchaSolution(
+				challenge,
+				"sig",
+				12345,
+				1000,
+				"userSig",
+				ipAddress,
+				headers,
+			);
+
+			expect(db.updateSessionRecord).toHaveBeenCalledWith(sessionId, {
+				userSubmitted: true,
+				result: {
+					status: CaptchaStatus.disapproved,
+					reason: "CAPTCHA.INVALID_TIMESTAMP",
+				},
+			});
+		});
+
+		it("should not update session when challengeRecord has no sessionId", async () => {
+			const timestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${pair.address}`;
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				difficulty: 4,
+				dappAccount: pair.address,
+				userAccount,
+				requestedAtTimestamp: new Date(timestamp),
+				result: { status: CaptchaStatus.pending },
+				userSubmitted: false,
+				serverChecked: false,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers,
+				ja4: "ja4",
+				providerSignature: "sig",
+				lastUpdatedTimestamp: new Date(),
+				// No sessionId
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: test mock
+			(verifyRecency as any).mockImplementation(() => true);
+			// biome-ignore lint/suspicious/noExplicitAny: test mock
+			(checkPowSignature as any).mockImplementation(() => true);
+			// biome-ignore lint/suspicious/noExplicitAny: test mock
+			(validateSolution as any).mockImplementation(() => true);
+			// biome-ignore lint/suspicious/noExplicitAny: test mock
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: test mock
+			(db.updatePowCaptchaRecordResult as any).mockResolvedValue(undefined);
+			// biome-ignore lint/suspicious/noExplicitAny: test mock
+			(db.updateSessionRecord as any) = vi.fn().mockResolvedValue(undefined);
+
+			await powCaptchaManager.verifyPowCaptchaSolution(
+				challenge,
+				"sig",
+				12345,
+				1000,
+				"userSig",
+				ipAddress,
+				headers,
+			);
+
+			expect(db.updateSessionRecord).not.toHaveBeenCalled();
+		});
+
+		it("should update session as serverChecked and approved on successful server verification", async () => {
+			const dappAccount = "dappAccount";
+			const timestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
+			const challengeRecord: Partial<PoWCaptchaStored> = {
+				challenge,
+				dappAccount,
+				userAccount,
+				requestedAtTimestamp: new Date(timestamp),
+				serverChecked: false,
+				result: { status: CaptchaStatus.approved },
+				sessionId,
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: test mock
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: test mock
+			(verifyRecency as any).mockImplementation(() => true);
+			// biome-ignore lint/suspicious/noExplicitAny: test mock
+			(db.updateSessionRecord as any) = vi.fn().mockResolvedValue(undefined);
+
+			const result =
+				await powCaptchaManager.serverVerifyPowCaptchaSolution(
+					dappAccount,
+					challenge,
+					1000,
+					mockEnv,
+				);
+
+			expect(result.verified).toBe(true);
+			expect(db.updateSessionRecord).toHaveBeenCalledWith(sessionId, {
+				serverChecked: true,
+				result: { status: CaptchaStatus.approved },
+			});
+		});
+
+		it("should update session as serverChecked and disapproved on recency failure", async () => {
+			const dappAccount = "dappAccount";
+			const timestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
+			const challengeRecord: Partial<PoWCaptchaStored> = {
+				challenge,
+				dappAccount,
+				userAccount,
+				requestedAtTimestamp: new Date(timestamp),
+				serverChecked: false,
+				result: { status: CaptchaStatus.approved },
+				sessionId,
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: test mock
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: test mock
+			(verifyRecency as any).mockImplementation(() => false);
+			// biome-ignore lint/suspicious/noExplicitAny: test mock
+			(db.updatePowCaptchaRecord as any).mockResolvedValue(undefined);
+			// biome-ignore lint/suspicious/noExplicitAny: test mock
+			(db.updateSessionRecord as any) = vi.fn().mockResolvedValue(undefined);
+
+			const result =
+				await powCaptchaManager.serverVerifyPowCaptchaSolution(
+					dappAccount,
+					challenge,
+					1000,
+					mockEnv,
+				);
+
+			expect(result.verified).toBe(false);
+			expect(db.updateSessionRecord).toHaveBeenCalledWith(sessionId, {
+				serverChecked: true,
+				result: {
+					status: CaptchaStatus.disapproved,
+					reason: "API.TIMESTAMP_TOO_OLD",
+				},
+			});
 		});
 	});
 });
