@@ -15,7 +15,7 @@ import fs from "node:fs";
 import type { Logger } from "@prosopo/common";
 import { ScheduledTaskNames, ScheduledTaskStatus } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
-import { cacheFile } from "@prosopo/util";
+import { cacheFile, validateDomain } from "@prosopo/util";
 
 const CACHE_FILE_PREFIX = "spam-email-domains-";
 const CACHE_FILE_TYPE = ".txt";
@@ -44,7 +44,16 @@ export const updateSpamEmailDomains = async (
 			const text = fs.readFileSync(filePath, "utf-8");
 			const domains = text.trim().split("\n");
 			for (const domain of domains) {
-				domainsSet.add(domain.trim().toLowerCase());
+				const trimmedDomain = domain.trim().toLowerCase();
+				// Skip empty lines and comment lines (starting with # or //)
+				if (
+					trimmedDomain &&
+					!trimmedDomain.startsWith("#") &&
+					!trimmedDomain.startsWith("//") &&
+					validateDomain(trimmedDomain)
+				) {
+					domainsSet.add(trimmedDomain);
+				}
 			}
 		}
 
