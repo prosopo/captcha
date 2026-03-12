@@ -1,7 +1,3 @@
-import fs from "node:fs";
-import https from "node:https";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,6 +11,12 @@ import { fileURLToPath } from "node:url";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import fs from "node:fs";
+import https from "node:https";
+import type { ServerOptions } from "node:https";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { ProsopoEnvError, getLogger } from "@prosopo/common";
 import { loadEnv } from "@prosopo/dotenv";
 import { getServerConfig } from "@prosopo/server";
@@ -114,36 +116,34 @@ async function main() {
 		: 9228;
 
 	logger.info(() => ({ msg: "Listening on port", data: { port } }));
-
+	const httpsOptions: ServerOptions = {};
 	if (
 		process.env.NODE_ENV === "development" ||
 		process.env.NODE_ENV === "test"
 	) {
-		try {
-			const __filename = fileURLToPath(import.meta.url);
-			const __dirname = path.dirname(__filename);
-			const certsDir = path.resolve(__dirname, "../../../certs");
+		const __filename = fileURLToPath(import.meta.url);
+		const __dirname = path.dirname(__filename);
+		const certsDir = path.resolve(__dirname, "../../../certs");
 
-			if (
-				fs.existsSync(path.join(certsDir, "server.key")) &&
-				fs.existsSync(path.join(certsDir, "server.crt"))
-			) {
-				const httpsOptions = {
-					key: fs.readFileSync(path.join(certsDir, "server.key")),
-					cert: fs.readFileSync(path.join(certsDir, "server.crt")),
-				};
-
-				https.createServer(httpsOptions, app).listen(port, () => {
-					logger.info(() => ({ msg: `HTTPS server started on port ${port}` }));
-				});
-			}
-		} catch (err) {
-			logger.error(() => ({
-				err,
-				msg: "Failed to start HTTPS server. Make sure certificates exist in captcha/certs. Run ./setup_certs.sh",
-			}));
-			throw err;
+		if (
+			fs.existsSync(path.join(certsDir, "server.key")) &&
+			fs.existsSync(path.join(certsDir, "server.crt"))
+		) {
+			httpsOptions.key = fs.readFileSync(path.join(certsDir, "server.key"));
+			httpsOptions.cert = fs.readFileSync(path.join(certsDir, "server.crt"));
 		}
+	}
+
+	try {
+		https.createServer(httpsOptions, app).listen(port, () => {
+			logger.info(() => ({ msg: `HTTPS server started on port ${port}` }));
+		});
+	} catch (err) {
+		logger.error(() => ({
+			err,
+			msg: "Failed to start HTTPS server. Make sure certificates exist in captcha/certs. Run ./setup_certs.sh",
+		}));
+		throw err;
 	}
 }
 
