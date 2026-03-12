@@ -169,17 +169,24 @@ export class PowCaptchaManager extends CaptchaManager {
 		}
 
 		if (!verifyRecency(challenge, timeout)) {
+			const timeoutResult = {
+				status: CaptchaStatus.disapproved,
+				reason: "CAPTCHA.INVALID_TIMESTAMP" as const,
+			};
 			await this.db.updatePowCaptchaRecordResult(
 				challenge,
-				{
-					status: CaptchaStatus.disapproved,
-					reason: "CAPTCHA.INVALID_TIMESTAMP",
-				},
+				timeoutResult,
 				false, //serverchecked
 				true, // usersubmitted
 				userTimestampSignature,
 				coords,
 			);
+			if (challengeRecord.sessionId) {
+				await this.db.updateSessionRecord(challengeRecord.sessionId, {
+					userSubmitted: true,
+					result: timeoutResult,
+				});
+			}
 			return false;
 		}
 
@@ -258,6 +265,14 @@ export class PowCaptchaManager extends CaptchaManager {
 			coords,
 		);
 
+		// Update the session record with submission result
+		if (challengeRecord.sessionId) {
+			await this.db.updateSessionRecord(challengeRecord.sessionId, {
+				userSubmitted: true,
+				result,
+			});
+		}
+
 		return correct;
 	}
 
@@ -328,12 +343,19 @@ export class PowCaptchaManager extends CaptchaManager {
 
 		const recent = verifyRecency(challenge, timeout);
 		if (!recent) {
+			const disapprovedResult = {
+				status: CaptchaStatus.disapproved,
+				reason: "API.TIMESTAMP_TOO_OLD" as const,
+			};
 			await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
-				result: {
-					status: CaptchaStatus.disapproved,
-					reason: "API.TIMESTAMP_TOO_OLD",
-				},
+				result: disapprovedResult,
 			});
+			if (challengeRecord.sessionId) {
+				await this.db.updateSessionRecord(challengeRecord.sessionId, {
+					serverChecked: true,
+					result: disapprovedResult,
+				});
+			}
 			return notVerifiedResponse;
 		}
 
@@ -359,12 +381,19 @@ export class PowCaptchaManager extends CaptchaManager {
 							policy: blockPolicy,
 						},
 					}));
+					const blockedResult = {
+						status: CaptchaStatus.disapproved,
+						reason: "API.ACCESS_POLICY_BLOCK" as const,
+					};
 					await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
-						result: {
-							status: CaptchaStatus.disapproved,
-							reason: "API.ACCESS_POLICY_BLOCK",
-						},
+						result: blockedResult,
 					});
+					if (challengeRecord.sessionId) {
+						await this.db.updateSessionRecord(challengeRecord.sessionId, {
+							serverChecked: true,
+							result: blockedResult,
+						});
+					}
 					return notVerifiedResponse;
 				}
 			} catch (error) {
@@ -434,12 +463,19 @@ export class PowCaptchaManager extends CaptchaManager {
 							distanceKm: ipValidation.distanceKm,
 						},
 					}));
+					const ipFailResult = {
+						status: CaptchaStatus.disapproved,
+						reason: "API.FAILED_IP_VALIDATION" as const,
+					};
 					await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
-						result: {
-							status: CaptchaStatus.disapproved,
-							reason: "API.FAILED_IP_VALIDATION",
-						},
+						result: ipFailResult,
 					});
+					if (challengeRecord.sessionId) {
+						await this.db.updateSessionRecord(challengeRecord.sessionId, {
+							serverChecked: true,
+							result: ipFailResult,
+						});
+					}
 					return notVerifiedResponse;
 				}
 			}
@@ -492,12 +528,19 @@ export class PowCaptchaManager extends CaptchaManager {
 					},
 				}));
 
+				const dmResult = {
+					status: CaptchaStatus.disapproved,
+					reason: decision.reason || "CAPTCHA.DECISION_MACHINE_DENIED",
+				};
 				await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
-					result: {
-						status: CaptchaStatus.disapproved,
-						reason: decision.reason || "CAPTCHA.DECISION_MACHINE_DENIED",
-					},
+					result: dmResult,
 				});
+				if (challengeRecord.sessionId) {
+					await this.db.updateSessionRecord(challengeRecord.sessionId, {
+						serverChecked: true,
+						result: dmResult,
+					});
+				}
 				return notVerifiedResponse;
 			}
 
@@ -516,6 +559,14 @@ export class PowCaptchaManager extends CaptchaManager {
 				err: error,
 			}));
 			// Don't fail the captcha if decision machine fails - default to allow
+		}
+
+		// Server verification passed — update session as approved and serverChecked
+		if (challengeRecord.sessionId) {
+			await this.db.updateSessionRecord(challengeRecord.sessionId, {
+				serverChecked: true,
+				result: { status: CaptchaStatus.approved },
+			});
 		}
 
 		return { verified: true, ...(score ? { score } : {}) };

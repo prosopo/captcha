@@ -1187,6 +1187,26 @@ export class ProviderDatabase
 	}
 
 	/**
+	 * Update a session record by sessionId
+	 */
+	async updateSessionRecord(
+		sessionId: string,
+		updates: Partial<Session>,
+	): Promise<void> {
+		try {
+			await this.tables.session.updateOne(
+				{ sessionId },
+				{ $set: { ...updates, lastUpdatedTimestamp: new Date() } },
+			);
+		} catch (err) {
+			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
+				context: { error: err, sessionId },
+				logger: this.logger,
+			});
+		}
+	}
+
+	/**
 	 * Get an active session by user IP hash
 	 * @param userSitekeyIpHash The hash of user, IP and sitekey combination
 	 * @returns The session record if it exists and is not deleted, undefined otherwise
