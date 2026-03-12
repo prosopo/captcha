@@ -14,11 +14,16 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cacheFile, getCurrentETag, saveFileWithETag } from "../cacheFile.js";
 import * as fetchModule from "../fetchWithEtag.js";
+
 vi.mock("../fetchWithEtag.js");
+
 describe("cacheFile", () => {
+	const __filename = fileURLToPath(import.meta.url);
+	const __dirname = path.dirname(__filename);
 	const testCacheDir = path.join(__dirname, "test-cache");
 	const testUrl = "https://example.com/data.txt";
 	const filePrefix = "test-file-";
@@ -119,6 +124,29 @@ describe("cacheFile", () => {
 				});
 			await cacheFile(testCacheDir, testUrl, mockLogger, filePrefix, fileType);
 			expect(fetchSpy).toHaveBeenCalledWith(testUrl, '"abc123"');
+		});
+
+		it("should handle empty response body with valid ETag", async () => {
+			const emptyContent = "";
+			const etag = '"empty123"';
+
+			vi.spyOn(fetchModule, "fetchWithETag").mockResolvedValue({
+				content: emptyContent,
+				etag,
+				notModified: false,
+			});
+
+			const filePath = await cacheFile(
+				testCacheDir,
+				testUrl,
+				mockLogger,
+				filePrefix,
+				fileType,
+			);
+
+			expect(fs.existsSync(filePath)).toBe(true);
+			expect(fs.readFileSync(filePath, "utf-8")).toBe("");
+			expect(mockLogger.info).toHaveBeenCalledWith(expect.any(Function));
 		});
 	});
 });

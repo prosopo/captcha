@@ -25,4 +25,4 @@ export const SpamEmailDomainRecordSchema = new Schema<SpamEmailDomainRecord>({
 	domain: { type: String, required: true, unique: true },
 });
 
-SpamEmailDomainRecordSchema.index({ domain: 1 }, { unique: true });
+SpamEmailDomainRecordSchema.index({ domain: 1 });

@@ -143,7 +143,7 @@ export const cacheFile = async (
 			logger.debug(() => ({
 				msg: "File not modified, using cached version",
 			}));
-		} else if (result.content && result.etag) {
+		} else if (result.content !== null && result.etag) {
 			logger.info(() => ({
 				msg: "File updated, caching new version",
 			}));
