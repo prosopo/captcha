@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import fs from "node:fs";
+import http from "node:http";
 import https from "node:https";
 import type { ServerOptions } from "node:https";
 import path from "node:path";
@@ -116,34 +117,44 @@ async function main() {
 		: 9228;
 
 	logger.info(() => ({ msg: "Listening on port", data: { port } }));
-	const httpsOptions: ServerOptions = {};
-	if (
-		process.env.NODE_ENV === "development" ||
-		process.env.NODE_ENV === "test"
-	) {
+
+	// Use HTTPS only in development/test when we have certificates
+	// In production, use HTTP because Caddy handles TLS termination
+	const isDev =
+		process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";
+
+	if (isDev) {
 		const __filename = fileURLToPath(import.meta.url);
 		const __dirname = path.dirname(__filename);
 		const certsDir = path.resolve(__dirname, "../../../certs");
 
-		if (
-			fs.existsSync(path.join(certsDir, "server.key")) &&
-			fs.existsSync(path.join(certsDir, "server.crt"))
-		) {
-			httpsOptions.key = fs.readFileSync(path.join(certsDir, "server.key"));
-			httpsOptions.cert = fs.readFileSync(path.join(certsDir, "server.crt"));
-		}
-	}
+		const keyPath = path.join(certsDir, "server.key");
+		const certPath = path.join(certsDir, "server.crt");
 
-	try {
-		https.createServer(httpsOptions, app).listen(port, () => {
-			logger.info(() => ({ msg: `HTTPS server started on port ${port}` }));
+		if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
+			const httpsOptions: ServerOptions = {
+				key: fs.readFileSync(keyPath),
+				cert: fs.readFileSync(certPath),
+			};
+
+			https.createServer(httpsOptions, app).listen(port, () => {
+				logger.info(() => ({ msg: `HTTPS server started on port ${port}` }));
+			});
+		} else {
+			logger.warn(() => ({
+				msg: "Certificates not found, starting HTTP server instead. Run ./setup_certs.sh to enable HTTPS in development.",
+			}));
+			http.createServer(app).listen(port, () => {
+				logger.info(() => ({ msg: `HTTP server started on port ${port}` }));
+			});
+		}
+	} else {
+		// Production: use plain HTTP, Caddy handles TLS
+		http.createServer(app).listen(port, () => {
+			logger.info(() => ({
+				msg: `HTTP server started on port ${port} (TLS handled by reverse proxy)`,
+			}));
 		});
-	} catch (err) {
-		logger.error(() => ({
-			err,
-			msg: "Failed to start HTTPS server. Make sure certificates exist in captcha/certs. Run ./setup_certs.sh",
-		}));
-		throw err;
 	}
 }
 

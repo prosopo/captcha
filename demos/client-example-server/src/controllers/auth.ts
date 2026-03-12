@@ -20,6 +20,7 @@ import { getPair } from "@prosopo/keyring";
 import { ProsopoServer } from "@prosopo/server";
 import {
 	ApiParams,
+	CaptchaType,
 	type KeyringPair,
 	ProcaptchaResponse,
 	type ProcaptchaToken,
@@ -62,7 +63,24 @@ const getPairAndSecretForSiteKey = (
 	let pair: KeyringPair | undefined;
 	let secret = baseSecret;
 
-	for (const captchaType of ["pow", "image", "frictionless"]) {
+	pair = getPair(secret);
+
+	if (pair.address === siteKey) {
+		logger.info(() => ({
+			msg: "Site key matches the server configuration without captcha type suffix",
+			data: {
+				siteKeyDerived: pair?.address,
+				siteKey,
+			},
+		}));
+		return { pair, secret };
+	}
+
+	for (const captchaType of [
+		CaptchaType.pow,
+		CaptchaType.image,
+		CaptchaType.frictionless,
+	]) {
 		const newSecret = `${baseSecret}//${captchaType}`;
 		pair = getPair(newSecret);
 		console.log(
