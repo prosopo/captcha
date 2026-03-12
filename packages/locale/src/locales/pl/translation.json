@@ -21,6 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Dostęp zablokowany przez zasady",
 		"FORBIDDEN": "Zabronione",
 		"PROVIDER_VERIFY_FAILED": "Weryfikacja dostawcy nie powiodła się",
+		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
 		"UNAUTHORIZED": "Nieautoryzowany",
 		"MISSING_BODY": "Brak ciała",
 		"NO_CONTENT_TYPE_HEADER": "Brak nagłówka typu zawartości. Przyjęto zakodowane ciało JSON, ale nie udało się sparsować.",

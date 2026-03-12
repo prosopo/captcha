@@ -126,6 +126,7 @@ export default class ProviderApi
 		userAccount: string,
 		maxVerifiedTime?: number,
 		ip?: string,
+		email?: string,
 	): Promise<ImageVerificationResponse> {
 		const payload: VerifySolutionBodyTypeInput = {
 			[ApiParams.token]: token,
@@ -134,6 +135,9 @@ export default class ProviderApi
 		};
 		if (maxVerifiedTime) {
 			payload[ApiParams.maxVerifiedTime] = maxVerifiedTime;
+		}
+		if (email) {
+			payload[ApiParams.email] = email;
 		}
 
 		return this.post(ClientApiPaths.VerifyImageCaptchaSolutionDapp, payload, {
@@ -255,6 +259,7 @@ export default class ProviderApi
 		recencyLimit: number,
 		user: string,
 		ip?: string,
+		email?: string,
 	): Promise<VerificationResponse> {
 		const body: ServerPowCaptchaVerifyRequestBodyType = {
 			[ApiParams.token]: token,
@@ -262,6 +267,9 @@ export default class ProviderApi
 			[ApiParams.verifiedTimeout]: recencyLimit,
 			[ApiParams.ip]: ip,
 		};
+		if (email) {
+			body[ApiParams.email] = email;
+		}
 		return this.post(ClientApiPaths.VerifyPowCaptchaSolution, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,

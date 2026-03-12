@@ -70,6 +70,7 @@ export class ProsopoServer {
 	 * @param user
 	 * @param challenge
 	 * @param ip
+	 * @param email
 	 */
 	public async verifyProvider(
 		token: string,
@@ -79,6 +80,7 @@ export class ProsopoServer {
 		user: string,
 		challenge?: string,
 		ip?: string,
+		email?: string,
 	): Promise<VerificationResponse> {
 		this.logger.info(() => ({
 			data: { providerUrl },
@@ -112,6 +114,7 @@ export class ProsopoServer {
 				timeouts.pow.cachedTimeout,
 				user,
 				ip,
+				email,
 			);
 		}
 		const imageTimeout = this.config.timeouts.image.cachedTimeout;
@@ -132,17 +135,19 @@ export class ProsopoServer {
 			user,
 			timeouts.image.cachedTimeout,
 			ip,
+			email,
 		);
 	}
 
 	/**
-	 *
-	 * @returns
 	 * @param token
+	 * @param ip
+	 * @param email
 	 */
 	public async isVerified(
 		token: ProcaptchaToken,
 		ip?: string,
+		email?: string,
 	): Promise<VerificationResponse> {
 		try {
 			const payload = decodeProcaptchaOutput(token);
@@ -175,6 +180,7 @@ export class ProsopoServer {
 				user,
 				challenge,
 				ip,
+				email,
 			);
 
 			this.logger.info(() => ({

@@ -690,4 +690,172 @@ describe("CaptchaManager", () => {
 			expect(result).toBeUndefined();
 		});
 	});
+
+	describe("checkSpamEmail", () => {
+		beforeEach(() => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db as any).getSpamEmailDomain = vi.fn();
+			vi.clearAllMocks();
+		});
+
+		it("should check database for single-word domains without @", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getSpamEmailDomain as any).mockResolvedValue(null);
+
+			const result = await captchaManager.checkSpamEmail("invalid-email");
+			expect(result).toBe(false);
+			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("invalid-email");
+		});
+
+		it("should handle domain-only format (without @)", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getSpamEmailDomain as any).mockResolvedValue({
+				domain: "spammydomain.com",
+			});
+
+			const result = await captchaManager.checkSpamEmail("spammydomain.com");
+			expect(result).toBe(true);
+			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("spammydomain.com");
+		});
+
+		it("should handle @domain.com format", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getSpamEmailDomain as any).mockResolvedValue({
+				domain: "spammydomain.com",
+			});
+
+			const result = await captchaManager.checkSpamEmail("@spammydomain.com");
+			expect(result).toBe(true);
+			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("spammydomain.com");
+		});
+
+		it("should handle user@domain.com format", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getSpamEmailDomain as any).mockResolvedValue({
+				domain: "spammydomain.com",
+			});
+
+			const result = await captchaManager.checkSpamEmail(
+				"user@spammydomain.com",
+			);
+			expect(result).toBe(true);
+			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("spammydomain.com");
+		});
+
+		it("should return false when email domain is not in spam list", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getSpamEmailDomain as any).mockResolvedValue(null);
+
+			const result = await captchaManager.checkSpamEmail("user@legitimate.com");
+			expect(result).toBe(false);
+			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("legitimate.com");
+		});
+
+		it("should convert domain to lowercase before checking", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getSpamEmailDomain as any).mockResolvedValue(null);
+
+			const result = await captchaManager.checkSpamEmail("user@UPPERCASE.COM");
+			expect(result).toBe(false);
+			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("uppercase.com");
+		});
+
+		it("should handle mixed case domains correctly", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getSpamEmailDomain as any).mockResolvedValue({
+				domain: "mixedcase.com",
+			});
+
+			const result = await captchaManager.checkSpamEmail("user@MixedCase.COM");
+			expect(result).toBe(true);
+			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("mixedcase.com");
+		});
+
+		it("should return false when database check throws an error", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getSpamEmailDomain as any).mockRejectedValue(
+				new Error("Database error"),
+			);
+
+			const result = await captchaManager.checkSpamEmail("user@example.com");
+			expect(result).toBe(false);
+			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("example.com");
+			expect(logger.warn).toHaveBeenCalled();
+		});
+
+		it("should log a warning when database check fails", async () => {
+			const error = new Error("Connection timeout");
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getSpamEmailDomain as any).mockRejectedValue(error);
+
+			await captchaManager.checkSpamEmail("user@example.com");
+			expect(logger.warn).toHaveBeenCalled();
+		});
+
+		it("should handle email with multiple @ symbols by taking last part", async () => {
+			// Emails cannot have more than one @ symbol per RFC 5321
+			// The current implementation splits on @ and takes the last part
+			// For "user@name@example.com", the last part is "example.com"
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getSpamEmailDomain as any).mockResolvedValue(null);
+
+			const result = await captchaManager.checkSpamEmail(
+				"user@name@example.com",
+			);
+			expect(result).toBe(false);
+			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("example.com");
+		});
+
+		it("should handle email with trailing @", async () => {
+			const result = await captchaManager.checkSpamEmail("user@");
+			expect(result).toBe(true);
+			expect(db.getSpamEmailDomain).not.toHaveBeenCalled();
+		});
+
+		it("should handle empty string email", async () => {
+			const result = await captchaManager.checkSpamEmail("");
+			expect(result).toBe(true);
+			expect(db.getSpamEmailDomain).not.toHaveBeenCalled();
+		});
+
+		it("should handle email with subdomain correctly", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getSpamEmailDomain as any).mockResolvedValue(null);
+
+			const result = await captchaManager.checkSpamEmail(
+				"user@mail.example.com",
+			);
+			expect(result).toBe(false);
+			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("mail.example.com");
+		});
+
+		it("should check exact domain match for spam list", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getSpamEmailDomain as any).mockResolvedValue({
+				domain: "spam.com",
+			});
+
+			const result = await captchaManager.checkSpamEmail("user@spam.com");
+			expect(result).toBe(true);
+			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("spam.com");
+		});
+
+		it("should handle common disposable email domains", async () => {
+			const disposableDomains = [
+				"tempmail.com",
+				"10minutemail.com",
+				"guerrillamail.com",
+				"mailinator.com",
+			];
+
+			for (const domain of disposableDomains) {
+				// biome-ignore lint/suspicious/noExplicitAny: tests
+				(db.getSpamEmailDomain as any).mockResolvedValue({ domain });
+				const result = await captchaManager.checkSpamEmail(`user@${domain}`);
+				expect(result).toBe(true);
+				expect(db.getSpamEmailDomain).toHaveBeenCalledWith(domain);
+				vi.clearAllMocks();
+			}
+		});
+	});
 });

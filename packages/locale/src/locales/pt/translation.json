@@ -21,6 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Acesso bloqueado por política",
 		"FORBIDDEN": "Proibido",
 		"PROVIDER_VERIFY_FAILED": "Falha na verificação do fornecedor",
+		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
 		"UNAUTHORIZED": "Não autorizado",
 		"MISSING_BODY": "Corpo ausente",
 		"NO_CONTENT_TYPE_HEADER": "Cabeçalho sem tipo de conteúdo. Suposto corpo codificado em JSON, mas falhou ao analisar.",

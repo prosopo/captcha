@@ -45,7 +45,8 @@
 		"FAILED_IP_VALIDATION": "IP-vahvistus epäonnistui",
 		"ACCESS_POLICY_BLOCK": "Pääsy estetty käytännön mukaan",
 		"FORBIDDEN": "Kielletty",
-		"PROVIDER_VERIFY_FAILED": "Palveluntarjoajan tarkistus epäonnistui"
+		"PROVIDER_VERIFY_FAILED": "Palveluntarjoajan tarkistus epäonnistui",
+		"SPAM_EMAIL_DOMAIN": "Email domain not allowed"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Virheellinen parametri"

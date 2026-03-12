@@ -62,4 +62,5 @@ export enum ApiParams {
 	decisionMachineVersion = "decisionMachineVersion",
 	decisionMachineCaptchaType = "decisionMachineCaptchaType",
 	salt = "salt",
+	email = "email",
 }

@@ -320,6 +320,7 @@
 		"ACCESS_POLICY_BLOCK": "Toegang geblokkeerd door beleid",
 		"FORBIDDEN": "Verboden",
 		"PROVIDER_VERIFY_FAILED": "Provider verificatie mislukt",
+		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
 		"UNAUTHORIZED": "Unauthorized",
 		"MISSING_BODY": "Ontbrekend lichaam",
 		"NO_CONTENT_TYPE_HEADER": "Geen content-type koptekst. Aangenomen dat het lichaam gecodeerd is in JSON maar niet kon worden geparseerd.",

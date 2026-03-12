@@ -21,6 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "访问被策略阻止",
 		"FORBIDDEN": "禁止",
 		"PROVIDER_VERIFY_FAILED": "提供商验证失败",
+		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
 		"UNAUTHORIZED": "未授权",
 		"MISSING_BODY": "缺少主体",
 		"NO_CONTENT_TYPE_HEADER": "没有内容类型标头。假定为JSON编码主体，但无法解析。",

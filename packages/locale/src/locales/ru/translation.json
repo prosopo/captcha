@@ -21,6 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Доступ заблокирован политикой",
 		"FORBIDDEN": "Запрещено",
 		"PROVIDER_VERIFY_FAILED": "Ошибка проверки провайдера",
+		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
 		"UNAUTHORIZED": "Не авторизован",
 		"MISSING_BODY": "Отсутствует тело",
 		"NO_CONTENT_TYPE_HEADER": "Заголовок отсутствия типа контента. Предполагается, что тело закодировано в формате JSON, но не удается разобрать.",
