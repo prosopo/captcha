@@ -392,11 +392,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 					enum: Object.values(CaptchaStatus),
 					required: true,
 				},
-				reason: {
-					type: String,
-					enum: TranslationKeysSchema.options,
-					required: false,
-				},
+				reason: { type: String, required: false },
 				error: { type: String, required: false },
 			},
 			{ _id: false },
