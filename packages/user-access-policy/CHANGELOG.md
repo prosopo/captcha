@@ -1,5 +1,16 @@
 # @prosopo/user-access-policy
 
+## 3.6.14
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/types@3.12.2
+  - @prosopo/util@3.2.6
+  - @prosopo/api@3.2.4
+  - @prosopo/common@3.1.30
+  - @prosopo/api-route@2.6.38
+  - @prosopo/redis-client@1.0.15
+
 ## 3.6.13
 ### Patch Changes
 

@@ -1,5 +1,12 @@
 # @prosopo/api
 
+## 3.2.4
+### Patch Changes
+
+- adb89a6: Disposable email checking
+- Updated dependencies [adb89a6]
+  - @prosopo/types@3.12.2
+
 ## 3.2.3
 ### Patch Changes
 

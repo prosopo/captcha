@@ -1,5 +1,14 @@
 # @prosopo/account
 
+## 2.8.13
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/types@3.12.2
+  - @prosopo/util@3.2.6
+  - @prosopo/common@3.1.30
+  - @prosopo/keyring@2.9.13
+
 ## 2.8.12
 ### Patch Changes
 

@@ -1,5 +1,16 @@
 # @prosopo/procaptcha
 
+## 2.10.4
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/types@3.12.2
+  - @prosopo/util@3.2.6
+  - @prosopo/api@3.2.4
+  - @prosopo/common@3.1.30
+  - @prosopo/datasets@3.1.7
+  - @prosopo/procaptcha-common@2.9.36
+
 ## 2.10.3
 ### Patch Changes
 

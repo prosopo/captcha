@@ -1,5 +1,10 @@
 # @prosopo/locale
 
+## 3.1.29
+### Patch Changes
+
+- adb89a6: Disposable email checking
+
 ## 3.1.28
 ### Patch Changes
 

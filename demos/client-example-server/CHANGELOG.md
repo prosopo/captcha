@@ -1,5 +1,16 @@
 # @prosopo/client-example-server
 
+## 2.7.69
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/server@2.9.65
+  - @prosopo/types@3.12.2
+  - @prosopo/util@3.2.6
+  - @prosopo/common@3.1.30
+  - @prosopo/keyring@2.9.13
+  - @prosopo/dotenv@3.0.35
+
 ## 2.7.68
 ### Patch Changes
 

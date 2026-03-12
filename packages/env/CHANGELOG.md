@@ -1,5 +1,15 @@
 # @prosopo/env
 
+## 3.3.9
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/database@3.9.8
+  - @prosopo/types@3.12.2
+  - @prosopo/types-env@2.8.9
+  - @prosopo/common@3.1.30
+  - @prosopo/keyring@2.9.13
+
 ## 3.3.8
 ### Patch Changes
 

@@ -1,5 +1,14 @@
 # @prosopo/types-env
 
+## 2.8.9
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/types-database@4.4.8
+  - @prosopo/types@3.12.2
+  - @prosopo/common@3.1.30
+  - @prosopo/keyring@2.9.13
+
 ## 2.8.8
 ### Patch Changes
 
