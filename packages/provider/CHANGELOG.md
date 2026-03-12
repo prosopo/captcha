@@ -1,5 +1,22 @@
 # @prosopo/provider
 
+## 3.21.4
+### Patch Changes
+
+- c316257: Adding sync fo sessions wrt captcha status
+- Updated dependencies [c316257]
+  - @prosopo/types-database@4.4.9
+  - @prosopo/database@3.9.9
+  - @prosopo/types@3.12.3
+  - @prosopo/types-env@2.8.10
+  - @prosopo/env@3.3.10
+  - @prosopo/api@3.2.5
+  - @prosopo/api-express-router@3.0.65
+  - @prosopo/datasets@3.1.8
+  - @prosopo/keyring@2.9.14
+  - @prosopo/load-balancer@2.8.31
+  - @prosopo/user-access-policy@3.6.15
+
 ## 3.21.3
 ### Patch Changes
 
