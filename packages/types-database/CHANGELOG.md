@@ -1,5 +1,13 @@
 # @prosopo/types-database
 
+## 4.4.9
+### Patch Changes
+
+- c316257: Adding sync fo sessions wrt captcha status
+- Updated dependencies [c316257]
+  - @prosopo/types@3.12.3
+  - @prosopo/user-access-policy@3.6.15
+
 ## 4.4.8
 ### Patch Changes
 

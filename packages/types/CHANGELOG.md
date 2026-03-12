@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 3.12.3
+### Patch Changes
+
+- c316257: Adding sync fo sessions wrt captcha status
+
 ## 3.12.2
 ### Patch Changes
 
