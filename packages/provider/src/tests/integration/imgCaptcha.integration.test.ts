@@ -72,7 +72,7 @@ describe("Image Captcha Integration Tests", () => {
 	let env: ProviderEnvironment;
 	let mongoContainer: StartedTestContainer;
 	let redisContainer: StartedTestContainer | undefined;
-	let server: Server;
+	let server: Server | undefined;
 	let dappAccount: string;
 	let mnemonic: string;
 	let tasks: Tasks;
@@ -80,8 +80,9 @@ describe("Image Captcha Integration Tests", () => {
 	let baseUrl: string;
 
 	beforeAll(async () => {
-		// Get a unique port for this test suite
-		testPort = getRandomPort();
+		// Get a unique port for this test suite using a more unique identifier
+		// Use process.pid and timestamp to ensure uniqueness across parallel test runs
+		testPort = 40000 + (process.pid % 10000) + Math.floor(Math.random() * 5000);
 		const protocol = isTlsAvailable() ? "https" : "http";
 		baseUrl = `${protocol}://localhost:${testPort}`;
 
@@ -187,12 +188,80 @@ describe("Image Captcha Integration Tests", () => {
 		env.logger.info(() => ({ msg: "Setting up provider dataset" }));
 		await tasks.datasetManager.providerSetDataset(datasetWithSolutionHashes);
 
-		// Start the provider API server
+		// Start the provider API server with retry logic
 		// This mimics the CLI start functionality
 		env.logger.info(() => ({
 			msg: `Starting provider API on port ${testPort}`,
 		}));
-		server = await startProviderApi(env, true, testPort);
+
+		let retries = 0;
+		const maxRetries = 3;
+		while (retries < maxRetries) {
+			try {
+				server = await startProviderApi(env, true, testPort);
+
+				// Wait for server to be ready by checking if it's listening
+				await new Promise<void>((resolve, reject) => {
+					if (!server) {
+						reject(new Error("Server is not running."));
+						return;
+					}
+
+					const checkInterval = setInterval(() => {
+						if (server?.listening) {
+							clearInterval(checkInterval);
+							resolve();
+						}
+					}, 100);
+
+					// Timeout after 5 seconds
+					setTimeout(() => {
+						clearInterval(checkInterval);
+						if (!server?.listening) {
+							reject(
+								new Error("Server failed to start listening within timeout"),
+							);
+						}
+					}, 5000);
+				});
+
+				env.logger.info(() => ({
+					msg: `Provider API started successfully on port ${testPort}`,
+				}));
+				break;
+			} catch (error) {
+				retries++;
+				env.logger.warn(() => ({
+					msg: `Failed to start server (attempt ${retries}/${maxRetries})`,
+					err: error,
+				}));
+
+				// Close server if it was created but failed
+				if (server) {
+					await new Promise<void>((resolve) => {
+						server?.close(() => resolve());
+					});
+					server = undefined;
+				}
+
+				if (retries >= maxRetries) {
+					throw new Error(
+						`Failed to start server after ${maxRetries} attempts: ${error}`,
+					);
+				}
+
+				// Try a different port
+				testPort =
+					40000 + (process.pid % 10000) + Math.floor(Math.random() * 5000);
+				baseUrl = `${protocol}://localhost:${testPort}`;
+				env.logger.info(() => ({
+					msg: `Retrying with port ${testPort}`,
+				}));
+
+				// Wait before retrying
+				await new Promise((resolve) => setTimeout(resolve, 1000));
+			}
+		}
 	});
 
 	beforeEach(async () => {
@@ -202,22 +271,45 @@ describe("Image Captcha Integration Tests", () => {
 	});
 
 	afterAll(async () => {
+		// Close server first
 		if (server) {
-			await new Promise<void>((resolve, reject) => {
-				server.close((err) => {
-					if (err) reject(err);
-					else resolve();
+			await new Promise<void>((resolve) => {
+				server?.close((err) => {
+					if (err) {
+						console.error("Error closing server:", err);
+					}
+					resolve();
 				});
 			});
+
+			// Give the server time to fully release the port
+			await new Promise((resolve) => setTimeout(resolve, 500));
+			server = undefined;
 		}
+
+		// Close database connections
 		if (env) {
-			await env.getDb().close();
+			try {
+				await env.getDb().close();
+			} catch (error) {
+				console.error("Error closing database:", error);
+			}
 		}
+
+		// Stop containers
 		if (mongoContainer) {
-			await mongoContainer.stop();
+			try {
+				await mongoContainer.stop();
+			} catch (error) {
+				console.error("Error stopping mongo container:", error);
+			}
 		}
 		if (redisContainer) {
-			await redisContainer.stop();
+			try {
+				await redisContainer.stop();
+			} catch (error) {
+				console.error("Error stopping redis container:", error);
+			}
 		}
 	});
 
