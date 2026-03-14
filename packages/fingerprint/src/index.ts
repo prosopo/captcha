@@ -15,9 +15,26 @@
 const FingerprintJSImport = async () =>
 	(await import("@prosopo/fingerprintjs")).default;
 
+let fingerprintCache: Promise<string> | null = null;
+
 export const getFingerprint = async () => {
-	const FingerprintJS = await FingerprintJSImport();
-	const fp = await FingerprintJS.load();
-	const result = await fp.get();
-	return result.visitorId;
+	if (!fingerprintCache) {
+		fingerprintCache = (async () => {
+			const FingerprintJS = await FingerprintJSImport();
+			const fp = await FingerprintJS.load();
+			const result = await fp.get();
+			return result.visitorId;
+		})();
+	}
+	return fingerprintCache;
+};
+
+/**
+ * Pre-warms the fingerprint cache so getFingerprint() resolves immediately when called later.
+ * Errors are silently ignored — getFingerprint() will retry on its next call.
+ */
+export const prefetchFingerprint = (): void => {
+	getFingerprint().catch(() => {
+		fingerprintCache = null;
+	});
 };
