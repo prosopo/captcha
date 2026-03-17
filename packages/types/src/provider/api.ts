@@ -270,7 +270,7 @@ export const VerifySolutionBody = object({
 		.optional()
 		.default(DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED),
 	[ApiParams.ip]: string().optional(),
-	[ApiParams.email]: string().email().optional(),
+	[ApiParams.email]: string().optional(),
 });
 
 export type VerifySolutionBodyTypeInput = input<typeof VerifySolutionBody>;
