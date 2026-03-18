@@ -298,8 +298,11 @@ export function validateDomainForOutboundRequest(
 			return { isValid: false, reason: `Reserved TLD: ${tld}` };
 		}
 	}
-
-	return { isValid: validateDomain(domain) };
+	const syntaxValid = validateDomain(normalizedDomain);
+	if (!syntaxValid) {
+		return { isValid: false, reason: "Domain failed syntax validation" };
+	}
+	return { isValid: true };
 }
 
 /**
