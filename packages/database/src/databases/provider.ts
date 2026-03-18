@@ -2176,8 +2176,8 @@ export class ProviderDatabase
 				: { domain };
 
 		return await this.tables.spamEmailDomain
-					.findOne<SpamEmailDomainRecord>(query)
-					.exec();
+			.findOne<SpamEmailDomainRecord>(query)
+			.exec();
 	}
 
 	async bulkUpdateSpamEmailDomains(

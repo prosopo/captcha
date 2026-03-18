@@ -39,9 +39,7 @@ export default (env: ProviderEnvironment) =>
 			req.logger.info(() => ({
 				msg: "Check spam email handler entry",
 				data: {
-					requestId: req.requestId,
 					emailDomain,
-					dapp,
 					path: req.path,
 					method: req.method,
 				},
@@ -81,9 +79,7 @@ export default (env: ProviderEnvironment) =>
 			req.logger.info(() => ({
 				msg: "Spam email check result",
 				data: {
-					requestId: req.requestId,
 					emailDomain,
-					dapp,
 					isSpam,
 				},
 			}));
@@ -95,7 +91,6 @@ export default (env: ProviderEnvironment) =>
 			req.logger.error(() => ({
 				msg: "Error in check spam email handler",
 				error,
-				requestId: req.requestId,
 			}));
 			return next(
 				new ProsopoApiError("API.INTERNAL_SERVER_ERROR", {
