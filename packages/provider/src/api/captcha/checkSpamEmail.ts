@@ -14,6 +14,7 @@
 
 import { ProsopoApiError } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import { extractDomainFromEmail } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import { object, string } from "zod";
 import type { AugmentedRequest } from "../../express.js";
@@ -34,11 +35,12 @@ export default (env: ProviderEnvironment) =>
 		try {
 			const tasks = new Tasks(env, req.logger);
 			const { email, dapp } = CheckSpamEmailRequestBody.parse(req.body);
+			const emailDomain = extractDomainFromEmail(email);
 			req.logger.info(() => ({
 				msg: "Check spam email handler entry",
 				data: {
 					requestId: req.requestId,
-					email,
+					emailDomain,
 					dapp,
 					path: req.path,
 					method: req.method,
@@ -80,14 +82,14 @@ export default (env: ProviderEnvironment) =>
 				msg: "Spam email check result",
 				data: {
 					requestId: req.requestId,
-					email,
+					emailDomain,
 					dapp,
 					isSpam,
 				},
 			}));
 			return res.json({
 				isSpam,
-				email,
+				emailDomain,
 			});
 		} catch (error) {
 			req.logger.error(() => ({

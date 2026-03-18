@@ -104,7 +104,6 @@ export const checkForRedirect = (
 				resolve({ timeout: true });
 			})
 			.on("error", (e) => {
-				console.error(`Error: ${e.message}`);
 				const isTlsError =
 					e.message.includes("CERT") ||
 					e.message.includes("SSL") ||

@@ -34,8 +34,10 @@ function resolveEntryFile(): string {
 
 const nodeExternals: Record<string, string> = {};
 for (const m of builtinModules) {
-	const key = `node:${m}`;
+	const key = m.indexOf("node:") === -1 ? `node:${m}` : m;
 	nodeExternals[key] = `commonjs ${m}`;
+	nodeExternals[m] = `commonjs ${m}`;
+
 }
 
 export default (mode: string) => {
