@@ -38,7 +38,7 @@ function extractDomain(urlOrDomain: string): string {
 
 /**
  * Checks if an email domain is spam by checking against a spam list,
- * performing DNS checks, and validating IP reputation
+ * performing DNS/redirect/TLS-related checks.
  */
 export async function checkSpamEmail(
 	email: string,

@@ -2166,12 +2166,16 @@ export class ProviderDatabase
 		}
 
 		const MAX_DOMAIN_SUFFIX_CANDIDATES = 5;
-		const prefixCandidates = buildDomainSuffixCandidates(domain).slice(0, MAX_DOMAIN_SUFFIX_CANDIDATES);
-		const conditions = prefixCandidates.map((d) => ({ domain: d }));
+		const prefixCandidates = buildDomainSuffixCandidates(domain).slice(
+			0,
+			MAX_DOMAIN_SUFFIX_CANDIDATES,
+		);
+		const query =
+			prefixCandidates.length > 0
+				? { domain: { $in: prefixCandidates } }
+				: { domain };
 
-		return this.tables.spamEmailDomain.findOne<SpamEmailDomainRecord>({
-			$or: conditions,
-		});
+		return this.tables.spamEmailDomain.findOne<SpamEmailDomainRecord>(query);
 	}
 
 	async bulkUpdateSpamEmailDomains(
