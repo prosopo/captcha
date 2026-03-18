@@ -1,5 +1,14 @@
 # @prosopo/types
 
+## 3.12.3
+### Patch Changes
+
+- d5082a9: Don't require email type
+- e1ea65f: Better spam email domain checking
+- c316257: Adding sync fo sessions wrt captcha status
+- Updated dependencies [e1ea65f]
+  - @prosopo/util@3.2.7
+
 ## 3.12.2
 ### Patch Changes
 

@@ -1,5 +1,28 @@
 # @prosopo/provider
 
+## 3.21.4
+### Patch Changes
+
+- 730c61e: Speed up captcha
+- e1ea65f: Better spam email domain checking
+- c316257: Adding sync fo sessions wrt captcha status
+- Updated dependencies [730c61e]
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/load-balancer@2.8.31
+  - @prosopo/types@3.12.3
+  - @prosopo/types-database@4.4.9
+  - @prosopo/database@3.9.9
+  - @prosopo/util@3.2.7
+  - @prosopo/api@3.2.5
+  - @prosopo/api-express-router@3.0.65
+  - @prosopo/datasets@3.1.8
+  - @prosopo/env@3.3.10
+  - @prosopo/keyring@2.9.14
+  - @prosopo/types-env@2.8.10
+  - @prosopo/user-access-policy@3.6.15
+
 ## 3.21.3
 ### Patch Changes
 
