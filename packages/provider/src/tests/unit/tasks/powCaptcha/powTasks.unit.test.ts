@@ -1570,6 +1570,7 @@ module.exports = (input) => {
 				undefined,
 				undefined,
 				spamEmail,
+				true,
 			);
 
 			expect(result.verified).toBe(false);
@@ -1640,6 +1641,7 @@ module.exports = (input) => {
 					undefined,
 					undefined,
 					legitimateEmail,
+					true,
 				);
 
 				expect(result.verified).toBe(true);
@@ -1767,6 +1769,7 @@ module.exports = (input) => {
 				undefined,
 				undefined,
 				atDomainEmail,
+				true,
 			);
 
 			expect(result.verified).toBe(false);
@@ -1832,6 +1835,7 @@ module.exports = (input) => {
 				undefined,
 				undefined,
 				domainOnly,
+				true,
 			);
 
 			expect(result.verified).toBe(false);
@@ -1895,6 +1899,7 @@ module.exports = (input) => {
 					undefined,
 					undefined,
 					email,
+					true,
 				);
 
 				// Should continue and verify successfully despite spam check error
