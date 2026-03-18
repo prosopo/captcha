@@ -2175,7 +2175,9 @@ export class ProviderDatabase
 				? { domain: { $in: suffixCandidates } }
 				: { domain };
 
-		return this.tables.spamEmailDomain.findOne<SpamEmailDomainRecord>(query);
+		return await this.tables.spamEmailDomain
+					.findOne<SpamEmailDomainRecord>(query)
+					.exec();
 	}
 
 	async bulkUpdateSpamEmailDomains(
