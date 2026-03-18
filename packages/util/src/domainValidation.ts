@@ -277,7 +277,12 @@ export function validateDomainForOutboundRequest(
 
 	// Extract TLD and check against reserved TLDs
 	const parts = normalizedDomain.split(".");
-	if (parts.length > 0) {
+
+	if (parts.length === 1) {
+		return { isValid: false, reason: "Domain must contain a TLD" };
+	}
+
+	if (parts.length > 1) {
 		const tld = parts[parts.length - 1];
 		if (tld && RESERVED_TLDS.has(tld)) {
 			return { isValid: false, reason: `Reserved TLD: ${tld}` };
