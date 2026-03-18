@@ -59,6 +59,18 @@ export function selectWeightedProvider(
 	return selectedProvider;
 }
 
+/**
+ * Pre-warms the provider cache for a given environment without requiring entropy.
+ * Call this as early as possible to avoid a cold-cache delay when getRandomActiveProvider is first used.
+ */
+export const prefetchProviders = async (
+	env: EnvironmentTypes,
+): Promise<void> => {
+	if (cachedProviders.length === 0) {
+		cachedProviders = await loadBalancer(env);
+	}
+};
+
 export const getRandomActiveProvider = async (
 	env: EnvironmentTypes,
 	entropy: number,

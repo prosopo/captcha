@@ -170,6 +170,7 @@ describe("ImgCaptchaManager", () => {
 			getDappUserCommitmentByAccount: vi.fn(),
 			markDappUserCommitmentsChecked: vi.fn(),
 			getSessionRecordBySessionId: vi.fn(),
+			updateSessionRecord: vi.fn(),
 			getSpamEmailDomain: vi.fn(),
 		} as unknown as IProviderDatabase;
 
@@ -758,6 +759,182 @@ describe("ImgCaptchaManager", () => {
 		});
 	});
 
+	describe("session result tracking for verifyImageCaptchaSolution", () => {
+		const ipAddress = getIPAddress("1.1.1.1");
+		const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
+		const sessionId = "test-session-for-result";
+
+		it("should update session as serverChecked and approved on successful verification", async () => {
+			const userAccount = "userAccount";
+			const dappAccount = "dappAccount";
+			const commitmentId = "commitmentId";
+
+			const commitment: Partial<UserCommitment> = {
+				id: commitmentId,
+				userAccount,
+				dappAccount,
+				result: { status: CaptchaStatus.approved },
+				userSubmitted: true,
+				serverChecked: false,
+				requestedAtTimestamp: new Date(),
+				ipAddress: {
+					lower: ipAddress.bigInt(),
+					upper: 0n,
+					type: IpAddressType.v4,
+				},
+				headers,
+				ja4: "ja4",
+				lastUpdatedTimestamp: new Date(),
+				sessionId,
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getDappUserCommitmentById as any).mockResolvedValue(commitment);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getSessionRecordBySessionId as any).mockResolvedValue(undefined);
+
+			// Mock decision machine to allow
+			const originalDecide =
+				// biome-ignore lint/suspicious/noExplicitAny: tests
+				(imgCaptchaManager as any).decisionMachineRunner.decide;
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(imgCaptchaManager as any).decisionMachineRunner.decide = vi
+				.fn()
+				.mockResolvedValue({ decision: "allow" });
+
+			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
+				userAccount,
+				dappAccount,
+				commitmentId,
+				mockEnv,
+			);
+
+			expect(result.verified).toBe(true);
+			expect(db.updateSessionRecord).toHaveBeenCalledWith(sessionId, {
+				serverChecked: true,
+				result: { status: CaptchaStatus.approved },
+			});
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(imgCaptchaManager as any).decisionMachineRunner.decide = originalDecide;
+		});
+
+		it("should update session as serverChecked and disapproved when decision machine denies", async () => {
+			const userAccount = "userAccount";
+			const dappAccount = "dappAccount";
+			const commitmentId = "commitmentId";
+
+			const commitment: Partial<UserCommitment> = {
+				id: commitmentId,
+				userAccount,
+				dappAccount,
+				result: { status: CaptchaStatus.approved },
+				userSubmitted: true,
+				serverChecked: false,
+				requestedAtTimestamp: new Date(),
+				ipAddress: {
+					lower: ipAddress.bigInt(),
+					upper: 0n,
+					type: IpAddressType.v4,
+				},
+				headers,
+				ja4: "ja4",
+				lastUpdatedTimestamp: new Date(),
+				sessionId,
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getDappUserCommitmentById as any).mockResolvedValue(commitment);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getSessionRecordBySessionId as any).mockResolvedValue(undefined);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.disapproveDappUserCommitment as any) = vi
+				.fn()
+				.mockResolvedValue(undefined);
+
+			// Mock decision machine to deny
+			const originalDecide =
+				// biome-ignore lint/suspicious/noExplicitAny: tests
+				(imgCaptchaManager as any).decisionMachineRunner.decide;
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(imgCaptchaManager as any).decisionMachineRunner.decide = vi
+				.fn()
+				.mockResolvedValue({
+					decision: "deny",
+					reason: "Suspicious",
+				});
+
+			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
+				userAccount,
+				dappAccount,
+				commitmentId,
+				mockEnv,
+			);
+
+			expect(result.verified).toBe(false);
+			expect(db.updateSessionRecord).toHaveBeenCalledWith(sessionId, {
+				serverChecked: true,
+				result: {
+					status: CaptchaStatus.disapproved,
+					reason: "Suspicious",
+				},
+			});
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(imgCaptchaManager as any).decisionMachineRunner.decide = originalDecide;
+		});
+
+		it("should not update session when commitment has no sessionId", async () => {
+			const userAccount = "userAccount";
+			const dappAccount = "dappAccount";
+			const commitmentId = "commitmentId";
+
+			const commitment: Partial<UserCommitment> = {
+				id: commitmentId,
+				userAccount,
+				dappAccount,
+				result: { status: CaptchaStatus.approved },
+				userSubmitted: true,
+				serverChecked: false,
+				requestedAtTimestamp: new Date(),
+				ipAddress: {
+					lower: ipAddress.bigInt(),
+					upper: 0n,
+					type: IpAddressType.v4,
+				},
+				headers,
+				ja4: "ja4",
+				lastUpdatedTimestamp: new Date(),
+				// No sessionId
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getDappUserCommitmentById as any).mockResolvedValue(commitment);
+
+			// Mock decision machine to allow
+			const originalDecide =
+				// biome-ignore lint/suspicious/noExplicitAny: tests
+				(imgCaptchaManager as any).decisionMachineRunner.decide;
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(imgCaptchaManager as any).decisionMachineRunner.decide = vi
+				.fn()
+				.mockResolvedValue({ decision: "allow" });
+
+			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
+				userAccount,
+				dappAccount,
+				commitmentId,
+				mockEnv,
+			);
+
+			expect(result.verified).toBe(true);
+			expect(db.updateSessionRecord).not.toHaveBeenCalled();
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(imgCaptchaManager as any).decisionMachineRunner.decide = originalDecide;
+		});
+	});
+
 	describe("verifyImageCaptchaSolution with spam email domain checking", () => {
 		it("should disapprove when email domain is found in spam list", async () => {
 			const userAccount = "userAccount";
@@ -813,6 +990,7 @@ describe("ImgCaptchaManager", () => {
 				undefined,
 				undefined,
 				spamEmail,
+				true,
 			);
 
 			expect(result.verified).toBe(false);
@@ -891,6 +1069,7 @@ describe("ImgCaptchaManager", () => {
 					undefined,
 					undefined,
 					legitimateEmail,
+					true,
 				);
 
 				expect(result.verified).toBe(true);
@@ -908,7 +1087,7 @@ describe("ImgCaptchaManager", () => {
 			}
 		});
 
-		it("should skip spam check when no email is provided", async () => {
+		it("should skip spam check when no email is provided and email checking is enabled", async () => {
 			const userAccount = "userAccount";
 			const dappAccount = "dappAccount";
 			const commitmentId = "commitmentId123";
@@ -967,6 +1146,7 @@ describe("ImgCaptchaManager", () => {
 					undefined,
 					undefined,
 					undefined, // No email provided
+					true,
 				);
 
 				expect(result.verified).toBe(true);
@@ -1034,6 +1214,7 @@ describe("ImgCaptchaManager", () => {
 				undefined,
 				undefined,
 				atDomainEmail,
+				true,
 			);
 
 			expect(result.verified).toBe(false);
@@ -1099,6 +1280,7 @@ describe("ImgCaptchaManager", () => {
 				undefined,
 				undefined,
 				domainOnly,
+				true,
 			);
 
 			expect(result.verified).toBe(false);
@@ -1171,6 +1353,7 @@ describe("ImgCaptchaManager", () => {
 					undefined,
 					undefined,
 					email,
+					true,
 				);
 
 				// Should continue and verify successfully despite spam check error
@@ -1240,6 +1423,7 @@ describe("ImgCaptchaManager", () => {
 				undefined,
 				undefined,
 				spamEmail,
+				true,
 			);
 
 			expect(result.verified).toBe(false);

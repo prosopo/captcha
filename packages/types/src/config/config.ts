@@ -328,6 +328,7 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 			secret: string().optional(),
 			password: string().optional(),
 		}),
+		dnsServers: array(string()).optional(),
 	}),
 );
 

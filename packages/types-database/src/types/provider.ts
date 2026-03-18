@@ -385,6 +385,23 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	geolocation: { type: String, required: false },
 	countryCode: { type: String, required: false },
 	headers: { type: Object, required: false },
+	result: {
+		type: new Schema(
+			{
+				status: {
+					type: String,
+					enum: Object.values(CaptchaStatus),
+					required: true,
+				},
+				reason: { type: String, required: false },
+				error: { type: String, required: false },
+			},
+			{ _id: false },
+		),
+		required: false,
+	},
+	userSubmitted: { type: Boolean, required: false },
+	serverChecked: { type: Boolean, required: false },
 } satisfies AllKeys<Session>);
 
 SessionRecordSchema.index({ createdAt: 1 });
@@ -402,6 +419,11 @@ SessionRecordSchema.index({
 	"scoreComponents.baseScore": 1,
 });
 SessionRecordSchema.index({ createdAt: 1, deleted: 1 });
+// Index for querying session verification status
+SessionRecordSchema.index(
+	{ "result.status": 1 },
+	{ background: true, sparse: true },
+);
 
 export type DetectorSchema = mongoose.Document & DetectorKey;
 export const DetectorRecordSchema = new Schema<DetectorSchema>({
@@ -662,6 +684,11 @@ export interface IProviderDatabase extends IDatabase {
 	getSessionRecordByToken(token: string): Promise<Session | undefined>;
 
 	checkAndRemoveSession(sessionId: string): Promise<Session | undefined>;
+
+	updateSessionRecord(
+		sessionId: string,
+		updates: Partial<Session>,
+	): Promise<void>;
 
 	getSessionByuserSitekeyIpHash(
 		userSitekeyIpHash: string,
