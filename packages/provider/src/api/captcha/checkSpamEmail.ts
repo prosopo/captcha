@@ -19,10 +19,12 @@ import { object, string } from "zod";
 import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
 import { checkSpamEmail as checkSpamEmailFn } from "../../tasks/spam/checkSpamEmail.js";
+
 const CheckSpamEmailRequestBody = object({
 	email: string(),
 	dapp: string(),
 });
+
 export default (env: ProviderEnvironment) =>
 	async (
 		req: Request & AugmentedRequest,
