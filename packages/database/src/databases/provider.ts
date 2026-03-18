@@ -85,10 +85,12 @@ import {
 	accessRulesRedisIndex,
 	createRedisAccessRulesStorage,
 } from "@prosopo/user-access-policy/redis";
+import { buildDomainSuffixCandidates } from "@prosopo/util";
 import type { ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
 
 const TWENTY_FOUR_HOURS_IN_MS = 24 * 60 * 60 * 1000;
+const MAX_DOMAIN_SUFFIX_CANDIDATES = 5;
 
 enum TableNames {
 	captcha = "captcha",
@@ -2163,9 +2165,19 @@ export class ProviderDatabase
 				context: { failedFuncName: this.getSpamEmailDomain.name },
 			});
 		}
-		return this.tables.spamEmailDomain
-			.findOne({ domain })
-			.exec() as Promise<SpamEmailDomainRecord | null>;
+
+		const suffixCandidates = buildDomainSuffixCandidates(domain).slice(
+			0,
+			MAX_DOMAIN_SUFFIX_CANDIDATES,
+		);
+		const query =
+			suffixCandidates.length > 0
+				? { domain: { $in: suffixCandidates } }
+				: { domain };
+
+		return await this.tables.spamEmailDomain
+			.findOne<SpamEmailDomainRecord>(query)
+			.exec();
 	}
 
 	async bulkUpdateSpamEmailDomains(

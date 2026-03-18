@@ -18,6 +18,8 @@ import type {
 	IPInfoResult,
 } from "@prosopo/types";
 
+const TIMEOUT_MS = 700;
+
 /**
  * Fetches comprehensive IP information from ipapi.is including geolocation,
  * provider details, and security threat indicators
@@ -53,7 +55,7 @@ export async function getIPInfo(
 
 		// Set up timeout controller
 		const controller = new AbortController();
-		const timeoutId = setTimeout(() => controller.abort(), 350);
+		const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
 		try {
 			const response = await fetch(url, {
@@ -140,7 +142,7 @@ export async function getIPInfo(
 			if (fetchError instanceof Error && fetchError.name === "AbortError") {
 				return {
 					isValid: false,
-					error: "Request timed out after 350ms",
+					error: `Request timed out after ${TIMEOUT_MS}ms`,
 					ip,
 				};
 			}

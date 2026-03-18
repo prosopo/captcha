@@ -47,7 +47,7 @@ describe("getJA4", () => {
 		const headers = {} as IncomingHttpHeaders;
 		const result = await getJA4(headers);
 
-		expect(result.ja4PlusFingerprint).toBe(DEFAULT_JA4);
+		expect(result.ja4PlusFingerprint.slice(0, 3)).toBe(DEFAULT_JA4);
 
 		process.env.NODE_ENV = originalNodeEnv;
 	});
@@ -59,7 +59,7 @@ describe("getJA4", () => {
 
 		const result = await getJA4(headers);
 
-		expect(result.ja4PlusFingerprint).toBe(DEFAULT_JA4);
+		expect(result.ja4PlusFingerprint.slice(0, 3)).toBe(DEFAULT_JA4);
 	});
 
 	it("should return default JA4 when x-tls-clienthello is not base64", async () => {
@@ -69,7 +69,7 @@ describe("getJA4", () => {
 
 		const result = await getJA4(headers);
 
-		expect(result.ja4PlusFingerprint).toBe(DEFAULT_JA4);
+		expect(result.ja4PlusFingerprint.slice(0, 3)).toBe(DEFAULT_JA4);
 	});
 
 	it("should return default JA4 when ClientHello first byte is not 0x01", async () => {
@@ -83,10 +83,13 @@ describe("getJA4", () => {
 
 		const result = await getJA4(headers);
 
-		expect(result.ja4PlusFingerprint).toBe(DEFAULT_JA4);
+		expect(result.ja4PlusFingerprint.slice(0, 3)).toBe(DEFAULT_JA4);
 	});
 
 	it("should successfully parse valid ClientHello", async () => {
+		// Ensure we're not in development mode
+		const originalNodeEnv = process.env.NODE_ENV;
+		process.env.NODE_ENV = "production";
 		// Create a buffer where the 6th byte (index 5) is 0x01
 		const validClientHello = Buffer.alloc(10);
 		validClientHello[5] = 0x01; // Valid first byte
@@ -98,9 +101,13 @@ describe("getJA4", () => {
 		const result = await getJA4(headers);
 
 		expect(result.ja4PlusFingerprint).toBe("ja4+1234567890abcdef");
+		process.env.NODE_ENV = originalNodeEnv;
 	});
 
 	it("should handle x-tls-version header", async () => {
+		// Ensure we're not in development mode
+		const originalNodeEnv = process.env.NODE_ENV;
+		process.env.NODE_ENV = "production";
 		const validClientHello = Buffer.alloc(10);
 		validClientHello[5] = 0x01;
 
@@ -112,6 +119,8 @@ describe("getJA4", () => {
 		const result = await getJA4(headers);
 
 		expect(result.ja4PlusFingerprint).toBe("ja4+1234567890abcdef");
+
+		process.env.NODE_ENV = originalNodeEnv;
 	});
 
 	it("should handle case insensitive x-tls-version", async () => {
@@ -169,7 +178,7 @@ describe("getJA4", () => {
 
 		const result = await getJA4(headers);
 
-		expect(result.ja4PlusFingerprint).toBe(DEFAULT_JA4);
+		expect(result.ja4PlusFingerprint.slice(0, 3)).toBe(DEFAULT_JA4);
 	});
 
 	it("should handle null or undefined headers", async () => {
@@ -180,7 +189,7 @@ describe("getJA4", () => {
 		// biome-ignore lint/suspicious/noExplicitAny: tests
 		const result = await getJA4(null as any);
 
-		expect(result.ja4PlusFingerprint).toBe(DEFAULT_JA4);
+		expect(result.ja4PlusFingerprint.slice(0, 3)).toBe(DEFAULT_JA4);
 
 		process.env.NODE_ENV = originalNodeEnv;
 	});

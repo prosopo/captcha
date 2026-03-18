@@ -990,6 +990,7 @@ describe("ImgCaptchaManager", () => {
 				undefined,
 				undefined,
 				spamEmail,
+				true,
 			);
 
 			expect(result.verified).toBe(false);
@@ -1068,6 +1069,7 @@ describe("ImgCaptchaManager", () => {
 					undefined,
 					undefined,
 					legitimateEmail,
+					true,
 				);
 
 				expect(result.verified).toBe(true);
@@ -1085,7 +1087,7 @@ describe("ImgCaptchaManager", () => {
 			}
 		});
 
-		it("should skip spam check when no email is provided", async () => {
+		it("should skip spam check when no email is provided and email checking is enabled", async () => {
 			const userAccount = "userAccount";
 			const dappAccount = "dappAccount";
 			const commitmentId = "commitmentId123";
@@ -1144,6 +1146,7 @@ describe("ImgCaptchaManager", () => {
 					undefined,
 					undefined,
 					undefined, // No email provided
+					true,
 				);
 
 				expect(result.verified).toBe(true);
@@ -1211,6 +1214,7 @@ describe("ImgCaptchaManager", () => {
 				undefined,
 				undefined,
 				atDomainEmail,
+				true,
 			);
 
 			expect(result.verified).toBe(false);
@@ -1276,6 +1280,7 @@ describe("ImgCaptchaManager", () => {
 				undefined,
 				undefined,
 				domainOnly,
+				true,
 			);
 
 			expect(result.verified).toBe(false);
@@ -1348,6 +1353,7 @@ describe("ImgCaptchaManager", () => {
 					undefined,
 					undefined,
 					email,
+					true,
 				);
 
 				// Should continue and verify successfully despite spam check error
@@ -1417,6 +1423,7 @@ describe("ImgCaptchaManager", () => {
 				undefined,
 				undefined,
 				spamEmail,
+				true,
 			);
 
 			expect(result.verified).toBe(false);

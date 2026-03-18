@@ -161,6 +161,7 @@ export const ClientSettingsSchema = object({
 	ipValidationRules: IPValidationRulesSchema.optional(),
 	disallowWebView: boolean().optional().default(false).optional(),
 	contextAware: ContextAwareSchema.optional(),
+	spamEmailDomainCheckEnabled: boolean().optional(),
 });
 
 export type IUserSettings = output<typeof ClientSettingsSchema>;
