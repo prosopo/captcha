@@ -155,6 +155,11 @@ export const UserSettingsSchema = new Schema({
 			},
 		},
 	},
+	spamEmailDomainCheckEnabled: {
+		type: Boolean,
+		default: false,
+		required: false,
+	},
 });
 
 export const UserDataSchema: mongoose.Schema<UserDataRecord> = new Schema({

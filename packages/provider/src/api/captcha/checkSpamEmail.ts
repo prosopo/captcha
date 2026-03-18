@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import { ProsopoApiError } from "@prosopo/common";
-import { CaptchaType } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 import { object, string } from "zod";
@@ -54,15 +53,11 @@ export default (env: ProviderEnvironment) =>
 					}),
 				);
 			}
-			// Validate client is allowed to use frictionless captcha
-			const { valid, reason } = await tasks.frictionlessManager.isValidRequest(
-				clientRecord,
-				CaptchaType.frictionless,
-				env,
-			);
+			// Validate client is allowed to use spam email domain checking
+			const valid = clientRecord.settings.spamEmailDomainCheckEnabled;
 			if (!valid) {
 				return next(
-					new ProsopoApiError(reason || "API.BAD_REQUEST", {
+					new ProsopoApiError("API.BAD_REQUEST", {
 						context: {
 							code: 400,
 							siteKey: dapp,

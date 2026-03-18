@@ -98,13 +98,13 @@ export class PowCaptchaManager extends CaptchaManager {
 	 * @description Verifies a PoW Captcha for a given user and dapp
 	 *
 	 * @param {string} challenge - the starting string for the PoW challenge
-	 * @param {string} difficulty - how many leading zeroes the solution must have
 	 * @param {string} providerChallengeSignature - proof that the Provider provided the challenge
 	 * @param {string} nonce - the string that the user has found that satisfies the PoW challenge
 	 * @param {number} timeout - the time in milliseconds since the Provider was selected to provide the PoW captcha
 	 * @param {string} userTimestampSignature
 	 * @param ipAddress
 	 * @param headers
+	 * @param behavioralData
 	 * @param salt
 	 */
 	async verifyPowCaptchaSolution(
@@ -286,6 +286,8 @@ export class PowCaptchaManager extends CaptchaManager {
 	 * @param env - provider environment
 	 * @param ip - optional IP address for validation
 	 * @param userAccessRulesStorage - storage for querying user access policies
+	 * @param email
+	 * @param spamEmailDomainCheckingEnabled
 	 */
 	async serverVerifyPowCaptchaSolution(
 		dappAccount: string,
@@ -295,6 +297,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		ip?: string,
 		userAccessRulesStorage?: AccessRulesStorage,
 		email?: string,
+		spamEmailDomainCheckingEnabled = false,
 	): Promise<{ verified: boolean; score?: number }> {
 		const notVerifiedResponse = { verified: false };
 
@@ -405,7 +408,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		}
 
 		// Check email domain against spam list if email is provided
-		if (email) {
+		if (email && spamEmailDomainCheckingEnabled) {
 			try {
 				const isSpam = await this.checkSpamEmail(email);
 				if (isSpam) {
