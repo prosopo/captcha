@@ -70,17 +70,22 @@ export const checkForMXRecord = async (
 
 export const checkForRedirect = (
 	url: string,
-): Promise<{ domain?: string; tlsError?: boolean }> => {
+): Promise<{ redirectUrl?: string; tlsError?: boolean }> => {
 	return new Promise((resolve) => {
 		https
 			.get(url, (res) => {
+				// Drain the response body to free up resources and prevent socket leaks
+				res.resume();
+
 				if (
 					res.statusCode &&
 					res.statusCode >= 300 &&
 					res.statusCode < 400 &&
 					res.headers.location
 				) {
-					resolve({ domain: res.headers.location });
+					// Resolve relative URLs against the request URL
+					const absoluteUrl = new URL(res.headers.location, url).href;
+					resolve({ redirectUrl: absoluteUrl });
 				} else {
 					resolve({});
 				}

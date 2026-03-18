@@ -316,7 +316,7 @@ describe("checkSpamEmail", () => {
 			mockRunDnsChecks.mockResolvedValue({
 				cnameResult: null,
 				mxRecordResult: null,
-				redirectResult: { domain: "https://spam-redirect.com/signup" },
+				redirectResult: { redirectUrl: "https://spam-redirect.com/signup" },
 			});
 
 			const result = await checkSpamEmail(
@@ -480,7 +480,7 @@ describe("checkSpamEmail", () => {
 			mockRunDnsChecks.mockResolvedValue({
 				cnameResult: ["some.cname.com."],
 				mxRecordResult: [{ exchange: "mail.example.com.", priority: 10 }],
-				redirectResult: { domain: "https://spam-redirect.com" },
+				redirectResult: { redirectUrl: "https://spam-redirect.com" },
 			});
 
 			const result = await checkSpamEmail(

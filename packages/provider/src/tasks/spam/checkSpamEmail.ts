@@ -16,6 +16,7 @@ import type { Logger } from "@prosopo/common";
 import type { ProsopoConfigOutput } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { runDnsChecks } from "@prosopo/util";
+
 /**
  * Extracts the domain from a URL or returns the input if it's already a domain
  */
@@ -101,8 +102,8 @@ export async function checkSpamEmail(
 		return true;
 	}
 	// If redirect domain found, check it in spam list
-	if (dnsCheckResult.redirectResult.domain) {
-		const redirectUrl = dnsCheckResult.redirectResult.domain;
+	if (dnsCheckResult.redirectResult.redirectUrl) {
+		const redirectUrl = dnsCheckResult.redirectResult.redirectUrl;
 		const redirectDomain = extractDomain(redirectUrl).toLowerCase().trim();
 		logger.info(() => ({
 			msg: "Email domain has HTTP redirect",
