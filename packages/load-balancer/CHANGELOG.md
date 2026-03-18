@@ -1,5 +1,14 @@
 # @prosopo/load-balancer
 
+## 2.8.31
+### Patch Changes
+
+- 730c61e: Speed up captcha
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/types@3.12.3
+
 ## 2.8.30
 ### Patch Changes
 
