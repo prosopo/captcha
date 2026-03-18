@@ -173,46 +173,53 @@ function isReservedIPv4(ipStr: string): boolean {
 
 /**
  * Checks if an IPv6 address is in a reserved/private range
+ * Extracts the first octet for bitmasking.
  */
 function isReservedIPv6(ipStr: string): boolean {
 	try {
 		const cleaned = ipStr.replace(/^\[|\]$/g, "");
 		const ip = new Address6(cleaned);
 
-		// Check for common reserved ranges
-		// ::1/128 - Loopback
-		if (ip.isLoopback()) return true;
+		// 1. Check for common reserved ranges via library helpers
+		if (ip.isLoopback()) return true; // ::1/128
+		if (ip.isLinkLocal()) return true; // fe80::/10
 
-		// ::/128 - Unspecified
-		if (cleaned === "::" || cleaned === "::0") return true;
+		// 2. ::/128 - Unspecified
+		if (cleaned === "::" || cleaned === "0:0:0:0:0:0:0:0") return true;
 
-		// ::ffff:0:0/96 - IPv4-mapped (check the IPv4 part)
+		// 3. ::ffff:0:0/96 - IPv4-mapped
 		if (ip.is4()) {
 			const v4 = ip.to4();
 			return isReservedIPv4(v4.address);
 		}
 
-		// fe80::/10 - Link-local
-		if (ip.isLinkLocal()) return true;
+		// 4. Manual bitmasking for Ranges
+		// ip.parsedAddress[0] is a string representing the first 16 bits (e.g., "fc00")
+		const firstWordStr = ip.parsedAddress[0];
+		if (firstWordStr) {
+			const first16Bits = Number.parseInt(firstWordStr, 16);
 
-		// fc00::/7 - Unique local address (private)
-		const firstWord = ip.parsedAddress[0];
-		if (firstWord) {
-			const firstByte = Number.parseInt(firstWord, 16);
-			if ((firstByte & 0xfe) === 0xfc) return true;
+			// Extract the first 8 bits (the first octet) by shifting right
+			const firstOctet = first16Bits >> 8;
+
+			// fc00::/7 - Unique local address (ULA)
+			// Binary 1111110x. Mask 0xfe (11111110) checks if the first 7 bits match 0xfc
+			if ((firstOctet & 0xfe) === 0xfc) return true;
+
+			// ff00::/8 - Multicast
+			// First octet must be 11111111 (0xff)
+			if (firstOctet === 0xff) return true;
 		}
 
-		// ff00::/8 - Multicast
-		if (firstWord) {
-			const firstByte = Number.parseInt(firstWord, 16);
-			if ((firstByte & 0xff00) === 0xff00) return true;
-		}
+		// 5. 2001:db8::/32 - Documentation Range
+		// Comparing the first two 16-bit words
+		const prefix = ip.parsedAddress.slice(0, 2).join(":").toLowerCase();
+		if (prefix === "2001:db8") return true;
 
-		// 2001:db8::/32 - Documentation
-		const prefix = ip.parsedAddress.slice(0, 2).join(":");
-		return prefix.toLowerCase() === "2001:db8";
+		return false;
 	} catch {
-		return true; // If we can't parse it, treat as reserved for safety
+		// If parsing fails, default to true (reserved) to prevent SSRF bypass
+		return true;
 	}
 }
 
