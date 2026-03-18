@@ -17,9 +17,9 @@ import type { ProsopoConfigOutput } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import {
 	extractDomainFromEmail,
-	runDnsChecks,
 	validateDomainForOutboundRequest,
 } from "@prosopo/util";
+import { runDnsChecks } from "../../utils/dns.js";
 
 /**
  * Extracts the domain from a URL or returns the input if it's already a domain

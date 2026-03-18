@@ -20,17 +20,21 @@ import { checkSpamEmail } from "../../../../tasks/spam/checkSpamEmail.js";
 
 // Mock @prosopo/util module
 vi.mock("@prosopo/util", () => ({
-	runDnsChecks: vi.fn(),
 	validateDomainForOutboundRequest: vi.fn(),
 	extractDomainFromEmail: vi.fn(),
+}));
+
+// Mock the local dns utils module
+vi.mock("../../../../utils/dns.js", () => ({
+	runDnsChecks: vi.fn(),
 }));
 
 // Import the mocked functions for use in tests
 import {
 	extractDomainFromEmail,
-	runDnsChecks,
 	validateDomainForOutboundRequest,
 } from "@prosopo/util";
+import { runDnsChecks } from "../../../../utils/dns.js";
 
 describe("checkSpamEmail", () => {
 	let db: IProviderDatabase;
