@@ -69,20 +69,103 @@ describe("validateDomainForOutboundRequest", () => {
 			}
 		});
 
-		it("should reject IPv6 addresses", () => {
-			const ipv6Addresses = [
-				"::1",
-				"fe80::1",
-				"2001:db8::1",
-				"[::1]",
-				"[fe80::1]",
-			];
+		describe("IPv6 reserved ranges (isReservedIPv6)", () => {
+			it("should reject loopback ::1/128", () => {
+				for (const addr of ["::1", "0:0:0:0:0:0:0:1"]) {
+					const result = validateDomainForOutboundRequest(addr);
+					expect(result.isValid, `${addr} must be rejected`).toBe(false);
+					expect(result.reason).toContain("reserved");
+				}
+			});
 
-			for (const ip of ipv6Addresses) {
-				const result = validateDomainForOutboundRequest(ip);
-				expect(result.isValid, `Expected ${ip} to be rejected`).toBe(false);
-				expect(result.reason).toContain("IP");
-			}
+			it("should reject unspecified ::/128", () => {
+				for (const addr of ["::", "0:0:0:0:0:0:0:0"]) {
+					const result = validateDomainForOutboundRequest(addr);
+					expect(result.isValid, `${addr} must be rejected`).toBe(false);
+					expect(result.reason).toContain("reserved");
+				}
+			});
+
+			it("should reject link-local fe80::/10", () => {
+				// fe80 first octet = 0xfe → link-local
+				for (const addr of ["fe80::1", "fe80::dead:beef", "fe80::1%eth0"]) {
+					const result = validateDomainForOutboundRequest(addr);
+					expect(result.isValid, `${addr} must be rejected`).toBe(false);
+					expect(result.reason).toContain("reserved");
+				}
+			});
+
+			it("should reject unique-local fc00::/7 (fc and fd prefixes)", () => {
+				// fc00::/7 covers fc00:: – fdff::
+				// fc: first octet 0xfc → (0xfc & 0xfe) === 0xfc ✓
+				// fd: first octet 0xfd → (0xfd & 0xfe) === 0xfc ✓
+				for (const addr of [
+					"fc00::1", // fc prefix
+					"fc00:dead:beef::1",
+					"fd00::1", // fd prefix
+					"fd12:3456:789a::1",
+				]) {
+					const result = validateDomainForOutboundRequest(addr);
+					expect(result.isValid, `${addr} must be rejected`).toBe(false);
+					expect(result.reason).toContain("reserved");
+				}
+			});
+
+			it("should reject multicast ff00::/8", () => {
+				// First octet 0xff → multicast
+				for (const addr of [
+					"ff00::1",
+					"ff02::1", // all nodes
+					"ff02::2", // all routers
+					"ff05::101", // NTP
+				]) {
+					const result = validateDomainForOutboundRequest(addr);
+					expect(result.isValid, `${addr} must be rejected`).toBe(false);
+					expect(result.reason).toContain("reserved");
+				}
+			});
+
+			it("should reject documentation range 2001:db8::/32", () => {
+				for (const addr of ["2001:db8::1", "2001:db8:85a3::8a2e:370:7334"]) {
+					const result = validateDomainForOutboundRequest(addr);
+					expect(result.isValid, `${addr} must be rejected`).toBe(false);
+					expect(result.reason).toContain("reserved");
+				}
+			});
+
+			it("should reject IPv4-mapped addresses ::ffff:0:0/96 when mapped IPv4 is private", () => {
+				// ::ffff:192.168.1.1 maps to 192.168.1.1 (private)
+				for (const addr of [
+					"::ffff:192.168.1.1",
+					"::ffff:127.0.0.1",
+					"::ffff:10.0.0.1",
+				]) {
+					const result = validateDomainForOutboundRequest(addr);
+					expect(result.isValid, `${addr} must be rejected`).toBe(false);
+					expect(result.reason).toContain("reserved");
+				}
+			});
+
+			it("should reject bracketed IPv6 literals", () => {
+				for (const addr of ["[::1]", "[fe80::1]", "[fc00::1]", "[ff02::1]"]) {
+					const result = validateDomainForOutboundRequest(addr);
+					expect(result.isValid, `${addr} must be rejected`).toBe(false);
+					expect(result.reason).toContain("IP");
+				}
+			});
+
+			it("should reject any IPv6 literal even when globally routable", () => {
+				// Public unicast — IP literals of any kind are not allowed
+				for (const addr of [
+					"2606:4700:4700::1111", // Cloudflare DNS
+					"2001:4860:4860::8888", // Google DNS
+					"2400:cb00:2048::1", // Cloudflare
+				]) {
+					const result = validateDomainForOutboundRequest(addr);
+					expect(result.isValid, `${addr} must be rejected`).toBe(false);
+					expect(result.reason).toContain("IP");
+				}
+			});
 		});
 
 		it("should reject reserved IPv4 ranges", () => {
@@ -140,10 +223,10 @@ describe("validateDomainForOutboundRequest", () => {
 
 	describe("reserved TLDs", () => {
 		it("should reject domains with reserved TLDs", () => {
+			// These all reach the TLD check (not caught earlier by hostname/pattern checks)
 			const reservedTLDDomains = [
 				"myserver.localhost",
 				"myhost.local",
-				"server.internal",
 				"database.intranet",
 				"router.lan",
 				"nas.home",
@@ -155,6 +238,14 @@ describe("validateDomainForOutboundRequest", () => {
 				expect(result.isValid, `Expected ${domain} to be rejected`).toBe(false);
 				expect(result.reason).toContain("TLD");
 			}
+		});
+
+		it("should reject .internal domains (caught by internal-hostname pattern)", () => {
+			// *.internal matches AWS_INTERNAL_PATTERNS before reaching the TLD check
+			const result = validateDomainForOutboundRequest("server.internal");
+			expect(result.isValid).toBe(false);
+			// Reason may be either the pattern match or the TLD check — just verify rejection
+			expect(result.reason).toBeDefined();
 		});
 	});
 
@@ -194,7 +285,7 @@ describe("validateDomainForOutboundRequest", () => {
 			for (const domain of singleLabelDomains) {
 				const result = validateDomainForOutboundRequest(domain);
 				expect(result.isValid, `Expected ${domain} to be rejected`).toBe(false);
-				expect(result.reason).toContain("Single-label");
+				expect(result.reason).toContain("TLD");
 			}
 		});
 	});

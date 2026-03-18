@@ -214,9 +214,7 @@ function isReservedIPv6(ipStr: string): boolean {
 		// 5. 2001:db8::/32 - Documentation Range
 		// Comparing the first two 16-bit words
 		const prefix = ip.parsedAddress.slice(0, 2).join(":").toLowerCase();
-		if (prefix === "2001:db8") return true;
-
-		return false;
+		return prefix === "2001:db8";
 	} catch {
 		// If parsing fails, default to true (reserved) to prevent SSRF bypass
 		return true;
@@ -284,6 +282,11 @@ export function validateDomainForOutboundRequest(
 
 	// Extract TLD and check against reserved TLDs
 	const parts = normalizedDomain.split(".");
+
+	// Reject leading dot, trailing dot, or consecutive dots (empty labels)
+	if (parts.some((part) => part === "")) {
+		return { isValid: false, reason: "Domain contains empty labels" };
+	}
 
 	if (parts.length === 1) {
 		return { isValid: false, reason: "Domain must contain a TLD" };
