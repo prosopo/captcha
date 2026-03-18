@@ -70,7 +70,7 @@ export const isTlsAvailable = (): boolean => {
  */
 export const getClientApiPathsExcludingVerify = (): ClientApiPaths[] => {
 	const paths = Object.values(ClientApiPaths).filter(
-		(path) => path.indexOf("verify") === -1,
+		(path) => path.indexOf("verify") === -1 && path.indexOf("spam") === -1,
 	);
 	return paths as ClientApiPaths[];
 };
