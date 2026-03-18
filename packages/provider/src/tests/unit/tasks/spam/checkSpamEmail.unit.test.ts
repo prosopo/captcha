@@ -18,10 +18,20 @@ import type { IProviderDatabase } from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { checkSpamEmail } from "../../../../tasks/spam/checkSpamEmail.js";
 
+// Mock @prosopo/util module
+vi.mock("@prosopo/util", () => ({
+	runDnsChecks: vi.fn(),
+}));
+
+// Import the mocked function for use in tests
+import { runDnsChecks } from "@prosopo/util";
+
 describe("checkSpamEmail", () => {
 	let db: IProviderDatabase;
 	let config: ProsopoConfigOutput;
 	const logger = getLogger("info", "checkSpamEmail.unit.test");
+	// Cast the mocked function to access mock methods
+	const mockRunDnsChecks = runDnsChecks as ReturnType<typeof vi.fn>;
 
 	beforeEach(() => {
 		// Mock database
@@ -40,6 +50,13 @@ describe("checkSpamEmail", () => {
 		// Mock logger warn
 		logger.warn = vi.fn();
 		vi.clearAllMocks();
+
+		// Default mock for runDnsChecks - returns no DNS results
+		mockRunDnsChecks.mockResolvedValue({
+			cnameResult: null,
+			mxRecordResult: null,
+			redirectResult: {},
+		});
 	});
 
 	it("should check database for single-word domains without @", async () => {
@@ -233,5 +250,274 @@ describe("checkSpamEmail", () => {
 		);
 		expect(result).toBe(false);
 		expect(db.getSpamEmailDomain).toHaveBeenCalledWith("example.com");
+	});
+
+	it("should detect spam when base domain matches (fakemail.* pattern)", async () => {
+		// Simulate database finding "fakemail" base domain
+		(db.getSpamEmailDomain as ReturnType<typeof vi.fn>).mockResolvedValue({
+			domain: "fakemail",
+		});
+
+		const result = await checkSpamEmail(
+			"user@fakemail.app",
+			db,
+			config,
+			logger,
+		);
+		expect(result).toBe(true);
+		expect(db.getSpamEmailDomain).toHaveBeenCalledWith("fakemail.app");
+	});
+
+	it("should detect spam with different TLDs for same base domain", async () => {
+		const testCases = [
+			"fakemail.com",
+			"fakemail.app",
+			"fakemail.xyz",
+			"fakemail.net",
+		];
+
+		for (const domain of testCases) {
+			vi.clearAllMocks();
+			(db.getSpamEmailDomain as ReturnType<typeof vi.fn>).mockResolvedValue({
+				domain: "fakemail",
+			});
+
+			const result = await checkSpamEmail(`user@${domain}`, db, config, logger);
+			expect(result).toBe(true);
+			expect(db.getSpamEmailDomain).toHaveBeenCalledWith(domain);
+		}
+	});
+
+	describe("DNS checks", () => {
+		it("should detect spam when domain has TLS error", async () => {
+			(db.getSpamEmailDomain as ReturnType<typeof vi.fn>).mockResolvedValue(
+				null,
+			);
+			mockRunDnsChecks.mockResolvedValue({
+				cnameResult: null,
+				mxRecordResult: null,
+				redirectResult: { tlsError: true },
+			});
+
+			const result = await checkSpamEmail(
+				"user@suspicious.com",
+				db,
+				config,
+				logger,
+			);
+			expect(result).toBe(true);
+		});
+
+		it("should check redirect domain when redirect is found", async () => {
+			(db.getSpamEmailDomain as ReturnType<typeof vi.fn>)
+				.mockResolvedValueOnce(null) // First call for original domain
+				.mockResolvedValueOnce({ domain: "spam-redirect.com" }); // Second call for redirect
+
+			mockRunDnsChecks.mockResolvedValue({
+				cnameResult: null,
+				mxRecordResult: null,
+				redirectResult: { domain: "https://spam-redirect.com/signup" },
+			});
+
+			const result = await checkSpamEmail(
+				"user@example.com",
+				db,
+				config,
+				logger,
+			);
+			expect(result).toBe(true);
+			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("example.com");
+			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("spam-redirect.com");
+		});
+
+		it("should check CNAME domain when CNAME is found", async () => {
+			(db.getSpamEmailDomain as ReturnType<typeof vi.fn>)
+				.mockResolvedValueOnce(null) // First call for original domain
+				.mockResolvedValueOnce({ domain: "spam.cname.com" }); // Second call for CNAME
+
+			mockRunDnsChecks.mockResolvedValue({
+				cnameResult: ["spam.cname.com."],
+				mxRecordResult: null,
+				redirectResult: {},
+			});
+
+			const result = await checkSpamEmail(
+				"user@example.com",
+				db,
+				config,
+				logger,
+			);
+			expect(result).toBe(true);
+			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("example.com");
+			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("spam.cname.com");
+		});
+
+		it("should check MX record domain when MX record is found", async () => {
+			(db.getSpamEmailDomain as ReturnType<typeof vi.fn>)
+				.mockResolvedValueOnce(null) // First call for original domain
+				.mockResolvedValueOnce({ domain: "fakemail.app" }); // Second call for MX domain
+
+			mockRunDnsChecks.mockResolvedValue({
+				cnameResult: null,
+				mxRecordResult: [{ exchange: "mail.fakemail.app.", priority: 10 }],
+				redirectResult: {},
+			});
+
+			const result = await checkSpamEmail("user@anowt.com", db, config, logger);
+			expect(result).toBe(true);
+			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("anowt.com");
+			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("mail.fakemail.app");
+		});
+
+		it("should handle MX record with trailing dot", async () => {
+			(db.getSpamEmailDomain as ReturnType<typeof vi.fn>)
+				.mockResolvedValueOnce(null)
+				.mockResolvedValueOnce(null);
+
+			mockRunDnsChecks.mockResolvedValue({
+				cnameResult: null,
+				mxRecordResult: [{ exchange: "mail.legitimate.com.", priority: 10 }],
+				redirectResult: {},
+			});
+
+			const result = await checkSpamEmail(
+				"user@example.com",
+				db,
+				config,
+				logger,
+			);
+			expect(result).toBe(false);
+			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("mail.legitimate.com");
+		});
+
+		it("should handle multiple MX records by checking the first one", async () => {
+			(db.getSpamEmailDomain as ReturnType<typeof vi.fn>)
+				.mockResolvedValueOnce(null)
+				.mockResolvedValueOnce({ domain: "spam-mx.com" });
+
+			mockRunDnsChecks.mockResolvedValue({
+				cnameResult: null,
+				mxRecordResult: [
+					{ exchange: "spam-mx.com.", priority: 10 },
+					{ exchange: "backup-mx.com.", priority: 20 },
+				],
+				redirectResult: {},
+			});
+
+			const result = await checkSpamEmail(
+				"user@example.com",
+				db,
+				config,
+				logger,
+			);
+			expect(result).toBe(true);
+			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("spam-mx.com");
+		});
+
+		it("should handle DNS check failure gracefully", async () => {
+			(db.getSpamEmailDomain as ReturnType<typeof vi.fn>).mockResolvedValue(
+				null,
+			);
+			mockRunDnsChecks.mockRejectedValue(new Error("DNS lookup failed"));
+
+			const result = await checkSpamEmail(
+				"user@example.com",
+				db,
+				config,
+				logger,
+			);
+			expect(result).toBe(false);
+			expect(logger.warn).toHaveBeenCalled();
+		});
+
+		it("should return false when MX record check fails", async () => {
+			(db.getSpamEmailDomain as ReturnType<typeof vi.fn>)
+				.mockResolvedValueOnce(null)
+				.mockRejectedValueOnce(new Error("Database error"));
+
+			mockRunDnsChecks.mockResolvedValue({
+				cnameResult: null,
+				mxRecordResult: [{ exchange: "mail.example.com.", priority: 10 }],
+				redirectResult: {},
+			});
+
+			const result = await checkSpamEmail(
+				"user@example.com",
+				db,
+				config,
+				logger,
+			);
+			expect(result).toBe(false);
+			expect(logger.warn).toHaveBeenCalled();
+		});
+
+		it("should handle empty MX record exchange gracefully", async () => {
+			(db.getSpamEmailDomain as ReturnType<typeof vi.fn>).mockResolvedValue(
+				null,
+			);
+
+			mockRunDnsChecks.mockResolvedValue({
+				cnameResult: null,
+				mxRecordResult: [{ exchange: "", priority: 10 }],
+				redirectResult: {},
+			});
+
+			const result = await checkSpamEmail(
+				"user@example.com",
+				db,
+				config,
+				logger,
+			);
+			expect(result).toBe(false);
+			expect(logger.warn).toHaveBeenCalled();
+		});
+
+		it("should prioritize redirect check over CNAME and MX checks", async () => {
+			(db.getSpamEmailDomain as ReturnType<typeof vi.fn>)
+				.mockResolvedValueOnce(null)
+				.mockResolvedValueOnce({ domain: "spam-redirect.com" });
+
+			mockRunDnsChecks.mockResolvedValue({
+				cnameResult: ["some.cname.com."],
+				mxRecordResult: [{ exchange: "mail.example.com.", priority: 10 }],
+				redirectResult: { domain: "https://spam-redirect.com" },
+			});
+
+			const result = await checkSpamEmail(
+				"user@example.com",
+				db,
+				config,
+				logger,
+			);
+			expect(result).toBe(true);
+			// Should only check original domain and redirect domain, not CNAME or MX
+			expect(db.getSpamEmailDomain).toHaveBeenCalledTimes(2);
+			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("example.com");
+			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("spam-redirect.com");
+		});
+
+		it("should prioritize CNAME check over MX check", async () => {
+			(db.getSpamEmailDomain as ReturnType<typeof vi.fn>)
+				.mockResolvedValueOnce(null)
+				.mockResolvedValueOnce({ domain: "spam.cname.com" });
+
+			mockRunDnsChecks.mockResolvedValue({
+				cnameResult: ["spam.cname.com."],
+				mxRecordResult: [{ exchange: "mail.example.com.", priority: 10 }],
+				redirectResult: {},
+			});
+
+			const result = await checkSpamEmail(
+				"user@example.com",
+				db,
+				config,
+				logger,
+			);
+			expect(result).toBe(true);
+			// Should only check original domain and CNAME, not MX
+			expect(db.getSpamEmailDomain).toHaveBeenCalledTimes(2);
+			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("example.com");
+			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("spam.cname.com");
+		});
 	});
 });

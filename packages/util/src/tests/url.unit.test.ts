@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect, it } from "vitest";
-import { validateDomain } from "../url.js";
+import { buildDomainPrefixCandidates, validateDomain } from "../url.js";
 
 describe("url", () => {
 	it("validates valid domains", () => {
@@ -59,5 +59,59 @@ describe("url", () => {
 				`${"a".repeat(62)}.${"a".repeat(62)}.${"a".repeat(62)}.${"a".repeat(62)}.co`,
 			),
 		).to.equal(false);
+	});
+});
+
+describe("buildDomainPrefixCandidates", () => {
+	it("should return all suffix candidates for a multi-level domain, excluding the TLD", () => {
+		const result = buildDomainPrefixCandidates("mail.fakemail.app");
+		expect(result).toEqual(["mail.fakemail.app", "fakemail.app"]);
+	});
+
+	it("should return a single element for a two-level domain", () => {
+		const result = buildDomainPrefixCandidates("fakemail.app");
+		expect(result).toEqual(["fakemail.app"]);
+	});
+
+	it("should return an empty array for a domain without dots (TLD only)", () => {
+		const result = buildDomainPrefixCandidates("localhost");
+		expect(result).toEqual([]);
+	});
+
+	it("should return an empty array for an empty string", () => {
+		const result = buildDomainPrefixCandidates("");
+		expect(result).toEqual([]);
+	});
+
+	it("should handle deep subdomains correctly, excluding the TLD", () => {
+		const result = buildDomainPrefixCandidates("a.b.c.d.example.com");
+		expect(result).toEqual([
+			"a.b.c.d.example.com",
+			"b.c.d.example.com",
+			"c.d.example.com",
+			"d.example.com",
+			"example.com",
+		]);
+	});
+
+	it("should handle domain with consecutive dots correctly", () => {
+		const result = buildDomainPrefixCandidates("test..domain");
+		expect(result).toEqual(["test..domain", ".domain"]);
+	});
+
+	it("should handle domain ending with a dot", () => {
+		const result = buildDomainPrefixCandidates("example.com.");
+		expect(result).toEqual(["example.com.", "com."]);
+	});
+
+	it("should handle domain starting with a dot", () => {
+		const result = buildDomainPrefixCandidates(".example.com");
+		expect(result).toEqual([".example.com", "example.com"]);
+	});
+
+	it("should return candidates in order from most specific to least specific", () => {
+		const result = buildDomainPrefixCandidates("sub.domain.tld");
+		expect(result[0]).toBe("sub.domain.tld");
+		expect(result[result.length - 1]).toBe("domain.tld");
 	});
 });

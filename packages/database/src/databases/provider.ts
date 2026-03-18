@@ -85,6 +85,7 @@ import {
 	accessRulesRedisIndex,
 	createRedisAccessRulesStorage,
 } from "@prosopo/user-access-policy/redis";
+import { buildDomainPrefixCandidates } from "@prosopo/util";
 import type { ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
 
@@ -2163,9 +2164,15 @@ export class ProviderDatabase
 				context: { failedFuncName: this.getSpamEmailDomain.name },
 			});
 		}
-		return this.tables.spamEmailDomain
-			.findOne({ domain })
-			.exec() as Promise<SpamEmailDomainRecord | null>;
+
+		const prefixCandidates = buildDomainPrefixCandidates(domain);
+		const conditions = prefixCandidates.map((d) => ({ domain: d }));
+
+		return (await this.tables.spamEmailDomain
+			.findOne({
+				$or: conditions,
+			})
+			.exec()) as Promise<SpamEmailDomainRecord | null>;
 	}
 
 	async bulkUpdateSpamEmailDomains(

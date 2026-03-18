@@ -79,7 +79,9 @@ export async function checkSpamEmail(
 	// Domain not found in spam list, run DNS checks
 	let dnsCheckResult: Awaited<ReturnType<typeof runDnsChecks>> | null = null;
 	try {
-		dnsCheckResult = await runDnsChecks(normalizedDomain);
+		dnsCheckResult = await runDnsChecks(normalizedDomain, {
+			dnsServers: config?.dnsServers,
+		});
 	} catch (error) {
 		logger.warn(() => ({
 			msg: "Failed to run DNS checks",
@@ -160,71 +162,51 @@ export async function checkSpamEmail(
 			return false;
 		}
 	}
-	// If A record found, check if IP is from datacenter
+	// If MX record found, check the domain associated with it
 	else if (
-		dnsCheckResult.aRecordResult &&
-		dnsCheckResult.aRecordResult.length > 0
+		dnsCheckResult.mxRecordResult &&
+		dnsCheckResult.mxRecordResult.length > 0
 	) {
-		const ipAddress = dnsCheckResult.aRecordResult[0];
-		if (!ipAddress) {
+		const firstMxRecord = dnsCheckResult.mxRecordResult[0];
+		if (!firstMxRecord || !firstMxRecord.exchange) {
 			logger.warn(() => ({
-				msg: "A record result array has undefined element",
+				msg: "MX record result array has undefined element or exchange",
 				email,
 				domain: normalizedDomain,
 			}));
 			return false;
 		}
+		// MX exchange may have trailing dots, remove them
+		const mxDomain = firstMxRecord.exchange
+			.replace(/\.$/, "")
+			.toLowerCase()
+			.trim();
 		logger.info(() => ({
-			msg: "Checking A record IP for datacenter",
+			msg: "Email domain has MX record",
 			email,
 			domain: normalizedDomain,
-			ipAddress,
+			mxDomain,
+			priority: firstMxRecord.priority,
 		}));
-		// Check if IP API is configured
-		if (!config.ipApi || !config.ipApi.baseUrl) {
-			logger.warn(() => ({
-				msg: "IP API not configured, skipping datacenter check",
-				email,
-				ipAddress,
-			}));
-			return false;
-		}
 		try {
-			const { getIPInfo } = await import("../../services/ipInfo.js");
-			const ipInfo = await getIPInfo(
-				ipAddress,
-				config.ipApi.baseUrl,
-				config.ipApi.apiKey || undefined,
-			);
-			// Type guard: check if response is valid before accessing isDatacenter
-			if (ipInfo.isValid) {
-				if (ipInfo.isDatacenter) {
-					logger.warn(() => ({
-						msg: "Email domain IP is from datacenter",
-						email,
-						domain: normalizedDomain,
-						ipAddress,
-						providerName: ipInfo.providerName,
-					}));
-					return true;
-				}
-			} else {
-				// ipInfo is IPInfoError here (isValid === false)
+			const record = await db.getSpamEmailDomain(mxDomain);
+			if (record !== null && record !== undefined) {
 				logger.warn(() => ({
-					msg: "IP info lookup failed",
+					msg: "Email domain MX record points to spam domain",
 					email,
-					ipAddress,
-					error: "error" in ipInfo ? ipInfo.error : "Unknown error",
+					domain: normalizedDomain,
+					mxDomain,
 				}));
+				return true;
 			}
 		} catch (error) {
 			logger.warn(() => ({
-				msg: "Failed to check IP datacenter status",
+				msg: "Failed to check spam email domain for MX record",
 				error,
 				email,
-				ipAddress,
+				mxDomain,
 			}));
-			return false; // Allow if IP check fails
+			return false;
 		}
 	}
 	// All checks passed

@@ -49,6 +49,17 @@ const getLRules = () => {
 	}
 };
 
+const getDnsServers = (): string[] | undefined => {
+	if (!process.env.PROSOPO_DNS_SERVERS) {
+		return undefined;
+	}
+	try {
+		return JSON.parse(process.env.PROSOPO_DNS_SERVERS);
+	} catch (e) {
+		return undefined;
+	}
+};
+
 const getSpamEmailDomainsUrls = (): string[] | undefined => {
 	if (!process.env.SPAM_EMAIL_DOMAINS_URLS) {
 		return undefined;
@@ -152,5 +163,6 @@ export default function getConfig(
 			baseUrl: process.env.PROSOPO_IPAPI_URL,
 		},
 		maxmindDbPath: process.env.MAXMIND_DB_PATH,
+		dnsServers: getDnsServers(),
 	} as ProsopoConfigInput);
 }

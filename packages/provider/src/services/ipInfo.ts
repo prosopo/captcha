@@ -142,7 +142,7 @@ export async function getIPInfo(
 			if (fetchError instanceof Error && fetchError.name === "AbortError") {
 				return {
 					isValid: false,
-					error: `Request timed out after ${TIMEOUT_MS}`,
+					error: `Request timed out after ${TIMEOUT_MS}ms`,
 					ip,
 				};
 			}

@@ -13,15 +13,30 @@
 // limitations under the License.
 
 import * as dns from "node:dns";
-import { promises as dnsPromises } from "node:dns";
 import * as https from "node:https";
+import { promisify } from "node:util";
+
+/** Default DNS servers to use for lookups (Google and Cloudflare) */
+const DEFAULT_DNS_SERVERS = ["8.8.8.8", "1.1.1.1"];
+
+/**
+ * Creates an isolated DNS resolver instance that doesn't affect global DNS config.
+ * Uses custom DNS servers by default for reliable lookups.
+ */
+const createResolver = (dnsServers?: string[]): dns.Resolver => {
+	const resolver = new dns.Resolver();
+	resolver.setServers(dnsServers ?? DEFAULT_DNS_SERVERS);
+	return resolver;
+};
 
 export const checkForCname = async (
 	domain: string,
+	resolver?: dns.Resolver,
 ): Promise<string[] | null> => {
 	try {
-		const addresses = await dnsPromises.resolveCname(domain);
-		return addresses;
+		const res = resolver ?? createResolver();
+		const resolveCname = promisify(res.resolveCname.bind(res));
+		return await resolveCname(domain);
 	} catch (err) {
 		return null;
 	}
@@ -29,17 +44,28 @@ export const checkForCname = async (
 
 export const checkForARecord = async (
 	domain: string,
+	resolver?: dns.Resolver,
 ): Promise<string[] | null> => {
-	// Try both callback and promises approaches
-	return new Promise((resolve, reject) => {
-		dns.resolve4(domain, (err, addresses) => {
-			if (err) {
-				resolve(null);
-			} else {
-				resolve(addresses);
-			}
-		});
-	});
+	try {
+		const res = resolver ?? createResolver();
+		const resolve4 = promisify(res.resolve4.bind(res));
+		return await resolve4(domain);
+	} catch (err) {
+		return null;
+	}
+};
+
+export const checkForMXRecord = async (
+	domain: string,
+	resolver?: dns.Resolver,
+): Promise<dns.MxRecord[] | null> => {
+	try {
+		const res = resolver ?? createResolver();
+		const resolveMx = promisify(res.resolveMx.bind(res));
+		return await resolveMx(domain);
+	} catch (err) {
+		return null;
+	}
 };
 
 export const checkForRedirect = (
@@ -72,20 +98,28 @@ export const checkForRedirect = (
 	});
 };
 
-export const runDnsChecks = async (domain: string) => {
-	// Set DNS servers to use system resolver
-	dns.setServers(["127.0.0.53", "8.8.8.8", "1.1.1.1"]);
+export interface DnsCheckOptions {
+	/** Optional DNS servers to use. If not provided, uses Google (8.8.8.8) and Cloudflare (1.1.1.1). */
+	dnsServers?: string[];
+}
+
+export const runDnsChecks = async (
+	domain: string,
+	options?: DnsCheckOptions,
+) => {
+	// Create an isolated resolver - doesn't affect global DNS config
+	const resolver = createResolver(options?.dnsServers);
 
 	try {
-		const [cnameResult, aRecordResult, redirectResult] = await Promise.all([
-			checkForCname(domain),
-			checkForARecord(domain),
+		const [cnameResult, mxRecordResult, redirectResult] = await Promise.all([
+			checkForCname(domain, resolver),
+			checkForMXRecord(domain, resolver),
 			checkForRedirect(`https://${domain}`),
 		]);
 
 		return {
 			cnameResult,
-			aRecordResult,
+			mxRecordResult,
 			redirectResult,
 		};
 	} catch (e) {

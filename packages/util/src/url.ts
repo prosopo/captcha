@@ -86,3 +86,31 @@ export const validateDomainPattern = (input: string): boolean => {
 
 	return validateDomain(domain);
 };
+
+/**
+ * @description Builds all suffix candidates for a domain by progressively stripping the leftmost label.
+ * For "mail.fakemail.app" this produces:
+ *   ["mail.fakemail.app", "fakemail.app"]
+ * This allows a single DB entry of "fakemail.app" to match queries for
+ * "mail.fakemail.app", "sub.fakemail.app", etc.
+ * The final TLD (e.g. "app", "com") is excluded as it would match all domains with that TLD.
+ *
+ * @param domain The domain to generate suffix candidates for
+ * @returns Array of domain suffix candidates, from most specific to least specific (excluding TLD)
+ */
+export const buildDomainPrefixCandidates = (domain: string): string[] => {
+	const candidates: string[] = [];
+	let current = domain;
+	while (current.length > 0) {
+		// Only add if there's at least one dot (i.e., not just a TLD)
+		if (current.includes(".")) {
+			candidates.push(current);
+		}
+		const dotIndex = current.indexOf(".");
+		if (dotIndex === -1) {
+			break;
+		}
+		current = current.substring(dotIndex + 1);
+	}
+	return candidates;
+};

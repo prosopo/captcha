@@ -65,15 +65,16 @@ export const isTlsAvailable = (): boolean => {
 };
 
 /**
- * Get client API paths excluding verify endpoints
- * @returns Array of ClientApiPaths excluding verify routes
+ * Get client API paths that expect Prosopo headers (like site key) for validation, excluding verify and spam routes
+ * @returns Array of ClientApiPaths excluding verify and spam routes
  */
-export const getClientApiPathsExcludingVerify = (): ClientApiPaths[] => {
-	const paths = Object.values(ClientApiPaths).filter(
-		(path) => path.indexOf("verify") === -1 && path.indexOf("spam") === -1,
-	);
-	return paths as ClientApiPaths[];
-};
+export const getClientApiPathsExpectingProsopoHeaders =
+	(): ClientApiPaths[] => {
+		const paths = Object.values(ClientApiPaths).filter(
+			(path) => path.indexOf("verify") === -1 && path.indexOf("spam") === -1,
+		);
+		return paths as ClientApiPaths[];
+	};
 
 /**
  * Extract authenticated user address from JWT for rate limiting
@@ -149,7 +150,7 @@ export async function startProviderApi(
 	);
 	const apiAdminRoutesProvider = createApiAdminRoutesProvider(env);
 
-	const clientPathsExcludingVerify = getClientApiPathsExcludingVerify();
+	const clientPathsExcludingVerify = getClientApiPathsExpectingProsopoHeaders();
 
 	env.logger.debug(() => ({
 		msg: "Adding headerCheckMiddleware",
