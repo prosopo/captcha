@@ -11,10 +11,24 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { isIP } from "node:net";
+import { Address4, Address6 } from "ip-address";
+
+const isIPAddress = (hostname: string): boolean => {
+	try {
+		new Address4(hostname);
+		return true;
+	} catch {
+		try {
+			new Address6(hostname);
+			return true;
+		} catch {
+			return false;
+		}
+	}
+};
 
 export const getURLProtocol = (url: URL) => {
-	if (isIP(url.hostname) === 0) {
+	if (!isIPAddress(url.hostname)) {
 		return "https";
 	}
 
