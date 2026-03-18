@@ -61,7 +61,6 @@ export async function checkSpamEmail(
 		logger.warn(() => ({
 			msg: "Failed to check spam email domain",
 			error,
-			email,
 		}));
 		return false;
 	}
@@ -71,7 +70,6 @@ export async function checkSpamEmail(
 	if (!domainValidation.isValid) {
 		logger.warn(() => ({
 			msg: "Email domain failed SSRF validation, rejecting",
-			email,
 			domain: normalizedDomain,
 			reason: domainValidation.reason,
 		}));
@@ -88,7 +86,6 @@ export async function checkSpamEmail(
 		logger.warn(() => ({
 			msg: "Failed to run DNS checks",
 			error,
-			email,
 			domain: normalizedDomain,
 		}));
 		return false; // Allow if DNS check fails
@@ -97,7 +94,6 @@ export async function checkSpamEmail(
 	if (dnsCheckResult.redirectResult.tlsError) {
 		logger.warn(() => ({
 			msg: "Email domain has TLS error",
-			email,
 			domain: normalizedDomain,
 		}));
 		return true;
@@ -108,7 +104,6 @@ export async function checkSpamEmail(
 		const redirectDomain = extractDomain(redirectUrl).toLowerCase().trim();
 		logger.info(() => ({
 			msg: "Email domain has HTTP redirect",
-			email,
 			domain: normalizedDomain,
 			redirectDomain,
 		}));
@@ -121,7 +116,6 @@ export async function checkSpamEmail(
 			logger.warn(() => ({
 				msg: "Failed to check spam email domain for redirect",
 				error,
-				email,
 				redirectDomain,
 			}));
 			return false;
@@ -136,7 +130,6 @@ export async function checkSpamEmail(
 		if (!firstCname) {
 			logger.warn(() => ({
 				msg: "CNAME result array has undefined element",
-				email,
 				domain: normalizedDomain,
 			}));
 			return false;
@@ -145,7 +138,6 @@ export async function checkSpamEmail(
 		const cnameDomain = firstCname.replace(/\.$/, "").toLowerCase().trim();
 		logger.info(() => ({
 			msg: "Email domain has CNAME",
-			email,
 			domain: normalizedDomain,
 			cnameDomain,
 		}));
@@ -158,7 +150,6 @@ export async function checkSpamEmail(
 			logger.warn(() => ({
 				msg: "Failed to check spam email domain for CNAME",
 				error,
-				email,
 				cnameDomain,
 			}));
 			return false;
@@ -173,7 +164,6 @@ export async function checkSpamEmail(
 		if (!firstMxRecord || !firstMxRecord.exchange) {
 			logger.warn(() => ({
 				msg: "MX record result array has undefined element or exchange",
-				email,
 				domain: normalizedDomain,
 			}));
 			return false;
@@ -185,7 +175,6 @@ export async function checkSpamEmail(
 			.trim();
 		logger.info(() => ({
 			msg: "Email domain has MX record",
-			email,
 			domain: normalizedDomain,
 			mxDomain,
 			priority: firstMxRecord.priority,
@@ -195,7 +184,6 @@ export async function checkSpamEmail(
 			if (record !== null && record !== undefined) {
 				logger.warn(() => ({
 					msg: "Email domain MX record points to spam domain",
-					email,
 					domain: normalizedDomain,
 					mxDomain,
 				}));
@@ -205,7 +193,6 @@ export async function checkSpamEmail(
 			logger.warn(() => ({
 				msg: "Failed to check spam email domain for MX record",
 				error,
-				email,
 				mxDomain,
 			}));
 			return false;
