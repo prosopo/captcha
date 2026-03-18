@@ -11,20 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { isIP } from "node:net";
+
 export const getURLProtocol = (url: URL) => {
-	// ipv4
-	if (url.hostname.match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)) {
-		return "http";
+	if (isIP(url.hostname) === 0) {
+		return "https";
 	}
-	// ipv6
-	if (
-		url.hostname.match(
-			/(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))/,
-		)
-	) {
-		return "http";
-	}
-	return "https";
+
+	return "http";
 };
 
 export const parseUrl = (domain: string) => {
@@ -104,21 +98,36 @@ export const validateDomainPattern = (input: string): boolean => {
  * "mail.fakemail.app", "sub.fakemail.app", etc.
  * The final TLD (e.g. "app", "com") is excluded as it would match all domains with that TLD.
  *
+ * The input is normalized before processing: trimmed, lowercased, and any trailing dot
+ * (FQDN notation) is stripped. Domains containing empty labels (consecutive dots, or a
+ * leading dot after normalization) are considered invalid and return an empty array.
+ *
  * @param domain The domain to generate suffix candidates for
- * @returns Array of domain suffix candidates, from most specific to least specific (excluding TLD)
+ * @returns Array of domain suffix candidates, from most specific to least specific (excluding TLD),
+ *          or an empty array if the input is empty or contains empty labels.
  */
 export const buildDomainSuffixCandidates = (domain: string): string[] => {
+	// Normalize: trim whitespace, lowercase, strip a single trailing dot (FQDN notation).
+	const normalized = domain.trim().toLowerCase().replace(/\.$/, "");
+
+	if (normalized.length === 0) {
+		return [];
+	}
+
+	// Reject domains with empty labels (consecutive dots or a leading dot).
+	if (normalized.includes("..") || normalized.startsWith(".")) {
+		return [];
+	}
+
 	const candidates: string[] = [];
-	let current = domain;
+	let current = normalized;
 	while (current.length > 0) {
-		// Only add if there's at least one dot (i.e., not just a TLD)
-		if (current.includes(".")) {
-			candidates.push(current);
-		}
 		const dotIndex = current.indexOf(".");
 		if (dotIndex === -1) {
+			// Only the TLD remains – exclude it.
 			break;
 		}
+		candidates.push(current);
 		current = current.substring(dotIndex + 1);
 	}
 	return candidates;

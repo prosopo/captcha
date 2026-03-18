@@ -90,6 +90,7 @@ import type { ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
 
 const TWENTY_FOUR_HOURS_IN_MS = 24 * 60 * 60 * 1000;
+const MAX_DOMAIN_SUFFIX_CANDIDATES = 5;
 
 enum TableNames {
 	captcha = "captcha",
@@ -2165,14 +2166,13 @@ export class ProviderDatabase
 			});
 		}
 
-		const MAX_DOMAIN_SUFFIX_CANDIDATES = 5;
-		const prefixCandidates = buildDomainSuffixCandidates(domain).slice(
+		const suffixCandidates = buildDomainSuffixCandidates(domain).slice(
 			0,
 			MAX_DOMAIN_SUFFIX_CANDIDATES,
 		);
 		const query =
-			prefixCandidates.length > 0
-				? { domain: { $in: prefixCandidates } }
+			suffixCandidates.length > 0
+				? { domain: { $in: suffixCandidates } }
 				: { domain };
 
 		return this.tables.spamEmailDomain.findOne<SpamEmailDomainRecord>(query);

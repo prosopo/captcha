@@ -37,7 +37,6 @@ for (const m of builtinModules) {
 	const key = m.indexOf("node:") === -1 ? `node:${m}` : m;
 	nodeExternals[key] = `commonjs ${m}`;
 	nodeExternals[m] = `commonjs ${m}`;
-
 }
 
 export default (mode: string) => {

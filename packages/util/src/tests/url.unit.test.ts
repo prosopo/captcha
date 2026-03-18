@@ -94,19 +94,29 @@ describe("buildDomainSuffixCandidates", () => {
 		]);
 	});
 
-	it("should handle domain with consecutive dots correctly", () => {
+	it("should return an empty array for a domain with consecutive dots (empty label)", () => {
 		const result = buildDomainSuffixCandidates("test..domain");
-		expect(result).toEqual(["test..domain", ".domain"]);
+		expect(result).toEqual([]);
 	});
 
-	it("should handle domain ending with a dot", () => {
+	it("should strip a trailing dot (FQDN notation) and return valid candidates", () => {
 		const result = buildDomainSuffixCandidates("example.com.");
-		expect(result).toEqual(["example.com.", "com."]);
+		expect(result).toEqual(["example.com"]);
 	});
 
-	it("should handle domain starting with a dot", () => {
+	it("should return an empty array for a domain starting with a dot (empty label)", () => {
 		const result = buildDomainSuffixCandidates(".example.com");
-		expect(result).toEqual([".example.com", "example.com"]);
+		expect(result).toEqual([]);
+	});
+
+	it("should normalize to lowercase", () => {
+		const result = buildDomainSuffixCandidates("Mail.FakeMail.App");
+		expect(result).toEqual(["mail.fakemail.app", "fakemail.app"]);
+	});
+
+	it("should trim surrounding whitespace before processing", () => {
+		const result = buildDomainSuffixCandidates("  example.com  ");
+		expect(result).toEqual(["example.com"]);
 	});
 
 	it("should return candidates in order from most specific to least specific", () => {
