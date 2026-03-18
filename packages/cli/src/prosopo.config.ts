@@ -49,12 +49,19 @@ const getLRules = () => {
 	}
 };
 
+const isStringArray = (value: unknown): value is string[] =>
+	Array.isArray(value) && value.every((item) => typeof item === "string");
+
 const getDnsServers = (): string[] | undefined => {
 	if (!process.env.PROSOPO_DNS_SERVERS) {
 		return undefined;
 	}
 	try {
-		return JSON.parse(process.env.PROSOPO_DNS_SERVERS);
+		const parsed = JSON.parse(process.env.PROSOPO_DNS_SERVERS);
+		if (isStringArray(parsed)) {
+			return parsed as string[];
+		}
+		return undefined;
 	} catch (e) {
 		return undefined;
 	}
@@ -65,7 +72,11 @@ const getSpamEmailDomainsUrls = (): string[] | undefined => {
 		return undefined;
 	}
 	try {
-		return JSON.parse(process.env.SPAM_EMAIL_DOMAINS_URLS);
+		const parsed = JSON.parse(process.env.SPAM_EMAIL_DOMAINS_URLS);
+		if (isStringArray(parsed)) {
+			return parsed as string[];
+		}
+		return undefined;
 	} catch (e) {
 		return undefined;
 	}

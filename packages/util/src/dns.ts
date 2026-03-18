@@ -20,7 +20,7 @@ import { promisify } from "node:util";
 const DEFAULT_DNS_SERVERS = ["8.8.8.8", "1.1.1.1"];
 
 /** Default timeout for HTTPS requests in milliseconds */
-const DEFAULT_HTTPS_TIMEOUT_MS = 5000;
+const DEFAULT_HTTPS_TIMEOUT_MS = 1000;
 
 /**
  * Creates an isolated DNS resolver instance that doesn't affect global DNS config.
@@ -88,8 +88,13 @@ export const checkForRedirect = (
 					res.headers.location
 				) {
 					// Resolve relative URLs against the request URL
-					const absoluteUrl = new URL(res.headers.location, url).href;
-					resolve({ redirectUrl: absoluteUrl });
+					try {
+						const absoluteUrl = new URL(res.headers.location, url).href;
+						resolve({ redirectUrl: absoluteUrl });
+					} catch {
+						// If the Location header is not a valid URL, treat as non-redirect
+						resolve({});
+					}
 				} else {
 					resolve({});
 				}
