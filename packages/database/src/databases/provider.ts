@@ -2165,7 +2165,8 @@ export class ProviderDatabase
 			});
 		}
 
-		const prefixCandidates = buildDomainSuffixCandidates(domain);
+		const MAX_DOMAIN_SUFFIX_CANDIDATES = 5;
+		const prefixCandidates = buildDomainSuffixCandidates(domain).slice(0, MAX_DOMAIN_SUFFIX_CANDIDATES);
 		const conditions = prefixCandidates.map((d) => ({ domain: d }));
 
 		return this.tables.spamEmailDomain.findOne<SpamEmailDomainRecord>({
