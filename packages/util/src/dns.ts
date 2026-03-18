@@ -19,6 +19,9 @@ import { promisify } from "node:util";
 /** Default DNS servers to use for lookups (Google and Cloudflare) */
 const DEFAULT_DNS_SERVERS = ["8.8.8.8", "1.1.1.1"];
 
+/** Default timeout for HTTPS requests in milliseconds */
+const DEFAULT_HTTPS_TIMEOUT_MS = 5000;
+
 /**
  * Creates an isolated DNS resolver instance that doesn't affect global DNS config.
  * Uses custom DNS servers by default for reliable lookups.
@@ -70,10 +73,11 @@ export const checkForMXRecord = async (
 
 export const checkForRedirect = (
 	url: string,
-): Promise<{ redirectUrl?: string; tlsError?: boolean }> => {
+	timeoutMs: number = DEFAULT_HTTPS_TIMEOUT_MS,
+): Promise<{ redirectUrl?: string; tlsError?: boolean; timeout?: boolean }> => {
 	return new Promise((resolve) => {
-		https
-			.get(url, (res) => {
+		const req = https
+			.get(url, { timeout: timeoutMs }, (res) => {
 				// Drain the response body to free up resources and prevent socket leaks
 				res.resume();
 
@@ -89,6 +93,10 @@ export const checkForRedirect = (
 				} else {
 					resolve({});
 				}
+			})
+			.on("timeout", () => {
+				req.destroy();
+				resolve({ timeout: true });
 			})
 			.on("error", (e) => {
 				console.error(`Error: ${e.message}`);

@@ -21,17 +21,27 @@ import { checkSpamEmail } from "../../../../tasks/spam/checkSpamEmail.js";
 // Mock @prosopo/util module
 vi.mock("@prosopo/util", () => ({
 	runDnsChecks: vi.fn(),
+	validateDomainForOutboundRequest: vi.fn(),
+	extractDomainFromEmail: vi.fn(),
 }));
 
-// Import the mocked function for use in tests
-import { runDnsChecks } from "@prosopo/util";
+// Import the mocked functions for use in tests
+import {
+	extractDomainFromEmail,
+	runDnsChecks,
+	validateDomainForOutboundRequest,
+} from "@prosopo/util";
 
 describe("checkSpamEmail", () => {
 	let db: IProviderDatabase;
 	let config: ProsopoConfigOutput;
 	const logger = getLogger("info", "checkSpamEmail.unit.test");
-	// Cast the mocked function to access mock methods
+	// Cast the mocked functions to access mock methods
 	const mockRunDnsChecks = runDnsChecks as ReturnType<typeof vi.fn>;
+	const mockValidateDomain = validateDomainForOutboundRequest as ReturnType<
+		typeof vi.fn
+	>;
+	const mockExtractDomain = extractDomainFromEmail as ReturnType<typeof vi.fn>;
 
 	beforeEach(() => {
 		// Mock database
@@ -50,6 +60,21 @@ describe("checkSpamEmail", () => {
 		// Mock logger warn
 		logger.warn = vi.fn();
 		vi.clearAllMocks();
+
+		// Default mock for extractDomainFromEmail - returns the domain part
+		mockExtractDomain.mockImplementation((email: string) => {
+			const trimmed = email.trim();
+			if (!trimmed) return null;
+			if (trimmed.includes("@")) {
+				const parts = trimmed.split("@");
+				const domain = parts[parts.length - 1] || "";
+				return domain.toLowerCase().trim() || null;
+			}
+			return trimmed.toLowerCase().trim() || null;
+		});
+
+		// Default mock for validateDomainForOutboundRequest - allows all domains
+		mockValidateDomain.mockReturnValue({ isValid: true });
 
 		// Default mock for runDnsChecks - returns no DNS results
 		mockRunDnsChecks.mockResolvedValue({
@@ -518,6 +543,169 @@ describe("checkSpamEmail", () => {
 			expect(db.getSpamEmailDomain).toHaveBeenCalledTimes(2);
 			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("example.com");
 			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("spam.cname.com");
+		});
+	});
+
+	describe("SSRF protection", () => {
+		it("should reject IP address literals", async () => {
+			mockExtractDomain.mockReturnValue("192.168.1.1");
+			mockValidateDomain.mockReturnValue({
+				isValid: false,
+				reason: "IP address literals are not allowed",
+			});
+			(db.getSpamEmailDomain as ReturnType<typeof vi.fn>).mockResolvedValue(
+				null,
+			);
+
+			const result = await checkSpamEmail(
+				"user@192.168.1.1",
+				db,
+				config,
+				logger,
+			);
+
+			expect(result).toBe(true); // Treated as spam
+			expect(mockValidateDomain).toHaveBeenCalledWith("192.168.1.1");
+			expect(mockRunDnsChecks).not.toHaveBeenCalled(); // DNS checks should not run
+			expect(logger.warn).toHaveBeenCalled();
+		});
+
+		it("should reject localhost domains", async () => {
+			mockExtractDomain.mockReturnValue("localhost");
+			mockValidateDomain.mockReturnValue({
+				isValid: false,
+				reason: "Reserved hostname",
+			});
+			(db.getSpamEmailDomain as ReturnType<typeof vi.fn>).mockResolvedValue(
+				null,
+			);
+
+			const result = await checkSpamEmail("user@localhost", db, config, logger);
+
+			expect(result).toBe(true); // Treated as spam
+			expect(mockValidateDomain).toHaveBeenCalledWith("localhost");
+			expect(mockRunDnsChecks).not.toHaveBeenCalled();
+		});
+
+		it("should reject AWS metadata service domain", async () => {
+			mockExtractDomain.mockReturnValue("169.254.169.254");
+			mockValidateDomain.mockReturnValue({
+				isValid: false,
+				reason: "IPv4 address in reserved/private range",
+			});
+			(db.getSpamEmailDomain as ReturnType<typeof vi.fn>).mockResolvedValue(
+				null,
+			);
+
+			const result = await checkSpamEmail(
+				"user@169.254.169.254",
+				db,
+				config,
+				logger,
+			);
+
+			expect(result).toBe(true); // Treated as spam
+			expect(mockRunDnsChecks).not.toHaveBeenCalled();
+		});
+
+		it("should reject internal TLD domains", async () => {
+			mockExtractDomain.mockReturnValue("myserver.internal");
+			mockValidateDomain.mockReturnValue({
+				isValid: false,
+				reason: "Internal/cloud metadata hostname",
+			});
+			(db.getSpamEmailDomain as ReturnType<typeof vi.fn>).mockResolvedValue(
+				null,
+			);
+
+			const result = await checkSpamEmail(
+				"user@myserver.internal",
+				db,
+				config,
+				logger,
+			);
+
+			expect(result).toBe(true); // Treated as spam
+			expect(mockRunDnsChecks).not.toHaveBeenCalled();
+		});
+
+		it("should reject .local domains", async () => {
+			mockExtractDomain.mockReturnValue("printer.local");
+			mockValidateDomain.mockReturnValue({
+				isValid: false,
+				reason: "Reserved TLD: local",
+			});
+			(db.getSpamEmailDomain as ReturnType<typeof vi.fn>).mockResolvedValue(
+				null,
+			);
+
+			const result = await checkSpamEmail(
+				"user@printer.local",
+				db,
+				config,
+				logger,
+			);
+
+			expect(result).toBe(true); // Treated as spam
+			expect(mockRunDnsChecks).not.toHaveBeenCalled();
+		});
+
+		it("should allow valid public domains and run DNS checks", async () => {
+			mockExtractDomain.mockReturnValue("example.com");
+			mockValidateDomain.mockReturnValue({ isValid: true });
+			(db.getSpamEmailDomain as ReturnType<typeof vi.fn>).mockResolvedValue(
+				null,
+			);
+			mockRunDnsChecks.mockResolvedValue({
+				cnameResult: null,
+				mxRecordResult: null,
+				redirectResult: {},
+			});
+
+			const result = await checkSpamEmail(
+				"user@example.com",
+				db,
+				config,
+				logger,
+			);
+
+			expect(result).toBe(false);
+			expect(mockValidateDomain).toHaveBeenCalledWith("example.com");
+			expect(mockRunDnsChecks).toHaveBeenCalled(); // DNS checks should run for valid domains
+		});
+
+		it("should check spam list before SSRF validation", async () => {
+			mockExtractDomain.mockReturnValue("known-spam.com");
+			(db.getSpamEmailDomain as ReturnType<typeof vi.fn>).mockResolvedValue({
+				domain: "known-spam.com",
+			});
+
+			const result = await checkSpamEmail(
+				"user@known-spam.com",
+				db,
+				config,
+				logger,
+			);
+
+			expect(result).toBe(true);
+			// SSRF validation should not be called if already in spam list
+			expect(mockValidateDomain).not.toHaveBeenCalled();
+			expect(mockRunDnsChecks).not.toHaveBeenCalled();
+		});
+
+		it("should log warning with reason when SSRF validation fails", async () => {
+			mockExtractDomain.mockReturnValue("10.0.0.1");
+			mockValidateDomain.mockReturnValue({
+				isValid: false,
+				reason: "IPv4 address in reserved/private range",
+			});
+			(db.getSpamEmailDomain as ReturnType<typeof vi.fn>).mockResolvedValue(
+				null,
+			);
+
+			await checkSpamEmail("user@10.0.0.1", db, config, logger);
+
+			expect(logger.warn).toHaveBeenCalled();
 		});
 	});
 });

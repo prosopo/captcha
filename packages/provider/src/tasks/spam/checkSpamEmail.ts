@@ -15,23 +15,27 @@
 import type { Logger } from "@prosopo/common";
 import type { ProsopoConfigOutput } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
-import { runDnsChecks } from "@prosopo/util";
+import {
+	extractDomainFromEmail,
+	runDnsChecks,
+	validateDomainForOutboundRequest,
+} from "@prosopo/util";
 
 /**
  * Extracts the domain from a URL or returns the input if it's already a domain
  */
 function extractDomain(urlOrDomain: string): string {
 	try {
-		// Try to parse as URL
 		const url = new URL(
 			urlOrDomain.startsWith("http") ? urlOrDomain : `https://${urlOrDomain}`,
 		);
 		return url.hostname;
 	} catch {
-		// If parsing fails, assume it's already a domain
+		// Assume it's already a domain
 		return urlOrDomain;
 	}
 }
+
 /**
  * Checks if an email domain is spam by checking against a spam list,
  * performing DNS checks, and validating IP reputation
@@ -42,27 +46,11 @@ export async function checkSpamEmail(
 	config: ProsopoConfigOutput,
 	logger: Logger,
 ): Promise<boolean> {
-	// Trim whitespace
-	const trimmedEmail = email.trim();
-	if (!trimmedEmail) {
-		return true; // Empty email is spam
-	}
 	// Extract domain from email
-	let domain: string;
-	if (trimmedEmail.includes("@")) {
-		// Handle user@domain.com or @domain.com
-		const parts = trimmedEmail.split("@");
-		// Take the last part after @ (handles multiple @ signs)
-		domain = parts[parts.length - 1] || "";
-	} else {
-		// Handle domain.com directly
-		domain = trimmedEmail;
+	const normalizedDomain = extractDomainFromEmail(email);
+	if (!normalizedDomain) {
+		return true; // Empty or invalid email is spam
 	}
-	// Validate domain is not empty
-	if (!domain || domain.trim() === "") {
-		return true; // Invalid domain is spam
-	}
-	const normalizedDomain = domain.toLowerCase().trim();
 	// Check if domain is in spam list
 	try {
 		const record = await db.getSpamEmailDomain(normalizedDomain);
@@ -77,6 +65,19 @@ export async function checkSpamEmail(
 		}));
 		return false;
 	}
+
+	// SSRF Protection: Validate domain before performing network operations
+	const domainValidation = validateDomainForOutboundRequest(normalizedDomain);
+	if (!domainValidation.isValid) {
+		logger.warn(() => ({
+			msg: "Email domain failed SSRF validation, rejecting",
+			email,
+			domain: normalizedDomain,
+			reason: domainValidation.reason,
+		}));
+		return true; // Treat as spam - suspicious domain
+	}
+
 	// Domain not found in spam list, run DNS checks
 	let dnsCheckResult: Awaited<ReturnType<typeof runDnsChecks>> | null = null;
 	try {

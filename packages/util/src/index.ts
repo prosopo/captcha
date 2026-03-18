@@ -34,3 +34,5 @@ export * from "./binaryString.js";
 export * from "./date.js";
 export * from "./cacheFile.js";
 export * from "./dns.js";
+export * from "./email.js";
+export * from "./domainValidation.js";
