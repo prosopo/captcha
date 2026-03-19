@@ -60,7 +60,6 @@ export default (env: ProviderEnvironment) =>
 		const {
 			puzzleChallengeId,
 			sliderLeft,
-			trailY,
 			signature,
 			user,
 			dapp,
@@ -89,7 +88,6 @@ export default (env: ProviderEnvironment) =>
 					puzzleChallengeId,
 					signature.provider.puzzleChallengeId,
 					sliderLeft,
-					trailY,
 					verifiedTimeout,
 					signature.user.timestamp,
 					getIPAddress(req.ip || ""),

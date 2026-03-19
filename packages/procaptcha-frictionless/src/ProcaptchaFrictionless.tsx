@@ -150,7 +150,12 @@ export const ProcaptchaFrictionless = ({
 				stateRef.current.attemptCount += 1;
 
 				const configOutput = ProcaptchaConfigSchema.parse(config);
-				const result = await detectBot(configOutput, container, restart);
+				const result = await detectBot(
+					configOutput,
+					container,
+					restart,
+					configOutput.captchas?.puzzle?.maxPoints,
+				);
 
 				if (result.error?.message) {
 					stateRef.current = {

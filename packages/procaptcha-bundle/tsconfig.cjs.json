@@ -23,6 +23,9 @@
 			"path": "../procaptcha-pow/tsconfig.cjs.json"
 		},
 		{
+			"path": "../procaptcha-puzzle/tsconfig.cjs.json"
+		},
+		{
 			"path": "../procaptcha-react/tsconfig.cjs.json"
 		},
 		{

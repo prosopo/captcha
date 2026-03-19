@@ -229,7 +229,6 @@ export default class ProviderApi
 		userAccount: string,
 		dappAccount: string,
 		sliderLeft: number,
-		trailY: number[],
 		userTimestampSignature: string,
 		timeout?: number,
 		behavioralData?: string,
@@ -237,7 +236,6 @@ export default class ProviderApi
 		const body = SubmitPuzzleCaptchaSolutionBody.parse({
 			[ApiParams.puzzleChallengeId]: challenge.puzzleChallengeId,
 			[ApiParams.sliderLeft]: sliderLeft,
-			[ApiParams.trailY]: trailY,
 			[ApiParams.user]: userAccount.toString(),
 			[ApiParams.dapp]: dappAccount.toString(),
 			[ApiParams.verifiedTimeout]: timeout,

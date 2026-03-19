@@ -3,7 +3,7 @@
 	"version": "1.1.58",
 	"type": "module",
 	"engines": {
-		"node": "^24",
+		"node": "^18",
 		"npm": "^11"
 	},
 	"main": "dist/fesm2022/prosopo-angular-procaptcha-wrapper.mjs",
@@ -18,14 +18,14 @@
 		"@prosopo/procaptcha-wrapper": "2.6.60"
 	},
 	"peerDependencies": {
-		"@angular/core": "^20.3.9"
+		"@angular/core": "^15.2.0"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.3.1",
-		"@angular/compiler-cli": "20.3.9",
+		"@angular/compiler-cli": "^15.2.0",
 		"@types/node": "22.10.2",
 		"del-cli": "6.0.0",
-		"ng-packagr": "^20.3.0"
+		"ng-packagr": "^14.2.2"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",

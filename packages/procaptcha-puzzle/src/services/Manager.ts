@@ -37,7 +37,6 @@ import { sleep } from "@prosopo/util";
 
 export type PuzzleStartResult = {
 	sliderLeft: number;
-	trailY: number[];
 };
 
 export const Manager = (
@@ -209,10 +208,9 @@ export const Manager = (
 	/**
 	 * Called by the widget after the user has successfully dragged the slider.
 	 */
-	const submitSolution = async (sliderLeft: number, trailY: number[]) => {
+	const submitSolution = async (sliderLeft: number) => {
 		await providerRetry(
 			async () => {
-				// @ts-expect-error: challenge is stored generically
 				const storedChallenge = state.challenge as
 					| ((ReturnType<typeof start> extends Promise<infer T> ? T : never) & {
 							providerUrl: string;
@@ -285,7 +283,6 @@ export const Manager = (
 					userAccount,
 					getDappAccount(),
 					sliderLeft,
-					trailY,
 					userTimestampSignature.signature.toString(),
 					config.captchas.pow.verifiedTimeout,
 					encryptedBehavioralData,
@@ -317,7 +314,7 @@ export const Manager = (
 					onFailed();
 				}
 			},
-			submitSolution.bind(null, sliderLeft, trailY),
+			submitSolution.bind(null, sliderLeft),
 			() => resetState(),
 			state.attemptCount,
 			3,

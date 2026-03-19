@@ -57,6 +57,7 @@ export type BotDetectionFunction = (
 	config: ProcaptchaClientConfigOutput,
 	container: HTMLElement | undefined,
 	restartFn: () => void,
+	maxPoints?: number,
 ) => Promise<BotDetectionFunctionResult>;
 
 /**

@@ -229,7 +229,6 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 	providerSignature: { type: String, required: true },
 	userSignature: { type: String, required: false },
 	sliderLeft: { type: Number, required: false },
-	trailY: { type: [Number], required: false },
 	ipAddress: CompositeIpAddressRecordSchemaObj,
 	providedIp: {
 		type: new Schema(CompositeIpAddressRecordSchemaObj, { _id: false }),

@@ -79,7 +79,6 @@ export interface ProviderApiInterface {
 		userAccount: string,
 		dappAccount: string,
 		sliderLeft: number,
-		trailY: number[],
 		userTimestampSignature: string,
 		timeout?: number,
 		behavioralData?: string,

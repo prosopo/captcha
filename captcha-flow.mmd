@@ -34,6 +34,9 @@ flowchart TD
     %% ─────────────── FRICTIONLESS ───────────────
     Q -->|POST GetFrictionlessCaptchaChallenge| FL_START
 
+    %% ─────────────── PUZZLE CHALLENGE ───────────────
+    Q -->|POST GetPuzzleCaptchaChallenge| PUZZLE_CH_START
+
     subgraph Frictionless["Frictionless Flow"]
         FL_START[Parse GetFrictionlessCaptchaChallengeRequestBody\ntoken · headHash · dapp · user]
         FL_START --> FL_MAINT{Maintenance\nmode?}
@@ -76,6 +79,47 @@ flowchart TD
         FL_HOST -->|Verified| FL_BOT
         FL_BOT -->|Yes| FL_IMG_BOT[sendImageCaptcha\nmin solved.count imageMaxRounds\nreason=BOT_SCORE_ABOVE_THRESHOLD]
         FL_BOT -->|No| FL_DEF[sendPowCaptcha\nreason=default]
+    end
+
+    subgraph PuzzleChallenge["Puzzle Captcha – Get Challenge"]
+        PUZZLE_CH_START[Parse GetPuzzleCaptchaChallengeRequestBody\nuser · dapp · sessionId]
+        PUZZLE_CH_START --> PUZZLE_CH_ADDR[validateSiteKey dapp\nvalidateAddr user]
+        PUZZLE_CH_ADDR --> PUZZLE_CH_CLIENT{getClientRecord\nregistered?}
+        PUZZLE_CH_CLIENT -->|No| PUZZLE_CH_ERR[400 SITE_KEY_NOT_REGISTERED]
+        PUZZLE_CH_CLIENT -->|Yes| PUZZLE_CH_GEO[geolocationService.getCountryCode]
+        PUZZLE_CH_GEO --> PUZZLE_CH_POL[getRequestUserScope\ngetPrioritisedAccessPolicies]
+        PUZZLE_CH_POL --> PUZZLE_CH_VALID{isValidRequest\nCaptchaType.puzzle\nsessionId: checkAndRemoveSession\ncaptchaType match · IP validate\nor clientSettings.captchaType==puzzle}
+        PUZZLE_CH_VALID -->|No| PUZZLE_CH_ERRVAL[400 reason\nAPI.INCORRECT_CAPTCHA_TYPE\nor CAPTCHA.NO_SESSION_FOUND]
+        PUZZLE_CH_VALID -->|Yes| PUZZLE_CH_DATASET[getDatasetIdWithSolvedCaptchasOfSizeN(1)\nfind dataset with solved captchas]
+        PUZZLE_CH_DATASET --> PUZZLE_CH_IMG[getRandomCaptcha(true, datasetId, 1)\nget one solved captcha from dataset]
+        PUZZLE_CH_IMG --> PUZZLE_CH_ITEM[Extract first item\ndata = imgUrl · type = "image"]
+        PUZZLE_CH_ITEM --> PUZZLE_CH_GEN[getPuzzleCaptchaChallenge\ntimestamp___user___dapp___nonce\nrandom destX · blockY positions\nsigned by provider keypair]
+        PUZZLE_CH_GEN --> PUZZLE_CH_STORE[storePuzzleCaptchaRecord\npuzzleChallengeId · imgUrl\ndestX · blockY · ipAddress\nheaders · ja4 · sessionId\ncountryCode · providerSignature]
+        PUZZLE_CH_STORE --> PUZZLE_CH_RESP[GetPuzzleCaptchaResponse\npuzzleChallengeId · imgUrl\ndestX · blockY · timestamp\nproviderSignature]
+    end
+
+    subgraph PuzzleSubmit["Puzzle Captcha – Submit Solution"]
+        PUZZLE_SUB_START[Parse SubmitPuzzleCaptchaSolutionBody\npuzzleChallengeId · sliderLeft\ntrailY · user · dapp · signature\nverifiedTimeout · behavioralData]
+        PUZZLE_SUB_START --> PUZZLE_SUB_MAINT{Maintenance\nmode?}
+        PUZZLE_SUB_MAINT -->|Yes| PUZZLE_SUB_OK[Return verified=true]
+        PUZZLE_SUB_MAINT -->|No| PUZZLE_SUB_ADDR[validateSiteKey dapp\nvalidateAddr user]
+        PUZZLE_SUB_ADDR --> PUZZLE_SUB_CLIENT{getClientRecord\nregistered?}
+        PUZZLE_SUB_CLIENT -->|No| PUZZLE_SUB_ERR[400 SITE_KEY_NOT_REGISTERED]
+        PUZZLE_SUB_CLIENT -->|Yes| PUZZLE_SUB_PSIG[signatureVerify\nprovider signed puzzleChallengeId\nproves provider issued challenge]
+        PUZZLE_SUB_PSIG --> PUZZLE_SUB_USIG[signatureVerify\nuser signed timestamp\nproves account ownership]
+        PUZZLE_SUB_USIG --> PUZZLE_SUB_RECORD{getPuzzleCaptchaRecordById\npuzzleChallengeId found?]
+        PUZZLE_SUB_RECORD -->|No| PUZZLE_SUB_NOTFOUND[Return verified=false]
+        PUZZLE_SUB_RECORD -->|Yes| PUZZLE_SUB_RECENT{verifyRecency\npuzzleChallengeId timestamp\n< verifiedTimeout?}
+        PUZZLE_SUB_RECENT -->|Expired| PUZZLE_SUB_OLD[updatePuzzleCaptchaRecord\nstatus=disapproved\nreason=CAPTCHA.INVALID_TIMESTAMP\nReturn verified=false]
+        PUZZLE_SUB_RECENT -->|Valid| PUZZLE_SUB_ACCURACY{sliderLeft within tolerance\nof stored destX?}
+        PUZZLE_SUB_ACCURACY --> PUZZLE_SUB_TRAIL{computeTrailStddev(trailY)\n> 0? (bot detection)}
+        PUZZLE_SUB_TRAIL --> PUZZLE_SUB_BEHAV[decryptBehavioralData\nDB keys + BOT_DECRYPTION_KEY\npack into behavioralDataPacked\nstore deviceCapability]
+        PUZZLE_SUB_BEHAV --> PUZZLE_SUB_UPDATE[updatePuzzleCaptchaRecord\nresult · userSubmitted · signatures\nsliderLeft · trailY]
+        PUZZLE_SUB_UPDATE --> PUZZLE_SUB_VERIFY{accuracy + trail stddev\nboth pass?}
+        PUZZLE_SUB_VERIFY -->|Yes| PUZZLE_SUB_APPROVE[updatePuzzleCaptchaRecord\nstatus=approved\nupdateSessionRecord approved]
+        PUZZLE_SUB_APPROVE --> PUZZLE_SUB_RESP[PuzzleCaptchaSolutionResponse\nverified=true]
+        PUZZLE_SUB_VERIFY -->|No| PUZZLE_SUB_DISAPPROVE[updatePuzzleCaptchaRecord\nstatus=disapproved\nreason=CAPTCHA.INVALID_SOLUTION\nupdateSessionRecord disapproved]
+        PUZZLE_SUB_DISAPPROVE --> PUZZLE_SUB_RESP_FAIL[PuzzleCaptchaSolutionResponse\nverified=false]
     end
 
     %% ─────────────── IMAGE CHALLENGE ───────────────
@@ -275,4 +319,3 @@ flowchart TD
 
     class ERR401A,ERR401B,ERR401C,FL_ERR400A,FL_ERR400B,FL_ERR400C,FL_CTX_ERR,FL_BLOCK,IMG_CH_ERR400,IMG_CH_ERR401,IMG_CH_ERRVAL,IMG_SUB_ERR,IMG_SUB_NOTFOUND,IMG_SUB_PAIRS_FAIL,IMG_SUB_DISAPPROVE,IMG_SUB_RESP_FAIL,POW_CH_ERR,POW_CH_ERRVAL,POW_CH_ERRORI,POW_SUB_ERR,POW_SUB_NOTFOUND,POW_SUB_TS,POW_SUB_WRONG,VI_ERR,VI_NO_SOL,VI_ALREADY,VI_DISAPP,VI_TIMEOUT,VI_BLOCKED,VI_SPAM_FAIL,VI_IP_FAIL,VI_WV_FAIL,VI_DM_DENY,VP_ERR,VP_UNVER,VP_NO_REC,VP_DISAPP,VP_ALREADY,VP_DAPP_FAIL,VP_TS_OLD,VP_BLOCKED,VP_SPAM_FAIL,VP_IP_FAIL,VP_DM_DENY,SE_ERR400A,SE_ERR400B error
     class FL_POW_MAINT,FL_REUSE,FL_IMG_POL,FL_POW_POL,FL_IMG_AGENT,FL_IMG_CTX,FL_IMG_WV,FL_IMG_TS,FL_IMG_BOT,FL_DEF,IMG_CH_RESP,IMG_SUB_OK,IMG_SUB_RESP,IMG_SUB_APPROVE,POW_CH_RESP,POW_SUB_OK,POW_SUB_RESP,VI_OK,VI_RESP,VP_OK,VP_RESP,SE_RESP success
-

@@ -65,6 +65,5 @@ export enum ApiParams {
 	email = "email",
 	puzzleChallengeId = "puzzleChallengeId",
 	sliderLeft = "sliderLeft",
-	trailY = "trailY",
 	destX = "destX",
 }

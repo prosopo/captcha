@@ -169,6 +169,7 @@ const defaultCaptchaTimeouts = {
 	image: defaultImageCaptchaTimeouts,
 	pow: defaultPoWCaptchaTimeouts,
 	contract: defaultContractCaptchaTimeouts,
+	puzzle: { maxPoints: 50 },
 };
 
 export const CaptchaTimeoutSchema = object({
@@ -206,12 +207,9 @@ export const CaptchaTimeoutSchema = object({
 			.optional()
 			.default(DEFAULT_POW_CAPTCHA_CACHED_TIMEOUT),
 	}).default(defaultPoWCaptchaTimeouts),
-	contract: object({
-		maxVerifiedTime: number()
-			.positive()
-			.optional()
-			.default(DEFAULT_MAX_VERIFIED_TIME_CONTRACT),
-	}).default(defaultContractCaptchaTimeouts),
+	puzzle: object({
+		maxPoints: number().positive().optional().default(50),
+	}).default({ maxPoints: 50 }),
 }).default(defaultCaptchaTimeouts);
 
 export type CaptchaTimeoutInput = input<typeof CaptchaTimeoutSchema>;

@@ -12,14 +12,65 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { css } from "@emotion/react";
 import { loadI18next, useTranslation } from "@prosopo/locale";
 import { buildUpdateState, useProcaptcha } from "@prosopo/procaptcha-common";
 import type { ProcaptchaProps } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
+import type React from "react";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Manager } from "../services/Manager.js";
 import type { VerifyResult } from "./PuzzleVerify.js";
 import PuzzleVerify from "./PuzzleVerify.js";
+
+type ModalProps = {
+	show: boolean;
+	children: React.ReactNode;
+};
+
+const ModalInnerDivCSS = css`
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	max-width: 500px;
+	background-color: transparent;
+	border: none;
+	border-radius: 4px;
+	z-index: 2147483647;
+	align-self: center;
+	box-shadow: rgba(0, 0, 0, 0.2) 0px 11px 15px -7px,
+		rgba(0, 0, 0, 0.14) 0px 24px 38px 3px,
+		rgba(0, 0, 0, 0.12) 0px 9px 46px 8px;
+	box-sizing: border-box;
+	/* iOS only */
+    @supports (-webkit-touch-callout: none) {
+		transform: translate(-50%, -100%);
+    }
+`;
+
+const ModalComponent = ({ show, children }: ModalProps) => {
+	const display = show ? "flex" : "none";
+	const ModalOuterDivCss = {
+		position: "fixed" as const,
+		zIndex: 2147483646,
+		inset: 0,
+		display,
+		alignItems: "center" as const,
+		justifyContent: "center" as const,
+		minHeight: "100vh",
+	};
+
+	return createPortal(
+		<div className="prosopo-modalOuter" style={ModalOuterDivCss}>
+			<div className="prosopo-modalInner" css={ModalInnerDivCSS}>
+				{children}
+			</div>
+		</div>,
+		document.body,
+	);
+};
 
 const ProcaptchaPuzzleWidget = (props: ProcaptchaProps) => {
 	const { ready: isTranslationReady } = useTranslation();
@@ -59,18 +110,15 @@ const ProcaptchaPuzzleWidget = (props: ProcaptchaProps) => {
 
 	useEffect(() => {
 		if (config.language) {
-			const apply = (i: {
-				language: string;
-				changeLanguage: (l: string) => Promise<void>;
-			}) => {
-				if (i.language !== config.language) {
-					i.changeLanguage(config.language as string).then((r) => r);
-				}
-			};
 			if (i18n) {
-				apply(i18n);
+				if (i18n.language !== config.language) {
+					i18n.changeLanguage(config.language).then((r) => r);
+				}
 			} else {
-				loadI18next(false).then((loaded) => apply(loaded));
+				loadI18next(false).then((i18n) => {
+					if (i18n.language !== config.language)
+						i18n.changeLanguage(config.language).then((r) => r);
+				});
 			}
 		}
 	}, [i18n, config.language]);
@@ -93,7 +141,7 @@ const ProcaptchaPuzzleWidget = (props: ProcaptchaProps) => {
 
 	const handleSuccess = async (result: VerifyResult) => {
 		setShowPuzzle(false);
-		await manager.current.submitSolution(result.left, result.trailY);
+		await manager.current.submitSolution(result.left);
 	};
 
 	const handleFail = () => {
@@ -111,7 +159,7 @@ const ProcaptchaPuzzleWidget = (props: ProcaptchaProps) => {
 					alignItems: "center",
 					gap: 8,
 					background: theme.palette.background.default,
-					color: theme.palette.text.primary,
+					color: theme.palette.background.contrastText,
 					cursor: "default",
 				}}
 			>
@@ -130,13 +178,15 @@ const ProcaptchaPuzzleWidget = (props: ProcaptchaProps) => {
 		blockY !== undefined
 	) {
 		return (
-			<PuzzleVerify
-				imgUrl={imgUrl}
-				serverDestX={destX}
-				visible={true}
-				onSuccess={handleSuccess}
-				onFail={handleFail}
-			/>
+			<ModalComponent show={showPuzzle}>
+				<PuzzleVerify
+					imgUrl={imgUrl}
+					serverDestX={destX}
+					visible={true}
+					onSuccess={handleSuccess}
+					onFail={handleFail}
+				/>
+			</ModalComponent>
 		);
 	}
 
@@ -149,10 +199,8 @@ const ProcaptchaPuzzleWidget = (props: ProcaptchaProps) => {
 				border: `1px solid ${theme.palette.primary.main}`,
 				borderRadius: 4,
 				padding: "8px 16px",
-				background: state.loading
-					? (theme.palette.action?.disabledBackground ?? "#ccc")
-					: theme.palette.background.default,
-				color: theme.palette.text.primary,
+				background: theme.palette.background.default,
+				color: theme.palette.background.contrastText,
 				cursor: state.loading ? "wait" : "pointer",
 				minWidth: 200,
 			}}

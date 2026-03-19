@@ -55,6 +55,7 @@ const customDetectBot: BotDetectionFunction = async (
 	config: ProcaptchaClientConfigOutput,
 	container: HTMLElement | undefined,
 	restartFn: () => void,
+	maxPoints?: number,
 ): Promise<BotDetectionFunctionResult> => {
 	// Kick off all async initialisations in parallel — provider list fetch no
 	// longer waits until after bot detection is complete.
@@ -71,6 +72,7 @@ const customDetectBot: BotDetectionFunction = async (
 		container,
 		restartFn,
 		() => ext.getAccount(config),
+		maxPoints || 50,
 	);
 
 	const userAccount = detectionResult.userAccount;

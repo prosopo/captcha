@@ -19,7 +19,6 @@ interface VerifyResult {
 	verified: boolean;
 	left: number;
 	destX: number;
-	trailY: number[];
 }
 
 interface VerifyProps {
@@ -61,7 +60,7 @@ const Verify = ({
 	r = 9,
 	imgUrl,
 	serverDestX,
-	text = "Swipe right to fill the puzzle",
+	text = "Drag the puzzle piece to fill the gap",
 	refreshIcon = "https://raw.githubusercontent.com/venkatmcajj/react-puzzle-captcha/master/docs/icon12.png",
 	visible = true,
 	onDraw,
@@ -74,9 +73,10 @@ const Verify = ({
 	const L = l + r * 2 + 3;
 
 	const [isLoading, setLoading] = useState(false);
-	const [sliderLeft, setSliderLeft] = useState(0);
-	const [sliderClass, setSliderClass] = useState("sliderContainer");
 	const [textTip, setTextTip] = useState<string | ReactNode>(text);
+	// Position of the puzzle piece
+	const [pieceX, setPieceX] = useState(0);
+	const [pieceY, setPieceY] = useState(0);
 
 	// biome-ignore lint/suspicious/noExplicitAny: canvas ref
 	const canvasRef = useRef<any>(null);
@@ -88,6 +88,8 @@ const Verify = ({
 	const trailRef = useRef<number[]>([]);
 	const originXRef = useRef(0);
 	const originYRef = useRef(0);
+	const dragStartXRef = useRef(0);
+	const dragStartYRef = useRef(0);
 	const xRef = useRef(0);
 	const yRef = useRef(0);
 
@@ -149,7 +151,8 @@ const Verify = ({
 		const y1 = yRef.current - r * 2 - 1;
 		const imageData = blockCtx.getImageData(xRef.current - 3, y1, L, L);
 		blockRef.current.width = L;
-		blockCtx.putImageData(imageData, 0, y1);
+		blockRef.current.height = L;
+		blockCtx.putImageData(imageData, 0, 0);
 	};
 
 	const initImg = () => {
@@ -163,10 +166,11 @@ const Verify = ({
 	const reset = () => {
 		const canvasCtx = canvasRef.current.getContext("2d");
 		const blockCtx = blockRef.current.getContext("2d");
-		setSliderLeft(0);
-		setSliderClass("sliderContainer");
+		setPieceX(0);
+		setPieceY(0);
 		blockRef.current.width = width;
 		blockRef.current.style.left = "0px";
+		blockRef.current.style.top = "0px";
 		trailRef.current = [];
 		canvasCtx.clearRect(0, 0, width, height);
 		blockCtx.clearRect(0, 0, width, height);
@@ -188,20 +192,30 @@ const Verify = ({
 			arr.length > 0
 				? Math.sqrt(deviations.map(square).reduce(sum) / arr.length)
 				: 0;
-		const left = Number.parseInt(blockRef.current.style.left);
+		// Check if piece is positioned correctly (within tolerance of target position)
+		// The piece should be positioned where the image data was extracted from
+		const targetX = xRef.current - 3; // Image data starts at xRef - 3
+		const targetY = yRef.current - r * 2 - 1; // Same as y1 in draw function
+		const tolerance = 15; // pixels tolerance for correct placement
+		const distanceX = Math.abs(pieceX - targetX);
+		const distanceY = Math.abs(pieceY - targetY);
+		const spliced = distanceX < tolerance && distanceY < tolerance;
+
 		return {
-			spliced: Math.abs(left - xRef.current) < 10,
+			spliced,
 			verified: stddev !== 0,
-			left,
+			left: pieceX,
 			destX: xRef.current,
-			trailY: [...trailRef.current],
 		};
 	};
 
 	// biome-ignore lint/suspicious/noExplicitAny: event
 	const handleDragStart = (e: any) => {
+		e.preventDefault();
 		originXRef.current = e.clientX ?? e.touches[0].clientX;
 		originYRef.current = e.clientY ?? e.touches[0].clientY;
+		dragStartXRef.current = pieceX;
+		dragStartYRef.current = pieceY;
 		isMouseDownRef.current = true;
 	};
 
@@ -211,38 +225,44 @@ const Verify = ({
 		e.preventDefault();
 		const eventX = e.clientX ?? e.touches[0].clientX;
 		const eventY = e.clientY ?? e.touches[0].clientY;
-		const moveX = eventX - originXRef.current;
-		const moveY = eventY - originYRef.current;
-		if (moveX < 0 || moveX + 38 >= width) return;
-		setSliderLeft(moveX);
-		const blockLeft = ((width - 40 - 20) / (width - 40)) * moveX;
-		blockRef.current.style.left = `${blockLeft}px`;
-		setSliderClass("sliderContainer sliderContainer_active");
-		trailRef.current.push(moveY);
-		onDraw?.(blockLeft);
+		const deltaX = eventX - originXRef.current;
+		const deltaY = eventY - originYRef.current;
+
+		const newX = dragStartXRef.current + deltaX;
+		const newY = dragStartYRef.current + deltaY;
+
+		// Allow free movement within reasonable bounds
+		setPieceX(Math.max(-50, Math.min(newX, width - L + 50)));
+		setPieceY(Math.max(-50, Math.min(newY, height - L + 50)));
+
+		trailRef.current.push(deltaY);
+		onDraw?.(pieceX);
 	};
 
 	// biome-ignore lint/suspicious/noExplicitAny: event
 	const handleDragEnd = (e: any) => {
 		if (!isMouseDownRef.current) return;
 		isMouseDownRef.current = false;
-		const eventX = e.clientX ?? e.changedTouches[0].clientX;
-		if (eventX === originXRef.current) return;
-		setSliderClass("sliderContainer");
+
 		const result = verify();
 		if (result.spliced) {
 			if (result.verified) {
-				setSliderClass("sliderContainer sliderContainer_success");
-				onSuccess?.(result);
+				setTextTip("Perfect! Puzzle completed!");
+				// Snap to exact position
+				const snapX = xRef.current - 3;
+				const snapY = yRef.current - r * 2 - 1;
+				setPieceX(snapX);
+				setPieceY(snapY);
+				blockRef.current.style.left = `${snapX}px`;
+				blockRef.current.style.top = `${snapY}px`;
+				setTimeout(() => onSuccess?.(result), 500);
 			} else {
-				setSliderClass("sliderContainer sliderContainer_fail");
-				setTextTip("Please try again");
-				reset();
+				setTextTip("Almost there! Keep trying.");
+				setTimeout(() => reset(), 1500);
 			}
 		} else {
-			setSliderClass("sliderContainer sliderContainer_fail");
-			onFail?.();
-			setTimeout(() => reset(), 1000);
+			setTextTip("Not quite right. Try again!");
+			setTimeout(() => reset(), 1500);
 		}
 	};
 
@@ -252,6 +272,14 @@ const Verify = ({
 			imgRef.current ? reset() : initImg();
 		}
 	}, [visible, imgUrl]);
+
+	// Update DOM position when piece position changes
+	useEffect(() => {
+		if (blockRef.current) {
+			blockRef.current.style.left = `${pieceX}px`;
+			blockRef.current.style.top = `${pieceY}px`;
+		}
+	}, [pieceX, pieceY]);
 
 	return (
 		<div
@@ -266,35 +294,35 @@ const Verify = ({
 			onTouchMove={handleDragMove}
 			onTouchEnd={handleDragEnd}
 		>
-			<div className="canvasArea">
+			<div className="canvasArea" style={{ position: "relative" }}>
 				<canvas ref={canvasRef} width={width} height={height} />
 				<canvas
 					ref={blockRef}
 					className="block"
 					width={width}
 					height={height}
+					style={{
+						position: "absolute",
+						left: `${pieceX}px`,
+						top: `${pieceY}px`,
+						cursor: "move",
+						zIndex: 10,
+					}}
 					onMouseDown={handleDragStart}
 					onTouchStart={handleDragStart}
 				/>
 			</div>
 			<div
-				className={sliderClass}
+				className="instructionText"
 				style={{
-					pointerEvents: isLoading ? "none" : "auto",
 					width: `${width}px`,
+					textAlign: "center",
+					padding: "10px",
+					fontSize: "14px",
+					color: "#666",
 				}}
 			>
-				<div className="sliderMask" style={{ width: `${sliderLeft}px` }}>
-					<div
-						className="slider"
-						style={{ left: `${sliderLeft}px` }}
-						onMouseDown={handleDragStart}
-						onTouchStart={handleDragStart}
-					>
-						<div className="sliderIcon">&rarr;</div>
-					</div>
-				</div>
-				<div className="sliderText">{textTip}</div>
+				{textTip}
 			</div>
 			<div
 				className="refreshIcon"

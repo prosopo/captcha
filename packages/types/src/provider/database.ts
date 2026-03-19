@@ -372,7 +372,6 @@ export interface PuzzleCaptchaStored extends StoredCaptcha {
 	providerSignature: string;
 	userSignature?: string;
 	sliderLeft?: number;
-	trailY?: number[];
 	tolerancePx?: number;
 }
 

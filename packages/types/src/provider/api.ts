@@ -440,7 +440,6 @@ export type GetPuzzleCaptchaChallengeRequestBodyTypeOutput = output<
 export const SubmitPuzzleCaptchaSolutionBody = object({
 	[ApiParams.puzzleChallengeId]: string(),
 	[ApiParams.sliderLeft]: number(),
-	[ApiParams.trailY]: number().array(),
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
 	[ApiParams.verifiedTimeout]: number()

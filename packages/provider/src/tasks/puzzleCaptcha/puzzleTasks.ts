@@ -23,8 +23,10 @@ import {
 	type DecisionMachineInput,
 	type GetPuzzleCaptchaResponse,
 	type IPAddress,
+	type MouseMovementPoint,
 	type PuzzleCaptchaSolutionResponse,
 	type RequestHeaders,
+	type TouchEventPoint,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
@@ -40,7 +42,7 @@ import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils
 import { checkPowSignature } from "../powCaptcha/powTasksUtils.js";
 
 const DEFAULT_PUZZLE_TOLERANCE_PX = 10;
-// Images from picsum photos – fixed seed-style URL so the same ID always returns the same image
+// Images from database datasets – random solved captcha images
 const PUZZLE_IMAGE_WIDTH = 320;
 const PUZZLE_IMAGE_HEIGHT = 160;
 const PUZZLE_PIECE_SIZE = 42; // l in the frontend Verify component
@@ -57,10 +59,32 @@ function computeTrailStddev(trailY: number[]): number {
 	return Math.sqrt(variance);
 }
 
+function isMouseMovementPoint(point: unknown): point is MouseMovementPoint {
+	return (
+		typeof point === "object" &&
+		point !== null &&
+		typeof (point as any).x === "number" &&
+		typeof (point as any).y === "number" &&
+		typeof (point as any).timestamp === "number"
+	);
+}
+
+function isTouchEventPoint(point: unknown): point is TouchEventPoint {
+	return (
+		typeof point === "object" &&
+		point !== null &&
+		typeof (point as any).x === "number" &&
+		typeof (point as any).y === "number" &&
+		typeof (point as any).timestamp === "number" &&
+		typeof (point as any).eventType === "string"
+	);
+}
+
 export class PuzzleCaptchaManager extends CaptchaManager {
 	/**
 	 * Generate a puzzle captcha challenge.
-	 * Picks a random picsum image and a random destX position for the puzzle piece,
+	 * Picks a random solved captcha from the database and uses its image,
+	 * generates a random destX position for the puzzle piece,
 	 * signs the challengeId with the provider keypair, stores the record, and returns
 	 * the challenge to the client.
 	 */
@@ -72,8 +96,43 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		const nonce = Math.floor(Math.random() * 1_000_000);
 		const puzzleChallengeId = `${requestedAtTimestamp}___${userAccount}___${dappAccount}___${nonce}`;
 
-		const imageId = getRandomInt(0, 1084);
-		const imgUrl = `https://picsum.photos/id/${imageId}/${PUZZLE_IMAGE_WIDTH}/${PUZZLE_IMAGE_HEIGHT}`;
+		// Get a dataset with at least one solved captcha
+		const datasetId = await this.db.getDatasetIdWithSolvedCaptchasOfSizeN(1);
+		if (!datasetId) {
+			throw new ProsopoEnvError("DATABASE.DATASET_NOT_FOUND", {
+				context: {
+					failedFuncName: this.getPuzzleCaptchaChallenge.name,
+					message: "No dataset with solved captchas found",
+				},
+			});
+		}
+
+		// Get a random solved captcha from the dataset
+		const solvedCaptchas = await this.db.getRandomCaptcha(true, datasetId, 1);
+		if (!solvedCaptchas || solvedCaptchas.length === 0) {
+			throw new ProsopoEnvError("DATABASE.CAPTCHA_GET_FAILED", {
+				context: {
+					failedFuncName: this.getPuzzleCaptchaChallenge.name,
+					datasetId,
+					message: "No solved captchas found in dataset",
+				},
+			});
+		}
+
+		const captcha = at(solvedCaptchas, 0);
+		// Use the first item from the captcha (should be an image)
+		const imageItem = captcha.items[0];
+		if (!imageItem || imageItem.type !== "image") {
+			throw new ProsopoEnvError("DATABASE.CAPTCHA_INVALID", {
+				context: {
+					failedFuncName: this.getPuzzleCaptchaChallenge.name,
+					captchaId: captcha.captchaId,
+					message: "Captcha does not contain a valid image",
+				},
+			});
+		}
+
+		const imgUrl = imageItem.data;
 
 		// r=9, L = l + r*2 + 3 = 42 + 9*2 + 3 = 63
 		const L = PUZZLE_PIECE_SIZE + 9 * 2 + 3;
@@ -107,7 +166,6 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		puzzleChallengeId: string,
 		providerChallengeSignature: string,
 		sliderLeft: number,
-		trailY: number[],
 		timeout: number,
 		userTimestampSignature: string,
 		ipAddress: IPAddress,
@@ -153,7 +211,6 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				},
 				userSubmitted: true,
 				sliderLeft,
-				trailY,
 			});
 			return false;
 		}
@@ -161,13 +218,8 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		// Verify slider accuracy
 		const spliced = Math.abs(sliderLeft - record.destX) < tolerancePx;
 
-		// Verify Y-axis trail std deviation is non-zero (bot detection)
-		const stddev = computeTrailStddev(trailY);
-		const verified = stddev !== 0;
-
-		const correct = spliced && verified;
-
-		// Process behavioral data if provided
+		// Extract trail data from behavioral data for bot detection
+		let verified = false;
 		if (behavioralData) {
 			try {
 				const decryptKeys = [
@@ -179,6 +231,35 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 					decryptKeys,
 				);
 				if (decryptedData) {
+					// Extract trail data from mouse/touch movements
+					const trailData: number[] = [];
+					if (
+						decryptedData.collector1 &&
+						Array.isArray(decryptedData.collector1)
+					) {
+						// Mouse movements - extract Y coordinates
+						for (const point of decryptedData.collector1) {
+							if (isMouseMovementPoint(point)) {
+								trailData.push(point.y);
+							}
+						}
+					}
+					if (
+						decryptedData.collector2 &&
+						Array.isArray(decryptedData.collector2)
+					) {
+						// Touch movements - extract Y coordinates
+						for (const point of decryptedData.collector2) {
+							if (isTouchEventPoint(point)) {
+								trailData.push(point.y);
+							}
+						}
+					}
+
+					// Verify Y-axis trail std deviation is non-zero (bot detection)
+					const stddev = computeTrailStddev(trailData);
+					verified = stddev !== 0;
+
 					const packedData: BehavioralDataPacked = {
 						c1: decryptedData.collector1 || [],
 						c2: decryptedData.collector2 || [],
@@ -198,6 +279,8 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 			}
 		}
 
+		const correct = spliced && verified;
+
 		const result = correct
 			? { status: CaptchaStatus.approved as const }
 			: {
@@ -210,7 +293,6 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 			userSubmitted: true,
 			userSignature: userTimestampSignature,
 			sliderLeft,
-			trailY,
 		});
 
 		return correct;

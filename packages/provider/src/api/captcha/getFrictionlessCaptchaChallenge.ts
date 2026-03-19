@@ -621,8 +621,8 @@ export default (
 				tasks.frictionlessManager.updateScore(botScore, scoreComponents);
 			}
 
-			// If the bot score is greater than the threshold, send an image captcha
-			if (Number(botScore) > botThreshold) {
+			// If the bot score more than 50% over the threshold, send an image captcha
+			if (Number(botScore) > botThreshold * 1.5) {
 				req.logger.info(() => ({
 					msg: "Bot score is greater than threshold",
 					data: {
@@ -654,6 +654,35 @@ export default (
 				);
 			}
 
+			// If the bot score is greater than the threshold, send a puzzle captcha
+			if (Number(botScore) > botThreshold) {
+				req.logger.info(() => ({
+					msg: "Bot score is greater than threshold",
+					data: {
+						botScore,
+						botThreshold,
+						token,
+					},
+				}));
+				req.logger.info(() => ({
+					msg: "Frictionless decision",
+					data: {
+						requestId: req.requestId,
+						decision: "bot_score_above_threshold",
+						captchaType: CaptchaType.puzzle,
+					},
+				}));
+				return res.json(
+					await tasks.frictionlessManager.sendPuzzleCaptcha({
+						userSitekeyIpHash,
+						reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
+						siteKey: dapp,
+						countryCode,
+						headers: flatHeaders,
+					}),
+				);
+			}
+
 			// Otherwise, send a PoW captcha
 			req.logger.info(() => ({
 				msg: "Frictionless decision",
@@ -664,8 +693,9 @@ export default (
 				},
 			}));
 			return res.json(
-				await tasks.frictionlessManager.sendPowCaptcha({
+				await tasks.frictionlessManager.sendPuzzleCaptcha({
 					userSitekeyIpHash,
+					reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
 					siteKey: dapp,
 					countryCode,
 					headers: flatHeaders,
