@@ -20,6 +20,7 @@ import {
 	type ProsopoConfigOutput,
 	Tier,
 	contextAwareThresholdDefault,
+	ClientSettingsSchema,
 } from "@prosopo/types";
 import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
 import { describe, expect, it, vi } from "vitest";
@@ -55,13 +56,13 @@ describe("apiRegisterSiteKeysEndpoint", () => {
 			})),
 		);
 
-	const defaultSettings = {
+	const defaultSettings = ClientSettingsSchema.parse({
 		captchaType: CaptchaType.frictionless,
-		domains: [],
+		domains: ["example.com"],
 		frictionlessThreshold: 0.5,
 		imageThreshold: 0.5,
 		imageMaxRounds: 3,
-		powDifficulty: 0.5,
+		powDifficulty: 1,
 		disallowWebView: false,
 		contextAware: {
 			enabled: false,
@@ -72,7 +73,7 @@ describe("apiRegisterSiteKeysEndpoint", () => {
 				},
 			},
 		},
-	};
+	});
 
 	it("should register or update multiple site keys", async () => {
 		const records: Array<Partial<ClientRecord>> = [
