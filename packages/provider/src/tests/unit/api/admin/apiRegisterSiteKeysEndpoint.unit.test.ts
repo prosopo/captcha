@@ -63,7 +63,7 @@ describe("ApiRegisterSiteKeysEndpoint", () => {
 					domains: ["example.com"],
 					captchaType: CaptchaType.pow,
 					frictionlessThreshold: 0.5,
-					powDifficulty: 100000,
+					powDifficulty: 5,
 					imageThreshold: 0.5,
 					imageMaxRounds: 3,
 				} as unknown as IUserSettings,
@@ -71,6 +71,7 @@ describe("ApiRegisterSiteKeysEndpoint", () => {
 			{
 				siteKey: "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
 				tier: Tier.Free,
+				settings: { domains: ["example.org"] } as unknown as IUserSettings,
 			},
 		];
 
@@ -87,6 +88,7 @@ describe("ApiRegisterSiteKeysEndpoint", () => {
 				{
 					siteKey: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
 					tier: Tier.Free,
+					settings: { domains: ["localhost"] } as unknown as IUserSettings,
 				},
 			],
 			mockLogger as never,
