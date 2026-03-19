@@ -1,5 +1,18 @@
 # @prosopo/account
 
+## 2.8.14
+### Patch Changes
+
+- 730c61e: Speed up captcha
+- Updated dependencies [730c61e]
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/fingerprint@2.6.29
+  - @prosopo/types@3.12.3
+  - @prosopo/util@3.2.7
+  - @prosopo/keyring@2.9.14
+
 ## 2.8.13
 ### Patch Changes
 

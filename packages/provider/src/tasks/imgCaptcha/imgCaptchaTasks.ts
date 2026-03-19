@@ -592,6 +592,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		contextAwareEnabled = false,
 		userAccessRulesStorage?: AccessRulesStorage,
 		email?: string,
+		spamEmailDomainCheckingEnabled = false,
 	): Promise<ImageVerificationResponse> {
 		const solution = await (commitmentId
 			? this.getDappUserCommitmentById(commitmentId)
@@ -687,7 +688,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		}
 
 		// Check email domain against spam list if email is provided
-		if (email) {
+		if (email && spamEmailDomainCheckingEnabled) {
 			try {
 				const isSpam = await this.checkSpamEmail(email);
 				if (isSpam) {

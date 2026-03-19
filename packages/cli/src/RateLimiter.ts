@@ -39,6 +39,10 @@ export const getRateLimitConfig = () => {
 			windowMs: process.env.PROSOPO_VERIFY_IMAGE_CAPTCHA_SOLUTION_DAPP_WINDOW,
 			limit: process.env.PROSOPO_VERIFY_IMAGE_CAPTCHA_SOLUTION_DAPP_LIMIT,
 		},
+		[ClientApiPaths.CheckSpamEmail]: {
+			windowMs: process.env.PROSOPO_CHECK_SPAM_EMAIL_WINDOW,
+			limit: process.env.PROSOPO_CHECK_SPAM_EMAIL_LIMIT,
+		},
 		[ClientApiPaths.GetProviderStatus]: {
 			windowMs: process.env.PROSOPO_GET_PROVIDER_STATUS_WINDOW,
 			limit: process.env.PROSOPO_GET_PROVIDER_STATUS_LIMIT,

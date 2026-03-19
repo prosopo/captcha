@@ -1,5 +1,17 @@
 # @prosopo/client-example-server
 
+## 2.7.70
+### Patch Changes
+
+- 731f7fc: Fix client example server ports
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/types@3.12.3
+  - @prosopo/util@3.2.7
+  - @prosopo/server@2.9.66
+  - @prosopo/keyring@2.9.14
+
 ## 2.7.69
 ### Patch Changes
 

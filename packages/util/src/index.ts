@@ -33,3 +33,5 @@ export * from "./fetchWithEtag.js";
 export * from "./binaryString.js";
 export * from "./date.js";
 export * from "./cacheFile.js";
+export * from "./email.js";
+export * from "./domainValidation.js";

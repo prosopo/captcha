@@ -87,6 +87,7 @@ export enum ClientApiPaths {
 	VerifyImageCaptchaSolutionDapp = "/v1/prosopo/provider/client/image/dapp/verify",
 	GetProviderStatus = "/v1/prosopo/provider/client/status",
 	SubmitUserEvents = "/v1/prosopo/provider/client/events",
+	CheckSpamEmail = "/v1/prosopo/provider/client/spam/email",
 }
 
 export enum PublicApiPaths {
@@ -147,6 +148,7 @@ export const ProviderDefaultRateLimits = {
 		limit: 60,
 	},
 	[ClientApiPaths.GetProviderStatus]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.CheckSpamEmail]: { windowMs: 60000, limit: 60 },
 	[PublicApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
 	[AdminApiPaths.SiteKeyRegister]: { windowMs: 60000, limit: 5 },

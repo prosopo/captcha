@@ -1,5 +1,16 @@
 # @prosopo/types-database
 
+## 4.4.9
+### Patch Changes
+
+- e1ea65f: Better spam email domain checking
+- c316257: Adding sync fo sessions wrt captcha status
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/types@3.12.3
+  - @prosopo/user-access-policy@3.6.15
+
 ## 4.4.8
 ### Patch Changes
 

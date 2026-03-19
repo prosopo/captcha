@@ -1,5 +1,10 @@
 # @prosopo/config
 
+## 3.3.1
+### Patch Changes
+
+- e1ea65f: Better spam email domain checking
+
 ## 3.3.0
 ### Minor Changes
 

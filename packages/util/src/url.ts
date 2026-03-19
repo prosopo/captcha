@@ -11,11 +11,28 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export const getURLProtocol = (url: URL) => {
-	if (url.hostname.match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)) {
-		return "http";
+import { Address4, Address6 } from "ip-address";
+
+const isIPAddress = (hostname: string): boolean => {
+	try {
+		new Address4(hostname);
+		return true;
+	} catch {
+		try {
+			new Address6(hostname);
+			return true;
+		} catch {
+			return false;
+		}
 	}
-	return "https";
+};
+
+export const getURLProtocol = (url: URL) => {
+	if (!isIPAddress(url.hostname)) {
+		return "https";
+	}
+
+	return "http";
 };
 
 export const parseUrl = (domain: string) => {
@@ -85,4 +102,47 @@ export const validateDomainPattern = (input: string): boolean => {
 	}
 
 	return validateDomain(domain);
+};
+
+/**
+ * @description Builds all suffix candidates for a domain by progressively stripping the leftmost label.
+ * For "mail.fakemail.app" this produces:
+ *   ["mail.fakemail.app", "fakemail.app"]
+ * This allows a single DB entry of "fakemail.app" to match queries for
+ * "mail.fakemail.app", "sub.fakemail.app", etc.
+ * The final TLD (e.g. "app", "com") is excluded as it would match all domains with that TLD.
+ *
+ * The input is normalized before processing: trimmed, lowercased, and any trailing dot
+ * (FQDN notation) is stripped. Domains containing empty labels (consecutive dots, or a
+ * leading dot after normalization) are considered invalid and return an empty array.
+ *
+ * @param domain The domain to generate suffix candidates for
+ * @returns Array of domain suffix candidates, from most specific to least specific (excluding TLD),
+ *          or an empty array if the input is empty or contains empty labels.
+ */
+export const buildDomainSuffixCandidates = (domain: string): string[] => {
+	// Normalize: trim whitespace, lowercase, strip a single trailing dot (FQDN notation).
+	const normalized = domain.trim().toLowerCase().replace(/\.$/, "");
+
+	if (normalized.length === 0) {
+		return [];
+	}
+
+	// Reject domains with empty labels (consecutive dots or a leading dot).
+	if (normalized.includes("..") || normalized.startsWith(".")) {
+		return [];
+	}
+
+	const candidates: string[] = [];
+	let current = normalized;
+	while (current.length > 0) {
+		const dotIndex = current.indexOf(".");
+		if (dotIndex === -1) {
+			// Only the TLD remains – exclude it.
+			break;
+		}
+		candidates.push(current);
+		current = current.substring(dotIndex + 1);
+	}
+	return candidates;
 };
