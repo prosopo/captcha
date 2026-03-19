@@ -29,6 +29,7 @@ import { DatasetManager } from "./dataset/datasetTasks.js";
 import { FrictionlessManager } from "./frictionless/frictionlessTasks.js";
 import { ImgCaptchaManager } from "./imgCaptcha/imgCaptchaTasks.js";
 import { PowCaptchaManager } from "./powCaptcha/powTasks.js";
+import { PuzzleCaptchaManager } from "./puzzleCaptcha/puzzleTasks.js";
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -44,6 +45,7 @@ export class Tasks {
 	imgCaptchaManager: ImgCaptchaManager;
 	clientTaskManager: ClientTaskManager;
 	frictionlessManager: FrictionlessManager;
+	puzzleCaptchaManager: PuzzleCaptchaManager;
 
 	constructor(env: ProviderEnvironment, logger?: Logger) {
 		this.config = env.config;
@@ -87,6 +89,12 @@ export class Tasks {
 			this.config,
 			this.logger,
 		);
+		this.puzzleCaptchaManager = new PuzzleCaptchaManager(
+			this.db,
+			this.pair,
+			this.config,
+			this.logger,
+		);
 	}
 
 	setLogger(logger: Logger): void {
@@ -97,6 +105,7 @@ export class Tasks {
 		this.imgCaptchaManager.logger = logger;
 		this.clientTaskManager.logger = logger;
 		this.frictionlessManager.logger = logger;
+		this.puzzleCaptchaManager.logger = logger;
 		this.db.logger = logger; // Ensure the database also uses the new logger
 	}
 }

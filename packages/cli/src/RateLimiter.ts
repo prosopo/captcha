@@ -23,6 +23,10 @@ export const getRateLimitConfig = () => {
 			windowMs: process.env.PROSOPO_GET_POW_CAPTCHA_CHALLENGE_WINDOW,
 			limit: process.env.PROSOPO_GET_POW_CAPTCHA_CHALLENGE_LIMIT,
 		},
+		[ClientApiPaths.GetPuzzleCaptchaChallenge]: {
+			windowMs: process.env.PROSOPO_GET_PUZZLE_CAPTCHA_CHALLENGE_WINDOW,
+			limit: process.env.PROSOPO_GET_PUZZLE_CAPTCHA_CHALLENGE_LIMIT,
+		},
 		[ClientApiPaths.SubmitImageCaptchaSolution]: {
 			windowMs: process.env.PROSOPO_SUBMIT_IMAGE_CAPTCHA_SOLUTION_WINDOW,
 			limit: process.env.PROSOPO_SUBMIT_IMAGE_CAPTCHA_SOLUTION_LIMIT,
@@ -31,6 +35,10 @@ export const getRateLimitConfig = () => {
 			windowMs: process.env.PROSOPO_SUBMIT_POW_CAPTCHA_SOLUTION_WINDOW,
 			limit: process.env.PROSOPO_SUBMIT_POW_CAPTCHA_SOLUTION_LIMIT,
 		},
+		[ClientApiPaths.SubmitPuzzleCaptchaSolution]: {
+			windowMs: process.env.PROSOPO_SUBMIT_PUZZLE_CAPTCHA_SOLUTION_WINDOW,
+			limit: process.env.PROSOPO_SUBMIT_PUZZLE_CAPTCHA_SOLUTION_LIMIT,
+		},
 		[ClientApiPaths.VerifyPowCaptchaSolution]: {
 			windowMs: process.env.PROSOPO_VERIFY_POW_CAPTCHA_SOLUTION_WINDOW,
 			limit: process.env.PROSOPO_VERIFY_POW_CAPTCHA_SOLUTION_LIMIT,
@@ -38,6 +46,10 @@ export const getRateLimitConfig = () => {
 		[ClientApiPaths.VerifyImageCaptchaSolutionDapp]: {
 			windowMs: process.env.PROSOPO_VERIFY_IMAGE_CAPTCHA_SOLUTION_DAPP_WINDOW,
 			limit: process.env.PROSOPO_VERIFY_IMAGE_CAPTCHA_SOLUTION_DAPP_LIMIT,
+		},
+		[ClientApiPaths.VerifyPuzzleCaptchaSolution]: {
+			windowMs: process.env.PROSOPO_VERIFY_PUZZLE_CAPTCHA_SOLUTION_WINDOW,
+			limit: process.env.PROSOPO_VERIFY_PUZZLE_CAPTCHA_SOLUTION_LIMIT,
 		},
 		[ClientApiPaths.CheckSpamEmail]: {
 			windowMs: process.env.PROSOPO_CHECK_SPAM_EMAIL_WINDOW,

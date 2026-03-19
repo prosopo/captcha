@@ -24,11 +24,14 @@ import type {
 	ApiResponse,
 	CaptchaResponseBody,
 	CaptchaSolutionResponse,
+	GetFrictionlessCaptchaResponse,
 	GetPowCaptchaResponse,
+	GetPuzzleCaptchaResponse,
 	ImageVerificationResponse,
 	PowCaptchaSolutionResponse,
 	Provider,
 	ProviderRegistered,
+	PuzzleCaptchaSolutionResponse,
 	RandomProvider,
 	UpdateProviderClientsResponse,
 } from "../provider/index.js";
@@ -66,6 +69,27 @@ export interface ProviderApiInterface {
 		timeout?: number,
 		salt?: string,
 	): Promise<PowCaptchaSolutionResponse>;
+	getPuzzleCaptchaChallenge(
+		userAccount: string,
+		dappAccount: string,
+		sessionId?: string,
+	): Promise<GetPuzzleCaptchaResponse>;
+	submitPuzzleCaptchaSolution(
+		challenge: GetPuzzleCaptchaResponse,
+		userAccount: string,
+		dappAccount: string,
+		sliderLeft: number,
+		trailY: number[],
+		userTimestampSignature: string,
+		timeout?: number,
+		behavioralData?: string,
+	): Promise<PuzzleCaptchaSolutionResponse>;
+	getFrictionlessCaptcha(
+		token: string,
+		headHash: string,
+		dapp: string,
+		user: string,
+	): Promise<GetFrictionlessCaptchaResponse>;
 	submitUserEvents(
 		events: StoredEvents,
 		string: string,

@@ -40,6 +40,7 @@ import {
 	type PoWCaptchaStored,
 	type PoWChallengeComponents,
 	type PoWChallengeId,
+	type PuzzleCaptchaStored,
 	type RequestHeaders,
 	type ScheduledTaskNames,
 	type ScheduledTaskResult,
@@ -66,6 +67,8 @@ import {
 	type IUserDataSlim,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
+	type PuzzleCaptchaRecord,
+	PuzzleCaptchaRecordSchema,
 	type ScheduledTask,
 	type ScheduledTaskRecord,
 	ScheduledTaskRecordSchema,
@@ -100,6 +103,7 @@ enum TableNames {
 	usersolution = "usersolution",
 	scheduler = "scheduler",
 	powcaptcha = "powcaptcha",
+	puzzlecaptcha = "puzzlecaptcha",
 	client = "client",
 	session = "session",
 	detector = "detector",
@@ -118,6 +122,11 @@ const PROVIDER_TABLES = [
 		collectionName: TableNames.powcaptcha,
 		modelName: "PowCaptcha",
 		schema: PoWCaptchaRecordSchema,
+	},
+	{
+		collectionName: TableNames.puzzlecaptcha,
+		modelName: "PuzzleCaptcha",
+		schema: PuzzleCaptchaRecordSchema,
 	},
 	{
 		collectionName: TableNames.dataset,
@@ -922,6 +931,97 @@ export class ProviderDatabase
 		await tables.powcaptcha.updateOne(
 			{ challenge },
 			{ $set: updates },
+			{ upsert: false },
+		);
+	}
+
+	/**
+	 * @description Stores a new Puzzle Captcha challenge record.
+	 */
+	async storePuzzleCaptchaRecord(
+		puzzleChallengeId: string,
+		userAccount: string,
+		dappAccount: string,
+		imgUrl: string,
+		destX: number,
+		blockY: number,
+		providerSignature: string,
+		ipAddress: CompositeIpAddress,
+		headers: RequestHeaders,
+		ja4: string,
+		sessionId?: string,
+		countryCode?: string,
+	): Promise<void> {
+		const tables = this.getTables();
+		const record: PuzzleCaptchaStored = {
+			puzzleChallengeId,
+			userAccount,
+			dappAccount,
+			imgUrl,
+			destX,
+			blockY,
+			providerSignature,
+			ipAddress,
+			headers,
+			ja4,
+			requestedAtTimestamp: new Date(),
+			lastUpdatedTimestamp: new Date(),
+			result: { status: CaptchaStatus.pending },
+			userSubmitted: false,
+			serverChecked: false,
+			sessionId,
+			countryCode,
+		};
+		try {
+			await tables.puzzlecaptcha.create(record);
+			this.logger.info(() => ({
+				data: { puzzleChallengeId, userAccount, dappAccount },
+				msg: "PuzzleCaptcha record created",
+			}));
+		} catch (error) {
+			throw new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
+				context: { error, puzzleChallengeId },
+				logger: this.logger,
+			});
+		}
+	}
+
+	/**
+	 * @description Retrieves a Puzzle Captcha record by its challenge ID.
+	 */
+	async getPuzzleCaptchaRecordById(
+		puzzleChallengeId: string,
+	): Promise<PuzzleCaptchaRecord | null> {
+		if (!this.tables) {
+			throw new ProsopoDBError("DATABASE.DATABASE_UNDEFINED", {
+				context: { failedFuncName: this.getPuzzleCaptchaRecordById.name },
+				logger: this.logger,
+			});
+		}
+		try {
+			const record = await this.tables.puzzlecaptcha
+				.findOne({ puzzleChallengeId })
+				.lean<PuzzleCaptchaRecord>();
+			return record ?? null;
+		} catch (error) {
+			throw new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
+				context: { error, puzzleChallengeId },
+				logger: this.logger,
+			});
+		}
+	}
+
+	/**
+	 * @description Updates a Puzzle Captcha record by its challenge ID.
+	 */
+	async updatePuzzleCaptchaRecord(
+		puzzleChallengeId: string,
+		updates: Partial<PuzzleCaptchaRecord>,
+	): Promise<void> {
+		const tables = this.getTables();
+		await tables.puzzlecaptcha.updateOne(
+			{ puzzleChallengeId },
+			{ $set: { ...updates, lastUpdatedTimestamp: new Date() } },
 			{ upsert: false },
 		);
 	}

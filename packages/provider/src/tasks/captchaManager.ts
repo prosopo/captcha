@@ -29,6 +29,7 @@ import type {
 	IProviderDatabase,
 	IUserDataSlim,
 	PoWCaptchaRecord,
+	PuzzleCaptchaRecord,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import {
@@ -345,7 +346,7 @@ export class CaptchaManager {
 	 */
 	async checkForHardBlock(
 		userAccessRulesStorage: AccessRulesStorage,
-		challengeRecord: PoWCaptchaRecord | UserCommitment,
+		challengeRecord: PoWCaptchaRecord | PuzzleCaptchaRecord | UserCommitment,
 		userAccount: string,
 		headers: RequestHeaders,
 		coords?: [number, number][][],

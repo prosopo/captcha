@@ -20,8 +20,10 @@ import checkSpamEmail from "./captcha/checkSpamEmail.js";
 import getFrictionlessCaptchaChallenge from "./captcha/getFrictionlessCaptchaChallenge.js";
 import getImageCaptchaChallenge from "./captcha/getImageCaptchaChallenge.js";
 import getPoWCaptchaChallenge from "./captcha/getPoWCaptchaChallenge.js";
+import getPuzzleCaptchaChallenge from "./captcha/getPuzzleCaptchaChallenge.js";
 import submitImageCaptchaSolution from "./captcha/submitImageCaptchaSolution.js";
 import submitPoWCaptchaSolution from "./captcha/submitPoWCaptchaSolution.js";
+import submitPuzzleCaptchaSolution from "./captcha/submitPuzzleCaptchaSolution.js";
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -60,6 +62,20 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	 */
 	router.post(ClientApiPaths.SubmitPowCaptchaSolution, (req, res, next) =>
 		submitPoWCaptchaSolution(env)(req, res, next),
+	);
+
+	/**
+	 * Supplies a puzzle slider challenge to a Dapp User
+	 */
+	router.post(ClientApiPaths.GetPuzzleCaptchaChallenge, (req, res, next) =>
+		getPuzzleCaptchaChallenge(env, userAccessRulesStorage)(req, res, next),
+	);
+
+	/**
+	 * Verifies a user's puzzle slider solution
+	 */
+	router.post(ClientApiPaths.SubmitPuzzleCaptchaSolution, (req, res, next) =>
+		submitPuzzleCaptchaSolution(env)(req, res, next),
 	);
 
 	/**

@@ -4,12 +4,11 @@
 		"rootDir": "./src",
 		"outDir": "./dist",
 		"lib": ["es6", "dom"],
-		"allowJs": true
+		"jsxImportSource": "@emotion/react"
 	},
 	"include": [
 		"src",
 		"src/**/*.json",
-		"src/index.html",
 		"src/**/*.ts",
 		"src/**/*.tsx",
 		"src/**/*.d.ts"
@@ -19,37 +18,28 @@
 			"path": "../../dev/config/tsconfig.json"
 		},
 		{
-			"path": "../detector"
-		},
-		{
-			"path": "../locale"
-		},
-		{
-			"path": "../load-balancer"
-		},
-		{
-			"path": "../procaptcha-pow"
-		},
-		{
-			"path": "../procaptcha-puzzle"
-		},
-		{
-			"path": "../procaptcha-react"
-		},
-		{
-			"path": "../types"
-		},
-		{
-			"path": "../widget-skeleton"
-		},
-		{
 			"path": "../api"
 		},
 		{
 			"path": "../common"
 		},
 		{
+			"path": "../locale"
+		},
+		{
 			"path": "../procaptcha-common"
+		},
+		{
+			"path": "../types"
+		},
+		{
+			"path": "../util"
+		},
+		{
+			"path": "../util-crypto"
+		},
+		{
+			"path": "../widget-skeleton"
 		}
 	]
 }

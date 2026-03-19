@@ -19,6 +19,7 @@ import {
 	providerRetry,
 } from "@prosopo/procaptcha-common";
 import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
+import { ProcaptchaPuzzle } from "@prosopo/procaptcha-puzzle";
 import { Procaptcha } from "@prosopo/procaptcha-react";
 import {
 	type FrictionlessState,
@@ -183,6 +184,20 @@ export const ProcaptchaFrictionless = ({
 							i18n={i18n}
 						/>,
 					);
+				} else if (result.captchaType === "puzzle") {
+					setComponentToRender(
+						<ProcaptchaPuzzle
+							config={config}
+							callbacks={callbacks}
+							frictionlessState={frictionlessState}
+							i18n={i18n}
+						/>,
+					);
+
+					stateRef.current = {
+						...stateRef.current,
+						loading: false,
+					};
 				} else {
 					setComponentToRender(
 						<ProcaptchaPow

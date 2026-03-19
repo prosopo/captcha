@@ -1,0 +1,278 @@
+flowchart TD
+    Client([Client / Dapp User]) --> A
+
+    subgraph Middleware["Request Middleware Pipeline"]
+        A[CORS] --> B[express.json]
+        B --> C[publicRouter\n/json, /favicon, etc.]
+        C --> D{Rate Limiting\nprod only}
+        D --> E[robotsMiddleware]
+        E --> F[ignoreMiddleware]
+        F --> G[requestLoggerMiddleware]
+        G --> H[i18nMiddleware]
+        H --> I[ja4Middleware\nfingerprint]
+        I --> J{Route type?}
+    end
+
+    J -->|Client routes\nexcl. verify + spam| K[headerCheckMiddleware\nvalidate prosopo-user\n+ prosopo-site-key headers]
+    J -->|verify routes| VR[prosopoVerifyRouter]
+    J -->|admin routes| AM[authMiddleware\nJWT verification]
+
+    K --> L{Headers valid?}
+    L -->|No| ERR401A[401 Unauthorized]
+    L -->|Yes| M[blockMiddleware\nBlacklistRequestInspector]
+
+    M --> N{User/IP blocked\nby access policy?}
+    N -->|Yes| ERR401B[401 Unauthorized]
+    N -->|No| O[domainMiddleware\n/v1/prosopo/provider/client/*]
+
+    O --> P{Origin in\nallowed domains?}
+    P -->|No| ERR401C[401 Unauthorized\nbad origin]
+    P -->|Yes| Q{Which endpoint?}
+
+    AM --> ADMIN[Admin API Routes\n/v1/prosopo/provider/admin/*]
+
+    %% ─────────────── FRICTIONLESS ───────────────
+    Q -->|POST GetFrictionlessCaptchaChallenge| FL_START
+
+    subgraph Frictionless["Frictionless Flow"]
+        FL_START[Parse GetFrictionlessCaptchaChallengeRequestBody\ntoken · headHash · dapp · user]
+        FL_START --> FL_MAINT{Maintenance\nmode?}
+        FL_MAINT -->|Yes| FL_POW_MAINT[sendPowCaptcha dummy score=0\nReturn PoW challenge]
+        FL_MAINT -->|No| FL_TOKEN{getSessionRecordByToken\ntoken already used?}
+        FL_TOKEN -->|Yes| FL_ERR400A[400 API.BAD_REQUEST]
+        FL_TOKEN -->|No| FL_SESSION{getSessionByuserSitekeyIpHash\nhash(user+IP+siteKey)\nexisting session?}
+        FL_SESSION -->|Yes| FL_REUSE[Return cached\ncaptchaType + sessionId]
+        FL_SESSION -->|No| FL_LANG[Check language header\ncheckLangRules → lScore]
+        FL_LANG --> FL_DECRYPT[decryptPayload\nbaseBotScore · timestamp\nproviderSelectEntropy\nuserId · userAgent\nwebView · iFrame · headHash\ndecryptionFailed · triggeredDetectors]
+        FL_DECRYPT --> FL_INIT_SCORE[botScore = baseBotScore + lScore\nscoreComponents = baseScore\n+ lScore + triggeredDetectors]
+        FL_INIT_SCORE --> FL_CLIENT{getClientRecord\nregistered?}
+        FL_CLIENT -->|No| FL_ERR400B[400 SITE_KEY_NOT_REGISTERED]
+        FL_CLIENT -->|Yes| FL_VALID{isValidRequest\nCaptchaType.frictionless\nclient settings match?}
+        FL_VALID -->|No| FL_ERR400C[400 API.INCORRECT_CAPTCHA_TYPE\nor API.BAD_REQUEST]
+        FL_VALID -->|Yes| FL_GEO[geolocationService.getCountryCode\nvia MaxMind GeoIP]
+        FL_GEO --> FL_POLICY{getPrioritisedAccessPolicies\npolicy matched?}
+        FL_POLICY -->|block policy| FL_SCORE_POL[scoreIncreaseAccessPolicy\nupdate botScore + components]
+        FL_SCORE_POL --> FL_BLOCK[registerBlockedSession\n401 Unauthorized]
+        FL_POLICY -->|image captchaType| FL_SCORE_POL_IMG[scoreIncreaseAccessPolicy\nupdate botScore + components]
+        FL_SCORE_POL_IMG --> FL_IMG_POL[sendImageCaptcha\nmin solvedImagesCount imageMaxRounds\nreason=USER_ACCESS_POLICY]
+        FL_POLICY -->|pow captchaType| FL_SCORE_POL_POW[scoreIncreaseAccessPolicy\nupdate botScore + components]
+        FL_SCORE_POL_POW --> FL_POW_POL[sendPowCaptcha\nreason=USER_ACCESS_POLICY]
+        FL_POLICY -->|no match| FL_AGENT{hashedUserAgent == token.userAgent\nAND prosopo-user header == token.userId?}
+        FL_AGENT -->|Mismatch| FL_IMG_AGENT[sendImageCaptcha\ntimestampDecayFunction rounds\nreason=USER_AGENT_MISMATCH]
+        FL_AGENT -->|Match| FL_CTX{clientRecord.settings\n.contextAware.enabled?}
+        FL_CTX -->|Yes + clientEntropy exists| FL_CTX_CHECK{compareBinaryStrings\ndecryptedHeadHash vs clientEntropy\nsim >= threshold?}
+        FL_CTX_CHECK -->|No headHash| FL_CTX_ERR[400 API.BAD_REQUEST]
+        FL_CTX_CHECK -->|sim < threshold| FL_IMG_CTX[sendImageCaptcha\nrounds = getRoundsFromSimScore\nreason=CONTEXT_AWARE_VALIDATION_FAILED]
+        FL_CTX_CHECK -->|sim >= threshold| FL_WV{clientRecord.settings\n.disallowWebView + webView=true?}
+        FL_CTX -->|disabled / no entropy| FL_WV
+        FL_WV -->|Yes| FL_SCORE_WV[scoreIncreaseWebView\nupdate botScore + components]
+        FL_SCORE_WV --> FL_IMG_WV[sendImageCaptcha\nmin solved.count*2 imageMaxRounds\nreason=WEBVIEW_DETECTED]
+        FL_WV -->|No| FL_TS{FrictionlessManager\n.timestampTooOld > 10 min?}
+        FL_TS -->|Yes| FL_SCORE_TS[scoreIncreaseTimestamp\nupdate botScore + components]
+        FL_SCORE_TS --> FL_IMG_TS[sendImageCaptcha\ntimestampDecayFunction rounds\nreason=OLD_TIMESTAMP]
+        FL_TS -->|No| FL_HOST[hostVerified\ncheck providerSelectEntropy\nagainst registered domains]
+        FL_HOST -->|Not verified| FL_SCORE_HOST[scoreIncreaseUnverifiedHost\nupdate botScore + components]
+        FL_SCORE_HOST --> FL_BOT{botScore >\nbotThreshold\ndefault 0.5?}
+        FL_HOST -->|Verified| FL_BOT
+        FL_BOT -->|Yes| FL_IMG_BOT[sendImageCaptcha\nmin solved.count imageMaxRounds\nreason=BOT_SCORE_ABOVE_THRESHOLD]
+        FL_BOT -->|No| FL_DEF[sendPowCaptcha\nreason=default]
+    end
+
+    %% ─────────────── IMAGE CHALLENGE ───────────────
+    Q -->|POST GetImageCaptchaChallenge| IMG_CH_START
+
+    subgraph ImageChallenge["Image Captcha – Get Challenge"]
+        IMG_CH_START[Parse CaptchaRequestBody\ndatasetId · user · dapp · sessionId]
+        IMG_CH_START --> IMG_CH_IP{normalizeRequestIp\nIP present?}
+        IMG_CH_IP -->|No| IMG_CH_ERR400[400 API.BAD_REQUEST\nIP not found]
+        IMG_CH_IP -->|Yes| IMG_CH_ADDR[validateSiteKey dapp\nvalidateAddr user]
+        IMG_CH_ADDR --> IMG_CH_CLIENT{getClientRecord\nregistered?}
+        IMG_CH_CLIENT -->|No| IMG_CH_ERR401[400 SITE_KEY_NOT_REGISTERED]
+        IMG_CH_CLIENT -->|Yes| IMG_CH_GEO[geolocationService.getCountryCode]
+        IMG_CH_GEO --> IMG_CH_POL[getRequestUserScope\ngetPrioritisedAccessPolicies]
+        IMG_CH_POL --> IMG_CH_VALID{isValidRequest\nCaptchaType.image\nsessionId: checkAndRemoveSession\ncaptchaType match · IP validate\nor clientSettings.captchaType==image}
+        IMG_CH_VALID -->|No| IMG_CH_ERRVAL[400 reason\nAPI.INCORRECT_CAPTCHA_TYPE\nor CAPTCHA.NO_SESSION_FOUND]
+        IMG_CH_VALID -->|Yes| IMG_CH_CFG[Build captchaConfig\nsolved.count = min solvedImagesCount\nOR policy OR env.config\ncapped by imageMaxRounds\nunsolved.count from policy or env]
+        IMG_CH_CFG --> IMG_CH_RAND[getRandomCaptchasAndRequestHash\ndatasetId · user · ipAddress\ncaptchaConfig · imageThreshold\nsessionId · countryCode]
+        IMG_CH_RAND --> IMG_CH_STORE[storePendingImageCommitment\nrequestHash · salt · deadline\nipAddress · threshold · sessionId]
+        IMG_CH_STORE --> IMG_CH_ASSETS[parseCaptchaAssets\nresolve image URLs\ntranslate target labels]
+        IMG_CH_ASSETS --> IMG_CH_RESP[CaptchaResponseBody\ncaptchas · requestHash\ntimestamp · providerSignature]
+    end
+
+    %% ─────────────── IMAGE SUBMIT ───────────────
+    Q -->|POST SubmitImageCaptchaSolution| IMG_SUB_START
+
+    subgraph ImageSubmit["Image Captcha – Submit Solution"]
+        IMG_SUB_START[Parse CaptchaSolutionBody\nuser · dapp · requestHash\ncaptchas · signature.user.timestamp\nsignature.provider.requestHash\ntimestamp · behavioralData]
+        IMG_SUB_START --> IMG_SUB_MAINT{Maintenance\nmode?}
+        IMG_SUB_MAINT -->|Yes| IMG_SUB_OK[Return verified=true\ncaptchas=[]]
+        IMG_SUB_MAINT -->|No| IMG_SUB_ADDR[validateSiteKey dapp\nvalidateAddr user]
+        IMG_SUB_ADDR --> IMG_SUB_CLIENT{getClientRecord\nregistered?}
+        IMG_SUB_CLIENT -->|No| IMG_SUB_ERR[400 SITE_KEY_NOT_REGISTERED]
+        IMG_SUB_CLIENT -->|Yes| IMG_SUB_USIG[signatureVerify\nuser signed timestamp\nproves account ownership]
+        IMG_SUB_USIG --> IMG_SUB_PSIG[signatureVerify\nprovider signed requestHash\nproves provider issued challenge]
+        IMG_SUB_PSIG --> IMG_SUB_PEND{getPendingImageCommitment\nrequestHash found?}
+        IMG_SUB_PEND -->|No| IMG_SUB_NOTFOUND[Return verified=false\nno captchas]
+        IMG_SUB_PEND -->|Yes| IMG_SUB_DEAD{deadlineTimestamp\n< now?}
+        IMG_SUB_DEAD -->|Expired| IMG_SUB_NOTFOUND
+        IMG_SUB_DEAD -->|Valid| IMG_SUB_HASH[computePendingRequestHash\nverify captchaIds + user + salt\nmatch requestHash]
+        IMG_SUB_HASH --> IMG_SUB_CAPTCHAS[validateReceivedCaptchasAgainstStoredCaptchas\nparse + sort · getCaptchaById\nlength + datasetId match]
+        IMG_SUB_CAPTCHAS --> IMG_SUB_MARK[updatePendingImageCommitmentStatus\nprevent reuse]
+        IMG_SUB_MARK --> IMG_SUB_BEHAV[decryptBehavioralData\nDB keys + BOT_DECRYPTION_KEY\npack into behavioralDataPacked\nstore deviceCapability]
+        IMG_SUB_BEHAV --> IMG_SUB_STORE[storeUserImageCaptchaSolution\nbuildTreeAndGetCommitmentId\ncommit: ipAddress · headers\nja4 · sessionId · salt]
+        IMG_SUB_STORE --> IMG_SUB_PAIRS{containsIdenticalPairs\nin click coordinates?}
+        IMG_SUB_PAIRS -->|Yes — bot signal| IMG_SUB_PAIRS_FAIL[disapproveDappUserCommitment\nCAP.INVALID_SOLUTION\nReturn verified=false]
+        IMG_SUB_PAIRS -->|No| IMG_SUB_COMPARE{compareCaptchaSolutions\nreceivedCaptchas vs solutionRecords\nthreshold check}
+        IMG_SUB_COMPARE -->|Pass| IMG_SUB_APPROVE[approveDappUserCommitment\nupdateSessionRecord approved]
+        IMG_SUB_APPROVE --> IMG_SUB_RESP[CaptchaSolutionResponse\nverified=true · captchas + proofs\nAPI.CAPTCHA_PASSED]
+        IMG_SUB_COMPARE -->|Fail| IMG_SUB_DISAPPROVE[disapproveDappUserCommitment\nCAP.INVALID_SOLUTION\nupdateSessionRecord disapproved]
+        IMG_SUB_DISAPPROVE --> IMG_SUB_RESP_FAIL[CaptchaSolutionResponse\nverified=false · empty proofs\nAPI.CAPTCHA_FAILED]
+    end
+
+    %% ─────────────── POW CHALLENGE ───────────────
+    Q -->|POST GetPowCaptchaChallenge| POW_CH_START
+
+    subgraph PowChallenge["PoW Captcha – Get Challenge"]
+        POW_CH_START[Parse GetPowCaptchaChallengeRequestBody\nuser · dapp · sessionId]
+        POW_CH_START --> POW_CH_ADDR[validateSiteKey dapp\nvalidateAddr user]
+        POW_CH_ADDR --> POW_CH_CLIENT{getClientRecord\nregistered?}
+        POW_CH_CLIENT -->|No| POW_CH_ERR[400 SITE_KEY_NOT_REGISTERED]
+        POW_CH_CLIENT -->|Yes| POW_CH_GEO[geolocationService.getCountryCode]
+        POW_CH_GEO --> POW_CH_POL[getRequestUserScope\ngetPrioritisedAccessPolicies\npowDifficulty from policy]
+        POW_CH_POL --> POW_CH_VALID{isValidRequest\nCaptchaType.pow\nsessionId: checkAndRemoveSession\ncaptchaType match · IP validate\nor clientSettings.captchaType==pow}
+        POW_CH_VALID -->|No| POW_CH_ERRVAL[400 reason\nAPI.INCORRECT_CAPTCHA_TYPE\nor CAPTCHA.NO_SESSION_FOUND]
+        POW_CH_VALID -->|Yes| POW_CH_ORIGIN{origin header\npresent?}
+        POW_CH_ORIGIN -->|No| POW_CH_ERRORI[400 API.BAD_REQUEST\nmissing origin]
+        POW_CH_ORIGIN -->|Yes| POW_CH_DIFF[Resolve difficulty\npowDifficulty: session\nOR policy OR clientSettings\nOR DEFAULT=4]
+        POW_CH_DIFF --> POW_CH_GEN[getPowCaptchaChallenge\ntimestamp___user___dapp___nonce\nsigned by provider keypair]
+        POW_CH_GEN --> POW_CH_STORE[storePowCaptchaRecord\nchallenge · ipAddress · headers\nja4 · sessionId · countryCode\nproviderSignature · difficulty]
+        POW_CH_STORE --> POW_CH_RESP[GetPowCaptchaResponse\nchallenge · difficulty\ntimestamp · providerSignature]
+    end
+
+    %% ─────────────── POW SUBMIT ───────────────
+    Q -->|POST SubmitPowCaptchaSolution| POW_SUB_START
+
+    subgraph PowSubmit["PoW Captcha – Submit Solution"]
+        POW_SUB_START[Parse SubmitPowCaptchaSolutionBody\nchallenge · nonce · salt\nsignature.provider.challenge\nsignature.user.timestamp\nuser · dapp · behavioralData\nverifiedTimeout]
+        POW_SUB_START --> POW_SUB_MAINT{Maintenance\nmode?}
+        POW_SUB_MAINT -->|Yes| POW_SUB_OK[Return verified=true]
+        POW_SUB_MAINT -->|No| POW_SUB_ADDR[validateSiteKey dapp\nvalidateAddr user]
+        POW_SUB_ADDR --> POW_SUB_CLIENT{getClientRecord\nregistered?}
+        POW_SUB_CLIENT -->|No| POW_SUB_ERR[400 SITE_KEY_NOT_REGISTERED]
+        POW_SUB_CLIENT -->|Yes| POW_SUB_CSIG[checkPowSignature\nprovider signed challenge]
+        POW_SUB_CSIG --> POW_SUB_USIG[checkPowSignature\nuser signed timestamp\nfrom challenge string]
+        POW_SUB_USIG --> POW_SUB_LOOKUP{getPowCaptchaRecordByChallenge\nrecord found?}
+        POW_SUB_LOOKUP -->|No| POW_SUB_NOTFOUND[Return verified=false]
+        POW_SUB_LOOKUP -->|Yes| POW_SUB_RECENCY{verifyRecency\nchallenge within\nverifiedTimeout?}
+        POW_SUB_RECENCY -->|Expired| POW_SUB_TS[updatePowCaptchaRecord\nstatus=disapproved\nCAP.INVALID_TIMESTAMP\nReturn verified=false]
+        POW_SUB_RECENCY -->|Recent| POW_SUB_NONCE{validateSolution\nnonce hash starts with\ndifficulty leading zeros?}
+        POW_SUB_NONCE -->|Fail| POW_SUB_WRONG[updatePowCaptchaRecord\nstatus=disapproved\nCAP.INVALID_SOLUTION\nReturn verified=false]
+        POW_SUB_NONCE -->|Pass| POW_SUB_BEHAV[decryptBehavioralData\nDB keys + BOT_DECRYPTION_KEY\npack into behavioralDataPacked\nstore deviceCapability + coords]
+        POW_SUB_BEHAV --> POW_SUB_STORE[updatePowCaptchaRecordResult\nstatus=approved\nuserTimestampSignature · coords\nupdateSessionRecord userSubmitted]
+        POW_SUB_STORE --> POW_SUB_RESP[PowCaptchaSolutionResponse\nverified=true · status=ok]
+    end
+
+    %% ─────────────── VERIFY ───────────────
+    VR --> VR_ROUTE{Which verify\nendpoint?}
+
+    subgraph VerifyImage["Server-side Verify – Image"]
+        VI_START[Parse VerifySolutionBody\ntoken · dappSignature · ip\nmaxVerifiedTime · email]
+        VI_START --> VI_MAINT{Maintenance\nmode?}
+        VI_MAINT -->|Yes| VI_OK[Return verified=true\nstatus=ok]
+        VI_MAINT -->|No| VI_DECODE[decodeProcaptchaOutput\nuser · dapp · timestamp · commitmentId]
+        VI_DECODE --> VI_ADDR[validateAddress\ndapp + user — SS58 format]
+        VI_ADDR --> VI_CLIENT{Client record\nregistered?}
+        VI_CLIENT -->|No| VI_ERR[400 SITE_KEY_NOT_REGISTERED]
+        VI_CLIENT -->|Yes| VI_SIG[verifySignature\ndappSignature signs timestamp\nusing dapp keypair]
+        VI_SIG --> VI_LOOKUP{Lookup commitment\nby commitmentId\nor user+dapp account?}
+        VI_LOOKUP -->|not found| VI_NO_SOL[Return verified=false\nAPI.USER_NOT_VERIFIED_NO_SOLUTION]
+        VI_LOOKUP -->|found| VI_SVRCHECKED{serverChecked\nalready?}
+        VI_SVRCHECKED -->|Yes — replay guard| VI_ALREADY[Return verified=false\nAPI.USER_ALREADY_VERIFIED]
+        VI_SVRCHECKED -->|No| VI_MARK[markDappUserCommitmentsChecked\nprevent replay]
+        VI_MARK --> VI_APPROVED{solution.result.status\n== approved?}
+        VI_APPROVED -->|No — disapproved| VI_DISAPP[Return verified=false\nAPI.USER_NOT_VERIFIED]
+        VI_APPROVED -->|Yes| VI_TIME{timeSinceCompletion\n> maxVerifiedTime?\ndefault 60 s}
+        VI_TIME -->|Yes — expired| VI_TIMEOUT[Return verified=false\nAPI.USER_NOT_VERIFIED_TIME_EXPIRED]
+        VI_TIME -->|No| VI_POLICY{Access policy\nhard block?}
+        VI_POLICY -->|Block policy matched| VI_BLOCKED[disapproveDappUserCommitment\nAPI.ACCESS_POLICY_BLOCK\nReturn verified=false\nAPI.USER_BLOCKED]
+        VI_POLICY -->|No block| VI_SPAM{email provided\n+ spamCheck enabled?}
+        VI_SPAM -->|Yes — spam domain| VI_SPAM_FAIL[disapproveDappUserCommitment\nAPI.SPAM_EMAIL_DOMAIN\nReturn verified=false]
+        VI_SPAM -->|No / not spam| VI_IP{ip provided\n+ ipValidationRules\nenabled?}
+        VI_IP -->|IP mismatch / distance| VI_IP_FAIL[Return verified=false\nAPI.USER_NOT_VERIFIED]
+        VI_IP -->|Pass / disabled| VI_SESSION{Session record\nexists?}
+        VI_SESSION -->|Yes| VI_SCORE[computeFrictionlessScore\nfrom scoreComponents]
+        VI_SCORE --> VI_WEBVIEW{disallowWebView\n+ webView score > 0?}
+        VI_WEBVIEW -->|Yes| VI_WV_FAIL[Return verified=false\nAPI.USER_NOT_VERIFIED]
+        VI_WEBVIEW -->|No| VI_CTX{contextAware enabled\n+ CONTEXT_AWARE_\nVALIDATION_FAILED?}
+        VI_CTX -->|Logged / continue| VI_DM[DecisionMachineRunner.decide\nuserAccount · dappAccount\ncaptchaType=image · headers\ncountryCode]
+        VI_SESSION -->|No| VI_DM
+        VI_DM --> VI_DM_DEC{Decision\n== Deny?}
+        VI_DM_DEC -->|Yes| VI_DM_DENY[disapproveDappUserCommitment\nDM reason\nReturn verified=false]
+        VI_DM_DEC -->|Allow| VI_FINAL[updateSessionRecord serverChecked=true\nstatus=approved]
+        VI_FINAL --> VI_RESP[ImageVerificationResponse\nverified=true · score · commitmentId\nAPI.USER_VERIFIED]
+    end
+
+    subgraph VerifyPow["Server-side Verify – PoW"]
+        VP_START[Parse ServerPowCaptchaVerifyRequestBody\ntoken · dappSignature · ip\nverifiedTimeout · email]
+        VP_START --> VP_MAINT{Maintenance\nmode?}
+        VP_MAINT -->|Yes| VP_OK[Return verified=true\nstatus=ok]
+        VP_MAINT -->|No| VP_DECODE[decodeProcaptchaOutput\ndapp · user · timestamp · challenge]
+        VP_DECODE --> VP_ADDR[validateAddress\ndapp + user — SS58 format]
+        VP_ADDR --> VP_CLIENT{Client record\nregistered?}
+        VP_CLIENT -->|No| VP_ERR[400 SITE_KEY_NOT_REGISTERED]
+        VP_CLIENT -->|Yes| VP_CHALLENGE{challenge\npresent in token?}
+        VP_CHALLENGE -->|No| VP_UNVER[Return verified=false\nAPI.USER_NOT_VERIFIED]
+        VP_CHALLENGE -->|Yes| VP_SIG[verifySignature\ndappSignature signs timestamp\nusing dapp keypair]
+        VP_SIG --> VP_LOOKUP{getPowCaptchaRecord\nByChallenge}
+        VP_LOOKUP -->|not found| VP_NO_REC[Return verified=false]
+        VP_LOOKUP -->|found| VP_STATUS{result.status\n== approved?}
+        VP_STATUS -->|No — disapproved| VP_DISAPP[Throw CAPTCHA.INVALID_SOLUTION\n500 error]
+        VP_STATUS -->|Yes| VP_SVRCHECKED{serverChecked\nalready?}
+        VP_SVRCHECKED -->|Yes — replay guard| VP_ALREADY[Return verified=false]
+        VP_SVRCHECKED -->|No| VP_DAPP{dappAccount\nmatches record?}
+        VP_DAPP -->|No| VP_DAPP_FAIL[Throw CAPTCHA.DAPP_USER\n_SOLUTION_NOT_FOUND]
+        VP_DAPP -->|Yes| VP_MARK[markDappUserPoWCommitmentsChecked\nprevent replay]
+        VP_MARK --> VP_RECENCY{verifyRecency\nchallenge within\nverifiedTimeout?}
+        VP_RECENCY -->|Expired| VP_TS_OLD[updatePowCaptchaRecord\nAPI.TIMESTAMP_TOO_OLD\nReturn verified=false]
+        VP_RECENCY -->|Recent| VP_POLICY{Access policy\nhard block?}
+        VP_POLICY -->|Block policy matched| VP_BLOCKED[updatePowCaptchaRecord\nAPI.ACCESS_POLICY_BLOCK\nReturn verified=false]
+        VP_POLICY -->|No block| VP_SPAM{email provided\n+ spamCheck enabled?}
+        VP_SPAM -->|Yes — spam domain| VP_SPAM_FAIL[updatePowCaptchaRecord\nAPI.SPAM_EMAIL_DOMAIN\nReturn verified=false]
+        VP_SPAM -->|No / not spam| VP_IP{ip provided\n+ ipValidationRules\nenabled?}
+        VP_IP -->|IP mismatch / distance| VP_IP_FAIL[updatePowCaptchaRecord\nAPI.FAILED_IP_VALIDATION\nReturn verified=false]
+        VP_IP -->|Pass / disabled| VP_SESSION{Session record\nexists?}
+        VP_SESSION -->|Yes| VP_SCORE[computeFrictionlessScore\nfrom scoreComponents]
+        VP_SCORE --> VP_DM[DecisionMachineRunner.decide\nuserAccount · dappAccount\ncaptchaType=pow · headers\nbehavioralDataPacked\ndeviceCapability · countryCode]
+        VP_SESSION -->|No| VP_DM
+        VP_DM --> VP_DM_DEC{Decision\n== Deny?}
+        VP_DM_DEC -->|Yes| VP_DM_DENY[updatePowCaptchaRecord\nDM reason\nReturn verified=false]
+        VP_DM_DEC -->|Allow| VP_FINAL[updateSessionRecord serverChecked=true\nstatus=approved]
+        VP_FINAL --> VP_RESP[VerificationResponse\nverified=true · score]
+    end
+
+    VR_ROUTE -->|POST VerifyImageCaptchaSolutionDapp| VI_START
+    VR_ROUTE -->|POST VerifyPowCaptchaSolution| VP_START
+
+    %% ─────────────── SPAM EMAIL ───────────────
+    Q -->|POST CheckSpamEmail| SE_START
+
+    subgraph SpamEmail["Spam Email Check"]
+        SE_START[Parse body\nemail · dapp]
+        SE_START --> SE_CLIENT{Client record\nregistered?}
+        SE_CLIENT -->|No| SE_ERR400A[400 SITE_KEY_NOT_REGISTERED]
+        SE_CLIENT -->|Yes| SE_ENABLED{spamEmailDomain\nCheckEnabled?}
+        SE_ENABLED -->|No| SE_ERR400B[400 Bad Request]
+        SE_ENABLED -->|Yes| SE_CHECK[checkSpamEmail\nextractDomain · DB lookup]
+        SE_CHECK --> SE_RESP[Response\nisSpam · emailDomain]
+    end
+
+    %% Styling
+    classDef error fill:#ff6b6b,stroke:#c0392b,color:#fff
+    classDef success fill:#27ae60,stroke:#1e8449,color:#fff
+    classDef decision fill:#f39c12,stroke:#d68910,color:#fff
+    classDef process fill:#2980b9,stroke:#1a5276,color:#fff
+    classDef middleware fill:#8e44ad,stroke:#6c3483,color:#fff
+
+    class ERR401A,ERR401B,ERR401C,FL_ERR400A,FL_ERR400B,FL_ERR400C,FL_CTX_ERR,FL_BLOCK,IMG_CH_ERR400,IMG_CH_ERR401,IMG_CH_ERRVAL,IMG_SUB_ERR,IMG_SUB_NOTFOUND,IMG_SUB_PAIRS_FAIL,IMG_SUB_DISAPPROVE,IMG_SUB_RESP_FAIL,POW_CH_ERR,POW_CH_ERRVAL,POW_CH_ERRORI,POW_SUB_ERR,POW_SUB_NOTFOUND,POW_SUB_TS,POW_SUB_WRONG,VI_ERR,VI_NO_SOL,VI_ALREADY,VI_DISAPP,VI_TIMEOUT,VI_BLOCKED,VI_SPAM_FAIL,VI_IP_FAIL,VI_WV_FAIL,VI_DM_DENY,VP_ERR,VP_UNVER,VP_NO_REC,VP_DISAPP,VP_ALREADY,VP_DAPP_FAIL,VP_TS_OLD,VP_BLOCKED,VP_SPAM_FAIL,VP_IP_FAIL,VP_DM_DENY,SE_ERR400A,SE_ERR400B error
+    class FL_POW_MAINT,FL_REUSE,FL_IMG_POL,FL_POW_POL,FL_IMG_AGENT,FL_IMG_CTX,FL_IMG_WV,FL_IMG_TS,FL_IMG_BOT,FL_DEF,IMG_CH_RESP,IMG_SUB_OK,IMG_SUB_RESP,IMG_SUB_APPROVE,POW_CH_RESP,POW_SUB_OK,POW_SUB_RESP,VI_OK,VI_RESP,VP_OK,VP_RESP,SE_RESP success
+

@@ -61,7 +61,7 @@ export type DecisionMachineInput = {
 	dappAccount: string;
 	captchaResult: "passed" | "failed";
 	headers: Record<string, string | string[] | undefined>;
-	captchaType?: CaptchaType.pow | CaptchaType.image;
+	captchaType?: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle;
 	behavioralDataPacked?: DecisionMachineBehavioralDataPacked;
 	deviceCapability?: string;
 	countryCode?: string;
@@ -74,7 +74,10 @@ export type DecisionMachineOutput = {
 	tags?: string[];
 };
 
-export type DecisionMachineCaptchaType = CaptchaType.pow | CaptchaType.image;
+export type DecisionMachineCaptchaType =
+	| CaptchaType.pow
+	| CaptchaType.image
+	| CaptchaType.puzzle;
 
 // This is the API configuration type (used for uploads/API calls)
 // The database storage type is DecisionMachineArtifact in provider/database.ts

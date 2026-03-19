@@ -20,6 +20,8 @@ import {
 	type ImageVerificationResponse,
 	ServerPowCaptchaVerifyRequestBody,
 	type ServerPowCaptchaVerifyRequestBodyOutput,
+	ServerPuzzleCaptchaVerifyRequestBody,
+	type ServerPuzzleCaptchaVerifyRequestBodyOutput,
 	type VerificationResponse,
 	VerifySolutionBody,
 	type VerifySolutionBodyTypeOutput,
@@ -267,6 +269,108 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 	// Your error handler should always be at the end of your application stack. Apparently it means not only after all
 	// app.use() but also after all your app.get() and app.post() calls.
 	// https://stackoverflow.com/a/62358794/1178971
+
+	/**
+	 * Server-side verifies a dapp's puzzle captcha solution
+	 *
+	 * @param {string} token - The Procaptcha token containing puzzleChallengeId
+	 * @param {string} dappSignature - Signed token using dapp keypair
+	 * @param {number} verifiedTimeout - Maximum time in milliseconds since the captcha was requested
+	 */
+	router.post(
+		ClientApiPaths.VerifyPuzzleCaptchaSolution,
+		async (req, res, next) => {
+			const tasks = new Tasks(env, req.logger);
+
+			if (getMaintenanceMode()) {
+				req.logger.info(() => ({
+					msg: "Maintenance mode active - returning verified for puzzle captcha verification",
+				}));
+				const verificationResponse: VerificationResponse = {
+					status: "ok",
+					verified: true,
+				};
+				return res.json(verificationResponse);
+			}
+
+			let parsed: ServerPuzzleCaptchaVerifyRequestBodyOutput;
+			try {
+				parsed = ServerPuzzleCaptchaVerifyRequestBody.parse(req.body);
+			} catch (err) {
+				return next(
+					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
+						context: { code: 400, error: err, body: req.body },
+						i18n: req.i18n,
+						logger: req.logger,
+					}),
+				);
+			}
+
+			try {
+				const { token, dappSignature, verifiedTimeout, ip, email } = parsed;
+
+				const { dapp, user, timestamp, challenge } =
+					decodeProcaptchaOutput(token);
+
+				validateAddress(dapp, false, 42);
+				validateAddress(user, false, 42);
+
+				const clientRecord = await tasks.db.getClientRecord(dapp);
+				if (!clientRecord) {
+					return next(
+						new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
+							context: { code: 400, siteKey: dapp },
+							i18n: req.i18n,
+							logger: req.logger,
+						}),
+					);
+				}
+
+				if (!challenge) {
+					const unverifiedResponse: VerificationResponse = {
+						status: req.i18n.t("API.USER_NOT_VERIFIED"),
+						[ApiParams.verified]: false,
+					};
+					return res.json(unverifiedResponse);
+				}
+
+				const dappPair = env.keyring.addFromAddress(dapp);
+				verifySignature(dappSignature, timestamp.toString(), dappPair);
+
+				const { verified, score } =
+					await tasks.puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+						dapp,
+						challenge,
+						verifiedTimeout,
+						env,
+						ip,
+						userAccessRulesStorage,
+						email,
+						clientRecord.settings.spamEmailDomainCheckEnabled,
+					);
+
+				const verificationResponse: VerificationResponse =
+					tasks.puzzleCaptchaManager.getPuzzleVerificationResponse(verified);
+
+				req.logger.info(() => ({
+					msg: "Puzzle captcha server verification result",
+					data: { verified, score, challenge, dapp, user },
+				}));
+
+				return res.json(verificationResponse);
+			} catch (err) {
+				req.logger.error(() => ({ err, data: { body: req.body } }));
+				return next(
+					new ProsopoApiError("API.BAD_REQUEST", {
+						context: { code: 500, error: err },
+						i18n: req.i18n,
+						logger: req.logger,
+					}),
+				);
+			}
+		},
+	);
+
 	router.use(handleErrors);
 
 	return router;

@@ -97,7 +97,11 @@ export class DecisionMachineRunner {
 	 */
 	private async selectArtifact(
 		dappAccount: string,
-		captchaType?: CaptchaType.image | CaptchaType.pow | undefined,
+		captchaType?:
+			| CaptchaType.image
+			| CaptchaType.pow
+			| CaptchaType.puzzle
+			| undefined,
 	): Promise<DecisionMachineArtifact | undefined> {
 		// Check for dapp-specific artifact first (highest priority)
 		const dappArtifact = await this.db.getDecisionMachineArtifact(

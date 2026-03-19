@@ -362,6 +362,20 @@ export interface PoWCaptchaStored
 	extends Omit<PoWCaptchaUser, "requestedAtTimestamp">,
 		StoredCaptcha {}
 
+export interface PuzzleCaptchaStored extends StoredCaptcha {
+	puzzleChallengeId: string;
+	dappAccount: string;
+	userAccount: string;
+	imgUrl: string;
+	destX: number;
+	blockY: number;
+	providerSignature: string;
+	userSignature?: string;
+	sliderLeft?: number;
+	trailY?: number[];
+	tolerancePx?: number;
+}
+
 export interface SolutionRecord extends CaptchaSolution {
 	datasetId: string;
 	datasetContentId: string;
@@ -410,7 +424,7 @@ export type DecisionMachineArtifact = {
 	source: string;
 	name?: string;
 	version?: string;
-	captchaType?: CaptchaType.pow | CaptchaType.image;
+	captchaType?: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle;
 	createdAt: Date;
 	updatedAt: Date;
 };

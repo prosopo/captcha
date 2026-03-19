@@ -81,10 +81,13 @@ export enum ClientApiPaths {
 	GetImageCaptchaChallenge = "/v1/prosopo/provider/client/captcha/image",
 	GetPowCaptchaChallenge = "/v1/prosopo/provider/client/captcha/pow",
 	GetFrictionlessCaptchaChallenge = "/v1/prosopo/provider/client/captcha/frictionless",
+	GetPuzzleCaptchaChallenge = "/v1/prosopo/provider/client/captcha/puzzle",
 	SubmitImageCaptchaSolution = "/v1/prosopo/provider/client/solution",
 	SubmitPowCaptchaSolution = "/v1/prosopo/provider/client/pow/solution",
+	SubmitPuzzleCaptchaSolution = "/v1/prosopo/provider/client/puzzle/solution",
 	VerifyPowCaptchaSolution = "/v1/prosopo/provider/client/pow/verify",
 	VerifyImageCaptchaSolutionDapp = "/v1/prosopo/provider/client/image/dapp/verify",
+	VerifyPuzzleCaptchaSolution = "/v1/prosopo/provider/client/puzzle/verify",
 	GetProviderStatus = "/v1/prosopo/provider/client/status",
 	SubmitUserEvents = "/v1/prosopo/provider/client/events",
 	CheckSpamEmail = "/v1/prosopo/provider/client/spam/email",
@@ -136,13 +139,16 @@ export type CombinedApiPaths = ClientApiPaths | AdminApiPaths;
 export const ProviderDefaultRateLimits = {
 	[ClientApiPaths.GetImageCaptchaChallenge]: { windowMs: 60000, limit: 30 },
 	[ClientApiPaths.GetPowCaptchaChallenge]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.GetPuzzleCaptchaChallenge]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.SubmitImageCaptchaSolution]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.GetFrictionlessCaptchaChallenge]: {
 		windowMs: 60000,
 		limit: 60,
 	},
 	[ClientApiPaths.SubmitPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.SubmitPuzzleCaptchaSolution]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.VerifyPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.VerifyPuzzleCaptchaSolution]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.VerifyImageCaptchaSolutionDapp]: {
 		windowMs: 60000,
 		limit: 60,
@@ -324,7 +330,10 @@ export interface GetPowCaptchaResponse extends ApiResponse {
 }
 
 export interface GetFrictionlessCaptchaResponse extends ApiResponse {
-	[ApiParams.captchaType]: CaptchaType.pow | CaptchaType.image;
+	[ApiParams.captchaType]:
+		| CaptchaType.pow
+		| CaptchaType.image
+		| CaptchaType.puzzle;
 	[ApiParams.sessionId]?: string;
 }
 
@@ -394,6 +403,87 @@ export const SubmitPowCaptchaSolutionBody = object({
 
 export type SubmitPowCaptchaSolutionBodyType = input<
 	typeof SubmitPowCaptchaSolutionBody
+>;
+
+// ─────────────── PUZZLE CAPTCHA TYPES ───────────────
+
+export interface GetPuzzleCaptchaResponse extends ApiResponse {
+	[ApiParams.puzzleChallengeId]: string;
+	imgUrl: string;
+	[ApiParams.destX]: number;
+	blockY: number;
+	[ApiParams.timestamp]: string;
+	[ApiParams.signature]: {
+		[ApiParams.provider]: { [ApiParams.puzzleChallengeId]: string };
+	};
+}
+
+export interface PuzzleCaptchaSolutionResponse extends ApiResponse {
+	[ApiParams.verified]: boolean;
+	[ApiParams.error]?: ApiJsonError;
+}
+
+export const GetPuzzleCaptchaChallengeRequestBody = object({
+	[ApiParams.user]: string(),
+	[ApiParams.dapp]: string(),
+	[ApiParams.sessionId]: string().optional(),
+});
+
+export type GetPuzzleCaptchaChallengeRequestBodyType = zInfer<
+	typeof GetPuzzleCaptchaChallengeRequestBody
+>;
+
+export type GetPuzzleCaptchaChallengeRequestBodyTypeOutput = output<
+	typeof GetPuzzleCaptchaChallengeRequestBody
+>;
+
+export const SubmitPuzzleCaptchaSolutionBody = object({
+	[ApiParams.puzzleChallengeId]: string(),
+	[ApiParams.sliderLeft]: number(),
+	[ApiParams.trailY]: number().array(),
+	[ApiParams.user]: string(),
+	[ApiParams.dapp]: string(),
+	[ApiParams.verifiedTimeout]: number()
+		.optional()
+		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
+	[ApiParams.signature]: object({
+		[ApiParams.user]: object({
+			[ApiParams.timestamp]: string(),
+		}),
+		[ApiParams.provider]: object({
+			[ApiParams.puzzleChallengeId]: string(),
+		}),
+	}),
+	[ApiParams.behavioralData]: string().optional(),
+});
+
+export type SubmitPuzzleCaptchaSolutionBodyType = input<
+	typeof SubmitPuzzleCaptchaSolutionBody
+>;
+
+export type SubmitPuzzleCaptchaSolutionBodyTypeOutput = output<
+	typeof SubmitPuzzleCaptchaSolutionBody
+>;
+
+/**
+ * Request body for server-side verification of a puzzle captcha solution
+ */
+export const ServerPuzzleCaptchaVerifyRequestBody = object({
+	[ApiParams.token]: ProcaptchaTokenSpec,
+	[ApiParams.dappSignature]: string(),
+	[ApiParams.verifiedTimeout]: number()
+		.optional()
+		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
+	[ApiParams.ip]: string().optional(),
+	[ApiParams.email]: string().email().optional(),
+});
+
+export type ServerPuzzleCaptchaVerifyRequestBodyOutput = output<
+	typeof ServerPuzzleCaptchaVerifyRequestBody
+>;
+
+export type ServerPuzzleCaptchaVerifyRequestBodyType = zInfer<
+	typeof ServerPuzzleCaptchaVerifyRequestBody
 >;
 
 export const GetFrictionlessCaptchaChallengeRequestBody = object({

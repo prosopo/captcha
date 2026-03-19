@@ -29,6 +29,8 @@ import {
 	type GetFrictionlessCaptchaResponse,
 	type GetPowCaptchaChallengeRequestBodyType,
 	type GetPowCaptchaResponse,
+	type GetPuzzleCaptchaChallengeRequestBodyType,
+	type GetPuzzleCaptchaResponse,
 	type IUserSettings,
 	type ImageVerificationResponse,
 	type PowCaptchaSolutionResponse,
@@ -37,12 +39,14 @@ import {
 	type ProviderApiInterface,
 	type ProviderRegistered,
 	PublicApiPaths,
+	type PuzzleCaptchaSolutionResponse,
 	type RandomProvider,
 	type RegisterSitekeyBodyTypeOutput,
 	RemoveDetectorKeyBodySpec,
 	type ServerPowCaptchaVerifyRequestBodyType,
 	type StoredEvents,
 	SubmitPowCaptchaSolutionBody,
+	SubmitPuzzleCaptchaSolutionBody,
 	type Tier,
 	ToggleMaintenanceModeBody,
 	UpdateDecisionMachineBody,
@@ -195,6 +199,58 @@ export default class ProviderApi
 			...(salt && { [ApiParams.salt]: salt }),
 		});
 		return this.post(ClientApiPaths.SubmitPowCaptchaSolution, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": userAccount,
+			},
+		});
+	}
+
+	public getPuzzleCaptchaChallenge(
+		user: string,
+		dapp: string,
+		sessionId?: string,
+	): Promise<GetPuzzleCaptchaResponse> {
+		const body: GetPuzzleCaptchaChallengeRequestBodyType = {
+			[ApiParams.user]: user.toString(),
+			[ApiParams.dapp]: dapp.toString(),
+			...(sessionId && { [ApiParams.sessionId]: sessionId }),
+		};
+		return this.post(ClientApiPaths.GetPuzzleCaptchaChallenge, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": user,
+			},
+		});
+	}
+
+	public submitPuzzleCaptchaSolution(
+		challenge: GetPuzzleCaptchaResponse,
+		userAccount: string,
+		dappAccount: string,
+		sliderLeft: number,
+		trailY: number[],
+		userTimestampSignature: string,
+		timeout?: number,
+		behavioralData?: string,
+	): Promise<PuzzleCaptchaSolutionResponse> {
+		const body = SubmitPuzzleCaptchaSolutionBody.parse({
+			[ApiParams.puzzleChallengeId]: challenge.puzzleChallengeId,
+			[ApiParams.sliderLeft]: sliderLeft,
+			[ApiParams.trailY]: trailY,
+			[ApiParams.user]: userAccount.toString(),
+			[ApiParams.dapp]: dappAccount.toString(),
+			[ApiParams.verifiedTimeout]: timeout,
+			[ApiParams.signature]: {
+				[ApiParams.provider]:
+					challenge[ApiParams.signature][ApiParams.provider],
+				[ApiParams.user]: {
+					[ApiParams.timestamp]: userTimestampSignature,
+				},
+			},
+			...(behavioralData && { [ApiParams.behavioralData]: behavioralData }),
+		});
+		return this.post(ClientApiPaths.SubmitPuzzleCaptchaSolution, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": userAccount,

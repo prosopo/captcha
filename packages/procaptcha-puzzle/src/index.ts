@@ -11,23 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-import { z } from "zod";
-
-enum CaptchaType {
-	image = "image",
-	pow = "pow",
-	frictionless = "frictionless",
-	puzzle = "puzzle",
-}
-
-const CaptchaTypeSchema = z.nativeEnum(CaptchaType);
-
-// Decision machines work with pow, image, and puzzle captcha types (not frictionless)
-const DecisionMachineCaptchaTypeSchema = z.union([
-	z.literal(CaptchaType.pow),
-	z.literal(CaptchaType.image),
-	z.literal(CaptchaType.puzzle),
-]);
-
-export { CaptchaType, CaptchaTypeSchema, DecisionMachineCaptchaTypeSchema };
+export * from "./components/ProcaptchaPuzzle.js";
+export * from "./components/ProcaptchaPuzzleWidget.js";
+export * from "./components/PuzzleVerify.js";

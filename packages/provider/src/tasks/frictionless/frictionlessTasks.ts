@@ -279,6 +279,52 @@ export class FrictionlessManager extends CaptchaManager {
 		};
 	}
 
+	async sendPuzzleCaptcha(
+		params?: Partial<PowCaptchaSessionParams>,
+	): Promise<GetFrictionlessCaptchaResponse> {
+		const effectiveParams = { ...this.sessionParams, ...params };
+		if (
+			!effectiveParams.token ||
+			effectiveParams.score === undefined ||
+			effectiveParams.threshold === undefined ||
+			!effectiveParams.scoreComponents ||
+			effectiveParams.providerSelectEntropy === undefined ||
+			!effectiveParams.ipAddress ||
+			effectiveParams.siteKey === undefined
+		) {
+			throw new Error(
+				"Session parameters must be set before calling sendPuzzleCaptcha",
+			);
+		}
+
+		const sessionRecord = await this.createSession(
+			effectiveParams.token,
+			effectiveParams.score,
+			effectiveParams.threshold,
+			effectiveParams.scoreComponents,
+			effectiveParams.providerSelectEntropy,
+			effectiveParams.ipAddress,
+			CaptchaType.puzzle,
+			effectiveParams.siteKey,
+			undefined,
+			undefined,
+			effectiveParams.userSitekeyIpHash,
+			effectiveParams.webView ?? false,
+			effectiveParams.iFrame ?? false,
+			effectiveParams.decryptedHeadHash,
+			effectiveParams.reason as FrictionlessReason | undefined,
+			undefined,
+			undefined,
+			effectiveParams.countryCode,
+			effectiveParams.headers,
+		);
+		return {
+			[ApiParams.captchaType]: CaptchaType.puzzle,
+			[ApiParams.sessionId]: sessionRecord.sessionId,
+			[ApiParams.status]: "ok",
+		};
+	}
+
 	async registerBlockedSession(
 		params?: Partial<ImageCaptchaSessionParams>,
 	): Promise<void> {
