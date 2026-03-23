@@ -16,11 +16,11 @@ import { ApiEndpointResponseStatus } from "@prosopo/api-route";
 import type { Logger } from "@prosopo/common";
 import {
 	CaptchaType,
+	ClientSettingsSchema,
 	ContextType,
 	type ProsopoConfigOutput,
 	Tier,
 	contextAwareThresholdDefault,
-	ClientSettingsSchema,
 } from "@prosopo/types";
 import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
 import { describe, expect, it, vi } from "vitest";
@@ -94,7 +94,11 @@ describe("apiRegisterSiteKeysEndpoint", () => {
 
 		expect(db.updateClientRecords).toHaveBeenCalledTimes(1);
 		expect(db.updateClientRecords).toHaveBeenCalledWith(
-			records.map((r) => ({ account: r.account, tier: r.tier, settings: r.settings })),
+			records.map((r) => ({
+				account: r.account,
+				tier: r.tier,
+				settings: r.settings,
+			})),
 		);
 
 		expect(endpointResponse).toEqual({

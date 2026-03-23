@@ -34,9 +34,7 @@ describe("ApiRegisterSiteKeysEndpoint", () => {
 		mockLogger = {
 			info: vi.fn(),
 		};
-		endpoint = new ApiRegisterSiteKeysEndpoint(
-			mockClientTaskManager as never,
-		);
+		endpoint = new ApiRegisterSiteKeysEndpoint(mockClientTaskManager as never);
 	});
 
 	it("returns success status when site keys are registered", async () => {

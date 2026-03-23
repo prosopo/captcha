@@ -43,7 +43,11 @@ class ApiRegisterSiteKeysEndpoint
 		const siteKeys = args.map(({ siteKey, tier, settings }) => ({
 			siteKey,
 			tier,
-			settings: settings || ClientSettingsSchema.parse({}),
+			settings:
+				settings ||
+				ClientSettingsSchema.parse({
+					domains: ["localhost"],
+				}),
 		}));
 
 		await this.clientTaskManager.registerSiteKeys(siteKeys);
