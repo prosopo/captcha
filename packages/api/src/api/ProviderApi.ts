@@ -64,7 +64,8 @@ import { ApiClient } from "./apiClient.js";
 
 export default class ProviderApi
 	extends ApiClient
-	implements ProviderApiInterface {
+	implements ProviderApiInterface
+{
 	public getCaptchaChallenge(
 		userAccount: string,
 		randomProvider: RandomProvider,
