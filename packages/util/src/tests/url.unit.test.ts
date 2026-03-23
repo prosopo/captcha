@@ -60,6 +60,12 @@ describe("url", () => {
 			),
 		).to.equal(false);
 	});
+	it("does not validate a domain containing consecutive dots", () => {
+		expect(validateDomain("google..com")).to.equal(false);
+	});
+	it("does not validate a domain with a trailing dot", () => {
+		expect(validateDomain("google.com.")).to.equal(false);
+	});
 });
 
 describe("buildDomainSuffixCandidates", () => {
