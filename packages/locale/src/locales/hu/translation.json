@@ -43,14 +43,6 @@
 		"INVALID_BODY": "Érvénytelen test",
 		"PARSE_ERROR": "Hiba az adatkérések elemzése közben"
 	},
-	"PORTAL": {
-		"CANNOT_MODIFY_OWNER_USER": "Nem lehet módosítani a tulajdonos felhasználót",
-		"CANNOT_DELETE_OWN_USER": "Nem törölheti saját fiókját",
-		"CANNOT_DELETE_LAST_USER": "Nem törölheti az utolsó felhasználót",
-		"USER_ALREADY_EXISTS": "A felhasználó már létezik",
-		"NO_SUGGESTIONS_FOUND": "Nincsenek javaslatok",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Nem lehet inaktiválni az utolsó aktív webhelyet"
-	},
 	"TARGET": {
 		"airplanes": "repülőgépek",
 		"american-flag": "amerikai zászló",

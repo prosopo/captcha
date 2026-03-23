@@ -43,14 +43,6 @@
 		"INVALID_BODY": "Nội dung không hợp lệ",
 		"PARSE_ERROR": "Lỗi phân tích yêu cầu"
 	},
-	"PORTAL": {
-		"CANNOT_MODIFY_OWNER_USER": "Không thể sửa đổi người dùng chủ sở hữu",
-		"CANNOT_DELETE_OWN_USER": "Không thể xóa tài khoản của chính bạn",
-		"CANNOT_DELETE_LAST_USER": "Không thể xóa người dùng cuối cùng",
-		"USER_ALREADY_EXISTS": "Người dùng đã tồn tại",
-		"NO_SUGGESTIONS_FOUND": "Không tìm thấy gợi ý nào",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Không thể vô hiệu hóa trang cuối cùng hoạt động"
-	},
 	"TARGET": {
 		"airplanes": "máy bay",
 		"american-flag": "cờ Mỹ",

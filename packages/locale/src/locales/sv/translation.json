@@ -43,14 +43,6 @@
 		"INVALID_BODY": "Ogiltig body",
 		"PARSE_ERROR": "Fel vid tolkning av förfrågan"
 	},
-	"PORTAL": {
-		"CANNOT_MODIFY_OWNER_USER": "Kan inte ändra ägare användare",
-		"CANNOT_DELETE_OWN_USER": "Kan inte ta bort ditt eget konto",
-		"CANNOT_DELETE_LAST_USER": "Kan inte ta bort sista användaren",
-		"USER_ALREADY_EXISTS": "Användaren finns redan",
-		"NO_SUGGESTIONS_FOUND": "Inga förslag hittades",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Kan inte inaktivera den sista aktiva platsen"
-	},
 	"TARGET": {
 		"airplanes": "flygplan",
 		"american-flag": "amerikanska flaggan",

@@ -342,14 +342,6 @@
 		"INVALID_BODY": "無効な本体",
 		"PARSE_ERROR": "リクエストの解析エラー"
 	},
-	"PORTAL": {
-		"CANNOT_MODIFY_OWNER_USER": "所有者ユーザーを変更できません",
-		"CANNOT_DELETE_OWN_USER": "自分のアカウントを削除することはできません",
-		"CANNOT_DELETE_LAST_USER": "最後のユーザーを削除することはできません",
-		"USER_ALREADY_EXISTS": "ユーザーはすでに存在しています",
-		"NO_SUGGESTIONS_FOUND": "提案は見つかりません",
-		"CANNOT_DEACTIVATE_LAST_SITE": "最後のアクティブサイトを無効にすることはできません"
-	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Polkadot拡張機能が見つかりません"
 	},

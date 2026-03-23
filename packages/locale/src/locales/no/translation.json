@@ -43,14 +43,6 @@
 		"INVALID_BODY": "Ugyldig kropp",
 		"PARSE_ERROR": "Feil ved å tolke forespørsel"
 	},
-	"PORTAL": {
-		"CANNOT_MODIFY_OWNER_USER": "Kan ikke endre eierbruker",
-		"CANNOT_DELETE_OWN_USER": "Kan ikke slette din egen konto",
-		"CANNOT_DELETE_LAST_USER": "Kan ikke slette siste bruker",
-		"USER_ALREADY_EXISTS": "Brukeren eksisterer allerede",
-		"NO_SUGGESTIONS_FOUND": "Ingen forslag funnet",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Kan ikke deaktivere siste aktive nettsted"
-	},
 	"TARGET": {
 		"airplanes": "flymaskiner",
 		"american-flag": "amerikansk flagg",

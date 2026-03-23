@@ -43,14 +43,6 @@
 		"INVALID_BODY": "Invalid body",
 		"PARSE_ERROR": "Error parsing request"
 	},
-	"PORTAL": {
-		"CANNOT_MODIFY_OWNER_USER": "لا يمكن تعديل مالك المستخدم",
-		"CANNOT_DELETE_OWN_USER": "لا يمكن حذف حسابك الخاص",
-		"CANNOT_DELETE_LAST_USER": "لا يمكن حذف آخر مستخدم",
-		"USER_ALREADY_EXISTS": "المستخدم موجود بالفعل",
-		"NO_SUGGESTIONS_FOUND": "لا توجد اقتراحات",
-		"CANNOT_DEACTIVATE_LAST_SITE": "لا يمكن تعطيل آخر موقع نشط"
-	},
 	"TARGET": {
 		"airplanes": "طائرات",
 		"american-flag": "العلم الأمريكي",

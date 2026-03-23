@@ -43,14 +43,6 @@
 		"INVALID_BODY": "无效的主体",
 		"PARSE_ERROR": "解析请求时出错"
 	},
-	"PORTAL": {
-		"CANNOT_MODIFY_OWNER_USER": "无法修改所有者用户",
-		"CANNOT_DELETE_OWN_USER": "无法删除您自己的帐户",
-		"CANNOT_DELETE_LAST_USER": "无法删除最后一个用户",
-		"USER_ALREADY_EXISTS": "用户已经存在",
-		"NO_SUGGESTIONS_FOUND": "未找到建议",
-		"CANNOT_DEACTIVATE_LAST_SITE": "无法停用最后一个活动站点"
-	},
 	"TARGET": {
 		"airplanes": "飞机",
 		"american-flag": "美国国旗",

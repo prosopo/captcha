@@ -43,14 +43,6 @@
 		"INVALID_BODY": "유효하지 않은 본문",
 		"PARSE_ERROR": "요청 구문 분석 오류"
 	},
-	"PORTAL": {
-		"CANNOT_MODIFY_OWNER_USER": "소유자 사용자를 수정할 수 없음",
-		"CANNOT_DELETE_OWN_USER": "본인 계정을 삭제할 수 없음",
-		"CANNOT_DELETE_LAST_USER": "마지막 사용자를 삭제할 수 없음",
-		"USER_ALREADY_EXISTS": "사용자가 이미 존재함",
-		"NO_SUGGESTIONS_FOUND": "제안을 찾을 수 없음",
-		"CANNOT_DEACTIVATE_LAST_SITE": "마지막 활성 사이트를 비활성화할 수 없음"
-	},
 	"TARGET": {
 		"airplanes": "비행기",
 		"american-flag": "미국 국기",

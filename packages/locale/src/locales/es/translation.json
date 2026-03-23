@@ -43,14 +43,6 @@
 		"INVALID_BODY": "Cuerpo inválido",
 		"PARSE_ERROR": "Error al analizar la respuesta"
 	},
-	"PORTAL": {
-		"CANNOT_MODIFY_OWNER_USER": "No se puede modificar el usuario propietario",
-		"CANNOT_DELETE_OWN_USER": "No se puede eliminar tu propia cuenta",
-		"CANNOT_DELETE_LAST_USER": "No se puede eliminar el último usuario",
-		"USER_ALREADY_EXISTS": "El usuario ya existe",
-		"NO_SUGGESTIONS_FOUND": "No se encontraron sugerencias",
-		"CANNOT_DEACTIVATE_LAST_SITE": "No se puede desactivar el último sitio activo"
-	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Extensión Polkadot no encontrada"
 	},

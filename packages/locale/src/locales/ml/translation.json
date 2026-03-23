@@ -43,14 +43,6 @@
 		"INVALID_BODY": "Hindi wastong body",
 		"PARSE_ERROR": "Error sa pagsasalin ng request"
 	},
-	"PORTAL": {
-		"CANNOT_MODIFY_OWNER_USER": "Annotcay odifymay ownerway seruy",
-		"CANNOT_DELETE_OWN_USER": "Annotcay eleteday ouryay ownway accountway",
-		"CANNOT_DELETE_LAST_USER": "Annotcay eleteday astlay seruy",
-		"USER_ALREADY_EXISTS": "Userway alreadyway existstay",
-		"NO_SUGGESTIONS_FOUND": "Onay uggestionssay oundfay",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Annotcay eactivateday ethay astlay activeay itesay"
-	},
 	"TARGET": {
 		"airplanes": "eroplano",
 		"american-flag": "bandila ng Amerika",

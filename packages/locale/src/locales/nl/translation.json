@@ -342,14 +342,6 @@
 		"INVALID_BODY": "Ongeldige body",
 		"PARSE_ERROR": "Fout bij parsen van aanvraag"
 	},
-	"PORTAL": {
-		"CANNOT_MODIFY_OWNER_USER": "Kan eigenaar gebruiker niet wijzigen",
-		"CANNOT_DELETE_OWN_USER": "Kan uw eigen account niet verwijderen",
-		"CANNOT_DELETE_LAST_USER": "Kan laatste gebruiker niet verwijderen",
-		"USER_ALREADY_EXISTS": "Gebruiker bestaat al",
-		"NO_SUGGESTIONS_FOUND": "Geen suggesties gevonden",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Kan de laatste actieve site niet deactiveren"
-	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Polkadot-extensie niet gevonden"
 	},

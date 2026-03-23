@@ -342,14 +342,6 @@
 		"INVALID_BODY": "अमनय बड",
 		"PARSE_ERROR": "अनरध वशषण म तरट"
 	},
-	"PORTAL": {
-		"CANNOT_MODIFY_OWNER_USER": "मलक उपयगकरत क सशधत नह कय ज सकत",
-		"CANNOT_DELETE_OWN_USER": "अपन खत हटय नह ज सकत",
-		"CANNOT_DELETE_LAST_USER": "आखर उपयगकरत हटय नह ज सकत",
-		"USER_ALREADY_EXISTS": "उपयगकरत पहल स मजद ह",
-		"NO_SUGGESTIONS_FOUND": "कई सझव नह मल",
-		"CANNOT_DEACTIVATE_LAST_SITE": "अतम सकरय सइट क नषकरय नह कय ज सकत"
-	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "पलकडट एकसटशन नह मल"
 	},

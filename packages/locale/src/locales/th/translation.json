@@ -43,14 +43,6 @@
 		"INVALID_BODY": "ข้อมูลไม่ถูกต้อง",
 		"PARSE_ERROR": "ข้อผิดพลาดในการแปลคำขอ"
 	},
-	"PORTAL": {
-		"CANNOT_MODIFY_OWNER_USER": "ไม่สามารถแก้ไขผู้ใช้เจ้าของ",
-		"CANNOT_DELETE_OWN_USER": "ไม่สามารถลบบัญชีของคุณเอง",
-		"CANNOT_DELETE_LAST_USER": "ไม่สามารถลบผู้ใช้สุดท้าย",
-		"USER_ALREADY_EXISTS": "ผู้ใช้มีอยู่แล้ว",
-		"NO_SUGGESTIONS_FOUND": "ไม่พบข้อเสนอ",
-		"CANNOT_DEACTIVATE_LAST_SITE": "ไม่สามารถปิดใช้งานเว็บไซต์ที่ใช้งานอยู่ครั้งสุดท้าย"
-	},
 	"TARGET": {
 		"airplanes": "เครื่องบิน",
 		"american-flag": "ธงอเมริกัน",

@@ -43,14 +43,6 @@
 		"INVALID_BODY": "Corp invalid",
 		"PARSE_ERROR": "Eroare la parsare"
 	},
-	"PORTAL": {
-		"CANNOT_MODIFY_OWNER_USER": "Nu se poate modifica utilizatorul proprietar",
-		"CANNOT_DELETE_OWN_USER": "Nu puteti sterge propriul cont",
-		"CANNOT_DELETE_LAST_USER": "Nu se poate sterge ultimul utilizator",
-		"USER_ALREADY_EXISTS": "Utilizatorul exista deja",
-		"NO_SUGGESTIONS_FOUND": "Nu s-au gasit sugestii",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Nu se poate dezactiva ultimul site activ"
-	},
 	"TARGET": {
 		"airplanes": "avioane",
 		"american-flag": "steag american",

@@ -43,14 +43,6 @@
 		"INVALID_BODY": "Neplatné tělo",
 		"PARSE_ERROR": "Chyba při zpracování požadavku"
 	},
-	"PORTAL": {
-		"CANNOT_MODIFY_OWNER_USER": "Nelze upravit vlastníka uživatele",
-		"CANNOT_DELETE_OWN_USER": "Nelze smazat vlastní účet",
-		"CANNOT_DELETE_LAST_USER": "Nelze smazat posledního uživatele",
-		"USER_ALREADY_EXISTS": "Uživatel již existuje",
-		"NO_SUGGESTIONS_FOUND": "Nebyly nalezeny žádné návrhy",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Nelze deaktivovat poslední aktivní web"
-	},
 	"TARGET": {
 		"airplanes": "letadla",
 		"american-flag": "americká vlajka",

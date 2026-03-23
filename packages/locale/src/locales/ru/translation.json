@@ -43,14 +43,6 @@
 		"INVALID_BODY": "Недопустимое тело запроса",
 		"PARSE_ERROR": "Ошибка разбора запроса"
 	},
-	"PORTAL": {
-		"CANNOT_MODIFY_OWNER_USER": "Невозможно изменить владельца пользователя",
-		"CANNOT_DELETE_OWN_USER": "Нельзя удалить свою учетную запись",
-		"CANNOT_DELETE_LAST_USER": "Нельзя удалить последнего пользователя",
-		"USER_ALREADY_EXISTS": "Пользователь уже существует",
-		"NO_SUGGESTIONS_FOUND": "Предложения не найдены",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Нельзя деактивировать последний активный сайт"
-	},
 	"TARGET": {
 		"airplanes": "самолеты",
 		"american-flag": "американский флаг",

@@ -43,14 +43,6 @@
 		"INVALID_BODY": "Nieprawidłowe ciało",
 		"PARSE_ERROR": "Błąd parsowania żądania"
 	},
-	"PORTAL": {
-		"CANNOT_MODIFY_OWNER_USER": "Nie można zmodyfikować właściciela użytkownika",
-		"CANNOT_DELETE_OWN_USER": "Nie można usunąć własnego konta",
-		"CANNOT_DELETE_LAST_USER": "Nie można usunąć ostatniego użytkownika",
-		"USER_ALREADY_EXISTS": "Użytkownik już istnieje",
-		"NO_SUGGESTIONS_FOUND": "Nie znaleziono sugestii",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Nie można dezaktywować ostatniej aktywnej witryny"
-	},
 	"TARGET": {
 		"airplanes": "samoloty",
 		"american-flag": "flaga amerykańska",

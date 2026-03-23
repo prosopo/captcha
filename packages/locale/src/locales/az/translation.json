@@ -43,14 +43,6 @@
 		"INVALID_BODY": "Yanlış bədən",
 		"PARSE_ERROR": "Tələbi pars edərkən səhv baş verdi"
 	},
-	"PORTAL": {
-		"CANNOT_MODIFY_OWNER_USER": "Sahib istifadəçini dəyişmək olmaz",
-		"CANNOT_DELETE_OWN_USER": "Öz hesabınızı silə bilmərsiniz",
-		"CANNOT_DELETE_LAST_USER": "Son istifadəçini silmək olmaz",
-		"USER_ALREADY_EXISTS": "İstifadəçi artıq mövcuddur",
-		"NO_SUGGESTIONS_FOUND": "Təklif tapılmadı",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Sonaktiv saytı deaktiv etmək olmaz"
-	},
 	"TARGET": {
 		"airplanes": "təyyarələr",
 		"american-flag": "Amerika bayrağı",

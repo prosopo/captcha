@@ -342,14 +342,6 @@
 		"INVALID_BODY": "Invalid body",
 		"PARSE_ERROR": "Error parsing request"
 	},
-	"PORTAL": {
-		"CANNOT_MODIFY_OWNER_USER": "Cannot modify owner user",
-		"CANNOT_DELETE_OWN_USER": "Cannot delete your own account",
-		"CANNOT_DELETE_LAST_USER": "Cannot delete last user",
-		"USER_ALREADY_EXISTS": "User already exists",
-		"NO_SUGGESTIONS_FOUND": "No suggestions found",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Cannot deactivate the last active site"
-	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Polkadot extension not found"
 	},

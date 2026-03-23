@@ -43,14 +43,6 @@
 		"INVALID_BODY": "Ungültiger Körper",
 		"PARSE_ERROR": "Fehler beim Parsen der Anfrage"
 	},
-	"PORTAL": {
-		"CANNOT_MODIFY_OWNER_USER": "Kann den Besitzerbenutzer nicht ändern",
-		"CANNOT_DELETE_OWN_USER": "Kann Ihr eigenes Konto nicht löschen",
-		"CANNOT_DELETE_LAST_USER": "Kann den letzten Benutzer nicht löschen",
-		"USER_ALREADY_EXISTS": "Benutzer existiert bereits",
-		"NO_SUGGESTIONS_FOUND": "Keine Vorschläge gefunden",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Kann den letzten aktiven Standort nicht deaktivieren"
-	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Polkadot-Erweiterung nicht gefunden"
 	},

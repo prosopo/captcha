@@ -342,14 +342,6 @@
 		"ACCOUNT_NOT_FOUND": "Δεν βρέθηκε λογαριασμός",
 		"INVALID_TIMESTAMP": "Μη έγκυρη σφραγίδα χρόνου"
 	},
-	"PORTAL": {
-		"CANNOT_MODIFY_OWNER_USER": "Δεν είναι δυνατή η τροποποίηση του χρήστη-κατόχου",
-		"CANNOT_DELETE_OWN_USER": "Δεν είναι δυνατή η διαγραφή του χρήστη-κατόχου",
-		"CANNOT_DELETE_LAST_USER": "Δεν είναι δυνατή η διαγραφή του τελευταίου χρήστη",
-		"USER_ALREADY_EXISTS": "Ο χρήστης υπάρχει ήδη",
-		"NO_SUGGESTIONS_FOUND": "Δεν βρέθηκαν προτάσεις",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Δεν είναι δυνατή η απενεργοποίηση του τελευταίου ιστότοπου"
-	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Δεν βρέθηκε επέκταση Polkadot"
 	},
