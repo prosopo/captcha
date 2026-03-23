@@ -14,14 +14,14 @@
 
 import type { i18n } from "i18next";
 let i18nInstance: i18n;
-async function loadI18next(backend: boolean): Promise<i18n> {
+async function loadI18next(backend: boolean, loadPaths?: string[]): Promise<i18n> {
 	return new Promise((resolve, reject) => {
 		try {
 			if (backend) {
 				import("./i18nBackend.js").then(({ default: initializeI18n }) => {
 					if (!i18nInstance) {
 						// pass the resolver into the i18n init fn which will resolve after i18n connected fires
-						i18nInstance = initializeI18n(resolve);
+						i18nInstance = initializeI18n(resolve, loadPaths);
 					} else {
 						// we've already initialised i18n so just return it
 						resolve(i18nInstance);
