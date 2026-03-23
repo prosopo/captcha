@@ -98,6 +98,7 @@ const customDetectBot: BotDetectionFunction = async (
 			detectionResult.encryptHeadHash,
 			config.account.address,
 			userAccount.account.address,
+			config.mode,
 		),
 		10000, // 10 second timeout
 	);
