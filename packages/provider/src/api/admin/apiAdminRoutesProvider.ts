@@ -18,7 +18,6 @@ import type { Tasks } from "../../tasks/index.js";
 import { ApiGetAllDecisionMachinesEndpoint } from "./apiGetAllDecisionMachinesEndpoint.js";
 import { ApiGetDecisionMachineEndpoint } from "./apiGetDecisionMachineEndpoint.js";
 import { ApiRegisterSiteKeyEndpoint } from "./apiRegisterSiteKeyEndpoint.js";
-import { ApiRegisterSiteKeysEndpoint } from "./apiRegisterSiteKeysEndpoint.js";
 import { ApiRemoveAllDecisionMachinesEndpoint } from "./apiRemoveAllDecisionMachinesEndpoint.js";
 import { ApiRemoveDecisionMachineEndpoint } from "./apiRemoveDecisionMachineEndpoint.js";
 import { ApiRemoveDetectorKeyEndpoint } from "./apiRemoveDetectorKeyEndpoint.js";
@@ -32,9 +31,6 @@ class ApiAdminRoutesProvider implements ApiRoutesProvider {
 	public getRoutes(): ApiRoutes {
 		return {
 			[AdminApiPaths.SiteKeyRegister]: new ApiRegisterSiteKeyEndpoint(
-				this.tasks.clientTaskManager,
-			),
-			[AdminApiPaths.SiteKeysRegister]: new ApiRegisterSiteKeysEndpoint(
 				this.tasks.clientTaskManager,
 			),
 			[AdminApiPaths.UpdateDetectorKey]: new ApiUpdateDetectorKeyEndpoint(

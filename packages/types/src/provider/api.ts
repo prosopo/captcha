@@ -121,7 +121,6 @@ export type TSubmitPowCaptchaSolutionURL =
 
 export enum AdminApiPaths {
 	SiteKeyRegister = "/v1/prosopo/provider/admin/sitekey/register",
-	SiteKeysRegister = "/v1/prosopo/provider/admin/sitekeys/register",
 	UpdateDetectorKey = "/v1/prosopo/provider/admin/detector/update",
 	RemoveDetectorKey = "/v1/prosopo/provider/admin/detector/remove",
 	ToggleMaintenanceMode = "/v1/prosopo/provider/admin/maintenance/toggle",
@@ -153,7 +152,6 @@ export const ProviderDefaultRateLimits = {
 	[PublicApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
 	[AdminApiPaths.SiteKeyRegister]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.SiteKeysRegister]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.UpdateDetectorKey]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.RemoveDetectorKey]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.ToggleMaintenanceMode]: { windowMs: 60000, limit: 5 },
@@ -423,14 +421,6 @@ export const RegisterSitekeyBody = object({
 	[ApiParams.settings]: ClientSettingsSchema.optional(),
 });
 
-export const RegisterSitekeysBody = array(
-	object({
-		[ApiParams.siteKey]: string(),
-		[ApiParams.tier]: nativeEnum(Tier),
-		[ApiParams.settings]: ClientSettingsSchema.optional(),
-	}),
-);
-
 export const UpdateDetectorKeyBody = object({
 	[ApiParams.detectorKey]: string(),
 });
@@ -537,10 +527,6 @@ export type UpdateDecisionMachineBodyTypeOutput = output<
 >;
 
 export type RegisterSitekeyBodyTypeOutput = output<typeof RegisterSitekeyBody>;
-
-export type RegisterSitekeysBodyTypeOutput = output<
-	typeof RegisterSitekeysBody
->;
 
 export const ProsopoCaptchaCountConfigSchema = object({
 	solved: object({

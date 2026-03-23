@@ -380,21 +380,6 @@ export class ClientTaskManager {
 		]);
 	}
 
-	async registerSiteKeys(
-		siteKeys: Array<{ siteKey: string; tier: Tier; settings: IUserSettings }>,
-	): Promise<void> {
-		const records: ClientRecord[] = [];
-		for (const { siteKey, tier, settings } of siteKeys) {
-			validateSiteKey(siteKey);
-			records.push({
-				account: siteKey,
-				tier,
-				settings,
-			} as ClientRecord);
-		}
-		await this.providerDB.updateClientRecords(records);
-	}
-
 	async updateDetectorKey(detectorKey: string): Promise<string[]> {
 		if (!isValidPrivateKey(detectorKey)) {
 			throw new ProsopoApiError("INVALID_DETECTOR_KEY", {
