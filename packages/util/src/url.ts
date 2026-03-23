@@ -51,7 +51,7 @@ export const validateDomain = (domain: string): boolean => {
 		return false;
 	}
 
-	// If there are two or more dots in a row, or if the domain starts with a dot, it's invalid
+	// If there are two or more dots in a row, or if the domain starts or ends with a dot, it's invalid
 	if (domain.includes("..") || domain.startsWith(".") || domain.endsWith(".")) {
 		return false;
 	}
