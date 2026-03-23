@@ -24,7 +24,7 @@ env:
   GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
   GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
   CARGO_TERM_COLOR: always
-  NODE_OPTIONS: "--max-old-space-size=4096 --use-system-ca"
+  NODE_OPTIONS: "--max-old-space-size=4096"
   NODE_ENV: "test"
   # Required for self-signed HTTPS certificates in test environment
   NODE_TLS_REJECT_UNAUTHORIZED: "0"
