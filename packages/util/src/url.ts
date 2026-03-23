@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Address4, Address6 } from "ip-address";
+import {at} from "./at.js";
 
 const isIPAddress = (hostname: string): boolean => {
 	try {
@@ -74,15 +75,28 @@ export const validateDomain = (domain: string): boolean => {
 	return true;
 };
 
-export const domainIsLocalhost = (domain: string) =>
-	domain === "localhost" || domain === "127.0.0.1";
+export const domainIsLocalhost = (domain: string) => {
+	// Remove port if present
+    const host = at(domain.split(':'),0).toLowerCase();
 
-// Accepts plain domains like "example.com" as well as simple wildcard patterns:
-// - "*"               → allow all
-// - "*.example.com"   → any subdomain of example.com (not example.com itself)
-// - "*example*"       → glob-style match anywhere within the hostname
-// - "localhost"       → allowed
-// This does NOT accept full regex; only '*' is supported as a wildcard.
+    return (
+        host === "localhost" ||
+        host.endsWith(".localhost") ||
+        host === "127.0.0.1" ||
+        host === "::1" ||
+        host === "[::1]"
+    );
+};
+
+/**
+ * @description Validates a domain pattern for site configuration
+ * Accepts plain domains like "example.com" as well as simple wildcard patterns:
+ * "*"               → allow all
+ * "*.example.com"   → any subdomain of example.com (not example.com itself)
+ * "*example*"       → glob-style match anywhere within the hostname
+ * "localhost"       → allowed
+ * This does NOT accept full regex; only '*' is supported as a wildcard.
+ */
 export const validateDomainPattern = (input: string): boolean => {
 	if (!input) return false;
 	const domain = input.trim().toLowerCase();
