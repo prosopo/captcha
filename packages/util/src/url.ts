@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Address4, Address6 } from "ip-address";
-import {at} from "./at.js";
+import { at } from "./at.js";
 
 const isIPAddress = (hostname: string): boolean => {
 	try {
@@ -77,15 +77,15 @@ export const validateDomain = (domain: string): boolean => {
 
 export const domainIsLocalhost = (domain: string) => {
 	// Remove port if present
-    const host = at(domain.split(':'),0).toLowerCase();
+	const host = at(domain.split(":"), 0).toLowerCase();
 
-    return (
-        host === "localhost" ||
-        host.endsWith(".localhost") ||
-        host === "127.0.0.1" ||
-        host === "::1" ||
-        host === "[::1]"
-    );
+	return (
+		host === "localhost" ||
+		host.endsWith(".localhost") ||
+		host === "127.0.0.1" ||
+		host === "::1" ||
+		host === "[::1]"
+	);
 };
 
 /**
