@@ -27,6 +27,7 @@ const loadPath =
 
 export function initializeI18n(
 	i18nLoadedCallback?: (value: typeof i18n) => void,
+	loadPaths?: string[],
 ) {
 	if (!i18n.isInitialized && isServerSide()) {
 		const lngDetector = new MiddlewareLanguageDetector(null, {
@@ -40,7 +41,7 @@ export function initializeI18n(
 				...i18nSharedOptions,
 				ns: ["translation"],
 				backend: {
-					loadPath,
+					loadPath: loadPaths ? [...loadPaths, loadPath] : loadPath,
 				},
 			});
 		i18n.on("loaded", () => {
