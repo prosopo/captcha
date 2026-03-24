@@ -1,5 +1,11 @@
 # @prosopo/util
 
+## 3.2.8
+### Patch Changes
+
+- e0fb3d6: Invalidate domains with incorrect dots
+- f3f23e3: Improve localhost detection
+
 ## 3.2.7
 ### Patch Changes
 

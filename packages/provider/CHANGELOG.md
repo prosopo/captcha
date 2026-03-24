@@ -1,5 +1,28 @@
 # @prosopo/provider
 
+## 3.22.0
+### Minor Changes
+
+- e6d9553: Add `registerSiteKeys` bulk endpoint (`POST /v1/prosopo/provider/admin/sitekeys/register`) that accepts an array of site key records, allowing multiple client records to be registered in a single request.
+
+### Patch Changes
+
+- Updated dependencies [e0fb3d6]
+- Updated dependencies [e6d9553]
+- Updated dependencies [f3f23e3]
+  - @prosopo/util@3.2.8
+  - @prosopo/types@3.13.0
+  - @prosopo/database@3.9.10
+  - @prosopo/datasets@3.1.9
+  - @prosopo/keyring@2.9.15
+  - @prosopo/user-access-policy@3.6.16
+  - @prosopo/api@3.2.6
+  - @prosopo/api-express-router@3.0.66
+  - @prosopo/env@3.3.11
+  - @prosopo/load-balancer@2.8.32
+  - @prosopo/types-database@4.4.10
+  - @prosopo/types-env@2.8.11
+
 ## 3.21.4
 ### Patch Changes
 
