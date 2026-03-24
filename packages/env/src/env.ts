@@ -143,7 +143,7 @@ export class Environment implements ProsopoEnvironment {
 				await this.db.connect();
 				this.logger.info(() => ({ msg: "Connected to db" }));
 			}
-            // Set the default datasetId to the most recently uploaded dataset
+			// Set the default datasetId to the most recently uploaded dataset
 			if (this.db && !this.datasetId) {
 				try {
 					this.datasetId = await this.db.getMostRecentDatasetId();
