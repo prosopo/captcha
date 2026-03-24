@@ -32,12 +32,12 @@
 
 # Reusable robots.txt logic
 (robots_logic) {
-    handle /robots.txt {
-        root * /srv/static
-        file_server
-        header Content-Type "text/plain"
-        header X-Robots-Tag "noindex, nofollow"
-    }
+	handle /robots.txt {
+		root * /srv/static
+		file_server
+		header Content-Type "text/plain"
+		header X-Robots-Tag "noindex, nofollow"
+	}
 }
 
 # --- REUSABLE PROXY SNIPPET ---
@@ -163,37 +163,35 @@
 
 # --- 1. MAIN DOMAIN (Mounted Certificate) ---
 pronode.prosopo.io {
+	import robots_logic
 
-    import robots_logic
+	tls /etc/caddy/certs/pronode.crt /etc/caddy/certs/pronode.key {
+		# This tells Caddy: "Don't manage this, just use these files"
+	}
 
-    tls /etc/caddy/certs/pronode.crt /etc/caddy/certs/pronode.key {
-        # This tells Caddy: "Don't manage this, just use these files"
-    }
+	vars node_id "main-gateway"
+	import my_proxy_logic
 
-    vars node_id "main-gateway"
-    import my_proxy_logic
-
-    log {
-       format json
-    }
+	log {
+		format json
+	}
 }
 
 # --- 2. NODE-SPECIFIC DOMAIN (ACME Challenge) ---
 {$CADDY_DOMAIN} {
+	import robots_logic
+	# Caddy will automatically perform the HTTP-01 challenge here
+	# No tls block needed unless you want to specify an email
 
-    import robots_logic
-    # Caddy will automatically perform the HTTP-01 challenge here
-    # No tls block needed unless you want to specify an email
+	vars node_id "I-am-node-{$NODE_ID}"
+	import my_proxy_logic
 
-    vars node_id "I-am-node-{$NODE_ID}"
-    import my_proxy_logic
-
-    log {
-       format json
-    }
+	log {
+		format json
+	}
 }
 
 # --- METRICS ---
 :9090 {
-    metrics /metrics
+	metrics /metrics
 }
