@@ -51,6 +51,11 @@ export const validateDomain = (domain: string): boolean => {
 		return false;
 	}
 
+	// If there are two or more dots in a row, or if the domain starts or ends with a dot, it's invalid
+	if (domain.includes("..") || domain.startsWith(".") || domain.endsWith(".")) {
+		return false;
+	}
+
 	// https://stackoverflow.com/a/57129472/1178971
 	if (
 		!domain.match(
@@ -69,15 +74,37 @@ export const validateDomain = (domain: string): boolean => {
 	return true;
 };
 
-export const domainIsLocalhost = (domain: string) =>
-	domain === "localhost" || domain === "127.0.0.1";
+export const domainIsLocalhost = (domain: string) => {
+	try {
+		const url = new URL(`http://${domain}`);
+		const host = url.hostname.toLowerCase();
+		return (
+			host === "localhost" ||
+			host.endsWith(".localhost") ||
+			host === "127.0.0.1" ||
+			host === "::1"
+		);
+	} catch {
+		// If parsing fails, fall back to simple checks
+		const lower = domain.toLowerCase();
+		return (
+			lower === "localhost" ||
+			lower === "127.0.0.1" ||
+			lower === "::1" ||
+			lower === "[::1]"
+		);
+	}
+};
 
-// Accepts plain domains like "example.com" as well as simple wildcard patterns:
-// - "*"               → allow all
-// - "*.example.com"   → any subdomain of example.com (not example.com itself)
-// - "*example*"       → glob-style match anywhere within the hostname
-// - "localhost"       → allowed
-// This does NOT accept full regex; only '*' is supported as a wildcard.
+/**
+ * @description Validates a domain pattern for site configuration
+ * Accepts plain domains like "example.com" as well as simple wildcard patterns:
+ * "*"               → allow all
+ * "*.example.com"   → any subdomain of example.com (not example.com itself)
+ * "*example*"       → glob-style match anywhere within the hostname
+ * "localhost"       → allowed
+ * This does NOT accept full regex; only '*' is supported as a wildcard.
+ */
 export const validateDomainPattern = (input: string): boolean => {
 	if (!input) return false;
 	const domain = input.trim().toLowerCase();
