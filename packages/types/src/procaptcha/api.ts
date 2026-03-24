@@ -29,6 +29,7 @@ export interface ProcaptchaApiInterface {
 		solutions: CaptchaSolution[],
 		timestamp: string,
 		providerRequestHashSignature: string,
+		behavioralData?: string,
 	): Promise<TCaptchaSubmitResult>;
 	getCaptchaChallenge(sessionId?: string): Promise<CaptchaResponseBody>;
 }

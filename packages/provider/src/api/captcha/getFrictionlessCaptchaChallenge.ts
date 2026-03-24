@@ -18,7 +18,7 @@ import {
 	ContextType,
 	GetFrictionlessCaptchaChallengeRequestBody,
 } from "@prosopo/types";
-import type { ScoreComponents } from "@prosopo/types-database";
+import type { ScoreComponents } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import { compareBinaryStrings, flatten } from "@prosopo/util";
@@ -26,7 +26,6 @@ import type { NextFunction, Response } from "express";
 import type { Request } from "express";
 import { getCompositeIpAddress } from "../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../express.js";
-import { GeolocationService } from "../../services/geolocation.js";
 import {
 	FrictionlessManager,
 	FrictionlessReason,
@@ -42,21 +41,6 @@ import {
 	determineContextType,
 	getContextThreshold,
 } from "./contextAwareValidation.js";
-
-// Singleton geolocation service instance
-let geolocationService: GeolocationService | null = null;
-
-const getGeolocationService = (
-	env: ProviderEnvironment,
-): GeolocationService => {
-	if (!geolocationService) {
-		geolocationService = new GeolocationService(
-			env.config.maxmindDbPath,
-			env.logger,
-		);
-	}
-	return geolocationService;
-};
 
 const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
 
@@ -200,6 +184,7 @@ export default (
 				iFrame,
 				decryptedHeadHash,
 				decryptionFailed,
+				triggeredDetectors,
 			} = await tasks.frictionlessManager.decryptPayload(token, headHash);
 
 			req.logger.debug(() => ({
@@ -255,29 +240,18 @@ export default (
 			let scoreComponents: ScoreComponents = {
 				baseScore: baseBotScore,
 				...(lScore && { lScore }),
+				...(triggeredDetectors &&
+					triggeredDetectors.length > 0 && { triggeredDetectors }),
 			};
 
 			const ipAddress = getCompositeIpAddress(normalizedIp);
-
-			// Set common session parameters on the frictionless manager
-			tasks.frictionlessManager.setSessionParams({
-				token,
-				score: botScore,
-				threshold: botThreshold,
-				scoreComponents,
-				ipAddress,
-				webView,
-				iFrame,
-				decryptedHeadHash,
-				siteKey: dapp,
-			});
 
 			// Get country code for geoblocking (skip if env is incomplete)
 			let countryCode: string | undefined;
 			if (env?.config?.maxmindDbPath) {
 				try {
-					const geoService = getGeolocationService(env);
-					countryCode = await geoService.getCountryCode(normalizedIp);
+					countryCode =
+						await env.geolocationService.getCountryCode(normalizedIp);
 					req.logger?.debug?.(() => ({
 						msg: "Resolved country code for geoblocking",
 						countryCode,
@@ -290,6 +264,23 @@ export default (
 					}));
 				}
 			}
+
+			const flatHeaders = flatten(req.headers);
+
+			// Set common session parameters on the frictionless manager
+			tasks.frictionlessManager.setSessionParams({
+				token,
+				score: botScore,
+				threshold: botThreshold,
+				scoreComponents,
+				ipAddress,
+				webView,
+				iFrame,
+				decryptedHeadHash,
+				siteKey: dapp,
+				countryCode,
+				headers: flatHeaders,
+			});
 
 			// Check if the IP address is blocked
 			const userScope = getRequestUserScope(
@@ -342,10 +333,12 @@ export default (
 						},
 					}));
 					await tasks.frictionlessManager.registerBlockedSession({
-						solvedImagesCount: env.config.captchas.solved.count,
+						solvedImagesCount: clientRecord.settings.imageMaxRounds,
 						userSitekeyIpHash,
 						reason: FrictionlessReason.ACCESS_POLICY_BLOCK,
 						siteKey: dapp,
+						countryCode,
+						headers: flatHeaders,
 					});
 
 					return res.status(401).json({ error: "Unauthorized" });
@@ -362,10 +355,17 @@ export default (
 					}));
 					return res.json(
 						await tasks.frictionlessManager.sendImageCaptcha({
-							solvedImagesCount: userAccessPolicy.solvedImagesCount,
+							solvedImagesCount: userAccessPolicy.solvedImagesCount
+								? Math.min(
+										userAccessPolicy.solvedImagesCount,
+										clientRecord.settings.imageMaxRounds,
+									)
+								: clientRecord.settings.imageMaxRounds,
 							userSitekeyIpHash,
 							reason: FrictionlessReason.USER_ACCESS_POLICY,
 							siteKey: dapp,
+							countryCode,
+							headers: flatHeaders,
 						}),
 					);
 				}
@@ -383,6 +383,8 @@ export default (
 							userSitekeyIpHash,
 							reason: FrictionlessReason.USER_ACCESS_POLICY,
 							siteKey: dapp,
+							countryCode,
+							headers: flatHeaders,
 						}),
 					);
 				}
@@ -418,15 +420,23 @@ export default (
 						captchaType: CaptchaType.image,
 					},
 				}));
+				console.log({
+					decryptionFailed,
+					timestamp,
+					maxRounds: clientRecord.settings.imageMaxRounds,
+				});
 				return res.json(
 					await tasks.frictionlessManager.sendImageCaptcha({
 						solvedImagesCount: timestampDecayFunction(
 							timestamp,
 							decryptionFailed,
+							clientRecord.settings.imageMaxRounds,
 						),
 						userSitekeyIpHash,
 						reason: FrictionlessReason.USER_AGENT_MISMATCH,
 						siteKey: dapp,
+						countryCode,
+						headers: flatHeaders,
 					}),
 				);
 			}
@@ -501,10 +511,15 @@ export default (
 							}));
 							return res.json(
 								await tasks.frictionlessManager.sendImageCaptcha({
-									solvedImagesCount: getRoundsFromSimScore(sim),
+									solvedImagesCount: Math.min(
+										getRoundsFromSimScore(sim),
+										clientRecord.settings.imageMaxRounds,
+									),
 									userSitekeyIpHash,
 									reason: FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED,
 									siteKey: dapp,
+									countryCode,
+									headers: flatHeaders,
 								}),
 							);
 						}
@@ -536,10 +551,15 @@ export default (
 				}));
 				return res.json(
 					await tasks.frictionlessManager.sendImageCaptcha({
-						solvedImagesCount: env.config.captchas.solved.count * 2,
+						solvedImagesCount: Math.min(
+							env.config.captchas.solved.count * 2,
+							clientRecord.settings.imageMaxRounds,
+						),
 						userSitekeyIpHash,
 						reason: FrictionlessReason.WEBVIEW_DETECTED,
 						siteKey: dapp,
+						countryCode,
+						headers: flatHeaders,
 					}),
 				);
 			}
@@ -569,10 +589,13 @@ export default (
 						solvedImagesCount: timestampDecayFunction(
 							timestamp,
 							decryptionFailed,
+							clientRecord.settings.imageMaxRounds,
 						),
 						userSitekeyIpHash,
 						reason: FrictionlessReason.OLD_TIMESTAMP,
 						siteKey: dapp,
+						countryCode,
+						headers: flatHeaders,
 					}),
 				);
 			}
@@ -597,10 +620,15 @@ export default (
 				}));
 				return res.json(
 					await tasks.frictionlessManager.sendImageCaptcha({
-						solvedImagesCount: env.config.captchas.solved.count,
+						solvedImagesCount: Math.min(
+							env.config.captchas.solved.count,
+							clientRecord.settings.imageMaxRounds,
+						),
 						userSitekeyIpHash,
 						reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
 						siteKey: dapp,
+						countryCode,
+						headers: flatHeaders,
 					}),
 				);
 			}
@@ -618,6 +646,8 @@ export default (
 				await tasks.frictionlessManager.sendPowCaptcha({
 					userSitekeyIpHash,
 					siteKey: dapp,
+					countryCode,
+					headers: flatHeaders,
 				}),
 			);
 		} catch (err) {

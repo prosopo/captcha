@@ -28,6 +28,7 @@ import {
 	type output,
 	string,
 	union,
+	type z,
 	type infer as zInfer,
 } from "zod";
 import { ApiParams } from "../api/params.js";
@@ -86,6 +87,7 @@ export enum ClientApiPaths {
 	VerifyImageCaptchaSolutionDapp = "/v1/prosopo/provider/client/image/dapp/verify",
 	GetProviderStatus = "/v1/prosopo/provider/client/status",
 	SubmitUserEvents = "/v1/prosopo/provider/client/events",
+	CheckSpamEmail = "/v1/prosopo/provider/client/spam/email",
 }
 
 export enum PublicApiPaths {
@@ -119,10 +121,15 @@ export type TSubmitPowCaptchaSolutionURL =
 
 export enum AdminApiPaths {
 	SiteKeyRegister = "/v1/prosopo/provider/admin/sitekey/register",
+	SiteKeysRegister = "/v1/prosopo/provider/admin/sitekeys/register",
 	UpdateDetectorKey = "/v1/prosopo/provider/admin/detector/update",
 	RemoveDetectorKey = "/v1/prosopo/provider/admin/detector/remove",
 	ToggleMaintenanceMode = "/v1/prosopo/provider/admin/maintenance/toggle",
 	UpdateDecisionMachine = "/v1/prosopo/provider/admin/decision-machine/update",
+	GetAllDecisionMachines = "/v1/prosopo/provider/admin/decision-machine/get-all",
+	GetDecisionMachine = "/v1/prosopo/provider/admin/decision-machine/get",
+	RemoveDecisionMachine = "/v1/prosopo/provider/admin/decision-machine/remove",
+	RemoveAllDecisionMachines = "/v1/prosopo/provider/admin/decision-machine/remove-all",
 }
 
 export type CombinedApiPaths = ClientApiPaths | AdminApiPaths;
@@ -142,13 +149,19 @@ export const ProviderDefaultRateLimits = {
 		limit: 60,
 	},
 	[ClientApiPaths.GetProviderStatus]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.CheckSpamEmail]: { windowMs: 60000, limit: 60 },
 	[PublicApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
 	[AdminApiPaths.SiteKeyRegister]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.SiteKeysRegister]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.UpdateDetectorKey]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.RemoveDetectorKey]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.ToggleMaintenanceMode]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.UpdateDecisionMachine]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.GetAllDecisionMachines]: { windowMs: 60000, limit: 60 },
+	[AdminApiPaths.GetDecisionMachine]: { windowMs: 60000, limit: 60 },
+	[AdminApiPaths.RemoveDecisionMachine]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.RemoveAllDecisionMachines]: { windowMs: 60000, limit: 5 },
 };
 
 type RateLimit = {
@@ -248,6 +261,7 @@ export const CaptchaSolutionBody = object({
 		[ApiParams.user]: TimestampSignatureSchema,
 		[ApiParams.provider]: RequestHashSignatureSchema,
 	}),
+	[ApiParams.behavioralData]: string().optional(),
 });
 
 export type CaptchaSolutionBodyType = zInfer<typeof CaptchaSolutionBody>;
@@ -259,6 +273,7 @@ export const VerifySolutionBody = object({
 		.optional()
 		.default(DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED),
 	[ApiParams.ip]: string().optional(),
+	[ApiParams.email]: string().optional(),
 });
 
 export type VerifySolutionBodyTypeInput = input<typeof VerifySolutionBody>;
@@ -332,6 +347,7 @@ export const ServerPowCaptchaVerifyRequestBody = object({
 		.optional()
 		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 	[ApiParams.ip]: string().optional(),
+	[ApiParams.email]: string().email().optional(),
 });
 
 export type ServerPowCaptchaVerifyRequestBodyOutput = output<
@@ -406,6 +422,14 @@ export const RegisterSitekeyBody = object({
 	[ApiParams.settings]: ClientSettingsSchema.optional(),
 });
 
+export const RegisterSitekeysBody = array(
+	object({
+		[ApiParams.siteKey]: string(),
+		[ApiParams.tier]: nativeEnum(Tier),
+		[ApiParams.settings]: ClientSettingsSchema.optional(),
+	}),
+);
+
 export const UpdateDetectorKeyBody = object({
 	[ApiParams.detectorKey]: string(),
 });
@@ -423,6 +447,69 @@ export const UpdateDecisionMachineBody = object({
 		DecisionMachineCaptchaTypeSchema.optional(),
 	[ApiParams.dapp]: string().optional(),
 });
+
+export const GetDecisionMachineBody = object({
+	id: string(),
+});
+
+export const GetAllDecisionMachinesBody = object({});
+
+export const RemoveDecisionMachineBody = object({
+	id: string(),
+});
+
+export const RemoveAllDecisionMachinesBody = object({});
+
+export const DecisionMachineSummarySchema = object({
+	_id: string(),
+	scope: nativeEnum(DecisionMachineScope),
+	dappAccount: string().nullish(),
+	runtime: nativeEnum(DecisionMachineRuntime),
+	language: nativeEnum(DecisionMachineLanguage).nullish(),
+	name: string().nullish(),
+	version: string().nullish(),
+	captchaType: DecisionMachineCaptchaTypeSchema.nullish(),
+	createdAt: string(),
+	updatedAt: string(),
+});
+
+export type DecisionMachineSummary = z.infer<
+	typeof DecisionMachineSummarySchema
+>;
+
+export const GetAllDecisionMachinesResponse = array(
+	DecisionMachineSummarySchema,
+);
+
+export type GetAllDecisionMachinesResponseType = z.infer<
+	typeof GetAllDecisionMachinesResponse
+>;
+
+export const GetDecisionMachineResponse = DecisionMachineSummarySchema.extend({
+	source: string(),
+});
+
+export type GetDecisionMachineResponseType = z.infer<
+	typeof GetDecisionMachineResponse
+>;
+
+export const RemoveDecisionMachineResponse = object({
+	success: boolean(),
+	deletedId: string(),
+});
+
+export type RemoveDecisionMachineResponseType = z.infer<
+	typeof RemoveDecisionMachineResponse
+>;
+
+export const RemoveAllDecisionMachinesResponse = object({
+	success: boolean(),
+	deletedCount: number(),
+});
+
+export type RemoveAllDecisionMachinesResponseType = z.infer<
+	typeof RemoveAllDecisionMachinesResponse
+>;
 
 export const RemoveDetectorKeyBodySpec = object({
 	[ApiParams.detectorKey]: string(),
@@ -449,6 +536,10 @@ export type UpdateDecisionMachineBodyTypeOutput = output<
 >;
 
 export type RegisterSitekeyBodyTypeOutput = output<typeof RegisterSitekeyBody>;
+
+export type RegisterSitekeysBodyTypeOutput = output<
+	typeof RegisterSitekeysBody
+>;
 
 export const ProsopoCaptchaCountConfigSchema = object({
 	solved: object({

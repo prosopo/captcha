@@ -12,17 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ApiParams } from "@prosopo/types";
-import type { CompositeIpAddress } from "../types/index.js";
-
-export interface PendingCaptchaRequest {
-	accountId: string;
-	pending: boolean;
-	salt: string;
-	[ApiParams.requestHash]: string;
-	deadlineTimestamp: number; // unix timestamp
-	requestedAtTimestamp: Date;
-	ipAddress: CompositeIpAddress;
-	sessionId?: string;
-	threshold: number;
-}
+export * from "./objectUtils.js";
+// todo these are still in the main namespace for back compatibility
+// export * from "./batches.js";
+// export * from "./utils.js";

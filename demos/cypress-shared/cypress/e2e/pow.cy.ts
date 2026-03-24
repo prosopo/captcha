@@ -55,7 +55,18 @@ describe("Proof of Work CAPTCHA", () => {
 	});
 
 	after(() => {
-		return cy.registerSiteKey(CaptchaType.image);
+		// Re-register the site key to reset state for subsequent test runs
+		// Using failOnStatusCode: false in the command, so this won't throw
+		cy.registerSiteKey(CaptchaType.image).then((response) => {
+			if (response.status === 200) {
+				cy.task("log", "Site key successfully re-registered");
+			} else {
+				cy.task(
+					"log",
+					`Warning: Could not re-register site key. Status: ${response.status}`,
+				);
+			}
+		});
 	});
 
 	it("An error is returned if captcha type is set to image and pow is used in the widget", () => {
@@ -73,7 +84,7 @@ describe("Proof of Work CAPTCHA", () => {
 			"powCaptcha",
 		);
 
-		getWidgetElement(checkboxClass, { timeout: 12000 }).first().click();
+		getWidgetElement(checkboxClass, { timeout: 12000 }).first().realClick();
 
 		return cy
 			.wait("@powCaptcha", { timeout: 36000 })
@@ -101,7 +112,7 @@ describe("Proof of Work CAPTCHA", () => {
 			"powVerify",
 		);
 
-		getWidgetElement(checkboxClass, { timeout: 12000 }).first().click();
+		getWidgetElement(checkboxClass, { timeout: 12000 }).first().realClick();
 
 		cy.wait("@powCaptcha", { timeout: 12000 })
 			.its("response")

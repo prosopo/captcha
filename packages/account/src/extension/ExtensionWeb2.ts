@@ -15,7 +15,7 @@
 import type { InjectedAccount } from "@polkadot/extension-inject/types";
 import type { InjectedExtension } from "@polkadot/extension-inject/types";
 import { stringToU8a } from "@polkadot/util";
-import { getFingerprint } from "@prosopo/fingerprint";
+import { getFingerprint, prefetchFingerprint } from "@prosopo/fingerprint";
 import { Keyring } from "@prosopo/keyring";
 import type { KeyringPair } from "@prosopo/types";
 import type { Account, ProcaptchaClientConfigOutput } from "@prosopo/types";
@@ -24,6 +24,12 @@ import { hexHash } from "@prosopo/util-crypto";
 import type { KeypairType } from "@prosopo/util-crypto";
 import { getCryptoWorkerManager } from "../workers/CryptoWorkerManager.js";
 import { Extension } from "./Extension.js";
+
+// Pre-warm both the fingerprint cache and the crypto worker as soon as this
+// module is imported — these fire in parallel and are ready before getAccount()
+// is ever called.
+prefetchFingerprint();
+getCryptoWorkerManager(); // instantiates the singleton and starts initWorker lazily on first use
 
 const SignerLoader = async () =>
 	(await import("@polkadot/extension-base/page/Signer")).default;
@@ -39,8 +45,16 @@ export class ExtensionWeb2 extends Extension {
 	public async getAccount(
 		config: ProcaptchaClientConfigOutput,
 	): Promise<Account> {
-		const account = await this.createAccount(config);
-		const extension: InjectedExtension = await this.createExtension(account);
+		// Fetch the Signer module in parallel with account creation — it is only
+		// needed once createAccount completes, so there is no dependency.
+		const [account, Signer] = await Promise.all([
+			this.createAccount(config),
+			SignerLoader(),
+		]);
+		const extension: InjectedExtension = await this.createExtension(
+			account,
+			Signer,
+		);
 
 		return {
 			account,
@@ -50,8 +64,8 @@ export class ExtensionWeb2 extends Extension {
 
 	private async createExtension(
 		account: AccountWithKeyPair,
+		Signer: Awaited<ReturnType<typeof SignerLoader>>,
 	): Promise<InjectedExtension> {
-		const Signer = await SignerLoader();
 		const signer = new Signer(async () => {
 			return;
 		});

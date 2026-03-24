@@ -18,6 +18,8 @@ import type {
 	IPInfoResult,
 } from "@prosopo/types";
 
+const TIMEOUT_MS = 700;
+
 /**
  * Fetches comprehensive IP information from ipapi.is including geolocation,
  * provider details, and security threat indicators
@@ -51,80 +53,102 @@ export async function getIPInfo(
 			body.key = apiKey;
 		}
 
-		const response = await fetch(url, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				Accept: "application/json",
-			},
-			body: JSON.stringify(body),
-		});
+		// Set up timeout controller
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-		if (!response.ok) {
-			return {
-				isValid: false,
-				error: `API request failed with status ${response.status}: ${response.statusText}`,
-				ip,
+		try {
+			const response = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Accept: "application/json",
+				},
+				body: JSON.stringify(body),
+				signal: controller.signal,
+			});
+
+			clearTimeout(timeoutId);
+
+			if (!response.ok) {
+				return {
+					isValid: false,
+					error: `API request failed with status ${response.status}: ${response.statusText}`,
+					ip,
+				};
+			}
+
+			const data: IPApiResponse = await response.json();
+
+			if (data.is_bogon) {
+				return {
+					isValid: false,
+					error: "IP address is bogon (non-routable)",
+					ip,
+				};
+			}
+
+			const result: IPInfoResult = {
+				ip: data.ip,
+				isValid: true,
+
+				// Threat indicators
+				isVPN: data.is_vpn,
+				isTor: data.is_tor,
+				isProxy: data.is_proxy,
+				isDatacenter: data.is_datacenter,
+				isAbuser: data.is_abuser,
+				isMobile: data.is_mobile,
+				isSatellite: data.is_satellite,
+
+				// Provider information
+				providerName: data.company?.name || data.datacenter?.datacenter,
+				providerType: data.company?.type || data.asn?.type,
+				asnNumber: data.asn?.asn,
+				asnOrganization: data.asn?.org,
+
+				// Geolocation
+				country: data.location?.country,
+				countryCode: data.location?.country_code,
+				region: data.location?.state,
+				city: data.location?.city,
+				latitude: data.location?.latitude,
+				longitude: data.location?.longitude,
+				timezone: data.location?.timezone,
+
+				// VPN specific details
+				vpnService: data.vpn?.service,
+				vpnType: data.vpn?.type,
+
+				// Risk scoring
+				abuserScore: Number.parseFloat(
+					data.asn?.abuser_score.split(" ")[0] || "0",
+				),
+				companyAbuserScore: Number.parseFloat(
+					data.company?.abuser_score.split(" ")[0] || "0",
+				),
 			};
+
+			// Include raw response if requested
+			if (includeRawResponse) {
+				result.rawResponse = data;
+			}
+
+			return result;
+		} catch (fetchError) {
+			clearTimeout(timeoutId);
+
+			// Check if it was a timeout/abort error
+			if (fetchError instanceof Error && fetchError.name === "AbortError") {
+				return {
+					isValid: false,
+					error: `Request timed out after ${TIMEOUT_MS}ms`,
+					ip,
+				};
+			}
+
+			throw fetchError;
 		}
-
-		const data: IPApiResponse = await response.json();
-
-		if (data.is_bogon) {
-			return {
-				isValid: false,
-				error: "IP address is bogon (non-routable)",
-				ip,
-			};
-		}
-
-		const result: IPInfoResult = {
-			ip: data.ip,
-			isValid: true,
-
-			// Threat indicators
-			isVPN: data.is_vpn,
-			isTor: data.is_tor,
-			isProxy: data.is_proxy,
-			isDatacenter: data.is_datacenter,
-			isAbuser: data.is_abuser,
-			isMobile: data.is_mobile,
-			isSatellite: data.is_satellite,
-
-			// Provider information
-			providerName: data.company?.name || data.datacenter?.datacenter,
-			providerType: data.company?.type || data.asn?.type,
-			asnNumber: data.asn?.asn,
-			asnOrganization: data.asn?.org,
-
-			// Geolocation
-			country: data.location?.country,
-			countryCode: data.location?.country_code,
-			region: data.location?.state,
-			city: data.location?.city,
-			latitude: data.location?.latitude,
-			longitude: data.location?.longitude,
-			timezone: data.location?.timezone,
-
-			// VPN specific details
-			vpnService: data.vpn?.service,
-			vpnType: data.vpn?.type,
-
-			// Risk scoring
-			abuserScore: Number.parseFloat(
-				data.asn?.abuser_score.split(" ")[0] || "0",
-			),
-			companyAbuserScore: Number.parseFloat(
-				data.company?.abuser_score.split(" ")[0] || "0",
-			),
-		};
-
-		// Include raw response if requested
-		if (includeRawResponse) {
-			result.rawResponse = data;
-		}
-
-		return result;
 	} catch (error) {
 		return {
 			isValid: false,

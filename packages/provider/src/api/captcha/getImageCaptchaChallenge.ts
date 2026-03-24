@@ -21,32 +21,17 @@ import {
 	type CaptchaResponseBody,
 	CaptchaType,
 	type ProsopoCaptchaCountConfigSchemaOutput,
+	imageMaxRoundsDefault,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import { flatten, getIPAddress } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../express.js";
-import { GeolocationService } from "../../services/geolocation.js";
 import { Tasks } from "../../tasks/index.js";
 import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
 import { getRequestUserScope } from "../blacklistRequestInspector.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
-
-// Singleton geolocation service instance
-let geolocationService: GeolocationService | null = null;
-
-const getGeolocationService = (
-	env: ProviderEnvironment,
-): GeolocationService => {
-	if (!geolocationService) {
-		geolocationService = new GeolocationService(
-			env.config.maxmindDbPath,
-			env.logger,
-		);
-	}
-	return geolocationService;
-};
 
 export default (
 	env: ProviderEnvironment,
@@ -120,8 +105,8 @@ export default (
 			}
 
 			// Get country code for geoblocking
-			const geoService = getGeolocationService(env);
-			const countryCode = await geoService.getCountryCode(normalizedIp);
+			const countryCode =
+				await env.geolocationService.getCountryCode(normalizedIp);
 
 			const userScope = getRequestUserScope(
 				flatten(req.headers),
@@ -170,10 +155,12 @@ export default (
 
 			const captchaConfig: ProsopoCaptchaCountConfigSchemaOutput = {
 				solved: {
-					count:
+					count: Math.min(
 						solvedImagesCount ||
-						userAccessPolicy?.solvedImagesCount ||
-						env.config.captchas.solved.count,
+							userAccessPolicy?.solvedImagesCount ||
+							env.config.captchas.solved.count,
+						clientRecord.settings.imageMaxRounds ?? imageMaxRoundsDefault,
+					),
 				},
 				unsolved: {
 					count:
@@ -181,6 +168,18 @@ export default (
 						env.config.captchas.unsolved.count,
 				},
 			};
+
+			// Get countryCode from session if available, otherwise from geolocation
+			let countryCodeToStore: string | undefined;
+			if (validSessionId) {
+				const sessionRecord =
+					await tasks.db.getSessionRecordBySessionId(validSessionId);
+				countryCodeToStore = sessionRecord?.countryCode;
+			}
+			// If not available from session, use the one we got for access policy
+			if (!countryCodeToStore) {
+				countryCodeToStore = countryCode;
+			}
 
 			const taskData =
 				await tasks.imgCaptchaManager.getRandomCaptchasAndRequestHash(
@@ -190,6 +189,7 @@ export default (
 					captchaConfig,
 					clientRecord.settings.imageThreshold ?? 0.8,
 					validSessionId,
+					countryCodeToStore,
 				);
 			const captchaResponse: CaptchaResponseBody = {
 				[ApiParams.status]: "ok",

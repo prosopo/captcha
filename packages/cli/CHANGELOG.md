@@ -1,5 +1,184 @@
 # @prosopo/cli
 
+## 3.6.4
+### Patch Changes
+
+- e1ea65f: Better spam email domain checking
+- Updated dependencies [730c61e]
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/provider@3.21.4
+  - @prosopo/types@3.12.3
+  - @prosopo/util@3.2.7
+  - @prosopo/api@3.2.5
+  - @prosopo/env@3.3.10
+  - @prosopo/keyring@2.9.14
+
+## 3.6.3
+### Patch Changes
+
+- adb89a6: Disposable email checking
+- Updated dependencies [dbcd098]
+- Updated dependencies [adb89a6]
+  - @prosopo/provider@3.21.3
+  - @prosopo/locale@3.1.29
+  - @prosopo/types@3.12.2
+  - @prosopo/util@3.2.6
+  - @prosopo/api@3.2.4
+  - @prosopo/env@3.3.9
+  - @prosopo/common@3.1.30
+  - @prosopo/keyring@2.9.13
+  - @prosopo/dotenv@3.0.35
+
+## 3.6.2
+### Patch Changes
+
+- Updated dependencies [f5c8725]
+  - @prosopo/provider@3.21.2
+
+## 3.6.1
+### Patch Changes
+
+- Updated dependencies [c5ee492]
+- Updated dependencies [a90eb54]
+  - @prosopo/common@3.1.29
+  - @prosopo/provider@3.21.1
+  - @prosopo/types@3.12.1
+  - @prosopo/dotenv@3.0.34
+  - @prosopo/env@3.3.8
+  - @prosopo/keyring@2.9.12
+  - @prosopo/api@3.2.3
+
+## 3.6.0
+### Minor Changes
+
+- feaca02: Max image rounds
+
+### Patch Changes
+
+- Updated dependencies [759d4e6]
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/provider@3.21.0
+  - @prosopo/keyring@2.9.11
+  - @prosopo/types@3.12.0
+  - @prosopo/env@3.3.7
+  - @prosopo/api@3.2.2
+
+## 3.5.38
+### Patch Changes
+
+- Updated dependencies [8148587]
+  - @prosopo/provider@3.20.4
+  - @prosopo/types@3.11.1
+  - @prosopo/api@3.2.1
+  - @prosopo/env@3.3.6
+  - @prosopo/keyring@2.9.10
+
+## 3.5.37
+### Patch Changes
+
+- Updated dependencies [5444635]
+  - @prosopo/provider@3.20.3
+
+## 3.5.36
+### Patch Changes
+
+- Updated dependencies [31af9cf]
+  - @prosopo/provider@3.20.2
+
+## 3.5.35
+### Patch Changes
+
+  - @prosopo/provider@3.20.1
+  - @prosopo/env@3.3.5
+
+## 3.5.34
+### Patch Changes
+
+- Updated dependencies [ca7f4ad]
+- Updated dependencies [7f6ffc5]
+  - @prosopo/provider@3.20.0
+  - @prosopo/types@3.11.0
+  - @prosopo/api@3.2.0
+  - @prosopo/env@3.3.4
+  - @prosopo/keyring@2.9.9
+
+## 3.5.33
+### Patch Changes
+
+- Updated dependencies [bca43e5]
+  - @prosopo/provider@3.19.3
+
+## 3.5.32
+### Patch Changes
+
+- 93fa086: Add decision engine endpoints
+- Updated dependencies [ce4f831]
+- Updated dependencies [93fa086]
+- Updated dependencies [4de47f5]
+  - @prosopo/provider@3.19.2
+  - @prosopo/types@3.10.2
+  - @prosopo/api@3.1.49
+  - @prosopo/env@3.3.3
+  - @prosopo/keyring@2.9.8
+
+## 3.5.31
+### Patch Changes
+
+- Updated dependencies [cde7550]
+  - @prosopo/provider@3.19.1
+  - @prosopo/types@3.10.1
+  - @prosopo/api@3.1.48
+  - @prosopo/env@3.3.2
+  - @prosopo/keyring@2.9.7
+
+## 3.5.30
+### Patch Changes
+
+- Updated dependencies [ad6d622]
+- Updated dependencies [fa95c5f]
+  - @prosopo/provider@3.19.0
+  - @prosopo/types@3.10.0
+  - @prosopo/env@3.3.1
+  - @prosopo/api@3.1.47
+  - @prosopo/keyring@2.9.6
+
+## 3.5.29
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+  - @prosopo/provider@3.18.0
+  - @prosopo/types@3.9.0
+  - @prosopo/env@3.3.0
+  - @prosopo/api@3.1.46
+  - @prosopo/keyring@2.9.5
+
+## 3.5.28
+### Patch Changes
+
+- Updated dependencies [3feeea4]
+  - @prosopo/provider@3.17.0
+  - @prosopo/env@3.2.42
+
+## 3.5.27
+### Patch Changes
+
+- Updated dependencies [4c08158]
+- Updated dependencies [d2431cd]
+  - @prosopo/provider@3.16.5
+  - @prosopo/types@3.8.4
+  - @prosopo/api@3.1.45
+  - @prosopo/env@3.2.41
+  - @prosopo/keyring@2.9.4
+
+## 3.5.26
+### Patch Changes
+
+- Updated dependencies [3a58d06]
+  - @prosopo/provider@3.16.4
+
 ## 3.5.25
 ### Patch Changes
 

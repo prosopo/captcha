@@ -1,5 +1,108 @@
 # @prosopo/procaptcha-react
 
+## 2.9.44
+### Patch Changes
+
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/types@3.12.3
+  - @prosopo/util@3.2.7
+  - @prosopo/procaptcha-common@2.9.37
+  - @prosopo/procaptcha@2.10.5
+
+## 2.9.43
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/locale@3.1.29
+  - @prosopo/types@3.12.2
+  - @prosopo/util@3.2.6
+  - @prosopo/common@3.1.30
+  - @prosopo/procaptcha@2.10.4
+  - @prosopo/procaptcha-common@2.9.36
+
+## 2.9.42
+### Patch Changes
+
+- Updated dependencies [c5ee492]
+- Updated dependencies [a90eb54]
+  - @prosopo/common@3.1.29
+  - @prosopo/types@3.12.1
+  - @prosopo/procaptcha@2.10.3
+  - @prosopo/procaptcha-common@2.9.35
+
+## 2.9.41
+### Patch Changes
+
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/types@3.12.0
+  - @prosopo/procaptcha-common@2.9.34
+  - @prosopo/procaptcha@2.10.2
+
+## 2.9.40
+### Patch Changes
+
+- Updated dependencies [8148587]
+  - @prosopo/types@3.11.1
+  - @prosopo/procaptcha@2.10.1
+  - @prosopo/procaptcha-common@2.9.33
+
+## 2.9.39
+### Patch Changes
+
+- Updated dependencies [7f6ffc5]
+  - @prosopo/procaptcha@2.10.0
+  - @prosopo/types@3.11.0
+  - @prosopo/procaptcha-common@2.9.32
+
+## 2.9.38
+### Patch Changes
+
+- Updated dependencies [93fa086]
+  - @prosopo/types@3.10.2
+  - @prosopo/procaptcha@2.9.38
+  - @prosopo/procaptcha-common@2.9.31
+
+## 2.9.37
+### Patch Changes
+
+- Updated dependencies [cde7550]
+  - @prosopo/types@3.10.1
+  - @prosopo/procaptcha@2.9.37
+  - @prosopo/procaptcha-common@2.9.30
+
+## 2.9.36
+### Patch Changes
+
+- Updated dependencies [ad6d622]
+  - @prosopo/types@3.10.0
+  - @prosopo/procaptcha@2.9.36
+  - @prosopo/procaptcha-common@2.9.29
+
+## 2.9.35
+### Patch Changes
+
+- 592adf1: Don't make people wait so long for a new session
+- Updated dependencies [ff58a70]
+  - @prosopo/types@3.9.0
+  - @prosopo/procaptcha@2.9.35
+  - @prosopo/procaptcha-common@2.9.28
+
+## 2.9.34
+### Patch Changes
+
+  - @prosopo/procaptcha@2.9.34
+
+## 2.9.33
+### Patch Changes
+
+- Updated dependencies [d2431cd]
+  - @prosopo/types@3.8.4
+  - @prosopo/procaptcha@2.9.33
+  - @prosopo/procaptcha-common@2.9.27
+
 ## 2.9.32
 ### Patch Changes
 

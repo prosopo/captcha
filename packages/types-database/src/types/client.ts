@@ -13,18 +13,25 @@
 // limitations under the License.
 
 import {
+	CaptchaType,
 	ContextType,
 	type IUserData,
 	type IUserSettings,
 	type Timestamp,
 	abuseScoreThresholdDefault,
 	abuseScoreThresholdExceedActionDefault,
+	captchaTypeDefault,
 	cityChangeActionDefault,
 	contextAwareThresholdDefault,
 	countryChangeActionDefault,
 	distanceExceedActionDefault,
 	distanceThresholdKmDefault,
+	domainsDefault,
+	frictionlessThresholdDefault,
+	imageMaxRoundsDefault,
+	imageThresholdDefault,
 	ispChangeActionDefault,
+	powDifficultyDefault,
 	requireAllConditionsDefault,
 } from "@prosopo/types";
 import mongoose from "mongoose";
@@ -35,6 +42,11 @@ import type { ClientRecord, Tables } from "./provider.js";
 export type UserDataRecord = mongoose.Document & IUserData;
 
 export const IPValidationRulesSchema = new Schema({
+	enabled: {
+		type: Boolean,
+		default: false,
+		required: true,
+	},
 	actions: {
 		countryChangeAction: {
 			type: Schema.Types.Mixed,
@@ -99,12 +111,30 @@ export const IPValidationRulesSchema = new Schema({
 });
 
 export const UserSettingsSchema = new Schema({
-	captchaType: String,
-	frictionlessThreshold: Number,
-	powDifficulty: Number,
-	imageThreshold: Number,
+	captchaType: {
+		type: String,
+		enum: CaptchaType,
+		default: captchaTypeDefault,
+	},
+	frictionlessThreshold: {
+		type: Number,
+		default: frictionlessThresholdDefault,
+	},
+	powDifficulty: { type: Number, default: powDifficultyDefault },
+	imageThreshold: {
+		type: Number,
+		default: imageThresholdDefault,
+	},
+	imageMaxRounds: {
+		type: Number,
+		default: imageMaxRoundsDefault,
+		required: false,
+	},
 	ipValidationRules: IPValidationRulesSchema,
-	domains: [String],
+	domains: {
+		type: [String],
+		default: domainsDefault,
+	},
 	disallowWebView: {
 		type: Boolean,
 		default: false,
@@ -124,6 +154,11 @@ export const UserSettingsSchema = new Schema({
 				},
 			},
 		},
+	},
+	spamEmailDomainCheckEnabled: {
+		type: Boolean,
+		default: false,
+		required: false,
 	},
 });
 

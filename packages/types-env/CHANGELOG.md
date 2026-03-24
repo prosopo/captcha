@@ -1,5 +1,117 @@
 # @prosopo/types-env
 
+## 2.8.10
+### Patch Changes
+
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/types@3.12.3
+  - @prosopo/types-database@4.4.9
+  - @prosopo/keyring@2.9.14
+
+## 2.8.9
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/types-database@4.4.8
+  - @prosopo/types@3.12.2
+  - @prosopo/common@3.1.30
+  - @prosopo/keyring@2.9.13
+
+## 2.8.8
+### Patch Changes
+
+- Updated dependencies [c5ee492]
+- Updated dependencies [a90eb54]
+  - @prosopo/common@3.1.29
+  - @prosopo/types-database@4.4.7
+  - @prosopo/types@3.12.1
+  - @prosopo/keyring@2.9.12
+
+## 2.8.7
+### Patch Changes
+
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/keyring@2.9.11
+  - @prosopo/types@3.12.0
+  - @prosopo/types-database@4.4.6
+
+## 2.8.6
+### Patch Changes
+
+- Updated dependencies [8148587]
+  - @prosopo/types-database@4.4.5
+  - @prosopo/types@3.11.1
+  - @prosopo/keyring@2.9.10
+
+## 2.8.5
+### Patch Changes
+
+- Updated dependencies [90033e9]
+  - @prosopo/types-database@4.4.4
+
+## 2.8.4
+### Patch Changes
+
+- Updated dependencies [7f6ffc5]
+  - @prosopo/types@3.11.0
+  - @prosopo/keyring@2.9.9
+  - @prosopo/types-database@4.4.3
+
+## 2.8.3
+### Patch Changes
+
+- Updated dependencies [93fa086]
+  - @prosopo/types-database@4.4.2
+  - @prosopo/types@3.10.2
+  - @prosopo/keyring@2.9.8
+
+## 2.8.2
+### Patch Changes
+
+- Updated dependencies [cde7550]
+  - @prosopo/types-database@4.4.1
+  - @prosopo/types@3.10.1
+  - @prosopo/keyring@2.9.7
+
+## 2.8.1
+### Patch Changes
+
+- Updated dependencies [ad6d622]
+- Updated dependencies [fa95c5f]
+  - @prosopo/types-database@4.4.0
+  - @prosopo/types@3.10.0
+  - @prosopo/keyring@2.9.6
+
+## 2.8.0
+### Minor Changes
+
+- ff58a70: Load the geolocation service at startup only
+
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+  - @prosopo/types@3.9.0
+  - @prosopo/keyring@2.9.5
+  - @prosopo/types-database@4.3.1
+
+## 2.7.66
+### Patch Changes
+
+- Updated dependencies [3feeea4]
+  - @prosopo/types-database@4.3.0
+
+## 2.7.65
+### Patch Changes
+
+- Updated dependencies [4c08158]
+- Updated dependencies [d2431cd]
+  - @prosopo/types-database@4.2.4
+  - @prosopo/types@3.8.4
+  - @prosopo/keyring@2.9.4
+
 ## 2.7.64
 ### Patch Changes
 

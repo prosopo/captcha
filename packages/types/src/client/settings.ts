@@ -20,6 +20,7 @@ export const domainsDefault: string[] = [];
 export const frictionlessThresholdDefault = 0.5;
 export const powDifficultyDefault = 4;
 export const imageThresholdDefault = 0.8;
+export const imageMaxRoundsDefault = 32;
 export const contextAwareThresholdDefault = 0.7;
 
 // IP Validation Rules
@@ -62,6 +63,7 @@ const IPValidationSchema = object({
 });
 
 export const IPValidationRulesSchema = object({
+	enabled: boolean().optional().default(false),
 	actions: object({
 		countryChangeAction: IPValidationActionSchema.optional().default(
 			countryChangeActionDefault,
@@ -151,9 +153,15 @@ export const ClientSettingsSchema = object({
 		.max(1)
 		.optional()
 		.default(imageThresholdDefault),
+	imageMaxRounds: number()
+		.int()
+		.min(2)
+		.optional()
+		.default(imageMaxRoundsDefault),
 	ipValidationRules: IPValidationRulesSchema.optional(),
 	disallowWebView: boolean().optional().default(false).optional(),
 	contextAware: ContextAwareSchema.optional(),
+	spamEmailDomainCheckEnabled: boolean().optional(),
 });
 
 export type IUserSettings = output<typeof ClientSettingsSchema>;

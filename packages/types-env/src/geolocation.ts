@@ -12,19 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, expect, it } from "vitest";
-import { chunkIntoBatches } from "../batches.js";
+export interface IGeolocationService {
+	/**
+	 * Initialize the MaxMind Reader.
+	 * This can be called at startup or will be lazy-initialized on first lookup.
+	 */
+	initialize(): Promise<void>;
 
-describe("chunkIntoBatches", () => {
-	it("should chunk into batches", () => {
-		const batches = chunkIntoBatches([1, 2, 3], 2);
+	/**
+	 * Lookup the country code for an IP address.
+	 * Returns undefined if lookup fails (permissive).
+	 */
+	getCountryCode(ip: string): Promise<string | undefined>;
 
-		expect(batches).toEqual([[1, 2], [3]]);
-	});
-
-	it("should handle the empty items case", () => {
-		const batches = chunkIntoBatches([], 2);
-
-		expect(batches).toEqual([]);
-	});
-});
+	/**
+	 * Check if the geolocation service is available.
+	 */
+	isAvailable(): boolean;
+}

@@ -1,5 +1,10 @@
 # @prosopo/fingerprint
 
+## 2.6.29
+### Patch Changes
+
+- 730c61e: Speed up captcha
+
 ## 2.6.28
 ### Patch Changes
 

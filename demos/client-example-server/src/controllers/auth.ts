@@ -15,15 +15,17 @@
 import { blake2b } from "@noble/hashes/blake2b";
 import { u8aToHex } from "@polkadot/util";
 import { randomAsHex } from "@polkadot/util-crypto";
-import { ProsopoEnvError } from "@prosopo/common";
+import { ProsopoEnvError, getLogger } from "@prosopo/common";
 import { getPair } from "@prosopo/keyring";
 import { ProsopoServer } from "@prosopo/server";
 import {
 	ApiParams,
+	CaptchaType,
+	type KeyringPair,
+	ProcaptchaResponse,
 	type ProcaptchaToken,
 	type ProsopoServerConfigOutput,
 } from "@prosopo/types";
-import { ProcaptchaResponse } from "@prosopo/types";
 import { at } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import jwt, { type JwtPayload } from "jsonwebtoken";
@@ -31,10 +33,13 @@ import type { Connection } from "mongoose";
 import { z } from "zod";
 import type { UserInterface } from "../models/user.js";
 
+const logger = getLogger("info", import.meta.url);
+
 const SubscribeBodySpec = ProcaptchaResponse.merge(
 	z.object({
 		email: z.string().email(),
 		password: z.string(),
+		siteKey: z.string(),
 	}),
 );
 
@@ -44,23 +49,90 @@ function hashPassword(password: string): string {
 
 const NO_IP = "NO_IP";
 
+/**
+ * Derives the correct KeyringPair and secret for a given site key by trying different captcha types.
+ * @param baseSecret - The base secret from config
+ * @param siteKey - The site key to match against
+ * @returns Object containing the matched pair and its corresponding secret
+ * @throws Error if no matching pair is found
+ */
+const getPairAndSecretForSiteKey = (
+	baseSecret: string,
+	siteKey: string,
+): { pair: KeyringPair; secret: string } => {
+	let pair: KeyringPair | undefined;
+	let secret = baseSecret;
+
+	pair = getPair(secret);
+
+	if (pair.address === siteKey) {
+		logger.info(() => ({
+			msg: "Site key matches the server configuration without captcha type suffix",
+			data: {
+				siteKeyDerived: pair?.address,
+				siteKey,
+			},
+		}));
+		return { pair, secret };
+	}
+
+	for (const captchaType of [
+		CaptchaType.pow,
+		CaptchaType.image,
+		CaptchaType.frictionless,
+	]) {
+		const newSecret = `${baseSecret}//${captchaType}`;
+		pair = getPair(newSecret);
+		console.log(
+			`[PAIR CHECK] Checking pair for ${captchaType}: ${pair?.address} (expected: ${siteKey})`,
+		);
+		logger.info(() => ({
+			msg: "Checking pair",
+			data: {
+				captchaType,
+				siteKeyDerived: pair?.address,
+				siteKey,
+			},
+		}));
+		if (pair.address === siteKey) {
+			console.log(`[PAIR CHECK] ✅ Match found for ${captchaType}!`);
+			secret = newSecret;
+			break;
+		}
+	}
+
+	if (!pair || pair.address !== siteKey) {
+		throw new Error(
+			`Site key does not match the server configuration: Provided ${siteKey} vs Server ${pair?.address}`,
+		);
+	}
+
+	return { pair, secret };
+};
+
 const getResponse = async (
 	ip: string,
 	token: ProcaptchaToken,
 	secret: string,
 	verifyEndpoint: string,
+	email?: string,
 ) => {
 	// Only include ip if environment is production
 	const body: Record<string, string> = {
 		[ApiParams.token]: token,
 		[ApiParams.secret]: secret,
+		...(email ? { [ApiParams.email]: email } : {}),
 	};
 
 	if (process.env.NODE_ENV !== "development") {
 		body[ApiParams.ip] = ip;
 	}
 
-	console.log({ body });
+	logger.info(() => ({
+		data: {
+			body,
+		},
+	}));
 
 	const response = await fetch(verifyEndpoint, {
 		method: "POST",
@@ -76,19 +148,39 @@ const verify = async (
 	token: ProcaptchaToken,
 	secret: string,
 	ip: string,
+	email?: string,
 ) => {
 	if (verifyType === "api") {
 		// verify using the API endpoint
-		console.log("Verifying using the API endpoint", verifyEndpoint);
+		logger.info(() => ({
+			msg: "Verifying using the API endpoint",
+			data: {
+				verifyEndpoint,
+			},
+		}));
 
-		const response = await getResponse(ip, token, secret, verifyEndpoint);
-		console.log(response);
+		const response = await getResponse(
+			ip,
+			token,
+			secret,
+			verifyEndpoint,
+			email,
+		);
+		logger.info(() => ({
+			data: {
+				response,
+			},
+		}));
 		return response.verified;
 	}
 	// verify using the TypeScript library
-	const verified = await prosopoServer.isVerified(token);
-	console.log(verified);
-	return verified;
+	const verified = await prosopoServer.isVerified(token, ip, email);
+	logger.info(() => ({
+		data: {
+			verified,
+		},
+	}));
+	return verified[ApiParams.verified];
 };
 
 const signup = async (
@@ -101,33 +193,40 @@ const signup = async (
 	next: NextFunction,
 ) => {
 	try {
+		if (!config.account.secret) {
+			throw new ProsopoEnvError("GENERAL.MNEMONIC_UNDEFINED", {
+				context: { missingParams: ["PROSOPO_SITE_PRIVATE_KEY"] },
+			});
+		}
 		const User = mongoose.model<UserInterface>("User");
 		// checks if email exists
 		const dbUser = await User.findOne({
 			email: { $eq: req.body.email },
 		});
 		const payload = SubscribeBodySpec.parse(req.body);
-		const pair = await getPair(config.account.secret);
+		// get the procaptcha-response token
+		const token = payload[ApiParams.procaptchaResponse];
+		const siteKey = payload[ApiParams.siteKey];
+
+		const { pair, secret } = getPairAndSecretForSiteKey(
+			config.account.secret,
+			siteKey,
+		);
+
 		const prosopoServer = new ProsopoServer(config, pair);
 		if (dbUser) {
 			return res.status(409).json({ message: "email already exists" });
 		}
-		// get the procaptcha-response token
-		const token = payload[ApiParams.procaptchaResponse];
 
-		if (!config.account.secret) {
-			throw new ProsopoEnvError("GENERAL.MNEMONIC_UNDEFINED", {
-				context: { missingParams: ["PROSOPO_SITE_PRIVATE_KEY"] },
-			});
-		}
-
+		const email = req.body.email;
 		const verified = await verify(
 			prosopoServer,
 			verifyType,
 			verifyEndpoint,
 			token,
-			config.account.secret,
-			req.headers["x-client-ip"]?.toString() || NO_IP,
+			secret,
+			req.headers["x-client-ip"]?.toString() || "127.0.0.1",
+			email,
 		);
 
 		if (verified === true) {
@@ -137,7 +236,7 @@ const signup = async (
 			const passwordHash = hashPassword(`${req.body.password}${salt}`);
 			if (passwordHash) {
 				return User.create({
-					email: req.body.email,
+					email: email,
 					name: req.body.name,
 					password: passwordHash,
 					salt: salt,
@@ -146,7 +245,10 @@ const signup = async (
 						res.status(200).json({ message: "user created" });
 					})
 					.catch((err) => {
-						console.log(err);
+						logger.error(() => ({
+							err,
+							msg: "Error creating user in database",
+						}));
 						res.status(502).json({ message: "error while creating the user" });
 					});
 			}
@@ -172,18 +274,17 @@ const login = async (
 	res: Response,
 ) => {
 	const User = mongoose.model<UserInterface>("User");
-	const pair = await getPair(config.account.secret);
-	const prosopoServer = new ProsopoServer(config, pair);
+
 	// checks if email exists
 	await User.findOne({
 		email: { $eq: req.body.email },
 	})
 		.then(async (dbUser) => {
 			if (dbUser) {
-				console.log(req.body);
 				const payload = SubscribeBodySpec.parse(req.body);
 
 				const token = payload[ApiParams.procaptchaResponse];
+				const siteKey = payload[ApiParams.siteKey];
 
 				if (!config.account.secret) {
 					throw new ProsopoEnvError("GENERAL.SECRET_MISSING", {
@@ -191,16 +292,26 @@ const login = async (
 					});
 				}
 
+				const { pair, secret } = getPairAndSecretForSiteKey(
+					config.account.secret,
+					siteKey,
+				);
+				const prosopoServer = new ProsopoServer(config, pair);
+
 				const verified = await verify(
 					prosopoServer,
 					verifyType,
 					verifyEndpoint,
 					token,
-					config.account.secret,
+					secret,
 					req.headers["x-client-ip"]?.toString() || NO_IP,
 				);
 
-				console.log("verified", verified);
+				logger.info(() => ({
+					data: {
+						verified,
+					},
+				}));
 
 				if (verified) {
 					// password hash

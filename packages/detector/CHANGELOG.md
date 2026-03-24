@@ -1,5 +1,96 @@
 # @prosopo/detector
 
+## 3.4.18
+### Patch Changes
+
+- 730c61e: Speed up captcha
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/types@3.12.3
+
+## 3.4.17
+### Patch Changes
+
+- dbcd098: Fix bug with chrome on ios
+- Updated dependencies [adb89a6]
+  - @prosopo/types@3.12.2
+
+## 3.4.16
+### Patch Changes
+
+- f5c8725: Fix bug with chrome on ios
+
+## 3.4.15
+### Patch Changes
+
+- Updated dependencies [a90eb54]
+  - @prosopo/types@3.12.1
+
+## 3.4.14
+### Patch Changes
+
+- 759d4e6: Dynamic server secrets for client example server
+- 676c5f2: Use HTTPS in developmentwq
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/types@3.12.0
+
+## 3.4.13
+### Patch Changes
+
+- 8148587: Clustering
+- Updated dependencies [8148587]
+  - @prosopo/types@3.11.1
+
+## 3.4.12
+### Patch Changes
+
+- 5444635: New ob code
+
+## 3.4.11
+### Patch Changes
+
+- Updated dependencies [7f6ffc5]
+  - @prosopo/types@3.11.0
+
+## 3.4.10
+### Patch Changes
+
+- bca43e5: catcher updates
+
+## 3.4.9
+### Patch Changes
+
+- ce4f831: patch for some mobile devices
+- 4de47f5: Catcher update
+- Updated dependencies [93fa086]
+  - @prosopo/types@3.10.2
+
+## 3.4.8
+### Patch Changes
+
+- Updated dependencies [cde7550]
+  - @prosopo/types@3.10.1
+
+## 3.4.7
+### Patch Changes
+
+- Updated dependencies [ad6d622]
+  - @prosopo/types@3.10.0
+
+## 3.4.6
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+  - @prosopo/types@3.9.0
+
+## 3.4.5
+### Patch Changes
+
+- Updated dependencies [d2431cd]
+  - @prosopo/types@3.8.4
+
 ## 3.4.4
 ### Patch Changes
 

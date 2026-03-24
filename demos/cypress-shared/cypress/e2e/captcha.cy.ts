@@ -87,7 +87,18 @@ describe("Captchas", () => {
 	});
 
 	after(() => {
-		cy.registerSiteKey(baseCaptchaType);
+		// Re-register the site key to reset state for subsequent test runs
+		// Using failOnStatusCode: false in the command, so this won't throw
+		cy.registerSiteKey(baseCaptchaType).then((response) => {
+			if (response.status === 200) {
+				cy.task("log", "Site key successfully re-registered");
+			} else {
+				cy.task(
+					"log",
+					`Warning: Could not re-register site key. Status: ${response.status}`,
+				);
+			}
+		});
 	});
 
 	it("An error is returned if captcha type is set to pow and the wrong captcha type is used in the widget", () => {
@@ -105,19 +116,18 @@ describe("Captchas", () => {
 		// Wait for the procaptcha script to be loaded after navigation
 		cy.waitForProcaptchaScript();
 
-		cy.task("log", "Clicking the first div...");
-		cy.get("div").first().click();
-
 		const checkbox = getWidgetElement(checkboxClass, { timeout: 12000 });
 
 		cy.task("log", "Checking if checkbox is visible...");
-		checkbox.first().should("be.visible");
+		checkbox.first().should("be.visible").should("not.be.disabled");
 
 		cy.task("log", "Intercepting POST request...");
 		cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
 			"getCaptcha",
 		);
-		checkbox.first().click();
+
+		cy.task("log", "Clicking checkbox with realClick...");
+		checkbox.first().realClick();
 
 		cy.task("log", "Waiting for @getCaptcha...");
 
@@ -169,7 +179,7 @@ describe("Captchas", () => {
 		cy.clickIAmHuman().then(() => {
 			cy.wait(2000);
 			cy.captchaImages().then(() => {
-				cy.get("@captchaImages").first().click();
+				cy.get("@captchaImages").first().realClick();
 				cy.get("@captchaImages")
 					.first()
 					.siblings()

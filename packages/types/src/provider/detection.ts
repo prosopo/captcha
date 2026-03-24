@@ -19,4 +19,5 @@ export type DetectorResult = {
 	isWebView?: boolean;
 	isIframe?: boolean;
 	decryptedHeadHash: string;
+	triggeredDetectors?: number[];
 };

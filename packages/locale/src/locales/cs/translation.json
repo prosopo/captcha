@@ -21,6 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Přístup blokován zásadami",
 		"FORBIDDEN": "Zakázáno",
 		"PROVIDER_VERIFY_FAILED": "Ověření poskytovatele selhalo",
+		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
 		"UNAUTHORIZED": "Neoprávněný",
 		"MISSING_BODY": "Chybějící tělo",
 		"NO_CONTENT_TYPE_HEADER": "Chybí hlavička typu obsahu. Předpokládáno, že tělo je kódované ve formátu JSON, ale nepodařilo se ho analyzovat.",

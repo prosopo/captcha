@@ -1,5 +1,135 @@
 # @prosopo/database
 
+## 3.9.9
+### Patch Changes
+
+- e1ea65f: Better spam email domain checking
+- c316257: Adding sync fo sessions wrt captcha status
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/types@3.12.3
+  - @prosopo/types-database@4.4.9
+  - @prosopo/util@3.2.7
+  - @prosopo/user-access-policy@3.6.15
+
+## 3.9.8
+### Patch Changes
+
+- adb89a6: Disposable email checking
+- Updated dependencies [adb89a6]
+  - @prosopo/types-database@4.4.8
+  - @prosopo/locale@3.1.29
+  - @prosopo/types@3.12.2
+  - @prosopo/common@3.1.30
+  - @prosopo/user-access-policy@3.6.14
+  - @prosopo/redis-client@1.0.15
+
+## 3.9.7
+### Patch Changes
+
+- Updated dependencies [c5ee492]
+- Updated dependencies [a90eb54]
+  - @prosopo/common@3.1.29
+  - @prosopo/types-database@4.4.7
+  - @prosopo/types@3.12.1
+  - @prosopo/redis-client@1.0.14
+  - @prosopo/user-access-policy@3.6.13
+
+## 3.9.6
+### Patch Changes
+
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/types@3.12.0
+  - @prosopo/types-database@4.4.6
+  - @prosopo/user-access-policy@3.6.12
+
+## 3.9.5
+### Patch Changes
+
+- Updated dependencies [8148587]
+  - @prosopo/types-database@4.4.5
+  - @prosopo/types@3.11.1
+  - @prosopo/user-access-policy@3.6.11
+
+## 3.9.4
+### Patch Changes
+
+- Updated dependencies [90033e9]
+  - @prosopo/types-database@4.4.4
+
+## 3.9.3
+### Patch Changes
+
+- Updated dependencies [7f6ffc5]
+  - @prosopo/types@3.11.0
+  - @prosopo/types-database@4.4.3
+  - @prosopo/user-access-policy@3.6.10
+
+## 3.9.2
+### Patch Changes
+
+- 93fa086: Add decision engine endpoints
+- Updated dependencies [93fa086]
+  - @prosopo/types-database@4.4.2
+  - @prosopo/types@3.10.2
+  - @prosopo/user-access-policy@3.6.9
+
+## 3.9.1
+### Patch Changes
+
+- Updated dependencies [cde7550]
+  - @prosopo/types-database@4.4.1
+  - @prosopo/types@3.10.1
+  - @prosopo/user-access-policy@3.6.8
+
+## 3.9.0
+### Minor Changes
+
+- ad6d622: Separate types from mongoose schemas to avoid bundling mongoose in frontend
+
+### Patch Changes
+
+- ced9f41: Fix incorrect projection
+- fa95c5f: zod types for db records
+- Updated dependencies [ad6d622]
+- Updated dependencies [fa95c5f]
+  - @prosopo/types-database@4.4.0
+  - @prosopo/types@3.10.0
+  - @prosopo/user-access-policy@3.6.7
+
+## 3.8.0
+### Minor Changes
+
+- d329e63: Use projections to speed up queries
+
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+  - @prosopo/types@3.9.0
+  - @prosopo/types-database@4.3.1
+  - @prosopo/user-access-policy@3.6.6
+
+## 3.7.0
+### Minor Changes
+
+- 3feeea4: Store geolocation. Remove pending image captcha collection
+
+### Patch Changes
+
+- Updated dependencies [3feeea4]
+  - @prosopo/types-database@4.3.0
+
+## 3.6.12
+### Patch Changes
+
+- Updated dependencies [4c08158]
+- Updated dependencies [d2431cd]
+  - @prosopo/types-database@4.2.4
+  - @prosopo/types@3.8.4
+  - @prosopo/user-access-policy@3.6.5
+
 ## 3.6.11
 ### Patch Changes
 

@@ -39,6 +39,10 @@ export const getRateLimitConfig = () => {
 			windowMs: process.env.PROSOPO_VERIFY_IMAGE_CAPTCHA_SOLUTION_DAPP_WINDOW,
 			limit: process.env.PROSOPO_VERIFY_IMAGE_CAPTCHA_SOLUTION_DAPP_LIMIT,
 		},
+		[ClientApiPaths.CheckSpamEmail]: {
+			windowMs: process.env.PROSOPO_CHECK_SPAM_EMAIL_WINDOW,
+			limit: process.env.PROSOPO_CHECK_SPAM_EMAIL_LIMIT,
+		},
 		[ClientApiPaths.GetProviderStatus]: {
 			windowMs: process.env.PROSOPO_GET_PROVIDER_STATUS_WINDOW,
 			limit: process.env.PROSOPO_GET_PROVIDER_STATUS_LIMIT,
@@ -54,6 +58,10 @@ export const getRateLimitConfig = () => {
 		[AdminApiPaths.SiteKeyRegister]: {
 			windowMs: process.env.PROSOPO_SITE_KEY_REGISTER_WINDOW,
 			limit: process.env.PROSOPO_SITE_KEY_REGISTER_LIMIT,
+		},
+		[AdminApiPaths.SiteKeysRegister]: {
+			windowMs: process.env.PROSOPO_SITE_KEYS_REGISTER_WINDOW,
+			limit: process.env.PROSOPO_SITE_KEYS_REGISTER_LIMIT,
 		},
 		[AdminApiPaths.UpdateDetectorKey]: {
 			windowMs: process.env.PROSOPO_UPDATE_DETECTOR_KEY_WINDOW,
@@ -74,6 +82,22 @@ export const getRateLimitConfig = () => {
 		[ClientApiPaths.GetFrictionlessCaptchaChallenge]: {
 			windowMs: process.env.PROSOPO_GET_FR_CAPTCHA_CHALLENGE_WINDOW,
 			limit: process.env.PROSOPO_GET_FR_CAPTCHA_CHALLENGE_LIMIT,
+		},
+		[AdminApiPaths.GetDecisionMachine]: {
+			windowMs: process.env.PROSOPO_GET_DECISION_MACHINE_WINDOW,
+			limit: process.env.PROSOPO_GET_DECISION_MACHINE_LIMIT,
+		},
+		[AdminApiPaths.GetAllDecisionMachines]: {
+			windowMs: process.env.PROSOPO_GET_ALL_DECISION_MACHINES_WINDOW,
+			limit: process.env.PROSOPO_GET_ALL_DECISION_MACHINES_LIMIT,
+		},
+		[AdminApiPaths.RemoveAllDecisionMachines]: {
+			windowMs: process.env.PROSOPO_REMOVE_ALL_DECISION_MACHINES_WINDOW,
+			limit: process.env.PROSOPO_REMOVE_ALL_DECISION_MACHINES_LIMIT,
+		},
+		[AdminApiPaths.RemoveDecisionMachine]: {
+			windowMs: process.env.PROSOPO_REMOVE_DECISION_MACHINE_WINDOW,
+			limit: process.env.PROSOPO_REMOVE_DECISION_MACHINE_LIMIT,
 		},
 	};
 };

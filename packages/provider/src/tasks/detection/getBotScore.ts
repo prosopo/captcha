@@ -32,6 +32,7 @@ export const getBotScore = async (
 	const isWebView: boolean = result.isWebView ?? false;
 	const isIframe: boolean = result.isIframe ?? false;
 	const decryptedHeadHash: string = result.decryptedHeadHash;
+	const triggeredDetectors: number[] | undefined = result.triggeredDetectors;
 
 	if (baseBotScore === undefined) {
 		return {
@@ -48,5 +49,6 @@ export const getBotScore = async (
 		isWebView,
 		isIframe,
 		decryptedHeadHash,
+		triggeredDetectors,
 	};
 };

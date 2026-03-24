@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/fingerprint",
-	"version": "2.6.28",
+	"version": "2.6.29",
 	"description": "Provider fingerprint",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -35,10 +35,10 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
-		"@fingerprintjs/fingerprintjs": "3.4.2"
+		"@prosopo/fingerprintjs": "5.1.0"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.0",
+		"@prosopo/config": "3.3.1",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "3.2.4",
 		"concurrently": "9.0.1",

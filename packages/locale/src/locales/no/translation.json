@@ -21,6 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Tilgang blokkert av policy",
 		"FORBIDDEN": "Forbudt",
 		"PROVIDER_VERIFY_FAILED": "Utdypning bekreftelse mislyktes",
+		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
 		"UNAUTHORIZED": "Oautorisert",
 		"MISSING_BODY": "Manglar kropp",
 		"NO_CONTENT_TYPE_HEADER": "Ingen innhaldstypeheader. Gjekk ut frå at kroppen var kodet i JSON, men vart ikkje tolka.",

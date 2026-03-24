@@ -21,6 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Приступ блокиран политиком",
 		"FORBIDDEN": "ممنوع",
 		"PROVIDER_VERIFY_FAILED": "فشل التحقق من المزود",
+		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
 		"UNAUTHORIZED": "غير مصرح",
 		"MISSING_BODY": "الجسم غير موجود",
 		"NO_CONTENT_TYPE_HEADER": "لا يوجد عنوان نوع المحتوى. يفترض جسمًا مشفرًا بتنسيق JSON ولكن فشل التحليل.",

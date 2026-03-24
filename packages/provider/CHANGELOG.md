@@ -1,5 +1,281 @@
 # @prosopo/provider
 
+## 3.21.4
+### Patch Changes
+
+- 730c61e: Speed up captcha
+- e1ea65f: Better spam email domain checking
+- c316257: Adding sync fo sessions wrt captcha status
+- Updated dependencies [730c61e]
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/load-balancer@2.8.31
+  - @prosopo/types@3.12.3
+  - @prosopo/types-database@4.4.9
+  - @prosopo/database@3.9.9
+  - @prosopo/util@3.2.7
+  - @prosopo/api@3.2.5
+  - @prosopo/api-express-router@3.0.65
+  - @prosopo/datasets@3.1.8
+  - @prosopo/env@3.3.10
+  - @prosopo/keyring@2.9.14
+  - @prosopo/types-env@2.8.10
+  - @prosopo/user-access-policy@3.6.15
+
+## 3.21.3
+### Patch Changes
+
+- dbcd098: Fix bug with chrome on ios
+- adb89a6: Disposable email checking
+- Updated dependencies [adb89a6]
+  - @prosopo/types-database@4.4.8
+  - @prosopo/database@3.9.8
+  - @prosopo/locale@3.1.29
+  - @prosopo/types@3.12.2
+  - @prosopo/util@3.2.6
+  - @prosopo/api@3.2.4
+  - @prosopo/types-env@2.8.9
+  - @prosopo/env@3.3.9
+  - @prosopo/api-express-router@3.0.64
+  - @prosopo/common@3.1.30
+  - @prosopo/datasets@3.1.7
+  - @prosopo/keyring@2.9.13
+  - @prosopo/load-balancer@2.8.30
+  - @prosopo/user-access-policy@3.6.14
+  - @prosopo/api-route@2.6.38
+
+## 3.21.2
+### Patch Changes
+
+- f5c8725: Fix bug with chrome on ios
+
+## 3.21.1
+### Patch Changes
+
+- a90eb54: We know WHAT happens but we don't know WHY happens
+- Updated dependencies [c5ee492]
+- Updated dependencies [a90eb54]
+  - @prosopo/common@3.1.29
+  - @prosopo/types-database@4.4.7
+  - @prosopo/types@3.12.1
+  - @prosopo/api-express-router@3.0.63
+  - @prosopo/api-route@2.6.37
+  - @prosopo/database@3.9.7
+  - @prosopo/datasets@3.1.6
+  - @prosopo/env@3.3.8
+  - @prosopo/keyring@2.9.12
+  - @prosopo/load-balancer@2.8.29
+  - @prosopo/types-env@2.8.8
+  - @prosopo/user-access-policy@3.6.13
+  - @prosopo/api@3.2.3
+
+## 3.21.0
+### Minor Changes
+
+- feaca02: Max image rounds
+
+### Patch Changes
+
+- 759d4e6: Dynamic server secrets for client example server
+- 676c5f2: Use HTTPS in developmentwq
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/load-balancer@2.8.28
+  - @prosopo/keyring@2.9.11
+  - @prosopo/types@3.12.0
+  - @prosopo/env@3.3.7
+  - @prosopo/types-env@2.8.7
+  - @prosopo/api@3.2.2
+  - @prosopo/api-express-router@3.0.62
+  - @prosopo/database@3.9.6
+  - @prosopo/datasets@3.1.5
+  - @prosopo/types-database@4.4.6
+  - @prosopo/user-access-policy@3.6.12
+
+## 3.20.4
+### Patch Changes
+
+- 8148587: Clustering
+- Updated dependencies [8148587]
+  - @prosopo/types-database@4.4.5
+  - @prosopo/types@3.11.1
+  - @prosopo/database@3.9.5
+  - @prosopo/types-env@2.8.6
+  - @prosopo/api@3.2.1
+  - @prosopo/api-express-router@3.0.61
+  - @prosopo/datasets@3.1.4
+  - @prosopo/env@3.3.6
+  - @prosopo/keyring@2.9.10
+  - @prosopo/load-balancer@2.8.27
+  - @prosopo/user-access-policy@3.6.11
+
+## 3.20.3
+### Patch Changes
+
+- 5444635: New ob code
+
+## 3.20.2
+### Patch Changes
+
+- 31af9cf: Use correct country code var
+
+## 3.20.1
+### Patch Changes
+
+- Updated dependencies [90033e9]
+  - @prosopo/types-database@4.4.4
+  - @prosopo/database@3.9.4
+  - @prosopo/types-env@2.8.5
+  - @prosopo/env@3.3.5
+  - @prosopo/api-express-router@3.0.60
+
+## 3.20.0
+### Minor Changes
+
+- 7f6ffc5: Store behavioural for image challenges
+
+### Patch Changes
+
+- ca7f4ad: Attach site key and user to logger earlier
+- Updated dependencies [ca7f4ad]
+- Updated dependencies [7f6ffc5]
+  - @prosopo/api-express-router@3.0.59
+  - @prosopo/types@3.11.0
+  - @prosopo/api@3.2.0
+  - @prosopo/database@3.9.3
+  - @prosopo/datasets@3.1.3
+  - @prosopo/env@3.3.4
+  - @prosopo/keyring@2.9.9
+  - @prosopo/load-balancer@2.8.26
+  - @prosopo/types-database@4.4.3
+  - @prosopo/types-env@2.8.4
+  - @prosopo/user-access-policy@3.6.10
+
+## 3.19.3
+### Patch Changes
+
+- bca43e5: catcher updates
+
+## 3.19.2
+### Patch Changes
+
+- ce4f831: patch for some mobile devices
+- 93fa086: Add decision engine endpoints
+- 4de47f5: Catcher update
+- Updated dependencies [93fa086]
+  - @prosopo/types-database@4.4.2
+  - @prosopo/database@3.9.2
+  - @prosopo/types@3.10.2
+  - @prosopo/api@3.1.49
+  - @prosopo/types-env@2.8.3
+  - @prosopo/env@3.3.3
+  - @prosopo/api-express-router@3.0.58
+  - @prosopo/datasets@3.1.2
+  - @prosopo/keyring@2.9.8
+  - @prosopo/load-balancer@2.8.25
+  - @prosopo/user-access-policy@3.6.9
+
+## 3.19.1
+### Patch Changes
+
+- cde7550: enhance/frictionless-headers-db-field
+- Updated dependencies [cde7550]
+  - @prosopo/types-database@4.4.1
+  - @prosopo/types@3.10.1
+  - @prosopo/database@3.9.1
+  - @prosopo/types-env@2.8.2
+  - @prosopo/api@3.1.48
+  - @prosopo/api-express-router@3.0.57
+  - @prosopo/datasets@3.1.1
+  - @prosopo/env@3.3.2
+  - @prosopo/keyring@2.9.7
+  - @prosopo/load-balancer@2.8.24
+  - @prosopo/user-access-policy@3.6.8
+
+## 3.19.0
+### Minor Changes
+
+- ad6d622: Separate types from mongoose schemas to avoid bundling mongoose in frontend
+
+### Patch Changes
+
+- fa95c5f: zod types for db records
+- Updated dependencies [ad6d622]
+- Updated dependencies [ced9f41]
+- Updated dependencies [fa95c5f]
+  - @prosopo/types-database@4.4.0
+  - @prosopo/database@3.9.0
+  - @prosopo/datasets@3.1.0
+  - @prosopo/types@3.10.0
+  - @prosopo/types-env@2.8.1
+  - @prosopo/env@3.3.1
+  - @prosopo/api@3.1.47
+  - @prosopo/api-express-router@3.0.56
+  - @prosopo/keyring@2.9.6
+  - @prosopo/load-balancer@2.8.23
+  - @prosopo/user-access-policy@3.6.7
+
+## 3.18.0
+### Minor Changes
+
+- ff58a70: Load the geolocation service at startup only
+
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+- Updated dependencies [d329e63]
+  - @prosopo/types-env@2.8.0
+  - @prosopo/types@3.9.0
+  - @prosopo/env@3.3.0
+  - @prosopo/database@3.8.0
+  - @prosopo/api@3.1.46
+  - @prosopo/api-express-router@3.0.55
+  - @prosopo/datasets@3.0.63
+  - @prosopo/keyring@2.9.5
+  - @prosopo/load-balancer@2.8.22
+  - @prosopo/types-database@4.3.1
+  - @prosopo/user-access-policy@3.6.6
+
+## 3.17.0
+### Minor Changes
+
+- 3feeea4: Store geolocation. Remove pending image captcha collection
+
+### Patch Changes
+
+- Updated dependencies [3feeea4]
+  - @prosopo/types-database@4.3.0
+  - @prosopo/database@3.7.0
+  - @prosopo/datasets@3.0.62
+  - @prosopo/types-env@2.7.66
+  - @prosopo/env@3.2.42
+  - @prosopo/api-express-router@3.0.54
+
+## 3.16.5
+### Patch Changes
+
+- 4c08158: Skip ip validation unit tests
+- d2431cd: Allow IP validation rules to be disabled
+- Updated dependencies [4c08158]
+- Updated dependencies [d2431cd]
+  - @prosopo/types-database@4.2.4
+  - @prosopo/types@3.8.4
+  - @prosopo/database@3.6.12
+  - @prosopo/datasets@3.0.61
+  - @prosopo/types-env@2.7.65
+  - @prosopo/api@3.1.45
+  - @prosopo/api-express-router@3.0.53
+  - @prosopo/env@3.2.41
+  - @prosopo/keyring@2.9.4
+  - @prosopo/load-balancer@2.8.21
+  - @prosopo/user-access-policy@3.6.5
+
+## 3.16.4
+### Patch Changes
+
+- 3a58d06: Don't fail on IP comparison fail
+
 ## 3.16.3
 ### Patch Changes
 

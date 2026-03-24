@@ -24,7 +24,7 @@ import {
 	type Item,
 	type MerkleProof,
 } from "@prosopo/types";
-import type { SolutionRecord } from "@prosopo/types-database";
+import type { SolutionRecord } from "@prosopo/types";
 import { at, get } from "@prosopo/util";
 import { beforeAll, describe, expect, test } from "vitest";
 import { NO_SOLUTION_VALUE, getSolutionValueToHash } from "../captcha/index.js";

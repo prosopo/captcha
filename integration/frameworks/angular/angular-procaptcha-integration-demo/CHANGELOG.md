@@ -1,5 +1,60 @@
 # @prosopo/angular-procaptcha-integration-demo
 
+## 1.1.58
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.58
+
+## 1.1.57
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.57
+
+## 1.1.56
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.56
+
+## 1.1.55
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.55
+
+## 1.1.54
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.54
+
+## 1.1.53
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.53
+
+## 1.1.52
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.52
+
+## 1.1.51
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.51
+
+## 1.1.50
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.50
+
+## 1.1.49
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.49
+
+## 1.1.48
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.48
+
 ## 1.1.47
 ### Patch Changes
 

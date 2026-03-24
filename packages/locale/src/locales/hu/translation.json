@@ -21,6 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "A hozzáférést a szabályzat letiltotta",
 		"FORBIDDEN": "tiltott",
 		"PROVIDER_VERIFY_FAILED": "Szolgáltató ellenőrzése sikertelen",
+		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
 		"UNAUTHORIZED": "Unauthorized",
 		"MISSING_BODY": "Hiányzó test",
 		"NO_CONTENT_TYPE_HEADER": "Nincs tartalom-típus fejléc. Feltételezett JSON kódolt test, de nem sikerült értelmezni.",

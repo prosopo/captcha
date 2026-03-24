@@ -1,5 +1,17 @@
 # @prosopo/file-server
 
+## 2.6.35
+### Patch Changes
+
+- Updated dependencies [e1ea65f]
+  - @prosopo/util@3.2.7
+
+## 2.6.34
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/util@3.2.6
+
 ## 2.6.33
 ### Patch Changes
 

@@ -1,5 +1,71 @@
 # @prosopo/types
 
+## 3.12.3
+### Patch Changes
+
+- d5082a9: Don't require email type
+- e1ea65f: Better spam email domain checking
+- c316257: Adding sync fo sessions wrt captcha status
+- Updated dependencies [e1ea65f]
+  - @prosopo/util@3.2.7
+
+## 3.12.2
+### Patch Changes
+
+- adb89a6: Disposable email checking
+- Updated dependencies [adb89a6]
+  - @prosopo/locale@3.1.29
+  - @prosopo/util@3.2.6
+
+## 3.12.1
+### Patch Changes
+
+- a90eb54: We know WHAT happens but we don't know WHY happens
+
+## 3.12.0
+### Minor Changes
+
+- feaca02: Max image rounds
+
+### Patch Changes
+
+- 676c5f2: Use HTTPS in developmentwq
+
+## 3.11.1
+### Patch Changes
+
+- 8148587: Clustering
+
+## 3.11.0
+### Minor Changes
+
+- 7f6ffc5: Store behavioural for image challenges
+
+## 3.10.2
+### Patch Changes
+
+- 93fa086: Add decision engine endpoints
+
+## 3.10.1
+### Patch Changes
+
+- cde7550: enhance/frictionless-headers-db-field
+
+## 3.10.0
+### Minor Changes
+
+- ad6d622: Separate types from mongoose schemas to avoid bundling mongoose in frontend
+
+## 3.9.0
+### Minor Changes
+
+- ff58a70: Load the geolocation service at startup only
+
+## 3.8.4
+### Patch Changes
+
+- d2431cd: Allow IP validation rules to be disabled
+
 ## 3.8.3
 ### Patch Changes
 

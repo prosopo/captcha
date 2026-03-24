@@ -21,33 +21,37 @@ import {
 	setupRedisIndex,
 } from "@prosopo/redis-client";
 import {
-	ApiParams,
 	type Captcha,
 	type CaptchaResult,
 	type CaptchaSolution,
 	CaptchaStates,
 	CaptchaStatus,
+	type CompositeIpAddress,
 	ContextType,
 	type Dataset,
 	type DatasetBase,
 	type DatasetWithIds,
 	type DatasetWithIdsAndTree,
 	DatasetWithIdsAndTreeSchema,
+	type DecisionMachineArtifact,
 	type DecisionMachineScope,
 	type Hash,
+	type PendingImageCaptchaRequest,
+	type PoWCaptchaStored,
 	type PoWChallengeComponents,
 	type PoWChallengeId,
 	type RequestHeaders,
 	type ScheduledTaskNames,
 	type ScheduledTaskResult,
 	type ScheduledTaskStatus,
-	type StoredStatus,
+	type Session,
+	type SolutionRecord,
+	type StoredCaptcha,
 	StoredStatusNames,
+	type UserCommitment,
+	UserCommitmentSchema,
 } from "@prosopo/types";
-import type {
-	CompositeIpAddress,
-	SessionRecord,
-} from "@prosopo/types-database";
+import type { SessionRecord } from "@prosopo/types-database";
 import {
 	CaptchaRecordSchema,
 	type ClientContextEntropyRecord,
@@ -55,32 +59,24 @@ import {
 	type ClientRecord,
 	ClientRecordSchema,
 	DatasetRecordSchema,
-	type DecisionMachineArtifact,
 	DecisionMachineArtifactRecordSchema,
 	DetectorRecordSchema,
 	type DetectorSchema,
 	type IProviderDatabase,
 	type IUserDataSlim,
-	type PendingCaptchaRequest,
-	type PendingCaptchaRequestMongoose,
-	PendingRecordSchema,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
-	type PoWCaptchaStored,
 	type ScheduledTask,
 	type ScheduledTaskRecord,
 	ScheduledTaskRecordSchema,
 	ScheduledTaskSchema,
-	type Session,
 	SessionRecordSchema,
-	type SolutionRecord,
 	SolutionRecordSchema,
-	type StoredCaptcha,
+	type SpamEmailDomainRecord,
+	SpamEmailDomainRecordSchema,
 	type Tables,
-	type UserCommitment,
 	type UserCommitmentRecord,
 	UserCommitmentRecordSchema,
-	UserCommitmentSchema,
 	type UserSolutionRecord,
 	UserSolutionRecordSchema,
 } from "@prosopo/types-database";
@@ -89,10 +85,12 @@ import {
 	accessRulesRedisIndex,
 	createRedisAccessRulesStorage,
 } from "@prosopo/user-access-policy/redis";
+import { buildDomainSuffixCandidates } from "@prosopo/util";
 import type { ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
 
 const TWENTY_FOUR_HOURS_IN_MS = 24 * 60 * 60 * 1000;
+const MAX_DOMAIN_SUFFIX_CANDIDATES = 5;
 
 enum TableNames {
 	captcha = "captcha",
@@ -100,7 +98,6 @@ enum TableNames {
 	solution = "solution",
 	commitment = "commitment",
 	usersolution = "usersolution",
-	pending = "pending",
 	scheduler = "scheduler",
 	powcaptcha = "powcaptcha",
 	client = "client",
@@ -108,6 +105,7 @@ enum TableNames {
 	detector = "detector",
 	decisionMachine = "decisionMachine",
 	clientContextEntropy = "clientContextEntropy",
+	spamEmailDomain = "spamEmailDomain",
 }
 
 const PROVIDER_TABLES = [
@@ -142,11 +140,6 @@ const PROVIDER_TABLES = [
 		schema: UserSolutionRecordSchema,
 	},
 	{
-		collectionName: TableNames.pending,
-		modelName: "Pending",
-		schema: PendingRecordSchema,
-	},
-	{
 		collectionName: TableNames.scheduler,
 		modelName: "Scheduler",
 		schema: ScheduledTaskRecordSchema,
@@ -175,6 +168,11 @@ const PROVIDER_TABLES = [
 		collectionName: TableNames.clientContextEntropy,
 		modelName: "ClientContextEntropy",
 		schema: ClientContextEntropyRecordSchema,
+	},
+	{
+		collectionName: TableNames.spamEmailDomain,
+		modelName: "SpamEmailDomain",
+		schema: SpamEmailDomainRecordSchema,
 	},
 ];
 
@@ -565,7 +563,12 @@ export class ProviderDatabase
 			[key in keyof Pick<Captcha, "captchaId">]: { $in: string[] };
 		} = { captchaId: { $in: captchaId } };
 		const cursor = this.tables?.captcha
-			.find<Captcha>(filter)
+			.find<Captcha>(filter, {
+				_id: 0,
+				captchaId: 1,
+				datasetId: 1,
+				items: 1,
+			})
 			.lean<(Captcha & { _id: unknown })[]>();
 		const docs = await cursor;
 
@@ -711,6 +714,7 @@ export class ProviderDatabase
 	 * @param userSubmitted
 	 * @param storedStatus
 	 * @param userSignature
+	 * @param countryCode
 	 * @returns {Promise<void>} A promise that resolves when the record is added.
 	 */
 	async storePowCaptchaRecord(
@@ -724,8 +728,8 @@ export class ProviderDatabase
 		sessionId?: string,
 		serverChecked = false,
 		userSubmitted = false,
-		storedStatus: StoredStatus = StoredStatusNames.notStored,
 		userSignature?: string,
+		countryCode?: string,
 	): Promise<void> {
 		const tables = this.getTables();
 
@@ -745,6 +749,7 @@ export class ProviderDatabase
 			userSignature,
 			lastUpdatedTimestamp: new Date(),
 			sessionId,
+			countryCode,
 		};
 
 		try {
@@ -754,7 +759,7 @@ export class ProviderDatabase
 					challenge,
 					userSubmitted,
 					serverChecked,
-					storedStatus,
+					countryCode,
 				},
 				msg: "PowCaptcha record added successfully",
 			}));
@@ -765,7 +770,7 @@ export class ProviderDatabase
 					challenge,
 					userSubmitted,
 					serverChecked,
-					storedStatus,
+					countryCode,
 				},
 				logger: this.logger,
 			});
@@ -797,7 +802,26 @@ export class ProviderDatabase
 				[key in keyof Pick<PoWCaptchaRecord, "challenge">]: string;
 			} = { challenge };
 			const record: PoWCaptchaRecord | null | undefined =
-				await this.tables.powcaptcha.findOne(filter).lean<PoWCaptchaRecord>();
+				await this.tables.powcaptcha
+					.findOne(filter, {
+						challenge: 1,
+						userAccount: 1,
+						dappAccount: 1,
+						requestedAtTimestamp: 1,
+						ipAddress: 1,
+						headers: 1,
+						ja4: 1,
+						result: 1,
+						difficulty: 1,
+						sessionId: 1,
+						countryCode: 1,
+						deviceCapability: 1,
+						behavioralDataPacked: 1,
+						serverChecked: 1,
+						userSubmitted: 1,
+						coords: 1,
+					} as { [key in keyof Partial<PoWCaptchaRecord>]: 1 })
+					.lean<PoWCaptchaRecord>();
 			if (record) {
 				this.logger.info(() => ({
 					data: { challenge },
@@ -1004,7 +1028,10 @@ export class ProviderDatabase
 		updates: Partial<UserCommitment>,
 	) {
 		const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
-		await this.tables?.commitment.updateOne(filter, updates);
+		await this.tables?.commitment.updateOne(filter, {
+			...updates,
+			lastUpdatedAtTimestamp: new Date(),
+		});
 	}
 
 	/**
@@ -1118,7 +1145,16 @@ export class ProviderDatabase
 		sessionId: string,
 	): Promise<Session | undefined> {
 		const filter: Pick<SessionRecord, "sessionId"> = { sessionId };
-		const doc = await this.tables.session.findOne(filter).lean<Session>();
+		const doc = await this.tables.session
+			.findOne(filter, {
+				sessionId: 1,
+				countryCode: 1,
+				scoreComponents: 1,
+				webView: 1,
+				reason: 1,
+				decryptedHeadHash: 1,
+			})
+			.lean<Session>();
 		return doc || undefined;
 	}
 
@@ -1160,6 +1196,26 @@ export class ProviderDatabase
 			return session || undefined;
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SESSION_CHECK_REMOVE_FAILED", {
+				context: { error: err, sessionId },
+				logger: this.logger,
+			});
+		}
+	}
+
+	/**
+	 * Update a session record by sessionId
+	 */
+	async updateSessionRecord(
+		sessionId: string,
+		updates: Partial<Session>,
+	): Promise<void> {
+		try {
+			await this.tables.session.updateOne(
+				{ sessionId },
+				{ $set: { ...updates, lastUpdatedTimestamp: new Date() } },
+			);
+		} catch (err) {
+			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
 				context: { error: err, sessionId },
 				logger: this.logger,
 			});
@@ -1268,11 +1324,12 @@ export class ProviderDatabase
 		userAccount: string,
 		requestHash: string,
 		salt: string,
-		deadlineTimestamp: number,
-		requestedAtTimestamp: number,
+		deadlineTimestamp: Date,
+		requestedAtTimestamp: Date,
 		ipAddress: CompositeIpAddress,
 		threshold: number,
 		sessionId?: string,
+		countryCode?: string,
 	): Promise<void> {
 		if (!isHex(requestHash)) {
 			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
@@ -1282,18 +1339,30 @@ export class ProviderDatabase
 				},
 			});
 		}
-		const pendingRecord: PendingCaptchaRequestMongoose = {
-			accountId: userAccount,
+		const pendingRecord = {
+			userAccount,
 			pending: true,
 			salt,
 			requestHash,
 			deadlineTimestamp,
-			requestedAtTimestamp: new Date(requestedAtTimestamp),
+			requestedAtTimestamp,
 			ipAddress,
 			sessionId,
 			threshold,
+			countryCode,
+			// Placeholder fields required by schema but not needed for pending state
+			dappAccount: "",
+			providerAccount: "",
+			datasetId: "",
+			id: "", // id is populated by the user's solution record when the user submits a solution, so we can leave it blank here
+			result: { status: CaptchaStatus.pending },
+			headers: {},
+			ja4: "",
+			userSignature: "",
+			userSubmitted: false,
+			serverChecked: false,
 		};
-		await this.tables?.pending.updateOne(
+		await this.tables?.commitment.updateOne(
 			{ requestHash: requestHash },
 			{ $set: pendingRecord },
 			{ upsert: true },
@@ -1301,11 +1370,11 @@ export class ProviderDatabase
 	}
 
 	/**
-	 * @description Get a Dapp user's pending record
+	 * @description Get a user's pending record
 	 */
 	async getPendingImageCommitment(
 		requestHash: string,
-	): Promise<PendingCaptchaRequest> {
+	): Promise<PendingImageCaptchaRequest> {
 		if (!isHex(requestHash)) {
 			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
 				context: {
@@ -1314,16 +1383,26 @@ export class ProviderDatabase
 				},
 			});
 		}
-		// @ts-ignore
-		const filter: Pick<PendingCaptchaRequest, "requestHash"> = {
-			[ApiParams.requestHash]: requestHash,
-		};
 
-		const doc: PendingCaptchaRequest | null | undefined =
-			await this.tables?.pending.findOne(filter).lean<PendingCaptchaRequest>();
+		const doc = await this.tables?.commitment
+			.findOne({
+				requestHash: requestHash,
+				pending: true,
+			})
+			.lean<UserCommitmentRecord>();
 
 		if (doc) {
-			return doc;
+			return {
+				dappAccount: doc.dappAccount,
+				pending: doc.pending,
+				salt: doc.salt,
+				requestHash: doc.requestHash,
+				deadlineTimestamp: doc.deadlineTimestamp,
+				requestedAtTimestamp: doc.requestedAtTimestamp,
+				ipAddress: doc.ipAddress,
+				sessionId: doc.sessionId,
+				threshold: doc.threshold,
+			};
 		}
 
 		throw new ProsopoDBError("DATABASE.PENDING_RECORD_NOT_FOUND", {
@@ -1347,18 +1426,13 @@ export class ProviderDatabase
 			});
 		}
 
-		// @ts-ignore
-		const filter: Pick<PendingCaptchaRequest, [ApiParams.requestHash]> = {
-			[ApiParams.requestHash]: requestHash,
-		};
-		await this.tables?.pending.updateOne<PendingCaptchaRequest>(
-			filter,
+		await this.tables?.commitment.updateOne(
+			{ requestHash: requestHash },
 			{
 				$set: {
-					[CaptchaStatus.pending]: false,
+					pending: false,
 				},
 			},
-			{ upsert: true },
 		);
 	}
 
@@ -1494,7 +1568,7 @@ export class ProviderDatabase
 		const filter: Pick<UserSolutionRecord, "commitmentId"> = {
 			commitmentId: commitmentId,
 		};
-		const project = { projection: { _id: 0 } };
+		const project = { _id: 0 };
 		const cursor = this.tables?.usersolution?.findOne(filter, project).lean();
 		const doc = await cursor;
 
@@ -1516,7 +1590,18 @@ export class ProviderDatabase
 	): Promise<UserCommitmentRecord | undefined> {
 		const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
 		const commitmentCursor = this.tables?.commitment
-			?.findOne(filter)
+			?.findOne(filter, {
+				id: 1,
+				result: 1,
+				serverChecked: 1,
+				requestedAtTimestamp: 1,
+				ipAddress: 1,
+				sessionId: 1,
+				userAccount: 1,
+				dappAccount: 1,
+				headers: 1,
+				countryCode: 1,
+			} as { [key in keyof Partial<UserCommitmentRecord>]: 1 })
 			.lean<UserCommitmentRecord>();
 
 		const doc = await commitmentCursor;
@@ -1537,7 +1622,10 @@ export class ProviderDatabase
 			userAccount,
 			dappAccount,
 		};
-		const project = { _id: 0 };
+		const project = {
+			_id: 0,
+			result: 1,
+		};
 		const sort = { sort: { _id: -1 } };
 		const docs: UserCommitmentRecord[] | null | undefined =
 			await this.tables?.commitment
@@ -1788,7 +1876,13 @@ export class ProviderDatabase
 	 */
 	async getClientRecord(account: string): Promise<ClientRecord | undefined> {
 		const filter: Pick<ClientRecord, "account"> = { account };
-		const doc = await this.tables?.client.findOne(filter).lean<ClientRecord>();
+		const doc = await this.tables?.client
+			.findOne(filter, {
+				account: 1,
+				settings: 1,
+				tier: 1,
+			})
+			.lean<ClientRecord>();
 		return doc ? doc : undefined;
 	}
 
@@ -1898,6 +1992,58 @@ export class ProviderDatabase
 			.findOne(filter)
 			.lean<DecisionMachineArtifact>();
 		return doc ?? undefined;
+	}
+
+	/**
+	 * Retrieves all decision machine artifacts.
+	 *
+	 * @returns Array of all decision machine artifacts
+	 */
+	async getAllDecisionMachineArtifacts(): Promise<
+		(DecisionMachineArtifact & { _id: string })[]
+	> {
+		const docs = await this.tables?.decisionMachine
+			.find({})
+			.lean<(DecisionMachineArtifact & { _id: string })[]>();
+		return docs ?? [];
+	}
+
+	/**
+	 * Retrieves a single decision machine artifact by MongoDB ObjectId.
+	 *
+	 * @param id - The MongoDB ObjectId as a string
+	 * @returns The matching artifact, or undefined if not found
+	 */
+	async getDecisionMachineArtifactById(
+		id: string,
+	): Promise<(DecisionMachineArtifact & { _id: string }) | undefined> {
+		const doc = await this.tables?.decisionMachine
+			.findById(id)
+			.lean<DecisionMachineArtifact & { _id: string }>();
+		return doc ?? undefined;
+	}
+
+	/**
+	 * Removes a decision machine artifact by MongoDB ObjectId.
+	 *
+	 * @param id - The MongoDB ObjectId as a string
+	 * @returns true if deleted, false if not found
+	 */
+	async removeDecisionMachineArtifact(id: string): Promise<boolean> {
+		const result = await this.tables?.decisionMachine.deleteOne({
+			_id: id,
+		});
+		return (result?.deletedCount ?? 0) > 0;
+	}
+
+	/**
+	 * Removes all decision machine artifacts.
+	 *
+	 * @returns The number of artifacts deleted
+	 */
+	async removeAllDecisionMachineArtifacts(): Promise<number> {
+		const result = await this.tables?.decisionMachine.deleteMany({});
+		return result?.deletedCount ?? 0;
 	}
 
 	/**
@@ -2023,5 +2169,51 @@ export class ProviderDatabase
 				}),
 			)
 		).filter((headHash): headHash is string => headHash !== undefined);
+	}
+
+	async getSpamEmailDomain(
+		domain: string,
+	): Promise<SpamEmailDomainRecord | null> {
+		if (!this.tables?.spamEmailDomain) {
+			throw new ProsopoDBError("DATABASE.DATABASE_IMPORT_ERROR", {
+				context: { failedFuncName: this.getSpamEmailDomain.name },
+			});
+		}
+
+		const suffixCandidates = buildDomainSuffixCandidates(domain).slice(
+			0,
+			MAX_DOMAIN_SUFFIX_CANDIDATES,
+		);
+		const query =
+			suffixCandidates.length > 0
+				? { domain: { $in: suffixCandidates } }
+				: { domain };
+
+		return await this.tables.spamEmailDomain
+			.findOne<SpamEmailDomainRecord>(query)
+			.exec();
+	}
+
+	async bulkUpdateSpamEmailDomains(
+		domains: Array<{ filter: { domain: string }; update: { domain: string } }>,
+		upsert: boolean,
+	): Promise<void> {
+		if (!this.tables?.spamEmailDomain) {
+			throw new ProsopoDBError("DATABASE.DATABASE_IMPORT_ERROR", {
+				context: { failedFuncName: this.bulkUpdateSpamEmailDomains.name },
+			});
+		}
+
+		const bulkOps = domains.map((op) => ({
+			updateOne: {
+				filter: op.filter,
+				update: { $set: op.update },
+				upsert,
+			},
+		}));
+
+		if (bulkOps.length > 0) {
+			await this.tables.spamEmailDomain.bulkWrite(bulkOps);
+		}
 	}
 }

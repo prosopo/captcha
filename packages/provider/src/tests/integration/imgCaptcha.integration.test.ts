@@ -17,7 +17,7 @@ import { stringToU8a, u8aToHex } from "@polkadot/util";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import { ProviderEnvironment } from "@prosopo/env";
 import { generateMnemonic, getPair } from "@prosopo/keyring";
-import { Tasks, startProviderApi } from "@prosopo/provider";
+import { Tasks, isTlsAvailable, startProviderApi } from "@prosopo/provider";
 import {
 	ApiParams,
 	type CaptchaRequestBodyType,
@@ -71,8 +71,8 @@ async function registerSiteKeyInDb(
 describe("Image Captcha Integration Tests", () => {
 	let env: ProviderEnvironment;
 	let mongoContainer: StartedTestContainer;
-	let redisContainer: StartedTestContainer;
-	let server: Server;
+	let redisContainer: StartedTestContainer | undefined;
+	let server: Server | undefined;
 	let dappAccount: string;
 	let mnemonic: string;
 	let tasks: Tasks;
@@ -80,9 +80,11 @@ describe("Image Captcha Integration Tests", () => {
 	let baseUrl: string;
 
 	beforeAll(async () => {
-		// Get a unique port for this test suite
-		testPort = getRandomPort();
-		baseUrl = `http://localhost:${testPort}`;
+		// Get a unique port for this test suite using a more unique identifier
+		// Use process.pid and timestamp to ensure uniqueness across parallel test runs
+		testPort = 40000 + (process.pid % 10000) + Math.floor(Math.random() * 5000);
+		const protocol = isTlsAvailable() ? "https" : "http";
+		baseUrl = `${protocol}://localhost:${testPort}`;
 
 		// Start MongoDB container
 		mongoContainer = await new GenericContainer("mongo:6.0.17")
@@ -94,22 +96,37 @@ describe("Image Captcha Integration Tests", () => {
 			})
 			.start();
 
-		// Start Redis container
-		redisContainer = await new GenericContainer("redis/redis-stack:latest")
-			.withExposedPorts(6379)
-			.withEnvironment({
-				REDIS_ARGS: "--requirepass root",
-			})
-			.start();
-
 		const mongoHost = mongoContainer.getHost();
 		const mongoPort = mongoContainer.getMappedPort(27017);
-		const redisHost = redisContainer.getHost();
-		const redisPort = redisContainer.getMappedPort(6379);
+
+		// Make Redis optional - can be disabled by setting SKIP_REDIS=true in environment
+		const skipRedis = process.env.SKIP_REDIS === "true";
+		let redisHost = "localhost";
+		let redisPort = 6379;
+
+		if (!skipRedis) {
+			try {
+				// Start Redis container
+				redisContainer = await new GenericContainer("redis/redis-stack:latest")
+					.withExposedPorts(6379)
+					.withEnvironment({
+						REDIS_ARGS: "--requirepass root",
+					})
+					.start();
+
+				redisHost = redisContainer.getHost();
+				redisPort = redisContainer.getMappedPort(6379);
+			} catch (error) {
+				console.warn(
+					"Failed to start Redis container, continuing without Redis:",
+					error,
+				);
+			}
+		}
 
 		const config = ProsopoConfigSchema.parse({
 			defaultEnvironment: "development",
-			host: `http://localhost:${testPort}`,
+			host: `${protocol}://localhost:${testPort}`,
 			account: {
 				secret:
 					process.env.PROVIDER_MNEMONIC ||
@@ -128,17 +145,22 @@ describe("Image Captcha Integration Tests", () => {
 					authSource: "admin",
 				},
 			},
-			redisConnection: {
-				url: `redis://:${encodeURIComponent("root")}@${redisHost}:${redisPort}`,
-				password: "root",
-				indexName: randomAsHex(16),
-			},
+			// Only configure Redis if container is available
+			...(redisContainer
+				? {
+						redisConnection: {
+							url: `redis://:${encodeURIComponent("root")}@${redisHost}:${redisPort}`,
+							password: "root",
+							indexName: randomAsHex(16),
+						},
+					}
+				: {}),
 			ipApi: {
 				baseUrl: "https://dummyUrl.com",
 				apiKey: "dummyKey",
 			},
 			server: {
-				baseURL: "http://localhost",
+				baseURL: `${protocol}://localhost`,
 				port: testPort,
 			},
 		});
@@ -148,8 +170,17 @@ describe("Image Captcha Integration Tests", () => {
 
 		const db = env.getDb();
 
-		// wait until Redis is ready
-		await db.getRedisAccessRulesConnection().getClient();
+		// wait until Redis is ready (only if Redis container was started)
+		if (redisContainer) {
+			try {
+				await db.getRedisAccessRulesConnection().getClient();
+			} catch (error) {
+				console.warn(
+					"Redis connection failed, continuing without Redis:",
+					error,
+				);
+			}
+		}
 
 		// Setup provider dataset - this is critical for the tests to work
 		// This mimics the setup script's setupProvider functionality
@@ -157,12 +188,80 @@ describe("Image Captcha Integration Tests", () => {
 		env.logger.info(() => ({ msg: "Setting up provider dataset" }));
 		await tasks.datasetManager.providerSetDataset(datasetWithSolutionHashes);
 
-		// Start the provider API server
+		// Start the provider API server with retry logic
 		// This mimics the CLI start functionality
 		env.logger.info(() => ({
 			msg: `Starting provider API on port ${testPort}`,
 		}));
-		server = await startProviderApi(env, true, testPort);
+
+		let retries = 0;
+		const maxRetries = 3;
+		while (retries < maxRetries) {
+			try {
+				server = await startProviderApi(env, true, testPort);
+
+				// Wait for server to be ready by checking if it's listening
+				await new Promise<void>((resolve, reject) => {
+					if (!server) {
+						reject(new Error("Server is not running."));
+						return;
+					}
+
+					const checkInterval = setInterval(() => {
+						if (server?.listening) {
+							clearInterval(checkInterval);
+							resolve();
+						}
+					}, 100);
+
+					// Timeout after 5 seconds
+					setTimeout(() => {
+						clearInterval(checkInterval);
+						if (!server?.listening) {
+							reject(
+								new Error("Server failed to start listening within timeout"),
+							);
+						}
+					}, 5000);
+				});
+
+				env.logger.info(() => ({
+					msg: `Provider API started successfully on port ${testPort}`,
+				}));
+				break;
+			} catch (error) {
+				retries++;
+				env.logger.warn(() => ({
+					msg: `Failed to start server (attempt ${retries}/${maxRetries})`,
+					err: error,
+				}));
+
+				// Close server if it was created but failed
+				if (server) {
+					await new Promise<void>((resolve) => {
+						server?.close(() => resolve());
+					});
+					server = undefined;
+				}
+
+				if (retries >= maxRetries) {
+					throw new Error(
+						`Failed to start server after ${maxRetries} attempts: ${error}`,
+					);
+				}
+
+				// Try a different port
+				testPort =
+					40000 + (process.pid % 10000) + Math.floor(Math.random() * 5000);
+				baseUrl = `${protocol}://localhost:${testPort}`;
+				env.logger.info(() => ({
+					msg: `Retrying with port ${testPort}`,
+				}));
+
+				// Wait before retrying
+				await new Promise((resolve) => setTimeout(resolve, 1000));
+			}
+		}
 	});
 
 	beforeEach(async () => {
@@ -172,28 +271,51 @@ describe("Image Captcha Integration Tests", () => {
 	});
 
 	afterAll(async () => {
+		// Close server first
 		if (server) {
-			await new Promise<void>((resolve, reject) => {
-				server.close((err) => {
-					if (err) reject(err);
-					else resolve();
+			await new Promise<void>((resolve) => {
+				server?.close((err) => {
+					if (err) {
+						console.error("Error closing server:", err);
+					}
+					resolve();
 				});
 			});
+
+			// Give the server time to fully release the port
+			await new Promise((resolve) => setTimeout(resolve, 500));
+			server = undefined;
 		}
+
+		// Close database connections
 		if (env) {
-			await env.getDb().close();
+			try {
+				await env.getDb().close();
+			} catch (error) {
+				console.error("Error closing database:", error);
+			}
 		}
+
+		// Stop containers
 		if (mongoContainer) {
-			await mongoContainer.stop();
+			try {
+				await mongoContainer.stop();
+			} catch (error) {
+				console.error("Error stopping mongo container:", error);
+			}
 		}
 		if (redisContainer) {
-			await redisContainer.stop();
+			try {
+				await redisContainer.stop();
+			} catch (error) {
+				console.error("Error stopping redis container:", error);
+			}
 		}
 	});
 
 	describe("GetImageCaptchaChallenge", () => {
 		it("should supply an image captcha challenge to a Dapp User", async () => {
-			const origin = "http://localhost";
+			const origin = "https://localhost";
 			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
 			const getImgCaptchaBody: CaptchaRequestBodyType = {
 				[ApiParams.dapp]: dappAccount,
@@ -219,7 +341,7 @@ describe("Image Captcha Integration Tests", () => {
 		});
 
 		it("should not supply an image captcha challenge to a Dapp User if the site key is not registered", async () => {
-			const origin = "http://localhost";
+			const origin = "https://localhost";
 			const [_mnemonic, unregisteredAccount] = await generateMnemonic();
 			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
 			const body: CaptchaRequestBodyType = {
@@ -247,7 +369,7 @@ describe("Image Captcha Integration Tests", () => {
 
 		it("should not supply an image captcha challenge to a Dapp User if an invalid site key is provided", async () => {
 			const invalidSiteKey = "junk";
-			const origin = "http://localhost";
+			const origin = "https://localhost";
 			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
 			const body: CaptchaRequestBodyType = {
 				[ApiParams.dapp]: invalidSiteKey,
@@ -274,7 +396,7 @@ describe("Image Captcha Integration Tests", () => {
 
 		it("should fail if datasetID is incorrect", async () => {
 			const datasetId = "thewrongdsetId";
-			const origin = "http://localhost";
+			const origin = "https://localhost";
 			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
 			const body: CaptchaRequestBodyType = {
 				[ApiParams.dapp]: dappAccount,
@@ -295,7 +417,7 @@ describe("Image Captcha Integration Tests", () => {
 			expect(response.status).toBe(500);
 		});
 		it("should return an error if the captcha type is set to pow", async () => {
-			const origin = "http://localhost";
+			const origin = "https://localhost";
 			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
 
 			await registerSiteKeyInDb(env, dappAccount, CaptchaType.pow);
@@ -322,7 +444,7 @@ describe("Image Captcha Integration Tests", () => {
 			expect(data.error?.code).toBe(400);
 		});
 		it("should return a translated error if the captcha type is set to pow and the language is set to es", async () => {
-			const origin = "http://localhost";
+			const origin = "https://localhost";
 			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
 			await registerSiteKeyInDb(env, dappAccount, CaptchaType.pow);
 			const body: CaptchaRequestBodyType = {
@@ -350,7 +472,7 @@ describe("Image Captcha Integration Tests", () => {
 		});
 	});
 	it("should return an error if the captcha type is set to frictionless and no sessionID is sent", async () => {
-		const origin = "http://localhost";
+		const origin = "https://localhost";
 		const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
 		await registerSiteKeyInDb(env, dappAccount, CaptchaType.frictionless);
 		const body: CaptchaRequestBodyType = {
@@ -381,7 +503,7 @@ describe("Image Captcha Integration Tests", () => {
 			// Use dummyUserAccount for signing, but dappAccount (registered in beforeEach) as the site key
 			const pair = getPair(dummyUserAccount.seed, undefined, "sr25519", 42);
 			const userAccount = dummyUserAccount.address;
-			const origin = "http://localhost";
+			const origin = "https://localhost";
 
 			// Get captcha challenge using the site key registered in beforeEach
 			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;

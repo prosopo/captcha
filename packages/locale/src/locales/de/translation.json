@@ -21,6 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Zugriff durch Richtlinie blockiert",
 		"FORBIDDEN": "Verboten",
 		"PROVIDER_VERIFY_FAILED": "Anbieterüberprüfung fehlgeschlagen",
+		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
 		"UNAUTHORIZED": "Unauthorized",
 		"MISSING_BODY": "Fehlender Körper",
 		"NO_CONTENT_TYPE_HEADER": "Kein Inhaltstyp-Header. Angenommenes JSON-kodiertes Körper, aber konnte nicht analysieren.",

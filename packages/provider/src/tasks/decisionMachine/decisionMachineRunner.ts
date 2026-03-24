@@ -16,6 +16,7 @@ import vm from "node:vm";
 import type { Logger } from "@prosopo/common";
 import {
 	type CaptchaType,
+	type DecisionMachineArtifact,
 	DecisionMachineDecision,
 	type DecisionMachineInput,
 	type DecisionMachineOutput,
@@ -23,10 +24,7 @@ import {
 	DecisionMachineRuntime,
 	DecisionMachineScope,
 } from "@prosopo/types";
-import type {
-	DecisionMachineArtifact,
-	IProviderDatabase,
-} from "@prosopo/types-database";
+import type { IProviderDatabase } from "@prosopo/types-database";
 
 const LOAD_TIMEOUT_MS =
 	Number.parseInt(process.env.DECISION_MACHINE_LOAD_TIMEOUT_MS ?? "", 10) ||

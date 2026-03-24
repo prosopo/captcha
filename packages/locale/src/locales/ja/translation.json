@@ -320,6 +320,7 @@
 		"ACCESS_POLICY_BLOCK": "ポリシーによりアクセスがブロックされました",
 		"FORBIDDEN": "禁止されています",
 		"PROVIDER_VERIFY_FAILED": "プロバイダーの検証に失敗しました",
+		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
 		"UNAUTHORIZED": "未承認",
 		"MISSING_BODY": "ボディが不足しています",
 		"NO_CONTENT_TYPE_HEADER": "Content-typeヘッダーがありません。JSONエンコードされたボディが想定されていますが、解析に失敗しました。",

@@ -1,5 +1,16 @@
 # @prosopo/dotenv
 
+## 3.0.35
+### Patch Changes
+
+  - @prosopo/common@3.1.30
+
+## 3.0.34
+### Patch Changes
+
+- Updated dependencies [c5ee492]
+  - @prosopo/common@3.1.29
+
 ## 3.0.33
 ### Patch Changes
 

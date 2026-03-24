@@ -1,5 +1,92 @@
 # @prosopo/datasets
 
+## 3.1.8
+### Patch Changes
+
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/types@3.12.3
+  - @prosopo/util@3.2.7
+
+## 3.1.7
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/types@3.12.2
+  - @prosopo/util@3.2.6
+  - @prosopo/common@3.1.30
+
+## 3.1.6
+### Patch Changes
+
+- Updated dependencies [c5ee492]
+- Updated dependencies [a90eb54]
+  - @prosopo/common@3.1.29
+  - @prosopo/types@3.12.1
+
+## 3.1.5
+### Patch Changes
+
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/types@3.12.0
+
+## 3.1.4
+### Patch Changes
+
+- Updated dependencies [8148587]
+  - @prosopo/types@3.11.1
+
+## 3.1.3
+### Patch Changes
+
+- Updated dependencies [7f6ffc5]
+  - @prosopo/types@3.11.0
+
+## 3.1.2
+### Patch Changes
+
+- Updated dependencies [93fa086]
+  - @prosopo/types@3.10.2
+
+## 3.1.1
+### Patch Changes
+
+- Updated dependencies [cde7550]
+  - @prosopo/types@3.10.1
+
+## 3.1.0
+### Minor Changes
+
+- ad6d622: Separate types from mongoose schemas to avoid bundling mongoose in frontend
+
+### Patch Changes
+
+- Updated dependencies [ad6d622]
+  - @prosopo/types@3.10.0
+
+## 3.0.63
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+  - @prosopo/types@3.9.0
+  - @prosopo/types-database@4.3.1
+
+## 3.0.62
+### Patch Changes
+
+- Updated dependencies [3feeea4]
+  - @prosopo/types-database@4.3.0
+
+## 3.0.61
+### Patch Changes
+
+- Updated dependencies [4c08158]
+- Updated dependencies [d2431cd]
+  - @prosopo/types-database@4.2.4
+  - @prosopo/types@3.8.4
+
 ## 3.0.60
 ### Patch Changes
 

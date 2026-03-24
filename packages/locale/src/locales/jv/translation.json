@@ -21,6 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Akses diblokir dening kabijakan",
 		"FORBIDDEN": "Forbidden",
 		"PROVIDER_VERIFY_FAILED": "Provider verification failed",
+		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
 		"UNAUTHORIZED": "Hindi umiiral",
 		"MISSING_BODY": "Kulang na katawan",
 		"NO_CONTENT_TYPE_HEADER": "Walang header ng uri ng nilalaman. Tinatayang JSON na naka-encode ang katawan ngunit nabigo sa pag-parse.",

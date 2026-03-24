@@ -57,16 +57,23 @@ export class GeolocationService {
 	private async doInitialize(): Promise<void> {
 		try {
 			const { Reader } = await import("@maxmind/geoip2-node");
+			this.logger?.debug(() => ({
+				msg: "Attempting to open MaxMind database",
+				data: { dbPath: this.dbPath },
+			}));
 			this.reader = await Reader.open(this.dbPath as string);
 			this.logger?.info(() => ({
-				msg: "MaxMind GeoIP2 Reader initialized",
+				msg: "MaxMind GeoIP2 Reader initialized successfully",
 				data: { dbPath: this.dbPath },
 			}));
 		} catch (error) {
 			this.logger?.warn(() => ({
-				msg: "Failed to initialize MaxMind GeoIP2 Reader",
+				msg: "Failed to initialize MaxMind GeoIP2 Reader - geolocation will be unavailable",
 				err: error,
-				data: { dbPath: this.dbPath },
+				data: {
+					dbPath: this.dbPath,
+					errorMessage: error instanceof Error ? error.message : String(error),
+				},
 			}));
 			// Continue without geolocation - permissive fallback
 		}

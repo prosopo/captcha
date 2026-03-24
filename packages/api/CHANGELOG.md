@@ -1,5 +1,80 @@
 # @prosopo/api
 
+## 3.2.5
+### Patch Changes
+
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/types@3.12.3
+
+## 3.2.4
+### Patch Changes
+
+- adb89a6: Disposable email checking
+- Updated dependencies [adb89a6]
+  - @prosopo/types@3.12.2
+
+## 3.2.3
+### Patch Changes
+
+- Updated dependencies [a90eb54]
+  - @prosopo/types@3.12.1
+
+## 3.2.2
+### Patch Changes
+
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/types@3.12.0
+
+## 3.2.1
+### Patch Changes
+
+- Updated dependencies [8148587]
+  - @prosopo/types@3.11.1
+
+## 3.2.0
+### Minor Changes
+
+- 7f6ffc5: Store behavioural for image challenges
+
+### Patch Changes
+
+- Updated dependencies [7f6ffc5]
+  - @prosopo/types@3.11.0
+
+## 3.1.49
+### Patch Changes
+
+- 93fa086: Add decision engine endpoints
+- Updated dependencies [93fa086]
+  - @prosopo/types@3.10.2
+
+## 3.1.48
+### Patch Changes
+
+- Updated dependencies [cde7550]
+  - @prosopo/types@3.10.1
+
+## 3.1.47
+### Patch Changes
+
+- Updated dependencies [ad6d622]
+  - @prosopo/types@3.10.0
+
+## 3.1.46
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+  - @prosopo/types@3.9.0
+
+## 3.1.45
+### Patch Changes
+
+- Updated dependencies [d2431cd]
+  - @prosopo/types@3.8.4
+
 ## 3.1.44
 ### Patch Changes
 

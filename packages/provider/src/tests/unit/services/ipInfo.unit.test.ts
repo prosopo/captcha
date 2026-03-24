@@ -111,14 +111,18 @@ describe("getIPInfo", () => {
 
 		await getIPInfo("8.8.8.8", "test-api-url");
 
-		expect(mockFetch).toHaveBeenCalledWith("test-api-url", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				Accept: "application/json",
-			},
-			body: JSON.stringify({ q: "8.8.8.8" }),
-		});
+		expect(mockFetch).toHaveBeenCalledWith(
+			"test-api-url",
+			expect.objectContaining({
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Accept: "application/json",
+				},
+				body: JSON.stringify({ q: "8.8.8.8" }),
+				signal: expect.any(AbortSignal),
+			}),
+		);
 	});
 
 	it("should make correct API request with API key", async () => {
@@ -129,14 +133,18 @@ describe("getIPInfo", () => {
 
 		await getIPInfo("8.8.8.8", "test-api-url", "test-api-key");
 
-		expect(mockFetch).toHaveBeenCalledWith("test-api-url", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				Accept: "application/json",
-			},
-			body: JSON.stringify({ q: "8.8.8.8", key: "test-api-key" }),
-		});
+		expect(mockFetch).toHaveBeenCalledWith(
+			"test-api-url",
+			expect.objectContaining({
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Accept: "application/json",
+				},
+				body: JSON.stringify({ q: "8.8.8.8", key: "test-api-key" }),
+				signal: expect.any(AbortSignal),
+			}),
+		);
 	});
 
 	it("should return error when API request fails", async () => {

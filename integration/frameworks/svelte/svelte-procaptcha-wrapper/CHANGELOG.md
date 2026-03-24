@@ -1,5 +1,60 @@
 # @prosopo/svelte-procaptcha-wrapper
 
+## 1.1.58
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.60
+
+## 1.1.57
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.59
+
+## 1.1.56
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.58
+
+## 1.1.55
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.57
+
+## 1.1.54
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.56
+
+## 1.1.53
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.55
+
+## 1.1.52
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.54
+
+## 1.1.51
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.53
+
+## 1.1.50
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.52
+
+## 1.1.49
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.51
+
+## 1.1.48
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.50
+
 ## 1.1.47
 ### Patch Changes
 

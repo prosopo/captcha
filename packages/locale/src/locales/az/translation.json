@@ -21,6 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Siyasət tərəfindən giriş bloklandı",
 		"FORBIDDEN": "Qadağan edilir",
 		"PROVIDER_VERIFY_FAILED": "Təchizatçı doğrulaması alınmadı",
+		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
 		"UNAUTHORIZED": "İcazəsiz",
 		"MISSING_BODY": "Gövdesi eksik",
 		"NO_CONTENT_TYPE_HEADER": "Məzmun-növü başlığı yoxdur. JSON kodlanmış gövde olduğu, ancaq ayrışdırmaq mümkün olmadığı düşünüldü.",

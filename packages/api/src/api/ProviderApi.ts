@@ -52,6 +52,12 @@ import {
 	type VerificationResponse,
 	type VerifySolutionBodyTypeInput,
 } from "@prosopo/types";
+import {
+	GetAllDecisionMachinesBody,
+	GetDecisionMachineBody,
+	RemoveAllDecisionMachinesBody,
+	RemoveDecisionMachineBody,
+} from "@prosopo/types";
 import { ApiClient } from "./apiClient.js";
 
 export default class ProviderApi
@@ -87,6 +93,7 @@ export default class ProviderApi
 		timestamp: string,
 		providerRequestHashSignature: string,
 		userTimestampSignature: string,
+		behavioralData?: string,
 	): Promise<CaptchaSolutionResponse> {
 		const body: CaptchaSolutionBodyType = {
 			[ApiParams.user]: userAccount,
@@ -102,6 +109,7 @@ export default class ProviderApi
 					[ApiParams.requestHash]: providerRequestHashSignature,
 				},
 			},
+			...(behavioralData && { [ApiParams.behavioralData]: behavioralData }),
 		};
 		return this.post(ClientApiPaths.SubmitImageCaptchaSolution, body, {
 			headers: {
@@ -117,6 +125,7 @@ export default class ProviderApi
 		userAccount: string,
 		maxVerifiedTime?: number,
 		ip?: string,
+		email?: string,
 	): Promise<ImageVerificationResponse> {
 		const payload: VerifySolutionBodyTypeInput = {
 			[ApiParams.token]: token,
@@ -125,6 +134,9 @@ export default class ProviderApi
 		};
 		if (maxVerifiedTime) {
 			payload[ApiParams.maxVerifiedTime] = maxVerifiedTime;
+		}
+		if (email) {
+			payload[ApiParams.email] = email;
 		}
 
 		return this.post(ClientApiPaths.VerifyImageCaptchaSolutionDapp, payload, {
@@ -246,6 +258,7 @@ export default class ProviderApi
 		recencyLimit: number,
 		user: string,
 		ip?: string,
+		email?: string,
 	): Promise<VerificationResponse> {
 		const body: ServerPowCaptchaVerifyRequestBodyType = {
 			[ApiParams.token]: token,
@@ -253,6 +266,9 @@ export default class ProviderApi
 			[ApiParams.verifiedTimeout]: recencyLimit,
 			[ApiParams.ip]: ip,
 		};
+		if (email) {
+			body[ApiParams.email] = email;
+		}
 		return this.post(ClientApiPaths.VerifyPowCaptchaSolution, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
@@ -315,6 +331,58 @@ export default class ProviderApi
 				[ApiParams.decisionMachineCaptchaType]: captchaType,
 				[ApiParams.dapp]: dappAccount,
 			}),
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					Authorization: `Bearer ${jwt}`,
+				},
+			},
+		);
+	}
+
+	public getAllDecisionMachines(jwt: string): Promise<ApiResponse> {
+		return this.post(
+			AdminApiPaths.GetAllDecisionMachines,
+			GetAllDecisionMachinesBody.parse({}),
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					Authorization: `Bearer ${jwt}`,
+				},
+			},
+		);
+	}
+
+	public getDecisionMachine(id: string, jwt: string): Promise<ApiResponse> {
+		return this.post(
+			AdminApiPaths.GetDecisionMachine,
+			GetDecisionMachineBody.parse({ id }),
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					Authorization: `Bearer ${jwt}`,
+				},
+			},
+		);
+	}
+
+	public removeDecisionMachine(id: string, jwt: string): Promise<ApiResponse> {
+		return this.post(
+			AdminApiPaths.RemoveDecisionMachine,
+			RemoveDecisionMachineBody.parse({ id }),
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					Authorization: `Bearer ${jwt}`,
+				},
+			},
+		);
+	}
+
+	public removeAllDecisionMachines(jwt: string): Promise<ApiResponse> {
+		return this.post(
+			AdminApiPaths.RemoveAllDecisionMachines,
+			RemoveAllDecisionMachinesBody.parse({}),
 			{
 				headers: {
 					"Prosopo-Site-Key": this.account,

@@ -22,17 +22,17 @@ import {
 	type DecisionMachineRuntime,
 	DecisionMachineScope,
 	type IUserSettings,
+	type PoWCaptchaStored,
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
 	ScheduledTaskStatus,
 	Tier,
+	type UserCommitment,
 } from "@prosopo/types";
 import type {
 	ClientRecord,
 	IProviderDatabase,
-	PoWCaptchaStored,
 	SessionRecord,
-	UserCommitment,
 } from "@prosopo/types-database";
 import { majorityAverage, parseUrl } from "@prosopo/util";
 import { validateSiteKey } from "../../api/validateAddress.js";
@@ -380,6 +380,21 @@ export class ClientTaskManager {
 		]);
 	}
 
+	async registerSiteKeys(
+		siteKeys: Array<{ siteKey: string; tier: Tier; settings: IUserSettings }>,
+	): Promise<void> {
+		const records: ClientRecord[] = [];
+		for (const { siteKey, tier, settings } of siteKeys) {
+			validateSiteKey(siteKey);
+			records.push({
+				account: siteKey,
+				tier,
+				settings,
+			} as ClientRecord);
+		}
+		await this.providerDB.updateClientRecords(records);
+	}
+
 	async updateDetectorKey(detectorKey: string): Promise<string[]> {
 		if (!isValidPrivateKey(detectorKey)) {
 			throw new ProsopoApiError("INVALID_DETECTOR_KEY", {
@@ -448,6 +463,98 @@ export class ClientTaskManager {
 		};
 	}
 
+	async getAllDecisionMachines(): Promise<
+		{
+			_id: string;
+			scope: DecisionMachineScope;
+			dappAccount?: string;
+			runtime: DecisionMachineRuntime;
+			language?: DecisionMachineLanguage;
+			name?: string;
+			version?: string;
+			captchaType?: DecisionMachineCaptchaType;
+			createdAt: string;
+			updatedAt: string;
+		}[]
+	> {
+		const artifacts = await this.providerDB.getAllDecisionMachineArtifacts();
+		return artifacts.map((artifact) => ({
+			_id: artifact._id.toString(),
+			scope: artifact.scope,
+			dappAccount: artifact.dappAccount,
+			runtime: artifact.runtime,
+			language: artifact.language,
+			name: artifact.name,
+			version: artifact.version,
+			captchaType: artifact.captchaType,
+			createdAt: artifact.createdAt.toISOString(),
+			updatedAt: artifact.updatedAt.toISOString(),
+		}));
+	}
+
+	async getDecisionMachine(id: string): Promise<{
+		_id: string;
+		scope: DecisionMachineScope;
+		dappAccount?: string;
+		runtime: DecisionMachineRuntime;
+		language?: DecisionMachineLanguage;
+		source: string;
+		name?: string;
+		version?: string;
+		captchaType?: DecisionMachineCaptchaType;
+		createdAt: string;
+		updatedAt: string;
+	}> {
+		const artifact = await this.providerDB.getDecisionMachineArtifactById(id);
+		if (!artifact) {
+			throw new ProsopoApiError("API.BAD_REQUEST", {
+				context: { id },
+				logger: this.logger,
+			});
+		}
+		return {
+			_id: artifact._id.toString(),
+			scope: artifact.scope,
+			dappAccount: artifact.dappAccount,
+			runtime: artifact.runtime,
+			language: artifact.language,
+			source: artifact.source,
+			name: artifact.name,
+			version: artifact.version,
+			captchaType: artifact.captchaType,
+			createdAt: artifact.createdAt.toISOString(),
+			updatedAt: artifact.updatedAt.toISOString(),
+		};
+	}
+
+	async removeDecisionMachine(id: string): Promise<{
+		success: boolean;
+		deletedId: string;
+	}> {
+		const success = await this.providerDB.removeDecisionMachineArtifact(id);
+		if (!success) {
+			throw new ProsopoApiError("API.BAD_REQUEST", {
+				context: { id, message: "Decision machine not found" },
+				logger: this.logger,
+			});
+		}
+		return {
+			success,
+			deletedId: id,
+		};
+	}
+
+	async removeAllDecisionMachines(): Promise<{
+		success: boolean;
+		deletedCount: number;
+	}> {
+		const deletedCount =
+			await this.providerDB.removeAllDecisionMachineArtifacts();
+		return {
+			success: true,
+			deletedCount,
+		};
+	}
 	/**
 	 * Matches a request referrer against an allowed domain pattern.
 	 * Supports global '*', subdomain '*.example.com', glob '*example*',

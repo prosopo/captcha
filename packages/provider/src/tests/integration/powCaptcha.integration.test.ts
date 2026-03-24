@@ -17,7 +17,7 @@ import { sha256 } from "@noble/hashes/sha256";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import { ProviderEnvironment } from "@prosopo/env";
 import { generateMnemonic, getPair } from "@prosopo/keyring";
-import { Tasks, startProviderApi } from "@prosopo/provider";
+import { Tasks, isTlsAvailable, startProviderApi } from "@prosopo/provider";
 import {
 	ApiParams,
 	CaptchaType,
@@ -51,6 +51,7 @@ function getRandomPort(): number {
 /**
  * Register a site key directly in the database using Tasks
  * This mimics the setup script's registerSiteKey functionality
+ * Uses a low difficulty for testing purposes to speed up tests that require solving the captcha
  */
 async function registerSiteKeyInDb(
 	env: ProviderEnvironment,
@@ -65,7 +66,7 @@ async function registerSiteKeyInDb(
 			captchaType,
 			domains: ["localhost", "0.0.0.0", "127.0.0.0", "example.com"],
 			frictionlessThreshold: 0.5,
-			powDifficulty: 4,
+			powDifficulty: 1,
 		}),
 	);
 }
@@ -114,16 +115,18 @@ const failPoW = (data: string, difficulty: number): number => {
 describe("PoW Integration Tests", () => {
 	let env: ProviderEnvironment;
 	let mongoContainer: StartedTestContainer;
-	let redisContainer: StartedTestContainer;
-	let server: Server;
+	let redisContainer: StartedTestContainer | undefined;
+	let server: Server | undefined;
 	let tasks: Tasks;
 	let testPort: number;
 	let baseUrl: string;
 
 	beforeAll(async () => {
-		// Get a unique port for this test suite
-		testPort = getRandomPort();
-		baseUrl = `http://localhost:${testPort}`;
+		// Get a unique port for this test suite using a more unique identifier
+		// Use process.pid and timestamp to ensure uniqueness across parallel test runs
+		testPort = 30000 + (process.pid % 10000) + Math.floor(Math.random() * 5000);
+		const protocol = isTlsAvailable() ? "https" : "http";
+		baseUrl = `${protocol}://localhost:${testPort}`;
 
 		// Start MongoDB container
 		mongoContainer = await new GenericContainer("mongo:6.0.17")
@@ -135,22 +138,37 @@ describe("PoW Integration Tests", () => {
 			})
 			.start();
 
-		// Start Redis container
-		redisContainer = await new GenericContainer("redis/redis-stack:latest")
-			.withExposedPorts(6379)
-			.withEnvironment({
-				REDIS_ARGS: "--requirepass root",
-			})
-			.start();
-
 		const mongoHost = mongoContainer.getHost();
 		const mongoPort = mongoContainer.getMappedPort(27017);
-		const redisHost = redisContainer.getHost();
-		const redisPort = redisContainer.getMappedPort(6379);
+
+		// Make Redis optional - can be disabled by setting SKIP_REDIS=true in environment
+		const skipRedis = process.env.SKIP_REDIS === "true";
+		let redisHost = "localhost";
+		let redisPort = 6379;
+
+		if (!skipRedis) {
+			try {
+				// Start Redis container
+				redisContainer = await new GenericContainer("redis/redis-stack:latest")
+					.withExposedPorts(6379)
+					.withEnvironment({
+						REDIS_ARGS: "--requirepass root",
+					})
+					.start();
+
+				redisHost = redisContainer.getHost();
+				redisPort = redisContainer.getMappedPort(6379);
+			} catch (error) {
+				console.warn(
+					"Failed to start Redis container, continuing without Redis:",
+					error,
+				);
+			}
+		}
 
 		const config = ProsopoConfigSchema.parse({
 			defaultEnvironment: "development",
-			host: `http://localhost:${testPort}`,
+			host: `${protocol}://localhost:${testPort}`,
 			account: {
 				secret:
 					process.env.PROVIDER_MNEMONIC ||
@@ -169,17 +187,22 @@ describe("PoW Integration Tests", () => {
 					authSource: "admin",
 				},
 			},
-			redisConnection: {
-				url: `redis://:${encodeURIComponent("root")}@${redisHost}:${redisPort}`,
-				password: "root",
-				indexName: randomAsHex(16),
-			},
+			// Only configure Redis if container is available
+			...(redisContainer
+				? {
+						redisConnection: {
+							url: `redis://:${encodeURIComponent("root")}@${redisHost}:${redisPort}`,
+							password: "root",
+							indexName: randomAsHex(16),
+						},
+					}
+				: {}),
 			ipApi: {
 				baseUrl: "https://dummyUrl.com",
 				apiKey: "dummyKey",
 			},
 			server: {
-				baseURL: "http://localhost",
+				baseURL: `${protocol}://localhost`,
 				port: testPort,
 			},
 		});
@@ -189,8 +212,17 @@ describe("PoW Integration Tests", () => {
 
 		const db = env.getDb();
 
-		// wait until Redis is ready
-		await db.getRedisAccessRulesConnection().getClient();
+		// wait until Redis is ready (only if Redis container was started)
+		if (redisContainer) {
+			try {
+				await db.getRedisAccessRulesConnection().getClient();
+			} catch (error) {
+				console.warn(
+					"Redis connection failed, continuing without Redis:",
+					error,
+				);
+			}
+		}
 
 		// Setup provider dataset - this is critical for the tests to work
 		// This mimics the setup script's setupProvider functionality
@@ -198,31 +230,122 @@ describe("PoW Integration Tests", () => {
 		env.logger.info(() => ({ msg: "Setting up provider dataset" }));
 		await tasks.datasetManager.providerSetDataset(datasetWithSolutionHashes);
 
-		// Start the provider API server
+		// Start the provider API server with retry logic
 		// This mimics the CLI start functionality
 		env.logger.info(() => ({
 			msg: `Starting provider API on port ${testPort}`,
 		}));
-		server = await startProviderApi(env, true, testPort);
+
+		let retries = 0;
+		const maxRetries = 3;
+		while (retries < maxRetries) {
+			try {
+				server = await startProviderApi(env, true, testPort);
+
+				// Wait for server to be ready by checking if it's listening
+				await new Promise<void>((resolve, reject) => {
+					if (!server) {
+						reject(new Error("Server is not running."));
+						return;
+					}
+
+					const checkInterval = setInterval(() => {
+						if (server?.listening) {
+							clearInterval(checkInterval);
+							resolve();
+						}
+					}, 100);
+
+					// Timeout after 5 seconds
+					setTimeout(() => {
+						clearInterval(checkInterval);
+						if (!server?.listening) {
+							reject(
+								new Error("Server failed to start listening within timeout"),
+							);
+						}
+					}, 5000);
+				});
+
+				env.logger.info(() => ({
+					msg: `Provider API started successfully on port ${testPort}`,
+				}));
+				break;
+			} catch (error) {
+				retries++;
+				env.logger.warn(() => ({
+					msg: `Failed to start server (attempt ${retries}/${maxRetries})`,
+					err: error,
+				}));
+
+				// Close server if it was created but failed
+				if (server) {
+					await new Promise<void>((resolve) => {
+						server?.close(() => resolve());
+					});
+					server = undefined;
+				}
+
+				if (retries >= maxRetries) {
+					throw new Error(
+						`Failed to start server after ${maxRetries} attempts: ${error}`,
+					);
+				}
+
+				// Try a different port
+				testPort =
+					30000 + (process.pid % 10000) + Math.floor(Math.random() * 5000);
+				baseUrl = `${protocol}://localhost:${testPort}`;
+				env.logger.info(() => ({
+					msg: `Retrying with port ${testPort}`,
+				}));
+
+				// Wait before retrying
+				await new Promise((resolve) => setTimeout(resolve, 1000));
+			}
+		}
 	});
 
 	afterAll(async () => {
+		// Close server first
 		if (server) {
-			await new Promise<void>((resolve, reject) => {
-				server.close((err) => {
-					if (err) reject(err);
-					else resolve();
+			await new Promise<void>((resolve) => {
+				server?.close((err) => {
+					if (err) {
+						console.error("Error closing server:", err);
+					}
+					resolve();
 				});
 			});
+
+			// Give the server time to fully release the port
+			await new Promise((resolve) => setTimeout(resolve, 500));
+			server = undefined;
 		}
+
+		// Close database connections
 		if (env) {
-			await env.getDb().close();
+			try {
+				await env.getDb().close();
+			} catch (error) {
+				console.error("Error closing database:", error);
+			}
 		}
+
+		// Stop containers
 		if (mongoContainer) {
-			await mongoContainer.stop();
+			try {
+				await mongoContainer.stop();
+			} catch (error) {
+				console.error("Error stopping mongo container:", error);
+			}
 		}
 		if (redisContainer) {
-			await redisContainer.stop();
+			try {
+				await redisContainer.stop();
+			} catch (error) {
+				console.error("Error stopping redis container:", error);
+			}
 		}
 	});
 
@@ -240,7 +363,7 @@ describe("PoW Integration Tests", () => {
 		});
 
 		it("should supply a PoW challenge to a Dapp User", async () => {
-			const origin = "http://localhost";
+			const origin = "https://localhost";
 			const body: GetPowCaptchaChallengeRequestBodyType = {
 				user: userId,
 				dapp: siteKey,
@@ -284,7 +407,7 @@ describe("PoW Integration Tests", () => {
 		});
 
 		it("should return an error if origin header is not valid", async () => {
-			const origin = "http://notallowed.com";
+			const origin = "https://notallowed.com";
 			const response = await fetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
 				method: "POST",
 				headers: {
@@ -316,7 +439,7 @@ describe("PoW Integration Tests", () => {
 			userPair = getPair(userMnemonic);
 		});
 		it("should verify a correctly completed PoW captcha as true", async () => {
-			const origin = "http://localhost";
+			const origin = "https://localhost";
 			const requestBody: GetPowCaptchaChallengeRequestBodyType = {
 				user: userId,
 				dapp: siteKey,
@@ -383,7 +506,7 @@ describe("PoW Integration Tests", () => {
 		});
 
 		it("should return false for incorrectly completed PoW captcha", async () => {
-			const origin = "http://localhost";
+			const origin = "https://localhost";
 
 			const captchaRes = await fetch(
 				`${baseUrl}${getPowCaptchaChallengePath}`,
@@ -450,7 +573,7 @@ describe("PoW Integration Tests", () => {
 			const [_mnemonic, unregisteredAccount] = await generateMnemonic();
 			const userPair = getPair(dummyUserAccount.seed, undefined, "sr25519", 42);
 			const userId = userPair.address;
-			const origin = "http://localhost";
+			const origin = "https://localhost";
 
 			const captchaRes = await fetch(
 				`${baseUrl}${getPowCaptchaChallengePath}`,
@@ -478,7 +601,7 @@ describe("PoW Integration Tests", () => {
 	});
 
 	it("should return an error for an invalid site key", async () => {
-		const origin = "http://localhost";
+		const origin = "https://localhost";
 		const invalidSiteKey = "junk";
 
 		const captchaRes = await fetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
@@ -502,7 +625,7 @@ describe("PoW Integration Tests", () => {
 	it("should return an error if the captcha type is set to image", async () => {
 		const userPair = getPair(dummyUserAccount.seed, undefined, "sr25519");
 		const userId = userPair.address;
-		const origin = "http://localhost";
+		const origin = "https://localhost";
 		const siteKey = "5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw";
 
 		await registerSiteKeyInDb(env, siteKey, CaptchaType.image);
@@ -528,7 +651,7 @@ describe("PoW Integration Tests", () => {
 	it("should return an error if the captcha type is set to frictionless and no sessionID is sent", async () => {
 		const userPair = getPair(dummyUserAccount.seed, undefined, "sr25519");
 		const userId = userPair.address;
-		const origin = "http://localhost";
+		const origin = "https://localhost";
 		// Create a new site key to avoid conflicts with other tests
 		const [_mnemonic, dapp] = await generateMnemonic();
 		await registerSiteKeyInDb(env, dapp, CaptchaType.frictionless);

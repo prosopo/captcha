@@ -14,7 +14,10 @@
 
 import { ProviderApi } from "@prosopo/api";
 import { ProsopoEnvError } from "@prosopo/common";
-import { getRandomActiveProvider } from "@prosopo/load-balancer";
+import {
+	getRandomActiveProvider,
+	prefetchProviders,
+} from "@prosopo/load-balancer";
 import { ExtensionLoader } from "@prosopo/procaptcha-common";
 import type {
 	BotDetectionFunction,
@@ -53,9 +56,15 @@ const customDetectBot: BotDetectionFunction = async (
 	container: HTMLElement | undefined,
 	restartFn: () => void,
 ): Promise<BotDetectionFunctionResult> => {
-	const ext = new (await ExtensionLoader(config.web2))();
+	// Kick off all async initialisations in parallel — provider list fetch no
+	// longer waits until after bot detection is complete.
+	const [ExtClass, detect] = await Promise.all([
+		ExtensionLoader(config.web2),
+		DetectorLoader(),
+		prefetchProviders(config.defaultEnvironment), // warms the cache; result discarded
+	]);
+	const ext = new ExtClass();
 
-	const detect = await DetectorLoader();
 	const detectionResult = await detect(
 		config.defaultEnvironment,
 		container,

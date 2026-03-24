@@ -116,6 +116,7 @@ const license = async (args: {
 				"**/packages/keyring/src/pair/**",
 				"**/packages/types/src/keyring/keyring/**",
 				"**/packages/types/src/keyring/pair/**",
+				"**/packages/fingerprintjs/**",
 			],
 		})
 		.filter((file) => fs.lstatSync(file).isFile());

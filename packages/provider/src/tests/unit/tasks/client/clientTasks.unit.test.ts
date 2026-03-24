@@ -17,18 +17,18 @@ import {
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
+	type PoWCaptchaStored,
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
 	type ScheduledTaskResult,
 	ScheduledTaskStatus,
 	Tier,
+	type UserCommitment,
 } from "@prosopo/types";
 import {
 	type IProviderDatabase,
-	type PoWCaptchaStored,
 	type ScheduledTaskRecord,
 	ScheduledTaskSchema,
-	type UserCommitment,
 } from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ClientTaskManager } from "../../../../tasks/client/clientTasks.js";

@@ -1,5 +1,102 @@
 # @prosopo/api-express-router
 
+## 3.0.65
+### Patch Changes
+
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/types@3.12.3
+  - @prosopo/env@3.3.10
+
+## 3.0.64
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/locale@3.1.29
+  - @prosopo/types@3.12.2
+  - @prosopo/env@3.3.9
+  - @prosopo/common@3.1.30
+  - @prosopo/api-route@2.6.38
+
+## 3.0.63
+### Patch Changes
+
+- Updated dependencies [c5ee492]
+- Updated dependencies [a90eb54]
+  - @prosopo/common@3.1.29
+  - @prosopo/types@3.12.1
+  - @prosopo/api-route@2.6.37
+  - @prosopo/env@3.3.8
+
+## 3.0.62
+### Patch Changes
+
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/types@3.12.0
+  - @prosopo/env@3.3.7
+
+## 3.0.61
+### Patch Changes
+
+- Updated dependencies [8148587]
+  - @prosopo/types@3.11.1
+  - @prosopo/env@3.3.6
+
+## 3.0.60
+### Patch Changes
+
+  - @prosopo/env@3.3.5
+
+## 3.0.59
+### Patch Changes
+
+- ca7f4ad: Attach site key and user to logger earlier
+- Updated dependencies [7f6ffc5]
+  - @prosopo/types@3.11.0
+  - @prosopo/env@3.3.4
+
+## 3.0.58
+### Patch Changes
+
+- Updated dependencies [93fa086]
+  - @prosopo/types@3.10.2
+  - @prosopo/env@3.3.3
+
+## 3.0.57
+### Patch Changes
+
+- Updated dependencies [cde7550]
+  - @prosopo/types@3.10.1
+  - @prosopo/env@3.3.2
+
+## 3.0.56
+### Patch Changes
+
+- Updated dependencies [ad6d622]
+  - @prosopo/types@3.10.0
+  - @prosopo/env@3.3.1
+
+## 3.0.55
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+  - @prosopo/types@3.9.0
+  - @prosopo/env@3.3.0
+
+## 3.0.54
+### Patch Changes
+
+  - @prosopo/env@3.2.42
+
+## 3.0.53
+### Patch Changes
+
+- Updated dependencies [d2431cd]
+  - @prosopo/types@3.8.4
+  - @prosopo/env@3.2.41
+
 ## 3.0.52
 ### Patch Changes
 

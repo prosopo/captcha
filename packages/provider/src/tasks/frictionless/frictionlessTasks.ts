@@ -16,17 +16,16 @@ import type { Logger } from "@prosopo/common";
 import {
 	ApiParams,
 	CaptchaType,
+	type CompositeIpAddress,
 	type ContextType,
 	type GetFrictionlessCaptchaResponse,
 	type KeyringPair,
 	type ProsopoConfigOutput,
+	type RequestHeaders,
+	type ScoreComponents,
+	type Session,
 } from "@prosopo/types";
-import type {
-	CompositeIpAddress,
-	IProviderDatabase,
-	ScoreComponents,
-	Session,
-} from "@prosopo/types-database";
+import type { IProviderDatabase } from "@prosopo/types-database";
 import type { AccessPolicy } from "@prosopo/user-access-policy";
 import { v4 as uuidv4 } from "uuid";
 import { checkLangRules } from "../../rules/lang.js";
@@ -82,6 +81,9 @@ export class FrictionlessManager extends CaptchaManager {
 			iFrame: params.iFrame ?? false,
 			decryptedHeadHash: params.decryptedHeadHash,
 			siteKey: params.siteKey,
+			geolocation: params.geolocation,
+			countryCode: params.countryCode,
+			headers: params.headers,
 		};
 	}
 
@@ -113,6 +115,8 @@ export class FrictionlessManager extends CaptchaManager {
 		reason?: FrictionlessReason,
 		blocked?: boolean,
 		deleted?: boolean,
+		countryCode?: string,
+		headers?: RequestHeaders,
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
@@ -133,6 +137,8 @@ export class FrictionlessManager extends CaptchaManager {
 			siteKey,
 			blocked,
 			deleted,
+			countryCode,
+			headers,
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);
@@ -172,6 +178,9 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.decryptedHeadHash,
 			effectiveParams.reason as FrictionlessReason,
 			effectiveParams.blocked,
+			undefined,
+			effectiveParams.countryCode,
+			effectiveParams.headers,
 		);
 
 		return {
@@ -213,6 +222,10 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.iFrame ?? false,
 			effectiveParams.decryptedHeadHash,
 			effectiveParams.reason as FrictionlessReason | undefined,
+			undefined,
+			undefined,
+			effectiveParams.countryCode,
+			effectiveParams.headers,
 		);
 		return {
 			[ApiParams.captchaType]: CaptchaType.pow,
@@ -257,6 +270,8 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.reason as FrictionlessReason,
 			true,
 			true,
+			effectiveParams.countryCode,
+			effectiveParams.headers,
 		);
 	}
 
@@ -392,6 +407,7 @@ export class FrictionlessManager extends CaptchaManager {
 		let iFrame: boolean | undefined;
 		let decryptedHeadHash = "";
 		let decryptionFailed = false;
+		let triggeredDetectors: number[] | undefined;
 		for (const [keyIndex, key] of decryptKeys.entries()) {
 			try {
 				this.logger.info(() => ({
@@ -408,6 +424,7 @@ export class FrictionlessManager extends CaptchaManager {
 				const u = decrypted.userAgent;
 				const w = decrypted.isWebView;
 				const i = decrypted.isIframe;
+				const td = decrypted.triggeredDetectors;
 				this.logger.debug(() => ({
 					msg: "Successfully decrypted score",
 					data: {
@@ -418,6 +435,7 @@ export class FrictionlessManager extends CaptchaManager {
 						userAgent: u,
 						webView: w,
 						iFrame: i,
+						triggeredDetectors: td,
 					},
 				}));
 				baseBotScore = s;
@@ -426,6 +444,7 @@ export class FrictionlessManager extends CaptchaManager {
 				userAgent = u;
 				webView = w;
 				iFrame = i;
+				triggeredDetectors = td;
 				break;
 			} catch (err) {
 				// check if the next index exists, if not, log an error
@@ -478,6 +497,7 @@ export class FrictionlessManager extends CaptchaManager {
 			iFrame: iFrame || false,
 			decryptedHeadHash,
 			decryptionFailed,
+			triggeredDetectors,
 		};
 	}
 

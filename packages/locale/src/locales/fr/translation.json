@@ -21,6 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Accès bloqué par la politique",
 		"FORBIDDEN": "Interdit",
 		"PROVIDER_VERIFY_FAILED": "Échec de la vérification du fournisseur",
+		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
 		"UNAUTHORIZED": "Non autorisé",
 		"MISSING_BODY": "Corps manquant",
 		"NO_CONTENT_TYPE_HEADER": "En-tête de type de contenu manquant. Corps encodé en JSON supposé mais erreur lors de l'analyse.",

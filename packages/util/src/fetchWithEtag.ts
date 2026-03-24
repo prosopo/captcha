@@ -40,8 +40,7 @@ export const fetchWithETag = async (
 		}
 
 		const content = await response.text();
-		const responseETag =
-			response.headers.get("etag")?.replace(/"/g, "") || null;
+		const responseETag = response.headers.get("etag") || null;
 
 		return { content, etag: responseETag, notModified: false };
 	} catch (error) {

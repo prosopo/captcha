@@ -1,5 +1,93 @@
 # @prosopo/account
 
+## 2.8.14
+### Patch Changes
+
+- 730c61e: Speed up captcha
+- Updated dependencies [730c61e]
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/fingerprint@2.6.29
+  - @prosopo/types@3.12.3
+  - @prosopo/util@3.2.7
+  - @prosopo/keyring@2.9.14
+
+## 2.8.13
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/types@3.12.2
+  - @prosopo/util@3.2.6
+  - @prosopo/common@3.1.30
+  - @prosopo/keyring@2.9.13
+
+## 2.8.12
+### Patch Changes
+
+- Updated dependencies [c5ee492]
+- Updated dependencies [a90eb54]
+  - @prosopo/common@3.1.29
+  - @prosopo/types@3.12.1
+  - @prosopo/keyring@2.9.12
+
+## 2.8.11
+### Patch Changes
+
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/keyring@2.9.11
+  - @prosopo/types@3.12.0
+
+## 2.8.10
+### Patch Changes
+
+- Updated dependencies [8148587]
+  - @prosopo/types@3.11.1
+  - @prosopo/keyring@2.9.10
+
+## 2.8.9
+### Patch Changes
+
+- Updated dependencies [7f6ffc5]
+  - @prosopo/types@3.11.0
+  - @prosopo/keyring@2.9.9
+
+## 2.8.8
+### Patch Changes
+
+- Updated dependencies [93fa086]
+  - @prosopo/types@3.10.2
+  - @prosopo/keyring@2.9.8
+
+## 2.8.7
+### Patch Changes
+
+- Updated dependencies [cde7550]
+  - @prosopo/types@3.10.1
+  - @prosopo/keyring@2.9.7
+
+## 2.8.6
+### Patch Changes
+
+- Updated dependencies [ad6d622]
+  - @prosopo/types@3.10.0
+  - @prosopo/keyring@2.9.6
+
+## 2.8.5
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+  - @prosopo/types@3.9.0
+  - @prosopo/keyring@2.9.5
+
+## 2.8.4
+### Patch Changes
+
+- Updated dependencies [d2431cd]
+  - @prosopo/types@3.8.4
+  - @prosopo/keyring@2.9.4
+
 ## 2.8.3
 ### Patch Changes
 

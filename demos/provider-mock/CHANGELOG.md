@@ -1,5 +1,182 @@
 # @prosopo/provider-mock
 
+## 2.8.69
+### Patch Changes
+
+- Updated dependencies [730c61e]
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/provider@3.21.4
+  - @prosopo/types@3.12.3
+  - @prosopo/types-database@4.4.9
+  - @prosopo/database@3.9.9
+  - @prosopo/api-express-router@3.0.65
+
+## 2.8.68
+### Patch Changes
+
+- Updated dependencies [dbcd098]
+- Updated dependencies [adb89a6]
+  - @prosopo/provider@3.21.3
+  - @prosopo/types-database@4.4.8
+  - @prosopo/database@3.9.8
+  - @prosopo/locale@3.1.29
+  - @prosopo/types@3.12.2
+  - @prosopo/api-express-router@3.0.64
+  - @prosopo/common@3.1.30
+  - @prosopo/dotenv@3.0.35
+
+## 2.8.67
+### Patch Changes
+
+- Updated dependencies [f5c8725]
+  - @prosopo/provider@3.21.2
+
+## 2.8.66
+### Patch Changes
+
+- Updated dependencies [c5ee492]
+- Updated dependencies [a90eb54]
+  - @prosopo/common@3.1.29
+  - @prosopo/types-database@4.4.7
+  - @prosopo/provider@3.21.1
+  - @prosopo/types@3.12.1
+  - @prosopo/api-express-router@3.0.63
+  - @prosopo/database@3.9.7
+  - @prosopo/dotenv@3.0.34
+
+## 2.8.65
+### Patch Changes
+
+- Updated dependencies [759d4e6]
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/provider@3.21.0
+  - @prosopo/types@3.12.0
+  - @prosopo/api-express-router@3.0.62
+  - @prosopo/database@3.9.6
+  - @prosopo/types-database@4.4.6
+
+## 2.8.64
+### Patch Changes
+
+- Updated dependencies [8148587]
+  - @prosopo/types-database@4.4.5
+  - @prosopo/provider@3.20.4
+  - @prosopo/types@3.11.1
+  - @prosopo/database@3.9.5
+  - @prosopo/api-express-router@3.0.61
+
+## 2.8.63
+### Patch Changes
+
+- Updated dependencies [5444635]
+  - @prosopo/provider@3.20.3
+
+## 2.8.62
+### Patch Changes
+
+- Updated dependencies [31af9cf]
+  - @prosopo/provider@3.20.2
+
+## 2.8.61
+### Patch Changes
+
+- Updated dependencies [90033e9]
+  - @prosopo/types-database@4.4.4
+  - @prosopo/database@3.9.4
+  - @prosopo/provider@3.20.1
+  - @prosopo/api-express-router@3.0.60
+
+## 2.8.60
+### Patch Changes
+
+- Updated dependencies [ca7f4ad]
+- Updated dependencies [7f6ffc5]
+  - @prosopo/api-express-router@3.0.59
+  - @prosopo/provider@3.20.0
+  - @prosopo/types@3.11.0
+  - @prosopo/database@3.9.3
+  - @prosopo/types-database@4.4.3
+
+## 2.8.59
+### Patch Changes
+
+- Updated dependencies [bca43e5]
+  - @prosopo/provider@3.19.3
+
+## 2.8.58
+### Patch Changes
+
+- Updated dependencies [ce4f831]
+- Updated dependencies [93fa086]
+- Updated dependencies [4de47f5]
+  - @prosopo/provider@3.19.2
+  - @prosopo/types-database@4.4.2
+  - @prosopo/database@3.9.2
+  - @prosopo/types@3.10.2
+  - @prosopo/api-express-router@3.0.58
+
+## 2.8.57
+### Patch Changes
+
+- Updated dependencies [cde7550]
+  - @prosopo/types-database@4.4.1
+  - @prosopo/provider@3.19.1
+  - @prosopo/types@3.10.1
+  - @prosopo/database@3.9.1
+  - @prosopo/api-express-router@3.0.57
+
+## 2.8.56
+### Patch Changes
+
+- Updated dependencies [ad6d622]
+- Updated dependencies [ced9f41]
+- Updated dependencies [fa95c5f]
+  - @prosopo/types-database@4.4.0
+  - @prosopo/database@3.9.0
+  - @prosopo/provider@3.19.0
+  - @prosopo/types@3.10.0
+  - @prosopo/api-express-router@3.0.56
+
+## 2.8.55
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+- Updated dependencies [d329e63]
+  - @prosopo/provider@3.18.0
+  - @prosopo/types@3.9.0
+  - @prosopo/database@3.8.0
+  - @prosopo/api-express-router@3.0.55
+  - @prosopo/types-database@4.3.1
+
+## 2.8.54
+### Patch Changes
+
+- Updated dependencies [3feeea4]
+  - @prosopo/types-database@4.3.0
+  - @prosopo/database@3.7.0
+  - @prosopo/provider@3.17.0
+  - @prosopo/api-express-router@3.0.54
+
+## 2.8.53
+### Patch Changes
+
+- Updated dependencies [4c08158]
+- Updated dependencies [d2431cd]
+  - @prosopo/types-database@4.2.4
+  - @prosopo/provider@3.16.5
+  - @prosopo/types@3.8.4
+  - @prosopo/database@3.6.12
+  - @prosopo/api-express-router@3.0.53
+
+## 2.8.52
+### Patch Changes
+
+- Updated dependencies [3a58d06]
+  - @prosopo/provider@3.16.4
+
 ## 2.8.51
 ### Patch Changes
 

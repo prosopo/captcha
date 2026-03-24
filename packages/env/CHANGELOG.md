@@ -1,5 +1,130 @@
 # @prosopo/env
 
+## 3.3.10
+### Patch Changes
+
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/types@3.12.3
+  - @prosopo/database@3.9.9
+  - @prosopo/keyring@2.9.14
+  - @prosopo/types-env@2.8.10
+
+## 3.3.9
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/database@3.9.8
+  - @prosopo/types@3.12.2
+  - @prosopo/types-env@2.8.9
+  - @prosopo/common@3.1.30
+  - @prosopo/keyring@2.9.13
+
+## 3.3.8
+### Patch Changes
+
+- Updated dependencies [c5ee492]
+- Updated dependencies [a90eb54]
+  - @prosopo/common@3.1.29
+  - @prosopo/types@3.12.1
+  - @prosopo/database@3.9.7
+  - @prosopo/keyring@2.9.12
+  - @prosopo/types-env@2.8.8
+
+## 3.3.7
+### Patch Changes
+
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/keyring@2.9.11
+  - @prosopo/types@3.12.0
+  - @prosopo/types-env@2.8.7
+  - @prosopo/database@3.9.6
+
+## 3.3.6
+### Patch Changes
+
+- Updated dependencies [8148587]
+  - @prosopo/types@3.11.1
+  - @prosopo/database@3.9.5
+  - @prosopo/types-env@2.8.6
+  - @prosopo/keyring@2.9.10
+
+## 3.3.5
+### Patch Changes
+
+  - @prosopo/database@3.9.4
+  - @prosopo/types-env@2.8.5
+
+## 3.3.4
+### Patch Changes
+
+- Updated dependencies [7f6ffc5]
+  - @prosopo/types@3.11.0
+  - @prosopo/database@3.9.3
+  - @prosopo/keyring@2.9.9
+  - @prosopo/types-env@2.8.4
+
+## 3.3.3
+### Patch Changes
+
+- Updated dependencies [93fa086]
+  - @prosopo/database@3.9.2
+  - @prosopo/types@3.10.2
+  - @prosopo/types-env@2.8.3
+  - @prosopo/keyring@2.9.8
+
+## 3.3.2
+### Patch Changes
+
+- Updated dependencies [cde7550]
+  - @prosopo/types@3.10.1
+  - @prosopo/database@3.9.1
+  - @prosopo/types-env@2.8.2
+  - @prosopo/keyring@2.9.7
+
+## 3.3.1
+### Patch Changes
+
+- Updated dependencies [ad6d622]
+- Updated dependencies [ced9f41]
+- Updated dependencies [fa95c5f]
+  - @prosopo/database@3.9.0
+  - @prosopo/types@3.10.0
+  - @prosopo/types-env@2.8.1
+  - @prosopo/keyring@2.9.6
+
+## 3.3.0
+### Minor Changes
+
+- ff58a70: Load the geolocation service at startup only
+
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+- Updated dependencies [d329e63]
+  - @prosopo/types-env@2.8.0
+  - @prosopo/types@3.9.0
+  - @prosopo/database@3.8.0
+  - @prosopo/keyring@2.9.5
+
+## 3.2.42
+### Patch Changes
+
+- Updated dependencies [3feeea4]
+  - @prosopo/database@3.7.0
+  - @prosopo/types-env@2.7.66
+
+## 3.2.41
+### Patch Changes
+
+- Updated dependencies [d2431cd]
+  - @prosopo/types@3.8.4
+  - @prosopo/database@3.6.12
+  - @prosopo/types-env@2.7.65
+  - @prosopo/keyring@2.9.4
+
 ## 3.2.40
 ### Patch Changes
 

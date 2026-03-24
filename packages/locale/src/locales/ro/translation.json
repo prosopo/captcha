@@ -21,6 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Acces blocat de politică",
 		"FORBIDDEN": "Interzis",
 		"PROVIDER_VERIFY_FAILED": "Verificarea furnizorului a esuat",
+		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
 		"UNAUTHORIZED": "Neautorizat",
 		"MISSING_BODY": "Corp lipsă",
 		"NO_CONTENT_TYPE_HEADER": "Fără antet de tip conținut. S-a presupus corp codat JSON dar nu s-a reușit parsarea.",

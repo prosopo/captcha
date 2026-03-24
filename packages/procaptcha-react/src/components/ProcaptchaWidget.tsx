@@ -64,7 +64,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 			if (state.error.key === "CAPTCHA.NO_SESSION_FOUND" && frictionlessState) {
 				setTimeout(() => {
 					frictionlessState.restart();
-				}, 3000);
+				}, 100);
 			}
 		}
 	}, [state.error, frictionlessState]);
