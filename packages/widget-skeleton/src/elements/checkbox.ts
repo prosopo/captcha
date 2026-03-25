@@ -23,7 +23,10 @@ import type { Theme } from "../theme.js";
 export function createCheckboxElement(theme: Theme): HTMLElement {
 	const checkbox = document.createElement("div");
 	checkbox.className = "checkbox";
-	checkbox.innerHTML = getCheckboxStyles(theme) + CHECKBOX_MARKUP;
+
+	const shadowRoot = checkbox.attachShadow({ mode: "open" });
+	shadowRoot.innerHTML = getCheckboxStyles(theme) + CHECKBOX_MARKUP;
+
 	return checkbox;
 }
 
@@ -36,7 +39,12 @@ export const getCheckboxInteractiveArea = (
 	widget: HTMLElement,
 ): HTMLElement | null => {
 	const widgetRoot = widget.shadowRoot || widget;
-	return widgetRoot.querySelector(".checkbox__content");
+	const checkbox = widgetRoot.querySelector(".checkbox") as HTMLElement | null;
+	if (!checkbox) {
+		return null;
+	}
+	const checkboxRoot = (checkbox as HTMLElement).shadowRoot || checkbox;
+	return checkboxRoot.querySelector(".checkbox__content");
 };
 
 export const CHECKBOX_MARKUP = `
@@ -57,7 +65,7 @@ export const CHECKBOX_MARKUP = `
  */
 const getCheckboxStyles = (theme: Theme): string => `
 <style>
-.checkbox {
+:host(.checkbox) {
     display: flex;
     flex-direction: column;
 }
@@ -85,10 +93,10 @@ const getCheckboxStyles = (theme: Theme): string => `
 
 .${WIDGET_CHECKBOX_SPINNER_CSS_CLASS} {
     margin-top: 0;
-    margin-left: 15px;
-    margin-right: 15px;
-    width: 2em;
-    height: 2em;
+    margin-left: 15px !important;
+    margin-right: 15px !important;
+    width: 28px !important;
+    height: 28px !important;
     border: 4px solid ${theme.palette.background.contrastText};
     border-bottom-color: transparent;
     border-radius: 50%;
