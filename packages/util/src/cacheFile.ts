@@ -13,8 +13,6 @@
 // limitations under the License.
 import fs from "node:fs";
 import path from "node:path";
-import { Readable } from "node:stream";
-import { pipeline } from "node:stream/promises";
 import type { ReadableStream as streamWeb } from "node:stream/web";
 import { fetchWithETag } from "./fetchWithEtag.js";
 
@@ -88,16 +86,29 @@ export function getCurrentETag(
 	return reconstructETagFromFilename(cachedFile, filePrefix, fileType);
 }
 
-export function saveFileWithETag(
+export async function saveFileWithETag(
 	stream: ReadableStream<Uint8Array>,
 	etag: string,
 	cacheDir: string,
 	filePrefix: `${string}-`,
 	fileType: `.${string}` = ".txt",
 ): Promise<string> {
+	// Ensure this only runs in Node.js environment
+	if (typeof window !== "undefined" || typeof process === "undefined") {
+		throw new Error(
+			"saveFileWithETag can only be used in Node.js environments",
+		);
+	}
+
 	const sanitizedETag = sanitizeETagForFilename(etag);
 	const filename = `${filePrefix}${sanitizedETag}${fileType}`;
 	const filepath = path.join(cacheDir, filename);
+
+	// Dynamically import Node.js stream modules to avoid bundling issues
+	const [{ Readable }, { pipeline }] = await Promise.all([
+		import("node:stream"),
+		import("node:stream/promises"),
+	]);
 
 	// Convert Web ReadableStream to Node.js Readable
 	const nodeStream = Readable.fromWeb(<streamWeb>stream);
