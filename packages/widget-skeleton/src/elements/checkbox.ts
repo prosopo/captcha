@@ -23,7 +23,10 @@ import type { Theme } from "../theme.js";
 export function createCheckboxElement(theme: Theme): HTMLElement {
 	const checkbox = document.createElement("div");
 	checkbox.className = "checkbox";
-	checkbox.innerHTML = getCheckboxStyles(theme) + CHECKBOX_MARKUP;
+
+	const shadowRoot = checkbox.attachShadow({ mode: "open" });
+	shadowRoot.innerHTML = getCheckboxStyles(theme) + CHECKBOX_MARKUP;
+
 	return checkbox;
 }
 
@@ -36,7 +39,11 @@ export const getCheckboxInteractiveArea = (
 	widget: HTMLElement,
 ): HTMLElement | null => {
 	const widgetRoot = widget.shadowRoot || widget;
-	return widgetRoot.querySelector(".checkbox__content");
+	const checkbox = widgetRoot.querySelector(".checkbox");
+	if (checkbox?.shadowRoot) {
+		return checkbox.shadowRoot.querySelector(".checkbox__content");
+	}
+	return null;
 };
 
 export const CHECKBOX_MARKUP = `

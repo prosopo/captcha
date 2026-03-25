@@ -68,7 +68,7 @@ const LOGO_STYLES = `
  */
 function getLogoMarkup(theme: Theme): string {
 	return `
-			<a href="${WIDGET_URL}?utm_campaign=widget" tabindex="0" target="_blank" role="button"
+			<a href="${WIDGET_URL}#widget" tabindex="0" target="_blank" role="button"
 			   aria-label="${WIDGET_URL_TEXT}"
 			   style="text-decoration: none;">
 				<div class="prosopo-logo">
@@ -88,6 +88,7 @@ function getLogoMarkup(theme: Theme): string {
 					Prosopo
 					</span>
 				</div>
+				<span style="position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden;">${WIDGET_URL_TEXT}</span>
 			</a>
 `;
 }
