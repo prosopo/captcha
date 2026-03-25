@@ -30,17 +30,20 @@ export function createWidgetSkeleton(
 	theme: Theme,
 	webComponentTag: string,
 ): { widgetInteractiveArea: HTMLElement; webComponent: HTMLElement } {
+	const host = document.createElement(webComponentTag);
+	applyDefaultStyles(host);
+
 	const widget = createWidgetSkeletonElement(theme);
-	applyDefaultStyles(widget);
+	host.appendChild(widget);
 
 	container.innerHTML = "";
-	container.appendChild(widget);
+	container.appendChild(host);
 
-	const widgetInteractiveArea = getCheckboxInteractiveArea(widget);
+	const widgetInteractiveArea = getCheckboxInteractiveArea(host);
 
 	if (!(widgetInteractiveArea instanceof HTMLElement)) {
 		throw new Error("Fail to initialize widget: interactive area is not found");
 	}
 
-	return { widgetInteractiveArea, webComponent: widget };
+	return { widgetInteractiveArea, webComponent: host };
 }
