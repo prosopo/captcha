@@ -41,8 +41,12 @@ export const fetchWithETag = async (
 		}
 
 		const responseETag = response.headers.get("etag") || null;
-		const contentLength = response.headers.get("content-length")
-			? Number.parseInt(<string>response.headers.get("content-length"), 10)
+		const contentLengthHeader = response.headers.get("content-length");
+		const contentLength = contentLengthHeader
+			? (() => {
+					const parsed = Number.parseInt(contentLengthHeader, 10);
+					return Number.isFinite(parsed) ? parsed : undefined;
+				})()
 			: undefined;
 
 		return {

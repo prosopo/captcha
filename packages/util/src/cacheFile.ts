@@ -13,6 +13,9 @@
 // limitations under the License.
 import fs from "node:fs";
 import path from "node:path";
+import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
+import type { ReadableStream as streamWeb } from "node:stream/web";
 import { fetchWithETag } from "./fetchWithEtag.js";
 
 export const ensureDirExists = (cacheDir: string): void => {
@@ -96,31 +99,30 @@ export function saveFileWithETag(
 	const filename = `${filePrefix}${sanitizedETag}${fileType}`;
 	const filepath = path.join(cacheDir, filename);
 
-	return new Promise((resolve, reject) => {
-		const fileStream = fs.createWriteStream(filepath);
-		const reader = stream.getReader();
+	// Convert Web ReadableStream to Node.js Readable
+	const nodeStream = Readable.fromWeb(<streamWeb>stream);
 
-		fileStream.on("error", reject);
-		fileStream.on("finish", () => resolve(filepath));
+	// Create write stream
+	const fileStream = fs.createWriteStream(filepath);
 
-		function read() {
-			reader
-				.read()
-				.then(({ done, value }) => {
-					if (done) {
-						fileStream.end();
-					} else {
-						fileStream.write(value, (err) => {
-							if (err) reject(err);
-							else read();
-						});
-					}
-				})
-				.catch(reject);
-		}
+	return pipeline(nodeStream, fileStream)
+		.then(() => filepath)
+		.catch((error) => {
+			// Clean up on error: destroy streams and remove partial file
+			nodeStream.destroy();
+			fileStream.destroy();
 
-		read();
-	});
+			// Remove partially written file if it exists
+			try {
+				if (fs.existsSync(filepath)) {
+					fs.unlinkSync(filepath);
+				}
+			} catch (cleanupError) {
+				// Ignore cleanup errors
+			}
+
+			throw error;
+		});
 }
 
 export function getCachedFilePath(
