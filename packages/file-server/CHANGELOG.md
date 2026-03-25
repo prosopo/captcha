@@ -1,5 +1,11 @@
 # @prosopo/file-server
 
+## 2.6.39
+### Patch Changes
+
+- Updated dependencies [a25dffa]
+  - @prosopo/util@3.2.11
+
 ## 2.6.38
 ### Patch Changes
 
