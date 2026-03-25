@@ -1,5 +1,11 @@
 # @prosopo/flux
 
+## 2.6.44
+### Patch Changes
+
+- Updated dependencies [22bfee7]
+  - @prosopo/util@3.2.9
+
 ## 2.6.43
 ### Patch Changes
 

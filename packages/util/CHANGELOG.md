@@ -1,5 +1,10 @@
 # @prosopo/util
 
+## 3.2.9
+### Patch Changes
+
+- 22bfee7: Stream large files to avoid loading entire file into RAM
+
 ## 3.2.8
 ### Patch Changes
 
