@@ -1,5 +1,31 @@
 # @prosopo/procaptcha-bundle
 
+## 3.3.23
+### Patch Changes
+
+- Updated dependencies [22bfee7]
+- Updated dependencies [20192d2]
+  - @prosopo/util@3.2.9
+  - @prosopo/widget-skeleton@2.7.14
+  - @prosopo/procaptcha-pow@2.8.47
+  - @prosopo/procaptcha-react@2.9.46
+  - @prosopo/types@3.13.1
+  - @prosopo/procaptcha-common@2.9.39
+  - @prosopo/procaptcha-frictionless@2.8.54
+
+## 3.3.22
+### Patch Changes
+
+- Updated dependencies [e0fb3d6]
+- Updated dependencies [e6d9553]
+- Updated dependencies [f3f23e3]
+  - @prosopo/util@3.2.8
+  - @prosopo/types@3.13.0
+  - @prosopo/procaptcha-pow@2.8.46
+  - @prosopo/procaptcha-react@2.9.45
+  - @prosopo/procaptcha-common@2.9.38
+  - @prosopo/procaptcha-frictionless@2.8.53
+
 ## 3.3.21
 ### Patch Changes
 

@@ -1,5 +1,10 @@
 # @prosopo/widget-skeleton
 
+## 2.7.14
+### Patch Changes
+
+- 20192d2: Move widget html out of shadow dom
+
 ## 2.7.13
 ### Patch Changes
 

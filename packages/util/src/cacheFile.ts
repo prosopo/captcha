@@ -13,6 +13,7 @@
 // limitations under the License.
 import fs from "node:fs";
 import path from "node:path";
+import type { ReadableStream as streamWeb } from "node:stream/web";
 import { fetchWithETag } from "./fetchWithEtag.js";
 
 export const ensureDirExists = (cacheDir: string): void => {
@@ -85,19 +86,54 @@ export function getCurrentETag(
 	return reconstructETagFromFilename(cachedFile, filePrefix, fileType);
 }
 
-export function saveFileWithETag(
-	content: string,
+export async function saveFileWithETag(
+	stream: ReadableStream<Uint8Array>,
 	etag: string,
 	cacheDir: string,
 	filePrefix: `${string}-`,
 	fileType: `.${string}` = ".txt",
-): string {
+): Promise<string> {
+	// Ensure this only runs in Node.js environment
+	if (typeof window !== "undefined" || typeof process === "undefined") {
+		throw new Error(
+			"saveFileWithETag can only be used in Node.js environments",
+		);
+	}
+
 	const sanitizedETag = sanitizeETagForFilename(etag);
 	const filename = `${filePrefix}${sanitizedETag}${fileType}`;
 	const filepath = path.join(cacheDir, filename);
 
-	fs.writeFileSync(filepath, content, "utf-8");
-	return filepath;
+	// Dynamically import Node.js stream modules to avoid bundling issues
+	const [{ Readable }, { pipeline }] = await Promise.all([
+		import("node:stream"),
+		import("node:stream/promises"),
+	]);
+
+	// Convert Web ReadableStream to Node.js Readable
+	const nodeStream = Readable.fromWeb(<streamWeb>stream);
+
+	// Create write stream
+	const fileStream = fs.createWriteStream(filepath);
+
+	return pipeline(nodeStream, fileStream)
+		.then(() => filepath)
+		.catch((error) => {
+			// Clean up on error: destroy streams and remove partial file
+			nodeStream.destroy();
+			fileStream.destroy();
+
+			// Remove partially written file if it exists
+			try {
+				if (fs.existsSync(filepath)) {
+					fs.unlinkSync(filepath);
+				}
+			} catch (cleanupError) {
+				// Ignore cleanup errors
+			}
+
+			throw error;
+		});
 }
 
 export function getCachedFilePath(
@@ -143,13 +179,13 @@ export const cacheFile = async (
 			logger.debug(() => ({
 				msg: "File not modified, using cached version",
 			}));
-		} else if (result.content !== null && result.etag) {
+		} else if (result.stream !== null && result.etag) {
 			logger.info(() => ({
 				msg: "File updated, caching new version",
 			}));
 			purgeOldCache(cacheDir, filePrefix, fileType);
-			filePath = saveFileWithETag(
-				result.content,
+			filePath = await saveFileWithETag(
+				result.stream,
 				result.etag,
 				cacheDir,
 				filePrefix,
