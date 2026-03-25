@@ -13,7 +13,7 @@
 // limitations under the License.
 export const WIDGET_URL = "https://prosopo.io";
 export const WIDGET_URL_TEXT =
-	"Visit prosopo.io to learn more about the service and its accessibility options.";
+	"Procaptcha: Frictionless, Privacy-focused Bot Protection by Prosopo.";
 export const WIDGET_INNER_HEIGHT = 74;
 export const WIDGET_OUTER_HEIGHT = 80;
 export const WIDGET_MIN_HEIGHT = "80px";
