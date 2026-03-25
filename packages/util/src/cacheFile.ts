@@ -37,7 +37,8 @@ function sanitizeLastModifiedForFilename(lastModified: string): string {
 	// Output: "Wed_25_Mar_2026_11_19_09_GMT"
 	return lastModified
 		.replace(/[,:\s]/g, "_") // Replace commas, colons, and spaces with underscores
-		.replace(/__/g, "_"); // Remove double underscores
+		.replace(/_+/g, "_") // Collapse multiple underscores into a single underscore
+		.replace(/^_+|_+$/g, ""); // Trim leading/trailing underscores
 }
 
 function isLastModifiedFilename(filename: string): boolean {
