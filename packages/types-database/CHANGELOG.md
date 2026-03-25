@@ -1,5 +1,11 @@
 # @prosopo/types-database
 
+## 4.4.13
+### Patch Changes
+
+  - @prosopo/types@3.13.3
+  - @prosopo/user-access-policy@3.6.19
+
 ## 4.4.12
 ### Patch Changes
 
