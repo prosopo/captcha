@@ -31,6 +31,12 @@
 			"import": "./dist/lodash.js",
 			"require": "./dist/cjs/lodash.cjs",
 			"default": "./dist/lodash.js"
+		},
+		"./node": {
+			"types": "./dist/node.d.ts",
+			"import": "./dist/node.js",
+			"require": "./dist/cjs/node.cjs",
+			"default": "./dist/node.js"
 		}
 	},
 	"types": "dist/index.d.ts",
