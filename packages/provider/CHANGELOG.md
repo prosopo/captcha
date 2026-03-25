@@ -1,5 +1,23 @@
 # @prosopo/provider
 
+## 3.22.2
+### Patch Changes
+
+- 346edd7: Fix exports for browser
+- Updated dependencies [346edd7]
+  - @prosopo/util@3.2.10
+  - @prosopo/database@3.9.12
+  - @prosopo/datasets@3.1.11
+  - @prosopo/keyring@2.9.17
+  - @prosopo/types@3.13.2
+  - @prosopo/user-access-policy@3.6.18
+  - @prosopo/env@3.3.13
+  - @prosopo/types-env@2.8.13
+  - @prosopo/api@3.2.8
+  - @prosopo/api-express-router@3.0.68
+  - @prosopo/load-balancer@2.8.34
+  - @prosopo/types-database@4.4.12
+
 ## 3.22.1
 ### Patch Changes
 
