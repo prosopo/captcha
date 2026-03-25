@@ -68,12 +68,12 @@ const LOGO_STYLES = `
  */
 function getLogoMarkup(theme: Theme): string {
 	return `
-			<a href="${WIDGET_URL}#widget" tabindex="0" target="_blank" role="button"
+			<a href="${WIDGET_URL}#widget" tabindex="0" target="_blank" rel="noopener"
 			   aria-label="${WIDGET_URL_TEXT}"
 			   style="text-decoration: none;">
 				<div class="prosopo-logo">
 					<svg id="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 49.010001 49.009997" style="fill: ${theme.palette.logoFill};"
-						 aria-label="Prosopo Logo With Text">
+						 aria-hidden="true">
 						<title>${WIDGET_URL_TEXT}</title>
 						<g transform="matrix(0.11319331,0,0,0.11319331,6.504999,-2.2052113e-4)">
 							<g>
