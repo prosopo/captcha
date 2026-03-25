@@ -86,18 +86,41 @@ export function getCurrentETag(
 }
 
 export function saveFileWithETag(
-	content: string,
+	stream: ReadableStream<Uint8Array>,
 	etag: string,
 	cacheDir: string,
 	filePrefix: `${string}-`,
 	fileType: `.${string}` = ".txt",
-): string {
+): Promise<string> {
 	const sanitizedETag = sanitizeETagForFilename(etag);
 	const filename = `${filePrefix}${sanitizedETag}${fileType}`;
 	const filepath = path.join(cacheDir, filename);
 
-	fs.writeFileSync(filepath, content, "utf-8");
-	return filepath;
+	return new Promise((resolve, reject) => {
+		const fileStream = fs.createWriteStream(filepath);
+		const reader = stream.getReader();
+
+		fileStream.on("error", reject);
+		fileStream.on("finish", () => resolve(filepath));
+
+		function read() {
+			reader
+				.read()
+				.then(({ done, value }) => {
+					if (done) {
+						fileStream.end();
+					} else {
+						fileStream.write(value, (err) => {
+							if (err) reject(err);
+							else read();
+						});
+					}
+				})
+				.catch(reject);
+		}
+
+		read();
+	});
 }
 
 export function getCachedFilePath(
@@ -143,13 +166,13 @@ export const cacheFile = async (
 			logger.debug(() => ({
 				msg: "File not modified, using cached version",
 			}));
-		} else if (result.content !== null && result.etag) {
+		} else if (result.stream !== null && result.etag) {
 			logger.info(() => ({
 				msg: "File updated, caching new version",
 			}));
 			purgeOldCache(cacheDir, filePrefix, fileType);
-			filePath = saveFileWithETag(
-				result.content,
+			filePath = await saveFileWithETag(
+				result.stream,
 				result.etag,
 				cacheDir,
 				filePrefix,
