@@ -31,13 +31,22 @@ function sanitizeETagForFilename(etag: string): string {
 		.replace(/[/\\:*?"<>|]/g, "_"); // Replace invalid filename characters with underscore
 }
 
+function sanitizeLastModifiedForFilename(lastModified: string): string {
+	// Encode the raw Last-Modified value using base64url to preserve it losslessly
+	// This handles any valid HTTP-date format without loss
+	return Buffer.from(lastModified, "utf8").toString("base64url");
+}
+
 function reconstructETagFromFilename(
 	filename: string,
 	filePrefix: string,
 	fileType: `.${string}` = ".txt",
 ): string {
 	// Extract sanitized etag from filename and reconstruct original format
-	const sanitizedETag = filename.replace(filePrefix, "").replace(fileType, "");
+	// Filename format: ${filePrefix}etag-${sanitizedETag}${fileType}
+	const withoutPrefix = filename.replace(filePrefix, "");
+	const withoutType = withoutPrefix.replace(fileType, "");
+	const sanitizedETag = withoutType.replace(/^etag-/, "");
 
 	// The sanitized ETag had W/ replaced with W_, so reverse that
 	// and handle the case where it was just a quoted etag without W/
@@ -45,6 +54,21 @@ function reconstructETagFromFilename(
 		return `W/"${sanitizedETag.substring(2)}"`;
 	}
 	return `"${sanitizedETag}"`;
+}
+
+function reconstructLastModifiedFromFilename(
+	filename: string,
+	filePrefix: string,
+	fileType: `.${string}` = ".txt",
+): string {
+	// Extract base64url encoded lastModified from filename and decode it
+	// Filename format: ${filePrefix}lm-${base64urlLastModified}${fileType}
+	const withoutPrefix = filename.replace(filePrefix, "");
+	const withoutType = withoutPrefix.replace(fileType, "");
+	const base64LastModified = withoutType.replace(/^lm-/, "");
+
+	// Decode from base64url back to the original Last-Modified string
+	return Buffer.from(base64LastModified, "base64url").toString("utf8");
 }
 
 export function purgeOldCache(
@@ -75,15 +99,43 @@ export function getCurrentETag(
 
 	const files = fs.readdirSync(cacheDir);
 	const cachedFile = files.find(
-		(file) => file.startsWith(filePrefix) && file.endsWith(fileType),
+		(file) =>
+			file.startsWith(filePrefix) &&
+			file.endsWith(fileType) &&
+			file.includes("etag-"),
 	);
 
 	if (!cachedFile) {
 		return null;
 	}
 
-	// Reconstruct the original ETag format for HTTP header use
+	// It's an ETag - reconstruct it
 	return reconstructETagFromFilename(cachedFile, filePrefix, fileType);
+}
+
+export function getCurrentLastModified(
+	cacheDir: string,
+	filePrefix: string,
+	fileType: `.${string}` = ".txt",
+): string | null {
+	if (!fs.existsSync(cacheDir)) {
+		return null;
+	}
+
+	const files = fs.readdirSync(cacheDir);
+	const cachedFile = files.find(
+		(file) =>
+			file.startsWith(filePrefix) &&
+			file.endsWith(fileType) &&
+			file.includes("lm-"),
+	);
+
+	if (!cachedFile) {
+		return null;
+	}
+
+	// It's a Last-Modified - reconstruct it
+	return reconstructLastModifiedFromFilename(cachedFile, filePrefix, fileType);
 }
 
 export async function saveFileWithETag(
@@ -101,7 +153,57 @@ export async function saveFileWithETag(
 	}
 
 	const sanitizedETag = sanitizeETagForFilename(etag);
-	const filename = `${filePrefix}${sanitizedETag}${fileType}`;
+	const filename = `${filePrefix}etag-${sanitizedETag}${fileType}`;
+	const filepath = path.join(cacheDir, filename);
+
+	// Dynamically import Node.js stream modules to avoid bundling issues
+	const [{ Readable }, { pipeline }] = await Promise.all([
+		import("node:stream"),
+		import("node:stream/promises"),
+	]);
+
+	// Convert Web ReadableStream to Node.js Readable
+	const nodeStream = Readable.fromWeb(<streamWeb>stream);
+
+	// Create write stream
+	const fileStream = fs.createWriteStream(filepath);
+
+	return pipeline(nodeStream, fileStream)
+		.then(() => filepath)
+		.catch((error) => {
+			// Clean up on error: destroy streams and remove partial file
+			nodeStream.destroy();
+			fileStream.destroy();
+
+			// Remove partially written file if it exists
+			try {
+				if (fs.existsSync(filepath)) {
+					fs.unlinkSync(filepath);
+				}
+			} catch (cleanupError) {
+				// Ignore cleanup errors
+			}
+
+			throw error;
+		});
+}
+
+export async function saveFileWithLastModified(
+	stream: ReadableStream<Uint8Array>,
+	lastModified: string,
+	cacheDir: string,
+	filePrefix: `${string}-`,
+	fileType: `.${string}` = ".txt",
+): Promise<string> {
+	// Ensure this only runs in Node.js environment
+	if (typeof window !== "undefined" || typeof process === "undefined") {
+		throw new Error(
+			"saveFileWithLastModified can only be used in Node.js environments",
+		);
+	}
+
+	const sanitizedLastModified = sanitizeLastModifiedForFilename(lastModified);
+	const filename = `${filePrefix}lm-${sanitizedLastModified}${fileType}`;
 	const filepath = path.join(cacheDir, filename);
 
 	// Dynamically import Node.js stream modules to avoid bundling issues
@@ -155,6 +257,58 @@ export function getCachedFilePath(
 
 type LogObj = (msg: () => { msg: string }) => void;
 
+export const fetchWithLastModified = async (
+	url: string,
+	lastModified: string | null,
+): Promise<{
+	stream: ReadableStream<Uint8Array> | null;
+	lastModified: string | null;
+	notModified: boolean;
+	contentLength?: number;
+}> => {
+	const headers: Record<string, string> = {};
+	if (lastModified) {
+		headers["If-Modified-Since"] = lastModified;
+	}
+
+	try {
+		const response = await fetch(url, {
+			method: "GET",
+			headers,
+		});
+
+		if (response.status === 304) {
+			return { stream: null, lastModified: null, notModified: true };
+		}
+
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+
+		const responseLastModified = response.headers.get("last-modified") || null;
+		const contentLengthHeader = response.headers.get("content-length");
+		const contentLength = contentLengthHeader
+			? (() => {
+					const parsed = Number.parseInt(contentLengthHeader, 10);
+					return Number.isFinite(parsed) ? parsed : undefined;
+				})()
+			: undefined;
+
+		return {
+			stream: response.body,
+			lastModified: responseLastModified,
+			notModified: false,
+			contentLength,
+		};
+	} catch (error) {
+		throw new Error(`Fetch error: ${error}`);
+	}
+};
+
+export const cacheFileUtils = {
+	fetchWithLastModified,
+};
+
 export const cacheFile = async (
 	cacheDir: string,
 	url: string,
@@ -170,29 +324,97 @@ export const cacheFile = async (
 	ensureDirExists(cacheDir);
 
 	const currentETag = getCurrentETag(cacheDir, filePrefix, fileType);
+	const currentLastModified = getCurrentLastModified(
+		cacheDir,
+		filePrefix,
+		fileType,
+	);
 	let filePath = getCachedFilePath(cacheDir, filePrefix, fileType);
 
 	try {
-		const result = await fetchWithETag(url, currentETag);
+		// Try ETag first if available
+		if (currentETag) {
+			const result = await fetchWithETag(url, currentETag);
 
-		if (result.notModified && filePath) {
-			logger.debug(() => ({
-				msg: "File not modified, using cached version",
-			}));
-		} else if (result.stream !== null && result.etag) {
-			logger.info(() => ({
-				msg: "File updated, caching new version",
-			}));
-			purgeOldCache(cacheDir, filePrefix, fileType);
-			filePath = await saveFileWithETag(
-				result.stream,
-				result.etag,
-				cacheDir,
-				filePrefix,
-				fileType,
+			if (result.notModified && filePath) {
+				logger.debug(() => ({
+					msg: "File not modified (ETag), using cached version",
+				}));
+			} else if (result.stream !== null && result.etag) {
+				logger.info(() => ({
+					msg: "File updated (ETag), caching new version",
+				}));
+				purgeOldCache(cacheDir, filePrefix, fileType);
+				filePath = await saveFileWithETag(
+					result.stream,
+					result.etag,
+					cacheDir,
+					filePrefix,
+					fileType,
+				);
+			} else {
+				throw new Error("Failed to fetch file or no ETag received");
+			}
+		} else if (currentLastModified) {
+			// Fall back to Last-Modified
+			const result = await cacheFileUtils.fetchWithLastModified(
+				url,
+				currentLastModified,
 			);
+
+			if (result.notModified && filePath) {
+				logger.debug(() => ({
+					msg: "File not modified (Last-Modified), using cached version",
+				}));
+			} else if (result.stream !== null && result.lastModified) {
+				logger.info(() => ({
+					msg: "File updated (Last-Modified), caching new version",
+				}));
+				purgeOldCache(cacheDir, filePrefix, fileType);
+				filePath = await saveFileWithLastModified(
+					result.stream,
+					result.lastModified,
+					cacheDir,
+					filePrefix,
+					fileType,
+				);
+			} else {
+				throw new Error("Failed to fetch file or no Last-Modified received");
+			}
 		} else {
-			throw new Error("Failed to fetch file or no ETag received");
+			// No cached version, fetch fresh
+			const etagResult = await fetchWithETag(url, null);
+			if (etagResult.stream !== null && etagResult.etag) {
+				logger.info(() => ({
+					msg: "Fetching file for first time (ETag)",
+				}));
+				filePath = await saveFileWithETag(
+					etagResult.stream,
+					etagResult.etag,
+					cacheDir,
+					filePrefix,
+					fileType,
+				);
+			} else {
+				// Try Last-Modified if ETag not available
+				const lmResult = await cacheFileUtils.fetchWithLastModified(url, null);
+				if (lmResult.stream !== null && lmResult.lastModified) {
+					logger.info(() => ({
+						msg: "Fetching file for first time (Last-Modified)",
+					}));
+					filePath = await saveFileWithLastModified(
+						lmResult.stream,
+						lmResult.lastModified,
+						cacheDir,
+						filePrefix,
+						fileType,
+					);
+				} else {
+					throw new Error(
+						"Failed to fetch file - no ETag or Last-Modified available",
+					);
+				}
+			}
 		}
 	} catch (error) {
 		logger.warn(() => ({
