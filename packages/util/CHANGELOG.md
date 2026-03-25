@@ -1,5 +1,10 @@
 # @prosopo/util
 
+## 3.2.11
+### Patch Changes
+
+- a25dffa: Cache based on last modified
+
 ## 3.2.10
 ### Patch Changes
 

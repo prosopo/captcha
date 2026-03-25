@@ -1,5 +1,10 @@
 # @prosopo/procaptcha-wrapper
 
+## 2.6.64
+### Patch Changes
+
+  - @prosopo/types@3.13.3
+
 ## 2.6.63
 ### Patch Changes
 
