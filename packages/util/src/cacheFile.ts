@@ -32,16 +32,9 @@ function sanitizeETagForFilename(etag: string): string {
 }
 
 function sanitizeLastModifiedForFilename(lastModified: string): string {
-	// Convert Last-Modified date to a safe filename format
-	// Input: "Wed, 25 Mar 2026 11:19:09 GMT"
-	// Output: "Wed_25_Mar_2026_11_19_09_GMT"
-	return lastModified
-		.replace(/[,:\s]/g, "_") // Replace commas, colons, and spaces with underscores
-		.replace(/__/g, "_"); // Remove double underscores
-}
-
-function isLastModifiedFilename(filename: string): boolean {
-	return filename.match(/\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun)_/) !== null;
+	// Encode the raw Last-Modified value using base64url to preserve it losslessly
+	// This handles any valid HTTP-date format without loss
+	return Buffer.from(lastModified, "utf8").toString("base64url");
 }
 
 function reconstructETagFromFilename(
@@ -50,7 +43,10 @@ function reconstructETagFromFilename(
 	fileType: `.${string}` = ".txt",
 ): string {
 	// Extract sanitized etag from filename and reconstruct original format
-	const sanitizedETag = filename.replace(filePrefix, "").replace(fileType, "");
+	// Filename format: ${filePrefix}etag-${sanitizedETag}${fileType}
+	const withoutPrefix = filename.replace(filePrefix, "");
+	const withoutType = withoutPrefix.replace(fileType, "");
+	const sanitizedETag = withoutType.replace(/^etag-/, "");
 
 	// The sanitized ETag had W/ replaced with W_, so reverse that
 	// and handle the case where it was just a quoted etag without W/
@@ -65,19 +61,14 @@ function reconstructLastModifiedFromFilename(
 	filePrefix: string,
 	fileType: `.${string}` = ".txt",
 ): string {
-	// Extract sanitized lastModified from filename and reconstruct original format
-	const sanitizedLastModified = filename
-		.replace(filePrefix, "")
-		.replace(fileType, "");
+	// Extract base64url encoded lastModified from filename and decode it
+	// Filename format: ${filePrefix}lm-${base64urlLastModified}${fileType}
+	const withoutPrefix = filename.replace(filePrefix, "");
+	const withoutType = withoutPrefix.replace(fileType, "");
+	const base64LastModified = withoutType.replace(/^lm-/, "");
 
-	// Convert back from "Wed_25_Mar_2026_11_19_09_GMT" to "Wed, 25 Mar 2026 11:19:09 GMT"
-	const parts = sanitizedLastModified.split("_");
-	if (parts.length >= 7) {
-		const [day, date, month, year, hour, minute, second, ...rest] = parts;
-		const tz = rest.join("_"); // GMT or similar
-		return `${day}, ${date} ${month} ${year} ${hour}:${minute}:${second} ${tz}`;
-	}
-	return sanitizedLastModified; // Fallback
+	// Decode from base64url back to the original Last-Modified string
+	return Buffer.from(base64LastModified, "base64url").toString("utf8");
 }
 
 export function purgeOldCache(
@@ -108,18 +99,16 @@ export function getCurrentETag(
 
 	const files = fs.readdirSync(cacheDir);
 	const cachedFile = files.find(
-		(file) => file.startsWith(filePrefix) && file.endsWith(fileType),
+		(file) =>
+			file.startsWith(filePrefix) &&
+			file.endsWith(fileType) &&
+			file.includes("etag-"),
 	);
 
 	if (!cachedFile) {
 		return null;
 	}
 
-	// Check if it's a Last-Modified based filename (contains day of week)
-	// If it contains day names, it's Last-Modified, otherwise it's ETag
-	if (isLastModifiedFilename(cachedFile)) {
-		return null; // It's Last-Modified
-	}
 	// It's an ETag - reconstruct it
 	return reconstructETagFromFilename(cachedFile, filePrefix, fileType);
 }
@@ -135,22 +124,18 @@ export function getCurrentLastModified(
 
 	const files = fs.readdirSync(cacheDir);
 	const cachedFile = files.find(
-		(file) => file.startsWith(filePrefix) && file.endsWith(fileType),
+		(file) =>
+			file.startsWith(filePrefix) &&
+			file.endsWith(fileType) &&
+			file.includes("lm-"),
 	);
 
 	if (!cachedFile) {
 		return null;
 	}
 
-	// Check if it's a Last-Modified based filename (contains day of week)
-	if (isLastModifiedFilename(cachedFile)) {
-		return reconstructLastModifiedFromFilename(
-			cachedFile,
-			filePrefix,
-			fileType,
-		);
-	}
-	return null;
+	// It's a Last-Modified - reconstruct it
+	return reconstructLastModifiedFromFilename(cachedFile, filePrefix, fileType);
 }
 
 export async function saveFileWithETag(
@@ -168,7 +153,7 @@ export async function saveFileWithETag(
 	}
 
 	const sanitizedETag = sanitizeETagForFilename(etag);
-	const filename = `${filePrefix}${sanitizedETag}${fileType}`;
+	const filename = `${filePrefix}etag-${sanitizedETag}${fileType}`;
 	const filepath = path.join(cacheDir, filename);
 
 	// Dynamically import Node.js stream modules to avoid bundling issues
@@ -218,7 +203,7 @@ export async function saveFileWithLastModified(
 	}
 
 	const sanitizedLastModified = sanitizeLastModifiedForFilename(lastModified);
-	const filename = `${filePrefix}${sanitizedLastModified}${fileType}`;
+	const filename = `${filePrefix}lm-${sanitizedLastModified}${fileType}`;
 	const filepath = path.join(cacheDir, filename);
 
 	// Dynamically import Node.js stream modules to avoid bundling issues

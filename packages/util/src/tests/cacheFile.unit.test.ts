@@ -55,6 +55,7 @@ describe("cacheFile", () => {
 		if (fs.existsSync(testCacheDir)) {
 			fs.rmSync(testCacheDir, { recursive: true, force: true });
 		}
+		vi.restoreAllMocks();
 	});
 	describe("ETag handling", () => {
 		beforeEach(() => {
@@ -130,34 +131,34 @@ describe("cacheFile", () => {
 		});
 		it("should correctly round-trip Last-Modified through cache cycle", async () => {
 			const content = "test content";
-			const lastModified = "Wed, 25 Mar 2026 11:19:09 GMT";
+			const lastModified = "Sunday, 23-Mar-26 10:15:30 GMT"; // RFC 850 format to test lossless encoding
 			// Mock ETag to return null so it falls back to Last-Modified
 			vi.spyOn(fetchModule, "fetchWithETag").mockResolvedValue({
 				stream: null,
 				etag: null,
 				notModified: false,
 			});
-			const mock = vi.fn();
-			const original = cacheFileModule.cacheFileUtils.fetchWithLastModified;
-			cacheFileModule.cacheFileUtils.fetchWithLastModified = mock;
-			mock.mockResolvedValueOnce({
+			const spy = vi.spyOn(
+				cacheFileModule.cacheFileUtils,
+				"fetchWithLastModified",
+			);
+			spy.mockResolvedValueOnce({
 				stream: stringToStream(content),
 				lastModified,
 				notModified: false,
 			});
-			mock.mockResolvedValueOnce({
+			spy.mockResolvedValueOnce({
 				stream: null,
 				lastModified: null,
 				notModified: true,
 			});
 			await cacheFile(testCacheDir, testUrl, mockLogger, filePrefix, fileType);
 			await cacheFile(testCacheDir, testUrl, mockLogger, filePrefix, fileType);
-			expect(mock).toHaveBeenNthCalledWith(
+			expect(spy).toHaveBeenNthCalledWith(
 				2,
 				testUrl,
-				"Wed, 25 Mar 2026 11:19:09 GMT",
+				"Sunday, 23-Mar-26 10:15:30 GMT",
 			);
-			cacheFileModule.cacheFileUtils.fetchWithLastModified = original;
 		});
 
 		it("should handle empty response body with valid Last-Modified", async () => {
@@ -171,10 +172,11 @@ describe("cacheFile", () => {
 				notModified: false,
 			});
 
-			const mock = vi.fn();
-			const original = cacheFileModule.cacheFileUtils.fetchWithLastModified;
-			cacheFileModule.cacheFileUtils.fetchWithLastModified = mock;
-			mock.mockResolvedValue({
+			const spy = vi.spyOn(
+				cacheFileModule.cacheFileUtils,
+				"fetchWithLastModified",
+			);
+			spy.mockResolvedValue({
 				stream: stringToStream(emptyContent),
 				lastModified,
 				notModified: false,
@@ -191,7 +193,6 @@ describe("cacheFile", () => {
 			expect(fs.existsSync(filePath)).toBe(true);
 			expect(fs.readFileSync(filePath, "utf-8")).toBe("");
 			expect(mockLogger.info).toHaveBeenCalledWith(expect.any(Function));
-			cacheFileModule.cacheFileUtils.fetchWithLastModified = original;
 		});
 
 		it("should fall back to Last-Modified when ETag is not available", async () => {
@@ -206,10 +207,11 @@ describe("cacheFile", () => {
 			});
 
 			// Mock Last-Modified fetch to succeed
-			const mock = vi.fn();
-			const original = cacheFileModule.cacheFileUtils.fetchWithLastModified;
-			cacheFileModule.cacheFileUtils.fetchWithLastModified = mock;
-			mock.mockResolvedValue({
+			const spy = vi.spyOn(
+				cacheFileModule.cacheFileUtils,
+				"fetchWithLastModified",
+			);
+			spy.mockResolvedValue({
 				stream: stringToStream(content),
 				lastModified,
 				notModified: false,
@@ -226,7 +228,6 @@ describe("cacheFile", () => {
 			expect(fs.existsSync(filePath)).toBe(true);
 			expect(fs.readFileSync(filePath, "utf-8")).toBe(content);
 			expect(mockLogger.info).toHaveBeenCalledWith(expect.any(Function));
-			cacheFileModule.cacheFileUtils.fetchWithLastModified = original;
 		});
 	});
 });
