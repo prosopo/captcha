@@ -182,7 +182,6 @@ export type Provider = {
 
 export type FrontendProvider = {
 	url: string;
-	datasetId: string;
 };
 
 export type RandomProvider = {
@@ -236,7 +235,7 @@ export interface CaptchaIdAndProof {
 export const CaptchaRequestBody = object({
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
-	[ApiParams.datasetId]: union([string(), array(number())]),
+	[ApiParams.datasetId]: union([string(), array(number())]).optional(),
 	[ApiParams.sessionId]: string().optional(),
 });
 

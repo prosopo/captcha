@@ -74,7 +74,6 @@ export default class ProviderApi
 		const body: CaptchaRequestBodyType = {
 			[ApiParams.dapp]: dappAccount,
 			[ApiParams.user]: userAccount,
-			[ApiParams.datasetId]: provider.datasetId,
 		};
 		if (sessionId) {
 			body[ApiParams.sessionId] = sessionId;
