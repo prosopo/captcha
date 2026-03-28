@@ -1,5 +1,43 @@
 # @prosopo/database
 
+## 3.9.13
+### Patch Changes
+
+- Updated dependencies [a25dffa]
+  - @prosopo/util@3.2.11
+  - @prosopo/types@3.13.3
+  - @prosopo/user-access-policy@3.6.19
+  - @prosopo/types-database@4.4.13
+
+## 3.9.12
+### Patch Changes
+
+- Updated dependencies [346edd7]
+  - @prosopo/util@3.2.10
+  - @prosopo/types@3.13.2
+  - @prosopo/user-access-policy@3.6.18
+  - @prosopo/types-database@4.4.12
+
+## 3.9.11
+### Patch Changes
+
+- Updated dependencies [22bfee7]
+  - @prosopo/util@3.2.9
+  - @prosopo/types@3.13.1
+  - @prosopo/user-access-policy@3.6.17
+  - @prosopo/types-database@4.4.11
+
+## 3.9.10
+### Patch Changes
+
+- Updated dependencies [e0fb3d6]
+- Updated dependencies [e6d9553]
+- Updated dependencies [f3f23e3]
+  - @prosopo/util@3.2.8
+  - @prosopo/types@3.13.0
+  - @prosopo/user-access-policy@3.6.16
+  - @prosopo/types-database@4.4.10
+
 ## 3.9.9
 ### Patch Changes
 

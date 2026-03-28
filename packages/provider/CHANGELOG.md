@@ -1,5 +1,80 @@
 # @prosopo/provider
 
+## 3.22.3
+### Patch Changes
+
+- Updated dependencies [a25dffa]
+  - @prosopo/util@3.2.11
+  - @prosopo/database@3.9.13
+  - @prosopo/datasets@3.1.12
+  - @prosopo/keyring@2.9.18
+  - @prosopo/types@3.13.3
+  - @prosopo/user-access-policy@3.6.19
+  - @prosopo/env@3.3.14
+  - @prosopo/types-env@2.8.14
+  - @prosopo/api@3.2.9
+  - @prosopo/api-express-router@3.0.69
+  - @prosopo/load-balancer@2.8.35
+  - @prosopo/types-database@4.4.13
+
+## 3.22.2
+### Patch Changes
+
+- 346edd7: Fix exports for browser
+- Updated dependencies [346edd7]
+  - @prosopo/util@3.2.10
+  - @prosopo/database@3.9.12
+  - @prosopo/datasets@3.1.11
+  - @prosopo/keyring@2.9.17
+  - @prosopo/types@3.13.2
+  - @prosopo/user-access-policy@3.6.18
+  - @prosopo/env@3.3.13
+  - @prosopo/types-env@2.8.13
+  - @prosopo/api@3.2.8
+  - @prosopo/api-express-router@3.0.68
+  - @prosopo/load-balancer@2.8.34
+  - @prosopo/types-database@4.4.12
+
+## 3.22.1
+### Patch Changes
+
+- Updated dependencies [22bfee7]
+  - @prosopo/util@3.2.9
+  - @prosopo/database@3.9.11
+  - @prosopo/datasets@3.1.10
+  - @prosopo/keyring@2.9.16
+  - @prosopo/types@3.13.1
+  - @prosopo/user-access-policy@3.6.17
+  - @prosopo/env@3.3.12
+  - @prosopo/types-env@2.8.12
+  - @prosopo/api@3.2.7
+  - @prosopo/api-express-router@3.0.67
+  - @prosopo/load-balancer@2.8.33
+  - @prosopo/types-database@4.4.11
+
+## 3.22.0
+### Minor Changes
+
+- e6d9553: Add `registerSiteKeys` bulk endpoint (`POST /v1/prosopo/provider/admin/sitekeys/register`) that accepts an array of site key records, allowing multiple client records to be registered in a single request.
+
+### Patch Changes
+
+- Updated dependencies [e0fb3d6]
+- Updated dependencies [e6d9553]
+- Updated dependencies [f3f23e3]
+  - @prosopo/util@3.2.8
+  - @prosopo/types@3.13.0
+  - @prosopo/database@3.9.10
+  - @prosopo/datasets@3.1.9
+  - @prosopo/keyring@2.9.15
+  - @prosopo/user-access-policy@3.6.16
+  - @prosopo/api@3.2.6
+  - @prosopo/api-express-router@3.0.66
+  - @prosopo/env@3.3.11
+  - @prosopo/load-balancer@2.8.32
+  - @prosopo/types-database@4.4.10
+  - @prosopo/types-env@2.8.11
+
 ## 3.21.4
 ### Patch Changes
 

@@ -1,5 +1,26 @@
 # @prosopo/util
 
+## 3.2.11
+### Patch Changes
+
+- a25dffa: Cache based on last modified
+
+## 3.2.10
+### Patch Changes
+
+- 346edd7: Fix exports for browser
+
+## 3.2.9
+### Patch Changes
+
+- 22bfee7: Stream large files to avoid loading entire file into RAM
+
+## 3.2.8
+### Patch Changes
+
+- e0fb3d6: Invalidate domains with incorrect dots
+- f3f23e3: Improve localhost detection
+
 ## 3.2.7
 ### Patch Changes
 

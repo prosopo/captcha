@@ -132,7 +132,8 @@ function getWidgetStyles(theme: Theme): string {
     flex-wrap: wrap;
     justify-content: space-between;
     min-height: ${WIDGET_INNER_HEIGHT}px;
-    overflow: hidden;
+    height: 100%;
+    box-sizing: border-box;
 }
 </style>
 `;
