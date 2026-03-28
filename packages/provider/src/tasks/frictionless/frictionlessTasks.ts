@@ -21,6 +21,7 @@ import {
 	type ContextType,
 	type GetFrictionlessCaptchaResponse,
 	type KeyringPair,
+	type ModeEnum,
 	type ProsopoConfigOutput,
 	type RequestHeaders,
 	type ScoreComponents,
@@ -97,6 +98,7 @@ export class FrictionlessManager extends CaptchaManager {
 			geolocation: params.geolocation,
 			countryCode: params.countryCode,
 			headers: params.headers,
+			mode: params.mode,
 		};
 	}
 
@@ -131,6 +133,7 @@ export class FrictionlessManager extends CaptchaManager {
 		deleted?: boolean,
 		countryCode?: string,
 		headers?: RequestHeaders,
+		mode?: ModeEnum,
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
@@ -142,6 +145,7 @@ export class FrictionlessManager extends CaptchaManager {
 			providerSelectEntropy,
 			ipAddress,
 			captchaType,
+			mode,
 			solvedImagesCount,
 			powDifficulty,
 			userSitekeyIpHash,
@@ -224,6 +228,7 @@ export class FrictionlessManager extends CaptchaManager {
 			undefined,
 			effectiveParams.countryCode,
 			effectiveParams.headers,
+			effectiveParams.mode,
 		);
 
 		return {
@@ -271,6 +276,7 @@ export class FrictionlessManager extends CaptchaManager {
 			undefined,
 			effectiveParams.countryCode,
 			effectiveParams.headers,
+			effectiveParams.mode,
 		);
 		return {
 			[ApiParams.captchaType]: CaptchaType.pow,
@@ -317,6 +323,7 @@ export class FrictionlessManager extends CaptchaManager {
 			true,
 			effectiveParams.countryCode,
 			effectiveParams.headers,
+			effectiveParams.mode,
 		);
 	}
 
