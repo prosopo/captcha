@@ -98,6 +98,8 @@ export const Checkbox: FC<CheckboxProps> = ({
 		display: flex;
 		cursor: pointer;
 		user-select: none;
+		font-weight: normal;
+		font-family: ${theme.font.fontFamily}
 		
 		@container widget (max-width: 219px) {
 			display: none;
