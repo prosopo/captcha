@@ -1,5 +1,10 @@
 # @prosopo/widget-skeleton
 
+## 2.8.0
+### Minor Changes
+
+- 73df23c: Stop widget css from being overriden
+
 ## 2.7.14
 ### Patch Changes
 
