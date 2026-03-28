@@ -30,8 +30,13 @@ export function createLogoElement(theme: Theme): HTMLElement {
 const LOGO_STYLES = `
 <style>
 .logo {
-    display: inline-flex;
+    display: flex;
     flex-direction: column;
+    margin-left:auto;
+    width: max-content;
+    height: 100%;
+    align-items: center;
+    justify-content:center;
 }
 
 .prosopo-logo {
@@ -39,7 +44,7 @@ const LOGO_STYLES = `
     flex-direction: column;    /* ✅ Stack vertically */
     align-items: center;       /* ✅ Center horizontally */
     justify-content: center;   /* ✅ Optional: center vertically if needed */
-    padding: 8px;
+    padding: 0px 8px 0px 8px;
     height: auto;
     min-width: max-content;
     gap: 2px;                  /* ✅ Space between SVG and text */
