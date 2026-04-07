@@ -12,22 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { z } from "zod";
-
-enum CaptchaType {
-	image = "image",
-	pow = "pow",
-	frictionless = "frictionless",
-	puzzle = "puzzle",
-}
-
-const CaptchaTypeSchema = z.nativeEnum(CaptchaType);
-
-// Decision machines only work with pow and image captcha types (not frictionless)
-const DecisionMachineCaptchaTypeSchema = z.union([
-	z.literal(CaptchaType.pow),
-	z.literal(CaptchaType.image),
-	z.literal(CaptchaType.puzzle),
-]);
-
-export { CaptchaType, CaptchaTypeSchema, DecisionMachineCaptchaTypeSchema };
+/**
+ * Validate that the puzzle solution is within tolerance of the target.
+ * Uses Euclidean distance.
+ */
+export const validatePuzzleSolution = (
+	finalX: number,
+	finalY: number,
+	targetX: number,
+	targetY: number,
+	tolerance: number,
+): boolean => {
+	const distance = Math.sqrt(
+		(finalX - targetX) ** 2 + (finalY - targetY) ** 2,
+	);
+	return distance <= tolerance;
+};

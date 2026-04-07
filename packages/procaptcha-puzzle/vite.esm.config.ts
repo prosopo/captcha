@@ -12,22 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { z } from "zod";
+import path from "node:path";
+import { ViteEsmConfig } from "@prosopo/config";
 
-enum CaptchaType {
-	image = "image",
-	pow = "pow",
-	frictionless = "frictionless",
-	puzzle = "puzzle",
+export default function () {
+	return ViteEsmConfig(path.basename("."), path.resolve("./tsconfig.json"));
 }
-
-const CaptchaTypeSchema = z.nativeEnum(CaptchaType);
-
-// Decision machines only work with pow and image captcha types (not frictionless)
-const DecisionMachineCaptchaTypeSchema = z.union([
-	z.literal(CaptchaType.pow),
-	z.literal(CaptchaType.image),
-	z.literal(CaptchaType.puzzle),
-]);
-
-export { CaptchaType, CaptchaTypeSchema, DecisionMachineCaptchaTypeSchema };

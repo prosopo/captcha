@@ -26,6 +26,7 @@ import {
 } from "@prosopo/types";
 import type {
 	ClientRecord,
+	PuzzleCaptchaRecord,
 	IProviderDatabase,
 	IUserDataSlim,
 	PoWCaptchaRecord,
@@ -345,7 +346,7 @@ export class CaptchaManager {
 	 */
 	async checkForHardBlock(
 		userAccessRulesStorage: AccessRulesStorage,
-		challengeRecord: PoWCaptchaRecord | UserCommitment,
+		challengeRecord: PoWCaptchaRecord | PuzzleCaptchaRecord | UserCommitment,
 		userAccount: string,
 		headers: RequestHeaders,
 		coords?: [number, number][][],

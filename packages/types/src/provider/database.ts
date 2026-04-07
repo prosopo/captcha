@@ -36,6 +36,7 @@ import {
 	CaptchaSolutionSchema,
 	CaptchaStatus,
 	type PoWCaptchaUser,
+	type PoWChallengeId,
 	PowChallengeIdSchema,
 } from "../datasets/index.js";
 import type {
@@ -362,6 +363,20 @@ export interface PoWCaptchaStored
 	extends Omit<PoWCaptchaUser, "requestedAtTimestamp">,
 		StoredCaptcha {}
 
+export interface PuzzleCaptchaStored extends StoredCaptcha {
+	challenge: PoWChallengeId;
+	targetX: number;
+	targetY: number;
+	originX: number;
+	originY: number;
+	tolerance: number;
+	providerSignature: string;
+	userSignature?: string;
+	userAccount: string;
+	dappAccount: string;
+	puzzleEvents?: Array<{ x: number; y: number; t: number }>;
+}
+
 export interface SolutionRecord extends CaptchaSolution {
 	datasetId: string;
 	datasetContentId: string;
@@ -410,7 +425,7 @@ export type DecisionMachineArtifact = {
 	source: string;
 	name?: string;
 	version?: string;
-	captchaType?: CaptchaType.pow | CaptchaType.image;
+	captchaType?: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle;
 	createdAt: Date;
 	updatedAt: Date;
 };

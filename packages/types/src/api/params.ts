@@ -63,4 +63,12 @@ export enum ApiParams {
 	decisionMachineCaptchaType = "decisionMachineCaptchaType",
 	salt = "salt",
 	email = "email",
+	targetX = "targetX",
+	targetY = "targetY",
+	originX = "originX",
+	originY = "originY",
+	finalX = "finalX",
+	finalY = "finalY",
+	puzzleEvents = "puzzleEvents",
+	tolerance = "tolerance",
 }

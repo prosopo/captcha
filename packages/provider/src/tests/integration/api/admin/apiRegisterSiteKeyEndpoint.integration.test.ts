@@ -65,6 +65,7 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 				imageThreshold: 0.5,
 				imageMaxRounds: 3,
 				powDifficulty: 0.5,
+				puzzleTolerance: 15,
 				disallowWebView: false,
 				contextAware: {
 					enabled: false,
@@ -102,6 +103,7 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 				imageThreshold: 0.5,
 				imageMaxRounds: 3,
 				powDifficulty: 0.5,
+				puzzleTolerance: 15,
 				disallowWebView: false,
 				contextAware: {
 					enabled: false,

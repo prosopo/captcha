@@ -12,22 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { z } from "zod";
+import { getDefaultEvents } from "@prosopo/procaptcha-common";
+import { ProcaptchaPuzzle } from "@prosopo/procaptcha-puzzle";
+import type { CaptchaProps } from "../captchaProps.js";
 
-enum CaptchaType {
-	image = "image",
-	pow = "pow",
-	frictionless = "frictionless",
-	puzzle = "puzzle",
-}
+const PuzzleCaptcha = (props: CaptchaProps) => {
+	const { config, callbacks, i18n } = props;
 
-const CaptchaTypeSchema = z.nativeEnum(CaptchaType);
+	return (
+		<ProcaptchaPuzzle
+			config={config}
+			callbacks={getDefaultEvents(callbacks)}
+			i18n={i18n}
+		/>
+	);
+};
 
-// Decision machines only work with pow and image captcha types (not frictionless)
-const DecisionMachineCaptchaTypeSchema = z.union([
-	z.literal(CaptchaType.pow),
-	z.literal(CaptchaType.image),
-	z.literal(CaptchaType.puzzle),
-]);
-
-export { CaptchaType, CaptchaTypeSchema, DecisionMachineCaptchaTypeSchema };
+export { PuzzleCaptcha };

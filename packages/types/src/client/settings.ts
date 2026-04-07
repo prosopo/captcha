@@ -158,6 +158,12 @@ export const ClientSettingsSchema = object({
 		.min(2)
 		.optional()
 		.default(imageMaxRoundsDefault),
+	puzzleTolerance: number()
+		.int()
+		.min(5)
+		.max(50)
+		.optional()
+		.default(15),
 	ipValidationRules: IPValidationRulesSchema.optional(),
 	disallowWebView: boolean().optional().default(false).optional(),
 	contextAware: ContextAwareSchema.optional(),

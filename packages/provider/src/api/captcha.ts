@@ -17,9 +17,11 @@ import { ClientApiPaths } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import express, { type Router } from "express";
 import checkSpamEmail from "./captcha/checkSpamEmail.js";
+import getPuzzleCaptchaChallenge from "./captcha/getPuzzleCaptchaChallenge.js";
 import getFrictionlessCaptchaChallenge from "./captcha/getFrictionlessCaptchaChallenge.js";
 import getImageCaptchaChallenge from "./captcha/getImageCaptchaChallenge.js";
 import getPoWCaptchaChallenge from "./captcha/getPoWCaptchaChallenge.js";
+import submitPuzzleCaptchaSolution from "./captcha/submitPuzzleCaptchaSolution.js";
 import submitImageCaptchaSolution from "./captcha/submitImageCaptchaSolution.js";
 import submitPoWCaptchaSolution from "./captcha/submitPoWCaptchaSolution.js";
 
@@ -73,6 +75,20 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				res,
 				next,
 			),
+	);
+
+	/**
+	 * Supplies a Puzzle challenge to a Dapp User
+	 */
+	router.post(ClientApiPaths.GetPuzzleCaptchaChallenge, (req, res, next) =>
+		getPuzzleCaptchaChallenge(env, userAccessRulesStorage)(req, res, next),
+	);
+
+	/**
+	 * Verifies a user's Puzzle solution as being approved or not
+	 */
+	router.post(ClientApiPaths.SubmitPuzzleCaptchaSolution, (req, res, next) =>
+		submitPuzzleCaptchaSolution(env)(req, res, next),
 	);
 
 	/**
