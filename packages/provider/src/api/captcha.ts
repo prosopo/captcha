@@ -17,13 +17,13 @@ import { ClientApiPaths } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import express, { type Router } from "express";
 import checkSpamEmail from "./captcha/checkSpamEmail.js";
-import getPuzzleCaptchaChallenge from "./captcha/getPuzzleCaptchaChallenge.js";
 import getFrictionlessCaptchaChallenge from "./captcha/getFrictionlessCaptchaChallenge.js";
 import getImageCaptchaChallenge from "./captcha/getImageCaptchaChallenge.js";
 import getPoWCaptchaChallenge from "./captcha/getPoWCaptchaChallenge.js";
-import submitPuzzleCaptchaSolution from "./captcha/submitPuzzleCaptchaSolution.js";
+import getPuzzleCaptchaChallenge from "./captcha/getPuzzleCaptchaChallenge.js";
 import submitImageCaptchaSolution from "./captcha/submitImageCaptchaSolution.js";
 import submitPoWCaptchaSolution from "./captcha/submitPoWCaptchaSolution.js";
+import submitPuzzleCaptchaSolution from "./captcha/submitPuzzleCaptchaSolution.js";
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol

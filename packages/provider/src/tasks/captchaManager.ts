@@ -26,10 +26,10 @@ import {
 } from "@prosopo/types";
 import type {
 	ClientRecord,
-	PuzzleCaptchaRecord,
 	IProviderDatabase,
 	IUserDataSlim,
 	PoWCaptchaRecord,
+	PuzzleCaptchaRecord,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import {

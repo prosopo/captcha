@@ -15,10 +15,10 @@
 import { CaptchaType } from "@prosopo/types";
 import type React from "react";
 import type { CaptchaProps } from "./captchaProps.js";
-import { PuzzleCaptcha } from "./components/puzzleCaptcha.js";
 import { FrictionlessCaptcha } from "./components/frictionlessCaptcha.js";
 import { ImageCaptcha } from "./components/imageCaptcha.js";
 import { PowCaptcha } from "./components/powCaptcha.js";
+import { PuzzleCaptcha } from "./components/puzzleCaptcha.js";
 
 const captchaComponentsList: Pick<
 	Record<CaptchaType, React.ComponentType<CaptchaProps>>,

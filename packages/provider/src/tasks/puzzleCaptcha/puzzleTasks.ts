@@ -96,9 +96,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 
 		// Use blockhash, userAccount and dappAccount for string for challenge
 		const challenge: PoWChallengeId = `${requestedAtTimestamp}___${userAccount}___${dappAccount}___${nonce}`;
-		const challengeSignature = u8aToHex(
-			this.pair.sign(stringToHex(challenge)),
-		);
+		const challengeSignature = u8aToHex(this.pair.sign(stringToHex(challenge)));
 
 		// Generate random target coordinates
 		const targetX = Math.floor(Math.random() * (280 - 150 + 1)) + 150;
@@ -407,12 +405,9 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 						status: CaptchaStatus.disapproved,
 						reason: "API.ACCESS_POLICY_BLOCK" as const,
 					};
-					await this.db.updatePuzzleCaptchaRecord(
-						challengeRecord.challenge,
-						{
-							result: blockedResult,
-						},
-					);
+					await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
+						result: blockedResult,
+					});
 					if (challengeRecord.sessionId) {
 						await this.db.updateSessionRecord(challengeRecord.sessionId, {
 							serverChecked: true,
@@ -439,15 +434,12 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 						msg: "Spam email domain detected in server puzzle verification",
 						data: { challenge, dappAccount, emailDomain },
 					}));
-					await this.db.updatePuzzleCaptchaRecord(
-						challengeRecord.challenge,
-						{
-							result: {
-								status: CaptchaStatus.disapproved,
-								reason: "API.SPAM_EMAIL_DOMAIN",
-							},
+					await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
+						result: {
+							status: CaptchaStatus.disapproved,
+							reason: "API.SPAM_EMAIL_DOMAIN",
 						},
-					);
+					});
 					return notVerifiedResponse;
 				}
 			} catch (error) {
@@ -495,12 +487,9 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 						status: CaptchaStatus.disapproved,
 						reason: "API.FAILED_IP_VALIDATION" as const,
 					};
-					await this.db.updatePuzzleCaptchaRecord(
-						challengeRecord.challenge,
-						{
-							result: ipFailResult,
-						},
-					);
+					await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
+						result: ipFailResult,
+					});
 					if (challengeRecord.sessionId) {
 						await this.db.updateSessionRecord(challengeRecord.sessionId, {
 							serverChecked: true,
@@ -563,12 +552,9 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 					status: CaptchaStatus.disapproved,
 					reason: decision.reason || "CAPTCHA.DECISION_MACHINE_DENIED",
 				};
-				await this.db.updatePuzzleCaptchaRecord(
-					challengeRecord.challenge,
-					{
-						result: dmResult,
-					},
-				);
+				await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
+					result: dmResult,
+				});
 				if (challengeRecord.sessionId) {
 					await this.db.updateSessionRecord(challengeRecord.sessionId, {
 						serverChecked: true,

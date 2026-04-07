@@ -23,8 +23,6 @@ export const validatePuzzleSolution = (
 	targetY: number,
 	tolerance: number,
 ): boolean => {
-	const distance = Math.sqrt(
-		(finalX - targetX) ** 2 + (finalY - targetY) ** 2,
-	);
+	const distance = Math.sqrt((finalX - targetX) ** 2 + (finalY - targetY) ** 2);
 	return distance <= tolerance;
 };

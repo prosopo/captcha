@@ -18,8 +18,8 @@ import {
 	getDefaultEvents,
 	providerRetry,
 } from "@prosopo/procaptcha-common";
-import { ProcaptchaPuzzle } from "@prosopo/procaptcha-puzzle";
 import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
+import { ProcaptchaPuzzle } from "@prosopo/procaptcha-puzzle";
 import { Procaptcha } from "@prosopo/procaptcha-react";
 import {
 	type FrictionlessState,

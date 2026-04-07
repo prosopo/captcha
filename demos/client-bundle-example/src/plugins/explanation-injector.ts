@@ -59,10 +59,7 @@ export default function explanationInjector(): Plugin {
 				} else if (isPow) {
 					explanationHtml = generatePowExplanation(isExplicit, isInvisible);
 				} else if (pageName.includes("puzzle")) {
-					explanationHtml = generatePuzzleExplanation(
-						isExplicit,
-						isInvisible,
-					);
+					explanationHtml = generatePuzzleExplanation(isExplicit, isInvisible);
 				}
 
 				// No explanation needed or couldn't determine type

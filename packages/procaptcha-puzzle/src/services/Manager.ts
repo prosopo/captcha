@@ -336,14 +336,10 @@ export const Manager = (
 			) {
 				try {
 					const behavioralData = {
-						collector1:
-							frictionlessState.behaviorCollector1?.getData() || [],
-						collector2:
-							frictionlessState.behaviorCollector2?.getData() || [],
-						collector3:
-							frictionlessState.behaviorCollector3?.getData() || [],
-						deviceCapability:
-							frictionlessState.deviceCapability || "unknown",
+						collector1: frictionlessState.behaviorCollector1?.getData() || [],
+						collector2: frictionlessState.behaviorCollector2?.getData() || [],
+						collector3: frictionlessState.behaviorCollector3?.getData() || [],
+						deviceCapability: frictionlessState.deviceCapability || "unknown",
 					};
 
 					// Pack the behavioral data before stringifying

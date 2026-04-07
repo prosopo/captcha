@@ -26,10 +26,10 @@ import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { ClientTaskManager } from "./client/clientTasks.js";
 import { DatasetManager } from "./dataset/datasetTasks.js";
-import { PuzzleCaptchaManager } from "./puzzleCaptcha/puzzleTasks.js";
 import { FrictionlessManager } from "./frictionless/frictionlessTasks.js";
 import { ImgCaptchaManager } from "./imgCaptcha/imgCaptchaTasks.js";
 import { PowCaptchaManager } from "./powCaptcha/powTasks.js";
+import { PuzzleCaptchaManager } from "./puzzleCaptcha/puzzleTasks.js";
 
 /**
  * @description Tasks that are shared by the API and CLI

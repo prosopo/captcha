@@ -35,12 +35,12 @@ import {
 	DatasetWithIdsAndTreeSchema,
 	type DecisionMachineArtifact,
 	type DecisionMachineScope,
-	type PuzzleCaptchaStored,
 	type Hash,
 	type PendingImageCaptchaRequest,
 	type PoWCaptchaStored,
 	type PoWChallengeComponents,
 	type PoWChallengeId,
+	type PuzzleCaptchaStored,
 	type RequestHeaders,
 	type ScheduledTaskNames,
 	type ScheduledTaskResult,
@@ -63,12 +63,12 @@ import {
 	DecisionMachineArtifactRecordSchema,
 	DetectorRecordSchema,
 	type DetectorSchema,
-	type PuzzleCaptchaRecord,
-	PuzzleCaptchaRecordSchema,
 	type IProviderDatabase,
 	type IUserDataSlim,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
+	type PuzzleCaptchaRecord,
+	PuzzleCaptchaRecordSchema,
 	type ScheduledTask,
 	type ScheduledTaskRecord,
 	ScheduledTaskRecordSchema,
@@ -1010,7 +1010,9 @@ export class ProviderDatabase
 	): Promise<PuzzleCaptchaRecord | null> {
 		if (!this.tables) {
 			throw new ProsopoDBError("DATABASE.DATABASE_UNDEFINED", {
-				context: { failedFuncName: this.getPuzzleCaptchaRecordByChallenge.name },
+				context: {
+					failedFuncName: this.getPuzzleCaptchaRecordByChallenge.name,
+				},
 				logger: this.logger,
 			});
 		}

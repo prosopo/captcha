@@ -145,8 +145,7 @@ export default (
 				);
 			}
 
-			const tolerance =
-				clientSettings?.settings?.puzzleTolerance;
+			const tolerance = clientSettings?.settings?.puzzleTolerance;
 			const challenge =
 				await tasks.puzzleCaptchaManager.getPuzzleCaptchaChallenge(
 					user,

@@ -112,7 +112,11 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	}, [config.mode]);
 
 	const handlePuzzleComplete = useCallback(
-		async (finalX: number, finalY: number, puzzleEvents: Array<PuzzleEvent>) => {
+		async (
+			finalX: number,
+			finalY: number,
+			puzzleEvents: Array<PuzzleEvent>,
+		) => {
 			setPuzzlePhase("submitting");
 			setLoading(true);
 			try {

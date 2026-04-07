@@ -15,7 +15,6 @@
 import vm from "node:vm";
 import type { Logger } from "@prosopo/common";
 import {
-	type CaptchaType,
 	type DecisionMachineArtifact,
 	type DecisionMachineCaptchaType,
 	DecisionMachineDecision,
