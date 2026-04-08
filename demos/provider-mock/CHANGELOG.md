@@ -1,5 +1,43 @@
 # @prosopo/provider-mock
 
+## 2.8.73
+### Patch Changes
+
+  - @prosopo/database@3.9.13
+  - @prosopo/provider@3.22.3
+  - @prosopo/types@3.13.3
+  - @prosopo/api-express-router@3.0.69
+  - @prosopo/types-database@4.4.13
+
+## 2.8.72
+### Patch Changes
+
+- Updated dependencies [346edd7]
+  - @prosopo/provider@3.22.2
+  - @prosopo/database@3.9.12
+  - @prosopo/types@3.13.2
+  - @prosopo/api-express-router@3.0.68
+  - @prosopo/types-database@4.4.12
+
+## 2.8.71
+### Patch Changes
+
+  - @prosopo/database@3.9.11
+  - @prosopo/provider@3.22.1
+  - @prosopo/types@3.13.1
+  - @prosopo/api-express-router@3.0.67
+  - @prosopo/types-database@4.4.11
+
+## 2.8.70
+### Patch Changes
+
+- Updated dependencies [e6d9553]
+  - @prosopo/provider@3.22.0
+  - @prosopo/types@3.13.0
+  - @prosopo/database@3.9.10
+  - @prosopo/api-express-router@3.0.66
+  - @prosopo/types-database@4.4.10
+
 ## 2.8.69
 ### Patch Changes
 
