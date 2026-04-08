@@ -117,6 +117,7 @@ export default (
 						powDifficulty: pow_difficulty as number,
 						imageThreshold: image_threshold as number,
 						imageMaxRounds: image_max_rounds as number,
+						puzzleTolerance: 15,
 						disallowWebView: false,
 					},
 					jwt,

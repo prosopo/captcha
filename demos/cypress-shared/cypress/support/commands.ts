@@ -342,6 +342,7 @@ function registerSiteKey(
 			powDifficulty: 1,
 			imageThreshold: 0.8,
 			imageMaxRounds: MAX_IMAGE_CAPTCHA_ROUNDS,
+			puzzleTolerance: 15,
 			disallowWebView: false,
 		};
 

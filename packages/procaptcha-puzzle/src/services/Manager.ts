@@ -272,7 +272,9 @@ export const Manager = (
 
 				challengeResult = challenge;
 			},
-			start,
+			async () => {
+				await start();
+			},
 			() => {
 				resetState();
 			},
