@@ -27,11 +27,13 @@ import type { CaptchaWithoutId } from "@prosopo/types";
 
 export const MAX_IMAGE_CAPTCHA_ROUNDS = 3;
 
-// Solution record keyed by item hashes for stable matching across dataset rebuilds.
-// buildDataset recomputes captchaContentId via merkle trees, so matching by
-// captchaContentId against the static fixture is unreliable.
+// Solution record keyed by item hashes + target for stable matching across
+// dataset rebuilds. We can't match by captchaContentId because buildDataset
+// recomputes it via merkle trees. We must include target because multiple
+// captchas can share the same images with different targets/solutions.
 interface TestSolution {
 	itemHashes: string;
+	target: string;
 	solution: string[];
 }
 
@@ -45,6 +47,7 @@ export function buildTestSolutions(
 				.map((i) => i.hash)
 				.sort()
 				.join(","),
+			target: c.target,
 			solution: (c.solution ?? []).map((s) => s.toString()),
 		}));
 }
@@ -242,13 +245,19 @@ function getSelectors(captcha: Captcha): Chainable<string[]> {
 		.then(({ captcha }) => {
 			cy.get<TestSolution[]>("@solutions").then((solutions) => {
 				let selectors: string[] = [];
-				// Match by item hashes rather than captchaContentId, because
-				// buildDataset recomputes captchaContentId via merkle trees.
+				// Match by item hashes + target rather than captchaContentId, because
+				// buildDataset recomputes captchaContentId via merkle trees. Target is
+				// needed because multiple captchas share the same images with different
+				// targets and solutions.
 				const captchaItemHashes = captcha.items
 					.map((i) => i.hash)
 					.sort()
 					.join(",");
-				const match = solutions.find((s) => s.itemHashes === captchaItemHashes);
+				const match = solutions.find(
+					(s) =>
+						s.itemHashes === captchaItemHashes &&
+						s.target === captcha.target,
+				);
 				if (match) {
 					selectors = captcha.items
 						.filter((item) => match.solution.includes(item.hash))
