@@ -24,9 +24,31 @@ import {
 import { at } from "@prosopo/util";
 import Chainable = Cypress.Chainable;
 import { getPair } from "@prosopo/keyring";
-import type { SolutionRecord } from "@prosopo/types";
+import type { CaptchaWithoutId } from "@prosopo/types";
 
 export const MAX_IMAGE_CAPTCHA_ROUNDS = 3;
+
+// Solution record keyed by item hashes for stable matching across dataset rebuilds.
+// buildDataset recomputes captchaContentId via merkle trees, so matching by
+// captchaContentId against the static fixture is unreliable.
+interface TestSolution {
+	itemHashes: string;
+	solution: string[];
+}
+
+export function buildTestSolutions(
+	captchas: CaptchaWithoutId[],
+): TestSolution[] {
+	return captchas
+		.filter((c) => c.solution)
+		.map((c) => ({
+			itemHashes: c.items
+				.map((i) => i.hash)
+				.sort()
+				.join(","),
+			solution: (c.solution ?? []).map((s) => s.toString()),
+		}));
+}
 
 declare global {
 	namespace Cypress {
@@ -219,17 +241,20 @@ function captchaImages(): Cypress.Chainable<JQuery<HTMLElement>> {
 function getSelectors(captcha: Captcha): Chainable<string[]> {
 	cy.wrap({ captcha })
 		.then(({ captcha }) => {
-			cy.get<SolutionRecord[]>("@solutions").then((solutions) => {
+			cy.get<TestSolution[]>("@solutions").then((solutions) => {
 				let selectors: string[] = [];
-				// Get the index of the captcha in the solution records array
-				const captchaIndex = solutions.findIndex(
-					(testSolution) =>
-						testSolution.captchaContentId === captcha.captchaContentId,
+				// Match by item hashes rather than captchaContentId, because
+				// buildDataset recomputes captchaContentId via merkle trees.
+				const captchaItemHashes = captcha.items
+					.map((i) => i.hash)
+					.sort()
+					.join(",");
+				const match = solutions.find(
+					(s) => s.itemHashes === captchaItemHashes,
 				);
-				if (captchaIndex !== -1) {
-					const solution = at(solutions, captchaIndex).solution;
+				if (match) {
 					selectors = captcha.items
-						.filter((item) => solution.includes(item.hash))
+						.filter((item) => match.solution.includes(item.hash))
 						// create a query selector for each image that is a solution
 						// drop https from the urls as this is what procaptcha does (avoids mixed-content warnings, e.g. resources loaded via a mix of http / https)
 						.map(
