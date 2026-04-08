@@ -21,7 +21,6 @@ import {
 	type IUserSettings,
 	Tier,
 } from "@prosopo/types";
-import { at } from "@prosopo/util";
 import Chainable = Cypress.Chainable;
 import { getPair } from "@prosopo/keyring";
 import type { CaptchaWithoutId } from "@prosopo/types";
@@ -249,9 +248,7 @@ function getSelectors(captcha: Captcha): Chainable<string[]> {
 					.map((i) => i.hash)
 					.sort()
 					.join(",");
-				const match = solutions.find(
-					(s) => s.itemHashes === captchaItemHashes,
-				);
+				const match = solutions.find((s) => s.itemHashes === captchaItemHashes);
 				if (match) {
 					selectors = captcha.items
 						.filter((item) => match.solution.includes(item.hash))
