@@ -14,12 +14,13 @@
 
 import type { Server } from "node:net";
 import { stringToU8a, u8aToHex } from "@polkadot/util";
-import { datasetWithSolutionHashes } from "@prosopo/datasets";
+import { buildDataset, datasetWithSolutionHashes } from "@prosopo/datasets";
 import { ProviderEnvironment } from "@prosopo/env";
 import { generateMnemonic, getPair } from "@prosopo/keyring";
 import { Tasks, isTlsAvailable, startProviderApi } from "@prosopo/provider";
 import {
 	ApiParams,
+	type Captcha,
 	type CaptchaRequestBodyType,
 	type CaptchaResponseBody,
 	type CaptchaSolutionBodyType,
@@ -78,6 +79,7 @@ describe("Image Captcha Integration Tests", () => {
 	let tasks: Tasks;
 	let testPort: number;
 	let baseUrl: string;
+	let builtDataset: Awaited<ReturnType<typeof buildDataset>>;
 
 	beforeAll(async () => {
 		// Get a unique port for this test suite using a more unique identifier
@@ -187,6 +189,7 @@ describe("Image Captcha Integration Tests", () => {
 		tasks = new Tasks(env);
 		env.logger.info(() => ({ msg: "Setting up provider dataset" }));
 		await tasks.datasetManager.providerSetDataset(datasetWithSolutionHashes);
+		builtDataset = await buildDataset(datasetWithSolutionHashes);
 
 		// Start the provider API server with retry logic
 		// This mimics the CLI start functionality
@@ -527,14 +530,16 @@ describe("Image Captcha Integration Tests", () => {
 
 			const data = (await response.json()) as CaptchaResponseBody;
 
-			// Create a map of solutions from the dataset for quick lookup
+			// Create a map of solutions from the built dataset for quick lookup.
+			// We use builtDataset (not datasetWithSolutionHashes) because buildDataset
+			// recomputes captchaContentId via merkle tree hashing, so the IDs stored
+			// in the DB differ from the pre-set ones in the static fixture.
 			const solutionMap = new Map<string, string[]>(
-				// @ts-ignore
-				datasetWithSolutionHashes.captchas
+				(builtDataset.captchas as Captcha[])
 					.filter((captcha) => captcha.solution)
 					.map((captcha) => [
 						captcha.captchaContentId,
-						captcha.solution?.map((s) => s.toString() as string),
+						captcha.solution?.map((s) => s.toString()) ?? [],
 					]),
 			);
 
