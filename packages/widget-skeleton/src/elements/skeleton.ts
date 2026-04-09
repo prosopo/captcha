@@ -45,7 +45,9 @@ export function createWidgetSkeletonElement(theme: Theme): HTMLElement {
 		.querySelector(".prosopo-widget__checkbox")
 		?.replaceWith(checkboxElement);
 
-	widgetElement.querySelector(".prosopo-widget__logo")?.replaceWith(logoElement);
+	widgetElement
+		.querySelector(".prosopo-widget__logo")
+		?.replaceWith(logoElement);
 
 	return widgetElement;
 }

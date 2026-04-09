@@ -39,7 +39,9 @@ export const getCheckboxInteractiveArea = (
 	widget: HTMLElement,
 ): HTMLElement | null => {
 	const widgetRoot = widget.shadowRoot || widget;
-	const checkbox = widgetRoot.querySelector(".prosopo-checkbox") as HTMLElement | null;
+	const checkbox = widgetRoot.querySelector(
+		".prosopo-checkbox",
+	) as HTMLElement | null;
 	if (!checkbox) {
 		return null;
 	}
