@@ -101,16 +101,16 @@ export const Checkbox: FC<CheckboxProps> = ({
 		font-weight: normal;
 		font-family: ${theme.font.fontFamily};
 		
-		@container widget (max-width: 219px) {
+		@container prosopo-widget (max-width: 219px) {
 			display: none;
 		}
-		@container widget (min-width: 220px) {
+		@container prosopo-widget (min-width: 220px) {
 			font-size: 12px;
 		}
-		@container widget (min-width: 250px) {
+		@container prosopo-widget (min-width: 250px) {
 			font-size: 14px;
 		}
-		@container widget (min-width: 270px) {
+		@container prosopo-widget (min-width: 270px) {
 			font-size: 16px;
 		}
 	`;
@@ -177,7 +177,7 @@ export const Checkbox: FC<CheckboxProps> = ({
 					checked={checked}
 					style={checkboxStyle}
 					disabled={error !== undefined}
-					className={loading ? "checkbox__loading-spinner" : ""}
+					className={loading ? "prosopo-checkbox__loading-spinner" : ""}
 					data-cy={"captcha-checkbox"}
 				/>
 			)}

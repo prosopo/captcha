@@ -33,7 +33,7 @@ import { createLogoElement } from "./logo.js";
  */
 export function createWidgetSkeletonElement(theme: Theme): HTMLElement {
 	const widgetElement = document.createElement("div");
-	widgetElement.className = "widget";
+	widgetElement.className = "prosopo-widget";
 
 	const checkboxElement = createCheckboxElement(theme);
 	const logoElement = createLogoElement(theme);
@@ -42,10 +42,12 @@ export function createWidgetSkeletonElement(theme: Theme): HTMLElement {
 		getWidgetStyles(theme) + getWidgetMarkup(isDevMode());
 
 	widgetElement
-		.querySelector(".widget__checkbox")
+		.querySelector(".prosopo-widget__checkbox")
 		?.replaceWith(checkboxElement);
 
-	widgetElement.querySelector(".widget__logo")?.replaceWith(logoElement);
+	widgetElement
+		.querySelector(".prosopo-widget__logo")
+		?.replaceWith(logoElement);
 
 	return widgetElement;
 }
@@ -61,13 +63,13 @@ function getWidgetMarkup(isDevelopmentMode: boolean): string {
 		: "";
 
 	return `
-<div class="widget__outer">
-	<div class="widget__wrapper">
-		<div class="widget__inner">
-			<div class="widget__dimensions" ${buttonDataAttribute}>
-				<div class="widget__content">
-					<div class="widget__checkbox"></div>
-					<div class="widget__logo"></div>
+<div class="prosopo-widget__outer">
+	<div class="prosopo-widget__wrapper">
+		<div class="prosopo-widget__inner">
+			<div class="prosopo-widget__dimensions" ${buttonDataAttribute}>
+				<div class="prosopo-widget__content">
+					<div class="prosopo-widget__checkbox"></div>
+					<div class="prosopo-widget__logo"></div>
 				</div>
 			</div>
 		</div>
@@ -84,12 +86,12 @@ function getWidgetMarkup(isDevelopmentMode: boolean): string {
 function getWidgetStyles(theme: Theme): string {
 	return `
 <style>
-.widget {
+.prosopo-widget {
     width: 100%;
     min-height: ${WIDGET_MIN_HEIGHT}
 }
 
-.widget__outer {
+.prosopo-widget__outer {
     max-width: ${WIDGET_MAX_WIDTH};
     min-height: 100%;
     overflow-x: auto;
@@ -98,16 +100,16 @@ function getWidgetStyles(theme: Theme): string {
     color: ${theme.font.color};
 }
 
-.widget__wrapper {
+.prosopo-widget__wrapper {
     container-type: size;
-    container-name: widget;
+    container-name: prosopo-widget;
     display: flex;
     flex-direction: column;
     height: ${WIDGET_OUTER_HEIGHT}px;
     min-width: 220px;
 }
 
-.widget__inner {
+.prosopo-widget__inner {
     max-height: 100%;
     min-width: 100%;
     overflow: hidden;
@@ -116,12 +118,12 @@ function getWidgetStyles(theme: Theme): string {
     display: grid;
 }
 
-.widget__dimensions {
+.prosopo-widget__dimensions {
     max-width: ${WIDGET_MAX_WIDTH};
     min-height: ${WIDGET_OUTER_HEIGHT}px;
 }
 
-.widget__content {
+.prosopo-widget__content {
     padding: ${WIDGET_PADDING};
     border: ${WIDGET_BORDER};
     background-color: ${theme.palette.background.default};
