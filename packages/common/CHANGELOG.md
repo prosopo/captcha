@@ -1,5 +1,10 @@
 # @prosopo/common
 
+## 3.1.31
+### Patch Changes
+
+- 4a9c518: fix/catcher-demo-vitest
+
 ## 3.1.30
 ### Patch Changes
 

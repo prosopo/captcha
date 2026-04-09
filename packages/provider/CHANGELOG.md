@@ -1,5 +1,22 @@
 # @prosopo/provider
 
+## 3.22.4
+### Patch Changes
+
+- fe5f0f9: Fixing flaky image captcha test
+- Updated dependencies [4a9c518]
+  - @prosopo/common@3.1.31
+  - @prosopo/api-express-router@3.0.70
+  - @prosopo/api-route@2.6.39
+  - @prosopo/database@3.9.14
+  - @prosopo/datasets@3.1.13
+  - @prosopo/env@3.3.15
+  - @prosopo/keyring@2.9.19
+  - @prosopo/load-balancer@2.8.36
+  - @prosopo/types-database@4.4.14
+  - @prosopo/types-env@2.8.15
+  - @prosopo/user-access-policy@3.6.20
+
 ## 3.22.3
 ### Patch Changes
 
