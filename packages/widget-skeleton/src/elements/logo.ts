@@ -22,14 +22,14 @@ import type { Theme } from "../theme.js";
  */
 export function createLogoElement(theme: Theme): HTMLElement {
 	const widgetLogo = document.createElement("div");
-	widgetLogo.className = "logo";
+	widgetLogo.className = "prosopo-logo-container";
 	widgetLogo.innerHTML = LOGO_STYLES + getLogoMarkup(theme);
 	return widgetLogo;
 }
 
 const LOGO_STYLES = `
 <style>
-.logo {
+.prosopo-logo-container {
     display: flex;
     flex-direction: column;
     margin-left:auto;
