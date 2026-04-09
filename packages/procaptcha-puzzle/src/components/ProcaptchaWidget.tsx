@@ -48,6 +48,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	const [puzzlePhase, setPuzzlePhase] = useState<PuzzlePhase>("checkbox");
 	const [challengeData, setChallengeData] =
 		useState<GetPuzzleCaptchaResponse | null>(null);
+	const [showRetry, setShowRetry] = useState(false);
 	// get the state update mechanism
 	const updateState = buildUpdateState(state, _updateState);
 	const manager = useRef(
@@ -74,6 +75,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 			setLoading(false);
 			setPuzzlePhase("checkbox");
 			setChallengeData(null);
+			setShowRetry(false);
 			if (state.error.key === "CAPTCHA.NO_SESSION_FOUND" && frictionlessState) {
 				setTimeout(() => {
 					frictionlessState.restart();
@@ -118,17 +120,46 @@ const Procaptcha = (props: ProcaptchaProps) => {
 			puzzleEvents: Array<PuzzleEvent>,
 		) => {
 			setPuzzlePhase("submitting");
-			setLoading(true);
 			try {
 				await manager.current.submitSolution(finalX, finalY, puzzleEvents);
 			} catch (error) {
 				console.error("Error submitting puzzle solution:", error);
 			}
-			setLoading(false);
-			setPuzzlePhase("checkbox");
-			setChallengeData(null);
+
+			// Check if solution was accepted (isHuman would be set by manager)
+			// We need to read the latest state — use a short delay to let state propagate
+			await new Promise<void>((resolve) => setTimeout(resolve, 50));
+
+			if (state.isHuman) {
+				// Success — close the puzzle
+				setPuzzlePhase("checkbox");
+				setChallengeData(null);
+				setShowRetry(false);
+				setLoading(false);
+			} else {
+				// Failed — show retry message and fetch a new challenge
+				setShowRetry(true);
+				setPuzzlePhase("dragging");
+
+				try {
+					const newChallenge = await manager.current.start();
+					if (newChallenge) {
+						setChallengeData(newChallenge);
+					} else {
+						// Couldn't get new challenge, fall back to checkbox
+						setPuzzlePhase("checkbox");
+						setChallengeData(null);
+						setShowRetry(false);
+					}
+				} catch {
+					setPuzzlePhase("checkbox");
+					setChallengeData(null);
+					setShowRetry(false);
+				}
+				setLoading(false);
+			}
 		},
-		[],
+		[state.isHuman],
 	);
 
 	if (config.mode === ModeEnum.invisible) {
@@ -136,44 +167,48 @@ const Procaptcha = (props: ProcaptchaProps) => {
 		return null;
 	}
 
-	// Phase 2: Show the puzzle canvas when challenge data is available
-	if (puzzlePhase === "dragging" && challengeData) {
-		return (
-			<PuzzleCanvas
-				originX={challengeData.originX}
-				originY={challengeData.originY}
-				targetX={challengeData.targetX}
-				targetY={challengeData.targetY}
-				onComplete={handlePuzzleComplete}
-			/>
-		);
-	}
-
-	// Phase 1: Show the checkbox (default and submitting phases)
 	return (
-		<Checkbox
-			checked={state.isHuman}
-			theme={theme}
-			onChange={async (_event: React.MouseEvent | React.TouchEvent) => {
-				if (loading) {
-					return;
-				}
-				setLoading(true);
+		<>
+			{/* Puzzle overlay — rendered outside the shadow DOM flow via fixed positioning */}
+			{(puzzlePhase === "dragging" || puzzlePhase === "submitting") &&
+				challengeData && (
+					<PuzzleCanvas
+						originX={challengeData.originX}
+						originY={challengeData.originY}
+						targetX={challengeData.targetX}
+						targetY={challengeData.targetY}
+						onComplete={handlePuzzleComplete}
+						showRetry={showRetry}
+						submitting={puzzlePhase === "submitting"}
+					/>
+				)}
 
-				const challenge = await manager.current.start();
+			{/* Checkbox — always rendered so transitions are smooth */}
+			<Checkbox
+				checked={state.isHuman}
+				theme={theme}
+				onChange={async (_event: React.MouseEvent | React.TouchEvent) => {
+					if (loading) {
+						return;
+					}
+					setLoading(true);
+					setShowRetry(false);
 
-				if (challenge) {
-					setChallengeData(challenge);
-					setPuzzlePhase("dragging");
-				}
+					const challenge = await manager.current.start();
 
-				setLoading(false);
-			}}
-			labelText={isTranslationReady ? t("WIDGET.I_AM_HUMAN") : ""}
-			error={state.error?.message}
-			aria-label="human checkbox"
-			loading={loading || puzzlePhase === "submitting"}
-		/>
+					if (challenge) {
+						setChallengeData(challenge);
+						setPuzzlePhase("dragging");
+					}
+
+					setLoading(false);
+				}}
+				labelText={isTranslationReady ? t("WIDGET.I_AM_HUMAN") : ""}
+				error={state.error?.message}
+				aria-label="human checkbox"
+				loading={loading || puzzlePhase === "submitting"}
+			/>
+		</>
 	);
 };
 

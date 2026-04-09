@@ -117,8 +117,8 @@ export default defineConfig(({ command, mode }) => {
 			"import.meta.env.PROSOPO_SITE_KEY_IMAGE": JSON.stringify(
 				process.env.PROSOPO_SITE_KEY_IMAGE,
 			),
-			"import.meta.env.PROSOPO_SITE_KEY_SLIDER": JSON.stringify(
-				process.env.PROSOPO_SITE_KEY_SLIDER,
+			"import.meta.env.PROSOPO_SITE_KEY_PUZZLE": JSON.stringify(
+				process.env.PROSOPO_SITE_KEY_PUZZLE,
 			),
 			"import.meta.env.PROSOPO_SITE_KEY_POW": JSON.stringify(
 				process.env.PROSOPO_SITE_KEY_POW,
@@ -197,6 +197,14 @@ export default defineConfig(({ command, mode }) => {
 					"invisible-frictionless-explicit": path.resolve(
 						__dirname,
 						"src/invisible-frictionless-explicit.html",
+					),
+					"puzzle-implicit": path.resolve(
+						__dirname,
+						"src/puzzle-implicit.html",
+					),
+					"puzzle-explicit": path.resolve(
+						__dirname,
+						"src/puzzle-explicit.html",
 					),
 				},
 			},

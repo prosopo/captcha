@@ -48,10 +48,10 @@ export default function navigationInjector(): Plugin {
 				implicit: { path: "frictionless-implicit.html", exists: true },
 				explicit: { path: "frictionless-explicit.html", exists: true },
 			},
-			// slider: {
-			// 	implicit: { path: "slider-implicit.html", exists: true },
-			// 	explicit: { path: "slider-explicit.html", exists: true },
-			// },
+			puzzle: {
+				implicit: { path: "puzzle-implicit.html", exists: true },
+				explicit: { path: "puzzle-explicit.html", exists: true },
+			},
 		},
 		invisible: {
 			image: {
@@ -72,10 +72,6 @@ export default function navigationInjector(): Plugin {
 					exists: true,
 				},
 			},
-			// slider: {
-			// 	implicit: { path: "invisible-slider-implicit.html", exists: true },
-			// 	explicit: { path: "invisible-slider-explicit.html", exists: true },
-			// },
 		},
 	};
 
