@@ -1,5 +1,19 @@
 # @prosopo/procaptcha-common
 
+## 2.10.0
+### Minor Changes
+
+- 73df23c: Stop widget css from being overriden
+
+### Patch Changes
+
+- 8139819: prosopo namespacing for css
+- Updated dependencies [73df23c]
+- Updated dependencies [8139819]
+  - @prosopo/widget-skeleton@2.8.0
+  - @prosopo/account@2.8.19
+  - @prosopo/load-balancer@2.8.36
+
 ## 2.9.41
 ### Patch Changes
 

@@ -1,5 +1,12 @@
 # @prosopo/account
 
+## 2.8.19
+### Patch Changes
+
+- Updated dependencies [4a9c518]
+  - @prosopo/common@3.1.31
+  - @prosopo/keyring@2.9.19
+
 ## 2.8.18
 ### Patch Changes
 
