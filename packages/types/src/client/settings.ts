@@ -133,6 +133,26 @@ const ContextAwareSchema = object({
 
 export type IContextAware = z.infer<typeof ContextAwareSchema>;
 
+// Spam filter rules
+export const maxLocalPartDotsDefault = 2;
+
+export const EmailSpamRulesSchema = object({
+	enabled: boolean().optional().default(false),
+	maxLocalPartDots: number().int().min(0).optional(),
+	normaliseGmail: boolean().optional().default(false),
+	useDefaultPatterns: boolean().optional().default(false),
+	customRegexBlocklist: array(string()).optional().default([]),
+});
+
+export const SpamFilterRulesSchema = object({
+	enabled: boolean().optional().default(false),
+	blockVpn: boolean().optional().default(false),
+	emailRules: EmailSpamRulesSchema.optional(),
+});
+
+export type IEmailSpamRules = output<typeof EmailSpamRulesSchema>;
+export type ISpamFilterRules = output<typeof SpamFilterRulesSchema>;
+
 export const ClientSettingsSchema = object({
 	captchaType: CaptchaTypeSpec.optional().default(captchaTypeDefault),
 	domains: array(string()).min(1),
@@ -162,6 +182,7 @@ export const ClientSettingsSchema = object({
 	disallowWebView: boolean().optional().default(false).optional(),
 	contextAware: ContextAwareSchema.optional(),
 	spamEmailDomainCheckEnabled: boolean().optional(),
+	spamFilter: SpamFilterRulesSchema.optional(),
 });
 
 export type IUserSettings = output<typeof ClientSettingsSchema>;

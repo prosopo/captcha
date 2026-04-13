@@ -118,7 +118,9 @@
 		"ACCESS_POLICY_BLOCK": "Access blocked by policy",
 		"FORBIDDEN": "Forbidden",
 		"PROVIDER_VERIFY_FAILED": "Provider verification failed",
-		"SPAM_EMAIL_DOMAIN": "Email domain not allowed"
+		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
+		"SPAM_EMAIL_RULE": "Email address blocked by spam filter rules",
+		"VPN_BLOCKED": "Requests from VPN, proxy or Tor exit nodes are not allowed for this site"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Cannot modify owner user",

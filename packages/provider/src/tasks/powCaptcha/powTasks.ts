@@ -27,6 +27,7 @@ import {
 	type CaptchaResult,
 	CaptchaStatus,
 	type IPAddress,
+	type ISpamFilterRules,
 	POW_SEPARATOR,
 	type PoWCaptcha,
 	type PoWChallengeId,
@@ -44,6 +45,8 @@ import { deepValidateIpAddress } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
+import { checkIpForVpn } from "../spam/checkVpn.js";
+import { evaluateEmailSpamRules } from "../spam/evaluateEmailSpamRules.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
 
 const DEFAULT_POW_DIFFICULTY = 4;
@@ -298,6 +301,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		userAccessRulesStorage?: AccessRulesStorage,
 		email?: string,
 		spamEmailDomainCheckingEnabled = false,
+		spamFilter?: ISpamFilterRules,
 	): Promise<{ verified: boolean; score?: number }> {
 		const notVerifiedResponse = { verified: false };
 
@@ -430,6 +434,47 @@ export class PowCaptchaManager extends CaptchaManager {
 					msg: "Failed to check spam email domain in server PoW verification",
 					error,
 				}));
+			}
+		}
+
+		// Spam filter: configurable per-site email pattern rules
+		if (spamFilter?.enabled && spamFilter.emailRules?.enabled && email) {
+			const result = evaluateEmailSpamRules(email, spamFilter.emailRules);
+			if (result.isSpam) {
+				this.logger.info(() => ({
+					msg: "Spam filter rejected email in PoW verification",
+					data: { challenge, dappAccount, reason: result.reason },
+				}));
+				await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
+					result: {
+						status: CaptchaStatus.disapproved,
+						reason: "API.SPAM_EMAIL_RULE",
+					},
+				});
+				return notVerifiedResponse;
+			}
+		}
+
+		// Spam filter: VPN block
+		if (spamFilter?.enabled && spamFilter.blockVpn && ip) {
+			const vpn = await checkIpForVpn(
+				ip,
+				env.config.ipApi.baseUrl,
+				env.config.ipApi.apiKey,
+				this.logger,
+			);
+			if (vpn.isBlocked) {
+				this.logger.info(() => ({
+					msg: "Spam filter rejected request from VPN/proxy in PoW verification",
+					data: { challenge, dappAccount, ip, ipService: vpn.ipService },
+				}));
+				await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
+					result: {
+						status: CaptchaStatus.disapproved,
+						reason: "API.VPN_BLOCKED",
+					},
+				});
+				return notVerifiedResponse;
 			}
 		}
 

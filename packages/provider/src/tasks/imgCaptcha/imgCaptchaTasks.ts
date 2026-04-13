@@ -32,6 +32,7 @@ import {
 	type DecisionMachineInput,
 	type Hash,
 	type IPAddress,
+	type ISpamFilterRules,
 	type ImageVerificationResponse,
 	type KeyringPair,
 	type PendingImageCaptchaRequest,
@@ -53,6 +54,8 @@ import { constructPairList, containsIdenticalPairs } from "../../pairs.js";
 import { checkLangRules } from "../../rules/lang.js";
 import { deepValidateIpAddress, shuffleArray } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
+import { checkIpForVpn } from "../spam/checkVpn.js";
+import { evaluateEmailSpamRules } from "../spam/evaluateEmailSpamRules.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { FrictionlessReason } from "../frictionless/frictionlessTasks.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
@@ -593,6 +596,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		userAccessRulesStorage?: AccessRulesStorage,
 		email?: string,
 		spamEmailDomainCheckingEnabled = false,
+		spamFilter?: ISpamFilterRules,
 	): Promise<ImageVerificationResponse> {
 		const solution = await (commitmentId
 			? this.getDappUserCommitmentById(commitmentId)
@@ -710,6 +714,47 @@ export class ImgCaptchaManager extends CaptchaManager {
 					msg: "Failed to check spam email domain in server image verification",
 					error,
 				}));
+			}
+		}
+
+		// Spam filter: configurable per-site email pattern rules
+		if (spamFilter?.enabled && spamFilter.emailRules?.enabled && email) {
+			const result = evaluateEmailSpamRules(email, spamFilter.emailRules);
+			if (result.isSpam) {
+				this.logger.info(() => ({
+					msg: "Spam filter rejected email in image verification",
+					data: { commitmentId, dapp, reason: result.reason },
+				}));
+				if (commitmentId) {
+					await this.db.disapproveDappUserCommitment(
+						commitmentId,
+						"API.SPAM_EMAIL_RULE",
+					);
+				}
+				return { status: "API.SPAM_EMAIL_RULE", verified: false };
+			}
+		}
+
+		// Spam filter: VPN block
+		if (spamFilter?.enabled && spamFilter.blockVpn && ip) {
+			const vpn = await checkIpForVpn(
+				ip,
+				env.config.ipApi.baseUrl,
+				env.config.ipApi.apiKey,
+				this.logger,
+			);
+			if (vpn.isBlocked) {
+				this.logger.info(() => ({
+					msg: "Spam filter rejected request from VPN/proxy",
+					data: { commitmentId, dapp, ip, ipService: vpn.ipService },
+				}));
+				if (commitmentId) {
+					await this.db.disapproveDappUserCommitment(
+						commitmentId,
+						"API.VPN_BLOCKED",
+					);
+				}
+				return { status: "API.VPN_BLOCKED", verified: false };
 			}
 		}
 
