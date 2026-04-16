@@ -74,7 +74,9 @@ const getCheckboxStyles = (theme: Theme): string => `
 
 .prosopo-checkbox__outer {
     align-items: center;
-    flex: 1;
+    flex: 0 1 auto !important;
+    width: auto !important;
+    display: flex !important;
 }
 
 .prosopo-checkbox__wrapper {

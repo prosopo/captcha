@@ -95,14 +95,16 @@ export const Checkbox: FC<CheckboxProps> = ({
 	const ResponsiveLabel = styled.label<ResponsiveLabelProps>`
 		color: ${theme.palette.background.contrastText};
 		position: relative;
-		display: flex;
+		display: flex !important;
 		cursor: pointer;
 		user-select: none;
 		font-weight: normal;
 		font-family: ${theme.font.fontFamily};
-		
-		@container prosopo-widget (max-width: 219px) {
+		@container prosopo-widget (max-width: 169px) {
 			display: none;
+		}
+		@container prosopo-widget (max-width: 170px) {
+			font-size: 10px;
 		}
 		@container prosopo-widget (min-width: 220px) {
 			font-size: 12px;
