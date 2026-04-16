@@ -39,6 +39,7 @@ import {
 	PublicApiPaths,
 	type RandomProvider,
 	type RegisterSitekeyBodyTypeOutput,
+	type RegisterSitekeysBodyTypeOutput,
 	RemoveDetectorKeyBodySpec,
 	type ServerPowCaptchaVerifyRequestBodyType,
 	type StoredEvents,
@@ -286,6 +287,18 @@ export default class ProviderApi
 	): Promise<ApiResponse> {
 		const body: RegisterSitekeyBodyTypeOutput = { siteKey, tier, settings };
 		return this.post(AdminApiPaths.SiteKeyRegister, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				Authorization: `Bearer ${jwt}`,
+			},
+		});
+	}
+
+	public registerSiteKeys(
+		siteKeys: RegisterSitekeysBodyTypeOutput,
+		jwt: string,
+	): Promise<ApiResponse> {
+		return this.post(AdminApiPaths.SiteKeysRegister, siteKeys, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				Authorization: `Bearer ${jwt}`,
