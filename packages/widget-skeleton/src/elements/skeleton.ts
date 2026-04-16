@@ -98,11 +98,12 @@ function getWidgetStyles(theme: Theme): string {
     width: 100%;
     font-family: ${theme.font.fontFamily};
     color: ${theme.font.color};
-	&::-webkit-scrollbar {
-        display: none;
-    }
     -ms-overflow-style: none;
     scrollbar-width: none;
+}
+
+.prosopo-widget__outer::-webkit-scrollbar {
+    display: none;
 }
 
 .prosopo-widget__wrapper {

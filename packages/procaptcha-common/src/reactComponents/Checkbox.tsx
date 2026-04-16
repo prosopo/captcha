@@ -103,7 +103,7 @@ export const Checkbox: FC<CheckboxProps> = ({
 		@container prosopo-widget (max-width: 169px) {
 			display: none;
 		}
-		@container prosopo-widget (max-width: 170px) {
+		@container prosopo-widget (min-width: 170px) {
 			font-size: 10px;
 		}
 		@container prosopo-widget (min-width: 220px) {
