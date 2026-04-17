@@ -21,7 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Zugriff durch Richtlinie blockiert",
 		"FORBIDDEN": "Verboten",
 		"PROVIDER_VERIFY_FAILED": "Anbieterüberprüfung fehlgeschlagen",
-		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
+		"SPAM_EMAIL_DOMAIN": "E-Mail-Domain nicht erlaubt",
 		"UNAUTHORIZED": "Unauthorized",
 		"MISSING_BODY": "Fehlender Körper",
 		"NO_CONTENT_TYPE_HEADER": "Kein Inhaltstyp-Header. Angenommenes JSON-kodiertes Körper, aber konnte nicht analysieren.",
@@ -41,7 +41,9 @@
 		"INVALID_IP": "Ungültige IP",
 		"INVALID_URL": "Ungültiger URL",
 		"INVALID_BODY": "Ungültiger Körper",
-		"PARSE_ERROR": "Fehler beim Parsen der Anfrage"
+		"PARSE_ERROR": "Fehler beim Parsen der Anfrage",
+		"SPAM_EMAIL_RULE": "E-Mail-Adresse durch Spamfilter-Regeln blockiert",
+		"VPN_BLOCKED": "Anfragen über VPN, Proxy oder Tor-Exit-Knoten sind für diese Website nicht erlaubt"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Kann den Besitzerbenutzer nicht ändern",

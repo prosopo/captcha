@@ -21,7 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Akses diblokir oleh kebijakan",
 		"FORBIDDEN": "Forbidden",
 		"PROVIDER_VERIFY_FAILED": "Provider verification failed",
-		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
+		"SPAM_EMAIL_DOMAIN": "Domain email tidak diizinkan",
 		"UNAUTHORIZED": "Unauthorized",
 		"MISSING_BODY": "Missing body",
 		"NO_CONTENT_TYPE_HEADER": "No content-type header. Assumed JSON encoded body but failed to parse.",
@@ -41,7 +41,9 @@
 		"INVALID_IP": "Invalid IP",
 		"INVALID_URL": "Invalid URL",
 		"INVALID_BODY": "Invalid body",
-		"PARSE_ERROR": "Error parsing request"
+		"PARSE_ERROR": "Error parsing request",
+		"SPAM_EMAIL_RULE": "Alamat email diblokir oleh aturan filter spam",
+		"VPN_BLOCKED": "Permintaan dari VPN, proxy, atau node keluar Tor tidak diizinkan untuk situs ini"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Cannot modify owner user",
