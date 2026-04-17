@@ -160,6 +160,17 @@ export const UserSettingsSchema = new Schema({
 		default: false,
 		required: false,
 	},
+	spamFilter: {
+		enabled: { type: Boolean, default: false },
+		blockVpn: { type: Boolean, default: false },
+		emailRules: {
+			enabled: { type: Boolean, default: false },
+			maxLocalPartDots: { type: Number, required: false },
+			normaliseGmail: { type: Boolean, default: false },
+			useDefaultPatterns: { type: Boolean, default: false },
+			customRegexBlocklist: { type: [String], default: [] },
+		},
+	},
 });
 
 export const UserDataSchema: mongoose.Schema<UserDataRecord> = new Schema({

@@ -320,7 +320,7 @@
 		"ACCESS_POLICY_BLOCK": "नीति द्वारा पहुंच अवरुद्ध",
 		"FORBIDDEN": "नषध",
 		"PROVIDER_VERIFY_FAILED": "परदत सतयपन वफल हआ",
-		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
+		"SPAM_EMAIL_DOMAIN": "ईमेल डोमेन की अनुमति नहीं है",
 		"UNAUTHORIZED": "अनधकत",
 		"MISSING_BODY": "शरर गयब ह",
 		"NO_CONTENT_TYPE_HEADER": "कई समगर परकर शरषक नह ह। मन गय JSON एनकड ह सकत ह लकन टकड करन म असफल।",
@@ -340,7 +340,9 @@
 		"INVALID_IP": "अमनय आईप",
 		"INVALID_URL": "अमनय यआरएल",
 		"INVALID_BODY": "अमनय बड",
-		"PARSE_ERROR": "अनरध वशषण म तरट"
+		"PARSE_ERROR": "अनरध वशषण म तरट",
+		"SPAM_EMAIL_RULE": "स्पैम फ़िल्टर नियमों द्वारा ईमेल पता अवरुद्ध",
+		"VPN_BLOCKED": "इस साइट के लिए VPN, प्रॉक्सी या Tor एक्ज़िट नोड्स से अनुरोध की अनुमति नहीं है"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "मलक उपयगकरत क सशधत नह कय ज सकत",

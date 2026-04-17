@@ -11,7 +11,7 @@
 		"ACCESS_POLICY_BLOCK": "Η πρόσβαση αποκλείστηκε από την πολιτική",
 		"FORBIDDEN": "Απαγορεύεται",
 		"PROVIDER_VERIFY_FAILED": "Αποτυχία επαλήθευσης παρόχου",
-		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
+		"SPAM_EMAIL_DOMAIN": "Ο τομέας email δεν επιτρέπεται",
 		"CAPTCHA_FAILED": "Απάντησες λανθασμένα ένα ή περισσότερα captchas. Παρακαλώ δοκίμασε ξανά",
 		"CAPTCHA_PASSED": "Απάντησες σωστά στα captchas",
 		"BAD_REQUEST": "Μη έγκυρο αίτημα",
@@ -28,7 +28,9 @@
 		"INVALID_IP": "Μη έγκυρη διεύθυνση IP",
 		"INVALID_URL": "Μη έγκυρη διεύθυνση URL",
 		"INVALID_BODY": "Μη έγκυρο σώμα",
-		"PARSE_ERROR": "Σφάλμα ανάλυσης αιτήματος"
+		"PARSE_ERROR": "Σφάλμα ανάλυσης αιτήματος",
+		"SPAM_EMAIL_RULE": "Η διεύθυνση email αποκλείστηκε από κανόνες φίλτρου spam",
+		"VPN_BLOCKED": "Αιτήματα από VPN, proxy ή κόμβους εξόδου Tor δεν επιτρέπονται για αυτόν τον ιστότοπο"
 	},
 	"TARGET": {
 		"animals": "ζώα",

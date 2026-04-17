@@ -21,7 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Acesso bloqueado por política",
 		"FORBIDDEN": "Proibido",
 		"PROVIDER_VERIFY_FAILED": "Falha na verificação do provedor",
-		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
+		"SPAM_EMAIL_DOMAIN": "Domínio de e-mail não permitido",
 		"UNAUTHORIZED": "Não autorizado",
 		"MISSING_BODY": "Corpo ausente",
 		"NO_CONTENT_TYPE_HEADER": "Cabeçalho sem tipo de conteúdo. Corpo codificado em JSON assumido, mas falha ao analisar.",
@@ -41,7 +41,9 @@
 		"INVALID_IP": "IP inválido",
 		"INVALID_URL": "URL inválida",
 		"INVALID_BODY": "Corpo inválido",
-		"PARSE_ERROR": "Erro ao analisar a solicitação"
+		"PARSE_ERROR": "Erro ao analisar a solicitação",
+		"SPAM_EMAIL_RULE": "Endereço de e-mail bloqueado pelas regras do filtro de spam",
+		"VPN_BLOCKED": "Solicitações de VPN, proxy ou nós de saída Tor não são permitidas para este site"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Não é possível modificar o usuário proprietário",

@@ -13,12 +13,9 @@
 // limitations under the License.
 
 import type { IPInfoResponse, IPInfoResult } from "@prosopo/types";
+import type { IIpInfoService } from "@prosopo/types-env";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { compareIPs } from "../../../services/ipComparison.js";
-import * as ipInfoModule from "../../../services/ipInfo.js";
-
-// Mock the getIPInfo function
-const getIPInfoSpy = vi.spyOn(ipInfoModule, "getIPInfo");
 
 const createMockIPInfo = (overrides: Partial<IPInfoResult>): IPInfoResult => ({
 	ip: "8.8.8.8",
@@ -44,13 +41,31 @@ const createMockIPInfo = (overrides: Partial<IPInfoResult>): IPInfoResult => ({
 	...overrides,
 });
 
+const createMockService = (responses: IPInfoResponse[]): IIpInfoService => {
+	let callIndex = 0;
+	return {
+		initialize: vi.fn(),
+		lookup: vi.fn().mockImplementation(async () => {
+			const response = responses[callIndex];
+			callIndex++;
+			if (!response) {
+				throw new Error("No more mock responses");
+			}
+			return response;
+		}),
+		isAvailable: vi.fn().mockReturnValue(true),
+	};
+};
+
 describe("compareIPs", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
 	it("should return error for invalid IP inputs", async () => {
-		const result = await compareIPs("", "8.8.8.8", "test-key", "test-url");
+		const service = createMockService([]);
+
+		const result = await compareIPs("", "8.8.8.8", service);
 
 		expect(result).toEqual({
 			error: "Invalid IP addresses provided",
@@ -58,16 +73,13 @@ describe("compareIPs", () => {
 			ip2: "8.8.8.8",
 		});
 
-		expect(getIPInfoSpy).not.toHaveBeenCalled();
+		expect(service.lookup).not.toHaveBeenCalled();
 	});
 
 	it("should return match for identical IPs", async () => {
-		const result = await compareIPs(
-			"8.8.8.8",
-			"8.8.8.8",
-			"test-key",
-			"test-url",
-		);
+		const service = createMockService([]);
+
+		const result = await compareIPs("8.8.8.8", "8.8.8.8", service);
 
 		expect(result).toEqual({
 			ipsMatch: true,
@@ -75,25 +87,18 @@ describe("compareIPs", () => {
 			ip2: "8.8.8.8",
 		});
 
-		expect(getIPInfoSpy).not.toHaveBeenCalled();
+		expect(service.lookup).not.toHaveBeenCalled();
 	});
 
 	it("should return error when both IP lookups fail", async () => {
-		const errorResponse = {
+		const errorResponse: IPInfoResponse = {
 			isValid: false,
 			error: "Invalid IP",
 			ip: "invalid",
-		} as const;
-		getIPInfoSpy
-			.mockResolvedValueOnce(errorResponse)
-			.mockResolvedValueOnce(errorResponse);
+		};
+		const service = createMockService([errorResponse, errorResponse]);
 
-		const result = await compareIPs(
-			"invalid1",
-			"invalid2",
-			"test-key",
-			"test-url",
-		);
+		const result = await compareIPs("invalid1", "invalid2", service);
 
 		expect(result).toEqual({
 			error: "Failed to lookup both IP addresses",
@@ -105,23 +110,16 @@ describe("compareIPs", () => {
 	});
 
 	it("should return error when first IP lookup fails", async () => {
-		const errorResponse = {
+		const errorResponse: IPInfoResponse = {
 			isValid: false,
 			error: "Invalid IP",
 			ip: "invalid",
-		} as const;
-		const validResponse = createMockIPInfo({ ip: "8.8.8.8" }) as IPInfoResponse;
+		};
+		const validResponse: IPInfoResponse = createMockIPInfo({ ip: "8.8.8.8" });
 
-		getIPInfoSpy
-			.mockResolvedValueOnce(errorResponse)
-			.mockResolvedValueOnce(validResponse);
+		const service = createMockService([errorResponse, validResponse]);
 
-		const result = await compareIPs(
-			"invalid",
-			"8.8.8.8",
-			"test-key",
-			"test-url",
-		);
+		const result = await compareIPs("invalid", "8.8.8.8", service);
 
 		expect(result).toEqual({
 			error: "Failed to lookup first IP address",
@@ -132,23 +130,16 @@ describe("compareIPs", () => {
 	});
 
 	it("should return error when second IP lookup fails", async () => {
-		const validResponse = createMockIPInfo({ ip: "8.8.8.8" }) as IPInfoResponse;
-		const errorResponse = {
+		const validResponse: IPInfoResponse = createMockIPInfo({ ip: "8.8.8.8" });
+		const errorResponse: IPInfoResponse = {
 			isValid: false,
 			error: "Invalid IP",
 			ip: "invalid",
-		} as const;
+		};
 
-		getIPInfoSpy
-			.mockResolvedValueOnce(validResponse)
-			.mockResolvedValueOnce(errorResponse);
+		const service = createMockService([validResponse, errorResponse]);
 
-		const result = await compareIPs(
-			"8.8.8.8",
-			"invalid",
-			"test-key",
-			"test-url",
-		);
+		const result = await compareIPs("8.8.8.8", "invalid", service);
 
 		expect(result).toEqual({
 			error: "Failed to lookup second IP address",
@@ -159,7 +150,7 @@ describe("compareIPs", () => {
 	});
 
 	it("should return detailed comparison for different IPs", async () => {
-		const ip1Info = createMockIPInfo({
+		const ip1Info: IPInfoResponse = createMockIPInfo({
 			ip: "8.8.8.8",
 			providerName: "Google LLC",
 			isDatacenter: true,
@@ -167,9 +158,9 @@ describe("compareIPs", () => {
 			city: "Mountain View",
 			latitude: 37.4056,
 			longitude: -122.0775,
-		}) as IPInfoResponse;
+		});
 
-		const ip2Info = createMockIPInfo({
+		const ip2Info: IPInfoResponse = createMockIPInfo({
 			ip: "1.1.1.1",
 			providerName: "Cloudflare Inc",
 			isDatacenter: true,
@@ -177,16 +168,11 @@ describe("compareIPs", () => {
 			city: "Sydney",
 			latitude: -33.8688,
 			longitude: 151.2093,
-		}) as IPInfoResponse;
+		});
 
-		getIPInfoSpy.mockResolvedValueOnce(ip1Info).mockResolvedValueOnce(ip2Info);
+		const service = createMockService([ip1Info, ip2Info]);
 
-		const result = await compareIPs(
-			"8.8.8.8",
-			"1.1.1.1",
-			"test-key",
-			"test-url",
-		);
+		const result = await compareIPs("8.8.8.8", "1.1.1.1", service);
 
 		expect(result).toMatchObject({
 			ipsMatch: false,
@@ -229,28 +215,23 @@ describe("compareIPs", () => {
 	});
 
 	it("should detect VPN/proxy usage", async () => {
-		const ip1Info = createMockIPInfo({
+		const ip1Info: IPInfoResponse = createMockIPInfo({
 			ip: "8.8.8.8",
 			isVPN: false,
 			isProxy: false,
 			isTor: false,
-		}) as IPInfoResponse;
+		});
 
-		const ip2Info = createMockIPInfo({
+		const ip2Info: IPInfoResponse = createMockIPInfo({
 			ip: "1.1.1.1",
 			isVPN: true,
 			isProxy: false,
 			isTor: false,
-		}) as IPInfoResponse;
+		});
 
-		getIPInfoSpy.mockResolvedValueOnce(ip1Info).mockResolvedValueOnce(ip2Info);
+		const service = createMockService([ip1Info, ip2Info]);
 
-		const result = await compareIPs(
-			"8.8.8.8",
-			"1.1.1.1",
-			"test-key",
-			"test-url",
-		);
+		const result = await compareIPs("8.8.8.8", "1.1.1.1", service);
 
 		if ("comparison" in result) {
 			expect(result.comparison?.anyVpnOrProxy).toBe(true);
@@ -260,26 +241,21 @@ describe("compareIPs", () => {
 	});
 
 	it("should handle missing coordinates gracefully", async () => {
-		const ip1Info = createMockIPInfo({
+		const ip1Info: IPInfoResponse = createMockIPInfo({
 			ip: "8.8.8.8",
 			latitude: undefined,
 			longitude: undefined,
-		}) as IPInfoResponse;
+		});
 
-		const ip2Info = createMockIPInfo({
+		const ip2Info: IPInfoResponse = createMockIPInfo({
 			ip: "1.1.1.1",
 			latitude: undefined,
 			longitude: undefined,
-		}) as IPInfoResponse;
+		});
 
-		getIPInfoSpy.mockResolvedValueOnce(ip1Info).mockResolvedValueOnce(ip2Info);
+		const service = createMockService([ip1Info, ip2Info]);
 
-		const result = await compareIPs(
-			"8.8.8.8",
-			"1.1.1.1",
-			"test-key",
-			"test-url",
-		);
+		const result = await compareIPs("8.8.8.8", "1.1.1.1", service);
 
 		if ("comparison" in result) {
 			expect(result.comparison?.distanceKm).toBeUndefined();
@@ -289,26 +265,21 @@ describe("compareIPs", () => {
 	});
 
 	it("should handle partial coordinate data", async () => {
-		const ip1Info = createMockIPInfo({
+		const ip1Info: IPInfoResponse = createMockIPInfo({
 			ip: "8.8.8.8",
 			latitude: 37.4056,
 			longitude: -122.0775,
-		}) as IPInfoResponse;
+		});
 
-		const ip2Info = createMockIPInfo({
+		const ip2Info: IPInfoResponse = createMockIPInfo({
 			ip: "1.1.1.1",
 			latitude: undefined,
 			longitude: undefined,
-		}) as IPInfoResponse;
+		});
 
-		getIPInfoSpy.mockResolvedValueOnce(ip1Info).mockResolvedValueOnce(ip2Info);
+		const service = createMockService([ip1Info, ip2Info]);
 
-		const result = await compareIPs(
-			"8.8.8.8",
-			"1.1.1.1",
-			"test-key",
-			"test-url",
-		);
+		const result = await compareIPs("8.8.8.8", "1.1.1.1", service);
 
 		if ("comparison" in result) {
 			expect(result.comparison?.distanceKm).toBeUndefined();
@@ -321,26 +292,21 @@ describe("compareIPs", () => {
 	});
 
 	it("should handle provider fallback logic", async () => {
-		const ip1Info = createMockIPInfo({
+		const ip1Info: IPInfoResponse = createMockIPInfo({
 			ip: "8.8.8.8",
 			providerName: undefined,
 			asnOrganization: "Google LLC",
-		}) as IPInfoResponse;
+		});
 
-		const ip2Info = createMockIPInfo({
+		const ip2Info: IPInfoResponse = createMockIPInfo({
 			ip: "1.1.1.1",
 			providerName: undefined,
 			asnOrganization: undefined,
-		}) as IPInfoResponse;
+		});
 
-		getIPInfoSpy.mockResolvedValueOnce(ip1Info).mockResolvedValueOnce(ip2Info);
+		const service = createMockService([ip1Info, ip2Info]);
 
-		const result = await compareIPs(
-			"8.8.8.8",
-			"1.1.1.1",
-			"test-key",
-			"test-url",
-		);
+		const result = await compareIPs("8.8.8.8", "1.1.1.1", service);
 
 		if ("comparison" in result) {
 			expect(result.comparison?.ip1Details.provider).toBe("Google LLC");
@@ -350,14 +316,13 @@ describe("compareIPs", () => {
 	});
 
 	it("should handle exceptions gracefully", async () => {
-		getIPInfoSpy.mockRejectedValueOnce(new Error("Network error"));
+		const service: IIpInfoService = {
+			initialize: vi.fn(),
+			lookup: vi.fn().mockRejectedValue(new Error("Network error")),
+			isAvailable: vi.fn().mockReturnValue(true),
+		};
 
-		const result = await compareIPs(
-			"8.8.8.8",
-			"1.1.1.1",
-			"test-key",
-			"test-url",
-		);
+		const result = await compareIPs("8.8.8.8", "1.1.1.1", service);
 
 		expect(result).toEqual({
 			error: "Comparison failed: Network error",
@@ -366,23 +331,15 @@ describe("compareIPs", () => {
 		});
 	});
 
-	it("should pass API key to getIPInfo", async () => {
-		const ip1Info = createMockIPInfo({ ip: "8.8.8.8" }) as IPInfoResponse;
-		const ip2Info = createMockIPInfo({ ip: "1.1.1.1" }) as IPInfoResponse;
+	it("should call service.lookup for both IPs", async () => {
+		const ip1Info: IPInfoResponse = createMockIPInfo({ ip: "8.8.8.8" });
+		const ip2Info: IPInfoResponse = createMockIPInfo({ ip: "1.1.1.1" });
 
-		getIPInfoSpy.mockResolvedValueOnce(ip1Info).mockResolvedValueOnce(ip2Info);
+		const service = createMockService([ip1Info, ip2Info]);
 
-		await compareIPs("8.8.8.8", "1.1.1.1", "test-api-key", "test-url");
+		await compareIPs("8.8.8.8", "1.1.1.1", service);
 
-		expect(getIPInfoSpy).toHaveBeenCalledWith(
-			"8.8.8.8",
-			"test-url",
-			"test-api-key",
-		);
-		expect(getIPInfoSpy).toHaveBeenCalledWith(
-			"1.1.1.1",
-			"test-url",
-			"test-api-key",
-		);
+		expect(service.lookup).toHaveBeenCalledWith("8.8.8.8");
+		expect(service.lookup).toHaveBeenCalledWith("1.1.1.1");
 	});
 });

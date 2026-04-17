@@ -21,7 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Siyasət tərəfindən giriş bloklandı",
 		"FORBIDDEN": "Qadağan edilir",
 		"PROVIDER_VERIFY_FAILED": "Təchizatçı doğrulaması alınmadı",
-		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
+		"SPAM_EMAIL_DOMAIN": "E-poçt domeni icazə verilmir",
 		"UNAUTHORIZED": "İcazəsiz",
 		"MISSING_BODY": "Gövdesi eksik",
 		"NO_CONTENT_TYPE_HEADER": "Məzmun-növü başlığı yoxdur. JSON kodlanmış gövde olduğu, ancaq ayrışdırmaq mümkün olmadığı düşünüldü.",
@@ -41,7 +41,9 @@
 		"INVALID_IP": "Yanlış IP",
 		"INVALID_URL": "Yanlış URL",
 		"INVALID_BODY": "Yanlış bədən",
-		"PARSE_ERROR": "Tələbi pars edərkən səhv baş verdi"
+		"PARSE_ERROR": "Tələbi pars edərkən səhv baş verdi",
+		"SPAM_EMAIL_RULE": "E-poçt ünvanı spam filtr qaydaları ilə bloklanıb",
+		"VPN_BLOCKED": "Bu sayt üçün VPN, proksi və ya Tor çıxış qovşaqlarından sorğulara icazə verilmir"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Sahib istifadəçini dəyişmək olmaz",

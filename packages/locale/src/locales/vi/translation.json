@@ -21,7 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Truy cập bị chặn bởi chính sách",
 		"FORBIDDEN": "Bị cấm",
 		"PROVIDER_VERIFY_FAILED": "Xác thực nhà cung cấp không thành công",
-		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
+		"SPAM_EMAIL_DOMAIN": "Tên miền email không được phép",
 		"UNAUTHORIZED": "Không được phép",
 		"MISSING_BODY": "Thiếu nội dung",
 		"NO_CONTENT_TYPE_HEADER": "Không có tiêu đề content-type. Giả định nội dung được mã hóa JSON nhưng không thể phân tích.",
@@ -41,7 +41,9 @@
 		"INVALID_IP": "IP không hợp lệ",
 		"INVALID_URL": "URL không hợp lệ",
 		"INVALID_BODY": "Nội dung không hợp lệ",
-		"PARSE_ERROR": "Lỗi phân tích yêu cầu"
+		"PARSE_ERROR": "Lỗi phân tích yêu cầu",
+		"SPAM_EMAIL_RULE": "Địa chỉ email bị chặn bởi quy tắc bộ lọc spam",
+		"VPN_BLOCKED": "Các yêu cầu từ VPN, proxy hoặc nút thoát Tor không được phép cho trang web này"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Không thể sửa đổi người dùng chủ sở hữu",

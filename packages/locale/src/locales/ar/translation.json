@@ -21,7 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "تم حظر الوصول بواسطة السياسة",
 		"FORBIDDEN": "ممنوع",
 		"PROVIDER_VERIFY_FAILED": "فشل التحقق من الجهة الخارجية",
-		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
+		"SPAM_EMAIL_DOMAIN": "نطاق البريد الإلكتروني غير مسموح به",
 		"UNAUTHORIZED": "غير مصرح",
 		"MISSING_BODY": "جسم مفقود",
 		"NO_CONTENT_TYPE_HEADER": "رأس نوع المحتوى غير موجود. تم افتراض جسم مشفر بتنسيق JSON ولكن فشل في التحليل.",
@@ -41,7 +41,9 @@
 		"INVALID_IP": "IP غير صالح",
 		"INVALID_URL": "عنوان URL غير صالح",
 		"INVALID_BODY": "بيانات غير صالحة",
-		"PARSE_ERROR": "خطأ في تحليل الطلب"
+		"PARSE_ERROR": "خطأ في تحليل الطلب",
+		"SPAM_EMAIL_RULE": "عنوان البريد الإلكتروني محظور بواسطة قواعد مكافحة البريد العشوائي",
+		"VPN_BLOCKED": "لا يُسمح بالطلبات من VPN أو البروكسي أو عقد خروج Tor لهذا الموقع"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "لا يمكن تعديل مالك المستخدم",

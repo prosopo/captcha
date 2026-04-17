@@ -32,6 +32,7 @@ import {
 	type DecisionMachineInput,
 	type Hash,
 	type IPAddress,
+	type ISpamFilterRules,
 	type ImageVerificationResponse,
 	type KeyringPair,
 	type PendingImageCaptchaRequest,
@@ -56,6 +57,8 @@ import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { FrictionlessReason } from "../frictionless/frictionlessTasks.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
+import { checkIpForVpn } from "../spam/checkVpn.js";
+import { evaluateEmailSpamRules } from "../spam/evaluateEmailSpamRules.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
 
 export class ImgCaptchaManager extends CaptchaManager {
@@ -593,6 +596,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		userAccessRulesStorage?: AccessRulesStorage,
 		email?: string,
 		spamEmailDomainCheckingEnabled = false,
+		spamFilter?: ISpamFilterRules,
 	): Promise<ImageVerificationResponse> {
 		const solution = await (commitmentId
 			? this.getDappUserCommitmentById(commitmentId)
@@ -713,6 +717,42 @@ export class ImgCaptchaManager extends CaptchaManager {
 			}
 		}
 
+		// Spam filter: configurable per-site email pattern rules
+		if (spamFilter?.enabled && spamFilter.emailRules?.enabled && email) {
+			const result = evaluateEmailSpamRules(email, spamFilter.emailRules);
+			if (result.isSpam) {
+				this.logger.info(() => ({
+					msg: "Spam filter rejected email in image verification",
+					data: { commitmentId, dapp, reason: result.reason },
+				}));
+				if (commitmentId) {
+					await this.db.disapproveDappUserCommitment(
+						commitmentId,
+						"API.SPAM_EMAIL_RULE",
+					);
+				}
+				return { status: "API.SPAM_EMAIL_RULE", verified: false };
+			}
+		}
+
+		// Spam filter: VPN block
+		if (spamFilter?.enabled && spamFilter.blockVpn && ip) {
+			const vpn = await checkIpForVpn(ip, env.ipInfoService, this.logger);
+			if (vpn.isBlocked) {
+				this.logger.info(() => ({
+					msg: "Spam filter rejected request from VPN/proxy",
+					data: { commitmentId, dapp, ip, ipService: vpn.ipService },
+				}));
+				if (commitmentId) {
+					await this.db.disapproveDappUserCommitment(
+						commitmentId,
+						"API.VPN_BLOCKED",
+					);
+				}
+				return { status: "API.VPN_BLOCKED", verified: false };
+			}
+		}
+
 		if (ip) {
 			const solutionIpAddress = getIpAddressFromComposite(solution.ipAddress);
 			// Get client settings for IP validation rules
@@ -729,8 +769,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 					ip,
 					solutionIpAddress,
 					this.logger,
-					env.config.ipApi.apiKey,
-					env.config.ipApi.baseUrl,
+					env.ipInfoService,
 					ipValidationRules,
 				);
 

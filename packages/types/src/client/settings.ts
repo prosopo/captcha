@@ -133,6 +133,53 @@ const ContextAwareSchema = object({
 
 export type IContextAware = z.infer<typeof ContextAwareSchema>;
 
+// Spam filter rules
+export const maxLocalPartDotsDefault = 2;
+
+const MAX_REGEX_PATTERN_LENGTH = 256;
+const MAX_CUSTOM_REGEX_PATTERNS = 50;
+
+// Patterns that enable catastrophic backtracking or uncontrolled execution
+const DANGEROUS_REGEX_TOKENS = /(\(\?[<!=])|(\(\?P[<])|(\(\?\{)|(\{[\d,]{4,})/;
+
+const safeRegexPattern = string()
+	.max(MAX_REGEX_PATTERN_LENGTH)
+	.refine(
+		(raw) => {
+			try {
+				new RegExp(raw, "i");
+				return true;
+			} catch {
+				return false;
+			}
+		},
+		{ message: "Invalid regular expression syntax" },
+	)
+	.refine((raw) => !DANGEROUS_REGEX_TOKENS.test(raw), {
+		message:
+			"Pattern uses disallowed features (lookahead, lookbehind, or large quantifiers)",
+	});
+
+export const EmailSpamRulesSchema = object({
+	enabled: boolean().optional().default(false),
+	maxLocalPartDots: number().int().min(0).optional(),
+	normaliseGmail: boolean().optional().default(false),
+	useDefaultPatterns: boolean().optional().default(false),
+	customRegexBlocklist: array(safeRegexPattern)
+		.max(MAX_CUSTOM_REGEX_PATTERNS)
+		.optional()
+		.default([]),
+});
+
+export const SpamFilterRulesSchema = object({
+	enabled: boolean().optional().default(false),
+	blockVpn: boolean().optional().default(false),
+	emailRules: EmailSpamRulesSchema.optional(),
+});
+
+export type IEmailSpamRules = output<typeof EmailSpamRulesSchema>;
+export type ISpamFilterRules = output<typeof SpamFilterRulesSchema>;
+
 export const ClientSettingsSchema = object({
 	captchaType: CaptchaTypeSpec.optional().default(captchaTypeDefault),
 	domains: array(string()).min(1),
@@ -162,6 +209,7 @@ export const ClientSettingsSchema = object({
 	disallowWebView: boolean().optional().default(false).optional(),
 	contextAware: ContextAwareSchema.optional(),
 	spamEmailDomainCheckEnabled: boolean().optional(),
+	spamFilter: SpamFilterRulesSchema.optional(),
 });
 
 export type IUserSettings = output<typeof ClientSettingsSchema>;

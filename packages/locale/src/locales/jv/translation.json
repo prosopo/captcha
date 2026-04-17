@@ -21,7 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Akses diblokir dening kabijakan",
 		"FORBIDDEN": "Forbidden",
 		"PROVIDER_VERIFY_FAILED": "Provider verification failed",
-		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
+		"SPAM_EMAIL_DOMAIN": "Domain email ora diidini",
 		"UNAUTHORIZED": "Hindi umiiral",
 		"MISSING_BODY": "Kulang na katawan",
 		"NO_CONTENT_TYPE_HEADER": "Walang header ng uri ng nilalaman. Tinatayang JSON na naka-encode ang katawan ngunit nabigo sa pag-parse.",
@@ -41,7 +41,9 @@
 		"INVALID_IP": "IP tidak valid",
 		"INVALID_URL": "URL tidak valid",
 		"INVALID_BODY": "Badan tidak valid",
-		"PARSE_ERROR": "Kesalahan parsing permintaan"
+		"PARSE_ERROR": "Kesalahan parsing permintaan",
+		"SPAM_EMAIL_RULE": "Alamat email diblokir dening aturan filter spam",
+		"VPN_BLOCKED": "Panjaluk saka VPN, proxy, utawa simpul metu Tor ora diidini kanggo situs iki"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Cannot modify owner user",
