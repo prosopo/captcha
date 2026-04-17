@@ -12,35 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Logger } from "@prosopo/common";
-import type { IPInfoResponse } from "@prosopo/types";
-import type { TFunction } from "i18next";
-export interface AugmentedRequest {
-	t: TFunction;
-	i18n: {
-		t: TFunction;
-	};
-	user?: string;
-	siteKey?: string;
-	ja4: string;
-	logger: Logger;
-	requestId?: string;
-	ipInfo?: IPInfoResponse;
-}
-
-declare global {
-	namespace Express {
-		interface Request {
-			t: TFunction;
-			i18n: {
-				t: TFunction;
-			};
-			user?: string;
-			siteKey?: string;
-			ja4: string;
-			logger: Logger;
-			requestId?: string;
-			ipInfo?: IPInfoResponse;
-		}
-	}
-}
+export { IpInfoService } from "./IpInfoService.js";
+export type { IIpInfoService, IpInfoServiceConfig } from "./types.js";

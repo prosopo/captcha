@@ -457,12 +457,7 @@ export class PowCaptchaManager extends CaptchaManager {
 
 		// Spam filter: VPN block
 		if (spamFilter?.enabled && spamFilter.blockVpn && ip) {
-			const vpn = await checkIpForVpn(
-				ip,
-				env.config.ipApi.baseUrl,
-				env.config.ipApi.apiKey,
-				this.logger,
-			);
+			const vpn = await checkIpForVpn(ip, env.ipInfoService, this.logger);
 			if (vpn.isBlocked) {
 				this.logger.info(() => ({
 					msg: "Spam filter rejected request from VPN/proxy in PoW verification",
@@ -496,8 +491,7 @@ export class PowCaptchaManager extends CaptchaManager {
 					ip,
 					challengeIpAddress,
 					this.logger,
-					env.config.ipApi.apiKey,
-					env.config.ipApi.baseUrl,
+					env.ipInfoService,
 					ipValidationRules,
 				);
 

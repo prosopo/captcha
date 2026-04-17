@@ -1,3 +1,4 @@
+import path from "node:path";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,36 +12,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { ViteCommonJSConfig } from "@prosopo/config";
 
-import type { Logger } from "@prosopo/common";
-import type { IPInfoResponse } from "@prosopo/types";
-import type { TFunction } from "i18next";
-export interface AugmentedRequest {
-	t: TFunction;
-	i18n: {
-		t: TFunction;
-	};
-	user?: string;
-	siteKey?: string;
-	ja4: string;
-	logger: Logger;
-	requestId?: string;
-	ipInfo?: IPInfoResponse;
-}
-
-declare global {
-	namespace Express {
-		interface Request {
-			t: TFunction;
-			i18n: {
-				t: TFunction;
-			};
-			user?: string;
-			siteKey?: string;
-			ja4: string;
-			logger: Logger;
-			requestId?: string;
-			ipInfo?: IPInfoResponse;
-		}
-	}
+export default function () {
+	return ViteCommonJSConfig(
+		path.basename("."),
+		path.resolve("./tsconfig.json"),
+	);
 }

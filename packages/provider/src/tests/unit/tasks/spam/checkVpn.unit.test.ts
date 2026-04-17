@@ -14,17 +14,9 @@
 
 import type { Logger } from "@prosopo/common";
 import type { IPInfoResult } from "@prosopo/types";
+import type { IIpInfoService } from "@prosopo/types-env";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-
-vi.mock("../../../../services/ipInfo.js", () => ({
-	getIPInfo: vi.fn(),
-}));
-
-import { getIPInfo } from "../../../../services/ipInfo.js";
-import {
-	checkIpForVpn,
-	ipInfoIsVpn,
-} from "../../../../tasks/spam/checkVpn.js";
+import { checkIpForVpn, ipInfoIsVpn } from "../../../../tasks/spam/checkVpn.js";
 
 const mockLogger = {
 	info: () => {},
@@ -50,11 +42,19 @@ const baseInfo = (overrides: Partial<IPInfoResult> = {}): IPInfoResult => ({
 	...overrides,
 });
 
+const createMockIpInfoService = (
+	lookupFn: IIpInfoService["lookup"],
+): IIpInfoService => ({
+	initialize: vi.fn(),
+	lookup: vi.fn().mockImplementation(lookupFn),
+	isAvailable: vi.fn().mockReturnValue(true),
+});
+
 describe("ipInfoIsVpn", () => {
 	it("returns false for invalid info", () => {
-		expect(
-			ipInfoIsVpn({ isValid: false, error: "boom", ip: "1.2.3.4" }),
-		).toBe(false);
+		expect(ipInfoIsVpn({ isValid: false, error: "boom", ip: "1.2.3.4" })).toBe(
+			false,
+		);
 	});
 
 	it("returns false for plain residential IPs", () => {
@@ -69,23 +69,18 @@ describe("ipInfoIsVpn", () => {
 });
 
 describe("checkIpForVpn", () => {
-	const mockedGetIPInfo = vi.mocked(getIPInfo);
+	let mockService: IIpInfoService;
 
 	beforeEach(() => {
-		mockedGetIPInfo.mockReset();
+		vi.clearAllMocks();
 	});
 
 	it("blocks VPN-classified IPs and surfaces the service name", async () => {
-		mockedGetIPInfo.mockResolvedValueOnce(
+		mockService = createMockIpInfoService(async () =>
 			baseInfo({ isVPN: true, vpnService: "ExampleVPN" }),
 		);
 
-		const result = await checkIpForVpn(
-			"1.2.3.4",
-			"https://api.example",
-			"key",
-			mockLogger,
-		);
+		const result = await checkIpForVpn("1.2.3.4", mockService, mockLogger);
 
 		expect(result).toEqual({
 			isBlocked: true,
@@ -95,27 +90,19 @@ describe("checkIpForVpn", () => {
 	});
 
 	it("allows residential IPs through", async () => {
-		mockedGetIPInfo.mockResolvedValueOnce(baseInfo());
+		mockService = createMockIpInfoService(async () => baseInfo());
 
-		const result = await checkIpForVpn(
-			"1.2.3.4",
-			"https://api.example",
-			"key",
-			mockLogger,
-		);
+		const result = await checkIpForVpn("1.2.3.4", mockService, mockLogger);
 
 		expect(result).toEqual({ isBlocked: false });
 	});
 
 	it("fails open if the lookup throws", async () => {
-		mockedGetIPInfo.mockRejectedValueOnce(new Error("network down"));
+		mockService = createMockIpInfoService(async () => {
+			throw new Error("network down");
+		});
 
-		const result = await checkIpForVpn(
-			"1.2.3.4",
-			"https://api.example",
-			"key",
-			mockLogger,
-		);
+		const result = await checkIpForVpn("1.2.3.4", mockService, mockLogger);
 
 		expect(result).toEqual({ isBlocked: false });
 	});

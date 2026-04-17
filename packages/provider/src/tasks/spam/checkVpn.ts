@@ -14,7 +14,7 @@
 
 import type { Logger } from "@prosopo/common";
 import type { IPInfoResponse } from "@prosopo/types";
-import { getIPInfo } from "../../services/ipInfo.js";
+import type { IIpInfoService } from "@prosopo/types-env";
 
 export type VpnCheckResult =
 	| { isBlocked: false }
@@ -29,18 +29,17 @@ export const ipInfoIsVpn = (info: IPInfoResponse): boolean => {
 };
 
 /**
- * Performs a VPN/proxy/tor lookup against the configured IP API and returns
+ * Performs a VPN/proxy/tor lookup using the IP info service and returns
  * a structured result. Falls back to "not blocked" on lookup failure so an
  * outage in the upstream service can't block all traffic.
  */
 export const checkIpForVpn = async (
 	ip: string,
-	apiUrl: string,
-	apiKey: string | undefined,
+	ipInfoService: IIpInfoService,
 	logger: Logger,
 ): Promise<VpnCheckResult> => {
 	try {
-		const info = await getIPInfo(ip, apiUrl, apiKey);
+		const info = await ipInfoService.lookup(ip);
 		if (ipInfoIsVpn(info)) {
 			return {
 				isBlocked: true,

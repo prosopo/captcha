@@ -19,7 +19,9 @@ import {
 	normaliseGmailAddress,
 } from "../../../../tasks/spam/evaluateEmailSpamRules.js";
 
-const baseRules = (overrides: Partial<IEmailSpamRules> = {}): IEmailSpamRules => ({
+const baseRules = (
+	overrides: Partial<IEmailSpamRules> = {},
+): IEmailSpamRules => ({
 	enabled: true,
 	maxLocalPartDots: undefined,
 	normaliseGmail: false,

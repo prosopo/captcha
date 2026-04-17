@@ -43,7 +43,9 @@ export const DEFAULT_EMAIL_SPAM_PATTERNS: { name: string; pattern: RegExp }[] =
 		},
 	];
 
-const splitEmail = (email: string): { local: string; domain: string } | null => {
+const splitEmail = (
+	email: string,
+): { local: string; domain: string } | null => {
 	const trimmed = email.trim().toLowerCase();
 	const at = trimmed.lastIndexOf("@");
 	if (at <= 0 || at === trimmed.length - 1) {
@@ -124,7 +126,7 @@ export const evaluateEmailSpamRules = (
 
 	for (const raw of rules.customRegexBlocklist ?? []) {
 		const regex = compileRegex(raw);
-		if (regex && regex.test(target)) {
+		if (regex?.test(target)) {
 			return {
 				isSpam: true,
 				reason: "EMAIL_MATCHED_CUSTOM_PATTERN",

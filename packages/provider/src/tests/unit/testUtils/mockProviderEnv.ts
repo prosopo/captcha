@@ -17,7 +17,7 @@ import type { ProviderDatabase } from "@prosopo/database";
 import type { GeolocationService } from "@prosopo/env";
 import type { Keyring } from "@prosopo/keyring";
 import type { KeyringPair, ProsopoConfigOutput } from "@prosopo/types";
-import type { ProviderEnvironment } from "@prosopo/types-env";
+import type { IIpInfoService, ProviderEnvironment } from "@prosopo/types-env";
 import { vi } from "vitest";
 
 /**
@@ -135,6 +135,23 @@ export function createMockProviderEnvironment(): ProviderEnvironment {
 		isAvailable: vi.fn().mockReturnValue(true),
 	} as unknown as GeolocationService;
 
+	// Mock IP info service
+	const mockIpInfoService: IIpInfoService = {
+		initialize: vi.fn().mockResolvedValue(undefined),
+		lookup: vi.fn().mockResolvedValue({
+			ip: "127.0.0.1",
+			isValid: true,
+			isVPN: false,
+			isTor: false,
+			isProxy: false,
+			isDatacenter: false,
+			isAbuser: false,
+			isMobile: false,
+			isSatellite: false,
+		}),
+		isAvailable: vi.fn().mockReturnValue(true),
+	};
+
 	// Create the mock environment
 	const mockEnv: ProviderEnvironment = {
 		config: mockConfig,
@@ -146,6 +163,7 @@ export function createMockProviderEnvironment(): ProviderEnvironment {
 		assetsResolver: undefined,
 		authAccount: mockPair,
 		geolocationService: mockGeolocationService,
+		ipInfoService: mockIpInfoService,
 		getDb: vi.fn().mockReturnValue(mockDatabase),
 		isReady: vi.fn().mockResolvedValue(undefined),
 		importDatabase: vi.fn().mockResolvedValue(undefined),

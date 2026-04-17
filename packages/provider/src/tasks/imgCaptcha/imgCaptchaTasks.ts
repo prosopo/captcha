@@ -54,11 +54,11 @@ import { constructPairList, containsIdenticalPairs } from "../../pairs.js";
 import { checkLangRules } from "../../rules/lang.js";
 import { deepValidateIpAddress, shuffleArray } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
-import { checkIpForVpn } from "../spam/checkVpn.js";
-import { evaluateEmailSpamRules } from "../spam/evaluateEmailSpamRules.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { FrictionlessReason } from "../frictionless/frictionlessTasks.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
+import { checkIpForVpn } from "../spam/checkVpn.js";
+import { evaluateEmailSpamRules } from "../spam/evaluateEmailSpamRules.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
 
 export class ImgCaptchaManager extends CaptchaManager {
@@ -737,12 +737,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 		// Spam filter: VPN block
 		if (spamFilter?.enabled && spamFilter.blockVpn && ip) {
-			const vpn = await checkIpForVpn(
-				ip,
-				env.config.ipApi.baseUrl,
-				env.config.ipApi.apiKey,
-				this.logger,
-			);
+			const vpn = await checkIpForVpn(ip, env.ipInfoService, this.logger);
 			if (vpn.isBlocked) {
 				this.logger.info(() => ({
 					msg: "Spam filter rejected request from VPN/proxy",
@@ -774,8 +769,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 					ip,
 					solutionIpAddress,
 					this.logger,
-					env.config.ipApi.apiKey,
-					env.config.ipApi.baseUrl,
+					env.ipInfoService,
 					ipValidationRules,
 				);
 

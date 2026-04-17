@@ -19,22 +19,7 @@
 			"path": "../common"
 		},
 		{
-			"path": "../ipinfo"
-		},
-		{
-			"path": "../database"
-		},
-		{
 			"path": "../types"
-		},
-		{
-			"path": "../types-env"
-		},
-		{
-			"path": "../util-crypto"
-		},
-		{
-			"path": "../keyring"
 		}
 	]
 }

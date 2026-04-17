@@ -14,33 +14,17 @@
 
 import type { Logger } from "@prosopo/common";
 import type { IPInfoResponse } from "@prosopo/types";
-import type { TFunction } from "i18next";
-export interface AugmentedRequest {
-	t: TFunction;
-	i18n: {
-		t: TFunction;
-	};
-	user?: string;
-	siteKey?: string;
-	ja4: string;
-	logger: Logger;
-	requestId?: string;
-	ipInfo?: IPInfoResponse;
+
+export interface IIpInfoService {
+	initialize(): Promise<void>;
+	lookup(ip: string): Promise<IPInfoResponse>;
+	isAvailable(): boolean;
 }
 
-declare global {
-	namespace Express {
-		interface Request {
-			t: TFunction;
-			i18n: {
-				t: TFunction;
-			};
-			user?: string;
-			siteKey?: string;
-			ja4: string;
-			logger: Logger;
-			requestId?: string;
-			ipInfo?: IPInfoResponse;
-		}
-	}
+export interface IpInfoServiceConfig {
+	maxmindCityDbPath?: string;
+	maxmindAsnDbPath?: string;
+	ipapiUrl?: string;
+	ipapiKey?: string;
+	logger?: Logger;
 }
