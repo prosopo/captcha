@@ -98,6 +98,12 @@ function getWidgetStyles(theme: Theme): string {
     width: 100%;
     font-family: ${theme.font.fontFamily};
     color: ${theme.font.color};
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.prosopo-widget__outer::-webkit-scrollbar {
+    display: none;
 }
 
 .prosopo-widget__wrapper {
@@ -106,7 +112,7 @@ function getWidgetStyles(theme: Theme): string {
     display: flex;
     flex-direction: column;
     height: ${WIDGET_OUTER_HEIGHT}px;
-    min-width: 220px;
+    min-width: 170px;
 }
 
 .prosopo-widget__inner {
@@ -129,13 +135,16 @@ function getWidgetStyles(theme: Theme): string {
     background-color: ${theme.palette.background.default};
     border-color: ${theme.palette.grey[300]};
     border-radius: ${WIDGET_BORDER_RADIUS};
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    justify-content: space-between;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    box-sizing: border-box;
     min-height: ${WIDGET_INNER_HEIGHT}px;
     height: 100%;
-    box-sizing: border-box;
+    direction: ltr !important;
 }
 </style>
 `;

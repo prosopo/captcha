@@ -1,3 +1,4 @@
+import type { RegisterSitekeysBodyTypeOutput } from "@prosopo/types";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -76,6 +77,10 @@ export interface ProviderApiInterface {
 		siteKey: string,
 		tier: Tier,
 		settings: IUserSettings,
+		jwt: string,
+	): Promise<ApiResponse>;
+	registerSiteKeys(
+		siteKeys: RegisterSitekeysBodyTypeOutput,
 		jwt: string,
 	): Promise<ApiResponse>;
 	updateDetectorKey(detectorKey: string, jwt: string): Promise<ApiResponse>;
