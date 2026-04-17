@@ -24,10 +24,8 @@ import { Keyring, getPair } from "@prosopo/keyring";
 import type { KeyringPair } from "@prosopo/types";
 import type { AssetsResolver, EnvironmentTypes } from "@prosopo/types";
 import type { ProsopoConfigOutput } from "@prosopo/types";
-import type { ProsopoEnvironment } from "@prosopo/types-env";
-import type { IIpInfoService } from "@prosopo/types-env";
+import type { IIpInfoService, ProsopoEnvironment } from "@prosopo/types-env";
 import { randomAsHex } from "@prosopo/util-crypto";
-import { GeolocationService } from "./services/geolocation.js";
 
 export class Environment implements ProsopoEnvironment {
 	config: ProsopoConfigOutput;
@@ -39,7 +37,6 @@ export class Environment implements ProsopoEnvironment {
 	pair: KeyringPair | undefined;
 	authAccount: KeyringPair | undefined;
 	envId: string | undefined;
-	geolocationService: GeolocationService;
 	ipInfoService: IIpInfoService;
 	ready = false;
 
@@ -62,12 +59,6 @@ export class Environment implements ProsopoEnvironment {
 		});
 		if (this.pair) this.keyring.addPair(this.pair);
 		this.envId = randomAsHex(32).slice(0, 32);
-
-		// Initialize GeolocationService
-		this.geolocationService = new GeolocationService(
-			this.config.maxmindDbPath,
-			this.logger,
-		);
 
 		// Initialize IpInfoService
 		this.ipInfoService = new IpInfoService({
@@ -155,8 +146,6 @@ export class Environment implements ProsopoEnvironment {
 				await this.db.connect();
 				this.logger.info(() => ({ msg: "Connected to db" }));
 			}
-			// Initialize MaxMind geolocation database
-			await this.geolocationService.initialize();
 			// Initialize IP info service (MaxMind + optional ipapi.is)
 			await this.ipInfoService.initialize();
 			this.ready = true;

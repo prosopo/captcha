@@ -26,7 +26,6 @@
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
 	},
 	"dependencies": {
-		"@maxmind/geoip2-node": "5.0.0",
 		"@prosopo/ipinfo": "0.1.0",
 		"@prosopo/common": "3.1.31",
 		"@prosopo/database": "3.9.14",
