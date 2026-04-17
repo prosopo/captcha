@@ -75,12 +75,21 @@ const countDots = (s: string): number => {
 	return n;
 };
 
-const compileRegex = (raw: string): RegExp | null => {
-	try {
-		return new RegExp(raw, "i");
-	} catch {
-		return null;
+const regexCache = new Map<string, RegExp | null>();
+
+const getCompiledRegex = (raw: string): RegExp | null => {
+	const cached = regexCache.get(raw);
+	if (cached !== undefined) {
+		return cached;
 	}
+	let compiled: RegExp | null;
+	try {
+		compiled = new RegExp(raw, "i");
+	} catch {
+		compiled = null;
+	}
+	regexCache.set(raw, compiled);
+	return compiled;
 };
 
 /**
@@ -125,7 +134,7 @@ export const evaluateEmailSpamRules = (
 	}
 
 	for (const raw of rules.customRegexBlocklist ?? []) {
-		const regex = compileRegex(raw);
+		const regex = getCompiledRegex(raw);
 		if (regex?.test(target)) {
 			return {
 				isSpam: true,
