@@ -470,7 +470,7 @@ describe("Image Captcha Integration Tests", () => {
 			expect(response.status).toBe(400);
 			const data = (await response.json()) as CaptchaResponseBody;
 			expect(data).toHaveProperty("error");
-			expect(data.error?.message).toBe("Tipo di CAPTCHA errato");
+			expect(data.error?.message).toBe("Tipo di CAPTCHA incorrecto");
 			expect(data.error?.code).toBe(400);
 		});
 	});
