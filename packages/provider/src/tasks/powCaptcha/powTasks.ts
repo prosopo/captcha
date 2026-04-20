@@ -28,6 +28,7 @@ import {
 	CaptchaStatus,
 	type IPAddress,
 	type ISpamFilterRules,
+	type ITrafficFilter,
 	POW_SEPARATOR,
 	type PoWCaptcha,
 	type PoWChallengeId,
@@ -45,7 +46,7 @@ import { deepValidateIpAddress } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
-import { checkIpForVpn } from "../spam/checkVpn.js";
+import { checkTrafficFilter } from "../spam/checkTrafficFilter.js";
 import { evaluateEmailSpamRules } from "../spam/evaluateEmailSpamRules.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
 
@@ -291,6 +292,8 @@ export class PowCaptchaManager extends CaptchaManager {
 	 * @param userAccessRulesStorage - storage for querying user access policies
 	 * @param email
 	 * @param spamEmailDomainCheckingEnabled
+	 * @param spamFilter
+	 * @param trafficFilter
 	 */
 	async serverVerifyPowCaptchaSolution(
 		dappAccount: string,
@@ -302,6 +305,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		email?: string,
 		spamEmailDomainCheckingEnabled = false,
 		spamFilter?: ISpamFilterRules,
+		trafficFilter?: ITrafficFilter,
 	): Promise<{ verified: boolean; score?: number }> {
 		const notVerifiedResponse = { verified: false };
 
@@ -455,18 +459,29 @@ export class PowCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		// Spam filter: VPN block
-		if (spamFilter?.enabled && spamFilter.blockVpn && ip) {
-			const vpn = await checkIpForVpn(ip, env.ipInfoService, this.logger);
-			if (vpn.isBlocked) {
+		// Traffic filter: block VPN/proxy/Tor/abuser etc.
+		// blockAbuser defaults to true so abusive networks are always blocked
+		const effectiveTrafficFilter = { blockAbuser: true, ...trafficFilter };
+		// if at least one true
+		const hasTrafficFilter = Object.values(effectiveTrafficFilter).some(
+			(v) => v,
+		);
+		if (ip && hasTrafficFilter) {
+			const check = await checkTrafficFilter(
+				ip,
+				effectiveTrafficFilter,
+				env.ipInfoService,
+				this.logger,
+			);
+			if (check.isBlocked) {
 				this.logger.info(() => ({
-					msg: "Spam filter rejected request from VPN/proxy in PoW verification",
-					data: { challenge, dappAccount, ip, ipService: vpn.ipService },
+					msg: "Traffic filter rejected request in PoW verification",
+					data: { challenge, dappAccount, ip, reason: check.reason },
 				}));
 				await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
 					result: {
 						status: CaptchaStatus.disapproved,
-						reason: "API.VPN_BLOCKED",
+						reason: check.reason,
 					},
 				});
 				return notVerifiedResponse;

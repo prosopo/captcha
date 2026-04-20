@@ -43,7 +43,14 @@
 		"INVALID_BODY": "Cuerpo inválido",
 		"PARSE_ERROR": "Error al analizar la respuesta",
 		"SPAM_EMAIL_RULE": "Dirección de correo electrónico bloqueada por reglas de filtro de spam",
-		"VPN_BLOCKED": "Las solicitudes desde VPN, proxy o nodos de salida Tor no están permitidas para este sitio"
+		"VPN_BLOCKED": "Las solicitudes desde conexiones VPN no están permitidas para este sitio",
+		"PROXY_BLOCKED": "Las solicitudes desde servidores proxy no están permitidas para este sitio",
+		"TOR_BLOCKED": "Las solicitudes desde nodos de salida Tor no están permitidas para este sitio",
+		"ABUSER_BLOCKED": "Las solicitudes desde redes marcadas por abuso no están permitidas para este sitio",
+		"DATACENTER_BLOCKED": "Las solicitudes desde direcciones IP de centros de datos no están permitidas para este sitio",
+		"MOBILE_BLOCKED": "Las solicitudes desde redes móviles no están permitidas para este sitio",
+		"SATELLITE_BLOCKED": "Las solicitudes desde conexiones satelitales no están permitidas para este sitio",
+		"CRAWLER_BLOCKED": "Las solicitudes desde rastreadores conocidos no están permitidas para este sitio"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "No se puede modificar el usuario propietario",

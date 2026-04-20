@@ -27,6 +27,7 @@ const createMockIPInfo = (overrides: Partial<IPInfoResult>): IPInfoResult => ({
 	isAbuser: false,
 	isMobile: false,
 	isSatellite: false,
+	isCrawler: false,
 	providerName: "Google LLC",
 	providerType: "business",
 	asnNumber: 15169,

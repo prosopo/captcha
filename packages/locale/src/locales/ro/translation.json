@@ -43,7 +43,14 @@
 		"INVALID_BODY": "Corp invalid",
 		"PARSE_ERROR": "Eroare la parsare",
 		"SPAM_EMAIL_RULE": "Adresa de e-mail blocată de regulile filtrului de spam",
-		"VPN_BLOCKED": "Solicitările de la VPN, proxy sau noduri de ieșire Tor nu sunt permise pentru acest site"
+		"VPN_BLOCKED": "Solicitările de la conexiuni VPN nu sunt permise pentru acest site",
+		"PROXY_BLOCKED": "Solicitările de la servere proxy nu sunt permise pentru acest site",
+		"TOR_BLOCKED": "Solicitările de la noduri de ieșire Tor nu sunt permise pentru acest site",
+		"ABUSER_BLOCKED": "Solicitările de la rețele semnalate pentru abuz nu sunt permise pentru acest site",
+		"DATACENTER_BLOCKED": "Solicitările de la adrese IP de centre de date nu sunt permise pentru acest site",
+		"MOBILE_BLOCKED": "Solicitările de la conexiuni de rețea mobilă nu sunt permise pentru acest site",
+		"SATELLITE_BLOCKED": "Solicitările de la conexiuni prin satelit nu sunt permise pentru acest site",
+		"CRAWLER_BLOCKED": "Solicitările de la crawlere cunoscute nu sunt permise pentru acest site"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Nu se poate modifica utilizatorul proprietar",

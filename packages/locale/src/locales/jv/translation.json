@@ -43,7 +43,14 @@
 		"INVALID_BODY": "Badan tidak valid",
 		"PARSE_ERROR": "Kesalahan parsing permintaan",
 		"SPAM_EMAIL_RULE": "Alamat email diblokir dening aturan filter spam",
-		"VPN_BLOCKED": "Panjaluk saka VPN, proxy, utawa simpul metu Tor ora diidini kanggo situs iki"
+		"VPN_BLOCKED": "Panjaluk saka sambungan VPN ora diidini kanggo situs iki",
+		"PROXY_BLOCKED": "Panjaluk saka server proxy ora diidini kanggo situs iki",
+		"TOR_BLOCKED": "Panjaluk saka simpul metu Tor ora diidini kanggo situs iki",
+		"ABUSER_BLOCKED": "Panjaluk saka jaringan sing ditandhani amarga penyalahgunaan ora diidini kanggo situs iki",
+		"DATACENTER_BLOCKED": "Panjaluk saka alamat IP pusat data ora diidini kanggo situs iki",
+		"MOBILE_BLOCKED": "Panjaluk saka sambungan jaringan seluler ora diidini kanggo situs iki",
+		"SATELLITE_BLOCKED": "Panjaluk saka sambungan satelit ora diidini kanggo situs iki",
+		"CRAWLER_BLOCKED": "Panjaluk saka crawler sing dikenal ora diidini kanggo situs iki"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Cannot modify owner user",

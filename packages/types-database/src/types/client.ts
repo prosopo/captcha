@@ -162,7 +162,6 @@ export const UserSettingsSchema = new Schema({
 	},
 	spamFilter: {
 		enabled: { type: Boolean, default: false },
-		blockVpn: { type: Boolean, default: false },
 		emailRules: {
 			enabled: { type: Boolean, default: false },
 			maxLocalPartDots: { type: Number, required: false },
@@ -170,6 +169,16 @@ export const UserSettingsSchema = new Schema({
 			useDefaultPatterns: { type: Boolean, default: false },
 			customRegexBlocklist: { type: [String], default: [] },
 		},
+	},
+	trafficFilter: {
+		blockVpn: { type: Boolean, default: false },
+		blockProxy: { type: Boolean, default: false },
+		blockTor: { type: Boolean, default: false },
+		blockAbuser: { type: Boolean, default: true },
+		blockDatacenter: { type: Boolean, default: false },
+		blockMobile: { type: Boolean, default: false },
+		blockSatellite: { type: Boolean, default: false },
+		blockCrawler: { type: Boolean, default: false },
 	},
 });
 

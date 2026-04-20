@@ -43,7 +43,14 @@
 		"INVALID_BODY": "Ogiltig body",
 		"PARSE_ERROR": "Fel vid tolkning av förfrågan",
 		"SPAM_EMAIL_RULE": "E-postadressen blockerad av spamfilterregler",
-		"VPN_BLOCKED": "Förfrågningar från VPN, proxy eller Tor-utgångsnoder är inte tillåtna för denna webbplats"
+		"VPN_BLOCKED": "Förfrågningar från VPN-anslutningar är inte tillåtna för denna webbplats",
+		"PROXY_BLOCKED": "Förfrågningar från proxyservrar är inte tillåtna för denna webbplats",
+		"TOR_BLOCKED": "Förfrågningar från Tor-utgångsnoder är inte tillåtna för denna webbplats",
+		"ABUSER_BLOCKED": "Förfrågningar från nätverk markerade för missbruk är inte tillåtna för denna webbplats",
+		"DATACENTER_BLOCKED": "Förfrågningar från datacenter-IP-adresser är inte tillåtna för denna webbplats",
+		"MOBILE_BLOCKED": "Förfrågningar från mobilnätverksanslutningar är inte tillåtna för denna webbplats",
+		"SATELLITE_BLOCKED": "Förfrågningar från satellitanslutningar är inte tillåtna för denna webbplats",
+		"CRAWLER_BLOCKED": "Förfrågningar från kända crawlers är inte tillåtna för denna webbplats"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Kan inte ändra ägare användare",

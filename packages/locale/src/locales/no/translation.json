@@ -43,7 +43,14 @@
 		"INVALID_BODY": "Ugyldig kropp",
 		"PARSE_ERROR": "Feil ved å tolke forespørsel",
 		"SPAM_EMAIL_RULE": "E-postadresse blokkert av spamfilterregler",
-		"VPN_BLOCKED": "Forespørsler fra VPN, proxy eller Tor-utgangsnoder er ikke tillatt for dette nettstedet"
+		"VPN_BLOCKED": "Forespørsler fra VPN-tilkoblinger er ikke tillatt for dette nettstedet",
+		"PROXY_BLOCKED": "Forespørsler fra proxyservere er ikke tillatt for dette nettstedet",
+		"TOR_BLOCKED": "Forespørsler fra Tor-utgangsnoder er ikke tillatt for dette nettstedet",
+		"ABUSER_BLOCKED": "Forespørsler fra nettverk flagget for misbruk er ikke tillatt for dette nettstedet",
+		"DATACENTER_BLOCKED": "Forespørsler fra datasenter-IP-adresser er ikke tillatt for dette nettstedet",
+		"MOBILE_BLOCKED": "Forespørsler fra mobilnettverkstilkoblinger er ikke tillatt for dette nettstedet",
+		"SATELLITE_BLOCKED": "Forespørsler fra satellittilkoblinger er ikke tillatt for dette nettstedet",
+		"CRAWLER_BLOCKED": "Forespørsler fra kjente roboter er ikke tillatt for dette nettstedet"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Kan ikke endre eierbruker",

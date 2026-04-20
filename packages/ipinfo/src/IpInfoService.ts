@@ -17,6 +17,43 @@ import { IpapiBackend } from "./backends/ipapi.js";
 import { MaxMindBackend } from "./backends/maxmind.js";
 import type { IIpInfoService, IpInfoServiceConfig } from "./types.js";
 
+/**
+ * Returns true for loopback, link-local, and private-range IPs that will
+ * never yield useful geolocation or threat data from any backend.
+ */
+function isNonRoutable(ip: string): boolean {
+	// Strip IPv4-mapped IPv6 prefix (::ffff:127.0.0.1 -> 127.0.0.1)
+	const normalized = ip.replace(/^::ffff:/i, "");
+
+	// IPv4 private / loopback / link-local
+	if (
+		normalized.startsWith("127.") ||
+		normalized.startsWith("10.") ||
+		normalized.startsWith("192.168.") ||
+		normalized.startsWith("169.254.") ||
+		normalized === "0.0.0.0"
+	) {
+		return true;
+	}
+
+	// 172.16.0.0 – 172.31.255.255
+	if (normalized.startsWith("172.")) {
+		const second = Number.parseInt(normalized.split(".")[1] ?? "", 10);
+		if (second >= 16 && second <= 31) return true;
+	}
+
+	// IPv6 loopback
+	if (normalized === "::1" || normalized === "::") return true;
+
+	// IPv6 ULA (fc00::/7 — covers fc00:: through fdff::)
+	if (/^f[cd]/i.test(normalized)) return true;
+
+	// IPv6 link-local (fe80::/10)
+	if (/^fe[89ab]/i.test(normalized)) return true;
+
+	return false;
+}
+
 export class IpInfoService implements IIpInfoService {
 	private maxmindBackend: MaxMindBackend | null = null;
 	private ipapiBackend: IpapiBackend | null = null;
@@ -64,6 +101,14 @@ export class IpInfoService implements IIpInfoService {
 	}
 
 	async lookup(ip: string): Promise<IPInfoResponse> {
+		if (isNonRoutable(ip)) {
+			return {
+				isValid: false,
+				error: "Non-routable IP address",
+				ip,
+			};
+		}
+
 		// Prefer ipapi.is when available (richer threat data)
 		if (this.ipapiBackend?.isAvailable()) {
 			const result = await this.ipapiBackend.lookup(ip);
