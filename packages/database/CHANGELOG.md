@@ -1,5 +1,17 @@
 # @prosopo/database
 
+## 3.9.15
+### Patch Changes
+
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+  - @prosopo/types-database@4.5.0
+  - @prosopo/locale@3.2.0
+  - @prosopo/types@3.14.0
+  - @prosopo/common@3.1.32
+  - @prosopo/user-access-policy@3.6.21
+  - @prosopo/redis-client@1.0.17
+
 ## 3.9.14
 ### Patch Changes
 

@@ -1,5 +1,20 @@
 # @prosopo/types-database
 
+## 4.5.0
+### Minor Changes
+
+- 42650db: Add better spam rules and move ipinfo service to local instead of external
+
+### Patch Changes
+
+- fc514dd: ability to block different types of traffic
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+  - @prosopo/locale@3.2.0
+  - @prosopo/types@3.14.0
+  - @prosopo/common@3.1.32
+  - @prosopo/user-access-policy@3.6.21
+
 ## 4.4.14
 ### Patch Changes
 

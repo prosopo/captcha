@@ -1,5 +1,31 @@
 # @prosopo/provider
 
+## 3.23.0
+### Minor Changes
+
+- 42650db: Add better spam rules and move ipinfo service to local instead of external
+
+### Patch Changes
+
+- fc514dd: ability to block different types of traffic
+- Updated dependencies [fc514dd]
+- Updated dependencies [7be39c4]
+- Updated dependencies [42650db]
+  - @prosopo/types-database@4.5.0
+  - @prosopo/locale@3.2.0
+  - @prosopo/types@3.14.0
+  - @prosopo/api@3.2.10
+  - @prosopo/api-express-router@3.1.0
+  - @prosopo/types-env@2.9.0
+  - @prosopo/env@3.4.0
+  - @prosopo/database@3.9.15
+  - @prosopo/common@3.1.32
+  - @prosopo/datasets@3.1.14
+  - @prosopo/keyring@2.9.20
+  - @prosopo/load-balancer@2.8.37
+  - @prosopo/user-access-policy@3.6.21
+  - @prosopo/api-route@2.6.40
+
 ## 3.22.4
 ### Patch Changes
 
