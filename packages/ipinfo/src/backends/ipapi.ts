@@ -98,11 +98,7 @@ export class IpapiBackend {
 					isAbuser: data.is_abuser,
 					isMobile: data.is_mobile,
 					isSatellite: data.is_satellite,
-					isCrawler:
-						typeof data.is_crawler === "boolean"
-							? data.is_crawler
-							: data.is_crawler === "true" || data.is_crawler === "1",
-
+					isCrawler: data.is_crawler,
 					providerName: data.company?.name || data.datacenter?.datacenter,
 					providerType: data.company?.type || data.asn?.type,
 					asnNumber: data.asn?.asn,
