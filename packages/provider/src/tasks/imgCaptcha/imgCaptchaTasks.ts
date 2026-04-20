@@ -740,7 +740,11 @@ export class ImgCaptchaManager extends CaptchaManager {
 		// Traffic filter: block VPN/proxy/Tor/abuser etc.
 		// blockAbuser defaults to true so abusive networks are always blocked
 		const effectiveTrafficFilter = { blockAbuser: true, ...trafficFilter };
-		if (ip) {
+		// if at least one true
+		const hasTrafficFilter = Object.values(effectiveTrafficFilter).some(
+			(v) => v,
+		);
+		if (ip && hasTrafficFilter) {
 			const check = await checkTrafficFilter(
 				ip,
 				effectiveTrafficFilter,
