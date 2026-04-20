@@ -1,5 +1,19 @@
 # @prosopo/procaptcha-common
 
+## 2.10.1
+### Patch Changes
+
+- 06970d2: Missed review comments
+- dd3e06e: CSS hot fix
+- Updated dependencies [06970d2]
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+- Updated dependencies [dd3e06e]
+  - @prosopo/widget-skeleton@2.8.1
+  - @prosopo/types@3.14.0
+  - @prosopo/account@2.8.20
+  - @prosopo/load-balancer@2.8.37
+
 ## 2.10.0
 ### Minor Changes
 

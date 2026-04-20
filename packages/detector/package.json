@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/detector",
-	"version": "3.4.22",
+	"version": "3.4.23",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"engines": {
@@ -24,7 +24,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@prosopo/types": "3.13.3",
+		"@prosopo/types": "3.14.0",
 		"dotenv": "16.4.5"
 	},
 	"devDependencies": {
