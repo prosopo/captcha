@@ -194,7 +194,7 @@ services:
       - 208.67.222.222
   ipinfo:
     # IP metadata sidecar
-    container_name: bumblebee-ipinfo
+    container_name: ipinfo
     image: prosopo/ipinfo:${IPINFO_VERSION:-0.1.0}
     # NET_ADMIN is required to check/create firewall chains, even when
     # enableFirewall is false in config.
@@ -203,6 +203,8 @@ services:
     # No host ports
     expose:
       - "3899"
+    networks:
+      - internal
     volumes:
       # Database blob ships separately
       - ./ipinfo/ipapi_database_ram:/usr/src/app/ipapi_database_ram:ro
