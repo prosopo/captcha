@@ -140,6 +140,7 @@ export function createMockProviderEnvironment(): ProviderEnvironment {
 			isAbuser: false,
 			isMobile: false,
 			isSatellite: false,
+			isCrawler: false,
 		}),
 		isAvailable: vi.fn().mockReturnValue(true),
 	};

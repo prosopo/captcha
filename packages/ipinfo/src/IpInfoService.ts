@@ -45,6 +45,12 @@ function isNonRoutable(ip: string): boolean {
 	// IPv6 loopback
 	if (normalized === "::1" || normalized === "::") return true;
 
+	// IPv6 ULA (fc00::/7 — covers fc00:: through fdff::)
+	if (/^f[cd]/i.test(normalized)) return true;
+
+	// IPv6 link-local (fe80::/10)
+	if (/^fe[89ab]/i.test(normalized)) return true;
+
 	return false;
 }
 
