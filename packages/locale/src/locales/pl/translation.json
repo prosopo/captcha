@@ -43,7 +43,14 @@
 		"INVALID_BODY": "Nieprawidłowe ciało",
 		"PARSE_ERROR": "Błąd parsowania żądania",
 		"SPAM_EMAIL_RULE": "Adres e-mail zablokowany przez reguły filtra spamu",
-		"VPN_BLOCKED": "Żądania z VPN, proxy lub węzłów wyjściowych Tor nie są dozwolone dla tej strony"
+		"VPN_BLOCKED": "Żądania z połączeń VPN nie są dozwolone dla tej strony",
+		"PROXY_BLOCKED": "Żądania z serwerów proxy nie są dozwolone dla tej strony",
+		"TOR_BLOCKED": "Żądania z węzłów wyjściowych Tor nie są dozwolone dla tej strony",
+		"ABUSER_BLOCKED": "Żądania z sieci oznaczonych za nadużycia nie są dozwolone dla tej strony",
+		"DATACENTER_BLOCKED": "Żądania z adresów IP centrów danych nie są dozwolone dla tej strony",
+		"MOBILE_BLOCKED": "Żądania z połączeń sieci komórkowych nie są dozwolone dla tej strony",
+		"SATELLITE_BLOCKED": "Żądania z połączeń satelitarnych nie są dozwolone dla tej strony",
+		"CRAWLER_BLOCKED": "Żądania od znanych robotów nie są dozwolone dla tej strony"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Nie można zmodyfikować właściciela użytkownika",

@@ -43,7 +43,14 @@
 		"INVALID_BODY": "유효하지 않은 본문",
 		"PARSE_ERROR": "요청 구문 분석 오류",
 		"SPAM_EMAIL_RULE": "스팸 필터 규칙에 의해 이메일 주소가 차단되었습니다",
-		"VPN_BLOCKED": "이 사이트에서는 VPN, 프록시 또는 Tor 출구 노드의 요청이 허용되지 않습니다"
+		"VPN_BLOCKED": "이 사이트에서는 VPN 연결의 요청이 허용되지 않습니다",
+		"PROXY_BLOCKED": "이 사이트에서는 프록시 서버의 요청이 허용되지 않습니다",
+		"TOR_BLOCKED": "이 사이트에서는 Tor 출구 노드의 요청이 허용되지 않습니다",
+		"ABUSER_BLOCKED": "악용으로 표시된 네트워크의 요청은 이 사이트에서 허용되지 않습니다",
+		"DATACENTER_BLOCKED": "이 사이트에서는 데이터센터 IP 주소의 요청이 허용되지 않습니다",
+		"MOBILE_BLOCKED": "이 사이트에서는 모바일 네트워크 연결의 요청이 허용되지 않습니다",
+		"SATELLITE_BLOCKED": "이 사이트에서는 위성 연결의 요청이 허용되지 않습니다",
+		"CRAWLER_BLOCKED": "이 사이트에서는 알려진 크롤러의 요청이 허용되지 않습니다"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "소유자 사용자를 수정할 수 없음",

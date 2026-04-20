@@ -130,6 +130,7 @@ export class MaxMindBackend {
 				isAbuser: false,
 				isMobile: false,
 				isSatellite: cityData?.traits?.isSatelliteProvider ?? false,
+				isCrawler: false,
 
 				// Geolocation from City DB
 				country: cityData?.country?.names?.en,

@@ -173,12 +173,23 @@ export const EmailSpamRulesSchema = object({
 
 export const SpamFilterRulesSchema = object({
 	enabled: boolean().optional().default(false),
-	blockVpn: boolean().optional().default(false),
 	emailRules: EmailSpamRulesSchema.optional(),
+});
+
+export const TrafficFilterSchema = object({
+	blockVpn: boolean().optional().default(false),
+	blockProxy: boolean().optional().default(false),
+	blockTor: boolean().optional().default(false),
+	blockAbuser: boolean().optional().default(true),
+	blockDatacenter: boolean().optional().default(false),
+	blockMobile: boolean().optional().default(false),
+	blockSatellite: boolean().optional().default(false),
+	blockCrawler: boolean().optional().default(false),
 });
 
 export type IEmailSpamRules = output<typeof EmailSpamRulesSchema>;
 export type ISpamFilterRules = output<typeof SpamFilterRulesSchema>;
+export type ITrafficFilter = output<typeof TrafficFilterSchema>;
 
 export const ClientSettingsSchema = object({
 	captchaType: CaptchaTypeSpec.optional().default(captchaTypeDefault),
@@ -210,6 +221,7 @@ export const ClientSettingsSchema = object({
 	contextAware: ContextAwareSchema.optional(),
 	spamEmailDomainCheckEnabled: boolean().optional(),
 	spamFilter: SpamFilterRulesSchema.optional(),
+	trafficFilter: TrafficFilterSchema.optional(),
 });
 
 export type IUserSettings = output<typeof ClientSettingsSchema>;

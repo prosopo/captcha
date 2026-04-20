@@ -43,7 +43,14 @@
 		"INVALID_BODY": "无效的主体",
 		"PARSE_ERROR": "解析请求时出错",
 		"SPAM_EMAIL_RULE": "电子邮件地址被垃圾邮件过滤规则拦截",
-		"VPN_BLOCKED": "此网站不允许来自VPN、代理或Tor出口节点的请求"
+		"VPN_BLOCKED": "此网站不允许来自VPN连接的请求",
+		"PROXY_BLOCKED": "此网站不允许来自代理服务器的请求",
+		"TOR_BLOCKED": "此网站不允许来自Tor出口节点的请求",
+		"ABUSER_BLOCKED": "此网站不允许来自被标记为滥用的网络的请求",
+		"DATACENTER_BLOCKED": "此网站不允许来自数据中心IP地址的请求",
+		"MOBILE_BLOCKED": "此网站不允许来自移动网络连接的请求",
+		"SATELLITE_BLOCKED": "此网站不允许来自卫星连接的请求",
+		"CRAWLER_BLOCKED": "此网站不允许来自已知爬虫的请求"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "无法修改所有者用户",

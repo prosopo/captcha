@@ -33,6 +33,7 @@ import {
 	type Hash,
 	type IPAddress,
 	type ISpamFilterRules,
+	type ITrafficFilter,
 	type ImageVerificationResponse,
 	type KeyringPair,
 	type PendingImageCaptchaRequest,
@@ -57,7 +58,7 @@ import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { FrictionlessReason } from "../frictionless/frictionlessTasks.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
-import { checkIpForVpn } from "../spam/checkVpn.js";
+import { checkTrafficFilter } from "../spam/checkTrafficFilter.js";
 import { evaluateEmailSpamRules } from "../spam/evaluateEmailSpamRules.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
 
@@ -597,6 +598,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		email?: string,
 		spamEmailDomainCheckingEnabled = false,
 		spamFilter?: ISpamFilterRules,
+		trafficFilter?: ITrafficFilter,
 	): Promise<ImageVerificationResponse> {
 		const solution = await (commitmentId
 			? this.getDappUserCommitmentById(commitmentId)
@@ -735,21 +737,28 @@ export class ImgCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		// Spam filter: VPN block
-		if (spamFilter?.enabled && spamFilter.blockVpn && ip) {
-			const vpn = await checkIpForVpn(ip, env.ipInfoService, this.logger);
-			if (vpn.isBlocked) {
+		// Traffic filter: block VPN/proxy/Tor/abuser etc.
+		// blockAbuser defaults to true so abusive networks are always blocked
+		const effectiveTrafficFilter = trafficFilter ?? { blockAbuser: true };
+		if (ip) {
+			const check = await checkTrafficFilter(
+				ip,
+				effectiveTrafficFilter,
+				env.ipInfoService,
+				this.logger,
+			);
+			if (check.isBlocked) {
 				this.logger.info(() => ({
-					msg: "Spam filter rejected request from VPN/proxy",
-					data: { commitmentId, dapp, ip, ipService: vpn.ipService },
+					msg: "Traffic filter rejected request",
+					data: { commitmentId, dapp, ip, reason: check.reason },
 				}));
 				if (commitmentId) {
 					await this.db.disapproveDappUserCommitment(
 						commitmentId,
-						"API.VPN_BLOCKED",
+						check.reason,
 					);
 				}
-				return { status: "API.VPN_BLOCKED", verified: false };
+				return { status: check.reason, verified: false };
 			}
 		}
 

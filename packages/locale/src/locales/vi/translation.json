@@ -43,7 +43,14 @@
 		"INVALID_BODY": "Nội dung không hợp lệ",
 		"PARSE_ERROR": "Lỗi phân tích yêu cầu",
 		"SPAM_EMAIL_RULE": "Địa chỉ email bị chặn bởi quy tắc bộ lọc spam",
-		"VPN_BLOCKED": "Các yêu cầu từ VPN, proxy hoặc nút thoát Tor không được phép cho trang web này"
+		"VPN_BLOCKED": "Các yêu cầu từ kết nối VPN không được phép cho trang web này",
+		"PROXY_BLOCKED": "Các yêu cầu từ máy chủ proxy không được phép cho trang web này",
+		"TOR_BLOCKED": "Các yêu cầu từ nút thoát Tor không được phép cho trang web này",
+		"ABUSER_BLOCKED": "Các yêu cầu từ mạng bị gắn cờ lạm dụng không được phép cho trang web này",
+		"DATACENTER_BLOCKED": "Các yêu cầu từ địa chỉ IP trung tâm dữ liệu không được phép cho trang web này",
+		"MOBILE_BLOCKED": "Các yêu cầu từ kết nối mạng di động không được phép cho trang web này",
+		"SATELLITE_BLOCKED": "Các yêu cầu từ kết nối vệ tinh không được phép cho trang web này",
+		"CRAWLER_BLOCKED": "Các yêu cầu từ trình thu thập dữ liệu đã biết không được phép cho trang web này"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Không thể sửa đổi người dùng chủ sở hữu",

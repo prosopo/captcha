@@ -128,6 +128,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						email,
 						clientRecord.settings.spamEmailDomainCheckEnabled,
 						clientRecord.settings.spamFilter,
+						clientRecord.settings.trafficFilter,
 					);
 
 				req.logger.debug(() => ({ data: { response } }));
@@ -241,6 +242,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						email,
 						clientRecord.settings.spamEmailDomainCheckEnabled,
 						clientRecord.settings.spamFilter,
+						clientRecord.settings.trafficFilter,
 					);
 
 				const verificationResponse: VerificationResponse =

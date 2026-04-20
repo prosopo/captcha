@@ -43,7 +43,14 @@
 		"INVALID_BODY": "Invalid body",
 		"PARSE_ERROR": "Error parsing request",
 		"SPAM_EMAIL_RULE": "Alamat email diblokir oleh aturan filter spam",
-		"VPN_BLOCKED": "Permintaan dari VPN, proxy, atau node keluar Tor tidak diizinkan untuk situs ini"
+		"VPN_BLOCKED": "Permintaan dari koneksi VPN tidak diizinkan untuk situs ini",
+		"PROXY_BLOCKED": "Permintaan dari server proxy tidak diizinkan untuk situs ini",
+		"TOR_BLOCKED": "Permintaan dari node keluar Tor tidak diizinkan untuk situs ini",
+		"ABUSER_BLOCKED": "Permintaan dari jaringan yang ditandai karena penyalahgunaan tidak diizinkan untuk situs ini",
+		"DATACENTER_BLOCKED": "Permintaan dari alamat IP pusat data tidak diizinkan untuk situs ini",
+		"MOBILE_BLOCKED": "Permintaan dari koneksi jaringan seluler tidak diizinkan untuk situs ini",
+		"SATELLITE_BLOCKED": "Permintaan dari koneksi satelit tidak diizinkan untuk situs ini",
+		"CRAWLER_BLOCKED": "Permintaan dari crawler yang dikenal tidak diizinkan untuk situs ini"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Cannot modify owner user",

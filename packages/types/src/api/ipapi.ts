@@ -128,6 +128,7 @@ export interface IPInfoResult {
 	isAbuser: boolean;
 	isMobile: boolean;
 	isSatellite: boolean;
+	isCrawler: boolean;
 
 	// Provider information
 	providerName?: string;

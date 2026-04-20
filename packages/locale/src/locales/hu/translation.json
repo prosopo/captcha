@@ -43,7 +43,14 @@
 		"INVALID_BODY": "Érvénytelen test",
 		"PARSE_ERROR": "Hiba az adatkérések elemzése közben",
 		"SPAM_EMAIL_RULE": "Az e-mail cím a spamszűrő szabályai alapján blokkolva",
-		"VPN_BLOCKED": "VPN-ről, proxyról vagy Tor kilépési csomópontokról érkező kérések nem engedélyezettek ezen az oldalon"
+		"VPN_BLOCKED": "VPN-kapcsolatokról érkező kérések nem engedélyezettek ezen az oldalon",
+		"PROXY_BLOCKED": "Proxy szerverekről érkező kérések nem engedélyezettek ezen az oldalon",
+		"TOR_BLOCKED": "Tor kilépési csomópontokról érkező kérések nem engedélyezettek ezen az oldalon",
+		"ABUSER_BLOCKED": "Visszaélésért megjelölt hálózatokról érkező kérések nem engedélyezettek ezen az oldalon",
+		"DATACENTER_BLOCKED": "Adatközponti IP-címekről érkező kérések nem engedélyezettek ezen az oldalon",
+		"MOBILE_BLOCKED": "Mobilhálózati kapcsolatokról érkező kérések nem engedélyezettek ezen az oldalon",
+		"SATELLITE_BLOCKED": "Műholdas kapcsolatokról érkező kérések nem engedélyezettek ezen az oldalon",
+		"CRAWLER_BLOCKED": "Ismert webrobotoktól érkező kérések nem engedélyezettek ezen az oldalon"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Nem lehet módosítani a tulajdonos felhasználót",

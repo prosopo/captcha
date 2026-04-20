@@ -43,7 +43,14 @@
 		"INVALID_BODY": "Corpo non valido",
 		"PARSE_ERROR": "Errore nell'analisi della richiesta",
 		"SPAM_EMAIL_RULE": "Indirizzo email bloccato dalle regole del filtro antispam",
-		"VPN_BLOCKED": "Le richieste da VPN, proxy o nodi di uscita Tor non sono consentite per questo sito"
+		"VPN_BLOCKED": "Le richieste da connessioni VPN non sono consentite per questo sito",
+		"PROXY_BLOCKED": "Le richieste da server proxy non sono consentite per questo sito",
+		"TOR_BLOCKED": "Le richieste da nodi di uscita Tor non sono consentite per questo sito",
+		"ABUSER_BLOCKED": "Le richieste da reti segnalate per abuso non sono consentite per questo sito",
+		"DATACENTER_BLOCKED": "Le richieste da indirizzi IP di data center non sono consentite per questo sito",
+		"MOBILE_BLOCKED": "Le richieste da connessioni di rete mobile non sono consentite per questo sito",
+		"SATELLITE_BLOCKED": "Le richieste da connessioni satellitari non sono consentite per questo sito",
+		"CRAWLER_BLOCKED": "Le richieste da crawler noti non sono consentite per questo sito"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Não é possível modificar o usuário proprietário",
