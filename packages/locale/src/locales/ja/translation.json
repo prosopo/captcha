@@ -357,7 +357,9 @@
 		"CANNOT_DELETE_LAST_USER": "最後のユーザーを削除することはできません",
 		"USER_ALREADY_EXISTS": "ユーザーはすでに存在しています",
 		"NO_SUGGESTIONS_FOUND": "提案は見つかりません",
-		"CANNOT_DEACTIVATE_LAST_SITE": "最後のアクティブサイトを無効にすることはできません"
+		"CANNOT_DEACTIVATE_LAST_SITE": "最後のアクティブサイトを無効にすることはできません",
+		"DUPLICATE_SITE_NAME": "この名前のサイトはすでに存在しています",
+		"INVALID_SITE_NAME": "サイト名には英字、数字、ハイフン、アンダースコアのみ使用できます"
 	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Polkadot拡張機能が見つかりません"

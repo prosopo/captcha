@@ -58,7 +58,9 @@
 		"CANNOT_DELETE_LAST_USER": "Nu se poate sterge ultimul utilizator",
 		"USER_ALREADY_EXISTS": "Utilizatorul exista deja",
 		"NO_SUGGESTIONS_FOUND": "Nu s-au gasit sugestii",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Nu se poate dezactiva ultimul site activ"
+		"CANNOT_DEACTIVATE_LAST_SITE": "Nu se poate dezactiva ultimul site activ",
+		"DUPLICATE_SITE_NAME": "Există deja un site cu acest nume",
+		"INVALID_SITE_NAME": "Numele site-ului trebuie să conțină doar litere, cifre, cratime și liniuțe de subliniere"
 	},
 	"TARGET": {
 		"airplanes": "avioane",

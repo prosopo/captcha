@@ -58,7 +58,9 @@
 		"CANNOT_DELETE_LAST_USER": "无法删除最后一个用户",
 		"USER_ALREADY_EXISTS": "用户已经存在",
 		"NO_SUGGESTIONS_FOUND": "未找到建议",
-		"CANNOT_DEACTIVATE_LAST_SITE": "无法停用最后一个活动站点"
+		"CANNOT_DEACTIVATE_LAST_SITE": "无法停用最后一个活动站点",
+		"DUPLICATE_SITE_NAME": "已存在同名站点",
+		"INVALID_SITE_NAME": "站点名称只能包含字母、数字、连字符和下划线"
 	},
 	"TARGET": {
 		"airplanes": "飞机",

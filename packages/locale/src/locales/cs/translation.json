@@ -58,7 +58,9 @@
 		"CANNOT_DELETE_LAST_USER": "Nelze smazat posledního uživatele",
 		"USER_ALREADY_EXISTS": "Uživatel již existuje",
 		"NO_SUGGESTIONS_FOUND": "Nebyly nalezeny žádné návrhy",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Nelze deaktivovat poslední aktivní web"
+		"CANNOT_DEACTIVATE_LAST_SITE": "Nelze deaktivovat poslední aktivní web",
+		"DUPLICATE_SITE_NAME": "Web s tímto názvem již existuje",
+		"INVALID_SITE_NAME": "Název webu smí obsahovat pouze písmena, čísla, pomlčky a podtržítka"
 	},
 	"TARGET": {
 		"airplanes": "letadla",

@@ -357,7 +357,9 @@
 		"CANNOT_DELETE_LAST_USER": "Kan laatste gebruiker niet verwijderen",
 		"USER_ALREADY_EXISTS": "Gebruiker bestaat al",
 		"NO_SUGGESTIONS_FOUND": "Geen suggesties gevonden",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Kan de laatste actieve site niet deactiveren"
+		"CANNOT_DEACTIVATE_LAST_SITE": "Kan de laatste actieve site niet deactiveren",
+		"DUPLICATE_SITE_NAME": "Er bestaat al een site met deze naam",
+		"INVALID_SITE_NAME": "De sitenaam mag alleen letters, cijfers, koppeltekens en underscores bevatten"
 	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Polkadot-extensie niet gevonden"

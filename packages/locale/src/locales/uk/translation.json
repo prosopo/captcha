@@ -58,7 +58,9 @@
 		"CANNOT_DELETE_LAST_USER": "Cannot delete last user",
 		"USER_ALREADY_EXISTS": "User already exists",
 		"NO_SUGGESTIONS_FOUND": "No suggestions found",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Cannot deactivate the last active site"
+		"CANNOT_DEACTIVATE_LAST_SITE": "Cannot deactivate the last active site",
+		"DUPLICATE_SITE_NAME": "Сайт із такою назвою вже існує",
+		"INVALID_SITE_NAME": "Назва сайту повинна містити лише літери, цифри, дефіси та символи підкреслення"
 	},
 	"TARGET": {
 		"airplanes": "aeroplanes",

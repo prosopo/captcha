@@ -58,7 +58,9 @@
 		"CANNOT_DELETE_LAST_USER": "Annotcay eleteday astlay seruy",
 		"USER_ALREADY_EXISTS": "Userway alreadyway existstay",
 		"NO_SUGGESTIONS_FOUND": "Onay uggestionssay oundfay",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Annotcay eactivateday ethay astlay activeay itesay"
+		"CANNOT_DEACTIVATE_LAST_SITE": "Annotcay eactivateday ethay astlay activeay itesay",
+		"DUPLICATE_SITE_NAME": "ഈ പേരിൽ ഒരു സൈറ്റ് ഇതിനകം നിലവിലുണ്ട്",
+		"INVALID_SITE_NAME": "സൈറ്റ് പേരിൽ അക്ഷരങ്ങൾ, അക്കങ്ങൾ, ഹൈഫനുകൾ, അടിവരകൾ എന്നിവ മാത്രമേ അടങ്ങിയിരിക്കാവൂ"
 	},
 	"TARGET": {
 		"airplanes": "eroplano",

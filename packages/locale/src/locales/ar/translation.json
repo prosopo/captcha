@@ -58,7 +58,9 @@
 		"CANNOT_DELETE_LAST_USER": "لا يمكن حذف أخر مستخدم",
 		"USER_ALREADY_EXISTS": "المستخدم موجود بالفعل",
 		"NO_SUGGESTIONS_FOUND": "لم يتم العثور على اقتراحات",
-		"CANNOT_DEACTIVATE_LAST_SITE": "لا يمكن تعطيل آخر موقع نشط"
+		"CANNOT_DEACTIVATE_LAST_SITE": "لا يمكن تعطيل آخر موقع نشط",
+		"DUPLICATE_SITE_NAME": "يوجد موقع بهذا الاسم بالفعل",
+		"INVALID_SITE_NAME": "يجب أن يحتوي اسم الموقع على أحرف وأرقام وشرطات وشرطات سفلية فقط"
 	},
 	"TARGET": {
 		"airplanes": "طائرات",

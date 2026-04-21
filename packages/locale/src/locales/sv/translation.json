@@ -58,7 +58,9 @@
 		"CANNOT_DELETE_LAST_USER": "Kan inte ta bort sista användaren",
 		"USER_ALREADY_EXISTS": "Användaren finns redan",
 		"NO_SUGGESTIONS_FOUND": "Inga förslag hittades",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Kan inte inaktivera den sista aktiva platsen"
+		"CANNOT_DEACTIVATE_LAST_SITE": "Kan inte inaktivera den sista aktiva platsen",
+		"DUPLICATE_SITE_NAME": "En webbplats med detta namn finns redan",
+		"INVALID_SITE_NAME": "Webbplatsnamnet får bara innehålla bokstäver, siffror, bindestreck och understreck"
 	},
 	"TARGET": {
 		"airplanes": "flygplan",
