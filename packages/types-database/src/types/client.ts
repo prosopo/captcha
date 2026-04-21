@@ -175,6 +175,7 @@ export const UserSettingsSchema = new Schema({
 		blockProxy: { type: Boolean, default: false },
 		blockTor: { type: Boolean, default: false },
 		blockAbuser: { type: Boolean, default: true },
+		abuserScoreThreshold: { type: Number, min: 0, max: 1, default: 0 },
 		blockDatacenter: { type: Boolean, default: false },
 		blockMobile: { type: Boolean, default: false },
 		blockSatellite: { type: Boolean, default: false },
