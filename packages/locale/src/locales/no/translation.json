@@ -58,7 +58,9 @@
 		"CANNOT_DELETE_LAST_USER": "Kan ikke slette siste bruker",
 		"USER_ALREADY_EXISTS": "Brukeren eksisterer allerede",
 		"NO_SUGGESTIONS_FOUND": "Ingen forslag funnet",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Kan ikke deaktivere siste aktive nettsted"
+		"CANNOT_DEACTIVATE_LAST_SITE": "Kan ikke deaktivere siste aktive nettsted",
+		"DUPLICATE_SITE_NAME": "Et nettsted med dette navnet finnes allerede",
+		"INVALID_SITE_NAME": "Nettstedsnavn kan bare inneholde bokstaver, tall, bindestreker og understreker"
 	},
 	"TARGET": {
 		"airplanes": "flymaskiner",

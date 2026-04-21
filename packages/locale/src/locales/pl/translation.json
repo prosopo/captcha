@@ -58,7 +58,9 @@
 		"CANNOT_DELETE_LAST_USER": "Nie można usunąć ostatniego użytkownika",
 		"USER_ALREADY_EXISTS": "Użytkownik już istnieje",
 		"NO_SUGGESTIONS_FOUND": "Nie znaleziono sugestii",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Nie można dezaktywować ostatniej aktywnej witryny"
+		"CANNOT_DEACTIVATE_LAST_SITE": "Nie można dezaktywować ostatniej aktywnej witryny",
+		"DUPLICATE_SITE_NAME": "Witryna o tej nazwie już istnieje",
+		"INVALID_SITE_NAME": "Nazwa witryny może zawierać tylko litery, cyfry, myślniki i podkreślenia"
 	},
 	"TARGET": {
 		"airplanes": "samoloty",

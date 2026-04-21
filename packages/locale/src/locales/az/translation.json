@@ -58,7 +58,9 @@
 		"CANNOT_DELETE_LAST_USER": "Son istifadəçini silmək olmaz",
 		"USER_ALREADY_EXISTS": "İstifadəçi artıq mövcuddur",
 		"NO_SUGGESTIONS_FOUND": "Təklif tapılmadı",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Sonaktiv saytı deaktiv etmək olmaz"
+		"CANNOT_DEACTIVATE_LAST_SITE": "Sonaktiv saytı deaktiv etmək olmaz",
+		"DUPLICATE_SITE_NAME": "Bu adla sayt artıq mövcuddur",
+		"INVALID_SITE_NAME": "Sayt adı yalnız hərflər, rəqəmlər, tire və alt xətt işarələri ehtiva etməlidir"
 	},
 	"TARGET": {
 		"airplanes": "təyyarələr",

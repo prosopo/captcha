@@ -58,7 +58,9 @@
 		"CANNOT_DELETE_LAST_USER": "Não é possível eliminar o último utilizador",
 		"USER_ALREADY_EXISTS": "Utilizador já existe",
 		"NO_SUGGESTIONS_FOUND": "Nenhuma sugestão encontrada",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Não é possível desativar o último site ativo"
+		"CANNOT_DEACTIVATE_LAST_SITE": "Não é possível desativar o último site ativo",
+		"DUPLICATE_SITE_NAME": "Já existe um site com este nome",
+		"INVALID_SITE_NAME": "O nome do site deve conter apenas letras, números, hífens e sublinhados"
 	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Extensão Polkadot não encontrada"

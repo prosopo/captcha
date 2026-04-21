@@ -58,7 +58,9 @@
 		"CANNOT_DELETE_LAST_USER": "Annotcay eleteday astlay seruy",
 		"USER_ALREADY_EXISTS": "Userway alreadyway existstay",
 		"NO_SUGGESTIONS_FOUND": "Onay uggestionssay oundfay",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Annotcay eactivateday ethay astlay activeay itesay"
+		"CANNOT_DEACTIVATE_LAST_SITE": "Annotcay eactivateday ethay astlay activeay itesay",
+		"DUPLICATE_SITE_NAME": "Mayroon nang site na may ganitong pangalan",
+		"INVALID_SITE_NAME": "Ang pangalan ng site ay dapat lamang naglalaman ng mga titik, numero, gitling, at salungguhit"
 	},
 	"TARGET": {
 		"airplanes": "eroplano",
