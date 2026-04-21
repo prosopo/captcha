@@ -320,7 +320,7 @@
 		"ACCESS_POLICY_BLOCK": "Akses disekat oleh dasar",
 		"FORBIDDEN": "Forbidden",
 		"PROVIDER_VERIFY_FAILED": "Provider verification failed",
-		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
+		"SPAM_EMAIL_DOMAIN": "Domain e-mel tidak dibenarkan",
 		"UNAUTHORIZED": "Unauthorized",
 		"MISSING_BODY": "Missing body",
 		"NO_CONTENT_TYPE_HEADER": "No content-type header. Assumed JSON encoded body but failed to parse.",
@@ -340,7 +340,16 @@
 		"INVALID_IP": "Invalid IP",
 		"INVALID_URL": "Invalid URL",
 		"INVALID_BODY": "Invalid body",
-		"PARSE_ERROR": "Error parsing request"
+		"PARSE_ERROR": "Error parsing request",
+		"SPAM_EMAIL_RULE": "Alamat e-mel disekat oleh peraturan penapis spam",
+		"VPN_BLOCKED": "Permintaan daripada sambungan VPN tidak dibenarkan untuk laman ini",
+		"PROXY_BLOCKED": "Permintaan daripada pelayan proksi tidak dibenarkan untuk laman ini",
+		"TOR_BLOCKED": "Permintaan daripada nod keluar Tor tidak dibenarkan untuk laman ini",
+		"ABUSER_BLOCKED": "Permintaan daripada rangkaian yang ditandakan kerana penyalahgunaan tidak dibenarkan untuk laman ini",
+		"DATACENTER_BLOCKED": "Permintaan daripada alamat IP pusat data tidak dibenarkan untuk laman ini",
+		"MOBILE_BLOCKED": "Permintaan daripada sambungan rangkaian mudah alih tidak dibenarkan untuk laman ini",
+		"SATELLITE_BLOCKED": "Permintaan daripada sambungan satelit tidak dibenarkan untuk laman ini",
+		"CRAWLER_BLOCKED": "Permintaan daripada perangkak yang dikenali tidak dibenarkan untuk laman ini"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Cannot modify owner user",

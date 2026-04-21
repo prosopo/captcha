@@ -1,5 +1,20 @@
 # @prosopo/api-express-router
 
+## 3.1.0
+### Minor Changes
+
+- 42650db: Add better spam rules and move ipinfo service to local instead of external
+
+### Patch Changes
+
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+  - @prosopo/locale@3.2.0
+  - @prosopo/types@3.14.0
+  - @prosopo/env@3.4.0
+  - @prosopo/common@3.1.32
+  - @prosopo/api-route@2.6.40
+
 ## 3.0.70
 ### Patch Changes
 

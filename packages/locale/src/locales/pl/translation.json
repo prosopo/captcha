@@ -21,7 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Dostęp zablokowany przez zasady",
 		"FORBIDDEN": "Zabronione",
 		"PROVIDER_VERIFY_FAILED": "Weryfikacja dostawcy nie powiodła się",
-		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
+		"SPAM_EMAIL_DOMAIN": "Domena e-mail niedozwolona",
 		"UNAUTHORIZED": "Nieautoryzowany",
 		"MISSING_BODY": "Brak ciała",
 		"NO_CONTENT_TYPE_HEADER": "Brak nagłówka typu zawartości. Przyjęto zakodowane ciało JSON, ale nie udało się sparsować.",
@@ -41,7 +41,16 @@
 		"INVALID_IP": "Nieprawidłowy adres IP",
 		"INVALID_URL": "Nieprawidłowy adres URL",
 		"INVALID_BODY": "Nieprawidłowe ciało",
-		"PARSE_ERROR": "Błąd parsowania żądania"
+		"PARSE_ERROR": "Błąd parsowania żądania",
+		"SPAM_EMAIL_RULE": "Adres e-mail zablokowany przez reguły filtra spamu",
+		"VPN_BLOCKED": "Żądania z połączeń VPN nie są dozwolone dla tej strony",
+		"PROXY_BLOCKED": "Żądania z serwerów proxy nie są dozwolone dla tej strony",
+		"TOR_BLOCKED": "Żądania z węzłów wyjściowych Tor nie są dozwolone dla tej strony",
+		"ABUSER_BLOCKED": "Żądania z sieci oznaczonych za nadużycia nie są dozwolone dla tej strony",
+		"DATACENTER_BLOCKED": "Żądania z adresów IP centrów danych nie są dozwolone dla tej strony",
+		"MOBILE_BLOCKED": "Żądania z połączeń sieci komórkowych nie są dozwolone dla tej strony",
+		"SATELLITE_BLOCKED": "Żądania z połączeń satelitarnych nie są dozwolone dla tej strony",
+		"CRAWLER_BLOCKED": "Żądania od znanych robotów nie są dozwolone dla tej strony"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Nie można zmodyfikować właściciela użytkownika",

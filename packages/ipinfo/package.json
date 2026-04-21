@@ -1,0 +1,43 @@
+{
+	"name": "@prosopo/ipinfo",
+	"version": "0.2.0",
+	"description": "IP information service with MaxMind and ipapi.is backends",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"type": "module",
+	"engines": {
+		"node": "^24",
+		"npm": "^11"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
+		}
+	},
+	"scripts": {
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
+		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
+		"build:cross-env": "vite build --config vite.esm.config.ts",
+		"build:tsc": "tsc --build --verbose",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"typecheck": "tsc --project tsconfig.types.json"
+	},
+	"dependencies": {
+		"@maxmind/geoip2-node": "5.0.0",
+		"@prosopo/common": "3.1.32",
+		"@prosopo/types": "3.14.0"
+	},
+	"devDependencies": {
+		"@prosopo/config": "3.3.1",
+		"@types/node": "22.10.2",
+		"@vitest/coverage-v8": "3.2.4",
+		"del-cli": "6.0.0",
+		"tslib": "2.7.0",
+		"typescript": "5.6.2",
+		"vite": "6.4.1",
+		"vitest": "3.2.4"
+	},
+	"license": "Apache-2.0"
+}

@@ -1,5 +1,11 @@
 # @prosopo/widget-skeleton
 
+## 2.8.1
+### Patch Changes
+
+- 06970d2: Missed review comments
+- dd3e06e: CSS hot fix
+
 ## 2.8.0
 ### Minor Changes
 

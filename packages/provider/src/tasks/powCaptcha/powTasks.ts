@@ -27,6 +27,8 @@ import {
 	type CaptchaResult,
 	CaptchaStatus,
 	type IPAddress,
+	type ISpamFilterRules,
+	type ITrafficFilter,
 	POW_SEPARATOR,
 	type PoWCaptcha,
 	type PoWChallengeId,
@@ -44,6 +46,8 @@ import { deepValidateIpAddress } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
+import { checkTrafficFilter } from "../spam/checkTrafficFilter.js";
+import { evaluateEmailSpamRules } from "../spam/evaluateEmailSpamRules.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
 
 const DEFAULT_POW_DIFFICULTY = 4;
@@ -288,6 +292,8 @@ export class PowCaptchaManager extends CaptchaManager {
 	 * @param userAccessRulesStorage - storage for querying user access policies
 	 * @param email
 	 * @param spamEmailDomainCheckingEnabled
+	 * @param spamFilter
+	 * @param trafficFilter
 	 */
 	async serverVerifyPowCaptchaSolution(
 		dappAccount: string,
@@ -298,6 +304,8 @@ export class PowCaptchaManager extends CaptchaManager {
 		userAccessRulesStorage?: AccessRulesStorage,
 		email?: string,
 		spamEmailDomainCheckingEnabled = false,
+		spamFilter?: ISpamFilterRules,
+		trafficFilter?: ITrafficFilter,
 	): Promise<{ verified: boolean; score?: number }> {
 		const notVerifiedResponse = { verified: false };
 
@@ -433,6 +441,53 @@ export class PowCaptchaManager extends CaptchaManager {
 			}
 		}
 
+		// Spam filter: configurable per-site email pattern rules
+		if (spamFilter?.enabled && spamFilter.emailRules?.enabled && email) {
+			const result = evaluateEmailSpamRules(email, spamFilter.emailRules);
+			if (result.isSpam) {
+				this.logger.info(() => ({
+					msg: "Spam filter rejected email in PoW verification",
+					data: { challenge, dappAccount, reason: result.reason },
+				}));
+				await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
+					result: {
+						status: CaptchaStatus.disapproved,
+						reason: "API.SPAM_EMAIL_RULE",
+					},
+				});
+				return notVerifiedResponse;
+			}
+		}
+
+		// Traffic filter: block VPN/proxy/Tor/abuser etc.
+		// blockAbuser defaults to true so abusive networks are always blocked
+		const effectiveTrafficFilter = { blockAbuser: true, ...trafficFilter };
+		// if at least one true
+		const hasTrafficFilter = Object.values(effectiveTrafficFilter).some(
+			(v) => v,
+		);
+		if (ip && hasTrafficFilter) {
+			const check = await checkTrafficFilter(
+				ip,
+				effectiveTrafficFilter,
+				env.ipInfoService,
+				this.logger,
+			);
+			if (check.isBlocked) {
+				this.logger.info(() => ({
+					msg: "Traffic filter rejected request in PoW verification",
+					data: { challenge, dappAccount, ip, reason: check.reason },
+				}));
+				await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
+					result: {
+						status: CaptchaStatus.disapproved,
+						reason: check.reason,
+					},
+				});
+				return notVerifiedResponse;
+			}
+		}
+
 		if (ip) {
 			const challengeIpAddress = getIpAddressFromComposite(
 				challengeRecord.ipAddress,
@@ -451,8 +506,7 @@ export class PowCaptchaManager extends CaptchaManager {
 					ip,
 					challengeIpAddress,
 					this.logger,
-					env.config.ipApi.apiKey,
-					env.config.ipApi.baseUrl,
+					env.ipInfoService,
 					ipValidationRules,
 				);
 

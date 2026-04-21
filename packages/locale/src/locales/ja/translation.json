@@ -320,7 +320,7 @@
 		"ACCESS_POLICY_BLOCK": "ポリシーによりアクセスがブロックされました",
 		"FORBIDDEN": "禁止されています",
 		"PROVIDER_VERIFY_FAILED": "プロバイダーの検証に失敗しました",
-		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
+		"SPAM_EMAIL_DOMAIN": "メールドメインは許可されていません",
 		"UNAUTHORIZED": "未承認",
 		"MISSING_BODY": "ボディが不足しています",
 		"NO_CONTENT_TYPE_HEADER": "Content-typeヘッダーがありません。JSONエンコードされたボディが想定されていますが、解析に失敗しました。",
@@ -340,7 +340,16 @@
 		"INVALID_IP": "無効なIP",
 		"INVALID_URL": "無効なURL",
 		"INVALID_BODY": "無効な本体",
-		"PARSE_ERROR": "リクエストの解析エラー"
+		"PARSE_ERROR": "リクエストの解析エラー",
+		"SPAM_EMAIL_RULE": "スパムフィルタールールによりメールアドレスがブロックされました",
+		"VPN_BLOCKED": "このサイトではVPN接続からのリクエストは許可されていません",
+		"PROXY_BLOCKED": "このサイトではプロキシサーバーからのリクエストは許可されていません",
+		"TOR_BLOCKED": "このサイトではTor出口ノードからのリクエストは許可されていません",
+		"ABUSER_BLOCKED": "このサイトでは不正行為としてフラグが付けられたネットワークからのリクエストは許可されていません",
+		"DATACENTER_BLOCKED": "このサイトではデータセンターのIPアドレスからのリクエストは許可されていません",
+		"MOBILE_BLOCKED": "このサイトではモバイルネットワーク接続からのリクエストは許可されていません",
+		"SATELLITE_BLOCKED": "このサイトでは衛星接続からのリクエストは許可されていません",
+		"CRAWLER_BLOCKED": "このサイトでは既知のクローラーからのリクエストは許可されていません"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "所有者ユーザーを変更できません",

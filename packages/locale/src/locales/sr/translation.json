@@ -21,7 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Приступ блокиран политиком",
 		"FORBIDDEN": "ممنوع",
 		"PROVIDER_VERIFY_FAILED": "فشل التحقق من المزود",
-		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
+		"SPAM_EMAIL_DOMAIN": "Домен е-поште није дозвољен",
 		"UNAUTHORIZED": "غير مصرح",
 		"MISSING_BODY": "الجسم غير موجود",
 		"NO_CONTENT_TYPE_HEADER": "لا يوجد عنوان نوع المحتوى. يفترض جسمًا مشفرًا بتنسيق JSON ولكن فشل التحليل.",
@@ -41,7 +41,16 @@
 		"INVALID_IP": "Invalid IP",
 		"INVALID_URL": "Invalid URL",
 		"INVALID_BODY": "Invalid body",
-		"PARSE_ERROR": "Error parsing request"
+		"PARSE_ERROR": "Error parsing request",
+		"SPAM_EMAIL_RULE": "Адреса е-поште блокирана правилима филтера за нежељену пошту",
+		"VPN_BLOCKED": "Захтеви са VPN конекција нису дозвољени за овај сајт",
+		"PROXY_BLOCKED": "Захтеви са прокси сервера нису дозвољени за овај сајт",
+		"TOR_BLOCKED": "Захтеви са Tor излазних чворова нису дозвољени за овај сајт",
+		"ABUSER_BLOCKED": "Захтеви са мрежа означених за злоупотребу нису дозвољени за овај сајт",
+		"DATACENTER_BLOCKED": "Захтеви са IP адреса центара података нису дозвољени за овај сајт",
+		"MOBILE_BLOCKED": "Захтеви са мобилних мрежних конекција нису дозвољени за овај сајт",
+		"SATELLITE_BLOCKED": "Захтеви са сателитских конекција нису дозвољени за овај сајт",
+		"CRAWLER_BLOCKED": "Захтеви од познатих ботова нису дозвољени за овај сајт"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "لا يمكن تعديل مالك المستخدم",

@@ -30,6 +30,7 @@ import {
 	ScheduledTaskStatus,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
+import type { IIpInfoService } from "@prosopo/types-env";
 import { at } from "@prosopo/util";
 import { decodeAddress, encodeAddress } from "@prosopo/util-crypto";
 import { Address4, Address6 } from "ip-address";
@@ -360,8 +361,7 @@ export const evaluateIpValidationRules = (
  * @param ip - The IP address string to validate
  * @param challengeIpAddress - The IP address from the challenge record
  * @param logger - Logger instance for debug messages
- * @param apiKey
- * @param apiUrl
+ * @param ipInfoService - IP info service for local lookups
  * @param ipValidationRules - IP validation rules configuration
  * @returns Object with validation result, optional error message, and distance info
  */
@@ -369,8 +369,7 @@ export const deepValidateIpAddress = async (
 	ip: string,
 	challengeIpAddress: IPAddress,
 	logger: Logger,
-	apiKey: string,
-	apiUrl: string,
+	ipInfoService: IIpInfoService,
 	ipValidationRules?: IIPValidationRules,
 ): Promise<{
 	isValid: boolean;
@@ -407,7 +406,7 @@ export const deepValidateIpAddress = async (
 	// Both IPs valid but different -> check distance
 	try {
 		const challengeIpString = challengeIpAddress.address;
-		const comparison = await compareIPs(challengeIpString, ip, apiKey, apiUrl);
+		const comparison = await compareIPs(challengeIpString, ip, ipInfoService);
 
 		if ("error" in comparison) {
 			logger.error(() => ({

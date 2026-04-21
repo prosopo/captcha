@@ -160,6 +160,26 @@ export const UserSettingsSchema = new Schema({
 		default: false,
 		required: false,
 	},
+	spamFilter: {
+		enabled: { type: Boolean, default: false },
+		emailRules: {
+			enabled: { type: Boolean, default: false },
+			maxLocalPartDots: { type: Number, required: false },
+			normaliseGmail: { type: Boolean, default: false },
+			useDefaultPatterns: { type: Boolean, default: false },
+			customRegexBlocklist: { type: [String], default: [] },
+		},
+	},
+	trafficFilter: {
+		blockVpn: { type: Boolean, default: false },
+		blockProxy: { type: Boolean, default: false },
+		blockTor: { type: Boolean, default: false },
+		blockAbuser: { type: Boolean, default: true },
+		blockDatacenter: { type: Boolean, default: false },
+		blockMobile: { type: Boolean, default: false },
+		blockSatellite: { type: Boolean, default: false },
+		blockCrawler: { type: Boolean, default: false },
+	},
 });
 
 export const UserDataSchema: mongoose.Schema<UserDataRecord> = new Schema({

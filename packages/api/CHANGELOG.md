@@ -1,5 +1,13 @@
 # @prosopo/api
 
+## 3.2.10
+### Patch Changes
+
+- 7be39c4: Add register site keys endpoint def
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+  - @prosopo/types@3.14.0
+
 ## 3.2.9
 ### Patch Changes
 

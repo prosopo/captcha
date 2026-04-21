@@ -1,5 +1,21 @@
 # @prosopo/env
 
+## 3.4.0
+### Minor Changes
+
+- 42650db: Add better spam rules and move ipinfo service to local instead of external
+
+### Patch Changes
+
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+  - @prosopo/ipinfo@0.2.0
+  - @prosopo/types@3.14.0
+  - @prosopo/types-env@2.9.0
+  - @prosopo/database@3.9.15
+  - @prosopo/common@3.1.32
+  - @prosopo/keyring@2.9.20
+
 ## 3.3.15
 ### Patch Changes
 

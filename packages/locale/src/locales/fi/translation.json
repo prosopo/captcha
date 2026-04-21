@@ -46,7 +46,16 @@
 		"ACCESS_POLICY_BLOCK": "Pääsy estetty käytännön mukaan",
 		"FORBIDDEN": "Kielletty",
 		"PROVIDER_VERIFY_FAILED": "Palveluntarjoajan tarkistus epäonnistui",
-		"SPAM_EMAIL_DOMAIN": "Email domain not allowed"
+		"SPAM_EMAIL_DOMAIN": "Sähköpostiverkkotunnus ei ole sallittu",
+		"SPAM_EMAIL_RULE": "Sähköpostiosoite estetty roskapostisuodattimen säännöillä",
+		"VPN_BLOCKED": "VPN-yhteyksien pyynnöt eivät ole sallittuja tälle sivustolle",
+		"PROXY_BLOCKED": "Välityspalvelimien pyynnöt eivät ole sallittuja tälle sivustolle",
+		"TOR_BLOCKED": "Tor-poistumissolmujen pyynnöt eivät ole sallittuja tälle sivustolle",
+		"ABUSER_BLOCKED": "Väärinkäytöstä merkittyjen verkkojen pyynnöt eivät ole sallittuja tälle sivustolle",
+		"DATACENTER_BLOCKED": "Datakeskusten IP-osoitteiden pyynnöt eivät ole sallittuja tälle sivustolle",
+		"MOBILE_BLOCKED": "Mobiiliverkkoyhteyksien pyynnöt eivät ole sallittuja tälle sivustolle",
+		"SATELLITE_BLOCKED": "Satelliittiyhteyksien pyynnöt eivät ole sallittuja tälle sivustolle",
+		"CRAWLER_BLOCKED": "Tunnettujen indeksoijien pyynnöt eivät ole sallittuja tälle sivustolle"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Virheellinen parametri"

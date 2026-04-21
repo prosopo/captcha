@@ -1,5 +1,19 @@
 # @prosopo/types-env
 
+## 2.9.0
+### Minor Changes
+
+- 42650db: Add better spam rules and move ipinfo service to local instead of external
+
+### Patch Changes
+
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+  - @prosopo/types-database@4.5.0
+  - @prosopo/types@3.14.0
+  - @prosopo/common@3.1.32
+  - @prosopo/keyring@2.9.20
+
 ## 2.8.15
 ### Patch Changes
 

@@ -32,6 +32,8 @@ import {
 	type DecisionMachineInput,
 	type Hash,
 	type IPAddress,
+	type ISpamFilterRules,
+	type ITrafficFilter,
 	type ImageVerificationResponse,
 	type KeyringPair,
 	type PendingImageCaptchaRequest,
@@ -56,6 +58,8 @@ import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { FrictionlessReason } from "../frictionless/frictionlessTasks.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
+import { checkTrafficFilter } from "../spam/checkTrafficFilter.js";
+import { evaluateEmailSpamRules } from "../spam/evaluateEmailSpamRules.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
 
 export class ImgCaptchaManager extends CaptchaManager {
@@ -593,6 +597,8 @@ export class ImgCaptchaManager extends CaptchaManager {
 		userAccessRulesStorage?: AccessRulesStorage,
 		email?: string,
 		spamEmailDomainCheckingEnabled = false,
+		spamFilter?: ISpamFilterRules,
+		trafficFilter?: ITrafficFilter,
 	): Promise<ImageVerificationResponse> {
 		const solution = await (commitmentId
 			? this.getDappUserCommitmentById(commitmentId)
@@ -713,6 +719,53 @@ export class ImgCaptchaManager extends CaptchaManager {
 			}
 		}
 
+		// Spam filter: configurable per-site email pattern rules
+		if (spamFilter?.enabled && spamFilter.emailRules?.enabled && email) {
+			const result = evaluateEmailSpamRules(email, spamFilter.emailRules);
+			if (result.isSpam) {
+				this.logger.info(() => ({
+					msg: "Spam filter rejected email in image verification",
+					data: { commitmentId, dapp, reason: result.reason },
+				}));
+				if (commitmentId) {
+					await this.db.disapproveDappUserCommitment(
+						commitmentId,
+						"API.SPAM_EMAIL_RULE",
+					);
+				}
+				return { status: "API.SPAM_EMAIL_RULE", verified: false };
+			}
+		}
+
+		// Traffic filter: block VPN/proxy/Tor/abuser etc.
+		// blockAbuser defaults to true so abusive networks are always blocked
+		const effectiveTrafficFilter = { blockAbuser: true, ...trafficFilter };
+		// if at least one true
+		const hasTrafficFilter = Object.values(effectiveTrafficFilter).some(
+			(v) => v,
+		);
+		if (ip && hasTrafficFilter) {
+			const check = await checkTrafficFilter(
+				ip,
+				effectiveTrafficFilter,
+				env.ipInfoService,
+				this.logger,
+			);
+			if (check.isBlocked) {
+				this.logger.info(() => ({
+					msg: "Traffic filter rejected request",
+					data: { commitmentId, dapp, ip, reason: check.reason },
+				}));
+				if (commitmentId) {
+					await this.db.disapproveDappUserCommitment(
+						commitmentId,
+						check.reason,
+					);
+				}
+				return { status: check.reason, verified: false };
+			}
+		}
+
 		if (ip) {
 			const solutionIpAddress = getIpAddressFromComposite(solution.ipAddress);
 			// Get client settings for IP validation rules
@@ -729,8 +782,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 					ip,
 					solutionIpAddress,
 					this.logger,
-					env.config.ipApi.apiKey,
-					env.config.ipApi.baseUrl,
+					env.ipInfoService,
 					ipValidationRules,
 				);
 

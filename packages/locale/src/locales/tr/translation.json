@@ -21,7 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Erişim politika tarafından engellendi",
 		"FORBIDDEN": "Forbidden",
 		"PROVIDER_VERIFY_FAILED": "Provider verification failed",
-		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
+		"SPAM_EMAIL_DOMAIN": "E-posta alan adına izin verilmiyor",
 		"UNAUTHORIZED": "Yetkisiz",
 		"MISSING_BODY": "Eksik gövde",
 		"NO_CONTENT_TYPE_HEADER": "İçerik tipi başlığı yok. JSON kodlu gövde varsayılmış ancak ayrıştırılamadı.",
@@ -41,7 +41,16 @@
 		"INVALID_IP": "Geçersiz IP",
 		"INVALID_URL": "Geçersiz URL",
 		"INVALID_BODY": "Geçersiz gövde",
-		"PARSE_ERROR": "İstek ayrıştırma hatası"
+		"PARSE_ERROR": "İstek ayrıştırma hatası",
+		"SPAM_EMAIL_RULE": "E-posta adresi spam filtresi kuralları tarafından engellendi",
+		"VPN_BLOCKED": "Bu site için VPN bağlantılarından gelen isteklere izin verilmiyor",
+		"PROXY_BLOCKED": "Bu site için proxy sunucularından gelen isteklere izin verilmiyor",
+		"TOR_BLOCKED": "Bu site için Tor çıkış düğümlerinden gelen isteklere izin verilmiyor",
+		"ABUSER_BLOCKED": "Bu site için kötüye kullanım olarak işaretlenen ağlardan gelen isteklere izin verilmiyor",
+		"DATACENTER_BLOCKED": "Bu site için veri merkezi IP adreslerinden gelen isteklere izin verilmiyor",
+		"MOBILE_BLOCKED": "Bu site için mobil ağ bağlantılarından gelen isteklere izin verilmiyor",
+		"SATELLITE_BLOCKED": "Bu site için uydu bağlantılarından gelen isteklere izin verilmiyor",
+		"CRAWLER_BLOCKED": "Bu site için bilinen tarayıcılardan gelen isteklere izin verilmiyor"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Cannot modify owner user",
