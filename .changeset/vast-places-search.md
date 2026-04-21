@@ -1,6 +1,0 @@
----
-"@prosopo/locale": patch
----
-
-Translations
-  

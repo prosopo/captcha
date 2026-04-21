@@ -1,5 +1,17 @@
 # @prosopo/types-database
 
+## 4.5.1
+### Patch Changes
+
+- 946a8ba: Abuser score threshold
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+- Updated dependencies [b94890c]
+  - @prosopo/types@3.14.1
+  - @prosopo/locale@3.2.1
+  - @prosopo/common@3.1.33
+  - @prosopo/user-access-policy@3.6.22
+
 ## 4.5.0
 ### Minor Changes
 

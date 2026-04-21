@@ -1,5 +1,10 @@
 # @prosopo/api-route
 
+## 2.6.41
+### Patch Changes
+
+  - @prosopo/common@3.1.33
+
 ## 2.6.40
 ### Patch Changes
 

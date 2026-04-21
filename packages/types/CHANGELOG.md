@@ -1,5 +1,13 @@
 # @prosopo/types
 
+## 3.14.1
+### Patch Changes
+
+- 946a8ba: Abuser score threshold
+- 5614814: Small config changes
+- Updated dependencies [b94890c]
+  - @prosopo/locale@3.2.1
+
 ## 3.14.0
 ### Minor Changes
 
