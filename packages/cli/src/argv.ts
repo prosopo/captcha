@@ -20,6 +20,7 @@ import { hideBin } from "yargs/helpers";
 import {
 	commandEnsureExternalIndexes,
 	commandEnsureIndexes,
+	commandMigrateAbuserScoreThreshold,
 	commandProviderSetDataset,
 	commandSiteKeyRegister,
 	commandSiteKeyRegisterApi,
@@ -44,6 +45,7 @@ function getCommands(
 	return [
 		commandEnsureIndexes(pair, config, { logger }),
 		commandEnsureExternalIndexes(pair, config, { logger }),
+		commandMigrateAbuserScoreThreshold(pair, config, { logger }),
 		commandProviderSetDataset(pair, config, { logger }),
 		commandStoreCaptchasExternally(pair, config, { logger }),
 		commandUpdateSpamEmailDomains(pair, config, { logger }),

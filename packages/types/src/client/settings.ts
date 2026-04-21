@@ -176,11 +176,18 @@ export const SpamFilterRulesSchema = object({
 	emailRules: EmailSpamRulesSchema.optional(),
 });
 
+export const abuserScoreTrafficThresholdDefault = 0;
+
 export const TrafficFilterSchema = object({
 	blockVpn: boolean().optional().default(false),
 	blockProxy: boolean().optional().default(false),
 	blockTor: boolean().optional().default(false),
 	blockAbuser: boolean().optional().default(true),
+	abuserScoreThreshold: number()
+		.min(0)
+		.max(1)
+		.optional()
+		.default(abuserScoreTrafficThresholdDefault),
 	blockDatacenter: boolean().optional().default(false),
 	blockMobile: boolean().optional().default(false),
 	blockSatellite: boolean().optional().default(false),

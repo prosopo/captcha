@@ -56,6 +56,7 @@ const allBlocked: ITrafficFilter = {
 	blockProxy: true,
 	blockTor: true,
 	blockAbuser: true,
+	abuserScoreThreshold: 0,
 	blockDatacenter: true,
 	blockMobile: true,
 	blockSatellite: true,
@@ -101,6 +102,53 @@ describe("checkTrafficFilter", () => {
 		const result = await checkTrafficFilter(
 			"1.2.3.4",
 			allBlocked,
+			service,
+			mockLogger,
+		);
+		expect(result).toEqual({ isBlocked: true, reason: "API.ABUSER_BLOCKED" });
+	});
+
+	it("blocks abuser when score meets threshold", async () => {
+		const service = createMockService(async () =>
+			baseInfo({ isAbuser: true, abuserScore: 0.06, companyAbuserScore: 0.03 }),
+		);
+		const result = await checkTrafficFilter(
+			"1.2.3.4",
+			{ ...allBlocked, abuserScoreThreshold: 0.05 },
+			service,
+			mockLogger,
+		);
+		expect(result).toEqual({ isBlocked: true, reason: "API.ABUSER_BLOCKED" });
+	});
+
+	it("allows abuser when score is below threshold", async () => {
+		const service = createMockService(async () =>
+			baseInfo({
+				isAbuser: true,
+				abuserScore: 0.0052,
+				companyAbuserScore: 0.0273,
+			}),
+		);
+		const result = await checkTrafficFilter(
+			"1.2.3.4",
+			{ ...allBlocked, abuserScoreThreshold: 0.05 },
+			service,
+			mockLogger,
+		);
+		expect(result).toEqual({ isBlocked: false });
+	});
+
+	it("uses company abuser score when it is higher than ASN score", async () => {
+		const service = createMockService(async () =>
+			baseInfo({
+				isAbuser: true,
+				abuserScore: 0.01,
+				companyAbuserScore: 0.08,
+			}),
+		);
+		const result = await checkTrafficFilter(
+			"1.2.3.4",
+			{ ...allBlocked, abuserScoreThreshold: 0.05 },
 			service,
 			mockLogger,
 		);

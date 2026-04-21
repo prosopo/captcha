@@ -62,7 +62,14 @@ export const checkTrafficFilter = async (
 		}
 
 		if ((trafficFilter.blockAbuser ?? true) && info.isAbuser) {
-			return { isBlocked: true, reason: "API.ABUSER_BLOCKED" };
+			const threshold = trafficFilter.abuserScoreThreshold ?? 0;
+			const maxScore = Math.max(
+				info.abuserScore ?? 0,
+				info.companyAbuserScore ?? 0,
+			);
+			if (maxScore >= threshold) {
+				return { isBlocked: true, reason: "API.ABUSER_BLOCKED" };
+			}
 		}
 
 		if (trafficFilter.blockDatacenter && info.isDatacenter) {
