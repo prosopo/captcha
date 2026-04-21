@@ -60,7 +60,7 @@
 		"NO_SUGGESTIONS_FOUND": "Aucune suggestion trouvée",
 		"CANNOT_DEACTIVATE_LAST_SITE": "Impossible de désactiver le dernier site actif",
 		"DUPLICATE_SITE_NAME": "Un site avec ce nom existe déjà",
-		"INVALID_SITE_NAME": "Le nom du site ne doit contenir que des lettres, des chiffres, des tirets et des tirets bas"
+		"INVALID_SITE_NAME": "Le nom du site ne doit contenir que des lettres, des chiffres, des tirets et des traits de soulignement"
 	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Extension Polkadot non trouvée"

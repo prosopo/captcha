@@ -60,7 +60,7 @@
 		"NO_SUGGESTIONS_FOUND": "No suggestions found",
 		"CANNOT_DEACTIVATE_LAST_SITE": "Cannot deactivate the last active site",
 		"DUPLICATE_SITE_NAME": "Situs kanthi jeneng iki wis ana",
-		"INVALID_SITE_NAME": "Jeneng situs mung kudu ngemot huruf, angka, tanda hubung, lan garis bawah"
+		"INVALID_SITE_NAME": "Jeneng situs mung kena ngemot aksara, angka, tanda hubung, lan garis ngisor"
 	},
 	"TARGET": {
 		"airplanes": "airplanes",

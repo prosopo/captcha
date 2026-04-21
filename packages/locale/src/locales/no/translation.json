@@ -60,7 +60,7 @@
 		"NO_SUGGESTIONS_FOUND": "Ingen forslag funnet",
 		"CANNOT_DEACTIVATE_LAST_SITE": "Kan ikke deaktivere siste aktive nettsted",
 		"DUPLICATE_SITE_NAME": "Et nettsted med dette navnet finnes allerede",
-		"INVALID_SITE_NAME": "Nettstedsnavn kan bare inneholde bokstaver, tall, bindestreker og understreker"
+		"INVALID_SITE_NAME": "Nettstednavnet kan bare inneholde bokstaver, tall, bindestreker og understreker"
 	},
 	"TARGET": {
 		"airplanes": "flymaskiner",

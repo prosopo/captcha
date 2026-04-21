@@ -59,8 +59,8 @@
 		"USER_ALREADY_EXISTS": "Utilizatorul exista deja",
 		"NO_SUGGESTIONS_FOUND": "Nu s-au gasit sugestii",
 		"CANNOT_DEACTIVATE_LAST_SITE": "Nu se poate dezactiva ultimul site activ",
-		"DUPLICATE_SITE_NAME": "Un site cu acest nume exista deja",
-		"INVALID_SITE_NAME": "Numele site-ului trebuie sa contina doar litere, cifre, cratime si underscore"
+		"DUPLICATE_SITE_NAME": "Există deja un site cu acest nume",
+		"INVALID_SITE_NAME": "Numele site-ului trebuie să conțină doar litere, cifre, cratime și liniuțe de subliniere"
 	},
 	"TARGET": {
 		"airplanes": "avioane",

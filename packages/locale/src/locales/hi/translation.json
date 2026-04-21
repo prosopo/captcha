@@ -359,7 +359,7 @@
 		"NO_SUGGESTIONS_FOUND": "कई सझव नह मल",
 		"CANNOT_DEACTIVATE_LAST_SITE": "अतम सकरय सइट क नषकरय नह कय ज सकत",
 		"DUPLICATE_SITE_NAME": "इस नाम की साइट पहले से मौजूद है",
-		"INVALID_SITE_NAME": "साइट नाम में केवल अक्षर, संख्याएँ, हाइफ़न और अंडरस्कोर होने चाहिए"
+		"INVALID_SITE_NAME": "साइट के नाम में केवल अक्षर, संख्याएँ, हाइफ़न और अंडरस्कोर होने चाहिए"
 	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "पलकडट एकसटशन नह मल"

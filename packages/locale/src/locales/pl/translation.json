@@ -60,7 +60,7 @@
 		"NO_SUGGESTIONS_FOUND": "Nie znaleziono sugestii",
 		"CANNOT_DEACTIVATE_LAST_SITE": "Nie można dezaktywować ostatniej aktywnej witryny",
 		"DUPLICATE_SITE_NAME": "Witryna o tej nazwie już istnieje",
-		"INVALID_SITE_NAME": "Nazwa witryny może zawierać tylko litery, cyfry, myślniki i podkreślenia"
+		"INVALID_SITE_NAME": "Nazwa witryny może zawierać tylko litery, cyfry, łączniki i podkreślenia"
 	},
 	"TARGET": {
 		"airplanes": "samoloty",
