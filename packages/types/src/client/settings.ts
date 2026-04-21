@@ -176,7 +176,7 @@ export const SpamFilterRulesSchema = object({
 	emailRules: EmailSpamRulesSchema.optional(),
 });
 
-export const abuserScoreTrafficThresholdDefault = 0;
+export const trafficFilterAbuserScoreThresholdDefault = 0;
 
 export const TrafficFilterSchema = object({
 	blockVpn: boolean().optional().default(false),
@@ -187,7 +187,7 @@ export const TrafficFilterSchema = object({
 		.min(0)
 		.max(1)
 		.optional()
-		.default(abuserScoreTrafficThresholdDefault),
+		.default(trafficFilterAbuserScoreThresholdDefault),
 	blockDatacenter: boolean().optional().default(false),
 	blockMobile: boolean().optional().default(false),
 	blockSatellite: boolean().optional().default(false),

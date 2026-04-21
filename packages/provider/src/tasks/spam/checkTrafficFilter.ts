@@ -13,7 +13,10 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/common";
-import type { ITrafficFilter } from "@prosopo/types";
+import {
+	type ITrafficFilter,
+	trafficFilterAbuserScoreThresholdDefault,
+} from "@prosopo/types";
 import type { IIpInfoService } from "@prosopo/types-env";
 
 export type TrafficBlockReason =
@@ -62,7 +65,9 @@ export const checkTrafficFilter = async (
 		}
 
 		if ((trafficFilter.blockAbuser ?? true) && info.isAbuser) {
-			const threshold = trafficFilter.abuserScoreThreshold ?? 0;
+			const threshold =
+				trafficFilter.abuserScoreThreshold ??
+				trafficFilterAbuserScoreThresholdDefault;
 			const maxScore = Math.max(
 				info.abuserScore ?? 0,
 				info.companyAbuserScore ?? 0,
