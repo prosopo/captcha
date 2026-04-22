@@ -143,10 +143,10 @@ export const ProviderDefaultRateLimits = {
 		limit: 60,
 	},
 	[ClientApiPaths.SubmitPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
-	[ClientApiPaths.VerifyPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.VerifyPowCaptchaSolution]: { windowMs: 60000, limit: 3000 },
 	[ClientApiPaths.VerifyImageCaptchaSolutionDapp]: {
 		windowMs: 60000,
-		limit: 60,
+		limit: 3000,
 	},
 	[ClientApiPaths.GetProviderStatus]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.CheckSpamEmail]: { windowMs: 60000, limit: 60 },
