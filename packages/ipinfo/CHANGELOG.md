@@ -1,5 +1,13 @@
 # @prosopo/ipinfo
 
+## 0.2.1
+### Patch Changes
+
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+  - @prosopo/types@3.14.1
+  - @prosopo/common@3.1.33
+
 ## 0.2.0
 ### Minor Changes
 

@@ -1,5 +1,21 @@
 # @prosopo/cli
 
+## 3.6.11
+### Patch Changes
+
+- 946a8ba: Abuser score threshold
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+- Updated dependencies [b94890c]
+  - @prosopo/provider@3.23.1
+  - @prosopo/types@3.14.1
+  - @prosopo/locale@3.2.1
+  - @prosopo/api@3.2.11
+  - @prosopo/common@3.1.33
+  - @prosopo/env@3.4.1
+  - @prosopo/keyring@2.9.21
+  - @prosopo/dotenv@3.0.38
+
 ## 3.6.10
 ### Patch Changes
 

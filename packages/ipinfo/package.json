@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/ipinfo",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"description": "IP information service with MaxMind and ipapi.is backends",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -26,8 +26,8 @@
 	},
 	"dependencies": {
 		"@maxmind/geoip2-node": "5.0.0",
-		"@prosopo/common": "3.1.32",
-		"@prosopo/types": "3.14.0"
+		"@prosopo/common": "3.1.33",
+		"@prosopo/types": "3.14.1"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.3.1",
