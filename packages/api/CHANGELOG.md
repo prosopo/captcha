@@ -1,5 +1,15 @@
 # @prosopo/api
 
+## 3.3.0
+### Minor Changes
+
+- 3e54c0a: Rate limits by client
+
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+
 ## 3.2.11
 ### Patch Changes
 

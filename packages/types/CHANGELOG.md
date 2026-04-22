@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 3.15.0
+### Minor Changes
+
+- 3e54c0a: Rate limits by client
+
 ## 3.14.1
 ### Patch Changes
 
