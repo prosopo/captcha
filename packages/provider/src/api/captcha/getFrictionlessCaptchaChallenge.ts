@@ -17,6 +17,7 @@ import {
 	CaptchaType,
 	ContextType,
 	GetFrictionlessCaptchaChallengeRequestBody,
+	ModeEnum,
 } from "@prosopo/types";
 import type { ScoreComponents } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -76,9 +77,11 @@ export default (
 			});
 
 			const tasks = new Tasks(env, req.logger);
-			const { token, headHash, dapp, user } =
+			const { token, headHash, dapp, user, mode } =
 				GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
 			const normalizedIp = normalizeRequestIp(req.ip, req.logger);
+			const sessionMode =
+				mode === ModeEnum.invisible ? ModeEnum.invisible : undefined;
 
 			req.logger.info(() => ({
 				msg: "Frictionless handler entry",
@@ -91,6 +94,7 @@ export default (
 					ja4: req.ja4,
 					path: req.path,
 					method: req.method,
+					...(sessionMode && { mode: sessionMode }),
 				},
 			}));
 
@@ -116,6 +120,7 @@ export default (
 						iFrame: false,
 						decryptedHeadHash: "",
 						siteKey: dapp,
+						mode: sessionMode,
 					}),
 				);
 			}
@@ -271,6 +276,7 @@ export default (
 				siteKey: dapp,
 				countryCode,
 				headers: flatHeaders,
+				mode: sessionMode,
 			});
 
 			// Check if the IP address is blocked
