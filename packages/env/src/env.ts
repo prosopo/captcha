@@ -39,6 +39,7 @@ export class Environment implements ProsopoEnvironment {
 	envId: string | undefined;
 	ipInfoService: IIpInfoService;
 	ready = false;
+	datasetId: string | undefined;
 
 	constructor(
 		config: ProsopoConfigOutput,
@@ -145,6 +146,27 @@ export class Environment implements ProsopoEnvironment {
 				}));
 				await this.db.connect();
 				this.logger.info(() => ({ msg: "Connected to db" }));
+			}
+			// Set the default datasetId to the most recently uploaded dataset
+			if (this.db && !this.datasetId) {
+				try {
+					this.datasetId = await this.db.getMostRecentDatasetId();
+					if (this.datasetId) {
+						this.logger.info(() => ({
+							msg: "Default dataset ID set",
+							data: { datasetId: this.datasetId },
+						}));
+					} else {
+						this.logger.warn(() => ({
+							msg: "No datasets found in database. Image captchas will not work until a dataset is uploaded.",
+						}));
+					}
+				} catch (err) {
+					this.logger.warn(() => ({
+						msg: "Failed to get most recent dataset ID",
+						data: { error: err },
+					}));
+				}
 			}
 			// Initialize IP info service (MaxMind + optional ipapi.is)
 			await this.ipInfoService.initialize();

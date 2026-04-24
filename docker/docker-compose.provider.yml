@@ -124,6 +124,8 @@ services:
       - "[::]:443:443"
     volumes:
       - ./provider.Caddyfile:/etc/caddy/Caddyfile
+      - ./certs/pronode.crt /etc/caddy/certs/pronode.crt
+      - ./certs/pronode.key /etc/caddy/certs/pronode.key
       - caddy_data:/data
       - caddy_config:/config
     networks:
