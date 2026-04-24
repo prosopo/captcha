@@ -35,7 +35,7 @@
 		"i18next": "24.2.2",
 		"i18next-browser-languagedetector": "8.0.2",
 		"i18next-chained-backend": "4.6.2",
-		"i18next-fs-backend": "2.6.0",
+		"i18next-fs-backend": "2.6.4",
 		"i18next-http-backend": "3.0.2",
 		"i18next-http-middleware": "3.7.4",
 		"i18next-resources-to-backend": "1.2.1",
