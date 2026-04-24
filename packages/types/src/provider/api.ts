@@ -296,6 +296,7 @@ export interface ApiResponse {
 export interface VerificationResponse extends ApiResponse {
 	[ApiParams.verified]: boolean;
 	[ApiParams.score]?: number;
+	[ApiParams.reason]?: string;
 }
 
 export interface UpdateDetectorKeyResponse extends ApiResponse {

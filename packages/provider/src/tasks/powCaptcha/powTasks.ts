@@ -306,8 +306,13 @@ export class PowCaptchaManager extends CaptchaManager {
 		spamEmailDomainCheckingEnabled = false,
 		spamFilter?: ISpamFilterRules,
 		trafficFilter?: ITrafficFilter,
-	): Promise<{ verified: boolean; score?: number }> {
-		const notVerifiedResponse = { verified: false };
+	): Promise<{ verified: boolean; score?: number; reason?: string }> {
+		const notVerified = (
+			reason: string,
+		): { verified: false; reason: string } => ({
+			verified: false,
+			reason,
+		});
 
 		const challengeRecord =
 			await this.db.getPowCaptchaRecordByChallenge(challenge);
@@ -317,7 +322,7 @@ export class PowCaptchaManager extends CaptchaManager {
 				msg: `No record of this challenge: ${challenge}`,
 			}));
 
-			return notVerifiedResponse;
+			return notVerified("CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND");
 		}
 
 		if (challengeRecord.result.status !== CaptchaStatus.approved) {
@@ -329,7 +334,8 @@ export class PowCaptchaManager extends CaptchaManager {
 			});
 		}
 
-		if (challengeRecord.serverChecked) return notVerifiedResponse;
+		if (challengeRecord.serverChecked)
+			return notVerified("API.USER_ALREADY_VERIFIED");
 
 		const challengeDappAccount = challengeRecord.dappAccount;
 
@@ -367,7 +373,7 @@ export class PowCaptchaManager extends CaptchaManager {
 					result: disapprovedResult,
 				});
 			}
-			return notVerifiedResponse;
+			return notVerified("API.TIMESTAMP_TOO_OLD");
 		}
 
 		// Check user access policies for hard blocks
@@ -405,7 +411,7 @@ export class PowCaptchaManager extends CaptchaManager {
 							result: blockedResult,
 						});
 					}
-					return notVerifiedResponse;
+					return notVerified("API.ACCESS_POLICY_BLOCK");
 				}
 			} catch (error) {
 				this.logger.warn(() => ({
@@ -431,7 +437,7 @@ export class PowCaptchaManager extends CaptchaManager {
 							reason: "API.SPAM_EMAIL_DOMAIN",
 						},
 					});
-					return notVerifiedResponse;
+					return notVerified("API.SPAM_EMAIL_DOMAIN");
 				}
 			} catch (error) {
 				this.logger.warn(() => ({
@@ -455,7 +461,7 @@ export class PowCaptchaManager extends CaptchaManager {
 						reason: "API.SPAM_EMAIL_RULE",
 					},
 				});
-				return notVerifiedResponse;
+				return notVerified("API.SPAM_EMAIL_RULE");
 			}
 		}
 
@@ -484,7 +490,7 @@ export class PowCaptchaManager extends CaptchaManager {
 						reason: check.reason,
 					},
 				});
-				return notVerifiedResponse;
+				return notVerified(check.reason);
 			}
 		}
 
@@ -533,7 +539,7 @@ export class PowCaptchaManager extends CaptchaManager {
 							result: ipFailResult,
 						});
 					}
-					return notVerifiedResponse;
+					return notVerified("API.FAILED_IP_VALIDATION");
 				}
 			}
 		}
@@ -598,7 +604,9 @@ export class PowCaptchaManager extends CaptchaManager {
 						result: dmResult,
 					});
 				}
-				return notVerifiedResponse;
+				return notVerified(
+					decision.reason || "CAPTCHA.DECISION_MACHINE_DENIED",
+				);
 			}
 
 			this.logger.debug(() => ({
