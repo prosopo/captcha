@@ -63,6 +63,14 @@ export const getRateLimitConfig = () => {
 			windowMs: process.env.PROSOPO_SITE_KEYS_REGISTER_WINDOW,
 			limit: process.env.PROSOPO_SITE_KEYS_REGISTER_LIMIT,
 		},
+		[AdminApiPaths.SiteKeyRemove]: {
+			windowMs: process.env.PROSOPO_SITE_KEY_REMOVE_WINDOW,
+			limit: process.env.PROSOPO_SITE_KEY_REMOVE_LIMIT,
+		},
+		[AdminApiPaths.SiteKeysRemove]: {
+			windowMs: process.env.PROSOPO_SITE_KEYS_REMOVE_WINDOW,
+			limit: process.env.PROSOPO_SITE_KEYS_REMOVE_LIMIT,
+		},
 		[AdminApiPaths.UpdateDetectorKey]: {
 			windowMs: process.env.PROSOPO_UPDATE_DETECTOR_KEY_WINDOW,
 			limit: process.env.PROSOPO_UPDATE_DETECTOR_KEY_LIMIT,

@@ -395,6 +395,20 @@ export class ClientTaskManager {
 		await this.providerDB.updateClientRecords(records);
 	}
 
+	async removeSiteKey(siteKey: string): Promise<void> {
+		validateSiteKey(siteKey);
+		await this.providerDB.removeClientRecords([siteKey]);
+	}
+
+	async removeSiteKeys(siteKeys: Array<{ siteKey: string }>): Promise<void> {
+		const accounts: string[] = [];
+		for (const { siteKey } of siteKeys) {
+			validateSiteKey(siteKey);
+			accounts.push(siteKey);
+		}
+		await this.providerDB.removeClientRecords(accounts);
+	}
+
 	async updateDetectorKey(detectorKey: string): Promise<string[]> {
 		if (!isValidPrivateKey(detectorKey)) {
 			throw new ProsopoApiError("INVALID_DETECTOR_KEY", {
