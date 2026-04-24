@@ -609,7 +609,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 			this.logger.debug(() => ({
 				msg: "Not verified - no solution found",
 			}));
-			return { status: "API.USER_NOT_VERIFIED_NO_SOLUTION", verified: false };
+			return {
+				status: "API.USER_NOT_VERIFIED_NO_SOLUTION",
+				verified: false,
+			};
 		}
 
 		// -- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING --
@@ -617,7 +620,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 		// solution has already been checked by the server. Moving this code around could result in solutions being
 		// re-usable.
 		if (solution.serverChecked) {
-			return { status: "API.USER_ALREADY_VERIFIED", verified: false };
+			return {
+				status: "API.USER_ALREADY_VERIFIED",
+				verified: false,
+			};
 		}
 
 		await this.db.markDappUserCommitmentsChecked([solution.id]);
@@ -625,7 +631,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 		// A solution exists but is disapproved
 		if (solution.result.status === CaptchaStatus.disapproved) {
-			return { status: "API.USER_NOT_VERIFIED", verified: false };
+			return {
+				status: solution.result.reason || "API.USER_NOT_VERIFIED",
+				verified: false,
+			};
 		}
 
 		maxVerifiedTime = maxVerifiedTime || 60 * 1000; // Default to 1 minute
@@ -681,7 +690,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 						});
 					}
 					return {
-						status: "API.USER_BLOCKED",
+						status: "API.ACCESS_POLICY_BLOCK",
 						verified: false,
 					};
 				}
@@ -709,7 +718,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 							"API.SPAM_EMAIL_DOMAIN",
 						);
 					}
-					return { status: "API.USER_NOT_VERIFIED", verified: false };
+					return {
+						status: "API.SPAM_EMAIL_DOMAIN",
+						verified: false,
+					};
 				}
 			} catch (error) {
 				this.logger.warn(() => ({
@@ -733,7 +745,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 						"API.SPAM_EMAIL_RULE",
 					);
 				}
-				return { status: "API.SPAM_EMAIL_RULE", verified: false };
+				return {
+					status: "API.SPAM_EMAIL_RULE",
+					verified: false,
+				};
 			}
 		}
 
@@ -762,7 +777,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 						check.reason,
 					);
 				}
-				return { status: check.reason, verified: false };
+				return {
+					status: check.reason,
+					verified: false,
+				};
 			}
 		}
 
@@ -796,12 +814,16 @@ export class ImgCaptchaManager extends CaptchaManager {
 							distanceKm: ipValidation.distanceKm,
 						},
 					}));
-					return { status: "API.USER_NOT_VERIFIED", verified: false };
+					return {
+						status: "API.FAILED_IP_VALIDATION",
+						verified: false,
+					};
 				}
 			}
 		}
 
 		let isApproved = solution.result.status === CaptchaStatus.approved;
+		let failureStatus = "API.USER_NOT_VERIFIED";
 
 		let score: number | undefined;
 		if (solution.sessionId) {
@@ -824,7 +846,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 					this.logger.info(() => ({
 						msg: "Disallowing webview access - user not verified",
 					}));
-					return { status: "API.USER_NOT_VERIFIED", verified: false };
+					return {
+						status: "API.DISALLOWED_WEBVIEW",
+						verified: false,
+					};
 				}
 				if (
 					contextAwareEnabled &&
@@ -878,6 +903,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 							});
 						}
 						isApproved = false;
+						failureStatus = dmReason;
 					}
 				}
 			} catch (error) {
@@ -897,7 +923,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		}
 
 		return {
-			status: isApproved ? "API.USER_VERIFIED" : "API.USER_NOT_VERIFIED",
+			status: isApproved ? "API.USER_VERIFIED" : failureStatus,
 			verified: isApproved,
 			commitmentId: solution.id.toString(),
 			...(score && { score }),
@@ -914,6 +940,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		translateFn: (key: string) => string,
 		score?: number,
 		commitmentId?: Hash,
+		reason?: string,
 	): ImageVerificationResponse {
 		return {
 			...super.getVerificationResponse(
@@ -921,6 +948,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				clientRecord,
 				translateFn,
 				score,
+				reason,
 			),
 			...(commitmentId && {
 				[ApiParams.commitmentId]: commitmentId,
