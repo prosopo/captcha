@@ -21,7 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Accesso bloccato dalla politica",
 		"FORBIDDEN": "Proibido",
 		"PROVIDER_VERIFY_FAILED": "Falha na verificação do provedor",
-		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
+		"SPAM_EMAIL_DOMAIN": "Dominio email non consentito",
 		"UNAUTHORIZED": "Unauthorized",
 		"MISSING_BODY": "Missing body",
 		"NO_CONTENT_TYPE_HEADER": "No content-type header. Assumed JSON encoded body but failed to parse.",
@@ -41,7 +41,16 @@
 		"INVALID_IP": "IP non valido",
 		"INVALID_URL": "URL non valido",
 		"INVALID_BODY": "Corpo non valido",
-		"PARSE_ERROR": "Errore nell'analisi della richiesta"
+		"PARSE_ERROR": "Errore nell'analisi della richiesta",
+		"SPAM_EMAIL_RULE": "Indirizzo email bloccato dalle regole del filtro antispam",
+		"VPN_BLOCKED": "Le richieste da connessioni VPN non sono consentite per questo sito",
+		"PROXY_BLOCKED": "Le richieste da server proxy non sono consentite per questo sito",
+		"TOR_BLOCKED": "Le richieste da nodi di uscita Tor non sono consentite per questo sito",
+		"ABUSER_BLOCKED": "Le richieste da reti segnalate per abuso non sono consentite per questo sito",
+		"DATACENTER_BLOCKED": "Le richieste da indirizzi IP di data center non sono consentite per questo sito",
+		"MOBILE_BLOCKED": "Le richieste da connessioni di rete mobile non sono consentite per questo sito",
+		"SATELLITE_BLOCKED": "Le richieste da connessioni satellitari non sono consentite per questo sito",
+		"CRAWLER_BLOCKED": "Le richieste da crawler noti non sono consentite per questo sito"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Não é possível modificar o usuário proprietário",
@@ -49,7 +58,9 @@
 		"CANNOT_DELETE_LAST_USER": "Não é possível excluir o último usuário",
 		"USER_ALREADY_EXISTS": "Usuário já existe",
 		"NO_SUGGESTIONS_FOUND": "Nenhuma sugestão encontrada",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Não é possível desativar o último site ativo"
+		"CANNOT_DEACTIVATE_LAST_SITE": "Não é possível desativar o último site ativo",
+		"DUPLICATE_SITE_NAME": "Esiste già un sito con questo nome",
+		"INVALID_SITE_NAME": "Il nome del sito deve contenere solo lettere, numeri, trattini e trattini bassi"
 	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Estensione Polkadot non trovata"

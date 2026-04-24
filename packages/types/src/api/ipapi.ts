@@ -100,7 +100,7 @@ export interface IPApiResponse {
 	is_bogon: boolean;
 	is_mobile: boolean;
 	is_satellite: boolean;
-	is_crawler: boolean | string;
+	is_crawler: boolean;
 	is_datacenter: boolean;
 	is_tor: boolean;
 	is_proxy: boolean;
@@ -128,6 +128,7 @@ export interface IPInfoResult {
 	isAbuser: boolean;
 	isMobile: boolean;
 	isSatellite: boolean;
+	isCrawler: boolean;
 
 	// Provider information
 	providerName?: string;

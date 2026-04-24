@@ -27,6 +27,8 @@ import {
 	type CaptchaResult,
 	CaptchaStatus,
 	type IPAddress,
+	type ISpamFilterRules,
+	type ITrafficFilter,
 	POW_SEPARATOR,
 	type PoWCaptcha,
 	type PoWChallengeId,
@@ -44,6 +46,8 @@ import { deepValidateIpAddress } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
+import { checkTrafficFilter } from "../spam/checkTrafficFilter.js";
+import { evaluateEmailSpamRules } from "../spam/evaluateEmailSpamRules.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
 
 const DEFAULT_POW_DIFFICULTY = 4;
@@ -288,6 +292,8 @@ export class PowCaptchaManager extends CaptchaManager {
 	 * @param userAccessRulesStorage - storage for querying user access policies
 	 * @param email
 	 * @param spamEmailDomainCheckingEnabled
+	 * @param spamFilter
+	 * @param trafficFilter
 	 */
 	async serverVerifyPowCaptchaSolution(
 		dappAccount: string,
@@ -298,8 +304,15 @@ export class PowCaptchaManager extends CaptchaManager {
 		userAccessRulesStorage?: AccessRulesStorage,
 		email?: string,
 		spamEmailDomainCheckingEnabled = false,
-	): Promise<{ verified: boolean; score?: number }> {
-		const notVerifiedResponse = { verified: false };
+		spamFilter?: ISpamFilterRules,
+		trafficFilter?: ITrafficFilter,
+	): Promise<{ verified: boolean; score?: number; reason?: string }> {
+		const notVerified = (
+			reason: string,
+		): { verified: false; reason: string } => ({
+			verified: false,
+			reason,
+		});
 
 		const challengeRecord =
 			await this.db.getPowCaptchaRecordByChallenge(challenge);
@@ -309,7 +322,7 @@ export class PowCaptchaManager extends CaptchaManager {
 				msg: `No record of this challenge: ${challenge}`,
 			}));
 
-			return notVerifiedResponse;
+			return notVerified("CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND");
 		}
 
 		if (challengeRecord.result.status !== CaptchaStatus.approved) {
@@ -321,7 +334,8 @@ export class PowCaptchaManager extends CaptchaManager {
 			});
 		}
 
-		if (challengeRecord.serverChecked) return notVerifiedResponse;
+		if (challengeRecord.serverChecked)
+			return notVerified("API.USER_ALREADY_VERIFIED");
 
 		const challengeDappAccount = challengeRecord.dappAccount;
 
@@ -359,7 +373,7 @@ export class PowCaptchaManager extends CaptchaManager {
 					result: disapprovedResult,
 				});
 			}
-			return notVerifiedResponse;
+			return notVerified("API.TIMESTAMP_TOO_OLD");
 		}
 
 		// Check user access policies for hard blocks
@@ -397,7 +411,7 @@ export class PowCaptchaManager extends CaptchaManager {
 							result: blockedResult,
 						});
 					}
-					return notVerifiedResponse;
+					return notVerified("API.ACCESS_POLICY_BLOCK");
 				}
 			} catch (error) {
 				this.logger.warn(() => ({
@@ -423,13 +437,60 @@ export class PowCaptchaManager extends CaptchaManager {
 							reason: "API.SPAM_EMAIL_DOMAIN",
 						},
 					});
-					return notVerifiedResponse;
+					return notVerified("API.SPAM_EMAIL_DOMAIN");
 				}
 			} catch (error) {
 				this.logger.warn(() => ({
 					msg: "Failed to check spam email domain in server PoW verification",
 					error,
 				}));
+			}
+		}
+
+		// Spam filter: configurable per-site email pattern rules
+		if (spamFilter?.enabled && spamFilter.emailRules?.enabled && email) {
+			const result = evaluateEmailSpamRules(email, spamFilter.emailRules);
+			if (result.isSpam) {
+				this.logger.info(() => ({
+					msg: "Spam filter rejected email in PoW verification",
+					data: { challenge, dappAccount, reason: result.reason },
+				}));
+				await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
+					result: {
+						status: CaptchaStatus.disapproved,
+						reason: "API.SPAM_EMAIL_RULE",
+					},
+				});
+				return notVerified("API.SPAM_EMAIL_RULE");
+			}
+		}
+
+		// Traffic filter: block VPN/proxy/Tor/abuser etc.
+		// blockAbuser defaults to true so abusive networks are always blocked
+		const effectiveTrafficFilter = { blockAbuser: true, ...trafficFilter };
+		// if at least one true
+		const hasTrafficFilter = Object.values(effectiveTrafficFilter).some(
+			(v) => v,
+		);
+		if (ip && hasTrafficFilter) {
+			const check = await checkTrafficFilter(
+				ip,
+				effectiveTrafficFilter,
+				env.ipInfoService,
+				this.logger,
+			);
+			if (check.isBlocked) {
+				this.logger.info(() => ({
+					msg: "Traffic filter rejected request in PoW verification",
+					data: { challenge, dappAccount, ip, reason: check.reason },
+				}));
+				await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
+					result: {
+						status: CaptchaStatus.disapproved,
+						reason: check.reason,
+					},
+				});
+				return notVerified(check.reason);
 			}
 		}
 
@@ -451,8 +512,7 @@ export class PowCaptchaManager extends CaptchaManager {
 					ip,
 					challengeIpAddress,
 					this.logger,
-					env.config.ipApi.apiKey,
-					env.config.ipApi.baseUrl,
+					env.ipInfoService,
 					ipValidationRules,
 				);
 
@@ -479,7 +539,7 @@ export class PowCaptchaManager extends CaptchaManager {
 							result: ipFailResult,
 						});
 					}
-					return notVerifiedResponse;
+					return notVerified("API.FAILED_IP_VALIDATION");
 				}
 			}
 		}
@@ -544,7 +604,9 @@ export class PowCaptchaManager extends CaptchaManager {
 						result: dmResult,
 					});
 				}
-				return notVerifiedResponse;
+				return notVerified(
+					decision.reason || "CAPTCHA.DECISION_MACHINE_DENIED",
+				);
 			}
 
 			this.logger.debug(() => ({

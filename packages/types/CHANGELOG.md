@@ -1,5 +1,30 @@
 # @prosopo/types
 
+## 3.15.0
+### Minor Changes
+
+- 3e54c0a: Rate limits by client
+
+## 3.14.1
+### Patch Changes
+
+- 946a8ba: Abuser score threshold
+- 5614814: Small config changes
+- Updated dependencies [b94890c]
+  - @prosopo/locale@3.2.1
+
+## 3.14.0
+### Minor Changes
+
+- 42650db: Add better spam rules and move ipinfo service to local instead of external
+
+### Patch Changes
+
+- fc514dd: ability to block different types of traffic
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+  - @prosopo/locale@3.2.0
+
 ## 3.13.3
 ### Patch Changes
 

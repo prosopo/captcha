@@ -1,5 +1,58 @@
 # @prosopo/procaptcha-bundle
 
+## 3.3.29
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+  - @prosopo/procaptcha-common@2.10.3
+  - @prosopo/procaptcha-frictionless@2.8.60
+  - @prosopo/procaptcha-pow@2.8.53
+  - @prosopo/procaptcha-react@2.9.52
+
+## 3.3.28
+### Patch Changes
+
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+- Updated dependencies [b94890c]
+  - @prosopo/types@3.14.1
+  - @prosopo/locale@3.2.1
+  - @prosopo/procaptcha-common@2.10.2
+  - @prosopo/procaptcha-frictionless@2.8.59
+  - @prosopo/procaptcha-pow@2.8.52
+  - @prosopo/procaptcha-react@2.9.51
+  - @prosopo/dotenv@3.0.38
+
+## 3.3.27
+### Patch Changes
+
+- Updated dependencies [06970d2]
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+- Updated dependencies [dd3e06e]
+  - @prosopo/procaptcha-common@2.10.1
+  - @prosopo/widget-skeleton@2.8.1
+  - @prosopo/locale@3.2.0
+  - @prosopo/types@3.14.0
+  - @prosopo/procaptcha-frictionless@2.8.58
+  - @prosopo/procaptcha-pow@2.8.51
+  - @prosopo/procaptcha-react@2.9.50
+  - @prosopo/dotenv@3.0.37
+
+## 3.3.26
+### Patch Changes
+
+- 49fd2d8: Fixing implicit lang string defined rendering
+- Updated dependencies [73df23c]
+- Updated dependencies [8139819]
+  - @prosopo/procaptcha-common@2.10.0
+  - @prosopo/widget-skeleton@2.8.0
+  - @prosopo/procaptcha-frictionless@2.8.57
+  - @prosopo/procaptcha-pow@2.8.50
+  - @prosopo/procaptcha-react@2.9.49
+  - @prosopo/dotenv@3.0.36
+
 ## 3.3.25
 ### Patch Changes
 

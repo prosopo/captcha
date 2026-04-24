@@ -240,6 +240,7 @@ export class CaptchaManager {
 		clientRecord: ClientRecord,
 		translateFn: (key: string) => string,
 		score?: number,
+		reason?: string,
 	) {
 		return {
 			status: translateFn(
@@ -249,6 +250,11 @@ export class CaptchaManager {
 			...(CaptchaManager.canClientSeeScore(clientRecord.tier, score) && {
 				[ApiParams.score]: score,
 			}),
+			...(!verified &&
+				clientRecord.tier !== Tier.Free &&
+				reason && {
+					[ApiParams.reason]: reason,
+				}),
 		};
 	}
 

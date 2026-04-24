@@ -46,6 +46,7 @@ import { prosopoRouter } from "./captcha.js";
 import { domainMiddleware } from "./domainMiddleware.js";
 import { headerCheckMiddleware } from "./headerCheckMiddleware.js";
 import { ignoreMiddleware } from "./ignoreMiddleware.js";
+import { ipInfoMiddleware } from "./ipInfoMiddleware.js";
 import { ja4Middleware } from "./ja4Middleware.js";
 import { publicRouter } from "./public.js";
 import { robotsMiddleware } from "./robotsMiddleware.js";
@@ -223,6 +224,7 @@ export async function startProviderApi(
 	apiApp.use(requestLoggerMiddleware(env));
 	apiApp.use(i18Middleware);
 	apiApp.use(ja4Middleware(env));
+	apiApp.use(ipInfoMiddleware(env));
 
 	// Run Header check middleware on all client routes
 	apiApp.use(clientPathsExcludingVerify, headerCheckMiddleware(env));

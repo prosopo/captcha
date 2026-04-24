@@ -21,7 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Acces blocat de politică",
 		"FORBIDDEN": "Interzis",
 		"PROVIDER_VERIFY_FAILED": "Verificarea furnizorului a esuat",
-		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
+		"SPAM_EMAIL_DOMAIN": "Domeniul de e-mail nu este permis",
 		"UNAUTHORIZED": "Neautorizat",
 		"MISSING_BODY": "Corp lipsă",
 		"NO_CONTENT_TYPE_HEADER": "Fără antet de tip conținut. S-a presupus corp codat JSON dar nu s-a reușit parsarea.",
@@ -41,7 +41,16 @@
 		"INVALID_IP": "IP invalid",
 		"INVALID_URL": "URL invalid",
 		"INVALID_BODY": "Corp invalid",
-		"PARSE_ERROR": "Eroare la parsare"
+		"PARSE_ERROR": "Eroare la parsare",
+		"SPAM_EMAIL_RULE": "Adresa de e-mail blocată de regulile filtrului de spam",
+		"VPN_BLOCKED": "Solicitările de la conexiuni VPN nu sunt permise pentru acest site",
+		"PROXY_BLOCKED": "Solicitările de la servere proxy nu sunt permise pentru acest site",
+		"TOR_BLOCKED": "Solicitările de la noduri de ieșire Tor nu sunt permise pentru acest site",
+		"ABUSER_BLOCKED": "Solicitările de la rețele semnalate pentru abuz nu sunt permise pentru acest site",
+		"DATACENTER_BLOCKED": "Solicitările de la adrese IP de centre de date nu sunt permise pentru acest site",
+		"MOBILE_BLOCKED": "Solicitările de la conexiuni de rețea mobilă nu sunt permise pentru acest site",
+		"SATELLITE_BLOCKED": "Solicitările de la conexiuni prin satelit nu sunt permise pentru acest site",
+		"CRAWLER_BLOCKED": "Solicitările de la crawlere cunoscute nu sunt permise pentru acest site"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Nu se poate modifica utilizatorul proprietar",
@@ -49,7 +58,9 @@
 		"CANNOT_DELETE_LAST_USER": "Nu se poate sterge ultimul utilizator",
 		"USER_ALREADY_EXISTS": "Utilizatorul exista deja",
 		"NO_SUGGESTIONS_FOUND": "Nu s-au gasit sugestii",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Nu se poate dezactiva ultimul site activ"
+		"CANNOT_DEACTIVATE_LAST_SITE": "Nu se poate dezactiva ultimul site activ",
+		"DUPLICATE_SITE_NAME": "Există deja un site cu acest nume",
+		"INVALID_SITE_NAME": "Numele site-ului trebuie să conțină doar litere, cifre, cratime și liniuțe de subliniere"
 	},
 	"TARGET": {
 		"airplanes": "avioane",

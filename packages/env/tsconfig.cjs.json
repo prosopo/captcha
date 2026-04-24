@@ -18,6 +18,9 @@
 			"path": "../common/tsconfig.cjs.json"
 		},
 		{
+			"path": "../ipinfo/tsconfig.cjs.json"
+		},
+		{
 			"path": "../database/tsconfig.cjs.json"
 		},
 		{

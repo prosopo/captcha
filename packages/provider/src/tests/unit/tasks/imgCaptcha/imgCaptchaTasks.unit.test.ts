@@ -612,7 +612,7 @@ describe("ImgCaptchaManager", () => {
 
 			// Verify result is not verified
 			expect(result.verified).toBe(false);
-			expect(result.status).toBe("API.USER_NOT_VERIFIED");
+			expect(result.status).toBe("Suspicious behavior detected");
 
 			// Verify commitment was disapproved
 			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith(
@@ -994,7 +994,7 @@ describe("ImgCaptchaManager", () => {
 			);
 
 			expect(result.verified).toBe(false);
-			expect(result.status).toBe("API.USER_NOT_VERIFIED");
+			expect(result.status).toBe("API.SPAM_EMAIL_DOMAIN");
 			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("spammydomain.com");
 			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith(
 				commitmentId,
@@ -1218,7 +1218,7 @@ describe("ImgCaptchaManager", () => {
 			);
 
 			expect(result.verified).toBe(false);
-			expect(result.status).toBe("API.USER_NOT_VERIFIED");
+			expect(result.status).toBe("API.SPAM_EMAIL_DOMAIN");
 			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("spammydomain.com");
 			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith(
 				commitmentId,
@@ -1284,7 +1284,7 @@ describe("ImgCaptchaManager", () => {
 			);
 
 			expect(result.verified).toBe(false);
-			expect(result.status).toBe("API.USER_NOT_VERIFIED");
+			expect(result.status).toBe("API.SPAM_EMAIL_DOMAIN");
 			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("spammydomain.com");
 		});
 
@@ -1427,7 +1427,7 @@ describe("ImgCaptchaManager", () => {
 			);
 
 			expect(result.verified).toBe(false);
-			expect(result.status).toBe("API.USER_NOT_VERIFIED");
+			expect(result.status).toBe("API.SPAM_EMAIL_DOMAIN");
 			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("spammydomain.com");
 			// Should not call disapprove when commitmentId is undefined
 			expect(db.disapproveDappUserCommitment).not.toHaveBeenCalled();

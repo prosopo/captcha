@@ -1,5 +1,44 @@
 # @prosopo/client-example-server
 
+## 2.7.78
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/server@2.10.0
+  - @prosopo/types@3.15.0
+  - @prosopo/keyring@2.9.22
+
+## 2.7.77
+### Patch Changes
+
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+  - @prosopo/types@3.14.1
+  - @prosopo/common@3.1.33
+  - @prosopo/keyring@2.9.21
+  - @prosopo/server@2.9.73
+  - @prosopo/dotenv@3.0.38
+
+## 2.7.76
+### Patch Changes
+
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+  - @prosopo/types@3.14.0
+  - @prosopo/common@3.1.32
+  - @prosopo/keyring@2.9.20
+  - @prosopo/server@2.9.72
+  - @prosopo/dotenv@3.0.37
+
+## 2.7.75
+### Patch Changes
+
+- Updated dependencies [4a9c518]
+  - @prosopo/common@3.1.31
+  - @prosopo/dotenv@3.0.36
+  - @prosopo/keyring@2.9.19
+  - @prosopo/server@2.9.71
+
 ## 2.7.74
 ### Patch Changes
 

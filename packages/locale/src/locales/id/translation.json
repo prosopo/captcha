@@ -21,7 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Akses diblokir oleh kebijakan",
 		"FORBIDDEN": "Forbidden",
 		"PROVIDER_VERIFY_FAILED": "Provider verification failed",
-		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
+		"SPAM_EMAIL_DOMAIN": "Domain email tidak diizinkan",
 		"UNAUTHORIZED": "Unauthorized",
 		"MISSING_BODY": "Missing body",
 		"NO_CONTENT_TYPE_HEADER": "No content-type header. Assumed JSON encoded body but failed to parse.",
@@ -41,7 +41,16 @@
 		"INVALID_IP": "Invalid IP",
 		"INVALID_URL": "Invalid URL",
 		"INVALID_BODY": "Invalid body",
-		"PARSE_ERROR": "Error parsing request"
+		"PARSE_ERROR": "Error parsing request",
+		"SPAM_EMAIL_RULE": "Alamat email diblokir oleh aturan filter spam",
+		"VPN_BLOCKED": "Permintaan dari koneksi VPN tidak diizinkan untuk situs ini",
+		"PROXY_BLOCKED": "Permintaan dari server proxy tidak diizinkan untuk situs ini",
+		"TOR_BLOCKED": "Permintaan dari node keluar Tor tidak diizinkan untuk situs ini",
+		"ABUSER_BLOCKED": "Permintaan dari jaringan yang ditandai karena penyalahgunaan tidak diizinkan untuk situs ini",
+		"DATACENTER_BLOCKED": "Permintaan dari alamat IP pusat data tidak diizinkan untuk situs ini",
+		"MOBILE_BLOCKED": "Permintaan dari koneksi jaringan seluler tidak diizinkan untuk situs ini",
+		"SATELLITE_BLOCKED": "Permintaan dari koneksi satelit tidak diizinkan untuk situs ini",
+		"CRAWLER_BLOCKED": "Permintaan dari crawler yang dikenal tidak diizinkan untuk situs ini"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Cannot modify owner user",
@@ -49,7 +58,9 @@
 		"CANNOT_DELETE_LAST_USER": "Cannot delete last user",
 		"USER_ALREADY_EXISTS": "User already exists",
 		"NO_SUGGESTIONS_FOUND": "No suggestions found",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Cannot deactivate the last active site"
+		"CANNOT_DEACTIVATE_LAST_SITE": "Cannot deactivate the last active site",
+		"DUPLICATE_SITE_NAME": "Situs dengan nama ini sudah ada",
+		"INVALID_SITE_NAME": "Nama situs hanya boleh berisi huruf, angka, tanda hubung, dan garis bawah"
 	},
 	"TARGET": {
 		"airplanes": "eroplano",

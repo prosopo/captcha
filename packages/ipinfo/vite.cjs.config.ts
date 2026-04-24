@@ -1,4 +1,3 @@
-import fs from "node:fs";
 import path from "node:path";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
 //
@@ -13,20 +12,11 @@ import path from "node:path";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ViteTestConfig } from "@prosopo/config";
-import dotenv from "dotenv";
-process.env.NODE_ENV = "test";
-// if .env.test exists at this level, use it, otherwise use the one at the root
-const envFile = `.env.${process.env.NODE_ENV || "development"}`;
-let envPath = envFile;
-if (fs.existsSync(envFile)) {
-	envPath = path.resolve(envFile);
-} else if (fs.existsSync(`../../${envFile}`)) {
-	envPath = path.resolve(`../../${envFile}`);
-} else {
-	throw new Error(`No ${envFile} file found`);
+import { ViteCommonJSConfig } from "@prosopo/config";
+
+export default function () {
+	return ViteCommonJSConfig(
+		path.basename("."),
+		path.resolve("./tsconfig.json"),
+	);
 }
-
-dotenv.config({ path: envPath });
-
-export default ViteTestConfig();

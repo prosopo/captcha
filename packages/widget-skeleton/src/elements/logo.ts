@@ -22,46 +22,52 @@ import type { Theme } from "../theme.js";
  */
 export function createLogoElement(theme: Theme): HTMLElement {
 	const widgetLogo = document.createElement("div");
-	widgetLogo.className = "logo";
+	widgetLogo.className = "prosopo-logo-container";
 	widgetLogo.innerHTML = LOGO_STYLES + getLogoMarkup(theme);
 	return widgetLogo;
 }
 
 const LOGO_STYLES = `
 <style>
-.logo {
-    display: flex;
-    flex-direction: column;
-    margin-left:auto;
-    width: max-content;
-    height: 100%;
-    align-items: center;
-    justify-content:center;
+.prosopo-logo-container {
+    display: flex !important;
+    margin-left: auto !important;
+    width: auto !important;
+    flex-shrink: 0 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-inline-start: auto !important;
 }
 
 .prosopo-logo {
-    display: inline-flex;
-    flex-direction: column;    /* ✅ Stack vertically */
-    align-items: center;       /* ✅ Center horizontally */
-    justify-content: center;   /* ✅ Optional: center vertically if needed */
+    justify-content: center;
     padding: 0px 8px 0px 8px;
     height: auto;
-    min-width: max-content;
-    gap: 2px;                  /* ✅ Space between SVG and text */
+}
+
+.prosopo-logo-container a, 
+.prosopo-logo {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-decoration: none !important;
+    gap: 2px !important;
 }
 
 .prosopo-logo-text {
     all: unset;
+    display: block !important;
     font-size: 9px !important;
     font-weight: bold !important;
     font-family: Helvetica Neue, Helvetica, Arial, sans-serif !important;
     line-height: 1 !important;
-    text-align: center;
+    text-align: center !important;
 }
 
 #logo {
-    width: 28px;
-    height: 28px;
+    width: 28px !important;
+    height: 28px !important;
+    display: block !important;
 }
 
 </style>
