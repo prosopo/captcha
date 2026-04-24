@@ -130,6 +130,8 @@ export enum AdminApiPaths {
 	GetDecisionMachine = "/v1/prosopo/provider/admin/decision-machine/get",
 	RemoveDecisionMachine = "/v1/prosopo/provider/admin/decision-machine/remove",
 	RemoveAllDecisionMachines = "/v1/prosopo/provider/admin/decision-machine/remove-all",
+	SiteKeyRemove = "/v1/prosopo/provider/admin/sitekey/remove",
+	SiteKeysRemove = "/v1/prosopo/provider/admin/sitekeys/remove",
 }
 
 export type CombinedApiPaths = ClientApiPaths | AdminApiPaths;
@@ -162,6 +164,8 @@ export const ProviderDefaultRateLimits = {
 	[AdminApiPaths.GetDecisionMachine]: { windowMs: 60000, limit: 60 },
 	[AdminApiPaths.RemoveDecisionMachine]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.RemoveAllDecisionMachines]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.SiteKeyRemove]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.SiteKeysRemove]: { windowMs: 60000, limit: 5 },
 };
 
 type RateLimit = {
@@ -432,6 +436,16 @@ export const RegisterSitekeysBody = array(
 	}),
 );
 
+export const RemoveSitekeyBody = object({
+	[ApiParams.siteKey]: string(),
+});
+
+export const RemoveSitekeysBody = array(
+	object({
+		[ApiParams.siteKey]: string(),
+	}),
+);
+
 export const UpdateDetectorKeyBody = object({
 	[ApiParams.detectorKey]: string(),
 });
@@ -542,6 +556,10 @@ export type RegisterSitekeyBodyTypeOutput = output<typeof RegisterSitekeyBody>;
 export type RegisterSitekeysBodyTypeOutput = output<
 	typeof RegisterSitekeysBody
 >;
+
+export type RemoveSitekeyBodyTypeOutput = output<typeof RemoveSitekeyBody>;
+
+export type RemoveSitekeysBodyTypeOutput = output<typeof RemoveSitekeysBody>;
 
 export const ProsopoCaptchaCountConfigSchema = object({
 	solved: object({

@@ -1,4 +1,7 @@
-import type { RegisterSitekeysBodyTypeOutput } from "@prosopo/types";
+import type {
+	RegisterSitekeysBodyTypeOutput,
+	RemoveSitekeysBodyTypeOutput,
+} from "@prosopo/types";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -81,6 +84,11 @@ export interface ProviderApiInterface {
 	): Promise<ApiResponse>;
 	registerSiteKeys(
 		siteKeys: RegisterSitekeysBodyTypeOutput,
+		jwt: string,
+	): Promise<ApiResponse>;
+	removeSiteKey(siteKey: string, jwt: string): Promise<ApiResponse>;
+	removeSiteKeys(
+		siteKeys: RemoveSitekeysBodyTypeOutput,
 		jwt: string,
 	): Promise<ApiResponse>;
 	updateDetectorKey(detectorKey: string, jwt: string): Promise<ApiResponse>;
