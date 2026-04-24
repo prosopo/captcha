@@ -1,5 +1,64 @@
 # @prosopo/procaptcha-wrapper
 
+## 2.6.67
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+
+## 2.6.66
+### Patch Changes
+
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+- Updated dependencies [b94890c]
+  - @prosopo/types@3.14.1
+  - @prosopo/locale@3.2.1
+
+## 2.6.65
+### Patch Changes
+
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+  - @prosopo/locale@3.2.0
+  - @prosopo/types@3.14.0
+
+## 2.6.64
+### Patch Changes
+
+  - @prosopo/types@3.13.3
+
+## 2.6.63
+### Patch Changes
+
+  - @prosopo/types@3.13.2
+
+## 2.6.62
+### Patch Changes
+
+  - @prosopo/types@3.13.1
+
+## 2.6.61
+### Patch Changes
+
+- Updated dependencies [e6d9553]
+  - @prosopo/types@3.13.0
+
+## 2.6.60
+### Patch Changes
+
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/types@3.12.3
+
+## 2.6.59
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/locale@3.1.29
+  - @prosopo/types@3.12.2
+
 ## 2.6.58
 ### Patch Changes
 

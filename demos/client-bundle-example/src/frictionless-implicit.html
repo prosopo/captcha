@@ -182,19 +182,11 @@
 <script type="module">
     (async () => {
 
-        // Use the current page's protocol and host, but get the port from the env var
-        const protocol = window.location.protocol;
-        const host = window.location.hostname; // Use the same hostname as the page
+        const host = new URL(window.location.href).host;
 
-        // Extract port from VITE_BUNDLE_URL (default to 9269 if not specified)
-        const envBundleUrl = import.meta.env.VITE_BUNDLE_URL || 'https://localhost:9269/procaptcha.bundle.js';
-        console.log('Environment Bundle URL:', envBundleUrl);
-        const bundleUrlObj = new URL(envBundleUrl);
-        const bundlePort = bundleUrlObj.port || '9269';
-        const bundlePath = bundleUrlObj.pathname;
-
-        const bundleUrl = `${protocol}//${host}:${bundlePort}${bundlePath}`;
-        console.log('Bundle URL:', bundleUrl);
+        // Use predefined VITE_BUNDLE_URL or default to localhost with the same host as the page, to ensure we load the
+        // bundle from the correct location in different environments
+        const bundleUrl = import.meta.env.VITE_BUNDLE_URL || 'https://localhost:9269/procaptcha.bundle.js'.replace('localhost', host);
 
         // Pattern to avoid race condition between Procaptcha script loading and Procaptcha render function call
         const {render} = await import(bundleUrl);

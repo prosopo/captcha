@@ -27,6 +27,8 @@ import {
 	type CaptchaResult,
 	CaptchaStatus,
 	type IPAddress,
+	type ISpamFilterRules,
+	type ITrafficFilter,
 	POW_SEPARATOR,
 	type PoWCaptcha,
 	type PoWChallengeId,
@@ -44,6 +46,8 @@ import { deepValidateIpAddress } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
+import { checkTrafficFilter } from "../spam/checkTrafficFilter.js";
+import { evaluateEmailSpamRules } from "../spam/evaluateEmailSpamRules.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
 
 const DEFAULT_POW_DIFFICULTY = 4;
@@ -98,13 +102,13 @@ export class PowCaptchaManager extends CaptchaManager {
 	 * @description Verifies a PoW Captcha for a given user and dapp
 	 *
 	 * @param {string} challenge - the starting string for the PoW challenge
-	 * @param {string} difficulty - how many leading zeroes the solution must have
 	 * @param {string} providerChallengeSignature - proof that the Provider provided the challenge
 	 * @param {string} nonce - the string that the user has found that satisfies the PoW challenge
 	 * @param {number} timeout - the time in milliseconds since the Provider was selected to provide the PoW captcha
 	 * @param {string} userTimestampSignature
 	 * @param ipAddress
 	 * @param headers
+	 * @param behavioralData
 	 * @param salt
 	 */
 	async verifyPowCaptchaSolution(
@@ -169,17 +173,24 @@ export class PowCaptchaManager extends CaptchaManager {
 		}
 
 		if (!verifyRecency(challenge, timeout)) {
+			const timeoutResult = {
+				status: CaptchaStatus.disapproved,
+				reason: "CAPTCHA.INVALID_TIMESTAMP" as const,
+			};
 			await this.db.updatePowCaptchaRecordResult(
 				challenge,
-				{
-					status: CaptchaStatus.disapproved,
-					reason: "CAPTCHA.INVALID_TIMESTAMP",
-				},
+				timeoutResult,
 				false, //serverchecked
 				true, // usersubmitted
 				userTimestampSignature,
 				coords,
 			);
+			if (challengeRecord.sessionId) {
+				await this.db.updateSessionRecord(challengeRecord.sessionId, {
+					userSubmitted: true,
+					result: timeoutResult,
+				});
+			}
 			return false;
 		}
 
@@ -258,6 +269,14 @@ export class PowCaptchaManager extends CaptchaManager {
 			coords,
 		);
 
+		// Update the session record with submission result
+		if (challengeRecord.sessionId) {
+			await this.db.updateSessionRecord(challengeRecord.sessionId, {
+				userSubmitted: true,
+				result,
+			});
+		}
+
 		return correct;
 	}
 
@@ -271,6 +290,10 @@ export class PowCaptchaManager extends CaptchaManager {
 	 * @param env - provider environment
 	 * @param ip - optional IP address for validation
 	 * @param userAccessRulesStorage - storage for querying user access policies
+	 * @param email
+	 * @param spamEmailDomainCheckingEnabled
+	 * @param spamFilter
+	 * @param trafficFilter
 	 */
 	async serverVerifyPowCaptchaSolution(
 		dappAccount: string,
@@ -279,8 +302,17 @@ export class PowCaptchaManager extends CaptchaManager {
 		env: ProviderEnvironment,
 		ip?: string,
 		userAccessRulesStorage?: AccessRulesStorage,
-	): Promise<{ verified: boolean; score?: number }> {
-		const notVerifiedResponse = { verified: false };
+		email?: string,
+		spamEmailDomainCheckingEnabled = false,
+		spamFilter?: ISpamFilterRules,
+		trafficFilter?: ITrafficFilter,
+	): Promise<{ verified: boolean; score?: number; reason?: string }> {
+		const notVerified = (
+			reason: string,
+		): { verified: false; reason: string } => ({
+			verified: false,
+			reason,
+		});
 
 		const challengeRecord =
 			await this.db.getPowCaptchaRecordByChallenge(challenge);
@@ -290,7 +322,7 @@ export class PowCaptchaManager extends CaptchaManager {
 				msg: `No record of this challenge: ${challenge}`,
 			}));
 
-			return notVerifiedResponse;
+			return notVerified("CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND");
 		}
 
 		if (challengeRecord.result.status !== CaptchaStatus.approved) {
@@ -302,7 +334,8 @@ export class PowCaptchaManager extends CaptchaManager {
 			});
 		}
 
-		if (challengeRecord.serverChecked) return notVerifiedResponse;
+		if (challengeRecord.serverChecked)
+			return notVerified("API.USER_ALREADY_VERIFIED");
 
 		const challengeDappAccount = challengeRecord.dappAccount;
 
@@ -327,13 +360,20 @@ export class PowCaptchaManager extends CaptchaManager {
 
 		const recent = verifyRecency(challenge, timeout);
 		if (!recent) {
+			const disapprovedResult = {
+				status: CaptchaStatus.disapproved,
+				reason: "API.TIMESTAMP_TOO_OLD" as const,
+			};
 			await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
-				result: {
-					status: CaptchaStatus.disapproved,
-					reason: "API.TIMESTAMP_TOO_OLD",
-				},
+				result: disapprovedResult,
 			});
-			return notVerifiedResponse;
+			if (challengeRecord.sessionId) {
+				await this.db.updateSessionRecord(challengeRecord.sessionId, {
+					serverChecked: true,
+					result: disapprovedResult,
+				});
+			}
+			return notVerified("API.TIMESTAMP_TOO_OLD");
 		}
 
 		// Check user access policies for hard blocks
@@ -358,19 +398,99 @@ export class PowCaptchaManager extends CaptchaManager {
 							policy: blockPolicy,
 						},
 					}));
+					const blockedResult = {
+						status: CaptchaStatus.disapproved,
+						reason: "API.ACCESS_POLICY_BLOCK" as const,
+					};
 					await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
-						result: {
-							status: CaptchaStatus.disapproved,
-							reason: "API.ACCESS_POLICY_BLOCK",
-						},
+						result: blockedResult,
 					});
-					return notVerifiedResponse;
+					if (challengeRecord.sessionId) {
+						await this.db.updateSessionRecord(challengeRecord.sessionId, {
+							serverChecked: true,
+							result: blockedResult,
+						});
+					}
+					return notVerified("API.ACCESS_POLICY_BLOCK");
 				}
 			} catch (error) {
 				this.logger.warn(() => ({
 					msg: "Failed to check user access policies in server PoW verification",
 					error,
 				}));
+			}
+		}
+
+		// Check email domain against spam list if email is provided
+		if (email && spamEmailDomainCheckingEnabled) {
+			try {
+				const isSpam = await this.checkSpamEmail(email);
+				if (isSpam) {
+					const emailDomain = email.split("@")[1] || "unknown";
+					this.logger.info(() => ({
+						msg: "Spam email domain detected in server PoW verification",
+						data: { challenge, dappAccount, emailDomain },
+					}));
+					await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
+						result: {
+							status: CaptchaStatus.disapproved,
+							reason: "API.SPAM_EMAIL_DOMAIN",
+						},
+					});
+					return notVerified("API.SPAM_EMAIL_DOMAIN");
+				}
+			} catch (error) {
+				this.logger.warn(() => ({
+					msg: "Failed to check spam email domain in server PoW verification",
+					error,
+				}));
+			}
+		}
+
+		// Spam filter: configurable per-site email pattern rules
+		if (spamFilter?.enabled && spamFilter.emailRules?.enabled && email) {
+			const result = evaluateEmailSpamRules(email, spamFilter.emailRules);
+			if (result.isSpam) {
+				this.logger.info(() => ({
+					msg: "Spam filter rejected email in PoW verification",
+					data: { challenge, dappAccount, reason: result.reason },
+				}));
+				await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
+					result: {
+						status: CaptchaStatus.disapproved,
+						reason: "API.SPAM_EMAIL_RULE",
+					},
+				});
+				return notVerified("API.SPAM_EMAIL_RULE");
+			}
+		}
+
+		// Traffic filter: block VPN/proxy/Tor/abuser etc.
+		// blockAbuser defaults to true so abusive networks are always blocked
+		const effectiveTrafficFilter = { blockAbuser: true, ...trafficFilter };
+		// if at least one true
+		const hasTrafficFilter = Object.values(effectiveTrafficFilter).some(
+			(v) => v,
+		);
+		if (ip && hasTrafficFilter) {
+			const check = await checkTrafficFilter(
+				ip,
+				effectiveTrafficFilter,
+				env.ipInfoService,
+				this.logger,
+			);
+			if (check.isBlocked) {
+				this.logger.info(() => ({
+					msg: "Traffic filter rejected request in PoW verification",
+					data: { challenge, dappAccount, ip, reason: check.reason },
+				}));
+				await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
+					result: {
+						status: CaptchaStatus.disapproved,
+						reason: check.reason,
+					},
+				});
+				return notVerified(check.reason);
 			}
 		}
 
@@ -392,8 +512,7 @@ export class PowCaptchaManager extends CaptchaManager {
 					ip,
 					challengeIpAddress,
 					this.logger,
-					env.config.ipApi.apiKey,
-					env.config.ipApi.baseUrl,
+					env.ipInfoService,
 					ipValidationRules,
 				);
 
@@ -407,13 +526,20 @@ export class PowCaptchaManager extends CaptchaManager {
 							distanceKm: ipValidation.distanceKm,
 						},
 					}));
+					const ipFailResult = {
+						status: CaptchaStatus.disapproved,
+						reason: "API.FAILED_IP_VALIDATION" as const,
+					};
 					await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
-						result: {
-							status: CaptchaStatus.disapproved,
-							reason: "API.FAILED_IP_VALIDATION",
-						},
+						result: ipFailResult,
 					});
-					return notVerifiedResponse;
+					if (challengeRecord.sessionId) {
+						await this.db.updateSessionRecord(challengeRecord.sessionId, {
+							serverChecked: true,
+							result: ipFailResult,
+						});
+					}
+					return notVerified("API.FAILED_IP_VALIDATION");
 				}
 			}
 		}
@@ -465,13 +591,22 @@ export class PowCaptchaManager extends CaptchaManager {
 					},
 				}));
 
+				const dmResult = {
+					status: CaptchaStatus.disapproved,
+					reason: decision.reason || "CAPTCHA.DECISION_MACHINE_DENIED",
+				};
 				await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
-					result: {
-						status: CaptchaStatus.disapproved,
-						reason: decision.reason || "CAPTCHA.DECISION_MACHINE_DENIED",
-					},
+					result: dmResult,
 				});
-				return notVerifiedResponse;
+				if (challengeRecord.sessionId) {
+					await this.db.updateSessionRecord(challengeRecord.sessionId, {
+						serverChecked: true,
+						result: dmResult,
+					});
+				}
+				return notVerified(
+					decision.reason || "CAPTCHA.DECISION_MACHINE_DENIED",
+				);
 			}
 
 			this.logger.debug(() => ({
@@ -489,6 +624,14 @@ export class PowCaptchaManager extends CaptchaManager {
 				err: error,
 			}));
 			// Don't fail the captcha if decision machine fails - default to allow
+		}
+
+		// Server verification passed — update session as approved and serverChecked
+		if (challengeRecord.sessionId) {
+			await this.db.updateSessionRecord(challengeRecord.sessionId, {
+				serverChecked: true,
+				result: { status: CaptchaStatus.approved },
+			});
 		}
 
 		return { verified: true, ...(score ? { score } : {}) };

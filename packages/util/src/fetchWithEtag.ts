@@ -16,9 +16,10 @@ export const fetchWithETag = async (
 	url: string,
 	etag: string | null,
 ): Promise<{
-	content: string | null;
+	stream: ReadableStream<Uint8Array> | null;
 	etag: string | null;
 	notModified: boolean;
+	contentLength?: number;
 }> => {
 	const headers: Record<string, string> = {};
 	if (etag) {
@@ -32,18 +33,28 @@ export const fetchWithETag = async (
 		});
 
 		if (response.status === 304) {
-			return { content: null, etag: null, notModified: true };
+			return { stream: null, etag: null, notModified: true };
 		}
 
 		if (!response.ok) {
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
 
-		const content = await response.text();
-		const responseETag =
-			response.headers.get("etag")?.replace(/"/g, "") || null;
+		const responseETag = response.headers.get("etag") || null;
+		const contentLengthHeader = response.headers.get("content-length");
+		const contentLength = contentLengthHeader
+			? (() => {
+					const parsed = Number.parseInt(contentLengthHeader, 10);
+					return Number.isFinite(parsed) ? parsed : undefined;
+				})()
+			: undefined;
 
-		return { content, etag: responseETag, notModified: false };
+		return {
+			stream: response.body,
+			etag: responseETag,
+			notModified: false,
+			contentLength,
+		};
 	} catch (error) {
 		throw new Error(`Fetch error: ${error}`);
 	}

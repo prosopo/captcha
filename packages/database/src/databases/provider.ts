@@ -72,6 +72,8 @@ import {
 	ScheduledTaskSchema,
 	SessionRecordSchema,
 	SolutionRecordSchema,
+	type SpamEmailDomainRecord,
+	SpamEmailDomainRecordSchema,
 	type Tables,
 	type UserCommitmentRecord,
 	UserCommitmentRecordSchema,
@@ -83,10 +85,12 @@ import {
 	accessRulesRedisIndex,
 	createRedisAccessRulesStorage,
 } from "@prosopo/user-access-policy/redis";
+import { buildDomainSuffixCandidates } from "@prosopo/util";
 import type { ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
 
 const TWENTY_FOUR_HOURS_IN_MS = 24 * 60 * 60 * 1000;
+const MAX_DOMAIN_SUFFIX_CANDIDATES = 5;
 
 enum TableNames {
 	captcha = "captcha",
@@ -101,6 +105,7 @@ enum TableNames {
 	detector = "detector",
 	decisionMachine = "decisionMachine",
 	clientContextEntropy = "clientContextEntropy",
+	spamEmailDomain = "spamEmailDomain",
 }
 
 const PROVIDER_TABLES = [
@@ -163,6 +168,11 @@ const PROVIDER_TABLES = [
 		collectionName: TableNames.clientContextEntropy,
 		modelName: "ClientContextEntropy",
 		schema: ClientContextEntropyRecordSchema,
+	},
+	{
+		collectionName: TableNames.spamEmailDomain,
+		modelName: "SpamEmailDomain",
+		schema: SpamEmailDomainRecordSchema,
 	},
 ];
 
@@ -1179,6 +1189,26 @@ export class ProviderDatabase
 	}
 
 	/**
+	 * Update a session record by sessionId
+	 */
+	async updateSessionRecord(
+		sessionId: string,
+		updates: Partial<Session>,
+	): Promise<void> {
+		try {
+			await this.tables.session.updateOne(
+				{ sessionId },
+				{ $set: { ...updates, lastUpdatedTimestamp: new Date() } },
+			);
+		} catch (err) {
+			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
+				context: { error: err, sessionId },
+				logger: this.logger,
+			});
+		}
+	}
+
+	/**
 	 * Get an active session by user IP hash
 	 * @param userSitekeyIpHash The hash of user, IP and sitekey combination
 	 * @returns The session record if it exists and is not deleted, undefined otherwise
@@ -1820,6 +1850,18 @@ export class ProviderDatabase
 	}
 
 	/**
+	 * @description Remove client records by account
+	 */
+	async removeClientRecords(accounts: string[]): Promise<void> {
+		if (!accounts || accounts.length === 0) {
+			return;
+		}
+		await this.tables?.client.deleteMany({
+			account: { $in: accounts },
+		});
+	}
+
+	/**
 	 * @description Get all client records
 	 */
 	async getAllClientRecords(): Promise<ClientRecord[]> {
@@ -2125,5 +2167,51 @@ export class ProviderDatabase
 				}),
 			)
 		).filter((headHash): headHash is string => headHash !== undefined);
+	}
+
+	async getSpamEmailDomain(
+		domain: string,
+	): Promise<SpamEmailDomainRecord | null> {
+		if (!this.tables?.spamEmailDomain) {
+			throw new ProsopoDBError("DATABASE.DATABASE_IMPORT_ERROR", {
+				context: { failedFuncName: this.getSpamEmailDomain.name },
+			});
+		}
+
+		const suffixCandidates = buildDomainSuffixCandidates(domain).slice(
+			0,
+			MAX_DOMAIN_SUFFIX_CANDIDATES,
+		);
+		const query =
+			suffixCandidates.length > 0
+				? { domain: { $in: suffixCandidates } }
+				: { domain };
+
+		return await this.tables.spamEmailDomain
+			.findOne<SpamEmailDomainRecord>(query)
+			.exec();
+	}
+
+	async bulkUpdateSpamEmailDomains(
+		domains: Array<{ filter: { domain: string }; update: { domain: string } }>,
+		upsert: boolean,
+	): Promise<void> {
+		if (!this.tables?.spamEmailDomain) {
+			throw new ProsopoDBError("DATABASE.DATABASE_IMPORT_ERROR", {
+				context: { failedFuncName: this.bulkUpdateSpamEmailDomains.name },
+			});
+		}
+
+		const bulkOps = domains.map((op) => ({
+			updateOne: {
+				filter: op.filter,
+				update: { $set: op.update },
+				upsert,
+			},
+		}));
+
+		if (bulkOps.length > 0) {
+			await this.tables.spamEmailDomain.bulkWrite(bulkOps);
+		}
 	}
 }

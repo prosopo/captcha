@@ -18,9 +18,12 @@ import type { Tasks } from "../../tasks/index.js";
 import { ApiGetAllDecisionMachinesEndpoint } from "./apiGetAllDecisionMachinesEndpoint.js";
 import { ApiGetDecisionMachineEndpoint } from "./apiGetDecisionMachineEndpoint.js";
 import { ApiRegisterSiteKeyEndpoint } from "./apiRegisterSiteKeyEndpoint.js";
+import { ApiRegisterSiteKeysEndpoint } from "./apiRegisterSiteKeysEndpoint.js";
 import { ApiRemoveAllDecisionMachinesEndpoint } from "./apiRemoveAllDecisionMachinesEndpoint.js";
 import { ApiRemoveDecisionMachineEndpoint } from "./apiRemoveDecisionMachineEndpoint.js";
 import { ApiRemoveDetectorKeyEndpoint } from "./apiRemoveDetectorKeyEndpoint.js";
+import { ApiRemoveSiteKeyEndpoint } from "./apiRemoveSiteKeyEndpoint.js";
+import { ApiRemoveSiteKeysEndpoint } from "./apiRemoveSiteKeysEndpoint.js";
 import { ApiToggleMaintenanceModeEndpoint } from "./apiToggleMaintenanceModeEndpoint.js";
 import { ApiUpdateDecisionMachineEndpoint } from "./apiUpdateDecisionMachineEndpoint.js";
 import { ApiUpdateDetectorKeyEndpoint } from "./apiUpdateDetectorKeyEndpoint.js";
@@ -31,6 +34,9 @@ class ApiAdminRoutesProvider implements ApiRoutesProvider {
 	public getRoutes(): ApiRoutes {
 		return {
 			[AdminApiPaths.SiteKeyRegister]: new ApiRegisterSiteKeyEndpoint(
+				this.tasks.clientTaskManager,
+			),
+			[AdminApiPaths.SiteKeysRegister]: new ApiRegisterSiteKeysEndpoint(
 				this.tasks.clientTaskManager,
 			),
 			[AdminApiPaths.UpdateDetectorKey]: new ApiUpdateDetectorKeyEndpoint(
@@ -50,6 +56,12 @@ class ApiAdminRoutesProvider implements ApiRoutesProvider {
 				new ApiRemoveDecisionMachineEndpoint(this.tasks.clientTaskManager),
 			[AdminApiPaths.RemoveAllDecisionMachines]:
 				new ApiRemoveAllDecisionMachinesEndpoint(this.tasks.clientTaskManager),
+			[AdminApiPaths.SiteKeyRemove]: new ApiRemoveSiteKeyEndpoint(
+				this.tasks.clientTaskManager,
+			),
+			[AdminApiPaths.SiteKeysRemove]: new ApiRemoveSiteKeysEndpoint(
+				this.tasks.clientTaskManager,
+			),
 			[AdminApiPaths.ToggleMaintenanceMode]:
 				new ApiToggleMaintenanceModeEndpoint(),
 		};

@@ -86,7 +86,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			}
 
 			// We don't want to expose any other errors to the client except for specific situations
-			const { dappSignature, token, ip, maxVerifiedTime } = parsed;
+			const { dappSignature, token, ip, maxVerifiedTime, email } = parsed;
 			try {
 				// This can error if the token is invalid
 				const { user, dapp, timestamp, commitmentId } =
@@ -125,6 +125,10 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						clientRecord.settings.disallowWebView,
 						clientRecord.settings.contextAware?.enabled,
 						userAccessRulesStorage,
+						email,
+						clientRecord.settings.spamEmailDomainCheckEnabled,
+						clientRecord.settings.spamFilter,
+						clientRecord.settings.trafficFilter,
 					);
 
 				req.logger.debug(() => ({ data: { response } }));
@@ -135,6 +139,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						req.i18n.t,
 						response[ApiParams.score],
 						response[ApiParams.commitmentId],
+						response[ApiParams.status],
 					);
 				res.json(verificationResponse);
 			} catch (err) {
@@ -191,7 +196,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 
 			// We don't want to expose any other errors to the client
 			try {
-				const { token, dappSignature, verifiedTimeout, ip } = parsed;
+				const { token, dappSignature, verifiedTimeout, ip, email } = parsed;
 
 				// This can error if the token is invalid
 				const { dapp, user, timestamp, challenge } =
@@ -227,7 +232,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				// Will throw an error if the signature is invalid
 				verifySignature(dappSignature, timestamp.toString(), dappPair);
 
-				const { verified, score } =
+				const { verified, score, reason } =
 					await tasks.powCaptchaManager.serverVerifyPowCaptchaSolution(
 						dapp,
 						challenge,
@@ -235,6 +240,10 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						env,
 						ip,
 						userAccessRulesStorage,
+						email,
+						clientRecord.settings.spamEmailDomainCheckEnabled,
+						clientRecord.settings.spamFilter,
+						clientRecord.settings.trafficFilter,
 					);
 
 				const verificationResponse: VerificationResponse =
@@ -243,6 +252,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						clientRecord,
 						req.i18n.t,
 						score,
+						reason,
 					);
 
 				return res.json(verificationResponse);

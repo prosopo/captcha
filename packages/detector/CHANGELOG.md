@@ -1,5 +1,67 @@
 # @prosopo/detector
 
+## 3.4.25
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+
+## 3.4.24
+### Patch Changes
+
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+  - @prosopo/types@3.14.1
+
+## 3.4.23
+### Patch Changes
+
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+  - @prosopo/types@3.14.0
+
+## 3.4.22
+### Patch Changes
+
+  - @prosopo/types@3.13.3
+
+## 3.4.21
+### Patch Changes
+
+  - @prosopo/types@3.13.2
+
+## 3.4.20
+### Patch Changes
+
+  - @prosopo/types@3.13.1
+
+## 3.4.19
+### Patch Changes
+
+- Updated dependencies [e6d9553]
+  - @prosopo/types@3.13.0
+
+## 3.4.18
+### Patch Changes
+
+- 730c61e: Speed up captcha
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/types@3.12.3
+
+## 3.4.17
+### Patch Changes
+
+- dbcd098: Fix bug with chrome on ios
+- Updated dependencies [adb89a6]
+  - @prosopo/types@3.12.2
+
+## 3.4.16
+### Patch Changes
+
+- f5c8725: Fix bug with chrome on ios
+
 ## 3.4.15
 ### Patch Changes
 

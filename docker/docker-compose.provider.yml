@@ -192,6 +192,24 @@ services:
       - 8.8.8.8
       - 1.1.1.1
       - 208.67.222.222
+  ipinfo:
+    # IP metadata sidecar
+    container_name: ipinfo
+    image: prosopo/ipinfo:${IPINFO_VERSION:-0.1.0}
+    # NET_ADMIN is required to check/create firewall chains, even when
+    # enableFirewall is false in config.
+    cap_add:
+      - NET_ADMIN
+    # No host ports
+    expose:
+      - "3899"
+    networks:
+      - internal
+    volumes:
+      # Database blob ships separately
+      - ./ipinfo/ipapi_database_ram:/usr/src/app/ipapi_database_ram:ro
+      # Config override
+      - ./ipinfo/config:/usr/src/app/config:ro
 networks:
   internal:
     enable_ipv6: true

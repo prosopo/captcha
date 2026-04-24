@@ -265,6 +265,13 @@ export const SessionSchema = object({
 	countryCode: string().optional(),
 	geolocation: string().optional(),
 	headers: object({}).catchall(string()),
+	result: object({
+		status: nativeEnum(CaptchaStatus),
+		reason: string().optional(),
+		error: string().optional(),
+	}).optional(),
+	userSubmitted: boolean().optional(),
+	serverChecked: boolean().optional(),
 }) satisfies ZodType<Session>;
 
 // Session now includes all frictionless token fields
@@ -293,6 +300,13 @@ export type Session = {
 	countryCode?: string;
 	geolocation?: string;
 	headers?: RequestHeaders;
+	result?: {
+		status: CaptchaStatus;
+		reason?: TranslationKey;
+		error?: string;
+	};
+	userSubmitted?: boolean;
+	serverChecked?: boolean;
 };
 
 // Zod schema for PoWCaptchaStored

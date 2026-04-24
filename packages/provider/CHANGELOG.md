@@ -1,5 +1,212 @@
 # @prosopo/provider
 
+## 3.23.2
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+  - @prosopo/api@3.3.0
+  - @prosopo/api-express-router@3.1.2
+  - @prosopo/database@3.9.17
+  - @prosopo/datasets@3.1.16
+  - @prosopo/env@3.4.2
+  - @prosopo/keyring@2.9.22
+  - @prosopo/load-balancer@2.8.39
+  - @prosopo/types-database@4.5.2
+  - @prosopo/types-env@2.9.2
+  - @prosopo/user-access-policy@3.6.23
+
+## 3.23.1
+### Patch Changes
+
+- 946a8ba: Abuser score threshold
+- 5614814: Small config changes
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+- Updated dependencies [b94890c]
+  - @prosopo/types-database@4.5.1
+  - @prosopo/types@3.14.1
+  - @prosopo/locale@3.2.1
+  - @prosopo/database@3.9.16
+  - @prosopo/types-env@2.9.1
+  - @prosopo/api@3.2.11
+  - @prosopo/api-express-router@3.1.1
+  - @prosopo/common@3.1.33
+  - @prosopo/datasets@3.1.15
+  - @prosopo/env@3.4.1
+  - @prosopo/keyring@2.9.21
+  - @prosopo/load-balancer@2.8.38
+  - @prosopo/user-access-policy@3.6.22
+  - @prosopo/api-route@2.6.41
+
+## 3.23.0
+### Minor Changes
+
+- 42650db: Add better spam rules and move ipinfo service to local instead of external
+
+### Patch Changes
+
+- fc514dd: ability to block different types of traffic
+- Updated dependencies [fc514dd]
+- Updated dependencies [7be39c4]
+- Updated dependencies [42650db]
+  - @prosopo/types-database@4.5.0
+  - @prosopo/locale@3.2.0
+  - @prosopo/types@3.14.0
+  - @prosopo/api@3.2.10
+  - @prosopo/api-express-router@3.1.0
+  - @prosopo/types-env@2.9.0
+  - @prosopo/env@3.4.0
+  - @prosopo/database@3.9.15
+  - @prosopo/common@3.1.32
+  - @prosopo/datasets@3.1.14
+  - @prosopo/keyring@2.9.20
+  - @prosopo/load-balancer@2.8.37
+  - @prosopo/user-access-policy@3.6.21
+  - @prosopo/api-route@2.6.40
+
+## 3.22.4
+### Patch Changes
+
+- fe5f0f9: Fixing flaky image captcha test
+- Updated dependencies [4a9c518]
+  - @prosopo/common@3.1.31
+  - @prosopo/api-express-router@3.0.70
+  - @prosopo/api-route@2.6.39
+  - @prosopo/database@3.9.14
+  - @prosopo/datasets@3.1.13
+  - @prosopo/env@3.3.15
+  - @prosopo/keyring@2.9.19
+  - @prosopo/load-balancer@2.8.36
+  - @prosopo/types-database@4.4.14
+  - @prosopo/types-env@2.8.15
+  - @prosopo/user-access-policy@3.6.20
+
+## 3.22.3
+### Patch Changes
+
+- Updated dependencies [a25dffa]
+  - @prosopo/util@3.2.11
+  - @prosopo/database@3.9.13
+  - @prosopo/datasets@3.1.12
+  - @prosopo/keyring@2.9.18
+  - @prosopo/types@3.13.3
+  - @prosopo/user-access-policy@3.6.19
+  - @prosopo/env@3.3.14
+  - @prosopo/types-env@2.8.14
+  - @prosopo/api@3.2.9
+  - @prosopo/api-express-router@3.0.69
+  - @prosopo/load-balancer@2.8.35
+  - @prosopo/types-database@4.4.13
+
+## 3.22.2
+### Patch Changes
+
+- 346edd7: Fix exports for browser
+- Updated dependencies [346edd7]
+  - @prosopo/util@3.2.10
+  - @prosopo/database@3.9.12
+  - @prosopo/datasets@3.1.11
+  - @prosopo/keyring@2.9.17
+  - @prosopo/types@3.13.2
+  - @prosopo/user-access-policy@3.6.18
+  - @prosopo/env@3.3.13
+  - @prosopo/types-env@2.8.13
+  - @prosopo/api@3.2.8
+  - @prosopo/api-express-router@3.0.68
+  - @prosopo/load-balancer@2.8.34
+  - @prosopo/types-database@4.4.12
+
+## 3.22.1
+### Patch Changes
+
+- Updated dependencies [22bfee7]
+  - @prosopo/util@3.2.9
+  - @prosopo/database@3.9.11
+  - @prosopo/datasets@3.1.10
+  - @prosopo/keyring@2.9.16
+  - @prosopo/types@3.13.1
+  - @prosopo/user-access-policy@3.6.17
+  - @prosopo/env@3.3.12
+  - @prosopo/types-env@2.8.12
+  - @prosopo/api@3.2.7
+  - @prosopo/api-express-router@3.0.67
+  - @prosopo/load-balancer@2.8.33
+  - @prosopo/types-database@4.4.11
+
+## 3.22.0
+### Minor Changes
+
+- e6d9553: Add `registerSiteKeys` bulk endpoint (`POST /v1/prosopo/provider/admin/sitekeys/register`) that accepts an array of site key records, allowing multiple client records to be registered in a single request.
+
+### Patch Changes
+
+- Updated dependencies [e0fb3d6]
+- Updated dependencies [e6d9553]
+- Updated dependencies [f3f23e3]
+  - @prosopo/util@3.2.8
+  - @prosopo/types@3.13.0
+  - @prosopo/database@3.9.10
+  - @prosopo/datasets@3.1.9
+  - @prosopo/keyring@2.9.15
+  - @prosopo/user-access-policy@3.6.16
+  - @prosopo/api@3.2.6
+  - @prosopo/api-express-router@3.0.66
+  - @prosopo/env@3.3.11
+  - @prosopo/load-balancer@2.8.32
+  - @prosopo/types-database@4.4.10
+  - @prosopo/types-env@2.8.11
+
+## 3.21.4
+### Patch Changes
+
+- 730c61e: Speed up captcha
+- e1ea65f: Better spam email domain checking
+- c316257: Adding sync fo sessions wrt captcha status
+- Updated dependencies [730c61e]
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/load-balancer@2.8.31
+  - @prosopo/types@3.12.3
+  - @prosopo/types-database@4.4.9
+  - @prosopo/database@3.9.9
+  - @prosopo/util@3.2.7
+  - @prosopo/api@3.2.5
+  - @prosopo/api-express-router@3.0.65
+  - @prosopo/datasets@3.1.8
+  - @prosopo/env@3.3.10
+  - @prosopo/keyring@2.9.14
+  - @prosopo/types-env@2.8.10
+  - @prosopo/user-access-policy@3.6.15
+
+## 3.21.3
+### Patch Changes
+
+- dbcd098: Fix bug with chrome on ios
+- adb89a6: Disposable email checking
+- Updated dependencies [adb89a6]
+  - @prosopo/types-database@4.4.8
+  - @prosopo/database@3.9.8
+  - @prosopo/locale@3.1.29
+  - @prosopo/types@3.12.2
+  - @prosopo/util@3.2.6
+  - @prosopo/api@3.2.4
+  - @prosopo/types-env@2.8.9
+  - @prosopo/env@3.3.9
+  - @prosopo/api-express-router@3.0.64
+  - @prosopo/common@3.1.30
+  - @prosopo/datasets@3.1.7
+  - @prosopo/keyring@2.9.13
+  - @prosopo/load-balancer@2.8.30
+  - @prosopo/user-access-policy@3.6.14
+  - @prosopo/api-route@2.6.38
+
+## 3.21.2
+### Patch Changes
+
+- f5c8725: Fix bug with chrome on ios
+
 ## 3.21.1
 ### Patch Changes
 

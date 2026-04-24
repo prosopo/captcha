@@ -87,6 +87,7 @@ export enum ClientApiPaths {
 	VerifyImageCaptchaSolutionDapp = "/v1/prosopo/provider/client/image/dapp/verify",
 	GetProviderStatus = "/v1/prosopo/provider/client/status",
 	SubmitUserEvents = "/v1/prosopo/provider/client/events",
+	CheckSpamEmail = "/v1/prosopo/provider/client/spam/email",
 }
 
 export enum PublicApiPaths {
@@ -120,6 +121,7 @@ export type TSubmitPowCaptchaSolutionURL =
 
 export enum AdminApiPaths {
 	SiteKeyRegister = "/v1/prosopo/provider/admin/sitekey/register",
+	SiteKeysRegister = "/v1/prosopo/provider/admin/sitekeys/register",
 	UpdateDetectorKey = "/v1/prosopo/provider/admin/detector/update",
 	RemoveDetectorKey = "/v1/prosopo/provider/admin/detector/remove",
 	ToggleMaintenanceMode = "/v1/prosopo/provider/admin/maintenance/toggle",
@@ -128,6 +130,8 @@ export enum AdminApiPaths {
 	GetDecisionMachine = "/v1/prosopo/provider/admin/decision-machine/get",
 	RemoveDecisionMachine = "/v1/prosopo/provider/admin/decision-machine/remove",
 	RemoveAllDecisionMachines = "/v1/prosopo/provider/admin/decision-machine/remove-all",
+	SiteKeyRemove = "/v1/prosopo/provider/admin/sitekey/remove",
+	SiteKeysRemove = "/v1/prosopo/provider/admin/sitekeys/remove",
 }
 
 export type CombinedApiPaths = ClientApiPaths | AdminApiPaths;
@@ -141,15 +145,17 @@ export const ProviderDefaultRateLimits = {
 		limit: 60,
 	},
 	[ClientApiPaths.SubmitPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
-	[ClientApiPaths.VerifyPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.VerifyPowCaptchaSolution]: { windowMs: 60000, limit: 3000 },
 	[ClientApiPaths.VerifyImageCaptchaSolutionDapp]: {
 		windowMs: 60000,
-		limit: 60,
+		limit: 3000,
 	},
 	[ClientApiPaths.GetProviderStatus]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.CheckSpamEmail]: { windowMs: 60000, limit: 60 },
 	[PublicApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
 	[AdminApiPaths.SiteKeyRegister]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.SiteKeysRegister]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.UpdateDetectorKey]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.RemoveDetectorKey]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.ToggleMaintenanceMode]: { windowMs: 60000, limit: 5 },
@@ -158,6 +164,8 @@ export const ProviderDefaultRateLimits = {
 	[AdminApiPaths.GetDecisionMachine]: { windowMs: 60000, limit: 60 },
 	[AdminApiPaths.RemoveDecisionMachine]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.RemoveAllDecisionMachines]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.SiteKeyRemove]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.SiteKeysRemove]: { windowMs: 60000, limit: 5 },
 };
 
 type RateLimit = {
@@ -270,6 +278,7 @@ export const VerifySolutionBody = object({
 		.optional()
 		.default(DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED),
 	[ApiParams.ip]: string().optional(),
+	[ApiParams.email]: string().optional(),
 });
 
 export type VerifySolutionBodyTypeInput = input<typeof VerifySolutionBody>;
@@ -291,6 +300,7 @@ export interface ApiResponse {
 export interface VerificationResponse extends ApiResponse {
 	[ApiParams.verified]: boolean;
 	[ApiParams.score]?: number;
+	[ApiParams.reason]?: string;
 }
 
 export interface UpdateDetectorKeyResponse extends ApiResponse {
@@ -343,6 +353,7 @@ export const ServerPowCaptchaVerifyRequestBody = object({
 		.optional()
 		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 	[ApiParams.ip]: string().optional(),
+	[ApiParams.email]: string().email().optional(),
 });
 
 export type ServerPowCaptchaVerifyRequestBodyOutput = output<
@@ -416,6 +427,24 @@ export const RegisterSitekeyBody = object({
 	[ApiParams.tier]: nativeEnum(Tier),
 	[ApiParams.settings]: ClientSettingsSchema.optional(),
 });
+
+export const RegisterSitekeysBody = array(
+	object({
+		[ApiParams.siteKey]: string(),
+		[ApiParams.tier]: nativeEnum(Tier),
+		[ApiParams.settings]: ClientSettingsSchema.optional(),
+	}),
+);
+
+export const RemoveSitekeyBody = object({
+	[ApiParams.siteKey]: string(),
+});
+
+export const RemoveSitekeysBody = array(
+	object({
+		[ApiParams.siteKey]: string(),
+	}),
+);
 
 export const UpdateDetectorKeyBody = object({
 	[ApiParams.detectorKey]: string(),
@@ -523,6 +552,14 @@ export type UpdateDecisionMachineBodyTypeOutput = output<
 >;
 
 export type RegisterSitekeyBodyTypeOutput = output<typeof RegisterSitekeyBody>;
+
+export type RegisterSitekeysBodyTypeOutput = output<
+	typeof RegisterSitekeysBody
+>;
+
+export type RemoveSitekeyBodyTypeOutput = output<typeof RemoveSitekeyBody>;
+
+export type RemoveSitekeysBodyTypeOutput = output<typeof RemoveSitekeysBody>;
 
 export const ProsopoCaptchaCountConfigSchema = object({
 	solved: object({

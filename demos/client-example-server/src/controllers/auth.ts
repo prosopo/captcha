@@ -20,6 +20,7 @@ import { getPair } from "@prosopo/keyring";
 import { ProsopoServer } from "@prosopo/server";
 import {
 	ApiParams,
+	CaptchaType,
 	type KeyringPair,
 	ProcaptchaResponse,
 	type ProcaptchaToken,
@@ -62,7 +63,24 @@ const getPairAndSecretForSiteKey = (
 	let pair: KeyringPair | undefined;
 	let secret = baseSecret;
 
-	for (const captchaType of ["pow", "image", "frictionless"]) {
+	pair = getPair(secret);
+
+	if (pair.address === siteKey) {
+		logger.info(() => ({
+			msg: "Site key matches the server configuration without captcha type suffix",
+			data: {
+				siteKeyDerived: pair?.address,
+				siteKey,
+			},
+		}));
+		return { pair, secret };
+	}
+
+	for (const captchaType of [
+		CaptchaType.pow,
+		CaptchaType.image,
+		CaptchaType.frictionless,
+	]) {
 		const newSecret = `${baseSecret}//${captchaType}`;
 		pair = getPair(newSecret);
 		console.log(
@@ -97,11 +115,13 @@ const getResponse = async (
 	token: ProcaptchaToken,
 	secret: string,
 	verifyEndpoint: string,
+	email?: string,
 ) => {
 	// Only include ip if environment is production
 	const body: Record<string, string> = {
 		[ApiParams.token]: token,
 		[ApiParams.secret]: secret,
+		...(email ? { [ApiParams.email]: email } : {}),
 	};
 
 	if (process.env.NODE_ENV !== "development") {
@@ -128,6 +148,7 @@ const verify = async (
 	token: ProcaptchaToken,
 	secret: string,
 	ip: string,
+	email?: string,
 ) => {
 	if (verifyType === "api") {
 		// verify using the API endpoint
@@ -138,7 +159,13 @@ const verify = async (
 			},
 		}));
 
-		const response = await getResponse(ip, token, secret, verifyEndpoint);
+		const response = await getResponse(
+			ip,
+			token,
+			secret,
+			verifyEndpoint,
+			email,
+		);
 		logger.info(() => ({
 			data: {
 				response,
@@ -147,7 +174,7 @@ const verify = async (
 		return response.verified;
 	}
 	// verify using the TypeScript library
-	const verified = await prosopoServer.isVerified(token);
+	const verified = await prosopoServer.isVerified(token, ip, email);
 	logger.info(() => ({
 		data: {
 			verified,
@@ -191,13 +218,15 @@ const signup = async (
 			return res.status(409).json({ message: "email already exists" });
 		}
 
+		const email = req.body.email;
 		const verified = await verify(
 			prosopoServer,
 			verifyType,
 			verifyEndpoint,
 			token,
 			secret,
-			req.headers["x-client-ip"]?.toString() || NO_IP,
+			req.headers["x-client-ip"]?.toString() || "127.0.0.1",
+			email,
 		);
 
 		if (verified === true) {
@@ -207,7 +236,7 @@ const signup = async (
 			const passwordHash = hashPassword(`${req.body.password}${salt}`);
 			if (passwordHash) {
 				return User.create({
-					email: req.body.email,
+					email: email,
 					name: req.body.name,
 					password: passwordHash,
 					salt: salt,

@@ -49,6 +49,39 @@ const getLRules = () => {
 	}
 };
 
+const isStringArray = (value: unknown): value is string[] =>
+	Array.isArray(value) && value.every((item) => typeof item === "string");
+
+const getDnsServers = (): string[] | undefined => {
+	if (!process.env.PROSOPO_DNS_SERVERS) {
+		return undefined;
+	}
+	try {
+		const parsed = JSON.parse(process.env.PROSOPO_DNS_SERVERS);
+		if (isStringArray(parsed)) {
+			return parsed as string[];
+		}
+		return undefined;
+	} catch (e) {
+		return undefined;
+	}
+};
+
+const getSpamEmailDomainsUrls = (): string[] | undefined => {
+	if (!process.env.SPAM_EMAIL_DOMAINS_URLS) {
+		return undefined;
+	}
+	try {
+		const parsed = JSON.parse(process.env.SPAM_EMAIL_DOMAINS_URLS);
+		if (isStringArray(parsed)) {
+			return parsed as string[];
+		}
+		return undefined;
+	} catch (e) {
+		return undefined;
+	}
+};
+
 const getHost = (): string | undefined => {
 	const importMeta = import.meta as { env?: { VITE_CADDY_DOMAIN: string } };
 	return process.env.CADDY_DOMAIN || importMeta.env?.VITE_CADDY_DOMAIN;
@@ -125,8 +158,12 @@ export default function getConfig(
 			clientEntropyScheduler: {
 				schedule: process.env.CLIENT_ENTROPY_SCHEDULE,
 			},
+			spamEmailDomainsScheduler: {
+				schedule: process.env.SPAM_EMAIL_DOMAINS_SCHEDULE,
+			},
 		},
 		lRules: getLRules(),
+		spamEmailDomainsUrls: getSpamEmailDomainsUrls(),
 		authAccount: {
 			address: getAddress(admin),
 			password: getPassword(admin),
@@ -137,5 +174,6 @@ export default function getConfig(
 			baseUrl: process.env.PROSOPO_IPAPI_URL,
 		},
 		maxmindDbPath: process.env.MAXMIND_DB_PATH,
+		dnsServers: getDnsServers(),
 	} as ProsopoConfigInput);
 }

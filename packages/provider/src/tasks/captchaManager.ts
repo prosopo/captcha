@@ -43,6 +43,7 @@ import {
 	getRequestUserScope,
 } from "../api/blacklistRequestInspector.js";
 import { getIpAddressFromComposite } from "../compositeIpAddress.js";
+import { checkSpamEmail as checkSpamEmailFn } from "./spam/checkSpamEmail.js";
 
 /**
  * Finds a hard block policy from access policies.
@@ -239,6 +240,7 @@ export class CaptchaManager {
 		clientRecord: ClientRecord,
 		translateFn: (key: string) => string,
 		score?: number,
+		reason?: string,
 	) {
 		return {
 			status: translateFn(
@@ -248,6 +250,11 @@ export class CaptchaManager {
 			...(CaptchaManager.canClientSeeScore(clientRecord.tier, score) && {
 				[ApiParams.score]: score,
 			}),
+			...(!verified &&
+				clientRecord.tier !== Tier.Free &&
+				reason && {
+					[ApiParams.reason]: reason,
+				}),
 		};
 	}
 
@@ -383,6 +390,15 @@ export class CaptchaManager {
 		);
 
 		return findHardBlockPolicy(accessPolicies);
+	}
+
+	/**
+	 * Checks if the provided email address has a domain in the spam email domain list.
+	 * Returns true if the email domain is spam (i.e. should be blocked), false otherwise.
+	 * Handles formats: user@domain.com, @domain.com, domain.com
+	 */
+	async checkSpamEmail(email: string): Promise<boolean> {
+		return checkSpamEmailFn(email, this.db, this.config, this.logger);
 	}
 
 	static canClientSeeScore(tier: Tier, score?: number) {

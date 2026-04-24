@@ -58,6 +58,7 @@ import { type Document, type Model, type ObjectId, Schema } from "mongoose";
 import { any, date, nativeEnum, object, type infer as zInfer } from "zod";
 import { UserSettingsSchema } from "./client.js";
 import type { IDatabase } from "./mongo.js";
+import type { SpamEmailDomainRecord } from "./spamEmailDomain.js";
 
 export type IUserDataSlim = Pick<IUserData, "account" | "settings" | "tier">;
 
@@ -384,6 +385,23 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	geolocation: { type: String, required: false },
 	countryCode: { type: String, required: false },
 	headers: { type: Object, required: false },
+	result: {
+		type: new Schema(
+			{
+				status: {
+					type: String,
+					enum: Object.values(CaptchaStatus),
+					required: true,
+				},
+				reason: { type: String, required: false },
+				error: { type: String, required: false },
+			},
+			{ _id: false },
+		),
+		required: false,
+	},
+	userSubmitted: { type: Boolean, required: false },
+	serverChecked: { type: Boolean, required: false },
 } satisfies AllKeys<Session>);
 
 SessionRecordSchema.index({ createdAt: 1 });
@@ -401,6 +419,11 @@ SessionRecordSchema.index({
 	"scoreComponents.baseScore": 1,
 });
 SessionRecordSchema.index({ createdAt: 1, deleted: 1 });
+// Index for querying session verification status
+SessionRecordSchema.index(
+	{ "result.status": 1 },
+	{ background: true, sparse: true },
+);
 
 export type DetectorSchema = mongoose.Document & DetectorKey;
 export const DetectorRecordSchema = new Schema<DetectorSchema>({
@@ -650,6 +673,8 @@ export interface IProviderDatabase extends IDatabase {
 
 	updateClientRecords(clientRecords: ClientRecord[]): Promise<void>;
 
+	removeClientRecords(accounts: string[]): Promise<void>;
+
 	getAllClientRecords(): Promise<ClientRecord[]>;
 
 	getClientRecord(account: string): Promise<ClientRecord | undefined>;
@@ -661,6 +686,11 @@ export interface IProviderDatabase extends IDatabase {
 	getSessionRecordByToken(token: string): Promise<Session | undefined>;
 
 	checkAndRemoveSession(sessionId: string): Promise<Session | undefined>;
+
+	updateSessionRecord(
+		sessionId: string,
+		updates: Partial<Session>,
+	): Promise<void>;
 
 	getSessionByuserSitekeyIpHash(
 		userSitekeyIpHash: string,
@@ -721,4 +751,11 @@ export interface IProviderDatabase extends IDatabase {
 		siteKey: string,
 		contextType: ContextType,
 	): Promise<string[]>;
+
+	getSpamEmailDomain(domain: string): Promise<SpamEmailDomainRecord | null>;
+
+	bulkUpdateSpamEmailDomains(
+		domains: Array<{ filter: { domain: string }; update: { domain: string } }>,
+		upsert: boolean,
+	): Promise<void>;
 }

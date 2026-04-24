@@ -1,5 +1,70 @@
 # @prosopo/load-balancer
 
+## 2.8.39
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+
+## 2.8.38
+### Patch Changes
+
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+  - @prosopo/types@3.14.1
+  - @prosopo/common@3.1.33
+
+## 2.8.37
+### Patch Changes
+
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+  - @prosopo/types@3.14.0
+  - @prosopo/common@3.1.32
+
+## 2.8.36
+### Patch Changes
+
+- Updated dependencies [4a9c518]
+  - @prosopo/common@3.1.31
+
+## 2.8.35
+### Patch Changes
+
+  - @prosopo/types@3.13.3
+
+## 2.8.34
+### Patch Changes
+
+  - @prosopo/types@3.13.2
+
+## 2.8.33
+### Patch Changes
+
+  - @prosopo/types@3.13.1
+
+## 2.8.32
+### Patch Changes
+
+- Updated dependencies [e6d9553]
+  - @prosopo/types@3.13.0
+
+## 2.8.31
+### Patch Changes
+
+- 730c61e: Speed up captcha
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/types@3.12.3
+
+## 2.8.30
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/types@3.12.2
+  - @prosopo/common@3.1.30
+
 ## 2.8.29
 ### Patch Changes
 

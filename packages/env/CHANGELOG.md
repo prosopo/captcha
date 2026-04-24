@@ -1,5 +1,106 @@
 # @prosopo/env
 
+## 3.4.2
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+  - @prosopo/database@3.9.17
+  - @prosopo/ipinfo@0.2.2
+  - @prosopo/keyring@2.9.22
+  - @prosopo/types-env@2.9.2
+
+## 3.4.1
+### Patch Changes
+
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+  - @prosopo/types@3.14.1
+  - @prosopo/database@3.9.16
+  - @prosopo/types-env@2.9.1
+  - @prosopo/common@3.1.33
+  - @prosopo/ipinfo@0.2.1
+  - @prosopo/keyring@2.9.21
+
+## 3.4.0
+### Minor Changes
+
+- 42650db: Add better spam rules and move ipinfo service to local instead of external
+
+### Patch Changes
+
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+  - @prosopo/ipinfo@0.2.0
+  - @prosopo/types@3.14.0
+  - @prosopo/types-env@2.9.0
+  - @prosopo/database@3.9.15
+  - @prosopo/common@3.1.32
+  - @prosopo/keyring@2.9.20
+
+## 3.3.15
+### Patch Changes
+
+- Updated dependencies [4a9c518]
+  - @prosopo/common@3.1.31
+  - @prosopo/database@3.9.14
+  - @prosopo/keyring@2.9.19
+  - @prosopo/types-env@2.8.15
+
+## 3.3.14
+### Patch Changes
+
+  - @prosopo/database@3.9.13
+  - @prosopo/keyring@2.9.18
+  - @prosopo/types@3.13.3
+  - @prosopo/types-env@2.8.14
+
+## 3.3.13
+### Patch Changes
+
+  - @prosopo/database@3.9.12
+  - @prosopo/keyring@2.9.17
+  - @prosopo/types@3.13.2
+  - @prosopo/types-env@2.8.13
+
+## 3.3.12
+### Patch Changes
+
+  - @prosopo/database@3.9.11
+  - @prosopo/keyring@2.9.16
+  - @prosopo/types@3.13.1
+  - @prosopo/types-env@2.8.12
+
+## 3.3.11
+### Patch Changes
+
+- Updated dependencies [e6d9553]
+  - @prosopo/types@3.13.0
+  - @prosopo/database@3.9.10
+  - @prosopo/keyring@2.9.15
+  - @prosopo/types-env@2.8.11
+
+## 3.3.10
+### Patch Changes
+
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/types@3.12.3
+  - @prosopo/database@3.9.9
+  - @prosopo/keyring@2.9.14
+  - @prosopo/types-env@2.8.10
+
+## 3.3.9
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/database@3.9.8
+  - @prosopo/types@3.12.2
+  - @prosopo/types-env@2.8.9
+  - @prosopo/common@3.1.30
+  - @prosopo/keyring@2.9.13
+
 ## 3.3.8
 ### Patch Changes
 

@@ -519,6 +519,73 @@ describe("CaptchaManager", () => {
 				verified: true,
 			});
 		});
+		it("should return a reason when verified is false and the tier is not free", () => {
+			const result = captchaManager.getVerificationResponse(
+				false,
+				{
+					account: "account",
+					tier: Tier.Professional,
+				} as unknown as ClientRecord,
+				() => "translated",
+				0.5,
+				"API.TIMESTAMP_TOO_OLD",
+			);
+			expect(result).toEqual({
+				status: "translated",
+				verified: false,
+				score: 0.5,
+				reason: "API.TIMESTAMP_TOO_OLD",
+			});
+		});
+		it("should not return a reason when verified is false and the tier is free", () => {
+			const result = captchaManager.getVerificationResponse(
+				false,
+				{
+					account: "account",
+					tier: Tier.Free,
+				} as unknown as ClientRecord,
+				() => "translated",
+				undefined,
+				"API.TIMESTAMP_TOO_OLD",
+			);
+			expect(result).toEqual({
+				status: "translated",
+				verified: false,
+			});
+		});
+		it("should not return a reason when verified is true", () => {
+			const result = captchaManager.getVerificationResponse(
+				true,
+				{
+					account: "account",
+					tier: Tier.Professional,
+				} as unknown as ClientRecord,
+				() => "translated",
+				0.5,
+				"API.TIMESTAMP_TOO_OLD",
+			);
+			expect(result).toEqual({
+				status: "translated",
+				verified: true,
+				score: 0.5,
+			});
+		});
+		it("should not return a reason when reason is undefined", () => {
+			const result = captchaManager.getVerificationResponse(
+				false,
+				{
+					account: "account",
+					tier: Tier.Professional,
+				} as unknown as ClientRecord,
+				() => "translated",
+				0.5,
+			);
+			expect(result).toEqual({
+				status: "translated",
+				verified: false,
+				score: 0.5,
+			});
+		});
 	});
 
 	describe("decryptBehavioralData", () => {

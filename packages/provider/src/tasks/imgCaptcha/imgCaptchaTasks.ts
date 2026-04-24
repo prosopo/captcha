@@ -32,6 +32,8 @@ import {
 	type DecisionMachineInput,
 	type Hash,
 	type IPAddress,
+	type ISpamFilterRules,
+	type ITrafficFilter,
 	type ImageVerificationResponse,
 	type KeyringPair,
 	type PendingImageCaptchaRequest,
@@ -56,6 +58,8 @@ import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { FrictionlessReason } from "../frictionless/frictionlessTasks.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
+import { checkTrafficFilter } from "../spam/checkTrafficFilter.js";
+import { evaluateEmailSpamRules } from "../spam/evaluateEmailSpamRules.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
 
 export class ImgCaptchaManager extends CaptchaManager {
@@ -391,6 +395,15 @@ export class ImgCaptchaManager extends CaptchaManager {
 					"CAPTCHA.INVALID_SOLUTION",
 					pairs,
 				);
+				if (pendingRecord.sessionId) {
+					await this.db.updateSessionRecord(pendingRecord.sessionId, {
+						userSubmitted: true,
+						result: {
+							status: CaptchaStatus.disapproved,
+							reason: "CAPTCHA.INVALID_SOLUTION",
+						},
+					});
+				}
 				response = {
 					captchas: captchaIds.map((id) => ({
 						captchaId: id,
@@ -417,12 +430,27 @@ export class ImgCaptchaManager extends CaptchaManager {
 					verified: true,
 				};
 				await this.db.approveDappUserCommitment(commitmentId, pairs);
+				if (pendingRecord.sessionId) {
+					await this.db.updateSessionRecord(pendingRecord.sessionId, {
+						userSubmitted: true,
+						result: { status: CaptchaStatus.approved },
+					});
+				}
 			} else {
 				await this.db.disapproveDappUserCommitment(
 					commitmentId,
 					"CAPTCHA.INVALID_SOLUTION",
 					pairs,
 				);
+				if (pendingRecord.sessionId) {
+					await this.db.updateSessionRecord(pendingRecord.sessionId, {
+						userSubmitted: true,
+						result: {
+							status: CaptchaStatus.disapproved,
+							reason: "CAPTCHA.INVALID_SOLUTION",
+						},
+					});
+				}
 				response = {
 					captchas: captchaIds.map((id) => ({
 						captchaId: id,
@@ -567,6 +595,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 		disallowWebView?: boolean,
 		contextAwareEnabled = false,
 		userAccessRulesStorage?: AccessRulesStorage,
+		email?: string,
+		spamEmailDomainCheckingEnabled = false,
+		spamFilter?: ISpamFilterRules,
+		trafficFilter?: ITrafficFilter,
 	): Promise<ImageVerificationResponse> {
 		const solution = await (commitmentId
 			? this.getDappUserCommitmentById(commitmentId)
@@ -577,7 +609,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 			this.logger.debug(() => ({
 				msg: "Not verified - no solution found",
 			}));
-			return { status: "API.USER_NOT_VERIFIED_NO_SOLUTION", verified: false };
+			return {
+				status: "API.USER_NOT_VERIFIED_NO_SOLUTION",
+				verified: false,
+			};
 		}
 
 		// -- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING --
@@ -585,7 +620,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 		// solution has already been checked by the server. Moving this code around could result in solutions being
 		// re-usable.
 		if (solution.serverChecked) {
-			return { status: "API.USER_ALREADY_VERIFIED", verified: false };
+			return {
+				status: "API.USER_ALREADY_VERIFIED",
+				verified: false,
+			};
 		}
 
 		await this.db.markDappUserCommitmentsChecked([solution.id]);
@@ -593,7 +631,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 		// A solution exists but is disapproved
 		if (solution.result.status === CaptchaStatus.disapproved) {
-			return { status: "API.USER_NOT_VERIFIED", verified: false };
+			return {
+				status: solution.result.reason || "API.USER_NOT_VERIFIED",
+				verified: false,
+			};
 		}
 
 		maxVerifiedTime = maxVerifiedTime || 60 * 1000; // Default to 1 minute
@@ -628,21 +669,28 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 				if (blockPolicy) {
 					this.logger.info(() => ({
-						msg: "User blocked by access policy in server PoW verification",
+						msg: "User blocked by access policy in server image verification",
 						data: {
 							userAccount: solution.userAccount,
 							dappAccount: solution.dappAccount,
 							policy: blockPolicy,
 						},
 					}));
+					const blockedResult = {
+						status: CaptchaStatus.disapproved,
+						reason: "API.ACCESS_POLICY_BLOCK" as const,
+					};
 					await this.db.updateDappUserCommitment(solution.id, {
-						result: {
-							status: CaptchaStatus.disapproved,
-							reason: "API.ACCESS_POLICY_BLOCK",
-						},
+						result: blockedResult,
 					});
+					if (solution.sessionId) {
+						await this.db.updateSessionRecord(solution.sessionId, {
+							serverChecked: true,
+							result: blockedResult,
+						});
+					}
 					return {
-						status: "API.USER_BLOCKED",
+						status: "API.ACCESS_POLICY_BLOCK",
 						verified: false,
 					};
 				}
@@ -651,6 +699,88 @@ export class ImgCaptchaManager extends CaptchaManager {
 					msg: "Failed to check user access policies in server Image verification",
 					error,
 				}));
+			}
+		}
+
+		// Check email domain against spam list if email is provided
+		if (email && spamEmailDomainCheckingEnabled) {
+			try {
+				const isSpam = await this.checkSpamEmail(email);
+				if (isSpam) {
+					const emailDomain = email.split("@")[1] || "unknown";
+					this.logger.info(() => ({
+						msg: "Spam email domain detected in server image verification",
+						data: { commitmentId, dapp, emailDomain },
+					}));
+					if (commitmentId) {
+						await this.db.disapproveDappUserCommitment(
+							commitmentId,
+							"API.SPAM_EMAIL_DOMAIN",
+						);
+					}
+					return {
+						status: "API.SPAM_EMAIL_DOMAIN",
+						verified: false,
+					};
+				}
+			} catch (error) {
+				this.logger.warn(() => ({
+					msg: "Failed to check spam email domain in server image verification",
+					error,
+				}));
+			}
+		}
+
+		// Spam filter: configurable per-site email pattern rules
+		if (spamFilter?.enabled && spamFilter.emailRules?.enabled && email) {
+			const result = evaluateEmailSpamRules(email, spamFilter.emailRules);
+			if (result.isSpam) {
+				this.logger.info(() => ({
+					msg: "Spam filter rejected email in image verification",
+					data: { commitmentId, dapp, reason: result.reason },
+				}));
+				if (commitmentId) {
+					await this.db.disapproveDappUserCommitment(
+						commitmentId,
+						"API.SPAM_EMAIL_RULE",
+					);
+				}
+				return {
+					status: "API.SPAM_EMAIL_RULE",
+					verified: false,
+				};
+			}
+		}
+
+		// Traffic filter: block VPN/proxy/Tor/abuser etc.
+		// blockAbuser defaults to true so abusive networks are always blocked
+		const effectiveTrafficFilter = { blockAbuser: true, ...trafficFilter };
+		// if at least one true
+		const hasTrafficFilter = Object.values(effectiveTrafficFilter).some(
+			(v) => v,
+		);
+		if (ip && hasTrafficFilter) {
+			const check = await checkTrafficFilter(
+				ip,
+				effectiveTrafficFilter,
+				env.ipInfoService,
+				this.logger,
+			);
+			if (check.isBlocked) {
+				this.logger.info(() => ({
+					msg: "Traffic filter rejected request",
+					data: { commitmentId, dapp, ip, reason: check.reason },
+				}));
+				if (commitmentId) {
+					await this.db.disapproveDappUserCommitment(
+						commitmentId,
+						check.reason,
+					);
+				}
+				return {
+					status: check.reason,
+					verified: false,
+				};
 			}
 		}
 
@@ -670,8 +800,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 					ip,
 					solutionIpAddress,
 					this.logger,
-					env.config.ipApi.apiKey,
-					env.config.ipApi.baseUrl,
+					env.ipInfoService,
 					ipValidationRules,
 				);
 
@@ -685,12 +814,16 @@ export class ImgCaptchaManager extends CaptchaManager {
 							distanceKm: ipValidation.distanceKm,
 						},
 					}));
-					return { status: "API.USER_NOT_VERIFIED", verified: false };
+					return {
+						status: "API.FAILED_IP_VALIDATION",
+						verified: false,
+					};
 				}
 			}
 		}
 
 		let isApproved = solution.result.status === CaptchaStatus.approved;
+		let failureStatus = "API.USER_NOT_VERIFIED";
 
 		let score: number | undefined;
 		if (solution.sessionId) {
@@ -713,7 +846,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 					this.logger.info(() => ({
 						msg: "Disallowing webview access - user not verified",
 					}));
-					return { status: "API.USER_NOT_VERIFIED", verified: false };
+					return {
+						status: "API.DISALLOWED_WEBVIEW",
+						verified: false,
+					};
 				}
 				if (
 					contextAwareEnabled &&
@@ -745,11 +881,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 				);
 				if (decision.decision === DecisionMachineDecision.Deny) {
 					if (commitmentId) {
+						const dmReason =
+							decision.reason || "CAPTCHA.DECISION_MACHINE_DENIED";
 						// commitmentId should always be present
-						await this.db.disapproveDappUserCommitment(
-							commitmentId,
-							decision.reason || "CAPTCHA.DECISION_MACHINE_DENIED",
-						);
+						await this.db.disapproveDappUserCommitment(commitmentId, dmReason);
 						// log
 						this.logger?.info(() => ({
 							msg: "Decision machine denied user verification",
@@ -758,7 +893,17 @@ export class ImgCaptchaManager extends CaptchaManager {
 								reason: decision.reason,
 							},
 						}));
+						if (solution.sessionId) {
+							await this.db.updateSessionRecord(solution.sessionId, {
+								serverChecked: true,
+								result: {
+									status: CaptchaStatus.disapproved,
+									reason: dmReason,
+								},
+							});
+						}
 						isApproved = false;
+						failureStatus = dmReason;
 					}
 				}
 			} catch (error) {
@@ -769,8 +914,16 @@ export class ImgCaptchaManager extends CaptchaManager {
 			}
 		}
 
+		// Update session with final server verification result (if not already updated by deny paths above)
+		if (isApproved && solution.sessionId) {
+			await this.db.updateSessionRecord(solution.sessionId, {
+				serverChecked: true,
+				result: { status: CaptchaStatus.approved },
+			});
+		}
+
 		return {
-			status: isApproved ? "API.USER_VERIFIED" : "API.USER_NOT_VERIFIED",
+			status: isApproved ? "API.USER_VERIFIED" : failureStatus,
 			verified: isApproved,
 			commitmentId: solution.id.toString(),
 			...(score && { score }),
@@ -787,6 +940,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		translateFn: (key: string) => string,
 		score?: number,
 		commitmentId?: Hash,
+		reason?: string,
 	): ImageVerificationResponse {
 		return {
 			...super.getVerificationResponse(
@@ -794,6 +948,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				clientRecord,
 				translateFn,
 				score,
+				reason,
 			),
 			...(commitmentId && {
 				[ApiParams.commitmentId]: commitmentId,

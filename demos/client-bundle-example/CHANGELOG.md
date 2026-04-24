@@ -1,5 +1,15 @@
 # @prosopo/client-bundle-example
 
+## 2.10.16
+### Patch Changes
+
+- dbcd098: Fix bug with chrome on ios
+
+## 2.10.15
+### Patch Changes
+
+- f5c8725: Fix bug with chrome on ios
+
 ## 2.10.14
 ### Patch Changes
 

@@ -1,5 +1,92 @@
 # @prosopo/types-database
 
+## 4.5.2
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+  - @prosopo/user-access-policy@3.6.23
+
+## 4.5.1
+### Patch Changes
+
+- 946a8ba: Abuser score threshold
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+- Updated dependencies [b94890c]
+  - @prosopo/types@3.14.1
+  - @prosopo/locale@3.2.1
+  - @prosopo/common@3.1.33
+  - @prosopo/user-access-policy@3.6.22
+
+## 4.5.0
+### Minor Changes
+
+- 42650db: Add better spam rules and move ipinfo service to local instead of external
+
+### Patch Changes
+
+- fc514dd: ability to block different types of traffic
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+  - @prosopo/locale@3.2.0
+  - @prosopo/types@3.14.0
+  - @prosopo/common@3.1.32
+  - @prosopo/user-access-policy@3.6.21
+
+## 4.4.14
+### Patch Changes
+
+- Updated dependencies [4a9c518]
+  - @prosopo/common@3.1.31
+  - @prosopo/user-access-policy@3.6.20
+
+## 4.4.13
+### Patch Changes
+
+  - @prosopo/types@3.13.3
+  - @prosopo/user-access-policy@3.6.19
+
+## 4.4.12
+### Patch Changes
+
+  - @prosopo/types@3.13.2
+  - @prosopo/user-access-policy@3.6.18
+
+## 4.4.11
+### Patch Changes
+
+  - @prosopo/types@3.13.1
+  - @prosopo/user-access-policy@3.6.17
+
+## 4.4.10
+### Patch Changes
+
+- Updated dependencies [e6d9553]
+  - @prosopo/types@3.13.0
+  - @prosopo/user-access-policy@3.6.16
+
+## 4.4.9
+### Patch Changes
+
+- e1ea65f: Better spam email domain checking
+- c316257: Adding sync fo sessions wrt captcha status
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/types@3.12.3
+  - @prosopo/user-access-policy@3.6.15
+
+## 4.4.8
+### Patch Changes
+
+- adb89a6: Disposable email checking
+- Updated dependencies [adb89a6]
+  - @prosopo/locale@3.1.29
+  - @prosopo/types@3.12.2
+  - @prosopo/common@3.1.30
+  - @prosopo/user-access-policy@3.6.14
+
 ## 4.4.7
 ### Patch Changes
 

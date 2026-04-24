@@ -21,6 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Acesso bloqueado por política",
 		"FORBIDDEN": "Proibido",
 		"PROVIDER_VERIFY_FAILED": "Falha na verificação do provedor",
+		"SPAM_EMAIL_DOMAIN": "Domínio de e-mail não permitido",
 		"UNAUTHORIZED": "Não autorizado",
 		"MISSING_BODY": "Corpo ausente",
 		"NO_CONTENT_TYPE_HEADER": "Cabeçalho sem tipo de conteúdo. Corpo codificado em JSON assumido, mas falha ao analisar.",
@@ -40,7 +41,16 @@
 		"INVALID_IP": "IP inválido",
 		"INVALID_URL": "URL inválida",
 		"INVALID_BODY": "Corpo inválido",
-		"PARSE_ERROR": "Erro ao analisar a solicitação"
+		"PARSE_ERROR": "Erro ao analisar a solicitação",
+		"SPAM_EMAIL_RULE": "Endereço de e-mail bloqueado pelas regras do filtro de spam",
+		"VPN_BLOCKED": "Solicitações de conexões VPN não são permitidas para este site",
+		"PROXY_BLOCKED": "Solicitações de servidores proxy não são permitidas para este site",
+		"TOR_BLOCKED": "Solicitações de nós de saída Tor não são permitidas para este site",
+		"ABUSER_BLOCKED": "Solicitações de redes sinalizadas por abuso não são permitidas para este site",
+		"DATACENTER_BLOCKED": "Solicitações de endereços IP de datacenters não são permitidas para este site",
+		"MOBILE_BLOCKED": "Solicitações de conexões de rede móvel não são permitidas para este site",
+		"SATELLITE_BLOCKED": "Solicitações de conexões por satélite não são permitidas para este site",
+		"CRAWLER_BLOCKED": "Solicitações de crawlers conhecidos não são permitidas para este site"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Não é possível modificar o usuário proprietário",
@@ -48,7 +58,9 @@
 		"CANNOT_DELETE_LAST_USER": "Não é possível excluir o último usuário",
 		"USER_ALREADY_EXISTS": "Usuário já existe",
 		"NO_SUGGESTIONS_FOUND": "Nenhuma sugestão encontrada",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Não é possível desativar o último site ativo"
+		"CANNOT_DEACTIVATE_LAST_SITE": "Não é possível desativar o último site ativo",
+		"DUPLICATE_SITE_NAME": "Já existe um site com este nome",
+		"INVALID_SITE_NAME": "O nome do site deve conter apenas letras, números, hifens e sublinhados"
 	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Extensão Polkadot não encontrada"

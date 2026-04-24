@@ -39,7 +39,11 @@ import {
 	PublicApiPaths,
 	type RandomProvider,
 	type RegisterSitekeyBodyTypeOutput,
+	type RegisterSitekeysBodyTypeOutput,
 	RemoveDetectorKeyBodySpec,
+	RemoveSitekeyBody,
+	RemoveSitekeysBody,
+	type RemoveSitekeysBodyTypeOutput,
 	type ServerPowCaptchaVerifyRequestBodyType,
 	type StoredEvents,
 	SubmitPowCaptchaSolutionBody,
@@ -126,6 +130,7 @@ export default class ProviderApi
 		userAccount: string,
 		maxVerifiedTime?: number,
 		ip?: string,
+		email?: string,
 	): Promise<ImageVerificationResponse> {
 		const payload: VerifySolutionBodyTypeInput = {
 			[ApiParams.token]: token,
@@ -134,6 +139,9 @@ export default class ProviderApi
 		};
 		if (maxVerifiedTime) {
 			payload[ApiParams.maxVerifiedTime] = maxVerifiedTime;
+		}
+		if (email) {
+			payload[ApiParams.email] = email;
 		}
 
 		return this.post(ClientApiPaths.VerifyImageCaptchaSolutionDapp, payload, {
@@ -255,6 +263,7 @@ export default class ProviderApi
 		recencyLimit: number,
 		user: string,
 		ip?: string,
+		email?: string,
 	): Promise<VerificationResponse> {
 		const body: ServerPowCaptchaVerifyRequestBodyType = {
 			[ApiParams.token]: token,
@@ -262,6 +271,9 @@ export default class ProviderApi
 			[ApiParams.verifiedTimeout]: recencyLimit,
 			[ApiParams.ip]: ip,
 		};
+		if (email) {
+			body[ApiParams.email] = email;
+		}
 		return this.post(ClientApiPaths.VerifyPowCaptchaSolution, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
@@ -283,6 +295,47 @@ export default class ProviderApi
 				Authorization: `Bearer ${jwt}`,
 			},
 		});
+	}
+
+	public registerSiteKeys(
+		siteKeys: RegisterSitekeysBodyTypeOutput,
+		jwt: string,
+	): Promise<ApiResponse> {
+		return this.post(AdminApiPaths.SiteKeysRegister, siteKeys, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				Authorization: `Bearer ${jwt}`,
+			},
+		});
+	}
+
+	public removeSiteKey(siteKey: string, jwt: string): Promise<ApiResponse> {
+		return this.post(
+			AdminApiPaths.SiteKeyRemove,
+			RemoveSitekeyBody.parse({ siteKey }),
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					Authorization: `Bearer ${jwt}`,
+				},
+			},
+		);
+	}
+
+	public removeSiteKeys(
+		siteKeys: RemoveSitekeysBodyTypeOutput,
+		jwt: string,
+	): Promise<ApiResponse> {
+		return this.post(
+			AdminApiPaths.SiteKeysRemove,
+			RemoveSitekeysBody.parse(siteKeys),
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					Authorization: `Bearer ${jwt}`,
+				},
+			},
+		);
 	}
 
 	public updateDetectorKey(

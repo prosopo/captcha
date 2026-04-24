@@ -14,7 +14,7 @@
 
 import { LanguageSchema } from "@prosopo/locale";
 import type { input } from "zod";
-import { literal } from "zod";
+import { array, literal } from "zod";
 import { number } from "zod";
 import { object } from "zod";
 import type { output } from "zod";
@@ -301,12 +301,16 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 			clientEntropyScheduler: object({
 				schedule: string().optional(),
 			}).optional(),
+			spamEmailDomainsScheduler: object({
+				schedule: string().optional(),
+			}).optional(),
 		}).optional(),
 		server: ProsopoApiConfigSchema.optional(),
 		mongoEventsUri: string().optional(),
 		mongoCaptchaUri: string().optional(),
 		mongoClientUri: string().optional(),
-		ipApi: IpApiServiceSpec,
+		ipApi: IpApiServiceSpec.optional(),
+		spamEmailDomainsUrls: array(string()).optional(),
 		redisConnection: object({
 			url: string(),
 			password: string(),
@@ -319,11 +323,14 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 		proxyCount: number().optional().default(0),
 		lRules: record(string(), number()).optional(),
 		maxmindDbPath: string().optional(),
+		maxmindCityDbPath: string().optional(),
+		maxmindAsnDbPath: string().optional(),
 		authAccount: object({
 			address: string().optional(),
 			secret: string().optional(),
 			password: string().optional(),
 		}),
+		dnsServers: array(string()).optional(),
 	}),
 );
 
