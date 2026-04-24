@@ -255,8 +255,7 @@ function getSelectors(captcha: Captcha): Chainable<string[]> {
 					.join(",");
 				const match = solutions.find(
 					(s) =>
-						s.itemHashes === captchaItemHashes &&
-						s.target === captcha.target,
+						s.itemHashes === captchaItemHashes && s.target === captcha.target,
 				);
 				if (match) {
 					selectors = captcha.items
