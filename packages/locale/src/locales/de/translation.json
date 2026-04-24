@@ -21,7 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Zugriff durch Richtlinie blockiert",
 		"FORBIDDEN": "Verboten",
 		"PROVIDER_VERIFY_FAILED": "Anbieterüberprüfung fehlgeschlagen",
-		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
+		"SPAM_EMAIL_DOMAIN": "E-Mail-Domain nicht erlaubt",
 		"UNAUTHORIZED": "Unauthorized",
 		"MISSING_BODY": "Fehlender Körper",
 		"NO_CONTENT_TYPE_HEADER": "Kein Inhaltstyp-Header. Angenommenes JSON-kodiertes Körper, aber konnte nicht analysieren.",
@@ -41,7 +41,16 @@
 		"INVALID_IP": "Ungültige IP",
 		"INVALID_URL": "Ungültiger URL",
 		"INVALID_BODY": "Ungültiger Körper",
-		"PARSE_ERROR": "Fehler beim Parsen der Anfrage"
+		"PARSE_ERROR": "Fehler beim Parsen der Anfrage",
+		"SPAM_EMAIL_RULE": "E-Mail-Adresse durch Spamfilter-Regeln blockiert",
+		"VPN_BLOCKED": "Anfragen über VPN-Verbindungen sind für diese Website nicht erlaubt",
+		"PROXY_BLOCKED": "Anfragen über Proxy-Server sind für diese Website nicht erlaubt",
+		"TOR_BLOCKED": "Anfragen über Tor-Exit-Knoten sind für diese Website nicht erlaubt",
+		"ABUSER_BLOCKED": "Anfragen von als missbräuchlich markierten Netzwerken sind für diese Website nicht erlaubt",
+		"DATACENTER_BLOCKED": "Anfragen von Rechenzentrum-IP-Adressen sind für diese Website nicht erlaubt",
+		"MOBILE_BLOCKED": "Anfragen von Mobilfunkverbindungen sind für diese Website nicht erlaubt",
+		"SATELLITE_BLOCKED": "Anfragen von Satellitenverbindungen sind für diese Website nicht erlaubt",
+		"CRAWLER_BLOCKED": "Anfragen von bekannten Crawlern sind für diese Website nicht erlaubt"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Kann den Besitzerbenutzer nicht ändern",
@@ -49,7 +58,9 @@
 		"CANNOT_DELETE_LAST_USER": "Kann den letzten Benutzer nicht löschen",
 		"USER_ALREADY_EXISTS": "Benutzer existiert bereits",
 		"NO_SUGGESTIONS_FOUND": "Keine Vorschläge gefunden",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Kann den letzten aktiven Standort nicht deaktivieren"
+		"CANNOT_DEACTIVATE_LAST_SITE": "Kann den letzten aktiven Standort nicht deaktivieren",
+		"DUPLICATE_SITE_NAME": "Eine Website mit diesem Namen existiert bereits",
+		"INVALID_SITE_NAME": "Der Websitename darf nur Buchstaben, Zahlen, Bindestriche und Unterstriche enthalten"
 	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Polkadot-Erweiterung nicht gefunden"

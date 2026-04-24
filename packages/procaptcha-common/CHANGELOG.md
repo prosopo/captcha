@@ -1,5 +1,81 @@
 # @prosopo/procaptcha-common
 
+## 2.10.3
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+  - @prosopo/account@2.8.22
+  - @prosopo/load-balancer@2.8.39
+
+## 2.10.2
+### Patch Changes
+
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+  - @prosopo/types@3.14.1
+  - @prosopo/account@2.8.21
+  - @prosopo/load-balancer@2.8.38
+
+## 2.10.1
+### Patch Changes
+
+- 06970d2: Missed review comments
+- dd3e06e: CSS hot fix
+- Updated dependencies [06970d2]
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+- Updated dependencies [dd3e06e]
+  - @prosopo/widget-skeleton@2.8.1
+  - @prosopo/types@3.14.0
+  - @prosopo/account@2.8.20
+  - @prosopo/load-balancer@2.8.37
+
+## 2.10.0
+### Minor Changes
+
+- 73df23c: Stop widget css from being overriden
+
+### Patch Changes
+
+- 8139819: prosopo namespacing for css
+- Updated dependencies [73df23c]
+- Updated dependencies [8139819]
+  - @prosopo/widget-skeleton@2.8.0
+  - @prosopo/account@2.8.19
+  - @prosopo/load-balancer@2.8.36
+
+## 2.9.41
+### Patch Changes
+
+  - @prosopo/account@2.8.18
+  - @prosopo/types@3.13.3
+  - @prosopo/load-balancer@2.8.35
+
+## 2.9.40
+### Patch Changes
+
+  - @prosopo/account@2.8.17
+  - @prosopo/types@3.13.2
+  - @prosopo/load-balancer@2.8.34
+
+## 2.9.39
+### Patch Changes
+
+- Updated dependencies [20192d2]
+  - @prosopo/widget-skeleton@2.7.14
+  - @prosopo/account@2.8.16
+  - @prosopo/types@3.13.1
+  - @prosopo/load-balancer@2.8.33
+
+## 2.9.38
+### Patch Changes
+
+- Updated dependencies [e6d9553]
+  - @prosopo/types@3.13.0
+  - @prosopo/account@2.8.15
+  - @prosopo/load-balancer@2.8.32
+
 ## 2.9.37
 ### Patch Changes
 

@@ -1,5 +1,71 @@
 # @prosopo/account
 
+## 2.8.22
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+  - @prosopo/keyring@2.9.22
+
+## 2.8.21
+### Patch Changes
+
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+  - @prosopo/types@3.14.1
+  - @prosopo/common@3.1.33
+  - @prosopo/keyring@2.9.21
+
+## 2.8.20
+### Patch Changes
+
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+  - @prosopo/types@3.14.0
+  - @prosopo/common@3.1.32
+  - @prosopo/keyring@2.9.20
+
+## 2.8.19
+### Patch Changes
+
+- Updated dependencies [4a9c518]
+  - @prosopo/common@3.1.31
+  - @prosopo/keyring@2.9.19
+
+## 2.8.18
+### Patch Changes
+
+- Updated dependencies [a25dffa]
+  - @prosopo/util@3.2.11
+  - @prosopo/keyring@2.9.18
+  - @prosopo/types@3.13.3
+
+## 2.8.17
+### Patch Changes
+
+- Updated dependencies [346edd7]
+  - @prosopo/util@3.2.10
+  - @prosopo/keyring@2.9.17
+  - @prosopo/types@3.13.2
+
+## 2.8.16
+### Patch Changes
+
+- Updated dependencies [22bfee7]
+  - @prosopo/util@3.2.9
+  - @prosopo/keyring@2.9.16
+  - @prosopo/types@3.13.1
+
+## 2.8.15
+### Patch Changes
+
+- Updated dependencies [e0fb3d6]
+- Updated dependencies [e6d9553]
+- Updated dependencies [f3f23e3]
+  - @prosopo/util@3.2.8
+  - @prosopo/types@3.13.0
+  - @prosopo/keyring@2.9.15
+
 ## 2.8.14
 ### Patch Changes
 

@@ -104,9 +104,11 @@ export default (
 				);
 			}
 
-			// Get country code for geoblocking
+			// Get country code for geoblocking from middleware-provided IP info
 			const countryCode =
-				await env.geolocationService.getCountryCode(normalizedIp);
+				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
+					? req.ipInfo.countryCode
+					: undefined;
 
 			const userScope = getRequestUserScope(
 				flatten(req.headers),

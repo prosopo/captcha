@@ -246,24 +246,11 @@ export default (
 
 			const ipAddress = getCompositeIpAddress(normalizedIp);
 
-			// Get country code for geoblocking (skip if env is incomplete)
-			let countryCode: string | undefined;
-			if (env?.config?.maxmindDbPath) {
-				try {
-					countryCode =
-						await env.geolocationService.getCountryCode(normalizedIp);
-					req.logger?.debug?.(() => ({
-						msg: "Resolved country code for geoblocking",
-						countryCode,
-						ip: normalizedIp,
-					}));
-				} catch (err) {
-					req.logger?.warn?.(() => ({
-						err,
-						msg: "Failed to resolve geolocation; skipping geoblocking",
-					}));
-				}
-			}
+			// Get country code for geoblocking from middleware-provided IP info
+			const countryCode =
+				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
+					? req.ipInfo.countryCode
+					: undefined;
 
 			const flatHeaders = flatten(req.headers);
 

@@ -1864,6 +1864,18 @@ export class ProviderDatabase
 	}
 
 	/**
+	 * @description Remove client records by account
+	 */
+	async removeClientRecords(accounts: string[]): Promise<void> {
+		if (!accounts || accounts.length === 0) {
+			return;
+		}
+		await this.tables?.client.deleteMany({
+			account: { $in: accounts },
+		});
+	}
+
+	/**
 	 * @description Get all client records
 	 */
 	async getAllClientRecords(): Promise<ClientRecord[]> {

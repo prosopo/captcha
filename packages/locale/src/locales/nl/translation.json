@@ -320,7 +320,7 @@
 		"ACCESS_POLICY_BLOCK": "Toegang geblokkeerd door beleid",
 		"FORBIDDEN": "Verboden",
 		"PROVIDER_VERIFY_FAILED": "Provider verificatie mislukt",
-		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
+		"SPAM_EMAIL_DOMAIN": "E-maildomein niet toegestaan",
 		"UNAUTHORIZED": "Unauthorized",
 		"MISSING_BODY": "Ontbrekend lichaam",
 		"NO_CONTENT_TYPE_HEADER": "Geen content-type koptekst. Aangenomen dat het lichaam gecodeerd is in JSON maar niet kon worden geparseerd.",
@@ -340,7 +340,16 @@
 		"INVALID_IP": "Ongeldig IP-adres",
 		"INVALID_URL": "Ongeldige URL",
 		"INVALID_BODY": "Ongeldige body",
-		"PARSE_ERROR": "Fout bij parsen van aanvraag"
+		"PARSE_ERROR": "Fout bij parsen van aanvraag",
+		"SPAM_EMAIL_RULE": "E-mailadres geblokkeerd door spamfilterregels",
+		"VPN_BLOCKED": "Verzoeken via VPN-verbindingen zijn niet toegestaan voor deze site",
+		"PROXY_BLOCKED": "Verzoeken via proxyservers zijn niet toegestaan voor deze site",
+		"TOR_BLOCKED": "Verzoeken via Tor-exitnodes zijn niet toegestaan voor deze site",
+		"ABUSER_BLOCKED": "Verzoeken van netwerken die zijn gemarkeerd voor misbruik zijn niet toegestaan voor deze site",
+		"DATACENTER_BLOCKED": "Verzoeken van datacenter-IP-adressen zijn niet toegestaan voor deze site",
+		"MOBILE_BLOCKED": "Verzoeken van mobiele netwerkverbindingen zijn niet toegestaan voor deze site",
+		"SATELLITE_BLOCKED": "Verzoeken van satellietverbindingen zijn niet toegestaan voor deze site",
+		"CRAWLER_BLOCKED": "Verzoeken van bekende crawlers zijn niet toegestaan voor deze site"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Kan eigenaar gebruiker niet wijzigen",
@@ -348,7 +357,9 @@
 		"CANNOT_DELETE_LAST_USER": "Kan laatste gebruiker niet verwijderen",
 		"USER_ALREADY_EXISTS": "Gebruiker bestaat al",
 		"NO_SUGGESTIONS_FOUND": "Geen suggesties gevonden",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Kan de laatste actieve site niet deactiveren"
+		"CANNOT_DEACTIVATE_LAST_SITE": "Kan de laatste actieve site niet deactiveren",
+		"DUPLICATE_SITE_NAME": "Er bestaat al een site met deze naam",
+		"INVALID_SITE_NAME": "De sitenaam mag alleen letters, cijfers, koppeltekens en underscores bevatten"
 	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Polkadot-extensie niet gevonden"

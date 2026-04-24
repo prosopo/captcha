@@ -19,13 +19,13 @@ import {
 	parseLogLevel,
 } from "@prosopo/common";
 import { ProviderDatabase } from "@prosopo/database";
+import { IpInfoService } from "@prosopo/ipinfo";
 import { Keyring, getPair } from "@prosopo/keyring";
 import type { KeyringPair } from "@prosopo/types";
 import type { AssetsResolver, EnvironmentTypes } from "@prosopo/types";
 import type { ProsopoConfigOutput } from "@prosopo/types";
-import type { ProsopoEnvironment } from "@prosopo/types-env";
+import type { IIpInfoService, ProsopoEnvironment } from "@prosopo/types-env";
 import { randomAsHex } from "@prosopo/util-crypto";
-import { GeolocationService } from "./services/geolocation.js";
 
 export class Environment implements ProsopoEnvironment {
 	config: ProsopoConfigOutput;
@@ -37,7 +37,7 @@ export class Environment implements ProsopoEnvironment {
 	pair: KeyringPair | undefined;
 	authAccount: KeyringPair | undefined;
 	envId: string | undefined;
-	geolocationService: GeolocationService;
+	ipInfoService: IIpInfoService;
 	ready = false;
 	datasetId: string | undefined;
 
@@ -61,11 +61,15 @@ export class Environment implements ProsopoEnvironment {
 		if (this.pair) this.keyring.addPair(this.pair);
 		this.envId = randomAsHex(32).slice(0, 32);
 
-		// Initialize GeolocationService
-		this.geolocationService = new GeolocationService(
-			this.config.maxmindDbPath,
-			this.logger,
-		);
+		// Initialize IpInfoService
+		this.ipInfoService = new IpInfoService({
+			maxmindCityDbPath:
+				this.config.maxmindCityDbPath ?? this.config.maxmindDbPath,
+			maxmindAsnDbPath: this.config.maxmindAsnDbPath,
+			ipapiUrl: this.config.ipApi?.baseUrl,
+			ipapiKey: this.config.ipApi?.apiKey,
+			logger: this.logger,
+		});
 
 		this.logger.info(() => ({
 			msg: "Environment initialized",
@@ -164,8 +168,8 @@ export class Environment implements ProsopoEnvironment {
 					}));
 				}
 			}
-			// Initialize MaxMind geolocation database
-			await this.geolocationService.initialize();
+			// Initialize IP info service (MaxMind + optional ipapi.is)
+			await this.ipInfoService.initialize();
 			this.ready = true;
 		} catch (err) {
 			throw new ProsopoEnvError("GENERAL.ENVIRONMENT_NOT_READY", {

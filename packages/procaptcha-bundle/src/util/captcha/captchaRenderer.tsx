@@ -51,6 +51,7 @@ class CaptchaRenderer {
 		i18n: Ti18n,
 		invisible: boolean,
 		widgetContainer: HTMLElement,
+		sourceElement?: Element,
 	): Root {
 		const captchaType =
 			(renderOptions?.captchaType as CaptchaType) ||
@@ -64,7 +65,11 @@ class CaptchaRenderer {
 			invisible,
 			renderOptions.userAccountAddress,
 		);
-		this.readAndValidateSettings(container, config, renderOptions);
+		this.readAndValidateSettings(
+			sourceElement || container,
+			config,
+			renderOptions,
+		);
 
 		const reactRoot = this.createReactRoot(
 			container,

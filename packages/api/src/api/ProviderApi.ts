@@ -39,7 +39,11 @@ import {
 	PublicApiPaths,
 	type RandomProvider,
 	type RegisterSitekeyBodyTypeOutput,
+	type RegisterSitekeysBodyTypeOutput,
 	RemoveDetectorKeyBodySpec,
+	RemoveSitekeyBody,
+	RemoveSitekeysBody,
+	type RemoveSitekeysBodyTypeOutput,
 	type ServerPowCaptchaVerifyRequestBodyType,
 	type StoredEvents,
 	SubmitPowCaptchaSolutionBody,
@@ -290,6 +294,47 @@ export default class ProviderApi
 				Authorization: `Bearer ${jwt}`,
 			},
 		});
+	}
+
+	public registerSiteKeys(
+		siteKeys: RegisterSitekeysBodyTypeOutput,
+		jwt: string,
+	): Promise<ApiResponse> {
+		return this.post(AdminApiPaths.SiteKeysRegister, siteKeys, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				Authorization: `Bearer ${jwt}`,
+			},
+		});
+	}
+
+	public removeSiteKey(siteKey: string, jwt: string): Promise<ApiResponse> {
+		return this.post(
+			AdminApiPaths.SiteKeyRemove,
+			RemoveSitekeyBody.parse({ siteKey }),
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					Authorization: `Bearer ${jwt}`,
+				},
+			},
+		);
+	}
+
+	public removeSiteKeys(
+		siteKeys: RemoveSitekeysBodyTypeOutput,
+		jwt: string,
+	): Promise<ApiResponse> {
+		return this.post(
+			AdminApiPaths.SiteKeysRemove,
+			RemoveSitekeysBody.parse(siteKeys),
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					Authorization: `Bearer ${jwt}`,
+				},
+			},
+		);
 	}
 
 	public updateDetectorKey(

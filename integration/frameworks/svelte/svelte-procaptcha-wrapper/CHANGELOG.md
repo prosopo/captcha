@@ -1,5 +1,40 @@
 # @prosopo/svelte-procaptcha-wrapper
 
+## 1.1.65
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.67
+
+## 1.1.64
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.66
+
+## 1.1.63
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.65
+
+## 1.1.62
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.64
+
+## 1.1.61
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.63
+
+## 1.1.60
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.62
+
+## 1.1.59
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.61
+
 ## 1.1.58
 ### Patch Changes
 

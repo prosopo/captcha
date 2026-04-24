@@ -60,7 +60,25 @@
 
 		rate_limit {
 			distributed
-			zone dynamic_example {
+
+			# Per-site-key rate limit for client requests (requests with Prosopo-Site-Key header).
+			# This is a coarse outer limit - Express handles fine-grained per-route limits.
+			zone client_rate_limit {
+				match {
+					header Prosopo-Site-Key *
+				}
+				key {http.request.header.Prosopo-Site-Key}
+				events {$CADDY_CLIENT_RATE_LIMIT_EVENTS}
+				window {$CADDY_CLIENT_RATE_LIMIT_WINDOW}
+			}
+
+			# Per-IP rate limit for non-client requests (admin, public endpoints).
+			zone ip_rate_limit {
+				match {
+					not {
+						header Prosopo-Site-Key *
+					}
+				}
 				key {remote_host}
 				events {$CADDY_RATE_LIMIT_EVENTS}
 				window {$CADDY_RATE_LIMIT_WINDOW}

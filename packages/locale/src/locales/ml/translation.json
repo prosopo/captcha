@@ -21,7 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "നയം മൂലം പ്രവേശനം തടഞ്ഞു",
 		"FORBIDDEN": "Forbiddenway",
 		"PROVIDER_VERIFY_FAILED": "Oviderpray erificationvay ailedfay",
-		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
+		"SPAM_EMAIL_DOMAIN": "ഇമെയിൽ ഡൊമെയ്ൻ അനുവദനീയമല്ല",
 		"UNAUTHORIZED": "Nakalista",
 		"MISSING_BODY": "Nawala ang katawan",
 		"NO_CONTENT_TYPE_HEADER": "Walang header ng uri ng content. Inakalang JSON na naka-encode ang katawan ngunit hindi ito nagawa na parsisin.",
@@ -41,7 +41,16 @@
 		"INVALID_IP": "Hindi wastong IP",
 		"INVALID_URL": "Hindi wastong URL",
 		"INVALID_BODY": "Hindi wastong body",
-		"PARSE_ERROR": "Error sa pagsasalin ng request"
+		"PARSE_ERROR": "Error sa pagsasalin ng request",
+		"SPAM_EMAIL_RULE": "സ്പാം ഫിൽട്ടർ നിയമങ്ങളാൽ ഇമെയിൽ വിലാസം തടഞ്ഞു",
+		"VPN_BLOCKED": "ഈ സൈറ്റിന് VPN കണക്ഷനുകളിൽ നിന്നുള്ള അഭ്യർത്ഥനകൾ അനുവദനീയമല്ല",
+		"PROXY_BLOCKED": "ഈ സൈറ്റിന് പ്രോക്സി സെർവറുകളിൽ നിന്നുള്ള അഭ്യർത്ഥനകൾ അനുവദനീയമല്ല",
+		"TOR_BLOCKED": "ഈ സൈറ്റിന് Tor എക്സിറ്റ് നോഡുകളിൽ നിന്നുള്ള അഭ്യർത്ഥനകൾ അനുവദനീയമല്ല",
+		"ABUSER_BLOCKED": "ദുരുപയോഗത്തിന് ഫ്ലാഗ് ചെയ്ത നെറ്റ്വർക്കുകളിൽ നിന്നുള്ള അഭ്യർത്ഥനകൾ ഈ സൈറ്റിന് അനുവദനീയമല്ല",
+		"DATACENTER_BLOCKED": "ഈ സൈറ്റിന് ഡാറ്റാസെന്റർ IP വിലാസങ്ങളിൽ നിന്നുള്ള അഭ്യർത്ഥനകൾ അനുവദനീയമല്ല",
+		"MOBILE_BLOCKED": "ഈ സൈറ്റിന് മൊബൈൽ നെറ്റ്വർക്ക് കണക്ഷനുകളിൽ നിന്നുള്ള അഭ്യർത്ഥനകൾ അനുവദനീയമല്ല",
+		"SATELLITE_BLOCKED": "ഈ സൈറ്റിന് ഉപഗ്രഹ കണക്ഷനുകളിൽ നിന്നുള്ള അഭ്യർത്ഥനകൾ അനുവദനീയമല്ല",
+		"CRAWLER_BLOCKED": "ഈ സൈറ്റിന് അറിയപ്പെടുന്ന ക്രോളറുകളിൽ നിന്നുള്ള അഭ്യർത്ഥനകൾ അനുവദനീയമല്ല"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Annotcay odifymay ownerway seruy",
@@ -49,7 +58,9 @@
 		"CANNOT_DELETE_LAST_USER": "Annotcay eleteday astlay seruy",
 		"USER_ALREADY_EXISTS": "Userway alreadyway existstay",
 		"NO_SUGGESTIONS_FOUND": "Onay uggestionssay oundfay",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Annotcay eactivateday ethay astlay activeay itesay"
+		"CANNOT_DEACTIVATE_LAST_SITE": "Annotcay eactivateday ethay astlay activeay itesay",
+		"DUPLICATE_SITE_NAME": "ഈ പേരിൽ ഒരു സൈറ്റ് ഇതിനകം നിലവിലുണ്ട്",
+		"INVALID_SITE_NAME": "സൈറ്റ് പേരിൽ അക്ഷരങ്ങൾ, അക്കങ്ങൾ, ഹൈഫനുകൾ, അടിവരകൾ എന്നിവ മാത്രമേ അടങ്ങിയിരിക്കാവൂ"
 	},
 	"TARGET": {
 		"airplanes": "eroplano",

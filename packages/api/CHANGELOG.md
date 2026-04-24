@@ -1,5 +1,51 @@
 # @prosopo/api
 
+## 3.3.0
+### Minor Changes
+
+- 3e54c0a: Rate limits by client
+
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+
+## 3.2.11
+### Patch Changes
+
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+  - @prosopo/types@3.14.1
+
+## 3.2.10
+### Patch Changes
+
+- 7be39c4: Add register site keys endpoint def
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+  - @prosopo/types@3.14.0
+
+## 3.2.9
+### Patch Changes
+
+  - @prosopo/types@3.13.3
+
+## 3.2.8
+### Patch Changes
+
+  - @prosopo/types@3.13.2
+
+## 3.2.7
+### Patch Changes
+
+  - @prosopo/types@3.13.1
+
+## 3.2.6
+### Patch Changes
+
+- Updated dependencies [e6d9553]
+  - @prosopo/types@3.13.0
+
 ## 3.2.5
 ### Patch Changes
 

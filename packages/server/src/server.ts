@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProviderApi } from "@prosopo/api";
+import { HttpError, ProviderApi } from "@prosopo/api";
 import {
 	type LogLevel,
 	type Logger,
@@ -196,8 +196,9 @@ export class ProsopoServer {
 			return verificationResponse;
 		} catch (err) {
 			this.logger.error(() => ({ err, data: { token } }));
+			const code = err instanceof HttpError ? err.status : 500;
 			throw new ProsopoApiError("API.BAD_REQUEST", {
-				context: { code: 500, token },
+				context: { code, token },
 			});
 		}
 	}
