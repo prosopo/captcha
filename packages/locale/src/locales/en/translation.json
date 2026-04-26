@@ -135,10 +135,9 @@
 		"CANNOT_DELETE_LAST_USER": "Cannot delete last user",
 		"USER_ALREADY_EXISTS": "User already exists",
 		"NO_SUGGESTIONS_FOUND": "No suggestions found",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Cannot deactivate the last active site",
 		"DUPLICATE_SITE_NAME": "A site with this name already exists",
 		"INVALID_SITE_NAME": "Site name must contain only letters, numbers, hyphens, and underscores"
-		"CANNOT_DEACTIVATE_LAST_SITE": "Cannot deactivate the last active site",
-		"PROTECT_GLOBAL_SITE_KEY_IN_USE": "This global site key is already in use by another Protect instance"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Invalid parameter"
