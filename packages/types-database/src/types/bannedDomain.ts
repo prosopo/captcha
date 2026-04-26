@@ -11,10 +11,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export * from "./mongo.js";
-export * from "./provider.js";
-export * from "./client.js";
-export * from "./captcha.js";
-export * from "./userAgent.js";
-export * from "./spamEmailDomain.js";
-export * from "./bannedDomain.js";
+
+import type mongoose from "mongoose";
+import { Schema } from "mongoose";
+
+export type BannedDomain = {
+	domain: string;
+};
+
+export type BannedDomainRecord = mongoose.Document & BannedDomain;
+
+export const BannedDomainRecordSchema = new Schema<BannedDomainRecord>({
+	domain: { type: String, required: true, unique: true },
+});
+
+BannedDomainRecordSchema.index({ domain: 1 });
