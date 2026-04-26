@@ -17,3 +17,4 @@ export * from "./client.js";
 export * from "./captcha.js";
 export * from "./userAgent.js";
 export * from "./spamEmailDomain.js";
+export * from "./bannedDomain.js";
