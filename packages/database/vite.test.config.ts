@@ -11,10 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export * from "./mongo.js";
-export * from "./provider.js";
-export * from "./client.js";
-export * from "./captcha.js";
-export * from "./userAgent.js";
-export * from "./spamEmailDomain.js";
-export * from "./bannedDomain.js";
+
+import { ViteTestConfig } from "@prosopo/config";
+process.env.NODE_ENV = "test";
+
+export default ViteTestConfig();

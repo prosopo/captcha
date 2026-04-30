@@ -1,10 +1,3 @@
-import {
-	type Logger,
-	ProsopoEnvError,
-	getLogger,
-	parseLogLevel,
-} from "@prosopo/common";
-import type { KeyringPair } from "@prosopo/types";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,17 +11,34 @@ import type { KeyringPair } from "@prosopo/types";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import {
+	type Logger,
+	ProsopoEnvError,
+	getLogger,
+	parseLogLevel,
+} from "@prosopo/common";
+import { CentralDbStreamer, ProviderDatabase } from "@prosopo/database";
+import type { KeyringPair } from "@prosopo/types";
 import type {
 	ProsopoCaptchaCountConfigSchemaOutput,
 	ProsopoConfigOutput,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import { RedisWriteQueue } from "../util/redisCache.js";
 import { ClientTaskManager } from "./client/clientTasks.js";
 import { DatasetManager } from "./dataset/datasetTasks.js";
 import { FrictionlessManager } from "./frictionless/frictionlessTasks.js";
 import { ImgCaptchaManager } from "./imgCaptcha/imgCaptchaTasks.js";
 import { PowCaptchaManager } from "./powCaptcha/powTasks.js";
+
+/**
+ * Singleton write queue manager.
+ * Ensures only one flush timer exists across all Tasks instances.
+ */
+let globalWriteQueue: RedisWriteQueue | null = null;
+let flushStarted = false;
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -44,6 +54,7 @@ export class Tasks {
 	imgCaptchaManager: ImgCaptchaManager;
 	clientTaskManager: ClientTaskManager;
 	frictionlessManager: FrictionlessManager;
+	writeQueue: RedisWriteQueue | null;
 
 	constructor(env: ProviderEnvironment, logger?: Logger) {
 		this.config = env.config;
@@ -57,6 +68,20 @@ export class Tasks {
 			});
 		}
 		this.pair = env.pair;
+
+		if (this.config.mongoCaptchaUri && this.db instanceof ProviderDatabase) {
+			const streamer = new CentralDbStreamer(
+				this.config.mongoCaptchaUri,
+				this.logger,
+			);
+			this.db.setCentralDbStreamer(streamer);
+			this.logger.info(() => ({
+				msg: "Central DB streamer initialized for real-time captcha data streaming",
+			}));
+		}
+
+		// Initialize write queue from existing Redis connection
+		this.writeQueue = this.initWriteQueue();
 
 		this.powCaptchaManager = new PowCaptchaManager(
 			this.db,
@@ -87,6 +112,76 @@ export class Tasks {
 			this.config,
 			this.logger,
 		);
+
+		// Pass the write queue to the frictionless manager for session caching
+		if (this.writeQueue) {
+			this.frictionlessManager.setWriteQueue(this.writeQueue);
+		}
+	}
+
+	private initWriteQueue(): RedisWriteQueue | null {
+		if (globalWriteQueue) {
+			return globalWriteQueue;
+		}
+
+		if (!(this.db instanceof ProviderDatabase)) {
+			return null;
+		}
+
+		try {
+			const redisConnection = this.db.getRedisConnection();
+			globalWriteQueue = new RedisWriteQueue(redisConnection, this.logger);
+
+			if (!flushStarted) {
+				flushStarted = true;
+				const db = this.db;
+				const logger = this.logger;
+				globalWriteQueue.startPeriodicFlush(async (queue) => {
+					await Tasks.flushWriteQueue(queue, db, logger);
+				}, 10_000);
+			}
+
+			return globalWriteQueue;
+		} catch {
+			this.logger.debug(() => ({
+				msg: "Redis not available for write queue - falling back to direct writes",
+			}));
+			return null;
+		}
+	}
+
+	/**
+	 * Flush queued session records from Redis to MongoDB in bulk.
+	 * Called periodically by the write queue timer.
+	 *
+	 * Note: PoW challenge and pending image commitment records are written
+	 * directly to MongoDB (not queued) because verification endpoints need
+	 * to read them immediately after creation. Session records are safe to
+	 * queue because they are not read in the immediate request path.
+	 */
+	static async flushWriteQueue(
+		queue: RedisWriteQueue,
+		db: IProviderDatabase,
+		logger: Logger,
+	): Promise<void> {
+		const sessionRecords = await queue.drainSessionRecords();
+		if (sessionRecords.length > 0) {
+			logger.info(() => ({
+				msg: `Flushing ${sessionRecords.length} queued session records to MongoDB`,
+			}));
+			for (const { record } of sessionRecords) {
+				try {
+					await db.storeSessionRecord(
+						record as Parameters<typeof db.storeSessionRecord>[0],
+					);
+				} catch (error) {
+					logger.error(() => ({
+						msg: "Failed to flush queued session record",
+						err: error,
+					}));
+				}
+			}
+		}
 	}
 
 	setLogger(logger: Logger): void {

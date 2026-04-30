@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/database",
-	"version": "3.9.18",
+	"version": "3.10.0",
 	"description": "Prosopo database plugins for provider",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -22,6 +22,7 @@
 		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
 		"typecheck": "tsc --project tsconfig.types.json"
 	},
 	"repository": {
@@ -40,7 +41,7 @@
 		"@prosopo/locale": "3.2.1",
 		"@prosopo/redis-client": "1.0.18",
 		"@prosopo/types": "3.16.0",
-		"@prosopo/types-database": "4.5.3",
+		"@prosopo/types-database": "4.6.0",
 		"@prosopo/user-access-policy": "3.6.24",
 		"@prosopo/util": "3.2.11",
 		"make-dir": "3.1.0",

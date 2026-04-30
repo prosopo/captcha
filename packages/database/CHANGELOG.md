@@ -1,5 +1,15 @@
 # @prosopo/database
 
+## 3.10.0
+### Minor Changes
+
+- 74092d0: Stream data back to central for decisions
+
+### Patch Changes
+
+- Updated dependencies [74092d0]
+  - @prosopo/types-database@4.6.0
+
 ## 3.9.18
 ### Patch Changes
 

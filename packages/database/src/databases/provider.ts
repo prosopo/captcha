@@ -51,7 +51,7 @@ import {
 	type UserCommitment,
 	UserCommitmentSchema,
 } from "@prosopo/types";
-import type { SessionRecord } from "@prosopo/types-database";
+import type { SessionRecord, StoredSession } from "@prosopo/types-database";
 import {
 	CaptchaRecordSchema,
 	type ClientContextEntropyRecord,
@@ -88,6 +88,7 @@ import {
 import { buildDomainSuffixCandidates } from "@prosopo/util";
 import type { ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
+import type { CentralDbStreamer } from "./centralDbStreamer.js";
 
 const TWENTY_FOUR_HOURS_IN_MS = 24 * 60 * 60 * 1000;
 const MAX_DOMAIN_SUFFIX_CANDIDATES = 5;
@@ -195,6 +196,7 @@ export class ProviderDatabase
 	implements IProviderDatabase
 {
 	tables = {} as Tables<TableNames>;
+	private centralStreamer: CentralDbStreamer | undefined;
 	private redisConnection: RedisConnection | null;
 	private redisAccessRulesConnection: RedisConnection | null;
 	private userAccessRulesStorage: AccessRulesStorage | null;
@@ -212,6 +214,10 @@ export class ProviderDatabase
 		this.redisAccessRulesConnection = null;
 		this.redisConnection = null;
 		this.userAccessRulesStorage = null;
+	}
+
+	setCentralDbStreamer(streamer: CentralDbStreamer): void {
+		this.centralStreamer = streamer;
 	}
 
 	override async connect(): Promise<void> {
@@ -683,6 +689,13 @@ export class ProviderDatabase
 				},
 			}));
 			await this.tables?.usersolution.bulkWrite(ops);
+			this.centralStreamer?.streamImageRecord(
+				commitmentRecord as UserCommitmentRecord,
+				(ts) =>
+					this.tables.commitment
+						.updateOne({ id: commit.id }, { $set: { storedAtTimestamp: ts } })
+						.then(() => {}),
+			);
 		}
 	}
 
@@ -749,6 +762,13 @@ export class ProviderDatabase
 				},
 				msg: "PowCaptcha record added successfully",
 			}));
+			this.centralStreamer?.streamPowRecord(
+				powCaptchaRecord as PoWCaptchaRecord,
+				(ts) =>
+					this.tables.powcaptcha
+						.updateOne({ challenge }, { $set: { storedAtTimestamp: ts } })
+						.then(() => {}),
+			);
 		} catch (error) {
 			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
 				context: {
@@ -897,6 +917,13 @@ export class ProviderDatabase
 				},
 				msg: "PowCaptcha record updated successfully",
 			}));
+			this.centralStreamer?.streamPowUpdate(
+				() => this.getPowCaptchaRecordByChallenge(challenge),
+				(ts) =>
+					this.tables.powcaptcha
+						.updateOne({ challenge }, { $set: { storedAtTimestamp: ts } })
+						.then(() => {}),
+			);
 		} catch (error) {
 			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
 				context: {
@@ -923,6 +950,13 @@ export class ProviderDatabase
 			{ challenge },
 			{ $set: updates },
 			{ upsert: false },
+		);
+		this.centralStreamer?.streamPowUpdate(
+			() => this.getPowCaptchaRecordByChallenge(challenge),
+			(ts) =>
+				this.tables.powcaptcha
+					.updateOne({ challenge }, { $set: { storedAtTimestamp: ts } })
+					.then(() => {}),
 		);
 	}
 
@@ -1116,6 +1150,16 @@ export class ProviderDatabase
 				data: { action: "storing", sessionRecord },
 			}));
 			await this.tables.session.create(sessionRecord);
+			this.centralStreamer?.streamSessionRecord(
+				sessionRecord as unknown as StoredSession,
+				(ts) =>
+					this.tables.session
+						.updateOne(
+							{ sessionId: sessionRecord.sessionId },
+							{ $set: { storedAtTimestamp: ts } },
+						)
+						.then(() => {}),
+			);
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SESSION_STORE_FAILED", {
 				context: { error: err, sessionId: sessionRecord.sessionId },
@@ -1194,12 +1238,29 @@ export class ProviderDatabase
 	async updateSessionRecord(
 		sessionId: string,
 		updates: Partial<Session>,
+		streamToCentral?: boolean,
 	): Promise<void> {
 		try {
 			await this.tables.session.updateOne(
 				{ sessionId },
 				{ $set: { ...updates, lastUpdatedTimestamp: new Date() } },
 			);
+			if (streamToCentral && this.centralStreamer) {
+				const streamer = this.centralStreamer;
+				const markStored = (ts: Date) =>
+					this.tables.session
+						.updateOne({ sessionId }, { $set: { storedAtTimestamp: ts } })
+						.then(() => {});
+				this.tables.session
+					.findOne({ sessionId })
+					.lean<StoredSession>()
+					.then((record) => {
+						if (record) {
+							streamer.streamSessionRecord(record, markStored);
+						}
+					})
+					.catch(() => {});
+			}
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
 				context: { error: err, sessionId },
@@ -1645,6 +1706,19 @@ export class ProviderDatabase
 			await this.tables?.commitment
 				?.findOneAndUpdate(filter, { $set: updateDoc }, { upsert: false })
 				.lean();
+			this.centralStreamer?.streamImageUpdate(
+				() =>
+					this.tables.commitment
+						.findOne({ id: commitmentId })
+						.lean<UserCommitmentRecord>(),
+				(ts) =>
+					this.tables.commitment
+						.updateOne(
+							{ id: commitmentId },
+							{ $set: { storedAtTimestamp: ts } },
+						)
+						.then(() => {}),
+			);
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SOLUTION_APPROVE_FAILED", {
 				context: { error: err, commitmentId },
@@ -1677,6 +1751,19 @@ export class ProviderDatabase
 			await this.tables?.commitment
 				?.findOneAndUpdate(filter, { $set: updateDoc }, { upsert: false })
 				.lean();
+			this.centralStreamer?.streamImageUpdate(
+				() =>
+					this.tables.commitment
+						.findOne({ id: commitmentId })
+						.lean<UserCommitmentRecord>(),
+				(ts) =>
+					this.tables.commitment
+						.updateOne(
+							{ id: commitmentId },
+							{ $set: { storedAtTimestamp: ts } },
+						)
+						.then(() => {}),
+			);
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SOLUTION_APPROVE_FAILED", {
 				context: { error: err, commitmentId },
