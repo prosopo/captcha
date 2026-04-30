@@ -923,9 +923,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		// Write result via the streaming-aware methods
 		if (commitmentId) {
 			if (isApproved) {
-				writePromises.push(
-					this.db.approveDappUserCommitment(commitmentId),
-				);
+				writePromises.push(this.db.approveDappUserCommitment(commitmentId));
 			} else if (commitmentUpdates.result) {
 				writePromises.push(
 					this.db.disapproveDappUserCommitment(
