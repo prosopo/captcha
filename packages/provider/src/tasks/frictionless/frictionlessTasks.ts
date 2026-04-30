@@ -69,6 +69,9 @@ export class FrictionlessManager extends CaptchaManager {
 		Session,
 		"sessionId" | "createdAt" | "captchaType"
 	>;
+	private writeQueue:
+		| import("../../util/redisCache.js").RedisWriteQueue
+		| null = null;
 
 	constructor(
 		db: IProviderDatabase,
@@ -78,6 +81,16 @@ export class FrictionlessManager extends CaptchaManager {
 	) {
 		super(db, pair, config, logger);
 		this.config = config;
+	}
+
+	/**
+	 * Set the Redis write queue for session caching.
+	 * When set, newly created sessions are cached in Redis for fast lookups.
+	 */
+	setWriteQueue(
+		queue: import("../../util/redisCache.js").RedisWriteQueue,
+	): void {
+		this.writeQueue = queue;
 	}
 
 	setSessionParams(
@@ -157,6 +170,27 @@ export class FrictionlessManager extends CaptchaManager {
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);
+
+		// Cache the session in Redis for fast lookups.
+		// This reduces MongoDB reads for subsequent requests that need
+		// to look up the session by sessionId or userSitekeyIpHash.
+		if (this.writeQueue) {
+			const cacheData = sessionRecord as unknown as Record<string, unknown>;
+			const cachePromises: Promise<boolean>[] = [
+				this.writeQueue.cacheSession(sessionRecord.sessionId, cacheData),
+			];
+			if (userSitekeyIpHash) {
+				cachePromises.push(
+					this.writeQueue.cacheSessionByHash(
+						userSitekeyIpHash,
+						sessionRecord.sessionId,
+					),
+				);
+			}
+			// Fire-and-forget: don't block the response on caching
+			Promise.all(cachePromises).catch(() => {});
+		}
+
 		return sessionRecord;
 	}
 

@@ -32,6 +32,7 @@
 		"@prosopo/env": "3.4.3",
 		"@prosopo/keyring": "2.9.23",
 		"@prosopo/load-balancer": "2.8.40",
+		"@prosopo/redis-client": "1.0.18",
 		"@prosopo/locale": "3.2.1",
 		"@prosopo/types": "3.16.0",
 		"@prosopo/types-database": "4.5.3",
