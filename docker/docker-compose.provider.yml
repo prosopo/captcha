@@ -175,8 +175,10 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock # needed for monitoring docker container events, e.g. start/stop/etc
     networks:
-      - internal
-      - external
+      external:
+      internal:
+        ipv4_address: 172.18.0.9
+        ipv6_address: fd00:aaaa::3
     logging:
       driver: 'json-file'
       options:
