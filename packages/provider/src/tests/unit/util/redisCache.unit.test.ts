@@ -136,6 +136,37 @@ describe("RedisWriteQueue", () => {
 			);
 		});
 
+		it("should roundtrip BigInt values through cache and restore them", async () => {
+			const sessionData = {
+				captchaType: "pow",
+				ipAddress: { lower: 16843009n, upper: 0n, type: "v4" },
+			};
+
+			// Simulate the write path: cacheSession serializes with bigIntReplacer
+			await writeQueue.cacheSession("session-bigint", sessionData);
+			const storedJson = mockRedisClient.set.mock.calls[0][1] as string;
+
+			// The stored JSON should have tagged BigInts, not raw BigInts
+			expect(storedJson).toContain("__bigint__:");
+			expect(storedJson).not.toContain("[object");
+
+			// Simulate the read path: getCachedSession deserializes with bigIntReviver
+			mockRedisClient.get.mockResolvedValue(storedJson);
+			const result = await writeQueue.getCachedSession("session-bigint");
+
+			// BigInt values should be restored, not left as strings
+			const ip = result?.ipAddress as {
+				lower: bigint;
+				upper: bigint;
+				type: string;
+			};
+			expect(typeof ip.lower).toBe("bigint");
+			expect(ip.lower).toBe(16843009n);
+			expect(typeof ip.upper).toBe("bigint");
+			expect(ip.upper).toBe(0n);
+			expect(ip.type).toBe("v4");
+		});
+
 		it("should return null on cache miss", async () => {
 			mockRedisClient.get.mockResolvedValue(null);
 

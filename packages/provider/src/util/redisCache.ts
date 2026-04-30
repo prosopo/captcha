@@ -18,6 +18,18 @@ import type { RedisConnection } from "@prosopo/redis-client";
 /** The Redis client type returned by RedisConnection.getClient() */
 type RedisClient = Awaited<ReturnType<RedisConnection["getClient"]>>;
 
+const BIGINT_TAG = "__bigint__:";
+
+/** JSON replacer that tags BigInt values so they can be restored by bigIntReviver. */
+const bigIntReplacer = (_key: string, value: unknown): unknown =>
+	"bigint" === typeof value ? `${BIGINT_TAG}${value.toString()}` : value;
+
+/** JSON reviver that restores tagged BigInt values produced by bigIntReplacer. */
+const bigIntReviver = (_key: string, value: unknown): unknown =>
+	"string" === typeof value && value.startsWith(BIGINT_TAG)
+		? BigInt(value.slice(BIGINT_TAG.length))
+		: value;
+
 /**
  * Redis-backed write queue and read cache for reducing MongoDB load.
  *
@@ -69,7 +81,7 @@ export class RedisWriteQueue {
 
 		try {
 			const key = `cache:session:${sessionId}`;
-			await client.set(key, JSON.stringify(sessionData), {
+			await client.set(key, JSON.stringify(sessionData, bigIntReplacer), {
 				EX: ttlSeconds,
 			});
 			return true;
@@ -100,7 +112,7 @@ export class RedisWriteQueue {
 			if (!data) {
 				return null;
 			}
-			return JSON.parse(data) as Record<string, unknown>;
+			return JSON.parse(data, bigIntReviver) as Record<string, unknown>;
 		} catch (error) {
 			this.logger.warn(() => ({
 				msg: "Failed to get cached session from Redis",
@@ -204,7 +216,7 @@ export class RedisWriteQueue {
 
 		try {
 			const key = `writeq:session:${sessionId}`;
-			const serialized = JSON.stringify(record);
+			const serialized = JSON.stringify(record, bigIntReplacer);
 			await client.set(key, serialized, { EX: ttlSeconds });
 			await client.sAdd("writeq:session:pending", sessionId);
 
@@ -249,7 +261,7 @@ export class RedisWriteQueue {
 				if (data) {
 					results.push({
 						sessionId,
-						record: JSON.parse(data) as Record<string, unknown>,
+						record: JSON.parse(data, bigIntReviver) as Record<string, unknown>,
 					});
 				}
 				await client.sRem("writeq:session:pending", sessionId);
