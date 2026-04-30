@@ -75,6 +75,12 @@ services:
       - production
       - staging
     image: mongo:6.0.17
+    command: mongod --wiredTigerCacheSizeGB 2.0
+    deploy:
+      resources:
+        limits:
+          # Total container ceiling (Cache + overhead)
+          memory: 3G
     labels:
       - "vector.mongo=true" # enable logging as a provider
       - "vector.docker=true" # log docker events
