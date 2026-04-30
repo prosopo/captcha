@@ -14,6 +14,7 @@
 
 import type { Logger } from "@prosopo/common";
 import type { RedisConnection } from "@prosopo/redis-client";
+import { at } from "@prosopo/util";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { RedisWriteQueue } from "../../../util/redisCache.js";
 
@@ -144,7 +145,7 @@ describe("RedisWriteQueue", () => {
 
 			// Simulate the write path: cacheSession serializes with bigIntReplacer
 			await writeQueue.cacheSession("session-bigint", sessionData);
-			const storedJson = mockRedisClient.set.mock.calls[0][1] as string;
+			const storedJson = at(at(mockRedisClient.set.mock.calls, 0), 1) as string;
 
 			// The stored JSON should have tagged BigInts, not raw BigInts
 			expect(storedJson).toContain("__bigint__:");
