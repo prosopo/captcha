@@ -21,12 +21,25 @@ import type {
 import { CaptchaDatabase } from "./captcha.js";
 
 /**
+ * Callback invoked after a successful central DB write to mark the local
+ * record as stored. Receives the `lastUpdatedTimestamp` from the record
+ * that was actually streamed, so it reflects *what* was synced rather than
+ * *when* — avoiding a race where a concurrent local update could be skipped
+ * by the batch cron.
+ */
+export type MarkStoredCallback = (streamedTimestamp: Date) => Promise<void>;
+
+/**
  * Fire-and-forget streamer that sends captcha records to a central database
  * in real-time. Errors are logged but never thrown, so local operations
  * are never blocked or disrupted.
  *
  * Unlike the batch `saveCaptchas()` method on CaptchaDatabase, this maintains
  * a persistent connection and upserts individual records as they arrive.
+ *
+ * After a successful central write, the provided `markStored` callback is
+ * called with the record's `lastUpdatedTimestamp` so the batch cron can
+ * determine whether the stored version is still current.
  */
 export class CentralDbStreamer {
 	private db: CaptchaDatabase;
@@ -57,11 +70,28 @@ export class CentralDbStreamer {
 		return this.connectPromise;
 	}
 
+	private getRecordTimestamp(record: {
+		lastUpdatedTimestamp?: Date;
+		createdAt?: Date;
+		requestedAtTimestamp?: Date;
+	}): Date {
+		return (
+			record.lastUpdatedTimestamp ??
+			record.createdAt ??
+			record.requestedAtTimestamp ??
+			new Date()
+		);
+	}
+
 	/**
 	 * Stream a PoW captcha record (create or update) to the central DB.
 	 * Fire-and-forget: errors are logged, never thrown.
 	 */
-	streamPowRecord(record: PoWCaptchaRecord): void {
+	streamPowRecord(
+		record: PoWCaptchaRecord,
+		markStored?: MarkStoredCallback,
+	): void {
+		const timestamp = this.getRecordTimestamp(record);
 		this.ensureConnected()
 			.then(() => {
 				const { _id, ...safeDoc } = record;
@@ -71,6 +101,7 @@ export class CentralDbStreamer {
 					{ upsert: true },
 				);
 			})
+			.then(() => markStored?.(timestamp))
 			.catch((err: unknown) => {
 				this.logger.error(() => ({
 					err,
@@ -82,11 +113,14 @@ export class CentralDbStreamer {
 	/**
 	 * Stream a partial PoW update by fetching the full record first, then upserting.
 	 */
-	streamPowUpdate(getFullRecord: () => Promise<PoWCaptchaRecord | null>): void {
+	streamPowUpdate(
+		getFullRecord: () => Promise<PoWCaptchaRecord | null>,
+		markStored?: MarkStoredCallback,
+	): void {
 		getFullRecord()
 			.then((record) => {
 				if (record) {
-					this.streamPowRecord(record);
+					this.streamPowRecord(record, markStored);
 				}
 			})
 			.catch((err: unknown) => {
@@ -101,7 +135,11 @@ export class CentralDbStreamer {
 	 * Stream an image captcha commitment record to the central DB.
 	 * Fire-and-forget: errors are logged, never thrown.
 	 */
-	streamImageRecord(record: UserCommitmentRecord): void {
+	streamImageRecord(
+		record: UserCommitmentRecord,
+		markStored?: MarkStoredCallback,
+	): void {
+		const timestamp = this.getRecordTimestamp(record);
 		this.ensureConnected()
 			.then(() => {
 				const { _id, ...safeDoc } = record;
@@ -111,6 +149,7 @@ export class CentralDbStreamer {
 					{ upsert: true },
 				);
 			})
+			.then(() => markStored?.(timestamp))
 			.catch((err: unknown) => {
 				this.logger.error(() => ({
 					err,
@@ -124,11 +163,12 @@ export class CentralDbStreamer {
 	 */
 	streamImageUpdate(
 		getFullRecord: () => Promise<UserCommitmentRecord | null>,
+		markStored?: MarkStoredCallback,
 	): void {
 		getFullRecord()
 			.then((record) => {
 				if (record) {
-					this.streamImageRecord(record);
+					this.streamImageRecord(record, markStored);
 				}
 			})
 			.catch((err: unknown) => {
@@ -143,7 +183,11 @@ export class CentralDbStreamer {
 	 * Stream a session record to the central DB.
 	 * Fire-and-forget: errors are logged, never thrown.
 	 */
-	streamSessionRecord(record: StoredSession): void {
+	streamSessionRecord(
+		record: StoredSession,
+		markStored?: MarkStoredCallback,
+	): void {
+		const timestamp = this.getRecordTimestamp(record);
 		this.ensureConnected()
 			.then(() => {
 				const { _id, ...safeDoc } = record;
@@ -153,6 +197,7 @@ export class CentralDbStreamer {
 					{ upsert: true },
 				);
 			})
+			.then(() => markStored?.(timestamp))
 			.catch((err: unknown) => {
 				this.logger.error(() => ({
 					err,
