@@ -32,6 +32,7 @@
 		"@prosopo/env": "3.4.3",
 		"@prosopo/keyring": "2.9.23",
 		"@prosopo/load-balancer": "2.8.40",
+		"@prosopo/redis-client": "1.0.18",
 		"@prosopo/locale": "3.2.1",
 		"@prosopo/types": "3.16.0",
 		"@prosopo/types-database": "4.5.3",
@@ -47,6 +48,7 @@
 		"ip-address": "10.0.1",
 		"mongoose": "8.13.0",
 		"read-tls-client-hello": "1.1.0",
+		"redis": "5.0.0",
 		"uuid": "11.1.0",
 		"zod": "3.23.8"
 	},
