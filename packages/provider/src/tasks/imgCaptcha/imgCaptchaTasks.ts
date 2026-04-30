@@ -906,8 +906,37 @@ export class ImgCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		// Single batch write: commitment updates + session update in parallel.
-		// Previously this was multiple sequential writes throughout the checks.
+		// Batch writes: separate non-streaming updates from streaming result writes.
+		// - providedIp uses updateDappUserCommitment (no central streaming)
+		// - approve/disapprove use dedicated methods that trigger centralStreamer
+		const writePromises: Promise<void>[] = [];
+
+		// Write providedIp if accumulated (non-streaming field)
+		if (commitmentUpdates.providedIp) {
+			writePromises.push(
+				this.db.updateDappUserCommitment(solution.id, {
+					providedIp: commitmentUpdates.providedIp,
+				}),
+			);
+		}
+
+		// Write result via the streaming-aware methods
+		if (commitmentId) {
+			if (isApproved) {
+				writePromises.push(
+					this.db.approveDappUserCommitment(commitmentId),
+				);
+			} else if (commitmentUpdates.result) {
+				writePromises.push(
+					this.db.disapproveDappUserCommitment(
+						commitmentId,
+						commitmentUpdates.result.reason,
+					),
+				);
+			}
+		}
+
+		// Update session with final server verification result (different collection)
 		const finalResult = isApproved
 			? { status: CaptchaStatus.approved as const }
 			: commitmentUpdates.result || {
@@ -915,16 +944,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 					reason: failureStatus,
 				};
 
-		const writePromises: Promise<void>[] = [];
-
-		// Write all accumulated commitment updates in one call
-		if (commitmentId && Object.keys(commitmentUpdates).length > 0) {
-			writePromises.push(
-				this.db.updateDappUserCommitment(solution.id, commitmentUpdates),
-			);
-		}
-
-		// Update session with final server verification result
 		if (solution.sessionId) {
 			writePromises.push(
 				this.db.updateSessionRecord(

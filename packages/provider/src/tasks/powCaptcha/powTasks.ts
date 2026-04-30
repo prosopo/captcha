@@ -271,8 +271,14 @@ export class PowCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		// Single combined write: result + behavioral data + session in parallel.
-		// Previously this was 2-3 separate sequential writes.
+		// Write behavioral data first (sequential) so it's present when
+		// updatePowCaptchaRecordResult triggers centralStreamer.streamPowUpdate(),
+		// which reads back the full record.
+		if (Object.keys(behavioralUpdates).length > 0) {
+			await this.db.updatePowCaptchaRecord(challenge, behavioralUpdates);
+		}
+
+		// Then write result + session in parallel (different documents/collections).
 		const writePromises: Promise<void>[] = [
 			this.db.updatePowCaptchaRecordResult(
 				challenge,
@@ -284,14 +290,6 @@ export class PowCaptchaManager extends CaptchaManager {
 			),
 		];
 
-		// Merge behavioral data into pow record if present
-		if (Object.keys(behavioralUpdates).length > 0) {
-			writePromises.push(
-				this.db.updatePowCaptchaRecord(challenge, behavioralUpdates),
-			);
-		}
-
-		// Update the session record with submission result in parallel
 		if (challengeRecord.sessionId) {
 			writePromises.push(
 				this.db.updateSessionRecord(challengeRecord.sessionId, {
