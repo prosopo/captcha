@@ -178,7 +178,7 @@ services:
       external:
       internal:
         ipv4_address: 172.18.0.9
-        ipv6_address: fd00:aaaa::3
+        ipv6_address: fd00:aaaa::9
     logging:
       driver: 'json-file'
       options:
