@@ -2157,10 +2157,14 @@ module.exports = (input) => {
 			);
 
 			expect(result.verified).toBe(true);
-			expect(db.updateSessionRecord).toHaveBeenCalledWith(sessionId, {
-				serverChecked: true,
-				result: { status: CaptchaStatus.approved },
-			});
+			expect(db.updateSessionRecord).toHaveBeenCalledWith(
+				sessionId,
+				{
+					serverChecked: true,
+					result: { status: CaptchaStatus.approved },
+				},
+				true,
+			);
 		});
 
 		it("should update session as serverChecked and disapproved on recency failure", async () => {
@@ -2197,13 +2201,17 @@ module.exports = (input) => {
 			);
 
 			expect(result.verified).toBe(false);
-			expect(db.updateSessionRecord).toHaveBeenCalledWith(sessionId, {
-				serverChecked: true,
-				result: {
-					status: CaptchaStatus.disapproved,
-					reason: "API.TIMESTAMP_TOO_OLD",
+			expect(db.updateSessionRecord).toHaveBeenCalledWith(
+				sessionId,
+				{
+					serverChecked: true,
+					result: {
+						status: CaptchaStatus.disapproved,
+						reason: "API.TIMESTAMP_TOO_OLD",
+					},
 				},
-			});
+				true,
+			);
 		});
 	});
 });
