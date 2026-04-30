@@ -368,10 +368,14 @@ export class PowCaptchaManager extends CaptchaManager {
 				result: disapprovedResult,
 			});
 			if (challengeRecord.sessionId) {
-				await this.db.updateSessionRecord(challengeRecord.sessionId, {
-					serverChecked: true,
-					result: disapprovedResult,
-				});
+				await this.db.updateSessionRecord(
+					challengeRecord.sessionId,
+					{
+						serverChecked: true,
+						result: disapprovedResult,
+					},
+					true,
+				);
 			}
 			return notVerified("API.TIMESTAMP_TOO_OLD");
 		}
@@ -406,10 +410,14 @@ export class PowCaptchaManager extends CaptchaManager {
 						result: blockedResult,
 					});
 					if (challengeRecord.sessionId) {
-						await this.db.updateSessionRecord(challengeRecord.sessionId, {
-							serverChecked: true,
-							result: blockedResult,
-						});
+						await this.db.updateSessionRecord(
+							challengeRecord.sessionId,
+							{
+								serverChecked: true,
+								result: blockedResult,
+							},
+							true,
+						);
 					}
 					return notVerified("API.ACCESS_POLICY_BLOCK");
 				}
@@ -534,10 +542,14 @@ export class PowCaptchaManager extends CaptchaManager {
 						result: ipFailResult,
 					});
 					if (challengeRecord.sessionId) {
-						await this.db.updateSessionRecord(challengeRecord.sessionId, {
-							serverChecked: true,
-							result: ipFailResult,
-						});
+						await this.db.updateSessionRecord(
+							challengeRecord.sessionId,
+							{
+								serverChecked: true,
+								result: ipFailResult,
+							},
+							true,
+						);
 					}
 					return notVerified("API.FAILED_IP_VALIDATION");
 				}
@@ -599,10 +611,14 @@ export class PowCaptchaManager extends CaptchaManager {
 					result: dmResult,
 				});
 				if (challengeRecord.sessionId) {
-					await this.db.updateSessionRecord(challengeRecord.sessionId, {
-						serverChecked: true,
-						result: dmResult,
-					});
+					await this.db.updateSessionRecord(
+						challengeRecord.sessionId,
+						{
+							serverChecked: true,
+							result: dmResult,
+						},
+						true,
+					);
 				}
 				return notVerified(
 					decision.reason || "CAPTCHA.DECISION_MACHINE_DENIED",
@@ -628,10 +644,14 @@ export class PowCaptchaManager extends CaptchaManager {
 
 		// Server verification passed — update session as approved and serverChecked
 		if (challengeRecord.sessionId) {
-			await this.db.updateSessionRecord(challengeRecord.sessionId, {
-				serverChecked: true,
-				result: { status: CaptchaStatus.approved },
-			});
+			await this.db.updateSessionRecord(
+				challengeRecord.sessionId,
+				{
+					serverChecked: true,
+					result: { status: CaptchaStatus.approved },
+				},
+				true,
+			);
 		}
 
 		return { verified: true, ...(score ? { score } : {}) };

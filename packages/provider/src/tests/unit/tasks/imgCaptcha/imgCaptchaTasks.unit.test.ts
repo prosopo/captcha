@@ -810,10 +810,14 @@ describe("ImgCaptchaManager", () => {
 			);
 
 			expect(result.verified).toBe(true);
-			expect(db.updateSessionRecord).toHaveBeenCalledWith(sessionId, {
-				serverChecked: true,
-				result: { status: CaptchaStatus.approved },
-			});
+			expect(db.updateSessionRecord).toHaveBeenCalledWith(
+				sessionId,
+				{
+					serverChecked: true,
+					result: { status: CaptchaStatus.approved },
+				},
+				true,
+			);
 
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(imgCaptchaManager as any).decisionMachineRunner.decide = originalDecide;
@@ -872,13 +876,17 @@ describe("ImgCaptchaManager", () => {
 			);
 
 			expect(result.verified).toBe(false);
-			expect(db.updateSessionRecord).toHaveBeenCalledWith(sessionId, {
-				serverChecked: true,
-				result: {
-					status: CaptchaStatus.disapproved,
-					reason: "Suspicious",
+			expect(db.updateSessionRecord).toHaveBeenCalledWith(
+				sessionId,
+				{
+					serverChecked: true,
+					result: {
+						status: CaptchaStatus.disapproved,
+						reason: "Suspicious",
+					},
 				},
-			});
+				true,
+			);
 
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(imgCaptchaManager as any).decisionMachineRunner.decide = originalDecide;
