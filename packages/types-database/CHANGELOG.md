@@ -1,5 +1,10 @@
 # @prosopo/types-database
 
+## 4.6.0
+### Minor Changes
+
+- 74092d0: Stream data back to central for decisions
+
 ## 4.5.3
 ### Patch Changes
 
