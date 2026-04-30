@@ -690,6 +690,7 @@ export interface IProviderDatabase extends IDatabase {
 	updateSessionRecord(
 		sessionId: string,
 		updates: Partial<Session>,
+		streamToCentral?: boolean,
 	): Promise<void>;
 
 	getSessionByuserSitekeyIpHash(

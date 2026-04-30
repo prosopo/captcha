@@ -1215,13 +1215,14 @@ export class ProviderDatabase
 	async updateSessionRecord(
 		sessionId: string,
 		updates: Partial<Session>,
+		streamToCentral?: boolean,
 	): Promise<void> {
 		try {
 			await this.tables.session.updateOne(
 				{ sessionId },
 				{ $set: { ...updates, lastUpdatedTimestamp: new Date() } },
 			);
-			if (this.centralStreamer) {
+			if (streamToCentral && this.centralStreamer) {
 				const streamer = this.centralStreamer;
 				this.tables.session
 					.findOne({ sessionId })

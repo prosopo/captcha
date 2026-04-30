@@ -1,10 +1,3 @@
-import {
-	type Logger,
-	ProsopoEnvError,
-	getLogger,
-	parseLogLevel,
-} from "@prosopo/common";
-import type { KeyringPair } from "@prosopo/types";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +11,15 @@ import type { KeyringPair } from "@prosopo/types";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import {
+	type Logger,
+	ProsopoEnvError,
+	getLogger,
+	parseLogLevel,
+} from "@prosopo/common";
 import { CentralDbStreamer, ProviderDatabase } from "@prosopo/database";
+import type { KeyringPair } from "@prosopo/types";
 import type {
 	ProsopoCaptchaCountConfigSchemaOutput,
 	ProsopoConfigOutput,

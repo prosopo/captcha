@@ -82,9 +82,7 @@ export class CentralDbStreamer {
 	/**
 	 * Stream a partial PoW update by fetching the full record first, then upserting.
 	 */
-	streamPowUpdate(
-		getFullRecord: () => Promise<PoWCaptchaRecord | null>,
-	): void {
+	streamPowUpdate(getFullRecord: () => Promise<PoWCaptchaRecord | null>): void {
 		getFullRecord()
 			.then((record) => {
 				if (record) {

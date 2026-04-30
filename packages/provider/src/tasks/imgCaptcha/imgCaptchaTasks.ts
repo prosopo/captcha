@@ -684,10 +684,14 @@ export class ImgCaptchaManager extends CaptchaManager {
 						result: blockedResult,
 					});
 					if (solution.sessionId) {
-						await this.db.updateSessionRecord(solution.sessionId, {
-							serverChecked: true,
-							result: blockedResult,
-						});
+						await this.db.updateSessionRecord(
+							solution.sessionId,
+							{
+								serverChecked: true,
+								result: blockedResult,
+							},
+							true,
+						);
 					}
 					return {
 						status: "API.ACCESS_POLICY_BLOCK",
@@ -894,13 +898,17 @@ export class ImgCaptchaManager extends CaptchaManager {
 							},
 						}));
 						if (solution.sessionId) {
-							await this.db.updateSessionRecord(solution.sessionId, {
-								serverChecked: true,
-								result: {
-									status: CaptchaStatus.disapproved,
-									reason: dmReason,
+							await this.db.updateSessionRecord(
+								solution.sessionId,
+								{
+									serverChecked: true,
+									result: {
+										status: CaptchaStatus.disapproved,
+										reason: dmReason,
+									},
 								},
-							});
+								true,
+							);
 						}
 						isApproved = false;
 						failureStatus = dmReason;
@@ -916,10 +924,14 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 		// Update session with final server verification result (if not already updated by deny paths above)
 		if (isApproved && solution.sessionId) {
-			await this.db.updateSessionRecord(solution.sessionId, {
-				serverChecked: true,
-				result: { status: CaptchaStatus.approved },
-			});
+			await this.db.updateSessionRecord(
+				solution.sessionId,
+				{
+					serverChecked: true,
+					result: { status: CaptchaStatus.approved },
+				},
+				true,
+			);
 		}
 
 		return {
