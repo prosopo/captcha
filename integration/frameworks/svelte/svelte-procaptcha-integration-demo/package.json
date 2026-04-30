@@ -32,7 +32,7 @@
 		"@prosopo/config": "3.3.1",
 		"@prosopo/procaptcha-integration-build-config": "1.1.28",
 		"@sveltejs/vite-plugin-svelte": "5.1.1",
-		"@types/node": "22.10.2",
+		"@types/node": "24.12.2",
 		"del-cli": "6.0.0",
 		"svelte-check": "4.2.2"
 	},
