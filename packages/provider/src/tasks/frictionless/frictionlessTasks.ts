@@ -510,9 +510,13 @@ export class FrictionlessManager extends CaptchaManager {
 			}
 		}
 
-		const baseBotScoreUndefined = baseBotScore === undefined;
-		const timestampUndefined = timestamp === undefined;
-		const providerSelectEntropyUndefined = providerSelectEntropy === undefined;
+		const baseBotScoreUndefined =
+			baseBotScore === undefined || Number.isNaN(baseBotScore);
+		const timestampUndefined =
+			timestamp === undefined || Number.isNaN(timestamp);
+		const providerSelectEntropyUndefined =
+			providerSelectEntropy === undefined ||
+			Number.isNaN(providerSelectEntropy);
 		const undefinedCount =
 			Number(baseBotScoreUndefined) +
 			Number(timestampUndefined) +
