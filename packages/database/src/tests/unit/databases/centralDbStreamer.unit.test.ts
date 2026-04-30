@@ -54,7 +54,7 @@ describe("CentralDbStreamer", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		mockLogger = createMockLogger();
-		errorSpy = mockLogger.error as MockInstance;
+		errorSpy = mockLogger.error as unknown as MockInstance;
 
 		mockPowUpdateOne = vi.fn().mockResolvedValue({ upsertedCount: 1 });
 		mockCommitmentUpdateOne = vi.fn().mockResolvedValue({ upsertedCount: 1 });
@@ -116,15 +116,13 @@ describe("CentralDbStreamer", () => {
 
 		it("strips _id from the record before upserting", async () => {
 			const record = makePowRecord();
-			(record as Record<string, unknown>)._id = "should-be-removed";
+			(record as unknown as Record<string, unknown>)._id = "should-be-removed";
 
 			streamer.streamPowRecord(record);
 			await flush();
 
-			const setArg = mockPowUpdateOne.mock.calls[0][1].$set as Record<
-				string,
-				unknown
-			>;
+			const call = mockPowUpdateOne.mock.calls[0] as unknown[];
+			const setArg = (call[1] as { $set: Record<string, unknown> }).$set;
 			expect(setArg._id).toBeUndefined();
 		});
 
