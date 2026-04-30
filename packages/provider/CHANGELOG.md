@@ -1,5 +1,10 @@
 # @prosopo/provider
 
+## 4.1.0
+### Minor Changes
+
+- 558bc6d: Make sure redis cache works with bigint
+
 ## 4.0.0
 ### Major Changes
 
