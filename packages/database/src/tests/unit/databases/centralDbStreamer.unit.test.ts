@@ -68,7 +68,10 @@ describe("CentralDbStreamer", () => {
 		// Inject mock db internals — replace the real CaptchaDatabase instance
 		// biome-ignore lint/suspicious/noExplicitAny: test access to private field
 		const db = (streamer as any).db;
-		db.connect = vi.fn().mockResolvedValue(undefined);
+		db.connect = vi.fn().mockImplementation(() => {
+			db.connected = true;
+			return Promise.resolve();
+		});
 		db.tables = {
 			powcaptcha: { updateOne: mockPowUpdateOne },
 			commitment: { updateOne: mockCommitmentUpdateOne },
