@@ -220,6 +220,10 @@ export class ProviderDatabase
 		this.centralStreamer = streamer;
 	}
 
+	hasCentralDbStreamer(): boolean {
+		return this.centralStreamer !== undefined;
+	}
+
 	override async connect(): Promise<void> {
 		await super.connect();
 
