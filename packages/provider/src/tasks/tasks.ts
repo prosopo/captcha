@@ -69,7 +69,11 @@ export class Tasks {
 		}
 		this.pair = env.pair;
 
-		if (this.config.mongoCaptchaUri && this.db instanceof ProviderDatabase) {
+		if (
+			this.config.mongoCaptchaUri &&
+			this.db instanceof ProviderDatabase &&
+			!this.db.hasCentralDbStreamer()
+		) {
 			const streamer = new CentralDbStreamer(
 				this.config.mongoCaptchaUri,
 				this.logger,
