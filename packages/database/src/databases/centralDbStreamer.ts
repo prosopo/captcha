@@ -45,6 +45,8 @@ export class CentralDbStreamer {
 	private db: CaptchaDatabase;
 	private logger: Logger;
 	private connectPromise: Promise<void> | undefined;
+	private lastFailureTime = 0;
+	private static readonly RECONNECT_COOLDOWN_MS = 5_000;
 
 	constructor(mongoCaptchaUri: string, logger?: Logger) {
 		this.logger = logger || getLogger("info", "CentralDbStreamer");
@@ -57,12 +59,28 @@ export class CentralDbStreamer {
 	}
 
 	private ensureConnected(): Promise<void> {
+		// If we had a successful connection but it has since dropped,
+		// reset so we attempt to reconnect.
+		if (this.connectPromise && !this.db.connected) {
+			this.connectPromise = undefined;
+		}
+
 		if (!this.connectPromise) {
+			// Avoid spamming reconnection attempts when the server is
+			// unreachable — wait at least RECONNECT_COOLDOWN_MS between tries.
+			const elapsed = Date.now() - this.lastFailureTime;
+			if (elapsed < CentralDbStreamer.RECONNECT_COOLDOWN_MS) {
+				return Promise.reject(
+					new Error("CentralDbStreamer reconnect cooldown"),
+				);
+			}
+
 			this.connectPromise = this.db.connect().catch((err: unknown) => {
 				this.logger.error(() => ({
 					err,
 					msg: "CentralDbStreamer failed to connect",
 				}));
+				this.lastFailureTime = Date.now();
 				this.connectPromise = undefined;
 				throw err;
 			});
