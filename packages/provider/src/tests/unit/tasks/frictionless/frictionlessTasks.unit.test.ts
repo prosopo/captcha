@@ -238,9 +238,8 @@ describe("Frictionless Task Manager", () => {
 				isReady: vi.fn().mockReturnValue(true),
 			};
 
-			frictionlessTaskManager.setWriteQueue(
-				mockWriteQueue as unknown as import("../../../../util/redisCache.js").RedisWriteQueue,
-			);
+			frictionlessTaskManager.writeQueue =
+				mockWriteQueue as unknown as import("../../../../util/redisCache.js").RedisWriteQueue;
 
 			frictionlessTaskManager.setSessionParams({
 				token: "test-token",
@@ -283,9 +282,8 @@ describe("Frictionless Task Manager", () => {
 				isReady: vi.fn().mockReturnValue(true),
 			};
 
-			frictionlessTaskManager.setWriteQueue(
-				mockWriteQueue as unknown as import("../../../../util/redisCache.js").RedisWriteQueue,
-			);
+			frictionlessTaskManager.writeQueue =
+				mockWriteQueue as unknown as import("../../../../util/redisCache.js").RedisWriteQueue;
 
 			frictionlessTaskManager.setSessionParams({
 				token: "test-token",

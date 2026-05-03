@@ -54,6 +54,7 @@ import {
 import { constructPairList, containsIdenticalPairs } from "../../pairs.js";
 import { checkLangRules } from "../../rules/lang.js";
 import { deepValidateIpAddress, shuffleArray } from "../../util.js";
+import type { RedisWriteQueue } from "../../util/redisCache.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { FrictionlessReason } from "../frictionless/frictionlessTasks.js";
@@ -70,8 +71,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 		pair: KeyringPair,
 		config: ProsopoConfigOutput,
 		logger?: Logger,
+		writeQueue?: RedisWriteQueue | null,
 	) {
-		super(db, pair, config, logger);
+		super(db, pair, config, logger, writeQueue);
 		this.config = config;
 		this.decisionMachineRunner = new DecisionMachineRunner(db);
 	}

@@ -46,6 +46,7 @@ import {
 	getIpAddressFromComposite,
 } from "../../compositeIpAddress.js";
 import { deepValidateIpAddress } from "../../util.js";
+import type { RedisWriteQueue } from "../../util/redisCache.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
@@ -64,8 +65,9 @@ export class PowCaptchaManager extends CaptchaManager {
 		pair: KeyringPair,
 		config: ProsopoConfigOutput,
 		logger?: Logger,
+		writeQueue?: RedisWriteQueue | null,
 	) {
-		super(db, pair, config, logger);
+		super(db, pair, config, logger, writeQueue);
 		this.POW_SEPARATOR = POW_SEPARATOR;
 		this.decisionMachineRunner = new DecisionMachineRunner(db);
 	}

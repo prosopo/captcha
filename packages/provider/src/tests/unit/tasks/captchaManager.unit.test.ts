@@ -31,6 +31,7 @@ import {
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CaptchaManager } from "../../../tasks/captchaManager.js";
 import type { BehavioralDataResult } from "../../../tasks/detection/decodeBehavior.js";
+import type { RedisWriteQueue } from "../../../util/redisCache.js";
 
 vi.mock("../../../tasks/detection/decodeBehavior.js", () => ({
 	default: vi.fn(),
@@ -63,6 +64,7 @@ describe("CaptchaManager", () => {
 	let logger: Logger;
 	let captchaManager: CaptchaManager;
 	let mockEnv: ProviderEnvironment;
+	let mockWriteQueue: RedisWriteQueue;
 
 	beforeEach(() => {
 		db = {
@@ -94,7 +96,17 @@ describe("CaptchaManager", () => {
 			},
 		} as unknown as ProviderEnvironment;
 
-		captchaManager = new CaptchaManager(db, pair, mockEnv.config, logger);
+		mockWriteQueue = {
+			invalidateCachedSession: vi.fn().mockResolvedValue(undefined),
+		} as unknown as RedisWriteQueue;
+
+		captchaManager = new CaptchaManager(
+			db,
+			pair,
+			mockEnv.config,
+			logger,
+			mockWriteQueue,
+		);
 
 		vi.clearAllMocks();
 	});
@@ -144,6 +156,117 @@ describe("CaptchaManager", () => {
 			} as Pick<Session, "sessionId" | "captchaType">);
 
 			const result = await captchaManager.isValidRequest(
+				{
+					account: "account",
+					tier: Tier.Free,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.frictionless,
+					},
+				},
+				CaptchaType.pow,
+				mockEnv,
+				"sessionId",
+				undefined,
+				"127.0.0.1",
+			);
+
+			expect(result).toEqual({
+				valid: true,
+				type: CaptchaType.pow,
+				sessionId: "sessionId",
+			});
+		});
+		it("should invalidate the Redis session cache after consuming a frictionless pow session", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.checkAndRemoveSession as any).mockResolvedValue({
+				sessionId: "sessionId",
+				captchaType: CaptchaType.pow,
+			} as Pick<Session, "sessionId" | "captchaType">);
+
+			await captchaManager.isValidRequest(
+				{
+					account: "account",
+					tier: Tier.Free,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.frictionless,
+					},
+				},
+				CaptchaType.pow,
+				mockEnv,
+				"sessionId",
+				undefined,
+				"127.0.0.1",
+			);
+
+			expect(mockWriteQueue.invalidateCachedSession).toHaveBeenCalledWith(
+				"sessionId",
+			);
+		});
+		it("should invalidate the Redis session cache after consuming a frictionless image session", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.checkAndRemoveSession as any).mockResolvedValue({
+				sessionId: "sessionId",
+				captchaType: CaptchaType.image,
+			} as Pick<Session, "sessionId" | "captchaType">);
+
+			await captchaManager.isValidRequest(
+				{
+					account: "account",
+					tier: Tier.Free,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.frictionless,
+					},
+				},
+				CaptchaType.image,
+				mockEnv,
+				"sessionId",
+				undefined,
+				"127.0.0.1",
+			);
+
+			expect(mockWriteQueue.invalidateCachedSession).toHaveBeenCalledWith(
+				"sessionId",
+			);
+		});
+		it("should not invalidate Redis cache when session is not found", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.checkAndRemoveSession as any).mockResolvedValue(undefined);
+
+			await captchaManager.isValidRequest(
+				{
+					account: "account",
+					tier: Tier.Free,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.frictionless,
+					},
+				},
+				CaptchaType.pow,
+				mockEnv,
+				"sessionId",
+			);
+
+			expect(mockWriteQueue.invalidateCachedSession).not.toHaveBeenCalled();
+		});
+		it("should not throw when writeQueue is null and session is consumed", async () => {
+			const managerWithoutRedis = new CaptchaManager(
+				db,
+				pair,
+				mockEnv.config,
+				logger,
+				null,
+			);
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.checkAndRemoveSession as any).mockResolvedValue({
+				sessionId: "sessionId",
+				captchaType: CaptchaType.pow,
+			} as Pick<Session, "sessionId" | "captchaType">);
+
+			const result = await managerWithoutRedis.isValidRequest(
 				{
 					account: "account",
 					tier: Tier.Free,

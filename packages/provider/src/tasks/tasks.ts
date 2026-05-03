@@ -92,6 +92,7 @@ export class Tasks {
 			this.pair,
 			this.config,
 			this.logger,
+			this.writeQueue,
 		);
 		this.datasetManager = new DatasetManager(
 			this.config,
@@ -104,6 +105,7 @@ export class Tasks {
 			this.pair,
 			this.config,
 			this.logger,
+			this.writeQueue,
 		);
 		this.clientTaskManager = new ClientTaskManager(
 			this.config,
@@ -115,12 +117,8 @@ export class Tasks {
 			this.pair,
 			this.config,
 			this.logger,
+			this.writeQueue,
 		);
-
-		// Pass the write queue to the frictionless manager for session caching
-		if (this.writeQueue) {
-			this.frictionlessManager.setWriteQueue(this.writeQueue);
-		}
 	}
 
 	private initWriteQueue(): RedisWriteQueue | null {
