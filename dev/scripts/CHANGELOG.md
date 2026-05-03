@@ -1,5 +1,13 @@
 # @prosopo/scripts
 
+## 3.1.80
+### Patch Changes
+
+- Updated dependencies [780dcb0]
+  - @prosopo/provider@4.2.0
+  - @prosopo/cli@3.6.16
+  - @prosopo/env@3.4.5
+
 ## 3.1.79
 ### Patch Changes
 
