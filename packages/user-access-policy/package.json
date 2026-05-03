@@ -50,7 +50,6 @@
 		"@prosopo/types": "3.16.0",
 		"@prosopo/util": "3.2.11",
 		"@redis/search": "5.0.0",
-		"@redis/client": "5.0.0",
 		"cidr-calc": "1.0.4",
 		"dotenv": "16.4.5",
 		"ip-address": "10.0.1",
