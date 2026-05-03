@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/database",
-	"version": "3.10.0",
+	"version": "3.10.1",
 	"description": "Prosopo database plugins for provider",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",

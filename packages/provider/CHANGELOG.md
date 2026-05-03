@@ -1,5 +1,17 @@
 # @prosopo/provider
 
+## 4.2.0
+### Minor Changes
+
+- 780dcb0: Clear sessions from cache when deleted from db
+
+### Patch Changes
+
+- Updated dependencies [942701b]
+  - @prosopo/database@3.10.1
+  - @prosopo/env@3.4.5
+  - @prosopo/api-express-router@3.1.5
+
 ## 4.1.0
 ### Minor Changes
 

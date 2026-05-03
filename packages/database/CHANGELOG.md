@@ -1,5 +1,10 @@
 # @prosopo/database
 
+## 3.10.1
+### Patch Changes
+
+- 942701b: Connection drop fix
+
 ## 3.10.0
 ### Minor Changes
 
