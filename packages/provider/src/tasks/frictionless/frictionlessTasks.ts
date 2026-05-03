@@ -69,28 +69,16 @@ export class FrictionlessManager extends CaptchaManager {
 		Session,
 		"sessionId" | "createdAt" | "captchaType"
 	>;
-	private writeQueue:
-		| import("../../util/redisCache.js").RedisWriteQueue
-		| null = null;
 
 	constructor(
 		db: IProviderDatabase,
 		pair: KeyringPair,
 		config: ProsopoConfigOutput,
 		logger?: Logger,
+		writeQueue?: import("../../util/redisCache.js").RedisWriteQueue | null,
 	) {
-		super(db, pair, config, logger);
+		super(db, pair, config, logger, writeQueue);
 		this.config = config;
-	}
-
-	/**
-	 * Set the Redis write queue for session caching.
-	 * When set, newly created sessions are cached in Redis for fast lookups.
-	 */
-	setWriteQueue(
-		queue: import("../../util/redisCache.js").RedisWriteQueue,
-	): void {
-		this.writeQueue = queue;
 	}
 
 	setSessionParams(
