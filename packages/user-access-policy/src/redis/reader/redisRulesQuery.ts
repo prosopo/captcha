@@ -52,6 +52,10 @@ const userIpQueries: Record<keyof UserIp, QueryBuilder> = {
 		if (scope.numericIp !== undefined) {
 			return ""; // handled by numericIp
 		}
+		// When all IP fields are undefined, numericIp handler already emits all ismissing clauses
+		if (value === undefined && scope.numericIpMaskMax === undefined) {
+			return "";
+		}
 		return value !== undefined
 			? `@numericIpMaskMin:[-inf ${value}]`
 			: "ismissing(@numericIpMaskMin)";
@@ -59,6 +63,10 @@ const userIpQueries: Record<keyof UserIp, QueryBuilder> = {
 	numericIpMaskMax: (value, scope) => {
 		if (scope.numericIp !== undefined) {
 			return ""; // handled by numericIp
+		}
+		// When all IP fields are undefined, numericIp handler already emits all ismissing clauses
+		if (value === undefined && scope.numericIpMaskMin === undefined) {
+			return "";
 		}
 		return value !== undefined
 			? `@numericIpMaskMax:[${value} +inf]`
