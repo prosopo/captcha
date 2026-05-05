@@ -14,6 +14,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { findWorkspaceRoot } from "@prosopo/workspace";
 import fg from "fast-glob";
 import type { Argv } from "yargs";
 import { z } from "zod";
@@ -34,58 +35,6 @@ enum Mode {
 	CHECK = "check",
 	FIX = "fix",
 }
-
-/**
- * Finds the workspace root directory (captcha-private)
- */
-const findWorkspaceRoot = (): string => {
-	const currentDir = process.cwd();
-	const lintDirPattern = /(.+)\/captcha\/dev\/lint$/;
-	const match = currentDir.match(lintDirPattern);
-
-	if (match?.[1]) {
-		return match[1];
-	}
-
-	const websitePath = path.join(currentDir, "packages", "prosopo-website");
-	if (fs.existsSync(websitePath)) {
-		return currentDir;
-	}
-
-	let dir = currentDir;
-	const maxDepth = 5;
-
-	for (let i = 0; i < maxDepth; i++) {
-		const packageJsonPath = path.join(dir, "package.json");
-
-		if (fs.existsSync(packageJsonPath)) {
-			try {
-				const packageJson = JSON.parse(
-					fs.readFileSync(packageJsonPath, "utf8"),
-				);
-				if (packageJson.name === "@prosopo/captcha-private") {
-					return dir;
-				}
-			} catch (e) {
-				// Continue if there's an error
-			}
-		}
-
-		const parentDir = path.dirname(dir);
-		if (parentDir === dir) {
-			// We've reached the root of the filesystem
-			break;
-		}
-
-		dir = parentDir;
-	}
-
-	// If all approaches fail, warn but return current directory
-	console.warn(
-		"Warning: Could not find workspace root. Using current directory.",
-	);
-	return currentDir;
-};
 
 /**
  * Check if a URL is an internal link

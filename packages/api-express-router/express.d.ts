@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/common";
+import type { IPInfoResponse } from "@prosopo/types";
 import type { TFunction } from "i18next";
 
 declare global {
@@ -27,6 +28,7 @@ declare global {
 			ja4: string;
 			logger: Logger;
 			requestId?: string;
+			ipInfo?: IPInfoResponse;
 		}
 	}
 }

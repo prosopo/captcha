@@ -1,5 +1,145 @@
 # @prosopo/provider
 
+## 4.2.0
+### Minor Changes
+
+- 780dcb0: Clear sessions from cache when deleted from db
+
+### Patch Changes
+
+- Updated dependencies [942701b]
+  - @prosopo/database@3.10.1
+  - @prosopo/env@3.4.5
+  - @prosopo/api-express-router@3.1.5
+
+## 4.1.0
+### Minor Changes
+
+- 558bc6d: Make sure redis cache works with bigint
+
+## 4.0.0
+### Major Changes
+
+- 41c54b0: Redis cache to avoid hitting the database multiple times per API request
+
+### Minor Changes
+
+- f14d645: Fix to catch NaN being passed in as score in sessions
+- 74092d0: Stream data back to central for decisions
+
+### Patch Changes
+
+- Updated dependencies [74092d0]
+  - @prosopo/types-database@4.6.0
+  - @prosopo/database@3.10.0
+  - @prosopo/types-env@2.9.4
+  - @prosopo/env@3.4.4
+  - @prosopo/api-express-router@3.1.4
+
+## 3.24.0
+### Minor Changes
+
+- 99dfb44: Pass back reason via verify calls
+
+### Patch Changes
+
+- f6a4402: API endpoint for removing site keys
+- Updated dependencies [f6a4402]
+- Updated dependencies [99dfb44]
+  - @prosopo/types-database@4.5.3
+  - @prosopo/database@3.9.18
+  - @prosopo/types@3.16.0
+  - @prosopo/api@3.3.1
+  - @prosopo/types-env@2.9.3
+  - @prosopo/env@3.4.3
+  - @prosopo/api-express-router@3.1.3
+  - @prosopo/datasets@3.1.17
+  - @prosopo/keyring@2.9.23
+  - @prosopo/load-balancer@2.8.40
+  - @prosopo/user-access-policy@3.6.24
+
+## 3.23.2
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+  - @prosopo/api@3.3.0
+  - @prosopo/api-express-router@3.1.2
+  - @prosopo/database@3.9.17
+  - @prosopo/datasets@3.1.16
+  - @prosopo/env@3.4.2
+  - @prosopo/keyring@2.9.22
+  - @prosopo/load-balancer@2.8.39
+  - @prosopo/types-database@4.5.2
+  - @prosopo/types-env@2.9.2
+  - @prosopo/user-access-policy@3.6.23
+
+## 3.23.1
+### Patch Changes
+
+- 946a8ba: Abuser score threshold
+- 5614814: Small config changes
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+- Updated dependencies [b94890c]
+  - @prosopo/types-database@4.5.1
+  - @prosopo/types@3.14.1
+  - @prosopo/locale@3.2.1
+  - @prosopo/database@3.9.16
+  - @prosopo/types-env@2.9.1
+  - @prosopo/api@3.2.11
+  - @prosopo/api-express-router@3.1.1
+  - @prosopo/common@3.1.33
+  - @prosopo/datasets@3.1.15
+  - @prosopo/env@3.4.1
+  - @prosopo/keyring@2.9.21
+  - @prosopo/load-balancer@2.8.38
+  - @prosopo/user-access-policy@3.6.22
+  - @prosopo/api-route@2.6.41
+
+## 3.23.0
+### Minor Changes
+
+- 42650db: Add better spam rules and move ipinfo service to local instead of external
+
+### Patch Changes
+
+- fc514dd: ability to block different types of traffic
+- Updated dependencies [fc514dd]
+- Updated dependencies [7be39c4]
+- Updated dependencies [42650db]
+  - @prosopo/types-database@4.5.0
+  - @prosopo/locale@3.2.0
+  - @prosopo/types@3.14.0
+  - @prosopo/api@3.2.10
+  - @prosopo/api-express-router@3.1.0
+  - @prosopo/types-env@2.9.0
+  - @prosopo/env@3.4.0
+  - @prosopo/database@3.9.15
+  - @prosopo/common@3.1.32
+  - @prosopo/datasets@3.1.14
+  - @prosopo/keyring@2.9.20
+  - @prosopo/load-balancer@2.8.37
+  - @prosopo/user-access-policy@3.6.21
+  - @prosopo/api-route@2.6.40
+
+## 3.22.4
+### Patch Changes
+
+- fe5f0f9: Fixing flaky image captcha test
+- Updated dependencies [4a9c518]
+  - @prosopo/common@3.1.31
+  - @prosopo/api-express-router@3.0.70
+  - @prosopo/api-route@2.6.39
+  - @prosopo/database@3.9.14
+  - @prosopo/datasets@3.1.13
+  - @prosopo/env@3.3.15
+  - @prosopo/keyring@2.9.19
+  - @prosopo/load-balancer@2.8.36
+  - @prosopo/types-database@4.4.14
+  - @prosopo/types-env@2.8.15
+  - @prosopo/user-access-policy@3.6.20
+
 ## 3.22.3
 ### Patch Changes
 

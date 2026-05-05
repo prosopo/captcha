@@ -1,5 +1,72 @@
 # @prosopo/database
 
+## 3.10.1
+### Patch Changes
+
+- 942701b: Connection drop fix
+
+## 3.10.0
+### Minor Changes
+
+- 74092d0: Stream data back to central for decisions
+
+### Patch Changes
+
+- Updated dependencies [74092d0]
+  - @prosopo/types-database@4.6.0
+
+## 3.9.18
+### Patch Changes
+
+- f6a4402: API endpoint for removing site keys
+- Updated dependencies [f6a4402]
+- Updated dependencies [99dfb44]
+  - @prosopo/types-database@4.5.3
+  - @prosopo/types@3.16.0
+  - @prosopo/user-access-policy@3.6.24
+
+## 3.9.17
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+  - @prosopo/types-database@4.5.2
+  - @prosopo/user-access-policy@3.6.23
+
+## 3.9.16
+### Patch Changes
+
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+- Updated dependencies [b94890c]
+  - @prosopo/types-database@4.5.1
+  - @prosopo/types@3.14.1
+  - @prosopo/locale@3.2.1
+  - @prosopo/common@3.1.33
+  - @prosopo/user-access-policy@3.6.22
+  - @prosopo/redis-client@1.0.18
+
+## 3.9.15
+### Patch Changes
+
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+  - @prosopo/types-database@4.5.0
+  - @prosopo/locale@3.2.0
+  - @prosopo/types@3.14.0
+  - @prosopo/common@3.1.32
+  - @prosopo/user-access-policy@3.6.21
+  - @prosopo/redis-client@1.0.17
+
+## 3.9.14
+### Patch Changes
+
+- Updated dependencies [4a9c518]
+  - @prosopo/common@3.1.31
+  - @prosopo/redis-client@1.0.16
+  - @prosopo/types-database@4.4.14
+  - @prosopo/user-access-policy@3.6.20
+
 ## 3.9.13
 ### Patch Changes
 

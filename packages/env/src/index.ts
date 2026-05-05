@@ -14,4 +14,3 @@
 
 export * from "./env.js";
 export * from "./provider.js";
-export * from "./services/geolocation.js";

@@ -32,6 +32,8 @@ import {
 	type DecisionMachineInput,
 	type Hash,
 	type IPAddress,
+	type ISpamFilterRules,
+	type ITrafficFilter,
 	type ImageVerificationResponse,
 	type KeyringPair,
 	type PendingImageCaptchaRequest,
@@ -52,10 +54,13 @@ import {
 import { constructPairList, containsIdenticalPairs } from "../../pairs.js";
 import { checkLangRules } from "../../rules/lang.js";
 import { deepValidateIpAddress, shuffleArray } from "../../util.js";
+import type { RedisWriteQueue } from "../../util/redisCache.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { FrictionlessReason } from "../frictionless/frictionlessTasks.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
+import { checkTrafficFilter } from "../spam/checkTrafficFilter.js";
+import { evaluateEmailSpamRules } from "../spam/evaluateEmailSpamRules.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
 
 export class ImgCaptchaManager extends CaptchaManager {
@@ -66,8 +71,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 		pair: KeyringPair,
 		config: ProsopoConfigOutput,
 		logger?: Logger,
+		writeQueue?: RedisWriteQueue | null,
 	) {
-		super(db, pair, config, logger);
+		super(db, pair, config, logger, writeQueue);
 		this.config = config;
 		this.decisionMachineRunner = new DecisionMachineRunner(db);
 	}
@@ -386,20 +392,26 @@ export class ImgCaptchaManager extends CaptchaManager {
 			const totalImages = storedCaptchas[0]?.items.length || 0;
 
 			if (containsIdenticalPairs(pairs) && process.env.NODE_ENV !== "test") {
-				await this.db.disapproveDappUserCommitment(
-					commitmentId,
-					"CAPTCHA.INVALID_SOLUTION",
-					pairs,
-				);
+				// Write commitment disapproval and session update in parallel
+				const writePromises: Promise<void>[] = [
+					this.db.disapproveDappUserCommitment(
+						commitmentId,
+						"CAPTCHA.INVALID_SOLUTION",
+						pairs,
+					),
+				];
 				if (pendingRecord.sessionId) {
-					await this.db.updateSessionRecord(pendingRecord.sessionId, {
-						userSubmitted: true,
-						result: {
-							status: CaptchaStatus.disapproved,
-							reason: "CAPTCHA.INVALID_SOLUTION",
-						},
-					});
+					writePromises.push(
+						this.db.updateSessionRecord(pendingRecord.sessionId, {
+							userSubmitted: true,
+							result: {
+								status: CaptchaStatus.disapproved,
+								reason: "CAPTCHA.INVALID_SOLUTION",
+							},
+						}),
+					);
 				}
+				await Promise.all(writePromises);
 				response = {
 					captchas: captchaIds.map((id) => ({
 						captchaId: id,
@@ -425,28 +437,40 @@ export class ImgCaptchaManager extends CaptchaManager {
 					})),
 					verified: true,
 				};
-				await this.db.approveDappUserCommitment(commitmentId, pairs);
+				// Write commitment approval and session update in parallel
+				const writePromises: Promise<void>[] = [
+					this.db.approveDappUserCommitment(commitmentId, pairs),
+				];
 				if (pendingRecord.sessionId) {
-					await this.db.updateSessionRecord(pendingRecord.sessionId, {
-						userSubmitted: true,
-						result: { status: CaptchaStatus.approved },
-					});
+					writePromises.push(
+						this.db.updateSessionRecord(pendingRecord.sessionId, {
+							userSubmitted: true,
+							result: { status: CaptchaStatus.approved },
+						}),
+					);
 				}
+				await Promise.all(writePromises);
 			} else {
-				await this.db.disapproveDappUserCommitment(
-					commitmentId,
-					"CAPTCHA.INVALID_SOLUTION",
-					pairs,
-				);
+				// Write commitment disapproval and session update in parallel
+				const writePromises: Promise<void>[] = [
+					this.db.disapproveDappUserCommitment(
+						commitmentId,
+						"CAPTCHA.INVALID_SOLUTION",
+						pairs,
+					),
+				];
 				if (pendingRecord.sessionId) {
-					await this.db.updateSessionRecord(pendingRecord.sessionId, {
-						userSubmitted: true,
-						result: {
-							status: CaptchaStatus.disapproved,
-							reason: "CAPTCHA.INVALID_SOLUTION",
-						},
-					});
+					writePromises.push(
+						this.db.updateSessionRecord(pendingRecord.sessionId, {
+							userSubmitted: true,
+							result: {
+								status: CaptchaStatus.disapproved,
+								reason: "CAPTCHA.INVALID_SOLUTION",
+							},
+						}),
+					);
 				}
+				await Promise.all(writePromises);
 				response = {
 					captchas: captchaIds.map((id) => ({
 						captchaId: id,
@@ -593,6 +617,8 @@ export class ImgCaptchaManager extends CaptchaManager {
 		userAccessRulesStorage?: AccessRulesStorage,
 		email?: string,
 		spamEmailDomainCheckingEnabled = false,
+		spamFilter?: ISpamFilterRules,
+		trafficFilter?: ITrafficFilter,
 	): Promise<ImageVerificationResponse> {
 		const solution = await (commitmentId
 			? this.getDappUserCommitmentById(commitmentId)
@@ -603,7 +629,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 			this.logger.debug(() => ({
 				msg: "Not verified - no solution found",
 			}));
-			return { status: "API.USER_NOT_VERIFIED_NO_SOLUTION", verified: false };
+			return {
+				status: "API.USER_NOT_VERIFIED_NO_SOLUTION",
+				verified: false,
+			};
 		}
 
 		// -- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING --
@@ -611,7 +640,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 		// solution has already been checked by the server. Moving this code around could result in solutions being
 		// re-usable.
 		if (solution.serverChecked) {
-			return { status: "API.USER_ALREADY_VERIFIED", verified: false };
+			return {
+				status: "API.USER_ALREADY_VERIFIED",
+				verified: false,
+			};
 		}
 
 		await this.db.markDappUserCommitmentsChecked([solution.id]);
@@ -619,7 +651,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 		// A solution exists but is disapproved
 		if (solution.result.status === CaptchaStatus.disapproved) {
-			return { status: "API.USER_NOT_VERIFIED", verified: false };
+			return {
+				status: solution.result.reason || "API.USER_NOT_VERIFIED",
+				verified: false,
+			};
 		}
 
 		maxVerifiedTime = maxVerifiedTime || 60 * 1000; // Default to 1 minute
@@ -639,6 +674,12 @@ export class ImgCaptchaManager extends CaptchaManager {
 				verified: false,
 			};
 		}
+
+		// Accumulate commitment updates in memory to batch writes.
+		// Instead of writing after each check, we collect all updates and
+		// perform a single batch write at the end.
+		const commitmentUpdates: Partial<UserCommitment> = {};
+		let failStatus: string | undefined;
 
 		// Check user access policies for hard blocks
 		if (userAccessRulesStorage) {
@@ -661,23 +702,11 @@ export class ImgCaptchaManager extends CaptchaManager {
 							policy: blockPolicy,
 						},
 					}));
-					const blockedResult = {
+					commitmentUpdates.result = {
 						status: CaptchaStatus.disapproved,
 						reason: "API.ACCESS_POLICY_BLOCK" as const,
 					};
-					await this.db.updateDappUserCommitment(solution.id, {
-						result: blockedResult,
-					});
-					if (solution.sessionId) {
-						await this.db.updateSessionRecord(solution.sessionId, {
-							serverChecked: true,
-							result: blockedResult,
-						});
-					}
-					return {
-						status: "API.USER_BLOCKED",
-						verified: false,
-					};
+					failStatus = "API.ACCESS_POLICY_BLOCK";
 				}
 			} catch (error) {
 				this.logger.warn(() => ({
@@ -688,7 +717,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		}
 
 		// Check email domain against spam list if email is provided
-		if (email && spamEmailDomainCheckingEnabled) {
+		if (!failStatus && email && spamEmailDomainCheckingEnabled) {
 			try {
 				const isSpam = await this.checkSpamEmail(email);
 				if (isSpam) {
@@ -697,13 +726,11 @@ export class ImgCaptchaManager extends CaptchaManager {
 						msg: "Spam email domain detected in server image verification",
 						data: { commitmentId, dapp, emailDomain },
 					}));
-					if (commitmentId) {
-						await this.db.disapproveDappUserCommitment(
-							commitmentId,
-							"API.SPAM_EMAIL_DOMAIN",
-						);
-					}
-					return { status: "API.USER_NOT_VERIFIED", verified: false };
+					commitmentUpdates.result = {
+						status: CaptchaStatus.disapproved,
+						reason: "API.SPAM_EMAIL_DOMAIN",
+					};
+					failStatus = "API.SPAM_EMAIL_DOMAIN";
 				}
 			} catch (error) {
 				this.logger.warn(() => ({
@@ -713,6 +740,57 @@ export class ImgCaptchaManager extends CaptchaManager {
 			}
 		}
 
+		// Spam filter: configurable per-site email pattern rules
+		if (
+			!failStatus &&
+			spamFilter?.enabled &&
+			spamFilter.emailRules?.enabled &&
+			email
+		) {
+			const result = evaluateEmailSpamRules(email, spamFilter.emailRules);
+			if (result.isSpam) {
+				this.logger.info(() => ({
+					msg: "Spam filter rejected email in image verification",
+					data: { commitmentId, dapp, reason: result.reason },
+				}));
+				commitmentUpdates.result = {
+					status: CaptchaStatus.disapproved,
+					reason: "API.SPAM_EMAIL_RULE",
+				};
+				failStatus = "API.SPAM_EMAIL_RULE";
+			}
+		}
+
+		// Traffic filter: block VPN/proxy/Tor/abuser etc.
+		// blockAbuser defaults to true so abusive networks are always blocked
+		if (!failStatus) {
+			const effectiveTrafficFilter = { blockAbuser: true, ...trafficFilter };
+			// if at least one true
+			const hasTrafficFilter = Object.values(effectiveTrafficFilter).some(
+				(v) => v,
+			);
+			if (ip && hasTrafficFilter) {
+				const check = await checkTrafficFilter(
+					ip,
+					effectiveTrafficFilter,
+					env.ipInfoService,
+					this.logger,
+				);
+				if (check.isBlocked) {
+					this.logger.info(() => ({
+						msg: "Traffic filter rejected request",
+						data: { commitmentId, dapp, ip, reason: check.reason },
+					}));
+					commitmentUpdates.result = {
+						status: CaptchaStatus.disapproved,
+						reason: check.reason,
+					};
+					failStatus = check.reason;
+				}
+			}
+		}
+
+		// IP validation: accumulate providedIp update
 		if (ip) {
 			const solutionIpAddress = getIpAddressFromComposite(solution.ipAddress);
 			// Get client settings for IP validation rules
@@ -720,17 +798,15 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 			const ipValidationRules = clientRecord?.settings?.ipValidationRules;
 
-			await this.db.updateDappUserCommitment(solution.id, {
-				providedIp: getCompositeIpAddress(ip),
-			});
+			// Accumulate providedIp instead of writing immediately
+			commitmentUpdates.providedIp = getCompositeIpAddress(ip);
 
-			if (ipValidationRules?.enabled === true) {
+			if (!failStatus && ipValidationRules?.enabled === true) {
 				const ipValidation = await deepValidateIpAddress(
 					ip,
 					solutionIpAddress,
 					this.logger,
-					env.config.ipApi.apiKey,
-					env.config.ipApi.baseUrl,
+					env.ipInfoService,
 					ipValidationRules,
 				);
 
@@ -744,12 +820,14 @@ export class ImgCaptchaManager extends CaptchaManager {
 							distanceKm: ipValidation.distanceKm,
 						},
 					}));
-					return { status: "API.USER_NOT_VERIFIED", verified: false };
+					failStatus = "API.FAILED_IP_VALIDATION";
 				}
 			}
 		}
 
-		let isApproved = solution.result.status === CaptchaStatus.approved;
+		let isApproved =
+			!failStatus && solution.result.status === CaptchaStatus.approved;
+		let failureStatus = failStatus || "API.USER_NOT_VERIFIED";
 
 		let score: number | undefined;
 		if (solution.sessionId) {
@@ -772,7 +850,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 					this.logger.info(() => ({
 						msg: "Disallowing webview access - user not verified",
 					}));
-					return { status: "API.USER_NOT_VERIFIED", verified: false };
+					return {
+						status: "API.DISALLOWED_WEBVIEW",
+						verified: false,
+					};
 				}
 				if (
 					contextAwareEnabled &&
@@ -786,8 +867,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 				}
 			}
 		}
+
+		// Decision machine evaluation (only if still approved)
 		if (isApproved) {
-			// Captcha solution is correct, now check decision machine
 			const decisionInput: DecisionMachineInput = {
 				userAccount: solution.userAccount,
 				dappAccount: solution.dappAccount,
@@ -803,30 +885,20 @@ export class ImgCaptchaManager extends CaptchaManager {
 					this.logger,
 				);
 				if (decision.decision === DecisionMachineDecision.Deny) {
-					if (commitmentId) {
-						const dmReason =
-							decision.reason || "CAPTCHA.DECISION_MACHINE_DENIED";
-						// commitmentId should always be present
-						await this.db.disapproveDappUserCommitment(commitmentId, dmReason);
-						// log
-						this.logger?.info(() => ({
-							msg: "Decision machine denied user verification",
-							data: {
-								commitmentId: commitmentId,
-								reason: decision.reason,
-							},
-						}));
-						if (solution.sessionId) {
-							await this.db.updateSessionRecord(solution.sessionId, {
-								serverChecked: true,
-								result: {
-									status: CaptchaStatus.disapproved,
-									reason: dmReason,
-								},
-							});
-						}
-						isApproved = false;
-					}
+					const dmReason = decision.reason || "CAPTCHA.DECISION_MACHINE_DENIED";
+					this.logger?.info(() => ({
+						msg: "Decision machine denied user verification",
+						data: {
+							commitmentId,
+							reason: decision.reason,
+						},
+					}));
+					commitmentUpdates.result = {
+						status: CaptchaStatus.disapproved,
+						reason: dmReason,
+					};
+					isApproved = false;
+					failureStatus = dmReason;
 				}
 			} catch (error) {
 				this.logger?.error(() => ({
@@ -836,16 +908,61 @@ export class ImgCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		// Update session with final server verification result (if not already updated by deny paths above)
-		if (isApproved && solution.sessionId) {
-			await this.db.updateSessionRecord(solution.sessionId, {
-				serverChecked: true,
-				result: { status: CaptchaStatus.approved },
-			});
+		// Batch writes: separate non-streaming updates from streaming result writes.
+		// - providedIp uses updateDappUserCommitment (no central streaming)
+		// - approve/disapprove use dedicated methods that trigger centralStreamer
+		const writePromises: Promise<void>[] = [];
+
+		// Write providedIp if accumulated (non-streaming field)
+		if (commitmentUpdates.providedIp) {
+			writePromises.push(
+				this.db.updateDappUserCommitment(solution.id, {
+					providedIp: commitmentUpdates.providedIp,
+				}),
+			);
+		}
+
+		// Write result via the streaming-aware methods
+		if (commitmentId) {
+			if (isApproved) {
+				writePromises.push(this.db.approveDappUserCommitment(commitmentId));
+			} else if (commitmentUpdates.result) {
+				writePromises.push(
+					this.db.disapproveDappUserCommitment(
+						commitmentId,
+						commitmentUpdates.result.reason,
+					),
+				);
+			}
+		}
+
+		// Update session with final server verification result (different collection)
+		const finalResult = isApproved
+			? { status: CaptchaStatus.approved as const }
+			: commitmentUpdates.result || {
+					status: CaptchaStatus.disapproved as const,
+					reason: failureStatus,
+				};
+
+		if (solution.sessionId) {
+			writePromises.push(
+				this.db.updateSessionRecord(
+					solution.sessionId,
+					{
+						serverChecked: true,
+						result: finalResult,
+					},
+					true,
+				),
+			);
+		}
+
+		if (writePromises.length > 0) {
+			await Promise.all(writePromises);
 		}
 
 		return {
-			status: isApproved ? "API.USER_VERIFIED" : "API.USER_NOT_VERIFIED",
+			status: isApproved ? "API.USER_VERIFIED" : failureStatus,
 			verified: isApproved,
 			commitmentId: solution.id.toString(),
 			...(score && { score }),
@@ -862,6 +979,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		translateFn: (key: string) => string,
 		score?: number,
 		commitmentId?: Hash,
+		reason?: string,
 	): ImageVerificationResponse {
 		return {
 			...super.getVerificationResponse(
@@ -869,6 +987,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				clientRecord,
 				translateFn,
 				score,
+				reason,
 			),
 			...(commitmentId && {
 				[ApiParams.commitmentId]: commitmentId,

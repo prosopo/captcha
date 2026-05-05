@@ -165,6 +165,7 @@ describe("ImgCaptchaManager", () => {
 			storeDappUserSolution: vi.fn(),
 			approveDappUserCommitment: vi.fn(),
 			disapproveDappUserCommitment: vi.fn(),
+			updateDappUserCommitment: vi.fn(),
 			getCaptchaById: vi.fn(),
 			getDappUserCommitmentById: vi.fn(),
 			getDappUserCommitmentByAccount: vi.fn(),
@@ -172,6 +173,7 @@ describe("ImgCaptchaManager", () => {
 			getSessionRecordBySessionId: vi.fn(),
 			updateSessionRecord: vi.fn(),
 			getSpamEmailDomain: vi.fn(),
+			getClientRecord: vi.fn(),
 		} as unknown as IProviderDatabase;
 
 		pair = {
@@ -584,10 +586,8 @@ describe("ImgCaptchaManager", () => {
 			// Mock database calls
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.getDappUserCommitmentById as any).mockResolvedValue(commitment);
-			db.disapproveDappUserCommitment = vi
-				.fn()
-				// biome-ignore lint/suspicious/noExplicitAny: tests
-				.mockResolvedValue(undefined) as any;
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.disapproveDappUserCommitment as any).mockResolvedValue(undefined);
 
 			// Mock decision machine to return Deny
 			const originalDecide =
@@ -612,9 +612,9 @@ describe("ImgCaptchaManager", () => {
 
 			// Verify result is not verified
 			expect(result.verified).toBe(false);
-			expect(result.status).toBe("API.USER_NOT_VERIFIED");
+			expect(result.status).toBe("Suspicious behavior detected");
 
-			// Verify commitment was disapproved
+			// Verify commitment was disapproved via streaming-aware method
 			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith(
 				commitmentId,
 				expect.stringContaining("Suspicious behavior"),
@@ -810,10 +810,14 @@ describe("ImgCaptchaManager", () => {
 			);
 
 			expect(result.verified).toBe(true);
-			expect(db.updateSessionRecord).toHaveBeenCalledWith(sessionId, {
-				serverChecked: true,
-				result: { status: CaptchaStatus.approved },
-			});
+			expect(db.updateSessionRecord).toHaveBeenCalledWith(
+				sessionId,
+				{
+					serverChecked: true,
+					result: { status: CaptchaStatus.approved },
+				},
+				true,
+			);
 
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(imgCaptchaManager as any).decisionMachineRunner.decide = originalDecide;
@@ -848,9 +852,7 @@ describe("ImgCaptchaManager", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.getSessionRecordBySessionId as any).mockResolvedValue(undefined);
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.disapproveDappUserCommitment as any) = vi
-				.fn()
-				.mockResolvedValue(undefined);
+			(db.disapproveDappUserCommitment as any).mockResolvedValue(undefined);
 
 			// Mock decision machine to deny
 			const originalDecide =
@@ -872,13 +874,17 @@ describe("ImgCaptchaManager", () => {
 			);
 
 			expect(result.verified).toBe(false);
-			expect(db.updateSessionRecord).toHaveBeenCalledWith(sessionId, {
-				serverChecked: true,
-				result: {
-					status: CaptchaStatus.disapproved,
-					reason: "Suspicious",
+			expect(db.updateSessionRecord).toHaveBeenCalledWith(
+				sessionId,
+				{
+					serverChecked: true,
+					result: {
+						status: CaptchaStatus.disapproved,
+						reason: "Suspicious",
+					},
 				},
-			});
+				true,
+			);
 
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(imgCaptchaManager as any).decisionMachineRunner.decide = originalDecide;
@@ -974,10 +980,8 @@ describe("ImgCaptchaManager", () => {
 			(db.getSpamEmailDomain as any).mockResolvedValue({
 				domain: "spammydomain.com",
 			});
-			db.disapproveDappUserCommitment = vi
-				.fn()
-				// biome-ignore lint/suspicious/noExplicitAny: tests
-				.mockResolvedValue(undefined) as any;
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.disapproveDappUserCommitment as any).mockResolvedValue(undefined);
 
 			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
 				userAccount,
@@ -994,7 +998,7 @@ describe("ImgCaptchaManager", () => {
 			);
 
 			expect(result.verified).toBe(false);
-			expect(result.status).toBe("API.USER_NOT_VERIFIED");
+			expect(result.status).toBe("API.SPAM_EMAIL_DOMAIN");
 			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("spammydomain.com");
 			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith(
 				commitmentId,
@@ -1198,10 +1202,8 @@ describe("ImgCaptchaManager", () => {
 			(db.getSpamEmailDomain as any).mockResolvedValue({
 				domain: "spammydomain.com",
 			});
-			db.disapproveDappUserCommitment = vi
-				.fn()
-				// biome-ignore lint/suspicious/noExplicitAny: tests
-				.mockResolvedValue(undefined) as any;
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.disapproveDappUserCommitment as any).mockResolvedValue(undefined);
 
 			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
 				userAccount,
@@ -1218,7 +1220,7 @@ describe("ImgCaptchaManager", () => {
 			);
 
 			expect(result.verified).toBe(false);
-			expect(result.status).toBe("API.USER_NOT_VERIFIED");
+			expect(result.status).toBe("API.SPAM_EMAIL_DOMAIN");
 			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("spammydomain.com");
 			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith(
 				commitmentId,
@@ -1264,10 +1266,8 @@ describe("ImgCaptchaManager", () => {
 			(db.getSpamEmailDomain as any).mockResolvedValue({
 				domain: "spammydomain.com",
 			});
-			db.disapproveDappUserCommitment = vi
-				.fn()
-				// biome-ignore lint/suspicious/noExplicitAny: tests
-				.mockResolvedValue(undefined) as any;
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.disapproveDappUserCommitment as any).mockResolvedValue(undefined);
 
 			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
 				userAccount,
@@ -1284,7 +1284,7 @@ describe("ImgCaptchaManager", () => {
 			);
 
 			expect(result.verified).toBe(false);
-			expect(result.status).toBe("API.USER_NOT_VERIFIED");
+			expect(result.status).toBe("API.SPAM_EMAIL_DOMAIN");
 			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("spammydomain.com");
 		});
 
@@ -1427,7 +1427,7 @@ describe("ImgCaptchaManager", () => {
 			);
 
 			expect(result.verified).toBe(false);
-			expect(result.status).toBe("API.USER_NOT_VERIFIED");
+			expect(result.status).toBe("API.SPAM_EMAIL_DOMAIN");
 			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("spammydomain.com");
 			// Should not call disapprove when commitmentId is undefined
 			expect(db.disapproveDappUserCommitment).not.toHaveBeenCalled();

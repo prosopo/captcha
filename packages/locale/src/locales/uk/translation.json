@@ -21,7 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Доступ заблоковано політикою",
 		"FORBIDDEN": "Forbidden",
 		"PROVIDER_VERIFY_FAILED": "Provider verification failed",
-		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
+		"SPAM_EMAIL_DOMAIN": "Домен електронної пошти не дозволено",
 		"UNAUTHORIZED": "Unauthorised",
 		"MISSING_BODY": "Missing body",
 		"NO_CONTENT_TYPE_HEADER": "No content-type header. Assumed JSON encoded body but failed to parse.",
@@ -41,7 +41,16 @@
 		"INVALID_IP": "Invalid IP",
 		"INVALID_URL": "Invalid URL",
 		"INVALID_BODY": "Invalid body",
-		"PARSE_ERROR": "Error parsing request"
+		"PARSE_ERROR": "Error parsing request",
+		"SPAM_EMAIL_RULE": "Адресу електронної пошти заблоковано правилами спам-фільтра",
+		"VPN_BLOCKED": "Запити з VPN-з'єднань не дозволені для цього сайту",
+		"PROXY_BLOCKED": "Запити з проксі-серверів не дозволені для цього сайту",
+		"TOR_BLOCKED": "Запити з вихідних вузлів Tor не дозволені для цього сайту",
+		"ABUSER_BLOCKED": "Запити з мереж, позначених за зловживання, не дозволені для цього сайту",
+		"DATACENTER_BLOCKED": "Запити з IP-адрес дата-центрів не дозволені для цього сайту",
+		"MOBILE_BLOCKED": "Запити з мобільних мережевих з'єднань не дозволені для цього сайту",
+		"SATELLITE_BLOCKED": "Запити із супутникових з'єднань не дозволені для цього сайту",
+		"CRAWLER_BLOCKED": "Запити від відомих пошукових роботів не дозволені для цього сайту"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Cannot modify owner user",
@@ -49,7 +58,9 @@
 		"CANNOT_DELETE_LAST_USER": "Cannot delete last user",
 		"USER_ALREADY_EXISTS": "User already exists",
 		"NO_SUGGESTIONS_FOUND": "No suggestions found",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Cannot deactivate the last active site"
+		"CANNOT_DEACTIVATE_LAST_SITE": "Cannot deactivate the last active site",
+		"DUPLICATE_SITE_NAME": "Сайт із такою назвою вже існує",
+		"INVALID_SITE_NAME": "Назва сайту повинна містити лише літери, цифри, дефіси та символи підкреслення"
 	},
 	"TARGET": {
 		"airplanes": "aeroplanes",

@@ -144,6 +144,34 @@ export default (
 			// Calculate the hash for this user-IP-sitekey combination
 			const userSitekeyIpHash = hashUserIp(user, normalizedIp, dapp);
 
+			// Check Redis cache first for session deduplication (avoids MongoDB query).
+			// Falls back to MongoDB if Redis is unavailable or cache miss.
+			let existingSessionId: string | null = null;
+			if (tasks.writeQueue) {
+				existingSessionId =
+					await tasks.writeQueue.getCachedSessionByHash(userSitekeyIpHash);
+				if (existingSessionId) {
+					// Verify the cached session still exists and get its details
+					const cachedData =
+						await tasks.writeQueue.getCachedSession(existingSessionId);
+					if (cachedData?.captchaType && !cachedData.deleted) {
+						req.logger.info(() => ({
+							msg: "Reusing existing session from Redis cache",
+							data: {
+								userSitekeyIpHash,
+								sessionId: existingSessionId,
+								captchaType: cachedData.captchaType,
+							},
+						}));
+						return res.json({
+							[ApiParams.captchaType]: cachedData.captchaType as string,
+							[ApiParams.sessionId]: existingSessionId,
+							[ApiParams.status]: "ok",
+						});
+					}
+				}
+			}
+
 			const existingSession =
 				await tasks.db.getSessionByuserSitekeyIpHash(userSitekeyIpHash);
 
@@ -165,6 +193,20 @@ export default (
 						sessionId: existingSession.sessionId,
 					},
 				}));
+
+				// Populate Redis cache for future requests
+				if (tasks.writeQueue) {
+					tasks.writeQueue
+						.cacheSessionByHash(userSitekeyIpHash, existingSession.sessionId)
+						.catch(() => {});
+					tasks.writeQueue
+						.cacheSession(
+							existingSession.sessionId,
+							existingSession as unknown as Record<string, unknown>,
+						)
+						.catch(() => {});
+				}
+
 				return res.json({
 					[ApiParams.captchaType]: existingSession.captchaType,
 					[ApiParams.sessionId]: existingSession.sessionId,
@@ -249,24 +291,11 @@ export default (
 
 			const ipAddress = getCompositeIpAddress(normalizedIp);
 
-			// Get country code for geoblocking (skip if env is incomplete)
-			let countryCode: string | undefined;
-			if (env?.config?.maxmindDbPath) {
-				try {
-					countryCode =
-						await env.geolocationService.getCountryCode(normalizedIp);
-					req.logger?.debug?.(() => ({
-						msg: "Resolved country code for geoblocking",
-						countryCode,
-						ip: normalizedIp,
-					}));
-				} catch (err) {
-					req.logger?.warn?.(() => ({
-						err,
-						msg: "Failed to resolve geolocation; skipping geoblocking",
-					}));
-				}
-			}
+			// Get country code for geoblocking from middleware-provided IP info
+			const countryCode =
+				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
+					? req.ipInfo.countryCode
+					: undefined;
 
 			const flatHeaders = flatten(req.headers);
 

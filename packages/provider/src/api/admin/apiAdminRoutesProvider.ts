@@ -22,6 +22,8 @@ import { ApiRegisterSiteKeysEndpoint } from "./apiRegisterSiteKeysEndpoint.js";
 import { ApiRemoveAllDecisionMachinesEndpoint } from "./apiRemoveAllDecisionMachinesEndpoint.js";
 import { ApiRemoveDecisionMachineEndpoint } from "./apiRemoveDecisionMachineEndpoint.js";
 import { ApiRemoveDetectorKeyEndpoint } from "./apiRemoveDetectorKeyEndpoint.js";
+import { ApiRemoveSiteKeyEndpoint } from "./apiRemoveSiteKeyEndpoint.js";
+import { ApiRemoveSiteKeysEndpoint } from "./apiRemoveSiteKeysEndpoint.js";
 import { ApiToggleMaintenanceModeEndpoint } from "./apiToggleMaintenanceModeEndpoint.js";
 import { ApiUpdateDecisionMachineEndpoint } from "./apiUpdateDecisionMachineEndpoint.js";
 import { ApiUpdateDetectorKeyEndpoint } from "./apiUpdateDetectorKeyEndpoint.js";
@@ -54,6 +56,12 @@ class ApiAdminRoutesProvider implements ApiRoutesProvider {
 				new ApiRemoveDecisionMachineEndpoint(this.tasks.clientTaskManager),
 			[AdminApiPaths.RemoveAllDecisionMachines]:
 				new ApiRemoveAllDecisionMachinesEndpoint(this.tasks.clientTaskManager),
+			[AdminApiPaths.SiteKeyRemove]: new ApiRemoveSiteKeyEndpoint(
+				this.tasks.clientTaskManager,
+			),
+			[AdminApiPaths.SiteKeysRemove]: new ApiRemoveSiteKeysEndpoint(
+				this.tasks.clientTaskManager,
+			),
 			[AdminApiPaths.ToggleMaintenanceMode]:
 				new ApiToggleMaintenanceModeEndpoint(),
 		};

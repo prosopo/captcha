@@ -11,6 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import type {
+	RegisterSitekeysBodyTypeOutput,
+	RemoveSitekeysBodyTypeOutput,
+} from "@prosopo/types";
 import type { IUserSettings, Tier } from "../client/index.js";
 import type { CaptchaSolution } from "../datasets/index.js";
 import type {
@@ -103,6 +108,15 @@ export interface ProviderApiInterface {
 		siteKey: string,
 		tier: Tier,
 		settings: IUserSettings,
+		jwt: string,
+	): Promise<ApiResponse>;
+	registerSiteKeys(
+		siteKeys: RegisterSitekeysBodyTypeOutput,
+		jwt: string,
+	): Promise<ApiResponse>;
+	removeSiteKey(siteKey: string, jwt: string): Promise<ApiResponse>;
+	removeSiteKeys(
+		siteKeys: RemoveSitekeysBodyTypeOutput,
 		jwt: string,
 	): Promise<ApiResponse>;
 	updateDetectorKey(detectorKey: string, jwt: string): Promise<ApiResponse>;

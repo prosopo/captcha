@@ -95,22 +95,24 @@ export const Checkbox: FC<CheckboxProps> = ({
 	const ResponsiveLabel = styled.label<ResponsiveLabelProps>`
 		color: ${theme.palette.background.contrastText};
 		position: relative;
-		display: flex;
+		display: flex !important;
 		cursor: pointer;
 		user-select: none;
 		font-weight: normal;
 		font-family: ${theme.font.fontFamily};
-		
-		@container widget (max-width: 219px) {
+		@container prosopo-widget (max-width: 169px) {
 			display: none;
 		}
-		@container widget (min-width: 220px) {
+		@container prosopo-widget (min-width: 170px) {
+			font-size: 10px;
+		}
+		@container prosopo-widget (min-width: 220px) {
 			font-size: 12px;
 		}
-		@container widget (min-width: 250px) {
+		@container prosopo-widget (min-width: 250px) {
 			font-size: 14px;
 		}
-		@container widget (min-width: 270px) {
+		@container prosopo-widget (min-width: 270px) {
 			font-size: 16px;
 		}
 	`;
@@ -177,7 +179,7 @@ export const Checkbox: FC<CheckboxProps> = ({
 					checked={checked}
 					style={checkboxStyle}
 					disabled={error !== undefined}
-					className={loading ? "checkbox__loading-spinner" : ""}
+					className={loading ? "prosopo-checkbox__loading-spinner" : ""}
 					data-cy={"captcha-checkbox"}
 				/>
 			)}

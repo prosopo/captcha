@@ -44,6 +44,7 @@ import {
 	getRequestUserScope,
 } from "../api/blacklistRequestInspector.js";
 import { getIpAddressFromComposite } from "../compositeIpAddress.js";
+import type { RedisWriteQueue } from "../util/redisCache.js";
 import { checkSpamEmail as checkSpamEmailFn } from "./spam/checkSpamEmail.js";
 
 /**
@@ -64,17 +65,20 @@ export class CaptchaManager {
 	db: IProviderDatabase;
 	config: ProsopoConfigOutput;
 	logger: Logger;
+	writeQueue: RedisWriteQueue | null;
 
 	constructor(
 		db: IProviderDatabase,
 		pair: KeyringPair,
 		config: ProsopoConfigOutput,
 		logger?: Logger,
+		writeQueue?: RedisWriteQueue | null,
 	) {
 		this.pair = pair;
 		this.db = db;
 		this.config = config;
 		this.logger = logger || getLogger("info", import.meta.url);
+		this.writeQueue = writeQueue ?? null;
 	}
 
 	async validateSessionIP(
@@ -147,6 +151,13 @@ export class CaptchaManager {
 						reason: "CAPTCHA.NO_SESSION_FOUND",
 						type: requestedCaptchaType,
 					};
+				}
+
+				// Invalidate the Redis session cache so that subsequent
+				// frictionless requests do not receive this now-deleted
+				// sessionId from the stale cache.
+				if (this.writeQueue) {
+					this.writeQueue.invalidateCachedSession(sessionId).catch(() => {});
 				}
 
 				// Validate IP address if currentIP is provided
@@ -241,6 +252,7 @@ export class CaptchaManager {
 		clientRecord: ClientRecord,
 		translateFn: (key: string) => string,
 		score?: number,
+		reason?: string,
 	) {
 		return {
 			status: translateFn(
@@ -250,6 +262,11 @@ export class CaptchaManager {
 			...(CaptchaManager.canClientSeeScore(clientRecord.tier, score) && {
 				[ApiParams.score]: score,
 			}),
+			...(!verified &&
+				clientRecord.tier !== Tier.Free &&
+				reason && {
+					[ApiParams.reason]: reason,
+				}),
 		};
 	}
 
