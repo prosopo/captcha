@@ -61,6 +61,9 @@
 		},
 		{
 			"path": "../locale/tsconfig.cjs.json"
+		},
+		{
+			"path": "../redis-client/tsconfig.cjs.json"
 		}
 	]
 }
