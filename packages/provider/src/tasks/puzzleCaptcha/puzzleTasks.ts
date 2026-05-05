@@ -468,8 +468,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 					ip,
 					challengeIpAddress,
 					this.logger,
-					env.config.ipApi.apiKey,
-					env.config.ipApi.baseUrl,
+					env.ipInfoService,
 					ipValidationRules,
 				);
 
