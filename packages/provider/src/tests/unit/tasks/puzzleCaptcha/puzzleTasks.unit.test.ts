@@ -31,10 +31,23 @@ import { checkPowSignature } from "../../../../tasks/powCaptcha/powTasksUtils.js
 import { PuzzleCaptchaManager } from "../../../../tasks/puzzleCaptcha/puzzleTasks.js";
 import { validatePuzzleSolution } from "../../../../tasks/puzzleCaptcha/puzzleTasksUtils.js";
 
-vi.mock("@polkadot/util", () => ({
-	u8aToHex: vi.fn(),
-	stringToHex: vi.fn(),
-}));
+vi.mock(
+	"@polkadot/util",
+	async (
+		importOriginal: () => // biome-ignore lint/suspicious/noExplicitAny: test helper
+			| Record<string, any>
+			// biome-ignore lint/suspicious/noExplicitAny: test helper
+			| PromiseLike<Record<string, any>>,
+	) => {
+		// biome-ignore lint/suspicious/noExplicitAny: test helper
+		const actual = (await importOriginal()) as Record<string, any>;
+		return {
+			...actual,
+			u8aToHex: vi.fn(),
+			stringToHex: vi.fn(),
+		};
+	},
+);
 
 vi.mock(
 	"@prosopo/util",
