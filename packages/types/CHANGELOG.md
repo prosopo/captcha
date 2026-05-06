@@ -1,5 +1,14 @@
 # @prosopo/types
 
+## 3.16.0
+### Minor Changes
+
+- 99dfb44: Pass back reason via verify calls
+
+### Patch Changes
+
+- f6a4402: API endpoint for removing site keys
+
 ## 3.15.0
 ### Minor Changes
 

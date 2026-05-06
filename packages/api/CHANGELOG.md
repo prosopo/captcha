@@ -1,5 +1,13 @@
 # @prosopo/api
 
+## 3.3.1
+### Patch Changes
+
+- f6a4402: API endpoint for removing site keys
+- Updated dependencies [f6a4402]
+- Updated dependencies [99dfb44]
+  - @prosopo/types@3.16.0
+
 ## 3.3.0
 ### Minor Changes
 

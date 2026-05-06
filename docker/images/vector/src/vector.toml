@@ -1,8 +1,8 @@
 # Vector Configuration for Prosopo Captcha Provider Logging
-# 
+#
 # This configuration file sets up Vector (a log aggregation tool) to collect and forward
 # logs from various Docker containers to OpenObserve (oo) for centralized logging and monitoring.
-# 
+#
 # The pipeline consists of:
 # 1. Sources: Collect logs from Docker containers and events
 # 2. Transforms: Process and format the collected data
@@ -90,8 +90,13 @@ healthcheck.enabled = true
 batch.timeout_secs = 15
 request.rate_limit_duration_secs = 1
 request.rate_limit_num = 10
+request.retry_max_attempts = 5            # Chuck the log away after 5 failed tries
+request.retry_initial_backoff_secs = 1    # Start retrying after 1s
+request.retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+
 buffer.type = "disk"
 buffer.max_size = 268435488
+buffer.when_full = "drop_new"
 compression = "gzip"
 
 # Sink: Forward provider logs to secondary OpenObserve instance (oo2.prosopo.io)
@@ -110,8 +115,13 @@ healthcheck.enabled = true
 batch.timeout_secs = 15
 request.rate_limit_duration_secs = 1
 request.rate_limit_num = 10
+request.retry_max_attempts = 5            # Chuck the log away after 5 failed tries
+request.retry_initial_backoff_secs = 1    # Start retrying after 1s
+request.retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+
 buffer.type = "disk"
 buffer.max_size = 268435488
+buffer.when_full = "drop_new"
 compression = "gzip"
 
 # =============================================================================
@@ -162,8 +172,13 @@ healthcheck.enabled = true
 batch.timeout_secs = 15
 request.rate_limit_duration_secs = 1
 request.rate_limit_num = 10
+request.retry_max_attempts = 5            # Chuck the log away after 5 failed tries
+request.retry_initial_backoff_secs = 1    # Start retrying after 1s
+request.retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+
 buffer.type = "disk"
 buffer.max_size = 268435488
+buffer.when_full = "drop_new"
 compression = "gzip"
 
 # Sink: Forward mongo logs to secondary OpenObserve instance (oo2.prosopo.io)
@@ -182,8 +197,13 @@ healthcheck.enabled = true
 batch.timeout_secs = 15
 request.rate_limit_duration_secs = 1
 request.rate_limit_num = 10
+request.retry_max_attempts = 5            # Chuck the log away after 5 failed tries
+request.retry_initial_backoff_secs = 1    # Start retrying after 1s
+request.retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+
 buffer.type = "disk"
 buffer.max_size = 268435488
+buffer.when_full = "drop_new"
 compression = "gzip"
 
 # =============================================================================
@@ -242,15 +262,20 @@ method = "post"
 auth.strategy = "basic"
 auth.user = "${OO_USERNAME:?err}"
 auth.password = "${OO_PASSWORD:?err}"
-compression = "gzip"
 encoding.codec = "json"
 encoding.timestamp_format = "rfc3339"
 healthcheck.enabled = true
 batch.timeout_secs = 15
 request.rate_limit_duration_secs = 1
 request.rate_limit_num = 10
+request.retry_max_attempts = 5            # Chuck the log away after 5 failed tries
+request.retry_initial_backoff_secs = 1    # Start retrying after 1s
+request.retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+
 buffer.type = "disk"
 buffer.max_size = 268435488
+buffer.when_full = "drop_new"
+compression = "gzip"
 
 # Sink: Forward Docker events to secondary OpenObserve instance
 [sinks.oo2_docker]
@@ -261,15 +286,19 @@ method = "post"
 auth.strategy = "basic"
 auth.user = "${OO2_USERNAME:?err}"
 auth.password = "${OO2_PASSWORD:?err}"
-compression = "gzip"
 encoding.codec = "json"
 encoding.timestamp_format = "rfc3339"
 healthcheck.enabled = true
 batch.timeout_secs = 15
 request.rate_limit_duration_secs = 1
-request.rate_limit_num = 10
+request.retry_max_attempts = 5            # Chuck the log away after 5 failed tries
+request.retry_initial_backoff_secs = 1    # Start retrying after 1s
+request.retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+
 buffer.type = "disk"
 buffer.max_size = 268435488
+buffer.when_full = "drop_new"
+compression = "gzip"
 
 # =============================================================================
 # CADDY WEB SERVER LOGS PIPELINE
@@ -314,15 +343,19 @@ method = "post"
 auth.strategy = "basic"
 auth.user = "${OO_USERNAME:?err}"
 auth.password = "${OO_PASSWORD:?err}"
-compression = "gzip"
 encoding.codec = "json"
 encoding.timestamp_format = "rfc3339"
 healthcheck.enabled = true
 batch.timeout_secs = 15
 request.rate_limit_duration_secs = 1
-request.rate_limit_num = 10
+request.retry_max_attempts = 5            # Chuck the log away after 5 failed tries
+request.retry_initial_backoff_secs = 1    # Start retrying after 1s
+request.retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+
 buffer.type = "disk"
 buffer.max_size = 268435488
+buffer.when_full = "drop_new"
+compression = "gzip"
 
 # Sink: Forward Caddy logs to secondary OpenObserve instance
 [sinks.oo2_caddy]
@@ -333,15 +366,19 @@ method = "post"
 auth.strategy = "basic"
 auth.user = "${OO2_USERNAME:?err}"
 auth.password = "${OO2_PASSWORD:?err}"
-compression = "gzip"
 encoding.codec = "json"
 encoding.timestamp_format = "rfc3339"
 healthcheck.enabled = true
 batch.timeout_secs = 15
 request.rate_limit_duration_secs = 1
-request.rate_limit_num = 10
+request.retry_max_attempts = 5            # Chuck the log away after 5 failed tries
+request.retry_initial_backoff_secs = 1    # Start retrying after 1s
+request.retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+
 buffer.type = "disk"
 buffer.max_size = 268435488
+buffer.when_full = "drop_new"
+compression = "gzip"
 
 # =============================================================================
 # VECTOR INTERNAL LOGS PIPELINE
@@ -369,15 +406,19 @@ method = "post"
 auth.strategy = "basic"
 auth.user = "${OO_USERNAME:?err}"
 auth.password = "${OO_PASSWORD:?err}"
-compression = "gzip"
 encoding.codec = "json"
 encoding.timestamp_format = "rfc3339"
 healthcheck.enabled = true
 batch.timeout_secs = 15
 request.rate_limit_duration_secs = 1
-request.rate_limit_num = 10
+request.retry_max_attempts = 5            # Chuck the log away after 5 failed tries
+request.retry_initial_backoff_secs = 1    # Start retrying after 1s
+request.retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+
 buffer.type = "disk"
 buffer.max_size = 268435488
+buffer.when_full = "drop_new"
+compression = "gzip"
 
 # Sink: Forward Vector logs to secondary OpenObserve instance
 [sinks.oo2_vector]
@@ -388,15 +429,19 @@ method = "post"
 auth.strategy = "basic"
 auth.user = "${OO2_USERNAME:?err}"
 auth.password = "${OO2_PASSWORD:?err}"
-compression = "gzip"
 encoding.codec = "json"
 encoding.timestamp_format = "rfc3339"
 healthcheck.enabled = true
 batch.timeout_secs = 15
 request.rate_limit_duration_secs = 1
-request.rate_limit_num = 10
+request.retry_max_attempts = 5            # Chuck the log away after 5 failed tries
+request.retry_initial_backoff_secs = 1    # Start retrying after 1s
+request.retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+
 buffer.type = "disk"
 buffer.max_size = 268435488
+buffer.when_full = "drop_new"
+compression = "gzip"
 
 # =============================================================================
 # REDIS LOGS PIPELINE
@@ -456,15 +501,19 @@ method = "post"
 auth.strategy = "basic"
 auth.user = "${OO_USERNAME:?err}"
 auth.password = "${OO_PASSWORD:?err}"
-compression = "gzip"
 encoding.codec = "json"
 encoding.timestamp_format = "rfc3339"
 healthcheck.enabled = true
 batch.timeout_secs = 15
 request.rate_limit_duration_secs = 1
-request.rate_limit_num = 10
+request.retry_max_attempts = 5            # Chuck the log away after 5 failed tries
+request.retry_initial_backoff_secs = 1    # Start retrying after 1s
+request.retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+
 buffer.type = "disk"
 buffer.max_size = 268435488
+buffer.when_full = "drop_new"
+compression = "gzip"
 
 # Sink: Forward Redis logs to secondary OpenObserve instance
 [sinks.oo2_redis]
@@ -475,15 +524,19 @@ method = "post"
 auth.strategy = "basic"
 auth.user = "${OO2_USERNAME:?err}"
 auth.password = "${OO2_PASSWORD:?err}"
-compression = "gzip"
 encoding.codec = "json"
 encoding.timestamp_format = "rfc3339"
 healthcheck.enabled = true
 batch.timeout_secs = 15
 request.rate_limit_duration_secs = 1
-request.rate_limit_num = 10
+request.retry_max_attempts = 5            # Chuck the log away after 5 failed tries
+request.retry_initial_backoff_secs = 1    # Start retrying after 1s
+request.retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+
 buffer.type = "disk"
 buffer.max_size = 268435488
+buffer.when_full = "drop_new"
+compression = "gzip"
 
 # =============================================================================
 # METRICS PIPELINE
@@ -630,9 +683,14 @@ auth.user = "${OO_USERNAME:?err}"
 auth.password = "${OO_PASSWORD:?err}"
 batch.timeout_secs = 15
 request.rate_limit_duration_secs = 1
-request.rate_limit_num = 10
+request.retry_max_attempts = 5            # Chuck the log away after 5 failed tries
+request.retry_initial_backoff_secs = 1    # Start retrying after 1s
+request.retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+
 buffer.type = "disk"
 buffer.max_size = 268435488
+buffer.when_full = "drop_new"
+compression = "gzip"
 
 # Sink: Forward all metrics to secondary OpenObserve instance
 # Backup destination for metrics redundancy and disaster recovery
@@ -645,6 +703,11 @@ auth.user = "${OO2_USERNAME:?err}"
 auth.password = "${OO2_PASSWORD:?err}"
 batch.timeout_secs = 15
 request.rate_limit_duration_secs = 1
-request.rate_limit_num = 10
+request.retry_max_attempts = 5            # Chuck the log away after 5 failed tries
+request.retry_initial_backoff_secs = 1    # Start retrying after 1s
+request.retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+
 buffer.type = "disk"
 buffer.max_size = 268435488
+buffer.when_full = "drop_new"
+compression = "gzip"

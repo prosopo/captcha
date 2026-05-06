@@ -1,5 +1,63 @@
 # @prosopo/provider
 
+## 4.2.0
+### Minor Changes
+
+- 780dcb0: Clear sessions from cache when deleted from db
+
+### Patch Changes
+
+- Updated dependencies [942701b]
+  - @prosopo/database@3.10.1
+  - @prosopo/env@3.4.5
+  - @prosopo/api-express-router@3.1.5
+
+## 4.1.0
+### Minor Changes
+
+- 558bc6d: Make sure redis cache works with bigint
+
+## 4.0.0
+### Major Changes
+
+- 41c54b0: Redis cache to avoid hitting the database multiple times per API request
+
+### Minor Changes
+
+- f14d645: Fix to catch NaN being passed in as score in sessions
+- 74092d0: Stream data back to central for decisions
+
+### Patch Changes
+
+- Updated dependencies [74092d0]
+  - @prosopo/types-database@4.6.0
+  - @prosopo/database@3.10.0
+  - @prosopo/types-env@2.9.4
+  - @prosopo/env@3.4.4
+  - @prosopo/api-express-router@3.1.4
+
+## 3.24.0
+### Minor Changes
+
+- 99dfb44: Pass back reason via verify calls
+
+### Patch Changes
+
+- f6a4402: API endpoint for removing site keys
+- Updated dependencies [f6a4402]
+- Updated dependencies [99dfb44]
+  - @prosopo/types-database@4.5.3
+  - @prosopo/database@3.9.18
+  - @prosopo/types@3.16.0
+  - @prosopo/api@3.3.1
+  - @prosopo/types-env@2.9.3
+  - @prosopo/env@3.4.3
+  - @prosopo/api-express-router@3.1.3
+  - @prosopo/datasets@3.1.17
+  - @prosopo/keyring@2.9.23
+  - @prosopo/load-balancer@2.8.40
+  - @prosopo/user-access-policy@3.6.24
+
 ## 3.23.2
 ### Patch Changes
 

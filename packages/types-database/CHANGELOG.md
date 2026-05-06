@@ -1,5 +1,19 @@
 # @prosopo/types-database
 
+## 4.6.0
+### Minor Changes
+
+- 74092d0: Stream data back to central for decisions
+
+## 4.5.3
+### Patch Changes
+
+- f6a4402: API endpoint for removing site keys
+- Updated dependencies [f6a4402]
+- Updated dependencies [99dfb44]
+  - @prosopo/types@3.16.0
+  - @prosopo/user-access-policy@3.6.24
+
 ## 4.5.2
 ### Patch Changes
 

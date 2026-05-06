@@ -1,5 +1,30 @@
 # @prosopo/database
 
+## 3.10.1
+### Patch Changes
+
+- 942701b: Connection drop fix
+
+## 3.10.0
+### Minor Changes
+
+- 74092d0: Stream data back to central for decisions
+
+### Patch Changes
+
+- Updated dependencies [74092d0]
+  - @prosopo/types-database@4.6.0
+
+## 3.9.18
+### Patch Changes
+
+- f6a4402: API endpoint for removing site keys
+- Updated dependencies [f6a4402]
+- Updated dependencies [99dfb44]
+  - @prosopo/types-database@4.5.3
+  - @prosopo/types@3.16.0
+  - @prosopo/user-access-policy@3.6.24
+
 ## 3.9.17
 ### Patch Changes
 
