@@ -30,6 +30,7 @@ import {
 import type { IPInfoResponse } from "../api/ipapi.js";
 import { CaptchaType } from "../client/index.js";
 import type { ContextType } from "../client/settings.js";
+import { ModeEnum } from "../config/mode.js";
 import {
 	type CaptchaResult,
 	type CaptchaSolution,
@@ -250,6 +251,7 @@ export const SessionSchema = object({
 	providerSelectEntropy: number(),
 	ipAddress: CompositeIpAddressSchema,
 	captchaType: nativeEnum(CaptchaType),
+	mode: nativeEnum(ModeEnum).optional(),
 	solvedImagesCount: number().optional(),
 	powDifficulty: number().optional(),
 	storedAtTimestamp: date().optional(),
@@ -285,6 +287,7 @@ export type Session = {
 	providerSelectEntropy: number;
 	ipAddress: CompositeIpAddress;
 	captchaType: CaptchaType;
+	mode?: ModeEnum;
 	solvedImagesCount?: number;
 	powDifficulty?: number;
 	storedAtTimestamp?: Date;
