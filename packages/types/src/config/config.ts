@@ -22,6 +22,9 @@ import { record, string, enum as zEnum } from "zod";
 import { union } from "zod";
 import type { infer as zInfer } from "zod";
 import z, { boolean } from "zod";
+import { Mode, ModeEnum } from "./mode.js";
+export { Mode, ModeEnum };
+export type { ModeType } from "./mode.js";
 import {
 	ApiPathRateLimits,
 	DEFAULT_SOLVED_COUNT,
@@ -273,14 +276,6 @@ export type ProsopoClientConfigOutput = output<
 >;
 
 const ThemeType = union([literal("light"), literal("dark")]);
-
-export enum ModeEnum {
-	visible = "visible",
-	invisible = "invisible",
-}
-
-export const Mode = zEnum([ModeEnum.visible, ModeEnum.invisible]).optional();
-export type ModeType = zInfer<typeof Mode>;
 
 export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 	object({

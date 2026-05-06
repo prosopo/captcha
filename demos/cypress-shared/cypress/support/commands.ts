@@ -22,12 +22,36 @@ import {
 	Tier,
 	puzzleToleranceDefault,
 } from "@prosopo/types";
-import { at } from "@prosopo/util";
 import Chainable = Cypress.Chainable;
 import { getPair } from "@prosopo/keyring";
-import type { SolutionRecord } from "@prosopo/types";
+import type { CaptchaWithoutId } from "@prosopo/types";
 
 export const MAX_IMAGE_CAPTCHA_ROUNDS = 3;
+
+// Solution record keyed by item hashes + target for stable matching across
+// dataset rebuilds. We can't match by captchaContentId because buildDataset
+// recomputes it via merkle trees. We must include target because multiple
+// captchas can share the same images with different targets/solutions.
+interface TestSolution {
+	itemHashes: string;
+	target: string;
+	solution: string[];
+}
+
+export function buildTestSolutions(
+	captchas: CaptchaWithoutId[],
+): TestSolution[] {
+	return captchas
+		.filter((c) => c.solution)
+		.map((c) => ({
+			itemHashes: c.items
+				.map((i) => i.hash)
+				.sort()
+				.join(","),
+			target: c.target,
+			solution: (c.solution ?? []).map((s) => s.toString()),
+		}));
+}
 
 declare global {
 	namespace Cypress {
@@ -220,17 +244,23 @@ function captchaImages(): Cypress.Chainable<JQuery<HTMLElement>> {
 function getSelectors(captcha: Captcha): Chainable<string[]> {
 	cy.wrap({ captcha })
 		.then(({ captcha }) => {
-			cy.get<SolutionRecord[]>("@solutions").then((solutions) => {
+			cy.get<TestSolution[]>("@solutions").then((solutions) => {
 				let selectors: string[] = [];
-				// Get the index of the captcha in the solution records array
-				const captchaIndex = solutions.findIndex(
-					(testSolution) =>
-						testSolution.captchaContentId === captcha.captchaContentId,
+				// Match by item hashes + target rather than captchaContentId, because
+				// buildDataset recomputes captchaContentId via merkle trees. Target is
+				// needed because multiple captchas share the same images with different
+				// targets and solutions.
+				const captchaItemHashes = captcha.items
+					.map((i) => i.hash)
+					.sort()
+					.join(",");
+				const match = solutions.find(
+					(s) =>
+						s.itemHashes === captchaItemHashes && s.target === captcha.target,
 				);
-				if (captchaIndex !== -1) {
-					const solution = at(solutions, captchaIndex).solution;
+				if (match) {
 					selectors = captcha.items
-						.filter((item) => solution.includes(item.hash))
+						.filter((item) => match.solution.includes(item.hash))
 						// create a query selector for each image that is a solution
 						// drop https from the urls as this is what procaptcha does (avoids mixed-content warnings, e.g. resources loaded via a mix of http / https)
 						.map(

@@ -25,6 +25,7 @@ import {
 	DecisionMachineScope,
 	type DetectorKey,
 	IpAddressType,
+	ModeEnum,
 	type PendingImageCaptchaRequest,
 	type PoWCaptchaStored,
 	type PuzzleCaptchaStored,
@@ -450,6 +451,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	providerSelectEntropy: { type: Number, required: true },
 	ipAddress: CompositeIpAddressRecordSchemaObj,
 	captchaType: { type: String, enum: CaptchaType, required: true },
+	mode: { type: String, enum: ModeEnum, required: false },
 	solvedImagesCount: { type: Number, required: false },
 	powDifficulty: { type: Number, required: false },
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_DAY },
@@ -462,8 +464,8 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	siteKey: { type: String, required: false },
 	reason: { type: String, required: false },
 	blocked: { type: Boolean, required: false },
-	geolocation: { type: String, required: false },
 	countryCode: { type: String, required: false },
+	geolocation: { type: String, required: false },
 	headers: { type: Object, required: false },
 	result: {
 		type: new Schema(

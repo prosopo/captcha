@@ -26,6 +26,7 @@ import {
 	type DecisionMachineLanguage,
 	type DecisionMachineRuntime,
 	type DecisionMachineScope,
+	type GetFrictionlessCaptchaChallengeRequestBodyOutput,
 	type GetFrictionlessCaptchaResponse,
 	type GetPowCaptchaChallengeRequestBodyType,
 	type GetPowCaptchaResponse,
@@ -33,6 +34,7 @@ import {
 	type GetPuzzleCaptchaResponse,
 	type IUserSettings,
 	type ImageVerificationResponse,
+	type ModeEnum,
 	type PowCaptchaSolutionResponse,
 	type ProcaptchaToken,
 	type Provider,
@@ -296,12 +298,14 @@ export default class ProviderApi
 		headHash: string,
 		dapp: string,
 		user: string,
+		mode?: ModeEnum,
 	): Promise<GetFrictionlessCaptchaResponse> {
-		const body = {
+		const body: GetFrictionlessCaptchaChallengeRequestBodyOutput = {
 			[ApiParams.token]: token,
 			[ApiParams.headHash]: headHash,
 			[ApiParams.dapp]: dapp,
 			[ApiParams.user]: user,
+			...(mode && { [ApiParams.mode]: mode }),
 		};
 		return this.post(ClientApiPaths.GetFrictionlessCaptchaChallenge, body, {
 			headers: {

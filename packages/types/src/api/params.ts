@@ -71,5 +71,6 @@ export enum ApiParams {
 	finalY = "finalY",
 	puzzleEvents = "puzzleEvents",
 	tolerance = "tolerance",
+	mode = "mode",
 	reason = "reason",
 }
