@@ -20,12 +20,22 @@ import type { NextFunction, Request, Response } from "express";
 import type { TFunction } from "i18next";
 import { ZodError } from "zod";
 import { Tasks } from "../tasks/index.js";
+import { getMaintenanceMode } from "./admin/apiToggleMaintenanceModeEndpoint.js";
 
 export const domainMiddleware = (env: ProviderEnvironment) => {
 	const tasks = new Tasks(env);
 
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
+			// If maintenance mode is active, skip domain validation
+			if (getMaintenanceMode()) {
+				req.logger.info(() => ({
+					msg: "Maintenance mode active - skipping domain validation",
+				}));
+				next();
+				return;
+			}
+
 			const siteKey = req.headers["prosopo-site-key"] as string;
 			if (!siteKey)
 				throw siteKeyNotRegisteredError(

@@ -11,8 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export * from "./config.js";
-export * from "./mode.js";
-export * from "./network.js";
-export * from "./timeouts.js";
-export * from "./frictionless.js";
+
+import type { infer as zInfer } from "zod";
+import { enum as zEnum } from "zod";
+
+export enum ModeEnum {
+	visible = "visible",
+	invisible = "invisible",
+}
+
+export const Mode = zEnum([ModeEnum.visible, ModeEnum.invisible]).optional();
+export type ModeType = zInfer<typeof Mode>;

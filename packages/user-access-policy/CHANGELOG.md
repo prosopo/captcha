@@ -1,5 +1,10 @@
 # @prosopo/user-access-policy
 
+## 3.7.0
+### Minor Changes
+
+- 60ba3b1: Fix for rules that expire before being removed from index.
+
 ## 3.6.24
 ### Patch Changes
 

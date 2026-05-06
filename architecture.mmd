@@ -1,0 +1,174 @@
+---
+title: Prosopo Procaptcha System Architecture
+---
+
+graph TB
+    %% ===== ACTORS =====
+    Developer["Website Developer<br/>(integrates Procaptcha)"]
+    EndUser["End User<br/>(website visitor)"]
+
+    %% ===== CLIENT SIDE =====
+    subgraph Browser["End User Browser"]
+        direction TB
+        Widget["Procaptcha Widget<br/>procaptcha-react / procaptcha-bundle"]
+        Manager["Manager<br/>(procaptcha)"]
+        LB["Load Balancer<br/>(load-balancer)"]
+
+        subgraph Detection["Bot Detection"]
+            Detector["Detector<br/>(detector)"]
+            Fingerprint["Fingerprint<br/>(fingerprint)"]
+            Behavioral["Behavioral Collectors<br/>mouse / touch / keyboard"]
+        end
+
+        subgraph CaptchaFlows["Challenge Flows"]
+            Frictionless["Frictionless<br/>(procaptcha-frictionless)"]
+            ImageCaptcha["Image Captcha<br/>select matching images"]
+            PoW["Proof of Work<br/>compute hash puzzle"]
+        end
+    end
+
+    %% ===== PROVIDER =====
+    subgraph Provider["Prosopo Provider"]
+        direction TB
+        subgraph PublicAPI["Public API"]
+            Healthz["GET /healthz"]
+            Details["GET .../public/details"]
+        end
+
+        subgraph ClientAPI["Client API (requires Site Key header)"]
+            direction TB
+            FrictionlessEP["POST .../client/captcha/frictionless"]
+            ImageChallengeEP["POST .../client/captcha/image"]
+            ImageSolutionEP["POST .../client/solution"]
+            PowChallengeEP["POST .../client/captcha/pow"]
+            PowSolutionEP["POST .../client/pow/solution"]
+            ImageVerifyEP["POST .../client/image/dapp/verify"]
+            PowVerifyEP["POST .../client/pow/verify"]
+            SpamEmailEP["POST .../client/spam/email"]
+        end
+
+        subgraph AdminAPI["Admin API (requires JWT)"]
+            SiteKeyMgmt["Site Key Management<br/>register / remove"]
+            DetectorMgmt["Detector Key Management<br/>update / remove"]
+            DecisionMachineMgmt["Decision Machine Management<br/>create / get / remove"]
+            MaintenanceToggle["Maintenance Mode Toggle"]
+        end
+
+        subgraph UapAPI["User Access Policy API (requires JWT)"]
+            RulesCRUD["Access Rules CRUD<br/>insert / fetch / delete / rehash"]
+        end
+
+        subgraph ProviderLogic["Provider Logic"]
+            ImgTasks["Image Captcha Manager"]
+            PowTasks["PoW Captcha Manager"]
+            FrictionlessTasks["Frictionless Manager"]
+            SolutionVerifier["Solution Verifier<br/>Merkle tree + salt embedding"]
+            DecisionMachine["Decision Machine<br/>pluggable scoring"]
+            AccessRules["Access Rules Engine<br/>spam / traffic / geo filters"]
+        end
+
+        subgraph Storage["Storage"]
+            MongoDB[(MongoDB<br/>captchas, commitments,<br/>clients, sessions)]
+            Redis[(Redis<br/>session cache,<br/>write queue)]
+            Dataset[(Dataset<br/>labelled + unlabelled<br/>captcha images)]
+        end
+    end
+
+    %% ===== WEBSITE BACKEND =====
+    subgraph DappBackend["Website Backend"]
+        ServerPkg["ProsopoServer<br/>(@prosopo/server)"]
+    end
+
+    %% ===== EXTERNAL =====
+    ProviderList["Provider List<br/>provider-list.prosopo.io"]
+
+    %% ===== DEVELOPER FLOW =====
+    Developer -->|"1. Sign up at prosopo.io<br/>get site key + secret"| DappBackend
+    Developer -->|"2. Add widget to frontend<br/>with site key"| Widget
+
+    %% ===== USER FLOW =====
+    EndUser -->|visits website| Widget
+    Widget --> Manager
+    Manager -->|fetch provider list| LB
+    LB -->|weighted random selection| ProviderList
+    ProviderList -->|provider URLs + weights| LB
+
+    %% ===== FRICTIONLESS FLOW =====
+    Manager -->|default: frictionless| Frictionless
+    Frictionless -->|parallel| Detector
+    Frictionless -->|parallel| Fingerprint
+    Frictionless -->|parallel| Behavioral
+    Frictionless -->|request session| FrictionlessEP
+
+    FrictionlessEP --> FrictionlessTasks
+    FrictionlessTasks --> Redis
+    FrictionlessTasks -->|human detected| Manager
+    FrictionlessTasks -->|bot suspected| ImageCaptcha
+    FrictionlessTasks -->|bot suspected| PoW
+
+    %% ===== IMAGE CAPTCHA FLOW =====
+    Manager -->|fallback: image| ImageCaptcha
+    ImageCaptcha -->|get challenge| ImageChallengeEP
+    ImageChallengeEP --> ImgTasks
+    ImgTasks -->|random captchas + salt| Dataset
+    ImgTasks -->|signed challenge| ImageCaptcha
+    ImageCaptcha -->|user selects images| ImageSolutionEP
+    ImageSolutionEP --> SolutionVerifier
+    SolutionVerifier -->|compare solutions| Dataset
+    SolutionVerifier -->|build commitment| MongoDB
+    SolutionVerifier -->|optional scoring| DecisionMachine
+    SolutionVerifier -->|check rules| AccessRules
+    SolutionVerifier -->|signed token| Manager
+
+    %% ===== POW FLOW =====
+    Manager -->|fallback: pow| PoW
+    PoW -->|get challenge| PowChallengeEP
+    PowChallengeEP --> PowTasks
+    PowTasks -->|challenge + difficulty| PoW
+    PoW -->|computed proof| PowSolutionEP
+    PowSolutionEP --> PowTasks
+    PowTasks -->|verify proof| MongoDB
+    PowTasks -->|signed token| Manager
+
+    %% ===== TOKEN TO BACKEND =====
+    Manager -->|"ProcaptchaToken<br/>(hex-encoded)"| EndUser
+    EndUser -->|"submit form + token"| DappBackend
+
+    %% ===== SERVER VERIFICATION =====
+    DappBackend --> ServerPkg
+    ServerPkg -->|verify image token| ImageVerifyEP
+    ServerPkg -->|verify pow token| PowVerifyEP
+    ImageVerifyEP -->|decode token, check commitment| MongoDB
+    PowVerifyEP -->|decode token, check proof| MongoDB
+    ImageVerifyEP -->|"verified: true/false"| ServerPkg
+    PowVerifyEP -->|"verified: true/false"| ServerPkg
+    ServerPkg -->|grant or deny access| DappBackend
+
+    %% ===== ADMIN =====
+    Developer -.->|"manage via portal<br/>or admin API"| AdminAPI
+    AdminAPI --> MongoDB
+
+    %% ===== STORAGE CONNECTIONS =====
+    ImgTasks --> MongoDB
+    PowTasks --> MongoDB
+    FrictionlessTasks --> MongoDB
+    AccessRules --> MongoDB
+    DecisionMachine --> MongoDB
+    ImgTasks --> Redis
+    PowTasks --> Redis
+
+    %% ===== STYLES =====
+    classDef actor fill:#e1f5fe,stroke:#0288d1,color:#000
+    classDef browser fill:#fff3e0,stroke:#f57c00,color:#000
+    classDef provider fill:#e8f5e9,stroke:#388e3c,color:#000
+    classDef storage fill:#fce4ec,stroke:#c62828,color:#000
+    classDef backend fill:#f3e5f5,stroke:#7b1fa2,color:#000
+    classDef external fill:#eceff1,stroke:#546e6a,color:#000
+
+    class Developer,EndUser actor
+    class Widget,Manager,LB,Detector,Fingerprint,Behavioral,Frictionless,ImageCaptcha,PoW browser
+    class Healthz,Details,FrictionlessEP,ImageChallengeEP,ImageSolutionEP,PowChallengeEP,PowSolutionEP,ImageVerifyEP,PowVerifyEP,SpamEmailEP,SiteKeyMgmt,DetectorMgmt,DecisionMachineMgmt,MaintenanceToggle,RulesCRUD provider
+    class ImgTasks,PowTasks,FrictionlessTasks,SolutionVerifier,DecisionMachine,AccessRules provider
+    class MongoDB,Redis,Dataset storage
+    class ServerPkg,DappBackend backend
+    class ProviderList external
