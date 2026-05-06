@@ -1048,6 +1048,111 @@ describe("redisAccessRulesStorage", () => {
 			// then
 			expect(foundAccessRules).toEqual([combinedAccessRule]);
 		});
+
+		test("returns remaining rules when a matched document's hash key has been deleted", async () => {
+			// given
+			const clientId = getUniqueString();
+
+			const survivingRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: clientId,
+				userId: "user1",
+			};
+			const deletedRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: clientId,
+				userId: "user2",
+			};
+
+			await insertRules([survivingRule, deletedRule]);
+
+			// Delete the hash key for deletedRule directly, bypassing the writer.
+			// The index may still reference it briefly, simulating the race
+			// condition that caused the @redis/search documentValue(null) crash.
+			const deletedRuleKey = getAccessRuleRedisKey(deletedRule);
+			await redisClient.del(deletedRuleKey);
+
+			// when
+			const foundAccessRules = await accessRulesReader.findRules({
+				policyScope: {
+					clientId: clientId,
+				},
+				policyScopeMatch: FilterScopeMatch.Exact,
+				userScope: {
+					userId: "user1",
+				},
+				userScopeMatch: FilterScopeMatch.Greedy,
+			});
+
+			// then - should not throw and should return the surviving rule
+			expect(foundAccessRules).toEqual([survivingRule]);
+		});
+
+		test("returns empty array without throwing when all matched documents have been deleted", async () => {
+			// given
+			const clientId = getUniqueString();
+
+			const rule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: clientId,
+				userId: "user1",
+			};
+
+			await insertRules([rule]);
+
+			// Delete the hash key directly
+			const ruleKey = getAccessRuleRedisKey(rule);
+			await redisClient.del(ruleKey);
+
+			// when
+			const foundAccessRules = await accessRulesReader.findRules({
+				policyScope: {
+					clientId: clientId,
+				},
+				policyScopeMatch: FilterScopeMatch.Exact,
+				userScope: {
+					userId: "user1",
+				},
+				userScopeMatch: FilterScopeMatch.Greedy,
+			});
+
+			// then - should not throw, should return empty array
+			expect(foundAccessRules).toEqual([]);
+		});
+
+		test("finds rules with matchingFieldsOnly when only userId is set and all IP fields are missing", async () => {
+			// This is the exact scenario from the production error where the query
+			// contained duplicate ismissing(@numericIpMaskMin) ismissing(@numericIpMaskMax)
+			// given
+			const clientId = getUniqueString();
+			const userId = getUniqueString();
+
+			const accessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: clientId,
+				userId: userId,
+			};
+
+			await insertRules([accessRule]);
+
+			// when - matchingFieldsOnly=true adds ismissing for all schema fields not in the scope
+			const foundAccessRules = await accessRulesReader.findRules(
+				{
+					policyScope: {
+						clientId: clientId,
+					},
+					policyScopeMatch: FilterScopeMatch.Exact,
+					userScope: {
+						userId: userId,
+					},
+					userScopeMatch: FilterScopeMatch.Exact,
+				},
+				true,
+			);
+
+			// then
+			expect(foundAccessRules).toEqual([accessRule]);
+		});
 	});
 
 	afterAll(async () => {
