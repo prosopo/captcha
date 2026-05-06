@@ -102,6 +102,8 @@ export class MongoDatabase implements IDatabase {
 				const connection = mongoose.createConnection(this.url, {
 					dbName: this.dbname,
 					serverApi: ServerApiVersion.v1,
+					maxPoolSize: 50,
+					minPoolSize: 5,
 				});
 
 				const onConnected = () => {

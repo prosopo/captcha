@@ -116,6 +116,7 @@ export default (
 				reason,
 				sessionId: validSessionId,
 				solvedImagesCount,
+				countryCode: sessionCountryCode,
 			} = await tasks.imgCaptchaManager.isValidRequest(
 				clientRecord,
 				CaptchaType.image,
@@ -155,17 +156,9 @@ export default (
 				},
 			};
 
-			// Get countryCode from session if available, otherwise from geolocation
-			let countryCodeToStore: string | undefined;
-			if (validSessionId) {
-				const sessionRecord =
-					await tasks.db.getSessionRecordBySessionId(validSessionId);
-				countryCodeToStore = sessionRecord?.countryCode;
-			}
-			// If not available from session, use the one we got for access policy
-			if (!countryCodeToStore) {
-				countryCodeToStore = countryCode;
-			}
+			// Use countryCode from session (already fetched in isValidRequest) or fall back to geolocation
+			const countryCodeToStore: string | undefined =
+				sessionCountryCode || countryCode;
 
 			const taskData =
 				await tasks.imgCaptchaManager.getRandomCaptchasAndRequestHash(
