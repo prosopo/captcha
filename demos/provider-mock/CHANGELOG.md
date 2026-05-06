@@ -1,5 +1,93 @@
 # @prosopo/provider-mock
 
+## 2.8.81
+### Patch Changes
+
+- Updated dependencies [780dcb0]
+- Updated dependencies [942701b]
+  - @prosopo/provider@4.2.0
+  - @prosopo/database@3.10.1
+  - @prosopo/api-express-router@3.1.5
+
+## 2.8.80
+### Patch Changes
+
+- Updated dependencies [558bc6d]
+  - @prosopo/provider@4.1.0
+
+## 2.8.79
+### Patch Changes
+
+- Updated dependencies [41c54b0]
+- Updated dependencies [f14d645]
+- Updated dependencies [74092d0]
+  - @prosopo/provider@4.0.0
+  - @prosopo/types-database@4.6.0
+  - @prosopo/database@3.10.0
+  - @prosopo/api-express-router@3.1.4
+
+## 2.8.78
+### Patch Changes
+
+- Updated dependencies [f6a4402]
+- Updated dependencies [99dfb44]
+  - @prosopo/types-database@4.5.3
+  - @prosopo/database@3.9.18
+  - @prosopo/provider@3.24.0
+  - @prosopo/types@3.16.0
+  - @prosopo/api-express-router@3.1.3
+
+## 2.8.77
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+  - @prosopo/api-express-router@3.1.2
+  - @prosopo/database@3.9.17
+  - @prosopo/provider@3.23.2
+  - @prosopo/types-database@4.5.2
+
+## 2.8.76
+### Patch Changes
+
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+- Updated dependencies [b94890c]
+  - @prosopo/types-database@4.5.1
+  - @prosopo/provider@3.23.1
+  - @prosopo/types@3.14.1
+  - @prosopo/locale@3.2.1
+  - @prosopo/database@3.9.16
+  - @prosopo/api-express-router@3.1.1
+  - @prosopo/common@3.1.33
+  - @prosopo/dotenv@3.0.38
+
+## 2.8.75
+### Patch Changes
+
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+  - @prosopo/types-database@4.5.0
+  - @prosopo/provider@3.23.0
+  - @prosopo/locale@3.2.0
+  - @prosopo/types@3.14.0
+  - @prosopo/api-express-router@3.1.0
+  - @prosopo/database@3.9.15
+  - @prosopo/common@3.1.32
+  - @prosopo/dotenv@3.0.37
+
+## 2.8.74
+### Patch Changes
+
+- Updated dependencies [4a9c518]
+- Updated dependencies [fe5f0f9]
+  - @prosopo/common@3.1.31
+  - @prosopo/provider@3.22.4
+  - @prosopo/api-express-router@3.0.70
+  - @prosopo/database@3.9.14
+  - @prosopo/dotenv@3.0.36
+  - @prosopo/types-database@4.4.14
+
 ## 2.8.73
 ### Patch Changes
 

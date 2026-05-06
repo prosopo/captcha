@@ -222,4 +222,117 @@ describe("Frictionless Task Manager", () => {
 			expect(response).toHaveProperty("status", "ok");
 		});
 	});
+
+	describe("Session caching with RedisWriteQueue", () => {
+		it("should cache session in Redis after creation when writeQueue is set", async () => {
+			const mockWriteQueue = {
+				cacheSession: vi.fn().mockResolvedValue(true),
+				cacheSessionByHash: vi.fn().mockResolvedValue(true),
+				getCachedSession: vi.fn().mockResolvedValue(null),
+				getCachedSessionByHash: vi.fn().mockResolvedValue(null),
+				invalidateCachedSession: vi.fn().mockResolvedValue(undefined),
+				queueSessionRecord: vi.fn().mockResolvedValue(true),
+				drainSessionRecords: vi.fn().mockResolvedValue([]),
+				startPeriodicFlush: vi.fn(),
+				stopPeriodicFlush: vi.fn(),
+				isReady: vi.fn().mockReturnValue(true),
+			};
+
+			frictionlessTaskManager.writeQueue =
+				mockWriteQueue as unknown as import("../../../../util/redisCache.js").RedisWriteQueue;
+
+			frictionlessTaskManager.setSessionParams({
+				token: "test-token",
+				score: 0.5,
+				threshold: 0.5,
+				scoreComponents: { baseScore: 0.5 },
+				providerSelectEntropy: 13337,
+				ipAddress: getCompositeIpAddress("1.1.1.1"),
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "abc",
+				siteKey: "test-dapp",
+			});
+
+			const response = await frictionlessTaskManager.sendPowCaptcha();
+
+			expect(response).toHaveProperty("captchaType", CaptchaType.pow);
+			expect(db.storeSessionRecord).toHaveBeenCalledOnce();
+
+			// Allow fire-and-forget cache promises to settle
+			await new Promise((resolve) => setTimeout(resolve, 10));
+
+			// Should have cached the session by sessionId
+			expect(mockWriteQueue.cacheSession).toHaveBeenCalledOnce();
+			const cacheArgs = mockWriteQueue.cacheSession.mock.calls[0] as unknown[];
+			expect(cacheArgs[0]).toBe(response.sessionId);
+		});
+
+		it("should cache session by hash when userSitekeyIpHash is provided", async () => {
+			const mockWriteQueue = {
+				cacheSession: vi.fn().mockResolvedValue(true),
+				cacheSessionByHash: vi.fn().mockResolvedValue(true),
+				getCachedSession: vi.fn().mockResolvedValue(null),
+				getCachedSessionByHash: vi.fn().mockResolvedValue(null),
+				invalidateCachedSession: vi.fn().mockResolvedValue(undefined),
+				queueSessionRecord: vi.fn().mockResolvedValue(true),
+				drainSessionRecords: vi.fn().mockResolvedValue([]),
+				startPeriodicFlush: vi.fn(),
+				stopPeriodicFlush: vi.fn(),
+				isReady: vi.fn().mockReturnValue(true),
+			};
+
+			frictionlessTaskManager.writeQueue =
+				mockWriteQueue as unknown as import("../../../../util/redisCache.js").RedisWriteQueue;
+
+			frictionlessTaskManager.setSessionParams({
+				token: "test-token",
+				score: 0.5,
+				threshold: 0.5,
+				scoreComponents: { baseScore: 0.5 },
+				providerSelectEntropy: 13337,
+				ipAddress: getCompositeIpAddress("1.1.1.1"),
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "abc",
+				siteKey: "test-dapp",
+			});
+
+			const userSitekeyIpHash = "test-hash-123";
+			await frictionlessTaskManager.sendPowCaptcha({
+				userSitekeyIpHash,
+			});
+
+			// Allow fire-and-forget cache promises to settle
+			await new Promise((resolve) => setTimeout(resolve, 10));
+
+			// Should have cached by both sessionId and hash
+			expect(mockWriteQueue.cacheSession).toHaveBeenCalledOnce();
+			expect(mockWriteQueue.cacheSessionByHash).toHaveBeenCalledWith(
+				userSitekeyIpHash,
+				expect.any(String),
+			);
+		});
+
+		it("should not cache when writeQueue is not set", async () => {
+			frictionlessTaskManager.setSessionParams({
+				token: "test-token",
+				score: 0.5,
+				threshold: 0.5,
+				scoreComponents: { baseScore: 0.5 },
+				providerSelectEntropy: 13337,
+				ipAddress: getCompositeIpAddress("1.1.1.1"),
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "abc",
+				siteKey: "test-dapp",
+			});
+
+			// No writeQueue set - should still work without caching
+			const response = await frictionlessTaskManager.sendPowCaptcha();
+
+			expect(response).toHaveProperty("captchaType", CaptchaType.pow);
+			expect(db.storeSessionRecord).toHaveBeenCalledOnce();
+		});
+	});
 });

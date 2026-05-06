@@ -320,7 +320,7 @@
 		"ACCESS_POLICY_BLOCK": "नीति द्वारा पहुंच अवरुद्ध",
 		"FORBIDDEN": "नषध",
 		"PROVIDER_VERIFY_FAILED": "परदत सतयपन वफल हआ",
-		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
+		"SPAM_EMAIL_DOMAIN": "ईमेल डोमेन की अनुमति नहीं है",
 		"UNAUTHORIZED": "अनधकत",
 		"MISSING_BODY": "शरर गयब ह",
 		"NO_CONTENT_TYPE_HEADER": "कई समगर परकर शरषक नह ह। मन गय JSON एनकड ह सकत ह लकन टकड करन म असफल।",
@@ -340,7 +340,16 @@
 		"INVALID_IP": "अमनय आईप",
 		"INVALID_URL": "अमनय यआरएल",
 		"INVALID_BODY": "अमनय बड",
-		"PARSE_ERROR": "अनरध वशषण म तरट"
+		"PARSE_ERROR": "अनरध वशषण म तरट",
+		"SPAM_EMAIL_RULE": "स्पैम फ़िल्टर नियमों द्वारा ईमेल पता अवरुद्ध",
+		"VPN_BLOCKED": "इस साइट के लिए VPN कनेक्शन से अनुरोध की अनुमति नहीं है",
+		"PROXY_BLOCKED": "इस साइट के लिए प्रॉक्सी सर्वर से अनुरोध की अनुमति नहीं है",
+		"TOR_BLOCKED": "इस साइट के लिए Tor एक्ज़िट नोड्स से अनुरोध की अनुमति नहीं है",
+		"ABUSER_BLOCKED": "दुरुपयोग के लिए चिह्नित नेटवर्क से अनुरोध इस साइट के लिए अनुमत नहीं हैं",
+		"DATACENTER_BLOCKED": "इस साइट के लिए डेटासेंटर IP पतों से अनुरोध की अनुमति नहीं है",
+		"MOBILE_BLOCKED": "इस साइट के लिए मोबाइल नेटवर्क कनेक्शन से अनुरोध की अनुमति नहीं है",
+		"SATELLITE_BLOCKED": "इस साइट के लिए सैटेलाइट कनेक्शन से अनुरोध की अनुमति नहीं है",
+		"CRAWLER_BLOCKED": "इस साइट के लिए ज्ञात क्रॉलर से अनुरोध की अनुमति नहीं है"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "मलक उपयगकरत क सशधत नह कय ज सकत",
@@ -348,7 +357,9 @@
 		"CANNOT_DELETE_LAST_USER": "आखर उपयगकरत हटय नह ज सकत",
 		"USER_ALREADY_EXISTS": "उपयगकरत पहल स मजद ह",
 		"NO_SUGGESTIONS_FOUND": "कई सझव नह मल",
-		"CANNOT_DEACTIVATE_LAST_SITE": "अतम सकरय सइट क नषकरय नह कय ज सकत"
+		"CANNOT_DEACTIVATE_LAST_SITE": "अतम सकरय सइट क नषकरय नह कय ज सकत",
+		"DUPLICATE_SITE_NAME": "इस नाम की साइट पहले से मौजूद है",
+		"INVALID_SITE_NAME": "साइट के नाम में केवल अक्षर, संख्याएँ, हाइफ़न और अंडरस्कोर होने चाहिए"
 	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "पलकडट एकसटशन नह मल"

@@ -37,7 +37,7 @@ export const getBotScore = async (
 	const decryptedHeadHash: string = result.decryptedHeadHash;
 	const triggeredDetectors: number[] | undefined = result.triggeredDetectors;
 
-	if (baseBotScore === undefined) {
+	if (baseBotScore === undefined || Number.isNaN(baseBotScore)) {
 		return {
 			baseBotScore: 1,
 			timestamp: 0,

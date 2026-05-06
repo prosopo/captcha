@@ -76,8 +76,9 @@ export class FrictionlessManager extends CaptchaManager {
 		pair: KeyringPair,
 		config: ProsopoConfigOutput,
 		logger?: Logger,
+		writeQueue?: import("../../util/redisCache.js").RedisWriteQueue | null,
 	) {
-		super(db, pair, config, logger);
+		super(db, pair, config, logger, writeQueue);
 		this.config = config;
 	}
 
@@ -161,6 +162,27 @@ export class FrictionlessManager extends CaptchaManager {
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);
+
+		// Cache the session in Redis for fast lookups.
+		// This reduces MongoDB reads for subsequent requests that need
+		// to look up the session by sessionId or userSitekeyIpHash.
+		if (this.writeQueue) {
+			const cacheData = sessionRecord as unknown as Record<string, unknown>;
+			const cachePromises: Promise<boolean>[] = [
+				this.writeQueue.cacheSession(sessionRecord.sessionId, cacheData),
+			];
+			if (userSitekeyIpHash) {
+				cachePromises.push(
+					this.writeQueue.cacheSessionByHash(
+						userSitekeyIpHash,
+						sessionRecord.sessionId,
+					),
+				);
+			}
+			// Fire-and-forget: don't block the response on caching
+			Promise.all(cachePromises).catch(() => {});
+		}
+
 		return sessionRecord;
 	}
 
@@ -517,9 +539,13 @@ export class FrictionlessManager extends CaptchaManager {
 			}
 		}
 
-		const baseBotScoreUndefined = baseBotScore === undefined;
-		const timestampUndefined = timestamp === undefined;
-		const providerSelectEntropyUndefined = providerSelectEntropy === undefined;
+		const baseBotScoreUndefined =
+			baseBotScore === undefined || Number.isNaN(baseBotScore);
+		const timestampUndefined =
+			timestamp === undefined || Number.isNaN(timestamp);
+		const providerSelectEntropyUndefined =
+			providerSelectEntropy === undefined ||
+			Number.isNaN(providerSelectEntropy);
 		const undefinedCount =
 			Number(baseBotScoreUndefined) +
 			Number(timestampUndefined) +

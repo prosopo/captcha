@@ -1,5 +1,76 @@
 # @prosopo/env
 
+## 3.4.5
+### Patch Changes
+
+- Updated dependencies [942701b]
+  - @prosopo/database@3.10.1
+
+## 3.4.4
+### Patch Changes
+
+- Updated dependencies [74092d0]
+  - @prosopo/database@3.10.0
+  - @prosopo/types-env@2.9.4
+
+## 3.4.3
+### Patch Changes
+
+- Updated dependencies [f6a4402]
+- Updated dependencies [99dfb44]
+  - @prosopo/database@3.9.18
+  - @prosopo/types@3.16.0
+  - @prosopo/types-env@2.9.3
+  - @prosopo/ipinfo@0.2.3
+  - @prosopo/keyring@2.9.23
+
+## 3.4.2
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+  - @prosopo/database@3.9.17
+  - @prosopo/ipinfo@0.2.2
+  - @prosopo/keyring@2.9.22
+  - @prosopo/types-env@2.9.2
+
+## 3.4.1
+### Patch Changes
+
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+  - @prosopo/types@3.14.1
+  - @prosopo/database@3.9.16
+  - @prosopo/types-env@2.9.1
+  - @prosopo/common@3.1.33
+  - @prosopo/ipinfo@0.2.1
+  - @prosopo/keyring@2.9.21
+
+## 3.4.0
+### Minor Changes
+
+- 42650db: Add better spam rules and move ipinfo service to local instead of external
+
+### Patch Changes
+
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+  - @prosopo/ipinfo@0.2.0
+  - @prosopo/types@3.14.0
+  - @prosopo/types-env@2.9.0
+  - @prosopo/database@3.9.15
+  - @prosopo/common@3.1.32
+  - @prosopo/keyring@2.9.20
+
+## 3.3.15
+### Patch Changes
+
+- Updated dependencies [4a9c518]
+  - @prosopo/common@3.1.31
+  - @prosopo/database@3.9.14
+  - @prosopo/keyring@2.9.19
+  - @prosopo/types-env@2.8.15
+
 ## 3.3.14
 ### Patch Changes
 

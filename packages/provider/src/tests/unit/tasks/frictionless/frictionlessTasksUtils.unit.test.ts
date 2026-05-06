@@ -13,9 +13,64 @@
 // limitations under the License.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { timestampDecayFunction } from "../../../../tasks/frictionless/frictionlessTasksUtils.js";
+import {
+	computeFrictionlessScore,
+	timestampDecayFunction,
+} from "../../../../tasks/frictionless/frictionlessTasksUtils.js";
 
 describe("frictionlessTasksUtils", () => {
+	describe("computeFrictionlessScore", () => {
+		it("should return a score between 0 and 1 for valid components", () => {
+			const result = computeFrictionlessScore({
+				baseScore: 0.3,
+				penalty: 0.2,
+			});
+			expect(result).toBe(0.5);
+		});
+
+		it("should cap the score at 1", () => {
+			const result = computeFrictionlessScore({
+				baseScore: 0.8,
+				penalty: 0.5,
+			});
+			expect(result).toBe(1);
+		});
+
+		it("should skip undefined components", () => {
+			const components: { [key: string]: number } = {
+				baseScore: 0.3,
+			};
+			// Simulate an undefined value in the object
+			Object.defineProperty(components, "missing", {
+				value: undefined,
+				enumerable: true,
+			});
+			const result = computeFrictionlessScore(components);
+			expect(result).toBe(0.3);
+		});
+
+		it("should return NaN if a score component is NaN", () => {
+			const result = computeFrictionlessScore({
+				baseScore: Number.NaN,
+				penalty: 0.2,
+			});
+			expect(result).toBeNaN();
+		});
+
+		it("should return NaN if all score components are NaN", () => {
+			const result = computeFrictionlessScore({
+				baseScore: Number.NaN,
+				penalty: Number.NaN,
+			});
+			expect(result).toBeNaN();
+		});
+
+		it("should return 0 for empty components", () => {
+			const result = computeFrictionlessScore({});
+			expect(result).toBe(0);
+		});
+	});
+
 	describe("timestampDecayFunction", () => {
 		let mockNow: number;
 
@@ -73,6 +128,11 @@ describe("frictionlessTasksUtils", () => {
 			expect(typeof result).toBe("number");
 			expect(result).toBeGreaterThanOrEqual(2);
 			expect(result).toBeLessThanOrEqual(12);
+		});
+
+		it("should return NaN when timestamp is NaN", () => {
+			const result = timestampDecayFunction(Number.NaN, false, 12);
+			expect(result).toBeNaN();
 		});
 	});
 });

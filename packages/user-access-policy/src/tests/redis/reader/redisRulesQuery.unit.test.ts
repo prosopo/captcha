@@ -150,6 +150,63 @@ describe("getRulesRedisQuery", () => {
 		);
 	});
 
+	it("does not duplicate ismissing for numericIpMaskMin and numericIpMaskMax when matchingFieldsOnly is true and all IP fields are undefined", () => {
+		const filter = {
+			userScope: {
+				userId: "user123",
+			},
+			userScopeMatch: FilterScopeMatch.Exact,
+		} as AccessRulesFilter;
+
+		const query = getRulesRedisQuery(filter, true);
+
+		// numericIp handler emits all three ismissing clauses when all IP fields are undefined.
+		// The individual numericIpMaskMin and numericIpMaskMax handlers should not duplicate them.
+		const numericIpMaskMinMatches = query.match(
+			/ismissing\(@numericIpMaskMin\)/g,
+		);
+		const numericIpMaskMaxMatches = query.match(
+			/ismissing\(@numericIpMaskMax\)/g,
+		);
+
+		expect(numericIpMaskMinMatches).toHaveLength(1);
+		expect(numericIpMaskMaxMatches).toHaveLength(1);
+		expect(query).toContain("ismissing(@numericIp)");
+		expect(query).toContain("@userId:{user123}");
+	});
+
+	it("emits ismissing for numericIpMaskMin when numericIpMaskMax is defined but numericIpMaskMin is not", () => {
+		const filter = {
+			userScope: {
+				numericIpMaskMax: BigInt(200),
+			},
+			userScopeMatch: FilterScopeMatch.Exact,
+		} as AccessRulesFilter;
+
+		const query = getRulesRedisQuery(filter, true);
+
+		// numericIp handler returns "" because numericIpMaskMax is defined.
+		// numericIpMaskMin handler should still emit ismissing since the numericIp handler didn't cover it.
+		expect(query).toContain("ismissing(@numericIpMaskMin)");
+		expect(query).toContain("@numericIpMaskMax:[200 +inf]");
+		expect(query).not.toContain("ismissing(@numericIpMaskMax)");
+	});
+
+	it("emits ismissing for numericIpMaskMax when numericIpMaskMin is defined but numericIpMaskMax is not", () => {
+		const filter = {
+			userScope: {
+				numericIpMaskMin: BigInt(100),
+			},
+			userScopeMatch: FilterScopeMatch.Exact,
+		} as AccessRulesFilter;
+
+		const query = getRulesRedisQuery(filter, true);
+
+		expect(query).toContain("@numericIpMaskMin:[-inf 100]");
+		expect(query).toContain("ismissing(@numericIpMaskMax)");
+		expect(query).not.toContain("ismissing(@numericIpMaskMin)");
+	});
+
 	it("includes headHash in query when provided", () => {
 		const filter = {
 			userScope: {

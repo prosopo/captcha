@@ -17,8 +17,8 @@ import type {
 	IPConnectionType,
 	IPInfoResult,
 } from "@prosopo/types";
+import type { IIpInfoService } from "@prosopo/types-env";
 import { getDistance } from "geolib";
-import { getIPInfo } from "./ipInfo.js";
 
 /**
  * Compares two IP addresses and provides detailed analysis including:
@@ -30,15 +30,13 @@ import { getIPInfo } from "./ipInfo.js";
  *
  * @param ip1 - First IP address to compare
  * @param ip2 - Second IP address to compare
- * @param apiKey
- * @param apiUrl
+ * @param ipInfoService - IP info service for local lookups
  * @returns Promise resolving to comparison results or error details
  */
 export async function compareIPs(
 	ip1: string,
 	ip2: string,
-	apiKey: string,
-	apiUrl: string,
+	ipInfoService: IIpInfoService,
 ): Promise<IPComparisonResponse> {
 	try {
 		// Validate inputs
@@ -59,10 +57,10 @@ export async function compareIPs(
 			};
 		}
 
-		// Get information for both IPs
+		// Get information for both IPs via local service
 		const [ip1Info, ip2Info] = await Promise.all([
-			getIPInfo(ip1, apiUrl, apiKey),
-			getIPInfo(ip2, apiUrl, apiKey),
+			ipInfoService.lookup(ip1),
+			ipInfoService.lookup(ip2),
 		]);
 
 		// Check for errors in IP lookups

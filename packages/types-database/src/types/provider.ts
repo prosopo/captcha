@@ -675,6 +675,8 @@ export interface IProviderDatabase extends IDatabase {
 
 	updateClientRecords(clientRecords: ClientRecord[]): Promise<void>;
 
+	removeClientRecords(accounts: string[]): Promise<void>;
+
 	getAllClientRecords(): Promise<ClientRecord[]>;
 
 	getClientRecord(account: string): Promise<ClientRecord | undefined>;
@@ -690,6 +692,7 @@ export interface IProviderDatabase extends IDatabase {
 	updateSessionRecord(
 		sessionId: string,
 		updates: Partial<Session>,
+		streamToCentral?: boolean,
 	): Promise<void>;
 
 	getSessionByuserSitekeyIpHash(

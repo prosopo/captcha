@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/database",
-	"version": "3.9.13",
+	"version": "3.10.1",
 	"description": "Prosopo database plugins for provider",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -22,6 +22,7 @@
 		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
 		"typecheck": "tsc --project tsconfig.types.json"
 	},
 	"repository": {
@@ -36,12 +37,12 @@
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
 		"@polkadot/util": "13.5.7",
-		"@prosopo/common": "3.1.30",
-		"@prosopo/locale": "3.1.29",
-		"@prosopo/redis-client": "1.0.15",
-		"@prosopo/types": "3.13.3",
-		"@prosopo/types-database": "4.4.13",
-		"@prosopo/user-access-policy": "3.6.19",
+		"@prosopo/common": "3.1.33",
+		"@prosopo/locale": "3.2.1",
+		"@prosopo/redis-client": "1.0.18",
+		"@prosopo/types": "3.16.0",
+		"@prosopo/types-database": "4.6.0",
+		"@prosopo/user-access-policy": "3.6.24",
 		"@prosopo/util": "3.2.11",
 		"make-dir": "3.1.0",
 		"mongodb": "6.15.0",

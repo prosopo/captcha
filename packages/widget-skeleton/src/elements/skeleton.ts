@@ -33,7 +33,7 @@ import { createLogoElement } from "./logo.js";
  */
 export function createWidgetSkeletonElement(theme: Theme): HTMLElement {
 	const widgetElement = document.createElement("div");
-	widgetElement.className = "widget";
+	widgetElement.className = "prosopo-widget";
 
 	const checkboxElement = createCheckboxElement(theme);
 	const logoElement = createLogoElement(theme);
@@ -42,10 +42,12 @@ export function createWidgetSkeletonElement(theme: Theme): HTMLElement {
 		getWidgetStyles(theme) + getWidgetMarkup(isDevMode());
 
 	widgetElement
-		.querySelector(".widget__checkbox")
+		.querySelector(".prosopo-widget__checkbox")
 		?.replaceWith(checkboxElement);
 
-	widgetElement.querySelector(".widget__logo")?.replaceWith(logoElement);
+	widgetElement
+		.querySelector(".prosopo-widget__logo")
+		?.replaceWith(logoElement);
 
 	return widgetElement;
 }
@@ -61,13 +63,13 @@ function getWidgetMarkup(isDevelopmentMode: boolean): string {
 		: "";
 
 	return `
-<div class="widget__outer">
-	<div class="widget__wrapper">
-		<div class="widget__inner">
-			<div class="widget__dimensions" ${buttonDataAttribute}>
-				<div class="widget__content">
-					<div class="widget__checkbox"></div>
-					<div class="widget__logo"></div>
+<div class="prosopo-widget__outer">
+	<div class="prosopo-widget__wrapper">
+		<div class="prosopo-widget__inner">
+			<div class="prosopo-widget__dimensions" ${buttonDataAttribute}>
+				<div class="prosopo-widget__content">
+					<div class="prosopo-widget__checkbox"></div>
+					<div class="prosopo-widget__logo"></div>
 				</div>
 			</div>
 		</div>
@@ -84,30 +86,36 @@ function getWidgetMarkup(isDevelopmentMode: boolean): string {
 function getWidgetStyles(theme: Theme): string {
 	return `
 <style>
-.widget {
+.prosopo-widget {
     width: 100%;
     min-height: ${WIDGET_MIN_HEIGHT}
 }
 
-.widget__outer {
+.prosopo-widget__outer {
     max-width: ${WIDGET_MAX_WIDTH};
     min-height: 100%;
     overflow-x: auto;
     width: 100%;
     font-family: ${theme.font.fontFamily};
     color: ${theme.font.color};
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 
-.widget__wrapper {
+.prosopo-widget__outer::-webkit-scrollbar {
+    display: none;
+}
+
+.prosopo-widget__wrapper {
     container-type: size;
-    container-name: widget;
+    container-name: prosopo-widget;
     display: flex;
     flex-direction: column;
     height: ${WIDGET_OUTER_HEIGHT}px;
-    min-width: 220px;
+    min-width: 170px;
 }
 
-.widget__inner {
+.prosopo-widget__inner {
     max-height: 100%;
     min-width: 100%;
     overflow: hidden;
@@ -116,24 +124,27 @@ function getWidgetStyles(theme: Theme): string {
     display: grid;
 }
 
-.widget__dimensions {
+.prosopo-widget__dimensions {
     max-width: ${WIDGET_MAX_WIDTH};
     min-height: ${WIDGET_OUTER_HEIGHT}px;
 }
 
-.widget__content {
+.prosopo-widget__content {
     padding: ${WIDGET_PADDING};
     border: ${WIDGET_BORDER};
     background-color: ${theme.palette.background.default};
     border-color: ${theme.palette.grey[300]};
     border-radius: ${WIDGET_BORDER_RADIUS};
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    justify-content: space-between;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    box-sizing: border-box;
     min-height: ${WIDGET_INNER_HEIGHT}px;
     height: 100%;
-    box-sizing: border-box;
+    direction: ltr !important;
 }
 </style>
 `;

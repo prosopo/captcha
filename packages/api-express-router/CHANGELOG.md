@@ -1,5 +1,65 @@
 # @prosopo/api-express-router
 
+## 3.1.5
+### Patch Changes
+
+  - @prosopo/env@3.4.5
+
+## 3.1.4
+### Patch Changes
+
+  - @prosopo/env@3.4.4
+
+## 3.1.3
+### Patch Changes
+
+- Updated dependencies [f6a4402]
+- Updated dependencies [99dfb44]
+  - @prosopo/types@3.16.0
+  - @prosopo/env@3.4.3
+
+## 3.1.2
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+  - @prosopo/env@3.4.2
+
+## 3.1.1
+### Patch Changes
+
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+- Updated dependencies [b94890c]
+  - @prosopo/types@3.14.1
+  - @prosopo/locale@3.2.1
+  - @prosopo/common@3.1.33
+  - @prosopo/env@3.4.1
+  - @prosopo/api-route@2.6.41
+
+## 3.1.0
+### Minor Changes
+
+- 42650db: Add better spam rules and move ipinfo service to local instead of external
+
+### Patch Changes
+
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+  - @prosopo/locale@3.2.0
+  - @prosopo/types@3.14.0
+  - @prosopo/env@3.4.0
+  - @prosopo/common@3.1.32
+  - @prosopo/api-route@2.6.40
+
+## 3.0.70
+### Patch Changes
+
+- Updated dependencies [4a9c518]
+  - @prosopo/common@3.1.31
+  - @prosopo/api-route@2.6.39
+  - @prosopo/env@3.3.15
+
 ## 3.0.69
 ### Patch Changes
 

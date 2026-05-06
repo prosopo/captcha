@@ -64,4 +64,5 @@ export enum ApiParams {
 	salt = "salt",
 	email = "email",
 	mode = "mode",
+	reason = "reason",
 }

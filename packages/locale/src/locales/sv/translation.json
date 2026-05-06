@@ -21,7 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Åtkomst blockerad av policy",
 		"FORBIDDEN": "Förbjuden",
 		"PROVIDER_VERIFY_FAILED": "Leverantörsverifiering misslyckades",
-		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
+		"SPAM_EMAIL_DOMAIN": "E-postdomänen är inte tillåten",
 		"UNAUTHORIZED": "Obehörig",
 		"MISSING_BODY": "Saknad kropp",
 		"NO_CONTENT_TYPE_HEADER": "Ingen innehållstypshuvud. Antogs JSON-kodad kropp men misslyckades med att tolka.",
@@ -41,7 +41,16 @@
 		"INVALID_IP": "Ogiltig IP",
 		"INVALID_URL": "Ogiltig URL",
 		"INVALID_BODY": "Ogiltig body",
-		"PARSE_ERROR": "Fel vid tolkning av förfrågan"
+		"PARSE_ERROR": "Fel vid tolkning av förfrågan",
+		"SPAM_EMAIL_RULE": "E-postadressen blockerad av spamfilterregler",
+		"VPN_BLOCKED": "Förfrågningar från VPN-anslutningar är inte tillåtna för denna webbplats",
+		"PROXY_BLOCKED": "Förfrågningar från proxyservrar är inte tillåtna för denna webbplats",
+		"TOR_BLOCKED": "Förfrågningar från Tor-utgångsnoder är inte tillåtna för denna webbplats",
+		"ABUSER_BLOCKED": "Förfrågningar från nätverk markerade för missbruk är inte tillåtna för denna webbplats",
+		"DATACENTER_BLOCKED": "Förfrågningar från datacenter-IP-adresser är inte tillåtna för denna webbplats",
+		"MOBILE_BLOCKED": "Förfrågningar från mobilnätverksanslutningar är inte tillåtna för denna webbplats",
+		"SATELLITE_BLOCKED": "Förfrågningar från satellitanslutningar är inte tillåtna för denna webbplats",
+		"CRAWLER_BLOCKED": "Förfrågningar från kända crawlers är inte tillåtna för denna webbplats"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Kan inte ändra ägare användare",
@@ -49,7 +58,9 @@
 		"CANNOT_DELETE_LAST_USER": "Kan inte ta bort sista användaren",
 		"USER_ALREADY_EXISTS": "Användaren finns redan",
 		"NO_SUGGESTIONS_FOUND": "Inga förslag hittades",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Kan inte inaktivera den sista aktiva platsen"
+		"CANNOT_DEACTIVATE_LAST_SITE": "Kan inte inaktivera den sista aktiva platsen",
+		"DUPLICATE_SITE_NAME": "En webbplats med detta namn finns redan",
+		"INVALID_SITE_NAME": "Webbplatsnamnet får bara innehålla bokstäver, siffror, bindestreck och understreck"
 	},
 	"TARGET": {
 		"airplanes": "flygplan",

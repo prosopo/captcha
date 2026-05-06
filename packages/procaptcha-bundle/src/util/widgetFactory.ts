@@ -121,6 +121,7 @@ class WidgetFactory {
 			this.i18n,
 			invisible,
 			widgetContainer,
+			container,
 		);
 
 		return captchaRoot;
