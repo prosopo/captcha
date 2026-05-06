@@ -30,7 +30,7 @@ import {
 import type { IPInfoResponse } from "../api/ipapi.js";
 import { CaptchaType } from "../client/index.js";
 import type { ContextType } from "../client/settings.js";
-import { ModeEnum } from "../config/config.js";
+import { ModeEnum } from "../config/mode.js";
 import {
 	type CaptchaResult,
 	type CaptchaSolution,

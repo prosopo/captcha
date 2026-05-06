@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 export * from "./config.js";
+export * from "./mode.js";
 export * from "./network.js";
 export * from "./timeouts.js";
 export * from "./frictionless.js";
