@@ -16,7 +16,11 @@ import "@cypress/xpath";
 import { ProsopoDatasetError } from "@prosopo/common";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import type { Captcha, CaptchaType } from "@prosopo/types";
-import { checkboxClass, getWidgetElement } from "../support/commands.js";
+import {
+	buildTestSolutions,
+	checkboxClass,
+	getWidgetElement,
+} from "../support/commands.js";
 
 const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "image";
 
@@ -55,10 +59,7 @@ describe("Captchas", () => {
 	});
 
 	beforeEach(() => {
-		const solutions = datasetWithSolutionHashes.captchas.map((captcha) => ({
-			captchaContentId: captcha.captchaContentId,
-			solution: captcha.solution,
-		}));
+		const solutions = buildTestSolutions(datasetWithSolutionHashes.captchas);
 
 		if (!solutions) {
 			throw new ProsopoDatasetError(
