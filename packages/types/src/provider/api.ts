@@ -470,17 +470,22 @@ export type GetPuzzleCaptchaChallengeRequestBodyTypeOutput = output<
 	typeof GetPuzzleCaptchaChallengeRequestBody
 >;
 
+// Event captured during a drag of the puzzle piece. `t` is milliseconds
+// since the drag started (not absolute), which is enough for behavioural
+// analysis and lets the trail be replay-portable.
+export const PuzzleEventSchema = object({
+	x: number(),
+	y: number(),
+	t: number(),
+});
+
+export type PuzzleEvent = zInfer<typeof PuzzleEventSchema>;
+
 export const SubmitPuzzleCaptchaSolutionBody = object({
 	[ApiParams.challenge]: PowChallengeIdSchema,
 	[ApiParams.finalX]: number(),
 	[ApiParams.finalY]: number(),
-	[ApiParams.puzzleEvents]: array(
-		object({
-			x: number(),
-			y: number(),
-			t: number(),
-		}),
-	),
+	[ApiParams.puzzleEvents]: array(PuzzleEventSchema),
 	[ApiParams.signature]: object({
 		[ApiParams.user]: object({
 			[ApiParams.timestamp]: string(),

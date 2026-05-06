@@ -44,7 +44,7 @@ import type {
 	DecisionMachineRuntime,
 	DecisionMachineScope,
 } from "../decisionMachine/index.js";
-import type { RequestHeaders } from "./api.js";
+import type { PuzzleEvent, RequestHeaders } from "./api.js";
 
 export interface BrowserInfo {
 	name: string;
@@ -374,7 +374,7 @@ export interface PuzzleCaptchaStored extends StoredCaptcha {
 	userSignature?: string;
 	userAccount: string;
 	dappAccount: string;
-	puzzleEvents?: Array<{ x: number; y: number; t: number }>;
+	puzzleEvents?: PuzzleEvent[];
 }
 
 export interface SolutionRecord extends CaptchaSolution {

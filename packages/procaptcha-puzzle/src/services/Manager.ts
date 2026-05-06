@@ -32,22 +32,17 @@ import {
 	ProcaptchaConfigSchema,
 	type ProcaptchaState,
 	type ProcaptchaStateUpdateFn,
+	type PuzzleEvent,
 	encodeProcaptchaOutput,
 } from "@prosopo/types";
 import { sleep } from "@prosopo/util";
-
-interface PuzzleEvent {
-	x: number;
-	y: number;
-	t: number;
-}
 
 interface PuzzleManagerHandle {
 	start: () => Promise<GetPuzzleCaptchaResponse | undefined>;
 	submitSolution: (
 		finalX: number,
 		finalY: number,
-		puzzleEvents: Array<PuzzleEvent>,
+		puzzleEvents: PuzzleEvent[],
 	) => Promise<boolean>;
 	resetState: (frictionlessRestart?: () => void) => void;
 }
@@ -288,7 +283,7 @@ export const Manager = (
 	const submitSolution = async (
 		finalX: number,
 		finalY: number,
-		puzzleEvents: Array<PuzzleEvent>,
+		puzzleEvents: PuzzleEvent[],
 	): Promise<boolean> => {
 		if (
 			!storedChallengeResponse ||

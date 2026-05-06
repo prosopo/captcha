@@ -19,6 +19,7 @@ import {
 	type GetPuzzleCaptchaResponse,
 	ModeEnum,
 	type ProcaptchaProps,
+	type PuzzleEvent,
 } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -29,12 +30,6 @@ import { PuzzleCanvas } from "./PuzzleCanvas.js";
 const PROCAPTCHA_EXECUTE_EVENT = "procaptcha:execute";
 
 type PuzzlePhase = "checkbox" | "dragging" | "submitting";
-
-interface PuzzleEvent {
-	x: number;
-	y: number;
-	t: number;
-}
 
 const Procaptcha = (props: ProcaptchaProps) => {
 	const { t, ready: isTranslationReady } = useTranslation();
@@ -71,17 +66,18 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	}, [i18n, config.language]);
 
 	useEffect(() => {
-		if (state.error) {
-			setLoading(false);
-			setPuzzlePhase("checkbox");
-			setChallengeData(null);
-			setShowRetry(false);
-			if (state.error.key === "CAPTCHA.NO_SESSION_FOUND" && frictionlessState) {
-				setTimeout(() => {
-					frictionlessState.restart();
-				}, 100);
-			}
+		if (!state.error) return undefined;
+		setLoading(false);
+		setPuzzlePhase("checkbox");
+		setChallengeData(null);
+		setShowRetry(false);
+		if (state.error.key === "CAPTCHA.NO_SESSION_FOUND" && frictionlessState) {
+			const timer = setTimeout(() => {
+				frictionlessState.restart();
+			}, 100);
+			return () => clearTimeout(timer);
 		}
+		return undefined;
 	}, [state.error, frictionlessState]);
 
 	// Add event listener for the execute event (works for invisible mode)
@@ -94,7 +90,9 @@ const Procaptcha = (props: ProcaptchaProps) => {
 				try {
 					manager.current.start();
 				} catch (error) {
-					console.error("Error starting puzzle verification:", error);
+					callbacks.onError?.(
+						error instanceof Error ? error : new Error(String(error)),
+					);
 				}
 			};
 
@@ -111,14 +109,10 @@ const Procaptcha = (props: ProcaptchaProps) => {
 
 		// Return empty cleanup function when not in invisible mode
 		return () => {};
-	}, [config.mode]);
+	}, [config.mode, callbacks.onError]);
 
 	const handlePuzzleComplete = useCallback(
-		async (
-			finalX: number,
-			finalY: number,
-			puzzleEvents: Array<PuzzleEvent>,
-		) => {
+		async (finalX: number, finalY: number, puzzleEvents: PuzzleEvent[]) => {
 			setPuzzlePhase("submitting");
 			let verified = false;
 			try {
@@ -128,7 +122,9 @@ const Procaptcha = (props: ProcaptchaProps) => {
 					puzzleEvents,
 				);
 			} catch (error) {
-				console.error("Error submitting puzzle solution:", error);
+				callbacks.onError?.(
+					error instanceof Error ? error : new Error(String(error)),
+				);
 			}
 
 			if (verified) {
@@ -160,7 +156,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 			}
 			setLoading(false);
 		},
-		[],
+		[callbacks.onError],
 	);
 
 	if (config.mode === ModeEnum.invisible) {

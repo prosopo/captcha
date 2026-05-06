@@ -29,7 +29,9 @@ import {
 	type IPAddress,
 	POW_SEPARATOR,
 	type PoWChallengeId,
+	type PuzzleEvent,
 	type RequestHeaders,
+	puzzleToleranceDefault,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -45,8 +47,6 @@ import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature } from "../powCaptcha/powTasksUtils.js";
 import { validatePuzzleSolution } from "./puzzleTasksUtils.js";
-
-const DEFAULT_PUZZLE_TOLERANCE = 15;
 
 interface PuzzleCaptchaChallenge {
 	challenge: PoWChallengeId;
@@ -88,7 +88,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		origin: string,
 		tolerance?: number,
 	): Promise<PuzzleCaptchaChallenge> {
-		const resolvedTolerance = tolerance || DEFAULT_PUZZLE_TOLERANCE;
+		const resolvedTolerance = tolerance ?? puzzleToleranceDefault;
 		const requestedAtTimestamp = Date.now();
 
 		// Create nonce for the challenge
@@ -125,7 +125,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 	 * @param {string} providerChallengeSignature - proof that the Provider provided the challenge
 	 * @param {number} finalX - the final X coordinate of the puzzle
 	 * @param {number} finalY - the final Y coordinate of the puzzle
-	 * @param {Array<{ x: number; y: number; t: number }>} puzzleEvents - the puzzle event trail
+	 * @param {PuzzleEvent[]} puzzleEvents - the puzzle event trail
 	 * @param {number} timeout - the time in milliseconds since the Provider was selected to provide the captcha
 	 * @param {string} userTimestampSignature
 	 * @param ipAddress
@@ -137,7 +137,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		providerChallengeSignature: string,
 		finalX: number,
 		finalY: number,
-		puzzleEvents: Array<{ x: number; y: number; t: number }>,
+		puzzleEvents: PuzzleEvent[],
 		timeout: number,
 		userTimestampSignature: string,
 		ipAddress: IPAddress,

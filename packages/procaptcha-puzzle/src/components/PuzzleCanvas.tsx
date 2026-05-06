@@ -12,13 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { PuzzleEvent } from "@prosopo/types";
 import { useCallback, useEffect, useRef, useState } from "react";
-
-interface PuzzleEvent {
-	x: number;
-	y: number;
-	t: number;
-}
 
 interface PuzzleCanvasProps {
 	originX: number;
@@ -28,7 +23,7 @@ interface PuzzleCanvasProps {
 	onComplete: (
 		finalX: number,
 		finalY: number,
-		puzzleEvents: Array<PuzzleEvent>,
+		puzzleEvents: PuzzleEvent[],
 	) => void;
 	showRetry: boolean;
 	submitting: boolean;
@@ -59,7 +54,7 @@ export const PuzzleCanvas = ({
 	const [posX, setPosX] = useState<number>(originX);
 	const [posY, setPosY] = useState<number>(originY);
 	const isDragging = useRef<boolean>(false);
-	const puzzleEvents = useRef<Array<PuzzleEvent>>([]);
+	const puzzleEvents = useRef<PuzzleEvent[]>([]);
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const offsetRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 	const [visible, setVisible] = useState(false);
