@@ -85,7 +85,7 @@ export const PuzzleCanvas = ({
 			return () => clearTimeout(timer);
 		}
 		return () => {};
-	}, [showRetry, originX, originY]);
+	}, [showRetry]);
 
 	const clamp = useCallback(
 		(value: number, min: number, max: number): number => {
@@ -232,9 +232,7 @@ export const PuzzleCanvas = ({
 				display: "flex",
 				alignItems: "center",
 				justifyContent: "center",
-				backgroundColor: visible
-					? "rgba(0, 0, 0, 0.4)"
-					: "rgba(0, 0, 0, 0)",
+				backgroundColor: visible ? "rgba(0, 0, 0, 0.4)" : "rgba(0, 0, 0, 0)",
 				transition: "background-color 0.3s ease",
 			}}
 		>
@@ -251,9 +249,7 @@ export const PuzzleCanvas = ({
 					opacity: visible ? 1 : 0,
 					transform: visible ? "scale(1)" : "scale(0.9)",
 					transition: "opacity 0.3s ease, transform 0.3s ease",
-					animation: shaking
-						? "prosopo-puzzle-shake 0.5s ease"
-						: "none",
+					animation: shaking ? "prosopo-puzzle-shake 0.5s ease" : "none",
 				}}
 			>
 				{/* Instruction text */}

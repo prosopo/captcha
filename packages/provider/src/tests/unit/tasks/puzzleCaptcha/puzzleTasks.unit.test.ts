@@ -154,7 +154,9 @@ describe("PuzzleCaptchaManager", () => {
 			);
 
 			// challenge format: timestamp___userAccount___dappAccount___nonce
-			expect(result.challenge).toMatch(/^[0-9]+___userAccount___dappAccount___[0-9]+$/);
+			expect(result.challenge).toMatch(
+				/^[0-9]+___userAccount___dappAccount___[0-9]+$/,
+			);
 			expect(result.targetX).toBeGreaterThanOrEqual(150);
 			expect(result.targetX).toBeLessThanOrEqual(280);
 			expect(result.targetY).toBeGreaterThanOrEqual(30);

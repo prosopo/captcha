@@ -157,7 +157,10 @@ export const ProviderDefaultRateLimits = {
 	[ClientApiPaths.VerifyPowCaptchaSolution]: { windowMs: 60000, limit: 3000 },
 	[ClientApiPaths.GetPuzzleCaptchaChallenge]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.SubmitPuzzleCaptchaSolution]: { windowMs: 60000, limit: 60 },
-	[ClientApiPaths.VerifyPuzzleCaptchaSolution]: { windowMs: 60000, limit: 3000 },
+	[ClientApiPaths.VerifyPuzzleCaptchaSolution]: {
+		windowMs: 60000,
+		limit: 3000,
+	},
 	[ClientApiPaths.VerifyImageCaptchaSolutionDapp]: {
 		windowMs: 60000,
 		limit: 3000,
