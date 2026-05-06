@@ -102,7 +102,7 @@ services:
         max-size: '100m'
         max-file: '1'
     healthcheck:
-      test: [ "CMD", "mongo", "--eval", "db.adminCommand('ping')", "--quiet" ] # ping the mongo server
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')", "--quiet" ] # ping the mongo server (mongo:6 ships mongosh, not mongo)
       interval: 5m
       retries: 3
       start_period: 30s
@@ -143,7 +143,7 @@ services:
         max-size: '100m'
         max-file: '1'
     healthcheck:
-      test: [ "CMD", "curl", "--fail", "localhost:2019/metrics" ] # ping the caddy admin api
+      test: [ "CMD", "curl", "--fail", "localhost:2020/metrics" ] # ping the caddy admin api (Caddyfile moves admin to :2020 to avoid conflicts)
       interval: 5m
       retries: 3
       start_period: 30s
@@ -208,6 +208,12 @@ services:
     # enableFirewall is false in config.
     cap_add:
       - NET_ADMIN
+    # Override the image's baked-in NODE_OPTIONS=--max-old-space-size=8192.
+    # On a 12GB host, an 8GB heap cap let this single service hold ~5.5GB of
+    # anon RSS and crowded everything else. 6144 leaves headroom over the
+    # observed working set without risking OOM during DB load.
+    environment:
+      NODE_OPTIONS: "--max-old-space-size=6144"
     # No host ports
     expose:
       - "3899"
