@@ -1,5 +1,115 @@
 # @prosopo/svelte-procaptcha-integration-demo
 
+## 1.1.66
+### Patch Changes
+
+  - @prosopo/svelte-procaptcha-wrapper@1.1.66
+
+## 1.1.65
+### Patch Changes
+
+  - @prosopo/svelte-procaptcha-wrapper@1.1.65
+
+## 1.1.64
+### Patch Changes
+
+  - @prosopo/svelte-procaptcha-wrapper@1.1.64
+
+## 1.1.63
+### Patch Changes
+
+  - @prosopo/svelte-procaptcha-wrapper@1.1.63
+
+## 1.1.62
+### Patch Changes
+
+  - @prosopo/svelte-procaptcha-wrapper@1.1.62
+
+## 1.1.61
+### Patch Changes
+
+  - @prosopo/svelte-procaptcha-wrapper@1.1.61
+
+## 1.1.60
+### Patch Changes
+
+  - @prosopo/svelte-procaptcha-wrapper@1.1.60
+
+## 1.1.59
+### Patch Changes
+
+  - @prosopo/svelte-procaptcha-wrapper@1.1.59
+
+## 1.1.58
+### Patch Changes
+
+  - @prosopo/svelte-procaptcha-wrapper@1.1.58
+
+## 1.1.57
+### Patch Changes
+
+  - @prosopo/svelte-procaptcha-wrapper@1.1.57
+
+## 1.1.56
+### Patch Changes
+
+  - @prosopo/svelte-procaptcha-wrapper@1.1.56
+
+## 1.1.55
+### Patch Changes
+
+  - @prosopo/svelte-procaptcha-wrapper@1.1.55
+
+## 1.1.54
+### Patch Changes
+
+  - @prosopo/svelte-procaptcha-wrapper@1.1.54
+
+## 1.1.53
+### Patch Changes
+
+  - @prosopo/svelte-procaptcha-wrapper@1.1.53
+
+## 1.1.52
+### Patch Changes
+
+  - @prosopo/svelte-procaptcha-wrapper@1.1.52
+
+## 1.1.51
+### Patch Changes
+
+  - @prosopo/svelte-procaptcha-wrapper@1.1.51
+
+## 1.1.50
+### Patch Changes
+
+  - @prosopo/svelte-procaptcha-wrapper@1.1.50
+
+## 1.1.49
+### Patch Changes
+
+  - @prosopo/svelte-procaptcha-wrapper@1.1.49
+
+## 1.1.48
+### Patch Changes
+
+  - @prosopo/svelte-procaptcha-wrapper@1.1.48
+
+## 1.1.47
+### Patch Changes
+
+  - @prosopo/svelte-procaptcha-wrapper@1.1.47
+
+## 1.1.46
+### Patch Changes
+
+  - @prosopo/svelte-procaptcha-wrapper@1.1.46
+
+## 1.1.45
+### Patch Changes
+
+  - @prosopo/svelte-procaptcha-wrapper@1.1.45
+
 ## 1.1.44
 ### Patch Changes
 

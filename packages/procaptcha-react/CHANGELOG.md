@@ -1,5 +1,231 @@
 # @prosopo/procaptcha-react
 
+## 2.9.53
+### Patch Changes
+
+- Updated dependencies [f6a4402]
+- Updated dependencies [99dfb44]
+  - @prosopo/types@3.16.0
+  - @prosopo/procaptcha@2.10.14
+  - @prosopo/procaptcha-common@2.10.4
+
+## 2.9.52
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+  - @prosopo/procaptcha@2.10.13
+  - @prosopo/procaptcha-common@2.10.3
+
+## 2.9.51
+### Patch Changes
+
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+- Updated dependencies [b94890c]
+  - @prosopo/types@3.14.1
+  - @prosopo/locale@3.2.1
+  - @prosopo/common@3.1.33
+  - @prosopo/procaptcha@2.10.12
+  - @prosopo/procaptcha-common@2.10.2
+
+## 2.9.50
+### Patch Changes
+
+- Updated dependencies [06970d2]
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+- Updated dependencies [dd3e06e]
+  - @prosopo/procaptcha-common@2.10.1
+  - @prosopo/widget-skeleton@2.8.1
+  - @prosopo/locale@3.2.0
+  - @prosopo/types@3.14.0
+  - @prosopo/procaptcha@2.10.11
+  - @prosopo/common@3.1.32
+
+## 2.9.49
+### Patch Changes
+
+- Updated dependencies [73df23c]
+- Updated dependencies [8139819]
+- Updated dependencies [4a9c518]
+  - @prosopo/procaptcha-common@2.10.0
+  - @prosopo/widget-skeleton@2.8.0
+  - @prosopo/common@3.1.31
+  - @prosopo/procaptcha@2.10.10
+
+## 2.9.48
+### Patch Changes
+
+- Updated dependencies [a25dffa]
+  - @prosopo/util@3.2.11
+  - @prosopo/procaptcha@2.10.9
+  - @prosopo/types@3.13.3
+  - @prosopo/procaptcha-common@2.9.41
+
+## 2.9.47
+### Patch Changes
+
+- Updated dependencies [346edd7]
+  - @prosopo/util@3.2.10
+  - @prosopo/procaptcha@2.10.8
+  - @prosopo/types@3.13.2
+  - @prosopo/procaptcha-common@2.9.40
+
+## 2.9.46
+### Patch Changes
+
+- Updated dependencies [22bfee7]
+- Updated dependencies [20192d2]
+  - @prosopo/util@3.2.9
+  - @prosopo/widget-skeleton@2.7.14
+  - @prosopo/procaptcha@2.10.7
+  - @prosopo/types@3.13.1
+  - @prosopo/procaptcha-common@2.9.39
+
+## 2.9.45
+### Patch Changes
+
+- Updated dependencies [e0fb3d6]
+- Updated dependencies [e6d9553]
+- Updated dependencies [f3f23e3]
+  - @prosopo/util@3.2.8
+  - @prosopo/types@3.13.0
+  - @prosopo/procaptcha@2.10.6
+  - @prosopo/procaptcha-common@2.9.38
+
+## 2.9.44
+### Patch Changes
+
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/types@3.12.3
+  - @prosopo/util@3.2.7
+  - @prosopo/procaptcha-common@2.9.37
+  - @prosopo/procaptcha@2.10.5
+
+## 2.9.43
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/locale@3.1.29
+  - @prosopo/types@3.12.2
+  - @prosopo/util@3.2.6
+  - @prosopo/common@3.1.30
+  - @prosopo/procaptcha@2.10.4
+  - @prosopo/procaptcha-common@2.9.36
+
+## 2.9.42
+### Patch Changes
+
+- Updated dependencies [c5ee492]
+- Updated dependencies [a90eb54]
+  - @prosopo/common@3.1.29
+  - @prosopo/types@3.12.1
+  - @prosopo/procaptcha@2.10.3
+  - @prosopo/procaptcha-common@2.9.35
+
+## 2.9.41
+### Patch Changes
+
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/types@3.12.0
+  - @prosopo/procaptcha-common@2.9.34
+  - @prosopo/procaptcha@2.10.2
+
+## 2.9.40
+### Patch Changes
+
+- Updated dependencies [8148587]
+  - @prosopo/types@3.11.1
+  - @prosopo/procaptcha@2.10.1
+  - @prosopo/procaptcha-common@2.9.33
+
+## 2.9.39
+### Patch Changes
+
+- Updated dependencies [7f6ffc5]
+  - @prosopo/procaptcha@2.10.0
+  - @prosopo/types@3.11.0
+  - @prosopo/procaptcha-common@2.9.32
+
+## 2.9.38
+### Patch Changes
+
+- Updated dependencies [93fa086]
+  - @prosopo/types@3.10.2
+  - @prosopo/procaptcha@2.9.38
+  - @prosopo/procaptcha-common@2.9.31
+
+## 2.9.37
+### Patch Changes
+
+- Updated dependencies [cde7550]
+  - @prosopo/types@3.10.1
+  - @prosopo/procaptcha@2.9.37
+  - @prosopo/procaptcha-common@2.9.30
+
+## 2.9.36
+### Patch Changes
+
+- Updated dependencies [ad6d622]
+  - @prosopo/types@3.10.0
+  - @prosopo/procaptcha@2.9.36
+  - @prosopo/procaptcha-common@2.9.29
+
+## 2.9.35
+### Patch Changes
+
+- 592adf1: Don't make people wait so long for a new session
+- Updated dependencies [ff58a70]
+  - @prosopo/types@3.9.0
+  - @prosopo/procaptcha@2.9.35
+  - @prosopo/procaptcha-common@2.9.28
+
+## 2.9.34
+### Patch Changes
+
+  - @prosopo/procaptcha@2.9.34
+
+## 2.9.33
+### Patch Changes
+
+- Updated dependencies [d2431cd]
+  - @prosopo/types@3.8.4
+  - @prosopo/procaptcha@2.9.33
+  - @prosopo/procaptcha-common@2.9.27
+
+## 2.9.32
+### Patch Changes
+
+  - @prosopo/procaptcha@2.9.32
+
+## 2.9.31
+### Patch Changes
+
+- Updated dependencies [bd6995b]
+  - @prosopo/types@3.8.3
+  - @prosopo/procaptcha@2.9.31
+  - @prosopo/procaptcha-common@2.9.26
+
+## 2.9.30
+### Patch Changes
+
+- Updated dependencies [9633e58]
+  - @prosopo/types@3.8.2
+  - @prosopo/procaptcha@2.9.30
+  - @prosopo/procaptcha-common@2.9.25
+
+## 2.9.29
+### Patch Changes
+
+- Updated dependencies [f52a5c1]
+  - @prosopo/types@3.8.1
+  - @prosopo/procaptcha@2.9.29
+  - @prosopo/procaptcha-common@2.9.24
+
 ## 2.9.28
 ### Patch Changes
 

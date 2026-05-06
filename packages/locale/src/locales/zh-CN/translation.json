@@ -21,6 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "访问被策略阻止",
 		"FORBIDDEN": "禁止",
 		"PROVIDER_VERIFY_FAILED": "提供商验证失败",
+		"SPAM_EMAIL_DOMAIN": "不允许此电子邮件域名",
 		"UNAUTHORIZED": "未授权",
 		"MISSING_BODY": "缺少主体",
 		"NO_CONTENT_TYPE_HEADER": "没有内容类型标头。假定为JSON编码主体，但无法解析。",
@@ -40,7 +41,16 @@
 		"INVALID_IP": "无效的IP",
 		"INVALID_URL": "无效的URL",
 		"INVALID_BODY": "无效的主体",
-		"PARSE_ERROR": "解析请求时出错"
+		"PARSE_ERROR": "解析请求时出错",
+		"SPAM_EMAIL_RULE": "电子邮件地址被垃圾邮件过滤规则拦截",
+		"VPN_BLOCKED": "此网站不允许来自VPN连接的请求",
+		"PROXY_BLOCKED": "此网站不允许来自代理服务器的请求",
+		"TOR_BLOCKED": "此网站不允许来自Tor出口节点的请求",
+		"ABUSER_BLOCKED": "此网站不允许来自被标记为滥用的网络的请求",
+		"DATACENTER_BLOCKED": "此网站不允许来自数据中心IP地址的请求",
+		"MOBILE_BLOCKED": "此网站不允许来自移动网络连接的请求",
+		"SATELLITE_BLOCKED": "此网站不允许来自卫星连接的请求",
+		"CRAWLER_BLOCKED": "此网站不允许来自已知爬虫的请求"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "无法修改所有者用户",
@@ -48,7 +58,9 @@
 		"CANNOT_DELETE_LAST_USER": "无法删除最后一个用户",
 		"USER_ALREADY_EXISTS": "用户已经存在",
 		"NO_SUGGESTIONS_FOUND": "未找到建议",
-		"CANNOT_DEACTIVATE_LAST_SITE": "无法停用最后一个活动站点"
+		"CANNOT_DEACTIVATE_LAST_SITE": "无法停用最后一个活动站点",
+		"DUPLICATE_SITE_NAME": "已存在同名站点",
+		"INVALID_SITE_NAME": "站点名称只能包含字母、数字、连字符和下划线"
 	},
 	"TARGET": {
 		"airplanes": "飞机",

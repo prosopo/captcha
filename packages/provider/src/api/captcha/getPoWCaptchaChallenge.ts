@@ -26,6 +26,7 @@ import type { NextFunction, Request, Response } from "express";
 import { getCompositeIpAddress } from "../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
+import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
 import { getRequestUserScope } from "../blacklistRequestInspector.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 
@@ -72,11 +73,27 @@ export default (
 				);
 			}
 
+			const normalizedIp = normalizeRequestIp(req.ip, req.logger);
+			if (!normalizedIp) {
+				req.logger.warn(() => ({
+					msg: "Request missing IP; geoblocking will be skipped",
+				}));
+			}
+
+			// Get country code for geoblocking from middleware-provided IP info
+			const countryCode =
+				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
+					? req.ipInfo.countryCode
+					: undefined;
+
 			const userScope = getRequestUserScope(
 				flatten(req.headers),
 				req.ja4,
-				req.ip,
+				normalizedIp,
 				user,
+				undefined, // headHash
+				undefined, // coords
+				countryCode,
 			);
 			const userAccessPolicy = (
 				await tasks.powCaptchaManager.getPrioritisedAccessPolicies(
@@ -97,7 +114,7 @@ export default (
 				env,
 				sessionId,
 				userAccessPolicy,
-				req.ip,
+				normalizedIp,
 			);
 
 			if (!valid) {
@@ -142,6 +159,18 @@ export default (
 				difficulty,
 			);
 
+			// Get countryCode from session if available, otherwise from geolocation
+			let countryCodeToStore: string | undefined;
+			if (validSessionId) {
+				const sessionRecord =
+					await tasks.db.getSessionRecordBySessionId(validSessionId);
+				countryCodeToStore = sessionRecord?.countryCode;
+			}
+			// If not available from session, use the one we already got for access policy
+			if (!countryCodeToStore) {
+				countryCodeToStore = countryCode;
+			}
+
 			await tasks.db.storePowCaptchaRecord(
 				challenge.challenge,
 				{
@@ -151,10 +180,14 @@ export default (
 				},
 				challenge.difficulty,
 				challenge.providerSignature,
-				getCompositeIpAddress(req.ip || ""),
+				getCompositeIpAddress(normalizedIp),
 				flatten(req.headers),
 				req.ja4,
 				validSessionId,
+				undefined,
+				undefined,
+				undefined,
+				countryCodeToStore,
 			);
 
 			const getPowCaptchaResponse: GetPowCaptchaResponse = {

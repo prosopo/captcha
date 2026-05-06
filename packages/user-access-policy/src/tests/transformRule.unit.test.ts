@@ -98,6 +98,7 @@ describe("transformRule", () => {
 		userId: "user",
 		headHash: "headHash",
 		coords: "[[1,2]]",
+		countryCode: "US",
 	} satisfies AccessRule;
 
 	it("should transform access rule record into rule", () => {

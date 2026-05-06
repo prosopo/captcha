@@ -1,5 +1,3 @@
-import { ProviderApi } from "@prosopo/api";
-import { loadBalancer } from "@prosopo/load-balancer";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +11,9 @@ import { loadBalancer } from "@prosopo/load-balancer";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { ProviderApi } from "@prosopo/api";
+import { loadBalancer } from "@prosopo/load-balancer";
 import {
 	type CaptchaType,
 	ClientSettingsSchema,
@@ -20,6 +21,7 @@ import {
 	type KeyringPair,
 	Tier,
 } from "@prosopo/types";
+import { imageMaxRoundsDefault } from "@prosopo/types";
 
 export const registerSiteKey = async (
 	siteKey: string,
@@ -41,6 +43,7 @@ export const registerSiteKey = async (
 					domains: ["localhost", "0.0.0.0", "127.0.0.0", "example.com"],
 					frictionlessThreshold: 0.5,
 					powDifficulty: 4,
+					imageMaxRounds: imageMaxRoundsDefault,
 				}),
 				adminPair.jwtIssue(),
 			);

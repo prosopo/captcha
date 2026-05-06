@@ -1,5 +1,267 @@
 # @prosopo/env
 
+## 3.4.5
+### Patch Changes
+
+- Updated dependencies [942701b]
+  - @prosopo/database@3.10.1
+
+## 3.4.4
+### Patch Changes
+
+- Updated dependencies [74092d0]
+  - @prosopo/database@3.10.0
+  - @prosopo/types-env@2.9.4
+
+## 3.4.3
+### Patch Changes
+
+- Updated dependencies [f6a4402]
+- Updated dependencies [99dfb44]
+  - @prosopo/database@3.9.18
+  - @prosopo/types@3.16.0
+  - @prosopo/types-env@2.9.3
+  - @prosopo/ipinfo@0.2.3
+  - @prosopo/keyring@2.9.23
+
+## 3.4.2
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+  - @prosopo/database@3.9.17
+  - @prosopo/ipinfo@0.2.2
+  - @prosopo/keyring@2.9.22
+  - @prosopo/types-env@2.9.2
+
+## 3.4.1
+### Patch Changes
+
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+  - @prosopo/types@3.14.1
+  - @prosopo/database@3.9.16
+  - @prosopo/types-env@2.9.1
+  - @prosopo/common@3.1.33
+  - @prosopo/ipinfo@0.2.1
+  - @prosopo/keyring@2.9.21
+
+## 3.4.0
+### Minor Changes
+
+- 42650db: Add better spam rules and move ipinfo service to local instead of external
+
+### Patch Changes
+
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+  - @prosopo/ipinfo@0.2.0
+  - @prosopo/types@3.14.0
+  - @prosopo/types-env@2.9.0
+  - @prosopo/database@3.9.15
+  - @prosopo/common@3.1.32
+  - @prosopo/keyring@2.9.20
+
+## 3.3.15
+### Patch Changes
+
+- Updated dependencies [4a9c518]
+  - @prosopo/common@3.1.31
+  - @prosopo/database@3.9.14
+  - @prosopo/keyring@2.9.19
+  - @prosopo/types-env@2.8.15
+
+## 3.3.14
+### Patch Changes
+
+  - @prosopo/database@3.9.13
+  - @prosopo/keyring@2.9.18
+  - @prosopo/types@3.13.3
+  - @prosopo/types-env@2.8.14
+
+## 3.3.13
+### Patch Changes
+
+  - @prosopo/database@3.9.12
+  - @prosopo/keyring@2.9.17
+  - @prosopo/types@3.13.2
+  - @prosopo/types-env@2.8.13
+
+## 3.3.12
+### Patch Changes
+
+  - @prosopo/database@3.9.11
+  - @prosopo/keyring@2.9.16
+  - @prosopo/types@3.13.1
+  - @prosopo/types-env@2.8.12
+
+## 3.3.11
+### Patch Changes
+
+- Updated dependencies [e6d9553]
+  - @prosopo/types@3.13.0
+  - @prosopo/database@3.9.10
+  - @prosopo/keyring@2.9.15
+  - @prosopo/types-env@2.8.11
+
+## 3.3.10
+### Patch Changes
+
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/types@3.12.3
+  - @prosopo/database@3.9.9
+  - @prosopo/keyring@2.9.14
+  - @prosopo/types-env@2.8.10
+
+## 3.3.9
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/database@3.9.8
+  - @prosopo/types@3.12.2
+  - @prosopo/types-env@2.8.9
+  - @prosopo/common@3.1.30
+  - @prosopo/keyring@2.9.13
+
+## 3.3.8
+### Patch Changes
+
+- Updated dependencies [c5ee492]
+- Updated dependencies [a90eb54]
+  - @prosopo/common@3.1.29
+  - @prosopo/types@3.12.1
+  - @prosopo/database@3.9.7
+  - @prosopo/keyring@2.9.12
+  - @prosopo/types-env@2.8.8
+
+## 3.3.7
+### Patch Changes
+
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/keyring@2.9.11
+  - @prosopo/types@3.12.0
+  - @prosopo/types-env@2.8.7
+  - @prosopo/database@3.9.6
+
+## 3.3.6
+### Patch Changes
+
+- Updated dependencies [8148587]
+  - @prosopo/types@3.11.1
+  - @prosopo/database@3.9.5
+  - @prosopo/types-env@2.8.6
+  - @prosopo/keyring@2.9.10
+
+## 3.3.5
+### Patch Changes
+
+  - @prosopo/database@3.9.4
+  - @prosopo/types-env@2.8.5
+
+## 3.3.4
+### Patch Changes
+
+- Updated dependencies [7f6ffc5]
+  - @prosopo/types@3.11.0
+  - @prosopo/database@3.9.3
+  - @prosopo/keyring@2.9.9
+  - @prosopo/types-env@2.8.4
+
+## 3.3.3
+### Patch Changes
+
+- Updated dependencies [93fa086]
+  - @prosopo/database@3.9.2
+  - @prosopo/types@3.10.2
+  - @prosopo/types-env@2.8.3
+  - @prosopo/keyring@2.9.8
+
+## 3.3.2
+### Patch Changes
+
+- Updated dependencies [cde7550]
+  - @prosopo/types@3.10.1
+  - @prosopo/database@3.9.1
+  - @prosopo/types-env@2.8.2
+  - @prosopo/keyring@2.9.7
+
+## 3.3.1
+### Patch Changes
+
+- Updated dependencies [ad6d622]
+- Updated dependencies [ced9f41]
+- Updated dependencies [fa95c5f]
+  - @prosopo/database@3.9.0
+  - @prosopo/types@3.10.0
+  - @prosopo/types-env@2.8.1
+  - @prosopo/keyring@2.9.6
+
+## 3.3.0
+### Minor Changes
+
+- ff58a70: Load the geolocation service at startup only
+
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+- Updated dependencies [d329e63]
+  - @prosopo/types-env@2.8.0
+  - @prosopo/types@3.9.0
+  - @prosopo/database@3.8.0
+  - @prosopo/keyring@2.9.5
+
+## 3.2.42
+### Patch Changes
+
+- Updated dependencies [3feeea4]
+  - @prosopo/database@3.7.0
+  - @prosopo/types-env@2.7.66
+
+## 3.2.41
+### Patch Changes
+
+- Updated dependencies [d2431cd]
+  - @prosopo/types@3.8.4
+  - @prosopo/database@3.6.12
+  - @prosopo/types-env@2.7.65
+  - @prosopo/keyring@2.9.4
+
+## 3.2.40
+### Patch Changes
+
+  - @prosopo/database@3.6.11
+  - @prosopo/types-env@2.7.64
+
+## 3.2.39
+### Patch Changes
+
+- Updated dependencies [bd6995b]
+  - @prosopo/types@3.8.3
+  - @prosopo/database@3.6.10
+  - @prosopo/keyring@2.9.3
+  - @prosopo/types-env@2.7.63
+
+## 3.2.38
+### Patch Changes
+
+- Updated dependencies [9633e58]
+  - @prosopo/types@3.8.2
+  - @prosopo/database@3.6.9
+  - @prosopo/types-env@2.7.62
+  - @prosopo/keyring@2.9.2
+
+## 3.2.37
+### Patch Changes
+
+- Updated dependencies [f52a5c1]
+  - @prosopo/database@3.6.8
+  - @prosopo/types@3.8.1
+  - @prosopo/types-env@2.7.61
+  - @prosopo/keyring@2.9.1
+
 ## 3.2.36
 ### Patch Changes
 

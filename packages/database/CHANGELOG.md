@@ -1,5 +1,272 @@
 # @prosopo/database
 
+## 3.10.1
+### Patch Changes
+
+- 942701b: Connection drop fix
+
+## 3.10.0
+### Minor Changes
+
+- 74092d0: Stream data back to central for decisions
+
+### Patch Changes
+
+- Updated dependencies [74092d0]
+  - @prosopo/types-database@4.6.0
+
+## 3.9.18
+### Patch Changes
+
+- f6a4402: API endpoint for removing site keys
+- Updated dependencies [f6a4402]
+- Updated dependencies [99dfb44]
+  - @prosopo/types-database@4.5.3
+  - @prosopo/types@3.16.0
+  - @prosopo/user-access-policy@3.6.24
+
+## 3.9.17
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+  - @prosopo/types-database@4.5.2
+  - @prosopo/user-access-policy@3.6.23
+
+## 3.9.16
+### Patch Changes
+
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+- Updated dependencies [b94890c]
+  - @prosopo/types-database@4.5.1
+  - @prosopo/types@3.14.1
+  - @prosopo/locale@3.2.1
+  - @prosopo/common@3.1.33
+  - @prosopo/user-access-policy@3.6.22
+  - @prosopo/redis-client@1.0.18
+
+## 3.9.15
+### Patch Changes
+
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+  - @prosopo/types-database@4.5.0
+  - @prosopo/locale@3.2.0
+  - @prosopo/types@3.14.0
+  - @prosopo/common@3.1.32
+  - @prosopo/user-access-policy@3.6.21
+  - @prosopo/redis-client@1.0.17
+
+## 3.9.14
+### Patch Changes
+
+- Updated dependencies [4a9c518]
+  - @prosopo/common@3.1.31
+  - @prosopo/redis-client@1.0.16
+  - @prosopo/types-database@4.4.14
+  - @prosopo/user-access-policy@3.6.20
+
+## 3.9.13
+### Patch Changes
+
+- Updated dependencies [a25dffa]
+  - @prosopo/util@3.2.11
+  - @prosopo/types@3.13.3
+  - @prosopo/user-access-policy@3.6.19
+  - @prosopo/types-database@4.4.13
+
+## 3.9.12
+### Patch Changes
+
+- Updated dependencies [346edd7]
+  - @prosopo/util@3.2.10
+  - @prosopo/types@3.13.2
+  - @prosopo/user-access-policy@3.6.18
+  - @prosopo/types-database@4.4.12
+
+## 3.9.11
+### Patch Changes
+
+- Updated dependencies [22bfee7]
+  - @prosopo/util@3.2.9
+  - @prosopo/types@3.13.1
+  - @prosopo/user-access-policy@3.6.17
+  - @prosopo/types-database@4.4.11
+
+## 3.9.10
+### Patch Changes
+
+- Updated dependencies [e0fb3d6]
+- Updated dependencies [e6d9553]
+- Updated dependencies [f3f23e3]
+  - @prosopo/util@3.2.8
+  - @prosopo/types@3.13.0
+  - @prosopo/user-access-policy@3.6.16
+  - @prosopo/types-database@4.4.10
+
+## 3.9.9
+### Patch Changes
+
+- e1ea65f: Better spam email domain checking
+- c316257: Adding sync fo sessions wrt captcha status
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/types@3.12.3
+  - @prosopo/types-database@4.4.9
+  - @prosopo/util@3.2.7
+  - @prosopo/user-access-policy@3.6.15
+
+## 3.9.8
+### Patch Changes
+
+- adb89a6: Disposable email checking
+- Updated dependencies [adb89a6]
+  - @prosopo/types-database@4.4.8
+  - @prosopo/locale@3.1.29
+  - @prosopo/types@3.12.2
+  - @prosopo/common@3.1.30
+  - @prosopo/user-access-policy@3.6.14
+  - @prosopo/redis-client@1.0.15
+
+## 3.9.7
+### Patch Changes
+
+- Updated dependencies [c5ee492]
+- Updated dependencies [a90eb54]
+  - @prosopo/common@3.1.29
+  - @prosopo/types-database@4.4.7
+  - @prosopo/types@3.12.1
+  - @prosopo/redis-client@1.0.14
+  - @prosopo/user-access-policy@3.6.13
+
+## 3.9.6
+### Patch Changes
+
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/types@3.12.0
+  - @prosopo/types-database@4.4.6
+  - @prosopo/user-access-policy@3.6.12
+
+## 3.9.5
+### Patch Changes
+
+- Updated dependencies [8148587]
+  - @prosopo/types-database@4.4.5
+  - @prosopo/types@3.11.1
+  - @prosopo/user-access-policy@3.6.11
+
+## 3.9.4
+### Patch Changes
+
+- Updated dependencies [90033e9]
+  - @prosopo/types-database@4.4.4
+
+## 3.9.3
+### Patch Changes
+
+- Updated dependencies [7f6ffc5]
+  - @prosopo/types@3.11.0
+  - @prosopo/types-database@4.4.3
+  - @prosopo/user-access-policy@3.6.10
+
+## 3.9.2
+### Patch Changes
+
+- 93fa086: Add decision engine endpoints
+- Updated dependencies [93fa086]
+  - @prosopo/types-database@4.4.2
+  - @prosopo/types@3.10.2
+  - @prosopo/user-access-policy@3.6.9
+
+## 3.9.1
+### Patch Changes
+
+- Updated dependencies [cde7550]
+  - @prosopo/types-database@4.4.1
+  - @prosopo/types@3.10.1
+  - @prosopo/user-access-policy@3.6.8
+
+## 3.9.0
+### Minor Changes
+
+- ad6d622: Separate types from mongoose schemas to avoid bundling mongoose in frontend
+
+### Patch Changes
+
+- ced9f41: Fix incorrect projection
+- fa95c5f: zod types for db records
+- Updated dependencies [ad6d622]
+- Updated dependencies [fa95c5f]
+  - @prosopo/types-database@4.4.0
+  - @prosopo/types@3.10.0
+  - @prosopo/user-access-policy@3.6.7
+
+## 3.8.0
+### Minor Changes
+
+- d329e63: Use projections to speed up queries
+
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+  - @prosopo/types@3.9.0
+  - @prosopo/types-database@4.3.1
+  - @prosopo/user-access-policy@3.6.6
+
+## 3.7.0
+### Minor Changes
+
+- 3feeea4: Store geolocation. Remove pending image captcha collection
+
+### Patch Changes
+
+- Updated dependencies [3feeea4]
+  - @prosopo/types-database@4.3.0
+
+## 3.6.12
+### Patch Changes
+
+- Updated dependencies [4c08158]
+- Updated dependencies [d2431cd]
+  - @prosopo/types-database@4.2.4
+  - @prosopo/types@3.8.4
+  - @prosopo/user-access-policy@3.6.5
+
+## 3.6.11
+### Patch Changes
+
+- Updated dependencies [8dad7f3]
+  - @prosopo/types-database@4.2.3
+
+## 3.6.10
+### Patch Changes
+
+- Updated dependencies [bd6995b]
+  - @prosopo/user-access-policy@3.6.4
+  - @prosopo/types@3.8.3
+  - @prosopo/types-database@4.2.2
+
+## 3.6.9
+### Patch Changes
+
+- Updated dependencies [9633e58]
+  - @prosopo/types-database@4.2.1
+  - @prosopo/types@3.8.2
+  - @prosopo/user-access-policy@3.6.3
+
+## 3.6.8
+### Patch Changes
+
+- f52a5c1: Adding decision machine to provider for behavior detection
+- Updated dependencies [f52a5c1]
+- Updated dependencies [4299cae]
+  - @prosopo/types-database@4.2.0
+  - @prosopo/types@3.8.1
+  - @prosopo/user-access-policy@3.6.2
+
 ## 3.6.7
 ### Patch Changes
 

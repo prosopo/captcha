@@ -16,6 +16,7 @@ import { handleErrors } from "@prosopo/api-express-router";
 import { ClientApiPaths } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import express, { type Router } from "express";
+import checkSpamEmail from "./captcha/checkSpamEmail.js";
 import getFrictionlessCaptchaChallenge from "./captcha/getFrictionlessCaptchaChallenge.js";
 import getImageCaptchaChallenge from "./captcha/getImageCaptchaChallenge.js";
 import getPoWCaptchaChallenge from "./captcha/getPoWCaptchaChallenge.js";
@@ -44,7 +45,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	 * Receives solved CAPTCHA challenges from the user, stores to database, and checks against solution commitment
 	 */
 	router.post(ClientApiPaths.SubmitImageCaptchaSolution, (req, res, next) =>
-		submitImageCaptchaSolution(env, userAccessRulesStorage)(req, res, next),
+		submitImageCaptchaSolution(env)(req, res, next),
 	);
 
 	/**
@@ -72,6 +73,13 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				res,
 				next,
 			),
+	);
+
+	/**
+	 * Checks if an email domain is spam
+	 */
+	router.post(ClientApiPaths.CheckSpamEmail, (req, res, next) =>
+		checkSpamEmail(env)(req, res, next),
 	);
 
 	// Your error handler should always be at the end of your application stack. Apparently it means not only after all

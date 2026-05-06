@@ -13,7 +13,7 @@
 // limitations under the License.
 export const WIDGET_URL = "https://prosopo.io";
 export const WIDGET_URL_TEXT =
-	"Visit prosopo.io to learn more about the service and its accessibility options.";
+	"Procaptcha: Frictionless, Privacy-focused Bot Protection by Prosopo.";
 export const WIDGET_INNER_HEIGHT = 74;
 export const WIDGET_OUTER_HEIGHT = 80;
 export const WIDGET_MIN_HEIGHT = "80px";
@@ -25,4 +25,5 @@ export const WIDGET_DIMENSIONS = {
 export const WIDGET_BORDER_RADIUS = "8px";
 export const WIDGET_PADDING = "2px";
 export const WIDGET_BORDER = "1px solid";
-export const WIDGET_CHECKBOX_SPINNER_CSS_CLASS = "checkbox__loading-spinner";
+export const WIDGET_CHECKBOX_SPINNER_CSS_CLASS =
+	"prosopo-checkbox__loading-spinner";

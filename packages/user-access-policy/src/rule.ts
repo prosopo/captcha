@@ -46,6 +46,7 @@ export type UserAttributes = {
 	userAgentHash?: string;
 	headHash?: string;
 	coords?: string;
+	countryCode?: string;
 };
 
 export type UserScope = UserAttributes & UserIp;

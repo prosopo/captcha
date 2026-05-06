@@ -117,7 +117,17 @@
 		"FAILED_IP_VALIDATION": "IP validation failed",
 		"ACCESS_POLICY_BLOCK": "Access blocked by policy",
 		"FORBIDDEN": "Forbidden",
-		"PROVIDER_VERIFY_FAILED": "Provider verification failed"
+		"PROVIDER_VERIFY_FAILED": "Provider verification failed",
+		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
+		"SPAM_EMAIL_RULE": "Email address blocked by spam filter rules",
+		"VPN_BLOCKED": "Requests from VPN connections are not allowed for this site",
+		"PROXY_BLOCKED": "Requests from proxy servers are not allowed for this site",
+		"TOR_BLOCKED": "Requests from Tor exit nodes are not allowed for this site",
+		"ABUSER_BLOCKED": "Requests from networks flagged for abuse are not allowed for this site",
+		"DATACENTER_BLOCKED": "Requests from datacenter IP addresses are not allowed for this site",
+		"MOBILE_BLOCKED": "Requests from mobile network connections are not allowed for this site",
+		"SATELLITE_BLOCKED": "Requests from satellite connections are not allowed for this site",
+		"CRAWLER_BLOCKED": "Requests from known crawlers are not allowed for this site"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Cannot modify owner user",
@@ -125,7 +135,9 @@
 		"CANNOT_DELETE_LAST_USER": "Cannot delete last user",
 		"USER_ALREADY_EXISTS": "User already exists",
 		"NO_SUGGESTIONS_FOUND": "No suggestions found",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Cannot deactivate the last active site"
+		"CANNOT_DEACTIVATE_LAST_SITE": "Cannot deactivate the last active site",
+		"DUPLICATE_SITE_NAME": "A site with this name already exists",
+		"INVALID_SITE_NAME": "Site name must contain only letters, numbers, hyphens, and underscores"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Invalid parameter"

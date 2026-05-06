@@ -38,6 +38,7 @@ export const userAttributesRedisSchema: RediSearchSchema = {
 	headHash: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 	// Use pipe separator for coords since JSON strings contain commas
 	coords: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true, SEPARATOR: "|" },
+	countryCode: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 } satisfies AllKeys<UserAttributes>;
 
 export const userScopeRedisSchema: RediSearchSchema = {

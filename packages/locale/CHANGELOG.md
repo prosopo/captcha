@@ -1,5 +1,24 @@
 # @prosopo/locale
 
+## 3.2.1
+### Patch Changes
+
+- b94890c: Translations
+
+## 3.2.0
+### Minor Changes
+
+- 42650db: Add better spam rules and move ipinfo service to local instead of external
+
+### Patch Changes
+
+- fc514dd: ability to block different types of traffic
+
+## 3.1.29
+### Patch Changes
+
+- adb89a6: Disposable email checking
+
 ## 3.1.28
 ### Patch Changes
 

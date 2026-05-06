@@ -21,6 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Přístup blokován zásadami",
 		"FORBIDDEN": "Zakázáno",
 		"PROVIDER_VERIFY_FAILED": "Ověření poskytovatele selhalo",
+		"SPAM_EMAIL_DOMAIN": "E-mailová doména není povolena",
 		"UNAUTHORIZED": "Neoprávněný",
 		"MISSING_BODY": "Chybějící tělo",
 		"NO_CONTENT_TYPE_HEADER": "Chybí hlavička typu obsahu. Předpokládáno, že tělo je kódované ve formátu JSON, ale nepodařilo se ho analyzovat.",
@@ -40,7 +41,16 @@
 		"INVALID_IP": "Neplatná IP adresa",
 		"INVALID_URL": "Neplatná URL adresa",
 		"INVALID_BODY": "Neplatné tělo",
-		"PARSE_ERROR": "Chyba při zpracování požadavku"
+		"PARSE_ERROR": "Chyba při zpracování požadavku",
+		"SPAM_EMAIL_RULE": "E-mailová adresa blokována pravidly spamového filtru",
+		"VPN_BLOCKED": "Požadavky z VPN připojení nejsou pro tento web povoleny",
+		"PROXY_BLOCKED": "Požadavky z proxy serverů nejsou pro tento web povoleny",
+		"TOR_BLOCKED": "Požadavky z výstupních uzlů Tor nejsou pro tento web povoleny",
+		"ABUSER_BLOCKED": "Požadavky ze sítí označených za zneužívající nejsou pro tento web povoleny",
+		"DATACENTER_BLOCKED": "Požadavky z IP adres datových center nejsou pro tento web povoleny",
+		"MOBILE_BLOCKED": "Požadavky z mobilních sítí nejsou pro tento web povoleny",
+		"SATELLITE_BLOCKED": "Požadavky ze satelitních připojení nejsou pro tento web povoleny",
+		"CRAWLER_BLOCKED": "Požadavky ze známých crawlerů nejsou pro tento web povoleny"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Nelze upravit vlastníka uživatele",
@@ -48,7 +58,9 @@
 		"CANNOT_DELETE_LAST_USER": "Nelze smazat posledního uživatele",
 		"USER_ALREADY_EXISTS": "Uživatel již existuje",
 		"NO_SUGGESTIONS_FOUND": "Nebyly nalezeny žádné návrhy",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Nelze deaktivovat poslední aktivní web"
+		"CANNOT_DEACTIVATE_LAST_SITE": "Nelze deaktivovat poslední aktivní web",
+		"DUPLICATE_SITE_NAME": "Web s tímto názvem již existuje",
+		"INVALID_SITE_NAME": "Název webu smí obsahovat pouze písmena, čísla, pomlčky a podtržítka"
 	},
 	"TARGET": {
 		"airplanes": "letadla",

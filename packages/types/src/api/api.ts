@@ -12,8 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type {
+	RegisterSitekeysBodyTypeOutput,
+	RemoveSitekeysBodyTypeOutput,
+} from "@prosopo/types";
 import type { IUserSettings, Tier } from "../client/index.js";
 import type { CaptchaSolution } from "../datasets/index.js";
+import type {
+	DecisionMachineCaptchaType,
+	DecisionMachineLanguage,
+	DecisionMachineRuntime,
+	DecisionMachineScope,
+} from "../decisionMachine/index.js";
 import type { ProcaptchaToken, StoredEvents } from "../procaptcha/index.js";
 import type {
 	ApiResponse,
@@ -40,6 +50,7 @@ export interface ProviderApiInterface {
 		timestamp: string,
 		providerRequestHashSignature: string,
 		userRequestHashSignature: string,
+		behavioralData?: string,
 	): Promise<CaptchaSolutionResponse>;
 	verifyDappUser(
 		token: ProcaptchaToken,
@@ -72,10 +83,34 @@ export interface ProviderApiInterface {
 		settings: IUserSettings,
 		jwt: string,
 	): Promise<ApiResponse>;
+	registerSiteKeys(
+		siteKeys: RegisterSitekeysBodyTypeOutput,
+		jwt: string,
+	): Promise<ApiResponse>;
+	removeSiteKey(siteKey: string, jwt: string): Promise<ApiResponse>;
+	removeSiteKeys(
+		siteKeys: RemoveSitekeysBodyTypeOutput,
+		jwt: string,
+	): Promise<ApiResponse>;
 	updateDetectorKey(detectorKey: string, jwt: string): Promise<ApiResponse>;
 	removeDetectorKey(
 		detectorKey: string,
 		jwt: string,
 		expirationInSeconds?: number,
 	): Promise<ApiResponse>;
+	updateDecisionMachine(
+		scope: DecisionMachineScope,
+		runtime: DecisionMachineRuntime,
+		source: string,
+		jwt: string,
+		dappAccount?: string,
+		language?: DecisionMachineLanguage,
+		name?: string,
+		version?: string,
+		captchaType?: DecisionMachineCaptchaType,
+	): Promise<ApiResponse>;
+	getAllDecisionMachines(jwt: string): Promise<ApiResponse>;
+	getDecisionMachine(id: string, jwt: string): Promise<ApiResponse>;
+	removeDecisionMachine(id: string, jwt: string): Promise<ApiResponse>;
+	removeAllDecisionMachines(jwt: string): Promise<ApiResponse>;
 }

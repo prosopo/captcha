@@ -22,41 +22,52 @@ import type { Theme } from "../theme.js";
  */
 export function createLogoElement(theme: Theme): HTMLElement {
 	const widgetLogo = document.createElement("div");
-	widgetLogo.className = "logo";
+	widgetLogo.className = "prosopo-logo-container";
 	widgetLogo.innerHTML = LOGO_STYLES + getLogoMarkup(theme);
 	return widgetLogo;
 }
 
 const LOGO_STYLES = `
 <style>
-.logo {
-    display: inline-flex;
-    flex-direction: column;
+.prosopo-logo-container {
+    display: flex !important;
+    margin-left: auto !important;
+    width: auto !important;
+    flex-shrink: 0 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-inline-start: auto !important;
 }
 
 .prosopo-logo {
-    display: inline-flex;
-    flex-direction: column;    /* ✅ Stack vertically */
-    align-items: center;       /* ✅ Center horizontally */
-    justify-content: center;   /* ✅ Optional: center vertically if needed */
-    padding: 8px;
+    justify-content: center;
+    padding: 0px 8px 0px 8px;
     height: auto;
-    min-width: max-content;
-    gap: 2px;                  /* ✅ Space between SVG and text */
+}
+
+.prosopo-logo-container a, 
+.prosopo-logo {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-decoration: none !important;
+    gap: 2px !important;
 }
 
 .prosopo-logo-text {
     all: unset;
+    display: block !important;
     font-size: 9px !important;
     font-weight: bold !important;
     font-family: Helvetica Neue, Helvetica, Arial, sans-serif !important;
     line-height: 1 !important;
-    text-align: center;
+    text-align: center !important;
 }
 
 #logo {
-    width: 28px;
-    height: 28px;
+    width: 28px !important;
+    height: 28px !important;
+    display: block !important;
 }
 
 </style>
@@ -68,12 +79,12 @@ const LOGO_STYLES = `
  */
 function getLogoMarkup(theme: Theme): string {
 	return `
-			<a href="${WIDGET_URL}?utm_campaign=widget" tabindex="0" target="_blank" role="button"
+			<a href="${WIDGET_URL}#widget" tabindex="0" target="_blank" rel="noopener"
 			   aria-label="${WIDGET_URL_TEXT}"
 			   style="text-decoration: none;">
 				<div class="prosopo-logo">
 					<svg id="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 49.010001 49.009997" style="fill: ${theme.palette.logoFill};"
-						 aria-label="Prosopo Logo With Text">
+						 aria-hidden="true">
 						<title>${WIDGET_URL_TEXT}</title>
 						<g transform="matrix(0.11319331,0,0,0.11319331,6.504999,-2.2052113e-4)">
 							<g>
@@ -88,6 +99,7 @@ function getLogoMarkup(theme: Theme): string {
 					Prosopo
 					</span>
 				</div>
+				<span style="position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden;">${WIDGET_URL_TEXT}</span>
 			</a>
 `;
 }

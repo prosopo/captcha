@@ -32,11 +32,12 @@
             window.onLoggedIn = (token) => {
                 updateCaptchaStatus('Logged in, fetching private resource', 'info');
                 const url = new URL("/private", config.serverUrl).href;
+                const origin = new URL(window.location.href).origin;
                 console.log("getting private resource with token ", token, "at", url);
                 fetch(url, {
                     method: "GET",
                     headers: {
-                        Origin: "http://localhost:9232", // TODO: change this to env var
+                        Origin: `${origin}`,
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${token}`,
                     },
@@ -79,6 +80,7 @@
                     email: document.getElementById('email').value,
                     name: document.getElementById('name').value,
                     password: document.getElementById('password').value,
+                    siteKey: import.meta.env.PROSOPO_SITE_KEY_FRICTIONLESS,
                     "procaptcha-response": procaptchaToken,
                 };
                 const url = new URL('signup', import.meta.env.PROSOPO_SERVER_URL).href;
@@ -179,8 +181,15 @@
 </div>
 <script type="module">
     (async () => {
+
+        const host = new URL(window.location.href).host;
+
+        // Use predefined VITE_BUNDLE_URL or default to localhost with the same host as the page, to ensure we load the
+        // bundle from the correct location in different environments
+        const bundleUrl = import.meta.env.VITE_BUNDLE_URL || 'https://localhost:9269/procaptcha.bundle.js'.replace('localhost', host);
+
         // Pattern to avoid race condition between Procaptcha script loading and Procaptcha render function call
-        const {render} = await import(import.meta.env.VITE_BUNDLE_URL);
+        const {render} = await import(bundleUrl);
 
         // Define a callback function to be called when the CAPTCHA is verified
         function onCaptchaVerified(output) {

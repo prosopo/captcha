@@ -1,5 +1,238 @@
 # @prosopo/server
 
+## 2.10.1
+### Patch Changes
+
+- Updated dependencies [f6a4402]
+- Updated dependencies [99dfb44]
+  - @prosopo/types@3.16.0
+  - @prosopo/api@3.3.1
+  - @prosopo/keyring@2.9.23
+  - @prosopo/load-balancer@2.8.40
+
+## 2.10.0
+### Minor Changes
+
+- 3e54c0a: Rate limits by client
+
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+  - @prosopo/api@3.3.0
+  - @prosopo/keyring@2.9.22
+  - @prosopo/load-balancer@2.8.39
+
+## 2.9.73
+### Patch Changes
+
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+  - @prosopo/types@3.14.1
+  - @prosopo/api@3.2.11
+  - @prosopo/common@3.1.33
+  - @prosopo/keyring@2.9.21
+  - @prosopo/load-balancer@2.8.38
+
+## 2.9.72
+### Patch Changes
+
+- Updated dependencies [fc514dd]
+- Updated dependencies [7be39c4]
+- Updated dependencies [42650db]
+  - @prosopo/types@3.14.0
+  - @prosopo/api@3.2.10
+  - @prosopo/common@3.1.32
+  - @prosopo/keyring@2.9.20
+  - @prosopo/load-balancer@2.8.37
+
+## 2.9.71
+### Patch Changes
+
+- Updated dependencies [4a9c518]
+  - @prosopo/common@3.1.31
+  - @prosopo/keyring@2.9.19
+  - @prosopo/load-balancer@2.8.36
+
+## 2.9.70
+### Patch Changes
+
+- Updated dependencies [a25dffa]
+  - @prosopo/util@3.2.11
+  - @prosopo/keyring@2.9.18
+  - @prosopo/types@3.13.3
+  - @prosopo/api@3.2.9
+  - @prosopo/load-balancer@2.8.35
+
+## 2.9.69
+### Patch Changes
+
+- Updated dependencies [346edd7]
+  - @prosopo/util@3.2.10
+  - @prosopo/keyring@2.9.17
+  - @prosopo/types@3.13.2
+  - @prosopo/api@3.2.8
+  - @prosopo/load-balancer@2.8.34
+
+## 2.9.68
+### Patch Changes
+
+- Updated dependencies [22bfee7]
+  - @prosopo/util@3.2.9
+  - @prosopo/keyring@2.9.16
+  - @prosopo/types@3.13.1
+  - @prosopo/api@3.2.7
+  - @prosopo/load-balancer@2.8.33
+
+## 2.9.67
+### Patch Changes
+
+- Updated dependencies [e0fb3d6]
+- Updated dependencies [e6d9553]
+- Updated dependencies [f3f23e3]
+  - @prosopo/util@3.2.8
+  - @prosopo/types@3.13.0
+  - @prosopo/keyring@2.9.15
+  - @prosopo/api@3.2.6
+  - @prosopo/load-balancer@2.8.32
+
+## 2.9.66
+### Patch Changes
+
+- Updated dependencies [730c61e]
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/load-balancer@2.8.31
+  - @prosopo/types@3.12.3
+  - @prosopo/util@3.2.7
+  - @prosopo/api@3.2.5
+  - @prosopo/keyring@2.9.14
+
+## 2.9.65
+### Patch Changes
+
+- adb89a6: Disposable email checking
+- Updated dependencies [adb89a6]
+  - @prosopo/types@3.12.2
+  - @prosopo/util@3.2.6
+  - @prosopo/api@3.2.4
+  - @prosopo/common@3.1.30
+  - @prosopo/keyring@2.9.13
+  - @prosopo/load-balancer@2.8.30
+
+## 2.9.64
+### Patch Changes
+
+- Updated dependencies [c5ee492]
+- Updated dependencies [a90eb54]
+  - @prosopo/common@3.1.29
+  - @prosopo/types@3.12.1
+  - @prosopo/keyring@2.9.12
+  - @prosopo/load-balancer@2.8.29
+  - @prosopo/api@3.2.3
+
+## 2.9.63
+### Patch Changes
+
+- 676c5f2: Use HTTPS in developmentwq
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/load-balancer@2.8.28
+  - @prosopo/keyring@2.9.11
+  - @prosopo/types@3.12.0
+  - @prosopo/api@3.2.2
+
+## 2.9.62
+### Patch Changes
+
+- Updated dependencies [8148587]
+  - @prosopo/types@3.11.1
+  - @prosopo/api@3.2.1
+  - @prosopo/keyring@2.9.10
+  - @prosopo/load-balancer@2.8.27
+
+## 2.9.61
+### Patch Changes
+
+- Updated dependencies [7f6ffc5]
+  - @prosopo/types@3.11.0
+  - @prosopo/api@3.2.0
+  - @prosopo/keyring@2.9.9
+  - @prosopo/load-balancer@2.8.26
+
+## 2.9.60
+### Patch Changes
+
+- Updated dependencies [93fa086]
+  - @prosopo/types@3.10.2
+  - @prosopo/api@3.1.49
+  - @prosopo/keyring@2.9.8
+  - @prosopo/load-balancer@2.8.25
+
+## 2.9.59
+### Patch Changes
+
+- Updated dependencies [cde7550]
+  - @prosopo/types@3.10.1
+  - @prosopo/api@3.1.48
+  - @prosopo/keyring@2.9.7
+  - @prosopo/load-balancer@2.8.24
+
+## 2.9.58
+### Patch Changes
+
+- Updated dependencies [ad6d622]
+  - @prosopo/types@3.10.0
+  - @prosopo/api@3.1.47
+  - @prosopo/keyring@2.9.6
+  - @prosopo/load-balancer@2.8.23
+
+## 2.9.57
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+  - @prosopo/types@3.9.0
+  - @prosopo/api@3.1.46
+  - @prosopo/keyring@2.9.5
+  - @prosopo/load-balancer@2.8.22
+
+## 2.9.56
+### Patch Changes
+
+- Updated dependencies [d2431cd]
+  - @prosopo/types@3.8.4
+  - @prosopo/api@3.1.45
+  - @prosopo/keyring@2.9.4
+  - @prosopo/load-balancer@2.8.21
+
+## 2.9.55
+### Patch Changes
+
+- Updated dependencies [bd6995b]
+  - @prosopo/types@3.8.3
+  - @prosopo/api@3.1.44
+  - @prosopo/keyring@2.9.3
+  - @prosopo/load-balancer@2.8.20
+
+## 2.9.54
+### Patch Changes
+
+- Updated dependencies [9633e58]
+  - @prosopo/types@3.8.2
+  - @prosopo/api@3.1.43
+  - @prosopo/keyring@2.9.2
+  - @prosopo/load-balancer@2.8.19
+
+## 2.9.53
+### Patch Changes
+
+- Updated dependencies [f52a5c1]
+  - @prosopo/types@3.8.1
+  - @prosopo/api@3.1.42
+  - @prosopo/keyring@2.9.1
+  - @prosopo/load-balancer@2.8.18
+
 ## 2.9.52
 ### Patch Changes
 

@@ -21,6 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "A hozzáférést a szabályzat letiltotta",
 		"FORBIDDEN": "tiltott",
 		"PROVIDER_VERIFY_FAILED": "Szolgáltató ellenőrzése sikertelen",
+		"SPAM_EMAIL_DOMAIN": "Az e-mail domain nem engedélyezett",
 		"UNAUTHORIZED": "Unauthorized",
 		"MISSING_BODY": "Hiányzó test",
 		"NO_CONTENT_TYPE_HEADER": "Nincs tartalom-típus fejléc. Feltételezett JSON kódolt test, de nem sikerült értelmezni.",
@@ -40,7 +41,16 @@
 		"INVALID_IP": "Érvénytelen IP",
 		"INVALID_URL": "Érvénytelen URL",
 		"INVALID_BODY": "Érvénytelen test",
-		"PARSE_ERROR": "Hiba az adatkérések elemzése közben"
+		"PARSE_ERROR": "Hiba az adatkérések elemzése közben",
+		"SPAM_EMAIL_RULE": "Az e-mail cím a spamszűrő szabályai alapján blokkolva",
+		"VPN_BLOCKED": "VPN-kapcsolatokról érkező kérések nem engedélyezettek ezen az oldalon",
+		"PROXY_BLOCKED": "Proxy szerverekről érkező kérések nem engedélyezettek ezen az oldalon",
+		"TOR_BLOCKED": "Tor kilépési csomópontokról érkező kérések nem engedélyezettek ezen az oldalon",
+		"ABUSER_BLOCKED": "Visszaélésért megjelölt hálózatokról érkező kérések nem engedélyezettek ezen az oldalon",
+		"DATACENTER_BLOCKED": "Adatközponti IP-címekről érkező kérések nem engedélyezettek ezen az oldalon",
+		"MOBILE_BLOCKED": "Mobilhálózati kapcsolatokról érkező kérések nem engedélyezettek ezen az oldalon",
+		"SATELLITE_BLOCKED": "Műholdas kapcsolatokról érkező kérések nem engedélyezettek ezen az oldalon",
+		"CRAWLER_BLOCKED": "Ismert webrobotoktól érkező kérések nem engedélyezettek ezen az oldalon"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Nem lehet módosítani a tulajdonos felhasználót",
@@ -48,7 +58,9 @@
 		"CANNOT_DELETE_LAST_USER": "Nem törölheti az utolsó felhasználót",
 		"USER_ALREADY_EXISTS": "A felhasználó már létezik",
 		"NO_SUGGESTIONS_FOUND": "Nincsenek javaslatok",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Nem lehet inaktiválni az utolsó aktív webhelyet"
+		"CANNOT_DEACTIVATE_LAST_SITE": "Nem lehet inaktiválni az utolsó aktív webhelyet",
+		"DUPLICATE_SITE_NAME": "Már létezik ilyen nevű webhely",
+		"INVALID_SITE_NAME": "A webhely neve csak betűket, számokat, kötőjeleket és aláhúzásjeleket tartalmazhat"
 	},
 	"TARGET": {
 		"airplanes": "repülőgépek",

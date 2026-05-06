@@ -21,6 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Accès bloqué par la politique",
 		"FORBIDDEN": "Interdit",
 		"PROVIDER_VERIFY_FAILED": "Échec de la vérification du fournisseur",
+		"SPAM_EMAIL_DOMAIN": "Domaine de messagerie non autorisé",
 		"UNAUTHORIZED": "Non autorisé",
 		"MISSING_BODY": "Corps manquant",
 		"NO_CONTENT_TYPE_HEADER": "En-tête de type de contenu manquant. Corps encodé en JSON supposé mais erreur lors de l'analyse.",
@@ -40,7 +41,16 @@
 		"INVALID_IP": "IP invalide",
 		"INVALID_URL": "URL inválida",
 		"INVALID_BODY": "Cuerpo inválido",
-		"PARSE_ERROR": "Erreur d'analyse de la demande"
+		"PARSE_ERROR": "Erreur d'analyse de la demande",
+		"SPAM_EMAIL_RULE": "Adresse e-mail bloquée par les règles du filtre anti-spam",
+		"VPN_BLOCKED": "Les requêtes provenant de connexions VPN ne sont pas autorisées pour ce site",
+		"PROXY_BLOCKED": "Les requêtes provenant de serveurs proxy ne sont pas autorisées pour ce site",
+		"TOR_BLOCKED": "Les requêtes provenant de nœuds de sortie Tor ne sont pas autorisées pour ce site",
+		"ABUSER_BLOCKED": "Les requêtes provenant de réseaux signalés pour abus ne sont pas autorisées pour ce site",
+		"DATACENTER_BLOCKED": "Les requêtes provenant d'adresses IP de centres de données ne sont pas autorisées pour ce site",
+		"MOBILE_BLOCKED": "Les requêtes provenant de réseaux mobiles ne sont pas autorisées pour ce site",
+		"SATELLITE_BLOCKED": "Les requêtes provenant de connexions satellite ne sont pas autorisées pour ce site",
+		"CRAWLER_BLOCKED": "Les requêtes provenant de robots d'exploration connus ne sont pas autorisées pour ce site"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Impossible de modifier le propriétaire de l'utilisateur",
@@ -48,7 +58,9 @@
 		"CANNOT_DELETE_LAST_USER": "Impossible de supprimer le dernier utilisateur",
 		"USER_ALREADY_EXISTS": "L'utilisateur existe déjà",
 		"NO_SUGGESTIONS_FOUND": "Aucune suggestion trouvée",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Impossible de désactiver le dernier site actif"
+		"CANNOT_DEACTIVATE_LAST_SITE": "Impossible de désactiver le dernier site actif",
+		"DUPLICATE_SITE_NAME": "Un site avec ce nom existe déjà",
+		"INVALID_SITE_NAME": "Le nom du site ne doit contenir que des lettres, des chiffres, des tirets et des traits de soulignement"
 	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Extension Polkadot non trouvée"

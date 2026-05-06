@@ -1,4 +1,3 @@
-import path from "node:path";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +11,13 @@ import path from "node:path";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import fs from "node:fs";
+import http from "node:http";
+import https from "node:https";
+import type { ServerOptions } from "node:https";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { ProsopoEnvError, getLogger } from "@prosopo/common";
 import { loadEnv } from "@prosopo/dotenv";
 import { getServerConfig } from "@prosopo/server";
@@ -23,11 +29,6 @@ import connectionFactory from "./utils/connection.js";
 import memoryServerSetup from "./utils/database.js";
 
 loadEnv();
-
-export function getEnvFile(filename = ".env", filepath = "./") {
-	const env = process.env.NODE_ENV || "development";
-	return path.join(filepath, `${filename}.${env}`);
-}
 
 enum ProsopoVerificationType {
 	api = "api",
@@ -46,6 +47,8 @@ async function main() {
 	const verifyEndpoint =
 		process.env.PROSOPO_VERIFY_ENDPOINT ||
 		`https://${apiPrefix}api.prosopo.io/siteverify`;
+
+	logger.info(() => ({ data: { verifyEndpoint } }));
 
 	const verifyType: ProsopoVerificationType = Object.keys(
 		ProsopoVerificationType,
@@ -81,8 +84,14 @@ async function main() {
 		res.sendStatus(200);
 	});
 
-	if (!process.env.MONGO_URI && process.env.NODE_ENV !== "development") {
-		throw new Error("Cannot run mongo memory in non-development environment");
+	if (
+		!process.env.MONGO_URI &&
+		process.env.NODE_ENV !== "development" &&
+		process.env.NODE_ENV !== "test"
+	) {
+		throw new Error(
+			"Cannot run mongo memory when NODE_ENV is neither development nor test",
+		);
 	}
 	logger.info(() => ({ msg: process.env.MONGO_URI }));
 	const uri = process.env.MONGO_URI || (await memoryServerSetup());
@@ -109,7 +118,44 @@ async function main() {
 
 	logger.info(() => ({ msg: "Listening on port", data: { port } }));
 
-	app.listen(port);
+	// Use HTTPS only in development/test when we have certificates
+	// In production, use HTTP because Caddy handles TLS termination
+	const isDev =
+		process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";
+
+	if (isDev) {
+		const __filename = fileURLToPath(import.meta.url);
+		const __dirname = path.dirname(__filename);
+		const certsDir = path.resolve(__dirname, "../../../certs");
+
+		const keyPath = path.join(certsDir, "server.key");
+		const certPath = path.join(certsDir, "server.crt");
+
+		if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
+			const httpsOptions: ServerOptions = {
+				key: fs.readFileSync(keyPath),
+				cert: fs.readFileSync(certPath),
+			};
+
+			https.createServer(httpsOptions, app).listen(port, () => {
+				logger.info(() => ({ msg: `HTTPS server started on port ${port}` }));
+			});
+		} else {
+			logger.warn(() => ({
+				msg: "Certificates not found, starting HTTP server instead. Run ./setup_certs.sh to enable HTTPS in development.",
+			}));
+			http.createServer(app).listen(port, () => {
+				logger.info(() => ({ msg: `HTTP server started on port ${port}` }));
+			});
+		}
+	} else {
+		// Production: use plain HTTP, Caddy handles TLS
+		http.createServer(app).listen(port, () => {
+			logger.info(() => ({
+				msg: `HTTP server started on port ${port} (TLS handled by reverse proxy)`,
+			}));
+		});
+	}
 }
 
 main()

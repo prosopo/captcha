@@ -1,5 +1,34 @@
 # @prosopo/common
 
+## 3.1.33
+### Patch Changes
+
+- Updated dependencies [b94890c]
+  - @prosopo/locale@3.2.1
+
+## 3.1.32
+### Patch Changes
+
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+  - @prosopo/locale@3.2.0
+
+## 3.1.31
+### Patch Changes
+
+- 4a9c518: fix/catcher-demo-vitest
+
+## 3.1.30
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/locale@3.1.29
+
+## 3.1.29
+### Patch Changes
+
+- c5ee492: fix/portal-traffic-report
+
 ## 3.1.28
 ### Patch Changes
 

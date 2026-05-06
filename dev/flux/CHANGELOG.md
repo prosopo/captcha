@@ -1,5 +1,70 @@
 # @prosopo/flux
 
+## 2.6.49
+### Patch Changes
+
+  - @prosopo/common@3.1.33
+  - @prosopo/dotenv@3.0.38
+
+## 2.6.48
+### Patch Changes
+
+  - @prosopo/common@3.1.32
+  - @prosopo/dotenv@3.0.37
+
+## 2.6.47
+### Patch Changes
+
+- Updated dependencies [4a9c518]
+  - @prosopo/common@3.1.31
+  - @prosopo/dotenv@3.0.36
+
+## 2.6.46
+### Patch Changes
+
+- Updated dependencies [a25dffa]
+  - @prosopo/util@3.2.11
+
+## 2.6.45
+### Patch Changes
+
+- Updated dependencies [346edd7]
+  - @prosopo/util@3.2.10
+
+## 2.6.44
+### Patch Changes
+
+- Updated dependencies [22bfee7]
+  - @prosopo/util@3.2.9
+
+## 2.6.43
+### Patch Changes
+
+- Updated dependencies [e0fb3d6]
+- Updated dependencies [f3f23e3]
+  - @prosopo/util@3.2.8
+
+## 2.6.42
+### Patch Changes
+
+- Updated dependencies [e1ea65f]
+  - @prosopo/util@3.2.7
+
+## 2.6.41
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/util@3.2.6
+  - @prosopo/common@3.1.30
+  - @prosopo/dotenv@3.0.35
+
+## 2.6.40
+### Patch Changes
+
+- Updated dependencies [c5ee492]
+  - @prosopo/common@3.1.29
+  - @prosopo/dotenv@3.0.34
+
 ## 2.6.39
 ### Patch Changes
 

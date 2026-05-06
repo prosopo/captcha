@@ -1,5 +1,149 @@
 # @prosopo/types
 
+## 3.16.0
+### Minor Changes
+
+- 99dfb44: Pass back reason via verify calls
+
+### Patch Changes
+
+- f6a4402: API endpoint for removing site keys
+
+## 3.15.0
+### Minor Changes
+
+- 3e54c0a: Rate limits by client
+
+## 3.14.1
+### Patch Changes
+
+- 946a8ba: Abuser score threshold
+- 5614814: Small config changes
+- Updated dependencies [b94890c]
+  - @prosopo/locale@3.2.1
+
+## 3.14.0
+### Minor Changes
+
+- 42650db: Add better spam rules and move ipinfo service to local instead of external
+
+### Patch Changes
+
+- fc514dd: ability to block different types of traffic
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+  - @prosopo/locale@3.2.0
+
+## 3.13.3
+### Patch Changes
+
+- Updated dependencies [a25dffa]
+  - @prosopo/util@3.2.11
+
+## 3.13.2
+### Patch Changes
+
+- Updated dependencies [346edd7]
+  - @prosopo/util@3.2.10
+
+## 3.13.1
+### Patch Changes
+
+- Updated dependencies [22bfee7]
+  - @prosopo/util@3.2.9
+
+## 3.13.0
+### Minor Changes
+
+- e6d9553: Add `registerSiteKeys` bulk endpoint (`POST /v1/prosopo/provider/admin/sitekeys/register`) that accepts an array of site key records, allowing multiple client records to be registered in a single request.
+
+### Patch Changes
+
+- Updated dependencies [e0fb3d6]
+- Updated dependencies [f3f23e3]
+  - @prosopo/util@3.2.8
+
+## 3.12.3
+### Patch Changes
+
+- d5082a9: Don't require email type
+- e1ea65f: Better spam email domain checking
+- c316257: Adding sync fo sessions wrt captcha status
+- Updated dependencies [e1ea65f]
+  - @prosopo/util@3.2.7
+
+## 3.12.2
+### Patch Changes
+
+- adb89a6: Disposable email checking
+- Updated dependencies [adb89a6]
+  - @prosopo/locale@3.1.29
+  - @prosopo/util@3.2.6
+
+## 3.12.1
+### Patch Changes
+
+- a90eb54: We know WHAT happens but we don't know WHY happens
+
+## 3.12.0
+### Minor Changes
+
+- feaca02: Max image rounds
+
+### Patch Changes
+
+- 676c5f2: Use HTTPS in developmentwq
+
+## 3.11.1
+### Patch Changes
+
+- 8148587: Clustering
+
+## 3.11.0
+### Minor Changes
+
+- 7f6ffc5: Store behavioural for image challenges
+
+## 3.10.2
+### Patch Changes
+
+- 93fa086: Add decision engine endpoints
+
+## 3.10.1
+### Patch Changes
+
+- cde7550: enhance/frictionless-headers-db-field
+
+## 3.10.0
+### Minor Changes
+
+- ad6d622: Separate types from mongoose schemas to avoid bundling mongoose in frontend
+
+## 3.9.0
+### Minor Changes
+
+- ff58a70: Load the geolocation service at startup only
+
+## 3.8.4
+### Patch Changes
+
+- d2431cd: Allow IP validation rules to be disabled
+
+## 3.8.3
+### Patch Changes
+
+- bd6995b: Adding UAP based geoblocking rules
+
+## 3.8.2
+### Patch Changes
+
+- 9633e58: Add captcha type to decision machine and run on image verification"
+
+## 3.8.1
+### Patch Changes
+
+- f52a5c1: Adding decision machine to provider for behavior detection
+
 ## 3.8.0
 ### Minor Changes
 

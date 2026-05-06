@@ -22,8 +22,11 @@ import type { Theme } from "../theme.js";
  */
 export function createCheckboxElement(theme: Theme): HTMLElement {
 	const checkbox = document.createElement("div");
-	checkbox.className = "checkbox";
-	checkbox.innerHTML = getCheckboxStyles(theme) + CHECKBOX_MARKUP;
+	checkbox.className = "prosopo-checkbox";
+
+	const shadowRoot = checkbox.attachShadow({ mode: "open" });
+	shadowRoot.innerHTML = getCheckboxStyles(theme) + CHECKBOX_MARKUP;
+
 	return checkbox;
 }
 
@@ -36,14 +39,21 @@ export const getCheckboxInteractiveArea = (
 	widget: HTMLElement,
 ): HTMLElement | null => {
 	const widgetRoot = widget.shadowRoot || widget;
-	return widgetRoot.querySelector(".checkbox__content");
+	const checkbox = widgetRoot.querySelector(
+		".prosopo-checkbox",
+	) as HTMLElement | null;
+	if (!checkbox) {
+		return null;
+	}
+	const checkboxRoot = (checkbox as HTMLElement).shadowRoot || checkbox;
+	return checkboxRoot.querySelector(".prosopo-checkbox__content");
 };
 
 export const CHECKBOX_MARKUP = `
-    <div class="checkbox__outer">
-        <div class="checkbox__wrapper">
-            <div class="checkbox__inner">
-                <div class="checkbox__content">
+    <div class="prosopo-checkbox__outer">
+        <div class="prosopo-checkbox__wrapper">
+            <div class="prosopo-checkbox__inner">
+                <div class="prosopo-checkbox__content">
                     <div class="${WIDGET_CHECKBOX_SPINNER_CSS_CLASS}" aria-label="Loading spinner"></div>
                 </div>
             </div>
@@ -57,17 +67,19 @@ export const CHECKBOX_MARKUP = `
  */
 const getCheckboxStyles = (theme: Theme): string => `
 <style>
-.checkbox {
+:host(.prosopo-checkbox) {
     display: flex;
     flex-direction: column;
 }
 
-.checkbox__outer {
+.prosopo-checkbox__outer {
     align-items: center;
-    flex: 1;
+    flex: 0 1 auto !important;
+    width: auto !important;
+    display: flex !important;
 }
 
-.checkbox__wrapper {
+.prosopo-checkbox__wrapper {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -75,26 +87,26 @@ const getCheckboxStyles = (theme: Theme): string => `
     vertical-align: middle;
 }
 
-.checkbox__inner {
+.prosopo-checkbox__inner {
     display: flex;
 }
 
-.checkbox__content {
+.prosopo-checkbox__content {
     display: inline-flex;
 }
 
 .${WIDGET_CHECKBOX_SPINNER_CSS_CLASS} {
     margin-top: 0;
-    margin-left: 15px;
-    margin-right: 15px;
-    width: 2em;
-    height: 2em;
+    margin-left: 15px !important;
+    margin-right: 15px !important;
+    width: 28px !important;
+    height: 28px !important;
     border: 4px solid ${theme.palette.background.contrastText};
     border-bottom-color: transparent;
     border-radius: 50%;
     display: inherit;
     box-sizing: border-box;
-    animation: checkbox__loading-spinner-rotation 1s linear infinite;
+    animation: ${WIDGET_CHECKBOX_SPINNER_CSS_CLASS}-rotation 1s linear infinite;
     will-change: transform;
 }
 

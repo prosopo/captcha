@@ -20,6 +20,7 @@ export const domainsDefault: string[] = [];
 export const frictionlessThresholdDefault = 0.5;
 export const powDifficultyDefault = 4;
 export const imageThresholdDefault = 0.8;
+export const imageMaxRoundsDefault = 32;
 export const contextAwareThresholdDefault = 0.7;
 
 // IP Validation Rules
@@ -62,6 +63,7 @@ const IPValidationSchema = object({
 });
 
 export const IPValidationRulesSchema = object({
+	enabled: boolean().optional().default(false),
 	actions: object({
 		countryChangeAction: IPValidationActionSchema.optional().default(
 			countryChangeActionDefault,
@@ -131,6 +133,71 @@ const ContextAwareSchema = object({
 
 export type IContextAware = z.infer<typeof ContextAwareSchema>;
 
+// Spam filter rules
+export const maxLocalPartDotsDefault = 2;
+
+const MAX_REGEX_PATTERN_LENGTH = 256;
+const MAX_CUSTOM_REGEX_PATTERNS = 50;
+
+// Patterns that enable catastrophic backtracking or uncontrolled execution
+const DANGEROUS_REGEX_TOKENS = /(\(\?[<!=])|(\(\?P[<])|(\(\?\{)|(\{[\d,]{4,})/;
+
+const safeRegexPattern = string()
+	.max(MAX_REGEX_PATTERN_LENGTH)
+	.refine(
+		(raw) => {
+			try {
+				new RegExp(raw, "i");
+				return true;
+			} catch {
+				return false;
+			}
+		},
+		{ message: "Invalid regular expression syntax" },
+	)
+	.refine((raw) => !DANGEROUS_REGEX_TOKENS.test(raw), {
+		message:
+			"Pattern uses disallowed features (lookahead, lookbehind, or large quantifiers)",
+	});
+
+export const EmailSpamRulesSchema = object({
+	enabled: boolean().optional().default(false),
+	maxLocalPartDots: number().int().min(0).optional(),
+	normaliseGmail: boolean().optional().default(false),
+	useDefaultPatterns: boolean().optional().default(false),
+	customRegexBlocklist: array(safeRegexPattern)
+		.max(MAX_CUSTOM_REGEX_PATTERNS)
+		.optional()
+		.default([]),
+});
+
+export const SpamFilterRulesSchema = object({
+	enabled: boolean().optional().default(false),
+	emailRules: EmailSpamRulesSchema.optional(),
+});
+
+export const trafficFilterAbuserScoreThresholdDefault = 0.5;
+
+export const TrafficFilterSchema = object({
+	blockVpn: boolean().optional().default(false),
+	blockProxy: boolean().optional().default(false),
+	blockTor: boolean().optional().default(false),
+	blockAbuser: boolean().optional().default(true),
+	abuserScoreThreshold: number()
+		.min(0)
+		.max(1)
+		.optional()
+		.default(trafficFilterAbuserScoreThresholdDefault),
+	blockDatacenter: boolean().optional().default(false),
+	blockMobile: boolean().optional().default(false),
+	blockSatellite: boolean().optional().default(false),
+	blockCrawler: boolean().optional().default(false),
+});
+
+export type IEmailSpamRules = output<typeof EmailSpamRulesSchema>;
+export type ISpamFilterRules = output<typeof SpamFilterRulesSchema>;
+export type ITrafficFilter = output<typeof TrafficFilterSchema>;
+
 export const ClientSettingsSchema = object({
 	captchaType: CaptchaTypeSpec.optional().default(captchaTypeDefault),
 	domains: array(string()).min(1),
@@ -151,9 +218,17 @@ export const ClientSettingsSchema = object({
 		.max(1)
 		.optional()
 		.default(imageThresholdDefault),
+	imageMaxRounds: number()
+		.int()
+		.min(2)
+		.optional()
+		.default(imageMaxRoundsDefault),
 	ipValidationRules: IPValidationRulesSchema.optional(),
 	disallowWebView: boolean().optional().default(false).optional(),
 	contextAware: ContextAwareSchema.optional(),
+	spamEmailDomainCheckEnabled: boolean().optional(),
+	spamFilter: SpamFilterRulesSchema.optional(),
+	trafficFilter: TrafficFilterSchema.optional(),
 });
 
 export type IUserSettings = output<typeof ClientSettingsSchema>;

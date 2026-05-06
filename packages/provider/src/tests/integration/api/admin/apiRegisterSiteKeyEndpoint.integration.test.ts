@@ -63,6 +63,7 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 				domains: [],
 				frictionlessThreshold: 0.5,
 				imageThreshold: 0.5,
+				imageMaxRounds: 3,
 				powDifficulty: 0.5,
 				disallowWebView: false,
 				contextAware: {
@@ -99,6 +100,7 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 				domains: [],
 				frictionlessThreshold: 0.5,
 				imageThreshold: 0.5,
+				imageMaxRounds: 3,
 				powDifficulty: 0.5,
 				disallowWebView: false,
 				contextAware: {

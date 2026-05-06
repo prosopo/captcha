@@ -163,3 +163,6 @@ captcha.json
 
 .turbo
 **/.turbo
+GeoLite2-Country.mmdb
+
+certs

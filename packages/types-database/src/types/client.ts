@@ -13,18 +13,25 @@
 // limitations under the License.
 
 import {
+	CaptchaType,
 	ContextType,
 	type IUserData,
 	type IUserSettings,
 	type Timestamp,
 	abuseScoreThresholdDefault,
 	abuseScoreThresholdExceedActionDefault,
+	captchaTypeDefault,
 	cityChangeActionDefault,
 	contextAwareThresholdDefault,
 	countryChangeActionDefault,
 	distanceExceedActionDefault,
 	distanceThresholdKmDefault,
+	domainsDefault,
+	frictionlessThresholdDefault,
+	imageMaxRoundsDefault,
+	imageThresholdDefault,
 	ispChangeActionDefault,
+	powDifficultyDefault,
 	requireAllConditionsDefault,
 } from "@prosopo/types";
 import mongoose from "mongoose";
@@ -35,6 +42,11 @@ import type { ClientRecord, Tables } from "./provider.js";
 export type UserDataRecord = mongoose.Document & IUserData;
 
 export const IPValidationRulesSchema = new Schema({
+	enabled: {
+		type: Boolean,
+		default: false,
+		required: true,
+	},
 	actions: {
 		countryChangeAction: {
 			type: Schema.Types.Mixed,
@@ -99,12 +111,30 @@ export const IPValidationRulesSchema = new Schema({
 });
 
 export const UserSettingsSchema = new Schema({
-	captchaType: String,
-	frictionlessThreshold: Number,
-	powDifficulty: Number,
-	imageThreshold: Number,
+	captchaType: {
+		type: String,
+		enum: CaptchaType,
+		default: captchaTypeDefault,
+	},
+	frictionlessThreshold: {
+		type: Number,
+		default: frictionlessThresholdDefault,
+	},
+	powDifficulty: { type: Number, default: powDifficultyDefault },
+	imageThreshold: {
+		type: Number,
+		default: imageThresholdDefault,
+	},
+	imageMaxRounds: {
+		type: Number,
+		default: imageMaxRoundsDefault,
+		required: false,
+	},
 	ipValidationRules: IPValidationRulesSchema,
-	domains: [String],
+	domains: {
+		type: [String],
+		default: domainsDefault,
+	},
 	disallowWebView: {
 		type: Boolean,
 		default: false,
@@ -124,6 +154,32 @@ export const UserSettingsSchema = new Schema({
 				},
 			},
 		},
+	},
+	spamEmailDomainCheckEnabled: {
+		type: Boolean,
+		default: false,
+		required: false,
+	},
+	spamFilter: {
+		enabled: { type: Boolean, default: false },
+		emailRules: {
+			enabled: { type: Boolean, default: false },
+			maxLocalPartDots: { type: Number, required: false },
+			normaliseGmail: { type: Boolean, default: false },
+			useDefaultPatterns: { type: Boolean, default: false },
+			customRegexBlocklist: { type: [String], default: [] },
+		},
+	},
+	trafficFilter: {
+		blockVpn: { type: Boolean, default: false },
+		blockProxy: { type: Boolean, default: false },
+		blockTor: { type: Boolean, default: false },
+		blockAbuser: { type: Boolean, default: true },
+		abuserScoreThreshold: { type: Number, min: 0, max: 1, default: 0 },
+		blockDatacenter: { type: Boolean, default: false },
+		blockMobile: { type: Boolean, default: false },
+		blockSatellite: { type: Boolean, default: false },
+		blockCrawler: { type: Boolean, default: false },
 	},
 });
 

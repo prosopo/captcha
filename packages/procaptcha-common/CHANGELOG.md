@@ -1,5 +1,206 @@
 # @prosopo/procaptcha-common
 
+## 2.10.4
+### Patch Changes
+
+- Updated dependencies [f6a4402]
+- Updated dependencies [99dfb44]
+  - @prosopo/types@3.16.0
+  - @prosopo/account@2.8.23
+  - @prosopo/load-balancer@2.8.40
+
+## 2.10.3
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+  - @prosopo/account@2.8.22
+  - @prosopo/load-balancer@2.8.39
+
+## 2.10.2
+### Patch Changes
+
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+  - @prosopo/types@3.14.1
+  - @prosopo/account@2.8.21
+  - @prosopo/load-balancer@2.8.38
+
+## 2.10.1
+### Patch Changes
+
+- 06970d2: Missed review comments
+- dd3e06e: CSS hot fix
+- Updated dependencies [06970d2]
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+- Updated dependencies [dd3e06e]
+  - @prosopo/widget-skeleton@2.8.1
+  - @prosopo/types@3.14.0
+  - @prosopo/account@2.8.20
+  - @prosopo/load-balancer@2.8.37
+
+## 2.10.0
+### Minor Changes
+
+- 73df23c: Stop widget css from being overriden
+
+### Patch Changes
+
+- 8139819: prosopo namespacing for css
+- Updated dependencies [73df23c]
+- Updated dependencies [8139819]
+  - @prosopo/widget-skeleton@2.8.0
+  - @prosopo/account@2.8.19
+  - @prosopo/load-balancer@2.8.36
+
+## 2.9.41
+### Patch Changes
+
+  - @prosopo/account@2.8.18
+  - @prosopo/types@3.13.3
+  - @prosopo/load-balancer@2.8.35
+
+## 2.9.40
+### Patch Changes
+
+  - @prosopo/account@2.8.17
+  - @prosopo/types@3.13.2
+  - @prosopo/load-balancer@2.8.34
+
+## 2.9.39
+### Patch Changes
+
+- Updated dependencies [20192d2]
+  - @prosopo/widget-skeleton@2.7.14
+  - @prosopo/account@2.8.16
+  - @prosopo/types@3.13.1
+  - @prosopo/load-balancer@2.8.33
+
+## 2.9.38
+### Patch Changes
+
+- Updated dependencies [e6d9553]
+  - @prosopo/types@3.13.0
+  - @prosopo/account@2.8.15
+  - @prosopo/load-balancer@2.8.32
+
+## 2.9.37
+### Patch Changes
+
+- Updated dependencies [730c61e]
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/load-balancer@2.8.31
+  - @prosopo/account@2.8.14
+  - @prosopo/types@3.12.3
+
+## 2.9.36
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/types@3.12.2
+  - @prosopo/account@2.8.13
+  - @prosopo/load-balancer@2.8.30
+
+## 2.9.35
+### Patch Changes
+
+- Updated dependencies [a90eb54]
+  - @prosopo/types@3.12.1
+  - @prosopo/account@2.8.12
+  - @prosopo/load-balancer@2.8.29
+
+## 2.9.34
+### Patch Changes
+
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/load-balancer@2.8.28
+  - @prosopo/types@3.12.0
+  - @prosopo/account@2.8.11
+
+## 2.9.33
+### Patch Changes
+
+- Updated dependencies [8148587]
+  - @prosopo/types@3.11.1
+  - @prosopo/account@2.8.10
+  - @prosopo/load-balancer@2.8.27
+
+## 2.9.32
+### Patch Changes
+
+- Updated dependencies [7f6ffc5]
+  - @prosopo/types@3.11.0
+  - @prosopo/account@2.8.9
+  - @prosopo/load-balancer@2.8.26
+
+## 2.9.31
+### Patch Changes
+
+- Updated dependencies [93fa086]
+  - @prosopo/types@3.10.2
+  - @prosopo/account@2.8.8
+  - @prosopo/load-balancer@2.8.25
+
+## 2.9.30
+### Patch Changes
+
+- Updated dependencies [cde7550]
+  - @prosopo/types@3.10.1
+  - @prosopo/account@2.8.7
+  - @prosopo/load-balancer@2.8.24
+
+## 2.9.29
+### Patch Changes
+
+- Updated dependencies [ad6d622]
+  - @prosopo/types@3.10.0
+  - @prosopo/account@2.8.6
+  - @prosopo/load-balancer@2.8.23
+
+## 2.9.28
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+  - @prosopo/types@3.9.0
+  - @prosopo/account@2.8.5
+  - @prosopo/load-balancer@2.8.22
+
+## 2.9.27
+### Patch Changes
+
+- Updated dependencies [d2431cd]
+  - @prosopo/types@3.8.4
+  - @prosopo/account@2.8.4
+  - @prosopo/load-balancer@2.8.21
+
+## 2.9.26
+### Patch Changes
+
+- Updated dependencies [bd6995b]
+  - @prosopo/types@3.8.3
+  - @prosopo/account@2.8.3
+  - @prosopo/load-balancer@2.8.20
+
+## 2.9.25
+### Patch Changes
+
+- Updated dependencies [9633e58]
+  - @prosopo/types@3.8.2
+  - @prosopo/account@2.8.2
+  - @prosopo/load-balancer@2.8.19
+
+## 2.9.24
+### Patch Changes
+
+- Updated dependencies [f52a5c1]
+  - @prosopo/types@3.8.1
+  - @prosopo/account@2.8.1
+  - @prosopo/load-balancer@2.8.18
+
 ## 2.9.23
 ### Patch Changes
 

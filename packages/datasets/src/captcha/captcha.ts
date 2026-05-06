@@ -26,8 +26,8 @@ import {
 	type HashedSolution,
 	type Item,
 	type RawSolution,
+	type SolutionRecord,
 } from "@prosopo/types";
-import type { SolutionRecord } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
 import { hexHash, hexHashArray } from "@prosopo/util-crypto";
 import { downloadImage } from "./util.js";

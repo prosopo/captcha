@@ -12,53 +12,171 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type Logger, getLogger } from "@prosopo/common";
+import { ApiPrefix, PublicApiPaths } from "@prosopo/types";
 import type { NextFunction, Request, Response } from "express";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ignoreMiddleware } from "../../../api/ignoreMiddleware.js";
 
-const loggerOuter = getLogger("info", import.meta.url);
-
-vi.mock("@prosopo/util", () => ({
-	hexToU8a: vi.fn(),
-	isHex: vi.fn(),
-}));
-
 describe("ignoreMiddleware", () => {
-	it("should 404 if url does not contain /v1/prosopo", async () => {
-		const mockLogger = {
-			debug: vi.fn().mockImplementation(loggerOuter.debug.bind(loggerOuter)),
-			log: vi.fn().mockImplementation(loggerOuter.log.bind(loggerOuter)),
-			info: vi.fn().mockImplementation(loggerOuter.info.bind(loggerOuter)),
-			error: vi.fn().mockImplementation(loggerOuter.error.bind(loggerOuter)),
-			trace: vi.fn().mockImplementation(loggerOuter.trace.bind(loggerOuter)),
-			fatal: vi.fn().mockImplementation(loggerOuter.fatal.bind(loggerOuter)),
-			warn: vi.fn().mockImplementation(loggerOuter.warn.bind(loggerOuter)),
-		} as unknown as Logger;
-		const mockReq = {
-			url: "/favicon.ico",
-			originalUrl: "/favicon.ico",
-			headers: {
-				signature: "0x1234",
-				timestamp: new Date().getTime(),
-			},
-			logger: mockLogger,
-		} as unknown as Request;
+	let mockReq: Request;
+	let mockRes: Response;
+	let mockNext: NextFunction;
 
-		const mockRes = {
-			status: vi.fn().mockReturnThis(),
-			statusCode: 404,
-			json: vi.fn(),
+	beforeEach(() => {
+		vi.clearAllMocks();
+
+		mockReq = {
+			originalUrl: "",
+		} as Request;
+
+		mockRes = {
+			statusCode: 200,
 			send: vi.fn(),
 		} as unknown as Response;
 
-		const mockNext = vi.fn(() => {
-			console.log("mock next function");
-		}) as unknown as NextFunction;
+		mockNext = vi.fn() as NextFunction;
+	});
 
+	it("should return a middleware function", () => {
 		const middleware = ignoreMiddleware();
-		await middleware(mockReq, mockRes, mockNext);
+
+		expect(middleware).toBeDefined();
+		expect(typeof middleware).toBe("function");
+	});
+
+	it("should allow health check requests to pass through", () => {
+		const middleware = ignoreMiddleware();
+
+		mockReq.originalUrl = `/api${PublicApiPaths.Healthz}`;
+
+		middleware(mockReq, mockRes, mockNext);
+
+		expect(mockNext).toHaveBeenCalledWith();
+		expect(mockNext).toHaveBeenCalledTimes(1);
+		expect(mockRes.send).not.toHaveBeenCalled();
+	});
+
+	it("should allow health check requests with query parameters", () => {
+		const middleware = ignoreMiddleware();
+
+		mockReq.originalUrl = `/api${PublicApiPaths.Healthz}?param=value`;
+
+		middleware(mockReq, mockRes, mockNext);
+
+		expect(mockNext).toHaveBeenCalledWith();
+		expect(mockRes.send).not.toHaveBeenCalled();
+	});
+
+	it("should return 404 for non-API routes", () => {
+		const middleware = ignoreMiddleware();
+
+		mockReq.originalUrl = "/some-other-route";
+
+		middleware(mockReq, mockRes, mockNext);
 
 		expect(mockRes.statusCode).toBe(404);
+		expect(mockRes.send).toHaveBeenCalledWith("Not Found");
+		expect(mockNext).not.toHaveBeenCalled();
+	});
+
+	it("should return 404 for routes not starting with API prefix", () => {
+		const middleware = ignoreMiddleware();
+
+		mockReq.originalUrl = "/api-but-not-proper-prefix/something";
+
+		middleware(mockReq, mockRes, mockNext);
+
+		expect(mockRes.statusCode).toBe(404);
+		expect(mockRes.send).toHaveBeenCalledWith("Not Found");
+		expect(mockNext).not.toHaveBeenCalled();
+	});
+
+	it("should allow API routes to pass through", () => {
+		const middleware = ignoreMiddleware();
+
+		mockReq.originalUrl = `${ApiPrefix}/some-endpoint`;
+
+		middleware(mockReq, mockRes, mockNext);
+
+		expect(mockNext).toHaveBeenCalledWith();
+		expect(mockRes.send).not.toHaveBeenCalled();
+	});
+
+	it("should allow API routes with query parameters", () => {
+		const middleware = ignoreMiddleware();
+
+		mockReq.originalUrl = `${ApiPrefix}/endpoint?param=value&another=123`;
+
+		middleware(mockReq, mockRes, mockNext);
+
+		expect(mockNext).toHaveBeenCalledWith();
+		expect(mockRes.send).not.toHaveBeenCalled();
+	});
+
+	it("should allow API routes with complex paths", () => {
+		const middleware = ignoreMiddleware();
+
+		mockReq.originalUrl = `${ApiPrefix}/v1/captcha/challenge/image`;
+
+		middleware(mockReq, mockRes, mockNext);
+
+		expect(mockNext).toHaveBeenCalledWith();
+		expect(mockRes.send).not.toHaveBeenCalled();
+	});
+
+	it("should handle root path requests", () => {
+		const middleware = ignoreMiddleware();
+
+		mockReq.originalUrl = "/";
+
+		middleware(mockReq, mockRes, mockNext);
+
+		expect(mockRes.statusCode).toBe(404);
+		expect(mockRes.send).toHaveBeenCalledWith("Not Found");
+		expect(mockNext).not.toHaveBeenCalled();
+	});
+
+	it("should handle empty path requests", () => {
+		const middleware = ignoreMiddleware();
+
+		mockReq.originalUrl = "";
+
+		middleware(mockReq, mockRes, mockNext);
+
+		expect(mockRes.statusCode).toBe(404);
+		expect(mockRes.send).toHaveBeenCalledWith("Not Found");
+		expect(mockNext).not.toHaveBeenCalled();
+	});
+
+	it("should handle undefined originalUrl", () => {
+		const middleware = ignoreMiddleware();
+
+		// biome-ignore lint/suspicious/noExplicitAny: tests
+		(mockReq as any).originalUrl = undefined;
+
+		expect(() => middleware(mockReq, mockRes, mockNext)).toThrow();
+	});
+
+	it("should be case sensitive for API prefix matching", () => {
+		const middleware = ignoreMiddleware();
+
+		mockReq.originalUrl = "/API/some-endpoint"; // uppercase API
+
+		middleware(mockReq, mockRes, mockNext);
+
+		expect(mockRes.statusCode).toBe(404);
+		expect(mockRes.send).toHaveBeenCalledWith("Not Found");
+		expect(mockNext).not.toHaveBeenCalled();
+	});
+
+	it("should handle API prefix at the beginning of the path", () => {
+		const middleware = ignoreMiddleware();
+
+		mockReq.originalUrl = `${ApiPrefix}endpoint`; // no leading slash after prefix
+
+		middleware(mockReq, mockRes, mockNext);
+
+		expect(mockNext).toHaveBeenCalledWith();
+		expect(mockRes.send).not.toHaveBeenCalled();
 	});
 });

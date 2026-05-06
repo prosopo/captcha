@@ -21,6 +21,7 @@
 		"ACCESS_POLICY_BLOCK": "Akses diblokir dening kabijakan",
 		"FORBIDDEN": "Forbidden",
 		"PROVIDER_VERIFY_FAILED": "Provider verification failed",
+		"SPAM_EMAIL_DOMAIN": "Domain email ora diidini",
 		"UNAUTHORIZED": "Hindi umiiral",
 		"MISSING_BODY": "Kulang na katawan",
 		"NO_CONTENT_TYPE_HEADER": "Walang header ng uri ng nilalaman. Tinatayang JSON na naka-encode ang katawan ngunit nabigo sa pag-parse.",
@@ -40,7 +41,16 @@
 		"INVALID_IP": "IP tidak valid",
 		"INVALID_URL": "URL tidak valid",
 		"INVALID_BODY": "Badan tidak valid",
-		"PARSE_ERROR": "Kesalahan parsing permintaan"
+		"PARSE_ERROR": "Kesalahan parsing permintaan",
+		"SPAM_EMAIL_RULE": "Alamat email diblokir dening aturan filter spam",
+		"VPN_BLOCKED": "Panjaluk saka sambungan VPN ora diidini kanggo situs iki",
+		"PROXY_BLOCKED": "Panjaluk saka server proxy ora diidini kanggo situs iki",
+		"TOR_BLOCKED": "Panjaluk saka simpul metu Tor ora diidini kanggo situs iki",
+		"ABUSER_BLOCKED": "Panjaluk saka jaringan sing ditandhani amarga penyalahgunaan ora diidini kanggo situs iki",
+		"DATACENTER_BLOCKED": "Panjaluk saka alamat IP pusat data ora diidini kanggo situs iki",
+		"MOBILE_BLOCKED": "Panjaluk saka sambungan jaringan seluler ora diidini kanggo situs iki",
+		"SATELLITE_BLOCKED": "Panjaluk saka sambungan satelit ora diidini kanggo situs iki",
+		"CRAWLER_BLOCKED": "Panjaluk saka crawler sing dikenal ora diidini kanggo situs iki"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Cannot modify owner user",
@@ -48,7 +58,9 @@
 		"CANNOT_DELETE_LAST_USER": "Cannot delete last user",
 		"USER_ALREADY_EXISTS": "User already exists",
 		"NO_SUGGESTIONS_FOUND": "No suggestions found",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Cannot deactivate the last active site"
+		"CANNOT_DEACTIVATE_LAST_SITE": "Cannot deactivate the last active site",
+		"DUPLICATE_SITE_NAME": "Situs kanthi jeneng iki wis ana",
+		"INVALID_SITE_NAME": "Jeneng situs mung kena ngemot aksara, angka, tanda hubung, lan garis ngisor"
 	},
 	"TARGET": {
 		"airplanes": "airplanes",

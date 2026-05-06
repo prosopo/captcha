@@ -1,0 +1,62 @@
+// Copyright 2021-2026 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+import {
+	type ApiEndpoint,
+	type ApiEndpointResponse,
+	ApiEndpointResponseStatus,
+} from "@prosopo/api-route";
+import { type Logger, type ProsopoApiError, getLogger } from "@prosopo/common";
+import { RemoveSitekeysBody } from "@prosopo/types";
+import type { z } from "zod";
+import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
+
+type RemoveSitekeysBodyType = typeof RemoveSitekeysBody;
+
+class ApiRemoveSiteKeysEndpoint implements ApiEndpoint<RemoveSitekeysBodyType> {
+	public constructor(private readonly clientTaskManager: ClientTaskManager) {}
+
+	async processRequest(
+		args: z.infer<RemoveSitekeysBodyType>,
+		logger?: Logger,
+	): Promise<ApiEndpointResponse> {
+		logger = logger || getLogger("info", import.meta.url);
+		try {
+			logger.info(() => ({
+				data: { count: args.length },
+				msg: "Removing site keys",
+			}));
+
+			await this.clientTaskManager.removeSiteKeys(args);
+
+			logger.info(() => ({ msg: "Site keys removed" }));
+
+			return {
+				status: ApiEndpointResponseStatus.SUCCESS,
+			};
+		} catch (error: unknown) {
+			logger.error(() => ({ err: error, msg: "Error removing site keys" }));
+			return {
+				status: ApiEndpointResponseStatus.FAIL,
+				error: (error as ProsopoApiError).message,
+			};
+		}
+	}
+
+	public getRequestArgsSchema(): RemoveSitekeysBodyType {
+		return RemoveSitekeysBody;
+	}
+}
+
+export { ApiRemoveSiteKeysEndpoint };
