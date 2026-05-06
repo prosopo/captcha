@@ -120,46 +120,47 @@ const Procaptcha = (props: ProcaptchaProps) => {
 			puzzleEvents: Array<PuzzleEvent>,
 		) => {
 			setPuzzlePhase("submitting");
+			let verified = false;
 			try {
-				await manager.current.submitSolution(finalX, finalY, puzzleEvents);
+				verified = await manager.current.submitSolution(
+					finalX,
+					finalY,
+					puzzleEvents,
+				);
 			} catch (error) {
 				console.error("Error submitting puzzle solution:", error);
 			}
 
-			// Check if solution was accepted (isHuman would be set by manager)
-			// We need to read the latest state — use a short delay to let state propagate
-			await new Promise<void>((resolve) => setTimeout(resolve, 50));
-
-			if (state.isHuman) {
-				// Success — close the puzzle
+			if (verified) {
 				setPuzzlePhase("checkbox");
 				setChallengeData(null);
 				setShowRetry(false);
 				setLoading(false);
-			} else {
-				// Failed — show retry message and fetch a new challenge
-				setShowRetry(true);
-				setPuzzlePhase("dragging");
+				return;
+			}
 
-				try {
-					const newChallenge = await manager.current.start();
-					if (newChallenge) {
-						setChallengeData(newChallenge);
-					} else {
-						// Couldn't get new challenge, fall back to checkbox
-						setPuzzlePhase("checkbox");
-						setChallengeData(null);
-						setShowRetry(false);
-					}
-				} catch {
+			// Failed — show retry message and fetch a new challenge
+			setShowRetry(true);
+			setPuzzlePhase("dragging");
+
+			try {
+				const newChallenge = await manager.current.start();
+				if (newChallenge) {
+					setChallengeData(newChallenge);
+				} else {
+					// Couldn't get new challenge, fall back to checkbox
 					setPuzzlePhase("checkbox");
 					setChallengeData(null);
 					setShowRetry(false);
 				}
-				setLoading(false);
+			} catch {
+				setPuzzlePhase("checkbox");
+				setChallengeData(null);
+				setShowRetry(false);
 			}
+			setLoading(false);
 		},
-		[state.isHuman],
+		[],
 	);
 
 	if (config.mode === ModeEnum.invisible) {

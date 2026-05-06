@@ -22,49 +22,45 @@ import {
 	type PuzzleCaptchaStored,
 	type RequestHeaders,
 } from "@prosopo/types";
-import type { IProviderDatabase } from "@prosopo/types-database";
+import type {
+	IProviderDatabase,
+	PuzzleCaptchaRecord,
+} from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { getIPAddress, verifyRecency } from "@prosopo/util";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getCompositeIpAddress } from "../../../../compositeIpAddress.js";
+import type { DecisionMachineRunner } from "../../../../tasks/decisionMachine/decisionMachineRunner.js";
 import { checkPowSignature } from "../../../../tasks/powCaptcha/powTasksUtils.js";
 import { PuzzleCaptchaManager } from "../../../../tasks/puzzleCaptcha/puzzleTasks.js";
 import { validatePuzzleSolution } from "../../../../tasks/puzzleCaptcha/puzzleTasksUtils.js";
 
-vi.mock(
-	"@polkadot/util",
-	async (
-		importOriginal: () => // biome-ignore lint/suspicious/noExplicitAny: test helper
-			| Record<string, any>
-			// biome-ignore lint/suspicious/noExplicitAny: test helper
-			| PromiseLike<Record<string, any>>,
-	) => {
-		// biome-ignore lint/suspicious/noExplicitAny: test helper
-		const actual = (await importOriginal()) as Record<string, any>;
-		return {
-			...actual,
-			u8aToHex: vi.fn(),
-			stringToHex: vi.fn(),
-		};
-	},
-);
+type DecideFn = DecisionMachineRunner["decide"];
 
-vi.mock(
-	"@prosopo/util",
-	async (
-		importOriginal: () => // biome-ignore lint/suspicious/noExplicitAny: test helper
-			| Record<string, any>
-			// biome-ignore lint/suspicious/noExplicitAny: test helper
-			| PromiseLike<Record<string, any>>,
-	) => {
-		// biome-ignore lint/suspicious/noExplicitAny: test helper
-		const actual = (await importOriginal()) as Record<string, any>;
-		return {
-			...actual,
-			verifyRecency: vi.fn(),
-		};
-	},
-);
+// PuzzleCaptchaRecord = mongoose.Document & PuzzleCaptchaStored. The tests
+// only care about a small subset of the stored fields; this helper widens
+// a partial fixture to the full record type without sprinkling casts at
+// every mock call site.
+const asPuzzleRecord = (
+	partial: Partial<PuzzleCaptchaStored>,
+): PuzzleCaptchaRecord => partial as unknown as PuzzleCaptchaRecord;
+
+vi.mock("@polkadot/util", async (importOriginal) => {
+	const actual = await importOriginal<typeof import("@polkadot/util")>();
+	return {
+		...actual,
+		u8aToHex: vi.fn(),
+		stringToHex: vi.fn(),
+	};
+});
+
+vi.mock("@prosopo/util", async (importOriginal) => {
+	const actual = await importOriginal<typeof import("@prosopo/util")>();
+	return {
+		...actual,
+		verifyRecency: vi.fn(),
+	};
+});
 
 vi.mock("../../../../tasks/powCaptcha/powTasksUtils.js", () => ({
 	checkPowSignature: vi.fn(),
@@ -79,30 +75,23 @@ describe("PuzzleCaptchaManager", () => {
 	let pair: KeyringPair;
 	let puzzleCaptchaManager: PuzzleCaptchaManager;
 	let mockEnv: ProviderEnvironment;
-	// biome-ignore lint/suspicious/noExplicitAny: test helper
-	let originalDecide: any;
+	let originalDecide: DecideFn | undefined;
 
-	// biome-ignore lint/suspicious/noExplicitAny: test helper
-	const mockDecisionMachine = (mockFn: any) => {
-		originalDecide = (
-			puzzleCaptchaManager as unknown as {
-				decisionMachineRunner: { decide: unknown };
-			}
-		).decisionMachineRunner.decide;
-		(
-			puzzleCaptchaManager as unknown as {
-				decisionMachineRunner: { decide: unknown };
-			}
-		).decisionMachineRunner.decide = mockFn;
+	// The decisionMachineRunner is a private field on PuzzleCaptchaManager;
+	// the cast lets the test stub it without making it public on the class.
+	const decisionMachineHandle = () =>
+		puzzleCaptchaManager as unknown as {
+			decisionMachineRunner: { decide: DecideFn };
+		};
+
+	const mockDecisionMachine = (mockFn: DecideFn) => {
+		originalDecide = decisionMachineHandle().decisionMachineRunner.decide;
+		decisionMachineHandle().decisionMachineRunner.decide = mockFn;
 	};
 
 	const restoreDecisionMachine = () => {
 		if (originalDecide) {
-			(
-				puzzleCaptchaManager as unknown as {
-					decisionMachineRunner: { decide: unknown };
-				}
-			).decisionMachineRunner.decide = originalDecide;
+			decisionMachineHandle().decisionMachineRunner.decide = originalDecide;
 			originalDecide = undefined;
 		}
 	};
@@ -135,10 +124,8 @@ describe("PuzzleCaptchaManager", () => {
 		puzzleCaptchaManager = new PuzzleCaptchaManager(db, pair, mockEnv.config);
 
 		vi.clearAllMocks();
-		// biome-ignore lint/suspicious/noExplicitAny: test helper
-		(u8aToHex as any).mockReturnValue("0xsigned");
-		// biome-ignore lint/suspicious/noExplicitAny: test helper
-		(stringToHex as any).mockImplementation((s: string) => `0xhex:${s}`);
+		vi.mocked(u8aToHex).mockReturnValue("0xsigned");
+		vi.mocked(stringToHex).mockImplementation((s) => `0xhex:${s}`);
 	});
 
 	afterEach(() => {
@@ -209,8 +196,8 @@ describe("PuzzleCaptchaManager", () => {
 
 		it("returns false when no challenge record exists", async () => {
 			const a = buildArgs();
-			// biome-ignore lint/suspicious/noExplicitAny: test helper
-			(db.getPuzzleCaptchaRecordByChallenge as any).mockResolvedValue(null);
+
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(null);
 
 			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
 				a.challenge,
@@ -228,6 +215,40 @@ describe("PuzzleCaptchaManager", () => {
 			expect(db.updatePuzzleCaptchaRecordResult).not.toHaveBeenCalled();
 		});
 
+		it("refuses re-submission of an already-submitted challenge (replay guard)", async () => {
+			const a = buildArgs();
+			const challengeRecord: Partial<PuzzleCaptchaStored> = {
+				challenge: a.challenge,
+				dappAccount: a.dappAccount,
+				userAccount: a.userAccount,
+				targetX: 100,
+				targetY: 100,
+				tolerance: 15,
+				ipAddress: getCompositeIpAddress(a.ipAddress),
+				result: { status: CaptchaStatus.disapproved, reason: "" },
+				userSubmitted: true,
+			};
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord(challengeRecord),
+			);
+
+			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
+				a.challenge,
+				a.providerSignature,
+				100,
+				100,
+				[],
+				1000,
+				a.userSignature,
+				a.ipAddress,
+				a.headers,
+			);
+
+			expect(result).toBe(false);
+			expect(validatePuzzleSolution).not.toHaveBeenCalled();
+			expect(db.updatePuzzleCaptchaRecordResult).not.toHaveBeenCalled();
+		});
+
 		it("returns false and records a timeout when the challenge is not recent", async () => {
 			const a = buildArgs();
 			const challengeRecord: Partial<PuzzleCaptchaStored> = {
@@ -240,12 +261,11 @@ describe("PuzzleCaptchaManager", () => {
 				ipAddress: getCompositeIpAddress(a.ipAddress),
 				result: { status: CaptchaStatus.pending },
 			};
-			// biome-ignore lint/suspicious/noExplicitAny: test helper
-			(db.getPuzzleCaptchaRecordByChallenge as any).mockResolvedValue(
-				challengeRecord,
+
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord(challengeRecord),
 			);
-			// biome-ignore lint/suspicious/noExplicitAny: test helper
-			(verifyRecency as any).mockImplementation(() => false);
+			vi.mocked(verifyRecency).mockImplementation(() => false);
 
 			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
 				a.challenge,
@@ -284,14 +304,12 @@ describe("PuzzleCaptchaManager", () => {
 				ipAddress: getCompositeIpAddress(a.ipAddress),
 				result: { status: CaptchaStatus.pending },
 			};
-			// biome-ignore lint/suspicious/noExplicitAny: test helper
-			(db.getPuzzleCaptchaRecordByChallenge as any).mockResolvedValue(
-				challengeRecord,
+
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord(challengeRecord),
 			);
-			// biome-ignore lint/suspicious/noExplicitAny: test helper
-			(verifyRecency as any).mockImplementation(() => true);
-			// biome-ignore lint/suspicious/noExplicitAny: test helper
-			(validatePuzzleSolution as any).mockReturnValue(true);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+			vi.mocked(validatePuzzleSolution).mockReturnValue(true);
 
 			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
 				a.challenge,
@@ -333,14 +351,12 @@ describe("PuzzleCaptchaManager", () => {
 				ipAddress: getCompositeIpAddress(a.ipAddress),
 				result: { status: CaptchaStatus.pending },
 			};
-			// biome-ignore lint/suspicious/noExplicitAny: test helper
-			(db.getPuzzleCaptchaRecordByChallenge as any).mockResolvedValue(
-				challengeRecord,
+
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord(challengeRecord),
 			);
-			// biome-ignore lint/suspicious/noExplicitAny: test helper
-			(verifyRecency as any).mockImplementation(() => true);
-			// biome-ignore lint/suspicious/noExplicitAny: test helper
-			(validatePuzzleSolution as any).mockReturnValue(false);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+			vi.mocked(validatePuzzleSolution).mockReturnValue(false);
 
 			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
 				a.challenge,
@@ -373,8 +389,7 @@ describe("PuzzleCaptchaManager", () => {
 		const challenge = "1234567___user___dappAccount___1";
 
 		it("returns verified:false when the challenge record does not exist", async () => {
-			// biome-ignore lint/suspicious/noExplicitAny: test helper
-			(db.getPuzzleCaptchaRecordByChallenge as any).mockResolvedValue(null);
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(null);
 
 			const result =
 				await puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
@@ -388,16 +403,17 @@ describe("PuzzleCaptchaManager", () => {
 		});
 
 		it("throws when the stored result is not approved", async () => {
-			// biome-ignore lint/suspicious/noExplicitAny: test helper
-			(db.getPuzzleCaptchaRecordByChallenge as any).mockResolvedValue({
-				challenge,
-				dappAccount,
-				result: {
-					status: CaptchaStatus.disapproved,
-					reason: "CAPTCHA.INVALID_SOLUTION",
-				},
-				serverChecked: false,
-			});
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord({
+					challenge,
+					dappAccount,
+					result: {
+						status: CaptchaStatus.disapproved,
+						reason: "CAPTCHA.INVALID_SOLUTION",
+					},
+					serverChecked: false,
+				}),
+			);
 
 			await expect(
 				puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
@@ -410,13 +426,14 @@ describe("PuzzleCaptchaManager", () => {
 		});
 
 		it("returns verified:false when the solution has already been server-checked", async () => {
-			// biome-ignore lint/suspicious/noExplicitAny: test helper
-			(db.getPuzzleCaptchaRecordByChallenge as any).mockResolvedValue({
-				challenge,
-				dappAccount,
-				result: { status: CaptchaStatus.approved },
-				serverChecked: true,
-			});
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord({
+					challenge,
+					dappAccount,
+					result: { status: CaptchaStatus.approved },
+					serverChecked: true,
+				}),
+			);
 
 			const result =
 				await puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
@@ -431,13 +448,14 @@ describe("PuzzleCaptchaManager", () => {
 		});
 
 		it("throws when the dappAccount on the record does not match", async () => {
-			// biome-ignore lint/suspicious/noExplicitAny: test helper
-			(db.getPuzzleCaptchaRecordByChallenge as any).mockResolvedValue({
-				challenge,
-				dappAccount: "differentDapp",
-				result: { status: CaptchaStatus.approved },
-				serverChecked: false,
-			});
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord({
+					challenge,
+					dappAccount: "differentDapp",
+					result: { status: CaptchaStatus.approved },
+					serverChecked: false,
+				}),
+			);
 
 			await expect(
 				puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
@@ -450,15 +468,15 @@ describe("PuzzleCaptchaManager", () => {
 		});
 
 		it("returns verified:false and writes a timeout result when not recent", async () => {
-			// biome-ignore lint/suspicious/noExplicitAny: test helper
-			(db.getPuzzleCaptchaRecordByChallenge as any).mockResolvedValue({
-				challenge,
-				dappAccount,
-				result: { status: CaptchaStatus.approved },
-				serverChecked: false,
-			});
-			// biome-ignore lint/suspicious/noExplicitAny: test helper
-			(verifyRecency as any).mockImplementation(() => false);
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord({
+					challenge,
+					dappAccount,
+					result: { status: CaptchaStatus.approved },
+					serverChecked: false,
+				}),
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => false);
 
 			const result =
 				await puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
@@ -481,17 +499,17 @@ describe("PuzzleCaptchaManager", () => {
 		});
 
 		it("returns verified:true on the happy path", async () => {
-			// biome-ignore lint/suspicious/noExplicitAny: test helper
-			(db.getPuzzleCaptchaRecordByChallenge as any).mockResolvedValue({
-				challenge,
-				dappAccount,
-				userAccount: "user",
-				result: { status: CaptchaStatus.approved },
-				serverChecked: false,
-				headers: { a: "1" },
-			});
-			// biome-ignore lint/suspicious/noExplicitAny: test helper
-			(verifyRecency as any).mockImplementation(() => true);
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord({
+					challenge,
+					dappAccount,
+					userAccount: "user",
+					result: { status: CaptchaStatus.approved },
+					serverChecked: false,
+					headers: { a: "1" },
+				}),
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
 			mockDecisionMachine(
 				vi.fn().mockResolvedValue({
 					decision: "allow",
@@ -517,17 +535,17 @@ describe("PuzzleCaptchaManager", () => {
 		});
 
 		it("returns verified:false when the decision machine denies", async () => {
-			// biome-ignore lint/suspicious/noExplicitAny: test helper
-			(db.getPuzzleCaptchaRecordByChallenge as any).mockResolvedValue({
-				challenge,
-				dappAccount,
-				userAccount: "user",
-				result: { status: CaptchaStatus.approved },
-				serverChecked: false,
-				headers: { a: "1" },
-			});
-			// biome-ignore lint/suspicious/noExplicitAny: test helper
-			(verifyRecency as any).mockImplementation(() => true);
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord({
+					challenge,
+					dappAccount,
+					userAccount: "user",
+					result: { status: CaptchaStatus.approved },
+					serverChecked: false,
+					headers: { a: "1" },
+				}),
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
 			mockDecisionMachine(
 				vi.fn().mockResolvedValue({
 					decision: "deny",

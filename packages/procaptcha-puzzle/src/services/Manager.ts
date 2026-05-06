@@ -48,7 +48,7 @@ interface PuzzleManagerHandle {
 		finalX: number,
 		finalY: number,
 		puzzleEvents: Array<PuzzleEvent>,
-	) => Promise<void>;
+	) => Promise<boolean>;
 	resetState: (frictionlessRestart?: () => void) => void;
 }
 
@@ -289,7 +289,7 @@ export const Manager = (
 		finalX: number,
 		finalY: number,
 		puzzleEvents: Array<PuzzleEvent>,
-	): Promise<void> => {
+	): Promise<boolean> => {
 		if (
 			!storedChallengeResponse ||
 			!storedProviderApi ||
@@ -393,9 +393,10 @@ export const Manager = (
 					}),
 				);
 				setValidChallengeTimeout();
-			} else {
-				onFailed();
+				return true;
 			}
+			onFailed();
+			return false;
 		} catch (error) {
 			updateState({ loading: false });
 			throw error;

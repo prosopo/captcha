@@ -174,6 +174,16 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 			return false;
 		}
 
+		// Single-use challenge: refuse re-submission. Unlike POW (hash-bound),
+		// the puzzle answer space is small enough to brute-force, so each
+		// challenge must accept exactly one submission.
+		if (challengeRecord.userSubmitted) {
+			this.logger.debug(() => ({
+				msg: `Challenge already submitted: ${challenge}`,
+			}));
+			return false;
+		}
+
 		if (!verifyRecency(challenge, timeout)) {
 			const timeoutResult = {
 				status: CaptchaStatus.disapproved,
