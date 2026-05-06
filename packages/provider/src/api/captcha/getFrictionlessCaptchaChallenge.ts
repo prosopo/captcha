@@ -125,8 +125,59 @@ export default (
 				);
 			}
 
-			// Check if the token has already been used
-			const existingToken = await tasks.db.getSessionRecordByToken(token);
+			// Calculate the hash upfront so both checks can run in parallel
+			const userSitekeyIpHash = hashUserIp(user, normalizedIp, dapp);
+
+			// Fire token-reuse check, Redis session lookup, and MongoDB session
+			// lookup all at once.  Redis and MongoDB race for the session dedup:
+			// if Redis has a cached hit we use it immediately without waiting for
+			// MongoDB; if Redis misses, the MongoDB query is already in-flight so
+			// we pay no extra latency for the Redis attempt.
+			const redisSessionPromise: Promise<string | null> = tasks.writeQueue
+				? tasks.writeQueue.getCachedSessionByHash(userSitekeyIpHash)
+				: Promise.resolve(null);
+			const mongoSessionPromise =
+				tasks.db.getSessionByuserSitekeyIpHash(userSitekeyIpHash);
+
+			const [existingToken, redisSessionId] = await Promise.all([
+				tasks.db.getSessionRecordByToken(token),
+				redisSessionPromise,
+			]);
+
+			// Resolve session dedup: prefer Redis hit, fall back to
+			// already-in-flight MongoDB query.
+			type SessionDedupResult = {
+				source: "redis" | "mongo";
+				sessionId: string;
+				captchaType: string;
+				session?: import("@prosopo/types").Session;
+			};
+			let sessionDedup: SessionDedupResult | null = null;
+
+			if (redisSessionId && tasks.writeQueue) {
+				const cachedData =
+					await tasks.writeQueue.getCachedSession(redisSessionId);
+				if (cachedData?.captchaType && !cachedData.deleted) {
+					sessionDedup = {
+						source: "redis",
+						sessionId: redisSessionId,
+						captchaType: cachedData.captchaType as string,
+					};
+				}
+			}
+
+			if (!sessionDedup) {
+				// MongoDB query was started in parallel — just await its result
+				const existingSession = await mongoSessionPromise;
+				if (existingSession) {
+					sessionDedup = {
+						source: "mongo",
+						sessionId: existingSession.sessionId,
+						captchaType: existingSession.captchaType,
+						session: existingSession,
+					};
+				}
+			}
 
 			if (existingToken) {
 				req.logger.info(() => ({
@@ -146,75 +197,52 @@ export default (
 				);
 			}
 
-			// Calculate the hash for this user-IP-sitekey combination
-			const userSitekeyIpHash = hashUserIp(user, normalizedIp, dapp);
+			if (sessionDedup) {
+				if (sessionDedup.source === "redis") {
+					req.logger.info(() => ({
+						msg: "Reusing existing session from Redis cache",
+						data: {
+							userSitekeyIpHash,
+							sessionId: sessionDedup.sessionId,
+							captchaType: sessionDedup.captchaType,
+						},
+					}));
+				} else {
+					req.logger.info(() => ({
+						msg: "Reusing existing session for user-IP-sitekey combination",
+						data: {
+							userSitekeyIpHash,
+							sessionId: sessionDedup.sessionId,
+							captchaType: sessionDedup.captchaType,
+						},
+					}));
+					req.logger.info(() => ({
+						msg: "Frictionless decision",
+						data: {
+							requestId: req.requestId,
+							decision: "reuse_session",
+							captchaType: sessionDedup.captchaType,
+							sessionId: sessionDedup.sessionId,
+						},
+					}));
 
-			// Check Redis cache first for session deduplication (avoids MongoDB query).
-			// Falls back to MongoDB if Redis is unavailable or cache miss.
-			let existingSessionId: string | null = null;
-			if (tasks.writeQueue) {
-				existingSessionId =
-					await tasks.writeQueue.getCachedSessionByHash(userSitekeyIpHash);
-				if (existingSessionId) {
-					// Verify the cached session still exists and get its details
-					const cachedData =
-						await tasks.writeQueue.getCachedSession(existingSessionId);
-					if (cachedData?.captchaType && !cachedData.deleted) {
-						req.logger.info(() => ({
-							msg: "Reusing existing session from Redis cache",
-							data: {
-								userSitekeyIpHash,
-								sessionId: existingSessionId,
-								captchaType: cachedData.captchaType,
-							},
-						}));
-						return res.json({
-							[ApiParams.captchaType]: cachedData.captchaType as string,
-							[ApiParams.sessionId]: existingSessionId,
-							[ApiParams.status]: "ok",
-						});
+					// Populate Redis cache for future requests
+					if (tasks.writeQueue && sessionDedup.session) {
+						tasks.writeQueue
+							.cacheSessionByHash(userSitekeyIpHash, sessionDedup.sessionId)
+							.catch(() => {});
+						tasks.writeQueue
+							.cacheSession(
+								sessionDedup.sessionId,
+								sessionDedup.session as unknown as Record<string, unknown>,
+							)
+							.catch(() => {});
 					}
-				}
-			}
-
-			const existingSession =
-				await tasks.db.getSessionByuserSitekeyIpHash(userSitekeyIpHash);
-
-			if (existingSession) {
-				req.logger.info(() => ({
-					msg: "Reusing existing session for user-IP-sitekey combination",
-					data: {
-						userSitekeyIpHash,
-						sessionId: existingSession.sessionId,
-						captchaType: existingSession.captchaType,
-					},
-				}));
-				req.logger.info(() => ({
-					msg: "Frictionless decision",
-					data: {
-						requestId: req.requestId,
-						decision: "reuse_session",
-						captchaType: existingSession.captchaType,
-						sessionId: existingSession.sessionId,
-					},
-				}));
-
-				// Populate Redis cache for future requests
-				if (tasks.writeQueue) {
-					tasks.writeQueue
-						.cacheSessionByHash(userSitekeyIpHash, existingSession.sessionId)
-						.catch(() => {});
-					tasks.writeQueue
-						.cacheSession(
-							existingSession.sessionId,
-							existingSession as unknown as Record<string, unknown>,
-						)
-						.catch(() => {});
 				}
 
 				return res.json({
-					[ApiParams.captchaType]: existingSession.captchaType,
-					[ApiParams.sessionId]: existingSession.sessionId,
+					[ApiParams.captchaType]: sessionDedup.captchaType,
+					[ApiParams.sessionId]: sessionDedup.sessionId,
 					[ApiParams.status]: "ok",
 				});
 			}

@@ -47,6 +47,7 @@ export class RedisWriteQueue {
 	private flushTimer: ReturnType<typeof setInterval> | null = null;
 	private flushCallback: ((queue: RedisWriteQueue) => Promise<void>) | null =
 		null;
+	private earlyFlushThreshold: number | undefined;
 
 	constructor(connection: RedisConnection, logger: Logger) {
 		this.connection = connection;
@@ -225,6 +226,9 @@ export class RedisWriteQueue {
 				EX: ttlSeconds,
 			});
 
+			// Fire-and-forget: trigger an early flush if the queue is large
+			this.triggerEarlyFlushIfNeeded();
+
 			return true;
 		} catch (error) {
 			this.logger.warn(() => ({
@@ -283,13 +287,19 @@ export class RedisWriteQueue {
 	/**
 	 * Start periodic background flush of queued records.
 	 * The callback receives this queue instance and should drain + bulk-write records.
+	 *
+	 * When the queue depth exceeds `earlyFlushThreshold`, an early flush is
+	 * triggered on the next `queueSessionRecord` call without waiting for
+	 * the regular interval.
 	 */
 	startPeriodicFlush(
 		callback: (queue: RedisWriteQueue) => Promise<void>,
 		intervalMs = 10000,
+		earlyFlushThreshold = 50,
 	): void {
 		this.stopPeriodicFlush();
 		this.flushCallback = callback;
+		this.earlyFlushThreshold = earlyFlushThreshold;
 		this.flushTimer = setInterval(() => {
 			this.flushCallback?.(this).catch((error) => {
 				this.logger.error(() => ({
@@ -301,6 +311,38 @@ export class RedisWriteQueue {
 	}
 
 	/**
+	 * Trigger an early flush if the pending queue exceeds the threshold.
+	 * Called automatically after queueing a record. This avoids large
+	 * batch build-ups between regular interval flushes.
+	 */
+	private triggerEarlyFlushIfNeeded(): void {
+		if (!this.flushCallback || !this.earlyFlushThreshold) return;
+		this.getPendingCount()
+			.then((count): Promise<void> | void => {
+				if (count >= (this.earlyFlushThreshold ?? 50)) {
+					return this.flushCallback?.(this);
+				}
+			})
+			.catch((error) => {
+				this.logger.error(() => ({
+					msg: "Early flush failed",
+					err: error,
+				}));
+			});
+	}
+
+	/** Get the number of pending session records awaiting flush. */
+	private async getPendingCount(): Promise<number> {
+		const client = await this.getClient();
+		if (!client) return 0;
+		try {
+			return await client.sCard("writeq:session:pending");
+		} catch {
+			return 0;
+		}
+	}
+
+	/**
 	 * Stop the periodic flush timer.
 	 */
 	stopPeriodicFlush(): void {
@@ -309,6 +351,7 @@ export class RedisWriteQueue {
 			this.flushTimer = null;
 		}
 		this.flushCallback = null;
+		this.earlyFlushThreshold = undefined;
 	}
 
 	/**

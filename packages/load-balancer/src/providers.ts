@@ -17,6 +17,22 @@ import { type HardcodedProvider, loadBalancer } from "./index.js";
 
 let cachedProviders: HardcodedProvider[] = [];
 
+/** Optional custom loader for server-side caching (e.g. cacheFile with ETag). */
+let customProviderLoader:
+	| ((env: EnvironmentTypes) => Promise<HardcodedProvider[]>)
+	| null = null;
+
+/**
+ * Set a custom provider loader that replaces the default HTTP fetch.
+ * Use this on the server side to inject cacheFile-based loading with
+ * ETag/Last-Modified support for disk persistence across restarts.
+ */
+export function setProviderLoader(
+	loader: (env: EnvironmentTypes) => Promise<HardcodedProvider[]>,
+): void {
+	customProviderLoader = loader;
+}
+
 export function _resetCache() {
 	cachedProviders = [];
 }
@@ -59,6 +75,16 @@ export function selectWeightedProvider(
 	return selectedProvider;
 }
 
+/** Load providers using the custom loader if set, otherwise the default fetch. */
+const loadProviders = async (
+	env: EnvironmentTypes,
+): Promise<HardcodedProvider[]> => {
+	if (customProviderLoader) {
+		return customProviderLoader(env);
+	}
+	return loadBalancer(env);
+};
+
 /**
  * Pre-warms the provider cache for a given environment without requiring entropy.
  * Call this as early as possible to avoid a cold-cache delay when getRandomActiveProvider is first used.
@@ -67,7 +93,7 @@ export const prefetchProviders = async (
 	env: EnvironmentTypes,
 ): Promise<void> => {
 	if (cachedProviders.length === 0) {
-		cachedProviders = await loadBalancer(env);
+		cachedProviders = await loadProviders(env);
 	}
 };
 
@@ -76,8 +102,7 @@ export const getRandomActiveProvider = async (
 	entropy: number,
 ): Promise<RandomProvider> => {
 	if (cachedProviders.length === 0) {
-		// only get the providers JSON once
-		cachedProviders = await loadBalancer(env);
+		cachedProviders = await loadProviders(env);
 	}
 
 	const randomProviderObj = selectWeightedProvider(cachedProviders, entropy);
