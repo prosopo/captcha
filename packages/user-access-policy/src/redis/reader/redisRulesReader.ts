@@ -18,7 +18,6 @@ import {
 	chunkIntoBatches,
 	executeBatchesSequentially,
 } from "@prosopo/common";
-import type { SearchReply } from "@redis/search";
 import type { RedisClientType } from "redis";
 import {
 	REDIS_QUERY_DIALECT,
@@ -88,11 +87,12 @@ export class RedisRulesReader implements AccessRulesReader {
 			return [];
 		}
 
-		let searchReply: SearchReply;
-
 		try {
-			// https://redis.io/docs/latest/commands/ft.search/
-			searchReply = await this.client.ft.search(
+			// Use searchNoContent to get document keys only, then fetch data separately.
+			// This avoids a bug in @redis/search where ft.search crashes with
+			// "Cannot read properties of null (reading 'length')" when a document
+			// is deleted/expired between the index scan and data retrieval.
+			const searchReply = await this.client.ft.searchNoContent(
 				ACCESS_RULES_REDIS_INDEX_NAME,
 				query,
 				{
@@ -120,6 +120,22 @@ export class RedisRulesReader implements AccessRulesReader {
 					},
 				}));
 			}
+
+			if (searchReply.documents.length === 0) {
+				return [];
+			}
+
+			const { records } = await fetchRedisHashRecords(
+				this.client,
+				searchReply.documents,
+				this.logger,
+			);
+
+			const nonEmptyRecords = records.filter(
+				(record) => Object.keys(record).length > 0,
+			);
+
+			return parseRedisRecords(nonEmptyRecords, accessRuleInput, this.logger);
 		} catch (e) {
 			this.logger.error(() => ({
 				err: e,
@@ -139,10 +155,6 @@ export class RedisRulesReader implements AccessRulesReader {
 
 			return [];
 		}
-
-		const records = searchReply.documents.map(({ value }) => value);
-
-		return parseRedisRecords(records, accessRuleInput, this.logger);
 	}
 
 	async findRuleIds(
