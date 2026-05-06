@@ -128,48 +128,56 @@ export default (
 			// Calculate the hash upfront so both checks can run in parallel
 			const userSitekeyIpHash = hashUserIp(user, normalizedIp, dapp);
 
-			// Run token-reuse check and session deduplication in parallel.
-			// These are independent lookups that previously ran sequentially.
-			const sessionDedupPromise = (async (): Promise<{
+			// Fire token-reuse check, Redis session lookup, and MongoDB session
+			// lookup all at once.  Redis and MongoDB race for the session dedup:
+			// if Redis has a cached hit we use it immediately without waiting for
+			// MongoDB; if Redis misses, the MongoDB query is already in-flight so
+			// we pay no extra latency for the Redis attempt.
+			const redisSessionPromise: Promise<string | null> = tasks.writeQueue
+				? tasks.writeQueue.getCachedSessionByHash(userSitekeyIpHash)
+				: Promise.resolve(null);
+			const mongoSessionPromise =
+				tasks.db.getSessionByuserSitekeyIpHash(userSitekeyIpHash);
+
+			const [existingToken, redisSessionId] = await Promise.all([
+				tasks.db.getSessionRecordByToken(token),
+				redisSessionPromise,
+			]);
+
+			// Resolve session dedup: prefer Redis hit, fall back to
+			// already-in-flight MongoDB query.
+			type SessionDedupResult = {
 				source: "redis" | "mongo";
 				sessionId: string;
 				captchaType: string;
 				session?: import("@prosopo/types").Session;
-			} | null> => {
-				// Check Redis cache first
-				if (tasks.writeQueue) {
-					const cachedSessionId =
-						await tasks.writeQueue.getCachedSessionByHash(userSitekeyIpHash);
-					if (cachedSessionId) {
-						const cachedData =
-							await tasks.writeQueue.getCachedSession(cachedSessionId);
-						if (cachedData?.captchaType && !cachedData.deleted) {
-							return {
-								source: "redis",
-								sessionId: cachedSessionId,
-								captchaType: cachedData.captchaType as string,
-							};
-						}
-					}
+			};
+			let sessionDedup: SessionDedupResult | null = null;
+
+			if (redisSessionId && tasks.writeQueue) {
+				const cachedData =
+					await tasks.writeQueue.getCachedSession(redisSessionId);
+				if (cachedData?.captchaType && !cachedData.deleted) {
+					sessionDedup = {
+						source: "redis",
+						sessionId: redisSessionId,
+						captchaType: cachedData.captchaType as string,
+					};
 				}
-				// Fall back to MongoDB
-				const existingSession =
-					await tasks.db.getSessionByuserSitekeyIpHash(userSitekeyIpHash);
+			}
+
+			if (!sessionDedup) {
+				// MongoDB query was started in parallel — just await its result
+				const existingSession = await mongoSessionPromise;
 				if (existingSession) {
-					return {
+					sessionDedup = {
 						source: "mongo",
 						sessionId: existingSession.sessionId,
 						captchaType: existingSession.captchaType,
 						session: existingSession,
 					};
 				}
-				return null;
-			})();
-
-			const [existingToken, sessionDedup] = await Promise.all([
-				tasks.db.getSessionRecordByToken(token),
-				sessionDedupPromise,
-			]);
+			}
 
 			if (existingToken) {
 				req.logger.info(() => ({
