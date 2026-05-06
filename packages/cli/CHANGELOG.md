@@ -1,5 +1,11 @@
 # @prosopo/cli
 
+## 3.6.17
+### Patch Changes
+
+  - @prosopo/provider@4.2.1
+  - @prosopo/env@3.4.6
+
 ## 3.6.16
 ### Patch Changes
 
