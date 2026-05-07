@@ -203,13 +203,13 @@ export default (
 				if (tasks.writeQueue) {
 					tasks.writeQueue
 						.cacheSessionByHash(userSitekeyIpHash, existingSession.sessionId)
-						.catch(() => {});
+						.catch(() => { });
 					tasks.writeQueue
 						.cacheSession(
 							existingSession.sessionId,
 							existingSession as unknown as Record<string, unknown>,
 						)
-						.catch(() => {});
+						.catch(() => { });
 				}
 
 				return res.json({
@@ -396,9 +396,9 @@ export default (
 						await tasks.frictionlessManager.sendImageCaptcha({
 							solvedImagesCount: userAccessPolicy.solvedImagesCount
 								? Math.min(
-										userAccessPolicy.solvedImagesCount,
-										clientRecord.settings.imageMaxRounds,
-									)
+									userAccessPolicy.solvedImagesCount,
+									clientRecord.settings.imageMaxRounds,
+								)
 								: clientRecord.settings.imageMaxRounds,
 							userSitekeyIpHash,
 							reason: FrictionlessReason.USER_ACCESS_POLICY,
@@ -460,7 +460,7 @@ export default (
 					},
 				}));
 				console.log({
-					decryptionFailed,
+					a,
 					timestamp,
 					maxRounds: clientRecord.settings.imageMaxRounds,
 				});
