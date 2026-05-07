@@ -185,8 +185,24 @@ export async function getDependencies(
 	}
 
 	let concat = "";
-	const { stdout, stderr } = await exec(cmd);
-	concat = stdout + stderr;
+	try {
+		const { stdout, stderr } = await exec(cmd);
+		concat = stdout + stderr;
+	} catch (e: unknown) {
+		// npm ls exits with code 1 when there are unmet optional dependencies,
+		// but still produces valid output on stdout/stderr
+		if (
+			e instanceof Error &&
+			"stdout" in e &&
+			typeof e.stdout === "string"
+		) {
+			const stderr =
+				"stderr" in e && typeof e.stderr === "string" ? e.stderr : "";
+			concat = e.stdout + stderr;
+		} else {
+			throw e;
+		}
+	}
 
 	let deps: string[] = [];
 	let peerDeps: string[] = [];
