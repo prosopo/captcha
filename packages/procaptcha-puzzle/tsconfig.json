@@ -3,12 +3,12 @@
 	"compilerOptions": {
 		"rootDir": "./src",
 		"outDir": "./dist",
-		"lib": ["es6", "dom"]
+		"lib": ["es6", "dom"],
+		"jsxImportSource": "@emotion/react"
 	},
 	"include": [
 		"src",
 		"src/**/*.json",
-		"src/index.html",
 		"src/**/*.ts",
 		"src/**/*.tsx",
 		"src/**/*.d.ts"
@@ -18,22 +18,16 @@
 			"path": "../../dev/config/tsconfig.json"
 		},
 		{
-			"path": "../dotenv"
+			"path": "../api"
+		},
+		{
+			"path": "../common"
 		},
 		{
 			"path": "../locale"
 		},
 		{
-			"path": "../procaptcha-frictionless"
-		},
-		{
-			"path": "../procaptcha-pow"
-		},
-		{
-			"path": "../procaptcha-puzzle"
-		},
-		{
-			"path": "../procaptcha-react"
+			"path": "../procaptcha-common"
 		},
 		{
 			"path": "../types"
@@ -43,9 +37,6 @@
 		},
 		{
 			"path": "../widget-skeleton"
-		},
-		{
-			"path": "../procaptcha-common"
 		}
 	]
 }

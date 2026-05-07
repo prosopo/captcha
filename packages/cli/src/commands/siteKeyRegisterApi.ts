@@ -20,6 +20,7 @@ import {
 	CaptchaTypeSpec,
 	type ProsopoConfigOutput,
 	Tier,
+	puzzleToleranceDefault,
 } from "@prosopo/types";
 import type { ArgumentsCamelCase, Argv } from "yargs";
 import { z } from "zod";
@@ -117,6 +118,7 @@ export default (
 						powDifficulty: pow_difficulty as number,
 						imageThreshold: image_threshold as number,
 						imageMaxRounds: image_max_rounds as number,
+						puzzleTolerance: puzzleToleranceDefault,
 						disallowWebView: false,
 					},
 					jwt,

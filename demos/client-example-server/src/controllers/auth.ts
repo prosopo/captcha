@@ -80,6 +80,7 @@ const getPairAndSecretForSiteKey = (
 		CaptchaType.pow,
 		CaptchaType.image,
 		CaptchaType.frictionless,
+		CaptchaType.puzzle,
 	]) {
 		const newSecret = `${baseSecret}//${captchaType}`;
 		pair = getPair(newSecret);

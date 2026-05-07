@@ -18,14 +18,19 @@ import type { CaptchaProps } from "./captchaProps.js";
 import { FrictionlessCaptcha } from "./components/frictionlessCaptcha.js";
 import { ImageCaptcha } from "./components/imageCaptcha.js";
 import { PowCaptcha } from "./components/powCaptcha.js";
+import { PuzzleCaptcha } from "./components/puzzleCaptcha.js";
 
 const captchaComponentsList: Pick<
 	Record<CaptchaType, React.ComponentType<CaptchaProps>>,
-	CaptchaType.image | CaptchaType.pow | CaptchaType.frictionless
+	| CaptchaType.image
+	| CaptchaType.pow
+	| CaptchaType.frictionless
+	| CaptchaType.puzzle
 > = {
 	[CaptchaType.image]: ImageCaptcha,
 	[CaptchaType.pow]: PowCaptcha,
 	[CaptchaType.frictionless]: FrictionlessCaptcha,
+	[CaptchaType.puzzle]: PuzzleCaptcha,
 };
 
 export { captchaComponentsList };

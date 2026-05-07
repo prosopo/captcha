@@ -30,12 +30,15 @@ import type {
 	CaptchaResponseBody,
 	CaptchaSolutionResponse,
 	GetPowCaptchaResponse,
+	GetPuzzleCaptchaResponse,
 	ImageVerificationResponse,
 	PowCaptchaSolutionResponse,
 	Provider,
 	ProviderRegistered,
+	PuzzleCaptchaSolutionResponse,
 	RandomProvider,
 	UpdateProviderClientsResponse,
+	VerificationResponse,
 } from "../provider/index.js";
 
 export interface ProviderApiInterface {
@@ -71,6 +74,30 @@ export interface ProviderApiInterface {
 		timeout?: number,
 		salt?: string,
 	): Promise<PowCaptchaSolutionResponse>;
+	getPuzzleCaptchaChallenge(
+		userAccount: string,
+		dappAccount: string,
+		sessionId?: string,
+	): Promise<GetPuzzleCaptchaResponse>;
+	submitPuzzleCaptchaSolution(
+		challenge: GetPuzzleCaptchaResponse,
+		userAccount: string,
+		dappAccount: string,
+		finalX: number,
+		finalY: number,
+		puzzleEvents: Array<{ x: number; y: number; t: number }>,
+		userTimestampSignature: string,
+		timeout?: number,
+		behavioralData?: string,
+	): Promise<PuzzleCaptchaSolutionResponse>;
+	submitPuzzleCaptchaVerify(
+		token: string,
+		signatureHex: string,
+		recencyLimit: number,
+		user: string,
+		ip?: string,
+		email?: string,
+	): Promise<VerificationResponse>;
 	submitUserEvents(
 		events: StoredEvents,
 		string: string,

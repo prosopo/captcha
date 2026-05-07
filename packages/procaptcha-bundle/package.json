@@ -43,6 +43,7 @@
 		"@prosopo/procaptcha-common": "2.10.5",
 		"@prosopo/procaptcha-frictionless": "2.8.62",
 		"@prosopo/procaptcha-pow": "2.8.55",
+		"@prosopo/procaptcha-puzzle": "2.8.45",
 		"@prosopo/procaptcha-react": "2.9.54",
 		"@prosopo/types": "3.16.1",
 		"@prosopo/util": "3.2.11",

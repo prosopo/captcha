@@ -30,6 +30,8 @@ import {
 	type GetFrictionlessCaptchaResponse,
 	type GetPowCaptchaChallengeRequestBodyType,
 	type GetPowCaptchaResponse,
+	type GetPuzzleCaptchaChallengeRequestBodyType,
+	type GetPuzzleCaptchaResponse,
 	type IUserSettings,
 	type ImageVerificationResponse,
 	type ModeEnum,
@@ -39,6 +41,7 @@ import {
 	type ProviderApiInterface,
 	type ProviderRegistered,
 	PublicApiPaths,
+	type PuzzleCaptchaSolutionResponse,
 	type RandomProvider,
 	type RegisterSitekeyBodyTypeOutput,
 	type RegisterSitekeysBodyTypeOutput,
@@ -47,8 +50,10 @@ import {
 	RemoveSitekeysBody,
 	type RemoveSitekeysBodyTypeOutput,
 	type ServerPowCaptchaVerifyRequestBodyType,
+	type ServerPuzzleCaptchaVerifyRequestBodyType,
 	type StoredEvents,
 	SubmitPowCaptchaSolutionBody,
+	SubmitPuzzleCaptchaSolutionBody,
 	type Tier,
 	ToggleMaintenanceModeBody,
 	UpdateDecisionMachineBody,
@@ -204,6 +209,86 @@ export default class ProviderApi
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": userAccount,
+			},
+		});
+	}
+
+	public getPuzzleCaptchaChallenge(
+		user: string,
+		dapp: string,
+		sessionId?: string,
+	): Promise<GetPuzzleCaptchaResponse> {
+		const body: GetPuzzleCaptchaChallengeRequestBodyType = {
+			[ApiParams.user]: user.toString(),
+			[ApiParams.dapp]: dapp.toString(),
+			...(sessionId && { [ApiParams.sessionId]: sessionId }),
+		};
+		return this.post(ClientApiPaths.GetPuzzleCaptchaChallenge, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": user,
+			},
+		});
+	}
+
+	public submitPuzzleCaptchaSolution(
+		challenge: GetPuzzleCaptchaResponse,
+		userAccount: string,
+		dappAccount: string,
+		finalX: number,
+		finalY: number,
+		puzzleEvents: Array<{ x: number; y: number; t: number }>,
+		userTimestampSignature: string,
+		timeout?: number,
+		behavioralData?: string,
+	): Promise<PuzzleCaptchaSolutionResponse> {
+		const body = SubmitPuzzleCaptchaSolutionBody.parse({
+			[ApiParams.challenge]: challenge.challenge,
+			[ApiParams.timestamp]: challenge.timestamp,
+			[ApiParams.user]: userAccount.toString(),
+			[ApiParams.dapp]: dappAccount.toString(),
+			[ApiParams.finalX]: finalX,
+			[ApiParams.finalY]: finalY,
+			[ApiParams.puzzleEvents]: puzzleEvents,
+			[ApiParams.verifiedTimeout]: timeout,
+			[ApiParams.signature]: {
+				[ApiParams.provider]:
+					challenge[ApiParams.signature][ApiParams.provider],
+				[ApiParams.user]: {
+					[ApiParams.timestamp]: userTimestampSignature,
+				},
+			},
+			...(behavioralData && { [ApiParams.behavioralData]: behavioralData }),
+		});
+		return this.post(ClientApiPaths.SubmitPuzzleCaptchaSolution, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": userAccount,
+			},
+		});
+	}
+
+	public submitPuzzleCaptchaVerify(
+		token: string,
+		signatureHex: string,
+		recencyLimit: number,
+		user: string,
+		ip?: string,
+		email?: string,
+	): Promise<VerificationResponse> {
+		const body: ServerPuzzleCaptchaVerifyRequestBodyType = {
+			[ApiParams.token]: token,
+			[ApiParams.dappSignature]: signatureHex,
+			[ApiParams.verifiedTimeout]: recencyLimit,
+			[ApiParams.ip]: ip,
+		};
+		if (email) {
+			body[ApiParams.email] = email;
+		}
+		return this.post(ClientApiPaths.VerifyPuzzleCaptchaSolution, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": user,
 			},
 		});
 	}

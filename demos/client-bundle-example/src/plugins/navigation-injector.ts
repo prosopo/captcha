@@ -48,10 +48,9 @@ export default function navigationInjector(): Plugin {
 				implicit: { path: "frictionless-implicit.html", exists: true },
 				explicit: { path: "frictionless-explicit.html", exists: true },
 			},
-			// slider: {
-			// 	implicit: { path: "slider-implicit.html", exists: true },
-			// 	explicit: { path: "slider-explicit.html", exists: true },
-			// },
+			// puzzle pages exist (puzzle-implicit.html, puzzle-explicit.html) and
+			// are reachable via direct URL, but intentionally hidden from the
+			// navbar while the puzzle captcha is in beta.
 		},
 		invisible: {
 			image: {
@@ -72,10 +71,6 @@ export default function navigationInjector(): Plugin {
 					exists: true,
 				},
 			},
-			// slider: {
-			// 	implicit: { path: "invisible-slider-implicit.html", exists: true },
-			// 	explicit: { path: "invisible-slider-explicit.html", exists: true },
-			// },
 		},
 	};
 

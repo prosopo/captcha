@@ -28,6 +28,7 @@ import {
 	ModeEnum,
 	type PendingImageCaptchaRequest,
 	type PoWCaptchaStored,
+	type PuzzleCaptchaStored,
 	type Session,
 	type SolutionRecord,
 	Tier,
@@ -107,6 +108,8 @@ export const CompositeIpAddressRecordSchemaObj = {
  */
 
 export type PoWCaptchaRecord = mongoose.Document & PoWCaptchaStored;
+
+export type PuzzleCaptchaRecord = mongoose.Document & PuzzleCaptchaStored;
 
 export type UserCommitmentRecord = mongoose.Document & UserCommitment;
 
@@ -204,6 +207,83 @@ PoWCaptchaRecordSchema.index({ "ipAddress.lower": 1 });
 PoWCaptchaRecordSchema.index({ "ipAddress.upper": 1 });
 PoWCaptchaRecordSchema.index({ "result.reason": 1 });
 PoWCaptchaRecordSchema.index({ countryCode: 1 });
+
+export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
+	challenge: { type: String, required: true },
+	dappAccount: { type: String, required: true },
+	userAccount: { type: String, required: true },
+	requestedAtTimestamp: { type: Date, required: true },
+	lastUpdatedTimestamp: { type: Date, required: false },
+	result: {
+		status: { type: String, enum: CaptchaStatus, required: true },
+		reason: {
+			type: String,
+			enum: TranslationKeysSchema.options,
+			required: false,
+		},
+		error: { type: String, required: false },
+	},
+	targetX: { type: Number, required: true },
+	targetY: { type: Number, required: true },
+	originX: { type: Number, required: true },
+	originY: { type: Number, required: true },
+	tolerance: { type: Number, required: true },
+	puzzleEvents: {
+		type: [
+			new Schema<{ x: number; y: number; t: number }>(
+				{
+					x: { type: Number, required: true },
+					y: { type: Number, required: true },
+					t: { type: Number, required: true },
+				},
+				{ _id: false },
+			),
+		],
+		required: false,
+	},
+	ipAddress: CompositeIpAddressRecordSchemaObj,
+	providedIp: {
+		type: new Schema(CompositeIpAddressRecordSchemaObj, { _id: false }),
+		required: false,
+	},
+	headers: { type: Object, required: true },
+	ja4: { type: String, required: true },
+	userSignature: { type: String, required: false },
+	userSubmitted: { type: Boolean, required: true },
+	serverChecked: { type: Boolean, required: true },
+	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
+	geolocation: { type: String, required: false },
+	countryCode: { type: String, required: false },
+	vpn: { type: Boolean, required: false },
+	ipInfo: { type: Object, required: false },
+	parsedUserAgentInfo: { type: Object, required: false },
+	sessionId: {
+		type: String,
+		required: false,
+	},
+	coords: { type: [[[Number]]], required: false },
+	// Current behavioral data storage format (packed)
+	deviceCapability: { type: String, required: false },
+	behavioralDataPacked: {
+		type: {
+			c1: { type: [Schema.Types.Mixed], required: true },
+			c2: { type: [Schema.Types.Mixed], required: true },
+			c3: { type: [Schema.Types.Mixed], required: true },
+			d: { type: String, required: true },
+		},
+		required: false,
+	},
+	providerSignature: { type: String, required: true },
+});
+
+// Set an index on the challenge field, ascending
+PuzzleCaptchaRecordSchema.index({ challenge: 1 });
+PuzzleCaptchaRecordSchema.index({ lastUpdatedTimestamp: 1 });
+PuzzleCaptchaRecordSchema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
+PuzzleCaptchaRecordSchema.index({ "ipAddress.lower": 1 });
+PuzzleCaptchaRecordSchema.index({ "ipAddress.upper": 1 });
+PuzzleCaptchaRecordSchema.index({ "result.reason": 1 });
+PuzzleCaptchaRecordSchema.index({ countryCode: 1 });
 
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	userAccount: { type: String, required: true },
@@ -671,6 +751,41 @@ export interface IProviderDatabase extends IDatabase {
 	updatePowCaptchaRecord(
 		challenge: PoWChallengeId,
 		updates: Partial<PoWCaptchaRecord>,
+	): Promise<void>;
+
+	storePuzzleCaptchaRecord(
+		challenge: PoWChallengeId,
+		components: PoWChallengeComponents,
+		targetX: number,
+		targetY: number,
+		originX: number,
+		originY: number,
+		tolerance: number,
+		providerSignature: string,
+		ipAddress: CompositeIpAddress,
+		headers: RequestHeaders,
+		ja4: string,
+		sessionId?: string,
+		countryCode?: string,
+	): Promise<void>;
+
+	getPuzzleCaptchaRecordByChallenge(
+		challenge: string,
+	): Promise<PuzzleCaptchaRecord | null>;
+
+	updatePuzzleCaptchaRecordResult(
+		challenge: PoWChallengeId,
+		result: CaptchaResult,
+		serverChecked: boolean,
+		userSubmitted: boolean,
+		userSignature?: string,
+		coords?: [number, number][][],
+		lastUpdatedTimestamp?: Date,
+	): Promise<void>;
+
+	updatePuzzleCaptchaRecord(
+		challenge: PoWChallengeId,
+		updates: Partial<PuzzleCaptchaRecord>,
 	): Promise<void>;
 
 	updateClientRecords(clientRecords: ClientRecord[]): Promise<void>;
