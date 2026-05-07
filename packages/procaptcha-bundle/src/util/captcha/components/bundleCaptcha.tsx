@@ -12,12 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { Ti18n } from "@prosopo/locale";
 import { getDefaultEvents } from "@prosopo/procaptcha-common";
 import { ProcaptchaFrictionless } from "@prosopo/procaptcha-frictionless";
+import type {
+	ProcaptchaCallbacks,
+	ProcaptchaClientConfigInput,
+} from "@prosopo/types";
 import { useState } from "react";
-import type { CaptchaProps } from "../captchaProps.js";
 
-const FrictionlessCaptcha = (props: CaptchaProps) => {
+interface BundleCaptchaProps {
+	config: ProcaptchaClientConfigInput;
+	callbacks: ProcaptchaCallbacks;
+	i18n: Ti18n;
+	container: HTMLElement;
+}
+
+// Universal captcha mount used by the script-tag bundle. Wraps
+// ProcaptchaFrictionless with a `key`-driven restart hook so a "no session"
+// error can fully unmount and remount the underlying widget. The server
+// decides which concrete challenge type to render via the /frictionless
+// endpoint — the wrapper itself is type-agnostic.
+const BundleCaptcha = (props: BundleCaptchaProps) => {
 	const { config, callbacks, i18n, container } = props;
 
 	const [componentKey, setComponentKey] = useState(0);
@@ -38,4 +54,4 @@ const FrictionlessCaptcha = (props: CaptchaProps) => {
 	);
 };
 
-export { FrictionlessCaptcha };
+export { BundleCaptcha };

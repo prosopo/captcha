@@ -16,7 +16,7 @@ import { type Logger, getLogger } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
 import {
 	ApiParams,
-	CaptchaType,
+	type CaptchaType,
 	type KeyringPair,
 	type ProsopoConfigOutput,
 	type RequestHeaders,
@@ -134,93 +134,78 @@ export class CaptchaManager {
 			};
 		}
 		// Session ID
-
-		// If the client has a sessionId then they are requesting a frictionless captcha.
+		// All client flows now go through the unified /frictionless entry point,
+		// so a sessionId may accompany any configured captchaType (frictionless
+		// runs the decision machine; image/pow/puzzle short-circuit). We trust
+		// the session record's captchaType as the source of truth.
 		if (sessionId) {
-			if (clientSettings?.settings?.captchaType === CaptchaType.frictionless) {
-				const sessionRecord = await this.db.checkAndRemoveSession(sessionId);
-				if (!sessionRecord) {
-					this.logger.warn(() => ({
-						msg: "No frictionless session found",
-						data: {
-							account: clientSettings.account,
-							sessionId: sessionId,
-						},
-					}));
-					return {
-						valid: false,
-						reason: "CAPTCHA.NO_SESSION_FOUND",
-						type: requestedCaptchaType,
-					};
-				}
-
-				// Invalidate the Redis session cache so that subsequent
-				// frictionless requests do not receive this now-deleted
-				// sessionId from the stale cache.
-				if (this.writeQueue) {
-					this.writeQueue.invalidateCachedSession(sessionId).catch(() => {});
-				}
-
-				// Validate IP address if currentIP is provided
-				if (currentIP) {
-					const ipValidation = await this.validateSessionIP(
-						sessionRecord,
-						currentIP,
-						env,
-					);
-					if (!ipValidation.valid) {
-						return {
-							valid: false,
-							reason: ipValidation.reason,
-							type: requestedCaptchaType,
-						};
-					}
-				}
-
-				// Check the captcha type of the session is the same as the requested captcha type
-				if (sessionRecord.captchaType !== requestedCaptchaType) {
-					this.logger.warn(() => ({
-						msg: "Invalid frictionless request",
-						data: {
-							account: clientSettings.account,
-							sessionId: sessionId,
-						},
-					}));
-					return {
-						valid: false,
-						reason: "CAPTCHA.NO_SESSION_FOUND",
-						type: requestedCaptchaType,
-					};
-				}
-
+			const sessionRecord = await this.db.checkAndRemoveSession(sessionId);
+			if (!sessionRecord) {
+				this.logger.warn(() => ({
+					msg: "No session found",
+					data: {
+						account: clientSettings.account,
+						sessionId: sessionId,
+					},
+				}));
 				return {
-					valid: true,
-					sessionId: sessionRecord.sessionId,
+					valid: false,
+					reason: "CAPTCHA.NO_SESSION_FOUND",
 					type: requestedCaptchaType,
-					...(sessionRecord.powDifficulty && {
-						powDifficulty: sessionRecord.powDifficulty,
-					}),
-					...(sessionRecord.solvedImagesCount && {
-						solvedImagesCount: sessionRecord.solvedImagesCount,
-					}),
-					countryCode: sessionRecord.countryCode,
 				};
 			}
 
-			// If the user somehow has a sessionId but the client settings do not specify frictionless then the request is
-			// invalid. This could occur if the client settings were changed after the user received a sessionId.
-			this.logger.warn(() => ({
-				msg: "Invalid frictionless request",
-				data: {
-					account: clientSettings.account,
-					sessionId: sessionId,
-					settingsCaptchaType: clientSettings?.settings?.captchaType,
-				},
-			}));
+			// Invalidate the Redis session cache so that subsequent
+			// requests do not receive this now-deleted sessionId from
+			// the stale cache.
+			if (this.writeQueue) {
+				this.writeQueue.invalidateCachedSession(sessionId).catch(() => {});
+			}
+
+			// Validate IP address if currentIP is provided
+			if (currentIP) {
+				const ipValidation = await this.validateSessionIP(
+					sessionRecord,
+					currentIP,
+					env,
+				);
+				if (!ipValidation.valid) {
+					return {
+						valid: false,
+						reason: ipValidation.reason,
+						type: requestedCaptchaType,
+					};
+				}
+			}
+
+			// Check the captcha type of the session is the same as the requested captcha type
+			if (sessionRecord.captchaType !== requestedCaptchaType) {
+				this.logger.warn(() => ({
+					msg: "Session captcha type does not match requested type",
+					data: {
+						account: clientSettings.account,
+						sessionId: sessionId,
+						sessionCaptchaType: sessionRecord.captchaType,
+						requestedCaptchaType,
+					},
+				}));
+				return {
+					valid: false,
+					reason: "CAPTCHA.NO_SESSION_FOUND",
+					type: requestedCaptchaType,
+				};
+			}
+
 			return {
-				valid: false,
-				reason: "API.INCORRECT_CAPTCHA_TYPE",
+				valid: true,
+				sessionId: sessionRecord.sessionId,
 				type: requestedCaptchaType,
+				...(sessionRecord.powDifficulty && {
+					powDifficulty: sessionRecord.powDifficulty,
+				}),
+				...(sessionRecord.solvedImagesCount && {
+					solvedImagesCount: sessionRecord.solvedImagesCount,
+				}),
 			};
 		}
 
