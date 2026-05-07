@@ -1,5 +1,17 @@
 # @prosopo/database
 
+## 3.11.0
+### Minor Changes
+
+- 33a6c57: Provider speed ups
+
+### Patch Changes
+
+- Updated dependencies [819ed95]
+  - @prosopo/types-database@4.6.2
+  - @prosopo/types@3.16.1
+  - @prosopo/user-access-policy@3.7.1
+
 ## 3.10.2
 ### Patch Changes
 

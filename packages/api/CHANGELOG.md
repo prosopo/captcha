@@ -1,5 +1,12 @@
 # @prosopo/api
 
+## 3.3.2
+### Patch Changes
+
+- 819ed95: Adding invisible mode to session data
+- Updated dependencies [819ed95]
+  - @prosopo/types@3.16.1
+
 ## 3.3.1
 ### Patch Changes
 
