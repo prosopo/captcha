@@ -33,12 +33,64 @@ const EXEC_TIMEOUT_MS =
 	Number.parseInt(process.env.DECISION_MACHINE_EXEC_TIMEOUT_MS ?? "", 10) ||
 	2000;
 
+/** How long cached artifacts are considered fresh (ms). */
+const ARTIFACT_CACHE_TTL_MS =
+	Number.parseInt(
+		process.env.DECISION_MACHINE_ARTIFACT_CACHE_TTL_MS ?? "",
+		10,
+	) || 5 * 60 * 1000; // 5 minutes
+
 const DEFAULT_DECISION: DecisionMachineOutput = {
 	decision: DecisionMachineDecision.Allow,
 };
 
+interface CachedArtifact {
+	artifact: DecisionMachineArtifact | undefined;
+	cachedAt: number;
+}
+
 export class DecisionMachineRunner {
+	private readonly artifactCache = new Map<string, CachedArtifact>();
+
 	constructor(private readonly db: IProviderDatabase) {}
+
+	/** Build a cache key for a given scope + dappAccount pair. */
+	private static cacheKey(
+		scope: DecisionMachineScope,
+		dappAccount?: string,
+	): string {
+		return `${scope}:${dappAccount ?? ""}`;
+	}
+
+	/** Return a cached artifact if still fresh, or undefined. */
+	private getCachedArtifact(
+		scope: DecisionMachineScope,
+		dappAccount?: string,
+	): DecisionMachineArtifact | undefined | null {
+		const entry = this.artifactCache.get(
+			DecisionMachineRunner.cacheKey(scope, dappAccount),
+		);
+		if (!entry) return null; // cache miss
+		if (Date.now() - entry.cachedAt > ARTIFACT_CACHE_TTL_MS) {
+			this.artifactCache.delete(
+				DecisionMachineRunner.cacheKey(scope, dappAccount),
+			);
+			return null; // expired
+		}
+		return entry.artifact; // may be undefined (negative cache)
+	}
+
+	/** Store an artifact (or undefined for negative cache) in the cache. */
+	private setCachedArtifact(
+		scope: DecisionMachineScope,
+		dappAccount: string | undefined,
+		artifact: DecisionMachineArtifact | undefined,
+	): void {
+		this.artifactCache.set(DecisionMachineRunner.cacheKey(scope, dappAccount), {
+			artifact,
+			cachedAt: Date.now(),
+		});
+	}
 
 	/**
 	 * Evaluates a single decision machine artifact and returns a decision.
@@ -99,19 +151,56 @@ export class DecisionMachineRunner {
 		dappAccount: string,
 		captchaType?: DecisionMachineCaptchaType,
 	): Promise<DecisionMachineArtifact | undefined> {
-		// Check for dapp-specific artifact first (highest priority)
-		const dappArtifact = await this.db.getDecisionMachineArtifact(
+		// Try cache first for both scopes
+		const cachedDapp = this.getCachedArtifact(
 			DecisionMachineScope.Dapp,
 			dappAccount,
 		);
+		const cachedGlobal = this.getCachedArtifact(DecisionMachineScope.Global);
+
+		// Both cached (including negative cache) — use priority logic without DB calls
+		if (cachedDapp !== null && cachedGlobal !== null) {
+			if (cachedDapp && this.matchesCaptchaType(cachedDapp, captchaType)) {
+				return cachedDapp;
+			}
+			if (cachedGlobal && this.matchesCaptchaType(cachedGlobal, captchaType)) {
+				return cachedGlobal;
+			}
+			return undefined;
+		}
+
+		// Fetch both scopes in parallel when cache misses
+		const [dappArtifact, globalArtifact] = await Promise.all([
+			cachedDapp !== null
+				? Promise.resolve(cachedDapp)
+				: this.db
+						.getDecisionMachineArtifact(DecisionMachineScope.Dapp, dappAccount)
+						.then((a) => {
+							this.setCachedArtifact(
+								DecisionMachineScope.Dapp,
+								dappAccount,
+								a ?? undefined,
+							);
+							return a ?? undefined;
+						}),
+			cachedGlobal !== null
+				? Promise.resolve(cachedGlobal)
+				: this.db
+						.getDecisionMachineArtifact(DecisionMachineScope.Global)
+						.then((a) => {
+							this.setCachedArtifact(
+								DecisionMachineScope.Global,
+								undefined,
+								a ?? undefined,
+							);
+							return a ?? undefined;
+						}),
+		]);
+
+		// Apply priority: dapp-specific first, then global
 		if (dappArtifact && this.matchesCaptchaType(dappArtifact, captchaType)) {
 			return dappArtifact;
 		}
-
-		// Fall back to global artifact (lower priority)
-		const globalArtifact = await this.db.getDecisionMachineArtifact(
-			DecisionMachineScope.Global,
-		);
 		if (
 			globalArtifact &&
 			this.matchesCaptchaType(globalArtifact, captchaType)

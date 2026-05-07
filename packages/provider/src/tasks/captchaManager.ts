@@ -105,6 +105,7 @@ export class CaptchaManager {
 		type: CaptchaType;
 		powDifficulty?: number;
 		solvedImagesCount?: number;
+		countryCode?: string;
 	}> {
 		this.logger.debug(() => ({
 			msg: "Validating request",
@@ -202,6 +203,7 @@ export class CaptchaManager {
 					...(sessionRecord.solvedImagesCount && {
 						solvedImagesCount: sessionRecord.solvedImagesCount,
 					}),
+					countryCode: sessionRecord.countryCode,
 				};
 			}
 

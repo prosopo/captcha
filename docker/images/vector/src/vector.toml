@@ -81,23 +81,34 @@ type = "http"
 inputs = ["provider_format"]
 uri = "https://oo.prosopo.io/api/dev_organization_29569_u24VnjrjN7XrP35/${NODE_ENV:?err}_provider_node/_json"
 method = "post"
-auth.strategy = "basic"
-auth.user = "${OO_USERNAME:?err}"
-auth.password = "${OO_PASSWORD:?err}"
-encoding.codec = "json"
-encoding.timestamp_format = "rfc3339"
-healthcheck.enabled = true
-batch.timeout_secs = 15
-request.rate_limit_duration_secs = 1
-request.rate_limit_num = 10
-request.retry_max_attempts = 5            # Chuck the log away after 5 failed tries
-request.retry_initial_backoff_secs = 1    # Start retrying after 1s
-request.retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
-
-buffer.type = "disk"
-buffer.max_size = 268435488
-buffer.when_full = "drop_new"
 compression = "gzip"
+
+[sinks.oo_provider.auth]
+strategy = "basic"
+user = "${OO_USERNAME:?err}"
+password = "${OO_PASSWORD:?err}"
+
+[sinks.oo_provider.encoding]
+codec = "json"
+timestamp_format = "rfc3339"
+
+[sinks.oo_provider.healthcheck]
+enabled = true
+
+[sinks.oo_provider.batch]
+timeout_secs = 15
+
+[sinks.oo_provider.request]
+rate_limit_duration_secs = 1
+rate_limit_num = 10
+retry_max_attempts = 5            # Chuck the log away after 5 failed tries
+retry_initial_backoff_secs = 1    # Start retrying after 1s
+retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+
+[sinks.oo_provider.buffer]
+type = "disk"
+max_size = 268435488
+when_full = "drop_newest"
 
 # Sink: Forward provider logs to secondary OpenObserve instance (oo2.prosopo.io)
 # Backup/fallback logging destination for redundancy
@@ -106,23 +117,34 @@ type = "http"
 inputs = ["provider_format"]
 uri = "https://oo2.prosopo.io/api/default/${NODE_ENV:?err}_provider_node/_json"
 method = "post"
-auth.strategy = "basic"
-auth.user = "${OO2_USERNAME:?err}"
-auth.password = "${OO2_PASSWORD:?err}"
-encoding.codec = "json"
-encoding.timestamp_format = "rfc3339"
-healthcheck.enabled = true
-batch.timeout_secs = 15
-request.rate_limit_duration_secs = 1
-request.rate_limit_num = 10
-request.retry_max_attempts = 5            # Chuck the log away after 5 failed tries
-request.retry_initial_backoff_secs = 1    # Start retrying after 1s
-request.retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
-
-buffer.type = "disk"
-buffer.max_size = 268435488
-buffer.when_full = "drop_new"
 compression = "gzip"
+
+[sinks.oo2_provider.auth]
+strategy = "basic"
+user = "${OO2_USERNAME:?err}"
+password = "${OO2_PASSWORD:?err}"
+
+[sinks.oo2_provider.encoding]
+codec = "json"
+timestamp_format = "rfc3339"
+
+[sinks.oo2_provider.healthcheck]
+enabled = true
+
+[sinks.oo2_provider.batch]
+timeout_secs = 15
+
+[sinks.oo2_provider.request]
+rate_limit_duration_secs = 1
+rate_limit_num = 10
+retry_max_attempts = 5            # Chuck the log away after 5 failed tries
+retry_initial_backoff_secs = 1    # Start retrying after 1s
+retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+
+[sinks.oo2_provider.buffer]
+type = "disk"
+max_size = 268435488
+when_full = "drop_newest"
 
 # =============================================================================
 # MONGO LOGS PIPELINE
@@ -163,23 +185,34 @@ type = "http"
 inputs = ["mongo_format"]
 uri = "https://oo.prosopo.io/api/dev_organization_29569_u24VnjrjN7XrP35/${NODE_ENV:?err}_provider_mongo/_json"
 method = "post"
-auth.strategy = "basic"
-auth.user = "${OO_USERNAME:?err}"
-auth.password = "${OO_PASSWORD:?err}"
-encoding.codec = "json"
-encoding.timestamp_format = "rfc3339"
-healthcheck.enabled = true
-batch.timeout_secs = 15
-request.rate_limit_duration_secs = 1
-request.rate_limit_num = 10
-request.retry_max_attempts = 5            # Chuck the log away after 5 failed tries
-request.retry_initial_backoff_secs = 1    # Start retrying after 1s
-request.retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
-
-buffer.type = "disk"
-buffer.max_size = 268435488
-buffer.when_full = "drop_new"
 compression = "gzip"
+
+[sinks.oo_mongo.auth]
+strategy = "basic"
+user = "${OO_USERNAME:?err}"
+password = "${OO_PASSWORD:?err}"
+
+[sinks.oo_mongo.encoding]
+codec = "json"
+timestamp_format = "rfc3339"
+
+[sinks.oo_mongo.healthcheck]
+enabled = true
+
+[sinks.oo_mongo.batch]
+timeout_secs = 15
+
+[sinks.oo_mongo.request]
+rate_limit_duration_secs = 1
+rate_limit_num = 10
+retry_max_attempts = 5            # Chuck the log away after 5 failed tries
+retry_initial_backoff_secs = 1    # Start retrying after 1s
+retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+
+[sinks.oo_mongo.buffer]
+type = "disk"
+max_size = 268435488
+when_full = "drop_newest"
 
 # Sink: Forward mongo logs to secondary OpenObserve instance (oo2.prosopo.io)
 # Backup/fallback logging destination for redundancy
@@ -188,23 +221,34 @@ type = "http"
 inputs = ["mongo_format"]
 uri = "https://oo2.prosopo.io/api/default/${NODE_ENV:?err}_provider_mongo/_json"
 method = "post"
-auth.strategy = "basic"
-auth.user = "${OO2_USERNAME:?err}"
-auth.password = "${OO2_PASSWORD:?err}"
-encoding.codec = "json"
-encoding.timestamp_format = "rfc3339"
-healthcheck.enabled = true
-batch.timeout_secs = 15
-request.rate_limit_duration_secs = 1
-request.rate_limit_num = 10
-request.retry_max_attempts = 5            # Chuck the log away after 5 failed tries
-request.retry_initial_backoff_secs = 1    # Start retrying after 1s
-request.retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
-
-buffer.type = "disk"
-buffer.max_size = 268435488
-buffer.when_full = "drop_new"
 compression = "gzip"
+
+[sinks.oo2_mongo.auth]
+strategy = "basic"
+user = "${OO2_USERNAME:?err}"
+password = "${OO2_PASSWORD:?err}"
+
+[sinks.oo2_mongo.encoding]
+codec = "json"
+timestamp_format = "rfc3339"
+
+[sinks.oo2_mongo.healthcheck]
+enabled = true
+
+[sinks.oo2_mongo.batch]
+timeout_secs = 15
+
+[sinks.oo2_mongo.request]
+rate_limit_duration_secs = 1
+rate_limit_num = 10
+retry_max_attempts = 5            # Chuck the log away after 5 failed tries
+retry_initial_backoff_secs = 1    # Start retrying after 1s
+retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+
+[sinks.oo2_mongo.buffer]
+type = "disk"
+max_size = 268435488
+when_full = "drop_newest"
 
 # =============================================================================
 # DOCKER EVENTS PIPELINE
@@ -227,7 +271,9 @@ type = "exec"
 # - oom: Container was terminated due to running out of memory
 command = [ "docker", "events", "--format", "json", "--filter", "label=vector.docker=true", "--filter", "event=start", "--filter", "event=stop", "--filter", "event=restart", "--filter", "event=die", "--filter", "event=pause", "--filter", "event=unpause", "--filter", "event=kill", "--filter", "event=oom" ]
 mode = "streaming"
-decoding.codec = "json"
+
+[sources.docker.decoding]
+codec = "json"
 
 # Transform: Format Docker events for consistent structure
 # - Parses JSON messages and adds host identification
@@ -259,23 +305,34 @@ type = "http"
 inputs = ["docker_format"]
 uri = "https://oo.prosopo.io/api/dev_organization_29569_u24VnjrjN7XrP35/${NODE_ENV:?err}_provider_docker/_json"
 method = "post"
-auth.strategy = "basic"
-auth.user = "${OO_USERNAME:?err}"
-auth.password = "${OO_PASSWORD:?err}"
-encoding.codec = "json"
-encoding.timestamp_format = "rfc3339"
-healthcheck.enabled = true
-batch.timeout_secs = 15
-request.rate_limit_duration_secs = 1
-request.rate_limit_num = 10
-request.retry_max_attempts = 5            # Chuck the log away after 5 failed tries
-request.retry_initial_backoff_secs = 1    # Start retrying after 1s
-request.retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
-
-buffer.type = "disk"
-buffer.max_size = 268435488
-buffer.when_full = "drop_new"
 compression = "gzip"
+
+[sinks.oo_docker.auth]
+strategy = "basic"
+user = "${OO_USERNAME:?err}"
+password = "${OO_PASSWORD:?err}"
+
+[sinks.oo_docker.encoding]
+codec = "json"
+timestamp_format = "rfc3339"
+
+[sinks.oo_docker.healthcheck]
+enabled = true
+
+[sinks.oo_docker.batch]
+timeout_secs = 15
+
+[sinks.oo_docker.request]
+rate_limit_duration_secs = 1
+rate_limit_num = 10
+retry_max_attempts = 5            # Chuck the log away after 5 failed tries
+retry_initial_backoff_secs = 1    # Start retrying after 1s
+retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+
+[sinks.oo_docker.buffer]
+type = "disk"
+max_size = 268435488
+when_full = "drop_newest"
 
 # Sink: Forward Docker events to secondary OpenObserve instance
 [sinks.oo2_docker]
@@ -283,22 +340,34 @@ type = "http"
 inputs = ["docker_format"]
 uri = "https://oo2.prosopo.io/api/default/${NODE_ENV:?err}_provider_docker/_json"
 method = "post"
-auth.strategy = "basic"
-auth.user = "${OO2_USERNAME:?err}"
-auth.password = "${OO2_PASSWORD:?err}"
-encoding.codec = "json"
-encoding.timestamp_format = "rfc3339"
-healthcheck.enabled = true
-batch.timeout_secs = 15
-request.rate_limit_duration_secs = 1
-request.retry_max_attempts = 5            # Chuck the log away after 5 failed tries
-request.retry_initial_backoff_secs = 1    # Start retrying after 1s
-request.retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
-
-buffer.type = "disk"
-buffer.max_size = 268435488
-buffer.when_full = "drop_new"
 compression = "gzip"
+
+[sinks.oo2_docker.auth]
+strategy = "basic"
+user = "${OO2_USERNAME:?err}"
+password = "${OO2_PASSWORD:?err}"
+
+[sinks.oo2_docker.encoding]
+codec = "json"
+timestamp_format = "rfc3339"
+
+[sinks.oo2_docker.healthcheck]
+enabled = true
+
+[sinks.oo2_docker.batch]
+timeout_secs = 15
+
+[sinks.oo2_docker.request]
+rate_limit_duration_secs = 1
+rate_limit_num = 10
+retry_max_attempts = 5            # Chuck the log away after 5 failed tries
+retry_initial_backoff_secs = 1    # Start retrying after 1s
+retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+
+[sinks.oo2_docker.buffer]
+type = "disk"
+max_size = 268435488
+when_full = "drop_newest"
 
 # =============================================================================
 # CADDY WEB SERVER LOGS PIPELINE
@@ -340,22 +409,34 @@ type = "http"
 inputs = ["caddy_format"]
 uri = "https://oo.prosopo.io/api/dev_organization_29569_u24VnjrjN7XrP35/${NODE_ENV:?err}_provider_caddy/_json"
 method = "post"
-auth.strategy = "basic"
-auth.user = "${OO_USERNAME:?err}"
-auth.password = "${OO_PASSWORD:?err}"
-encoding.codec = "json"
-encoding.timestamp_format = "rfc3339"
-healthcheck.enabled = true
-batch.timeout_secs = 15
-request.rate_limit_duration_secs = 1
-request.retry_max_attempts = 5            # Chuck the log away after 5 failed tries
-request.retry_initial_backoff_secs = 1    # Start retrying after 1s
-request.retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
-
-buffer.type = "disk"
-buffer.max_size = 268435488
-buffer.when_full = "drop_new"
 compression = "gzip"
+
+[sinks.oo_caddy.auth]
+strategy = "basic"
+user = "${OO_USERNAME:?err}"
+password = "${OO_PASSWORD:?err}"
+
+[sinks.oo_caddy.encoding]
+codec = "json"
+timestamp_format = "rfc3339"
+
+[sinks.oo_caddy.healthcheck]
+enabled = true
+
+[sinks.oo_caddy.batch]
+timeout_secs = 15
+
+[sinks.oo_caddy.request]
+rate_limit_duration_secs = 1
+rate_limit_num = 10
+retry_max_attempts = 5            # Chuck the log away after 5 failed tries
+retry_initial_backoff_secs = 1    # Start retrying after 1s
+retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+
+[sinks.oo_caddy.buffer]
+type = "disk"
+max_size = 268435488
+when_full = "drop_newest"
 
 # Sink: Forward Caddy logs to secondary OpenObserve instance
 [sinks.oo2_caddy]
@@ -363,22 +444,34 @@ type = "http"
 inputs = ["caddy_format"]
 uri = "https://oo2.prosopo.io/api/default/${NODE_ENV:?err}_provider_caddy/_json"
 method = "post"
-auth.strategy = "basic"
-auth.user = "${OO2_USERNAME:?err}"
-auth.password = "${OO2_PASSWORD:?err}"
-encoding.codec = "json"
-encoding.timestamp_format = "rfc3339"
-healthcheck.enabled = true
-batch.timeout_secs = 15
-request.rate_limit_duration_secs = 1
-request.retry_max_attempts = 5            # Chuck the log away after 5 failed tries
-request.retry_initial_backoff_secs = 1    # Start retrying after 1s
-request.retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
-
-buffer.type = "disk"
-buffer.max_size = 268435488
-buffer.when_full = "drop_new"
 compression = "gzip"
+
+[sinks.oo2_caddy.auth]
+strategy = "basic"
+user = "${OO2_USERNAME:?err}"
+password = "${OO2_PASSWORD:?err}"
+
+[sinks.oo2_caddy.encoding]
+codec = "json"
+timestamp_format = "rfc3339"
+
+[sinks.oo2_caddy.healthcheck]
+enabled = true
+
+[sinks.oo2_caddy.batch]
+timeout_secs = 15
+
+[sinks.oo2_caddy.request]
+rate_limit_duration_secs = 1
+rate_limit_num = 10
+retry_max_attempts = 5            # Chuck the log away after 5 failed tries
+retry_initial_backoff_secs = 1    # Start retrying after 1s
+retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+
+[sinks.oo2_caddy.buffer]
+type = "disk"
+max_size = 268435488
+when_full = "drop_newest"
 
 # =============================================================================
 # VECTOR INTERNAL LOGS PIPELINE
@@ -403,22 +496,34 @@ type = "http"
 inputs = ["vector_format"]
 uri = "https://oo.prosopo.io/api/dev_organization_29569_u24VnjrjN7XrP35/${NODE_ENV:?err}_provider_vector/_json"
 method = "post"
-auth.strategy = "basic"
-auth.user = "${OO_USERNAME:?err}"
-auth.password = "${OO_PASSWORD:?err}"
-encoding.codec = "json"
-encoding.timestamp_format = "rfc3339"
-healthcheck.enabled = true
-batch.timeout_secs = 15
-request.rate_limit_duration_secs = 1
-request.retry_max_attempts = 5            # Chuck the log away after 5 failed tries
-request.retry_initial_backoff_secs = 1    # Start retrying after 1s
-request.retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
-
-buffer.type = "disk"
-buffer.max_size = 268435488
-buffer.when_full = "drop_new"
 compression = "gzip"
+
+[sinks.oo_vector.auth]
+strategy = "basic"
+user = "${OO_USERNAME:?err}"
+password = "${OO_PASSWORD:?err}"
+
+[sinks.oo_vector.encoding]
+codec = "json"
+timestamp_format = "rfc3339"
+
+[sinks.oo_vector.healthcheck]
+enabled = true
+
+[sinks.oo_vector.batch]
+timeout_secs = 15
+
+[sinks.oo_vector.request]
+rate_limit_duration_secs = 1
+rate_limit_num = 10
+retry_max_attempts = 5            # Chuck the log away after 5 failed tries
+retry_initial_backoff_secs = 1    # Start retrying after 1s
+retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+
+[sinks.oo_vector.buffer]
+type = "disk"
+max_size = 268435488
+when_full = "drop_newest"
 
 # Sink: Forward Vector logs to secondary OpenObserve instance
 [sinks.oo2_vector]
@@ -426,22 +531,34 @@ type = "http"
 inputs = ["vector_format"]
 uri = "https://oo2.prosopo.io/api/default/${NODE_ENV:?err}_provider_vector/_json"
 method = "post"
-auth.strategy = "basic"
-auth.user = "${OO2_USERNAME:?err}"
-auth.password = "${OO2_PASSWORD:?err}"
-encoding.codec = "json"
-encoding.timestamp_format = "rfc3339"
-healthcheck.enabled = true
-batch.timeout_secs = 15
-request.rate_limit_duration_secs = 1
-request.retry_max_attempts = 5            # Chuck the log away after 5 failed tries
-request.retry_initial_backoff_secs = 1    # Start retrying after 1s
-request.retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
-
-buffer.type = "disk"
-buffer.max_size = 268435488
-buffer.when_full = "drop_new"
 compression = "gzip"
+
+[sinks.oo2_vector.auth]
+strategy = "basic"
+user = "${OO2_USERNAME:?err}"
+password = "${OO2_PASSWORD:?err}"
+
+[sinks.oo2_vector.encoding]
+codec = "json"
+timestamp_format = "rfc3339"
+
+[sinks.oo2_vector.healthcheck]
+enabled = true
+
+[sinks.oo2_vector.batch]
+timeout_secs = 15
+
+[sinks.oo2_vector.request]
+rate_limit_duration_secs = 1
+rate_limit_num = 10
+retry_max_attempts = 5            # Chuck the log away after 5 failed tries
+retry_initial_backoff_secs = 1    # Start retrying after 1s
+retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+
+[sinks.oo2_vector.buffer]
+type = "disk"
+max_size = 268435488
+when_full = "drop_newest"
 
 # =============================================================================
 # REDIS LOGS PIPELINE
@@ -498,22 +615,34 @@ type = "http"
 inputs = ["redis_format"]
 uri = "https://oo.prosopo.io/api/dev_organization_29569_u24VnjrjN7XrP35/${NODE_ENV:?err}_provider_redis/_json"
 method = "post"
-auth.strategy = "basic"
-auth.user = "${OO_USERNAME:?err}"
-auth.password = "${OO_PASSWORD:?err}"
-encoding.codec = "json"
-encoding.timestamp_format = "rfc3339"
-healthcheck.enabled = true
-batch.timeout_secs = 15
-request.rate_limit_duration_secs = 1
-request.retry_max_attempts = 5            # Chuck the log away after 5 failed tries
-request.retry_initial_backoff_secs = 1    # Start retrying after 1s
-request.retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
-
-buffer.type = "disk"
-buffer.max_size = 268435488
-buffer.when_full = "drop_new"
 compression = "gzip"
+
+[sinks.oo_redis.auth]
+strategy = "basic"
+user = "${OO_USERNAME:?err}"
+password = "${OO_PASSWORD:?err}"
+
+[sinks.oo_redis.encoding]
+codec = "json"
+timestamp_format = "rfc3339"
+
+[sinks.oo_redis.healthcheck]
+enabled = true
+
+[sinks.oo_redis.batch]
+timeout_secs = 15
+
+[sinks.oo_redis.request]
+rate_limit_duration_secs = 1
+rate_limit_num = 10
+retry_max_attempts = 5            # Chuck the log away after 5 failed tries
+retry_initial_backoff_secs = 1    # Start retrying after 1s
+retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+
+[sinks.oo_redis.buffer]
+type = "disk"
+max_size = 268435488
+when_full = "drop_newest"
 
 # Sink: Forward Redis logs to secondary OpenObserve instance
 [sinks.oo2_redis]
@@ -521,22 +650,34 @@ type = "http"
 inputs = ["redis_format"]
 uri = "https://oo2.prosopo.io/api/default/${NODE_ENV:?err}_provider_redis/_json"
 method = "post"
-auth.strategy = "basic"
-auth.user = "${OO2_USERNAME:?err}"
-auth.password = "${OO2_PASSWORD:?err}"
-encoding.codec = "json"
-encoding.timestamp_format = "rfc3339"
-healthcheck.enabled = true
-batch.timeout_secs = 15
-request.rate_limit_duration_secs = 1
-request.retry_max_attempts = 5            # Chuck the log away after 5 failed tries
-request.retry_initial_backoff_secs = 1    # Start retrying after 1s
-request.retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
-
-buffer.type = "disk"
-buffer.max_size = 268435488
-buffer.when_full = "drop_new"
 compression = "gzip"
+
+[sinks.oo2_redis.auth]
+strategy = "basic"
+user = "${OO2_USERNAME:?err}"
+password = "${OO2_PASSWORD:?err}"
+
+[sinks.oo2_redis.encoding]
+codec = "json"
+timestamp_format = "rfc3339"
+
+[sinks.oo2_redis.healthcheck]
+enabled = true
+
+[sinks.oo2_redis.batch]
+timeout_secs = 15
+
+[sinks.oo2_redis.request]
+rate_limit_duration_secs = 1
+rate_limit_num = 10
+retry_max_attempts = 5            # Chuck the log away after 5 failed tries
+retry_initial_backoff_secs = 1    # Start retrying after 1s
+retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+
+[sinks.oo2_redis.buffer]
+type = "disk"
+max_size = 268435488
+when_full = "drop_newest"
 
 # =============================================================================
 # METRICS PIPELINE
@@ -678,19 +819,26 @@ source = '''
 type = "prometheus_remote_write"
 inputs = ["host_metrics_format", "vector_metrics_format", "cadvisor_metrics_format", "mongodb_metrics_format", "redis_metrics_format", "caddy_metrics_format"]
 endpoint = "https://oo.prosopo.io/api/dev_organization_29569_u24VnjrjN7XrP35/prometheus/api/v1/write"
-auth.strategy = "basic"
-auth.user = "${OO_USERNAME:?err}"
-auth.password = "${OO_PASSWORD:?err}"
-batch.timeout_secs = 15
-request.rate_limit_duration_secs = 1
-request.retry_max_attempts = 5            # Chuck the log away after 5 failed tries
-request.retry_initial_backoff_secs = 1    # Start retrying after 1s
-request.retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
 
-buffer.type = "disk"
-buffer.max_size = 268435488
-buffer.when_full = "drop_new"
-compression = "gzip"
+[sinks.oo_metrics.auth]
+strategy = "basic"
+user = "${OO_USERNAME:?err}"
+password = "${OO_PASSWORD:?err}"
+
+[sinks.oo_metrics.batch]
+timeout_secs = 15
+
+[sinks.oo_metrics.request]
+rate_limit_duration_secs = 1
+rate_limit_num = 10
+retry_max_attempts = 5            # Chuck the log away after 5 failed tries
+retry_initial_backoff_secs = 1    # Start retrying after 1s
+retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+
+[sinks.oo_metrics.buffer]
+type = "disk"
+max_size = 268435488
+when_full = "drop_newest"
 
 # Sink: Forward all metrics to secondary OpenObserve instance
 # Backup destination for metrics redundancy and disaster recovery
@@ -698,16 +846,24 @@ compression = "gzip"
 type = "prometheus_remote_write"
 inputs = ["host_metrics_format", "vector_metrics_format", "cadvisor_metrics_format", "mongodb_metrics_format", "redis_metrics_format", "caddy_metrics_format"]
 endpoint = "https://oo2.prosopo.io/api/default/prometheus/api/v1/write"
-auth.strategy = "basic"
-auth.user = "${OO2_USERNAME:?err}"
-auth.password = "${OO2_PASSWORD:?err}"
-batch.timeout_secs = 15
-request.rate_limit_duration_secs = 1
-request.retry_max_attempts = 5            # Chuck the log away after 5 failed tries
-request.retry_initial_backoff_secs = 1    # Start retrying after 1s
-request.retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
 
-buffer.type = "disk"
-buffer.max_size = 268435488
-buffer.when_full = "drop_new"
-compression = "gzip"
+[sinks.oo2_metrics.auth]
+strategy = "basic"
+user = "${OO2_USERNAME:?err}"
+password = "${OO2_PASSWORD:?err}"
+
+[sinks.oo2_metrics.batch]
+timeout_secs = 15
+
+[sinks.oo2_metrics.request]
+rate_limit_duration_secs = 1
+rate_limit_num = 10
+retry_max_attempts = 5            # Chuck the log away after 5 failed tries
+retry_initial_backoff_secs = 1    # Start retrying after 1s
+retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+
+[sinks.oo2_metrics.buffer]
+type = "disk"
+max_size = 268435488
+when_full = "drop_newest"
+

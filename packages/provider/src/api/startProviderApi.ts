@@ -25,6 +25,11 @@ import {
 } from "@prosopo/api-express-router";
 import { parseLogLevel } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/env";
+import {
+	convertHostedProvider,
+	getLoadBalancerUrl,
+	setProviderLoader,
+} from "@prosopo/load-balancer";
 import { i18nMiddleware } from "@prosopo/locale";
 import {
 	AdminApiPaths,
@@ -36,6 +41,7 @@ import {
 	getExpressApiRuleRateLimits,
 } from "@prosopo/user-access-policy/api";
 import type { JWT } from "@prosopo/util-crypto";
+import { cacheFile } from "@prosopo/util/node";
 import cors from "cors";
 import express from "express";
 import type { Request } from "express";
@@ -138,6 +144,32 @@ export async function startProviderApi(
 	port?: number,
 ): Promise<Server> {
 	env.logger.info(() => ({ msg: "Starting Prosopo API" }));
+
+	// Wire up cacheFile-based provider list loading for disk persistence
+	// with ETag/Last-Modified support. This avoids cold-start fetches after
+	// process restarts and provides a disk fallback if the remote is down.
+	const providerCacheDir = path.resolve("./provider-list-cache");
+	setProviderLoader(async (environment) => {
+		if (environment === "development") {
+			// Development uses hardcoded providers, no caching needed
+			const { loadBalancer } = await import("@prosopo/load-balancer");
+			return loadBalancer(environment);
+		}
+		const url = getLoadBalancerUrl(environment);
+		const filePath = await cacheFile(
+			providerCacheDir,
+			url,
+			env.logger,
+			"provider-list-",
+			".json",
+		);
+		const text = fs.readFileSync(filePath, "utf-8");
+		const providers: Record<string, unknown> = JSON.parse(text) as Record<
+			string,
+			unknown
+		>;
+		return convertHostedProvider(providers);
+	});
 
 	const apiApp = express();
 	const apiPort = port || env.config.server?.port;
