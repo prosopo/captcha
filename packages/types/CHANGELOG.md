@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 3.16.1
+### Patch Changes
+
+- 819ed95: Adding invisible mode to session data
+
 ## 3.16.0
 ### Minor Changes
 

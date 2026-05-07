@@ -1,5 +1,19 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.8.62
+### Patch Changes
+
+- 819ed95: Adding invisible mode to session data
+- Updated dependencies [819ed95]
+- Updated dependencies [33a6c57]
+  - @prosopo/types@3.16.1
+  - @prosopo/api@3.3.2
+  - @prosopo/load-balancer@2.9.0
+  - @prosopo/detector@3.4.27
+  - @prosopo/procaptcha-common@2.10.5
+  - @prosopo/procaptcha-pow@2.8.55
+  - @prosopo/procaptcha-react@2.9.54
+
 ## 2.8.61
 ### Patch Changes
 

@@ -1,5 +1,15 @@
 # @prosopo/load-balancer
 
+## 2.9.0
+### Minor Changes
+
+- 33a6c57: Provider speed ups
+
+### Patch Changes
+
+- Updated dependencies [819ed95]
+  - @prosopo/types@3.16.1
+
 ## 2.8.40
 ### Patch Changes
 

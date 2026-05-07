@@ -1,5 +1,28 @@
 # @prosopo/provider
 
+## 4.3.0
+### Minor Changes
+
+- 33a6c57: Provider speed ups
+
+### Patch Changes
+
+- 819ed95: Adding invisible mode to session data
+- 1b35548: Adding maintenance mode check at start of domain middleware
+- Updated dependencies [819ed95]
+- Updated dependencies [33a6c57]
+  - @prosopo/types-database@4.6.2
+  - @prosopo/types@3.16.1
+  - @prosopo/api@3.3.2
+  - @prosopo/load-balancer@2.9.0
+  - @prosopo/database@3.11.0
+  - @prosopo/types-env@2.9.6
+  - @prosopo/api-express-router@3.1.7
+  - @prosopo/datasets@3.1.18
+  - @prosopo/env@3.4.7
+  - @prosopo/keyring@2.9.24
+  - @prosopo/user-access-policy@3.7.1
+
 ## 4.2.1
 ### Patch Changes
 

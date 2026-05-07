@@ -1,5 +1,13 @@
 # @prosopo/types-database
 
+## 4.6.2
+### Patch Changes
+
+- 819ed95: Adding invisible mode to session data
+- Updated dependencies [819ed95]
+  - @prosopo/types@3.16.1
+  - @prosopo/user-access-policy@3.7.1
+
 ## 4.6.1
 ### Patch Changes
 

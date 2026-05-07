@@ -1,5 +1,12 @@
 # @prosopo/cypress-shared
 
+## 2.8.71
+### Patch Changes
+
+- f22072d: Flaky cypress tests fix
+- Updated dependencies [819ed95]
+  - @prosopo/types@3.16.1
+
 ## 2.8.70
 ### Patch Changes
 
