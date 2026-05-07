@@ -13,7 +13,6 @@ const handleVerification = (token: string): void => {
 
 <div>
     <ProcaptchaComponent siteKey="{siteKey}"
-                         captchaType="pow"
                          language="en"
                          callback={handleVerification}
                          htmlAttributes={{class: "my-app__procaptcha"}} />

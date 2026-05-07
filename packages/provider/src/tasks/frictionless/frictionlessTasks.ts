@@ -65,6 +65,8 @@ export interface ImageCaptchaSessionParams extends Session {}
 
 export interface PowCaptchaSessionParams extends Session {}
 
+export interface PuzzleCaptchaSessionParams extends Session {}
+
 export class FrictionlessManager extends CaptchaManager {
 	private sessionParams?: Omit<
 		Session,
@@ -215,53 +217,27 @@ export class FrictionlessManager extends CaptchaManager {
 	async sendImageCaptcha(
 		params?: Partial<ImageCaptchaSessionParams>,
 	): Promise<GetFrictionlessCaptchaResponse> {
-		const effectiveParams = { ...this.sessionParams, ...params };
-		if (
-			!effectiveParams.token ||
-			effectiveParams.score === undefined ||
-			effectiveParams.threshold === undefined ||
-			!effectiveParams.scoreComponents ||
-			effectiveParams.providerSelectEntropy === undefined ||
-			!effectiveParams.ipAddress ||
-			effectiveParams.siteKey === undefined
-		) {
-			throw new Error(
-				"Session parameters must be set before calling sendImageCaptcha",
-			);
-		}
-
-		const sessionRecord = await this.createSession(
-			effectiveParams.token,
-			effectiveParams.score,
-			effectiveParams.threshold,
-			effectiveParams.scoreComponents,
-			effectiveParams.providerSelectEntropy,
-			effectiveParams.ipAddress,
-			CaptchaType.image,
-			effectiveParams.siteKey,
-			effectiveParams.solvedImagesCount,
-			undefined,
-			effectiveParams.userSitekeyIpHash,
-			effectiveParams.webView ?? false,
-			effectiveParams.iFrame ?? false,
-			effectiveParams.decryptedHeadHash,
-			effectiveParams.reason as FrictionlessReason,
-			effectiveParams.blocked,
-			undefined,
-			effectiveParams.countryCode,
-			effectiveParams.headers,
-			effectiveParams.mode,
-		);
-
-		return {
-			[ApiParams.captchaType]: CaptchaType.image,
-			[ApiParams.sessionId]: sessionRecord.sessionId,
-			[ApiParams.status]: "ok",
-		};
+		return this.sendCaptcha(CaptchaType.image, params);
 	}
 
 	async sendPowCaptcha(
 		params?: Partial<PowCaptchaSessionParams>,
+	): Promise<GetFrictionlessCaptchaResponse> {
+		return this.sendCaptcha(CaptchaType.pow, params);
+	}
+
+	async sendPuzzleCaptcha(
+		params?: Partial<PuzzleCaptchaSessionParams>,
+	): Promise<GetFrictionlessCaptchaResponse> {
+		return this.sendCaptcha(CaptchaType.puzzle, params);
+	}
+
+	// Shared body for the three concrete `send*Captcha` helpers. Each helper is
+	// kept as its own thin wrapper so call-sites read clearly, but session
+	// validation and the createSession invocation only live in one place.
+	private async sendCaptcha(
+		captchaType: CaptchaType.image | CaptchaType.pow | CaptchaType.puzzle,
+		params?: Partial<Session>,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const effectiveParams = { ...this.sessionParams, ...params };
 		if (
@@ -274,9 +250,21 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.siteKey === undefined
 		) {
 			throw new Error(
-				"Session parameters must be set before calling sendPowCaptcha",
+				`Session parameters must be set before sending a ${captchaType} captcha`,
 			);
 		}
+
+		// Per-type fields that are silently dropped for the other types.
+		const solvedImagesCount =
+			captchaType === CaptchaType.image
+				? effectiveParams.solvedImagesCount
+				: undefined;
+		const powDifficulty =
+			captchaType === CaptchaType.pow
+				? effectiveParams.powDifficulty
+				: undefined;
+		const blocked =
+			captchaType === CaptchaType.image ? effectiveParams.blocked : undefined;
 
 		const sessionRecord = await this.createSession(
 			effectiveParams.token,
@@ -285,23 +273,24 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.scoreComponents,
 			effectiveParams.providerSelectEntropy,
 			effectiveParams.ipAddress,
-			CaptchaType.pow,
+			captchaType,
 			effectiveParams.siteKey,
-			undefined,
-			effectiveParams.powDifficulty,
+			solvedImagesCount,
+			powDifficulty,
 			effectiveParams.userSitekeyIpHash,
 			effectiveParams.webView ?? false,
 			effectiveParams.iFrame ?? false,
 			effectiveParams.decryptedHeadHash,
 			effectiveParams.reason as FrictionlessReason | undefined,
-			undefined,
+			blocked,
 			undefined,
 			effectiveParams.countryCode,
 			effectiveParams.headers,
 			effectiveParams.mode,
 		);
+
 		return {
-			[ApiParams.captchaType]: CaptchaType.pow,
+			[ApiParams.captchaType]: captchaType,
 			[ApiParams.sessionId]: sessionRecord.sessionId,
 			[ApiParams.status]: "ok",
 		};

@@ -14,9 +14,11 @@
 
 import {
 	CaptchaType,
+	ClientSettingsSchema,
 	FrictionlessPenalties,
 	type KeyringPair,
 	type ProsopoConfigOutput,
+	imageMaxRoundsDefault,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import {
@@ -220,6 +222,55 @@ describe("Frictionless Task Manager", () => {
 			expect(response).toHaveProperty("captchaType", CaptchaType.pow);
 			expect(response).toHaveProperty("sessionId");
 			expect(response).toHaveProperty("status", "ok");
+		});
+
+		it("should create puzzle captcha session correctly", async () => {
+			const mockToken = "mockToken123";
+			const mockScore = 0.5;
+			const mockThreshold = 0.7;
+			const mockScoreComponents = { baseScore: 0.5 };
+			const mockEntropy = 12345;
+			const mockIpAddress = getCompositeIpAddress("127.0.0.1");
+			const mockSiteKey = "mockSiteKey";
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.storeSessionRecord as any).mockResolvedValue(undefined);
+
+			frictionlessTaskManager.setSessionParams({
+				token: mockToken,
+				score: mockScore,
+				threshold: mockThreshold,
+				scoreComponents: mockScoreComponents,
+				providerSelectEntropy: mockEntropy,
+				ipAddress: mockIpAddress,
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "",
+				siteKey: mockSiteKey,
+			});
+
+			const response = await frictionlessTaskManager.sendPuzzleCaptcha();
+
+			expect(response).toHaveProperty("captchaType", CaptchaType.puzzle);
+			expect(response).toHaveProperty("sessionId");
+			expect(response).toHaveProperty("status", "ok");
+		});
+
+		it("should throw when sendPuzzleCaptcha is called without session params", async () => {
+			await expect(frictionlessTaskManager.sendPuzzleCaptcha()).rejects.toThrow(
+				/Session parameters must be set/,
+			);
+		});
+	});
+
+	describe("ClientSettingsSchema defaults", () => {
+		it("defaults imageMaxRounds to 2", () => {
+			expect(imageMaxRoundsDefault).toBe(2);
+			const parsed = ClientSettingsSchema.parse({
+				captchaType: CaptchaType.image,
+				domains: ["localhost"],
+			});
+			expect(parsed.imageMaxRounds).toBe(2);
 		});
 	});
 

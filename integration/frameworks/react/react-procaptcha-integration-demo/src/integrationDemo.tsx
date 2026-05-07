@@ -22,7 +22,6 @@ const IntegrationDemoComponent = (): ReactNode => {
 	return (
 		<ProcaptchaComponent
 			siteKey={siteKey}
-			captchaType={"pow"}
 			language={"en"}
 			callback={(token: string): void => {
 				console.log("verified", token);

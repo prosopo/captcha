@@ -20,7 +20,7 @@ export const domainsDefault: string[] = [];
 export const frictionlessThresholdDefault = 0.5;
 export const powDifficultyDefault = 4;
 export const imageThresholdDefault = 0.8;
-export const imageMaxRoundsDefault = 32;
+export const imageMaxRoundsDefault = 2;
 export const contextAwareThresholdDefault = 0.7;
 export const puzzleToleranceDefault = 15;
 

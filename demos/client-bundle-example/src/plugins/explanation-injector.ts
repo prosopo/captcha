@@ -94,12 +94,10 @@ function generateFrictionlessExplanation(
 	const codeExample = isExplicit
 		? escapeHtml(`// Import the render function
 import { render } from "%VITE_BUNDLE_URL%"
-import { CaptchaType } from "@prosopo/types";
 
 // Render CAPTCHA
 const widgetId = render(document.getElementById('procaptcha-container'), {
     siteKey: import.meta.env.PROSOPO_SITE_KEY_FRICTIONLESS,
-    captchaType: CaptchaType.frictionless,
     callback: handleCaptchaResponse,
     "failed-callback": handleCaptchaFailed${isInvisible ? ',\n    size: "invisible"' : ""}
 });`)
@@ -108,8 +106,7 @@ const widgetId = render(document.getElementById('procaptcha-container'), {
     data-theme="light"
     data-sitekey="%PROSOPO_SITE_KEY_FRICTIONLESS%"
     data-failed-callback="onCaptchaFailed"
-    data-callback="onCaptchaVerified"
-    data-captcha-type="frictionless"${isInvisible ? '\n    data-size="invisible"' : ""}
+    data-callback="onCaptchaVerified"${isInvisible ? '\n    data-size="invisible"' : ""}
 ></div>`);
 
 	return `
@@ -150,12 +147,10 @@ function generateImageExplanation(
 	const codeExample = isExplicit
 		? escapeHtml(`// Import the render function
 import { render } from "%VITE_BUNDLE_URL%"
-import { CaptchaType } from "@prosopo/types";
 
 // Render CAPTCHA
 const widgetId = render(document.getElementById('procaptcha-container'), {
     siteKey: import.meta.env.PROSOPO_SITE_KEY_IMAGE,
-    captchaType: CaptchaType.image,
     callback: handleCaptchaResponse,
     "failed-callback": handleCaptchaFailed${isInvisible ? ',\n    size: "invisible"' : ""}
 });`)
@@ -164,8 +159,7 @@ const widgetId = render(document.getElementById('procaptcha-container'), {
     data-theme="light"
     data-sitekey="%PROSOPO_SITE_KEY_IMAGE%"
     data-failed-callback="onCaptchaFailed"
-    data-callback="onCaptchaVerified"
-    data-captcha-type="image"${isInvisible ? '\n    data-size="invisible"' : ""}
+    data-callback="onCaptchaVerified"${isInvisible ? '\n    data-size="invisible"' : ""}
 ></div>`);
 
 	return `
@@ -206,12 +200,10 @@ function generatePowExplanation(
 	const codeExample = isExplicit
 		? escapeHtml(`// Import the render function
 import { render } from "%VITE_BUNDLE_URL%"
-import { CaptchaType } from "@prosopo/types";
 
 // Render CAPTCHA
 const widgetId = render(document.getElementById('procaptcha-container'), {
     siteKey: import.meta.env.PROSOPO_SITE_KEY_POW,
-    captchaType: CaptchaType.pow,
     callback: handleCaptchaResponse,
     "failed-callback": handleCaptchaFailed${isInvisible ? ',\n    size: "invisible"' : ""}
 });`)
@@ -220,8 +212,7 @@ const widgetId = render(document.getElementById('procaptcha-container'), {
     data-theme="light"
     data-sitekey="%PROSOPO_SITE_KEY_POW%"
     data-failed-callback="onCaptchaFailed"
-    data-callback="onCaptchaVerified"
-    data-captcha-type="pow"${isInvisible ? '\n    data-size="invisible"' : ""}
+    data-callback="onCaptchaVerified"${isInvisible ? '\n    data-size="invisible"' : ""}
 ></div>`);
 
 	return `
@@ -260,12 +251,10 @@ function generatePuzzleExplanation(
 	const codeExample = isExplicit
 		? escapeHtml(`// Import the render function
 import { render } from "%VITE_BUNDLE_URL%"
-import { CaptchaType } from "@prosopo/types";
 
 // Render CAPTCHA
 const widgetId = render(document.getElementById('procaptcha-container'), {
     siteKey: import.meta.env.PROSOPO_SITE_KEY_PUZZLE,
-    captchaType: CaptchaType.puzzle,
     callback: handleCaptchaResponse,
     "failed-callback": handleCaptchaFailed${isInvisible ? ',\n    size: "invisible"' : ""}
 });`)
@@ -274,8 +263,7 @@ const widgetId = render(document.getElementById('procaptcha-container'), {
     data-theme="light"
     data-sitekey="%PROSOPO_SITE_KEY_PUZZLE%"
     data-failed-callback="onCaptchaFailed"
-    data-callback="onCaptchaVerified"
-    data-captcha-type="puzzle"${isInvisible ? '\n    data-size="invisible"' : ""}
+    data-callback="onCaptchaVerified"${isInvisible ? '\n    data-size="invisible"' : ""}
 ></div>`);
 
 	return `
