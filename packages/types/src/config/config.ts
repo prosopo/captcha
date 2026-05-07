@@ -48,6 +48,9 @@ import {
 	DEFAULT_POW_CAPTCHA_CACHED_TIMEOUT,
 	DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
 	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
+	DEFAULT_PUZZLE_CAPTCHA_CACHED_TIMEOUT,
+	DEFAULT_PUZZLE_CAPTCHA_SOLUTION_TIMEOUT,
+	DEFAULT_PUZZLE_CAPTCHA_VERIFIED_TIMEOUT,
 } from "./timeouts.js";
 
 const LogLevel = zEnum([
@@ -164,6 +167,12 @@ const defaultPoWCaptchaTimeouts = {
 	cachedTimeout: DEFAULT_POW_CAPTCHA_CACHED_TIMEOUT,
 };
 
+const defaultPuzzleCaptchaTimeouts = {
+	verifiedTimeout: DEFAULT_PUZZLE_CAPTCHA_VERIFIED_TIMEOUT,
+	solutionTimeout: DEFAULT_PUZZLE_CAPTCHA_SOLUTION_TIMEOUT,
+	cachedTimeout: DEFAULT_PUZZLE_CAPTCHA_CACHED_TIMEOUT,
+};
+
 const defaultContractCaptchaTimeouts = {
 	maxVerifiedTime: DEFAULT_MAX_VERIFIED_TIME_CONTRACT,
 };
@@ -171,6 +180,7 @@ const defaultContractCaptchaTimeouts = {
 const defaultCaptchaTimeouts = {
 	image: defaultImageCaptchaTimeouts,
 	pow: defaultPoWCaptchaTimeouts,
+	puzzle: defaultPuzzleCaptchaTimeouts,
 	contract: defaultContractCaptchaTimeouts,
 };
 
@@ -209,6 +219,20 @@ export const CaptchaTimeoutSchema = object({
 			.optional()
 			.default(DEFAULT_POW_CAPTCHA_CACHED_TIMEOUT),
 	}).default(defaultPoWCaptchaTimeouts),
+	puzzle: object({
+		verifiedTimeout: number()
+			.positive()
+			.optional()
+			.default(DEFAULT_PUZZLE_CAPTCHA_VERIFIED_TIMEOUT),
+		solutionTimeout: number()
+			.positive()
+			.optional()
+			.default(DEFAULT_PUZZLE_CAPTCHA_SOLUTION_TIMEOUT),
+		cachedTimeout: number()
+			.positive()
+			.optional()
+			.default(DEFAULT_PUZZLE_CAPTCHA_CACHED_TIMEOUT),
+	}).default(defaultPuzzleCaptchaTimeouts),
 	contract: object({
 		maxVerifiedTime: number()
 			.positive()

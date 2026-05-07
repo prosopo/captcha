@@ -107,5 +107,17 @@ export const getRateLimitConfig = () => {
 			windowMs: process.env.PROSOPO_REMOVE_DECISION_MACHINE_WINDOW,
 			limit: process.env.PROSOPO_REMOVE_DECISION_MACHINE_LIMIT,
 		},
+		[ClientApiPaths.GetPuzzleCaptchaChallenge]: {
+			windowMs: process.env.PROSOPO_GET_PUZZLE_CAPTCHA_CHALLENGE_WINDOW,
+			limit: process.env.PROSOPO_GET_PUZZLE_CAPTCHA_CHALLENGE_LIMIT,
+		},
+		[ClientApiPaths.SubmitPuzzleCaptchaSolution]: {
+			windowMs: process.env.PROSOPO_SUBMIT_PUZZLE_CAPTCHA_SOLUTION_WINDOW,
+			limit: process.env.PROSOPO_SUBMIT_PUZZLE_CAPTCHA_SOLUTION_LIMIT,
+		},
+		[ClientApiPaths.VerifyPuzzleCaptchaSolution]: {
+			windowMs: process.env.PROSOPO_VERIFY_PUZZLE_CAPTCHA_SOLUTION_WINDOW,
+			limit: process.env.PROSOPO_VERIFY_PUZZLE_CAPTCHA_SOLUTION_LIMIT,
+		},
 	};
 };

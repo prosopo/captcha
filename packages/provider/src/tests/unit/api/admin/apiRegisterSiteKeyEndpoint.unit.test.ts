@@ -60,6 +60,7 @@ describe("ApiRegisterSiteKeyEndpoint", () => {
 			powDifficulty: 100000,
 			imageThreshold: 0.5,
 			imageMaxRounds: 3,
+			puzzleTolerance: 15,
 		};
 
 		await endpoint.processRequest(

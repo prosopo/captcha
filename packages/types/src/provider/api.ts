@@ -86,6 +86,9 @@ export enum ClientApiPaths {
 	SubmitPowCaptchaSolution = "/v1/prosopo/provider/client/pow/solution",
 	VerifyPowCaptchaSolution = "/v1/prosopo/provider/client/pow/verify",
 	VerifyImageCaptchaSolutionDapp = "/v1/prosopo/provider/client/image/dapp/verify",
+	GetPuzzleCaptchaChallenge = "/v1/prosopo/provider/client/captcha/puzzle",
+	SubmitPuzzleCaptchaSolution = "/v1/prosopo/provider/client/puzzle/solution",
+	VerifyPuzzleCaptchaSolution = "/v1/prosopo/provider/client/puzzle/verify",
 	GetProviderStatus = "/v1/prosopo/provider/client/status",
 	SubmitUserEvents = "/v1/prosopo/provider/client/events",
 	CheckSpamEmail = "/v1/prosopo/provider/client/spam/email",
@@ -120,6 +123,12 @@ export type TGetPowCaptchaChallengeURL =
 export type TSubmitPowCaptchaSolutionURL =
 	`${string}${ClientApiPaths.SubmitPowCaptchaSolution}`;
 
+export type TGetPuzzleCaptchaChallengeURL =
+	`${string}${ClientApiPaths.GetPuzzleCaptchaChallenge}`;
+
+export type TSubmitPuzzleCaptchaSolutionURL =
+	`${string}${ClientApiPaths.SubmitPuzzleCaptchaSolution}`;
+
 export enum AdminApiPaths {
 	SiteKeyRegister = "/v1/prosopo/provider/admin/sitekey/register",
 	SiteKeysRegister = "/v1/prosopo/provider/admin/sitekeys/register",
@@ -147,6 +156,12 @@ export const ProviderDefaultRateLimits = {
 	},
 	[ClientApiPaths.SubmitPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.VerifyPowCaptchaSolution]: { windowMs: 60000, limit: 3000 },
+	[ClientApiPaths.GetPuzzleCaptchaChallenge]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.SubmitPuzzleCaptchaSolution]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.VerifyPuzzleCaptchaSolution]: {
+		windowMs: 60000,
+		limit: 3000,
+	},
 	[ClientApiPaths.VerifyImageCaptchaSolutionDapp]: {
 		windowMs: 60000,
 		limit: 3000,
@@ -331,8 +346,29 @@ export interface GetPowCaptchaResponse extends ApiResponse {
 	};
 }
 
+export interface GetPuzzleCaptchaResponse extends ApiResponse {
+	[ApiParams.challenge]: PoWChallengeId;
+	[ApiParams.targetX]: number;
+	[ApiParams.targetY]: number;
+	[ApiParams.originX]: number;
+	[ApiParams.originY]: number;
+	[ApiParams.tolerance]: number;
+	[ApiParams.timestamp]: string;
+	[ApiParams.signature]: {
+		[ApiParams.provider]: ChallengeSignature;
+	};
+}
+
+export interface PuzzleCaptchaSolutionResponse extends ApiResponse {
+	[ApiParams.verified]: boolean;
+	[ApiParams.error]?: ApiJsonError;
+}
+
 export interface GetFrictionlessCaptchaResponse extends ApiResponse {
-	[ApiParams.captchaType]: CaptchaType.pow | CaptchaType.image;
+	[ApiParams.captchaType]:
+		| CaptchaType.pow
+		| CaptchaType.image
+		| CaptchaType.puzzle;
 	[ApiParams.sessionId]?: string;
 }
 
@@ -418,6 +454,80 @@ export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<
 
 export type SubmitPowCaptchaSolutionBodyTypeOutput = output<
 	typeof SubmitPowCaptchaSolutionBody
+>;
+
+// Puzzle captcha schemas
+
+export const GetPuzzleCaptchaChallengeRequestBody = object({
+	[ApiParams.user]: string(),
+	[ApiParams.dapp]: string(),
+	[ApiParams.sessionId]: string().optional(),
+});
+
+export type GetPuzzleCaptchaChallengeRequestBodyType = zInfer<
+	typeof GetPuzzleCaptchaChallengeRequestBody
+>;
+
+export type GetPuzzleCaptchaChallengeRequestBodyTypeOutput = output<
+	typeof GetPuzzleCaptchaChallengeRequestBody
+>;
+
+// Event captured during a drag of the puzzle piece. `t` is milliseconds
+// since the drag started (not absolute), which is enough for behavioural
+// analysis and lets the trail be replay-portable.
+export const PuzzleEventSchema = object({
+	x: number(),
+	y: number(),
+	t: number(),
+});
+
+export type PuzzleEvent = zInfer<typeof PuzzleEventSchema>;
+
+export const SubmitPuzzleCaptchaSolutionBody = object({
+	[ApiParams.challenge]: PowChallengeIdSchema,
+	[ApiParams.finalX]: number(),
+	[ApiParams.finalY]: number(),
+	[ApiParams.puzzleEvents]: array(PuzzleEventSchema),
+	[ApiParams.signature]: object({
+		[ApiParams.user]: object({
+			[ApiParams.timestamp]: string(),
+		}),
+		[ApiParams.provider]: object({
+			[ApiParams.challenge]: string(),
+		}),
+	}),
+	[ApiParams.user]: string(),
+	[ApiParams.dapp]: string(),
+	[ApiParams.verifiedTimeout]: number()
+		.optional()
+		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
+	[ApiParams.behavioralData]: string().optional(),
+});
+
+export type SubmitPuzzleCaptchaSolutionBodyType = input<
+	typeof SubmitPuzzleCaptchaSolutionBody
+>;
+
+export type SubmitPuzzleCaptchaSolutionBodyTypeOutput = output<
+	typeof SubmitPuzzleCaptchaSolutionBody
+>;
+
+export const ServerPuzzleCaptchaVerifyRequestBody = object({
+	[ApiParams.token]: ProcaptchaTokenSpec,
+	[ApiParams.dappSignature]: string(),
+	[ApiParams.verifiedTimeout]: number()
+		.optional()
+		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
+	[ApiParams.ip]: string().optional(),
+	[ApiParams.email]: string().email().optional(),
+});
+
+export type ServerPuzzleCaptchaVerifyRequestBodyType = zInfer<
+	typeof ServerPuzzleCaptchaVerifyRequestBody
+>;
+
+export type ServerPuzzleCaptchaVerifyRequestBodyOutput = output<
+	typeof ServerPuzzleCaptchaVerifyRequestBody
 >;
 
 export const VerifyPowCaptchaSolutionBody = object({

@@ -15,8 +15,8 @@
 import vm from "node:vm";
 import type { Logger } from "@prosopo/common";
 import {
-	type CaptchaType,
 	type DecisionMachineArtifact,
+	type DecisionMachineCaptchaType,
 	DecisionMachineDecision,
 	type DecisionMachineInput,
 	type DecisionMachineOutput,
@@ -149,7 +149,7 @@ export class DecisionMachineRunner {
 	 */
 	private async selectArtifact(
 		dappAccount: string,
-		captchaType?: CaptchaType.image | CaptchaType.pow | undefined,
+		captchaType?: DecisionMachineCaptchaType,
 	): Promise<DecisionMachineArtifact | undefined> {
 		// Try cache first for both scopes
 		const cachedDapp = this.getCachedArtifact(

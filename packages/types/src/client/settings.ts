@@ -22,6 +22,7 @@ export const powDifficultyDefault = 4;
 export const imageThresholdDefault = 0.8;
 export const imageMaxRoundsDefault = 32;
 export const contextAwareThresholdDefault = 0.7;
+export const puzzleToleranceDefault = 15;
 
 // IP Validation Rules
 export enum IPValidationAction {
@@ -223,6 +224,12 @@ export const ClientSettingsSchema = object({
 		.min(2)
 		.optional()
 		.default(imageMaxRoundsDefault),
+	puzzleTolerance: number()
+		.int()
+		.min(5)
+		.max(50)
+		.optional()
+		.default(puzzleToleranceDefault),
 	ipValidationRules: IPValidationRulesSchema.optional(),
 	disallowWebView: boolean().optional().default(false).optional(),
 	contextAware: ContextAwareSchema.optional(),

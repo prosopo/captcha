@@ -20,6 +20,8 @@ import {
 	type ImageVerificationResponse,
 	ServerPowCaptchaVerifyRequestBody,
 	type ServerPowCaptchaVerifyRequestBodyOutput,
+	ServerPuzzleCaptchaVerifyRequestBody,
+	type ServerPuzzleCaptchaVerifyRequestBodyOutput,
 	type VerificationResponse,
 	VerifySolutionBody,
 	type VerifySolutionBodyTypeOutput,
@@ -258,6 +260,118 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				return res.json(verificationResponse);
 			} catch (err) {
 				console.error("\nError in verifyPowCaptchaSolution:", err);
+				req.logger.error(() => ({ err, data: { body: req.body } }));
+				return next(
+					new ProsopoApiError("API.BAD_REQUEST", {
+						context: { code: 500, error: err },
+						i18n: req.i18n,
+						logger: req.logger,
+					}),
+				);
+			}
+		},
+	);
+
+	/**
+	 * Verifies a dapp's puzzle captcha solution as being approved or not
+	 *
+	 * @param {string} token - Token containing dapp, blockNumber and challenge
+	 * @param {string} dappSignature - Signed token
+	 * @param {number} verifiedTimeout - The maximum time in milliseconds to be valid
+	 */
+	router.post(
+		ClientApiPaths.VerifyPuzzleCaptchaSolution,
+		async (req, res, next) => {
+			const tasks = new Tasks(env, req.logger);
+
+			// If in maintenance mode, always return verified before any checks
+			if (getMaintenanceMode()) {
+				req.logger.info(() => ({
+					msg: "Maintenance mode active - returning verified for puzzle captcha verification",
+				}));
+				const verificationResponse: VerificationResponse = {
+					status: "ok",
+					verified: true,
+				};
+				return res.json(verificationResponse);
+			}
+
+			let parsed: ServerPuzzleCaptchaVerifyRequestBodyOutput;
+
+			// We can be helpful and provide a more detailed error message when there are missing fields
+			try {
+				parsed = ServerPuzzleCaptchaVerifyRequestBody.parse(req.body);
+			} catch (err) {
+				return next(
+					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
+						context: { code: 400, error: err, body: req.body },
+						i18n: req.i18n,
+						logger: req.logger,
+					}),
+				);
+			}
+
+			// We don't want to expose any other errors to the client
+			try {
+				const { token, dappSignature, verifiedTimeout, ip, email } = parsed;
+
+				// This can error if the token is invalid
+				const { dapp, user, timestamp, challenge } =
+					decodeProcaptchaOutput(token);
+
+				// Do this before checking the db
+				validateAddress(dapp, false, 42);
+				validateAddress(user, false, 42);
+
+				// Reject any unregistered site keys
+				const clientRecord = await tasks.db.getClientRecord(dapp);
+				if (!clientRecord) {
+					return next(
+						new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
+							context: { code: 400, siteKey: dapp },
+							i18n: req.i18n,
+							logger: req.logger,
+						}),
+					);
+				}
+
+				if (!challenge) {
+					const unverifiedResponse: VerificationResponse = {
+						status: req.i18n.t("API.USER_NOT_VERIFIED"),
+						[ApiParams.verified]: false,
+					};
+					return res.json(unverifiedResponse);
+				}
+
+				// Verify using the dapp pair passed in the request
+				const dappPair = env.keyring.addFromAddress(dapp);
+
+				// Will throw an error if the signature is invalid
+				verifySignature(dappSignature, timestamp.toString(), dappPair);
+
+				const { verified, score } =
+					await tasks.puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+						dapp,
+						challenge,
+						verifiedTimeout,
+						env,
+						ip,
+						userAccessRulesStorage,
+						email,
+						clientRecord.settings.spamEmailDomainCheckEnabled,
+					);
+
+				const verificationResponse: VerificationResponse =
+					tasks.puzzleCaptchaManager.getVerificationResponse(
+						verified,
+						clientRecord,
+						req.i18n.t,
+						score,
+					);
+
+				return res.json(verificationResponse);
+			} catch (err) {
+				console.error("\nError in verifyPuzzleCaptchaSolution:", err);
 				req.logger.error(() => ({ err, data: { body: req.body } }));
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {

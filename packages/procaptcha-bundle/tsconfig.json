@@ -30,6 +30,9 @@
 			"path": "../procaptcha-pow"
 		},
 		{
+			"path": "../procaptcha-puzzle"
+		},
+		{
 			"path": "../procaptcha-react"
 		},
 		{

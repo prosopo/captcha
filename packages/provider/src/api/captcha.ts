@@ -20,8 +20,10 @@ import checkSpamEmail from "./captcha/checkSpamEmail.js";
 import getFrictionlessCaptchaChallenge from "./captcha/getFrictionlessCaptchaChallenge.js";
 import getImageCaptchaChallenge from "./captcha/getImageCaptchaChallenge.js";
 import getPoWCaptchaChallenge from "./captcha/getPoWCaptchaChallenge.js";
+import getPuzzleCaptchaChallenge from "./captcha/getPuzzleCaptchaChallenge.js";
 import submitImageCaptchaSolution from "./captcha/submitImageCaptchaSolution.js";
 import submitPoWCaptchaSolution from "./captcha/submitPoWCaptchaSolution.js";
+import submitPuzzleCaptchaSolution from "./captcha/submitPuzzleCaptchaSolution.js";
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -73,6 +75,20 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				res,
 				next,
 			),
+	);
+
+	/**
+	 * Supplies a Puzzle challenge to a Dapp User
+	 */
+	router.post(ClientApiPaths.GetPuzzleCaptchaChallenge, (req, res, next) =>
+		getPuzzleCaptchaChallenge(env, userAccessRulesStorage)(req, res, next),
+	);
+
+	/**
+	 * Verifies a user's Puzzle solution as being approved or not
+	 */
+	router.post(ClientApiPaths.SubmitPuzzleCaptchaSolution, (req, res, next) =>
+		submitPuzzleCaptchaSolution(env)(req, res, next),
 	);
 
 	/**

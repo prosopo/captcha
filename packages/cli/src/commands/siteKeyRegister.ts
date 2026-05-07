@@ -20,6 +20,7 @@ import {
 	type KeyringPair,
 	contextAwareThresholdDefault,
 	imageMaxRoundsDefault,
+	puzzleToleranceDefault,
 } from "@prosopo/types";
 import {
 	CaptchaTypeSpec,
@@ -121,6 +122,7 @@ export default (
 					powDifficulty: pow_difficulty as number,
 					imageThreshold: image_threshold as number,
 					imageMaxRounds: image_max_rounds as number,
+					puzzleTolerance: puzzleToleranceDefault,
 					disallowWebView: false,
 					contextAware: {
 						enabled: false,
