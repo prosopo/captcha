@@ -101,56 +101,10 @@ describe("Captchas", () => {
 		});
 	});
 
-	it("An error is returned if captcha type is set to pow and the wrong captcha type is used in the widget", () => {
-		expect(baseCaptchaType).to.not.equal(CaptchaType.pow);
-		cy.registerSiteKey(baseCaptchaType, CaptchaType.pow).then((response) => {
-			// Log the response status and body using cy.task()
-			cy.task("log", `Response status: ${response.status}`);
-			cy.task("log", `Response: ${JSON.stringify(response.body)}`);
-
-			// Ensure the request was successful
-			expect(response.status).to.equal(200);
-		});
-		cy.visit(Cypress.env("default_page"));
-
-		// Wait for the procaptcha script to be loaded after navigation
-		cy.waitForProcaptchaScript();
-
-		const checkbox = getWidgetElement(checkboxClass, { timeout: 12000 });
-
-		cy.task("log", "Checking if checkbox is visible...");
-		checkbox.first().should("be.visible").should("not.be.disabled");
-
-		cy.task("log", "Intercepting POST request...");
-		cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
-			"getCaptcha",
-		);
-
-		cy.task("log", "Clicking checkbox with realClick...");
-		checkbox.first().realClick();
-
-		cy.task("log", "Waiting for @getCaptcha...");
-
-		// Wait for at least one request and log it to terminal
-		cy.wait("@allRequests").then((interception) => {
-			cy.task(
-				"log",
-				`Intercepted Request: ${JSON.stringify(interception.request.body)}`,
-			);
-			cy.task(
-				"log",
-				`Intercepted Response: ${interception.response?.statusCode} - ${JSON.stringify(interception.response?.body)}`,
-			);
-		});
-		return cy
-			.wait("@getCaptcha", { timeout: 36000 })
-			.its("response")
-			.should("exist") // Ensures response is not undefined
-			.then((response) => {
-				expect(response.statusCode).to.equal(400);
-				expect(response.body).to.have.property("error");
-			});
-	});
+	// Removed: "An error is returned if captcha type is set to pow and the
+	// wrong captcha type is used in the widget" — captchaType is now
+	// entirely server-driven, so the widget can't disagree with the
+	// site key's stored type.
 
 	it("Captchas load when 'I am human' is pressed", () => {
 		cy.clickIAmHuman().then((captchas) => {
