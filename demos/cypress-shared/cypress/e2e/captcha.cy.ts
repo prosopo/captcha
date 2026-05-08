@@ -16,7 +16,7 @@
 import "@cypress/xpath";
 import { ProsopoDatasetError } from "@prosopo/common";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
-import { type Captcha, CaptchaType } from "@prosopo/types";
+import type { Captcha, CaptchaType } from "@prosopo/types";
 import { at } from "@prosopo/util";
 import { checkboxClass, getWidgetElement } from "../support/commands.js";
 

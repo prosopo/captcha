@@ -74,43 +74,10 @@ describe("Captchas", () => {
 		});
 	});
 
-	it("An error is returned if captcha type is set to pow and frictionless is used in the widget", () => {
-		expect(baseCaptchaType).to.not.equal(CaptchaType.pow);
-
-		// Set up intercept before visiting the page
-		cy.intercept("POST", "**/prosopo/provider/client/captcha/image**").as(
-			"getCaptcha",
-		);
-
-		return cy
-			.registerSiteKey(baseCaptchaType, CaptchaType.pow)
-			.then((response) => {
-				// Log the response status and body using cy.task()
-				cy.task("log", `Response status: ${response.status}`);
-				cy.task("log", `Response: ${JSON.stringify(response.body)}`);
-
-				// Ensure the request was successful
-				expect(response.status).to.equal(200);
-			})
-			.then(() => {
-				// Only visit the page after site key registration is complete
-				cy.visit(Cypress.env("default_page"));
-
-				// Wait for the procaptcha script to be loaded after navigation
-				cy.waitForProcaptchaScript();
-
-				cy.clickCheckbox();
-
-				return cy
-					.wait("@getCaptcha", { timeout: 36000 })
-					.its("response")
-					.then((response) => {
-						expect(response).to.not.be.undefined;
-						expect(response?.statusCode).to.equal(400);
-						expect(response?.body).to.have.property("error");
-					});
-			});
-	});
+	// Removed: "An error is returned if captcha type is set to pow and
+	// frictionless is used in the widget" — captchaType is now entirely
+	// server-driven, so the widget can't disagree with the site key's
+	// stored type.
 
 	it("Captchas load when 'I am human' is pressed", () => {
 		cy.visit(Cypress.env("default_page"));
