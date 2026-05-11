@@ -14,9 +14,10 @@
 
 import { z } from "zod";
 import {
-	type CaptchaType,
+	CaptchaType,
 	DecisionMachineCaptchaTypeSchema,
 } from "../client/captchaType/captchaType.js";
+import type { RequestHeaders } from "../provider/api.js";
 
 export enum DecisionMachineRuntime {
 	Node = "node",
@@ -57,6 +58,7 @@ export type DecisionMachineBehavioralDataPacked = {
 };
 
 export type DecisionMachineInput = {
+	phase?: "verify";
 	userAccount: string;
 	dappAccount: string;
 	captchaResult: "passed" | "failed";
@@ -106,4 +108,113 @@ export const DecisionMachineConfigSchema = z.object({
 	version: z.string().optional(),
 	createdAt: z.string(),
 	captchaType: DecisionMachineCaptchaTypeSchema.optional(),
+});
+
+/**
+ * Routing decision machines: select the concrete captcha type for a frictionless
+ * request based on baseline (from the ladder), pre-derived platform flags, and
+ * per-sitekey Redis usage counters. Failure modes (missing machine, throw,
+ * timeout, invalid output) fall back to the baseline.
+ */
+
+export const COUNTER_WINDOWS = ["1m", "10m", "1h", "3h", "6h", "24h"] as const;
+export type CounterWindow = (typeof COUNTER_WINDOWS)[number];
+
+export const COUNTER_WINDOW_SECONDS: Record<CounterWindow, number> = {
+	"1m": 60,
+	"10m": 600,
+	"1h": 3600,
+	"3h": 10800,
+	"6h": 21600,
+	"24h": 86400,
+};
+
+export const COUNTER_KINDS = ["served", "solved"] as const;
+export type CounterKind = (typeof COUNTER_KINDS)[number];
+
+export const COUNTER_DIMENSIONS = ["ip", "userAccount"] as const;
+export type CounterDimension = (typeof COUNTER_DIMENSIONS)[number];
+
+export const COUNTER_CAPTCHA_ANY = "any" as const;
+export type CounterCaptchaType =
+	| CaptchaType.pow
+	| CaptchaType.image
+	| CaptchaType.puzzle
+	| typeof COUNTER_CAPTCHA_ANY;
+
+export interface CounterSpec {
+	kind: CounterKind;
+	captchaType: CounterCaptchaType;
+	dimension: CounterDimension;
+	window: CounterWindow;
+}
+
+export const CounterSpecSchema = z.object({
+	kind: z.enum(COUNTER_KINDS),
+	captchaType: z.union([
+		z.literal(CaptchaType.pow),
+		z.literal(CaptchaType.image),
+		z.literal(CaptchaType.puzzle),
+		z.literal(COUNTER_CAPTCHA_ANY),
+	]),
+	dimension: z.enum(COUNTER_DIMENSIONS),
+	window: z.enum(COUNTER_WINDOWS),
+});
+
+export const encodeCounterKey = (
+	dappAccount: string,
+	spec: CounterSpec,
+	value: string,
+): string =>
+	`cnt:${dappAccount}:${spec.kind}:${spec.captchaType}:${spec.dimension}:${value}:${spec.window}`;
+
+export interface RoutingMachineBaseline {
+	captchaType: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle;
+	solvedImagesCount?: number;
+	powDifficulty?: number;
+}
+
+export interface RoutingMachinePlatform {
+	isApple: boolean;
+	isWebView: boolean;
+	isMobile: boolean;
+}
+
+export interface RoutingMachineRawSignals {
+	headers: RequestHeaders;
+	userAgent: string;
+	ja4?: string;
+	behavioralDataPacked?: DecisionMachineBehavioralDataPacked;
+}
+
+export interface RoutingMachineInputBase {
+	phase: "route";
+	dappAccount: string;
+	userAccount: string;
+	ip: string;
+	countryCode?: string;
+	baseline: RoutingMachineBaseline;
+	score: number;
+	platform: RoutingMachinePlatform;
+	raw: RoutingMachineRawSignals;
+}
+
+export interface RoutingMachineInput extends RoutingMachineInputBase {
+	counters: Record<string, number>;
+}
+
+export interface RoutingMachineOutput {
+	captchaType: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle;
+	solvedImagesCount?: number;
+	powDifficulty?: number;
+}
+
+export const RoutingMachineOutputSchema = z.object({
+	captchaType: z.union([
+		z.literal(CaptchaType.pow),
+		z.literal(CaptchaType.image),
+		z.literal(CaptchaType.puzzle),
+	]),
+	solvedImagesCount: z.number().int().positive().optional(),
+	powDifficulty: z.number().int().positive().optional(),
 });

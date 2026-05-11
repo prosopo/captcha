@@ -95,6 +95,7 @@ module.exports = (input) => {
 `;
 
 	beforeEach(() => {
+		DecisionMachineRunner.invalidateAllArtifactCache();
 		db = {
 			getDecisionMachineArtifact: vi.fn(),
 		} as unknown as IProviderDatabase;

@@ -27,8 +27,10 @@ import type {
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { RedisWriteQueue } from "../util/redisCache.js";
+import { UsageCounters } from "../util/usageCounters.js";
 import { ClientTaskManager } from "./client/clientTasks.js";
 import { DatasetManager } from "./dataset/datasetTasks.js";
+import { DecisionMachineRunner } from "./decisionMachine/decisionMachineRunner.js";
 import { FrictionlessManager } from "./frictionless/frictionlessTasks.js";
 import { ImgCaptchaManager } from "./imgCaptcha/imgCaptchaTasks.js";
 import { PowCaptchaManager } from "./powCaptcha/powTasks.js";
@@ -57,6 +59,8 @@ export class Tasks {
 	clientTaskManager: ClientTaskManager;
 	frictionlessManager: FrictionlessManager;
 	writeQueue: RedisWriteQueue | null;
+	decisionMachineRunner: DecisionMachineRunner;
+	usageCounters: UsageCounters | null;
 
 	constructor(env: ProviderEnvironment, logger?: Logger) {
 		this.config = env.config;
@@ -88,6 +92,8 @@ export class Tasks {
 
 		// Initialize write queue from existing Redis connection
 		this.writeQueue = this.initWriteQueue();
+		this.decisionMachineRunner = new DecisionMachineRunner(this.db);
+		this.usageCounters = this.initUsageCounters();
 
 		this.powCaptchaManager = new PowCaptchaManager(
 			this.db,
@@ -95,12 +101,14 @@ export class Tasks {
 			this.config,
 			this.logger,
 			this.writeQueue,
+			this.usageCounters,
 		);
 		this.puzzleCaptchaManager = new PuzzleCaptchaManager(
 			this.db,
 			this.pair,
 			this.config,
 			this.logger,
+			this.usageCounters,
 		);
 		this.datasetManager = new DatasetManager(
 			this.config,
@@ -114,6 +122,7 @@ export class Tasks {
 			this.config,
 			this.logger,
 			this.writeQueue,
+			this.usageCounters,
 		);
 		this.clientTaskManager = new ClientTaskManager(
 			this.config,
@@ -126,7 +135,18 @@ export class Tasks {
 			this.config,
 			this.logger,
 			this.writeQueue,
+			this.decisionMachineRunner,
+			this.usageCounters,
 		);
+	}
+
+	private initUsageCounters(): UsageCounters | null {
+		if (!(this.db instanceof ProviderDatabase)) return null;
+		try {
+			return new UsageCounters(this.db.getRedisConnection(), this.logger);
+		} catch {
+			return null;
+		}
 	}
 
 	private initWriteQueue(): RedisWriteQueue | null {
