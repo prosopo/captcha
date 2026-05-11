@@ -64,9 +64,7 @@ interface NamedExport {
 }
 
 export class DecisionMachineRunner {
-	// Shared across instances so admin cache busting in one place propagates to
-	// every captcha manager (PoW, image, puzzle) that holds a runner.
-	private static readonly artifactCache = new Map<string, CachedArtifact>();
+	private readonly artifactCache = new Map<string, CachedArtifact>();
 
 	constructor(private readonly db: IProviderDatabase) {}
 
@@ -83,12 +81,12 @@ export class DecisionMachineRunner {
 		scope: DecisionMachineScope,
 		dappAccount?: string,
 	): DecisionMachineArtifact | undefined | null {
-		const entry = DecisionMachineRunner.artifactCache.get(
+		const entry = this.artifactCache.get(
 			DecisionMachineRunner.cacheKey(scope, dappAccount),
 		);
 		if (!entry) return null; // cache miss
 		if (Date.now() - entry.cachedAt > ARTIFACT_CACHE_TTL_MS) {
-			DecisionMachineRunner.artifactCache.delete(
+			this.artifactCache.delete(
 				DecisionMachineRunner.cacheKey(scope, dappAccount),
 			);
 			return null; // expired
@@ -102,41 +100,10 @@ export class DecisionMachineRunner {
 		dappAccount: string | undefined,
 		artifact: DecisionMachineArtifact | undefined,
 	): void {
-		DecisionMachineRunner.artifactCache.set(
-			DecisionMachineRunner.cacheKey(scope, dappAccount),
-			{
-				artifact,
-				cachedAt: Date.now(),
-			},
-		);
-	}
-
-	/**
-	 * Invalidate the cached entry for a given (scope, dappAccount). Called from
-	 * the admin update endpoint so newly-pushed machines propagate immediately.
-	 * Static so any runner instance (or the admin endpoint itself) can bust the
-	 * shared cache.
-	 */
-	static invalidateArtifactCache(
-		scope: DecisionMachineScope,
-		dappAccount?: string,
-	): void {
-		DecisionMachineRunner.artifactCache.delete(
-			DecisionMachineRunner.cacheKey(scope, dappAccount),
-		);
-	}
-
-	/** Instance shortcut to the static cache invalidator. */
-	invalidateArtifactCache(
-		scope: DecisionMachineScope,
-		dappAccount?: string,
-	): void {
-		DecisionMachineRunner.invalidateArtifactCache(scope, dappAccount);
-	}
-
-	/** Wipe every cached artifact (used by remove-all admin endpoint). */
-	static invalidateAllArtifactCache(): void {
-		DecisionMachineRunner.artifactCache.clear();
+		this.artifactCache.set(DecisionMachineRunner.cacheKey(scope, dappAccount), {
+			artifact,
+			cachedAt: Date.now(),
+		});
 	}
 
 	/**

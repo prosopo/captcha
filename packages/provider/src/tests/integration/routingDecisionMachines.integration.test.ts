@@ -292,25 +292,6 @@ describe("Routing Decision Machines (live local Mongo + Redis)", () => {
 		}
 	});
 
-	it("admin PUT propagates immediately (cache invalidated on update)", async () => {
-		await removeAll();
-
-		const sourceA = `module.exports.route = function() {
-			return { captchaType: 'image', solvedImagesCount: 2 };
-		};`;
-		expect((await putMachine(sourceA, "v-A")).status).toBe(200);
-		const before = await sendCaptchaViaRouter(CaptchaType.pow);
-		expect(before[ApiParams.captchaType]).toBe(CaptchaType.image);
-
-		const sourceB = `module.exports.route = function() {
-			return { captchaType: 'puzzle' };
-		};`;
-		expect((await putMachine(sourceB, "v-B")).status).toBe(200);
-		// No sleep — cache should be invalidated by the PUT.
-		const after = await sendCaptchaViaRouter(CaptchaType.pow);
-		expect(after[ApiParams.captchaType]).toBe(CaptchaType.puzzle);
-	});
-
 	it("a single artifact exporting both verify and route is honoured for routing", async () => {
 		await removeAll();
 		// Dual-export source: verify() veto behaviour (unused by this test) +

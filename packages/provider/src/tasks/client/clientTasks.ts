@@ -36,7 +36,6 @@ import type {
 } from "@prosopo/types-database";
 import { majorityAverage, parseUrl } from "@prosopo/util";
 import { validateSiteKey } from "../../api/validateAddress.js";
-import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 
 const SAMPLE_SIZE = 75;
 const isValidPrivateKey = (privateKeyString: string) => {
@@ -471,8 +470,6 @@ export class ClientTaskManager {
 			updatedAt: now,
 		});
 
-		DecisionMachineRunner.invalidateArtifactCache(scope, dappAccount);
-
 		return {
 			scope,
 			dappAccount,
@@ -548,19 +545,12 @@ export class ClientTaskManager {
 		success: boolean;
 		deletedId: string;
 	}> {
-		const existing = await this.providerDB.getDecisionMachineArtifactById(id);
 		const success = await this.providerDB.removeDecisionMachineArtifact(id);
 		if (!success) {
 			throw new ProsopoApiError("API.BAD_REQUEST", {
 				context: { id, message: "Decision machine not found" },
 				logger: this.logger,
 			});
-		}
-		if (existing) {
-			DecisionMachineRunner.invalidateArtifactCache(
-				existing.scope,
-				existing.dappAccount,
-			);
 		}
 		return {
 			success,
@@ -574,7 +564,6 @@ export class ClientTaskManager {
 	}> {
 		const deletedCount =
 			await this.providerDB.removeAllDecisionMachineArtifacts();
-		DecisionMachineRunner.invalidateAllArtifactCache();
 		return {
 			success: true,
 			deletedCount,

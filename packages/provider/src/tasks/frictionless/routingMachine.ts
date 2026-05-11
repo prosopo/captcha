@@ -14,9 +14,7 @@
 
 import type { Logger } from "@prosopo/common";
 import type {
-	CaptchaType,
 	CounterSpec,
-	RequestHeaders,
 	RoutingMachineBaseline,
 	RoutingMachineInput,
 	RoutingMachineInputBase,
@@ -123,47 +121,3 @@ const specsToReads = (
 	}
 	return out;
 };
-
-/**
- * Helper used by both the request response path (served) and the verify path
- * (solved) to derive a stable counter context from a session record's worth of
- * data.
- */
-export const buildRoutingContext = (input: {
-	dappAccount: string;
-	userAccount: string;
-	ip: string;
-	countryCode?: string;
-	score: number;
-	platform: RoutingMachinePlatform;
-	headers: RequestHeaders;
-	userAgent: string;
-	ja4?: string;
-	behavioralDataPacked?: RoutingMachineRawSignals["behavioralDataPacked"];
-}): RoutingContext => ({
-	dappAccount: input.dappAccount,
-	userAccount: input.userAccount,
-	ip: input.ip,
-	countryCode: input.countryCode,
-	score: input.score,
-	platform: input.platform,
-	raw: {
-		headers: input.headers,
-		userAgent: input.userAgent,
-		ja4: input.ja4,
-		behavioralDataPacked: input.behavioralDataPacked,
-	},
-});
-
-/**
- * Convenience wrapper so callers don't have to know how to compose a baseline
- * from an arbitrary CaptchaType when they want a no-router path to take.
- */
-export const baselineOf = (
-	captchaType: CaptchaType.image | CaptchaType.pow | CaptchaType.puzzle,
-	params: { solvedImagesCount?: number; powDifficulty?: number } = {},
-): RoutingMachineBaseline => ({
-	captchaType,
-	solvedImagesCount: params.solvedImagesCount,
-	powDifficulty: params.powDifficulty,
-});

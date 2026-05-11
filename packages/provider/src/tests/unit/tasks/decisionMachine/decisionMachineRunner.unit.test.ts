@@ -71,7 +71,6 @@ describe("DecisionMachineRunner", () => {
 	let runner: DecisionMachineRunner;
 
 	beforeEach(() => {
-		DecisionMachineRunner.invalidateAllArtifactCache();
 		db = {
 			getDecisionMachineArtifact: vi.fn(),
 		} as unknown as IProviderDatabase;
@@ -410,38 +409,6 @@ describe("DecisionMachineRunner", () => {
 
 			const result = await runner.getRequiredCounters(baseRouteInput());
 			expect(result).toEqual([]);
-		});
-	});
-
-	describe("invalidateArtifactCache", () => {
-		it("forces the next call to re-fetch from the DB", async () => {
-			const v1 = buildArtifact(
-				'module.exports.route = () => ({ captchaType: "image" });',
-				DecisionMachineScope.Global,
-			);
-			const v2 = buildArtifact(
-				'module.exports.route = () => ({ captchaType: "puzzle" });',
-				DecisionMachineScope.Global,
-			);
-			const getArtifact =
-				db.getDecisionMachineArtifact as unknown as ReturnType<typeof vi.fn>;
-			// First call: dapp=undefined, global=v1
-			getArtifact.mockResolvedValueOnce(undefined).mockResolvedValueOnce(v1);
-			const first = await runner.route(routeInput());
-			expect(first?.captchaType).toBe(CaptchaType.image);
-
-			// Without invalidation a second call should hit cache (no new DB call):
-			const second = await runner.route(routeInput());
-			expect(second?.captchaType).toBe(CaptchaType.image);
-			expect(getArtifact).toHaveBeenCalledTimes(2); // not 4
-
-			// Invalidate and reseed mocks to v2:
-			runner.invalidateArtifactCache(DecisionMachineScope.Global);
-			runner.invalidateArtifactCache(DecisionMachineScope.Dapp, "dapp");
-			getArtifact.mockResolvedValueOnce(undefined).mockResolvedValueOnce(v2);
-			const third = await runner.route(routeInput());
-			expect(third?.captchaType).toBe(CaptchaType.puzzle);
-			expect(getArtifact).toHaveBeenCalledTimes(4);
 		});
 	});
 });
