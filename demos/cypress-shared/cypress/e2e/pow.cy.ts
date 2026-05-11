@@ -69,11 +69,6 @@ describe("Proof of Work CAPTCHA", () => {
 		});
 	});
 
-	// Removed: "An error is returned if captcha type is set to image and
-	// pow is used in the widget" — captchaType is now entirely
-	// server-driven, so the widget can't disagree with the site key's
-	// stored type.
-
 	it("POW CAPTCHA loads and completes when 'I am human' is pressed", () => {
 		cy.visit(Cypress.env("default_page"));
 

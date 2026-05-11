@@ -74,11 +74,6 @@ describe("Captchas", () => {
 		});
 	});
 
-	// Removed: "An error is returned if captcha type is set to pow and
-	// frictionless is used in the widget" — captchaType is now entirely
-	// server-driven, so the widget can't disagree with the site key's
-	// stored type.
-
 	it("Captchas load when 'I am human' is pressed", () => {
 		cy.visit(Cypress.env("default_page"));
 

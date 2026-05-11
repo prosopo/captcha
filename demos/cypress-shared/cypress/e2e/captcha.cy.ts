@@ -101,11 +101,6 @@ describe("Captchas", () => {
 		});
 	});
 
-	// Removed: "An error is returned if captcha type is set to pow and the
-	// wrong captcha type is used in the widget" — captchaType is now
-	// entirely server-driven, so the widget can't disagree with the
-	// site key's stored type.
-
 	it("Captchas load when 'I am human' is pressed", () => {
 		cy.clickIAmHuman().then((captchas) => {
 			expect(captchas.length).to.be.gt(0);
