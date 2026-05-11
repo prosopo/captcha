@@ -13,22 +13,22 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/common";
-import {
-	type CaptchaType,
-	type CounterSpec,
-	type RequestHeaders,
-	type RoutingMachineBaseline,
-	type RoutingMachineInput,
-	type RoutingMachineInputBase,
-	type RoutingMachineOutput,
-	type RoutingMachinePlatform,
-	type RoutingMachineRawSignals,
+import type {
+	CaptchaType,
+	CounterSpec,
+	RequestHeaders,
+	RoutingMachineBaseline,
+	RoutingMachineInput,
+	RoutingMachineInputBase,
+	RoutingMachineOutput,
+	RoutingMachinePlatform,
+	RoutingMachineRawSignals,
 } from "@prosopo/types";
-import type { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import type {
 	CounterIncrement,
 	UsageCounters,
 } from "../../util/usageCounters.js";
+import type { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 
 export interface RoutingContext {
 	dappAccount: string;

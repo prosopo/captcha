@@ -146,7 +146,9 @@ export class UsageCounters {
 		if (!client) {
 			return null;
 		}
-		const keys = reads.map((r) => encodeCounterKey(dappAccount, r.spec, r.value));
+		const keys = reads.map((r) =>
+			encodeCounterKey(dappAccount, r.spec, r.value),
+		);
 		try {
 			const values = await client.mGet(keys);
 			const out: Record<string, number> = {};

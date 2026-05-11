@@ -135,10 +135,7 @@ describe("Routing Decision Machines (live local Mongo + Redis)", () => {
 		}
 	});
 
-	const putMachine = async (
-		source: string,
-		name: string,
-	): Promise<Response> =>
+	const putMachine = async (source: string, name: string): Promise<Response> =>
 		testFetch(`${baseUrl}${AdminApiPaths.UpdateDecisionMachine}`, {
 			method: "POST",
 			headers: {
@@ -150,8 +147,7 @@ describe("Routing Decision Machines (live local Mongo + Redis)", () => {
 				[ApiParams.decisionMachineScope]: DecisionMachineScope.Global,
 				[ApiParams.decisionMachineRuntime]: DecisionMachineRuntime.Node,
 				[ApiParams.decisionMachineSource]: source,
-				[ApiParams.decisionMachineLanguage]:
-					DecisionMachineLanguage.JavaScript,
+				[ApiParams.decisionMachineLanguage]: DecisionMachineLanguage.JavaScript,
 				[ApiParams.decisionMachineName]: name,
 				[ApiParams.decisionMachineVersion]: "1.0.0",
 			}),
@@ -221,7 +217,7 @@ describe("Routing Decision Machines (live local Mongo + Redis)", () => {
 
 	it("passes baseline through when machine returns undefined / no route", async () => {
 		await removeAll();
-		const source = `module.exports.unrelated = function() { return null; };`;
+		const source = "module.exports.unrelated = function() { return null; };";
 		const res = await putMachine(source, "no-route");
 		expect(res.status).toBe(200);
 		const response = await sendCaptchaViaRouter(CaptchaType.pow);
@@ -280,10 +276,7 @@ describe("Routing Decision Machines (live local Mongo + Redis)", () => {
 
 		// Cleanup: zero out the seeded counter
 		if (tasks.usageCounters) {
-			const client = await env
-				.getDb()
-				.getRedisConnection()
-				.getClient();
+			const client = await env.getDb().getRedisConnection().getClient();
 			await client.del(
 				encodeCounterKey(
 					dappAccount,

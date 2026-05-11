@@ -423,9 +423,8 @@ describe("DecisionMachineRunner", () => {
 				'module.exports.route = () => ({ captchaType: "puzzle" });',
 				DecisionMachineScope.Global,
 			);
-			const getArtifact = db.getDecisionMachineArtifact as unknown as ReturnType<
-				typeof vi.fn
-			>;
+			const getArtifact =
+				db.getDecisionMachineArtifact as unknown as ReturnType<typeof vi.fn>;
 			// First call: dapp=undefined, global=v1
 			getArtifact.mockResolvedValueOnce(undefined).mockResolvedValueOnce(v1);
 			const first = await runner.route(routeInput());

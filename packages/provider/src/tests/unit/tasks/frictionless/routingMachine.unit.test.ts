@@ -21,8 +21,8 @@ import {
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { DecisionMachineRunner } from "../../../../tasks/decisionMachine/decisionMachineRunner.js";
 import {
-	applyRouter,
 	type RoutingContext,
+	applyRouter,
 } from "../../../../tasks/frictionless/routingMachine.js";
 import type { UsageCounters } from "../../../../util/usageCounters.js";
 

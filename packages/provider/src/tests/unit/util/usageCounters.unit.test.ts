@@ -56,9 +56,7 @@ const buildConnection = (client: MockClient, ready = true): RedisConnection =>
 		getAwaitingTimeMs: vi.fn().mockReturnValue(0),
 	}) as unknown as RedisConnection;
 
-const sampleSpec = (
-	overrides: Partial<CounterSpec> = {},
-): CounterSpec => ({
+const sampleSpec = (overrides: Partial<CounterSpec> = {}): CounterSpec => ({
 	kind: "served",
 	captchaType: CaptchaType.pow,
 	dimension: "ip",
@@ -128,9 +126,7 @@ describe("UsageCounters", () => {
 	describe("incrAsync", () => {
 		it("does not throw on Redis failure", async () => {
 			client.evalSha.mockRejectedValue(new Error("boom"));
-			expect(() =>
-				counters.incrAsync(DAPP, sampleSpec(), IP),
-			).not.toThrow();
+			expect(() => counters.incrAsync(DAPP, sampleSpec(), IP)).not.toThrow();
 			await new Promise((r) => setImmediate(r));
 			expect(logger.warn).toHaveBeenCalled();
 		});
@@ -215,7 +211,12 @@ describe("encodeCounterKey", () => {
 
 describe("buildAllWindowIncrements", () => {
 	it("emits 24 increments for a concrete captcha type (6 windows × 2 dims × {type, any})", () => {
-		const result = buildAllWindowIncrements("served", CaptchaType.pow, IP, USER);
+		const result = buildAllWindowIncrements(
+			"served",
+			CaptchaType.pow,
+			IP,
+			USER,
+		);
 		expect(result).toHaveLength(24);
 		const windows = new Set(result.map((r) => r.spec.window));
 		expect(windows).toEqual(new Set(["1m", "10m", "1h", "3h", "6h", "24h"]));

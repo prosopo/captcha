@@ -33,7 +33,7 @@ import type { AccessPolicy } from "@prosopo/user-access-policy";
 import { v4 as uuidv4 } from "uuid";
 import { checkLangRules } from "../../rules/lang.js";
 import {
-	UsageCounters,
+	type UsageCounters,
 	buildAllWindowIncrements,
 } from "../../util/usageCounters.js";
 import { CaptchaManager } from "../captchaManager.js";
