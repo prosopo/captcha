@@ -270,7 +270,7 @@ describe("Frictionless Task Manager", () => {
 				captchaType: CaptchaType.image,
 				domains: ["localhost"],
 			});
-			expect(parsed.imageMaxRounds).toBe(2);
+			expect(parsed.imageMaxRounds).toBe(32);
 		});
 	});
 
