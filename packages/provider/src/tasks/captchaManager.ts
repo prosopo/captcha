@@ -206,6 +206,7 @@ export class CaptchaManager {
 				...(sessionRecord.solvedImagesCount && {
 					solvedImagesCount: sessionRecord.solvedImagesCount,
 				}),
+				countryCode: sessionRecord.countryCode,
 			};
 		}
 
