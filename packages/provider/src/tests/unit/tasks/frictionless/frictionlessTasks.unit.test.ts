@@ -264,7 +264,7 @@ describe("Frictionless Task Manager", () => {
 	});
 
 	describe("ClientSettingsSchema defaults", () => {
-		it("defaults imageMaxRounds to 2", () => {
+		it("defaults imageMaxRounds to 32", () => {
 			expect(imageMaxRoundsDefault).toBe(32);
 			const parsed = ClientSettingsSchema.parse({
 				captchaType: CaptchaType.image,

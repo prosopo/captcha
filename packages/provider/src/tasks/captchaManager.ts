@@ -191,7 +191,7 @@ export class CaptchaManager {
 				}));
 				return {
 					valid: false,
-					reason: "CAPTCHA.NO_SESSION_FOUND",
+					reason: "API.INCORRECT_CAPTCHA_TYPE",
 					type: requestedCaptchaType,
 				};
 			}
