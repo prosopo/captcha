@@ -69,33 +69,6 @@ describe("Proof of Work CAPTCHA", () => {
 		});
 	});
 
-	it("An error is returned if captcha type is set to image and pow is used in the widget", () => {
-		// Register with image site key but use POW captcha
-		cy.registerSiteKey(baseCaptchaType, CaptchaType.image).then((response) => {
-			cy.task("log", `Response status: ${response.status}`);
-			cy.task("log", `Response: ${JSON.stringify(response.body)}`);
-			expect(response.status).to.equal(200);
-		});
-		cy.visit(Cypress.env("default_page"));
-
-		cy.waitForProcaptchaScript();
-
-		cy.intercept("POST", "**/prosopo/provider/client/captcha/pow").as(
-			"powCaptcha",
-		);
-
-		getWidgetElement(checkboxClass, { timeout: 12000 }).first().realClick();
-
-		return cy
-			.wait("@powCaptcha", { timeout: 36000 })
-			.its("response")
-			.then((response) => {
-				expect(response).to.not.be.undefined;
-				expect(response?.statusCode).to.equal(400);
-				expect(response?.body).to.have.property("error");
-			});
-	});
-
 	it("POW CAPTCHA loads and completes when 'I am human' is pressed", () => {
 		cy.visit(Cypress.env("default_page"));
 

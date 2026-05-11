@@ -16,7 +16,6 @@ import { getWindowCallback } from "@prosopo/procaptcha-common";
 import type { ProcaptchaRenderOptions } from "@prosopo/types";
 import { at } from "@prosopo/util";
 import type { Root } from "react-dom/client";
-import { getCaptchaType } from "./util/captcha/captchaType.js";
 import { extractParams, getProcaptchaScript } from "./util/config.js";
 import { WidgetFactory } from "./util/widgetFactory.js";
 import { WidgetThemeResolver } from "./util/widgetThemeResolver.js";
@@ -48,12 +47,9 @@ const implicitRender = async () => {
 			return;
 		}
 
-		const captchaType = getCaptchaType(elements);
-
 		const root = await widgetFactory.createWidgets(
 			elements,
 			{
-				captchaType: captchaType,
 				siteKey: siteKey,
 			},
 			!(web3 === "true"),
@@ -72,12 +68,9 @@ const implicitRender = async () => {
 			const siteKey = button.getAttribute("data-sitekey") || "";
 			const callback = button.getAttribute("data-callback") || "";
 
-			const captchaType = getCaptchaType([button]);
-
 			const root = await widgetFactory.createWidgets(
 				[button],
 				{
-					captchaType: captchaType,
 					siteKey: siteKey,
 					callback: callback,
 				},
