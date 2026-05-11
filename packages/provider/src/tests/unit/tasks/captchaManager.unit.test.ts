@@ -342,7 +342,7 @@ describe("CaptchaManager", () => {
 
 			expect(result).toEqual({
 				valid: false,
-				reason: "CAPTCHA.NO_SESSION_FOUND",
+				reason: "API.INCORRECT_CAPTCHA_TYPE",
 				type: CaptchaType.image,
 			});
 		});
@@ -370,7 +370,7 @@ describe("CaptchaManager", () => {
 
 			expect(result).toEqual({
 				valid: false,
-				reason: "CAPTCHA.NO_SESSION_FOUND",
+				reason: "API.INCORRECT_CAPTCHA_TYPE",
 				type: CaptchaType.pow,
 			});
 		});
