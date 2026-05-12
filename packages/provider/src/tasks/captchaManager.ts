@@ -148,6 +148,14 @@ export class CaptchaManager {
 						sessionId: sessionId,
 					},
 				}));
+				// DB and cache have drifted (e.g. cache outlived the DB
+				// record, or Mongo was dropped while Redis kept the entry).
+				// Without this, the hash → sessionId mapping keeps resolving
+				// and /frictionless keeps "Reusing existing session" →
+				// /captcha/* keeps failing in an infinite loop.
+				if (this.writeQueue) {
+					this.writeQueue.invalidateCachedSession(sessionId).catch(() => {});
+				}
 				return {
 					valid: false,
 					reason: "CAPTCHA.NO_SESSION_FOUND",
