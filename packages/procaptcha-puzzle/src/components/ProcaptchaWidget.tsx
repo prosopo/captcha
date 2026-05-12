@@ -84,15 +84,27 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	useEffect(() => {
 		// Only set up event listener if in invisible mode
 		if (config.mode === ModeEnum.invisible) {
-			// Event handler for when execute() is called
-			const handleExecuteEvent = () => {
-				// Directly start the verification process without showing any UI
+			// Event handler for when execute() is called: fetch a challenge
+			// then drive the puzzle UI through the same phase transitions as
+			// the visible checkbox flow.
+			const handleExecuteEvent = async () => {
+				if (loading) {
+					return;
+				}
+				setLoading(true);
+				setShowRetry(false);
 				try {
-					manager.current.start();
+					const challenge = await manager.current.start();
+					if (challenge) {
+						setChallengeData(challenge);
+						setPuzzlePhase("dragging");
+					}
 				} catch (error) {
 					callbacks.onError?.(
 						error instanceof Error ? error : new Error(String(error)),
 					);
+				} finally {
+					setLoading(false);
 				}
 			};
 
@@ -109,7 +121,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 
 		// Return empty cleanup function when not in invisible mode
 		return () => {};
-	}, [config.mode, callbacks.onError]);
+	}, [config.mode, callbacks.onError, loading]);
 
 	const handlePuzzleComplete = useCallback(
 		async (finalX: number, finalY: number, puzzleEvents: PuzzleEvent[]) => {
@@ -159,52 +171,56 @@ const Procaptcha = (props: ProcaptchaProps) => {
 		[callbacks.onError],
 	);
 
-	if (config.mode === ModeEnum.invisible) {
-		// Return null for invisible mode - no UI needed
-		return null;
-	}
+	const isInvisible = config.mode === ModeEnum.invisible;
+	const showPuzzleOverlay =
+		(puzzlePhase === "dragging" || puzzlePhase === "submitting") &&
+		challengeData;
 
 	return (
 		<>
-			{/* Puzzle overlay — rendered outside the shadow DOM flow via fixed positioning */}
-			{(puzzlePhase === "dragging" || puzzlePhase === "submitting") &&
-				challengeData && (
-					<PuzzleCanvas
-						originX={challengeData.originX}
-						originY={challengeData.originY}
-						targetX={challengeData.targetX}
-						targetY={challengeData.targetY}
-						onComplete={handlePuzzleComplete}
-						showRetry={showRetry}
-						submitting={puzzlePhase === "submitting"}
-					/>
-				)}
+			{/* Puzzle overlay — rendered outside the shadow DOM flow via fixed
+			    positioning. Shown in both visible and invisible modes once a
+			    challenge has been fetched; puzzle is inherently interactive. */}
+			{showPuzzleOverlay && (
+				<PuzzleCanvas
+					originX={challengeData.originX}
+					originY={challengeData.originY}
+					targetX={challengeData.targetX}
+					targetY={challengeData.targetY}
+					onComplete={handlePuzzleComplete}
+					showRetry={showRetry}
+					submitting={puzzlePhase === "submitting"}
+				/>
+			)}
 
-			{/* Checkbox — always rendered so transitions are smooth */}
-			<Checkbox
-				checked={state.isHuman}
-				theme={theme}
-				onChange={async (_event: React.MouseEvent | React.TouchEvent) => {
-					if (loading) {
-						return;
-					}
-					setLoading(true);
-					setShowRetry(false);
+			{/* Checkbox — only in visible mode. Invisible mode is driven by
+			    the host page's execute() call (e.g. on form submit). */}
+			{!isInvisible && (
+				<Checkbox
+					checked={state.isHuman}
+					theme={theme}
+					onChange={async (_event: React.MouseEvent | React.TouchEvent) => {
+						if (loading) {
+							return;
+						}
+						setLoading(true);
+						setShowRetry(false);
 
-					const challenge = await manager.current.start();
+						const challenge = await manager.current.start();
 
-					if (challenge) {
-						setChallengeData(challenge);
-						setPuzzlePhase("dragging");
-					}
+						if (challenge) {
+							setChallengeData(challenge);
+							setPuzzlePhase("dragging");
+						}
 
-					setLoading(false);
-				}}
-				labelText={isTranslationReady ? t("WIDGET.I_AM_HUMAN") : ""}
-				error={state.error?.message}
-				aria-label="human checkbox"
-				loading={loading || puzzlePhase === "submitting"}
-			/>
+						setLoading(false);
+					}}
+					labelText={isTranslationReady ? t("WIDGET.I_AM_HUMAN") : ""}
+					error={state.error?.message}
+					aria-label="human checkbox"
+					loading={loading || puzzlePhase === "submitting"}
+				/>
+			)}
 		</>
 	);
 };

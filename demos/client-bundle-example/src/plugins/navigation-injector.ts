@@ -48,9 +48,10 @@ export default function navigationInjector(): Plugin {
 				implicit: { path: "frictionless-implicit.html", exists: true },
 				explicit: { path: "frictionless-explicit.html", exists: true },
 			},
-			// puzzle pages exist (puzzle-implicit.html, puzzle-explicit.html) and
-			// are reachable via direct URL, but intentionally hidden from the
-			// navbar while the puzzle captcha is in beta.
+			puzzle: {
+				implicit: { path: "puzzle-implicit.html", exists: true },
+				explicit: { path: "puzzle-explicit.html", exists: true },
+			},
 		},
 		invisible: {
 			image: {
@@ -70,6 +71,10 @@ export default function navigationInjector(): Plugin {
 					path: "invisible-frictionless-explicit.html",
 					exists: true,
 				},
+			},
+			puzzle: {
+				implicit: { path: "invisible-puzzle-implicit.html", exists: true },
+				explicit: { path: "invisible-puzzle-explicit.html", exists: true },
 			},
 		},
 	};
