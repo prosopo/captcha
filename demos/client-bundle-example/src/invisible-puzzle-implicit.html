@@ -50,10 +50,10 @@
 
             const resultElement = document.getElementById('result');
             if (resultElement) {
-                resultElement.innerHTML = `<strong>Form submitted with:</strong><br>
-- Name: ${name}<br>
-- Email: ${email}<br>
-- Procaptcha verified: Yes`;
+                // textContent (not innerHTML) — user-typed values must not be
+                // interpreted as HTML; whitespace preserved via CSS below.
+                resultElement.textContent = `Form submitted with:\n- Name: ${name}\n- Email: ${email}\n- Procaptcha verified: Yes`;
+                resultElement.style.whiteSpace = 'pre-wrap';
                 resultElement.style.display = 'block';
             }
 
