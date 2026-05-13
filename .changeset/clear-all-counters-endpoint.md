@@ -1,7 +1,7 @@
 ---
-"@prosopo/types": minor
-"@prosopo/api": minor
-"@prosopo/provider": minor
+"@prosopo/types": patch
+"@prosopo/api": patch
+"@prosopo/provider": patch
 ---
 
 Add a new admin-only endpoint `POST /v1/prosopo/provider/admin/counters/clear-all`
