@@ -140,6 +140,7 @@ export enum AdminApiPaths {
 	GetDecisionMachine = "/v1/prosopo/provider/admin/decision-machine/get",
 	RemoveDecisionMachine = "/v1/prosopo/provider/admin/decision-machine/remove",
 	RemoveAllDecisionMachines = "/v1/prosopo/provider/admin/decision-machine/remove-all",
+	ClearAllCounters = "/v1/prosopo/provider/admin/counters/clear-all",
 	SiteKeyRemove = "/v1/prosopo/provider/admin/sitekey/remove",
 	SiteKeysRemove = "/v1/prosopo/provider/admin/sitekeys/remove",
 }
@@ -180,6 +181,7 @@ export const ProviderDefaultRateLimits = {
 	[AdminApiPaths.GetDecisionMachine]: { windowMs: 60000, limit: 60 },
 	[AdminApiPaths.RemoveDecisionMachine]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.RemoveAllDecisionMachines]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.ClearAllCounters]: { windowMs: 60000, limit: 10 },
 	[AdminApiPaths.SiteKeyRemove]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.SiteKeysRemove]: { windowMs: 60000, limit: 5 },
 };
@@ -587,6 +589,22 @@ export const RemoveDecisionMachineBody = object({
 });
 
 export const RemoveAllDecisionMachinesBody = object({});
+
+export const ClearAllCountersBody = object({
+	[ApiParams.dapp]: string().optional(),
+});
+
+export type ClearAllCountersBodyType = z.infer<typeof ClearAllCountersBody>;
+
+export const ClearAllCountersResponse = object({
+	success: boolean(),
+	deletedCount: number(),
+	scope: string(),
+});
+
+export type ClearAllCountersResponseType = z.infer<
+	typeof ClearAllCountersResponse
+>;
 
 export const DecisionMachineSummarySchema = object({
 	_id: string(),

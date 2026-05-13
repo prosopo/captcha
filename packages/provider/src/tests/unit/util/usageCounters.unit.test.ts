@@ -41,12 +41,32 @@ interface MockClient {
 	scriptLoad: ReturnType<typeof vi.fn>;
 	evalSha: ReturnType<typeof vi.fn>;
 	mGet: ReturnType<typeof vi.fn>;
+	scanIterator: ReturnType<typeof vi.fn>;
+	del: ReturnType<typeof vi.fn>;
 }
 
 const buildClient = (): MockClient => ({
 	scriptLoad: vi.fn().mockResolvedValue("script-sha-123"),
 	evalSha: vi.fn().mockResolvedValue(1),
 	mGet: vi.fn().mockResolvedValue([]),
+	scanIterator: vi.fn(),
+	del: vi.fn().mockResolvedValue(0),
+});
+
+const asyncIterableOf = <T>(items: T[]): AsyncIterable<T> => ({
+	[Symbol.asyncIterator](): AsyncIterator<T> {
+		let i = 0;
+		return {
+			next(): Promise<IteratorResult<T>> {
+				if (i < items.length) {
+					// biome-ignore lint/style/noNonNullAssertion: bounds-checked
+					const v = items[i++]!;
+					return Promise.resolve({ value: v, done: false });
+				}
+				return Promise.resolve({ value: undefined as never, done: true });
+			},
+		};
+	},
 });
 
 const buildConnection = (client: MockClient, ready = true): RedisConnection =>
@@ -178,6 +198,75 @@ describe("UsageCounters", () => {
 				{ spec: sampleSpec(), value: IP },
 			]);
 			expect(result).toBeNull();
+			expect(logger.warn).toHaveBeenCalled();
+		});
+	});
+
+	describe("clearAll", () => {
+		it("returns null when Redis is not ready", async () => {
+			connection = buildConnection(client, false);
+			counters = new UsageCounters(connection, logger);
+			expect(await counters.clearAll()).toBeNull();
+			expect(client.scanIterator).not.toHaveBeenCalled();
+		});
+
+		it("scans cnt:* and deletes matched keys when no dapp is given", async () => {
+			client.scanIterator.mockReturnValue(
+				asyncIterableOf([
+					`cnt:${DAPP}:served:pow:ip:1.2.3.4:10m`,
+					`cnt:other:solved:any:userAccount:0xab:1h`,
+				]),
+			);
+			client.del.mockResolvedValueOnce(2);
+			const deleted = await counters.clearAll();
+			expect(deleted).toBe(2);
+			const scanArgs = client.scanIterator.mock.calls[0]?.[0] as {
+				MATCH: string;
+			};
+			expect(scanArgs.MATCH).toBe("cnt:*");
+			expect(client.del).toHaveBeenCalledTimes(1);
+		});
+
+		it("scopes pattern to cnt:{dapp}:* when dappAccount is provided", async () => {
+			client.scanIterator.mockReturnValue(
+				asyncIterableOf([`cnt:${DAPP}:served:pow:ip:1.2.3.4:10m`]),
+			);
+			client.del.mockResolvedValueOnce(1);
+			const deleted = await counters.clearAll(DAPP);
+			expect(deleted).toBe(1);
+			const scanArgs = client.scanIterator.mock.calls[0]?.[0] as {
+				MATCH: string;
+			};
+			expect(scanArgs.MATCH).toBe(`cnt:${DAPP}:*`);
+		});
+
+		it("returns 0 when no keys match", async () => {
+			client.scanIterator.mockReturnValue(asyncIterableOf<string>([]));
+			const deleted = await counters.clearAll();
+			expect(deleted).toBe(0);
+			expect(client.del).not.toHaveBeenCalled();
+		});
+
+		it("batches DEL calls past the 500-key threshold", async () => {
+			const keys: string[] = [];
+			for (let i = 0; i < 750; i++) {
+				keys.push(`cnt:${DAPP}:served:pow:ip:${i}:10m`);
+			}
+			client.scanIterator.mockReturnValue(asyncIterableOf(keys));
+			client.del
+				.mockResolvedValueOnce(500)
+				.mockResolvedValueOnce(250);
+			const deleted = await counters.clearAll();
+			expect(deleted).toBe(750);
+			expect(client.del).toHaveBeenCalledTimes(2);
+		});
+
+		it("returns null and logs when scan throws", async () => {
+			client.scanIterator.mockImplementation(() => {
+				throw new Error("scan-failed");
+			});
+			const deleted = await counters.clearAll();
+			expect(deleted).toBeNull();
 			expect(logger.warn).toHaveBeenCalled();
 		});
 	});
