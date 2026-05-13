@@ -25,6 +25,7 @@ type MockTasks = {
 		decryptPayload: MockFn;
 		checkLangRules: MockFn;
 		setSessionParams: MockFn;
+		setRoutingContext: MockFn;
 		getClientContextEntropy: MockFn;
 		sendImageCaptcha: MockFn;
 		sendPowCaptcha: MockFn;
@@ -139,6 +140,7 @@ vi.mock("../../../tasks/index.js", async () => {
 					decryptPayload: vi.fn(),
 					checkLangRules: vi.fn().mockReturnValue(0),
 					setSessionParams: vi.fn(),
+					setRoutingContext: vi.fn(),
 					getClientContextEntropy: vi.fn(),
 					sendImageCaptcha: vi.fn().mockResolvedValue({ type: "image" }),
 					sendPowCaptcha: vi.fn().mockResolvedValue({ type: "pow" }),
@@ -206,6 +208,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			decryptPayload: vi.fn(),
 			checkLangRules: vi.fn().mockReturnValue(0),
 			setSessionParams: vi.fn(),
+			setRoutingContext: vi.fn(),
 			getClientContextEntropy: vi.fn(),
 			sendImageCaptcha: vi.fn().mockResolvedValue({ type: "image" }),
 			sendPowCaptcha: vi.fn().mockResolvedValue({ type: "pow" }),

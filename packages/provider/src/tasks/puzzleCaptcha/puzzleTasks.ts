@@ -42,6 +42,10 @@ import {
 	getIpAddressFromComposite,
 } from "../../compositeIpAddress.js";
 import { deepValidateIpAddress } from "../../util.js";
+import {
+	type UsageCounters,
+	buildAllWindowIncrements,
+} from "../../util/usageCounters.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
@@ -62,16 +66,19 @@ interface PuzzleCaptchaChallenge {
 export class PuzzleCaptchaManager extends CaptchaManager {
 	POW_SEPARATOR: string;
 	private decisionMachineRunner: DecisionMachineRunner;
+	private readonly usageCounters: UsageCounters | null;
 
 	constructor(
 		db: IProviderDatabase,
 		pair: KeyringPair,
 		config: ProsopoConfigOutput,
 		logger?: Logger,
+		usageCounters?: UsageCounters | null,
 	) {
 		super(db, pair, config, logger);
 		this.POW_SEPARATOR = POW_SEPARATOR;
 		this.decisionMachineRunner = new DecisionMachineRunner(db);
+		this.usageCounters = usageCounters ?? null;
 	}
 
 	/**
@@ -219,6 +226,21 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				status: CaptchaStatus.disapproved,
 				reason: "CAPTCHA.INVALID_SOLUTION",
 			};
+		}
+
+		// Solved-counter writes: fire-and-forget, only on a correct puzzle.
+		// Runs before any decision-machine veto.
+		if (correct && this.usageCounters) {
+			const dappAccount = at(challengeSplit, 2);
+			this.usageCounters.incrManyAsync(
+				dappAccount,
+				buildAllWindowIncrements(
+					"solved",
+					CaptchaType.puzzle,
+					ipAddress.address,
+					userAccount,
+				),
+			);
 		}
 
 		// Process behavioral data if provided

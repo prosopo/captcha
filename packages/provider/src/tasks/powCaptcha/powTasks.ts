@@ -47,6 +47,10 @@ import {
 } from "../../compositeIpAddress.js";
 import { deepValidateIpAddress } from "../../util.js";
 import type { RedisWriteQueue } from "../../util/redisCache.js";
+import {
+	type UsageCounters,
+	buildAllWindowIncrements,
+} from "../../util/usageCounters.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
@@ -59,6 +63,7 @@ const DEFAULT_POW_DIFFICULTY = 4;
 export class PowCaptchaManager extends CaptchaManager {
 	POW_SEPARATOR: string;
 	private decisionMachineRunner: DecisionMachineRunner;
+	private readonly usageCounters: UsageCounters | null;
 
 	constructor(
 		db: IProviderDatabase,
@@ -66,10 +71,12 @@ export class PowCaptchaManager extends CaptchaManager {
 		config: ProsopoConfigOutput,
 		logger?: Logger,
 		writeQueue?: RedisWriteQueue | null,
+		usageCounters?: UsageCounters | null,
 	) {
 		super(db, pair, config, logger, writeQueue);
 		this.POW_SEPARATOR = POW_SEPARATOR;
 		this.decisionMachineRunner = new DecisionMachineRunner(db);
+		this.usageCounters = usageCounters ?? null;
 	}
 
 	/**
@@ -213,6 +220,23 @@ export class PowCaptchaManager extends CaptchaManager {
 				status: CaptchaStatus.disapproved,
 				reason: "CAPTCHA.INVALID_SOLUTION",
 			};
+		}
+
+		// Solved-counter writes: fire-and-forget, only on successful PoW math.
+		// Runs before the decision-machine verify-phase veto so a denied
+		// solution still counts as "solved" from the routing-machine's
+		// perspective (the user did the work).
+		if (correct && this.usageCounters) {
+			const dappAccount = at(challengeSplit, 2);
+			this.usageCounters.incrManyAsync(
+				dappAccount,
+				buildAllWindowIncrements(
+					"solved",
+					CaptchaType.pow,
+					ipAddress.address,
+					userAccount,
+				),
+			);
 		}
 
 		// Accumulate behavioral data for a combined write with the result update.

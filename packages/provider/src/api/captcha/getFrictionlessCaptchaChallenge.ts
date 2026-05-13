@@ -33,6 +33,7 @@ import {
 } from "../../tasks/frictionless/frictionlessTasks.js";
 import { timestampDecayFunction } from "../../tasks/frictionless/frictionlessTasksUtils.js";
 import { Tasks } from "../../tasks/index.js";
+import { derivePlatform } from "../../utils/devicePlatform.js";
 import { hashUserAgent } from "../../utils/hashUserAgent.js";
 import { hashUserIp } from "../../utils/hashUserIp.js";
 import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
@@ -409,6 +410,31 @@ export default (
 				countryCode,
 				headers: flatHeaders,
 				mode: sessionMode,
+			});
+
+			// Routing-machine context — enables router invocation and served
+			// counter writes inside FrictionlessManager.sendCaptcha. Only the
+			// real frictionless path (after maintenance-mode and configured-
+			// captchaType short-circuits) supplies one.
+			const ipInfoMobile =
+				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
+					? req.ipInfo.isMobile
+					: undefined;
+			const safeUserAgent = userAgent ?? "";
+			tasks.frictionlessManager.setRoutingContext({
+				dappAccount: dapp,
+				userAccount: user,
+				ip: normalizedIp,
+				countryCode,
+				score: botScore,
+				platform: derivePlatform(safeUserAgent, webView, {
+					...(typeof ipInfoMobile === "boolean" && { isMobile: ipInfoMobile }),
+				}),
+				raw: {
+					headers: flatHeaders,
+					userAgent: safeUserAgent,
+					...(req.ja4 && { ja4: req.ja4 }),
+				},
 			});
 
 			// Check if the IP address is blocked
