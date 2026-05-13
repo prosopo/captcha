@@ -64,9 +64,9 @@ import {
 	type VerifySolutionBodyTypeInput,
 } from "@prosopo/types";
 import {
+	ClearAllCountersBody,
 	GetAllDecisionMachinesBody,
 	GetDecisionMachineBody,
-	ClearAllCountersBody,
 	RemoveAllDecisionMachinesBody,
 	RemoveDecisionMachineBody,
 } from "@prosopo/types";

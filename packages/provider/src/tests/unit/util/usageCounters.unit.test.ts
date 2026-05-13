@@ -214,7 +214,7 @@ describe("UsageCounters", () => {
 			client.scanIterator.mockReturnValue(
 				asyncIterableOf([
 					`cnt:${DAPP}:served:pow:ip:1.2.3.4:10m`,
-					`cnt:other:solved:any:userAccount:0xab:1h`,
+					"cnt:other:solved:any:userAccount:0xab:1h",
 				]),
 			);
 			client.del.mockResolvedValueOnce(2);
@@ -253,9 +253,7 @@ describe("UsageCounters", () => {
 				keys.push(`cnt:${DAPP}:served:pow:ip:${i}:10m`);
 			}
 			client.scanIterator.mockReturnValue(asyncIterableOf(keys));
-			client.del
-				.mockResolvedValueOnce(500)
-				.mockResolvedValueOnce(250);
+			client.del.mockResolvedValueOnce(500).mockResolvedValueOnce(250);
 			const deleted = await counters.clearAll();
 			expect(deleted).toBe(750);
 			expect(client.del).toHaveBeenCalledTimes(2);
