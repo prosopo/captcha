@@ -64,6 +64,7 @@ import {
 	type VerifySolutionBodyTypeInput,
 } from "@prosopo/types";
 import {
+	ClearAllCountersBody,
 	GetAllDecisionMachinesBody,
 	GetDecisionMachineBody,
 	RemoveAllDecisionMachinesBody,
@@ -518,6 +519,22 @@ export default class ProviderApi
 		return this.post(
 			AdminApiPaths.RemoveAllDecisionMachines,
 			RemoveAllDecisionMachinesBody.parse({}),
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					Authorization: `Bearer ${jwt}`,
+				},
+			},
+		);
+	}
+
+	public clearAllCounters(
+		jwt: string,
+		dappAccount?: string,
+	): Promise<ApiResponse> {
+		return this.post(
+			AdminApiPaths.ClearAllCounters,
+			ClearAllCountersBody.parse({ [ApiParams.dapp]: dappAccount }),
 			{
 				headers: {
 					"Prosopo-Site-Key": this.account,

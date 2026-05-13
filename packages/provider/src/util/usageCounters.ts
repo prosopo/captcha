@@ -131,6 +131,50 @@ export class UsageCounters {
 	}
 
 	/**
+	 * Delete every counter key matching the given dapp (or all counters when
+	 * dappAccount is omitted). Intended for admin manual-testing flows — not
+	 * for the hot path. Uses SCAN + DEL in chunks; returns the number of keys
+	 * deleted. Returns null on Redis failure.
+	 */
+	async clearAll(dappAccount?: string): Promise<number | null> {
+		const client = await this.getClient();
+		if (!client) {
+			return null;
+		}
+		const pattern = dappAccount ? `cnt:${dappAccount}:*` : "cnt:*";
+		let deleted = 0;
+		try {
+			const batchSize = 500;
+			let batch: string[] = [];
+			for await (const key of client.scanIterator({
+				MATCH: pattern,
+				COUNT: 200,
+			})) {
+				if (Array.isArray(key)) {
+					for (const k of key) batch.push(k);
+				} else {
+					batch.push(key);
+				}
+				if (batch.length >= batchSize) {
+					deleted += Number(await client.del(batch));
+					batch = [];
+				}
+			}
+			if (batch.length > 0) {
+				deleted += Number(await client.del(batch));
+			}
+			return deleted;
+		} catch (error) {
+			this.logger.warn(() => ({
+				msg: "Counter clearAll failed",
+				err: error,
+				data: { pattern, deleted },
+			}));
+			return null;
+		}
+	}
+
+	/**
 	 * Bulk read counters via MGET. Missing keys map to 0. Returns a record
 	 * keyed by encoded counter key. Returns null on Redis failure so callers
 	 * can fall back.
