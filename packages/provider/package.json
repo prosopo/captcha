@@ -45,7 +45,7 @@
 		"express-rate-limit": "7.4.0",
 		"geolib": "3.3.4",
 		"i18next": "24.1.0",
-		"ip-address": "10.0.1",
+		"ip-address": "10.1.1",
 		"mongoose": "8.13.0",
 		"read-tls-client-hello": "1.1.0",
 		"uuid": "11.1.0",
