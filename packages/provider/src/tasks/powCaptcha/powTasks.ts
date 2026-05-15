@@ -514,9 +514,11 @@ export class PowCaptchaManager extends CaptchaManager {
 			const hasTrafficFilter = Object.values(effectiveTrafficFilter).some(
 				(v) => v,
 			);
-			if (ip && hasTrafficFilter) {
+			const ipToCheck =
+				ip || getIpAddressFromComposite(challengeRecord.ipAddress).address;
+			if (ipToCheck && hasTrafficFilter) {
 				const check = await checkTrafficFilter(
-					ip,
+					ipToCheck,
 					effectiveTrafficFilter,
 					env.ipInfoService,
 					this.logger,
