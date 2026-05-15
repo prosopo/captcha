@@ -345,6 +345,7 @@ describe("PowCaptchaManager", () => {
 				requestedAtTimestamp: new Date(timestamp),
 				serverChecked: false,
 				result: { status: CaptchaStatus.approved },
+				ipAddress: getCompositeIpAddress(getIPAddress("1.1.1.1")),
 			};
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
@@ -2138,6 +2139,7 @@ module.exports = (input) => {
 				serverChecked: false,
 				result: { status: CaptchaStatus.approved },
 				sessionId,
+				ipAddress: getCompositeIpAddress(getIPAddress("1.1.1.1")),
 			};
 
 			// biome-ignore lint/suspicious/noExplicitAny: test mock
