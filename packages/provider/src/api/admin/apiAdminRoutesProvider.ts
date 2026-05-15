@@ -15,6 +15,7 @@
 import type { ApiRoutes, ApiRoutesProvider } from "@prosopo/api-route";
 import { AdminApiPaths } from "@prosopo/types";
 import type { Tasks } from "../../tasks/index.js";
+import { ApiClearAllCountersEndpoint } from "./apiClearAllCountersEndpoint.js";
 import { ApiGetAllDecisionMachinesEndpoint } from "./apiGetAllDecisionMachinesEndpoint.js";
 import { ApiGetDecisionMachineEndpoint } from "./apiGetDecisionMachineEndpoint.js";
 import { ApiRegisterSiteKeyEndpoint } from "./apiRegisterSiteKeyEndpoint.js";
@@ -56,6 +57,9 @@ class ApiAdminRoutesProvider implements ApiRoutesProvider {
 				new ApiRemoveDecisionMachineEndpoint(this.tasks.clientTaskManager),
 			[AdminApiPaths.RemoveAllDecisionMachines]:
 				new ApiRemoveAllDecisionMachinesEndpoint(this.tasks.clientTaskManager),
+			[AdminApiPaths.ClearAllCounters]: new ApiClearAllCountersEndpoint(
+				this.tasks.usageCounters,
+			),
 			[AdminApiPaths.SiteKeyRemove]: new ApiRemoveSiteKeyEndpoint(
 				this.tasks.clientTaskManager,
 			),

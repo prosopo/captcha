@@ -55,6 +55,10 @@ import { constructPairList, containsIdenticalPairs } from "../../pairs.js";
 import { checkLangRules } from "../../rules/lang.js";
 import { deepValidateIpAddress, shuffleArray } from "../../util.js";
 import type { RedisWriteQueue } from "../../util/redisCache.js";
+import {
+	type UsageCounters,
+	buildAllWindowIncrements,
+} from "../../util/usageCounters.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { FrictionlessReason } from "../frictionless/frictionlessTasks.js";
@@ -65,6 +69,7 @@ import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
 
 export class ImgCaptchaManager extends CaptchaManager {
 	private decisionMachineRunner: DecisionMachineRunner;
+	private readonly usageCounters: UsageCounters | null;
 
 	constructor(
 		db: IProviderDatabase,
@@ -72,10 +77,12 @@ export class ImgCaptchaManager extends CaptchaManager {
 		config: ProsopoConfigOutput,
 		logger?: Logger,
 		writeQueue?: RedisWriteQueue | null,
+		usageCounters?: UsageCounters | null,
 	) {
 		super(db, pair, config, logger, writeQueue);
 		this.config = config;
 		this.decisionMachineRunner = new DecisionMachineRunner(db);
+		this.usageCounters = usageCounters ?? null;
 	}
 
 	async getCaptchaWithProof(
@@ -828,6 +835,26 @@ export class ImgCaptchaManager extends CaptchaManager {
 		let isApproved =
 			!failStatus && solution.result.status === CaptchaStatus.approved;
 		let failureStatus = failStatus || "API.USER_NOT_VERIFIED";
+
+		// Solved-counter writes: fire-and-forget, only on successful image
+		// captcha verification (before any decision-machine veto runs). The
+		// user did the visual work so we record it.
+		if (
+			!failStatus &&
+			solution.result.status === CaptchaStatus.approved &&
+			this.usageCounters
+		) {
+			const ipValue = ip ?? "";
+			this.usageCounters.incrManyAsync(
+				solution.dappAccount,
+				buildAllWindowIncrements(
+					"solved",
+					CaptchaType.image,
+					ipValue,
+					solution.userAccount,
+				),
+			);
+		}
 
 		let score: number | undefined;
 		if (solution.sessionId) {

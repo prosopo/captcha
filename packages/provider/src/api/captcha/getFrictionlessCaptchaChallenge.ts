@@ -33,6 +33,7 @@ import {
 } from "../../tasks/frictionless/frictionlessTasks.js";
 import { timestampDecayFunction } from "../../tasks/frictionless/frictionlessTasksUtils.js";
 import { Tasks } from "../../tasks/index.js";
+import { derivePlatform } from "../../utils/devicePlatform.js";
 import { hashUserAgent } from "../../utils/hashUserAgent.js";
 import { hashUserIp } from "../../utils/hashUserIp.js";
 import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
@@ -247,6 +248,90 @@ export default (
 				});
 			}
 
+			const clientRecord = await tasks.db.getClientRecord(dapp);
+
+			if (!clientRecord) {
+				return next(
+					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
+						context: { code: 400, siteKey: dapp },
+						i18n: req.i18n,
+						logger: req.logger,
+					}),
+				);
+			}
+
+			// Hoisted request context — used by both the short-circuit branch
+			// and the decision-machine path below.
+			const ipAddress = getCompositeIpAddress(normalizedIp);
+			const flatHeaders = flatten(req.headers);
+			const countryCode =
+				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
+					? req.ipInfo.countryCode
+					: undefined;
+
+			// Short-circuit when the site key is configured for a concrete captcha
+			// type. The /frictionless endpoint is the unified entry — for image,
+			// pow, or puzzle settings we skip the bot-detection decision machine
+			// and create a session of the configured type directly.
+			const configuredType = clientRecord.settings?.captchaType;
+			if (configuredType && configuredType !== CaptchaType.frictionless) {
+				const shortCircuitParams = {
+					token,
+					score: 0,
+					threshold:
+						clientRecord.settings?.frictionlessThreshold ??
+						DEFAULT_FRICTIONLESS_THRESHOLD,
+					scoreComponents: { baseScore: 0 } as ScoreComponents,
+					providerSelectEntropy: 0,
+					ipAddress,
+					webView: false,
+					iFrame: false,
+					decryptedHeadHash: "",
+					siteKey: dapp,
+					countryCode,
+					headers: flatHeaders,
+					mode: sessionMode,
+					userSitekeyIpHash,
+				};
+
+				req.logger.info(() => ({
+					msg: "Frictionless decision",
+					data: {
+						requestId: req.requestId,
+						decision: "configured_captcha_type",
+						captchaType: configuredType,
+					},
+				}));
+
+				switch (configuredType) {
+					case CaptchaType.image:
+						return res.json(
+							await tasks.frictionlessManager.sendImageCaptcha({
+								...shortCircuitParams,
+								solvedImagesCount: clientRecord.settings.imageMaxRounds,
+							}),
+						);
+					case CaptchaType.pow:
+						return res.json(
+							await tasks.frictionlessManager.sendPowCaptcha(
+								shortCircuitParams,
+							),
+						);
+					case CaptchaType.puzzle:
+						return res.json(
+							await tasks.frictionlessManager.sendPuzzleCaptcha(
+								shortCircuitParams,
+							),
+						);
+					default:
+						// Loud failure if the enum gains a new value that the
+						// short-circuit hasn't been updated to handle.
+						throw new Error(
+							`Unhandled configured captchaType in /frictionless short-circuit: ${configuredType}`,
+						);
+				}
+			}
+
 			const lScore = tasks.frictionlessManager.checkLangRules(
 				req.headers["accept-language"] || "",
 			);
@@ -277,18 +362,6 @@ export default (
 			}));
 
 			let botScore = baseBotScore + lScore;
-
-			const clientRecord = await tasks.db.getClientRecord(dapp);
-
-			if (!clientRecord) {
-				return next(
-					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-						context: { code: 400, siteKey: dapp },
-						i18n: req.i18n,
-						logger: req.logger,
-					}),
-				);
-			}
 
 			const { valid, reason } = await tasks.frictionlessManager.isValidRequest(
 				clientRecord,
@@ -322,16 +395,6 @@ export default (
 					triggeredDetectors.length > 0 && { triggeredDetectors }),
 			};
 
-			const ipAddress = getCompositeIpAddress(normalizedIp);
-
-			// Get country code for geoblocking from middleware-provided IP info
-			const countryCode =
-				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
-					? req.ipInfo.countryCode
-					: undefined;
-
-			const flatHeaders = flatten(req.headers);
-
 			// Set common session parameters on the frictionless manager
 			tasks.frictionlessManager.setSessionParams({
 				token,
@@ -347,6 +410,31 @@ export default (
 				countryCode,
 				headers: flatHeaders,
 				mode: sessionMode,
+			});
+
+			// Routing-machine context — enables router invocation and served
+			// counter writes inside FrictionlessManager.sendCaptcha. Only the
+			// real frictionless path (after maintenance-mode and configured-
+			// captchaType short-circuits) supplies one.
+			const ipInfoMobile =
+				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
+					? req.ipInfo.isMobile
+					: undefined;
+			const safeUserAgent = userAgent ?? "";
+			tasks.frictionlessManager.setRoutingContext({
+				dappAccount: dapp,
+				userAccount: user,
+				ip: normalizedIp,
+				countryCode,
+				score: botScore,
+				platform: derivePlatform(safeUserAgent, webView, {
+					...(typeof ipInfoMobile === "boolean" && { isMobile: ipInfoMobile }),
+				}),
+				raw: {
+					headers: flatHeaders,
+					userAgent: safeUserAgent,
+					...(req.ja4 && { ja4: req.ja4 }),
+				},
 			});
 
 			// Check if the IP address is blocked
@@ -487,11 +575,6 @@ export default (
 						captchaType: CaptchaType.image,
 					},
 				}));
-				console.log({
-					decryptionFailed,
-					timestamp,
-					maxRounds: clientRecord.settings.imageMaxRounds,
-				});
 				return res.json(
 					await tasks.frictionlessManager.sendImageCaptcha({
 						solvedImagesCount: timestampDecayFunction(

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ContextType } from "@prosopo/types";
+import { CaptchaType, ContextType } from "@prosopo/types";
 import { type Mock, beforeEach, describe, expect, it, vi } from "vitest";
 import getHandler from "../../../api/captcha/getFrictionlessCaptchaChallenge.js";
 import { FrictionlessReason } from "../../../tasks/frictionless/frictionlessTasks.js";
@@ -25,9 +25,11 @@ type MockTasks = {
 		decryptPayload: MockFn;
 		checkLangRules: MockFn;
 		setSessionParams: MockFn;
+		setRoutingContext: MockFn;
 		getClientContextEntropy: MockFn;
 		sendImageCaptcha: MockFn;
 		sendPowCaptcha: MockFn;
+		sendPuzzleCaptcha: MockFn;
 		registerBlockedSession: MockFn;
 		getPrioritisedAccessPolicies: MockFn;
 		isValidRequest: MockFn;
@@ -138,9 +140,11 @@ vi.mock("../../../tasks/index.js", async () => {
 					decryptPayload: vi.fn(),
 					checkLangRules: vi.fn().mockReturnValue(0),
 					setSessionParams: vi.fn(),
+					setRoutingContext: vi.fn(),
 					getClientContextEntropy: vi.fn(),
 					sendImageCaptcha: vi.fn().mockResolvedValue({ type: "image" }),
 					sendPowCaptcha: vi.fn().mockResolvedValue({ type: "pow" }),
+					sendPuzzleCaptcha: vi.fn().mockResolvedValue({ type: "puzzle" }),
 					registerBlockedSession: vi.fn(),
 					getPrioritisedAccessPolicies: vi.fn().mockResolvedValue([]),
 					isValidRequest: vi.fn().mockResolvedValue({ valid: true }),
@@ -204,9 +208,11 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			decryptPayload: vi.fn(),
 			checkLangRules: vi.fn().mockReturnValue(0),
 			setSessionParams: vi.fn(),
+			setRoutingContext: vi.fn(),
 			getClientContextEntropy: vi.fn(),
 			sendImageCaptcha: vi.fn().mockResolvedValue({ type: "image" }),
 			sendPowCaptcha: vi.fn().mockResolvedValue({ type: "pow" }),
+			sendPuzzleCaptcha: vi.fn().mockResolvedValue({ type: "puzzle" }),
 			registerBlockedSession: vi.fn(),
 			getPrioritisedAccessPolicies: vi.fn().mockResolvedValue([]),
 			isValidRequest: vi.fn().mockResolvedValue({ valid: true }),
@@ -483,5 +489,167 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 				reason: FrictionlessReason.ACCESS_POLICY_BLOCK,
 			}),
 		);
+	});
+
+	describe("configured-captcha-type short-circuit", () => {
+		it("calls sendImageCaptcha and skips the decision machine when settings.captchaType is image", async () => {
+			tasksInstance.db.getClientRecord.mockResolvedValue({
+				account: "siteImage",
+				settings: {
+					captchaType: CaptchaType.image,
+					imageMaxRounds: 4,
+					frictionlessThreshold: 0.5,
+				},
+			});
+
+			const body = {
+				token: "tImg",
+				headHash: "hh",
+				dapp: "siteImage",
+				user: "u",
+			};
+			const { req, res, next } = buildReqRes(body);
+
+			// biome-ignore lint/suspicious/noExplicitAny: mock request
+			await handler(req as any, res as any, next);
+
+			expect(next).not.toHaveBeenCalled();
+			expect(
+				tasksInstance.frictionlessManager.sendImageCaptcha,
+			).toHaveBeenCalledWith(
+				expect.objectContaining({
+					token: "tImg",
+					siteKey: "siteImage",
+					solvedImagesCount: 4,
+				}),
+			);
+			expect(
+				tasksInstance.frictionlessManager.decryptPayload,
+			).not.toHaveBeenCalled();
+			expect(
+				tasksInstance.frictionlessManager.sendPowCaptcha,
+			).not.toHaveBeenCalled();
+			expect(
+				tasksInstance.frictionlessManager.sendPuzzleCaptcha,
+			).not.toHaveBeenCalled();
+		});
+
+		it("calls sendPowCaptcha and skips the decision machine when settings.captchaType is pow", async () => {
+			tasksInstance.db.getClientRecord.mockResolvedValue({
+				account: "sitePow",
+				settings: {
+					captchaType: CaptchaType.pow,
+					frictionlessThreshold: 0.5,
+				},
+			});
+
+			const body = {
+				token: "tPow",
+				headHash: "hh",
+				dapp: "sitePow",
+				user: "u",
+			};
+			const { req, res, next } = buildReqRes(body);
+
+			// biome-ignore lint/suspicious/noExplicitAny: mock request
+			await handler(req as any, res as any, next);
+
+			expect(next).not.toHaveBeenCalled();
+			expect(
+				tasksInstance.frictionlessManager.sendPowCaptcha,
+			).toHaveBeenCalledWith(
+				expect.objectContaining({
+					token: "tPow",
+					siteKey: "sitePow",
+				}),
+			);
+			expect(
+				tasksInstance.frictionlessManager.decryptPayload,
+			).not.toHaveBeenCalled();
+			expect(
+				tasksInstance.frictionlessManager.sendImageCaptcha,
+			).not.toHaveBeenCalled();
+		});
+
+		it("calls sendPuzzleCaptcha and skips the decision machine when settings.captchaType is puzzle", async () => {
+			tasksInstance.db.getClientRecord.mockResolvedValue({
+				account: "sitePuzzle",
+				settings: {
+					captchaType: CaptchaType.puzzle,
+					frictionlessThreshold: 0.5,
+				},
+			});
+
+			const body = {
+				token: "tPuz",
+				headHash: "hh",
+				dapp: "sitePuzzle",
+				user: "u",
+			};
+			const { req, res, next } = buildReqRes(body);
+
+			// biome-ignore lint/suspicious/noExplicitAny: mock request
+			await handler(req as any, res as any, next);
+
+			expect(next).not.toHaveBeenCalled();
+			expect(
+				tasksInstance.frictionlessManager.sendPuzzleCaptcha,
+			).toHaveBeenCalledWith(
+				expect.objectContaining({
+					token: "tPuz",
+					siteKey: "sitePuzzle",
+				}),
+			);
+			expect(
+				tasksInstance.frictionlessManager.decryptPayload,
+			).not.toHaveBeenCalled();
+		});
+
+		it("falls through to the decision machine when settings.captchaType is frictionless", async () => {
+			tasksInstance.db.getClientRecord.mockResolvedValue({
+				account: "siteFric",
+				settings: {
+					captchaType: CaptchaType.frictionless,
+					imageMaxRounds: 5,
+					frictionlessThreshold: 0.5,
+					disallowWebView: false,
+				},
+			});
+
+			tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue({
+				baseBotScore: 0,
+				timestamp: Date.now(),
+				providerSelectEntropy: 0,
+				userId: "u",
+				userAgent: "844bc172f032bdd2d0baae3536c1d66c",
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "abc",
+				decryptionFailed: false,
+			});
+
+			const body = {
+				token: "tFric",
+				headHash: "hh",
+				dapp: "siteFric",
+				user: "u",
+			};
+			const { req, res, next } = buildReqRes(body);
+
+			// biome-ignore lint/suspicious/noExplicitAny: mock request
+			await handler(req as any, res as any, next);
+
+			expect(next).not.toHaveBeenCalled();
+			// Default decision when nothing else triggers is pow.
+			expect(
+				tasksInstance.frictionlessManager.decryptPayload,
+			).toHaveBeenCalled();
+			expect(
+				tasksInstance.frictionlessManager.sendPowCaptcha,
+			).toHaveBeenCalled();
+			expect(
+				tasksInstance.frictionlessManager.sendPuzzleCaptcha,
+			).not.toHaveBeenCalled();
+		});
 	});
 });

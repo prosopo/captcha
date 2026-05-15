@@ -30,7 +30,6 @@ import { environment } from "../environments/environment";
 export class AppComponent {
 	procaptchaSettings: ProcaptchaRenderOptions = {
 		siteKey: environment.PROCATCHA_SITE_KEY,
-		captchaType: "pow",
 		language: "en",
 		callback: (token: string) => {
 			console.log("verified", token);

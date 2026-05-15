@@ -15,6 +15,8 @@
 import vm from "node:vm";
 import type { Logger } from "@prosopo/common";
 import {
+	type CounterSpec,
+	CounterSpecSchema,
 	type DecisionMachineArtifact,
 	type DecisionMachineCaptchaType,
 	DecisionMachineDecision,
@@ -23,8 +25,13 @@ import {
 	DecisionMachineOutputSchema,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
+	type RoutingMachineInput,
+	type RoutingMachineInputBase,
+	type RoutingMachineOutput,
+	RoutingMachineOutputSchema,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
+import { z } from "zod";
 
 const LOAD_TIMEOUT_MS =
 	Number.parseInt(process.env.DECISION_MACHINE_LOAD_TIMEOUT_MS ?? "", 10) ||
@@ -44,9 +51,16 @@ const DEFAULT_DECISION: DecisionMachineOutput = {
 	decision: DecisionMachineDecision.Allow,
 };
 
+const RequiredCountersSchema = z.array(CounterSpecSchema);
+
 interface CachedArtifact {
 	artifact: DecisionMachineArtifact | undefined;
 	cachedAt: number;
+}
+
+interface NamedExport {
+	name: string;
+	fn: (...args: unknown[]) => unknown;
 }
 
 export class DecisionMachineRunner {
@@ -121,8 +135,13 @@ export class DecisionMachineRunner {
 				return DEFAULT_DECISION;
 			}
 
-			const output = await this.executeNodeMachine(artifact, input);
-			return output;
+			const decision = await this.runArtifactExport(
+				artifact,
+				["decide", "default"],
+				{ input: { ...input, phase: input.phase ?? "verify" } },
+				DecisionMachineOutputSchema,
+			);
+			return decision ?? DEFAULT_DECISION;
 		} catch (error) {
 			logger?.error?.(() => ({
 				msg: "Decision machine failed, defaulting to allow",
@@ -130,6 +149,72 @@ export class DecisionMachineRunner {
 				data: { dappAccount: input.dappAccount },
 			}));
 			return DEFAULT_DECISION;
+		}
+	}
+
+	/**
+	 * Routing phase: ask the configured machine which concrete captcha type to
+	 * serve. Returns undefined when no machine is configured, the machine throws
+	 * or times out, or the output fails schema validation — caller should fall
+	 * back to its baseline in any of these cases.
+	 */
+	async route(
+		input: RoutingMachineInput,
+		logger?: Logger,
+	): Promise<RoutingMachineOutput | undefined> {
+		try {
+			const artifact = await this.selectArtifact(input.dappAccount);
+			if (!artifact) return undefined;
+			if (artifact.runtime !== DecisionMachineRuntime.Node) {
+				logger?.warn?.(() => ({
+					msg: "Unsupported routing machine runtime, falling back to baseline",
+					data: { runtime: artifact.runtime },
+				}));
+				return undefined;
+			}
+			return await this.runArtifactExport(
+				artifact,
+				["route"],
+				{ input },
+				RoutingMachineOutputSchema,
+			);
+		} catch (error) {
+			logger?.error?.(() => ({
+				msg: "Routing machine failed, falling back to baseline",
+				err: error,
+				data: { dappAccount: input.dappAccount },
+			}));
+			return undefined;
+		}
+	}
+
+	/**
+	 * Pre-fetch hook: ask the configured machine which counters it needs read
+	 * into its input before {@link route} is invoked. Returns [] when no machine
+	 * is configured or it doesn't declare any.
+	 */
+	async getRequiredCounters(
+		input: RoutingMachineInputBase,
+		logger?: Logger,
+	): Promise<CounterSpec[]> {
+		try {
+			const artifact = await this.selectArtifact(input.dappAccount);
+			if (!artifact) return [];
+			if (artifact.runtime !== DecisionMachineRuntime.Node) return [];
+			const specs = await this.runArtifactExport(
+				artifact,
+				["requiredCounters"],
+				{ input, optional: true },
+				RequiredCountersSchema,
+			);
+			return specs ?? [];
+		} catch (error) {
+			logger?.warn?.(() => ({
+				msg: "requiredCounters() failed, proceeding with no counters",
+				err: error,
+				data: { dappAccount: input.dappAccount },
+			}));
+			return [];
 		}
 	}
 
@@ -232,10 +317,20 @@ export class DecisionMachineRunner {
 		return artifact.captchaType === captchaType;
 	}
 
-	private async executeNodeMachine(
+	/**
+	 * Load the artifact source into a fresh vm sandbox, locate a callable
+	 * matching one of {exportNames} (or `module.exports` itself if it's a
+	 * function), invoke it with {input}, and validate the result with
+	 * {schema}. Returns undefined when {options.optional} is true and no
+	 * matching export exists. Otherwise throws on missing export, invalid
+	 * output, or sandbox failure.
+	 */
+	private async runArtifactExport<T>(
 		artifact: DecisionMachineArtifact,
-		input: DecisionMachineInput,
-	): Promise<DecisionMachineOutput> {
+		exportNames: string[],
+		options: { input: unknown; optional?: boolean },
+		schema: z.ZodSchema<T>,
+	): Promise<T | undefined> {
 		const sandbox = {
 			module: { exports: {} as unknown },
 			exports: {} as Record<string, unknown>,
@@ -247,29 +342,49 @@ export class DecisionMachineRunner {
 		script.runInContext(context, { timeout: LOAD_TIMEOUT_MS });
 
 		const exported = (sandbox.module as { exports: unknown }).exports;
-		const decideFn =
-			typeof exported === "function"
-				? exported
-				: typeof (exported as { decide?: unknown })?.decide === "function"
-					? (exported as { decide: unknown }).decide
-					: undefined;
-
-		if (!decideFn) {
-			throw new Error("Decision machine must export a decide function.");
+		const named = this.findExport(exported, exportNames);
+		if (!named) {
+			if (options.optional) return undefined;
+			throw new Error(
+				`Decision machine must export one of: ${exportNames.join(", ")}`,
+			);
 		}
 
-		const decision = await this.withTimeout(
-			Promise.resolve(
-				(decideFn as (args: DecisionMachineInput) => unknown)(input),
-			),
+		const result = await this.withTimeout(
+			Promise.resolve(named.fn(options.input)),
 			EXEC_TIMEOUT_MS,
 		);
-		const parsed = DecisionMachineOutputSchema.safeParse(decision);
+		const parsed = schema.safeParse(result);
 		if (!parsed.success) {
-			throw new Error("Decision machine output failed validation.");
+			throw new Error(
+				`Decision machine '${named.name}' output failed validation`,
+			);
 		}
-
 		return parsed.data;
+	}
+
+	private findExport(
+		exported: unknown,
+		exportNames: string[],
+	): NamedExport | undefined {
+		// Treat the entire module.exports as the default function only when
+		// "default" is acceptable.
+		if (
+			typeof exported === "function" &&
+			(exportNames.includes("default") || exportNames.includes("decide"))
+		) {
+			return {
+				name: "default",
+				fn: exported as (...args: unknown[]) => unknown,
+			};
+		}
+		for (const name of exportNames) {
+			const candidate = (exported as Record<string, unknown> | null)?.[name];
+			if (typeof candidate === "function") {
+				return { name, fn: candidate as (...args: unknown[]) => unknown };
+			}
+		}
+		return undefined;
 	}
 
 	private async withTimeout<T>(

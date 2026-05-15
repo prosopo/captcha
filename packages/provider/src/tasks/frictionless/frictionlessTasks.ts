@@ -24,6 +24,7 @@ import {
 	type ModeEnum,
 	type ProsopoConfigOutput,
 	type RequestHeaders,
+	type RoutingMachineBaseline,
 	type ScoreComponents,
 	type Session,
 } from "@prosopo/types";
@@ -31,8 +32,14 @@ import type { IProviderDatabase } from "@prosopo/types-database";
 import type { AccessPolicy } from "@prosopo/user-access-policy";
 import { v4 as uuidv4 } from "uuid";
 import { checkLangRules } from "../../rules/lang.js";
+import {
+	type UsageCounters,
+	buildAllWindowIncrements,
+} from "../../util/usageCounters.js";
 import { CaptchaManager } from "../captchaManager.js";
+import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { getBotScore } from "../detection/getBotScore.js";
+import { type RoutingContext, applyRouter } from "./routingMachine.js";
 
 const getDefaultEntropy = (): number => {
 	if (process.env.PROSOPO_ENTROPY) {
@@ -65,11 +72,16 @@ export interface ImageCaptchaSessionParams extends Session {}
 
 export interface PowCaptchaSessionParams extends Session {}
 
+export interface PuzzleCaptchaSessionParams extends Session {}
+
 export class FrictionlessManager extends CaptchaManager {
 	private sessionParams?: Omit<
 		Session,
 		"sessionId" | "createdAt" | "captchaType"
 	>;
+	private routingContext?: RoutingContext;
+	private readonly decisionMachineRunner: DecisionMachineRunner;
+	private readonly usageCounters: UsageCounters | null;
 
 	constructor(
 		db: IProviderDatabase,
@@ -77,9 +89,27 @@ export class FrictionlessManager extends CaptchaManager {
 		config: ProsopoConfigOutput,
 		logger?: Logger,
 		writeQueue?: import("../../util/redisCache.js").RedisWriteQueue | null,
+		decisionMachineRunner?: DecisionMachineRunner,
+		usageCounters?: UsageCounters | null,
 	) {
 		super(db, pair, config, logger, writeQueue);
 		this.config = config;
+		this.decisionMachineRunner =
+			decisionMachineRunner ?? new DecisionMachineRunner(db);
+		this.usageCounters = usageCounters ?? null;
+	}
+
+	/**
+	 * Provide the routing-machine context for this request. When set, the
+	 * frictionless flow's send*Captcha calls will (a) invoke the routing
+	 * machine to potentially override the baseline captcha type, and (b) emit
+	 * fire-and-forget served-counter writes after the session is created.
+	 *
+	 * Not called on maintenance-mode or configured-captchaType short-circuit
+	 * paths — those skip routing entirely.
+	 */
+	setRoutingContext(ctx: RoutingContext): void {
+		this.routingContext = ctx;
 	}
 
 	setSessionParams(
@@ -215,53 +245,27 @@ export class FrictionlessManager extends CaptchaManager {
 	async sendImageCaptcha(
 		params?: Partial<ImageCaptchaSessionParams>,
 	): Promise<GetFrictionlessCaptchaResponse> {
-		const effectiveParams = { ...this.sessionParams, ...params };
-		if (
-			!effectiveParams.token ||
-			effectiveParams.score === undefined ||
-			effectiveParams.threshold === undefined ||
-			!effectiveParams.scoreComponents ||
-			effectiveParams.providerSelectEntropy === undefined ||
-			!effectiveParams.ipAddress ||
-			effectiveParams.siteKey === undefined
-		) {
-			throw new Error(
-				"Session parameters must be set before calling sendImageCaptcha",
-			);
-		}
-
-		const sessionRecord = await this.createSession(
-			effectiveParams.token,
-			effectiveParams.score,
-			effectiveParams.threshold,
-			effectiveParams.scoreComponents,
-			effectiveParams.providerSelectEntropy,
-			effectiveParams.ipAddress,
-			CaptchaType.image,
-			effectiveParams.siteKey,
-			effectiveParams.solvedImagesCount,
-			undefined,
-			effectiveParams.userSitekeyIpHash,
-			effectiveParams.webView ?? false,
-			effectiveParams.iFrame ?? false,
-			effectiveParams.decryptedHeadHash,
-			effectiveParams.reason as FrictionlessReason,
-			effectiveParams.blocked,
-			undefined,
-			effectiveParams.countryCode,
-			effectiveParams.headers,
-			effectiveParams.mode,
-		);
-
-		return {
-			[ApiParams.captchaType]: CaptchaType.image,
-			[ApiParams.sessionId]: sessionRecord.sessionId,
-			[ApiParams.status]: "ok",
-		};
+		return this.sendCaptcha(CaptchaType.image, params);
 	}
 
 	async sendPowCaptcha(
 		params?: Partial<PowCaptchaSessionParams>,
+	): Promise<GetFrictionlessCaptchaResponse> {
+		return this.sendCaptcha(CaptchaType.pow, params);
+	}
+
+	async sendPuzzleCaptcha(
+		params?: Partial<PuzzleCaptchaSessionParams>,
+	): Promise<GetFrictionlessCaptchaResponse> {
+		return this.sendCaptcha(CaptchaType.puzzle, params);
+	}
+
+	// Shared body for the three concrete `send*Captcha` helpers. Each helper is
+	// kept as its own thin wrapper so call-sites read clearly, but session
+	// validation and the createSession invocation only live in one place.
+	private async sendCaptcha(
+		captchaType: CaptchaType.image | CaptchaType.pow | CaptchaType.puzzle,
+		params?: Partial<Session>,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const effectiveParams = { ...this.sessionParams, ...params };
 		if (
@@ -274,9 +278,48 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.siteKey === undefined
 		) {
 			throw new Error(
-				"Session parameters must be set before calling sendPowCaptcha",
+				`Session parameters must be set before sending a ${captchaType} captcha`,
 			);
 		}
+
+		// Apply the routing machine (if any) to potentially override the
+		// baseline captcha type. Only runs when the handler has supplied a
+		// routing context; maintenance-mode and configured-captchaType
+		// short-circuits skip routing entirely.
+		const baseline: RoutingMachineBaseline = {
+			captchaType,
+			solvedImagesCount:
+				captchaType === CaptchaType.image
+					? effectiveParams.solvedImagesCount
+					: undefined,
+			powDifficulty:
+				captchaType === CaptchaType.pow
+					? effectiveParams.powDifficulty
+					: undefined,
+		};
+		const routed = this.routingContext
+			? await applyRouter(
+					this.decisionMachineRunner,
+					this.usageCounters,
+					baseline,
+					this.routingContext,
+					this.logger,
+				)
+			: baseline;
+
+		const finalCaptchaType = routed.captchaType;
+		const finalSolvedImagesCount =
+			finalCaptchaType === CaptchaType.image
+				? (routed.solvedImagesCount ?? effectiveParams.solvedImagesCount)
+				: undefined;
+		const finalPowDifficulty =
+			finalCaptchaType === CaptchaType.pow
+				? (routed.powDifficulty ?? effectiveParams.powDifficulty)
+				: undefined;
+		const blocked =
+			finalCaptchaType === CaptchaType.image
+				? effectiveParams.blocked
+				: undefined;
 
 		const sessionRecord = await this.createSession(
 			effectiveParams.token,
@@ -285,23 +328,40 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.scoreComponents,
 			effectiveParams.providerSelectEntropy,
 			effectiveParams.ipAddress,
-			CaptchaType.pow,
+			finalCaptchaType,
 			effectiveParams.siteKey,
-			undefined,
-			effectiveParams.powDifficulty,
+			finalSolvedImagesCount,
+			finalPowDifficulty,
 			effectiveParams.userSitekeyIpHash,
 			effectiveParams.webView ?? false,
 			effectiveParams.iFrame ?? false,
 			effectiveParams.decryptedHeadHash,
 			effectiveParams.reason as FrictionlessReason | undefined,
-			undefined,
+			blocked,
 			undefined,
 			effectiveParams.countryCode,
 			effectiveParams.headers,
 			effectiveParams.mode,
 		);
+
+		// Fire-and-forget served-counter writes. Skipped when there's no
+		// routing context (maintenance mode / configured captchaType paths) —
+		// counters are only useful when a router is in play, which requires
+		// the same context.
+		if (this.routingContext && this.usageCounters) {
+			this.usageCounters.incrManyAsync(
+				this.routingContext.dappAccount,
+				buildAllWindowIncrements(
+					"served",
+					finalCaptchaType,
+					this.routingContext.ip,
+					this.routingContext.userAccount,
+				),
+			);
+		}
+
 		return {
-			[ApiParams.captchaType]: CaptchaType.pow,
+			[ApiParams.captchaType]: finalCaptchaType,
 			[ApiParams.sessionId]: sessionRecord.sessionId,
 			[ApiParams.status]: "ok",
 		};

@@ -232,7 +232,7 @@ describe("CaptchaManager", () => {
 				"sessionId",
 			);
 		});
-		it("should not invalidate Redis cache when session is not found", async () => {
+		it("should invalidate Redis cache when session is not found, to break stale-cache loops", async () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.checkAndRemoveSession as any).mockResolvedValue(undefined);
 
@@ -250,7 +250,13 @@ describe("CaptchaManager", () => {
 				"sessionId",
 			);
 
-			expect(mockWriteQueue.invalidateCachedSession).not.toHaveBeenCalled();
+			// When DB has no record but Redis cache does, the cache must be
+			// invalidated; otherwise the user-IP-hash mapping keeps resolving
+			// to the dead sessionId and /frictionless keeps "Reusing existing
+			// session" while /captcha/{type} keeps 400-ing in a loop.
+			expect(mockWriteQueue.invalidateCachedSession).toHaveBeenCalledWith(
+				"sessionId",
+			);
 		});
 		it("should not throw when writeQueue is null and session is consumed", async () => {
 			const managerWithoutRedis = new CaptchaManager(
@@ -342,7 +348,7 @@ describe("CaptchaManager", () => {
 
 			expect(result).toEqual({
 				valid: false,
-				reason: "CAPTCHA.NO_SESSION_FOUND",
+				reason: "API.INCORRECT_CAPTCHA_TYPE",
 				type: CaptchaType.image,
 			});
 		});
@@ -370,7 +376,7 @@ describe("CaptchaManager", () => {
 
 			expect(result).toEqual({
 				valid: false,
-				reason: "CAPTCHA.NO_SESSION_FOUND",
+				reason: "API.INCORRECT_CAPTCHA_TYPE",
 				type: CaptchaType.pow,
 			});
 		});

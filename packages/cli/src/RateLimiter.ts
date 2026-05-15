@@ -107,6 +107,10 @@ export const getRateLimitConfig = () => {
 			windowMs: process.env.PROSOPO_REMOVE_DECISION_MACHINE_WINDOW,
 			limit: process.env.PROSOPO_REMOVE_DECISION_MACHINE_LIMIT,
 		},
+		[AdminApiPaths.ClearAllCounters]: {
+			windowMs: process.env.PROSOPO_CLEAR_ALL_COUNTERS_WINDOW,
+			limit: process.env.PROSOPO_CLEAR_ALL_COUNTERS_LIMIT,
+		},
 		[ClientApiPaths.GetPuzzleCaptchaChallenge]: {
 			windowMs: process.env.PROSOPO_GET_PUZZLE_CAPTCHA_CHALLENGE_WINDOW,
 			limit: process.env.PROSOPO_GET_PUZZLE_CAPTCHA_CHALLENGE_LIMIT,
