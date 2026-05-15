@@ -64,7 +64,7 @@ const LOGO_STYLES = `
     text-align: center !important;
 }
 
-#logo {
+#prosopo-logo {
     width: 28px !important;
     height: 28px !important;
     display: block !important;
@@ -83,7 +83,7 @@ function getLogoMarkup(theme: Theme): string {
 			   aria-label="${WIDGET_URL_TEXT}"
 			   style="text-decoration: none;">
 				<div class="prosopo-logo">
-					<svg id="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 49.010001 49.009997" style="fill: ${theme.palette.logoFill};"
+					<svg id="prosopo-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 49.010001 49.009997" style="fill: ${theme.palette.logoFill};"
 						 aria-hidden="true">
 						<title>${WIDGET_URL_TEXT}</title>
 						<g transform="matrix(0.11319331,0,0,0.11319331,6.504999,-2.2052113e-4)">
