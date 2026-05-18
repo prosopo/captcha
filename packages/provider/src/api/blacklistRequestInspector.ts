@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/common";
-import { ApiPrefix } from "@prosopo/types";
+import { ApiPrefix, type IPInfoResponse } from "@prosopo/types";
 import {
 	AccessPolicyType,
 	type AccessRulesStorage,
@@ -133,6 +133,7 @@ export class BlacklistRequestInspector {
 			request.headers,
 			request.body,
 			request.logger,
+			request.ipInfo,
 		);
 
 		if (shouldAbortRequest) {
@@ -150,6 +151,7 @@ export class BlacklistRequestInspector {
 		requestHeaders: Record<string, unknown>,
 		requestBody: Record<string, unknown>,
 		logger: Logger,
+		ipInfo?: IPInfoResponse,
 	): Promise<boolean> {
 		// Skip this middleware for non-api routes like /json /favicon.ico etc
 		if (this.isApiUnrelatedRoute(requestedRoute)) {
@@ -178,9 +180,24 @@ export class BlacklistRequestInspector {
 				requestBody,
 			);
 
+			// Country comes from req.ipInfo (populated by ipInfoMiddleware,
+			// which runs before blockMiddleware). Threading it in here lets
+			// country-based access rules fire at the earliest entry point —
+			// in particular, *before* a frictionless session is created.
+			const countryCode =
+				ipInfo && ipInfo.isValid ? ipInfo.countryCode : undefined;
+
 			const accessPolicies = await getPrioritisedAccessRule(
 				this.userAccessRulesStorage,
-				getRequestUserScope(requestHeaders, ja4, rawIp, userId),
+				getRequestUserScope(
+					requestHeaders,
+					ja4,
+					rawIp,
+					userId,
+					undefined, // headHash
+					undefined, // coords
+					countryCode,
+				),
 				clientId,
 			);
 			if (

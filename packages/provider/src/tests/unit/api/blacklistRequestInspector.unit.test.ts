@@ -12,8 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, expect, it } from "vitest";
-import { getRequestUserScope } from "../../../api/blacklistRequestInspector.js";
+import type { Logger } from "@prosopo/common";
+import type { IPInfoResponse } from "@prosopo/types";
+import {
+	AccessPolicyType,
+	type AccessRulesStorage,
+} from "@prosopo/user-access-policy";
+import { describe, expect, it, vi } from "vitest";
+import {
+	BlacklistRequestInspector,
+	getRequestUserScope,
+} from "../../../api/blacklistRequestInspector.js";
 
 describe("getRequestUserScope", () => {
 	it("should return a user scope with ja4Hash and userAgent and ip and userId", () => {
@@ -70,5 +79,161 @@ describe("getRequestUserScope", () => {
 		expect(userScope).toEqual({
 			userAgent: userAgent,
 		});
+	});
+
+	it("should include countryCode in the scope when provided", () => {
+		const userScope = getRequestUserScope(
+			{ "user-agent": "ua" },
+			"ja4",
+			"1.1.1.1",
+			"user1",
+			undefined,
+			undefined,
+			"DE",
+		);
+		expect(userScope.countryCode).toBe("DE");
+	});
+});
+
+describe("BlacklistRequestInspector.shouldAbortRequest", () => {
+	const mockLogger = {
+		info: vi.fn(),
+		debug: vi.fn(),
+		error: vi.fn(),
+		warn: vi.fn(),
+	} as unknown as Logger;
+
+	const buildStorage = (
+		findRules: (filter: unknown) => Promise<unknown[]>,
+	): AccessRulesStorage =>
+		({
+			findRules: vi.fn().mockImplementation(findRules),
+		}) as unknown as AccessRulesStorage;
+
+	const validIpInfo = (countryCode: string): IPInfoResponse => ({
+		ip: "1.1.1.1",
+		isValid: true,
+		isVPN: false,
+		isTor: false,
+		isProxy: false,
+		isDatacenter: false,
+		isAbuser: false,
+		isMobile: false,
+		isSatellite: false,
+		isCrawler: false,
+		countryCode,
+	});
+
+	it("threads req.ipInfo.countryCode into the access-rule lookup", async () => {
+		const seenScopes: Array<Record<string, unknown>> = [];
+		const storage = buildStorage(async (filter) => {
+			const f = filter as { userScope: Record<string, unknown> };
+			seenScopes.push(f.userScope);
+			return [];
+		});
+		const inspector = new BlacklistRequestInspector(
+			storage,
+			async () => undefined,
+		);
+
+		await inspector.shouldAbortRequest(
+			"/v1/prosopo/provider/client/captcha/frictionless",
+			"1.1.1.1",
+			"ja4hash",
+			{},
+			{},
+			mockLogger,
+			validIpInfo("DE"),
+		);
+
+		// At least one of the prioritised sub-scopes must carry the
+		// countryCode — otherwise country-based rules can never fire
+		// at the earliest entry point (blockMiddleware).
+		const hasCountry = seenScopes.some(
+			(scope) => scope.countryCode === "DE",
+		);
+		expect(hasCountry).toBe(true);
+	});
+
+	it("does not pass countryCode when req.ipInfo is missing", async () => {
+		const seenScopes: Array<Record<string, unknown>> = [];
+		const storage = buildStorage(async (filter) => {
+			const f = filter as { userScope: Record<string, unknown> };
+			seenScopes.push(f.userScope);
+			return [];
+		});
+		const inspector = new BlacklistRequestInspector(
+			storage,
+			async () => undefined,
+		);
+
+		await inspector.shouldAbortRequest(
+			"/v1/prosopo/provider/client/captcha/frictionless",
+			"1.1.1.1",
+			"ja4hash",
+			{},
+			{},
+			mockLogger,
+			undefined,
+		);
+
+		const anyCountry = seenScopes.some(
+			(scope) => "countryCode" in scope,
+		);
+		expect(anyCountry).toBe(false);
+	});
+
+	it("does not pass countryCode when req.ipInfo is an error response", async () => {
+		const seenScopes: Array<Record<string, unknown>> = [];
+		const storage = buildStorage(async (filter) => {
+			const f = filter as { userScope: Record<string, unknown> };
+			seenScopes.push(f.userScope);
+			return [];
+		});
+		const inspector = new BlacklistRequestInspector(
+			storage,
+			async () => undefined,
+		);
+
+		await inspector.shouldAbortRequest(
+			"/v1/prosopo/provider/client/captcha/frictionless",
+			"1.1.1.1",
+			"ja4hash",
+			{},
+			{},
+			mockLogger,
+			{ isValid: false, error: "lookup failed", ip: "1.1.1.1" },
+		);
+
+		const anyCountry = seenScopes.some(
+			(scope) => "countryCode" in scope,
+		);
+		expect(anyCountry).toBe(false);
+	});
+
+	it("aborts the request when a Block policy matches on country", async () => {
+		const storage = buildStorage(async (filter) => {
+			// Return a Block policy iff the scope matches our country
+			const f = filter as { userScope: { countryCode?: string } };
+			if (f.userScope.countryCode === "DE") {
+				return [{ type: AccessPolicyType.Block }];
+			}
+			return [];
+		});
+		const inspector = new BlacklistRequestInspector(
+			storage,
+			async () => undefined,
+		);
+
+		const shouldAbort = await inspector.shouldAbortRequest(
+			"/v1/prosopo/provider/client/captcha/frictionless",
+			"1.1.1.1",
+			"ja4hash",
+			{},
+			{},
+			mockLogger,
+			validIpInfo("DE"),
+		);
+		expect(shouldAbort).toBe(true);
 	});
 });
