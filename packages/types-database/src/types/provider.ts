@@ -178,6 +178,10 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	geolocation: { type: String, required: false },
 	countryCode: { type: String, required: false },
 	vpn: { type: Boolean, required: false },
+	tor: { type: Boolean, required: false },
+	proxy: { type: Boolean, required: false },
+	datacenter: { type: Boolean, required: false },
+	abuser: { type: Boolean, required: false },
 	ipInfo: { type: Object, required: false },
 	parsedUserAgentInfo: { type: Object, required: false },
 	sessionId: {
@@ -255,6 +259,10 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 	geolocation: { type: String, required: false },
 	countryCode: { type: String, required: false },
 	vpn: { type: Boolean, required: false },
+	tor: { type: Boolean, required: false },
+	proxy: { type: Boolean, required: false },
+	datacenter: { type: Boolean, required: false },
+	abuser: { type: Boolean, required: false },
 	ipInfo: { type: Object, required: false },
 	parsedUserAgentInfo: { type: Object, required: false },
 	sessionId: {
@@ -316,6 +324,10 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	geolocation: { type: String, required: false },
 	countryCode: { type: String, required: false },
 	vpn: { type: Boolean, required: false },
+	tor: { type: Boolean, required: false },
+	proxy: { type: Boolean, required: false },
+	datacenter: { type: Boolean, required: false },
+	abuser: { type: Boolean, required: false },
 	parsedUserAgentInfo: { type: Object, required: false },
 	sessionId: {
 		type: String,

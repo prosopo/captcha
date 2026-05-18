@@ -147,6 +147,14 @@ export interface StoredCaptcha {
 	geolocation?: string;
 	countryCode?: string;
 	vpn?: boolean;
+	// Additional ipinfo flags persisted by the CHECK_IP_INFO job so the
+	// portal can filter / display the same signals the traffic filter
+	// uses to block requests. All optional for back-compat with records
+	// written before enrichment.
+	tor?: boolean;
+	proxy?: boolean;
+	datacenter?: boolean;
+	abuser?: boolean;
 	ipInfo?: IPInfoResponse;
 	parsedUserAgentInfo?: UserAgentInfo;
 	storedAtTimestamp?: Date;
@@ -338,6 +346,10 @@ export const PoWCaptchaStoredSchema = object({
 	geolocation: string().optional(),
 	countryCode: string().optional(),
 	vpn: boolean().optional(),
+	tor: boolean().optional(),
+	proxy: boolean().optional(),
+	datacenter: boolean().optional(),
+	abuser: boolean().optional(),
 	parsedUserAgentInfo: any().optional(),
 	storedAtTimestamp: date().optional(),
 	lastUpdatedTimestamp: date().optional(),
