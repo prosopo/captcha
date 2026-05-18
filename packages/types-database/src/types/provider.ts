@@ -182,6 +182,8 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	proxy: { type: Boolean, required: false },
 	datacenter: { type: Boolean, required: false },
 	abuser: { type: Boolean, required: false },
+	abuserScore: { type: Number, required: false },
+	asnNumber: { type: Number, required: false },
 	ipInfo: { type: Object, required: false },
 	parsedUserAgentInfo: { type: Object, required: false },
 	sessionId: {
@@ -263,6 +265,8 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 	proxy: { type: Boolean, required: false },
 	datacenter: { type: Boolean, required: false },
 	abuser: { type: Boolean, required: false },
+	abuserScore: { type: Number, required: false },
+	asnNumber: { type: Number, required: false },
 	ipInfo: { type: Object, required: false },
 	parsedUserAgentInfo: { type: Object, required: false },
 	sessionId: {
@@ -328,6 +332,8 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	proxy: { type: Boolean, required: false },
 	datacenter: { type: Boolean, required: false },
 	abuser: { type: Boolean, required: false },
+	abuserScore: { type: Number, required: false },
+	asnNumber: { type: Number, required: false },
 	parsedUserAgentInfo: { type: Object, required: false },
 	sessionId: {
 		type: String,

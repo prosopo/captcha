@@ -3,8 +3,12 @@
 "@prosopo/types-database": patch
 ---
 
-Add `tor`, `proxy`, `datacenter`, `abuser` optional booleans to `StoredCaptcha` so the job runner's CHECK_IP_INFO enrichment can persist every flag the provider's traffic filter blocks on — alongside the existing `vpn` / `countryCode` fields.
+Add the ipinfo flags the provider's traffic filter actually blocks on as optional top-level fields on `StoredCaptcha`, alongside the existing `vpn` / `countryCode` fields. The job runner's CHECK_IP_INFO enrichment in captcha-private writes them from one ipinfo lookup per record.
 
+- Booleans: `tor`, `proxy`, `datacenter`, `abuser`.
+- Numerics: `abuserScore` (max of the asn + company scores — the exact value `checkTrafficFilter.ts` compares against the abuser threshold), `asnNumber`.
+
+Applied to:
 - `StoredCaptcha` interface (used by PoW + UserCommitment + Puzzle records).
 - `PoWCaptchaStoredSchema` zod validator.
 - PoW, Puzzle, UserCommitment mongoose schemas in `@prosopo/types-database`.
