@@ -86,11 +86,12 @@ const needsTrailingSlash = (url: string): boolean => {
 		return false;
 	}
 
-	// Skip Nunjucks template variables. A URL fragment containing either `{{`
-	// or `}}` is enough: the markdown extractor's title-stripping `split(" ")`
-	// can chop a templated URL like `{{ site.url }}/foo/` down to just `{{`,
-	// so we must skip on either delimiter rather than requiring both.
-	if (url.includes("{{") || url.includes("}}")) {
+	// If the URL ends with a Nunjucks template expression (e.g. `{{ siteUrl }}`
+	// or `/products/{{ slug }}`) we can't tell at lint time whether the
+	// rendered URL ends in a slash, so skip. URLs with templated *middles*
+	// (e.g. `{{ site.url }}/products/foo`) are still audited — appending a
+	// trailing slash to the static suffix is always safe.
+	if (url.trimEnd().endsWith("}}")) {
 		return false;
 	}
 
@@ -119,6 +120,36 @@ const needsTrailingSlash = (url: string): boolean => {
 };
 
 /**
+ * Extract the URL portion from a markdown link's parenthesised content,
+ * tolerating spaces inside Nunjucks `{{ ... }}` template expressions.
+ *
+ * Markdown allows an optional title after the URL: `[text](url "title")`.
+ * A naïve `split(" ")` mangles templated URLs because `{{ site.url }}`
+ * contains spaces inside the braces.
+ */
+const extractMarkdownUrl = (urlPart: string): string => {
+	let depth = 0;
+	for (let i = 0; i < urlPart.length; i++) {
+		const two = urlPart.slice(i, i + 2);
+		if (two === "{{") {
+			depth++;
+			i++;
+			continue;
+		}
+		if (two === "}}") {
+			depth = Math.max(0, depth - 1);
+			i++;
+			continue;
+		}
+		const ch = urlPart[i] || "";
+		if (depth === 0 && /\s/.test(ch)) {
+			return urlPart.slice(0, i);
+		}
+	}
+	return urlPart;
+};
+
+/**
  * Extract links from markdown format
  * @param content - The file content
  * @returns Array of URLs and their line numbers
@@ -137,9 +168,7 @@ const extractMarkdownLinks = (
 		match = markdownLinkRegex.exec(line);
 		while (match !== null) {
 			if (match[2]) {
-				const urlPart = match[2];
-				// Handle cases with title: [text](url "title") by getting the first part
-				const url = urlPart.split(" ")[0];
+				const url = extractMarkdownUrl(match[2]);
 				if (url) {
 					links.push({
 						url,
