@@ -54,7 +54,6 @@ import {
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
-import { checkTrafficFilter } from "../spam/checkTrafficFilter.js";
 import { evaluateEmailSpamRules } from "../spam/evaluateEmailSpamRules.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
 
@@ -508,38 +507,27 @@ export class PowCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		// Traffic filter: block VPN/proxy/Tor/abuser etc.
-		// blockAbuser defaults to true so abusive networks are always blocked
+		// Traffic filter: block VPN/proxy/Tor/abuser etc. Resolved in
+		// CaptchaManager so all three verify paths (pow/image/puzzle)
+		// share the same "compute effective filter, optionally fresh
+		// lookup, run check" logic.
 		if (!failResult) {
-			const effectiveTrafficFilter = { blockAbuser: true, ...trafficFilter };
-			// if at least one true
-			const hasTrafficFilter = Object.values(effectiveTrafficFilter).some(
-				(v) => v,
+			const check = await this.resolveTrafficFilterCheck(
+				env,
+				challengeRecord.ipInfo,
+				trafficFilter,
+				ip,
 			);
-			if (hasTrafficFilter) {
-				// If the dapp passed up the end user's current IP via
-				// the verify call, look that up fresh — it's the "now"
-				// IP for filtering and may differ from the IP that
-				// originally issued the challenge. Otherwise reuse the
-				// payload captured at challenge-issuance time.
-				const ipInfoForFilter = ip
-					? await env.ipInfoService.lookup(ip)
-					: challengeRecord.ipInfo;
-				const check = checkTrafficFilter(
-					ipInfoForFilter,
-					effectiveTrafficFilter,
-				);
-				if (check.isBlocked) {
-					this.logger.info(() => ({
-						msg: "Traffic filter rejected request in PoW verification",
-						data: { challenge, dappAccount, ip, reason: check.reason },
-					}));
-					failResult = {
-						status: CaptchaStatus.disapproved,
-						reason: check.reason,
-					};
-					failReason = check.reason;
-				}
+			if (check.isBlocked) {
+				this.logger.info(() => ({
+					msg: "Traffic filter rejected request in PoW verification",
+					data: { challenge, dappAccount, ip, reason: check.reason },
+				}));
+				failResult = {
+					status: CaptchaStatus.disapproved,
+					reason: check.reason,
+				};
+				failReason = check.reason;
 			}
 		}
 

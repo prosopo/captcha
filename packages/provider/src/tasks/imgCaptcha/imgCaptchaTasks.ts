@@ -64,7 +64,6 @@ import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { FrictionlessReason } from "../frictionless/frictionlessTasks.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
-import { checkTrafficFilter } from "../spam/checkTrafficFilter.js";
 import { evaluateEmailSpamRules } from "../spam/evaluateEmailSpamRules.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
 
@@ -763,38 +762,27 @@ export class ImgCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		// Traffic filter: block VPN/proxy/Tor/abuser etc.
-		// blockAbuser defaults to true so abusive networks are always blocked
+		// Traffic filter: block VPN/proxy/Tor/abuser etc. Resolved in
+		// CaptchaManager so all three verify paths (pow/image/puzzle)
+		// share the same "compute effective filter, optionally fresh
+		// lookup, run check" logic.
 		if (!failStatus) {
-			const effectiveTrafficFilter = { blockAbuser: true, ...trafficFilter };
-			// if at least one true
-			const hasTrafficFilter = Object.values(effectiveTrafficFilter).some(
-				(v) => v,
+			const check = await this.resolveTrafficFilterCheck(
+				env,
+				solution.ipInfo,
+				trafficFilter,
+				ip,
 			);
-			if (hasTrafficFilter) {
-				// If the dapp passed up the end user's current IP via
-				// the verify call, look that up fresh — it's the "now"
-				// IP for filtering and may differ from the IP that
-				// originally requested the captcha. Otherwise reuse
-				// the payload captured at request time.
-				const ipInfoForFilter = ip
-					? await env.ipInfoService.lookup(ip)
-					: solution.ipInfo;
-				const check = checkTrafficFilter(
-					ipInfoForFilter,
-					effectiveTrafficFilter,
-				);
-				if (check.isBlocked) {
-					this.logger.info(() => ({
-						msg: "Traffic filter rejected request",
-						data: { commitmentId, dapp, ip, reason: check.reason },
-					}));
-					commitmentUpdates.result = {
-						status: CaptchaStatus.disapproved,
-						reason: check.reason,
-					};
-					failStatus = check.reason;
-				}
+			if (check.isBlocked) {
+				this.logger.info(() => ({
+					msg: "Traffic filter rejected request",
+					data: { commitmentId, dapp, ip, reason: check.reason },
+				}));
+				commitmentUpdates.result = {
+					status: CaptchaStatus.disapproved,
+					reason: check.reason,
+				};
+				failStatus = check.reason;
 			}
 		}
 
