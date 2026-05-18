@@ -54,8 +54,15 @@ const isInternalLink = (url: string): boolean => {
 		return true; // No protocol means internal link
 	}
 
-	// If it has a protocol but points to prosopo.io, it's still internal
-	return url.includes("prosopo.io");
+	// Match the host exactly. A substring check would falsely flag
+	// third-party URLs that contain "prosopo.io" in the path
+	// (e.g. https://uk.trustpilot.com/review/prosopo.io).
+	try {
+		const { hostname } = new URL(url);
+		return hostname === "prosopo.io" || hostname.endsWith(".prosopo.io");
+	} catch {
+		return false;
+	}
 };
 
 /**
@@ -79,8 +86,11 @@ const needsTrailingSlash = (url: string): boolean => {
 		return false;
 	}
 
-	// Skip Nunjucks template variables - URLs containing {{ }} syntax
-	if (url.includes("{{") && url.includes("}}")) {
+	// Skip Nunjucks template variables. A URL fragment containing either `{{`
+	// or `}}` is enough: the markdown extractor's title-stripping `split(" ")`
+	// can chop a templated URL like `{{ site.url }}/foo/` down to just `{{`,
+	// so we must skip on either delimiter rather than requiring both.
+	if (url.includes("{{") || url.includes("}}")) {
 		return false;
 	}
 
