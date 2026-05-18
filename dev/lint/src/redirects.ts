@@ -41,7 +41,7 @@ enum Mode {
  * @param url - The URL to check
  * @returns boolean indicating whether the URL is an internal link
  */
-const isInternalLink = (url: string): boolean => {
+export const isInternalLink = (url: string): boolean => {
 	// Skip empty URLs, fragments, and mailto links
 	if (!url || url.startsWith("#") || url.startsWith("mailto:")) {
 		return false;
@@ -70,7 +70,7 @@ const isInternalLink = (url: string): boolean => {
  * @param url - The URL to check
  * @returns boolean indicating whether the URL should have a trailing slash
  */
-const needsTrailingSlash = (url: string): boolean => {
+export const needsTrailingSlash = (url: string): boolean => {
 	// URLs that already end with a slash are fine
 	if (url.endsWith("/")) {
 		return false;
@@ -127,7 +127,7 @@ const needsTrailingSlash = (url: string): boolean => {
  * A naïve `split(" ")` mangles templated URLs because `{{ site.url }}`
  * contains spaces inside the braces.
  */
-const extractMarkdownUrl = (urlPart: string): string => {
+export const extractMarkdownUrl = (urlPart: string): string => {
 	let depth = 0;
 	for (let i = 0; i < urlPart.length; i++) {
 		const two = urlPart.slice(i, i + 2);
@@ -218,6 +218,32 @@ const extractHtmlLinks = (
 };
 
 /**
+ * Build the rewritten link text with a trailing slash appended to the URL.
+ * Pure function — returns `originalText` unchanged if the URL doesn't appear
+ * in any of the recognised wrappers (quoted, parenthesised, parenthesised
+ * with a following markdown title).
+ */
+export const buildReplacementText = (
+	originalText: string,
+	url: string,
+): string => {
+	const urlWithSlash = `${url}/`;
+	if (originalText.includes(`"${url}"`)) {
+		return originalText.replace(`"${url}"`, `"${urlWithSlash}"`);
+	}
+	if (originalText.includes(`'${url}'`)) {
+		return originalText.replace(`'${url}'`, `'${urlWithSlash}'`);
+	}
+	if (originalText.includes(`(${url})`)) {
+		return originalText.replace(`(${url})`, `(${urlWithSlash})`);
+	}
+	if (originalText.includes(`(${url} `)) {
+		return originalText.replace(`(${url} `, `(${urlWithSlash} `);
+	}
+	return originalText;
+};
+
+/**
  * Extract all links from a file (both markdown and HTML)
  * @param filePath - The path to the file
  * @returns Array of links with file path, line number, and URL
@@ -235,33 +261,9 @@ const extractLinksFromFile = async (filePath: string): Promise<FileLink[]> => {
 		const allLinks = [...mdLinks, ...htmlLinks].map((link) => {
 			const internal = isInternalLink(link.url);
 			const needsSlash = internal && needsTrailingSlash(link.url);
-
-			// Create replacement text if needed
-			let replacementText = link.originalText;
-			if (needsSlash) {
-				const urlWithSlash = `${link.url}/`;
-				if (link.originalText.includes(`"${link.url}"`)) {
-					replacementText = link.originalText.replace(
-						`"${link.url}"`,
-						`"${urlWithSlash}"`,
-					);
-				} else if (link.originalText.includes(`'${link.url}'`)) {
-					replacementText = link.originalText.replace(
-						`'${link.url}'`,
-						`'${urlWithSlash}'`,
-					);
-				} else if (link.originalText.includes(`(${link.url})`)) {
-					replacementText = link.originalText.replace(
-						`(${link.url})`,
-						`(${urlWithSlash})`,
-					);
-				} else if (link.originalText.includes(`(${link.url} `)) {
-					replacementText = link.originalText.replace(
-						`(${link.url} `,
-						`(${urlWithSlash} `,
-					);
-				}
-			}
+			const replacementText = needsSlash
+				? buildReplacementText(link.originalText, link.url)
+				: link.originalText;
 
 			return {
 				filePath,
