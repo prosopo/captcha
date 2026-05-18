@@ -359,6 +359,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						userAccessRulesStorage,
 						email,
 						clientRecord.settings.spamEmailDomainCheckEnabled,
+						clientRecord.settings.trafficFilter,
 					);
 
 				const verificationResponse: VerificationResponse =

@@ -206,6 +206,21 @@ describe("ImgCaptchaManager", () => {
 					baseUrl: "https://api.ipapi.is",
 				},
 			},
+			// `verifyImageCaptchaSolution` calls
+			// `env.ipInfoService.lookup(ip)` when the verify call
+			// passes an `ip` and the traffic filter is enabled. Tests
+			// that don't care about the response can stub it with an
+			// `isValid: false` payload so the filter falls through to
+			// "not blocked".
+			ipInfoService: {
+				initialize: vi.fn().mockResolvedValue(undefined),
+				isAvailable: vi.fn().mockReturnValue(true),
+				lookup: vi.fn(async (ip: string) => ({
+					isValid: false as const,
+					error: "stubbed in test",
+					ip,
+				})),
+			},
 		} as unknown as ProviderEnvironment;
 
 		vi.clearAllMocks();

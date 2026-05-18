@@ -516,14 +516,18 @@ export class PowCaptchaManager extends CaptchaManager {
 			const hasTrafficFilter = Object.values(effectiveTrafficFilter).some(
 				(v) => v,
 			);
-			const ipToCheck =
-				ip || getIpAddressFromComposite(challengeRecord.ipAddress).address;
-			if (ipToCheck && hasTrafficFilter) {
-				const check = await checkTrafficFilter(
-					ipToCheck,
+			if (hasTrafficFilter) {
+				// If the dapp passed up the end user's current IP via
+				// the verify call, look that up fresh — it's the "now"
+				// IP for filtering and may differ from the IP that
+				// originally issued the challenge. Otherwise reuse the
+				// payload captured at challenge-issuance time.
+				const ipInfoForFilter = ip
+					? await env.ipInfoService.lookup(ip)
+					: challengeRecord.ipInfo;
+				const check = checkTrafficFilter(
+					ipInfoForFilter,
 					effectiveTrafficFilter,
-					env.ipInfoService,
-					this.logger,
 				);
 				if (check.isBlocked) {
 					this.logger.info(() => ({

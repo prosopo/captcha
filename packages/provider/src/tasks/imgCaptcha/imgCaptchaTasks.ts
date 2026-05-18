@@ -771,12 +771,18 @@ export class ImgCaptchaManager extends CaptchaManager {
 			const hasTrafficFilter = Object.values(effectiveTrafficFilter).some(
 				(v) => v,
 			);
-			if (ip && hasTrafficFilter) {
-				const check = await checkTrafficFilter(
-					ip,
+			if (hasTrafficFilter) {
+				// If the dapp passed up the end user's current IP via
+				// the verify call, look that up fresh — it's the "now"
+				// IP for filtering and may differ from the IP that
+				// originally requested the captcha. Otherwise reuse
+				// the payload captured at request time.
+				const ipInfoForFilter = ip
+					? await env.ipInfoService.lookup(ip)
+					: solution.ipInfo;
+				const check = checkTrafficFilter(
+					ipInfoForFilter,
 					effectiveTrafficFilter,
-					env.ipInfoService,
-					this.logger,
 				);
 				if (check.isBlocked) {
 					this.logger.info(() => ({

@@ -27,6 +27,7 @@ import {
 	type CaptchaResult,
 	CaptchaStatus,
 	type IPAddress,
+	type ITrafficFilter,
 	POW_SEPARATOR,
 	type PoWChallengeId,
 	type PuzzleEvent,
@@ -50,6 +51,7 @@ import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature } from "../powCaptcha/powTasksUtils.js";
+import { checkTrafficFilter } from "../spam/checkTrafficFilter.js";
 import { validatePuzzleSolution } from "./puzzleTasksUtils.js";
 
 interface PuzzleCaptchaChallenge {
@@ -346,6 +348,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		userAccessRulesStorage?: AccessRulesStorage,
 		email?: string,
 		spamEmailDomainCheckingEnabled = false,
+		trafficFilter?: ITrafficFilter,
 	): Promise<{ verified: boolean; score?: number }> {
 		const notVerifiedResponse = { verified: false };
 
@@ -481,6 +484,49 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 					msg: "Failed to check spam email domain in server puzzle verification",
 					error,
 				}));
+			}
+		}
+
+		// Traffic filter: block VPN/proxy/Tor/abuser etc. blockAbuser
+		// defaults to true so abusive networks are always blocked.
+		{
+			const effectiveTrafficFilter = { blockAbuser: true, ...trafficFilter };
+			const hasTrafficFilter = Object.values(effectiveTrafficFilter).some(
+				(v) => v,
+			);
+			if (hasTrafficFilter) {
+				// If the dapp passed up the end user's current IP via
+				// the verify call, look that up fresh — it's the "now"
+				// IP for filtering and may differ from the IP that
+				// originally issued the challenge. Otherwise reuse the
+				// payload captured at challenge-issuance time.
+				const ipInfoForFilter = ip
+					? await env.ipInfoService.lookup(ip)
+					: challengeRecord.ipInfo;
+				const check = checkTrafficFilter(
+					ipInfoForFilter,
+					effectiveTrafficFilter,
+				);
+				if (check.isBlocked) {
+					this.logger.info(() => ({
+						msg: "Traffic filter rejected request in puzzle verification",
+						data: { challenge, dappAccount, ip, reason: check.reason },
+					}));
+					const blockedResult = {
+						status: CaptchaStatus.disapproved,
+						reason: check.reason,
+					};
+					await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
+						result: blockedResult,
+					});
+					if (challengeRecord.sessionId) {
+						await this.db.updateSessionRecord(challengeRecord.sessionId, {
+							serverChecked: true,
+							result: blockedResult,
+						});
+					}
+					return notVerifiedResponse;
+				}
 			}
 		}
 
