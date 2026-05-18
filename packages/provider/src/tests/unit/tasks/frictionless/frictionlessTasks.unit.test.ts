@@ -156,6 +156,99 @@ describe("Frictionless Task Manager", () => {
 			expect(db.storeSessionRecord).toHaveBeenCalledWith(session);
 		});
 
+		it("threads ipInfo from setSessionParams through to the stored session record", async () => {
+			// setSessionParams({ ipInfo: ... }) → sendImageCaptcha →
+			// createSession → storeSessionRecord. The full payload from
+			// the request-time ipInfoMiddleware must land on the
+			// session record, not be silently dropped along the way.
+			const mockIpAddress = getCompositeIpAddress("1.2.3.4");
+			const stubIpInfo = {
+				ip: "1.2.3.4",
+				isValid: true as const,
+				isVPN: true,
+				isTor: false,
+				isProxy: false,
+				isDatacenter: true,
+				isAbuser: false,
+				isMobile: false,
+				isSatellite: false,
+				isCrawler: false,
+				countryCode: "DE",
+				asnNumber: 12345,
+			};
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.storeSessionRecord as any).mockResolvedValue(undefined);
+
+			frictionlessTaskManager.setSessionParams({
+				token: "tok-ipinfo",
+				score: 0.5,
+				threshold: 0.7,
+				scoreComponents: { baseScore: 0.5 },
+				providerSelectEntropy: 99,
+				ipAddress: mockIpAddress,
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "",
+				siteKey: "siteKey-ipinfo",
+				ipInfo: stubIpInfo,
+			});
+
+			await frictionlessTaskManager.sendImageCaptcha({
+				solvedImagesCount: 0,
+			});
+
+			// Inspect the session that storeSessionRecord was actually
+			// called with — the ipInfo we set must be on it.
+			expect(db.storeSessionRecord).toHaveBeenCalledWith(
+				expect.objectContaining({ ipInfo: stubIpInfo }),
+			);
+		});
+
+		it("threads ipInfo through registerBlockedSession too", async () => {
+			// The blocked-session path constructs a Session record
+			// independently of sendImageCaptcha; make sure ipInfo is
+			// carried through there as well.
+			const mockIpAddress = getCompositeIpAddress("1.2.3.4");
+			const stubIpInfo = {
+				ip: "1.2.3.4",
+				isValid: true as const,
+				isVPN: false,
+				isTor: true,
+				isProxy: false,
+				isDatacenter: false,
+				isAbuser: false,
+				isMobile: false,
+				isSatellite: false,
+				isCrawler: false,
+				countryCode: "GB",
+			};
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.storeSessionRecord as any).mockResolvedValue(undefined);
+
+			frictionlessTaskManager.setSessionParams({
+				token: "tok-blocked",
+				score: 0.9,
+				threshold: 0.5,
+				scoreComponents: { baseScore: 0.9 },
+				providerSelectEntropy: 1,
+				ipAddress: mockIpAddress,
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "",
+				siteKey: "siteKey-blocked",
+				ipInfo: stubIpInfo,
+			});
+
+			await frictionlessTaskManager.registerBlockedSession({});
+
+			expect(db.storeSessionRecord).toHaveBeenCalledWith(
+				expect.objectContaining({
+					ipInfo: stubIpInfo,
+					blocked: true,
+				}),
+			);
+		});
+
 		it("should create image captcha session correctly", async () => {
 			const mockToken = "mockToken123";
 			const mockScore = 0.5;
