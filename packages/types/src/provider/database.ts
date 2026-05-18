@@ -269,8 +269,12 @@ export const SessionSchema = object({
 	siteKey: string().optional(),
 	reason: string().optional(),
 	blocked: boolean().optional(),
-	countryCode: string().optional(),
-	geolocation: string().optional(),
+	// Full ipinfo payload from ipInfoMiddleware at session-creation
+	// time. Replaces the flat `countryCode` / `geolocation` fields —
+	// consumers narrow on `ipInfo.isValid` and read whichever sub-field
+	// they need (countryCode, isVPN, etc.). Mirrors what's stored on
+	// captcha records (PoW / Puzzle / UserCommitment).
+	ipInfo: any().optional(),
 	headers: object({}).catchall(string()),
 	result: object({
 		status: nativeEnum(CaptchaStatus),
@@ -305,8 +309,9 @@ export type Session = {
 	siteKey?: string;
 	reason?: string;
 	blocked?: boolean;
-	countryCode?: string;
-	geolocation?: string;
+	// Full ipinfo payload from ipInfoMiddleware at session-creation
+	// time. Replaces the flat `countryCode` / `geolocation` fields.
+	ipInfo?: IPInfoResponse;
 	headers?: RequestHeaders;
 	result?: {
 		status: CaptchaStatus;

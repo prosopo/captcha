@@ -15,6 +15,7 @@
 import { LogLevel, getLogger } from "@prosopo/common";
 import {
 	CaptchaStatus,
+	CaptchaType,
 	type CompositeIpAddress,
 	type IPInfoResponse,
 	IpAddressType,
@@ -24,6 +25,8 @@ import {
 	PoWCaptchaRecordSchema,
 	type PuzzleCaptchaRecord,
 	PuzzleCaptchaRecordSchema,
+	type SessionRecord,
+	SessionRecordSchema,
 	type UserCommitmentRecord,
 	UserCommitmentRecordSchema,
 } from "@prosopo/types-database";
@@ -72,6 +75,7 @@ describe("captcha record ipInfo persistence (MongoMemory roundtrip)", () => {
 	let PoWModel: mongoose.Model<PoWCaptchaRecord>;
 	let PuzzleModel: mongoose.Model<PuzzleCaptchaRecord>;
 	let CommitmentModel: mongoose.Model<UserCommitmentRecord>;
+	let SessionModel: mongoose.Model<SessionRecord>;
 
 	beforeAll(async () => {
 		mongoDb = new MongoMemoryDatabase("ignored", "captchastorage", logger);
@@ -92,6 +96,10 @@ describe("captcha record ipInfo persistence (MongoMemory roundtrip)", () => {
 		CommitmentModel = mongoDb.connection.model<UserCommitmentRecord>(
 			"Commitment",
 			UserCommitmentRecordSchema,
+		);
+		SessionModel = mongoDb.connection.model<SessionRecord>(
+			"Session",
+			SessionRecordSchema,
 		);
 	});
 
@@ -211,6 +219,61 @@ describe("captcha record ipInfo persistence (MongoMemory roundtrip)", () => {
 			id: "commitment-valid",
 		}).lean<UserCommitmentRecord>();
 		expect(got?.ipInfo).toMatchObject(validIpInfo);
+	});
+
+	it("persists the full IPInfoResponse on a Session record", async () => {
+		await SessionModel.create({
+			sessionId: "session-valid",
+			createdAt: new Date(),
+			token: "tok-1",
+			score: 0.5,
+			threshold: 0.5,
+			scoreComponents: { baseScore: 0.5 },
+			providerSelectEntropy: 0.1,
+			ipAddress: ipv4Composite(16843009n),
+			captchaType: CaptchaType.frictionless,
+			webView: false,
+			iFrame: false,
+			decryptedHeadHash: "",
+			siteKey: "dapp1",
+			ipInfo: validIpInfo,
+		});
+
+		const got = await SessionModel.findOne({
+			sessionId: "session-valid",
+		}).lean<SessionRecord>();
+		expect(got).not.toBeNull();
+		expect(got?.ipInfo).toMatchObject(validIpInfo);
+		expect(got?.ipInfo?.isValid).toBe(true);
+		if (got?.ipInfo?.isValid) {
+			expect(got.ipInfo.countryCode).toBe("DE");
+			expect(got.ipInfo.isVPN).toBe(true);
+		}
+	});
+
+	it("persists an IPInfoError on a Session record", async () => {
+		await SessionModel.create({
+			sessionId: "session-error",
+			createdAt: new Date(),
+			token: "tok-2",
+			score: 0.5,
+			threshold: 0.5,
+			scoreComponents: { baseScore: 0.5 },
+			providerSelectEntropy: 0.1,
+			ipAddress: ipv4Composite(2130706433n),
+			captchaType: CaptchaType.frictionless,
+			webView: false,
+			iFrame: false,
+			decryptedHeadHash: "",
+			siteKey: "dapp1",
+			ipInfo: errorIpInfo,
+		});
+
+		const got = await SessionModel.findOne({
+			sessionId: "session-error",
+		}).lean<SessionRecord>();
+		expect(got?.ipInfo).toMatchObject(errorIpInfo);
+		expect(got?.ipInfo?.isValid).toBe(false);
 	});
 
 	it("backfill query { ipInfo: { $exists: false } } matches records missing ipInfo", async () => {

@@ -469,8 +469,10 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	siteKey: { type: String, required: false },
 	reason: { type: String, required: false },
 	blocked: { type: Boolean, required: false },
-	countryCode: { type: String, required: false },
-	geolocation: { type: String, required: false },
+	// Full ipinfo payload — replaces flat `countryCode` / `geolocation`
+	// fields. Mirrors the captcha record schemas (PoW / Puzzle /
+	// UserCommitment).
+	ipInfo: { type: Object, required: false },
 	headers: { type: Object, required: false },
 	result: {
 		type: new Schema(

@@ -111,7 +111,10 @@ export class CaptchaManager {
 		type: CaptchaType;
 		powDifficulty?: number;
 		solvedImagesCount?: number;
-		countryCode?: string;
+		// The session's stored ipInfo (if a sessionId was provided and
+		// resolved). Callers may use this for routing / scope logic
+		// without re-reading the session record.
+		ipInfo?: IPInfoResponse;
 	}> {
 		this.logger.debug(() => ({
 			msg: "Validating request",
@@ -220,7 +223,7 @@ export class CaptchaManager {
 				...(sessionRecord.solvedImagesCount && {
 					solvedImagesCount: sessionRecord.solvedImagesCount,
 				}),
-				countryCode: sessionRecord.countryCode,
+				ipInfo: sessionRecord.ipInfo,
 			};
 		}
 
