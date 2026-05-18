@@ -433,7 +433,7 @@ export class PowCaptchaManager extends CaptchaManager {
 					challengeRecord.userAccount,
 					challengeRecord.headers,
 					challengeRecord.coords,
-					challengeRecord.ipInfo && challengeRecord.ipInfo.isValid
+					challengeRecord.ipInfo?.isValid
 						? challengeRecord.ipInfo.countryCode
 						: undefined,
 				);
@@ -599,10 +599,9 @@ export class PowCaptchaManager extends CaptchaManager {
 					captchaType: CaptchaType.pow,
 					behavioralDataPacked: challengeRecord.behavioralDataPacked,
 					deviceCapability: challengeRecord.deviceCapability,
-					countryCode:
-						challengeRecord.ipInfo && challengeRecord.ipInfo.isValid
-							? challengeRecord.ipInfo.countryCode
-							: undefined,
+					countryCode: challengeRecord.ipInfo?.isValid
+						? challengeRecord.ipInfo.countryCode
+						: undefined,
 				};
 
 				const decision = await this.decisionMachineRunner.decide(

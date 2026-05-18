@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { getLogger, LogLevel } from "@prosopo/common";
+import { LogLevel, getLogger } from "@prosopo/common";
 import {
 	CaptchaStatus,
 	type CompositeIpAddress,
@@ -27,7 +27,7 @@ import {
 	type UserCommitmentRecord,
 	UserCommitmentRecordSchema,
 } from "@prosopo/types-database";
-import mongoose from "mongoose";
+import type mongoose from "mongoose";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { MongoMemoryDatabase } from "../../base/mongoMemory.js";
 
@@ -101,7 +101,8 @@ describe("captcha record ipInfo persistence (MongoMemory roundtrip)", () => {
 
 	it("persists the full IPInfoResponse on a PoW captcha record", async () => {
 		await PoWModel.create({
-			challenge: "1___2___challenge-pow-valid" as `${number}___${string}___${string}`,
+			challenge:
+				"1___2___challenge-pow-valid" as `${number}___${string}___${string}`,
 			userAccount: "user1",
 			dappAccount: "dapp1",
 			requestedAtTimestamp: new Date(),
@@ -132,7 +133,8 @@ describe("captcha record ipInfo persistence (MongoMemory roundtrip)", () => {
 
 	it("persists an IPInfoError on a PoW captcha record", async () => {
 		await PoWModel.create({
-			challenge: "1___2___challenge-pow-error" as `${number}___${string}___${string}`,
+			challenge:
+				"1___2___challenge-pow-error" as `${number}___${string}___${string}`,
 			userAccount: "user2",
 			dappAccount: "dapp1",
 			requestedAtTimestamp: new Date(),
@@ -156,7 +158,8 @@ describe("captcha record ipInfo persistence (MongoMemory roundtrip)", () => {
 
 	it("persists the full IPInfoResponse on a Puzzle captcha record", async () => {
 		await PuzzleModel.create({
-			challenge: "1___2___challenge-puzzle-valid" as `${number}___${string}___${string}`,
+			challenge:
+				"1___2___challenge-puzzle-valid" as `${number}___${string}___${string}`,
 			userAccount: "user3",
 			dappAccount: "dapp1",
 			requestedAtTimestamp: new Date(),

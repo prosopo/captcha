@@ -49,8 +49,8 @@ import { getIpAddressFromComposite } from "../compositeIpAddress.js";
 import type { RedisWriteQueue } from "../util/redisCache.js";
 import { checkSpamEmail as checkSpamEmailFn } from "./spam/checkSpamEmail.js";
 import {
-	checkTrafficFilter,
 	type TrafficCheckResult,
+	checkTrafficFilter,
 } from "./spam/checkTrafficFilter.js";
 
 /**

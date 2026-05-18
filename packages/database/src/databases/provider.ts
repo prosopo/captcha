@@ -772,8 +772,7 @@ export class ProviderDatabase
 					challenge,
 					userSubmitted,
 					serverChecked,
-					countryCode:
-						ipInfo && ipInfo.isValid ? ipInfo.countryCode : undefined,
+					countryCode: ipInfo?.isValid ? ipInfo.countryCode : undefined,
 				},
 				msg: "PowCaptcha record added successfully",
 			}));
@@ -1019,8 +1018,7 @@ export class ProviderDatabase
 			this.logger.info(() => ({
 				data: {
 					challenge,
-					countryCode:
-						ipInfo && ipInfo.isValid ? ipInfo.countryCode : undefined,
+					countryCode: ipInfo?.isValid ? ipInfo.countryCode : undefined,
 				},
 				msg: "PuzzleCaptcha record added successfully",
 			}));

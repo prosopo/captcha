@@ -689,9 +689,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 					solution.userAccount,
 					solution.headers,
 					solution.coords,
-					solution.ipInfo && solution.ipInfo.isValid
-						? solution.ipInfo.countryCode
-						: undefined,
+					solution.ipInfo?.isValid ? solution.ipInfo.countryCode : undefined,
 				);
 
 				if (blockPolicy) {
@@ -892,10 +890,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 				captchaResult: "passed",
 				headers: solution.headers,
 				captchaType: CaptchaType.image,
-				countryCode:
-					solution.ipInfo && solution.ipInfo.isValid
-						? solution.ipInfo.countryCode
-						: undefined,
+				countryCode: solution.ipInfo?.isValid
+					? solution.ipInfo.countryCode
+					: undefined,
 			};
 
 			try {
