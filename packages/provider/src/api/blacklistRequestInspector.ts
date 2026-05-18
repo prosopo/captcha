@@ -184,8 +184,7 @@ export class BlacklistRequestInspector {
 			// which runs before blockMiddleware). Threading it in here lets
 			// country-based access rules fire at the earliest entry point —
 			// in particular, *before* a frictionless session is created.
-			const countryCode =
-				ipInfo && ipInfo.isValid ? ipInfo.countryCode : undefined;
+			const countryCode = ipInfo?.isValid ? ipInfo.countryCode : undefined;
 
 			const accessPolicies = await getPrioritisedAccessRule(
 				this.userAccessRulesStorage,

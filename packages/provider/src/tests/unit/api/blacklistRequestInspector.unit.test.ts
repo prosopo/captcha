@@ -149,9 +149,7 @@ describe("BlacklistRequestInspector.shouldAbortRequest", () => {
 		// At least one of the prioritised sub-scopes must carry the
 		// countryCode — otherwise country-based rules can never fire
 		// at the earliest entry point (blockMiddleware).
-		const hasCountry = seenScopes.some(
-			(scope) => scope.countryCode === "DE",
-		);
+		const hasCountry = seenScopes.some((scope) => scope.countryCode === "DE");
 		expect(hasCountry).toBe(true);
 	});
 
@@ -177,9 +175,7 @@ describe("BlacklistRequestInspector.shouldAbortRequest", () => {
 			undefined,
 		);
 
-		const anyCountry = seenScopes.some(
-			(scope) => "countryCode" in scope,
-		);
+		const anyCountry = seenScopes.some((scope) => "countryCode" in scope);
 		expect(anyCountry).toBe(false);
 	});
 
@@ -205,9 +201,7 @@ describe("BlacklistRequestInspector.shouldAbortRequest", () => {
 			{ isValid: false, error: "lookup failed", ip: "1.1.1.1" },
 		);
 
-		const anyCountry = seenScopes.some(
-			(scope) => "countryCode" in scope,
-		);
+		const anyCountry = seenScopes.some((scope) => "countryCode" in scope);
 		expect(anyCountry).toBe(false);
 	});
 
