@@ -39,9 +39,9 @@ describe("isInternalLink", () => {
 
 	test("third-party hosts that contain 'prosopo.io' in the path are external", () => {
 		// Regression: previously matched via substring and got flagged as internal.
-		expect(
-			isInternalLink("https://uk.trustpilot.com/review/prosopo.io"),
-		).toBe(false);
+		expect(isInternalLink("https://uk.trustpilot.com/review/prosopo.io")).toBe(
+			false,
+		);
 		expect(isInternalLink("https://github.com/prosopo/captcha")).toBe(false);
 	});
 
@@ -97,12 +97,8 @@ describe("extractMarkdownUrl", () => {
 	});
 
 	test("strips an optional markdown title separated by whitespace", () => {
-		expect(extractMarkdownUrl('/products/foo/ "title"')).toBe(
-			"/products/foo/",
-		);
-		expect(extractMarkdownUrl("/products/foo/ 'title'")).toBe(
-			"/products/foo/",
-		);
+		expect(extractMarkdownUrl('/products/foo/ "title"')).toBe("/products/foo/");
+		expect(extractMarkdownUrl("/products/foo/ 'title'")).toBe("/products/foo/");
 	});
 
 	test("preserves Nunjucks expressions that contain spaces", () => {
@@ -113,15 +109,15 @@ describe("extractMarkdownUrl", () => {
 	});
 
 	test("handles a templated URL followed by a markdown title", () => {
-		expect(
-			extractMarkdownUrl('{{ site.url }}/products/foo/ "title"'),
-		).toBe("{{ site.url }}/products/foo/");
+		expect(extractMarkdownUrl('{{ site.url }}/products/foo/ "title"')).toBe(
+			"{{ site.url }}/products/foo/",
+		);
 	});
 
 	test("handles a URL with multiple template expressions", () => {
-		expect(
-			extractMarkdownUrl("/{{ locale }}/products/{{ slug }}/"),
-		).toBe("/{{ locale }}/products/{{ slug }}/");
+		expect(extractMarkdownUrl("/{{ locale }}/products/{{ slug }}/")).toBe(
+			"/{{ locale }}/products/{{ slug }}/",
+		);
 	});
 
 	test("returns the bare template when the URL is purely templated", () => {
@@ -147,19 +143,13 @@ describe("buildReplacementText", () => {
 
 	test("appends a slash inside an HTML double-quoted href", () => {
 		expect(
-			buildReplacementText(
-				'<a href="/products/foo">Foo</a>',
-				"/products/foo",
-			),
+			buildReplacementText('<a href="/products/foo">Foo</a>', "/products/foo"),
 		).toBe('<a href="/products/foo/">Foo</a>');
 	});
 
 	test("appends a slash inside an HTML single-quoted href", () => {
 		expect(
-			buildReplacementText(
-				"<a href='/products/foo'>Foo</a>",
-				"/products/foo",
-			),
+			buildReplacementText("<a href='/products/foo'>Foo</a>", "/products/foo"),
 		).toBe("<a href='/products/foo/'>Foo</a>");
 	});
 
