@@ -1,16 +1,20 @@
 ---
 "@prosopo/types": patch
 "@prosopo/types-database": patch
+"@prosopo/database": patch
+"@prosopo/provider": patch
 ---
 
-Add the ipinfo flags the provider's traffic filter actually blocks on as optional top-level fields on `StoredCaptcha`, alongside the existing `vpn` / `countryCode` fields. The job runner's CHECK_IP_INFO enrichment in captcha-private writes them from one ipinfo lookup per record.
+Drop flat ipinfo fields (`vpn`, `countryCode`, `tor`, `proxy`, `datacenter`, `abuser`, `geolocation`) from captcha records — persist the full `IPInfoResponse` payload as `ipInfo` instead
 
-- Booleans: `tor`, `proxy`, `datacenter`, `abuser`.
-- Numerics: `abuserScore` (max of the asn + company scores — the exact value `checkTrafficFilter.ts` compares against the abuser threshold), `asnNumber`.
+The provider's `ipInfoMiddleware` already calls `ipInfoService.lookup()` on every captcha request and attaches the result to `req.ipInfo`. Persisting that whole payload on every captcha record means the portal sees the *exact* response the traffic filter consulted, with no cherry-picked-field translation layer in between. Adding a new flag in the future (e.g. `isMobile`) requires zero schema changes — it's already in the payload.
 
-Applied to:
-- `StoredCaptcha` interface (used by PoW + UserCommitment + Puzzle records).
-- `PoWCaptchaStoredSchema` zod validator.
-- PoW, Puzzle, UserCommitment mongoose schemas in `@prosopo/types-database`.
+- `StoredCaptcha` interface: removed `vpn`, `countryCode`, `geolocation`. Keeps `ipInfo?: IPInfoResponse`.
+- `PoWCaptchaStoredSchema` zod validator: same removals, adds `ipInfo` (validated as `any()` since `IPInfoResponse` is a discriminated union narrowed at read time).
+- PoW, Puzzle, UserCommitment mongoose schemas in `@prosopo/types-database`: same removals. UserCommitment now also has `ipInfo` (previously only PoW + Puzzle did). Replaced `{ countryCode: 1 }` index with `{ "ipInfo.countryCode": 1 }` + `{ "ipInfo.isVPN": 1 }`.
+- `IProviderDatabase` interface: `storePowCaptchaRecord` / `storePuzzleCaptchaRecord` / `storePendingImageCommitment` now take `ipInfo?: IPInfoResponse` in place of `countryCode?: string`.
+- Provider call sites (`getPoWCaptchaChallenge.ts`, `getPuzzleCaptchaChallenge.ts`, `getImageCaptchaChallenge.ts`, `submitImageCaptchaSolution.ts`) pass `req.ipInfo` directly. The earlier "prefer session.countryCode, fallback to req's countryCode" branching is gone — record `ipInfo` reflects what was true at challenge-issuance time.
+- Provider read sites (`powTasks.ts`, `puzzleTasks.ts`, `imgCaptchaTasks.ts`) narrow `record.ipInfo?.isValid` then read `.countryCode` for access-policy / decision-machine input — same effective value, derived from the persisted payload.
+- Lean projections in `provider.ts` switched from `countryCode: 1` to `ipInfo: 1`.
 
-No new mongoose indexes — `vpn` is also unindexed at the provider schema level. Portal-side `database-private` models can add indexes when their search / filter UIs grow to use these signals. Paired with [captcha-private#3339](https://github.com/prosopo/captcha-private/pull/3339).
+Paired with [captcha-private#3339](https://github.com/prosopo/captcha-private/pull/3339), which updates the CHECK_IP_INFO backfill job (now writes the full payload, query becomes `{ ipInfo: { $exists: false } }`), the portal search models / aggregation pipeline (read nested `ipInfo.*`), and the anomaly detectors.

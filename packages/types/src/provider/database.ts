@@ -144,21 +144,13 @@ export interface StoredCaptcha {
 	ja4: string;
 	userSubmitted: boolean;
 	serverChecked: boolean;
-	geolocation?: string;
-	countryCode?: string;
-	vpn?: boolean;
-	// Additional ipinfo flags persisted by the CHECK_IP_INFO job so the
-	// portal can filter / display the same signals the traffic filter
-	// uses to block requests. All optional for back-compat with records
-	// written before enrichment. `abuserScore` is max(asn, company)
-	// score so it directly mirrors what `checkTrafficFilter.ts`
-	// compares against the abuser threshold.
-	tor?: boolean;
-	proxy?: boolean;
-	datacenter?: boolean;
-	abuser?: boolean;
-	abuserScore?: number;
-	asnNumber?: number;
+	// The full ipinfo payload from `IpInfoService.lookup()`. Persisted
+	// either by the provider's ipInfoMiddleware (at request time) or by
+	// the CHECK_IP_INFO backfill job. Consumers read individual fields
+	// (`isVPN`, `countryCode`, `isTor`, ...) directly off this object
+	// after narrowing on `isValid`, instead of having one flat top-level
+	// field per signal. Optional for records written before the
+	// middleware existed; backfill fills them in over time.
 	ipInfo?: IPInfoResponse;
 	parsedUserAgentInfo?: UserAgentInfo;
 	storedAtTimestamp?: Date;
@@ -347,15 +339,10 @@ export const PoWCaptchaStoredSchema = object({
 	ja4: string(),
 	userSubmitted: boolean(),
 	serverChecked: boolean(),
-	geolocation: string().optional(),
-	countryCode: string().optional(),
-	vpn: boolean().optional(),
-	tor: boolean().optional(),
-	proxy: boolean().optional(),
-	datacenter: boolean().optional(),
-	abuser: boolean().optional(),
-	abuserScore: number().optional(),
-	asnNumber: number().optional(),
+	// The full ipinfo payload — optional and not validated nominally
+	// because IPInfoResponse is a discriminated union and consumers
+	// only need to narrow at read time.
+	ipInfo: any().optional(),
 	parsedUserAgentInfo: any().optional(),
 	storedAtTimestamp: date().optional(),
 	lastUpdatedTimestamp: date().optional(),

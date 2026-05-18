@@ -116,7 +116,6 @@ export default (
 				reason,
 				sessionId: validSessionId,
 				solvedImagesCount,
-				countryCode: sessionCountryCode,
 			} = await tasks.imgCaptchaManager.isValidRequest(
 				clientRecord,
 				CaptchaType.image,
@@ -156,10 +155,6 @@ export default (
 				},
 			};
 
-			// Use countryCode from session (already fetched in isValidRequest) or fall back to geolocation
-			const countryCodeToStore: string | undefined =
-				sessionCountryCode || countryCode;
-
 			const taskData =
 				await tasks.imgCaptchaManager.getRandomCaptchasAndRequestHash(
 					datasetId,
@@ -168,7 +163,10 @@ export default (
 					captchaConfig,
 					clientRecord.settings.imageThreshold ?? 0.8,
 					validSessionId,
-					countryCodeToStore,
+					// Persist the full ipinfo payload — consumers read
+					// individual flags off this object instead of separate
+					// flat fields.
+					req.ipInfo,
 				);
 			const captchaResponse: CaptchaResponseBody = {
 				[ApiParams.status]: "ok",

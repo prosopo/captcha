@@ -32,6 +32,7 @@ import {
 	type DecisionMachineInput,
 	type Hash,
 	type IPAddress,
+	type IPInfoResponse,
 	type ISpamFilterRules,
 	type ITrafficFilter,
 	type ImageVerificationResponse,
@@ -112,7 +113,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		captchaConfig: ProsopoCaptchaCountConfigSchemaOutput,
 		threshold: number,
 		sessionId?: string,
-		countryCode?: string,
+		ipInfo?: IPInfoResponse,
 	): Promise<{
 		captchas: Captcha[];
 		requestHash: string;
@@ -180,7 +181,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			getCompositeIpAddress(ipAddress),
 			threshold,
 			sessionId,
-			countryCode,
+			ipInfo,
 		);
 		return {
 			captchas,
@@ -217,6 +218,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		headers: RequestHeaders,
 		ja4: string,
 		behavioralData?: string,
+		ipInfo?: IPInfoResponse,
 	): Promise<DappUserSolutionResult> {
 		// check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
 		const verification = signatureVerify(
@@ -295,15 +297,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 			// prevent this request hash from being used twice
 			await this.db.updatePendingImageCommitmentStatus(requestHash);
 
-			// Get countryCode from session if available, otherwise use fallback
-			let countryCode: string | undefined;
-			if (pendingRecord.sessionId) {
-				const sessionRecord = await this.db.getSessionRecordBySessionId(
-					pendingRecord.sessionId,
-				);
-				countryCode = sessionRecord?.countryCode;
-			}
-
 			// Process behavioral data if provided
 			let behavioralDataPacked: BehavioralDataPacked | undefined;
 			let deviceCapability: string | undefined;
@@ -371,7 +364,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				headers,
 				sessionId: pendingRecord.sessionId,
 				ja4,
-				countryCode,
+				ipInfo,
 				pending: false,
 				salt: pendingRecord.salt,
 				requestHash: pendingRecord[ApiParams.requestHash],
@@ -697,7 +690,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 					solution.userAccount,
 					solution.headers,
 					solution.coords,
-					solution.countryCode,
+					solution.ipInfo && solution.ipInfo.isValid
+						? solution.ipInfo.countryCode
+						: undefined,
 				);
 
 				if (blockPolicy) {
@@ -903,7 +898,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 				captchaResult: "passed",
 				headers: solution.headers,
 				captchaType: CaptchaType.image,
-				countryCode: solution.countryCode,
+				countryCode:
+					solution.ipInfo && solution.ipInfo.isValid
+						? solution.ipInfo.countryCode
+						: undefined,
 			};
 
 			try {

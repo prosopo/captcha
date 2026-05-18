@@ -92,6 +92,10 @@ export default (env: ProviderEnvironment) =>
 					flatten(req.headers),
 					req.ja4,
 					parsed[ApiParams.behavioralData],
+					// Persist the full ipinfo payload — consumers read
+					// individual flags off this object instead of separate
+					// flat fields.
+					req.ipInfo,
 				);
 
 			const returnValue: CaptchaSolutionResponse = {

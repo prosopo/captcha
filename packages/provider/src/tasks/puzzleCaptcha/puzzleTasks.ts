@@ -420,7 +420,9 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 					challengeRecord.userAccount,
 					challengeRecord.headers,
 					challengeRecord.coords,
-					challengeRecord.countryCode,
+					challengeRecord.ipInfo && challengeRecord.ipInfo.isValid
+						? challengeRecord.ipInfo.countryCode
+						: undefined,
 				);
 
 				if (blockPolicy) {
@@ -558,7 +560,10 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				captchaType: CaptchaType.puzzle,
 				behavioralDataPacked: challengeRecord.behavioralDataPacked,
 				deviceCapability: challengeRecord.deviceCapability,
-				countryCode: challengeRecord.countryCode,
+				countryCode:
+					challengeRecord.ipInfo && challengeRecord.ipInfo.isValid
+						? challengeRecord.ipInfo.countryCode
+						: undefined,
 			};
 
 			const decision = await this.decisionMachineRunner.decide(
