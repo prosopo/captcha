@@ -54,7 +54,6 @@ import {
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
-import { checkTrafficFilter } from "../spam/checkTrafficFilter.js";
 import { evaluateEmailSpamRules } from "../spam/evaluateEmailSpamRules.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
 
@@ -434,7 +433,9 @@ export class PowCaptchaManager extends CaptchaManager {
 					challengeRecord.userAccount,
 					challengeRecord.headers,
 					challengeRecord.coords,
-					challengeRecord.countryCode,
+					challengeRecord.ipInfo?.isValid
+						? challengeRecord.ipInfo.countryCode
+						: undefined,
 				);
 
 				if (blockPolicy) {
@@ -506,34 +507,27 @@ export class PowCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		// Traffic filter: block VPN/proxy/Tor/abuser etc.
-		// blockAbuser defaults to true so abusive networks are always blocked
+		// Traffic filter: block VPN/proxy/Tor/abuser etc. Resolved in
+		// CaptchaManager so all three verify paths (pow/image/puzzle)
+		// share the same "compute effective filter, optionally fresh
+		// lookup, run check" logic.
 		if (!failResult) {
-			const effectiveTrafficFilter = { blockAbuser: true, ...trafficFilter };
-			// if at least one true
-			const hasTrafficFilter = Object.values(effectiveTrafficFilter).some(
-				(v) => v,
+			const check = await this.resolveTrafficFilterCheck(
+				env,
+				challengeRecord.ipInfo,
+				trafficFilter,
+				ip,
 			);
-			const ipToCheck =
-				ip || getIpAddressFromComposite(challengeRecord.ipAddress).address;
-			if (ipToCheck && hasTrafficFilter) {
-				const check = await checkTrafficFilter(
-					ipToCheck,
-					effectiveTrafficFilter,
-					env.ipInfoService,
-					this.logger,
-				);
-				if (check.isBlocked) {
-					this.logger.info(() => ({
-						msg: "Traffic filter rejected request in PoW verification",
-						data: { challenge, dappAccount, ip, reason: check.reason },
-					}));
-					failResult = {
-						status: CaptchaStatus.disapproved,
-						reason: check.reason,
-					};
-					failReason = check.reason;
-				}
+			if (check.isBlocked) {
+				this.logger.info(() => ({
+					msg: "Traffic filter rejected request in PoW verification",
+					data: { challenge, dappAccount, ip, reason: check.reason },
+				}));
+				failResult = {
+					status: CaptchaStatus.disapproved,
+					reason: check.reason,
+				};
+				failReason = check.reason;
 			}
 		}
 
@@ -605,7 +599,9 @@ export class PowCaptchaManager extends CaptchaManager {
 					captchaType: CaptchaType.pow,
 					behavioralDataPacked: challengeRecord.behavioralDataPacked,
 					deviceCapability: challengeRecord.deviceCapability,
-					countryCode: challengeRecord.countryCode,
+					countryCode: challengeRecord.ipInfo?.isValid
+						? challengeRecord.ipInfo.countryCode
+						: undefined,
 				};
 
 				const decision = await this.decisionMachineRunner.decide(

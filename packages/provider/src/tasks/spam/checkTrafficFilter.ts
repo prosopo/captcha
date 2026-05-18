@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Logger } from "@prosopo/common";
 import {
+	type IPInfoResponse,
 	type ITrafficFilter,
 	trafficFilterAbuserScoreThresholdDefault,
 } from "@prosopo/types";
-import type { IIpInfoService } from "@prosopo/types-env";
 
 export type TrafficBlockReason =
 	| "API.VPN_BLOCKED"
@@ -34,72 +33,61 @@ export type TrafficCheckResult =
 	| { isBlocked: true; reason: TrafficBlockReason };
 
 /**
- * Checks whether an IP should be blocked based on traffic filter settings.
- * Each filter (VPN, proxy, Tor, abuser) is evaluated independently.
- * Falls back to "not blocked" on lookup failure so an outage in the
- * upstream service can't block all traffic.
+ * Checks whether a request should be blocked based on traffic filter
+ * settings and the request's already-resolved IP info (attached to
+ * `req.ipInfo` by `ipInfoMiddleware`). Each filter (VPN, proxy, Tor,
+ * abuser, etc.) is evaluated independently. A missing or invalid
+ * `ipInfo` falls back to "not blocked" so an outage in the upstream
+ * service can't block all traffic.
  */
-export const checkTrafficFilter = async (
-	ip: string,
+export const checkTrafficFilter = (
+	ipInfo: IPInfoResponse | undefined,
 	trafficFilter: Partial<ITrafficFilter>,
-	ipInfoService: IIpInfoService,
-	logger: Logger,
-): Promise<TrafficCheckResult> => {
-	try {
-		const info = await ipInfoService.lookup(ip);
-
-		if (!info.isValid) {
-			return { isBlocked: false };
-		}
-
-		if (trafficFilter.blockVpn && info.isVPN) {
-			return { isBlocked: true, reason: "API.VPN_BLOCKED" };
-		}
-
-		if (trafficFilter.blockProxy && info.isProxy) {
-			return { isBlocked: true, reason: "API.PROXY_BLOCKED" };
-		}
-
-		if (trafficFilter.blockTor && info.isTor) {
-			return { isBlocked: true, reason: "API.TOR_BLOCKED" };
-		}
-
-		if ((trafficFilter.blockAbuser ?? true) && info.isAbuser) {
-			const threshold =
-				trafficFilter.abuserScoreThreshold ??
-				trafficFilterAbuserScoreThresholdDefault;
-			const maxScore = Math.max(
-				info.abuserScore ?? 0,
-				info.companyAbuserScore ?? 0,
-			);
-			if (maxScore >= threshold) {
-				return { isBlocked: true, reason: "API.ABUSER_BLOCKED" };
-			}
-		}
-
-		if (trafficFilter.blockDatacenter && info.isDatacenter) {
-			return { isBlocked: true, reason: "API.DATACENTER_BLOCKED" };
-		}
-
-		if (trafficFilter.blockMobile && info.isMobile) {
-			return { isBlocked: true, reason: "API.MOBILE_BLOCKED" };
-		}
-
-		if (trafficFilter.blockSatellite && info.isSatellite) {
-			return { isBlocked: true, reason: "API.SATELLITE_BLOCKED" };
-		}
-
-		if (trafficFilter.blockCrawler && info.isCrawler) {
-			return { isBlocked: true, reason: "API.CRAWLER_BLOCKED" };
-		}
-
-		return { isBlocked: false };
-	} catch (error) {
-		logger.warn(() => ({
-			msg: "Traffic filter check failed; allowing request",
-			error,
-			ip,
-		}));
+): TrafficCheckResult => {
+	if (!ipInfo || !ipInfo.isValid) {
 		return { isBlocked: false };
 	}
+
+	if (trafficFilter.blockVpn && ipInfo.isVPN) {
+		return { isBlocked: true, reason: "API.VPN_BLOCKED" };
+	}
+
+	if (trafficFilter.blockProxy && ipInfo.isProxy) {
+		return { isBlocked: true, reason: "API.PROXY_BLOCKED" };
+	}
+
+	if (trafficFilter.blockTor && ipInfo.isTor) {
+		return { isBlocked: true, reason: "API.TOR_BLOCKED" };
+	}
+
+	if ((trafficFilter.blockAbuser ?? true) && ipInfo.isAbuser) {
+		const threshold =
+			trafficFilter.abuserScoreThreshold ??
+			trafficFilterAbuserScoreThresholdDefault;
+		const maxScore = Math.max(
+			ipInfo.abuserScore ?? 0,
+			ipInfo.companyAbuserScore ?? 0,
+		);
+		if (maxScore >= threshold) {
+			return { isBlocked: true, reason: "API.ABUSER_BLOCKED" };
+		}
+	}
+
+	if (trafficFilter.blockDatacenter && ipInfo.isDatacenter) {
+		return { isBlocked: true, reason: "API.DATACENTER_BLOCKED" };
+	}
+
+	if (trafficFilter.blockMobile && ipInfo.isMobile) {
+		return { isBlocked: true, reason: "API.MOBILE_BLOCKED" };
+	}
+
+	if (trafficFilter.blockSatellite && ipInfo.isSatellite) {
+		return { isBlocked: true, reason: "API.SATELLITE_BLOCKED" };
+	}
+
+	if (trafficFilter.blockCrawler && ipInfo.isCrawler) {
+		return { isBlocked: true, reason: "API.CRAWLER_BLOCKED" };
+	}
+
+	return { isBlocked: false };
 };

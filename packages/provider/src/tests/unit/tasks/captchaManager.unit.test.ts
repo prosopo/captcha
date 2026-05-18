@@ -178,6 +178,50 @@ describe("CaptchaManager", () => {
 				sessionId: "sessionId",
 			});
 		});
+
+		it("returns the session's stored ipInfo so callers can avoid a second DB read", async () => {
+			// Sessions now persist the full IPInfoResponse rather than a
+			// flat countryCode. isValidRequest surfaces it on the return
+			// so the verify path / downstream routing can read country /
+			// vpn / etc. without re-fetching the session.
+			const stubIpInfo = {
+				ip: "1.2.3.4",
+				isValid: true as const,
+				isVPN: true,
+				isTor: false,
+				isProxy: false,
+				isDatacenter: false,
+				isAbuser: false,
+				isMobile: false,
+				isSatellite: false,
+				isCrawler: false,
+				countryCode: "DE",
+			};
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.checkAndRemoveSession as any).mockResolvedValue({
+				sessionId: "sessionId",
+				captchaType: CaptchaType.pow,
+				ipInfo: stubIpInfo,
+			} as Pick<Session, "sessionId" | "captchaType" | "ipInfo">);
+
+			const result = await captchaManager.isValidRequest(
+				{
+					account: "account",
+					tier: Tier.Free,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.frictionless,
+					},
+				},
+				CaptchaType.pow,
+				mockEnv,
+				"sessionId",
+				undefined,
+				"127.0.0.1",
+			);
+
+			expect(result.ipInfo).toBe(stubIpInfo);
+		});
 		it("should invalidate the Redis session cache after consuming a frictionless pow session", async () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.checkAndRemoveSession as any).mockResolvedValue({

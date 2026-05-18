@@ -159,18 +159,6 @@ export default (
 				difficulty,
 			);
 
-			// Get countryCode from session if available, otherwise from geolocation
-			let countryCodeToStore: string | undefined;
-			if (validSessionId) {
-				const sessionRecord =
-					await tasks.db.getSessionRecordBySessionId(validSessionId);
-				countryCodeToStore = sessionRecord?.countryCode;
-			}
-			// If not available from session, use the one we already got for access policy
-			if (!countryCodeToStore) {
-				countryCodeToStore = countryCode;
-			}
-
 			await tasks.db.storePowCaptchaRecord(
 				challenge.challenge,
 				{
@@ -187,7 +175,11 @@ export default (
 				undefined,
 				undefined,
 				undefined,
-				countryCodeToStore,
+				// Persist the full ipinfo payload — consumers (portal,
+				// anomaly detection, CHECK_IP_INFO backfill) read the
+				// individual flags off this object instead of separate
+				// flat fields.
+				req.ipInfo,
 			);
 
 			const getPowCaptchaResponse: GetPowCaptchaResponse = {

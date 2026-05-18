@@ -17,6 +17,8 @@ import type { TranslationKey } from "@prosopo/locale";
 import {
 	ApiParams,
 	type CaptchaType,
+	type IPInfoResponse,
+	type ITrafficFilter,
 	type KeyringPair,
 	type ProsopoConfigOutput,
 	type RequestHeaders,
@@ -46,6 +48,10 @@ import {
 import { getIpAddressFromComposite } from "../compositeIpAddress.js";
 import type { RedisWriteQueue } from "../util/redisCache.js";
 import { checkSpamEmail as checkSpamEmailFn } from "./spam/checkSpamEmail.js";
+import {
+	type TrafficCheckResult,
+	checkTrafficFilter,
+} from "./spam/checkTrafficFilter.js";
 
 /**
  * Finds a hard block policy from access policies.
@@ -105,7 +111,10 @@ export class CaptchaManager {
 		type: CaptchaType;
 		powDifficulty?: number;
 		solvedImagesCount?: number;
-		countryCode?: string;
+		// The session's stored ipInfo (if a sessionId was provided and
+		// resolved). Callers may use this for routing / scope logic
+		// without re-reading the session record.
+		ipInfo?: IPInfoResponse;
 	}> {
 		this.logger.debug(() => ({
 			msg: "Validating request",
@@ -214,7 +223,7 @@ export class CaptchaManager {
 				...(sessionRecord.solvedImagesCount && {
 					solvedImagesCount: sessionRecord.solvedImagesCount,
 				}),
-				countryCode: sessionRecord.countryCode,
+				ipInfo: sessionRecord.ipInfo,
 			};
 		}
 
@@ -407,6 +416,41 @@ export class CaptchaManager {
 	 */
 	async checkSpamEmail(email: string): Promise<boolean> {
 		return checkSpamEmailFn(email, this.db, this.config, this.logger);
+	}
+
+	/**
+	 * Resolves the IP info to feed to `checkTrafficFilter` and runs the check.
+	 *
+	 * - The captcha record already carries the IPInfoResponse from request
+	 *   time (ipInfoMiddleware → storeXxxRecord), so by default we reuse it
+	 *   instead of hitting the sidecar again.
+	 * - If the dapp's server passed up the end user's current IP via the
+	 *   verify call, look that up fresh — it's the "now" IP for filtering
+	 *   and may differ from the IP that originally requested the captcha.
+	 * - `blockAbuser` defaults to true so abusive networks are always
+	 *   blocked even when the site hasn't configured a trafficFilter.
+	 * - Returns `{ isBlocked: false }` if every filter flag is off, without
+	 *   consulting the payload at all.
+	 *
+	 * Callers handle the "blocked" branch themselves (each verify path
+	 * updates record / session state differently); this helper just returns
+	 * the verdict.
+	 */
+	async resolveTrafficFilterCheck(
+		env: ProviderEnvironment,
+		recordIpInfo: IPInfoResponse | undefined,
+		trafficFilter: Partial<ITrafficFilter> | undefined,
+		currentIp?: string,
+	): Promise<TrafficCheckResult> {
+		const effective = { blockAbuser: true, ...trafficFilter };
+		const hasAny = Object.values(effective).some((v) => v);
+		if (!hasAny) {
+			return { isBlocked: false };
+		}
+		const ipInfo = currentIp
+			? await env.ipInfoService.lookup(currentIp)
+			: recordIpInfo;
+		return checkTrafficFilter(ipInfo, effective);
 	}
 
 	static canClientSeeScore(tier: Tier, score?: number) {

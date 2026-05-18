@@ -20,6 +20,7 @@ import {
 	type CompositeIpAddress,
 	type ContextType,
 	type GetFrictionlessCaptchaResponse,
+	type IPInfoResponse,
 	type KeyringPair,
 	type ModeEnum,
 	type ProsopoConfigOutput,
@@ -126,8 +127,7 @@ export class FrictionlessManager extends CaptchaManager {
 			iFrame: params.iFrame ?? false,
 			decryptedHeadHash: params.decryptedHeadHash,
 			siteKey: params.siteKey,
-			geolocation: params.geolocation,
-			countryCode: params.countryCode,
+			ipInfo: params.ipInfo,
 			headers: params.headers,
 			mode: params.mode,
 		};
@@ -162,7 +162,7 @@ export class FrictionlessManager extends CaptchaManager {
 		reason?: FrictionlessReason,
 		blocked?: boolean,
 		deleted?: boolean,
-		countryCode?: string,
+		ipInfo?: IPInfoResponse,
 		headers?: RequestHeaders,
 		mode?: ModeEnum,
 	): Promise<Session> {
@@ -187,7 +187,7 @@ export class FrictionlessManager extends CaptchaManager {
 			siteKey,
 			blocked,
 			deleted,
-			countryCode,
+			ipInfo,
 			headers,
 		};
 
@@ -339,7 +339,7 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.reason as FrictionlessReason | undefined,
 			blocked,
 			undefined,
-			effectiveParams.countryCode,
+			effectiveParams.ipInfo,
 			effectiveParams.headers,
 			effectiveParams.mode,
 		);
@@ -403,7 +403,7 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.reason as FrictionlessReason,
 			true,
 			true,
-			effectiveParams.countryCode,
+			effectiveParams.ipInfo,
 			effectiveParams.headers,
 			effectiveParams.mode,
 		);

@@ -180,7 +180,21 @@ describe("Routing Decision Machines (live local Mongo + Redis)", () => {
 			iFrame: false,
 			decryptedHeadHash: "",
 			siteKey: dappAccount,
-			countryCode: "GB",
+			// Session now stores the full IPInfoResponse instead of a
+			// flat countryCode string.
+			ipInfo: {
+				ip: "1.2.3.4",
+				isValid: true,
+				isVPN: false,
+				isTor: false,
+				isProxy: false,
+				isDatacenter: false,
+				isAbuser: false,
+				isMobile: false,
+				isSatellite: false,
+				isCrawler: false,
+				countryCode: "GB",
+			},
 			headers: {},
 		});
 		tasks.frictionlessManager.setRoutingContext({

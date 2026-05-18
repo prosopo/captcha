@@ -27,6 +27,7 @@ import {
 	type CaptchaResult,
 	CaptchaStatus,
 	type IPAddress,
+	type ITrafficFilter,
 	POW_SEPARATOR,
 	type PoWChallengeId,
 	type PuzzleEvent,
@@ -346,6 +347,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		userAccessRulesStorage?: AccessRulesStorage,
 		email?: string,
 		spamEmailDomainCheckingEnabled = false,
+		trafficFilter?: ITrafficFilter,
 	): Promise<{ verified: boolean; score?: number }> {
 		const notVerifiedResponse = { verified: false };
 
@@ -420,7 +422,9 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 					challengeRecord.userAccount,
 					challengeRecord.headers,
 					challengeRecord.coords,
-					challengeRecord.countryCode,
+					challengeRecord.ipInfo?.isValid
+						? challengeRecord.ipInfo.countryCode
+						: undefined,
 				);
 
 				if (blockPolicy) {
@@ -479,6 +483,39 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 					msg: "Failed to check spam email domain in server puzzle verification",
 					error,
 				}));
+			}
+		}
+
+		// Traffic filter: block VPN/proxy/Tor/abuser etc. Resolved in
+		// CaptchaManager so all three verify paths (pow/image/puzzle)
+		// share the same "compute effective filter, optionally fresh
+		// lookup, run check" logic.
+		{
+			const check = await this.resolveTrafficFilterCheck(
+				env,
+				challengeRecord.ipInfo,
+				trafficFilter,
+				ip,
+			);
+			if (check.isBlocked) {
+				this.logger.info(() => ({
+					msg: "Traffic filter rejected request in puzzle verification",
+					data: { challenge, dappAccount, ip, reason: check.reason },
+				}));
+				const blockedResult = {
+					status: CaptchaStatus.disapproved,
+					reason: check.reason,
+				};
+				await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
+					result: blockedResult,
+				});
+				if (challengeRecord.sessionId) {
+					await this.db.updateSessionRecord(challengeRecord.sessionId, {
+						serverChecked: true,
+						result: blockedResult,
+					});
+				}
+				return notVerifiedResponse;
 			}
 		}
 
@@ -558,7 +595,9 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				captchaType: CaptchaType.puzzle,
 				behavioralDataPacked: challengeRecord.behavioralDataPacked,
 				deviceCapability: challengeRecord.deviceCapability,
-				countryCode: challengeRecord.countryCode,
+				countryCode: challengeRecord.ipInfo?.isValid
+					? challengeRecord.ipInfo.countryCode
+					: undefined,
 			};
 
 			const decision = await this.decisionMachineRunner.decide(

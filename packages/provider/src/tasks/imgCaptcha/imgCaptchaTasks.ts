@@ -32,6 +32,7 @@ import {
 	type DecisionMachineInput,
 	type Hash,
 	type IPAddress,
+	type IPInfoResponse,
 	type ISpamFilterRules,
 	type ITrafficFilter,
 	type ImageVerificationResponse,
@@ -63,7 +64,6 @@ import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { FrictionlessReason } from "../frictionless/frictionlessTasks.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
-import { checkTrafficFilter } from "../spam/checkTrafficFilter.js";
 import { evaluateEmailSpamRules } from "../spam/evaluateEmailSpamRules.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
 
@@ -112,7 +112,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		captchaConfig: ProsopoCaptchaCountConfigSchemaOutput,
 		threshold: number,
 		sessionId?: string,
-		countryCode?: string,
+		ipInfo?: IPInfoResponse,
 	): Promise<{
 		captchas: Captcha[];
 		requestHash: string;
@@ -180,7 +180,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			getCompositeIpAddress(ipAddress),
 			threshold,
 			sessionId,
-			countryCode,
+			ipInfo,
 		);
 		return {
 			captchas,
@@ -217,6 +217,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		headers: RequestHeaders,
 		ja4: string,
 		behavioralData?: string,
+		ipInfo?: IPInfoResponse,
 	): Promise<DappUserSolutionResult> {
 		// check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
 		const verification = signatureVerify(
@@ -295,15 +296,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 			// prevent this request hash from being used twice
 			await this.db.updatePendingImageCommitmentStatus(requestHash);
 
-			// Get countryCode from session if available, otherwise use fallback
-			let countryCode: string | undefined;
-			if (pendingRecord.sessionId) {
-				const sessionRecord = await this.db.getSessionRecordBySessionId(
-					pendingRecord.sessionId,
-				);
-				countryCode = sessionRecord?.countryCode;
-			}
-
 			// Process behavioral data if provided
 			let behavioralDataPacked: BehavioralDataPacked | undefined;
 			let deviceCapability: string | undefined;
@@ -371,7 +363,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				headers,
 				sessionId: pendingRecord.sessionId,
 				ja4,
-				countryCode,
+				ipInfo,
 				pending: false,
 				salt: pendingRecord.salt,
 				requestHash: pendingRecord[ApiParams.requestHash],
@@ -697,7 +689,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 					solution.userAccount,
 					solution.headers,
 					solution.coords,
-					solution.countryCode,
+					solution.ipInfo?.isValid ? solution.ipInfo.countryCode : undefined,
 				);
 
 				if (blockPolicy) {
@@ -768,32 +760,27 @@ export class ImgCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		// Traffic filter: block VPN/proxy/Tor/abuser etc.
-		// blockAbuser defaults to true so abusive networks are always blocked
+		// Traffic filter: block VPN/proxy/Tor/abuser etc. Resolved in
+		// CaptchaManager so all three verify paths (pow/image/puzzle)
+		// share the same "compute effective filter, optionally fresh
+		// lookup, run check" logic.
 		if (!failStatus) {
-			const effectiveTrafficFilter = { blockAbuser: true, ...trafficFilter };
-			// if at least one true
-			const hasTrafficFilter = Object.values(effectiveTrafficFilter).some(
-				(v) => v,
+			const check = await this.resolveTrafficFilterCheck(
+				env,
+				solution.ipInfo,
+				trafficFilter,
+				ip,
 			);
-			if (ip && hasTrafficFilter) {
-				const check = await checkTrafficFilter(
-					ip,
-					effectiveTrafficFilter,
-					env.ipInfoService,
-					this.logger,
-				);
-				if (check.isBlocked) {
-					this.logger.info(() => ({
-						msg: "Traffic filter rejected request",
-						data: { commitmentId, dapp, ip, reason: check.reason },
-					}));
-					commitmentUpdates.result = {
-						status: CaptchaStatus.disapproved,
-						reason: check.reason,
-					};
-					failStatus = check.reason;
-				}
+			if (check.isBlocked) {
+				this.logger.info(() => ({
+					msg: "Traffic filter rejected request",
+					data: { commitmentId, dapp, ip, reason: check.reason },
+				}));
+				commitmentUpdates.result = {
+					status: CaptchaStatus.disapproved,
+					reason: check.reason,
+				};
+				failStatus = check.reason;
 			}
 		}
 
@@ -903,7 +890,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 				captchaResult: "passed",
 				headers: solution.headers,
 				captchaType: CaptchaType.image,
-				countryCode: solution.countryCode,
+				countryCode: solution.ipInfo?.isValid
+					? solution.ipInfo.countryCode
+					: undefined,
 			};
 
 			try {

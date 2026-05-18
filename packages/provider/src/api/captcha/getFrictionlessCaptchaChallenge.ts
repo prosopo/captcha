@@ -288,7 +288,7 @@ export default (
 					iFrame: false,
 					decryptedHeadHash: "",
 					siteKey: dapp,
-					countryCode,
+					ipInfo: req.ipInfo,
 					headers: flatHeaders,
 					mode: sessionMode,
 					userSitekeyIpHash,
@@ -407,7 +407,11 @@ export default (
 				iFrame,
 				decryptedHeadHash,
 				siteKey: dapp,
-				countryCode,
+				// Persist the full ipinfo payload on the session record —
+				// consumers narrow on `ipInfo.isValid` and read whichever
+				// sub-field they need. Mirrors what we store on captcha
+				// records.
+				ipInfo: req.ipInfo,
 				headers: flatHeaders,
 				mode: sessionMode,
 			});
@@ -492,7 +496,7 @@ export default (
 						userSitekeyIpHash,
 						reason: FrictionlessReason.ACCESS_POLICY_BLOCK,
 						siteKey: dapp,
-						countryCode,
+						ipInfo: req.ipInfo,
 						headers: flatHeaders,
 					});
 
@@ -519,7 +523,7 @@ export default (
 							userSitekeyIpHash,
 							reason: FrictionlessReason.USER_ACCESS_POLICY,
 							siteKey: dapp,
-							countryCode,
+							ipInfo: req.ipInfo,
 							headers: flatHeaders,
 						}),
 					);
@@ -538,7 +542,7 @@ export default (
 							userSitekeyIpHash,
 							reason: FrictionlessReason.USER_ACCESS_POLICY,
 							siteKey: dapp,
-							countryCode,
+							ipInfo: req.ipInfo,
 							headers: flatHeaders,
 						}),
 					);
@@ -585,7 +589,7 @@ export default (
 						userSitekeyIpHash,
 						reason: FrictionlessReason.USER_AGENT_MISMATCH,
 						siteKey: dapp,
-						countryCode,
+						ipInfo: req.ipInfo,
 						headers: flatHeaders,
 					}),
 				);
@@ -668,7 +672,7 @@ export default (
 									userSitekeyIpHash,
 									reason: FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED,
 									siteKey: dapp,
-									countryCode,
+									ipInfo: req.ipInfo,
 									headers: flatHeaders,
 								}),
 							);
@@ -708,7 +712,7 @@ export default (
 						userSitekeyIpHash,
 						reason: FrictionlessReason.WEBVIEW_DETECTED,
 						siteKey: dapp,
-						countryCode,
+						ipInfo: req.ipInfo,
 						headers: flatHeaders,
 					}),
 				);
@@ -744,7 +748,7 @@ export default (
 						userSitekeyIpHash,
 						reason: FrictionlessReason.OLD_TIMESTAMP,
 						siteKey: dapp,
-						countryCode,
+						ipInfo: req.ipInfo,
 						headers: flatHeaders,
 					}),
 				);
@@ -794,7 +798,7 @@ export default (
 						userSitekeyIpHash,
 						reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
 						siteKey: dapp,
-						countryCode,
+						ipInfo: req.ipInfo,
 						headers: flatHeaders,
 					}),
 				);
@@ -813,7 +817,7 @@ export default (
 				await tasks.frictionlessManager.sendPowCaptcha({
 					userSitekeyIpHash,
 					siteKey: dapp,
-					countryCode,
+					ipInfo: req.ipInfo,
 					headers: flatHeaders,
 				}),
 			);

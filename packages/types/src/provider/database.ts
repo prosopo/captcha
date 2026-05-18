@@ -144,9 +144,13 @@ export interface StoredCaptcha {
 	ja4: string;
 	userSubmitted: boolean;
 	serverChecked: boolean;
-	geolocation?: string;
-	countryCode?: string;
-	vpn?: boolean;
+	// The full ipinfo payload from `IpInfoService.lookup()`. Persisted
+	// either by the provider's ipInfoMiddleware (at request time) or by
+	// the CHECK_IP_INFO backfill job. Consumers read individual fields
+	// (`isVPN`, `countryCode`, `isTor`, ...) directly off this object
+	// after narrowing on `isValid`, instead of having one flat top-level
+	// field per signal. Optional for records written before the
+	// middleware existed; backfill fills them in over time.
 	ipInfo?: IPInfoResponse;
 	parsedUserAgentInfo?: UserAgentInfo;
 	storedAtTimestamp?: Date;
@@ -265,8 +269,12 @@ export const SessionSchema = object({
 	siteKey: string().optional(),
 	reason: string().optional(),
 	blocked: boolean().optional(),
-	countryCode: string().optional(),
-	geolocation: string().optional(),
+	// Full ipinfo payload from ipInfoMiddleware at session-creation
+	// time. Replaces the flat `countryCode` / `geolocation` fields —
+	// consumers narrow on `ipInfo.isValid` and read whichever sub-field
+	// they need (countryCode, isVPN, etc.). Mirrors what's stored on
+	// captcha records (PoW / Puzzle / UserCommitment).
+	ipInfo: any().optional(),
 	headers: object({}).catchall(string()),
 	result: object({
 		status: nativeEnum(CaptchaStatus),
@@ -301,8 +309,9 @@ export type Session = {
 	siteKey?: string;
 	reason?: string;
 	blocked?: boolean;
-	countryCode?: string;
-	geolocation?: string;
+	// Full ipinfo payload from ipInfoMiddleware at session-creation
+	// time. Replaces the flat `countryCode` / `geolocation` fields.
+	ipInfo?: IPInfoResponse;
 	headers?: RequestHeaders;
 	result?: {
 		status: CaptchaStatus;
@@ -335,9 +344,10 @@ export const PoWCaptchaStoredSchema = object({
 	ja4: string(),
 	userSubmitted: boolean(),
 	serverChecked: boolean(),
-	geolocation: string().optional(),
-	countryCode: string().optional(),
-	vpn: boolean().optional(),
+	// The full ipinfo payload — optional and not validated nominally
+	// because IPInfoResponse is a discriminated union and consumers
+	// only need to narrow at read time.
+	ipInfo: any().optional(),
 	parsedUserAgentInfo: any().optional(),
 	storedAtTimestamp: date().optional(),
 	lastUpdatedTimestamp: date().optional(),

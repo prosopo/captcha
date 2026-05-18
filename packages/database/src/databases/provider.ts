@@ -36,6 +36,7 @@ import {
 	type DecisionMachineArtifact,
 	type DecisionMachineScope,
 	type Hash,
+	type IPInfoResponse,
 	type PendingImageCaptchaRequest,
 	type PoWCaptchaStored,
 	type PoWChallengeComponents,
@@ -726,7 +727,7 @@ export class ProviderDatabase
 	 * @param userSubmitted
 	 * @param storedStatus
 	 * @param userSignature
-	 * @param countryCode
+	 * @param ipInfo full ipinfo payload from the ipInfoMiddleware
 	 * @returns {Promise<void>} A promise that resolves when the record is added.
 	 */
 	async storePowCaptchaRecord(
@@ -741,7 +742,7 @@ export class ProviderDatabase
 		serverChecked = false,
 		userSubmitted = false,
 		userSignature?: string,
-		countryCode?: string,
+		ipInfo?: IPInfoResponse,
 	): Promise<void> {
 		const tables = this.getTables();
 
@@ -761,7 +762,7 @@ export class ProviderDatabase
 			userSignature,
 			lastUpdatedTimestamp: new Date(),
 			sessionId,
-			countryCode,
+			ipInfo,
 		};
 
 		try {
@@ -771,7 +772,7 @@ export class ProviderDatabase
 					challenge,
 					userSubmitted,
 					serverChecked,
-					countryCode,
+					countryCode: ipInfo?.isValid ? ipInfo.countryCode : undefined,
 				},
 				msg: "PowCaptcha record added successfully",
 			}));
@@ -789,7 +790,7 @@ export class ProviderDatabase
 					challenge,
 					userSubmitted,
 					serverChecked,
-					countryCode,
+					ipInfo,
 				},
 				logger: this.logger,
 			});
@@ -833,7 +834,7 @@ export class ProviderDatabase
 						result: 1,
 						difficulty: 1,
 						sessionId: 1,
-						countryCode: 1,
+						ipInfo: 1,
 						deviceCapability: 1,
 						behavioralDataPacked: 1,
 						serverChecked: 1,
@@ -986,7 +987,7 @@ export class ProviderDatabase
 		headers: RequestHeaders,
 		ja4: string,
 		sessionId?: string,
-		countryCode?: string,
+		ipInfo?: IPInfoResponse,
 	): Promise<void> {
 		const tables = this.getTables();
 
@@ -1009,7 +1010,7 @@ export class ProviderDatabase
 			providerSignature,
 			lastUpdatedTimestamp: new Date(),
 			sessionId,
-			countryCode,
+			ipInfo,
 		};
 
 		try {
@@ -1017,7 +1018,7 @@ export class ProviderDatabase
 			this.logger.info(() => ({
 				data: {
 					challenge,
-					countryCode,
+					countryCode: ipInfo?.isValid ? ipInfo.countryCode : undefined,
 				},
 				msg: "PuzzleCaptcha record added successfully",
 			}));
@@ -1026,7 +1027,7 @@ export class ProviderDatabase
 				context: {
 					error,
 					challenge,
-					countryCode,
+					ipInfo,
 				},
 				logger: this.logger,
 			});
@@ -1077,7 +1078,7 @@ export class ProviderDatabase
 						tolerance: 1,
 						puzzleEvents: 1,
 						sessionId: 1,
-						countryCode: 1,
+						ipInfo: 1,
 						deviceCapability: 1,
 						behavioralDataPacked: 1,
 						serverChecked: 1,
@@ -1424,7 +1425,7 @@ export class ProviderDatabase
 		const doc = await this.tables.session
 			.findOne(filter, {
 				sessionId: 1,
-				countryCode: 1,
+				ipInfo: 1,
 				scoreComponents: 1,
 				webView: 1,
 				reason: 1,
@@ -1622,7 +1623,7 @@ export class ProviderDatabase
 		ipAddress: CompositeIpAddress,
 		threshold: number,
 		sessionId?: string,
-		countryCode?: string,
+		ipInfo?: IPInfoResponse,
 	): Promise<void> {
 		if (!isHex(requestHash)) {
 			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
@@ -1642,7 +1643,7 @@ export class ProviderDatabase
 			ipAddress,
 			sessionId,
 			threshold,
-			countryCode,
+			ipInfo,
 			// Placeholder fields required by schema but not needed for pending state
 			dappAccount: "",
 			providerAccount: "",
@@ -1893,7 +1894,7 @@ export class ProviderDatabase
 				userAccount: 1,
 				dappAccount: 1,
 				headers: 1,
-				countryCode: 1,
+				ipInfo: 1,
 			} as { [key in keyof Partial<UserCommitmentRecord>]: 1 })
 			.lean<UserCommitmentRecord>();
 

@@ -45,6 +45,7 @@ import {
 	type DatasetBase,
 	type DatasetWithIds,
 	type Hash,
+	type IPInfoResponse,
 	type IUserData,
 	type Item,
 	type PoWChallengeComponents,
@@ -175,9 +176,9 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	userSubmitted: { type: Boolean, required: true },
 	serverChecked: { type: Boolean, required: true },
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
-	geolocation: { type: String, required: false },
-	countryCode: { type: String, required: false },
-	vpn: { type: Boolean, required: false },
+	// Full ipinfo payload. Replaces the flat `vpn`, `countryCode`,
+	// `geolocation` and other per-flag fields — consumers narrow on
+	// `ipInfo.isValid` and read whichever sub-field they need.
 	ipInfo: { type: Object, required: false },
 	parsedUserAgentInfo: { type: Object, required: false },
 	sessionId: {
@@ -206,7 +207,8 @@ PoWCaptchaRecordSchema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
 PoWCaptchaRecordSchema.index({ "ipAddress.lower": 1 });
 PoWCaptchaRecordSchema.index({ "ipAddress.upper": 1 });
 PoWCaptchaRecordSchema.index({ "result.reason": 1 });
-PoWCaptchaRecordSchema.index({ countryCode: 1 });
+PoWCaptchaRecordSchema.index({ "ipInfo.countryCode": 1 });
+PoWCaptchaRecordSchema.index({ "ipInfo.isVPN": 1 });
 
 export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 	challenge: { type: String, required: true },
@@ -252,9 +254,9 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 	userSubmitted: { type: Boolean, required: true },
 	serverChecked: { type: Boolean, required: true },
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
-	geolocation: { type: String, required: false },
-	countryCode: { type: String, required: false },
-	vpn: { type: Boolean, required: false },
+	// Full ipinfo payload. Replaces the flat `vpn`, `countryCode`,
+	// `geolocation` and other per-flag fields — consumers narrow on
+	// `ipInfo.isValid` and read whichever sub-field they need.
 	ipInfo: { type: Object, required: false },
 	parsedUserAgentInfo: { type: Object, required: false },
 	sessionId: {
@@ -283,7 +285,8 @@ PuzzleCaptchaRecordSchema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
 PuzzleCaptchaRecordSchema.index({ "ipAddress.lower": 1 });
 PuzzleCaptchaRecordSchema.index({ "ipAddress.upper": 1 });
 PuzzleCaptchaRecordSchema.index({ "result.reason": 1 });
-PuzzleCaptchaRecordSchema.index({ countryCode: 1 });
+PuzzleCaptchaRecordSchema.index({ "ipInfo.countryCode": 1 });
+PuzzleCaptchaRecordSchema.index({ "ipInfo.isVPN": 1 });
 
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	userAccount: { type: String, required: true },
@@ -313,9 +316,10 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
 	requestedAtTimestamp: { type: Date, required: true },
 	lastUpdatedTimestamp: { type: Date, required: false },
-	geolocation: { type: String, required: false },
-	countryCode: { type: String, required: false },
-	vpn: { type: Boolean, required: false },
+	// Full ipinfo payload. Replaces the flat `vpn`, `countryCode`,
+	// `geolocation` and other per-flag fields — consumers narrow on
+	// `ipInfo.isValid` and read whichever sub-field they need.
+	ipInfo: { type: Object, required: false },
 	parsedUserAgentInfo: { type: Object, required: false },
 	sessionId: {
 		type: String,
@@ -349,7 +353,8 @@ UserCommitmentRecordSchema.index({ userAccount: 1, dappAccount: 1 });
 UserCommitmentRecordSchema.index({ "ipAddress.lower": 1 });
 UserCommitmentRecordSchema.index({ "ipAddress.upper": 1 });
 UserCommitmentRecordSchema.index({ "result.reason": 1 });
-UserCommitmentRecordSchema.index({ countryCode: 1 });
+UserCommitmentRecordSchema.index({ "ipInfo.countryCode": 1 });
+UserCommitmentRecordSchema.index({ "ipInfo.isVPN": 1 });
 UserCommitmentRecordSchema.index({ requestHash: -1 });
 UserCommitmentRecordSchema.index({ pending: 1 });
 
@@ -464,8 +469,10 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	siteKey: { type: String, required: false },
 	reason: { type: String, required: false },
 	blocked: { type: Boolean, required: false },
-	countryCode: { type: String, required: false },
-	geolocation: { type: String, required: false },
+	// Full ipinfo payload — replaces flat `countryCode` / `geolocation`
+	// fields. Mirrors the captcha record schemas (PoW / Puzzle /
+	// UserCommitment).
+	ipInfo: { type: Object, required: false },
 	headers: { type: Object, required: false },
 	result: {
 		type: new Schema(
@@ -619,7 +626,7 @@ export interface IProviderDatabase extends IDatabase {
 		ipAddress: CompositeIpAddress,
 		threshold: number,
 		sessionId?: string,
-		countryCode?: string,
+		ipInfo?: IPInfoResponse,
 	): Promise<void>;
 
 	getPendingImageCommitment(
@@ -732,7 +739,7 @@ export interface IProviderDatabase extends IDatabase {
 		serverChecked?: boolean,
 		userSubmitted?: boolean,
 		userSignature?: string,
-		countryCode?: string,
+		ipInfo?: IPInfoResponse,
 	): Promise<void>;
 
 	getPowCaptchaRecordByChallenge(
@@ -766,7 +773,7 @@ export interface IProviderDatabase extends IDatabase {
 		headers: RequestHeaders,
 		ja4: string,
 		sessionId?: string,
-		countryCode?: string,
+		ipInfo?: IPInfoResponse,
 	): Promise<void>;
 
 	getPuzzleCaptchaRecordByChallenge(
