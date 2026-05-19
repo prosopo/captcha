@@ -219,7 +219,9 @@ export class NativeLogger implements Logger {
 				data.cause = e.cause;
 			}
 		}
-		const msg = e.message || e.msg || "";
+		// Prefer translationKey when present (e.g. ProsopoBaseError) so the
+		// top-level `err` field is locale-stable and queryable.
+		const msg = e.translationKey || e.message || e.msg || "";
 		if (e.message && e.msg) {
 			// duplicate message, defer msg to data
 			data.msg = e.msg;
