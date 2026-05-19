@@ -40,7 +40,9 @@ export class DeleteRulesEndpoint implements ApiEndpoint<DeleteRulesSchema> {
 
 	async processRequest(
 		args: AccessRulesFilterInput[],
+		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
+		const log = logger ?? this.logger;
 		let deletedCount = 0;
 
 		for (const rulesFilterInput of args) {
@@ -57,7 +59,7 @@ export class DeleteRulesEndpoint implements ApiEndpoint<DeleteRulesSchema> {
 
 					deletedCount += uniqueRuleIds.length;
 
-					this.logger.info(() => ({
+					log.info(() => ({
 						msg: "Endpoint deleted rules",
 						data: {
 							rulesFilterInput,
