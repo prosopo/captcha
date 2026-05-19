@@ -19,7 +19,6 @@ import {
 	type GetPowCaptchaChallengeRequestBodyTypeOutput,
 	type GetPowCaptchaResponse,
 	SimdReadingsStage,
-	decodeSimdReadings,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
@@ -161,18 +160,27 @@ export default (
 				difficulty,
 			);
 
-			// Cache-first / Mongo-deferred SIMD attach. The helper awaits the
-			// Redis patch (so the in-flight request's cache view is current)
-			// and fires the Mongo write in the background — request response
-			// isn't gated on a Mongo round-trip. First-hop-wins handled at
-			// both the cache layer (`$ifNull` semantics) and the Mongo layer.
-			if (validSessionId) {
-				const decodedSimd = decodeSimdReadings(simdReadings);
-				if (decodedSimd) {
+			// Cache-first / Mongo-deferred SIMD attach. Hybrid-decrypt the
+			// readings via the obfuscated `decodeSimd.js` bundle before
+			// persisting — the wire format is opaque ciphertext so bot
+			// operators can't forge plausible timings by reading the public
+			// codec.
+			if (validSessionId && simdReadings) {
+				const linkedSessionId = validSessionId;
+				const decryptKeys = [
+					...(await tasks.frictionlessManager.getDetectorKeys()),
+					process.env.BOT_DECRYPTION_KEY,
+				];
+				const decrypted = await tasks.frictionlessManager.decryptSimdReadings(
+					simdReadings,
+					decryptKeys,
+				);
+				if (decrypted) {
+					const { timestamp: _ignored, ...readings } = decrypted;
 					await tasks.frictionlessManager
 						.recordSessionSimdReadingsIfAbsentWithCache(
-							validSessionId,
-							decodedSimd,
+							linkedSessionId,
+							readings,
 							SimdReadingsStage.challenge,
 						)
 						.catch((updateErr) => {

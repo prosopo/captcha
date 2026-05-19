@@ -18,7 +18,6 @@ import {
 	ContextType,
 	GetFrictionlessCaptchaChallengeRequestBody,
 	ModeEnum,
-	decodeSimdReadings,
 } from "@prosopo/types";
 import type { ScoreComponents } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -81,7 +80,27 @@ export default (
 			const tasks = new Tasks(env, req.logger);
 			const { token, headHash, dapp, user, mode, simdReadings } =
 				GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
-			const decodedSimdReadings = decodeSimdReadings(simdReadings);
+			// Hybrid-decrypt the SIMD readings here so the rest of the
+			// handler can pass them into setSessionParams as a plain
+			// SimdReadings object. Missing/unparseable → undefined (the
+			// session is just created without the field).
+			let decodedSimdReadings:
+				| import("@prosopo/types").SimdReadings
+				| undefined;
+			if (simdReadings) {
+				const decryptKeys = [
+					...(await tasks.frictionlessManager.getDetectorKeys()),
+					process.env.BOT_DECRYPTION_KEY,
+				];
+				const decrypted = await tasks.frictionlessManager.decryptSimdReadings(
+					simdReadings,
+					decryptKeys,
+				);
+				if (decrypted) {
+					const { timestamp: _ignored, ...readings } = decrypted;
+					decodedSimdReadings = readings;
+				}
+			}
 			const normalizedIp = normalizeRequestIp(req.ip, req.logger);
 			const sessionMode =
 				mode === ModeEnum.invisible ? ModeEnum.invisible : undefined;

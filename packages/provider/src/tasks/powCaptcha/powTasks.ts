@@ -34,7 +34,6 @@ import {
 	type PoWChallengeId,
 	type RequestHeaders,
 	SimdReadingsStage,
-	decodeSimdReadings,
 } from "@prosopo/types";
 import type {
 	IProviderDatabase,
@@ -318,7 +317,6 @@ export class PowCaptchaManager extends CaptchaManager {
 			),
 		];
 
-		const decodedSimdReadings = decodeSimdReadings(simdReadings);
 		if (challengeRecord.sessionId) {
 			const linkedSessionId = challengeRecord.sessionId;
 			writePromises.push(
@@ -328,14 +326,28 @@ export class PowCaptchaManager extends CaptchaManager {
 				}),
 			);
 			// First-hop-wins SIMD attach — if readings already arrived at
-			// frictionless or challenge-GET, this is a no-op.
-			if (decodedSimdReadings) {
+			// frictionless or challenge-GET, this is a no-op. Decrypt via
+			// the obfuscated bundle before persisting.
+			if (simdReadings) {
 				writePromises.push(
-					this.recordSessionSimdReadingsIfAbsentWithCache(
-						linkedSessionId,
-						decodedSimdReadings,
-						SimdReadingsStage.submit,
-					),
+					(async () => {
+						const decryptKeys = [
+							...(await this.getDetectorKeys()),
+							process.env.BOT_DECRYPTION_KEY,
+						];
+						const decrypted = await this.decryptSimdReadings(
+							simdReadings,
+							decryptKeys,
+						);
+						if (decrypted) {
+							const { timestamp: _ignored, ...readings } = decrypted;
+							await this.recordSessionSimdReadingsIfAbsentWithCache(
+								linkedSessionId,
+								readings,
+								SimdReadingsStage.submit,
+							);
+						}
+					})(),
 				);
 			}
 		}

@@ -386,6 +386,51 @@ export class CaptchaManager {
 		return await this.db.getDetectorKeys();
 	}
 
+	/**
+	 * Decrypt the catcher's WASM SIMD CPU fingerprint readings via the
+	 * obfuscated `decodeSimd.js` bundle (source lives in the private
+	 * @prosopo/catcher repo). Mirrors `decryptBehavioralData`: tries each
+	 * detector key in turn (loaded by the caller, with the env-var key as
+	 * fallback). Returns null when no key works so the caller can drop
+	 * the field rather than fail the whole request.
+	 */
+	async decryptSimdReadings(
+		encryptedData: string,
+		decryptKeys: (string | undefined)[],
+	): Promise<import("./detection/decodeSimd.js").SimdReadingsResult | null> {
+		const decryptSimdReadings = (await import("./detection/decodeSimd.js"))
+			.default;
+
+		const validKeys = decryptKeys.filter((k) => k);
+		if (validKeys.length === 0) {
+			this.logger?.error(() => ({
+				msg: "No decryption keys provided for SIMD readings",
+			}));
+			return null;
+		}
+
+		for (const [keyIndex, key] of validKeys.entries()) {
+			try {
+				return await decryptSimdReadings(encryptedData, key);
+			} catch (err) {
+				this.logger?.debug(() => ({
+					msg: "Failed to decrypt SIMD readings with key, trying next",
+					data: {
+						keyIndex: keyIndex + 1,
+						totalKeys: validKeys.length,
+						err,
+					},
+				}));
+			}
+		}
+
+		this.logger?.warn(() => ({
+			msg: "Failed to decrypt SIMD readings with all available keys",
+			data: { totalKeysAttempted: validKeys.length },
+		}));
+		return null;
+	}
+
 	async decryptBehavioralData(
 		encryptedData: string,
 		decryptKeys: (string | undefined)[],

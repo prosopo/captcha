@@ -33,7 +33,6 @@ import {
 	type PuzzleEvent,
 	type RequestHeaders,
 	SimdReadingsStage,
-	decodeSimdReadings,
 	puzzleToleranceDefault,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
@@ -318,20 +317,32 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		);
 
 		// Update the session record with submission result
-		const decodedSimdReadings = decodeSimdReadings(simdReadings);
 		if (challengeRecord.sessionId) {
-			await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
+			const linkedSessionId = challengeRecord.sessionId;
+			await this.updateSessionRecordWithCache(linkedSessionId, {
 				userSubmitted: true,
 				result,
 			});
 			// First-hop-wins SIMD attach — if readings already arrived at
-			// frictionless or challenge-GET, this is a no-op.
-			if (decodedSimdReadings) {
-				await this.recordSessionSimdReadingsIfAbsentWithCache(
-					challengeRecord.sessionId,
-					decodedSimdReadings,
-					SimdReadingsStage.submit,
+			// frictionless or challenge-GET, this is a no-op. Decrypt via
+			// the obfuscated bundle before persisting.
+			if (simdReadings) {
+				const decryptKeys = [
+					...(await this.getDetectorKeys()),
+					process.env.BOT_DECRYPTION_KEY,
+				];
+				const decrypted = await this.decryptSimdReadings(
+					simdReadings,
+					decryptKeys,
 				);
+				if (decrypted) {
+					const { timestamp: _ignored, ...readings } = decrypted;
+					await this.recordSessionSimdReadingsIfAbsentWithCache(
+						linkedSessionId,
+						readings,
+						SimdReadingsStage.submit,
+					);
+				}
 			}
 		}
 

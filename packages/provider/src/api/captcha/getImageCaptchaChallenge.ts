@@ -22,7 +22,6 @@ import {
 	CaptchaType,
 	type ProsopoCaptchaCountConfigSchemaOutput,
 	SimdReadingsStage,
-	decodeSimdReadings,
 	imageMaxRoundsDefault,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -158,13 +157,22 @@ export default (
 			};
 
 			// Cache-first / Mongo-deferred SIMD attach (see getPoWCaptchaChallenge).
-			if (validSessionId) {
-				const decodedSimd = decodeSimdReadings(simdReadings);
-				if (decodedSimd) {
+			if (validSessionId && simdReadings) {
+				const linkedSessionId = validSessionId;
+				const decryptKeys = [
+					...(await tasks.frictionlessManager.getDetectorKeys()),
+					process.env.BOT_DECRYPTION_KEY,
+				];
+				const decrypted = await tasks.frictionlessManager.decryptSimdReadings(
+					simdReadings,
+					decryptKeys,
+				);
+				if (decrypted) {
+					const { timestamp: _ignored, ...readings } = decrypted;
 					await tasks.frictionlessManager
 						.recordSessionSimdReadingsIfAbsentWithCache(
-							validSessionId,
-							decodedSimd,
+							linkedSessionId,
+							readings,
 							SimdReadingsStage.challenge,
 						)
 						.catch((updateErr) => {

@@ -43,7 +43,6 @@ import {
 	type RequestHeaders,
 	SimdReadingsStage,
 	type UserCommitment,
-	decodeSimdReadings,
 } from "@prosopo/types";
 import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -222,7 +221,25 @@ export class ImgCaptchaManager extends CaptchaManager {
 		ipInfo?: IPInfoResponse,
 		simdReadings?: string,
 	): Promise<DappUserSolutionResult> {
-		const decodedSimdReadings = decodeSimdReadings(simdReadings);
+		// Hybrid-decrypt the SIMD readings up-front via the obfuscated
+		// `decodeSimd.js` bundle. `decodedSimdReadings` is the plain
+		// SimdReadings object (timestamp stripped) or undefined if we
+		// couldn't decrypt with any of the available keys.
+		let decodedSimdReadings: import("@prosopo/types").SimdReadings | undefined;
+		if (simdReadings) {
+			const decryptKeys = [
+				...(await this.getDetectorKeys()),
+				process.env.BOT_DECRYPTION_KEY,
+			];
+			const decrypted = await this.decryptSimdReadings(
+				simdReadings,
+				decryptKeys,
+			);
+			if (decrypted) {
+				const { timestamp: _ignored, ...readings } = decrypted;
+				decodedSimdReadings = readings;
+			}
+		}
 		// First-hop-wins SIMD attach helper — appends a no-op write when the
 		// session already carries readings. Idempotent at the storage layer.
 		const pushSimdAttachIfAny = (
