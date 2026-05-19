@@ -27,6 +27,7 @@ import {
 	string,
 	tuple,
 	union,
+	enum as zEnum,
 	type infer as zInfer,
 } from "zod";
 import type { IPInfoResponse } from "../api/ipapi.js";
@@ -270,6 +271,15 @@ export const SimdReadingsSchema = union([
 	}),
 ]);
 
+// Stage at which the catcher's SIMD readings first reached the provider.
+// Tracked once on the Session record (first hop wins) so analytics can see
+// when in the user's journey the CPU fingerprint became available.
+export const SimdReadingsStageSchema = zEnum([
+	"frictionless",
+	"challenge",
+	"submit",
+] as const);
+
 export interface ScoreComponents {
 	baseScore: number;
 	lScore?: number;
@@ -321,6 +331,10 @@ export const SessionSchema = object({
 	// WASM SIMD CPU fingerprint readings. Collection-only — used to build the
 	// training dataset for later classification. Absent on older clients.
 	simdReadings: SimdReadingsSchema.optional(),
+	// Stage at which the readings first arrived. First-hop-wins so the
+	// indicator reflects when the catcher's CPU fingerprint became
+	// available relative to the user's journey.
+	simdReadingsStage: SimdReadingsStageSchema.optional(),
 }) satisfies ZodType<Session>;
 
 // Session now includes all frictionless token fields
@@ -360,7 +374,11 @@ export type Session = {
 	serverChecked?: boolean;
 	// WASM SIMD CPU fingerprint readings forwarded by the catcher client.
 	simdReadings?: SimdReadings;
+	// Stage at which the readings first arrived.
+	simdReadingsStage?: SimdReadingsStage;
 };
+
+export type SimdReadingsStage = "frictionless" | "challenge" | "submit";
 
 // Zod schema for PoWCaptchaStored
 // PoWCaptchaStored = PoWCaptchaUser (minus requestedAtTimestamp) + StoredCaptcha

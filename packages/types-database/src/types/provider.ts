@@ -30,6 +30,7 @@ import {
 	type PoWCaptchaStored,
 	type PuzzleCaptchaStored,
 	type Session,
+	type SimdReadingsStage,
 	type SolutionRecord,
 	Tier,
 	type UserCommitment,
@@ -496,6 +497,9 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	// discriminated union and the dataset is still evolving — Zod validates
 	// at the boundary, Mongoose just persists it.
 	simdReadings: { type: Schema.Types.Mixed, required: false },
+	// Stage at which the SIMD readings first arrived on this session
+	// (frictionless / challenge / submit). First-hop-wins.
+	simdReadingsStage: { type: String, required: false },
 } satisfies AllKeys<Session>);
 
 SessionRecordSchema.index({ createdAt: 1 });
@@ -586,6 +590,21 @@ ClientContextEntropyRecordSchema.index(
 	{ account: 1, contextType: 1 },
 	{ unique: true },
 );
+
+/**
+ * Adapter the database uses to refresh the Redis session cache after a
+ * Mongo write. Structurally satisfied by the provider's `RedisWriteQueue`.
+ * Kept minimal so the database package does not need to depend on
+ * `@prosopo/provider`.
+ */
+export interface SessionCacheStore {
+	cacheSession(
+		sessionId: string,
+		sessionData: Record<string, unknown>,
+		ttlSeconds?: number,
+	): Promise<boolean>;
+	getCachedSession(sessionId: string): Promise<Record<string, unknown> | null>;
+}
 
 export interface IProviderDatabase extends IDatabase {
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
@@ -821,6 +840,27 @@ export interface IProviderDatabase extends IDatabase {
 		updates: Partial<Session>,
 		streamToCentral?: boolean,
 	): Promise<void>;
+
+	/**
+	 * Record SIMD CPU fingerprint readings on the session — first hop wins.
+	 * Atomically sets both `simdReadings` and `simdReadingsStage` only when
+	 * the session does not already carry readings, so re-attaches on later
+	 * hops are no-ops at the storage layer. Also refreshes the Redis cache
+	 * when a SessionCacheStore is registered on the DB.
+	 */
+	recordSessionSimdReadingsIfAbsent(
+		sessionId: string,
+		readings: NonNullable<Session["simdReadings"]>,
+		stage: SimdReadingsStage,
+	): Promise<void>;
+
+	/**
+	 * Register a Redis session-cache adapter so write methods refresh the
+	 * cache after a successful Mongo write. Optional — when absent, writes
+	 * still go to Mongo and the cache is left to expire / be repopulated
+	 * lazily.
+	 */
+	setSessionCache(store: SessionCacheStore | null): void;
 
 	getSessionByuserSitekeyIpHash(
 		userSitekeyIpHash: string,

@@ -192,6 +192,9 @@ export class FrictionlessManager extends CaptchaManager {
 			ipInfo,
 			headers,
 			simdReadings,
+			// Tag the arrival stage when the readings actually came in on
+			// this hop. Absence of readings → absence of stage.
+			...(simdReadings && { simdReadingsStage: "frictionless" as const }),
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);

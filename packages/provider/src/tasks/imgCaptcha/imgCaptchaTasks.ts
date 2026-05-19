@@ -222,9 +222,22 @@ export class ImgCaptchaManager extends CaptchaManager {
 		simdReadings?: string,
 	): Promise<DappUserSolutionResult> {
 		const decodedSimdReadings = decodeSimdReadings(simdReadings);
-		const simdSessionPatch = decodedSimdReadings
-			? { simdReadings: decodedSimdReadings }
-			: {};
+		// First-hop-wins SIMD attach helper — appends a no-op write when the
+		// session already carries readings. Idempotent at the storage layer.
+		const pushSimdAttachIfAny = (
+			sessionId: string,
+			writes: Promise<void>[],
+		): void => {
+			if (decodedSimdReadings) {
+				writes.push(
+					this.db.recordSessionSimdReadingsIfAbsent(
+						sessionId,
+						decodedSimdReadings,
+						"submit",
+					),
+				);
+			}
+		};
 		// check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
 		const verification = signatureVerify(
 			stringToHex(timestamp.toString()),
@@ -413,9 +426,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 								status: CaptchaStatus.disapproved,
 								reason: "CAPTCHA.INVALID_SOLUTION",
 							},
-							...simdSessionPatch,
 						}),
 					);
+					pushSimdAttachIfAny(pendingRecord.sessionId, writePromises);
 				}
 				await Promise.all(writePromises);
 				response = {
@@ -452,9 +465,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 						this.db.updateSessionRecord(pendingRecord.sessionId, {
 							userSubmitted: true,
 							result: { status: CaptchaStatus.approved },
-							...simdSessionPatch,
 						}),
 					);
+					pushSimdAttachIfAny(pendingRecord.sessionId, writePromises);
 				}
 				await Promise.all(writePromises);
 			} else {
@@ -474,9 +487,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 								status: CaptchaStatus.disapproved,
 								reason: "CAPTCHA.INVALID_SOLUTION",
 							},
-							...simdSessionPatch,
 						}),
 					);
+					pushSimdAttachIfAny(pendingRecord.sessionId, writePromises);
 				}
 				await Promise.all(writePromises);
 				response = {

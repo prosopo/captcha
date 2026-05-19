@@ -322,8 +322,16 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 			await this.db.updateSessionRecord(challengeRecord.sessionId, {
 				userSubmitted: true,
 				result,
-				...(decodedSimdReadings && { simdReadings: decodedSimdReadings }),
 			});
+			// First-hop-wins SIMD attach — if readings already arrived at
+			// frictionless or challenge-GET, this is a no-op.
+			if (decodedSimdReadings) {
+				await this.db.recordSessionSimdReadingsIfAbsent(
+					challengeRecord.sessionId,
+					decodedSimdReadings,
+					"submit",
+				);
+			}
 		}
 
 		return correct;

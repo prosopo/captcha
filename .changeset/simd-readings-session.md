@@ -2,6 +2,7 @@
 "@prosopo/types": patch
 "@prosopo/types-database": patch
 "@prosopo/api": patch
+"@prosopo/database": patch
 "@prosopo/procaptcha": patch
 "@prosopo/procaptcha-pow": patch
 "@prosopo/procaptcha-puzzle": patch

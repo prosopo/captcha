@@ -161,13 +161,18 @@ export default (
 			);
 
 			// Patch the linked session with any SIMD readings the catcher had
-			// ready by this point. Solution-time attach is still a backup —
-			// this is just the earliest opportunity once the session exists.
+			// ready by this point. First-hop-wins via the DB method: if the
+			// readings already arrived on the frictionless hop, this is a
+			// no-op. Solution-time attach remains as a final backup.
 			if (validSessionId) {
 				const decodedSimd = decodeSimdReadings(simdReadings);
 				if (decodedSimd) {
 					tasks.db
-						.updateSessionRecord(validSessionId, { simdReadings: decodedSimd })
+						.recordSessionSimdReadingsIfAbsent(
+							validSessionId,
+							decodedSimd,
+							"challenge",
+						)
 						.catch((updateErr) => {
 							req.logger.warn(() => ({
 								err: updateErr,

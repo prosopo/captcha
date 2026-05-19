@@ -323,9 +323,19 @@ export class PowCaptchaManager extends CaptchaManager {
 				this.db.updateSessionRecord(challengeRecord.sessionId, {
 					userSubmitted: true,
 					result,
-					...(decodedSimdReadings && { simdReadings: decodedSimdReadings }),
 				}),
 			);
+			// First-hop-wins SIMD attach — if readings already arrived at
+			// frictionless or challenge-GET, this is a no-op.
+			if (decodedSimdReadings) {
+				writePromises.push(
+					this.db.recordSessionSimdReadingsIfAbsent(
+						challengeRecord.sessionId,
+						decodedSimdReadings,
+						"submit",
+					),
+				);
+			}
 		}
 
 		await Promise.all(writePromises);
