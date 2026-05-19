@@ -158,30 +158,16 @@ export default (
 					tolerance,
 				);
 
-			// First-hop-wins patch — if the readings already landed at
-			// frictionless, this is a no-op at the storage layer. Mirror the
-			// cache.
+			// Cache-first / Mongo-deferred SIMD attach (see getPoWCaptchaChallenge).
 			if (validSessionId) {
 				const decodedSimd = decodeSimdReadings(simdReadings);
 				if (decodedSimd) {
-					const linkedSessionId = validSessionId;
-					tasks.db
-						.recordSessionSimdReadingsIfAbsent(
-							linkedSessionId,
+					await tasks.frictionlessManager
+						.recordSessionSimdReadingsIfAbsentWithCache(
+							validSessionId,
 							decodedSimd,
 							SimdReadingsStage.challenge,
 						)
-						.then(() => {
-							if (tasks.writeQueue) {
-								tasks.writeQueue
-									.patchCachedSimdReadingsIfAbsent(
-										linkedSessionId,
-										decodedSimd as unknown as Record<string, unknown>,
-										SimdReadingsStage.challenge,
-									)
-									.catch(() => undefined);
-							}
-						})
 						.catch((updateErr) => {
 							req.logger.warn(() => ({
 								err: updateErr,

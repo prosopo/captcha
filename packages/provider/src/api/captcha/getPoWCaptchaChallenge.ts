@@ -161,32 +161,20 @@ export default (
 				difficulty,
 			);
 
-			// Patch the linked session with any SIMD readings the catcher had
-			// ready by this point. First-hop-wins via the atomic DB method:
-			// if the readings already arrived on the frictionless hop, this
-			// is a no-op. Refresh the Redis cache symmetrically so subsequent
-			// cached reads stay consistent with Mongo.
+			// Cache-first / Mongo-deferred SIMD attach. The helper awaits the
+			// Redis patch (so the in-flight request's cache view is current)
+			// and fires the Mongo write in the background — request response
+			// isn't gated on a Mongo round-trip. First-hop-wins handled at
+			// both the cache layer (`$ifNull` semantics) and the Mongo layer.
 			if (validSessionId) {
 				const decodedSimd = decodeSimdReadings(simdReadings);
 				if (decodedSimd) {
-					const linkedSessionId = validSessionId;
-					tasks.db
-						.recordSessionSimdReadingsIfAbsent(
-							linkedSessionId,
+					await tasks.frictionlessManager
+						.recordSessionSimdReadingsIfAbsentWithCache(
+							validSessionId,
 							decodedSimd,
 							SimdReadingsStage.challenge,
 						)
-						.then(() => {
-							if (tasks.writeQueue) {
-								tasks.writeQueue
-									.patchCachedSimdReadingsIfAbsent(
-										linkedSessionId,
-										decodedSimd as unknown as Record<string, unknown>,
-										SimdReadingsStage.challenge,
-									)
-									.catch(() => undefined);
-							}
-						})
 						.catch((updateErr) => {
 							req.logger.warn(() => ({
 								err: updateErr,

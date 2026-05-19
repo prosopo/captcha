@@ -89,54 +89,97 @@ export class CaptchaManager {
 	}
 
 	/**
-	 * Update a session record AND keep the Redis cache consistent.
-	 * Mongo write is awaited; the cache patch is fire-and-forget (a stale
-	 * cache only costs an extra Mongo read on the next access, not
-	 * correctness). Prefer this over `this.db.updateSessionRecord` in any
-	 * in-request handler so the fast-path stays in sync.
+	 * Update a session record with cache-first / write-behind semantics:
+	 * the Redis cache patch is awaited (so the in-request view of the
+	 * session is up-to-date for any subsequent fast-path read), and the
+	 * Mongo write is fire-and-forget so the response isn't gated on a
+	 * round-trip to Mongo. Matches the `RedisWriteQueue` design where
+	 * Redis is the source of truth for the in-flight request and Mongo is
+	 * eventually consistent.
+	 *
+	 * Prefer this over `this.db.updateSessionRecord` in any in-request
+	 * handler.
 	 */
-	protected async updateSessionRecordWithCache(
+	public async updateSessionRecordWithCache(
 		sessionId: string,
 		updates: Partial<Session>,
 		streamToCentral?: boolean,
 	): Promise<void> {
-		// Avoid passing a trailing undefined to keep call-shape identical
-		// to direct `db.updateSessionRecord(sessionId, updates)` invocations
-		// (existing unit tests use strict arity matchers).
-		if (streamToCentral === undefined) {
-			await this.db.updateSessionRecord(sessionId, updates);
-		} else {
-			await this.db.updateSessionRecord(sessionId, updates, streamToCentral);
-		}
+		// Cache first — this is what the rest of the request sees.
 		if (this.writeQueue) {
-			this.writeQueue
-				.patchCachedSession(
-					sessionId,
-					updates as unknown as Record<string, unknown>,
-				)
-				.catch(() => undefined);
+			await this.writeQueue.patchCachedSession(
+				sessionId,
+				updates as unknown as Record<string, unknown>,
+			);
 		}
+		// Mongo write happens in the background. Errors are logged but the
+		// response has already been served on the strength of the cache.
+		this.scheduleMongoSessionUpdate(sessionId, updates, streamToCentral);
 	}
 
 	/**
-	 * First-hop-wins SIMD attach with cache mirroring. Calls the atomic
-	 * Mongo write then patches the Redis cache (also first-hop-wins).
+	 * First-hop-wins SIMD attach with cache-first / Mongo-deferred
+	 * semantics — mirrors `updateSessionRecordWithCache`.
 	 */
-	protected async recordSessionSimdReadingsIfAbsentWithCache(
+	public async recordSessionSimdReadingsIfAbsentWithCache(
 		sessionId: string,
 		readings: NonNullable<Session["simdReadings"]>,
 		stage: SimdReadingsStage,
 	): Promise<void> {
-		await this.db.recordSessionSimdReadingsIfAbsent(sessionId, readings, stage);
 		if (this.writeQueue) {
-			this.writeQueue
-				.patchCachedSimdReadingsIfAbsent(
-					sessionId,
-					readings as unknown as Record<string, unknown>,
-					stage,
-				)
-				.catch(() => undefined);
+			await this.writeQueue.patchCachedSimdReadingsIfAbsent(
+				sessionId,
+				readings as unknown as Record<string, unknown>,
+				stage,
+			);
 		}
+		this.scheduleMongoSimdReadingsUpdate(sessionId, readings, stage);
+	}
+
+	/**
+	 * Fire-and-forget Mongo session update. Public so non-Task handlers
+	 * (e.g. challenge GETs) can keep request response latency off the
+	 * Mongo critical path while still ensuring eventual persistence.
+	 */
+	public scheduleMongoSessionUpdate(
+		sessionId: string,
+		updates: Partial<Session>,
+		streamToCentral?: boolean,
+	): void {
+		// Wrap in Promise.resolve so a mocked db method that returns
+		// undefined (rather than a resolved promise) doesn't blow up the
+		// .catch chain. Production always returns a promise.
+		Promise.resolve(
+			streamToCentral === undefined
+				? this.db.updateSessionRecord(sessionId, updates)
+				: this.db.updateSessionRecord(sessionId, updates, streamToCentral),
+		).catch((err) => {
+			this.logger.warn(() => ({
+				err,
+				msg: "Background Mongo session update failed",
+				data: { sessionId },
+			}));
+		});
+	}
+
+	/**
+	 * Fire-and-forget Mongo SIMD-readings update. Public for the same
+	 * reason as `scheduleMongoSessionUpdate`.
+	 */
+	public scheduleMongoSimdReadingsUpdate(
+		sessionId: string,
+		readings: NonNullable<Session["simdReadings"]>,
+		stage: SimdReadingsStage,
+	): void {
+		Promise.resolve(
+			this.db.recordSessionSimdReadingsIfAbsent(sessionId, readings, stage),
+		).catch((err) => {
+			this.logger.warn(() => ({
+				err,
+				msg: "Background Mongo SIMD-readings update failed",
+				data: { sessionId, stage },
+			}));
+		});
 	}
 
 	async validateSessionIP(
