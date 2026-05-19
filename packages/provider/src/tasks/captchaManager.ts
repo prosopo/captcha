@@ -23,6 +23,7 @@ import {
 	type ProsopoConfigOutput,
 	type RequestHeaders,
 	type Session,
+	type SimdReadingsStage,
 	Tier,
 	type UserCommitment,
 } from "@prosopo/types";
@@ -85,6 +86,57 @@ export class CaptchaManager {
 		this.config = config;
 		this.logger = logger || getLogger("info", import.meta.url);
 		this.writeQueue = writeQueue ?? null;
+	}
+
+	/**
+	 * Update a session record AND keep the Redis cache consistent.
+	 * Mongo write is awaited; the cache patch is fire-and-forget (a stale
+	 * cache only costs an extra Mongo read on the next access, not
+	 * correctness). Prefer this over `this.db.updateSessionRecord` in any
+	 * in-request handler so the fast-path stays in sync.
+	 */
+	protected async updateSessionRecordWithCache(
+		sessionId: string,
+		updates: Partial<Session>,
+		streamToCentral?: boolean,
+	): Promise<void> {
+		// Avoid passing a trailing undefined to keep call-shape identical
+		// to direct `db.updateSessionRecord(sessionId, updates)` invocations
+		// (existing unit tests use strict arity matchers).
+		if (streamToCentral === undefined) {
+			await this.db.updateSessionRecord(sessionId, updates);
+		} else {
+			await this.db.updateSessionRecord(sessionId, updates, streamToCentral);
+		}
+		if (this.writeQueue) {
+			this.writeQueue
+				.patchCachedSession(
+					sessionId,
+					updates as unknown as Record<string, unknown>,
+				)
+				.catch(() => undefined);
+		}
+	}
+
+	/**
+	 * First-hop-wins SIMD attach with cache mirroring. Calls the atomic
+	 * Mongo write then patches the Redis cache (also first-hop-wins).
+	 */
+	protected async recordSessionSimdReadingsIfAbsentWithCache(
+		sessionId: string,
+		readings: NonNullable<Session["simdReadings"]>,
+		stage: SimdReadingsStage,
+	): Promise<void> {
+		await this.db.recordSessionSimdReadingsIfAbsent(sessionId, readings, stage);
+		if (this.writeQueue) {
+			this.writeQueue
+				.patchCachedSimdReadingsIfAbsent(
+					sessionId,
+					readings as unknown as Record<string, unknown>,
+					stage,
+				)
+				.catch(() => undefined);
+		}
 	}
 
 	async validateSessionIP(

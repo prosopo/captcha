@@ -21,6 +21,7 @@ import {
 	type CaptchaResponseBody,
 	CaptchaType,
 	type ProsopoCaptchaCountConfigSchemaOutput,
+	SimdReadingsStage,
 	decodeSimdReadings,
 	imageMaxRoundsDefault,
 } from "@prosopo/types";
@@ -157,16 +158,29 @@ export default (
 			};
 
 			// First-hop-wins patch — if the readings already landed at
-			// frictionless, this is a no-op at the storage layer.
+			// frictionless, this is a no-op at the storage layer. Mirror the
+			// cache.
 			if (validSessionId) {
 				const decodedSimd = decodeSimdReadings(simdReadings);
 				if (decodedSimd) {
+					const linkedSessionId = validSessionId;
 					tasks.db
 						.recordSessionSimdReadingsIfAbsent(
-							validSessionId,
+							linkedSessionId,
 							decodedSimd,
-							"challenge",
+							SimdReadingsStage.challenge,
 						)
+						.then(() => {
+							if (tasks.writeQueue) {
+								tasks.writeQueue
+									.patchCachedSimdReadingsIfAbsent(
+										linkedSessionId,
+										decodedSimd as unknown as Record<string, unknown>,
+										SimdReadingsStage.challenge,
+									)
+									.catch(() => undefined);
+							}
+						})
 						.catch((updateErr) => {
 							req.logger.warn(() => ({
 								err: updateErr,

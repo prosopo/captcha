@@ -41,6 +41,7 @@ import {
 	type ProsopoCaptchaCountConfigSchemaOutput,
 	type ProsopoConfigOutput,
 	type RequestHeaders,
+	SimdReadingsStage,
 	type UserCommitment,
 	decodeSimdReadings,
 } from "@prosopo/types";
@@ -230,10 +231,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 		): void => {
 			if (decodedSimdReadings) {
 				writes.push(
-					this.db.recordSessionSimdReadingsIfAbsent(
+					this.recordSessionSimdReadingsIfAbsentWithCache(
 						sessionId,
 						decodedSimdReadings,
-						"submit",
+						SimdReadingsStage.submit,
 					),
 				);
 			}
@@ -420,7 +421,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				];
 				if (pendingRecord.sessionId) {
 					writePromises.push(
-						this.db.updateSessionRecord(pendingRecord.sessionId, {
+						this.updateSessionRecordWithCache(pendingRecord.sessionId, {
 							userSubmitted: true,
 							result: {
 								status: CaptchaStatus.disapproved,
@@ -462,7 +463,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				];
 				if (pendingRecord.sessionId) {
 					writePromises.push(
-						this.db.updateSessionRecord(pendingRecord.sessionId, {
+						this.updateSessionRecordWithCache(pendingRecord.sessionId, {
 							userSubmitted: true,
 							result: { status: CaptchaStatus.approved },
 						}),
@@ -481,7 +482,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				];
 				if (pendingRecord.sessionId) {
 					writePromises.push(
-						this.db.updateSessionRecord(pendingRecord.sessionId, {
+						this.updateSessionRecordWithCache(pendingRecord.sessionId, {
 							userSubmitted: true,
 							result: {
 								status: CaptchaStatus.disapproved,
@@ -984,7 +985,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 		if (solution.sessionId) {
 			writePromises.push(
-				this.db.updateSessionRecord(
+				this.updateSessionRecordWithCache(
 					solution.sessionId,
 					{
 						serverChecked: true,

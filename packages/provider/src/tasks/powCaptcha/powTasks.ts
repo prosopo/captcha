@@ -33,6 +33,7 @@ import {
 	type PoWCaptcha,
 	type PoWChallengeId,
 	type RequestHeaders,
+	SimdReadingsStage,
 	decodeSimdReadings,
 } from "@prosopo/types";
 import type {
@@ -203,7 +204,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			];
 			if (challengeRecord.sessionId) {
 				writePromises.push(
-					this.db.updateSessionRecord(challengeRecord.sessionId, {
+					this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 						userSubmitted: true,
 						result: timeoutResult,
 					}),
@@ -319,8 +320,9 @@ export class PowCaptchaManager extends CaptchaManager {
 
 		const decodedSimdReadings = decodeSimdReadings(simdReadings);
 		if (challengeRecord.sessionId) {
+			const linkedSessionId = challengeRecord.sessionId;
 			writePromises.push(
-				this.db.updateSessionRecord(challengeRecord.sessionId, {
+				this.updateSessionRecordWithCache(linkedSessionId, {
 					userSubmitted: true,
 					result,
 				}),
@@ -329,10 +331,10 @@ export class PowCaptchaManager extends CaptchaManager {
 			// frictionless or challenge-GET, this is a no-op.
 			if (decodedSimdReadings) {
 				writePromises.push(
-					this.db.recordSessionSimdReadingsIfAbsent(
-						challengeRecord.sessionId,
+					this.recordSessionSimdReadingsIfAbsentWithCache(
+						linkedSessionId,
 						decodedSimdReadings,
-						"submit",
+						SimdReadingsStage.submit,
 					),
 				);
 			}
@@ -683,7 +685,7 @@ export class PowCaptchaManager extends CaptchaManager {
 
 		if (challengeRecord.sessionId) {
 			writePromises.push(
-				this.db.updateSessionRecord(
+				this.updateSessionRecordWithCache(
 					challengeRecord.sessionId,
 					{
 						serverChecked: true,

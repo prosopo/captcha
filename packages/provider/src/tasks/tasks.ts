@@ -92,11 +92,6 @@ export class Tasks {
 
 		// Initialize write queue from existing Redis connection
 		this.writeQueue = this.initWriteQueue();
-		// Wire the write queue into the DB so updateSessionRecord (and the
-		// SIMD-readings setter) keep the Redis session cache in sync.
-		if (this.db instanceof ProviderDatabase) {
-			this.db.setSessionCache(this.writeQueue);
-		}
 		this.decisionMachineRunner = new DecisionMachineRunner(this.db);
 		this.usageCounters = this.initUsageCounters();
 

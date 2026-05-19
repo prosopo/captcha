@@ -28,6 +28,7 @@ import {
 	type RoutingMachineBaseline,
 	type ScoreComponents,
 	type Session,
+	SimdReadingsStage,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { AccessPolicy } from "@prosopo/user-access-policy";
@@ -194,7 +195,9 @@ export class FrictionlessManager extends CaptchaManager {
 			simdReadings,
 			// Tag the arrival stage when the readings actually came in on
 			// this hop. Absence of readings → absence of stage.
-			...(simdReadings && { simdReadingsStage: "frictionless" as const }),
+			...(simdReadings && {
+				simdReadingsStage: SimdReadingsStage.frictionless,
+			}),
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);

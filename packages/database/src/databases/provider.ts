@@ -75,7 +75,6 @@ import {
 	type ScheduledTaskRecord,
 	ScheduledTaskRecordSchema,
 	ScheduledTaskSchema,
-	type SessionCacheStore,
 	SessionRecordSchema,
 	SolutionRecordSchema,
 	type SpamEmailDomainRecord,
@@ -213,7 +212,6 @@ export class ProviderDatabase
 	private redisAccessRulesConnection: RedisConnection | null;
 	private userAccessRulesStorage: AccessRulesStorage | null;
 	private indexesEnsured = false;
-	private sessionCache: SessionCacheStore | null = null;
 
 	constructor(private readonly options: ProviderDatabaseOptions) {
 		super(
@@ -231,10 +229,6 @@ export class ProviderDatabase
 
 	setCentralDbStreamer(streamer: CentralDbStreamer): void {
 		this.centralStreamer = streamer;
-	}
-
-	setSessionCache(store: SessionCacheStore | null): void {
-		this.sessionCache = store;
 	}
 
 	hasCentralDbStreamer(): boolean {
@@ -1487,10 +1481,10 @@ export class ProviderDatabase
 	}
 
 	/**
-	 * Update a session record by sessionId. Refreshes the Redis session
-	 * cache after a successful Mongo write so that subsequent cached reads
-	 * see the patched record — required by the contract that every
-	 * in-request write keeps the cache consistent.
+	 * Update a session record by sessionId. Pure Mongo write — callers in
+	 * the provider package are responsible for refreshing the Redis cache
+	 * via `RedisWriteQueue.patchCachedSession`, matching the existing
+	 * caller-side caching pattern (see `frictionlessTasks.createSession`).
 	 */
 	async updateSessionRecord(
 		sessionId: string,
@@ -1498,37 +1492,25 @@ export class ProviderDatabase
 		streamToCentral?: boolean,
 	): Promise<void> {
 		try {
-			const updated = await this.tables.session.findOneAndUpdate(
+			await this.tables.session.updateOne(
 				{ sessionId },
 				{ $set: { ...updates, lastUpdatedTimestamp: new Date() } },
-				{ new: true },
 			);
-
-			// Refresh the Redis cache after every successful Mongo update so
-			// readers hitting the fast path see the latest record. Fire-and-
-			// forget — cache misses are non-fatal and just trigger a Mongo
-			// read on the next access.
-			if (updated && this.sessionCache) {
-				const cacheData = updated.toObject() as Record<string, unknown>;
-				this.sessionCache.cacheSession(sessionId, cacheData).catch((err) => {
-					this.logger.warn(() => ({
-						err,
-						msg: "Failed to refresh Redis session cache after update",
-						data: { sessionId },
-					}));
-				});
-			}
-
-			if (streamToCentral && this.centralStreamer && updated) {
+			if (streamToCentral && this.centralStreamer) {
 				const streamer = this.centralStreamer;
 				const markStored = (ts: Date) =>
 					this.tables.session
 						.updateOne({ sessionId }, { $set: { storedAtTimestamp: ts } })
 						.then(() => {});
-				streamer.streamSessionRecord(
-					updated.toObject() as StoredSession,
-					markStored,
-				);
+				this.tables.session
+					.findOne({ sessionId })
+					.lean<StoredSession>()
+					.then((record) => {
+						if (record) {
+							streamer.streamSessionRecord(record, markStored);
+						}
+					})
+					.catch(() => {});
 			}
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
@@ -1542,7 +1524,8 @@ export class ProviderDatabase
 	 * Atomically record SIMD CPU fingerprint readings on the session — only
 	 * if they aren't already present. Uses a Mongo aggregation-pipeline
 	 * update so `simdReadings` and `simdReadingsStage` are set together,
-	 * first-hop-wins. Refreshes the Redis cache on success.
+	 * first-hop-wins. Pure Mongo write — cache refresh is the caller's
+	 * responsibility via `RedisWriteQueue.patchCachedSimdReadingsIfAbsent`.
 	 */
 	async recordSessionSimdReadingsIfAbsent(
 		sessionId: string,
@@ -1550,32 +1533,15 @@ export class ProviderDatabase
 		stage: SimdReadingsStage,
 	): Promise<void> {
 		try {
-			const updated = await this.tables.session.findOneAndUpdate(
-				{ sessionId },
-				[
-					{
-						$set: {
-							simdReadings: { $ifNull: ["$simdReadings", readings] },
-							simdReadingsStage: {
-								$ifNull: ["$simdReadingsStage", stage],
-							},
-							lastUpdatedTimestamp: new Date(),
-						},
+			await this.tables.session.updateOne({ sessionId }, [
+				{
+					$set: {
+						simdReadings: { $ifNull: ["$simdReadings", readings] },
+						simdReadingsStage: { $ifNull: ["$simdReadingsStage", stage] },
+						lastUpdatedTimestamp: new Date(),
 					},
-				],
-				{ new: true },
-			);
-
-			if (updated && this.sessionCache) {
-				const cacheData = updated.toObject() as Record<string, unknown>;
-				this.sessionCache.cacheSession(sessionId, cacheData).catch((err) => {
-					this.logger.warn(() => ({
-						err,
-						msg: "Failed to refresh Redis session cache after SIMD record",
-						data: { sessionId, stage },
-					}));
-				});
-			}
+				},
+			]);
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
 				context: { error: err, sessionId, stage },

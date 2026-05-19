@@ -591,21 +591,6 @@ ClientContextEntropyRecordSchema.index(
 	{ unique: true },
 );
 
-/**
- * Adapter the database uses to refresh the Redis session cache after a
- * Mongo write. Structurally satisfied by the provider's `RedisWriteQueue`.
- * Kept minimal so the database package does not need to depend on
- * `@prosopo/provider`.
- */
-export interface SessionCacheStore {
-	cacheSession(
-		sessionId: string,
-		sessionData: Record<string, unknown>,
-		ttlSeconds?: number,
-	): Promise<boolean>;
-	getCachedSession(sessionId: string): Promise<Record<string, unknown> | null>;
-}
-
 export interface IProviderDatabase extends IDatabase {
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	tables: Tables<any>;
@@ -845,22 +830,15 @@ export interface IProviderDatabase extends IDatabase {
 	 * Record SIMD CPU fingerprint readings on the session — first hop wins.
 	 * Atomically sets both `simdReadings` and `simdReadingsStage` only when
 	 * the session does not already carry readings, so re-attaches on later
-	 * hops are no-ops at the storage layer. Also refreshes the Redis cache
-	 * when a SessionCacheStore is registered on the DB.
+	 * hops are no-ops at the storage layer. Pure Mongo write; provider-side
+	 * callers refresh the Redis cache via
+	 * `RedisWriteQueue.patchCachedSimdReadingsIfAbsent`.
 	 */
 	recordSessionSimdReadingsIfAbsent(
 		sessionId: string,
 		readings: NonNullable<Session["simdReadings"]>,
 		stage: SimdReadingsStage,
 	): Promise<void>;
-
-	/**
-	 * Register a Redis session-cache adapter so write methods refresh the
-	 * cache after a successful Mongo write. Optional — when absent, writes
-	 * still go to Mongo and the cache is left to expire / be repopulated
-	 * lazily.
-	 */
-	setSessionCache(store: SessionCacheStore | null): void;
 
 	getSessionByuserSitekeyIpHash(
 		userSitekeyIpHash: string,

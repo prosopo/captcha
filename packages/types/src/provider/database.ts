@@ -27,7 +27,6 @@ import {
 	string,
 	tuple,
 	union,
-	enum as zEnum,
 	type infer as zInfer,
 } from "zod";
 import type { IPInfoResponse } from "../api/ipapi.js";
@@ -274,11 +273,13 @@ export const SimdReadingsSchema = union([
 // Stage at which the catcher's SIMD readings first reached the provider.
 // Tracked once on the Session record (first hop wins) so analytics can see
 // when in the user's journey the CPU fingerprint became available.
-export const SimdReadingsStageSchema = zEnum([
-	"frictionless",
-	"challenge",
-	"submit",
-] as const);
+export enum SimdReadingsStage {
+	frictionless = "frictionless",
+	challenge = "challenge",
+	submit = "submit",
+}
+
+export const SimdReadingsStageSchema = nativeEnum(SimdReadingsStage);
 
 export interface ScoreComponents {
 	baseScore: number;
@@ -377,8 +378,6 @@ export type Session = {
 	// Stage at which the readings first arrived.
 	simdReadingsStage?: SimdReadingsStage;
 };
-
-export type SimdReadingsStage = "frictionless" | "challenge" | "submit";
 
 // Zod schema for PoWCaptchaStored
 // PoWCaptchaStored = PoWCaptchaUser (minus requestedAtTimestamp) + StoredCaptcha
