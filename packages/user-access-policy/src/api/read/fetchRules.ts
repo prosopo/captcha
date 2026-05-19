@@ -57,10 +57,12 @@ export class FetchRulesEndpoint implements ApiEndpoint<FetchRulesSchema> {
 
 	async processRequest(
 		args: FetchRulesOptions,
+		logger?: Logger,
 	): Promise<FetchRulesEndpointResponse> {
+		const log = logger ?? this.logger;
 		const ruleEntries = await this.accessRulesStorage.fetchRules(args.ids);
 
-		this.logger.info(() => ({
+		log.info(() => ({
 			msg: "Endpoint fetched rules",
 			data: {
 				requestedCount: args.ids.length,
@@ -68,7 +70,7 @@ export class FetchRulesEndpoint implements ApiEndpoint<FetchRulesSchema> {
 			},
 		}));
 
-		this.logger.debug(() => ({
+		log.debug(() => ({
 			msg: "Fetched rule details",
 			data: {
 				ruleEntries: ruleEntries,

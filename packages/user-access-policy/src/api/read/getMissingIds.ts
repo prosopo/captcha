@@ -47,10 +47,14 @@ export class GetMissingIdsEndpoint implements ApiEndpoint<MissingIdsSchema> {
 		return z.string().array();
 	}
 
-	async processRequest(args: MissingIds): Promise<MissingIdsEndpointResponse> {
+	async processRequest(
+		args: MissingIds,
+		logger?: Logger,
+	): Promise<MissingIdsEndpointResponse> {
+		const log = logger ?? this.logger;
 		const missingIds = await this.accessRulesStorage.getMissingRuleIds(args);
 
-		this.logger.info(() => ({
+		log.info(() => ({
 			msg: "Endpoint checked missing ids",
 			data: {
 				idsToCheck: args.length,
@@ -58,7 +62,7 @@ export class GetMissingIdsEndpoint implements ApiEndpoint<MissingIdsSchema> {
 			},
 		}));
 
-		this.logger.debug(() => ({
+		log.debug(() => ({
 			msg: "Missing id details",
 			data: {
 				idsToCheck: args,

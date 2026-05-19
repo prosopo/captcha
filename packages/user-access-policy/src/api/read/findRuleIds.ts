@@ -56,7 +56,9 @@ export class FindRuleIdsEndpoint implements ApiEndpoint<FindRulesSchema> {
 
 	async processRequest(
 		args: AccessRulesFilterInput[],
+		logger?: Logger,
 	): Promise<RuleIdsEndpointResponse> {
+		const log = logger ?? this.logger;
 		const ruleIdBatches = await executeBatchesSequentially(
 			args,
 			async (rulesFilterInput) => {
@@ -76,7 +78,7 @@ export class FindRuleIdsEndpoint implements ApiEndpoint<FindRulesSchema> {
 		// Set() automatically removes duplicates
 		const uniqueRuleIds = [...new Set(ruleIds)];
 
-		this.logger.info(() => ({
+		log.info(() => ({
 			msg: "Endpoint found rules",
 			data: {
 				totalFoundCount: ruleIds.length,
