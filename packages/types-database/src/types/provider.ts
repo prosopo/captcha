@@ -491,6 +491,11 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	},
 	userSubmitted: { type: Boolean, required: false },
 	serverChecked: { type: Boolean, required: false },
+	// WASM SIMD CPU fingerprint readings collected by the catcher client.
+	// Stored as a free-form Mixed sub-document because the shape is a
+	// discriminated union and the dataset is still evolving — Zod validates
+	// at the boundary, Mongoose just persists it.
+	simdReadings: { type: Schema.Types.Mixed, required: false },
 } satisfies AllKeys<Session>);
 
 SessionRecordSchema.index({ createdAt: 1 });

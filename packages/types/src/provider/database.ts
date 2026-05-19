@@ -20,11 +20,13 @@ import {
 	bigint,
 	boolean,
 	date,
+	literal,
 	nativeEnum,
 	number,
 	object,
 	string,
 	tuple,
+	union,
 	type infer as zInfer,
 } from "zod";
 import type { IPInfoResponse } from "../api/ipapi.js";
@@ -46,6 +48,7 @@ import type {
 	DecisionMachineScope,
 } from "../decisionMachine/index.js";
 import type { PuzzleEvent, RequestHeaders } from "./api.js";
+import type { SimdReadings } from "./detection.js";
 
 export interface BrowserInfo {
 	name: string;
@@ -235,6 +238,38 @@ export const ScoreComponentsSchema = object({
 	triggeredDetectors: array(number()).optional(),
 });
 
+// Zod schema for the WASM SIMD CPU fingerprint readings collected by the
+// catcher client and forwarded in the encrypted payload. Mirrors the
+// `SimdReadings` discriminated union in ./detection.ts.
+const SimdOpReadingRecordSchema = object({
+	name: string(),
+	category: nativeEnum({
+		FP: "FP",
+		INT: "INT",
+		BIT: "BIT",
+		PERM: "PERM",
+	} as const),
+	bestNs: number(),
+	medianNs: number(),
+	iters: number(),
+	resultLane: number(),
+});
+
+export const SimdReadingsSchema = union([
+	object({
+		supported: literal(false),
+		reason: string(),
+	}),
+	object({
+		supported: literal(true),
+		schema: number(),
+		timerResolutionMs: number(),
+		runsPerOp: number(),
+		durationMs: number(),
+		ops: array(SimdOpReadingRecordSchema),
+	}),
+]);
+
 export interface ScoreComponents {
 	baseScore: number;
 	lScore?: number;
@@ -283,6 +318,9 @@ export const SessionSchema = object({
 	}).optional(),
 	userSubmitted: boolean().optional(),
 	serverChecked: boolean().optional(),
+	// WASM SIMD CPU fingerprint readings. Collection-only — used to build the
+	// training dataset for later classification. Absent on older clients.
+	simdReadings: SimdReadingsSchema.optional(),
 }) satisfies ZodType<Session>;
 
 // Session now includes all frictionless token fields
@@ -320,6 +358,8 @@ export type Session = {
 	};
 	userSubmitted?: boolean;
 	serverChecked?: boolean;
+	// WASM SIMD CPU fingerprint readings forwarded by the catcher client.
+	simdReadings?: SimdReadings;
 };
 
 // Zod schema for PoWCaptchaStored

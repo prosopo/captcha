@@ -36,6 +36,7 @@ export const getBotScore = async (
 	const isIframe: boolean = result.isIframe ?? false;
 	const decryptedHeadHash: string = result.decryptedHeadHash;
 	const triggeredDetectors: number[] | undefined = result.triggeredDetectors;
+	const simdReadings = result.simdReadings;
 
 	if (baseBotScore === undefined || Number.isNaN(baseBotScore)) {
 		return {
@@ -55,5 +56,6 @@ export const getBotScore = async (
 		isIframe,
 		decryptedHeadHash,
 		triggeredDetectors,
+		simdReadings,
 	};
 };
