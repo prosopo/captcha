@@ -214,10 +214,18 @@ export const Manager = (
 
 				const providerApi = new ProviderApi(providerUrl, getDappAccount());
 
+				// Non-blocking check (timeoutMs=0): only attach SIMD readings if
+				// the benchmark prefetched by the catcher has already resolved.
+				// We want this signal as early as possible — first request that
+				// has it wins; later attach points (submission) are backups.
+				const simdReadingsOnChallenge = frictionlessState?.getSimdReadings
+					? await frictionlessState.getSimdReadings(0)
+					: undefined;
 				const challenge = await providerApi.getPowCaptchaChallenge(
 					userAccount,
 					getDappAccount(),
 					frictionlessState?.sessionId,
+					simdReadingsOnChallenge,
 				);
 
 				if (challenge.error) {

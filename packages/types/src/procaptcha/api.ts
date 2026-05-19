@@ -32,5 +32,8 @@ export interface ProcaptchaApiInterface {
 		behavioralData?: string,
 		simdReadings?: string,
 	): Promise<TCaptchaSubmitResult>;
-	getCaptchaChallenge(sessionId?: string): Promise<CaptchaResponseBody>;
+	getCaptchaChallenge(
+		sessionId?: string,
+		simdReadings?: string,
+	): Promise<CaptchaResponseBody>;
 }

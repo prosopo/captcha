@@ -237,10 +237,16 @@ export const Manager = (
 
 				const providerApi = new ProviderApi(providerUrl, getDappAccount());
 
+				// Non-blocking check — attach SIMD readings only if the
+				// prefetched benchmark has already resolved.
+				const simdReadingsOnChallenge = frictionlessState?.getSimdReadings
+					? await frictionlessState.getSimdReadings(0)
+					: undefined;
 				const challenge = await providerApi.getPuzzleCaptchaChallenge(
 					userAccount,
 					getDappAccount(),
 					frictionlessState?.sessionId,
+					simdReadingsOnChallenge,
 				);
 
 				if (challenge.error) {

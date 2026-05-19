@@ -80,6 +80,7 @@ export default class ProviderApi
 		userAccount: string,
 		randomProvider: RandomProvider,
 		sessionId?: string,
+		simdReadings?: string,
 	): Promise<CaptchaResponseBody> {
 		const { provider } = randomProvider;
 		const dappAccount = this.account;
@@ -90,6 +91,9 @@ export default class ProviderApi
 		};
 		if (sessionId) {
 			body[ApiParams.sessionId] = sessionId;
+		}
+		if (simdReadings) {
+			body[ApiParams.simdReadings] = simdReadings;
 		}
 		return this.post(ClientApiPaths.GetImageCaptchaChallenge, body, {
 			headers: {
@@ -166,11 +170,13 @@ export default class ProviderApi
 		user: string,
 		dapp: string,
 		sessionId?: string,
+		simdReadings?: string,
 	): Promise<GetPowCaptchaResponse> {
 		const body: GetPowCaptchaChallengeRequestBodyType = {
 			[ApiParams.user]: user.toString(),
 			[ApiParams.dapp]: dapp.toString(),
 			...(sessionId && { [ApiParams.sessionId]: sessionId }),
+			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
 		};
 		return this.post(ClientApiPaths.GetPowCaptchaChallenge, body, {
 			headers: {
@@ -222,11 +228,13 @@ export default class ProviderApi
 		user: string,
 		dapp: string,
 		sessionId?: string,
+		simdReadings?: string,
 	): Promise<GetPuzzleCaptchaResponse> {
 		const body: GetPuzzleCaptchaChallengeRequestBodyType = {
 			[ApiParams.user]: user.toString(),
 			[ApiParams.dapp]: dapp.toString(),
 			...(sessionId && { [ApiParams.sessionId]: sessionId }),
+			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
 		};
 		return this.post(ClientApiPaths.GetPuzzleCaptchaChallenge, body, {
 			headers: {

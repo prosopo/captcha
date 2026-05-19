@@ -21,6 +21,7 @@ import {
 	type CaptchaResponseBody,
 	CaptchaType,
 	type ProsopoCaptchaCountConfigSchemaOutput,
+	decodeSimdReadings,
 	imageMaxRoundsDefault,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -70,7 +71,7 @@ export default (
 			);
 		}
 
-		const { datasetId, user, dapp, sessionId } = parsed;
+		const { datasetId, user, dapp, sessionId, simdReadings } = parsed;
 
 		validateSiteKey(dapp);
 		validateAddr(user);
@@ -154,6 +155,22 @@ export default (
 						env.config.captchas.unsolved.count,
 				},
 			};
+
+			// Patch the linked session with any SIMD readings the catcher had
+			// ready by this point. Solution-time attach is still a backup.
+			if (validSessionId) {
+				const decodedSimd = decodeSimdReadings(simdReadings);
+				if (decodedSimd) {
+					tasks.db
+						.updateSessionRecord(validSessionId, { simdReadings: decodedSimd })
+						.catch((updateErr) => {
+							req.logger.warn(() => ({
+								err: updateErr,
+								msg: "Failed to patch session with SIMD readings on image challenge",
+							}));
+						});
+				}
+			}
 
 			const taskData =
 				await tasks.imgCaptchaManager.getRandomCaptchasAndRequestHash(

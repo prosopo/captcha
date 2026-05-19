@@ -164,8 +164,14 @@ export function Manager(
 					updateState({ captchaApi });
 				}
 
+				// Non-blocking check — attach SIMD readings only if the
+				// prefetched benchmark has already resolved by this point.
+				const simdReadingsOnChallenge = frictionlessState?.getSimdReadings
+					? await frictionlessState.getSimdReadings(0)
+					: undefined;
 				const challenge = await captchaApi?.getCaptchaChallenge(
 					state.sessionId,
+					simdReadingsOnChallenge,
 				);
 
 				if (challenge.error) {

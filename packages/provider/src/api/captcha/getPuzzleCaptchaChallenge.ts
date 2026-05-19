@@ -18,6 +18,7 @@ import {
 	GetPuzzleCaptchaChallengeRequestBody,
 	type GetPuzzleCaptchaChallengeRequestBodyTypeOutput,
 	type GetPuzzleCaptchaResponse,
+	decodeSimdReadings,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
@@ -55,7 +56,7 @@ export default (
 			);
 		}
 
-		const { user, dapp, sessionId } = parsed;
+		const { user, dapp, sessionId, simdReadings } = parsed;
 
 		validateSiteKey(dapp);
 		validateAddr(user);
@@ -155,6 +156,22 @@ export default (
 					origin,
 					tolerance,
 				);
+
+			// Patch the linked session with any SIMD readings the catcher had
+			// ready by this point. Solution-time attach is still a backup.
+			if (validSessionId) {
+				const decodedSimd = decodeSimdReadings(simdReadings);
+				if (decodedSimd) {
+					tasks.db
+						.updateSessionRecord(validSessionId, { simdReadings: decodedSimd })
+						.catch((updateErr) => {
+							req.logger.warn(() => ({
+								err: updateErr,
+								msg: "Failed to patch session with SIMD readings on puzzle challenge",
+							}));
+						});
+				}
+			}
 
 			await tasks.db.storePuzzleCaptchaRecord(
 				challenge.challenge,

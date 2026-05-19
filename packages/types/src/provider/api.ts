@@ -260,6 +260,7 @@ export const CaptchaRequestBody = object({
 	[ApiParams.dapp]: string(),
 	[ApiParams.datasetId]: union([string(), array(number())]),
 	[ApiParams.sessionId]: string().optional(),
+	[ApiParams.simdReadings]: string().optional(),
 });
 
 export type CaptchaRequestBodyType = zInfer<typeof CaptchaRequestBody>;
@@ -407,6 +408,7 @@ export const GetPowCaptchaChallengeRequestBody = object({
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
 	[ApiParams.sessionId]: string().optional(),
+	[ApiParams.simdReadings]: string().optional(),
 });
 
 export type GetPowCaptchaChallengeRequestBodyType = zInfer<
@@ -469,6 +471,7 @@ export const GetPuzzleCaptchaChallengeRequestBody = object({
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
 	[ApiParams.sessionId]: string().optional(),
+	[ApiParams.simdReadings]: string().optional(),
 });
 
 export type GetPuzzleCaptchaChallengeRequestBodyType = zInfer<

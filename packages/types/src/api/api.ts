@@ -45,6 +45,8 @@ export interface ProviderApiInterface {
 	getCaptchaChallenge(
 		userAccount: string,
 		randomProvider: RandomProvider,
+		sessionId?: string,
+		simdReadings?: string,
 	): Promise<CaptchaResponseBody>;
 	submitCaptchaSolution(
 		captchas: CaptchaSolution[],
@@ -65,6 +67,8 @@ export interface ProviderApiInterface {
 	getPowCaptchaChallenge(
 		userAccount: string,
 		dappAccount: string,
+		sessionId?: string,
+		simdReadings?: string,
 	): Promise<GetPowCaptchaResponse>;
 	submitPowCaptchaSolution(
 		challenge: GetPowCaptchaResponse,
@@ -80,6 +84,7 @@ export interface ProviderApiInterface {
 		userAccount: string,
 		dappAccount: string,
 		sessionId?: string,
+		simdReadings?: string,
 	): Promise<GetPuzzleCaptchaResponse>;
 	submitPuzzleCaptchaSolution(
 		challenge: GetPuzzleCaptchaResponse,
