@@ -130,6 +130,7 @@ export class FrictionlessManager extends CaptchaManager {
 			ipInfo: params.ipInfo,
 			headers: params.headers,
 			mode: params.mode,
+			simdReadings: params.simdReadings,
 		};
 	}
 
@@ -165,6 +166,7 @@ export class FrictionlessManager extends CaptchaManager {
 		ipInfo?: IPInfoResponse,
 		headers?: RequestHeaders,
 		mode?: ModeEnum,
+		simdReadings?: Session["simdReadings"],
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
@@ -189,6 +191,7 @@ export class FrictionlessManager extends CaptchaManager {
 			deleted,
 			ipInfo,
 			headers,
+			simdReadings,
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);
@@ -342,6 +345,7 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.ipInfo,
 			effectiveParams.headers,
 			effectiveParams.mode,
+			effectiveParams.simdReadings,
 		);
 
 		// Fire-and-forget served-counter writes. Skipped when there's no
@@ -406,6 +410,7 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.ipInfo,
 			effectiveParams.headers,
 			effectiveParams.mode,
+			effectiveParams.simdReadings,
 		);
 	}
 

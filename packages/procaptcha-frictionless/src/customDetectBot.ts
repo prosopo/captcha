@@ -91,6 +91,14 @@ const customDetectBot: BotDetectionFunction = async (
 		config.account.address,
 	);
 
+	// Non-blocking SIMD-readings check: only attach if the catcher's
+	// prefetched WASM benchmark has already resolved. If not ready by this
+	// initial frictionless hop, it'll be re-attempted on the captcha
+	// challenge GET and again on solution submit.
+	const simdReadingsOnFrictionless = detectionResult.getSimdReadings
+		? await detectionResult.getSimdReadings(0)
+		: undefined;
+
 	// Get frictionless captcha with timeout
 	const captcha = await withTimeout(
 		providerApi.getFrictionlessCaptcha(
@@ -99,6 +107,7 @@ const customDetectBot: BotDetectionFunction = async (
 			config.account.address,
 			userAccount.account.address,
 			config.mode,
+			simdReadingsOnFrictionless,
 		),
 		10000, // 10 second timeout
 	);

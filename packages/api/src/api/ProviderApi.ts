@@ -314,6 +314,7 @@ export default class ProviderApi
 		dapp: string,
 		user: string,
 		mode?: ModeEnum,
+		simdReadings?: string,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const body: GetFrictionlessCaptchaChallengeRequestBodyOutput = {
 			[ApiParams.token]: token,
@@ -321,6 +322,7 @@ export default class ProviderApi
 			[ApiParams.dapp]: dapp,
 			[ApiParams.user]: user,
 			...(mode && { [ApiParams.mode]: mode }),
+			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
 		};
 		return this.post(ClientApiPaths.GetFrictionlessCaptchaChallenge, body, {
 			headers: {

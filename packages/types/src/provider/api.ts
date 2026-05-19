@@ -455,6 +455,7 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	[ApiParams.user]: string(),
 	[ApiParams.headHash]: string(),
 	[ApiParams.mode]: nativeEnum(ModeEnum).optional(),
+	[ApiParams.simdReadings]: string().optional(),
 });
 
 export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<
