@@ -51,6 +51,7 @@ export type BotDetectionFunctionResult = GetFrictionlessCaptchaResponse & {
 	deviceCapability?: string;
 	encryptBehavioralData?: (data: string) => Promise<string>;
 	packBehavioralData?: (data: BehavioralData) => PackedBehavioralData;
+	getSimdReadings?: (timeoutMs?: number) => Promise<string | undefined>;
 };
 
 export type BotDetectionFunction = (
