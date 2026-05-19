@@ -92,6 +92,7 @@ export class ProsopoCaptchaApi implements ProcaptchaApiInterface {
 		timestamp: string,
 		providerRequestHashSignature: string,
 		behavioralData?: string,
+		simdReadings?: string,
 	): Promise<TCaptchaSubmitResult> {
 		const tree = new CaptchaMerkleTree();
 
@@ -120,6 +121,7 @@ export class ProsopoCaptchaApi implements ProcaptchaApiInterface {
 				providerRequestHashSignature,
 				userTimestampSignature,
 				behavioralData,
+				simdReadings,
 			);
 		} catch (error) {
 			throw new ProsopoDatasetError("CAPTCHA.INVALID_CAPTCHA_CHALLENGE", {

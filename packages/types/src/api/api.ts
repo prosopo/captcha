@@ -54,6 +54,7 @@ export interface ProviderApiInterface {
 		providerRequestHashSignature: string,
 		userRequestHashSignature: string,
 		behavioralData?: string,
+		simdReadings?: string,
 	): Promise<CaptchaSolutionResponse>;
 	verifyDappUser(
 		token: ProcaptchaToken,
@@ -73,6 +74,7 @@ export interface ProviderApiInterface {
 		userTimestampSignature: string,
 		timeout?: number,
 		salt?: string,
+		simdReadings?: string,
 	): Promise<PowCaptchaSolutionResponse>;
 	getPuzzleCaptchaChallenge(
 		userAccount: string,
@@ -89,6 +91,7 @@ export interface ProviderApiInterface {
 		userTimestampSignature: string,
 		timeout?: number,
 		behavioralData?: string,
+		simdReadings?: string,
 	): Promise<PuzzleCaptchaSolutionResponse>;
 	submitPuzzleCaptchaVerify(
 		token: string,

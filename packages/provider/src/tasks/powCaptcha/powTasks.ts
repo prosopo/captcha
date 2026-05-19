@@ -33,6 +33,7 @@ import {
 	type PoWCaptcha,
 	type PoWChallengeId,
 	type RequestHeaders,
+	decodeSimdReadings,
 } from "@prosopo/types";
 import type {
 	IProviderDatabase,
@@ -132,6 +133,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		headers: RequestHeaders,
 		behavioralData?: string,
 		salt?: string,
+		simdReadings?: string,
 	): Promise<boolean> {
 		// Check signatures before doing DB reads to avoid unnecessary network connections
 		checkPowSignature(
@@ -315,11 +317,13 @@ export class PowCaptchaManager extends CaptchaManager {
 			),
 		];
 
+		const decodedSimdReadings = decodeSimdReadings(simdReadings);
 		if (challengeRecord.sessionId) {
 			writePromises.push(
 				this.db.updateSessionRecord(challengeRecord.sessionId, {
 					userSubmitted: true,
 					result,
+					...(decodedSimdReadings && { simdReadings: decodedSimdReadings }),
 				}),
 			);
 		}

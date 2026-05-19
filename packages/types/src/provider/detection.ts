@@ -49,5 +49,4 @@ export type DetectorResult = {
 	isIframe?: boolean;
 	decryptedHeadHash: string;
 	triggeredDetectors?: number[];
-	simdReadings?: SimdReadings;
 };

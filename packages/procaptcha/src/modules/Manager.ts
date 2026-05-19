@@ -315,6 +315,9 @@ export function Manager(
 					}
 				}
 
+				const simdReadings = frictionlessState?.getSimdReadings
+					? await frictionlessState.getSimdReadings()
+					: undefined;
 				// send the commitment to the provider
 				const submission: TCaptchaSubmitResult =
 					await captchaApi.submitCaptchaSolution(
@@ -324,6 +327,7 @@ export function Manager(
 						challenge.timestamp,
 						challenge.signature.provider.requestHash,
 						encryptedBehavioralData,
+						simdReadings,
 					);
 
 				// mark as is human if solution has been approved

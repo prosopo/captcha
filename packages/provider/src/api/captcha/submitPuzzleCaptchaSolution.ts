@@ -68,6 +68,7 @@ export default (env: ProviderEnvironment) =>
 			dapp,
 			user,
 			behavioralData,
+			simdReadings,
 		} = parsed;
 
 		validateSiteKey(dapp);
@@ -98,6 +99,7 @@ export default (env: ProviderEnvironment) =>
 					getIPAddress(req.ip || ""),
 					flatten(req.headers),
 					behavioralData,
+					simdReadings,
 				);
 			const response: PuzzleCaptchaSolutionResponse = {
 				status: "ok",

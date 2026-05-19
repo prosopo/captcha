@@ -130,7 +130,6 @@ export class FrictionlessManager extends CaptchaManager {
 			ipInfo: params.ipInfo,
 			headers: params.headers,
 			mode: params.mode,
-			simdReadings: params.simdReadings,
 		};
 	}
 
@@ -166,7 +165,6 @@ export class FrictionlessManager extends CaptchaManager {
 		ipInfo?: IPInfoResponse,
 		headers?: RequestHeaders,
 		mode?: ModeEnum,
-		simdReadings?: Session["simdReadings"],
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
@@ -191,7 +189,6 @@ export class FrictionlessManager extends CaptchaManager {
 			deleted,
 			ipInfo,
 			headers,
-			simdReadings,
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);
@@ -345,7 +342,6 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.ipInfo,
 			effectiveParams.headers,
 			effectiveParams.mode,
-			effectiveParams.simdReadings,
 		);
 
 		// Fire-and-forget served-counter writes. Skipped when there's no
@@ -410,7 +406,6 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.ipInfo,
 			effectiveParams.headers,
 			effectiveParams.mode,
-			effectiveParams.simdReadings,
 		);
 	}
 
@@ -548,7 +543,6 @@ export class FrictionlessManager extends CaptchaManager {
 		let decryptedHeadHash = "";
 		let decryptionFailed = false;
 		let triggeredDetectors: number[] | undefined;
-		let simdReadings: Session["simdReadings"];
 		for (const [keyIndex, key] of decryptKeys.entries()) {
 			try {
 				this.logger.info(() => ({
@@ -567,7 +561,6 @@ export class FrictionlessManager extends CaptchaManager {
 				const w = decrypted.isWebView;
 				const i = decrypted.isIframe;
 				const td = decrypted.triggeredDetectors;
-				const sr = decrypted.simdReadings;
 				this.logger.debug(() => ({
 					msg: "Successfully decrypted score",
 					data: {
@@ -580,7 +573,6 @@ export class FrictionlessManager extends CaptchaManager {
 						webView: w,
 						iFrame: i,
 						triggeredDetectors: td,
-						simdReadingsSupported: sr?.supported,
 					},
 				}));
 				baseBotScore = s;
@@ -591,7 +583,6 @@ export class FrictionlessManager extends CaptchaManager {
 				webView = w;
 				iFrame = i;
 				triggeredDetectors = td;
-				simdReadings = sr;
 				break;
 			} catch (err) {
 				// check if the next index exists, if not, log an error
@@ -656,7 +647,6 @@ export class FrictionlessManager extends CaptchaManager {
 			decryptedHeadHash,
 			decryptionFailed,
 			triggeredDetectors,
-			simdReadings,
 		};
 	}
 

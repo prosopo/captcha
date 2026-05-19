@@ -32,6 +32,7 @@ import {
 	type PoWChallengeId,
 	type PuzzleEvent,
 	type RequestHeaders,
+	decodeSimdReadings,
 	puzzleToleranceDefault,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
@@ -151,6 +152,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		ipAddress: IPAddress,
 		headers: RequestHeaders,
 		behavioralData?: string,
+		simdReadings?: string,
 	): Promise<boolean> {
 		// Check signatures before doing DB reads to avoid unnecessary network connections
 		checkPowSignature(
@@ -315,10 +317,12 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		);
 
 		// Update the session record with submission result
+		const decodedSimdReadings = decodeSimdReadings(simdReadings);
 		if (challengeRecord.sessionId) {
 			await this.db.updateSessionRecord(challengeRecord.sessionId, {
 				userSubmitted: true,
 				result,
+				...(decodedSimdReadings && { simdReadings: decodedSimdReadings }),
 			});
 		}
 

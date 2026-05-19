@@ -347,7 +347,6 @@ export default (
 				decryptedHeadHash,
 				decryptionFailed,
 				triggeredDetectors,
-				simdReadings,
 			} = await tasks.frictionlessManager.decryptPayload(token, headHash);
 
 			req.logger.debug(() => ({
@@ -415,7 +414,6 @@ export default (
 				ipInfo: req.ipInfo,
 				headers: flatHeaders,
 				mode: sessionMode,
-				simdReadings,
 			});
 
 			// Routing-machine context — enables router invocation and served

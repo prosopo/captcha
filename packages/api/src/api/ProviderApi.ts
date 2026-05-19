@@ -107,6 +107,7 @@ export default class ProviderApi
 		providerRequestHashSignature: string,
 		userTimestampSignature: string,
 		behavioralData?: string,
+		simdReadings?: string,
 	): Promise<CaptchaSolutionResponse> {
 		const body: CaptchaSolutionBodyType = {
 			[ApiParams.user]: userAccount,
@@ -123,6 +124,7 @@ export default class ProviderApi
 				},
 			},
 			...(behavioralData && { [ApiParams.behavioralData]: behavioralData }),
+			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
 		};
 		return this.post(ClientApiPaths.SubmitImageCaptchaSolution, body, {
 			headers: {
@@ -187,6 +189,7 @@ export default class ProviderApi
 		timeout?: number,
 		behavioralData?: string,
 		salt?: string,
+		simdReadings?: string,
 	): Promise<PowCaptchaSolutionResponse> {
 		const body = SubmitPowCaptchaSolutionBody.parse({
 			[ApiParams.challenge]: challenge.challenge,
@@ -205,6 +208,7 @@ export default class ProviderApi
 			},
 			...(behavioralData && { [ApiParams.behavioralData]: behavioralData }),
 			...(salt && { [ApiParams.salt]: salt }),
+			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
 		});
 		return this.post(ClientApiPaths.SubmitPowCaptchaSolution, body, {
 			headers: {
@@ -242,6 +246,7 @@ export default class ProviderApi
 		userTimestampSignature: string,
 		timeout?: number,
 		behavioralData?: string,
+		simdReadings?: string,
 	): Promise<PuzzleCaptchaSolutionResponse> {
 		const body = SubmitPuzzleCaptchaSolutionBody.parse({
 			[ApiParams.challenge]: challenge.challenge,
@@ -260,6 +265,7 @@ export default class ProviderApi
 				},
 			},
 			...(behavioralData && { [ApiParams.behavioralData]: behavioralData }),
+			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
 		});
 		return this.post(ClientApiPaths.SubmitPuzzleCaptchaSolution, body, {
 			headers: {

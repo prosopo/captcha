@@ -298,6 +298,9 @@ export const Manager = (
 						}
 					}
 
+					const simdReadings = frictionlessState?.getSimdReadings
+						? await frictionlessState.getSimdReadings()
+						: undefined;
 					const verifiedSolution = await providerApi.submitPowCaptchaSolution(
 						challenge,
 						getAccount().account.account.address,
@@ -307,6 +310,7 @@ export const Manager = (
 						config.captchas.pow.verifiedTimeout,
 						encryptedBehavioralData,
 						salt,
+						simdReadings,
 					);
 					if (verifiedSolution[ApiParams.verified]) {
 						updateState({

@@ -117,6 +117,7 @@ const customDetectBot: BotDetectionFunction = async (
 		deviceCapability: detectionResult.hasTouchSupport,
 		encryptBehavioralData: detectionResult.encryptBehavioralData,
 		packBehavioralData: detectionResult.packBehavioralData,
+		getSimdReadings: detectionResult.getSimdReadings,
 	};
 };
 

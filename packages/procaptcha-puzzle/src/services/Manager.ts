@@ -353,6 +353,9 @@ export const Manager = (
 				}
 			}
 
+			const simdReadings = frictionlessState?.getSimdReadings
+				? await frictionlessState.getSimdReadings()
+				: undefined;
 			const verifiedSolution = await providerApi.submitPuzzleCaptchaSolution(
 				challenge,
 				getAccount().account.account.address,
@@ -363,6 +366,7 @@ export const Manager = (
 				userTimestampSignature.signature.toString(),
 				config.captchas.puzzle.verifiedTimeout,
 				encryptedBehavioralData,
+				simdReadings,
 			);
 
 			if (verifiedSolution[ApiParams.verified]) {

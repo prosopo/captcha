@@ -173,6 +173,7 @@ export const ProcaptchaFrictionless = ({
 					behaviorCollector3: result.behaviorCollector3,
 					deviceCapability: result.deviceCapability,
 					encryptBehavioralData: result.encryptBehavioralData,
+					getSimdReadings: result.getSimdReadings,
 				};
 
 				if (result.captchaType === "image") {

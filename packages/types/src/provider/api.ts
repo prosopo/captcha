@@ -285,6 +285,10 @@ export const CaptchaSolutionBody = object({
 		[ApiParams.provider]: RequestHashSignatureSchema,
 	}),
 	[ApiParams.behavioralData]: string().optional(),
+	// Compact encoded SimdReadings produced by @prosopo/catcher's
+	// simdReadingsCodec — opaque at this layer; the provider decodes and
+	// persists on the captcha record. Collection-only, no scoring.
+	[ApiParams.simdReadings]: string().optional(),
 });
 
 export type CaptchaSolutionBodyType = zInfer<typeof CaptchaSolutionBody>;
@@ -436,6 +440,7 @@ export const SubmitPowCaptchaSolutionBody = object({
 		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 	[ApiParams.behavioralData]: string().optional(),
 	[ApiParams.salt]: string().optional(),
+	[ApiParams.simdReadings]: string().optional(),
 });
 
 export type SubmitPowCaptchaSolutionBodyType = input<
@@ -504,6 +509,7 @@ export const SubmitPuzzleCaptchaSolutionBody = object({
 		.optional()
 		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 	[ApiParams.behavioralData]: string().optional(),
+	[ApiParams.simdReadings]: string().optional(),
 });
 
 export type SubmitPuzzleCaptchaSolutionBodyType = input<

@@ -42,6 +42,7 @@ import {
 	type ProsopoConfigOutput,
 	type RequestHeaders,
 	type UserCommitment,
+	decodeSimdReadings,
 } from "@prosopo/types";
 import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -218,7 +219,12 @@ export class ImgCaptchaManager extends CaptchaManager {
 		ja4: string,
 		behavioralData?: string,
 		ipInfo?: IPInfoResponse,
+		simdReadings?: string,
 	): Promise<DappUserSolutionResult> {
+		const decodedSimdReadings = decodeSimdReadings(simdReadings);
+		const simdSessionPatch = decodedSimdReadings
+			? { simdReadings: decodedSimdReadings }
+			: {};
 		// check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
 		const verification = signatureVerify(
 			stringToHex(timestamp.toString()),
@@ -407,6 +413,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 								status: CaptchaStatus.disapproved,
 								reason: "CAPTCHA.INVALID_SOLUTION",
 							},
+							...simdSessionPatch,
 						}),
 					);
 				}
@@ -445,6 +452,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 						this.db.updateSessionRecord(pendingRecord.sessionId, {
 							userSubmitted: true,
 							result: { status: CaptchaStatus.approved },
+							...simdSessionPatch,
 						}),
 					);
 				}
@@ -466,6 +474,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 								status: CaptchaStatus.disapproved,
 								reason: "CAPTCHA.INVALID_SOLUTION",
 							},
+							...simdSessionPatch,
 						}),
 					);
 				}
