@@ -265,7 +265,6 @@ export const evaluateIpValidationRules = (
 		});
 	}
 
-	console.log(JSON.stringify(effectiveRules, null, 2));
 	// Check for abuse score exceed condition
 	const ip2AbuseScore = comparison.comparison.ip2Details?.abuserScore;
 	if (

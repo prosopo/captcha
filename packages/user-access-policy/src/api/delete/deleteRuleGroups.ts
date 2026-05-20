@@ -50,7 +50,11 @@ export class DeleteRuleGroupsEndpoint
 		);
 	}
 
-	async processRequest(args: DeleteSiteGroups): Promise<ApiEndpointResponse> {
+	async processRequest(
+		args: DeleteSiteGroups,
+		logger?: Logger,
+	): Promise<ApiEndpointResponse> {
+		const log = logger ?? this.logger;
 		const foundRuleIdPromises = args.flatMap((ruleToDelete) =>
 			ruleToDelete.clientIds.map((clientId) =>
 				this.accessRulesStorage.findRuleIds({
@@ -73,7 +77,7 @@ export class DeleteRuleGroupsEndpoint
 			await this.accessRulesStorage.deleteRules(uniqueRuleIds);
 		}
 
-		this.logger.info(() => ({
+		log.info(() => ({
 			msg: "Endpoint deleted rule groups",
 			data: {
 				args,

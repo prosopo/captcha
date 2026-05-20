@@ -77,7 +77,10 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 
 	async processRequest(
 		args: ParsedInsertRuleGroups,
+		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
+		const log = logger ?? this.logger;
+
 		const timeoutPromise = new Promise<ApiEndpointResponse>((resolve) => {
 			setTimeout(() => {
 				resolve({
@@ -93,7 +96,7 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 
 		const createRulesPromise = this.createRuleGroups(args)
 			.then((insertedIds) => {
-				this.logger.info(() => ({
+				log.info(() => ({
 					msg: "Endpoint inserted access rules",
 					data: {
 						userScopesCount: userScopesCount,
@@ -102,7 +105,7 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 					},
 				}));
 
-				this.logger.debug(() => ({
+				log.debug(() => ({
 					msg: "Inserted access rules details",
 					data: {
 						insertedIds,
@@ -115,8 +118,8 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 				};
 			})
 			.catch((error) => {
-				if (LogLevel.enum.debug === this.logger.getLogLevel()) {
-					this.logger.error(() => ({
+				if (LogLevel.enum.debug === log.getLogLevel()) {
+					log.error(() => ({
 						err: error,
 						data: { args },
 						msg: "Failed to insert access rules",

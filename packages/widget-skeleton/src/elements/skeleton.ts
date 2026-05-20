@@ -91,6 +91,13 @@ function getWidgetStyles(theme: Theme): string {
     min-height: ${WIDGET_MIN_HEIGHT}
 }
 
+.prosopo-widget::after,
+.prosopo-widget a::before,
+.prosopo-widget a::after {
+  content: none !important;
+  display: none !important;
+}
+
 .prosopo-widget__outer {
     max-width: ${WIDGET_MAX_WIDTH};
     min-height: 100%;
