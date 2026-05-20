@@ -330,24 +330,11 @@ export class PowCaptchaManager extends CaptchaManager {
 			// the obfuscated bundle before persisting.
 			if (simdReadings) {
 				writePromises.push(
-					(async () => {
-						const decryptKeys = [
-							...(await this.getDetectorKeys()),
-							process.env.BOT_DECRYPTION_KEY,
-						];
-						const decrypted = await this.decryptSimdReadings(
-							simdReadings,
-							decryptKeys,
-						);
-						if (decrypted) {
-							const { timestamp: _ignored, ...readings } = decrypted;
-							await this.recordSessionSimdReadingsIfAbsentWithCache(
-								linkedSessionId,
-								readings,
-								SimdReadingsStage.submit,
-							);
-						}
-					})(),
+					this.decryptAndAttachSimdReadingsIfAbsent(
+						linkedSessionId,
+						simdReadings,
+						SimdReadingsStage.submit,
+					),
 				);
 			}
 		}

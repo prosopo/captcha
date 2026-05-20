@@ -224,22 +224,12 @@ export class ImgCaptchaManager extends CaptchaManager {
 		// Hybrid-decrypt the SIMD readings up-front via the obfuscated
 		// `decodeSimd.js` bundle. `decodedSimdReadings` is the plain
 		// SimdReadings object (timestamp stripped) or undefined if we
-		// couldn't decrypt with any of the available keys.
-		let decodedSimdReadings: import("@prosopo/types").SimdReadings | undefined;
-		if (simdReadings) {
-			const decryptKeys = [
-				...(await this.getDetectorKeys()),
-				process.env.BOT_DECRYPTION_KEY,
-			];
-			const decrypted = await this.decryptSimdReadings(
-				simdReadings,
-				decryptKeys,
-			);
-			if (decrypted) {
-				const { timestamp: _ignored, ...readings } = decrypted;
-				decodedSimdReadings = readings;
-			}
-		}
+		// couldn't decrypt with any of the available keys. Decoded once
+		// here and reused by the closure below since img submit may attach
+		// to multiple session writes.
+		const decodedSimdReadings = simdReadings
+			? await this.decryptSimdReadingsForAttach(simdReadings)
+			: undefined;
 		// First-hop-wins SIMD attach helper — appends a no-op write when the
 		// session already carries readings. Idempotent at the storage layer.
 		const pushSimdAttachIfAny = (

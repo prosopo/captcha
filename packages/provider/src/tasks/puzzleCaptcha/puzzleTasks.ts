@@ -327,22 +327,11 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 			// frictionless or challenge-GET, this is a no-op. Decrypt via
 			// the obfuscated bundle before persisting.
 			if (simdReadings) {
-				const decryptKeys = [
-					...(await this.getDetectorKeys()),
-					process.env.BOT_DECRYPTION_KEY,
-				];
-				const decrypted = await this.decryptSimdReadings(
+				await this.decryptAndAttachSimdReadingsIfAbsent(
+					linkedSessionId,
 					simdReadings,
-					decryptKeys,
+					SimdReadingsStage.submit,
 				);
-				if (decrypted) {
-					const { timestamp: _ignored, ...readings } = decrypted;
-					await this.recordSessionSimdReadingsIfAbsentWithCache(
-						linkedSessionId,
-						readings,
-						SimdReadingsStage.submit,
-					);
-				}
 			}
 		}
 

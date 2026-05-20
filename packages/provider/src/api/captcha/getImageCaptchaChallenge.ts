@@ -158,30 +158,18 @@ export default (
 
 			// Cache-first / Mongo-deferred SIMD attach (see getPoWCaptchaChallenge).
 			if (validSessionId && simdReadings) {
-				const linkedSessionId = validSessionId;
-				const decryptKeys = [
-					...(await tasks.frictionlessManager.getDetectorKeys()),
-					process.env.BOT_DECRYPTION_KEY,
-				];
-				const decrypted = await tasks.frictionlessManager.decryptSimdReadings(
-					simdReadings,
-					decryptKeys,
-				);
-				if (decrypted) {
-					const { timestamp: _ignored, ...readings } = decrypted;
-					await tasks.frictionlessManager
-						.recordSessionSimdReadingsIfAbsentWithCache(
-							linkedSessionId,
-							readings,
-							SimdReadingsStage.challenge,
-						)
-						.catch((updateErr) => {
-							req.logger.warn(() => ({
-								err: updateErr,
-								msg: "Failed to patch session with SIMD readings on image challenge",
-							}));
-						});
-				}
+				await tasks.frictionlessManager
+					.decryptAndAttachSimdReadingsIfAbsent(
+						validSessionId,
+						simdReadings,
+						SimdReadingsStage.challenge,
+					)
+					.catch((updateErr) => {
+						req.logger.warn(() => ({
+							err: updateErr,
+							msg: "Failed to patch session with SIMD readings on image challenge",
+						}));
+					});
 			}
 
 			const taskData =

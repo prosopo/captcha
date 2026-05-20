@@ -118,6 +118,59 @@ export class CaptchaManager {
 	}
 
 	/**
+	 * Hybrid-decrypt a wire-format SIMD readings ciphertext using the active
+	 * provider detector keys plus the global `BOT_DECRYPTION_KEY`, and strip
+	 * the throwaway `timestamp` field so what's returned matches the shape
+	 * we persist on the session record. Returns `undefined` when no key
+	 * decrypts the payload (malformed ciphertext, key rotation, etc.).
+	 *
+	 * Used directly by the image-submit path, which decodes once and then
+	 * attaches the same readings to several session writes. Other callers
+	 * should prefer `decryptAndAttachSimdReadingsIfAbsent` below.
+	 */
+	public async decryptSimdReadingsForAttach(
+		simdReadingsCiphertext: string,
+	): Promise<NonNullable<Session["simdReadings"]> | undefined> {
+		const decryptKeys = [
+			...(await this.getDetectorKeys()),
+			process.env.BOT_DECRYPTION_KEY,
+		];
+		const decrypted = await this.decryptSimdReadings(
+			simdReadingsCiphertext,
+			decryptKeys,
+		);
+		if (!decrypted) return undefined;
+		const { timestamp: _ignored, ...readings } = decrypted;
+		return readings;
+	}
+
+	/**
+	 * Decrypt + persist convenience: the three challenge-GET endpoints and
+	 * the PoW/Puzzle submit verifiers all share this exact sequence.
+	 * No-op on decrypt failure.
+	 *
+	 * Returns `void` and intentionally lets errors bubble — challenge-GET
+	 * callers attach a `.catch` with their own log context (e.g. "PoW
+	 * challenge" vs "puzzle challenge") so warnings remain attributable to
+	 * the endpoint.
+	 */
+	public async decryptAndAttachSimdReadingsIfAbsent(
+		sessionId: string,
+		simdReadingsCiphertext: string,
+		stage: SimdReadingsStage,
+	): Promise<void> {
+		const readings = await this.decryptSimdReadingsForAttach(
+			simdReadingsCiphertext,
+		);
+		if (!readings) return;
+		await this.recordSessionSimdReadingsIfAbsentWithCache(
+			sessionId,
+			readings,
+			stage,
+		);
+	}
+
+	/**
 	 * First-hop-wins SIMD attach with cache-first / Mongo-deferred
 	 * semantics — mirrors `updateSessionRecordWithCache`.
 	 */

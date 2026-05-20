@@ -166,30 +166,18 @@ export default (
 			// operators can't forge plausible timings by reading the public
 			// codec.
 			if (validSessionId && simdReadings) {
-				const linkedSessionId = validSessionId;
-				const decryptKeys = [
-					...(await tasks.frictionlessManager.getDetectorKeys()),
-					process.env.BOT_DECRYPTION_KEY,
-				];
-				const decrypted = await tasks.frictionlessManager.decryptSimdReadings(
-					simdReadings,
-					decryptKeys,
-				);
-				if (decrypted) {
-					const { timestamp: _ignored, ...readings } = decrypted;
-					await tasks.frictionlessManager
-						.recordSessionSimdReadingsIfAbsentWithCache(
-							linkedSessionId,
-							readings,
-							SimdReadingsStage.challenge,
-						)
-						.catch((updateErr) => {
-							req.logger.warn(() => ({
-								err: updateErr,
-								msg: "Failed to patch session with SIMD readings on PoW challenge",
-							}));
-						});
-				}
+				await tasks.frictionlessManager
+					.decryptAndAttachSimdReadingsIfAbsent(
+						validSessionId,
+						simdReadings,
+						SimdReadingsStage.challenge,
+					)
+					.catch((updateErr) => {
+						req.logger.warn(() => ({
+							err: updateErr,
+							msg: "Failed to patch session with SIMD readings on PoW challenge",
+						}));
+					});
 			}
 
 			await tasks.db.storePowCaptchaRecord(
