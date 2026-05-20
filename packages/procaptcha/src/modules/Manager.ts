@@ -380,14 +380,12 @@ export function Manager(
 	const reload = async () => {
 		// disable the time limit
 		clearTimeout();
-		// trigger the onClose event
+		// trigger the onReload event
 		events.onReload();
-		// abandon the captcha process and restart frictionless, if it exists
-		resetState(frictionlessState?.restart);
-		if (!frictionlessState?.restart) {
-			// start the captcha process again unless we need a new session
-			await start();
-		}
+		// ensure start() will proceed and load a fresh challenge in place,
+		// keeping the modal open and the frictionless session (if any) intact
+		updateState({ loading: false });
+		await start();
 	};
 
 	/**
