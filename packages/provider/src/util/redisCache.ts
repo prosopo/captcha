@@ -125,6 +125,55 @@ export class RedisWriteQueue {
 	}
 
 	/**
+	 * Patch the cached session in place — read the existing entry, shallow-
+	 * merge the provided updates, and write it back. No-op on cache miss so
+	 * the next read repopulates from Mongo. Mirrors the field-level Mongo
+	 * patch done by `db.updateSessionRecord`; callers invoke both to keep
+	 * Redis consistent with the DB after every in-request write.
+	 */
+	async patchCachedSession(
+		sessionId: string,
+		updates: Record<string, unknown>,
+		ttlSeconds = 86400,
+	): Promise<boolean> {
+		const existing = await this.getCachedSession(sessionId);
+		if (!existing) return false;
+		return this.cacheSession(
+			sessionId,
+			{ ...existing, ...updates, lastUpdatedTimestamp: new Date() },
+			ttlSeconds,
+		);
+	}
+
+	/**
+	 * First-hop-wins SIMD attach on the cache — mirrors the atomic Mongo
+	 * `$ifNull` pipeline update in `db.recordSessionSimdReadingsIfAbsent`.
+	 * Reads the cache; if it doesn't already carry `simdReadings`, merges
+	 * the new readings + stage. No-op on cache miss or when readings are
+	 * already present.
+	 */
+	async patchCachedSimdReadingsIfAbsent(
+		sessionId: string,
+		readings: Record<string, unknown>,
+		stage: string,
+		ttlSeconds = 86400,
+	): Promise<boolean> {
+		const existing = await this.getCachedSession(sessionId);
+		if (!existing) return false;
+		if (existing.simdReadings) return false;
+		return this.cacheSession(
+			sessionId,
+			{
+				...existing,
+				simdReadings: readings,
+				simdReadingsStage: stage,
+				lastUpdatedTimestamp: new Date(),
+			},
+			ttlSeconds,
+		);
+	}
+
+	/**
 	 * Invalidate a cached session when it's updated.
 	 */
 	async invalidateCachedSession(sessionId: string): Promise<void> {

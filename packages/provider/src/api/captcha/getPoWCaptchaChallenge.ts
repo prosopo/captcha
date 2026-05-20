@@ -18,6 +18,7 @@ import {
 	GetPowCaptchaChallengeRequestBody,
 	type GetPowCaptchaChallengeRequestBodyTypeOutput,
 	type GetPowCaptchaResponse,
+	SimdReadingsStage,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
@@ -55,7 +56,7 @@ export default (
 			);
 		}
 
-		const { user, dapp, sessionId } = parsed;
+		const { user, dapp, sessionId, simdReadings } = parsed;
 
 		validateSiteKey(dapp);
 		validateAddr(user);
@@ -158,6 +159,21 @@ export default (
 				origin,
 				difficulty,
 			);
+
+			if (validSessionId && simdReadings) {
+				await tasks.frictionlessManager
+					.decryptAndAttachSimdReadingsIfAbsent(
+						validSessionId,
+						simdReadings,
+						SimdReadingsStage.challenge,
+					)
+					.catch((updateErr) => {
+						req.logger.warn(() => ({
+							err: updateErr,
+							msg: "Failed to patch session with SIMD readings on PoW challenge",
+						}));
+					});
+			}
 
 			await tasks.db.storePowCaptchaRecord(
 				challenge.challenge,

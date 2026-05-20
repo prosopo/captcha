@@ -96,6 +96,7 @@ export default (env: ProviderEnvironment) =>
 					// individual flags off this object instead of separate
 					// flat fields.
 					req.ipInfo,
+					parsed[ApiParams.simdReadings],
 				);
 
 			const returnValue: CaptchaSolutionResponse = {

@@ -11,10 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// Guarded to remain loadable in browser runtimes (e.g. vite dev/preview)
-// where `process` isn't defined.
-const envVersion =
-	typeof process !== "undefined"
-		? process.env?.PROSOPO_PACKAGE_VERSION
-		: undefined;
-export const version = envVersion || "dev";
+
+import type { SimdReadings } from "@prosopo/types";
+
+export type SimdReadingsResult = SimdReadings & { timestamp: number };
+
+export default function decryptSimdReadings(
+	encryptedData: string,
+	privateKeyString?: string,
+): Promise<SimdReadingsResult>;

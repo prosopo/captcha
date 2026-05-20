@@ -78,8 +78,29 @@ export default (
 			});
 
 			const tasks = new Tasks(env, req.logger);
-			const { token, headHash, dapp, user, mode } =
+			const { token, headHash, dapp, user, mode, simdReadings } =
 				GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
+			// Hybrid-decrypt the SIMD readings here so the rest of the
+			// handler can pass them into setSessionParams as a plain
+			// SimdReadings object. Missing/unparseable → undefined (the
+			// session is just created without the field).
+			let decodedSimdReadings:
+				| import("@prosopo/types").SimdReadings
+				| undefined;
+			if (simdReadings) {
+				const decryptKeys = [
+					...(await tasks.frictionlessManager.getDetectorKeys()),
+					process.env.BOT_DECRYPTION_KEY,
+				];
+				const decrypted = await tasks.frictionlessManager.decryptSimdReadings(
+					simdReadings,
+					decryptKeys,
+				);
+				if (decrypted) {
+					const { timestamp: _ignored, ...readings } = decrypted;
+					decodedSimdReadings = readings;
+				}
+			}
 			const normalizedIp = normalizeRequestIp(req.ip, req.logger);
 			const sessionMode =
 				mode === ModeEnum.invisible ? ModeEnum.invisible : undefined;
@@ -414,6 +435,11 @@ export default (
 				ipInfo: req.ipInfo,
 				headers: flatHeaders,
 				mode: sessionMode,
+				// Optional SIMD CPU fingerprint readings — present only when
+				// the catcher's prefetched benchmark had resolved by the time
+				// this frictionless request was made. Subsequent challenge-GET
+				// + solution-submit hops attempt to attach again if not.
+				...(decodedSimdReadings && { simdReadings: decodedSimdReadings }),
 			});
 
 			// Routing-machine context — enables router invocation and served

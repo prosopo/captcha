@@ -18,9 +18,6 @@ import {
 	getDefaultEvents,
 	providerRetry,
 } from "@prosopo/procaptcha-common";
-import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
-import { ProcaptchaPuzzle } from "@prosopo/procaptcha-puzzle";
-import { Procaptcha } from "@prosopo/procaptcha-react";
 import {
 	type FrictionlessState,
 	type ModeType,
@@ -30,6 +27,14 @@ import {
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { useEffect, useRef, useState } from "react";
 import customDetectBot from "./customDetectBot.js";
+
+// Each session uses exactly one solver — chosen by the /frictionless response.
+const ProcaptchaLoader = async () =>
+	(await import("@prosopo/procaptcha-react")).Procaptcha;
+const ProcaptchaPuzzleLoader = async () =>
+	(await import("@prosopo/procaptcha-puzzle")).ProcaptchaPuzzle;
+const ProcaptchaPowLoader = async () =>
+	(await import("@prosopo/procaptcha-pow")).ProcaptchaPow;
 
 const renderPlaceholder = (
 	theme: string | undefined,
@@ -173,9 +178,11 @@ export const ProcaptchaFrictionless = ({
 					behaviorCollector3: result.behaviorCollector3,
 					deviceCapability: result.deviceCapability,
 					encryptBehavioralData: result.encryptBehavioralData,
+					getSimdReadings: result.getSimdReadings,
 				};
 
 				if (result.captchaType === "image") {
+					const Procaptcha = await ProcaptchaLoader();
 					setComponentToRender(
 						<Procaptcha
 							config={config}
@@ -185,6 +192,7 @@ export const ProcaptchaFrictionless = ({
 						/>,
 					);
 				} else if (result.captchaType === "puzzle") {
+					const ProcaptchaPuzzle = await ProcaptchaPuzzleLoader();
 					setComponentToRender(
 						<ProcaptchaPuzzle
 							config={config}
@@ -194,6 +202,7 @@ export const ProcaptchaFrictionless = ({
 						/>,
 					);
 				} else {
+					const ProcaptchaPow = await ProcaptchaPowLoader();
 					setComponentToRender(
 						<ProcaptchaPow
 							config={config}

@@ -51,6 +51,12 @@ export type FrictionlessState = {
 	deviceCapability?: string;
 	encryptBehavioralData?: (data: string) => Promise<string>;
 	packBehavioralData?: (data: BehavioralData) => PackedBehavioralData;
+	// Returns the encoded WASM SIMD CPU fingerprint readings (collected by
+	// the catcher's prefetched benchmark), suitable for attaching to a
+	// captcha solution body. Returns `undefined` if the benchmark hasn't
+	// completed in time or SIMD isn't available — callers should treat
+	// either case as "skip this signal". Never throws.
+	getSimdReadings?: (timeoutMs?: number) => Promise<string | undefined>;
 };
 
 export type ProcaptchaCallbacks = Partial<Callbacks>;

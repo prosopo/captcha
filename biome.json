@@ -24,7 +24,8 @@
 			"./packages/fingerprintjs/*",
 			"*.bundle.js",
 			"./packages/provider/src/tasks/detection/decodePayload.js",
-			"./packages/provider/src/tasks/detection/decodeBehavior.js"
+			"./packages/provider/src/tasks/detection/decodeBehavior.js",
+			"./packages/provider/src/tasks/detection/decodeSimd.js"
 		]
 	},
 	"linter": {

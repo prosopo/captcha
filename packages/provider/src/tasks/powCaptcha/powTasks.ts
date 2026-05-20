@@ -33,6 +33,7 @@ import {
 	type PoWCaptcha,
 	type PoWChallengeId,
 	type RequestHeaders,
+	SimdReadingsStage,
 } from "@prosopo/types";
 import type {
 	IProviderDatabase,
@@ -132,6 +133,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		headers: RequestHeaders,
 		behavioralData?: string,
 		salt?: string,
+		simdReadings?: string,
 	): Promise<boolean> {
 		// Check signatures before doing DB reads to avoid unnecessary network connections
 		checkPowSignature(
@@ -201,7 +203,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			];
 			if (challengeRecord.sessionId) {
 				writePromises.push(
-					this.db.updateSessionRecord(challengeRecord.sessionId, {
+					this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 						userSubmitted: true,
 						result: timeoutResult,
 					}),
@@ -316,12 +318,22 @@ export class PowCaptchaManager extends CaptchaManager {
 		];
 
 		if (challengeRecord.sessionId) {
+			const linkedSessionId = challengeRecord.sessionId;
 			writePromises.push(
-				this.db.updateSessionRecord(challengeRecord.sessionId, {
+				this.updateSessionRecordWithCache(linkedSessionId, {
 					userSubmitted: true,
 					result,
 				}),
 			);
+			if (simdReadings) {
+				writePromises.push(
+					this.decryptAndAttachSimdReadingsIfAbsent(
+						linkedSessionId,
+						simdReadings,
+						SimdReadingsStage.submit,
+					),
+				);
+			}
 		}
 
 		await Promise.all(writePromises);
@@ -669,7 +681,7 @@ export class PowCaptchaManager extends CaptchaManager {
 
 		if (challengeRecord.sessionId) {
 			writePromises.push(
-				this.db.updateSessionRecord(
+				this.updateSessionRecordWithCache(
 					challengeRecord.sessionId,
 					{
 						serverChecked: true,

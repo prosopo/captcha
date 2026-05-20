@@ -15,7 +15,11 @@
 import type { EnvironmentTypes, RandomProvider } from "@prosopo/types";
 import { type HardcodedProvider, loadBalancer } from "./index.js";
 
-let cachedProviders: HardcodedProvider[] = [];
+// Keyed by env so a prefetch and a later call with a different env don't share.
+const providerPromiseCache: Map<
+	EnvironmentTypes,
+	Promise<HardcodedProvider[]>
+> = new Map();
 
 /** Optional custom loader for server-side caching (e.g. cacheFile with ETag). */
 let customProviderLoader:
@@ -34,7 +38,7 @@ export function setProviderLoader(
 }
 
 export function _resetCache() {
-	cachedProviders = [];
+	providerPromiseCache.clear();
 }
 
 /**
@@ -85,6 +89,21 @@ const loadProviders = async (
 	return loadBalancer(env);
 };
 
+// Caches the in-flight Promise (not the resolved array) so concurrent callers
+// share a single network request rather than racing.
+const getProvidersPromise = (
+	env: EnvironmentTypes,
+): Promise<HardcodedProvider[]> => {
+	const existing = providerPromiseCache.get(env);
+	if (existing) return existing;
+	const promise = loadProviders(env).catch((err) => {
+		providerPromiseCache.delete(env);
+		throw err;
+	});
+	providerPromiseCache.set(env, promise);
+	return promise;
+};
+
 /**
  * Pre-warms the provider cache for a given environment without requiring entropy.
  * Call this as early as possible to avoid a cold-cache delay when getRandomActiveProvider is first used.
@@ -92,20 +111,15 @@ const loadProviders = async (
 export const prefetchProviders = async (
 	env: EnvironmentTypes,
 ): Promise<void> => {
-	if (cachedProviders.length === 0) {
-		cachedProviders = await loadProviders(env);
-	}
+	await getProvidersPromise(env);
 };
 
 export const getRandomActiveProvider = async (
 	env: EnvironmentTypes,
 	entropy: number,
 ): Promise<RandomProvider> => {
-	if (cachedProviders.length === 0) {
-		cachedProviders = await loadProviders(env);
-	}
-
-	const randomProviderObj = selectWeightedProvider(cachedProviders, entropy);
+	const providers = await getProvidersPromise(env);
+	const randomProviderObj = selectWeightedProvider(providers, entropy);
 
 	return {
 		providerAccount: randomProviderObj.address,

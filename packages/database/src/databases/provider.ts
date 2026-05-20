@@ -47,6 +47,7 @@ import {
 	type ScheduledTaskResult,
 	type ScheduledTaskStatus,
 	type Session,
+	type SimdReadingsStage,
 	type SolutionRecord,
 	type StoredCaptcha,
 	StoredStatusNames,
@@ -1480,7 +1481,10 @@ export class ProviderDatabase
 	}
 
 	/**
-	 * Update a session record by sessionId
+	 * Update a session record by sessionId. Pure Mongo write — callers in
+	 * the provider package are responsible for refreshing the Redis cache
+	 * via `RedisWriteQueue.patchCachedSession`, matching the existing
+	 * caller-side caching pattern (see `frictionlessTasks.createSession`).
 	 */
 	async updateSessionRecord(
 		sessionId: string,
@@ -1511,6 +1515,36 @@ export class ProviderDatabase
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
 				context: { error: err, sessionId },
+				logger: this.logger,
+			});
+		}
+	}
+
+	/**
+	 * Atomically record SIMD CPU fingerprint readings on the session — only
+	 * if they aren't already present. Uses a Mongo aggregation-pipeline
+	 * update so `simdReadings` and `simdReadingsStage` are set together,
+	 * first-hop-wins. Pure Mongo write — cache refresh is the caller's
+	 * responsibility via `RedisWriteQueue.patchCachedSimdReadingsIfAbsent`.
+	 */
+	async recordSessionSimdReadingsIfAbsent(
+		sessionId: string,
+		readings: NonNullable<Session["simdReadings"]>,
+		stage: SimdReadingsStage,
+	): Promise<void> {
+		try {
+			await this.tables.session.updateOne({ sessionId }, [
+				{
+					$set: {
+						simdReadings: { $ifNull: ["$simdReadings", readings] },
+						simdReadingsStage: { $ifNull: ["$simdReadingsStage", stage] },
+						lastUpdatedTimestamp: new Date(),
+					},
+				},
+			]);
+		} catch (err) {
+			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
+				context: { error: err, sessionId, stage },
 				logger: this.logger,
 			});
 		}

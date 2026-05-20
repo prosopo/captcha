@@ -67,6 +67,7 @@ export default (env: ProviderEnvironment) =>
 			user,
 			behavioralData,
 			salt,
+			simdReadings,
 		} = parsed;
 
 		validateSiteKey(dapp);
@@ -95,6 +96,7 @@ export default (env: ProviderEnvironment) =>
 				flatten(req.headers),
 				behavioralData,
 				salt,
+				simdReadings,
 			);
 			const response: PowCaptchaSolutionResponse = { status: "ok", verified };
 			return res.json(response);

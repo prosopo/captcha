@@ -30,6 +30,7 @@ import {
 	type PoWCaptchaStored,
 	type PuzzleCaptchaStored,
 	type Session,
+	type SimdReadingsStage,
 	type SolutionRecord,
 	Tier,
 	type UserCommitment,
@@ -491,6 +492,14 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	},
 	userSubmitted: { type: Boolean, required: false },
 	serverChecked: { type: Boolean, required: false },
+	// WASM SIMD CPU fingerprint readings collected by the catcher client.
+	// Stored as a free-form Mixed sub-document because the shape is a
+	// discriminated union and the dataset is still evolving — Zod validates
+	// at the boundary, Mongoose just persists it.
+	simdReadings: { type: Schema.Types.Mixed, required: false },
+	// Stage at which the SIMD readings first arrived on this session
+	// (frictionless / challenge / submit). First-hop-wins.
+	simdReadingsStage: { type: String, required: false },
 } satisfies AllKeys<Session>);
 
 SessionRecordSchema.index({ createdAt: 1 });
@@ -815,6 +824,20 @@ export interface IProviderDatabase extends IDatabase {
 		sessionId: string,
 		updates: Partial<Session>,
 		streamToCentral?: boolean,
+	): Promise<void>;
+
+	/**
+	 * Record SIMD CPU fingerprint readings on the session — first hop wins.
+	 * Atomically sets both `simdReadings` and `simdReadingsStage` only when
+	 * the session does not already carry readings, so re-attaches on later
+	 * hops are no-ops at the storage layer. Pure Mongo write; provider-side
+	 * callers refresh the Redis cache via
+	 * `RedisWriteQueue.patchCachedSimdReadingsIfAbsent`.
+	 */
+	recordSessionSimdReadingsIfAbsent(
+		sessionId: string,
+		readings: NonNullable<Session["simdReadings"]>,
+		stage: SimdReadingsStage,
 	): Promise<void>;
 
 	getSessionByuserSitekeyIpHash(

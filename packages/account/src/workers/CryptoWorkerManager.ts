@@ -123,6 +123,15 @@ export class CryptoWorkerManager {
 	}
 
 	/**
+	 * Eagerly spawn the worker so the first runTask() doesn't pay the
+	 * worker-spawn + module-parse cost. Failures are swallowed because
+	 * runTask() will reattempt initWorker() on demand.
+	 */
+	prewarm(): void {
+		this.initWorker().catch(() => {});
+	}
+
+	/**
 	 * Run a task in the Web Worker
 	 */
 	async runTask<T>(

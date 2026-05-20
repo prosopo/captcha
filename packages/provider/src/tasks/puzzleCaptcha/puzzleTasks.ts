@@ -32,6 +32,7 @@ import {
 	type PoWChallengeId,
 	type PuzzleEvent,
 	type RequestHeaders,
+	SimdReadingsStage,
 	puzzleToleranceDefault,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
@@ -151,6 +152,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		ipAddress: IPAddress,
 		headers: RequestHeaders,
 		behavioralData?: string,
+		simdReadings?: string,
 	): Promise<boolean> {
 		// Check signatures before doing DB reads to avoid unnecessary network connections
 		checkPowSignature(
@@ -205,7 +207,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				userTimestampSignature,
 			);
 			if (challengeRecord.sessionId) {
-				await this.db.updateSessionRecord(challengeRecord.sessionId, {
+				await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 					userSubmitted: true,
 					result: timeoutResult,
 				});
@@ -316,10 +318,18 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 
 		// Update the session record with submission result
 		if (challengeRecord.sessionId) {
-			await this.db.updateSessionRecord(challengeRecord.sessionId, {
+			const linkedSessionId = challengeRecord.sessionId;
+			await this.updateSessionRecordWithCache(linkedSessionId, {
 				userSubmitted: true,
 				result,
 			});
+			if (simdReadings) {
+				await this.decryptAndAttachSimdReadingsIfAbsent(
+					linkedSessionId,
+					simdReadings,
+					SimdReadingsStage.submit,
+				);
+			}
 		}
 
 		return correct;
@@ -405,7 +415,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				result: disapprovedResult,
 			});
 			if (challengeRecord.sessionId) {
-				await this.db.updateSessionRecord(challengeRecord.sessionId, {
+				await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 					serverChecked: true,
 					result: disapprovedResult,
 				});
@@ -445,7 +455,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 						result: blockedResult,
 					});
 					if (challengeRecord.sessionId) {
-						await this.db.updateSessionRecord(challengeRecord.sessionId, {
+						await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 							serverChecked: true,
 							result: blockedResult,
 						});
@@ -510,7 +520,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 					result: blockedResult,
 				});
 				if (challengeRecord.sessionId) {
-					await this.db.updateSessionRecord(challengeRecord.sessionId, {
+					await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 						serverChecked: true,
 						result: blockedResult,
 					});
@@ -559,7 +569,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 						result: ipFailResult,
 					});
 					if (challengeRecord.sessionId) {
-						await this.db.updateSessionRecord(challengeRecord.sessionId, {
+						await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 							serverChecked: true,
 							result: ipFailResult,
 						});
@@ -626,7 +636,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 					result: dmResult,
 				});
 				if (challengeRecord.sessionId) {
-					await this.db.updateSessionRecord(challengeRecord.sessionId, {
+					await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 						serverChecked: true,
 						result: dmResult,
 					});
@@ -653,7 +663,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 
 		// Server verification passed — update session as approved and serverChecked
 		if (challengeRecord.sessionId) {
-			await this.db.updateSessionRecord(challengeRecord.sessionId, {
+			await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 				serverChecked: true,
 				result: { status: CaptchaStatus.approved },
 			});

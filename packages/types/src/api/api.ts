@@ -45,6 +45,8 @@ export interface ProviderApiInterface {
 	getCaptchaChallenge(
 		userAccount: string,
 		randomProvider: RandomProvider,
+		sessionId?: string,
+		simdReadings?: string,
 	): Promise<CaptchaResponseBody>;
 	submitCaptchaSolution(
 		captchas: CaptchaSolution[],
@@ -54,6 +56,7 @@ export interface ProviderApiInterface {
 		providerRequestHashSignature: string,
 		userRequestHashSignature: string,
 		behavioralData?: string,
+		simdReadings?: string,
 	): Promise<CaptchaSolutionResponse>;
 	verifyDappUser(
 		token: ProcaptchaToken,
@@ -64,6 +67,8 @@ export interface ProviderApiInterface {
 	getPowCaptchaChallenge(
 		userAccount: string,
 		dappAccount: string,
+		sessionId?: string,
+		simdReadings?: string,
 	): Promise<GetPowCaptchaResponse>;
 	submitPowCaptchaSolution(
 		challenge: GetPowCaptchaResponse,
@@ -73,11 +78,13 @@ export interface ProviderApiInterface {
 		userTimestampSignature: string,
 		timeout?: number,
 		salt?: string,
+		simdReadings?: string,
 	): Promise<PowCaptchaSolutionResponse>;
 	getPuzzleCaptchaChallenge(
 		userAccount: string,
 		dappAccount: string,
 		sessionId?: string,
+		simdReadings?: string,
 	): Promise<GetPuzzleCaptchaResponse>;
 	submitPuzzleCaptchaSolution(
 		challenge: GetPuzzleCaptchaResponse,
@@ -89,6 +96,7 @@ export interface ProviderApiInterface {
 		userTimestampSignature: string,
 		timeout?: number,
 		behavioralData?: string,
+		simdReadings?: string,
 	): Promise<PuzzleCaptchaSolutionResponse>;
 	submitPuzzleCaptchaVerify(
 		token: string,

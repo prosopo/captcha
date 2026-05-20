@@ -23,6 +23,7 @@ import {
 	type ProsopoConfigOutput,
 	type RequestHeaders,
 	type Session,
+	type SimdReadingsStage,
 	Tier,
 	type UserCommitment,
 } from "@prosopo/types";
@@ -47,6 +48,8 @@ import {
 } from "../api/blacklistRequestInspector.js";
 import { getIpAddressFromComposite } from "../compositeIpAddress.js";
 import type { RedisWriteQueue } from "../util/redisCache.js";
+import type { BehavioralDataResult } from "./detection/decodeBehavior.js";
+import type { SimdReadingsResult } from "./detection/decodeSimd.js";
 import { checkSpamEmail as checkSpamEmailFn } from "./spam/checkSpamEmail.js";
 import {
 	type TrafficCheckResult,
@@ -85,6 +88,137 @@ export class CaptchaManager {
 		this.config = config;
 		this.logger = logger || getLogger("info", import.meta.url);
 		this.writeQueue = writeQueue ?? null;
+	}
+
+	/**
+	 * Update a session record with cache-first / write-behind semantics:
+	 * the Redis cache patch is awaited (so the in-request view of the
+	 * session is up-to-date for any subsequent fast-path read), and the
+	 * Mongo write is fire-and-forget so the response isn't gated on a
+	 * round-trip to Mongo. Matches the `RedisWriteQueue` design where
+	 * Redis is the source of truth for the in-flight request and Mongo is
+	 * eventually consistent.
+	 *
+	 * Prefer this over `this.db.updateSessionRecord` in any in-request
+	 * handler.
+	 */
+	public async updateSessionRecordWithCache(
+		sessionId: string,
+		updates: Partial<Session>,
+		streamToCentral?: boolean,
+	): Promise<void> {
+		// Cache first — this is what the rest of the request sees.
+		if (this.writeQueue) {
+			await this.writeQueue.patchCachedSession(
+				sessionId,
+				updates as unknown as Record<string, unknown>,
+			);
+		}
+		// Mongo write happens in the background. Errors are logged but the
+		// response has already been served on the strength of the cache.
+		this.scheduleMongoSessionUpdate(sessionId, updates, streamToCentral);
+	}
+
+	/**
+	 * Decrypt with the active detector keys and strip the throwaway
+	 * `timestamp` field. Returns `undefined` when no key decrypts.
+	 */
+	public async decryptSimdReadingsForAttach(
+		simdReadingsCiphertext: string,
+	): Promise<NonNullable<Session["simdReadings"]> | undefined> {
+		const decryptKeys = [
+			...(await this.getDetectorKeys()),
+			process.env.BOT_DECRYPTION_KEY,
+		];
+		const decrypted = await this.decryptSimdReadings(
+			simdReadingsCiphertext,
+			decryptKeys,
+		);
+		if (!decrypted) return undefined;
+		const { timestamp: _ignored, ...readings } = decrypted;
+		return readings;
+	}
+
+	/** Decrypt + first-hop-wins attach. No-op on decrypt failure. */
+	public async decryptAndAttachSimdReadingsIfAbsent(
+		sessionId: string,
+		simdReadingsCiphertext: string,
+		stage: SimdReadingsStage,
+	): Promise<void> {
+		const readings = await this.decryptSimdReadingsForAttach(
+			simdReadingsCiphertext,
+		);
+		if (!readings) return;
+		await this.recordSessionSimdReadingsIfAbsentWithCache(
+			sessionId,
+			readings,
+			stage,
+		);
+	}
+
+	/**
+	 * First-hop-wins SIMD attach with cache-first / Mongo-deferred
+	 * semantics — mirrors `updateSessionRecordWithCache`.
+	 */
+	public async recordSessionSimdReadingsIfAbsentWithCache(
+		sessionId: string,
+		readings: NonNullable<Session["simdReadings"]>,
+		stage: SimdReadingsStage,
+	): Promise<void> {
+		if (this.writeQueue) {
+			await this.writeQueue.patchCachedSimdReadingsIfAbsent(
+				sessionId,
+				readings as unknown as Record<string, unknown>,
+				stage,
+			);
+		}
+		this.scheduleMongoSimdReadingsUpdate(sessionId, readings, stage);
+	}
+
+	/**
+	 * Fire-and-forget Mongo session update. Public so non-Task handlers
+	 * (e.g. challenge GETs) can keep request response latency off the
+	 * Mongo critical path while still ensuring eventual persistence.
+	 */
+	public scheduleMongoSessionUpdate(
+		sessionId: string,
+		updates: Partial<Session>,
+		streamToCentral?: boolean,
+	): void {
+		// Wrap in Promise.resolve so a mocked db method that returns
+		// undefined (rather than a resolved promise) doesn't blow up the
+		// .catch chain. Production always returns a promise.
+		Promise.resolve(
+			streamToCentral === undefined
+				? this.db.updateSessionRecord(sessionId, updates)
+				: this.db.updateSessionRecord(sessionId, updates, streamToCentral),
+		).catch((err) => {
+			this.logger.warn(() => ({
+				err,
+				msg: "Background Mongo session update failed",
+				data: { sessionId },
+			}));
+		});
+	}
+
+	/**
+	 * Fire-and-forget Mongo SIMD-readings update. Public for the same
+	 * reason as `scheduleMongoSessionUpdate`.
+	 */
+	public scheduleMongoSimdReadingsUpdate(
+		sessionId: string,
+		readings: NonNullable<Session["simdReadings"]>,
+		stage: SimdReadingsStage,
+	): void {
+		Promise.resolve(
+			this.db.recordSessionSimdReadingsIfAbsent(sessionId, readings, stage),
+		).catch((err) => {
+			this.logger.warn(() => ({
+				err,
+				msg: "Background Mongo SIMD-readings update failed",
+				data: { sessionId, stage },
+			}));
+		});
 	}
 
 	async validateSessionIP(
@@ -291,12 +425,55 @@ export class CaptchaManager {
 		return await this.db.getDetectorKeys();
 	}
 
+	/**
+	 * Decrypt the catcher's WASM SIMD CPU fingerprint readings via the
+	 * obfuscated `decodeSimd.js` bundle (source lives in the private
+	 * @prosopo/catcher repo). Mirrors `decryptBehavioralData`: tries each
+	 * detector key in turn (loaded by the caller, with the env-var key as
+	 * fallback). Returns null when no key works so the caller can drop
+	 * the field rather than fail the whole request.
+	 */
+	async decryptSimdReadings(
+		encryptedData: string,
+		decryptKeys: (string | undefined)[],
+	): Promise<SimdReadingsResult | null> {
+		const decryptSimdReadings = (await import("./detection/decodeSimd.js"))
+			.default;
+
+		const validKeys = decryptKeys.filter((k) => k);
+		if (validKeys.length === 0) {
+			this.logger?.error(() => ({
+				msg: "No decryption keys provided for SIMD readings",
+			}));
+			return null;
+		}
+
+		for (const [keyIndex, key] of validKeys.entries()) {
+			try {
+				return await decryptSimdReadings(encryptedData, key);
+			} catch (err) {
+				this.logger?.debug(() => ({
+					msg: "Failed to decrypt SIMD readings with key, trying next",
+					data: {
+						keyIndex: keyIndex + 1,
+						totalKeys: validKeys.length,
+						err,
+					},
+				}));
+			}
+		}
+
+		this.logger?.warn(() => ({
+			msg: "Failed to decrypt SIMD readings with all available keys",
+			data: { totalKeysAttempted: validKeys.length },
+		}));
+		return null;
+	}
+
 	async decryptBehavioralData(
 		encryptedData: string,
 		decryptKeys: (string | undefined)[],
-	): Promise<
-		import("./detection/decodeBehavior.js").BehavioralDataResult | null
-	> {
+	): Promise<BehavioralDataResult | null> {
 		const decryptBehavioralData = (
 			await import("./detection/decodeBehavior.js")
 		).default;

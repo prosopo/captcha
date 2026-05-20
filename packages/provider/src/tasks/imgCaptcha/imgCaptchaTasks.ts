@@ -41,6 +41,7 @@ import {
 	type ProsopoCaptchaCountConfigSchemaOutput,
 	type ProsopoConfigOutput,
 	type RequestHeaders,
+	SimdReadingsStage,
 	type UserCommitment,
 } from "@prosopo/types";
 import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
@@ -218,7 +219,26 @@ export class ImgCaptchaManager extends CaptchaManager {
 		ja4: string,
 		behavioralData?: string,
 		ipInfo?: IPInfoResponse,
+		simdReadings?: string,
 	): Promise<DappUserSolutionResult> {
+		// Decoded once and reused — img submit may attach to multiple sessions.
+		const decodedSimdReadings = simdReadings
+			? await this.decryptSimdReadingsForAttach(simdReadings)
+			: undefined;
+		const pushSimdAttachIfAny = (
+			sessionId: string,
+			writes: Promise<void>[],
+		): void => {
+			if (decodedSimdReadings) {
+				writes.push(
+					this.recordSessionSimdReadingsIfAbsentWithCache(
+						sessionId,
+						decodedSimdReadings,
+						SimdReadingsStage.submit,
+					),
+				);
+			}
+		};
 		// check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
 		const verification = signatureVerify(
 			stringToHex(timestamp.toString()),
@@ -401,7 +421,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				];
 				if (pendingRecord.sessionId) {
 					writePromises.push(
-						this.db.updateSessionRecord(pendingRecord.sessionId, {
+						this.updateSessionRecordWithCache(pendingRecord.sessionId, {
 							userSubmitted: true,
 							result: {
 								status: CaptchaStatus.disapproved,
@@ -409,6 +429,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 							},
 						}),
 					);
+					pushSimdAttachIfAny(pendingRecord.sessionId, writePromises);
 				}
 				await Promise.all(writePromises);
 				response = {
@@ -442,11 +463,12 @@ export class ImgCaptchaManager extends CaptchaManager {
 				];
 				if (pendingRecord.sessionId) {
 					writePromises.push(
-						this.db.updateSessionRecord(pendingRecord.sessionId, {
+						this.updateSessionRecordWithCache(pendingRecord.sessionId, {
 							userSubmitted: true,
 							result: { status: CaptchaStatus.approved },
 						}),
 					);
+					pushSimdAttachIfAny(pendingRecord.sessionId, writePromises);
 				}
 				await Promise.all(writePromises);
 			} else {
@@ -460,7 +482,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				];
 				if (pendingRecord.sessionId) {
 					writePromises.push(
-						this.db.updateSessionRecord(pendingRecord.sessionId, {
+						this.updateSessionRecordWithCache(pendingRecord.sessionId, {
 							userSubmitted: true,
 							result: {
 								status: CaptchaStatus.disapproved,
@@ -468,6 +490,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 							},
 						}),
 					);
+					pushSimdAttachIfAny(pendingRecord.sessionId, writePromises);
 				}
 				await Promise.all(writePromises);
 				response = {
@@ -962,7 +985,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 		if (solution.sessionId) {
 			writePromises.push(
-				this.db.updateSessionRecord(
+				this.updateSessionRecordWithCache(
 					solution.sessionId,
 					{
 						serverChecked: true,

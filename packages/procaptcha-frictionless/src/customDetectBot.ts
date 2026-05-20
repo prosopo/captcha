@@ -19,12 +19,24 @@ import {
 	prefetchProviders,
 } from "@prosopo/load-balancer";
 import { ExtensionLoader } from "@prosopo/procaptcha-common";
+import { EnvironmentTypesSchema } from "@prosopo/types";
 import type {
 	BotDetectionFunction,
 	ProcaptchaClientConfigOutput,
 } from "@prosopo/types";
 import type { BotDetectionFunctionResult } from "@prosopo/types";
 import { DetectorLoader } from "./detectorLoader.js";
+
+if (typeof window !== "undefined") {
+	const envHint =
+		typeof process !== "undefined"
+			? process.env?.PROSOPO_DEFAULT_ENVIRONMENT
+			: undefined;
+	const parsedEnv = EnvironmentTypesSchema.safeParse(envHint);
+	if (parsedEnv.success) {
+		prefetchProviders(parsedEnv.data).catch(() => undefined);
+	}
+}
 
 export const withTimeout = async <T>(
 	promise: Promise<T>,
@@ -56,12 +68,10 @@ const customDetectBot: BotDetectionFunction = async (
 	container: HTMLElement | undefined,
 	restartFn: () => void,
 ): Promise<BotDetectionFunctionResult> => {
-	// Kick off all async initialisations in parallel — provider list fetch no
-	// longer waits until after bot detection is complete.
 	const [ExtClass, detect] = await Promise.all([
 		ExtensionLoader(config.web2),
 		DetectorLoader(),
-		prefetchProviders(config.defaultEnvironment), // warms the cache; result discarded
+		prefetchProviders(config.defaultEnvironment),
 	]);
 	const ext = new ExtClass();
 
@@ -91,6 +101,14 @@ const customDetectBot: BotDetectionFunction = async (
 		config.account.address,
 	);
 
+	// Non-blocking SIMD-readings check: only attach if the catcher's
+	// prefetched WASM benchmark has already resolved. If not ready by this
+	// initial frictionless hop, it'll be re-attempted on the captcha
+	// challenge GET and again on solution submit.
+	const simdReadingsOnFrictionless = detectionResult.getSimdReadings
+		? await detectionResult.getSimdReadings(0)
+		: undefined;
+
 	// Get frictionless captcha with timeout
 	const captcha = await withTimeout(
 		providerApi.getFrictionlessCaptcha(
@@ -99,6 +117,7 @@ const customDetectBot: BotDetectionFunction = async (
 			config.account.address,
 			userAccount.account.address,
 			config.mode,
+			simdReadingsOnFrictionless,
 		),
 		10000, // 10 second timeout
 	);
@@ -117,6 +136,7 @@ const customDetectBot: BotDetectionFunction = async (
 		deviceCapability: detectionResult.hasTouchSupport,
 		encryptBehavioralData: detectionResult.encryptBehavioralData,
 		packBehavioralData: detectionResult.packBehavioralData,
+		getSimdReadings: detectionResult.getSimdReadings,
 	};
 };
 

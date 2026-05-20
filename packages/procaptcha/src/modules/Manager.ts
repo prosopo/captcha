@@ -164,8 +164,14 @@ export function Manager(
 					updateState({ captchaApi });
 				}
 
+				// Non-blocking check — attach SIMD readings only if the
+				// prefetched benchmark has already resolved by this point.
+				const simdReadingsOnChallenge = frictionlessState?.getSimdReadings
+					? await frictionlessState.getSimdReadings(0)
+					: undefined;
 				const challenge = await captchaApi?.getCaptchaChallenge(
 					state.sessionId,
+					simdReadingsOnChallenge,
 				);
 
 				if (challenge.error) {
@@ -315,6 +321,9 @@ export function Manager(
 					}
 				}
 
+				const simdReadings = frictionlessState?.getSimdReadings
+					? await frictionlessState.getSimdReadings()
+					: undefined;
 				// send the commitment to the provider
 				const submission: TCaptchaSubmitResult =
 					await captchaApi.submitCaptchaSolution(
@@ -324,6 +333,7 @@ export function Manager(
 						challenge.timestamp,
 						challenge.signature.provider.requestHash,
 						encryptedBehavioralData,
+						simdReadings,
 					);
 
 				// mark as is human if solution has been approved

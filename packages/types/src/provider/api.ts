@@ -260,6 +260,7 @@ export const CaptchaRequestBody = object({
 	[ApiParams.dapp]: string(),
 	[ApiParams.datasetId]: union([string(), array(number())]),
 	[ApiParams.sessionId]: string().optional(),
+	[ApiParams.simdReadings]: string().optional(),
 });
 
 export type CaptchaRequestBodyType = zInfer<typeof CaptchaRequestBody>;
@@ -285,6 +286,10 @@ export const CaptchaSolutionBody = object({
 		[ApiParams.provider]: RequestHashSignatureSchema,
 	}),
 	[ApiParams.behavioralData]: string().optional(),
+	// Compact encoded SimdReadings produced by @prosopo/catcher's
+	// simdReadingsCodec — opaque at this layer; the provider decodes and
+	// persists on the captcha record. Collection-only, no scoring.
+	[ApiParams.simdReadings]: string().optional(),
 });
 
 export type CaptchaSolutionBodyType = zInfer<typeof CaptchaSolutionBody>;
@@ -403,6 +408,7 @@ export const GetPowCaptchaChallengeRequestBody = object({
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
 	[ApiParams.sessionId]: string().optional(),
+	[ApiParams.simdReadings]: string().optional(),
 });
 
 export type GetPowCaptchaChallengeRequestBodyType = zInfer<
@@ -436,6 +442,7 @@ export const SubmitPowCaptchaSolutionBody = object({
 		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 	[ApiParams.behavioralData]: string().optional(),
 	[ApiParams.salt]: string().optional(),
+	[ApiParams.simdReadings]: string().optional(),
 });
 
 export type SubmitPowCaptchaSolutionBodyType = input<
@@ -448,6 +455,7 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	[ApiParams.user]: string(),
 	[ApiParams.headHash]: string(),
 	[ApiParams.mode]: nativeEnum(ModeEnum).optional(),
+	[ApiParams.simdReadings]: string().optional(),
 });
 
 export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<
@@ -464,6 +472,7 @@ export const GetPuzzleCaptchaChallengeRequestBody = object({
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
 	[ApiParams.sessionId]: string().optional(),
+	[ApiParams.simdReadings]: string().optional(),
 });
 
 export type GetPuzzleCaptchaChallengeRequestBodyType = zInfer<
@@ -504,6 +513,7 @@ export const SubmitPuzzleCaptchaSolutionBody = object({
 		.optional()
 		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 	[ApiParams.behavioralData]: string().optional(),
+	[ApiParams.simdReadings]: string().optional(),
 });
 
 export type SubmitPuzzleCaptchaSolutionBodyType = input<
