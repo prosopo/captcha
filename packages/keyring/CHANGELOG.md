@@ -1,5 +1,27 @@
 # @prosopo/keyring
 
+## 2.9.25
+### Patch Changes
+
+- 8bb7286: Move `captchaType` from client (`data-captcha-type` / render-options prop)
+  to a server-side site-key setting; the bundle now calls `/frictionless`
+  for all flows. Renames the bundle's universal mount component from
+  `FrictionlessCaptcha` to `BundleCaptcha` to reflect that it is no longer
+  frictionless-specific — the server decides which concrete challenge type
+  to render.
+- Updated dependencies [3c0be68]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [d865319]
+- Updated dependencies [753304b]
+- Updated dependencies [8bb7286]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [4993813]
+  - @prosopo/types@4.0.0
+  - @prosopo/util@3.2.12
+  - @prosopo/common@3.1.34
+
 ## 2.9.24
 ### Patch Changes
 
