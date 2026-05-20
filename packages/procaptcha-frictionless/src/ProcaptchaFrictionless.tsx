@@ -18,9 +18,6 @@ import {
 	getDefaultEvents,
 	providerRetry,
 } from "@prosopo/procaptcha-common";
-import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
-import { ProcaptchaPuzzle } from "@prosopo/procaptcha-puzzle";
-import { Procaptcha } from "@prosopo/procaptcha-react";
 import {
 	type FrictionlessState,
 	type ModeType,
@@ -30,6 +27,19 @@ import {
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { useEffect, useRef, useState } from "react";
 import customDetectBot from "./customDetectBot.js";
+
+// The three solver components are dynamically imported on demand: each
+// captcha session uses exactly one solver type (image / puzzle / PoW),
+// decided server-side via the /frictionless response. Statically importing
+// all three pulled ~500KB of unused solver UI into the initial
+// captchaRenderer chunk; lazy-loading lets the initial bundle ship just
+// the orchestration code and downloads the chosen solver after detection.
+const ProcaptchaLoader = async () =>
+	(await import("@prosopo/procaptcha-react")).Procaptcha;
+const ProcaptchaPuzzleLoader = async () =>
+	(await import("@prosopo/procaptcha-puzzle")).ProcaptchaPuzzle;
+const ProcaptchaPowLoader = async () =>
+	(await import("@prosopo/procaptcha-pow")).ProcaptchaPow;
 
 const renderPlaceholder = (
 	theme: string | undefined,
@@ -177,6 +187,7 @@ export const ProcaptchaFrictionless = ({
 				};
 
 				if (result.captchaType === "image") {
+					const Procaptcha = await ProcaptchaLoader();
 					setComponentToRender(
 						<Procaptcha
 							config={config}
@@ -186,6 +197,7 @@ export const ProcaptchaFrictionless = ({
 						/>,
 					);
 				} else if (result.captchaType === "puzzle") {
+					const ProcaptchaPuzzle = await ProcaptchaPuzzleLoader();
 					setComponentToRender(
 						<ProcaptchaPuzzle
 							config={config}
@@ -195,6 +207,7 @@ export const ProcaptchaFrictionless = ({
 						/>,
 					);
 				} else {
+					const ProcaptchaPow = await ProcaptchaPowLoader();
 					setComponentToRender(
 						<ProcaptchaPow
 							config={config}

@@ -15,7 +15,13 @@
 import type { EnvironmentTypes, RandomProvider } from "@prosopo/types";
 import { type HardcodedProvider, loadBalancer } from "./index.js";
 
-let cachedProviders: HardcodedProvider[] = [];
+// Keyed by environment so that a prefetch fired at module-load time with one
+// env (e.g. production) and a later call from a different env (e.g. staging)
+// don't share — they'd otherwise return wrong-environment providers.
+const providerPromiseCache: Map<
+	EnvironmentTypes,
+	Promise<HardcodedProvider[]>
+> = new Map();
 
 /** Optional custom loader for server-side caching (e.g. cacheFile with ETag). */
 let customProviderLoader:
@@ -34,7 +40,7 @@ export function setProviderLoader(
 }
 
 export function _resetCache() {
-	cachedProviders = [];
+	providerPromiseCache.clear();
 }
 
 /**
@@ -86,26 +92,41 @@ const loadProviders = async (
 };
 
 /**
+ * Get the cached promise for a given environment, or start a new fetch.
+ * Caching the in-flight Promise (not just the resolved array) lets concurrent
+ * callers — e.g. a module-load prefetch and the customDetectBot Promise.all —
+ * share the same network request instead of racing.
+ */
+const getProvidersPromise = (
+	env: EnvironmentTypes,
+): Promise<HardcodedProvider[]> => {
+	const existing = providerPromiseCache.get(env);
+	if (existing) return existing;
+	const promise = loadProviders(env).catch((err) => {
+		// On failure, clear the cached rejected promise so the next caller can retry.
+		providerPromiseCache.delete(env);
+		throw err;
+	});
+	providerPromiseCache.set(env, promise);
+	return promise;
+};
+
+/**
  * Pre-warms the provider cache for a given environment without requiring entropy.
  * Call this as early as possible to avoid a cold-cache delay when getRandomActiveProvider is first used.
  */
 export const prefetchProviders = async (
 	env: EnvironmentTypes,
 ): Promise<void> => {
-	if (cachedProviders.length === 0) {
-		cachedProviders = await loadProviders(env);
-	}
+	await getProvidersPromise(env);
 };
 
 export const getRandomActiveProvider = async (
 	env: EnvironmentTypes,
 	entropy: number,
 ): Promise<RandomProvider> => {
-	if (cachedProviders.length === 0) {
-		cachedProviders = await loadProviders(env);
-	}
-
-	const randomProviderObj = selectWeightedProvider(cachedProviders, entropy);
+	const providers = await getProvidersPromise(env);
+	const randomProviderObj = selectWeightedProvider(providers, entropy);
 
 	return {
 		providerAccount: randomProviderObj.address,

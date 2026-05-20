@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import Signer from "@polkadot/extension-base/page/Signer";
 import type { InjectedAccount } from "@polkadot/extension-inject/types";
 import type { InjectedExtension } from "@polkadot/extension-inject/types";
 import { stringToU8a } from "@polkadot/util";
@@ -27,12 +28,12 @@ import { Extension } from "./Extension.js";
 
 // Pre-warm both the fingerprint cache and the crypto worker as soon as this
 // module is imported — these fire in parallel and are ready before getAccount()
-// is ever called.
+// is ever called. `prewarm()` actually spawns the Worker and lets its script
+// parse during chunk-load time; without it, the ~500ms worker module-eval
+// lands inside the first createAccount() call.
 prefetchFingerprint();
-getCryptoWorkerManager(); // instantiates the singleton and starts initWorker lazily on first use
+getCryptoWorkerManager().prewarm();
 
-const SignerLoader = async () =>
-	(await import("@polkadot/extension-base/page/Signer")).default;
 const EntropyToMnemonicLoader = async () =>
 	(await import("@prosopo/util-crypto")).entropyToMnemonic;
 
@@ -45,16 +46,8 @@ export class ExtensionWeb2 extends Extension {
 	public async getAccount(
 		config: ProcaptchaClientConfigOutput,
 	): Promise<Account> {
-		// Fetch the Signer module in parallel with account creation — it is only
-		// needed once createAccount completes, so there is no dependency.
-		const [account, Signer] = await Promise.all([
-			this.createAccount(config),
-			SignerLoader(),
-		]);
-		const extension: InjectedExtension = await this.createExtension(
-			account,
-			Signer,
-		);
+		const account = await this.createAccount(config);
+		const extension: InjectedExtension = this.createExtension(account);
 
 		return {
 			account,
@@ -62,10 +55,7 @@ export class ExtensionWeb2 extends Extension {
 		};
 	}
 
-	private async createExtension(
-		account: AccountWithKeyPair,
-		Signer: Awaited<ReturnType<typeof SignerLoader>>,
-	): Promise<InjectedExtension> {
+	private createExtension(account: AccountWithKeyPair): InjectedExtension {
 		const signer = new Signer(async () => {
 			return;
 		});

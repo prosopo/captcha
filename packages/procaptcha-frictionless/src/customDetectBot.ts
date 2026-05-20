@@ -19,12 +19,32 @@ import {
 	prefetchProviders,
 } from "@prosopo/load-balancer";
 import { ExtensionLoader } from "@prosopo/procaptcha-common";
+import { EnvironmentTypesSchema } from "@prosopo/types";
 import type {
 	BotDetectionFunction,
 	ProcaptchaClientConfigOutput,
 } from "@prosopo/types";
 import type { BotDetectionFunctionResult } from "@prosopo/types";
 import { DetectorLoader } from "./detectorLoader.js";
+
+// Start the provider-list HTTP fetch as soon as this module is imported — the
+// in-flight Promise is cached by environment, so the customDetectBot call below
+// reuses this fetch rather than waiting for a fresh one. The env hint comes
+// from `PROSOPO_DEFAULT_ENVIRONMENT` (baked in at bundle time by configCreator);
+// if it's absent or the actual runtime config picks a different env, the cache
+// miss for that env triggers a separate fetch in customDetectBot below.
+// `typeof process` guard keeps this safe in plain-browser runtimes where
+// `process` is undefined.
+if (typeof window !== "undefined") {
+	const envHint =
+		typeof process !== "undefined"
+			? process.env?.PROSOPO_DEFAULT_ENVIRONMENT
+			: undefined;
+	const parsedEnv = EnvironmentTypesSchema.safeParse(envHint);
+	if (parsedEnv.success) {
+		prefetchProviders(parsedEnv.data).catch(() => undefined);
+	}
+}
 
 export const withTimeout = async <T>(
 	promise: Promise<T>,
