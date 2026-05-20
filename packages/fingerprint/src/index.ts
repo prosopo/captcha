@@ -33,10 +33,15 @@ export const getFingerprint = async (): Promise<string> => {
 			// any source might read (some sources use `cache`, `domBlockers`
 			// uses `debug`, etc.). Mirrors fpjs's internal `BuiltinSourceOptions`
 			// — which isn't exported, so we declare the shape inline.
-			const sourceOptions: { cache: Record<string, unknown>; debug?: boolean } = {
-				cache: {},
-			};
-			const getComponents = loadSources(sources, sourceOptions, EXCLUDED_SOURCES);
+			const sourceOptions: { cache: Record<string, unknown>; debug?: boolean } =
+				{
+					cache: {},
+				};
+			const getComponents = loadSources(
+				sources,
+				sourceOptions,
+				EXCLUDED_SOURCES,
+			);
 			const components = await getComponents();
 			return hashComponents(components);
 		})();
