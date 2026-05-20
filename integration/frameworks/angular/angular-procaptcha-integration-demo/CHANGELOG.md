@@ -1,5 +1,10 @@
 # @prosopo/angular-procaptcha-integration-demo
 
+## 1.1.68
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.68
+
 ## 1.1.67
 ### Patch Changes
 
