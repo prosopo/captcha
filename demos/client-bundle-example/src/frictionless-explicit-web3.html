@@ -234,7 +234,6 @@
             // Render the CAPTCHA
             const widgetId = render(captchaContainer, {
                 siteKey: import.meta.env.PROSOPO_SITE_KEY_FRICTIONLESS,
-                captchaType: "frictionless",
                 callback: onCaptchaVerified,
                 "failed-callback": function () {
                     console.log('Challenge failed');
