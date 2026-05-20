@@ -26,11 +26,6 @@ import type { KeypairType } from "@prosopo/util-crypto";
 import { getCryptoWorkerManager } from "../workers/CryptoWorkerManager.js";
 import { Extension } from "./Extension.js";
 
-// Pre-warm both the fingerprint cache and the crypto worker as soon as this
-// module is imported — these fire in parallel and are ready before getAccount()
-// is ever called. `prewarm()` actually spawns the Worker and lets its script
-// parse during chunk-load time; without it, the ~500ms worker module-eval
-// lands inside the first createAccount() call.
 prefetchFingerprint();
 getCryptoWorkerManager().prewarm();
 

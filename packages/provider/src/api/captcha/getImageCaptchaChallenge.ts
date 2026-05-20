@@ -156,7 +156,6 @@ export default (
 				},
 			};
 
-			// Cache-first / Mongo-deferred SIMD attach (see getPoWCaptchaChallenge).
 			if (validSessionId && simdReadings) {
 				await tasks.frictionlessManager
 					.decryptAndAttachSimdReadingsIfAbsent(

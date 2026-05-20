@@ -28,12 +28,7 @@ import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { useEffect, useRef, useState } from "react";
 import customDetectBot from "./customDetectBot.js";
 
-// The three solver components are dynamically imported on demand: each
-// captcha session uses exactly one solver type (image / puzzle / PoW),
-// decided server-side via the /frictionless response. Statically importing
-// all three pulled ~500KB of unused solver UI into the initial
-// captchaRenderer chunk; lazy-loading lets the initial bundle ship just
-// the orchestration code and downloads the chosen solver after detection.
+// Each session uses exactly one solver — chosen by the /frictionless response.
 const ProcaptchaLoader = async () =>
 	(await import("@prosopo/procaptcha-react")).Procaptcha;
 const ProcaptchaPuzzleLoader = async () =>

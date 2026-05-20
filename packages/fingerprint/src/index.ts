@@ -12,11 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Sources excluded from the visitorId hash. `webGlExtensions` walks every
-// supported WebGL extension and shader-precision combination, which can take
-// 1.5–2s on real GPUs and gates everything downstream of `getFingerprint()`
-// (account derivation → frictionless POST). The high-entropy part of WebGL
-// fingerprinting (vendor/UNMASKED_RENDERER) is in `webGlBasics`, which stays.
+// webGlExtensions walks every supported WebGL extension + shader-precision
+// combination, costing 1.5-2s on real GPUs. Dropped from the visitorId hash;
+// webGlBasics still covers vendor/UNMASKED_RENDERER.
 const EXCLUDED_SOURCES = ["webGlExtensions"] as const;
 
 const FingerprintJSImport = async () => import("@prosopo/fingerprintjs");
@@ -29,10 +27,8 @@ export const getFingerprint = async (): Promise<string> => {
 			const { sources, loadSources, hashComponents, prepareForSources } =
 				await FingerprintJSImport();
 			await prepareForSources();
-			// The sourceOptions object must structurally contain every property
-			// any source might read (some sources use `cache`, `domBlockers`
-			// uses `debug`, etc.). Mirrors fpjs's internal `BuiltinSourceOptions`
-			// — which isn't exported, so we declare the shape inline.
+			// Structural supertype of every per-source Options shape — fpjs's
+			// `BuiltinSourceOptions` isn't exported.
 			const sourceOptions: { cache: Record<string, unknown>; debug?: boolean } =
 				{
 					cache: {},
@@ -49,10 +45,6 @@ export const getFingerprint = async (): Promise<string> => {
 	return fingerprintCache;
 };
 
-/**
- * Pre-warms the fingerprint cache so getFingerprint() resolves immediately when called later.
- * Errors are silently ignored — getFingerprint() will retry on its next call.
- */
 export const prefetchFingerprint = (): void => {
 	getFingerprint().catch(() => {
 		fingerprintCache = null;

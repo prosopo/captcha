@@ -123,20 +123,12 @@ export class CryptoWorkerManager {
 	}
 
 	/**
-	 * Eagerly spin up the worker so the first runTask() call doesn't pay the
-	 * worker-spawn + script-parse cost. Fire-and-forget — failures are swallowed
-	 * because runTask() will retry initWorker() on demand anyway.
-	 *
-	 * The cryptoWorker bundle imports @prosopo/util-crypto and @noble/hashes,
-	 * which is a non-trivial parse on a cold worker thread (~500ms in the trace).
-	 * Without prewarm, that parse lands inside the first createAccount() call
-	 * and gates the frictionless POST. With prewarm, it overlaps with chunk
-	 * downloading and is hot by the time createAccount runs.
+	 * Eagerly spawn the worker so the first runTask() doesn't pay the
+	 * worker-spawn + module-parse cost. Failures are swallowed because
+	 * runTask() will reattempt initWorker() on demand.
 	 */
 	prewarm(): void {
-		this.initWorker().catch(() => {
-			// Non-fatal — runTask() will reattempt initWorker() on demand.
-		});
+		this.initWorker().catch(() => {});
 	}
 
 	/**

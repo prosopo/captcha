@@ -325,9 +325,6 @@ export class PowCaptchaManager extends CaptchaManager {
 					result,
 				}),
 			);
-			// First-hop-wins SIMD attach — if readings already arrived at
-			// frictionless or challenge-GET, this is a no-op. Decrypt via
-			// the obfuscated bundle before persisting.
 			if (simdReadings) {
 				writePromises.push(
 					this.decryptAndAttachSimdReadingsIfAbsent(

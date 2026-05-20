@@ -160,11 +160,6 @@ export default (
 				difficulty,
 			);
 
-			// Cache-first / Mongo-deferred SIMD attach. Hybrid-decrypt the
-			// readings via the obfuscated `decodeSimd.js` bundle before
-			// persisting — the wire format is opaque ciphertext so bot
-			// operators can't forge plausible timings by reading the public
-			// codec.
 			if (validSessionId && simdReadings) {
 				await tasks.frictionlessManager
 					.decryptAndAttachSimdReadingsIfAbsent(

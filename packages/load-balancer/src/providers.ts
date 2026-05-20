@@ -15,9 +15,7 @@
 import type { EnvironmentTypes, RandomProvider } from "@prosopo/types";
 import { type HardcodedProvider, loadBalancer } from "./index.js";
 
-// Keyed by environment so that a prefetch fired at module-load time with one
-// env (e.g. production) and a later call from a different env (e.g. staging)
-// don't share — they'd otherwise return wrong-environment providers.
+// Keyed by env so a prefetch and a later call with a different env don't share.
 const providerPromiseCache: Map<
 	EnvironmentTypes,
 	Promise<HardcodedProvider[]>
@@ -91,19 +89,14 @@ const loadProviders = async (
 	return loadBalancer(env);
 };
 
-/**
- * Get the cached promise for a given environment, or start a new fetch.
- * Caching the in-flight Promise (not just the resolved array) lets concurrent
- * callers — e.g. a module-load prefetch and the customDetectBot Promise.all —
- * share the same network request instead of racing.
- */
+// Caches the in-flight Promise (not the resolved array) so concurrent callers
+// share a single network request rather than racing.
 const getProvidersPromise = (
 	env: EnvironmentTypes,
 ): Promise<HardcodedProvider[]> => {
 	const existing = providerPromiseCache.get(env);
 	if (existing) return existing;
 	const promise = loadProviders(env).catch((err) => {
-		// On failure, clear the cached rejected promise so the next caller can retry.
 		providerPromiseCache.delete(env);
 		throw err;
 	});

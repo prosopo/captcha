@@ -48,6 +48,8 @@ import {
 } from "../api/blacklistRequestInspector.js";
 import { getIpAddressFromComposite } from "../compositeIpAddress.js";
 import type { RedisWriteQueue } from "../util/redisCache.js";
+import type { BehavioralDataResult } from "./detection/decodeBehavior.js";
+import type { SimdReadingsResult } from "./detection/decodeSimd.js";
 import { checkSpamEmail as checkSpamEmailFn } from "./spam/checkSpamEmail.js";
 import {
 	type TrafficCheckResult,
@@ -118,15 +120,8 @@ export class CaptchaManager {
 	}
 
 	/**
-	 * Hybrid-decrypt a wire-format SIMD readings ciphertext using the active
-	 * provider detector keys plus the global `BOT_DECRYPTION_KEY`, and strip
-	 * the throwaway `timestamp` field so what's returned matches the shape
-	 * we persist on the session record. Returns `undefined` when no key
-	 * decrypts the payload (malformed ciphertext, key rotation, etc.).
-	 *
-	 * Used directly by the image-submit path, which decodes once and then
-	 * attaches the same readings to several session writes. Other callers
-	 * should prefer `decryptAndAttachSimdReadingsIfAbsent` below.
+	 * Decrypt with the active detector keys and strip the throwaway
+	 * `timestamp` field. Returns `undefined` when no key decrypts.
 	 */
 	public async decryptSimdReadingsForAttach(
 		simdReadingsCiphertext: string,
@@ -144,16 +139,7 @@ export class CaptchaManager {
 		return readings;
 	}
 
-	/**
-	 * Decrypt + persist convenience: the three challenge-GET endpoints and
-	 * the PoW/Puzzle submit verifiers all share this exact sequence.
-	 * No-op on decrypt failure.
-	 *
-	 * Returns `void` and intentionally lets errors bubble — challenge-GET
-	 * callers attach a `.catch` with their own log context (e.g. "PoW
-	 * challenge" vs "puzzle challenge") so warnings remain attributable to
-	 * the endpoint.
-	 */
+	/** Decrypt + first-hop-wins attach. No-op on decrypt failure. */
 	public async decryptAndAttachSimdReadingsIfAbsent(
 		sessionId: string,
 		simdReadingsCiphertext: string,
@@ -450,7 +436,7 @@ export class CaptchaManager {
 	async decryptSimdReadings(
 		encryptedData: string,
 		decryptKeys: (string | undefined)[],
-	): Promise<import("./detection/decodeSimd.js").SimdReadingsResult | null> {
+	): Promise<SimdReadingsResult | null> {
 		const decryptSimdReadings = (await import("./detection/decodeSimd.js"))
 			.default;
 
@@ -487,9 +473,7 @@ export class CaptchaManager {
 	async decryptBehavioralData(
 		encryptedData: string,
 		decryptKeys: (string | undefined)[],
-	): Promise<
-		import("./detection/decodeBehavior.js").BehavioralDataResult | null
-	> {
+	): Promise<BehavioralDataResult | null> {
 		const decryptBehavioralData = (
 			await import("./detection/decodeBehavior.js")
 		).default;

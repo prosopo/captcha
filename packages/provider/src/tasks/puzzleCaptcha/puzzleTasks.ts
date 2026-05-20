@@ -323,9 +323,6 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				userSubmitted: true,
 				result,
 			});
-			// First-hop-wins SIMD attach — if readings already arrived at
-			// frictionless or challenge-GET, this is a no-op. Decrypt via
-			// the obfuscated bundle before persisting.
 			if (simdReadings) {
 				await this.decryptAndAttachSimdReadingsIfAbsent(
 					linkedSessionId,
