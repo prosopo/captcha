@@ -22,6 +22,7 @@ import {
 	type KeyringPair,
 	type ProsopoConfigOutput,
 	type RequestHeaders,
+	ResultReason,
 	type Session,
 	type SimdReadingsStage,
 	Tier,
@@ -272,7 +273,7 @@ export class CaptchaManager {
 			}));
 			return {
 				valid: false,
-				reason: "API.INCORRECT_CAPTCHA_TYPE",
+				reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
 				type: requestedCaptchaType,
 			};
 		}
@@ -317,7 +318,7 @@ export class CaptchaManager {
 				}
 				return {
 					valid: false,
-					reason: "CAPTCHA.NO_SESSION_FOUND",
+					reason: ResultReason.CAPTCHA_NO_SESSION_FOUND,
 					type: requestedCaptchaType,
 				};
 			}
@@ -368,7 +369,7 @@ export class CaptchaManager {
 				}));
 				return {
 					valid: false,
-					reason: "API.INCORRECT_CAPTCHA_TYPE",
+					reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
 					type: requestedCaptchaType,
 				};
 			}
@@ -404,7 +405,7 @@ export class CaptchaManager {
 			}));
 			return {
 				valid: false,
-				reason: "API.INCORRECT_CAPTCHA_TYPE",
+				reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
 				type: requestedCaptchaType,
 			};
 		}

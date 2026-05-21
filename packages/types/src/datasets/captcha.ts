@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { AccountId } from "@polkadot/types/interfaces/runtime";
-import type { TranslationKey } from "@prosopo/locale";
 import {
 	array,
 	custom,
@@ -25,6 +24,7 @@ import {
 	number as zNumber,
 	undefined as zUndefined,
 } from "zod";
+import type { ResultReason } from "../provider/reasons.js";
 
 export enum CaptchaTypes {
 	SelectAll = "SelectAll",
@@ -74,7 +74,7 @@ export interface Captcha extends CaptchaWithoutId {
 
 export interface CaptchaResult {
 	status: CaptchaStatus;
-	reason?: TranslationKey;
+	reason?: ResultReason;
 }
 
 export enum CaptchaStatus {

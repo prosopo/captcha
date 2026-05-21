@@ -14,7 +14,6 @@
 
 import { isHex } from "@polkadot/util/is";
 import { type Logger, ProsopoDBError } from "@prosopo/common";
-import type { TranslationKey } from "@prosopo/locale";
 import {
 	type RedisConnection,
 	connectToRedis,
@@ -43,6 +42,7 @@ import {
 	type PoWChallengeId,
 	type PuzzleCaptchaStored,
 	type RequestHeaders,
+	type ResultReason,
 	type ScheduledTaskNames,
 	type ScheduledTaskResult,
 	type ScheduledTaskStatus,
@@ -2015,7 +2015,7 @@ export class ProviderDatabase
 	 */
 	async disapproveDappUserCommitment(
 		commitmentId: string,
-		reason?: TranslationKey,
+		reason?: ResultReason,
 		coords?: [number, number][][],
 	): Promise<void> {
 		try {

@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { TranslationKey } from "@prosopo/locale";
 import {
 	type ZodType,
+	type ZodTypeDef,
 	any,
 	array,
 	bigint,
@@ -49,6 +49,7 @@ import type {
 } from "../decisionMachine/index.js";
 import type { PuzzleEvent, RequestHeaders } from "./api.js";
 import type { SimdReadings } from "./detection.js";
+import type { FrictionlessReason, ResultReason } from "./reasons.js";
 
 export interface BrowserInfo {
 	name: string;
@@ -137,7 +138,7 @@ export interface BehavioralDataPacked {
 export interface StoredCaptcha {
 	result: {
 		status: CaptchaStatus;
-		reason?: TranslationKey;
+		reason?: ResultReason;
 		error?: string;
 	};
 	requestedAtTimestamp: Date;
@@ -183,11 +184,19 @@ export interface UserCommitment extends StoredCaptcha {
 	deadlineTimestamp: Date;
 }
 
+// Runtime parsing stays permissive (`string().optional()`) because decision
+// machines are operator-authored JS — their `reason` is whatever string the
+// machine returns, including values that won't be in `ResultReason`. The
+// strict `ResultReason` type is preserved at the schema's output via
+// `.transform`, so callers still see the canonical enum on the TS surface
+// while old/foreign records still parse without throwing.
 const CaptchaResultSchema = object({
 	status: nativeEnum(CaptchaStatus),
-	reason: string().optional(), // Should be translation key but DecisionMachines submit random strings as reason, so we can't validate against TranslationKeysSchema here
+	reason: string()
+		.optional()
+		.transform((v) => v as ResultReason | undefined),
 	error: string().optional(),
-}) satisfies ZodType<CaptchaResult>;
+}) satisfies ZodType<CaptchaResult, ZodTypeDef, unknown>;
 
 // Zod schema for BehavioralDataPacked
 const BehavioralDataPackedSchema = object({
@@ -225,7 +234,7 @@ export const UserCommitmentSchema = object({
 	// Behavioral data fields
 	deviceCapability: string().optional(),
 	behavioralDataPacked: BehavioralDataPackedSchema.optional(),
-}) satisfies ZodType<UserCommitment>;
+}) satisfies ZodType<UserCommitment, ZodTypeDef, unknown>;
 
 // Zod schema for ScoreComponents
 export const ScoreComponentsSchema = object({
@@ -313,7 +322,13 @@ export const SessionSchema = object({
 	iFrame: boolean(),
 	decryptedHeadHash: string(),
 	siteKey: string().optional(),
-	reason: string().optional(),
+	// Selection reason: writes go through `FrictionlessReason`, but the
+	// schema accepts any string at runtime so old records (or unforeseen
+	// values) still parse. Output type is cast back to the enum so the
+	// TS surface stays strict.
+	reason: string()
+		.optional()
+		.transform((v) => v as FrictionlessReason | undefined),
 	blocked: boolean().optional(),
 	// Full ipinfo payload from ipInfoMiddleware at session-creation
 	// time. Replaces the flat `countryCode` / `geolocation` fields —
@@ -324,7 +339,11 @@ export const SessionSchema = object({
 	headers: object({}).catchall(string()),
 	result: object({
 		status: nativeEnum(CaptchaStatus),
-		reason: string().optional(),
+		// See the comment on `CaptchaResultSchema.reason`: permissive at
+		// runtime, cast back to `ResultReason` on the TS surface.
+		reason: string()
+			.optional()
+			.transform((v) => v as ResultReason | undefined),
 		error: string().optional(),
 	}).optional(),
 	userSubmitted: boolean().optional(),
@@ -336,7 +355,7 @@ export const SessionSchema = object({
 	// indicator reflects when the catcher's CPU fingerprint became
 	// available relative to the user's journey.
 	simdReadingsStage: SimdReadingsStageSchema.optional(),
-}) satisfies ZodType<Session>;
+}) satisfies ZodType<Session, ZodTypeDef, unknown>;
 
 // Session now includes all frictionless token fields
 export type Session = {
@@ -360,7 +379,7 @@ export type Session = {
 	iFrame: boolean;
 	decryptedHeadHash: string;
 	siteKey?: string;
-	reason?: string;
+	reason?: FrictionlessReason;
 	blocked?: boolean;
 	// Full ipinfo payload from ipInfoMiddleware at session-creation
 	// time. Replaces the flat `countryCode` / `geolocation` fields.
@@ -368,7 +387,7 @@ export type Session = {
 	headers?: RequestHeaders;
 	result?: {
 		status: CaptchaStatus;
-		reason?: TranslationKey;
+		reason?: ResultReason;
 		error?: string;
 	};
 	userSubmitted?: boolean;
@@ -415,7 +434,7 @@ export const PoWCaptchaStoredSchema = object({
 	clickEvents: array(object({}).catchall(any())).optional(),
 	deviceCapability: string().optional(),
 	behavioralDataPacked: BehavioralDataPackedSchema.optional(),
-}) satisfies ZodType<PoWCaptchaStored>;
+}) satisfies ZodType<PoWCaptchaStored, ZodTypeDef, unknown>;
 
 export type PendingImageCaptchaRequest = {
 	dappAccount: string;

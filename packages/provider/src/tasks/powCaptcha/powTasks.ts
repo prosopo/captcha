@@ -33,6 +33,7 @@ import {
 	type PoWCaptcha,
 	type PoWChallengeId,
 	type RequestHeaders,
+	ResultReason,
 	SimdReadingsStage,
 } from "@prosopo/types";
 import type {
@@ -188,7 +189,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		if (!verifyRecency(challenge, timeout)) {
 			const timeoutResult = {
 				status: CaptchaStatus.disapproved,
-				reason: "CAPTCHA.INVALID_TIMESTAMP" as const,
+				reason: ResultReason.CAPTCHA_INVALID_TIMESTAMP,
 			};
 			// Write pow record and session update in parallel
 			const writePromises: Promise<void>[] = [
@@ -219,7 +220,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		if (!correct) {
 			result = {
 				status: CaptchaStatus.disapproved,
-				reason: "CAPTCHA.INVALID_SOLUTION",
+				reason: ResultReason.CAPTCHA_INVALID_SOLUTION,
 			};
 		}
 
@@ -431,7 +432,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		if (!recent) {
 			failResult = {
 				status: CaptchaStatus.disapproved,
-				reason: "API.TIMESTAMP_TOO_OLD" as const,
+				reason: ResultReason.TIMESTAMP_TOO_OLD,
 			};
 			failReason = "API.TIMESTAMP_TOO_OLD";
 		}
@@ -462,7 +463,7 @@ export class PowCaptchaManager extends CaptchaManager {
 					}));
 					failResult = {
 						status: CaptchaStatus.disapproved,
-						reason: "API.ACCESS_POLICY_BLOCK" as const,
+						reason: ResultReason.ACCESS_POLICY_BLOCK,
 					};
 					failReason = "API.ACCESS_POLICY_BLOCK";
 				}
@@ -486,7 +487,7 @@ export class PowCaptchaManager extends CaptchaManager {
 					}));
 					failResult = {
 						status: CaptchaStatus.disapproved,
-						reason: "API.SPAM_EMAIL_DOMAIN",
+						reason: ResultReason.SPAM_EMAIL_DOMAIN,
 					};
 					failReason = "API.SPAM_EMAIL_DOMAIN";
 				}
@@ -513,7 +514,7 @@ export class PowCaptchaManager extends CaptchaManager {
 				}));
 				failResult = {
 					status: CaptchaStatus.disapproved,
-					reason: "API.SPAM_EMAIL_RULE",
+					reason: ResultReason.SPAM_EMAIL_RULE,
 				};
 				failReason = "API.SPAM_EMAIL_RULE";
 			}
@@ -577,7 +578,7 @@ export class PowCaptchaManager extends CaptchaManager {
 					}));
 					failResult = {
 						status: CaptchaStatus.disapproved,
-						reason: "API.FAILED_IP_VALIDATION" as const,
+						reason: ResultReason.FAILED_IP_VALIDATION,
 					};
 					failReason = "API.FAILED_IP_VALIDATION";
 				}
@@ -634,11 +635,17 @@ export class PowCaptchaManager extends CaptchaManager {
 						},
 					}));
 
+					// Decision machines are operator-authored JS — their `reason`
+					// is just `string | undefined`. Cast to `ResultReason` at the
+					// boundary so the strict types on `CaptchaResult` hold; the
+					// canonical fallback is used when the DM returns no reason.
+					const dmReason = (decision.reason ||
+						ResultReason.CAPTCHA_DECISION_MACHINE_DENIED) as ResultReason;
 					failResult = {
 						status: CaptchaStatus.disapproved,
-						reason: decision.reason || "CAPTCHA.DECISION_MACHINE_DENIED",
+						reason: dmReason,
 					};
-					failReason = decision.reason || "CAPTCHA.DECISION_MACHINE_DENIED";
+					failReason = dmReason;
 				} else {
 					this.logger.debug(() => ({
 						msg: "Decision machine allowed PoW captcha",

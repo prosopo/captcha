@@ -41,6 +41,7 @@ import {
 	type ProsopoCaptchaCountConfigSchemaOutput,
 	type ProsopoConfigOutput,
 	type RequestHeaders,
+	ResultReason,
 	SimdReadingsStage,
 	type UserCommitment,
 } from "@prosopo/types";
@@ -425,7 +426,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 							userSubmitted: true,
 							result: {
 								status: CaptchaStatus.disapproved,
-								reason: "CAPTCHA.INVALID_SOLUTION",
+								reason: ResultReason.CAPTCHA_INVALID_SOLUTION,
 							},
 						}),
 					);
@@ -486,7 +487,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 							userSubmitted: true,
 							result: {
 								status: CaptchaStatus.disapproved,
-								reason: "CAPTCHA.INVALID_SOLUTION",
+								reason: ResultReason.CAPTCHA_INVALID_SOLUTION,
 							},
 						}),
 					);
@@ -701,7 +702,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		// Instead of writing after each check, we collect all updates and
 		// perform a single batch write at the end.
 		const commitmentUpdates: Partial<UserCommitment> = {};
-		let failStatus: string | undefined;
+		let failStatus: ResultReason | undefined;
 
 		// Check user access policies for hard blocks
 		if (userAccessRulesStorage) {
@@ -726,9 +727,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 					}));
 					commitmentUpdates.result = {
 						status: CaptchaStatus.disapproved,
-						reason: "API.ACCESS_POLICY_BLOCK" as const,
+						reason: ResultReason.ACCESS_POLICY_BLOCK,
 					};
-					failStatus = "API.ACCESS_POLICY_BLOCK";
+					failStatus = ResultReason.ACCESS_POLICY_BLOCK;
 				}
 			} catch (error) {
 				this.logger.warn(() => ({
@@ -750,9 +751,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 					}));
 					commitmentUpdates.result = {
 						status: CaptchaStatus.disapproved,
-						reason: "API.SPAM_EMAIL_DOMAIN",
+						reason: ResultReason.SPAM_EMAIL_DOMAIN,
 					};
-					failStatus = "API.SPAM_EMAIL_DOMAIN";
+					failStatus = ResultReason.SPAM_EMAIL_DOMAIN;
 				}
 			} catch (error) {
 				this.logger.warn(() => ({
@@ -777,9 +778,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 				}));
 				commitmentUpdates.result = {
 					status: CaptchaStatus.disapproved,
-					reason: "API.SPAM_EMAIL_RULE",
+					reason: ResultReason.SPAM_EMAIL_RULE,
 				};
-				failStatus = "API.SPAM_EMAIL_RULE";
+				failStatus = ResultReason.SPAM_EMAIL_RULE;
 			}
 		}
 
@@ -837,14 +838,14 @@ export class ImgCaptchaManager extends CaptchaManager {
 							distanceKm: ipValidation.distanceKm,
 						},
 					}));
-					failStatus = "API.FAILED_IP_VALIDATION";
+					failStatus = ResultReason.FAILED_IP_VALIDATION;
 				}
 			}
 		}
 
 		let isApproved =
 			!failStatus && solution.result.status === CaptchaStatus.approved;
-		let failureStatus = failStatus || "API.USER_NOT_VERIFIED";
+		let failureStatus = failStatus || ResultReason.USER_NOT_VERIFIED;
 
 		// Solved-counter writes: fire-and-forget, only on successful image
 		// captcha verification (before any decision-machine veto runs). The
@@ -924,7 +925,11 @@ export class ImgCaptchaManager extends CaptchaManager {
 					this.logger,
 				);
 				if (decision.decision === DecisionMachineDecision.Deny) {
-					const dmReason = decision.reason || "CAPTCHA.DECISION_MACHINE_DENIED";
+					// Decision machines are operator-authored JS — their `reason`
+					// is just `string | undefined`. Cast to `ResultReason` at the
+					// boundary so the strict types on `CaptchaResult` hold.
+					const dmReason = (decision.reason ||
+						ResultReason.CAPTCHA_DECISION_MACHINE_DENIED) as ResultReason;
 					this.logger?.info(() => ({
 						msg: "Decision machine denied user verification",
 						data: {
@@ -1001,7 +1006,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		}
 
 		return {
-			status: isApproved ? "API.USER_VERIFIED" : failureStatus,
+			status: isApproved ? ResultReason.USER_VERIFIED : failureStatus,
 			verified: isApproved,
 			commitmentId: solution.id.toString(),
 			...(score && { score }),
