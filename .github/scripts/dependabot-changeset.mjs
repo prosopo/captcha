@@ -7,8 +7,8 @@
 // check does not require a changeset in those cases.
 
 import { execFileSync } from "node:child_process";
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 
 const baseRef = process.env.BASE_REF;
 const prNumber = process.env.PR_NUMBER;
@@ -18,8 +18,7 @@ if (!baseRef || !prNumber) {
 	throw new Error("BASE_REF and PR_NUMBER must be set");
 }
 
-const git = (...args) =>
-	execFileSync("git", args, { encoding: "utf8" }).trim();
+const git = (...args) => execFileSync("git", args, { encoding: "utf8" }).trim();
 
 // Files introduced by this PR relative to the merge base with the target branch.
 const changed = git(
