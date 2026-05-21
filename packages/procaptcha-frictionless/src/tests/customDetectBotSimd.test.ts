@@ -59,11 +59,16 @@ const baseConfig = {
 	mode: "frictionless" as const,
 } as unknown as Parameters<typeof customDetectBot>[0];
 
-const makeDetectionResult = (getSimdReadings?: (timeoutMs: number) => Promise<string | undefined>) => ({
+const makeDetectionResult = (
+	getSimdReadings?: (timeoutMs: number) => Promise<string | undefined>,
+) => ({
 	token: "TOKEN",
 	encryptHeadHash: "HASH",
 	userAccount: { account: { address: "5FakeUserAccountAddress" } },
-	provider: { provider: { url: "https://provider.test" }, providerAccount: "5Provider" },
+	provider: {
+		provider: { url: "https://provider.test" },
+		providerAccount: "5Provider",
+	},
 	getSimdReadings,
 	mouseTracker: undefined,
 	touchTracker: undefined,
@@ -121,9 +126,10 @@ describe("customDetectBot SIMD deferral", () => {
 
 	it("does not block the frictionless POST on a slow getSimdReadings", async () => {
 		let simdResolve!: (v: string) => void;
-		const getSimdReadings = vi.fn().mockImplementation(
-			() => new Promise<string>((r) => (simdResolve = r)),
-		);
+		const simdPromise = new Promise<string>((resolve) => {
+			simdResolve = resolve;
+		});
+		const getSimdReadings = vi.fn().mockReturnValue(simdPromise);
 		mocks.detect.mockResolvedValue(makeDetectionResult(getSimdReadings));
 
 		// If the POST awaited getSimdReadings, this would hang forever.
