@@ -1,5 +1,41 @@
 # @prosopo/procaptcha-bundle
 
+## 4.0.0
+### Major Changes
+
+- 8bb7286: Move `captchaType` from client (`data-captcha-type` / render-options prop)
+  to a server-side site-key setting; the bundle now calls `/frictionless`
+  for all flows. Renames the bundle's universal mount component from
+  `FrictionlessCaptcha` to `BundleCaptcha` to reflect that it is no longer
+  frictionless-specific — the server decides which concrete challenge type
+  to render.
+
+### Minor Changes
+
+- d865319: Add puzzle captcha (drag-to-target challenge) as a new captcha type:
+  provider endpoints, manager + widget package, types, demo pages, and
+  a `puzzleTolerance` site setting.
+
+### Patch Changes
+
+- Updated dependencies [3c0be68]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [d865319]
+- Updated dependencies [753304b]
+- Updated dependencies [8bb7286]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [5f1ae53]
+  - @prosopo/types@4.0.0
+  - @prosopo/procaptcha-frictionless@2.9.0
+  - @prosopo/locale@3.2.2
+  - @prosopo/util@3.2.12
+  - @prosopo/widget-skeleton@2.8.2
+  - @prosopo/procaptcha-common@2.10.6
+  - @prosopo/dotenv@3.0.39
+
 ## 3.3.31
 ### Patch Changes
 

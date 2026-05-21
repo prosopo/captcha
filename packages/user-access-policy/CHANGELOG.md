@@ -1,5 +1,42 @@
 # @prosopo/user-access-policy
 
+## 3.7.2
+### Patch Changes
+
+- 72a0483: User Access Policy (UAP) rule endpoints now use the per-request logger
+  passed by the express adapter, instead of the long-lived app logger
+  captured at construction time. This means every "Endpoint inserted access
+  rules" / "Endpoint fetched rules" / "Endpoint deleted rules" / etc. log
+  line now carries `requestId`, `siteKey`, and `user`, matching the rest of
+  the provider API and making the logs queryable per-request in OpenObserve.
+  
+  Each `processRequest(args, logger?)` resolves to the request logger when
+  present and falls back to `this.logger` otherwise, preserving behaviour
+  when called directly (e.g. from a script or unit test that doesn't pass
+  a logger). The express adapter at
+  `api-express-router/.../apiExpressDefaultEndpointAdapter.ts` already
+  passes `request.logger` — no router-level changes needed.
+  
+  Touched endpoints (all under `packages/user-access-policy/src/api/`):
+  `InsertRulesEndpoint`, `RehashRulesEndpoint`, `FetchRulesEndpoint`,
+  `FindRuleIdsEndpoint`, `GetMissingIdsEndpoint`, `DeleteRulesEndpoint`,
+  `DeleteAllRulesEndpoint`, `DeleteRuleGroupsEndpoint`.
+- Updated dependencies [3c0be68]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [d865319]
+- Updated dependencies [753304b]
+- Updated dependencies [8bb7286]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [4993813]
+  - @prosopo/types@4.0.0
+  - @prosopo/api@3.4.0
+  - @prosopo/util@3.2.12
+  - @prosopo/common@3.1.34
+  - @prosopo/api-route@2.6.42
+  - @prosopo/redis-client@1.0.19
+
 ## 3.7.1
 ### Patch Changes
 

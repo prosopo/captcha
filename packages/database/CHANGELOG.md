@@ -1,5 +1,96 @@
 # @prosopo/database
 
+## 3.12.0
+### Minor Changes
+
+- d865319: Add puzzle captcha (drag-to-target challenge) as a new captcha type:
+  provider endpoints, manager + widget package, types, demo pages, and
+  a `puzzleTolerance` site setting.
+
+### Patch Changes
+
+- f9ea09d: Stop re-looking up the IP in `checkTrafficFilter` — read `record.ipInfo` instead
+  
+  Now that every captcha record carries the full `IPInfoResponse` (written by `ipInfoMiddleware` at request time), `checkTrafficFilter` no longer needs to call `ipInfoService.lookup(ip)` on the verify path. The function takes an `IPInfoResponse | undefined` directly and is no longer async — one fewer sidecar round-trip per verify call.
+  
+  - `checkTrafficFilter(ip, trafficFilter, ipInfoService, logger)` → `checkTrafficFilter(ipInfo, trafficFilter)`.
+  - `serverVerifyPowCaptchaSolution`, `verifyImageCaptchaSolution`, and `serverVerifyPuzzleCaptchaSolution` (newly given a `trafficFilter` parameter to bring it to parity with the other two) read `challengeRecord.ipInfo` / `solution.ipInfo` by default, and only do a fresh `env.ipInfoService.lookup(ip)` when the dapp passed up the end user's current IP via the verify call — that's the "now" IP for filtering, and may differ from the IP that originally requested the captcha.
+  - Existing unit tests (`checkTrafficFilter.unit.test.ts`) updated to the new shape; new MongoMemory roundtrip tests in `packages/database/src/tests/integration/ipInfoPersistence.integration.test.ts` prove the three captcha schemas (PoW / Puzzle / UserCommitment) actually persist + retrieve a full IPInfoResponse, and that the `{ ipInfo: { $exists: false } }` backfill query matches records missing the field.
+  
+  Paired with [captcha-private#3339](https://github.com/prosopo/captcha-private/pull/3339).
+- f9ea09d: Drop flat ipinfo fields (`vpn`, `countryCode`, `tor`, `proxy`, `datacenter`, `abuser`, `geolocation`) from captcha records — persist the full `IPInfoResponse` payload as `ipInfo` instead
+  
+  The provider's `ipInfoMiddleware` already calls `ipInfoService.lookup()` on every captcha request and attaches the result to `req.ipInfo`. Persisting that whole payload on every captcha record means the portal sees the *exact* response the traffic filter consulted, with no cherry-picked-field translation layer in between. Adding a new flag in the future (e.g. `isMobile`) requires zero schema changes — it's already in the payload.
+  
+  - `StoredCaptcha` interface: removed `vpn`, `countryCode`, `geolocation`. Keeps `ipInfo?: IPInfoResponse`.
+  - `PoWCaptchaStoredSchema` zod validator: same removals, adds `ipInfo` (validated as `any()` since `IPInfoResponse` is a discriminated union narrowed at read time).
+  - PoW, Puzzle, UserCommitment mongoose schemas in `@prosopo/types-database`: same removals. UserCommitment now also has `ipInfo` (previously only PoW + Puzzle did). Replaced `{ countryCode: 1 }` index with `{ "ipInfo.countryCode": 1 }` + `{ "ipInfo.isVPN": 1 }`.
+  - `IProviderDatabase` interface: `storePowCaptchaRecord` / `storePuzzleCaptchaRecord` / `storePendingImageCommitment` now take `ipInfo?: IPInfoResponse` in place of `countryCode?: string`.
+  - Provider call sites (`getPoWCaptchaChallenge.ts`, `getPuzzleCaptchaChallenge.ts`, `getImageCaptchaChallenge.ts`, `submitImageCaptchaSolution.ts`) pass `req.ipInfo` directly. The earlier "prefer session.countryCode, fallback to req's countryCode" branching is gone — record `ipInfo` reflects what was true at challenge-issuance time.
+  - Provider read sites (`powTasks.ts`, `puzzleTasks.ts`, `imgCaptchaTasks.ts`) narrow `record.ipInfo?.isValid` then read `.countryCode` for access-policy / decision-machine input — same effective value, derived from the persisted payload.
+  - Lean projections in `provider.ts` switched from `countryCode: 1` to `ipInfo: 1`.
+  
+  Paired with [captcha-private#3339](https://github.com/prosopo/captcha-private/pull/3339), which updates the CHECK_IP_INFO backfill job (now writes the full payload, query becomes `{ ipInfo: { $exists: false } }`), the portal search models / aggregation pipeline (read nested `ipInfo.*`), and the anomaly detectors.
+- 4aae4e6: Plumb the WASM SIMD CPU fingerprint readings (collected by the catcher
+  client per https://blog.azerpas.com/writing/wasm-simd-fingerprinting/)
+  through the captcha flow and onto the linked `Session` record.
+  Collection-only — no scoring or classification yet.
+  
+  The readings are sent at the earliest moment they're available so the
+  signal lands on the session as soon as possible:
+  
+  1. **Captcha-challenge GET** (PoW / Puzzle / Image) — the procaptcha
+     Manager calls `frictionlessState.getSimdReadings(0)` (non-blocking
+     cache check) and attaches it to the challenge-request body. The
+     provider handler decodes and patches the linked session via
+     `updateSessionRecord`.
+  2. **Solution submission** (PoW / Puzzle / Image) — same non-blocking
+     check on the submit body. Acts as a backup if the benchmark wasn't
+     ready in time for the challenge GET.
+  
+  Frictionless init itself stays SIMD-free (benchmark is too slow to gate
+  the first hop).
+  
+  Surface area:
+  
+  - `SimdReadings` discriminated union + `SimdOpReadingRecord` /
+    `SimdOpCategory` in `@prosopo/types`, plus `simdReadingsCodec` shared
+    encode/decode helpers so the browser SDK and the provider use the same
+    pipe-safe wire format.
+  - Optional `simdReadings: string()` on `CaptchaRequestBody`,
+    `GetPowCaptchaChallengeRequestBody`, `GetPuzzleCaptchaChallengeRequestBody`,
+    `CaptchaSolutionBody`, `SubmitPowCaptchaSolutionBody`, and
+    `SubmitPuzzleCaptchaSolutionBody`.
+  - `FrictionlessState.getSimdReadings` + `BotDetectionFunctionResult.getSimdReadings`
+    so the catcher's prefetched benchmark is consumed at the request sites.
+  - `ProcaptchaApiInterface.{getCaptchaChallenge, submitCaptchaSolution}` and
+    the `ProviderApi.{getCaptchaChallenge, getPowCaptchaChallenge, getPuzzleCaptchaChallenge,
+    submitCaptchaSolution, submitPowCaptchaSolution, submitPuzzleCaptchaSolution}`
+    client methods accept the field.
+  - Provider challenge + solution handlers decode via `decodeSimdReadings`
+    and `updateSessionRecord` (Mongoose `Mixed`, Zod discriminated-union
+    validation at the edge). The challenge-GET patch is fire-and-forget.
+  
+  Backward-compatible: older catcher clients omit the field at every layer;
+  the session record omits it in turn.
+- Updated dependencies [3c0be68]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [d865319]
+- Updated dependencies [753304b]
+- Updated dependencies [8bb7286]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [4993813]
+- Updated dependencies [72a0483]
+  - @prosopo/types@4.0.0
+  - @prosopo/types-database@4.7.0
+  - @prosopo/locale@3.2.2
+  - @prosopo/util@3.2.12
+  - @prosopo/common@3.1.34
+  - @prosopo/user-access-policy@3.7.2
+  - @prosopo/redis-client@1.0.19
+
 ## 3.11.0
 ### Minor Changes
 

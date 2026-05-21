@@ -29,8 +29,11 @@ import {
 	ClientApiPaths,
 	ClientSettingsSchema,
 	DatabaseTypes,
+	type ImageVerificationResponse,
 	ProsopoConfigSchema,
 	Tier,
+	type VerifySolutionBodyTypeInput,
+	encodeProcaptchaOutput,
 } from "@prosopo/types";
 import { embedData } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
@@ -705,6 +708,163 @@ describe("Image Captcha Integration Tests", () => {
 			expect(res.status).toBe(
 				"You answered one or more captchas incorrectly. Please try again",
 			);
+		});
+
+		it("should disapprove a correct solution submitted after the time limit, and the dapp should verify the challenge as disapproved", async () => {
+			const pair = getPair(dummyUserAccount.seed, undefined, "sr25519", 42);
+			const userAccount = dummyUserAccount.address;
+			const origin = "https://localhost";
+
+			// Get an image captcha challenge using the site key registered in beforeEach
+			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
+			const getImgCaptchaBody: CaptchaRequestBodyType = {
+				[ApiParams.dapp]: dappAccount,
+				[ApiParams.user]: userAccount,
+				[ApiParams.datasetId]: solutions.datasetId,
+			};
+			const response = await fetch(getImageCaptchaURL, {
+				method: "POST",
+				body: JSON.stringify(getImgCaptchaBody),
+				headers: {
+					"Content-Type": "application/json",
+					Origin: origin,
+					"Prosopo-Site-Key": dappAccount,
+					"Prosopo-User": userAccount,
+				},
+			});
+
+			expect(response.status).toBe(200);
+
+			const data = (await response.json()) as CaptchaResponseBody;
+
+			// Force the solution time limit to be exceeded by pushing the stored
+			// deadline for this pending commitment into the past, so the subsequent
+			// (correct) solution is treated as submitted too late. This avoids having
+			// to actually wait out the real timeout. Mirrors the expired-deadline
+			// setup in imgCaptchaTasks.unit.test.ts.
+			const expireResult = await env
+				.getDb()
+				.getTables()
+				.commitment.updateOne(
+					{ requestHash: data.requestHash, pending: true },
+					{ $set: { deadlineTimestamp: new Date(Date.now() - 60 * 1000) } },
+				);
+			expect(expireResult.modifiedCount).toBe(1);
+
+			// Build the CORRECT solution for the returned challenge
+			const solutionMap = new Map<string, string[]>(
+				(builtDataset.captchas as Captcha[])
+					.filter((captcha) => captcha.solution)
+					.map((captcha) => [
+						captcha.captchaContentId,
+						captcha.solution?.map((s) => s.toString()) ?? [],
+					]),
+			);
+
+			const temp = data.captchas.map((captcha, index) => {
+				const solution = solutionMap.get(captcha.captchaContentId);
+				if (!solution) {
+					throw new Error(
+						`Solution not found for captchaContentId: ${captcha.captchaContentId}`,
+					);
+				}
+
+				return {
+					captchaContentId: captcha.captchaContentId,
+					captchaId: captcha.captchaId,
+					salt: embedData(randomAsHex(), [
+						1 + index,
+						2 + index,
+						3 + index,
+						4 + index,
+					]),
+					solution: solution,
+				};
+			});
+
+			const solveImgCaptchaBody: CaptchaSolutionBodyType = {
+				[ApiParams.captchas]: temp,
+				[ApiParams.dapp]: dappAccount,
+				[ApiParams.requestHash]: data.requestHash,
+				[ApiParams.signature]: {
+					[ApiParams.user]: {
+						[ApiParams.timestamp]: u8aToHex(
+							pair.sign(stringToU8a(data.timestamp)),
+						),
+					},
+					[ApiParams.provider]: data[ApiParams.signature][ApiParams.provider],
+				},
+				[ApiParams.timestamp]: data.timestamp,
+				[ApiParams.user]: userAccount,
+			};
+
+			const solveThatCaptcha = await fetch(
+				`${baseUrl}${ClientApiPaths.SubmitImageCaptchaSolution}`,
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						Origin: origin,
+						"Prosopo-Site-Key": dappAccount,
+						"Prosopo-User": userAccount,
+					},
+					body: JSON.stringify(solveImgCaptchaBody),
+				},
+			);
+
+			expect(solveThatCaptcha.status).toBe(200);
+
+			const solutionResult =
+				(await solveThatCaptcha.json()) as CaptchaSolutionResponse;
+
+			// The provider disapproves the correct solution because the time limit
+			// has been exceeded.
+			expect(solutionResult.verified).toBe(false);
+			expect(solutionResult.status).toBe(
+				"You answered one or more captchas incorrectly. Please try again",
+			);
+
+			// The dapp verifies the challenge and is told it is disapproved: no
+			// approved commitment was stored for this user/site key.
+			const dappPair = getPair(mnemonic);
+			const verifyTimestamp = Date.now().toString();
+			const token = encodeProcaptchaOutput({
+				[ApiParams.dapp]: dappAccount,
+				[ApiParams.user]: userAccount,
+				[ApiParams.timestamp]: verifyTimestamp,
+				[ApiParams.signature]: {
+					[ApiParams.provider]: {},
+					[ApiParams.user]: {},
+				},
+			});
+			const dappSignature = u8aToHex(
+				dappPair.sign(stringToU8a(verifyTimestamp)),
+			);
+
+			const verifyBody: VerifySolutionBodyTypeInput = {
+				[ApiParams.token]: token,
+				[ApiParams.dappSignature]: dappSignature,
+			};
+
+			const verifyResponse = await fetch(
+				`${baseUrl}${ClientApiPaths.VerifyImageCaptchaSolutionDapp}`,
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						Origin: origin,
+						"Prosopo-Site-Key": dappAccount,
+						"Prosopo-User": userAccount,
+					},
+					body: JSON.stringify(verifyBody),
+				},
+			);
+
+			expect(verifyResponse.status).toBe(200);
+
+			const verifyResult =
+				(await verifyResponse.json()) as ImageVerificationResponse;
+			expect(verifyResult.verified).toBe(false);
 		});
 	});
 });

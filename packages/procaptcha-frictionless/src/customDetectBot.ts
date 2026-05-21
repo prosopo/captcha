@@ -101,26 +101,26 @@ const customDetectBot: BotDetectionFunction = async (
 		config.account.address,
 	);
 
-	// Non-blocking SIMD-readings check: only attach if the catcher's
-	// prefetched WASM benchmark has already resolved. If not ready by this
-	// initial frictionless hop, it'll be re-attempted on the captcha
-	// challenge GET and again on solution submit.
-	const simdReadingsOnFrictionless = detectionResult.getSimdReadings
-		? await detectionResult.getSimdReadings(0)
-		: undefined;
-
-	// Get frictionless captcha with timeout
-	const captcha = await withTimeout(
-		providerApi.getFrictionlessCaptcha(
-			detectionResult.token,
-			detectionResult.encryptHeadHash,
-			config.account.address,
-			userAccount.account.address,
-			config.mode,
-			simdReadingsOnFrictionless,
-		),
-		10000, // 10 second timeout
+	// SIMD readings deliberately omitted from the frictionless hop. The WASM
+	// benchmark is a CPU-bound loop that contends with BotScoreWorker if it
+	// runs during detection; deferring it until after the POST is in flight
+	// lets it complete in the worker thread while the network round-trip
+	// burns. Readings still attach on the challenge GET and on solution
+	// submit (first-hop-wins server-side).
+	const captchaPromise = providerApi.getFrictionlessCaptcha(
+		detectionResult.token,
+		detectionResult.encryptHeadHash,
+		config.account.address,
+		userAccount.account.address,
+		config.mode,
+		undefined,
 	);
+	if (detectionResult.getSimdReadings) {
+		// Fire-and-forget: triggers the memoised prefetch inside the catcher
+		// so the next hop sees a hot benchmark. We never await the result here.
+		void detectionResult.getSimdReadings(60_000).catch(() => undefined);
+	}
+	const captcha = await withTimeout(captchaPromise, 10000);
 
 	return {
 		captchaType: captcha.captchaType,

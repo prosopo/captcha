@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Imports remain correct, assuming the declaration file is set up
-import CryptoWorkerConstructor from "./cryptoWorker.ts?worker&inline";
+import CryptoWorkerConstructor from "./cryptoWorker.js?worker&inline";
 
 interface CryptoWorkerMessage {
 	taskId: string;

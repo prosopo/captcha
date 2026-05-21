@@ -1,5 +1,119 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.9.0
+### Minor Changes
+
+- d865319: Add puzzle captcha (drag-to-target challenge) as a new captcha type:
+  provider endpoints, manager + widget package, types, demo pages, and
+  a `puzzleTolerance` site setting.
+
+### Patch Changes
+
+- 4aae4e6: Pull the frictionless POST critical path down by ~340ms on the test
+  hardware via four focused changes:
+  
+  - **Inline Signer.** `@polkadot/extension-base/page/Signer` is now a
+    static import in `ExtensionWeb2`. It's 0.5KB on disk but its dynamic
+    import was costing ~190ms of network round-trip; inlining removes
+    one separate chunk fetch + parse from the critical path.
+  
+  - **Pre-warm the CryptoWorker.** `CryptoWorkerManager` gains a public
+    `prewarm()` that actually spawns the Worker and lets its script
+    parse during chunk-load time. Previously the call at module load
+    only instantiated the manager class; the worker itself spun up
+    lazily on the first `runTask`, putting the ~500ms worker module-eval
+    inside the first `createAccount()` call. Now it overlaps with chunk
+    loading and is hot by the time it's needed.
+  
+  - **Prefetch providers at module load with an env-keyed cache.**
+    `prefetchProviders` and `getRandomActiveProvider` share an in-flight
+    `Promise<HardcodedProvider[]>` keyed by environment, so a module-load
+    prefetch and the later `customDetectBot` Promise.all reuse the same
+    network call. `procaptcha-frictionless` triggers the prefetch from
+    module-import time using `PROSOPO_DEFAULT_ENVIRONMENT` (browser-safe
+    `typeof process` guard + `EnvironmentTypesSchema.safeParse`), so the
+    HTTP fetch overlaps with chunk download instead of running as part
+    of the detection Promise.all.
+  
+  - **Lazy-load the three captcha solvers.** `ProcaptchaFrictionless`
+    no longer statically imports `Procaptcha`, `ProcaptchaPuzzle`, and
+    `ProcaptchaPow`; each is `await import(...)` at the point the
+    frictionless response picks a type. Two of the three wrappers used
+    to be dead weight in the initial bundle; now only the chosen solver
+    is downloaded, after the frictionless POST has fired. Pulls ~64KB
+    of solver UI (chosen wrapper + Emotion dev runtime + builder + lazy
+    shim) out of the initial captchaRenderer chunk.
+  
+  Combined with the earlier worker-related changes, the frictionless POST
+  on the puzzle-implicit test page is now ~1290ms vs ~1630ms before this
+  batch, and ~6500ms in the original baseline. The remaining floor is
+  dominated by the BotScoreWorker's obfuscated bundle parse + run.
+- 4aae4e6: Plumb the WASM SIMD CPU fingerprint readings (collected by the catcher
+  client per https://blog.azerpas.com/writing/wasm-simd-fingerprinting/)
+  through the captcha flow and onto the linked `Session` record.
+  Collection-only — no scoring or classification yet.
+  
+  The readings are sent at the earliest moment they're available so the
+  signal lands on the session as soon as possible:
+  
+  1. **Captcha-challenge GET** (PoW / Puzzle / Image) — the procaptcha
+     Manager calls `frictionlessState.getSimdReadings(0)` (non-blocking
+     cache check) and attaches it to the challenge-request body. The
+     provider handler decodes and patches the linked session via
+     `updateSessionRecord`.
+  2. **Solution submission** (PoW / Puzzle / Image) — same non-blocking
+     check on the submit body. Acts as a backup if the benchmark wasn't
+     ready in time for the challenge GET.
+  
+  Frictionless init itself stays SIMD-free (benchmark is too slow to gate
+  the first hop).
+  
+  Surface area:
+  
+  - `SimdReadings` discriminated union + `SimdOpReadingRecord` /
+    `SimdOpCategory` in `@prosopo/types`, plus `simdReadingsCodec` shared
+    encode/decode helpers so the browser SDK and the provider use the same
+    pipe-safe wire format.
+  - Optional `simdReadings: string()` on `CaptchaRequestBody`,
+    `GetPowCaptchaChallengeRequestBody`, `GetPuzzleCaptchaChallengeRequestBody`,
+    `CaptchaSolutionBody`, `SubmitPowCaptchaSolutionBody`, and
+    `SubmitPuzzleCaptchaSolutionBody`.
+  - `FrictionlessState.getSimdReadings` + `BotDetectionFunctionResult.getSimdReadings`
+    so the catcher's prefetched benchmark is consumed at the request sites.
+  - `ProcaptchaApiInterface.{getCaptchaChallenge, submitCaptchaSolution}` and
+    the `ProviderApi.{getCaptchaChallenge, getPowCaptchaChallenge, getPuzzleCaptchaChallenge,
+    submitCaptchaSolution, submitPowCaptchaSolution, submitPuzzleCaptchaSolution}`
+    client methods accept the field.
+  - Provider challenge + solution handlers decode via `decodeSimdReadings`
+    and `updateSessionRecord` (Mongoose `Mixed`, Zod discriminated-union
+    validation at the edge). The challenge-GET patch is fire-and-forget.
+  
+  Backward-compatible: older catcher clients omit the field at every layer;
+  the session record omits it in turn.
+- Updated dependencies [3c0be68]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [d865319]
+- Updated dependencies [273926d]
+- Updated dependencies [753304b]
+- Updated dependencies [8bb7286]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [4993813]
+- Updated dependencies [5f1ae53]
+  - @prosopo/types@4.0.0
+  - @prosopo/api@3.4.0
+  - @prosopo/load-balancer@2.9.1
+  - @prosopo/locale@3.2.2
+  - @prosopo/procaptcha-puzzle@2.9.0
+  - @prosopo/procaptcha-pow@2.8.56
+  - @prosopo/common@3.1.34
+  - @prosopo/widget-skeleton@2.8.2
+  - @prosopo/detector@3.4.28
+  - @prosopo/procaptcha-common@2.10.6
+  - @prosopo/procaptcha-react@2.9.55
+
 ## 2.8.62
 ### Patch Changes
 
