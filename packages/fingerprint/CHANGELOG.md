@@ -1,5 +1,15 @@
 # @prosopo/fingerprint
 
+## 2.6.31
+### Patch Changes
+
+- 642d064: Bump `@prosopo/fingerprintjs` to 5.2.0 to mirror the upstream v5.2.0
+  release brought into the fork by the earlier upstream merge. Also
+  aligns the fork's `@prosopo/config` devDependency with the workspace
+  pin (3.3.0 → 3.3.1).
+- Updated dependencies [642d064]
+  - @prosopo/fingerprintjs@5.3.0
+
 ## 2.6.30
 ### Patch Changes
 
