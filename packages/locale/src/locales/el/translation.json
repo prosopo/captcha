@@ -373,7 +373,8 @@
 		"I_AM_HUMAN": "Είμαι άνθρωπος",
 		"NO_ACCOUNTS_FOUND": "Δεν βρέθηκαν λογαριασμοί",
 		"ACCOUNT_NOT_FOUND": "Δεν βρέθηκε λογαριασμός",
-		"NO_EXTENSION_FOUND": "Δε βρέθηκε επέκταση"
+		"NO_EXTENSION_FOUND": "Δε βρέθηκε επέκταση",
+		"INSECURE_CONTEXT": "Το Procaptcha απαιτεί ασφαλή σύνδεση (HTTPS)"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Αποτυχία κωδικοποίησης μη έγκυρης διεύθυνσης",

@@ -373,7 +373,8 @@
 		"I_AM_HUMAN": "ฉันเป็นมนุษย์",
 		"NO_ACCOUNTS_FOUND": "ไม่พบบัญชี",
 		"ACCOUNT_NOT_FOUND": "ไม่พบบัญชี",
-		"NO_EXTENSION_FOUND": "ไม่พบส่วนขยาย"
+		"NO_EXTENSION_FOUND": "ไม่พบส่วนขยาย",
+		"INSECURE_CONTEXT": "Procaptcha ต้องใช้การเชื่อมต่อที่ปลอดภัย (HTTPS)"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "ล้มเหลวในการเข้ารหัสที่อยู่ไม่ถูกต้อง",

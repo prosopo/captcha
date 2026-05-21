@@ -373,7 +373,8 @@
 		"I_AM_HUMAN": "म मनषय ह",
 		"NO_ACCOUNTS_FOUND": "कई खत नह मल",
 		"ACCOUNT_NOT_FOUND": "खत नह मल",
-		"NO_EXTENSION_FOUND": "कई एकसटशन नह मल"
+		"NO_EXTENSION_FOUND": "कई एकसटशन नह मल",
+		"INSECURE_CONTEXT": "Procaptcha के लिए सुरक्षित (HTTPS) कनेक्शन आवश्यक है"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "अवध पत क एनकड करन म वफल रह",

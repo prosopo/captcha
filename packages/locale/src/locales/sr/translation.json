@@ -373,7 +373,8 @@
 		"I_AM_HUMAN": "Ја сам човек",
 		"NO_ACCOUNTS_FOUND": "Нису пронађени налози",
 		"ACCOUNT_NOT_FOUND": "Н��лог није пронађен",
-		"NO_EXTENSION_FOUND": "Нису пронађене екстензије"
+		"NO_EXTENSION_FOUND": "Нису пронађене екстензије",
+		"INSECURE_CONTEXT": "Procaptcha захтева безбедну (HTTPS) везу"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Немогуће кодирање неважеће адресе",

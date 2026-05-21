@@ -74,7 +74,8 @@
 		"I_AM_HUMAN": "Ich bin ein Mensch",
 		"NO_ACCOUNTS_FOUND": "Keine Konten gefunden",
 		"ACCOUNT_NOT_FOUND": "Konto nicht gefunden",
-		"NO_EXTENSION_FOUND": "Keine Erweiterung gefunden"
+		"NO_EXTENSION_FOUND": "Keine Erweiterung gefunden",
+		"INSECURE_CONTEXT": "Procaptcha erfordert eine sichere (HTTPS-)Verbindung"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Ungültige Adresse konnte nicht codiert werden",

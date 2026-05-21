@@ -373,7 +373,8 @@
 		"I_AM_HUMAN": "Ik ben een mens",
 		"NO_ACCOUNTS_FOUND": "Geen accounts gevonden",
 		"ACCOUNT_NOT_FOUND": "Account niet gevonden",
-		"NO_EXTENSION_FOUND": "Geen extensie gevonden"
+		"NO_EXTENSION_FOUND": "Geen extensie gevonden",
+		"INSECURE_CONTEXT": "Procaptcha vereist een beveiligde (HTTPS-)verbinding"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Mislukt om ongeldig adres te coderen",
