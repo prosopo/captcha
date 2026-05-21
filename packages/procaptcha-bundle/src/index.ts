@@ -20,7 +20,10 @@ import { extractParams, getProcaptchaScript } from "./util/config.js";
 import { WidgetFactory } from "./util/widgetFactory.js";
 import { WidgetThemeResolver } from "./util/widgetThemeResolver.js";
 
-const BUNDLE_NAME = "procaptcha.bundle.js";
+const BUNDLE_NAMES = [
+	"procaptcha.bundle.iife.js",
+	"procaptcha.bundle.js",
+];
 let procaptchaRoots: Root[] = [];
 
 const widgetFactory = new WidgetFactory(new WidgetThemeResolver());
@@ -204,12 +207,12 @@ declare global {
 const start = () => {
 	// onLoadUrlCallback defines the name of the callback function to be called when the script is loaded
 	// onRenderExplicit takes values of either explicit or implicit
-	const { onloadUrlCallback, renderExplicit } = extractParams(BUNDLE_NAME);
+	const { onloadUrlCallback, renderExplicit } = extractParams(BUNDLE_NAMES);
 	let readyCalled = false;
 
 	// Render the Procaptcha component implicitly if renderExplicit is not set to explicit
 	if (renderExplicit !== "explicit") {
-		getProcaptchaScript(BUNDLE_NAME)?.addEventListener("load", () => {
+		getProcaptchaScript(BUNDLE_NAMES)?.addEventListener("load", () => {
 			ready(implicitRender);
 			readyCalled = true;
 		});
@@ -221,7 +224,7 @@ const start = () => {
 
 	if (onloadUrlCallback) {
 		// Add event listener to the script tag to call the callback function when the script is loaded
-		getProcaptchaScript(BUNDLE_NAME)?.addEventListener("load", () => {
+		getProcaptchaScript(BUNDLE_NAMES)?.addEventListener("load", () => {
 			const onloadCallback = getWindowCallback(onloadUrlCallback);
 			ready(onloadCallback);
 		});
