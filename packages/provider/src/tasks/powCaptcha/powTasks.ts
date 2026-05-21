@@ -635,11 +635,17 @@ export class PowCaptchaManager extends CaptchaManager {
 						},
 					}));
 
+					// Decision machines are operator-authored JS — their `reason`
+					// is just `string | undefined`. Cast to `ResultReason` at the
+					// boundary so the strict types on `CaptchaResult` hold; the
+					// canonical fallback is used when the DM returns no reason.
+					const dmReason = (decision.reason ||
+						ResultReason.CAPTCHA_DECISION_MACHINE_DENIED) as ResultReason;
 					failResult = {
 						status: CaptchaStatus.disapproved,
-						reason: decision.reason || "CAPTCHA.DECISION_MACHINE_DENIED",
+						reason: dmReason,
 					};
-					failReason = decision.reason || "CAPTCHA.DECISION_MACHINE_DENIED";
+					failReason = dmReason;
 				} else {
 					this.logger.debug(() => ({
 						msg: "Decision machine allowed PoW captcha",

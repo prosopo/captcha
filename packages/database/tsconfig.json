@@ -28,9 +28,6 @@
 			"path": "../user-access-policy"
 		},
 		{
-			"path": "../locale"
-		},
-		{
 			"path": "../redis-client"
 		},
 		{

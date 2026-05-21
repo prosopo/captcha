@@ -629,9 +629,13 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 					},
 				}));
 
+				// Decision machines are operator-authored JS — their `reason`
+				// is just `string | undefined`. Cast to `ResultReason` at the
+				// boundary so the strict types on `CaptchaResult` hold.
 				const dmResult = {
 					status: CaptchaStatus.disapproved,
-					reason: decision.reason || "CAPTCHA.DECISION_MACHINE_DENIED",
+					reason: (decision.reason ||
+						ResultReason.CAPTCHA_DECISION_MACHINE_DENIED) as ResultReason,
 				};
 				await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
 					result: dmResult,
