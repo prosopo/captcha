@@ -599,5 +599,112 @@ describe("Image Captcha Integration Tests", () => {
 			const res = jsonRes as CaptchaSolutionResponse;
 			expect(res.status).toBe("You correctly answered the captchas");
 		});
+
+		it("should mark an incorrectly completed image captcha as disapproved", async () => {
+			// Use dummyUserAccount for signing, but dappAccount (registered in beforeEach) as the site key
+			const pair = getPair(dummyUserAccount.seed, undefined, "sr25519", 42);
+			const userAccount = dummyUserAccount.address;
+			const origin = "https://localhost";
+
+			// Get captcha challenge using the site key registered in beforeEach
+			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
+			const getImgCaptchaBody: CaptchaRequestBodyType = {
+				[ApiParams.dapp]: dappAccount,
+				[ApiParams.user]: userAccount,
+				[ApiParams.datasetId]: solutions.datasetId,
+			};
+			const response = await fetch(getImageCaptchaURL, {
+				method: "POST",
+				body: JSON.stringify(getImgCaptchaBody),
+				headers: {
+					"Content-Type": "application/json",
+					Origin: origin,
+					"Prosopo-Site-Key": dappAccount,
+					"Prosopo-User": userAccount,
+				},
+			});
+
+			expect(response.status).toBe(200);
+
+			const data = (await response.json()) as CaptchaResponseBody;
+
+			// Build a map of the correct solution and all item hashes for each captcha
+			// from the built dataset (which recomputes captchaContentId via merkle hashing).
+			const captchaInfoMap = new Map<
+				string,
+				{ solution: string[]; itemHashes: string[] }
+			>(
+				(builtDataset.captchas as Captcha[])
+					.filter((captcha) => captcha.solution)
+					.map((captcha) => [
+						captcha.captchaContentId,
+						{
+							solution: captcha.solution?.map((s) => s.toString()) ?? [],
+							itemHashes: captcha.items.map((item) => item.hash),
+						},
+					]),
+			);
+
+			// Deliberately select the wrong images: every image that is NOT part of the
+			// correct solution. This guarantees 0% correctness, below the 0.8 threshold.
+			const temp = data.captchas.map((captcha, index) => {
+				const info = captchaInfoMap.get(captcha.captchaContentId);
+				if (!info) {
+					throw new Error(
+						`Captcha info not found for captchaContentId: ${captcha.captchaContentId}`,
+					);
+				}
+
+				return {
+					captchaContentId: captcha.captchaContentId,
+					captchaId: captcha.captchaId,
+					salt: embedData(randomAsHex(), [
+						1 + index,
+						2 + index,
+						3 + index,
+						4 + index,
+					]),
+					solution: info.itemHashes.filter(
+						(hash) => !info.solution.includes(hash),
+					),
+				};
+			});
+
+			const solveImgCaptchaBody: CaptchaSolutionBodyType = {
+				[ApiParams.captchas]: temp,
+				[ApiParams.dapp]: dappAccount,
+				[ApiParams.requestHash]: data.requestHash,
+				[ApiParams.signature]: {
+					[ApiParams.user]: {
+						[ApiParams.timestamp]: u8aToHex(
+							pair.sign(stringToU8a(data.timestamp)),
+						),
+					},
+					[ApiParams.provider]: data[ApiParams.signature][ApiParams.provider],
+				},
+				[ApiParams.timestamp]: data.timestamp,
+				[ApiParams.user]: userAccount,
+			};
+
+			const solveThatCaptcha = await fetch(
+				`${baseUrl}${ClientApiPaths.SubmitImageCaptchaSolution}`,
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						Origin: origin,
+						"Prosopo-Site-Key": dappAccount,
+						"Prosopo-User": userAccount,
+					},
+					body: JSON.stringify(solveImgCaptchaBody),
+				},
+			);
+
+			const res = (await solveThatCaptcha.json()) as CaptchaSolutionResponse;
+			expect(res.verified).toBe(false);
+			expect(res.status).toBe(
+				"You answered one or more captchas incorrectly. Please try again",
+			);
+		});
 	});
 });
