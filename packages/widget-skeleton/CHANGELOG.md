@@ -1,5 +1,10 @@
 # @prosopo/widget-skeleton
 
+## 2.8.2
+### Patch Changes
+
+- 5f1ae53: Small CSS change and test file change
+
 ## 2.8.1
 ### Patch Changes
 
