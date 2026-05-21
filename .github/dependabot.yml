@@ -1,0 +1,29 @@
+# Dependabot configuration.
+# Note: each npm/github-actions PR opened here also triggers `dependabot-changeset.yml`,
+# which refreshes the lockfile and writes a changeset so the `changesets` check passes.
+# That workflow needs PROSOPONATOR_PAT added under Settings > Secrets and variables >
+# Dependabot (Actions secrets are NOT available to Dependabot-triggered runs).
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    # Keep majors as standalone PRs (they may need manual review / a larger bump),
+    # group everything else to cut down on PR + changeset noise across the workspace.
+    groups:
+      npm-minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    groups:
+      github-actions:
+        patterns:
+          - "*"

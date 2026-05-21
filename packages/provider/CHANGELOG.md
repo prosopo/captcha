@@ -1,5 +1,12 @@
 # @prosopo/provider
 
+## 4.4.1
+### Patch Changes
+
+- bd9f284: Add an integration test asserting that a correct image captcha solution
+  submitted after the time limit is disapproved by the provider and verified as
+  disapproved by the dapp.
+
 ## 4.4.0
 ### Minor Changes
 
