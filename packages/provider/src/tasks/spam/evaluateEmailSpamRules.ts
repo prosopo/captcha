@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { IEmailSpamRules } from "@prosopo/types";
+import { type IEmailSpamRules, ResultReason } from "@prosopo/types";
 
 export type EmailSpamReason =
-	| "EMAIL_INVALID"
-	| "EMAIL_TOO_MANY_DOTS"
-	| "EMAIL_MATCHED_DEFAULT_PATTERN"
-	| "EMAIL_MATCHED_CUSTOM_PATTERN";
+	| ResultReason.EMAIL_INVALID
+	| ResultReason.EMAIL_TOO_MANY_DOTS
+	| ResultReason.EMAIL_MATCHED_DEFAULT_PATTERN
+	| ResultReason.EMAIL_MATCHED_CUSTOM_PATTERN;
 
 export type EmailSpamResult =
 	| { isSpam: false }
@@ -107,14 +107,14 @@ export const evaluateEmailSpamRules = (
 
 	const parts = splitEmail(email);
 	if (!parts) {
-		return { isSpam: true, reason: "EMAIL_INVALID" };
+		return { isSpam: true, reason: ResultReason.EMAIL_INVALID };
 	}
 
 	if (
 		typeof rules.maxLocalPartDots === "number" &&
 		countDots(parts.local) > rules.maxLocalPartDots
 	) {
-		return { isSpam: true, reason: "EMAIL_TOO_MANY_DOTS" };
+		return { isSpam: true, reason: ResultReason.EMAIL_TOO_MANY_DOTS };
 	}
 
 	const target = rules.normaliseGmail
@@ -126,7 +126,7 @@ export const evaluateEmailSpamRules = (
 			if (pattern.test(`${parts.local}@${parts.domain}`)) {
 				return {
 					isSpam: true,
-					reason: "EMAIL_MATCHED_DEFAULT_PATTERN",
+					reason: ResultReason.EMAIL_MATCHED_DEFAULT_PATTERN,
 					pattern: name,
 				};
 			}
@@ -138,7 +138,7 @@ export const evaluateEmailSpamRules = (
 		if (regex?.test(target)) {
 			return {
 				isSpam: true,
-				reason: "EMAIL_MATCHED_CUSTOM_PATTERN",
+				reason: ResultReason.EMAIL_MATCHED_CUSTOM_PATTERN,
 				pattern: raw,
 			};
 		}

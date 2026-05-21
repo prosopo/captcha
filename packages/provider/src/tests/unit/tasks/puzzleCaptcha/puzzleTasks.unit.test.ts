@@ -21,6 +21,7 @@ import {
 	type PoWChallengeId,
 	type PuzzleCaptchaStored,
 	type RequestHeaders,
+	ResultReason,
 } from "@prosopo/types";
 import type {
 	IProviderDatabase,
@@ -225,7 +226,7 @@ describe("PuzzleCaptchaManager", () => {
 				targetY: 100,
 				tolerance: 15,
 				ipAddress: getCompositeIpAddress(a.ipAddress),
-				result: { status: CaptchaStatus.disapproved, reason: "" },
+				result: { status: CaptchaStatus.disapproved },
 				userSubmitted: true,
 			};
 			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
@@ -409,7 +410,7 @@ describe("PuzzleCaptchaManager", () => {
 					dappAccount,
 					result: {
 						status: CaptchaStatus.disapproved,
-						reason: "CAPTCHA.INVALID_SOLUTION",
+						reason: ResultReason.CAPTCHA_INVALID_SOLUTION,
 					},
 					serverChecked: false,
 				}),
