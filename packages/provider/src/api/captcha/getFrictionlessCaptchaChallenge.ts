@@ -329,7 +329,10 @@ export default (
 						return res.json(
 							await tasks.frictionlessManager.sendImageCaptcha({
 								...shortCircuitParams,
-								solvedImagesCount: clientRecord.settings.imageMaxRounds,
+								solvedImagesCount: Math.min(
+									env.config.captchas.solved.count,
+									clientRecord.settings.imageMaxRounds,
+								),
 							}),
 						);
 					case CaptchaType.pow:

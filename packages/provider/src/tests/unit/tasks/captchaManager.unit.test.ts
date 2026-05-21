@@ -99,6 +99,8 @@ describe("CaptchaManager", () => {
 
 		mockWriteQueue = {
 			invalidateCachedSession: vi.fn().mockResolvedValue(undefined),
+			invalidateCachedSessionByHash: vi.fn().mockResolvedValue(undefined),
+			getCachedSession: vi.fn().mockResolvedValue(null),
 		} as unknown as RedisWriteQueue;
 
 		captchaManager = new CaptchaManager(
@@ -227,7 +229,8 @@ describe("CaptchaManager", () => {
 			(db.checkAndRemoveSession as any).mockResolvedValue({
 				sessionId: "sessionId",
 				captchaType: CaptchaType.pow,
-			} as Pick<Session, "sessionId" | "captchaType">);
+				userSitekeyIpHash: "hash-xyz",
+			} as Pick<Session, "sessionId" | "captchaType" | "userSitekeyIpHash">);
 
 			await captchaManager.isValidRequest(
 				{
@@ -248,13 +251,17 @@ describe("CaptchaManager", () => {
 			expect(mockWriteQueue.invalidateCachedSession).toHaveBeenCalledWith(
 				"sessionId",
 			);
+			expect(mockWriteQueue.invalidateCachedSessionByHash).toHaveBeenCalledWith(
+				"hash-xyz",
+			);
 		});
 		it("should invalidate the Redis session cache after consuming a frictionless image session", async () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.checkAndRemoveSession as any).mockResolvedValue({
 				sessionId: "sessionId",
 				captchaType: CaptchaType.image,
-			} as Pick<Session, "sessionId" | "captchaType">);
+				userSitekeyIpHash: "hash-xyz",
+			} as Pick<Session, "sessionId" | "captchaType" | "userSitekeyIpHash">);
 
 			await captchaManager.isValidRequest(
 				{
@@ -275,10 +282,23 @@ describe("CaptchaManager", () => {
 			expect(mockWriteQueue.invalidateCachedSession).toHaveBeenCalledWith(
 				"sessionId",
 			);
+			expect(mockWriteQueue.invalidateCachedSessionByHash).toHaveBeenCalledWith(
+				"hash-xyz",
+			);
 		});
 		it("should invalidate Redis cache when session is not found, to break stale-cache loops", async () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.checkAndRemoveSession as any).mockResolvedValue(undefined);
+			// Simulate the drifted-cache state: DB record is gone, but the
+			// Redis sessionId cache still holds the original entry which
+			// carries the userSitekeyIpHash needed to invalidate the hash
+			// mapping.
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(mockWriteQueue.getCachedSession as any).mockResolvedValueOnce({
+				sessionId: "sessionId",
+				userSitekeyIpHash: "hash-xyz",
+			});
 
 			await captchaManager.isValidRequest(
 				{
@@ -294,12 +314,16 @@ describe("CaptchaManager", () => {
 				"sessionId",
 			);
 
-			// When DB has no record but Redis cache does, the cache must be
-			// invalidated; otherwise the user-IP-hash mapping keeps resolving
-			// to the dead sessionId and /frictionless keeps "Reusing existing
-			// session" while /captcha/{type} keeps 400-ing in a loop.
+			// When DB has no record but Redis cache does, BOTH the sessionId
+			// cache and the hash → sessionId mapping must be invalidated;
+			// otherwise the hash mapping keeps resolving to the dead
+			// sessionId and /frictionless keeps "Reusing existing session"
+			// while /captcha/{type} keeps 400-ing in a loop.
 			expect(mockWriteQueue.invalidateCachedSession).toHaveBeenCalledWith(
 				"sessionId",
+			);
+			expect(mockWriteQueue.invalidateCachedSessionByHash).toHaveBeenCalledWith(
+				"hash-xyz",
 			);
 		});
 		it("should not throw when writeQueue is null and session is consumed", async () => {

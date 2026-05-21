@@ -283,6 +283,13 @@ export class CaptchaManager {
 		// runs the decision machine; image/pow/puzzle short-circuit). We trust
 		// the session record's captchaType as the source of truth.
 		if (sessionId) {
+			// Look up the cache record before consuming the session so we
+			// can invalidate the hash → sessionId mapping even when the DB
+			// record is already gone. Without this, the failure path leaks
+			// the hash mapping for the remainder of its 1-hour TTL.
+			const cachedBeforeRemove = this.writeQueue
+				? await this.writeQueue.getCachedSession(sessionId)
+				: null;
 			const sessionRecord = await this.db.checkAndRemoveSession(sessionId);
 			if (!sessionRecord) {
 				this.logger.warn(() => ({
@@ -298,7 +305,16 @@ export class CaptchaManager {
 				// and /frictionless keeps "Reusing existing session" →
 				// /captcha/* keeps failing in an infinite loop.
 				if (this.writeQueue) {
-					this.writeQueue.invalidateCachedSession(sessionId).catch(() => {});
+					const cachedHash =
+						typeof cachedBeforeRemove?.userSitekeyIpHash === "string"
+							? cachedBeforeRemove.userSitekeyIpHash
+							: undefined;
+					await Promise.all([
+						this.writeQueue.invalidateCachedSession(sessionId),
+						cachedHash
+							? this.writeQueue.invalidateCachedSessionByHash(cachedHash)
+							: Promise.resolve(),
+					]);
 				}
 				return {
 					valid: false,
@@ -309,9 +325,19 @@ export class CaptchaManager {
 
 			// Invalidate the Redis session cache so that subsequent
 			// requests do not receive this now-deleted sessionId from
-			// the stale cache.
+			// the stale cache. Both the sessionId cache and the
+			// hash → sessionId mapping must be invalidated, awaited so
+			// no concurrent write (e.g. solution-submit `patchCachedSession`)
+			// can re-populate the entry between consume and response.
 			if (this.writeQueue) {
-				this.writeQueue.invalidateCachedSession(sessionId).catch(() => {});
+				await Promise.all([
+					this.writeQueue.invalidateCachedSession(sessionId),
+					sessionRecord.userSitekeyIpHash
+						? this.writeQueue.invalidateCachedSessionByHash(
+								sessionRecord.userSitekeyIpHash,
+							)
+						: Promise.resolve(),
+				]);
 			}
 
 			// Validate IP address if currentIP is provided
