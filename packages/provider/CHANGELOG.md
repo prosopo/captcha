@@ -1,5 +1,54 @@
 # @prosopo/provider
 
+## 4.4.2
+### Patch Changes
+
+- f4001e8: Fix `/captcha/{type}` endpoints looping with "No session found" after a
+  session has been consumed: the hash → sessionId mapping
+  (`cache:session:hash:{userSitekeyIpHash}`) is now invalidated alongside
+  the sessionId cache, and both invalidations are awaited so a concurrent
+  `patchCachedSession` (e.g. puzzle solution submission) can no longer
+  re-populate the cache between consume and response. Previously the
+  hash mapping outlived the session for up to its 1-hour TTL, so
+  `/frictionless` kept handing the dead sessionId back to the client.
+  
+  Fix the configured-image short-circuit in `/frictionless` to use the
+  normal solved count capped by `imageMaxRounds`, matching every other
+  image branch in the file. Previously it used `imageMaxRounds`
+  (default 32) as the count rather than as a cap, so any site key
+  configured with `captchaType: image` punished every visitor with 32
+  rounds regardless of bot signals.
+- 6a741ce: Move `FrictionlessReason` into `@prosopo/types` and add a new
+  `ResultReason` enum covering the values previously inlined as string
+  literals on `result.reason` (API.CAPTCHA_PASSED, API.VPN_BLOCKED,
+  EMAIL_INVALID, etc.). Provider task code now references the enums so the
+  canonical list of selection/result reasons lives in one place and can be
+  imported by non-server packages (portal, audit tooling) without pulling
+  in `@prosopo/provider`. The previous `FrictionlessReason` export from
+  `@prosopo/provider` is preserved as a re-export for backwards
+  compatibility.
+  
+  `CaptchaResult.reason`, `StoredCaptcha.result.reason`, `Session.result.reason`
+  are now typed `ResultReason | undefined`; `Session.reason` is typed
+  `FrictionlessReason | undefined`. The runtime zod schema stays permissive
+  (`string().optional().transform(v => v as ResultReason | undefined)`) so
+  operator-authored decision-machine output and old MongoDB records still
+  parse without throwing; the strict enum is preserved on the TS surface
+  via the transform.
+- 0832606: Add integration test asserting an incorrectly solved image captcha is marked as disapproved
+- Updated dependencies [6a741ce]
+  - @prosopo/types@4.1.0
+  - @prosopo/database@3.12.1
+  - @prosopo/api@3.4.1
+  - @prosopo/api-express-router@3.1.9
+  - @prosopo/datasets@3.1.20
+  - @prosopo/env@3.4.9
+  - @prosopo/keyring@2.9.26
+  - @prosopo/load-balancer@2.9.2
+  - @prosopo/types-database@4.7.1
+  - @prosopo/types-env@2.9.8
+  - @prosopo/user-access-policy@3.7.3
+
 ## 4.4.1
 ### Patch Changes
 
