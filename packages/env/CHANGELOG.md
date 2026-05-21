@@ -1,5 +1,15 @@
 # @prosopo/env
 
+## 3.4.9
+### Patch Changes
+
+- Updated dependencies [6a741ce]
+  - @prosopo/types@4.1.0
+  - @prosopo/database@3.12.1
+  - @prosopo/ipinfo@0.2.6
+  - @prosopo/keyring@2.9.26
+  - @prosopo/types-env@2.9.8
+
 ## 3.4.8
 ### Patch Changes
 
