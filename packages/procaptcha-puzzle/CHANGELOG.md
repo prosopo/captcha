@@ -1,5 +1,10 @@
 # @prosopo/procaptcha-puzzle
 
+## 2.9.1
+### Patch Changes
+
+  - @prosopo/procaptcha-common@2.10.7
+
 ## 2.9.0
 ### Minor Changes
 
