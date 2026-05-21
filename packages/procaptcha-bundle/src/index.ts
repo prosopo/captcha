@@ -20,10 +20,7 @@ import { extractParams, getProcaptchaScript } from "./util/config.js";
 import { WidgetFactory } from "./util/widgetFactory.js";
 import { WidgetThemeResolver } from "./util/widgetThemeResolver.js";
 
-const BUNDLE_NAMES = [
-	"procaptcha.bundle.iife.js",
-	"procaptcha.bundle.js",
-];
+const BUNDLE_NAMES = ["procaptcha.bundle.iife.js", "procaptcha.bundle.js"];
 let procaptchaRoots: Root[] = [];
 
 const widgetFactory = new WidgetFactory(new WidgetThemeResolver());
