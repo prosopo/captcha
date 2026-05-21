@@ -407,7 +407,8 @@
 		"I_AM_HUMAN": "Olen ihminen",
 		"NO_ACCOUNTS_FOUND": "Ei tilejä löytynyt",
 		"ACCOUNT_NOT_FOUND": "Tiliä ei löytynyt",
-		"NO_EXTENSION_FOUND": "Laajennusta ei löytynyt"
+		"NO_EXTENSION_FOUND": "Laajennusta ei löytynyt",
+		"INSECURE_CONTEXT": "Procaptcha vaatii suojatun (HTTPS) yhteyden"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Epäonnistui koodata virheellinen osoite",

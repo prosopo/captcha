@@ -373,7 +373,8 @@
 		"I_AM_HUMAN": "Sunt om",
 		"NO_ACCOUNTS_FOUND": "Niciun cont gasit",
 		"ACCOUNT_NOT_FOUND": "Contul nu a fost gasit",
-		"NO_EXTENSION_FOUND": "Nicio extensie gasita"
+		"NO_EXTENSION_FOUND": "Nicio extensie gasita",
+		"INSECURE_CONTEXT": "Procaptcha necesită o conexiune securizată (HTTPS)"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Eroare la codificarea adresei invalide",

@@ -373,7 +373,8 @@
 		"I_AM_HUMAN": "Я человек",
 		"NO_ACCOUNTS_FOUND": "Учетные записи не найдены",
 		"ACCOUNT_NOT_FOUND": "Учетная запись не найдена",
-		"NO_EXTENSION_FOUND": "Расширение не найдено"
+		"NO_EXTENSION_FOUND": "Расширение не найдено",
+		"INSECURE_CONTEXT": "Procaptcha требует безопасного соединения (HTTPS)"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Не удалось закодировать неверный адрес",

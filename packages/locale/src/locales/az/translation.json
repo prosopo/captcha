@@ -373,7 +373,8 @@
 		"I_AM_HUMAN": "Mən insanam",
 		"NO_ACCOUNTS_FOUND": "Hesab tapılmadı",
 		"ACCOUNT_NOT_FOUND": "Hesab tapılmadı",
-		"NO_EXTENSION_FOUND": "Tətbiq tapılmadı"
+		"NO_EXTENSION_FOUND": "Tətbiq tapılmadı",
+		"INSECURE_CONTEXT": "Procaptcha təhlükəsiz (HTTPS) bağlantı tələb edir"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Geçərsiz ünvan kodlanmadı",

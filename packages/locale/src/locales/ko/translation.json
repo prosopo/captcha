@@ -373,7 +373,8 @@
 		"I_AM_HUMAN": "인간입니다",
 		"NO_ACCOUNTS_FOUND": "계정을 찾을 수 없음",
 		"ACCOUNT_NOT_FOUND": "계정을 찾을 수 없음",
-		"NO_EXTENSION_FOUND": "확장 프로그램을 찾을 수 없음"
+		"NO_EXTENSION_FOUND": "확장 프로그램을 찾을 수 없음",
+		"INSECURE_CONTEXT": "Procaptcha에는 보안 연결(HTTPS)이 필요합니다"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "유효하지 않은 주소를 인코딩하는 데 실패함",

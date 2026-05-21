@@ -373,7 +373,8 @@
 		"I_AM_HUMAN": "Ben bir insanım",
 		"NO_ACCOUNTS_FOUND": "Hesap bulunamadı",
 		"ACCOUNT_NOT_FOUND": "Hesap bulunamadı",
-		"NO_EXTENSION_FOUND": "Eklenti bulunamadı"
+		"NO_EXTENSION_FOUND": "Eklenti bulunamadı",
+		"INSECURE_CONTEXT": "Procaptcha güvenli bir (HTTPS) bağlantı gerektirir"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Geçersiz adresi kodlama başarısız oldu",

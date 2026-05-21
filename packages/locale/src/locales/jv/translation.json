@@ -373,7 +373,8 @@
 		"I_AM_HUMAN": "Saya manusia",
 		"NO_ACCOUNTS_FOUND": "Tidak ada akun ditemukan",
 		"ACCOUNT_NOT_FOUND": "Akun tidak ditemukan",
-		"NO_EXTENSION_FOUND": "Tidak ada ekstensi ditemukan"
+		"NO_EXTENSION_FOUND": "Tidak ada ekstensi ditemukan",
+		"INSECURE_CONTEXT": "Procaptcha mbutuhake sambungan sing aman (HTTPS)"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Gagal mengkodekan alamat yang tidak valid",

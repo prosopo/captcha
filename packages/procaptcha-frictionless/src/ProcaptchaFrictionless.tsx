@@ -16,6 +16,7 @@ import { loadI18next } from "@prosopo/locale";
 import {
 	Checkbox,
 	getDefaultEvents,
+	isSecureBrowserContext,
 	providerRetry,
 } from "@prosopo/procaptcha-common";
 import {
@@ -150,6 +151,18 @@ export const ProcaptchaFrictionless = ({
 	};
 
 	const start = async () => {
+		// Procaptcha cannot run over plain HTTP (no SubtleCrypto etc.), which
+		// would otherwise fail later with a cryptic provider-selection error.
+		// Surface a clear, non-retrying message instead.
+		if (!isSecureBrowserContext()) {
+			const errorMessage = i18n.isInitialized
+				? i18n.t("WIDGET.INSECURE_CONTEXT")
+				: "Procaptcha requires a secure (HTTPS) connection";
+			events.onError(new Error(errorMessage));
+			fallOverWithStyle(errorMessage, "WIDGET.INSECURE_CONTEXT");
+			return;
+		}
+
 		await providerRetry(
 			async () => {
 				stateRef.current.attemptCount += 1;

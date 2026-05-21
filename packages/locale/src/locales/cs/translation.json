@@ -373,7 +373,8 @@
 		"I_AM_HUMAN": "Jsem člověk",
 		"NO_ACCOUNTS_FOUND": "Nebyly nalezeny žádné účty",
 		"ACCOUNT_NOT_FOUND": "Účet nenalezen",
-		"NO_EXTENSION_FOUND": "Nenalezeno žádné rozšíření"
+		"NO_EXTENSION_FOUND": "Nenalezeno žádné rozšíření",
+		"INSECURE_CONTEXT": "Procaptcha vyžaduje zabezpečené připojení (HTTPS)"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Nepodařilo se zakódovat neplatnou adresu",

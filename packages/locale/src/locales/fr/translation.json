@@ -74,7 +74,8 @@
 		"I_AM_HUMAN": "Je suis humain",
 		"NO_ACCOUNTS_FOUND": "Aucun compte trouvé",
 		"ACCOUNT_NOT_FOUND": "Compte non trouvé",
-		"NO_EXTENSION_FOUND": "Aucune extension trouvée"
+		"NO_EXTENSION_FOUND": "Aucune extension trouvée",
+		"INSECURE_CONTEXT": "Procaptcha nécessite une connexion sécurisée (HTTPS)"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Échec de l'encodage de l'adresse invalide",

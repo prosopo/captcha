@@ -373,7 +373,8 @@
 		"I_AM_HUMAN": "Ember vagyok",
 		"NO_ACCOUNTS_FOUND": "Nem található felhasználó",
 		"ACCOUNT_NOT_FOUND": "Felhasználó nem található",
-		"NO_EXTENSION_FOUND": "Nincs kiterjesztés található"
+		"NO_EXTENSION_FOUND": "Nincs kiterjesztés található",
+		"INSECURE_CONTEXT": "A Procaptcha biztonságos (HTTPS) kapcsolatot igényel"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Nem sikerült kódolni az érvénytelen címet",

@@ -373,7 +373,8 @@
 		"I_AM_HUMAN": "أنا إنسان",
 		"NO_ACCOUNTS_FOUND": "لم يتم العثور على حسابات",
 		"ACCOUNT_NOT_FOUND": "حساب غير موجود",
-		"NO_EXTENSION_FOUND": "لم يتم العثور على امتداد"
+		"NO_EXTENSION_FOUND": "لم يتم العثور على امتداد",
+		"INSECURE_CONTEXT": "يتطلب Procaptcha اتصالاً آمنًا (HTTPS)"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "فشل في ترميز عنوان غير صالح",
