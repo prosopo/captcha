@@ -41,6 +41,7 @@ import {
 	type ProsopoCaptchaCountConfigSchemaOutput,
 	type ProsopoConfigOutput,
 	type RequestHeaders,
+	ResultReason,
 	SimdReadingsStage,
 	type UserCommitment,
 } from "@prosopo/types";
@@ -425,7 +426,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 							userSubmitted: true,
 							result: {
 								status: CaptchaStatus.disapproved,
-								reason: "CAPTCHA.INVALID_SOLUTION",
+								reason: ResultReason.CAPTCHA_INVALID_SOLUTION,
 							},
 						}),
 					);
@@ -486,7 +487,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 							userSubmitted: true,
 							result: {
 								status: CaptchaStatus.disapproved,
-								reason: "CAPTCHA.INVALID_SOLUTION",
+								reason: ResultReason.CAPTCHA_INVALID_SOLUTION,
 							},
 						}),
 					);
@@ -726,7 +727,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 					}));
 					commitmentUpdates.result = {
 						status: CaptchaStatus.disapproved,
-						reason: "API.ACCESS_POLICY_BLOCK" as const,
+						reason: ResultReason.ACCESS_POLICY_BLOCK,
 					};
 					failStatus = "API.ACCESS_POLICY_BLOCK";
 				}
@@ -750,7 +751,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 					}));
 					commitmentUpdates.result = {
 						status: CaptchaStatus.disapproved,
-						reason: "API.SPAM_EMAIL_DOMAIN",
+						reason: ResultReason.SPAM_EMAIL_DOMAIN,
 					};
 					failStatus = "API.SPAM_EMAIL_DOMAIN";
 				}
@@ -777,7 +778,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				}));
 				commitmentUpdates.result = {
 					status: CaptchaStatus.disapproved,
-					reason: "API.SPAM_EMAIL_RULE",
+					reason: ResultReason.SPAM_EMAIL_RULE,
 				};
 				failStatus = "API.SPAM_EMAIL_RULE";
 			}

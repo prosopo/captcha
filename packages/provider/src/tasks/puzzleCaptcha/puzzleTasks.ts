@@ -32,6 +32,7 @@ import {
 	type PoWChallengeId,
 	type PuzzleEvent,
 	type RequestHeaders,
+	ResultReason,
 	SimdReadingsStage,
 	puzzleToleranceDefault,
 } from "@prosopo/types";
@@ -197,7 +198,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		if (!verifyRecency(challenge, timeout)) {
 			const timeoutResult = {
 				status: CaptchaStatus.disapproved,
-				reason: "CAPTCHA.INVALID_TIMESTAMP" as const,
+				reason: ResultReason.CAPTCHA_INVALID_TIMESTAMP,
 			};
 			await this.db.updatePuzzleCaptchaRecordResult(
 				challenge,
@@ -227,7 +228,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		if (!correct) {
 			result = {
 				status: CaptchaStatus.disapproved,
-				reason: "CAPTCHA.INVALID_SOLUTION",
+				reason: ResultReason.CAPTCHA_INVALID_SOLUTION,
 			};
 		}
 
@@ -409,7 +410,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		if (!recent) {
 			const disapprovedResult = {
 				status: CaptchaStatus.disapproved,
-				reason: "API.TIMESTAMP_TOO_OLD" as const,
+				reason: ResultReason.TIMESTAMP_TOO_OLD,
 			};
 			await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
 				result: disapprovedResult,
@@ -449,7 +450,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 					}));
 					const blockedResult = {
 						status: CaptchaStatus.disapproved,
-						reason: "API.ACCESS_POLICY_BLOCK" as const,
+						reason: ResultReason.ACCESS_POLICY_BLOCK,
 					};
 					await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
 						result: blockedResult,
@@ -483,7 +484,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 					await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
 						result: {
 							status: CaptchaStatus.disapproved,
-							reason: "API.SPAM_EMAIL_DOMAIN",
+							reason: ResultReason.SPAM_EMAIL_DOMAIN,
 						},
 					});
 					return notVerifiedResponse;
@@ -563,7 +564,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 					}));
 					const ipFailResult = {
 						status: CaptchaStatus.disapproved,
-						reason: "API.FAILED_IP_VALIDATION" as const,
+						reason: ResultReason.FAILED_IP_VALIDATION,
 					};
 					await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
 						result: ipFailResult,

@@ -19,6 +19,7 @@ import {
 	CaptchaType,
 	type CompositeIpAddress,
 	type ContextType,
+	FrictionlessReason,
 	type GetFrictionlessCaptchaResponse,
 	type IPInfoResponse,
 	type KeyringPair,
@@ -60,15 +61,9 @@ const getSessionIDPrefix = (host?: string): string => {
 	return host ? host.replace(".prosopo.io", "") : "local";
 };
 
-export enum FrictionlessReason {
-	CONTEXT_AWARE_VALIDATION_FAILED = "CONTEXT_AWARE_VALIDATION_FAILED",
-	USER_ACCESS_POLICY = "USER_ACCESS_POLICY",
-	ACCESS_POLICY_BLOCK = "ACCESS_POLICY_BLOCK",
-	USER_AGENT_MISMATCH = "USER_AGENT_MISMATCH",
-	OLD_TIMESTAMP = "OLD_TIMESTAMP",
-	BOT_SCORE_ABOVE_THRESHOLD = "BOT_SCORE_ABOVE_THRESHOLD",
-	WEBVIEW_DETECTED = "WEBVIEW_DETECTED",
-}
+// FrictionlessReason now lives in @prosopo/types so non-server packages
+// (audit portal, tests) can reference it without depending on the provider.
+export { FrictionlessReason };
 
 export interface ImageCaptchaSessionParams extends Session {}
 
