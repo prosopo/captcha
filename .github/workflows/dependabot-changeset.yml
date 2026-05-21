@@ -1,0 +1,83 @@
+# Makes Dependabot PRs pass the `changesets` check (and keeps the lockfile in sync).
+#
+# On every Dependabot PR this:
+#   1. refreshes package-lock.json with `npm i` (safety; Dependabot usually does this itself),
+#   2. derives which *versioned* workspace packages had their package.json changed,
+#   3. writes a patch changeset for them describing the bump,
+#   4. commits the lockfile + changeset back onto the PR branch.
+#
+# The push uses PROSOPONATOR_PAT, which MUST be added under
+#   Settings > Secrets and variables > Dependabot
+# because Dependabot-triggered workflow runs get a read-only GITHUB_TOKEN and no
+# access to *Actions* secrets. Because the push happens as the PAT user (not
+# dependabot[bot]), the resulting `synchronize` event is skipped by the actor guard
+# below, so there is no re-trigger loop.
+#
+# `npm run changesets:add` is intentionally NOT used: it is interactive (prompts for
+# packages + bump type) and cannot run unattended, so the changeset file is written directly.
+
+name: dependabot-changeset
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  changeset:
+    name: changeset
+    runs-on: ubuntu-latest
+    if: ${{ github.actor == 'dependabot[bot]' }}
+    env:
+      BASE_REF: ${{ github.event.pull_request.base.ref }}
+      HEAD_REF: ${{ github.event.pull_request.head.ref }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      PR_TITLE: ${{ github.event.pull_request.title }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.PROSOPONATOR_PAT }}
+          submodules: "recursive"
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      # Refresh the lockfile against the bumped package.json files.
+      - name: Update lockfile
+        run: npm install --package-lock-only --workspaces --include-workspace-root
+
+      - name: Generate changeset
+        env:
+          GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
+        run: |
+          git fetch origin "$BASE_REF" --depth=1
+          node .github/scripts/dependabot-changeset.mjs
+
+      - name: Commit and push
+        run: |
+          git config user.name "prosoponator[bot]"
+          git config user.email "prosoponator[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing to commit (no versioned package changed)."
+            exit 0
+          fi
+          git commit -m "chore(deps): add changeset and refresh lockfile [dependabot-skip]"
+          git push origin "HEAD:$HEAD_REF"
