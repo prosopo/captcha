@@ -193,6 +193,31 @@ export class RedisWriteQueue {
 		}
 	}
 
+	/**
+	 * Invalidate the hash → sessionId mapping used by /frictionless for
+	 * dedup. Must be called alongside `invalidateCachedSession` when a
+	 * session is consumed, otherwise the hash mapping keeps resolving to
+	 * a dead sessionId for the remainder of its 1-hour TTL.
+	 */
+	async invalidateCachedSessionByHash(
+		userSitekeyIpHash: string,
+	): Promise<void> {
+		const client = await this.getClient();
+		if (!client) {
+			return;
+		}
+
+		try {
+			await client.del(`cache:session:hash:${userSitekeyIpHash}`);
+		} catch (error) {
+			this.logger.warn(() => ({
+				msg: "Failed to invalidate cached session hash in Redis",
+				err: error,
+				userSitekeyIpHash,
+			}));
+		}
+	}
+
 	// ── Frictionless session deduplication cache ────────────────────────
 
 	/**
