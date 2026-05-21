@@ -373,7 +373,8 @@
 		"I_AM_HUMAN": "Jeg er menneske",
 		"NO_ACCOUNTS_FOUND": "Ingen kontoer funnet",
 		"ACCOUNT_NOT_FOUND": "Konto ikke funnet",
-		"NO_EXTENSION_FOUND": "Ingen tilleggsprogram funnet"
+		"NO_EXTENSION_FOUND": "Ingen tilleggsprogram funnet",
+		"INSECURE_CONTEXT": "Procaptcha krever en sikker (HTTPS) tilkobling"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Klarte ikke å kryptere ugyldig adresse",

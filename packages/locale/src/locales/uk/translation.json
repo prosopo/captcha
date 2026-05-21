@@ -373,7 +373,8 @@
 		"I_AM_HUMAN": "I am human",
 		"NO_ACCOUNTS_FOUND": "No accounts found",
 		"ACCOUNT_NOT_FOUND": "Account not found",
-		"NO_EXTENSION_FOUND": "No extension found"
+		"NO_EXTENSION_FOUND": "No extension found",
+		"INSECURE_CONTEXT": "Procaptcha потребує безпечного з'єднання (HTTPS)"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Failed to encode invalid address",

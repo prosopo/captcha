@@ -373,7 +373,8 @@
 		"I_AM_HUMAN": "Jag är en människa",
 		"NO_ACCOUNTS_FOUND": "Inga konton hittades",
 		"ACCOUNT_NOT_FOUND": "Konto hittades inte",
-		"NO_EXTENSION_FOUND": "Ingen förlängning hittades"
+		"NO_EXTENSION_FOUND": "Ingen förlängning hittades",
+		"INSECURE_CONTEXT": "Procaptcha kräver en säker (HTTPS) anslutning"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Misslyckades att koda ogiltig adress",

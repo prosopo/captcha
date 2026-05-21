@@ -74,7 +74,8 @@
 		"I_AM_HUMAN": "Soy humano",
 		"NO_ACCOUNTS_FOUND": "No se encontraron cuentas",
 		"ACCOUNT_NOT_FOUND": "Cuenta no encontrada",
-		"NO_EXTENSION_FOUND": "Extensión no encontrada"
+		"NO_EXTENSION_FOUND": "Extensión no encontrada",
+		"INSECURE_CONTEXT": "Procaptcha requiere una conexión segura (HTTPS)"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Error al codificar dirección inválida",

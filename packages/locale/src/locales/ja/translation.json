@@ -373,7 +373,8 @@
 		"I_AM_HUMAN": "私は人間です",
 		"NO_ACCOUNTS_FOUND": "アカウントが見つかりません",
 		"ACCOUNT_NOT_FOUND": "アカウントが見つかりません",
-		"NO_EXTENSION_FOUND": "拡張機能が見つかりません"
+		"NO_EXTENSION_FOUND": "拡張機能が見つかりません",
+		"INSECURE_CONTEXT": "Procaptcha には安全な (HTTPS) 接続が必要です"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "無効なアドレスをエンコードできませんでした",
