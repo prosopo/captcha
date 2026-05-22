@@ -259,6 +259,7 @@ jobs:
           NODE_ENV=production npm run build:all
           NODE_ENV=production npm run build:all:cjs
           NODE_ENV=production npm run bundle:all
+          NODE_ENV=production npm run bundle:iife:all
 
       - name: push
         if: ${{ env.affected != '[]' }}
