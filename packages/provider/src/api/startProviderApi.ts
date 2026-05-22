@@ -55,6 +55,8 @@ import { ignoreMiddleware } from "./ignoreMiddleware.js";
 import { ipInfoMiddleware } from "./ipInfoMiddleware.js";
 import { ja4Middleware } from "./ja4Middleware.js";
 import { metricsMiddleware } from "./metrics.js";
+
+import { authHealthRouter } from "./authHealth.js";
 import { publicRouter } from "./public.js";
 import { robotsMiddleware } from "./robotsMiddleware.js";
 import { prosopoVerifyRouter } from "./verify.js";
@@ -387,6 +389,10 @@ export async function startProviderApi(
 		"/v1/prosopo/provider/admin",
 		authMiddleware(env.pair, env.authAccount),
 	);
+
+	// Authenticated health endpoint
+	apiApp.use("/auth", authMiddleware(env.pair, env.authAccount));
+	apiApp.use(authHealthRouter(env));
 	if (apiRuleRoutesProvider) {
 		const userAccessRuleRoutes = apiRuleRoutesProvider.getRoutes();
 		for (const userAccessRuleRoute in userAccessRuleRoutes) {
