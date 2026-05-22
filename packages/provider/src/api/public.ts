@@ -15,7 +15,12 @@
 import { handleErrors } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/env";
-import { type ProviderDetails, PublicApiPaths } from "@prosopo/types";
+import {
+	HealthApiPaths,
+	type HealthResponse,
+	type ProviderDetails,
+	PublicApiPaths,
+} from "@prosopo/types";
 import { version } from "@prosopo/util";
 import express, { type Router } from "express";
 
@@ -29,6 +34,14 @@ export function publicRouter(env: ProviderEnvironment): Router {
 
 	router.get(PublicApiPaths.Healthz, (req, res) => {
 		res.status(200).send("OK");
+	});
+
+	router.get(HealthApiPaths.Health, (req, res) => {
+		const response: HealthResponse = {
+			alive: true,
+			timestamp: new Date().toISOString(),
+		};
+		res.json(response);
 	});
 
 	/**
