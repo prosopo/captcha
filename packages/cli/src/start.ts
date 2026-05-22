@@ -62,8 +62,13 @@ export async function start(
 	// Get rid of any scheduled task records from previous runs
 	env.cleanup();
 
+	// Skip schedulers in maintenance mode — they all build a Tasks instance
+	// which requires a connected DB, and would just log noise on every tick.
+	const maintenanceMode =
+		process.env.MAINTENANCE_MODE?.toLowerCase() === "true";
+
 	// Start the scheduled jobs if they are defined
-	if (env.pair) {
+	if (env.pair && !maintenanceMode) {
 		const cronScheduleStorage =
 			env.config.scheduledTasks?.captchaScheduler?.schedule;
 		if (cronScheduleStorage) {

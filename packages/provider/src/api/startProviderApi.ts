@@ -177,22 +177,25 @@ export async function startProviderApi(
 	const apiEndpointAdapter = createApiExpressDefaultEndpointAdapter(
 		parseLogLevel(env.config.logLevel),
 	);
-	// Maintenance-mode / Redis-down startup: storage may not be initialised.
-	// `AccessRuleApiRoutes` is admin-only; in maintenance mode you can't
-	// edit rules anyway, so build it lazily and skip when unavailable.
+	// Maintenance-mode / DB-down startup: skip the admin/access-rule wiring
+	// since both rely on DB-backed Tasks construction. Captcha endpoints
+	// short-circuit on maintenance-mode at the handler.
 	let apiRuleRoutesProvider: AccessRuleApiRoutes | undefined;
+	let apiAdminRoutesProvider:
+		| ReturnType<typeof createApiAdminRoutesProvider>
+		| undefined;
 	try {
 		apiRuleRoutesProvider = new AccessRuleApiRoutes(
 			env.getDb().getUserAccessRulesStorage(),
 			env.logger,
 		);
+		apiAdminRoutesProvider = createApiAdminRoutesProvider(env);
 	} catch (err) {
 		env.logger.warn(() => ({
-			msg: "Skipping access-rule admin routes; storage unavailable",
+			msg: "Skipping admin/access-rule routes; DB unavailable",
 			err,
 		}));
 	}
-	const apiAdminRoutesProvider = createApiAdminRoutesProvider(env);
 
 	const clientPathsExcludingVerify = getClientApiPathsExpectingProsopoHeaders();
 
@@ -296,16 +299,18 @@ export async function startProviderApi(
 			),
 		);
 	}
-	apiApp.use(
-		apiExpressRouterFactory.createRouter(
-			apiAdminRoutesProvider,
-			// unlike the default one, it should have errorStatusCode as 400
-			createApiExpressDefaultEndpointAdapter(
-				parseLogLevel(env.config.logLevel),
-				400,
+	if (apiAdminRoutesProvider) {
+		apiApp.use(
+			apiExpressRouterFactory.createRouter(
+				apiAdminRoutesProvider,
+				// unlike the default one, it should have errorStatusCode as 400
+				createApiExpressDefaultEndpointAdapter(
+					parseLogLevel(env.config.logLevel),
+					400,
+				),
 			),
-		),
-	);
+		);
+	}
 
 	// Blocking middleware will run on any routes defined after this point
 	apiApp.use(blockMiddleware(env));

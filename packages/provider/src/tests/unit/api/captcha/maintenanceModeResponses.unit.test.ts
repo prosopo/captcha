@@ -38,8 +38,12 @@ describe("maintenanceModeResponses", () => {
 				CaptchaType.puzzle,
 				"foo.prosopo.io",
 			);
-			expect(r[ApiParams.sessionId]?.startsWith("foo-")).toBe(true);
-			expect(r[ApiParams.sessionId]?.includes(".prosopo.io")).toBe(false);
+			// Match the full expected shape `<prefix>-<uuid>` rather than
+			// substring-checking, so we don't trip CodeQL's URL-substring
+			// sanitisation false-positive and the assertion is tighter.
+			expect(r[ApiParams.sessionId]).toMatch(
+				/^foo-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+			);
 		});
 
 		it("falls back to `local` when host is undefined", () => {
