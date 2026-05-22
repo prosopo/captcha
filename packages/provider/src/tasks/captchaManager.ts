@@ -291,21 +291,19 @@ export class CaptchaManager {
 				? await this.writeQueue.getCachedSession(sessionId)
 				: null;
 
-			// invalidate the cached session
-			console.log(
-				`\nINVALIDATING CACHE FOR SESSION ${sessionId} ${cachedBeforeRemove?.userSitekeyIpHash} \n`,
-			);
+			// Invalidate the cached session up front so a concurrent
+			// /frictionless can't keep resurrecting it via the hash → sessionId
+			// pointer while we wait on the Mongo round-trip.
 			const cachedHash =
 				typeof cachedBeforeRemove?.userSitekeyIpHash === "string"
 					? cachedBeforeRemove.userSitekeyIpHash
 					: undefined;
-			const invalidationPromises = await Promise.all([
+			await Promise.all([
 				this.writeQueue?.invalidateCachedSession(sessionId),
 				cachedHash
 					? this.writeQueue?.invalidateCachedSessionByHash(cachedHash)
 					: Promise.resolve(),
 			]);
-			console.log({ invalidationPromises, writeQueue: this.writeQueue });
 
 			const sessionRecord = await this.db.checkAndRemoveSession(sessionId);
 			if (!sessionRecord) {
@@ -322,10 +320,6 @@ export class CaptchaManager {
 				// and /frictionless keeps "Reusing existing session" →
 				// /captcha/* keeps failing in an infinite loop.
 				if (this.writeQueue) {
-					console.log(
-						"INVALIDATING CACHE FOR SESSION NOT FOUND IN DB",
-						sessionId,
-					);
 					const cachedHash =
 						typeof cachedBeforeRemove?.userSitekeyIpHash === "string"
 							? cachedBeforeRemove.userSitekeyIpHash
@@ -351,7 +345,6 @@ export class CaptchaManager {
 			// no concurrent write (e.g. solution-submit `patchCachedSession`)
 			// can re-populate the entry between consume and response.
 			if (this.writeQueue) {
-				console.log("INVALIDATING CACHE FOR SESSION", sessionId);
 				await Promise.all([
 					this.writeQueue.invalidateCachedSession(sessionId),
 					sessionRecord.userSitekeyIpHash

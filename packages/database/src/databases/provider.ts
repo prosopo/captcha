@@ -1573,7 +1573,6 @@ export class ProviderDatabase
 			const session = await this.tables.session
 				.findOne<SessionRecord>(filter)
 				.lean<SessionRecord>();
-			console.log({ session });
 			return session || undefined;
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {

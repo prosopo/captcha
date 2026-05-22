@@ -119,12 +119,7 @@ export class RedisWriteQueue {
 			if (!data) {
 				return null;
 			}
-			const session = JSON.parse(data, bigIntReviver) as Record<
-				string,
-				unknown
-			>;
-			console.log({ cachedSession: session });
-			return session;
+			return JSON.parse(data, bigIntReviver) as Record<string, unknown>;
 		} catch (error) {
 			this.logger.warn(() => ({
 				msg: "Failed to get cached session from Redis",

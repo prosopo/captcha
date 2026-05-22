@@ -114,7 +114,6 @@ export default (
 				)
 			)[0];
 
-			console.log("\nVALIDAtING REQUEST\n");
 			const {
 				valid,
 				reason,
