@@ -177,10 +177,21 @@ export async function startProviderApi(
 	const apiEndpointAdapter = createApiExpressDefaultEndpointAdapter(
 		parseLogLevel(env.config.logLevel),
 	);
-	const apiRuleRoutesProvider = new AccessRuleApiRoutes(
-		env.getDb().getUserAccessRulesStorage(),
-		env.logger,
-	);
+	// Maintenance-mode / Redis-down startup: storage may not be initialised.
+	// `AccessRuleApiRoutes` is admin-only; in maintenance mode you can't
+	// edit rules anyway, so build it lazily and skip when unavailable.
+	let apiRuleRoutesProvider: AccessRuleApiRoutes | undefined;
+	try {
+		apiRuleRoutesProvider = new AccessRuleApiRoutes(
+			env.getDb().getUserAccessRulesStorage(),
+			env.logger,
+		);
+	} catch (err) {
+		env.logger.warn(() => ({
+			msg: "Skipping access-rule admin routes; storage unavailable",
+			err,
+		}));
+	}
 	const apiAdminRoutesProvider = createApiAdminRoutesProvider(env);
 
 	const clientPathsExcludingVerify = getClientApiPathsExpectingProsopoHeaders();
@@ -270,16 +281,21 @@ export async function startProviderApi(
 		"/v1/prosopo/provider/admin",
 		authMiddleware(env.pair, env.authAccount),
 	);
-	const userAccessRuleRoutes = apiRuleRoutesProvider.getRoutes();
-	for (const userAccessRuleRoute in userAccessRuleRoutes) {
-		apiApp.use(userAccessRuleRoute, authMiddleware(env.pair, env.authAccount));
+	if (apiRuleRoutesProvider) {
+		const userAccessRuleRoutes = apiRuleRoutesProvider.getRoutes();
+		for (const userAccessRuleRoute in userAccessRuleRoutes) {
+			apiApp.use(
+				userAccessRuleRoute,
+				authMiddleware(env.pair, env.authAccount),
+			);
+		}
+		apiApp.use(
+			apiExpressRouterFactory.createRouter(
+				apiRuleRoutesProvider,
+				apiEndpointAdapter,
+			),
+		);
 	}
-	apiApp.use(
-		apiExpressRouterFactory.createRouter(
-			apiRuleRoutesProvider,
-			apiEndpointAdapter,
-		),
-	);
 	apiApp.use(
 		apiExpressRouterFactory.createRouter(
 			apiAdminRoutesProvider,

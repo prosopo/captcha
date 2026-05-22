@@ -30,6 +30,12 @@ const bigIntReviver = (_key: string, value: unknown): unknown =>
 		? BigInt(value.slice(BIGINT_TAG.length))
 		: value;
 
+const SESSION_KEY_PATTERNS = [
+	"cache:session:*",
+	"writeq:session:*",
+	"writeq:session:pending",
+] as const;
+
 /**
  * Redis-backed write queue and read cache for reducing MongoDB load.
  *
@@ -113,7 +119,12 @@ export class RedisWriteQueue {
 			if (!data) {
 				return null;
 			}
-			return JSON.parse(data, bigIntReviver) as Record<string, unknown>;
+			const session = JSON.parse(data, bigIntReviver) as Record<
+				string,
+				unknown
+			>;
+			console.log({ cachedSession: session });
+			return session;
 		} catch (error) {
 			this.logger.warn(() => ({
 				msg: "Failed to get cached session from Redis",
@@ -426,6 +437,70 @@ export class RedisWriteQueue {
 		}
 		this.flushCallback = null;
 		this.earlyFlushThreshold = undefined;
+	}
+
+	/**
+	 * Drop every session-related key from Redis. Intended for provider
+	 * startup so a fresh process can never inherit stale read-cache,
+	 * dedup-by-hash, or pending-write-queue entries written by an
+	 * earlier (possibly crashed) run.
+	 *
+	 * Uses SCAN — KEYS would block the Redis server on large keyspaces.
+	 *
+	 * Bypasses the `isReady()` fast-path that other methods use because
+	 * this runs during startup, before the Redis client's async
+	 * connect() handshake has had time to flip the flag. We await the
+	 * connection promise directly with a bounded timeout so we don't
+	 * hang the boot sequence when Redis is unreachable.
+	 */
+	async clearAllSessionRecords(timeoutMs = 5000): Promise<void> {
+		this.logger.info(() => ({
+			msg: "Clearing Redis session records at startup",
+		}));
+
+		let client: RedisClient;
+		try {
+			client = await Promise.race<RedisClient>([
+				this.connection.getClient(),
+				new Promise<RedisClient>((_, reject) =>
+					setTimeout(
+						() => reject(new Error("Redis connection timeout")),
+						timeoutMs,
+					),
+				),
+			]);
+		} catch (error) {
+			this.logger.warn(() => ({
+				msg: "Skipped Redis session cleanup — Redis not reachable",
+				err: error,
+			}));
+			return;
+		}
+
+		try {
+			let totalDeleted = 0;
+			for (const pattern of SESSION_KEY_PATTERNS) {
+				for await (const key of client.scanIterator({
+					MATCH: pattern,
+					COUNT: 500,
+				})) {
+					const keys = Array.isArray(key) ? key : [key];
+					if (keys.length > 0) {
+						await client.del(keys);
+						totalDeleted += keys.length;
+					}
+				}
+			}
+			this.logger.info(() => ({
+				msg: "Cleared Redis session records at startup",
+				data: { totalDeleted },
+			}));
+		} catch (error) {
+			this.logger.warn(() => ({
+				msg: "Failed to clear Redis session records at startup",
+				err: error,
+			}));
+		}
 	}
 
 	/**

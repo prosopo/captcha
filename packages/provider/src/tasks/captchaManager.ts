@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { type Logger, getLogger } from "@prosopo/common";
+import type { RedisWriteQueue } from "@prosopo/database";
 import type { TranslationKey } from "@prosopo/locale";
 import {
 	ApiParams,
@@ -48,7 +49,6 @@ import {
 	getRequestUserScope,
 } from "../api/blacklistRequestInspector.js";
 import { getIpAddressFromComposite } from "../compositeIpAddress.js";
-import type { RedisWriteQueue } from "../util/redisCache.js";
 import type { BehavioralDataResult } from "./detection/decodeBehavior.js";
 import type { SimdReadingsResult } from "./detection/decodeSimd.js";
 import { checkSpamEmail as checkSpamEmailFn } from "./spam/checkSpamEmail.js";
@@ -290,6 +290,23 @@ export class CaptchaManager {
 			const cachedBeforeRemove = this.writeQueue
 				? await this.writeQueue.getCachedSession(sessionId)
 				: null;
+
+			// invalidate the cached session
+			console.log(
+				`\nINVALIDATING CACHE FOR SESSION ${sessionId} ${cachedBeforeRemove?.userSitekeyIpHash} \n`,
+			);
+			const cachedHash =
+				typeof cachedBeforeRemove?.userSitekeyIpHash === "string"
+					? cachedBeforeRemove.userSitekeyIpHash
+					: undefined;
+			const invalidationPromises = await Promise.all([
+				this.writeQueue?.invalidateCachedSession(sessionId),
+				cachedHash
+					? this.writeQueue?.invalidateCachedSessionByHash(cachedHash)
+					: Promise.resolve(),
+			]);
+			console.log({ invalidationPromises, writeQueue: this.writeQueue });
+
 			const sessionRecord = await this.db.checkAndRemoveSession(sessionId);
 			if (!sessionRecord) {
 				this.logger.warn(() => ({
@@ -305,6 +322,10 @@ export class CaptchaManager {
 				// and /frictionless keeps "Reusing existing session" →
 				// /captcha/* keeps failing in an infinite loop.
 				if (this.writeQueue) {
+					console.log(
+						"INVALIDATING CACHE FOR SESSION NOT FOUND IN DB",
+						sessionId,
+					);
 					const cachedHash =
 						typeof cachedBeforeRemove?.userSitekeyIpHash === "string"
 							? cachedBeforeRemove.userSitekeyIpHash
@@ -330,6 +351,7 @@ export class CaptchaManager {
 			// no concurrent write (e.g. solution-submit `patchCachedSession`)
 			// can re-populate the entry between consume and response.
 			if (this.writeQueue) {
+				console.log("INVALIDATING CACHE FOR SESSION", sessionId);
 				await Promise.all([
 					this.writeQueue.invalidateCachedSession(sessionId),
 					sessionRecord.userSitekeyIpHash
