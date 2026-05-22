@@ -85,7 +85,7 @@ export class FrictionlessManager extends CaptchaManager {
 		pair: KeyringPair,
 		config: ProsopoConfigOutput,
 		logger?: Logger,
-		writeQueue?: import("../../util/redisCache.js").RedisWriteQueue | null,
+		writeQueue?: import("@prosopo/database").RedisWriteQueue | null,
 		decisionMachineRunner?: DecisionMachineRunner,
 		usageCounters?: UsageCounters | null,
 	) {
@@ -200,6 +200,14 @@ export class FrictionlessManager extends CaptchaManager {
 		// Cache the session in Redis for fast lookups.
 		// This reduces MongoDB reads for subsequent requests that need
 		// to look up the session by sessionId or userSitekeyIpHash.
+		//
+		// Awaited (not fire-and-forget): the next request from this client
+		// (e.g. /captcha/{type}) consumes the session and `await`s its
+		// Redis invalidation. If the cache write here landed *after* that
+		// invalidation, the stale entry would survive — Redis would keep
+		// resolving the hash → sessionId mapping to a Mongo-deleted row
+		// for the rest of the TTL, breaking subsequent captcha attempts
+		// for the same user+IP+sitekey.
 		if (this.writeQueue) {
 			const cacheData = sessionRecord as unknown as Record<string, unknown>;
 			const cachePromises: Promise<boolean>[] = [
@@ -213,8 +221,7 @@ export class FrictionlessManager extends CaptchaManager {
 					),
 				);
 			}
-			// Fire-and-forget: don't block the response on caching
-			Promise.all(cachePromises).catch(() => {});
+			await Promise.all(cachePromises).catch(() => {});
 		}
 
 		return sessionRecord;

@@ -254,6 +254,7 @@ export default class ProviderApi
 		userTimestampSignature: string,
 		timeout?: number,
 		behavioralData?: string,
+		salt?: string,
 		simdReadings?: string,
 	): Promise<PuzzleCaptchaSolutionResponse> {
 		const body = SubmitPuzzleCaptchaSolutionBody.parse({
@@ -273,6 +274,7 @@ export default class ProviderApi
 				},
 			},
 			...(behavioralData && { [ApiParams.behavioralData]: behavioralData }),
+			...(salt && { [ApiParams.salt]: salt }),
 			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
 		});
 		return this.post(ClientApiPaths.SubmitPuzzleCaptchaSolution, body, {

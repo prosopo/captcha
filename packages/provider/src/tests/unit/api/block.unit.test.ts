@@ -13,77 +13,80 @@
 // limitations under the License.
 
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BlacklistRequestInspector } from "../../../api/blacklistRequestInspector.js";
 import { blockMiddleware } from "../../../api/block.js";
 
 vi.mock("../../../api/blacklistRequestInspector.js");
 
 describe("blockMiddleware", () => {
-	it("creates BlacklistRequestInspector with correct dependencies", () => {
-		const mockUserAccessRulesStorage = {
+	beforeEach(() => {
+		vi.mocked(BlacklistRequestInspector).mockClear();
+	});
+	const buildMockEnv = (
+		getUserAccessRulesStorageImpl: () => unknown = () => ({
 			get: vi.fn(),
 			set: vi.fn(),
-		};
+		}),
+	) => {
 		const mockDb = {
-			getUserAccessRulesStorage: vi
-				.fn()
-				.mockReturnValue(mockUserAccessRulesStorage),
+			getUserAccessRulesStorage: vi.fn(getUserAccessRulesStorageImpl),
 		};
-		const mockIsReady = vi.fn();
-		const mockEnv = {
-			getDb: vi.fn().mockReturnValue(mockDb),
-			isReady: mockIsReady,
-		} as unknown as ProviderEnvironment;
-
-		const mockAbortRequestForBlockedUsers = vi.fn();
-		const mockBlacklistRequestInspector = {
-			abortRequestForBlockedUsers: mockAbortRequestForBlockedUsers,
+		return {
+			env: {
+				getDb: vi.fn().mockReturnValue(mockDb),
+				isReady: vi.fn(),
+			} as unknown as ProviderEnvironment,
+			mockDb,
 		};
-		vi.mocked(BlacklistRequestInspector).mockReturnValue(
-			// biome-ignore lint/suspicious/noExplicitAny: tests
-			mockBlacklistRequestInspector as any,
-		);
+	};
 
-		const middleware = blockMiddleware(mockEnv);
+	it("constructs BlacklistRequestInspector lazily on first request", async () => {
+		const { env, mockDb } = buildMockEnv();
+		const mockAbort = vi.fn();
+		vi.mocked(BlacklistRequestInspector).mockReturnValue({
+			abortRequestForBlockedUsers: mockAbort,
+		} as never);
 
-		// The second argument should be the bound isReady function
-		expect(BlacklistRequestInspector).toHaveBeenCalledWith(
-			mockUserAccessRulesStorage,
-			expect.any(Function), // bound isReady function
-		);
-		expect(typeof middleware).toBe("function");
+		const middleware = blockMiddleware(env);
+
+		// Eager phase: nothing constructed yet, storage not touched.
+		expect(BlacklistRequestInspector).not.toHaveBeenCalled();
+		expect(mockDb.getUserAccessRulesStorage).not.toHaveBeenCalled();
+
+		await middleware({} as never, {} as never, vi.fn() as never);
+
+		// Lazy phase: inspector built and wired on first hit.
+		expect(BlacklistRequestInspector).toHaveBeenCalledTimes(1);
+		expect(mockAbort).toHaveBeenCalledTimes(1);
 	});
 
-	it("returns bound abortRequestForBlockedUsers method", () => {
-		const mockUserAccessRulesStorage = {
-			get: vi.fn(),
-			set: vi.fn(),
-		};
-		const mockDb = {
-			getUserAccessRulesStorage: vi
-				.fn()
-				.mockReturnValue(mockUserAccessRulesStorage),
-		};
-		const mockIsReady = vi.fn();
-		const mockEnv = {
-			getDb: vi.fn().mockReturnValue(mockDb),
-			isReady: mockIsReady,
-		} as unknown as ProviderEnvironment;
+	it("skips the blocklist check when access-rules storage is unavailable", async () => {
+		const { env } = buildMockEnv(() => {
+			throw new Error("storage not ready");
+		});
 
-		const mockAbortRequestForBlockedUsers = vi.fn();
-		const mockBlacklistRequestInspector = {
-			abortRequestForBlockedUsers: mockAbortRequestForBlockedUsers,
-		};
-		vi.mocked(BlacklistRequestInspector).mockReturnValue(
-			// biome-ignore lint/suspicious/noExplicitAny: tests
-			mockBlacklistRequestInspector as any,
-		);
+		const middleware = blockMiddleware(env);
+		const next = vi.fn();
+		await middleware({} as never, {} as never, next);
 
-		const middleware = blockMiddleware(mockEnv);
+		// next() invoked directly; no inspector built.
+		expect(next).toHaveBeenCalledTimes(1);
+		expect(BlacklistRequestInspector).not.toHaveBeenCalled();
+	});
 
-		expect(typeof middleware).toBe("function");
-		// The middleware returns a bound function, not the original method
-		expect(middleware).not.toBe(mockAbortRequestForBlockedUsers);
+	it("caches the inspector across requests", async () => {
+		const { env } = buildMockEnv();
+		const mockAbort = vi.fn();
+		vi.mocked(BlacklistRequestInspector).mockReturnValue({
+			abortRequestForBlockedUsers: mockAbort,
+		} as never);
+
+		const middleware = blockMiddleware(env);
+		await middleware({} as never, {} as never, vi.fn() as never);
+		await middleware({} as never, {} as never, vi.fn() as never);
+
+		expect(BlacklistRequestInspector).toHaveBeenCalledTimes(1);
+		expect(mockAbort).toHaveBeenCalledTimes(2);
 	});
 });

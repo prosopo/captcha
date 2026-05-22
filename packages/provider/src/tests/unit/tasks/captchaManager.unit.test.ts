@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { type Logger, getLogger } from "@prosopo/common";
+import type { RedisWriteQueue } from "@prosopo/database";
 import {
 	ContextType,
 	IpAddressType,
@@ -31,7 +32,6 @@ import {
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CaptchaManager } from "../../../tasks/captchaManager.js";
 import type { BehavioralDataResult } from "../../../tasks/detection/decodeBehavior.js";
-import type { RedisWriteQueue } from "../../../util/redisCache.js";
 
 vi.mock("../../../tasks/detection/decodeBehavior.js", () => ({
 	default: vi.fn(),

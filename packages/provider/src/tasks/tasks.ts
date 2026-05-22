@@ -19,6 +19,7 @@ import {
 	parseLogLevel,
 } from "@prosopo/common";
 import { CentralDbStreamer, ProviderDatabase } from "@prosopo/database";
+import { RedisWriteQueue } from "@prosopo/database";
 import type { KeyringPair } from "@prosopo/types";
 import type {
 	ProsopoCaptchaCountConfigSchemaOutput,
@@ -26,7 +27,6 @@ import type {
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import { RedisWriteQueue } from "../util/redisCache.js";
 import { UsageCounters } from "../util/usageCounters.js";
 import { ClientTaskManager } from "./client/clientTasks.js";
 import { DatasetManager } from "./dataset/datasetTasks.js";

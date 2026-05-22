@@ -11,9 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import makeDir from "make-dir";
-// This is just to stop the linter from complaining about an unused import
-console.debug(makeDir);
-export * from "./base/index.js";
-export * from "./databases/index.js";
-export * from "./redisCache.js";
+import { ViteTestConfig } from "@prosopo/config";
+
+process.env.NODE_ENV = "test";
+
+export default ViteTestConfig();

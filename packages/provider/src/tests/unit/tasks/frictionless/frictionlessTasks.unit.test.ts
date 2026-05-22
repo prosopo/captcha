@@ -383,7 +383,7 @@ describe("Frictionless Task Manager", () => {
 			};
 
 			frictionlessTaskManager.writeQueue =
-				mockWriteQueue as unknown as import("../../../../util/redisCache.js").RedisWriteQueue;
+				mockWriteQueue as unknown as import("@prosopo/database").RedisWriteQueue;
 
 			frictionlessTaskManager.setSessionParams({
 				token: "test-token",
@@ -427,7 +427,7 @@ describe("Frictionless Task Manager", () => {
 			};
 
 			frictionlessTaskManager.writeQueue =
-				mockWriteQueue as unknown as import("../../../../util/redisCache.js").RedisWriteQueue;
+				mockWriteQueue as unknown as import("@prosopo/database").RedisWriteQueue;
 
 			frictionlessTaskManager.setSessionParams({
 				token: "test-token",
