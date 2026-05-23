@@ -1,5 +1,28 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.9.3
+### Patch Changes
+
+- 53bfd45: Detect when the widget is served over plain HTTP (an insecure browser context)
+  and show a clear "Procaptcha requires a secure (HTTPS) connection" message
+  instead of failing later with a cryptic `Provider Selection Failed` error.
+  Procaptcha depends on secure-context-only browser APIs (e.g. SubtleCrypto), so
+  the frictionless widget now short-circuits before the provider-selection retry
+  loop when `window.isSecureContext` is false. Adds the `WIDGET.INSECURE_CONTEXT`
+  translation key across all locales and an `isSecureBrowserContext` helper.
+- Updated dependencies [53bfd45]
+- Updated dependencies [91958da]
+  - @prosopo/procaptcha-common@2.10.9
+  - @prosopo/locale@3.2.3
+  - @prosopo/procaptcha-puzzle@2.10.0
+  - @prosopo/api@3.4.2
+  - @prosopo/types@4.1.1
+  - @prosopo/procaptcha-pow@2.8.59
+  - @prosopo/procaptcha-react@2.9.58
+  - @prosopo/common@3.1.35
+  - @prosopo/detector@3.4.30
+  - @prosopo/load-balancer@2.9.3
+
 ## 2.9.2
 ### Patch Changes
 
