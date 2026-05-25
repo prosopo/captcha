@@ -12,12 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export const getProcaptchaScript = (name: string) =>
-	document.querySelector<HTMLScriptElement>(`script[src*="${name}"]`);
+export const getProcaptchaScript = (
+	names: string[],
+): HTMLScriptElement | null => {
+	for (const name of names) {
+		const script = document.querySelector<HTMLScriptElement>(
+			`script[src*="${name}"]`,
+		);
+		if (script) {
+			return script;
+		}
+	}
+	return null;
+};
 
-export const extractParams = (name: string) => {
-	const script = getProcaptchaScript(name);
-	if (script && script.src.indexOf(`${name}`) !== -1) {
+export const extractParams = (names: string[]) => {
+	const script = getProcaptchaScript(names);
+	if (script) {
 		const params = new URLSearchParams(script.src.split("?")[1]);
 		return {
 			onloadUrlCallback: params.get("onload") || undefined,
