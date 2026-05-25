@@ -14,6 +14,7 @@
 		"build:all:tsc": "turbo run build:tsc",
 		"build:all:cjs": "turbo run build:cjs",
 		"bundle:all": "turbo run bundle",
+		"bundle:iife:all": "turbo run bundle:iife",
 		"clean:nx": "nx reset",
 		"clean:turbo": "rm -rf .turbo",
 		"clean:all": "turbo run clean",
