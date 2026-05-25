@@ -154,9 +154,10 @@ export class DecisionMachineRunner {
 
 	/**
 	 * Routing phase: ask the configured machine which concrete captcha type to
-	 * serve. Returns undefined when no machine is configured, the machine throws
-	 * or times out, or the output fails schema validation — caller should fall
-	 * back to its baseline in any of these cases.
+	 * serve. Returns undefined when no machine is configured, the machine has
+	 * no route export, the machine throws or times out, or the output fails
+	 * schema validation — caller should fall back to its baseline in any of
+	 * these cases.
 	 */
 	async route(
 		input: RoutingMachineInput,
@@ -175,7 +176,7 @@ export class DecisionMachineRunner {
 			return await this.runArtifactExport(
 				artifact,
 				["route"],
-				{ input },
+				{ input, optional: true },
 				RoutingMachineOutputSchema,
 			);
 		} catch (error) {
