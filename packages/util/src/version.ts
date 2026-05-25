@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // Guarded to remain loadable in browser runtimes (e.g. vite dev/preview)
-// where `process` isn't defined.
+// where `process` isn't defined. Note: the inner access must be
+// `process.env.PROSOPO_PACKAGE_VERSION` (no optional chaining) so that Vite's
+// `define` AST replacement matches and substitutes the build-time version.
 const envVersion =
 	typeof process !== "undefined"
-		? process.env?.PROSOPO_PACKAGE_VERSION
+		? process.env.PROSOPO_PACKAGE_VERSION
 		: undefined;
 export const version = envVersion || "dev";
