@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { Logger } from "@prosopo/common";
 import {
 	CaptchaType,
 	type DecisionMachineArtifact,
@@ -25,6 +26,30 @@ import {
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DecisionMachineRunner } from "../../../../tasks/decisionMachine/decisionMachineRunner.js";
+
+const stubLogger = (): Logger => {
+	const noop = (): void => {};
+	const logger: Partial<Logger> = {
+		setLogLevel: noop,
+		getLogLevel: () => "info",
+		getScope: () => "test",
+		info: vi.fn(),
+		debug: vi.fn(),
+		trace: vi.fn(),
+		warn: vi.fn(),
+		error: vi.fn(),
+		fatal: vi.fn(),
+		log: vi.fn(),
+		getPretty: () => false,
+		setPretty: noop,
+		getPrintStack: () => false,
+		setPrintStack: noop,
+		getFormat: () => "json",
+		setFormat: noop,
+	};
+	logger.with = () => logger as Logger;
+	return logger as Logger;
+};
 
 const baseRouteInput = (
 	overrides: Partial<RoutingMachineInputBase> = {},
@@ -273,6 +298,25 @@ describe("DecisionMachineRunner", () => {
 
 			const result = await runner.route(routeInput());
 			expect(result).toBeUndefined();
+		});
+
+		it("returns undefined without logging an error for a decide-only artifact", async () => {
+			// Mirrors the in-prod shape: a bare default function intended for
+			// decide(). route() should silently fall back to baseline rather
+			// than log "Decision machine must export one of: route" per request.
+			const artifact = buildArtifact(
+				'module.exports = () => ({ decision: "allow" });',
+				DecisionMachineScope.Global,
+			);
+			(db.getDecisionMachineArtifact as unknown as ReturnType<typeof vi.fn>)
+				.mockResolvedValueOnce(undefined)
+				.mockResolvedValueOnce(artifact);
+
+			const logger = stubLogger();
+			const result = await runner.route(routeInput(), logger);
+			expect(result).toBeUndefined();
+			expect(logger.error).not.toHaveBeenCalled();
+			expect(logger.warn).not.toHaveBeenCalled();
 		});
 
 		it("returns undefined on invalid output", async () => {
