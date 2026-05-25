@@ -513,6 +513,7 @@ export const SubmitPuzzleCaptchaSolutionBody = object({
 		.optional()
 		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 	[ApiParams.behavioralData]: string().optional(),
+	[ApiParams.salt]: string().optional(),
 	[ApiParams.simdReadings]: string().optional(),
 });
 

@@ -28,8 +28,10 @@ import { getCompositeIpAddress } from "../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
 import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
+import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 import { getRequestUserScope } from "../blacklistRequestInspector.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
+import { buildPuzzleMaintenanceResponse } from "./maintenanceModeResponses.js";
 
 export default (
 	env: ProviderEnvironment,
@@ -41,7 +43,7 @@ export default (
 		next: NextFunction,
 	) => {
 		let parsed: GetPuzzleCaptchaChallengeRequestBodyTypeOutput;
-		const tasks = new Tasks(env);
+		const tasks = new Tasks(env, req.logger);
 		tasks.setLogger(req.logger);
 
 		try {
@@ -60,6 +62,14 @@ export default (
 
 		validateSiteKey(dapp);
 		validateAddr(user);
+
+		if (getMaintenanceMode()) {
+			req.logger.info(() => ({
+				msg: "Maintenance mode active - returning dummy puzzle challenge",
+				data: { dapp, user, sessionId },
+			}));
+			return res.json(buildPuzzleMaintenanceResponse(user, dapp));
+		}
 
 		try {
 			const clientSettings = await tasks.db.getClientRecord(dapp);

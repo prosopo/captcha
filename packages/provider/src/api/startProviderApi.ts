@@ -177,11 +177,25 @@ export async function startProviderApi(
 	const apiEndpointAdapter = createApiExpressDefaultEndpointAdapter(
 		parseLogLevel(env.config.logLevel),
 	);
-	const apiRuleRoutesProvider = new AccessRuleApiRoutes(
-		env.getDb().getUserAccessRulesStorage(),
-		env.logger,
-	);
-	const apiAdminRoutesProvider = createApiAdminRoutesProvider(env);
+	// Maintenance-mode / DB-down startup: skip the admin/access-rule wiring
+	// since both rely on DB-backed Tasks construction. Captcha endpoints
+	// short-circuit on maintenance-mode at the handler.
+	let apiRuleRoutesProvider: AccessRuleApiRoutes | undefined;
+	let apiAdminRoutesProvider:
+		| ReturnType<typeof createApiAdminRoutesProvider>
+		| undefined;
+	try {
+		apiRuleRoutesProvider = new AccessRuleApiRoutes(
+			env.getDb().getUserAccessRulesStorage(),
+			env.logger,
+		);
+		apiAdminRoutesProvider = createApiAdminRoutesProvider(env);
+	} catch (err) {
+		env.logger.warn(() => ({
+			msg: "Skipping admin/access-rule routes; DB unavailable",
+			err,
+		}));
+	}
 
 	const clientPathsExcludingVerify = getClientApiPathsExpectingProsopoHeaders();
 
@@ -270,26 +284,33 @@ export async function startProviderApi(
 		"/v1/prosopo/provider/admin",
 		authMiddleware(env.pair, env.authAccount),
 	);
-	const userAccessRuleRoutes = apiRuleRoutesProvider.getRoutes();
-	for (const userAccessRuleRoute in userAccessRuleRoutes) {
-		apiApp.use(userAccessRuleRoute, authMiddleware(env.pair, env.authAccount));
-	}
-	apiApp.use(
-		apiExpressRouterFactory.createRouter(
-			apiRuleRoutesProvider,
-			apiEndpointAdapter,
-		),
-	);
-	apiApp.use(
-		apiExpressRouterFactory.createRouter(
-			apiAdminRoutesProvider,
-			// unlike the default one, it should have errorStatusCode as 400
-			createApiExpressDefaultEndpointAdapter(
-				parseLogLevel(env.config.logLevel),
-				400,
+	if (apiRuleRoutesProvider) {
+		const userAccessRuleRoutes = apiRuleRoutesProvider.getRoutes();
+		for (const userAccessRuleRoute in userAccessRuleRoutes) {
+			apiApp.use(
+				userAccessRuleRoute,
+				authMiddleware(env.pair, env.authAccount),
+			);
+		}
+		apiApp.use(
+			apiExpressRouterFactory.createRouter(
+				apiRuleRoutesProvider,
+				apiEndpointAdapter,
 			),
-		),
-	);
+		);
+	}
+	if (apiAdminRoutesProvider) {
+		apiApp.use(
+			apiExpressRouterFactory.createRouter(
+				apiAdminRoutesProvider,
+				// unlike the default one, it should have errorStatusCode as 400
+				createApiExpressDefaultEndpointAdapter(
+					parseLogLevel(env.config.logLevel),
+					400,
+				),
+			),
+		);
+	}
 
 	// Blocking middleware will run on any routes defined after this point
 	apiApp.use(blockMiddleware(env));

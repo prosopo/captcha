@@ -28,8 +28,10 @@ import { getCompositeIpAddress } from "../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
 import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
+import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 import { getRequestUserScope } from "../blacklistRequestInspector.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
+import { buildPowMaintenanceResponse } from "./maintenanceModeResponses.js";
 
 export default (
 	env: ProviderEnvironment,
@@ -60,6 +62,14 @@ export default (
 
 		validateSiteKey(dapp);
 		validateAddr(user);
+
+		if (getMaintenanceMode()) {
+			req.logger.info(() => ({
+				msg: "Maintenance mode active - returning dummy PoW challenge",
+				data: { dapp, user, sessionId },
+			}));
+			return res.json(buildPowMaintenanceResponse(user, dapp));
+		}
 
 		try {
 			const clientSettings = await tasks.db.getClientRecord(dapp);

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { type Logger, getLogger } from "@prosopo/common";
+import type { RedisWriteQueue } from "@prosopo/database";
 import type { TranslationKey } from "@prosopo/locale";
 import {
 	ApiParams,
@@ -48,7 +49,6 @@ import {
 	getRequestUserScope,
 } from "../api/blacklistRequestInspector.js";
 import { getIpAddressFromComposite } from "../compositeIpAddress.js";
-import type { RedisWriteQueue } from "../util/redisCache.js";
 import type { BehavioralDataResult } from "./detection/decodeBehavior.js";
 import type { SimdReadingsResult } from "./detection/decodeSimd.js";
 import { checkSpamEmail as checkSpamEmailFn } from "./spam/checkSpamEmail.js";
@@ -290,6 +290,21 @@ export class CaptchaManager {
 			const cachedBeforeRemove = this.writeQueue
 				? await this.writeQueue.getCachedSession(sessionId)
 				: null;
+
+			// Invalidate the cached session up front so a concurrent
+			// /frictionless can't keep resurrecting it via the hash → sessionId
+			// pointer while we wait on the Mongo round-trip.
+			const cachedHash =
+				typeof cachedBeforeRemove?.userSitekeyIpHash === "string"
+					? cachedBeforeRemove.userSitekeyIpHash
+					: undefined;
+			await Promise.all([
+				this.writeQueue?.invalidateCachedSession(sessionId),
+				cachedHash
+					? this.writeQueue?.invalidateCachedSessionByHash(cachedHash)
+					: Promise.resolve(),
+			]);
+
 			const sessionRecord = await this.db.checkAndRemoveSession(sessionId);
 			if (!sessionRecord) {
 				this.logger.warn(() => ({

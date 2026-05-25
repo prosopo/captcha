@@ -34,7 +34,21 @@ import submitPuzzleCaptchaSolution from "./captcha/submitPuzzleCaptchaSolution.j
 export function prosopoRouter(env: ProviderEnvironment): Router {
 	const router = express.Router();
 
-	const userAccessRulesStorage = env.getDb().getUserAccessRulesStorage();
+	// Maintenance-mode / Redis-down startup: the storage isn't initialised.
+	// Pass `undefined` through; the captcha endpoints short-circuit before
+	// any access-rules lookup when MAINTENANCE_MODE is on.
+	let userAccessRulesStorage: ReturnType<
+		ReturnType<ProviderEnvironment["getDb"]>["getUserAccessRulesStorage"]
+	>;
+	try {
+		userAccessRulesStorage = env.getDb().getUserAccessRulesStorage();
+	} catch (err) {
+		env.logger.warn(() => ({
+			msg: "User access rules storage unavailable; captcha endpoints will skip access-policy checks",
+			err,
+		}));
+		userAccessRulesStorage = undefined as never;
+	}
 
 	/**
 	 * Provides a Captcha puzzle to a Dapp User

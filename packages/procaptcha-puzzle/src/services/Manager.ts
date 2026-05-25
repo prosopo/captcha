@@ -35,10 +35,14 @@ import {
 	type PuzzleEvent,
 	encodeProcaptchaOutput,
 } from "@prosopo/types";
-import { sleep } from "@prosopo/util";
+import { embedData, sleep } from "@prosopo/util";
+import { randomAsHex } from "@prosopo/util-crypto";
 
 interface PuzzleManagerHandle {
-	start: () => Promise<GetPuzzleCaptchaResponse | undefined>;
+	start: (
+		x?: number,
+		y?: number,
+	) => Promise<GetPuzzleCaptchaResponse | undefined>;
 	submitSolution: (
 		finalX: number,
 		finalY: number,
@@ -61,6 +65,11 @@ export const Manager = (
 	let storedProviderApi: ProviderApi | undefined;
 	let storedProviderUrl: string | undefined;
 	let storedUser: Account | undefined;
+	// Checkbox click coords, captured by start() and embedded into the
+	// solution salt at submit time — same shape as the POW flow so the
+	// provider records identical entry-point telemetry for both types.
+	let storedClickX: number | undefined;
+	let storedClickY: number | undefined;
 
 	const defaultState = (): Partial<ProcaptchaState> => {
 		return {
@@ -152,6 +161,8 @@ export const Manager = (
 		storedProviderApi = undefined;
 		storedProviderUrl = undefined;
 		storedUser = undefined;
+		storedClickX = undefined;
+		storedClickY = undefined;
 	};
 
 	const setValidChallengeTimeout = () => {
@@ -167,8 +178,14 @@ export const Manager = (
 		updateState({ successfullChallengeTimeout });
 	};
 
-	const start = async (): Promise<GetPuzzleCaptchaResponse | undefined> => {
-		let challengeResult: GetPuzzleCaptchaResponse | undefined;
+	const start = async (
+		x = 0,
+		y = 0,
+	): Promise<GetPuzzleCaptchaResponse | undefined> => {
+		// Persist click coords on every entry so retries inherit the
+		// trusted coordinates captured by the widget on initial click.
+		storedClickX = x;
+		storedClickY = y;
 
 		await providerRetry(
 			async () => {
@@ -270,8 +287,6 @@ export const Manager = (
 				updateState({
 					loading: false,
 				});
-
-				challengeResult = challenge;
 			},
 			async () => {
 				await start();
@@ -283,7 +298,9 @@ export const Manager = (
 			3,
 		);
 
-		return challengeResult;
+		// Return the stored challenge so retries (which re-enter `start`)
+		// still surface the resolved challenge to the original caller.
+		return storedChallengeResponse;
 	};
 
 	const submitSolution = async (
@@ -359,6 +376,20 @@ export const Manager = (
 				}
 			}
 
+			// Encode the checkbox click coordinates into a random salt, same
+			// shape as the POW flow. The provider decodes this on submit and
+			// records the (x, y) on the puzzle captcha record for telemetry.
+			let salt: string | undefined;
+			if (storedClickX !== undefined && storedClickY !== undefined) {
+				const coords = [storedClickX, storedClickY];
+				const randomSalt = randomAsHex(
+					coords
+						.map((coord) => coord.toString(16).length + 4)
+						.reduce((acc, curr) => acc + curr, 0),
+				);
+				salt = embedData(randomSalt, coords);
+			}
+
 			const simdReadings = frictionlessState?.getSimdReadings
 				? await frictionlessState.getSimdReadings()
 				: undefined;
@@ -372,6 +403,7 @@ export const Manager = (
 				userTimestampSignature.signature.toString(),
 				config.captchas.puzzle.verifiedTimeout,
 				encryptedBehavioralData,
+				salt,
 				simdReadings,
 			);
 

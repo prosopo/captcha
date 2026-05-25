@@ -199,14 +199,36 @@ const Procaptcha = (props: ProcaptchaProps) => {
 				<Checkbox
 					checked={state.isHuman}
 					theme={theme}
-					onChange={async (_event: React.MouseEvent | React.TouchEvent) => {
+					onChange={async (event: React.MouseEvent | React.TouchEvent) => {
 						if (loading) {
 							return;
 						}
 						setLoading(true);
 						setShowRetry(false);
 
-						const challenge = await manager.current.start();
+						// Capture click coordinates (mirrors POW widget) so the
+						// puzzle solution salt records the entry-point telemetry.
+						let x = 0;
+						let y = 0;
+						const mouseOrTouchEvent = event.nativeEvent;
+						if (!mouseOrTouchEvent.isTrusted) {
+							// Don't capture coordinates for non-trusted events
+						} else if (
+							"touches" in mouseOrTouchEvent &&
+							mouseOrTouchEvent.touches.length > 0 &&
+							mouseOrTouchEvent.touches[0]
+						) {
+							x = mouseOrTouchEvent.touches[0].clientX;
+							y = mouseOrTouchEvent.touches[0].clientY;
+						} else if (
+							"clientX" in mouseOrTouchEvent &&
+							"clientY" in mouseOrTouchEvent
+						) {
+							x = mouseOrTouchEvent.clientX;
+							y = mouseOrTouchEvent.clientY;
+						}
+
+						const challenge = await manager.current.start(x, y);
 
 						if (challenge) {
 							setChallengeData(challenge);
