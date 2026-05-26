@@ -210,6 +210,24 @@ PoWCaptchaRecordSchema.index({ "ipAddress.upper": 1 });
 PoWCaptchaRecordSchema.index({ "result.reason": 1 });
 PoWCaptchaRecordSchema.index({ "ipInfo.countryCode": 1 });
 PoWCaptchaRecordSchema.index({ "ipInfo.isVPN": 1 });
+// Supports the CHECK_IP_INFO / PARSE_USER_AGENT backfill queries
+// (`{ <field>: { $exists: false } }`). Partial filter keeps the index
+// limited to the un-enriched rows, so it shrinks as the backfill
+// progresses and is empty once the middleware has filled every row.
+PoWCaptchaRecordSchema.index(
+	{ _id: 1 },
+	{
+		name: "ipInfo_missing",
+		partialFilterExpression: { ipInfo: { $exists: false } },
+	},
+);
+PoWCaptchaRecordSchema.index(
+	{ _id: 1 },
+	{
+		name: "parsedUserAgentInfo_missing",
+		partialFilterExpression: { parsedUserAgentInfo: { $exists: false } },
+	},
+);
 
 export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 	challenge: { type: String, required: true },
@@ -288,6 +306,20 @@ PuzzleCaptchaRecordSchema.index({ "ipAddress.upper": 1 });
 PuzzleCaptchaRecordSchema.index({ "result.reason": 1 });
 PuzzleCaptchaRecordSchema.index({ "ipInfo.countryCode": 1 });
 PuzzleCaptchaRecordSchema.index({ "ipInfo.isVPN": 1 });
+PuzzleCaptchaRecordSchema.index(
+	{ _id: 1 },
+	{
+		name: "ipInfo_missing",
+		partialFilterExpression: { ipInfo: { $exists: false } },
+	},
+);
+PuzzleCaptchaRecordSchema.index(
+	{ _id: 1 },
+	{
+		name: "parsedUserAgentInfo_missing",
+		partialFilterExpression: { parsedUserAgentInfo: { $exists: false } },
+	},
+);
 
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	userAccount: { type: String, required: true },
@@ -358,6 +390,20 @@ UserCommitmentRecordSchema.index({ "ipInfo.countryCode": 1 });
 UserCommitmentRecordSchema.index({ "ipInfo.isVPN": 1 });
 UserCommitmentRecordSchema.index({ requestHash: -1 });
 UserCommitmentRecordSchema.index({ pending: 1 });
+UserCommitmentRecordSchema.index(
+	{ _id: 1 },
+	{
+		name: "ipInfo_missing",
+		partialFilterExpression: { ipInfo: { $exists: false } },
+	},
+);
+UserCommitmentRecordSchema.index(
+	{ _id: 1 },
+	{
+		name: "parsedUserAgentInfo_missing",
+		partialFilterExpression: { parsedUserAgentInfo: { $exists: false } },
+	},
+);
 
 export const DatasetRecordSchema = new Schema<DatasetWithIds>({
 	contentTree: { type: [[String]], required: true },
