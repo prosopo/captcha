@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-puzzle",
-	"version": "2.10.0",
+	"version": "2.10.1",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "dist/index.js",
@@ -30,14 +30,14 @@
 	"browserslist": ["> 0.5%, last 2 versions, not dead"],
 	"dependencies": {
 		"@polkadot/util": "13.5.7",
-		"@prosopo/api": "3.4.2",
+		"@prosopo/api": "3.4.3",
 		"@prosopo/common": "3.1.35",
 		"@prosopo/locale": "3.2.3",
-		"@prosopo/procaptcha-common": "2.10.9",
-		"@prosopo/types": "4.1.1",
-		"@prosopo/util": "3.2.12",
+		"@prosopo/procaptcha-common": "2.10.10",
+		"@prosopo/types": "4.1.2",
+		"@prosopo/util": "3.2.13",
 		"@prosopo/util-crypto": "13.5.29",
-		"@prosopo/widget-skeleton": "2.8.2",
+		"@prosopo/widget-skeleton": "2.8.3",
 		"react": "18.3.1"
 	},
 	"devDependencies": {

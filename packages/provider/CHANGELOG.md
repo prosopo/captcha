@@ -1,5 +1,35 @@
 # @prosopo/provider
 
+## 4.5.1
+### Patch Changes
+
+- a780f1c: Stop logging an error per request when a decision machine has no `route` export.
+  
+  PR #2543 added a routing pre-phase that calls `route()` on whichever decision
+  machine is selected for the dapp. The runner's export lookup only treats
+  `module.exports = fn` as a default for `decide`/`default`, so decide-only
+  machines (the in-prod shape: a bare default function) caused `route()` to
+  throw `Decision machine must export one of: route` on every verify request.
+  
+  Behaviour was already correct — the caller catches and falls back to the
+  baseline — but the per-request error log was noisy. Pass `optional: true`
+  when looking up the `route` export so a missing one returns `undefined`
+  silently, matching how `requiredCounters` is already handled. Schema
+  validation failures, throws, and timeouts continue to log an error.
+- Updated dependencies [72a1218]
+  - @prosopo/util@3.2.13
+  - @prosopo/database@3.13.1
+  - @prosopo/datasets@3.1.22
+  - @prosopo/keyring@2.9.28
+  - @prosopo/types@4.1.2
+  - @prosopo/user-access-policy@3.7.5
+  - @prosopo/env@3.5.1
+  - @prosopo/types-env@2.9.10
+  - @prosopo/api@3.4.3
+  - @prosopo/api-express-router@3.1.11
+  - @prosopo/load-balancer@2.9.4
+  - @prosopo/types-database@4.7.3
+
 ## 4.5.0
 ### Minor Changes
 

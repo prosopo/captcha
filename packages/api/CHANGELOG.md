@@ -1,5 +1,10 @@
 # @prosopo/api
 
+## 3.4.3
+### Patch Changes
+
+  - @prosopo/types@4.1.2
+
 ## 3.4.2
 ### Patch Changes
 

@@ -1,5 +1,11 @@
 # @prosopo/types
 
+## 4.1.2
+### Patch Changes
+
+- Updated dependencies [72a1218]
+  - @prosopo/util@3.2.13
+
 ## 4.1.1
 ### Patch Changes
 
