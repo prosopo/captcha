@@ -74,6 +74,29 @@ export const validateDomain = (domain: string): boolean => {
 	return true;
 };
 
+/**
+ * @description Decodes a Google Translate proxy hostname back to the original host.
+ * Google Translate proxies a site under `<encoded>.translate.goog`, where the original
+ * hostname is encoded by replacing dots with single dashes and dashes with double dashes.
+ * For example:
+ *   - "prosopo.io"     → "prosopo-io.translate.goog"
+ *   - "www.example.com" → "www-example-com.translate.goog"
+ *   - "my-site.com"     → "my--site-com.translate.goog"
+ * Returns the decoded original hostname, or null if the input is not a translate.goog host.
+ */
+export const decodeGoogleTranslateHost = (hostname: string): string | null => {
+	const suffix = ".translate.goog";
+	const host = hostname.toLowerCase().replace(/\.$/, "");
+	if (!host.endsWith(suffix)) return null;
+	const encoded = host.slice(0, -suffix.length);
+	if (!encoded) return null;
+	const placeholder = "\x00";
+	return encoded
+		.replace(/--/g, placeholder)
+		.replace(/-/g, ".")
+		.replace(new RegExp(placeholder, "g"), "-");
+};
+
 export const domainIsLocalhost = (domain: string) => {
 	try {
 		const url = new URL(`http://${domain}`);
