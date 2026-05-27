@@ -85,6 +85,29 @@ export const runDecisionMachine = async (
 	const { req, res } = handle;
 	let { botScore, scoreComponents } = input;
 
+	const autoBanThreshold = clientRecord.settings.autoBanScoreThreshold;
+	if (autoBanThreshold !== undefined && Number(botScore) >= autoBanThreshold) {
+		req.logger.info(() => ({
+			msg: "Frictionless decision",
+			data: {
+				requestId: req.requestId,
+				decision: "auto_ban_score",
+				botScore,
+				autoBanThreshold,
+				token: input.token,
+			},
+		}));
+		await tasks.frictionlessManager.registerBlockedSession({
+			solvedImagesCount: clientRecord.settings.imageMaxRounds,
+			userSitekeyIpHash,
+			reason: FrictionlessReason.AUTO_BAN_SCORE,
+			siteKey: dapp,
+			ipInfo,
+			headers: flatHeaders,
+		});
+		return res.status(401).json({ error: "Unauthorized" });
+	}
+
 	const userAgentMismatchResponse = await runUserAgentMismatchCheck(
 		input,
 		handle,
