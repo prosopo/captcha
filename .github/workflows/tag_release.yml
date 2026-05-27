@@ -23,19 +23,19 @@ jobs:
     steps:
       - name: Get token for gh app
         id: app_token
-        uses: peter-murray/workflow-application-token-action@v3
+        uses: peter-murray/workflow-application-token-action@v4
         with:
           application_id: ${{ vars.PROSOPONATOR_APP_ID }}
           application_private_key: ${{ secrets.PROSOPONATOR_APP_PRIVATE_KEY }}
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: 'recursive'
           token: ${{ steps.app_token.outputs.token }}
           fetch-depth: 0
           ref: main
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '24'
           cache: 'npm'
