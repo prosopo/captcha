@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect, it } from "vitest";
-import { buildDomainSuffixCandidates, validateDomain } from "../url.js";
+import {
+	buildDomainSuffixCandidates,
+	decodeGoogleTranslateHost,
+	validateDomain,
+} from "../url.js";
 
 describe("url", () => {
 	it("validates valid domains", () => {
@@ -129,5 +133,53 @@ describe("buildDomainSuffixCandidates", () => {
 		const result = buildDomainSuffixCandidates("sub.domain.tld");
 		expect(result[0]).toBe("sub.domain.tld");
 		expect(result[result.length - 1]).toBe("domain.tld");
+	});
+});
+
+describe("decodeGoogleTranslateHost", () => {
+	it("decodes a simple two-label domain", () => {
+		expect(decodeGoogleTranslateHost("prosopo-io.translate.goog")).toBe(
+			"prosopo.io",
+		);
+	});
+
+	it("decodes a domain with subdomains", () => {
+		expect(decodeGoogleTranslateHost("www-example-com.translate.goog")).toBe(
+			"www.example.com",
+		);
+	});
+
+	it("decodes a domain containing a dash (double-dash encoding)", () => {
+		expect(decodeGoogleTranslateHost("my--site-com.translate.goog")).toBe(
+			"my-site.com",
+		);
+	});
+
+	it("decodes a domain with mixed dashes and subdomains", () => {
+		expect(decodeGoogleTranslateHost("foo-my--site-co-uk.translate.goog")).toBe(
+			"foo.my-site.co.uk",
+		);
+	});
+
+	it("is case-insensitive on the suffix", () => {
+		expect(decodeGoogleTranslateHost("Prosopo-IO.Translate.Goog")).toBe(
+			"prosopo.io",
+		);
+	});
+
+	it("ignores a trailing dot on the FQDN", () => {
+		expect(decodeGoogleTranslateHost("prosopo-io.translate.goog.")).toBe(
+			"prosopo.io",
+		);
+	});
+
+	it("returns null for non-translate.goog hosts", () => {
+		expect(decodeGoogleTranslateHost("prosopo.io")).toBeNull();
+		expect(decodeGoogleTranslateHost("translate.google.com")).toBeNull();
+		expect(decodeGoogleTranslateHost("translate.goog")).toBeNull();
+	});
+
+	it("returns null for an empty encoded subdomain", () => {
+		expect(decodeGoogleTranslateHost(".translate.goog")).toBeNull();
 	});
 });

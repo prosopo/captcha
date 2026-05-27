@@ -15,6 +15,7 @@
 import { handleErrors } from "@prosopo/api-express-router";
 import { type Logger, ProsopoApiError } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import { decodeGoogleTranslateHost, parseUrl } from "@prosopo/util";
 import { validateAddress } from "@prosopo/util-crypto";
 import type { NextFunction, Request, Response } from "express";
 import type { TFunction } from "i18next";
@@ -67,10 +68,14 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 			if (!origin)
 				throw unauthorizedOriginError(req.i18n, undefined, req.logger);
 
-			for (const domain of allowedDomains) {
-				if (tasks.clientTaskManager.domainPatternMatcher(origin, domain)) {
-					next();
-					return;
+			const candidateOrigins = [origin, ...googleTranslateOrigins(origin)];
+
+			for (const candidate of candidateOrigins) {
+				for (const domain of allowedDomains) {
+					if (tasks.clientTaskManager.domainPatternMatcher(candidate, domain)) {
+						next();
+						return;
+					}
 				}
 			}
 
@@ -88,6 +93,19 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 			}
 		}
 	};
+};
+
+// If the origin is a Google Translate proxy URL, return the decoded original
+// origin(s) so the domain check can still match the site's allowed domains.
+const googleTranslateOrigins = (origin: string): string[] => {
+	try {
+		const url = parseUrl(origin);
+		const decodedHost = decodeGoogleTranslateHost(url.hostname);
+		if (!decodedHost) return [];
+		return [`${url.protocol}//${decodedHost}`];
+	} catch {
+		return [];
+	}
 };
 
 const siteKeyNotRegisteredError = (
