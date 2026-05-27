@@ -55,7 +55,8 @@
 		"DATACENTER_BLOCKED": "Datakeskusten IP-osoitteiden pyynnöt eivät ole sallittuja tälle sivustolle",
 		"MOBILE_BLOCKED": "Mobiiliverkkoyhteyksien pyynnöt eivät ole sallittuja tälle sivustolle",
 		"SATELLITE_BLOCKED": "Satelliittiyhteyksien pyynnöt eivät ole sallittuja tälle sivustolle",
-		"CRAWLER_BLOCKED": "Tunnettujen indeksoijien pyynnöt eivät ole sallittuja tälle sivustolle"
+		"CRAWLER_BLOCKED": "Tunnettujen indeksoijien pyynnöt eivät ole sallittuja tälle sivustolle",
+		"DISALLOWED_WEBVIEW": "Sovelluksen sisäisistä selaimista (WebView) tulevia pyyntöjä ei sallita tällä sivustolla"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Virheellinen parametri"

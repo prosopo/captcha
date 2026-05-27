@@ -50,7 +50,8 @@
 		"DATACENTER_BLOCKED": "Các yêu cầu từ địa chỉ IP trung tâm dữ liệu không được phép cho trang web này",
 		"MOBILE_BLOCKED": "Các yêu cầu từ kết nối mạng di động không được phép cho trang web này",
 		"SATELLITE_BLOCKED": "Các yêu cầu từ kết nối vệ tinh không được phép cho trang web này",
-		"CRAWLER_BLOCKED": "Các yêu cầu từ trình thu thập dữ liệu đã biết không được phép cho trang web này"
+		"CRAWLER_BLOCKED": "Các yêu cầu từ trình thu thập dữ liệu đã biết không được phép cho trang web này",
+		"DISALLOWED_WEBVIEW": "Yêu cầu từ trình duyệt trong ứng dụng (WebView) không được phép cho trang web này"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Không thể sửa đổi người dùng chủ sở hữu",

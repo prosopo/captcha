@@ -50,7 +50,8 @@
 		"DATACENTER_BLOCKED": "Las solicitudes desde direcciones IP de centros de datos no están permitidas para este sitio",
 		"MOBILE_BLOCKED": "Las solicitudes desde redes móviles no están permitidas para este sitio",
 		"SATELLITE_BLOCKED": "Las solicitudes desde conexiones satelitales no están permitidas para este sitio",
-		"CRAWLER_BLOCKED": "Las solicitudes desde rastreadores conocidos no están permitidas para este sitio"
+		"CRAWLER_BLOCKED": "Las solicitudes desde rastreadores conocidos no están permitidas para este sitio",
+		"DISALLOWED_WEBVIEW": "No se permiten solicitudes desde navegadores integrados en aplicaciones (WebView) para este sitio"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "No se puede modificar el usuario propietario",

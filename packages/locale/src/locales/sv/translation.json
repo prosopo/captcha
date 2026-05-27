@@ -50,7 +50,8 @@
 		"DATACENTER_BLOCKED": "Förfrågningar från datacenter-IP-adresser är inte tillåtna för denna webbplats",
 		"MOBILE_BLOCKED": "Förfrågningar från mobilnätverksanslutningar är inte tillåtna för denna webbplats",
 		"SATELLITE_BLOCKED": "Förfrågningar från satellitanslutningar är inte tillåtna för denna webbplats",
-		"CRAWLER_BLOCKED": "Förfrågningar från kända crawlers är inte tillåtna för denna webbplats"
+		"CRAWLER_BLOCKED": "Förfrågningar från kända crawlers är inte tillåtna för denna webbplats",
+		"DISALLOWED_WEBVIEW": "Förfrågningar från inbäddade webbläsare (WebView) är inte tillåtna för denna webbplats"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Kan inte ändra ägare användare",

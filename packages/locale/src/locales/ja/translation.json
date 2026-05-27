@@ -349,7 +349,8 @@
 		"DATACENTER_BLOCKED": "このサイトではデータセンターのIPアドレスからのリクエストは許可されていません",
 		"MOBILE_BLOCKED": "このサイトではモバイルネットワーク接続からのリクエストは許可されていません",
 		"SATELLITE_BLOCKED": "このサイトでは衛星接続からのリクエストは許可されていません",
-		"CRAWLER_BLOCKED": "このサイトでは既知のクローラーからのリクエストは許可されていません"
+		"CRAWLER_BLOCKED": "このサイトでは既知のクローラーからのリクエストは許可されていません",
+		"DISALLOWED_WEBVIEW": "このサイトではアプリ内ブラウザ (WebView) からのリクエストは許可されていません"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "所有者ユーザーを変更できません",
