@@ -1,5 +1,10 @@
 # @prosopo/react-procaptcha-integration-demo
 
+## 1.1.72
+### Patch Changes
+
+  - @prosopo/react-procaptcha-wrapper@1.1.72
+
 ## 1.1.71
 ### Patch Changes
 
