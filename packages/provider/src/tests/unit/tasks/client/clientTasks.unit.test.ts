@@ -285,9 +285,11 @@ describe("ClientTaskManager", () => {
 
 		expect(providerDB.markDappUserCommitmentsStored).toHaveBeenCalledWith(
 			mockCommitments.map((c) => c.id),
+			expect.any(Date),
 		);
 		expect(providerDB.markDappUserPoWCommitmentsStored).toHaveBeenCalledWith(
 			mockPoWCommitments.map((c) => c.challenge),
+			expect.any(Date),
 		);
 	});
 
@@ -379,6 +381,7 @@ describe("ClientTaskManager", () => {
 		const expectedPoWChallenges = mockPoWCommitments.map((c) => c.challenge);
 		expect(providerDB.markDappUserPoWCommitmentsStored).toHaveBeenCalledWith(
 			expectedPoWChallenges,
+			expect.any(Date),
 		);
 		logger.info(() => ({
 			msg: "Test: Verified PoW commitments were marked as stored",

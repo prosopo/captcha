@@ -159,6 +159,13 @@ export interface StoredCaptcha {
 	parsedUserAgentInfo?: UserAgentInfo;
 	storedAtTimestamp?: Date;
 	lastUpdatedTimestamp?: Date;
+	// Sentinel for the central-DB sweep. `true` when the record has unstaged
+	// changes (never staged, or mutated after the last stage). Unset by
+	// `markXxxStored` after a successful stage (guarded so an in-flight update
+	// isn't accidentally cleared). Allows the sweep to scan a tiny partial
+	// index instead of $or'ing `{storedAtTimestamp:{$exists:false}}` with an
+	// unindexable $expr branch.
+	pendingStage?: boolean;
 	sessionId?: string;
 	coords?: [number, number][][];
 	// Legacy fields - kept for backward compatibility with existing data
@@ -223,6 +230,7 @@ export const UserCommitmentSchema = object({
 	storedAtTimestamp: date().optional(),
 	requestedAtTimestamp: date(),
 	lastUpdatedTimestamp: date().optional(),
+	pendingStage: boolean().optional(),
 	sessionId: string().optional(),
 	coords: array(array(tuple([number(), number()]))).optional(),
 	// Pending request fields for image captcha workflow
@@ -316,6 +324,7 @@ export const SessionSchema = object({
 	powDifficulty: number().optional(),
 	storedAtTimestamp: date().optional(),
 	lastUpdatedTimestamp: date().optional(),
+	pendingStage: boolean().optional(),
 	deleted: boolean().optional(),
 	userSitekeyIpHash: string().optional(),
 	webView: boolean(),
@@ -373,6 +382,8 @@ export type Session = {
 	powDifficulty?: number;
 	storedAtTimestamp?: Date;
 	lastUpdatedTimestamp?: Date;
+	// See StoredCaptcha.pendingStage — same semantics on Session records.
+	pendingStage?: boolean;
 	deleted?: boolean;
 	userSitekeyIpHash?: string;
 	webView: boolean;
