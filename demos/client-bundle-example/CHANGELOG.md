@@ -1,5 +1,10 @@
 # @prosopo/client-bundle-example
 
+## 2.10.18
+### Patch Changes
+
+- 5d87beb: chore(client-bundle-example): register invisible-puzzle explicit/implicit pages as Vite build entries so they are emitted in `dist` and reachable from the demo navigation.
+
 ## 2.10.17
 ### Patch Changes
 
