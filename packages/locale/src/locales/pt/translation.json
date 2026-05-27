@@ -50,7 +50,8 @@
 		"DATACENTER_BLOCKED": "Pedidos de endereços IP de centros de dados não são permitidos para este site",
 		"MOBILE_BLOCKED": "Pedidos de ligações de rede móvel não são permitidos para este site",
 		"SATELLITE_BLOCKED": "Pedidos de ligações por satélite não são permitidos para este site",
-		"CRAWLER_BLOCKED": "Pedidos de rastreadores conhecidos não são permitidos para este site"
+		"CRAWLER_BLOCKED": "Pedidos de rastreadores conhecidos não são permitidos para este site",
+		"DISALLOWED_WEBVIEW": "Pedidos a partir de navegadores incorporados em aplicações (WebView) não são permitidos para este site"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Não é possível modificar o utilizador proprietário",

@@ -50,7 +50,8 @@
 		"DATACENTER_BLOCKED": "Permintaan dari alamat IP pusat data tidak diizinkan untuk situs ini",
 		"MOBILE_BLOCKED": "Permintaan dari koneksi jaringan seluler tidak diizinkan untuk situs ini",
 		"SATELLITE_BLOCKED": "Permintaan dari koneksi satelit tidak diizinkan untuk situs ini",
-		"CRAWLER_BLOCKED": "Permintaan dari crawler yang dikenal tidak diizinkan untuk situs ini"
+		"CRAWLER_BLOCKED": "Permintaan dari crawler yang dikenal tidak diizinkan untuk situs ini",
+		"DISALLOWED_WEBVIEW": "Permintaan dari peramban dalam aplikasi (WebView) tidak diizinkan untuk situs ini"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Cannot modify owner user",

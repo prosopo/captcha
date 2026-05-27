@@ -50,7 +50,8 @@
 		"DATACENTER_BLOCKED": "Adatközponti IP-címekről érkező kérések nem engedélyezettek ezen az oldalon",
 		"MOBILE_BLOCKED": "Mobilhálózati kapcsolatokról érkező kérések nem engedélyezettek ezen az oldalon",
 		"SATELLITE_BLOCKED": "Műholdas kapcsolatokról érkező kérések nem engedélyezettek ezen az oldalon",
-		"CRAWLER_BLOCKED": "Ismert webrobotoktól érkező kérések nem engedélyezettek ezen az oldalon"
+		"CRAWLER_BLOCKED": "Ismert webrobotoktól érkező kérések nem engedélyezettek ezen az oldalon",
+		"DISALLOWED_WEBVIEW": "Az alkalmazáson belüli böngészőkből (WebView) érkező kérések nem engedélyezettek ezen az oldalon"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Nem lehet módosítani a tulajdonos felhasználót",

@@ -349,7 +349,8 @@
 		"DATACENTER_BLOCKED": "Permintaan daripada alamat IP pusat data tidak dibenarkan untuk laman ini",
 		"MOBILE_BLOCKED": "Permintaan daripada sambungan rangkaian mudah alih tidak dibenarkan untuk laman ini",
 		"SATELLITE_BLOCKED": "Permintaan daripada sambungan satelit tidak dibenarkan untuk laman ini",
-		"CRAWLER_BLOCKED": "Permintaan daripada perangkak yang dikenali tidak dibenarkan untuk laman ini"
+		"CRAWLER_BLOCKED": "Permintaan daripada perangkak yang dikenali tidak dibenarkan untuk laman ini",
+		"DISALLOWED_WEBVIEW": "Permintaan daripada pelayar dalam aplikasi (WebView) tidak dibenarkan untuk laman ini"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Cannot modify owner user",

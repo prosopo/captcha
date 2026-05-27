@@ -50,7 +50,8 @@
 		"DATACENTER_BLOCKED": "이 사이트에서는 데이터센터 IP 주소의 요청이 허용되지 않습니다",
 		"MOBILE_BLOCKED": "이 사이트에서는 모바일 네트워크 연결의 요청이 허용되지 않습니다",
 		"SATELLITE_BLOCKED": "이 사이트에서는 위성 연결의 요청이 허용되지 않습니다",
-		"CRAWLER_BLOCKED": "이 사이트에서는 알려진 크롤러의 요청이 허용되지 않습니다"
+		"CRAWLER_BLOCKED": "이 사이트에서는 알려진 크롤러의 요청이 허용되지 않습니다",
+		"DISALLOWED_WEBVIEW": "이 사이트에서는 인앱 브라우저(WebView)의 요청이 허용되지 않습니다"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "소유자 사용자를 수정할 수 없음",
