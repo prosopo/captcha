@@ -240,7 +240,7 @@ describe("PowCaptchaManager", () => {
 				...verifyPowCaptchaSolutionArgs,
 			);
 
-			expect(result).toBe(true);
+			expect(result.verified).toBe(true);
 
 			// Will cause build to fail if args change
 			const verifyRecencyArgs: Parameters<typeof verifyRecency> = [
@@ -330,16 +330,18 @@ describe("PowCaptchaManager", () => {
 			(validateSolution as any).mockImplementation(() => false);
 
 			expect(
-				await powCaptchaManager.verifyPowCaptchaSolution(
-					challenge,
-					signature,
-					nonce,
-					timeout,
-					timestampSignature,
-					ipAddress,
-					headers,
-					undefined, // salt (optional)
-				),
+				(
+					await powCaptchaManager.verifyPowCaptchaSolution(
+						challenge,
+						signature,
+						nonce,
+						timeout,
+						timestampSignature,
+						ipAddress,
+						headers,
+						undefined, // salt (optional)
+					)
+				).verified,
 			).toBe(false);
 
 			expect(verifyRecency).toHaveBeenCalledWith(challenge, timeout);
@@ -2338,7 +2340,7 @@ module.exports = (input) => {
 					headers,
 				);
 
-				expect(result).toBe(false);
+				expect(result.verified).toBe(false);
 				expect(db.updatePowCaptchaRecordResult).toHaveBeenCalledOnce();
 				expect(db.updateSessionRecord).toHaveBeenCalledWith(sessionId, {
 					userSubmitted: true,

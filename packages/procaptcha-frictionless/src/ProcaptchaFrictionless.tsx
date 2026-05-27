@@ -20,6 +20,7 @@ import {
 	providerRetry,
 } from "@prosopo/procaptcha-common";
 import {
+	CaptchaType,
 	type FrictionlessState,
 	type ModeType,
 	ProcaptchaConfigSchema,
@@ -150,6 +151,58 @@ export const ProcaptchaFrictionless = ({
 		}, 10000);
 	};
 
+	// Mount the captcha widget that matches the chosen type. Used both for the
+	// initial frictionless decision and for the post-pow escalation handoff —
+	// in the latter case the FrictionlessState carries the new sessionId minted
+	// by the provider when it decided PoW alone wasn't enough.
+	const renderForCaptchaType = async (
+		captchaType: string,
+		frictionlessState: FrictionlessState,
+	) => {
+		const onEscalate = (
+			next: CaptchaType.image | CaptchaType.puzzle,
+			newSessionId: string,
+		) => {
+			void renderForCaptchaType(next, {
+				...frictionlessState,
+				sessionId: newSessionId,
+			});
+		};
+
+		if (captchaType === CaptchaType.image) {
+			const Procaptcha = await ProcaptchaLoader();
+			setComponentToRender(
+				<Procaptcha
+					config={config}
+					callbacks={callbacks}
+					frictionlessState={frictionlessState}
+					i18n={i18n}
+				/>,
+			);
+		} else if (captchaType === CaptchaType.puzzle) {
+			const ProcaptchaPuzzle = await ProcaptchaPuzzleLoader();
+			setComponentToRender(
+				<ProcaptchaPuzzle
+					config={config}
+					callbacks={callbacks}
+					frictionlessState={frictionlessState}
+					i18n={i18n}
+				/>,
+			);
+		} else {
+			const ProcaptchaPow = await ProcaptchaPowLoader();
+			setComponentToRender(
+				<ProcaptchaPow
+					config={config}
+					callbacks={callbacks}
+					frictionlessState={frictionlessState}
+					i18n={i18n}
+					onEscalate={onEscalate}
+				/>,
+			);
+		}
+	};
+
 	const start = async () => {
 		// Procaptcha cannot run over plain HTTP (no SubtleCrypto etc.), which
 		// would otherwise fail later with a cryptic provider-selection error.
@@ -194,42 +247,12 @@ export const ProcaptchaFrictionless = ({
 					getSimdReadings: result.getSimdReadings,
 				};
 
-				if (result.captchaType === "image") {
-					const Procaptcha = await ProcaptchaLoader();
-					setComponentToRender(
-						<Procaptcha
-							config={config}
-							callbacks={callbacks}
-							frictionlessState={frictionlessState}
-							i18n={i18n}
-						/>,
-					);
-				} else if (result.captchaType === "puzzle") {
-					const ProcaptchaPuzzle = await ProcaptchaPuzzleLoader();
-					setComponentToRender(
-						<ProcaptchaPuzzle
-							config={config}
-							callbacks={callbacks}
-							frictionlessState={frictionlessState}
-							i18n={i18n}
-						/>,
-					);
-				} else {
-					const ProcaptchaPow = await ProcaptchaPowLoader();
-					setComponentToRender(
-						<ProcaptchaPow
-							config={config}
-							callbacks={callbacks}
-							frictionlessState={frictionlessState}
-							i18n={i18n}
-						/>,
-					);
+				await renderForCaptchaType(result.captchaType, frictionlessState);
 
-					stateRef.current = {
-						...stateRef.current,
-						loading: false,
-					};
-				}
+				stateRef.current = {
+					...stateRef.current,
+					loading: false,
+				};
 			},
 			start,
 			resetState,
