@@ -50,7 +50,8 @@
 		"DATACENTER_BLOCKED": "Anfragen von Rechenzentrum-IP-Adressen sind für diese Website nicht erlaubt",
 		"MOBILE_BLOCKED": "Anfragen von Mobilfunkverbindungen sind für diese Website nicht erlaubt",
 		"SATELLITE_BLOCKED": "Anfragen von Satellitenverbindungen sind für diese Website nicht erlaubt",
-		"CRAWLER_BLOCKED": "Anfragen von bekannten Crawlern sind für diese Website nicht erlaubt"
+		"CRAWLER_BLOCKED": "Anfragen von bekannten Crawlern sind für diese Website nicht erlaubt",
+		"DISALLOWED_WEBVIEW": "Anfragen aus In-App-Browsern (WebView) sind für diese Website nicht erlaubt"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Kann den Besitzerbenutzer nicht ändern",

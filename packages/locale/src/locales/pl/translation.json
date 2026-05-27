@@ -50,7 +50,8 @@
 		"DATACENTER_BLOCKED": "Żądania z adresów IP centrów danych nie są dozwolone dla tej strony",
 		"MOBILE_BLOCKED": "Żądania z połączeń sieci komórkowych nie są dozwolone dla tej strony",
 		"SATELLITE_BLOCKED": "Żądania z połączeń satelitarnych nie są dozwolone dla tej strony",
-		"CRAWLER_BLOCKED": "Żądania od znanych robotów nie są dozwolone dla tej strony"
+		"CRAWLER_BLOCKED": "Żądania od znanych robotów nie są dozwolone dla tej strony",
+		"DISALLOWED_WEBVIEW": "Żądania z przeglądarek wbudowanych w aplikacje (WebView) nie są dozwolone dla tej strony"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Nie można zmodyfikować właściciela użytkownika",

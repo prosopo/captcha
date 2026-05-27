@@ -50,7 +50,8 @@
 		"DATACENTER_BLOCKED": "Solicitările de la adrese IP de centre de date nu sunt permise pentru acest site",
 		"MOBILE_BLOCKED": "Solicitările de la conexiuni de rețea mobilă nu sunt permise pentru acest site",
 		"SATELLITE_BLOCKED": "Solicitările de la conexiuni prin satelit nu sunt permise pentru acest site",
-		"CRAWLER_BLOCKED": "Solicitările de la crawlere cunoscute nu sunt permise pentru acest site"
+		"CRAWLER_BLOCKED": "Solicitările de la crawlere cunoscute nu sunt permise pentru acest site",
+		"DISALLOWED_WEBVIEW": "Solicitările din browsere încorporate în aplicații (WebView) nu sunt permise pentru acest site"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Nu se poate modifica utilizatorul proprietar",

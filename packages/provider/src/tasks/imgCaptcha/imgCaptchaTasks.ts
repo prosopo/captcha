@@ -882,16 +882,21 @@ export class ImgCaptchaManager extends CaptchaManager {
 				}));
 
 				if (
+					!failStatus &&
 					disallowWebView === true &&
-					(sessionRecord.scoreComponents.webView || 0) > 0
+					(sessionRecord.webView === true ||
+						(sessionRecord.scoreComponents.webView || 0) > 0)
 				) {
 					this.logger.info(() => ({
 						msg: "Disallowing webview access - user not verified",
 					}));
-					return {
-						status: "API.DISALLOWED_WEBVIEW",
-						verified: false,
+					commitmentUpdates.result = {
+						status: CaptchaStatus.disapproved,
+						reason: ResultReason.DISALLOWED_WEBVIEW,
 					};
+					failStatus = ResultReason.DISALLOWED_WEBVIEW;
+					isApproved = false;
+					failureStatus = ResultReason.DISALLOWED_WEBVIEW;
 				}
 				if (
 					contextAwareEnabled &&

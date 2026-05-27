@@ -128,7 +128,8 @@
 		"DATACENTER_BLOCKED": "Requests from datacenter IP addresses are not allowed for this site",
 		"MOBILE_BLOCKED": "Requests from mobile network connections are not allowed for this site",
 		"SATELLITE_BLOCKED": "Requests from satellite connections are not allowed for this site",
-		"CRAWLER_BLOCKED": "Requests from known crawlers are not allowed for this site"
+		"CRAWLER_BLOCKED": "Requests from known crawlers are not allowed for this site",
+		"DISALLOWED_WEBVIEW": "Requests from in-app browsers (WebViews) are not allowed for this site"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Cannot modify owner user",
