@@ -225,10 +225,8 @@ export const ClientSettingsSchema = object({
 		.optional()
 		.default(imageMaxRoundsDefault),
 	// Detector score at or above which the frictionless flow blocks the
-	// request outright instead of issuing a challenge. Undefined / null
-	// disables. Nullable on the wire so the portal can send an explicit
-	// "clear" signal (JSON drops undefined keys).
-	autoBanScoreThreshold: number().min(0).nullable().optional(),
+	// request outright instead of issuing a challenge. Absent = disabled.
+	autoBanScoreThreshold: number().min(0).optional(),
 	puzzleTolerance: number()
 		.int()
 		.min(5)

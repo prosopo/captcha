@@ -86,9 +86,7 @@ export const runDecisionMachine = async (
 	let { botScore, scoreComponents } = input;
 
 	const autoBanThreshold = clientRecord.settings.autoBanScoreThreshold;
-	// `!= null` matches both null and undefined; the handler normalises to
-	// undefined on write but the schema is nullable on the wire.
-	if (autoBanThreshold != null && Number(botScore) >= autoBanThreshold) {
+	if (autoBanThreshold !== undefined && Number(botScore) >= autoBanThreshold) {
 		req.logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {
