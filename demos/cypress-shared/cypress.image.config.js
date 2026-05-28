@@ -16,6 +16,7 @@ import { builtinModules } from "node:module";
 import { loadEnv } from "@prosopo/dotenv";
 import { defineConfig } from "cypress";
 import vitePreprocessor from "cypress-vite";
+import { configureVisualRegression } from "cypress-visual-regression";
 
 const allExternal = [
 	...builtinModules,
@@ -25,15 +26,23 @@ loadEnv();
 
 export default defineConfig({
 	video: true,
+	screenshotsFolder: "./cypress/snapshots/actual",
+	trashAssetsBeforeRuns: true,
 	headers: { "Accept-Encoding": "gzip, deflate" },
 	env: {
 		...process.env,
 		// For the client-example, the default page is the captcha type. For the client-bundle-example, the default_page
 		// is sometimes passed via --env default_page='/THE_PAGE.html'" inside package.json scripts.
 		default_page: "/",
+		visualRegressionType: "regression",
+		visualRegressionBaseDirectory: "cypress/snapshots/baseline",
+		visualRegressionDiffDirectory: "cypress/snapshots/diff",
+		visualRegressionGenerateDiff: "fail",
+		visualRegressionFailSilently: false,
 	},
 	e2e: {
 		setupNodeEvents(on, config) {
+			configureVisualRegression(on);
 			on(
 				"file:preprocessor",
 				vitePreprocessor({
