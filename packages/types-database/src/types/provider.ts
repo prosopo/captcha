@@ -177,6 +177,11 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	userSubmitted: { type: Boolean, required: true },
 	serverChecked: { type: Boolean, required: true },
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
+	// See `StoredCaptcha.pendingStage` — `true` while the record has
+	// unstaged changes. Indexed via a tiny partial index so the
+	// StoreCommitmentsExternal sweep scans only pending rows instead of
+	// the whole collection.
+	pendingStage: { type: Boolean, required: false },
 	// Full ipinfo payload. Replaces the flat `vpn`, `countryCode`,
 	// `geolocation` and other per-flag fields — consumers narrow on
 	// `ipInfo.isValid` and read whichever sub-field they need.
@@ -218,6 +223,17 @@ PoWCaptchaRecordSchema.index({ "ipInfo.isVPN": 1 });
 // `$not` isn't allowed inside `partialFilterExpression`.
 PoWCaptchaRecordSchema.index({ ipInfo: 1 });
 PoWCaptchaRecordSchema.index({ parsedUserAgentInfo: 1 });
+// Tiny partial index serving the StoreCommitmentsExternal sweep. Only
+// records with `pendingStage: true` are indexed — typically a small
+// rolling set — so the query examines only the pending rows instead of
+// scanning the whole powcaptchas collection.
+PoWCaptchaRecordSchema.index(
+	{ pendingStage: 1 },
+	{
+		name: "pendingStage_partial",
+		partialFilterExpression: { pendingStage: true },
+	},
+);
 
 export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 	challenge: { type: String, required: true },
@@ -263,6 +279,8 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 	userSubmitted: { type: Boolean, required: true },
 	serverChecked: { type: Boolean, required: true },
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
+	// See `StoredCaptcha.pendingStage`.
+	pendingStage: { type: Boolean, required: false },
 	// Full ipinfo payload. Replaces the flat `vpn`, `countryCode`,
 	// `geolocation` and other per-flag fields — consumers narrow on
 	// `ipInfo.isValid` and read whichever sub-field they need.
@@ -298,6 +316,13 @@ PuzzleCaptchaRecordSchema.index({ "ipInfo.countryCode": 1 });
 PuzzleCaptchaRecordSchema.index({ "ipInfo.isVPN": 1 });
 PuzzleCaptchaRecordSchema.index({ ipInfo: 1 });
 PuzzleCaptchaRecordSchema.index({ parsedUserAgentInfo: 1 });
+PuzzleCaptchaRecordSchema.index(
+	{ pendingStage: 1 },
+	{
+		name: "pendingStage_partial",
+		partialFilterExpression: { pendingStage: true },
+	},
+);
 
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	userAccount: { type: String, required: true },
@@ -327,6 +352,8 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
 	requestedAtTimestamp: { type: Date, required: true },
 	lastUpdatedTimestamp: { type: Date, required: false },
+	// See `StoredCaptcha.pendingStage`.
+	pendingStage: { type: Boolean, required: false },
 	// Full ipinfo payload. Replaces the flat `vpn`, `countryCode`,
 	// `geolocation` and other per-flag fields — consumers narrow on
 	// `ipInfo.isValid` and read whichever sub-field they need.
@@ -370,6 +397,13 @@ UserCommitmentRecordSchema.index({ requestHash: -1 });
 UserCommitmentRecordSchema.index({ pending: 1 });
 UserCommitmentRecordSchema.index({ ipInfo: 1 });
 UserCommitmentRecordSchema.index({ parsedUserAgentInfo: 1 });
+UserCommitmentRecordSchema.index(
+	{ pendingStage: 1 },
+	{
+		name: "pendingStage_partial",
+		partialFilterExpression: { pendingStage: true },
+	},
+);
 
 export const DatasetRecordSchema = new Schema<DatasetWithIds>({
 	contentTree: { type: [[String]], required: true },
@@ -474,6 +508,8 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	powDifficulty: { type: Number, required: false },
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_DAY },
 	lastUpdatedTimestamp: { type: Date, required: false },
+	// See `StoredCaptcha.pendingStage` — same semantics on Session records.
+	pendingStage: { type: Boolean, required: false },
 	deleted: { type: Boolean, required: false },
 	userSitekeyIpHash: { type: String, required: false },
 	webView: { type: Boolean, required: true, default: false },
@@ -533,6 +569,15 @@ SessionRecordSchema.index({ createdAt: 1, deleted: 1 });
 SessionRecordSchema.index(
 	{ "result.status": 1 },
 	{ background: true, sparse: true },
+);
+// See PoWCaptchaRecordSchema's pendingStage_partial — same purpose for
+// the unstored-session sweep.
+SessionRecordSchema.index(
+	{ pendingStage: 1 },
+	{
+		name: "pendingStage_partial",
+		partialFilterExpression: { pendingStage: true },
+	},
 );
 
 export type DetectorSchema = mongoose.Document & DetectorKey;
@@ -705,7 +750,10 @@ export interface IProviderDatabase extends IDatabase {
 		skip?: number,
 	): Promise<UserCommitmentRecord[]>;
 
-	markDappUserCommitmentsStored(commitmentIds: Hash[]): Promise<void>;
+	markDappUserCommitmentsStored(
+		commitmentIds: Hash[],
+		asOfTimestamp?: Date,
+	): Promise<void>;
 
 	markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void>;
 
@@ -721,7 +769,10 @@ export interface IProviderDatabase extends IDatabase {
 
 	markDappUserPoWCommitmentsChecked(challengeIds: string[]): Promise<void>;
 
-	markDappUserPoWCommitmentsStored(challengeIds: string[]): Promise<void>;
+	markDappUserPoWCommitmentsStored(
+		challengeIds: string[],
+		asOfTimestamp?: Date,
+	): Promise<void>;
 
 	flagProcessedDappUserSolutions(captchaIds: Hash[]): Promise<void>;
 
@@ -861,7 +912,10 @@ export interface IProviderDatabase extends IDatabase {
 		skip: number,
 	): Promise<SessionRecord[]>;
 
-	markSessionRecordsStored(sessionIds: string[]): Promise<void>;
+	markSessionRecordsStored(
+		sessionIds: string[],
+		asOfTimestamp?: Date,
+	): Promise<void>;
 
 	getUserAccessRulesStorage(): AccessRulesStorage;
 

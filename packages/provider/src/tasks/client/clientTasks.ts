@@ -109,6 +109,10 @@ export class ClientTaskManager {
 		try {
 			const BATCH_SIZE = 1000;
 			const captchaDB = this.getCaptchaDB(this.config.mongoCaptchaUri);
+			// Captured once at sweep start. Passed through to markXxxStored as
+			// the guard cutoff so any record mutated after this point keeps
+			// `pendingStage: true` and is picked up on the next sweep.
+			const sweepStartedAt = new Date();
 
 			// Process image commitments with cursor
 			let processedCommitments = 0;
@@ -128,6 +132,7 @@ export class ClientTaskManager {
 						await captchaDB.saveCaptchas([], filteredBatch, []);
 						await this.providerDB.markDappUserCommitmentsStored(
 							filteredBatch.map((commitment) => commitment.id),
+							sweepStartedAt,
 						);
 					}
 					processedCommitments += filteredBatch.length;
@@ -151,6 +156,7 @@ export class ClientTaskManager {
 						await captchaDB.saveCaptchas([], [], filteredBatch);
 						await this.providerDB.markDappUserPoWCommitmentsStored(
 							filteredBatch.map((record) => record.challenge),
+							sweepStartedAt,
 						);
 					}
 					processedPowRecords += filteredBatch.length;
@@ -171,6 +177,7 @@ export class ClientTaskManager {
 						await captchaDB.saveCaptchas(filteredBatch, [], []);
 						await this.providerDB.markSessionRecordsStored(
 							filteredBatch.map((record) => record.sessionId),
+							sweepStartedAt,
 						);
 					}
 					processedSessionRecords += filteredBatch.length;
