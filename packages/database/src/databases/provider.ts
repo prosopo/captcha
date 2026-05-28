@@ -762,6 +762,7 @@ export class ProviderDatabase
 			providerSignature,
 			userSignature,
 			lastUpdatedTimestamp: new Date(),
+			pendingStage: true,
 			sessionId,
 			ipInfo,
 		};
@@ -780,8 +781,18 @@ export class ProviderDatabase
 			this.centralStreamer?.streamPowRecord(
 				powCaptchaRecord as PoWCaptchaRecord,
 				(ts) =>
+					// Guard with `lastUpdatedTimestamp: { $lte: ts }` so a concurrent
+					// update (newer lastUpdatedTimestamp) doesn't get its pendingStage
+					// flag cleared by this older stage completion. Mismatched docs
+					// leave pendingStage set so the next sweep picks them up.
 					this.tables.powcaptcha
-						.updateOne({ challenge }, { $set: { storedAtTimestamp: ts } })
+						.updateOne(
+							{ challenge, lastUpdatedTimestamp: { $lte: ts } },
+							{
+								$set: { storedAtTimestamp: ts },
+								$unset: { pendingStage: 1 },
+							},
+						)
 						.then(() => {}),
 			);
 		} catch (error) {
@@ -896,12 +907,14 @@ export class ProviderDatabase
 			| "userSignature"
 			| "lastUpdatedTimestamp"
 			| "coords"
+			| "pendingStage"
 		> = {
 			result,
 			serverChecked,
 			userSubmitted,
 			userSignature,
 			lastUpdatedTimestamp: timestamp,
+			pendingStage: true,
 			...(coords && { coords }),
 		};
 		try {
@@ -936,7 +949,13 @@ export class ProviderDatabase
 				() => this.getPowCaptchaRecordByChallenge(challenge),
 				(ts) =>
 					this.tables.powcaptcha
-						.updateOne({ challenge }, { $set: { storedAtTimestamp: ts } })
+						.updateOne(
+							{ challenge, lastUpdatedTimestamp: { $lte: ts } },
+							{
+								$set: { storedAtTimestamp: ts },
+								$unset: { pendingStage: 1 },
+							},
+						)
 						.then(() => {}),
 			);
 		} catch (error) {
@@ -963,14 +982,20 @@ export class ProviderDatabase
 		const tables = this.getTables();
 		await tables.powcaptcha.updateOne(
 			{ challenge },
-			{ $set: updates },
+			{ $set: { ...updates, pendingStage: true } },
 			{ upsert: false },
 		);
 		this.centralStreamer?.streamPowUpdate(
 			() => this.getPowCaptchaRecordByChallenge(challenge),
 			(ts) =>
 				this.tables.powcaptcha
-					.updateOne({ challenge }, { $set: { storedAtTimestamp: ts } })
+					.updateOne(
+						{ challenge, lastUpdatedTimestamp: { $lte: ts } },
+						{
+							$set: { storedAtTimestamp: ts },
+							$unset: { pendingStage: 1 },
+						},
+					)
 					.then(() => {}),
 		);
 	}
@@ -1010,6 +1035,7 @@ export class ProviderDatabase
 			tolerance,
 			providerSignature,
 			lastUpdatedTimestamp: new Date(),
+			pendingStage: true,
 			sessionId,
 			ipInfo,
 		};
@@ -1143,12 +1169,14 @@ export class ProviderDatabase
 			| "userSignature"
 			| "lastUpdatedTimestamp"
 			| "coords"
+			| "pendingStage"
 		> = {
 			result,
 			serverChecked,
 			userSubmitted,
 			userSignature,
 			lastUpdatedTimestamp: timestamp,
+			pendingStage: true,
 			...(coords && { coords }),
 		};
 		try {
@@ -1203,7 +1231,7 @@ export class ProviderDatabase
 		const tables = this.getTables();
 		await tables.puzzlecaptcha.updateOne(
 			{ challenge },
-			{ $set: updates },
+			{ $set: { ...updates, pendingStage: true } },
 			{ upsert: false },
 		);
 	}
@@ -1221,52 +1249,50 @@ export class ProviderDatabase
 	}
 
 	/** @description Get Dapp User captcha commitments from the commitments table that have not been counted towards the
-	 * client's total
+	 * client's total.
+	 *
+	 * Served by the `pendingStage_partial` index. Records have
+	 * `pendingStage: true` set on insert and on every mutation (see
+	 * `updateDappUserCommitment`, `markDappUserCommitmentsChecked`,
+	 * `approveDappUserCommitment`, `disapproveDappUserCommitment`,
+	 * `storePendingImageCommitment`). `markDappUserCommitmentsStored` clears
+	 * the flag after a successful stage, guarded by `lastUpdatedTimestamp`
+	 * so an in-flight update isn't lost.
 	 */
 	async getUnstoredDappUserCommitments(
 		limit = 1000,
 		skip = 0,
 	): Promise<UserCommitmentRecord[]> {
-		const filterNoStoredTimestamp: {
-			[key in keyof Pick<PoWCaptchaRecord, "storedAtTimestamp">]: {
-				$exists: boolean;
-			};
-		} = { storedAtTimestamp: { $exists: false } };
-		const docs = await this.tables?.commitment.aggregate<UserCommitmentRecord>([
-			{
-				$match: {
-					$or: [
-						filterNoStoredTimestamp,
-						{
-							$expr: {
-								$lt: ["$storedAtTimestamp", "$lastUpdatedTimestamp"],
-							},
-						},
-					],
-				},
-			},
-			{
-				$sort: { _id: 1 },
-			},
-			{
-				$skip: skip,
-			},
-			{
-				$limit: limit,
-			},
-		]);
+		const docs = await this.tables?.commitment
+			.find({ pendingStage: true })
+			.sort({ _id: 1 })
+			.skip(skip)
+			.limit(limit)
+			.lean<UserCommitmentRecord[]>();
 		return docs || [];
 	}
 
-	/** @description Mark a list of captcha commits as stored
+	/** @description Mark a list of captcha commits as stored.
+	 *
+	 * `asOfTimestamp` defaults to "now" but the sweep should pass the time
+	 * at which it fetched the batch. The lastUpdatedTimestamp guard prevents
+	 * us from clearing pendingStage on a record that was mutated between
+	 * fetch and mark-stored — those records will leave pendingStage set so
+	 * the next sweep picks them up.
 	 */
-	async markDappUserCommitmentsStored(commitmentIds: Hash[]): Promise<void> {
-		const updateDoc: Pick<StoredCaptcha, "storedAtTimestamp"> = {
-			storedAtTimestamp: new Date(),
-		};
+	async markDappUserCommitmentsStored(
+		commitmentIds: Hash[],
+		asOfTimestamp: Date = new Date(),
+	): Promise<void> {
 		await this.tables?.commitment.updateMany(
-			{ id: { $in: commitmentIds } },
-			{ $set: updateDoc },
+			{
+				id: { $in: commitmentIds },
+				lastUpdatedTimestamp: { $lte: asOfTimestamp },
+			},
+			{
+				$set: { storedAtTimestamp: new Date() },
+				$unset: { pendingStage: 1 },
+			},
 			{ upsert: false },
 		);
 	}
@@ -1276,10 +1302,11 @@ export class ProviderDatabase
 	async markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void> {
 		const updateDoc: Pick<
 			StoredCaptcha,
-			"serverChecked" | "lastUpdatedTimestamp"
+			"serverChecked" | "lastUpdatedTimestamp" | "pendingStage"
 		> = {
 			[StoredStatusNames.serverChecked]: true,
 			lastUpdatedTimestamp: new Date(),
+			pendingStage: true,
 		};
 
 		await this.tables?.commitment.updateMany(
@@ -1299,6 +1326,7 @@ export class ProviderDatabase
 		await this.tables?.commitment.updateOne(filter, {
 			...updates,
 			lastUpdatedAtTimestamp: new Date(),
+			pendingStage: true,
 		});
 	}
 
@@ -1312,60 +1340,36 @@ export class ProviderDatabase
 		limit = 1000,
 		skip = 0,
 	): Promise<PoWCaptchaRecord[]> {
-		const filterNoStoredTimestamp: {
-			[key in keyof Pick<PoWCaptchaRecord, "storedAtTimestamp">]: {
-				$exists: boolean;
-			};
-		} = { storedAtTimestamp: { $exists: false } };
-		const docs = await this.tables?.powcaptcha.aggregate<PoWCaptchaRecord>([
-			{
-				$match: {
-					$or: [
-						filterNoStoredTimestamp,
-						{
-							$expr: {
-								$lt: [
-									{
-										$convert: {
-											input: "$storedAtTimestamp",
-											to: "date",
-										},
-									},
-									{
-										$convert: {
-											input: "$lastUpdatedTimestamp",
-											to: "date",
-										},
-									},
-								],
-							},
-						},
-					],
-				},
-			},
-			{
-				$sort: { _id: 1 },
-			},
-			{
-				$skip: skip,
-			},
-			{
-				$limit: limit,
-			},
-		]);
+		// Served by the `pendingStage_partial` index — see
+		// `getUnstoredDappUserCommitments` for the lifecycle of the flag.
+		const docs = await this.tables?.powcaptcha
+			.find({ pendingStage: true })
+			.sort({ _id: 1 })
+			.skip(skip)
+			.limit(limit)
+			.lean<PoWCaptchaRecord[]>();
 		return docs || [];
 	}
 
-	/** @description Mark a list of PoW captcha commits as stored
+	/** @description Mark a list of PoW captcha commits as stored.
+	 *
+	 * `asOfTimestamp` defaults to "now" but the sweep should pass the time
+	 * at which it fetched the batch. See markDappUserCommitmentsStored for
+	 * the guard rationale.
 	 */
-	async markDappUserPoWCommitmentsStored(challenges: string[]): Promise<void> {
-		const updateDoc: Pick<StoredCaptcha, "storedAtTimestamp"> = {
-			storedAtTimestamp: new Date(),
-		};
-
+	async markDappUserPoWCommitmentsStored(
+		challenges: string[],
+		asOfTimestamp: Date = new Date(),
+	): Promise<void> {
 		await this.tables?.powcaptcha.updateMany(
-			{ challenge: { $in: challenges } },
-			{ $set: updateDoc },
+			{
+				challenge: { $in: challenges },
+				lastUpdatedTimestamp: { $lte: asOfTimestamp },
+			},
+			{
+				$set: { storedAtTimestamp: new Date() },
+				$unset: { pendingStage: 1 },
+			},
 			{ upsert: false },
 		);
 	}
@@ -1375,10 +1379,11 @@ export class ProviderDatabase
 	async markDappUserPoWCommitmentsChecked(challenges: string[]): Promise<void> {
 		const updateDoc: Pick<
 			StoredCaptcha,
-			"serverChecked" | "lastUpdatedTimestamp"
+			"serverChecked" | "lastUpdatedTimestamp" | "pendingStage"
 		> = {
 			[StoredStatusNames.serverChecked]: true,
 			lastUpdatedTimestamp: new Date(),
+			pendingStage: true,
 		};
 		await this.tables?.powcaptcha.updateMany(
 			{ challenge: { $in: challenges } },
@@ -1397,14 +1402,31 @@ export class ProviderDatabase
 			this.logger.debug(() => ({
 				data: { action: "storing", sessionRecord },
 			}));
-			await this.tables.session.create(sessionRecord);
+			// Stamp lastUpdatedTimestamp at insert so the markStored guard
+			// (`lastUpdatedTimestamp <= ts`) has something to compare against
+			// after the streamer succeeds. Without it, a successful first
+			// stage couldn't unset pendingStage and the sweep would re-stage
+			// the record on every pass until the first update happened.
+			const recordWithFlag: Session = {
+				...sessionRecord,
+				lastUpdatedTimestamp:
+					sessionRecord.lastUpdatedTimestamp ?? sessionRecord.createdAt,
+				pendingStage: true,
+			};
+			await this.tables.session.create(recordWithFlag);
 			this.centralStreamer?.streamSessionRecord(
-				sessionRecord as unknown as StoredSession,
+				recordWithFlag as unknown as StoredSession,
 				(ts) =>
 					this.tables.session
 						.updateOne(
-							{ sessionId: sessionRecord.sessionId },
-							{ $set: { storedAtTimestamp: ts } },
+							{
+								sessionId: sessionRecord.sessionId,
+								lastUpdatedTimestamp: { $lte: ts },
+							},
+							{
+								$set: { storedAtTimestamp: ts },
+								$unset: { pendingStage: 1 },
+							},
 						)
 						.then(() => {}),
 			);
@@ -1469,6 +1491,7 @@ export class ProviderDatabase
 				.findOneAndUpdate<SessionRecord>(filter, {
 					deleted: true,
 					lastUpdatedTimestamp: new Date(),
+					pendingStage: true,
 				})
 				.lean<SessionRecord>();
 			return session || undefined;
@@ -1494,13 +1517,25 @@ export class ProviderDatabase
 		try {
 			await this.tables.session.updateOne(
 				{ sessionId },
-				{ $set: { ...updates, lastUpdatedTimestamp: new Date() } },
+				{
+					$set: {
+						...updates,
+						lastUpdatedTimestamp: new Date(),
+						pendingStage: true,
+					},
+				},
 			);
 			if (streamToCentral && this.centralStreamer) {
 				const streamer = this.centralStreamer;
 				const markStored = (ts: Date) =>
 					this.tables.session
-						.updateOne({ sessionId }, { $set: { storedAtTimestamp: ts } })
+						.updateOne(
+							{ sessionId, lastUpdatedTimestamp: { $lte: ts } },
+							{
+								$set: { storedAtTimestamp: ts },
+								$unset: { pendingStage: 1 },
+							},
+						)
 						.then(() => {});
 				this.tables.session
 					.findOne({ sessionId })
@@ -1539,6 +1574,7 @@ export class ProviderDatabase
 						simdReadings: { $ifNull: ["$simdReadings", readings] },
 						simdReadingsStage: { $ifNull: ["$simdReadingsStage", stage] },
 						lastUpdatedTimestamp: new Date(),
+						pendingStage: true,
 					},
 				},
 			]);
@@ -1583,64 +1619,47 @@ export class ProviderDatabase
 	}
 
 	/** Get unstored session records
-	 * @description Get session records that have not been stored yet
+	 * @description Get session records that have not been stored yet.
+	 *
+	 * Served by the `pendingStage_partial` index — see
+	 * `getUnstoredDappUserCommitments` for the lifecycle of the flag.
+	 * `checkAndRemoveSession` also flips the flag so consumed sessions
+	 * propagate to the central DB via the next sweep.
 	 * @param limit
 	 * @param skip
 	 */
 	getUnstoredSessionRecords(limit = 1000, skip = 0): Promise<SessionRecord[]> {
-		const filterNoStoredTimestamp: {
-			[key in keyof Pick<SessionRecord, "storedAtTimestamp">]: {
-				$exists: boolean;
-			};
-		} = { storedAtTimestamp: { $exists: false } };
-		return this.tables?.session
-			.aggregate<SessionRecord>([
-				{
-					$match: {
-						$or: [
-							filterNoStoredTimestamp,
-							{
-								$expr: {
-									$lt: [
-										{
-											$convert: {
-												input: "$storedAtTimestamp",
-												to: "date",
-											},
-										},
-										{
-											$convert: {
-												input: "$lastUpdatedTimestamp",
-												to: "date",
-											},
-										},
-									],
-								},
-							},
-						],
-					},
-				},
-				{
-					$sort: { _id: 1 },
-				},
-				{
-					$skip: skip,
-				},
-				{
-					$limit: limit,
-				},
-			])
+		return Promise.resolve(this.tables?.session)
+			.then((tbl) =>
+				tbl
+					?.find({ pendingStage: true })
+					.sort({ _id: 1 })
+					.skip(skip)
+					.limit(limit)
+					.lean<SessionRecord[]>(),
+			)
 			.then((docs) => docs || []);
 	}
 
-	/** Mark a list of session records as stored */
-	async markSessionRecordsStored(sessionIds: string[]): Promise<void> {
-		const updateDoc: Pick<SessionRecord, "storedAtTimestamp"> = {
-			storedAtTimestamp: new Date(),
-		};
+	/** Mark a list of session records as stored.
+	 *
+	 * `asOfTimestamp` defaults to "now" but the sweep should pass the time
+	 * at which it fetched the batch. See markDappUserCommitmentsStored for
+	 * the guard rationale.
+	 */
+	async markSessionRecordsStored(
+		sessionIds: string[],
+		asOfTimestamp: Date = new Date(),
+	): Promise<void> {
 		await this.tables?.session.updateMany(
-			{ sessionId: { $in: sessionIds } },
-			{ $set: updateDoc },
+			{
+				sessionId: { $in: sessionIds },
+				lastUpdatedTimestamp: { $lte: asOfTimestamp },
+			},
+			{
+				$set: { storedAtTimestamp: new Date() },
+				$unset: { pendingStage: 1 },
+			},
 			{ upsert: false },
 		);
 	}
@@ -1678,6 +1697,16 @@ export class ProviderDatabase
 			sessionId,
 			threshold,
 			ipInfo,
+			// Deliberately NOT setting pendingStage here. Placeholder
+			// records have id: "" until the user submits a solution; if we
+			// flag them, the sweep picks them up via the partial index but
+			// then `markDappUserCommitmentsStored` runs
+			// `{ id: { $in: ["", ...] } }` which collapses to a single ""
+			// bound and scans every empty-id row via the `id_-1` index —
+			// turning a cheap sweep into a fresh cache evictor. The real
+			// commitment only gets `pendingStage: true` once `id` is
+			// populated by approve/disapprove, at which point staging it is
+			// meaningful.
 			// Placeholder fields required by schema but not needed for pending state
 			dappAccount: "",
 			providerAccount: "",
@@ -1977,10 +2006,11 @@ export class ProviderDatabase
 			const result: CaptchaResult = { status: CaptchaStatus.approved };
 			const updateDoc: Pick<
 				StoredCaptcha,
-				"result" | "lastUpdatedTimestamp" | "coords"
+				"result" | "lastUpdatedTimestamp" | "coords" | "pendingStage"
 			> = {
 				result,
 				lastUpdatedTimestamp: new Date(),
+				pendingStage: true,
 				...(coords ? { coords } : {}),
 			};
 			const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
@@ -1995,8 +2025,11 @@ export class ProviderDatabase
 				(ts) =>
 					this.tables.commitment
 						.updateOne(
-							{ id: commitmentId },
-							{ $set: { storedAtTimestamp: ts } },
+							{ id: commitmentId, lastUpdatedTimestamp: { $lte: ts } },
+							{
+								$set: { storedAtTimestamp: ts },
+								$unset: { pendingStage: 1 },
+							},
 						)
 						.then(() => {}),
 			);
@@ -2021,10 +2054,11 @@ export class ProviderDatabase
 		try {
 			const updateDoc: Pick<
 				StoredCaptcha,
-				"result" | "lastUpdatedTimestamp" | "coords"
+				"result" | "lastUpdatedTimestamp" | "coords" | "pendingStage"
 			> = {
 				result: { status: CaptchaStatus.disapproved, reason },
 				lastUpdatedTimestamp: new Date(),
+				pendingStage: true,
 				...(coords ? { coords } : {}),
 			};
 
@@ -2040,8 +2074,11 @@ export class ProviderDatabase
 				(ts) =>
 					this.tables.commitment
 						.updateOne(
-							{ id: commitmentId },
-							{ $set: { storedAtTimestamp: ts } },
+							{ id: commitmentId, lastUpdatedTimestamp: { $lte: ts } },
+							{
+								$set: { storedAtTimestamp: ts },
+								$unset: { pendingStage: 1 },
+							},
 						)
 						.then(() => {}),
 			);

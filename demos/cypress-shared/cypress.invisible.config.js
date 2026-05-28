@@ -15,6 +15,7 @@
 import { builtinModules } from "node:module";
 import { loadEnv } from "@prosopo/dotenv";
 import { defineConfig } from "cypress";
+import { configureVisualRegression } from "cypress-visual-regression";
 import vitePreprocessor from "cypress-vite";
 
 loadEnv();
@@ -26,13 +27,21 @@ const allExternal = [
 
 export default defineConfig({
 	video: true,
+	screenshotsFolder: "./cypress/snapshots/actual",
+	trashAssetsBeforeRuns: true,
 	headers: { "Accept-Encoding": "gzip, deflate" },
 	env: {
 		...process.env,
 		default_page: "/invisible-image-explicit.html",
+		visualRegressionType: "regression",
+		visualRegressionBaseDirectory: "cypress/snapshots/baseline",
+		visualRegressionDiffDirectory: "cypress/snapshots/diff",
+		visualRegressionGenerateDiff: "fail",
+		visualRegressionFailSilently: false,
 	},
 	e2e: {
 		setupNodeEvents(on, config) {
+			configureVisualRegression(on);
 			on(
 				"file:preprocessor",
 				vitePreprocessor({

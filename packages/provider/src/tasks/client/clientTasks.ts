@@ -109,6 +109,10 @@ export class ClientTaskManager {
 		try {
 			const BATCH_SIZE = 1000;
 			const captchaDB = this.getCaptchaDB(this.config.mongoCaptchaUri);
+			// Captured once at sweep start. Passed through to markXxxStored as
+			// the guard cutoff so any record mutated after this point keeps
+			// `pendingStage: true` and is picked up on the next sweep.
+			const sweepStartedAt = new Date();
 
 			// Process image commitments with cursor
 			let processedCommitments = 0;
@@ -120,14 +124,25 @@ export class ClientTaskManager {
 						skip,
 					),
 				async (batch) => {
-					const filteredBatch = lastTask?.updated
-						? batch.filter((commitment) => this.isRecordUpdated(commitment))
-						: batch;
+					const filteredBatch = (
+						lastTask?.updated
+							? batch.filter((commitment) => this.isRecordUpdated(commitment))
+							: batch
+					).filter((commitment) => commitment.id !== "");
+					// Skip placeholder records — `storePendingImageCommitment`
+					// inserts with `id: ""` until the user submits a solution.
+					// Defense in depth: even if a stray placeholder slips into
+					// the partial index, never pass `id: ""` to
+					// markDappUserCommitmentsStored — Mongo collapses
+					// `{ id: { $in: ["", "", ...] } }` to a single empty-string
+					// bound and the IXSCAN on `id_-1` then walks every
+					// empty-id document on the node (~100K rows).
 
 					if (filteredBatch.length > 0) {
 						await captchaDB.saveCaptchas([], filteredBatch, []);
 						await this.providerDB.markDappUserCommitmentsStored(
 							filteredBatch.map((commitment) => commitment.id),
+							sweepStartedAt,
 						);
 					}
 					processedCommitments += filteredBatch.length;
@@ -151,6 +166,7 @@ export class ClientTaskManager {
 						await captchaDB.saveCaptchas([], [], filteredBatch);
 						await this.providerDB.markDappUserPoWCommitmentsStored(
 							filteredBatch.map((record) => record.challenge),
+							sweepStartedAt,
 						);
 					}
 					processedPowRecords += filteredBatch.length;
@@ -171,6 +187,7 @@ export class ClientTaskManager {
 						await captchaDB.saveCaptchas(filteredBatch, [], []);
 						await this.providerDB.markSessionRecordsStored(
 							filteredBatch.map((record) => record.sessionId),
+							sweepStartedAt,
 						);
 					}
 					processedSessionRecords += filteredBatch.length;
