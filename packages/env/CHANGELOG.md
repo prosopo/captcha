@@ -1,5 +1,15 @@
 # @prosopo/env
 
+## 3.5.3
+### Patch Changes
+
+- Updated dependencies [d351362]
+  - @prosopo/types@4.1.4
+  - @prosopo/database@3.13.3
+  - @prosopo/ipinfo@0.2.10
+  - @prosopo/keyring@2.9.30
+  - @prosopo/types-env@2.9.12
+
 ## 3.5.2
 ### Patch Changes
 
