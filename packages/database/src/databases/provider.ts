@@ -1697,7 +1697,16 @@ export class ProviderDatabase
 			sessionId,
 			threshold,
 			ipInfo,
-			pendingStage: true,
+			// Deliberately NOT setting pendingStage here. Placeholder
+			// records have id: "" until the user submits a solution; if we
+			// flag them, the sweep picks them up via the partial index but
+			// then `markDappUserCommitmentsStored` runs
+			// `{ id: { $in: ["", ...] } }` which collapses to a single ""
+			// bound and scans every empty-id row via the `id_-1` index —
+			// turning a cheap sweep into a fresh cache evictor. The real
+			// commitment only gets `pendingStage: true` once `id` is
+			// populated by approve/disapprove, at which point staging it is
+			// meaningful.
 			// Placeholder fields required by schema but not needed for pending state
 			dappAccount: "",
 			providerAccount: "",
