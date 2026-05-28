@@ -40,7 +40,10 @@ import {
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-const FULLY_POPULATED_SETTINGS: IUserSettings = {
+// `satisfies` (rather than a `: IUserSettings` annotation) so TypeScript
+// keeps the narrow literal type — every nested sub-document is known to
+// be present, so the assertions below don't need `!` non-null assertions.
+const FULLY_POPULATED_SETTINGS = {
 	captchaType: CaptchaType.frictionless,
 	domains: ["example.com", "*.example.com"],
 	frictionlessThreshold: 0.42,
@@ -76,6 +79,23 @@ const FULLY_POPULATED_SETTINGS: IUserSettings = {
 		abuseScoreThreshold: 0.25,
 		requireAllConditions: true,
 		forceConsistentIp: true,
+		// Per-country overrides. Stored as a Map in Mongoose; comes back
+		// as a plain object via `.lean()`. Each override field is itself
+		// optional in `IPValidationSchema` so this entry sets every one.
+		countryOverrides: {
+			DE: {
+				actions: {
+					countryChangeAction: IPValidationAction.Flag,
+					cityChangeAction: IPValidationAction.Allow,
+					ispChangeAction: IPValidationAction.Reject,
+					distanceExceedAction: IPValidationAction.Allow,
+					abuseScoreExceedAction: IPValidationAction.Reject,
+				},
+				distanceThresholdKm: 500,
+				abuseScoreThreshold: 0.4,
+				requireAllConditions: false,
+			},
+		},
 	},
 	spamEmailDomainCheckEnabled: true,
 	spamFilter: {
@@ -100,7 +120,7 @@ const FULLY_POPULATED_SETTINGS: IUserSettings = {
 		blockCrawler: true,
 	},
 	storeMetadata: true,
-};
+} satisfies IUserSettings;
 
 describe("Client settings Mongo persistence", () => {
 	let mongoContainer: StartedTestContainer;
@@ -211,16 +231,16 @@ describe("Client settings Mongo persistence", () => {
 
 		// Nested objects — compare wholesale so any nested drop also fails.
 		expect(stored.contextAware).toMatchObject(
-			FULLY_POPULATED_SETTINGS.contextAware!,
+			FULLY_POPULATED_SETTINGS.contextAware,
 		);
 		expect(stored.ipValidationRules).toMatchObject(
-			FULLY_POPULATED_SETTINGS.ipValidationRules!,
+			FULLY_POPULATED_SETTINGS.ipValidationRules,
 		);
 		expect(stored.spamFilter).toMatchObject(
-			FULLY_POPULATED_SETTINGS.spamFilter!,
+			FULLY_POPULATED_SETTINGS.spamFilter,
 		);
 		expect(stored.trafficFilter).toMatchObject(
-			FULLY_POPULATED_SETTINGS.trafficFilter!,
+			FULLY_POPULATED_SETTINGS.trafficFilter,
 		);
 	}, 60_000);
 });
