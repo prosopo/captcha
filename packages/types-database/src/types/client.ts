@@ -130,6 +130,10 @@ export const UserSettingsSchema = new Schema({
 		default: imageMaxRoundsDefault,
 		required: false,
 	},
+	puzzleTolerance: {
+		type: Number,
+		required: false,
+	},
 	ipValidationRules: IPValidationRulesSchema,
 	domains: {
 		type: [String],
