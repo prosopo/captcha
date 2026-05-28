@@ -111,11 +111,23 @@ jobs:
       - run: docker compose --file ./docker/docker-compose.test.yml down
         if: always()
 
+      - name: Write changeset for baseline regeneration
+        run: |
+          cat > ".changeset/regen-baselines-${{ github.run_id }}.md" <<'EOF'
+          ---
+          "@prosopo/cypress-shared": patch
+          ---
+
+          Regenerate visual snapshot baselines.
+          EOF
+
       - name: Open PR with regenerated baselines
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.PROSOPONATOR_PAT }}
-          add-paths: demos/cypress-shared/cypress/snapshots/baseline/**
+          add-paths: |
+            demos/cypress-shared/cypress/snapshots/baseline/**
+            .changeset/regen-baselines-*.md
           commit-message: "chore(cypress): regenerate visual snapshot baselines"
           title: "chore(cypress): regenerate visual snapshot baselines"
           body: |
