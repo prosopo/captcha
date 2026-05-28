@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import type { Ti18n } from "@prosopo/locale";
+import type { CaptchaType } from "../client/captchaType/captchaType.js";
 import type { ProcaptchaClientConfigInput } from "../config/index.js";
 import type { RandomProvider } from "../provider/api.js";
 import type {
@@ -23,6 +24,17 @@ import type {
 	TouchEventPoint,
 } from "./behavioral.js";
 import type { Account, Callbacks } from "./manager.js";
+
+/**
+ * Surface used by procaptcha-pow to hand off a verified-but-not-done user to
+ * the frictionless wrapper, which then mounts the chosen image/puzzle widget
+ * in place. Internal to the procaptcha-frictionless → procaptcha-pow flow —
+ * dapps do not see this.
+ */
+export type ProcaptchaEscalationHandler = (
+	captchaType: CaptchaType.image | CaptchaType.puzzle,
+	sessionId: string,
+) => void;
 
 // Generic behavioral data collectors for analytics
 export type FrictionlessState = {
@@ -73,4 +85,8 @@ export interface ProcaptchaProps {
 	// display an error message
 	errorMessage?: string;
 	container?: HTMLElement;
+	// Set by ProcaptchaFrictionless on the PoW widget so a verified PoW
+	// solution that the provider chose to escalate can be transitioned into
+	// the appropriate image/puzzle widget without a full restart.
+	onEscalate?: ProcaptchaEscalationHandler;
 }

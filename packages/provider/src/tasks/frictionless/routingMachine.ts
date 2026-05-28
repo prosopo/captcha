@@ -19,6 +19,7 @@ import type {
 	RoutingMachineInput,
 	RoutingMachineInputBase,
 	RoutingMachineOutput,
+	RoutingMachinePhase,
 	RoutingMachinePlatform,
 	RoutingMachineRawSignals,
 } from "@prosopo/types";
@@ -50,10 +51,11 @@ export const applyRouter = async (
 	baseline: RoutingMachineBaseline,
 	ctx: RoutingContext,
 	logger: Logger,
+	phase: RoutingMachinePhase = "route",
 ): Promise<RoutingMachineOutput> => {
 	try {
 		const partial: RoutingMachineInputBase = {
-			phase: "route",
+			phase,
 			dappAccount: ctx.dappAccount,
 			userAccount: ctx.userAccount,
 			ip: ctx.ip,

@@ -27,6 +27,7 @@ import {
 	type BehavioralDataPacked,
 	type CaptchaResult,
 	CaptchaStatus,
+	type DecisionMachineBehavioralDataPacked,
 	type IPAddress,
 	type ISpamFilterRules,
 	type ITrafficFilter,
@@ -35,6 +36,10 @@ import {
 	type PoWChallengeId,
 	type RequestHeaders,
 	ResultReason,
+	type RoutingMachineBaseline,
+	type RoutingMachineOutput,
+	type RoutingMachinePlatform,
+	type RoutingMachineRawSignals,
 	SimdReadingsStage,
 } from "@prosopo/types";
 import type {
@@ -56,8 +61,30 @@ import {
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
+import {
+	type RoutingContext,
+	applyRouter,
+} from "../frictionless/routingMachine.js";
 import { evaluateEmailSpamRules } from "../spam/evaluateEmailSpamRules.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
+
+/**
+ * Request-side data the handler can supply for the post-pow routing pass.
+ * Score, dapp/user account, and behavioural data are filled in by
+ * `verifyPowCaptchaSolution` once the challenge record and decrypted
+ * behavioural payload are in hand.
+ */
+export interface PostPowRoutingContext {
+	ip: string;
+	countryCode?: string;
+	platform: RoutingMachinePlatform;
+	raw: Omit<RoutingMachineRawSignals, "behavioralDataPacked">;
+}
+
+export type VerifyPowCaptchaSolutionResult = {
+	verified: boolean;
+	routingOutput?: RoutingMachineOutput;
+};
 
 const DEFAULT_POW_DIFFICULTY = 4;
 
@@ -65,6 +92,7 @@ export class PowCaptchaManager extends CaptchaManager {
 	POW_SEPARATOR: string;
 	private decisionMachineRunner: DecisionMachineRunner;
 	private readonly usageCounters: UsageCounters | null;
+	private postPowContext?: PostPowRoutingContext;
 
 	constructor(
 		db: IProviderDatabase,
@@ -78,6 +106,15 @@ export class PowCaptchaManager extends CaptchaManager {
 		this.POW_SEPARATOR = POW_SEPARATOR;
 		this.decisionMachineRunner = new DecisionMachineRunner(db);
 		this.usageCounters = usageCounters ?? null;
+	}
+
+	/**
+	 * Provide the request-side data needed to run the post-pow routing pass
+	 * inside `verifyPowCaptchaSolution`. When unset, the routing pass is
+	 * skipped and verification behaves exactly as before.
+	 */
+	setPostPowContext(ctx: PostPowRoutingContext): void {
+		this.postPowContext = ctx;
 	}
 
 	/**
@@ -135,7 +172,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		behavioralData?: string,
 		salt?: string,
 		simdReadings?: string,
-	): Promise<boolean> {
+	): Promise<VerifyPowCaptchaSolutionResult> {
 		// Check signatures before doing DB reads to avoid unnecessary network connections
 		checkPowSignature(
 			challenge,
@@ -163,7 +200,7 @@ export class PowCaptchaManager extends CaptchaManager {
 				msg: `No record of this challenge: ${challenge}`,
 			}));
 			// no record of this challenge
-			return false;
+			return { verified: false };
 		}
 
 		const difficulty = challengeRecord.difficulty;
@@ -211,7 +248,7 @@ export class PowCaptchaManager extends CaptchaManager {
 				);
 			}
 			await Promise.all(writePromises);
-			return false;
+			return { verified: false };
 		}
 
 		const correct = validateSolution(nonce, challenge, difficulty);
@@ -245,6 +282,12 @@ export class PowCaptchaManager extends CaptchaManager {
 		// Previously this was a separate DB write; now we merge it into a single
 		// updatePowCaptchaRecord call below.
 		let behavioralUpdates: Partial<PoWCaptchaRecord> = {};
+		// Hoisted so the post-pow routing pass (below) can feed it into the
+		// routing machine. Falsy if behavioural data was absent or failed to
+		// decrypt — in either case routing still runs but without this signal.
+		let decryptedBehavioralDataPacked:
+			| DecisionMachineBehavioralDataPacked
+			| undefined;
 		if (behavioralData) {
 			try {
 				// Get decryption keys: detector keys from DB first, then env var as fallback
@@ -289,6 +332,7 @@ export class PowCaptchaManager extends CaptchaManager {
 						behavioralDataPacked: packedData,
 						deviceCapability: decryptedData.deviceCapability,
 					};
+					decryptedBehavioralDataPacked = packedData;
 				}
 			} catch (error) {
 				this.logger?.error(() => ({
@@ -339,7 +383,93 @@ export class PowCaptchaManager extends CaptchaManager {
 
 		await Promise.all(writePromises);
 
-		return correct;
+		// Post-pow routing: only meaningful on a verified solution. The routing
+		// machine re-examines the (now richer) signals — score from the original
+		// session, decrypted behavioural data, counters — and may escalate the
+		// user to an image/puzzle captcha. Returning baseline (pow) means "done".
+		if (!correct || !this.postPowContext) {
+			return { verified: correct };
+		}
+
+		const routingOutput = await this.runPostPowRouting({
+			challengeRecord,
+			challengeSplit,
+			behavioralDataPacked: decryptedBehavioralDataPacked,
+		});
+		return { verified: correct, routingOutput };
+	}
+
+	/**
+	 * Resolve the originating session, build a full RoutingContext, and run the
+	 * post-pow phase of the routing machine. Returns the machine's output, or
+	 * undefined when prerequisites are missing (no session, no score) — in
+	 * which case the caller treats the result as "no escalation".
+	 */
+	private async runPostPowRouting(args: {
+		challengeRecord: PoWCaptchaRecord;
+		challengeSplit: string[];
+		behavioralDataPacked?: DecisionMachineBehavioralDataPacked;
+	}): Promise<RoutingMachineOutput | undefined> {
+		if (!this.postPowContext) return undefined;
+
+		const { challengeRecord, challengeSplit, behavioralDataPacked } = args;
+
+		if (!challengeRecord.sessionId) {
+			this.logger.debug(() => ({
+				msg: "Skipping post-pow routing: PoW record has no linked session",
+			}));
+			return undefined;
+		}
+
+		const sessionRecord = await this.db.getSessionRecordBySessionId(
+			challengeRecord.sessionId,
+		);
+		if (!sessionRecord) {
+			this.logger.debug(() => ({
+				msg: "Skipping post-pow routing: session record not found",
+				data: { sessionId: challengeRecord.sessionId },
+			}));
+			return undefined;
+		}
+
+		const score = computeFrictionlessScore(sessionRecord.scoreComponents);
+		const dappAccount = at(challengeSplit, 2);
+		const userAccount = at(challengeSplit, 1);
+
+		// Enrich platform.isWebView from the session — that flag is only
+		// derivable from the encrypted bot-detection payload at frictionless
+		// time, not from the submit request alone.
+		const platform = {
+			...this.postPowContext.platform,
+			isWebView: sessionRecord.webView,
+		};
+
+		const ctx: RoutingContext = {
+			dappAccount,
+			userAccount,
+			ip: this.postPowContext.ip,
+			countryCode: this.postPowContext.countryCode,
+			score,
+			platform,
+			raw: {
+				...this.postPowContext.raw,
+				...(behavioralDataPacked && { behavioralDataPacked }),
+			},
+		};
+
+		const baseline: RoutingMachineBaseline = {
+			captchaType: CaptchaType.pow,
+			powDifficulty: challengeRecord.difficulty,
+		};
+
+		return applyRouter(
+			this.decisionMachineRunner,
+			this.usageCounters,
+			baseline,
+			ctx,
+			this.logger,
+			"postPow",
+		);
 	}
 
 	/**

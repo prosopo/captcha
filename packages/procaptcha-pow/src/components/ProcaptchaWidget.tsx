@@ -35,7 +35,14 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	// get the state update mechanism
 	const updateState = buildUpdateState(state, _updateState);
 	const manager = useRef(
-		Manager(config, state, updateState, callbacks, frictionlessState),
+		Manager(
+			config,
+			state,
+			updateState,
+			callbacks,
+			frictionlessState,
+			props.onEscalate,
+		),
 	);
 
 	useEffect(() => {

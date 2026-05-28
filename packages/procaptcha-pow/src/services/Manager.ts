@@ -25,10 +25,12 @@ import { getDefaultEvents } from "@prosopo/procaptcha-common";
 import {
 	type Account,
 	ApiParams,
+	CaptchaType,
 	type FrictionlessState,
 	type ProcaptchaCallbacks,
 	type ProcaptchaClientConfigInput,
 	ProcaptchaConfigSchema,
+	type ProcaptchaEscalationHandler,
 	type ProcaptchaState,
 	type ProcaptchaStateUpdateFn,
 	encodeProcaptchaOutput,
@@ -43,6 +45,7 @@ export const Manager = (
 	onStateUpdate: ProcaptchaStateUpdateFn,
 	callbacks: ProcaptchaCallbacks,
 	frictionlessState?: FrictionlessState,
+	onEscalate?: ProcaptchaEscalationHandler,
 ) => {
 	const events = getDefaultEvents(callbacks);
 
@@ -320,7 +323,22 @@ export const Manager = (
 						salt,
 						simdReadings,
 					);
-					if (verifiedSolution[ApiParams.verified]) {
+					const escalation = verifiedSolution[ApiParams.escalation];
+					if (
+						escalation &&
+						(escalation[ApiParams.captchaType] === CaptchaType.image ||
+							escalation[ApiParams.captchaType] === CaptchaType.puzzle)
+					) {
+						// Provider accepted the PoW but wants the user to complete a
+						// follow-up image/puzzle challenge. Hand off to the wrapper —
+						// don't fire onHuman or onFailed; the wrapper mounts the next
+						// widget and the standard success/failure path resumes there.
+						updateState({ loading: false });
+						onEscalate?.(
+							escalation[ApiParams.captchaType],
+							escalation[ApiParams.sessionId],
+						);
+					} else if (verifiedSolution[ApiParams.verified]) {
 						updateState({
 							isHuman: true,
 							loading: false,
