@@ -160,6 +160,11 @@ export const UserSettingsSchema = new Schema({
 		default: false,
 		required: false,
 	},
+	autoBanScoreThreshold: {
+		type: Number,
+		min: 0,
+		required: false,
+	},
 	spamFilter: {
 		enabled: { type: Boolean, default: false },
 		emailRules: {
