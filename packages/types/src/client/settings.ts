@@ -239,6 +239,11 @@ export const ClientSettingsSchema = object({
 	spamEmailDomainCheckEnabled: boolean().optional(),
 	spamFilter: SpamFilterRulesSchema.optional(),
 	trafficFilter: TrafficFilterSchema.optional(),
+	// When true, the provider persists the metadata (`email`, ...) that
+	// dapp servers attach to `/verify` requests on the captcha record.
+	// Off by default — opt in to enable downstream analysis (e.g. judging
+	// whether the submitted emails are mostly spam).
+	storeMetadata: boolean().optional(),
 });
 
 export type IUserSettings = output<typeof ClientSettingsSchema>;
