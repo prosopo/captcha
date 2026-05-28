@@ -60,6 +60,15 @@ export default defineConfig({
 					return null; // Cypress requires tasks to return something
 				},
 			});
+			// Firefox uses its own NSS trust store, not the OS one. Setting
+			// security.enterprise_roots.enabled lets it read the system CA
+			// bundle that install_cert.sh populates via update-ca-certificates.
+			on("before:browser:launch", (browser, launchOptions) => {
+				if (browser.family === "firefox") {
+					launchOptions.preferences["security.enterprise_roots.enabled"] = true;
+				}
+				return launchOptions;
+			});
 		},
 		specPattern: ["cypress/e2e/**/invisible.cy.ts"],
 	},

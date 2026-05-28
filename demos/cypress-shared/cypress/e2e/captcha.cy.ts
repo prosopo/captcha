@@ -128,7 +128,7 @@ describe("Captchas", () => {
 		cy.clickIAmHuman().then(() => {
 			cy.wait(2000);
 			cy.captchaImages().then(() => {
-				cy.get("@captchaImages").first().realClick();
+				cy.get("@captchaImages").first().realClickCompat();
 				cy.get("@captchaImages")
 					.first()
 					.siblings()

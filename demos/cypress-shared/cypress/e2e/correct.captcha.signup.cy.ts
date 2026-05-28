@@ -118,7 +118,7 @@ describe("Captchas", () => {
 		cy.elementExists("button[type='button']:nth-of-type(2)").then(
 			(confirmBtn: unknown) => {
 				if (confirmBtn) {
-					cy.wrap(confirmBtn).realClick();
+					cy.wrap(confirmBtn).realClickCompat();
 				}
 			},
 		);
@@ -177,7 +177,7 @@ describe("Captchas", () => {
 			.should("not.be.disabled");
 
 		// Click submit button
-		cy.get('button[data-cy="submit-button"]').first().realClick();
+		cy.get('button[data-cy="submit-button"]').first().realClickCompat();
 
 		// Wait for signup response with extended timeout and proper error handling
 		cy.wait("@signup", { timeout: 20000 }).then((interception) => {

@@ -14,6 +14,25 @@
 /// <reference types="cypress" />
 import "cypress-real-events";
 
+// Firefox does not support the Chrome DevTools Protocol that cypress-real-events
+// relies on, so fall back to a synthetic mousedown→mouseup→click trigger chain
+// there. Use this child command (`.realClickCompat()`) anywhere a real click
+// would otherwise be used.
+Cypress.Commands.add(
+	"realClickCompat",
+	{ prevSubject: "element" },
+	($el: JQuery<HTMLElement>) => {
+		if (Cypress.browser.family === "firefox") {
+			return cy
+				.wrap($el)
+				.trigger("mousedown", { force: true })
+				.trigger("mouseup", { force: true })
+				.trigger("click", { force: true });
+		}
+		return cy.wrap($el).realClick();
+	},
+);
+
 import {
 	AdminApiPaths,
 	type Captcha,
@@ -81,6 +100,11 @@ declare global {
 
 			// Wait for the procaptcha script to load and be ready
 			waitForProcaptchaScript(): Cypress.Chainable<void>;
+
+			// Cross-browser real click. Uses cypress-real-events' .realClick()
+			// on Chromium-family browsers and a synthetic mousedown→mouseup→
+			// click trigger chain on Firefox (no CDP support there).
+			realClickCompat(): Cypress.Chainable<JQuery<HTMLElement>>;
 		}
 	}
 }
@@ -158,7 +182,7 @@ function clickCheckbox(): Cypress.Chainable<JQuery<HTMLElement>> {
 			cy.task("log", `Checkbox is visible: ${$checkbox.is(":visible")}`);
 			cy.task("log", `Checkbox is disabled: ${$checkbox.is(":disabled")}`);
 			cy.task("log", `Checkbox checked state: ${$checkbox.is(":checked")}`);
-			cy.wrap($checkbox).realClick();
+			cy.wrap($checkbox).realClickCompat();
 		});
 }
 
@@ -184,7 +208,7 @@ function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
 				cy.task("log", `Checkbox is visible: ${$checkbox.is(":visible")}`);
 				cy.task("log", `Checkbox is disabled: ${$checkbox.is(":disabled")}`);
 				cy.task("log", `Checkbox checked state: ${$checkbox.is(":checked")}`);
-				cy.wrap($checkbox).realClick();
+				cy.wrap($checkbox).realClickCompat();
 			});
 
 		return cy
@@ -304,7 +328,7 @@ function clickCorrectCaptchaImages(
 					.then((elements) => {
 						if (elements.length > 0) {
 							cy.wrap(elements).each(($img) => {
-								cy.wrap($img).realClick();
+								cy.wrap($img).realClickCompat();
 								cy.wait(100); // Small wait between clicks
 							});
 						} else {
@@ -332,7 +356,7 @@ function clickNextButton(): Chainable<JQuery<HTMLElement>> {
 		.should("be.visible")
 		.then(($btn) => {
 			cy.task("log", "Next button found and visible, clicking...");
-			cy.wrap($btn).realClick();
+			cy.wrap($btn).realClickCompat();
 			cy.task("log", "Next button clicked!");
 		});
 }

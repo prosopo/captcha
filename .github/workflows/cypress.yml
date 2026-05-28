@@ -37,6 +37,12 @@ jobs:
   check:
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chrome, firefox]
+    env:
+      CYPRESS_BROWSER: ${{ matrix.browser }}
     steps:
       - name: Print contexts
         uses: prosopo/captcha/.github/actions/print_contexts@gha
@@ -130,7 +136,7 @@ jobs:
         # store screenshots only on failures
         if: failure()
         with:
-          name: cypress-screenshots
+          name: cypress-screenshots-${{ matrix.browser }}
           path: ./demos/cypress-shared/cypress/screenshots
           if-no-files-found: ignore  # 'warn' or 'error' are also available, defaults to `warn`
 
@@ -139,7 +145,7 @@ jobs:
         # store videos only on failures
         if: failure()
         with:
-          name: cypress-videos
+          name: cypress-videos-${{ matrix.browser }}
           path: ./demos/cypress-shared/cypress/videos
           if-no-files-found: ignore   # 'warn' or 'error' are also available, defaults to `warn`
 
