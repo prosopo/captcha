@@ -144,6 +144,9 @@ export interface StoredCaptcha {
 	requestedAtTimestamp: Date;
 	ipAddress: CompositeIpAddress;
 	providedIp?: CompositeIpAddress;
+	// Email forwarded by the dapp server on `/verify`. Only persisted when
+	// the site key has `settings.storeMetadata = true` — off by default.
+	providedEmail?: string;
 	headers: RequestHeaders;
 	ja4: string;
 	userSubmitted: boolean;
@@ -223,6 +226,7 @@ export const UserCommitmentSchema = object({
 	userSignature: string(),
 	ipAddress: CompositeIpAddressSchema,
 	providedIp: CompositeIpAddressSchema.optional(),
+	providedEmail: string().optional(),
 	headers: object({}).catchall(string()),
 	ja4: string(),
 	userSubmitted: boolean(),
@@ -427,6 +431,7 @@ export const PoWCaptchaStoredSchema = object({
 	requestedAtTimestamp: date(),
 	ipAddress: CompositeIpAddressSchema,
 	providedIp: CompositeIpAddressSchema.optional(),
+	providedEmail: string().optional(),
 	headers: object({}).catchall(string()),
 	ja4: string(),
 	userSubmitted: boolean(),

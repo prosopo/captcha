@@ -356,6 +356,9 @@ export class PowCaptchaManager extends CaptchaManager {
 	 * @param spamEmailDomainCheckingEnabled
 	 * @param spamFilter
 	 * @param trafficFilter
+	 * @param storeMetadata - when true, persists the dapp-server-provided
+	 *   `email` (and any future metadata fields) on the captcha record so
+	 *   it can be inspected for spam-rate analysis.
 	 */
 	async serverVerifyPowCaptchaSolution(
 		dappAccount: string,
@@ -368,6 +371,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		spamEmailDomainCheckingEnabled = false,
 		spamFilter?: ISpamFilterRules,
 		trafficFilter?: ITrafficFilter,
+		storeMetadata = false,
 	): Promise<{ verified: boolean; score?: number; reason?: string }> {
 		const notVerified = (
 			reason: string,
@@ -542,6 +546,13 @@ export class PowCaptchaManager extends CaptchaManager {
 				};
 				failReason = check.reason;
 			}
+		}
+
+		// Persist dapp-server-provided email when the site opts in. Gated
+		// purely by `storeMetadata` — independent of the spam-email checks
+		// above, which inspect the email but never write it.
+		if (storeMetadata && email) {
+			powRecordUpdates.providedEmail = email;
 		}
 
 		// IP validation: store provided IP and validate if rules enabled

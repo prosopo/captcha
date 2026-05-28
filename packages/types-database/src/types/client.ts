@@ -186,6 +186,11 @@ export const UserSettingsSchema = new Schema({
 		blockSatellite: { type: Boolean, default: false },
 		blockCrawler: { type: Boolean, default: false },
 	},
+	storeMetadata: {
+		type: Boolean,
+		default: false,
+		required: false,
+	},
 });
 
 export const UserDataSchema: mongoose.Schema<UserDataRecord> = new Schema({

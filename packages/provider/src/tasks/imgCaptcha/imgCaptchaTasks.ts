@@ -642,6 +642,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		spamEmailDomainCheckingEnabled = false,
 		spamFilter?: ISpamFilterRules,
 		trafficFilter?: ITrafficFilter,
+		storeMetadata = false,
 	): Promise<ImageVerificationResponse> {
 		const solution = await (commitmentId
 			? this.getDappUserCommitmentById(commitmentId)
@@ -808,6 +809,13 @@ export class ImgCaptchaManager extends CaptchaManager {
 			}
 		}
 
+		// Persist dapp-server-provided email when the site opts in. Gated
+		// purely by `storeMetadata` — independent of the spam-email checks
+		// above, which inspect the email but never write it.
+		if (storeMetadata && email) {
+			commitmentUpdates.providedEmail = email;
+		}
+
 		// IP validation: accumulate providedIp update
 		if (ip) {
 			const solutionIpAddress = getIpAddressFromComposite(solution.ipAddress);
@@ -958,16 +966,21 @@ export class ImgCaptchaManager extends CaptchaManager {
 		}
 
 		// Batch writes: separate non-streaming updates from streaming result writes.
-		// - providedIp uses updateDappUserCommitment (no central streaming)
+		// - providedIp / providedEmail use updateDappUserCommitment (no central streaming)
 		// - approve/disapprove use dedicated methods that trigger centralStreamer
 		const writePromises: Promise<void>[] = [];
 
-		// Write providedIp if accumulated (non-streaming field)
+		// Write non-streaming metadata fields if accumulated.
+		const metadataUpdates: Partial<UserCommitment> = {};
 		if (commitmentUpdates.providedIp) {
+			metadataUpdates.providedIp = commitmentUpdates.providedIp;
+		}
+		if (commitmentUpdates.providedEmail) {
+			metadataUpdates.providedEmail = commitmentUpdates.providedEmail;
+		}
+		if (Object.keys(metadataUpdates).length > 0) {
 			writePromises.push(
-				this.db.updateDappUserCommitment(solution.id, {
-					providedIp: commitmentUpdates.providedIp,
-				}),
+				this.db.updateDappUserCommitment(solution.id, metadataUpdates),
 			);
 		}
 
