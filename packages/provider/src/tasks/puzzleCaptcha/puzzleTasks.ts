@@ -348,6 +348,9 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 	 * @param userAccessRulesStorage - storage for querying user access policies
 	 * @param email
 	 * @param spamEmailDomainCheckingEnabled
+	 * @param trafficFilter
+	 * @param storeMetadata - when true, persists the dapp-server-provided
+	 *   `email` on the captcha record for spam-rate analysis.
 	 */
 	async serverVerifyPuzzleCaptchaSolution(
 		dappAccount: string,
@@ -359,6 +362,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		email?: string,
 		spamEmailDomainCheckingEnabled = false,
 		trafficFilter?: ITrafficFilter,
+		storeMetadata = false,
 	): Promise<{ verified: boolean; score?: number }> {
 		const notVerifiedResponse = { verified: false };
 
@@ -528,6 +532,15 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				}
 				return notVerifiedResponse;
 			}
+		}
+
+		// Persist dapp-server-provided metadata when the site opts in.
+		// Gated purely by `storeMetadata` — independent of the spam-email
+		// check above, which inspects the email but never writes it.
+		if (storeMetadata && email) {
+			await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
+				metadata: { email },
+			});
 		}
 
 		if (ip) {

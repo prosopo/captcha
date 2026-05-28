@@ -130,6 +130,10 @@ export const UserSettingsSchema = new Schema({
 		default: imageMaxRoundsDefault,
 		required: false,
 	},
+	puzzleTolerance: {
+		type: Number,
+		required: false,
+	},
 	ipValidationRules: IPValidationRulesSchema,
 	domains: {
 		type: [String],
@@ -185,6 +189,11 @@ export const UserSettingsSchema = new Schema({
 		blockMobile: { type: Boolean, default: false },
 		blockSatellite: { type: Boolean, default: false },
 		blockCrawler: { type: Boolean, default: false },
+	},
+	storeMetadata: {
+		type: Boolean,
+		default: false,
+		required: false,
 	},
 });
 
