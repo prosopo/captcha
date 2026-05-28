@@ -85,6 +85,8 @@ describe("Captchas", () => {
 		);
 		cy.wait("@frictionless", { timeout: 5000 });
 
+		cy.snap("frictionless-initial", { ensureInView: '[type="checkbox"]' });
+
 		cy.clickIAmHuman().then((captchas) => {
 			expect(captchas.length).to.be.gt(0);
 		});
