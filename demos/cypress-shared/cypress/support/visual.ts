@@ -32,6 +32,11 @@ const PAUSE_STYLE_ID = "__prosopo_visual_regression_pause__";
 export interface SnapOptions {
 	errorThreshold?: number;
 	capture?: "viewport" | "fullPage";
+	// CSS selector of an element to scrollIntoView before a viewport capture.
+	// Use this to guarantee the captcha widget is in shot regardless of where
+	// it renders on the host page. Ignored for element-scoped snaps and when
+	// capture is "fullPage".
+	ensureInView?: string;
 }
 
 declare global {
@@ -64,7 +69,11 @@ Cypress.Commands.add(
 		name: string,
 		options: SnapOptions = {},
 	) => {
-		const { errorThreshold = 0.01, capture = "viewport" } = options;
+		const {
+			errorThreshold = 0.01,
+			capture = "viewport",
+			ensureInView,
+		} = options;
 
 		injectPauseAnimationsStyle();
 		// One animation frame for the style to apply before screenshotting.
@@ -74,6 +83,12 @@ Cypress.Commands.add(
 			return cy
 				.wrap(subject, { log: false })
 				.compareSnapshot(name, { errorThreshold });
+		}
+		if (ensureInView && capture === "viewport") {
+			cy.get(ensureInView, { includeShadowDom: true, log: false })
+				.first()
+				.scrollIntoView();
+			cy.wait(50, { log: false });
 		}
 		return cy.compareSnapshot(name, { capture, errorThreshold });
 	},
