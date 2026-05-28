@@ -379,9 +379,15 @@ export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 	[ApiParams.sessionId]?: string;
 }
 
+export interface PowCaptchaSolutionEscalation {
+	[ApiParams.captchaType]: CaptchaType.image | CaptchaType.puzzle;
+	[ApiParams.sessionId]: string;
+}
+
 export interface PowCaptchaSolutionResponse extends ApiResponse {
 	[ApiParams.verified]: boolean;
 	[ApiParams.error]?: ApiJsonError;
+	[ApiParams.escalation]?: PowCaptchaSolutionEscalation;
 }
 
 /**
