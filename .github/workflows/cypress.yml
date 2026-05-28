@@ -143,4 +143,14 @@ jobs:
           path: ./demos/cypress-shared/cypress/videos
           if-no-files-found: ignore   # 'warn' or 'error' are also available, defaults to `warn`
 
+      # visual-regression diffs (and the actual frames that produced them) when snapshots don't match
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-snapshot-diffs
+          path: |
+            ./demos/cypress-shared/cypress/snapshots/diff
+            ./demos/cypress-shared/cypress/snapshots/actual
+          if-no-files-found: ignore
+
       - run: docker compose --file ./docker/docker-compose.test.yml down
