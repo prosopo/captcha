@@ -59,6 +59,7 @@ Cypress.Commands.add(
 	"snap",
 	{ prevSubject: ["optional", "element"] },
 	(
+		// biome-ignore lint/suspicious/noConfusingVoidType: cypress's prevSubject typing requires void for the missing-subject branch
 		subject: JQuery<HTMLElement> | void,
 		name: string,
 		options: SnapOptions = {},
