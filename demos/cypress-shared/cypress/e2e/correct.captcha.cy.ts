@@ -124,9 +124,12 @@ describe("Captchas", () => {
 			"postSolution",
 		);
 
+		cy.snap("image-widget-initial");
+
 		cy.clickIAmHuman().then(() => {
 			// Make sure the images are loaded
 			cy.captchaImages().then(() => {
+				cy.snap("image-modal-open");
 				cy.get("@captchas").each((captcha: Captcha) => {
 					cy.log("in each function");
 					// Click next without selecting any images (incorrect answer)
@@ -144,6 +147,7 @@ describe("Captchas", () => {
 			cy.wait(1000);
 
 			getWidgetElement(checkboxClass).first().should("not.be.checked");
+			cy.snap("image-widget-failure");
 		});
 
 		// check the logs by going through all recorded calls
@@ -184,6 +188,8 @@ describe("Captchas", () => {
 		getWidgetElement(checkboxClass, { timeout: 15000 })
 			.first()
 			.should("be.checked");
+
+		cy.snap("image-widget-success");
 
 		// check the logs by going through all recorded calls
 		// Use a generous timeout — CI can be slow processing the callback

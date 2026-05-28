@@ -85,6 +85,8 @@ describe("Proof of Work CAPTCHA", () => {
 			"powVerify",
 		);
 
+		cy.snap("pow-initial");
+
 		getWidgetElement(checkboxClass, { timeout: 12000 }).first().realClick();
 
 		cy.wait("@powCaptcha", { timeout: 12000 })
@@ -110,5 +112,7 @@ describe("Proof of Work CAPTCHA", () => {
 			"contain",
 			"Challenge passed successfully",
 		);
+
+		cy.snap("pow-success");
 	});
 });

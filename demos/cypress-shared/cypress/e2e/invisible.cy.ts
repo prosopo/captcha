@@ -68,6 +68,8 @@ describe("Captchas", () => {
 	it("Captchas load when 'I am human' is pressed", () => {
 		cy.visit(Cypress.env("default_page"));
 
+		cy.snap("invisible-form-initial");
+
 		// Fill in name and email
 		cy.get("input[name='name']").type("John Doe");
 		cy.get("input[name='email']").type("john.doe@example.com");
@@ -82,6 +84,7 @@ describe("Captchas", () => {
 		cy.wait(2000);
 		cy.captchaImages().then((images) => {
 			expect(images).to.have.length(9);
+			cy.snap("invisible-modal-open");
 		});
 	});
 });
