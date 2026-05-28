@@ -125,10 +125,13 @@ graph TB
     PoW -->|get challenge| PowChallengeEP
     PowChallengeEP --> PowTasks
     PowTasks -->|challenge + difficulty| PoW
-    PoW -->|computed proof| PowSolutionEP
+    PoW -->|"computed proof<br/>+ behavioural data"| PowSolutionEP
     PowSolutionEP --> PowTasks
     PowTasks -->|verify proof| MongoDB
+    PowTasks -->|"post-pow routing<br/>(re-evaluate with<br/>behavioural data)"| DecisionMachine
     PowTasks -->|signed token| Manager
+    PowTasks -->|escalate: image/puzzle<br/>+ new sessionId| PoW
+    PoW -->|escalation handoff| ImageCaptcha
 
     %% ===== TOKEN TO BACKEND =====
     Manager -->|"ProcaptchaToken<br/>(hex-encoded)"| EndUser
