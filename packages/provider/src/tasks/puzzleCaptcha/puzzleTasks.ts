@@ -555,12 +555,12 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		// Persist dapp-server-provided email when the site opts in. Gated
-		// purely by `storeMetadata` — independent of the spam-email check
-		// above, which inspects the email but never writes it.
+		// Persist dapp-server-provided metadata when the site opts in.
+		// Gated purely by `storeMetadata` — independent of the spam-email
+		// check above, which inspects the email but never writes it.
 		if (storeMetadata && email) {
 			await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
-				providedEmail: email,
+				metadata: { email },
 			});
 		}
 

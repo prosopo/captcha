@@ -135,6 +135,15 @@ export interface BehavioralDataPacked {
 	d: string;
 }
 
+// Dapp-server-forwarded metadata that the captcha record optionally
+// captures. Only populated when the site key has
+// `settings.storeMetadata = true` — off by default. New fields are added
+// here as the verify payload grows; `providedIp` stays top-level for
+// backwards compatibility (existing data and indexes already use it).
+export interface StoredCaptchaMetadata {
+	email?: string;
+}
+
 export interface StoredCaptcha {
 	result: {
 		status: CaptchaStatus;
@@ -144,9 +153,7 @@ export interface StoredCaptcha {
 	requestedAtTimestamp: Date;
 	ipAddress: CompositeIpAddress;
 	providedIp?: CompositeIpAddress;
-	// Email forwarded by the dapp server on `/verify`. Only persisted when
-	// the site key has `settings.storeMetadata = true` — off by default.
-	providedEmail?: string;
+	metadata?: StoredCaptchaMetadata;
 	headers: RequestHeaders;
 	ja4: string;
 	userSubmitted: boolean;
@@ -216,6 +223,10 @@ const BehavioralDataPackedSchema = object({
 	d: string(),
 });
 
+export const StoredCaptchaMetadataSchema = object({
+	email: string().optional(),
+}) satisfies ZodType<StoredCaptchaMetadata, ZodTypeDef, unknown>;
+
 export const UserCommitmentSchema = object({
 	userAccount: string(),
 	dappAccount: string(),
@@ -226,7 +237,7 @@ export const UserCommitmentSchema = object({
 	userSignature: string(),
 	ipAddress: CompositeIpAddressSchema,
 	providedIp: CompositeIpAddressSchema.optional(),
-	providedEmail: string().optional(),
+	metadata: StoredCaptchaMetadataSchema.optional(),
 	headers: object({}).catchall(string()),
 	ja4: string(),
 	userSubmitted: boolean(),
@@ -431,7 +442,7 @@ export const PoWCaptchaStoredSchema = object({
 	requestedAtTimestamp: date(),
 	ipAddress: CompositeIpAddressSchema,
 	providedIp: CompositeIpAddressSchema.optional(),
-	providedEmail: string().optional(),
+	metadata: StoredCaptchaMetadataSchema.optional(),
 	headers: object({}).catchall(string()),
 	ja4: string(),
 	userSubmitted: boolean(),

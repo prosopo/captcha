@@ -171,7 +171,13 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 		type: new Schema(CompositeIpAddressRecordSchemaObj, { _id: false }),
 		required: false,
 	},
-	providedEmail: { type: String, required: false },
+	metadata: {
+		type: new Schema(
+			{ email: { type: String, required: false } },
+			{ _id: false },
+		),
+		required: false,
+	},
 	headers: { type: Object, required: true },
 	ja4: { type: String, required: true },
 	userSignature: { type: String, required: false },
@@ -274,7 +280,13 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 		type: new Schema(CompositeIpAddressRecordSchemaObj, { _id: false }),
 		required: false,
 	},
-	providedEmail: { type: String, required: false },
+	metadata: {
+		type: new Schema(
+			{ email: { type: String, required: false } },
+			{ _id: false },
+		),
+		required: false,
+	},
 	headers: { type: Object, required: true },
 	ja4: { type: String, required: true },
 	userSignature: { type: String, required: false },
@@ -346,7 +358,13 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 		type: new Schema(CompositeIpAddressRecordSchemaObj, { _id: false }),
 		required: false,
 	},
-	providedEmail: { type: String, required: false },
+	metadata: {
+		type: new Schema(
+			{ email: { type: String, required: false } },
+			{ _id: false },
+		),
+		required: false,
+	},
 	headers: { type: Object, required: true },
 	ja4: { type: String, required: true },
 	userSignature: { type: String, required: true },

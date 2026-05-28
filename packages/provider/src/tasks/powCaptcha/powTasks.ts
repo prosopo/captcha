@@ -548,11 +548,11 @@ export class PowCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		// Persist dapp-server-provided email when the site opts in. Gated
-		// purely by `storeMetadata` — independent of the spam-email checks
-		// above, which inspect the email but never write it.
+		// Persist dapp-server-provided metadata when the site opts in.
+		// Gated purely by `storeMetadata` — independent of the spam-email
+		// checks above, which inspect the email but never write it.
 		if (storeMetadata && email) {
-			powRecordUpdates.providedEmail = email;
+			powRecordUpdates.metadata = { email };
 		}
 
 		// IP validation: store provided IP and validate if rules enabled

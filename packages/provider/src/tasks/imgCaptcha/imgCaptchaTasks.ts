@@ -809,11 +809,11 @@ export class ImgCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		// Persist dapp-server-provided email when the site opts in. Gated
-		// purely by `storeMetadata` — independent of the spam-email checks
-		// above, which inspect the email but never write it.
+		// Persist dapp-server-provided metadata when the site opts in.
+		// Gated purely by `storeMetadata` — independent of the spam-email
+		// checks above, which inspect the email but never write it.
 		if (storeMetadata && email) {
-			commitmentUpdates.providedEmail = email;
+			commitmentUpdates.metadata = { email };
 		}
 
 		// IP validation: accumulate providedIp update
@@ -966,21 +966,21 @@ export class ImgCaptchaManager extends CaptchaManager {
 		}
 
 		// Batch writes: separate non-streaming updates from streaming result writes.
-		// - providedIp / providedEmail use updateDappUserCommitment (no central streaming)
+		// - providedIp / metadata use updateDappUserCommitment (no central streaming)
 		// - approve/disapprove use dedicated methods that trigger centralStreamer
 		const writePromises: Promise<void>[] = [];
 
 		// Write non-streaming metadata fields if accumulated.
-		const metadataUpdates: Partial<UserCommitment> = {};
+		const sideUpdates: Partial<UserCommitment> = {};
 		if (commitmentUpdates.providedIp) {
-			metadataUpdates.providedIp = commitmentUpdates.providedIp;
+			sideUpdates.providedIp = commitmentUpdates.providedIp;
 		}
-		if (commitmentUpdates.providedEmail) {
-			metadataUpdates.providedEmail = commitmentUpdates.providedEmail;
+		if (commitmentUpdates.metadata) {
+			sideUpdates.metadata = commitmentUpdates.metadata;
 		}
-		if (Object.keys(metadataUpdates).length > 0) {
+		if (Object.keys(sideUpdates).length > 0) {
 			writePromises.push(
-				this.db.updateDappUserCommitment(solution.id, metadataUpdates),
+				this.db.updateDappUserCommitment(solution.id, sideUpdates),
 			);
 		}
 
