@@ -187,8 +187,10 @@ export interface RoutingMachineRawSignals {
 	behavioralDataPacked?: DecisionMachineBehavioralDataPacked;
 }
 
+export type RoutingMachinePhase = "route" | "postPow";
+
 export interface RoutingMachineInputBase {
-	phase: "route";
+	phase: RoutingMachinePhase;
 	dappAccount: string;
 	userAccount: string;
 	ip: string;

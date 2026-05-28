@@ -74,4 +74,5 @@ export enum ApiParams {
 	tolerance = "tolerance",
 	mode = "mode",
 	reason = "reason",
+	escalation = "escalation",
 }
