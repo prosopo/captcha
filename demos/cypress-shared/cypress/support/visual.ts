@@ -59,7 +59,7 @@ Cypress.Commands.add(
 	"snap",
 	{ prevSubject: ["optional", "element"] },
 	(
-		subject: JQuery<HTMLElement> | undefined,
+		subject: JQuery<HTMLElement> | void,
 		name: string,
 		options: SnapOptions = {},
 	) => {
