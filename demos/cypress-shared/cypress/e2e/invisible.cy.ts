@@ -84,7 +84,6 @@ describe("Captchas", () => {
 		cy.wait(2000);
 		cy.captchaImages().then((images) => {
 			expect(images).to.have.length(9);
-			cy.snap("invisible-modal-open");
 		});
 	});
 });

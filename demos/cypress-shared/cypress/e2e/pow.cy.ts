@@ -85,7 +85,7 @@ describe("Proof of Work CAPTCHA", () => {
 			"powVerify",
 		);
 
-		cy.snap("pow-initial");
+		cy.snap("pow-initial", { ensureInView: '[type="checkbox"]' });
 
 		getWidgetElement(checkboxClass, { timeout: 12000 }).first().realClick();
 
@@ -113,6 +113,6 @@ describe("Proof of Work CAPTCHA", () => {
 			"Challenge passed successfully",
 		);
 
-		cy.snap("pow-success");
+		cy.snap("pow-success", { ensureInView: ".status-success" });
 	});
 });
