@@ -285,7 +285,9 @@ export class PowCaptchaManager extends CaptchaManager {
 		// Hoisted so the post-pow routing pass (below) can feed it into the
 		// routing machine. Falsy if behavioural data was absent or failed to
 		// decrypt — in either case routing still runs but without this signal.
-		let decryptedBehavioralDataPacked: DecisionMachineBehavioralDataPacked | undefined;
+		let decryptedBehavioralDataPacked:
+			| DecisionMachineBehavioralDataPacked
+			| undefined;
 		if (behavioralData) {
 			try {
 				// Get decryption keys: detector keys from DB first, then env var as fallback

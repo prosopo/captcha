@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import type { Ti18n } from "@prosopo/locale";
+import type { CaptchaType } from "../client/captchaType/captchaType.js";
 import type { ProcaptchaClientConfigInput } from "../config/index.js";
 import type { RandomProvider } from "../provider/api.js";
 import type {
@@ -22,7 +23,6 @@ import type {
 	PackedBehavioralData,
 	TouchEventPoint,
 } from "./behavioral.js";
-import type { CaptchaType } from "../client/captchaType/captchaType.js";
 import type { Account, Callbacks } from "./manager.js";
 
 /**
