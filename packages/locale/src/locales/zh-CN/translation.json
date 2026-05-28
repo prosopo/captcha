@@ -50,7 +50,8 @@
 		"DATACENTER_BLOCKED": "此网站不允许来自数据中心IP地址的请求",
 		"MOBILE_BLOCKED": "此网站不允许来自移动网络连接的请求",
 		"SATELLITE_BLOCKED": "此网站不允许来自卫星连接的请求",
-		"CRAWLER_BLOCKED": "此网站不允许来自已知爬虫的请求"
+		"CRAWLER_BLOCKED": "此网站不允许来自已知爬虫的请求",
+		"DISALLOWED_WEBVIEW": "此站点不允许来自应用内浏览器 (WebView) 的请求"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "无法修改所有者用户",

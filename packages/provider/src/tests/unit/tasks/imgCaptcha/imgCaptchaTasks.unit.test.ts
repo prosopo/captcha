@@ -1448,4 +1448,167 @@ describe("ImgCaptchaManager", () => {
 			expect(db.disapproveDappUserCommitment).not.toHaveBeenCalled();
 		});
 	});
+
+	describe("verifyImageCaptchaSolution with disallowWebView", () => {
+		const ipAddress = getIPAddress("1.1.1.1");
+		const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
+		const sessionId = "test-session-webview";
+
+		const baseCommitment = (commitmentId: string): Partial<UserCommitment> => ({
+			id: commitmentId,
+			userAccount: "userAccount",
+			dappAccount: "dappAccount",
+			providerAccount: "providerAccount",
+			datasetId: "datasetId",
+			result: { status: CaptchaStatus.approved },
+			userSignature: "",
+			userSubmitted: true,
+			serverChecked: false,
+			requestedAtTimestamp: new Date(),
+			ipAddress: {
+				lower: ipAddress.bigInt(),
+				upper: 0n,
+				type: IpAddressType.v4,
+			},
+			headers,
+			ja4: "ja4",
+			lastUpdatedTimestamp: new Date(),
+			sessionId,
+		});
+
+		it("should disapprove and persist DISALLOWED_WEBVIEW when scoreComponents.webView > 0", async () => {
+			const commitmentId = "webviewScoreCommitmentId";
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getDappUserCommitmentById as any).mockResolvedValue(
+				baseCommitment(commitmentId),
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.markDappUserCommitmentsChecked as any).mockResolvedValue(undefined);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getSessionRecordBySessionId as any).mockResolvedValue({
+				sessionId,
+				scoreComponents: { baseScore: 1, webView: 0.1 },
+				webView: true,
+				reason: "WEBVIEW_DETECTED",
+			});
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.disapproveDappUserCommitment as any).mockResolvedValue(undefined);
+
+			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
+				"userAccount",
+				"dappAccount",
+				commitmentId,
+				mockEnv,
+				undefined,
+				undefined,
+				true, // disallowWebView
+			);
+
+			expect(result.verified).toBe(false);
+			expect(result.status).toBe("API.DISALLOWED_WEBVIEW");
+			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith(
+				commitmentId,
+				"API.DISALLOWED_WEBVIEW",
+			);
+			expect(db.updateSessionRecord).toHaveBeenCalledWith(
+				sessionId,
+				{
+					serverChecked: true,
+					result: {
+						status: CaptchaStatus.disapproved,
+						reason: "API.DISALLOWED_WEBVIEW",
+					},
+				},
+				true,
+			);
+			// Decision machine must not be consulted once the request is blocked.
+			expect(db.approveDappUserCommitment).not.toHaveBeenCalled();
+		});
+
+		it("should disapprove when session.webView is true even if scoreComponents.webView is unset", async () => {
+			const commitmentId = "webviewBoolCommitmentId";
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getDappUserCommitmentById as any).mockResolvedValue(
+				baseCommitment(commitmentId),
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.markDappUserCommitmentsChecked as any).mockResolvedValue(undefined);
+			// Webview detected but reached image captcha via a non-webview
+			// frictionless branch (UA mismatch, context-aware, etc.), so
+			// `scoreComponents.webView` is absent.
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getSessionRecordBySessionId as any).mockResolvedValue({
+				sessionId,
+				scoreComponents: { baseScore: 1 },
+				webView: true,
+				reason: "USER_AGENT_MISMATCH",
+			});
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.disapproveDappUserCommitment as any).mockResolvedValue(undefined);
+
+			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
+				"userAccount",
+				"dappAccount",
+				commitmentId,
+				mockEnv,
+				undefined,
+				undefined,
+				true, // disallowWebView
+			);
+
+			expect(result.verified).toBe(false);
+			expect(result.status).toBe("API.DISALLOWED_WEBVIEW");
+			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith(
+				commitmentId,
+				"API.DISALLOWED_WEBVIEW",
+			);
+		});
+
+		it("should not block when disallowWebView is false even if webview is detected", async () => {
+			const commitmentId = "webviewAllowedCommitmentId";
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getDappUserCommitmentById as any).mockResolvedValue(
+				baseCommitment(commitmentId),
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.markDappUserCommitmentsChecked as any).mockResolvedValue(undefined);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getSessionRecordBySessionId as any).mockResolvedValue({
+				sessionId,
+				scoreComponents: { baseScore: 1, webView: 0.1 },
+				webView: true,
+			});
+
+			const originalDecide =
+				// biome-ignore lint/suspicious/noExplicitAny: tests
+				(imgCaptchaManager as any).decisionMachineRunner.decide;
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(imgCaptchaManager as any).decisionMachineRunner.decide = vi
+				.fn()
+				.mockResolvedValue({ decision: "allow" });
+
+			try {
+				const result = await imgCaptchaManager.verifyImageCaptchaSolution(
+					"userAccount",
+					"dappAccount",
+					commitmentId,
+					mockEnv,
+					undefined,
+					undefined,
+					false, // disallowWebView
+				);
+
+				expect(result.verified).toBe(true);
+				expect(result.status).toBe("API.USER_VERIFIED");
+				expect(db.approveDappUserCommitment).toHaveBeenCalledWith(commitmentId);
+			} finally {
+				// biome-ignore lint/suspicious/noExplicitAny: tests
+				(imgCaptchaManager as any).decisionMachineRunner.decide =
+					originalDecide;
+			}
+		});
+	});
 });

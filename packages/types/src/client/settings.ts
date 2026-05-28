@@ -224,6 +224,9 @@ export const ClientSettingsSchema = object({
 		.min(2)
 		.optional()
 		.default(imageMaxRoundsDefault),
+	// Detector score at or above which the frictionless flow blocks the
+	// request outright instead of issuing a challenge. Undefined disables.
+	autoBanScoreThreshold: number().min(0).optional(),
 	puzzleTolerance: number()
 		.int()
 		.min(5)

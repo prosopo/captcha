@@ -50,7 +50,8 @@
 		"DATACENTER_BLOCKED": "Bu sayt üçün məlumat mərkəzi IP ünvanlarından sorğulara icazə verilmir",
 		"MOBILE_BLOCKED": "Bu sayt üçün mobil şəbəkə bağlantılarından sorğulara icazə verilmir",
 		"SATELLITE_BLOCKED": "Bu sayt üçün peyk bağlantılarından sorğulara icazə verilmir",
-		"CRAWLER_BLOCKED": "Bu sayt üçün tanınmış tarayıcılardan sorğulara icazə verilmir"
+		"CRAWLER_BLOCKED": "Bu sayt üçün tanınmış tarayıcılardan sorğulara icazə verilmir",
+		"DISALLOWED_WEBVIEW": "Bu sayt üçün tətbiqdaxili brauzerlərdən (WebView) sorğulara icazə verilmir"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Sahib istifadəçini dəyişmək olmaz",

@@ -50,7 +50,8 @@
 		"DATACENTER_BLOCKED": "Les requêtes provenant d'adresses IP de centres de données ne sont pas autorisées pour ce site",
 		"MOBILE_BLOCKED": "Les requêtes provenant de réseaux mobiles ne sont pas autorisées pour ce site",
 		"SATELLITE_BLOCKED": "Les requêtes provenant de connexions satellite ne sont pas autorisées pour ce site",
-		"CRAWLER_BLOCKED": "Les requêtes provenant de robots d'exploration connus ne sont pas autorisées pour ce site"
+		"CRAWLER_BLOCKED": "Les requêtes provenant de robots d'exploration connus ne sont pas autorisées pour ce site",
+		"DISALLOWED_WEBVIEW": "Les requêtes provenant de navigateurs intégrés aux applications (WebView) ne sont pas autorisées pour ce site"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Impossible de modifier le propriétaire de l'utilisateur",

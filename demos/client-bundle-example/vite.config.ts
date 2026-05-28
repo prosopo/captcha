@@ -206,6 +206,14 @@ export default defineConfig(({ command, mode }) => {
 						__dirname,
 						"src/puzzle-explicit.html",
 					),
+					"invisible-puzzle-implicit": path.resolve(
+						__dirname,
+						"src/invisible-puzzle-implicit.html",
+					),
+					"invisible-puzzle-explicit": path.resolve(
+						__dirname,
+						"src/invisible-puzzle-explicit.html",
+					),
 				},
 			},
 		},

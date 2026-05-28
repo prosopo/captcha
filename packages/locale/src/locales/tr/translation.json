@@ -50,7 +50,8 @@
 		"DATACENTER_BLOCKED": "Bu site için veri merkezi IP adreslerinden gelen isteklere izin verilmiyor",
 		"MOBILE_BLOCKED": "Bu site için mobil ağ bağlantılarından gelen isteklere izin verilmiyor",
 		"SATELLITE_BLOCKED": "Bu site için uydu bağlantılarından gelen isteklere izin verilmiyor",
-		"CRAWLER_BLOCKED": "Bu site için bilinen tarayıcılardan gelen isteklere izin verilmiyor"
+		"CRAWLER_BLOCKED": "Bu site için bilinen tarayıcılardan gelen isteklere izin verilmiyor",
+		"DISALLOWED_WEBVIEW": "Bu site için uygulama içi tarayıcılardan (WebView) gelen isteklere izin verilmiyor"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Cannot modify owner user",

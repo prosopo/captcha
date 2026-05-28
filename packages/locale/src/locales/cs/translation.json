@@ -50,7 +50,8 @@
 		"DATACENTER_BLOCKED": "Požadavky z IP adres datových center nejsou pro tento web povoleny",
 		"MOBILE_BLOCKED": "Požadavky z mobilních sítí nejsou pro tento web povoleny",
 		"SATELLITE_BLOCKED": "Požadavky ze satelitních připojení nejsou pro tento web povoleny",
-		"CRAWLER_BLOCKED": "Požadavky ze známých crawlerů nejsou pro tento web povoleny"
+		"CRAWLER_BLOCKED": "Požadavky ze známých crawlerů nejsou pro tento web povoleny",
+		"DISALLOWED_WEBVIEW": "Požadavky z prohlížečů v aplikacích (WebView) nejsou pro tento web povoleny"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Nelze upravit vlastníka uživatele",

@@ -1,5 +1,81 @@
 # @prosopo/provider
 
+## 4.5.2
+### Patch Changes
+
+- 6567ce0: feat(provider): allow Google Translate proxy domains through the domain check middleware
+  
+  Google Translate proxies a site under `<encoded>.translate.goog` (e.g.
+  `prosopo-io.translate.goog`), encoding `.` as `-` and `-` as `--`. With the
+  previous implementation the proxied host never matched a site's allowed
+  domains and the captcha widget broke on translated pages.
+  
+  Add `decodeGoogleTranslateHost` to `@prosopo/util` which reverses the
+  encoding, and update the provider's `domainMiddleware` so that when the
+  request origin is a `*.translate.goog` URL it also tries the decoded
+  origin against the site's allowed domains.
+  
+  Closes #2585.
+- e2711ae: feat(provider): add `autoBanScoreThreshold` client setting and frictionless auto-ban
+  
+  Adds an optional `autoBanScoreThreshold` to `ClientSettingsSchema`. When set,
+  the frictionless decision machine blocks any request whose detector score is
+  at or above the threshold with HTTP 401 instead of issuing an image or PoW
+  challenge — useful for clients receiving floods of image solves from sessions
+  scoring at or above 1.
+  
+  The check runs first in `runDecisionMachine`, before the existing
+  user-agent / context-aware / webview / timestamp / threshold gates, so score
+  bumps applied by those gates cannot bypass it. Blocked sessions are persisted
+  via `registerBlockedSession` with the new `FrictionlessReason.AUTO_BAN_SCORE`
+  reason.
+  
+  Undefined threshold = disabled; existing clients are unaffected.
+- 5786629: fix(provider): persist DISALLOWED_WEBVIEW outcome and broaden detection in image captcha verify
+  
+  The webview check in `verifyImageCaptchaSolution` did an early return that
+  left the commitment stuck at `Approved` in the database and never marked
+  the session as `serverChecked` / `disapproved`, even though the API
+  correctly returned `verified: false`. This made the DB state misleading
+  and broke any downstream consumer reading commitment status directly.
+  
+  The check also only fired when `scoreComponents.webView > 0`, which is
+  only set when the frictionless flow took the webview branch. Webview
+  users who reached the image captcha via another branch (UA mismatch,
+  context-aware failure, timestamp, bot score) had `session.webView: true`
+  but no `scoreComponents.webView`, so the verify-time block missed them.
+  
+  - Convert the early return to the same `failStatus` /
+    `commitmentUpdates.result` pattern used by every other check in the
+    function, so the commitment and session are properly persisted as
+    disapproved with reason `DISALLOWED_WEBVIEW`.
+  - Trigger on `session.webView === true` OR `scoreComponents.webView > 0`.
+  - Add `ResultReason.DISALLOWED_WEBVIEW` and the English locale entry.
+  - Add unit tests for score-based detection, boolean-only detection, and
+    the `disallowWebView=false` passthrough.
+  
+  Closes #3396.
+- Updated dependencies [6567ce0]
+- Updated dependencies [e2711ae]
+- Updated dependencies [5786629]
+- Updated dependencies [7e8cbb7]
+  - @prosopo/util@3.2.14
+  - @prosopo/types@4.1.3
+  - @prosopo/locale@3.2.4
+  - @prosopo/types-database@4.7.4
+  - @prosopo/database@3.13.2
+  - @prosopo/datasets@3.1.23
+  - @prosopo/keyring@2.9.29
+  - @prosopo/user-access-policy@3.7.6
+  - @prosopo/api@3.4.4
+  - @prosopo/api-express-router@3.1.12
+  - @prosopo/common@3.1.36
+  - @prosopo/env@3.5.2
+  - @prosopo/load-balancer@2.9.5
+  - @prosopo/types-env@2.9.11
+  - @prosopo/api-route@2.6.44
+  - @prosopo/redis-client@1.0.21
+
 ## 4.5.1
 ### Patch Changes
 
