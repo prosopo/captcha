@@ -58,7 +58,11 @@ function injectPauseAnimationsStyle(): void {
 Cypress.Commands.add(
 	"snap",
 	{ prevSubject: ["optional", "element"] },
-	(subject: JQuery<HTMLElement> | undefined, name: string, options: SnapOptions = {}) => {
+	(
+		subject: JQuery<HTMLElement> | undefined,
+		name: string,
+		options: SnapOptions = {},
+	) => {
 		const { errorThreshold = 0.01, capture = "viewport" } = options;
 
 		injectPauseAnimationsStyle();

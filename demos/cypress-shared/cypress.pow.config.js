@@ -15,8 +15,8 @@
 import { builtinModules } from "node:module";
 import { loadEnv } from "@prosopo/dotenv";
 import { defineConfig } from "cypress";
-import vitePreprocessor from "cypress-vite";
 import { configureVisualRegression } from "cypress-visual-regression";
+import vitePreprocessor from "cypress-vite";
 
 loadEnv();
 
