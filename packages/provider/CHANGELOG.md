@@ -1,5 +1,110 @@
 # @prosopo/provider
 
+## 4.6.0
+### Minor Changes
+
+- 20cae63: feat(provider): re-route after PoW using decrypted behavioural data
+  
+  PoW solutions are now re-evaluated by the routing machine after submission.
+  Previously the routing decision was made up-front on a thin set of signals;
+  behavioural data only becomes available (decrypted server-side) once the
+  user submits their PoW solution, so a user with weak behavioural signals
+  could still earn a token by solving PoW alone.
+  
+  The submit endpoint now runs the routing machine a second time in a new
+  `postPow` phase, feeding in the decrypted behavioural data, the originating
+  session's score, request headers, JA4, and IP info. If the router escalates,
+  the provider mints a fresh session (carrying the original session's risk
+  profile) and returns `escalation: { captchaType, sessionId }` on the
+  `PowCaptchaSolutionResponse`. The `verified` flag is forced to `false` on
+  escalation — the user isn't done until they clear the follow-up.
+  
+  On the client, `ProcaptchaFrictionless` accepts the escalation via a new
+  internal `onEscalate` prop on the PoW widget and mounts the chosen image
+  or puzzle widget in place, splicing the new sessionId into the
+  `FrictionlessState`. The handoff is internal to the frictionless → pow
+  flow — dapps integrating Procaptcha see no API change.
+  
+  `RoutingMachineInputBase.phase` widens from `"route"` to
+  `"route" | "postPow"` so decision-machine configs can distinguish the two
+  passes.
+
+### Patch Changes
+
+- 4d9923e: test(provider): integration test asserting every IUserSettings field round-trips through Mongo
+  
+  Registers a site key with a fully-populated `IUserSettings` (every field set, including the new `storeMetadata` and the existing nested `contextAware` / `ipValidationRules` / `spamFilter` / `trafficFilter` sub-documents), reads the record back from Mongo via the real Mongoose write/read path, and asserts each top-level and nested field survived. This is the regression test class that would have caught the `autoBanScoreThreshold` Mongoose-strict-mode drop on the original PR.
+  
+  While adding the test it caught another field that was in zod `ClientSettingsSchema` but missing from the Mongoose `UserSettingsSchema`: `puzzleTolerance`. The fix is bundled here — adds `puzzleTolerance: { type: Number, required: false }` to `UserSettingsSchema` so it actually persists.
+- b2e1a5d: fix(database/provider): don't flag image-captcha placeholder records as `pendingStage`
+  
+  #2596 set `pendingStage: true` on every commitment write, including
+  `storePendingImageCommitment` which inserts placeholder records with
+  `id: ""` while waiting for the user to submit a solution. The sweep
+  then picked those up via `pendingStage_partial` (fast) and called
+  `markDappUserCommitmentsStored(["", "", ...], ts)` (slow) — Mongo
+  dedupes the `$in` array to a single empty-string bound and the
+  `IXSCAN { id: -1 }` walks every empty-id document on the node (~102K
+  on production). On pronode11 that meant 2–8 s per sweep cycle of
+  unnecessary index scan on `usercommitments`, replacing the old
+  WT-cache-thrash with a different one.
+  
+  Two-part fix:
+  
+  - `storePendingImageCommitment` no longer sets `pendingStage`. The
+    real commitment record only gets the flag once `approve` /
+    `disapprove` runs, at which point `id` is populated and staging is
+    meaningful.
+  - `storeCommitmentsExternal` defensively skips any batch entry whose
+    `id` is empty before calling `markDappUserCommitmentsStored`, so a
+    stray placeholder slipping into the partial index can never
+    re-introduce the bug.
+  
+  For nodes already running #2596, the existing flagged placeholders
+  need clearing once (otherwise they sit at `pendingStage: true`
+  forever, since `markDappUserCommitmentsStored`'s
+  `lastUpdatedTimestamp <= ts` guard never matches them after their
+  last update). One-shot per node:
+  
+  ```js
+  db.usercommitments.updateMany(
+    { pendingStage: true, id: "" },
+    { $unset: { pendingStage: 1 } }
+  );
+  ```
+- 4d9923e: feat: optional `storeMetadata` site setting persists `/verify` metadata
+  
+  Adds a per-site-key boolean `storeMetadata` (default `false`) to
+  `ClientSettingsSchema` / `UserSettingsSchema`. When enabled, the provider
+  writes the dapp-server-forwarded metadata that arrives on the image, PoW
+  and puzzle `/verify` endpoints onto the corresponding captcha record under
+  a new `metadata` sub-document (`{ email?: string }` today; more fields
+  will be added here as the verify payload grows).
+  
+  `providedIp` stays top-level — existing data and indexes already use it,
+  and it predates this setting.
+  
+  Off by default. Existing spam-email checks still inspect the submitted
+  email unconditionally — this setting only gates **storage** of metadata
+  so the submitted values can be sampled later to judge whether traffic is
+  mostly spam.
+- Updated dependencies [cdbc5ed]
+- Updated dependencies [4d9923e]
+- Updated dependencies [20cae63]
+- Updated dependencies [b2e1a5d]
+- Updated dependencies [4d9923e]
+  - @prosopo/types-database@4.7.6
+  - @prosopo/types@4.2.0
+  - @prosopo/database@3.13.4
+  - @prosopo/types-env@2.9.13
+  - @prosopo/api@3.4.6
+  - @prosopo/api-express-router@3.1.14
+  - @prosopo/datasets@3.1.25
+  - @prosopo/env@3.5.4
+  - @prosopo/keyring@2.9.31
+  - @prosopo/load-balancer@2.9.7
+  - @prosopo/user-access-policy@3.7.8
+
 ## 4.5.3
 ### Patch Changes
 
