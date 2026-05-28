@@ -124,9 +124,19 @@ export class ClientTaskManager {
 						skip,
 					),
 				async (batch) => {
-					const filteredBatch = lastTask?.updated
-						? batch.filter((commitment) => this.isRecordUpdated(commitment))
-						: batch;
+					const filteredBatch = (
+						lastTask?.updated
+							? batch.filter((commitment) => this.isRecordUpdated(commitment))
+							: batch
+					).filter((commitment) => commitment.id !== "");
+					// Skip placeholder records — `storePendingImageCommitment`
+					// inserts with `id: ""` until the user submits a solution.
+					// Defense in depth: even if a stray placeholder slips into
+					// the partial index, never pass `id: ""` to
+					// markDappUserCommitmentsStored — Mongo collapses
+					// `{ id: { $in: ["", "", ...] } }` to a single empty-string
+					// bound and the IXSCAN on `id_-1` then walks every
+					// empty-id document on the node (~100K rows).
 
 					if (filteredBatch.length > 0) {
 						await captchaDB.saveCaptchas([], filteredBatch, []);
