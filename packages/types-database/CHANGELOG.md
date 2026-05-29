@@ -1,5 +1,46 @@
 # @prosopo/types-database
 
+## 4.7.6
+### Patch Changes
+
+- cdbc5ed: fix(types-database): persist `autoBanScoreThreshold` on client settings
+  
+  `autoBanScoreThreshold` was added to the zod `ClientSettingsSchema` and the
+  frictionless decision machine in #2592, but the Mongoose `UserSettingsSchema`
+  was never updated. Mongoose's strict mode silently dropped the field on every
+  `$set`, so neither the portal account collection nor the provider
+  `ClientRecord` collection ever persisted the value — meaning a system user
+  could set the threshold in the portal, the API would accept it, but the
+  provider would never actually enforce it.
+  
+  Adds the field to the Mongoose schema (`Number`, `min: 0`, `required: false`,
+  no default) so the property is preserved on write.
+- 4d9923e: test(provider): integration test asserting every IUserSettings field round-trips through Mongo
+  
+  Registers a site key with a fully-populated `IUserSettings` (every field set, including the new `storeMetadata` and the existing nested `contextAware` / `ipValidationRules` / `spamFilter` / `trafficFilter` sub-documents), reads the record back from Mongo via the real Mongoose write/read path, and asserts each top-level and nested field survived. This is the regression test class that would have caught the `autoBanScoreThreshold` Mongoose-strict-mode drop on the original PR.
+  
+  While adding the test it caught another field that was in zod `ClientSettingsSchema` but missing from the Mongoose `UserSettingsSchema`: `puzzleTolerance`. The fix is bundled here — adds `puzzleTolerance: { type: Number, required: false }` to `UserSettingsSchema` so it actually persists.
+- 4d9923e: feat: optional `storeMetadata` site setting persists `/verify` metadata
+  
+  Adds a per-site-key boolean `storeMetadata` (default `false`) to
+  `ClientSettingsSchema` / `UserSettingsSchema`. When enabled, the provider
+  writes the dapp-server-forwarded metadata that arrives on the image, PoW
+  and puzzle `/verify` endpoints onto the corresponding captcha record under
+  a new `metadata` sub-document (`{ email?: string }` today; more fields
+  will be added here as the verify payload grows).
+  
+  `providedIp` stays top-level — existing data and indexes already use it,
+  and it predates this setting.
+  
+  Off by default. Existing spam-email checks still inspect the submitted
+  email unconditionally — this setting only gates **storage** of metadata
+  so the submitted values can be sampled later to judge whether traffic is
+  mostly spam.
+- Updated dependencies [20cae63]
+- Updated dependencies [4d9923e]
+  - @prosopo/types@4.2.0
+  - @prosopo/user-access-policy@3.7.8
+
 ## 4.7.5
 ### Patch Changes
 

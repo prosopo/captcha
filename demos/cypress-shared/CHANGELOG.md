@@ -1,5 +1,14 @@
 # @prosopo/cypress-shared
 
+## 2.8.78
+### Patch Changes
+
+- 59c2337: Add `ensureInView` option to `cy.snap()` so viewport-scoped snapshots can guarantee the captcha widget is in shot before the screenshot is taken. The baseline-regeneration workflow now also writes an empty changeset so its auto-opened PR passes the changesets check.
+- 97d6112: Wire up cypress-visual-regression plugin (no snap calls yet — helper and CI baseline workflow only). Follow-up PR will add `cy.snap()` calls to spec files.
+- Updated dependencies [20cae63]
+- Updated dependencies [4d9923e]
+  - @prosopo/types@4.2.0
+
 ## 2.8.77
 ### Patch Changes
 
