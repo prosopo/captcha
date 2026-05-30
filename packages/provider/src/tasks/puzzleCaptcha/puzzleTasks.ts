@@ -39,7 +39,7 @@ import {
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
-import { at, verifyRecency } from "@prosopo/util";
+import { at, extractData, verifyRecency } from "@prosopo/util";
 import {
 	getCompositeIpAddress,
 	getIpAddressFromComposite,
@@ -153,6 +153,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		ipAddress: IPAddress,
 		headers: RequestHeaders,
 		behavioralData?: string,
+		salt?: string,
 		simdReadings?: string,
 	): Promise<boolean> {
 		// Check signatures before doing DB reads to avoid unnecessary network connections
@@ -185,6 +186,24 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 			return false;
 		}
 
+		// Extract coordinates from salt if provided — mirrors the POW
+		// flow so the puzzle record carries the checkbox click telemetry.
+		let coords: [number, number][][] | undefined;
+		if (salt) {
+			try {
+				const extractedData = extractData(salt);
+				if (extractedData.length >= 2) {
+					coords = [[[extractedData[0], extractedData[1]] as [number, number]]];
+				}
+			} catch (error) {
+				this.logger.warn(() => ({
+					msg: "Failed to extract coordinates from salt",
+					error,
+					salt,
+				}));
+			}
+		}
+
 		// Single-use challenge: refuse re-submission. Unlike POW (hash-bound),
 		// the puzzle answer space is small enough to brute-force, so each
 		// challenge must accept exactly one submission.
@@ -206,6 +225,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				false, //serverchecked
 				true, // usersubmitted
 				userTimestampSignature,
+				coords,
 			);
 			if (challengeRecord.sessionId) {
 				await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
@@ -315,6 +335,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 			false,
 			true,
 			userTimestampSignature,
+			coords,
 		);
 
 		// Update the session record with submission result

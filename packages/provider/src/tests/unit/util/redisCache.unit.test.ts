@@ -13,10 +13,10 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/common";
+import { RedisWriteQueue } from "@prosopo/database";
 import type { RedisConnection } from "@prosopo/redis-client";
 import { at } from "@prosopo/util";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { RedisWriteQueue } from "../../../util/redisCache.js";
 
 describe("RedisWriteQueue", () => {
 	let mockLogger: Logger;

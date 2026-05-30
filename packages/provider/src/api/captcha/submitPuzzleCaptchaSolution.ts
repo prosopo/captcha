@@ -68,6 +68,7 @@ export default (env: ProviderEnvironment) =>
 			dapp,
 			user,
 			behavioralData,
+			salt,
 			simdReadings,
 		} = parsed;
 
@@ -99,6 +100,7 @@ export default (env: ProviderEnvironment) =>
 					getIPAddress(req.ip || ""),
 					flatten(req.headers),
 					behavioralData,
+					salt,
 					simdReadings,
 				);
 			const response: PuzzleCaptchaSolutionResponse = {

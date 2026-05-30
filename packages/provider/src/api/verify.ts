@@ -42,9 +42,18 @@ import { getMaintenanceMode } from "./admin/apiToggleMaintenanceModeEndpoint.js"
  */
 export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 	const router = express.Router();
-	const userAccessRulesStorage: AccessRulesStorage = env
-		.getDb()
-		.getUserAccessRulesStorage();
+	// Verify endpoints short-circuit on maintenance mode before touching
+	// access-rule storage; tolerate it being unavailable at startup.
+	let userAccessRulesStorage: AccessRulesStorage;
+	try {
+		userAccessRulesStorage = env.getDb().getUserAccessRulesStorage();
+	} catch (err) {
+		env.logger.warn(() => ({
+			msg: "User access rules storage unavailable; verify endpoints will skip access-policy checks",
+			err,
+		}));
+		userAccessRulesStorage = undefined as never;
+	}
 
 	/**
 	 * Verifies a dapp's solution as being approved or not

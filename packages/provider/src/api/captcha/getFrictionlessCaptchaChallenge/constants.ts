@@ -11,9 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import makeDir from "make-dir";
-// This is just to stop the linter from complaining about an unused import
-console.debug(makeDir);
-export * from "./base/index.js";
-export * from "./databases/index.js";
-export * from "./redisCache.js";
+
+export const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
+
+export const getRoundsFromSimScore = (simScore: number): number => {
+	if (simScore >= 0.9) return 0;
+	if (simScore >= 0.8) return 3;
+	if (simScore >= 0.7) return 4;
+	if (simScore >= 0.6) return 6;
+	if (simScore >= 0.5) return 7;
+	return 8;
+};

@@ -290,6 +290,7 @@ describe("PuzzleCaptchaManager", () => {
 				false,
 				true,
 				a.userSignature,
+				undefined, // coords — no salt supplied in this test
 			);
 		});
 
@@ -332,6 +333,7 @@ describe("PuzzleCaptchaManager", () => {
 				false,
 				true,
 				a.userSignature,
+				undefined, // coords — no salt supplied in this test
 			);
 			// puzzleEvents stored when no behavioral data
 			expect(db.updatePuzzleCaptchaRecord).toHaveBeenCalledWith(
@@ -381,6 +383,7 @@ describe("PuzzleCaptchaManager", () => {
 				false,
 				true,
 				a.userSignature,
+				undefined, // coords — no salt supplied in this test
 			);
 		});
 	});

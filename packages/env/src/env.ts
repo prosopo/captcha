@@ -136,10 +136,19 @@ export class Environment implements ProsopoEnvironment {
 				this.pair.unlock(this.config.account.password);
 			}
 			await this.getSigner();
-			if (!this.db) {
+
+			const maintenanceMode = isMaintenanceMode();
+
+			// In maintenance mode we skip the DB connect entirely so a slow
+			// Mongo socket can't gate boot. Handlers short-circuit before
+			// touching the DB while the flag is on.
+			if (maintenanceMode) {
+				this.logger.warn(() => ({
+					msg: "MAINTENANCE_MODE=true — skipping DB import on startup",
+				}));
+			} else if (!this.db) {
 				await this.importDatabase();
-			}
-			if (this.db && !this.db.connected) {
+			} else if (this.db && !this.db.connected) {
 				this.logger.warn(() => ({
 					msg: `Database connection is not ready (state: ${this.db?.connection?.readyState}), reconnecting...`,
 				}));
@@ -191,3 +200,8 @@ export class Environment implements ProsopoEnvironment {
 		}
 	}
 }
+
+// Read directly from process.env to avoid a cyclic dep on the provider
+// package (which owns the runtime toggle endpoint). Same env var name.
+export const isMaintenanceMode = (): boolean =>
+	process.env.MAINTENANCE_MODE?.toLowerCase() === "true";

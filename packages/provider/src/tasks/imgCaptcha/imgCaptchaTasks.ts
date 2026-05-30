@@ -14,6 +14,7 @@
 
 import { stringToHex, u8aToHex } from "@polkadot/util";
 import { type Logger, ProsopoEnvError } from "@prosopo/common";
+import type { RedisWriteQueue } from "@prosopo/database";
 import {
 	compareCaptchaSolutions,
 	computePendingRequestHash,
@@ -57,7 +58,6 @@ import {
 import { constructPairList, containsIdenticalPairs } from "../../pairs.js";
 import { checkLangRules } from "../../rules/lang.js";
 import { deepValidateIpAddress, shuffleArray } from "../../util.js";
-import type { RedisWriteQueue } from "../../util/redisCache.js";
 import {
 	type UsageCounters,
 	buildAllWindowIncrements,

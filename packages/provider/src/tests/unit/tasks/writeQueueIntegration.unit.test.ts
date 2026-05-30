@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/common";
+import { RedisWriteQueue } from "@prosopo/database";
 import type { RedisConnection } from "@prosopo/redis-client";
 import {
 	CaptchaType,
@@ -25,7 +26,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getCompositeIpAddress } from "../../../compositeIpAddress.js";
 import { FrictionlessManager } from "../../../tasks/frictionless/frictionlessTasks.js";
 import { Tasks } from "../../../tasks/tasks.js";
-import { RedisWriteQueue } from "../../../util/redisCache.js";
 
 describe("Write queue integration with captcha flows", () => {
 	let mockLogger: Logger;
