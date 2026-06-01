@@ -42,6 +42,7 @@
 		"@polkadot/util": "13.5.7",
 		"@polkadot/util-crypto": "13.5.7",
 		"@prosopo/common": "3.1.36",
+		"@prosopo/logger": "1.0.0",
 		"@prosopo/dotenv": "3.0.41",
 		"@prosopo/keyring": "2.9.31",
 		"@prosopo/server": "2.10.9",

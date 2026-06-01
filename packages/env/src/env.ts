@@ -12,15 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {
-	type Logger,
-	ProsopoEnvError,
-	getLogger,
-	parseLogLevel,
-} from "@prosopo/common";
+import { ProsopoEnvError } from "@prosopo/common";
 import { ProviderDatabase } from "@prosopo/database";
 import { IpInfoService } from "@prosopo/ipinfo";
 import { Keyring, getPair } from "@prosopo/keyring";
+import { type Logger, getLogger, parseLogLevel } from "@prosopo/logger";
 import type { KeyringPair } from "@prosopo/types";
 import type { AssetsResolver, EnvironmentTypes } from "@prosopo/types";
 import type { ProsopoConfigOutput } from "@prosopo/types";

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { LogLevel, type Logger, getLogger } from "@prosopo/common";
 import { ProviderEnvironment } from "@prosopo/env";
+import { LogLevel, type Logger, getLogger } from "@prosopo/logger";
 import { updateSpamEmailDomains } from "@prosopo/provider";
 import type { KeyringPair } from "@prosopo/types";
 import type { ProsopoConfigOutput } from "@prosopo/types";

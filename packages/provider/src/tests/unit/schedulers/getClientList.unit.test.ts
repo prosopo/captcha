@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type Logger, getLogger } from "@prosopo/common";
 import { ProviderEnvironment } from "@prosopo/env";
+import type { Logger } from "@prosopo/logger";
 import type { KeyringPair } from "@prosopo/types";
 import { type ProsopoConfigOutput, ScheduledTaskNames } from "@prosopo/types";
 import { CronJob } from "cron";
@@ -22,7 +22,8 @@ import { getClientList } from "../../../schedulers/getClientList.js";
 import { Tasks } from "../../../tasks/tasks.js";
 import { checkIfTaskIsRunning } from "../../../util.js";
 
-vi.mock("@prosopo/env", () => {
+vi.mock("@prosopo/env", async () => {
+	const { getLogger } = await import("@prosopo/logger");
 	const loggerOuter = getLogger("info", import.meta.url);
 	const mockLogger = {
 		debug: vi.fn().mockImplementation(loggerOuter.debug.bind(loggerOuter)),

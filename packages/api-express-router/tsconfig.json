@@ -20,6 +20,9 @@
 			"path": "../common"
 		},
 		{
+			"path": "../logger"
+		},
+		{
 			"path": "../../dev/config/tsconfig.json"
 		},
 		{

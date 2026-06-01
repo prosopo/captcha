@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type Logger, ProsopoDBError, getLogger } from "@prosopo/common";
+import { ProsopoDBError } from "@prosopo/common";
+import { type Logger, getLogger } from "@prosopo/logger";
 import {
 	type CaptchaProperties,
 	type ICaptchaDatabase,

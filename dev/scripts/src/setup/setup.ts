@@ -14,7 +14,7 @@
 
 import path from "node:path";
 import { defaultConfig, getSecret } from "@prosopo/cli";
-import { LogLevel, ProsopoEnvError, getLogger } from "@prosopo/common";
+import { ProsopoEnvError } from "@prosopo/common";
 import { getEnvFile } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
 import {
@@ -22,6 +22,7 @@ import {
 	getDefaultSiteKeys,
 	getPair,
 } from "@prosopo/keyring";
+import { LogLevel, getLogger } from "@prosopo/logger";
 import type { IProviderAccount } from "@prosopo/types";
 import { get } from "@prosopo/util";
 import fse from "fs-extra";

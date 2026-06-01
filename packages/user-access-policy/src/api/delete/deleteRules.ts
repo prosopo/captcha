@@ -17,7 +17,8 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import { type Logger, executeBatchesSequentially } from "@prosopo/common";
+import { executeBatchesSequentially } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import { type ZodType, z } from "zod";
 import {
 	type AccessRulesFilterInput,

@@ -1,3 +1,4 @@
+import { ProsopoDBError } from "@prosopo/common";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,7 +12,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { type Logger, ProsopoDBError, getLogger } from "@prosopo/common";
+import { type Logger, getLogger } from "@prosopo/logger";
 import type { IDatabase } from "@prosopo/types-database";
 import { ServerApiVersion } from "mongodb";
 import mongoose, { type Connection } from "mongoose";

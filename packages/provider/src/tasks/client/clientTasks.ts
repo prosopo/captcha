@@ -13,8 +13,9 @@
 // limitations under the License.
 
 import { createPrivateKey } from "node:crypto";
-import { type Logger, ProsopoApiError } from "@prosopo/common";
+import { ProsopoApiError } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
+import type { Logger } from "@prosopo/logger";
 import {
 	type ContextType,
 	type DecisionMachineCaptchaType,

@@ -33,6 +33,7 @@
 		"@polkadot/util-crypto": "13.5.7",
 		"@prosopo/cli": "3.6.26",
 		"@prosopo/common": "3.1.36",
+		"@prosopo/logger": "1.0.0",
 		"@prosopo/datasets": "3.1.25",
 		"@prosopo/dotenv": "3.0.41",
 		"@prosopo/env": "3.5.4",

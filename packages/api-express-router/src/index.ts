@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { LogLevel } from "@prosopo/common";
+import type { LogLevel } from "@prosopo/logger";
 import { ApiExpressRouterFactory } from "./apiExpressRouterFactory.js";
 import { ApiExpressDefaultEndpointAdapter } from "./endpointAdapter/apiExpressDefaultEndpointAdapter.js";
 import type { ApiExpressEndpointAdapter } from "./endpointAdapter/apiExpressEndpointAdapter.js";

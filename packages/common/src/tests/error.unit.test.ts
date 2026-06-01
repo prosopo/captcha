@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { TFunction } from "i18next";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ProsopoApiError, ProsopoEnvError, unwrapError } from "../error.js";
 import {
 	type LogObject,
 	type LogRecord,
 	type LogRecordFn,
 	type Logger,
 	NativeLogger,
-} from "../logger.js";
+} from "@prosopo/logger";
+import type { TFunction } from "i18next";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { ProsopoApiError, ProsopoEnvError, unwrapError } from "../error.js";
 
 // Tiny stand-in for the i18next translator. Keys present in the map are
 // translated, anything else falls through unchanged (mirrors i18next behavior

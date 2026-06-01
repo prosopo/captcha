@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import { ProviderApi } from "@prosopo/api";
-import { LogLevel, type Logger, getLogger } from "@prosopo/common";
 import { ProviderEnvironment } from "@prosopo/env";
+import { LogLevel, type Logger, getLogger } from "@prosopo/logger";
 import type { KeyringPair } from "@prosopo/types";
 import {
 	CaptchaTypeSpec,

@@ -15,8 +15,9 @@
 import { blake2b } from "@noble/hashes/blake2b";
 import { u8aToHex } from "@polkadot/util";
 import { randomAsHex } from "@polkadot/util-crypto";
-import { ProsopoEnvError, getLogger } from "@prosopo/common";
+import { ProsopoEnvError } from "@prosopo/common";
 import { getPair } from "@prosopo/keyring";
+import { getLogger } from "@prosopo/logger";
 import { ProsopoServer } from "@prosopo/server";
 import {
 	ApiParams,

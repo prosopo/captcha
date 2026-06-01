@@ -17,6 +17,9 @@
 			"path": "../../packages/common"
 		},
 		{
+			"path": "../../packages/logger"
+		},
+		{
 			"path": "../../packages/provider"
 		},
 		{

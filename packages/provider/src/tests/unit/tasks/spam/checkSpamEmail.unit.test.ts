@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { getLogger } from "@prosopo/common";
+import { getLogger } from "@prosopo/logger";
 import type { ProsopoConfigOutput } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";

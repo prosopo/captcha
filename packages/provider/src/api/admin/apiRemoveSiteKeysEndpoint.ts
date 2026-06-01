@@ -17,7 +17,8 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import { type Logger, type ProsopoApiError, getLogger } from "@prosopo/common";
+import type { ProsopoApiError } from "@prosopo/common";
+import { type Logger, getLogger } from "@prosopo/logger";
 import { RemoveSitekeysBody } from "@prosopo/types";
 import type { z } from "zod";
 import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Logger } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import type { IIpInfoService } from "@prosopo/types-env";
 import { Address4 } from "ip-address";
 import { beforeEach, describe, expect, it, vi } from "vitest";

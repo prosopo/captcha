@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import { handleErrors } from "@prosopo/api-express-router";
-import { type Logger, ProsopoApiError } from "@prosopo/common";
+import { ProsopoApiError } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { decodeGoogleTranslateHost, parseUrl } from "@prosopo/util";
 import { validateAddress } from "@prosopo/util-crypto";

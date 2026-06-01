@@ -17,7 +17,7 @@
 			"path": "../../dev/config/tsconfig.json"
 		},
 		{
-			"path": "../../packages/common/tsconfig.json"
+			"path": "../../packages/logger/tsconfig.json"
 		}
 	]
 }

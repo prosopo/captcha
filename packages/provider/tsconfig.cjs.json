@@ -24,6 +24,9 @@
 			"path": "../common/tsconfig.cjs.json"
 		},
 		{
+			"path": "../logger/tsconfig.cjs.json"
+		},
+		{
 			"path": "../database/tsconfig.cjs.json"
 		},
 		{

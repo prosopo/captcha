@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { getLogger } from "@prosopo/common";
+import { getLogger } from "@prosopo/logger";
 import { kebabCase } from "@prosopo/util";
 import type { Options } from "yargs";
 import type * as z from "zod";

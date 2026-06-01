@@ -28,6 +28,7 @@
 	"dependencies": {
 		"@prosopo/ipinfo": "0.2.11",
 		"@prosopo/common": "3.1.36",
+		"@prosopo/logger": "1.0.0",
 		"@prosopo/database": "3.13.4",
 		"@prosopo/keyring": "2.9.31",
 		"@prosopo/types": "4.2.0",

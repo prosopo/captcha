@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { parseLogLevel } from "@prosopo/common";
+import { parseLogLevel } from "@prosopo/logger";
 import {
 	DatabaseTypes,
 	EnvironmentTypesSchema,

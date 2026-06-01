@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { Asn, City, ReaderModel } from "@maxmind/geoip2-node";
-import type { Logger } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import type { IPInfoResponse, IPInfoResult } from "@prosopo/types";
 
 export interface MaxMindBackendConfig {

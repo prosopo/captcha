@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import fs from "node:fs";
-import type { Logger } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import { ScheduledTaskNames, ScheduledTaskStatus } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { validateDomain } from "@prosopo/util";

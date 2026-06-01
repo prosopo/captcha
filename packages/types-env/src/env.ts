@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Logger } from "@prosopo/common";
 import type { Keyring } from "@prosopo/keyring";
+import type { Logger } from "@prosopo/logger";
 import type { KeyringPair } from "@prosopo/types";
 import type { AssetsResolver, EnvironmentTypes } from "@prosopo/types";
 import type { ProsopoBasicConfigOutput } from "@prosopo/types";

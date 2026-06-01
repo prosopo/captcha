@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { ApiEndpointResponseStatus } from "@prosopo/api-route";
-import type { Logger } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiClearAllCountersEndpoint } from "../../../../api/admin/apiClearAllCountersEndpoint.js";
 import type { UsageCounters } from "../../../../util/usageCounters.js";
