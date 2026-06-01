@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { ProviderEnvironment } from "@prosopo/env";
-import { type Logger, getLogger } from "@prosopo/logger";
+import type { Logger } from "@prosopo/logger";
 import type { KeyringPair } from "@prosopo/types";
 import type { ProsopoConfigOutput } from "@prosopo/types";
 import { CronJob } from "cron";
@@ -21,7 +21,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { storeCaptchasExternally } from "../../../schedulers/captchaScheduler.js";
 import { Tasks } from "../../../tasks/tasks.js";
 
-vi.mock("@prosopo/env", () => {
+vi.mock("@prosopo/env", async () => {
+	const { getLogger } = await import("@prosopo/logger");
 	const loggerOuter = getLogger("info", import.meta.url);
 	const mockLogger = {
 		debug: vi.fn().mockImplementation(loggerOuter.debug.bind(loggerOuter)),
