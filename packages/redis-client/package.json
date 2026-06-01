@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/redis-client",
-	"version": "1.0.21",
+	"version": "1.0.22",
 	"description": "Pluggable Redis client for non-blocking connections with smart index creation",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -37,7 +37,7 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
-		"@prosopo/logger": "1.0.0",
+		"@prosopo/logger": "1.0.1",
 		"@redis/search": "5.0.0",
 		"redis": "5.0.0"
 	},

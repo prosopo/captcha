@@ -1,5 +1,24 @@
 # @prosopo/provider
 
+## 4.6.1
+### Patch Changes
+
+- 0fd81af: Extract the logger into its own `@prosopo/logger` package, out of `@prosopo/common`. Consumers now import logger symbols from `@prosopo/logger`; `@prosopo/common` no longer re-exports them. Unused `@prosopo/common` dependencies pruned where the only usage was the logger.
+- Updated dependencies [0fd81af]
+  - @prosopo/api-express-router@3.1.15
+  - @prosopo/api-route@2.6.45
+  - @prosopo/common@3.1.37
+  - @prosopo/database@3.13.5
+  - @prosopo/datasets@3.1.26
+  - @prosopo/env@3.5.5
+  - @prosopo/logger@1.0.1
+  - @prosopo/redis-client@1.0.22
+  - @prosopo/types-database@4.7.7
+  - @prosopo/types-env@2.9.14
+  - @prosopo/user-access-policy@3.7.9
+  - @prosopo/keyring@2.9.32
+  - @prosopo/load-balancer@2.9.8
+
 ## 4.6.0
 ### Minor Changes
 

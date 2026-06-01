@@ -1,5 +1,15 @@
 # @prosopo/api-express-router
 
+## 3.1.15
+### Patch Changes
+
+- 0fd81af: Extract the logger into its own `@prosopo/logger` package, out of `@prosopo/common`. Consumers now import logger symbols from `@prosopo/logger`; `@prosopo/common` no longer re-exports them. Unused `@prosopo/common` dependencies pruned where the only usage was the logger.
+- Updated dependencies [0fd81af]
+  - @prosopo/api-route@2.6.45
+  - @prosopo/common@3.1.37
+  - @prosopo/env@3.5.5
+  - @prosopo/logger@1.0.1
+
 ## 3.1.14
 ### Patch Changes
 
