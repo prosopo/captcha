@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/common",
-	"version": "3.1.36",
+	"version": "3.1.37",
 	"description": "Prosopo common library",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -34,7 +34,7 @@
 	"license": "Apache-2.0",
 	"dependencies": {
 		"@prosopo/locale": "3.2.4",
-		"@prosopo/logger": "1.0.0",
+		"@prosopo/logger": "1.0.1",
 		"i18next": "24.1.0",
 		"zod": "3.23.8"
 	},

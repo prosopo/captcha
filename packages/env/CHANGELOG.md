@@ -1,5 +1,17 @@
 # @prosopo/env
 
+## 3.5.5
+### Patch Changes
+
+- 0fd81af: Extract the logger into its own `@prosopo/logger` package, out of `@prosopo/common`. Consumers now import logger symbols from `@prosopo/logger`; `@prosopo/common` no longer re-exports them. Unused `@prosopo/common` dependencies pruned where the only usage was the logger.
+- Updated dependencies [0fd81af]
+  - @prosopo/common@3.1.37
+  - @prosopo/database@3.13.5
+  - @prosopo/ipinfo@0.2.12
+  - @prosopo/logger@1.0.1
+  - @prosopo/types-env@2.9.14
+  - @prosopo/keyring@2.9.32
+
 ## 3.5.4
 ### Patch Changes
 

@@ -1,5 +1,12 @@
 # @prosopo/procaptcha-puzzle
 
+## 2.10.5
+### Patch Changes
+
+- Updated dependencies [0fd81af]
+  - @prosopo/common@3.1.37
+  - @prosopo/procaptcha-common@2.10.14
+
 ## 2.10.4
 ### Patch Changes
 
