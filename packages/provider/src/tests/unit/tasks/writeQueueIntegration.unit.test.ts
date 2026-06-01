@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Logger } from "@prosopo/common";
 import { RedisWriteQueue } from "@prosopo/database";
+import type { Logger } from "@prosopo/logger";
 import type { RedisConnection } from "@prosopo/redis-client";
 import {
 	CaptchaType,

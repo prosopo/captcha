@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { ApiEndpointResponseStatus } from "@prosopo/api-route";
-import type { Logger } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import {
 	CaptchaType,
 	ClientSettingsSchema,

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { handleErrors } from "@prosopo/api-express-router";
-import { type Logger, getLogger } from "@prosopo/common";
+import { type Logger, getLogger } from "@prosopo/logger";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";

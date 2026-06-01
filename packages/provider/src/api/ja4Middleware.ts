@@ -15,7 +15,7 @@
 import type { IncomingHttpHeaders } from "node:http";
 import { Readable } from "node:stream";
 import { handleErrors } from "@prosopo/api-express-router";
-import { type Logger, getLogger } from "@prosopo/common";
+import { type Logger, getLogger } from "@prosopo/logger";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { randomAsHex } from "@prosopo/util-crypto";
 import type { NextFunction, Request, Response } from "express";

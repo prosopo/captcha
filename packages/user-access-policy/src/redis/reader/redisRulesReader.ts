@@ -13,11 +13,8 @@
 // limitations under the License.
 
 import * as util from "node:util";
-import {
-	type Logger,
-	chunkIntoBatches,
-	executeBatchesSequentially,
-} from "@prosopo/common";
+import { chunkIntoBatches, executeBatchesSequentially } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import type { RedisClientType } from "redis";
 import {
 	REDIS_QUERY_DIALECT,

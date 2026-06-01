@@ -13,15 +13,10 @@
 // limitations under the License.
 
 import { HttpError, ProviderApi } from "@prosopo/api";
-import {
-	type LogLevel,
-	type Logger,
-	ProsopoApiError,
-	ProsopoContractError,
-	getLogger,
-} from "@prosopo/common";
+import { ProsopoApiError, ProsopoContractError } from "@prosopo/common";
 import { Keyring } from "@prosopo/keyring";
 import { loadBalancer } from "@prosopo/load-balancer";
+import { type LogLevel, type Logger, getLogger } from "@prosopo/logger";
 import type { KeyringPair } from "@prosopo/types";
 import {
 	type CaptchaTimeoutOutput,

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import vm from "node:vm";
-import type { Logger } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import {
 	type CounterSpec,
 	CounterSpecSchema,

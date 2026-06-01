@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { LogLevel, type Logger, getLogger } from "@prosopo/common";
+import { LogLevel, type Logger, getLogger } from "@prosopo/logger";
 import type { ArgumentsCamelCase, Argv } from "yargs";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
 //

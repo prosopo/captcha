@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import { hexToU8a, isHex } from "@polkadot/util";
-import { type Logger, ProsopoEnvError, getLogger } from "@prosopo/common";
+import { ProsopoEnvError } from "@prosopo/common";
+import { type Logger, getLogger } from "@prosopo/logger";
 import type { KeyringPair } from "@prosopo/types";
 import type { JWTVerifyResult } from "@prosopo/util-crypto";
 import type { NextFunction, Request, Response } from "express";

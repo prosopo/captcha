@@ -24,7 +24,7 @@
 		"typecheck": "tsc --project tsconfig.types.json"
 	},
 	"dependencies": {
-		"@prosopo/common": "3.1.36",
+		"@prosopo/logger": "1.0.0",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {

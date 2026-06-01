@@ -13,11 +13,8 @@
 // limitations under the License.
 
 import type { ApiEndpoint } from "@prosopo/api-route";
-import {
-	type LogLevel,
-	ProsopoApiError,
-	stringifyBigInts,
-} from "@prosopo/common";
+import { ProsopoApiError } from "@prosopo/common";
+import { type LogLevel, stringifyBigInts } from "@prosopo/logger";
 import type { NextFunction, Request, Response } from "express";
 import type { ZodType } from "zod";
 import type { ApiExpressEndpointAdapter } from "./apiExpressEndpointAdapter.js";

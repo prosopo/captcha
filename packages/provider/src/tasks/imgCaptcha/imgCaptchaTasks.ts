@@ -13,13 +13,14 @@
 // limitations under the License.
 
 import { stringToHex, u8aToHex } from "@polkadot/util";
-import { type Logger, ProsopoEnvError } from "@prosopo/common";
+import { ProsopoEnvError } from "@prosopo/common";
 import type { RedisWriteQueue } from "@prosopo/database";
 import {
 	compareCaptchaSolutions,
 	computePendingRequestHash,
 	parseAndSortCaptchaSolutions,
 } from "@prosopo/datasets";
+import type { Logger } from "@prosopo/logger";
 import {
 	ApiParams,
 	type BehavioralDataPacked,

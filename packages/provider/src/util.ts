@@ -14,11 +14,8 @@
 
 import { hexToU8a } from "@polkadot/util/hex";
 import { isHex } from "@polkadot/util/is";
-import {
-	type Logger,
-	ProsopoContractError,
-	ProsopoEnvError,
-} from "@prosopo/common";
+import { ProsopoContractError, ProsopoEnvError } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import {
 	type IIPValidation,
 	type IIPValidationRules,

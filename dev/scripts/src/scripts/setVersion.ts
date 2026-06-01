@@ -15,8 +15,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { parse, stringify } from "@iarna/toml";
-import { getLogger, parseLogLevel } from "@prosopo/common";
 import { loadEnv } from "@prosopo/dotenv";
+import { getLogger, parseLogLevel } from "@prosopo/logger";
 import { getRootDir } from "@prosopo/workspace";
 
 // We have to load env here if we're importing this file from cli/index.ts, otherwise, the env is loaded after the

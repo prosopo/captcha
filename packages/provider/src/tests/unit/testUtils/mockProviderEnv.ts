@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Logger } from "@prosopo/common";
 import type { ProviderDatabase } from "@prosopo/database";
 import type { Keyring } from "@prosopo/keyring";
+import type { Logger } from "@prosopo/logger";
 import type { KeyringPair, ProsopoConfigOutput } from "@prosopo/types";
 import type { IIpInfoService, ProviderEnvironment } from "@prosopo/types-env";
 import { vi } from "vitest";

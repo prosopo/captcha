@@ -102,7 +102,10 @@ export default defineConfig(async ({ command, mode }) => {
 							}
 							return "web2Chunk";
 						}
-						if (id.includes("packages/common/dist")) {
+						if (
+							id.includes("packages/common/dist") ||
+							id.includes("packages/logger/dist")
+						) {
 							return "commonChunk";
 						}
 						if (id.includes("zod")) {

@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProsopoApiError, getLogger } from "@prosopo/common";
+import { ProsopoApiError } from "@prosopo/common";
+import { getLogger } from "@prosopo/logger";
 import { getJA4 } from "@prosopo/provider";
 import {
 	ClientApiPaths,

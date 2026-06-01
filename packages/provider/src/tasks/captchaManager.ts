@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type Logger, getLogger } from "@prosopo/common";
 import type { RedisWriteQueue } from "@prosopo/database";
 import type { TranslationKey } from "@prosopo/locale";
+import { type Logger, getLogger } from "@prosopo/logger";
 import {
 	ApiParams,
 	type CaptchaType,

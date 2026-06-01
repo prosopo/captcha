@@ -12,14 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {
-	type Logger,
-	ProsopoEnvError,
-	getLogger,
-	parseLogLevel,
-} from "@prosopo/common";
+import { ProsopoEnvError } from "@prosopo/common";
 import { CentralDbStreamer, ProviderDatabase } from "@prosopo/database";
 import { RedisWriteQueue } from "@prosopo/database";
+import { type Logger, getLogger, parseLogLevel } from "@prosopo/logger";
 import type { KeyringPair } from "@prosopo/types";
 import type {
 	ProsopoCaptchaCountConfigSchemaOutput,

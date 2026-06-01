@@ -17,7 +17,7 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import type { Logger } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import type { AccessRulesStorage } from "#policy/rulesStorage.js";
 
 export class DeleteAllRulesEndpoint implements ApiEndpoint<undefined> {

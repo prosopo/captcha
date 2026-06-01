@@ -17,7 +17,8 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import { type AllKeys, LogLevel, type Logger } from "@prosopo/common";
+import type { AllKeys } from "@prosopo/common";
+import { LogLevel, type Logger } from "@prosopo/logger";
 import { type ZodType, z } from "zod";
 import type {
 	AccessPolicy,

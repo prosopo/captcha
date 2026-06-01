@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { ProsopoApiError } from "@prosopo/common";
-import type { Logger } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import { validateAddress } from "@prosopo/util-crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { validateAddr, validateSiteKey } from "../../../api/validateAddress.js";

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Logger } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import { describe, expect, it, vi } from "vitest";
 import { InsertRulesEndpoint } from "#policy/api/write/insertRules.js";
 import { AccessPolicyType } from "#policy/rule.js";

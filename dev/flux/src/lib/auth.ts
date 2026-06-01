@@ -13,8 +13,9 @@
 // limitations under the License.
 
 import { base64Encode } from "@polkadot/util-crypto";
-import { ProsopoError, getLogger } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { loadEnv } from "@prosopo/dotenv";
+import { getLogger } from "@prosopo/logger";
 import qs from "qs";
 import { errorHandler } from "../errorHandler.js";
 import { sign } from "./sep256k1Sign.js";

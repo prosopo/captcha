@@ -12,13 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {
-	LogLevel,
-	type Logger,
-	chunkIntoBatches,
-	executeBatchesSequentially,
-	getLogger,
-} from "@prosopo/common";
+import { chunkIntoBatches, executeBatchesSequentially } from "@prosopo/common";
+import { LogLevel, type Logger, getLogger } from "@prosopo/logger";
 import {
 	type RedisConnection,
 	createTestRedisConnection,

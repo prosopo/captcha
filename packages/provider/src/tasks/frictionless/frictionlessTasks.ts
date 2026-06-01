@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Logger } from "@prosopo/common";
 import { getRandomActiveProvider } from "@prosopo/load-balancer";
+import type { Logger } from "@prosopo/logger";
 import {
 	ApiParams,
 	CaptchaType,

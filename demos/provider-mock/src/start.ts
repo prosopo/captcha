@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import { handleErrors } from "@prosopo/api-express-router";
-import { LogLevel, getLogger } from "@prosopo/common";
 import { i18nMiddleware } from "@prosopo/locale";
+import { LogLevel, getLogger } from "@prosopo/logger";
 import cors from "cors";
 import express from "express";
 import { prosopoRouter } from "./api.js";

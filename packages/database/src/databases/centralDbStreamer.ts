@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type Logger, getLogger } from "@prosopo/common";
+import { type Logger, getLogger } from "@prosopo/logger";
 import type {
 	PoWCaptchaRecord,
 	StoredSession,

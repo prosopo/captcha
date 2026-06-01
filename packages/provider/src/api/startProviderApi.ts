@@ -23,7 +23,6 @@ import {
 	createApiExpressDefaultEndpointAdapter,
 	requestLoggerMiddleware,
 } from "@prosopo/api-express-router";
-import { parseLogLevel } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/env";
 import {
 	convertHostedProvider,
@@ -31,6 +30,7 @@ import {
 	setProviderLoader,
 } from "@prosopo/load-balancer";
 import { i18nMiddleware } from "@prosopo/locale";
+import { parseLogLevel } from "@prosopo/logger";
 import {
 	AdminApiPaths,
 	ClientApiPaths,

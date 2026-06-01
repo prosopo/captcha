@@ -20,6 +20,9 @@
 			"path": "../locale"
 		},
 		{
+			"path": "../logger"
+		},
+		{
 			"path": "../types"
 		}
 	]

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Logger } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import type { BehavioralDataResult } from "./decodeBehavior.js";
 import decryptBehavioralData from "./decodeBehavior.js";
 

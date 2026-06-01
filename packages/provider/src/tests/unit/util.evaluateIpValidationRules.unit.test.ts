@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Logger } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import { type IPComparison, IPValidationAction } from "@prosopo/types";
 import type { IIPValidationRules, IPComparisonResult } from "@prosopo/types";
 import { describe, expect, it } from "vitest";

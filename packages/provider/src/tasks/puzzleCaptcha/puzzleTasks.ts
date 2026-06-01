@@ -14,7 +14,7 @@
 
 import { stringToHex, u8aToHex } from "@polkadot/util";
 import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
-import type { Logger } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import type { KeyringPair, ProsopoConfigOutput } from "@prosopo/types";
 import {
 	CaptchaType,
