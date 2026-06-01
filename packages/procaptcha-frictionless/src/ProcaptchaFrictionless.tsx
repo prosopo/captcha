@@ -15,6 +15,7 @@
 import { loadI18next } from "@prosopo/locale";
 import {
 	Checkbox,
+	TestModeBanner,
 	getDefaultEvents,
 	isSecureBrowserContext,
 	providerRetry,
@@ -275,5 +276,10 @@ export const ProcaptchaFrictionless = ({
 		detectAndSetComponent();
 	}, [config, callbacks, detectBot, config.language]);
 
-	return componentToRender;
+	return (
+		<>
+			<TestModeBanner siteKey={config.account?.address ?? ""} />
+			{componentToRender}
+		</>
+	);
 };

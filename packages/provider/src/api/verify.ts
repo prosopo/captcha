@@ -33,6 +33,7 @@ import { validateAddress } from "@prosopo/util-crypto";
 import express, { type Router } from "express";
 import { Tasks } from "../tasks/tasks.js";
 import { getMaintenanceMode } from "./admin/apiToggleMaintenanceModeEndpoint.js";
+import { resolveTestSiteKeyVerdict } from "./testSiteKey.js";
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -102,6 +103,18 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				// This can error if the token is invalid
 				const { user, dapp, timestamp, commitmentId } =
 					decodeProcaptchaOutput(token);
+
+				// Reserved CI test site keys force a deterministic verdict before
+				// the signature and registered-key checks, so the dapp server needs
+				// no real secret and the key works in every environment.
+				const testVerdict = resolveTestSiteKeyVerdict(dapp, req.logger);
+				if (testVerdict !== null) {
+					const verificationResponse: ImageVerificationResponse = {
+						status: "ok",
+						verified: testVerdict,
+					};
+					return res.json(verificationResponse);
+				}
 
 				// Do this before checking the db
 				validateAddress(dapp, false, 42);
@@ -213,6 +226,18 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				// This can error if the token is invalid
 				const { dapp, user, timestamp, challenge } =
 					decodeProcaptchaOutput(token);
+
+				// Reserved CI test site keys force a deterministic verdict before
+				// the signature and registered-key checks, so the dapp server needs
+				// no real secret and the key works in every environment.
+				const testVerdict = resolveTestSiteKeyVerdict(dapp, req.logger);
+				if (testVerdict !== null) {
+					const verificationResponse: VerificationResponse = {
+						status: "ok",
+						verified: testVerdict,
+					};
+					return res.json(verificationResponse);
+				}
 
 				// Do this before checking the db
 				validateAddress(dapp, false, 42);
@@ -332,6 +357,18 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				// This can error if the token is invalid
 				const { dapp, user, timestamp, challenge } =
 					decodeProcaptchaOutput(token);
+
+				// Reserved CI test site keys force a deterministic verdict before
+				// the signature and registered-key checks, so the dapp server needs
+				// no real secret and the key works in every environment.
+				const testVerdict = resolveTestSiteKeyVerdict(dapp, req.logger);
+				if (testVerdict !== null) {
+					const verificationResponse: VerificationResponse = {
+						status: "ok",
+						verified: testVerdict,
+					};
+					return res.json(verificationResponse);
+				}
 
 				// Do this before checking the db
 				validateAddress(dapp, false, 42);
