@@ -21,6 +21,7 @@ import {
 	type CaptchaSolution,
 	type CaptchaSolutionBodyType,
 	type CaptchaSolutionResponse,
+	type ClientMetaData,
 	type CaptchaType,
 	ClientApiPaths,
 	type DecisionMachineLanguage,
@@ -112,6 +113,7 @@ export default class ProviderApi
 		userTimestampSignature: string,
 		behavioralData?: string,
 		simdReadings?: string,
+		clientMetaData?: ClientMetaData,
 	): Promise<CaptchaSolutionResponse> {
 		const body: CaptchaSolutionBodyType = {
 			[ApiParams.user]: userAccount,
@@ -129,6 +131,7 @@ export default class ProviderApi
 			},
 			...(behavioralData && { [ApiParams.behavioralData]: behavioralData }),
 			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
+			...(clientMetaData && { [ApiParams.clientMetaData]: clientMetaData }),
 		};
 		return this.post(ClientApiPaths.SubmitImageCaptchaSolution, body, {
 			headers: {
@@ -196,6 +199,7 @@ export default class ProviderApi
 		behavioralData?: string,
 		salt?: string,
 		simdReadings?: string,
+		clientMetaData?: ClientMetaData,
 	): Promise<PowCaptchaSolutionResponse> {
 		const body = SubmitPowCaptchaSolutionBody.parse({
 			[ApiParams.challenge]: challenge.challenge,
@@ -215,6 +219,7 @@ export default class ProviderApi
 			...(behavioralData && { [ApiParams.behavioralData]: behavioralData }),
 			...(salt && { [ApiParams.salt]: salt }),
 			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
+			...(clientMetaData && { [ApiParams.clientMetaData]: clientMetaData }),
 		});
 		return this.post(ClientApiPaths.SubmitPowCaptchaSolution, body, {
 			headers: {
@@ -256,6 +261,7 @@ export default class ProviderApi
 		behavioralData?: string,
 		salt?: string,
 		simdReadings?: string,
+		clientMetaData?: ClientMetaData,
 	): Promise<PuzzleCaptchaSolutionResponse> {
 		const body = SubmitPuzzleCaptchaSolutionBody.parse({
 			[ApiParams.challenge]: challenge.challenge,
@@ -276,6 +282,7 @@ export default class ProviderApi
 			...(behavioralData && { [ApiParams.behavioralData]: behavioralData }),
 			...(salt && { [ApiParams.salt]: salt }),
 			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
+			...(clientMetaData && { [ApiParams.clientMetaData]: clientMetaData }),
 		});
 		return this.post(ClientApiPaths.SubmitPuzzleCaptchaSolution, body, {
 			headers: {

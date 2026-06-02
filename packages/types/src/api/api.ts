@@ -25,6 +25,7 @@ import type {
 	DecisionMachineScope,
 } from "../decisionMachine/index.js";
 import type { ProcaptchaToken, StoredEvents } from "../procaptcha/index.js";
+import type { ClientMetaData } from "../provider/database.js";
 import type {
 	ApiResponse,
 	CaptchaResponseBody,
@@ -57,6 +58,7 @@ export interface ProviderApiInterface {
 		userRequestHashSignature: string,
 		behavioralData?: string,
 		simdReadings?: string,
+		clientMetaData?: ClientMetaData,
 	): Promise<CaptchaSolutionResponse>;
 	verifyDappUser(
 		token: ProcaptchaToken,
@@ -77,8 +79,10 @@ export interface ProviderApiInterface {
 		nonce: number,
 		userTimestampSignature: string,
 		timeout?: number,
+		behavioralData?: string,
 		salt?: string,
 		simdReadings?: string,
+		clientMetaData?: ClientMetaData,
 	): Promise<PowCaptchaSolutionResponse>;
 	getPuzzleCaptchaChallenge(
 		userAccount: string,
@@ -96,7 +100,9 @@ export interface ProviderApiInterface {
 		userTimestampSignature: string,
 		timeout?: number,
 		behavioralData?: string,
+		salt?: string,
 		simdReadings?: string,
+		clientMetaData?: ClientMetaData,
 	): Promise<PuzzleCaptchaSolutionResponse>;
 	submitPuzzleCaptchaVerify(
 		token: string,

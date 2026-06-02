@@ -38,6 +38,7 @@ import { handleAccessPolicy } from "./accessPolicy.js";
 import { DEFAULT_FRICTIONLESS_THRESHOLD } from "./constants.js";
 import { runDecisionMachine } from "./decisionMachine.js";
 import { decryptIncomingSimdReadings } from "./decryptSimdReadings.js";
+import { attachHoneypot } from "./honeypotResponse.js";
 import { resolveSessionDedup } from "./sessionDedup.js";
 import { runConfiguredCaptchaTypeShortCircuit } from "./shortCircuit.js";
 

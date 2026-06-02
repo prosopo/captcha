@@ -275,6 +275,15 @@ export interface CaptchaResponseBody extends ApiResponse {
 	};
 }
 
+// Widget-controlled metadata sent alongside the captcha solution. The widget
+// only populates this when the honeypot input has been filled in (which
+// should only happen for bots). Server-side: persisted on the StoredCaptcha
+// record, no automatic verdict. The TS shape (`ClientMetaData`) lives in
+// ./database.ts — this schema is the wire-level zod for request bodies.
+export const ClientMetaDataSchema = object({
+	[ApiParams.hp]: string().optional(),
+});
+
 export const CaptchaSolutionBody = object({
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
@@ -290,6 +299,7 @@ export const CaptchaSolutionBody = object({
 	// simdReadingsCodec — opaque at this layer; the provider decodes and
 	// persists on the captcha record. Collection-only, no scoring.
 	[ApiParams.simdReadings]: string().optional(),
+	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
 });
 
 export type CaptchaSolutionBodyType = zInfer<typeof CaptchaSolutionBody>;
@@ -377,6 +387,11 @@ export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 		| CaptchaType.image
 		| CaptchaType.puzzle;
 	[ApiParams.sessionId]?: string;
+	// Encoded honeypot question. Present when the site key has honeypot
+	// enabled. The widget renders the value into an off-screen hidden
+	// text input; bots that auto-fill text fields will populate it and the
+	// value rides back up in `clientMetaData.hp` on solution submission.
+	[ApiParams.hp]?: string;
 }
 
 export interface PowCaptchaSolutionEscalation {
@@ -449,6 +464,7 @@ export const SubmitPowCaptchaSolutionBody = object({
 	[ApiParams.behavioralData]: string().optional(),
 	[ApiParams.salt]: string().optional(),
 	[ApiParams.simdReadings]: string().optional(),
+	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
 });
 
 export type SubmitPowCaptchaSolutionBodyType = input<
@@ -521,6 +537,7 @@ export const SubmitPuzzleCaptchaSolutionBody = object({
 	[ApiParams.behavioralData]: string().optional(),
 	[ApiParams.salt]: string().optional(),
 	[ApiParams.simdReadings]: string().optional(),
+	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
 });
 
 export type SubmitPuzzleCaptchaSolutionBodyType = input<

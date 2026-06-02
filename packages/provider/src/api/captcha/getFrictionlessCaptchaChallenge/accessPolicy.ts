@@ -24,6 +24,7 @@ import type { AccessPolicy, UserScope } from "@prosopo/user-access-policy";
 import type { Response } from "express";
 import { FrictionlessReason } from "../../../tasks/frictionless/frictionlessTasks.js";
 import type { Tasks } from "../../../tasks/index.js";
+import { attachHoneypot } from "./honeypotResponse.js";
 
 export type AccessPolicyInput = {
 	tasks: Tasks;
@@ -129,15 +130,18 @@ export const handleAccessPolicy = async (
 		return {
 			handled: true,
 			response: res.json(
-				await tasks.frictionlessManager.sendImageCaptcha({
-					...captchaTypeBaseParams,
-					solvedImagesCount: userAccessPolicy.solvedImagesCount
-						? Math.min(
-								userAccessPolicy.solvedImagesCount,
-								clientRecord.settings.imageMaxRounds,
-							)
-						: clientRecord.settings.imageMaxRounds,
-				}),
+				attachHoneypot(
+					await tasks.frictionlessManager.sendImageCaptcha({
+						...captchaTypeBaseParams,
+						solvedImagesCount: userAccessPolicy.solvedImagesCount
+							? Math.min(
+									userAccessPolicy.solvedImagesCount,
+									clientRecord.settings.imageMaxRounds,
+								)
+							: clientRecord.settings.imageMaxRounds,
+					}),
+					clientRecord,
+				),
 			),
 		};
 	}
@@ -154,7 +158,10 @@ export const handleAccessPolicy = async (
 		return {
 			handled: true,
 			response: res.json(
-				await tasks.frictionlessManager.sendPowCaptcha(captchaTypeBaseParams),
+				attachHoneypot(
+					await tasks.frictionlessManager.sendPowCaptcha(captchaTypeBaseParams),
+					clientRecord,
+				),
 			),
 		};
 	}
@@ -171,8 +178,11 @@ export const handleAccessPolicy = async (
 		return {
 			handled: true,
 			response: res.json(
-				await tasks.frictionlessManager.sendPuzzleCaptcha(
-					captchaTypeBaseParams,
+				attachHoneypot(
+					await tasks.frictionlessManager.sendPuzzleCaptcha(
+						captchaTypeBaseParams,
+					),
+					clientRecord,
 				),
 			),
 		};

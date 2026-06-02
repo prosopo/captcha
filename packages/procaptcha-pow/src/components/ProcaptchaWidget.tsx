@@ -34,6 +34,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	const [loading, setLoading] = useState(false);
 	// get the state update mechanism
 	const updateState = buildUpdateState(state, _updateState);
+	const hpRef = useRef<HTMLInputElement>(null);
 	const manager = useRef(
 		Manager(
 			config,
@@ -42,6 +43,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 			callbacks,
 			frictionlessState,
 			props.onEscalate,
+			() => hpRef.current?.value || undefined,
 		),
 	);
 
@@ -101,16 +103,38 @@ const Procaptcha = (props: ProcaptchaProps) => {
 		return () => {};
 	}, [config.mode]);
 
+	const honeypot = frictionlessState?.hp ? (
+		<input
+			ref={hpRef}
+			type="text"
+			name="hp"
+			defaultValue={frictionlessState.hp}
+			tabIndex={-1}
+			autoComplete="off"
+			aria-hidden="true"
+			style={{
+				position: "absolute",
+				left: "-9999px",
+				width: "1px",
+				height: "1px",
+				opacity: 0,
+			}}
+		/>
+	) : null;
+
 	if (config.mode === ModeEnum.invisible) {
-		// Return null for invisible mode - no UI needed
-		return null;
+		// Invisible mode renders no checkbox, but we still render the honeypot
+		// so bots that scan the DOM for inputs find a tempting target.
+		return honeypot;
 	}
 
 	return (
-		<Checkbox
-			checked={state.isHuman}
-			theme={theme}
-			onChange={async (event: React.MouseEvent | React.TouchEvent) => {
+		<>
+			{honeypot}
+			<Checkbox
+				checked={state.isHuman}
+				theme={theme}
+				onChange={async (event: React.MouseEvent | React.TouchEvent) => {
 				if (loading) {
 					return;
 				}
@@ -148,6 +172,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 			aria-label="human checkbox"
 			loading={loading}
 		/>
+		</>
 	);
 };
 

@@ -26,6 +26,7 @@ import type { Response } from "express";
 import type { getCompositeIpAddress } from "../../../compositeIpAddress.js";
 import type { Tasks } from "../../../tasks/index.js";
 import { DEFAULT_FRICTIONLESS_THRESHOLD } from "./constants.js";
+import { attachHoneypot } from "./honeypotResponse.js";
 
 export type ShortCircuitInput = {
 	tasks: Tasks;
@@ -84,21 +85,30 @@ export const runConfiguredCaptchaTypeShortCircuit = async (
 	switch (configuredType) {
 		case CaptchaType.image:
 			return res.json(
-				await input.tasks.frictionlessManager.sendImageCaptcha({
-					...sessionParams,
-					solvedImagesCount: Math.min(
-						input.env.config.captchas.solved.count,
-						input.clientRecord.settings.imageMaxRounds,
-					),
-				}),
+				attachHoneypot(
+					await input.tasks.frictionlessManager.sendImageCaptcha({
+						...sessionParams,
+						solvedImagesCount: Math.min(
+							input.env.config.captchas.solved.count,
+							input.clientRecord.settings.imageMaxRounds,
+						),
+					}),
+					input.clientRecord,
+				),
 			);
 		case CaptchaType.pow:
 			return res.json(
-				await input.tasks.frictionlessManager.sendPowCaptcha(sessionParams),
+				attachHoneypot(
+					await input.tasks.frictionlessManager.sendPowCaptcha(sessionParams),
+					input.clientRecord,
+				),
 			);
 		case CaptchaType.puzzle:
 			return res.json(
-				await input.tasks.frictionlessManager.sendPuzzleCaptcha(sessionParams),
+				attachHoneypot(
+					await input.tasks.frictionlessManager.sendPuzzleCaptcha(sessionParams),
+					input.clientRecord,
+				),
 			);
 		default:
 			throw new Error(
