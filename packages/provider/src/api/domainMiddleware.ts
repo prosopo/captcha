@@ -26,7 +26,11 @@ import { getMaintenanceMode } from "./admin/apiToggleMaintenanceModeEndpoint.js"
 import { isReservedTestSiteKey } from "./testSiteKey.js";
 
 export const domainMiddleware = (env: ProviderEnvironment) => {
-	const tasks = new Tasks(env);
+	// Resolve Tasks (and its DB handle) lazily. In maintenance-mode startup the
+	// DB isn't initialised, so constructing Tasks eagerly here would call
+	// env.getDb() and crash boot. Build it on the first request that actually
+	// needs domain validation (i.e. once maintenance mode is off).
+	let cachedTasks: Tasks | undefined;
 
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
@@ -38,6 +42,11 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 				next();
 				return;
 			}
+
+			if (!cachedTasks) {
+				cachedTasks = new Tasks(env);
+			}
+			const tasks = cachedTasks;
 
 			const siteKey = req.headers["prosopo-site-key"] as string;
 			if (!siteKey)
