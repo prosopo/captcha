@@ -42,7 +42,10 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 				return;
 			}
 
-			const tasks = (cachedTasks ??= new Tasks(env));
+			if (!cachedTasks) {
+				cachedTasks = new Tasks(env);
+			}
+			const tasks = cachedTasks;
 
 			const siteKey = req.headers["prosopo-site-key"] as string;
 			if (!siteKey)
