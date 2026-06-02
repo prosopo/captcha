@@ -32,6 +32,7 @@ import { hashUserIp } from "../../../utils/hashUserIp.js";
 import { normalizeRequestIp } from "../../../utils/normalizeRequestIp.js";
 import { getMaintenanceMode } from "../../admin/apiToggleMaintenanceModeEndpoint.js";
 import { getRequestUserScope } from "../../blacklistRequestInspector.js";
+import { isReservedTestSiteKey } from "../../testSiteKey.js";
 import { buildFrictionlessMaintenanceResponse } from "../maintenanceModeResponses.js";
 import { handleAccessPolicy } from "./accessPolicy.js";
 import { DEFAULT_FRICTIONLESS_THRESHOLD } from "./constants.js";
@@ -95,6 +96,23 @@ export default (
 			if (getMaintenanceMode()) {
 				req.logger.info(() => ({
 					msg: "Maintenance mode active - returning dummy PoW captcha session",
+					data: { dapp, user },
+				}));
+				return res.json(
+					buildFrictionlessMaintenanceResponse(
+						CaptchaType.pow,
+						env.config.host,
+					),
+				);
+			}
+
+			// Reserved CI test site keys: serve an invisible PoW session (no DB
+			// record required) so the flow is deterministic and non-interactive.
+			// The verdict is forced at /submit/pow and /verify based on which
+			// reserved key it is.
+			if (isReservedTestSiteKey(dapp)) {
+				req.logger.warn(() => ({
+					msg: "Reserved TEST site key - returning invisible PoW session",
 					data: { dapp, user },
 				}));
 				return res.json(

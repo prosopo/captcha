@@ -23,6 +23,7 @@ import type { TFunction } from "i18next";
 import { ZodError } from "zod";
 import { Tasks } from "../tasks/index.js";
 import { getMaintenanceMode } from "./admin/apiToggleMaintenanceModeEndpoint.js";
+import { isReservedTestSiteKey } from "./testSiteKey.js";
 
 export const domainMiddleware = (env: ProviderEnvironment) => {
 	// Resolve Tasks (and its DB handle) lazily. In maintenance-mode startup the
@@ -59,6 +60,14 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 				validateAddress(siteKey, false, 42);
 			} catch (err) {
 				throw invalidSiteKeyError(req.i18n, siteKey, req.logger);
+			}
+
+			// Reserved CI test site keys have no DB record and no domain
+			// allowlist; let them through so the deterministic test flow works in
+			// every environment and from any origin.
+			if (isReservedTestSiteKey(siteKey)) {
+				next();
+				return;
 			}
 
 			const clientSettings = await tasks.db.getClientRecord(siteKey);

@@ -16,7 +16,11 @@
 
 import { loadI18next, useTranslation } from "@prosopo/locale";
 import { Manager } from "@prosopo/procaptcha";
-import { Checkbox, useProcaptcha } from "@prosopo/procaptcha-common";
+import {
+	Checkbox,
+	TestModeBanner,
+	useProcaptcha,
+} from "@prosopo/procaptcha-common";
 import { ProcaptchaConfigSchema, type ProcaptchaProps } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { useEffect, useRef, useState } from "react";
@@ -139,6 +143,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 					<div>No challenge set.</div>
 				)}
 			</Modal>
+			<TestModeBanner siteKey={config.account.address ?? ""} />
 			<Checkbox
 				theme={theme}
 				onChange={async (e: { isTrusted: boolean }) => {

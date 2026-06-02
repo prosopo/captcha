@@ -23,6 +23,7 @@ import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/tasks.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
+import { resolveTestSiteKeyVerdict } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 
 export default (env: ProviderEnvironment) =>
@@ -74,6 +75,17 @@ export default (env: ProviderEnvironment) =>
 
 		validateSiteKey(dapp);
 		validateAddr(user);
+
+		// Reserved CI test site keys force a deterministic verdict before any DB
+		// lookup, so they work in every environment without a registered record.
+		const testVerdict = resolveTestSiteKeyVerdict(dapp, req.logger);
+		if (testVerdict !== null) {
+			const response: PuzzleCaptchaSolutionResponse = {
+				status: "ok",
+				verified: testVerdict,
+			};
+			return res.json(response);
+		}
 
 		try {
 			const clientRecord = await tasks.db.getClientRecord(dapp);
