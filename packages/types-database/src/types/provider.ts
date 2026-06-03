@@ -179,10 +179,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 		required: false,
 	},
 	clientMetaData: {
-		type: new Schema(
-			{ hp: { type: String, required: false } },
-			{ _id: false },
-		),
+		type: new Schema({ hp: { type: String, required: false } }, { _id: false }),
 		required: false,
 	},
 	headers: { type: Object, required: true },
@@ -295,10 +292,7 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 		required: false,
 	},
 	clientMetaData: {
-		type: new Schema(
-			{ hp: { type: String, required: false } },
-			{ _id: false },
-		),
+		type: new Schema({ hp: { type: String, required: false } }, { _id: false }),
 		required: false,
 	},
 	headers: { type: Object, required: true },
@@ -380,10 +374,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 		required: false,
 	},
 	clientMetaData: {
-		type: new Schema(
-			{ hp: { type: String, required: false } },
-			{ _id: false },
-		),
+		type: new Schema({ hp: { type: String, required: false } }, { _id: false }),
 		required: false,
 	},
 	headers: { type: Object, required: true },

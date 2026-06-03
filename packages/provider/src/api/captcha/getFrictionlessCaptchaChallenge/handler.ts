@@ -178,8 +178,10 @@ export default (
 				}));
 				attachHoneypot(res, clientRecord);
 				return res.json({
-					[ApiParams.captchaType]:
-						dedup.captchaType as CaptchaType.image | CaptchaType.pow | CaptchaType.puzzle,
+					[ApiParams.captchaType]: dedup.captchaType as
+						| CaptchaType.image
+						| CaptchaType.pow
+						| CaptchaType.puzzle,
 					[ApiParams.sessionId]: dedup.sessionId,
 					[ApiParams.status]: "ok",
 				});

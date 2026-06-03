@@ -135,43 +135,43 @@ const Procaptcha = (props: ProcaptchaProps) => {
 				checked={state.isHuman}
 				theme={theme}
 				onChange={async (event: React.MouseEvent | React.TouchEvent) => {
-				if (loading) {
-					return;
-				}
-				setLoading(true);
+					if (loading) {
+						return;
+					}
+					setLoading(true);
 
-				// Capture click coordinates
-				let x = 0;
-				let y = 0;
+					// Capture click coordinates
+					let x = 0;
+					let y = 0;
 
-				// Try to get coordinates from the change event's underlying mouse event
-				// The original mouse event might be available in the event chain
-				const mouseOrTouchEvent = event.nativeEvent;
-				if (!mouseOrTouchEvent.isTrusted) {
-					// Don't capture coordinates for non-trusted events
-				} else if (
-					"touches" in mouseOrTouchEvent &&
-					mouseOrTouchEvent.touches.length > 0 &&
-					mouseOrTouchEvent.touches[0]
-				) {
-					x = mouseOrTouchEvent.touches[0].clientX;
-					y = mouseOrTouchEvent.touches[0].clientY;
-				} else if (
-					"clientX" in mouseOrTouchEvent &&
-					"clientY" in mouseOrTouchEvent
-				) {
-					x = mouseOrTouchEvent.clientX;
-					y = mouseOrTouchEvent.clientY;
-				}
+					// Try to get coordinates from the change event's underlying mouse event
+					// The original mouse event might be available in the event chain
+					const mouseOrTouchEvent = event.nativeEvent;
+					if (!mouseOrTouchEvent.isTrusted) {
+						// Don't capture coordinates for non-trusted events
+					} else if (
+						"touches" in mouseOrTouchEvent &&
+						mouseOrTouchEvent.touches.length > 0 &&
+						mouseOrTouchEvent.touches[0]
+					) {
+						x = mouseOrTouchEvent.touches[0].clientX;
+						y = mouseOrTouchEvent.touches[0].clientY;
+					} else if (
+						"clientX" in mouseOrTouchEvent &&
+						"clientY" in mouseOrTouchEvent
+					) {
+						x = mouseOrTouchEvent.clientX;
+						y = mouseOrTouchEvent.clientY;
+					}
 
-				await manager.current.start(x, y);
-				setLoading(false);
-			}}
-			labelText={isTranslationReady ? t("WIDGET.I_AM_HUMAN") : ""}
-			error={state.error?.message}
-			aria-label="human checkbox"
-			loading={loading}
-		/>
+					await manager.current.start(x, y);
+					setLoading(false);
+				}}
+				labelText={isTranslationReady ? t("WIDGET.I_AM_HUMAN") : ""}
+				error={state.error?.message}
+				aria-label="human checkbox"
+				loading={loading}
+			/>
 		</>
 	);
 };
