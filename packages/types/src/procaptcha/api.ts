@@ -14,6 +14,7 @@
 
 import type { ProviderApiInterface } from "../api/index.js";
 import type { CaptchaSolution } from "../datasets/index.js";
+import type { ClientMetaData } from "../provider/database.js";
 import type { CaptchaResponseBody, RandomProvider } from "../provider/index.js";
 import type { TCaptchaSubmitResult } from "./client.js";
 
@@ -31,6 +32,7 @@ export interface ProcaptchaApiInterface {
 		providerRequestHashSignature: string,
 		behavioralData?: string,
 		simdReadings?: string,
+		clientMetaData?: ClientMetaData,
 	): Promise<TCaptchaSubmitResult>;
 	getCaptchaChallenge(
 		sessionId?: string,

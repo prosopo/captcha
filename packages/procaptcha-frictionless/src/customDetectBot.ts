@@ -129,6 +129,7 @@ const customDetectBot: BotDetectionFunction = async (
 		status: captcha.status,
 		userAccount: userAccount,
 		error: captcha.error,
+		hp: captcha.hp,
 		// Map specific trackers to generic behavioral collectors
 		behaviorCollector1: detectionResult.mouseTracker,
 		behaviorCollector2: detectionResult.touchTracker,

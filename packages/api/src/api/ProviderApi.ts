@@ -23,6 +23,7 @@ import {
 	type CaptchaSolutionResponse,
 	type CaptchaType,
 	ClientApiPaths,
+	type ClientMetaData,
 	type DecisionMachineLanguage,
 	type DecisionMachineRuntime,
 	type DecisionMachineScope,
@@ -112,6 +113,7 @@ export default class ProviderApi
 		userTimestampSignature: string,
 		behavioralData?: string,
 		simdReadings?: string,
+		clientMetaData?: ClientMetaData,
 	): Promise<CaptchaSolutionResponse> {
 		const body: CaptchaSolutionBodyType = {
 			[ApiParams.user]: userAccount,
@@ -129,6 +131,7 @@ export default class ProviderApi
 			},
 			...(behavioralData && { [ApiParams.behavioralData]: behavioralData }),
 			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
+			...(clientMetaData && { [ApiParams.clientMetaData]: clientMetaData }),
 		};
 		return this.post(ClientApiPaths.SubmitImageCaptchaSolution, body, {
 			headers: {
@@ -196,6 +199,7 @@ export default class ProviderApi
 		behavioralData?: string,
 		salt?: string,
 		simdReadings?: string,
+		clientMetaData?: ClientMetaData,
 	): Promise<PowCaptchaSolutionResponse> {
 		const body = SubmitPowCaptchaSolutionBody.parse({
 			[ApiParams.challenge]: challenge.challenge,
@@ -215,6 +219,7 @@ export default class ProviderApi
 			...(behavioralData && { [ApiParams.behavioralData]: behavioralData }),
 			...(salt && { [ApiParams.salt]: salt }),
 			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
+			...(clientMetaData && { [ApiParams.clientMetaData]: clientMetaData }),
 		});
 		return this.post(ClientApiPaths.SubmitPowCaptchaSolution, body, {
 			headers: {
@@ -256,6 +261,7 @@ export default class ProviderApi
 		behavioralData?: string,
 		salt?: string,
 		simdReadings?: string,
+		clientMetaData?: ClientMetaData,
 	): Promise<PuzzleCaptchaSolutionResponse> {
 		const body = SubmitPuzzleCaptchaSolutionBody.parse({
 			[ApiParams.challenge]: challenge.challenge,
@@ -276,6 +282,7 @@ export default class ProviderApi
 			...(behavioralData && { [ApiParams.behavioralData]: behavioralData }),
 			...(salt && { [ApiParams.salt]: salt }),
 			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
+			...(clientMetaData && { [ApiParams.clientMetaData]: clientMetaData }),
 		});
 		return this.post(ClientApiPaths.SubmitPuzzleCaptchaSolution, body, {
 			headers: {
@@ -310,7 +317,7 @@ export default class ProviderApi
 		});
 	}
 
-	public getFrictionlessCaptcha(
+	public async getFrictionlessCaptcha(
 		token: string,
 		headHash: string,
 		dapp: string,
@@ -326,12 +333,21 @@ export default class ProviderApi
 			...(mode && { [ApiParams.mode]: mode }),
 			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
 		};
-		return this.post(ClientApiPaths.GetFrictionlessCaptchaChallenge, body, {
+		const { data, headers } = await this.postWithHeaders<
+			GetFrictionlessCaptchaResponse,
+			typeof body
+		>(ClientApiPaths.GetFrictionlessCaptchaChallenge, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": user,
 			},
 		});
+		// Honeypot rides on the x-prosopo-meta header rather than the JSON
+		// body so it doesn't sit there for response-scraping bots to grep.
+		// Re-attach to the returned object so downstream code (widget,
+		// FrictionlessState) consumes it identically to before.
+		const hp = headers.get("x-prosopo-meta");
+		return hp ? { ...data, [ApiParams.hp]: hp } : data;
 	}
 
 	public submitUserEvents(

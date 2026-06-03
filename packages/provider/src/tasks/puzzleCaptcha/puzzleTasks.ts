@@ -26,6 +26,7 @@ import {
 	type BehavioralDataPacked,
 	type CaptchaResult,
 	CaptchaStatus,
+	type ClientMetaData,
 	type IPAddress,
 	type ITrafficFilter,
 	POW_SEPARATOR,
@@ -155,6 +156,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		behavioralData?: string,
 		salt?: string,
 		simdReadings?: string,
+		clientMetaData?: ClientMetaData,
 	): Promise<boolean> {
 		// Check signatures before doing DB reads to avoid unnecessary network connections
 		checkPowSignature(
@@ -326,6 +328,12 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 			// Store puzzle events even without behavioral data
 			await this.db.updatePuzzleCaptchaRecord(challenge, {
 				puzzleEvents,
+			});
+		}
+
+		if (clientMetaData?.hp) {
+			await this.db.updatePuzzleCaptchaRecord(challenge, {
+				clientMetaData: { hp: clientMetaData.hp },
 			});
 		}
 

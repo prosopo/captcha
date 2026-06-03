@@ -46,8 +46,16 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	const [showRetry, setShowRetry] = useState(false);
 	// get the state update mechanism
 	const updateState = buildUpdateState(state, _updateState);
+	const hpRef = useRef<HTMLInputElement>(null);
 	const manager = useRef(
-		Manager(config, state, updateState, callbacks, frictionlessState),
+		Manager(
+			config,
+			state,
+			updateState,
+			callbacks,
+			frictionlessState,
+			() => hpRef.current?.value || undefined,
+		),
 	);
 
 	useEffect(() => {
@@ -178,6 +186,24 @@ const Procaptcha = (props: ProcaptchaProps) => {
 
 	return (
 		<>
+			{frictionlessState?.hp && (
+				<input
+					ref={hpRef}
+					type="text"
+					name="email_confirm"
+					defaultValue={frictionlessState.hp}
+					tabIndex={-1}
+					autoComplete="off"
+					aria-hidden="true"
+					style={{
+						position: "absolute",
+						left: "-9999px",
+						width: "1px",
+						height: "1px",
+						opacity: 0,
+					}}
+				/>
+			)}
 			{/* Puzzle overlay — rendered outside the shadow DOM flow via fixed
 			    positioning. Shown in both visible and invisible modes once a
 			    challenge has been fetched; puzzle is inherently interactive. */}

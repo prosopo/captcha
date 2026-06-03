@@ -57,6 +57,9 @@ export const Manager = (
 	onStateUpdate: ProcaptchaStateUpdateFn,
 	callbacks: ProcaptchaCallbacks,
 	frictionlessState?: FrictionlessState,
+	// Reads the live honeypot input value at submit time. Returns undefined
+	// when the honeypot is disabled or the input hasn't been filled.
+	getHoneypotValue?: () => string | undefined,
 ): PuzzleManagerHandle => {
 	const events = getDefaultEvents(callbacks);
 
@@ -393,6 +396,8 @@ export const Manager = (
 			const simdReadings = frictionlessState?.getSimdReadings
 				? await frictionlessState.getSimdReadings()
 				: undefined;
+			const hpValue = getHoneypotValue?.();
+			const clientMetaData = hpValue ? { hp: hpValue } : undefined;
 			const verifiedSolution = await providerApi.submitPuzzleCaptchaSolution(
 				challenge,
 				getAccount().account.account.address,
@@ -405,6 +410,7 @@ export const Manager = (
 				encryptedBehavioralData,
 				salt,
 				simdReadings,
+				clientMetaData,
 			);
 
 			if (verifiedSolution[ApiParams.verified]) {

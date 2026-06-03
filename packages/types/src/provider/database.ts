@@ -144,6 +144,13 @@ export interface StoredCaptchaMetadata {
 	email?: string;
 }
 
+// Widget-controlled metadata captured during the captcha solution submission.
+// Always persisted when present (not gated by `storeMetadata`) — this is a
+// signal channel for the honeypot (and any future widget-side traps).
+export interface ClientMetaData {
+	hp?: string;
+}
+
 export interface StoredCaptcha {
 	result: {
 		status: CaptchaStatus;
@@ -154,6 +161,7 @@ export interface StoredCaptcha {
 	ipAddress: CompositeIpAddress;
 	providedIp?: CompositeIpAddress;
 	metadata?: StoredCaptchaMetadata;
+	clientMetaData?: ClientMetaData;
 	headers: RequestHeaders;
 	ja4: string;
 	userSubmitted: boolean;
@@ -227,6 +235,10 @@ export const StoredCaptchaMetadataSchema = object({
 	email: string().optional(),
 }) satisfies ZodType<StoredCaptchaMetadata, ZodTypeDef, unknown>;
 
+export const ClientMetaDataDbSchema = object({
+	hp: string().optional(),
+}) satisfies ZodType<ClientMetaData, ZodTypeDef, unknown>;
+
 export const UserCommitmentSchema = object({
 	userAccount: string(),
 	dappAccount: string(),
@@ -238,6 +250,7 @@ export const UserCommitmentSchema = object({
 	ipAddress: CompositeIpAddressSchema,
 	providedIp: CompositeIpAddressSchema.optional(),
 	metadata: StoredCaptchaMetadataSchema.optional(),
+	clientMetaData: ClientMetaDataDbSchema.optional(),
 	headers: object({}).catchall(string()),
 	ja4: string(),
 	userSubmitted: boolean(),
@@ -443,6 +456,7 @@ export const PoWCaptchaStoredSchema = object({
 	ipAddress: CompositeIpAddressSchema,
 	providedIp: CompositeIpAddressSchema.optional(),
 	metadata: StoredCaptchaMetadataSchema.optional(),
+	clientMetaData: ClientMetaDataDbSchema.optional(),
 	headers: object({}).catchall(string()),
 	ja4: string(),
 	userSubmitted: boolean(),

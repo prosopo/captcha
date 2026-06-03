@@ -69,6 +69,11 @@ export type FrictionlessState = {
 	// completed in time or SIMD isn't available — callers should treat
 	// either case as "skip this signal". Never throws.
 	getSimdReadings?: (timeoutMs?: number) => Promise<string | undefined>;
+	// Encoded honeypot question forwarded from the frictionless response.
+	// The widget renders this into an off-screen hidden text input. If a
+	// bot fills it, the value is sent back as `clientMetaData.hp` on
+	// solution submission. Undefined when honeypot is disabled for the site.
+	hp?: string;
 };
 
 export type ProcaptchaCallbacks = Partial<Callbacks>;
