@@ -53,37 +53,39 @@ const MORSE_MAP: Record<string, string> = {
 	"9": "----.",
 };
 
-// Semaphore: Unicode "Flags" approximations from the Miscellaneous Symbols
-// and Pictographs block. Picked for distinctness (each letter renders as
-// something visually different) rather than for true semaphore-flag glyph
-// accuracy — the goal is "string of opaque symbols", not signaller training.
+// Semaphore: each letter is a pair of arrows approximating the two flag
+// positions of the corresponding semaphore character, viewed from the
+// observer's perspective (left arrow = observer-left arm, right arrow =
+// observer-right arm). Mapping is bijective so a decoder can recover the
+// letter; positions roughly track the standard A–G "right arm sweeps,
+// left arm down" / H–N "both arms" structure of flag semaphore.
 const SEMAPHORE_MAP: Record<string, string> = {
-	a: "🚩",
-	b: "🏁",
-	c: "🏴",
-	d: "🏳",
-	e: "⛳",
-	f: "🎌",
-	g: "🚩",
-	h: "🏁",
-	i: "🏴",
-	j: "🏳",
-	k: "⛳",
-	l: "🎌",
-	m: "🚩",
-	n: "🏁",
-	o: "🏴",
-	p: "🏳",
-	q: "⛳",
-	r: "🎌",
-	s: "🚩",
-	t: "🏁",
-	u: "🏴",
-	v: "🏳",
-	w: "⛳",
-	x: "🎌",
-	y: "🚩",
-	z: "🏁",
+	a: "↙↓",
+	b: "←↓",
+	c: "↖↓",
+	d: "↑↓",
+	e: "↓↘",
+	f: "↓→",
+	g: "↓↗",
+	h: "↙←",
+	i: "↙↖",
+	j: "↓↑",
+	k: "↑←",
+	l: "↗←",
+	m: "←↖",
+	n: "←↑",
+	o: "↖↑",
+	p: "↑↗",
+	q: "↗→",
+	r: "→↘",
+	s: "↘↓",
+	t: "↓↙",
+	u: "↘↗",
+	v: "→↑",
+	w: "↘↑",
+	x: "↙↗",
+	y: "→↗",
+	z: "↘→",
 };
 
 const encodeMorse = (text: string): string => {
@@ -100,10 +102,16 @@ const encodeMorse = (text: string): string => {
 };
 
 const encodeSemaphore = (text: string): string => {
-	return [...text.toLowerCase()]
-		.map((ch) => (ch === " " ? " " : SEMAPHORE_MAP[ch]))
-		.filter((glyph): glyph is string => Boolean(glyph))
-		.join("");
+	const words = text.toLowerCase().split(/\s+/).filter(Boolean);
+	return words
+		.map((word) =>
+			[...word]
+				.map((ch) => SEMAPHORE_MAP[ch])
+				.filter((code): code is string => Boolean(code))
+				.join(" "),
+		)
+		.filter(Boolean)
+		.join(" / ");
 };
 
 export const encodeHoneypotQuestion = (
