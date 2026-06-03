@@ -12,7 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type CSSProperties, forwardRef, useId, useMemo } from "react";
+import {
+	type CSSProperties,
+	forwardRef,
+	useEffect,
+	useId,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
+import { createPortal } from "react-dom";
 
 interface HoneypotProps {
 	encodedQuestion: string;
@@ -37,24 +46,72 @@ const decodeBase64Utf8 = (b64: string): string => {
 	return new TextDecoder().decode(bytes);
 };
 
-// The decoded question is rendered as the input's <label>, not as the input's
-// value. Naive form-fillers leave the empty input alone — no signal, no false
+// Locate the dapp's enclosing <form> by stepping out of the widget's shadow
+// root into light DOM, then walking up via closest(). Returns null when the
+// widget isn't embedded inside a form.
+const findAncestorForm = (anchor: Element): HTMLFormElement | null => {
+	const root = anchor.getRootNode();
+	const lightDomEntry = root instanceof ShadowRoot ? root.host : anchor;
+	return lightDomEntry instanceof Element
+		? lightDomEntry.closest("form")
+		: null;
+};
+
+// Honeypot must live in light DOM, not in the widget's shadow root: if it
+// rendered there a bot would have to traverse `.shadowRoot` to reach it, and
+// @prosopo/catcher patches that getter to detect (and restart on) automated
+// access — wiping the value the bot just wrote before it can submit.
+//
+// Within light DOM we prefer the enclosing <form> so bots scraping
+// `form.querySelectorAll('input')` discover the bait naturally; document.body
+// is the fallback for widgets mounted outside any form.
+//
+// The decoded question is rendered as the input's <label>, not as its value.
+// Naive form-fillers leave the empty input alone — no signal, no false
 // positives. Agents that read the DOM as a prompt may decode the label and
-// write an answer into the empty field; that response is what we capture and
-// persist via clientMetaData.hp.
+// write an answer into the empty field; that response rides up as
+// clientMetaData.hp.
 export const Honeypot = forwardRef<HTMLInputElement, HoneypotProps>(
 	({ encodedQuestion }, ref) => {
 		const id = useId();
+		// Opaque non-existent form id. Setting `form="..."` on an input with a
+		// value that doesn't match any form's id disassociates the input from
+		// every form: the browser excludes it from the parent form's submission
+		// set and from `form.elements`, while leaving it discoverable via
+		// `form.querySelectorAll('input')`. Built from useId so it's unique per
+		// Honeypot instance and guaranteed not to collide with the input's own id.
+		const detachedFormId = `${id}-d`;
 		const question = useMemo(
 			() => decodeBase64Utf8(encodedQuestion),
 			[encodedQuestion],
 		);
-		return (
+		const anchorRef = useRef<HTMLSpanElement>(null);
+		const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
+
+		useEffect(() => {
+			const anchor = anchorRef.current;
+			if (!anchor) return;
+			setPortalTarget(findAncestorForm(anchor) ?? document.body);
+		}, []);
+
+		if (typeof document === "undefined") return null;
+
+		// Transient anchor while we resolve the portal target. Sits in the React
+		// tree (inside the shadow root) just long enough for the effect above to
+		// walk out to light DOM and find the form.
+		if (!portalTarget) {
+			return (
+				<span ref={anchorRef} aria-hidden="true" style={{ display: "none" }} />
+			);
+		}
+
+		return createPortal(
 			<div aria-hidden="true" style={offscreenStyle}>
 				<label htmlFor={id}>{question}</label>
 				<input
 					ref={ref}
 					id={id}
+					form={detachedFormId}
 					type="text"
 					name="email_confirm"
 					defaultValue=""
@@ -62,7 +119,8 @@ export const Honeypot = forwardRef<HTMLInputElement, HoneypotProps>(
 					autoComplete="off"
 					aria-hidden="true"
 				/>
-			</div>
+			</div>,
+			portalTarget,
 		);
 	},
 );
