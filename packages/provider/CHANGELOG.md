@@ -1,5 +1,56 @@
 # @prosopo/provider
 
+## 4.6.2
+### Patch Changes
+
+- d62eb70: Fix provider crash-loop on startup in maintenance mode.
+  
+  `domainMiddleware` constructed `new Tasks(env)` eagerly at wire-up time, which
+  calls `env.getDb()`. In `MAINTENANCE_MODE=true` the DB is intentionally never
+  connected (`isReady()` skips the connect), so `getDb()` throws
+  `"db not setup! Please call isReady() first"`. That error was unguarded and
+  propagated out of `startProviderApi`, crashing the process on every boot and
+  leaving the provider in a Docker restart loop.
+  
+  `Tasks` is now resolved lazily on the first request that actually needs domain
+  validation — i.e. only once maintenance mode is off — mirroring the existing
+  lazy pattern in `blockMiddleware`. The request handler already short-circuits
+  on `getMaintenanceMode()` before touching the DB, so no request path depends on
+  the eager construction.
+- 6c26669: Add per-site honeypot trap. When enabled, the provider attaches an encoded question (morse or semaphore, base64-wrapped) in the `x-prosopo-meta` response header on frictionless responses. The widget renders the value into an off-screen hidden input with `name="email_confirm"`; bots that auto-fill text inputs populate it and the value rides back on the solution submit as `clientMetaData.hp`, which is persisted on the `StoredCaptcha` record. Falls back to a random phrase from `PROSOPO_HONEYPOT_PHRASE_BANK_PATH` when no custom question is configured.
+- f7f9ec5: feat(provider,widget): reserved always-pass / always-fail test site keys
+  
+  Add two fixed, well-known reserved site keys (`ALWAYS_PASS_SITE_KEY` /
+  `ALWAYS_FAIL_SITE_KEY`) that force a deterministic captcha verdict for CI/CD and
+  integration testing, constant across production, staging and development.
+  
+  - `@prosopo/types`: shared constants + `getTestSiteKeyMode`, imported by both the
+    provider and the widget.
+  - `@prosopo/provider`: short-circuits the `submit*` and `verify` endpoints (verify
+    runs before the signature check, so no dapp secret is needed), serves an
+    invisible PoW session from the frictionless handler, and bypasses domain
+    middleware. Works in every environment with no DB record.
+  - `@prosopo/procaptcha-common` / `-react` / `-frictionless`: render a prominent
+    `TestModeBanner` warning (always pass/fail) plus a console warning so a test key
+    can never ship to production unnoticed.
+  
+  always-pass verifies at both the submit and verify layers; always-fail fails at
+  both. Safe in production by design: the override only weakens protection for a
+  dapp that deliberately opts in, mirroring reCAPTCHA's public test keys.
+- Updated dependencies [6c26669]
+- Updated dependencies [f7f9ec5]
+  - @prosopo/types@4.2.1
+  - @prosopo/types-database@4.7.8
+  - @prosopo/api@3.4.7
+  - @prosopo/api-express-router@3.1.16
+  - @prosopo/database@3.13.6
+  - @prosopo/datasets@3.1.27
+  - @prosopo/env@3.5.6
+  - @prosopo/keyring@2.9.33
+  - @prosopo/load-balancer@2.9.9
+  - @prosopo/types-env@2.9.15
+  - @prosopo/user-access-policy@3.7.10
+
 ## 4.6.1
 ### Patch Changes
 
