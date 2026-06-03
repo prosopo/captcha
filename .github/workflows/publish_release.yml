@@ -50,6 +50,9 @@ jobs:
         run: |
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
 
+      - name: Verify npm registry auth
+        run: npm whoami --registry https://registry.npmjs.org/
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -97,7 +100,7 @@ jobs:
       - name: Publish to npm
         run: |
           echo "Publishing all packages to npm"
-          npm --workspaces publish --access=public || true
+          npm --workspaces publish --access=public
 
       - name: Publish production image to Docker Hub
         run: |
