@@ -14,7 +14,7 @@
 
 import { loadI18next, useTranslation } from "@prosopo/locale";
 import { buildUpdateState, useProcaptcha } from "@prosopo/procaptcha-common";
-import { Checkbox } from "@prosopo/procaptcha-common";
+import { Checkbox, Honeypot } from "@prosopo/procaptcha-common";
 import { ModeEnum, type ProcaptchaProps } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { useEffect, useRef, useState } from "react";
@@ -104,22 +104,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	}, [config.mode]);
 
 	const honeypot = frictionlessState?.hp ? (
-		<input
-			ref={hpRef}
-			type="text"
-			name="email_confirm"
-			defaultValue={frictionlessState.hp}
-			tabIndex={-1}
-			autoComplete="off"
-			aria-hidden="true"
-			style={{
-				position: "absolute",
-				left: "-9999px",
-				width: "1px",
-				height: "1px",
-				opacity: 0,
-			}}
-		/>
+		<Honeypot ref={hpRef} encodedQuestion={frictionlessState.hp} />
 	) : null;
 
 	if (config.mode === ModeEnum.invisible) {

@@ -14,7 +14,7 @@
 
 import { loadI18next, useTranslation } from "@prosopo/locale";
 import { buildUpdateState, useProcaptcha } from "@prosopo/procaptcha-common";
-import { Checkbox } from "@prosopo/procaptcha-common";
+import { Checkbox, Honeypot } from "@prosopo/procaptcha-common";
 import {
 	type GetPuzzleCaptchaResponse,
 	ModeEnum,
@@ -187,22 +187,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	return (
 		<>
 			{frictionlessState?.hp && (
-				<input
-					ref={hpRef}
-					type="text"
-					name="email_confirm"
-					defaultValue={frictionlessState.hp}
-					tabIndex={-1}
-					autoComplete="off"
-					aria-hidden="true"
-					style={{
-						position: "absolute",
-						left: "-9999px",
-						width: "1px",
-						height: "1px",
-						opacity: 0,
-					}}
-				/>
+				<Honeypot ref={hpRef} encodedQuestion={frictionlessState.hp} />
 			)}
 			{/* Puzzle overlay — rendered outside the shadow DOM flow via fixed
 			    positioning. Shown in both visible and invisible modes once a

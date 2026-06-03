@@ -18,6 +18,7 @@ import { loadI18next, useTranslation } from "@prosopo/locale";
 import { Manager } from "@prosopo/procaptcha";
 import {
 	Checkbox,
+	Honeypot,
 	TestModeBanner,
 	useProcaptcha,
 } from "@prosopo/procaptcha-common";
@@ -107,22 +108,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 	}, [manager, state.challenge, updateState]); // Add dependencies
 
 	const honeypot = frictionlessState?.hp ? (
-		<input
-			ref={hpRef}
-			type="text"
-			name="email_confirm"
-			defaultValue={frictionlessState.hp}
-			tabIndex={-1}
-			autoComplete="off"
-			aria-hidden="true"
-			style={{
-				position: "absolute",
-				left: "-9999px",
-				width: "1px",
-				height: "1px",
-				opacity: 0,
-			}}
-		/>
+		<Honeypot ref={hpRef} encodedQuestion={frictionlessState.hp} />
 	) : null;
 
 	if (config.mode === "invisible") {
