@@ -75,4 +75,7 @@ export enum ApiParams {
 	mode = "mode",
 	reason = "reason",
 	escalation = "escalation",
+	hp = "hp",
+	clientMetaData = "clientMetaData",
+	honeypot = "honeypot",
 }

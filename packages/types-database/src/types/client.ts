@@ -195,6 +195,15 @@ export const UserSettingsSchema = new Schema({
 		default: false,
 		required: false,
 	},
+	honeypot: {
+		enabled: { type: Boolean, default: false },
+		question: { type: String, required: false },
+		encodingType: {
+			type: String,
+			enum: ["morse", "semaphore"],
+			default: "morse",
+		},
+	},
 });
 
 export const UserDataSchema: mongoose.Schema<UserDataRecord> = new Schema({

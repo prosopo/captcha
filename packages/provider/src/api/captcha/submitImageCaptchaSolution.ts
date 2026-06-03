@@ -110,6 +110,7 @@ export default (env: ProviderEnvironment) =>
 					// flat fields.
 					req.ipInfo,
 					parsed[ApiParams.simdReadings],
+					parsed[ApiParams.clientMetaData],
 				);
 
 			const returnValue: CaptchaSolutionResponse = {

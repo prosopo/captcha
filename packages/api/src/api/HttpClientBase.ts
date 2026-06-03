@@ -67,6 +67,39 @@ export class HttpClientBase {
 		}
 	}
 
+	// Like `post`, but also surfaces the response Headers so callers can read
+	// values delivered out-of-band (e.g. the honeypot meta header). The body
+	// is still parsed as JSON.
+	protected async postWithHeaders<T, U>(
+		input: RequestInfo,
+		body: U,
+		init?: RequestInit,
+	): Promise<{ data: T; headers: Headers }> {
+		const headers = {
+			"Content-Type": "application/json",
+			...(init?.headers || {}),
+		};
+		try {
+			const response = await fetch(this.baseURL + input, {
+				method: "POST",
+				body: JSON.stringify(body),
+				...init,
+				headers,
+			});
+			if (
+				!response.ok &&
+				response.status !== 400 &&
+				!response.headers.get("content-type")?.includes("application/json")
+			) {
+				throw new HttpError(response.status, response.statusText, response.url);
+			}
+			const data = await this.responseHandler<T>(response);
+			return { data, headers: response.headers };
+		} catch (error) {
+			return this.errorHandler(error as Error);
+		}
+	}
+
 	protected async responseHandler<T>(response: Response): Promise<T> {
 		try {
 			return await response.json();

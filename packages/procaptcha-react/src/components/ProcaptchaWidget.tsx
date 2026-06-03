@@ -18,6 +18,7 @@ import { loadI18next, useTranslation } from "@prosopo/locale";
 import { Manager } from "@prosopo/procaptcha";
 import {
 	Checkbox,
+	Honeypot,
 	TestModeBanner,
 	useProcaptcha,
 } from "@prosopo/procaptcha-common";
@@ -38,12 +39,14 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 	const callbacks = props.callbacks || {};
 	const [state, updateState] = useProcaptcha(useState, useRef);
 	const [loading, setLoading] = useState(false);
+	const hpRef = useRef<HTMLInputElement>(null);
 	const manager = Manager(
 		config,
 		state,
 		updateState,
 		callbacks,
 		frictionlessState,
+		() => hpRef.current?.value || undefined,
 	);
 	const theme = "light" === props.config.theme ? lightTheme : darkTheme;
 
@@ -104,28 +107,36 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 		};
 	}, [manager, state.challenge, updateState]); // Add dependencies
 
+	const honeypot = frictionlessState?.hp ? (
+		<Honeypot ref={hpRef} encodedQuestion={frictionlessState.hp} />
+	) : null;
+
 	if (config.mode === "invisible") {
 		return (
-			<Modal show={state.showModal}>
-				{state.challenge ? (
-					<CaptchaComponent
-						challenge={state.challenge}
-						index={state.index}
-						solutions={state.solutions}
-						onSubmit={manager.submit}
-						onCancel={manager.cancel}
-						onClick={manager.select}
-						onNext={manager.nextRound}
-						onReload={manager.reload}
-						themeColor={config.theme ?? "light"}
-					/>
-				) : null}
-			</Modal>
+			<>
+				{honeypot}
+				<Modal show={state.showModal}>
+					{state.challenge ? (
+						<CaptchaComponent
+							challenge={state.challenge}
+							index={state.index}
+							solutions={state.solutions}
+							onSubmit={manager.submit}
+							onCancel={manager.cancel}
+							onClick={manager.select}
+							onNext={manager.nextRound}
+							onReload={manager.reload}
+							themeColor={config.theme ?? "light"}
+						/>
+					) : null}
+				</Modal>
+			</>
 		);
 	}
 
 	return (
 		<div className={"image-captcha"}>
+			{honeypot}
 			<Modal show={state.showModal}>
 				{state.challenge ? (
 					<CaptchaComponent

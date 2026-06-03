@@ -199,6 +199,28 @@ export type IEmailSpamRules = output<typeof EmailSpamRulesSchema>;
 export type ISpamFilterRules = output<typeof SpamFilterRulesSchema>;
 export type ITrafficFilter = output<typeof TrafficFilterSchema>;
 
+// Encoding used when serialising the honeypot question into the rendered
+// hidden input. Humans don't see the field; bots that auto-fill text inputs
+// receive an encoded string they can't trivially decode.
+export enum EncodingType {
+	morse = "morse",
+	semaphore = "semaphore",
+}
+
+export const EncodingTypeSchema = z.nativeEnum(EncodingType);
+
+export const honeypotEncodingTypeDefault = EncodingType.morse;
+
+export const HoneypotSettingsSchema = object({
+	enabled: boolean().optional().default(false),
+	question: string().optional(),
+	encodingType: EncodingTypeSchema.optional().default(
+		honeypotEncodingTypeDefault,
+	),
+});
+
+export type IHoneypotSettings = output<typeof HoneypotSettingsSchema>;
+
 export const ClientSettingsSchema = object({
 	captchaType: CaptchaTypeSpec.optional().default(captchaTypeDefault),
 	domains: array(string()).min(1),
@@ -244,6 +266,7 @@ export const ClientSettingsSchema = object({
 	// Off by default — opt in to enable downstream analysis (e.g. judging
 	// whether the submitted emails are mostly spam).
 	storeMetadata: boolean().optional(),
+	honeypot: HoneypotSettingsSchema.optional(),
 });
 
 export type IUserSettings = output<typeof ClientSettingsSchema>;

@@ -1,5 +1,50 @@
 # @prosopo/procaptcha-react
 
+## 2.9.65
+### Patch Changes
+
+- d3db08d: feat(widget): bait AI responses with empty input + decoded label, portaled into the dapp's form
+  
+  Redesigns the honeypot so it can actually catch AI agents instead of being inert:
+  
+  - Empty input + decoded label: the encoded morse/semaphore question moves from `input.value` to an offscreen `<label>` (base64-decoded at render). Naive form-fillers and humans leave the empty input alone; agents that read the DOM as a prompt write into the empty field, captured as `clientMetaData.hp` on submit.
+  - Portaled to light DOM, inside the dapp's `<form>`: widget stays in shadow DOM, but the honeypot portals via `react-dom/createPortal` into the enclosing form (`document.body` fallback). Bots no longer have to traverse `.shadowRoot` to reach it (which was tripping `@prosopo/catcher`'s shadow-DOM guard and wiping the bot's value), and the bait sits where bots actually look — `form.querySelectorAll('input')`.
+  - `form="<useId>-d"`: opaque per-instance non-existent form id disassociates the input from native form submission while keeping it DOM-discoverable. Dapp backends don't receive a stray `email_confirm=` field.
+  - Shared `<Honeypot />` extracted to `@prosopo/procaptcha-common`.
+  - `procaptcha-bundle` Vite config now routes the Honeypot module into a per-build opaque chunk (`c<random8hex>-<hash>.js`) so the URL doesn't identify the component or stay stable across builds for static blocklisting.
+- Updated dependencies [d3db08d]
+  - @prosopo/procaptcha-common@2.10.16
+  - @prosopo/procaptcha@2.10.26
+
+## 2.9.64
+### Patch Changes
+
+- 6c26669: Add per-site honeypot trap. When enabled, the provider attaches an encoded question (morse or semaphore, base64-wrapped) in the `x-prosopo-meta` response header on frictionless responses. The widget renders the value into an off-screen hidden input with `name="email_confirm"`; bots that auto-fill text inputs populate it and the value rides back on the solution submit as `clientMetaData.hp`, which is persisted on the `StoredCaptcha` record. Falls back to a random phrase from `PROSOPO_HONEYPOT_PHRASE_BANK_PATH` when no custom question is configured.
+- f7f9ec5: feat(provider,widget): reserved always-pass / always-fail test site keys
+  
+  Add two fixed, well-known reserved site keys (`ALWAYS_PASS_SITE_KEY` /
+  `ALWAYS_FAIL_SITE_KEY`) that force a deterministic captcha verdict for CI/CD and
+  integration testing, constant across production, staging and development.
+  
+  - `@prosopo/types`: shared constants + `getTestSiteKeyMode`, imported by both the
+    provider and the widget.
+  - `@prosopo/provider`: short-circuits the `submit*` and `verify` endpoints (verify
+    runs before the signature check, so no dapp secret is needed), serves an
+    invisible PoW session from the frictionless handler, and bypasses domain
+    middleware. Works in every environment with no DB record.
+  - `@prosopo/procaptcha-common` / `-react` / `-frictionless`: render a prominent
+    `TestModeBanner` warning (always pass/fail) plus a console warning so a test key
+    can never ship to production unnoticed.
+  
+  always-pass verifies at both the submit and verify layers; always-fail fails at
+  both. Safe in production by design: the override only weakens protection for a
+  dapp that deliberately opts in, mirroring reCAPTCHA's public test keys.
+- Updated dependencies [6c26669]
+- Updated dependencies [f7f9ec5]
+  - @prosopo/types@4.2.1
+  - @prosopo/procaptcha@2.10.25
+  - @prosopo/procaptcha-common@2.10.15
+
 ## 2.9.63
 ### Patch Changes
 

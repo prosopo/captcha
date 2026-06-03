@@ -27,6 +27,7 @@ import {
 	type BehavioralDataPacked,
 	type CaptchaResult,
 	CaptchaStatus,
+	type ClientMetaData,
 	type DecisionMachineBehavioralDataPacked,
 	type IPAddress,
 	type ISpamFilterRules,
@@ -172,6 +173,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		behavioralData?: string,
 		salt?: string,
 		simdReadings?: string,
+		clientMetaData?: ClientMetaData,
 	): Promise<VerifyPowCaptchaSolutionResult> {
 		// Check signatures before doing DB reads to avoid unnecessary network connections
 		checkPowSignature(
@@ -346,8 +348,12 @@ export class PowCaptchaManager extends CaptchaManager {
 		// Write behavioral data first (sequential) so it's present when
 		// updatePowCaptchaRecordResult triggers centralStreamer.streamPowUpdate(),
 		// which reads back the full record.
-		if (Object.keys(behavioralUpdates).length > 0) {
-			await this.db.updatePowCaptchaRecord(challenge, behavioralUpdates);
+		const recordUpdates: Partial<PoWCaptchaRecord> = { ...behavioralUpdates };
+		if (clientMetaData?.hp) {
+			recordUpdates.clientMetaData = { hp: clientMetaData.hp };
+		}
+		if (Object.keys(recordUpdates).length > 0) {
+			await this.db.updatePowCaptchaRecord(challenge, recordUpdates);
 		}
 
 		// Then write result + session in parallel (different documents/collections).

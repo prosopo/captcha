@@ -46,6 +46,10 @@ export const Manager = (
 	callbacks: ProcaptchaCallbacks,
 	frictionlessState?: FrictionlessState,
 	onEscalate?: ProcaptchaEscalationHandler,
+	// Reads the live honeypot input value at submit time. Returns undefined
+	// when the input doesn't exist (honeypot disabled) or hasn't been filled.
+	// Bots that auto-fill text inputs populate it; humans never see it.
+	getHoneypotValue?: () => string | undefined,
 ) => {
 	const events = getDefaultEvents(callbacks);
 
@@ -312,6 +316,8 @@ export const Manager = (
 					const simdReadings = frictionlessState?.getSimdReadings
 						? await frictionlessState.getSimdReadings()
 						: undefined;
+					const hpValue = getHoneypotValue?.();
+					const clientMetaData = hpValue ? { hp: hpValue } : undefined;
 					const verifiedSolution = await providerApi.submitPowCaptchaSolution(
 						challenge,
 						getAccount().account.account.address,
@@ -322,6 +328,7 @@ export const Manager = (
 						encryptedBehavioralData,
 						salt,
 						simdReadings,
+						clientMetaData,
 					);
 					const escalation = verifiedSolution[ApiParams.escalation];
 					if (
