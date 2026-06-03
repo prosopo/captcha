@@ -70,6 +70,9 @@ export function Manager(
 	onStateUpdate: ProcaptchaStateUpdateFn,
 	callbacks: ProcaptchaCallbacks,
 	frictionlessState?: FrictionlessState,
+	// Reads the live honeypot input value at submit time. Returns undefined
+	// when the honeypot is disabled or the input hasn't been filled.
+	getHoneypotValue?: () => string | undefined,
 ) {
 	const events = getDefaultEvents(callbacks);
 
@@ -324,6 +327,8 @@ export function Manager(
 				const simdReadings = frictionlessState?.getSimdReadings
 					? await frictionlessState.getSimdReadings()
 					: undefined;
+				const hpValue = getHoneypotValue?.();
+				const clientMetaData = hpValue ? { hp: hpValue } : undefined;
 				// send the commitment to the provider
 				const submission: TCaptchaSubmitResult =
 					await captchaApi.submitCaptchaSolution(
@@ -334,6 +339,7 @@ export function Manager(
 						challenge.signature.provider.requestHash,
 						encryptedBehavioralData,
 						simdReadings,
+						clientMetaData,
 					);
 
 				// mark as is human if solution has been approved

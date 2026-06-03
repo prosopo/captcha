@@ -24,6 +24,7 @@ import type { AccessPolicy, UserScope } from "@prosopo/user-access-policy";
 import type { Response } from "express";
 import { FrictionlessReason } from "../../../tasks/frictionless/frictionlessTasks.js";
 import type { Tasks } from "../../../tasks/index.js";
+import { attachHoneypot } from "./honeypotResponse.js";
 
 export type AccessPolicyInput = {
 	tasks: Tasks;
@@ -126,6 +127,7 @@ export const handleAccessPolicy = async (
 				captchaType: CaptchaType.image,
 			},
 		}));
+		attachHoneypot(res, clientRecord);
 		return {
 			handled: true,
 			response: res.json(
@@ -151,6 +153,7 @@ export const handleAccessPolicy = async (
 				captchaType: CaptchaType.pow,
 			},
 		}));
+		attachHoneypot(res, clientRecord);
 		return {
 			handled: true,
 			response: res.json(
@@ -168,6 +171,7 @@ export const handleAccessPolicy = async (
 				captchaType: CaptchaType.puzzle,
 			},
 		}));
+		attachHoneypot(res, clientRecord);
 		return {
 			handled: true,
 			response: res.json(

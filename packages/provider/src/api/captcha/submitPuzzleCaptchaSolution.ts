@@ -71,6 +71,7 @@ export default (env: ProviderEnvironment) =>
 			behavioralData,
 			salt,
 			simdReadings,
+			clientMetaData,
 		} = parsed;
 
 		validateSiteKey(dapp);
@@ -114,6 +115,7 @@ export default (env: ProviderEnvironment) =>
 					behavioralData,
 					salt,
 					simdReadings,
+					clientMetaData,
 				);
 			const response: PuzzleCaptchaSolutionResponse = {
 				status: "ok",

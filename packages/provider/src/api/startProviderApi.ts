@@ -207,7 +207,11 @@ export async function startProviderApi(
 	// https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
 	apiApp.set("trust proxy", 1);
 
-	apiApp.use(cors());
+	// `exposedHeaders` lets the browser surface our custom response headers
+	// to fetch() callers — without this the widget can't read x-prosopo-meta
+	// for the honeypot transport. Same effect as the
+	// Access-Control-Expose-Headers response header.
+	apiApp.use(cors({ exposedHeaders: ["x-prosopo-meta"] }));
 	apiApp.use(express.json({ limit: "50mb" }));
 
 	// Put this first so that no middleware runs on it

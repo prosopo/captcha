@@ -14,7 +14,7 @@
 
 import { loadI18next, useTranslation } from "@prosopo/locale";
 import { buildUpdateState, useProcaptcha } from "@prosopo/procaptcha-common";
-import { Checkbox } from "@prosopo/procaptcha-common";
+import { Checkbox, Honeypot } from "@prosopo/procaptcha-common";
 import {
 	type GetPuzzleCaptchaResponse,
 	ModeEnum,
@@ -46,8 +46,16 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	const [showRetry, setShowRetry] = useState(false);
 	// get the state update mechanism
 	const updateState = buildUpdateState(state, _updateState);
+	const hpRef = useRef<HTMLInputElement>(null);
 	const manager = useRef(
-		Manager(config, state, updateState, callbacks, frictionlessState),
+		Manager(
+			config,
+			state,
+			updateState,
+			callbacks,
+			frictionlessState,
+			() => hpRef.current?.value || undefined,
+		),
 	);
 
 	useEffect(() => {
@@ -178,6 +186,9 @@ const Procaptcha = (props: ProcaptchaProps) => {
 
 	return (
 		<>
+			{frictionlessState?.hp && (
+				<Honeypot ref={hpRef} encodedQuestion={frictionlessState.hp} />
+			)}
 			{/* Puzzle overlay — rendered outside the shadow DOM flow via fixed
 			    positioning. Shown in both visible and invisible modes once a
 			    challenge has been fetched; puzzle is inherently interactive. */}

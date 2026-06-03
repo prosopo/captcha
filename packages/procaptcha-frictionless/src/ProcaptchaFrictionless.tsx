@@ -246,6 +246,7 @@ export const ProcaptchaFrictionless = ({
 					deviceCapability: result.deviceCapability,
 					encryptBehavioralData: result.encryptBehavioralData,
 					getSimdReadings: result.getSimdReadings,
+					hp: result.hp,
 				};
 
 				await renderForCaptchaType(result.captchaType, frictionlessState);

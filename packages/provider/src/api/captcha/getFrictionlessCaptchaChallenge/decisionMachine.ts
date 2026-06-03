@@ -37,6 +37,7 @@ import {
 	getContextThreshold,
 } from "../contextAwareValidation.js";
 import { getRoundsFromSimScore } from "./constants.js";
+import { attachHoneypot } from "./honeypotResponse.js";
 
 export type DecisionMachineInput = {
 	tasks: Tasks;
@@ -136,6 +137,7 @@ export const runDecisionMachine = async (
 				captchaType: CaptchaType.image,
 			},
 		}));
+		attachHoneypot(res, clientRecord);
 		return res.json(
 			await tasks.frictionlessManager.sendImageCaptcha({
 				solvedImagesCount: Math.min(
@@ -170,6 +172,7 @@ export const runDecisionMachine = async (
 				captchaType: CaptchaType.image,
 			},
 		}));
+		attachHoneypot(res, clientRecord);
 		return res.json(
 			await tasks.frictionlessManager.sendImageCaptcha({
 				solvedImagesCount: timestampDecayFunction(
@@ -218,6 +221,7 @@ export const runDecisionMachine = async (
 				captchaType: CaptchaType.image,
 			},
 		}));
+		attachHoneypot(res, clientRecord);
 		return res.json(
 			await tasks.frictionlessManager.sendImageCaptcha({
 				solvedImagesCount: Math.min(
@@ -241,6 +245,7 @@ export const runDecisionMachine = async (
 			captchaType: CaptchaType.pow,
 		},
 	}));
+	attachHoneypot(res, clientRecord);
 	return res.json(
 		await tasks.frictionlessManager.sendPowCaptcha({
 			userSitekeyIpHash,
@@ -288,6 +293,7 @@ const runUserAgentMismatchCheck = async (
 			captchaType: CaptchaType.image,
 		},
 	}));
+	attachHoneypot(res, input.clientRecord);
 	return res.json(
 		await input.tasks.frictionlessManager.sendImageCaptcha({
 			solvedImagesCount: timestampDecayFunction(
@@ -362,6 +368,7 @@ const runContextAwareValidation = async (
 			threshold,
 		},
 	}));
+	attachHoneypot(res, clientRecord);
 	return res.json(
 		await tasks.frictionlessManager.sendImageCaptcha({
 			solvedImagesCount: Math.min(

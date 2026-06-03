@@ -26,6 +26,7 @@ import type { Response } from "express";
 import type { getCompositeIpAddress } from "../../../compositeIpAddress.js";
 import type { Tasks } from "../../../tasks/index.js";
 import { DEFAULT_FRICTIONLESS_THRESHOLD } from "./constants.js";
+import { attachHoneypot } from "./honeypotResponse.js";
 
 export type ShortCircuitInput = {
 	tasks: Tasks;
@@ -81,6 +82,7 @@ export const runConfiguredCaptchaTypeShortCircuit = async (
 		},
 	}));
 
+	attachHoneypot(res, input.clientRecord);
 	switch (configuredType) {
 		case CaptchaType.image:
 			return res.json(

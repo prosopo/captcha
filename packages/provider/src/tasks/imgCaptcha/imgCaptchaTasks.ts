@@ -28,6 +28,7 @@ import {
 	type CaptchaSolution,
 	CaptchaStatus,
 	CaptchaType,
+	type ClientMetaData,
 	DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
 	type DappUserSolutionResult,
 	DecisionMachineDecision,
@@ -222,6 +223,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		behavioralData?: string,
 		ipInfo?: IPInfoResponse,
 		simdReadings?: string,
+		clientMetaData?: ClientMetaData,
 	): Promise<DappUserSolutionResult> {
 		// Decoded once and reused — img submit may attach to multiple sessions.
 		const decodedSimdReadings = simdReadings
@@ -393,6 +395,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 				deadlineTimestamp: pendingRecord.deadlineTimestamp,
 				...(behavioralDataPacked && { behavioralDataPacked }),
 				...(deviceCapability && { deviceCapability }),
+				...(clientMetaData?.hp && {
+					clientMetaData: { hp: clientMetaData.hp },
+				}),
 			};
 			await this.db.storeUserImageCaptchaSolution(receivedCaptchas, commit);
 

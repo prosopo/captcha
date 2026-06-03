@@ -15,6 +15,7 @@
 import { u8aToHex } from "@polkadot/util";
 import { ProsopoEnvError } from "@prosopo/common";
 import {
+	compareCaptchaSolutions,
 	computePendingRequestHash,
 	parseAndSortCaptchaSolutions,
 } from "@prosopo/datasets";
@@ -32,9 +33,10 @@ import {
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { getIPAddress } from "@prosopo/util";
-import { randomAsHex } from "@prosopo/util-crypto";
+import { randomAsHex, signatureVerify } from "@prosopo/util-crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImgCaptchaManager } from "../../../../tasks/imgCaptcha/imgCaptchaTasks.js";
+import { buildTreeAndGetCommitmentId } from "../../../../tasks/imgCaptcha/imgCaptchaTasksUtils.js";
 import { shuffleArray } from "../../../../util.js";
 
 const loggerOuter = getLogger("info", import.meta.url);
@@ -175,6 +177,8 @@ describe("ImgCaptchaManager", () => {
 			updateSessionRecord: vi.fn(),
 			getSpamEmailDomain: vi.fn(),
 			getClientRecord: vi.fn(),
+			getSolutionByCaptchaId: vi.fn(),
+			storeUserImageCaptchaSolution: vi.fn(),
 		} as unknown as IProviderDatabase;
 
 		pair = {
@@ -464,6 +468,94 @@ describe("ImgCaptchaManager", () => {
 		const logObj = logFn();
 		expect(logObj).toMatchObject({
 			msg: "Deadline for responding to captcha has expired",
+		});
+	});
+
+	describe("dappUserSolution — failed challenge", () => {
+		it("disapproves the commitment and returns verified:false when the submitted solution is incorrect", async () => {
+			const userAccount = "userAccount";
+			const dappAccount = "dappAccount";
+			const requestHash = "requestHash";
+			// salt "0x00" decodes (via extractData) to an empty pair list, so the
+			// real pair-construction helpers run without needing fixture crypto.
+			const captchas = [
+				{ captchaId: "captcha1", solution: ["a"], salt: "0x00" },
+			] as unknown as CaptchaSolution[];
+			const timestamp = Date.now();
+			const ipAddress = getIPAddress("1.1.1.1");
+			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
+
+			// Both signatures are mocked valid so the flow reaches the
+			// solution-comparison branch instead of throwing on a bad signature.
+			vi.mocked(signatureVerify).mockReturnValue({
+				crypto: "sr25519",
+				isValid: true,
+				isWrapped: false,
+				publicKey: new Uint8Array(),
+			});
+
+			// No sessionId on the pending record: the session-update write is
+			// skipped, keeping the assertion focused on commitment disapproval.
+			const pendingRecord = {
+				requestHash,
+				salt: "0x00",
+				threshold: 0.8,
+				deadlineTimestamp: new Date(timestamp + 10_000),
+			} as unknown as PendingImageCaptchaRequest;
+			vi.mocked(db.getPendingImageCommitment).mockResolvedValue(pendingRecord);
+
+			// The pending/received validators have their own tests; stub them here
+			// to inject controlled stored/received captchas for the comparison.
+			vi.spyOn(
+				imgCaptchaManager,
+				"validateDappUserSolutionRequestIsPending",
+			).mockResolvedValue(true);
+			const storedCaptchas = [
+				{ captchaId: "captcha1", datasetId: "datasetId", items: [{}, {}] },
+			] as unknown as Captcha[];
+			vi.spyOn(
+				imgCaptchaManager,
+				"validateReceivedCaptchasAgainstStoredCaptchas",
+			).mockResolvedValue({
+				storedCaptchas,
+				receivedCaptchas: captchas,
+				captchaIds: ["captcha1"],
+			});
+
+			vi.mocked(buildTreeAndGetCommitmentId).mockReturnValue({
+				tree: { proof: vi.fn() },
+				commitmentId: "commitmentId",
+			} as unknown as ReturnType<typeof buildTreeAndGetCommitmentId>);
+
+			vi.mocked(db.getSolutionByCaptchaId).mockResolvedValue({
+				captchaId: "captcha1",
+				solution: ["a"],
+			} as unknown as Awaited<ReturnType<typeof db.getSolutionByCaptchaId>>);
+
+			// The user selected the wrong images: the comparison fails.
+			vi.mocked(compareCaptchaSolutions).mockReturnValue(false);
+
+			const result = await imgCaptchaManager.dappUserSolution(
+				userAccount,
+				dappAccount,
+				requestHash,
+				captchas,
+				"userTimestampSignature",
+				timestamp,
+				"providerRequestHashSignature",
+				ipAddress,
+				headers,
+				"ja4",
+			);
+
+			expect(result.verified).toBe(false);
+			expect(compareCaptchaSolutions).toHaveBeenCalled();
+			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith(
+				"commitmentId",
+				"CAPTCHA.INVALID_SOLUTION",
+				expect.anything(),
+			);
+			expect(db.approveDappUserCommitment).not.toHaveBeenCalled();
 		});
 	});
 
