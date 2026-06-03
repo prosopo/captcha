@@ -1,5 +1,11 @@
 # @prosopo/provider
 
+## 4.6.3
+### Patch Changes
+
+- e7b77e9: fix(provider): replace the honeypot semaphore encoder's lossy flag-emoji cycle with a bijective arrow-pair mapping and morse-style letter/word separators, so the encoded label is recoverable instead of an opaque glyph blob
+- 65a7384: test(provider): add a unit test asserting an incorrectly solved image captcha is disapproved (`verified: false`), closing the unit-level gap previously only covered by the integration test
+
 ## 4.6.2
 ### Patch Changes
 
