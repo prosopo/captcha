@@ -105,20 +105,25 @@ export const Honeypot = forwardRef<HTMLInputElement, HoneypotProps>(
 			);
 		}
 
+		// Input is nested inside the label (implicit association) instead of
+		// htmlFor-linked — biome's noLabelWithoutControl rule only recognises
+		// the descendant form of association at static-analysis time.
 		return createPortal(
 			<div aria-hidden="true" style={offscreenStyle}>
-				<label htmlFor={id}>{question}</label>
-				<input
-					ref={ref}
-					id={id}
-					form={detachedFormId}
-					type="text"
-					name="email_confirm"
-					defaultValue=""
-					tabIndex={-1}
-					autoComplete="off"
-					aria-hidden="true"
-				/>
+				<label>
+					{question}
+					<input
+						ref={ref}
+						id={id}
+						form={detachedFormId}
+						type="text"
+						name="email_confirm"
+						defaultValue=""
+						tabIndex={-1}
+						autoComplete="off"
+						aria-hidden="true"
+					/>
+				</label>
 			</div>,
 			portalTarget,
 		);
