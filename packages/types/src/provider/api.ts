@@ -387,10 +387,11 @@ export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 		| CaptchaType.image
 		| CaptchaType.puzzle;
 	[ApiParams.sessionId]?: string;
-	// Encoded honeypot question. Present when the site key has honeypot
-	// enabled. The widget renders the value into an off-screen hidden
-	// text input; bots that auto-fill text fields will populate it and the
-	// value rides back up in `clientMetaData.hp` on solution submission.
+	// Encoded honeypot question. NOT serialised by the provider on the wire
+	// (it travels in the `x-prosopo-meta` response header so it doesn't sit
+	// in the JSON body for bots to grep); the API client moves it onto this
+	// field after reading the header, so downstream widget code consumes it
+	// the same way regardless of transport.
 	[ApiParams.hp]?: string;
 }
 

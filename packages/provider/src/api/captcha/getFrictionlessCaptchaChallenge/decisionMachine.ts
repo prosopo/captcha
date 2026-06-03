@@ -137,21 +137,19 @@ export const runDecisionMachine = async (
 				captchaType: CaptchaType.image,
 			},
 		}));
+		attachHoneypot(res, clientRecord);
 		return res.json(
-			attachHoneypot(
-				await tasks.frictionlessManager.sendImageCaptcha({
-					solvedImagesCount: Math.min(
-						env.config.captchas.solved.count * 2,
-						clientRecord.settings.imageMaxRounds,
-					),
-					userSitekeyIpHash,
-					reason: FrictionlessReason.WEBVIEW_DETECTED,
-					siteKey: dapp,
-					ipInfo,
-					headers: flatHeaders,
-				}),
-				clientRecord,
-			),
+			await tasks.frictionlessManager.sendImageCaptcha({
+				solvedImagesCount: Math.min(
+					env.config.captchas.solved.count * 2,
+					clientRecord.settings.imageMaxRounds,
+				),
+				userSitekeyIpHash,
+				reason: FrictionlessReason.WEBVIEW_DETECTED,
+				siteKey: dapp,
+				ipInfo,
+				headers: flatHeaders,
+			}),
 		);
 	}
 
@@ -174,22 +172,20 @@ export const runDecisionMachine = async (
 				captchaType: CaptchaType.image,
 			},
 		}));
+		attachHoneypot(res, clientRecord);
 		return res.json(
-			attachHoneypot(
-				await tasks.frictionlessManager.sendImageCaptcha({
-					solvedImagesCount: timestampDecayFunction(
-						input.timestamp,
-						input.decryptionFailed,
-						clientRecord.settings.imageMaxRounds,
-					),
-					userSitekeyIpHash,
-					reason: FrictionlessReason.OLD_TIMESTAMP,
-					siteKey: dapp,
-					ipInfo,
-					headers: flatHeaders,
-				}),
-				clientRecord,
-			),
+			await tasks.frictionlessManager.sendImageCaptcha({
+				solvedImagesCount: timestampDecayFunction(
+					input.timestamp,
+					input.decryptionFailed,
+					clientRecord.settings.imageMaxRounds,
+				),
+				userSitekeyIpHash,
+				reason: FrictionlessReason.OLD_TIMESTAMP,
+				siteKey: dapp,
+				ipInfo,
+				headers: flatHeaders,
+			}),
 		);
 	}
 
@@ -225,21 +221,19 @@ export const runDecisionMachine = async (
 				captchaType: CaptchaType.image,
 			},
 		}));
+		attachHoneypot(res, clientRecord);
 		return res.json(
-			attachHoneypot(
-				await tasks.frictionlessManager.sendImageCaptcha({
-					solvedImagesCount: Math.min(
-						env.config.captchas.solved.count,
-						clientRecord.settings.imageMaxRounds,
-					),
-					userSitekeyIpHash,
-					reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
-					siteKey: dapp,
-					ipInfo,
-					headers: flatHeaders,
-				}),
-				clientRecord,
-			),
+			await tasks.frictionlessManager.sendImageCaptcha({
+				solvedImagesCount: Math.min(
+					env.config.captchas.solved.count,
+					clientRecord.settings.imageMaxRounds,
+				),
+				userSitekeyIpHash,
+				reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
+				siteKey: dapp,
+				ipInfo,
+				headers: flatHeaders,
+			}),
 		);
 	}
 
@@ -251,16 +245,14 @@ export const runDecisionMachine = async (
 			captchaType: CaptchaType.pow,
 		},
 	}));
+	attachHoneypot(res, clientRecord);
 	return res.json(
-		attachHoneypot(
-			await tasks.frictionlessManager.sendPowCaptcha({
-				userSitekeyIpHash,
-				siteKey: dapp,
-				ipInfo,
-				headers: flatHeaders,
-			}),
-			clientRecord,
-		),
+		await tasks.frictionlessManager.sendPowCaptcha({
+			userSitekeyIpHash,
+			siteKey: dapp,
+			ipInfo,
+			headers: flatHeaders,
+		}),
 	);
 };
 
@@ -301,22 +293,20 @@ const runUserAgentMismatchCheck = async (
 			captchaType: CaptchaType.image,
 		},
 	}));
+	attachHoneypot(res, input.clientRecord);
 	return res.json(
-		attachHoneypot(
-			await input.tasks.frictionlessManager.sendImageCaptcha({
-				solvedImagesCount: timestampDecayFunction(
-					input.timestamp,
-					input.decryptionFailed,
-					input.clientRecord.settings.imageMaxRounds,
-				),
-				userSitekeyIpHash: input.userSitekeyIpHash,
-				reason: FrictionlessReason.USER_AGENT_MISMATCH,
-				siteKey: input.dapp,
-				ipInfo: input.ipInfo,
-				headers: input.flatHeaders,
-			}),
-			input.clientRecord,
-		),
+		await input.tasks.frictionlessManager.sendImageCaptcha({
+			solvedImagesCount: timestampDecayFunction(
+				input.timestamp,
+				input.decryptionFailed,
+				input.clientRecord.settings.imageMaxRounds,
+			),
+			userSitekeyIpHash: input.userSitekeyIpHash,
+			reason: FrictionlessReason.USER_AGENT_MISMATCH,
+			siteKey: input.dapp,
+			ipInfo: input.ipInfo,
+			headers: input.flatHeaders,
+		}),
 	);
 };
 
@@ -378,20 +368,18 @@ const runContextAwareValidation = async (
 			threshold,
 		},
 	}));
+	attachHoneypot(res, clientRecord);
 	return res.json(
-		attachHoneypot(
-			await tasks.frictionlessManager.sendImageCaptcha({
-				solvedImagesCount: Math.min(
-					getRoundsFromSimScore(sim),
-					clientRecord.settings.imageMaxRounds,
-				),
-				userSitekeyIpHash: input.userSitekeyIpHash,
-				reason: FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED,
-				siteKey: dapp,
-				ipInfo: input.ipInfo,
-				headers: input.flatHeaders,
-			}),
-			clientRecord,
-		),
+		await tasks.frictionlessManager.sendImageCaptcha({
+			solvedImagesCount: Math.min(
+				getRoundsFromSimScore(sim),
+				clientRecord.settings.imageMaxRounds,
+			),
+			userSitekeyIpHash: input.userSitekeyIpHash,
+			reason: FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED,
+			siteKey: dapp,
+			ipInfo: input.ipInfo,
+			headers: input.flatHeaders,
+		}),
 	);
 };

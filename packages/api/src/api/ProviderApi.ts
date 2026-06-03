@@ -317,7 +317,7 @@ export default class ProviderApi
 		});
 	}
 
-	public getFrictionlessCaptcha(
+	public async getFrictionlessCaptcha(
 		token: string,
 		headHash: string,
 		dapp: string,
@@ -333,12 +333,21 @@ export default class ProviderApi
 			...(mode && { [ApiParams.mode]: mode }),
 			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
 		};
-		return this.post(ClientApiPaths.GetFrictionlessCaptchaChallenge, body, {
+		const { data, headers } = await this.postWithHeaders<
+			GetFrictionlessCaptchaResponse,
+			typeof body
+		>(ClientApiPaths.GetFrictionlessCaptchaChallenge, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": user,
 			},
 		});
+		// Honeypot rides on the x-prosopo-meta header rather than the JSON
+		// body so it doesn't sit there for response-scraping bots to grep.
+		// Re-attach to the returned object so downstream code (widget,
+		// FrictionlessState) consumes it identically to before.
+		const hp = headers.get("x-prosopo-meta");
+		return hp ? { ...data, [ApiParams.hp]: hp } : data;
 	}
 
 	public submitUserEvents(

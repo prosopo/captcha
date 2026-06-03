@@ -127,21 +127,19 @@ export const handleAccessPolicy = async (
 				captchaType: CaptchaType.image,
 			},
 		}));
+		attachHoneypot(res, clientRecord);
 		return {
 			handled: true,
 			response: res.json(
-				attachHoneypot(
-					await tasks.frictionlessManager.sendImageCaptcha({
-						...captchaTypeBaseParams,
-						solvedImagesCount: userAccessPolicy.solvedImagesCount
-							? Math.min(
-									userAccessPolicy.solvedImagesCount,
-									clientRecord.settings.imageMaxRounds,
-								)
-							: clientRecord.settings.imageMaxRounds,
-					}),
-					clientRecord,
-				),
+				await tasks.frictionlessManager.sendImageCaptcha({
+					...captchaTypeBaseParams,
+					solvedImagesCount: userAccessPolicy.solvedImagesCount
+						? Math.min(
+								userAccessPolicy.solvedImagesCount,
+								clientRecord.settings.imageMaxRounds,
+							)
+						: clientRecord.settings.imageMaxRounds,
+				}),
 			),
 		};
 	}
@@ -155,13 +153,11 @@ export const handleAccessPolicy = async (
 				captchaType: CaptchaType.pow,
 			},
 		}));
+		attachHoneypot(res, clientRecord);
 		return {
 			handled: true,
 			response: res.json(
-				attachHoneypot(
-					await tasks.frictionlessManager.sendPowCaptcha(captchaTypeBaseParams),
-					clientRecord,
-				),
+				await tasks.frictionlessManager.sendPowCaptcha(captchaTypeBaseParams),
 			),
 		};
 	}
@@ -175,14 +171,12 @@ export const handleAccessPolicy = async (
 				captchaType: CaptchaType.puzzle,
 			},
 		}));
+		attachHoneypot(res, clientRecord);
 		return {
 			handled: true,
 			response: res.json(
-				attachHoneypot(
-					await tasks.frictionlessManager.sendPuzzleCaptcha(
-						captchaTypeBaseParams,
-					),
-					clientRecord,
+				await tasks.frictionlessManager.sendPuzzleCaptcha(
+					captchaTypeBaseParams,
 				),
 			),
 		};

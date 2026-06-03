@@ -107,7 +107,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 		<input
 			ref={hpRef}
 			type="text"
-			name="hp"
+			name="email_confirm"
 			defaultValue={frictionlessState.hp}
 			tabIndex={-1}
 			autoComplete="off"

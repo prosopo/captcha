@@ -146,6 +146,18 @@ export default (
 				);
 			}
 
+			const clientRecord = await tasks.db.getClientRecord(dapp);
+
+			if (!clientRecord) {
+				return next(
+					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
+						context: { code: 400, siteKey: dapp },
+						i18n: req.i18n,
+						logger: req.logger,
+					}),
+				);
+			}
+
 			if (dedup) {
 				req.logger.info(() => ({
 					msg: "Reusing existing session for user-IP-sitekey combination",
@@ -164,23 +176,13 @@ export default (
 						sessionId: dedup.sessionId,
 					},
 				}));
+				attachHoneypot(res, clientRecord);
 				return res.json({
-					[ApiParams.captchaType]: dedup.captchaType,
+					[ApiParams.captchaType]:
+						dedup.captchaType as CaptchaType.image | CaptchaType.pow | CaptchaType.puzzle,
 					[ApiParams.sessionId]: dedup.sessionId,
 					[ApiParams.status]: "ok",
 				});
-			}
-
-			const clientRecord = await tasks.db.getClientRecord(dapp);
-
-			if (!clientRecord) {
-				return next(
-					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-						context: { code: 400, siteKey: dapp },
-						i18n: req.i18n,
-						logger: req.logger,
-					}),
-				);
 			}
 
 			const ipAddress = getCompositeIpAddress(normalizedIp);

@@ -110,10 +110,13 @@ export const encodeHoneypotQuestion = (
 	text: string,
 	encoding: EncodingType,
 ): string => {
-	switch (encoding) {
-		case EncodingType.morse:
-			return encodeMorse(text);
-		case EncodingType.semaphore:
-			return encodeSemaphore(text);
-	}
+	const encoded =
+		encoding === EncodingType.morse
+			? encodeMorse(text)
+			: encodeSemaphore(text);
+	// Wrap in base64 so the wire/DOM value looks like any other opaque token
+	// rather than recognisable morse / semaphore. The widget renders the
+	// base64 string into the hidden input verbatim — bots that auto-fill see
+	// an opaque blob, not a morse code they can pattern-match against and skip.
+	return Buffer.from(encoded, "utf-8").toString("base64");
 };

@@ -82,33 +82,25 @@ export const runConfiguredCaptchaTypeShortCircuit = async (
 		},
 	}));
 
+	attachHoneypot(res, input.clientRecord);
 	switch (configuredType) {
 		case CaptchaType.image:
 			return res.json(
-				attachHoneypot(
-					await input.tasks.frictionlessManager.sendImageCaptcha({
-						...sessionParams,
-						solvedImagesCount: Math.min(
-							input.env.config.captchas.solved.count,
-							input.clientRecord.settings.imageMaxRounds,
-						),
-					}),
-					input.clientRecord,
-				),
+				await input.tasks.frictionlessManager.sendImageCaptcha({
+					...sessionParams,
+					solvedImagesCount: Math.min(
+						input.env.config.captchas.solved.count,
+						input.clientRecord.settings.imageMaxRounds,
+					),
+				}),
 			);
 		case CaptchaType.pow:
 			return res.json(
-				attachHoneypot(
-					await input.tasks.frictionlessManager.sendPowCaptcha(sessionParams),
-					input.clientRecord,
-				),
+				await input.tasks.frictionlessManager.sendPowCaptcha(sessionParams),
 			);
 		case CaptchaType.puzzle:
 			return res.json(
-				attachHoneypot(
-					await input.tasks.frictionlessManager.sendPuzzleCaptcha(sessionParams),
-					input.clientRecord,
-				),
+				await input.tasks.frictionlessManager.sendPuzzleCaptcha(sessionParams),
 			);
 		default:
 			throw new Error(

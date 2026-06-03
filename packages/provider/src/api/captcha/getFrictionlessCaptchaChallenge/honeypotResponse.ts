@@ -12,25 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ApiParams, type GetFrictionlessCaptchaResponse } from "@prosopo/types";
 import type { ClientRecord } from "@prosopo/types-database";
+import type { Response } from "express";
 import { encodeHoneypotQuestion } from "../../../utils/honeypot/encoders.js";
 import { getRandomPhrase } from "../../../utils/honeypot/phraseBank.js";
 
+// Header carrying the encoded honeypot question. Deliberately named to look
+// like generic observability metadata; bots that filter "hp"-shaped fields
+// on the JSON body won't grep this. The browser only exposes it to the
+// widget because it's whitelisted in `Access-Control-Expose-Headers`.
+export const HONEYPOT_HEADER = "x-prosopo-meta";
+
 /**
- * Mutates `response` to include the encoded honeypot question (`hp`) when
- * the client's settings have honeypot enabled. If no custom question is
- * configured, falls back to a random phrase from the bank; if the bank is
- * empty, returns the response unchanged.
+ * Sets the honeypot header on the response when the client has honeypot
+ * enabled. Header value is base64-wrapped morse/semaphore so an inspector
+ * doesn't immediately recognise the encoding shape. Falls back to a random
+ * phrase from the bank when no custom question is configured; no-op when
+ * the bank is empty or honeypot is disabled.
  */
 export const attachHoneypot = (
-	response: GetFrictionlessCaptchaResponse,
+	res: Response,
 	clientRecord: Pick<ClientRecord, "settings">,
-): GetFrictionlessCaptchaResponse => {
+): void => {
 	const cfg = clientRecord.settings?.honeypot;
-	if (!cfg?.enabled) return response;
+	if (!cfg?.enabled) return;
 	const question = cfg.question ?? getRandomPhrase();
-	if (!question) return response;
-	response[ApiParams.hp] = encodeHoneypotQuestion(question, cfg.encodingType);
-	return response;
+	if (!question) return;
+	res.setHeader(
+		HONEYPOT_HEADER,
+		encodeHoneypotQuestion(question, cfg.encodingType),
+	);
 };
