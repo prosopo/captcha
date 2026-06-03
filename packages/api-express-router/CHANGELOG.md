@@ -1,5 +1,13 @@
 # @prosopo/api-express-router
 
+## 3.1.16
+### Patch Changes
+
+- Updated dependencies [6c26669]
+- Updated dependencies [f7f9ec5]
+  - @prosopo/types@4.2.1
+  - @prosopo/env@3.5.6
+
 ## 3.1.15
 ### Patch Changes
 

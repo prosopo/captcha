@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/user-access-policy",
-	"version": "3.7.9",
+	"version": "3.7.10",
 	"type": "module",
 	"engines": {
 		"node": "^24",
@@ -43,12 +43,12 @@
 		"test": "npm run test:unit && npm run test:integration"
 	},
 	"dependencies": {
-		"@prosopo/api": "3.4.6",
+		"@prosopo/api": "3.4.7",
 		"@prosopo/api-route": "2.6.45",
 		"@prosopo/common": "3.1.37",
 		"@prosopo/logger": "1.0.1",
 		"@prosopo/redis-client": "1.0.22",
-		"@prosopo/types": "4.2.0",
+		"@prosopo/types": "4.2.1",
 		"@prosopo/util": "3.2.14",
 		"@redis/search": "5.0.0",
 		"cidr-calc": "1.0.4",
