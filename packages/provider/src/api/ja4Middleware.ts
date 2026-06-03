@@ -13,16 +13,12 @@
 // limitations under the License.
 
 import type { IncomingHttpHeaders } from "node:http";
-import { Readable } from "node:stream";
 import { handleErrors } from "@prosopo/api-express-router";
 import { type Logger, getLogger } from "@prosopo/logger";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { randomAsHex } from "@prosopo/util-crypto";
 import type { NextFunction, Request, Response } from "express";
-import {
-	calculateJa4FromHelloData,
-	readTlsClientHello,
-} from "read-tls-client-hello";
+import { calculateJa4 } from "./ja4.js";
 
 export const DEFAULT_JA4 = "ja4";
 
@@ -39,9 +35,6 @@ export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
 	try {
 		// Validate headers and make sure they're strings
 		const xTlsClientHello = (headers["x-tls-clienthello"] || "").toString();
-		const xTlsVersion = (headers["x-tls-version"] || "")
-			.toString()
-			.toLowerCase();
 
 		// Decode the base64 ClientHello message
 		const clientHelloBuffer = Buffer.from(xTlsClientHello, "base64");
@@ -60,22 +53,7 @@ export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
 			return { ja4PlusFingerprint: DEFAULT_JA4 };
 		}
 
-		logger.debug(() => ({
-			msg: "Headers TLS Version:",
-			data: { xTlsVersion },
-		}));
-
-		// Convert to Readable stream
-		const readableStream = new Readable({
-			read() {
-				this.push(clientHelloBuffer);
-			},
-		});
-
-		// Parse the TLS Client Hello
-		const clientHello = await readTlsClientHello(readableStream);
-
-		const ja4PlusFingerprint = calculateJa4FromHelloData(clientHello);
+		const ja4PlusFingerprint = calculateJa4(clientHelloBuffer);
 
 		return { ja4PlusFingerprint };
 	} catch (e) {
