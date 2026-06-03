@@ -119,6 +119,9 @@ export function calculateJa4(data: Buffer): string {
 	if (data.length < RECORD_HEADER_LENGTH + recordLen) {
 		throw new Ja4ParseError("Record length exceeds buffer");
 	}
+	// Slice to the record boundary so subsequent parsing cannot bleed into
+	// bytes beyond this TLS record (e.g. a concatenated second record).
+	data = data.subarray(0, RECORD_HEADER_LENGTH + recordLen);
 
 	// Handshake header
 	const msgType = data[offset++];
@@ -127,7 +130,11 @@ export function calculateJa4(data: Buffer): string {
 			`Not a ClientHello: handshake type 0x${msgType.toString(16)}`,
 		);
 	}
-	offset += 3; // 3-byte message length
+	const msgLen = (data[offset] << 16) | (data[offset + 1] << 8) | data[offset + 2];
+	offset += 3;
+	if (data.length - offset < msgLen) {
+		throw new Ja4ParseError("Handshake message length exceeds record");
+	}
 
 	// ClientHello body: version(2) + random(32) + session_id_len(1)
 	if (data.length - offset < 35) {
@@ -206,7 +213,7 @@ export function calculateJa4(data: Buffer): string {
 			if (extData.length >= 1) {
 				const listLen = extData[0];
 				let best = 0;
-				for (let i = 1; i + 1 < extData.length && i <= listLen; i += 2) {
+				for (let i = 1; i + 1 < extData.length && i + 1 <= listLen; i += 2) {
 					const v = extData.readUInt16BE(i);
 					if (!isGrease(v) && v > best) best = v;
 				}
@@ -283,8 +290,7 @@ export function calculateJa4(data: Buffer): string {
 	const sortedExts = [...filteredExts].sort((a, b) => a - b);
 	const extStr = formatIdList(sortedExts);
 	const sigAlgStr = formatIdList(sigAlgorithms);
-	const extHashInput =
-		sigAlgStr.length > 0 ? `${extStr}_${sigAlgStr}` : extStr;
+	const extHashInput = sigAlgStr.length > 0 ? `${extStr}_${sigAlgStr}` : extStr;
 	const extHash = hash12(extHashInput);
 
 	return `${firstChunk}_${cipherHash}_${extHash}`;
