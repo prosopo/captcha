@@ -25,7 +25,7 @@ const EXT_ALPN = 0x0010;
 const EXT_SUPPORTED_VERSIONS = 0x002b;
 
 // GREASE values match the pattern 0x?a?a (RFC 8701).
-function isGrcase(id: number): boolean {
+function isGrease(id: number): boolean {
 	return (id & 0x0f0f) === 0x0a0a;
 }
 
@@ -88,7 +88,15 @@ export class Ja4ParseError extends Error {
  *   4-byte handshake header (msg_type + msg_len)
  *   ClientHello body
  *
- * Throws Ja4ParseError on malformed input.
+ * Throws Ja4ParseError for structural failures in the TLS record or handshake
+ * header (wrong record type, wrong message type, declared lengths exceeding the
+ * buffer, odd cipher-suite length).
+ *
+ * Extension-level malformation (truncated extension body, malformed SNI/ALPN
+ * entries) is handled defensively: parsing stops at the first bad entry and
+ * a fingerprint is produced from whatever was successfully parsed. This matches
+ * the Rust reference implementation and avoids turning extension parse errors
+ * into connection-fingerprinting failures.
  */
 export function calculateJa4(data: Buffer): string {
 	let offset = 0;
@@ -145,6 +153,9 @@ export function calculateJa4(data: Buffer): string {
 	if (data.length - offset < cipherSuitesLen) {
 		throw new Ja4ParseError("Truncated at cipher suites");
 	}
+	if (cipherSuitesLen % 2 !== 0) {
+		throw new Ja4ParseError("Cipher suites length is not a multiple of 2");
+	}
 	const cipherSuites: number[] = [];
 	for (let i = 0; i < cipherSuitesLen; i += 2) {
 		cipherSuites.push(data.readUInt16BE(offset + i));
@@ -197,7 +208,7 @@ export function calculateJa4(data: Buffer): string {
 				let best = 0;
 				for (let i = 1; i + 1 < extData.length && i <= listLen; i += 2) {
 					const v = extData.readUInt16BE(i);
-					if (!isGrcase(v) && v > best) best = v;
+					if (!isGrease(v) && v > best) best = v;
 				}
 				if (best > 0) clientVersion = best;
 			}
@@ -207,7 +218,7 @@ export function calculateJa4(data: Buffer): string {
 				const algLen = extData.readUInt16BE(0);
 				for (let i = 2; i + 1 < extData.length && i < algLen + 2; i += 2) {
 					const alg = extData.readUInt16BE(i);
-					if (!isGrcase(alg)) sigAlgorithms.push(alg);
+					if (!isGrease(alg)) sigAlgorithms.push(alg);
 				}
 			}
 		} else if (extId === EXT_SERVER_NAME) {
@@ -248,8 +259,8 @@ export function calculateJa4(data: Buffer): string {
 	const [alpnFirst, alpnLast] =
 		alpnProtocols.length > 0 ? alpnFirstLast(alpnProtocols[0]) : ["0", "0"];
 
-	const nonGreaseCiphers = cipherSuites.filter((c) => !isGrcase(c));
-	const nonGreaseExts = extIds.filter((e) => !isGrcase(e));
+	const nonGreaseCiphers = cipherSuites.filter((c) => !isGrease(c));
+	const nonGreaseExts = extIds.filter((e) => !isGrease(e));
 
 	const cipherCount = Math.min(99, nonGreaseCiphers.length)
 		.toString()
