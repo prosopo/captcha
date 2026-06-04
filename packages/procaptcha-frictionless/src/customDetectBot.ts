@@ -122,13 +122,8 @@ const customDetectBot: BotDetectionFunction = async (
 	}
 	const captcha = await withTimeout(captchaPromise, 10000);
 
-	// Per-session DNS observation URL — only set on deployments where
-	// the provider has a dns-event sidecar configured. Bundle fires one
-	// no-cors GET so DNS resolution of {sessionId}.{subzone} routes
-	// through the user's actual resolver chain (revealing residential
-	// proxies that don't tunnel DNS) and the HTTPS hit reveals the
-	// proxy exit IP. Failures are swallowed — this is purely
-	// observation, must never break the captcha flow.
+	// Fire-and-forget DNS observation beacon. Failures swallowed —
+	// observation must never break the captcha flow.
 	if (captcha.dns_url) {
 		try {
 			void fetch(captcha.dns_url, {

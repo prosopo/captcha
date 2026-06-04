@@ -377,9 +377,6 @@ export class FrictionlessManager extends CaptchaManager {
 			[ApiParams.captchaType]: finalCaptchaType,
 			[ApiParams.sessionId]: sessionRecord.sessionId,
 			[ApiParams.status]: "ok",
-			// Sidecar-driven DNS observation URL. Always populated when the
-			// pronode is deployed alongside a dns-event sidecar; absent
-			// otherwise. Bundle handles missing gracefully.
 			dns_url: buildDnsEventUrl(sessionRecord.sessionId),
 		};
 	}

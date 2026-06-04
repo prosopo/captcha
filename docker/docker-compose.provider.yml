@@ -218,25 +218,14 @@ services:
       - ./ipinfo/ipapi_database_ram:/usr/src/app/ipapi_database_ram:ro
       # Config override
       - ./ipinfo/config:/usr/src/app/config:ro
-  dns-event:
-    # DNS-event sidecar. Authoritative for the per-pronode subzone
-    # declared in DNS_TRAP_TENANTS_PATH, serves a per-session pixel,
-    # and POSTs observations to /v1/prosopo/provider/admin/dns/event on
-    # this provider. Setup (one-time, per pronode):
-    #   1. Delegate a subzone to this host via NS, e.g.
-    #        t.pronode1.prosopo.io. IN NS ns.pronode1.prosopo.io.
-    #   2. Set DNS_TRAP_TENANTS_PATH to a JSON file with that subzone +
-    #      this provider's site_key.
-    #   3. Set DNS_TRAP_A_RECORD to this host's public IP.
-    #   4. Set DNS_TRAP_HMAC_SECRET (must match DNS_EVENT_HMAC_SECRET
-    #      on the provider).
-    #   5. Set DNS_TRAP_EVENT_SINK_URL to https://this-pronode:9229.
-    container_name: dns-event
+  dns:
+    # DNS observation sidecar. Caddy fronts TLS for *.t.{CADDY_DOMAIN}
+    # and reverse-proxies HTTP to this container — see provider.Caddyfile.
+    container_name: dns
     profiles:
       - production
       - staging
-    image: ghcr.io/prosopo/dns-trap:${DNS_TRAP_VERSION?DNS_TRAP_VERSION must be set}
-    # Bind 53 + 443 as non-root (image runs as appuser).
+    image: prosopo/dns:${DNS_VERSION?DNS_VERSION must be set}
     cap_add:
       - NET_BIND_SERVICE
     env_file:
@@ -244,19 +233,18 @@ services:
     ports:
       - "53:53/udp"
       - "53:53/tcp"
-      - "443:443"
+    expose:
+      - "9362"
+    environment:
+      - DNS_HTTPS_PORT=9362
+      - DNS_HTTPS_BIND=0.0.0.0
+      - DNS_DISABLE_ACME=true
     volumes:
-      # Persistent ACME state — account key + per-subzone wildcard
-      # certs. Mount from the host so they survive restarts and don't
-      # trip Let's Encrypt rate limits on every redeploy.
-      - /data/dns-event:/data
-      # Tenant registry. List of (subzone, site_key) tuples this
-      # instance is authoritative for. Edit + restart to add tenants.
-      - ./dns-event-tenants.json:/etc/dns-trap/tenants.json:ro
+      - /data/dns:/data
+      - ./dns-tenants.json:/etc/dns/tenants.json:ro
     networks:
       external:
       internal:
-        # Distinct from existing services on the internal subnet.
         ipv4_address: 172.18.0.10
         ipv6_address: fd00:aaaa::a
     restart: unless-stopped

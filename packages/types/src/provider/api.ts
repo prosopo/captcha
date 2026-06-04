@@ -143,11 +143,7 @@ export enum AdminApiPaths {
 	ClearAllCounters = "/v1/prosopo/provider/admin/counters/clear-all",
 	SiteKeyRemove = "/v1/prosopo/provider/admin/sitekey/remove",
 	SiteKeysRemove = "/v1/prosopo/provider/admin/sitekeys/remove",
-	// Receives batched DNS observation events from the prosopo dns-event
-	// sidecar. Auth: same admin sr25519 JWT as the other admin routes.
-	// Named generically ("dns") in the public surface so the route
-	// doesn't telegraph the residential-proxy detection use case to
-	// anyone reading client traffic.
+	// Receives batched DNS observation events from the dns sidecar.
 	DnsEvent = "/v1/prosopo/provider/admin/dns/event",
 }
 
@@ -403,15 +399,7 @@ export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 	// field after reading the header, so downstream widget code consumes it
 	// the same way regardless of transport.
 	[ApiParams.hp]?: string;
-	// Per-session DNS observation URL. When the provider deployment has
-	// DNS_EVENT_SUBZONE + DNS_EVENT_HMAC_SECRET configured (i.e. a
-	// dns-event sidecar is running alongside this pronode), this is a
-	// URL of the form
-	// https://{sessionId}.{subzone}/{hmac_path}?sid={sessionId}.
-	// The widget fires one no-cors GET to it; the sidecar logs the DNS
-	// resolver IP and the HTTPS peer IP and ships both to this provider
-	// via POST /v1/prosopo/provider/admin/dns/event. Always present on
-	// deployments that run the sidecar — no per-site opt-in.
+	// Per-session DNS observation URL; undefined when no dns sidecar.
 	dns_url?: string;
 }
 
@@ -446,14 +434,7 @@ export type ServerPowCaptchaVerifyRequestBodyOutput = output<
 	typeof ServerPowCaptchaVerifyRequestBody
 >;
 
-// ── DNS observation event ingestion ────────────────────────────────
-// Wire-compatible with the dns-event sidecar's Rust `event::Event` and
-// `event::Batch`. Sidecar batches events and POSTs to
-// AdminApiPaths.DnsEvent on the provider with an admin sr25519 JWT.
-//
-// "DNS event" rather than "DNS-leak trap" in the public surface — the
-// generic naming doesn't telegraph the residential-proxy detection use
-// case to anyone reading client traffic.
+// ── DNS observation event ingestion (wire-compat with the dns sidecar) ─
 export const DnsEventKindSchema = union([
 	string().regex(/^dns$/),
 	string().regex(/^http$/),

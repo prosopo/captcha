@@ -28,14 +28,7 @@ import type { z } from "zod";
 
 type DnsEventBatchSchemaType = typeof DnsEventBatchSchema;
 
-/**
- * Decide which `Session.dnsEvent` fields to mutate based on the event
- * kind. DNS events carry the resolver IP (source of the UDP/53 query);
- * HTTP events carry the peer IP + path-validation outcome.
- *
- * Exported separately from the endpoint class so the unit test can pin
- * the merge logic without going through the database layer.
- */
+// Exported for unit tests.
 export const dnsEventToPartialSession = (
 	event: DnsEvent,
 	existing: Session["dnsEvent"] | undefined,
@@ -67,30 +60,14 @@ class ApiDnsEventEndpoint implements ApiEndpoint<DnsEventBatchSchemaType> {
 		let errors = 0;
 
 		for (const event of events) {
-			// `jti` on the wire carries the procaptcha sessionId — that's
-			// how the sidecar names the per-session subdomain. Events
-			// without a sessionId (e.g. scanners probing the apex of the
-			// delegated subzone) are intentionally dropped on the floor
-			// here; the sidecar's metrics already capture them under
-			// `dns_trap_dns_queries_total{match="miss"}`.
 			const sessionId = event.jti;
 			if (!sessionId) {
-				logger.debug(() => ({
-					data: { kind: event.kind, src_ip: event.src_ip },
-					msg: "Skipping DNS event with no sessionId",
-				}));
 				continue;
 			}
 
 			try {
 				const session = await this.db.getSessionRecordBySessionId(sessionId);
 				if (!session) {
-					// A late-arriving event after the session record has
-					// expired. Common at TTL boundaries; log at debug.
-					logger.debug(() => ({
-						data: { sessionId, kind: event.kind },
-						msg: "DNS event for unknown session — ignoring",
-					}));
 					continue;
 				}
 				const dnsEvent = dnsEventToPartialSession(event, session.dnsEvent);

@@ -225,3 +225,19 @@ http://:9090 {
 		format json
 	}
 }
+
+# Wildcard subdomain → DNS sidecar pixel.
+# Requires the Caddy image built with a DNS-01 plugin (e.g. cloudflare)
+# so the wildcard cert *.t.{$CADDY_DOMAIN} can be issued.
+*.t.{$CADDY_DOMAIN} {
+	tls {
+		dns {$CADDY_DNS_PROVIDER:cloudflare} {$CADDY_DNS_TOKEN}
+	}
+	reverse_proxy dns:9362 {
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto https
+	}
+	log {
+		format json
+	}
+}
