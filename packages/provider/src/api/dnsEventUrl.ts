@@ -34,6 +34,6 @@ export const derivePath = (sessionId: string, secret: string): string => {
 	mac.update(sessionId);
 	const digest = mac.digest();
 	const name = digest.subarray(0, 8).toString("hex");
-	const ext = EXTENSIONS[digest[8]! % EXTENSIONS.length];
+	const ext = EXTENSIONS[(digest.at(8) ?? 0) % EXTENSIONS.length];
 	return `/${name}.${ext}`;
 };
