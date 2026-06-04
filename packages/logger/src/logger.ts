@@ -85,8 +85,16 @@ export function parseLogLevel(
 	level: string | undefined,
 	or: LogLevel = InfoLevel,
 ): LogLevel {
-	const result = LogLevel.safeParse(level);
-	return result.success ? result.data : or;
+	if (!level) return or;
+	// Handle directive strings like "warn,database=trace" — extract the bare global level.
+	for (const part of level.split(",")) {
+		const trimmed = part.trim();
+		if (trimmed && !trimmed.includes("=")) {
+			const parsed = LogLevel.safeParse(trimmed);
+			if (parsed.success) return parsed.data;
+		}
+	}
+	return or;
 }
 
 // ---------------------------------------------------------------------------
@@ -152,7 +160,7 @@ function getGlobalDirectives(): Directives {
 	if (!_globalDirectives) {
 		const raw =
 			typeof process !== "undefined"
-				? (process.env.PROSOPO_LOG_LEVEL ?? "")
+				? (process.env?.PROSOPO_LOG_LEVEL ?? "")
 				: "";
 		_globalDirectives = parseDirectives(raw);
 	}
@@ -190,7 +198,6 @@ export class NativeLogger implements Logger {
 	// this provides utility for adding properties to every log message
 	private defaultData: LogObject | undefined;
 	private level: LogLevel;
-	private levelNum: number;
 	private pretty = 0; // pretty print indentation level - 0 = no pretty print, 2 = 2 spaces, etc
 	private printStack = false; // whether to print the stack trace in the log
 	private format: Format = FormatJson;
@@ -200,7 +207,6 @@ export class NativeLogger implements Logger {
 		private levelMap: LevelMap = logLevelMap,
 	) {
 		this.level = InfoLevel; // default log level
-		this.levelNum = this.levelMap[this.level];
 	}
 
 	setFormat(format: Format): void {
@@ -215,7 +221,12 @@ export class NativeLogger implements Logger {
 	}
 
 	with(obj: LogObject, subscope?: string): Logger {
-		const newScope = subscope ? `${this.scope}:${subscope}` : this.scope;
+		const newScope =
+			subscope
+				? this.scope
+					? `${this.scope}:${subscope}`
+					: subscope
+				: this.scope;
 		const newLogger = new NativeLogger(newScope, this.levelMap);
 		newLogger.defaultData = { ...this.defaultData, ...obj };
 		newLogger.setPretty(this.getPretty());
@@ -248,7 +259,6 @@ export class NativeLogger implements Logger {
 
 	setLogLevel(level: LogLevel): void {
 		this.level = level;
-		this.levelNum = this.levelMap[level];
 	}
 
 	getLogLevel(): LogLevel {
