@@ -13,8 +13,7 @@
 // limitations under the License.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { NativeLogger, getLogger } from "../logger.js";
-import { stringifyBigInts } from "../logger.js";
+import { getLogger, stringifyBigInts } from "../logger.js";
 describe("unpackError", () => {
 	let captured: string[] = [];
 
@@ -30,7 +29,7 @@ describe("unpackError", () => {
 	});
 
 	function lastRecord(): Record<string, unknown> {
-		const raw = captured[captured.length - 1];
+		const raw = captured[captured.length - 1] ?? "";
 		return JSON.parse(raw) as Record<string, unknown>;
 	}
 
@@ -62,7 +61,8 @@ describe("unpackError", () => {
 	it("recursively unpacks cause", () => {
 		const logger = getLogger("error", "test");
 		const cause = new Error("root cause");
-		const err = new Error("outer", { cause });
+		const err = new Error("outer");
+		(err as Record<string, unknown>).cause = cause;
 		logger.error(() => ({ err }));
 		const errData = lastRecord().errData as Record<string, unknown>;
 		const causeData = errData.cause as Record<string, unknown>;
