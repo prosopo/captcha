@@ -24,9 +24,13 @@ vi.mock("@prosopo/api-express-router", () => ({
 	handleErrors: vi.fn(),
 }));
 
-vi.mock("@prosopo/util", () => ({
-	version: "1.0.0-test",
-}));
+vi.mock("@prosopo/util", async (importActual) => {
+	const actual = await importActual<typeof import("@prosopo/util")>();
+	return {
+		...actual,
+		version: "1.0.0-test",
+	};
+});
 
 describe("publicRouter", () => {
 	let mockEnv: ProviderEnvironment;
