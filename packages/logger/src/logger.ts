@@ -37,11 +37,12 @@ export type Logger = {
 	fatal(fn: LogRecordFn): void;
 	log(level: LogLevel, fn: LogRecordFn): void;
 	/**
-	 * Creates a new logger instance which includes the given object in every log message. Akin to a child logger.
-	 * This is useful for adding context to log messages, such as user IDs, request IDs, etc.
-	 * @param obj An object to log, which will be added to every log message.
+	 * Creates a child logger with merged default data and an optional subscope appended to the
+	 * current scope (e.g. parent "database" + subscope "queries" → "database:queries").
+	 * The child's effective level is resolved from PROSOPO_LOG_LEVEL directives for the new scope,
+	 * falling back to the parent's level when no directive matches.
 	 */
-	with(obj: LogObject): Logger;
+	with(obj: LogObject, subscope?: string): Logger;
 	getPretty(): boolean;
 	setPretty(pretty: boolean): void;
 	getPrintStack(): boolean;
@@ -86,6 +87,84 @@ export function parseLogLevel(
 ): LogLevel {
 	const result = LogLevel.safeParse(level);
 	return result.success ? result.data : or;
+}
+
+// ---------------------------------------------------------------------------
+// Directive-based filtering
+//
+// PROSOPO_LOG_LEVEL supports both a bare level and a comma-separated directive
+// string with optional per-scope overrides, e.g.:
+//   "warn"                         – global floor
+//   "warn,database=trace"          – global warn, database:* gets trace
+//   "database=trace,http=debug"    – per-scope only, no global default
+//
+// Scope segments are separated by ":" mirroring module paths, e.g.
+//   "provider:db=debug" matches any logger whose scope starts with "provider:db".
+// ---------------------------------------------------------------------------
+
+export type Directives = Map<string, LogLevel>;
+
+/**
+ * Parse a PROSOPO_LOG_LEVEL directive string into a scope→level map.
+ * An entry with an empty-string key represents the global default.
+ */
+export function parseDirectives(raw: string): Directives {
+	const map: Directives = new Map();
+	for (const part of raw.split(",")) {
+		const trimmed = part.trim();
+		if (!trimmed) continue;
+		const eqIdx = trimmed.indexOf("=");
+		if (eqIdx === -1) {
+			const parsed = LogLevel.safeParse(trimmed);
+			if (parsed.success) map.set("", parsed.data);
+		} else {
+			const scope = trimmed.slice(0, eqIdx).trim();
+			const parsed = LogLevel.safeParse(trimmed.slice(eqIdx + 1).trim());
+			if (parsed.success) map.set(scope, parsed.data);
+		}
+	}
+	return map;
+}
+
+/**
+ * Find the most specific directive that matches the given scope.
+ * Walks from the full scope up to the empty-string global default.
+ * Returns the fallback if nothing matches.
+ */
+export function resolveLevel(
+	scope: string,
+	directives: Directives,
+	fallback: LogLevel,
+): LogLevel {
+	if (directives.has(scope)) return directives.get(scope) as LogLevel;
+	const parts = scope.split(":");
+	for (let i = parts.length - 1; i > 0; i--) {
+		const prefix = parts.slice(0, i).join(":");
+		if (directives.has(prefix)) return directives.get(prefix) as LogLevel;
+	}
+	if (directives.has("")) return directives.get("") as LogLevel;
+	return fallback;
+}
+
+let _globalDirectives: Directives | undefined;
+
+function getGlobalDirectives(): Directives {
+	if (!_globalDirectives) {
+		const raw =
+			typeof process !== "undefined"
+				? (process.env["PROSOPO_LOG_LEVEL"] ?? "")
+				: "";
+		_globalDirectives = parseDirectives(raw);
+	}
+	return _globalDirectives;
+}
+
+/**
+ * Override the global directives at runtime (useful in tests or at app startup).
+ * Accepts the same directive string as PROSOPO_LOG_LEVEL.
+ */
+export function setGlobalDirectives(raw: string): void {
+	_globalDirectives = parseDirectives(raw);
 }
 
 // Create a new logger with the given level and scope
@@ -135,10 +214,15 @@ export class NativeLogger implements Logger {
 		return this.format;
 	}
 
-	with(obj: LogObject): Logger {
-		const newLogger = new NativeLogger(this.scope);
+	with(obj: LogObject, subscope?: string): Logger {
+		const newScope = subscope ? `${this.scope}:${subscope}` : this.scope;
+		const newLogger = new NativeLogger(newScope, this.levelMap);
 		newLogger.defaultData = { ...this.defaultData, ...obj };
-		newLogger.setLogLevel(this.getLogLevel());
+		newLogger.setPretty(this.getPretty());
+		newLogger.setPrintStack(this.getPrintStack());
+		newLogger.setLogLevel(
+			resolveLevel(newScope, getGlobalDirectives(), this.getLogLevel()),
+		);
 		return newLogger;
 	}
 
@@ -240,8 +324,11 @@ export class NativeLogger implements Logger {
 		fn: LogRecordFn,
 		level: LogLevel,
 	): void {
-		if (this.levelMap[level] < this.levelNum) {
-			return; // skip logging if the level is below the current log level threshold
+		// Re-resolve at print time so directives set after construction are respected.
+		const effectiveLevelNum =
+			this.levelMap[resolveLevel(this.scope, getGlobalDirectives(), this.level)];
+		if (this.levelMap[level] < effectiveLevelNum) {
+			return; // skip logging if the level is below the effective threshold
 		}
 		const ts = new Date().toISOString();
 		// populate the log fields using the fn
