@@ -34,7 +34,7 @@ class ApiUpdateDecisionMachineEndpoint
 		args: z.infer<UpdateDecisionMachineBodyType>,
 		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
-		logger = 
+		logger =
 			logger || getLogger("info", "provider:admin:decision-machine:update");
 		try {
 			const {

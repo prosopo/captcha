@@ -37,7 +37,7 @@ class ApiRemoveDecisionMachineEndpoint
 		args: z.infer<RemoveDecisionMachineBodyType>,
 		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
-		logger = 
+		logger =
 			logger || getLogger("info", "provider:admin:decision-machine:remove");
 		try {
 			const { id } = args;

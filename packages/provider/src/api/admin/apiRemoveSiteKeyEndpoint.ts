@@ -32,8 +32,7 @@ class ApiRemoveSiteKeyEndpoint implements ApiEndpoint<RemoveSitekeyBodyType> {
 		args: z.infer<RemoveSitekeyBodyType>,
 		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
-		logger = 
-			logger || getLogger("info", "provider:admin:site-key:remove");
+		logger = logger || getLogger("info", "provider:admin:site-key:remove");
 		try {
 			const { siteKey } = args;
 

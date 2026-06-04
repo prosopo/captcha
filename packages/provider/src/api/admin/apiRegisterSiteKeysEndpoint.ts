@@ -33,8 +33,7 @@ class ApiRegisterSiteKeysEndpoint
 		args: z.infer<RegisterSitekeysBodyType>,
 		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
-		logger = 
-			logger || getLogger("info", "provider:admin:site-keys:register");
+		logger = logger || getLogger("info", "provider:admin:site-keys:register");
 
 		logger.info(() => ({
 			data: { count: args.length },

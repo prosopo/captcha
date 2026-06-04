@@ -158,10 +158,13 @@ describe("headerCheckMiddleware", () => {
 		const middleware = headerCheckMiddleware(mockEnv);
 		await middleware(mockReq, mockRes, mockNext);
 
-		expect(mockLogger.with).toHaveBeenCalledWith({
-			user: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
-			siteKey: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
-		});
+		expect(mockLogger.with).toHaveBeenCalledWith(
+			{
+				user: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				siteKey: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			},
+			"header-check",
+		);
 	});
 
 	it("calls handleErrors when validation throws", async () => {
