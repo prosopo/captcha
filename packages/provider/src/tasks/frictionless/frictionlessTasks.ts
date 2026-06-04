@@ -34,6 +34,7 @@ import {
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { AccessPolicy } from "@prosopo/user-access-policy";
 import { v4 as uuidv4 } from "uuid";
+import { buildDnsEventUrl } from "../../api/dnsEventUrl.js";
 import { checkLangRules } from "../../rules/lang.js";
 import {
 	type UsageCounters,
@@ -376,6 +377,10 @@ export class FrictionlessManager extends CaptchaManager {
 			[ApiParams.captchaType]: finalCaptchaType,
 			[ApiParams.sessionId]: sessionRecord.sessionId,
 			[ApiParams.status]: "ok",
+			// Sidecar-driven DNS observation URL. Always populated when the
+			// pronode is deployed alongside a dns-event sidecar; absent
+			// otherwise. Bundle handles missing gracefully.
+			dns_url: buildDnsEventUrl(sessionRecord.sessionId),
 		};
 	}
 

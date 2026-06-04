@@ -52,6 +52,7 @@ graph TB
             DetectorMgmt["Detector Key Management<br/>update / remove"]
             DecisionMachineMgmt["Decision Machine Management<br/>create / get / remove"]
             MaintenanceToggle["Maintenance Mode Toggle"]
+            DnsEventEP["POST .../admin/dns/event<br/>(receives DNS event batches from the dns-event sidecar)"]
         end
 
         subgraph UapAPI["User Access Policy API (requires JWT)"]
@@ -81,6 +82,34 @@ graph TB
 
     %% ===== EXTERNAL =====
     ProviderList["Provider List<br/>provider-list.prosopo.io"]
+
+    %% ===== DNS-EVENT SIDECAR =====
+    subgraph DnsEventSidecar["DNS Event Sidecar (ghcr.io/prosopo/dns-trap, runs per pronode)"]
+        direction TB
+        DnsAuth["Authoritative DNS<br/>(UDP+TCP 53, *.{subzone})<br/>Captures resolver source IP"]
+        DnsPixel["HTTPS Pixel<br/>(443, /{hmac_path})<br/>Captures TLS peer IP"]
+        AcmeLoop["ACME DNS-01<br/>Self-validates against own NS<br/>Renews wildcard cert per subzone"]
+    end
+
+    %% Per-session flow:
+    %%   1. Provider includes `dns_url` in frictionless response when
+    %%      DNS_EVENT_SUBZONE + DNS_EVENT_HMAC_SECRET are set on the host.
+    %%      URL is https://{sessionId}.{subzone}/{hmac_path}?sid={sessionId}.
+    %%   2. Bundle fires no-cors GET to dns_url on init.
+    %%   3. Browser's resolver queries {sessionId}.{subzone} → sidecar
+    %%      logs resolver IP + qname (contains sessionId).
+    %%   4. Browser opens TLS to sidecar (SNI carries the same sessionId).
+    %%      Sidecar validates path = HMAC(sessionId, secret), serves pixel,
+    %%      logs peer IP + path_valid.
+    %%   5. Sidecar batches events, POSTs to
+    %%      POST .../admin/dns/event with admin sr25519 JWT.
+    %%   6. Provider merges resolverIp/peerIp/pathValid into Session.dnsEvent.
+    %% Signal: resolver IP vs peer IP geo-disagreement reveals residential
+    %% proxies that don't tunnel DNS. Same binary runs alongside Bumblebee
+    %% (Protect) since the wire contract + admin JWT scheme are identical.
+    Widget -->|"no-cors GET dns_url<br/>(per-session)"| DnsPixel
+    DnsAuth -.->|"DNS event<br/>(resolver IP, qname)"| DnsEventEP
+    DnsPixel -.->|"HTTP event<br/>(peer IP, path_valid)"| DnsEventEP
 
     %% ===== DEVELOPER FLOW =====
     Developer -->|"1. Sign up at prosopo.io<br/>get site key + secret"| DappBackend
