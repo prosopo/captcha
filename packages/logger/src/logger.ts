@@ -152,7 +152,7 @@ function getGlobalDirectives(): Directives {
 	if (!_globalDirectives) {
 		const raw =
 			typeof process !== "undefined"
-				? (process.env["PROSOPO_LOG_LEVEL"] ?? "")
+				? (process.env.PROSOPO_LOG_LEVEL ?? "")
 				: "";
 		_globalDirectives = parseDirectives(raw);
 	}
