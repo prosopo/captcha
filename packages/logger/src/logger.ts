@@ -171,12 +171,16 @@ export class NativeLogger implements Logger {
 		return this.level;
 	}
 
-	private unpackError(err: Error | object): { msg: string; data: Record<string, unknown> } {
+	private unpackError(err: Error | object): {
+		msg: string;
+		data: Record<string, unknown>;
+	} {
 		const e = err as Record<string, unknown>;
 		const data: Record<string, unknown> = {};
 
 		for (const key of Object.getOwnPropertyNames(err)) {
-			if (!this.printStack && (key === "stack" || key === "stacktrace")) continue;
+			if (!this.printStack && (key === "stack" || key === "stacktrace"))
+				continue;
 			data[key] = e[key];
 		}
 
@@ -187,7 +191,10 @@ export class NativeLogger implements Logger {
 		// Recursively unpack the cause chain
 		const cause = e["cause"];
 		if (cause !== undefined) {
-			if (cause instanceof Error || (typeof cause === "object" && cause !== null)) {
+			if (
+				cause instanceof Error ||
+				(typeof cause === "object" && cause !== null)
+			) {
 				data["cause"] = this.unpackError(cause as Error | object);
 			} else {
 				data["cause"] = cause;
@@ -196,7 +203,7 @@ export class NativeLogger implements Logger {
 
 		// Prefer translationKey when present (e.g. ProsopoBaseError) so the
 		// top-level `err` field is locale-stable and queryable.
-		const msg = String(e["translationKey"] ?? e["message"] ?? e["msg"] ?? "");
+		const msg = String(e["translationKey"] ?? e["message"] ?? e.msg ?? "");
 		return { msg, data };
 	}
 
