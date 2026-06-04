@@ -69,12 +69,12 @@ export type LevelMap = {
 };
 
 const logLevelMap: LevelMap = {
-	[TraceLevel]: 5,
-	[DebugLevel]: 4,
-	[InfoLevel]: 3,
-	[WarnLevel]: 2,
-	[ErrorLevel]: 1,
-	[FatalLevel]: 0,
+	[TraceLevel]: 0,
+	[DebugLevel]: 1,
+	[InfoLevel]: 2,
+	[WarnLevel]: 3,
+	[ErrorLevel]: 4,
+	[FatalLevel]: 5,
 };
 
 export function parseLogLevel(
@@ -237,8 +237,8 @@ export class NativeLogger implements Logger {
 		fn: LogRecordFn,
 		level: LogLevel,
 	): void {
-		if (this.levelMap[level] > this.levelNum) {
-			return; // skip logging if the level is higher than the current log level
+		if (this.levelMap[level] < this.levelNum) {
+			return; // skip logging if the level is below the current log level threshold
 		}
 		const ts = new Date().toISOString();
 		// populate the log fields using the fn
@@ -268,7 +268,7 @@ export class NativeLogger implements Logger {
 			msg?: string;
 			err?: string;
 			errData?: LogRecord;
-		} = { scope: this.scope, ts, level: this.level };
+		} = { scope: this.scope, ts, level };
 		if (data) {
 			baseRecord.data = data;
 		}
