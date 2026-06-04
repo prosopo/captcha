@@ -43,6 +43,7 @@ import {
 	type PoWChallengeId,
 	type PuzzleCaptchaStored,
 	type RequestHeaders,
+	RequestType,
 	type ResultReason,
 	type ScheduledTaskNames,
 	type ScheduledTaskResult,
@@ -124,6 +125,12 @@ const PROVIDER_TABLES = [
 	},
 	{
 		collectionName: TableNames.powcaptcha,
+		// NOTE: model name is "PowCaptcha" (lowercase w). The private-DB reader
+		// (@prosopo/database-private PoWCaptchaData) registers "PoWCaptcha"
+		// (capital W); both pluralize to the same physical `powcaptchas`
+		// collection, so they coexist. This inconsistency is resolved when the
+		// records are merged into the unified `requests` collection — do not
+		// "fix" either string in isolation, as changing it moves the collection.
 		modelName: "PowCaptcha",
 		schema: PoWCaptchaRecordSchema,
 	},
@@ -669,7 +676,7 @@ export class ProviderDatabase
 	/**
 	 * @description Store a Dapp User's captcha solution commitment
 	 */
-	async storeUserImageCaptchaSolution(
+	async storeImageCaptchaSolution(
 		captchas: CaptchaSolution[],
 		commit: UserCommitment,
 	): Promise<void> {
@@ -1239,7 +1246,7 @@ export class ProviderDatabase
 
 	/** @description Get serverChecked Dapp User image captcha commitments from the commitments table
 	 */
-	async getCheckedDappUserCommitments(): Promise<UserCommitmentRecord[]> {
+	async getCheckedImageCaptchas(): Promise<UserCommitmentRecord[]> {
 		const filter: {
 			[key in keyof Pick<UserCommitmentRecord, "serverChecked">]: boolean;
 		} = { [StoredStatusNames.serverChecked]: true };
@@ -1254,13 +1261,13 @@ export class ProviderDatabase
 	 *
 	 * Served by the `pendingStage_partial` index. Records have
 	 * `pendingStage: true` set on insert and on every mutation (see
-	 * `updateDappUserCommitment`, `markDappUserCommitmentsChecked`,
-	 * `approveDappUserCommitment`, `disapproveDappUserCommitment`,
-	 * `storePendingImageCommitment`). `markDappUserCommitmentsStored` clears
+	 * `updateImageCaptcha`, `markImageCaptchasChecked`,
+	 * `approveImageCaptcha`, `disapproveImageCaptcha`,
+	 * `storePendingImageCommitment`). `markImageCaptchasStored` clears
 	 * the flag after a successful stage, guarded by `lastUpdatedTimestamp`
 	 * so an in-flight update isn't lost.
 	 */
-	async getUnstoredDappUserCommitments(
+	async getUnstoredImageCaptchas(
 		limit = 1000,
 		skip = 0,
 	): Promise<UserCommitmentRecord[]> {
@@ -1281,7 +1288,7 @@ export class ProviderDatabase
 	 * fetch and mark-stored — those records will leave pendingStage set so
 	 * the next sweep picks them up.
 	 */
-	async markDappUserCommitmentsStored(
+	async markImageCaptchasStored(
 		commitmentIds: Hash[],
 		asOfTimestamp: Date = new Date(),
 	): Promise<void> {
@@ -1300,7 +1307,7 @@ export class ProviderDatabase
 
 	/** @description Mark a list of captcha commits as checked
 	 */
-	async markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void> {
+	async markImageCaptchasChecked(commitmentIds: Hash[]): Promise<void> {
 		const updateDoc: Pick<
 			StoredCaptcha,
 			"serverChecked" | "lastUpdatedTimestamp" | "pendingStage"
@@ -1319,7 +1326,7 @@ export class ProviderDatabase
 
 	/** @description Update an image captcha commitment
 	 */
-	async updateDappUserCommitment(
+	async updateImageCaptcha(
 		commitmentId: Hash,
 		updates: Partial<UserCommitment>,
 	) {
@@ -1342,7 +1349,7 @@ export class ProviderDatabase
 		skip = 0,
 	): Promise<PoWCaptchaRecord[]> {
 		// Served by the `pendingStage_partial` index — see
-		// `getUnstoredDappUserCommitments` for the lifecycle of the flag.
+		// `getUnstoredImageCaptchas` for the lifecycle of the flag.
 		const docs = await this.tables?.powcaptcha
 			.find({ pendingStage: true })
 			.sort({ _id: 1 })
@@ -1355,7 +1362,7 @@ export class ProviderDatabase
 	/** @description Mark a list of PoW captcha commits as stored.
 	 *
 	 * `asOfTimestamp` defaults to "now" but the sweep should pass the time
-	 * at which it fetched the batch. See markDappUserCommitmentsStored for
+	 * at which it fetched the batch. See markImageCaptchasStored for
 	 * the guard rationale.
 	 */
 	async markDappUserPoWCommitmentsStored(
@@ -1623,7 +1630,7 @@ export class ProviderDatabase
 	 * @description Get session records that have not been stored yet.
 	 *
 	 * Served by the `pendingStage_partial` index — see
-	 * `getUnstoredDappUserCommitments` for the lifecycle of the flag.
+	 * `getUnstoredImageCaptchas` for the lifecycle of the flag.
 	 * `checkAndRemoveSession` also flips the flag so consumed sessions
 	 * propagate to the central DB via the next sweep.
 	 * @param limit
@@ -1645,7 +1652,7 @@ export class ProviderDatabase
 	/** Mark a list of session records as stored.
 	 *
 	 * `asOfTimestamp` defaults to "now" but the sweep should pass the time
-	 * at which it fetched the batch. See markDappUserCommitmentsStored for
+	 * at which it fetched the batch. See markImageCaptchasStored for
 	 * the guard rationale.
 	 */
 	async markSessionRecordsStored(
@@ -1688,6 +1695,10 @@ export class ProviderDatabase
 			});
 		}
 		const pendingRecord = {
+			// Stamp the discriminator explicitly: this placeholder is built by
+			// hand and written via `$set`, so we don't rely on the schema
+			// default applying on upsert-insert.
+			requestType: RequestType.imagecaptcha,
 			userAccount,
 			pending: true,
 			salt,
@@ -1701,7 +1712,7 @@ export class ProviderDatabase
 			// Deliberately NOT setting pendingStage here. Placeholder
 			// records have id: "" until the user submits a solution; if we
 			// flag them, the sweep picks them up via the partial index but
-			// then `markDappUserCommitmentsStored` runs
+			// then `markImageCaptchasStored` runs
 			// `{ id: { $in: ["", ...] } }` which collapses to a single ""
 			// bound and scans every empty-id row via the `id_-1` index —
 			// turning a cheap sweep into a fresh cache evictor. The real
@@ -1943,7 +1954,7 @@ export class ProviderDatabase
 	 * @description Get dapp user commitment by user account
 	 * @param commitmentId
 	 */
-	async getDappUserCommitmentById(
+	async getImageCaptchaById(
 		commitmentId: string,
 	): Promise<UserCommitmentRecord | undefined> {
 		const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
@@ -1972,7 +1983,7 @@ export class ProviderDatabase
 	 * @param {string} userAccount
 	 * @param {string} dappAccount
 	 */
-	async getDappUserCommitmentByAccount(
+	async getImageCaptchaByAccount(
 		userAccount: string,
 		dappAccount: string,
 	): Promise<UserCommitmentRecord[]> {
@@ -1999,7 +2010,7 @@ export class ProviderDatabase
 	 * @param {string[]} commitmentId
 	 * @param coords
 	 */
-	async approveDappUserCommitment(
+	async approveImageCaptcha(
 		commitmentId: string,
 		coords?: [number, number][][],
 	): Promise<void> {
@@ -2047,7 +2058,7 @@ export class ProviderDatabase
 	 * @param coords
 	 * @param reason
 	 */
-	async disapproveDappUserCommitment(
+	async disapproveImageCaptcha(
 		commitmentId: string,
 		reason?: ResultReason,
 		coords?: [number, number][][],
@@ -2114,7 +2125,7 @@ export class ProviderDatabase
 	 * @description Flag dapp users' commitments as used by calculated solution
 	 * @param {string[]} commitmentIds
 	 */
-	async flagProcessedDappUserCommitments(commitmentIds: Hash[]): Promise<void> {
+	async flagProcessedImageCaptchas(commitmentIds: Hash[]): Promise<void> {
 		try {
 			const distinctCommitmentIds = [...new Set(commitmentIds)];
 			await this.tables?.commitment

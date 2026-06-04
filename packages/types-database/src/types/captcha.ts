@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { PoWCaptcha, UserCommitment } from "@prosopo/types";
+import type { ImageCaptcha, PoWCaptcha } from "@prosopo/types";
 import { type RootFilterQuery, Schema } from "mongoose";
 import type { IDatabase } from "./mongo.js";
 import {
+	type ImageCaptchaRecord,
+	ImageCaptchaRecordSchema,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
 	type SessionRecord,
 	SessionRecordSchema,
-	type UserCommitmentRecord,
-	UserCommitmentRecordSchema,
 } from "./provider.js";
 
 // StoredSession is now the same as SessionRecord since we merged the schemas
@@ -29,10 +29,15 @@ export type StoredSession = SessionRecord;
 
 export const StoredSessionRecordSchema: Schema = SessionRecordSchema;
 
-export const StoredUserCommitmentRecordSchema: Schema = new Schema({
-	...UserCommitmentRecordSchema.obj,
+export const StoredImageCaptchaRecordSchema: Schema = new Schema({
+	...ImageCaptchaRecordSchema.obj,
 });
-StoredUserCommitmentRecordSchema.index({ sessionId: 1 });
+StoredImageCaptchaRecordSchema.index({ sessionId: 1 });
+
+/**
+ * @deprecated Use {@link StoredImageCaptchaRecordSchema}. Back-compat alias.
+ */
+export const StoredUserCommitmentRecordSchema = StoredImageCaptchaRecordSchema;
 
 export const StoredPoWCaptchaRecordSchema: Schema = new Schema({
 	...PoWCaptchaRecordSchema.obj,
@@ -42,17 +47,17 @@ StoredPoWCaptchaRecordSchema.index({ sessionId: 1 });
 export interface ICaptchaDatabase extends IDatabase {
 	saveCaptchas(
 		sessionEvents: StoredSession[],
-		imageCaptchaEvents: UserCommitmentRecord[],
+		imageCaptchaEvents: ImageCaptchaRecord[],
 		powCaptchaEvents: PoWCaptchaRecord[],
 	): Promise<void>;
 	getCaptchas(
 		filter: RootFilterQuery<CaptchaProperties>,
 		limit: number,
 	): Promise<{
-		userCommitmentRecords: UserCommitmentRecord[];
+		imageCaptchaRecords: ImageCaptchaRecord[];
 		powCaptchaRecords: PoWCaptchaRecord[];
 	}>;
 }
 
 export interface CaptchaProperties
-	extends Partial<UserCommitment & PoWCaptcha> {}
+	extends Partial<ImageCaptcha & PoWCaptcha> {}

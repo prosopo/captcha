@@ -14,9 +14,9 @@
 
 import { type Logger, getLogger } from "@prosopo/logger";
 import type {
+	ImageCaptchaRecord,
 	PoWCaptchaRecord,
 	StoredSession,
-	UserCommitmentRecord,
 } from "@prosopo/types-database";
 import { CaptchaDatabase } from "./captcha.js";
 
@@ -154,7 +154,7 @@ export class CentralDbStreamer {
 	 * Fire-and-forget: errors are logged, never thrown.
 	 */
 	streamImageRecord(
-		record: UserCommitmentRecord,
+		record: ImageCaptchaRecord,
 		markStored?: MarkStoredCallback,
 	): void {
 		const timestamp = this.getRecordTimestamp(record);
@@ -180,7 +180,7 @@ export class CentralDbStreamer {
 	 * Stream an image captcha update by fetching the full record first.
 	 */
 	streamImageUpdate(
-		getFullRecord: () => Promise<UserCommitmentRecord | null>,
+		getFullRecord: () => Promise<ImageCaptchaRecord | null>,
 		markStored?: MarkStoredCallback,
 	): void {
 		getFullRecord()

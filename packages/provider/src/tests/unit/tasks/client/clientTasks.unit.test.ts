@@ -139,8 +139,8 @@ describe("ClientTaskManager", () => {
 			markFrictionlessTokenRecordsStored: vi.fn(),
 			getUnstoredSessionRecords: vi.fn().mockResolvedValue([]),
 			markSessionRecordsStored: vi.fn(),
-			getUnstoredDappUserCommitments: vi.fn().mockResolvedValue([]),
-			markDappUserCommitmentsStored: vi.fn(),
+			getUnstoredImageCaptchas: vi.fn().mockResolvedValue([]),
+			markImageCaptchasStored: vi.fn(),
 			markDappUserPoWCommitmentsStored: vi.fn(),
 			getUnstoredDappUserPoWCommitments: vi.fn().mockResolvedValue([]),
 			createScheduledTaskStatus: vi.fn(
@@ -249,7 +249,7 @@ describe("ClientTaskManager", () => {
 			msg: "Mongo env not set",
 		});
 
-		expect(providerDB.getUnstoredDappUserCommitments).not.toHaveBeenCalled();
+		expect(providerDB.getUnstoredImageCaptchas).not.toHaveBeenCalled();
 	});
 
 	it("should store commitments externally if mongoCaptchaUri is set", async () => {
@@ -263,7 +263,7 @@ describe("ClientTaskManager", () => {
 		];
 
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.getUnstoredDappUserCommitments as any).mockResolvedValueOnce(
+		(providerDB.getUnstoredImageCaptchas as any).mockResolvedValueOnce(
 			mockCommitments,
 		);
 
@@ -280,10 +280,10 @@ describe("ClientTaskManager", () => {
 
 		await clientTaskManager.storeCommitmentsExternal();
 
-		expect(providerDB.getUnstoredDappUserCommitments).toHaveBeenCalled();
+		expect(providerDB.getUnstoredImageCaptchas).toHaveBeenCalled();
 		expect(providerDB.getUnstoredDappUserPoWCommitments).toHaveBeenCalled();
 
-		expect(providerDB.markDappUserCommitmentsStored).toHaveBeenCalledWith(
+		expect(providerDB.markImageCaptchasStored).toHaveBeenCalledWith(
 			mockCommitments.map((c) => c.id),
 			expect.any(Date),
 		);
@@ -345,7 +345,7 @@ describe("ClientTaskManager", () => {
 		}));
 
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.getUnstoredDappUserCommitments as any).mockResolvedValueOnce(
+		(providerDB.getUnstoredImageCaptchas as any).mockResolvedValueOnce(
 			mockCommitments,
 		);
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
@@ -358,7 +358,7 @@ describe("ClientTaskManager", () => {
 		logger.info(() => ({ msg: "Test: storeCommitmentsExternal completed" }));
 
 		// Verification steps with logging
-		expect(providerDB.getUnstoredDappUserCommitments).toHaveBeenCalled();
+		expect(providerDB.getUnstoredImageCaptchas).toHaveBeenCalled();
 		expect(providerDB.getUnstoredDappUserPoWCommitments).toHaveBeenCalled();
 		logger.info(() => ({ msg: "Test: Verified DB queries were made" }));
 
@@ -373,7 +373,7 @@ describe("ClientTaskManager", () => {
 		);
 		logger.info(() => ({ msg: "Test: Verified task status creation" }));
 
-		expect(providerDB.markDappUserCommitmentsStored).not.toHaveBeenCalled();
+		expect(providerDB.markImageCaptchasStored).not.toHaveBeenCalled();
 		logger.info(() => ({
 			msg: "Test: Verified no image commitments were marked as stored (expected as they're old)",
 		}));
@@ -423,7 +423,7 @@ describe("ClientTaskManager", () => {
 		collections.schedulers.time = 2;
 
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.getUnstoredDappUserCommitments as any).mockResolvedValueOnce(
+		(providerDB.getUnstoredImageCaptchas as any).mockResolvedValueOnce(
 			[],
 		);
 
@@ -434,7 +434,7 @@ describe("ClientTaskManager", () => {
 
 		await clientTaskManager.storeCommitmentsExternal();
 
-		expect(providerDB.markDappUserCommitmentsStored).not.toHaveBeenCalled();
+		expect(providerDB.markImageCaptchasStored).not.toHaveBeenCalled();
 		expect(providerDB.markDappUserPoWCommitmentsStored).not.toHaveBeenCalled();
 
 		expect(providerDB.updateScheduledTaskStatus).toHaveBeenCalledWith(
