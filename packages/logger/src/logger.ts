@@ -221,12 +221,11 @@ export class NativeLogger implements Logger {
 	}
 
 	with(obj: LogObject, subscope?: string): Logger {
-		const newScope =
-			subscope
-				? this.scope
-					? `${this.scope}:${subscope}`
-					: subscope
-				: this.scope;
+		const newScope = subscope
+			? this.scope
+				? `${this.scope}:${subscope}`
+				: subscope
+			: this.scope;
 		const newLogger = new NativeLogger(newScope, this.levelMap);
 		newLogger.defaultData = { ...this.defaultData, ...obj };
 		newLogger.setPretty(this.getPretty());
