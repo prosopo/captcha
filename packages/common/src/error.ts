@@ -16,16 +16,11 @@ import type { TranslationKey } from "@prosopo/locale";
 import type { ApiJsonError } from "@prosopo/types";
 import type { TFunction } from "i18next";
 import { ZodError } from "zod";
-import { type LogLevel, type Logger, getLogger } from "./logger.js";
 
 type BaseErrorOptions<ContextType> = {
 	name?: string;
 	translationKey?: TranslationKey;
-	logger?: Logger;
-	logLevel?: LogLevel;
 	context?: ContextType;
-	silent?: boolean;
-	i18n?: { t: TFunction };
 };
 
 interface BaseContextParams {
@@ -44,47 +39,27 @@ type ApiContextParams = BaseContextParams & {
 	code?: number;
 };
 
-// if i18n is not loaded then we use this
-const backupTranslationObj = { t: (key: string) => key };
-
 export abstract class ProsopoBaseError<
 	ContextType extends BaseContextParams = BaseContextParams,
 > extends Error {
-	translationKey: string | undefined;
+	translationKey: TranslationKey | undefined;
 	context: ContextType | undefined;
+	cause: Error | undefined;
 
 	constructor(
 		error: Error | TranslationKey,
 		options?: BaseErrorOptions<ContextType>,
 	) {
-		const logger = options?.logger || getLogger("info", import.meta.url);
-		const logLevel = options?.logLevel || "error";
-		const i18n = options?.i18n || backupTranslationObj;
 		if (error instanceof Error) {
-			super(i18n.t(error.message));
+			super(error.message);
+			this.cause = error;
 			this.translationKey = options?.translationKey;
-			this.context = {
-				...(options?.context as ContextType),
-				...(options?.translationKey
-					? { translationMessage: i18n.t(options.translationKey) }
-					: {}),
-			};
 		} else {
-			super(i18n.t(error));
+			super(error);
 			this.translationKey = error;
-			this.context = options?.context;
 		}
-		if (!options?.silent) this.logError(logger, logLevel, options?.name);
-	}
-
-	private logError(logger: Logger, logLevel: LogLevel, errorName?: string) {
-		const errorParams = { error: this.message, context: this.context };
-		const errorMessage = { errorType: errorName || this.name, errorParams };
-		if (logLevel === "debug") {
-			logger.debug(() => ({ data: { ...errorMessage, stack: this.stack } }));
-			return;
-		}
-		logger.error(() => ({ data: { ...errorMessage } }));
+		this.context = options?.context;
+		this.name = options?.name || this.constructor.name;
 	}
 }
 
@@ -94,9 +69,7 @@ export class ProsopoError extends ProsopoBaseError<BaseContextParams> {
 		error: Error | TranslationKey,
 		options?: BaseErrorOptions<BaseContextParams>,
 	) {
-		const errorName = options?.name || "ProsopoError";
-		const optionsAll = { ...options, name: errorName };
-		super(error, optionsAll);
+		super(error, options);
 	}
 }
 
@@ -105,9 +78,7 @@ export class ProsopoEnvError extends ProsopoBaseError<EnvContextParams> {
 		error: Error | TranslationKey,
 		options?: BaseErrorOptions<EnvContextParams>,
 	) {
-		const errorName = options?.name || "ProsopoEnvError";
-		const optionsAll = { ...options, name: errorName };
-		super(error, optionsAll);
+		super(error, options);
 	}
 }
 
@@ -116,9 +87,7 @@ export class ProsopoContractError extends ProsopoBaseError<ContractContextParams
 		error: Error | TranslationKey,
 		options?: BaseErrorOptions<ContractContextParams>,
 	) {
-		const errorName = options?.name || "ProsopoContractError";
-		const optionsAll = { ...options, name: errorName };
-		super(error, optionsAll);
+		super(error, options);
 	}
 }
 
@@ -127,9 +96,7 @@ export class ProsopoTxQueueError extends ProsopoBaseError<ContractContextParams>
 		error: Error | TranslationKey,
 		options?: BaseErrorOptions<ContractContextParams>,
 	) {
-		const errorName = options?.name || "ProsopoTxQueueError";
-		const optionsAll = { ...options, name: errorName };
-		super(error, optionsAll);
+		super(error, options);
 	}
 }
 
@@ -138,9 +105,7 @@ export class ProsopoDBError extends ProsopoBaseError<DBContextParams> {
 		error: Error | TranslationKey,
 		options?: BaseErrorOptions<DBContextParams>,
 	) {
-		const errorName = options?.name || "ProsopoDBError";
-		const optionsAll = { ...options, name: errorName };
-		super(error, optionsAll);
+		super(error, options);
 	}
 }
 
@@ -149,9 +114,7 @@ export class ProsopoCliError extends ProsopoBaseError<CliContextParams> {
 		error: Error | TranslationKey,
 		options?: BaseErrorOptions<CliContextParams>,
 	) {
-		const errorName = options?.name || "ProsopoCliError";
-		const optionsAll = { ...options, name: errorName };
-		super(error, optionsAll);
+		super(error, options);
 	}
 }
 
@@ -160,9 +123,7 @@ export class ProsopoDatasetError extends ProsopoBaseError<DatasetContextParams> 
 		error: Error | TranslationKey,
 		options?: BaseErrorOptions<DatasetContextParams>,
 	) {
-		const errorName = options?.name || "ProsopoDatasetError";
-		const optionsAll = { ...options, name: errorName };
-		super(error, optionsAll);
+		super(error, options);
 	}
 }
 
@@ -173,11 +134,9 @@ export class ProsopoApiError extends ProsopoBaseError<ApiContextParams> {
 		error: Error | TranslationKey,
 		options?: BaseErrorOptions<ApiContextParams>,
 	) {
-		const errorName = options?.name || "ProsopoApiError";
 		const code = options?.context?.code || 500;
 		const optionsAll = {
 			...options,
-			name: errorName,
 			context: {
 				...options?.context,
 				code,
@@ -191,35 +150,39 @@ export class ProsopoApiError extends ProsopoBaseError<ApiContextParams> {
 	}
 }
 
+const fallbackTranslate = { t: (key: string) => key };
+
 export const unwrapError = (
 	err: ProsopoBaseError | SyntaxError | ZodError,
 	i18nInstance?: { t: TFunction },
 ) => {
-	const i18n = i18nInstance || backupTranslationObj;
+	const i18n = i18nInstance || fallbackTranslate;
 	let code = "code" in err ? (err.code as number) : 400;
 
-	const message = i18n.t(err.message); // should be translated already
-	let jsonError: ApiJsonError = { code, message };
+	let jsonError: ApiJsonError = {
+		code,
+		message: i18n.t(
+			(err as ProsopoBaseError).translationKey || err.message,
+		),
+	};
 	const statusMessage = "Bad Request";
-	jsonError.message = message;
-	jsonError.key = "translationKey" in err ? err.translationKey : "API.UNKNOWN";
+	jsonError.key =
+		(err as ProsopoBaseError).translationKey ?? "API.UNKNOWN";
 
 	// unwrap the errors to get the actual error message
 	while (err instanceof ProsopoBaseError && err.context) {
-		// base error will not have a translation key
 		const contextTranslationKey =
 			typeof err.context.translationKey === "string"
 				? err.context.translationKey
 				: undefined;
 		jsonError.key =
 			contextTranslationKey || err.translationKey || "API.UNKNOWN";
-		jsonError.message = i18n.t(err.message);
+		jsonError.message = i18n.t(err.translationKey || err.message);
 		jsonError.data = err.context.data as Record<string, unknown> | undefined;
 
 		const contextCode =
 			typeof err.context.code === "number" ? err.context.code : undefined;
 		code = contextCode ?? jsonError.code;
-		// Only move to the next error if ProsopoBaseError or ZodError
 		if (
 			err.context.error &&
 			(err.context.error instanceof ProsopoBaseError ||

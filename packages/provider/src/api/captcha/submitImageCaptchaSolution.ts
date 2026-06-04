@@ -59,8 +59,6 @@ export default (
 			return next(
 				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
 					context: { code: 400, error: err, body: req.body },
-					i18n: req.i18n,
-					logger: req.logger,
 				}),
 			);
 		}
@@ -77,8 +75,6 @@ export default (
 				return next(
 					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
 						context: { code: 400, siteKey: dapp },
-						i18n: req.i18n,
-						logger: req.logger,
 					}),
 				);
 			}
@@ -117,8 +113,6 @@ export default (
 						siteKey: req.body.dapp,
 						error: err,
 					},
-					i18n: req.i18n,
-					logger: req.logger,
 				}),
 			);
 		}

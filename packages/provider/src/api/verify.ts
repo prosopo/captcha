@@ -79,8 +79,6 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				return next(
 					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
 						context: { code: 400, error: err, body: req.body },
-						i18n: req.i18n,
-						logger: req.logger,
 					}),
 				);
 			}
@@ -102,8 +100,6 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					return next(
 						new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
 							context: { code: 400, siteKey: dapp, user },
-							i18n: req.i18n,
-							logger: req.logger,
 						}),
 					);
 				}
@@ -141,8 +137,6 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: { code: 500, siteKey: req.body.dapp, user: req.body.user },
-						i18n: req.i18n,
-						logger: req.logger,
 					}),
 				);
 			}
@@ -182,8 +176,6 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				return next(
 					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
 						context: { code: 400, error: err, body: req.body },
-						i18n: req.i18n,
-						logger: req.logger,
 					}),
 				);
 			}
@@ -206,8 +198,6 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					return next(
 						new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
 							context: { code: 400, siteKey: dapp },
-							i18n: req.i18n,
-							logger: req.logger,
 						}),
 					);
 				}
@@ -251,8 +241,6 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: { code: 500, error: err },
-						i18n: req.i18n,
-						logger: req.logger,
 					}),
 				);
 			}

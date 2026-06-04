@@ -82,7 +82,6 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		if (!this.tables) {
 			throw new ProsopoDBError("DATABASE.TABLES_UNDEFINED", {
 				context: { failedFuncName: this.getTables.name },
-				logger: this.logger,
 			});
 		}
 		return this.tables;
@@ -233,7 +232,6 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 					limit,
 					failedFuncName: this.getCaptchas.name,
 				},
-				logger: this.logger,
 			});
 		} finally {
 			await this.close();

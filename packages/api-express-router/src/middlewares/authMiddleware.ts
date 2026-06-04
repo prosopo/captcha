@@ -40,7 +40,7 @@ export const authMiddleware = (
 
 			res.status(401).json({
 				error: new ProsopoEnvError(error || "API.UNAUTHORIZED", {
-					context: { i18n: req.i18n, code: 401 },
+					context: { code: 401 },
 				}),
 			});
 			return;

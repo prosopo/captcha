@@ -251,7 +251,6 @@ export class ProviderDatabase
 		if (!this.tables) {
 			throw new ProsopoDBError("DATABASE.TABLES_UNDEFINED", {
 				context: { failedFuncName: this.getTables.name },
-				logger: this.logger,
 			});
 		}
 		return this.tables;
@@ -417,7 +416,6 @@ export class ProviderDatabase
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.DATASET_LOAD_FAILED", {
 				context: { failedFuncName: this.storeDataset.name, error: err },
-				logger: this.logger,
 			});
 		}
 	}
@@ -744,7 +742,6 @@ export class ProviderDatabase
 					serverChecked,
 					storedStatus,
 				},
-				logger: this.logger,
 			});
 			this.logger.error(() => ({
 				err: error,
@@ -765,7 +762,6 @@ export class ProviderDatabase
 		if (!this.tables) {
 			throw new ProsopoDBError("DATABASE.DATABASE_UNDEFINED", {
 				context: { failedFuncName: this.getPowCaptchaRecordByChallenge.name },
-				logger: this.logger,
 			});
 		}
 
@@ -790,7 +786,6 @@ export class ProviderDatabase
 		} catch (error) {
 			const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
 				context: { error, challenge },
-				logger: this.logger,
 			});
 			this.logger.error(() => ({
 				err: err,
@@ -849,7 +844,6 @@ export class ProviderDatabase
 						challenge,
 						...update,
 					},
-					logger: this.logger,
 				});
 				this.logger.info(() => ({
 					err: err,
@@ -871,7 +865,6 @@ export class ProviderDatabase
 					challenge,
 					...update,
 				},
-				logger: this.logger,
 			});
 			this.logger.error(() => ({
 				err: err,
@@ -1083,7 +1076,6 @@ export class ProviderDatabase
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SESSION_STORE_FAILED", {
 				context: { error: err, sessionId: sessionRecord.sessionId },
-				logger: this.logger,
 			});
 		}
 	}
@@ -1138,7 +1130,6 @@ export class ProviderDatabase
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SESSION_CHECK_REMOVE_FAILED", {
 				context: { error: err, sessionId },
-				logger: this.logger,
 			});
 		}
 	}
@@ -1170,7 +1161,6 @@ export class ProviderDatabase
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
 				context: { error: err, userSitekeyIpHash },
-				logger: this.logger,
 			});
 		}
 	}

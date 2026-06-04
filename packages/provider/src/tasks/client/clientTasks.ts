@@ -263,7 +263,6 @@ export class ClientTaskManager {
 		} catch (e: unknown) {
 			const getClientListError = new ProsopoApiError("DATABASE.UNKNOWN", {
 				context: { error: e },
-				logger: this.logger,
 			});
 			this.logger.error(() => ({
 				err: getClientListError,
@@ -346,7 +345,6 @@ export class ClientTaskManager {
 				"DATABASE.UNKNOWN",
 				{
 					context: { error: e },
-					logger: this.logger,
 				},
 			);
 			this.logger.error(() => ({
@@ -380,7 +378,6 @@ export class ClientTaskManager {
 		if (!isValidPrivateKey(detectorKey)) {
 			throw new ProsopoApiError("INVALID_DETECTOR_KEY", {
 				context: { detectorKey },
-				logger: this.logger,
 			});
 		}
 		await this.providerDB.storeDetectorKey(detectorKey);
@@ -396,7 +393,6 @@ export class ClientTaskManager {
 		if (!isValidPrivateKey(detectorKey)) {
 			throw new ProsopoApiError("INVALID_DETECTOR_KEY", {
 				context: { detectorKey },
-				logger: this.logger,
 			});
 		}
 		await this.providerDB.removeDetectorKey(detectorKey, expirationInSeconds);

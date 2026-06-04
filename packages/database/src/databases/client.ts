@@ -57,7 +57,6 @@ export class ClientDatabase extends MongoDatabase implements IClientDatabase {
 		if (!this.tables) {
 			throw new ProsopoDBError("DATABASE.TABLES_UNDEFINED", {
 				context: { failedFuncName: this.getTables.name },
-				logger: this.logger,
 			});
 		}
 		return this.tables;
