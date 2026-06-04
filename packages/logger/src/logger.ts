@@ -184,26 +184,26 @@ export class NativeLogger implements Logger {
 			data[key] = e[key];
 		}
 
-		if (!data["name"]) {
-			data["name"] = "Error";
+		if (!data.name) {
+			data.name = "Error";
 		}
 
 		// Recursively unpack the cause chain
-		const cause = e["cause"];
+		const cause = e.cause;
 		if (cause !== undefined) {
 			if (
 				cause instanceof Error ||
 				(typeof cause === "object" && cause !== null)
 			) {
-				data["cause"] = this.unpackError(cause as Error | object);
+				data.cause = this.unpackError(cause as Error | object);
 			} else {
-				data["cause"] = cause;
+				data.cause = cause;
 			}
 		}
 
 		// Prefer translationKey when present (e.g. ProsopoBaseError) so the
 		// top-level `err` field is locale-stable and queryable.
-		const msg = String(e["translationKey"] ?? e["message"] ?? e.msg ?? "");
+		const msg = String(e.translationKey ?? e.message ?? e.msg ?? "");
 		return { msg, data };
 	}
 
