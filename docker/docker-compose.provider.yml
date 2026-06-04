@@ -234,11 +234,10 @@ services:
       - "53:53/udp"
       - "53:53/tcp"
     expose:
-      - "9362"
+      - "443"
     environment:
-      - DNS_HTTPS_PORT=9362
+      - DNS_HTTPS_PORT=443
       - DNS_HTTPS_BIND=0.0.0.0
-      - DNS_DISABLE_ACME=true
     volumes:
       - /data/dns:/data
       - ./dns-tenants.json:/etc/dns/tenants.json:ro
