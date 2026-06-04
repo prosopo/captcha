@@ -110,8 +110,8 @@ function buildAlpnExtension(protocols: string[]): Buffer {
 function buildSupportedVersionsExtension(versions: number[]): Buffer {
 	const buf = Buffer.allocUnsafe(1 + versions.length * 2);
 	buf[0] = versions.length * 2;
-	for (let i = 0; i < versions.length; i++) {
-		buf.writeUInt16BE(versions[i], 1 + i * 2);
+	for (const [i, v] of versions.entries()) {
+		buf.writeUInt16BE(v, 1 + i * 2);
 	}
 	return buf;
 }
@@ -119,8 +119,8 @@ function buildSupportedVersionsExtension(versions: number[]): Buffer {
 function buildSigAlgsExtension(algs: number[]): Buffer {
 	const buf = Buffer.allocUnsafe(2 + algs.length * 2);
 	buf.writeUInt16BE(algs.length * 2, 0);
-	for (let i = 0; i < algs.length; i++) {
-		buf.writeUInt16BE(algs[i], 2 + i * 2);
+	for (const [i, v] of algs.entries()) {
+		buf.writeUInt16BE(v, 2 + i * 2);
 	}
 	return buf;
 }
@@ -243,10 +243,14 @@ describe("calculateJa4 — counts", () => {
 		const sni = buildSniExtension("example.com");
 		const fakeGreaseData = Buffer.alloc(0);
 		const fp = calculateJa4(
-			buildClientHello(0x0303, [0xc02f], [
-				{ id: 0x0a0a, data: fakeGreaseData },
-				{ id: 0x0000, data: sni },
-			]),
+			buildClientHello(
+				0x0303,
+				[0xc02f],
+				[
+					{ id: 0x0a0a, data: fakeGreaseData },
+					{ id: 0x0000, data: sni },
+				],
+			),
 		);
 		expect(fp.slice(6, 8)).toBe("01");
 	});
@@ -303,11 +307,15 @@ describe("calculateJa4 — extension hash", () => {
 		const sigAlgs = buildSigAlgsExtension([0x0403]);
 
 		const withSniAlpn = calculateJa4(
-			buildClientHello(0x0303, [0x1301], [
-				{ id: 0x0000, data: sni },
-				{ id: 0x0010, data: alpn },
-				{ id: 0x000d, data: sigAlgs },
-			]),
+			buildClientHello(
+				0x0303,
+				[0x1301],
+				[
+					{ id: 0x0000, data: sni },
+					{ id: 0x0010, data: alpn },
+					{ id: 0x000d, data: sigAlgs },
+				],
+			),
 		).split("_")[2];
 
 		const withoutSniAlpn = calculateJa4(

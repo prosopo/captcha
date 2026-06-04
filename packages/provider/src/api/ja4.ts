@@ -52,9 +52,11 @@ function alpnChar(b: number): string {
 // Return (first, last) JA4 ALPN chars for a raw protocol byte slice.
 // A missing position (empty or single-byte slice) returns "0".
 function alpnFirstLast(protocol: Buffer): [string, string] {
-	const first = protocol.length > 0 ? alpnChar(protocol[0]) : "0";
+	const first = protocol.length > 0 ? alpnChar(protocol.readUInt8(0)) : "0";
 	const last =
-		protocol.length > 1 ? alpnChar(protocol[protocol.length - 1]) : "0";
+		protocol.length > 1
+			? alpnChar(protocol.readUInt8(protocol.length - 1))
+			: "0";
 	return [first, last];
 }
 
@@ -106,7 +108,8 @@ export function calculateJa4(data: Buffer): string {
 	}
 
 	// TLS record header
-	const recordType = data[offset++];
+	const recordType = data.readUInt8(offset);
+	offset += 1;
 	if (recordType !== HANDSHAKE_RECORD_TYPE) {
 		throw new Ja4ParseError(
 			`Invalid record type: 0x${recordType.toString(16)}`,
@@ -124,13 +127,14 @@ export function calculateJa4(data: Buffer): string {
 	data = data.subarray(0, RECORD_HEADER_LENGTH + recordLen);
 
 	// Handshake header
-	const msgType = data[offset++];
+	const msgType = data.readUInt8(offset);
+	offset += 1;
 	if (msgType !== HANDSHAKE_MESSAGE_TYPE) {
 		throw new Ja4ParseError(
 			`Not a ClientHello: handshake type 0x${msgType.toString(16)}`,
 		);
 	}
-	const msgLen = (data[offset] << 16) | (data[offset + 1] << 8) | data[offset + 2];
+	const msgLen = data.readUIntBE(offset, 3);
 	offset += 3;
 	if (data.length - offset < msgLen) {
 		throw new Ja4ParseError("Handshake message length exceeds record");
@@ -145,7 +149,8 @@ export function calculateJa4(data: Buffer): string {
 	offset += 2;
 	offset += 32; // client random
 
-	const sessionIdLen = data[offset++];
+	const sessionIdLen = data.readUInt8(offset);
+	offset += 1;
 	if (data.length - offset < sessionIdLen) {
 		throw new Ja4ParseError("Truncated at session ID");
 	}
@@ -172,7 +177,8 @@ export function calculateJa4(data: Buffer): string {
 	if (data.length - offset < 1) {
 		throw new Ja4ParseError("Truncated at compression methods");
 	}
-	const compressionLen = data[offset++];
+	const compressionLen = data.readUInt8(offset);
+	offset += 1;
 	if (data.length - offset < compressionLen) {
 		throw new Ja4ParseError("Truncated at compression methods data");
 	}
@@ -211,7 +217,7 @@ export function calculateJa4(data: Buffer): string {
 			// 1-byte list length, then 2-byte version entries.
 			// Pick the highest non-GREASE version.
 			if (extData.length >= 1) {
-				const listLen = extData[0];
+				const listLen = extData.readUInt8(0);
 				let best = 0;
 				for (let i = 1; i + 1 < extData.length && i + 1 <= listLen; i += 2) {
 					const v = extData.readUInt16BE(i);
@@ -234,7 +240,8 @@ export function calculateJa4(data: Buffer): string {
 			if (extData.length >= 2) {
 				let sniOff = 2;
 				while (sniOff + 3 <= extData.length) {
-					const nameType = extData[sniOff++];
+					const nameType = extData.readUInt8(sniOff);
+					sniOff += 1;
 					const nameLen = extData.readUInt16BE(sniOff);
 					sniOff += 2;
 					if (sniOff + nameLen > extData.length) break;
@@ -251,7 +258,8 @@ export function calculateJa4(data: Buffer): string {
 			if (extData.length >= 2) {
 				let alpnOff = 2;
 				while (alpnOff < extData.length) {
-					const protoLen = extData[alpnOff++];
+					const protoLen = extData.readUInt8(alpnOff);
+					alpnOff += 1;
 					if (alpnOff + protoLen > extData.length) break;
 					alpnProtocols.push(extData.subarray(alpnOff, alpnOff + protoLen));
 					alpnOff += protoLen;
