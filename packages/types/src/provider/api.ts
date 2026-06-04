@@ -143,6 +143,12 @@ export enum AdminApiPaths {
 	ClearAllCounters = "/v1/prosopo/provider/admin/counters/clear-all",
 	SiteKeyRemove = "/v1/prosopo/provider/admin/sitekey/remove",
 	SiteKeysRemove = "/v1/prosopo/provider/admin/sitekeys/remove",
+	// Receives batched DNS observation events from the prosopo dns-event
+	// sidecar. Auth: same admin sr25519 JWT as the other admin routes.
+	// Named generically ("dns") in the public surface so the route
+	// doesn't telegraph the residential-proxy detection use case to
+	// anyone reading client traffic.
+	DnsEvent = "/v1/prosopo/provider/admin/dns/event",
 }
 
 export type CombinedApiPaths = ClientApiPaths | AdminApiPaths;
@@ -184,6 +190,10 @@ export const ProviderDefaultRateLimits = {
 	[AdminApiPaths.ClearAllCounters]: { windowMs: 60000, limit: 10 },
 	[AdminApiPaths.SiteKeyRemove]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.SiteKeysRemove]: { windowMs: 60000, limit: 5 },
+	// Sidecar batches events and POSTs at shipper_flush_ms cadence
+	// (1s default), so a high per-minute ceiling is fine. Single ingest
+	// path per pronode → no cross-tenant fairness concerns.
+	[AdminApiPaths.DnsEvent]: { windowMs: 60000, limit: 600 },
 };
 
 type RateLimit = {
@@ -393,6 +403,16 @@ export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 	// field after reading the header, so downstream widget code consumes it
 	// the same way regardless of transport.
 	[ApiParams.hp]?: string;
+	// Per-session DNS observation URL. When the provider deployment has
+	// DNS_EVENT_SUBZONE + DNS_EVENT_HMAC_SECRET configured (i.e. a
+	// dns-event sidecar is running alongside this pronode), this is a
+	// URL of the form
+	// https://{sessionId}.{subzone}/{hmac_path}?sid={sessionId}.
+	// The widget fires one no-cors GET to it; the sidecar logs the DNS
+	// resolver IP and the HTTPS peer IP and ships both to this provider
+	// via POST /v1/prosopo/provider/admin/dns/event. Always present on
+	// deployments that run the sidecar — no per-site opt-in.
+	dns_url?: string;
 }
 
 export interface PowCaptchaSolutionEscalation {
@@ -425,6 +445,49 @@ export const ServerPowCaptchaVerifyRequestBody = object({
 export type ServerPowCaptchaVerifyRequestBodyOutput = output<
 	typeof ServerPowCaptchaVerifyRequestBody
 >;
+
+// ── DNS observation event ingestion ────────────────────────────────
+// Wire-compatible with the dns-event sidecar's Rust `event::Event` and
+// `event::Batch`. Sidecar batches events and POSTs to
+// AdminApiPaths.DnsEvent on the provider with an admin sr25519 JWT.
+//
+// "DNS event" rather than "DNS-leak trap" in the public surface — the
+// generic naming doesn't telegraph the residential-proxy detection use
+// case to anyone reading client traffic.
+export const DnsEventKindSchema = union([
+	string().regex(/^dns$/),
+	string().regex(/^http$/),
+]);
+export type DnsEventKind = "dns" | "http";
+
+export const DnsEventSchema = object({
+	kind: DnsEventKindSchema,
+	ts: string(), // ISO-8601 UTC (serde default for chrono DateTime<Utc>)
+	src_ip: string(),
+	// Per-session ID carried in the URL subdomain — captures the procaptcha
+	// sessionId. Named `jti` on the wire for cross-product compatibility
+	// with Protect's session identifier.
+	jti: string().optional(),
+	site_key: string().optional(),
+	subzone: string().optional(),
+	qname: string().optional(),
+	qtype: string().optional(),
+	sni: string().optional(),
+	path: string().optional(),
+	user_agent: string().optional(),
+	path_valid: boolean().optional(),
+});
+export type DnsEvent = output<typeof DnsEventSchema>;
+
+export const DnsEventBatchSchema = object({
+	events: array(DnsEventSchema),
+});
+export type DnsEventBatch = output<typeof DnsEventBatchSchema>;
+
+export interface DnsEventResponseBody extends ApiResponse {
+	stored: number;
+	errors: number;
+}
 
 export const GetPowCaptchaChallengeRequestBody = object({
 	[ApiParams.user]: string(),
