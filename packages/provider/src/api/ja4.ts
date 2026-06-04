@@ -272,7 +272,8 @@ export function calculateJa4(data: Buffer): string {
 	const versionStr = tlsVersionStr(clientVersion);
 	const sni = serverNames.length > 0 ? "d" : "i";
 	const [alpnFirst, alpnLast] =
-		alpnProtocols.length > 0 ? alpnFirstLast(alpnProtocols[0]) : ["0", "0"];
+		// alpnProtocols.length > 0 guard above ensures [0] is defined
+		alpnProtocols.length > 0 ? alpnFirstLast(alpnProtocols[0]!) : ["0", "0"];
 
 	const nonGreaseCiphers = cipherSuites.filter((c) => !isGrease(c));
 	const nonGreaseExts = extIds.filter((e) => !isGrease(e));
