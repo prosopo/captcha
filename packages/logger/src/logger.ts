@@ -326,7 +326,9 @@ export class NativeLogger implements Logger {
 	): void {
 		// Re-resolve at print time so directives set after construction are respected.
 		const effectiveLevelNum =
-			this.levelMap[resolveLevel(this.scope, getGlobalDirectives(), this.level)];
+			this.levelMap[
+				resolveLevel(this.scope, getGlobalDirectives(), this.level)
+			];
 		if (this.levelMap[level] < effectiveLevelNum) {
 			return; // skip logging if the level is below the effective threshold
 		}
