@@ -24,6 +24,7 @@ describe("ApiUpdateDetectorKeyEndpoint", () => {
 	let mockLogger: {
 		info: ReturnType<typeof vi.fn>;
 		error: ReturnType<typeof vi.fn>;
+		with: ReturnType<typeof vi.fn>;
 	};
 
 	beforeEach(() => {
@@ -34,6 +35,7 @@ describe("ApiUpdateDetectorKeyEndpoint", () => {
 		mockLogger = {
 			info: vi.fn(),
 			error: vi.fn(),
+			with: vi.fn().mockReturnThis(),
 		};
 		endpoint = new ApiUpdateDetectorKeyEndpoint(mockClientTaskManager as never);
 	});
