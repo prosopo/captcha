@@ -155,7 +155,13 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 				}}
 				checked={state.isHuman}
 				labelText={isTranslationReady ? t("WIDGET.I_AM_HUMAN") : ""}
-				error={state.error?.message}
+				error={
+					state.error
+						? isTranslationReady
+							? t(state.error.key as Parameters<typeof t>[0])
+							: state.error.key
+						: undefined
+				}
 				aria-label="human checkbox"
 				loading={loading}
 			/>

@@ -25,7 +25,7 @@ export const handleErrors = (
 	next: NextFunction,
 ) => {
 	request.logger.error(() => ({ err }));
-	const { code, statusMessage, jsonError } = unwrapError(err, request.i18n);
+	const { code, statusMessage, jsonError } = unwrapError(err);
 	response.statusMessage = statusMessage;
 	response.set("content-type", "application/json");
 	response.status(code);

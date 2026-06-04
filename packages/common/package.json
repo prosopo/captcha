@@ -27,8 +27,6 @@
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
 	"dependencies": {
-		"@prosopo/locale": "3.1.27",
-		"i18next": "24.1.0",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {

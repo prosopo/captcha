@@ -16,7 +16,8 @@ import { LanguageSchema, Languages } from "./translations.js";
 export const i18nSharedOptions = {
 	debug: process.env.PROSOPO_LOG_LEVEL === "debug",
 	fallbackLng: LanguageSchema.enum.en,
-	namespace: "translation",
+	defaultNS: "translation",
+	ns: ["translation"],
 	supportedLngs: Object.values(Languages),
 	nonExplicitSupportedLngs: false,
 };
