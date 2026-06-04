@@ -44,5 +44,4 @@ describe("stringifyBigInts", () => {
 		stringifyBigInts(nested);
 		expect(nested).toEqual({ inner: { val: "99" } });
 	});
-
 });
