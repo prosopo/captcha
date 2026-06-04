@@ -151,6 +151,20 @@ export interface ClientMetaData {
 	hp?: string;
 }
 
+/**
+ * Internal classification labels applied by superadmins from the audit page to
+ * build supervised ML training sets. Stored directly on the captcha record
+ * (see {@link StoredCaptcha.label}); not part of the captcha verification flow.
+ */
+export enum CaptchaLabel {
+	human = "human",
+	bot = "bot",
+	suspicious = "suspicious",
+	unknown = "unknown",
+}
+
+export const CaptchaLabelSchema = nativeEnum(CaptchaLabel);
+
 export interface StoredCaptcha {
 	result: {
 		status: CaptchaStatus;
@@ -193,6 +207,13 @@ export interface StoredCaptcha {
 	// Current behavioral data storage format (packed)
 	deviceCapability?: string;
 	behavioralDataPacked?: BehavioralDataPacked;
+	// Internal ML labelling, written by superadmins via the audit page. Not part
+	// of the captcha verification flow; used to build supervised training sets.
+	// See `CaptchaLabel`.
+	label?: CaptchaLabel;
+	labelReason?: string;
+	labelledBy?: string;
+	labelledAt?: Date;
 }
 
 export interface UserCommitment extends StoredCaptcha {
@@ -270,6 +291,11 @@ export const UserCommitmentSchema = object({
 	// Behavioral data fields
 	deviceCapability: string().optional(),
 	behavioralDataPacked: BehavioralDataPackedSchema.optional(),
+	// Internal ML labelling (see StoredCaptcha.label)
+	label: CaptchaLabelSchema.optional(),
+	labelReason: string().optional(),
+	labelledBy: string().optional(),
+	labelledAt: date().optional(),
 }) satisfies ZodType<UserCommitment, ZodTypeDef, unknown>;
 
 // Zod schema for ScoreComponents
@@ -475,6 +501,11 @@ export const PoWCaptchaStoredSchema = object({
 	clickEvents: array(object({}).catchall(any())).optional(),
 	deviceCapability: string().optional(),
 	behavioralDataPacked: BehavioralDataPackedSchema.optional(),
+	// Internal ML labelling (see StoredCaptcha.label)
+	label: CaptchaLabelSchema.optional(),
+	labelReason: string().optional(),
+	labelledBy: string().optional(),
+	labelledAt: date().optional(),
 }) satisfies ZodType<PoWCaptchaStored, ZodTypeDef, unknown>;
 
 export type PendingImageCaptchaRequest = {

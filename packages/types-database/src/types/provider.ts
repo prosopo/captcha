@@ -15,6 +15,7 @@
 import type { AllKeys } from "@prosopo/common";
 import { type TranslationKey, TranslationKeysSchema } from "@prosopo/locale";
 import {
+	CaptchaLabel,
 	CaptchaType,
 	type ClientContextEntropy,
 	type CompositeIpAddress,
@@ -215,10 +216,17 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 		required: false,
 	},
 	providerSignature: { type: String, required: true },
+	// Internal ML labelling applied by superadmins via the audit page.
+	label: { type: String, enum: Object.values(CaptchaLabel), required: false },
+	labelReason: { type: String, required: false },
+	labelledBy: { type: String, required: false },
+	labelledAt: { type: Date, required: false },
 });
 
 // Set an index on the captchaId field, ascending
 PoWCaptchaRecordSchema.index({ challenge: 1 });
+// Supports the labelled-dataset export query (`{ label: { $exists: true } }`).
+PoWCaptchaRecordSchema.index({ label: 1, dappAccount: 1 });
 PoWCaptchaRecordSchema.index({ lastUpdatedTimestamp: 1 });
 PoWCaptchaRecordSchema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
 PoWCaptchaRecordSchema.index({ "ipAddress.lower": 1 });
@@ -414,9 +422,16 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 		},
 		required: false,
 	},
+	// Internal ML labelling applied by superadmins via the audit page.
+	label: { type: String, enum: Object.values(CaptchaLabel), required: false },
+	labelReason: { type: String, required: false },
+	labelledBy: { type: String, required: false },
+	labelledAt: { type: Date, required: false },
 });
 // Set an index on the commitment id field, descending
 UserCommitmentRecordSchema.index({ id: -1 });
+// Supports the labelled-dataset export query (`{ label: { $exists: true } }`).
+UserCommitmentRecordSchema.index({ label: 1, dappAccount: 1 });
 UserCommitmentRecordSchema.index({
 	lastUpdatedTimestamp: 1,
 });
