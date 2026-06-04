@@ -18,11 +18,11 @@ import { fileURLToPath } from "node:url";
 import { LogLevel, getLogger, parseLogLevel } from "@prosopo/logger";
 import dotenv from "dotenv";
 
-const __filename = fileURLToPath("dotenv");
+const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const logger = getLogger(
 	parseLogLevel(process.env.PROSOPO_LOG_LEVEL, LogLevel.enum.info),
-	import.meta.url,
+	"dotenv",
 );
 
 export function getEnv() {
