@@ -34,3 +34,4 @@ export * from "./binaryString.js";
 export * from "./date.js";
 export * from "./email.js";
 export * from "./domainValidation.js";
+export * from "./bigint.js";
