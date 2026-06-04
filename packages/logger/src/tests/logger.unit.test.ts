@@ -12,8 +12,72 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { NativeLogger, getLogger } from "../logger.js";
 import { stringifyBigInts } from "../logger.js";
+describe("unpackError", () => {
+	let captured: string[] = [];
+
+	beforeEach(() => {
+		captured = [];
+		vi.spyOn(console, "error").mockImplementation((...args: unknown[]) => {
+			captured.push(String(args[0]));
+		});
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	function lastRecord(): Record<string, unknown> {
+		const raw = captured[captured.length - 1];
+		return JSON.parse(raw) as Record<string, unknown>;
+	}
+
+	it("captures name from Error prototype chain", () => {
+		const logger = getLogger("error", "test");
+		const err = new TypeError("bad input");
+		logger.error(() => ({ err }));
+		const record = lastRecord();
+		const errData = record.errData as Record<string, unknown>;
+		expect(errData.name).toBe("TypeError");
+	});
+
+	it("captures message field", () => {
+		const logger = getLogger("error", "test");
+		const err = new Error("something went wrong");
+		logger.error(() => ({ err }));
+		const errData = lastRecord().errData as Record<string, unknown>;
+		expect(errData.message).toBe("something went wrong");
+	});
+
+	it("captures custom own properties from subclass errors", () => {
+		const logger = getLogger("error", "test");
+		const err = Object.assign(new Error("custom"), { statusCode: 404 });
+		logger.error(() => ({ err }));
+		const errData = lastRecord().errData as Record<string, unknown>;
+		expect(errData.statusCode).toBe(404);
+	});
+
+	it("recursively unpacks cause", () => {
+		const logger = getLogger("error", "test");
+		const cause = new Error("root cause");
+		const err = new Error("outer", { cause });
+		logger.error(() => ({ err }));
+		const errData = lastRecord().errData as Record<string, unknown>;
+		const causeData = errData.cause as Record<string, unknown>;
+		expect(causeData).toBeDefined();
+	});
+
+	it("suppresses stack when printStack is false (default)", () => {
+		const logger = getLogger("error", "test");
+		const err = new Error("test");
+		logger.error(() => ({ err }));
+		const errData = lastRecord().errData as Record<string, unknown>;
+		expect(errData.stack).toBeUndefined();
+	});
+});
+
 describe("stringifyBigInts", () => {
 	it("should strigify big int", () => {
 		const bigInt = BigInt(12345678901234567890n);

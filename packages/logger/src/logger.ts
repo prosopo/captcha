@@ -185,7 +185,7 @@ export class NativeLogger implements Logger {
 		}
 
 		if (!data.name) {
-			data.name = "Error";
+			data.name = (err as { name?: unknown }).name ?? "Error";
 		}
 
 		// Recursively unpack the cause chain
