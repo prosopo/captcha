@@ -43,7 +43,7 @@ export const headerCheckMiddleware = (env: ProviderEnvironment) => {
 			req.logger = req.logger.with({
 				user,
 				siteKey,
-			});
+			}, "header-check");
 
 			next();
 		} catch (err) {

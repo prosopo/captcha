@@ -29,7 +29,7 @@ vi.mock("../../../api/validateAddress.js", () => ({
 	validateAddr: vi.fn(),
 }));
 
-const loggerOuter = getLogger("info", import.meta.url);
+const loggerOuter = getLogger("info", "test:header-check-middleware");
 
 describe("headerCheckMiddleware", () => {
 	let mockEnv: ProviderEnvironment;

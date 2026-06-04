@@ -87,7 +87,7 @@ export class CaptchaManager {
 		this.pair = pair;
 		this.db = db;
 		this.config = config;
-		this.logger = logger || getLogger("info", import.meta.url);
+		this.logger = logger || getLogger("info", "provider:captcha-manager");
 		this.writeQueue = writeQueue ?? null;
 	}
 
