@@ -15,7 +15,7 @@
 import { stringifyBigInts } from "@prosopo/util";
 import { z } from "zod";
 
-export { stringifyBigInts } from "@prosopo/util";
+export { stringifyBigInts };
 
 export type LogObject = object;
 export type LogRecord = {
