@@ -32,6 +32,7 @@ import { hashUserIp } from "../../../utils/hashUserIp.js";
 import { normalizeRequestIp } from "../../../utils/normalizeRequestIp.js";
 import { getMaintenanceMode } from "../../admin/apiToggleMaintenanceModeEndpoint.js";
 import { getRequestUserScope } from "../../blacklistRequestInspector.js";
+import { buildDnsEventUrl } from "../../dnsEventUrl.js";
 import { isReservedTestSiteKey } from "../../testSiteKey.js";
 import { buildFrictionlessMaintenanceResponse } from "../maintenanceModeResponses.js";
 import { handleAccessPolicy } from "./accessPolicy.js";
@@ -184,6 +185,7 @@ export default (
 						| CaptchaType.puzzle,
 					[ApiParams.sessionId]: dedup.sessionId,
 					[ApiParams.status]: "ok",
+					dns_url: buildDnsEventUrl(dedup.sessionId),
 				});
 			}
 

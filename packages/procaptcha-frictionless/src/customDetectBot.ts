@@ -122,6 +122,22 @@ const customDetectBot: BotDetectionFunction = async (
 	}
 	const captcha = await withTimeout(captchaPromise, 10000);
 
+	// Fire-and-forget DNS observation beacon. Failures swallowed —
+	// observation must never break the captcha flow.
+	if (captcha.dns_url) {
+		try {
+			void fetch(captcha.dns_url, {
+				method: "GET",
+				mode: "no-cors",
+				credentials: "omit",
+				keepalive: true,
+				cache: "no-store",
+			}).catch(() => undefined);
+		} catch {
+			/* swallow */
+		}
+	}
+
 	return {
 		captchaType: captcha.captchaType,
 		sessionId: captcha.sessionId,
