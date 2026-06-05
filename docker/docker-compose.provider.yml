@@ -233,8 +233,10 @@ services:
     ports:
       - "53:53/udp"
       - "53:53/tcp"
-    expose:
-      - "443"
+      # Sidecar HTTPS on 9362 (staging) — Caddy owns 443 on these
+      # hosts. Production: drop this mapping and use caddy-l4 to
+      # SNI-route the wildcard back to the sidecar on 443.
+      - "9362:443"
     environment:
       - DNS_HTTPS_PORT=443
       - DNS_HTTPS_BIND=0.0.0.0
