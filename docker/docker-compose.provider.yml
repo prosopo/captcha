@@ -246,6 +246,10 @@ services:
       - DNS_HTTPS_BIND=0.0.0.0
     volumes:
       - /data/dns:/data
+      # dns-tenants.json is rendered per host by ansible
+      # (playbooks/provider.yml) before `compose up`. Pronodes come and
+      # go independently; a single repo-checked-in file would make every
+      # host re-deploy on every tenant change. The file is .gitignored.
       - ./dns-tenants.json:/etc/dns/tenants.json:ro
     networks:
       external:
