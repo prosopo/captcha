@@ -23,7 +23,12 @@ export const buildDnsEventUrl = (sessionId: string): string | undefined => {
 		return undefined;
 	}
 	const path = derivePath(sessionId, secret);
-	return `https://${sessionId}.${subzone}${path}?sid=${sessionId}`;
+	// Optional port override — used on hosts where Caddy already owns
+	// 443 and the sidecar can't bind it directly. Omit for the
+	// hide-in-plain-sight case (URL looks like a normal tracker).
+	const port = process.env.DNS_EVENT_PORT;
+	const host = port ? `${sessionId}.${subzone}:${port}` : `${sessionId}.${subzone}`;
+	return `https://${host}${path}?sid=${sessionId}`;
 };
 
 // Mirrors the HMAC path algorithm in the dns sidecar
