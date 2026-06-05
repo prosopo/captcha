@@ -24,7 +24,12 @@
 		"ACCOUNT_NOT_FOUND": "Account not found",
 		"SITE_KEY_NOT_FOUND": "Site key not found",
 		"INVALID_TIMESTAMP": "Invalid timestamp",
-		"MISSING_SECRET_KEY": "Missing secret key"
+		"MISSING_SECRET_KEY": "Missing secret key",
+		"BILLING_ERROR": "Billing error",
+		"INVALID_JWT": "Invalid authentication token",
+		"MISSING_AUTH_HEADER": "Missing authentication header",
+		"OBJECT_COUNT_ERROR": "Unexpected object count",
+		"SECRET_MISSING": "Secret is missing"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Failed to encode invalid address",
@@ -72,6 +77,8 @@
 		"UNKNOWN": "Unknown database error"
 	},
 	"CAPTCHA": {
+		"FAILED": "Captcha failed",
+		"PASSED": "Captcha passed",
 		"PARSE_ERROR": "Error parsing captcha",
 		"INVALID_CAPTCHA_ID": "Invalid captcha id",
 		"INVALID_ITEM_FORMAT": "Only image and text item types allowed",
@@ -115,15 +122,27 @@
 		"NO_CONTENT_TYPE_HEADER": "No content-type header. Assumed JSON encoded body but failed to parse.",
 		"TIMESTAMP_TOO_OLD": "Timestamp too old",
 		"FORBIDDEN": "Forbidden",
-		"PROVIDER_VERIFY_FAILED": "Provider verification failed"
+		"PROVIDER_VERIFY_FAILED": "Provider verification failed",
+		"FEATURE_NOT_ENABLED": "This feature is not enabled",
+		"INVALID_AUTHORIZATION_HEADER": "Invalid authorization header",
+		"INVALID_DOMAIN": "Invalid domain",
+		"NO_PERMISSIONS": "No permissions configured for this account"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Cannot modify owner user",
+		"CANNOT_MODIFY_USER": "Cannot modify this user",
 		"CANNOT_DELETE_OWN_USER": "Cannot delete your own account",
 		"CANNOT_DELETE_LAST_USER": "Cannot delete last user",
 		"USER_ALREADY_EXISTS": "User already exists",
 		"NO_SUGGESTIONS_FOUND": "No suggestions found",
-		"CANNOT_DEACTIVATE_LAST_SITE": "Cannot deactivate the last active site"
+		"CANNOT_DEACTIVATE_LAST_SITE": "Cannot deactivate the last active site",
+		"API_KEYS_INVALID_NUMBER_OF_SITES": "Invalid number of sites for API key generation",
+		"API_KEYS_NOT_FOUND": "API keys not found"
+	},
+	"BILLING": {
+		"STRIPE_PORTAL": "Could not open billing portal",
+		"STRIPE_SESSION_NOT_FOUND": "Billing session not found",
+		"STRIPE_PAYMENT_FAILED": "Payment failed"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Invalid parameter"
@@ -133,6 +152,7 @@
 		"PROVIDER_NO_CAPTCHA": "No captchas returned from provider",
 		"MISSING_PROVIDER_PAIR": "Missing provider pair",
 		"MISSING_ENV_VARIABLE": "Missing environment variable",
+		"MISSING_SECRET_KEY": "Missing secret key",
 		"GENERAL": "General Dev Error, see context",
 		"METHOD_NOT_IMPLEMENTED": "Method not implemented"
 	},
