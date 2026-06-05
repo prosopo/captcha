@@ -232,16 +232,13 @@ services:
       - ../.env.1.${NODE_ENV}
     ports:
       # Bind on the host's external IPv4 specifically — systemd-resolved
-      # already claims 0.0.0.0:53 indirectly via stub-resolver iptables,
-      # so docker can't claim 0.0.0.0:53 even though `ss` shows only
-      # 127.0.0.5x. ${HOST_IPV4} is exported by the ansible playbook
-      # from the inventory's per-host ipv4 var.
+      # already claims 0.0.0.0:53 indirectly via stub-resolver iptables.
+      # ${HOST_IPV4} is exported by the ansible playbook.
       - "${HOST_IPV4}:53:53/udp"
       - "${HOST_IPV4}:53:53/tcp"
-      # Sidecar HTTPS on 9362 (staging) — Caddy owns 443 on these
-      # hosts. Production: drop this mapping and use caddy-l4 to
-      # SNI-route the wildcard back to the sidecar on 443.
-      - "9362:443"
+      # HTTPS pixel is reached via Caddy's layer4 SNI passthrough
+      # (provider.Caddyfile *.t.{CADDY_DOMAIN} block → dns:443 over
+      # the docker network) — no host port mapping needed.
     environment:
       - DNS_HTTPS_PORT=443
       - DNS_HTTPS_BIND=0.0.0.0
