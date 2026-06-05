@@ -166,3 +166,4 @@ captcha.json
 GeoLite2-Country.mmdb
 
 certs
+issue-long-jwt.mjs

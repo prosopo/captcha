@@ -27,7 +27,9 @@ export const buildDnsEventUrl = (sessionId: string): string | undefined => {
 	// 443 and the sidecar can't bind it directly. Omit for the
 	// hide-in-plain-sight case (URL looks like a normal tracker).
 	const port = process.env.DNS_EVENT_PORT;
-	const host = port ? `${sessionId}.${subzone}:${port}` : `${sessionId}.${subzone}`;
+	const host = port
+		? `${sessionId}.${subzone}:${port}`
+		: `${sessionId}.${subzone}`;
 	return `https://${host}${path}?sid=${sessionId}`;
 };
 
