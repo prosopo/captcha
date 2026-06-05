@@ -21,9 +21,10 @@ type Node =
 	  }
 	| string;
 
+// Returns [""] for a string leaf so the parent can prepend its key without a separator.
 function getLeafFieldPath(obj: Node): string[] {
 	if (typeof obj === "string") {
-		return [];
+		return [""];
 	}
 
 	return Object.keys(obj).reduce((arr, key) => {
@@ -35,14 +36,20 @@ function getLeafFieldPath(obj: Node): string[] {
 
 		return arr.concat(
 			children.map((child) => {
-				return `${key}.${child}`;
+				return child ? `${key}.${child}` : key;
 			}),
 		);
 	}, [] as string[]);
 }
 
+// Recursive conditional type that derives the exact union of dot-notation leaf paths
+// from the translation JSON shape at compile time, independently of the runtime function.
+type Leaves<T> = {
+	[K in keyof T & string]: T[K] extends string ? K : `${K}.${Leaves<T[K]>}`;
+}[keyof T & string];
+
 export const TranslationKeysSchema = z.enum(
 	getLeafFieldPath(translationEn) as [string, ...string[]],
 );
 
-export type TranslationKey = z.infer<typeof TranslationKeysSchema>;
+export type TranslationKey = Leaves<typeof translationEn>;
