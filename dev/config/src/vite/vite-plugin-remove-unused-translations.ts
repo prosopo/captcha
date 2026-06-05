@@ -63,6 +63,12 @@ export const unflatten = (
 	return result;
 };
 
+// This plugin uses static string scanning: it scans each source file for the
+// presence of each known translation key as a literal substring. It only works
+// for keys that appear verbatim in the bundled source — keys constructed at
+// runtime (e.g. template literals, variable lookups, or keys from API responses)
+// will be treated as unused and stripped. Add such keys to translationKeys
+// statically, or they will be missing from the bundle.
 export default function VitePluginRemoveUnusedTranslations(
 	translationKeys: string[],
 	jsonPattern: string,
