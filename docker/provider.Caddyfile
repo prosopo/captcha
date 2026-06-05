@@ -225,24 +225,3 @@ http://:9090 {
 		format json
 	}
 }
-
-# Layer-4 SNI passthrough for the wildcard DNS-sidecar subdomain.
-# The DNS sidecar terminates TLS itself via ACME DNS-01 (it's
-# authoritative for the subzone). Caddy here only routes the raw TCP
-# stream based on SNI — never decrypts. Requires the Caddy image to
-# include the `caddy-l4` plugin (xcaddy build --with
-# github.com/mholt/caddy-l4). Without the plugin this block is
-# rejected at startup; ensure the prosopo/caddy image is the
-# layer4-built one before deploying.
-{
-	layer4 {
-		:443 {
-			@trap tls sni *.t.{$CADDY_DOMAIN}
-			route @trap {
-				proxy {
-					upstream dns:443
-				}
-			}
-		}
-	}
-}
