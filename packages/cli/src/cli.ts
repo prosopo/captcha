@@ -15,7 +15,7 @@ import process from "node:process";
 import { LogLevel, getLogger } from "@prosopo/common";
 import { loadEnv } from "@prosopo/dotenv";
 import { getPair } from "@prosopo/keyring";
-import { loadI18next } from "@prosopo/locale";
+import { loadI18nextBackend } from "@prosopo/locale";
 import type { ProsopoConfigOutput } from "@prosopo/types";
 import { isMain } from "@prosopo/util";
 import { processArgs } from "./argv.js";
@@ -59,7 +59,7 @@ async function main() {
 
 //if main process
 if (isMain(import.meta.url, "provider")) {
-	loadI18next(true).then(() => {
+	loadI18nextBackend().then(() => {
 		main()
 			.then(() => {
 				log.info(() => ({ msg: "Running main process..." }));

@@ -14,7 +14,7 @@
 
 /** @jsxImportSource @emotion/react */
 
-import { loadI18next, useTranslation } from "@prosopo/locale";
+import { loadI18nextFrontend, useTranslation } from "@prosopo/locale";
 import { Manager } from "@prosopo/procaptcha";
 import { Checkbox, useProcaptcha } from "@prosopo/procaptcha-common";
 import { ProcaptchaConfigSchema, type ProcaptchaProps } from "@prosopo/types";
@@ -50,7 +50,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 					i18n.changeLanguage(config.language).then((r) => r);
 				}
 			} else {
-				loadI18next(false).then((i18n) => {
+				loadI18nextFrontend().then((i18n) => {
 					if (i18n.language !== config.language)
 						i18n.changeLanguage(config.language).then((r) => r);
 				});
