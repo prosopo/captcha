@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { TranslationKey } from "@prosopo/locale";
 import type { ApiJsonError } from "@prosopo/types";
 import { ZodError } from "zod";
 
 type BaseErrorOptions<ContextType> = {
 	name?: string;
-	translationKey?: string;
+	translationKey?: TranslationKey;
 	context?: ContextType;
 };
 
@@ -40,12 +41,12 @@ type ApiContextParams = BaseContextParams & {
 export abstract class ProsopoBaseError<
 	ContextType extends BaseContextParams = BaseContextParams,
 > extends Error {
-	translationKey: string | undefined;
+	translationKey: TranslationKey | undefined;
 	context: ContextType | undefined;
 	cause: Error | undefined;
 
 	constructor(
-		error: Error | string,
+		error: Error | TranslationKey,
 		options?: BaseErrorOptions<ContextType>,
 	) {
 		if (error instanceof Error) {
@@ -64,7 +65,7 @@ export abstract class ProsopoBaseError<
 // Generic error class
 export class ProsopoError extends ProsopoBaseError<BaseContextParams> {
 	constructor(
-		error: Error | string,
+		error: Error | TranslationKey,
 		options?: BaseErrorOptions<BaseContextParams>,
 	) {
 		super(error, options);
@@ -73,7 +74,7 @@ export class ProsopoError extends ProsopoBaseError<BaseContextParams> {
 
 export class ProsopoEnvError extends ProsopoBaseError<EnvContextParams> {
 	constructor(
-		error: Error | string,
+		error: Error | TranslationKey,
 		options?: BaseErrorOptions<EnvContextParams>,
 	) {
 		super(error, options);
@@ -82,7 +83,7 @@ export class ProsopoEnvError extends ProsopoBaseError<EnvContextParams> {
 
 export class ProsopoContractError extends ProsopoBaseError<ContractContextParams> {
 	constructor(
-		error: Error | string,
+		error: Error | TranslationKey,
 		options?: BaseErrorOptions<ContractContextParams>,
 	) {
 		super(error, options);
@@ -91,7 +92,7 @@ export class ProsopoContractError extends ProsopoBaseError<ContractContextParams
 
 export class ProsopoTxQueueError extends ProsopoBaseError<ContractContextParams> {
 	constructor(
-		error: Error | string,
+		error: Error | TranslationKey,
 		options?: BaseErrorOptions<ContractContextParams>,
 	) {
 		super(error, options);
@@ -100,7 +101,7 @@ export class ProsopoTxQueueError extends ProsopoBaseError<ContractContextParams>
 
 export class ProsopoDBError extends ProsopoBaseError<DBContextParams> {
 	constructor(
-		error: Error | string,
+		error: Error | TranslationKey,
 		options?: BaseErrorOptions<DBContextParams>,
 	) {
 		super(error, options);
@@ -109,7 +110,7 @@ export class ProsopoDBError extends ProsopoBaseError<DBContextParams> {
 
 export class ProsopoCliError extends ProsopoBaseError<CliContextParams> {
 	constructor(
-		error: Error | string,
+		error: Error | TranslationKey,
 		options?: BaseErrorOptions<CliContextParams>,
 	) {
 		super(error, options);
@@ -118,7 +119,7 @@ export class ProsopoCliError extends ProsopoBaseError<CliContextParams> {
 
 export class ProsopoDatasetError extends ProsopoBaseError<DatasetContextParams> {
 	constructor(
-		error: Error | string,
+		error: Error | TranslationKey,
 		options?: BaseErrorOptions<DatasetContextParams>,
 	) {
 		super(error, options);
@@ -129,7 +130,7 @@ export class ProsopoApiError extends ProsopoBaseError<ApiContextParams> {
 	code: number;
 
 	constructor(
-		error: Error | string,
+		error: Error | TranslationKey,
 		options?: BaseErrorOptions<ApiContextParams>,
 	) {
 		const code = options?.context?.code || 500;
