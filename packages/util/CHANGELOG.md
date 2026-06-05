@@ -1,5 +1,10 @@
 # @prosopo/util
 
+## 3.2.15
+### Patch Changes
+
+- 6ca1125: Move stringifyBigInts to @prosopo/util where generic utilities belong. Re-exported from @prosopo/logger for backward compatibility.
+
 ## 3.2.14
 ### Patch Changes
 
