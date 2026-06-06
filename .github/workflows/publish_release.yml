@@ -100,11 +100,14 @@ jobs:
         # token. No NPM_TOKEN secret required. Each workspace package must
         # be registered as a trusted publisher on npmjs.com pointing at
         # this workflow file.
-        # --provenance attaches a signed build attestation linking the
-        # tarball back to this exact workflow run.
+        # `--provenance` is intentionally omitted: provenance attestation
+        # demands `repository.url` on every published manifest and most
+        # of our workspace packages don't carry one. Re-add once each
+        # package.json declares the repo (or once we strip the private
+        # dev/* packages from the publish set).
         run: |
           echo "Publishing all packages to npm via trusted publishing"
-          npm --workspaces publish --access=public --provenance
+          npm --workspaces publish --access=public
 
       - name: Publish production image to Docker Hub
         run: |
