@@ -39,5 +39,10 @@
 		"vite": "6.4.1",
 		"vitest": "3.2.4"
 	},
-	"license": "Apache-2.0"
+	"license": "Apache-2.0",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "packages/ipinfo"
+	}
 }

@@ -54,7 +54,8 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+ssh://git@github.com/prosopo/provider.git"
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "demos/provider-mock"
 	},
 	"bugs": {
 		"url": "https://github.com/prosopo/captcha/issues"

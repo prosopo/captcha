@@ -42,7 +42,8 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/prosopo/captcha.git"
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "dev/vite-plugin-watch-workspace"
 	},
 	"bugs": {
 		"url": "https://github.com/prosopo/captcha/issues"
