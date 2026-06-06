@@ -264,68 +264,40 @@ export class NativeLogger implements Logger {
 		return this.level;
 	}
 
-	private unpackError(err: Error | object): { msg: string; data: LogRecord } {
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		const e: any = err; // allow additional properties
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		const data: any = { ...err };
-		data.name = e.name || "Error";
-		if (this.printStack) {
-			if (e.stack) {
-				data.stack = e.stack;
-			}
-			if (e.stacktrace) {
-				data.stacktrace = e.stacktrace; // for compatibility with some environments
-			}
+	private unpackError(err: Error | object): {
+		msg: string;
+		data: Record<string, unknown>;
+	} {
+		const e = err as Record<string, unknown>;
+		const data: Record<string, unknown> = {};
+
+		for (const key of Object.getOwnPropertyNames(err)) {
+			if (!this.printStack && (key === "stack" || key === "stacktrace"))
+				continue;
+			data[key] = e[key];
 		}
-		if (e.cause) {
-			data.cause = e.cause; // include cause if available
+
+		if (!data.name) {
+			data.name = (err as { name?: unknown }).name ?? "Error";
 		}
-		if (e.code) {
-			data.code = e.code; // include code if available
-		}
-		if (e.details) {
-			data.details = e.details; // include details if available
-		}
-		if (e.context) {
-			data.context = e.context; // include context if available
-		}
-		if (e.data) {
-			data.data = e.data; // include data if available
-		}
-		if (e.info) {
-			data.info = e.info; // include info if available
-		}
-		if (e.metadata) {
-			data.metadata = e.metadata; // include metadata if available
-		}
-		if (e.status) {
-			data.status = e.status; // include status if available
-		}
-		if (e.statusCode) {
-			data.statusCode = e.statusCode; // include statusCode if available
-		}
-		if (e.cause) {
-			// chainload errors can have a cause property
-			if (e.cause instanceof Error) {
-				// recurse into the cause
-				data.cause = this.unpackError(e.cause as Error);
+
+		// Recursively unpack the cause chain
+		const cause = e.cause;
+		if (cause !== undefined) {
+			if (
+				cause instanceof Error ||
+				(typeof cause === "object" && cause !== null)
+			) {
+				data.cause = this.unpackError(cause as Error | object);
 			} else {
-				// if the cause is not an error, just include it as is
-				data.cause = e.cause;
+				data.cause = cause;
 			}
 		}
+
 		// Prefer translationKey when present (e.g. ProsopoBaseError) so the
 		// top-level `err` field is locale-stable and queryable.
-		const msg = e.translationKey || e.message || e.msg || "";
-		if (e.message && e.msg) {
-			// duplicate message, defer msg to data
-			data.msg = e.msg;
-		}
-		return {
-			msg,
-			data,
-		};
+		const msg = String(e.translationKey ?? e.message ?? e.msg ?? "");
+		return { msg, data };
 	}
 
 	private print(
@@ -345,7 +317,7 @@ export class NativeLogger implements Logger {
 		// populate the log fields using the fn
 		let { data, msg, err } = fn();
 		let errMsg: string | undefined;
-		let errData: LogRecord | undefined;
+		let errData: Record<string, unknown> | undefined;
 		if (err) {
 			if (err instanceof Error || typeof err === "object") {
 				// if it's an instance of Error, unpack the standard fields (e.g. message, name, stack, etc)
@@ -368,7 +340,7 @@ export class NativeLogger implements Logger {
 			data?: LogObject;
 			msg?: string;
 			err?: string;
-			errData?: LogRecord;
+			errData?: Record<string, unknown>;
 		} = { scope: this.scope, ts, level };
 		if (data) {
 			baseRecord.data = data;

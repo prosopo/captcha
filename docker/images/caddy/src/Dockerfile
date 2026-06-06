@@ -3,7 +3,8 @@ RUN apk update && apk add gcc g++ make libpcap-dev libpcap
 RUN CGO_ENABLED=1 xcaddy build \
     --with github.com/mholt/caddy-ratelimit \
     --with github.com/prosopo/chaddy \
-    --with github.com/lolPants/caddy-requestid
+    --with github.com/lolPants/caddy-requestid \
+    --with github.com/mholt/caddy-l4
 FROM caddy:2
 RUN apk update && apk add libpcap
 RUN apk add --no-cache curl

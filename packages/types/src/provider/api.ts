@@ -143,6 +143,8 @@ export enum AdminApiPaths {
 	ClearAllCounters = "/v1/prosopo/provider/admin/counters/clear-all",
 	SiteKeyRemove = "/v1/prosopo/provider/admin/sitekey/remove",
 	SiteKeysRemove = "/v1/prosopo/provider/admin/sitekeys/remove",
+	// Receives batched DNS observation events from the dns sidecar.
+	DnsEvent = "/v1/prosopo/provider/admin/dns/event",
 }
 
 export type CombinedApiPaths = ClientApiPaths | AdminApiPaths;
@@ -184,6 +186,10 @@ export const ProviderDefaultRateLimits = {
 	[AdminApiPaths.ClearAllCounters]: { windowMs: 60000, limit: 10 },
 	[AdminApiPaths.SiteKeyRemove]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.SiteKeysRemove]: { windowMs: 60000, limit: 5 },
+	// Sidecar batches events and POSTs at shipper_flush_ms cadence
+	// (1s default), so a high per-minute ceiling is fine. Single ingest
+	// path per pronode → no cross-tenant fairness concerns.
+	[AdminApiPaths.DnsEvent]: { windowMs: 60000, limit: 600 },
 };
 
 type RateLimit = {
@@ -393,6 +399,8 @@ export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 	// field after reading the header, so downstream widget code consumes it
 	// the same way regardless of transport.
 	[ApiParams.hp]?: string;
+	// Per-session DNS observation URL; undefined when no dns sidecar.
+	dns_url?: string;
 }
 
 export interface PowCaptchaSolutionEscalation {
@@ -425,6 +433,42 @@ export const ServerPowCaptchaVerifyRequestBody = object({
 export type ServerPowCaptchaVerifyRequestBodyOutput = output<
 	typeof ServerPowCaptchaVerifyRequestBody
 >;
+
+// ── DNS observation event ingestion (wire-compat with the dns sidecar) ─
+export const DnsEventKindSchema = union([
+	string().regex(/^dns$/),
+	string().regex(/^http$/),
+]);
+export type DnsEventKind = "dns" | "http";
+
+export const DnsEventSchema = object({
+	kind: DnsEventKindSchema,
+	ts: string(), // ISO-8601 UTC (serde default for chrono DateTime<Utc>)
+	src_ip: string(),
+	// Per-session ID carried in the URL subdomain — captures the procaptcha
+	// sessionId. Named `jti` on the wire for cross-product compatibility
+	// with Protect's session identifier.
+	jti: string().optional(),
+	site_key: string().optional(),
+	subzone: string().optional(),
+	qname: string().optional(),
+	qtype: string().optional(),
+	sni: string().optional(),
+	path: string().optional(),
+	user_agent: string().optional(),
+	path_valid: boolean().optional(),
+});
+export type DnsEvent = output<typeof DnsEventSchema>;
+
+export const DnsEventBatchSchema = object({
+	events: array(DnsEventSchema),
+});
+export type DnsEventBatch = output<typeof DnsEventBatchSchema>;
+
+export interface DnsEventResponseBody extends ApiResponse {
+	stored: number;
+	errors: number;
+}
 
 export const GetPowCaptchaChallengeRequestBody = object({
 	[ApiParams.user]: string(),

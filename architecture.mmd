@@ -52,6 +52,7 @@ graph TB
             DetectorMgmt["Detector Key Management<br/>update / remove"]
             DecisionMachineMgmt["Decision Machine Management<br/>create / get / remove"]
             MaintenanceToggle["Maintenance Mode Toggle"]
+            DnsEventEP["POST .../admin/dns/event<br/>(receives DNS event batches from the dns sidecar)"]
         end
 
         subgraph UapAPI["User Access Policy API (requires JWT)"]
@@ -81,6 +82,17 @@ graph TB
 
     %% ===== EXTERNAL =====
     ProviderList["Provider List<br/>provider-list.prosopo.io"]
+
+    %% ===== DNS SIDECAR =====
+    subgraph DnsEventSidecar["DNS Sidecar (prosopo/dns, per pronode)"]
+        direction TB
+        DnsAuth["Authoritative DNS<br/>(UDP+TCP 53, *.{subzone})"]
+        DnsPixel["HTTPS Pixel<br/>(internal 9362, fronted by Caddy)"]
+    end
+
+    Widget -->|"no-cors GET dns_url"| DnsPixel
+    DnsAuth -.->|"DNS event"| DnsEventEP
+    DnsPixel -.->|"HTTP event"| DnsEventEP
 
     %% ===== DEVELOPER FLOW =====
     Developer -->|"1. Sign up at prosopo.io<br/>get site key + secret"| DappBackend
