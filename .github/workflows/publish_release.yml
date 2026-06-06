@@ -100,14 +100,26 @@ jobs:
         # token. No NPM_TOKEN secret required. Each workspace package must
         # be registered as a trusted publisher on npmjs.com pointing at
         # this workflow file.
-        # `--provenance` attaches a signed Sigstore attestation linking
-        # each tarball back to this workflow run. The registry verifies
-        # `repository.url` on every published manifest against the OIDC
-        # claim, so every workspace package.json must declare
-        # `repository: { url: git+https://github.com/prosopo/captcha.git, directory: <path> }`.
+        #
+        # `npm --workspaces publish` blindly tries every workspace which
+        # fails the whole release the moment one package is already at
+        # its current version on the registry (the common case in a
+        # changeset-driven monorepo — only bumped packages get fresh
+        # versions). `changeset publish` consults `.changeset/` + the
+        # registry and only publishes packages whose local version is
+        # ahead of npm.
+        #
+        # NPM_CONFIG_PROVENANCE=true is the env-var form of
+        # `npm publish --provenance`; changeset publish delegates to npm
+        # CLI and inherits the flag, so each tarball gets a Sigstore
+        # attestation linking it to this workflow run. Provenance
+        # verification requires `repository.url` on every published
+        # manifest to match the OIDC claim.
+        env:
+          NPM_CONFIG_PROVENANCE: 'true'
         run: |
-          echo "Publishing all packages to npm via trusted publishing"
-          npm --workspaces publish --access=public --provenance
+          echo "Publishing changed packages via @changesets/cli"
+          npx @changesets/cli publish
 
       - name: Publish production image to Docker Hub
         run: |
