@@ -73,7 +73,8 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+ssh://git@github.com/prosopo/provider.git"
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "packages/provider"
 	},
 	"description": "The easiest way to deploy the Prosopo contract and run the Provider node is via the [captcha repository](https://github.com/prosopo/captcha/).",
 	"bugs": {

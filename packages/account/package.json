@@ -36,7 +36,8 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+ssh://git@github.com/prosopo/types.git"
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "packages/account"
 	},
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",

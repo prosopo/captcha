@@ -28,7 +28,8 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+ssh://git@github.com/prosopo/captcha.git"
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "packages/redis-client"
 	},
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
