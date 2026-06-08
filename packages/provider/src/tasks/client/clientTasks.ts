@@ -120,7 +120,7 @@ export class ClientTaskManager {
 
 			await this.processBatchesWithCursor(
 				async (skip: number) =>
-					await this.providerDB.getUnstoredDappUserCommitments(
+					await this.providerDB.getUnstoredImageCaptchas(
 						BATCH_SIZE,
 						skip,
 					),
@@ -134,14 +134,14 @@ export class ClientTaskManager {
 					// inserts with `id: ""` until the user submits a solution.
 					// Defense in depth: even if a stray placeholder slips into
 					// the partial index, never pass `id: ""` to
-					// markDappUserCommitmentsStored — Mongo collapses
+					// markImageCaptchasStored — Mongo collapses
 					// `{ id: { $in: ["", "", ...] } }` to a single empty-string
 					// bound and the IXSCAN on `id_-1` then walks every
 					// empty-id document on the node (~100K rows).
 
 					if (filteredBatch.length > 0) {
 						await captchaDB.saveCaptchas([], filteredBatch, []);
-						await this.providerDB.markDappUserCommitmentsStored(
+						await this.providerDB.markImageCaptchasStored(
 							filteredBatch.map((commitment) => commitment.id),
 							sweepStartedAt,
 						);

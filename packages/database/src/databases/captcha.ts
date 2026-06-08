@@ -17,13 +17,13 @@ import { type Logger, getLogger } from "@prosopo/logger";
 import {
 	type CaptchaProperties,
 	type ICaptchaDatabase,
+	type ImageCaptchaRecord,
 	type PoWCaptchaRecord,
+	StoredImageCaptchaRecordSchema,
 	StoredPoWCaptchaRecordSchema,
 	type StoredSession,
 	StoredSessionRecordSchema,
-	StoredUserCommitmentRecordSchema,
 	type Tables,
-	type UserCommitmentRecord,
 } from "@prosopo/types-database";
 import type { RootFilterQuery } from "mongoose";
 import { MongoDatabase } from "../base/index.js";
@@ -51,7 +51,7 @@ const CAPTCHA_TABLES = [
 	{
 		collectionName: TableNames.commitment,
 		modelName: "UserCommitment",
-		schema: StoredUserCommitmentRecordSchema,
+		schema: StoredImageCaptchaRecordSchema,
 	},
 ];
 
@@ -126,7 +126,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 
 	async saveCaptchas(
 		sessionEvents: StoredSession[],
-		imageCaptchaEvents: UserCommitmentRecord[],
+		imageCaptchaEvents: ImageCaptchaRecord[],
 		powCaptchaEvents: PoWCaptchaRecord[],
 	) {
 		await this.connect();
@@ -206,7 +206,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		filter: RootFilterQuery<CaptchaProperties> = {},
 		limit = 100,
 	): Promise<{
-		userCommitmentRecords: UserCommitmentRecord[];
+		imageCaptchaRecords: ImageCaptchaRecord[];
 		powCaptchaRecords: PoWCaptchaRecord[];
 	}> {
 		await this.connect();
@@ -215,7 +215,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 			const commitmentResults = await this.tables.commitment
 				.find(filter)
 				.limit(limit)
-				.lean<UserCommitmentRecord[]>();
+				.lean<ImageCaptchaRecord[]>();
 
 			const powCaptchaResults = await this.tables.powcaptcha
 				.find(filter)
@@ -223,7 +223,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 				.lean<PoWCaptchaRecord[]>();
 
 			return {
-				userCommitmentRecords: commitmentResults,
+				imageCaptchaRecords: commitmentResults,
 				powCaptchaRecords: powCaptchaResults,
 			};
 		} catch (error) {

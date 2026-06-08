@@ -166,19 +166,19 @@ describe("ImgCaptchaManager", () => {
 			getPendingImageCommitment: vi.fn(),
 			updatePendingImageCommitmentStatus: vi.fn(),
 			storeDappUserSolution: vi.fn(),
-			approveDappUserCommitment: vi.fn(),
-			disapproveDappUserCommitment: vi.fn(),
-			updateDappUserCommitment: vi.fn(),
+			approveImageCaptcha: vi.fn(),
+			disapproveImageCaptcha: vi.fn(),
+			updateImageCaptcha: vi.fn(),
 			getCaptchaById: vi.fn(),
-			getDappUserCommitmentById: vi.fn(),
-			getDappUserCommitmentByAccount: vi.fn(),
-			markDappUserCommitmentsChecked: vi.fn(),
+			getImageCaptchaById: vi.fn(),
+			getImageCaptchaByAccount: vi.fn(),
+			markImageCaptchasChecked: vi.fn(),
 			getSessionRecordBySessionId: vi.fn(),
 			updateSessionRecord: vi.fn(),
 			getSpamEmailDomain: vi.fn(),
 			getClientRecord: vi.fn(),
 			getSolutionByCaptchaId: vi.fn(),
-			storeUserImageCaptchaSolution: vi.fn(),
+			storeImageCaptchaSolution: vi.fn(),
 		} as unknown as IProviderDatabase;
 
 		pair = {
@@ -550,12 +550,12 @@ describe("ImgCaptchaManager", () => {
 
 			expect(result.verified).toBe(false);
 			expect(compareCaptchaSolutions).toHaveBeenCalled();
-			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith(
+			expect(db.disapproveImageCaptcha).toHaveBeenCalledWith(
 				"commitmentId",
 				"CAPTCHA.INVALID_SOLUTION",
 				expect.anything(),
 			);
-			expect(db.approveDappUserCommitment).not.toHaveBeenCalled();
+			expect(db.approveImageCaptcha).not.toHaveBeenCalled();
 		});
 	});
 
@@ -582,10 +582,10 @@ describe("ImgCaptchaManager", () => {
 			lastUpdatedTimestamp: new Date(),
 		};
 		// biome-ignore lint/suspicious/noExplicitAny: tests
-		(db.getDappUserCommitmentById as any).mockResolvedValue(dappUserCommitment);
+		(db.getImageCaptchaById as any).mockResolvedValue(dappUserCommitment);
 
 		const result =
-			await imgCaptchaManager.getDappUserCommitmentById(commitmentId);
+			await imgCaptchaManager.getImageCaptchaById(commitmentId);
 
 		expect(result).toEqual(dappUserCommitment);
 	});
@@ -593,14 +593,14 @@ describe("ImgCaptchaManager", () => {
 	it("should throw an error if dapp user commitment is not found by ID", async () => {
 		const commitmentId = "commitmentId";
 		// biome-ignore lint/suspicious/noExplicitAny: tests
-		(db.getDappUserCommitmentById as any).mockResolvedValue(null);
+		(db.getImageCaptchaById as any).mockResolvedValue(null);
 
 		await expect(
-			imgCaptchaManager.getDappUserCommitmentById(commitmentId),
+			imgCaptchaManager.getImageCaptchaById(commitmentId),
 		).rejects.toThrow(
 			new ProsopoEnvError("CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND", {
 				context: {
-					failedFuncName: "getDappUserCommitmentById",
+					failedFuncName: "getImageCaptchaById",
 					commitmentId: commitmentId,
 				},
 			}),
@@ -633,11 +633,11 @@ describe("ImgCaptchaManager", () => {
 			} as Partial<UserCommitment>,
 		];
 		// biome-ignore lint/suspicious/noExplicitAny: tests
-		(db.getDappUserCommitmentByAccount as any).mockResolvedValue(
+		(db.getImageCaptchaByAccount as any).mockResolvedValue(
 			dappUserCommitments,
 		);
 
-		const result = await imgCaptchaManager.getDappUserCommitmentByAccount(
+		const result = await imgCaptchaManager.getImageCaptchaByAccount(
 			userAccount,
 			dappAccount,
 		);
@@ -650,11 +650,11 @@ describe("ImgCaptchaManager", () => {
 		const dappAccount = "dappAccount";
 		const dappUserCommitments: UserCommitment[] = [];
 		// biome-ignore lint/suspicious/noExplicitAny: tests
-		(db.getDappUserCommitmentByAccount as any).mockResolvedValue(
+		(db.getImageCaptchaByAccount as any).mockResolvedValue(
 			dappUserCommitments,
 		);
 
-		const result = await imgCaptchaManager.getDappUserCommitmentByAccount(
+		const result = await imgCaptchaManager.getImageCaptchaByAccount(
 			userAccount,
 			dappAccount,
 		);
@@ -693,9 +693,9 @@ describe("ImgCaptchaManager", () => {
 
 			// Mock database calls
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.getDappUserCommitmentById as any).mockResolvedValue(commitment);
+			(db.getImageCaptchaById as any).mockResolvedValue(commitment);
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.disapproveDappUserCommitment as any).mockResolvedValue(undefined);
+			(db.disapproveImageCaptcha as any).mockResolvedValue(undefined);
 
 			// Mock decision machine to return Deny
 			const originalDecide =
@@ -723,7 +723,7 @@ describe("ImgCaptchaManager", () => {
 			expect(result.status).toBe("Suspicious behavior detected");
 
 			// Verify commitment was disapproved via streaming-aware method
-			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith(
+			expect(db.disapproveImageCaptcha).toHaveBeenCalledWith(
 				commitmentId,
 				expect.stringContaining("Suspicious behavior"),
 			);
@@ -763,7 +763,7 @@ describe("ImgCaptchaManager", () => {
 
 			// Mock database calls
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.getDappUserCommitmentById as any).mockResolvedValue(commitment);
+			(db.getImageCaptchaById as any).mockResolvedValue(commitment);
 
 			// Mock decision machine to throw an error
 			const originalDecide =
@@ -820,7 +820,7 @@ describe("ImgCaptchaManager", () => {
 
 			// Mock database calls
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.getDappUserCommitmentById as any).mockResolvedValue(commitment);
+			(db.getImageCaptchaById as any).mockResolvedValue(commitment);
 
 			// Mock decision machine to return Allow
 			const originalDecide =
@@ -897,7 +897,7 @@ describe("ImgCaptchaManager", () => {
 			};
 
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.getDappUserCommitmentById as any).mockResolvedValue(commitment);
+			(db.getImageCaptchaById as any).mockResolvedValue(commitment);
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.getSessionRecordBySessionId as any).mockResolvedValue(undefined);
 
@@ -956,11 +956,11 @@ describe("ImgCaptchaManager", () => {
 			};
 
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.getDappUserCommitmentById as any).mockResolvedValue(commitment);
+			(db.getImageCaptchaById as any).mockResolvedValue(commitment);
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.getSessionRecordBySessionId as any).mockResolvedValue(undefined);
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.disapproveDappUserCommitment as any).mockResolvedValue(undefined);
+			(db.disapproveImageCaptcha as any).mockResolvedValue(undefined);
 
 			// Mock decision machine to deny
 			const originalDecide =
@@ -1023,7 +1023,7 @@ describe("ImgCaptchaManager", () => {
 			};
 
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.getDappUserCommitmentById as any).mockResolvedValue(commitment);
+			(db.getImageCaptchaById as any).mockResolvedValue(commitment);
 
 			// Mock decision machine to allow
 			const originalDecide =
@@ -1081,15 +1081,15 @@ describe("ImgCaptchaManager", () => {
 
 			// Mock database calls
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.getDappUserCommitmentById as any).mockResolvedValue(commitment);
+			(db.getImageCaptchaById as any).mockResolvedValue(commitment);
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.markDappUserCommitmentsChecked as any).mockResolvedValue(undefined);
+			(db.markImageCaptchasChecked as any).mockResolvedValue(undefined);
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.getSpamEmailDomain as any).mockResolvedValue({
 				domain: "spammydomain.com",
 			});
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.disapproveDappUserCommitment as any).mockResolvedValue(undefined);
+			(db.disapproveImageCaptcha as any).mockResolvedValue(undefined);
 
 			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
 				userAccount,
@@ -1108,7 +1108,7 @@ describe("ImgCaptchaManager", () => {
 			expect(result.verified).toBe(false);
 			expect(result.status).toBe("API.SPAM_EMAIL_DOMAIN");
 			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("spammydomain.com");
-			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith(
+			expect(db.disapproveImageCaptcha).toHaveBeenCalledWith(
 				commitmentId,
 				"API.SPAM_EMAIL_DOMAIN",
 			);
@@ -1145,13 +1145,13 @@ describe("ImgCaptchaManager", () => {
 
 			// Mock database calls
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.getDappUserCommitmentById as any).mockResolvedValue(commitment);
+			(db.getImageCaptchaById as any).mockResolvedValue(commitment);
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.markDappUserCommitmentsChecked as any).mockResolvedValue(undefined);
+			(db.markImageCaptchasChecked as any).mockResolvedValue(undefined);
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.getSpamEmailDomain as any).mockResolvedValue(null);
-			// Reset disapproveDappUserCommitment mock
-			db.disapproveDappUserCommitment = vi
+			// Reset disapproveImageCaptcha mock
+			db.disapproveImageCaptcha = vi
 				.fn()
 				// biome-ignore lint/suspicious/noExplicitAny: tests
 				.mockResolvedValue(undefined) as any;
@@ -1187,7 +1187,7 @@ describe("ImgCaptchaManager", () => {
 				expect(result.verified).toBe(true);
 				expect(result.status).toBe("API.USER_VERIFIED");
 				expect(db.getSpamEmailDomain).toHaveBeenCalledWith("legitimate.com");
-				expect(db.disapproveDappUserCommitment).not.toHaveBeenCalledWith(
+				expect(db.disapproveImageCaptcha).not.toHaveBeenCalledWith(
 					commitmentId,
 					"API.SPAM_EMAIL_DOMAIN",
 				);
@@ -1229,9 +1229,9 @@ describe("ImgCaptchaManager", () => {
 
 			// Mock database calls
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.getDappUserCommitmentById as any).mockResolvedValue(commitment);
+			(db.getImageCaptchaById as any).mockResolvedValue(commitment);
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.markDappUserCommitmentsChecked as any).mockResolvedValue(undefined);
+			(db.markImageCaptchasChecked as any).mockResolvedValue(undefined);
 
 			// Mock decision machine to allow
 			const originalDecide =
@@ -1303,15 +1303,15 @@ describe("ImgCaptchaManager", () => {
 
 			// Mock database calls
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.getDappUserCommitmentById as any).mockResolvedValue(commitment);
+			(db.getImageCaptchaById as any).mockResolvedValue(commitment);
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.markDappUserCommitmentsChecked as any).mockResolvedValue(undefined);
+			(db.markImageCaptchasChecked as any).mockResolvedValue(undefined);
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.getSpamEmailDomain as any).mockResolvedValue({
 				domain: "spammydomain.com",
 			});
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.disapproveDappUserCommitment as any).mockResolvedValue(undefined);
+			(db.disapproveImageCaptcha as any).mockResolvedValue(undefined);
 
 			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
 				userAccount,
@@ -1330,7 +1330,7 @@ describe("ImgCaptchaManager", () => {
 			expect(result.verified).toBe(false);
 			expect(result.status).toBe("API.SPAM_EMAIL_DOMAIN");
 			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("spammydomain.com");
-			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith(
+			expect(db.disapproveImageCaptcha).toHaveBeenCalledWith(
 				commitmentId,
 				"API.SPAM_EMAIL_DOMAIN",
 			);
@@ -1367,15 +1367,15 @@ describe("ImgCaptchaManager", () => {
 
 			// Mock database calls
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.getDappUserCommitmentById as any).mockResolvedValue(commitment);
+			(db.getImageCaptchaById as any).mockResolvedValue(commitment);
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.markDappUserCommitmentsChecked as any).mockResolvedValue(undefined);
+			(db.markImageCaptchasChecked as any).mockResolvedValue(undefined);
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.getSpamEmailDomain as any).mockResolvedValue({
 				domain: "spammydomain.com",
 			});
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.disapproveDappUserCommitment as any).mockResolvedValue(undefined);
+			(db.disapproveImageCaptcha as any).mockResolvedValue(undefined);
 
 			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
 				userAccount,
@@ -1427,9 +1427,9 @@ describe("ImgCaptchaManager", () => {
 
 			// Mock database calls
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.getDappUserCommitmentById as any).mockResolvedValue(commitment);
+			(db.getImageCaptchaById as any).mockResolvedValue(commitment);
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.markDappUserCommitmentsChecked as any).mockResolvedValue(undefined);
+			(db.markImageCaptchasChecked as any).mockResolvedValue(undefined);
 			// Mock database error when checking spam
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.getSpamEmailDomain as any).mockRejectedValue(
@@ -1476,7 +1476,7 @@ describe("ImgCaptchaManager", () => {
 			}
 		});
 
-		it("should not call disapproveDappUserCommitment when commitmentId is undefined", async () => {
+		it("should not call disapproveImageCaptcha when commitmentId is undefined", async () => {
 			const userAccount = "userAccount";
 			const dappAccount = "dappAccount";
 			const spamEmail = "user@spammydomain.com";
@@ -1506,16 +1506,16 @@ describe("ImgCaptchaManager", () => {
 
 			// Mock database calls to find commitment by account
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.getDappUserCommitmentByAccount as any).mockResolvedValue([
+			(db.getImageCaptchaByAccount as any).mockResolvedValue([
 				commitment,
 			]);
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.markDappUserCommitmentsChecked as any).mockResolvedValue(undefined);
+			(db.markImageCaptchasChecked as any).mockResolvedValue(undefined);
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.getSpamEmailDomain as any).mockResolvedValue({
 				domain: "spammydomain.com",
 			});
-			db.disapproveDappUserCommitment = vi
+			db.disapproveImageCaptcha = vi
 				.fn()
 				// biome-ignore lint/suspicious/noExplicitAny: tests
 				.mockResolvedValue(undefined) as any;
@@ -1538,7 +1538,7 @@ describe("ImgCaptchaManager", () => {
 			expect(result.status).toBe("API.SPAM_EMAIL_DOMAIN");
 			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("spammydomain.com");
 			// Should not call disapprove when commitmentId is undefined
-			expect(db.disapproveDappUserCommitment).not.toHaveBeenCalled();
+			expect(db.disapproveImageCaptcha).not.toHaveBeenCalled();
 		});
 	});
 
@@ -1573,11 +1573,11 @@ describe("ImgCaptchaManager", () => {
 			const commitmentId = "webviewScoreCommitmentId";
 
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.getDappUserCommitmentById as any).mockResolvedValue(
+			(db.getImageCaptchaById as any).mockResolvedValue(
 				baseCommitment(commitmentId),
 			);
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.markDappUserCommitmentsChecked as any).mockResolvedValue(undefined);
+			(db.markImageCaptchasChecked as any).mockResolvedValue(undefined);
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.getSessionRecordBySessionId as any).mockResolvedValue({
 				sessionId,
@@ -1586,7 +1586,7 @@ describe("ImgCaptchaManager", () => {
 				reason: "WEBVIEW_DETECTED",
 			});
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.disapproveDappUserCommitment as any).mockResolvedValue(undefined);
+			(db.disapproveImageCaptcha as any).mockResolvedValue(undefined);
 
 			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
 				"userAccount",
@@ -1600,7 +1600,7 @@ describe("ImgCaptchaManager", () => {
 
 			expect(result.verified).toBe(false);
 			expect(result.status).toBe("API.DISALLOWED_WEBVIEW");
-			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith(
+			expect(db.disapproveImageCaptcha).toHaveBeenCalledWith(
 				commitmentId,
 				"API.DISALLOWED_WEBVIEW",
 			);
@@ -1616,18 +1616,18 @@ describe("ImgCaptchaManager", () => {
 				true,
 			);
 			// Decision machine must not be consulted once the request is blocked.
-			expect(db.approveDappUserCommitment).not.toHaveBeenCalled();
+			expect(db.approveImageCaptcha).not.toHaveBeenCalled();
 		});
 
 		it("should disapprove when session.webView is true even if scoreComponents.webView is unset", async () => {
 			const commitmentId = "webviewBoolCommitmentId";
 
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.getDappUserCommitmentById as any).mockResolvedValue(
+			(db.getImageCaptchaById as any).mockResolvedValue(
 				baseCommitment(commitmentId),
 			);
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.markDappUserCommitmentsChecked as any).mockResolvedValue(undefined);
+			(db.markImageCaptchasChecked as any).mockResolvedValue(undefined);
 			// Webview detected but reached image captcha via a non-webview
 			// frictionless branch (UA mismatch, context-aware, etc.), so
 			// `scoreComponents.webView` is absent.
@@ -1639,7 +1639,7 @@ describe("ImgCaptchaManager", () => {
 				reason: "USER_AGENT_MISMATCH",
 			});
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.disapproveDappUserCommitment as any).mockResolvedValue(undefined);
+			(db.disapproveImageCaptcha as any).mockResolvedValue(undefined);
 
 			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
 				"userAccount",
@@ -1653,7 +1653,7 @@ describe("ImgCaptchaManager", () => {
 
 			expect(result.verified).toBe(false);
 			expect(result.status).toBe("API.DISALLOWED_WEBVIEW");
-			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith(
+			expect(db.disapproveImageCaptcha).toHaveBeenCalledWith(
 				commitmentId,
 				"API.DISALLOWED_WEBVIEW",
 			);
@@ -1663,11 +1663,11 @@ describe("ImgCaptchaManager", () => {
 			const commitmentId = "webviewAllowedCommitmentId";
 
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.getDappUserCommitmentById as any).mockResolvedValue(
+			(db.getImageCaptchaById as any).mockResolvedValue(
 				baseCommitment(commitmentId),
 			);
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.markDappUserCommitmentsChecked as any).mockResolvedValue(undefined);
+			(db.markImageCaptchasChecked as any).mockResolvedValue(undefined);
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.getSessionRecordBySessionId as any).mockResolvedValue({
 				sessionId,
@@ -1696,7 +1696,7 @@ describe("ImgCaptchaManager", () => {
 
 				expect(result.verified).toBe(true);
 				expect(result.status).toBe("API.USER_VERIFIED");
-				expect(db.approveDappUserCommitment).toHaveBeenCalledWith(commitmentId);
+				expect(db.approveImageCaptcha).toHaveBeenCalledWith(commitmentId);
 			} finally {
 				// biome-ignore lint/suspicious/noExplicitAny: tests
 				(imgCaptchaManager as any).decisionMachineRunner.decide =

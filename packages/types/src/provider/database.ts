@@ -50,6 +50,7 @@ import type {
 import type { PuzzleEvent, RequestHeaders } from "./api.js";
 import type { SimdReadings } from "./detection.js";
 import type { FrictionlessReason, ResultReason } from "./reasons.js";
+import { RequestType, RequestTypeSchema } from "./requestType.js";
 
 export interface BrowserInfo {
 	name: string;
@@ -165,7 +166,30 @@ export enum CaptchaLabel {
 
 export const CaptchaLabelSchema = nativeEnum(CaptchaLabel);
 
+/**
+ * Fields common to every persisted captcha request, regardless of kind
+ * (session / powcaptcha / imagecaptcha / puzzle). This is the shared shape the
+ * consolidation builds on: the `requestType` discriminator plus the
+ * cross-cutting correlation / staging fields that already exist on every
+ * record. Kept additive for now — `StoredCaptcha` and `Session` carry these
+ * fields directly rather than `extends`ing this, so no existing record shape is
+ * tightened. Once the records live in one `requests` collection this becomes
+ * the required base for the discriminated union.
+ */
+export interface RequestRecord {
+	requestType?: RequestType;
+	sessionId?: string;
+	requestedAtTimestamp?: Date;
+	lastUpdatedTimestamp?: Date;
+	storedAtTimestamp?: Date;
+	pendingStage?: boolean;
+}
+
 export interface StoredCaptcha {
+	// Discriminator for the unified request model. Optional for back-compat
+	// with records written before the field existed; writers stamp it via the
+	// mongoose schema default. See {@link RequestRecord}.
+	requestType?: RequestType;
 	result: {
 		status: CaptchaStatus;
 		reason?: ResultReason;
@@ -216,7 +240,7 @@ export interface StoredCaptcha {
 	labelledAt?: Date;
 }
 
-export interface UserCommitment extends StoredCaptcha {
+export interface ImageCaptcha extends StoredCaptcha {
 	userAccount: string;
 	dappAccount: string;
 	datasetId: string;
@@ -229,6 +253,12 @@ export interface UserCommitment extends StoredCaptcha {
 	threshold: number;
 	deadlineTimestamp: Date;
 }
+
+/**
+ * @deprecated Use {@link ImageCaptcha}. Retained as a back-compat alias while
+ * consumers migrate off the old name; remove in a later cleanup.
+ */
+export type UserCommitment = ImageCaptcha;
 
 // Runtime parsing stays permissive (`string().optional()`) because decision
 // machines are operator-authored JS — their `reason` is whatever string the
@@ -260,7 +290,7 @@ export const ClientMetaDataDbSchema = object({
 	hp: string().optional(),
 }) satisfies ZodType<ClientMetaData, ZodTypeDef, unknown>;
 
-export const UserCommitmentSchema = object({
+export const ImageCaptchaSchema = object({
 	userAccount: string(),
 	dappAccount: string(),
 	datasetId: string(),
@@ -280,6 +310,7 @@ export const UserCommitmentSchema = object({
 	requestedAtTimestamp: date(),
 	lastUpdatedTimestamp: date().optional(),
 	pendingStage: boolean().optional(),
+	requestType: RequestTypeSchema.optional(),
 	sessionId: string().optional(),
 	coords: array(array(tuple([number(), number()]))).optional(),
 	// Pending request fields for image captcha workflow
@@ -296,7 +327,13 @@ export const UserCommitmentSchema = object({
 	labelReason: string().optional(),
 	labelledBy: string().optional(),
 	labelledAt: date().optional(),
-}) satisfies ZodType<UserCommitment, ZodTypeDef, unknown>;
+}) satisfies ZodType<ImageCaptcha, ZodTypeDef, unknown>;
+
+/**
+ * @deprecated Use {@link ImageCaptchaSchema}. Back-compat alias; remove in a
+ * later cleanup.
+ */
+export const UserCommitmentSchema = ImageCaptchaSchema;
 
 // Zod schema for ScoreComponents
 export const ScoreComponentsSchema = object({
@@ -381,6 +418,7 @@ export const SessionSchema = object({
 	storedAtTimestamp: date().optional(),
 	lastUpdatedTimestamp: date().optional(),
 	pendingStage: boolean().optional(),
+	requestType: RequestTypeSchema.optional(),
 	deleted: boolean().optional(),
 	userSitekeyIpHash: string().optional(),
 	webView: boolean(),
@@ -446,6 +484,10 @@ export type Session = {
 	lastUpdatedTimestamp?: Date;
 	// See StoredCaptcha.pendingStage — same semantics on Session records.
 	pendingStage?: boolean;
+	// Discriminator for the unified request model. Always `RequestType.session`
+	// for session records; stamped via the mongoose schema default. Optional for
+	// back-compat with records written before the field existed.
+	requestType?: RequestType;
 	deleted?: boolean;
 	userSitekeyIpHash?: string;
 	webView: boolean;
@@ -523,6 +565,7 @@ export const PoWCaptchaStoredSchema = object({
 	parsedUserAgentInfo: any().optional(),
 	storedAtTimestamp: date().optional(),
 	lastUpdatedTimestamp: date().optional(),
+	requestType: RequestTypeSchema.optional(),
 	sessionId: string().optional(),
 	coords: array(array(tuple([number(), number()]))).optional(),
 	mouseEvents: array(object({}).catchall(any())).optional(),
@@ -581,13 +624,23 @@ export const UserSolutionSchema = CaptchaSolutionSchema.extend({
 
 export type UserSolution = zInfer<typeof UserSolutionSchema>;
 
-export const UserCommitmentWithSolutionsSchema = UserCommitmentSchema.extend({
+export const ImageCaptchaWithSolutionsSchema = ImageCaptchaSchema.extend({
 	captchas: array(UserSolutionSchema),
 });
 
-export type UserCommitmentWithSolutions = zInfer<
-	typeof UserCommitmentWithSolutionsSchema
+export type ImageCaptchaWithSolutions = zInfer<
+	typeof ImageCaptchaWithSolutionsSchema
 >;
+
+/**
+ * @deprecated Use {@link ImageCaptchaWithSolutionsSchema}. Back-compat alias.
+ */
+export const UserCommitmentWithSolutionsSchema = ImageCaptchaWithSolutionsSchema;
+
+/**
+ * @deprecated Use {@link ImageCaptchaWithSolutions}. Back-compat alias.
+ */
+export type UserCommitmentWithSolutions = ImageCaptchaWithSolutions;
 
 export type DetectorKey = {
 	detectorKey: string;

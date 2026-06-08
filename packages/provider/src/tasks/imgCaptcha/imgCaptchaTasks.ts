@@ -399,7 +399,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 					clientMetaData: { hp: clientMetaData.hp },
 				}),
 			};
-			await this.db.storeUserImageCaptchaSolution(receivedCaptchas, commit);
+			await this.db.storeImageCaptchaSolution(receivedCaptchas, commit);
 
 			const solutionRecords = await Promise.all(
 				storedCaptchas.map(async (captcha) => {
@@ -420,7 +420,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			if (containsIdenticalPairs(pairs) && process.env.NODE_ENV !== "test") {
 				// Write commitment disapproval and session update in parallel
 				const writePromises: Promise<void>[] = [
-					this.db.disapproveDappUserCommitment(
+					this.db.disapproveImageCaptcha(
 						commitmentId,
 						"CAPTCHA.INVALID_SOLUTION",
 						pairs,
@@ -466,7 +466,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				};
 				// Write commitment approval and session update in parallel
 				const writePromises: Promise<void>[] = [
-					this.db.approveDappUserCommitment(commitmentId, pairs),
+					this.db.approveImageCaptcha(commitmentId, pairs),
 				];
 				if (pendingRecord.sessionId) {
 					writePromises.push(
@@ -481,7 +481,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			} else {
 				// Write commitment disapproval and session update in parallel
 				const writePromises: Promise<void>[] = [
-					this.db.disapproveDappUserCommitment(
+					this.db.disapproveImageCaptcha(
 						commitmentId,
 						"CAPTCHA.INVALID_SOLUTION",
 						pairs,
@@ -599,15 +599,15 @@ export class ImgCaptchaManager extends CaptchaManager {
 	/*
 	 * Get dapp user solution from database
 	 */
-	async getDappUserCommitmentById(
+	async getImageCaptchaById(
 		commitmentId: string,
 	): Promise<UserCommitment> {
 		const dappUserSolution =
-			await this.db.getDappUserCommitmentById(commitmentId);
+			await this.db.getImageCaptchaById(commitmentId);
 		if (!dappUserSolution) {
 			throw new ProsopoEnvError("CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND", {
 				context: {
-					failedFuncName: this.getDappUserCommitmentById.name,
+					failedFuncName: this.getImageCaptchaById.name,
 					commitmentId: commitmentId,
 				},
 			});
@@ -616,11 +616,11 @@ export class ImgCaptchaManager extends CaptchaManager {
 	}
 
 	/* Check if dapp user has verified solution in cache */
-	async getDappUserCommitmentByAccount(
+	async getImageCaptchaByAccount(
 		userAccount: string,
 		dappAccount: string,
 	): Promise<UserCommitment | undefined> {
-		const dappUserSolutions = await this.db.getDappUserCommitmentByAccount(
+		const dappUserSolutions = await this.db.getImageCaptchaByAccount(
 			userAccount,
 			dappAccount,
 		);
@@ -651,8 +651,8 @@ export class ImgCaptchaManager extends CaptchaManager {
 		storeMetadata = false,
 	): Promise<ImageVerificationResponse> {
 		const solution = await (commitmentId
-			? this.getDappUserCommitmentById(commitmentId)
-			: this.getDappUserCommitmentByAccount(user, dapp));
+			? this.getImageCaptchaById(commitmentId)
+			: this.getImageCaptchaByAccount(user, dapp));
 
 		// No solution exists
 		if (!solution) {
@@ -676,7 +676,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			};
 		}
 
-		await this.db.markDappUserCommitmentsChecked([solution.id]);
+		await this.db.markImageCaptchasChecked([solution.id]);
 		// -- END WARNING --
 
 		// A solution exists but is disapproved
@@ -972,7 +972,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		}
 
 		// Batch writes: separate non-streaming updates from streaming result writes.
-		// - providedIp / metadata use updateDappUserCommitment (no central streaming)
+		// - providedIp / metadata use updateImageCaptcha (no central streaming)
 		// - approve/disapprove use dedicated methods that trigger centralStreamer
 		const writePromises: Promise<void>[] = [];
 
@@ -986,17 +986,17 @@ export class ImgCaptchaManager extends CaptchaManager {
 		}
 		if (Object.keys(sideUpdates).length > 0) {
 			writePromises.push(
-				this.db.updateDappUserCommitment(solution.id, sideUpdates),
+				this.db.updateImageCaptcha(solution.id, sideUpdates),
 			);
 		}
 
 		// Write result via the streaming-aware methods
 		if (commitmentId) {
 			if (isApproved) {
-				writePromises.push(this.db.approveDappUserCommitment(commitmentId));
+				writePromises.push(this.db.approveImageCaptcha(commitmentId));
 			} else if (commitmentUpdates.result) {
 				writePromises.push(
-					this.db.disapproveDappUserCommitment(
+					this.db.disapproveImageCaptcha(
 						commitmentId,
 						commitmentUpdates.result.reason,
 					),

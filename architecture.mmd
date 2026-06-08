@@ -68,8 +68,14 @@ graph TB
             AccessRules["Access Rules Engine<br/>spam / traffic / geo filters"]
         end
 
+        %% Captcha request records (sessions, powcaptchas, imagecaptchas a.k.a.
+        %% commitments) each carry a `requestType` discriminator
+        %% (session / powcaptcha / imagecaptcha / puzzlecaptcha) so every record
+        %% is self-describing ahead of consolidating them into one `requests`
+        %% collection. Phase 1: discriminator added; physical collections are
+        %% unchanged. "UserCommitment" record/type renamed to "ImageCaptcha".
         subgraph Storage["Storage"]
-            MongoDB[(MongoDB<br/>captchas, commitments,<br/>clients, sessions)]
+            MongoDB[(MongoDB<br/>captchas, imagecaptchas,<br/>powcaptchas, clients, sessions<br/>+ requestType discriminator)]
             Redis[(Redis<br/>session cache,<br/>write queue)]
             Dataset[(Dataset<br/>labelled + unlabelled<br/>captcha images)]
         end
