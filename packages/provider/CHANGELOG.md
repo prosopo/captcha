@@ -1,5 +1,22 @@
 # @prosopo/provider
 
+## 4.7.2
+### Patch Changes
+
+- b03dad1: Thread `shadowDomPenalty: boolean` from the catcher's encrypted detection payload through `decryptPayload` and persist it on `Session.scoreComponents` so the flag is queryable in Mongo without inferring it from `baseScore=1 ∧ ¬triggeredDetectors`. Field is optional on the wire (position 6); older catcher bundles omit it and `shadowDomPenalty` stays undefined.
+- Updated dependencies [b03dad1]
+  - @prosopo/types@4.3.1
+  - @prosopo/types-database@4.8.1
+  - @prosopo/env@3.5.8
+  - @prosopo/api@3.4.9
+  - @prosopo/api-express-router@3.1.18
+  - @prosopo/database@3.13.8
+  - @prosopo/datasets@3.1.29
+  - @prosopo/keyring@2.9.35
+  - @prosopo/load-balancer@2.9.11
+  - @prosopo/types-env@2.9.17
+  - @prosopo/user-access-policy@3.7.12
+
 ## 4.7.1
 ### Patch Changes
 
