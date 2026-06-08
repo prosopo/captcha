@@ -2,18 +2,16 @@
 {
 	# debug
 	http_port {$CADDY_HTTP_PORT:80}
-	# auto_https defaults to "on" — that's what we want now. Caddy
-	# auto-creates a :80 server that serves HTTP-01 ACME challenges
-	# AND redirects everything else to https://{host}{uri} (port
-	# 443, NOT :8443 — Caddy uses the global https_port for the
-	# redirect target, and :443 is owned by layer4 below which
-	# forwards the request straight back to the :8443 main site for
-	# non-trap-subzone SNIs). Removing the previous
-	# `disable_redirects` setting + the explicit :80 site below
-	# fixes silent ACME-renewal failure: with the old `terminal:
-	# true` redirect route Caddy had no place to inject its
-	# challenge handler.
-	auto_https {$CADDY_AUTO_HTTPS:on}
+	# `auto_https` intentionally omitted — its valid Caddyfile values
+	# are off / disable_redirects / disable_certs / ignore_loaded_certs,
+	# none of which match the default ("fully on"). Letting it default
+	# means Caddy auto-creates the :80 server with BOTH HTTP-01 ACME
+	# challenge handling AND HTTP→HTTPS redirects targeting port 443
+	# (the global https_port; layer4 below sits on it and SNI-routes
+	# the request back to the :8443 main site for non-trap subzones).
+	# The previous setting `disable_redirects` plus an explicit
+	# `http://{$CADDY_DOMAIN}` site left Caddy nowhere to inject the
+	# challenge handler, so renewals were silently broken.
 	admin {$CADDY_ADMIN_API::2020} # set the admin api to run on localhost:2020 (default is 2019 which can conflict with caddy daemon)
 
 	# Caddy must be told custom rate_limit module its order
