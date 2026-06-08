@@ -307,6 +307,7 @@ export const ScoreComponentsSchema = object({
 	unverifiedHost: number().optional(),
 	webView: number().optional(),
 	triggeredDetectors: array(number()).optional(),
+	shadowDomPenalty: boolean().optional(),
 });
 
 // Zod schema for the WASM SIMD CPU fingerprint readings collected by the
@@ -360,6 +361,7 @@ export interface ScoreComponents {
 	unverifiedHost?: number;
 	webView?: number;
 	triggeredDetectors?: number[];
+	shadowDomPenalty?: boolean;
 }
 
 // Zod schema for Session

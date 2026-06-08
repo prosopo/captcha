@@ -556,6 +556,7 @@ export class FrictionlessManager extends CaptchaManager {
 		let decryptedHeadHash = "";
 		let decryptionFailed = false;
 		let triggeredDetectors: number[] | undefined;
+		let shadowDomPenalty: boolean | undefined;
 		for (const [keyIndex, key] of decryptKeys.entries()) {
 			try {
 				this.logger.info(() => ({
@@ -574,6 +575,7 @@ export class FrictionlessManager extends CaptchaManager {
 				const w = decrypted.isWebView;
 				const i = decrypted.isIframe;
 				const td = decrypted.triggeredDetectors;
+				const sd = decrypted.shadowDomPenalty;
 				this.logger.debug(() => ({
 					msg: "Successfully decrypted score",
 					data: {
@@ -586,6 +588,7 @@ export class FrictionlessManager extends CaptchaManager {
 						webView: w,
 						iFrame: i,
 						triggeredDetectors: td,
+						shadowDomPenalty: sd,
 					},
 				}));
 				baseBotScore = s;
@@ -596,6 +599,7 @@ export class FrictionlessManager extends CaptchaManager {
 				webView = w;
 				iFrame = i;
 				triggeredDetectors = td;
+				shadowDomPenalty = sd;
 				break;
 			} catch (err) {
 				// check if the next index exists, if not, log an error
@@ -645,6 +649,7 @@ export class FrictionlessManager extends CaptchaManager {
 				iFrame,
 				decryptedHeadHash,
 				decryptionFailed,
+				shadowDomPenalty,
 			},
 		}));
 
@@ -660,6 +665,7 @@ export class FrictionlessManager extends CaptchaManager {
 			decryptedHeadHash,
 			decryptionFailed,
 			triggeredDetectors,
+			shadowDomPenalty,
 		};
 	}
 

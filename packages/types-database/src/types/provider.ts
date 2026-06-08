@@ -547,6 +547,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 		unverifiedHost: { type: Number, required: false },
 		webView: { type: Number, required: false },
 		triggeredDetectors: { type: [Number], required: false },
+		shadowDomPenalty: { type: Boolean, required: false },
 	},
 	providerSelectEntropy: { type: Number, required: true },
 	ipAddress: CompositeIpAddressRecordSchemaObj,
