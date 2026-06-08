@@ -16,6 +16,7 @@ import type { ApiRoutes, ApiRoutesProvider } from "@prosopo/api-route";
 import { AdminApiPaths } from "@prosopo/types";
 import type { Tasks } from "../../tasks/index.js";
 import { ApiClearAllCountersEndpoint } from "./apiClearAllCountersEndpoint.js";
+import { ApiDnsEventEndpoint } from "./apiDnsEventEndpoint.js";
 import { ApiGetAllDecisionMachinesEndpoint } from "./apiGetAllDecisionMachinesEndpoint.js";
 import { ApiGetDecisionMachineEndpoint } from "./apiGetDecisionMachineEndpoint.js";
 import { ApiRegisterSiteKeyEndpoint } from "./apiRegisterSiteKeyEndpoint.js";
@@ -68,6 +69,7 @@ class ApiAdminRoutesProvider implements ApiRoutesProvider {
 			),
 			[AdminApiPaths.ToggleMaintenanceMode]:
 				new ApiToggleMaintenanceModeEndpoint(),
+			[AdminApiPaths.DnsEvent]: new ApiDnsEventEndpoint(this.tasks.db),
 		};
 	}
 }

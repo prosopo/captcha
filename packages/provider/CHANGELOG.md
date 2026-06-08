@@ -1,5 +1,53 @@
 # @prosopo/provider
 
+## 4.7.1
+### Patch Changes
+
+- 936e987: Republish under npm trusted publishing.
+  
+  No runtime change. The v3.6.30 publish landed only a partial slice of the workspace before npm rejected the rest (provenance verification + repository-field mismatch). Cutting a fresh version so every package gets a clean publish under the new OIDC-based workflow with provenance attestations attached.
+
+## 4.7.0
+### Minor Changes
+
+- 2392aaf: Integrate the prosopo/dns sidecar against the procaptcha provider.
+  
+  - New admin endpoint `POST /v1/prosopo/provider/admin/dns/event` ingests batched DNS observation events from the sidecar (auth: admin sr25519 JWT) and merges resolver / peer IPs onto the matching Session record under a new `Session.dnsEvent` field.
+  - Frictionless response carries a per-session `dns_url` when the pronode has `DNS_EVENT_SUBZONE` + `DNS_EVENT_HMAC_SECRET` set. The HMAC path mirrors the sidecar's Rust implementation so both sides agree without shared per-request state.
+  - The frictionless bundle fires one no-cors GET to `dns_url` on detection completion (fire-and-forget; failures never affect the captcha flow).
+  - `dns_url` is included on the `reuse_session` short-circuit path too, not only the new-session path — otherwise repeat visits from the same user/IP/sitekey combination silently dropped the observation hop.
+  - Deploy compose entry for the sidecar plus a Caddy `layer4` SNI-passthrough block so the sidecar terminates TLS itself (no Cloudflare token needed). Caddy image must be rebuilt with the `caddy-l4` plugin.
+
+### Patch Changes
+
+- 896243a: Document three known spec deviations in `read-tls-client-hello`'s JA4 implementation.
+  
+  Adds inline comments to `ja4Middleware.ts` explaining how `calculateJa4FromHelloData`
+  differs from the Rust/AWS-Lambda reference: TLS 1.3 detection via extension presence
+  rather than content, single-byte ALPN first-char duplication, and ASCII decoding of
+  non-alphanumeric ALPN bytes instead of hex encoding.
+- Updated dependencies [a1d60db]
+- Updated dependencies [2392aaf]
+- Updated dependencies [97cf7bd]
+- Updated dependencies [6ca1125]
+- Updated dependencies [32a591b]
+  - @prosopo/types@4.3.0
+  - @prosopo/types-database@4.8.0
+  - @prosopo/logger@1.0.2
+  - @prosopo/util@3.2.15
+  - @prosopo/api@3.4.8
+  - @prosopo/api-express-router@3.1.17
+  - @prosopo/common@3.1.38
+  - @prosopo/database@3.13.7
+  - @prosopo/datasets@3.1.28
+  - @prosopo/env@3.5.7
+  - @prosopo/keyring@2.9.34
+  - @prosopo/load-balancer@2.9.10
+  - @prosopo/types-env@2.9.16
+  - @prosopo/user-access-policy@3.7.11
+  - @prosopo/api-route@2.6.46
+  - @prosopo/redis-client@1.0.23
+
 ## 4.6.3
 ### Patch Changes
 

@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/svelte-procaptcha-integration-demo",
-	"version": "1.1.75",
+	"version": "1.1.76",
 	"type": "module",
 	"engines": {
 		"node": "^24",
@@ -25,7 +25,7 @@
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo"
 	},
 	"dependencies": {
-		"@prosopo/svelte-procaptcha-wrapper": "1.1.75",
+		"@prosopo/svelte-procaptcha-wrapper": "1.1.76",
 		"svelte": "^5.0.0"
 	},
 	"devDependencies": {
@@ -42,5 +42,10 @@
 		"url": "https://github.com/prosopo/captcha/issues"
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
-	"sideEffects": false
+	"sideEffects": false,
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "integration/frameworks/svelte/svelte-procaptcha-integration-demo"
+	}
 }

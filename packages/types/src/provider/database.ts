@@ -420,6 +420,12 @@ export const SessionSchema = object({
 	// indicator reflects when the catcher's CPU fingerprint became
 	// available relative to the user's journey.
 	simdReadingsStage: SimdReadingsStageSchema.optional(),
+	dnsEvent: object({
+		resolverIp: string().optional(),
+		peerIp: string().optional(),
+		pathValid: boolean().optional(),
+		receivedAt: date(),
+	}).optional(),
 }) satisfies ZodType<Session, ZodTypeDef, unknown>;
 
 // Session now includes all frictionless token fields
@@ -463,6 +469,27 @@ export type Session = {
 	simdReadings?: SimdReadings;
 	// Stage at which the readings first arrived.
 	simdReadingsStage?: SimdReadingsStage;
+	// DNS observation merge target — populated by the dns-event sidecar
+	// via POST /v1/prosopo/provider/admin/dns/event. At most one DNS
+	// event + one HTTP event per session under normal usage; the
+	// resolver/peer IP mismatch is the signal that flags a residential
+	// proxy that doesn't tunnel DNS.
+	dnsEvent?: {
+		// Source IP of the UDP/53 query that hit the auth nameserver for
+		// {sessionId}.{subzone}. That's the resolver the user's proxy
+		// chain actually used — leaks even when HTTP traffic is proxied.
+		resolverIp?: string;
+		// Peer IP of the TLS connection that hit the pixel endpoint. The
+		// proxy exit IP from the user's perspective.
+		peerIp?: string;
+		// True iff the HTTPS request path matched HMAC(sessionId, secret).
+		// False indicates a scanner / replayed sessionId / wrong secret.
+		pathValid?: boolean;
+		// Wall-clock time the first event for this session was received
+		// by the provider. Subsequent events update the individual fields
+		// above but don't bump this timestamp.
+		receivedAt: Date;
+	};
 };
 
 // Zod schema for PoWCaptchaStored

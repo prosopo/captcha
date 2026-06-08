@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/ipinfo",
-	"version": "0.2.13",
+	"version": "0.2.14",
 	"description": "IP information service with MaxMind and ipapi.is backends",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -26,8 +26,8 @@
 	},
 	"dependencies": {
 		"@maxmind/geoip2-node": "5.0.0",
-		"@prosopo/logger": "1.0.1",
-		"@prosopo/types": "4.2.1"
+		"@prosopo/logger": "1.0.2",
+		"@prosopo/types": "4.3.0"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.3.1",
@@ -39,5 +39,10 @@
 		"vite": "6.4.1",
 		"vitest": "3.2.4"
 	},
-	"license": "Apache-2.0"
+	"license": "Apache-2.0",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "packages/ipinfo"
+	}
 }

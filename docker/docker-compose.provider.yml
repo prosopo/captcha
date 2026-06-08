@@ -218,6 +218,45 @@ services:
       - ./ipinfo/ipapi_database_ram:/usr/src/app/ipapi_database_ram:ro
       # Config override
       - ./ipinfo/config:/usr/src/app/config:ro
+  dns:
+    # DNS observation sidecar. Caddy fronts TLS for *.t.{CADDY_DOMAIN}
+    # and reverse-proxies HTTP to this container — see provider.Caddyfile.
+    container_name: dns
+    profiles:
+      - production
+      - staging
+    image: prosopo/dns:${DNS_VERSION?DNS_VERSION must be set}
+    cap_add:
+      - NET_BIND_SERVICE
+    env_file:
+      - ../.env.1.${NODE_ENV}
+    ports:
+      # Bind on the host's external IPv4 specifically — systemd-resolved
+      # already claims 0.0.0.0:53 indirectly via stub-resolver iptables.
+      # ${HOST_IPV4} is exported by the ansible playbook.
+      - "${HOST_IPV4}:53:53/udp"
+      - "${HOST_IPV4}:53:53/tcp"
+      # HTTPS pixel on host:9362 because Caddy owns :443 (the embedded
+      # layer4 SNI-passthrough integration is a follow-up — needs the
+      # HTTP server moved off :443 so layer4 can own it). dns_url
+      # includes :9362 in the URL via DNS_EVENT_PORT.
+      - "9362:443"
+    environment:
+      - DNS_HTTPS_PORT=443
+      - DNS_HTTPS_BIND=0.0.0.0
+    volumes:
+      - /data/dns:/data
+      # dns-tenants.json is rendered per host by ansible
+      # (playbooks/provider.yml) before `compose up`. Pronodes come and
+      # go independently; a single repo-checked-in file would make every
+      # host re-deploy on every tenant change. The file is .gitignored.
+      - ./dns-tenants.json:/etc/dns/tenants.json:ro
+    networks:
+      external:
+      internal:
+        ipv4_address: 172.18.0.10
+        ipv6_address: fd00:aaaa::a
+    restart: unless-stopped
 networks:
   internal:
     enable_ipv6: true

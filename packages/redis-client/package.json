@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/redis-client",
-	"version": "1.0.22",
+	"version": "1.0.23",
 	"description": "Pluggable Redis client for non-blocking connections with smart index creation",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -28,7 +28,8 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+ssh://git@github.com/prosopo/captcha.git"
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "packages/redis-client"
 	},
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
@@ -37,7 +38,7 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
-		"@prosopo/logger": "1.0.1",
+		"@prosopo/logger": "1.0.2",
 		"@redis/search": "5.0.0",
 		"redis": "5.0.0"
 	},

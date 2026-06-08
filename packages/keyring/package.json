@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/keyring",
-	"version": "2.9.33",
+	"version": "2.9.34",
 	"description": "Keypair generator for Prosopo",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -27,7 +27,8 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+ssh://git@github.com/prosopo/types.git"
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "packages/keyring"
 	},
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
@@ -38,9 +39,9 @@
 	"dependencies": {
 		"@polkadot/util": "13.5.7",
 		"@polkadot/util-crypto": "13.5.7",
-		"@prosopo/common": "3.1.37",
-		"@prosopo/types": "4.2.1",
-		"@prosopo/util": "3.2.14",
+		"@prosopo/common": "3.1.38",
+		"@prosopo/types": "4.3.0",
+		"@prosopo/util": "3.2.15",
 		"@prosopo/util-crypto": "13.5.29",
 		"dotenv": "16.4.5"
 	},

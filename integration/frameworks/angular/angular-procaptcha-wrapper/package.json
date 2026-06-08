@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/angular-procaptcha-wrapper",
-	"version": "1.1.75",
+	"version": "1.1.76",
 	"type": "module",
 	"engines": {
 		"node": "^24",
@@ -15,7 +15,7 @@
 		"dev": "npm run build -- --watch"
 	},
 	"dependencies": {
-		"@prosopo/procaptcha-wrapper": "2.6.77"
+		"@prosopo/procaptcha-wrapper": "2.6.78"
 	},
 	"peerDependencies": {
 		"@angular/core": "^20.3.9"
@@ -33,5 +33,10 @@
 		"url": "https://github.com/prosopo/captcha/issues"
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
-	"sideEffects": false
+	"sideEffects": false,
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "integration/frameworks/angular/angular-procaptcha-wrapper"
+	}
 }

@@ -34,6 +34,7 @@ import {
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { AccessPolicy } from "@prosopo/user-access-policy";
 import { v4 as uuidv4 } from "uuid";
+import { buildDnsEventUrl } from "../../api/dnsEventUrl.js";
 import { checkLangRules } from "../../rules/lang.js";
 import {
 	type UsageCounters,
@@ -376,6 +377,7 @@ export class FrictionlessManager extends CaptchaManager {
 			[ApiParams.captchaType]: finalCaptchaType,
 			[ApiParams.sessionId]: sessionRecord.sessionId,
 			[ApiParams.status]: "ok",
+			dns_url: buildDnsEventUrl(sessionRecord.sessionId),
 		};
 	}
 

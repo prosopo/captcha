@@ -597,6 +597,21 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	// Stage at which the SIMD readings first arrived on this session
 	// (frictionless / challenge / submit). First-hop-wins.
 	simdReadingsStage: { type: String, required: false },
+	// DNS observation merge target. Populated by
+	// POST /v1/prosopo/provider/admin/dns/event from the dns-event
+	// sidecar (see types/provider/database.ts → Session.dnsEvent).
+	dnsEvent: {
+		type: new Schema(
+			{
+				resolverIp: { type: String, required: false },
+				peerIp: { type: String, required: false },
+				pathValid: { type: Boolean, required: false },
+				receivedAt: { type: Date, required: true },
+			},
+			{ _id: false },
+		),
+		required: false,
+	},
 } satisfies AllKeys<Session>);
 
 SessionRecordSchema.index({ createdAt: 1 });

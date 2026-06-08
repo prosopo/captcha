@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/logger",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"description": "Prosopo logger library",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -28,7 +28,7 @@
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
 	"dependencies": {
-		"@prosopo/util": "3.2.14",
+		"@prosopo/util": "3.2.15",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
@@ -47,7 +47,8 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/prosopo/captcha.git"
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "packages/logger"
 	},
 	"bugs": {
 		"url": "https://github.com/prosopo/captcha/issues"
