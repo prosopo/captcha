@@ -2,7 +2,18 @@
 {
 	# debug
 	http_port {$CADDY_HTTP_PORT:80}
-	auto_https {$CADDY_AUTO_HTTPS:disable_redirects}
+	# auto_https defaults to "on" — that's what we want now. Caddy
+	# auto-creates a :80 server that serves HTTP-01 ACME challenges
+	# AND redirects everything else to https://{host}{uri} (port
+	# 443, NOT :8443 — Caddy uses the global https_port for the
+	# redirect target, and :443 is owned by layer4 below which
+	# forwards the request straight back to the :8443 main site for
+	# non-trap-subzone SNIs). Removing the previous
+	# `disable_redirects` setting + the explicit :80 site below
+	# fixes silent ACME-renewal failure: with the old `terminal:
+	# true` redirect route Caddy had no place to inject its
+	# challenge handler.
+	auto_https {$CADDY_AUTO_HTTPS:on}
 	admin {$CADDY_ADMIN_API::2020} # set the admin api to run on localhost:2020 (default is 2019 which can conflict with caddy daemon)
 
 	# Caddy must be told custom rate_limit module its order
@@ -59,19 +70,13 @@ http://:9090 {
 	metrics /metrics
 }
 
-# Port-80 listener: serves ACME HTTP-01 challenges (the only ACME
-# challenge type we can use now that :443 belongs to layer4 — TLS-
-# ALPN-01 is explicitly disabled on the main site below) and
-# redirects everything else to HTTPS. The acme path is left
-# untouched so Caddy's own challenge handler picks it up.
-http://{$CADDY_DOMAIN} {
-	@notacme not path /.well-known/acme-challenge/*
-	redir @notacme https://{host}{uri}
-}
-
 # Main site: bound on :8443. Layer4 (above) proxies non-trap-subzone
 # SNI connections from :443 in. ACME issuer is restricted to HTTP-01
-# because TLS-ALPN-01 requires control of :443.
+# because TLS-ALPN-01 requires control of :443. The :80 redirect
+# server is auto-created by Caddy (auto_https=on); it serves both
+# ACME HTTP-01 challenges AND HTTP→HTTPS redirects targeting port
+# 443 (i.e. the layer4 listener), which forwards non-matching SNIs
+# back to this same :8443 server.
 https://{$CADDY_DOMAIN}:8443 {
 
 	tls {
