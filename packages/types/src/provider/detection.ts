@@ -49,4 +49,7 @@ export type DetectorResult = {
 	isIframe?: boolean;
 	decryptedHeadHash: string;
 	triggeredDetectors?: number[];
+	// True when the client-side shadow-DOM detector tripped and contributed a
+	// hard penalty to `score`. Undefined for clients that predate the field.
+	shadowDomPenalty?: boolean;
 };

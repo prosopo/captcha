@@ -230,6 +230,7 @@ export default (
 				decryptedHeadHash,
 				decryptionFailed,
 				triggeredDetectors,
+				shadowDomPenalty,
 			} = await tasks.frictionlessManager.decryptPayload(token, headHash);
 
 			req.logger.debug(() => ({
@@ -271,6 +272,7 @@ export default (
 				...(lScore && { lScore }),
 				...(triggeredDetectors &&
 					triggeredDetectors.length > 0 && { triggeredDetectors }),
+				...(shadowDomPenalty !== undefined && { shadowDomPenalty }),
 			};
 
 			tasks.frictionlessManager.setSessionParams({
