@@ -1,5 +1,11 @@
 # @prosopo/cli
 
+## 3.6.33
+### Patch Changes
+
+- b24ea03: Caddy now SNI-routes :443 with caddy-l4. Pixel URL drops the :9362 port; HTTP-01 ACME renewals keep working via auto-managed :80.
+- 3420831: DNS sidecar event merge: atomic dotted-path `$set` so DNS + HTTP legs co-occur on one session (was clobbering: prior projection omitted `dnsEvent`, every write started from `undefined`). Caddy now forwards PROXY-protocol v2 on the `*.t.{domain}` route and the sidecar (≥0.1.6) reads it, so `dnsEvent.peerIp` records the real client IP instead of the docker bridge address.
+
 ## 3.6.32
 ### Patch Changes
 
