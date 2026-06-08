@@ -95,10 +95,7 @@ describe("ApiDnsEventEndpoint", () => {
 			src_ip: "1.2.3.4",
 			jti: "session-A",
 		};
-		await endpoint.processRequest(
-			{ events: [event] },
-			mockLogger as never,
-		);
+		await endpoint.processRequest({ events: [event] }, mockLogger as never);
 		expect(mergeSessionDnsEvent).toHaveBeenCalledTimes(1);
 		expect(mergeSessionDnsEvent).toHaveBeenCalledWith(
 			"session-A",
@@ -115,10 +112,7 @@ describe("ApiDnsEventEndpoint", () => {
 			jti: "session-B",
 			path_valid: false,
 		};
-		await endpoint.processRequest(
-			{ events: [event] },
-			mockLogger as never,
-		);
+		await endpoint.processRequest({ events: [event] }, mockLogger as never);
 		expect(mergeSessionDnsEvent).toHaveBeenCalledWith(
 			"session-B",
 			{ peerIp: "5.6.7.8", pathValid: false },
@@ -142,10 +136,7 @@ describe("ApiDnsEventEndpoint", () => {
 			jti: "session-X",
 			path_valid: true,
 		};
-		await endpoint.processRequest(
-			{ events: [dns, http] },
-			mockLogger as never,
-		);
+		await endpoint.processRequest({ events: [dns, http] }, mockLogger as never);
 		expect(mergeSessionDnsEvent).toHaveBeenCalledTimes(2);
 		expect(mergeSessionDnsEvent).toHaveBeenNthCalledWith(
 			1,
