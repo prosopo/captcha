@@ -33,12 +33,22 @@
 		:443 {
 			@dns_subzone tls sni *.t.{$CADDY_DOMAIN}
 			route @dns_subzone {
+				# The dns sidecar (Rust) doesn't speak PROXY protocol —
+				# proxy the raw TCP only on this branch.
 				proxy {
 					upstream dns:443
 				}
 			}
 			route {
-				proxy 127.0.0.1:8443
+				# Forward the real client IP to the local HTTPS server
+				# via PROXY protocol v2. Without this the upstream sees
+				# every request as coming from 127.0.0.1 and Caddy's
+				# rate-limit keyed on {remote_host} 429s the whole
+				# fleet within seconds.
+				proxy {
+					proxy_protocol v2
+					upstream 127.0.0.1:8443
+				}
 			}
 		}
 	}
@@ -50,7 +60,15 @@
 
 	servers {
 		protocols h1 h2
+		# Order matters: proxy_protocol must run before tls so the
+		# PROXY header is consumed first, then the TLS bytes are read.
+		# `allow 127.0.0.1` restricts who can send a PROXY header —
+		# only layer4 (local) is permitted, anyone else's request is
+		# treated as a normal connection.
 		listener_wrappers {
+			proxy_protocol {
+				allow 127.0.0.1/32
+			}
 			client_hello
 			tls
 		}
