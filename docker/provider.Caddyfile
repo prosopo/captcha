@@ -8,6 +8,32 @@
 	# Caddy must be told custom rate_limit module its order
 	order rate_limit before basicauth
 
+	# Layer-4 SNI router on :443. Lets the dns sidecar serve the
+	# pixel endpoint on the standard HTTPS port — sessions get
+	# `https://{sessionId}.t.{host}/...` instead of dragging a :9362
+	# port suffix through every URL.
+	#
+	# Connections whose ClientHello SNI matches the dns-trap subzone
+	# pattern `*.t.{$CADDY_DOMAIN}` are proxied raw (TLS not
+	# terminated here) to the dns container which has its own
+	# Let's-Encrypt cert. Everything else falls through to Caddy's
+	# normal HTTPS server, bound on :8443 below so :443 is free for
+	# this router. Provided by `github.com/mholt/caddy-l4` (baked
+	# into the prosopo/caddy image at 2.5.7-dns-3455+).
+	layer4 {
+		:443 {
+			@dns_subzone tls sni *.t.{$CADDY_DOMAIN}
+			route @dns_subzone {
+				proxy {
+					upstream dns:443
+				}
+			}
+			route {
+				proxy 127.0.0.1:8443
+			}
+		}
+	}
+
 	client_hello {
 		# Configure the maximum allowed ClientHello packet size in bytes (1-16384)
 		max_client_hello_size 16384
@@ -33,12 +59,26 @@ http://:9090 {
 	metrics /metrics
 }
 
-{$CADDY_DOMAIN} {
+# Port-80 listener: serves ACME HTTP-01 challenges (the only ACME
+# challenge type we can use now that :443 belongs to layer4 — TLS-
+# ALPN-01 is explicitly disabled on the main site below) and
+# redirects everything else to HTTPS. The acme path is left
+# untouched so Caddy's own challenge handler picks it up.
+http://{$CADDY_DOMAIN} {
+	@notacme not path /.well-known/acme-challenge/*
+	redir @notacme https://{host}{uri}
+}
 
-    @httpOnly {
-        protocol http
-    }
-    redir @httpOnly https://{host}{uri}
+# Main site: bound on :8443. Layer4 (above) proxies non-trap-subzone
+# SNI connections from :443 in. ACME issuer is restricted to HTTP-01
+# because TLS-ALPN-01 requires control of :443.
+https://{$CADDY_DOMAIN}:8443 {
+
+	tls {
+		issuer acme {
+			disable_tlsalpn_challenge
+		}
+	}
 	
 	handle /robots.txt {
 		uri strip_prefix / # removes leading /, so it looks directly in root
