@@ -247,6 +247,13 @@ services:
       # of Caddy's docker bridge address. Must be paired with
       # `proxy_protocol v2` on the @dns_subzone route in provider.Caddyfile.
       - DNS_PROXY_PROTOCOL=1
+      # Dual-stack: serve AAAA pointing at the host's public ipv6
+      # alongside the existing A record. Without this, v6-preferring
+      # browsers happy-eyeballs back to v4 for the pixel and
+      # `dnsEvent.peerIp` records the v4 exit instead of the real v6.
+      # Unset on v4-only hosts — the sidecar (≥0.1.7) treats blank as
+      # "no AAAA" and serves A only.
+      - DNS_AAAA_RECORD=${HOST_IPV6:-}
     volumes:
       - /data/dns:/data
       # dns-tenants.json is rendered per host by ansible
