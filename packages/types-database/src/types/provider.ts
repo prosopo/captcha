@@ -967,6 +967,25 @@ export interface IProviderDatabase extends IDatabase {
 		stage: SimdReadingsStage,
 	): Promise<void>;
 
+	/**
+	 * Merge a partial dnsEvent observation into the session record using
+	 * dotted-path `$set` so DNS-leg and HTTP-leg events can both land on
+	 * the same session without read-modify-write races. `receivedAt` is
+	 * only written if absent (`$setOnInsert`-style behaviour via $set
+	 * + a `$cond` would over-complicate; instead, the caller passes
+	 * `receivedAtIfAbsent` and we set it unconditionally only when no
+	 * field already exists). Returns true if the session existed.
+	 */
+	mergeSessionDnsEvent(
+		sessionId: string,
+		fields: {
+			resolverIp?: string;
+			peerIp?: string;
+			pathValid?: boolean;
+		},
+		receivedAtIfAbsent: Date,
+	): Promise<boolean>;
+
 	getSessionByuserSitekeyIpHash(
 		userSitekeyIpHash: string,
 	): Promise<SessionRecord | undefined>;
