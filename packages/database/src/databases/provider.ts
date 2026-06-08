@@ -1588,6 +1588,57 @@ export class ProviderDatabase
 	}
 
 	/**
+	 * Merge a DNS sidecar observation into the session's `dnsEvent` subdoc
+	 * using dotted-path `$set` so DNS-leg and HTTP-leg events on the same
+	 * session don't clobber each other. Replaces the prior read-modify-write
+	 * pattern that lost half the fields under any race (and 100% of the time
+	 * when the read projection didn't include `dnsEvent`).
+	 *
+	 * `receivedAtIfAbsent` is written only on the first hit for a session
+	 * via a `$cond` in an aggregation-pipeline update; later events leave
+	 * the original timestamp alone.
+	 */
+	async mergeSessionDnsEvent(
+		sessionId: string,
+		fields: {
+			resolverIp?: string;
+			peerIp?: string;
+			pathValid?: boolean;
+		},
+		receivedAtIfAbsent: Date,
+	): Promise<boolean> {
+		// Aggregation-pipeline $set: nested string/bool literals stand for
+		// themselves, $ifNull preserves the existing receivedAt on later hits.
+		const setStage: Record<string, unknown> = {
+			"dnsEvent.receivedAt": {
+				$ifNull: ["$dnsEvent.receivedAt", receivedAtIfAbsent],
+			},
+			lastUpdatedTimestamp: new Date(),
+			pendingStage: true,
+		};
+		if (fields.resolverIp !== undefined) {
+			setStage["dnsEvent.resolverIp"] = fields.resolverIp;
+		}
+		if (fields.peerIp !== undefined) {
+			setStage["dnsEvent.peerIp"] = fields.peerIp;
+		}
+		if (fields.pathValid !== undefined) {
+			setStage["dnsEvent.pathValid"] = fields.pathValid;
+		}
+		try {
+			const result = await this.tables.session.updateOne({ sessionId }, [
+				{ $set: setStage },
+			]);
+			return result.matchedCount > 0;
+		} catch (err) {
+			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
+				context: { error: err, sessionId },
+				logger: this.logger,
+			});
+		}
+	}
+
+	/**
 	 * Get an active session by user IP hash
 	 * @param userSitekeyIpHash The hash of user, IP and sitekey combination
 	 * @returns The session record if it exists and is not deleted, undefined otherwise

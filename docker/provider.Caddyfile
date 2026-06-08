@@ -33,9 +33,13 @@
 		:443 {
 			@dns_subzone tls sni *.t.{$CADDY_DOMAIN}
 			route @dns_subzone {
-				# The dns sidecar (Rust) doesn't speak PROXY protocol —
-				# proxy the raw TCP only on this branch.
+				# dns sidecar ≥0.1.6 reads PROXY v2 when DNS_PROXY_PROTOCOL=1,
+				# so we send the real client peer through instead of letting
+				# the sidecar see Caddy's docker bridge IP. Without this every
+				# `dnsEvent.peerIp` is `172.19.0.x` and fails to correlate
+				# with `ipInfo.ip`.
 				proxy {
+					proxy_protocol v2
 					upstream dns:443
 				}
 			}

@@ -242,6 +242,11 @@ services:
     environment:
       - DNS_HTTPS_PORT=443
       - DNS_HTTPS_BIND=0.0.0.0
+      # Caddy `layer4` raw-proxies *.t.{CADDY_DOMAIN} to dns:443 with a
+      # PROXY v2 header so the sidecar sees the real client peer instead
+      # of Caddy's docker bridge address. Must be paired with
+      # `proxy_protocol v2` on the @dns_subzone route in provider.Caddyfile.
+      - DNS_PROXY_PROTOCOL=1
     volumes:
       - /data/dns:/data
       # dns-tenants.json is rendered per host by ansible

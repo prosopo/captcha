@@ -18,32 +18,26 @@ import {
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
 import { type Logger, getLogger } from "@prosopo/logger";
-import {
-	type DnsEvent,
-	DnsEventBatchSchema,
-	type Session,
-} from "@prosopo/types";
+import { type DnsEvent, DnsEventBatchSchema } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { z } from "zod";
 
 type DnsEventBatchSchemaType = typeof DnsEventBatchSchema;
 
-// Exported for unit tests.
-export const dnsEventToPartialSession = (
+// Exported for unit tests — picks out the field(s) one DnsEvent contributes.
+export const dnsEventToFields = (
 	event: DnsEvent,
-	existing: Session["dnsEvent"] | undefined,
-): Session["dnsEvent"] => {
-	const receivedAt = existing?.receivedAt ?? new Date();
-	const merged: Session["dnsEvent"] = { ...(existing ?? {}), receivedAt };
+): { resolverIp?: string; peerIp?: string; pathValid?: boolean } => {
 	if (event.kind === "dns") {
-		merged.resolverIp = event.src_ip;
-	} else {
-		merged.peerIp = event.src_ip;
-		if (typeof event.path_valid === "boolean") {
-			merged.pathValid = event.path_valid;
-		}
+		return { resolverIp: event.src_ip };
 	}
-	return merged;
+	const out: { peerIp: string; pathValid?: boolean } = {
+		peerIp: event.src_ip,
+	};
+	if (typeof event.path_valid === "boolean") {
+		out.pathValid = event.path_valid;
+	}
+	return out;
 };
 
 class ApiDnsEventEndpoint implements ApiEndpoint<DnsEventBatchSchemaType> {
@@ -58,6 +52,7 @@ class ApiDnsEventEndpoint implements ApiEndpoint<DnsEventBatchSchemaType> {
 
 		let stored = 0;
 		let errors = 0;
+		const now = new Date();
 
 		for (const event of events) {
 			const sessionId = event.jti;
@@ -66,13 +61,15 @@ class ApiDnsEventEndpoint implements ApiEndpoint<DnsEventBatchSchemaType> {
 			}
 
 			try {
-				const session = await this.db.getSessionRecordBySessionId(sessionId);
-				if (!session) {
-					continue;
+				const fields = dnsEventToFields(event);
+				const matched = await this.db.mergeSessionDnsEvent(
+					sessionId,
+					fields,
+					now,
+				);
+				if (matched) {
+					stored += 1;
 				}
-				const dnsEvent = dnsEventToPartialSession(event, session.dnsEvent);
-				await this.db.updateSessionRecord(sessionId, { dnsEvent });
-				stored += 1;
 			} catch (err) {
 				errors += 1;
 				logger.warn(() => ({
