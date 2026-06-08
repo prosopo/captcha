@@ -236,11 +236,9 @@ services:
       # ${HOST_IPV4} is exported by the ansible playbook.
       - "${HOST_IPV4}:53:53/udp"
       - "${HOST_IPV4}:53:53/tcp"
-      # HTTPS pixel on host:9362 because Caddy owns :443 (the embedded
-      # layer4 SNI-passthrough integration is a follow-up — needs the
-      # HTTP server moved off :443 so layer4 can own it). dns_url
-      # includes :9362 in the URL via DNS_EVENT_PORT.
-      - "9362:443"
+      # No host port for the HTTPS pixel: Caddy's layer4 block on :443
+      # SNI-routes `*.t.{CADDY_DOMAIN}` straight to dns:443 over the
+      # docker network. URLs no longer carry a :9362 suffix.
     environment:
       - DNS_HTTPS_PORT=443
       - DNS_HTTPS_BIND=0.0.0.0
