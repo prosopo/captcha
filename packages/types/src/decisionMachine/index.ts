@@ -17,6 +17,7 @@ import {
 	CaptchaType,
 	DecisionMachineCaptchaTypeSchema,
 } from "../client/captchaType/captchaType.js";
+import type { ModeEnum } from "../config/mode.js";
 import type { RequestHeaders } from "../provider/api.js";
 
 export enum DecisionMachineRuntime {
@@ -185,6 +186,16 @@ export interface RoutingMachineRawSignals {
 	userAgent: string;
 	ja4?: string;
 	behavioralDataPacked?: DecisionMachineBehavioralDataPacked;
+	/**
+	 * Normalized widget mode (visible|invisible) of the originating session.
+	 * Only populated on the post-pow pass, where the session is resolved.
+	 */
+	mode?: ModeEnum;
+	/**
+	 * True when the submitted click coords were absent or every pair was (0,0).
+	 * Only meaningful on the post-pow pass after a visible-mode checkbox click.
+	 */
+	coordsAllZero?: boolean;
 }
 
 export type RoutingMachinePhase = "route" | "postPow";

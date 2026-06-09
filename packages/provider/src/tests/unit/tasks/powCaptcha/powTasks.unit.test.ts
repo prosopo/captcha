@@ -34,7 +34,10 @@ import {
 import { getIPAddress, verifyRecency } from "@prosopo/util";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getCompositeIpAddress } from "../../../../compositeIpAddress.js";
-import { PowCaptchaManager } from "../../../../tasks/powCaptcha/powTasks.js";
+import {
+	PowCaptchaManager,
+	isCoordsAllZero,
+} from "../../../../tasks/powCaptcha/powTasks.js";
 import {
 	checkPowSignature,
 	validateSolution,
@@ -2583,5 +2586,48 @@ module.exports = (input) => {
 				});
 			});
 		});
+	});
+});
+
+describe("isCoordsAllZero", () => {
+	// Typed constructor so tuple literals satisfy [number, number][][].
+	const coords = (groups: [number, number][][]): [number, number][][] => groups;
+
+	it("returns true when coords are undefined (no salt / not supplied)", () => {
+		expect(isCoordsAllZero(undefined)).toBe(true);
+	});
+
+	it("returns true for the canonical all-zero coords [[[0,0]]]", () => {
+		expect(isCoordsAllZero(coords([[[0, 0]]]))).toBe(true);
+	});
+
+	it("returns true when every pair across groups is (0,0)", () => {
+		expect(
+			isCoordsAllZero(
+				coords([
+					[
+						[0, 0],
+						[0, 0],
+					],
+					[[0, 0]],
+				]),
+			),
+		).toBe(true);
+	});
+
+	it("returns true for an empty coords array", () => {
+		expect(isCoordsAllZero(coords([]))).toBe(true);
+	});
+
+	it("returns false when an x component is non-zero", () => {
+		expect(isCoordsAllZero(coords([[[12, 0]]]))).toBe(false);
+	});
+
+	it("returns false when a y component is non-zero", () => {
+		expect(isCoordsAllZero(coords([[[0, 34]]]))).toBe(false);
+	});
+
+	it("returns false when any pair in any group is non-zero", () => {
+		expect(isCoordsAllZero(coords([[[0, 0]], [[5, 6]]]))).toBe(false);
 	});
 });

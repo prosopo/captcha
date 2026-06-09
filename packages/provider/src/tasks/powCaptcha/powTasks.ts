@@ -21,6 +21,7 @@ import {
 	CaptchaType,
 	DecisionMachineDecision,
 	type DecisionMachineInput,
+	ModeEnum,
 } from "@prosopo/types";
 import {
 	ApiParams,
@@ -88,6 +89,17 @@ export type VerifyPowCaptchaSolutionResult = {
 };
 
 const DEFAULT_POW_DIFFICULTY = 4;
+
+/**
+ * True when the submitted click coords are absent or every recorded pair is
+ * (0,0). In visible mode a genuine checkbox click always embeds a real cursor
+ * position, so all-zero coords signal that no real click happened (invisible
+ * mode, a synthetic/untrusted click, or a bot that solved the PoW without
+ * driving the widget). Drives the visible-mode post-pow escalation.
+ */
+export const isCoordsAllZero = (coords?: [number, number][][]): boolean =>
+	!coords ||
+	coords.every((group) => group.every(([x, y]) => x === 0 && y === 0));
 
 export class PowCaptchaManager extends CaptchaManager {
 	POW_SEPARATOR: string;
@@ -401,6 +413,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			challengeRecord,
 			challengeSplit,
 			behavioralDataPacked: decryptedBehavioralDataPacked,
+			coords,
 		});
 		return { verified: correct, routingOutput };
 	}
@@ -415,10 +428,12 @@ export class PowCaptchaManager extends CaptchaManager {
 		challengeRecord: PoWCaptchaRecord;
 		challengeSplit: string[];
 		behavioralDataPacked?: DecisionMachineBehavioralDataPacked;
+		coords?: [number, number][][];
 	}): Promise<RoutingMachineOutput | undefined> {
 		if (!this.postPowContext) return undefined;
 
-		const { challengeRecord, challengeSplit, behavioralDataPacked } = args;
+		const { challengeRecord, challengeSplit, behavioralDataPacked, coords } =
+			args;
 
 		if (!challengeRecord.sessionId) {
 			this.logger.debug(() => ({
@@ -450,6 +465,14 @@ export class PowCaptchaManager extends CaptchaManager {
 			isWebView: sessionRecord.webView,
 		};
 
+		// Normalize the widget mode (sessions store `invisible` or `undefined`).
+		// `undefined` means the default, visible mode.
+		const mode =
+			sessionRecord.mode === ModeEnum.invisible
+				? ModeEnum.invisible
+				: ModeEnum.visible;
+		const coordsAllZero = isCoordsAllZero(coords);
+
 		const ctx: RoutingContext = {
 			dappAccount,
 			userAccount,
@@ -459,6 +482,8 @@ export class PowCaptchaManager extends CaptchaManager {
 			platform,
 			raw: {
 				...this.postPowContext.raw,
+				mode,
+				coordsAllZero,
 				...(behavioralDataPacked && { behavioralDataPacked }),
 			},
 		};

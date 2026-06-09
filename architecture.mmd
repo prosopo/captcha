@@ -140,7 +140,7 @@ graph TB
     PoW -->|"computed proof<br/>+ behavioural data"| PowSolutionEP
     PowSolutionEP --> PowTasks
     PowTasks -->|verify proof| MongoDB
-    PowTasks -->|"post-pow routing<br/>(re-evaluate with<br/>behavioural data)"| DecisionMachine
+    PowTasks -->|"post-pow routing<br/>(re-evaluate with behavioural<br/>data, widget mode + click coords)"| DecisionMachine
     PowTasks -->|signed token| Manager
     PowTasks -->|escalate: image/puzzle<br/>+ new sessionId| PoW
     PoW -->|escalation handoff| ImageCaptcha
