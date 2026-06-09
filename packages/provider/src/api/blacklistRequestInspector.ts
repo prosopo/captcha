@@ -141,12 +141,18 @@ const ruleSpecificity = (
 	return score;
 };
 
+// On equal specificity, the more severe outcome wins. This is a safety
+// property: a request that matches both a Block rule and a Restrict rule
+// of equal specificity must be blocked, never restricted-but-let-through.
+const policySeverity = (rule: AccessRule): number =>
+	rule.type === AccessPolicyType.Block ? 1 : 0;
+
 /**
  * Rank the candidate rules a single Redis query returned. A rule "applies" iff
  * every populated field on the rule equals the corresponding request field
- * (IP fields use range semantics). The most specific applicable rule wins:
- * client-scoped rules outrank global rules of equal user-scope specificity,
- * matching the priority the original per-subset loop produced.
+ * (IP fields use range semantics). The most specific applicable rule wins;
+ * on tie, the more severe (Block over Restrict) wins. Client-scoped rules
+ * outrank global rules of equal user-scope specificity.
  */
 export const rankCandidateRules = (
 	rules: AccessRule[],
@@ -155,11 +161,15 @@ export const rankCandidateRules = (
 ): AccessRule[] =>
 	rules
 		.filter((rule) => ruleApplies(rule, request, requestClientId))
-		.sort(
-			(a, b) =>
+		.sort((a, b) => {
+			const specDelta =
 				ruleSpecificity(b, requestClientId) -
-				ruleSpecificity(a, requestClientId),
-		);
+				ruleSpecificity(a, requestClientId);
+			if (specDelta !== 0) {
+				return specDelta;
+			}
+			return policySeverity(b) - policySeverity(a);
+		});
 
 /**
  * Fetch the access rules that apply to a request, most specific first.

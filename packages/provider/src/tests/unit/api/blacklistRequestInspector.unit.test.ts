@@ -356,4 +356,40 @@ describe("rankCandidateRules", () => {
 		const ranked = rankCandidateRules([rule], request, undefined);
 		expect(ranked).toEqual([]);
 	});
+
+	it("on equal specificity, Block wins over Restrict (safety tiebreaker)", () => {
+		const restrict: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+		};
+		const block: AccessRule = {
+			type: AccessPolicyType.Block,
+			ja4Hash: "ja4-A",
+		};
+		// Pass them in restrict-first order — block must still come first.
+		const ranked = rankCandidateRules([restrict, block], request, undefined);
+		expect(ranked[0]).toEqual(block);
+		expect(ranked[1]).toEqual(restrict);
+	});
+
+	it("specificity still beats severity (a more-specific Restrict beats a less-specific Block)", () => {
+		// A Restrict matching ja4 + asn (2 fields) outranks a Block matching
+		// only ja4 (1 field) — the operator intentionally narrowed the policy
+		// for this combination.
+		const broadBlock: AccessRule = {
+			type: AccessPolicyType.Block,
+			ja4Hash: "ja4-A",
+		};
+		const specificRestrict: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			asn: 205016,
+		};
+		const ranked = rankCandidateRules(
+			[broadBlock, specificRestrict],
+			request,
+			undefined,
+		);
+		expect(ranked[0]).toEqual(specificRestrict);
+	});
 });
