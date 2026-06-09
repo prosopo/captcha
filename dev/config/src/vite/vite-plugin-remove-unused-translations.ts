@@ -69,10 +69,16 @@ export const unflatten = (
 // runtime (e.g. template literals, variable lookups, or keys from API responses)
 // will be treated as unused and stripped. Add such keys to translationKeys
 // statically, or they will be missing from the bundle.
+//
+// Backend error keys are always preserved in the bundle since they're returned
+// by the server and not found in frontend source code.
 export default function VitePluginRemoveUnusedTranslations(
 	translationKeys: string[],
 	jsonPattern: string,
+	backendErrorKeys?: string[],
 ): Plugin {
+	const backendKeys = new Set(backendErrorKeys || []);
+
 	return {
 		name: "remove-unused-translations",
 		transform(code: string) {
@@ -100,9 +106,11 @@ export default function VitePluginRemoveUnusedTranslations(
 					const jsonData = JSON.parse(content);
 					const jsonDataFlattened = flatten(jsonData);
 
-					// Remove keys that are not in `used`
+					// Keep keys that are either used in frontend code or are backend error keys
 					const filteredData = Object.fromEntries(
-						Object.entries(jsonDataFlattened).filter(([key]) => used.has(key)),
+						Object.entries(jsonDataFlattened).filter(
+							([key]) => used.has(key) || backendKeys.has(key),
+						),
 					);
 
 					const unflattened = unflatten(filteredData);

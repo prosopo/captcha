@@ -16,9 +16,11 @@ import type { i18n } from "i18next";
 
 let frontendInstance: i18n | undefined;
 let frontendPromise: Promise<i18n> | undefined;
+let frontendInitialized = false;
 
 let backendInstance: i18n | undefined;
 let backendPromise: Promise<i18n> | undefined;
+let backendInitialized = false;
 
 export async function loadI18nextFrontend(): Promise<i18n> {
 	if (frontendInstance) return frontendInstance;
@@ -27,17 +29,36 @@ export async function loadI18nextFrontend(): Promise<i18n> {
 			({ default: initializeI18n }) =>
 				new Promise<i18n>((resolve, reject) => {
 					try {
+						// Prevent race conditions: only initialize once
+						if (frontendInitialized) {
+							if (frontendInstance) return resolve(frontendInstance);
+							// Still initializing, wait for completion
+							return;
+						}
+						frontendInitialized = true;
+
 						frontendInstance = initializeI18n((i18n) => {
 							frontendInstance = i18n;
 							resolve(i18n);
 						});
+						// If init is synchronous and callback wasn't called, resolve with instance
+						if (frontendInstance && !frontendInstance.isInitialized) {
+							// Instance created but not yet initialized, let callback handle it
+						} else if (frontendInstance) {
+							resolve(frontendInstance);
+						}
 					} catch (e) {
+						frontendInitialized = false;
 						reject(e);
 					}
 				}),
 		);
 	}
 	return frontendPromise;
+}
+
+export function getFrontendI18n(): i18n | undefined {
+	return frontendInstance;
 }
 
 export async function loadI18nextBackend(): Promise<i18n> {
@@ -47,11 +68,26 @@ export async function loadI18nextBackend(): Promise<i18n> {
 			({ default: initializeI18n }) =>
 				new Promise<i18n>((resolve, reject) => {
 					try {
+						// Prevent race conditions: only initialize once
+						if (backendInitialized) {
+							if (backendInstance) return resolve(backendInstance);
+							// Still initializing, wait for completion
+							return;
+						}
+						backendInitialized = true;
+
 						backendInstance = initializeI18n((i18n) => {
 							backendInstance = i18n;
 							resolve(i18n);
 						});
+						// If init is synchronous and callback wasn't called, resolve with instance
+						if (backendInstance && !backendInstance.isInitialized) {
+							// Instance created but not yet initialized, let callback handle it
+						} else if (backendInstance) {
+							resolve(backendInstance);
+						}
 					} catch (e) {
+						backendInitialized = false;
 						reject(e);
 					}
 				}),

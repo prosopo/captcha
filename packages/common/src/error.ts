@@ -19,6 +19,7 @@ import { ZodError } from "zod";
 type BaseErrorOptions<ContextType> = {
 	name?: string;
 	translationKey?: TranslationKey;
+	message?: string;
 	context?: ContextType;
 };
 
@@ -42,6 +43,7 @@ export abstract class ProsopoBaseError<
 	ContextType extends BaseContextParams = BaseContextParams,
 > extends Error {
 	translationKey: TranslationKey | undefined;
+	message: string;
 	context: ContextType | undefined;
 	cause: Error | undefined;
 
@@ -53,9 +55,12 @@ export abstract class ProsopoBaseError<
 			super(error.message);
 			this.cause = error;
 			this.translationKey = options?.translationKey;
+			this.message = options?.message || error.message;
 		} else {
-			super(error);
+			const fallback = options?.message || error;
+			super(fallback);
 			this.translationKey = error;
+			this.message = fallback;
 		}
 		this.context = options?.context;
 		this.name = options?.name || this.constructor.name;
@@ -153,14 +158,15 @@ export const unwrapError = (
 	err: ProsopoBaseError | SyntaxError | ZodError,
 ) => {
 	let code = "code" in err ? (err.code as number) : 400;
+	const baseError = err as ProsopoBaseError;
 
 	let jsonError: ApiJsonError = {
 		code,
-		message: (err as ProsopoBaseError).translationKey || err.message,
+		message: baseError.message || baseError.translationKey || err.message,
 	};
 	const statusMessage = "Bad Request";
 	jsonError.key =
-		(err as ProsopoBaseError).translationKey ?? "API.UNKNOWN";
+		baseError.translationKey ?? "API.UNKNOWN";
 
 	// unwrap the errors to get the actual error message
 	while (err instanceof ProsopoBaseError && err.context) {
@@ -170,7 +176,7 @@ export const unwrapError = (
 				: undefined;
 		jsonError.key =
 			contextTranslationKey || err.translationKey || "API.UNKNOWN";
-		jsonError.message = err.translationKey || err.message;
+		jsonError.message = err.message || err.translationKey || "Unknown error";
 		jsonError.data = err.context.data as Record<string, unknown> | undefined;
 
 		const contextCode =
