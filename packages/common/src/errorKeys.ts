@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { TranslationKey } from "@prosopo/locale";
+
 // Single source of truth for all valid API error keys
 export const API_ERROR_KEYS = {
 	FORBIDDEN: "API.FORBIDDEN",
@@ -75,3 +77,11 @@ export type ValidErrorKey =
 
 // Array of all keys for the Vite plugin
 export const BACKEND_ERROR_KEYS_ARRAY = Object.values(ALL_ERROR_KEYS);
+
+// Type-level validation: ensure all error keys exist in translation.json
+// Each ValidErrorKey must be assignable to TranslationKey (derived from translation JSON)
+// If this errors, a key is defined here but missing from the translation file.
+export const _validateErrorKeysExistInTranslations: Record<ValidErrorKey, unknown> = {} as Record<
+	ValidErrorKey,
+	TranslationKey
+>;
