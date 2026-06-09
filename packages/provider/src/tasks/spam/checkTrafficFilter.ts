@@ -40,6 +40,15 @@ export type TrafficCheckResult =
  * abuser, etc.) is evaluated independently. A missing or invalid
  * `ipInfo` falls back to "not blocked" so an outage in the upstream
  * service can't block all traffic.
+ *
+ * One cross-filter rule: when an operator enables `blockDatacenter` but
+ * leaves `blockVpn` off, commercial VPNs that exit from datacenter IPs
+ * (which is most of them — Mullvad, NordVPN, ProtonVPN, etc. all run on
+ * AWS/OVH/Hetzner) would otherwise be caught by the datacenter rule.
+ * Operators almost never intend that: "block data centers" is about
+ * scraping/automation traffic, not VPN end-users. So the datacenter
+ * rule is suppressed for IPs also flagged as VPN unless the operator
+ * has opted in to blocking VPN traffic explicitly.
  */
 export const checkTrafficFilter = (
 	ipInfo: IPInfoResponse | undefined,
@@ -74,7 +83,11 @@ export const checkTrafficFilter = (
 		}
 	}
 
-	if (trafficFilter.blockDatacenter && ipInfo.isDatacenter) {
+	if (
+		trafficFilter.blockDatacenter &&
+		ipInfo.isDatacenter &&
+		!(ipInfo.isVPN && !trafficFilter.blockVpn)
+	) {
 		return { isBlocked: true, reason: ResultReason.DATACENTER_BLOCKED };
 	}
 
