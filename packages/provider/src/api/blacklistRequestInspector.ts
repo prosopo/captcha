@@ -15,6 +15,7 @@
 import type { Logger } from "@prosopo/logger";
 import { ApiPrefix, type IPInfoResponse } from "@prosopo/types";
 import {
+	type AccessRule,
 	AccessPolicyType,
 	type AccessRulesStorage,
 	FilterScopeMatch,
@@ -22,7 +23,6 @@ import {
 	type UserScopeRecord,
 	userScopeInput,
 } from "@prosopo/user-access-policy";
-import { uniqueSubsets } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 
 export const getRequestUserScope = (
@@ -61,55 +61,138 @@ export const getRequestUserScope = (
 	};
 };
 
-const getPrioritisedUserScopes = (userScope: {
-	[key: string]: bigint | number | string;
-}): Record<string, bigint | number | string | undefined>[] => {
-	const userScopeKeys = Object.keys(userScope);
-	return uniqueSubsets(userScopeKeys).map((subset: string[]) =>
-		subset.reduce(
-			(acc, key) => {
-				acc[key] = userScope[key];
-				return acc;
-			},
-			{} as Record<string, bigint | number | string | undefined>,
-		),
+// Scalar user-scope fields (i.e. everything except the IP triple, which is
+// handled with range semantics below). Each present field on a rule
+// contributes one point of specificity when ranking candidates.
+const SCALAR_USER_SCOPE_FIELDS = [
+	"userId",
+	"ja4Hash",
+	"headersHash",
+	"userAgentHash",
+	"headHash",
+	"coords",
+	"countryCode",
+	"asn",
+] as const satisfies ReadonlyArray<keyof UserScope>;
+
+const ruleHasIpConstraint = (rule: AccessRule): boolean =>
+	rule.numericIp !== undefined ||
+	(rule.numericIpMaskMin !== undefined && rule.numericIpMaskMax !== undefined);
+
+const ruleIpMatchesRequest = (
+	rule: AccessRule,
+	requestIp: bigint | undefined,
+): boolean => {
+	if (!ruleHasIpConstraint(rule)) {
+		return true;
+	}
+	if (requestIp === undefined) {
+		return false;
+	}
+	if (rule.numericIp !== undefined) {
+		return requestIp === rule.numericIp;
+	}
+	// CIDR rule: numericIpMaskMin / numericIpMaskMax both defined (per
+	// ruleHasIpConstraint above).
+	return (
+		requestIp >= (rule.numericIpMaskMin as bigint) &&
+		requestIp <= (rule.numericIpMaskMax as bigint)
 	);
 };
 
+const ruleApplies = (
+	rule: AccessRule,
+	request: UserScope,
+	requestClientId: string | undefined,
+): boolean => {
+	// Client-scoped rules: rule.clientId must equal the request's clientId.
+	// Rules without a clientId are global and apply to any client.
+	if (rule.clientId !== undefined && rule.clientId !== requestClientId) {
+		return false;
+	}
+	for (const field of SCALAR_USER_SCOPE_FIELDS) {
+		const ruleValue = rule[field];
+		if (ruleValue === undefined) {
+			continue;
+		}
+		if (ruleValue !== request[field]) {
+			return false;
+		}
+	}
+	return ruleIpMatchesRequest(rule, request.numericIp);
+};
+
+const ruleSpecificity = (
+	rule: AccessRule,
+	requestClientId: string | undefined,
+): number => {
+	let score = 0;
+	if (rule.clientId !== undefined && rule.clientId === requestClientId) {
+		score += 1;
+	}
+	for (const field of SCALAR_USER_SCOPE_FIELDS) {
+		if (rule[field] !== undefined) {
+			score += 1;
+		}
+	}
+	if (ruleHasIpConstraint(rule)) {
+		score += 1;
+	}
+	return score;
+};
+
+/**
+ * Rank the candidate rules a single Redis query returned. A rule "applies" iff
+ * every populated field on the rule equals the corresponding request field
+ * (IP fields use range semantics). The most specific applicable rule wins:
+ * client-scoped rules outrank global rules of equal user-scope specificity,
+ * matching the priority the original per-subset loop produced.
+ */
+export const rankCandidateRules = (
+	rules: AccessRule[],
+	request: UserScope,
+	requestClientId: string | undefined,
+): AccessRule[] =>
+	rules
+		.filter((rule) => ruleApplies(rule, request, requestClientId))
+		.sort(
+			(a, b) =>
+				ruleSpecificity(b, requestClientId) -
+				ruleSpecificity(a, requestClientId),
+		);
+
+/**
+ * Fetch the access rules that apply to a request, most specific first.
+ *
+ * Old shape: 2 × (2^n − 1) `FT.SEARCH` round trips, one per non-empty subset
+ * of the populated user-scope fields × {clientId, undefined}. With n=6 fields
+ * (incl. ASN) that's 126 round trips per request.
+ *
+ * New shape: one greedy `FT.SEARCH` that returns any rule touching any
+ * populated request field for either the matching clientId or no clientId.
+ * Specificity is computed in JS afterwards. Same external semantics.
+ */
 export const getPrioritisedAccessRule = async (
 	userAccessRulesStorage: AccessRulesStorage,
 	userScope: UserScope | UserScopeRecord,
 	clientId?: string,
-) => {
-	const prioritisedUserScopes = getPrioritisedUserScopes(userScope);
-	const policyPromises = [];
-	// Search first by clientId, if it exists, then by undefined clientId. Otherwise, just search by undefined clientId.
-	const clientLoop = clientId ? [clientId, undefined] : [undefined];
-	for (const clientOrUndefined of clientLoop) {
-		for (const scope of prioritisedUserScopes) {
-			if (Object.values(scope).every((value) => value === undefined)) {
-				continue;
-			}
+): Promise<AccessRule[]> => {
+	const parsedUserScope = userScopeInput.parse(userScope);
 
-			const parsedUserScope = userScopeInput.parse(scope);
+	const filter = {
+		...(clientId && {
+			policyScope: {
+				clientId,
+			},
+		}),
+		policyScopeMatch: FilterScopeMatch.Greedy,
+		userScope: parsedUserScope,
+		userScopeMatch: FilterScopeMatch.Greedy,
+	};
 
-			const filter = {
-				...(clientOrUndefined && {
-					policyScope: {
-						clientId: clientOrUndefined,
-					},
-				}),
-				policyScopeMatch: FilterScopeMatch.Exact,
+	const candidates = await userAccessRulesStorage.findRules(filter, false, true);
 
-				userScope: parsedUserScope,
-
-				userScopeMatch: FilterScopeMatch.Exact,
-			};
-
-			policyPromises.push(userAccessRulesStorage.findRules(filter, true, true));
-		}
-	}
-	return (await Promise.all(policyPromises)).flat();
+	return rankCandidateRules(candidates, parsedUserScope, clientId);
 };
 
 export class BlacklistRequestInspector {
