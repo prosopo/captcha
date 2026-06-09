@@ -15,8 +15,8 @@
 import type { Logger } from "@prosopo/logger";
 import { ApiPrefix, type IPInfoResponse } from "@prosopo/types";
 import {
-	type AccessRule,
 	AccessPolicyType,
+	type AccessRule,
 	type AccessRulesStorage,
 	FilterScopeMatch,
 	type UserScope,
@@ -200,7 +200,11 @@ export const getPrioritisedAccessRule = async (
 		userScopeMatch: FilterScopeMatch.Greedy,
 	};
 
-	const candidates = await userAccessRulesStorage.findRules(filter, false, true);
+	const candidates = await userAccessRulesStorage.findRules(
+		filter,
+		false,
+		true,
+	);
 
 	return rankCandidateRules(candidates, parsedUserScope, clientId);
 };

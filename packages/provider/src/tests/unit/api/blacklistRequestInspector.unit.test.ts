@@ -15,8 +15,8 @@
 import type { Logger } from "@prosopo/logger";
 import type { IPInfoResponse } from "@prosopo/types";
 import {
-	type AccessRule,
 	AccessPolicyType,
+	type AccessRule,
 	type AccessRulesStorage,
 	type UserScope,
 } from "@prosopo/user-access-policy";
