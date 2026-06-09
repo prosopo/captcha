@@ -30,6 +30,7 @@ export const userAttributesRecordFields = [
 	"headHash",
 	"coords",
 	"countryCode",
+	"asn",
 ] as const satisfies (keyof UserAttributesRecord)[];
 
 export type UserIpRecord = {

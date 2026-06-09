@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { stringifyBigInts } from "@prosopo/util";
 import { z } from "zod";
+
+export { stringifyBigInts };
 
 export type LogObject = object;
 export type LogRecord = {
@@ -69,12 +72,12 @@ export type LevelMap = {
 };
 
 const logLevelMap: LevelMap = {
-	[TraceLevel]: 5,
-	[DebugLevel]: 4,
-	[InfoLevel]: 3,
-	[WarnLevel]: 2,
-	[ErrorLevel]: 1,
-	[FatalLevel]: 0,
+	[TraceLevel]: 0,
+	[DebugLevel]: 1,
+	[InfoLevel]: 2,
+	[WarnLevel]: 3,
+	[ErrorLevel]: 4,
+	[FatalLevel]: 5,
 };
 
 export function parseLogLevel(
@@ -168,68 +171,40 @@ export class NativeLogger implements Logger {
 		return this.level;
 	}
 
-	private unpackError(err: Error | object): { msg: string; data: LogRecord } {
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		const e: any = err; // allow additional properties
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		const data: any = { ...err };
-		data.name = e.name || "Error";
-		if (this.printStack) {
-			if (e.stack) {
-				data.stack = e.stack;
-			}
-			if (e.stacktrace) {
-				data.stacktrace = e.stacktrace; // for compatibility with some environments
-			}
+	private unpackError(err: Error | object): {
+		msg: string;
+		data: Record<string, unknown>;
+	} {
+		const e = err as Record<string, unknown>;
+		const data: Record<string, unknown> = {};
+
+		for (const key of Object.getOwnPropertyNames(err)) {
+			if (!this.printStack && (key === "stack" || key === "stacktrace"))
+				continue;
+			data[key] = e[key];
 		}
-		if (e.cause) {
-			data.cause = e.cause; // include cause if available
+
+		if (!data.name) {
+			data.name = (err as { name?: unknown }).name ?? "Error";
 		}
-		if (e.code) {
-			data.code = e.code; // include code if available
-		}
-		if (e.details) {
-			data.details = e.details; // include details if available
-		}
-		if (e.context) {
-			data.context = e.context; // include context if available
-		}
-		if (e.data) {
-			data.data = e.data; // include data if available
-		}
-		if (e.info) {
-			data.info = e.info; // include info if available
-		}
-		if (e.metadata) {
-			data.metadata = e.metadata; // include metadata if available
-		}
-		if (e.status) {
-			data.status = e.status; // include status if available
-		}
-		if (e.statusCode) {
-			data.statusCode = e.statusCode; // include statusCode if available
-		}
-		if (e.cause) {
-			// chainload errors can have a cause property
-			if (e.cause instanceof Error) {
-				// recurse into the cause
-				data.cause = this.unpackError(e.cause as Error);
+
+		// Recursively unpack the cause chain
+		const cause = e.cause;
+		if (cause !== undefined) {
+			if (
+				cause instanceof Error ||
+				(typeof cause === "object" && cause !== null)
+			) {
+				data.cause = this.unpackError(cause as Error | object);
 			} else {
-				// if the cause is not an error, just include it as is
-				data.cause = e.cause;
+				data.cause = cause;
 			}
 		}
+
 		// Prefer translationKey when present (e.g. ProsopoBaseError) so the
 		// top-level `err` field is locale-stable and queryable.
-		const msg = e.translationKey || e.message || e.msg || "";
-		if (e.message && e.msg) {
-			// duplicate message, defer msg to data
-			data.msg = e.msg;
-		}
-		return {
-			msg,
-			data,
-		};
+		const msg = String(e.translationKey ?? e.message ?? e.msg ?? "");
+		return { msg, data };
 	}
 
 	private print(
@@ -237,14 +212,14 @@ export class NativeLogger implements Logger {
 		fn: LogRecordFn,
 		level: LogLevel,
 	): void {
-		if (this.levelMap[level] > this.levelNum) {
-			return; // skip logging if the level is higher than the current log level
+		if (this.levelMap[level] < this.levelNum) {
+			return; // skip logging if the level is below the current log level threshold
 		}
 		const ts = new Date().toISOString();
 		// populate the log fields using the fn
 		let { data, msg, err } = fn();
 		let errMsg: string | undefined;
-		let errData: LogRecord | undefined;
+		let errData: Record<string, unknown> | undefined;
 		if (err) {
 			if (err instanceof Error || typeof err === "object") {
 				// if it's an instance of Error, unpack the standard fields (e.g. message, name, stack, etc)
@@ -267,8 +242,8 @@ export class NativeLogger implements Logger {
 			data?: LogObject;
 			msg?: string;
 			err?: string;
-			errData?: LogRecord;
-		} = { scope: this.scope, ts, level: this.level };
+			errData?: Record<string, unknown>;
+		} = { scope: this.scope, ts, level };
 		if (data) {
 			baseRecord.data = data;
 		}
@@ -348,35 +323,3 @@ export class NativeLogger implements Logger {
 		}
 	}
 }
-
-/**
- * Recursively converts BigInt values to strings throughout an object, array, or primitive value.
- *
- * BigInts must be cast to strings before applying JSON.stringify(), as it cannot serialize BigInt values and will
- * throw "TypeError: Do not know how to serialize a BigInt".
- *
- * @param value - The value to process (can be a primitive, object, or array)
- * @returns The same value with all BigInt instances converted to strings
- */
-export const stringifyBigInts = (value: unknown): unknown => {
-	if ("bigint" === typeof value) {
-		return value.toString();
-	}
-
-	if (isObject(value)) {
-		for (const key of Object.keys(value)) {
-			value[key] = stringifyBigInts(value[key]);
-		}
-	}
-
-	if (Array.isArray(value)) {
-		for (let i = 0; i < value.length; i++) {
-			value[i] = stringifyBigInts(value[i]);
-		}
-	}
-
-	return value;
-};
-
-const isObject = (value: unknown): value is Record<string, unknown> =>
-	Object === value?.constructor;

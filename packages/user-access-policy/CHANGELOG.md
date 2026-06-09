@@ -1,5 +1,33 @@
 # @prosopo/user-access-policy
 
+## 3.8.0
+### Minor Changes
+
+- 2f459ce: Add `asn` as a user-scope field for access rules. The captcha provider can now block / restrict by Autonomous System Number, matching what the protect/bumblebee tier already supports. ASN is read from `ipInfo.asnNumber` and threaded through `getRequestUserScope` and `checkForHardBlock` at all challenge entry points. Redis index gains a NUMERIC `asn` field with range-syntax lookups.
+
+## 3.7.12
+### Patch Changes
+
+- Updated dependencies [b03dad1]
+  - @prosopo/types@4.3.1
+  - @prosopo/api@3.4.9
+
+## 3.7.11
+### Patch Changes
+
+- Updated dependencies [a1d60db]
+- Updated dependencies [2392aaf]
+- Updated dependencies [97cf7bd]
+- Updated dependencies [6ca1125]
+- Updated dependencies [32a591b]
+  - @prosopo/types@4.3.0
+  - @prosopo/logger@1.0.2
+  - @prosopo/util@3.2.15
+  - @prosopo/api@3.4.8
+  - @prosopo/common@3.1.38
+  - @prosopo/api-route@2.6.46
+  - @prosopo/redis-client@1.0.23
+
 ## 3.7.10
 ### Patch Changes
 

@@ -1,5 +1,15 @@
 # @prosopo/svelte-procaptcha-integration-demo
 
+## 1.1.77
+### Patch Changes
+
+  - @prosopo/svelte-procaptcha-wrapper@1.1.77
+
+## 1.1.76
+### Patch Changes
+
+  - @prosopo/svelte-procaptcha-wrapper@1.1.76
+
 ## 1.1.75
 ### Patch Changes
 

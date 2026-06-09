@@ -71,7 +71,8 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/prosopo/captcha.git"
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "dev/config"
 	},
 	"bugs": {
 		"url": "https://github.com/prosopo/captcha/issues"

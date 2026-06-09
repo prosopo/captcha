@@ -1,5 +1,23 @@
 # @prosopo/ipinfo
 
+## 0.2.15
+### Patch Changes
+
+- 9b18b31: Bump @prosopo/ipinfo so npm accepts the trusted-publishing publish. Version 0.2.14 was previously burned on the registry; this republishes at 0.2.15.
+- Updated dependencies [b03dad1]
+  - @prosopo/types@4.3.1
+
+## 0.2.14
+### Patch Changes
+
+- Updated dependencies [a1d60db]
+- Updated dependencies [2392aaf]
+- Updated dependencies [97cf7bd]
+- Updated dependencies [6ca1125]
+- Updated dependencies [32a591b]
+  - @prosopo/types@4.3.0
+  - @prosopo/logger@1.0.2
+
 ## 0.2.13
 ### Patch Changes
 

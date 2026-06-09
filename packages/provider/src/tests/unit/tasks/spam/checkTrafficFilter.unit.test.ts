@@ -106,6 +106,38 @@ describe("checkTrafficFilter", () => {
 		});
 	});
 
+	it("does not block VPN-on-datacenter IPs when blockDatacenter is on but blockVpn is off", () => {
+		// Commercial VPNs run on datacenter IPs. Operators who enabled
+		// datacenter blocking but not VPN blocking did not intend to
+		// catch VPN end-users.
+		const result = checkTrafficFilter(
+			baseInfo({ isDatacenter: true, isVPN: true }),
+			{ ...allBlocked, blockVpn: false },
+		);
+		expect(result).toEqual({ isBlocked: false });
+	});
+
+	it("still blocks raw datacenter (non-VPN) IPs when blockDatacenter is on and blockVpn is off", () => {
+		const result = checkTrafficFilter(
+			baseInfo({ isDatacenter: true, isVPN: false }),
+			{ ...allBlocked, blockVpn: false },
+		);
+		expect(result).toEqual({
+			isBlocked: true,
+			reason: "API.DATACENTER_BLOCKED",
+		});
+	});
+
+	it("blocks VPN-on-datacenter IPs as VPN when both filters are enabled", () => {
+		// The VPN check runs first and short-circuits before the
+		// datacenter rule, so the reason should be VPN_BLOCKED.
+		const result = checkTrafficFilter(
+			baseInfo({ isDatacenter: true, isVPN: true }),
+			allBlocked,
+		);
+		expect(result).toEqual({ isBlocked: true, reason: "API.VPN_BLOCKED" });
+	});
+
 	it("blocks mobile when blockMobile is true", () => {
 		const result = checkTrafficFilter(baseInfo({ isMobile: true }), allBlocked);
 		expect(result).toEqual({ isBlocked: true, reason: "API.MOBILE_BLOCKED" });

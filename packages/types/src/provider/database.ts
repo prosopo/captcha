@@ -151,6 +151,20 @@ export interface ClientMetaData {
 	hp?: string;
 }
 
+/**
+ * Internal classification labels applied by superadmins from the audit page to
+ * build supervised ML training sets. Stored directly on the captcha record
+ * (see {@link StoredCaptcha.label}); not part of the captcha verification flow.
+ */
+export enum CaptchaLabel {
+	human = "human",
+	bot = "bot",
+	suspicious = "suspicious",
+	unknown = "unknown",
+}
+
+export const CaptchaLabelSchema = nativeEnum(CaptchaLabel);
+
 export interface StoredCaptcha {
 	result: {
 		status: CaptchaStatus;
@@ -193,6 +207,13 @@ export interface StoredCaptcha {
 	// Current behavioral data storage format (packed)
 	deviceCapability?: string;
 	behavioralDataPacked?: BehavioralDataPacked;
+	// Internal ML labelling, written by superadmins via the audit page. Not part
+	// of the captcha verification flow; used to build supervised training sets.
+	// See `CaptchaLabel`.
+	label?: CaptchaLabel;
+	labelReason?: string;
+	labelledBy?: string;
+	labelledAt?: Date;
 }
 
 export interface UserCommitment extends StoredCaptcha {
@@ -270,6 +291,11 @@ export const UserCommitmentSchema = object({
 	// Behavioral data fields
 	deviceCapability: string().optional(),
 	behavioralDataPacked: BehavioralDataPackedSchema.optional(),
+	// Internal ML labelling (see StoredCaptcha.label)
+	label: CaptchaLabelSchema.optional(),
+	labelReason: string().optional(),
+	labelledBy: string().optional(),
+	labelledAt: date().optional(),
 }) satisfies ZodType<UserCommitment, ZodTypeDef, unknown>;
 
 // Zod schema for ScoreComponents
@@ -281,6 +307,7 @@ export const ScoreComponentsSchema = object({
 	unverifiedHost: number().optional(),
 	webView: number().optional(),
 	triggeredDetectors: array(number()).optional(),
+	shadowDomPenalty: boolean().optional(),
 });
 
 // Zod schema for the WASM SIMD CPU fingerprint readings collected by the
@@ -334,6 +361,7 @@ export interface ScoreComponents {
 	unverifiedHost?: number;
 	webView?: number;
 	triggeredDetectors?: number[];
+	shadowDomPenalty?: boolean;
 }
 
 // Zod schema for Session
@@ -392,6 +420,12 @@ export const SessionSchema = object({
 	// indicator reflects when the catcher's CPU fingerprint became
 	// available relative to the user's journey.
 	simdReadingsStage: SimdReadingsStageSchema.optional(),
+	dnsEvent: object({
+		resolverIp: string().optional(),
+		peerIp: string().optional(),
+		pathValid: boolean().optional(),
+		receivedAt: date(),
+	}).optional(),
 }) satisfies ZodType<Session, ZodTypeDef, unknown>;
 
 // Session now includes all frictionless token fields
@@ -435,6 +469,27 @@ export type Session = {
 	simdReadings?: SimdReadings;
 	// Stage at which the readings first arrived.
 	simdReadingsStage?: SimdReadingsStage;
+	// DNS observation merge target — populated by the dns-event sidecar
+	// via POST /v1/prosopo/provider/admin/dns/event. At most one DNS
+	// event + one HTTP event per session under normal usage; the
+	// resolver/peer IP mismatch is the signal that flags a residential
+	// proxy that doesn't tunnel DNS.
+	dnsEvent?: {
+		// Source IP of the UDP/53 query that hit the auth nameserver for
+		// {sessionId}.{subzone}. That's the resolver the user's proxy
+		// chain actually used — leaks even when HTTP traffic is proxied.
+		resolverIp?: string;
+		// Peer IP of the TLS connection that hit the pixel endpoint. The
+		// proxy exit IP from the user's perspective.
+		peerIp?: string;
+		// True iff the HTTPS request path matched HMAC(sessionId, secret).
+		// False indicates a scanner / replayed sessionId / wrong secret.
+		pathValid?: boolean;
+		// Wall-clock time the first event for this session was received
+		// by the provider. Subsequent events update the individual fields
+		// above but don't bump this timestamp.
+		receivedAt: Date;
+	};
 };
 
 // Zod schema for PoWCaptchaStored
@@ -475,6 +530,11 @@ export const PoWCaptchaStoredSchema = object({
 	clickEvents: array(object({}).catchall(any())).optional(),
 	deviceCapability: string().optional(),
 	behavioralDataPacked: BehavioralDataPackedSchema.optional(),
+	// Internal ML labelling (see StoredCaptcha.label)
+	label: CaptchaLabelSchema.optional(),
+	labelReason: string().optional(),
+	labelledBy: string().optional(),
+	labelledAt: date().optional(),
 }) satisfies ZodType<PoWCaptchaStored, ZodTypeDef, unknown>;
 
 export type PendingImageCaptchaRequest = {

@@ -32,6 +32,7 @@ import { hashUserIp } from "../../../utils/hashUserIp.js";
 import { normalizeRequestIp } from "../../../utils/normalizeRequestIp.js";
 import { getMaintenanceMode } from "../../admin/apiToggleMaintenanceModeEndpoint.js";
 import { getRequestUserScope } from "../../blacklistRequestInspector.js";
+import { buildDnsEventUrl } from "../../dnsEventUrl.js";
 import { isReservedTestSiteKey } from "../../testSiteKey.js";
 import { buildFrictionlessMaintenanceResponse } from "../maintenanceModeResponses.js";
 import { handleAccessPolicy } from "./accessPolicy.js";
@@ -184,6 +185,7 @@ export default (
 						| CaptchaType.puzzle,
 					[ApiParams.sessionId]: dedup.sessionId,
 					[ApiParams.status]: "ok",
+					dns_url: buildDnsEventUrl(dedup.sessionId),
 				});
 			}
 
@@ -192,6 +194,10 @@ export default (
 			const countryCode =
 				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
 					? req.ipInfo.countryCode
+					: undefined;
+			const asn =
+				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
+					? req.ipInfo.asnNumber
 					: undefined;
 
 			const shortCircuitResponse = await runConfiguredCaptchaTypeShortCircuit(
@@ -228,6 +234,7 @@ export default (
 				decryptedHeadHash,
 				decryptionFailed,
 				triggeredDetectors,
+				shadowDomPenalty,
 			} = await tasks.frictionlessManager.decryptPayload(token, headHash);
 
 			req.logger.debug(() => ({
@@ -269,6 +276,7 @@ export default (
 				...(lScore && { lScore }),
 				...(triggeredDetectors &&
 					triggeredDetectors.length > 0 && { triggeredDetectors }),
+				...(shadowDomPenalty !== undefined && { shadowDomPenalty }),
 			};
 
 			tasks.frictionlessManager.setSessionParams({
@@ -317,6 +325,7 @@ export default (
 				undefined,
 				undefined,
 				countryCode,
+				asn,
 			);
 			const userAccessPolicy = (
 				await tasks.frictionlessManager.getPrioritisedAccessPolicies(

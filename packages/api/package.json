@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/api",
-	"version": "3.4.7",
+	"version": "3.4.9",
 	"description": "Wrapper for the provider API",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -26,7 +26,8 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/prosopo/captcha.git"
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "packages/api"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
@@ -35,7 +36,7 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
-		"@prosopo/types": "4.2.1"
+		"@prosopo/types": "4.3.1"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.3.1",

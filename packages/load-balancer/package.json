@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/load-balancer",
-	"version": "2.9.9",
+	"version": "2.9.11",
 	"description": "Provider load balancer",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -27,7 +27,8 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+ssh://git@github.com/prosopo/captcha.git"
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "packages/load-balancer"
 	},
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
@@ -36,8 +37,8 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
-		"@prosopo/common": "3.1.37",
-		"@prosopo/types": "4.2.1",
+		"@prosopo/common": "3.1.38",
+		"@prosopo/types": "4.3.1",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {

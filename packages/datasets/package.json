@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/datasets",
-	"version": "3.1.27",
+	"version": "3.1.29",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
@@ -42,10 +42,10 @@
 	},
 	"dependencies": {
 		"@polkadot/util": "13.5.7",
-		"@prosopo/common": "3.1.37",
-		"@prosopo/logger": "1.0.1",
-		"@prosopo/types": "4.2.1",
-		"@prosopo/util": "3.2.14",
+		"@prosopo/common": "3.1.38",
+		"@prosopo/logger": "1.0.2",
+		"@prosopo/types": "4.3.1",
+		"@prosopo/util": "3.2.15",
 		"@prosopo/util-crypto": "13.5.29"
 	},
 	"devDependencies": {
@@ -64,7 +64,8 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/prosopo/captcha.git"
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "packages/datasets"
 	},
 	"bugs": {
 		"url": "https://github.com/prosopo/captcha/issues"

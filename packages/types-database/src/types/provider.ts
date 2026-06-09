@@ -15,6 +15,7 @@
 import type { AllKeys } from "@prosopo/common";
 import { type TranslationKey, TranslationKeysSchema } from "@prosopo/locale";
 import {
+	CaptchaLabel,
 	CaptchaType,
 	type ClientContextEntropy,
 	type CompositeIpAddress,
@@ -215,10 +216,17 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 		required: false,
 	},
 	providerSignature: { type: String, required: true },
+	// Internal ML labelling applied by superadmins via the audit page.
+	label: { type: String, enum: Object.values(CaptchaLabel), required: false },
+	labelReason: { type: String, required: false },
+	labelledBy: { type: String, required: false },
+	labelledAt: { type: Date, required: false },
 });
 
 // Set an index on the captchaId field, ascending
 PoWCaptchaRecordSchema.index({ challenge: 1 });
+// Supports the labelled-dataset export query (`{ label: { $exists: true } }`).
+PoWCaptchaRecordSchema.index({ label: 1, dappAccount: 1 });
 PoWCaptchaRecordSchema.index({ lastUpdatedTimestamp: 1 });
 PoWCaptchaRecordSchema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
 PoWCaptchaRecordSchema.index({ "ipAddress.lower": 1 });
@@ -414,9 +422,16 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 		},
 		required: false,
 	},
+	// Internal ML labelling applied by superadmins via the audit page.
+	label: { type: String, enum: Object.values(CaptchaLabel), required: false },
+	labelReason: { type: String, required: false },
+	labelledBy: { type: String, required: false },
+	labelledAt: { type: Date, required: false },
 });
 // Set an index on the commitment id field, descending
 UserCommitmentRecordSchema.index({ id: -1 });
+// Supports the labelled-dataset export query (`{ label: { $exists: true } }`).
+UserCommitmentRecordSchema.index({ label: 1, dappAccount: 1 });
 UserCommitmentRecordSchema.index({
 	lastUpdatedTimestamp: 1,
 });
@@ -532,6 +547,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 		unverifiedHost: { type: Number, required: false },
 		webView: { type: Number, required: false },
 		triggeredDetectors: { type: [Number], required: false },
+		shadowDomPenalty: { type: Boolean, required: false },
 	},
 	providerSelectEntropy: { type: Number, required: true },
 	ipAddress: CompositeIpAddressRecordSchemaObj,
@@ -581,6 +597,21 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	// Stage at which the SIMD readings first arrived on this session
 	// (frictionless / challenge / submit). First-hop-wins.
 	simdReadingsStage: { type: String, required: false },
+	// DNS observation merge target. Populated by
+	// POST /v1/prosopo/provider/admin/dns/event from the dns-event
+	// sidecar (see types/provider/database.ts → Session.dnsEvent).
+	dnsEvent: {
+		type: new Schema(
+			{
+				resolverIp: { type: String, required: false },
+				peerIp: { type: String, required: false },
+				pathValid: { type: Boolean, required: false },
+				receivedAt: { type: Date, required: true },
+			},
+			{ _id: false },
+		),
+		required: false,
+	},
 } satisfies AllKeys<Session>);
 
 SessionRecordSchema.index({ createdAt: 1 });
@@ -935,6 +966,25 @@ export interface IProviderDatabase extends IDatabase {
 		readings: NonNullable<Session["simdReadings"]>,
 		stage: SimdReadingsStage,
 	): Promise<void>;
+
+	/**
+	 * Merge a partial dnsEvent observation into the session record using
+	 * dotted-path `$set` so DNS-leg and HTTP-leg events can both land on
+	 * the same session without read-modify-write races. `receivedAt` is
+	 * only written if absent (`$setOnInsert`-style behaviour via $set
+	 * + a `$cond` would over-complicate; instead, the caller passes
+	 * `receivedAtIfAbsent` and we set it unconditionally only when no
+	 * field already exists). Returns true if the session existed.
+	 */
+	mergeSessionDnsEvent(
+		sessionId: string,
+		fields: {
+			resolverIp?: string;
+			peerIp?: string;
+			pathValid?: boolean;
+		},
+		receivedAtIfAbsent: Date,
+	): Promise<boolean>;
 
 	getSessionByuserSitekeyIpHash(
 		userSitekeyIpHash: string,

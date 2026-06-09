@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/vue-procaptcha-wrapper",
-	"version": "1.1.75",
+	"version": "1.1.77",
 	"type": "module",
 	"engines": {
 		"node": "^24",
@@ -24,7 +24,7 @@
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo"
 	},
 	"dependencies": {
-		"@prosopo/procaptcha-wrapper": "2.6.77",
+		"@prosopo/procaptcha-wrapper": "2.6.79",
 		"vue": "3.5.13"
 	},
 	"devDependencies": {
@@ -41,5 +41,10 @@
 		"url": "https://github.com/prosopo/captcha/issues"
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
-	"sideEffects": false
+	"sideEffects": false,
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "integration/frameworks/vue/vue-procaptcha-wrapper"
+	}
 }

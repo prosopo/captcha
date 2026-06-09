@@ -469,6 +469,9 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 					challengeRecord.ipInfo?.isValid
 						? challengeRecord.ipInfo.countryCode
 						: undefined,
+					challengeRecord.ipInfo?.isValid
+						? challengeRecord.ipInfo.asnNumber
+						: undefined,
 				);
 
 				if (blockPolicy) {

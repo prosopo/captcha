@@ -1,5 +1,86 @@
 # @prosopo/provider
 
+## 4.8.0
+### Minor Changes
+
+- 2f459ce: Collapse the per-request access-rule lookup from 2 × (2^n − 1) Redis `FT.SEARCH` round trips (126 with n=6 user-scope fields) to a single greedy query, with specificity ranking done in JS. Same external semantics — client-scoped rules still outrank global, and a rule with both `ja4Hash` and `ip` constraints is correctly rejected for requests that only match one of them.
+
+### Patch Changes
+
+- 2f459ce: Add `asn` as a user-scope field for access rules. The captcha provider can now block / restrict by Autonomous System Number, matching what the protect/bumblebee tier already supports. ASN is read from `ipInfo.asnNumber` and threaded through `getRequestUserScope` and `checkForHardBlock` at all challenge entry points. Redis index gains a NUMERIC `asn` field with range-syntax lookups.
+- Updated dependencies [2f459ce]
+  - @prosopo/user-access-policy@3.8.0
+  - @prosopo/database@3.13.9
+  - @prosopo/types-database@4.8.2
+  - @prosopo/env@3.5.9
+  - @prosopo/types-env@2.9.18
+  - @prosopo/api-express-router@3.1.19
+
+## 4.7.2
+### Patch Changes
+
+- b03dad1: Thread `shadowDomPenalty: boolean` from the catcher's encrypted detection payload through `decryptPayload` and persist it on `Session.scoreComponents` so the flag is queryable in Mongo without inferring it from `baseScore=1 ∧ ¬triggeredDetectors`. Field is optional on the wire (position 6); older catcher bundles omit it and `shadowDomPenalty` stays undefined.
+- Updated dependencies [b03dad1]
+  - @prosopo/types@4.3.1
+  - @prosopo/types-database@4.8.1
+  - @prosopo/env@3.5.8
+  - @prosopo/api@3.4.9
+  - @prosopo/api-express-router@3.1.18
+  - @prosopo/database@3.13.8
+  - @prosopo/datasets@3.1.29
+  - @prosopo/keyring@2.9.35
+  - @prosopo/load-balancer@2.9.11
+  - @prosopo/types-env@2.9.17
+  - @prosopo/user-access-policy@3.7.12
+
+## 4.7.1
+### Patch Changes
+
+- 936e987: Republish under npm trusted publishing.
+  
+  No runtime change. The v3.6.30 publish landed only a partial slice of the workspace before npm rejected the rest (provenance verification + repository-field mismatch). Cutting a fresh version so every package gets a clean publish under the new OIDC-based workflow with provenance attestations attached.
+
+## 4.7.0
+### Minor Changes
+
+- 2392aaf: Integrate the prosopo/dns sidecar against the procaptcha provider.
+  
+  - New admin endpoint `POST /v1/prosopo/provider/admin/dns/event` ingests batched DNS observation events from the sidecar (auth: admin sr25519 JWT) and merges resolver / peer IPs onto the matching Session record under a new `Session.dnsEvent` field.
+  - Frictionless response carries a per-session `dns_url` when the pronode has `DNS_EVENT_SUBZONE` + `DNS_EVENT_HMAC_SECRET` set. The HMAC path mirrors the sidecar's Rust implementation so both sides agree without shared per-request state.
+  - The frictionless bundle fires one no-cors GET to `dns_url` on detection completion (fire-and-forget; failures never affect the captcha flow).
+  - `dns_url` is included on the `reuse_session` short-circuit path too, not only the new-session path — otherwise repeat visits from the same user/IP/sitekey combination silently dropped the observation hop.
+  - Deploy compose entry for the sidecar plus a Caddy `layer4` SNI-passthrough block so the sidecar terminates TLS itself (no Cloudflare token needed). Caddy image must be rebuilt with the `caddy-l4` plugin.
+
+### Patch Changes
+
+- 896243a: Document three known spec deviations in `read-tls-client-hello`'s JA4 implementation.
+  
+  Adds inline comments to `ja4Middleware.ts` explaining how `calculateJa4FromHelloData`
+  differs from the Rust/AWS-Lambda reference: TLS 1.3 detection via extension presence
+  rather than content, single-byte ALPN first-char duplication, and ASCII decoding of
+  non-alphanumeric ALPN bytes instead of hex encoding.
+- Updated dependencies [a1d60db]
+- Updated dependencies [2392aaf]
+- Updated dependencies [97cf7bd]
+- Updated dependencies [6ca1125]
+- Updated dependencies [32a591b]
+  - @prosopo/types@4.3.0
+  - @prosopo/types-database@4.8.0
+  - @prosopo/logger@1.0.2
+  - @prosopo/util@3.2.15
+  - @prosopo/api@3.4.8
+  - @prosopo/api-express-router@3.1.17
+  - @prosopo/common@3.1.38
+  - @prosopo/database@3.13.7
+  - @prosopo/datasets@3.1.28
+  - @prosopo/env@3.5.7
+  - @prosopo/keyring@2.9.34
+  - @prosopo/load-balancer@2.9.10
+  - @prosopo/types-env@2.9.16
+  - @prosopo/user-access-policy@3.7.11
+  - @prosopo/api-route@2.6.46
+  - @prosopo/redis-client@1.0.23
+
 ## 4.6.3
 ### Patch Changes
 

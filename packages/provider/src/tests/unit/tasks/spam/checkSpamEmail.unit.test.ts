@@ -19,10 +19,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { checkSpamEmail } from "../../../../tasks/spam/checkSpamEmail.js";
 
 // Mock @prosopo/util module
-vi.mock("@prosopo/util", () => ({
-	validateDomainForOutboundRequest: vi.fn(),
-	extractDomainFromEmail: vi.fn(),
-}));
+vi.mock("@prosopo/util", async (importActual) => {
+	const actual = await importActual<typeof import("@prosopo/util")>();
+	return {
+		...actual,
+		validateDomainForOutboundRequest: vi.fn(),
+		extractDomainFromEmail: vi.fn(),
+	};
+});
 
 // Mock the local dns utils module
 vi.mock("../../../../utils/dns.js", () => ({

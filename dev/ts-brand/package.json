@@ -43,7 +43,8 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/prosopo/captcha.git"
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "dev/ts-brand"
 	},
 	"bugs": {
 		"url": "https://github.com/prosopo/captcha/issues"

@@ -1,5 +1,64 @@
 # @prosopo/cli
 
+## 3.6.34
+### Patch Changes
+
+- Updated dependencies [2f459ce]
+- Updated dependencies [2f459ce]
+  - @prosopo/provider@4.8.0
+  - @prosopo/env@3.5.9
+
+## 3.6.33
+### Patch Changes
+
+- b24ea03: Caddy now SNI-routes :443 with caddy-l4. Pixel URL drops the :9362 port; HTTP-01 ACME renewals keep working via auto-managed :80.
+- 3420831: DNS sidecar event merge: atomic dotted-path `$set` so DNS + HTTP legs co-occur on one session (was clobbering: prior projection omitted `dnsEvent`, every write started from `undefined`). Caddy now forwards PROXY-protocol v2 on the `*.t.{domain}` route and the sidecar (≥0.1.6) reads it, so `dnsEvent.peerIp` records the real client IP instead of the docker bridge address.
+
+## 3.6.32
+### Patch Changes
+
+- Updated dependencies [b03dad1]
+  - @prosopo/provider@4.7.2
+  - @prosopo/types@4.3.1
+  - @prosopo/env@3.5.8
+  - @prosopo/api@3.4.9
+  - @prosopo/keyring@2.9.35
+
+## 3.6.31
+### Patch Changes
+
+- 936e987: Republish under npm trusted publishing.
+  
+  No runtime change. The v3.6.30 publish landed only a partial slice of the workspace before npm rejected the rest (provenance verification + repository-field mismatch). Cutting a fresh version so every package gets a clean publish under the new OIDC-based workflow with provenance attestations attached.
+- Updated dependencies [936e987]
+  - @prosopo/provider@4.7.1
+
+## 3.6.30
+### Patch Changes
+
+- 2392aaf: Integrate the prosopo/dns sidecar against the procaptcha provider.
+  
+  - New admin endpoint `POST /v1/prosopo/provider/admin/dns/event` ingests batched DNS observation events from the sidecar (auth: admin sr25519 JWT) and merges resolver / peer IPs onto the matching Session record under a new `Session.dnsEvent` field.
+  - Frictionless response carries a per-session `dns_url` when the pronode has `DNS_EVENT_SUBZONE` + `DNS_EVENT_HMAC_SECRET` set. The HMAC path mirrors the sidecar's Rust implementation so both sides agree without shared per-request state.
+  - The frictionless bundle fires one no-cors GET to `dns_url` on detection completion (fire-and-forget; failures never affect the captcha flow).
+  - `dns_url` is included on the `reuse_session` short-circuit path too, not only the new-session path — otherwise repeat visits from the same user/IP/sitekey combination silently dropped the observation hop.
+  - Deploy compose entry for the sidecar plus a Caddy `layer4` SNI-passthrough block so the sidecar terminates TLS itself (no Cloudflare token needed). Caddy image must be rebuilt with the `caddy-l4` plugin.
+- Updated dependencies [a1d60db]
+- Updated dependencies [2392aaf]
+- Updated dependencies [896243a]
+- Updated dependencies [97cf7bd]
+- Updated dependencies [6ca1125]
+- Updated dependencies [32a591b]
+  - @prosopo/types@4.3.0
+  - @prosopo/provider@4.7.0
+  - @prosopo/logger@1.0.2
+  - @prosopo/util@3.2.15
+  - @prosopo/api@3.4.8
+  - @prosopo/common@3.1.38
+  - @prosopo/env@3.5.7
+  - @prosopo/keyring@2.9.34
+  - @prosopo/dotenv@3.0.43
+
 ## 3.6.29
 ### Patch Changes
 

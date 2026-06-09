@@ -16,12 +16,15 @@ import type { Logger } from "@prosopo/logger";
 import type { IPInfoResponse } from "@prosopo/types";
 import {
 	AccessPolicyType,
+	type AccessRule,
 	type AccessRulesStorage,
+	type UserScope,
 } from "@prosopo/user-access-policy";
 import { describe, expect, it, vi } from "vitest";
 import {
 	BlacklistRequestInspector,
 	getRequestUserScope,
+	rankCandidateRules,
 } from "../../../api/blacklistRequestInspector.js";
 
 describe("getRequestUserScope", () => {
@@ -229,5 +232,164 @@ describe("BlacklistRequestInspector.shouldAbortRequest", () => {
 			validIpInfo("DE"),
 		);
 		expect(shouldAbort).toBe(true);
+	});
+});
+
+describe("rankCandidateRules", () => {
+	const request: UserScope = {
+		ja4Hash: "ja4-A",
+		userAgentHash: "ua-X",
+		numericIp: 16909060n, // 1.2.3.4
+		asn: 205016,
+	};
+
+	it("rejects a rule whose IP doesn't match the request, even if ja4 does", () => {
+		// The user-stated worst case: rule with ja4 AND ip, greedy query
+		// returns it because ja4 matches, but the IP doesn't.
+		const ruleA: AccessRule = {
+			type: AccessPolicyType.Block,
+			ja4Hash: "ja4-A",
+			numericIp: 99999n,
+		};
+		const ranked = rankCandidateRules([ruleA], request, undefined);
+		expect(ranked).toEqual([]);
+	});
+
+	it("accepts a rule whose populated fields all match", () => {
+		const rule: AccessRule = {
+			type: AccessPolicyType.Block,
+			ja4Hash: "ja4-A",
+			numericIp: 16909060n,
+		};
+		const ranked = rankCandidateRules([rule], request, undefined);
+		expect(ranked).toEqual([rule]);
+	});
+
+	it("accepts a CIDR rule when request IP is in range", () => {
+		const rule: AccessRule = {
+			type: AccessPolicyType.Block,
+			ja4Hash: "ja4-A",
+			numericIpMaskMin: 16909000n,
+			numericIpMaskMax: 16910000n,
+		};
+		const ranked = rankCandidateRules([rule], request, undefined);
+		expect(ranked).toEqual([rule]);
+	});
+
+	it("rejects a CIDR rule when request IP is outside range", () => {
+		const rule: AccessRule = {
+			type: AccessPolicyType.Block,
+			numericIpMaskMin: 99000n,
+			numericIpMaskMax: 99999n,
+		};
+		const ranked = rankCandidateRules([rule], request, undefined);
+		expect(ranked).toEqual([]);
+	});
+
+	it("ranks more-specific rules first (more populated fields wins)", () => {
+		const broad: AccessRule = {
+			type: AccessPolicyType.Block,
+			ja4Hash: "ja4-A",
+		};
+		const specific: AccessRule = {
+			type: AccessPolicyType.Block,
+			ja4Hash: "ja4-A",
+			asn: 205016,
+		};
+		const ranked = rankCandidateRules([broad, specific], request, undefined);
+		expect(ranked).toEqual([specific, broad]);
+	});
+
+	it("ranks a client-scoped rule above a global rule of equal user-scope specificity", () => {
+		const global: AccessRule = {
+			type: AccessPolicyType.Block,
+			ja4Hash: "ja4-A",
+		};
+		const clientScoped: AccessRule = {
+			type: AccessPolicyType.Block,
+			clientId: "site-1",
+			ja4Hash: "ja4-A",
+		};
+		const ranked = rankCandidateRules(
+			[global, clientScoped],
+			request,
+			"site-1",
+		);
+		expect(ranked[0]).toEqual(clientScoped);
+		expect(ranked[1]).toEqual(global);
+	});
+
+	it("rejects a client-scoped rule whose clientId doesn't match the request", () => {
+		const rule: AccessRule = {
+			type: AccessPolicyType.Block,
+			clientId: "site-2",
+			ja4Hash: "ja4-A",
+		};
+		const ranked = rankCandidateRules([rule], request, "site-1");
+		expect(ranked).toEqual([]);
+	});
+
+	it("accepts a global rule (no clientId) when no request clientId is passed", () => {
+		const rule: AccessRule = {
+			type: AccessPolicyType.Block,
+			ja4Hash: "ja4-A",
+		};
+		const ranked = rankCandidateRules([rule], request, undefined);
+		expect(ranked).toEqual([rule]);
+	});
+
+	it("accepts a rule with no user-scope fields (matches every request)", () => {
+		const rule: AccessRule = {
+			type: AccessPolicyType.Block,
+		};
+		const ranked = rankCandidateRules([rule], request, undefined);
+		expect(ranked).toEqual([rule]);
+	});
+
+	it("rejects a rule that requires a field the request doesn't have", () => {
+		// Request has no headHash. Rule requires headHash. Should reject.
+		const rule: AccessRule = {
+			type: AccessPolicyType.Block,
+			ja4Hash: "ja4-A",
+			headHash: "hash-X",
+		};
+		const ranked = rankCandidateRules([rule], request, undefined);
+		expect(ranked).toEqual([]);
+	});
+
+	it("on equal specificity, Block wins over Restrict (safety tiebreaker)", () => {
+		const restrict: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+		};
+		const block: AccessRule = {
+			type: AccessPolicyType.Block,
+			ja4Hash: "ja4-A",
+		};
+		// Pass them in restrict-first order — block must still come first.
+		const ranked = rankCandidateRules([restrict, block], request, undefined);
+		expect(ranked[0]).toEqual(block);
+		expect(ranked[1]).toEqual(restrict);
+	});
+
+	it("specificity still beats severity (a more-specific Restrict beats a less-specific Block)", () => {
+		// A Restrict matching ja4 + asn (2 fields) outranks a Block matching
+		// only ja4 (1 field) — the operator intentionally narrowed the policy
+		// for this combination.
+		const broadBlock: AccessRule = {
+			type: AccessPolicyType.Block,
+			ja4Hash: "ja4-A",
+		};
+		const specificRestrict: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			asn: 205016,
+		};
+		const ranked = rankCandidateRules(
+			[broadBlock, specificRestrict],
+			request,
+			undefined,
+		);
+		expect(ranked[0]).toEqual(specificRestrict);
 	});
 });
