@@ -1,5 +1,21 @@
 # @prosopo/provider
 
+## 4.8.0
+### Minor Changes
+
+- 2f459ce: Collapse the per-request access-rule lookup from 2 × (2^n − 1) Redis `FT.SEARCH` round trips (126 with n=6 user-scope fields) to a single greedy query, with specificity ranking done in JS. Same external semantics — client-scoped rules still outrank global, and a rule with both `ja4Hash` and `ip` constraints is correctly rejected for requests that only match one of them.
+
+### Patch Changes
+
+- 2f459ce: Add `asn` as a user-scope field for access rules. The captcha provider can now block / restrict by Autonomous System Number, matching what the protect/bumblebee tier already supports. ASN is read from `ipInfo.asnNumber` and threaded through `getRequestUserScope` and `checkForHardBlock` at all challenge entry points. Redis index gains a NUMERIC `asn` field with range-syntax lookups.
+- Updated dependencies [2f459ce]
+  - @prosopo/user-access-policy@3.8.0
+  - @prosopo/database@3.13.9
+  - @prosopo/types-database@4.8.2
+  - @prosopo/env@3.5.9
+  - @prosopo/types-env@2.9.18
+  - @prosopo/api-express-router@3.1.19
+
 ## 4.7.2
 ### Patch Changes
 
