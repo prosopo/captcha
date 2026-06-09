@@ -20,6 +20,7 @@ import {
 } from "@prosopo/config";
 import { loadEnv } from "@prosopo/dotenv";
 import { at, flatten } from "@prosopo/util";
+import { BACKEND_ERROR_KEYS_ARRAY } from "@prosopo/common";
 import fg from "fast-glob";
 import { defineConfig } from "vite";
 
@@ -64,44 +65,6 @@ const localeFiles = await fg.glob(
 const translationKeys = Object.keys(
 	flatten(JSON.parse(fs.readFileSync(at(localeFiles, 0), "utf-8"))),
 );
-
-// Collect backend error keys that should not be removed from translations
-// These keys are returned by the API but don't appear as string literals in frontend code
-const backendErrorKeys = [
-	"API.FORBIDDEN",
-	"API.NO_CONTENT_TYPE_HEADER",
-	"API.MISSING_QUERY_PARAMETERS",
-	"API.MISSING_BODY",
-	"API.INVALID_BODY",
-	"API.PARSE_ERROR",
-	"API.MISSING_AUTHORIZATION_HEADER",
-	"API.INVALID_AUTHORIZATION_HEADER",
-	"API.INSUFFICIENT_PERMISSIONS",
-	"API.NO_PERMISSIONS",
-	"API.FEATURE_NOT_ENABLED",
-	"GENERAL.ACCOUNT_NOT_FOUND",
-	"API.SITE_KEY_NOT_REGISTERED",
-	"GENERAL.SITE_KEY_NOT_FOUND",
-	"API.INVALID_SITE_KEY",
-	"API.INVALID_DOMAIN",
-	"GENERAL.MISSING_SECRET_KEY",
-	"API.PROVIDER_VERIFY_FAILED",
-	"PORTAL.CANNOT_MODIFY_OWNER_USER",
-	"PORTAL.CANNOT_MODIFY_USER",
-	"PORTAL.CANNOT_DELETE_OWN_USER",
-	"PORTAL.CANNOT_DELETE_LAST_USER",
-	"PORTAL.USER_ALREADY_EXISTS",
-	"PORTAL.NO_SUGGESTIONS_FOUND",
-	"PORTAL.CANNOT_DEACTIVATE_LAST_SITE",
-	"API.TIMESTAMP_TOO_OLD",
-	"GENERAL.INVALID_SIGNATURE",
-	"BILLING.STRIPE_PORTAL",
-	"BILLING.STRIPE_SESSION_NOT_FOUND",
-	"BILLING.STRIPE_PAYMENT_FAILED",
-	"PORTAL.API_KEYS_INVALID_NUMBER_OF_SITES",
-	"PORTAL.API_KEYS_NOT_FOUND",
-	"API.UNKNOWN",
-];
 
 // Merge with generic frontend config
 export default defineConfig(async ({ command, mode }) => {
@@ -184,7 +147,7 @@ export default defineConfig(async ({ command, mode }) => {
 			VitePluginRemoveUnusedTranslations(
 				translationKeys,
 				`${copyDir.destDir}/**/*.json`,
-				backendErrorKeys,
+				BACKEND_ERROR_KEYS_ARRAY,
 			),
 
 			...(frontendConfig.plugins ? frontendConfig.plugins : []),

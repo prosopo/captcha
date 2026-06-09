@@ -15,6 +15,7 @@
 import type { TranslationKey } from "@prosopo/locale";
 import type { ApiJsonError } from "@prosopo/types";
 import { ZodError } from "zod";
+import type { ValidErrorKey } from "./errorKeys.js";
 
 type BaseErrorOptions<ContextType> = {
 	name?: string;
@@ -135,7 +136,7 @@ export class ProsopoApiError extends ProsopoBaseError<ApiContextParams> {
 	code: number;
 
 	constructor(
-		error: Error | TranslationKey,
+		error: Error | ValidErrorKey,
 		options?: BaseErrorOptions<ApiContextParams>,
 	) {
 		const code = options?.context?.code || 500;
