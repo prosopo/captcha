@@ -195,6 +195,10 @@ export default (
 				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
 					? req.ipInfo.countryCode
 					: undefined;
+			const asn =
+				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
+					? req.ipInfo.asnNumber
+					: undefined;
 
 			const shortCircuitResponse = await runConfiguredCaptchaTypeShortCircuit(
 				{
@@ -321,6 +325,7 @@ export default (
 				undefined,
 				undefined,
 				countryCode,
+				asn,
 			);
 			const userAccessPolicy = (
 				await tasks.frictionlessManager.getPrioritisedAccessPolicies(

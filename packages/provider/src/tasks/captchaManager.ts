@@ -592,6 +592,7 @@ export class CaptchaManager {
 		headers: RequestHeaders,
 		coords?: [number, number][][],
 		countryCode?: string,
+		asn?: number,
 	): Promise<AccessPolicy | undefined> {
 		// Get headHash from session record if available
 		let headHash: string | undefined;
@@ -617,6 +618,7 @@ export class CaptchaManager {
 			headHash,
 			coordsString,
 			countryCode,
+			asn,
 		);
 
 		const accessPolicies = await this.getPrioritisedAccessPolicies(

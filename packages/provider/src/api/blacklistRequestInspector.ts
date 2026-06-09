@@ -33,6 +33,7 @@ export const getRequestUserScope = (
 	headHash?: string,
 	coords?: string,
 	countryCode?: string,
+	asn?: number,
 ): Pick<
 	UserScopeRecord,
 	| "userId"
@@ -42,6 +43,7 @@ export const getRequestUserScope = (
 	| "headHash"
 	| "coords"
 	| "countryCode"
+	| "asn"
 > => {
 	const userAgent = requestHeaders["user-agent"]
 		? requestHeaders["user-agent"].toString()
@@ -55,12 +57,13 @@ export const getRequestUserScope = (
 		...(headHash && { headHash }),
 		...(coords && { coords }),
 		...(countryCode && { countryCode }),
+		...(typeof asn === "number" && { asn }),
 	};
 };
 
 const getPrioritisedUserScopes = (userScope: {
-	[key: string]: bigint | string;
-}): Record<string, bigint | string | undefined>[] => {
+	[key: string]: bigint | number | string;
+}): Record<string, bigint | number | string | undefined>[] => {
 	const userScopeKeys = Object.keys(userScope);
 	return uniqueSubsets(userScopeKeys).map((subset: string[]) =>
 		subset.reduce(
@@ -68,7 +71,7 @@ const getPrioritisedUserScopes = (userScope: {
 				acc[key] = userScope[key];
 				return acc;
 			},
-			{} as Record<string, bigint | string | undefined>,
+			{} as Record<string, bigint | number | string | undefined>,
 		),
 	);
 };
@@ -185,6 +188,7 @@ export class BlacklistRequestInspector {
 			// country-based access rules fire at the earliest entry point —
 			// in particular, *before* a frictionless session is created.
 			const countryCode = ipInfo?.isValid ? ipInfo.countryCode : undefined;
+			const asn = ipInfo?.isValid ? ipInfo.asnNumber : undefined;
 
 			const accessPolicies = await getPrioritisedAccessRule(
 				this.userAccessRulesStorage,
@@ -196,6 +200,7 @@ export class BlacklistRequestInspector {
 					undefined, // headHash
 					undefined, // coords
 					countryCode,
+					asn,
 				),
 				clientId,
 			);
