@@ -150,6 +150,22 @@ describe("getRulesRedisQuery", () => {
 		);
 	});
 
+	it("emits NUMERIC range syntax for asn, not TAG syntax", () => {
+		const filter = {
+			userScope: {
+				asn: 205016,
+			},
+			userScopeMatch: FilterScopeMatch.Greedy,
+		} as AccessRulesFilter;
+
+		const query = getRulesRedisQuery(filter, false);
+
+		// asn is indexed as NUMERIC; TAG syntax (@asn:{205016}) would silently
+		// fail to match. Must use range syntax.
+		expect(query).toContain("@asn:[205016 205016]");
+		expect(query).not.toContain("@asn:{");
+	});
+
 	it("does not duplicate ismissing for numericIpMaskMin and numericIpMaskMax when matchingFieldsOnly is true and all IP fields are undefined", () => {
 		const filter = {
 			userScope: {
