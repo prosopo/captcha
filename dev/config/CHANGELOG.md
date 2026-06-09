@@ -1,5 +1,22 @@
 # @prosopo/config
 
+## 3.3.1
+### Patch Changes
+
+- e1ea65f: Better spam email domain checking
+
+## 3.3.0
+### Minor Changes
+
+- 6a4d57d: Move account creation into worker
+
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- fa98e0a: make vitest run in shuffle mode
+- 3acc333: Release 3.3.0
+
 ## 3.2.1
 ### Patch Changes
 

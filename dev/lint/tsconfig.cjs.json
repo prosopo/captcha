@@ -11,6 +11,9 @@
 		},
 		{
 			"path": "../config/tsconfig.cjs.json"
+		},
+		{
+			"path": "../workspace/tsconfig.cjs.json"
 		}
 	]
 }

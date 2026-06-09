@@ -1,5 +1,548 @@
 # @prosopo/types-database
 
+## 4.8.2
+### Patch Changes
+
+- Updated dependencies [2f459ce]
+  - @prosopo/user-access-policy@3.8.0
+
+## 4.8.1
+### Patch Changes
+
+- b03dad1: Thread `shadowDomPenalty: boolean` from the catcher's encrypted detection payload through `decryptPayload` and persist it on `Session.scoreComponents` so the flag is queryable in Mongo without inferring it from `baseScore=1 ∧ ¬triggeredDetectors`. Field is optional on the wire (position 6); older catcher bundles omit it and `shadowDomPenalty` stays undefined.
+- Updated dependencies [b03dad1]
+  - @prosopo/types@4.3.1
+  - @prosopo/user-access-policy@3.7.12
+
+## 4.8.0
+### Minor Changes
+
+- 2392aaf: Integrate the prosopo/dns sidecar against the procaptcha provider.
+  
+  - New admin endpoint `POST /v1/prosopo/provider/admin/dns/event` ingests batched DNS observation events from the sidecar (auth: admin sr25519 JWT) and merges resolver / peer IPs onto the matching Session record under a new `Session.dnsEvent` field.
+  - Frictionless response carries a per-session `dns_url` when the pronode has `DNS_EVENT_SUBZONE` + `DNS_EVENT_HMAC_SECRET` set. The HMAC path mirrors the sidecar's Rust implementation so both sides agree without shared per-request state.
+  - The frictionless bundle fires one no-cors GET to `dns_url` on detection completion (fire-and-forget; failures never affect the captcha flow).
+  - `dns_url` is included on the `reuse_session` short-circuit path too, not only the new-session path — otherwise repeat visits from the same user/IP/sitekey combination silently dropped the observation hop.
+  - Deploy compose entry for the sidecar plus a Caddy `layer4` SNI-passthrough block so the sidecar terminates TLS itself (no Cloudflare token needed). Caddy image must be rebuilt with the `caddy-l4` plugin.
+
+### Patch Changes
+
+- a1d60db: Add optional internal ML labelling fields (label/labelReason/labelledBy/labelledAt) to captcha records.
+- Updated dependencies [a1d60db]
+- Updated dependencies [2392aaf]
+- Updated dependencies [97cf7bd]
+- Updated dependencies [6ca1125]
+- Updated dependencies [32a591b]
+  - @prosopo/types@4.3.0
+  - @prosopo/logger@1.0.2
+  - @prosopo/common@3.1.38
+  - @prosopo/user-access-policy@3.7.11
+
+## 4.7.8
+### Patch Changes
+
+- 6c26669: Add per-site honeypot trap. When enabled, the provider attaches an encoded question (morse or semaphore, base64-wrapped) in the `x-prosopo-meta` response header on frictionless responses. The widget renders the value into an off-screen hidden input with `name="email_confirm"`; bots that auto-fill text inputs populate it and the value rides back on the solution submit as `clientMetaData.hp`, which is persisted on the `StoredCaptcha` record. Falls back to a random phrase from `PROSOPO_HONEYPOT_PHRASE_BANK_PATH` when no custom question is configured.
+- Updated dependencies [6c26669]
+- Updated dependencies [f7f9ec5]
+  - @prosopo/types@4.2.1
+  - @prosopo/user-access-policy@3.7.10
+
+## 4.7.7
+### Patch Changes
+
+- 0fd81af: Extract the logger into its own `@prosopo/logger` package, out of `@prosopo/common`. Consumers now import logger symbols from `@prosopo/logger`; `@prosopo/common` no longer re-exports them. Unused `@prosopo/common` dependencies pruned where the only usage was the logger.
+- Updated dependencies [0fd81af]
+  - @prosopo/common@3.1.37
+  - @prosopo/logger@1.0.1
+  - @prosopo/user-access-policy@3.7.9
+
+## 4.7.6
+### Patch Changes
+
+- cdbc5ed: fix(types-database): persist `autoBanScoreThreshold` on client settings
+  
+  `autoBanScoreThreshold` was added to the zod `ClientSettingsSchema` and the
+  frictionless decision machine in #2592, but the Mongoose `UserSettingsSchema`
+  was never updated. Mongoose's strict mode silently dropped the field on every
+  `$set`, so neither the portal account collection nor the provider
+  `ClientRecord` collection ever persisted the value — meaning a system user
+  could set the threshold in the portal, the API would accept it, but the
+  provider would never actually enforce it.
+  
+  Adds the field to the Mongoose schema (`Number`, `min: 0`, `required: false`,
+  no default) so the property is preserved on write.
+- 4d9923e: test(provider): integration test asserting every IUserSettings field round-trips through Mongo
+  
+  Registers a site key with a fully-populated `IUserSettings` (every field set, including the new `storeMetadata` and the existing nested `contextAware` / `ipValidationRules` / `spamFilter` / `trafficFilter` sub-documents), reads the record back from Mongo via the real Mongoose write/read path, and asserts each top-level and nested field survived. This is the regression test class that would have caught the `autoBanScoreThreshold` Mongoose-strict-mode drop on the original PR.
+  
+  While adding the test it caught another field that was in zod `ClientSettingsSchema` but missing from the Mongoose `UserSettingsSchema`: `puzzleTolerance`. The fix is bundled here — adds `puzzleTolerance: { type: Number, required: false }` to `UserSettingsSchema` so it actually persists.
+- 4d9923e: feat: optional `storeMetadata` site setting persists `/verify` metadata
+  
+  Adds a per-site-key boolean `storeMetadata` (default `false`) to
+  `ClientSettingsSchema` / `UserSettingsSchema`. When enabled, the provider
+  writes the dapp-server-forwarded metadata that arrives on the image, PoW
+  and puzzle `/verify` endpoints onto the corresponding captcha record under
+  a new `metadata` sub-document (`{ email?: string }` today; more fields
+  will be added here as the verify payload grows).
+  
+  `providedIp` stays top-level — existing data and indexes already use it,
+  and it predates this setting.
+  
+  Off by default. Existing spam-email checks still inspect the submitted
+  email unconditionally — this setting only gates **storage** of metadata
+  so the submitted values can be sampled later to judge whether traffic is
+  mostly spam.
+- Updated dependencies [20cae63]
+- Updated dependencies [4d9923e]
+  - @prosopo/types@4.2.0
+  - @prosopo/user-access-policy@3.7.8
+
+## 4.7.5
+### Patch Changes
+
+- d351362: fix: replace `$or + $expr` unstored-records sweep with a `pendingStage` sentinel
+  
+  The `StoreCommitmentsExternal` background job fetches "records that still
+  need to be shipped to the central DB" via
+  `{ $or: [ { storedAtTimestamp: { $exists: false } }, { $expr: { $lt: [$storedAtTimestamp, $lastUpdatedTimestamp] } } ] }`.
+  `$expr` is unindexable (per-doc computation) and combined with `$or`
+  defeats the planner entirely — production was running this every sweep
+  as a `IXSCAN { _id: 1 }` collection scan, examining ~673K powcaptcha
+  docs, ~240K usercommitments docs, and ~60K sessions docs per pass. On
+  the worst-affected nodes this thrashed the WiredTiger cache (10h of
+  cumulative app-thread blocking on disk reads in 43h of uptime) and made
+  every other Mongo lookup (including the frictionless session dedup
+  queries) slow by eviction — manifesting as traffic-correlated provider
+  latency starting 2026-05-26.
+  
+  Replace the query semantics with a `pendingStage: true` sentinel:
+  
+  - New optional `pendingStage` field on `StoredCaptcha` and `Session`
+    (Zod + TS + Mongoose schemas).
+  - New tiny partial index per collection:
+    `{ pendingStage: 1 }` with `partialFilterExpression: { pendingStage: true }`.
+    Indexes only the rows that need staging — typically a tiny rolling set,
+    ~20 KB for a 700K-row collection with 100 pending rows in local tests.
+  - Write paths (`storeXxx`, `updateXxx`, `markXxxChecked`, approve /
+    disapprove, `checkAndRemoveSession`, `recordSessionSimdReadingsIfAbsent`,
+    `storePendingImageCommitment`) set `pendingStage: true` alongside the
+    existing `lastUpdatedTimestamp` bump.
+  - `markXxxStored` and the per-record streamer mark-stored callbacks
+    `$unset: { pendingStage: 1 }` alongside the `storedAtTimestamp` write,
+    guarded by `lastUpdatedTimestamp: { $lte: ts }` so an in-flight update
+    doesn't get its pending flag cleared by an older stage completion.
+  - `markXxxStored` bulk methods accept an `asOfTimestamp` argument; the
+    sweep passes the time it fetched the batch so the guard is correct
+    across the full ship-then-mark round trip.
+  - `getUnstoredXxx` queries become `{ pendingStage: true }` sorted by
+    `_id` — uses the new partial index, examines only pending docs.
+  
+  Local verification on a 700,100-doc test collection: old query ~549 ms
+  examining 700,100 docs; new query 0 ms examining 100 docs. Index storage
+  ~20 KB.
+- Updated dependencies [d351362]
+  - @prosopo/types@4.1.4
+  - @prosopo/user-access-policy@3.7.7
+
+## 4.7.4
+### Patch Changes
+
+- 7e8cbb7: fix(types-database): replace broken partial indexes with regular non-sparse indexes for CHECK_IP_INFO / PARSE_USER_AGENT backfill queries
+  
+  The original partial-index approach (#2587, then #2589) couldn't work in MongoDB:
+  
+  - `partialFilterExpression` isn't allowed on `_id` indexes (caught by #2589).
+  - More fundamentally, `{ $exists: false }` is rewritten internally as `$not: { $exists: true }`, and `$not` isn't on the partial-filter operator allowlist either. So no key field could rescue the partial-index design.
+  
+  Replace the six broken partial-index definitions on `PoWCaptchaRecordSchema`, `PuzzleCaptchaRecordSchema`, and `UserCommitmentRecordSchema` with regular non-sparse indexes on the fields themselves (`{ ipInfo: 1 }` and `{ parsedUserAgentInfo: 1 }`). Non-sparse indexes include entries for missing-field documents (stored as null), which the planner can use to satisfy `{ <field>: { $exists: false } }` via `IXSCAN`.
+  
+  Note: both layers that swallowed the original `createIndex` failures (`CaptchaDatabase.ensureIndexes()` `.catch` warning, and Mongoose `autoIndex`'s un-listened `'index'` event) are still silent — worth a follow-up so the next bad schema change doesn't ship unnoticed.
+- Updated dependencies [e2711ae]
+- Updated dependencies [5786629]
+  - @prosopo/types@4.1.3
+  - @prosopo/locale@3.2.4
+  - @prosopo/user-access-policy@3.7.6
+  - @prosopo/common@3.1.36
+
+## 4.7.3
+### Patch Changes
+
+  - @prosopo/types@4.1.2
+  - @prosopo/user-access-policy@3.7.5
+
+## 4.7.2
+### Patch Changes
+
+- Updated dependencies [53bfd45]
+- Updated dependencies [91958da]
+  - @prosopo/locale@3.2.3
+  - @prosopo/types@4.1.1
+  - @prosopo/common@3.1.35
+  - @prosopo/user-access-policy@3.7.4
+
+## 4.7.1
+### Patch Changes
+
+- Updated dependencies [6a741ce]
+  - @prosopo/types@4.1.0
+  - @prosopo/user-access-policy@3.7.3
+
+## 4.7.0
+### Minor Changes
+
+- d865319: Add puzzle captcha (drag-to-target challenge) as a new captcha type:
+  provider endpoints, manager + widget package, types, demo pages, and
+  a `puzzleTolerance` site setting.
+
+### Patch Changes
+
+- f9ea09d: Drop flat ipinfo fields (`vpn`, `countryCode`, `tor`, `proxy`, `datacenter`, `abuser`, `geolocation`) from captcha records — persist the full `IPInfoResponse` payload as `ipInfo` instead
+  
+  The provider's `ipInfoMiddleware` already calls `ipInfoService.lookup()` on every captcha request and attaches the result to `req.ipInfo`. Persisting that whole payload on every captcha record means the portal sees the *exact* response the traffic filter consulted, with no cherry-picked-field translation layer in between. Adding a new flag in the future (e.g. `isMobile`) requires zero schema changes — it's already in the payload.
+  
+  - `StoredCaptcha` interface: removed `vpn`, `countryCode`, `geolocation`. Keeps `ipInfo?: IPInfoResponse`.
+  - `PoWCaptchaStoredSchema` zod validator: same removals, adds `ipInfo` (validated as `any()` since `IPInfoResponse` is a discriminated union narrowed at read time).
+  - PoW, Puzzle, UserCommitment mongoose schemas in `@prosopo/types-database`: same removals. UserCommitment now also has `ipInfo` (previously only PoW + Puzzle did). Replaced `{ countryCode: 1 }` index with `{ "ipInfo.countryCode": 1 }` + `{ "ipInfo.isVPN": 1 }`.
+  - `IProviderDatabase` interface: `storePowCaptchaRecord` / `storePuzzleCaptchaRecord` / `storePendingImageCommitment` now take `ipInfo?: IPInfoResponse` in place of `countryCode?: string`.
+  - Provider call sites (`getPoWCaptchaChallenge.ts`, `getPuzzleCaptchaChallenge.ts`, `getImageCaptchaChallenge.ts`, `submitImageCaptchaSolution.ts`) pass `req.ipInfo` directly. The earlier "prefer session.countryCode, fallback to req's countryCode" branching is gone — record `ipInfo` reflects what was true at challenge-issuance time.
+  - Provider read sites (`powTasks.ts`, `puzzleTasks.ts`, `imgCaptchaTasks.ts`) narrow `record.ipInfo?.isValid` then read `.countryCode` for access-policy / decision-machine input — same effective value, derived from the persisted payload.
+  - Lean projections in `provider.ts` switched from `countryCode: 1` to `ipInfo: 1`.
+  
+  Paired with [captcha-private#3339](https://github.com/prosopo/captcha-private/pull/3339), which updates the CHECK_IP_INFO backfill job (now writes the full payload, query becomes `{ ipInfo: { $exists: false } }`), the portal search models / aggregation pipeline (read nested `ipInfo.*`), and the anomaly detectors.
+- f9ea09d: Drop flat `countryCode` / `geolocation` fields from Session records — persist the full `IPInfoResponse` payload as `session.ipInfo` instead
+  
+  Brings sessions in line with captcha records (PoW / Puzzle / UserCommitment), which already store the full payload. The provider's `ipInfoMiddleware` populates `req.ipInfo` at session-creation time; that whole payload now lives on the session, so consumers narrow on `session.ipInfo?.isValid` and read whichever sub-field they need (countryCode, isVPN, isMobile, isTor, ...).
+  
+  - `Session` interface + `SessionSchema` zod (`@prosopo/types`): replace `countryCode?: string` / `geolocation?: string` with `ipInfo?: IPInfoResponse`.
+  - `SessionRecordSchema` mongoose (`@prosopo/types-database`): same.
+  - `FrictionlessManager.setSessionParams` / `createSession`: accept `ipInfo` instead of `countryCode`.
+  - `getFrictionlessCaptchaChallenge.ts` call sites (10 of them — `sendImageCaptcha`, `sendPowCaptcha`, `registerBlockedSession`, etc.) pass `req.ipInfo` instead of `countryCode`.
+  - `CaptchaManager.isValidRequest()` return: drop dead `countryCode: sessionRecord.countryCode` field (no caller was destructuring it after the earlier refactor), surface `ipInfo: sessionRecord.ipInfo` instead for callers that want it.
+  - Two new MongoMemory roundtrip tests in `ipInfoPersistence.integration.test.ts` cover Session.ipInfo (valid response + error response). `routingDecisionMachines.integration.test.ts` fixture updated to write the full payload.
+  
+  `RoutingContext.countryCode` is unchanged — that's a transient runtime struct fed into the routing machine, not a stored record. Callers of `setRoutingContext` already derive `countryCode` from `req.ipInfo.countryCode` at the API boundary.
+  
+  Paired with [captcha-private#3339](https://github.com/prosopo/captcha-private/pull/3339).
+- 4aae4e6: Plumb the WASM SIMD CPU fingerprint readings (collected by the catcher
+  client per https://blog.azerpas.com/writing/wasm-simd-fingerprinting/)
+  through the captcha flow and onto the linked `Session` record.
+  Collection-only — no scoring or classification yet.
+  
+  The readings are sent at the earliest moment they're available so the
+  signal lands on the session as soon as possible:
+  
+  1. **Captcha-challenge GET** (PoW / Puzzle / Image) — the procaptcha
+     Manager calls `frictionlessState.getSimdReadings(0)` (non-blocking
+     cache check) and attaches it to the challenge-request body. The
+     provider handler decodes and patches the linked session via
+     `updateSessionRecord`.
+  2. **Solution submission** (PoW / Puzzle / Image) — same non-blocking
+     check on the submit body. Acts as a backup if the benchmark wasn't
+     ready in time for the challenge GET.
+  
+  Frictionless init itself stays SIMD-free (benchmark is too slow to gate
+  the first hop).
+  
+  Surface area:
+  
+  - `SimdReadings` discriminated union + `SimdOpReadingRecord` /
+    `SimdOpCategory` in `@prosopo/types`, plus `simdReadingsCodec` shared
+    encode/decode helpers so the browser SDK and the provider use the same
+    pipe-safe wire format.
+  - Optional `simdReadings: string()` on `CaptchaRequestBody`,
+    `GetPowCaptchaChallengeRequestBody`, `GetPuzzleCaptchaChallengeRequestBody`,
+    `CaptchaSolutionBody`, `SubmitPowCaptchaSolutionBody`, and
+    `SubmitPuzzleCaptchaSolutionBody`.
+  - `FrictionlessState.getSimdReadings` + `BotDetectionFunctionResult.getSimdReadings`
+    so the catcher's prefetched benchmark is consumed at the request sites.
+  - `ProcaptchaApiInterface.{getCaptchaChallenge, submitCaptchaSolution}` and
+    the `ProviderApi.{getCaptchaChallenge, getPowCaptchaChallenge, getPuzzleCaptchaChallenge,
+    submitCaptchaSolution, submitPowCaptchaSolution, submitPuzzleCaptchaSolution}`
+    client methods accept the field.
+  - Provider challenge + solution handlers decode via `decodeSimdReadings`
+    and `updateSessionRecord` (Mongoose `Mixed`, Zod discriminated-union
+    validation at the edge). The challenge-GET patch is fire-and-forget.
+  
+  Backward-compatible: older catcher clients omit the field at every layer;
+  the session record omits it in turn.
+- Updated dependencies [3c0be68]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [d865319]
+- Updated dependencies [753304b]
+- Updated dependencies [8bb7286]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [4993813]
+- Updated dependencies [72a0483]
+  - @prosopo/types@4.0.0
+  - @prosopo/locale@3.2.2
+  - @prosopo/common@3.1.34
+  - @prosopo/user-access-policy@3.7.2
+
+## 4.6.2
+### Patch Changes
+
+- 819ed95: Adding invisible mode to session data
+- Updated dependencies [819ed95]
+  - @prosopo/types@3.16.1
+  - @prosopo/user-access-policy@3.7.1
+
+## 4.6.1
+### Patch Changes
+
+- Updated dependencies [60ba3b1]
+  - @prosopo/user-access-policy@3.7.0
+
+## 4.6.0
+### Minor Changes
+
+- 74092d0: Stream data back to central for decisions
+
+## 4.5.3
+### Patch Changes
+
+- f6a4402: API endpoint for removing site keys
+- Updated dependencies [f6a4402]
+- Updated dependencies [99dfb44]
+  - @prosopo/types@3.16.0
+  - @prosopo/user-access-policy@3.6.24
+
+## 4.5.2
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+  - @prosopo/user-access-policy@3.6.23
+
+## 4.5.1
+### Patch Changes
+
+- 946a8ba: Abuser score threshold
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+- Updated dependencies [b94890c]
+  - @prosopo/types@3.14.1
+  - @prosopo/locale@3.2.1
+  - @prosopo/common@3.1.33
+  - @prosopo/user-access-policy@3.6.22
+
+## 4.5.0
+### Minor Changes
+
+- 42650db: Add better spam rules and move ipinfo service to local instead of external
+
+### Patch Changes
+
+- fc514dd: ability to block different types of traffic
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+  - @prosopo/locale@3.2.0
+  - @prosopo/types@3.14.0
+  - @prosopo/common@3.1.32
+  - @prosopo/user-access-policy@3.6.21
+
+## 4.4.14
+### Patch Changes
+
+- Updated dependencies [4a9c518]
+  - @prosopo/common@3.1.31
+  - @prosopo/user-access-policy@3.6.20
+
+## 4.4.13
+### Patch Changes
+
+  - @prosopo/types@3.13.3
+  - @prosopo/user-access-policy@3.6.19
+
+## 4.4.12
+### Patch Changes
+
+  - @prosopo/types@3.13.2
+  - @prosopo/user-access-policy@3.6.18
+
+## 4.4.11
+### Patch Changes
+
+  - @prosopo/types@3.13.1
+  - @prosopo/user-access-policy@3.6.17
+
+## 4.4.10
+### Patch Changes
+
+- Updated dependencies [e6d9553]
+  - @prosopo/types@3.13.0
+  - @prosopo/user-access-policy@3.6.16
+
+## 4.4.9
+### Patch Changes
+
+- e1ea65f: Better spam email domain checking
+- c316257: Adding sync fo sessions wrt captcha status
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/types@3.12.3
+  - @prosopo/user-access-policy@3.6.15
+
+## 4.4.8
+### Patch Changes
+
+- adb89a6: Disposable email checking
+- Updated dependencies [adb89a6]
+  - @prosopo/locale@3.1.29
+  - @prosopo/types@3.12.2
+  - @prosopo/common@3.1.30
+  - @prosopo/user-access-policy@3.6.14
+
+## 4.4.7
+### Patch Changes
+
+- a90eb54: We know WHAT happens but we don't know WHY happens
+- Updated dependencies [c5ee492]
+- Updated dependencies [a90eb54]
+  - @prosopo/common@3.1.29
+  - @prosopo/types@3.12.1
+  - @prosopo/user-access-policy@3.6.13
+
+## 4.4.6
+### Patch Changes
+
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/types@3.12.0
+  - @prosopo/user-access-policy@3.6.12
+
+## 4.4.5
+### Patch Changes
+
+- 8148587: Clustering
+- Updated dependencies [8148587]
+  - @prosopo/types@3.11.1
+  - @prosopo/user-access-policy@3.6.11
+
+## 4.4.4
+### Patch Changes
+
+- 90033e9: Add missing schema field
+
+## 4.4.3
+### Patch Changes
+
+- Updated dependencies [7f6ffc5]
+  - @prosopo/types@3.11.0
+  - @prosopo/user-access-policy@3.6.10
+
+## 4.4.2
+### Patch Changes
+
+- 93fa086: Add decision engine endpoints
+- Updated dependencies [93fa086]
+  - @prosopo/types@3.10.2
+  - @prosopo/user-access-policy@3.6.9
+
+## 4.4.1
+### Patch Changes
+
+- cde7550: enhance/frictionless-headers-db-field
+- Updated dependencies [cde7550]
+  - @prosopo/types@3.10.1
+  - @prosopo/user-access-policy@3.6.8
+
+## 4.4.0
+### Minor Changes
+
+- ad6d622: Separate types from mongoose schemas to avoid bundling mongoose in frontend
+
+### Patch Changes
+
+- fa95c5f: zod types for db records
+- Updated dependencies [ad6d622]
+  - @prosopo/types@3.10.0
+  - @prosopo/user-access-policy@3.6.7
+
+## 4.3.1
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+  - @prosopo/types@3.9.0
+  - @prosopo/user-access-policy@3.6.6
+
+## 4.3.0
+### Minor Changes
+
+- 3feeea4: Store geolocation. Remove pending image captcha collection
+
+## 4.2.4
+### Patch Changes
+
+- 4c08158: Skip ip validation unit tests
+- d2431cd: Allow IP validation rules to be disabled
+- Updated dependencies [d2431cd]
+  - @prosopo/types@3.8.4
+  - @prosopo/user-access-policy@3.6.5
+
+## 4.2.3
+### Patch Changes
+
+- 8dad7f3: Implement frictionless blocks
+
+## 4.2.2
+### Patch Changes
+
+- Updated dependencies [bd6995b]
+  - @prosopo/user-access-policy@3.6.4
+  - @prosopo/types@3.8.3
+
+## 4.2.1
+### Patch Changes
+
+- 9633e58: Add captcha type to decision machine and run on image verification"
+- Updated dependencies [9633e58]
+  - @prosopo/types@3.8.2
+  - @prosopo/user-access-policy@3.6.3
+
+## 4.2.0
+### Minor Changes
+
+- 4299cae: Adding site key to session records
+
+### Patch Changes
+
+- f52a5c1: Adding decision machine to provider for behavior detection
+- Updated dependencies [f52a5c1]
+  - @prosopo/types@3.8.1
+  - @prosopo/user-access-policy@3.6.2
+
+## 4.1.6
+### Patch Changes
+
+- Updated dependencies [ed87b6f]
+  - @prosopo/user-access-policy@3.6.1
+
+## 4.1.5
+### Patch Changes
+
+- 3acc333: Update pow record at verify
+- 3acc333: Fix type
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 7543d17: mouse movements bot stopping
+- fe9fe22: adding api returns
+- 3acc333: Release 3.3.0
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [17854a7]
+- Updated dependencies [7543d17]
+- Updated dependencies [fe9fe22]
+- Updated dependencies [3acc333]
+  - @prosopo/types@3.8.0
+  - @prosopo/user-access-policy@3.6.0
+  - @prosopo/common@3.1.28
+  - @prosopo/locale@3.1.28
+
 ## 4.1.4
 ### Patch Changes
 

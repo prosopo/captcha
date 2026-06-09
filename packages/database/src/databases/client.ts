@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type Logger, ProsopoDBError } from "@prosopo/common";
+import { ProsopoDBError } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import type { Timestamp } from "@prosopo/types";
 import {
 	AccountSchema,

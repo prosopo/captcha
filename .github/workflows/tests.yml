@@ -25,6 +25,7 @@ env:
   GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
   CARGO_TERM_COLOR: always
   NODE_OPTIONS: "--max-old-space-size=4096"
+  NODE_TLS_REJECT_UNAUTHORIZED: "0"
   NODE_ENV: "test"
 
 defaults:
@@ -49,6 +50,7 @@ jobs:
 
       - uses: actions/checkout@v4
         with:
+          token: ${{ secrets.PROSOPONATOR_PAT }}
           submodules: "recursive"
 
       - uses: actions/setup-node@v4
@@ -81,6 +83,13 @@ jobs:
           docker container ls
           sleep 10s
 
+      # setup certs
+      - name: Setup certs
+        run: |
+          ./setup_certs.sh
+          ./install_cert.sh
+          echo "NODE_EXTRA_CA_CERTS=$(pwd)/certs/server.crt" >> $GITHUB_ENV
+
       - name: Setup env
         run: |
           set -euxo pipefail # stop on errors, print commands, fail on pipe fails
@@ -92,6 +101,13 @@ jobs:
           cp dev/scripts/env.test packages/cli/.env.test
           cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
 
+          # Update URLs to use HTTPS since certificates are present
+          sed -i 's|http://localhost|https://localhost|g' demos/client-bundle-example/.env.test
+          sed -i 's|http://localhost|https://localhost|g' .env.test
+          sed -i 's|http://localhost|https://localhost|g' dev/scripts/.env.test
+          sed -i 's|http://localhost|https://localhost|g' packages/cli/.env.test
+          sed -i 's|http://localhost|https://localhost|g' packages/procaptcha-bundle/.env.test
+
           NODE_ENV="test" npm run setup
 
           echo NODE_ENV: "$NODE_ENV"
@@ -99,10 +115,11 @@ jobs:
       - name: Start services and run tests
         env:
           NX_PARALLEL: "1"
+          SKIP_REDIS: "true"
         run: |
           npx concurrently \
             "NODE_ENV=test npm run start:provider" \
-            "sleep 10s && NODE_ENV=test npm run test:all" \
+            "sleep 10s && NODE_TLS_REJECT_UNAUTHORIZED=0 NODE_ENV=test npm run test:all" \
             --success "first" --kill-others
 
       - run: docker compose --file ./docker/docker-compose.test.yml down

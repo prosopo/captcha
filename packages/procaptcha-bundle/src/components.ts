@@ -12,7 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export * from "./util/captcha/components/frictionlessCaptcha.js";
-export * from "./util/captcha/components/powCaptcha.js";
-export * from "./util/captcha/components/imageCaptcha.js";
-export * from "./util/captcha/captchaComponentProvider.js";
+export * from "./util/captcha/components/bundleCaptcha.js";

@@ -13,13 +13,14 @@
 // limitations under the License.
 
 import { ProviderApi } from "@prosopo/api";
-import { LogLevel, type Logger, getLogger } from "@prosopo/common";
 import { ProviderEnvironment } from "@prosopo/env";
+import { LogLevel, type Logger, getLogger } from "@prosopo/logger";
 import type { KeyringPair } from "@prosopo/types";
 import {
 	CaptchaTypeSpec,
 	type ProsopoConfigOutput,
 	Tier,
+	puzzleToleranceDefault,
 } from "@prosopo/types";
 import type { ArgumentsCamelCase, Argv } from "yargs";
 import { z } from "zod";
@@ -85,6 +86,11 @@ export default (
 					type: "number" as const,
 					demandOption: false,
 					desc: "Image threshold for settings",
+				} as const)
+				.option("image_max_rounds", {
+					type: "number" as const,
+					demandOption: false,
+					desc: "Max image rounds",
 				} as const),
 		handler: async (argv: ArgumentsCamelCase) => {
 			try {
@@ -98,6 +104,7 @@ export default (
 					domains,
 					pow_difficulty,
 					image_threshold,
+					image_max_rounds,
 				} = SiteKeyRegisterApiCommandArgsSpec.parse(argv);
 				const api = new ProviderApi(url as string, pair.address);
 				const jwt = pair.jwtIssue();
@@ -110,6 +117,8 @@ export default (
 						domains: domains || [],
 						powDifficulty: pow_difficulty as number,
 						imageThreshold: image_threshold as number,
+						imageMaxRounds: image_max_rounds as number,
+						puzzleTolerance: puzzleToleranceDefault,
 						disallowWebView: false,
 					},
 					jwt,

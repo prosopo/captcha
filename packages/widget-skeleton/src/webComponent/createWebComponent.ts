@@ -53,3 +53,5 @@ const applyDefaultStyles = (webComponent: HTMLElement) => {
 	webComponent.style.width = "100%";
 	webComponent.style.maxWidth = WIDGET_MAX_WIDTH;
 };
+
+export { applyDefaultStyles };

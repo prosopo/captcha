@@ -22,6 +22,9 @@
 			"path": "../common/tsconfig.cjs.json"
 		},
 		{
+			"path": "../logger/tsconfig.cjs.json"
+		},
+		{
 			"path": "../keyring/tsconfig.cjs.json"
 		},
 		{

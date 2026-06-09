@@ -1,3 +1,4 @@
+import { ProsopoEnvError } from "@prosopo/common";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,7 +12,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { LogLevel, ProsopoEnvError, getLogger } from "@prosopo/common";
+import { LogLevel, getLogger } from "@prosopo/logger";
 import { getURLProtocol } from "@prosopo/util";
 import { errorHandler } from "../errorHandler.js";
 import { getAuth, verifyLogin } from "./auth.js";

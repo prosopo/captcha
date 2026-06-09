@@ -13,10 +13,7 @@
 // limitations under the License.
 
 import type { IPAddress } from "@prosopo/types";
-import {
-	type CompositeIpAddress,
-	IpAddressType,
-} from "@prosopo/types-database";
+import { type CompositeIpAddress, IpAddressType } from "@prosopo/types";
 import { getIPAddress } from "@prosopo/util";
 import { Address4, Address6 } from "ip-address";
 

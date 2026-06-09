@@ -12,12 +12,41 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const FingerprintJSImport = async () =>
-	(await import("@fingerprintjs/fingerprintjs")).default;
+// webGlExtensions walks every supported WebGL extension + shader-precision
+// combination, costing 1.5-2s on real GPUs. Dropped from the visitorId hash;
+// webGlBasics still covers vendor/UNMASKED_RENDERER.
+const EXCLUDED_SOURCES = ["webGlExtensions"] as const;
 
-export const getFingerprint = async () => {
-	const FingerprintJS = await FingerprintJSImport();
-	const fp = await FingerprintJS.load();
-	const result = await fp.get();
-	return result.visitorId;
+const FingerprintJSImport = async () => import("@prosopo/fingerprintjs");
+
+let fingerprintCache: Promise<string> | null = null;
+
+export const getFingerprint = async (): Promise<string> => {
+	if (!fingerprintCache) {
+		fingerprintCache = (async () => {
+			const { sources, loadSources, hashComponents, prepareForSources } =
+				await FingerprintJSImport();
+			await prepareForSources();
+			// Structural supertype of every per-source Options shape — fpjs's
+			// `BuiltinSourceOptions` isn't exported.
+			const sourceOptions: { cache: Record<string, unknown>; debug?: boolean } =
+				{
+					cache: {},
+				};
+			const getComponents = loadSources(
+				sources,
+				sourceOptions,
+				EXCLUDED_SOURCES,
+			);
+			const components = await getComponents();
+			return hashComponents(components);
+		})();
+	}
+	return fingerprintCache;
+};
+
+export const prefetchFingerprint = (): void => {
+	getFingerprint().catch(() => {
+		fingerprintCache = null;
+	});
 };

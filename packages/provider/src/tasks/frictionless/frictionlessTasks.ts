@@ -12,27 +12,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Logger } from "@prosopo/common";
 import { getRandomActiveProvider } from "@prosopo/load-balancer";
+import type { Logger } from "@prosopo/logger";
 import {
 	ApiParams,
 	CaptchaType,
+	type CompositeIpAddress,
 	type ContextType,
+	FrictionlessReason,
 	type GetFrictionlessCaptchaResponse,
+	type IPInfoResponse,
 	type KeyringPair,
+	type ModeEnum,
 	type ProsopoConfigOutput,
+	type RequestHeaders,
+	type RoutingMachineBaseline,
+	type ScoreComponents,
+	type Session,
+	SimdReadingsStage,
 } from "@prosopo/types";
-import type {
-	CompositeIpAddress,
-	IProviderDatabase,
-	ScoreComponents,
-	Session,
-} from "@prosopo/types-database";
+import type { IProviderDatabase } from "@prosopo/types-database";
 import type { AccessPolicy } from "@prosopo/user-access-policy";
 import { v4 as uuidv4 } from "uuid";
+import { buildDnsEventUrl } from "../../api/dnsEventUrl.js";
 import { checkLangRules } from "../../rules/lang.js";
+import {
+	type UsageCounters,
+	buildAllWindowIncrements,
+} from "../../util/usageCounters.js";
 import { CaptchaManager } from "../captchaManager.js";
+import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { getBotScore } from "../detection/getBotScore.js";
+import { type RoutingContext, applyRouter } from "./routingMachine.js";
 
 const getDefaultEntropy = (): number => {
 	if (process.env.PROSOPO_ENTROPY) {
@@ -51,33 +62,52 @@ const getSessionIDPrefix = (host?: string): string => {
 	return host ? host.replace(".prosopo.io", "") : "local";
 };
 
-export enum FrictionlessReason {
-	CONTEXT_AWARE_VALIDATION_FAILED = "CONTEXT_AWARE_VALIDATION_FAILED",
-	USER_ACCESS_POLICY = "USER_ACCESS_POLICY",
-	USER_AGENT_MISMATCH = "USER_AGENT_MISMATCH",
-	OLD_TIMESTAMP = "OLD_TIMESTAMP",
-	BOT_SCORE_ABOVE_THRESHOLD = "BOT_SCORE_ABOVE_THRESHOLD",
-	WEBVIEW_DETECTED = "WEBVIEW_DETECTED",
-}
+// FrictionlessReason now lives in @prosopo/types so non-server packages
+// (audit portal, tests) can reference it without depending on the provider.
+export { FrictionlessReason };
 
 export interface ImageCaptchaSessionParams extends Session {}
 
 export interface PowCaptchaSessionParams extends Session {}
+
+export interface PuzzleCaptchaSessionParams extends Session {}
 
 export class FrictionlessManager extends CaptchaManager {
 	private sessionParams?: Omit<
 		Session,
 		"sessionId" | "createdAt" | "captchaType"
 	>;
+	private routingContext?: RoutingContext;
+	private readonly decisionMachineRunner: DecisionMachineRunner;
+	private readonly usageCounters: UsageCounters | null;
 
 	constructor(
 		db: IProviderDatabase,
 		pair: KeyringPair,
 		config: ProsopoConfigOutput,
 		logger?: Logger,
+		writeQueue?: import("@prosopo/database").RedisWriteQueue | null,
+		decisionMachineRunner?: DecisionMachineRunner,
+		usageCounters?: UsageCounters | null,
 	) {
-		super(db, pair, config, logger);
+		super(db, pair, config, logger, writeQueue);
 		this.config = config;
+		this.decisionMachineRunner =
+			decisionMachineRunner ?? new DecisionMachineRunner(db);
+		this.usageCounters = usageCounters ?? null;
+	}
+
+	/**
+	 * Provide the routing-machine context for this request. When set, the
+	 * frictionless flow's send*Captcha calls will (a) invoke the routing
+	 * machine to potentially override the baseline captcha type, and (b) emit
+	 * fire-and-forget served-counter writes after the session is created.
+	 *
+	 * Not called on maintenance-mode or configured-captchaType short-circuit
+	 * paths — those skip routing entirely.
+	 */
+	setRoutingContext(ctx: RoutingContext): void {
+		this.routingContext = ctx;
 	}
 
 	setSessionParams(
@@ -93,6 +123,11 @@ export class FrictionlessManager extends CaptchaManager {
 			webView: params.webView ?? false,
 			iFrame: params.iFrame ?? false,
 			decryptedHeadHash: params.decryptedHeadHash,
+			siteKey: params.siteKey,
+			ipInfo: params.ipInfo,
+			headers: params.headers,
+			mode: params.mode,
+			simdReadings: params.simdReadings,
 		};
 	}
 
@@ -115,6 +150,7 @@ export class FrictionlessManager extends CaptchaManager {
 		providerSelectEntropy: number,
 		ipAddress: CompositeIpAddress,
 		captchaType: CaptchaType,
+		siteKey: string,
 		solvedImagesCount?: number,
 		powDifficulty?: number,
 		userSitekeyIpHash?: string,
@@ -122,6 +158,12 @@ export class FrictionlessManager extends CaptchaManager {
 		iFrame = false,
 		decryptedHeadHash = "",
 		reason?: FrictionlessReason,
+		blocked?: boolean,
+		deleted?: boolean,
+		ipInfo?: IPInfoResponse,
+		headers?: RequestHeaders,
+		mode?: ModeEnum,
+		simdReadings?: Session["simdReadings"],
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
@@ -133,6 +175,7 @@ export class FrictionlessManager extends CaptchaManager {
 			providerSelectEntropy,
 			ipAddress,
 			captchaType,
+			mode,
 			solvedImagesCount,
 			powDifficulty,
 			userSitekeyIpHash,
@@ -140,9 +183,48 @@ export class FrictionlessManager extends CaptchaManager {
 			iFrame,
 			decryptedHeadHash,
 			reason,
+			siteKey,
+			blocked,
+			deleted,
+			ipInfo,
+			headers,
+			simdReadings,
+			// Tag the arrival stage when the readings actually came in on
+			// this hop. Absence of readings → absence of stage.
+			...(simdReadings && {
+				simdReadingsStage: SimdReadingsStage.frictionless,
+			}),
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);
+
+		// Cache the session in Redis for fast lookups.
+		// This reduces MongoDB reads for subsequent requests that need
+		// to look up the session by sessionId or userSitekeyIpHash.
+		//
+		// Awaited (not fire-and-forget): the next request from this client
+		// (e.g. /captcha/{type}) consumes the session and `await`s its
+		// Redis invalidation. If the cache write here landed *after* that
+		// invalidation, the stale entry would survive — Redis would keep
+		// resolving the hash → sessionId mapping to a Mongo-deleted row
+		// for the rest of the TTL, breaking subsequent captcha attempts
+		// for the same user+IP+sitekey.
+		if (this.writeQueue) {
+			const cacheData = sessionRecord as unknown as Record<string, unknown>;
+			const cachePromises: Promise<boolean>[] = [
+				this.writeQueue.cacheSession(sessionRecord.sessionId, cacheData),
+			];
+			if (userSitekeyIpHash) {
+				cachePromises.push(
+					this.writeQueue.cacheSessionByHash(
+						userSitekeyIpHash,
+						sessionRecord.sessionId,
+					),
+				);
+			}
+			await Promise.all(cachePromises).catch(() => {});
+		}
+
 		return sessionRecord;
 	}
 
@@ -153,14 +235,18 @@ export class FrictionlessManager extends CaptchaManager {
 		);
 
 		const domain = new URL(chosen.provider.url).hostname;
+		const configDomain =
+			this.config.host.indexOf("http") > -1
+				? new URL(this.config.host).hostname
+				: this.config.host;
 		this.logger.info(() => ({
 			data: { entropy, host: this.config.host, domain },
 		}));
 
-		if (domain !== this.config.host) {
+		if (domain !== configDomain) {
 			this.logger.info(() => ({
 				msg: "Host mismatch",
-				data: { expected: this.config.host, got: domain, entropy },
+				data: { expected: configDomain, got: domain, entropy },
 			}));
 			return { verified: false, domain };
 		}
@@ -171,45 +257,27 @@ export class FrictionlessManager extends CaptchaManager {
 	async sendImageCaptcha(
 		params?: Partial<ImageCaptchaSessionParams>,
 	): Promise<GetFrictionlessCaptchaResponse> {
-		const effectiveParams = { ...this.sessionParams, ...params };
-		if (
-			!effectiveParams.token ||
-			effectiveParams.score === undefined ||
-			effectiveParams.threshold === undefined ||
-			!effectiveParams.scoreComponents ||
-			effectiveParams.providerSelectEntropy === undefined ||
-			!effectiveParams.ipAddress
-		) {
-			throw new Error(
-				"Session parameters must be set before calling sendImageCaptcha",
-			);
-		}
-
-		const sessionRecord = await this.createSession(
-			effectiveParams.token,
-			effectiveParams.score,
-			effectiveParams.threshold,
-			effectiveParams.scoreComponents,
-			effectiveParams.providerSelectEntropy,
-			effectiveParams.ipAddress,
-			CaptchaType.image,
-			effectiveParams.solvedImagesCount,
-			undefined,
-			effectiveParams.userSitekeyIpHash,
-			effectiveParams.webView ?? false,
-			effectiveParams.iFrame ?? false,
-			effectiveParams.decryptedHeadHash,
-			effectiveParams.reason as FrictionlessReason | undefined,
-		);
-		return {
-			[ApiParams.captchaType]: CaptchaType.image,
-			[ApiParams.sessionId]: sessionRecord.sessionId,
-			[ApiParams.status]: "ok",
-		};
+		return this.sendCaptcha(CaptchaType.image, params);
 	}
 
 	async sendPowCaptcha(
 		params?: Partial<PowCaptchaSessionParams>,
+	): Promise<GetFrictionlessCaptchaResponse> {
+		return this.sendCaptcha(CaptchaType.pow, params);
+	}
+
+	async sendPuzzleCaptcha(
+		params?: Partial<PuzzleCaptchaSessionParams>,
+	): Promise<GetFrictionlessCaptchaResponse> {
+		return this.sendCaptcha(CaptchaType.puzzle, params);
+	}
+
+	// Shared body for the three concrete `send*Captcha` helpers. Each helper is
+	// kept as its own thin wrapper so call-sites read clearly, but session
+	// validation and the createSession invocation only live in one place.
+	private async sendCaptcha(
+		captchaType: CaptchaType.image | CaptchaType.pow | CaptchaType.puzzle,
+		params?: Partial<Session>,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const effectiveParams = { ...this.sessionParams, ...params };
 		if (
@@ -218,12 +286,52 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.threshold === undefined ||
 			!effectiveParams.scoreComponents ||
 			effectiveParams.providerSelectEntropy === undefined ||
-			!effectiveParams.ipAddress
+			!effectiveParams.ipAddress ||
+			effectiveParams.siteKey === undefined
 		) {
 			throw new Error(
-				"Session parameters must be set before calling sendPowCaptcha",
+				`Session parameters must be set before sending a ${captchaType} captcha`,
 			);
 		}
+
+		// Apply the routing machine (if any) to potentially override the
+		// baseline captcha type. Only runs when the handler has supplied a
+		// routing context; maintenance-mode and configured-captchaType
+		// short-circuits skip routing entirely.
+		const baseline: RoutingMachineBaseline = {
+			captchaType,
+			solvedImagesCount:
+				captchaType === CaptchaType.image
+					? effectiveParams.solvedImagesCount
+					: undefined,
+			powDifficulty:
+				captchaType === CaptchaType.pow
+					? effectiveParams.powDifficulty
+					: undefined,
+		};
+		const routed = this.routingContext
+			? await applyRouter(
+					this.decisionMachineRunner,
+					this.usageCounters,
+					baseline,
+					this.routingContext,
+					this.logger,
+				)
+			: baseline;
+
+		const finalCaptchaType = routed.captchaType;
+		const finalSolvedImagesCount =
+			finalCaptchaType === CaptchaType.image
+				? (routed.solvedImagesCount ?? effectiveParams.solvedImagesCount)
+				: undefined;
+		const finalPowDifficulty =
+			finalCaptchaType === CaptchaType.pow
+				? (routed.powDifficulty ?? effectiveParams.powDifficulty)
+				: undefined;
+		const blocked =
+			finalCaptchaType === CaptchaType.image
+				? effectiveParams.blocked
+				: undefined;
 
 		const sessionRecord = await this.createSession(
 			effectiveParams.token,
@@ -232,20 +340,88 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.scoreComponents,
 			effectiveParams.providerSelectEntropy,
 			effectiveParams.ipAddress,
-			CaptchaType.pow,
-			undefined,
-			effectiveParams.powDifficulty,
+			finalCaptchaType,
+			effectiveParams.siteKey,
+			finalSolvedImagesCount,
+			finalPowDifficulty,
 			effectiveParams.userSitekeyIpHash,
 			effectiveParams.webView ?? false,
 			effectiveParams.iFrame ?? false,
 			effectiveParams.decryptedHeadHash,
 			effectiveParams.reason as FrictionlessReason | undefined,
+			blocked,
+			undefined,
+			effectiveParams.ipInfo,
+			effectiveParams.headers,
+			effectiveParams.mode,
+			effectiveParams.simdReadings,
 		);
+
+		// Fire-and-forget served-counter writes. Skipped when there's no
+		// routing context (maintenance mode / configured captchaType paths) —
+		// counters are only useful when a router is in play, which requires
+		// the same context.
+		if (this.routingContext && this.usageCounters) {
+			this.usageCounters.incrManyAsync(
+				this.routingContext.dappAccount,
+				buildAllWindowIncrements(
+					"served",
+					finalCaptchaType,
+					this.routingContext.ip,
+					this.routingContext.userAccount,
+				),
+			);
+		}
+
 		return {
-			[ApiParams.captchaType]: CaptchaType.pow,
+			[ApiParams.captchaType]: finalCaptchaType,
 			[ApiParams.sessionId]: sessionRecord.sessionId,
 			[ApiParams.status]: "ok",
+			dns_url: buildDnsEventUrl(sessionRecord.sessionId),
 		};
+	}
+
+	async registerBlockedSession(
+		params?: Partial<ImageCaptchaSessionParams>,
+	): Promise<void> {
+		const effectiveParams = { ...this.sessionParams, ...params };
+		if (
+			!effectiveParams.token ||
+			effectiveParams.score === undefined ||
+			effectiveParams.threshold === undefined ||
+			!effectiveParams.scoreComponents ||
+			effectiveParams.providerSelectEntropy === undefined ||
+			!effectiveParams.ipAddress ||
+			effectiveParams.siteKey === undefined
+		) {
+			throw new Error(
+				"Session parameters must be set before calling registerBlockedSession",
+			);
+		}
+
+		await this.createSession(
+			effectiveParams.token,
+			effectiveParams.score,
+			effectiveParams.threshold,
+			effectiveParams.scoreComponents,
+			effectiveParams.providerSelectEntropy,
+			effectiveParams.ipAddress,
+			CaptchaType.image,
+			effectiveParams.siteKey,
+			effectiveParams.solvedImagesCount,
+			undefined,
+			effectiveParams.userSitekeyIpHash,
+			effectiveParams.webView ?? false,
+			effectiveParams.iFrame ?? false,
+			effectiveParams.decryptedHeadHash,
+			effectiveParams.reason as FrictionlessReason,
+			true,
+			true,
+			effectiveParams.ipInfo,
+			effectiveParams.headers,
+			effectiveParams.mode,
+			effectiveParams.simdReadings,
+		);
 	}
 
 	scoreIncreaseAccessPolicy(
@@ -381,6 +557,8 @@ export class FrictionlessManager extends CaptchaManager {
 		let iFrame: boolean | undefined;
 		let decryptedHeadHash = "";
 		let decryptionFailed = false;
+		let triggeredDetectors: number[] | undefined;
+		let shadowDomPenalty: boolean | undefined;
 		for (const [keyIndex, key] of decryptKeys.entries()) {
 			try {
 				this.logger.info(() => ({
@@ -398,6 +576,8 @@ export class FrictionlessManager extends CaptchaManager {
 				const u = decrypted.userAgent;
 				const w = decrypted.isWebView;
 				const i = decrypted.isIframe;
+				const td = decrypted.triggeredDetectors;
+				const sd = decrypted.shadowDomPenalty;
 				this.logger.debug(() => ({
 					msg: "Successfully decrypted score",
 					data: {
@@ -409,6 +589,8 @@ export class FrictionlessManager extends CaptchaManager {
 						userAgent: u,
 						webView: w,
 						iFrame: i,
+						triggeredDetectors: td,
+						shadowDomPenalty: sd,
 					},
 				}));
 				baseBotScore = s;
@@ -418,6 +600,8 @@ export class FrictionlessManager extends CaptchaManager {
 				userAgent = u;
 				webView = w;
 				iFrame = i;
+				triggeredDetectors = td;
+				shadowDomPenalty = sd;
 				break;
 			} catch (err) {
 				// check if the next index exists, if not, log an error
@@ -434,9 +618,13 @@ export class FrictionlessManager extends CaptchaManager {
 			}
 		}
 
-		const baseBotScoreUndefined = baseBotScore === undefined;
-		const timestampUndefined = timestamp === undefined;
-		const providerSelectEntropyUndefined = providerSelectEntropy === undefined;
+		const baseBotScoreUndefined =
+			baseBotScore === undefined || Number.isNaN(baseBotScore);
+		const timestampUndefined =
+			timestamp === undefined || Number.isNaN(timestamp);
+		const providerSelectEntropyUndefined =
+			providerSelectEntropy === undefined ||
+			Number.isNaN(providerSelectEntropy);
 		const undefinedCount =
 			Number(baseBotScoreUndefined) +
 			Number(timestampUndefined) +
@@ -463,6 +651,7 @@ export class FrictionlessManager extends CaptchaManager {
 				iFrame,
 				decryptedHeadHash,
 				decryptionFailed,
+				shadowDomPenalty,
 			},
 		}));
 
@@ -477,6 +666,8 @@ export class FrictionlessManager extends CaptchaManager {
 			iFrame: iFrame || false,
 			decryptedHeadHash,
 			decryptionFailed,
+			triggeredDetectors,
+			shadowDomPenalty,
 		};
 	}
 

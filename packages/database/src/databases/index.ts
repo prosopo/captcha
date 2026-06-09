@@ -18,6 +18,7 @@ import { CaptchaDatabase } from "./captcha.js";
 import { ClientDatabase } from "./client.js";
 import { ProviderDatabase } from "./provider.js";
 export * from "./captcha.js";
+export * from "./centralDbStreamer.js";
 export * from "./client.js";
 export { ProviderDatabase } from "./provider.js";
 export const Databases = {

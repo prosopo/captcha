@@ -27,7 +27,7 @@ export default async function (
 	packageVersion: string,
 	bundleName: string,
 	packageDir: string,
-	entry: string | string[],
+	entry: string | string[] | Record<string, string>,
 	command?: string,
 	mode?: string,
 	outputDir?: string,
@@ -80,8 +80,15 @@ export default async function (
 	let entriesAbsolute: string[];
 	if (typeof entry === "string") {
 		entriesAbsolute = [path.resolve(packageDir, entry)];
-	} else {
+	} else if (Array.isArray(entry)) {
 		entriesAbsolute = entry.map((e) => path.resolve(packageDir, e));
+	} else {
+		entriesAbsolute = Object.fromEntries(
+			Object.entries(entry).map(([key, value]) => [
+				key,
+				path.resolve(packageDir, value),
+			]),
+		) as unknown as string[];
 	}
 
 	// drop console logs if in production mode

@@ -12,21 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type Logger, getLogger } from "@prosopo/common";
+import type { RedisWriteQueue } from "@prosopo/database";
+import { type Logger, getLogger } from "@prosopo/logger";
 import {
 	ContextType,
+	IpAddressType,
 	type KeyringPair,
+	type Session,
 	contextAwareThresholdDefault,
 } from "@prosopo/types";
 import { CaptchaType, type IUserSettings, Tier } from "@prosopo/types";
-import type {
-	ClientRecord,
-	IProviderDatabase,
-	Session,
-} from "@prosopo/types-database";
+import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import {
+	type AccessPolicy,
+	AccessPolicyType,
+	type AccessRulesStorage,
+} from "@prosopo/user-access-policy";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CaptchaManager } from "../../../tasks/captchaManager.js";
+import type { BehavioralDataResult } from "../../../tasks/detection/decodeBehavior.js";
+
+vi.mock("../../../tasks/detection/decodeBehavior.js", () => ({
+	default: vi.fn(),
+}));
 
 const loggerOuter = getLogger("info", import.meta.url);
 
@@ -36,6 +45,8 @@ const defaultUserSettings: IUserSettings = {
 	captchaType: CaptchaType.frictionless,
 	powDifficulty: 4,
 	imageThreshold: 0.8,
+	imageMaxRounds: 3,
+	puzzleTolerance: 15,
 	disallowWebView: false,
 	contextAware: {
 		enabled: false,
@@ -54,6 +65,7 @@ describe("CaptchaManager", () => {
 	let logger: Logger;
 	let captchaManager: CaptchaManager;
 	let mockEnv: ProviderEnvironment;
+	let mockWriteQueue: RedisWriteQueue;
 
 	beforeEach(() => {
 		db = {
@@ -85,7 +97,19 @@ describe("CaptchaManager", () => {
 			},
 		} as unknown as ProviderEnvironment;
 
-		captchaManager = new CaptchaManager(db, pair, mockEnv.config, logger);
+		mockWriteQueue = {
+			invalidateCachedSession: vi.fn().mockResolvedValue(undefined),
+			invalidateCachedSessionByHash: vi.fn().mockResolvedValue(undefined),
+			getCachedSession: vi.fn().mockResolvedValue(null),
+		} as unknown as RedisWriteQueue;
+
+		captchaManager = new CaptchaManager(
+			db,
+			pair,
+			mockEnv.config,
+			logger,
+			mockWriteQueue,
+		);
 
 		vi.clearAllMocks();
 	});
@@ -135,6 +159,189 @@ describe("CaptchaManager", () => {
 			} as Pick<Session, "sessionId" | "captchaType">);
 
 			const result = await captchaManager.isValidRequest(
+				{
+					account: "account",
+					tier: Tier.Free,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.frictionless,
+					},
+				},
+				CaptchaType.pow,
+				mockEnv,
+				"sessionId",
+				undefined,
+				"127.0.0.1",
+			);
+
+			expect(result).toEqual({
+				valid: true,
+				type: CaptchaType.pow,
+				sessionId: "sessionId",
+			});
+		});
+
+		it("returns the session's stored ipInfo so callers can avoid a second DB read", async () => {
+			// Sessions now persist the full IPInfoResponse rather than a
+			// flat countryCode. isValidRequest surfaces it on the return
+			// so the verify path / downstream routing can read country /
+			// vpn / etc. without re-fetching the session.
+			const stubIpInfo = {
+				ip: "1.2.3.4",
+				isValid: true as const,
+				isVPN: true,
+				isTor: false,
+				isProxy: false,
+				isDatacenter: false,
+				isAbuser: false,
+				isMobile: false,
+				isSatellite: false,
+				isCrawler: false,
+				countryCode: "DE",
+			};
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.checkAndRemoveSession as any).mockResolvedValue({
+				sessionId: "sessionId",
+				captchaType: CaptchaType.pow,
+				ipInfo: stubIpInfo,
+			} as Pick<Session, "sessionId" | "captchaType" | "ipInfo">);
+
+			const result = await captchaManager.isValidRequest(
+				{
+					account: "account",
+					tier: Tier.Free,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.frictionless,
+					},
+				},
+				CaptchaType.pow,
+				mockEnv,
+				"sessionId",
+				undefined,
+				"127.0.0.1",
+			);
+
+			expect(result.ipInfo).toBe(stubIpInfo);
+		});
+		it("should invalidate the Redis session cache after consuming a frictionless pow session", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.checkAndRemoveSession as any).mockResolvedValue({
+				sessionId: "sessionId",
+				captchaType: CaptchaType.pow,
+				userSitekeyIpHash: "hash-xyz",
+			} as Pick<Session, "sessionId" | "captchaType" | "userSitekeyIpHash">);
+
+			await captchaManager.isValidRequest(
+				{
+					account: "account",
+					tier: Tier.Free,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.frictionless,
+					},
+				},
+				CaptchaType.pow,
+				mockEnv,
+				"sessionId",
+				undefined,
+				"127.0.0.1",
+			);
+
+			expect(mockWriteQueue.invalidateCachedSession).toHaveBeenCalledWith(
+				"sessionId",
+			);
+			expect(mockWriteQueue.invalidateCachedSessionByHash).toHaveBeenCalledWith(
+				"hash-xyz",
+			);
+		});
+		it("should invalidate the Redis session cache after consuming a frictionless image session", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.checkAndRemoveSession as any).mockResolvedValue({
+				sessionId: "sessionId",
+				captchaType: CaptchaType.image,
+				userSitekeyIpHash: "hash-xyz",
+			} as Pick<Session, "sessionId" | "captchaType" | "userSitekeyIpHash">);
+
+			await captchaManager.isValidRequest(
+				{
+					account: "account",
+					tier: Tier.Free,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.frictionless,
+					},
+				},
+				CaptchaType.image,
+				mockEnv,
+				"sessionId",
+				undefined,
+				"127.0.0.1",
+			);
+
+			expect(mockWriteQueue.invalidateCachedSession).toHaveBeenCalledWith(
+				"sessionId",
+			);
+			expect(mockWriteQueue.invalidateCachedSessionByHash).toHaveBeenCalledWith(
+				"hash-xyz",
+			);
+		});
+		it("should invalidate Redis cache when session is not found, to break stale-cache loops", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.checkAndRemoveSession as any).mockResolvedValue(undefined);
+			// Simulate the drifted-cache state: DB record is gone, but the
+			// Redis sessionId cache still holds the original entry which
+			// carries the userSitekeyIpHash needed to invalidate the hash
+			// mapping.
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(mockWriteQueue.getCachedSession as any).mockResolvedValueOnce({
+				sessionId: "sessionId",
+				userSitekeyIpHash: "hash-xyz",
+			});
+
+			await captchaManager.isValidRequest(
+				{
+					account: "account",
+					tier: Tier.Free,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.frictionless,
+					},
+				},
+				CaptchaType.pow,
+				mockEnv,
+				"sessionId",
+			);
+
+			// When DB has no record but Redis cache does, BOTH the sessionId
+			// cache and the hash → sessionId mapping must be invalidated;
+			// otherwise the hash mapping keeps resolving to the dead
+			// sessionId and /frictionless keeps "Reusing existing session"
+			// while /captcha/{type} keeps 400-ing in a loop.
+			expect(mockWriteQueue.invalidateCachedSession).toHaveBeenCalledWith(
+				"sessionId",
+			);
+			expect(mockWriteQueue.invalidateCachedSessionByHash).toHaveBeenCalledWith(
+				"hash-xyz",
+			);
+		});
+		it("should not throw when writeQueue is null and session is consumed", async () => {
+			const managerWithoutRedis = new CaptchaManager(
+				db,
+				pair,
+				mockEnv.config,
+				logger,
+				null,
+			);
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.checkAndRemoveSession as any).mockResolvedValue({
+				sessionId: "sessionId",
+				captchaType: CaptchaType.pow,
+			} as Pick<Session, "sessionId" | "captchaType">);
+
+			const result = await managerWithoutRedis.isValidRequest(
 				{
 					account: "account",
 					tier: Tier.Free,
@@ -209,7 +416,7 @@ describe("CaptchaManager", () => {
 
 			expect(result).toEqual({
 				valid: false,
-				reason: "CAPTCHA.NO_SESSION_FOUND",
+				reason: "API.INCORRECT_CAPTCHA_TYPE",
 				type: CaptchaType.image,
 			});
 		});
@@ -237,7 +444,7 @@ describe("CaptchaManager", () => {
 
 			expect(result).toEqual({
 				valid: false,
-				reason: "CAPTCHA.NO_SESSION_FOUND",
+				reason: "API.INCORRECT_CAPTCHA_TYPE",
 				type: CaptchaType.pow,
 			});
 		});
@@ -509,6 +716,243 @@ describe("CaptchaManager", () => {
 				status: "translated",
 				verified: true,
 			});
+		});
+		it("should return a reason when verified is false and the tier is not free", () => {
+			const result = captchaManager.getVerificationResponse(
+				false,
+				{
+					account: "account",
+					tier: Tier.Professional,
+				} as unknown as ClientRecord,
+				() => "translated",
+				0.5,
+				"API.TIMESTAMP_TOO_OLD",
+			);
+			expect(result).toEqual({
+				status: "translated",
+				verified: false,
+				score: 0.5,
+				reason: "API.TIMESTAMP_TOO_OLD",
+			});
+		});
+		it("should not return a reason when verified is false and the tier is free", () => {
+			const result = captchaManager.getVerificationResponse(
+				false,
+				{
+					account: "account",
+					tier: Tier.Free,
+				} as unknown as ClientRecord,
+				() => "translated",
+				undefined,
+				"API.TIMESTAMP_TOO_OLD",
+			);
+			expect(result).toEqual({
+				status: "translated",
+				verified: false,
+			});
+		});
+		it("should not return a reason when verified is true", () => {
+			const result = captchaManager.getVerificationResponse(
+				true,
+				{
+					account: "account",
+					tier: Tier.Professional,
+				} as unknown as ClientRecord,
+				() => "translated",
+				0.5,
+				"API.TIMESTAMP_TOO_OLD",
+			);
+			expect(result).toEqual({
+				status: "translated",
+				verified: true,
+				score: 0.5,
+			});
+		});
+		it("should not return a reason when reason is undefined", () => {
+			const result = captchaManager.getVerificationResponse(
+				false,
+				{
+					account: "account",
+					tier: Tier.Professional,
+				} as unknown as ClientRecord,
+				() => "translated",
+				0.5,
+			);
+			expect(result).toEqual({
+				status: "translated",
+				verified: false,
+				score: 0.5,
+			});
+		});
+	});
+
+	describe("decryptBehavioralData", () => {
+		// biome-ignore lint/suspicious/noExplicitAny: tests
+		let decryptFn: any;
+
+		beforeEach(async () => {
+			// Get the mocked default export
+			const mod = await import("../../../tasks/detection/decodeBehavior.js");
+			decryptFn = mod.default;
+			vi.mocked(decryptFn).mockReset();
+		});
+
+		it("should return null when no decryption keys are provided", async () => {
+			const result = await captchaManager.decryptBehavioralData(
+				"encryptedData",
+				[],
+			);
+			expect(result).toBeNull();
+			expect(decryptFn).not.toHaveBeenCalled();
+		});
+
+		it("should return null when all provided keys are undefined", async () => {
+			const result = await captchaManager.decryptBehavioralData(
+				"encryptedData",
+				[undefined, undefined],
+			);
+			expect(result).toBeNull();
+			expect(decryptFn).not.toHaveBeenCalled();
+		});
+
+		it("should return the result when the first valid key succeeds", async () => {
+			const mockResult: BehavioralDataResult = {
+				collector1: [{ event: "click" }],
+				collector2: [],
+				collector3: [],
+				deviceCapability: "desktop",
+				timestamp: 1000,
+			};
+			vi.mocked(decryptFn).mockResolvedValue(mockResult);
+
+			const result = await captchaManager.decryptBehavioralData(
+				"encryptedData",
+				["key1", "key2"],
+			);
+			expect(result).toEqual(mockResult);
+			expect(decryptFn).toHaveBeenCalledTimes(1);
+			expect(decryptFn).toHaveBeenCalledWith("encryptedData", "key1");
+		});
+
+		it("should try the next key when the first key fails", async () => {
+			const mockResult: BehavioralDataResult = {
+				collector1: [],
+				collector2: [],
+				collector3: [],
+				deviceCapability: "mobile",
+				timestamp: 2000,
+			};
+			vi.mocked(decryptFn)
+				.mockRejectedValueOnce(new Error("bad key"))
+				.mockResolvedValueOnce(mockResult);
+
+			const result = await captchaManager.decryptBehavioralData(
+				"encryptedData",
+				["badKey", "goodKey"],
+			);
+			expect(result).toEqual(mockResult);
+			expect(decryptFn).toHaveBeenCalledTimes(2);
+			expect(decryptFn).toHaveBeenNthCalledWith(1, "encryptedData", "badKey");
+			expect(decryptFn).toHaveBeenNthCalledWith(2, "encryptedData", "goodKey");
+		});
+
+		it("should return null when all valid keys fail", async () => {
+			vi.mocked(decryptFn).mockRejectedValue(new Error("decrypt failed"));
+
+			const result = await captchaManager.decryptBehavioralData(
+				"encryptedData",
+				["key1", "key2"],
+			);
+			expect(result).toBeNull();
+			expect(decryptFn).toHaveBeenCalledTimes(2);
+		});
+	});
+
+	describe("checkForHardBlock", () => {
+		const compositeIp = { lower: 2130706433n, type: IpAddressType.v4 }; // 127.0.0.1
+		const mockHeaders = { "user-agent": "test-agent" };
+		// biome-ignore lint/suspicious/noExplicitAny: tests
+		const mockChallengeRecord: any = {
+			sessionId: undefined,
+			ipAddress: compositeIp,
+			ja4: "test-ja4",
+			dappAccount: "dappAccount",
+		};
+
+		beforeEach(() => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db as any).getSessionRecordBySessionId = vi.fn().mockResolvedValue(null);
+		});
+
+		it("should return undefined when there are no matching policies", async () => {
+			vi.spyOn(
+				captchaManager,
+				"getPrioritisedAccessPolicies",
+			).mockResolvedValue([]);
+
+			const result = await captchaManager.checkForHardBlock(
+				{} as AccessRulesStorage,
+				mockChallengeRecord,
+				"userAccount",
+				mockHeaders,
+			);
+			expect(result).toBeUndefined();
+		});
+
+		it("should return undefined for a Block policy that has a captchaType (captcha-type selector, not hard block)", async () => {
+			const blockWithCaptchaType: AccessPolicy = {
+				type: AccessPolicyType.Block,
+				captchaType: CaptchaType.image,
+			};
+			vi.spyOn(
+				captchaManager,
+				"getPrioritisedAccessPolicies",
+			).mockResolvedValue([blockWithCaptchaType]);
+
+			const result = await captchaManager.checkForHardBlock(
+				{} as AccessRulesStorage,
+				mockChallengeRecord,
+				"userAccount",
+				mockHeaders,
+			);
+			expect(result).toBeUndefined();
+		});
+
+		it("should return the policy for a Block policy without a captchaType (hard block)", async () => {
+			const hardBlockPolicy: AccessPolicy = {
+				type: AccessPolicyType.Block,
+				description: "hard block",
+			};
+			vi.spyOn(
+				captchaManager,
+				"getPrioritisedAccessPolicies",
+			).mockResolvedValue([hardBlockPolicy]);
+
+			const result = await captchaManager.checkForHardBlock(
+				{} as AccessRulesStorage,
+				mockChallengeRecord,
+				"userAccount",
+				mockHeaders,
+			);
+			expect(result).toEqual(hardBlockPolicy);
+		});
+
+		it("should return undefined for a Restrict policy without captchaType (not a Block policy)", async () => {
+			const restrictPolicy: AccessPolicy = {
+				type: AccessPolicyType.Restrict,
+			};
+			vi.spyOn(
+				captchaManager,
+				"getPrioritisedAccessPolicies",
+			).mockResolvedValue([restrictPolicy]);
+
+			const result = await captchaManager.checkForHardBlock(
+				{} as AccessRulesStorage,
+				mockChallengeRecord,
+				"userAccount",
+				mockHeaders,
+			);
+			expect(result).toBeUndefined();
 		});
 	});
 });

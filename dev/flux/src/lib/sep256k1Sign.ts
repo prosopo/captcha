@@ -22,8 +22,9 @@ import {
 } from "@polkadot/util-crypto";
 import { BN_BE_256_OPTS } from "@polkadot/util-crypto/bn";
 import type { Keypair } from "@polkadot/util-crypto/types";
-import { LogLevel, ProsopoEnvError, getLogger } from "@prosopo/common";
+import { ProsopoEnvError } from "@prosopo/common";
 import { loadEnv } from "@prosopo/dotenv";
+import { LogLevel, getLogger } from "@prosopo/logger";
 import { at } from "@prosopo/util";
 import { isMain } from "@prosopo/util";
 import varuint from "varuint-bitcoin";

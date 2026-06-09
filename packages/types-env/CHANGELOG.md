@@ -1,5 +1,384 @@
 # @prosopo/types-env
 
+## 2.9.18
+### Patch Changes
+
+  - @prosopo/types-database@4.8.2
+
+## 2.9.17
+### Patch Changes
+
+- Updated dependencies [b03dad1]
+  - @prosopo/types@4.3.1
+  - @prosopo/types-database@4.8.1
+  - @prosopo/keyring@2.9.35
+
+## 2.9.16
+### Patch Changes
+
+- Updated dependencies [a1d60db]
+- Updated dependencies [2392aaf]
+- Updated dependencies [97cf7bd]
+- Updated dependencies [6ca1125]
+- Updated dependencies [32a591b]
+  - @prosopo/types@4.3.0
+  - @prosopo/types-database@4.8.0
+  - @prosopo/logger@1.0.2
+  - @prosopo/keyring@2.9.34
+
+## 2.9.15
+### Patch Changes
+
+- Updated dependencies [6c26669]
+- Updated dependencies [f7f9ec5]
+  - @prosopo/types@4.2.1
+  - @prosopo/types-database@4.7.8
+  - @prosopo/keyring@2.9.33
+
+## 2.9.14
+### Patch Changes
+
+- 0fd81af: Extract the logger into its own `@prosopo/logger` package, out of `@prosopo/common`. Consumers now import logger symbols from `@prosopo/logger`; `@prosopo/common` no longer re-exports them. Unused `@prosopo/common` dependencies pruned where the only usage was the logger.
+- Updated dependencies [0fd81af]
+  - @prosopo/logger@1.0.1
+  - @prosopo/types-database@4.7.7
+  - @prosopo/keyring@2.9.32
+
+## 2.9.13
+### Patch Changes
+
+- Updated dependencies [cdbc5ed]
+- Updated dependencies [4d9923e]
+- Updated dependencies [20cae63]
+- Updated dependencies [4d9923e]
+  - @prosopo/types-database@4.7.6
+  - @prosopo/types@4.2.0
+  - @prosopo/keyring@2.9.31
+
+## 2.9.12
+### Patch Changes
+
+- Updated dependencies [d351362]
+  - @prosopo/types@4.1.4
+  - @prosopo/types-database@4.7.5
+  - @prosopo/keyring@2.9.30
+
+## 2.9.11
+### Patch Changes
+
+- Updated dependencies [e2711ae]
+- Updated dependencies [5786629]
+- Updated dependencies [7e8cbb7]
+  - @prosopo/types@4.1.3
+  - @prosopo/types-database@4.7.4
+  - @prosopo/keyring@2.9.29
+  - @prosopo/common@3.1.36
+
+## 2.9.10
+### Patch Changes
+
+  - @prosopo/keyring@2.9.28
+  - @prosopo/types@4.1.2
+  - @prosopo/types-database@4.7.3
+
+## 2.9.9
+### Patch Changes
+
+- Updated dependencies [91958da]
+  - @prosopo/types@4.1.1
+  - @prosopo/common@3.1.35
+  - @prosopo/types-database@4.7.2
+  - @prosopo/keyring@2.9.27
+
+## 2.9.8
+### Patch Changes
+
+- Updated dependencies [6a741ce]
+  - @prosopo/types@4.1.0
+  - @prosopo/keyring@2.9.26
+  - @prosopo/types-database@4.7.1
+
+## 2.9.7
+### Patch Changes
+
+- Updated dependencies [3c0be68]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [d865319]
+- Updated dependencies [753304b]
+- Updated dependencies [8bb7286]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [4993813]
+  - @prosopo/types@4.0.0
+  - @prosopo/types-database@4.7.0
+  - @prosopo/keyring@2.9.25
+  - @prosopo/common@3.1.34
+
+## 2.9.6
+### Patch Changes
+
+- Updated dependencies [819ed95]
+  - @prosopo/types-database@4.6.2
+  - @prosopo/types@3.16.1
+  - @prosopo/keyring@2.9.24
+
+## 2.9.5
+### Patch Changes
+
+  - @prosopo/types-database@4.6.1
+
+## 2.9.4
+### Patch Changes
+
+- Updated dependencies [74092d0]
+  - @prosopo/types-database@4.6.0
+
+## 2.9.3
+### Patch Changes
+
+- Updated dependencies [f6a4402]
+- Updated dependencies [99dfb44]
+  - @prosopo/types-database@4.5.3
+  - @prosopo/types@3.16.0
+  - @prosopo/keyring@2.9.23
+
+## 2.9.2
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+  - @prosopo/keyring@2.9.22
+  - @prosopo/types-database@4.5.2
+
+## 2.9.1
+### Patch Changes
+
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+  - @prosopo/types-database@4.5.1
+  - @prosopo/types@3.14.1
+  - @prosopo/common@3.1.33
+  - @prosopo/keyring@2.9.21
+
+## 2.9.0
+### Minor Changes
+
+- 42650db: Add better spam rules and move ipinfo service to local instead of external
+
+### Patch Changes
+
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+  - @prosopo/types-database@4.5.0
+  - @prosopo/types@3.14.0
+  - @prosopo/common@3.1.32
+  - @prosopo/keyring@2.9.20
+
+## 2.8.15
+### Patch Changes
+
+- Updated dependencies [4a9c518]
+  - @prosopo/common@3.1.31
+  - @prosopo/keyring@2.9.19
+  - @prosopo/types-database@4.4.14
+
+## 2.8.14
+### Patch Changes
+
+  - @prosopo/keyring@2.9.18
+  - @prosopo/types@3.13.3
+  - @prosopo/types-database@4.4.13
+
+## 2.8.13
+### Patch Changes
+
+  - @prosopo/keyring@2.9.17
+  - @prosopo/types@3.13.2
+  - @prosopo/types-database@4.4.12
+
+## 2.8.12
+### Patch Changes
+
+  - @prosopo/keyring@2.9.16
+  - @prosopo/types@3.13.1
+  - @prosopo/types-database@4.4.11
+
+## 2.8.11
+### Patch Changes
+
+- Updated dependencies [e6d9553]
+  - @prosopo/types@3.13.0
+  - @prosopo/keyring@2.9.15
+  - @prosopo/types-database@4.4.10
+
+## 2.8.10
+### Patch Changes
+
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/types@3.12.3
+  - @prosopo/types-database@4.4.9
+  - @prosopo/keyring@2.9.14
+
+## 2.8.9
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/types-database@4.4.8
+  - @prosopo/types@3.12.2
+  - @prosopo/common@3.1.30
+  - @prosopo/keyring@2.9.13
+
+## 2.8.8
+### Patch Changes
+
+- Updated dependencies [c5ee492]
+- Updated dependencies [a90eb54]
+  - @prosopo/common@3.1.29
+  - @prosopo/types-database@4.4.7
+  - @prosopo/types@3.12.1
+  - @prosopo/keyring@2.9.12
+
+## 2.8.7
+### Patch Changes
+
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/keyring@2.9.11
+  - @prosopo/types@3.12.0
+  - @prosopo/types-database@4.4.6
+
+## 2.8.6
+### Patch Changes
+
+- Updated dependencies [8148587]
+  - @prosopo/types-database@4.4.5
+  - @prosopo/types@3.11.1
+  - @prosopo/keyring@2.9.10
+
+## 2.8.5
+### Patch Changes
+
+- Updated dependencies [90033e9]
+  - @prosopo/types-database@4.4.4
+
+## 2.8.4
+### Patch Changes
+
+- Updated dependencies [7f6ffc5]
+  - @prosopo/types@3.11.0
+  - @prosopo/keyring@2.9.9
+  - @prosopo/types-database@4.4.3
+
+## 2.8.3
+### Patch Changes
+
+- Updated dependencies [93fa086]
+  - @prosopo/types-database@4.4.2
+  - @prosopo/types@3.10.2
+  - @prosopo/keyring@2.9.8
+
+## 2.8.2
+### Patch Changes
+
+- Updated dependencies [cde7550]
+  - @prosopo/types-database@4.4.1
+  - @prosopo/types@3.10.1
+  - @prosopo/keyring@2.9.7
+
+## 2.8.1
+### Patch Changes
+
+- Updated dependencies [ad6d622]
+- Updated dependencies [fa95c5f]
+  - @prosopo/types-database@4.4.0
+  - @prosopo/types@3.10.0
+  - @prosopo/keyring@2.9.6
+
+## 2.8.0
+### Minor Changes
+
+- ff58a70: Load the geolocation service at startup only
+
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+  - @prosopo/types@3.9.0
+  - @prosopo/keyring@2.9.5
+  - @prosopo/types-database@4.3.1
+
+## 2.7.66
+### Patch Changes
+
+- Updated dependencies [3feeea4]
+  - @prosopo/types-database@4.3.0
+
+## 2.7.65
+### Patch Changes
+
+- Updated dependencies [4c08158]
+- Updated dependencies [d2431cd]
+  - @prosopo/types-database@4.2.4
+  - @prosopo/types@3.8.4
+  - @prosopo/keyring@2.9.4
+
+## 2.7.64
+### Patch Changes
+
+- Updated dependencies [8dad7f3]
+  - @prosopo/types-database@4.2.3
+
+## 2.7.63
+### Patch Changes
+
+- Updated dependencies [bd6995b]
+  - @prosopo/types@3.8.3
+  - @prosopo/types-database@4.2.2
+  - @prosopo/keyring@2.9.3
+
+## 2.7.62
+### Patch Changes
+
+- Updated dependencies [9633e58]
+  - @prosopo/types-database@4.2.1
+  - @prosopo/types@3.8.2
+  - @prosopo/keyring@2.9.2
+
+## 2.7.61
+### Patch Changes
+
+- Updated dependencies [f52a5c1]
+- Updated dependencies [4299cae]
+  - @prosopo/types-database@4.2.0
+  - @prosopo/types@3.8.1
+  - @prosopo/keyring@2.9.1
+
+## 2.7.60
+### Patch Changes
+
+  - @prosopo/types-database@4.1.6
+
+## 2.7.59
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+- Updated dependencies [3acc333]
+- Updated dependencies [3acc333]
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [7543d17]
+- Updated dependencies [fe9fe22]
+- Updated dependencies [3acc333]
+  - @prosopo/types-database@4.1.5
+  - @prosopo/keyring@2.9.0
+  - @prosopo/types@3.8.0
+  - @prosopo/common@3.1.28
+
 ## 2.7.58
 ### Patch Changes
 

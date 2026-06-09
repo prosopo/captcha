@@ -1,5 +1,364 @@
 # @prosopo/api-express-router
 
+## 3.1.19
+### Patch Changes
+
+  - @prosopo/env@3.5.9
+
+## 3.1.18
+### Patch Changes
+
+- Updated dependencies [b03dad1]
+  - @prosopo/types@4.3.1
+  - @prosopo/env@3.5.8
+
+## 3.1.17
+### Patch Changes
+
+- Updated dependencies [a1d60db]
+- Updated dependencies [2392aaf]
+- Updated dependencies [97cf7bd]
+- Updated dependencies [6ca1125]
+- Updated dependencies [32a591b]
+  - @prosopo/types@4.3.0
+  - @prosopo/logger@1.0.2
+  - @prosopo/common@3.1.38
+  - @prosopo/env@3.5.7
+  - @prosopo/api-route@2.6.46
+
+## 3.1.16
+### Patch Changes
+
+- Updated dependencies [6c26669]
+- Updated dependencies [f7f9ec5]
+  - @prosopo/types@4.2.1
+  - @prosopo/env@3.5.6
+
+## 3.1.15
+### Patch Changes
+
+- 0fd81af: Extract the logger into its own `@prosopo/logger` package, out of `@prosopo/common`. Consumers now import logger symbols from `@prosopo/logger`; `@prosopo/common` no longer re-exports them. Unused `@prosopo/common` dependencies pruned where the only usage was the logger.
+- Updated dependencies [0fd81af]
+  - @prosopo/api-route@2.6.45
+  - @prosopo/common@3.1.37
+  - @prosopo/env@3.5.5
+  - @prosopo/logger@1.0.1
+
+## 3.1.14
+### Patch Changes
+
+- Updated dependencies [20cae63]
+- Updated dependencies [4d9923e]
+  - @prosopo/types@4.2.0
+  - @prosopo/env@3.5.4
+
+## 3.1.13
+### Patch Changes
+
+- Updated dependencies [d351362]
+  - @prosopo/types@4.1.4
+  - @prosopo/env@3.5.3
+
+## 3.1.12
+### Patch Changes
+
+- Updated dependencies [e2711ae]
+- Updated dependencies [5786629]
+  - @prosopo/types@4.1.3
+  - @prosopo/locale@3.2.4
+  - @prosopo/common@3.1.36
+  - @prosopo/env@3.5.2
+  - @prosopo/api-route@2.6.44
+
+## 3.1.11
+### Patch Changes
+
+  - @prosopo/types@4.1.2
+  - @prosopo/env@3.5.1
+
+## 3.1.10
+### Patch Changes
+
+- Updated dependencies [53bfd45]
+- Updated dependencies [91958da]
+  - @prosopo/locale@3.2.3
+  - @prosopo/env@3.5.0
+  - @prosopo/types@4.1.1
+  - @prosopo/common@3.1.35
+  - @prosopo/api-route@2.6.43
+
+## 3.1.9
+### Patch Changes
+
+- Updated dependencies [6a741ce]
+  - @prosopo/types@4.1.0
+  - @prosopo/env@3.4.9
+
+## 3.1.8
+### Patch Changes
+
+- Updated dependencies [3c0be68]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [d865319]
+- Updated dependencies [753304b]
+- Updated dependencies [8bb7286]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [4993813]
+  - @prosopo/types@4.0.0
+  - @prosopo/locale@3.2.2
+  - @prosopo/common@3.1.34
+  - @prosopo/env@3.4.8
+  - @prosopo/api-route@2.6.42
+
+## 3.1.7
+### Patch Changes
+
+- Updated dependencies [819ed95]
+  - @prosopo/types@3.16.1
+  - @prosopo/env@3.4.7
+
+## 3.1.6
+### Patch Changes
+
+  - @prosopo/env@3.4.6
+
+## 3.1.5
+### Patch Changes
+
+  - @prosopo/env@3.4.5
+
+## 3.1.4
+### Patch Changes
+
+  - @prosopo/env@3.4.4
+
+## 3.1.3
+### Patch Changes
+
+- Updated dependencies [f6a4402]
+- Updated dependencies [99dfb44]
+  - @prosopo/types@3.16.0
+  - @prosopo/env@3.4.3
+
+## 3.1.2
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+  - @prosopo/env@3.4.2
+
+## 3.1.1
+### Patch Changes
+
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+- Updated dependencies [b94890c]
+  - @prosopo/types@3.14.1
+  - @prosopo/locale@3.2.1
+  - @prosopo/common@3.1.33
+  - @prosopo/env@3.4.1
+  - @prosopo/api-route@2.6.41
+
+## 3.1.0
+### Minor Changes
+
+- 42650db: Add better spam rules and move ipinfo service to local instead of external
+
+### Patch Changes
+
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+  - @prosopo/locale@3.2.0
+  - @prosopo/types@3.14.0
+  - @prosopo/env@3.4.0
+  - @prosopo/common@3.1.32
+  - @prosopo/api-route@2.6.40
+
+## 3.0.70
+### Patch Changes
+
+- Updated dependencies [4a9c518]
+  - @prosopo/common@3.1.31
+  - @prosopo/api-route@2.6.39
+  - @prosopo/env@3.3.15
+
+## 3.0.69
+### Patch Changes
+
+  - @prosopo/types@3.13.3
+  - @prosopo/env@3.3.14
+
+## 3.0.68
+### Patch Changes
+
+  - @prosopo/types@3.13.2
+  - @prosopo/env@3.3.13
+
+## 3.0.67
+### Patch Changes
+
+  - @prosopo/types@3.13.1
+  - @prosopo/env@3.3.12
+
+## 3.0.66
+### Patch Changes
+
+- Updated dependencies [e6d9553]
+  - @prosopo/types@3.13.0
+  - @prosopo/env@3.3.11
+
+## 3.0.65
+### Patch Changes
+
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/types@3.12.3
+  - @prosopo/env@3.3.10
+
+## 3.0.64
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/locale@3.1.29
+  - @prosopo/types@3.12.2
+  - @prosopo/env@3.3.9
+  - @prosopo/common@3.1.30
+  - @prosopo/api-route@2.6.38
+
+## 3.0.63
+### Patch Changes
+
+- Updated dependencies [c5ee492]
+- Updated dependencies [a90eb54]
+  - @prosopo/common@3.1.29
+  - @prosopo/types@3.12.1
+  - @prosopo/api-route@2.6.37
+  - @prosopo/env@3.3.8
+
+## 3.0.62
+### Patch Changes
+
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/types@3.12.0
+  - @prosopo/env@3.3.7
+
+## 3.0.61
+### Patch Changes
+
+- Updated dependencies [8148587]
+  - @prosopo/types@3.11.1
+  - @prosopo/env@3.3.6
+
+## 3.0.60
+### Patch Changes
+
+  - @prosopo/env@3.3.5
+
+## 3.0.59
+### Patch Changes
+
+- ca7f4ad: Attach site key and user to logger earlier
+- Updated dependencies [7f6ffc5]
+  - @prosopo/types@3.11.0
+  - @prosopo/env@3.3.4
+
+## 3.0.58
+### Patch Changes
+
+- Updated dependencies [93fa086]
+  - @prosopo/types@3.10.2
+  - @prosopo/env@3.3.3
+
+## 3.0.57
+### Patch Changes
+
+- Updated dependencies [cde7550]
+  - @prosopo/types@3.10.1
+  - @prosopo/env@3.3.2
+
+## 3.0.56
+### Patch Changes
+
+- Updated dependencies [ad6d622]
+  - @prosopo/types@3.10.0
+  - @prosopo/env@3.3.1
+
+## 3.0.55
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+  - @prosopo/types@3.9.0
+  - @prosopo/env@3.3.0
+
+## 3.0.54
+### Patch Changes
+
+  - @prosopo/env@3.2.42
+
+## 3.0.53
+### Patch Changes
+
+- Updated dependencies [d2431cd]
+  - @prosopo/types@3.8.4
+  - @prosopo/env@3.2.41
+
+## 3.0.52
+### Patch Changes
+
+  - @prosopo/env@3.2.40
+
+## 3.0.51
+### Patch Changes
+
+- Updated dependencies [bd6995b]
+  - @prosopo/types@3.8.3
+  - @prosopo/env@3.2.39
+
+## 3.0.50
+### Patch Changes
+
+- Updated dependencies [9633e58]
+  - @prosopo/types@3.8.2
+  - @prosopo/env@3.2.38
+
+## 3.0.49
+### Patch Changes
+
+- Updated dependencies [f52a5c1]
+  - @prosopo/types@3.8.1
+  - @prosopo/env@3.2.37
+
+## 3.0.48
+### Patch Changes
+
+  - @prosopo/env@3.2.36
+
+## 3.0.47
+### Patch Changes
+
+- 3acc333: Add JWT issuance to keypairs
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 7543d17: mouse movements bot stopping
+- 3acc333: Release 3.3.0
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [7543d17]
+- Updated dependencies [fe9fe22]
+- Updated dependencies [3acc333]
+  - @prosopo/util-crypto@13.5.29
+  - @prosopo/types@3.8.0
+  - @prosopo/api-route@2.6.36
+  - @prosopo/common@3.1.28
+  - @prosopo/locale@3.1.28
+  - @prosopo/env@3.2.35
+
 ## 3.0.46
 ### Patch Changes
 

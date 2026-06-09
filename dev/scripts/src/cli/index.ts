@@ -14,9 +14,9 @@
 
 import path from "node:path";
 import { isHex } from "@polkadot/util";
-import { LogLevel, getLogger } from "@prosopo/common";
-import { parseLogLevel } from "@prosopo/common";
 import { getEnv, loadEnv } from "@prosopo/dotenv";
+import { LogLevel, getLogger } from "@prosopo/logger";
+import { parseLogLevel } from "@prosopo/logger";
 import { decodeProcaptchaOutput, encodeProcaptchaOutput } from "@prosopo/types";
 import { getScriptsPkgDir } from "@prosopo/workspace";
 import yargs from "yargs";

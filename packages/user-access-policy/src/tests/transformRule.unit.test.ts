@@ -64,6 +64,20 @@ describe("makeAccessRuleHash", () => {
 		expect(hash1).toEqual(hash2);
 	});
 
+	it("should include asn in the rule hash", () => {
+		const ruleWithoutAsn: AccessRule = {
+			type: AccessPolicyType.Block,
+		};
+		const ruleWithAsn: AccessRule = {
+			type: AccessPolicyType.Block,
+			asn: 205016,
+		};
+
+		expect(makeAccessRuleHash(ruleWithoutAsn)).not.toEqual(
+			makeAccessRuleHash(ruleWithAsn),
+		);
+	});
+
 	it("should make same hash for 'undefined' and missing properties", () => {
 		const rule1: AccessRule = {
 			type: AccessPolicyType.Restrict,
@@ -98,6 +112,8 @@ describe("transformRule", () => {
 		userId: "user",
 		headHash: "headHash",
 		coords: "[[1,2]]",
+		countryCode: "US",
+		asn: 205016,
 	} satisfies AccessRule;
 
 	it("should transform access rule record into rule", () => {

@@ -28,11 +28,16 @@ import {
 	type output,
 	string,
 	union,
+	type z,
 	type infer as zInfer,
 } from "zod";
 import { ApiParams } from "../api/params.js";
-import type { CaptchaType } from "../client/captchaType/captchaType.js";
+import {
+	type CaptchaType,
+	DecisionMachineCaptchaTypeSchema,
+} from "../client/captchaType/captchaType.js";
 import { ClientSettingsSchema, Tier } from "../client/index.js";
+import { ModeEnum } from "../config/mode.js";
 import {
 	DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED,
 	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
@@ -46,6 +51,11 @@ import {
 	PowChallengeIdSchema,
 	type UserAccount,
 } from "../datasets/index.js";
+import {
+	DecisionMachineLanguage,
+	DecisionMachineRuntime,
+	DecisionMachineScope,
+} from "../decisionMachine/index.js";
 import {
 	type ChallengeSignature,
 	ProcaptchaTokenSpec,
@@ -76,8 +86,12 @@ export enum ClientApiPaths {
 	SubmitPowCaptchaSolution = "/v1/prosopo/provider/client/pow/solution",
 	VerifyPowCaptchaSolution = "/v1/prosopo/provider/client/pow/verify",
 	VerifyImageCaptchaSolutionDapp = "/v1/prosopo/provider/client/image/dapp/verify",
+	GetPuzzleCaptchaChallenge = "/v1/prosopo/provider/client/captcha/puzzle",
+	SubmitPuzzleCaptchaSolution = "/v1/prosopo/provider/client/puzzle/solution",
+	VerifyPuzzleCaptchaSolution = "/v1/prosopo/provider/client/puzzle/verify",
 	GetProviderStatus = "/v1/prosopo/provider/client/status",
 	SubmitUserEvents = "/v1/prosopo/provider/client/events",
+	CheckSpamEmail = "/v1/prosopo/provider/client/spam/email",
 }
 
 export enum PublicApiPaths {
@@ -109,11 +123,28 @@ export type TGetPowCaptchaChallengeURL =
 export type TSubmitPowCaptchaSolutionURL =
 	`${string}${ClientApiPaths.SubmitPowCaptchaSolution}`;
 
+export type TGetPuzzleCaptchaChallengeURL =
+	`${string}${ClientApiPaths.GetPuzzleCaptchaChallenge}`;
+
+export type TSubmitPuzzleCaptchaSolutionURL =
+	`${string}${ClientApiPaths.SubmitPuzzleCaptchaSolution}`;
+
 export enum AdminApiPaths {
 	SiteKeyRegister = "/v1/prosopo/provider/admin/sitekey/register",
+	SiteKeysRegister = "/v1/prosopo/provider/admin/sitekeys/register",
 	UpdateDetectorKey = "/v1/prosopo/provider/admin/detector/update",
 	RemoveDetectorKey = "/v1/prosopo/provider/admin/detector/remove",
 	ToggleMaintenanceMode = "/v1/prosopo/provider/admin/maintenance/toggle",
+	UpdateDecisionMachine = "/v1/prosopo/provider/admin/decision-machine/update",
+	GetAllDecisionMachines = "/v1/prosopo/provider/admin/decision-machine/get-all",
+	GetDecisionMachine = "/v1/prosopo/provider/admin/decision-machine/get",
+	RemoveDecisionMachine = "/v1/prosopo/provider/admin/decision-machine/remove",
+	RemoveAllDecisionMachines = "/v1/prosopo/provider/admin/decision-machine/remove-all",
+	ClearAllCounters = "/v1/prosopo/provider/admin/counters/clear-all",
+	SiteKeyRemove = "/v1/prosopo/provider/admin/sitekey/remove",
+	SiteKeysRemove = "/v1/prosopo/provider/admin/sitekeys/remove",
+	// Receives batched DNS observation events from the dns sidecar.
+	DnsEvent = "/v1/prosopo/provider/admin/dns/event",
 }
 
 export type CombinedApiPaths = ClientApiPaths | AdminApiPaths;
@@ -127,18 +158,38 @@ export const ProviderDefaultRateLimits = {
 		limit: 60,
 	},
 	[ClientApiPaths.SubmitPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
-	[ClientApiPaths.VerifyPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.VerifyPowCaptchaSolution]: { windowMs: 60000, limit: 3000 },
+	[ClientApiPaths.GetPuzzleCaptchaChallenge]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.SubmitPuzzleCaptchaSolution]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.VerifyPuzzleCaptchaSolution]: {
+		windowMs: 60000,
+		limit: 3000,
+	},
 	[ClientApiPaths.VerifyImageCaptchaSolutionDapp]: {
 		windowMs: 60000,
-		limit: 60,
+		limit: 3000,
 	},
 	[ClientApiPaths.GetProviderStatus]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.CheckSpamEmail]: { windowMs: 60000, limit: 60 },
 	[PublicApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
 	[AdminApiPaths.SiteKeyRegister]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.SiteKeysRegister]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.UpdateDetectorKey]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.RemoveDetectorKey]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.ToggleMaintenanceMode]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.UpdateDecisionMachine]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.GetAllDecisionMachines]: { windowMs: 60000, limit: 60 },
+	[AdminApiPaths.GetDecisionMachine]: { windowMs: 60000, limit: 60 },
+	[AdminApiPaths.RemoveDecisionMachine]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.RemoveAllDecisionMachines]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.ClearAllCounters]: { windowMs: 60000, limit: 10 },
+	[AdminApiPaths.SiteKeyRemove]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.SiteKeysRemove]: { windowMs: 60000, limit: 5 },
+	// Sidecar batches events and POSTs at shipper_flush_ms cadence
+	// (1s default), so a high per-minute ceiling is fine. Single ingest
+	// path per pronode → no cross-tenant fairness concerns.
+	[AdminApiPaths.DnsEvent]: { windowMs: 60000, limit: 600 },
 };
 
 type RateLimit = {
@@ -215,6 +266,7 @@ export const CaptchaRequestBody = object({
 	[ApiParams.dapp]: string(),
 	[ApiParams.datasetId]: union([string(), array(number())]),
 	[ApiParams.sessionId]: string().optional(),
+	[ApiParams.simdReadings]: string().optional(),
 });
 
 export type CaptchaRequestBodyType = zInfer<typeof CaptchaRequestBody>;
@@ -229,6 +281,15 @@ export interface CaptchaResponseBody extends ApiResponse {
 	};
 }
 
+// Widget-controlled metadata sent alongside the captcha solution. The widget
+// only populates this when the honeypot input has been filled in (which
+// should only happen for bots). Server-side: persisted on the StoredCaptcha
+// record, no automatic verdict. The TS shape (`ClientMetaData`) lives in
+// ./database.ts — this schema is the wire-level zod for request bodies.
+export const ClientMetaDataSchema = object({
+	[ApiParams.hp]: string().optional(),
+});
+
 export const CaptchaSolutionBody = object({
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
@@ -239,6 +300,12 @@ export const CaptchaSolutionBody = object({
 		[ApiParams.user]: TimestampSignatureSchema,
 		[ApiParams.provider]: RequestHashSignatureSchema,
 	}),
+	[ApiParams.behavioralData]: string().optional(),
+	// Compact encoded SimdReadings produced by @prosopo/catcher's
+	// simdReadingsCodec — opaque at this layer; the provider decodes and
+	// persists on the captcha record. Collection-only, no scoring.
+	[ApiParams.simdReadings]: string().optional(),
+	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
 });
 
 export type CaptchaSolutionBodyType = zInfer<typeof CaptchaSolutionBody>;
@@ -250,6 +317,7 @@ export const VerifySolutionBody = object({
 		.optional()
 		.default(DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED),
 	[ApiParams.ip]: string().optional(),
+	[ApiParams.email]: string().optional(),
 });
 
 export type VerifySolutionBodyTypeInput = input<typeof VerifySolutionBody>;
@@ -271,11 +339,20 @@ export interface ApiResponse {
 export interface VerificationResponse extends ApiResponse {
 	[ApiParams.verified]: boolean;
 	[ApiParams.score]?: number;
+	[ApiParams.reason]?: string;
 }
 
 export interface UpdateDetectorKeyResponse extends ApiResponse {
 	data: {
 		activeDetectorKeys: string[];
+	};
+}
+
+export interface UpdateDecisionMachineResponse extends ApiResponse {
+	data: {
+		scope: DecisionMachineScope;
+		dappAccount?: string;
+		updatedAt: string;
 	};
 }
 
@@ -292,14 +369,49 @@ export interface GetPowCaptchaResponse extends ApiResponse {
 	};
 }
 
+export interface GetPuzzleCaptchaResponse extends ApiResponse {
+	[ApiParams.challenge]: PoWChallengeId;
+	[ApiParams.targetX]: number;
+	[ApiParams.targetY]: number;
+	[ApiParams.originX]: number;
+	[ApiParams.originY]: number;
+	[ApiParams.tolerance]: number;
+	[ApiParams.timestamp]: string;
+	[ApiParams.signature]: {
+		[ApiParams.provider]: ChallengeSignature;
+	};
+}
+
+export interface PuzzleCaptchaSolutionResponse extends ApiResponse {
+	[ApiParams.verified]: boolean;
+	[ApiParams.error]?: ApiJsonError;
+}
+
 export interface GetFrictionlessCaptchaResponse extends ApiResponse {
-	[ApiParams.captchaType]: CaptchaType.pow | CaptchaType.image;
+	[ApiParams.captchaType]:
+		| CaptchaType.pow
+		| CaptchaType.image
+		| CaptchaType.puzzle;
 	[ApiParams.sessionId]?: string;
+	// Encoded honeypot question. NOT serialised by the provider on the wire
+	// (it travels in the `x-prosopo-meta` response header so it doesn't sit
+	// in the JSON body for bots to grep); the API client moves it onto this
+	// field after reading the header, so downstream widget code consumes it
+	// the same way regardless of transport.
+	[ApiParams.hp]?: string;
+	// Per-session DNS observation URL; undefined when no dns sidecar.
+	dns_url?: string;
+}
+
+export interface PowCaptchaSolutionEscalation {
+	[ApiParams.captchaType]: CaptchaType.image | CaptchaType.puzzle;
+	[ApiParams.sessionId]: string;
 }
 
 export interface PowCaptchaSolutionResponse extends ApiResponse {
 	[ApiParams.verified]: boolean;
 	[ApiParams.error]?: ApiJsonError;
+	[ApiParams.escalation]?: PowCaptchaSolutionEscalation;
 }
 
 /**
@@ -315,16 +427,54 @@ export const ServerPowCaptchaVerifyRequestBody = object({
 		.optional()
 		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 	[ApiParams.ip]: string().optional(),
+	[ApiParams.email]: string().email().optional(),
 });
 
 export type ServerPowCaptchaVerifyRequestBodyOutput = output<
 	typeof ServerPowCaptchaVerifyRequestBody
 >;
 
+// ── DNS observation event ingestion (wire-compat with the dns sidecar) ─
+export const DnsEventKindSchema = union([
+	string().regex(/^dns$/),
+	string().regex(/^http$/),
+]);
+export type DnsEventKind = "dns" | "http";
+
+export const DnsEventSchema = object({
+	kind: DnsEventKindSchema,
+	ts: string(), // ISO-8601 UTC (serde default for chrono DateTime<Utc>)
+	src_ip: string(),
+	// Per-session ID carried in the URL subdomain — captures the procaptcha
+	// sessionId. Named `jti` on the wire for cross-product compatibility
+	// with Protect's session identifier.
+	jti: string().optional(),
+	site_key: string().optional(),
+	subzone: string().optional(),
+	qname: string().optional(),
+	qtype: string().optional(),
+	sni: string().optional(),
+	path: string().optional(),
+	user_agent: string().optional(),
+	path_valid: boolean().optional(),
+});
+export type DnsEvent = output<typeof DnsEventSchema>;
+
+export const DnsEventBatchSchema = object({
+	events: array(DnsEventSchema),
+});
+export type DnsEventBatch = output<typeof DnsEventBatchSchema>;
+
+export interface DnsEventResponseBody extends ApiResponse {
+	stored: number;
+	errors: number;
+}
+
 export const GetPowCaptchaChallengeRequestBody = object({
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
 	[ApiParams.sessionId]: string().optional(),
+	[ApiParams.simdReadings]: string().optional(),
 });
 
 export type GetPowCaptchaChallengeRequestBodyType = zInfer<
@@ -358,9 +508,11 @@ export const SubmitPowCaptchaSolutionBody = object({
 		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 	[ApiParams.behavioralData]: string().optional(),
 	[ApiParams.salt]: string().optional(),
+	[ApiParams.simdReadings]: string().optional(),
+	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
 });
 
-export type SubmitPowCaptchaSolutionBodyType = zInfer<
+export type SubmitPowCaptchaSolutionBodyType = input<
 	typeof SubmitPowCaptchaSolutionBody
 >;
 
@@ -369,6 +521,8 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	[ApiParams.token]: string(),
 	[ApiParams.user]: string(),
 	[ApiParams.headHash]: string(),
+	[ApiParams.mode]: nativeEnum(ModeEnum).optional(),
+	[ApiParams.simdReadings]: string().optional(),
 });
 
 export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<
@@ -377,6 +531,84 @@ export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<
 
 export type SubmitPowCaptchaSolutionBodyTypeOutput = output<
 	typeof SubmitPowCaptchaSolutionBody
+>;
+
+// Puzzle captcha schemas
+
+export const GetPuzzleCaptchaChallengeRequestBody = object({
+	[ApiParams.user]: string(),
+	[ApiParams.dapp]: string(),
+	[ApiParams.sessionId]: string().optional(),
+	[ApiParams.simdReadings]: string().optional(),
+});
+
+export type GetPuzzleCaptchaChallengeRequestBodyType = zInfer<
+	typeof GetPuzzleCaptchaChallengeRequestBody
+>;
+
+export type GetPuzzleCaptchaChallengeRequestBodyTypeOutput = output<
+	typeof GetPuzzleCaptchaChallengeRequestBody
+>;
+
+// Event captured during a drag of the puzzle piece. `t` is milliseconds
+// since the drag started (not absolute), which is enough for behavioural
+// analysis and lets the trail be replay-portable.
+export const PuzzleEventSchema = object({
+	x: number(),
+	y: number(),
+	t: number(),
+});
+
+export type PuzzleEvent = zInfer<typeof PuzzleEventSchema>;
+
+export const SubmitPuzzleCaptchaSolutionBody = object({
+	[ApiParams.challenge]: PowChallengeIdSchema,
+	[ApiParams.finalX]: number(),
+	[ApiParams.finalY]: number(),
+	[ApiParams.puzzleEvents]: array(PuzzleEventSchema),
+	[ApiParams.signature]: object({
+		[ApiParams.user]: object({
+			[ApiParams.timestamp]: string(),
+		}),
+		[ApiParams.provider]: object({
+			[ApiParams.challenge]: string(),
+		}),
+	}),
+	[ApiParams.user]: string(),
+	[ApiParams.dapp]: string(),
+	[ApiParams.verifiedTimeout]: number()
+		.optional()
+		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
+	[ApiParams.behavioralData]: string().optional(),
+	[ApiParams.salt]: string().optional(),
+	[ApiParams.simdReadings]: string().optional(),
+	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
+});
+
+export type SubmitPuzzleCaptchaSolutionBodyType = input<
+	typeof SubmitPuzzleCaptchaSolutionBody
+>;
+
+export type SubmitPuzzleCaptchaSolutionBodyTypeOutput = output<
+	typeof SubmitPuzzleCaptchaSolutionBody
+>;
+
+export const ServerPuzzleCaptchaVerifyRequestBody = object({
+	[ApiParams.token]: ProcaptchaTokenSpec,
+	[ApiParams.dappSignature]: string(),
+	[ApiParams.verifiedTimeout]: number()
+		.optional()
+		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
+	[ApiParams.ip]: string().optional(),
+	[ApiParams.email]: string().email().optional(),
+});
+
+export type ServerPuzzleCaptchaVerifyRequestBodyType = zInfer<
+	typeof ServerPuzzleCaptchaVerifyRequestBody
+>;
+
+export type ServerPuzzleCaptchaVerifyRequestBodyOutput = output<
+	typeof ServerPuzzleCaptchaVerifyRequestBody
 >;
 
 export const VerifyPowCaptchaSolutionBody = object({
@@ -389,9 +621,120 @@ export const RegisterSitekeyBody = object({
 	[ApiParams.settings]: ClientSettingsSchema.optional(),
 });
 
+export const RegisterSitekeysBody = array(
+	object({
+		[ApiParams.siteKey]: string(),
+		[ApiParams.tier]: nativeEnum(Tier),
+		[ApiParams.settings]: ClientSettingsSchema.optional(),
+	}),
+);
+
+export const RemoveSitekeyBody = object({
+	[ApiParams.siteKey]: string(),
+});
+
+export const RemoveSitekeysBody = array(
+	object({
+		[ApiParams.siteKey]: string(),
+	}),
+);
+
 export const UpdateDetectorKeyBody = object({
 	[ApiParams.detectorKey]: string(),
 });
+
+export const UpdateDecisionMachineBody = object({
+	[ApiParams.decisionMachineScope]: nativeEnum(DecisionMachineScope),
+	[ApiParams.decisionMachineRuntime]: nativeEnum(DecisionMachineRuntime),
+	[ApiParams.decisionMachineSource]: string(),
+	[ApiParams.decisionMachineLanguage]: nativeEnum(
+		DecisionMachineLanguage,
+	).optional(),
+	[ApiParams.decisionMachineName]: string().optional(),
+	[ApiParams.decisionMachineVersion]: string().optional(),
+	[ApiParams.decisionMachineCaptchaType]:
+		DecisionMachineCaptchaTypeSchema.optional(),
+	[ApiParams.dapp]: string().optional(),
+});
+
+export const GetDecisionMachineBody = object({
+	id: string(),
+});
+
+export const GetAllDecisionMachinesBody = object({});
+
+export const RemoveDecisionMachineBody = object({
+	id: string(),
+});
+
+export const RemoveAllDecisionMachinesBody = object({});
+
+export const ClearAllCountersBody = object({
+	[ApiParams.dapp]: string().optional(),
+});
+
+export type ClearAllCountersBodyType = z.infer<typeof ClearAllCountersBody>;
+
+export const ClearAllCountersResponse = object({
+	success: boolean(),
+	deletedCount: number(),
+	scope: string(),
+});
+
+export type ClearAllCountersResponseType = z.infer<
+	typeof ClearAllCountersResponse
+>;
+
+export const DecisionMachineSummarySchema = object({
+	_id: string(),
+	scope: nativeEnum(DecisionMachineScope),
+	dappAccount: string().nullish(),
+	runtime: nativeEnum(DecisionMachineRuntime),
+	language: nativeEnum(DecisionMachineLanguage).nullish(),
+	name: string().nullish(),
+	version: string().nullish(),
+	captchaType: DecisionMachineCaptchaTypeSchema.nullish(),
+	createdAt: string(),
+	updatedAt: string(),
+});
+
+export type DecisionMachineSummary = z.infer<
+	typeof DecisionMachineSummarySchema
+>;
+
+export const GetAllDecisionMachinesResponse = array(
+	DecisionMachineSummarySchema,
+);
+
+export type GetAllDecisionMachinesResponseType = z.infer<
+	typeof GetAllDecisionMachinesResponse
+>;
+
+export const GetDecisionMachineResponse = DecisionMachineSummarySchema.extend({
+	source: string(),
+});
+
+export type GetDecisionMachineResponseType = z.infer<
+	typeof GetDecisionMachineResponse
+>;
+
+export const RemoveDecisionMachineResponse = object({
+	success: boolean(),
+	deletedId: string(),
+});
+
+export type RemoveDecisionMachineResponseType = z.infer<
+	typeof RemoveDecisionMachineResponse
+>;
+
+export const RemoveAllDecisionMachinesResponse = object({
+	success: boolean(),
+	deletedCount: number(),
+});
+
+export type RemoveAllDecisionMachinesResponseType = z.infer<
+	typeof RemoveAllDecisionMachinesResponse
+>;
 
 export const RemoveDetectorKeyBodySpec = object({
 	[ApiParams.detectorKey]: string(),
@@ -413,7 +756,19 @@ export type ToggleMaintenanceModeBodyOutput = output<
 	typeof ToggleMaintenanceModeBody
 >;
 
+export type UpdateDecisionMachineBodyTypeOutput = output<
+	typeof UpdateDecisionMachineBody
+>;
+
 export type RegisterSitekeyBodyTypeOutput = output<typeof RegisterSitekeyBody>;
+
+export type RegisterSitekeysBodyTypeOutput = output<
+	typeof RegisterSitekeysBody
+>;
+
+export type RemoveSitekeyBodyTypeOutput = output<typeof RemoveSitekeyBody>;
+
+export type RemoveSitekeysBodyTypeOutput = output<typeof RemoveSitekeysBody>;
 
 export const ProsopoCaptchaCountConfigSchema = object({
 	solved: object({

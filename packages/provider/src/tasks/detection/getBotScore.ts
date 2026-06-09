@@ -35,8 +35,10 @@ export const getBotScore = async (
 	const isWebView: boolean = result.isWebView ?? false;
 	const isIframe: boolean = result.isIframe ?? false;
 	const decryptedHeadHash: string = result.decryptedHeadHash;
+	const triggeredDetectors: number[] | undefined = result.triggeredDetectors;
+	const shadowDomPenalty: boolean | undefined = result.shadowDomPenalty;
 
-	if (baseBotScore === undefined) {
+	if (baseBotScore === undefined || Number.isNaN(baseBotScore)) {
 		return {
 			baseBotScore: 1,
 			timestamp: 0,
@@ -53,5 +55,7 @@ export const getBotScore = async (
 		isWebView,
 		isIframe,
 		decryptedHeadHash,
+		triggeredDetectors,
+		shadowDomPenalty,
 	};
 };

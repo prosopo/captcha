@@ -27,6 +27,9 @@
 			"path": "../common"
 		},
 		{
+			"path": "../logger"
+		},
+		{
 			"path": "../../dev/config"
 		},
 		{
@@ -67,6 +70,9 @@
 		},
 		{
 			"path": "../locale"
+		},
+		{
+			"path": "../redis-client"
 		}
 	]
 }

@@ -1,5 +1,133 @@
 # @prosopo/flux
 
+## 2.6.55
+### Patch Changes
+
+- Updated dependencies [97cf7bd]
+- Updated dependencies [6ca1125]
+- Updated dependencies [32a591b]
+  - @prosopo/logger@1.0.2
+  - @prosopo/util@3.2.15
+  - @prosopo/common@3.1.38
+  - @prosopo/dotenv@3.0.43
+
+## 2.6.54
+### Patch Changes
+
+- 0fd81af: Extract the logger into its own `@prosopo/logger` package, out of `@prosopo/common`. Consumers now import logger symbols from `@prosopo/logger`; `@prosopo/common` no longer re-exports them. Unused `@prosopo/common` dependencies pruned where the only usage was the logger.
+- Updated dependencies [0fd81af]
+  - @prosopo/common@3.1.37
+  - @prosopo/dotenv@3.0.42
+  - @prosopo/logger@1.0.1
+
+## 2.6.53
+### Patch Changes
+
+- Updated dependencies [6567ce0]
+  - @prosopo/util@3.2.14
+  - @prosopo/common@3.1.36
+  - @prosopo/dotenv@3.0.41
+
+## 2.6.52
+### Patch Changes
+
+- Updated dependencies [72a1218]
+  - @prosopo/util@3.2.13
+
+## 2.6.51
+### Patch Changes
+
+  - @prosopo/common@3.1.35
+  - @prosopo/dotenv@3.0.40
+
+## 2.6.50
+### Patch Changes
+
+- Updated dependencies [4aae4e6]
+- Updated dependencies [4993813]
+  - @prosopo/util@3.2.12
+  - @prosopo/common@3.1.34
+  - @prosopo/dotenv@3.0.39
+
+## 2.6.49
+### Patch Changes
+
+  - @prosopo/common@3.1.33
+  - @prosopo/dotenv@3.0.38
+
+## 2.6.48
+### Patch Changes
+
+  - @prosopo/common@3.1.32
+  - @prosopo/dotenv@3.0.37
+
+## 2.6.47
+### Patch Changes
+
+- Updated dependencies [4a9c518]
+  - @prosopo/common@3.1.31
+  - @prosopo/dotenv@3.0.36
+
+## 2.6.46
+### Patch Changes
+
+- Updated dependencies [a25dffa]
+  - @prosopo/util@3.2.11
+
+## 2.6.45
+### Patch Changes
+
+- Updated dependencies [346edd7]
+  - @prosopo/util@3.2.10
+
+## 2.6.44
+### Patch Changes
+
+- Updated dependencies [22bfee7]
+  - @prosopo/util@3.2.9
+
+## 2.6.43
+### Patch Changes
+
+- Updated dependencies [e0fb3d6]
+- Updated dependencies [f3f23e3]
+  - @prosopo/util@3.2.8
+
+## 2.6.42
+### Patch Changes
+
+- Updated dependencies [e1ea65f]
+  - @prosopo/util@3.2.7
+
+## 2.6.41
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/util@3.2.6
+  - @prosopo/common@3.1.30
+  - @prosopo/dotenv@3.0.35
+
+## 2.6.40
+### Patch Changes
+
+- Updated dependencies [c5ee492]
+  - @prosopo/common@3.1.29
+  - @prosopo/dotenv@3.0.34
+
+## 2.6.39
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+- Updated dependencies [a53526b]
+- Updated dependencies [0a38892]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [3acc333]
+  - @prosopo/util@3.2.5
+  - @prosopo/common@3.1.28
+  - @prosopo/dotenv@3.0.33
+
 ## 2.6.38
 ### Patch Changes
 

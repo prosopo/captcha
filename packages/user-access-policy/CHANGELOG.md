@@ -1,5 +1,373 @@
 # @prosopo/user-access-policy
 
+## 3.8.0
+### Minor Changes
+
+- 2f459ce: Add `asn` as a user-scope field for access rules. The captcha provider can now block / restrict by Autonomous System Number, matching what the protect/bumblebee tier already supports. ASN is read from `ipInfo.asnNumber` and threaded through `getRequestUserScope` and `checkForHardBlock` at all challenge entry points. Redis index gains a NUMERIC `asn` field with range-syntax lookups.
+
+## 3.7.12
+### Patch Changes
+
+- Updated dependencies [b03dad1]
+  - @prosopo/types@4.3.1
+  - @prosopo/api@3.4.9
+
+## 3.7.11
+### Patch Changes
+
+- Updated dependencies [a1d60db]
+- Updated dependencies [2392aaf]
+- Updated dependencies [97cf7bd]
+- Updated dependencies [6ca1125]
+- Updated dependencies [32a591b]
+  - @prosopo/types@4.3.0
+  - @prosopo/logger@1.0.2
+  - @prosopo/util@3.2.15
+  - @prosopo/api@3.4.8
+  - @prosopo/common@3.1.38
+  - @prosopo/api-route@2.6.46
+  - @prosopo/redis-client@1.0.23
+
+## 3.7.10
+### Patch Changes
+
+- Updated dependencies [6c26669]
+- Updated dependencies [f7f9ec5]
+  - @prosopo/types@4.2.1
+  - @prosopo/api@3.4.7
+
+## 3.7.9
+### Patch Changes
+
+- 0fd81af: Extract the logger into its own `@prosopo/logger` package, out of `@prosopo/common`. Consumers now import logger symbols from `@prosopo/logger`; `@prosopo/common` no longer re-exports them. Unused `@prosopo/common` dependencies pruned where the only usage was the logger.
+- Updated dependencies [0fd81af]
+  - @prosopo/api-route@2.6.45
+  - @prosopo/common@3.1.37
+  - @prosopo/logger@1.0.1
+  - @prosopo/redis-client@1.0.22
+
+## 3.7.8
+### Patch Changes
+
+- Updated dependencies [20cae63]
+- Updated dependencies [4d9923e]
+  - @prosopo/types@4.2.0
+  - @prosopo/api@3.4.6
+
+## 3.7.7
+### Patch Changes
+
+- Updated dependencies [d351362]
+  - @prosopo/types@4.1.4
+  - @prosopo/api@3.4.5
+
+## 3.7.6
+### Patch Changes
+
+- Updated dependencies [6567ce0]
+- Updated dependencies [e2711ae]
+- Updated dependencies [5786629]
+  - @prosopo/util@3.2.14
+  - @prosopo/types@4.1.3
+  - @prosopo/api@3.4.4
+  - @prosopo/common@3.1.36
+  - @prosopo/api-route@2.6.44
+  - @prosopo/redis-client@1.0.21
+
+## 3.7.5
+### Patch Changes
+
+- Updated dependencies [72a1218]
+  - @prosopo/util@3.2.13
+  - @prosopo/types@4.1.2
+  - @prosopo/api@3.4.3
+
+## 3.7.4
+### Patch Changes
+
+- Updated dependencies [91958da]
+  - @prosopo/api@3.4.2
+  - @prosopo/types@4.1.1
+  - @prosopo/common@3.1.35
+  - @prosopo/api-route@2.6.43
+  - @prosopo/redis-client@1.0.20
+
+## 3.7.3
+### Patch Changes
+
+- Updated dependencies [6a741ce]
+  - @prosopo/types@4.1.0
+  - @prosopo/api@3.4.1
+
+## 3.7.2
+### Patch Changes
+
+- 72a0483: User Access Policy (UAP) rule endpoints now use the per-request logger
+  passed by the express adapter, instead of the long-lived app logger
+  captured at construction time. This means every "Endpoint inserted access
+  rules" / "Endpoint fetched rules" / "Endpoint deleted rules" / etc. log
+  line now carries `requestId`, `siteKey`, and `user`, matching the rest of
+  the provider API and making the logs queryable per-request in OpenObserve.
+  
+  Each `processRequest(args, logger?)` resolves to the request logger when
+  present and falls back to `this.logger` otherwise, preserving behaviour
+  when called directly (e.g. from a script or unit test that doesn't pass
+  a logger). The express adapter at
+  `api-express-router/.../apiExpressDefaultEndpointAdapter.ts` already
+  passes `request.logger` — no router-level changes needed.
+  
+  Touched endpoints (all under `packages/user-access-policy/src/api/`):
+  `InsertRulesEndpoint`, `RehashRulesEndpoint`, `FetchRulesEndpoint`,
+  `FindRuleIdsEndpoint`, `GetMissingIdsEndpoint`, `DeleteRulesEndpoint`,
+  `DeleteAllRulesEndpoint`, `DeleteRuleGroupsEndpoint`.
+- Updated dependencies [3c0be68]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [d865319]
+- Updated dependencies [753304b]
+- Updated dependencies [8bb7286]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [4993813]
+  - @prosopo/types@4.0.0
+  - @prosopo/api@3.4.0
+  - @prosopo/util@3.2.12
+  - @prosopo/common@3.1.34
+  - @prosopo/api-route@2.6.42
+  - @prosopo/redis-client@1.0.19
+
+## 3.7.1
+### Patch Changes
+
+- Updated dependencies [819ed95]
+  - @prosopo/types@3.16.1
+  - @prosopo/api@3.3.2
+
+## 3.7.0
+### Minor Changes
+
+- 60ba3b1: Fix for rules that expire before being removed from index.
+
+## 3.6.24
+### Patch Changes
+
+- Updated dependencies [f6a4402]
+- Updated dependencies [99dfb44]
+  - @prosopo/types@3.16.0
+  - @prosopo/api@3.3.1
+
+## 3.6.23
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+  - @prosopo/api@3.3.0
+
+## 3.6.22
+### Patch Changes
+
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+  - @prosopo/types@3.14.1
+  - @prosopo/api@3.2.11
+  - @prosopo/common@3.1.33
+  - @prosopo/api-route@2.6.41
+  - @prosopo/redis-client@1.0.18
+
+## 3.6.21
+### Patch Changes
+
+- Updated dependencies [fc514dd]
+- Updated dependencies [7be39c4]
+- Updated dependencies [42650db]
+  - @prosopo/types@3.14.0
+  - @prosopo/api@3.2.10
+  - @prosopo/common@3.1.32
+  - @prosopo/api-route@2.6.40
+  - @prosopo/redis-client@1.0.17
+
+## 3.6.20
+### Patch Changes
+
+- Updated dependencies [4a9c518]
+  - @prosopo/common@3.1.31
+  - @prosopo/api-route@2.6.39
+  - @prosopo/redis-client@1.0.16
+
+## 3.6.19
+### Patch Changes
+
+- Updated dependencies [a25dffa]
+  - @prosopo/util@3.2.11
+  - @prosopo/types@3.13.3
+  - @prosopo/api@3.2.9
+
+## 3.6.18
+### Patch Changes
+
+- Updated dependencies [346edd7]
+  - @prosopo/util@3.2.10
+  - @prosopo/types@3.13.2
+  - @prosopo/api@3.2.8
+
+## 3.6.17
+### Patch Changes
+
+- Updated dependencies [22bfee7]
+  - @prosopo/util@3.2.9
+  - @prosopo/types@3.13.1
+  - @prosopo/api@3.2.7
+
+## 3.6.16
+### Patch Changes
+
+- Updated dependencies [e0fb3d6]
+- Updated dependencies [e6d9553]
+- Updated dependencies [f3f23e3]
+  - @prosopo/util@3.2.8
+  - @prosopo/types@3.13.0
+  - @prosopo/api@3.2.6
+
+## 3.6.15
+### Patch Changes
+
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/types@3.12.3
+  - @prosopo/util@3.2.7
+  - @prosopo/api@3.2.5
+
+## 3.6.14
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/types@3.12.2
+  - @prosopo/util@3.2.6
+  - @prosopo/api@3.2.4
+  - @prosopo/common@3.1.30
+  - @prosopo/api-route@2.6.38
+  - @prosopo/redis-client@1.0.15
+
+## 3.6.13
+### Patch Changes
+
+- Updated dependencies [c5ee492]
+- Updated dependencies [a90eb54]
+  - @prosopo/common@3.1.29
+  - @prosopo/types@3.12.1
+  - @prosopo/api-route@2.6.37
+  - @prosopo/redis-client@1.0.14
+  - @prosopo/api@3.2.3
+
+## 3.6.12
+### Patch Changes
+
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/types@3.12.0
+  - @prosopo/api@3.2.2
+
+## 3.6.11
+### Patch Changes
+
+- Updated dependencies [8148587]
+  - @prosopo/types@3.11.1
+  - @prosopo/api@3.2.1
+
+## 3.6.10
+### Patch Changes
+
+- Updated dependencies [7f6ffc5]
+  - @prosopo/types@3.11.0
+  - @prosopo/api@3.2.0
+
+## 3.6.9
+### Patch Changes
+
+- Updated dependencies [93fa086]
+  - @prosopo/types@3.10.2
+  - @prosopo/api@3.1.49
+
+## 3.6.8
+### Patch Changes
+
+- Updated dependencies [cde7550]
+  - @prosopo/types@3.10.1
+  - @prosopo/api@3.1.48
+
+## 3.6.7
+### Patch Changes
+
+- Updated dependencies [ad6d622]
+  - @prosopo/types@3.10.0
+  - @prosopo/api@3.1.47
+
+## 3.6.6
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+  - @prosopo/types@3.9.0
+  - @prosopo/api@3.1.46
+
+## 3.6.5
+### Patch Changes
+
+- Updated dependencies [d2431cd]
+  - @prosopo/types@3.8.4
+  - @prosopo/api@3.1.45
+
+## 3.6.4
+### Patch Changes
+
+- bd6995b: Adding UAP based geoblocking rules
+- Updated dependencies [bd6995b]
+  - @prosopo/types@3.8.3
+  - @prosopo/api@3.1.44
+
+## 3.6.3
+### Patch Changes
+
+- Updated dependencies [9633e58]
+  - @prosopo/types@3.8.2
+  - @prosopo/api@3.1.43
+
+## 3.6.2
+### Patch Changes
+
+- Updated dependencies [f52a5c1]
+  - @prosopo/types@3.8.1
+  - @prosopo/api@3.1.42
+
+## 3.6.1
+### Patch Changes
+
+- ed87b6f: Fix authentication in uaps
+
+## 3.6.0
+### Minor Changes
+
+- 17854a7: fix deleteAll endpoint throwing a recursion limit when too many rules are in redis
+
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+- Updated dependencies [a53526b]
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [7543d17]
+- Updated dependencies [3acc333]
+  - @prosopo/util@3.2.5
+  - @prosopo/types@3.8.0
+  - @prosopo/redis-client@1.0.13
+  - @prosopo/api-route@2.6.36
+  - @prosopo/common@3.1.28
+  - @prosopo/api@3.1.41
+
 ## 3.5.37
 ### Patch Changes
 

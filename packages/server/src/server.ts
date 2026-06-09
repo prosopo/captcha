@@ -12,16 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProviderApi } from "@prosopo/api";
-import {
-	type LogLevel,
-	type Logger,
-	ProsopoApiError,
-	ProsopoContractError,
-	getLogger,
-} from "@prosopo/common";
+import { HttpError, ProviderApi } from "@prosopo/api";
+import { ProsopoApiError, ProsopoContractError } from "@prosopo/common";
 import { Keyring } from "@prosopo/keyring";
 import { loadBalancer } from "@prosopo/load-balancer";
+import { type LogLevel, type Logger, getLogger } from "@prosopo/logger";
 import type { KeyringPair } from "@prosopo/types";
 import {
 	type CaptchaTimeoutOutput,
@@ -70,6 +65,7 @@ export class ProsopoServer {
 	 * @param user
 	 * @param challenge
 	 * @param ip
+	 * @param email
 	 */
 	public async verifyProvider(
 		token: string,
@@ -79,6 +75,7 @@ export class ProsopoServer {
 		user: string,
 		challenge?: string,
 		ip?: string,
+		email?: string,
 	): Promise<VerificationResponse> {
 		this.logger.info(() => ({
 			data: { providerUrl },
@@ -112,6 +109,7 @@ export class ProsopoServer {
 				timeouts.pow.cachedTimeout,
 				user,
 				ip,
+				email,
 			);
 		}
 		const imageTimeout = this.config.timeouts.image.cachedTimeout;
@@ -132,17 +130,19 @@ export class ProsopoServer {
 			user,
 			timeouts.image.cachedTimeout,
 			ip,
+			email,
 		);
 	}
 
 	/**
-	 *
-	 * @returns
 	 * @param token
+	 * @param ip
+	 * @param email
 	 */
 	public async isVerified(
 		token: ProcaptchaToken,
 		ip?: string,
+		email?: string,
 	): Promise<VerificationResponse> {
 		try {
 			const payload = decodeProcaptchaOutput(token);
@@ -175,6 +175,7 @@ export class ProsopoServer {
 				user,
 				challenge,
 				ip,
+				email,
 			);
 
 			this.logger.info(() => ({
@@ -190,8 +191,9 @@ export class ProsopoServer {
 			return verificationResponse;
 		} catch (err) {
 			this.logger.error(() => ({ err, data: { token } }));
+			const code = err instanceof HttpError ? err.status : 500;
 			throw new ProsopoApiError("API.BAD_REQUEST", {
-				context: { code: 500, token },
+				context: { code, token },
 			});
 		}
 	}

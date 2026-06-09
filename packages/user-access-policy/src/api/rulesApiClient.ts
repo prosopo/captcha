@@ -38,36 +38,31 @@ export class AccessRulesApiClient extends ApiClient {
 
 	public deleteMany(
 		filters: AccessRulesFilterInput[],
-		timestamp: string,
-		signature: string,
+		jwt: string,
 	): Promise<ApiEndpointResponse> {
 		return this.post(
 			accessRuleApiPaths.DELETE_MANY,
 			filters,
-			this.getAuthHeaders(timestamp, signature),
+			this.getAuthHeaders(jwt),
 		);
 	}
 
 	public deleteGroups(
 		siteGroups: DeleteSiteGroups,
-		timestamp: string,
-		signature: string,
+		jwt: string,
 	): Promise<ApiEndpointResponse> {
 		return this.post(
 			accessRuleApiPaths.DELETE_GROUPS,
 			siteGroups,
-			this.getAuthHeaders(timestamp, signature),
+			this.getAuthHeaders(jwt),
 		);
 	}
 
-	public deleteAll(
-		timestamp: string,
-		signature: string,
-	): Promise<ApiEndpointResponse> {
+	public deleteAll(jwt: string): Promise<ApiEndpointResponse> {
 		return this.post(
 			accessRuleApiPaths.DELETE_ALL,
 			{},
-			this.getAuthHeaders(timestamp, signature),
+			this.getAuthHeaders(jwt),
 		);
 	}
 
@@ -75,13 +70,12 @@ export class AccessRulesApiClient extends ApiClient {
 
 	public async getMissingIds(
 		idsToCheck: MissingIds,
-		timestamp: string,
-		signature: string,
+		jwt: string,
 	): Promise<MissingIdsEndpointResponse> {
 		const endpointResponse: ApiEndpointResponse = await this.post(
 			accessRuleApiPaths.GET_MISSING_IDS,
 			idsToCheck,
-			this.getAuthHeaders(timestamp, signature),
+			this.getAuthHeaders(jwt),
 		);
 
 		const parsedData = missingIdsResponse.safeParse(endpointResponse.data);
@@ -94,13 +88,12 @@ export class AccessRulesApiClient extends ApiClient {
 
 	public async fetchMany(
 		fetchOptions: FetchRulesOptions,
-		timestamp: string,
-		signature: string,
+		jwt: string,
 	): Promise<FetchRulesEndpointResponse> {
 		const endpointResponse: ApiEndpointResponse = await this.post(
 			accessRuleApiPaths.FETCH_MANY,
 			fetchOptions,
-			this.getAuthHeaders(timestamp, signature),
+			this.getAuthHeaders(jwt),
 		);
 
 		const parsedData = fetchRulesResponse.safeParse(endpointResponse.data);
@@ -113,13 +106,12 @@ export class AccessRulesApiClient extends ApiClient {
 
 	public async findIds(
 		filters: AccessRulesFilterInput[],
-		timestamp: string,
-		signature: string,
+		jwt: string,
 	): Promise<RuleIdsEndpointResponse> {
 		const endpointResponse: ApiEndpointResponse = await this.post(
 			accessRuleApiPaths.FIND_IDS,
 			filters,
-			this.getAuthHeaders(timestamp, signature),
+			this.getAuthHeaders(jwt),
 		);
 
 		const parsedData = ruleIdsResponse.safeParse(endpointResponse.data);
@@ -132,35 +124,30 @@ export class AccessRulesApiClient extends ApiClient {
 
 	//// write
 
-	public async rehashAll(
-		timestamp: string,
-		signature: string,
-	): Promise<ApiEndpointResponse> {
+	public async rehashAll(jwt: string): Promise<ApiEndpointResponse> {
 		return this.post(
 			accessRuleApiPaths.REHASH_ALL,
 			{},
-			this.getAuthHeaders(timestamp, signature),
+			this.getAuthHeaders(jwt),
 		);
 	}
 
 	public insertMany(
 		ruleGroups: InsertRulesGroup[],
-		timestamp: string,
-		signature: string,
+		jwt: string,
 	): Promise<ApiEndpointResponse> {
 		return this.post(
 			accessRuleApiPaths.INSERT_MANY,
 			ruleGroups,
-			this.getAuthHeaders(timestamp, signature),
+			this.getAuthHeaders(jwt),
 		);
 	}
 
-	protected getAuthHeaders(timestamp: string, signature: string): RequestInit {
+	protected getAuthHeaders(jwt: string): RequestInit {
 		return {
 			headers: {
 				"Prosopo-Site-Key": this.account,
-				timestamp,
-				signature,
+				Authorization: `Bearer ${jwt}`,
 			},
 		};
 	}

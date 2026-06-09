@@ -1,5 +1,73 @@
 # @prosopo/redis-client
 
+## 1.0.23
+### Patch Changes
+
+- Updated dependencies [97cf7bd]
+- Updated dependencies [6ca1125]
+- Updated dependencies [32a591b]
+  - @prosopo/logger@1.0.2
+
+## 1.0.22
+### Patch Changes
+
+- 0fd81af: Extract the logger into its own `@prosopo/logger` package, out of `@prosopo/common`. Consumers now import logger symbols from `@prosopo/logger`; `@prosopo/common` no longer re-exports them. Unused `@prosopo/common` dependencies pruned where the only usage was the logger.
+- Updated dependencies [0fd81af]
+  - @prosopo/logger@1.0.1
+
+## 1.0.21
+### Patch Changes
+
+  - @prosopo/common@3.1.36
+
+## 1.0.20
+### Patch Changes
+
+  - @prosopo/common@3.1.35
+
+## 1.0.19
+### Patch Changes
+
+- Updated dependencies [4993813]
+  - @prosopo/common@3.1.34
+
+## 1.0.18
+### Patch Changes
+
+  - @prosopo/common@3.1.33
+
+## 1.0.17
+### Patch Changes
+
+  - @prosopo/common@3.1.32
+
+## 1.0.16
+### Patch Changes
+
+- Updated dependencies [4a9c518]
+  - @prosopo/common@3.1.31
+
+## 1.0.15
+### Patch Changes
+
+  - @prosopo/common@3.1.30
+
+## 1.0.14
+### Patch Changes
+
+- Updated dependencies [c5ee492]
+  - @prosopo/common@3.1.29
+
+## 1.0.13
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- Updated dependencies [0a38892]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [3acc333]
+  - @prosopo/common@3.1.28
+
 ## 1.0.12
 ### Patch Changes
 

@@ -12,16 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { getLogger, parseLogLevel } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/env";
+import { getLogger, parseLogLevel } from "@prosopo/logger";
 import type { NextFunction, Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
+
+const getHeaderValue = (
+	req: Request,
+	headerName: string,
+): string | undefined => {
+	if (headerName in req.headers && req.headers[headerName]) {
+		return req.headers[headerName].toString();
+	}
+	return undefined;
+};
 
 export function requestLoggerMiddleware(env: ProviderEnvironment) {
 	return (req: Request, res: Response, next: NextFunction) => {
 		const requestId =
 			(req.headers["x-request-id"] as string) || `e-${uuidv4()}`; // use prefix to differentiate from other IDs
-
+		const user = getHeaderValue(req, "prosopo-user");
+		const siteKey = getHeaderValue(req, "prosopo-site-key");
 		const sessionId = req.body?.sessionId ? req.body.sessionId : null;
 
 		const logger = getLogger(
@@ -29,6 +40,8 @@ export function requestLoggerMiddleware(env: ProviderEnvironment) {
 			"request-logger",
 		).with({
 			requestId,
+			...(user ? { user } : {}),
+			...(siteKey ? { siteKey } : {}),
 			...(sessionId ? { sessionId } : {}),
 		});
 

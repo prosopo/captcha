@@ -12,11 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {
-	type Logger,
-	chunkIntoBatches,
-	executeBatchesSequentially,
-} from "@prosopo/common";
+import { chunkIntoBatches, executeBatchesSequentially } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import type { RedisClientType } from "redis";
 import { REDIS_BATCH_SIZE } from "#policy/redis/redisClient.js";
 import type { AccessRule } from "#policy/rule.js";

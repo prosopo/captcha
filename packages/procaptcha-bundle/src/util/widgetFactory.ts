@@ -18,11 +18,7 @@ import {
 	getDefaultCallbacks,
 	setUserCallbacks,
 } from "@prosopo/procaptcha-common";
-import {
-	type Callbacks,
-	CaptchaType,
-	type ProcaptchaRenderOptions,
-} from "@prosopo/types";
+import type { Callbacks, ProcaptchaRenderOptions } from "@prosopo/types";
 import {
 	createWidgetSkeleton,
 	darkTheme,
@@ -112,7 +108,6 @@ class WidgetFactory {
 				identifierPrefix: "procaptcha-",
 				emotionCacheKey: "procaptcha",
 				webComponentTag: "prosopo-procaptcha",
-				defaultCaptchaType: CaptchaType.frictionless,
 			},
 			widgetInteractiveArea,
 			renderOptions,
@@ -121,6 +116,7 @@ class WidgetFactory {
 			this.i18n,
 			invisible,
 			widgetContainer,
+			container,
 		);
 
 		return captchaRoot;
@@ -142,11 +138,7 @@ class WidgetFactory {
 		const CaptchaRenderer = (await import("./captcha/captchaRenderer.js"))
 			.CaptchaRenderer;
 
-		const CaptchaComponentProvider = (
-			await import("./captcha/captchaComponentProvider.js")
-		).CaptchaComponentProvider;
-
-		return new CaptchaRenderer(new CaptchaComponentProvider());
+		return new CaptchaRenderer();
 	}
 }
 

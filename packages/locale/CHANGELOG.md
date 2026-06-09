@@ -1,5 +1,81 @@
 # @prosopo/locale
 
+## 3.2.4
+### Patch Changes
+
+- 5786629: fix(provider): persist DISALLOWED_WEBVIEW outcome and broaden detection in image captcha verify
+  
+  The webview check in `verifyImageCaptchaSolution` did an early return that
+  left the commitment stuck at `Approved` in the database and never marked
+  the session as `serverChecked` / `disapproved`, even though the API
+  correctly returned `verified: false`. This made the DB state misleading
+  and broke any downstream consumer reading commitment status directly.
+  
+  The check also only fired when `scoreComponents.webView > 0`, which is
+  only set when the frictionless flow took the webview branch. Webview
+  users who reached the image captcha via another branch (UA mismatch,
+  context-aware failure, timestamp, bot score) had `session.webView: true`
+  but no `scoreComponents.webView`, so the verify-time block missed them.
+  
+  - Convert the early return to the same `failStatus` /
+    `commitmentUpdates.result` pattern used by every other check in the
+    function, so the commitment and session are properly persisted as
+    disapproved with reason `DISALLOWED_WEBVIEW`.
+  - Trigger on `session.webView === true` OR `scoreComponents.webView > 0`.
+  - Add `ResultReason.DISALLOWED_WEBVIEW` and the English locale entry.
+  - Add unit tests for score-based detection, boolean-only detection, and
+    the `disallowWebView=false` passthrough.
+  
+  Closes #3396.
+
+## 3.2.3
+### Patch Changes
+
+- 53bfd45: Detect when the widget is served over plain HTTP (an insecure browser context)
+  and show a clear "Procaptcha requires a secure (HTTPS) connection" message
+  instead of failing later with a cryptic `Provider Selection Failed` error.
+  Procaptcha depends on secure-context-only browser APIs (e.g. SubtleCrypto), so
+  the frictionless widget now short-circuits before the provider-selection retry
+  loop when `window.isSecureContext` is false. Adds the `WIDGET.INSECURE_CONTEXT`
+  translation key across all locales and an `isSecureBrowserContext` helper.
+
+## 3.2.2
+### Patch Changes
+
+- 4aae4e6: Guard the `process.env` reads in `i18nSharedOptions` and `version` so both
+  packages are loadable in a plain browser runtime (e.g. Vite dev/preview
+  servers) where `process` is undefined. Without the guard, any consumer that
+  side-effectfully imports `@prosopo/types` — which transitively reaches
+  `@prosopo/locale` via `LanguageSchema` — would crash the page with
+  `ReferenceError: process is not defined`.
+
+## 3.2.1
+### Patch Changes
+
+- b94890c: Translations
+
+## 3.2.0
+### Minor Changes
+
+- 42650db: Add better spam rules and move ipinfo service to local instead of external
+
+### Patch Changes
+
+- fc514dd: ability to block different types of traffic
+
+## 3.1.29
+### Patch Changes
+
+- adb89a6: Disposable email checking
+
+## 3.1.28
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- fe9fe22: adding api returns
+- 3acc333: Release 3.3.0
+
 ## 3.1.27
 ### Patch Changes
 

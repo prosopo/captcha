@@ -70,6 +70,9 @@ export function Manager(
 	onStateUpdate: ProcaptchaStateUpdateFn,
 	callbacks: ProcaptchaCallbacks,
 	frictionlessState?: FrictionlessState,
+	// Reads the live honeypot input value at submit time. Returns undefined
+	// when the honeypot is disabled or the input hasn't been filled.
+	getHoneypotValue?: () => string | undefined,
 ) {
 	const events = getDefaultEvents(callbacks);
 
@@ -164,8 +167,14 @@ export function Manager(
 					updateState({ captchaApi });
 				}
 
+				// Non-blocking check — attach SIMD readings only if the
+				// prefetched benchmark has already resolved by this point.
+				const simdReadingsOnChallenge = frictionlessState?.getSimdReadings
+					? await frictionlessState.getSimdReadings(0)
+					: undefined;
 				const challenge = await captchaApi?.getCaptchaChallenge(
 					state.sessionId,
+					simdReadingsOnChallenge,
 				);
 
 				if (challenge.error) {
@@ -284,9 +293,42 @@ export function Manager(
 					type: "bytes",
 				});
 
-				// TODO: Add behavioral data collection for image captcha when API supports it
-				// (Currently only PoW captcha submission accepts behavioral data)
+				let encryptedBehavioralData: string | undefined;
 
+				// Collect and encrypt behavioral data before submission
+				if (
+					frictionlessState?.encryptBehavioralData &&
+					(frictionlessState?.behaviorCollector1 ||
+						frictionlessState?.behaviorCollector2 ||
+						frictionlessState?.behaviorCollector3)
+				) {
+					try {
+						const behavioralData = {
+							collector1: frictionlessState.behaviorCollector1?.getData() || [],
+							collector2: frictionlessState.behaviorCollector2?.getData() || [],
+							collector3: frictionlessState.behaviorCollector3?.getData() || [],
+							deviceCapability: frictionlessState.deviceCapability || "unknown",
+						};
+
+						// Pack the behavioral data before stringifying
+						const dataToEncrypt = frictionlessState.packBehavioralData
+							? frictionlessState.packBehavioralData(behavioralData)
+							: behavioralData;
+
+						encryptedBehavioralData =
+							await frictionlessState.encryptBehavioralData(
+								JSON.stringify(dataToEncrypt),
+							);
+					} catch {
+						// Silently ignore behavioral data errors - captcha should still work
+					}
+				}
+
+				const simdReadings = frictionlessState?.getSimdReadings
+					? await frictionlessState.getSimdReadings()
+					: undefined;
+				const hpValue = getHoneypotValue?.();
+				const clientMetaData = hpValue ? { hp: hpValue } : undefined;
 				// send the commitment to the provider
 				const submission: TCaptchaSubmitResult =
 					await captchaApi.submitCaptchaSolution(
@@ -295,6 +337,9 @@ export function Manager(
 						captchaSolution,
 						challenge.timestamp,
 						challenge.signature.provider.requestHash,
+						encryptedBehavioralData,
+						simdReadings,
+						clientMetaData,
 					);
 
 				// mark as is human if solution has been approved

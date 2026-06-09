@@ -21,7 +21,6 @@ import { default as viteReact } from "@vitejs/plugin-react";
 import type { Drop } from "esbuild";
 import type { ExternalOption } from "rollup";
 import css from "rollup-plugin-import-css";
-import { visualizer } from "rollup-plugin-visualizer";
 import type { UserConfig } from "vite";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { filterDependencies, getDependencies } from "../dependencies.js";
@@ -142,6 +141,9 @@ export default async function (
 			include: ["node_modules"],
 			force: true,
 		},
+		worker: {
+			format: "es",
+		},
 		esbuild: {
 			platform: "browser",
 			target: [
@@ -233,12 +235,12 @@ export default async function (
 							}
 						},
 					},
-					visualizer({
-						open: true,
-						template: "treemap", //'list',
-						gzipSize: true,
-						brotliSize: true,
-					}),
+					// visualizer({
+					// 	open: true,
+					// 	template: "treemap", //'list',
+					// 	gzipSize: true,
+					// 	brotliSize: true,
+					// }),
 					// I think we can use this plugin to build all packages instead of relying on the tsc step that's
 					// currently a precursor in package.json. However, it fails for the following reason:
 					// https://github.com/rollup/plugins/issues/243

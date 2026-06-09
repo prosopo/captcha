@@ -14,11 +14,8 @@
 
 import { hexToU8a } from "@polkadot/util/hex";
 import { isHex } from "@polkadot/util/is";
-import {
-	type Logger,
-	ProsopoContractError,
-	ProsopoEnvError,
-} from "@prosopo/common";
+import { ProsopoContractError, ProsopoEnvError } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import {
 	type IIPValidation,
 	type IIPValidationRules,
@@ -30,6 +27,7 @@ import {
 	ScheduledTaskStatus,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
+import type { IIpInfoService } from "@prosopo/types-env";
 import { at } from "@prosopo/util";
 import { decodeAddress, encodeAddress } from "@prosopo/util-crypto";
 import { Address4, Address6 } from "ip-address";
@@ -264,7 +262,6 @@ export const evaluateIpValidationRules = (
 		});
 	}
 
-	console.log(JSON.stringify(effectiveRules, null, 2));
 	// Check for abuse score exceed condition
 	const ip2AbuseScore = comparison.comparison.ip2Details?.abuserScore;
 	if (
@@ -360,8 +357,7 @@ export const evaluateIpValidationRules = (
  * @param ip - The IP address string to validate
  * @param challengeIpAddress - The IP address from the challenge record
  * @param logger - Logger instance for debug messages
- * @param apiKey
- * @param apiUrl
+ * @param ipInfoService - IP info service for local lookups
  * @param ipValidationRules - IP validation rules configuration
  * @returns Object with validation result, optional error message, and distance info
  */
@@ -369,8 +365,7 @@ export const deepValidateIpAddress = async (
 	ip: string,
 	challengeIpAddress: IPAddress,
 	logger: Logger,
-	apiKey: string,
-	apiUrl: string,
+	ipInfoService: IIpInfoService,
 	ipValidationRules?: IIPValidationRules,
 ): Promise<{
 	isValid: boolean;
@@ -407,7 +402,7 @@ export const deepValidateIpAddress = async (
 	// Both IPs valid but different -> check distance
 	try {
 		const challengeIpString = challengeIpAddress.address;
-		const comparison = await compareIPs(challengeIpString, ip, apiKey, apiUrl);
+		const comparison = await compareIPs(challengeIpString, ip, ipInfoService);
 
 		if ("error" in comparison) {
 			logger.error(() => ({
@@ -420,7 +415,7 @@ export const deepValidateIpAddress = async (
 			}));
 			// If we can't do distance comparison and IPs don't match exactly, be strict
 			return {
-				isValid: false,
+				isValid: true,
 				errorMessage: "Could not determine IP distance",
 			};
 		}

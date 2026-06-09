@@ -1,5 +1,85 @@
 # @prosopo/lint
 
+## 2.8.33
+### Patch Changes
+
+- Updated dependencies [6ca1125]
+  - @prosopo/util@3.2.15
+
+## 2.8.32
+### Patch Changes
+
+- Updated dependencies [6567ce0]
+  - @prosopo/util@3.2.14
+
+## 2.8.31
+### Patch Changes
+
+- Updated dependencies [72a1218]
+  - @prosopo/util@3.2.13
+
+## 2.8.30
+### Patch Changes
+
+- 7075948: fix/lint redirects now enforces trailing slashes on templated URLs and stops false-positiving on third-party hosts that contain "prosopo.io" in the path
+  
+  - `isInternalLink` switched from substring matching to hostname matching via `new URL(url).hostname`, so URLs like `https://uk.trustpilot.com/review/prosopo.io` are correctly classified as external.
+  - New `extractMarkdownUrl` helper splits the parenthesised content of a markdown link `[text](url ...)` on whitespace while tracking `{{ ... }}` depth, fixing the previous `split(" ")[0]` that mangled templated URLs.
+  - `needsTrailingSlash` now only short-circuits when the URL **ends** in `}}`. URLs with templated middles (e.g. `{{ site.url }}/products/foo`) are audited — appending a slash to the static suffix is always safe and avoids a 301 hop that costs crawl budget.
+  - Extracted the inline replacement logic into a pure `buildReplacementText` helper and added 25 unit tests covering all four functions.
+- 5f1ae53: Small CSS change and test file change
+- Updated dependencies [4aae4e6]
+  - @prosopo/util@3.2.12
+
+## 2.8.29
+### Patch Changes
+
+- Updated dependencies [a25dffa]
+  - @prosopo/util@3.2.11
+
+## 2.8.28
+### Patch Changes
+
+- Updated dependencies [346edd7]
+  - @prosopo/util@3.2.10
+
+## 2.8.27
+### Patch Changes
+
+- Updated dependencies [22bfee7]
+  - @prosopo/util@3.2.9
+
+## 2.8.26
+### Patch Changes
+
+- Updated dependencies [e0fb3d6]
+- Updated dependencies [f3f23e3]
+  - @prosopo/util@3.2.8
+
+## 2.8.25
+### Patch Changes
+
+- Updated dependencies [e1ea65f]
+  - @prosopo/util@3.2.7
+
+## 2.8.24
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/util@3.2.6
+
+## 2.8.23
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+- Updated dependencies [a53526b]
+- Updated dependencies [0a38892]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [3acc333]
+  - @prosopo/util@3.2.5
+
 ## 2.8.22
 ### Patch Changes
 

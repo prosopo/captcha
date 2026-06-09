@@ -15,10 +15,30 @@
 import type { EnvironmentTypes, RandomProvider } from "@prosopo/types";
 import { type HardcodedProvider, loadBalancer } from "./index.js";
 
-let cachedProviders: HardcodedProvider[] = [];
+// Keyed by env so a prefetch and a later call with a different env don't share.
+const providerPromiseCache: Map<
+	EnvironmentTypes,
+	Promise<HardcodedProvider[]>
+> = new Map();
+
+/** Optional custom loader for server-side caching (e.g. cacheFile with ETag). */
+let customProviderLoader:
+	| ((env: EnvironmentTypes) => Promise<HardcodedProvider[]>)
+	| null = null;
+
+/**
+ * Set a custom provider loader that replaces the default HTTP fetch.
+ * Use this on the server side to inject cacheFile-based loading with
+ * ETag/Last-Modified support for disk persistence across restarts.
+ */
+export function setProviderLoader(
+	loader: (env: EnvironmentTypes) => Promise<HardcodedProvider[]>,
+): void {
+	customProviderLoader = loader;
+}
 
 export function _resetCache() {
-	cachedProviders = [];
+	providerPromiseCache.clear();
 }
 
 /**
@@ -59,16 +79,47 @@ export function selectWeightedProvider(
 	return selectedProvider;
 }
 
+/** Load providers using the custom loader if set, otherwise the default fetch. */
+const loadProviders = async (
+	env: EnvironmentTypes,
+): Promise<HardcodedProvider[]> => {
+	if (customProviderLoader) {
+		return customProviderLoader(env);
+	}
+	return loadBalancer(env);
+};
+
+// Caches the in-flight Promise (not the resolved array) so concurrent callers
+// share a single network request rather than racing.
+const getProvidersPromise = (
+	env: EnvironmentTypes,
+): Promise<HardcodedProvider[]> => {
+	const existing = providerPromiseCache.get(env);
+	if (existing) return existing;
+	const promise = loadProviders(env).catch((err) => {
+		providerPromiseCache.delete(env);
+		throw err;
+	});
+	providerPromiseCache.set(env, promise);
+	return promise;
+};
+
+/**
+ * Pre-warms the provider cache for a given environment without requiring entropy.
+ * Call this as early as possible to avoid a cold-cache delay when getRandomActiveProvider is first used.
+ */
+export const prefetchProviders = async (
+	env: EnvironmentTypes,
+): Promise<void> => {
+	await getProvidersPromise(env);
+};
+
 export const getRandomActiveProvider = async (
 	env: EnvironmentTypes,
 	entropy: number,
 ): Promise<RandomProvider> => {
-	if (cachedProviders.length === 0) {
-		// only get the providers JSON once
-		cachedProviders = await loadBalancer(env);
-	}
-
-	const randomProviderObj = selectWeightedProvider(cachedProviders, entropy);
+	const providers = await getProvidersPromise(env);
+	const randomProviderObj = selectWeightedProvider(providers, entropy);
 
 	return {
 		providerAccount: randomProviderObj.address,

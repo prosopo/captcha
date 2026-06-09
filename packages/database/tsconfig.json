@@ -19,6 +19,9 @@
 			"path": "../common"
 		},
 		{
+			"path": "../logger"
+		},
+		{
 			"path": "../types"
 		},
 		{
@@ -28,10 +31,10 @@
 			"path": "../user-access-policy"
 		},
 		{
-			"path": "../locale"
+			"path": "../redis-client"
 		},
 		{
-			"path": "../redis-client"
+			"path": "../util"
 		}
 	]
 }

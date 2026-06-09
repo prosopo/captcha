@@ -17,7 +17,7 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import type { Logger } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import type { AccessRulesStorage } from "#policy/rulesStorage.js";
 
 export class RehashRulesEndpoint implements ApiEndpoint<undefined> {
@@ -28,9 +28,10 @@ export class RehashRulesEndpoint implements ApiEndpoint<undefined> {
 
 	public getRequestArgsSchema(): undefined {}
 
-	async processRequest(): Promise<ApiEndpointResponse> {
+	async processRequest(logger?: Logger): Promise<ApiEndpointResponse> {
+		const log = logger ?? this.logger;
 		await this.accessRulesStorage.fetchAllRuleIds(async (ruleIds: string[]) => {
-			this.logger.info(() => ({
+			log.info(() => ({
 				msg: "Fetched rule ids batch",
 				data: {
 					count: ruleIds.length,
@@ -40,7 +41,7 @@ export class RehashRulesEndpoint implements ApiEndpoint<undefined> {
 
 			const ruleEntries = await this.accessRulesStorage.fetchRules(ruleIds);
 
-			this.logger.info(() => ({
+			log.info(() => ({
 				msg: "Fetched rules",
 				data: {
 					count: ruleEntries.length,
@@ -48,7 +49,7 @@ export class RehashRulesEndpoint implements ApiEndpoint<undefined> {
 			}));
 
 			if (ruleEntries.length !== ruleIds.length) {
-				this.logger.warn(() => ({
+				log.warn(() => ({
 					msg: "Fetched rules count is not equal to the requested count",
 					data: {
 						fetchedCount: ruleEntries.length,
@@ -59,7 +60,7 @@ export class RehashRulesEndpoint implements ApiEndpoint<undefined> {
 
 			await this.accessRulesStorage.deleteRules(ruleIds);
 
-			this.logger.info(() => ({
+			log.info(() => ({
 				msg: "Deleted rules",
 				data: {
 					count: ruleIds.length,
@@ -68,7 +69,7 @@ export class RehashRulesEndpoint implements ApiEndpoint<undefined> {
 
 			await this.accessRulesStorage.insertRules(ruleEntries);
 
-			this.logger.info(() => ({
+			log.info(() => ({
 				msg: "Inserted rules",
 				data: {
 					count: ruleEntries.length,

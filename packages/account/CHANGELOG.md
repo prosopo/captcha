@@ -1,5 +1,373 @@
 # @prosopo/account
 
+## 2.8.36
+### Patch Changes
+
+- Updated dependencies [b03dad1]
+  - @prosopo/types@4.3.1
+  - @prosopo/keyring@2.9.35
+
+## 2.8.35
+### Patch Changes
+
+- Updated dependencies [a1d60db]
+- Updated dependencies [2392aaf]
+- Updated dependencies [6ca1125]
+  - @prosopo/types@4.3.0
+  - @prosopo/util@3.2.15
+  - @prosopo/common@3.1.38
+  - @prosopo/keyring@2.9.34
+
+## 2.8.34
+### Patch Changes
+
+- Updated dependencies [6c26669]
+- Updated dependencies [f7f9ec5]
+  - @prosopo/types@4.2.1
+  - @prosopo/keyring@2.9.33
+
+## 2.8.33
+### Patch Changes
+
+- Updated dependencies [0fd81af]
+  - @prosopo/common@3.1.37
+  - @prosopo/keyring@2.9.32
+
+## 2.8.32
+### Patch Changes
+
+- Updated dependencies [20cae63]
+- Updated dependencies [4d9923e]
+  - @prosopo/types@4.2.0
+  - @prosopo/keyring@2.9.31
+
+## 2.8.31
+### Patch Changes
+
+- Updated dependencies [d351362]
+  - @prosopo/types@4.1.4
+  - @prosopo/keyring@2.9.30
+
+## 2.8.30
+### Patch Changes
+
+- Updated dependencies [6567ce0]
+- Updated dependencies [e2711ae]
+- Updated dependencies [5786629]
+  - @prosopo/util@3.2.14
+  - @prosopo/types@4.1.3
+  - @prosopo/keyring@2.9.29
+  - @prosopo/common@3.1.36
+
+## 2.8.29
+### Patch Changes
+
+- Updated dependencies [72a1218]
+  - @prosopo/util@3.2.13
+  - @prosopo/keyring@2.9.28
+  - @prosopo/types@4.1.2
+
+## 2.8.28
+### Patch Changes
+
+- Updated dependencies [91958da]
+  - @prosopo/types@4.1.1
+  - @prosopo/common@3.1.35
+  - @prosopo/keyring@2.9.27
+
+## 2.8.27
+### Patch Changes
+
+- Updated dependencies [6a741ce]
+  - @prosopo/types@4.1.0
+  - @prosopo/keyring@2.9.26
+
+## 2.8.26
+### Patch Changes
+
+- 642d064: Fix `CryptoWorkerManager` import path so downstream Vite bundles resolve
+  the inlined worker. The import was `./cryptoWorker.ts?worker&inline`,
+  which kept the `.ts` extension through TypeScript compilation; the
+  emitted `dist/workers/CryptoWorkerManager.js` then referenced a
+  non-existent `.ts` file when consumed by `procaptcha-bundle`'s Rollup
+  build, breaking the cypress workflow with
+  `Could not resolve "./cryptoWorker.ts?worker&inline"`. Aligning with
+  the catcher pattern (`*.js?worker&inline`).
+- Updated dependencies [642d064]
+  - @prosopo/fingerprint@2.6.31
+
+## 2.8.25
+### Patch Changes
+
+- 4aae4e6: Pull the frictionless POST critical path down by ~340ms on the test
+  hardware via four focused changes:
+  
+  - **Inline Signer.** `@polkadot/extension-base/page/Signer` is now a
+    static import in `ExtensionWeb2`. It's 0.5KB on disk but its dynamic
+    import was costing ~190ms of network round-trip; inlining removes
+    one separate chunk fetch + parse from the critical path.
+  
+  - **Pre-warm the CryptoWorker.** `CryptoWorkerManager` gains a public
+    `prewarm()` that actually spawns the Worker and lets its script
+    parse during chunk-load time. Previously the call at module load
+    only instantiated the manager class; the worker itself spun up
+    lazily on the first `runTask`, putting the ~500ms worker module-eval
+    inside the first `createAccount()` call. Now it overlaps with chunk
+    loading and is hot by the time it's needed.
+  
+  - **Prefetch providers at module load with an env-keyed cache.**
+    `prefetchProviders` and `getRandomActiveProvider` share an in-flight
+    `Promise<HardcodedProvider[]>` keyed by environment, so a module-load
+    prefetch and the later `customDetectBot` Promise.all reuse the same
+    network call. `procaptcha-frictionless` triggers the prefetch from
+    module-import time using `PROSOPO_DEFAULT_ENVIRONMENT` (browser-safe
+    `typeof process` guard + `EnvironmentTypesSchema.safeParse`), so the
+    HTTP fetch overlaps with chunk download instead of running as part
+    of the detection Promise.all.
+  
+  - **Lazy-load the three captcha solvers.** `ProcaptchaFrictionless`
+    no longer statically imports `Procaptcha`, `ProcaptchaPuzzle`, and
+    `ProcaptchaPow`; each is `await import(...)` at the point the
+    frictionless response picks a type. Two of the three wrappers used
+    to be dead weight in the initial bundle; now only the chosen solver
+    is downloaded, after the frictionless POST has fired. Pulls ~64KB
+    of solver UI (chosen wrapper + Emotion dev runtime + builder + lazy
+    shim) out of the initial captchaRenderer chunk.
+  
+  Combined with the earlier worker-related changes, the frictionless POST
+  on the puzzle-implicit test page is now ~1290ms vs ~1630ms before this
+  batch, and ~6500ms in the original baseline. The remaining floor is
+  dominated by the BotScoreWorker's obfuscated bundle parse + run.
+- Updated dependencies [3c0be68]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [d865319]
+- Updated dependencies [753304b]
+- Updated dependencies [8bb7286]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [4993813]
+  - @prosopo/types@4.0.0
+  - @prosopo/fingerprint@2.6.30
+  - @prosopo/util@3.2.12
+  - @prosopo/keyring@2.9.25
+  - @prosopo/common@3.1.34
+
+## 2.8.24
+### Patch Changes
+
+- Updated dependencies [819ed95]
+  - @prosopo/types@3.16.1
+  - @prosopo/keyring@2.9.24
+
+## 2.8.23
+### Patch Changes
+
+- Updated dependencies [f6a4402]
+- Updated dependencies [99dfb44]
+  - @prosopo/types@3.16.0
+  - @prosopo/keyring@2.9.23
+
+## 2.8.22
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+  - @prosopo/keyring@2.9.22
+
+## 2.8.21
+### Patch Changes
+
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+  - @prosopo/types@3.14.1
+  - @prosopo/common@3.1.33
+  - @prosopo/keyring@2.9.21
+
+## 2.8.20
+### Patch Changes
+
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+  - @prosopo/types@3.14.0
+  - @prosopo/common@3.1.32
+  - @prosopo/keyring@2.9.20
+
+## 2.8.19
+### Patch Changes
+
+- Updated dependencies [4a9c518]
+  - @prosopo/common@3.1.31
+  - @prosopo/keyring@2.9.19
+
+## 2.8.18
+### Patch Changes
+
+- Updated dependencies [a25dffa]
+  - @prosopo/util@3.2.11
+  - @prosopo/keyring@2.9.18
+  - @prosopo/types@3.13.3
+
+## 2.8.17
+### Patch Changes
+
+- Updated dependencies [346edd7]
+  - @prosopo/util@3.2.10
+  - @prosopo/keyring@2.9.17
+  - @prosopo/types@3.13.2
+
+## 2.8.16
+### Patch Changes
+
+- Updated dependencies [22bfee7]
+  - @prosopo/util@3.2.9
+  - @prosopo/keyring@2.9.16
+  - @prosopo/types@3.13.1
+
+## 2.8.15
+### Patch Changes
+
+- Updated dependencies [e0fb3d6]
+- Updated dependencies [e6d9553]
+- Updated dependencies [f3f23e3]
+  - @prosopo/util@3.2.8
+  - @prosopo/types@3.13.0
+  - @prosopo/keyring@2.9.15
+
+## 2.8.14
+### Patch Changes
+
+- 730c61e: Speed up captcha
+- Updated dependencies [730c61e]
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/fingerprint@2.6.29
+  - @prosopo/types@3.12.3
+  - @prosopo/util@3.2.7
+  - @prosopo/keyring@2.9.14
+
+## 2.8.13
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/types@3.12.2
+  - @prosopo/util@3.2.6
+  - @prosopo/common@3.1.30
+  - @prosopo/keyring@2.9.13
+
+## 2.8.12
+### Patch Changes
+
+- Updated dependencies [c5ee492]
+- Updated dependencies [a90eb54]
+  - @prosopo/common@3.1.29
+  - @prosopo/types@3.12.1
+  - @prosopo/keyring@2.9.12
+
+## 2.8.11
+### Patch Changes
+
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/keyring@2.9.11
+  - @prosopo/types@3.12.0
+
+## 2.8.10
+### Patch Changes
+
+- Updated dependencies [8148587]
+  - @prosopo/types@3.11.1
+  - @prosopo/keyring@2.9.10
+
+## 2.8.9
+### Patch Changes
+
+- Updated dependencies [7f6ffc5]
+  - @prosopo/types@3.11.0
+  - @prosopo/keyring@2.9.9
+
+## 2.8.8
+### Patch Changes
+
+- Updated dependencies [93fa086]
+  - @prosopo/types@3.10.2
+  - @prosopo/keyring@2.9.8
+
+## 2.8.7
+### Patch Changes
+
+- Updated dependencies [cde7550]
+  - @prosopo/types@3.10.1
+  - @prosopo/keyring@2.9.7
+
+## 2.8.6
+### Patch Changes
+
+- Updated dependencies [ad6d622]
+  - @prosopo/types@3.10.0
+  - @prosopo/keyring@2.9.6
+
+## 2.8.5
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+  - @prosopo/types@3.9.0
+  - @prosopo/keyring@2.9.5
+
+## 2.8.4
+### Patch Changes
+
+- Updated dependencies [d2431cd]
+  - @prosopo/types@3.8.4
+  - @prosopo/keyring@2.9.4
+
+## 2.8.3
+### Patch Changes
+
+- Updated dependencies [bd6995b]
+  - @prosopo/types@3.8.3
+  - @prosopo/keyring@2.9.3
+
+## 2.8.2
+### Patch Changes
+
+- Updated dependencies [9633e58]
+  - @prosopo/types@3.8.2
+  - @prosopo/keyring@2.9.2
+
+## 2.8.1
+### Patch Changes
+
+- Updated dependencies [f52a5c1]
+  - @prosopo/types@3.8.1
+  - @prosopo/keyring@2.9.1
+
+## 2.8.0
+### Minor Changes
+
+- 6a4d57d: Move account creation into worker
+
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+- Updated dependencies [a53526b]
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [7543d17]
+- Updated dependencies [3acc333]
+  - @prosopo/util@3.2.5
+  - @prosopo/util-crypto@13.5.29
+  - @prosopo/keyring@2.9.0
+  - @prosopo/types@3.8.0
+  - @prosopo/fingerprint@2.6.28
+  - @prosopo/common@3.1.28
+
 ## 2.7.46
 ### Patch Changes
 

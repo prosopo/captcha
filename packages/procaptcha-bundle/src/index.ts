@@ -16,12 +16,11 @@ import { getWindowCallback } from "@prosopo/procaptcha-common";
 import type { ProcaptchaRenderOptions } from "@prosopo/types";
 import { at } from "@prosopo/util";
 import type { Root } from "react-dom/client";
-import { getCaptchaType } from "./util/captcha/captchaType.js";
 import { extractParams, getProcaptchaScript } from "./util/config.js";
 import { WidgetFactory } from "./util/widgetFactory.js";
 import { WidgetThemeResolver } from "./util/widgetThemeResolver.js";
 
-const BUNDLE_NAME = "procaptcha.bundle.js";
+const BUNDLE_NAMES = ["procaptcha.bundle.iife.js", "procaptcha.bundle.js"];
 let procaptchaRoots: Root[] = [];
 
 const widgetFactory = new WidgetFactory(new WidgetThemeResolver());
@@ -48,12 +47,9 @@ const implicitRender = async () => {
 			return;
 		}
 
-		const captchaType = getCaptchaType(elements);
-
 		const root = await widgetFactory.createWidgets(
 			elements,
 			{
-				captchaType: captchaType,
 				siteKey: siteKey,
 			},
 			!(web3 === "true"),
@@ -72,12 +68,9 @@ const implicitRender = async () => {
 			const siteKey = button.getAttribute("data-sitekey") || "";
 			const callback = button.getAttribute("data-callback") || "";
 
-			const captchaType = getCaptchaType([button]);
-
 			const root = await widgetFactory.createWidgets(
 				[button],
 				{
-					captchaType: captchaType,
 					siteKey: siteKey,
 					callback: callback,
 				},
@@ -211,12 +204,12 @@ declare global {
 const start = () => {
 	// onLoadUrlCallback defines the name of the callback function to be called when the script is loaded
 	// onRenderExplicit takes values of either explicit or implicit
-	const { onloadUrlCallback, renderExplicit } = extractParams(BUNDLE_NAME);
+	const { onloadUrlCallback, renderExplicit } = extractParams(BUNDLE_NAMES);
 	let readyCalled = false;
 
 	// Render the Procaptcha component implicitly if renderExplicit is not set to explicit
 	if (renderExplicit !== "explicit") {
-		getProcaptchaScript(BUNDLE_NAME)?.addEventListener("load", () => {
+		getProcaptchaScript(BUNDLE_NAMES)?.addEventListener("load", () => {
 			ready(implicitRender);
 			readyCalled = true;
 		});
@@ -228,7 +221,7 @@ const start = () => {
 
 	if (onloadUrlCallback) {
 		// Add event listener to the script tag to call the callback function when the script is loaded
-		getProcaptchaScript(BUNDLE_NAME)?.addEventListener("load", () => {
+		getProcaptchaScript(BUNDLE_NAMES)?.addEventListener("load", () => {
 			const onloadCallback = getWindowCallback(onloadUrlCallback);
 			ready(onloadCallback);
 		});

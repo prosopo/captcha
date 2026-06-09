@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
+import { ProcaptchaFrictionless } from "@prosopo/procaptcha-frictionless";
 import type { Callbacks, ProcaptchaProps } from "@prosopo/types";
 import { type DOMWindow, JSDOM } from "jsdom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -54,23 +54,6 @@ vi.mock("@polkadot/extension-dapp", async () => {
 		},
 	};
 });
-
-vi.mock(
-	"@prosopo/procaptcha-pow",
-	async () => {
-		return {
-			ProcaptchaPow: vi.fn((props: ProcaptchaProps) => {
-				return (
-					// @ts-ignore
-					<div config={props.config} callbacks={props.callbacks}>
-						ProcaptchaPow
-					</div>
-				);
-			}),
-		};
-	},
-	//{ spy: true },
-);
 
 vi.mock("@prosopo/procaptcha-frictionless", async () => {
 	return {
@@ -123,7 +106,7 @@ describe("Config utility functions", () => {
 		vi.clearAllMocks();
 	});
 
-	it<TestContext>("renders the correct captcha type", async (ctx) => {
+	it<TestContext>("always mounts the unified frictionless dispatcher", async (ctx) => {
 		// @ts-ignore
 		const script = ctx.document.createElement("script");
 		script.src = "https://example.com/procaptcha.js";
@@ -138,11 +121,36 @@ describe("Config utility functions", () => {
 
 		await widgetFactory.createWidgets([script], {
 			siteKey: "1234",
-			captchaType: "pow",
 		});
 
 		await vi.waitFor(() => {
-			expect(ProcaptchaPow).toHaveBeenCalledTimes(1);
+			expect(ProcaptchaFrictionless).toHaveBeenCalledTimes(1);
+		});
+	});
+
+	it<TestContext>("ignores any legacy data-captcha-type attribute on the host element", async (ctx) => {
+		// @ts-ignore
+		const script = ctx.document.createElement("script");
+		script.src = "https://example.com/procaptcha.js";
+		// Customers may still have this attribute on their HTML from before
+		// the server-driven captchaType refactor. The bundle must silently
+		// ignore it and always mount the unified dispatcher.
+		script.setAttribute("data-captcha-type", "image");
+		document.body.appendChild(script);
+
+		expect(ctx.window).toBeDefined();
+
+		if (!ctx.window) {
+			expect(true).toBe(false);
+			return;
+		}
+
+		await widgetFactory.createWidgets([script], {
+			siteKey: "1234",
+		});
+
+		await vi.waitFor(() => {
+			expect(ProcaptchaFrictionless).toHaveBeenCalledTimes(1);
 		});
 	});
 
@@ -188,16 +196,13 @@ describe("Config utility functions", () => {
 
 		await widgetFactory.createWidgets([script], {
 			siteKey: "1234",
-			captchaType: "pow",
 		});
 
-		// override <ProcaptchaPow config={config} callbacks={callbacks} />, in renderLogic.tsx and check that the callbacks
-		// are set correctly
 		await vi.waitFor(() => {
-			expect(ProcaptchaPow).toHaveBeenCalledTimes(1);
+			expect(ProcaptchaFrictionless).toHaveBeenCalledTimes(1);
 			// hack to get mock calls
 			// @ts-ignore
-			const call = ProcaptchaPow.mock.calls[0];
+			const call = ProcaptchaFrictionless.mock.calls[0];
 			const props = call[0];
 
 			// Check that the core properties we care about are present

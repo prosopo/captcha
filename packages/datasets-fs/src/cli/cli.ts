@@ -1,4 +1,5 @@
-import { LogLevel, ProsopoCliError, getLogger } from "@prosopo/common";
+import { ProsopoCliError } from "@prosopo/common";
+import { LogLevel, getLogger } from "@prosopo/logger";
 import yargs, { type Argv } from "yargs";
 import { hideBin } from "yargs/helpers";
 // Copyright 2021-2026 Prosopo (UK) Ltd.

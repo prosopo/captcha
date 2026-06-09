@@ -31,6 +31,10 @@
 			"dependsOn": ["@prosopo/config#build"],
 			"outputs": ["dist/**", "*.tsbuildinfo"]
 		},
+		"bundle:iife": {
+			"dependsOn": ["@prosopo/config#build"],
+			"outputs": ["dist/**", "*.tsbuildinfo"]
+		},
 		"bundle:webpack": {
 			"dependsOn": ["@prosopo/config#build"],
 			"outputs": ["dist/**", "*.tsbuildinfo"]

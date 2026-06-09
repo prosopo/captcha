@@ -23,6 +23,7 @@ import {
 	type CaptchaResponseBody,
 	type CaptchaSolution,
 	type CaptchaSolutionResponse,
+	type ClientMetaData,
 	type ProcaptchaApiInterface,
 	type RandomProvider,
 } from "@prosopo/types";
@@ -55,12 +56,14 @@ export class ProsopoCaptchaApi implements ProcaptchaApiInterface {
 
 	public async getCaptchaChallenge(
 		sessionId?: string,
+		simdReadings?: string,
 	): Promise<CaptchaResponseBody> {
 		try {
 			const captchaChallenge = await this.providerApi.getCaptchaChallenge(
 				this.userAccount,
 				this.provider,
 				sessionId,
+				simdReadings,
 			);
 
 			if (captchaChallenge[ApiParams.error]) {
@@ -91,6 +94,9 @@ export class ProsopoCaptchaApi implements ProcaptchaApiInterface {
 		solutions: CaptchaSolution[],
 		timestamp: string,
 		providerRequestHashSignature: string,
+		behavioralData?: string,
+		simdReadings?: string,
+		clientMetaData?: ClientMetaData,
 	): Promise<TCaptchaSubmitResult> {
 		const tree = new CaptchaMerkleTree();
 
@@ -118,6 +124,9 @@ export class ProsopoCaptchaApi implements ProcaptchaApiInterface {
 				timestamp,
 				providerRequestHashSignature,
 				userTimestampSignature,
+				behavioralData,
+				simdReadings,
+				clientMetaData,
 			);
 		} catch (error) {
 			throw new ProsopoDatasetError("CAPTCHA.INVALID_CAPTCHA_CHALLENGE", {

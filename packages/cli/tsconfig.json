@@ -23,6 +23,9 @@
 			"path": "../common"
 		},
 		{
+			"path": "../logger"
+		},
+		{
 			"path": "../dotenv"
 		},
 		{
@@ -42,15 +45,6 @@
 		},
 		{
 			"path": "../util"
-		},
-		{
-			"path": "../util-crypto"
-		},
-		{
-			"path": "../user-access-policy"
-		},
-		{
-			"path": "../api-express-router"
 		},
 		{
 			"path": "../../dev/workspace"

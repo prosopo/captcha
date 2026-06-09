@@ -14,7 +14,7 @@
 
 import { LanguageSchema } from "@prosopo/locale";
 import type { input } from "zod";
-import { literal } from "zod";
+import { array, literal } from "zod";
 import { number } from "zod";
 import { object } from "zod";
 import type { output } from "zod";
@@ -22,6 +22,9 @@ import { record, string, enum as zEnum } from "zod";
 import { union } from "zod";
 import type { infer as zInfer } from "zod";
 import z, { boolean } from "zod";
+import { Mode, ModeEnum } from "./mode.js";
+export { Mode, ModeEnum };
+export type { ModeType } from "./mode.js";
 import {
 	ApiPathRateLimits,
 	DEFAULT_SOLVED_COUNT,
@@ -45,6 +48,9 @@ import {
 	DEFAULT_POW_CAPTCHA_CACHED_TIMEOUT,
 	DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
 	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
+	DEFAULT_PUZZLE_CAPTCHA_CACHED_TIMEOUT,
+	DEFAULT_PUZZLE_CAPTCHA_SOLUTION_TIMEOUT,
+	DEFAULT_PUZZLE_CAPTCHA_VERIFIED_TIMEOUT,
 } from "./timeouts.js";
 
 const LogLevel = zEnum([
@@ -161,6 +167,12 @@ const defaultPoWCaptchaTimeouts = {
 	cachedTimeout: DEFAULT_POW_CAPTCHA_CACHED_TIMEOUT,
 };
 
+const defaultPuzzleCaptchaTimeouts = {
+	verifiedTimeout: DEFAULT_PUZZLE_CAPTCHA_VERIFIED_TIMEOUT,
+	solutionTimeout: DEFAULT_PUZZLE_CAPTCHA_SOLUTION_TIMEOUT,
+	cachedTimeout: DEFAULT_PUZZLE_CAPTCHA_CACHED_TIMEOUT,
+};
+
 const defaultContractCaptchaTimeouts = {
 	maxVerifiedTime: DEFAULT_MAX_VERIFIED_TIME_CONTRACT,
 };
@@ -168,6 +180,7 @@ const defaultContractCaptchaTimeouts = {
 const defaultCaptchaTimeouts = {
 	image: defaultImageCaptchaTimeouts,
 	pow: defaultPoWCaptchaTimeouts,
+	puzzle: defaultPuzzleCaptchaTimeouts,
 	contract: defaultContractCaptchaTimeouts,
 };
 
@@ -206,6 +219,20 @@ export const CaptchaTimeoutSchema = object({
 			.optional()
 			.default(DEFAULT_POW_CAPTCHA_CACHED_TIMEOUT),
 	}).default(defaultPoWCaptchaTimeouts),
+	puzzle: object({
+		verifiedTimeout: number()
+			.positive()
+			.optional()
+			.default(DEFAULT_PUZZLE_CAPTCHA_VERIFIED_TIMEOUT),
+		solutionTimeout: number()
+			.positive()
+			.optional()
+			.default(DEFAULT_PUZZLE_CAPTCHA_SOLUTION_TIMEOUT),
+		cachedTimeout: number()
+			.positive()
+			.optional()
+			.default(DEFAULT_PUZZLE_CAPTCHA_CACHED_TIMEOUT),
+	}).default(defaultPuzzleCaptchaTimeouts),
 	contract: object({
 		maxVerifiedTime: number()
 			.positive()
@@ -250,14 +277,6 @@ export type ProsopoClientConfigOutput = output<
 
 const ThemeType = union([literal("light"), literal("dark")]);
 
-export enum ModeEnum {
-	visible = "visible",
-	invisible = "invisible",
-}
-
-export const Mode = zEnum([ModeEnum.visible, ModeEnum.invisible]).optional();
-export type ModeType = zInfer<typeof Mode>;
-
 export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 	object({
 		theme: ThemeType.optional().default("light"),
@@ -301,12 +320,16 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 			clientEntropyScheduler: object({
 				schedule: string().optional(),
 			}).optional(),
+			spamEmailDomainsScheduler: object({
+				schedule: string().optional(),
+			}).optional(),
 		}).optional(),
 		server: ProsopoApiConfigSchema.optional(),
 		mongoEventsUri: string().optional(),
 		mongoCaptchaUri: string().optional(),
 		mongoClientUri: string().optional(),
-		ipApi: IpApiServiceSpec,
+		ipApi: IpApiServiceSpec.optional(),
+		spamEmailDomainsUrls: array(string()).optional(),
 		redisConnection: object({
 			url: string(),
 			password: string(),
@@ -318,11 +341,15 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 		rateLimits: ApiPathRateLimits.default(ProviderDefaultRateLimits),
 		proxyCount: number().optional().default(0),
 		lRules: record(string(), number()).optional(),
+		maxmindDbPath: string().optional(),
+		maxmindCityDbPath: string().optional(),
+		maxmindAsnDbPath: string().optional(),
 		authAccount: object({
 			address: string().optional(),
 			secret: string().optional(),
 			password: string().optional(),
 		}),
+		dnsServers: array(string()).optional(),
 	}),
 );
 

@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import process from "node:process";
-import { LogLevel, getLogger } from "@prosopo/common";
 import { loadEnv } from "@prosopo/dotenv";
 import { getPair } from "@prosopo/keyring";
 import { loadI18nextBackend } from "@prosopo/locale";
+import { LogLevel, getLogger } from "@prosopo/logger";
 import type { ProsopoConfigOutput } from "@prosopo/types";
 import { isMain } from "@prosopo/util";
 import { processArgs } from "./argv.js";

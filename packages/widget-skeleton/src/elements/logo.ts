@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { WIDGET_URL, WIDGET_URL_TEXT } from "../constants.js";
+import { WIDGET_URL } from "../constants.js";
 import type { Theme } from "../theme.js";
 
 /**
@@ -22,43 +22,48 @@ import type { Theme } from "../theme.js";
  */
 export function createLogoElement(theme: Theme): HTMLElement {
 	const widgetLogo = document.createElement("div");
-	widgetLogo.className = "logo";
+	widgetLogo.className = "prosopo-logo-container";
 	widgetLogo.innerHTML = LOGO_STYLES + getLogoMarkup(theme);
 	return widgetLogo;
 }
 
 const LOGO_STYLES = `
 <style>
-.logo {
-    display: inline-flex;
-    flex-direction: column;
+.prosopo-logo-container {
+    display: flex !important;
+    margin-left: auto !important;
+    width: auto !important;
+    flex-shrink: 0 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-inline-start: auto !important;
 }
 
-.prosopo-logo {
-    display: inline-flex;
-    flex-direction: column;    /* ✅ Stack vertically */
-    align-items: center;       /* ✅ Center horizontally */
-    justify-content: center;   /* ✅ Optional: center vertically if needed */
-    padding: 8px;
-    height: auto;
-    min-width: max-content;
-    gap: 2px;                  /* ✅ Space between SVG and text */
+.prosopo-logo-container a {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-decoration: none !important;
+    gap: 2px !important;
+    padding: 0 8px !important;
 }
 
 .prosopo-logo-text {
     all: unset;
+    display: block !important;
     font-size: 9px !important;
     font-weight: bold !important;
     font-family: Helvetica Neue, Helvetica, Arial, sans-serif !important;
     line-height: 1 !important;
-    text-align: center;
+    text-align: center !important;
 }
 
-#logo {
-    width: 28px;
-    height: 28px;
+#prosopo-logo {
+    width: 28px !important;
+    height: 28px !important;
+    display: block !important;
 }
-
 </style>
 `;
 
@@ -68,26 +73,18 @@ const LOGO_STYLES = `
  */
 function getLogoMarkup(theme: Theme): string {
 	return `
-			<a href="${WIDGET_URL}?utm_campaign=widget" tabindex="0" target="_blank" role="button"
-			   aria-label="${WIDGET_URL_TEXT}"
-			   style="text-decoration: none;">
-				<div class="prosopo-logo">
-					<svg id="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 49.010001 49.009997" style="fill: ${theme.palette.logoFill};"
-						 aria-label="Prosopo Logo With Text">
-						<title>${WIDGET_URL_TEXT}</title>
-						<g transform="matrix(0.11319331,0,0,0.11319331,6.504999,-2.2052113e-4)">
-							<g>
-								<path d="m 119.79,50.5 a 147.75,147.75 0 0 1 147.75,147.75 h 50.5 C 318.04,88.76 229.28,0 119.79,0 Z"></path>
-								<path d="m 53.6,116.7 a 147.74,147.74 0 0 1 147.74,147.74 h 50.5 C 251.84,154.95 163.09,66.2 53.6,66.2 Z"></path>
-								<path d="M 198.24,382.48 A 147.75,147.75 0 0 1 50.5,234.74 H 0 c 0,109.49 88.75,198.24 198.24,198.24 z"></path>
-								<path d="M 264.41,316.31 A 147.74,147.74 0 0 1 116.67,168.56 H 66.16 c 0,109.49 88.76,198.25 198.25,198.25 z"></path>
-							</g>
-						</g>
-					</svg>
-					<span class="prosopo-logo-text" id="logo-text" style="color: ${theme.palette.logoFill};">
-					Prosopo
-					</span>
-				</div>
-			</a>
+<a href="${WIDGET_URL}/" target="_blank" rel="noopener" style="color: ${theme.palette.logoFill};">
+    <svg id="prosopo-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 49.010001 49.009997" style="fill: ${theme.palette.logoFill};" aria-hidden="true">
+        <g transform="matrix(0.11319331,0,0,0.11319331,6.504999,-2.2052113e-4)">
+            <g>
+                <path d="m 119.79,50.5 a 147.75,147.75 0 0 1 147.75,147.75 h 50.5 C 318.04,88.76 229.28,0 119.79,0 Z"></path>
+                <path d="m 53.6,116.7 a 147.74,147.74 0 0 1 147.74,147.74 h 50.5 C 251.84,154.95 163.09,66.2 53.6,66.2 Z"></path>
+                <path d="M 198.24,382.48 A 147.75,147.75 0 0 1 50.5,234.74 H 0 c 0,109.49 88.75,198.24 198.24,198.24 z"></path>
+                <path d="M 264.41,316.31 A 147.74,147.74 0 0 1 116.67,168.56 H 66.16 c 0,109.49 88.76,198.25 198.25,198.25 z"></path>
+            </g>
+        </g>
+    </svg>
+    <span class="prosopo-logo-text">Prosopo</span>
+</a>
 `;
 }

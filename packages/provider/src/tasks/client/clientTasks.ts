@@ -13,22 +13,27 @@
 // limitations under the License.
 
 import { createPrivateKey } from "node:crypto";
-import { type Logger, ProsopoApiError } from "@prosopo/common";
+import { ProsopoApiError } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
+import type { Logger } from "@prosopo/logger";
 import {
 	type ContextType,
+	type DecisionMachineCaptchaType,
+	type DecisionMachineLanguage,
+	type DecisionMachineRuntime,
+	DecisionMachineScope,
 	type IUserSettings,
+	type PoWCaptchaStored,
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
 	ScheduledTaskStatus,
 	Tier,
+	type UserCommitment,
 } from "@prosopo/types";
 import type {
 	ClientRecord,
 	IProviderDatabase,
-	PoWCaptchaStored,
 	SessionRecord,
-	UserCommitment,
 } from "@prosopo/types-database";
 import { majorityAverage, parseUrl } from "@prosopo/util";
 import { validateSiteKey } from "../../api/validateAddress.js";
@@ -105,6 +110,10 @@ export class ClientTaskManager {
 		try {
 			const BATCH_SIZE = 1000;
 			const captchaDB = this.getCaptchaDB(this.config.mongoCaptchaUri);
+			// Captured once at sweep start. Passed through to markXxxStored as
+			// the guard cutoff so any record mutated after this point keeps
+			// `pendingStage: true` and is picked up on the next sweep.
+			const sweepStartedAt = new Date();
 
 			// Process image commitments with cursor
 			let processedCommitments = 0;
@@ -116,14 +125,25 @@ export class ClientTaskManager {
 						skip,
 					),
 				async (batch) => {
-					const filteredBatch = lastTask?.updated
-						? batch.filter((commitment) => this.isRecordUpdated(commitment))
-						: batch;
+					const filteredBatch = (
+						lastTask?.updated
+							? batch.filter((commitment) => this.isRecordUpdated(commitment))
+							: batch
+					).filter((commitment) => commitment.id !== "");
+					// Skip placeholder records — `storePendingImageCommitment`
+					// inserts with `id: ""` until the user submits a solution.
+					// Defense in depth: even if a stray placeholder slips into
+					// the partial index, never pass `id: ""` to
+					// markDappUserCommitmentsStored — Mongo collapses
+					// `{ id: { $in: ["", "", ...] } }` to a single empty-string
+					// bound and the IXSCAN on `id_-1` then walks every
+					// empty-id document on the node (~100K rows).
 
 					if (filteredBatch.length > 0) {
 						await captchaDB.saveCaptchas([], filteredBatch, []);
 						await this.providerDB.markDappUserCommitmentsStored(
 							filteredBatch.map((commitment) => commitment.id),
+							sweepStartedAt,
 						);
 					}
 					processedCommitments += filteredBatch.length;
@@ -147,6 +167,7 @@ export class ClientTaskManager {
 						await captchaDB.saveCaptchas([], [], filteredBatch);
 						await this.providerDB.markDappUserPoWCommitmentsStored(
 							filteredBatch.map((record) => record.challenge),
+							sweepStartedAt,
 						);
 					}
 					processedPowRecords += filteredBatch.length;
@@ -167,6 +188,7 @@ export class ClientTaskManager {
 						await captchaDB.saveCaptchas(filteredBatch, [], []);
 						await this.providerDB.markSessionRecordsStored(
 							filteredBatch.map((record) => record.sessionId),
+							sweepStartedAt,
 						);
 					}
 					processedSessionRecords += filteredBatch.length;
@@ -374,6 +396,35 @@ export class ClientTaskManager {
 		]);
 	}
 
+	async registerSiteKeys(
+		siteKeys: Array<{ siteKey: string; tier: Tier; settings: IUserSettings }>,
+	): Promise<void> {
+		const records: ClientRecord[] = [];
+		for (const { siteKey, tier, settings } of siteKeys) {
+			validateSiteKey(siteKey);
+			records.push({
+				account: siteKey,
+				tier,
+				settings,
+			} as ClientRecord);
+		}
+		await this.providerDB.updateClientRecords(records);
+	}
+
+	async removeSiteKey(siteKey: string): Promise<void> {
+		validateSiteKey(siteKey);
+		await this.providerDB.removeClientRecords([siteKey]);
+	}
+
+	async removeSiteKeys(siteKeys: Array<{ siteKey: string }>): Promise<void> {
+		const accounts: string[] = [];
+		for (const { siteKey } of siteKeys) {
+			validateSiteKey(siteKey);
+			accounts.push(siteKey);
+		}
+		await this.providerDB.removeClientRecords(accounts);
+	}
+
 	async updateDetectorKey(detectorKey: string): Promise<string[]> {
 		if (!isValidPrivateKey(detectorKey)) {
 			throw new ProsopoApiError("INVALID_DETECTOR_KEY", {
@@ -398,6 +449,140 @@ export class ClientTaskManager {
 		await this.providerDB.removeDetectorKey(detectorKey, expirationInSeconds);
 	}
 
+	async updateDecisionMachine(
+		scope: DecisionMachineScope,
+		runtime: DecisionMachineRuntime,
+		source: string,
+		dappAccount?: string,
+		language?: DecisionMachineLanguage,
+		name?: string,
+		version?: string,
+		captchaType?: DecisionMachineCaptchaType,
+	): Promise<{
+		scope: DecisionMachineScope;
+		dappAccount?: string;
+		updatedAt: string;
+	}> {
+		if (scope === DecisionMachineScope.Dapp && !dappAccount) {
+			throw new ProsopoApiError("API.BAD_REQUEST", {
+				context: { scope, dappAccount },
+				logger: this.logger,
+			});
+		}
+
+		const now = new Date();
+		await this.providerDB.upsertDecisionMachineArtifact({
+			scope,
+			dappAccount,
+			runtime,
+			language,
+			source,
+			name,
+			version,
+			captchaType,
+			createdAt: now,
+			updatedAt: now,
+		});
+
+		return {
+			scope,
+			dappAccount,
+			updatedAt: now.toISOString(),
+		};
+	}
+
+	async getAllDecisionMachines(): Promise<
+		{
+			_id: string;
+			scope: DecisionMachineScope;
+			dappAccount?: string;
+			runtime: DecisionMachineRuntime;
+			language?: DecisionMachineLanguage;
+			name?: string;
+			version?: string;
+			captchaType?: DecisionMachineCaptchaType;
+			createdAt: string;
+			updatedAt: string;
+		}[]
+	> {
+		const artifacts = await this.providerDB.getAllDecisionMachineArtifacts();
+		return artifacts.map((artifact) => ({
+			_id: artifact._id.toString(),
+			scope: artifact.scope,
+			dappAccount: artifact.dappAccount,
+			runtime: artifact.runtime,
+			language: artifact.language,
+			name: artifact.name,
+			version: artifact.version,
+			captchaType: artifact.captchaType,
+			createdAt: artifact.createdAt.toISOString(),
+			updatedAt: artifact.updatedAt.toISOString(),
+		}));
+	}
+
+	async getDecisionMachine(id: string): Promise<{
+		_id: string;
+		scope: DecisionMachineScope;
+		dappAccount?: string;
+		runtime: DecisionMachineRuntime;
+		language?: DecisionMachineLanguage;
+		source: string;
+		name?: string;
+		version?: string;
+		captchaType?: DecisionMachineCaptchaType;
+		createdAt: string;
+		updatedAt: string;
+	}> {
+		const artifact = await this.providerDB.getDecisionMachineArtifactById(id);
+		if (!artifact) {
+			throw new ProsopoApiError("API.BAD_REQUEST", {
+				context: { id },
+				logger: this.logger,
+			});
+		}
+		return {
+			_id: artifact._id.toString(),
+			scope: artifact.scope,
+			dappAccount: artifact.dappAccount,
+			runtime: artifact.runtime,
+			language: artifact.language,
+			source: artifact.source,
+			name: artifact.name,
+			version: artifact.version,
+			captchaType: artifact.captchaType,
+			createdAt: artifact.createdAt.toISOString(),
+			updatedAt: artifact.updatedAt.toISOString(),
+		};
+	}
+
+	async removeDecisionMachine(id: string): Promise<{
+		success: boolean;
+		deletedId: string;
+	}> {
+		const success = await this.providerDB.removeDecisionMachineArtifact(id);
+		if (!success) {
+			throw new ProsopoApiError("API.BAD_REQUEST", {
+				context: { id, message: "Decision machine not found" },
+				logger: this.logger,
+			});
+		}
+		return {
+			success,
+			deletedId: id,
+		};
+	}
+
+	async removeAllDecisionMachines(): Promise<{
+		success: boolean;
+		deletedCount: number;
+	}> {
+		const deletedCount =
+			await this.providerDB.removeAllDecisionMachineArtifacts();
+		return {
+			success: true,
+			deletedCount,
+		};
+	}
 	/**
 	 * Matches a request referrer against an allowed domain pattern.
 	 * Supports global '*', subdomain '*.example.com', glob '*example*',

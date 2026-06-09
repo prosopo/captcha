@@ -17,7 +17,8 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import type { AllKeys, Logger } from "@prosopo/common";
+import type { AllKeys } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import { type ZodType, z } from "zod";
 import type { AccessRulesStorage } from "#policy/rulesStorage.js";
 
@@ -47,10 +48,14 @@ export class GetMissingIdsEndpoint implements ApiEndpoint<MissingIdsSchema> {
 		return z.string().array();
 	}
 
-	async processRequest(args: MissingIds): Promise<MissingIdsEndpointResponse> {
+	async processRequest(
+		args: MissingIds,
+		logger?: Logger,
+	): Promise<MissingIdsEndpointResponse> {
+		const log = logger ?? this.logger;
 		const missingIds = await this.accessRulesStorage.getMissingRuleIds(args);
 
-		this.logger.info(() => ({
+		log.info(() => ({
 			msg: "Endpoint checked missing ids",
 			data: {
 				idsToCheck: args.length,
@@ -58,7 +63,7 @@ export class GetMissingIdsEndpoint implements ApiEndpoint<MissingIdsSchema> {
 			},
 		}));
 
-		this.logger.debug(() => ({
+		log.debug(() => ({
 			msg: "Missing id details",
 			data: {
 				idsToCheck: args,

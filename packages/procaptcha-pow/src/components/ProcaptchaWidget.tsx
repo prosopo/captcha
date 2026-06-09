@@ -14,7 +14,7 @@
 
 import { loadI18nextFrontend, useTranslation } from "@prosopo/locale";
 import { buildUpdateState, useProcaptcha } from "@prosopo/procaptcha-common";
-import { Checkbox } from "@prosopo/procaptcha-common";
+import { Checkbox, Honeypot } from "@prosopo/procaptcha-common";
 import { ModeEnum, type ProcaptchaProps } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { useEffect, useRef, useState } from "react";
@@ -34,8 +34,17 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	const [loading, setLoading] = useState(false);
 	// get the state update mechanism
 	const updateState = buildUpdateState(state, _updateState);
+	const hpRef = useRef<HTMLInputElement>(null);
 	const manager = useRef(
-		Manager(config, state, updateState, callbacks, frictionlessState),
+		Manager(
+			config,
+			state,
+			updateState,
+			callbacks,
+			frictionlessState,
+			props.onEscalate,
+			() => hpRef.current?.value || undefined,
+		),
 	);
 
 	useEffect(() => {
@@ -59,7 +68,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 			if (state.error.key === "CAPTCHA.NO_SESSION_FOUND" && frictionlessState) {
 				setTimeout(() => {
 					frictionlessState.restart();
-				}, 3000);
+				}, 100);
 			}
 		}
 	}, [state.error, frictionlessState]);
@@ -94,53 +103,61 @@ const Procaptcha = (props: ProcaptchaProps) => {
 		return () => {};
 	}, [config.mode]);
 
+	const honeypot = frictionlessState?.hp ? (
+		<Honeypot ref={hpRef} encodedQuestion={frictionlessState.hp} />
+	) : null;
+
 	if (config.mode === ModeEnum.invisible) {
-		// Return null for invisible mode - no UI needed
-		return null;
+		// Invisible mode renders no checkbox, but we still render the honeypot
+		// so bots that scan the DOM for inputs find a tempting target.
+		return honeypot;
 	}
 
 	return (
-		<Checkbox
-			checked={state.isHuman}
-			theme={theme}
-			onChange={async (event: React.MouseEvent | React.TouchEvent) => {
-				if (loading) {
-					return;
-				}
-				setLoading(true);
+		<>
+			{honeypot}
+			<Checkbox
+				checked={state.isHuman}
+				theme={theme}
+				onChange={async (event: React.MouseEvent | React.TouchEvent) => {
+					if (loading) {
+						return;
+					}
+					setLoading(true);
 
-				// Capture click coordinates
-				let x = 0;
-				let y = 0;
+					// Capture click coordinates
+					let x = 0;
+					let y = 0;
 
-				// Try to get coordinates from the change event's underlying mouse event
-				// The original mouse event might be available in the event chain
-				const mouseOrTouchEvent = event.nativeEvent;
-				if (!mouseOrTouchEvent.isTrusted) {
-					// Don't capture coordinates for non-trusted events
-				} else if (
-					"touches" in mouseOrTouchEvent &&
-					mouseOrTouchEvent.touches.length > 0 &&
-					mouseOrTouchEvent.touches[0]
-				) {
-					x = mouseOrTouchEvent.touches[0].clientX;
-					y = mouseOrTouchEvent.touches[0].clientY;
-				} else if (
-					"clientX" in mouseOrTouchEvent &&
-					"clientY" in mouseOrTouchEvent
-				) {
-					x = mouseOrTouchEvent.clientX;
-					y = mouseOrTouchEvent.clientY;
-				}
+					// Try to get coordinates from the change event's underlying mouse event
+					// The original mouse event might be available in the event chain
+					const mouseOrTouchEvent = event.nativeEvent;
+					if (!mouseOrTouchEvent.isTrusted) {
+						// Don't capture coordinates for non-trusted events
+					} else if (
+						"touches" in mouseOrTouchEvent &&
+						mouseOrTouchEvent.touches.length > 0 &&
+						mouseOrTouchEvent.touches[0]
+					) {
+						x = mouseOrTouchEvent.touches[0].clientX;
+						y = mouseOrTouchEvent.touches[0].clientY;
+					} else if (
+						"clientX" in mouseOrTouchEvent &&
+						"clientY" in mouseOrTouchEvent
+					) {
+						x = mouseOrTouchEvent.clientX;
+						y = mouseOrTouchEvent.clientY;
+					}
 
-				await manager.current.start(x, y);
-				setLoading(false);
-			}}
-			labelText={isTranslationReady ? t("WIDGET.I_AM_HUMAN") : ""}
-			error={state.error?.message}
-			aria-label="human checkbox"
-			loading={loading}
-		/>
+					await manager.current.start(x, y);
+					setLoading(false);
+				}}
+				labelText={isTranslationReady ? t("WIDGET.I_AM_HUMAN") : ""}
+				error={state.error?.message}
+				aria-label="human checkbox"
+				loading={loading}
+			/>
+		</>
 	);
 };
 

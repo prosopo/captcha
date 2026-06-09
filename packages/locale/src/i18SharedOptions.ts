@@ -13,8 +13,15 @@
 // limitations under the License.
 import { LanguageSchema, Languages } from "./translations.js";
 
+// Guard the `process.env` read so the module is loadable in a plain browser
+// runtime where `process` is undefined. Without the guard, any side-effectful
+// runtime import of `@prosopo/types` (which transitively reaches here via
+// `LanguageSchema`) crashes the page in Vite's dev/preview mode.
+const logLevel =
+	typeof process !== "undefined" ? process.env?.PROSOPO_LOG_LEVEL : undefined;
+
 export const i18nSharedOptions = {
-	debug: process.env.PROSOPO_LOG_LEVEL === "debug",
+	debug: logLevel === "debug",
 	fallbackLng: LanguageSchema.enum.en,
 	defaultNS: "translation",
 	ns: ["translation"],

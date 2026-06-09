@@ -25,10 +25,12 @@ import { getDefaultEvents } from "@prosopo/procaptcha-common";
 import {
 	type Account,
 	ApiParams,
+	CaptchaType,
 	type FrictionlessState,
 	type ProcaptchaCallbacks,
 	type ProcaptchaClientConfigInput,
 	ProcaptchaConfigSchema,
+	type ProcaptchaEscalationHandler,
 	type ProcaptchaState,
 	type ProcaptchaStateUpdateFn,
 	encodeProcaptchaOutput,
@@ -43,6 +45,11 @@ export const Manager = (
 	onStateUpdate: ProcaptchaStateUpdateFn,
 	callbacks: ProcaptchaCallbacks,
 	frictionlessState?: FrictionlessState,
+	onEscalate?: ProcaptchaEscalationHandler,
+	// Reads the live honeypot input value at submit time. Returns undefined
+	// when the input doesn't exist (honeypot disabled) or hasn't been filled.
+	// Bots that auto-fill text inputs populate it; humans never see it.
+	getHoneypotValue?: () => string | undefined,
 ) => {
 	const events = getDefaultEvents(callbacks);
 
@@ -214,10 +221,18 @@ export const Manager = (
 
 				const providerApi = new ProviderApi(providerUrl, getDappAccount());
 
+				// Non-blocking check (timeoutMs=0): only attach SIMD readings if
+				// the benchmark prefetched by the catcher has already resolved.
+				// We want this signal as early as possible — first request that
+				// has it wins; later attach points (submission) are backups.
+				const simdReadingsOnChallenge = frictionlessState?.getSimdReadings
+					? await frictionlessState.getSimdReadings(0)
+					: undefined;
 				const challenge = await providerApi.getPowCaptchaChallenge(
 					userAccount,
 					getDappAccount(),
 					frictionlessState?.sessionId,
+					simdReadingsOnChallenge,
 				);
 
 				if (challenge.error) {
@@ -229,7 +244,10 @@ export const Manager = (
 						},
 					});
 				} else {
-					const solution = solvePoW(challenge.challenge, challenge.difficulty);
+					const solution = await solvePoW(
+						challenge.challenge,
+						challenge.difficulty,
+					);
 
 					// Create salt with encoded coordinates if coordinates are provided
 					let salt: string | undefined;
@@ -295,6 +313,11 @@ export const Manager = (
 						}
 					}
 
+					const simdReadings = frictionlessState?.getSimdReadings
+						? await frictionlessState.getSimdReadings()
+						: undefined;
+					const hpValue = getHoneypotValue?.();
+					const clientMetaData = hpValue ? { hp: hpValue } : undefined;
 					const verifiedSolution = await providerApi.submitPowCaptchaSolution(
 						challenge,
 						getAccount().account.account.address,
@@ -304,8 +327,25 @@ export const Manager = (
 						config.captchas.pow.verifiedTimeout,
 						encryptedBehavioralData,
 						salt,
+						simdReadings,
+						clientMetaData,
 					);
-					if (verifiedSolution[ApiParams.verified]) {
+					const escalation = verifiedSolution[ApiParams.escalation];
+					if (
+						escalation &&
+						(escalation[ApiParams.captchaType] === CaptchaType.image ||
+							escalation[ApiParams.captchaType] === CaptchaType.puzzle)
+					) {
+						// Provider accepted the PoW but wants the user to complete a
+						// follow-up image/puzzle challenge. Hand off to the wrapper —
+						// don't fire onHuman or onFailed; the wrapper mounts the next
+						// widget and the standard success/failure path resumes there.
+						updateState({ loading: false });
+						onEscalate?.(
+							escalation[ApiParams.captchaType],
+							escalation[ApiParams.sessionId],
+						);
+					} else if (verifiedSolution[ApiParams.verified]) {
 						updateState({
 							isHuman: true,
 							loading: false,

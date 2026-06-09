@@ -20,7 +20,9 @@ export const domainsDefault: string[] = [];
 export const frictionlessThresholdDefault = 0.5;
 export const powDifficultyDefault = 4;
 export const imageThresholdDefault = 0.8;
+export const imageMaxRoundsDefault = 32;
 export const contextAwareThresholdDefault = 0.7;
+export const puzzleToleranceDefault = 15;
 
 // IP Validation Rules
 export enum IPValidationAction {
@@ -62,6 +64,7 @@ const IPValidationSchema = object({
 });
 
 export const IPValidationRulesSchema = object({
+	enabled: boolean().optional().default(false),
 	actions: object({
 		countryChangeAction: IPValidationActionSchema.optional().default(
 			countryChangeActionDefault,
@@ -131,6 +134,93 @@ const ContextAwareSchema = object({
 
 export type IContextAware = z.infer<typeof ContextAwareSchema>;
 
+// Spam filter rules
+export const maxLocalPartDotsDefault = 2;
+
+const MAX_REGEX_PATTERN_LENGTH = 256;
+const MAX_CUSTOM_REGEX_PATTERNS = 50;
+
+// Patterns that enable catastrophic backtracking or uncontrolled execution
+const DANGEROUS_REGEX_TOKENS = /(\(\?[<!=])|(\(\?P[<])|(\(\?\{)|(\{[\d,]{4,})/;
+
+const safeRegexPattern = string()
+	.max(MAX_REGEX_PATTERN_LENGTH)
+	.refine(
+		(raw) => {
+			try {
+				new RegExp(raw, "i");
+				return true;
+			} catch {
+				return false;
+			}
+		},
+		{ message: "Invalid regular expression syntax" },
+	)
+	.refine((raw) => !DANGEROUS_REGEX_TOKENS.test(raw), {
+		message:
+			"Pattern uses disallowed features (lookahead, lookbehind, or large quantifiers)",
+	});
+
+export const EmailSpamRulesSchema = object({
+	enabled: boolean().optional().default(false),
+	maxLocalPartDots: number().int().min(0).optional(),
+	normaliseGmail: boolean().optional().default(false),
+	useDefaultPatterns: boolean().optional().default(false),
+	customRegexBlocklist: array(safeRegexPattern)
+		.max(MAX_CUSTOM_REGEX_PATTERNS)
+		.optional()
+		.default([]),
+});
+
+export const SpamFilterRulesSchema = object({
+	enabled: boolean().optional().default(false),
+	emailRules: EmailSpamRulesSchema.optional(),
+});
+
+export const trafficFilterAbuserScoreThresholdDefault = 0.5;
+
+export const TrafficFilterSchema = object({
+	blockVpn: boolean().optional().default(false),
+	blockProxy: boolean().optional().default(false),
+	blockTor: boolean().optional().default(false),
+	blockAbuser: boolean().optional().default(true),
+	abuserScoreThreshold: number()
+		.min(0)
+		.max(1)
+		.optional()
+		.default(trafficFilterAbuserScoreThresholdDefault),
+	blockDatacenter: boolean().optional().default(false),
+	blockMobile: boolean().optional().default(false),
+	blockSatellite: boolean().optional().default(false),
+	blockCrawler: boolean().optional().default(false),
+});
+
+export type IEmailSpamRules = output<typeof EmailSpamRulesSchema>;
+export type ISpamFilterRules = output<typeof SpamFilterRulesSchema>;
+export type ITrafficFilter = output<typeof TrafficFilterSchema>;
+
+// Encoding used when serialising the honeypot question into the rendered
+// hidden input. Humans don't see the field; bots that auto-fill text inputs
+// receive an encoded string they can't trivially decode.
+export enum EncodingType {
+	morse = "morse",
+	semaphore = "semaphore",
+}
+
+export const EncodingTypeSchema = z.nativeEnum(EncodingType);
+
+export const honeypotEncodingTypeDefault = EncodingType.morse;
+
+export const HoneypotSettingsSchema = object({
+	enabled: boolean().optional().default(false),
+	question: string().optional(),
+	encodingType: EncodingTypeSchema.optional().default(
+		honeypotEncodingTypeDefault,
+	),
+});
+
+export type IHoneypotSettings = output<typeof HoneypotSettingsSchema>;
+
 export const ClientSettingsSchema = object({
 	captchaType: CaptchaTypeSpec.optional().default(captchaTypeDefault),
 	domains: array(string()).min(1),
@@ -151,9 +241,32 @@ export const ClientSettingsSchema = object({
 		.max(1)
 		.optional()
 		.default(imageThresholdDefault),
+	imageMaxRounds: number()
+		.int()
+		.min(2)
+		.optional()
+		.default(imageMaxRoundsDefault),
+	// Detector score at or above which the frictionless flow blocks the
+	// request outright instead of issuing a challenge. Undefined disables.
+	autoBanScoreThreshold: number().min(0).optional(),
+	puzzleTolerance: number()
+		.int()
+		.min(5)
+		.max(50)
+		.optional()
+		.default(puzzleToleranceDefault),
 	ipValidationRules: IPValidationRulesSchema.optional(),
 	disallowWebView: boolean().optional().default(false).optional(),
 	contextAware: ContextAwareSchema.optional(),
+	spamEmailDomainCheckEnabled: boolean().optional(),
+	spamFilter: SpamFilterRulesSchema.optional(),
+	trafficFilter: TrafficFilterSchema.optional(),
+	// When true, the provider persists the metadata (`email`, ...) that
+	// dapp servers attach to `/verify` requests on the captcha record.
+	// Off by default — opt in to enable downstream analysis (e.g. judging
+	// whether the submitted emails are mostly spam).
+	storeMetadata: boolean().optional(),
+	honeypot: HoneypotSettingsSchema.optional(),
 });
 
 export type IUserSettings = output<typeof ClientSettingsSchema>;

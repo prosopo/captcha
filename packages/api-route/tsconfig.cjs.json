@@ -10,7 +10,7 @@
 			"path": "../../dev/config/tsconfig.cjs.json"
 		},
 		{
-			"path": "../../packages/common/tsconfig.cjs.json"
+			"path": "../../packages/logger/tsconfig.cjs.json"
 		}
 	]
 }

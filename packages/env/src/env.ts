@@ -12,18 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {
-	type Logger,
-	ProsopoEnvError,
-	getLogger,
-	parseLogLevel,
-} from "@prosopo/common";
+import { ProsopoEnvError } from "@prosopo/common";
 import { ProviderDatabase } from "@prosopo/database";
+import { IpInfoService } from "@prosopo/ipinfo";
 import { Keyring, getPair } from "@prosopo/keyring";
+import { type Logger, getLogger, parseLogLevel } from "@prosopo/logger";
 import type { KeyringPair } from "@prosopo/types";
 import type { AssetsResolver, EnvironmentTypes } from "@prosopo/types";
 import type { ProsopoConfigOutput } from "@prosopo/types";
-import type { ProsopoEnvironment } from "@prosopo/types-env";
+import type { IIpInfoService, ProsopoEnvironment } from "@prosopo/types-env";
 import { randomAsHex } from "@prosopo/util-crypto";
 
 export class Environment implements ProsopoEnvironment {
@@ -36,6 +33,7 @@ export class Environment implements ProsopoEnvironment {
 	pair: KeyringPair | undefined;
 	authAccount: KeyringPair | undefined;
 	envId: string | undefined;
+	ipInfoService: IIpInfoService;
 	ready = false;
 
 	constructor(
@@ -57,12 +55,24 @@ export class Environment implements ProsopoEnvironment {
 		});
 		if (this.pair) this.keyring.addPair(this.pair);
 		this.envId = randomAsHex(32).slice(0, 32);
+
+		// Initialize IpInfoService
+		this.ipInfoService = new IpInfoService({
+			maxmindCityDbPath:
+				this.config.maxmindCityDbPath ?? this.config.maxmindDbPath,
+			maxmindAsnDbPath: this.config.maxmindAsnDbPath,
+			ipapiUrl: this.config.ipApi?.baseUrl,
+			ipapiKey: this.config.ipApi?.apiKey,
+			logger: this.logger,
+		});
+
 		this.logger.info(() => ({
 			msg: "Environment initialized",
 			data: {
 				envId: this.envId,
 				defaultEnvironment: this.defaultEnvironment,
 				logLevel: this.config.logLevel,
+				maxmindDbPath: this.config.maxmindDbPath || "not configured",
 			},
 		}));
 	}
@@ -122,16 +132,27 @@ export class Environment implements ProsopoEnvironment {
 				this.pair.unlock(this.config.account.password);
 			}
 			await this.getSigner();
-			if (!this.db) {
+
+			const maintenanceMode = isMaintenanceMode();
+
+			// In maintenance mode we skip the DB connect entirely so a slow
+			// Mongo socket can't gate boot. Handlers short-circuit before
+			// touching the DB while the flag is on.
+			if (maintenanceMode) {
+				this.logger.warn(() => ({
+					msg: "MAINTENANCE_MODE=true — skipping DB import on startup",
+				}));
+			} else if (!this.db) {
 				await this.importDatabase();
-			}
-			if (this.db && !this.db.connected) {
+			} else if (this.db && !this.db.connected) {
 				this.logger.warn(() => ({
 					msg: `Database connection is not ready (state: ${this.db?.connection?.readyState}), reconnecting...`,
 				}));
 				await this.db.connect();
 				this.logger.info(() => ({ msg: "Connected to db" }));
 			}
+			// Initialize IP info service (MaxMind + optional ipapi.is)
+			await this.ipInfoService.initialize();
 			this.ready = true;
 		} catch (err) {
 			throw new ProsopoEnvError("GENERAL.ENVIRONMENT_NOT_READY", {
@@ -174,3 +195,8 @@ export class Environment implements ProsopoEnvironment {
 		}
 	}
 }
+
+// Read directly from process.env to avoid a cyclic dep on the provider
+// package (which owns the runtime toggle endpoint). Same env var name.
+export const isMaintenanceMode = (): boolean =>
+	process.env.MAINTENANCE_MODE?.toLowerCase() === "true";

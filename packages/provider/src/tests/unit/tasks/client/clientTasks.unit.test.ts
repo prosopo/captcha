@@ -11,21 +11,24 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { type Logger, getLogger } from "@prosopo/common";
+import { type Logger, getLogger } from "@prosopo/logger";
 import {
 	ContextType,
+	DecisionMachineLanguage,
+	DecisionMachineRuntime,
+	DecisionMachineScope,
+	type PoWCaptchaStored,
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
 	type ScheduledTaskResult,
 	ScheduledTaskStatus,
 	Tier,
+	type UserCommitment,
 } from "@prosopo/types";
 import {
 	type IProviderDatabase,
-	type PoWCaptchaStored,
 	type ScheduledTaskRecord,
 	ScheduledTaskSchema,
-	type UserCommitment,
 } from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ClientTaskManager } from "../../../../tasks/client/clientTasks.js";
@@ -218,6 +221,7 @@ describe("ClientTaskManager", () => {
 				Array(100).fill("11111111"), // Return 100 samples to meet SAMPLE_SIZE requirement
 			),
 			setClientContextEntropy: vi.fn(),
+			upsertDecisionMachineArtifact: vi.fn(),
 		} as unknown as IProviderDatabase;
 
 		// captchaDB = {
@@ -281,9 +285,11 @@ describe("ClientTaskManager", () => {
 
 		expect(providerDB.markDappUserCommitmentsStored).toHaveBeenCalledWith(
 			mockCommitments.map((c) => c.id),
+			expect.any(Date),
 		);
 		expect(providerDB.markDappUserPoWCommitmentsStored).toHaveBeenCalledWith(
 			mockPoWCommitments.map((c) => c.challenge),
+			expect.any(Date),
 		);
 	});
 
@@ -375,6 +381,7 @@ describe("ClientTaskManager", () => {
 		const expectedPoWChallenges = mockPoWCommitments.map((c) => c.challenge);
 		expect(providerDB.markDappUserPoWCommitmentsStored).toHaveBeenCalledWith(
 			expectedPoWChallenges,
+			expect.any(Date),
 		);
 		logger.info(() => ({
 			msg: "Test: Verified PoW commitments were marked as stored",
@@ -729,6 +736,33 @@ describe("ClientTaskManager", () => {
 				ContextType.Webview,
 				"11111111",
 			);
+		});
+	});
+
+	describe("Decision machine updates", () => {
+		it("should store decision machine artifacts with global scope", async () => {
+			const result = await clientTaskManager.updateDecisionMachine(
+				DecisionMachineScope.Global,
+				DecisionMachineRuntime.Node,
+				'module.exports = () => ({ decision: "allow" });',
+				undefined,
+				DecisionMachineLanguage.JavaScript,
+				"dm",
+				"1.0.0",
+			);
+
+			expect(providerDB.upsertDecisionMachineArtifact).toHaveBeenCalled();
+			expect(result.scope).toBe(DecisionMachineScope.Global);
+		});
+
+		it("should reject dapp scope without dapp account", async () => {
+			await expect(
+				clientTaskManager.updateDecisionMachine(
+					DecisionMachineScope.Dapp,
+					DecisionMachineRuntime.Node,
+					'module.exports = () => ({ decision: "allow" });',
+				),
+			).rejects.toThrow();
 		});
 	});
 });

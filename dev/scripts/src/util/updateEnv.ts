@@ -14,8 +14,8 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import type { Logger } from "@prosopo/common";
 import { getEnv } from "@prosopo/dotenv";
+import type { Logger } from "@prosopo/logger";
 import { at } from "@prosopo/util";
 import dotenv from "dotenv";
 import fg from "fast-glob";
