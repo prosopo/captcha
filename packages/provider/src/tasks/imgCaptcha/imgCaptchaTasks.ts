@@ -721,6 +721,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 					solution.headers,
 					solution.coords,
 					solution.ipInfo?.isValid ? solution.ipInfo.countryCode : undefined,
+					solution.ipInfo?.isValid ? solution.ipInfo.asnNumber : undefined,
 				);
 
 				if (blockPolicy) {

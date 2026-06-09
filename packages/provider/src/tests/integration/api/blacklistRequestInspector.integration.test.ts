@@ -158,82 +158,22 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				siteKey,
 			);
 
-			expect(spy).toHaveBeenCalledTimes(6);
+			// One greedy query replaces the old per-subset loop. JS rank then
+			// filters + sorts client-side.
+			expect(spy).toHaveBeenCalledTimes(1);
 			expect(spy).toHaveBeenCalledWith(
 				{
 					policyScope: {
 						clientId: siteKey,
 					},
-					policyScopeMatch: FilterScopeMatch.Exact,
+					policyScopeMatch: FilterScopeMatch.Greedy,
 					userScope: userScopeInput.parse({
 						ja4Hash: ja4Hash1,
 						userAgent: userAgent1,
 					}),
-					userScopeMatch: FilterScopeMatch.Exact,
+					userScopeMatch: FilterScopeMatch.Greedy,
 				},
-				true,
-				true,
-			);
-			expect(spy).toHaveBeenCalledWith(
-				{
-					policyScope: {
-						clientId: siteKey,
-					},
-					policyScopeMatch: FilterScopeMatch.Exact,
-					userScope: userScopeInput.parse({
-						userAgent: userAgent1,
-					}),
-					userScopeMatch: FilterScopeMatch.Exact,
-				},
-				true,
-				true,
-			);
-			expect(spy).toHaveBeenCalledWith(
-				{
-					policyScope: {
-						clientId: siteKey,
-					},
-					policyScopeMatch: FilterScopeMatch.Exact,
-					userScope: userScopeInput.parse({
-						ja4Hash: ja4Hash1,
-					}),
-					userScopeMatch: FilterScopeMatch.Exact,
-				},
-				true,
-				true,
-			);
-			expect(spy).toHaveBeenCalledWith(
-				{
-					policyScopeMatch: FilterScopeMatch.Exact,
-					userScope: userScopeInput.parse({
-						ja4Hash: ja4Hash1,
-						userAgent: userAgent1,
-					}),
-					userScopeMatch: FilterScopeMatch.Exact,
-				},
-				true,
-				true,
-			);
-			expect(spy).toHaveBeenCalledWith(
-				{
-					policyScopeMatch: FilterScopeMatch.Exact,
-					userScope: userScopeInput.parse({
-						userAgent: userAgent1,
-					}),
-					userScopeMatch: FilterScopeMatch.Exact,
-				},
-				true,
-				true,
-			);
-			expect(spy).toHaveBeenCalledWith(
-				{
-					policyScopeMatch: FilterScopeMatch.Exact,
-					userScope: userScopeInput.parse({
-						ja4Hash: ja4Hash1,
-					}),
-					userScopeMatch: FilterScopeMatch.Exact,
-				},
-				true,
+				false,
 				true,
 			);
 
@@ -263,83 +203,22 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				siteKey,
 			);
 
-			expect(spy).toHaveBeenCalledTimes(6);
-
-			expect(spy).toHaveBeenCalledWith(
-				{
-					policyScopeMatch: FilterScopeMatch.Exact,
-					userScope: userScopeInput.parse({
-						ja4Hash: ja4Hash1,
-						userAgent: userAgent1,
-					}),
-					userScopeMatch: FilterScopeMatch.Exact,
-				},
-				true,
-				true,
-			);
-			expect(spy).toHaveBeenCalledWith(
-				{
-					policyScopeMatch: FilterScopeMatch.Exact,
-					userScope: userScopeInput.parse({
-						userAgent: userAgent1,
-					}),
-					userScopeMatch: FilterScopeMatch.Exact,
-				},
-				true,
-				true,
-			);
-			expect(spy).toHaveBeenCalledWith(
-				{
-					policyScopeMatch: FilterScopeMatch.Exact,
-					userScope: userScopeInput.parse({
-						ja4Hash: ja4Hash1,
-					}),
-					userScopeMatch: FilterScopeMatch.Exact,
-				},
-				true,
-				true,
-			);
+			// One greedy query; rank rejects the rule because userAgent
+			// doesn't match even though ja4 does.
+			expect(spy).toHaveBeenCalledTimes(1);
 			expect(spy).toHaveBeenCalledWith(
 				{
 					policyScope: {
 						clientId: siteKey,
 					},
-					policyScopeMatch: FilterScopeMatch.Exact,
+					policyScopeMatch: FilterScopeMatch.Greedy,
 					userScope: userScopeInput.parse({
 						ja4Hash: ja4Hash1,
 						userAgent: userAgent1,
 					}),
-					userScopeMatch: FilterScopeMatch.Exact,
+					userScopeMatch: FilterScopeMatch.Greedy,
 				},
-				true,
-				true,
-			);
-			expect(spy).toHaveBeenCalledWith(
-				{
-					policyScope: {
-						clientId: siteKey,
-					},
-					policyScopeMatch: FilterScopeMatch.Exact,
-					userScope: userScopeInput.parse({
-						userAgent: userAgent1,
-					}),
-					userScopeMatch: FilterScopeMatch.Exact,
-				},
-				true,
-				true,
-			);
-			expect(spy).toHaveBeenCalledWith(
-				{
-					policyScope: {
-						clientId: siteKey,
-					},
-					policyScopeMatch: FilterScopeMatch.Exact,
-					userScope: userScopeInput.parse({
-						ja4Hash: ja4Hash1,
-					}),
-					userScopeMatch: FilterScopeMatch.Exact,
-				},
-				true,
+				false,
 				true,
 			);
 			expect(result).toHaveLength(0);
@@ -377,7 +256,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				siteKey,
 			);
 
-			expect(spy).toHaveBeenCalledTimes(6);
+			expect(spy).toHaveBeenCalledTimes(1);
 
 			expect(result.length).toBe(2);
 		});
@@ -411,7 +290,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				siteKey,
 			);
 
-			expect(spy).toHaveBeenCalledTimes(6);
+			expect(spy).toHaveBeenCalledTimes(1);
 
 			expect(result.length).toBe(2);
 			expect(result).toStrictEqual([accessRule1, accessRule2]);

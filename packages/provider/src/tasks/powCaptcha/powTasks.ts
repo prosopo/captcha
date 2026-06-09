@@ -589,6 +589,9 @@ export class PowCaptchaManager extends CaptchaManager {
 					challengeRecord.ipInfo?.isValid
 						? challengeRecord.ipInfo.countryCode
 						: undefined,
+					challengeRecord.ipInfo?.isValid
+						? challengeRecord.ipInfo.asnNumber
+						: undefined,
 				);
 
 				if (blockPolicy) {

@@ -96,6 +96,10 @@ export default (
 				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
 					? req.ipInfo.countryCode
 					: undefined;
+			const asn =
+				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
+					? req.ipInfo.asnNumber
+					: undefined;
 
 			const userScope = getRequestUserScope(
 				flatten(req.headers),
@@ -105,6 +109,7 @@ export default (
 				undefined, // headHash
 				undefined, // coords
 				countryCode,
+				asn,
 			);
 			const userAccessPolicy = (
 				await tasks.powCaptchaManager.getPrioritisedAccessPolicies(
