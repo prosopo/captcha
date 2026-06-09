@@ -254,6 +254,12 @@ services:
       # Unset on v4-only hosts — the sidecar (≥0.1.7) treats blank as
       # "no AAAA" and serves A only.
       - DNS_AAAA_RECORD=${HOST_IPV6:-}
+      # Tight shipper batch flush. Default 1000ms adds ~500ms average
+      # buffering latency to every dnsEvent on the way to provider1's
+      # admin endpoint. Empty batches are skipped (see shipper.rs), so
+      # the cost on idle hosts is just a tokio tick wakeup. Real POST
+      # volume is bounded by the event rate, not the flush rate.
+      - DNS_SHIPPER_FLUSH_MS=50
     volumes:
       - /data/dns:/data
       # dns-tenants.json is rendered per host by ansible
