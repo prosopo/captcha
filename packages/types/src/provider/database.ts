@@ -276,6 +276,13 @@ export const UserCommitmentSchema = object({
 	ja4: string(),
 	userSubmitted: boolean(),
 	serverChecked: boolean(),
+	// The full ipinfo payload — optional and not validated nominally
+	// because IPInfoResponse is a discriminated union and consumers
+	// only need to narrow at read time. Mirrors PoWCaptchaStoredSchema.
+	// Omitting these dropped enrichment on every commitment because Zod
+	// strips unknown keys by default.
+	ipInfo: any().optional(),
+	parsedUserAgentInfo: any().optional(),
 	storedAtTimestamp: date().optional(),
 	requestedAtTimestamp: date(),
 	lastUpdatedTimestamp: date().optional(),
