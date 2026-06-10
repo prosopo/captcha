@@ -1,5 +1,16 @@
 # @prosopo/procaptcha
 
+## 2.10.29
+### Patch Changes
+
+- 2d66d8e: Image-captcha widget now forwards the trusted checkbox click `(clientX, clientY)` through `manager.start(x, y)`. `Manager.submit` embeds the pair as a 2-number prefix on the first captcha's solution salt. Provider peels the prefix via length math against `solution.length` (no protocol version flag — older clients keep working unchanged) and prepends it as the first entry of `pairs`, which is written to `UserCommitment.coords`. Adds `peelCheckboxPrefix` helper in `pairs.ts` with round-trip unit tests.
+- Updated dependencies [bc3813d]
+- Updated dependencies [4d05e3f]
+  - @prosopo/types@4.4.0
+  - @prosopo/api@3.4.10
+  - @prosopo/datasets@3.1.30
+  - @prosopo/procaptcha-common@2.10.19
+
 ## 2.10.28
 ### Patch Changes
 

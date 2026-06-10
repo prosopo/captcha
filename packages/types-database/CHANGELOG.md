@@ -1,5 +1,18 @@
 # @prosopo/types-database
 
+## 4.9.0
+### Minor Changes
+
+- bc3813d: Surface dnsEvent observations across the verify and frictionless flows. Each verify path now enriches the session's dnsEvent IPs once and passes the result to the traffic filter, decision machine, IP validation, and usage counters. Adds `scoreComponents.dnsAsymmetry` (Zod + TS interface + mongoose) computed from resolver / peer ipInfo plus path validity, with the score patched onto the session at DNS event ingest time so it weights subsequent reads. Adds `CounterDimension.peerIp` for rate-limit keys keyed on the dnsEvent peer IP.
+
+### Patch Changes
+
+- 2972def: chore(deps-dev): bump vitest from 3.2.4 to 3.2.6 in /packages/types-database
+- Updated dependencies [bc3813d]
+- Updated dependencies [4d05e3f]
+  - @prosopo/types@4.4.0
+  - @prosopo/user-access-policy@3.8.1
+
 ## 4.8.2
 ### Patch Changes
 
