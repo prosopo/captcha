@@ -72,7 +72,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
         run: |
-          git fetch origin "$BASE_REF" --depth=1
+          # No --depth here: a shallow fetch cuts the base branch's history, so if the
+          # base advanced after this PR branch was created/rebased, `git diff
+          # origin/$BASE_REF...HEAD` in the script fails with "no merge base".
+          # checkout above already ran with fetch-depth: 0, so this fetch is cheap.
+          git fetch origin "$BASE_REF"
           node .github/scripts/dependabot-changeset.mjs
 
       - name: Commit and push
