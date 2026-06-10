@@ -367,12 +367,28 @@ export const deepValidateIpAddress = async (
 	logger: Logger,
 	ipInfoService: IIpInfoService,
 	ipValidationRules?: IIPValidationRules,
+	dnsPeerIp?: string,
 ): Promise<{
 	isValid: boolean;
 	errorMessage?: string;
 	distanceKm?: number;
 	shouldFlag?: boolean;
 }> => {
+	if (
+		ipValidationRules?.forceConsistentIp === true &&
+		dnsPeerIp &&
+		dnsPeerIp !== ip
+	) {
+		logger.info(() => ({
+			msg: "IP validation failed - dnsEvent.peerIp does not match client IP",
+			data: { clientIp: ip, dnsPeerIp },
+		}));
+		return {
+			isValid: false,
+			errorMessage: `Client IP ${ip} does not match dnsEvent.peerIp ${dnsPeerIp}`,
+		};
+	}
+
 	const standardValidation = validateIpAddress(ip, challengeIpAddress, logger);
 	if (!standardValidation.isValid) {
 		// Check if this is a format error or a mismatch

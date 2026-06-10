@@ -13,11 +13,20 @@
 // limitations under the License.
 
 import { z } from "zod";
+import type { IPInfoResponse } from "../api/ipapi.js";
 import {
 	CaptchaType,
 	DecisionMachineCaptchaTypeSchema,
 } from "../client/captchaType/captchaType.js";
 import type { RequestHeaders } from "../provider/api.js";
+
+export type EnrichedDnsEvent = {
+	peerIp?: string;
+	resolverIp?: string;
+	pathValid?: boolean;
+	peerIpInfo?: IPInfoResponse;
+	resolverIpInfo?: IPInfoResponse;
+};
 
 export enum DecisionMachineRuntime {
 	Node = "node",
@@ -67,6 +76,7 @@ export type DecisionMachineInput = {
 	behavioralDataPacked?: DecisionMachineBehavioralDataPacked;
 	deviceCapability?: string;
 	countryCode?: string;
+	dnsEvent?: EnrichedDnsEvent;
 };
 
 export type DecisionMachineOutput = {
@@ -132,7 +142,7 @@ export const COUNTER_WINDOW_SECONDS: Record<CounterWindow, number> = {
 export const COUNTER_KINDS = ["served", "solved"] as const;
 export type CounterKind = (typeof COUNTER_KINDS)[number];
 
-export const COUNTER_DIMENSIONS = ["ip", "userAccount"] as const;
+export const COUNTER_DIMENSIONS = ["ip", "userAccount", "peerIp"] as const;
 export type CounterDimension = (typeof COUNTER_DIMENSIONS)[number];
 
 export const COUNTER_CAPTCHA_ANY = "any" as const;

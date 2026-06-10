@@ -52,6 +52,11 @@ import {
 } from "../../util/usageCounters.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
+import {
+	computeDnsAsymmetry,
+	enrichDnsEvent,
+	getIpInfoAsn,
+} from "../dnsEvent/enrichDnsEvent.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature } from "../powCaptcha/powTasksUtils.js";
 import { validatePuzzleSolution } from "./puzzleTasksUtils.js";
@@ -537,22 +542,34 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 			? await this.db.getSessionRecordBySessionId(challengeRecord.sessionId)
 			: undefined;
 
-		// Traffic filter: block VPN/proxy/Tor/abuser etc. Resolved in
-		// CaptchaManager so all three verify paths (pow/image/puzzle)
-		// share the same "compute effective filter, optionally fresh
-		// lookup, run check" logic.
+		const enrichedDnsEvent = await enrichDnsEvent(
+			sessionRecord?.dnsEvent,
+			env.ipInfoService,
+			ip ?? challengeRecord.ipInfo?.ip,
+		);
+
 		{
 			const check = await this.resolveTrafficFilterCheck(
 				env,
 				challengeRecord.ipInfo,
 				trafficFilter,
 				ip,
-				sessionRecord?.dnsEvent,
+				enrichedDnsEvent,
 			);
 			if (check.isBlocked) {
 				this.logger.info(() => ({
 					msg: "Traffic filter rejected request in puzzle verification",
-					data: { challenge, dappAccount, ip, reason: check.reason },
+					data: {
+						challenge,
+						dappAccount,
+						ip,
+						reason: check.reason,
+						dnsPeerIp: enrichedDnsEvent?.peerIp,
+						dnsResolverIp: enrichedDnsEvent?.resolverIp,
+						dnsPeerAsn: getIpInfoAsn(enrichedDnsEvent?.peerIpInfo),
+						dnsResolverAsn: getIpInfoAsn(enrichedDnsEvent?.resolverIpInfo),
+						dnsPathValid: enrichedDnsEvent?.pathValid,
+					},
 				}));
 				const blockedResult = {
 					status: CaptchaStatus.disapproved,
@@ -600,6 +617,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 					this.logger,
 					env.ipInfoService,
 					ipValidationRules,
+					enrichedDnsEvent?.peerIp,
 				);
 
 				if (!ipValidation.isValid) {
@@ -632,11 +650,23 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 
 		let score: number | undefined;
 		if (sessionRecord) {
+			const dnsAsymmetry = computeDnsAsymmetry(
+				enrichedDnsEvent,
+				challengeRecord.ipInfo,
+			);
+			if (dnsAsymmetry > 0) {
+				sessionRecord.scoreComponents = {
+					...sessionRecord.scoreComponents,
+					dnsAsymmetry,
+				};
+			}
 			score = computeFrictionlessScore(sessionRecord?.scoreComponents);
 			this.logger.info(() => ({
 				data: {
 					scoreComponents: { ...(sessionRecord?.scoreComponents || {}) },
 					score,
+					dnsPeerAsn: getIpInfoAsn(enrichedDnsEvent?.peerIpInfo),
+					dnsResolverAsn: getIpInfoAsn(enrichedDnsEvent?.resolverIpInfo),
 				},
 			}));
 		}
@@ -654,6 +684,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				countryCode: challengeRecord.ipInfo?.isValid
 					? challengeRecord.ipInfo.countryCode
 					: undefined,
+				dnsEvent: enrichedDnsEvent,
 			};
 
 			const decision = await this.decisionMachineRunner.decide(
