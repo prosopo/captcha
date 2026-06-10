@@ -57,7 +57,11 @@ import {
 	getCompositeIpAddress,
 	getIpAddressFromComposite,
 } from "../../compositeIpAddress.js";
-import { constructPairList, containsIdenticalPairs } from "../../pairs.js";
+import {
+	constructPairList,
+	containsIdenticalPairs,
+	peelCheckboxPrefix,
+} from "../../pairs.js";
 import { checkLangRules } from "../../rules/lang.js";
 import { deepValidateIpAddress, shuffleArray } from "../../util.js";
 import {
@@ -307,8 +311,15 @@ export class ImgCaptchaManager extends CaptchaManager {
 			const { storedCaptchas, receivedCaptchas, captchaIds } =
 				await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas);
 
-			const flat = receivedCaptchas.map((c) => extractData(c.salt));
-			const pairs = flat.map((list) => constructPairList(list));
+			const rawFlat = receivedCaptchas.map((c) => extractData(c.salt));
+			const { checkbox: checkboxCoordPair, flat } = peelCheckboxPrefix(
+				rawFlat,
+				receivedCaptchas.map((c) => c.solution.length),
+			);
+			const shapePairs = flat.map((list) => constructPairList(list));
+			const pairs: [number, number][][] = checkboxCoordPair
+				? [[checkboxCoordPair], ...shapePairs]
+				: shapePairs;
 
 			const { tree, commitmentId } =
 				buildTreeAndGetCommitmentId(receivedCaptchas);
