@@ -70,6 +70,11 @@ import {
 } from "../../util/usageCounters.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
+import {
+	computeDnsAsymmetry,
+	enrichDnsEvent,
+	getIpInfoAsn,
+} from "../dnsEvent/enrichDnsEvent.js";
 import { FrictionlessReason } from "../frictionless/frictionlessTasks.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { evaluateEmailSpamRules } from "../spam/evaluateEmailSpamRules.js";
@@ -807,22 +812,34 @@ export class ImgCaptchaManager extends CaptchaManager {
 			? await this.db.getSessionRecordBySessionId(solution.sessionId)
 			: undefined;
 
-		// Traffic filter: block VPN/proxy/Tor/abuser etc. Resolved in
-		// CaptchaManager so all three verify paths (pow/image/puzzle)
-		// share the same "compute effective filter, optionally fresh
-		// lookup, run check" logic.
+		const enrichedDnsEvent = await enrichDnsEvent(
+			sessionRecord?.dnsEvent,
+			env.ipInfoService,
+			ip ?? solution.ipInfo?.ip,
+		);
+
 		if (!failStatus) {
 			const check = await this.resolveTrafficFilterCheck(
 				env,
 				solution.ipInfo,
 				trafficFilter,
 				ip,
-				sessionRecord?.dnsEvent,
+				enrichedDnsEvent,
 			);
 			if (check.isBlocked) {
 				this.logger.info(() => ({
 					msg: "Traffic filter rejected request",
-					data: { commitmentId, dapp, ip, reason: check.reason },
+					data: {
+						commitmentId,
+						dapp,
+						ip,
+						reason: check.reason,
+						dnsPeerIp: enrichedDnsEvent?.peerIp,
+						dnsResolverIp: enrichedDnsEvent?.resolverIp,
+						dnsPeerAsn: getIpInfoAsn(enrichedDnsEvent?.peerIpInfo),
+						dnsResolverAsn: getIpInfoAsn(enrichedDnsEvent?.resolverIpInfo),
+						dnsPathValid: enrichedDnsEvent?.pathValid,
+					},
 				}));
 				commitmentUpdates.result = {
 					status: CaptchaStatus.disapproved,
@@ -857,6 +874,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 					this.logger,
 					env.ipInfoService,
 					ipValidationRules,
+					enrichedDnsEvent?.peerIp,
 				);
 
 				if (!ipValidation.isValid) {
@@ -894,17 +912,30 @@ export class ImgCaptchaManager extends CaptchaManager {
 					CaptchaType.image,
 					ipValue,
 					solution.userAccount,
+					enrichedDnsEvent?.peerIp,
 				),
 			);
 		}
 
 		let score: number | undefined;
 		if (sessionRecord) {
+			const dnsAsymmetry = computeDnsAsymmetry(
+				enrichedDnsEvent,
+				solution.ipInfo,
+			);
+			if (dnsAsymmetry > 0) {
+				sessionRecord.scoreComponents = {
+					...sessionRecord.scoreComponents,
+					dnsAsymmetry,
+				};
+			}
 			score = computeFrictionlessScore(sessionRecord?.scoreComponents);
 			this.logger.info(() => ({
 				data: {
 					scoreComponents: sessionRecord?.scoreComponents,
 					score: score,
+					dnsPeerAsn: getIpInfoAsn(enrichedDnsEvent?.peerIpInfo),
+					dnsResolverAsn: getIpInfoAsn(enrichedDnsEvent?.resolverIpInfo),
 				},
 			}));
 
@@ -948,6 +979,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				countryCode: solution.ipInfo?.isValid
 					? solution.ipInfo.countryCode
 					: undefined,
+				dnsEvent: enrichedDnsEvent,
 			};
 
 			try {

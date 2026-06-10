@@ -18,6 +18,7 @@ import { type Logger, getLogger } from "@prosopo/logger";
 import {
 	ApiParams,
 	type CaptchaType,
+	type EnrichedDnsEvent,
 	type IPInfoResponse,
 	type ITrafficFilter,
 	type KeyringPair,
@@ -51,6 +52,7 @@ import {
 import { getIpAddressFromComposite } from "../compositeIpAddress.js";
 import type { BehavioralDataResult } from "./detection/decodeBehavior.js";
 import type { SimdReadingsResult } from "./detection/decodeSimd.js";
+import { extraIpInfosFromEnrichedDnsEvent } from "./dnsEvent/enrichDnsEvent.js";
 import { checkSpamEmail as checkSpamEmailFn } from "./spam/checkSpamEmail.js";
 import {
 	type TrafficCheckResult,
@@ -664,7 +666,7 @@ export class CaptchaManager {
 		recordIpInfo: IPInfoResponse | undefined,
 		trafficFilter: Partial<ITrafficFilter> | undefined,
 		currentIp?: string,
-		dnsEvent?: Session["dnsEvent"],
+		enrichedDnsEvent?: EnrichedDnsEvent,
 	): Promise<TrafficCheckResult> {
 		const effective = { blockAbuser: true, ...trafficFilter };
 		const hasAny = Object.values(effective).some((v) => v);
@@ -672,23 +674,15 @@ export class CaptchaManager {
 			return { isBlocked: false };
 		}
 
-		const dnsIps = new Set<string>();
-		const primaryIp = currentIp ?? recordIpInfo?.ip;
-		const dnsPeerIp = dnsEvent?.peerIp;
-		const dnsResolverIp = dnsEvent?.resolverIp;
-		if (dnsPeerIp && dnsPeerIp !== primaryIp) {
-			dnsIps.add(dnsPeerIp);
-		}
-		if (dnsResolverIp && dnsResolverIp !== primaryIp) {
-			dnsIps.add(dnsResolverIp);
-		}
+		const ipInfo = currentIp
+			? await env.ipInfoService.lookup(currentIp)
+			: recordIpInfo;
 
-		const [ipInfo, ...extras] = await Promise.all([
-			currentIp ? env.ipInfoService.lookup(currentIp) : recordIpInfo,
-			...[...dnsIps].map((ip) => env.ipInfoService.lookup(ip)),
-		]);
-
-		return checkTrafficFilter(ipInfo, effective, extras);
+		return checkTrafficFilter(
+			ipInfo,
+			effective,
+			extraIpInfosFromEnrichedDnsEvent(enrichedDnsEvent),
+		);
 	}
 
 	static canClientSeeScore(tier: Tier, score?: number) {
