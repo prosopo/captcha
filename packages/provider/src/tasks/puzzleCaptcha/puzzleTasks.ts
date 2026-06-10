@@ -533,6 +533,10 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 			}
 		}
 
+		const sessionRecord = challengeRecord.sessionId
+			? await this.db.getSessionRecordBySessionId(challengeRecord.sessionId)
+			: undefined;
+
 		// Traffic filter: block VPN/proxy/Tor/abuser etc. Resolved in
 		// CaptchaManager so all three verify paths (pow/image/puzzle)
 		// share the same "compute effective filter, optionally fresh
@@ -543,6 +547,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				challengeRecord.ipInfo,
 				trafficFilter,
 				ip,
+				sessionRecord?.dnsEvent,
 			);
 			if (check.isBlocked) {
 				this.logger.info(() => ({
@@ -626,19 +631,14 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		}
 
 		let score: number | undefined;
-		if (challengeRecord.sessionId) {
-			const sessionRecord = await this.db.getSessionRecordBySessionId(
-				challengeRecord.sessionId,
-			);
-			if (sessionRecord) {
-				score = computeFrictionlessScore(sessionRecord?.scoreComponents);
-				this.logger.info(() => ({
-					data: {
-						scoreComponents: { ...(sessionRecord?.scoreComponents || {}) },
-						score,
-					},
-				}));
-			}
+		if (sessionRecord) {
+			score = computeFrictionlessScore(sessionRecord?.scoreComponents);
+			this.logger.info(() => ({
+				data: {
+					scoreComponents: { ...(sessionRecord?.scoreComponents || {}) },
+					score,
+				},
+			}));
 		}
 
 		// We know solution is correct by this point. Run decision machine evaluation to process additional checks.

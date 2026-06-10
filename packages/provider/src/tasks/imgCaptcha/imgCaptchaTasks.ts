@@ -57,7 +57,11 @@ import {
 	getCompositeIpAddress,
 	getIpAddressFromComposite,
 } from "../../compositeIpAddress.js";
-import { constructPairList, containsIdenticalPairs } from "../../pairs.js";
+import {
+	constructPairList,
+	containsIdenticalPairs,
+	peelCheckboxPrefix,
+} from "../../pairs.js";
 import { checkLangRules } from "../../rules/lang.js";
 import { deepValidateIpAddress, shuffleArray } from "../../util.js";
 import {
@@ -302,8 +306,15 @@ export class ImgCaptchaManager extends CaptchaManager {
 			const { storedCaptchas, receivedCaptchas, captchaIds } =
 				await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas);
 
-			const flat = receivedCaptchas.map((c) => extractData(c.salt));
-			const pairs = flat.map((list) => constructPairList(list));
+			const rawFlat = receivedCaptchas.map((c) => extractData(c.salt));
+			const { checkbox: checkboxCoordPair, flat } = peelCheckboxPrefix(
+				rawFlat,
+				receivedCaptchas.map((c) => c.solution.length),
+			);
+			const shapePairs = flat.map((list) => constructPairList(list));
+			const pairs: [number, number][][] = checkboxCoordPair
+				? [[checkboxCoordPair], ...shapePairs]
+				: shapePairs;
 
 			const { tree, commitmentId } =
 				buildTreeAndGetCommitmentId(receivedCaptchas);
@@ -792,6 +803,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 			}
 		}
 
+		const sessionRecord = solution.sessionId
+			? await this.db.getSessionRecordBySessionId(solution.sessionId)
+			: undefined;
+
 		// Traffic filter: block VPN/proxy/Tor/abuser etc. Resolved in
 		// CaptchaManager so all three verify paths (pow/image/puzzle)
 		// share the same "compute effective filter, optionally fresh
@@ -802,6 +817,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				solution.ipInfo,
 				trafficFilter,
 				ip,
+				sessionRecord?.dnsEvent,
 			);
 			if (check.isBlocked) {
 				this.logger.info(() => ({
@@ -883,46 +899,41 @@ export class ImgCaptchaManager extends CaptchaManager {
 		}
 
 		let score: number | undefined;
-		if (solution.sessionId) {
-			const sessionRecord = await this.db.getSessionRecordBySessionId(
-				solution.sessionId,
-			);
-			if (sessionRecord) {
-				score = computeFrictionlessScore(sessionRecord?.scoreComponents);
-				this.logger.info(() => ({
-					data: {
-						scoreComponents: sessionRecord?.scoreComponents,
-						score: score,
-					},
-				}));
+		if (sessionRecord) {
+			score = computeFrictionlessScore(sessionRecord?.scoreComponents);
+			this.logger.info(() => ({
+				data: {
+					scoreComponents: sessionRecord?.scoreComponents,
+					score: score,
+				},
+			}));
 
-				if (
-					!failStatus &&
-					disallowWebView === true &&
-					(sessionRecord.webView === true ||
-						(sessionRecord.scoreComponents.webView || 0) > 0)
-				) {
-					this.logger.info(() => ({
-						msg: "Disallowing webview access - user not verified",
-					}));
-					commitmentUpdates.result = {
-						status: CaptchaStatus.disapproved,
-						reason: ResultReason.DISALLOWED_WEBVIEW,
-					};
-					failStatus = ResultReason.DISALLOWED_WEBVIEW;
-					isApproved = false;
-					failureStatus = ResultReason.DISALLOWED_WEBVIEW;
-				}
-				if (
-					contextAwareEnabled &&
-					sessionRecord.reason ===
-						FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED
-				) {
-					this.logger.info(() => ({
-						msg: "Context aware validation failed",
-					}));
-					//return { status: "API.USER_NOT_VERIFIED", verified: false };
-				}
+			if (
+				!failStatus &&
+				disallowWebView === true &&
+				(sessionRecord.webView === true ||
+					(sessionRecord.scoreComponents.webView || 0) > 0)
+			) {
+				this.logger.info(() => ({
+					msg: "Disallowing webview access - user not verified",
+				}));
+				commitmentUpdates.result = {
+					status: CaptchaStatus.disapproved,
+					reason: ResultReason.DISALLOWED_WEBVIEW,
+				};
+				failStatus = ResultReason.DISALLOWED_WEBVIEW;
+				isApproved = false;
+				failureStatus = ResultReason.DISALLOWED_WEBVIEW;
+			}
+			if (
+				contextAwareEnabled &&
+				sessionRecord.reason ===
+					FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED
+			) {
+				this.logger.info(() => ({
+					msg: "Context aware validation failed",
+				}));
+				//return { status: "API.USER_NOT_VERIFIED", verified: false };
 			}
 		}
 
