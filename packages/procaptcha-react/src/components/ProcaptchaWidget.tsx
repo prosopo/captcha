@@ -177,10 +177,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 					) {
 						x = nativeEvent.touches[0].clientX;
 						y = nativeEvent.touches[0].clientY;
-					} else if (
-						"clientX" in nativeEvent &&
-						"clientY" in nativeEvent
-					) {
+					} else if ("clientX" in nativeEvent && "clientY" in nativeEvent) {
 						x = nativeEvent.clientX;
 						y = nativeEvent.clientY;
 					}

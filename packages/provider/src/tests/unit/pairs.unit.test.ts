@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { embedData, extractData } from "@prosopo/util";
+import { randomAsHex } from "@prosopo/util-crypto";
 import { describe, expect, it } from "vitest";
 import {
 	constructPairList,
 	containsIdenticalPairs,
 	peelCheckboxPrefix,
 } from "../../pairs.js";
-import { embedData, extractData } from "@prosopo/util";
-import { randomAsHex } from "@prosopo/util-crypto";
 
 describe("constructPairList", () => {
 	it("should construct pairs from even-length array", () => {
@@ -334,10 +334,10 @@ describe("peelCheckboxPrefix", () => {
 		const salt1 = buildSalt(captcha1Shapes);
 
 		const rawFlat = [extractData(salt0), extractData(salt1)];
-		const { checkbox, flat } = peelCheckboxPrefix(
-			rawFlat,
-			[captcha0Shapes.length / 2, captcha1Shapes.length / 2],
-		);
+		const { checkbox, flat } = peelCheckboxPrefix(rawFlat, [
+			captcha0Shapes.length / 2,
+			captcha1Shapes.length / 2,
+		]);
 		const shapePairs = flat.map((list) => constructPairList(list));
 		const pairs = checkbox ? [[checkbox], ...shapePairs] : shapePairs;
 
@@ -362,10 +362,10 @@ describe("peelCheckboxPrefix", () => {
 		const salt1 = buildSalt(captcha1Shapes);
 
 		const rawFlat = [extractData(salt0), extractData(salt1)];
-		const { checkbox, flat } = peelCheckboxPrefix(
-			rawFlat,
-			[captcha0Shapes.length / 2, captcha1Shapes.length / 2],
-		);
+		const { checkbox, flat } = peelCheckboxPrefix(rawFlat, [
+			captcha0Shapes.length / 2,
+			captcha1Shapes.length / 2,
+		]);
 		const pairs = flat.map((list) => constructPairList(list));
 
 		expect(checkbox).toBeUndefined();
@@ -374,9 +374,7 @@ describe("peelCheckboxPrefix", () => {
 				[10, 20],
 				[30, 40],
 			],
-			[
-				[50, 60],
-			],
+			[[50, 60]],
 		]);
 	});
 
