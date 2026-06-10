@@ -30,6 +30,23 @@ export const constructPairList = (list: number[]): [number, number][] => {
 	return pairList;
 };
 
+export const peelCheckboxPrefix = (
+	flat: number[][],
+	solutionLengths: number[],
+): { checkbox?: [number, number]; flat: number[][] } => {
+	const firstFlat = flat[0];
+	const firstLen = solutionLengths[0];
+	if (firstFlat === undefined || firstLen === undefined) {
+		return { flat };
+	}
+	if (firstFlat.length === 2 * firstLen + 2) {
+		const checkbox: [number, number] = [at(firstFlat, 0), at(firstFlat, 1)];
+		const stripped = [firstFlat.slice(2), ...flat.slice(1)];
+		return { checkbox, flat: stripped };
+	}
+	return { flat };
+};
+
 /**
  * Check if there are identical pairs in flattened lists of pairs
  * @param pairsLists
