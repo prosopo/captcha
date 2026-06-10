@@ -13,7 +13,13 @@
 // limitations under the License.
 
 import { describe, expect, it } from "vitest";
-import { constructPairList, containsIdenticalPairs } from "../../pairs.js";
+import {
+	constructPairList,
+	containsIdenticalPairs,
+	peelCheckboxPrefix,
+} from "../../pairs.js";
+import { embedData, extractData } from "@prosopo/util";
+import { randomAsHex } from "@prosopo/util-crypto";
 
 describe("constructPairList", () => {
 	it("should construct pairs from even-length array", () => {
@@ -287,5 +293,94 @@ describe("containsIdenticalPairs", () => {
 		const result = containsIdenticalPairs(input);
 
 		expect(result).toBe(false);
+	});
+});
+
+const buildSalt = (data: number[]): string => {
+	const hexLength = data
+		.map((d) => d.toString(16).length + 4)
+		.reduce((acc, curr) => acc + curr, 0);
+	const randomHex = randomAsHex(hexLength);
+	return embedData(randomHex, data);
+};
+
+describe("peelCheckboxPrefix", () => {
+	it("returns no prefix when first list length matches 2 * solution.length", () => {
+		const salt0 = buildSalt([10, 20, 30, 40]);
+		const salt1 = buildSalt([50, 60]);
+		const flat = [extractData(salt0), extractData(salt1)];
+		const { checkbox, flat: out } = peelCheckboxPrefix(flat, [2, 1]);
+		expect(checkbox).toBeUndefined();
+		expect(out).toEqual(flat);
+	});
+
+	it("peels [x, y] when first list length is 2 * solution.length + 2", () => {
+		const salt0 = buildSalt([7, 13, 10, 20, 30, 40]);
+		const salt1 = buildSalt([50, 60]);
+		const flat = [extractData(salt0), extractData(salt1)];
+		const { checkbox, flat: out } = peelCheckboxPrefix(flat, [2, 1]);
+		expect(checkbox).toEqual([7, 13]);
+		expect(out[0]).toEqual([10, 20, 30, 40]);
+		expect(out[1]).toEqual([50, 60]);
+	});
+
+	it("round-trips client embed → server peel → constructPairList → prepend", () => {
+		const checkboxX = 142;
+		const checkboxY = 87;
+		const captcha0Shapes = [299, 244, 299, 352, 170, 358];
+		const captcha1Shapes = [180, 470, 297, 481];
+
+		const salt0 = buildSalt([checkboxX, checkboxY, ...captcha0Shapes]);
+		const salt1 = buildSalt(captcha1Shapes);
+
+		const rawFlat = [extractData(salt0), extractData(salt1)];
+		const { checkbox, flat } = peelCheckboxPrefix(
+			rawFlat,
+			[captcha0Shapes.length / 2, captcha1Shapes.length / 2],
+		);
+		const shapePairs = flat.map((list) => constructPairList(list));
+		const pairs = checkbox ? [[checkbox], ...shapePairs] : shapePairs;
+
+		expect(pairs).toEqual([
+			[[checkboxX, checkboxY]],
+			[
+				[299, 244],
+				[299, 352],
+				[170, 358],
+			],
+			[
+				[180, 470],
+				[297, 481],
+			],
+		]);
+	});
+
+	it("leaves rawFlat unchanged when only an older client (no prefix) submits", () => {
+		const captcha0Shapes = [10, 20, 30, 40];
+		const captcha1Shapes = [50, 60];
+		const salt0 = buildSalt(captcha0Shapes);
+		const salt1 = buildSalt(captcha1Shapes);
+
+		const rawFlat = [extractData(salt0), extractData(salt1)];
+		const { checkbox, flat } = peelCheckboxPrefix(
+			rawFlat,
+			[captcha0Shapes.length / 2, captcha1Shapes.length / 2],
+		);
+		const pairs = flat.map((list) => constructPairList(list));
+
+		expect(checkbox).toBeUndefined();
+		expect(pairs).toEqual([
+			[
+				[10, 20],
+				[30, 40],
+			],
+			[
+				[50, 60],
+			],
+		]);
+	});
+
+	it("handles empty inputs without throwing", () => {
+		expect(peelCheckboxPrefix([], [])).toEqual({ flat: [] });
 	});
 });

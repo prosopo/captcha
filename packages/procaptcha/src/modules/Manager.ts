@@ -79,6 +79,9 @@ export function Manager(
 	// get the state update mechanism
 	const updateState = buildUpdateState(state, onStateUpdate);
 
+	let checkboxClickX = 0;
+	let checkboxClickY = 0;
+
 	/**
 	 * Build the config on demand, using the optional config passed in from the outside. State may override various
 	 * config values depending on the state of the captcha process. E.g. if the process has been started using account
@@ -102,7 +105,9 @@ export function Manager(
 	/**
 	 * Called on start of user verification. This is when the user ticks the box to claim they are human.
 	 */
-	const start = async () => {
+	const start = async (checkboxX = 0, checkboxY = 0) => {
+		checkboxClickX = checkboxX;
+		checkboxClickY = checkboxY;
 		events.onOpen();
 		await providerRetry(
 			async () => {
@@ -243,7 +248,11 @@ export function Manager(
 				const captchaSolution: CaptchaSolution[] = state.challenge.captchas.map(
 					(captcha, index) => {
 						const solution = at(state.solutions, index);
-						const coords = solution.flatMap(([_, x, y]) => [x, y]);
+						const shapeCoords = solution.flatMap(([_, x, y]) => [x, y]);
+						const coords =
+							index === 0
+								? [checkboxClickX, checkboxClickY, ...shapeCoords]
+								: shapeCoords;
 						const salt = randomAsHex(
 							coords
 								.map((x) => x.toString(16).length + 4)
