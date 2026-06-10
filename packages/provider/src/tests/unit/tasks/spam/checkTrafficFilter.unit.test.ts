@@ -196,4 +196,87 @@ describe("checkTrafficFilter", () => {
 		);
 		expect(result).toEqual({ isBlocked: false });
 	});
+
+	describe("extraIpInfos", () => {
+		const cleanPrimary = baseInfo({ ip: "192.0.2.1" });
+
+		it("blocks when an extra IP is a datacenter", () => {
+			const result = checkTrafficFilter(cleanPrimary, allBlocked, [
+				baseInfo({ ip: "198.51.100.10", isDatacenter: true }),
+			]);
+			expect(result).toEqual({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+
+		it("blocks when an extra IP exceeds the abuser score threshold", () => {
+			const result = checkTrafficFilter(
+				cleanPrimary,
+				{ ...allBlocked, abuserScoreThreshold: 80 },
+				[
+					baseInfo({
+						ip: "203.0.113.10",
+						isAbuser: true,
+						abuserScore: 95,
+					}),
+				],
+			);
+			expect(result).toEqual({
+				isBlocked: true,
+				reason: "API.ABUSER_BLOCKED",
+			});
+		});
+
+		it("does NOT apply VPN-datacenter suppression to extra IPs", () => {
+			const noVpnBlock: ITrafficFilter = { ...allBlocked, blockVpn: false };
+			const result = checkTrafficFilter(cleanPrimary, noVpnBlock, [
+				baseInfo({
+					ip: "198.51.100.10",
+					isVPN: true,
+					isDatacenter: true,
+				}),
+			]);
+			expect(result).toEqual({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+
+		it("does apply VPN-datacenter suppression to the primary IP", () => {
+			const noVpnBlock: ITrafficFilter = { ...allBlocked, blockVpn: false };
+			const result = checkTrafficFilter(
+				baseInfo({ isVPN: true, isDatacenter: true }),
+				noVpnBlock,
+			);
+			expect(result).toEqual({ isBlocked: false });
+		});
+
+		it("allows through when extra IPs are clean", () => {
+			const result = checkTrafficFilter(cleanPrimary, allBlocked, [
+				baseInfo({ ip: "8.8.8.8" }),
+				baseInfo({ ip: "1.1.1.1" }),
+			]);
+			expect(result).toEqual({ isBlocked: false });
+		});
+
+		it("ignores undefined / invalid entries in the extras list", () => {
+			const result = checkTrafficFilter(cleanPrimary, allBlocked, [
+				undefined,
+				{ isValid: false, error: "lookup failed", ip: "1.2.3.4" },
+				baseInfo({ ip: "198.51.100.10", isDatacenter: true }),
+			]);
+			expect(result).toEqual({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+
+		it("primary block takes precedence over extra block", () => {
+			const result = checkTrafficFilter(baseInfo({ isTor: true }), allBlocked, [
+				baseInfo({ ip: "198.51.100.10", isDatacenter: true }),
+			]);
+			expect(result).toEqual({ isBlocked: true, reason: "API.TOR_BLOCKED" });
+		});
+	});
 });

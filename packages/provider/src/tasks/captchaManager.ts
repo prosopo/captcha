@@ -648,6 +648,8 @@ export class CaptchaManager {
 	 * - If the dapp's server passed up the end user's current IP via the
 	 *   verify call, look that up fresh — it's the "now" IP for filtering
 	 *   and may differ from the IP that originally requested the captcha.
+	 * - When the session carries a `dnsEvent`, its `peerIp` and `resolverIp`
+	 *   are enriched and passed alongside the primary IP.
 	 * - `blockAbuser` defaults to true so abusive networks are always
 	 *   blocked even when the site hasn't configured a trafficFilter.
 	 * - Returns `{ isBlocked: false }` if every filter flag is off, without
@@ -662,16 +664,31 @@ export class CaptchaManager {
 		recordIpInfo: IPInfoResponse | undefined,
 		trafficFilter: Partial<ITrafficFilter> | undefined,
 		currentIp?: string,
+		dnsEvent?: Session["dnsEvent"],
 	): Promise<TrafficCheckResult> {
 		const effective = { blockAbuser: true, ...trafficFilter };
 		const hasAny = Object.values(effective).some((v) => v);
 		if (!hasAny) {
 			return { isBlocked: false };
 		}
-		const ipInfo = currentIp
-			? await env.ipInfoService.lookup(currentIp)
-			: recordIpInfo;
-		return checkTrafficFilter(ipInfo, effective);
+
+		const dnsIps = new Set<string>();
+		const primaryIp = currentIp ?? recordIpInfo?.ip;
+		const dnsPeerIp = dnsEvent?.peerIp;
+		const dnsResolverIp = dnsEvent?.resolverIp;
+		if (dnsPeerIp && dnsPeerIp !== primaryIp) {
+			dnsIps.add(dnsPeerIp);
+		}
+		if (dnsResolverIp && dnsResolverIp !== primaryIp) {
+			dnsIps.add(dnsResolverIp);
+		}
+
+		const [ipInfo, ...extras] = await Promise.all([
+			currentIp ? env.ipInfoService.lookup(currentIp) : recordIpInfo,
+			...[...dnsIps].map((ip) => env.ipInfoService.lookup(ip)),
+		]);
+
+		return checkTrafficFilter(ipInfo, effective, extras);
 	}
 
 	static canClientSeeScore(tier: Tier, score?: number) {
