@@ -10,7 +10,12 @@
 		"INVALID_SIGNATURE": "Ungültige Signatur",
 		"SITE_KEY_MISSING": "SITE-KEY fehlt",
 		"ACCOUNT_NOT_FOUND": "Konto nicht gefunden",
-		"INVALID_TIMESTAMP": "Ungültiger Zeitstempel"
+		"INVALID_TIMESTAMP": "Ungültiger Zeitstempel",
+		"BILLING_ERROR": "Billing error",
+		"INVALID_JWT": "Invalid authentication token",
+		"MISSING_AUTH_HEADER": "Missing authentication header",
+		"OBJECT_COUNT_ERROR": "Unexpected object count",
+		"SECRET_MISSING": "Secret is missing"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Unzureichende Berechtigungen zur Ausführung dieser Aktion",
@@ -51,7 +56,13 @@
 		"MOBILE_BLOCKED": "Anfragen von Mobilfunkverbindungen sind für diese Website nicht erlaubt",
 		"SATELLITE_BLOCKED": "Anfragen von Satellitenverbindungen sind für diese Website nicht erlaubt",
 		"CRAWLER_BLOCKED": "Anfragen von bekannten Crawlern sind für diese Website nicht erlaubt",
-		"DISALLOWED_WEBVIEW": "Anfragen aus In-App-Browsern (WebView) sind für diese Website nicht erlaubt"
+		"DISALLOWED_WEBVIEW": "Anfragen aus In-App-Browsern (WebView) sind für diese Website nicht erlaubt",
+		"INTERNAL_SERVER_ERROR": "Internal server error",
+		"INVALID_DETECTOR_KEY": "Invalid detector key",
+		"FEATURE_NOT_ENABLED": "This feature is not enabled",
+		"INVALID_AUTHORIZATION_HEADER": "Invalid authorization header",
+		"INVALID_DOMAIN": "Invalid domain",
+		"NO_PERMISSIONS": "No permissions configured for this account"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Kann den Besitzerbenutzer nicht ändern",
@@ -61,7 +72,10 @@
 		"NO_SUGGESTIONS_FOUND": "Keine Vorschläge gefunden",
 		"CANNOT_DEACTIVATE_LAST_SITE": "Kann den letzten aktiven Standort nicht deaktivieren",
 		"DUPLICATE_SITE_NAME": "Eine Website mit diesem Namen existiert bereits",
-		"INVALID_SITE_NAME": "Der Websitename darf nur Buchstaben, Zahlen, Bindestriche und Unterstriche enthalten"
+		"INVALID_SITE_NAME": "Der Websitename darf nur Buchstaben, Zahlen, Bindestriche und Unterstriche enthalten",
+		"CANNOT_MODIFY_USER": "Cannot modify this user",
+		"API_KEYS_INVALID_NUMBER_OF_SITES": "Invalid number of sites for API key generation",
+		"API_KEYS_NOT_FOUND": "API keys not found"
 	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Polkadot-Erweiterung nicht gefunden"
@@ -121,7 +135,15 @@
 		"TABLES_UNDEFINED": "Tabellen undefiniert",
 		"CONNECTION_UNDEFINED": "Verbindung undefiniert",
 		"COMMITMENT_FLAG_FAILED": "Verpflichtung konnte nicht als verarbeitet markiert werden",
-		"UNKNOWN": "Unbekannter Datenbankfehler"
+		"UNKNOWN": "Unbekannter Datenbankfehler",
+		"QUERY_ERROR": "Database query failed",
+		"SESSION_STORE_FAILED": "Failed to store session",
+		"SESSION_CHECK_REMOVE_FAILED": "Failed to check and remove session",
+		"SESSION_GET_FAILED": "Failed to get session",
+		"CAPTCHA_SAMPLE_SIZE_EXCEEDED": "Captcha sample size exceeded",
+		"DATABASE_IMPORT_ERROR": "Database import error",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis access rules connection is undefined",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "User access rules storage is undefined"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Fehler beim Parsen des Captchas",
@@ -139,7 +161,11 @@
 		"IP_ADDRESS_MISMATCH": "IP-Adresse stimmt nicht überein",
 		"INVALID_TOKEN": "Ungültiges Token",
 		"INVALID_SOLUTION": "Ungültige Lösung",
-		"DECRYPTION_ERROR": "Fehler beim Entschlüsseln"
+		"DECRYPTION_ERROR": "Fehler beim Entschlüsseln",
+		"FAILED": "Captcha failed",
+		"PASSED": "Captcha passed",
+		"SOLUTION_NOT_FOUND": "Solution not found",
+		"INVALID_TIMESTAMP": "Invalid timestamp"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Ungültiger Parameter"
@@ -150,7 +176,8 @@
 		"MISSING_PROVIDER_PAIR": "Fehlendes Anbieterpaar",
 		"MISSING_ENV_VARIABLE": "Fehlende Umgebungsvariable",
 		"GENERAL": "Allgemeiner Entwicklerfehler, siehe Kontext",
-		"METHOD_NOT_IMPLEMENTED": "Methode nicht implementiert"
+		"METHOD_NOT_IMPLEMENTED": "Methode nicht implementiert",
+		"MISSING_SECRET_KEY": "Missing secret key"
 	},
 	"FS": {
 		"FILE_NOT_FOUND": "Datei nicht gefunden",
@@ -455,5 +482,10 @@
 		"sword": "Schwert",
 		"syringe": "Spritze",
 		"tambourine": "Tamburin"
+	},
+	"BILLING": {
+		"STRIPE_PORTAL": "Could not open billing portal",
+		"STRIPE_SESSION_NOT_FOUND": "Billing session not found",
+		"STRIPE_PAYMENT_FAILED": "Payment failed"
 	}
 }

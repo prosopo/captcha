@@ -10,7 +10,12 @@
 		"INVALID_SIGNATURE": "無効な署名",
 		"SITE_KEY_MISSING": "SITE KEYが見つかりません",
 		"ACCOUNT_NOT_FOUND": "アカウントが見つかりません",
-		"INVALID_TIMESTAMP": "無効なタイムスタンプ"
+		"INVALID_TIMESTAMP": "無効なタイムスタンプ",
+		"BILLING_ERROR": "Billing error",
+		"INVALID_JWT": "Invalid authentication token",
+		"MISSING_AUTH_HEADER": "Missing authentication header",
+		"OBJECT_COUNT_ERROR": "Unexpected object count",
+		"SECRET_MISSING": "Secret is missing"
 	},
 	"TARGET": {
 		"homer-simpson": "homer-simpson",
@@ -350,7 +355,13 @@
 		"MOBILE_BLOCKED": "このサイトではモバイルネットワーク接続からのリクエストは許可されていません",
 		"SATELLITE_BLOCKED": "このサイトでは衛星接続からのリクエストは許可されていません",
 		"CRAWLER_BLOCKED": "このサイトでは既知のクローラーからのリクエストは許可されていません",
-		"DISALLOWED_WEBVIEW": "このサイトではアプリ内ブラウザ (WebView) からのリクエストは許可されていません"
+		"DISALLOWED_WEBVIEW": "このサイトではアプリ内ブラウザ (WebView) からのリクエストは許可されていません",
+		"INTERNAL_SERVER_ERROR": "Internal server error",
+		"INVALID_DETECTOR_KEY": "Invalid detector key",
+		"FEATURE_NOT_ENABLED": "This feature is not enabled",
+		"INVALID_AUTHORIZATION_HEADER": "Invalid authorization header",
+		"INVALID_DOMAIN": "Invalid domain",
+		"NO_PERMISSIONS": "No permissions configured for this account"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "所有者ユーザーを変更できません",
@@ -360,7 +371,10 @@
 		"NO_SUGGESTIONS_FOUND": "提案は見つかりません",
 		"CANNOT_DEACTIVATE_LAST_SITE": "最後のアクティブサイトを無効にすることはできません",
 		"DUPLICATE_SITE_NAME": "この名前のサイトはすでに存在しています",
-		"INVALID_SITE_NAME": "サイト名には英字、数字、ハイフン、アンダースコアのみ使用できます"
+		"INVALID_SITE_NAME": "サイト名には英字、数字、ハイフン、アンダースコアのみ使用できます",
+		"CANNOT_MODIFY_USER": "Cannot modify this user",
+		"API_KEYS_INVALID_NUMBER_OF_SITES": "Invalid number of sites for API key generation",
+		"API_KEYS_NOT_FOUND": "API keys not found"
 	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Polkadot拡張機能が見つかりません"
@@ -420,7 +434,15 @@
 		"TABLES_UNDEFINED": "テーブルが未定義です",
 		"CONNECTION_UNDEFINED": "接続が未定義です",
 		"COMMITMENT_FLAG_FAILED": "コミットメントを処理済みとフラグ付けするのに失敗しました",
-		"UNKNOWN": "不明なデータベースエラー"
+		"UNKNOWN": "不明なデータベースエラー",
+		"QUERY_ERROR": "Database query failed",
+		"SESSION_STORE_FAILED": "Failed to store session",
+		"SESSION_CHECK_REMOVE_FAILED": "Failed to check and remove session",
+		"SESSION_GET_FAILED": "Failed to get session",
+		"CAPTCHA_SAMPLE_SIZE_EXCEEDED": "Captcha sample size exceeded",
+		"DATABASE_IMPORT_ERROR": "Database import error",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis access rules connection is undefined",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "User access rules storage is undefined"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "キャプチャの解析エラー",
@@ -438,7 +460,11 @@
 		"IP_ADDRESS_MISMATCH": "IPアドレスが一致しません",
 		"INVALID_TOKEN": "無効なトークン",
 		"INVALID_SOLUTION": "無効なソリューション",
-		"DECRYPTION_ERROR": "復号エラー"
+		"DECRYPTION_ERROR": "復号エラー",
+		"FAILED": "Captcha failed",
+		"PASSED": "Captcha passed",
+		"SOLUTION_NOT_FOUND": "Solution not found",
+		"INVALID_TIMESTAMP": "Invalid timestamp"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "無効なパラメーター"
@@ -449,11 +475,17 @@
 		"MISSING_PROVIDER_PAIR": "プロバイダーペアがありません",
 		"MISSING_ENV_VARIABLE": "環境変数が見つかりません",
 		"GENERAL": "一般的なDevエラー、コンテキストを参照してください",
-		"METHOD_NOT_IMPLEMENTED": "メソッドは実装されていません"
+		"METHOD_NOT_IMPLEMENTED": "メソッドは実装されていません",
+		"MISSING_SECRET_KEY": "Missing secret key"
 	},
 	"FS": {
 		"FILE_NOT_FOUND": "ファイルが見つかりません",
 		"FILE_ALREADY_EXISTS": "ファイルはすでに存在します",
 		"INVALID_DIR_FORMAT": "無効なディレクトリ形式"
+	},
+	"BILLING": {
+		"STRIPE_PORTAL": "Could not open billing portal",
+		"STRIPE_SESSION_NOT_FOUND": "Billing session not found",
+		"STRIPE_PAYMENT_FAILED": "Payment failed"
 	}
 }

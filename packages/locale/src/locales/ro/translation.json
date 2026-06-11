@@ -10,7 +10,12 @@
 		"INVALID_SIGNATURE": "Semnatura invalida",
 		"SITE_KEY_MISSING": "Cheia SITE lipseste",
 		"ACCOUNT_NOT_FOUND": "Contul nu a fost gasit",
-		"INVALID_TIMESTAMP": "Timestamp invalid"
+		"INVALID_TIMESTAMP": "Timestamp invalid",
+		"BILLING_ERROR": "Billing error",
+		"INVALID_JWT": "Invalid authentication token",
+		"MISSING_AUTH_HEADER": "Missing authentication header",
+		"OBJECT_COUNT_ERROR": "Unexpected object count",
+		"SECRET_MISSING": "Secret is missing"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Permisiuni insuficiente pentru a efectua aceasta actiune",
@@ -51,7 +56,13 @@
 		"MOBILE_BLOCKED": "Solicitările de la conexiuni de rețea mobilă nu sunt permise pentru acest site",
 		"SATELLITE_BLOCKED": "Solicitările de la conexiuni prin satelit nu sunt permise pentru acest site",
 		"CRAWLER_BLOCKED": "Solicitările de la crawlere cunoscute nu sunt permise pentru acest site",
-		"DISALLOWED_WEBVIEW": "Solicitările din browsere încorporate în aplicații (WebView) nu sunt permise pentru acest site"
+		"DISALLOWED_WEBVIEW": "Solicitările din browsere încorporate în aplicații (WebView) nu sunt permise pentru acest site",
+		"INTERNAL_SERVER_ERROR": "Internal server error",
+		"INVALID_DETECTOR_KEY": "Invalid detector key",
+		"FEATURE_NOT_ENABLED": "This feature is not enabled",
+		"INVALID_AUTHORIZATION_HEADER": "Invalid authorization header",
+		"INVALID_DOMAIN": "Invalid domain",
+		"NO_PERMISSIONS": "No permissions configured for this account"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Nu se poate modifica utilizatorul proprietar",
@@ -61,7 +72,10 @@
 		"NO_SUGGESTIONS_FOUND": "Nu s-au gasit sugestii",
 		"CANNOT_DEACTIVATE_LAST_SITE": "Nu se poate dezactiva ultimul site activ",
 		"DUPLICATE_SITE_NAME": "Există deja un site cu acest nume",
-		"INVALID_SITE_NAME": "Numele site-ului trebuie să conțină doar litere, cifre, cratime și liniuțe de subliniere"
+		"INVALID_SITE_NAME": "Numele site-ului trebuie să conțină doar litere, cifre, cratime și liniuțe de subliniere",
+		"CANNOT_MODIFY_USER": "Cannot modify this user",
+		"API_KEYS_INVALID_NUMBER_OF_SITES": "Invalid number of sites for API key generation",
+		"API_KEYS_NOT_FOUND": "API keys not found"
 	},
 	"TARGET": {
 		"airplanes": "avioane",
@@ -420,7 +434,15 @@
 		"TABLES_UNDEFINED": "Tabelele sunt nedefinite",
 		"CONNECTION_UNDEFINED": "Conexiunea este nedefinita",
 		"COMMITMENT_FLAG_FAILED": "Esuata la marcarea angajamentului ca procesat",
-		"UNKNOWN": "Eroare necunoscuta la baza de date"
+		"UNKNOWN": "Eroare necunoscuta la baza de date",
+		"QUERY_ERROR": "Database query failed",
+		"SESSION_STORE_FAILED": "Failed to store session",
+		"SESSION_CHECK_REMOVE_FAILED": "Failed to check and remove session",
+		"SESSION_GET_FAILED": "Failed to get session",
+		"CAPTCHA_SAMPLE_SIZE_EXCEEDED": "Captcha sample size exceeded",
+		"DATABASE_IMPORT_ERROR": "Database import error",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis access rules connection is undefined",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "User access rules storage is undefined"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Eroare la parsarea captcha-ului",
@@ -438,7 +460,11 @@
 		"IP_ADDRESS_MISMATCH": "Adresele IP nu se potrivesc",
 		"INVALID_TOKEN": "Token invalid",
 		"INVALID_SOLUTION": "Solutie invalida",
-		"DECRYPTION_ERROR": "Eroare la decriptare"
+		"DECRYPTION_ERROR": "Eroare la decriptare",
+		"FAILED": "Captcha failed",
+		"PASSED": "Captcha passed",
+		"SOLUTION_NOT_FOUND": "Solution not found",
+		"INVALID_TIMESTAMP": "Invalid timestamp"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Parametru invalid"
@@ -449,11 +475,17 @@
 		"MISSING_PROVIDER_PAIR": "Pereche de furnizori lipsa",
 		"MISSING_ENV_VARIABLE": "Variabila de mediu lipsa",
 		"GENERAL": "Eroare generala de dezvoltare, vezi contextul",
-		"METHOD_NOT_IMPLEMENTED": "Metoda neimplementata"
+		"METHOD_NOT_IMPLEMENTED": "Metoda neimplementata",
+		"MISSING_SECRET_KEY": "Missing secret key"
 	},
 	"FS": {
 		"FILE_NOT_FOUND": "Fisierul nu a fost gasit",
 		"FILE_ALREADY_EXISTS": "Fisierul deja exista",
 		"INVALID_DIR_FORMAT": "Format de director invalid"
+	},
+	"BILLING": {
+		"STRIPE_PORTAL": "Could not open billing portal",
+		"STRIPE_SESSION_NOT_FOUND": "Billing session not found",
+		"STRIPE_PAYMENT_FAILED": "Payment failed"
 	}
 }

@@ -10,7 +10,12 @@
 		"INVALID_SIGNATURE": "Неважећи потпис",
 		"SITE_KEY_MISSING": "Недостаје кључ сајта",
 		"ACCOUNT_NOT_FOUND": "Налог није пронађен",
-		"INVALID_TIMESTAMP": "Неважећа временска ознака"
+		"INVALID_TIMESTAMP": "Неважећа временска ознака",
+		"BILLING_ERROR": "Billing error",
+		"INVALID_JWT": "Invalid authentication token",
+		"MISSING_AUTH_HEADER": "Missing authentication header",
+		"OBJECT_COUNT_ERROR": "Unexpected object count",
+		"SECRET_MISSING": "Secret is missing"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Недовољне дозволе за обављање ове радње",
@@ -51,7 +56,13 @@
 		"MOBILE_BLOCKED": "Захтеви са мобилних мрежних конекција нису дозвољени за овај сајт",
 		"SATELLITE_BLOCKED": "З��хтеви са сателитских конекција нису дозвољени за овај сајт",
 		"CRAWLER_BLOCKED": "Захтеви од познатих ботова нису дозвољени за овај сајт",
-		"DISALLOWED_WEBVIEW": "Захтеви из уграђених прегледача (WebView) нису дозвољени за овај сајт"
+		"DISALLOWED_WEBVIEW": "Захтеви из уграђених прегледача (WebView) нису дозвољени за овај сајт",
+		"INTERNAL_SERVER_ERROR": "Internal server error",
+		"INVALID_DETECTOR_KEY": "Invalid detector key",
+		"FEATURE_NOT_ENABLED": "This feature is not enabled",
+		"INVALID_AUTHORIZATION_HEADER": "Invalid authorization header",
+		"INVALID_DOMAIN": "Invalid domain",
+		"NO_PERMISSIONS": "No permissions configured for this account"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Није могуће изменити власника корисника",
@@ -61,7 +72,10 @@
 		"NO_SUGGESTIONS_FOUND": "Нису пронађени предлози",
 		"CANNOT_DEACTIVATE_LAST_SITE": "Није могуће деактивирати последњи активни сајт",
 		"DUPLICATE_SITE_NAME": "Сајт са овим именом већ постоји",
-		"INVALID_SITE_NAME": "Назив сајта сме да садржи само слова, бројеве, цртице и доње црте"
+		"INVALID_SITE_NAME": "Назив сајта сме да садржи само слова, бројеве, цртице и доње црте",
+		"CANNOT_MODIFY_USER": "Cannot modify this user",
+		"API_KEYS_INVALID_NUMBER_OF_SITES": "Invalid number of sites for API key generation",
+		"API_KEYS_NOT_FOUND": "API keys not found"
 	},
 	"TARGET": {
 		"airplanes": "авиони",
@@ -420,7 +434,15 @@
 		"TABLES_UNDEFINED": "Табеле нису дефинисане",
 		"CONNECTION_UNDEFINED": "Веза није дефинисана",
 		"COMMITMENT_FLAG_FAILED": "Означавање обавезе као обрађене није успело",
-		"UNKNOWN": "Непозната грешка базе података"
+		"UNKNOWN": "Непозната грешка базе података",
+		"QUERY_ERROR": "Database query failed",
+		"SESSION_STORE_FAILED": "Failed to store session",
+		"SESSION_CHECK_REMOVE_FAILED": "Failed to check and remove session",
+		"SESSION_GET_FAILED": "Failed to get session",
+		"CAPTCHA_SAMPLE_SIZE_EXCEEDED": "Captcha sample size exceeded",
+		"DATABASE_IMPORT_ERROR": "Database import error",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis access rules connection is undefined",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "User access rules storage is undefined"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Грешка при рашчлањивању капче",
@@ -438,7 +460,11 @@
 		"IP_ADDRESS_MISMATCH": "IP адресе се не подударају",
 		"INVALID_TOKEN": "Неважећи токен",
 		"INVALID_SOLUTION": "Неважеће решење",
-		"DECRYPTION_ERROR": "Грешка при дешифровању"
+		"DECRYPTION_ERROR": "Грешка при дешифровању",
+		"FAILED": "Captcha failed",
+		"PASSED": "Captcha passed",
+		"SOLUTION_NOT_FOUND": "Solution not found",
+		"INVALID_TIMESTAMP": "Invalid timestamp"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Неважећи параметар"
@@ -449,11 +475,17 @@
 		"MISSING_PROVIDER_PAIR": "Недостаје пар провајдера",
 		"MISSING_ENV_VARIABLE": "Недостаје променљива окружења",
 		"GENERAL": "Општа грешка развоја, погледајте контекст",
-		"METHOD_NOT_IMPLEMENTED": "Метода није имплементирана"
+		"METHOD_NOT_IMPLEMENTED": "Метода није имплементирана",
+		"MISSING_SECRET_KEY": "Missing secret key"
 	},
 	"FS": {
 		"FILE_NOT_FOUND": "Датотека није пронађена",
 		"FILE_ALREADY_EXISTS": "Датотека већ постоји",
 		"INVALID_DIR_FORMAT": "Неважећи формат директоријума"
+	},
+	"BILLING": {
+		"STRIPE_PORTAL": "Could not open billing portal",
+		"STRIPE_SESSION_NOT_FOUND": "Billing session not found",
+		"STRIPE_PAYMENT_FAILED": "Payment failed"
 	}
 }

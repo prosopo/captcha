@@ -10,7 +10,12 @@
 		"INVALID_SIGNATURE": "Érvénytelen aláírás",
 		"SITE_KEY_MISSING": "Az oldal kulcs hiányzik",
 		"ACCOUNT_NOT_FOUND": "Felhasználó nem található",
-		"INVALID_TIMESTAMP": "Érvénytelen időbélyeg"
+		"INVALID_TIMESTAMP": "Érvénytelen időbélyeg",
+		"BILLING_ERROR": "Billing error",
+		"INVALID_JWT": "Invalid authentication token",
+		"MISSING_AUTH_HEADER": "Missing authentication header",
+		"OBJECT_COUNT_ERROR": "Unexpected object count",
+		"SECRET_MISSING": "Secret is missing"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Nincs elegendő engedély a művelet végrehajtásához",
@@ -51,7 +56,13 @@
 		"MOBILE_BLOCKED": "Mobilhálózati kapcsolatokról érkező kérések nem engedélyezettek ezen az oldalon",
 		"SATELLITE_BLOCKED": "Műholdas kapcsolatokról érkező kérések nem engedélyezettek ezen az oldalon",
 		"CRAWLER_BLOCKED": "Ismert webrobotoktól érkező kérések nem engedélyezettek ezen az oldalon",
-		"DISALLOWED_WEBVIEW": "Az alkalmazáson belüli böngészőkből (WebView) érkező kérések nem engedélyezettek ezen az oldalon"
+		"DISALLOWED_WEBVIEW": "Az alkalmazáson belüli böngészőkből (WebView) érkező kérések nem engedélyezettek ezen az oldalon",
+		"INTERNAL_SERVER_ERROR": "Internal server error",
+		"INVALID_DETECTOR_KEY": "Invalid detector key",
+		"FEATURE_NOT_ENABLED": "This feature is not enabled",
+		"INVALID_AUTHORIZATION_HEADER": "Invalid authorization header",
+		"INVALID_DOMAIN": "Invalid domain",
+		"NO_PERMISSIONS": "No permissions configured for this account"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Nem lehet módosítani a tulajdonos felhasználót",
@@ -61,7 +72,10 @@
 		"NO_SUGGESTIONS_FOUND": "Nincsenek javaslatok",
 		"CANNOT_DEACTIVATE_LAST_SITE": "Nem lehet inaktiválni az utolsó aktív webhelyet",
 		"DUPLICATE_SITE_NAME": "Már létezik ilyen nevű webhely",
-		"INVALID_SITE_NAME": "A webhely neve csak betűket, számokat, kötőjeleket és aláhúzásjeleket tartalmazhat"
+		"INVALID_SITE_NAME": "A webhely neve csak betűket, számokat, kötőjeleket és aláhúzásjeleket tartalmazhat",
+		"CANNOT_MODIFY_USER": "Cannot modify this user",
+		"API_KEYS_INVALID_NUMBER_OF_SITES": "Invalid number of sites for API key generation",
+		"API_KEYS_NOT_FOUND": "API keys not found"
 	},
 	"TARGET": {
 		"airplanes": "repülőgépek",
@@ -420,7 +434,15 @@
 		"TABLES_UNDEFINED": "Táblák nincsenek meghatározva",
 		"CONNECTION_UNDEFINED": "Kapcsolat meghatározatlan",
 		"COMMITMENT_FLAG_FAILED": "Az elkötelezettség jelzése feldolgozottként sikertelen",
-		"UNKNOWN": "Ismeretlen adatbázis hiba"
+		"UNKNOWN": "Ismeretlen adatbázis hiba",
+		"QUERY_ERROR": "Database query failed",
+		"SESSION_STORE_FAILED": "Failed to store session",
+		"SESSION_CHECK_REMOVE_FAILED": "Failed to check and remove session",
+		"SESSION_GET_FAILED": "Failed to get session",
+		"CAPTCHA_SAMPLE_SIZE_EXCEEDED": "Captcha sample size exceeded",
+		"DATABASE_IMPORT_ERROR": "Database import error",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis access rules connection is undefined",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "User access rules storage is undefined"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Hiba a captcha elemzésekor",
@@ -438,7 +460,11 @@
 		"IP_ADDRESS_MISMATCH": "Az IP címek nem egyeznek",
 		"INVALID_TOKEN": "Érvénytelen token",
 		"INVALID_SOLUTION": "Érvénytelen megoldás",
-		"DECRYPTION_ERROR": "Hiba a titkosítás közben"
+		"DECRYPTION_ERROR": "Hiba a titkosítás közben",
+		"FAILED": "Captcha failed",
+		"PASSED": "Captcha passed",
+		"SOLUTION_NOT_FOUND": "Solution not found",
+		"INVALID_TIMESTAMP": "Invalid timestamp"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Érvénytelen paraméter"
@@ -449,11 +475,17 @@
 		"MISSING_PROVIDER_PAIR": "Hiányzó ellátópár",
 		"MISSING_ENV_VARIABLE": "Hiányzó környezeti változó",
 		"GENERAL": "Általános fejlesztői hiba, lásd a kontextust",
-		"METHOD_NOT_IMPLEMENTED": "Az eljárás nincs implementálva"
+		"METHOD_NOT_IMPLEMENTED": "Az eljárás nincs implementálva",
+		"MISSING_SECRET_KEY": "Missing secret key"
 	},
 	"FS": {
 		"FILE_NOT_FOUND": "Fájl nem található",
 		"FILE_ALREADY_EXISTS": "A fájl már létezik",
 		"INVALID_DIR_FORMAT": "Érvénytelen könyvtár formátum"
+	},
+	"BILLING": {
+		"STRIPE_PORTAL": "Could not open billing portal",
+		"STRIPE_SESSION_NOT_FOUND": "Billing session not found",
+		"STRIPE_PAYMENT_FAILED": "Payment failed"
 	}
 }

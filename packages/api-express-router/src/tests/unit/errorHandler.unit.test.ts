@@ -19,7 +19,9 @@ import { ZodError } from "zod";
 import { handleErrors } from "../../errorHandler.js";
 
 describe("handleErrors", () => {
-	const mockRequest = {} as unknown as Request;
+	const mockRequest = {
+		logger: { error: vi.fn() },
+	} as unknown as Request;
 
 	it("should handle ProsopoApiError", () => {
 		const mockResponse = {

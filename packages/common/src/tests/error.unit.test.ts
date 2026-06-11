@@ -12,188 +12,60 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {
-	type LogObject,
-	type LogRecord,
-	type LogRecordFn,
-	type Logger,
-	NativeLogger,
-} from "@prosopo/logger";
-import type { TFunction } from "i18next";
+import { NativeLogger } from "@prosopo/logger";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ProsopoApiError, ProsopoEnvError, unwrapError } from "../error.js";
 
-// Tiny stand-in for the i18next translator. Keys present in the map are
-// translated, anything else falls through unchanged (mirrors i18next behavior
-// for unknown keys).
-const makeI18n = (translations: Record<string, string>): { t: TFunction } => {
-	const t = ((key: string) => translations[key] ?? key) as unknown as TFunction;
-	return { t };
-};
-
-const englishI18n = makeI18n({
-	"CAPTCHA.NO_SESSION_FOUND": "No session found",
-	"API.INVALID_SITE_KEY": "Invalid site key",
-	"API.UNKNOWN": "Unknown error",
-});
-
-const frenchI18n = makeI18n({
-	"CAPTCHA.NO_SESSION_FOUND": "Aucune session trouvée",
-	"API.INVALID_SITE_KEY": "Clé de site invalide",
-});
-
-// Mock logger that captures the LogRecord produced by each invocation so we
-// can assert on the emitted shape.
-type CapturedLog = { level: string; record: LogRecord };
-
-const makeCapturingLogger = (): {
-	logger: Logger;
-	logs: CapturedLog[];
-} => {
-	const logs: CapturedLog[] = [];
-	const capture = (level: string) => (fn: LogRecordFn) => {
-		logs.push({ level, record: fn() });
-	};
-	const logger: Logger = {
-		setLogLevel: () => {},
-		getLogLevel: () => "info",
-		getScope: () => "test",
-		info: capture("info"),
-		debug: capture("debug"),
-		trace: capture("trace"),
-		warn: capture("warn"),
-		error: capture("error"),
-		fatal: capture("fatal"),
-		log: (level, fn) => capture(level)(fn),
-		with: () => logger,
-		getPretty: () => false,
-		setPretty: () => {},
-		getPrintStack: () => false,
-		setPrintStack: () => {},
-		getFormat: () => "json",
-		setFormat: () => {},
-	};
-	return { logger, logs };
-};
-
-describe("ProsopoBaseError.logError", () => {
-	it("logs the translation key as the top-level `err` field, not the translated message", () => {
-		const { logger, logs } = makeCapturingLogger();
-
-		new ProsopoApiError("CAPTCHA.NO_SESSION_FOUND", {
+describe("ProsopoBaseError construction is decoupled from i18n and logging", () => {
+	it("stores the translation key without translating it", () => {
+		const err = new ProsopoApiError("API.INVALID_SITE_KEY", {
 			context: { code: 400 },
-			i18n: englishI18n,
-			logger,
 		});
 
-		expect(logs).toHaveLength(1);
-		expect(logs[0]?.level).toBe("error");
-		expect(logs[0]?.record.err).toBe("CAPTCHA.NO_SESSION_FOUND");
-		// The translated string must not be the top-level err.
-		expect(logs[0]?.record.err).not.toBe("No session found");
+		// The error carries the key verbatim; translation is deferred to the
+		// presentation layer (UI render / HTTP response), not construction.
+		expect(err.translationKey).toBe("API.INVALID_SITE_KEY");
+		expect(err.message).toBe("API.INVALID_SITE_KEY");
+		expect(err.code).toBe(400);
 	});
 
-	it("logs the same translation key regardless of locale", () => {
-		const { logger: enLogger, logs: enLogs } = makeCapturingLogger();
-		const { logger: frLogger, logs: frLogs } = makeCapturingLogger();
-
-		new ProsopoApiError("CAPTCHA.NO_SESSION_FOUND", {
+	it("uses an explicit message option as the fallback message while keeping the key", () => {
+		const err = new ProsopoApiError("API.INVALID_SITE_KEY", {
+			message: "Invalid site key",
 			context: { code: 400 },
-			i18n: englishI18n,
-			logger: enLogger,
-		});
-		new ProsopoApiError("CAPTCHA.NO_SESSION_FOUND", {
-			context: { code: 400 },
-			i18n: frenchI18n,
-			logger: frLogger,
 		});
 
-		expect(enLogs[0]?.record.err).toBe("CAPTCHA.NO_SESSION_FOUND");
-		expect(frLogs[0]?.record.err).toBe("CAPTCHA.NO_SESSION_FOUND");
+		expect(err.translationKey).toBe("API.INVALID_SITE_KEY");
+		expect(err.message).toBe("Invalid site key");
 	});
 
-	it("emits errorType and context under `data`, with no `errorParams` nesting", () => {
-		const { logger, logs } = makeCapturingLogger();
-
-		new ProsopoApiError("API.INVALID_SITE_KEY", {
-			context: { code: 400, siteKey: "abc" },
-			i18n: englishI18n,
-			logger,
-		});
-
-		const data = logs[0]?.record.data as LogObject & {
-			errorType?: string;
-			context?: Record<string, unknown>;
-			errorParams?: unknown;
-		};
-		expect(data?.errorType).toBe("ProsopoApiError");
-		expect(data?.context?.code).toBe(400);
-		expect(data?.context?.siteKey).toBe("abc");
-		expect(data?.errorParams).toBeUndefined();
-	});
-
-	it("does not inject a translated `translationMessage` into context when wrapping an Error", () => {
-		const { logger, logs } = makeCapturingLogger();
-
+	it("wraps an underlying Error, preserving its message as the cause", () => {
 		const inner = new Error("kaboom");
-		new ProsopoEnvError(inner, {
+		const err = new ProsopoEnvError(inner, {
 			translationKey: "API.UNKNOWN",
 			context: { code: 500 },
-			i18n: englishI18n,
-			logger,
 		});
 
-		const data = logs[0]?.record.data as LogObject & {
-			context?: Record<string, unknown>;
-		};
-		expect(data?.context?.translationMessage).toBeUndefined();
-		// The translation key still appears at the top level via `err`.
-		expect(logs[0]?.record.err).toBe("API.UNKNOWN");
+		expect(err.cause).toBe(inner);
+		expect(err.message).toBe("kaboom");
+		expect(err.translationKey).toBe("API.UNKNOWN");
 	});
 
-	it("falls back to `message` when no translation key is available", () => {
-		const { logger, logs } = makeCapturingLogger();
+	it("falls back to the wrapped Error message when no translation key is given", () => {
+		const err = new ProsopoEnvError(new Error("raw failure"));
 
-		// Constructed from a plain Error with no translationKey option.
-		new ProsopoEnvError(new Error("raw failure"), {
-			i18n: englishI18n,
-			logger,
-		});
-
-		expect(logs[0]?.record.err).toBe("raw failure");
+		expect(err.translationKey).toBeUndefined();
+		expect(err.message).toBe("raw failure");
 	});
 
-	it("respects `silent: true` and does not log", () => {
-		const { logger, logs } = makeCapturingLogger();
+	it("defaults the API error code to 500 when none is supplied", () => {
+		const err = new ProsopoApiError("API.UNKNOWN");
 
-		new ProsopoApiError("API.INVALID_SITE_KEY", {
-			context: { code: 400 },
-			i18n: englishI18n,
-			logger,
-			silent: true,
-		});
-
-		expect(logs).toHaveLength(0);
-	});
-
-	it("logs at debug level and includes the stack when logLevel is 'debug'", () => {
-		const { logger, logs } = makeCapturingLogger();
-
-		new ProsopoApiError("API.INVALID_SITE_KEY", {
-			context: { code: 400 },
-			i18n: englishI18n,
-			logger,
-			logLevel: "debug",
-		});
-
-		expect(logs[0]?.level).toBe("debug");
-		expect(logs[0]?.record.err).toBe("API.INVALID_SITE_KEY");
-		const data = logs[0]?.record.data as LogObject & { stack?: string };
-		expect(typeof data?.stack).toBe("string");
+		expect(err.code).toBe(500);
 	});
 });
 
-describe("Logger.unpackError prefers translationKey over translated message", () => {
+describe("Logger.unpackError prefers translationKey over the translated message", () => {
 	let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
 
 	beforeEach(() => {
@@ -204,18 +76,11 @@ describe("Logger.unpackError prefers translationKey over translated message", ()
 		consoleErrorSpy.mockRestore();
 	});
 
-	it("emits the translation key as the top-level `err` when a ProsopoApiError is passed via { err }", () => {
-		// Build the error first with `silent: true` so its own auto-log doesn't
-		// interfere with the spy.
-		const apiError = new ProsopoApiError("CAPTCHA.NO_SESSION_FOUND", {
+	it("emits the translation key as the top-level `err` when a ProsopoApiError is logged", () => {
+		const apiError = new ProsopoApiError("API.INVALID_SITE_KEY", {
+			message: "Invalid site key",
 			context: { code: 400 },
-			i18n: frenchI18n, // .message is "Aucune session trouvée"
-			silent: true,
 		});
-
-		// `apiError.message` is the (French) translation; we want the logger
-		// to emit the *key* at top level instead.
-		expect(apiError.message).toBe("Aucune session trouvée");
 
 		const logger = new NativeLogger("test");
 		logger.error(() => ({ err: apiError }));
@@ -223,8 +88,9 @@ describe("Logger.unpackError prefers translationKey over translated message", ()
 		expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
 		const output = consoleErrorSpy.mock.calls[0]?.[0] as string;
 		const parsed = JSON.parse(output) as { err?: string };
-		expect(parsed.err).toBe("CAPTCHA.NO_SESSION_FOUND");
-		expect(parsed.err).not.toBe("Aucune session trouvée");
+		// The locale-stable key is logged, not the human-readable message.
+		expect(parsed.err).toBe("API.INVALID_SITE_KEY");
+		expect(parsed.err).not.toBe("Invalid site key");
 	});
 
 	it("falls back to `message` when the error has no translationKey", () => {
@@ -238,40 +104,27 @@ describe("Logger.unpackError prefers translationKey over translated message", ()
 	});
 });
 
-describe("unwrapError still produces a translated HTTP response", () => {
-	it("translates the message via i18n for the response body even though the log emits the key", () => {
-		// Build silently so we don't pollute test output.
-		const err = new ProsopoApiError("CAPTCHA.NO_SESSION_FOUND", {
+describe("unwrapError produces a JSON response carrying the translation key", () => {
+	it("exposes the translation key and code on the JSON response", () => {
+		const err = new ProsopoApiError("API.INVALID_SITE_KEY", {
+			message: "Invalid site key",
 			context: { code: 400 },
-			i18n: englishI18n,
-			silent: true,
 		});
 
-		const { jsonError } = unwrapError(err, englishI18n);
-		expect(jsonError.message).toBe("No session found");
-		expect(jsonError.key).toBe("CAPTCHA.NO_SESSION_FOUND");
+		const { code, jsonError } = unwrapError(err);
+		expect(jsonError.key).toBe("API.INVALID_SITE_KEY");
+		expect(jsonError.message).toBe("Invalid site key");
 		expect(jsonError.code).toBe(400);
+		expect(code).toBe(400);
 	});
 
-	it("exposes the translation key on the JSON response regardless of construction locale", () => {
-		// Same error constructed under two different locales; both responses
-		// must carry the same `key` so clients can branch on it consistently.
-		const enErr = new ProsopoApiError("CAPTCHA.NO_SESSION_FOUND", {
-			context: { code: 400 },
-			i18n: englishI18n,
-			silent: true,
-		});
-		const frErr = new ProsopoApiError("CAPTCHA.NO_SESSION_FOUND", {
-			context: { code: 400 },
-			i18n: frenchI18n,
-			silent: true,
+	it("defaults the key to API.UNKNOWN when the error carries no translation key", () => {
+		const err = new ProsopoEnvError(new Error("raw failure"), {
+			context: { code: 500 },
 		});
 
-		expect(unwrapError(enErr, englishI18n).jsonError.key).toBe(
-			"CAPTCHA.NO_SESSION_FOUND",
-		);
-		expect(unwrapError(frErr, frenchI18n).jsonError.key).toBe(
-			"CAPTCHA.NO_SESSION_FOUND",
-		);
+		const { jsonError } = unwrapError(err);
+		expect(jsonError.key).toBe("API.UNKNOWN");
+		expect(jsonError.message).toBe("raw failure");
 	});
 });

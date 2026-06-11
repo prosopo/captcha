@@ -10,7 +10,12 @@
 		"INVALID_SIGNATURE": "Ongeldige handtekening",
 		"SITE_KEY_MISSING": "SITE KEY ontbreekt",
 		"ACCOUNT_NOT_FOUND": "Account niet gevonden",
-		"INVALID_TIMESTAMP": "Ongeldige tijdstempel"
+		"INVALID_TIMESTAMP": "Ongeldige tijdstempel",
+		"BILLING_ERROR": "Billing error",
+		"INVALID_JWT": "Invalid authentication token",
+		"MISSING_AUTH_HEADER": "Missing authentication header",
+		"OBJECT_COUNT_ERROR": "Unexpected object count",
+		"SECRET_MISSING": "Secret is missing"
 	},
 	"TARGET": {
 		"yo-yo": "jojo",
@@ -350,7 +355,13 @@
 		"MOBILE_BLOCKED": "Verzoeken van mobiele netwerkverbindingen zijn niet toegestaan voor deze site",
 		"SATELLITE_BLOCKED": "Verzoeken van satellietverbindingen zijn niet toegestaan voor deze site",
 		"CRAWLER_BLOCKED": "Verzoeken van bekende crawlers zijn niet toegestaan voor deze site",
-		"DISALLOWED_WEBVIEW": "Verzoeken van in-app-browsers (WebView) zijn niet toegestaan voor deze site"
+		"DISALLOWED_WEBVIEW": "Verzoeken van in-app-browsers (WebView) zijn niet toegestaan voor deze site",
+		"INTERNAL_SERVER_ERROR": "Internal server error",
+		"INVALID_DETECTOR_KEY": "Invalid detector key",
+		"FEATURE_NOT_ENABLED": "This feature is not enabled",
+		"INVALID_AUTHORIZATION_HEADER": "Invalid authorization header",
+		"INVALID_DOMAIN": "Invalid domain",
+		"NO_PERMISSIONS": "No permissions configured for this account"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Kan eigenaar gebruiker niet wijzigen",
@@ -360,7 +371,10 @@
 		"NO_SUGGESTIONS_FOUND": "Geen suggesties gevonden",
 		"CANNOT_DEACTIVATE_LAST_SITE": "Kan de laatste actieve site niet deactiveren",
 		"DUPLICATE_SITE_NAME": "Er bestaat al een site met deze naam",
-		"INVALID_SITE_NAME": "De sitenaam mag alleen letters, cijfers, koppeltekens en underscores bevatten"
+		"INVALID_SITE_NAME": "De sitenaam mag alleen letters, cijfers, koppeltekens en underscores bevatten",
+		"CANNOT_MODIFY_USER": "Cannot modify this user",
+		"API_KEYS_INVALID_NUMBER_OF_SITES": "Invalid number of sites for API key generation",
+		"API_KEYS_NOT_FOUND": "API keys not found"
 	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Polkadot-extensie niet gevonden"
@@ -420,7 +434,15 @@
 		"TABLES_UNDEFINED": "Tabellen niet gedefinieerd",
 		"CONNECTION_UNDEFINED": "Verbinding niet gedefinieerd",
 		"COMMITMENT_FLAG_FAILED": "Mislukt om toezegging te markeren als verwerkt",
-		"UNKNOWN": "Onbekende databasefout"
+		"UNKNOWN": "Onbekende databasefout",
+		"QUERY_ERROR": "Database query failed",
+		"SESSION_STORE_FAILED": "Failed to store session",
+		"SESSION_CHECK_REMOVE_FAILED": "Failed to check and remove session",
+		"SESSION_GET_FAILED": "Failed to get session",
+		"CAPTCHA_SAMPLE_SIZE_EXCEEDED": "Captcha sample size exceeded",
+		"DATABASE_IMPORT_ERROR": "Database import error",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis access rules connection is undefined",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "User access rules storage is undefined"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Fout bij parseren captcha",
@@ -438,7 +460,11 @@
 		"IP_ADDRESS_MISMATCH": "IP-adressen komen niet overeen",
 		"INVALID_TOKEN": "Ongeldige token",
 		"INVALID_SOLUTION": "Ongeldige oplossing",
-		"DECRYPTION_ERROR": "Fout bij decoderen"
+		"DECRYPTION_ERROR": "Fout bij decoderen",
+		"FAILED": "Captcha failed",
+		"PASSED": "Captcha passed",
+		"SOLUTION_NOT_FOUND": "Solution not found",
+		"INVALID_TIMESTAMP": "Invalid timestamp"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Ongeldige parameter"
@@ -449,11 +475,17 @@
 		"MISSING_PROVIDER_PAIR": "Ontbrekend providerpaar",
 		"MISSING_ENV_VARIABLE": "Ontbrekende omgevingsvariabele",
 		"GENERAL": "Algemene Dev-fout, zie context",
-		"METHOD_NOT_IMPLEMENTED": "Methode niet geïmplementeerd"
+		"METHOD_NOT_IMPLEMENTED": "Methode niet geïmplementeerd",
+		"MISSING_SECRET_KEY": "Missing secret key"
 	},
 	"FS": {
 		"FILE_NOT_FOUND": "Bestand niet gevonden",
 		"FILE_ALREADY_EXISTS": "Bestand bestaat al",
 		"INVALID_DIR_FORMAT": "Ongeldig mapformaat"
+	},
+	"BILLING": {
+		"STRIPE_PORTAL": "Could not open billing portal",
+		"STRIPE_SESSION_NOT_FOUND": "Billing session not found",
+		"STRIPE_PAYMENT_FAILED": "Payment failed"
 	}
 }

@@ -10,7 +10,12 @@
 		"ENVIRONMENT_NOT_READY": "환경이 준비되지 않음",
 		"INVALID_SIGNATURE": "잘못된 서명",
 		"SITE_KEY_MISSING": "SITE KEY가 누락됨",
-		"INVALID_TIMESTAMP": "잘못된 타임스탬프"
+		"INVALID_TIMESTAMP": "잘못된 타임스탬프",
+		"BILLING_ERROR": "Billing error",
+		"INVALID_JWT": "Invalid authentication token",
+		"MISSING_AUTH_HEADER": "Missing authentication header",
+		"OBJECT_COUNT_ERROR": "Unexpected object count",
+		"SECRET_MISSING": "Secret is missing"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "이 작업을 수행할 권한이 충분하지 않음",
@@ -51,7 +56,13 @@
 		"MOBILE_BLOCKED": "이 사이트에서는 모바일 네트워크 연결의 요청이 허용되지 않습니다",
 		"SATELLITE_BLOCKED": "이 사이트에서는 위성 연결의 요청이 허용되지 않습니다",
 		"CRAWLER_BLOCKED": "이 사이트에서는 알려진 크롤러의 요청이 허용되지 않습니다",
-		"DISALLOWED_WEBVIEW": "이 사이트에서는 인앱 브라우저(WebView)의 요청이 허용되지 않습니다"
+		"DISALLOWED_WEBVIEW": "이 사이트에서는 인앱 브라우저(WebView)의 요청이 허용되지 않습니다",
+		"INTERNAL_SERVER_ERROR": "Internal server error",
+		"INVALID_DETECTOR_KEY": "Invalid detector key",
+		"FEATURE_NOT_ENABLED": "This feature is not enabled",
+		"INVALID_AUTHORIZATION_HEADER": "Invalid authorization header",
+		"INVALID_DOMAIN": "Invalid domain",
+		"NO_PERMISSIONS": "No permissions configured for this account"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "소유자 사용자를 수정할 수 없음",
@@ -61,7 +72,10 @@
 		"NO_SUGGESTIONS_FOUND": "제안을 찾을 수 없음",
 		"CANNOT_DEACTIVATE_LAST_SITE": "마지막 활성 사이트를 비활성화할 수 없음",
 		"DUPLICATE_SITE_NAME": "이 이름의 사이트가 이미 존재합니다",
-		"INVALID_SITE_NAME": "사이트 이름에는 문자, 숫자, 하이픈 및 밑줄만 포함할 수 있습니다"
+		"INVALID_SITE_NAME": "사이트 이름에는 문자, 숫자, 하이픈 및 밑줄만 포함할 수 있습니다",
+		"CANNOT_MODIFY_USER": "Cannot modify this user",
+		"API_KEYS_INVALID_NUMBER_OF_SITES": "Invalid number of sites for API key generation",
+		"API_KEYS_NOT_FOUND": "API keys not found"
 	},
 	"TARGET": {
 		"airplanes": "비행기",
@@ -420,7 +434,15 @@
 		"TABLES_UNDEFINED": "테이블 정의되지 않음",
 		"CONNECTION_UNDEFINED": "연결 정의되지 않음",
 		"COMMITMENT_FLAG_FAILED": "커밋먼트를 처리된 것으로 플래그 처리 실패함",
-		"UNKNOWN": "알 수 없는 데이터베이스 오류"
+		"UNKNOWN": "알 수 없는 데이터베이스 오류",
+		"QUERY_ERROR": "Database query failed",
+		"SESSION_STORE_FAILED": "Failed to store session",
+		"SESSION_CHECK_REMOVE_FAILED": "Failed to check and remove session",
+		"SESSION_GET_FAILED": "Failed to get session",
+		"CAPTCHA_SAMPLE_SIZE_EXCEEDED": "Captcha sample size exceeded",
+		"DATABASE_IMPORT_ERROR": "Database import error",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis access rules connection is undefined",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "User access rules storage is undefined"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "캡차 구문 분석 오류",
@@ -438,7 +460,11 @@
 		"IP_ADDRESS_MISMATCH": "IP 주소가 일치하지 않습니다",
 		"INVALID_TOKEN": "유효하지 않은 토큰",
 		"INVALID_SOLUTION": "유효하지 않은 솔루션",
-		"DECRYPTION_ERROR": "해제 오류"
+		"DECRYPTION_ERROR": "해제 오류",
+		"FAILED": "Captcha failed",
+		"PASSED": "Captcha passed",
+		"SOLUTION_NOT_FOUND": "Solution not found",
+		"INVALID_TIMESTAMP": "Invalid timestamp"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "잘못된 매개변수"
@@ -449,11 +475,17 @@
 		"MISSING_PROVIDER_PAIR": "누락된 제공자 쌍",
 		"MISSING_ENV_VARIABLE": "누락된 환경 변수",
 		"GENERAL": "일반 개발 오류, 상황을 확인하십시오",
-		"METHOD_NOT_IMPLEMENTED": "구현되지 않은 메소드"
+		"METHOD_NOT_IMPLEMENTED": "구현되지 않은 메소드",
+		"MISSING_SECRET_KEY": "Missing secret key"
 	},
 	"FS": {
 		"FILE_NOT_FOUND": "파일을 찾을 수 없습니다",
 		"FILE_ALREADY_EXISTS": "파일이 이미 존재합니다",
 		"INVALID_DIR_FORMAT": "유효하지 않은 디렉토리 형식"
+	},
+	"BILLING": {
+		"STRIPE_PORTAL": "Could not open billing portal",
+		"STRIPE_SESSION_NOT_FOUND": "Billing session not found",
+		"STRIPE_PAYMENT_FAILED": "Payment failed"
 	}
 }

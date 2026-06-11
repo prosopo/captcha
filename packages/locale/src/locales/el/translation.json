@@ -38,7 +38,13 @@
 		"MOBILE_BLOCKED": "Αιτήματα από συνδέσεις κινητών δικτύων δεν επιτρέπονται για αυτόν τον ιστότοπο",
 		"SATELLITE_BLOCKED": "Αιτήματα από δορυφορικές συνδέσεις δεν επιτρέπονται για αυτόν τον ιστότοπο",
 		"CRAWLER_BLOCKED": "Αιτήματα από γνωστά προγράμματα ανίχνευσης δεν επιτρέπονται για αυτόν τον ιστότοπο",
-		"DISALLOWED_WEBVIEW": "Δεν επιτρέπονται αιτήματα από ενσωματωμένους περιηγητές (WebView) για αυτόν τον ιστότοπο"
+		"DISALLOWED_WEBVIEW": "Δεν επιτρέπονται αιτήματα από ενσωματωμένους περιηγητές (WebView) για αυτόν τον ιστότοπο",
+		"INTERNAL_SERVER_ERROR": "Internal server error",
+		"INVALID_DETECTOR_KEY": "Invalid detector key",
+		"FEATURE_NOT_ENABLED": "This feature is not enabled",
+		"INVALID_AUTHORIZATION_HEADER": "Invalid authorization header",
+		"INVALID_DOMAIN": "Invalid domain",
+		"NO_PERMISSIONS": "No permissions configured for this account"
 	},
 	"TARGET": {
 		"animals": "ζώα",
@@ -350,7 +356,12 @@
 		"INVALID_SIGNATURE": "Μη έγκυρη υπογραφή",
 		"SITE_KEY_MISSING": "Λείπει το SITE KEY",
 		"ACCOUNT_NOT_FOUND": "Δεν βρέθηκε λογαριασμός",
-		"INVALID_TIMESTAMP": "Μη έγκυρη σφραγίδα χρόνου"
+		"INVALID_TIMESTAMP": "Μη έγκυρη σφραγίδα χρόνου",
+		"BILLING_ERROR": "Billing error",
+		"INVALID_JWT": "Invalid authentication token",
+		"MISSING_AUTH_HEADER": "Missing authentication header",
+		"OBJECT_COUNT_ERROR": "Unexpected object count",
+		"SECRET_MISSING": "Secret is missing"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Δεν είναι δυνατή η τροποποίηση του χρήστη-κατόχου",
@@ -360,7 +371,10 @@
 		"NO_SUGGESTIONS_FOUND": "Δεν βρέθηκαν προτάσεις",
 		"CANNOT_DEACTIVATE_LAST_SITE": "Δεν είναι δυνατή η απενεργοποίηση του τελευταίου ιστότοπου",
 		"DUPLICATE_SITE_NAME": "Υπάρχει ήδη ιστότοπος με αυτό το όνομα",
-		"INVALID_SITE_NAME": "Το όνομα ιστότοπου πρέπει να περιέχει μόνο γράμματα, αριθμούς, παύλες και κάτω παύλες"
+		"INVALID_SITE_NAME": "Το όνομα ιστότοπου πρέπει να περιέχει μόνο γράμματα, αριθμούς, παύλες και κάτω παύλες",
+		"CANNOT_MODIFY_USER": "Cannot modify this user",
+		"API_KEYS_INVALID_NUMBER_OF_SITES": "Invalid number of sites for API key generation",
+		"API_KEYS_NOT_FOUND": "API keys not found"
 	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Δεν βρέθηκε επέκταση Polkadot"
@@ -420,7 +434,15 @@
 		"TABLES_UNDEFINED": "Οι πίνακες δεν έχουν οριστεί",
 		"CONNECTION_UNDEFINED": "Η σύνδεση δεν έχει οριστεί",
 		"COMMITMENT_FLAG_FAILED": "Αποτυχία σημαίας δέσμευσης ως επεξεργασμένη",
-		"UNKNOWN": "Άγνωστο σφάλμα βάσης δεδομένων"
+		"UNKNOWN": "Άγνωστο σφάλμα βάσης δεδομένων",
+		"QUERY_ERROR": "Database query failed",
+		"SESSION_STORE_FAILED": "Failed to store session",
+		"SESSION_CHECK_REMOVE_FAILED": "Failed to check and remove session",
+		"SESSION_GET_FAILED": "Failed to get session",
+		"CAPTCHA_SAMPLE_SIZE_EXCEEDED": "Captcha sample size exceeded",
+		"DATABASE_IMPORT_ERROR": "Database import error",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis access rules connection is undefined",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "User access rules storage is undefined"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Σφάλμα ανάλυσης captcha",
@@ -438,7 +460,11 @@
 		"IP_ADDRESS_MISMATCH": "Οι διευθύνσεις IP δεν ταιριάζουν",
 		"INVALID_TOKEN": "Μη έγκυρο τεκμήριο",
 		"INVALID_SOLUTION": "Μη έγκυρη λύση",
-		"DECRYPTION_ERROR": "Σφάλμα αποκρυπτογράφησης"
+		"DECRYPTION_ERROR": "Σφάλμα αποκρυπτογράφησης",
+		"FAILED": "Captcha failed",
+		"PASSED": "Captcha passed",
+		"SOLUTION_NOT_FOUND": "Solution not found",
+		"INVALID_TIMESTAMP": "Invalid timestamp"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Μη έγκυρη παράμετρος"
@@ -449,11 +475,17 @@
 		"MISSING_PROVIDER_PAIR": "Λείπει ζεύγος παρόχου",
 		"MISSING_ENV_VARIABLE": "Λείπει μεταβλητή περιβάλλοντος",
 		"GENERAL": "Γενικό σφάλμα ανάπτυξης, δες τα συμφραζόμενα",
-		"METHOD_NOT_IMPLEMENTED": "Η μέθοδος δεν έχει υλοποιηθεί"
+		"METHOD_NOT_IMPLEMENTED": "Η μέθοδος δεν έχει υλοποιηθεί",
+		"MISSING_SECRET_KEY": "Missing secret key"
 	},
 	"FS": {
 		"FILE_NOT_FOUND": "Αρχείο δεν βρέθηκε",
 		"FILE_ALREADY_EXISTS": "Το αρχείο υπάρχει ήδη",
 		"INVALID_DIR_FORMAT": "Μη έγκυρος τύπος φακέλου"
+	},
+	"BILLING": {
+		"STRIPE_PORTAL": "Could not open billing portal",
+		"STRIPE_SESSION_NOT_FOUND": "Billing session not found",
+		"STRIPE_PAYMENT_FAILED": "Payment failed"
 	}
 }

@@ -10,7 +10,12 @@
 		"INVALID_SIGNATURE": "Chữ ký không hợp lệ",
 		"SITE_KEY_MISSING": "SITE KEY thiếu",
 		"ACCOUNT_NOT_FOUND": "Không tìm thấy tài khoản",
-		"INVALID_TIMESTAMP": "Thời điểm không hợp lệ"
+		"INVALID_TIMESTAMP": "Thời điểm không hợp lệ",
+		"BILLING_ERROR": "Billing error",
+		"INVALID_JWT": "Invalid authentication token",
+		"MISSING_AUTH_HEADER": "Missing authentication header",
+		"OBJECT_COUNT_ERROR": "Unexpected object count",
+		"SECRET_MISSING": "Secret is missing"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Không đủ quyền để thực hiện hành động này",
@@ -51,7 +56,13 @@
 		"MOBILE_BLOCKED": "Các yêu cầu từ kết nối mạng di động không được phép cho trang web này",
 		"SATELLITE_BLOCKED": "Các yêu cầu từ kết nối vệ tinh không được phép cho trang web này",
 		"CRAWLER_BLOCKED": "Các yêu cầu từ trình thu thập dữ liệu đã biết không được phép cho trang web này",
-		"DISALLOWED_WEBVIEW": "Yêu cầu từ trình duyệt trong ứng dụng (WebView) không được phép cho trang web này"
+		"DISALLOWED_WEBVIEW": "Yêu cầu từ trình duyệt trong ứng dụng (WebView) không được phép cho trang web này",
+		"INTERNAL_SERVER_ERROR": "Internal server error",
+		"INVALID_DETECTOR_KEY": "Invalid detector key",
+		"FEATURE_NOT_ENABLED": "This feature is not enabled",
+		"INVALID_AUTHORIZATION_HEADER": "Invalid authorization header",
+		"INVALID_DOMAIN": "Invalid domain",
+		"NO_PERMISSIONS": "No permissions configured for this account"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Không thể sửa đổi người dùng chủ sở hữu",
@@ -61,7 +72,10 @@
 		"NO_SUGGESTIONS_FOUND": "Không tìm thấy gợi ý nào",
 		"CANNOT_DEACTIVATE_LAST_SITE": "Không thể vô hiệu hóa trang cuối cùng hoạt động",
 		"DUPLICATE_SITE_NAME": "Đã tồn tại một trang web với tên này",
-		"INVALID_SITE_NAME": "Tên trang web chỉ được chứa chữ cái, chữ số, dấu gạch ngang và dấu gạch dưới"
+		"INVALID_SITE_NAME": "Tên trang web chỉ được chứa chữ cái, chữ số, dấu gạch ngang và dấu gạch dưới",
+		"CANNOT_MODIFY_USER": "Cannot modify this user",
+		"API_KEYS_INVALID_NUMBER_OF_SITES": "Invalid number of sites for API key generation",
+		"API_KEYS_NOT_FOUND": "API keys not found"
 	},
 	"TARGET": {
 		"airplanes": "máy bay",
@@ -420,7 +434,15 @@
 		"TABLES_UNDEFINED": "Bảng chưa xác định",
 		"CONNECTION_UNDEFINED": "Kết nối không xác định",
 		"COMMITMENT_FLAG_FAILED": "Không thể đánh dấu cam kết là đã xử lý",
-		"UNKNOWN": "Lỗi cơ sở dữ liệu không xác định"
+		"UNKNOWN": "Lỗi cơ sở dữ liệu không xác định",
+		"QUERY_ERROR": "Database query failed",
+		"SESSION_STORE_FAILED": "Failed to store session",
+		"SESSION_CHECK_REMOVE_FAILED": "Failed to check and remove session",
+		"SESSION_GET_FAILED": "Failed to get session",
+		"CAPTCHA_SAMPLE_SIZE_EXCEEDED": "Captcha sample size exceeded",
+		"DATABASE_IMPORT_ERROR": "Database import error",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis access rules connection is undefined",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "User access rules storage is undefined"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Lỗi phân tích captcha",
@@ -438,7 +460,11 @@
 		"IP_ADDRESS_MISMATCH": "Phát hiện không khớp địa chỉ IP",
 		"INVALID_TOKEN": "Token không hợp lệ",
 		"INVALID_SOLUTION": "Giải pháp không hợp lệ",
-		"DECRYPTION_ERROR": "Lỗi giải mã"
+		"DECRYPTION_ERROR": "Lỗi giải mã",
+		"FAILED": "Captcha failed",
+		"PASSED": "Captcha passed",
+		"SOLUTION_NOT_FOUND": "Solution not found",
+		"INVALID_TIMESTAMP": "Invalid timestamp"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Tham số không hợp lệ"
@@ -449,11 +475,17 @@
 		"MISSING_PROVIDER_PAIR": "Thiếu cặp nhà cung cấp",
 		"MISSING_ENV_VARIABLE": "Thiếu biến môi trường",
 		"GENERAL": "Lỗi phát triển chung, xem ngữ cảnh",
-		"METHOD_NOT_IMPLEMENTED": "Phương thức chưa được triển khai"
+		"METHOD_NOT_IMPLEMENTED": "Phương thức chưa được triển khai",
+		"MISSING_SECRET_KEY": "Missing secret key"
 	},
 	"FS": {
 		"FILE_NOT_FOUND": "Không tìm thấy tệp",
 		"FILE_ALREADY_EXISTS": "Tệp đã tồn tại",
 		"INVALID_DIR_FORMAT": "Định dạng thư mục không hợp lệ"
+	},
+	"BILLING": {
+		"STRIPE_PORTAL": "Could not open billing portal",
+		"STRIPE_SESSION_NOT_FOUND": "Billing session not found",
+		"STRIPE_PAYMENT_FAILED": "Payment failed"
 	}
 }

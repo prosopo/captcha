@@ -145,8 +145,6 @@ export default (
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: { code: 400, siteKey: dapp, user },
-						i18n: req.i18n,
-						logger: req.logger,
 					}),
 				);
 			}
@@ -157,8 +155,6 @@ export default (
 				return next(
 					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
 						context: { code: 400, siteKey: dapp },
-						i18n: req.i18n,
-						logger: req.logger,
 					}),
 				);
 			}
@@ -265,8 +261,6 @@ export default (
 				return next(
 					new ProsopoApiError(reason || "API.BAD_REQUEST", {
 						context: { code: 400, siteKey: dapp, user },
-						i18n: req.i18n,
-						logger: req.logger,
 					}),
 				);
 			}
@@ -394,8 +388,6 @@ export default (
 			return next(
 				new ProsopoApiError("API.BAD_REQUEST", {
 					context: { code: 400, error: err },
-					i18n: req.i18n,
-					logger: req.logger,
 				}),
 			);
 		}

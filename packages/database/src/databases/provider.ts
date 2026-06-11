@@ -1050,7 +1050,6 @@ export class ProviderDatabase
 					challenge,
 					ipInfo,
 				},
-				logger: this.logger,
 			});
 			this.logger.error(() => ({
 				err: error,
@@ -1073,7 +1072,6 @@ export class ProviderDatabase
 				context: {
 					failedFuncName: this.getPuzzleCaptchaRecordByChallenge.name,
 				},
-				logger: this.logger,
 			});
 		}
 
@@ -1122,7 +1120,6 @@ export class ProviderDatabase
 		} catch (error) {
 			const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
 				context: { error, challenge },
-				logger: this.logger,
 			});
 			this.logger.error(() => ({
 				err: err,
@@ -1186,7 +1183,6 @@ export class ProviderDatabase
 						challenge,
 						...update,
 					},
-					logger: this.logger,
 				});
 				this.logger.info(() => ({
 					err: err,
@@ -1208,7 +1204,6 @@ export class ProviderDatabase
 					challenge,
 					...update,
 				},
-				logger: this.logger,
 			});
 			this.logger.error(() => ({
 				err: err,
@@ -1542,7 +1537,6 @@ export class ProviderDatabase
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
 				context: { error: err, sessionId },
-				logger: this.logger,
 			});
 		}
 	}
@@ -1573,7 +1567,6 @@ export class ProviderDatabase
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
 				context: { error: err, sessionId, stage },
-				logger: this.logger,
 			});
 		}
 	}
@@ -1624,7 +1617,6 @@ export class ProviderDatabase
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
 				context: { error: err, sessionId },
-				logger: this.logger,
 			});
 		}
 	}

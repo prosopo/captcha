@@ -134,8 +134,6 @@ const siteKeyNotRegisteredError = (
 ) => {
 	return new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
 		context: { code: 400, siteKey: dapp },
-		i18n,
-		logger,
 	});
 };
 
@@ -146,8 +144,6 @@ const invalidSiteKeyError = (
 ) => {
 	return new ProsopoApiError("API.INVALID_SITE_KEY", {
 		context: { code: 400, siteKey: siteKey },
-		i18n,
-		logger,
 	});
 };
 
@@ -158,8 +154,6 @@ const unauthorizedOriginError = (
 ) => {
 	return new ProsopoApiError("API.UNAUTHORIZED_ORIGIN_URL", {
 		context: { code: 400, origin },
-		i18n,
-		logger,
 	});
 };
 
@@ -177,7 +171,5 @@ const siteKeyInvalidDomainError = (
 			siteKey: dapp,
 			domain,
 		},
-		i18n,
-		logger,
 	});
 };

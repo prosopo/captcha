@@ -427,7 +427,7 @@ export class ClientTaskManager {
 
 	async updateDetectorKey(detectorKey: string): Promise<string[]> {
 		if (!isValidPrivateKey(detectorKey)) {
-			throw new ProsopoApiError("INVALID_DETECTOR_KEY", {
+			throw new ProsopoApiError("API.INVALID_DETECTOR_KEY", {
 				context: { detectorKey },
 			});
 		}
@@ -442,7 +442,7 @@ export class ClientTaskManager {
 		expirationInSeconds?: number,
 	): Promise<void> {
 		if (!isValidPrivateKey(detectorKey)) {
-			throw new ProsopoApiError("INVALID_DETECTOR_KEY", {
+			throw new ProsopoApiError("API.INVALID_DETECTOR_KEY", {
 				context: { detectorKey },
 			});
 		}
@@ -466,7 +466,6 @@ export class ClientTaskManager {
 		if (scope === DecisionMachineScope.Dapp && !dappAccount) {
 			throw new ProsopoApiError("API.BAD_REQUEST", {
 				context: { scope, dappAccount },
-				logger: this.logger,
 			});
 		}
 
@@ -537,7 +536,6 @@ export class ClientTaskManager {
 		if (!artifact) {
 			throw new ProsopoApiError("API.BAD_REQUEST", {
 				context: { id },
-				logger: this.logger,
 			});
 		}
 		return {
@@ -563,7 +561,6 @@ export class ClientTaskManager {
 		if (!success) {
 			throw new ProsopoApiError("API.BAD_REQUEST", {
 				context: { id, message: "Decision machine not found" },
-				logger: this.logger,
 			});
 		}
 		return {

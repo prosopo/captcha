@@ -32,13 +32,11 @@ export const validateAddr = (
 		if (!valid) {
 			throw new ProsopoApiError(translationKey, {
 				context: { code: 400, siteKey: address },
-				logger,
 			});
 		}
 	} catch (err) {
 		throw new ProsopoApiError(translationKey, {
 			context: { code: 400, siteKey: address },
-			logger,
 		});
 	}
 };

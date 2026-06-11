@@ -10,7 +10,12 @@
 		"INVALID_SIGNATURE": "无效的签名",
 		"SITE_KEY_MISSING": "缺少SITE KEY",
 		"ACCOUNT_NOT_FOUND": "找不到帐户",
-		"INVALID_TIMESTAMP": "无效的时间戳"
+		"INVALID_TIMESTAMP": "无效的时间戳",
+		"BILLING_ERROR": "Billing error",
+		"INVALID_JWT": "Invalid authentication token",
+		"MISSING_AUTH_HEADER": "Missing authentication header",
+		"OBJECT_COUNT_ERROR": "Unexpected object count",
+		"SECRET_MISSING": "Secret is missing"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "权限不足，无法执行此操作",
@@ -51,7 +56,13 @@
 		"MOBILE_BLOCKED": "此网站不允许来自移动网络连接的请求",
 		"SATELLITE_BLOCKED": "此网站不允许来自卫星连接的请求",
 		"CRAWLER_BLOCKED": "此网站不允许来自已知爬虫的请求",
-		"DISALLOWED_WEBVIEW": "此站点不允许来自应用内浏览器 (WebView) 的请求"
+		"DISALLOWED_WEBVIEW": "此站点不允许来自应用内浏览器 (WebView) 的请求",
+		"INTERNAL_SERVER_ERROR": "Internal server error",
+		"INVALID_DETECTOR_KEY": "Invalid detector key",
+		"FEATURE_NOT_ENABLED": "This feature is not enabled",
+		"INVALID_AUTHORIZATION_HEADER": "Invalid authorization header",
+		"INVALID_DOMAIN": "Invalid domain",
+		"NO_PERMISSIONS": "No permissions configured for this account"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "无法修改所有者用户",
@@ -61,7 +72,10 @@
 		"NO_SUGGESTIONS_FOUND": "未找到建议",
 		"CANNOT_DEACTIVATE_LAST_SITE": "无法停用最后一个活动站点",
 		"DUPLICATE_SITE_NAME": "已存在同名站点",
-		"INVALID_SITE_NAME": "站点名称只能包含字母、数字、连字符和下划线"
+		"INVALID_SITE_NAME": "站点名称只能包含字母、数字、连字符和下划线",
+		"CANNOT_MODIFY_USER": "Cannot modify this user",
+		"API_KEYS_INVALID_NUMBER_OF_SITES": "Invalid number of sites for API key generation",
+		"API_KEYS_NOT_FOUND": "API keys not found"
 	},
 	"TARGET": {
 		"airplanes": "飞机",
@@ -420,7 +434,15 @@
 		"TABLES_UNDEFINED": "未定义表",
 		"CONNECTION_UNDEFINED": "连接未定义",
 		"COMMITMENT_FLAG_FAILED": "标记承诺为已处理失败",
-		"UNKNOWN": "未知数据库错误"
+		"UNKNOWN": "未知数据库错误",
+		"QUERY_ERROR": "Database query failed",
+		"SESSION_STORE_FAILED": "Failed to store session",
+		"SESSION_CHECK_REMOVE_FAILED": "Failed to check and remove session",
+		"SESSION_GET_FAILED": "Failed to get session",
+		"CAPTCHA_SAMPLE_SIZE_EXCEEDED": "Captcha sample size exceeded",
+		"DATABASE_IMPORT_ERROR": "Database import error",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis access rules connection is undefined",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "User access rules storage is undefined"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "解析验证码时出错",
@@ -438,7 +460,11 @@
 		"IP_ADDRESS_MISMATCH": "检测到 IP 地址不匹配",
 		"INVALID_TOKEN": "无效的令牌",
 		"INVALID_SOLUTION": "无效的解决方案",
-		"DECRYPTION_ERROR": "解密错误"
+		"DECRYPTION_ERROR": "解密错误",
+		"FAILED": "Captcha failed",
+		"PASSED": "Captcha passed",
+		"SOLUTION_NOT_FOUND": "Solution not found",
+		"INVALID_TIMESTAMP": "Invalid timestamp"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "无效的参数"
@@ -449,11 +475,17 @@
 		"MISSING_PROVIDER_PAIR": "缺少提供商对",
 		"MISSING_ENV_VARIABLE": "缺少环境变量",
 		"GENERAL": "一般开发错误，请参考上下文",
-		"METHOD_NOT_IMPLEMENTED": "方法未实现"
+		"METHOD_NOT_IMPLEMENTED": "方法未实现",
+		"MISSING_SECRET_KEY": "Missing secret key"
 	},
 	"FS": {
 		"FILE_NOT_FOUND": "未找到文件",
 		"FILE_ALREADY_EXISTS": "文件已存在",
 		"INVALID_DIR_FORMAT": "无效的目录格式"
+	},
+	"BILLING": {
+		"STRIPE_PORTAL": "Could not open billing portal",
+		"STRIPE_SESSION_NOT_FOUND": "Billing session not found",
+		"STRIPE_PAYMENT_FAILED": "Payment failed"
 	}
 }

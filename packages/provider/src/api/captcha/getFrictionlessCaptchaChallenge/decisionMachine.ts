@@ -348,8 +348,6 @@ const runContextAwareValidation = async (
 		return next(
 			new ProsopoApiError("API.BAD_REQUEST", {
 				context: { code: 400, siteKey: dapp, user },
-				i18n: req.i18n,
-				logger: req.logger,
 			}),
 		);
 	}
