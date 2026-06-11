@@ -31,8 +31,10 @@ import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
 import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
+import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 import { getRequestUserScope } from "../blacklistRequestInspector.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
+import { buildImageMaintenanceResponse } from "./maintenanceModeResponses.js";
 
 export default (
 	env: ProviderEnvironment,
@@ -43,7 +45,6 @@ export default (
 		res: Response,
 		next: NextFunction,
 	) => {
-		const tasks = new Tasks(env, req.logger);
 		let parsed: CaptchaRequestBodyTypeOutput;
 
 		const normalizedIp = normalizeRequestIp(req.ip, req.logger);
@@ -75,6 +76,19 @@ export default (
 
 		validateSiteKey(dapp);
 		validateAddr(user);
+
+		// Maintenance-mode short-circuit must run before `new Tasks(env, ...)`
+		// because the Tasks constructor calls `env.getDb()`, which throws when
+		// `env.db` is undefined (the maintenance-mode case).
+		if (getMaintenanceMode()) {
+			req.logger.info(() => ({
+				msg: "Maintenance mode active - returning dummy image challenge",
+				data: { dapp, user, sessionId },
+			}));
+			return res.json(buildImageMaintenanceResponse());
+		}
+
+		const tasks = new Tasks(env, req.logger);
 
 		try {
 			const clientRecord = await tasks.db.getClientRecord(dapp);
