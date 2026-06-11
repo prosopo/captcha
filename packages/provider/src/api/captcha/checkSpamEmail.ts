@@ -20,6 +20,7 @@ import { object, string } from "zod";
 import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
 import { checkSpamEmail as checkSpamEmailFn } from "../../tasks/spam/checkSpamEmail.js";
+import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 
 const CheckSpamEmailRequestBody = object({
 	email: string(),
@@ -33,7 +34,6 @@ export default (env: ProviderEnvironment) =>
 		next: NextFunction,
 	) => {
 		try {
-			const tasks = new Tasks(env, req.logger);
 			const { email, dapp } = CheckSpamEmailRequestBody.parse(req.body);
 			const emailDomain = extractDomainFromEmail(email);
 			req.logger.info(() => ({
@@ -44,6 +44,21 @@ export default (env: ProviderEnvironment) =>
 					method: req.method,
 				},
 			}));
+
+			// Maintenance-mode short-circuit must run before `new Tasks(env, ...)`
+			// because the Tasks constructor calls `env.getDb()`, which throws when
+			// `env.db` is undefined (the maintenance-mode case). Let the user
+			// through (isSpam=false) so the form submission isn't blocked while
+			// Mongo is unavailable.
+			if (getMaintenanceMode()) {
+				req.logger.info(() => ({
+					msg: "Maintenance mode active - returning isSpam=false",
+					data: { emailDomain },
+				}));
+				return res.json({ isSpam: false, emailDomain });
+			}
+
+			const tasks = new Tasks(env, req.logger);
 			// Get client record and perform the same validation as frictionless flow
 			const clientRecord = await tasks.db.getClientRecord(dapp);
 			if (!clientRecord) {
