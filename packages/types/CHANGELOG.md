@@ -1,5 +1,14 @@
 # @prosopo/types
 
+## 4.4.0
+### Minor Changes
+
+- bc3813d: Surface dnsEvent observations across the verify and frictionless flows. Each verify path now enriches the session's dnsEvent IPs once and passes the result to the traffic filter, decision machine, IP validation, and usage counters. Adds `scoreComponents.dnsAsymmetry` (Zod + TS interface + mongoose) computed from resolver / peer ipInfo plus path validity, with the score patched onto the session at DNS event ingest time so it weights subsequent reads. Adds `CounterDimension.peerIp` for rate-limit keys keyed on the dnsEvent peer IP.
+
+### Patch Changes
+
+- 4d05e3f: Add `ipInfo` and `parsedUserAgentInfo` to the Zod `UserCommitmentSchema` so the provider stops silently stripping them on the write path. Mirrors the existing fields on `PoWCaptchaStoredSchema` and `SessionSchema`.
+
 ## 4.3.1
 ### Patch Changes
 

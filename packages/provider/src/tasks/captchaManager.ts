@@ -18,6 +18,7 @@ import { type Logger, getLogger } from "@prosopo/logger";
 import {
 	ApiParams,
 	type CaptchaType,
+	type EnrichedDnsEvent,
 	type IPInfoResponse,
 	type ITrafficFilter,
 	type KeyringPair,
@@ -51,6 +52,7 @@ import {
 import { getIpAddressFromComposite } from "../compositeIpAddress.js";
 import type { BehavioralDataResult } from "./detection/decodeBehavior.js";
 import type { SimdReadingsResult } from "./detection/decodeSimd.js";
+import { extraIpInfosFromEnrichedDnsEvent } from "./dnsEvent/enrichDnsEvent.js";
 import { checkSpamEmail as checkSpamEmailFn } from "./spam/checkSpamEmail.js";
 import {
 	type TrafficCheckResult,
@@ -648,6 +650,8 @@ export class CaptchaManager {
 	 * - If the dapp's server passed up the end user's current IP via the
 	 *   verify call, look that up fresh — it's the "now" IP for filtering
 	 *   and may differ from the IP that originally requested the captcha.
+	 * - When the session carries a `dnsEvent`, its `peerIp` and `resolverIp`
+	 *   are enriched and passed alongside the primary IP.
 	 * - `blockAbuser` defaults to true so abusive networks are always
 	 *   blocked even when the site hasn't configured a trafficFilter.
 	 * - Returns `{ isBlocked: false }` if every filter flag is off, without
@@ -662,16 +666,23 @@ export class CaptchaManager {
 		recordIpInfo: IPInfoResponse | undefined,
 		trafficFilter: Partial<ITrafficFilter> | undefined,
 		currentIp?: string,
+		enrichedDnsEvent?: EnrichedDnsEvent,
 	): Promise<TrafficCheckResult> {
 		const effective = { blockAbuser: true, ...trafficFilter };
 		const hasAny = Object.values(effective).some((v) => v);
 		if (!hasAny) {
 			return { isBlocked: false };
 		}
+
 		const ipInfo = currentIp
 			? await env.ipInfoService.lookup(currentIp)
 			: recordIpInfo;
-		return checkTrafficFilter(ipInfo, effective);
+
+		return checkTrafficFilter(
+			ipInfo,
+			effective,
+			extraIpInfosFromEnrichedDnsEvent(enrichedDnsEvent),
+		);
 	}
 
 	static canClientSeeScore(tier: Tier, score?: number) {

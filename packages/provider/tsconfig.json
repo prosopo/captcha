@@ -42,6 +42,9 @@
 			"path": "../env"
 		},
 		{
+			"path": "../ipinfo"
+		},
+		{
 			"path": "../load-balancer"
 		},
 		{

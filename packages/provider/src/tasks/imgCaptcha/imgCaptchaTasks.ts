@@ -57,7 +57,11 @@ import {
 	getCompositeIpAddress,
 	getIpAddressFromComposite,
 } from "../../compositeIpAddress.js";
-import { constructPairList, containsIdenticalPairs } from "../../pairs.js";
+import {
+	constructPairList,
+	containsIdenticalPairs,
+	peelCheckboxPrefix,
+} from "../../pairs.js";
 import { checkLangRules } from "../../rules/lang.js";
 import { deepValidateIpAddress, shuffleArray } from "../../util.js";
 import {
@@ -66,6 +70,11 @@ import {
 } from "../../util/usageCounters.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
+import {
+	computeDnsAsymmetry,
+	enrichDnsEvent,
+	getIpInfoAsn,
+} from "../dnsEvent/enrichDnsEvent.js";
 import { FrictionlessReason } from "../frictionless/frictionlessTasks.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { evaluateEmailSpamRules } from "../spam/evaluateEmailSpamRules.js";
@@ -302,8 +311,15 @@ export class ImgCaptchaManager extends CaptchaManager {
 			const { storedCaptchas, receivedCaptchas, captchaIds } =
 				await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas);
 
-			const flat = receivedCaptchas.map((c) => extractData(c.salt));
-			const pairs = flat.map((list) => constructPairList(list));
+			const rawFlat = receivedCaptchas.map((c) => extractData(c.salt));
+			const { checkbox: checkboxCoordPair, flat } = peelCheckboxPrefix(
+				rawFlat,
+				receivedCaptchas.map((c) => c.solution.length),
+			);
+			const shapePairs = flat.map((list) => constructPairList(list));
+			const pairs: [number, number][][] = checkboxCoordPair
+				? [[checkboxCoordPair], ...shapePairs]
+				: shapePairs;
 
 			const { tree, commitmentId } =
 				buildTreeAndGetCommitmentId(receivedCaptchas);
@@ -792,21 +808,38 @@ export class ImgCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		// Traffic filter: block VPN/proxy/Tor/abuser etc. Resolved in
-		// CaptchaManager so all three verify paths (pow/image/puzzle)
-		// share the same "compute effective filter, optionally fresh
-		// lookup, run check" logic.
+		const sessionRecord = solution.sessionId
+			? await this.db.getSessionRecordBySessionId(solution.sessionId)
+			: undefined;
+
+		const enrichedDnsEvent = await enrichDnsEvent(
+			sessionRecord?.dnsEvent,
+			env.ipInfoService,
+			ip ?? solution.ipInfo?.ip,
+		);
+
 		if (!failStatus) {
 			const check = await this.resolveTrafficFilterCheck(
 				env,
 				solution.ipInfo,
 				trafficFilter,
 				ip,
+				enrichedDnsEvent,
 			);
 			if (check.isBlocked) {
 				this.logger.info(() => ({
 					msg: "Traffic filter rejected request",
-					data: { commitmentId, dapp, ip, reason: check.reason },
+					data: {
+						commitmentId,
+						dapp,
+						ip,
+						reason: check.reason,
+						dnsPeerIp: enrichedDnsEvent?.peerIp,
+						dnsResolverIp: enrichedDnsEvent?.resolverIp,
+						dnsPeerAsn: getIpInfoAsn(enrichedDnsEvent?.peerIpInfo),
+						dnsResolverAsn: getIpInfoAsn(enrichedDnsEvent?.resolverIpInfo),
+						dnsPathValid: enrichedDnsEvent?.pathValid,
+					},
 				}));
 				commitmentUpdates.result = {
 					status: CaptchaStatus.disapproved,
@@ -841,6 +874,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 					this.logger,
 					env.ipInfoService,
 					ipValidationRules,
+					enrichedDnsEvent?.peerIp,
 				);
 
 				if (!ipValidation.isValid) {
@@ -878,51 +912,59 @@ export class ImgCaptchaManager extends CaptchaManager {
 					CaptchaType.image,
 					ipValue,
 					solution.userAccount,
+					enrichedDnsEvent?.peerIp,
 				),
 			);
 		}
 
 		let score: number | undefined;
-		if (solution.sessionId) {
-			const sessionRecord = await this.db.getSessionRecordBySessionId(
-				solution.sessionId,
+		if (sessionRecord) {
+			const dnsAsymmetry = computeDnsAsymmetry(
+				enrichedDnsEvent,
+				solution.ipInfo,
 			);
-			if (sessionRecord) {
-				score = computeFrictionlessScore(sessionRecord?.scoreComponents);
-				this.logger.info(() => ({
-					data: {
-						scoreComponents: sessionRecord?.scoreComponents,
-						score: score,
-					},
-				}));
+			if (dnsAsymmetry > 0) {
+				sessionRecord.scoreComponents = {
+					...sessionRecord.scoreComponents,
+					dnsAsymmetry,
+				};
+			}
+			score = computeFrictionlessScore(sessionRecord?.scoreComponents);
+			this.logger.info(() => ({
+				data: {
+					scoreComponents: sessionRecord?.scoreComponents,
+					score: score,
+					dnsPeerAsn: getIpInfoAsn(enrichedDnsEvent?.peerIpInfo),
+					dnsResolverAsn: getIpInfoAsn(enrichedDnsEvent?.resolverIpInfo),
+				},
+			}));
 
-				if (
-					!failStatus &&
-					disallowWebView === true &&
-					(sessionRecord.webView === true ||
-						(sessionRecord.scoreComponents.webView || 0) > 0)
-				) {
-					this.logger.info(() => ({
-						msg: "Disallowing webview access - user not verified",
-					}));
-					commitmentUpdates.result = {
-						status: CaptchaStatus.disapproved,
-						reason: ResultReason.DISALLOWED_WEBVIEW,
-					};
-					failStatus = ResultReason.DISALLOWED_WEBVIEW;
-					isApproved = false;
-					failureStatus = ResultReason.DISALLOWED_WEBVIEW;
-				}
-				if (
-					contextAwareEnabled &&
-					sessionRecord.reason ===
-						FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED
-				) {
-					this.logger.info(() => ({
-						msg: "Context aware validation failed",
-					}));
-					//return { status: "API.USER_NOT_VERIFIED", verified: false };
-				}
+			if (
+				!failStatus &&
+				disallowWebView === true &&
+				(sessionRecord.webView === true ||
+					(sessionRecord.scoreComponents.webView || 0) > 0)
+			) {
+				this.logger.info(() => ({
+					msg: "Disallowing webview access - user not verified",
+				}));
+				commitmentUpdates.result = {
+					status: CaptchaStatus.disapproved,
+					reason: ResultReason.DISALLOWED_WEBVIEW,
+				};
+				failStatus = ResultReason.DISALLOWED_WEBVIEW;
+				isApproved = false;
+				failureStatus = ResultReason.DISALLOWED_WEBVIEW;
+			}
+			if (
+				contextAwareEnabled &&
+				sessionRecord.reason ===
+					FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED
+			) {
+				this.logger.info(() => ({
+					msg: "Context aware validation failed",
+				}));
+				//return { status: "API.USER_NOT_VERIFIED", verified: false };
 			}
 		}
 
@@ -937,6 +979,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				countryCode: solution.ipInfo?.isValid
 					? solution.ipInfo.countryCode
 					: undefined,
+				dnsEvent: enrichedDnsEvent,
 			};
 
 			try {

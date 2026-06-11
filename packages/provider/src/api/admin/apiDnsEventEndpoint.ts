@@ -17,10 +17,15 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
+import type { IIpInfoService } from "@prosopo/ipinfo";
 import { type Logger, getLogger } from "@prosopo/logger";
 import { type DnsEvent, DnsEventBatchSchema } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { z } from "zod";
+import {
+	computeDnsAsymmetry,
+	enrichDnsEvent,
+} from "../../tasks/dnsEvent/enrichDnsEvent.js";
 
 type DnsEventBatchSchemaType = typeof DnsEventBatchSchema;
 
@@ -41,7 +46,10 @@ export const dnsEventToFields = (
 };
 
 class ApiDnsEventEndpoint implements ApiEndpoint<DnsEventBatchSchemaType> {
-	public constructor(private readonly db: IProviderDatabase) {}
+	public constructor(
+		private readonly db: IProviderDatabase,
+		private readonly ipInfoService?: IIpInfoService,
+	) {}
 
 	async processRequest(
 		args: z.infer<DnsEventBatchSchemaType>,
@@ -69,6 +77,7 @@ class ApiDnsEventEndpoint implements ApiEndpoint<DnsEventBatchSchemaType> {
 				);
 				if (matched) {
 					stored += 1;
+					await this.recomputeDnsAsymmetry(sessionId, logger);
 				}
 			} catch (err) {
 				errors += 1;
@@ -93,6 +102,37 @@ class ApiDnsEventEndpoint implements ApiEndpoint<DnsEventBatchSchemaType> {
 
 	public getRequestArgsSchema(): DnsEventBatchSchemaType {
 		return DnsEventBatchSchema;
+	}
+
+	private async recomputeDnsAsymmetry(
+		sessionId: string,
+		logger: Logger,
+	): Promise<void> {
+		if (!this.ipInfoService) return;
+		try {
+			const session = await this.db.getSessionRecordBySessionId(sessionId);
+			if (!session?.dnsEvent) return;
+			const enriched = await enrichDnsEvent(
+				session.dnsEvent,
+				this.ipInfoService,
+				session.ipInfo?.ip,
+			);
+			const dnsAsymmetry = computeDnsAsymmetry(enriched, session.ipInfo);
+			if (dnsAsymmetry > 0) {
+				await this.db.updateSessionRecord(sessionId, {
+					scoreComponents: {
+						...session.scoreComponents,
+						dnsAsymmetry,
+					},
+				});
+			}
+		} catch (err) {
+			logger.warn(() => ({
+				err,
+				data: { sessionId },
+				msg: "Failed to recompute dnsAsymmetry after DNS event merge",
+			}));
+		}
 	}
 }
 

@@ -548,6 +548,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 		webView: { type: Number, required: false },
 		triggeredDetectors: { type: [Number], required: false },
 		shadowDomPenalty: { type: Boolean, required: false },
+		dnsAsymmetry: { type: Number, required: false },
 	},
 	providerSelectEntropy: { type: Number, required: true },
 	ipAddress: CompositeIpAddressRecordSchemaObj,

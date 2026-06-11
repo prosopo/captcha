@@ -276,6 +276,13 @@ export const UserCommitmentSchema = object({
 	ja4: string(),
 	userSubmitted: boolean(),
 	serverChecked: boolean(),
+	// The full ipinfo payload — optional and not validated nominally
+	// because IPInfoResponse is a discriminated union and consumers
+	// only need to narrow at read time. Mirrors PoWCaptchaStoredSchema.
+	// Omitting these dropped enrichment on every commitment because Zod
+	// strips unknown keys by default.
+	ipInfo: any().optional(),
+	parsedUserAgentInfo: any().optional(),
 	storedAtTimestamp: date().optional(),
 	requestedAtTimestamp: date(),
 	lastUpdatedTimestamp: date().optional(),
@@ -308,6 +315,7 @@ export const ScoreComponentsSchema = object({
 	webView: number().optional(),
 	triggeredDetectors: array(number()).optional(),
 	shadowDomPenalty: boolean().optional(),
+	dnsAsymmetry: number().optional(),
 });
 
 // Zod schema for the WASM SIMD CPU fingerprint readings collected by the
@@ -362,6 +370,7 @@ export interface ScoreComponents {
 	webView?: number;
 	triggeredDetectors?: number[];
 	shadowDomPenalty?: boolean;
+	dnsAsymmetry?: number;
 }
 
 // Zod schema for Session

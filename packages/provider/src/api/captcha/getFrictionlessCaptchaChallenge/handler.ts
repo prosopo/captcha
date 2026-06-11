@@ -65,14 +65,9 @@ export default (
 				}));
 			});
 
-			const tasks = new Tasks(env, req.logger);
 			const { token, headHash, dapp, user, mode, simdReadings } =
 				GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
 
-			const decodedSimdReadings = await decryptIncomingSimdReadings(
-				tasks.frictionlessManager,
-				simdReadings,
-			);
 			const normalizedIp = normalizeRequestIp(req.ip, req.logger);
 			const sessionMode =
 				mode === ModeEnum.invisible ? ModeEnum.invisible : undefined;
@@ -92,7 +87,9 @@ export default (
 				},
 			}));
 
-			// Maintenance mode: short-circuit before any DB access. The matching
+			// Maintenance mode: short-circuit before constructing Tasks. The
+			// Tasks constructor calls `env.getDb()`, which throws when `env.db`
+			// is undefined (the maintenance-mode case). The matching
 			// /captcha/{type} and /submit/{type} endpoints also short-circuit so
 			// the captcha widget keeps rendering while Mongo is unavailable.
 			if (getMaintenanceMode()) {
@@ -107,6 +104,13 @@ export default (
 					),
 				);
 			}
+
+			const tasks = new Tasks(env, req.logger);
+
+			const decodedSimdReadings = await decryptIncomingSimdReadings(
+				tasks.frictionlessManager,
+				simdReadings,
+			);
 
 			// Reserved CI test site keys: serve an invisible PoW session (no DB
 			// record required) so the flow is deterministic and non-interactive.

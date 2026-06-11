@@ -1,5 +1,30 @@
 # @prosopo/provider
 
+## 4.9.0
+### Minor Changes
+
+- bc3813d: Surface dnsEvent observations across the verify and frictionless flows. Each verify path now enriches the session's dnsEvent IPs once and passes the result to the traffic filter, decision machine, IP validation, and usage counters. Adds `scoreComponents.dnsAsymmetry` (Zod + TS interface + mongoose) computed from resolver / peer ipInfo plus path validity, with the score patched onto the session at DNS event ingest time so it weights subsequent reads. Adds `CounterDimension.peerIp` for rate-limit keys keyed on the dnsEvent peer IP.
+- f305c37: Extend `checkTrafficFilter` to accept an optional `extraIpInfos` list and apply the same per-rule checks across additional IPs. Each verify path threads `session.dnsEvent` IPs through `resolveTrafficFilterCheck` so its peer / resolver enrichments are evaluated alongside the primary client IP.
+
+### Patch Changes
+
+- 2d66d8e: Image-captcha widget now forwards the trusted checkbox click `(clientX, clientY)` through `manager.start(x, y)`. `Manager.submit` embeds the pair as a 2-number prefix on the first captcha's solution salt. Provider peels the prefix via length math against `solution.length` (no protocol version flag — older clients keep working unchanged) and prepends it as the first entry of `pairs`, which is written to `UserCommitment.coords`. Adds `peelCheckboxPrefix` helper in `pairs.ts` with round-trip unit tests.
+- Updated dependencies [2972def]
+- Updated dependencies [bc3813d]
+- Updated dependencies [4d05e3f]
+  - @prosopo/types-database@4.9.0
+  - @prosopo/types@4.4.0
+  - @prosopo/database@3.13.10
+  - @prosopo/types-env@2.9.19
+  - @prosopo/api@3.4.10
+  - @prosopo/api-express-router@3.1.20
+  - @prosopo/datasets@3.1.30
+  - @prosopo/env@3.5.10
+  - @prosopo/ipinfo@0.2.16
+  - @prosopo/keyring@2.9.36
+  - @prosopo/load-balancer@2.9.12
+  - @prosopo/user-access-policy@3.8.1
+
 ## 4.8.1
 ### Patch Changes
 

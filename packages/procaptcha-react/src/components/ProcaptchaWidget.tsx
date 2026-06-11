@@ -157,8 +157,8 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 			<TestModeBanner siteKey={config.account.address ?? ""} />
 			<Checkbox
 				theme={theme}
-				onChange={async (e: { isTrusted: boolean }) => {
-					if (!e.isTrusted) {
+				onChange={async (event: React.MouseEvent | React.TouchEvent) => {
+					if (!event.isTrusted) {
 						return;
 					}
 
@@ -166,7 +166,23 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 						return;
 					}
 					setLoading(true);
-					await manager.start();
+
+					let x = 0;
+					let y = 0;
+					const nativeEvent = event.nativeEvent;
+					if (
+						"touches" in nativeEvent &&
+						nativeEvent.touches.length > 0 &&
+						nativeEvent.touches[0]
+					) {
+						x = nativeEvent.touches[0].clientX;
+						y = nativeEvent.touches[0].clientY;
+					} else if ("clientX" in nativeEvent && "clientY" in nativeEvent) {
+						x = nativeEvent.clientX;
+						y = nativeEvent.clientY;
+					}
+
+					await manager.start(x, y);
 					setLoading(false);
 				}}
 				checked={state.isHuman}
