@@ -81,7 +81,7 @@ export const BACKEND_ERROR_KEYS_ARRAY = Object.values(ALL_ERROR_KEYS);
 // Type-level validation: ensure all error keys exist in translation.json
 // Each ValidErrorKey must be assignable to TranslationKey (derived from translation JSON)
 // If this errors, a key is defined here but missing from the translation file.
-export const _validateErrorKeysExistInTranslations: Record<ValidErrorKey, unknown> = {} as Record<
+export const _validateErrorKeysExistInTranslations: Record<
 	ValidErrorKey,
-	TranslationKey
->;
+	unknown
+> = {} as Record<ValidErrorKey, TranslationKey>;

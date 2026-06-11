@@ -15,13 +15,13 @@
 import { randomBytes } from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { BACKEND_ERROR_KEYS_ARRAY } from "@prosopo/common";
 import {
 	ViteFrontendConfig,
 	VitePluginRemoveUnusedTranslations,
 } from "@prosopo/config";
 import { loadEnv } from "@prosopo/dotenv";
 import { at, flatten } from "@prosopo/util";
-import { BACKEND_ERROR_KEYS_ARRAY } from "@prosopo/common";
 import fg from "fast-glob";
 import { defineConfig } from "vite";
 
