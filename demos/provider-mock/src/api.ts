@@ -53,7 +53,6 @@ export function prosopoRouter(): Router {
 				return next(
 					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
 						context: { error: err, code: 400 },
-						logLevel: "info",
 					}),
 				);
 			}
