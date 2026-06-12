@@ -167,6 +167,79 @@ services:
       internal:
         ipv4_address: 172.18.0.8
         ipv6_address: fd00:aaaa::8
+  redis-exporter:
+    # Exports redis-stack metrics in Prometheus format on :9121, scraped by
+    # vector (sources.redis_metrics -> http://redis-exporter:9121/metrics).
+    container_name: redis-exporter
+    profiles:
+      - production
+      - staging
+    image: oliver006/redis_exporter:${REDIS_EXPORTER_IMAGE:-v1.62.0}
+    labels:
+      - "vector.docker=true" # log docker events
+    environment:
+      # The exporter connects to redis over the internal network. Without an
+      # explicit REDIS_ADDR it defaults to its own localhost:6379 and scrapes
+      # nothing. REDIS_PASSWORD is filled from the deploy-exported provider env
+      # (same value as REDIS_CONNECTION_PASSWORD); empty means no-auth redis.
+      - REDIS_ADDR=redis://redis-stack:6379
+      - REDIS_PASSWORD=${REDIS_CONNECTION_PASSWORD:-}
+    env_file:
+      - ../.env.1.${NODE_ENV}
+    depends_on:
+      redis-stack:
+        condition: service_started
+    restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+    expose:
+      - "9121"
+    networks:
+      internal:
+        ipv4_address: 172.18.0.11
+        ipv6_address: fd00:aaaa::b
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '1'
+  cadvisor:
+    # Per-container resource metrics (cpu/memory/disk/network/...) in
+    # Prometheus format on :8080, scraped by vector
+    # (sources.cadvisor_metrics -> http://cadvisor:8080/metrics).
+    container_name: cadvisor
+    profiles:
+      - production
+      - staging
+    image: gcr.io/cadvisor/cadvisor:${CADVISOR_IMAGE:-v0.52.1}
+    labels:
+      - "vector.docker=true" # log docker events
+    # cadvisor needs broad host access to read cgroup/container stats.
+    privileged: true
+    devices:
+      - /dev/kmsg
+    command:
+      - '--enable_metrics=cpu,cpuLoad,memory,disk,diskIO,network,process,pressure,oom_event,percpu,app,tcp,udp'
+      - '--store_container_labels=false'
+      - '--whitelisted_container_labels=com.docker.compose.service,com.docker.compose.project'
+      - '--docker_only=true'
+    volumes:
+      - /:/rootfs:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    restart: unless-stopped
+    expose:
+      - "8080"
+    networks:
+      internal:
+        ipv4_address: 172.18.0.12
+        ipv6_address: fd00:aaaa::c
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '1'
   vector:
     container_name: vector
     profiles:
@@ -178,8 +251,18 @@ services:
     labels:
       - "vector.docker=true" # log docker events
     restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+    # sources.host_metrics reads /proc and /sys. Inside a container these are
+    # the container's own namespaced views, so without these mounts the
+    # "host" metrics would actually describe the vector container. Mount the
+    # host's procfs/sysfs read-only and point vector at them via
+    # PROCFS_ROOT/SYSFS_ROOT so host_metrics reports true host CPU/mem/disk/net.
+    environment:
+      - PROCFS_ROOT=/host/proc
+      - SYSFS_ROOT=/host/sys
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock # needed for monitoring docker container events, e.g. start/stop/etc
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
     networks:
       external:
       internal:
