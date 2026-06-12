@@ -899,17 +899,13 @@ export class ProviderDatabase
 	): Promise<void> {
 		const tables = this.getTables();
 		const timestamp = new Date();
-		const update: Pick<
-			PoWCaptchaRecord,
-			| "result"
-			| "serverChecked"
-			| "userSubmitted"
-			| "storedAtTimestamp"
-			| "userSignature"
-			| "lastUpdatedTimestamp"
-			| "coords"
-			| "pendingStage"
-		> = {
+		const isDisapproved = result.status === CaptchaStatus.disapproved;
+		// Use the aggregation-pipeline form of updateOne so we can stamp
+		// the lifecycle timestamps (submittedAtTimestamp, failedAtTimestamp)
+		// only on the first transition into each state — `$ifNull` keeps
+		// the previously-stamped value when one exists. This preserves the
+		// invariant that lifecycle timestamps are set exactly once.
+		const setStage: Record<string, unknown> = {
 			result,
 			serverChecked,
 			userSubmitted,
@@ -918,18 +914,26 @@ export class ProviderDatabase
 			pendingStage: true,
 			...(coords && { coords }),
 		};
+		if (userSubmitted) {
+			setStage.submittedAtTimestamp = {
+				$ifNull: ["$submittedAtTimestamp", timestamp],
+			};
+		}
+		if (isDisapproved) {
+			setStage.failedAtTimestamp = {
+				$ifNull: ["$failedAtTimestamp", timestamp],
+			};
+		}
 		try {
 			const updateResult = await tables.powcaptcha.updateOne(
 				{ challenge },
-				{
-					$set: update,
-				},
+				[{ $set: setStage }],
 			);
 			if (updateResult.matchedCount === 0) {
 				const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
 					context: {
 						challenge,
-						...update,
+						...setStage,
 					},
 					logger: this.logger,
 				});
@@ -942,7 +946,7 @@ export class ProviderDatabase
 			this.logger.info(() => ({
 				data: {
 					challenge,
-					...update,
+					...setStage,
 				},
 				msg: "PowCaptcha record updated successfully",
 			}));
@@ -964,7 +968,7 @@ export class ProviderDatabase
 				context: {
 					error,
 					challenge,
-					...update,
+					...setStage,
 				},
 				logger: this.logger,
 			});
@@ -1161,17 +1165,11 @@ export class ProviderDatabase
 	): Promise<void> {
 		const tables = this.getTables();
 		const timestamp = lastUpdatedTimestamp ?? new Date();
-		const update: Pick<
-			PuzzleCaptchaRecord,
-			| "result"
-			| "serverChecked"
-			| "userSubmitted"
-			| "storedAtTimestamp"
-			| "userSignature"
-			| "lastUpdatedTimestamp"
-			| "coords"
-			| "pendingStage"
-		> = {
+		const isDisapproved = result.status === CaptchaStatus.disapproved;
+		// Aggregation-pipeline update so submittedAtTimestamp /
+		// failedAtTimestamp can be set only on the first transition into
+		// each state via $ifNull. See updatePowCaptchaRecordResult.
+		const setStage: Record<string, unknown> = {
 			result,
 			serverChecked,
 			userSubmitted,
@@ -1180,18 +1178,26 @@ export class ProviderDatabase
 			pendingStage: true,
 			...(coords && { coords }),
 		};
+		if (userSubmitted) {
+			setStage.submittedAtTimestamp = {
+				$ifNull: ["$submittedAtTimestamp", timestamp],
+			};
+		}
+		if (isDisapproved) {
+			setStage.failedAtTimestamp = {
+				$ifNull: ["$failedAtTimestamp", timestamp],
+			};
+		}
 		try {
 			const updateResult = await tables.puzzlecaptcha.updateOne(
 				{ challenge },
-				{
-					$set: update,
-				},
+				[{ $set: setStage }],
 			);
 			if (updateResult.matchedCount === 0) {
 				const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
 					context: {
 						challenge,
-						...update,
+						...setStage,
 					},
 					logger: this.logger,
 				});
@@ -1204,7 +1210,7 @@ export class ProviderDatabase
 			this.logger.info(() => ({
 				data: {
 					challenge,
-					...update,
+					...setStage,
 				},
 				msg: "PuzzleCaptcha record updated successfully",
 			}));
@@ -1213,7 +1219,7 @@ export class ProviderDatabase
 				context: {
 					error,
 					challenge,
-					...update,
+					...setStage,
 				},
 				logger: this.logger,
 			});
@@ -1230,11 +1236,33 @@ export class ProviderDatabase
 		updates: Partial<PuzzleCaptchaRecord>,
 	): Promise<void> {
 		const tables = this.getTables();
-		await tables.puzzlecaptcha.updateOne(
-			{ challenge },
-			{ $set: { ...updates, pendingStage: true } },
-			{ upsert: false },
-		);
+		const timestamp = new Date();
+		// Aggregation-pipeline form so the lifecycle stamps land on the
+		// first transition only. The verify path uses this method to flip
+		// serverChecked → true; the same call needs to stamp
+		// verifiedAtTimestamp on first verify. Submit / fail transitions
+		// go through updatePuzzleCaptchaRecordResult but a partial update
+		// here could also touch userSubmitted or the result.
+		const setStage: Record<string, unknown> = {
+			...updates,
+			pendingStage: true,
+		};
+		if (updates.serverChecked === true) {
+			setStage.verifiedAtTimestamp = {
+				$ifNull: ["$verifiedAtTimestamp", timestamp],
+			};
+		}
+		if (updates.userSubmitted === true) {
+			setStage.submittedAtTimestamp = {
+				$ifNull: ["$submittedAtTimestamp", timestamp],
+			};
+		}
+		if (updates.result?.status === CaptchaStatus.disapproved) {
+			setStage.failedAtTimestamp = {
+				$ifNull: ["$failedAtTimestamp", timestamp],
+			};
+		}
+		await tables.puzzlecaptcha.updateOne({ challenge }, [{ $set: setStage }]);
 	}
 
 	/** @description Get serverChecked Dapp User image captcha commitments from the commitments table
@@ -1301,20 +1329,23 @@ export class ProviderDatabase
 	/** @description Mark a list of captcha commits as checked
 	 */
 	async markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void> {
-		const updateDoc: Pick<
-			StoredCaptcha,
-			"serverChecked" | "lastUpdatedTimestamp" | "pendingStage"
-		> = {
-			[StoredStatusNames.serverChecked]: true,
-			lastUpdatedTimestamp: new Date(),
-			pendingStage: true,
-		};
-
-		await this.tables?.commitment.updateMany(
-			{ id: { $in: commitmentIds } },
-			{ $set: updateDoc },
-			{ upsert: false },
-		);
+		const timestamp = new Date();
+		// Aggregation-pipeline form so verifiedAtTimestamp is stamped only
+		// on the first verify ($ifNull keeps the existing value). serverChecked
+		// can be set repeatedly across re-verifies but the lifecycle stamp
+		// must record the first one.
+		await this.tables?.commitment.updateMany({ id: { $in: commitmentIds } }, [
+			{
+				$set: {
+					serverChecked: true,
+					lastUpdatedTimestamp: timestamp,
+					pendingStage: true,
+					verifiedAtTimestamp: {
+						$ifNull: ["$verifiedAtTimestamp", timestamp],
+					},
+				},
+			},
+		]);
 	}
 
 	/** @description Update an image captcha commitment
@@ -1324,11 +1355,32 @@ export class ProviderDatabase
 		updates: Partial<UserCommitment>,
 	) {
 		const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
-		await this.tables?.commitment.updateOne(filter, {
+		const timestamp = new Date();
+		// Aggregation-pipeline form so any lifecycle transition implicit in
+		// `updates` (userSubmitted=true / serverChecked=true / disapproved
+		// result) stamps the corresponding lifecycle timestamp on the first
+		// transition only.
+		const setStage: Record<string, unknown> = {
 			...updates,
-			lastUpdatedAtTimestamp: new Date(),
+			lastUpdatedAtTimestamp: timestamp,
 			pendingStage: true,
-		});
+		};
+		if (updates.userSubmitted === true) {
+			setStage.submittedAtTimestamp = {
+				$ifNull: ["$submittedAtTimestamp", timestamp],
+			};
+		}
+		if (updates.serverChecked === true) {
+			setStage.verifiedAtTimestamp = {
+				$ifNull: ["$verifiedAtTimestamp", timestamp],
+			};
+		}
+		if (updates.result?.status === CaptchaStatus.disapproved) {
+			setStage.failedAtTimestamp = {
+				$ifNull: ["$failedAtTimestamp", timestamp],
+			};
+		}
+		await this.tables?.commitment.updateOne(filter, [{ $set: setStage }]);
 	}
 
 	/**
@@ -1378,19 +1430,24 @@ export class ProviderDatabase
 	/** @description Mark a list of PoW captcha commits as checked by the server
 	 */
 	async markDappUserPoWCommitmentsChecked(challenges: string[]): Promise<void> {
-		const updateDoc: Pick<
-			StoredCaptcha,
-			"serverChecked" | "lastUpdatedTimestamp" | "pendingStage"
-		> = {
-			[StoredStatusNames.serverChecked]: true,
-			lastUpdatedTimestamp: new Date(),
-			pendingStage: true,
-		};
+		const timestamp = new Date();
+		// Aggregation-pipeline form so verifiedAtTimestamp is stamped only
+		// on the first verify ($ifNull keeps the existing value). See
+		// markDappUserCommitmentsChecked.
 		await this.tables?.powcaptcha.updateMany(
 			{ challenge: { $in: challenges } },
-			{
-				$set: updateDoc,
-			},
+			[
+				{
+					$set: {
+						serverChecked: true,
+						lastUpdatedTimestamp: timestamp,
+						pendingStage: true,
+						verifiedAtTimestamp: {
+							$ifNull: ["$verifiedAtTimestamp", timestamp],
+						},
+					},
+				},
+			],
 			{ upsert: false },
 		);
 	}

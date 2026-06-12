@@ -180,6 +180,27 @@ export interface StoredCaptcha {
 	ja4: string;
 	userSubmitted: boolean;
 	serverChecked: boolean;
+	// Lifecycle timestamps. Each captures the moment a distinct state
+	// transition happened and is set ONCE — never overwritten by later
+	// mutations. `lastUpdatedTimestamp` keeps its "last write of any kind"
+	// meaning; these new fields let consumers compute precise per-stage
+	// durations (e.g. submit→verify window, time-to-disapprove) without
+	// log cross-referencing.
+	//
+	// `submittedAtTimestamp` is set on the first user-submission write
+	// (the call that flips `userSubmitted` to true), regardless of whether
+	// the result is approved or disapproved.
+	//
+	// `verifiedAtTimestamp` is set when the dapp first calls /verify
+	// (the call that flips `serverChecked` to true), regardless of the
+	// verify outcome.
+	//
+	// `failedAtTimestamp` is set the first time the captcha lands in a
+	// non-approved terminal state (Disapproved). Useful to separate
+	// "submitted but never verified" from "submitted then failed verify".
+	submittedAtTimestamp?: Date;
+	verifiedAtTimestamp?: Date;
+	failedAtTimestamp?: Date;
 	// The full ipinfo payload from `IpInfoService.lookup()`. Persisted
 	// either by the provider's ipInfoMiddleware (at request time) or by
 	// the CHECK_IP_INFO backfill job. Consumers read individual fields

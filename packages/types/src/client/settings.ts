@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { array, boolean, number, object, type output, string, z } from "zod";
+import { DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT } from "../config/timeouts.js";
 import { CaptchaType } from "./captchaType/captchaType.js";
 import { CaptchaTypeSpec } from "./captchaType/captchaTypeSpec.js";
 
@@ -224,6 +225,21 @@ export type IHoneypotSettings = output<typeof HoneypotSettingsSchema>;
 export const ClientSettingsSchema = object({
 	captchaType: CaptchaTypeSpec.optional().default(captchaTypeDefault),
 	domains: array(string()).min(1),
+	// Maximum milliseconds the dapp's /verify call has after the user
+	// submitted the captcha solution to the provider. Was previously a
+	// request-body parameter (client-controlled, easily stockpiled
+	// against). Moved to the per-client setting so the operator decides
+	// the window per dapp, and the request body has no influence.
+	// Default DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT = 120000ms (2 min).
+	// Tight customers (e.g. auto-submit flows like Twickets) should set
+	// this to ~10000ms to leave bots no room to inject pre-solved
+	// stockpile entries.
+	verifiedTimeout: number()
+		.int()
+		.min(1000)
+		.max(600000)
+		.optional()
+		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 	frictionlessThreshold: number()
 		.min(0)
 		.max(1)

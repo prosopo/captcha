@@ -573,8 +573,21 @@ export class PowCaptchaManager extends CaptchaManager {
 		let failResult: CaptchaResult | undefined;
 		let failReason: string | undefined;
 
-		const recent = verifyRecency(challenge, timeout);
-		if (!recent) {
+		// Submit → verify recency. Was previously issuance → verify
+		// (`verifyRecency(challenge, timeout)`) which gave bots the full
+		// solve + stockpile window in one budget. Switched to a tighter
+		// "the dapp must verify within `timeout` ms of the user's
+		// solution actually arriving" check, sourced from the lifecycle
+		// `submittedAtTimestamp` (set once, never overwritten) on the
+		// captcha record. The earlier `result.status === Approved` guard
+		// proves userSubmitted=true on the record, so the field is
+		// always populated by the time we reach this check.
+		const submittedAt = challengeRecord.submittedAtTimestamp;
+		const submitToVerifyMs =
+			submittedAt instanceof Date
+				? Date.now() - submittedAt.getTime()
+				: Number.POSITIVE_INFINITY;
+		if (submitToVerifyMs > timeout) {
 			failResult = {
 				status: CaptchaStatus.disapproved,
 				reason: ResultReason.TIMESTAMP_TOO_OLD,

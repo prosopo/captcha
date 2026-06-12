@@ -221,7 +221,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 
 			// We don't want to expose any other errors to the client
 			try {
-				const { token, dappSignature, verifiedTimeout, ip, email } = parsed;
+				const { token, dappSignature, ip, email } = parsed;
 
 				// This can error if the token is invalid
 				const { dapp, user, timestamp, challenge } =
@@ -269,11 +269,15 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				// Will throw an error if the signature is invalid
 				verifySignature(dappSignature, timestamp.toString(), dappPair);
 
+				// `verifiedTimeout` is now strictly server-determined,
+				// sourced from the per-client settings. Was previously a
+				// request-body parameter which let dapps (or bots posing
+				// as dapps) raise the recency ceiling.
 				const { verified, score, reason } =
 					await tasks.powCaptchaManager.serverVerifyPowCaptchaSolution(
 						dapp,
 						challenge,
-						verifiedTimeout,
+						clientRecord.settings.verifiedTimeout,
 						env,
 						ip,
 						userAccessRulesStorage,
@@ -352,7 +356,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 
 			// We don't want to expose any other errors to the client
 			try {
-				const { token, dappSignature, verifiedTimeout, ip, email } = parsed;
+				const { token, dappSignature, ip, email } = parsed;
 
 				// This can error if the token is invalid
 				const { dapp, user, timestamp, challenge } =
@@ -400,11 +404,12 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				// Will throw an error if the signature is invalid
 				verifySignature(dappSignature, timestamp.toString(), dappPair);
 
+				// Server-determined verify window — see the pow branch above.
 				const { verified, score } =
 					await tasks.puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
 						dapp,
 						challenge,
-						verifiedTimeout,
+						clientRecord.settings.verifiedTimeout,
 						env,
 						ip,
 						userAccessRulesStorage,

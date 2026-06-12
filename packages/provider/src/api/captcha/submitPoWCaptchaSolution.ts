@@ -66,7 +66,6 @@ export default (env: ProviderEnvironment) =>
 			challenge,
 			signature,
 			nonce,
-			verifiedTimeout,
 			dapp,
 			user,
 			behavioralData,
@@ -125,11 +124,18 @@ export default (env: ProviderEnvironment) =>
 				},
 			});
 
+			// Submit-side recency window. Was previously a client-supplied
+			// `verifiedTimeout` parameter on the body — moved to the
+			// per-client setting so the client can't influence it. The
+			// submit window measures issuance → submit (existing
+			// `verifyRecency` semantics inside verifyPowCaptchaSolution);
+			// the verify-side window measures submit → verify and is
+			// applied later in serverVerifyPowCaptchaSolution.
 			const result = await tasks.powCaptchaManager.verifyPowCaptchaSolution(
 				challenge,
 				signature.provider.challenge,
 				nonce,
-				verifiedTimeout,
+				clientRecord.settings.verifiedTimeout,
 				signature.user.timestamp,
 				getIPAddress(req.ip || ""),
 				flatHeaders,

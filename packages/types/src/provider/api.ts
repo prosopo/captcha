@@ -415,17 +415,22 @@ export interface PowCaptchaSolutionResponse extends ApiResponse {
 }
 
 /**
- * Request body for the server to verify a PoW captcha solution
- * @param {string} token - The Procaptcha token
- * @param {string} dappUserSignature - The signature proving ownership of the site key
- * @param {number} verifiedTimeout - The maximum time in milliseconds since the captcha was requested
+ * Request body for the server to verify a PoW captcha solution.
+ *
+ * `verifiedTimeout` used to live here (default 120000ms). It was
+ * client-controlled and let dapps (or any caller spoofing as one)
+ * raise the recency-check ceiling — bots could submit stockpiled
+ * solutions tens of minutes after issuance and still pass.
+ *
+ * It now lives on the per-client settings (`ClientSettingsSchema.verifiedTimeout`)
+ * — server-determined, configurable by the operator per dapp. The
+ * request body field has been removed entirely; any legacy callers
+ * passing it will see strict zod rejection so the operator notices
+ * and can clean up.
  */
 export const ServerPowCaptchaVerifyRequestBody = object({
 	[ApiParams.token]: ProcaptchaTokenSpec,
 	[ApiParams.dappSignature]: string(),
-	[ApiParams.verifiedTimeout]: number()
-		.optional()
-		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 	[ApiParams.ip]: string().optional(),
 	[ApiParams.email]: string().email().optional(),
 });
@@ -489,6 +494,10 @@ export type ServerPowCaptchaVerifyRequestBodyType = zInfer<
 	typeof ServerPowCaptchaVerifyRequestBody
 >;
 
+// See ServerPowCaptchaVerifyRequestBody — `verifiedTimeout` removed from
+// the body. The submit-side recency check still uses the existing server
+// config (`env.config.captchas.pow.solutionTimeout`); the per-dapp
+// verify-side window lives on the client settings.
 export const SubmitPowCaptchaSolutionBody = object({
 	[ApiParams.challenge]: PowChallengeIdSchema,
 	[ApiParams.difficulty]: number(),
@@ -503,9 +512,6 @@ export const SubmitPowCaptchaSolutionBody = object({
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
 	[ApiParams.nonce]: number(),
-	[ApiParams.verifiedTimeout]: number()
-		.optional()
-		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 	[ApiParams.behavioralData]: string().optional(),
 	[ApiParams.salt]: string().optional(),
 	[ApiParams.simdReadings]: string().optional(),
@@ -576,9 +582,8 @@ export const SubmitPuzzleCaptchaSolutionBody = object({
 	}),
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
-	[ApiParams.verifiedTimeout]: number()
-		.optional()
-		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
+	// See SubmitPowCaptchaSolutionBody — verifiedTimeout dropped from the
+	// body; sourced from the per-client settings instead.
 	[ApiParams.behavioralData]: string().optional(),
 	[ApiParams.salt]: string().optional(),
 	[ApiParams.simdReadings]: string().optional(),
@@ -593,12 +598,11 @@ export type SubmitPuzzleCaptchaSolutionBodyTypeOutput = output<
 	typeof SubmitPuzzleCaptchaSolutionBody
 >;
 
+// See ServerPowCaptchaVerifyRequestBody — verifiedTimeout dropped from
+// the body; sourced from the per-client settings instead.
 export const ServerPuzzleCaptchaVerifyRequestBody = object({
 	[ApiParams.token]: ProcaptchaTokenSpec,
 	[ApiParams.dappSignature]: string(),
-	[ApiParams.verifiedTimeout]: number()
-		.optional()
-		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 	[ApiParams.ip]: string().optional(),
 	[ApiParams.email]: string().email().optional(),
 });

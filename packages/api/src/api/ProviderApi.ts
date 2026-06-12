@@ -195,12 +195,13 @@ export default class ProviderApi
 		dappAccount: string,
 		nonce: number,
 		userTimestampSignature: string,
-		timeout?: number,
 		behavioralData?: string,
 		salt?: string,
 		simdReadings?: string,
 		clientMetaData?: ClientMetaData,
 	): Promise<PowCaptchaSolutionResponse> {
+		// verifiedTimeout no longer travels on the body — it's sourced
+		// server-side from the per-client settings.
 		const body = SubmitPowCaptchaSolutionBody.parse({
 			[ApiParams.challenge]: challenge.challenge,
 			[ApiParams.difficulty]: challenge.difficulty,
@@ -208,7 +209,6 @@ export default class ProviderApi
 			[ApiParams.user]: userAccount.toString(),
 			[ApiParams.dapp]: dappAccount.toString(),
 			[ApiParams.nonce]: nonce,
-			[ApiParams.verifiedTimeout]: timeout,
 			[ApiParams.signature]: {
 				[ApiParams.provider]:
 					challenge[ApiParams.signature][ApiParams.provider],
@@ -257,12 +257,13 @@ export default class ProviderApi
 		finalY: number,
 		puzzleEvents: Array<{ x: number; y: number; t: number }>,
 		userTimestampSignature: string,
-		timeout?: number,
 		behavioralData?: string,
 		salt?: string,
 		simdReadings?: string,
 		clientMetaData?: ClientMetaData,
 	): Promise<PuzzleCaptchaSolutionResponse> {
+		// verifiedTimeout no longer travels on the body — see
+		// submitPowCaptchaSolution.
 		const body = SubmitPuzzleCaptchaSolutionBody.parse({
 			[ApiParams.challenge]: challenge.challenge,
 			[ApiParams.timestamp]: challenge.timestamp,
@@ -271,7 +272,6 @@ export default class ProviderApi
 			[ApiParams.finalX]: finalX,
 			[ApiParams.finalY]: finalY,
 			[ApiParams.puzzleEvents]: puzzleEvents,
-			[ApiParams.verifiedTimeout]: timeout,
 			[ApiParams.signature]: {
 				[ApiParams.provider]:
 					challenge[ApiParams.signature][ApiParams.provider],
@@ -292,10 +292,14 @@ export default class ProviderApi
 		});
 	}
 
+	// `recencyLimit` parameter retained for back-compat with existing
+	// callers (typically dapp-side server SDKs) but no longer forwarded
+	// on the wire — the recency window is sourced server-side from the
+	// per-client settings now.
 	public submitPuzzleCaptchaVerify(
 		token: string,
 		signatureHex: string,
-		recencyLimit: number,
+		_recencyLimit: number,
 		user: string,
 		ip?: string,
 		email?: string,
@@ -303,7 +307,6 @@ export default class ProviderApi
 		const body: ServerPuzzleCaptchaVerifyRequestBodyType = {
 			[ApiParams.token]: token,
 			[ApiParams.dappSignature]: signatureHex,
-			[ApiParams.verifiedTimeout]: recencyLimit,
 			[ApiParams.ip]: ip,
 		};
 		if (email) {
@@ -381,10 +384,12 @@ export default class ProviderApi
 		});
 	}
 
+	// `recencyLimit` retained for caller back-compat; no longer
+	// forwarded on the wire. See submitPuzzleCaptchaVerify above.
 	public submitPowCaptchaVerify(
 		token: string,
 		signatureHex: string,
-		recencyLimit: number,
+		_recencyLimit: number,
 		user: string,
 		ip?: string,
 		email?: string,
@@ -392,7 +397,6 @@ export default class ProviderApi
 		const body: ServerPowCaptchaVerifyRequestBodyType = {
 			[ApiParams.token]: token,
 			[ApiParams.dappSignature]: signatureHex,
-			[ApiParams.verifiedTimeout]: recencyLimit,
 			[ApiParams.ip]: ip,
 		};
 		if (email) {

@@ -65,7 +65,6 @@ export default (env: ProviderEnvironment) =>
 			finalX,
 			finalY,
 			puzzleEvents,
-			verifiedTimeout,
 			dapp,
 			user,
 			behavioralData,
@@ -101,6 +100,8 @@ export default (env: ProviderEnvironment) =>
 				);
 			}
 
+			// See submitPoWCaptchaSolution — verifiedTimeout sourced from
+			// the per-client settings, not from the request body.
 			const verified =
 				await tasks.puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
 					challenge,
@@ -108,7 +109,7 @@ export default (env: ProviderEnvironment) =>
 					finalX,
 					finalY,
 					puzzleEvents,
-					verifiedTimeout,
+					clientRecord.settings.verifiedTimeout,
 					signature.user.timestamp,
 					getIPAddress(req.ip || ""),
 					flatten(req.headers),

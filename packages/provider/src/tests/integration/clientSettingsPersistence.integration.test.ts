@@ -51,6 +51,7 @@ const FULLY_POPULATED_SETTINGS = {
 	imageThreshold: 0.81,
 	imageMaxRounds: 12,
 	autoBanScoreThreshold: 0.95,
+	verifiedTimeout: 120000,
 	puzzleTolerance: 20,
 	disallowWebView: true,
 	contextAware: {

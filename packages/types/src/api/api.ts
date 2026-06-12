@@ -72,13 +72,14 @@ export interface ProviderApiInterface {
 		sessionId?: string,
 		simdReadings?: string,
 	): Promise<GetPowCaptchaResponse>;
+	// `timeout` (was the verifiedTimeout body param) removed — sourced
+	// server-side from the per-client settings.
 	submitPowCaptchaSolution(
 		challenge: GetPowCaptchaResponse,
 		userAccount: string,
 		dappAccount: string,
 		nonce: number,
 		userTimestampSignature: string,
-		timeout?: number,
 		behavioralData?: string,
 		salt?: string,
 		simdReadings?: string,
@@ -90,6 +91,8 @@ export interface ProviderApiInterface {
 		sessionId?: string,
 		simdReadings?: string,
 	): Promise<GetPuzzleCaptchaResponse>;
+	// `timeout` (was the verifiedTimeout body param) removed — see
+	// submitPowCaptchaSolution above.
 	submitPuzzleCaptchaSolution(
 		challenge: GetPuzzleCaptchaResponse,
 		userAccount: string,
@@ -98,7 +101,6 @@ export interface ProviderApiInterface {
 		finalY: number,
 		puzzleEvents: Array<{ x: number; y: number; t: number }>,
 		userTimestampSignature: string,
-		timeout?: number,
 		behavioralData?: string,
 		salt?: string,
 		simdReadings?: string,
