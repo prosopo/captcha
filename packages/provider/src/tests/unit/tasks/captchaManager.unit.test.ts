@@ -954,5 +954,80 @@ describe("CaptchaManager", () => {
 			);
 			expect(result).toBeUndefined();
 		});
+
+		// Block + captchaType USED to mean "captcha-type selector, not a
+		// hard block" (the previous test). deferToVerify=true on the same
+		// rule flips it back to a hard block: the policy explicitly opted
+		// out of request-time enforcement and asked to be matched here
+		// instead. Without this, deferToVerify Block rules become
+		// invisible — middleware skips them (correct) and verify also
+		// skips them (the bug we'd be testing for).
+		it("should return the policy for a Block policy with deferToVerify=true AND captchaType (verify-time hard block)", async () => {
+			const deferBlock: AccessPolicy = {
+				type: AccessPolicyType.Block,
+				captchaType: CaptchaType.image,
+				deferToVerify: true,
+			};
+			vi.spyOn(
+				captchaManager,
+				"getPrioritisedAccessPolicies",
+			).mockResolvedValue([deferBlock]);
+
+			const result = await captchaManager.checkForHardBlock(
+				{} as AccessRulesStorage,
+				mockChallengeRecord,
+				"userAccount",
+				mockHeaders,
+			);
+			expect(result).toEqual(deferBlock);
+		});
+
+		// deferToVerify=true with no captchaType still resolves to a hard
+		// block — it's a hard block by either gate of the OR (no
+		// captchaType OR deferToVerify). This guards against a future
+		// refactor that makes the two gates mutually exclusive instead
+		// of redundant-on-overlap.
+		it("should return the policy for a Block policy with deferToVerify=true AND no captchaType", async () => {
+			const deferBlockNoType: AccessPolicy = {
+				type: AccessPolicyType.Block,
+				deferToVerify: true,
+			};
+			vi.spyOn(
+				captchaManager,
+				"getPrioritisedAccessPolicies",
+			).mockResolvedValue([deferBlockNoType]);
+
+			const result = await captchaManager.checkForHardBlock(
+				{} as AccessRulesStorage,
+				mockChallengeRecord,
+				"userAccount",
+				mockHeaders,
+			);
+			expect(result).toEqual(deferBlockNoType);
+		});
+
+		// Restrict + deferToVerify is non-sensical for hard-block purposes
+		// (deferToVerify on Restrict has its own meaning at middleware
+		// time, see blacklistRequestInspector tests). The hard-block
+		// matcher must stay Block-only — accidentally letting a Restrict
+		// pass through here would deny-list any restrict-throttled user.
+		it("should return undefined for Restrict + deferToVerify (hard block is Block-only)", async () => {
+			const restrictDefer: AccessPolicy = {
+				type: AccessPolicyType.Restrict,
+				deferToVerify: true,
+			};
+			vi.spyOn(
+				captchaManager,
+				"getPrioritisedAccessPolicies",
+			).mockResolvedValue([restrictDefer]);
+
+			const result = await captchaManager.checkForHardBlock(
+				{} as AccessRulesStorage,
+				mockChallengeRecord,
+				"userAccount",
+				mockHeaders,
+			);
+			expect(result).toBeUndefined();
+		});
 	});
 });
