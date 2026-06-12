@@ -23,36 +23,45 @@ let backendPromise: Promise<i18n> | undefined;
 let backendInitialized = false;
 
 export async function loadI18nextFrontend(): Promise<i18n> {
-	if (frontendInstance) return frontendInstance;
+	// Only short-circuit once the instance is fully initialized; while
+	// initialization is in flight, fall through to the shared promise so
+	// concurrent callers await readiness instead of a half-ready instance.
+	if (frontendInstance?.isInitialized) return frontendInstance;
 	if (!frontendPromise) {
-		frontendPromise = import("./i18nFrontend.js").then(
-			({ default: initializeI18n }) =>
-				new Promise<i18n>((resolve, reject) => {
-					try {
-						// Prevent race conditions: only initialize once
-						if (frontendInitialized) {
-							if (frontendInstance) return resolve(frontendInstance);
-							// Still initializing, wait for completion
-							return;
-						}
-						frontendInitialized = true;
+		frontendPromise = import("./i18nFrontend.js")
+			.then(
+				({ default: initializeI18n }) =>
+					new Promise<i18n>((resolve, reject) => {
+						try {
+							// Prevent race conditions: only initialize once
+							if (frontendInitialized) {
+								if (frontendInstance) return resolve(frontendInstance);
+								// Still initializing, wait for completion
+								return;
+							}
+							frontendInitialized = true;
 
-						frontendInstance = initializeI18n((i18n) => {
-							frontendInstance = i18n;
-							resolve(i18n);
-						});
-						// If init is synchronous and callback wasn't called, resolve with instance
-						if (frontendInstance && !frontendInstance.isInitialized) {
-							// Instance created but not yet initialized, let callback handle it
-						} else if (frontendInstance) {
-							resolve(frontendInstance);
+							frontendInstance = initializeI18n((i18n) => {
+								frontendInstance = i18n;
+								resolve(i18n);
+							});
+							// If init was synchronous (already initialized), resolve now;
+							// otherwise the loaded callback above resolves it.
+							if (frontendInstance?.isInitialized) {
+								resolve(frontendInstance);
+							}
+						} catch (e) {
+							frontendInitialized = false;
+							reject(e);
 						}
-					} catch (e) {
-						frontendInitialized = false;
-						reject(e);
-					}
-				}),
-		);
+					}),
+			)
+			.catch((e) => {
+				// Reset cached state so a future call can retry after a failure.
+				frontendPromise = undefined;
+				frontendInitialized = false;
+				throw e;
+			});
 	}
 	return frontendPromise;
 }
@@ -62,36 +71,45 @@ export function getFrontendI18n(): i18n | undefined {
 }
 
 export async function loadI18nextBackend(): Promise<i18n> {
-	if (backendInstance) return backendInstance;
+	// Only short-circuit once the instance is fully initialized; while
+	// initialization is in flight, fall through to the shared promise so
+	// concurrent callers await readiness instead of a half-ready instance.
+	if (backendInstance?.isInitialized) return backendInstance;
 	if (!backendPromise) {
-		backendPromise = import("./i18nBackend.js").then(
-			({ default: initializeI18n }) =>
-				new Promise<i18n>((resolve, reject) => {
-					try {
-						// Prevent race conditions: only initialize once
-						if (backendInitialized) {
-							if (backendInstance) return resolve(backendInstance);
-							// Still initializing, wait for completion
-							return;
-						}
-						backendInitialized = true;
+		backendPromise = import("./i18nBackend.js")
+			.then(
+				({ default: initializeI18n }) =>
+					new Promise<i18n>((resolve, reject) => {
+						try {
+							// Prevent race conditions: only initialize once
+							if (backendInitialized) {
+								if (backendInstance) return resolve(backendInstance);
+								// Still initializing, wait for completion
+								return;
+							}
+							backendInitialized = true;
 
-						backendInstance = initializeI18n((i18n) => {
-							backendInstance = i18n;
-							resolve(i18n);
-						});
-						// If init is synchronous and callback wasn't called, resolve with instance
-						if (backendInstance && !backendInstance.isInitialized) {
-							// Instance created but not yet initialized, let callback handle it
-						} else if (backendInstance) {
-							resolve(backendInstance);
+							backendInstance = initializeI18n((i18n) => {
+								backendInstance = i18n;
+								resolve(i18n);
+							});
+							// If init was synchronous (already initialized), resolve now;
+							// otherwise the loaded callback above resolves it.
+							if (backendInstance?.isInitialized) {
+								resolve(backendInstance);
+							}
+						} catch (e) {
+							backendInitialized = false;
+							reject(e);
 						}
-					} catch (e) {
-						backendInitialized = false;
-						reject(e);
-					}
-				}),
-		);
+					}),
+			)
+			.catch((e) => {
+				// Reset cached state so a future call can retry after a failure.
+				backendPromise = undefined;
+				backendInitialized = false;
+				throw e;
+			});
 	}
 	return backendPromise;
 }

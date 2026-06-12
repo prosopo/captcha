@@ -78,10 +78,9 @@ export type ValidErrorKey =
 // Array of all keys for the Vite plugin
 export const BACKEND_ERROR_KEYS_ARRAY = Object.values(ALL_ERROR_KEYS);
 
-// Type-level validation: ensure all error keys exist in translation.json
-// Each ValidErrorKey must be assignable to TranslationKey (derived from translation JSON)
-// If this errors, a key is defined here but missing from the translation file.
-export const _validateErrorKeysExistInTranslations: Record<
-	ValidErrorKey,
-	unknown
-> = {} as Record<ValidErrorKey, TranslationKey>;
+// Compile-time check: every backend error key must exist in the locale JSON.
+// `BACKEND_ERROR_KEYS_ARRAY` is typed `ValidErrorKey[]`; assigning it to a
+// `TranslationKey[]` fails to compile if any `ValidErrorKey` is not a
+// `TranslationKey` (i.e. a key here is missing from the translation files).
+export const _validateErrorKeysExistInTranslations: readonly TranslationKey[] =
+	BACKEND_ERROR_KEYS_ARRAY;
