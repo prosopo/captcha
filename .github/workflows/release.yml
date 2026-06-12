@@ -305,7 +305,7 @@ jobs:
             echo "Publishing $pkg to npm"
             result=0
             set +e
-            pnpm publish -w "$pkg" --access public --registry https://registry.npmjs.org/
+            pnpm --filter "$pkg" publish --access public --registry https://registry.npmjs.org/
             result=$?
             set -e
             echo
@@ -337,7 +337,7 @@ jobs:
 #                    # make the package non-private so it can be published to gh
 #                    npm pkg --workspace $pkg delete private
 #                    set +e
-#                    pnpm publish -w "$pkg" --access public --registry https://npm.pkg.github.com
+#                    pnpm --filter "$pkg" publish --access public --registry https://npm.pkg.github.com
 #                    result_gh=$?
 #                    set -e
 #                    echo
@@ -377,7 +377,7 @@ jobs:
               continue
             fi
             set +e
-            pnpm publish:docker -w "$pkg"
+            pnpm --filter "$pkg" run publish:docker
             result=$?
             set -e
             echo
