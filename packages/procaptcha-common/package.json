@@ -21,7 +21,7 @@
 	"source": "./src/index.ts",
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
+		"build": "pnpm run build:cross-env -- --mode ${NODE_ENV:-development}",
 		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
@@ -30,19 +30,21 @@
 		"test:watch": "NODE_ENV=${NODE_ENV:-test}; npx vitest --config ./vite.test.config.ts",
 		"test:coverage": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --coverage --config ./vite.test.config.ts"
 	},
-	"browserslist": ["> 0.5%, last 2 versions, not dead"],
+	"browserslist": [
+		"> 0.5%, last 2 versions, not dead"
+	],
 	"dependencies": {
 		"@emotion/react": "11.11.1",
 		"@emotion/styled": "11.11.0",
-		"@prosopo/account": "2.8.37",
-		"@prosopo/load-balancer": "2.9.12",
-		"@prosopo/types": "4.4.0",
-		"@prosopo/widget-skeleton": "2.8.3",
+		"@prosopo/account": "workspace:*",
+		"@prosopo/load-balancer": "workspace:*",
+		"@prosopo/types": "workspace:*",
+		"@prosopo/widget-skeleton": "workspace:*",
 		"react": "18.3.1",
 		"react-dom": "18.3.1"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.1",
+		"@prosopo/config": "workspace:*",
 		"@types/jsdom": "21.1.7",
 		"@types/node": "22.10.2",
 		"@types/react": "18.3.1",

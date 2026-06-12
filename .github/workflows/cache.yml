@@ -45,13 +45,14 @@ jobs:
           token: ${{ secrets.PROSOPONATOR_PAT }}
           submodules: "recursive"
 
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-          cache: 'npm'
+          cache: pnpm
 
       # don't restore the cache, otherwise we get artifacts left over from the previous run sit in the cache for eternity. Do a clean build every time.
-      - run: npm cache clean --force
+      - run: pnpm store prune
 
       - uses: prosopo/captcha/.github/actions/npm@gha
         with:
@@ -59,7 +60,7 @@ jobs:
 
       # clean the nx cache
       - run: npx nx reset
-      - run: npm run clean:turbo
+      - run: pnpm run clean:turbo
 
       # install cypress so we don't have to do that every time
       - run: npx cypress install

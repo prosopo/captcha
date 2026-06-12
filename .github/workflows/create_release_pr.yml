@@ -33,10 +33,11 @@ jobs:
           token: ${{ steps.app_token.outputs.token }}
           fetch-depth: 0
 
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-          cache: 'npm'
+          cache: pnpm
 
       - name: Setup npm registry
         run: |
@@ -47,7 +48,7 @@ jobs:
           git config user.name "prosoponator[bot]"
           git config user.email "dev@prosopo.io"
 
-      - run: npm ci --ignore-scripts --include=dev
+      - run: pnpm install --frozen-lockfile --ignore-scripts --include=dev
 
       - name: Detect changesets
         id: detect
@@ -69,13 +70,13 @@ jobs:
       - name: Version bump
         if: steps.detect.outputs.has_changesets == 'true'
         run: |
-          npm i -g @changesets/cli
+          pnpm install -g @changesets/cli
           npx @changesets/cli version --verbose
           
-          npm i --ignore-scripts --include=dev
+          pnpm install --ignore-scripts --include=dev
           
           # Set the version of root and docker/images/provider to match @prosopo/cli
-          root_version=$(npm -w @prosopo/cli pkg get version | jq -r '.["@prosopo/cli"]')
+          root_version=$(pnpm --filter @prosopo/cli pkg get version | jq -r '.["@prosopo/cli"]')
           echo "root_version=$root_version" >> $GITHUB_ENV
           echo "Setting versions to $root_version"
           
@@ -86,16 +87,16 @@ jobs:
           
           git add -u .
 
-      - run: npm ci --ignore-scripts --include=dev
+      - run: pnpm install --frozen-lockfile --ignore-scripts --include=dev
 
       - name: Build packages
         run: |
           echo "Building all packages"
-          npm run build:all
+          pnpm run build:all
 
       - name: lint-fix
         run: |
-          npm run lint-fix
+          pnpm run lint-fix
           git add -u .
 
       - name: Create release branch and PR

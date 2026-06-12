@@ -46,10 +46,11 @@ jobs:
           token: ${{ secrets.PROSOPONATOR_PAT }}
           submodules: "recursive"
 
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-          cache: 'npm'
+          cache: pnpm
 
       - uses: prosopo/captcha/.github/actions/npm@gha
         with:
@@ -84,29 +85,29 @@ jobs:
           docker container ls
           sleep 10s
 
-      - run: NODE_ENV="test" npm run setup
+      - run: NODE_ENV="test" pnpm run setup
 
       - run: NODE_ENV="development" npx turbo run @prosopo/procaptcha-bundle#bundle
 
       - name: Regenerate image baselines
         if: contains(inputs.configs, 'image')
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:baselines:image" --success "first" --kill-others
+          npx concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:baselines:image" --success "first" --kill-others
 
       - name: Regenerate frictionless baselines
         if: contains(inputs.configs, 'frictionless')
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:baselines:frictionless" --success "first" --kill-others
+          npx concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:baselines:frictionless" --success "first" --kill-others
 
       - name: Regenerate pow baselines
         if: contains(inputs.configs, 'pow')
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:baselines:pow" --success "first" --kill-others
+          npx concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:baselines:pow" --success "first" --kill-others
 
       - name: Regenerate invisible baselines
         if: contains(inputs.configs, 'invisible')
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:baselines:invisible" --success "first" --kill-others
+          npx concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:baselines:invisible" --success "first" --kill-others
 
       - run: docker compose --file ./docker/docker-compose.test.yml down
         if: always()

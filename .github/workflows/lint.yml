@@ -51,10 +51,11 @@ jobs:
           token: ${{ secrets.PROSOPONATOR_PAT }}
           submodules: "recursive"
 
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-          cache: 'npm'
+          cache: pnpm
 
       - uses: prosopo/captcha/.github/actions/npm@gha
         with:
@@ -62,5 +63,5 @@ jobs:
 
       - run: npx turbo run @prosopo/lint#build
 
-      - run: npm run lint
+      - run: pnpm run lint
 

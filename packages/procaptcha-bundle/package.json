@@ -25,7 +25,7 @@
 	"source": "./src/index.tsx",
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
+		"build": "pnpm run build:cross-env -- --mode ${NODE_ENV:-development}",
 		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
@@ -37,15 +37,17 @@
 		"serve": "NODE_ENV=${NODE_ENV:-development}; vite serve --config vite.serve.config.ts --mode $NODE_ENV --host",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
 	},
-	"browserslist": ["> 0.5%, last 2 versions, not dead"],
+	"browserslist": [
+		"> 0.5%, last 2 versions, not dead"
+	],
 	"dependencies": {
-		"@prosopo/dotenv": "3.0.43",
-		"@prosopo/locale": "3.2.4",
-		"@prosopo/procaptcha-common": "2.10.19",
-		"@prosopo/procaptcha-frictionless": "2.11.2",
-		"@prosopo/types": "4.4.0",
-		"@prosopo/util": "3.2.15",
-		"@prosopo/widget-skeleton": "2.8.3",
+		"@prosopo/dotenv": "workspace:*",
+		"@prosopo/locale": "workspace:*",
+		"@prosopo/procaptcha-common": "workspace:*",
+		"@prosopo/procaptcha-frictionless": "workspace:*",
+		"@prosopo/types": "workspace:*",
+		"@prosopo/util": "workspace:*",
+		"@prosopo/widget-skeleton": "workspace:*",
 		"dotenv": "16.4.5",
 		"fast-glob": "3.3.2",
 		"jsdom": "25.0.0",
@@ -68,7 +70,7 @@
 		"registry": "https://registry.npmjs.org"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.1",
+		"@prosopo/config": "workspace:*",
 		"@types/jsdom": "21.1.7",
 		"@types/node": "22.10.2",
 		"@types/react": "18.3.1",

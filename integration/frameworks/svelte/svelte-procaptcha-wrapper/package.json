@@ -19,17 +19,17 @@
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
 		"svpkg": "svelte-package -i ./src -o ./dist",
-		"build": "npm run svpkg && del-cli --verbose ./.svelte-kit",
-		"dev": "npm run svpkg -- -w"
+		"build": "pnpm run svpkg && del-cli --verbose ./.svelte-kit",
+		"dev": "pnpm run svpkg -- -w"
 	},
 	"dependencies": {
-		"@prosopo/procaptcha-wrapper": "2.6.80"
+		"@prosopo/procaptcha-wrapper": "workspace:*"
 	},
 	"peerDependencies": {
 		"svelte": "^5.0.0"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.1",
+		"@prosopo/config": "workspace:*",
 		"@sveltejs/package": "2.3.10",
 		"@types/node": "22.10.2",
 		"del-cli": "6.0.0",

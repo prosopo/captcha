@@ -12,16 +12,16 @@
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
 		"build": "ng-packagr -p ng-package.json",
-		"dev": "npm run build -- --watch"
+		"dev": "pnpm run build -- --watch"
 	},
 	"dependencies": {
-		"@prosopo/procaptcha-wrapper": "2.6.80"
+		"@prosopo/procaptcha-wrapper": "workspace:*"
 	},
 	"peerDependencies": {
 		"@angular/core": "^20.3.9"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.1",
+		"@prosopo/config": "workspace:*",
 		"@angular/compiler-cli": "20.3.9",
 		"@types/node": "22.10.2",
 		"del-cli": "6.0.0",

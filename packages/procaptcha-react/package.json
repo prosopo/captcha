@@ -21,27 +21,29 @@
 	"source": "./src/index.ts",
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
+		"build": "pnpm run build:cross-env -- --mode ${NODE_ENV:-development}",
 		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --project tsconfig.types.json"
 	},
-	"browserslist": ["> 0.5%, last 2 versions, not dead"],
+	"browserslist": [
+		"> 0.5%, last 2 versions, not dead"
+	],
 	"dependencies": {
-		"@prosopo/common": "3.1.38",
-		"@prosopo/locale": "3.2.4",
-		"@prosopo/procaptcha": "2.10.29",
-		"@prosopo/procaptcha-common": "2.10.19",
-		"@prosopo/types": "4.4.0",
-		"@prosopo/util": "3.2.15",
-		"@prosopo/widget-skeleton": "2.8.3",
+		"@prosopo/common": "workspace:*",
+		"@prosopo/locale": "workspace:*",
+		"@prosopo/procaptcha": "workspace:*",
+		"@prosopo/procaptcha-common": "workspace:*",
+		"@prosopo/types": "workspace:*",
+		"@prosopo/util": "workspace:*",
+		"@prosopo/widget-skeleton": "workspace:*",
 		"csstype": "3.1.3",
 		"react": "18.3.1",
 		"react-dom": "18.3.1"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.1",
+		"@prosopo/config": "workspace:*",
 		"@emotion/react": "11.11.1",
 		"@types/node": "22.10.2",
 		"@types/react-dom": "18.3.1",
