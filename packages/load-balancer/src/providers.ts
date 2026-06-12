@@ -114,6 +114,17 @@ export const prefetchProviders = async (
 	await getProvidersPromise(env);
 };
 
+/**
+ * Returns the full (cached) list of active providers for an environment.
+ * Used to look up a provider by url/address, e.g. to find the provider that
+ * issued a token before forwarding a verification request to it.
+ */
+export const getProviders = async (
+	env: EnvironmentTypes,
+): Promise<HardcodedProvider[]> => {
+	return getProvidersPromise(env);
+};
+
 export const getRandomActiveProvider = async (
 	env: EnvironmentTypes,
 	entropy: number,

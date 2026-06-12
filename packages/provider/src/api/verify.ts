@@ -33,6 +33,7 @@ import { validateAddress } from "@prosopo/util-crypto";
 import express, { type Router } from "express";
 import { Tasks } from "../tasks/tasks.js";
 import { getMaintenanceMode } from "./admin/apiToggleMaintenanceModeEndpoint.js";
+import { forwardVerifyIfNotIssuer } from "./forwardVerify.js";
 import { resolveTestSiteKeyVerdict } from "./testSiteKey.js";
 
 /**
@@ -103,7 +104,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			const { dappSignature, token, ip, maxVerifiedTime, email } = parsed;
 			try {
 				// This can error if the token is invalid
-				const { user, dapp, timestamp, commitmentId } =
+				const { user, dapp, timestamp, commitmentId, providerUrl } =
 					decodeProcaptchaOutput(token);
 
 				// Reserved CI test site keys force a deterministic verdict before
@@ -116,6 +117,23 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						verified: testVerdict,
 					};
 					return res.json(verificationResponse);
+				}
+
+				// A client can verify against any pronode: if this node did not
+				// issue the token, forward the request to the provider that did
+				// and return its result. Only this provider can verify its own
+				// commitment, so do this before any local lookup.
+				const forwarded = await forwardVerifyIfNotIssuer({
+					env,
+					logger: req.logger,
+					path: ClientApiPaths.VerifyImageCaptchaSolutionDapp,
+					providerUrl,
+					dapp,
+					user,
+					body: parsed,
+				});
+				if (forwarded) {
+					return res.json(forwarded);
 				}
 
 				// Do this before checking the db
@@ -228,7 +246,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				const { token, dappSignature, verifiedTimeout, ip, email } = parsed;
 
 				// This can error if the token is invalid
-				const { dapp, user, timestamp, challenge } =
+				const { dapp, user, timestamp, challenge, providerUrl } =
 					decodeProcaptchaOutput(token);
 
 				// Reserved CI test site keys force a deterministic verdict before
@@ -241,6 +259,23 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						verified: testVerdict,
 					};
 					return res.json(verificationResponse);
+				}
+
+				// A client can verify against any pronode: if this node did not
+				// issue the token, forward the request to the provider that did
+				// and return its result. Only this provider can verify its own
+				// challenge, so do this before any local lookup.
+				const forwarded = await forwardVerifyIfNotIssuer({
+					env,
+					logger: req.logger,
+					path: ClientApiPaths.VerifyPowCaptchaSolution,
+					providerUrl,
+					dapp,
+					user,
+					body: parsed,
+				});
+				if (forwarded) {
+					return res.json(forwarded);
 				}
 
 				// Do this before checking the db
@@ -361,7 +396,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				const { token, dappSignature, verifiedTimeout, ip, email } = parsed;
 
 				// This can error if the token is invalid
-				const { dapp, user, timestamp, challenge } =
+				const { dapp, user, timestamp, challenge, providerUrl } =
 					decodeProcaptchaOutput(token);
 
 				// Reserved CI test site keys force a deterministic verdict before
@@ -374,6 +409,23 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						verified: testVerdict,
 					};
 					return res.json(verificationResponse);
+				}
+
+				// A client can verify against any pronode: if this node did not
+				// issue the token, forward the request to the provider that did
+				// and return its result. Only this provider can verify its own
+				// challenge, so do this before any local lookup.
+				const forwarded = await forwardVerifyIfNotIssuer({
+					env,
+					logger: req.logger,
+					path: ClientApiPaths.VerifyPuzzleCaptchaSolution,
+					providerUrl,
+					dapp,
+					user,
+					body: parsed,
+				});
+				if (forwarded) {
+					return res.json(forwarded);
 				}
 
 				// Do this before checking the db

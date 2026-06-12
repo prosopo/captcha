@@ -381,6 +381,25 @@ export default class ProviderApi
 		});
 	}
 
+	/**
+	 * Forwards an already-parsed verify request body to a verify path on this
+	 * provider, verbatim. Used by a pronode to proxy a verification request
+	 * through to the provider that issued the token (the one the client
+	 * happened to contact is not necessarily the issuer).
+	 */
+	public forwardVerify(
+		path: ClientApiPaths,
+		body: object,
+		user: string,
+	): Promise<VerificationResponse> {
+		return this.post(path, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": user,
+			},
+		});
+	}
+
 	public submitPowCaptchaVerify(
 		token: string,
 		signatureHex: string,
