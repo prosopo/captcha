@@ -21,6 +21,7 @@ import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
 import { checkSpamEmail as checkSpamEmailFn } from "../../tasks/spam/checkSpamEmail.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
+import { recordSpamEmail } from "../metrics.js";
 
 const CheckSpamEmailRequestBody = object({
 	email: string(),
@@ -98,6 +99,7 @@ export default (env: ProviderEnvironment) =>
 					isSpam,
 				},
 			}));
+			recordSpamEmail(isSpam ? "spam" : "ham");
 			return res.json({
 				isSpam,
 				emailDomain,

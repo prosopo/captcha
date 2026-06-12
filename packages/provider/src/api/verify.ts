@@ -16,6 +16,7 @@ import { handleErrors, verifySignature } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
 import {
 	ApiParams,
+	CaptchaType,
 	ClientApiPaths,
 	type ImageVerificationResponse,
 	ServerPowCaptchaVerifyRequestBody,
@@ -33,7 +34,15 @@ import { validateAddress } from "@prosopo/util-crypto";
 import express, { type Router } from "express";
 import { Tasks } from "../tasks/tasks.js";
 import { getMaintenanceMode } from "./admin/apiToggleMaintenanceModeEndpoint.js";
+import { metricsEnabled, recordCaptchaVerify } from "./metrics.js";
 import { resolveTestSiteKeyVerdict } from "./testSiteKey.js";
+
+// Maps each verify route to its captcha type for metrics labelling.
+const VERIFY_PATH_TYPE: Partial<Record<ClientApiPaths, CaptchaType>> = {
+	[ClientApiPaths.VerifyImageCaptchaSolutionDapp]: CaptchaType.image,
+	[ClientApiPaths.VerifyPowCaptchaSolution]: CaptchaType.pow,
+	[ClientApiPaths.VerifyPuzzleCaptchaSolution]: CaptchaType.puzzle,
+};
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -55,6 +64,35 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 		}));
 		userAccessRulesStorage = undefined as never;
 	}
+
+	// Records the outcome of every verify response (type + verified/failed +
+	// source) in one place by observing the JSON body, rather than threading a
+	// metric call through each of the maintenance/test-key/no-challenge/real
+	// return paths. Only successful (2xx) responses are counted; thrown errors
+	// go through handleErrors and are captured by the http_requests_total
+	// status label instead.
+	router.use((req, res, next) => {
+		if (!metricsEnabled()) return next();
+		const type = VERIFY_PATH_TYPE[req.path as ClientApiPaths];
+		if (!type) return next();
+		const originalJson = res.json.bind(res);
+		res.json = (body: unknown) => {
+			if (res.statusCode < 400) {
+				const verified = !!(
+					body &&
+					typeof body === "object" &&
+					(body as { verified?: unknown }).verified
+				);
+				recordCaptchaVerify({
+					type,
+					verified,
+					source: getMaintenanceMode() ? "maintenance" : "real",
+				});
+			}
+			return originalJson(body);
+		};
+		next();
+	});
 
 	/**
 	 * Verifies a dapp's solution as being approved or not

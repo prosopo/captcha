@@ -33,6 +33,11 @@ import { normalizeRequestIp } from "../../../utils/normalizeRequestIp.js";
 import { getMaintenanceMode } from "../../admin/apiToggleMaintenanceModeEndpoint.js";
 import { getRequestUserScope } from "../../blacklistRequestInspector.js";
 import { buildDnsEventUrl } from "../../dnsEventUrl.js";
+import {
+	recordBotScore,
+	recordDetectorTriggered,
+	recordFrictionlessDecision,
+} from "../../metrics.js";
 import { isReservedTestSiteKey } from "../../testSiteKey.js";
 import { buildFrictionlessMaintenanceResponse } from "../maintenanceModeResponses.js";
 import { handleAccessPolicy } from "./accessPolicy.js";
@@ -181,6 +186,7 @@ export default (
 						sessionId: dedup.sessionId,
 					},
 				}));
+				recordFrictionlessDecision("reuse_session");
 				attachHoneypot(res, clientRecord);
 				return res.json({
 					[ApiParams.captchaType]: dedup.captchaType as
@@ -269,6 +275,11 @@ export default (
 						logger: req.logger,
 					}),
 				);
+			}
+
+			recordBotScore(botScore);
+			if (triggeredDetectors && triggeredDetectors.length > 0) {
+				recordDetectorTriggered(triggeredDetectors);
 			}
 
 			const botThreshold =

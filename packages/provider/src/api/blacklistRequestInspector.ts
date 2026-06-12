@@ -24,6 +24,7 @@ import {
 	userScopeInput,
 } from "@prosopo/user-access-policy";
 import type { NextFunction, Request, Response } from "express";
+import { recordBlockedRequest } from "./metrics.js";
 
 export const getRequestUserScope = (
 	requestHeaders: Record<string, unknown>,
@@ -269,6 +270,7 @@ export class BlacklistRequestInspector {
 				msg: "Request without IP",
 			}));
 
+			recordBlockedRequest("no_ip");
 			return true;
 		}
 
@@ -310,13 +312,18 @@ export class BlacklistRequestInspector {
 			}
 			const accessPolicy = accessPolicies[0];
 
-			return AccessPolicyType.Block === accessPolicy.type;
+			const blocked = AccessPolicyType.Block === accessPolicy.type;
+			if (blocked) {
+				recordBlockedRequest("access_policy");
+			}
+			return blocked;
 		} catch (err) {
 			logger.error(() => ({
 				err,
 				msg: "Block Middleware Error",
 			}));
 
+			recordBlockedRequest("error");
 			return true;
 		}
 	}

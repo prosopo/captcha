@@ -18,6 +18,7 @@ import type { ProviderEnvironment } from "@prosopo/env";
 import { type ProviderDetails, PublicApiPaths } from "@prosopo/types";
 import { version } from "@prosopo/util";
 import express, { type Router } from "express";
+import { metricsEnabled, metricsHandler } from "./metrics.js";
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -30,6 +31,13 @@ export function publicRouter(env: ProviderEnvironment): Router {
 	router.get(PublicApiPaths.Healthz, (req, res) => {
 		res.status(200).send("OK");
 	});
+
+	// Prometheus metrics endpoint. Lives in the public router so it runs before
+	// rate-limiting, auth and blocking middleware — scrapes are never throttled
+	// or blocked. Vector scrapes this over the internal docker network.
+	if (metricsEnabled()) {
+		router.get(PublicApiPaths.Metrics, metricsHandler(env));
+	}
 
 	/**
 	 * Gets public details of the provider
