@@ -35,6 +35,15 @@ export const accessPolicyInput = z.object({
 	unsolvedImagesCount: z.coerce.number().optional(),
 	// used to increase the user's score
 	frictionlessScore: z.coerce.number().optional(),
+	// Skip the request-time block middleware and only fire at verify.
+	// Redis stores booleans as strings — preprocess so "true"/"false"
+	// round-trip to the JS boolean the matcher expects.
+	deferToVerify: z
+		.preprocess(
+			(v) => (typeof v === "string" ? v === "true" : v),
+			z.boolean(),
+		)
+		.optional(),
 } satisfies AllKeys<AccessPolicy>) satisfies ZodType<AccessPolicy>;
 
 // Sanitize block policies by removing captchaType and solvedImagesCount
