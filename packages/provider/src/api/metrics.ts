@@ -70,7 +70,7 @@ interface ProviderMetrics {
 	httpRequestDuration: Histogram<"route" | "method" | "status">;
 	captchaIssuedTotal: Counter<"type">;
 	captchaIssueErrorsTotal: Counter<"type">;
-	captchaVerifyTotal: Counter<"type" | "result" | "source" | "reason">;
+	captchaVerifyTotal: Counter<"type" | "result" | "source">;
 	frictionlessRoutedTotal: Counter<"decision">;
 	botScore: Histogram<never>;
 	detectorTriggeredTotal: Counter<"detector">;
@@ -115,8 +115,8 @@ const buildMetrics = (): ProviderMetrics => {
 	});
 	const captchaVerifyTotal = new Counter({
 		name: `${PREFIX}captcha_verify_total`,
-		help: "Captcha verification outcomes, by type/result/source/reason",
-		labelNames: ["type", "result", "source", "reason"] as const,
+		help: "Captcha verification outcomes, by type/result/source",
+		labelNames: ["type", "result", "source"] as const,
 		registers: [registry],
 	});
 	const frictionlessRoutedTotal = new Counter({
@@ -212,14 +212,12 @@ export const recordCaptchaVerify = (args: {
 	type: CaptchaType;
 	verified: boolean;
 	source: "real" | "test_key" | "maintenance" | "cached";
-	reason?: string;
 }): void => {
 	if (!metricsEnabled()) return;
 	getMetrics().captchaVerifyTotal.inc({
 		type: args.type,
 		result: args.verified ? "verified" : "failed",
 		source: args.source,
-		reason: args.reason ?? "none",
 	});
 };
 
@@ -292,8 +290,18 @@ export const metricsMiddleware = (): RequestHandler => {
 
 // Serves the Prometheus exposition. Refreshes the redis-readiness gauges from
 // the live DB connections at scrape time so they reflect current state.
+//
+// The endpoint is intended for the internal docker network (vector scrapes it),
+// so it is unauthenticated by default. Set PROSOPO_METRICS_TOKEN to require an
+// `Authorization: Bearer <token>` header — use this if the provider port is
+// reachable outside the internal network.
 export const metricsHandler = (env: ProviderEnvironment): RequestHandler => {
-	return async (_req: Request, res: Response) => {
+	return async (req: Request, res: Response) => {
+		const token = process.env.PROSOPO_METRICS_TOKEN;
+		if (token && req.headers.authorization !== `Bearer ${token}`) {
+			res.status(401).send("Unauthorized");
+			return;
+		}
 		const m = getMetrics();
 		try {
 			const db = env.getDb();
@@ -306,8 +314,11 @@ export const metricsHandler = (env: ProviderEnvironment): RequestHandler => {
 				db.getRedisAccessRulesConnection().isReady() ? 1 : 0,
 			);
 		} catch {
-			// DB may be unavailable (e.g. maintenance mode / startup); still
-			// serve whatever metrics we have rather than failing the scrape.
+			// DB unavailable (e.g. maintenance mode / startup / connection down):
+			// report not-ready rather than leaving the gauges at a stale "ready",
+			// and still serve the rest of the metrics rather than failing the scrape.
+			m.redisReady.set({ actor: "general" }, 0);
+			m.redisReady.set({ actor: "uap" }, 0);
 		}
 		res.set("Content-Type", m.registry.contentType);
 		res.end(await m.registry.metrics());

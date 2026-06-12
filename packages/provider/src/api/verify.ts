@@ -35,7 +35,29 @@ import express, { type Router } from "express";
 import { Tasks } from "../tasks/tasks.js";
 import { getMaintenanceMode } from "./admin/apiToggleMaintenanceModeEndpoint.js";
 import { metricsEnabled, recordCaptchaVerify } from "./metrics.js";
-import { resolveTestSiteKeyVerdict } from "./testSiteKey.js";
+import {
+	isReservedTestSiteKey,
+	resolveTestSiteKeyVerdict,
+} from "./testSiteKey.js";
+
+// Derives the metrics `source` label for a verify request: maintenance mode and
+// reserved CI test site keys return a verdict without a real verification, so
+// they are labelled separately to keep the real human solve-rate clean.
+const deriveVerifySource = (
+	body: unknown,
+): "real" | "test_key" | "maintenance" => {
+	if (getMaintenanceMode()) return "maintenance";
+	try {
+		const token = (body as { token?: string })?.token;
+		if (token) {
+			const { dapp } = decodeProcaptchaOutput(token);
+			if (isReservedTestSiteKey(dapp)) return "test_key";
+		}
+	} catch {
+		// Malformed/undecodable token — treat as a real request.
+	}
+	return "real";
+};
 
 // Maps each verify route to its captcha type for metrics labelling.
 const VERIFY_PATH_TYPE: Partial<Record<ClientApiPaths, CaptchaType>> = {
@@ -77,7 +99,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 		if (!type) return next();
 		const originalJson = res.json.bind(res);
 		res.json = (body: unknown) => {
-			if (res.statusCode < 400) {
+			if (res.statusCode < 300) {
 				const verified = !!(
 					body &&
 					typeof body === "object" &&
@@ -86,7 +108,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				recordCaptchaVerify({
 					type,
 					verified,
-					source: getMaintenanceMode() ? "maintenance" : "real",
+					source: deriveVerifySource(req.body),
 				});
 			}
 			return originalJson(body);
