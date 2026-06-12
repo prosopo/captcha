@@ -15,7 +15,8 @@
 		"INVALID_JWT": "Invalid authentication token",
 		"MISSING_AUTH_HEADER": "Missing authentication header",
 		"OBJECT_COUNT_ERROR": "Unexpected object count",
-		"SECRET_MISSING": "Secret is missing"
+		"SECRET_MISSING": "Secret is missing",
+		"UNKNOWN": "Unknown error"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "이 작업을 수행할 권한이 충분하지 않음",

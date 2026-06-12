@@ -39,10 +39,10 @@ describe("ProsopoBaseError construction is decoupled from i18n and logging", () 
 		expect(err.message).toBe("Invalid site key");
 	});
 
-	it("wraps an underlying Error, preserving its message as the cause", () => {
+	it("keeps the causing Error as `cause` and uses its message as the fallback", () => {
 		const inner = new Error("kaboom");
-		const err = new ProsopoEnvError(inner, {
-			translationKey: "API.UNKNOWN",
+		const err = new ProsopoEnvError("API.UNKNOWN", {
+			cause: inner,
 			context: { code: 500 },
 		});
 
@@ -51,10 +51,12 @@ describe("ProsopoBaseError construction is decoupled from i18n and logging", () 
 		expect(err.translationKey).toBe("API.UNKNOWN");
 	});
 
-	it("falls back to the wrapped Error message when no translation key is given", () => {
-		const err = new ProsopoEnvError(new Error("raw failure"));
+	it("falls back to the cause's message while keeping a placeholder key", () => {
+		const err = new ProsopoEnvError("GENERAL.UNKNOWN", {
+			cause: new Error("raw failure"),
+		});
 
-		expect(err.translationKey).toBeUndefined();
+		expect(err.translationKey).toBe("GENERAL.UNKNOWN");
 		expect(err.message).toBe("raw failure");
 	});
 
@@ -118,12 +120,8 @@ describe("unwrapError produces a JSON response carrying the translation key", ()
 		expect(code).toBe(400);
 	});
 
-	it("defaults the key to API.UNKNOWN when the error carries no translation key", () => {
-		const err = new ProsopoEnvError(new Error("raw failure"), {
-			context: { code: 500 },
-		});
-
-		const { jsonError } = unwrapError(err);
+	it("defaults the key to API.UNKNOWN for a non-Prosopo error that has no translation key", () => {
+		const { jsonError } = unwrapError(new SyntaxError("raw failure"));
 		expect(jsonError.key).toBe("API.UNKNOWN");
 		expect(jsonError.message).toBe("raw failure");
 	});

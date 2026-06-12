@@ -24,6 +24,7 @@
 		"SITE_KEY_MISSING": "SITE KEY missing",
 		"ACCOUNT_NOT_FOUND": "Account not found",
 		"SITE_KEY_NOT_FOUND": "Site key not found",
+		"UNKNOWN": "Unknown error",
 		"INVALID_TIMESTAMP": "Invalid timestamp",
 		"MISSING_SECRET_KEY": "Missing secret key",
 		"BILLING_ERROR": "Billing error",

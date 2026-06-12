@@ -90,21 +90,15 @@ export abstract class Generate<
 		// if specified, check files exist
 		const labelledMapFile: string | undefined = args.labelled;
 		if (labelledMapFile && !fs.existsSync(labelledMapFile)) {
-			throw new ProsopoDatasetError(
-				new Error(`labelled map file does not exist: ${labelledMapFile}`),
-				{
-					translationKey: "FS.FILE_NOT_FOUND",
-				},
-			);
+			throw new ProsopoDatasetError("FS.FILE_NOT_FOUND", {
+				message: `labelled map file does not exist: ${labelledMapFile}`,
+			});
 		}
 		const unlabelledMapFile: string | undefined = args.unlabelled;
 		if (unlabelledMapFile && !fs.existsSync(unlabelledMapFile)) {
-			throw new ProsopoDatasetError(
-				new Error(`unlabelled map file does not exist: ${unlabelledMapFile}`),
-				{
-					translationKey: "FS.FILE_NOT_FOUND",
-				},
-			);
+			throw new ProsopoDatasetError("FS.FILE_NOT_FOUND", {
+				message: `unlabelled map file does not exist: ${unlabelledMapFile}`,
+			});
 		}
 		this.labelledMapFile = labelledMapFile || "";
 		this.unlabelledMapFile = unlabelledMapFile || "";

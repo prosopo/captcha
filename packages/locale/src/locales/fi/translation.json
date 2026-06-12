@@ -101,7 +101,8 @@
 		"INVALID_JWT": "Invalid authentication token",
 		"MISSING_AUTH_HEADER": "Missing authentication header",
 		"OBJECT_COUNT_ERROR": "Unexpected object count",
-		"SECRET_MISSING": "Secret is missing"
+		"SECRET_MISSING": "Secret is missing",
+		"UNKNOWN": "Unknown error"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Ei voida muokata omistajakäyttäjää",

@@ -26,8 +26,6 @@ export const authMiddleware = (
 		try {
 			const jwt = extractJWT(req);
 
-			let error: ProsopoApiError | undefined;
-
 			if (authAccount?.jwtVerify(jwt).isValid) {
 				next();
 				return;
@@ -39,7 +37,7 @@ export const authMiddleware = (
 			}
 
 			res.status(401).json({
-				error: new ProsopoEnvError(error || "API.UNAUTHORIZED", {
+				error: new ProsopoEnvError("API.UNAUTHORIZED", {
 					context: { code: 401 },
 				}),
 			});

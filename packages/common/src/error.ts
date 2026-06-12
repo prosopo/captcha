@@ -18,8 +18,10 @@ import { ZodError } from "zod";
 
 type BaseErrorOptions<ContextType> = {
 	name?: string;
-	translationKey?: TranslationKey;
 	message?: string;
+	// The underlying error that caused this one, if any. Its message is used as
+	// the fallback `message` when no explicit `message` is provided.
+	cause?: Error;
 	context?: ContextType;
 };
 
@@ -48,20 +50,15 @@ export abstract class ProsopoBaseError<
 	cause: Error | undefined;
 
 	constructor(
-		error: Error | TranslationKey,
+		translationKey: TranslationKey,
 		options?: BaseErrorOptions<ContextType>,
 	) {
-		if (error instanceof Error) {
-			super(error.message);
-			this.cause = error;
-			this.translationKey = options?.translationKey;
-			this.message = options?.message || error.message;
-		} else {
-			const fallback = options?.message || error;
-			super(fallback);
-			this.translationKey = error;
-			this.message = fallback;
-		}
+		const message =
+			options?.message ?? options?.cause?.message ?? translationKey;
+		super(message);
+		this.translationKey = translationKey;
+		this.message = message;
+		this.cause = options?.cause;
 		this.context = options?.context;
 		this.name = options?.name || this.constructor.name;
 	}

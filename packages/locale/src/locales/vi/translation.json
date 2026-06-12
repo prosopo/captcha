@@ -15,7 +15,8 @@
 		"INVALID_JWT": "Invalid authentication token",
 		"MISSING_AUTH_HEADER": "Missing authentication header",
 		"OBJECT_COUNT_ERROR": "Unexpected object count",
-		"SECRET_MISSING": "Secret is missing"
+		"SECRET_MISSING": "Secret is missing",
+		"UNKNOWN": "Unknown error"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Không đủ quyền để thực hiện hành động này",

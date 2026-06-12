@@ -47,12 +47,9 @@ export class InputCliCommand<
 		await super._check(args);
 		// input must exist
 		if (!fs.existsSync(args.input)) {
-			throw new ProsopoDatasetError(
-				new Error(`input path does not exist: ${args.input}`),
-				{
-					translationKey: "FS.FILE_NOT_FOUND",
-				},
-			);
+			throw new ProsopoDatasetError("FS.FILE_NOT_FOUND", {
+				message: `input path does not exist: ${args.input}`,
+			});
 		}
 	}
 }

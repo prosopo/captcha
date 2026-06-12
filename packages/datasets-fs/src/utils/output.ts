@@ -64,12 +64,9 @@ export class OutputCliCommand<
 		// output must not exist, unless overwrite is true
 		if (this.outputExists()) {
 			if (!args.overwrite) {
-				throw new ProsopoEnvError(
-					new Error(`output path already exists: ${args.output}`),
-					{
-						translationKey: "FS.FILE_ALREADY_EXISTS",
-					},
-				);
+				throw new ProsopoEnvError("FS.FILE_ALREADY_EXISTS", {
+					message: `output path already exists: ${args.output}`,
+				});
 			}
 		}
 	}
