@@ -1,0 +1,47 @@
+# Supply-chain guard: ensure dependencies are pinned to exact versions.
+#
+# Floating ranges (^, ~, *, "latest") let `npm install` silently pull a newer
+# release than was reviewed. Recent npm worms/hijacks abused this exact gap:
+# the "Shai-Hulud" worm (Sep 2025, 500+ packages), the chalk/debug hijack
+# (Sep 2025, ~2.6B weekly downloads) and the nx attack (Aug 2025). Pinning exact
+# versions + committed lockfile + `npm ci` blocks the auto-pull of a bad release.
+
+name: pinned-versions
+
+on:
+  pull_request:
+    branches: [main, dev, staging, release/*]
+    types:
+      - opened # when a PR is opened
+      - synchronize # when a PR is pushed to
+      - reopened # when a PR is reopened
+      - ready_for_review # when a PR is marked as ready for review (e.g. taken off draft mode)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    # Skip draft PRs, but still allow manual workflow_dispatch runs (where
+    # github.event.pull_request is undefined).
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      # No `npm install` needed — the check only reads JSON files.
+      - name: Check dependencies are pinned to exact versions
+        run: node .github/scripts/check-pinned-versions.mjs
