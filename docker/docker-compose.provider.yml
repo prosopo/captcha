@@ -187,8 +187,7 @@ services:
     env_file:
       - ../.env.1.${NODE_ENV}
     depends_on:
-      redis-stack:
-        condition: service_started
+      - redis-stack
     restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
     expose:
       - "9121"
@@ -235,6 +234,71 @@ services:
       internal:
         ipv4_address: 172.18.0.12
         ipv6_address: fd00:aaaa::c
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '1'
+  mongodb-exporter:
+    # Percona MongoDB exporter: richer mongo metrics (replication, per-collection
+    # & index stats, query exec stats, connection pool) in Prometheus format on
+    # :9216, scraped by vector (sources.mongodb_exporter_metrics ->
+    # http://mongodb-exporter:9216/metrics). Complements vector's built-in
+    # mongodb_metrics source, which only exposes basic server status.
+    container_name: mongodb-exporter
+    profiles:
+      - production
+      - staging
+    image: percona/mongodb_exporter:${MONGODB_EXPORTER_IMAGE:-0.43.1}
+    labels:
+      - "vector.docker=true" # log docker events
+    # MONGODB_URI is resolved by compose interpolation from the deploy-exported
+    # provider env (same MONGO_INITDB_ROOT_* values the database/vector services
+    # use). Passed via env rather than --mongodb.uri so the password isn't
+    # visible in the container's process args. --collect-all enables all
+    # collectors; --compatible-mode keeps metric names stable for dashboards.
+    environment:
+      - MONGODB_URI=mongodb://${MONGO_INITDB_ROOT_USERNAME:-root}:${MONGO_INITDB_ROOT_PASSWORD:-root}@database:27017
+    command:
+      - '--collect-all'
+      - '--compatible-mode'
+    env_file:
+      - ../.env.1.${NODE_ENV}
+    depends_on:
+      - database
+    restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+    expose:
+      - "9216"
+    networks:
+      internal:
+        ipv4_address: 172.18.0.13
+        ipv6_address: fd00:aaaa::d
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '1'
+  smartctl-exporter:
+    # Disk SMART health metrics (reallocated sectors, temperature, wear,
+    # predicted failure) in Prometheus format on :9633, scraped by vector
+    # (sources.smartctl_metrics -> http://smartctl-exporter:9633/metrics).
+    # Needs privileged + host /dev access to issue SMART commands to the disks.
+    container_name: smartctl-exporter
+    profiles:
+      - production
+      - staging
+    image: prometheuscommunity/smartctl-exporter:${SMARTCTL_EXPORTER_IMAGE:-v0.13.0}
+    labels:
+      - "vector.docker=true" # log docker events
+    privileged: true
+    user: root
+    restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+    expose:
+      - "9633"
+    networks:
+      internal:
+        ipv4_address: 172.18.0.14
+        ipv6_address: fd00:aaaa::e
     logging:
       driver: 'json-file'
       options:
