@@ -75,7 +75,7 @@ export class Resize extends InputOutputCliCommand<ArgsSchemaType> {
 		const outDir: string = args.output;
 		const overwrite = args.overwrite || false;
 		if (!overwrite && fs.existsSync(outDir)) {
-			throw new ProsopoEnvError("FS.FILE_NOT_FOUND", {
+			throw new ProsopoEnvError("FS.FILE_ALREADY_EXISTS", {
 				message: `Output directory already exists: ${outDir}`,
 			});
 		}

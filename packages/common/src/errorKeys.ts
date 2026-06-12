@@ -40,6 +40,12 @@ export const GENERAL_ERROR_KEYS = {
 	SITE_KEY_NOT_FOUND: "GENERAL.SITE_KEY_NOT_FOUND",
 	MISSING_SECRET_KEY: "GENERAL.MISSING_SECRET_KEY",
 	INVALID_SIGNATURE: "GENERAL.INVALID_SIGNATURE",
+	// Thrown by the backend (auth middleware / env guards) and returned to the
+	// frontend as the error key, so they must be preserved in the frontend
+	// translation bundle by the Vite pruning plugin.
+	MISSING_AUTH_HEADER: "GENERAL.MISSING_AUTH_HEADER",
+	INVALID_JWT: "GENERAL.INVALID_JWT",
+	UNKNOWN: "GENERAL.UNKNOWN",
 } as const;
 
 export const PORTAL_ERROR_KEYS = {
