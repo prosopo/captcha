@@ -76,6 +76,12 @@ export type DecisionMachineInput = {
 	behavioralDataPacked?: DecisionMachineBehavioralDataPacked;
 	deviceCapability?: string;
 	countryCode?: string;
+	// Full ipinfo payload. `countryCode` is kept as a separate top-level
+	// field for backwards compatibility with existing decision machines, but
+	// rules that need isDatacenter / isVPN / asnNumber / isAbuser etc. should
+	// read from `ipInfo` (set to the same payload stored on the captcha
+	// challenge record). Undefined for invalid lookups.
+	ipInfo?: IPInfoResponse;
 	dnsEvent?: EnrichedDnsEvent;
 };
 

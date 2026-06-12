@@ -684,6 +684,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				countryCode: challengeRecord.ipInfo?.isValid
 					? challengeRecord.ipInfo.countryCode
 					: undefined,
+				ipInfo: challengeRecord.ipInfo,
 				dnsEvent: enrichedDnsEvent,
 			};
 
