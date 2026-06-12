@@ -106,7 +106,11 @@ https://{$CADDY_DOMAIN}:8443 {
 	}
 	
 	handle /robots.txt {
-		uri strip_prefix / # removes leading /, so it looks directly in root
+		# Serve /srv/static/robots.txt. Do NOT strip the leading slash:
+		# file_server prepends `root` to the request path, so `/robots.txt`
+		# already resolves to `/srv/static/robots.txt`. Rewriting the path to
+		# `robots.txt` (no leading slash) makes file_server issue a 308
+		# canonical redirect to re-add the slash, which loops forever (#3467).
 		root * /srv/static
 		file_server
 		header Content-Type "text/plain"
