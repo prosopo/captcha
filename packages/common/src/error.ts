@@ -86,7 +86,7 @@ export class ProsopoApiError extends ProsopoBaseError<ApiContextParams> {
 	code: number;
 
 	constructor(
-		error: Error | TranslationKey,
+		translationKey: TranslationKey,
 		options?: BaseErrorOptions<ApiContextParams>,
 	) {
 		const code = options?.context?.code || 500;
@@ -95,12 +95,9 @@ export class ProsopoApiError extends ProsopoBaseError<ApiContextParams> {
 			context: {
 				...options?.context,
 				code,
-				...(error instanceof ProsopoBaseError && error.translationKey
-					? { translationKey: error.translationKey }
-					: {}),
 			},
 		};
-		super(error, optionsAll);
+		super(translationKey, optionsAll);
 		this.code = code;
 	}
 }

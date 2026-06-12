@@ -124,8 +124,12 @@ describe("handleErrors", () => {
 		} as unknown as Response;
 		const mockNext = vi.fn() as unknown as NextFunction;
 
-		const envError = new ProsopoEnvError("GENERAL.ENVIRONMENT_NOT_READY");
-		const apiError = new ProsopoApiError(envError);
+		const envError = new ProsopoEnvError("GENERAL.ENVIRONMENT_NOT_READY", {
+			context: { code: 500 },
+		});
+		const apiError = new ProsopoApiError("API.UNKNOWN", {
+			context: { error: envError },
+		});
 
 		handleErrors(apiError, mockRequest, mockResponse, mockNext);
 
