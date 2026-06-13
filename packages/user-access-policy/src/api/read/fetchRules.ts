@@ -36,12 +36,15 @@ export type FetchRulesResponse = {
 	ruleEntries: AccessRuleEntry[];
 };
 
-// `satisfies ZodType<FetchRulesResponse>` is omitted because
-// `ruleEntryInput.rule` transitively uses `z.preprocess` on
-// `deferToVerify`, widening the schema's input position to `unknown`.
-// The `AllKeys<FetchRulesResponse>` constraint still catches missing
-// fields.
-export const fetchRulesResponse = z.object({
+// Explicit annotation with `unknown` input position rather than the
+// strict identity form because `ruleEntryInput.rule` transitively uses
+// `z.preprocess` on `deferToVerify`. Required for portable declaration
+// emit; the `AllKeys<...>` constraint still catches missing fields.
+export const fetchRulesResponse: ZodType<
+	FetchRulesResponse,
+	z.ZodTypeDef,
+	unknown
+> = z.object({
 	ruleEntries: ruleEntryInput.array(),
 } satisfies AllKeys<FetchRulesResponse>);
 
