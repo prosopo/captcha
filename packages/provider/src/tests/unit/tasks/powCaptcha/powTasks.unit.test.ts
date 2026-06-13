@@ -249,7 +249,6 @@ describe("PowCaptchaManager", () => {
 				timeout,
 			];
 
-
 			const checKPowSignatureArgs1: Parameters<typeof checkPowSignature> = [
 				requestedAtTimestamp.toString(),
 				userSignature,
@@ -344,7 +343,6 @@ describe("PowCaptchaManager", () => {
 					)
 				).verified,
 			).toBe(false);
-
 		});
 	});
 

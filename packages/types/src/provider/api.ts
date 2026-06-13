@@ -38,10 +38,7 @@ import {
 } from "../client/captchaType/captchaType.js";
 import { ClientSettingsSchema, Tier } from "../client/index.js";
 import { ModeEnum } from "../config/mode.js";
-import {
-	DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED,
-	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
-} from "../config/timeouts.js";
+import { DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED } from "../config/timeouts.js";
 import {
 	type Captcha,
 	CaptchaSolutionSchema,

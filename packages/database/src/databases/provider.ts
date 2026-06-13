@@ -920,10 +920,9 @@ export class ProviderDatabase
 			};
 		}
 		try {
-			const updateResult = await tables.powcaptcha.updateOne(
-				{ challenge },
-				[{ $set: setStage }],
-			);
+			const updateResult = await tables.powcaptcha.updateOne({ challenge }, [
+				{ $set: setStage },
+			]);
 			if (updateResult.matchedCount === 0) {
 				const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
 					context: {
@@ -1181,10 +1180,9 @@ export class ProviderDatabase
 			};
 		}
 		try {
-			const updateResult = await tables.puzzlecaptcha.updateOne(
-				{ challenge },
-				[{ $set: setStage }],
-			);
+			const updateResult = await tables.puzzlecaptcha.updateOne({ challenge }, [
+				{ $set: setStage },
+			]);
 			if (updateResult.matchedCount === 0) {
 				const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
 					context: {
