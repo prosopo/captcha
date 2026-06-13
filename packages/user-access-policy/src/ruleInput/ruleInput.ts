@@ -48,20 +48,25 @@ const ruleGroupInput = z
 		return ruleGroup;
 	});
 
-export const accessRuleInput: ZodType<AccessRule> = z
+// The explicit `: ZodType<AccessRule>` annotation is omitted because
+// `accessPolicyInput.shape.deferToVerify` uses `z.preprocess` which
+// widens the schema's input type to `unknown`. The `transform` below
+// pins the OUTPUT to AccessRule, which is what callers consume.
+export const accessRuleInput = z
 	.object({
 		...accessPolicyInput.shape,
 		...policyScopeInput.shape,
 	})
 	.and(userScopeInput)
 	.and(ruleGroupInput)
-	// transform is used for type safety only - plain "satisfies ZodType<x>" doesn't work after ".and()"
 	.transform((ruleInput: AccessRuleInput): AccessRule => ruleInput);
 
+// Same reason as accessRuleInput — `rule` is `accessRuleInput` whose
+// input type carries the `unknown` deferToVerify from preprocess.
 export const ruleEntryInput = z.object({
 	rule: accessRuleInput,
 	expiresUnixTimestamp: z.coerce.number().optional(),
-} satisfies AllKeys<AccessRuleEntry>) satisfies ZodType<AccessRuleEntry>;
+} satisfies AllKeys<AccessRuleEntry>);
 
 export type AccessRulesFilterInput = AccessRulesFilter & {
 	userScope?: UserScopeInput;

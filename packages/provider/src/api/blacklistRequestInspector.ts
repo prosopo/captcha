@@ -301,14 +301,18 @@ export class BlacklistRequestInspector {
 				),
 				clientId,
 			);
-			if (
-				!accessPolicies ||
-				accessPolicies.length === 0 ||
-				!accessPolicies[0]
-			) {
+			// Skip policies that have explicitly opted out of request-time
+			// enforcement (`deferToVerify`). Those are matched again from
+			// `checkForHardBlock` inside each captcha task's verify path —
+			// same pattern coords rules already use, just driven by a
+			// per-policy flag rather than by blanking the scope field.
+			const enforceable = (accessPolicies ?? []).filter(
+				(p) => !p.deferToVerify,
+			);
+			if (enforceable.length === 0 || !enforceable[0]) {
 				return false;
 			}
-			const accessPolicy = accessPolicies[0];
+			const accessPolicy = enforceable[0];
 
 			return AccessPolicyType.Block === accessPolicy.type;
 		} catch (err) {
