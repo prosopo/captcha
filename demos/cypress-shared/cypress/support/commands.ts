@@ -375,6 +375,7 @@ function registerSiteKey(
 			imageMaxRounds: MAX_IMAGE_CAPTCHA_ROUNDS,
 			puzzleTolerance: puzzleToleranceDefault,
 			disallowWebView: false,
+			verifiedTimeout: 60000,
 		};
 
 		// Use cy.request() to ensure Cypress correctly queues the request

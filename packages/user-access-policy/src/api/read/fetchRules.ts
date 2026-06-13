@@ -36,9 +36,14 @@ export type FetchRulesResponse = {
 	ruleEntries: AccessRuleEntry[];
 };
 
+// `satisfies ZodType<FetchRulesResponse>` is omitted because
+// `ruleEntryInput.rule` transitively uses `z.preprocess` on
+// `deferToVerify`, widening the schema's input position to `unknown`.
+// The `AllKeys<FetchRulesResponse>` constraint still catches missing
+// fields.
 export const fetchRulesResponse = z.object({
 	ruleEntries: ruleEntryInput.array(),
-} satisfies AllKeys<FetchRulesResponse>) satisfies ZodType<FetchRulesResponse>;
+} satisfies AllKeys<FetchRulesResponse>);
 
 export type FetchRulesEndpointResponse = ApiEndpointResponse & {
 	data?: FetchRulesResponse;

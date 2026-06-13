@@ -841,6 +841,9 @@ export class ProviderDatabase
 						userAccount: 1,
 						dappAccount: 1,
 						requestedAtTimestamp: 1,
+						submittedAtTimestamp: 1,
+						verifiedAtTimestamp: 1,
+						failedAtTimestamp: 1,
 						ipAddress: 1,
 						headers: 1,
 						ja4: 1,
@@ -899,17 +902,8 @@ export class ProviderDatabase
 	): Promise<void> {
 		const tables = this.getTables();
 		const timestamp = new Date();
-		const update: Pick<
-			PoWCaptchaRecord,
-			| "result"
-			| "serverChecked"
-			| "userSubmitted"
-			| "storedAtTimestamp"
-			| "userSignature"
-			| "lastUpdatedTimestamp"
-			| "coords"
-			| "pendingStage"
-		> = {
+		const isDisapproved = result.status === CaptchaStatus.disapproved;
+		const setStage: Record<string, unknown> = {
 			result,
 			serverChecked,
 			userSubmitted,
@@ -918,18 +912,25 @@ export class ProviderDatabase
 			pendingStage: true,
 			...(coords && { coords }),
 		};
+		if (userSubmitted) {
+			setStage.submittedAtTimestamp = {
+				$ifNull: ["$submittedAtTimestamp", timestamp],
+			};
+		}
+		if (isDisapproved) {
+			setStage.failedAtTimestamp = {
+				$ifNull: ["$failedAtTimestamp", timestamp],
+			};
+		}
 		try {
-			const updateResult = await tables.powcaptcha.updateOne(
-				{ challenge },
-				{
-					$set: update,
-				},
-			);
+			const updateResult = await tables.powcaptcha.updateOne({ challenge }, [
+				{ $set: setStage },
+			]);
 			if (updateResult.matchedCount === 0) {
 				const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
 					context: {
 						challenge,
-						...update,
+						...setStage,
 					},
 					logger: this.logger,
 				});
@@ -942,7 +943,7 @@ export class ProviderDatabase
 			this.logger.info(() => ({
 				data: {
 					challenge,
-					...update,
+					...setStage,
 				},
 				msg: "PowCaptcha record updated successfully",
 			}));
@@ -964,7 +965,7 @@ export class ProviderDatabase
 				context: {
 					error,
 					challenge,
-					...update,
+					...setStage,
 				},
 				logger: this.logger,
 			});
@@ -1161,17 +1162,8 @@ export class ProviderDatabase
 	): Promise<void> {
 		const tables = this.getTables();
 		const timestamp = lastUpdatedTimestamp ?? new Date();
-		const update: Pick<
-			PuzzleCaptchaRecord,
-			| "result"
-			| "serverChecked"
-			| "userSubmitted"
-			| "storedAtTimestamp"
-			| "userSignature"
-			| "lastUpdatedTimestamp"
-			| "coords"
-			| "pendingStage"
-		> = {
+		const isDisapproved = result.status === CaptchaStatus.disapproved;
+		const setStage: Record<string, unknown> = {
 			result,
 			serverChecked,
 			userSubmitted,
@@ -1180,18 +1172,25 @@ export class ProviderDatabase
 			pendingStage: true,
 			...(coords && { coords }),
 		};
+		if (userSubmitted) {
+			setStage.submittedAtTimestamp = {
+				$ifNull: ["$submittedAtTimestamp", timestamp],
+			};
+		}
+		if (isDisapproved) {
+			setStage.failedAtTimestamp = {
+				$ifNull: ["$failedAtTimestamp", timestamp],
+			};
+		}
 		try {
-			const updateResult = await tables.puzzlecaptcha.updateOne(
-				{ challenge },
-				{
-					$set: update,
-				},
-			);
+			const updateResult = await tables.puzzlecaptcha.updateOne({ challenge }, [
+				{ $set: setStage },
+			]);
 			if (updateResult.matchedCount === 0) {
 				const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
 					context: {
 						challenge,
-						...update,
+						...setStage,
 					},
 					logger: this.logger,
 				});
@@ -1204,7 +1203,7 @@ export class ProviderDatabase
 			this.logger.info(() => ({
 				data: {
 					challenge,
-					...update,
+					...setStage,
 				},
 				msg: "PuzzleCaptcha record updated successfully",
 			}));
@@ -1213,7 +1212,7 @@ export class ProviderDatabase
 				context: {
 					error,
 					challenge,
-					...update,
+					...setStage,
 				},
 				logger: this.logger,
 			});
@@ -1230,11 +1229,27 @@ export class ProviderDatabase
 		updates: Partial<PuzzleCaptchaRecord>,
 	): Promise<void> {
 		const tables = this.getTables();
-		await tables.puzzlecaptcha.updateOne(
-			{ challenge },
-			{ $set: { ...updates, pendingStage: true } },
-			{ upsert: false },
-		);
+		const timestamp = new Date();
+		const setStage: Record<string, unknown> = {
+			...updates,
+			pendingStage: true,
+		};
+		if (updates.serverChecked === true) {
+			setStage.verifiedAtTimestamp = {
+				$ifNull: ["$verifiedAtTimestamp", timestamp],
+			};
+		}
+		if (updates.userSubmitted === true) {
+			setStage.submittedAtTimestamp = {
+				$ifNull: ["$submittedAtTimestamp", timestamp],
+			};
+		}
+		if (updates.result?.status === CaptchaStatus.disapproved) {
+			setStage.failedAtTimestamp = {
+				$ifNull: ["$failedAtTimestamp", timestamp],
+			};
+		}
+		await tables.puzzlecaptcha.updateOne({ challenge }, [{ $set: setStage }]);
 	}
 
 	/** @description Get serverChecked Dapp User image captcha commitments from the commitments table
@@ -1301,20 +1316,19 @@ export class ProviderDatabase
 	/** @description Mark a list of captcha commits as checked
 	 */
 	async markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void> {
-		const updateDoc: Pick<
-			StoredCaptcha,
-			"serverChecked" | "lastUpdatedTimestamp" | "pendingStage"
-		> = {
-			[StoredStatusNames.serverChecked]: true,
-			lastUpdatedTimestamp: new Date(),
-			pendingStage: true,
-		};
-
-		await this.tables?.commitment.updateMany(
-			{ id: { $in: commitmentIds } },
-			{ $set: updateDoc },
-			{ upsert: false },
-		);
+		const timestamp = new Date();
+		await this.tables?.commitment.updateMany({ id: { $in: commitmentIds } }, [
+			{
+				$set: {
+					serverChecked: true,
+					lastUpdatedTimestamp: timestamp,
+					pendingStage: true,
+					verifiedAtTimestamp: {
+						$ifNull: ["$verifiedAtTimestamp", timestamp],
+					},
+				},
+			},
+		]);
 	}
 
 	/** @description Update an image captcha commitment
@@ -1324,11 +1338,28 @@ export class ProviderDatabase
 		updates: Partial<UserCommitment>,
 	) {
 		const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
-		await this.tables?.commitment.updateOne(filter, {
+		const timestamp = new Date();
+		const setStage: Record<string, unknown> = {
 			...updates,
-			lastUpdatedAtTimestamp: new Date(),
+			lastUpdatedAtTimestamp: timestamp,
 			pendingStage: true,
-		});
+		};
+		if (updates.userSubmitted === true) {
+			setStage.submittedAtTimestamp = {
+				$ifNull: ["$submittedAtTimestamp", timestamp],
+			};
+		}
+		if (updates.serverChecked === true) {
+			setStage.verifiedAtTimestamp = {
+				$ifNull: ["$verifiedAtTimestamp", timestamp],
+			};
+		}
+		if (updates.result?.status === CaptchaStatus.disapproved) {
+			setStage.failedAtTimestamp = {
+				$ifNull: ["$failedAtTimestamp", timestamp],
+			};
+		}
+		await this.tables?.commitment.updateOne(filter, [{ $set: setStage }]);
 	}
 
 	/**
@@ -1378,19 +1409,21 @@ export class ProviderDatabase
 	/** @description Mark a list of PoW captcha commits as checked by the server
 	 */
 	async markDappUserPoWCommitmentsChecked(challenges: string[]): Promise<void> {
-		const updateDoc: Pick<
-			StoredCaptcha,
-			"serverChecked" | "lastUpdatedTimestamp" | "pendingStage"
-		> = {
-			[StoredStatusNames.serverChecked]: true,
-			lastUpdatedTimestamp: new Date(),
-			pendingStage: true,
-		};
+		const timestamp = new Date();
 		await this.tables?.powcaptcha.updateMany(
 			{ challenge: { $in: challenges } },
-			{
-				$set: updateDoc,
-			},
+			[
+				{
+					$set: {
+						serverChecked: true,
+						lastUpdatedTimestamp: timestamp,
+						pendingStage: true,
+						verifiedAtTimestamp: {
+							$ifNull: ["$verifiedAtTimestamp", timestamp],
+						},
+					},
+				},
+			],
 			{ upsert: false },
 		);
 	}
@@ -2004,6 +2037,9 @@ export class ProviderDatabase
 				result: 1,
 				serverChecked: 1,
 				requestedAtTimestamp: 1,
+				submittedAtTimestamp: 1,
+				verifiedAtTimestamp: 1,
+				failedAtTimestamp: 1,
 				ipAddress: 1,
 				sessionId: 1,
 				userAccount: 1,

@@ -444,8 +444,12 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		});
 		// -- END WARNING --
 
-		const recent = verifyRecency(challenge, timeout);
-		if (!recent) {
+		const submittedAt = challengeRecord.submittedAtTimestamp;
+		const submitToVerifyMs =
+			submittedAt instanceof Date
+				? Date.now() - submittedAt.getTime()
+				: Number.POSITIVE_INFINITY;
+		if (submitToVerifyMs > timeout) {
 			const disapprovedResult = {
 				status: CaptchaStatus.disapproved,
 				reason: ResultReason.TIMESTAMP_TOO_OLD,

@@ -106,7 +106,6 @@ export class ProsopoServer {
 			return await providerApi.submitPowCaptchaVerify(
 				token,
 				signatureHex,
-				timeouts.pow.cachedTimeout,
 				user,
 				ip,
 				email,

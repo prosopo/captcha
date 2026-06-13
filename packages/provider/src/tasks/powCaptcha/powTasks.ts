@@ -573,8 +573,12 @@ export class PowCaptchaManager extends CaptchaManager {
 		let failResult: CaptchaResult | undefined;
 		let failReason: string | undefined;
 
-		const recent = verifyRecency(challenge, timeout);
-		if (!recent) {
+		const submittedAt = challengeRecord.submittedAtTimestamp;
+		const submitToVerifyMs =
+			submittedAt instanceof Date
+				? Date.now() - submittedAt.getTime()
+				: Number.POSITIVE_INFINITY;
+		if (submitToVerifyMs > timeout) {
 			failResult = {
 				status: CaptchaStatus.disapproved,
 				reason: ResultReason.TIMESTAMP_TOO_OLD,

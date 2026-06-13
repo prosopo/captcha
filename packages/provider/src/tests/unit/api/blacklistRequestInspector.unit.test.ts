@@ -233,6 +233,99 @@ describe("BlacklistRequestInspector.shouldAbortRequest", () => {
 		);
 		expect(shouldAbort).toBe(true);
 	});
+
+	// A Block policy with deferToVerify=true is the verify-time-only block:
+	// the request must pass blockMiddleware unimpeded (so the captcha
+	// challenge is served), and the block fires later at the verify step
+	// via CaptchaManager.checkForHardBlock. If middleware aborted here, the
+	// captcha widget would 401 client-side and the bot would never reach
+	// the verify path that's supposed to gather their behavioural data.
+	it("does NOT abort the request when the only matching Block policy has deferToVerify=true", async () => {
+		const storage = buildStorage(async () => [
+			{
+				type: AccessPolicyType.Block,
+				deferToVerify: true,
+			},
+		]);
+		const inspector = new BlacklistRequestInspector(
+			storage,
+			async () => undefined,
+		);
+
+		const shouldAbort = await inspector.shouldAbortRequest(
+			"/v1/prosopo/provider/client/captcha/frictionless",
+			"1.1.1.1",
+			"ja4hash",
+			{},
+			{},
+			mockLogger,
+			validIpInfo("DE"),
+		);
+		expect(shouldAbort).toBe(false);
+	});
+
+	// Defence in depth: a Restrict policy with deferToVerify=true also gets
+	// filtered out at middleware time. Restrict-with-deferToVerify isn't a
+	// pattern the rule-writer emits today (deferToVerify is currently only
+	// meaningful on Block), but the filter is policy-type-agnostic so the
+	// behaviour shouldn't depend on type.
+	it("does NOT abort when only matching policy is Restrict + deferToVerify", async () => {
+		const storage = buildStorage(async () => [
+			{
+				type: AccessPolicyType.Restrict,
+				deferToVerify: true,
+			},
+		]);
+		const inspector = new BlacklistRequestInspector(
+			storage,
+			async () => undefined,
+		);
+
+		const shouldAbort = await inspector.shouldAbortRequest(
+			"/v1/prosopo/provider/client/captcha/frictionless",
+			"1.1.1.1",
+			"ja4hash",
+			{},
+			{},
+			mockLogger,
+			validIpInfo("DE"),
+		);
+		expect(shouldAbort).toBe(false);
+	});
+
+	// Mixed result: a deferToVerify=true policy must NOT bury a non-deferred
+	// Block policy that also matches. The filter strips deferred policies
+	// before the top-pick, so the remaining non-deferred Block still
+	// surfaces and aborts the request. Without this, an operator who set
+	// deferToVerify on a high-specificity rule would accidentally suppress
+	// the lower-specificity hard block on the same scope.
+	it("aborts when a deferToVerify policy coexists with a non-deferred Block policy", async () => {
+		const storage = buildStorage(async () => [
+			{
+				type: AccessPolicyType.Block,
+				deferToVerify: true,
+				ja4Hash: "ja4hash",
+			},
+			{
+				type: AccessPolicyType.Block,
+			},
+		]);
+		const inspector = new BlacklistRequestInspector(
+			storage,
+			async () => undefined,
+		);
+
+		const shouldAbort = await inspector.shouldAbortRequest(
+			"/v1/prosopo/provider/client/captcha/frictionless",
+			"1.1.1.1",
+			"ja4hash",
+			{},
+			{},
+			mockLogger,
+			validIpInfo("DE"),
+		);
+		expect(shouldAbort).toBe(true);
+	});
 });
 
 describe("rankCandidateRules", () => {

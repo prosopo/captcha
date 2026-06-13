@@ -156,6 +156,9 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	dappAccount: { type: String, required: true },
 	userAccount: { type: String, required: true },
 	requestedAtTimestamp: { type: Date, required: true },
+	submittedAtTimestamp: { type: Date, required: false },
+	verifiedAtTimestamp: { type: Date, required: false },
+	failedAtTimestamp: { type: Date, required: false },
 	lastUpdatedTimestamp: { type: Date, required: false },
 	result: {
 		status: { type: String, enum: CaptchaStatus, required: true },
@@ -259,6 +262,9 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 	dappAccount: { type: String, required: true },
 	userAccount: { type: String, required: true },
 	requestedAtTimestamp: { type: Date, required: true },
+	submittedAtTimestamp: { type: Date, required: false },
+	verifiedAtTimestamp: { type: Date, required: false },
+	failedAtTimestamp: { type: Date, required: false },
 	lastUpdatedTimestamp: { type: Date, required: false },
 	result: {
 		status: { type: String, enum: CaptchaStatus, required: true },
@@ -392,6 +398,9 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	serverChecked: { type: Boolean, required: true },
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
 	requestedAtTimestamp: { type: Date, required: true },
+	submittedAtTimestamp: { type: Date, required: false },
+	verifiedAtTimestamp: { type: Date, required: false },
+	failedAtTimestamp: { type: Date, required: false },
 	lastUpdatedTimestamp: { type: Date, required: false },
 	// See `StoredCaptcha.pendingStage`.
 	pendingStage: { type: Boolean, required: false },

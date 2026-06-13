@@ -465,7 +465,6 @@ describe("PoW Integration Tests", () => {
 			const signature = challengeBody.signature;
 			const nonce = await solvePoW(challenge, difficulty);
 
-			const verifiedTimeout = 120000;
 			const submitBody: SubmitPowCaptchaSolutionBodyType = {
 				challenge,
 				difficulty,
@@ -478,7 +477,6 @@ describe("PoW Integration Tests", () => {
 					},
 				},
 				nonce,
-				verifiedTimeout,
 				user: userPair.address,
 				dapp: siteKey,
 			};
@@ -529,7 +527,6 @@ describe("PoW Integration Tests", () => {
 			const difficulty = challengeBody.difficulty;
 			const signature = challengeBody.signature;
 			const nonce = failPoW(challenge, difficulty);
-			const verifiedTimeout = 120000;
 
 			const body: SubmitPowCaptchaSolutionBodyType = {
 				challenge,
@@ -543,7 +540,6 @@ describe("PoW Integration Tests", () => {
 					},
 				},
 				nonce,
-				verifiedTimeout,
 				user: userPair.address,
 				dapp: siteKey,
 			};

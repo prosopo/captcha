@@ -572,6 +572,7 @@ describe("ImgCaptchaManager", () => {
 			userSubmitted: true,
 			serverChecked: false,
 			requestedAtTimestamp: new Date(0),
+			submittedAtTimestamp: new Date(),
 			ipAddress: {
 				lower: getIPAddress("1.1.1.1").bigInt(),
 				upper: 0n,
@@ -622,6 +623,7 @@ describe("ImgCaptchaManager", () => {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(0),
+				submittedAtTimestamp: new Date(),
 				ipAddress: {
 					lower: getIPAddress("1.1.1.1").bigInt(),
 					upper: 0n,
@@ -681,6 +683,7 @@ describe("ImgCaptchaManager", () => {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
 				ipAddress: {
 					lower: ipAddress.bigInt(),
 					upper: 0n,
@@ -751,6 +754,7 @@ describe("ImgCaptchaManager", () => {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
 				ipAddress: {
 					lower: ipAddress.bigInt(),
 					upper: 0n,
@@ -808,6 +812,7 @@ describe("ImgCaptchaManager", () => {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
 				ipAddress: {
 					lower: ipAddress.bigInt(),
 					upper: 0n,
@@ -885,6 +890,7 @@ describe("ImgCaptchaManager", () => {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
 				ipAddress: {
 					lower: ipAddress.bigInt(),
 					upper: 0n,
@@ -944,6 +950,7 @@ describe("ImgCaptchaManager", () => {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
 				ipAddress: {
 					lower: ipAddress.bigInt(),
 					upper: 0n,
@@ -1011,6 +1018,7 @@ describe("ImgCaptchaManager", () => {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
 				ipAddress: {
 					lower: ipAddress.bigInt(),
 					upper: 0n,
@@ -1069,6 +1077,7 @@ describe("ImgCaptchaManager", () => {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
 				ipAddress: {
 					lower: ipAddress.bigInt(),
 					upper: 0n,
@@ -1133,6 +1142,7 @@ describe("ImgCaptchaManager", () => {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
 				ipAddress: {
 					lower: ipAddress.bigInt(),
 					upper: 0n,
@@ -1217,6 +1227,7 @@ describe("ImgCaptchaManager", () => {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
 				ipAddress: {
 					lower: ipAddress.bigInt(),
 					upper: 0n,
@@ -1291,6 +1302,7 @@ describe("ImgCaptchaManager", () => {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
 				ipAddress: {
 					lower: ipAddress.bigInt(),
 					upper: 0n,
@@ -1355,6 +1367,7 @@ describe("ImgCaptchaManager", () => {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
 				ipAddress: {
 					lower: ipAddress.bigInt(),
 					upper: 0n,
@@ -1415,6 +1428,7 @@ describe("ImgCaptchaManager", () => {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
 				ipAddress: {
 					lower: ipAddress.bigInt(),
 					upper: 0n,
@@ -1494,6 +1508,7 @@ describe("ImgCaptchaManager", () => {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
 				ipAddress: {
 					lower: ipAddress.bigInt(),
 					upper: 0n,
@@ -1558,6 +1573,7 @@ describe("ImgCaptchaManager", () => {
 			userSubmitted: true,
 			serverChecked: false,
 			requestedAtTimestamp: new Date(),
+			submittedAtTimestamp: new Date(),
 			ipAddress: {
 				lower: ipAddress.bigInt(),
 				upper: 0n,

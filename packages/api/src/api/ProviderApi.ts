@@ -195,7 +195,6 @@ export default class ProviderApi
 		dappAccount: string,
 		nonce: number,
 		userTimestampSignature: string,
-		timeout?: number,
 		behavioralData?: string,
 		salt?: string,
 		simdReadings?: string,
@@ -208,7 +207,6 @@ export default class ProviderApi
 			[ApiParams.user]: userAccount.toString(),
 			[ApiParams.dapp]: dappAccount.toString(),
 			[ApiParams.nonce]: nonce,
-			[ApiParams.verifiedTimeout]: timeout,
 			[ApiParams.signature]: {
 				[ApiParams.provider]:
 					challenge[ApiParams.signature][ApiParams.provider],
@@ -257,7 +255,6 @@ export default class ProviderApi
 		finalY: number,
 		puzzleEvents: Array<{ x: number; y: number; t: number }>,
 		userTimestampSignature: string,
-		timeout?: number,
 		behavioralData?: string,
 		salt?: string,
 		simdReadings?: string,
@@ -271,7 +268,6 @@ export default class ProviderApi
 			[ApiParams.finalX]: finalX,
 			[ApiParams.finalY]: finalY,
 			[ApiParams.puzzleEvents]: puzzleEvents,
-			[ApiParams.verifiedTimeout]: timeout,
 			[ApiParams.signature]: {
 				[ApiParams.provider]:
 					challenge[ApiParams.signature][ApiParams.provider],
@@ -295,7 +291,6 @@ export default class ProviderApi
 	public submitPuzzleCaptchaVerify(
 		token: string,
 		signatureHex: string,
-		recencyLimit: number,
 		user: string,
 		ip?: string,
 		email?: string,
@@ -303,7 +298,6 @@ export default class ProviderApi
 		const body: ServerPuzzleCaptchaVerifyRequestBodyType = {
 			[ApiParams.token]: token,
 			[ApiParams.dappSignature]: signatureHex,
-			[ApiParams.verifiedTimeout]: recencyLimit,
 			[ApiParams.ip]: ip,
 		};
 		if (email) {
@@ -384,7 +378,6 @@ export default class ProviderApi
 	public submitPowCaptchaVerify(
 		token: string,
 		signatureHex: string,
-		recencyLimit: number,
 		user: string,
 		ip?: string,
 		email?: string,
@@ -392,7 +385,6 @@ export default class ProviderApi
 		const body: ServerPowCaptchaVerifyRequestBodyType = {
 			[ApiParams.token]: token,
 			[ApiParams.dappSignature]: signatureHex,
-			[ApiParams.verifiedTimeout]: recencyLimit,
 			[ApiParams.ip]: ip,
 		};
 		if (email) {
