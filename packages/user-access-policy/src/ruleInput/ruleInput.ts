@@ -48,11 +48,12 @@ const ruleGroupInput = z
 		return ruleGroup;
 	});
 
-// The explicit `: ZodType<AccessRule>` annotation is omitted because
-// `accessPolicyInput.shape.deferToVerify` uses `z.preprocess` which
-// widens the schema's input type to `unknown`. The `transform` below
-// pins the OUTPUT to AccessRule, which is what callers consume.
-export const accessRuleInput = z
+// Explicit `ZodType<…, ZodTypeDef, unknown>` annotation rather than the
+// strict-identity form because `accessPolicyInput.shape.deferToVerify`
+// uses `z.preprocess` which widens the input position to `unknown`. The
+// relaxed annotation is portable for declaration emit; the `transform`
+// pins the OUTPUT to AccessRule.
+export const accessRuleInput: ZodType<AccessRule, z.ZodTypeDef, unknown> = z
 	.object({
 		...accessPolicyInput.shape,
 		...policyScopeInput.shape,
@@ -61,12 +62,11 @@ export const accessRuleInput = z
 	.and(ruleGroupInput)
 	.transform((ruleInput: AccessRuleInput): AccessRule => ruleInput);
 
-// Same reason as accessRuleInput — `rule` is `accessRuleInput` whose
-// input type carries the `unknown` deferToVerify from preprocess.
-export const ruleEntryInput = z.object({
-	rule: accessRuleInput,
-	expiresUnixTimestamp: z.coerce.number().optional(),
-} satisfies AllKeys<AccessRuleEntry>);
+export const ruleEntryInput: ZodType<AccessRuleEntry, z.ZodTypeDef, unknown> =
+	z.object({
+		rule: accessRuleInput,
+		expiresUnixTimestamp: z.coerce.number().optional(),
+	} satisfies AllKeys<AccessRuleEntry>);
 
 export type AccessRulesFilterInput = AccessRulesFilter & {
 	userScope?: UserScopeInput;
