@@ -15,6 +15,7 @@
 import {
 	CaptchaType,
 	ContextType,
+	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
 	type IUserData,
 	type IUserSettings,
 	type Timestamp,
@@ -24,7 +25,6 @@ import {
 	cityChangeActionDefault,
 	contextAwareThresholdDefault,
 	countryChangeActionDefault,
-	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
 	distanceExceedActionDefault,
 	distanceThresholdKmDefault,
 	domainsDefault,
