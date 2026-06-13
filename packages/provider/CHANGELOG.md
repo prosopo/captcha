@@ -1,5 +1,87 @@
 # @prosopo/provider
 
+## 4.9.1
+### Patch Changes
+
+- 4da8941: Add `deferToVerify` flag on `AccessPolicy` so a Block policy can skip the request-time `blockMiddleware` (no 401 at the captcha endpoint) and fire instead at the verify step. The behaviour mirrors the existing coords-rule deferral pattern: today the middleware blanks out coords from the userScope, so coords-only rules can only ever match in the verify path. `deferToVerify` is the explicit version of that for other signals (ja4Hash, headersHash, etc.) — useful when you want the attacker to pay the captcha-solving cost and the dApp to silently receive `{verified: false}` instead of the bot's frontend seeing a 401.
+  
+  Wiring:
+  
+  - `BlacklistRequestInspector.shouldAbortRequest` filters out matching policies that have `deferToVerify` before picking the top hit. Those policies never short-circuit the middleware.
+  - `CaptchaManager.findHardBlockPolicy` widens its matcher: a Block policy now counts as a hard block when it has either no `captchaType` (existing behaviour) **or** `deferToVerify === true`. The check is invoked from `imgCaptchaTasks.dappUserSolution`, `powTasks.serverVerifyPowCaptcha`, and `puzzleTasks.verifyPuzzleCaptchaSolution`, so the deferral applies to all three captcha types.
+  - Persistence: `deferToVerify` lands on the mongo `accessPolicySchema` (Boolean) and the zod `accessPolicyInput` (with a string→boolean preprocess so the Redis round-trip works).
+  
+  Motivating use case: a set of spoofed-JA4 hard-block rules pushed 2026-06-12. Marking those `deferToVerify: true` would still reject the attacker at verify but force them to complete N image captcha rounds and surface behavioural data on the commitment record before the rejection — useful for both telemetry and operator-side friction.
+- f69724f: Expose `ipInfo` to the verify-phase decision machine. The frictionless DM already gets the full `IPInfoResponse`; the verify-phase DM was only receiving `countryCode`, so rules that need `isDatacenter`, `isVPN`, `isAbuser`, `asnNumber` etc. couldn't run at submission time.
+  
+  `DecisionMachineInput` now carries an optional `ipInfo` field (alongside `countryCode`, which is kept for backwards compatibility). The three verify-phase call sites — `powTasks`, `puzzleTasks`, `imgCaptchaTasks` — forward `challengeRecord.ipInfo` / `solution.ipInfo` into the input.
+  
+  This unblocks rules like:
+  ```
+  if (input.behavioralDataPacked &&
+      !input.behavioralDataPacked.c1.length &&
+      !input.behavioralDataPacked.c2.length &&
+      !input.behavioralDataPacked.c3.length &&
+      input.ipInfo?.isDatacenter) return Deny;
+  ```
+  which catches the datacenter-class bots (Sparkle, Versatel, OVH) that submit empty `behavioralDataPacked` — observed at 100% empty-bDP across a 21-row Sparkle sample, versus 1–3% in genuine traffic.
+- 3973078: Track every lifecycle timestamp on every captcha type, and switch the dapp-verify recency check from issuance→verify to **submit→verify** with the window sourced from per-client settings.
+  
+  ### Lifecycle timestamps
+  
+  `StoredCaptcha` (the base shared by PoW, Puzzle, and Image/UserCommitment) gains three new fields:
+  
+  - `submittedAtTimestamp` — set once on the first user-submission write, never overwritten.
+  - `verifiedAtTimestamp` — set once when the dapp first calls /verify, never overwritten.
+  - `failedAtTimestamp` — set once on the first non-approved terminal state, never overwritten.
+  
+  `lastUpdatedTimestamp` keeps its "last write of any kind" meaning. The new fields use `$ifNull` in aggregation-pipeline updates so the stamp lands only on the first transition — concurrent or repeat writes are no-ops on the lifecycle stamps.
+  
+  ### Submit→verify window
+  
+  The dapp-verify recency check used to be `now - challengeTimestamp <= timeout`. The window was issuance→verify, which gave bots room to stockpile pre-solved solutions and redeem them many seconds (sometimes minutes) later from the time they reached the provider.
+  
+  The check is now `now - challengeRecord.submittedAtTimestamp <= clientSettings.verifiedTimeout`. The window measures from the moment the user's solution actually arrived. Combined with the new lifecycle fields, this measurably tightens the stockpile attack surface — the data showed 1564 records / 21% on Twickets where a correct PoW was submitted but the dapp never verified, p99 issuance→submit of 31s on that cohort, and records up to 1.26 min.
+  
+  ### Settings move
+  
+  `verifiedTimeout` moves to `ClientSettingsSchema` (per-client, operator-set via the portal). Default stays at 120000ms for back-compat; auto-submit dapps (Twickets et al.) should set it to ~10000ms.
+  
+  Removed from request bodies entirely:
+  
+  - `ServerPowCaptchaVerifyRequestBody`
+  - `ServerPuzzleCaptchaVerifyRequestBody`
+  - `SubmitPowCaptchaSolutionBody`
+  - `SubmitPuzzleCaptchaSolutionBody`
+  
+  The client field was client-controlled and unsigned — any caller could raise the recency ceiling. It's now server-determined.
+  
+  `ProviderApiInterface.submitPow/PuzzleCaptchaSolution` lose their `timeout` parameter (no longer forwarded). The verify wrappers keep their `recencyLimit` parameter for caller back-compat but the value is no longer transmitted; server reads from the client settings instead.
+  
+  ### Migration
+  
+  Pre-PR records with `userSubmitted=true` but no `submittedAtTimestamp` will fail the new recency check. The submit window is short (120s default verifiedTimeout) so the migration cliff is naturally bounded — records in flight at deploy time expire within ~2 minutes.
+  
+  348 provider unit tests + 28 database tests pass.
+- 73b9f92: Run the `getMaintenanceMode()` short-circuit before constructing `Tasks` in every captcha and verify handler. The `Tasks` constructor calls `env.getDb()`, which throws synchronously when `env.db` is undefined (the maintenance-mode case), so the existing short-circuits were unreachable and the provider was throwing `db not setup! Please call isReady() first` on every request the moment maintenance mode was toggled on. Also adds a maintenance-mode bypass to `getImageCaptchaChallenge` (empty-captchas response, mirroring the existing `submitImageCaptchaSolution` shape) and `checkSpamEmail` (`isSpam: false`) so those endpoints stay usable while Mongo is unavailable.
+- Updated dependencies [70ef67a]
+- Updated dependencies [4da8941]
+- Updated dependencies [f69724f]
+- Updated dependencies [4226c59]
+- Updated dependencies [3973078]
+  - @prosopo/user-access-policy@3.9.0
+  - @prosopo/types@4.4.1
+  - @prosopo/database@3.13.11
+  - @prosopo/types-database@4.9.1
+  - @prosopo/api@3.4.11
+  - @prosopo/api-express-router@3.1.21
+  - @prosopo/datasets@3.1.31
+  - @prosopo/env@3.5.11
+  - @prosopo/ipinfo@0.2.17
+  - @prosopo/keyring@2.9.37
+  - @prosopo/load-balancer@2.9.13
+  - @prosopo/types-env@2.9.20
+
 ## 4.9.0
 ### Minor Changes
 
