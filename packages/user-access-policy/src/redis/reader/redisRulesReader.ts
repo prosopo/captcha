@@ -23,10 +23,7 @@ import {
 	getMissingRedisKeys,
 	parseRedisRecords,
 } from "#policy/redis/redisClient.js";
-import {
-	ACCESS_RULES_REDIS_INDEX_NAME,
-	ACCESS_RULE_REDIS_KEY_PREFIX,
-} from "#policy/redis/redisRuleIndex.js";
+import { ACCESS_RULE_REDIS_KEY_PREFIX } from "#policy/redis/redisRuleIndex.js";
 import type { AccessRule } from "#policy/rule.js";
 import { accessRuleInput } from "#policy/ruleInput/ruleInput.js";
 import type {

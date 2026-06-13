@@ -53,7 +53,10 @@ export const aggregateRedisKeys = async (
 		if (batchHandler) {
 			await batchHandler(recordKeys);
 		} else {
-			if (maxKeys !== undefined && foundKeys.length + recordKeys.length > maxKeys) {
+			if (
+				maxKeys !== undefined &&
+				foundKeys.length + recordKeys.length > maxKeys
+			) {
 				const remaining = Math.max(0, maxKeys - foundKeys.length);
 				foundKeys.push(...recordKeys.slice(0, remaining));
 				stopRequested = true;
