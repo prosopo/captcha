@@ -120,6 +120,7 @@ export default (
 						imageMaxRounds: image_max_rounds as number,
 						puzzleTolerance: puzzleToleranceDefault,
 						disallowWebView: false,
+						verifiedTimeout: 60000,
 					},
 					jwt,
 				);
