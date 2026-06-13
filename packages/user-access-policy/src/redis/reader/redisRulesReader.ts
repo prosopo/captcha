@@ -16,10 +16,7 @@ import * as util from "node:util";
 import { chunkIntoBatches, executeBatchesSequentially } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
 import type { RedisClientType } from "redis";
-import {
-	REDIS_QUERY_DIALECT,
-	getRulesRedisQuery,
-} from "#policy/redis/reader/redisRulesQuery.js";
+import { getRulesRedisQuery } from "#policy/redis/reader/redisRulesQuery.js";
 import {
 	REDIS_BATCH_SIZE,
 	fetchRedisHashRecords,
@@ -38,6 +35,15 @@ import type {
 	AccessRulesReader,
 } from "#policy/rulesStorage.js";
 import { aggregateRedisKeys } from "./redisAggregate.js";
+
+// Verify-time lookup safety cap. The greedy `userScopeMatch` OR-query can match
+// thousands of candidates on bot-attack-scale accounts; we still need to bring
+// every candidate back so JS-side specificity ranking can pick the right rule,
+// but a hard cap prevents a pathological match (e.g. an attacker crafting a
+// userScope that hits the entire account's rule index) from spiralling the
+// per-request cost. 10× the page size leaves comfortable headroom over the
+// observed worst case (~2k candidates).
+export const FIND_RULES_MAX_CANDIDATES = REDIS_BATCH_SIZE * 10;
 
 export class RedisRulesReader implements AccessRulesReader {
 	constructor(
@@ -85,46 +91,45 @@ export class RedisRulesReader implements AccessRulesReader {
 		}
 
 		try {
-			// Use searchNoContent to get document keys only, then fetch data separately.
-			// This avoids a bug in @redis/search where ft.search crashes with
-			// "Cannot read properties of null (reading 'length')" when a document
-			// is deleted/expired between the index scan and data retrieval.
-			const searchReply = await this.client.ft.searchNoContent(
-				ACCESS_RULES_REDIS_INDEX_NAME,
+			// FT.AGGREGATE WITHCURSOR (via aggregateRedisKeys) instead of
+			// FT.SEARCH. FT.SEARCH's LIMIT caps the candidate set at
+			// REDIS_BATCH_SIZE (1000), silently dropping anything past that.
+			// Under the greedy `userScopeMatch` mode (#2657), the OR-of-fields
+			// query for a popular ja4 hash returns thousands of candidates —
+			// matches sitting past offset 1000 (block rules emitted by
+			// less-frequent detectors like SUDDEN_VOLUME_INCREASE) were lost,
+			// so verify-time ranking only saw the high-volume rules and the
+			// most-specific block rule for the request never reached the
+			// JS-side specificity sort.
+			const ruleKeys = await aggregateRedisKeys(
+				this.client,
 				query,
-				{
-					DIALECT: REDIS_QUERY_DIALECT,
-					// FT.search doesn't support "unlimited" selects
-					LIMIT: {
-						from: 0,
-						size: REDIS_BATCH_SIZE,
-					},
-				},
+				this.logger,
+				undefined,
+				FIND_RULES_MAX_CANDIDATES,
 			);
 
-			if (searchReply.total > 0) {
-				this.logger.debug(() => ({
-					msg: "Executed search query",
-					data: {
-						inspect: util.inspect(
-							{
-								filter: filter,
-								searchReply: searchReply,
-								query: query,
-							},
-							{ depth: null },
-						),
-					},
-				}));
-			}
-
-			if (searchReply.documents.length === 0) {
+			if (ruleKeys.length === 0) {
 				return [];
 			}
 
+			this.logger.debug(() => ({
+				msg: "Executed search query",
+				data: {
+					inspect: util.inspect(
+						{
+							filter: filter,
+							foundCount: ruleKeys.length,
+							query: query,
+						},
+						{ depth: null },
+					),
+				},
+			}));
+
 			const { records } = await fetchRedisHashRecords(
 				this.client,
-				searchReply.documents,
+				ruleKeys,
 				this.logger,
 			);
 

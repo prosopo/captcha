@@ -1115,6 +1115,58 @@ describe("redisAccessRulesStorage", () => {
 			expect(foundAccessRules).toEqual([]);
 		});
 
+		test("returns all matches when the candidate set exceeds the FT.SEARCH page size", async () => {
+			// Regression: under the production traffic profile of a high-volume
+			// bot attack, the greedy `@field:{X} | @field:{Y}` query returns
+			// thousands of candidate rules sharing the dominant ja4 fingerprint.
+			// FT.SEARCH's LIMIT (1000) silently truncated the candidate set,
+			// dropping less-frequent block rules — they never reached the
+			// JS-side specificity sort, so verify let the bot through.
+			// FT.AGGREGATE WITHCURSOR paginates the result and returns all of
+			// them. This test inserts > 1000 rules so the old code would
+			// truncate; the target block rule must still come back.
+			const clientId = getUniqueString();
+			const popularJa4 = `t13d1516h2_${getUniqueString()}`;
+
+			const targetBlockRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: clientId,
+				ja4Hash: popularJa4,
+				coords: "[[[867,60]]]",
+			};
+
+			// 1500 noise rules sharing the popular ja4 but with distinct coords.
+			// 1500 > REDIS_BATCH_SIZE (1000) — guarantees the targetBlockRule's
+			// FT index position has at least a 1/3 chance of sitting past the
+			// truncation boundary on any given run. With pagination, it must
+			// always come back regardless of indexed order.
+			const noiseRules: AccessRule[] = Array.from({ length: 1500 }, (_, i) => ({
+				type: AccessPolicyType.Restrict,
+				clientId: clientId,
+				ja4Hash: popularJa4,
+				coords: `[[[${i % 1024},${60 + (i % 32)}]]]`,
+				description: `noise-${i}`,
+			}));
+
+			await insertRules([targetBlockRule, ...noiseRules]);
+
+			const indexRecordsCount = await getIndexRecordsCount(indexName);
+			expect(indexRecordsCount).toBe(1501);
+
+			const found = await accessRulesReader.findRules({
+				policyScope: { clientId: clientId },
+				policyScopeMatch: FilterScopeMatch.Greedy,
+				userScope: {
+					ja4Hash: popularJa4,
+					coords: "[[[867,60]]]",
+				},
+				userScopeMatch: FilterScopeMatch.Greedy,
+			});
+
+			expect(found.length).toBe(1501);
+			expect(found).toContainEqual(targetBlockRule);
+		}, 60_000);
+
 		test("finds rules with matchingFieldsOnly when only userId is set and all IP fields are missing", async () => {
 			// This is the exact scenario from the production error where the query
 			// contained duplicate ismissing(@numericIpMaskMin) ismissing(@numericIpMaskMax)
