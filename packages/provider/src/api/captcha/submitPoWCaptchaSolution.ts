@@ -35,10 +35,9 @@ export default (env: ProviderEnvironment) =>
 		res: Response,
 		next: NextFunction,
 	) => {
-		let parsed: SubmitPowCaptchaSolutionBodyTypeOutput;
-		const tasks = new Tasks(env, req.logger);
-
-		// If in maintenance mode, always return verified
+		// Maintenance-mode short-circuit must run before `new Tasks(env, ...)`
+		// because the Tasks constructor calls `env.getDb()`, which throws when
+		// `env.db` is undefined (the maintenance-mode case).
 		if (getMaintenanceMode()) {
 			req.logger.info(() => ({
 				msg: "Maintenance mode active - returning verified",
@@ -49,6 +48,9 @@ export default (env: ProviderEnvironment) =>
 			};
 			return res.json(response);
 		}
+
+		let parsed: SubmitPowCaptchaSolutionBodyTypeOutput;
+		const tasks = new Tasks(env, req.logger);
 
 		try {
 			parsed = SubmitPowCaptchaSolutionBody.parse(req.body);
