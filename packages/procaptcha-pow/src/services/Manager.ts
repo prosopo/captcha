@@ -324,7 +324,6 @@ export const Manager = (
 						getDappAccount(),
 						solution,
 						userTimestampSignature.signature.toString(),
-						config.captchas.pow.verifiedTimeout,
 						encryptedBehavioralData,
 						salt,
 						simdReadings,

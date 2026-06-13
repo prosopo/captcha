@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { array, boolean, number, object, type output, string, z } from "zod";
+import { DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT } from "../config/timeouts.js";
 import { CaptchaType } from "./captchaType/captchaType.js";
 import { CaptchaTypeSpec } from "./captchaType/captchaTypeSpec.js";
 
@@ -224,6 +225,13 @@ export type IHoneypotSettings = output<typeof HoneypotSettingsSchema>;
 export const ClientSettingsSchema = object({
 	captchaType: CaptchaTypeSpec.optional().default(captchaTypeDefault),
 	domains: array(string()).min(1),
+	// Maximum ms between user submission and the dapp's /verify call.
+	verifiedTimeout: number()
+		.int()
+		.min(1000)
+		.max(600000)
+		.optional()
+		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 	frictionlessThreshold: number()
 		.min(0)
 		.max(1)

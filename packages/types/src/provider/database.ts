@@ -180,6 +180,10 @@ export interface StoredCaptcha {
 	ja4: string;
 	userSubmitted: boolean;
 	serverChecked: boolean;
+	// Set once on first transition; never overwritten.
+	submittedAtTimestamp?: Date;
+	verifiedAtTimestamp?: Date;
+	failedAtTimestamp?: Date;
 	// The full ipinfo payload from `IpInfoService.lookup()`. Persisted
 	// either by the provider's ipInfoMiddleware (at request time) or by
 	// the CHECK_IP_INFO backfill job. Consumers read individual fields
@@ -285,6 +289,9 @@ export const UserCommitmentSchema = object({
 	parsedUserAgentInfo: any().optional(),
 	storedAtTimestamp: date().optional(),
 	requestedAtTimestamp: date(),
+	submittedAtTimestamp: date().optional(),
+	verifiedAtTimestamp: date().optional(),
+	failedAtTimestamp: date().optional(),
 	lastUpdatedTimestamp: date().optional(),
 	pendingStage: boolean().optional(),
 	sessionId: string().optional(),
@@ -517,6 +524,9 @@ export const PoWCaptchaStoredSchema = object({
 	// From StoredCaptcha
 	result: CaptchaResultSchema,
 	requestedAtTimestamp: date(),
+	submittedAtTimestamp: date().optional(),
+	verifiedAtTimestamp: date().optional(),
+	failedAtTimestamp: date().optional(),
 	ipAddress: CompositeIpAddressSchema,
 	providedIp: CompositeIpAddressSchema.optional(),
 	metadata: StoredCaptchaMetadataSchema.optional(),
