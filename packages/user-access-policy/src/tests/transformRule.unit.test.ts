@@ -106,6 +106,7 @@ describe("transformRule", () => {
 		powDifficulty: 1,
 		unsolvedImagesCount: 1,
 		frictionlessScore: 1,
+		deferToVerify: false,
 		headersHash: "headersHash",
 		ja4Hash: "js4Hash",
 		clientId: "client",
