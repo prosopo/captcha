@@ -39,10 +39,7 @@ export const accessPolicyInput = z.object({
 	// Redis stores booleans as strings — preprocess so "true"/"false"
 	// round-trip to the JS boolean the matcher expects.
 	deferToVerify: z
-		.preprocess(
-			(v) => (typeof v === "string" ? v === "true" : v),
-			z.boolean(),
-		)
+		.preprocess((v) => (typeof v === "string" ? v === "true" : v), z.boolean())
 		.optional(),
 } satisfies AllKeys<AccessPolicy>) satisfies ZodType<AccessPolicy>;
 
