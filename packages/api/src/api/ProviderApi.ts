@@ -200,8 +200,6 @@ export default class ProviderApi
 		simdReadings?: string,
 		clientMetaData?: ClientMetaData,
 	): Promise<PowCaptchaSolutionResponse> {
-		// verifiedTimeout no longer travels on the body — it's sourced
-		// server-side from the per-client settings.
 		const body = SubmitPowCaptchaSolutionBody.parse({
 			[ApiParams.challenge]: challenge.challenge,
 			[ApiParams.difficulty]: challenge.difficulty,
@@ -262,8 +260,6 @@ export default class ProviderApi
 		simdReadings?: string,
 		clientMetaData?: ClientMetaData,
 	): Promise<PuzzleCaptchaSolutionResponse> {
-		// verifiedTimeout no longer travels on the body — see
-		// submitPowCaptchaSolution.
 		const body = SubmitPuzzleCaptchaSolutionBody.parse({
 			[ApiParams.challenge]: challenge.challenge,
 			[ApiParams.timestamp]: challenge.timestamp,
@@ -292,14 +288,9 @@ export default class ProviderApi
 		});
 	}
 
-	// `recencyLimit` parameter retained for back-compat with existing
-	// callers (typically dapp-side server SDKs) but no longer forwarded
-	// on the wire — the recency window is sourced server-side from the
-	// per-client settings now.
 	public submitPuzzleCaptchaVerify(
 		token: string,
 		signatureHex: string,
-		_recencyLimit: number,
 		user: string,
 		ip?: string,
 		email?: string,
@@ -384,12 +375,9 @@ export default class ProviderApi
 		});
 	}
 
-	// `recencyLimit` retained for caller back-compat; no longer
-	// forwarded on the wire. See submitPuzzleCaptchaVerify above.
 	public submitPowCaptchaVerify(
 		token: string,
 		signatureHex: string,
-		_recencyLimit: number,
 		user: string,
 		ip?: string,
 		email?: string,

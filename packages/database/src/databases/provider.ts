@@ -900,11 +900,6 @@ export class ProviderDatabase
 		const tables = this.getTables();
 		const timestamp = new Date();
 		const isDisapproved = result.status === CaptchaStatus.disapproved;
-		// Use the aggregation-pipeline form of updateOne so we can stamp
-		// the lifecycle timestamps (submittedAtTimestamp, failedAtTimestamp)
-		// only on the first transition into each state — `$ifNull` keeps
-		// the previously-stamped value when one exists. This preserves the
-		// invariant that lifecycle timestamps are set exactly once.
 		const setStage: Record<string, unknown> = {
 			result,
 			serverChecked,
@@ -1166,9 +1161,6 @@ export class ProviderDatabase
 		const tables = this.getTables();
 		const timestamp = lastUpdatedTimestamp ?? new Date();
 		const isDisapproved = result.status === CaptchaStatus.disapproved;
-		// Aggregation-pipeline update so submittedAtTimestamp /
-		// failedAtTimestamp can be set only on the first transition into
-		// each state via $ifNull. See updatePowCaptchaRecordResult.
 		const setStage: Record<string, unknown> = {
 			result,
 			serverChecked,
@@ -1237,12 +1229,6 @@ export class ProviderDatabase
 	): Promise<void> {
 		const tables = this.getTables();
 		const timestamp = new Date();
-		// Aggregation-pipeline form so the lifecycle stamps land on the
-		// first transition only. The verify path uses this method to flip
-		// serverChecked → true; the same call needs to stamp
-		// verifiedAtTimestamp on first verify. Submit / fail transitions
-		// go through updatePuzzleCaptchaRecordResult but a partial update
-		// here could also touch userSubmitted or the result.
 		const setStage: Record<string, unknown> = {
 			...updates,
 			pendingStage: true,
@@ -1330,10 +1316,6 @@ export class ProviderDatabase
 	 */
 	async markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void> {
 		const timestamp = new Date();
-		// Aggregation-pipeline form so verifiedAtTimestamp is stamped only
-		// on the first verify ($ifNull keeps the existing value). serverChecked
-		// can be set repeatedly across re-verifies but the lifecycle stamp
-		// must record the first one.
 		await this.tables?.commitment.updateMany({ id: { $in: commitmentIds } }, [
 			{
 				$set: {
@@ -1356,10 +1338,6 @@ export class ProviderDatabase
 	) {
 		const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
 		const timestamp = new Date();
-		// Aggregation-pipeline form so any lifecycle transition implicit in
-		// `updates` (userSubmitted=true / serverChecked=true / disapproved
-		// result) stamps the corresponding lifecycle timestamp on the first
-		// transition only.
 		const setStage: Record<string, unknown> = {
 			...updates,
 			lastUpdatedAtTimestamp: timestamp,
@@ -1431,9 +1409,6 @@ export class ProviderDatabase
 	 */
 	async markDappUserPoWCommitmentsChecked(challenges: string[]): Promise<void> {
 		const timestamp = new Date();
-		// Aggregation-pipeline form so verifiedAtTimestamp is stamped only
-		// on the first verify ($ifNull keeps the existing value). See
-		// markDappUserCommitmentsChecked.
 		await this.tables?.powcaptcha.updateMany(
 			{ challenge: { $in: challenges } },
 			[

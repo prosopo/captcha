@@ -225,15 +225,7 @@ export type IHoneypotSettings = output<typeof HoneypotSettingsSchema>;
 export const ClientSettingsSchema = object({
 	captchaType: CaptchaTypeSpec.optional().default(captchaTypeDefault),
 	domains: array(string()).min(1),
-	// Maximum milliseconds the dapp's /verify call has after the user
-	// submitted the captcha solution to the provider. Was previously a
-	// request-body parameter (client-controlled, easily stockpiled
-	// against). Moved to the per-client setting so the operator decides
-	// the window per dapp, and the request body has no influence.
-	// Default DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT = 120000ms (2 min).
-	// Tight customers (e.g. auto-submit flows like Twickets) should set
-	// this to ~10000ms to leave bots no room to inject pre-solved
-	// stockpile entries.
+	// Maximum ms between user submission and the dapp's /verify call.
 	verifiedTimeout: number()
 		.int()
 		.min(1000)

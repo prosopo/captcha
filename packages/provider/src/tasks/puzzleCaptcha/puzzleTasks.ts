@@ -444,9 +444,6 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		});
 		// -- END WARNING --
 
-		// Submit → verify recency. See powTasks.serverVerifyPuzzleCaptchaSolution
-		// for the rationale: switched from issuance→verify to submit→verify
-		// so a stockpiled solution can't be redeemed minutes later.
 		const submittedAt = challengeRecord.submittedAtTimestamp;
 		const submitToVerifyMs =
 			submittedAt instanceof Date

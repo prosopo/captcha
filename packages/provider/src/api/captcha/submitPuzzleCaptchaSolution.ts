@@ -102,8 +102,6 @@ export default (env: ProviderEnvironment) =>
 				);
 			}
 
-			// See submitPoWCaptchaSolution — verifiedTimeout sourced from
-			// the per-client settings, not from the request body.
 			const verified =
 				await tasks.puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
 					challenge,

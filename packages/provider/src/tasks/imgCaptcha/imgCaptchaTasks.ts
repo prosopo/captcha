@@ -399,9 +399,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(timestamp),
-				// First user-submission write — stamp the lifecycle
-				// timestamp at the same instant. This is the only path
-				// that creates a userSubmitted=true image commitment.
 				submittedAtTimestamp: new Date(),
 				ipAddress: getCompositeIpAddress(ipAddress),
 				headers,
@@ -709,15 +706,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 		maxVerifiedTime = maxVerifiedTime || 60 * 1000; // Default to 1 minute
 
-		// Submit → verify recency. Was previously issuance → verify (compared
-		// against `requestedAtTimestamp`) which gave bots room to stockpile
-		// solved image captchas and redeem later. Switched to the lifecycle
-		// `submittedAtTimestamp` (set once at first user-submission, never
-		// overwritten). storeUserImageCaptchaSolution always populates this
-		// at submit time, so by the time we reach this verify path the
-		// field is guaranteed present — falling back to +Infinity here
-		// disapproves the rare legacy record without the stamp, which is
-		// the safer default than letting a stockpiled solution through.
 		const currentTime = Date.now();
 		const submittedAt = solution.submittedAtTimestamp;
 		const timeSinceCompletion =

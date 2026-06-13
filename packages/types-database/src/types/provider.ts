@@ -156,11 +156,8 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	dappAccount: { type: String, required: true },
 	userAccount: { type: String, required: true },
 	requestedAtTimestamp: { type: Date, required: true },
-	// See StoredCaptcha — set once at first user-submission, never overwritten.
 	submittedAtTimestamp: { type: Date, required: false },
-	// Set once when the dapp first calls /verify (i.e. serverChecked flips to true).
 	verifiedAtTimestamp: { type: Date, required: false },
-	// Set once on the first non-approved terminal state.
 	failedAtTimestamp: { type: Date, required: false },
 	lastUpdatedTimestamp: { type: Date, required: false },
 	result: {
@@ -265,11 +262,8 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 	dappAccount: { type: String, required: true },
 	userAccount: { type: String, required: true },
 	requestedAtTimestamp: { type: Date, required: true },
-	// See StoredCaptcha — set once at first user-submission, never overwritten.
 	submittedAtTimestamp: { type: Date, required: false },
-	// Set once when the dapp first calls /verify (i.e. serverChecked flips to true).
 	verifiedAtTimestamp: { type: Date, required: false },
-	// Set once on the first non-approved terminal state.
 	failedAtTimestamp: { type: Date, required: false },
 	lastUpdatedTimestamp: { type: Date, required: false },
 	result: {
@@ -404,11 +398,8 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	serverChecked: { type: Boolean, required: true },
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
 	requestedAtTimestamp: { type: Date, required: true },
-	// See StoredCaptcha — set once at first user-submission, never overwritten.
 	submittedAtTimestamp: { type: Date, required: false },
-	// Set once when the dapp first calls /verify (i.e. serverChecked flips to true).
 	verifiedAtTimestamp: { type: Date, required: false },
-	// Set once on the first non-approved terminal state.
 	failedAtTimestamp: { type: Date, required: false },
 	lastUpdatedTimestamp: { type: Date, required: false },
 	// See `StoredCaptcha.pendingStage`.
