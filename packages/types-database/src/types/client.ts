@@ -24,6 +24,7 @@ import {
 	cityChangeActionDefault,
 	contextAwareThresholdDefault,
 	countryChangeActionDefault,
+	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
 	distanceExceedActionDefault,
 	distanceThresholdKmDefault,
 	domainsDefault,
@@ -115,6 +116,10 @@ export const UserSettingsSchema = new Schema({
 		type: String,
 		enum: CaptchaType,
 		default: captchaTypeDefault,
+	},
+	verifiedTimeout: {
+		type: Number,
+		default: DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
 	},
 	frictionlessThreshold: {
 		type: Number,
