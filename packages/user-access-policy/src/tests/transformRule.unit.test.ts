@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { CaptchaType } from "@prosopo/types";
-import { Address4 } from "ip-address";
+import { Address4, Address6 } from "ip-address";
 import { describe, expect, it } from "vitest";
 import { AccessPolicyType, type AccessRule } from "#policy/rule.js";
 import type { AccessRuleRecord } from "#policy/ruleRecord.js";
@@ -186,6 +186,32 @@ describe("transformRule", () => {
 			} as unknown as AccessRule),
 		).toThrow();
 	});
+
+	it("should round-trip an IPv6 address and CIDR mask", () => {
+		const ipv6 = "2001:db8::1";
+		const ipv6Cidr = "2001:db8::/32";
+
+		const expectedNumericIp = new Address6(ipv6).bigInt();
+		const expectedMaskMin = new Address6(ipv6Cidr).startAddress().bigInt();
+		const expectedMaskMax = new Address6(ipv6Cidr).endAddress().bigInt();
+
+		const ruleRecord: AccessRuleRecord = {
+			type: AccessPolicyType.Restrict,
+			ip: ipv6,
+			ipMask: ipv6Cidr,
+		};
+
+		const accessRule = transformAccessRuleRecordIntoRule(ruleRecord);
+
+		expect(accessRule.numericIp).toEqual(expectedNumericIp);
+		expect(accessRule.numericIpMaskMin).toEqual(expectedMaskMin);
+		expect(accessRule.numericIpMaskMax).toEqual(expectedMaskMax);
+
+		const reconstructed = transformAccessRuleIntoRecord(accessRule);
+
+		expect(reconstructed.ip).toEqual(new Address6(ipv6).correctForm());
+		expect(reconstructed.ipMask).toEqual(ipv6Cidr);
+	});
 });
 
 describe("getCidrFromNumericIpRange", () => {
@@ -267,4 +293,44 @@ describe("getCidrFromNumericIpRange", () => {
 
 		expect(cird).toEqual(cirdExample.cidr);
 	});
+
+	type Ipv6CidrExample = {
+		cidr: string;
+		startIp: string;
+		endIp: string;
+		description: string;
+	};
+
+	const ipv6CirdsSet: Ipv6CidrExample[] = [
+		{
+			cidr: "2001:db8::/32",
+			startIp: "2001:db8::",
+			endIp: "2001:db8:ffff:ffff:ffff:ffff:ffff:ffff",
+			description: "/32 IPv6 network",
+		},
+		{
+			cidr: "2001:db8::/64",
+			startIp: "2001:db8::",
+			endIp: "2001:db8::ffff:ffff:ffff:ffff",
+			description: "/64 IPv6 subnet",
+		},
+		{
+			cidr: "fe80::/10",
+			startIp: "fe80::",
+			endIp: "febf:ffff:ffff:ffff:ffff:ffff:ffff:ffff",
+			description: "/10 IPv6 link-local",
+		},
+	];
+
+	it.each(ipv6CirdsSet)(
+		"should convert $description to $cidr",
+		(cirdExample) => {
+			const cidr = getCidrFromNumericIpRange(
+				new Address6(cirdExample.startIp).bigInt(),
+				new Address6(cirdExample.endIp).bigInt(),
+			);
+
+			expect(cidr).toEqual(cirdExample.cidr);
+		},
+	);
 });
