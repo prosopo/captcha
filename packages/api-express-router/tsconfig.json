@@ -29,9 +29,6 @@
 			"path": "../env"
 		},
 		{
-			"path": "../locale"
-		},
-		{
 			"path": "../types"
 		},
 		{

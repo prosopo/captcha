@@ -370,7 +370,7 @@ describe("Image Captcha Integration Tests", () => {
 			expect(response.status).toBe(400);
 			const data = (await response.json()) as CaptchaResponseBody;
 			expect(data).toHaveProperty("error");
-			expect(data.error?.message).toBe("Site key not registered");
+			expect(data.error?.message).toBe("API.SITE_KEY_NOT_REGISTERED");
 		});
 
 		it("should not supply an image captcha challenge to a Dapp User if an invalid site key is provided", async () => {
@@ -397,7 +397,7 @@ describe("Image Captcha Integration Tests", () => {
 			const data = (await response.json()) as CaptchaResponseBody;
 			expect(response.status).toBe(400);
 			expect(data).toHaveProperty("error");
-			expect(data.error?.message).toBe("Invalid site key");
+			expect(data.error?.message).toBe("API.INVALID_SITE_KEY");
 		});
 
 		it("should fail if datasetID is incorrect", async () => {
@@ -446,10 +446,10 @@ describe("Image Captcha Integration Tests", () => {
 			expect(response.status).toBe(400);
 			const data = (await response.json()) as CaptchaResponseBody;
 			expect(data).toHaveProperty("error");
-			expect(data.error?.message).toBe("Incorrect CAPTCHA type");
+			expect(data.error?.message).toBe("API.INCORRECT_CAPTCHA_TYPE");
 			expect(data.error?.code).toBe(400);
 		});
-		it("should return a translated error if the captcha type is set to pow and the language is set to es", async () => {
+		it("should return the locale-stable error key regardless of Accept-Language (es)", async () => {
 			const origin = "https://localhost";
 			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
 			await registerSiteKeyInDb(env, dappAccount, CaptchaType.pow);
@@ -473,7 +473,7 @@ describe("Image Captcha Integration Tests", () => {
 			expect(response.status).toBe(400);
 			const data = (await response.json()) as CaptchaResponseBody;
 			expect(data).toHaveProperty("error");
-			expect(data.error?.message).toBe("Tipo de CAPTCHA incorrecto");
+			expect(data.error?.message).toBe("API.INCORRECT_CAPTCHA_TYPE");
 			expect(data.error?.code).toBe(400);
 		});
 	});
@@ -500,7 +500,7 @@ describe("Image Captcha Integration Tests", () => {
 		expect(response.status).toBe(400);
 		const data = (await response.json()) as CaptchaResponseBody;
 		expect(data).toHaveProperty("error");
-		expect(data.error?.message).toBe("Incorrect CAPTCHA type");
+		expect(data.error?.message).toBe("API.INCORRECT_CAPTCHA_TYPE");
 		expect(data.error?.code).toBe(400);
 	});
 

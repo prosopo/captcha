@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { loadI18next } from "@prosopo/locale";
+import { loadI18nextFrontend } from "@prosopo/locale";
 import {
 	Checkbox,
 	TestModeBanner,
@@ -97,7 +97,7 @@ export const ProcaptchaFrictionless = ({
 					i18n.changeLanguage(config.language).then((r) => r);
 				}
 			} else {
-				loadI18next(false).then((i18n) => {
+				loadI18nextFrontend().then((i18n) => {
 					if (i18n.language !== config.language)
 						i18n.changeLanguage(config.language).then((r) => r);
 				});

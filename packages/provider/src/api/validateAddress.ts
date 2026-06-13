@@ -24,7 +24,9 @@ export const validateSiteKey = (siteKey: string, logger?: Logger) => {
 export const validateAddr = (
 	address: string,
 	translationKey: TranslationKey = "CONTRACT.INVALID_ADDRESS",
-	logger?: Logger,
+	// Errors no longer log at construction (decoupled from i18n/logging); the
+	// param is kept for call-site compatibility but intentionally unused.
+	_logger?: Logger,
 ) => {
 	try {
 		const valid = validateAddress(address, false, 42);
@@ -32,13 +34,11 @@ export const validateAddr = (
 		if (!valid) {
 			throw new ProsopoApiError(translationKey, {
 				context: { code: 400, siteKey: address },
-				logger,
 			});
 		}
 	} catch (err) {
 		throw new ProsopoApiError(translationKey, {
 			context: { code: 400, siteKey: address },
-			logger,
 		});
 	}
 };

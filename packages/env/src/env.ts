@@ -97,27 +97,27 @@ export class Environment implements ProsopoEnvironment {
 
 	getDb(): ProviderDatabase {
 		if (this.db === undefined) {
-			throw new ProsopoEnvError(
-				new Error("db not setup! Please call isReady() first"),
-			);
+			throw new ProsopoEnvError("GENERAL.UNKNOWN", {
+				message: "db not setup! Please call isReady() first",
+			});
 		}
 		return this.db;
 	}
 
 	getAssetsResolver(): AssetsResolver {
 		if (this.assetsResolver === undefined) {
-			throw new ProsopoEnvError(
-				new Error("assetsResolver not setup! Please call isReady() first"),
-			);
+			throw new ProsopoEnvError("GENERAL.UNKNOWN", {
+				message: "assetsResolver not setup! Please call isReady() first",
+			});
 		}
 		return this.assetsResolver;
 	}
 
 	getPair(): KeyringPair {
 		if (this.pair === undefined) {
-			throw new ProsopoEnvError(
-				new Error("pair not setup! Please call isReady() first"),
-			);
+			throw new ProsopoEnvError("GENERAL.UNKNOWN", {
+				message: "pair not setup! Please call isReady() first",
+			});
 		}
 		return this.pair;
 	}
@@ -157,7 +157,6 @@ export class Environment implements ProsopoEnvironment {
 		} catch (err) {
 			throw new ProsopoEnvError("GENERAL.ENVIRONMENT_NOT_READY", {
 				context: { error: err },
-				logger: this.logger,
 			});
 		}
 	}

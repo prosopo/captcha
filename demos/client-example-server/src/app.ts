@@ -101,7 +101,6 @@ async function main() {
 	if (!process.env.PROSOPO_SITE_PRIVATE_KEY) {
 		const mnemonicError = new ProsopoEnvError("GENERAL.MNEMONIC_UNDEFINED", {
 			context: { missingParams: ["PROSOPO_SITE_PRIVATE_KEY"] },
-			logger,
 		});
 
 		logger.error(() => ({ err: mnemonicError }));

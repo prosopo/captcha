@@ -10,7 +10,13 @@
 		"INVALID_SIGNATURE": "ลายเซ็นต์ไม่ถูกต้อง",
 		"SITE_KEY_MISSING": "SITE KEY หายไป",
 		"ACCOUNT_NOT_FOUND": "ไม่พบบัญชี",
-		"INVALID_TIMESTAMP": "เครื่องหมายเวลาไม่ถูกต้อง"
+		"INVALID_TIMESTAMP": "เครื่องหมายเวลาไม่ถูกต้อง",
+		"BILLING_ERROR": "Billing error",
+		"INVALID_JWT": "Invalid authentication token",
+		"MISSING_AUTH_HEADER": "Missing authentication header",
+		"OBJECT_COUNT_ERROR": "Unexpected object count",
+		"SECRET_MISSING": "Secret is missing",
+		"UNKNOWN": "Unknown error"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "สิทธิ์ไม่เพียงพอในการทำการกระทำนี้",
@@ -51,7 +57,13 @@
 		"MOBILE_BLOCKED": "คำขอจากการเชื่อมต่อเครือข่ายมือถือไม่ได้รับอนุญาตสำหรับเว็บไซต์นี้",
 		"SATELLITE_BLOCKED": "คำขอจากการเชื่อมต่อดาวเทียมไม่ได้รับอนุญาตสำหรับเว็บไซต์นี้",
 		"CRAWLER_BLOCKED": "คำขอจากโปรแกรมรวบรวมข้อมูลที่รู้จักไม่ได้รับอนุญาตสำหรับเว็บไซต์นี้",
-		"DISALLOWED_WEBVIEW": "ไม่อนุญาตให้ส่งคำขอจากเบราว์เซอร์ในแอป (WebView) สำหรับเว็บไซต์นี้"
+		"DISALLOWED_WEBVIEW": "ไม่อนุญาตให้ส่งคำขอจากเบราว์เซอร์ในแอป (WebView) สำหรับเว็บไซต์นี้",
+		"INTERNAL_SERVER_ERROR": "Internal server error",
+		"INVALID_DETECTOR_KEY": "Invalid detector key",
+		"FEATURE_NOT_ENABLED": "This feature is not enabled",
+		"INVALID_AUTHORIZATION_HEADER": "Invalid authorization header",
+		"INVALID_DOMAIN": "Invalid domain",
+		"NO_PERMISSIONS": "No permissions configured for this account"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "ไม่สามารถแก้ไขผู้ใช้เจ้าของ",
@@ -61,7 +73,10 @@
 		"NO_SUGGESTIONS_FOUND": "ไม่พบข้อเสนอ",
 		"CANNOT_DEACTIVATE_LAST_SITE": "ไม่สามารถปิดใช้งานเว็บไซต์ที่ใช้งานอยู่ครั้งสุดท้าย",
 		"DUPLICATE_SITE_NAME": "มีไซต์ที่ใช้ชื่อนี้อยู่แล้ว",
-		"INVALID_SITE_NAME": "ชื่อไซต์ต้องประกอบด้วยตัวอักษร ตัวเลข ขีดกลาง และขีดล่างเท่านั้น"
+		"INVALID_SITE_NAME": "ชื่อไซต์ต้องประกอบด้วยตัวอักษร ตัวเลข ขีดกลาง และขีดล่างเท่านั้น",
+		"CANNOT_MODIFY_USER": "Cannot modify this user",
+		"API_KEYS_INVALID_NUMBER_OF_SITES": "Invalid number of sites for API key generation",
+		"API_KEYS_NOT_FOUND": "API keys not found"
 	},
 	"TARGET": {
 		"airplanes": "เครื่องบิน",
@@ -420,7 +435,15 @@
 		"TABLES_UNDEFINED": "ตารางไม่ได้ถูกกำหนดไว้",
 		"CONNECTION_UNDEFINED": "การเชื่อมต่อไม่ได้ถูกกำหนด",
 		"COMMITMENT_FLAG_FAILED": "ล้มเหลวในการทำเครื่องหมายการสนับสนุนว่าดำเนินการแล้ว",
-		"UNKNOWN": "ข้อผิดพลาดในฐานข้อมูลที่ไม่ทราบสาเหตุ"
+		"UNKNOWN": "ข้อผิดพลาดในฐานข้อมูลที่ไม่ทราบสาเหตุ",
+		"QUERY_ERROR": "Database query failed",
+		"SESSION_STORE_FAILED": "Failed to store session",
+		"SESSION_CHECK_REMOVE_FAILED": "Failed to check and remove session",
+		"SESSION_GET_FAILED": "Failed to get session",
+		"CAPTCHA_SAMPLE_SIZE_EXCEEDED": "Captcha sample size exceeded",
+		"DATABASE_IMPORT_ERROR": "Database import error",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis access rules connection is undefined",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "User access rules storage is undefined"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "ข้อผิดพลาดในการแยกวิเคราะห์ captcha",
@@ -438,7 +461,11 @@
 		"IP_ADDRESS_MISMATCH": "ที่อยู่ IP ไม่ตรงกัน",
 		"INVALID_TOKEN": "โทเคนไม่ถูกต้อง",
 		"INVALID_SOLUTION": "คำตอบไม่ถูกต้อง",
-		"DECRYPTION_ERROR": "เกิดข้อผิดพลาดในการถอดรหัส"
+		"DECRYPTION_ERROR": "เกิดข้อผิดพลาดในการถอดรหัส",
+		"FAILED": "Captcha failed",
+		"PASSED": "Captcha passed",
+		"SOLUTION_NOT_FOUND": "Solution not found",
+		"INVALID_TIMESTAMP": "Invalid timestamp"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "พารามิเตอร์ไม่ถูกต้อง"
@@ -449,11 +476,17 @@
 		"MISSING_PROVIDER_PAIR": "คู่ให้บริการที่ขาดหาย",
 		"MISSING_ENV_VARIABLE": "ตัวแปรสภาพแวดล้อมที่ขาดหาย",
 		"GENERAL": "ข้อผิดพลาด Dev ทั่วไป ดูบริบท",
-		"METHOD_NOT_IMPLEMENTED": "เมธอดยังไม่ได้นำมาใช้"
+		"METHOD_NOT_IMPLEMENTED": "เมธอดยังไม่ได้นำมาใช้",
+		"MISSING_SECRET_KEY": "Missing secret key"
 	},
 	"FS": {
 		"FILE_NOT_FOUND": "ไม่พบไฟล์",
 		"FILE_ALREADY_EXISTS": "ไฟล์มีอยู่แล้ว",
 		"INVALID_DIR_FORMAT": "รูปแบบไดเรกทอรีไม่ถูกต้อง"
+	},
+	"BILLING": {
+		"STRIPE_PORTAL": "Could not open billing portal",
+		"STRIPE_SESSION_NOT_FOUND": "Billing session not found",
+		"STRIPE_PAYMENT_FAILED": "Payment failed"
 	}
 }

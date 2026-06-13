@@ -10,7 +10,13 @@
 		"INVALID_SIGNATURE": "Nieprawidłowe podpisanie",
 		"SITE_KEY_MISSING": "BRAK KLUCZA WITRY",
 		"ACCOUNT_NOT_FOUND": "Nie znaleziono konta",
-		"INVALID_TIMESTAMP": "Nieprawidłowy znacznik czasu"
+		"INVALID_TIMESTAMP": "Nieprawidłowy znacznik czasu",
+		"BILLING_ERROR": "Billing error",
+		"INVALID_JWT": "Invalid authentication token",
+		"MISSING_AUTH_HEADER": "Missing authentication header",
+		"OBJECT_COUNT_ERROR": "Unexpected object count",
+		"SECRET_MISSING": "Secret is missing",
+		"UNKNOWN": "Unknown error"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Niewystarczające uprawnienia do wykonania tej akcji",
@@ -51,7 +57,13 @@
 		"MOBILE_BLOCKED": "Żądania z połączeń sieci komórkowych nie są dozwolone dla tej strony",
 		"SATELLITE_BLOCKED": "Żądania z połączeń satelitarnych nie są dozwolone dla tej strony",
 		"CRAWLER_BLOCKED": "Żądania od znanych robotów nie są dozwolone dla tej strony",
-		"DISALLOWED_WEBVIEW": "Żądania z przeglądarek wbudowanych w aplikacje (WebView) nie są dozwolone dla tej strony"
+		"DISALLOWED_WEBVIEW": "Żądania z przeglądarek wbudowanych w aplikacje (WebView) nie są dozwolone dla tej strony",
+		"INTERNAL_SERVER_ERROR": "Internal server error",
+		"INVALID_DETECTOR_KEY": "Invalid detector key",
+		"FEATURE_NOT_ENABLED": "This feature is not enabled",
+		"INVALID_AUTHORIZATION_HEADER": "Invalid authorization header",
+		"INVALID_DOMAIN": "Invalid domain",
+		"NO_PERMISSIONS": "No permissions configured for this account"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Nie można zmodyfikować właściciela użytkownika",
@@ -61,7 +73,10 @@
 		"NO_SUGGESTIONS_FOUND": "Nie znaleziono sugestii",
 		"CANNOT_DEACTIVATE_LAST_SITE": "Nie można dezaktywować ostatniej aktywnej witryny",
 		"DUPLICATE_SITE_NAME": "Witryna o tej nazwie już istnieje",
-		"INVALID_SITE_NAME": "Nazwa witryny może zawierać tylko litery, cyfry, łączniki i podkreślenia"
+		"INVALID_SITE_NAME": "Nazwa witryny może zawierać tylko litery, cyfry, łączniki i podkreślenia",
+		"CANNOT_MODIFY_USER": "Cannot modify this user",
+		"API_KEYS_INVALID_NUMBER_OF_SITES": "Invalid number of sites for API key generation",
+		"API_KEYS_NOT_FOUND": "API keys not found"
 	},
 	"TARGET": {
 		"airplanes": "samoloty",
@@ -420,7 +435,15 @@
 		"TABLES_UNDEFINED": "Tabele niezdefiniowane",
 		"CONNECTION_UNDEFINED": "Połączenie niezdefiniowane",
 		"COMMITMENT_FLAG_FAILED": "Nie udało się oznaczyć zobowiązania jako przetworzone",
-		"UNKNOWN": "Nieznany błąd bazy danych"
+		"UNKNOWN": "Nieznany błąd bazy danych",
+		"QUERY_ERROR": "Database query failed",
+		"SESSION_STORE_FAILED": "Failed to store session",
+		"SESSION_CHECK_REMOVE_FAILED": "Failed to check and remove session",
+		"SESSION_GET_FAILED": "Failed to get session",
+		"CAPTCHA_SAMPLE_SIZE_EXCEEDED": "Captcha sample size exceeded",
+		"DATABASE_IMPORT_ERROR": "Database import error",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis access rules connection is undefined",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "User access rules storage is undefined"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Błąd parsowania captchy",
@@ -438,7 +461,11 @@
 		"IP_ADDRESS_MISMATCH": "Adresy IP nie pasują",
 		"INVALID_TOKEN": "Nieprawidłowy token",
 		"INVALID_SOLUTION": "Nieprawidłowe rozwiązanie",
-		"DECRYPTION_ERROR": "Błąd deszyfrowania"
+		"DECRYPTION_ERROR": "Błąd deszyfrowania",
+		"FAILED": "Captcha failed",
+		"PASSED": "Captcha passed",
+		"SOLUTION_NOT_FOUND": "Solution not found",
+		"INVALID_TIMESTAMP": "Invalid timestamp"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Nieprawidłowy parametr"
@@ -449,11 +476,17 @@
 		"MISSING_PROVIDER_PAIR": "Brakująca para dostawcy",
 		"MISSING_ENV_VARIABLE": "Brak zmiennej środowiskowej",
 		"GENERAL": "Ogólny błąd dewelopera, zobacz kontekst",
-		"METHOD_NOT_IMPLEMENTED": "Metoda niezaimplementowana"
+		"METHOD_NOT_IMPLEMENTED": "Metoda niezaimplementowana",
+		"MISSING_SECRET_KEY": "Missing secret key"
 	},
 	"FS": {
 		"FILE_NOT_FOUND": "Plik nie znaleziony",
 		"FILE_ALREADY_EXISTS": "Plik już istnieje",
 		"INVALID_DIR_FORMAT": "Nieprawidłowy format katalogu"
+	},
+	"BILLING": {
+		"STRIPE_PORTAL": "Could not open billing portal",
+		"STRIPE_SESSION_NOT_FOUND": "Billing session not found",
+		"STRIPE_PAYMENT_FAILED": "Payment failed"
 	}
 }

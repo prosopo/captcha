@@ -10,7 +10,13 @@
 		"INVALID_SIGNATURE": "Ugyldig signatur",
 		"SITE_KEY_MISSING": "SITE KEY mangler",
 		"ACCOUNT_NOT_FOUND": "Konto ikke funnet",
-		"INVALID_TIMESTAMP": "Ugyldig tidsstempel"
+		"INVALID_TIMESTAMP": "Ugyldig tidsstempel",
+		"BILLING_ERROR": "Billing error",
+		"INVALID_JWT": "Invalid authentication token",
+		"MISSING_AUTH_HEADER": "Missing authentication header",
+		"OBJECT_COUNT_ERROR": "Unexpected object count",
+		"SECRET_MISSING": "Secret is missing",
+		"UNKNOWN": "Unknown error"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Utilstrekkelige tillatelser for å utføre denne handlingen",
@@ -51,7 +57,13 @@
 		"MOBILE_BLOCKED": "Forespørsler fra mobilnettverkstilkoblinger er ikke tillatt for dette nettstedet",
 		"SATELLITE_BLOCKED": "Forespørsler fra satellittilkoblinger er ikke tillatt for dette nettstedet",
 		"CRAWLER_BLOCKED": "Forespørsler fra kjente roboter er ikke tillatt for dette nettstedet",
-		"DISALLOWED_WEBVIEW": "Forespørsler fra innebygde nettlesere (WebView) er ikke tillatt for dette nettstedet"
+		"DISALLOWED_WEBVIEW": "Forespørsler fra innebygde nettlesere (WebView) er ikke tillatt for dette nettstedet",
+		"INTERNAL_SERVER_ERROR": "Internal server error",
+		"INVALID_DETECTOR_KEY": "Invalid detector key",
+		"FEATURE_NOT_ENABLED": "This feature is not enabled",
+		"INVALID_AUTHORIZATION_HEADER": "Invalid authorization header",
+		"INVALID_DOMAIN": "Invalid domain",
+		"NO_PERMISSIONS": "No permissions configured for this account"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Kan ikke endre eierbruker",
@@ -61,7 +73,10 @@
 		"NO_SUGGESTIONS_FOUND": "Ingen forslag funnet",
 		"CANNOT_DEACTIVATE_LAST_SITE": "Kan ikke deaktivere siste aktive nettsted",
 		"DUPLICATE_SITE_NAME": "Et nettsted med dette navnet finnes allerede",
-		"INVALID_SITE_NAME": "Nettstednavnet kan bare inneholde bokstaver, tall, bindestreker og understreker"
+		"INVALID_SITE_NAME": "Nettstednavnet kan bare inneholde bokstaver, tall, bindestreker og understreker",
+		"CANNOT_MODIFY_USER": "Cannot modify this user",
+		"API_KEYS_INVALID_NUMBER_OF_SITES": "Invalid number of sites for API key generation",
+		"API_KEYS_NOT_FOUND": "API keys not found"
 	},
 	"TARGET": {
 		"airplanes": "flymaskiner",
@@ -420,7 +435,15 @@
 		"TABLES_UNDEFINED": "Tabeller er udefinert",
 		"CONNECTION_UNDEFINED": "Tilkobling udefinert",
 		"COMMITMENT_FLAG_FAILED": "Klarte ikke å flagge engasjement som behandlet",
-		"UNKNOWN": "Ukjent databasefeil"
+		"UNKNOWN": "Ukjent databasefeil",
+		"QUERY_ERROR": "Database query failed",
+		"SESSION_STORE_FAILED": "Failed to store session",
+		"SESSION_CHECK_REMOVE_FAILED": "Failed to check and remove session",
+		"SESSION_GET_FAILED": "Failed to get session",
+		"CAPTCHA_SAMPLE_SIZE_EXCEEDED": "Captcha sample size exceeded",
+		"DATABASE_IMPORT_ERROR": "Database import error",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis access rules connection is undefined",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "User access rules storage is undefined"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Feil parsing captcha",
@@ -438,7 +461,11 @@
 		"IP_ADDRESS_MISMATCH": "IP-adresser stemmer ikke overens",
 		"INVALID_TOKEN": "Ugyldig token",
 		"INVALID_SOLUTION": "Ugyldig løsning",
-		"DECRYPTION_ERROR": "Feil ved dekryptering"
+		"DECRYPTION_ERROR": "Feil ved dekryptering",
+		"FAILED": "Captcha failed",
+		"PASSED": "Captcha passed",
+		"SOLUTION_NOT_FOUND": "Solution not found",
+		"INVALID_TIMESTAMP": "Invalid timestamp"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Ugyldig parameter"
@@ -449,11 +476,17 @@
 		"MISSING_PROVIDER_PAIR": "Manglende leverandørpar",
 		"MISSING_ENV_VARIABLE": "Manglende miljøvariabel",
 		"GENERAL": "Generell utviklerfeil, se kontekst",
-		"METHOD_NOT_IMPLEMENTED": "Metoden er ikkje implementert"
+		"METHOD_NOT_IMPLEMENTED": "Metoden er ikkje implementert",
+		"MISSING_SECRET_KEY": "Missing secret key"
 	},
 	"FS": {
 		"FILE_NOT_FOUND": "Filen ble ikkje funnet",
 		"FILE_ALREADY_EXISTS": "Filen eksisterer allerede",
 		"INVALID_DIR_FORMAT": "Ugyldig katalogformat"
+	},
+	"BILLING": {
+		"STRIPE_PORTAL": "Could not open billing portal",
+		"STRIPE_SESSION_NOT_FOUND": "Billing session not found",
+		"STRIPE_PAYMENT_FAILED": "Payment failed"
 	}
 }

@@ -28,7 +28,12 @@ const loadPath =
 export function initializeI18n(
 	i18nLoadedCallback?: (value: typeof i18n) => void,
 ) {
-	if (!i18n.isInitialized && isServerSide()) {
+	if (!isServerSide()) {
+		throw new Error(
+			"initializeI18n (backend) must not be called in browser context — use i18nFrontend instead",
+		);
+	}
+	if (!i18n.isInitialized) {
 		const lngDetector = new MiddlewareLanguageDetector(null, {
 			order: ["header", "query", "cookie"],
 		});
@@ -38,7 +43,6 @@ export function initializeI18n(
 			.use(lngDetector) // this line should switch the language to the one the user reports in the Accept-Language header
 			.init({
 				...i18nSharedOptions,
-				ns: ["translation"],
 				backend: {
 					loadPath,
 				},

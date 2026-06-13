@@ -13,5 +13,6 @@
 // limitations under the License.
 
 export * from "./error.js";
+export * from "./errorKeys.js";
 export * from "./utils/utils.js";
 export * from "./utils/batches.js";

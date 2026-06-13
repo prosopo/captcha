@@ -23,7 +23,8 @@ const logLevel =
 export const i18nSharedOptions = {
 	debug: logLevel === "debug",
 	fallbackLng: LanguageSchema.enum.en,
-	namespace: "translation",
+	defaultNS: "translation",
+	ns: ["translation"],
 	supportedLngs: Object.values(Languages),
 	nonExplicitSupportedLngs: false,
 };

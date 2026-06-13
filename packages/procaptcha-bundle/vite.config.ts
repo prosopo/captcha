@@ -15,6 +15,7 @@
 import { randomBytes } from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { BACKEND_ERROR_KEYS_ARRAY } from "@prosopo/common";
 import {
 	ViteFrontendConfig,
 	VitePluginRemoveUnusedTranslations,
@@ -167,6 +168,7 @@ export default defineConfig(async ({ command, mode }) => {
 			VitePluginRemoveUnusedTranslations(
 				translationKeys,
 				`${copyDir.destDir}/**/*.json`,
+				BACKEND_ERROR_KEYS_ARRAY,
 			),
 
 			...(frontendConfig.plugins ? frontendConfig.plugins : []),

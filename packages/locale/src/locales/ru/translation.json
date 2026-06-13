@@ -10,7 +10,13 @@
 		"INVALID_SIGNATURE": "Неверная подпись",
 		"SITE_KEY_MISSING": "Отсутствует ключ сайта",
 		"ACCOUNT_NOT_FOUND": "Учетная запись не найдена",
-		"INVALID_TIMESTAMP": "Недопустимый временной штамп"
+		"INVALID_TIMESTAMP": "Недопустимый временной штамп",
+		"BILLING_ERROR": "Billing error",
+		"INVALID_JWT": "Invalid authentication token",
+		"MISSING_AUTH_HEADER": "Missing authentication header",
+		"OBJECT_COUNT_ERROR": "Unexpected object count",
+		"SECRET_MISSING": "Secret is missing",
+		"UNKNOWN": "Unknown error"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Недостаточно прав для выполнения этого действия",
@@ -51,7 +57,13 @@
 		"MOBILE_BLOCKED": "Запросы с мобильных сетевых подключений не разрешены для этого сайта",
 		"SATELLITE_BLOCKED": "Запросы со спутниковых подключений не разрешены для этого сайта",
 		"CRAWLER_BLOCKED": "Запросы от известных поисковых роботов не разрешены для этого сайта",
-		"DISALLOWED_WEBVIEW": "Запросы из встроенных браузеров (WebView) не разрешены для этого сайта"
+		"DISALLOWED_WEBVIEW": "Запросы из встроенных браузеров (WebView) не разрешены для этого сайта",
+		"INTERNAL_SERVER_ERROR": "Internal server error",
+		"INVALID_DETECTOR_KEY": "Invalid detector key",
+		"FEATURE_NOT_ENABLED": "This feature is not enabled",
+		"INVALID_AUTHORIZATION_HEADER": "Invalid authorization header",
+		"INVALID_DOMAIN": "Invalid domain",
+		"NO_PERMISSIONS": "No permissions configured for this account"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Невозможно изменить владельца пользователя",
@@ -61,7 +73,10 @@
 		"NO_SUGGESTIONS_FOUND": "Предложения не найдены",
 		"CANNOT_DEACTIVATE_LAST_SITE": "Нельзя деактивировать последний активный сайт",
 		"DUPLICATE_SITE_NAME": "Сайт с таким именем уже существует",
-		"INVALID_SITE_NAME": "Имя сайта должно содержать только буквы, цифры, дефисы и символы подчёркивания"
+		"INVALID_SITE_NAME": "Имя сайта должно содержать только буквы, цифры, дефисы и символы подчёркивания",
+		"CANNOT_MODIFY_USER": "Cannot modify this user",
+		"API_KEYS_INVALID_NUMBER_OF_SITES": "Invalid number of sites for API key generation",
+		"API_KEYS_NOT_FOUND": "API keys not found"
 	},
 	"TARGET": {
 		"airplanes": "самолеты",
@@ -420,7 +435,15 @@
 		"TABLES_UNDEFINED": "Таблицы не определены",
 		"CONNECTION_UNDEFINED": "Подключение не определено",
 		"COMMITMENT_FLAG_FAILED": "Не удалось пометить коммитмент как обработанный",
-		"UNKNOWN": "Неизвестная ошибка базы данных"
+		"UNKNOWN": "Неизвестная ошибка базы данных",
+		"QUERY_ERROR": "Database query failed",
+		"SESSION_STORE_FAILED": "Failed to store session",
+		"SESSION_CHECK_REMOVE_FAILED": "Failed to check and remove session",
+		"SESSION_GET_FAILED": "Failed to get session",
+		"CAPTCHA_SAMPLE_SIZE_EXCEEDED": "Captcha sample size exceeded",
+		"DATABASE_IMPORT_ERROR": "Database import error",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis access rules connection is undefined",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "User access rules storage is undefined"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Ошибка парсинга капчи",
@@ -438,7 +461,11 @@
 		"IP_ADDRESS_MISMATCH": "IP адреса не совпадают",
 		"INVALID_TOKEN": "Недействительный токен",
 		"INVALID_SOLUTION": "Недопустимое решение",
-		"DECRYPTION_ERROR": "Ошибка расшифровки"
+		"DECRYPTION_ERROR": "Ошибка расшифровки",
+		"FAILED": "Captcha failed",
+		"PASSED": "Captcha passed",
+		"SOLUTION_NOT_FOUND": "Solution not found",
+		"INVALID_TIMESTAMP": "Invalid timestamp"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Недопустимый параметр"
@@ -449,11 +476,17 @@
 		"MISSING_PROVIDER_PAIR": "Отсутствует пара поставщиков",
 		"MISSING_ENV_VARIABLE": "Отсутствует переменная среды",
 		"GENERAL": "Общая ошибка Dev, см. контекст",
-		"METHOD_NOT_IMPLEMENTED": "Метод не реализован"
+		"METHOD_NOT_IMPLEMENTED": "Метод не реализован",
+		"MISSING_SECRET_KEY": "Missing secret key"
 	},
 	"FS": {
 		"FILE_NOT_FOUND": "Файл не найден",
 		"FILE_ALREADY_EXISTS": "Файл уже существует",
 		"INVALID_DIR_FORMAT": "Недопустимый формат каталога"
+	},
+	"BILLING": {
+		"STRIPE_PORTAL": "Could not open billing portal",
+		"STRIPE_SESSION_NOT_FOUND": "Billing session not found",
+		"STRIPE_PAYMENT_FAILED": "Payment failed"
 	}
 }

@@ -10,7 +10,13 @@
 		"ENVIRONMENT_NOT_READY": "Çevre hazır değil",
 		"INVALID_SIGNATURE": "Geçersiz imza",
 		"SITE_KEY_MISSING": "SITE KEY eksik",
-		"INVALID_TIMESTAMP": "Geçersiz zaman damgası"
+		"INVALID_TIMESTAMP": "Geçersiz zaman damgası",
+		"BILLING_ERROR": "Billing error",
+		"INVALID_JWT": "Invalid authentication token",
+		"MISSING_AUTH_HEADER": "Missing authentication header",
+		"OBJECT_COUNT_ERROR": "Unexpected object count",
+		"SECRET_MISSING": "Secret is missing",
+		"UNKNOWN": "Unknown error"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Insufficient permissions to perform this action",
@@ -51,7 +57,13 @@
 		"MOBILE_BLOCKED": "Bu site için mobil ağ bağlantılarından gelen isteklere izin verilmiyor",
 		"SATELLITE_BLOCKED": "Bu site için uydu bağlantılarından gelen isteklere izin verilmiyor",
 		"CRAWLER_BLOCKED": "Bu site için bilinen tarayıcılardan gelen isteklere izin verilmiyor",
-		"DISALLOWED_WEBVIEW": "Bu site için uygulama içi tarayıcılardan (WebView) gelen isteklere izin verilmiyor"
+		"DISALLOWED_WEBVIEW": "Bu site için uygulama içi tarayıcılardan (WebView) gelen isteklere izin verilmiyor",
+		"INTERNAL_SERVER_ERROR": "Internal server error",
+		"INVALID_DETECTOR_KEY": "Invalid detector key",
+		"FEATURE_NOT_ENABLED": "This feature is not enabled",
+		"INVALID_AUTHORIZATION_HEADER": "Invalid authorization header",
+		"INVALID_DOMAIN": "Invalid domain",
+		"NO_PERMISSIONS": "No permissions configured for this account"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Cannot modify owner user",
@@ -61,7 +73,10 @@
 		"NO_SUGGESTIONS_FOUND": "No suggestions found",
 		"CANNOT_DEACTIVATE_LAST_SITE": "Cannot deactivate the last active site",
 		"DUPLICATE_SITE_NAME": "Bu ada sahip bir site zaten mevcut",
-		"INVALID_SITE_NAME": "Site adı yalnızca harf, rakam, tire ve alt çizgi içermelidir"
+		"INVALID_SITE_NAME": "Site adı yalnızca harf, rakam, tire ve alt çizgi içermelidir",
+		"CANNOT_MODIFY_USER": "Cannot modify this user",
+		"API_KEYS_INVALID_NUMBER_OF_SITES": "Invalid number of sites for API key generation",
+		"API_KEYS_NOT_FOUND": "API keys not found"
 	},
 	"TARGET": {
 		"airplanes": "uçaklar",
@@ -420,7 +435,15 @@
 		"TABLES_UNDEFINED": "Tablolar tanımsız",
 		"CONNECTION_UNDEFINED": "Bağlantı tanımsız",
 		"COMMITMENT_FLAG_FAILED": "Taahhütü işlenmiş olarak işaretleme başarısız oldu",
-		"UNKNOWN": "Bilinmeyen veritabanı hatası"
+		"UNKNOWN": "Bilinmeyen veritabanı hatası",
+		"QUERY_ERROR": "Database query failed",
+		"SESSION_STORE_FAILED": "Failed to store session",
+		"SESSION_CHECK_REMOVE_FAILED": "Failed to check and remove session",
+		"SESSION_GET_FAILED": "Failed to get session",
+		"CAPTCHA_SAMPLE_SIZE_EXCEEDED": "Captcha sample size exceeded",
+		"DATABASE_IMPORT_ERROR": "Database import error",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis access rules connection is undefined",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "User access rules storage is undefined"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Captcha ayrıştırma hatası",
@@ -438,7 +461,11 @@
 		"IP_ADDRESS_MISMATCH": "IP adresleri eşleşmiyor",
 		"INVALID_TOKEN": "Geçersiz belirteç",
 		"INVALID_SOLUTION": "Geçersiz çözüm",
-		"DECRYPTION_ERROR": "Şifreleme hatası"
+		"DECRYPTION_ERROR": "Şifreleme hatası",
+		"FAILED": "Captcha failed",
+		"PASSED": "Captcha passed",
+		"SOLUTION_NOT_FOUND": "Solution not found",
+		"INVALID_TIMESTAMP": "Invalid timestamp"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Geçersiz parametre"
@@ -449,11 +476,17 @@
 		"MISSING_PROVIDER_PAIR": "Eksik sağlayıcı çifti",
 		"MISSING_ENV_VARIABLE": "Eksik ortam değişkeni",
 		"GENERAL": "Genel Geliştirici Hatası, bağlamı kontrol edin",
-		"METHOD_NOT_IMPLEMENTED": "Yöntem uygulanmadı"
+		"METHOD_NOT_IMPLEMENTED": "Yöntem uygulanmadı",
+		"MISSING_SECRET_KEY": "Missing secret key"
 	},
 	"FS": {
 		"FILE_NOT_FOUND": "Dosya bulunamadı",
 		"FILE_ALREADY_EXISTS": "Dosya zaten var",
 		"INVALID_DIR_FORMAT": "Geçersiz dizin biçimi"
+	},
+	"BILLING": {
+		"STRIPE_PORTAL": "Could not open billing portal",
+		"STRIPE_SESSION_NOT_FOUND": "Billing session not found",
+		"STRIPE_PAYMENT_FAILED": "Payment failed"
 	}
 }

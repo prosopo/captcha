@@ -10,7 +10,13 @@
 		"INVALID_SIGNATURE": "Firma non valida",
 		"SITE_KEY_MISSING": "Manca la chiave del sito",
 		"ACCOUNT_NOT_FOUND": "Account non trovato",
-		"INVALID_TIMESTAMP": "Timestamp non valido"
+		"INVALID_TIMESTAMP": "Timestamp non valido",
+		"BILLING_ERROR": "Billing error",
+		"INVALID_JWT": "Invalid authentication token",
+		"MISSING_AUTH_HEADER": "Missing authentication header",
+		"OBJECT_COUNT_ERROR": "Unexpected object count",
+		"SECRET_MISSING": "Secret is missing",
+		"UNKNOWN": "Unknown error"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Permissões insuficientes para realizar esta ação",
@@ -51,7 +57,13 @@
 		"MOBILE_BLOCKED": "Le richieste da connessioni di rete mobile non sono consentite per questo sito",
 		"SATELLITE_BLOCKED": "Le richieste da connessioni satellitari non sono consentite per questo sito",
 		"CRAWLER_BLOCKED": "Le richieste da crawler noti non sono consentite per questo sito",
-		"DISALLOWED_WEBVIEW": "Le richieste da browser integrati nelle app (WebView) non sono consentite per questo sito"
+		"DISALLOWED_WEBVIEW": "Le richieste da browser integrati nelle app (WebView) non sono consentite per questo sito",
+		"INTERNAL_SERVER_ERROR": "Internal server error",
+		"INVALID_DETECTOR_KEY": "Invalid detector key",
+		"FEATURE_NOT_ENABLED": "This feature is not enabled",
+		"INVALID_AUTHORIZATION_HEADER": "Invalid authorization header",
+		"INVALID_DOMAIN": "Invalid domain",
+		"NO_PERMISSIONS": "No permissions configured for this account"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Não é possível modificar o usuário proprietário",
@@ -61,7 +73,10 @@
 		"NO_SUGGESTIONS_FOUND": "Nenhuma sugestão encontrada",
 		"CANNOT_DEACTIVATE_LAST_SITE": "Não é possível desativar o último site ativo",
 		"DUPLICATE_SITE_NAME": "Esiste già un sito con questo nome",
-		"INVALID_SITE_NAME": "Il nome del sito deve contenere solo lettere, numeri, trattini e trattini bassi"
+		"INVALID_SITE_NAME": "Il nome del sito deve contenere solo lettere, numeri, trattini e trattini bassi",
+		"CANNOT_MODIFY_USER": "Cannot modify this user",
+		"API_KEYS_INVALID_NUMBER_OF_SITES": "Invalid number of sites for API key generation",
+		"API_KEYS_NOT_FOUND": "API keys not found"
 	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Estensione Polkadot non trovata"
@@ -121,7 +136,15 @@
 		"TABLES_UNDEFINED": "Tabelle indefinite",
 		"CONNECTION_UNDEFINED": "Connessione indefinita",
 		"COMMITMENT_FLAG_FAILED": "Impossibile contrassegnare l'impegno come elaborato",
-		"UNKNOWN": "Errore database sconosciuto"
+		"UNKNOWN": "Errore database sconosciuto",
+		"QUERY_ERROR": "Database query failed",
+		"SESSION_STORE_FAILED": "Failed to store session",
+		"SESSION_CHECK_REMOVE_FAILED": "Failed to check and remove session",
+		"SESSION_GET_FAILED": "Failed to get session",
+		"CAPTCHA_SAMPLE_SIZE_EXCEEDED": "Captcha sample size exceeded",
+		"DATABASE_IMPORT_ERROR": "Database import error",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis access rules connection is undefined",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "User access rules storage is undefined"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Errore nell'analisi del captcha",
@@ -139,7 +162,11 @@
 		"IP_ADDRESS_MISMATCH": "Gli indirizzi IP non corrispondono",
 		"INVALID_TOKEN": "Token non valido",
 		"INVALID_SOLUTION": "Soluzione non valida",
-		"DECRYPTION_ERROR": "Errore di decodifica"
+		"DECRYPTION_ERROR": "Errore di decodifica",
+		"FAILED": "Captcha failed",
+		"PASSED": "Captcha passed",
+		"SOLUTION_NOT_FOUND": "Solution not found",
+		"INVALID_TIMESTAMP": "Invalid timestamp"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Parametro non valido"
@@ -150,7 +177,8 @@
 		"MISSING_PROVIDER_PAIR": "Coppia di fornitori mancante",
 		"MISSING_ENV_VARIABLE": "Variabile d'ambiente mancante",
 		"GENERAL": "Errore di sviluppo generale, vedere il contesto",
-		"METHOD_NOT_IMPLEMENTED": "Metodo non implementato"
+		"METHOD_NOT_IMPLEMENTED": "Metodo non implementato",
+		"MISSING_SECRET_KEY": "Missing secret key"
 	},
 	"FS": {
 		"FILE_NOT_FOUND": "File non trovato",
@@ -455,5 +483,10 @@
 		"sword": "spada",
 		"syringe": "siringa",
 		"tambourine": "tamburello"
+	},
+	"BILLING": {
+		"STRIPE_PORTAL": "Could not open billing portal",
+		"STRIPE_SESSION_NOT_FOUND": "Billing session not found",
+		"STRIPE_PAYMENT_FAILED": "Payment failed"
 	}
 }

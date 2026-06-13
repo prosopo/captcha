@@ -10,7 +10,13 @@
 		"INVALID_SIGNATURE": "Invalid nga lagda",
 		"SITE_KEY_MISSING": "Nanginahanglan og SITE KEY",
 		"ACCOUNT_NOT_FOUND": "Account dili makita",
-		"INVALID_TIMESTAMP": "Invalid nga timestamp"
+		"INVALID_TIMESTAMP": "Invalid nga timestamp",
+		"BILLING_ERROR": "Billing error",
+		"INVALID_JWT": "Invalid authentication token",
+		"MISSING_AUTH_HEADER": "Missing authentication header",
+		"OBJECT_COUNT_ERROR": "Unexpected object count",
+		"SECRET_MISSING": "Secret is missing",
+		"UNKNOWN": "Unknown error"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Insufficientway ermissionspay otay erformpay histay actionway",
@@ -51,7 +57,13 @@
 		"MOBILE_BLOCKED": "ഈ സൈറ്റിന് മൊബൈൽ നെറ്റ്വർക്ക് കണക്ഷനുകളിൽ നിന്നുള്ള അഭ്യർത്ഥനകൾ അനുവദനീയമല്ല",
 		"SATELLITE_BLOCKED": "ഈ സൈറ്റിന് ഉപഗ്രഹ കണക്ഷനുകളിൽ നിന്നുള്ള അഭ്യർത്ഥനകൾ അനുവദനീയമല്ല",
 		"CRAWLER_BLOCKED": "ഈ സൈറ്റിന് അറിയപ്പെടുന്ന ക്രോളറുകളിൽ നിന്നുള്ള അഭ്യർത്ഥനകൾ അനുവദനീയമല്ല",
-		"DISALLOWED_WEBVIEW": "ഈ സൈറ്റിന് ഇൻ-ആപ്പ് ബ്രൗസറുകളിൽ (WebView) നിന്നുള്ള അഭ്യർത്ഥനകൾ അനുവദനീയമല്ല"
+		"DISALLOWED_WEBVIEW": "ഈ സൈറ്റിന് ഇൻ-ആപ്പ് ബ്രൗസറുകളിൽ (WebView) നിന്നുള്ള അഭ്യർത്ഥനകൾ അനുവദനീയമല്ല",
+		"INTERNAL_SERVER_ERROR": "Internal server error",
+		"INVALID_DETECTOR_KEY": "Invalid detector key",
+		"FEATURE_NOT_ENABLED": "This feature is not enabled",
+		"INVALID_AUTHORIZATION_HEADER": "Invalid authorization header",
+		"INVALID_DOMAIN": "Invalid domain",
+		"NO_PERMISSIONS": "No permissions configured for this account"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Annotcay odifymay ownerway seruy",
@@ -61,7 +73,10 @@
 		"NO_SUGGESTIONS_FOUND": "Onay uggestionssay oundfay",
 		"CANNOT_DEACTIVATE_LAST_SITE": "Annotcay eactivateday ethay astlay activeay itesay",
 		"DUPLICATE_SITE_NAME": "ഈ പേരിൽ ഒരു സൈറ്റ് ഇതിനകം നിലവിലുണ്ട്",
-		"INVALID_SITE_NAME": "സൈറ്റ് പേരിൽ അക്ഷരങ്ങൾ, അക്കങ്ങൾ, ഹൈഫനുകൾ, അടിവരകൾ എന്നിവ മാത്രമേ അടങ്ങിയിരിക്കാവൂ"
+		"INVALID_SITE_NAME": "സൈറ്റ് പേരിൽ അക്ഷരങ്ങൾ, അക്കങ്ങൾ, ഹൈഫനുകൾ, അടിവരകൾ എന്നിവ മാത്രമേ അടങ്ങിയിരിക്കാവൂ",
+		"CANNOT_MODIFY_USER": "Cannot modify this user",
+		"API_KEYS_INVALID_NUMBER_OF_SITES": "Invalid number of sites for API key generation",
+		"API_KEYS_NOT_FOUND": "API keys not found"
 	},
 	"TARGET": {
 		"airplanes": "eroplano",
@@ -420,7 +435,15 @@
 		"TABLES_UNDEFINED": "Mga lamesa way butang",
 		"CONNECTION_UNDEFINED": "Koneksiyon wala pa nahimutang",
 		"COMMITMENT_FLAG_FAILED": "Nahimong pakyas ang pag-flag sa commitment nga giproseso",
-		"UNKNOWN": "Sayop sa dili masayod na database"
+		"UNKNOWN": "Sayop sa dili masayod na database",
+		"QUERY_ERROR": "Database query failed",
+		"SESSION_STORE_FAILED": "Failed to store session",
+		"SESSION_CHECK_REMOVE_FAILED": "Failed to check and remove session",
+		"SESSION_GET_FAILED": "Failed to get session",
+		"CAPTCHA_SAMPLE_SIZE_EXCEEDED": "Captcha sample size exceeded",
+		"DATABASE_IMPORT_ERROR": "Database import error",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis access rules connection is undefined",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "User access rules storage is undefined"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Sayop sa pag-parse sa captcha",
@@ -438,7 +461,11 @@
 		"IP_ADDRESS_MISMATCH": "IP വിലാസങ്ങൾ പൊരുത്തപ്പെടുന്നില്ല",
 		"INVALID_TOKEN": "Hindi wastong token",
 		"INVALID_SOLUTION": "Hindi wastong solusyon",
-		"DECRYPTION_ERROR": "Error sa pagdedecrypt"
+		"DECRYPTION_ERROR": "Error sa pagdedecrypt",
+		"FAILED": "Captcha failed",
+		"PASSED": "Captcha passed",
+		"SOLUTION_NOT_FOUND": "Solution not found",
+		"INVALID_TIMESTAMP": "Invalid timestamp"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Hindi wastong parameter"
@@ -449,11 +476,17 @@
 		"MISSING_PROVIDER_PAIR": "Nawawalang provider pair",
 		"MISSING_ENV_VARIABLE": "Nawawalang environment variable",
 		"GENERAL": "Pangkalahatang Dev Error, tingnan ang konteksto",
-		"METHOD_NOT_IMPLEMENTED": "Paraan hindi pa naipatutupad"
+		"METHOD_NOT_IMPLEMENTED": "Paraan hindi pa naipatutupad",
+		"MISSING_SECRET_KEY": "Missing secret key"
 	},
 	"FS": {
 		"FILE_NOT_FOUND": "File ay hindi natagpuan",
 		"FILE_ALREADY_EXISTS": "File ay mayroon na",
 		"INVALID_DIR_FORMAT": "Hindi wastong format ng directory"
+	},
+	"BILLING": {
+		"STRIPE_PORTAL": "Could not open billing portal",
+		"STRIPE_SESSION_NOT_FOUND": "Billing session not found",
+		"STRIPE_PAYMENT_FAILED": "Payment failed"
 	}
 }

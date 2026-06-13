@@ -138,7 +138,7 @@ describe("authMiddleware", () => {
 		expect(mockRes.status).toHaveBeenCalledWith(401);
 		expect(mockRes.json).toHaveBeenCalledWith({
 			error: new ProsopoEnvError("API.UNAUTHORIZED", {
-				context: { i18n: mockReq.i18n, code: 401 },
+				context: { code: 401 },
 			}),
 		});
 	});
@@ -176,7 +176,7 @@ describe("authMiddleware", () => {
 		expect(mockRes.status).toHaveBeenCalledWith(401);
 		expect(mockRes.json).toHaveBeenCalledWith({
 			error: new ProsopoEnvError("API.UNAUTHORIZED", {
-				context: { i18n: mockReq.i18n, code: 401 },
+				context: { code: 401 },
 			}),
 		});
 	});

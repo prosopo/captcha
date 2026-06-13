@@ -68,22 +68,16 @@ export class Resize extends InputOutputCliCommand<ArgsSchemaType> {
 
 		const mapFile: string = args.input;
 		if (!fs.existsSync(mapFile)) {
-			throw new ProsopoDatasetError(
-				new Error(`Map file does not exist: ${mapFile}`),
-				{
-					translationKey: "FS.FILE_NOT_FOUND",
-				},
-			);
+			throw new ProsopoDatasetError("FS.FILE_NOT_FOUND", {
+				message: `Map file does not exist: ${mapFile}`,
+			});
 		}
 		const outDir: string = args.output;
 		const overwrite = args.overwrite || false;
 		if (!overwrite && fs.existsSync(outDir)) {
-			throw new ProsopoEnvError(
-				new Error(`Output directory already exists: ${outDir}`),
-				{
-					translationKey: "FS.FILE_NOT_FOUND",
-				},
-			);
+			throw new ProsopoEnvError("FS.FILE_ALREADY_EXISTS", {
+				message: `Output directory already exists: ${outDir}`,
+			});
 		}
 
 		// create the output directory

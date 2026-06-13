@@ -285,7 +285,6 @@ export class ClientTaskManager {
 		} catch (e: unknown) {
 			const getClientListError = new ProsopoApiError("DATABASE.UNKNOWN", {
 				context: { error: e },
-				logger: this.logger,
 			});
 			this.logger.error(() => ({
 				err: getClientListError,
@@ -368,7 +367,6 @@ export class ClientTaskManager {
 				"DATABASE.UNKNOWN",
 				{
 					context: { error: e },
-					logger: this.logger,
 				},
 			);
 			this.logger.error(() => ({
@@ -429,9 +427,8 @@ export class ClientTaskManager {
 
 	async updateDetectorKey(detectorKey: string): Promise<string[]> {
 		if (!isValidPrivateKey(detectorKey)) {
-			throw new ProsopoApiError("INVALID_DETECTOR_KEY", {
+			throw new ProsopoApiError("API.INVALID_DETECTOR_KEY", {
 				context: { detectorKey },
-				logger: this.logger,
 			});
 		}
 		await this.providerDB.storeDetectorKey(detectorKey);
@@ -445,9 +442,8 @@ export class ClientTaskManager {
 		expirationInSeconds?: number,
 	): Promise<void> {
 		if (!isValidPrivateKey(detectorKey)) {
-			throw new ProsopoApiError("INVALID_DETECTOR_KEY", {
+			throw new ProsopoApiError("API.INVALID_DETECTOR_KEY", {
 				context: { detectorKey },
-				logger: this.logger,
 			});
 		}
 		await this.providerDB.removeDetectorKey(detectorKey, expirationInSeconds);
@@ -470,7 +466,6 @@ export class ClientTaskManager {
 		if (scope === DecisionMachineScope.Dapp && !dappAccount) {
 			throw new ProsopoApiError("API.BAD_REQUEST", {
 				context: { scope, dappAccount },
-				logger: this.logger,
 			});
 		}
 
@@ -541,7 +536,6 @@ export class ClientTaskManager {
 		if (!artifact) {
 			throw new ProsopoApiError("API.BAD_REQUEST", {
 				context: { id },
-				logger: this.logger,
 			});
 		}
 		return {
@@ -567,7 +561,6 @@ export class ClientTaskManager {
 		if (!success) {
 			throw new ProsopoApiError("API.BAD_REQUEST", {
 				context: { id, message: "Decision machine not found" },
-				logger: this.logger,
 			});
 		}
 		return {

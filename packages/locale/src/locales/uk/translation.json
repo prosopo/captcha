@@ -10,7 +10,13 @@
 		"INVALID_SIGNATURE": "Invalid signature",
 		"SITE_KEY_MISSING": "SITE KEY missing",
 		"ACCOUNT_NOT_FOUND": "Account not found",
-		"INVALID_TIMESTAMP": "Invalid timestamp"
+		"INVALID_TIMESTAMP": "Invalid timestamp",
+		"BILLING_ERROR": "Billing error",
+		"INVALID_JWT": "Invalid authentication token",
+		"MISSING_AUTH_HEADER": "Missing authentication header",
+		"OBJECT_COUNT_ERROR": "Unexpected object count",
+		"SECRET_MISSING": "Secret is missing",
+		"UNKNOWN": "Unknown error"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Insufficient permissions to perform this action",
@@ -51,7 +57,13 @@
 		"MOBILE_BLOCKED": "Запити з мобільних мережевих з'єднань не дозволені для цього сайту",
 		"SATELLITE_BLOCKED": "Запити із супутникових з'єднань не дозволені для цього сайту",
 		"CRAWLER_BLOCKED": "Запити від відомих пошукових роботів не дозволені для цього сайту",
-		"DISALLOWED_WEBVIEW": "Запити з вбудованих браузерів (WebView) не дозволені для цього сайту"
+		"DISALLOWED_WEBVIEW": "Запити з вбудованих браузерів (WebView) не дозволені для цього сайту",
+		"INTERNAL_SERVER_ERROR": "Internal server error",
+		"INVALID_DETECTOR_KEY": "Invalid detector key",
+		"FEATURE_NOT_ENABLED": "This feature is not enabled",
+		"INVALID_AUTHORIZATION_HEADER": "Invalid authorization header",
+		"INVALID_DOMAIN": "Invalid domain",
+		"NO_PERMISSIONS": "No permissions configured for this account"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Cannot modify owner user",
@@ -61,7 +73,10 @@
 		"NO_SUGGESTIONS_FOUND": "No suggestions found",
 		"CANNOT_DEACTIVATE_LAST_SITE": "Cannot deactivate the last active site",
 		"DUPLICATE_SITE_NAME": "Сайт із такою назвою вже існує",
-		"INVALID_SITE_NAME": "Назва сайту повинна містити лише літери, цифри, дефіси та символи підкреслення"
+		"INVALID_SITE_NAME": "Назва сайту повинна містити лише літери, цифри, дефіси та символи підкреслення",
+		"CANNOT_MODIFY_USER": "Cannot modify this user",
+		"API_KEYS_INVALID_NUMBER_OF_SITES": "Invalid number of sites for API key generation",
+		"API_KEYS_NOT_FOUND": "API keys not found"
 	},
 	"TARGET": {
 		"airplanes": "aeroplanes",
@@ -420,7 +435,15 @@
 		"TABLES_UNDEFINED": "Tables undefined",
 		"CONNECTION_UNDEFINED": "Connection undefined",
 		"COMMITMENT_FLAG_FAILED": "Failed to flag commitment as processed",
-		"UNKNOWN": "Unknown database error"
+		"UNKNOWN": "Unknown database error",
+		"QUERY_ERROR": "Database query failed",
+		"SESSION_STORE_FAILED": "Failed to store session",
+		"SESSION_CHECK_REMOVE_FAILED": "Failed to check and remove session",
+		"SESSION_GET_FAILED": "Failed to get session",
+		"CAPTCHA_SAMPLE_SIZE_EXCEEDED": "Captcha sample size exceeded",
+		"DATABASE_IMPORT_ERROR": "Database import error",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis access rules connection is undefined",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "User access rules storage is undefined"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Error parsing captcha",
@@ -438,7 +461,11 @@
 		"IP_ADDRESS_MISMATCH": "IP address mismatch detected",
 		"INVALID_TOKEN": "Invalid token",
 		"INVALID_SOLUTION": "Invalid solution",
-		"DECRYPTION_ERROR": "Error decrypting"
+		"DECRYPTION_ERROR": "Error decrypting",
+		"FAILED": "Captcha failed",
+		"PASSED": "Captcha passed",
+		"SOLUTION_NOT_FOUND": "Solution not found",
+		"INVALID_TIMESTAMP": "Invalid timestamp"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Invalid parameter"
@@ -449,11 +476,17 @@
 		"MISSING_PROVIDER_PAIR": "Missing provider pair",
 		"MISSING_ENV_VARIABLE": "Missing environment variable",
 		"GENERAL": "General Dev Error, see context",
-		"METHOD_NOT_IMPLEMENTED": "Method not implemented"
+		"METHOD_NOT_IMPLEMENTED": "Method not implemented",
+		"MISSING_SECRET_KEY": "Missing secret key"
 	},
 	"FS": {
 		"FILE_NOT_FOUND": "File not found",
 		"FILE_ALREADY_EXISTS": "File already exists",
 		"INVALID_DIR_FORMAT": "Invalid directory format"
+	},
+	"BILLING": {
+		"STRIPE_PORTAL": "Could not open billing portal",
+		"STRIPE_SESSION_NOT_FOUND": "Billing session not found",
+		"STRIPE_PAYMENT_FAILED": "Payment failed"
 	}
 }

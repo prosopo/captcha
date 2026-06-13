@@ -592,7 +592,7 @@ describe("PoW Integration Tests", () => {
 			const data = (await captchaRes.json()) as GetPowCaptchaResponse;
 
 			expect(data).toHaveProperty("error");
-			expect(data.error?.message).toBe("Site key not registered");
+			expect(data.error?.message).toBe("API.SITE_KEY_NOT_REGISTERED");
 		});
 	});
 
@@ -615,7 +615,7 @@ describe("PoW Integration Tests", () => {
 		const challengeBody = (await captchaRes.json()) as GetPowCaptchaResponse;
 
 		expect(challengeBody).toHaveProperty("error");
-		expect(challengeBody.error?.message).toBe("Invalid site key");
+		expect(challengeBody.error?.message).toBe("API.INVALID_SITE_KEY");
 	});
 
 	it("should return an error if the captcha type is set to image", async () => {
@@ -641,7 +641,7 @@ describe("PoW Integration Tests", () => {
 		const challengeBody = (await captchaRes.json()) as GetPowCaptchaResponse;
 
 		expect(challengeBody).toHaveProperty("error");
-		expect(challengeBody.error?.message).toBe("Incorrect CAPTCHA type");
+		expect(challengeBody.error?.message).toBe("API.INCORRECT_CAPTCHA_TYPE");
 		expect(challengeBody.error?.code).toBe(400);
 	});
 	it("should return an error if the captcha type is set to frictionless and no sessionID is sent", async () => {
@@ -667,7 +667,7 @@ describe("PoW Integration Tests", () => {
 		const challengeBody = (await captchaRes.json()) as GetPowCaptchaResponse;
 
 		expect(challengeBody).toHaveProperty("error");
-		expect(challengeBody.error?.message).toBe("Incorrect CAPTCHA type");
+		expect(challengeBody.error?.message).toBe("API.INCORRECT_CAPTCHA_TYPE");
 		expect(challengeBody.error?.code).toBe(400);
 	});
 });

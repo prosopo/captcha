@@ -13,12 +13,12 @@
 // limitations under the License.
 
 import { type HandleOptions, handle } from "i18next-http-middleware";
-import loadI18next from "./loadI18next.js";
+import { loadI18nextBackend } from "./loadI18next.js";
 
 async function i18nMiddleware(
 	options: HandleOptions,
 ): Promise<ReturnType<typeof handle>> {
-	const i18n = await loadI18next(true);
+	const i18n = await loadI18nextBackend();
 	return handle(i18n, { ...options });
 }
 

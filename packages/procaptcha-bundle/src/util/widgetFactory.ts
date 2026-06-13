@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { loadI18next } from "@prosopo/locale";
+import { loadI18nextFrontend } from "@prosopo/locale";
 import type { Ti18n } from "@prosopo/locale";
 import {
 	getDefaultCallbacks,
@@ -124,7 +124,7 @@ class WidgetFactory {
 
 	protected async getCaptchaRenderer(): Promise<CaptchaRenderer> {
 		if (this._i18n === null) {
-			this._i18n = await loadI18next(false);
+			this._i18n = await loadI18nextFrontend();
 		}
 
 		if (this.captchaRenderer === null) {

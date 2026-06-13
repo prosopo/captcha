@@ -13,7 +13,11 @@
 // limitations under the License.
 
 export { default as i18nMiddleware } from "./i18nMiddleware.js";
-export { default as loadI18next } from "./loadI18next.js";
+export {
+	default as loadI18next,
+	loadI18nextFrontend,
+	loadI18nextBackend,
+} from "./loadI18next.js";
 export { Languages, LanguageSchema } from "./translations.js";
 export { isClientSide } from "./util.js";
 export { TranslationKeysSchema } from "./translationKey.js";

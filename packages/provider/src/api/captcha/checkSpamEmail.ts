@@ -65,8 +65,6 @@ export default (env: ProviderEnvironment) =>
 				return next(
 					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
 						context: { code: 400, siteKey: dapp },
-						i18n: req.i18n,
-						logger: req.logger,
 					}),
 				);
 			}
@@ -79,8 +77,6 @@ export default (env: ProviderEnvironment) =>
 							code: 400,
 							siteKey: dapp,
 						},
-						i18n: req.i18n,
-						logger: req.logger,
 					}),
 				);
 			}
@@ -110,8 +106,6 @@ export default (env: ProviderEnvironment) =>
 			return next(
 				new ProsopoApiError("API.INTERNAL_SERVER_ERROR", {
 					context: { code: 500 },
-					i18n: req.i18n,
-					logger: req.logger,
 				}),
 			);
 		}

@@ -10,7 +10,13 @@
 		"INVALID_SIGNATURE": "Neplatný podpis",
 		"SITE_KEY_MISSING": "Chybějící SITE KEY",
 		"ACCOUNT_NOT_FOUND": "Účet nenalezen",
-		"INVALID_TIMESTAMP": "Neplatný časový razítko"
+		"INVALID_TIMESTAMP": "Neplatný časový razítko",
+		"BILLING_ERROR": "Billing error",
+		"INVALID_JWT": "Invalid authentication token",
+		"MISSING_AUTH_HEADER": "Missing authentication header",
+		"OBJECT_COUNT_ERROR": "Unexpected object count",
+		"SECRET_MISSING": "Secret is missing",
+		"UNKNOWN": "Unknown error"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Nedostatečná oprávnění k provedení této akce",
@@ -51,7 +57,13 @@
 		"MOBILE_BLOCKED": "Požadavky z mobilních sítí nejsou pro tento web povoleny",
 		"SATELLITE_BLOCKED": "Požadavky ze satelitních připojení nejsou pro tento web povoleny",
 		"CRAWLER_BLOCKED": "Požadavky ze známých crawlerů nejsou pro tento web povoleny",
-		"DISALLOWED_WEBVIEW": "Požadavky z prohlížečů v aplikacích (WebView) nejsou pro tento web povoleny"
+		"DISALLOWED_WEBVIEW": "Požadavky z prohlížečů v aplikacích (WebView) nejsou pro tento web povoleny",
+		"INTERNAL_SERVER_ERROR": "Internal server error",
+		"INVALID_DETECTOR_KEY": "Invalid detector key",
+		"FEATURE_NOT_ENABLED": "This feature is not enabled",
+		"INVALID_AUTHORIZATION_HEADER": "Invalid authorization header",
+		"INVALID_DOMAIN": "Invalid domain",
+		"NO_PERMISSIONS": "No permissions configured for this account"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Nelze upravit vlastníka uživatele",
@@ -61,7 +73,10 @@
 		"NO_SUGGESTIONS_FOUND": "Nebyly nalezeny žádné návrhy",
 		"CANNOT_DEACTIVATE_LAST_SITE": "Nelze deaktivovat poslední aktivní web",
 		"DUPLICATE_SITE_NAME": "Web s tímto názvem již existuje",
-		"INVALID_SITE_NAME": "Název webu smí obsahovat pouze písmena, čísla, pomlčky a podtržítka"
+		"INVALID_SITE_NAME": "Název webu smí obsahovat pouze písmena, čísla, pomlčky a podtržítka",
+		"CANNOT_MODIFY_USER": "Cannot modify this user",
+		"API_KEYS_INVALID_NUMBER_OF_SITES": "Invalid number of sites for API key generation",
+		"API_KEYS_NOT_FOUND": "API keys not found"
 	},
 	"TARGET": {
 		"airplanes": "letadla",
@@ -420,7 +435,15 @@
 		"TABLES_UNDEFINED": "Tabulky nedefinovány",
 		"CONNECTION_UNDEFINED": "Připojení není definováno",
 		"COMMITMENT_FLAG_FAILED": "Nepodařilo se označit závazek jako zpracovaný",
-		"UNKNOWN": "Neznámá chyba databáze"
+		"UNKNOWN": "Neznámá chyba databáze",
+		"QUERY_ERROR": "Database query failed",
+		"SESSION_STORE_FAILED": "Failed to store session",
+		"SESSION_CHECK_REMOVE_FAILED": "Failed to check and remove session",
+		"SESSION_GET_FAILED": "Failed to get session",
+		"CAPTCHA_SAMPLE_SIZE_EXCEEDED": "Captcha sample size exceeded",
+		"DATABASE_IMPORT_ERROR": "Database import error",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis access rules connection is undefined",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "User access rules storage is undefined"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Chyba při analýze captcha",
@@ -438,7 +461,11 @@
 		"IP_ADDRESS_MISMATCH": "IP adresy se neshodují",
 		"INVALID_TOKEN": "Neplatný token",
 		"INVALID_SOLUTION": "Neplatné řešení",
-		"DECRYPTION_ERROR": "Chyba dešifrování"
+		"DECRYPTION_ERROR": "Chyba dešifrování",
+		"FAILED": "Captcha failed",
+		"PASSED": "Captcha passed",
+		"SOLUTION_NOT_FOUND": "Solution not found",
+		"INVALID_TIMESTAMP": "Invalid timestamp"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Neplatný parametr"
@@ -449,11 +476,17 @@
 		"MISSING_PROVIDER_PAIR": "Chybějící dvojice poskytovatelů",
 		"MISSING_ENV_VARIABLE": "Chybějící proměnná prostředí",
 		"GENERAL": "Obecná chyba vývoje, viz kontext",
-		"METHOD_NOT_IMPLEMENTED": "Metoda není implementována"
+		"METHOD_NOT_IMPLEMENTED": "Metoda není implementována",
+		"MISSING_SECRET_KEY": "Missing secret key"
 	},
 	"FS": {
 		"FILE_NOT_FOUND": "Soubor nenalezen",
 		"FILE_ALREADY_EXISTS": "Soubor již existuje",
 		"INVALID_DIR_FORMAT": "Neplatný formát adresáře"
+	},
+	"BILLING": {
+		"STRIPE_PORTAL": "Could not open billing portal",
+		"STRIPE_SESSION_NOT_FOUND": "Billing session not found",
+		"STRIPE_PAYMENT_FAILED": "Payment failed"
 	}
 }

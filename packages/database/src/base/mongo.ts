@@ -65,7 +65,6 @@ export class MongoDatabase implements IDatabase {
 		if (!this.connection) {
 			throw new ProsopoDBError("DATABASE.CONNECTION_UNDEFINED", {
 				context: { failedFuncName: this.getConnection.name },
-				logger: this.logger,
 			});
 		}
 		return this.connection;

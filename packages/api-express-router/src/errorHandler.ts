@@ -24,7 +24,11 @@ export const handleErrors = (
 	response: Response,
 	next: NextFunction,
 ) => {
-	const { code, statusMessage, jsonError } = unwrapError(err, request.i18n);
+	// `request.logger` is populated by the request-logger middleware; guard the
+	// call so a missing logger (e.g. a minimal app without that middleware)
+	// doesn't throw and mask the original error.
+	request.logger?.error(() => ({ err }));
+	const { code, statusMessage, jsonError } = unwrapError(err);
 	response.statusMessage = statusMessage;
 	response.set("content-type", "application/json");
 	response.status(code);

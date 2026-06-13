@@ -10,7 +10,13 @@
 		"INVALID_SIGNATURE": "अवध हसतकषर",
 		"SITE_KEY_MISSING": "सइट कज गयब ह",
 		"ACCOUNT_NOT_FOUND": "खत नह मल",
-		"INVALID_TIMESTAMP": "अवध समय चहन"
+		"INVALID_TIMESTAMP": "अवध समय चहन",
+		"BILLING_ERROR": "Billing error",
+		"INVALID_JWT": "Invalid authentication token",
+		"MISSING_AUTH_HEADER": "Missing authentication header",
+		"OBJECT_COUNT_ERROR": "Unexpected object count",
+		"SECRET_MISSING": "Secret is missing",
+		"UNKNOWN": "Unknown error"
 	},
 	"TARGET": {
 		"pelecaniformes": "पलकनफरमस",
@@ -350,7 +356,13 @@
 		"MOBILE_BLOCKED": "इस साइट के लिए मोबाइल नेटवर्क कनेक्शन से अनुरोध की अनुमति नहीं है",
 		"SATELLITE_BLOCKED": "इस साइट के लिए सैटेलाइट कनेक्शन से अनुरोध की अनुमति नहीं है",
 		"CRAWLER_BLOCKED": "इस साइट के लिए ज्ञात क्रॉलर से अनुरोध की अनुमति नहीं है",
-		"DISALLOWED_WEBVIEW": "इस साइट के लिए इन-ऐप ब्राउज़र (WebView) से अनुरोध की अनुमति नहीं है"
+		"DISALLOWED_WEBVIEW": "इस साइट के लिए इन-ऐप ब्राउज़र (WebView) से अनुरोध की अनुमति नहीं है",
+		"INTERNAL_SERVER_ERROR": "Internal server error",
+		"INVALID_DETECTOR_KEY": "Invalid detector key",
+		"FEATURE_NOT_ENABLED": "This feature is not enabled",
+		"INVALID_AUTHORIZATION_HEADER": "Invalid authorization header",
+		"INVALID_DOMAIN": "Invalid domain",
+		"NO_PERMISSIONS": "No permissions configured for this account"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "मलक उपयगकरत क सशधत नह कय ज सकत",
@@ -360,7 +372,10 @@
 		"NO_SUGGESTIONS_FOUND": "कई सझव नह मल",
 		"CANNOT_DEACTIVATE_LAST_SITE": "अतम सकरय सइट क नषकरय नह कय ज सकत",
 		"DUPLICATE_SITE_NAME": "इस नाम की साइट पहले से मौजूद है",
-		"INVALID_SITE_NAME": "साइट के नाम में केवल अक्षर, संख्याएँ, हाइफ़न और अंडरस्कोर होने चाहिए"
+		"INVALID_SITE_NAME": "साइट के नाम में केवल अक्षर, संख्याएँ, हाइफ़न और अंडरस्कोर होने चाहिए",
+		"CANNOT_MODIFY_USER": "Cannot modify this user",
+		"API_KEYS_INVALID_NUMBER_OF_SITES": "Invalid number of sites for API key generation",
+		"API_KEYS_NOT_FOUND": "API keys not found"
 	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "पलकडट एकसटशन नह मल"
@@ -420,7 +435,15 @@
 		"TABLES_UNDEFINED": "टबल अनरदषट",
 		"CONNECTION_UNDEFINED": "कनकशन अनरदषट",
 		"COMMITMENT_FLAG_FAILED": "परतबदधत क परससकरण क रप म झड चढन म वफल",
-		"UNKNOWN": "अजञत डटबस तरट"
+		"UNKNOWN": "अजञत डटबस तरट",
+		"QUERY_ERROR": "Database query failed",
+		"SESSION_STORE_FAILED": "Failed to store session",
+		"SESSION_CHECK_REMOVE_FAILED": "Failed to check and remove session",
+		"SESSION_GET_FAILED": "Failed to get session",
+		"CAPTCHA_SAMPLE_SIZE_EXCEEDED": "Captcha sample size exceeded",
+		"DATABASE_IMPORT_ERROR": "Database import error",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis access rules connection is undefined",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "User access rules storage is undefined"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "कपच क परस करन म तरट",
@@ -438,7 +461,11 @@
 		"IP_ADDRESS_MISMATCH": "IP पते मेल नहीं खाते",
 		"INVALID_TOKEN": "अमनय टकन",
 		"INVALID_SOLUTION": "अमनय समधन",
-		"DECRYPTION_ERROR": "डकरपशन तरट"
+		"DECRYPTION_ERROR": "डकरपशन तरट",
+		"FAILED": "Captcha failed",
+		"PASSED": "Captcha passed",
+		"SOLUTION_NOT_FOUND": "Solution not found",
+		"INVALID_TIMESTAMP": "Invalid timestamp"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "अमनय परमटर"
@@ -449,11 +476,17 @@
 		"MISSING_PROVIDER_PAIR": "परवइडर जड गयब ह",
 		"MISSING_ENV_VARIABLE": "परयवरण म गयब चर",
 		"GENERAL": "समनय डव तरट, सदरभ दख",
-		"METHOD_NOT_IMPLEMENTED": "वध क लग नह कय गय ह"
+		"METHOD_NOT_IMPLEMENTED": "वध क लग नह कय गय ह",
+		"MISSING_SECRET_KEY": "Missing secret key"
 	},
 	"FS": {
 		"FILE_NOT_FOUND": "फइल नह मल",
 		"FILE_ALREADY_EXISTS": "फइल पहल स मजद ह",
 		"INVALID_DIR_FORMAT": "अमनय नरदशक पररप"
+	},
+	"BILLING": {
+		"STRIPE_PORTAL": "Could not open billing portal",
+		"STRIPE_SESSION_NOT_FOUND": "Billing session not found",
+		"STRIPE_PAYMENT_FAILED": "Payment failed"
 	}
 }

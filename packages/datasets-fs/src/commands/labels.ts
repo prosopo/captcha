@@ -46,8 +46,8 @@ export class Labels extends InputOutputCliCommand<ArgsSchemaType> {
 
 		const file = args.input;
 		if (!fs.existsSync(file)) {
-			throw new ProsopoDatasetError(new Error(`file does not exist: ${file}`), {
-				translationKey: "FS.FILE_NOT_FOUND",
+			throw new ProsopoDatasetError("FS.FILE_NOT_FOUND", {
+				message: `file does not exist: ${file}`,
 			});
 		}
 
