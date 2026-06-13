@@ -994,6 +994,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				countryCode: solution.ipInfo?.isValid
 					? solution.ipInfo.countryCode
 					: undefined,
+				ipInfo: solution.ipInfo,
 				dnsEvent: enrichedDnsEvent,
 			};
 
