@@ -29,12 +29,12 @@ export const blockMiddleware = (providerEnvironment: ProviderEnvironment) => {
 	return (req: Request, res: Response, next: NextFunction) => {
 		if (!blacklistRequestInspector) {
 			try {
-				const userAccessRulesStorage = providerEnvironment
-					.getDb()
-					.getUserAccessRulesStorage();
+				const db = providerEnvironment.getDb();
+				const userAccessRulesStorage = db.getUserAccessRulesStorage();
 				blacklistRequestInspector = new BlacklistRequestInspector(
 					userAccessRulesStorage,
 					environmentReadinessWaiter,
+					db,
 				);
 			} catch {
 				// Storage still not ready — skip the blocklist check this hop.

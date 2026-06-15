@@ -577,6 +577,13 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	siteKey: { type: String, required: false },
 	reason: { type: String, required: false },
 	blocked: { type: Boolean, required: false },
+	// On synthetic blocked-session records (blocked=true, deleted=true)
+	// these carry the identity of the access-policy rule that fired at the
+	// request-time block middleware — the Traffic page joins on these to
+	// surface which rules are blocking traffic and at what volume.
+	ruleHash: { type: String, required: false },
+	ruleType: { type: [String], required: false },
+	ruleDescription: { type: String, required: false },
 	// Full ipinfo payload — replaces flat `countryCode` / `geolocation`
 	// fields. Mirrors the captcha record schemas (PoW / Puzzle /
 	// UserCommitment).
@@ -632,6 +639,13 @@ SessionRecordSchema.index({ userSitekeyIpHash: 1 });
 SessionRecordSchema.index({ providerSelectEntropy: 1 });
 SessionRecordSchema.index({ token: 1 });
 SessionRecordSchema.index({ siteKey: 1 }, { background: true, sparse: true });
+// Traffic-page aggregations group blocked-session records by rule. Sparse
+// so legit sessions (no rule fields) don't bloat the index.
+SessionRecordSchema.index(
+	{ siteKey: 1, blocked: 1, createdAt: 1 },
+	{ background: true, sparse: true },
+);
+SessionRecordSchema.index({ ruleHash: 1 }, { background: true, sparse: true });
 // Compound indexes for session aggregation queries
 SessionRecordSchema.index({
 	createdAt: 1,
@@ -950,6 +964,8 @@ export interface IProviderDatabase extends IDatabase {
 	getClientRecord(account: string): Promise<ClientRecord | undefined>;
 
 	storeSessionRecord(sessionRecord: Session): Promise<void>;
+
+	storeBlockedSession(sessionRecord: Session): Promise<void>;
 
 	getSessionRecordBySessionId(sessionId: string): Promise<Session | undefined>;
 
