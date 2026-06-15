@@ -1230,26 +1230,45 @@ export class ProviderDatabase
 	): Promise<void> {
 		const tables = this.getTables();
 		const timestamp = new Date();
-		const setStage: Record<string, unknown> = {
+		const baseSet: Record<string, unknown> = {
 			...updates,
 			pendingStage: true,
 		};
+		const pipelineExprs: Record<string, unknown> = {};
 		if (updates.serverChecked === true) {
-			setStage.verifiedAtTimestamp = {
+			pipelineExprs.verifiedAtTimestamp = {
 				$ifNull: ["$verifiedAtTimestamp", timestamp],
 			};
 		}
 		if (updates.userSubmitted === true) {
-			setStage.submittedAtTimestamp = {
+			pipelineExprs.submittedAtTimestamp = {
 				$ifNull: ["$submittedAtTimestamp", timestamp],
 			};
 		}
 		if (updates.result?.status === CaptchaStatus.disapproved) {
-			setStage.failedAtTimestamp = {
+			pipelineExprs.failedAtTimestamp = {
 				$ifNull: ["$failedAtTimestamp", timestamp],
 			};
 		}
-		await tables.puzzlecaptcha.updateOne({ challenge }, [{ $set: setStage }]);
+		// Prefer ordinary `$set` so Mongoose schema casting fires — without
+		// it, a `bigint` in a composite-IP half (e.g. `providedIp.lower`)
+		// gets serialised as BSON Long instead of going through the
+		// `bigint→string→Decimal128` setter on
+		// `CompositeIpAddressRecordSchemaObj`, leaving the on-disk type
+		// out of sync with the schema and breaking downstream casts in the
+		// central-streaming sweep. Only fall back to the pipeline form
+		// when an `$ifNull` (or other aggregation expression) is actually
+		// required.
+		if (Object.keys(pipelineExprs).length === 0) {
+			await tables.puzzlecaptcha.updateOne(
+				{ challenge },
+				{ $set: baseSet },
+			);
+			return;
+		}
+		await tables.puzzlecaptcha.updateOne({ challenge }, [
+			{ $set: { ...baseSet, ...pipelineExprs } },
+		]);
 	}
 
 	/** @description Get serverChecked Dapp User image captcha commitments from the commitments table
@@ -1339,27 +1358,39 @@ export class ProviderDatabase
 	) {
 		const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
 		const timestamp = new Date();
-		const setStage: Record<string, unknown> = {
+		const baseSet: Record<string, unknown> = {
 			...updates,
 			lastUpdatedAtTimestamp: timestamp,
 			pendingStage: true,
 		};
+		const pipelineExprs: Record<string, unknown> = {};
 		if (updates.userSubmitted === true) {
-			setStage.submittedAtTimestamp = {
+			pipelineExprs.submittedAtTimestamp = {
 				$ifNull: ["$submittedAtTimestamp", timestamp],
 			};
 		}
 		if (updates.serverChecked === true) {
-			setStage.verifiedAtTimestamp = {
+			pipelineExprs.verifiedAtTimestamp = {
 				$ifNull: ["$verifiedAtTimestamp", timestamp],
 			};
 		}
 		if (updates.result?.status === CaptchaStatus.disapproved) {
-			setStage.failedAtTimestamp = {
+			pipelineExprs.failedAtTimestamp = {
 				$ifNull: ["$failedAtTimestamp", timestamp],
 			};
 		}
-		await this.tables?.commitment.updateOne(filter, [{ $set: setStage }]);
+		// Prefer ordinary `$set` so Mongoose schema casting fires — see the
+		// matching comment on `updatePuzzleCaptchaRecord`. The
+		// `imgCaptchaTasks` side-update call site (line ~1037) only
+		// populates `providedIp` / `metadata`, so this branch takes the
+		// non-pipeline path and the `bigint → Decimal128` setter runs.
+		if (Object.keys(pipelineExprs).length === 0) {
+			await this.tables?.commitment.updateOne(filter, { $set: baseSet });
+			return;
+		}
+		await this.tables?.commitment.updateOne(filter, [
+			{ $set: { ...baseSet, ...pipelineExprs } },
+		]);
 	}
 
 	/**
