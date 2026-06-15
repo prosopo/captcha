@@ -234,5 +234,5 @@ export const RoutingMachineOutputSchema = z.object({
 		z.literal(CaptchaType.puzzle),
 	]),
 	solvedImagesCount: z.number().int().positive().optional(),
-	powDifficulty: z.number().int().positive().optional(),
+	powDifficulty: z.number().positive().optional(),
 });

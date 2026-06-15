@@ -251,7 +251,6 @@ export const ClientSettingsSchema = object({
 		.optional()
 		.default(frictionlessThresholdDefault),
 	powDifficulty: number()
-		.int()
 		.positive()
 		.min(1)
 		.max(10)
