@@ -41,17 +41,21 @@ const buttonStyleBase: CSSProperties = {
 	verticalAlign: "middle",
 	appearance: undefined,
 	textDecoration: "none",
-	fontWeight: "500",
+	fontWeight: 600,
 	fontSize: "0.875rem",
 	lineHeight: "1.75",
-	letterSpacing: "0.02857em",
-	textTransform: "uppercase",
+	letterSpacing: "0.02em",
+	// Material 3 buttons use sentence case, not all-caps.
+	textTransform: "none",
 	minWidth: "64px",
-	padding: "6px 16px",
-	borderRadius: "4px",
+	padding: "8px 16px",
+	height: "42px",
+	// Full pill — the Material 3 shape for the action row.
+	borderRadius: "100px",
+	border: "none",
 	transition:
-		"background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, border-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
-	backgroundColor: "#ffffff",
+		"background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, filter 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
+	backgroundColor: "transparent",
 };
 
 const Button: React.FC<ButtonProps> = ({
@@ -65,28 +69,30 @@ const Button: React.FC<ButtonProps> = ({
 		[themeColor],
 	);
 	const [hover, setHover] = useState(false);
-	const buttonStyle = useMemo(() => {
-		const baseStyle = {
+	const buttonStyle: CSSProperties = useMemo(() => {
+		const baseStyle: CSSProperties = {
 			...buttonStyleBase,
-			border: `1px solid ${theme.palette.grey[500]}`,
-			boxShadow: `0px 1px 3px 0px ${theme.palette.grey[500]}`,
+			borderRadius: theme.shape.button,
 			fontFamily: theme.font.fontFamily,
 			width: "100%",
-			color: hover
-				? theme.palette.primary.contrastText
-				: theme.palette.background.contrastText,
 		};
 		if (buttonType === "cancel") {
+			// Material 3 "text" button — no fill at rest, tonal wash on hover.
 			return {
 				...baseStyle,
-				backgroundColor: hover ? theme.palette.grey[600] : "transparent",
+				backgroundColor: hover
+					? theme.palette.primaryContainer.main
+					: "transparent",
+				color: theme.palette.titleAccent,
 			};
 		}
+		// Material 3 "filled" button — the primary action.
 		return {
 			...baseStyle,
-			backgroundColor: hover
-				? theme.palette.primary.main
-				: theme.palette.background.default,
+			backgroundColor: theme.palette.primary.main,
+			color: theme.palette.primary.contrastText,
+			boxShadow: theme.elevation.buttonPrimary,
+			filter: hover ? "brightness(1.06)" : "none",
 		};
 	}, [buttonType, hover, theme]);
 

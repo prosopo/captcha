@@ -66,9 +66,9 @@ const CaptchaComponent = ({
 					maxHeight: "100%",
 					display: "flex",
 					flexDirection: "column",
-					border: "1px solid #dddddd",
-					boxShadow: "rgba(255, 255, 255, 0.2) 0px 0px 4px",
-					borderRadius: "4px",
+					border: `1px solid ${theme.palette.border}`,
+					boxShadow: theme.elevation.card,
+					borderRadius: theme.shape.card,
 					backgroundColor: theme.palette.background.default,
 					userSelect: "none",
 					touchAction: "none",
@@ -95,20 +95,21 @@ const CaptchaComponent = ({
 					>
 						<div
 							style={{
-								backgroundColor: theme.palette.primary.main,
+								backgroundColor: theme.palette.primaryContainer.main,
+									borderRadius: theme.shape.header,
 								width: "100%",
 								marginTop: fullSpacing,
 							}}
 						>
 							<div
 								style={{
-									padding: `${theme.spacing.half}px`,
+									padding: "12px 14px",
 									fontFamily: theme.font.fontFamily,
 								}}
 							>
 								<p
 									style={{
-										color: "#ffffff",
+										color: theme.palette.primaryContainer.contrastText,
 										fontWeight: 700,
 										lineHeight: 1.5,
 									}}
@@ -116,14 +117,20 @@ const CaptchaComponent = ({
 									{t("WIDGET.SELECT_ALL")}
 									{":"}
 									&nbsp;
-									<span>{`${at(challenge.captchas, index).target} `}</span>
+									<span
+											style={{
+												color: theme.palette.titleAccent,
+												fontWeight: 800,
+											}}
+										>{`${at(challenge.captchas, index).target} `}</span>
 								</p>
 								<p
 									style={{
-										color: "#ffffff",
+										color: theme.palette.primaryContainer.contrastText,
 										fontWeight: 500,
-										lineHeight: 0.8,
+										lineHeight: 1.4,
 										fontSize: "0.8rem",
+											opacity: 0.8,
 									}}
 								>
 									{t("WIDGET.IF_NONE_CLICK_NEXT")}

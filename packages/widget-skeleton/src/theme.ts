@@ -25,7 +25,36 @@ const grey = {
 	900: "#212121",
 };
 
+// Prosopo brand purple ramp (packages/portal/tailwind.config.js). The widgets
+// are styled in a Material 3 "tonal" key off this single hue — tonal container
+// surfaces + a saturated primary, mirrored into a dark plum scheme for dark mode.
+const purple = {
+	50: "#EDECF5",
+	100: "#DCD9EC",
+	200: "#B8B4D9",
+	300: "#8C85C1",
+	400: "#695FAD",
+	500: "#4E439F",
+	600: "#423987",
+	700: "#332C67",
+	800: "#1F1B40",
+	900: "#100D20",
+};
+
 const DEFAULT_SPACING = 10; // size in pixels
+
+const FONT_FAMILY =
+	'ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"';
+
+// Material 3 shape scale, shared across both themes.
+const shape = {
+	widget: "16px", // the on-page "I am human" surface
+	card: "28px", // the challenge dialog container
+	header: "18px", // the tonal header "secondary container"
+	button: "100px", // full pill buttons
+	tile: "14px", // image grid cells
+	tileSelected: "16px", // image grid cells when selected
+};
 
 export type Theme = typeof lightTheme | typeof darkTheme;
 
@@ -33,28 +62,59 @@ export const lightTheme = {
 	palette: {
 		mode: "light",
 		primary: {
-			main: "#487DFA",
-			contrastText: "#fff",
+			main: purple[500],
+			contrastText: "#ffffff",
+		},
+		// M3 tonal "secondary container" — a soft tint of the primary used for the
+		// challenge header and the reload affordance.
+		primaryContainer: {
+			main: purple[100],
+			contrastText: purple[800],
 		},
 		background: {
-			default: "#fff",
-			contrastText: "#000",
+			// Doubles as the M3 surface for the widget + challenge card.
+			default: "#f8f6fd",
+			contrastText: "#1c182b",
 		},
-		border: grey[400],
+		surface: "#f8f6fd",
+		onSurface: "#1c182b",
+		muted: "#6f6890",
+		// Bold "target word" in the challenge header.
+		titleAccent: purple[600],
+		// The checkbox is fully custom-painted (works identically in dark mode).
+		checkbox: {
+			border: purple[400],
+			fill: purple[500],
+			tick: "#ffffff",
+		},
+		// Image grid tiles.
+		tile: {
+			border: "#e7e2f3",
+		},
+		// Semi-transparent wash over a selected image tile.
+		overlay: "rgba(78, 67, 159, 0.32)",
+		border: purple[100],
 		error: {
-			main: "#f44336",
+			main: "#b3261e",
 		},
-		logoFill: "#1d1d1b",
+		logoFill: purple[700],
 		grey,
+		purple,
+	},
+	shape,
+	elevation: {
+		widget: "0 1px 2px rgba(20,8,24,.06), 0 4px 12px rgba(20,8,24,.06)",
+		widgetHover: "0 2px 4px rgba(20,8,24,.10), 0 8px 22px rgba(20,8,24,.12)",
+		card: "0 4px 8px rgba(20,8,24,.08), 0 10px 28px rgba(20,8,24,.12)",
+		buttonPrimary: "0 1px 3px rgba(78,67,159,.5)",
 	},
 	spacing: {
 		unit: DEFAULT_SPACING,
 		half: Math.floor(DEFAULT_SPACING / 2),
 	},
 	font: {
-		fontFamily:
-			'ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
-		color: "#000",
+		fontFamily: FONT_FAMILY,
+		color: "#1c182b",
 	},
 };
 
@@ -62,27 +122,54 @@ export const darkTheme = {
 	palette: {
 		mode: "dark",
 		primary: {
-			main: "#487DFA",
-			contrastText: "#fff",
+			// M3 dark uses a lighter tone of the source hue as the accent.
+			main: purple[300],
+			contrastText: purple[900],
+		},
+		primaryContainer: {
+			main: "#2a2550",
+			contrastText: purple[100],
 		},
 		background: {
-			default: "#303030",
-			contrastText: "#fff",
+			// Dark plum M3 surface rather than neutral grey.
+			default: "#1a1623",
+			contrastText: "#ece6f5",
 		},
-		border: grey[300],
+		surface: "#1a1623",
+		onSurface: "#ece6f5",
+		muted: "#a79fc4",
+		titleAccent: purple[200],
+		checkbox: {
+			// Brightened a touch so the filled state reads on a dark surface.
+			border: purple[300],
+			fill: "#7a6fd0",
+			tick: "#ffffff",
+		},
+		tile: {
+			border: "#2c2742",
+		},
+		overlay: "rgba(124, 111, 208, 0.5)",
+		border: "#332c50",
 		error: {
-			main: "#f44336",
+			main: "#f2b8b5",
 		},
-		logoFill: "#fff",
+		logoFill: "#cfc9e6",
 		grey,
+		purple,
+	},
+	shape,
+	elevation: {
+		widget: "0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.45)",
+		widgetHover: "0 2px 6px rgba(0,0,0,.5), 0 10px 26px rgba(0,0,0,.55)",
+		card: "0 8px 24px rgba(0,0,0,.55), 0 18px 50px rgba(0,0,0,.6)",
+		buttonPrimary: "0 1px 3px rgba(0,0,0,.5)",
 	},
 	spacing: {
 		unit: DEFAULT_SPACING,
 		half: Math.floor(DEFAULT_SPACING / 2),
 	},
 	font: {
-		fontFamily:
-			'ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
-		color: "#fff",
+		fontFamily: FONT_FAMILY,
+		color: "#ece6f5",
 	},
 };

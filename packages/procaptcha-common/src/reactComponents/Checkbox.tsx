@@ -86,10 +86,6 @@ export const Checkbox: FC<CheckboxProps> = ({
 	error,
 	loading,
 }: CheckboxProps) => {
-	const checkboxStyleBase: CSSProperties = {
-		...baseStyle,
-		border: `1px solid ${theme.palette.background.contrastText}`,
-	};
 	const [hover, setHover] = useState(false);
 
 	const ResponsiveLabel = styled.label<ResponsiveLabelProps>`
@@ -119,16 +115,34 @@ export const Checkbox: FC<CheckboxProps> = ({
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: TODO fix
 	const checkboxStyle: CSSProperties = useMemo(() => {
+		// White (token) tick painted directly onto the box so the checked state is
+		// identical in light and dark mode — the native control can't be themed.
+		const tickColor = theme.palette.checkbox.tick.replace("#", "%23");
+		const checkImage = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='${tickColor}' d='M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E")`;
 		return {
-			...checkboxStyleBase,
-			borderColor: hover
-				? theme.palette.background.contrastText
-				: theme.palette.border,
-			appearance: checked ? "auto" : "none",
+			...baseStyle,
+			appearance: "none",
 			flex: 1,
 			margin: "15px",
 			minWidth: "28px",
 			minHeight: "28px",
+			borderRadius: "8px",
+			borderStyle: "solid",
+			borderWidth: "2px",
+			borderColor: checked
+				? theme.palette.checkbox.fill
+				: hover
+					? theme.palette.primary.main
+					: theme.palette.checkbox.border,
+			backgroundColor: checked
+				? theme.palette.checkbox.fill
+				: theme.palette.surface,
+			backgroundImage: checked ? checkImage : "none",
+			backgroundRepeat: "no-repeat",
+			backgroundPosition: "center",
+			backgroundSize: "20px 20px",
+			transition:
+				"background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
 		};
 	}, [hover, theme, checked]);
 	const id = generateRandomId();

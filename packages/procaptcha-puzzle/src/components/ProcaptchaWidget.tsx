@@ -201,6 +201,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 					onComplete={handlePuzzleComplete}
 					showRetry={showRetry}
 					submitting={puzzlePhase === "submitting"}
+						theme={theme}
 				/>
 			)}
 

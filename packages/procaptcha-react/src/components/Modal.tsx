@@ -28,7 +28,7 @@ const ModalInnerDivCSS = css`
 	max-width: 500px;
 	background-color: transparent;
 	border: none;
-	border-radius: 4px;
+	border-radius: 28px;
 	z-index: 2147483647;
 	align-self: center;
 	box-shadow: rgba(0, 0, 0, 0.2) 0px 11px 15px -7px,
