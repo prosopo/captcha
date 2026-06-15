@@ -158,8 +158,9 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				siteKey,
 			);
 
-			// One greedy query replaces the old per-subset loop. JS rank then
-			// filters + sorts client-side.
+			// One query, matchingFieldsOnly=true engages server-side
+			// specificity rank in FT.AGGREGATE — every returned rule
+			// already applies, so JS rank is a defensive pass.
 			expect(spy).toHaveBeenCalledTimes(1);
 			expect(spy).toHaveBeenCalledWith(
 				{
@@ -173,7 +174,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					}),
 					userScopeMatch: FilterScopeMatch.Greedy,
 				},
-				false,
+				true,
 				true,
 			);
 
@@ -203,8 +204,10 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				siteKey,
 			);
 
-			// One greedy query; rank rejects the rule because userAgent
-			// doesn't match even though ja4 does.
+			// matchingFieldsOnly=true: the strict AND-of-disjunctions
+			// filter already excludes this rule at the Redis side
+			// because @userAgentHash on the rule doesn't equal the
+			// request's userAgentHash.
 			expect(spy).toHaveBeenCalledTimes(1);
 			expect(spy).toHaveBeenCalledWith(
 				{
@@ -218,7 +221,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					}),
 					userScopeMatch: FilterScopeMatch.Greedy,
 				},
-				false,
+				true,
 				true,
 			);
 			expect(result).toHaveLength(0);
