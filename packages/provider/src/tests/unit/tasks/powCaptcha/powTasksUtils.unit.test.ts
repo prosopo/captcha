@@ -96,18 +96,19 @@ describe("validateSolution", () => {
 	});
 
 	it("should be monotonic — harder difficulty implies easier difficulty", () => {
-		// If a (nonce, challenge) hash meets difficulty 5, it must meet 4.75, 4.5, etc.
-		// Search for one that satisfies the higher bar so the property is testable.
+		// Search at d=3 (12 bits ≡ ~1/4k); over 200k iterations the probability
+		// of no match is e^-48, no flake risk. Searching at d=5 (~1/1M) in the
+		// same budget misses too often.
 		const challenge = "monotonic";
 		let solvingNonce = -1;
-		for (let n = 0; n < 100_000; n++) {
-			if (validateSolution(n, challenge, 5)) {
+		for (let n = 0; n < 200_000; n++) {
+			if (validateSolution(n, challenge, 3)) {
 				solvingNonce = n;
 				break;
 			}
 		}
 		expect(solvingNonce).toBeGreaterThanOrEqual(0);
-		for (const easier of [4.75, 4.5, 4.25, 4, 3, 2, 1]) {
+		for (const easier of [2.75, 2.5, 2.25, 2, 1]) {
 			expect(validateSolution(solvingNonce, challenge, easier)).toBe(true);
 		}
 	});

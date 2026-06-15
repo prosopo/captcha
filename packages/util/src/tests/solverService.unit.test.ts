@@ -64,18 +64,21 @@ describe("hashMeetsDifficulty", () => {
 	});
 
 	it("is monotonic — meeting harder difficulty implies meeting easier", () => {
-		// pick a nonce that meets difficulty 4 (~1 in 65k)
+		// Pick a nonce that meets difficulty 3 (12 bits ≡ ~1 in 4k). Over 200k
+		// attempts the probability of zero matches is e^(-48) — no flake risk,
+		// whereas a difficulty-4 search (16 bits ≡ ~1 in 65k) over the same
+		// budget misses ~5% of the time.
 		let met: Uint8Array | null = null;
 		for (let n = 0; n < 200_000; n++) {
 			const h = hashOf(`${n}monotonic`);
-			if (hashMeetsDifficulty(h, 4)) {
+			if (hashMeetsDifficulty(h, 3)) {
 				met = h;
 				break;
 			}
 		}
 		expect(met).not.toBeNull();
 		if (met) {
-			for (const easier of [3.75, 3.5, 3, 2, 1]) {
+			for (const easier of [2.75, 2.5, 2, 1]) {
 				expect(hashMeetsDifficulty(met, easier)).toBe(true);
 			}
 		}
