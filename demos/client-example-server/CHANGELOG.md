@@ -1,5 +1,17 @@
 # @prosopo/client-example-server
 
+## 2.7.95
+### Patch Changes
+
+- Updated dependencies [55b1388]
+  - @prosopo/util@3.3.0
+  - @prosopo/types@4.6.0
+  - @prosopo/keyring@2.9.39
+  - @prosopo/logger@1.0.3
+  - @prosopo/server@2.10.17
+  - @prosopo/common@3.1.39
+  - @prosopo/dotenv@3.0.44
+
 ## 2.7.94
 ### Patch Changes
 
