@@ -58,6 +58,7 @@ import {
 	ScheduledTaskStatus,
 } from "@prosopo/types";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
+import { Long } from "bson";
 import type mongoose from "mongoose";
 import { type Document, type Model, type ObjectId, Schema } from "mongoose";
 import { any, date, nativeEnum, object, type infer as zInfer } from "zod";
@@ -82,22 +83,61 @@ export const ClientRecordSchema = new Schema<ClientRecord>({
 // Set an index on the account field, ascending
 ClientRecordSchema.index({ account: 1 });
 
+// IP-half setter shared by `lower` and `upper`. Normalises every input
+// shape the writers and the sweep can hand us into something Mongoose's
+// Decimal128 caster will accept:
+//
+//   - `bigint`       — produced by `getCompositeIpAddress` on every fresh
+//                      write; stringify so the caster sees a numeric
+//                      string instead of an unsupported type.
+//   - BSON `Long`    — produced when a *pipeline-form* update wrote a
+//                      `bigint` value to disk (pipeline updates skip
+//                      schema casting, so the driver serialised the
+//                      bigint as Int64). The central-streaming sweep
+//                      reads these via `.lean()` and replays them through
+//                      `bulkWrite { $set: leanDoc }`; without this branch
+//                      the cast throws and the entire batch aborts. Use
+//                      the *unsigned* representation so an IPv6 lower
+//                      with bit 63 set converts to a positive Decimal128
+//                      — matching what `bigint→string` would have
+//                      produced if the setter had run on write.
+//   - everything else (string / number / Decimal128) — pass through; the
+//                      caster handles them natively.
+// Duck-typed Long check rather than `instanceof Long`: the MongoDB
+// driver deserialises with its bundled `bson` copy, and hoisting
+// differences can place that `Long` constructor on a different class
+// identity than the one this file imports — which would silently skip
+// normalisation here. Same defence as the helper in
+// `CaptchaDatabase.normaliseCompositeIp` (database/captcha.ts).
+const isBsonLong = (value: unknown): boolean =>
+	typeof value === "object" &&
+	value !== null &&
+	"_bsontype" in value &&
+	(value as { _bsontype: string })._bsontype === "Long";
+
+const normaliseIpHalf = (
+	value: bigint | number | string | Long | unknown,
+): bigint | number | string | unknown => {
+	if (typeof value === "bigint") return value.toString();
+	if (isBsonLong(value)) {
+		const lng = value as { low: number; high: number };
+		return Long.fromBits(lng.low, lng.high, true).toString();
+	}
+	return value;
+};
+
 export const CompositeIpAddressRecordSchemaObj = {
 	lower: {
 		// INT64 isn't enough capable - it reserves extra bits for the sign bit, etc, so Decimal128 guarantees no overflow
 		type: Schema.Types.Decimal128,
 		required: true,
-		// without casting to string Mongoose not able to set bigint to Decimal128
-		set: (value: bigint | string | number) =>
-			"bigint" === typeof value ? value.toString() : value,
+		set: normaliseIpHalf,
 	},
 	upper: {
 		// INT64 isn't enough capable - it reserves extra bits for the sign bit, etc, so Decimal128 guarantees no overflow
 		type: Schema.Types.Decimal128,
 		required: false,
-		// without casting to string Mongoose not able to set bigint to Decimal128
-		set: (value: bigint | string | number) =>
-			"bigint" === typeof value ? value.toString() : value,
+		set: normaliseIpHalf,
 	},
 	type: { type: String, enum: IpAddressType, required: true },
 };

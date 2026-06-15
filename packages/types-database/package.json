@@ -37,10 +37,11 @@
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
 		"@prosopo/common": "3.1.38",
-		"@prosopo/logger": "1.0.2",
 		"@prosopo/locale": "3.2.4",
+		"@prosopo/logger": "1.0.2",
 		"@prosopo/types": "4.5.0",
 		"@prosopo/user-access-policy": "3.10.0",
+		"bson": "6.10.4",
 		"mongoose": "8.13.0",
 		"zod": "3.23.8"
 	},
