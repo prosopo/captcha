@@ -376,6 +376,7 @@ function registerSiteKey(
 			puzzleTolerance: puzzleToleranceDefault,
 			disallowWebView: false,
 			verifiedTimeout: 60000,
+			solutionTimeout: 60000,
 		};
 
 		// Use cy.request() to ensure Cypress correctly queues the request

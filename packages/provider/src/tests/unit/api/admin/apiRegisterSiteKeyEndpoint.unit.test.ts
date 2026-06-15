@@ -61,6 +61,7 @@ describe("ApiRegisterSiteKeyEndpoint", () => {
 			imageThreshold: 0.5,
 			imageMaxRounds: 3,
 			verifiedTimeout: 120000,
+			solutionTimeout: 60000,
 			puzzleTolerance: 15,
 		};
 

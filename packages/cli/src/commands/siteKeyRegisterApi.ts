@@ -121,6 +121,7 @@ export default (
 						puzzleTolerance: puzzleToleranceDefault,
 						disallowWebView: false,
 						verifiedTimeout: 60000,
+						solutionTimeout: 60000,
 					},
 					jwt,
 				);
