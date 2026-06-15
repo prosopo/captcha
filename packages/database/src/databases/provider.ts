@@ -1473,6 +1473,60 @@ export class ProviderDatabase
 	}
 
 	/**
+	 * Persist a synthetic Session record for a request that was 401'd at the
+	 * request-time block middleware. The record is written with
+	 * `blocked=true` + `deleted=true` so the captcha flow can't pick it up
+	 * downstream, and with sentinel values for the schema-required fields
+	 * the blocked request never had a chance to populate (score / threshold /
+	 * captchaType / etc.).
+	 *
+	 * Designed for fire-and-forget: callers `void`-cast the promise and any
+	 * Mongo error is swallowed-and-logged so the 401 response is never
+	 * delayed by a persistence failure. The structured log line at the call
+	 * site is the source of truth either way.
+	 *
+	 * Mirrors `storeSessionRecord` enough that the Traffic-page
+	 * aggregations can read these records out of the central-streamer
+	 * pipeline once the UI work lands.
+	 */
+	async storeBlockedSession(record: Session): Promise<void> {
+		try {
+			const stored: Session = {
+				...record,
+				blocked: true,
+				deleted: true,
+				// Stamp storedAtTimestamp so the existing TTL index on the
+				// sessions collection sweeps the record after one day.
+				storedAtTimestamp: record.storedAtTimestamp ?? record.createdAt,
+				lastUpdatedTimestamp: record.lastUpdatedTimestamp ?? record.createdAt,
+			};
+			await this.tables.session.create(stored);
+			this.centralStreamer?.streamSessionRecord(
+				stored as unknown as StoredSession,
+				(ts) =>
+					this.tables.session
+						.updateOne(
+							{
+								sessionId: stored.sessionId,
+								lastUpdatedTimestamp: { $lte: ts },
+							},
+							{ $set: { storedAtTimestamp: ts } },
+						)
+						.then(() => {}),
+			);
+		} catch (err) {
+			// Swallow — the structured log line at the inspector's call site
+			// captures the same information for OO2, and a 401 must not be
+			// delayed by Mongo write trouble.
+			this.logger.warn(() => ({
+				err,
+				msg: "Failed to persist blocked session record",
+				data: { sessionId: record.sessionId, siteKey: record.siteKey },
+			}));
+		}
+	}
+
+	/**
 	 * Get a session record by sessionId
 	 */
 	async getSessionRecordBySessionId(

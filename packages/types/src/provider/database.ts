@@ -411,6 +411,10 @@ export const SessionSchema = object({
 		.optional()
 		.transform((v) => v as FrictionlessReason | undefined),
 	blocked: boolean().optional(),
+	// See Session.ruleHash — populated on synthetic blocked-session records.
+	ruleHash: string().optional(),
+	ruleType: string().array().optional(),
+	ruleDescription: string().optional(),
 	// Full ipinfo payload from ipInfoMiddleware at session-creation
 	// time. Replaces the flat `countryCode` / `geolocation` fields —
 	// consumers narrow on `ipInfo.isValid` and read whichever sub-field
@@ -470,6 +474,14 @@ export type Session = {
 	siteKey?: string;
 	reason?: FrictionlessReason;
 	blocked?: boolean;
+	// When `blocked` is true, these record which access-policy rule matched
+	// at the request-time block middleware. Populated only on synthetic
+	// "blocked session" records the inspector writes when it 401s a request,
+	// so the Traffic page can surface "why are we blocking traffic for this
+	// site?" without an extra Mongo lookup against the rules collection.
+	ruleHash?: string; // == the redis-key suffix of the matched rule
+	ruleType?: string[]; // populated scope fields, e.g. ['ja4Hash'], ['ja4Hash','coords']
+	ruleDescription?: string; // operator-set description copied from the rule's AccessPolicy
 	// Full ipinfo payload from ipInfoMiddleware at session-creation
 	// time. Replaces the flat `countryCode` / `geolocation` fields.
 	ipInfo?: IPInfoResponse;
