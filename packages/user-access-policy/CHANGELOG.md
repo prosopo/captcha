@@ -1,5 +1,17 @@
 # @prosopo/user-access-policy
 
+## 3.10.1
+### Patch Changes
+
+- Updated dependencies [55b1388]
+  - @prosopo/util@3.3.0
+  - @prosopo/types@4.6.0
+  - @prosopo/logger@1.0.3
+  - @prosopo/api@3.4.13
+  - @prosopo/common@3.1.39
+  - @prosopo/api-route@2.6.47
+  - @prosopo/redis-client@1.0.24
+
 ## 3.10.0
 ### Minor Changes
 

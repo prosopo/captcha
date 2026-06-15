@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/logger",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"description": "Prosopo logger library",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -28,7 +28,7 @@
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
 	"dependencies": {
-		"@prosopo/util": "3.2.15",
+		"@prosopo/util": "3.3.0",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {

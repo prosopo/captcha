@@ -1,5 +1,32 @@
 # @prosopo/provider
 
+## 4.11.0
+### Minor Changes
+
+- 55b1388: Bit-level granular PoW difficulty via target-threshold check. `solvePoW` (client) and `validateSolution` (server) now compare the hash as a 256-bit big-endian integer against `target = 2^(256 - round(4 * difficulty))`, shared via `targetForDifficulty` / `hashMeetsDifficulty` in `@prosopo/util`. Integer difficulties produce *identical* behaviour to the legacy hex-prefix check (d=4 ≡ 16 leading zero bits ≡ threshold 2^240), so existing clients, configs, anomaly detectors, and stored records are unchanged. Fractional values quantise to bit-level granularity: each 0.25 step ≡ 1 bit ≡ 2× work, so providers can tune d=4.25, d=4.5, d=4.75 to fill the 16× gap between today's d=4 and d=5 — useful for landing on a sensible mobile UX. `powDifficulty` in `ClientSettingsSchema` and `RoutingMachineOutputSchema` drops `.int()`; wire format (nonce as `u32`, difficulty as `number`) is unchanged.
+
+### Patch Changes
+
+- Updated dependencies [55b1388]
+- Updated dependencies [44eaebf]
+  - @prosopo/util@3.3.0
+  - @prosopo/types@4.6.0
+  - @prosopo/database@3.14.1
+  - @prosopo/types-database@4.10.1
+  - @prosopo/datasets@3.1.33
+  - @prosopo/keyring@2.9.39
+  - @prosopo/logger@1.0.3
+  - @prosopo/user-access-policy@3.10.1
+  - @prosopo/api@3.4.13
+  - @prosopo/api-express-router@3.1.24
+  - @prosopo/common@3.1.39
+  - @prosopo/env@3.5.14
+  - @prosopo/ipinfo@0.2.19
+  - @prosopo/load-balancer@2.9.15
+  - @prosopo/types-env@2.9.23
+  - @prosopo/api-route@2.6.47
+  - @prosopo/redis-client@1.0.24
+
 ## 4.10.0
 ### Minor Changes
 
