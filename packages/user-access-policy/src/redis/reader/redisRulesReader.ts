@@ -30,7 +30,7 @@ import {
 	ACCESS_RULES_REDIS_INDEX_NAME,
 	ACCESS_RULE_REDIS_KEY_PREFIX,
 } from "#policy/redis/redisRuleIndex.js";
-import type { AccessRule } from "#policy/rule.js";
+import { AccessPolicyType, type AccessRule } from "#policy/rule.js";
 import { accessRuleInput } from "#policy/ruleInput/ruleInput.js";
 import type {
 	AccessRuleEntry,
@@ -38,6 +38,91 @@ import type {
 	AccessRulesReader,
 } from "#policy/rulesStorage.js";
 import { aggregateRedisKeys } from "./redisAggregate.js";
+
+// Server-side specificity ranking config.
+//
+// Strict-match findRules (matchingFieldsOnly=true) used to pull every
+// matching rule's hash into Node and sort in JS. With the greedy regression
+// in #2689 this hauled ~1190 hashes per request and pegged provider CPU.
+//
+// The new path lets RediSearch compute specificity itself: one
+// FT.AGGREGATE that filters via the strict AND-of-disjunctions query,
+// counts populated rule fields with APPLY+exists(), sorts by that
+// derived score DESC, and returns only the top-N candidates. Node
+// receives at most TOP_N small records, no HGETALL fanout, no JS rank.
+//
+// TOP_N >> 1 leaves headroom for the deferToVerify filter that runs
+// post-aggregate (a Block rule with deferToVerify is skipped in the
+// blockMiddleware path, so we need a few alternates ready). 20 covers
+// the worst observed concentration of deferToVerify rules per scope by
+// comfortable margin while keeping payload tiny.
+export const SERVER_SIDE_RANK_TOP_N = 20;
+
+// Safety cap for the greedy (admin/internal) path. Generous because
+// admin tooling depends on the full result set; not on the hot
+// per-request path.
+const GREEDY_MAX_CANDIDATES = REDIS_BATCH_SIZE * 10;
+
+// Fields that contribute one specificity point each. Mirrors
+// SCALAR_USER_SCOPE_FIELDS + clientId + ip-constraint in
+// blacklistRequestInspector.ruleSpecificity. numericIp and the
+// numericIpMaskMin range are mutually exclusive on a rule (see
+// ruleHasIpConstraint), so `exists(@numericIp) + exists(@numericIpMaskMin)`
+// contributes 1 in practice — never 2 — when applied to writer-produced
+// rules.
+const SPECIFICITY_EXPR = [
+	"exists(@clientId)",
+	"exists(@userId)",
+	"exists(@ja4Hash)",
+	"exists(@headersHash)",
+	"exists(@userAgentHash)",
+	"exists(@headHash)",
+	"exists(@coords)",
+	"exists(@countryCode)",
+	"exists(@asn)",
+	"exists(@numericIp)",
+	"exists(@numericIpMaskMin)",
+].join(" + ");
+
+// Block outranks Restrict on equal specificity (defensive: a request
+// that would match a Block rule must never be downgraded). Note the
+// string literal is lowercase because AccessPolicyType.Block = "block"
+// and getRedisRuleValue serialises via String().
+const SEVERITY_EXPR = `(@type == "${AccessPolicyType.Block}")`;
+
+// Final rank: specificity weighted, severity as tiebreaker on equal
+// specificity. spec*2 + sev fits both into a single sortable float.
+const RANK_EXPR = "(@_spec * 2) + @_sev";
+
+// Every field referenced by SPECIFICITY_EXPR/SEVERITY_EXPR, plus the
+// fields needed to reconstruct an AccessRule downstream. APPLY can only
+// see fields explicitly loaded into the aggregate pipeline, so this
+// list must include every rule attribute the parser cares about.
+const RULE_LOAD_FIELDS = [
+	"@__key",
+	"@type",
+	"@captchaType",
+	"@description",
+	"@solvedImagesCount",
+	"@imageThreshold",
+	"@powDifficulty",
+	"@unsolvedImagesCount",
+	"@frictionlessScore",
+	"@deferToVerify",
+	"@clientId",
+	"@groupId",
+	"@userId",
+	"@ja4Hash",
+	"@headersHash",
+	"@userAgentHash",
+	"@headHash",
+	"@coords",
+	"@countryCode",
+	"@asn",
+	"@numericIp",
+	"@numericIpMaskMin",
+	"@numericIpMaskMax",
+] as const;
 
 export class RedisRulesReader implements AccessRulesReader {
 	constructor(
@@ -84,38 +169,123 @@ export class RedisRulesReader implements AccessRulesReader {
 			return [];
 		}
 
+		// Hot path: strict-match callers (blockMiddleware /
+		// checkForHardBlock) get server-side specificity ranking via
+		// FT.AGGREGATE — Redis returns the top N candidates already
+		// sorted, no HGETALL fanout. See SPECIFICITY_EXPR / RANK_EXPR
+		// above for the score definition.
+		if (matchingFieldsOnly) {
+			return this.findRulesRanked(filter, query);
+		}
+
+		// Admin / internal callers (greedy mode): keep the FT.SEARCH +
+		// HGETALL fanout path. Cap at REDIS_BATCH_SIZE; truncation past
+		// that point is the known liability tracked in #2689.
+		return this.findRulesGreedy(filter, query);
+	}
+
+	private async findRulesRanked(
+		filter: AccessRulesFilter,
+		query: string,
+	): Promise<AccessRule[]> {
 		try {
-			// HOTFIX 3.6.38.1: reverted to FT.SEARCH-with-no-content + HGETALL
-			// fanout because the FT.AGGREGATE WITHCURSOR path added in #2689
-			// pegged provider1 CPU at ~125% on pronode10 (extra cursor round
-			// trips + ~1190 hashes pulled per request). Restoring the cap at
-			// REDIS_BATCH_SIZE re-opens the silent-truncation behaviour the
-			// AGGREGATE change was fixing; that is the known liability we
-			// accept until the real fix (server-side specificity rank via
-			// APPLY/SORTBY) lands.
-			const searchReply = await this.client.ft.searchNoContent(
+			const reply = await this.client.ft.aggregate(
 				ACCESS_RULES_REDIS_INDEX_NAME,
 				query,
 				{
 					DIALECT: REDIS_QUERY_DIALECT,
-					LIMIT: {
-						from: 0,
-						size: REDIS_BATCH_SIZE,
-					},
+					LOAD: [...RULE_LOAD_FIELDS],
+					STEPS: [
+						{ type: "APPLY", expression: SPECIFICITY_EXPR, AS: "_spec" },
+						{ type: "APPLY", expression: SEVERITY_EXPR, AS: "_sev" },
+						{ type: "APPLY", expression: RANK_EXPR, AS: "_rank" },
+						{
+							type: "SORTBY",
+							BY: [{ BY: "@_rank", DIRECTION: "DESC" }],
+							// SORTBY MAX would let RediSearch keep only the
+							// top-N in a bounded heap rather than fully
+							// sorting, but the @redis/search client
+							// serialises MAX *before* DESC and RediSearch
+							// rejects that order ("MISSING ASC or DESC
+							// after sort field (MAX)"). LIMIT below still
+							// trims; SORTBY does a full sort. Acceptable
+							// because the strict-match filter already
+							// keeps the candidate set small in practice.
+						},
+						{ type: "LIMIT", from: 0, size: SERVER_SIDE_RANK_TOP_N },
+					],
 				},
 			);
 
-			if (searchReply.documents.length === 0) {
+			if (reply.results.length === 0) {
 				return [];
 			}
 
 			this.logger.debug(() => ({
-				msg: "Executed search query",
+				msg: "Executed ranked search query",
 				data: {
 					inspect: util.inspect(
 						{
 							filter: filter,
-							foundCount: searchReply.documents.length,
+							foundCount: reply.results.length,
+							query: query,
+						},
+						{ depth: null },
+					),
+				},
+			}));
+
+			// FT.AGGREGATE results include the derived _spec/_sev/_rank
+			// fields and the loaded rule fields. parseRedisRecords runs
+			// through zod which ignores the derived fields. __key is
+			// also passed through but unused downstream.
+			return parseRedisRecords(reply.results, accessRuleInput, this.logger);
+		} catch (e) {
+			this.logger.error(() => ({
+				err: e,
+				data: {
+					inspect: util.inspect(
+						{ query, filter },
+						{ depth: null },
+					),
+				},
+				msg: "failed to execute ranked search query",
+			}));
+
+			return [];
+		}
+	}
+
+	// Used only by admin / internal callers (matchingFieldsOnly=false).
+	// Not on the per-request blockMiddleware path any more, so the CPU
+	// cost of the HGETALL fanout is acceptable. Same shape as #2689's
+	// aggregate-with-cursor: returns every candidate up to
+	// GREEDY_MAX_CANDIDATES so we don't silently drop matches that
+	// admin tools depend on (e.g. ASN-wide rule listings).
+	private async findRulesGreedy(
+		filter: AccessRulesFilter,
+		query: string,
+	): Promise<AccessRule[]> {
+		try {
+			const ruleKeys = await aggregateRedisKeys(
+				this.client,
+				query,
+				this.logger,
+				undefined,
+				GREEDY_MAX_CANDIDATES,
+			);
+
+			if (ruleKeys.length === 0) {
+				return [];
+			}
+
+			this.logger.debug(() => ({
+				msg: "Executed greedy search query",
+				data: {
+					inspect: util.inspect(
+						{
+							filter: filter,
+							foundCount: ruleKeys.length,
 							query: query,
 						},
 						{ depth: null },
@@ -125,7 +295,7 @@ export class RedisRulesReader implements AccessRulesReader {
 
 			const { records } = await fetchRedisHashRecords(
 				this.client,
-				searchReply.documents,
+				ruleKeys,
 				this.logger,
 			);
 
@@ -139,16 +309,11 @@ export class RedisRulesReader implements AccessRulesReader {
 				err: e,
 				data: {
 					inspect: util.inspect(
-						{
-							query: query,
-							filter: filter,
-						},
-						{
-							depth: null,
-						},
+						{ query, filter },
+						{ depth: null },
 					),
 				},
-				msg: "failed to execute search query",
+				msg: "failed to execute greedy search query",
 			}));
 
 			return [];
