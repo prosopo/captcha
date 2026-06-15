@@ -228,13 +228,25 @@ export const rankCandidateRules = (
 /**
  * Fetch the access rules that apply to a request, most specific first.
  *
- * Old shape: 2 × (2^n − 1) `FT.SEARCH` round trips, one per non-empty subset
- * of the populated user-scope fields × {clientId, undefined}. With n=6 fields
- * (incl. ASN) that's 126 round trips per request.
+ * Evolution of this lookup:
  *
- * New shape: one greedy `FT.SEARCH` that returns any rule touching any
- * populated request field for either the matching clientId or no clientId.
- * Specificity is computed in JS afterwards. Same external semantics.
+ *  - Original: 2 × (2^n − 1) `FT.SEARCH` round trips, one per non-empty
+ *    subset of the populated user-scope fields × {clientId, undefined}.
+ *    n=6 fields ⇒ 126 RTTs per request.
+ *  - #2657 (greedy): one OR-of-fields `FT.SEARCH`, JS-side rank picks
+ *    the most-specific. 1 RTT but pulled hundreds of irrelevant hashes
+ *    every request.
+ *  - #2689 / 3.6.38: greedy + FT.AGGREGATE+CURSOR to defeat the silent
+ *    1000-cap truncation. Tipped CPU into 125% peg in production.
+ *  - 3.6.38.1 hotfix: reverted to greedy + FT.SEARCH (this file's old
+ *    shape with the truncation bug back).
+ *  - Now (this fix): strict-match query so every returned candidate
+ *    actually applies, with specificity ranked server-side via
+ *    FT.AGGREGATE+APPLY+SORTBY+LIMIT in the storage layer. Node receives
+ *    at most 20 already-ranked rules — no JS sort needed for
+ *    correctness, but `rankCandidateRules` is kept as defence so any
+ *    mismatch between the Redis-side score and the JS semantics surfaces
+ *    as ordering rather than letting traffic through.
  */
 export const getPrioritisedAccessRule = async (
 	userAccessRulesStorage: AccessRulesStorage,
@@ -256,7 +268,7 @@ export const getPrioritisedAccessRule = async (
 
 	const candidates = await userAccessRulesStorage.findRules(
 		filter,
-		false,
+		true, // matchingFieldsOnly — engages server-side specificity rank
 		true,
 	);
 
