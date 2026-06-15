@@ -66,6 +66,7 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 				imageMaxRounds: 3,
 				powDifficulty: 0.5,
 				verifiedTimeout: 120000,
+				solutionTimeout: 60000,
 				puzzleTolerance: 15,
 				disallowWebView: false,
 				contextAware: {
@@ -105,6 +106,7 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 				imageMaxRounds: 3,
 				powDifficulty: 0.5,
 				verifiedTimeout: 120000,
+				solutionTimeout: 60000,
 				puzzleTolerance: 15,
 				disallowWebView: false,
 				contextAware: {

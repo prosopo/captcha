@@ -15,6 +15,7 @@
 import {
 	CaptchaType,
 	ContextType,
+	DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
 	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
 	type IUserData,
 	type IUserSettings,
@@ -120,6 +121,10 @@ export const UserSettingsSchema = new Schema({
 	verifiedTimeout: {
 		type: Number,
 		default: DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
+	},
+	solutionTimeout: {
+		type: Number,
+		default: DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
 	},
 	frictionlessThreshold: {
 		type: Number,

@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { array, boolean, number, object, type output, string, z } from "zod";
-import { DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT } from "../config/timeouts.js";
+import {
+	DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
+	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
+} from "../config/timeouts.js";
 import { CaptchaType } from "./captchaType/captchaType.js";
 import { CaptchaTypeSpec } from "./captchaType/captchaTypeSpec.js";
 
@@ -232,6 +235,16 @@ export const ClientSettingsSchema = object({
 		.max(600000)
 		.optional()
 		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
+	// Maximum ms between challenge issuance and the user's submission to
+	// /pow/solution or /puzzle/solution. Bounds how long the user has to
+	// solve the challenge before the submission is rejected as stale.
+	// Distinct from `verifiedTimeout` (which gates submission → /verify).
+	solutionTimeout: number()
+		.int()
+		.min(1000)
+		.max(600000)
+		.optional()
+		.default(DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT),
 	frictionlessThreshold: number()
 		.min(0)
 		.max(1)

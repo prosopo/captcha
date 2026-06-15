@@ -47,6 +47,7 @@ const defaultUserSettings: IUserSettings = {
 	imageThreshold: 0.8,
 	imageMaxRounds: 3,
 	verifiedTimeout: 120000,
+	solutionTimeout: 60000,
 	puzzleTolerance: 15,
 	disallowWebView: false,
 	contextAware: {
