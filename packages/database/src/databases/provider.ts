@@ -1260,10 +1260,7 @@ export class ProviderDatabase
 		// when an `$ifNull` (or other aggregation expression) is actually
 		// required.
 		if (Object.keys(pipelineExprs).length === 0) {
-			await tables.puzzlecaptcha.updateOne(
-				{ challenge },
-				{ $set: baseSet },
-			);
+			await tables.puzzlecaptcha.updateOne({ challenge }, { $set: baseSet });
 			return;
 		}
 		await tables.puzzlecaptcha.updateOne({ challenge }, [

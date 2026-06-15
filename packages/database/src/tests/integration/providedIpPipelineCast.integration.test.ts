@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Long } from "bson";
 import { LogLevel, getLogger } from "@prosopo/logger";
 import { CaptchaStatus, IpAddressType } from "@prosopo/types";
 import {
 	type UserCommitmentRecord,
 	UserCommitmentRecordSchema,
 } from "@prosopo/types-database";
+import { Long } from "bson";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import type mongoose from "mongoose";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
