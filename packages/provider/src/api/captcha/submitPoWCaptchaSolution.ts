@@ -126,11 +126,20 @@ export default (env: ProviderEnvironment) =>
 				},
 			});
 
+			// `solutionTimeout` gates issuance → submit; falls back to
+			// `verifiedTimeout` for records that pre-date the field, since
+			// historically that value covered both windows. Mongoose `default`
+			// doesn't fire on reads, so the runtime value can be undefined
+			// even though the parsed schema type says `number`.
+			const persistedSolutionTimeout =
+				clientRecord.settings.solutionTimeout as number | undefined;
+			const submitWindowMs: number =
+				persistedSolutionTimeout ?? clientRecord.settings.verifiedTimeout;
 			const result = await tasks.powCaptchaManager.verifyPowCaptchaSolution(
 				challenge,
 				signature.provider.challenge,
 				nonce,
-				clientRecord.settings.verifiedTimeout,
+				submitWindowMs,
 				signature.user.timestamp,
 				getIPAddress(req.ip || ""),
 				flatHeaders,
