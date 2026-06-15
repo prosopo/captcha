@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { chunkIntoBatches, executeBatchesSequentially } from "@prosopo/common";
-import { type Logger } from "@prosopo/logger";
+import type { Logger } from "@prosopo/logger";
 import {
 	type RedisConnection,
 	createTestRedisConnection,
@@ -206,59 +206,24 @@ describe("redisRulesReader ranked-path benchmark", () => {
 		);
 	});
 
-	test(
-		`ranked findRules p50/p99 over ${QUERY_COUNT} queries against ${RULE_COUNT} rules`,
-		async () => {
-			// warm up — first call pays for index page-in
+	test(`ranked findRules p50/p99 over ${QUERY_COUNT} queries against ${RULE_COUNT} rules`, async () => {
+		// warm up — first call pays for index page-in
+		await reader.findRules(
+			{
+				policyScope: { clientId: "warmup" },
+				policyScopeMatch: FilterScopeMatch.Greedy,
+				userScope: { ja4Hash: "warmup" },
+				userScopeMatch: FilterScopeMatch.Greedy,
+			},
+			true,
+		);
+
+		const samples: number[] = [];
+		for (let i = 0; i < QUERY_COUNT; i++) {
+			const { clientId, scope } = buildBenchmarkRequest(i);
+			const start = performance.now();
 			await reader.findRules(
 				{
-					policyScope: { clientId: "warmup" },
-					policyScopeMatch: FilterScopeMatch.Greedy,
-					userScope: { ja4Hash: "warmup" },
-					userScopeMatch: FilterScopeMatch.Greedy,
-				},
-				true,
-			);
-
-			const samples: number[] = [];
-			for (let i = 0; i < QUERY_COUNT; i++) {
-				const { clientId, scope } = buildBenchmarkRequest(i);
-				const start = performance.now();
-				await reader.findRules(
-					{
-						policyScope: { clientId },
-						policyScopeMatch: FilterScopeMatch.Greedy,
-						userScope: scope,
-						userScopeMatch: FilterScopeMatch.Greedy,
-					},
-					true,
-				);
-				samples.push(performance.now() - start);
-			}
-
-			samples.sort((a, b) => a - b);
-			const p50 = percentile(samples, 0.5);
-			const p99 = percentile(samples, 0.99);
-			const avg = samples.reduce((a, b) => a + b, 0) / samples.length;
-
-			console.log(
-				`ranked findRules: avg=${avg.toFixed(2)}ms  p50=${p50.toFixed(2)}ms  p99=${p99.toFixed(2)}ms  n=${samples.length}`,
-			);
-
-			expect(p50).toBeLessThan(P50_LATENCY_MS);
-			expect(p99).toBeLessThan(P99_LATENCY_MS);
-		},
-		120_000,
-	);
-
-	test(
-		"ranked findRules result size is bounded by SERVER_SIDE_RANK_TOP_N",
-		async () => {
-			// Fully-populated request that should apply to many seeded rules
-			// — the new path must cap at SERVER_SIDE_RANK_TOP_N (20).
-			const { clientId, scope } = buildBenchmarkRequest(0);
-			const results = await reader.findRules(
-				{
 					policyScope: { clientId },
 					policyScopeMatch: FilterScopeMatch.Greedy,
 					userScope: scope,
@@ -266,92 +231,108 @@ describe("redisRulesReader ranked-path benchmark", () => {
 				},
 				true,
 			);
-			expect(results.length).toBeLessThanOrEqual(20);
-			expect(results.length).toBeGreaterThan(0);
-		},
-		60_000,
-	);
+			samples.push(performance.now() - start);
+		}
 
-	test(
-		`HGETALL-free: ranked path returns full rules without per-rule fanout`,
-		async () => {
-			// The benefit of the ranked path in production is *not* raw
-			// localhost latency (the strict-match index walk is heavier
-			// than a greedy FT.SEARCH on a quiet box). It's that the
-			// ranked path returns full rule bodies inside the single
-			// FT.AGGREGATE reply, with no follow-up HGETALL fanout. In
-			// production each HGETALL costs ~0.5ms of network RTT over
-			// the Docker bridge, so cutting hundreds of round trips per
-			// request is the win that doesn't appear in a localhost
-			// timing test.
-			//
-			// This test stands in for that: confirm the ranked path
-			// produces fully-populated AccessRule objects from one
-			// aggregate call (no separate hash fetches needed).
-			const { clientId, scope } = buildBenchmarkRequest(0);
-			const ranked = await reader.findRules(
-				{
-					policyScope: { clientId },
-					policyScopeMatch: FilterScopeMatch.Greedy,
-					userScope: scope,
-					userScopeMatch: FilterScopeMatch.Greedy,
-				},
-				true,
-			);
+		samples.sort((a, b) => a - b);
+		const p50 = percentile(samples, 0.5);
+		const p99 = percentile(samples, 0.99);
+		const avg = samples.reduce((a, b) => a + b, 0) / samples.length;
 
-			expect(ranked.length).toBeGreaterThan(0);
-			// Every returned record must have the policy fields populated —
-			// proves the LOAD pipeline includes them rather than relying
-			// on a follow-up HGETALL.
-			for (const rule of ranked) {
-				expect(rule.type).toBeDefined();
-			}
-		},
-		60_000,
-	);
+		console.log(
+			`ranked findRules: avg=${avg.toFixed(2)}ms  p50=${p50.toFixed(2)}ms  p99=${p99.toFixed(2)}ms  n=${samples.length}`,
+		);
 
-	test(
-		"ranked findRules returns rules in specificity-descending order",
-		async () => {
-			// A request that matches the high-specificity bucket should
-			// surface the rule with the most populated fields first.
-			const { clientId, scope } = buildBenchmarkRequest(9);
-			const results = await reader.findRules(
-				{
-					policyScope: { clientId },
-					policyScopeMatch: FilterScopeMatch.Greedy,
-					userScope: scope,
-					userScopeMatch: FilterScopeMatch.Greedy,
-				},
-				true,
-			);
+		expect(p50).toBeLessThan(P50_LATENCY_MS);
+		expect(p99).toBeLessThan(P99_LATENCY_MS);
+	}, 120_000);
 
-			if (results.length === 0) return;
-			const top = results[0];
-			if (!top) return;
+	test("ranked findRules result size is bounded by SERVER_SIDE_RANK_TOP_N", async () => {
+		// Fully-populated request that should apply to many seeded rules
+		// — the new path must cap at SERVER_SIDE_RANK_TOP_N (20).
+		const { clientId, scope } = buildBenchmarkRequest(0);
+		const results = await reader.findRules(
+			{
+				policyScope: { clientId },
+				policyScopeMatch: FilterScopeMatch.Greedy,
+				userScope: scope,
+				userScopeMatch: FilterScopeMatch.Greedy,
+			},
+			true,
+		);
+		expect(results.length).toBeLessThanOrEqual(20);
+		expect(results.length).toBeGreaterThan(0);
+	}, 60_000);
 
-			// The top rule must have at least as many populated user-scope
-			// fields as any other returned rule.
-			const countFields = (r: AccessRule): number =>
-				(r.userId ? 1 : 0) +
-				(r.ja4Hash ? 1 : 0) +
-				(r.headersHash ? 1 : 0) +
-				(r.userAgentHash ? 1 : 0) +
-				(r.headHash ? 1 : 0) +
-				(r.coords ? 1 : 0) +
-				(r.countryCode ? 1 : 0) +
-				(r.asn !== undefined ? 1 : 0) +
-				(r.clientId ? 1 : 0) +
-				(r.numericIp !== undefined ||
-				r.numericIpMaskMin !== undefined
-					? 1
-					: 0);
+	test("HGETALL-free: ranked path returns full rules without per-rule fanout", async () => {
+		// The benefit of the ranked path in production is *not* raw
+		// localhost latency (the strict-match index walk is heavier
+		// than a greedy FT.SEARCH on a quiet box). It's that the
+		// ranked path returns full rule bodies inside the single
+		// FT.AGGREGATE reply, with no follow-up HGETALL fanout. In
+		// production each HGETALL costs ~0.5ms of network RTT over
+		// the Docker bridge, so cutting hundreds of round trips per
+		// request is the win that doesn't appear in a localhost
+		// timing test.
+		//
+		// This test stands in for that: confirm the ranked path
+		// produces fully-populated AccessRule objects from one
+		// aggregate call (no separate hash fetches needed).
+		const { clientId, scope } = buildBenchmarkRequest(0);
+		const ranked = await reader.findRules(
+			{
+				policyScope: { clientId },
+				policyScopeMatch: FilterScopeMatch.Greedy,
+				userScope: scope,
+				userScopeMatch: FilterScopeMatch.Greedy,
+			},
+			true,
+		);
 
-			const topScore = countFields(top);
-			for (const r of results) {
-				expect(countFields(r)).toBeLessThanOrEqual(topScore);
-			}
-		},
-		60_000,
-	);
+		expect(ranked.length).toBeGreaterThan(0);
+		// Every returned record must have the policy fields populated —
+		// proves the LOAD pipeline includes them rather than relying
+		// on a follow-up HGETALL.
+		for (const rule of ranked) {
+			expect(rule.type).toBeDefined();
+		}
+	}, 60_000);
+
+	test("ranked findRules returns rules in specificity-descending order", async () => {
+		// A request that matches the high-specificity bucket should
+		// surface the rule with the most populated fields first.
+		const { clientId, scope } = buildBenchmarkRequest(9);
+		const results = await reader.findRules(
+			{
+				policyScope: { clientId },
+				policyScopeMatch: FilterScopeMatch.Greedy,
+				userScope: scope,
+				userScopeMatch: FilterScopeMatch.Greedy,
+			},
+			true,
+		);
+
+		if (results.length === 0) return;
+		const top = results[0];
+		if (!top) return;
+
+		// The top rule must have at least as many populated user-scope
+		// fields as any other returned rule.
+		const countFields = (r: AccessRule): number =>
+			(r.userId ? 1 : 0) +
+			(r.ja4Hash ? 1 : 0) +
+			(r.headersHash ? 1 : 0) +
+			(r.userAgentHash ? 1 : 0) +
+			(r.headHash ? 1 : 0) +
+			(r.coords ? 1 : 0) +
+			(r.countryCode ? 1 : 0) +
+			(r.asn !== undefined ? 1 : 0) +
+			(r.clientId ? 1 : 0) +
+			(r.numericIp !== undefined || r.numericIpMaskMin !== undefined ? 1 : 0);
+
+		const topScore = countFields(top);
+		for (const r of results) {
+			expect(countFields(r)).toBeLessThanOrEqual(topScore);
+		}
+	}, 60_000);
 });

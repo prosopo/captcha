@@ -244,10 +244,7 @@ export class RedisRulesReader implements AccessRulesReader {
 			this.logger.error(() => ({
 				err: e,
 				data: {
-					inspect: util.inspect(
-						{ query, filter },
-						{ depth: null },
-					),
+					inspect: util.inspect({ query, filter }, { depth: null }),
 				},
 				msg: "failed to execute ranked search query",
 			}));
@@ -308,10 +305,7 @@ export class RedisRulesReader implements AccessRulesReader {
 			this.logger.error(() => ({
 				err: e,
 				data: {
-					inspect: util.inspect(
-						{ query, filter },
-						{ depth: null },
-					),
+					inspect: util.inspect({ query, filter }, { depth: null }),
 				},
 				msg: "failed to execute greedy search query",
 			}));
