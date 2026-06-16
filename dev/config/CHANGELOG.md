@@ -1,5 +1,10 @@
 # @prosopo/config
 
+## 3.3.2
+### Patch Changes
+
+- 7a97bba: chore(deps): bump esbuild from 0.25.9 to 0.28.1
+
 ## 3.3.1
 ### Patch Changes
 

@@ -1,5 +1,11 @@
 # @prosopo/angular-procaptcha-wrapper
 
+## 1.1.82
+### Patch Changes
+
+- 4c71a9f: chore(deps): bump @angular/core from 20.3.16 to 20.3.25
+  - @prosopo/procaptcha-wrapper@2.6.84
+
 ## 1.1.81
 ### Patch Changes
 
