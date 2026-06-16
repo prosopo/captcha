@@ -1,5 +1,26 @@
 # @prosopo/database
 
+## 3.14.2
+### Patch Changes
+
+- 4626340: perf(provider): cut p95 on /captcha/frictionless and /captcha/image
+  
+  Replaces the `$match → $sample` random-captcha lookup with an indexed
+  range scan over a new `{datasetId, solved, randomKey}` compound index;
+  reorders the `sampleContextEntropy` aggregation so `$sample` runs
+  before `$lookup`; batches three pairs of independent awaits in the
+  frictionless handler via `Promise.all`. Adds an integration test
+  asserting via `.explain()` and wall-clock timing that the new paths
+  are quantifiably faster. The legacy aggregation remains as a fallback
+  in `getRandomCaptcha` so deployment can precede the
+  providerBackfillCaptchaRandomKey rollout.
+- 5f47c42: fix(database): widen `getSessionRecordBySessionId` projection so post-PoW routing escalations stop failing with `DATABASE.SESSION_STORE_FAILED`. The projection added in #2393 dropped `token`, `score`, `threshold`, `providerSelectEntropy`, `ipAddress`, etc., which `buildEscalation` forwards into a new session via `frictionlessManager.createSession`. With routing machines enabled for edge (2026-06-16) every escalation 500'd. Headers are now enumerated key-by-key so `headers.x-tls-clienthello` (multi-KB TLS ClientHello) stays out of the read.
+- Updated dependencies [4626340]
+- Updated dependencies [6962179]
+  - @prosopo/types@4.6.1
+  - @prosopo/types-database@4.10.2
+  - @prosopo/user-access-policy@3.10.2
+
 ## 3.14.1
 ### Patch Changes
 
