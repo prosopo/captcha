@@ -403,7 +403,17 @@ export class ProviderDatabase
 								Captcha,
 								"captchaId"
 							>,
-							update: { $set: captchaDoc },
+							// `$setOnInsert` stamps `randomKey` once on the
+							// initial insert and leaves it untouched on
+							// re-imports of the same captchaId. See
+							// `getRandomCaptcha` and the
+							// providerBackfillCaptchaRandomKey playbook for
+							// the corresponding read path and one-shot
+							// backfill of pre-existing rows.
+							update: {
+								$set: captchaDoc,
+								$setOnInsert: { randomKey: Math.random() },
+							},
 							upsert: true,
 						},
 					})),
@@ -544,26 +554,65 @@ export class ProviderDatabase
 			});
 		}
 		const sampleSize = size ? Math.abs(Math.trunc(size)) : 1;
-		const filter: Pick<Captcha, "datasetId" | "solved"> = { datasetId, solved };
-		const cursor = this.tables?.captcha.aggregate([
-			{ $match: filter },
-			{ $sample: { size: sampleSize } },
-			{
-				$project: {
-					datasetId: 1,
-					datasetContentId: 1,
-					captchaId: 1,
-					captchaContentId: 1,
-					items: 1,
-					target: 1,
-				},
-			},
-		]);
-		const docs = await cursor;
+		const projection = {
+			_id: 0,
+			datasetId: 1,
+			datasetContentId: 1,
+			captchaId: 1,
+			captchaContentId: 1,
+			items: 1,
+			target: 1,
+		};
+		// Indexed random sampling via `randomKey` and the
+		// `{datasetId, solved, randomKey}` compound index. Pick a pivot in
+		// [0,1) and walk the next `sampleSize` keys; wrap to the start of
+		// the range when the pivot lands near 1.0. Each branch reads at
+		// most `sampleSize` index keys, replacing the previous `$sample`
+		// aggregation that materialised the full matched set (~20K docs,
+		// ~140ms avg, max 721ms). `datasetId` is hex (validated above) but
+		// the `Hash` alias permits `number[]`, which Mongoose's strict
+		// FilterQuery rejects, hence the cast.
+		const baseFilter = { datasetId: datasetId as string, solved };
+		const pivot = Math.random();
+		const head =
+			(await this.tables?.captcha
+				.find({ ...baseFilter, randomKey: { $gte: pivot } }, projection)
+				.sort({ randomKey: 1 })
+				.limit(sampleSize)
+				.lean<Captcha[]>()) ?? [];
+		let docs: Captcha[] = head;
+		if (docs.length < sampleSize) {
+			const tail =
+				(await this.tables?.captcha
+					.find({ ...baseFilter, randomKey: { $lt: pivot } }, projection)
+					.sort({ randomKey: 1 })
+					.limit(sampleSize - docs.length)
+					.lean<Captcha[]>()) ?? [];
+			docs = docs.concat(tail);
+		}
 
-		if (docs?.length) {
-			// drop the _id field
-			return docs.map(({ _id, ...keepAttrs }) => keepAttrs) as Captcha[];
+		// Fallback for the gap between deploying this code and the
+		// providerBackfillCaptchaRandomKey playbook completing:
+		// pre-existing captcha docs have no `randomKey`, so the range
+		// queries above skip them entirely. The old aggregation works
+		// regardless. Once backfill is verified across all pronodes this
+		// fallback can be deleted.
+		if (docs.length === 0) {
+			const fallback =
+				(await this.tables?.captcha
+					.aggregate([
+						{ $match: baseFilter },
+						{ $sample: { size: sampleSize } },
+						{ $project: projection },
+					])
+					.exec()) ?? [];
+			if (fallback.length > 0) {
+				return fallback.map(({ _id, ...keep }) => keep) as Captcha[];
+			}
+		}
+
+		if (docs.length > 0) {
+			return docs;
 		}
 
 		throw new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
@@ -2709,7 +2758,14 @@ export class ProviderDatabase
 			});
 		}
 
-		// Use aggregation to join with session records and filter by context
+		// Use aggregation to join with session records and filter by
+		// context. `$sample` runs *before* `$lookup` so the join only
+		// processes the bounded random pool (`max`) instead of every
+		// matched powcaptcha. The previous ordering let `$lookup` chew
+		// through the full match (>30K docs for the busiest dapp,
+		// ~4.7s per call) before the trailing `$limit` had any effect.
+		// A second `$sample` after the post-join filter trims down to
+		// the requested `size`.
 		// biome-ignore lint/suspicious/noExplicitAny: Dynamic pipeline construction requires flexible typing
 		const pipeline: any[] = [
 			{
@@ -2720,6 +2776,7 @@ export class ProviderDatabase
 					},
 				},
 			},
+			{ $sample: { size: max } },
 			{
 				$lookup: {
 					from: "sessions",
@@ -2752,7 +2809,6 @@ export class ProviderDatabase
 		}
 
 		pipeline.push(
-			{ $limit: max },
 			{ $sample: { size } },
 			{
 				$project: {

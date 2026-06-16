@@ -70,6 +70,11 @@ export interface Captcha extends CaptchaWithoutId {
 	assetURI?: string;
 	datasetId?: string;
 	datasetContentId?: string;
+	// Storage-only random pivot in [0,1). Stamped on insert and indexed
+	// by `{datasetId, solved, randomKey}` to make `getRandomCaptcha` an
+	// O(log n + N) range scan. Absent on the wire — never serialised
+	// back to widgets or APIs.
+	randomKey?: number;
 }
 
 export interface CaptchaResult {
