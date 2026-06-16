@@ -1561,14 +1561,55 @@ export class ProviderDatabase
 		sessionId: string,
 	): Promise<Session | undefined> {
 		const filter: Pick<SessionRecord, "sessionId"> = { sessionId };
+		// Projection lists every field a caller of this function actually
+		// reads. `headers` is selected by individual key rather than as a
+		// whole blob: the flattened `req.headers` persisted at frictionless
+		// time can contain `x-tls-clienthello` (a base64-encoded full TLS
+		// ClientHello, multi-KB per session). That field is only consumed
+		// by `ja4Middleware` from the live `req.headers` at the entry
+		// point — never re-read off the persisted Session — so it just
+		// bloats every subsequent lookup. The enumerated list below covers
+		// the headers `buildEscalation` forwards onto the escalation
+		// session. New headers that need to round-trip must be added
+		// here explicitly.
 		const doc = await this.tables.session
 			.findOne(filter, {
 				sessionId: 1,
-				ipInfo: 1,
+				token: 1,
+				score: 1,
+				threshold: 1,
 				scoreComponents: 1,
+				providerSelectEntropy: 1,
+				ipAddress: 1,
+				ipInfo: 1,
 				webView: 1,
-				reason: 1,
+				iFrame: 1,
 				decryptedHeadHash: 1,
+				siteKey: 1,
+				reason: 1,
+				mode: 1,
+				solvedImagesCount: 1,
+				userSitekeyIpHash: 1,
+				simdReadings: 1,
+				dnsEvent: 1,
+				"headers.user-agent": 1,
+				"headers.accept": 1,
+				"headers.accept-language": 1,
+				"headers.accept-encoding": 1,
+				"headers.sec-ch-ua": 1,
+				"headers.sec-ch-ua-mobile": 1,
+				"headers.sec-ch-ua-platform": 1,
+				"headers.sec-ch-ua-platform-version": 1,
+				"headers.sec-fetch-dest": 1,
+				"headers.sec-fetch-mode": 1,
+				"headers.sec-fetch-site": 1,
+				"headers.sec-fetch-user": 1,
+				"headers.referer": 1,
+				"headers.origin": 1,
+				"headers.prosopo-user": 1,
+				"headers.prosopo-site-key": 1,
+				"headers.prosopo-type": 1,
+				"headers.x-tls-version": 1,
 			})
 			.lean<Session>();
 		return doc || undefined;
