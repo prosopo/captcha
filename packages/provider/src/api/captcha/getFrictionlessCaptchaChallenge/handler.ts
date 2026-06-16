@@ -136,10 +136,7 @@ export default (
 			// handles.
 			const [decodedSimdReadings, { existingToken, dedup }, clientRecord] =
 				await Promise.all([
-					decryptIncomingSimdReadings(
-						tasks.frictionlessManager,
-						simdReadings,
-					),
+					decryptIncomingSimdReadings(tasks.frictionlessManager, simdReadings),
 					resolveSessionDedup(tasks, token, userSitekeyIpHash, req.logger),
 					tasks.db.getClientRecord(dapp),
 				]);
@@ -248,20 +245,19 @@ export default (
 			// async), and the Redis-backed access-policy lookup. None of
 			// them depends on the others' outputs — running them in
 			// series previously added up to ~50-80ms on the hot path.
-			const [decryptedPayload, validation, accessPolicies] =
-				await Promise.all([
-					tasks.frictionlessManager.decryptPayload(token, headHash),
-					tasks.frictionlessManager.isValidRequest(
-						clientRecord,
-						CaptchaType.frictionless,
-						env,
-					),
-					tasks.frictionlessManager.getPrioritisedAccessPolicies(
-						userAccessRulesStorage,
-						dapp,
-						userScope,
-					),
-				]);
+			const [decryptedPayload, validation, accessPolicies] = await Promise.all([
+				tasks.frictionlessManager.decryptPayload(token, headHash),
+				tasks.frictionlessManager.isValidRequest(
+					clientRecord,
+					CaptchaType.frictionless,
+					env,
+				),
+				tasks.frictionlessManager.getPrioritisedAccessPolicies(
+					userAccessRulesStorage,
+					dapp,
+					userScope,
+				),
+			]);
 
 			const {
 				baseBotScore,

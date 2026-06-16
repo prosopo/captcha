@@ -576,10 +576,7 @@ export class ProviderDatabase
 		const pivot = Math.random();
 		const head =
 			(await this.tables?.captcha
-				.find(
-					{ ...baseFilter, randomKey: { $gte: pivot } },
-					projection,
-				)
+				.find({ ...baseFilter, randomKey: { $gte: pivot } }, projection)
 				.sort({ randomKey: 1 })
 				.limit(sampleSize)
 				.lean<Captcha[]>()) ?? [];
@@ -587,10 +584,7 @@ export class ProviderDatabase
 		if (docs.length < sampleSize) {
 			const tail =
 				(await this.tables?.captcha
-					.find(
-						{ ...baseFilter, randomKey: { $lt: pivot } },
-						projection,
-					)
+					.find({ ...baseFilter, randomKey: { $lt: pivot } }, projection)
 					.sort({ randomKey: 1 })
 					.limit(sampleSize - docs.length)
 					.lean<Captcha[]>()) ?? [];

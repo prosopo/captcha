@@ -76,7 +76,10 @@ function getStats(explain: ExplainResult): ExplainExecutionStats | undefined {
 	return cursor?.executionStats;
 }
 
-async function timeIt(fn: () => Promise<unknown>, iterations: number): Promise<number> {
+async function timeIt(
+	fn: () => Promise<unknown>,
+	iterations: number,
+): Promise<number> {
 	// Warm up once so JIT / first-query overhead doesn't skew the result.
 	await fn();
 	const start = process.hrtime.bigint();
@@ -90,7 +93,8 @@ async function timeIt(fn: () => Promise<unknown>, iterations: number): Promise<n
 describe("getRandomCaptcha — randomKey range scan vs $sample aggregation", () => {
 	let mongoDb: MongoMemoryDatabase;
 	let CaptchaModel: mongoose.Model<Captcha>;
-	const datasetId = "0xdeadbeefcafef00ddeadbeefcafef00ddeadbeefcafef00ddeadbeefcafef00d";
+	const datasetId =
+		"0xdeadbeefcafef00ddeadbeefcafef00ddeadbeefcafef00ddeadbeefcafef00d";
 	// Enough rows that the difference between "scan everything that
 	// matched" and "walk N index keys" is unambiguous on the in-memory
 	// instance. Production sees ~20K per (datasetId, solved); 5K is
@@ -144,7 +148,8 @@ describe("getRandomCaptcha — randomKey range scan vs $sample aggregation", () 
 			.limit(SAMPLE_SIZE)
 			.explain("executionStats");
 		const newStats = getStats(newExplain);
-		if (!newStats) throw new Error("explain returned no stats for the new path");
+		if (!newStats)
+			throw new Error("explain returned no stats for the new path");
 
 		// biome-ignore lint/suspicious/noExplicitAny: explain() returns dynamic shape
 		const oldExplain: any = await CaptchaModel.aggregate([
@@ -153,7 +158,8 @@ describe("getRandomCaptcha — randomKey range scan vs $sample aggregation", () 
 			{ $project: { captchaId: 1 } },
 		]).explain("executionStats");
 		const oldStats = getStats(oldExplain);
-		if (!oldStats) throw new Error("explain returned no stats for the old path");
+		if (!oldStats)
+			throw new Error("explain returned no stats for the old path");
 
 		// The new path returns SAMPLE_SIZE docs and should walk on the
 		// order of SAMPLE_SIZE keys — be generous to absorb any wrap-around
