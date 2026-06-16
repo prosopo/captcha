@@ -1290,6 +1290,53 @@ describe("redisAccessRulesStorage", () => {
 
 			expect(foundAccessRules).toEqual([validRule]);
 		});
+
+		test("findRulesRanked preserves bigint precision for IPv6 numericIp values", async () => {
+			// Production repro: under 3.6.40.1 we saw
+			//   "Cannot convert 5.59112965392e+37 to a BigInt"
+			// from the FT.AGGREGATE path in findRulesRanked whenever a
+			// matched candidate carries an IPv6 numericIp. The cause is
+			// that RediSearch indexes NUMERIC fields as 8-byte doubles
+			// and FT.AGGREGATE LOAD reads from that index buffer (not
+			// the underlying hash), so any value past
+			// Number.MAX_SAFE_INTEGER round-trips as scientific
+			// notation. `z.coerce.bigint()` then throws and the whole
+			// aggregate gets caught + returned as []. The aggregate is
+			// now used purely as a ranker over @__key; the field values
+			// come back via HGETALL, which preserves the original
+			// 38-digit string stored in the hash. This test inserts a
+			// rule with the same shape as the failing prod query — an
+			// IPv6 numericIp + matching userScope — and asserts the
+			// rule is returned with the bigint intact.
+			const clientId = getUniqueString();
+			const userId = getUniqueString();
+			// 38-digit IPv6 value past Number.MAX_SAFE_INTEGER. Anything
+			// > 2**53 demonstrates the precision loss; this specific
+			// value matches the order of magnitude of the prod error.
+			const ipv6NumericIp = 55878094658432211238406371356040233102n;
+
+			const accessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: clientId,
+				userId: userId,
+				numericIp: ipv6NumericIp,
+			};
+
+			await insertRules([accessRule]);
+
+			const foundAccessRules = await accessRulesReader.findRules(
+				{
+					policyScope: { clientId: clientId },
+					policyScopeMatch: FilterScopeMatch.Exact,
+					userScope: { userId: userId, numericIp: ipv6NumericIp },
+					userScopeMatch: FilterScopeMatch.Greedy,
+				},
+				true,
+			);
+
+			expect(foundAccessRules).toEqual([accessRule]);
+			expect(foundAccessRules[0]?.numericIp).toBe(ipv6NumericIp);
+		});
 	});
 
 	afterAll(async () => {
