@@ -14,6 +14,7 @@
 import { ProsopoApiError } from "@prosopo/common";
 import {
 	CaptchaType,
+	type FrictionlessReason,
 	type PowCaptchaSolutionEscalation,
 	type PowCaptchaSolutionResponse,
 	SubmitPowCaptchaSolutionBody,
@@ -210,7 +211,14 @@ const buildEscalation = async (
 		captchaType: CaptchaType.image | CaptchaType.puzzle;
 		solvedImagesCount?: number;
 		powDifficulty?: number;
+		reason?: string;
 	};
+
+	// Prefer the routing machine's own selection reason (e.g. an invalid
+	// fingerprint proof) for the escalated captcha record; fall back to the
+	// originating session's reason when the machine didn't supply one.
+	const selectionReason =
+		(routed.reason as FrictionlessReason | undefined) ?? originSession.reason;
 
 	const newSession = await tasks.frictionlessManager.createSession(
 		originSession.token,
@@ -229,7 +237,7 @@ const buildEscalation = async (
 		originSession.webView,
 		originSession.iFrame,
 		originSession.decryptedHeadHash,
-		originSession.reason,
+		selectionReason,
 		undefined,
 		undefined,
 		originSession.ipInfo,

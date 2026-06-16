@@ -226,6 +226,10 @@ export interface RoutingMachineOutput {
 	captchaType: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle;
 	solvedImagesCount?: number;
 	powDifficulty?: number;
+	// Optional selection reason the machine can attach to explain an escalation
+	// (e.g. why it chose image over pow). Persisted to `session.reason` by the
+	// provider. Free-form string because machines are operator-authored.
+	reason?: string;
 }
 
 export const RoutingMachineOutputSchema = z.object({
@@ -236,4 +240,5 @@ export const RoutingMachineOutputSchema = z.object({
 	]),
 	solvedImagesCount: z.number().int().positive().optional(),
 	powDifficulty: z.number().positive().optional(),
+	reason: z.string().optional(),
 });
