@@ -324,10 +324,10 @@ describe("checkTrafficFilter", () => {
 		it("still blocks datacenter IPs that report no datacenter name", () => {
 			// Operators can only opt traffic out by name. A missing name
 			// must keep behaving like before the allowlist existed.
-			const result = checkTrafficFilter(
-				baseInfo({ isDatacenter: true }),
-				{ ...allBlocked, datacenterNameAllowlist: ["iCloud Private Relay"] },
-			);
+			const result = checkTrafficFilter(baseInfo({ isDatacenter: true }), {
+				...allBlocked,
+				datacenterNameAllowlist: ["iCloud Private Relay"],
+			});
 			expect(result).toEqual({
 				isBlocked: true,
 				reason: "API.DATACENTER_BLOCKED",
