@@ -122,9 +122,11 @@ export default (env: ProviderEnvironment) =>
 				msg: fingerprintProof
 					? "fingerprintProof detected"
 					: "no fingerprintProof on PoW submission",
-				fingerprintProofPresent: fingerprintProof !== undefined,
-				fingerprintProofBytes: fingerprintProof?.length ?? 0,
-				challenge,
+				data: {
+					fingerprintProofPresent: fingerprintProof !== undefined,
+					fingerprintProofBytes: fingerprintProof?.length ?? 0,
+					challenge,
+				},
 			}));
 
 			tasks.powCaptchaManager.setPostPowContext({
@@ -171,9 +173,11 @@ export default (env: ProviderEnvironment) =>
 			if (result.routingOutput) {
 				req.logger.info(() => ({
 					msg: "post-PoW routing decision",
-					routedCaptchaType: result.routingOutput?.captchaType,
-					routingReason: result.routingOutput?.reason,
-					challenge,
+					data: {
+						routedCaptchaType: result.routingOutput?.captchaType,
+						routingReason: result.routingOutput?.reason,
+						challenge,
+					},
 				}));
 			}
 
