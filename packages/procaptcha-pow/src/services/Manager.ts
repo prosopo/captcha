@@ -16,6 +16,7 @@ import { stringToHex } from "@polkadot/util/string";
 import { ProviderApi } from "@prosopo/api";
 import { ProsopoEnvError } from "@prosopo/common";
 import {
+	FINGERPRINT_DISCLOSURE_KEYS,
 	encodeFingerprintProof,
 	getFingerprintProof,
 } from "@prosopo/fingerprint";
@@ -324,13 +325,27 @@ export const Manager = (
 					const clientMetaData = hpValue ? { hp: hpValue } : undefined;
 					// Best-effort proof of fingerprint; submission proceeds without it
 					// if a proof can't be produced (e.g. fingerprint unavailable).
+					// Only the validator-checked keys are disclosed to keep the
+					// payload small (see FINGERPRINT_DISCLOSURE_KEYS).
 					let fingerprintProof: string | undefined;
 					try {
 						fingerprintProof = encodeFingerprintProof(
-							await getFingerprintProof(),
+							await getFingerprintProof(FINGERPRINT_DISCLOSURE_KEYS),
 						);
 					} catch {
 						fingerprintProof = undefined;
+					}
+					// Test hook for exercising the provider's fingerprint failure
+					// path. In a browser console set:
+					//   window.__prosopoFingerprintProofTest__ = "malformed" // → image
+					//   window.__prosopoFingerprintProofTest__ = "omit"      // → image
+					// Never set in production; unset/any other value = normal proof.
+					const fpTest = (globalThis as Record<string, unknown>)
+						.__prosopoFingerprintProofTest__;
+					if (fpTest === "omit") {
+						fingerprintProof = undefined;
+					} else if (typeof fpTest === "string" && fpTest.length > 0) {
+						fingerprintProof = "invalid-fingerprint-proof";
 					}
 					const verifiedSolution = await providerApi.submitPowCaptchaSolution(
 						challenge,

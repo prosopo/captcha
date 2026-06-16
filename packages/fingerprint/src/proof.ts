@@ -25,6 +25,28 @@ import {
 export const FINGERPRINT_PROOF_VERSION = 1;
 
 /**
+ * The fixed set of components the client discloses in a proof of fingerprint.
+ * Disclosing every component (the previous default) made the proof enormous —
+ * each disclosure carries a full Merkle path and its raw value, and components
+ * like webgl/audio/fonts have very large values. Selective disclosure keeps the
+ * commitment (`root`) over the whole component set while only these cheap,
+ * stable scalar components carry a path + value, shrinking the payload ~10x.
+ *
+ * The provider-side validator's bounds MUST be a subset of these keys: a bounded
+ * key that isn't disclosed would always fail validation as `missing:<key>`.
+ */
+export const FINGERPRINT_DISCLOSURE_KEYS: readonly string[] = [
+	"colorDepth",
+	"cookiesEnabled",
+	"sessionStorage",
+	"localStorage",
+	"timezone",
+	"hardwareConcurrency",
+	"languages",
+	"architecture",
+];
+
+/**
  * A single disclosed fingerprint component: its raw value (or an error flag)
  * together with the Merkle proof that it belongs to the committed root. The
  * value is left as `unknown` because each FingerprintJS source produces a
@@ -85,7 +107,7 @@ export const leafHashForContent = (content: string): string => hexHash(content);
  */
 export const buildFingerprintProofFromComponents = (
 	components: UnknownComponents,
-	discloseKeys?: string[],
+	discloseKeys?: readonly string[],
 ): FingerprintProof => {
 	const keys = Object.keys(components).sort();
 	if (keys.length === 0) {

@@ -115,6 +115,18 @@ export default (env: ProviderEnvironment) =>
 				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
 					? req.ipInfo.countryCode
 					: undefined;
+			// Observability for the proof-of-fingerprint flow: the validation
+			// itself runs inside the closed-source routing machine (no logger), so
+			// log here at the provider boundary whether a proof arrived.
+			req.logger.info(() => ({
+				msg: fingerprintProof
+					? "fingerprintProof detected"
+					: "no fingerprintProof on PoW submission",
+				fingerprintProofPresent: fingerprintProof !== undefined,
+				fingerprintProofBytes: fingerprintProof?.length ?? 0,
+				challenge,
+			}));
+
 			tasks.powCaptchaManager.setPostPowContext({
 				ip: req.ip || "",
 				countryCode,
@@ -152,6 +164,18 @@ export default (env: ProviderEnvironment) =>
 				simdReadings,
 				clientMetaData,
 			);
+
+			// Surface the routing machine's post-PoW decision (escalation +
+			// selection reason, e.g. FINGERPRINT_PROOF_INVALID) at the provider
+			// boundary so the fingerprint outcome is visible in provider logs.
+			if (result.routingOutput) {
+				req.logger.info(() => ({
+					msg: "post-PoW routing decision",
+					routedCaptchaType: result.routingOutput?.captchaType,
+					routingReason: result.routingOutput?.reason,
+					challenge,
+				}));
+			}
 
 			const escalation = await buildEscalation(tasks, result, challenge);
 			const response: PowCaptchaSolutionResponse = {

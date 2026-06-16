@@ -65,11 +65,13 @@ export const getFingerprint = async (): Promise<string> => {
 
 /**
  * Produce a proof of fingerprint: a Merkle commitment to the full component set
- * plus a selective disclosure of the requested components (all of them by
- * default). Derived from the same component run as {@link getFingerprint}.
+ * plus a selective disclosure of the requested components. Callers should pass
+ * {@link FINGERPRINT_DISCLOSURE_KEYS} — omitting `discloseKeys` discloses every
+ * component, which produces a very large payload. Derived from the same
+ * component run as {@link getFingerprint}.
  */
 export const getFingerprintProof = async (
-	discloseKeys?: string[],
+	discloseKeys?: readonly string[],
 ): Promise<FingerprintProof> => {
 	const components = await loadComponents();
 	return buildFingerprintProofFromComponents(components, discloseKeys);
@@ -83,6 +85,7 @@ export const prefetchFingerprint = (): void => {
 
 export type { FingerprintLeafDisclosure, FingerprintProof } from "./proof.js";
 export {
+	FINGERPRINT_DISCLOSURE_KEYS,
 	FINGERPRINT_PROOF_VERSION,
 	buildFingerprintProofFromComponents,
 	encodeFingerprintProof,
