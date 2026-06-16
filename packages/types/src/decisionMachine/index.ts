@@ -201,8 +201,6 @@ export interface RoutingMachineRawSignals {
 	userAgent: string;
 	ja4?: string;
 	behavioralDataPacked?: DecisionMachineBehavioralDataPacked;
-	// Encoded proof of fingerprint attached to the PoW submission, validated by
-	// the (closed-source) routing machine.
 	fingerprintProof?: string;
 }
 
