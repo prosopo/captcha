@@ -1200,6 +1200,143 @@ describe("redisAccessRulesStorage", () => {
 			// then
 			expect(foundAccessRules).toEqual([accessRule]);
 		});
+
+		test("findRulesRanked does not throw when a matched candidate is missing @type", async () => {
+			// Production repro: under 3.6.40 we observed
+			//   "Could not find the value for a parameter name, consider
+			//    using EXISTS if applicable for type"
+			// from the FT.AGGREGATE pipeline in findRulesRanked. The cause
+			// is SEVERITY_EXPR = `(@type == "block")` — a bare @type
+			// reference that fails when a candidate document lacks the
+			// `type` field. Candidates can reach the pipeline without
+			// `type` two ways: (a) a partial-write / rehash race in the
+			// writer, (b) a stale RediSearch index entry pointing at a
+			// hash whose `type` field has been HDEL'd. Either way the
+			// whole aggregate fails and the catch in findRulesRanked
+			// returns [], i.e. NO rules match — a Block rule that should
+			// fire silently lets the request through.
+			const clientId = getUniqueString();
+			const userId = getUniqueString();
+
+			const accessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: clientId,
+				userId: userId,
+			};
+
+			await insertRules([accessRule]);
+
+			// Simulate the malformed-doc scenario by removing the `type`
+			// field from the hash. The RediSearch index still references
+			// the doc (type is not part of the index schema) but the
+			// APPLY LOAD will pull an undefined @type.
+			const ruleKey = getAccessRuleRedisKey(accessRule);
+			await redisClient.hDel(ruleKey, "type");
+
+			// when - matchingFieldsOnly=true routes through findRulesRanked
+			const foundAccessRules = await accessRulesReader.findRules(
+				{
+					policyScope: { clientId: clientId },
+					policyScopeMatch: FilterScopeMatch.Exact,
+					userScope: { userId: userId },
+					userScopeMatch: FilterScopeMatch.Exact,
+				},
+				true,
+			);
+
+			// then - the typeless doc must not crash the pipeline.
+			// `type` is required to reconstruct an AccessRule, so the
+			// doc is dropped from the result rather than returned with
+			// a default. The remaining valid rules (none here) come back.
+			expect(foundAccessRules).toEqual([]);
+		});
+
+		test("findRulesRanked returns the valid rule and skips a typeless ghost candidate", async () => {
+			// Same scenario as the previous test but with a co-resident
+			// valid rule. The typeless ghost must not poison the
+			// pipeline — the valid rule still has to come back so the
+			// block decision sticks.
+			const clientId = getUniqueString();
+			const userId = getUniqueString();
+
+			const validRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: clientId,
+				userId: userId,
+				ja4Hash: "t13d1313h2_valid",
+			};
+			const ghostRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: clientId,
+				userId: userId,
+				ja4Hash: "t13d1313h2_ghost",
+			};
+
+			await insertRules([validRule, ghostRule]);
+
+			// Strip `type` from the ghost only.
+			const ghostKey = getAccessRuleRedisKey(ghostRule);
+			await redisClient.hDel(ghostKey, "type");
+
+			const foundAccessRules = await accessRulesReader.findRules(
+				{
+					policyScope: { clientId: clientId },
+					policyScopeMatch: FilterScopeMatch.Exact,
+					userScope: { userId: userId },
+					userScopeMatch: FilterScopeMatch.Greedy,
+				},
+				true,
+			);
+
+			expect(foundAccessRules).toEqual([validRule]);
+		});
+
+		test("findRulesRanked preserves bigint precision for IPv6 numericIp values", async () => {
+			// Production repro: under 3.6.40.1 we saw
+			//   "Cannot convert 5.59112965392e+37 to a BigInt"
+			// from the FT.AGGREGATE path in findRulesRanked whenever a
+			// matched candidate carries an IPv6 numericIp. The cause is
+			// that RediSearch indexes NUMERIC fields as 8-byte doubles
+			// and FT.AGGREGATE LOAD reads from that index buffer (not
+			// the underlying hash), so any value past
+			// Number.MAX_SAFE_INTEGER round-trips as scientific
+			// notation. `z.coerce.bigint()` then throws and the whole
+			// aggregate gets caught + returned as []. The aggregate is
+			// now used purely as a ranker over @__key; the field values
+			// come back via HGETALL, which preserves the original
+			// 38-digit string stored in the hash. This test inserts a
+			// rule with the same shape as the failing prod query — an
+			// IPv6 numericIp + matching userScope — and asserts the
+			// rule is returned with the bigint intact.
+			const clientId = getUniqueString();
+			const userId = getUniqueString();
+			// 38-digit IPv6 value past Number.MAX_SAFE_INTEGER. Anything
+			// > 2**53 demonstrates the precision loss; this specific
+			// value matches the order of magnitude of the prod error.
+			const ipv6NumericIp = 55878094658432211238406371356040233102n;
+
+			const accessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: clientId,
+				userId: userId,
+				numericIp: ipv6NumericIp,
+			};
+
+			await insertRules([accessRule]);
+
+			const foundAccessRules = await accessRulesReader.findRules(
+				{
+					policyScope: { clientId: clientId },
+					policyScopeMatch: FilterScopeMatch.Exact,
+					userScope: { userId: userId, numericIp: ipv6NumericIp },
+					userScopeMatch: FilterScopeMatch.Greedy,
+				},
+				true,
+			);
+
+			expect(foundAccessRules).toEqual([accessRule]);
+			expect(foundAccessRules[0]?.numericIp).toBe(ipv6NumericIp);
+		});
 	});
 
 	afterAll(async () => {
