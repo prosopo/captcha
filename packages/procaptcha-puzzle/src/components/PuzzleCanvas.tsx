@@ -274,7 +274,7 @@ export const PuzzleCanvas = ({
 				<div
 					style={{
 						backgroundColor: theme.palette.surface,
-						borderRadius: "20px 20px 0 0",
+						borderRadius: "12px 12px 0 0",
 						padding: "12px 20px",
 						width: `${CONTAINER_WIDTH}px`,
 						boxSizing: "border-box",
@@ -301,7 +301,7 @@ export const PuzzleCanvas = ({
 						width: `${CONTAINER_WIDTH}px`,
 						height: `${CONTAINER_HEIGHT}px`,
 						background: puzzleAreaBg,
-						borderRadius: "0 0 20px 20px",
+						borderRadius: "0 0 12px 12px",
 						overflow: "hidden",
 						userSelect: "none",
 						boxShadow:

@@ -126,7 +126,7 @@ export const Checkbox: FC<CheckboxProps> = ({
 			margin: "15px",
 			minWidth: "28px",
 			minHeight: "28px",
-			borderRadius: "8px",
+			borderRadius: "6px",
 			borderStyle: "solid",
 			borderWidth: "2px",
 			borderColor: checked

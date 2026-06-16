@@ -50,8 +50,8 @@ const buttonStyleBase: CSSProperties = {
 	minWidth: "64px",
 	padding: "8px 16px",
 	height: "42px",
-	// Full pill — the Material 3 shape for the action row.
-	borderRadius: "100px",
+	// Softly rounded action buttons (overridden per-theme by shape.button).
+	borderRadius: "8px",
 	border: "none",
 	transition:
 		"background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, filter 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",

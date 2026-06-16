@@ -46,14 +46,14 @@ const DEFAULT_SPACING = 10; // size in pixels
 const FONT_FAMILY =
 	'ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"';
 
-// Material 3 shape scale, shared across both themes.
+// Material 3 shape scale, reined in — gently rounded rather than fully round.
 const shape = {
-	widget: "16px", // the on-page "I am human" surface
-	card: "28px", // the challenge dialog container
-	header: "18px", // the tonal header "secondary container"
-	button: "100px", // full pill buttons
-	tile: "14px", // image grid cells
-	tileSelected: "16px", // image grid cells when selected
+	widget: "8px", // the on-page "I am human" surface
+	card: "12px", // the challenge dialog container
+	header: "8px", // the tonal header "secondary container"
+	button: "8px", // softly rounded action buttons (no longer full pills)
+	tile: "6px", // image grid cells
+	tileSelected: "8px", // image grid cells when selected
 };
 
 export type Theme = typeof lightTheme | typeof darkTheme;
@@ -102,11 +102,12 @@ export const lightTheme = {
 		purple,
 	},
 	shape,
+	// Flat by design — borders, not drop shadows, separate the surfaces.
 	elevation: {
-		widget: "0 1px 2px rgba(20,8,24,.06), 0 4px 12px rgba(20,8,24,.06)",
-		widgetHover: "0 2px 4px rgba(20,8,24,.10), 0 8px 22px rgba(20,8,24,.12)",
-		card: "0 4px 8px rgba(20,8,24,.08), 0 10px 28px rgba(20,8,24,.12)",
-		buttonPrimary: "0 1px 3px rgba(78,67,159,.5)",
+		widget: "none",
+		widgetHover: "none",
+		card: "none",
+		buttonPrimary: "none",
 	},
 	spacing: {
 		unit: DEFAULT_SPACING,
@@ -158,11 +159,12 @@ export const darkTheme = {
 		purple,
 	},
 	shape,
+	// Flat by design — borders, not drop shadows, separate the surfaces.
 	elevation: {
-		widget: "0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.45)",
-		widgetHover: "0 2px 6px rgba(0,0,0,.5), 0 10px 26px rgba(0,0,0,.55)",
-		card: "0 8px 24px rgba(0,0,0,.55), 0 18px 50px rgba(0,0,0,.6)",
-		buttonPrimary: "0 1px 3px rgba(0,0,0,.5)",
+		widget: "none",
+		widgetHover: "none",
+		card: "none",
+		buttonPrimary: "none",
 	},
 	spacing: {
 		unit: DEFAULT_SPACING,
