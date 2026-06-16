@@ -196,6 +196,19 @@ export class RedisRulesReader implements AccessRulesReader {
 					DIALECT: REDIS_QUERY_DIALECT,
 					LOAD: [...RULE_LOAD_FIELDS],
 					STEPS: [
+						// Drop candidates whose hash is missing `type` before
+						// any APPLY runs. SEVERITY_EXPR dereferences `@type`
+						// directly, and RediSearch throws
+						//   "Could not find the value for a parameter name,
+						//    consider using EXISTS if applicable for type"
+						// when the LOAD pulls an undefined @type, aborting
+						// the whole aggregate. The undefined @type can come
+						// from a partial-write race in the writer or a
+						// stale RediSearch index entry pointing at a hash
+						// whose `type` field has been removed; in both
+						// cases the doc is malformed and not a valid
+						// AccessRule, so dropping it is correct.
+						{ type: "FILTER", expression: "exists(@type)" },
 						{ type: "APPLY", expression: SPECIFICITY_EXPR, AS: "_spec" },
 						{ type: "APPLY", expression: SEVERITY_EXPR, AS: "_sev" },
 						{ type: "APPLY", expression: RANK_EXPR, AS: "_rank" },
@@ -235,11 +248,45 @@ export class RedisRulesReader implements AccessRulesReader {
 				},
 			}));
 
-			// FT.AGGREGATE results include the derived _spec/_sev/_rank
-			// fields and the loaded rule fields. parseRedisRecords runs
-			// through zod which ignores the derived fields. __key is
-			// also passed through but unused downstream.
-			return parseRedisRecords(reply.results, accessRuleInput, this.logger);
+			// FT.AGGREGATE LOAD reads NUMERIC fields from the index (an
+			// 8-byte double), not from the underlying hash, so any
+			// numericIp/numericIpMaskMin/numericIpMaskMax larger than
+			// Number.MAX_SAFE_INTEGER (e.g. every IPv6 rule) round-trips
+			// as scientific notation — `5.59112965392e+37` — and
+			// `z.coerce.bigint()` throws
+			//   "Cannot convert 5.59112965392e+37 to a BigInt"
+			// which aborts the whole aggregate via the catch below and
+			// returns no rules. The hash itself stores the full
+			// 38-digit string verbatim, so the aggregate is used purely
+			// as a ranker (it gives us the top-N keys, sorted by spec /
+			// severity); the real field values come back via HGETALL
+			// over those keys, identical to the greedy path. Same
+			// race-safety as the greedy path: HGETALL on a key that's
+			// been deleted between FT.AGGREGATE and HGETALL returns an
+			// empty hash, which is dropped by the non-empty filter.
+			const ruleKeys: string[] = [];
+			for (const result of reply.results) {
+				const key = (result as { __key?: unknown }).__key;
+				if (typeof key === "string") {
+					ruleKeys.push(key);
+				}
+			}
+
+			if (ruleKeys.length === 0) {
+				return [];
+			}
+
+			const { records } = await fetchRedisHashRecords(
+				this.client,
+				ruleKeys,
+				this.logger,
+			);
+
+			const nonEmptyRecords = records.filter(
+				(record) => Object.keys(record).length > 0,
+			);
+
+			return parseRedisRecords(nonEmptyRecords, accessRuleInput, this.logger);
 		} catch (e) {
 			this.logger.error(() => ({
 				err: e,
