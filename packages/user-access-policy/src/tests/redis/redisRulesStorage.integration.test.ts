@@ -1337,6 +1337,164 @@ describe("redisAccessRulesStorage", () => {
 			expect(foundAccessRules).toEqual([accessRule]);
 			expect(foundAccessRules[0]?.numericIp).toBe(ipv6NumericIp);
 		});
+
+		test("findRulesRanked preserves rank order over multiple candidates", async () => {
+			// Assumption under test: the FT.AGGREGATE -> HGETALL refactor
+			// preserves the rank order produced by SORTBY @_rank DESC.
+			// reply.results is rank-sorted; the for-of loop pushes
+			// __key in iteration order; multi.exec() returns pipeline
+			// results in queue order; the non-empty filter is stable;
+			// parseRedisRecords' flatMap is stable. Verified end-to-end
+			// here by inserting two rules whose specificity differs by
+			// exactly one extra populated field, and asserting the more
+			// specific rule comes back at index [0].
+			const clientId = getUniqueString();
+			const userId = getUniqueString();
+			const ja4 = `t13d1313h2_${getUniqueString()}`;
+
+			// 4 populated scalar fields ⇒ _spec = 4
+			const moreSpecificRule: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				clientId: clientId,
+				userId: userId,
+				ja4Hash: ja4,
+				countryCode: "GB",
+			};
+			// 2 populated scalar fields ⇒ _spec = 2
+			const lessSpecificRule: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				clientId: clientId,
+				ja4Hash: ja4,
+			};
+
+			// Insert deliberately in the LEAST-specific-first order so
+			// that any accidental "preserve insertion order" code path
+			// (e.g. forgetting SORTBY entirely) would produce
+			// [lessSpecific, moreSpecific] and the assertion would
+			// catch it.
+			await insertRules([lessSpecificRule, moreSpecificRule]);
+
+			const foundAccessRules = await accessRulesReader.findRules(
+				{
+					policyScope: { clientId: clientId },
+					policyScopeMatch: FilterScopeMatch.Exact,
+					userScope: {
+						userId: userId,
+						ja4Hash: ja4,
+						countryCode: "GB",
+					},
+					userScopeMatch: FilterScopeMatch.Greedy,
+				},
+				true,
+			);
+
+			expect(foundAccessRules).toHaveLength(2);
+			expect(foundAccessRules[0]).toEqual(moreSpecificRule);
+			expect(foundAccessRules[1]).toEqual(lessSpecificRule);
+		});
+
+		test("findRulesRanked ranks Block over Restrict at equal specificity", async () => {
+			// Assumption under test: SEVERITY_EXPR contributes its
+			// weight correctly through the HGETALL retrieval — Block
+			// rules tied on specificity with Restrict rules still come
+			// back first. RANK_EXPR = (_spec * 2) + _sev so at equal
+			// spec the Block (_sev = 1) outranks the Restrict (_sev = 0)
+			// by 1 point.
+			const clientId = getUniqueString();
+			const userId = getUniqueString();
+
+			const blockRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: clientId,
+				userId: userId,
+			};
+			const restrictRule: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				clientId: clientId,
+				userId: userId,
+				description: "tiebreaker-restrict",
+			};
+
+			// Insert restrict first; if SEVERITY tiebreaker is dropped
+			// silently the result would lead with the restrict.
+			await insertRules([restrictRule, blockRule]);
+
+			const foundAccessRules = await accessRulesReader.findRules(
+				{
+					policyScope: { clientId: clientId },
+					policyScopeMatch: FilterScopeMatch.Exact,
+					userScope: { userId: userId },
+					userScopeMatch: FilterScopeMatch.Greedy,
+				},
+				true,
+			);
+
+			expect(foundAccessRules).toHaveLength(2);
+			expect(foundAccessRules[0]?.type).toBe(AccessPolicyType.Block);
+			expect(foundAccessRules[1]?.type).toBe(AccessPolicyType.Restrict);
+		});
+
+		test("findRulesRanked: keys DEL'd between aggregate and HGETALL drop out without reordering survivors", async () => {
+			// Assumption under test: the race window between
+			// FT.AGGREGATE and the HGETALL fanout is handled by the
+			// non-empty filter, AND the surviving entries keep their
+			// relative rank order (Array.filter is stable). Mirrors the
+			// existing greedy-path "returns remaining rules when a
+			// matched document's hash key has been deleted" test but
+			// asserts the matchingFieldsOnly=true (ranked) path.
+			const clientId = getUniqueString();
+			const userId = getUniqueString();
+
+			// 3 specificity levels: the middle one will be DEL'd
+			// mid-pipeline. The other two must still come back in the
+			// correct rank order.
+			const topRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: clientId,
+				userId: userId,
+				ja4Hash: "t13d_top",
+				countryCode: "GB",
+			};
+			const middleRule: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				clientId: clientId,
+				userId: userId,
+				ja4Hash: "t13d_mid",
+			};
+			const bottomRule: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				clientId: clientId,
+				userId: userId,
+			};
+
+			await insertRules([topRule, middleRule, bottomRule]);
+
+			// Drop the middle rule's hash directly. The RediSearch
+			// index still references it for a window; FT.AGGREGATE
+			// returns 3 keys, HGETALL returns one empty + two
+			// populated. The filter must drop the empty one and the
+			// remaining two must stay in the {top, bottom} order.
+			const middleKey = getAccessRuleRedisKey(middleRule);
+			await redisClient.del(middleKey);
+
+			const foundAccessRules = await accessRulesReader.findRules(
+				{
+					policyScope: { clientId: clientId },
+					policyScopeMatch: FilterScopeMatch.Exact,
+					userScope: {
+						userId: userId,
+						ja4Hash: "t13d_top",
+						countryCode: "GB",
+					},
+					userScopeMatch: FilterScopeMatch.Greedy,
+				},
+				true,
+			);
+
+			expect(foundAccessRules).toHaveLength(2);
+			expect(foundAccessRules[0]).toEqual(topRule);
+			expect(foundAccessRules[1]).toEqual(bottomRule);
+		});
 	});
 
 	afterAll(async () => {
