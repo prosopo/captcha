@@ -196,6 +196,19 @@ export class RedisRulesReader implements AccessRulesReader {
 					DIALECT: REDIS_QUERY_DIALECT,
 					LOAD: [...RULE_LOAD_FIELDS],
 					STEPS: [
+						// Drop candidates whose hash is missing `type` before
+						// any APPLY runs. SEVERITY_EXPR dereferences `@type`
+						// directly, and RediSearch throws
+						//   "Could not find the value for a parameter name,
+						//    consider using EXISTS if applicable for type"
+						// when the LOAD pulls an undefined @type, aborting
+						// the whole aggregate. The undefined @type can come
+						// from a partial-write race in the writer or a
+						// stale RediSearch index entry pointing at a hash
+						// whose `type` field has been removed; in both
+						// cases the doc is malformed and not a valid
+						// AccessRule, so dropping it is correct.
+						{ type: "FILTER", expression: "exists(@type)" },
 						{ type: "APPLY", expression: SPECIFICITY_EXPR, AS: "_spec" },
 						{ type: "APPLY", expression: SEVERITY_EXPR, AS: "_sev" },
 						{ type: "APPLY", expression: RANK_EXPR, AS: "_rank" },

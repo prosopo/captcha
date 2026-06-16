@@ -1200,6 +1200,96 @@ describe("redisAccessRulesStorage", () => {
 			// then
 			expect(foundAccessRules).toEqual([accessRule]);
 		});
+
+		test("findRulesRanked does not throw when a matched candidate is missing @type", async () => {
+			// Production repro: under 3.6.40 we observed
+			//   "Could not find the value for a parameter name, consider
+			//    using EXISTS if applicable for type"
+			// from the FT.AGGREGATE pipeline in findRulesRanked. The cause
+			// is SEVERITY_EXPR = `(@type == "block")` — a bare @type
+			// reference that fails when a candidate document lacks the
+			// `type` field. Candidates can reach the pipeline without
+			// `type` two ways: (a) a partial-write / rehash race in the
+			// writer, (b) a stale RediSearch index entry pointing at a
+			// hash whose `type` field has been HDEL'd. Either way the
+			// whole aggregate fails and the catch in findRulesRanked
+			// returns [], i.e. NO rules match — a Block rule that should
+			// fire silently lets the request through.
+			const clientId = getUniqueString();
+			const userId = getUniqueString();
+
+			const accessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: clientId,
+				userId: userId,
+			};
+
+			await insertRules([accessRule]);
+
+			// Simulate the malformed-doc scenario by removing the `type`
+			// field from the hash. The RediSearch index still references
+			// the doc (type is not part of the index schema) but the
+			// APPLY LOAD will pull an undefined @type.
+			const ruleKey = getAccessRuleRedisKey(accessRule);
+			await redisClient.hDel(ruleKey, "type");
+
+			// when - matchingFieldsOnly=true routes through findRulesRanked
+			const foundAccessRules = await accessRulesReader.findRules(
+				{
+					policyScope: { clientId: clientId },
+					policyScopeMatch: FilterScopeMatch.Exact,
+					userScope: { userId: userId },
+					userScopeMatch: FilterScopeMatch.Exact,
+				},
+				true,
+			);
+
+			// then - the typeless doc must not crash the pipeline.
+			// `type` is required to reconstruct an AccessRule, so the
+			// doc is dropped from the result rather than returned with
+			// a default. The remaining valid rules (none here) come back.
+			expect(foundAccessRules).toEqual([]);
+		});
+
+		test("findRulesRanked returns the valid rule and skips a typeless ghost candidate", async () => {
+			// Same scenario as the previous test but with a co-resident
+			// valid rule. The typeless ghost must not poison the
+			// pipeline — the valid rule still has to come back so the
+			// block decision sticks.
+			const clientId = getUniqueString();
+			const userId = getUniqueString();
+
+			const validRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: clientId,
+				userId: userId,
+				ja4Hash: "t13d1313h2_valid",
+			};
+			const ghostRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: clientId,
+				userId: userId,
+				ja4Hash: "t13d1313h2_ghost",
+			};
+
+			await insertRules([validRule, ghostRule]);
+
+			// Strip `type` from the ghost only.
+			const ghostKey = getAccessRuleRedisKey(ghostRule);
+			await redisClient.hDel(ghostKey, "type");
+
+			const foundAccessRules = await accessRulesReader.findRules(
+				{
+					policyScope: { clientId: clientId },
+					policyScopeMatch: FilterScopeMatch.Exact,
+					userScope: { userId: userId },
+					userScopeMatch: FilterScopeMatch.Greedy,
+				},
+				true,
+			);
+
+			expect(foundAccessRules).toEqual([validRule]);
+		});
 	});
 
 	afterAll(async () => {
