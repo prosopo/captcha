@@ -37,6 +37,25 @@ type EvaluateOptions = {
 	suppressVpnDatacenterInteraction: boolean;
 };
 
+// Datacenter names come from the upstream `datacenter.datacenter` field, which
+// is human-curated and may drift in casing/whitespace across records (e.g.
+// "iCloud Private Relay" vs "icloud private relay"). Compare trimmed and
+// lowercased so an operator can paste the value verbatim from one record and
+// still match the others.
+const isDatacenterNameAllowlisted = (
+	datacenterName: string | undefined,
+	allowlist: ReadonlyArray<string> | undefined,
+): boolean => {
+	if (!datacenterName || !allowlist || allowlist.length === 0) {
+		return false;
+	}
+	const needle = datacenterName.trim().toLowerCase();
+	if (!needle) {
+		return false;
+	}
+	return allowlist.some((entry) => entry.trim().toLowerCase() === needle);
+};
+
 const evaluateIpInfo = (
 	ipInfo: IPInfoResponse | undefined,
 	trafficFilter: Partial<ITrafficFilter>,
@@ -78,6 +97,10 @@ const evaluateIpInfo = (
 			options.suppressVpnDatacenterInteraction &&
 			ipInfo.isVPN &&
 			!trafficFilter.blockVpn
+		) &&
+		!isDatacenterNameAllowlisted(
+			ipInfo.datacenterName,
+			trafficFilter.datacenterNameAllowlist,
 		)
 	) {
 		return { isBlocked: true, reason: ResultReason.DATACENTER_BLOCKED };
@@ -114,6 +137,12 @@ const evaluateIpInfo = (
  * scraping/automation traffic, not VPN end-users. So the datacenter
  * rule is suppressed for IPs also flagged as VPN unless the operator
  * has opted in to blocking VPN traffic explicitly.
+ *
+ * The datacenter rule also honours `datacenterNameAllowlist`: consumer
+ * relays such as Apple's iCloud Private Relay route through datacenter
+ * ranges and are reported as `is_datacenter=true` by upstream, but the
+ * exiting users are real humans. Operators can list the upstream
+ * `datacenter.datacenter` names they want to allow through.
  */
 export const checkTrafficFilter = (
 	ipInfo: IPInfoResponse | undefined,
