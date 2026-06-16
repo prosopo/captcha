@@ -84,6 +84,10 @@ export default async function (
 		"process.env.PROSOPO_LOG_LEVEL": JSON.stringify(
 			process.env.PROSOPO_LOG_LEVEL,
 		),
+		// number of web workers used to solve PoW captchas in parallel
+		"process.env.PROSOPO_POW_WORKERS": JSON.stringify(
+			process.env.PROSOPO_POW_WORKERS,
+		),
 		// only needed if bundling with a site key
 		"process.env.PROSOPO_SITE_KEY": JSON.stringify(
 			process.env.PROSOPO_SITE_KEY,

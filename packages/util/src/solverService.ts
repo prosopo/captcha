@@ -13,8 +13,29 @@
 // limitations under the License.
 import { sha256 } from "@noble/hashes/sha256";
 
-export const solvePoW = (data: string, difficulty: number): number => {
-	let nonce = 0;
+export const solvePoW = (data: string, difficulty: number): number =>
+	solvePoWOffset(data, difficulty, 0, 1);
+
+/**
+ * Solve a PoW challenge while only trying a subset of the nonce space.
+ *
+ * Starting from `start`, only nonces `start, start + step, start + 2*step, ...`
+ * are tried. This allows the work to be divided across multiple solvers (e.g.
+ * web workers): with `step` workers, worker `i` uses `start = i` so that every
+ * nonce is covered exactly once across the pool with no overlap.
+ *
+ * @param data - the challenge data appended to the nonce before hashing
+ * @param difficulty - the number of leading hex zeros the hash must have
+ * @param start - the first nonce to try (the worker's offset)
+ * @param step - the gap between consecutive nonces tried (the worker count)
+ */
+export const solvePoWOffset = (
+	data: string,
+	difficulty: number,
+	start: number,
+	step: number,
+): number => {
+	let nonce = start;
 	const prefix = "0".repeat(difficulty);
 
 	while (true) {
@@ -25,7 +46,7 @@ export const solvePoW = (data: string, difficulty: number): number => {
 			return nonce;
 		}
 
-		nonce += 1;
+		nonce += step;
 	}
 };
 
