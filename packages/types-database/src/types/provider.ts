@@ -170,6 +170,12 @@ export const CaptchaRecordSchema = new Schema<Captcha>({
 	solved: { type: Boolean, required: true },
 	target: { type: String, required: true },
 	salt: { type: String, required: true },
+	// Random pivot in [0,1) stamped at insert time and never updated.
+	// Powers `ProviderDatabase.getRandomCaptcha`, which walks at most
+	// `sampleSize` keys of the compound index below instead of
+	// materialising the full matched set via `$sample`. Pre-existing
+	// rows are filled by providerBackfillCaptchaRandomKey.yml.
+	randomKey: { type: Number, required: false },
 	items: {
 		type: [
 			new Schema<Item>(
@@ -190,6 +196,10 @@ CaptchaRecordSchema.index({ captchaId: 1 });
 CaptchaRecordSchema.index({ datasetId: 1 });
 // Set an index on the datasetId and solved fields, ascending
 CaptchaRecordSchema.index({ datasetId: 1, solved: 1 });
+// Indexed random sampling — range scan on `randomKey` for a given
+// (datasetId, solved) returns N random captchas in O(log n + N) instead
+// of materialising the full matched set.
+CaptchaRecordSchema.index({ datasetId: 1, solved: 1, randomKey: 1 });
 
 export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	challenge: { type: String, required: true },
