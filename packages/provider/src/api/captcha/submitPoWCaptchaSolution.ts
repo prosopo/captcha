@@ -74,6 +74,7 @@ export default (env: ProviderEnvironment) =>
 			salt,
 			simdReadings,
 			clientMetaData,
+			fingerprintProof,
 		} = parsed;
 
 		validateSiteKey(dapp);
@@ -123,6 +124,7 @@ export default (env: ProviderEnvironment) =>
 					headers: flatHeaders,
 					userAgent,
 					...(req.ja4 && { ja4: req.ja4 }),
+					...(fingerprintProof && { fingerprintProof }),
 				},
 			});
 

@@ -16,6 +16,10 @@ import { stringToHex } from "@polkadot/util/string";
 import { ProviderApi } from "@prosopo/api";
 import { ProsopoEnvError } from "@prosopo/common";
 import {
+	encodeFingerprintProof,
+	getFingerprintProof,
+} from "@prosopo/fingerprint";
+import {
 	ExtensionLoader,
 	buildUpdateState,
 	getProcaptchaRandomActiveProvider,
@@ -318,6 +322,16 @@ export const Manager = (
 						: undefined;
 					const hpValue = getHoneypotValue?.();
 					const clientMetaData = hpValue ? { hp: hpValue } : undefined;
+					// Best-effort proof of fingerprint; submission proceeds without it
+					// if a proof can't be produced (e.g. fingerprint unavailable).
+					let fingerprintProof: string | undefined;
+					try {
+						fingerprintProof = encodeFingerprintProof(
+							await getFingerprintProof(),
+						);
+					} catch {
+						fingerprintProof = undefined;
+					}
 					const verifiedSolution = await providerApi.submitPowCaptchaSolution(
 						challenge,
 						getAccount().account.account.address,
@@ -328,6 +342,7 @@ export const Manager = (
 						salt,
 						simdReadings,
 						clientMetaData,
+						fingerprintProof,
 					);
 					const escalation = verifiedSolution[ApiParams.escalation];
 					if (

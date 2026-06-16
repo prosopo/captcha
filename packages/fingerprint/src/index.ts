@@ -12,6 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { UnknownComponents } from "@prosopo/fingerprintjs";
+import {
+	buildFingerprintProofFromComponents,
+	type FingerprintProof,
+} from "./proof.js";
+
 // webGlExtensions walks every supported WebGL extension + shader-precision
 // combination, costing 1.5-2s on real GPUs. Dropped from the visitorId hash;
 // webGlBasics still covers vendor/UNMASKED_RENDERER.
@@ -19,12 +25,14 @@ const EXCLUDED_SOURCES = ["webGlExtensions"] as const;
 
 const FingerprintJSImport = async () => import("@prosopo/fingerprintjs");
 
-let fingerprintCache: Promise<string> | null = null;
+// Cache the resolved components (the expensive part) rather than just the hash,
+// so the visitorId and the proof are derived from one identical run.
+let componentsCache: Promise<UnknownComponents> | null = null;
 
-export const getFingerprint = async (): Promise<string> => {
-	if (!fingerprintCache) {
-		fingerprintCache = (async () => {
-			const { sources, loadSources, hashComponents, prepareForSources } =
+const loadComponents = (): Promise<UnknownComponents> => {
+	if (!componentsCache) {
+		const pending = (async () => {
+			const { sources, loadSources, prepareForSources } =
 				await FingerprintJSImport();
 			await prepareForSources();
 			// Structural supertype of every per-source Options shape — fpjs's
@@ -33,20 +41,58 @@ export const getFingerprint = async (): Promise<string> => {
 				{
 					cache: {},
 				};
-			const getComponents = loadSources(
-				sources,
-				sourceOptions,
-				EXCLUDED_SOURCES,
-			);
-			const components = await getComponents();
-			return hashComponents(components);
+			const getComponents = loadSources(sources, sourceOptions, EXCLUDED_SOURCES);
+			return getComponents();
 		})();
+		componentsCache = pending;
+		// Don't cache a rejected run — let the next caller retry.
+		pending.catch(() => {
+			if (componentsCache === pending) {
+				componentsCache = null;
+			}
+		});
 	}
-	return fingerprintCache;
+	return componentsCache;
+};
+
+export const getFingerprint = async (): Promise<string> => {
+	const [{ hashComponents }, components] = await Promise.all([
+		FingerprintJSImport(),
+		loadComponents(),
+	]);
+	return hashComponents(components);
+};
+
+/**
+ * Produce a proof of fingerprint: a Merkle commitment to the full component set
+ * plus a selective disclosure of the requested components (all of them by
+ * default). Derived from the same component run as {@link getFingerprint}.
+ */
+export const getFingerprintProof = async (
+	discloseKeys?: string[],
+): Promise<FingerprintProof> => {
+	const components = await loadComponents();
+	return buildFingerprintProofFromComponents(components, discloseKeys);
 };
 
 export const prefetchFingerprint = (): void => {
-	getFingerprint().catch(() => {
-		fingerprintCache = null;
+	loadComponents().catch(() => {
+		/* swallow — loadComponents already clears its own failed cache */
 	});
 };
+
+export type { FingerprintLeafDisclosure, FingerprintProof } from "./proof.js";
+export {
+	FINGERPRINT_PROOF_VERSION,
+	buildFingerprintProofFromComponents,
+	encodeFingerprintProof,
+	leafHashForContent,
+	verifyFingerprintProofStructure,
+} from "./proof.js";
+export {
+	buildMerkleLayers,
+	hashMerklePair,
+	merkleProofFromLayers,
+	merkleRootFromLayers,
+	verifyMerkleProof,
+} from "./merkle.js";
