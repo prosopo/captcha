@@ -14,17 +14,18 @@
 
 import { ProsopoApiError } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import { INPUT_LIMITS, boundedString } from "@prosopo/types";
 import { extractDomainFromEmail } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
-import { object, string } from "zod";
+import { object } from "zod";
 import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
 import { checkSpamEmail as checkSpamEmailFn } from "../../tasks/spam/checkSpamEmail.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 
 const CheckSpamEmailRequestBody = object({
-	email: string(),
-	dapp: string(),
+	email: boundedString(INPUT_LIMITS.EMAIL),
+	dapp: boundedString(INPUT_LIMITS.ID),
 });
 
 export default (env: ProviderEnvironment) =>

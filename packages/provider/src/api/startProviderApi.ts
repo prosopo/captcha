@@ -212,7 +212,11 @@ export async function startProviderApi(
 	// for the honeypot transport. Same effect as the
 	// Access-Control-Expose-Headers response header.
 	apiApp.use(cors({ exposedHeaders: ["x-prosopo-meta"] }));
-	apiApp.use(express.json({ limit: "50mb" }));
+	// Coarse request body-size backstop. Generous enough for legitimate
+	// payloads (captcha solutions, behavioural/simd readings, DNS event
+	// batches) but bounds oversized-payload abuse before parsing; the
+	// per-field caps in @prosopo/types (`INPUT_LIMITS`) are the finer control.
+	apiApp.use(express.json({ limit: "1mb" }));
 
 	// Put this first so that no middleware runs on it
 	apiApp.use(publicRouter(env));
