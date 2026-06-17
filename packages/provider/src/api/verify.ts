@@ -171,6 +171,12 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				res.json(verificationResponse);
 			} catch (err) {
 				req.logger.error(() => ({ err, data: { body: req.body } }));
+				// Preserve the status code of errors that already carry one
+				// (e.g. a 401 INVALID_SIGNATURE or a 400 validation error);
+				// only wrap genuinely-unexpected errors as a 500.
+				if (err instanceof ProsopoApiError) {
+					return next(err);
+				}
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: { code: 500, siteKey: req.body.dapp, user: req.body.user },
@@ -304,6 +310,12 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					err,
 					data: { body: req.body },
 				}));
+				// Preserve the status code of errors that already carry one
+				// (e.g. a 401 INVALID_SIGNATURE or a 400 validation error);
+				// only wrap genuinely-unexpected errors as a 500.
+				if (err instanceof ProsopoApiError) {
+					return next(err);
+				}
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: { code: 500, error: err },
@@ -435,6 +447,12 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					err,
 					data: { body: req.body },
 				}));
+				// Preserve the status code of errors that already carry one
+				// (e.g. a 401 INVALID_SIGNATURE or a 400 validation error);
+				// only wrap genuinely-unexpected errors as a 500.
+				if (err instanceof ProsopoApiError) {
+					return next(err);
+				}
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: { code: 500, error: err },
