@@ -65,6 +65,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 		}
 	}, [i18n, config.language]);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: manager is recreated each render; only autoStart triggers this
 	useEffect(() => {
 		if (props.autoStart) {
 			setLoading(true);
