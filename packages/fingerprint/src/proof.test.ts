@@ -25,7 +25,10 @@ const sampleComponents = (): UnknownComponents => ({
 	cookiesEnabled: { value: true, duration: 1 },
 	hardwareConcurrency: { value: 8, duration: 1 },
 	timezone: { value: "UTC+1", duration: 2 },
-	canvas: { value: { winding: true, geometry: "abc", text: "def" }, duration: 3 },
+	canvas: {
+		value: { winding: true, geometry: "abc", text: "def" },
+		duration: 3,
+	},
 	languages: { value: [["en-GB"], ["en"]], duration: 1 },
 	broken: { error: new Error("source failed"), duration: 0 },
 });
@@ -79,7 +82,9 @@ describe("fingerprint proof", () => {
 	});
 
 	it("rejects a proof whose disclosed value was tampered with", () => {
-		const proof = clone(buildFingerprintProofFromComponents(sampleComponents()));
+		const proof = clone(
+			buildFingerprintProofFromComponents(sampleComponents()),
+		);
 		const target = proof.disclosures.find((d) => d.key === "colorDepth");
 		if (target === undefined) {
 			throw new Error("expected colorDepth disclosure");
@@ -89,13 +94,17 @@ describe("fingerprint proof", () => {
 	});
 
 	it("rejects a proof whose root was tampered with", () => {
-		const proof = clone(buildFingerprintProofFromComponents(sampleComponents()));
+		const proof = clone(
+			buildFingerprintProofFromComponents(sampleComponents()),
+		);
 		proof.root = `0x${"0".repeat(64)}`;
 		expect(verifyFingerprintProofStructure(proof)).toBe(false);
 	});
 
 	it("rejects a disclosure carrying a non-sibling leaf's proof", () => {
-		const proof = clone(buildFingerprintProofFromComponents(sampleComponents()));
+		const proof = clone(
+			buildFingerprintProofFromComponents(sampleComponents()),
+		);
 		// `broken` and `timezone` are the first and last leaves in sorted order, so
 		// they are not Merkle siblings — `broken`'s leaf does not appear anywhere in
 		// `timezone`'s proof, so lending it that proof must fail verification.
