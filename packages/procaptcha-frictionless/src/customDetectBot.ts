@@ -18,7 +18,7 @@ import {
 	getRandomActiveProvider,
 	prefetchProviders,
 } from "@prosopo/load-balancer";
-import { ExtensionLoader } from "@prosopo/procaptcha-common";
+import { ExtensionLoader, pickIpMode } from "@prosopo/procaptcha-common";
 import { EnvironmentTypesSchema } from "@prosopo/types";
 import type {
 	BotDetectionFunction,
@@ -68,16 +68,22 @@ const customDetectBot: BotDetectionFunction = async (
 	container: HTMLElement | undefined,
 	restartFn: () => void,
 ): Promise<BotDetectionFunctionResult> => {
+	const ipMode = pickIpMode(config);
 	const [ExtClass, detect] = await Promise.all([
 		ExtensionLoader(config.web2),
 		DetectorLoader(),
-		prefetchProviders(config.defaultEnvironment),
+		prefetchProviders(config.defaultEnvironment, ipMode),
 	]);
 	const ext = new ExtClass();
 
+	// Bind ipMode into the provider getter so the detector — whose callback
+	// signature is fixed — still respects the dapp's ipv4/ipv6 preference.
+	const getProvider: typeof getRandomActiveProvider = (env, entropy) =>
+		getRandomActiveProvider(env, entropy, ipMode);
+
 	const detectionResult = await detect(
 		config.defaultEnvironment,
-		getRandomActiveProvider,
+		getProvider,
 		container,
 		restartFn,
 		() => ext.getAccount(config),

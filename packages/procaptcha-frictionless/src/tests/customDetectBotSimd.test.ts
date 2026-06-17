@@ -44,6 +44,11 @@ vi.mock("@prosopo/procaptcha-common", () => ({
 			}
 		};
 	}),
+	pickIpMode: (flags: { ipv4?: boolean; ipv6?: boolean } | undefined) => {
+		if (flags?.ipv4) return "ipv4";
+		if (flags?.ipv6) return "ipv6";
+		return undefined;
+	},
 }));
 
 vi.mock("../detectorLoader.js", () => ({

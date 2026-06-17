@@ -149,11 +149,11 @@ export async function startProviderApi(
 	// with ETag/Last-Modified support. This avoids cold-start fetches after
 	// process restarts and provides a disk fallback if the remote is down.
 	const providerCacheDir = path.resolve("./provider-list-cache");
-	setProviderLoader(async (environment) => {
+	setProviderLoader(async (environment, ipMode) => {
 		if (environment === "development") {
 			// Development uses hardcoded providers, no caching needed
 			const { loadBalancer } = await import("@prosopo/load-balancer");
-			return loadBalancer(environment);
+			return loadBalancer(environment, ipMode);
 		}
 		const url = getLoadBalancerUrl(environment);
 		const filePath = await cacheFile(
@@ -168,7 +168,7 @@ export async function startProviderApi(
 			string,
 			unknown
 		>;
-		return convertHostedProvider(providers);
+		return convertHostedProvider(providers, ipMode);
 	});
 
 	const apiApp = express();

@@ -59,7 +59,13 @@ describe("providers", () => {
 			const result = await getProcaptchaRandomActiveProvider("development");
 
 			expect(mockGetRandomValues).toHaveBeenCalledWith(expect.any(Uint8Array));
-			expect(getRandomActiveProvider).toHaveBeenCalledWith("development", 550); // sum of mockRandomValues
+			// sum of mockRandomValues = 550; third arg is the optional ipMode
+			// selector, undefined by default.
+			expect(getRandomActiveProvider).toHaveBeenCalledWith(
+				"development",
+				550,
+				undefined,
+			);
 			expect(result).toEqual({ providerUrl: "https://test-provider.com" });
 		});
 

@@ -13,17 +13,21 @@
 // limitations under the License.
 
 import type { EnvironmentTypes, RandomProvider } from "@prosopo/types";
-import { type HardcodedProvider, loadBalancer } from "./index.js";
+import { type HardcodedProvider, type IpMode, loadBalancer } from "./index.js";
 
-// Keyed by env so a prefetch and a later call with a different env don't share.
-const providerPromiseCache: Map<
-	EnvironmentTypes,
-	Promise<HardcodedProvider[]>
-> = new Map();
+// Keyed by env + ipMode so a prefetch and a later call with a different env
+// (or a different ip mode) don't share cache entries.
+type CacheKey = `${EnvironmentTypes}|${IpMode | "dual"}`;
+
+const cacheKey = (env: EnvironmentTypes, ipMode?: IpMode): CacheKey =>
+	`${env}|${ipMode ?? "dual"}`;
+
+const providerPromiseCache: Map<CacheKey, Promise<HardcodedProvider[]>> =
+	new Map();
 
 /** Optional custom loader for server-side caching (e.g. cacheFile with ETag). */
 let customProviderLoader:
-	| ((env: EnvironmentTypes) => Promise<HardcodedProvider[]>)
+	| ((env: EnvironmentTypes, ipMode?: IpMode) => Promise<HardcodedProvider[]>)
 	| null = null;
 
 /**
@@ -32,7 +36,10 @@ let customProviderLoader:
  * ETag/Last-Modified support for disk persistence across restarts.
  */
 export function setProviderLoader(
-	loader: (env: EnvironmentTypes) => Promise<HardcodedProvider[]>,
+	loader: (
+		env: EnvironmentTypes,
+		ipMode?: IpMode,
+	) => Promise<HardcodedProvider[]>,
 ): void {
 	customProviderLoader = loader;
 }
@@ -82,25 +89,28 @@ export function selectWeightedProvider(
 /** Load providers using the custom loader if set, otherwise the default fetch. */
 const loadProviders = async (
 	env: EnvironmentTypes,
+	ipMode?: IpMode,
 ): Promise<HardcodedProvider[]> => {
 	if (customProviderLoader) {
-		return customProviderLoader(env);
+		return customProviderLoader(env, ipMode);
 	}
-	return loadBalancer(env);
+	return loadBalancer(env, ipMode);
 };
 
 // Caches the in-flight Promise (not the resolved array) so concurrent callers
 // share a single network request rather than racing.
 const getProvidersPromise = (
 	env: EnvironmentTypes,
+	ipMode?: IpMode,
 ): Promise<HardcodedProvider[]> => {
-	const existing = providerPromiseCache.get(env);
+	const key = cacheKey(env, ipMode);
+	const existing = providerPromiseCache.get(key);
 	if (existing) return existing;
-	const promise = loadProviders(env).catch((err) => {
-		providerPromiseCache.delete(env);
+	const promise = loadProviders(env, ipMode).catch((err) => {
+		providerPromiseCache.delete(key);
 		throw err;
 	});
-	providerPromiseCache.set(env, promise);
+	providerPromiseCache.set(key, promise);
 	return promise;
 };
 
@@ -110,15 +120,17 @@ const getProvidersPromise = (
  */
 export const prefetchProviders = async (
 	env: EnvironmentTypes,
+	ipMode?: IpMode,
 ): Promise<void> => {
-	await getProvidersPromise(env);
+	await getProvidersPromise(env, ipMode);
 };
 
 export const getRandomActiveProvider = async (
 	env: EnvironmentTypes,
 	entropy: number,
+	ipMode?: IpMode,
 ): Promise<RandomProvider> => {
-	const providers = await getProvidersPromise(env);
+	const providers = await getProvidersPromise(env, ipMode);
 	const randomProviderObj = selectWeightedProvider(providers, entropy);
 
 	return {

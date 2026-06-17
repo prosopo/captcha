@@ -283,6 +283,10 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 		captchas: CaptchaTimeoutSchema.optional().default(defaultCaptchaTimeouts),
 		language: LanguageSchema.optional(),
 		mode: Mode.optional().default(ModeEnum.visible),
+		// Restrict provider DNS resolution. When both are unset (or both true)
+		// providers are dual-stack. ipv4 wins if both true.
+		ipv4: boolean().optional(),
+		ipv6: boolean().optional(),
 	}),
 );
 
