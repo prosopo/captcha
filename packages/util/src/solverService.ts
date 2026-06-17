@@ -33,31 +33,102 @@ export const targetForDifficulty = (difficulty: number): bigint => {
 	return 1n << BigInt(HASH_BITS - bits);
 };
 
-const hashToBigInt = (hash: Uint8Array): bigint => {
-	let value = 0n;
-	for (const byte of hash) {
-		value = (value << 8n) | BigInt(byte);
+// `targetForDifficulty` is always a power of two (`1n << (256 - bits)`), so the
+// comparison `hash < target` is equivalent to "the leading `bits` bits of the
+// hash are all zero". That lets the hot loop test the raw bytes directly
+// instead of allocating a 256-bit bigint per candidate hash.
+interface DifficultyMask {
+	// number of leading bytes that must be entirely zero
+	zeroBytes: number;
+	// exclusive upper bound for the byte after the zero run (1 when no partial
+	// byte is required, i.e. the difficulty is a whole number of bytes)
+	partialBound: number;
+	// when true every hash satisfies the difficulty (bits <= 0)
+	always: boolean;
+	// when true only the all-zero hash satisfies the difficulty (bits >= 256)
+	requireZeroHash: boolean;
+}
+
+const difficultyMask = (difficulty: number): DifficultyMask => {
+	const bits = bitsRequired(difficulty);
+	if (bits <= 0)
+		return {
+			zeroBytes: 0,
+			partialBound: 1,
+			always: true,
+			requireZeroHash: false,
+		};
+	if (bits >= HASH_BITS)
+		return {
+			zeroBytes: 32,
+			partialBound: 1,
+			always: false,
+			requireZeroHash: true,
+		};
+	const zeroBytes = bits >> 3;
+	const remBits = bits & 7;
+	return {
+		zeroBytes,
+		// remaining bits must be zero in the next byte: byte < 2^(8 - remBits)
+		partialBound: remBits === 0 ? 1 : 1 << (8 - remBits),
+		always: false,
+		requireZeroHash: false,
+	};
+};
+
+const hashMeetsMask = (hash: Uint8Array, mask: DifficultyMask): boolean => {
+	if (mask.always) return true;
+	for (let i = 0; i < mask.zeroBytes; i++) {
+		if (hash[i] !== 0) return false;
 	}
-	return value;
+	if (mask.requireZeroHash) return true;
+	if (mask.partialBound > 1) {
+		// non-null: zeroBytes < 32 whenever a partial byte is required
+		return (hash[mask.zeroBytes] as number) < mask.partialBound;
+	}
+	return true;
 };
 
 export const hashMeetsDifficulty = (
 	hash: Uint8Array,
 	difficulty: number,
-): boolean => hashToBigInt(hash) < targetForDifficulty(difficulty);
+): boolean => hashMeetsMask(hash, difficultyMask(difficulty));
 
 export const solvePoW = async (
 	data: string,
 	difficulty: number,
 ): Promise<number> => {
-	const target = targetForDifficulty(difficulty);
+	const mask = difficultyMask(difficulty);
+
+	// Encode the constant suffix once and reuse a single message buffer, only
+	// rewriting the nonce's decimal digits each iteration. The digit count only
+	// grows at powers of ten, where the buffer is reallocated.
+	const encoder = new TextEncoder();
+	const dataBytes = encoder.encode(data);
+
 	let nonce = 0;
+	let digits = 1;
+	let message = new Uint8Array(digits + dataBytes.length);
+	message.set(dataBytes, digits);
+	let rollover = 10;
 
 	while (true) {
-		const message = new TextEncoder().encode(nonce + data);
-		const hash = sha256(message);
+		if (nonce === rollover) {
+			// the decimal representation gained a digit; grow the buffer
+			digits += 1;
+			rollover *= 10;
+			message = new Uint8Array(digits + dataBytes.length);
+			message.set(dataBytes, digits);
+		}
 
-		if (hashToBigInt(hash) < target) {
+		// write the nonce's decimal digits into the leading `digits` bytes
+		let n = nonce;
+		for (let i = digits - 1; i >= 0; i--) {
+			message[i] = 48 + (n % 10); // 48 === '0'.charCodeAt(0)
+			n = Math.floor(n / 10);
+		}
+
+		if (hashMeetsMask(sha256(message), mask)) {
 			return nonce;
 		}
 

@@ -101,4 +101,46 @@ describe("solvePoW", () => {
 		const hash = sha256(new TextEncoder().encode(nonce + challenge));
 		expect(hashMeetsDifficulty(hash, difficulty)).toBe(true);
 	});
+
+	it("returns the first (smallest) qualifying nonce", async () => {
+		// the optimised loop must still scan nonces in ascending order, so the
+		// result is the lowest nonce that meets the difficulty
+		const challenge = "solver-first-nonce";
+		const difficulty = 2;
+		const nonce = await solvePoW(challenge, difficulty);
+		for (let n = 0; n < nonce; n++) {
+			const earlier = sha256(new TextEncoder().encode(n + challenge));
+			expect(hashMeetsDifficulty(earlier, difficulty)).toBe(false);
+		}
+	});
+
+	it("produces a nonce identical to a reference brute-force solver", async () => {
+		// guards against the in-place decimal-digit encoding diverging from the
+		// straightforward `nonce + data` string encoding
+		const reference = (data: string, difficulty: number): number => {
+			let n = 0;
+			while (true) {
+				const h = sha256(new TextEncoder().encode(n + data));
+				if (hashMeetsDifficulty(h, difficulty)) return n;
+				n += 1;
+			}
+		};
+		for (const challenge of ["a", "longer-challenge-string", "12345"]) {
+			const difficulty = 2;
+			expect(await solvePoW(challenge, difficulty)).toBe(
+				reference(challenge, difficulty),
+			);
+		}
+	});
+
+	it("encodes multi-digit nonces correctly across buffer growth", async () => {
+		// difficulty 3 (12 bits) needs ~4k attempts on average, forcing the nonce
+		// well past the single- and multi-digit rollover boundaries
+		const challenge = "solver-multidigit";
+		const difficulty = 3;
+		const nonce = await solvePoW(challenge, difficulty);
+		expect(nonce).toBeGreaterThan(99);
+		const hash = sha256(new TextEncoder().encode(nonce + challenge));
+		expect(hashMeetsDifficulty(hash, difficulty)).toBe(true);
+	});
 });
