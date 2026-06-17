@@ -199,10 +199,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		}
 
 		// Extract coordinates from salt if provided — mirrors the POW
-		// flow so the puzzle record carries the checkbox click telemetry.
-		// Crafted salts can decode to NaN / oversize floats; we treat
-		// that as adversarial input and auto-fail the verification
-		// rather than dropping the bad coords silently.
+		// flow. Invalid salt input disapproves the request.
 		let coords: [number, number][][] | undefined;
 		let saltDecodeError: unknown;
 		if (salt) {

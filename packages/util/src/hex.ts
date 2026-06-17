@@ -144,22 +144,8 @@ export const embedData = (hexString: string, data: number[]): `0x${string}` => {
 	return `0x${hex.join("")}`;
 };
 
-/**
- * Throws if `n` isn't a finite non-negative integer.
- *
- * `parseInt("", 16)` returns NaN, and `parseInt(<very-long-hex>, 16)`
- * returns a finite-but-out-of-range float (e.g. `3.6e+22`). Both creep
- * through `embedData` round-trip if a bot supplies a hand-crafted hex
- * payload. Failing fast here means every caller gets the invariant —
- * "extracted values are real positions" — for free, and the downstream
- * Mongoose `[[[Number]]]` cast never has to choke on a NaN.
- */
+/** Throws if `n` isn't a safe non-negative integer. */
 const assertExtracted = (n: number, label: string): void => {
-	// `Number.isSafeInteger` covers NaN, ±Infinity, non-integers, and the
-	// > 2^53 range that `parseInt` of a very long hex string returns as a
-	// rounded-double. The first two are the bot's NaN payload; the last
-	// is the 9.26e+26 payload we observed alongside it (see
-	// scripts/find-bad-coords-via-oo.ts).
 	if (!Number.isSafeInteger(n) || n < 0) {
 		throw new Error(
 			`extractData: ${label} parsed to invalid value ${String(n)}`,

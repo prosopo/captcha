@@ -217,12 +217,8 @@ export class PowCaptchaManager extends CaptchaManager {
 
 		const difficulty = challengeRecord.difficulty;
 
-		// Extract coordinates from salt if provided. A crafted salt can
-		// produce NaN / oversize floats which used to land in `coords`
-		// untouched and crash the central streamer's Mongoose cast. We now
-		// fail the verification outright (auto-fail on bad data) so the
-		// adversarial input is surfaced as a disapproval reason rather
-		// than silently dropped.
+		// Extract coordinates from salt if provided. Invalid salt input
+		// disapproves the request rather than persisting partial data.
 		let coords: [number, number][][] | undefined;
 		let saltDecodeError: unknown;
 		if (salt) {

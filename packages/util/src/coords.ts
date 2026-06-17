@@ -12,12 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/**
- * Plausible upper bound for a pixel coordinate written to PoW / puzzle
- * captcha records. Real canvases sit comfortably below this; anything
- * larger is the parseInt-of-overlong-hex artefact from a crafted salt.
- * Used by callers that build coords from client-supplied salts.
- */
+/** Upper bound for pixel coordinates persisted to captcha records. */
 export const MAX_PIXEL_COORD = 1_000_000;
 
 const isValidCoordScalar = (v: unknown): v is number => {
@@ -31,19 +26,8 @@ const isValidCoordScalar = (v: unknown): v is number => {
 };
 
 /**
- * Final-line-of-defence assertion for the `[[[Number]]]` `coords` shape
- * persisted to `powcaptcha` / `puzzlecaptcha` records.
- *
- * Why this exists: `updatePowCaptchaRecordResult` writes via a Mongoose
- * pipeline update (`[{$set: setStage}]`), which bypasses the schema's
- * Number cast that would normally assert `!Number.isNaN(v)`. A
- * malformed coord (NaN / Infinity / sane-but-huge) therefore persists
- * locally, then crashes the central streamer's regular `$set` upsert
- * with `Cast to [[[Number]]] failed for value …`. Throwing here keeps
- * the bad value out of the local DB in the first place.
- *
- * Callers should treat a thrown error as adversarial input and surface
- * it as a user-facing disapproval rather than letting it bubble.
+ * Validates the `[[[Number]]]` coords shape. Throws if any element is
+ * not a safe non-negative integer within `MAX_PIXEL_COORD`.
  */
 export const assertCoordsSafe = (coords: unknown, label = "coords"): void => {
 	if (coords === undefined || coords === null) return;
@@ -72,12 +56,7 @@ export const assertCoordsSafe = (coords: unknown, label = "coords"): void => {
 	}
 };
 
-/**
- * Type-narrowing variant that returns `coords` only if safe, else
- * `undefined`. Use when a caller would rather drop bad coords silently
- * than surface them to the user (e.g. analytics paths that already had
- * lenient handling pre-validation).
- */
+/** Returns `coords` if safe, else `undefined`. */
 export const safeCoordsOrUndefined = <T>(coords: T): T | undefined => {
 	try {
 		assertCoordsSafe(coords);

@@ -32,8 +32,6 @@ describe("assertCoordsSafe", () => {
 		expect(() => assertCoordsSafe([])).not.to.throw();
 	});
 
-	// Regression cases lifted from the actual cast-error payloads we
-	// captured in production (see scripts/find-bad-coords-via-oo.ts).
 	test("rejects NaN at coords[0][0][0]", () => {
 		expect(() => assertCoordsSafe([[[Number.NaN, 270]]])).to.throw(
 			/finite non-negative integer/,
@@ -49,13 +47,13 @@ describe("assertCoordsSafe", () => {
 		);
 	});
 
-	test("rejects sane-but-huge finite floats from parseInt(<long hex>)", () => {
-		expect(() => assertCoordsSafe([[[3.6e22, 0]]])).to.throw(
-			/finite non-negative integer/,
-		);
-		expect(() => assertCoordsSafe([[[0, 9.26e26]]])).to.throw(
-			/finite non-negative integer/,
-		);
+	test("rejects values above Number.MAX_SAFE_INTEGER", () => {
+		expect(() =>
+			assertCoordsSafe([[[Number.MAX_SAFE_INTEGER + 1, 0]]]),
+		).to.throw(/finite non-negative integer/);
+		expect(() =>
+			assertCoordsSafe([[[0, Number.MAX_SAFE_INTEGER * 2]]]),
+		).to.throw(/finite non-negative integer/);
 	});
 
 	test("rejects negative integers", () => {

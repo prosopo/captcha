@@ -346,12 +346,6 @@ describe("PowCaptchaManager", () => {
 			).toBe(false);
 		});
 
-		// Regression for the malformed-salt → NaN-coords → central-streamer
-		// cast crash. A crafted hex salt (count=1, position=2, length=0)
-		// makes `extractData` return NaN. Pre-fix the value was passed
-		// straight to `coords` and the central streamer's Mongoose cast
-		// failed. Now the request is failed outright with
-		// `CAPTCHA_INVALID_SALT` and no coords are persisted.
 		it("auto-fails with CAPTCHA_INVALID_SALT when salt decodes to invalid coords", async () => {
 			const challenge: PoWChallengeId = `${12345}${POW_SEPARATOR}userAccount${POW_SEPARATOR}dappAccount`;
 			const difficulty = 4;
@@ -384,7 +378,6 @@ describe("PowCaptchaManager", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(db.updatePowCaptchaRecordResult as any).mockResolvedValue(true);
 
-			// count=1, position=0x02, length=0 → valueHex="" → parseInt → NaN.
 			const malformedSalt = "0x010200";
 
 			const result = await powCaptchaManager.verifyPowCaptchaSolution(
@@ -411,8 +404,6 @@ describe("PowCaptchaManager", () => {
 				timestampSignature,
 				undefined, // coords must NOT be the bad value
 			);
-			// Salt rejection is fail-fast — recency and solution checks
-			// should never run.
 			expect(verifyRecency).not.toHaveBeenCalled();
 			expect(validateSolution).not.toHaveBeenCalled();
 		});

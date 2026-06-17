@@ -261,11 +261,6 @@ describe("PuzzleCaptchaManager", () => {
 			expect(db.updatePuzzleCaptchaRecordResult).not.toHaveBeenCalled();
 		});
 
-		// Regression for the malformed-salt → NaN-coords central-DB cast
-		// crash. The puzzle path mirrors PoW — a crafted hex salt makes
-		// extractData throw; pre-fix coords stayed unset but the
-		// adversarial input wasn't surfaced. Now it auto-fails with
-		// CAPTCHA_INVALID_SALT.
 		it("auto-fails with CAPTCHA_INVALID_SALT when salt decodes to invalid coords", async () => {
 			const a = buildArgs();
 			const challengeRecord: Partial<PuzzleCaptchaStored> = {
@@ -286,7 +281,6 @@ describe("PuzzleCaptchaManager", () => {
 				undefined,
 			);
 
-			// count=1, position=0x02, length=0 → valueHex="" → parseInt → NaN.
 			const malformedSalt = "0x010200";
 
 			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
