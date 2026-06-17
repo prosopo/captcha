@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { STATUS_CODES } from "node:http";
 import type { TranslationKey } from "@prosopo/locale";
 import { type LogLevel, type Logger, getLogger } from "@prosopo/logger";
 import type { ApiJsonError } from "@prosopo/types";
@@ -201,7 +202,6 @@ export const unwrapError = (
 
 	const message = i18n.t(err.message); // should be translated already
 	let jsonError: ApiJsonError = { code, message };
-	const statusMessage = "Bad Request";
 	jsonError.message = message;
 	jsonError.key = "translationKey" in err ? err.translationKey : "API.UNKNOWN";
 
@@ -244,6 +244,10 @@ export const unwrapError = (
 	}
 
 	jsonError.code = code;
+	// Derive the HTTP reason phrase from the final status code rather than
+	// hardcoding "Bad Request", so a 401/403/500 response carries the correct
+	// status message.
+	const statusMessage = STATUS_CODES[code] ?? "Bad Request";
 	return { code, statusMessage, jsonError };
 };
 
