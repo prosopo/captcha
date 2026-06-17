@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { ApiEndpoint } from "@prosopo/api-route";
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoApiError, ProsopoBaseError, unwrapError } from "@prosopo/common";
 import { type LogLevel, stringifyBigInts } from "@prosopo/logger";
 import type { NextFunction, Request, Response } from "express";
 import type { ZodType } from "zod";
@@ -57,7 +57,28 @@ class ApiExpressDefaultEndpointAdapter implements ApiExpressEndpointAdapter {
 				err: error,
 			}));
 
-			response.status(500).send("An internal server error occurred.");
+			// Errors that already carry a proper status code (e.g. a 400 admin
+			// auth/validation error) should surface that code with the standard
+			// `{ error: ... }` JSON envelope rather than a hardcoded 500. For
+			// truly-unexpected errors fall back to this adapter's configured
+			// errorStatusCode.
+			if (error instanceof ProsopoBaseError) {
+				const { code, statusMessage, jsonError } = unwrapError(
+					error,
+					request.i18n,
+				);
+				response.statusMessage = statusMessage;
+				response.status(code).json({ error: jsonError });
+				return;
+			}
+
+			response.status(this.errorStatusCode).json({
+				error: {
+					code: this.errorStatusCode,
+					key: "API.UNKNOWN",
+					message: "An internal server error occurred.",
+				},
+			});
 		}
 	}
 }
