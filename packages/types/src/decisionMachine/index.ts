@@ -19,6 +19,7 @@ import {
 	DecisionMachineCaptchaTypeSchema,
 } from "../client/captchaType/captchaType.js";
 import type { RequestHeaders } from "../provider/api.js";
+import type { SimdReadings } from "../provider/detection.js";
 
 export type EnrichedDnsEvent = {
 	peerIp?: string;
@@ -202,6 +203,11 @@ export interface RoutingMachineRawSignals {
 	ja4?: string;
 	behavioralDataPacked?: DecisionMachineBehavioralDataPacked;
 	fingerprintProof?: string;
+	// Decoded per-CPU WASM SIMD fingerprint readings, when the client submitted
+	// them with the PoW solution (decrypted and attached to the session, then
+	// surfaced here for the post-pow routing machine). Undefined when absent or
+	// unsupported on the client.
+	simd?: SimdReadings;
 }
 
 export type RoutingMachinePhase = "route" | "postPow";

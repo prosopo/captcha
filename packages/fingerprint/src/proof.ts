@@ -89,7 +89,9 @@ const componentLeafContent = (
 	return `${escapeKey(key)}:${serialized}`;
 };
 
-const disclosureLeafContent = (disclosure: FingerprintLeafDisclosure): string => {
+const disclosureLeafContent = (
+	disclosure: FingerprintLeafDisclosure,
+): string => {
 	const serialized = disclosure.error
 		? "error"
 		: JSON.stringify(disclosure.value);

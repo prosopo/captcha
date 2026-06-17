@@ -14,8 +14,8 @@
 
 import type { UnknownComponents } from "@prosopo/fingerprintjs";
 import {
-	buildFingerprintProofFromComponents,
 	type FingerprintProof,
+	buildFingerprintProofFromComponents,
 } from "./proof.js";
 
 // webGlExtensions walks every supported WebGL extension + shader-precision
@@ -41,7 +41,11 @@ const loadComponents = (): Promise<UnknownComponents> => {
 				{
 					cache: {},
 				};
-			const getComponents = loadSources(sources, sourceOptions, EXCLUDED_SOURCES);
+			const getComponents = loadSources(
+				sources,
+				sourceOptions,
+				EXCLUDED_SOURCES,
+			);
 			return getComponents();
 		})();
 		componentsCache = pending;
