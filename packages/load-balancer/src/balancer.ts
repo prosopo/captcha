@@ -60,6 +60,15 @@ export const convertHostedProvider = (
 	return providers.sort((a, b) => a.url.localeCompare(b.url));
 };
 
+// Strip the leading `ipv4.` / `ipv6.` label that providerListJson prepends for
+// the single-stack sub-lists so callers can derive a stable identity from the
+// provider URL regardless of which ipMode was requested.
+export const stripIpModeLabel = (hostname: string): string =>
+	hostname.replace(/^ipv[46]\./, "");
+
+export const getProviderHostname = (provider: HardcodedProvider): string =>
+	stripIpModeLabel(new URL(provider.url).hostname);
+
 export const getLoadBalancerUrl = (environment: EnvironmentTypes): string => {
 	if (environment === "production") {
 		return "https://provider-list.prosopo.io/";

@@ -13,7 +13,11 @@
 // limitations under the License.
 
 import { describe, expect, it } from "vitest";
-import { convertHostedProvider } from "../balancer.js";
+import {
+	convertHostedProvider,
+	getProviderHostname,
+	stripIpModeLabel,
+} from "../balancer.js";
 
 const dualStackEntry = {
 	address: "5DualStack",
@@ -96,5 +100,64 @@ describe("convertHostedProvider", () => {
 			"https://pronode4.prosopo.io",
 			"https://pronode5.prosopo.io",
 		]);
+	});
+});
+
+describe("stripIpModeLabel", () => {
+	it("removes a leading ipv4. label", () => {
+		expect(stripIpModeLabel("ipv4.pronode4.prosopo.io")).toBe(
+			"pronode4.prosopo.io",
+		);
+	});
+
+	it("removes a leading ipv6. label", () => {
+		expect(stripIpModeLabel("ipv6.pronode4.prosopo.io")).toBe(
+			"pronode4.prosopo.io",
+		);
+	});
+
+	it("leaves a dual-stack hostname untouched", () => {
+		expect(stripIpModeLabel("pronode4.prosopo.io")).toBe("pronode4.prosopo.io");
+	});
+
+	it("does not strip a non-anchored ipv4 segment", () => {
+		expect(stripIpModeLabel("foo.ipv4.pronode4.prosopo.io")).toBe(
+			"foo.ipv4.pronode4.prosopo.io",
+		);
+	});
+});
+
+describe("getProviderHostname", () => {
+	const baseProvider = {
+		address: "5DualStack",
+		datasetId: "0xdataset",
+		weight: 1,
+	};
+
+	it("returns the bare hostname for a dual-stack provider", () => {
+		expect(
+			getProviderHostname({
+				...baseProvider,
+				url: "https://pronode4.prosopo.io",
+			}),
+		).toBe("pronode4.prosopo.io");
+	});
+
+	it("strips the ipv4. label from an ipv4 sub-list provider", () => {
+		expect(
+			getProviderHostname({
+				...baseProvider,
+				url: "https://ipv4.pronode4.prosopo.io",
+			}),
+		).toBe("pronode4.prosopo.io");
+	});
+
+	it("strips the ipv6. label from an ipv6 sub-list provider", () => {
+		expect(
+			getProviderHostname({
+				...baseProvider,
+				url: "https://ipv6.pronode4.prosopo.io",
+			}),
+		).toBe("pronode4.prosopo.io");
 	});
 });

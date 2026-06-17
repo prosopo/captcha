@@ -43,3 +43,8 @@ can pin provider DNS resolution to a single stack:
 - `provider`: `startProviderApi`'s cacheFile loader forwards `ipMode`
   through to `convertHostedProvider`, so server-side callers can
   request the per-mode sub-list too.
+- `load-balancer`: new `stripIpModeLabel` / `getProviderHostname`
+  helpers strip the leading `ipv4.` / `ipv6.` label, so consumers
+  that derive identity from a provider URL (metric labels, sync-rule
+  keys, etc.) stay stable across stacks regardless of which `IpMode`
+  was requested.
