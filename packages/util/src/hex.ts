@@ -144,11 +144,35 @@ export const embedData = (hexString: string, data: number[]): `0x${string}` => {
 	return `0x${hex.join("")}`;
 };
 
-export const extractData = (hexString: string) => {
+/**
+ * Throws if `n` isn't a finite non-negative integer.
+ *
+ * `parseInt("", 16)` returns NaN, and `parseInt(<very-long-hex>, 16)`
+ * returns a finite-but-out-of-range float (e.g. `3.6e+22`). Both creep
+ * through `embedData` round-trip if a bot supplies a hand-crafted hex
+ * payload. Failing fast here means every caller gets the invariant —
+ * "extracted values are real positions" — for free, and the downstream
+ * Mongoose `[[[Number]]]` cast never has to choke on a NaN.
+ */
+const assertExtracted = (n: number, label: string): void => {
+	// `Number.isSafeInteger` covers NaN, ±Infinity, non-integers, and the
+	// > 2^53 range that `parseInt` of a very long hex string returns as a
+	// rounded-double. The first two are the bot's NaN payload; the last
+	// is the 9.26e+26 payload we observed alongside it (see
+	// scripts/find-bad-coords-via-oo.ts).
+	if (!Number.isSafeInteger(n) || n < 0) {
+		throw new Error(
+			`extractData: ${label} parsed to invalid value ${String(n)}`,
+		);
+	}
+};
+
+export const extractData = (hexString: string): number[] => {
 	const hex = hexString.replace(/^0x/, "").split("");
 	let cursor = 0;
 
 	const count = Number.parseInt(at(hex, cursor) + hex[cursor + 1], 16);
+	assertExtracted(count, "count");
 	cursor += 2;
 
 	const positions: number[] = [];
@@ -156,6 +180,8 @@ export const extractData = (hexString: string) => {
 	for (let i = 0; i < count; i++) {
 		const pos = Number.parseInt(at(hex, cursor) + hex[cursor + 1], 16);
 		const len = Number.parseInt(at(hex, cursor + 2) + hex[cursor + 3], 16);
+		assertExtracted(pos, `positions[${i}]`);
+		assertExtracted(len, `lengths[${i}]`);
 		positions.push(pos);
 		lengths.push(len);
 		cursor += 4;
@@ -166,7 +192,9 @@ export const extractData = (hexString: string) => {
 		const startPos = at(positions, i);
 		const len = at(lengths, i);
 		const valueHex = hex.slice(startPos, startPos + len).join("");
-		results.push(Number.parseInt(valueHex, 16));
+		const value = Number.parseInt(valueHex, 16);
+		assertExtracted(value, `values[${i}]`);
+		results.push(value);
 	}
 
 	return results;

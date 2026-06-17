@@ -91,7 +91,7 @@ import {
 	accessRulesRedisIndex,
 	createRedisAccessRulesStorage,
 } from "@prosopo/user-access-policy/redis";
-import { buildDomainSuffixCandidates } from "@prosopo/util";
+import { assertCoordsSafe, buildDomainSuffixCandidates } from "@prosopo/util";
 import type { ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
 import type { CentralDbStreamer } from "./centralDbStreamer.js";
@@ -952,6 +952,13 @@ export class ProviderDatabase
 		const tables = this.getTables();
 		const timestamp = new Date();
 		const isDisapproved = result.status === CaptchaStatus.disapproved;
+		// Belt-and-braces: the pipeline-form `updateOne([{$set: ...}])`
+		// below bypasses Mongoose's [[[Number]]] cast, so a NaN /
+		// non-finite / oversize coord slipping past the powTasks
+		// validation would land in the local DB and crash the central
+		// streamer. Reject here too — adversarial input must not reach
+		// disk.
+		assertCoordsSafe(coords, "coords");
 		const setStage: Record<string, unknown> = {
 			result,
 			serverChecked,
@@ -1212,6 +1219,10 @@ export class ProviderDatabase
 		const tables = this.getTables();
 		const timestamp = lastUpdatedTimestamp ?? new Date();
 		const isDisapproved = result.status === CaptchaStatus.disapproved;
+		// See updatePowCaptchaRecordResult — pipeline-form update would
+		// otherwise let NaN / oversize coords reach disk and break the
+		// central streamer.
+		assertCoordsSafe(coords, "coords");
 		const setStage: Record<string, unknown> = {
 			result,
 			serverChecked,

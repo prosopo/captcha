@@ -23,6 +23,7 @@ import {
 	type PoWCaptchaStored,
 	type PoWChallengeId,
 	type RequestHeaders,
+	ResultReason,
 	type Session,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
@@ -343,6 +344,77 @@ describe("PowCaptchaManager", () => {
 					)
 				).verified,
 			).toBe(false);
+		});
+
+		// Regression for the malformed-salt → NaN-coords → central-streamer
+		// cast crash. A crafted hex salt (count=1, position=2, length=0)
+		// makes `extractData` return NaN. Pre-fix the value was passed
+		// straight to `coords` and the central streamer's Mongoose cast
+		// failed. Now the request is failed outright with
+		// `CAPTCHA_INVALID_SALT` and no coords are persisted.
+		it("auto-fails with CAPTCHA_INVALID_SALT when salt decodes to invalid coords", async () => {
+			const challenge: PoWChallengeId = `${12345}${POW_SEPARATOR}userAccount${POW_SEPARATOR}dappAccount`;
+			const difficulty = 4;
+			const signature = "testSignature";
+			const nonce = 12345;
+			const timeout = 1000;
+			const timestampSignature = "testTimestampSignature";
+			const ipAddress = getIPAddress("1.1.1.1");
+			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				dappAccount: pair.address,
+				userAccount: "testUserAccount",
+				requestedAtTimestamp: new Date(12345),
+				submittedAtTimestamp: new Date(),
+				result: { status: CaptchaStatus.pending },
+				userSubmitted: false,
+				serverChecked: false,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers,
+				ja4: "ja4",
+				providerSignature: "testSignature",
+				difficulty,
+				lastUpdatedTimestamp: new Date(0),
+			};
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.updatePowCaptchaRecordResult as any).mockResolvedValue(true);
+
+			// count=1, position=0x02, length=0 → valueHex="" → parseInt → NaN.
+			const malformedSalt = "0x010200";
+
+			const result = await powCaptchaManager.verifyPowCaptchaSolution(
+				challenge,
+				signature,
+				nonce,
+				timeout,
+				timestampSignature,
+				ipAddress,
+				headers,
+				undefined, // behavioralData
+				malformedSalt,
+			);
+
+			expect(result.verified).toBe(false);
+			expect(db.updatePowCaptchaRecordResult).toHaveBeenCalledWith(
+				challenge,
+				{
+					status: CaptchaStatus.disapproved,
+					reason: ResultReason.CAPTCHA_INVALID_SALT,
+				},
+				false, // serverChecked
+				true, // userSubmitted
+				timestampSignature,
+				undefined, // coords must NOT be the bad value
+			);
+			// Salt rejection is fail-fast — recency and solution checks
+			// should never run.
+			expect(verifyRecency).not.toHaveBeenCalled();
+			expect(validateSolution).not.toHaveBeenCalled();
 		});
 	});
 

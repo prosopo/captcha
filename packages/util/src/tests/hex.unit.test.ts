@@ -94,4 +94,28 @@ describe("extractData", () => {
 		const result = extractData(embedData(hex, [99999, 99999]));
 		expect(result).to.deep.equal([99999, 99999]);
 	});
+
+	// A crafted hex `salt` from a bot can declare `length: 0` slices —
+	// `parseInt("", 16)` returns NaN. Pre-fix this slid through and
+	// crashed the central-DB streamer's [[[Number]]] cast (see
+	// captcha/packages/database/src/databases/centralDbStreamer.ts).
+	test("throws when a value slice decodes to NaN (length=0)", () => {
+		// 1 entry, position=0x02 (skip 1 byte), length=0x00 → valueHex="".
+		const malformed = "0x010200";
+		expect(() => extractData(malformed)).to.throw(/invalid value/);
+	});
+
+	test("throws when the count byte itself is non-hex (NaN)", () => {
+		expect(() => extractData("0xzz")).to.throw(/invalid value/);
+	});
+
+	// 16 hex chars at position 6 → parseInt("ffff…", 16) = 1.84e+19,
+	// finite but beyond Number.MAX_SAFE_INTEGER so its representation
+	// rounds. Matches the live attacker payload pattern (9.26e+26 etc.)
+	// that crashed the central streamer.
+	test("throws when a value parses above Number.MAX_SAFE_INTEGER", () => {
+		// count=1, position=0x06 (start after header), length=0x10 (16).
+		const malformed = `0x010610${"f".repeat(16)}`;
+		expect(() => extractData(malformed)).to.throw(/invalid value/);
+	});
 });
