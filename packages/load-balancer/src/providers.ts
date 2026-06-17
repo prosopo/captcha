@@ -22,8 +22,10 @@ type CacheKey = `${EnvironmentTypes}|${IpMode | "dual"}`;
 const cacheKey = (env: EnvironmentTypes, ipMode?: IpMode): CacheKey =>
 	`${env}|${ipMode ?? "dual"}`;
 
-const providerPromiseCache: Map<CacheKey, Promise<HardcodedProvider[]>> =
-	new Map();
+const providerPromiseCache: Map<
+	CacheKey,
+	Promise<HardcodedProvider[]>
+> = new Map();
 
 /** Optional custom loader for server-side caching (e.g. cacheFile with ETag). */
 let customProviderLoader:

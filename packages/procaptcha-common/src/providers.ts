@@ -32,7 +32,11 @@ export const getProcaptchaRandomActiveProvider = async (
 ) => {
 	const randomNumberU8a = window.crypto.getRandomValues(new Uint8Array(10));
 	const randomNumber = randomNumberU8a.reduce((a, b) => a + b, 0);
-	return await getRandomActiveProvider(defaultEnvironment, randomNumber, ipMode);
+	return await getRandomActiveProvider(
+		defaultEnvironment,
+		randomNumber,
+		ipMode,
+	);
 };
 
 export const providerRetry = async (
