@@ -2579,6 +2579,20 @@ export class ProviderDatabase
 		});
 	}
 
+	async removeDetectorKeys(
+		detectorKeys: string[],
+		expirationInSeconds?: number,
+	): Promise<void> {
+		const expiresAt = new Date(
+			Date.now() + (expirationInSeconds || 10 * 60) * 1000,
+		);
+
+		await this.tables?.detector.updateMany(
+			{ detectorKey: { $in: detectorKeys } },
+			{ $set: { expiresAt } },
+		);
+	}
+
 	/**
 	 * @description Get valid detector keys
 	 */

@@ -453,6 +453,24 @@ export class ClientTaskManager {
 		await this.providerDB.removeDetectorKey(detectorKey, expirationInSeconds);
 	}
 
+	async removeDetectorKeys(
+		detectorKeys: string[],
+		expirationInSeconds?: number,
+	): Promise<void> {
+		for (const detectorKey of detectorKeys) {
+			if (!isValidPrivateKey(detectorKey)) {
+				throw new ProsopoApiError("INVALID_DETECTOR_KEY", {
+					context: { detectorKey },
+					logger: this.logger,
+				});
+			}
+		}
+		await this.providerDB.removeDetectorKeys(
+			detectorKeys,
+			expirationInSeconds,
+		);
+	}
+
 	async updateDecisionMachine(
 		scope: DecisionMachineScope,
 		runtime: DecisionMachineRuntime,

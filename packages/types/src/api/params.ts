@@ -49,6 +49,7 @@ export enum ApiParams {
 	score = "score",
 	tier = "tier",
 	detectorKey = "detectorKey",
+	detectorKeys = "detectorKeys",
 	ip = "ip",
 	expirationInSeconds = "expirationInSeconds",
 	enabled = "enabled",

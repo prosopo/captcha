@@ -47,6 +47,8 @@ import {
 	type RegisterSitekeyBodyTypeOutput,
 	type RegisterSitekeysBodyTypeOutput,
 	RemoveDetectorKeyBodySpec,
+	RemoveDetectorKeysBodySpec,
+	type RemoveDetectorKeysBodyOutput,
 	RemoveSitekeyBody,
 	RemoveSitekeysBody,
 	type RemoveSitekeysBodyTypeOutput,
@@ -583,6 +585,26 @@ export default class ProviderApi
 			AdminApiPaths.RemoveDetectorKey,
 			RemoveDetectorKeyBodySpec.parse({
 				detectorKey,
+				expirationInSeconds,
+			}),
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					Authorization: `Bearer ${jwt}`,
+				},
+			},
+		);
+	}
+
+	public removeDetectorKeys(
+		detectorKeys: string[],
+		jwt: string,
+		expirationInSeconds?: number,
+	): Promise<ApiResponse> {
+		return this.post(
+			AdminApiPaths.RemoveDetectorKeys,
+			RemoveDetectorKeysBodySpec.parse({
+				detectorKeys,
 				expirationInSeconds,
 			}),
 			{

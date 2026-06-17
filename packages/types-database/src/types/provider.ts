@@ -1087,6 +1087,11 @@ export interface IProviderDatabase extends IDatabase {
 		expirationInSeconds?: number,
 	): Promise<void>;
 
+	removeDetectorKeys(
+		detectorKeys: string[],
+		expirationInSeconds?: number,
+	): Promise<void>;
+
 	upsertDecisionMachineArtifact(
 		artifact: DecisionMachineArtifact,
 	): Promise<void>;

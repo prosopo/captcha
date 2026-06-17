@@ -131,6 +131,7 @@ export enum AdminApiPaths {
 	SiteKeysRegister = "/v1/prosopo/provider/admin/sitekeys/register",
 	UpdateDetectorKey = "/v1/prosopo/provider/admin/detector/update",
 	RemoveDetectorKey = "/v1/prosopo/provider/admin/detector/remove",
+	RemoveDetectorKeys = "/v1/prosopo/provider/admin/detector/remove/batch",
 	ToggleMaintenanceMode = "/v1/prosopo/provider/admin/maintenance/toggle",
 	UpdateDecisionMachine = "/v1/prosopo/provider/admin/decision-machine/update",
 	GetAllDecisionMachines = "/v1/prosopo/provider/admin/decision-machine/get-all",
@@ -174,6 +175,7 @@ export const ProviderDefaultRateLimits = {
 	[AdminApiPaths.SiteKeysRegister]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.UpdateDetectorKey]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.RemoveDetectorKey]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.RemoveDetectorKeys]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.ToggleMaintenanceMode]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.UpdateDecisionMachine]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.GetAllDecisionMachines]: { windowMs: 60000, limit: 60 },
@@ -729,6 +731,18 @@ export type RemoveDetectorKeyBodyInput = input<
 >;
 export type RemoveDetectorKeyBodyOutput = output<
 	typeof RemoveDetectorKeyBodySpec
+>;
+
+export const RemoveDetectorKeysBodySpec = object({
+	[ApiParams.detectorKeys]: array(string()),
+	[ApiParams.expirationInSeconds]: number().positive().optional(),
+});
+
+export type RemoveDetectorKeysBodyInput = input<
+	typeof RemoveDetectorKeysBodySpec
+>;
+export type RemoveDetectorKeysBodyOutput = output<
+	typeof RemoveDetectorKeysBodySpec
 >;
 
 export const ToggleMaintenanceModeBody = object({
