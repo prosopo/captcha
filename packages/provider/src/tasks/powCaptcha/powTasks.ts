@@ -465,6 +465,10 @@ export class PowCaptchaManager extends CaptchaManager {
 			raw: {
 				...this.postPowContext.raw,
 				...(behavioralDataPacked && { behavioralDataPacked }),
+				// SIMD readings are decrypted and attached to the session above
+				// (decryptAndAttachSimdReadingsIfAbsent) before this re-fetch, so
+				// they are available here in decoded form for the routing machine.
+				...(sessionRecord.simdReadings && { simd: sessionRecord.simdReadings }),
 			},
 		};
 
