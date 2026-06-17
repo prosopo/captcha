@@ -21,6 +21,7 @@ import { default as viteReact } from "@vitejs/plugin-react";
 import type { Drop } from "esbuild";
 import type { ExternalOption } from "rollup";
 import css from "rollup-plugin-import-css";
+import { visualizer } from "rollup-plugin-visualizer";
 import type { UserConfig } from "vite";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { filterDependencies, getDependencies } from "../dependencies.js";
@@ -51,6 +52,10 @@ export default async function (
 
 	console.info(`Running at ${dir} in ${mode} mode`);
 	const isProduction = mode === "production";
+	// Rollup bundle stats (rollup-plugin-visualizer treemap). Off by default —
+	// set PROSOPO_BUNDLE_STATS=true to generate the stats page and open it in
+	// the browser once the bundle has been built.
+	const openBundleStats = process.env.PROSOPO_BUNDLE_STATS === "true";
 	// NODE_ENV must be wrapped in quotes.
 	// If NODE_ENV ends up out of sync (one set to development and the other set to production), it causes
 	// issues like this: https://github.com/hashicorp/next-mdx-remote/pull/323
@@ -235,12 +240,19 @@ export default async function (
 							}
 						},
 					},
-					// visualizer({
-					// 	open: true,
-					// 	template: "treemap", //'list',
-					// 	gzipSize: true,
-					// 	brotliSize: true,
-					// }),
+					// Bundle stats page — only wired in (and opened in the
+					// browser) when PROSOPO_BUNDLE_STATS=true. Defaults off so
+					// normal builds neither emit the report nor pop a window.
+					...(openBundleStats
+						? [
+								visualizer({
+									open: true,
+									template: "treemap",
+									gzipSize: true,
+									brotliSize: true,
+								}),
+							]
+						: []),
 					// I think we can use this plugin to build all packages instead of relying on the tsc step that's
 					// currently a precursor in package.json. However, it fails for the following reason:
 					// https://github.com/rollup/plugins/issues/243
