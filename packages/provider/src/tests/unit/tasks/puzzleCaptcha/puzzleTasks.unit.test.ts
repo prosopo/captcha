@@ -282,7 +282,9 @@ describe("PuzzleCaptchaManager", () => {
 			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
 				asPuzzleRecord(challengeRecord),
 			);
-			vi.mocked(db.updatePuzzleCaptchaRecordResult).mockResolvedValue(undefined);
+			vi.mocked(db.updatePuzzleCaptchaRecordResult).mockResolvedValue(
+				undefined,
+			);
 
 			// count=1, position=0x02, length=0 → valueHex="" → parseInt → NaN.
 			const malformedSalt = "0x010200";

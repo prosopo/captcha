@@ -45,10 +45,7 @@ const isValidCoordScalar = (v: unknown): v is number => {
  * Callers should treat a thrown error as adversarial input and surface
  * it as a user-facing disapproval rather than letting it bubble.
  */
-export const assertCoordsSafe = (
-	coords: unknown,
-	label = "coords",
-): void => {
+export const assertCoordsSafe = (coords: unknown, label = "coords"): void => {
 	if (coords === undefined || coords === null) return;
 	if (!Array.isArray(coords)) {
 		throw new Error(`${label} must be an array, got ${typeof coords}`);

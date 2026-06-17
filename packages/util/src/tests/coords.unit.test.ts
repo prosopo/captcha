@@ -77,9 +77,7 @@ describe("assertCoordsSafe", () => {
 	});
 
 	test("rejects non-array members in the nested shape", () => {
-		expect(() => assertCoordsSafe("not an array")).to.throw(
-			/must be an array/,
-		);
+		expect(() => assertCoordsSafe("not an array")).to.throw(/must be an array/);
 		expect(() => assertCoordsSafe(["stroke"])).to.throw(
 			/must be an array of points/,
 		);

@@ -436,6 +436,7 @@
 		"NO_CAPTCHA": "لم يتم العثور على captcha",
 		"NO_SESSION_FOUND": "لم يتم العثور على جلسة",
 		"IP_ADDRESS_MISMATCH": "عناوين IP غير متطابقة",
+		"INVALID_SALT": "ملح غير صالح",
 		"INVALID_TOKEN": "الرمز غير صالح",
 		"INVALID_SOLUTION": "الحل غير صالح",
 		"DECRYPTION_ERROR": "خطأ في فك التشفير"
