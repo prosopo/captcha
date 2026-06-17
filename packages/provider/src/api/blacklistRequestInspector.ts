@@ -281,7 +281,7 @@ export class BlacklistRequestInspector {
 		private readonly environmentReadinessWaiter: () => Promise<void>,
 		// Optional so existing test-suite construction (where the DB isn't
 		// always plumbed) keeps working. When provided, every request that
-		// the inspector decides to 401 also writes a synthetic
+		// the inspector decides to block (403) also writes a synthetic
 		// `blocked=true, deleted=true` session record so the Traffic page
 		// can aggregate per-rule block counts.
 		private readonly db?: IProviderDatabase,
@@ -309,7 +309,10 @@ export class BlacklistRequestInspector {
 		);
 
 		if (shouldAbortRequest) {
-			res.status(401).json({ error: "Unauthorized" });
+			// A blocklist denial (blocked IP / JA4 / user) is a 403 Forbidden,
+			// not a 401 Unauthorized - the client isn't lacking credentials,
+			// it is denied access.
+			res.status(403).json({ error: "Forbidden" });
 			return;
 		}
 
@@ -420,7 +423,7 @@ export class BlacklistRequestInspector {
 
 	/**
 	 * Emit a structured log line and (if a DB is wired) persist a synthetic
-	 * Session record for the request we're about to 401. Fire-and-forget on
+	 * Session record for the request we're about to block (403). Fire-and-forget on
 	 * the Mongo side — the structured log line is the source of truth and
 	 * the 401 response is never delayed by a persistence failure.
 	 *
