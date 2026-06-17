@@ -1,5 +1,19 @@
 # @prosopo/procaptcha-pow
 
+## 2.10.0
+### Minor Changes
+
+- dde23e8: Internal bot-detection signal improvements.
+
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/types@4.7.0
+  - @prosopo/fingerprint@2.7.0
+  - @prosopo/api@3.5.0
+  - @prosopo/procaptcha-common@2.10.24
+
 ## 2.9.10
 ### Patch Changes
 

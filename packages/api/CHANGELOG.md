@@ -1,5 +1,16 @@
 # @prosopo/api
 
+## 3.5.0
+### Minor Changes
+
+- dde23e8: Internal bot-detection signal improvements.
+
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/types@4.7.0
+
 ## 3.4.14
 ### Patch Changes
 
