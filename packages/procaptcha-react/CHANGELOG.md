@@ -1,5 +1,23 @@
 # @prosopo/procaptcha-react
 
+## 2.9.74
+### Patch Changes
+
+- 46fedf4: Auto-start image/puzzle widget after PoW escalation so the user does not need to click the checkbox a second time.
+- Updated dependencies [46fedf4]
+  - @prosopo/types@4.7.1
+  - @prosopo/procaptcha@2.10.35
+  - @prosopo/procaptcha-common@2.10.25
+
+## 2.9.73
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/types@4.7.0
+  - @prosopo/procaptcha@2.10.34
+  - @prosopo/procaptcha-common@2.10.24
+
 ## 2.9.72
 ### Patch Changes
 

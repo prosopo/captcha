@@ -199,6 +199,7 @@ export default class ProviderApi
 		salt?: string,
 		simdReadings?: string,
 		clientMetaData?: ClientMetaData,
+		fingerprintProof?: string,
 	): Promise<PowCaptchaSolutionResponse> {
 		const body = SubmitPowCaptchaSolutionBody.parse({
 			[ApiParams.challenge]: challenge.challenge,
@@ -218,6 +219,9 @@ export default class ProviderApi
 			...(salt && { [ApiParams.salt]: salt }),
 			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
 			...(clientMetaData && { [ApiParams.clientMetaData]: clientMetaData }),
+			...(fingerprintProof && {
+				[ApiParams.fingerprintProof]: fingerprintProof,
+			}),
 		});
 		return this.post(ClientApiPaths.SubmitPowCaptchaSolution, body, {
 			headers: {

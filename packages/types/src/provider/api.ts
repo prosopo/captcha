@@ -498,6 +498,7 @@ export const SubmitPowCaptchaSolutionBody = object({
 	[ApiParams.salt]: string().optional(),
 	[ApiParams.simdReadings]: string().optional(),
 	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
+	[ApiParams.fingerprintProof]: string().optional(),
 });
 
 export type SubmitPowCaptchaSolutionBodyType = input<
