@@ -88,7 +88,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 				() => setLoading(false),
 			);
 		}
-	}, []);
+	}, [props.autoStart]);
 
 	useEffect(() => {
 		if (!state.error) return undefined;

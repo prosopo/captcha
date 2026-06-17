@@ -73,7 +73,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 				() => setLoading(false),
 			);
 		}
-	}, []);
+	}, [props.autoStart]);
 
 	useEffect(() => {
 		if (state.error) {
