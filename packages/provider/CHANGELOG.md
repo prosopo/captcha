@@ -1,5 +1,35 @@
 # @prosopo/provider
 
+## 4.11.1
+### Patch Changes
+
+- 4626340: perf(provider): cut p95 on /captcha/frictionless and /captcha/image
+  
+  Replaces the `$match → $sample` random-captcha lookup with an indexed
+  range scan over a new `{datasetId, solved, randomKey}` compound index;
+  reorders the `sampleContextEntropy` aggregation so `$sample` runs
+  before `$lookup`; batches three pairs of independent awaits in the
+  frictionless handler via `Promise.all`. Adds an integration test
+  asserting via `.explain()` and wall-clock timing that the new paths
+  are quantifiably faster. The legacy aggregation remains as a fallback
+  in `getRandomCaptcha` so deployment can precede the
+  providerBackfillCaptchaRandomKey rollout.
+- Updated dependencies [4626340]
+- Updated dependencies [6962179]
+- Updated dependencies [5f47c42]
+  - @prosopo/database@3.14.2
+  - @prosopo/types@4.6.1
+  - @prosopo/types-database@4.10.2
+  - @prosopo/user-access-policy@3.10.2
+  - @prosopo/api@3.4.14
+  - @prosopo/api-express-router@3.1.25
+  - @prosopo/datasets@3.1.34
+  - @prosopo/env@3.5.15
+  - @prosopo/ipinfo@0.2.20
+  - @prosopo/keyring@2.9.40
+  - @prosopo/load-balancer@2.9.16
+  - @prosopo/types-env@2.9.24
+
 ## 4.11.0
 ### Minor Changes
 

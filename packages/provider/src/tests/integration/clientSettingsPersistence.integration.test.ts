@@ -117,6 +117,7 @@ const FULLY_POPULATED_SETTINGS = {
 		blockAbuser: true,
 		abuserScoreThreshold: 0.33,
 		blockDatacenter: true,
+		datacenterNameAllowlist: ["iCloud Private Relay"],
 		blockMobile: false,
 		blockSatellite: true,
 		blockCrawler: true,

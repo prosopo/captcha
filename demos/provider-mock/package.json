@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/provider-mock",
-	"version": "2.8.104",
+	"version": "2.8.105",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"type": "module",
@@ -26,21 +26,21 @@
 		"bundle": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.config.ts --mode $NODE_ENV"
 	},
 	"dependencies": {
-		"@prosopo/api-express-router": "3.1.24",
+		"@prosopo/api-express-router": "3.1.25",
 		"@prosopo/common": "3.1.39",
 		"@prosopo/logger": "1.0.3",
-		"@prosopo/database": "3.14.1",
+		"@prosopo/database": "3.14.2",
 		"@prosopo/dotenv": "3.0.44",
 		"@prosopo/locale": "3.2.4",
-		"@prosopo/provider": "4.11.0",
-		"@prosopo/types": "4.6.0",
-		"@prosopo/types-database": "4.10.1",
+		"@prosopo/provider": "4.11.1",
+		"@prosopo/types": "4.6.1",
+		"@prosopo/types-database": "4.10.2",
 		"cors": "2.8.5",
 		"express": "4.21.2",
 		"mongoose": "8.13.0"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.1",
+		"@prosopo/config": "3.3.2",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "3.2.4",
 		"concurrently": "9.0.1",

@@ -183,6 +183,14 @@ export const SpamFilterRulesSchema = object({
 
 export const trafficFilterAbuserScoreThresholdDefault = 0.5;
 
+// Operators almost always want `blockDatacenter` to catch scraping/automation
+// traffic but not legitimate consumer relays that exit from datacenter IPs
+// (Apple's iCloud Private Relay being the canonical example). Entries are
+// compared case-insensitively against `IPInfoResult.datacenterName`, which
+// comes from the upstream ipapi `datacenter.datacenter` field.
+const MAX_DATACENTER_ALLOWLIST_ENTRIES = 50;
+const MAX_DATACENTER_ALLOWLIST_ENTRY_LENGTH = 128;
+
 export const TrafficFilterSchema = object({
 	blockVpn: boolean().optional().default(false),
 	blockProxy: boolean().optional().default(false),
@@ -194,6 +202,11 @@ export const TrafficFilterSchema = object({
 		.optional()
 		.default(trafficFilterAbuserScoreThresholdDefault),
 	blockDatacenter: boolean().optional().default(false),
+	datacenterNameAllowlist: array(
+		string().min(1).max(MAX_DATACENTER_ALLOWLIST_ENTRY_LENGTH),
+	)
+		.max(MAX_DATACENTER_ALLOWLIST_ENTRIES)
+		.optional(),
 	blockMobile: boolean().optional().default(false),
 	blockSatellite: boolean().optional().default(false),
 	blockCrawler: boolean().optional().default(false),
