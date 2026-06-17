@@ -66,6 +66,16 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 	}, [i18n, config.language]);
 
 	useEffect(() => {
+		if (props.autoStart) {
+			setLoading(true);
+			manager.start().then(
+				() => setLoading(false),
+				() => setLoading(false),
+			);
+		}
+	}, []);
+
+	useEffect(() => {
 		if (state.error) {
 			setLoading(false);
 			if (state.error.key === "CAPTCHA.NO_SESSION_FOUND" && frictionlessState) {
