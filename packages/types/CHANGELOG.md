@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 4.7.1
+### Patch Changes
+
+- 46fedf4: Auto-start image/puzzle widget after PoW escalation so the user does not need to click the checkbox a second time.
+
 ## 4.7.0
 ### Minor Changes
 

@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-bundle",
-	"version": "4.1.14",
+	"version": "4.1.15",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "dist/index.js",
@@ -41,9 +41,9 @@
 	"dependencies": {
 		"@prosopo/dotenv": "3.0.44",
 		"@prosopo/locale": "3.2.4",
-		"@prosopo/procaptcha-common": "2.10.24",
-		"@prosopo/procaptcha-frictionless": "2.11.7",
-		"@prosopo/types": "4.7.0",
+		"@prosopo/procaptcha-common": "2.10.25",
+		"@prosopo/procaptcha-frictionless": "2.11.8",
+		"@prosopo/types": "4.7.1",
 		"@prosopo/util": "3.3.0",
 		"@prosopo/widget-skeleton": "2.8.3",
 		"dotenv": "16.4.5",
