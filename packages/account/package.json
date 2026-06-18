@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/account",
-	"version": "2.8.43",
+	"version": "2.8.44",
 	"description": "Services and Utils for Prosopo account gen and management",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -51,11 +51,11 @@
 		"@polkadot/extension-inject": "0.62.3",
 		"@polkadot/util": "13.5.7",
 		"@polkadot/util-crypto": "13.5.7",
-		"@prosopo/common": "3.1.39",
-		"@prosopo/fingerprint": "2.7.1",
-		"@prosopo/keyring": "2.9.42",
-		"@prosopo/types": "4.7.1",
-		"@prosopo/util": "3.3.0",
+		"@prosopo/common": "3.1.40",
+		"@prosopo/fingerprint": "2.7.2",
+		"@prosopo/keyring": "2.9.43",
+		"@prosopo/types": "4.7.2",
+		"@prosopo/util": "3.3.1",
 		"@prosopo/util-crypto": "13.5.29"
 	},
 	"devDependencies": {
