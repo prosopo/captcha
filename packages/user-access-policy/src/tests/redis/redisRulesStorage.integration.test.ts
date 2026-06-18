@@ -1605,11 +1605,7 @@ describe("redisAccessRulesStorage", () => {
 				coords: "[[[5,6]]]",
 			};
 
-			await insertRules([
-				blockMatch,
-				restrictMatch,
-				restrictMatchWithCoords,
-			]);
+			await insertRules([blockMatch, restrictMatch, restrictMatchWithCoords]);
 
 			const found = await accessRulesReader.findRules(
 				{
@@ -1629,8 +1625,7 @@ describe("redisAccessRulesStorage", () => {
 			);
 			expect(
 				found.some(
-					(r) =>
-						r.type === AccessPolicyType.Block && r.ja4Hash === ja4Hash,
+					(r) => r.type === AccessPolicyType.Block && r.ja4Hash === ja4Hash,
 				),
 			).toBe(true);
 		});
