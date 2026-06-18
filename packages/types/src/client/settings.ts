@@ -184,10 +184,11 @@ export const SpamFilterRulesSchema = object({
 export const trafficFilterAbuserScoreThresholdDefault = 0.5;
 
 // Operators almost always want `blockDatacenter` to catch scraping/automation
-// traffic but not legitimate consumer relays that exit from datacenter IPs
-// (Apple's iCloud Private Relay being the canonical example). Entries are
-// compared case-insensitively against `IPInfoResult.datacenterName`, which
-// comes from the upstream ipapi `datacenter.datacenter` field.
+// traffic but not legitimate consumer relays that exit from datacenter IPs.
+// Entries match case-insensitively against `datacenterName`, `providerName`,
+// or `asnOrganization` — upstream populates `datacenter.datacenter` only for
+// curated named ranges, so the providerName / asnOrganization fallback is
+// needed to reach generic CDN and cloud-provider IPs.
 const MAX_DATACENTER_ALLOWLIST_ENTRIES = 50;
 const MAX_DATACENTER_ALLOWLIST_ENTRY_LENGTH = 128;
 
@@ -207,6 +208,11 @@ export const TrafficFilterSchema = object({
 	)
 		.max(MAX_DATACENTER_ALLOWLIST_ENTRIES)
 		.optional(),
+	// Opt-in: when the catcher confirmed `dnsEvent.pathValid === true`, skip
+	// the datacenter / VPN / proxy / Tor evaluation on the DNS peer +
+	// resolver IPs. Otherwise users on public DoH resolvers (whose resolver
+	// IPs are necessarily datacenter) trip the rule.
+	skipExtrasOnValidDnsPath: boolean().optional().default(false),
 	blockMobile: boolean().optional().default(false),
 	blockSatellite: boolean().optional().default(false),
 	blockCrawler: boolean().optional().default(false),

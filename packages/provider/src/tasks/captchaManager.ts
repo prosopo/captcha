@@ -693,6 +693,7 @@ export class CaptchaManager {
 			ipInfo,
 			effective,
 			extraIpInfosFromEnrichedDnsEvent(enrichedDnsEvent),
+			enrichedDnsEvent?.pathValid,
 		);
 	}
 
