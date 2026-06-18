@@ -10,7 +10,7 @@
 	},
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
+		"build": "pnpm run build:cross-env -- --mode ${NODE_ENV:-development}",
 		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
@@ -30,12 +30,12 @@
 	},
 	"dependencies": {
 		"@noble/hashes": "1.8.0",
-		"@prosopo/common": "3.1.39",
-		"@prosopo/logger": "1.0.3",
-		"@prosopo/types": "4.7.1",
-		"@prosopo/util": "3.3.0",
-		"@prosopo/util-crypto": "13.5.29",
-		"@prosopo/workspace": "3.1.20",
+		"@prosopo/common": "workspace:*",
+		"@prosopo/logger": "workspace:*",
+		"@prosopo/types": "workspace:*",
+		"@prosopo/util": "workspace:*",
+		"@prosopo/util-crypto": "workspace:*",
+		"@prosopo/workspace": "workspace:*",
 		"bcrypt": "6.0.0",
 		"cli-progress": "3.12.0",
 		"sharp": "0.33.5",
@@ -43,7 +43,7 @@
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.2",
+		"@prosopo/config": "workspace:*",
 		"@types/bcrypt": "5.0.2",
 		"@types/cli-progress": "3.11.6",
 		"@types/node": "22.10.2",

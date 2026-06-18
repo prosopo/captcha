@@ -16,7 +16,7 @@
 		}
 	},
 	"scripts": {
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
+		"build": "pnpm run build:cross-env -- --mode ${NODE_ENV:-development}",
 		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "vue-tsc --project tsconfig.json",
@@ -24,12 +24,12 @@
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo"
 	},
 	"dependencies": {
-		"@prosopo/procaptcha-wrapper": "2.6.86",
+		"@prosopo/procaptcha-wrapper": "workspace:*",
 		"vue": "3.5.13"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.2",
-		"@prosopo/procaptcha-integration-build-config": "1.1.28",
+		"@prosopo/config": "workspace:*",
+		"@prosopo/procaptcha-integration-build-config": "workspace:*",
 		"@types/node": "22.10.2",
 		"@vitejs/plugin-vue": "5.2.3",
 		"del-cli": "6.0.0",

@@ -13,7 +13,7 @@
 		}
 	},
 	"scripts": {
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
+		"build": "pnpm run build:cross-env -- --mode ${NODE_ENV:-development}",
 		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
@@ -31,7 +31,7 @@
 		"fast-glob": "3.3.2"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.2",
+		"@prosopo/config": "workspace:*",
 		"@types/debug": "4.1.12",
 		"@types/node": "24.2.1",
 		"typescript": "5.6.2",

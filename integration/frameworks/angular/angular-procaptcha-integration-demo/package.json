@@ -12,14 +12,14 @@
 		"start": "ng serve",
 		"build": "ng build",
 		"watch": "ng build --watch --configuration development",
-		"dev": "npm run start"
+		"dev": "pnpm run start"
 	},
 	"dependencies": {
 		"@angular/common": "^20.3.9",
 		"@angular/core": "^20.3.25",
 		"@angular/platform-browser": "^20.3.9",
 		"@angular/router": "^20.3.9",
-		"@prosopo/angular-procaptcha-wrapper": "1.1.84"
+		"@prosopo/angular-procaptcha-wrapper": "workspace:*"
 	},
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -31,7 +31,7 @@
 		}
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.2",
+		"@prosopo/config": "workspace:*",
 		"@angular-builders/custom-webpack": "^20.0.0",
 		"@angular-devkit/build-angular": "^20.3.8",
 		"@angular/cli": "^20.3.8",

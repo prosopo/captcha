@@ -21,7 +21,7 @@
 	"source": "./src/index.ts",
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
+		"build": "pnpm run build:cross-env -- --mode ${NODE_ENV:-development}",
 		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
@@ -34,15 +34,15 @@
 	"dependencies": {
 		"@emotion/react": "11.11.1",
 		"@emotion/styled": "11.11.0",
-		"@prosopo/account": "2.8.43",
-		"@prosopo/load-balancer": "2.9.18",
-		"@prosopo/types": "4.7.1",
-		"@prosopo/widget-skeleton": "2.8.3",
+		"@prosopo/account": "workspace:*",
+		"@prosopo/load-balancer": "workspace:*",
+		"@prosopo/types": "workspace:*",
+		"@prosopo/widget-skeleton": "workspace:*",
 		"react": "18.3.1",
 		"react-dom": "18.3.1"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.2",
+		"@prosopo/config": "workspace:*",
 		"@types/jsdom": "21.1.7",
 		"@types/node": "22.10.2",
 		"@types/react": "18.3.1",

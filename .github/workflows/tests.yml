@@ -53,10 +53,11 @@ jobs:
           token: ${{ secrets.PROSOPONATOR_PAT }}
           submodules: "recursive"
 
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-          cache: 'npm'
+          cache: pnpm
 
       - uses: prosopo/captcha/.github/actions/npm@gha
         with:
@@ -108,7 +109,7 @@ jobs:
           sed -i 's|http://localhost|https://localhost|g' packages/cli/.env.test
           sed -i 's|http://localhost|https://localhost|g' packages/procaptcha-bundle/.env.test
 
-          NODE_ENV="test" npm run setup
+          NODE_ENV="test" pnpm run setup
 
           echo NODE_ENV: "$NODE_ENV"
 
@@ -118,8 +119,8 @@ jobs:
           SKIP_REDIS: "true"
         run: |
           npx concurrently \
-            "NODE_ENV=test npm run start:provider" \
-            "sleep 10s && NODE_TLS_REJECT_UNAUTHORIZED=0 NODE_ENV=test npm run test:all" \
+            "NODE_ENV=test pnpm run start:provider" \
+            "sleep 10s && NODE_TLS_REJECT_UNAUTHORIZED=0 NODE_ENV=test pnpm run test:all" \
             --success "first" --kill-others
 
       - run: docker compose --file ./docker/docker-compose.test.yml down

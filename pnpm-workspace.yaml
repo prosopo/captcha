@@ -1,0 +1,32 @@
+packages:
+  - "dev/*"
+  - "packages/*"
+  - "demos/*"
+  - "integration/*"
+  - "integration/frameworks/*/*"
+
+# Internal deps use the `workspace:*` protocol. The one exception is
+# packages/fingerprintjs (a standalone repo consumed as a submodule), whose
+# `@prosopo/config` dep keeps a registry version so it still installs on its
+# own; linkWorkspacePackages lets it resolve to the local dev/config here.
+linkWorkspacePackages: true
+
+# Ported from the former npm `overrides` field.
+overrides:
+  "@types/express-serve-static-core": "4.19.6"
+
+# Dependencies allowed to run install/build lifecycle scripts.
+allowBuilds:
+  "@biomejs/biome": true
+  "@parcel/watcher": true
+  bcrypt: true
+  cpu-features: true
+  cypress: true
+  esbuild: true
+  lmdb: true
+  mongodb-memory-server: true
+  msgpackr-extract: true
+  nx: true
+  protobufjs: true
+  sharp: true
+  ssh2: true

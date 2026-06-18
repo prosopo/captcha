@@ -54,10 +54,11 @@ jobs:
           token: ${{ steps.app_token.outputs.token }}
           fetch-depth: 0 # fetch all history
 
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-          cache: 'npm'
+          cache: pnpm
 
       - name: setup npm registry
         run: |
@@ -92,7 +93,7 @@ jobs:
           git config user.email "dev@prosopo.io"
 
 
-      - run: npm ci --ignore-scripts --include=dev
+      - run: pnpm install --frozen-lockfile --ignore-scripts --include=dev
 
       - name: detect changesets
         run: |
@@ -132,13 +133,13 @@ jobs:
 
       - name: version
         run: |
-          npm i -g @changesets/cli
+          pnpm install -g @changesets/cli
           npx @changesets/cli version --verbose
           git status
 
-          npm i --ignore-scripts --include=dev
+          pnpm install --ignore-scripts --include=dev
           # Set the version of the root package.json and the docker/images/provider/package.json to the same as @prosopo/cli
-          root_version=$(npm -w @prosopo/cli pkg get version | jq -r '.["@prosopo/cli"]')
+          root_version=$(pnpm --filter @prosopo/cli pkg get version | jq -r '.["@prosopo/cli"]')
           echo "root_version=$root_version" >> $GITHUB_ENV
           echo "Setting root package.json version to $root_version"
           npm pkg set version="$root_version"
@@ -182,10 +183,10 @@ jobs:
       - name: lint
         if: ${{ env.affected != '[]' }}
         run: |
-          npm run build:tsc -w @prosopo/config
-          npm run build:tsc -w @prosopo/lint
-          npm run build:tsc -w @prosopo/procaptcha-integration-build-config
-          npm run lint-fix
+          pnpm run build:tsc -w @prosopo/config
+          pnpm run build:tsc -w @prosopo/lint
+          pnpm run build:tsc -w @prosopo/procaptcha-integration-build-config
+          pnpm run lint-fix
           # Amend the previous commit with any lint fixes
           if [ -n "$(git status --porcelain)" ]; then
             git add -u .
@@ -256,10 +257,10 @@ jobs:
         run: |
           echo "Building and bundling affected packages"
           set -x
-          NODE_ENV=production npm run build:all
-          NODE_ENV=production npm run build:all:cjs
-          NODE_ENV=production npm run bundle:all
-          NODE_ENV=production npm run bundle:iife:all
+          NODE_ENV=production pnpm run build:all
+          NODE_ENV=production pnpm run build:all:cjs
+          NODE_ENV=production pnpm run bundle:all
+          NODE_ENV=production pnpm run bundle:iife:all
 
       - name: push
         if: ${{ env.affected != '[]' }}
@@ -304,7 +305,7 @@ jobs:
             echo "Publishing $pkg to npm"
             result=0
             set +e
-            npm publish -w "$pkg" --access public --registry https://registry.npmjs.org/
+            pnpm --filter "$pkg" publish --access public --registry https://registry.npmjs.org/
             result=$?
             set -e
             echo
@@ -336,7 +337,7 @@ jobs:
 #                    # make the package non-private so it can be published to gh
 #                    npm pkg --workspace $pkg delete private
 #                    set +e
-#                    npm publish -w "$pkg" --access public --registry https://npm.pkg.github.com
+#                    pnpm --filter "$pkg" publish --access public --registry https://npm.pkg.github.com
 #                    result_gh=$?
 #                    set -e
 #                    echo
@@ -376,7 +377,7 @@ jobs:
               continue
             fi
             set +e
-            npm publish:docker -w "$pkg"
+            pnpm --filter "$pkg" run publish:docker
             result=$?
             set -e
             echo

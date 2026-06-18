@@ -8,9 +8,9 @@
 	"type": "module",
 	"scripts": {
 		"docker-tag": "echo $(node -p \"require('./package.json').name.replace('@','').replace('-docker','')\"):$(node -p \"require('./package.json').version\")",
-		"build": "npm run clean && cp -r src dist && docker build --progress=plain --tag $(npm run --silent docker-tag) dist",
+		"build": "pnpm run clean && cp -r src dist && docker build --progress=plain --tag $(pnpm --silent run docker-tag) dist",
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"publish:docker": "docker push $(npm run --silent docker-tag)"
+		"publish:docker": "docker push $(pnpm --silent run docker-tag)"
 	},
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
