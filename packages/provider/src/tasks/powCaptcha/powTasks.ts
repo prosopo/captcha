@@ -49,7 +49,12 @@ import type {
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
-import { at, extractData, verifyRecency } from "@prosopo/util";
+import {
+	assertCoordsSafe,
+	at,
+	extractData,
+	verifyRecency,
+} from "@prosopo/util";
 import {
 	getCompositeIpAddress,
 	getIpAddressFromComposite,
@@ -212,22 +217,55 @@ export class PowCaptchaManager extends CaptchaManager {
 
 		const difficulty = challengeRecord.difficulty;
 
-		// Extract coordinates from salt if provided
+		// Extract coordinates from salt if provided. Invalid salt input
+		// disapproves the request rather than persisting partial data.
 		let coords: [number, number][][] | undefined;
+		let saltDecodeError: unknown;
 		if (salt) {
 			try {
 				const extractedData = extractData(salt);
-				// Convert extracted data to coordinate pairs
 				if (extractedData.length >= 2) {
-					coords = [[[extractedData[0], extractedData[1]] as [number, number]]];
+					const built: [number, number][][] = [
+						[[extractedData[0], extractedData[1]] as [number, number]],
+					];
+					assertCoordsSafe(built, "coords");
+					coords = built;
 				}
 			} catch (error) {
+				saltDecodeError = error;
 				this.logger.warn(() => ({
 					msg: "Failed to extract coordinates from salt",
 					error,
 					salt,
 				}));
 			}
+		}
+
+		if (saltDecodeError) {
+			const badSaltResult = {
+				status: CaptchaStatus.disapproved,
+				reason: ResultReason.CAPTCHA_INVALID_SALT,
+			};
+			const writePromises: Promise<void>[] = [
+				this.db.updatePowCaptchaRecordResult(
+					challenge,
+					badSaltResult,
+					false, // serverChecked
+					true, // userSubmitted
+					userTimestampSignature,
+					undefined, // never persist the bad coords
+				),
+			];
+			if (challengeRecord.sessionId) {
+				writePromises.push(
+					this.updateSessionRecordWithCache(challengeRecord.sessionId, {
+						userSubmitted: true,
+						result: badSaltResult,
+					}),
+				);
+			}
+			await Promise.all(writePromises);
+			return { verified: false };
 		}
 
 		if (!verifyRecency(challenge, timeout)) {
