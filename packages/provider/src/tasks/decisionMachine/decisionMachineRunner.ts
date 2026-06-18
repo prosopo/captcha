@@ -21,6 +21,7 @@ import {
 	type DecisionMachineCaptchaType,
 	DecisionMachineDecision,
 	type DecisionMachineInput,
+	DecisionMachineKind,
 	type DecisionMachineOutput,
 	DecisionMachineOutputSchema,
 	DecisionMachineRuntime,
@@ -68,26 +69,28 @@ export class DecisionMachineRunner {
 
 	constructor(private readonly db: IProviderDatabase) {}
 
-	/** Build a cache key for a given scope + dappAccount pair. */
+	/** Build a cache key for a given scope + kind + dappAccount tuple. */
 	private static cacheKey(
 		scope: DecisionMachineScope,
+		kind: DecisionMachineKind,
 		dappAccount?: string,
 	): string {
-		return `${scope}:${dappAccount ?? ""}`;
+		return `${scope}:${kind}:${dappAccount ?? ""}`;
 	}
 
 	/** Return a cached artifact if still fresh, or undefined. */
 	private getCachedArtifact(
 		scope: DecisionMachineScope,
+		kind: DecisionMachineKind,
 		dappAccount?: string,
 	): DecisionMachineArtifact | undefined | null {
 		const entry = this.artifactCache.get(
-			DecisionMachineRunner.cacheKey(scope, dappAccount),
+			DecisionMachineRunner.cacheKey(scope, kind, dappAccount),
 		);
 		if (!entry) return null; // cache miss
 		if (Date.now() - entry.cachedAt > ARTIFACT_CACHE_TTL_MS) {
 			this.artifactCache.delete(
-				DecisionMachineRunner.cacheKey(scope, dappAccount),
+				DecisionMachineRunner.cacheKey(scope, kind, dappAccount),
 			);
 			return null; // expired
 		}
@@ -97,13 +100,17 @@ export class DecisionMachineRunner {
 	/** Store an artifact (or undefined for negative cache) in the cache. */
 	private setCachedArtifact(
 		scope: DecisionMachineScope,
+		kind: DecisionMachineKind,
 		dappAccount: string | undefined,
 		artifact: DecisionMachineArtifact | undefined,
 	): void {
-		this.artifactCache.set(DecisionMachineRunner.cacheKey(scope, dappAccount), {
-			artifact,
-			cachedAt: Date.now(),
-		});
+		this.artifactCache.set(
+			DecisionMachineRunner.cacheKey(scope, kind, dappAccount),
+			{
+				artifact,
+				cachedAt: Date.now(),
+			},
+		);
 	}
 
 	/**
@@ -121,6 +128,7 @@ export class DecisionMachineRunner {
 		try {
 			const artifact = await this.selectArtifact(
 				input.dappAccount,
+				DecisionMachineKind.Decision,
 				input.captchaType,
 			);
 			if (!artifact) {
@@ -164,7 +172,10 @@ export class DecisionMachineRunner {
 		logger?: Logger,
 	): Promise<RoutingMachineOutput | undefined> {
 		try {
-			const artifact = await this.selectArtifact(input.dappAccount);
+			const artifact = await this.selectArtifact(
+				input.dappAccount,
+				DecisionMachineKind.Routing,
+			);
 			if (!artifact) return undefined;
 			if (artifact.runtime !== DecisionMachineRuntime.Node) {
 				logger?.warn?.(() => ({
@@ -199,7 +210,10 @@ export class DecisionMachineRunner {
 		logger?: Logger,
 	): Promise<CounterSpec[]> {
 		try {
-			const artifact = await this.selectArtifact(input.dappAccount);
+			const artifact = await this.selectArtifact(
+				input.dappAccount,
+				DecisionMachineKind.Routing,
+			);
 			if (!artifact) return [];
 			if (artifact.runtime !== DecisionMachineRuntime.Node) return [];
 			const specs = await this.runArtifactExport(
@@ -235,14 +249,19 @@ export class DecisionMachineRunner {
 	 */
 	private async selectArtifact(
 		dappAccount: string,
+		kind: DecisionMachineKind,
 		captchaType?: DecisionMachineCaptchaType,
 	): Promise<DecisionMachineArtifact | undefined> {
 		// Try cache first for both scopes
 		const cachedDapp = this.getCachedArtifact(
 			DecisionMachineScope.Dapp,
+			kind,
 			dappAccount,
 		);
-		const cachedGlobal = this.getCachedArtifact(DecisionMachineScope.Global);
+		const cachedGlobal = this.getCachedArtifact(
+			DecisionMachineScope.Global,
+			kind,
+		);
 
 		// Both cached (including negative cache) — use priority logic without DB calls
 		if (cachedDapp !== null && cachedGlobal !== null) {
@@ -260,10 +279,15 @@ export class DecisionMachineRunner {
 			cachedDapp !== null
 				? Promise.resolve(cachedDapp)
 				: this.db
-						.getDecisionMachineArtifact(DecisionMachineScope.Dapp, dappAccount)
+						.getDecisionMachineArtifact(
+							DecisionMachineScope.Dapp,
+							dappAccount,
+							kind,
+						)
 						.then((a) => {
 							this.setCachedArtifact(
 								DecisionMachineScope.Dapp,
+								kind,
 								dappAccount,
 								a ?? undefined,
 							);
@@ -272,10 +296,11 @@ export class DecisionMachineRunner {
 			cachedGlobal !== null
 				? Promise.resolve(cachedGlobal)
 				: this.db
-						.getDecisionMachineArtifact(DecisionMachineScope.Global)
+						.getDecisionMachineArtifact(DecisionMachineScope.Global, undefined, kind)
 						.then((a) => {
 							this.setCachedArtifact(
 								DecisionMachineScope.Global,
+								kind,
 								undefined,
 								a ?? undefined,
 							);
