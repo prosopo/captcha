@@ -90,21 +90,15 @@ http://:9090 {
 	metrics /metrics
 }
 
-# Main site: bound on :8443. Layer4 (above) proxies non-trap-subzone
-# SNI connections from :443 in. ACME issuer is restricted to HTTP-01
-# because TLS-ALPN-01 requires control of :443. The :80 redirect
-# server is auto-created by Caddy (auto_https=on); it serves both
-# ACME HTTP-01 challenges AND HTTP→HTTPS redirects targeting port
-# 443 (i.e. the layer4 listener), which forwards non-matching SNIs
-# back to this same :8443 server.
-https://{$CADDY_DOMAIN}:8443 {
-
-	tls {
-		issuer acme {
-			disable_tlsalpn_challenge
-		}
-	}
-	
+# Shared route/handler config. Imported by both the per-host site
+# ({$CADDY_DOMAIN} = pronodeN.prosopo.io) and the load-balanced site
+# ({$CADDY_GLOBAL_DOMAIN} = pronode.prosopo.io). Only the TLS strategy
+# differs between the two: per-host uses ACME HTTP-01 (works because each
+# pronodeN's A record points to one IP), load-balanced uses `tls internal`
+# because DNS round-robin breaks HTTP-01 challenges — a real cert
+# distribution mechanism (shared storage, DNS-01, or pre-provisioned PEM)
+# is a follow-up.
+(provider_site) {
 	handle /robots.txt {
 		# Serve /srv/static/robots.txt. Do NOT strip the leading slash:
 		# file_server prepends `root` to the request path, so `/robots.txt`
@@ -293,4 +287,32 @@ https://{$CADDY_DOMAIN}:8443 {
 	log {
 		format json
 	}
+}
+
+# Per-host site: bound on :8443. Layer4 (above) proxies non-trap-subzone
+# SNI connections from :443 in. ACME issuer is restricted to HTTP-01
+# because TLS-ALPN-01 requires control of :443. The :80 redirect server
+# is auto-created by Caddy (auto_https=on); it serves both ACME HTTP-01
+# challenges AND HTTP→HTTPS redirects targeting port 443 (i.e. the layer4
+# listener), which forwards non-matching SNIs back to this same :8443.
+https://{$CADDY_DOMAIN}:8443 {
+	tls {
+		issuer acme {
+			disable_tlsalpn_challenge
+		}
+	}
+	import provider_site
+}
+
+# Load-balanced site for pronode.prosopo.io. Pronode operators round-robin
+# DNS this hostname across every pronode, so ACME HTTP-01 doesn't work
+# here — challenges land on whichever node DNS hands out, which usually
+# isn't the one renewing. `tls internal` issues a Caddy-CA cert so the
+# layer4 → :8443 routing path is exercised without Caddy attempting (and
+# failing) ACME for this hostname. Replace with a real cert strategy
+# (shared storage / DNS-01 / pre-provisioned PEM) before this domain
+# is exposed to real browser traffic.
+https://{$CADDY_GLOBAL_DOMAIN}:8443 {
+	tls internal
+	import provider_site
 }
