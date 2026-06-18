@@ -1495,6 +1495,145 @@ describe("redisAccessRulesStorage", () => {
 			expect(foundAccessRules[0]).toEqual(topRule);
 			expect(foundAccessRules[1]).toEqual(bottomRule);
 		});
+
+		test("blockOnly filter returns only Block rules even when Restrict rules share the same user scope", async () => {
+			// Mix the two policy types across the same (clientId, ja4Hash)
+			// space so the strict-match query would otherwise return both.
+			// Without blockOnly, the result includes Restrict rules; with
+			// blockOnly the Redis-side `@type:{block}` clause excludes
+			// them before the JS sees the candidates.
+			const clientId = getUniqueString();
+			const ja4Hash = "t13d_blockonly";
+
+			const block1: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId,
+				ja4Hash,
+			};
+			const block2: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId,
+				ja4Hash,
+				coords: "[[[1,2]]]",
+			};
+			const restrict1: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				clientId,
+				ja4Hash,
+			};
+			const restrict2: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				clientId,
+				ja4Hash,
+				coords: "[[[3,4]]]",
+			};
+			const blockOtherClient: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: getUniqueString(),
+				ja4Hash,
+			};
+
+			await insertRules([
+				block1,
+				block2,
+				restrict1,
+				restrict2,
+				blockOtherClient,
+			]);
+
+			// Greedy / no blockOnly → both Block and Restrict for this
+			// clientId come back. The other-client rule is excluded by
+			// the greedy policy scope match (different clientId AND set).
+			const mixed = await accessRulesReader.findRules({
+				policyScope: { clientId },
+				policyScopeMatch: FilterScopeMatch.Greedy,
+				userScope: { ja4Hash },
+				userScopeMatch: FilterScopeMatch.Greedy,
+			});
+			const mixedTypes = mixed.map((r) => r.type).sort();
+			expect(mixed).toHaveLength(4);
+			expect(mixedTypes).toEqual([
+				AccessPolicyType.Block,
+				AccessPolicyType.Block,
+				AccessPolicyType.Restrict,
+				AccessPolicyType.Restrict,
+			]);
+
+			// Same query with blockOnly → only the two Block rules for
+			// this clientId. Restrict rules must be filtered server-side.
+			const blockOnly = await accessRulesReader.findRules({
+				policyScope: { clientId },
+				policyScopeMatch: FilterScopeMatch.Greedy,
+				userScope: { ja4Hash },
+				userScopeMatch: FilterScopeMatch.Greedy,
+				blockOnly: true,
+			});
+			expect(blockOnly).toHaveLength(2);
+			for (const rule of blockOnly) {
+				expect(rule.type).toBe(AccessPolicyType.Block);
+				expect(rule.clientId).toBe(clientId);
+			}
+			const blockHashes = new Set(blockOnly.map((r) => r.coords));
+			expect(blockHashes).toEqual(new Set([undefined, "[[[1,2]]]"]));
+		});
+
+		test("blockOnly composes with matchingFieldsOnly on the ranked hot path — Restrict rules never come back", async () => {
+			// Exercises the production hot path: greedy user-scope match
+			// with matchingFieldsOnly=true (the FT.AGGREGATE-ranked
+			// branch). The greedy ja4 query is permissive enough that
+			// `ruleApplies` is still the last word on whether a rule
+			// applies; the only guarantee this layer is supposed to
+			// uphold is that Restrict candidates are gone before JS sees
+			// them. That's what blockOnly is for.
+			const clientId = getUniqueString();
+			const ja4Hash = "t13d_hotpath";
+
+			const blockMatch: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId,
+				ja4Hash,
+			};
+			const restrictMatch: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				clientId,
+				ja4Hash,
+			};
+			const restrictMatchWithCoords: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				clientId,
+				ja4Hash,
+				coords: "[[[5,6]]]",
+			};
+
+			await insertRules([
+				blockMatch,
+				restrictMatch,
+				restrictMatchWithCoords,
+			]);
+
+			const found = await accessRulesReader.findRules(
+				{
+					policyScope: { clientId },
+					policyScopeMatch: FilterScopeMatch.Greedy,
+					userScope: { ja4Hash },
+					userScopeMatch: FilterScopeMatch.Greedy,
+					blockOnly: true,
+				},
+				true, // matchingFieldsOnly — ranked path
+			);
+
+			// Restrict rules must not appear; at least the matching
+			// Block rule must be present.
+			expect(found.some((r) => r.type === AccessPolicyType.Restrict)).toBe(
+				false,
+			);
+			expect(
+				found.some(
+					(r) =>
+						r.type === AccessPolicyType.Block && r.ja4Hash === ja4Hash,
+				),
+			).toBe(true);
+		});
 	});
 
 	afterAll(async () => {
