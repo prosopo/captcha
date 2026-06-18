@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { PolicyScope, UserIp, UserScope } from "#policy/rule.js";
+import { AccessPolicyType, type PolicyScope, type UserIp, type UserScope } from "#policy/rule.js";
 import { userScopeSchema } from "#policy/ruleInput/userScopeInput.js";
 import {
 	type AccessRulesFilter,
@@ -201,6 +201,10 @@ export const getRulesRedisQuery = (
 
 	if (filter.groupId) {
 		queryParts.push(`@groupId:{${filter.groupId}}`);
+	}
+
+	if (filter.blockOnly) {
+		queryParts.push(`@type:{${AccessPolicyType.Block}}`);
 	}
 
 	const policyScopeQuery = getPolicyScopeQuery(
