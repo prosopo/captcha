@@ -8,6 +8,7 @@
 		"NO_CAPTCHA": "Ei löytynyt captchaa",
 		"NO_SESSION_FOUND": "Ei löytynyt istuntoa",
 		"IP_ADDRESS_MISMATCH": "IP-osoitteet eivät täsmää",
+		"INVALID_SALT": "Virheellinen suola",
 		"INVALID_TOKEN": "Virheellinen tunniste",
 		"INVALID_SOLUTION": "Virheellinen ratkaisu",
 		"DECRYPTION_ERROR": "Virhe salauksessa",

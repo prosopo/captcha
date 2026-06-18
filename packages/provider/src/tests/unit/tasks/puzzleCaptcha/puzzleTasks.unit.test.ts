@@ -261,6 +261,57 @@ describe("PuzzleCaptchaManager", () => {
 			expect(db.updatePuzzleCaptchaRecordResult).not.toHaveBeenCalled();
 		});
 
+		it("auto-fails with CAPTCHA_INVALID_SALT when salt decodes to invalid coords", async () => {
+			const a = buildArgs();
+			const challengeRecord: Partial<PuzzleCaptchaStored> = {
+				challenge: a.challenge,
+				dappAccount: a.dappAccount,
+				userAccount: a.userAccount,
+				targetX: 100,
+				targetY: 100,
+				tolerance: 15,
+				ipAddress: getCompositeIpAddress(a.ipAddress),
+				result: { status: CaptchaStatus.pending },
+				userSubmitted: false,
+			};
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord(challengeRecord),
+			);
+			vi.mocked(db.updatePuzzleCaptchaRecordResult).mockResolvedValue(
+				undefined,
+			);
+
+			const malformedSalt = "0x010200";
+
+			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
+				a.challenge,
+				a.providerSignature,
+				100,
+				100,
+				[],
+				1000,
+				a.userSignature,
+				a.ipAddress,
+				a.headers,
+				undefined, // behavioralData
+				malformedSalt,
+			);
+
+			expect(result).toBe(false);
+			expect(validatePuzzleSolution).not.toHaveBeenCalled();
+			expect(db.updatePuzzleCaptchaRecordResult).toHaveBeenCalledWith(
+				a.challenge,
+				{
+					status: CaptchaStatus.disapproved,
+					reason: ResultReason.CAPTCHA_INVALID_SALT,
+				},
+				false, // serverChecked
+				true, // userSubmitted
+				a.userSignature,
+				undefined, // coords must NOT be the bad value
+			);
+		});
+
 		it("returns false and records a timeout when the challenge is not recent", async () => {
 			const a = buildArgs();
 			const challengeRecord: Partial<PuzzleCaptchaStored> = {

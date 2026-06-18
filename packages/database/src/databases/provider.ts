@@ -91,7 +91,7 @@ import {
 	accessRulesRedisIndex,
 	createRedisAccessRulesStorage,
 } from "@prosopo/user-access-policy/redis";
-import { buildDomainSuffixCandidates } from "@prosopo/util";
+import { assertCoordsSafe, buildDomainSuffixCandidates } from "@prosopo/util";
 import type { ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
 import type { CentralDbStreamer } from "./centralDbStreamer.js";
@@ -952,6 +952,8 @@ export class ProviderDatabase
 		const tables = this.getTables();
 		const timestamp = new Date();
 		const isDisapproved = result.status === CaptchaStatus.disapproved;
+		// Defence-in-depth: validate coords before write.
+		assertCoordsSafe(coords, "coords");
 		const setStage: Record<string, unknown> = {
 			result,
 			serverChecked,
@@ -1212,6 +1214,8 @@ export class ProviderDatabase
 		const tables = this.getTables();
 		const timestamp = lastUpdatedTimestamp ?? new Date();
 		const isDisapproved = result.status === CaptchaStatus.disapproved;
+		// Defence-in-depth: validate coords before write.
+		assertCoordsSafe(coords, "coords");
 		const setStage: Record<string, unknown> = {
 			result,
 			serverChecked,
