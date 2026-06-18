@@ -90,7 +90,7 @@ export const getClientApiPathsExpectingProsopoHeaders =
  */
 export const getUserFromJWT = (req: Request): string | undefined => {
 	try {
-		const authHeader = req.headers.Authorization || req.headers.authorization;
+		const authHeader = req.headers.authorization;
 		if (!authHeader || typeof authHeader !== "string") {
 			return undefined;
 		}

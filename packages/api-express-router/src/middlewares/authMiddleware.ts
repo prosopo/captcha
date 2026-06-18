@@ -53,7 +53,7 @@ export const authMiddleware = (
 };
 
 const extractJWT = (req: Request) => {
-	const authHeader = req.headers.Authorization || req.headers.authorization;
+	const authHeader = req.headers.authorization;
 
 	if (!authHeader || typeof authHeader !== "string") {
 		throw new ProsopoApiError("GENERAL.MISSING_AUTH_HEADER", {
