@@ -19,6 +19,7 @@ import {
 	DecisionMachineCaptchaTypeSchema,
 } from "../client/captchaType/captchaType.js";
 import type { RequestHeaders } from "../provider/api.js";
+import type { SimdReadings } from "../provider/detection.js";
 
 export type EnrichedDnsEvent = {
 	peerIp?: string;
@@ -201,6 +202,12 @@ export interface RoutingMachineRawSignals {
 	userAgent: string;
 	ja4?: string;
 	behavioralDataPacked?: DecisionMachineBehavioralDataPacked;
+	fingerprintProof?: string;
+	// Decoded per-CPU WASM SIMD fingerprint readings, when the client submitted
+	// them with the PoW solution (decrypted and attached to the session, then
+	// surfaced here for the post-pow routing machine). Undefined when absent or
+	// unsupported on the client.
+	simd?: SimdReadings;
 }
 
 export type RoutingMachinePhase = "route" | "postPow";
@@ -225,6 +232,10 @@ export interface RoutingMachineOutput {
 	captchaType: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle;
 	solvedImagesCount?: number;
 	powDifficulty?: number;
+	// Optional selection reason the machine can attach to explain an escalation
+	// (e.g. why it chose image over pow). Persisted to `session.reason` by the
+	// provider. Free-form string because machines are operator-authored.
+	reason?: string;
 }
 
 export const RoutingMachineOutputSchema = z.object({
@@ -234,5 +245,6 @@ export const RoutingMachineOutputSchema = z.object({
 		z.literal(CaptchaType.puzzle),
 	]),
 	solvedImagesCount: z.number().int().positive().optional(),
-	powDifficulty: z.number().int().positive().optional(),
+	powDifficulty: z.number().positive().optional(),
+	reason: z.string().optional(),
 });

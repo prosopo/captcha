@@ -12,8 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { randomUUID } from "node:crypto";
 import type { Logger } from "@prosopo/logger";
-import { ApiPrefix, type IPInfoResponse } from "@prosopo/types";
+import {
+	ApiPrefix,
+	CaptchaStatus,
+	CaptchaType,
+	FrictionlessReason,
+	type IPInfoResponse,
+	type RequestHeaders,
+	ResultReason,
+	type Session,
+} from "@prosopo/types";
+import type { IProviderDatabase } from "@prosopo/types-database";
 import {
 	AccessPolicyType,
 	type AccessRule,
@@ -21,9 +32,11 @@ import {
 	FilterScopeMatch,
 	type UserScope,
 	type UserScopeRecord,
+	makeAccessRuleHash,
 	userScopeInput,
 } from "@prosopo/user-access-policy";
 import type { NextFunction, Request, Response } from "express";
+import { getCompositeIpAddress } from "../compositeIpAddress.js";
 
 export const getRequestUserScope = (
 	requestHeaders: Record<string, unknown>,
@@ -74,6 +87,47 @@ const SCALAR_USER_SCOPE_FIELDS = [
 	"countryCode",
 	"asn",
 ] as const satisfies ReadonlyArray<keyof UserScope>;
+
+// Derive the populated-scope field list for a matched rule (the same shape
+// as Mongo's `accessControlRules.ruleType`). Used when persisting a blocked
+// session so the Traffic page can group blocks by rule-type — `['ja4Hash']`
+// vs `['ja4Hash','coords']` vs `['ip']` — without re-parsing the rule.
+const deriveRuleType = (rule: AccessRule): string[] => {
+	const fields: string[] = [];
+	for (const f of SCALAR_USER_SCOPE_FIELDS) {
+		if (rule[f] !== undefined) {
+			fields.push(f);
+		}
+	}
+	if (rule.numericIp !== undefined) {
+		fields.push("ip");
+	} else if (
+		rule.numericIpMaskMin !== undefined &&
+		rule.numericIpMaskMax !== undefined
+	) {
+		fields.push("ipMask");
+	}
+	return fields;
+};
+
+// Strip header values that aren't strings so the Session.headers object
+// matches the schema (RequestHeaders is `Record<string, string>`). Mirrors
+// what the frictionless path stores; cheaper than dragging every catch-all
+// header through and keeps the blocked-session doc the same shape as a
+// normal session for the Traffic-page aggregations.
+const sanitizeRequestHeaders = (
+	headers: Record<string, unknown>,
+): RequestHeaders => {
+	const out: Record<string, string> = {};
+	for (const [k, v] of Object.entries(headers)) {
+		if (typeof v === "string") {
+			out[k] = v;
+		} else if (Array.isArray(v)) {
+			out[k] = v.map((x) => String(x)).join(", ");
+		}
+	}
+	return out as RequestHeaders;
+};
 
 const ruleHasIpConstraint = (rule: AccessRule): boolean =>
 	rule.numericIp !== undefined ||
@@ -174,13 +228,25 @@ export const rankCandidateRules = (
 /**
  * Fetch the access rules that apply to a request, most specific first.
  *
- * Old shape: 2 × (2^n − 1) `FT.SEARCH` round trips, one per non-empty subset
- * of the populated user-scope fields × {clientId, undefined}. With n=6 fields
- * (incl. ASN) that's 126 round trips per request.
+ * Evolution of this lookup:
  *
- * New shape: one greedy `FT.SEARCH` that returns any rule touching any
- * populated request field for either the matching clientId or no clientId.
- * Specificity is computed in JS afterwards. Same external semantics.
+ *  - Original: 2 × (2^n − 1) `FT.SEARCH` round trips, one per non-empty
+ *    subset of the populated user-scope fields × {clientId, undefined}.
+ *    n=6 fields ⇒ 126 RTTs per request.
+ *  - #2657 (greedy): one OR-of-fields `FT.SEARCH`, JS-side rank picks
+ *    the most-specific. 1 RTT but pulled hundreds of irrelevant hashes
+ *    every request.
+ *  - #2689 / 3.6.38: greedy + FT.AGGREGATE+CURSOR to defeat the silent
+ *    1000-cap truncation. Tipped CPU into 125% peg in production.
+ *  - 3.6.38.1 hotfix: reverted to greedy + FT.SEARCH (this file's old
+ *    shape with the truncation bug back).
+ *  - Now (this fix): strict-match query so every returned candidate
+ *    actually applies, with specificity ranked server-side via
+ *    FT.AGGREGATE+APPLY+SORTBY+LIMIT in the storage layer. Node receives
+ *    at most 20 already-ranked rules — no JS sort needed for
+ *    correctness, but `rankCandidateRules` is kept as defence so any
+ *    mismatch between the Redis-side score and the JS semantics surfaces
+ *    as ordering rather than letting traffic through.
  */
 export const getPrioritisedAccessRule = async (
 	userAccessRulesStorage: AccessRulesStorage,
@@ -202,7 +268,7 @@ export const getPrioritisedAccessRule = async (
 
 	const candidates = await userAccessRulesStorage.findRules(
 		filter,
-		false,
+		true, // matchingFieldsOnly — engages server-side specificity rank
 		true,
 	);
 
@@ -213,6 +279,12 @@ export class BlacklistRequestInspector {
 	public constructor(
 		private readonly userAccessRulesStorage: AccessRulesStorage,
 		private readonly environmentReadinessWaiter: () => Promise<void>,
+		// Optional so existing test-suite construction (where the DB isn't
+		// always plumbed) keeps working. When provided, every request that
+		// the inspector decides to 401 also writes a synthetic
+		// `blocked=true, deleted=true` session record so the Traffic page
+		// can aggregate per-rule block counts.
+		private readonly db?: IProviderDatabase,
 	) {}
 
 	public async abortRequestForBlockedUsers(
@@ -301,16 +373,41 @@ export class BlacklistRequestInspector {
 				),
 				clientId,
 			);
-			if (
-				!accessPolicies ||
-				accessPolicies.length === 0 ||
-				!accessPolicies[0]
-			) {
+			// Skip policies that have explicitly opted out of request-time
+			// enforcement (`deferToVerify`). Those are matched again from
+			// `checkForHardBlock` inside each captcha task's verify path —
+			// same pattern coords rules already use, just driven by a
+			// per-policy flag rather than by blanking the scope field.
+			const enforceable = (accessPolicies ?? []).filter(
+				(p) => !p.deferToVerify,
+			);
+			if (enforceable.length === 0 || !enforceable[0]) {
 				return false;
 			}
-			const accessPolicy = accessPolicies[0];
+			const accessPolicy = enforceable[0];
 
-			return AccessPolicyType.Block === accessPolicy.type;
+			const isBlock = AccessPolicyType.Block === accessPolicy.type;
+			if (isBlock) {
+				// `Restrict` policies aren't logged or persisted here — those
+				// don't 401, they let the request through with modified
+				// captcha params and the downstream captcha-creation path
+				// already writes a normal session record.
+				this.recordBlockDecision(
+					accessPolicy,
+					{
+						userId,
+						clientId,
+						rawIp,
+						ja4,
+						requestHeaders,
+						ipInfo,
+						countryCode,
+						asn,
+					},
+					logger,
+				);
+			}
+			return isBlock;
 		} catch (err) {
 			logger.error(() => ({
 				err,
@@ -319,6 +416,105 @@ export class BlacklistRequestInspector {
 
 			return true;
 		}
+	}
+
+	/**
+	 * Emit a structured log line and (if a DB is wired) persist a synthetic
+	 * Session record for the request we're about to 401. Fire-and-forget on
+	 * the Mongo side — the structured log line is the source of truth and
+	 * the 401 response is never delayed by a persistence failure.
+	 *
+	 * Carries the matched rule's identity (hash + ruleType + description)
+	 * so the Traffic page can surface "what's blocking traffic for this
+	 * site" without re-reading the rules collection.
+	 */
+	private recordBlockDecision(
+		accessPolicy: AccessRule,
+		ctx: {
+			userId?: string;
+			clientId?: string;
+			rawIp: string;
+			ja4: string;
+			requestHeaders: Record<string, unknown>;
+			ipInfo?: IPInfoResponse;
+			countryCode?: string;
+			asn?: number;
+		},
+		logger: Logger,
+	): void {
+		const ruleHash = makeAccessRuleHash(accessPolicy);
+		const ruleType = deriveRuleType(accessPolicy);
+		const ruleDescription = accessPolicy.description;
+		const userAgent =
+			typeof ctx.requestHeaders["user-agent"] === "string"
+				? (ctx.requestHeaders["user-agent"] as string)
+				: undefined;
+
+		logger.info(() => ({
+			msg: "Access policy block",
+			data: {
+				ruleHash,
+				ruleType,
+				ruleDescription,
+				policyType: accessPolicy.type,
+				clientId: ctx.clientId,
+				userScope: {
+					userId: ctx.userId,
+					ja4: ctx.ja4,
+					ip: ctx.rawIp,
+					userAgent,
+					countryCode: ctx.countryCode,
+					asn: ctx.asn,
+				},
+			},
+		}));
+
+		// Persistence is optional and best-effort. The log line above is the
+		// primary record; storeBlockedSession swallows its own errors so the
+		// 401 path is unaffected if Mongo is unhappy.
+		if (!this.db) {
+			return;
+		}
+		const ipAddress = ctx.rawIp ? getCompositeIpAddress(ctx.rawIp) : undefined;
+		if (!ipAddress) {
+			// Schema requires ipAddress; without a parseable IP we drop the
+			// persistence and rely on the log line.
+			return;
+		}
+		const headers = sanitizeRequestHeaders(ctx.requestHeaders);
+		const session: Session = {
+			sessionId: `blocked-${randomUUID()}`,
+			createdAt: new Date(),
+			// Sentinel values for schema-required fields the blocked request
+			// never reached the point of populating.
+			token: "",
+			score: 1,
+			threshold: 0,
+			scoreComponents: { baseScore: 1 },
+			providerSelectEntropy: 0,
+			captchaType: CaptchaType.frictionless,
+			webView: false,
+			iFrame: false,
+			decryptedHeadHash: "",
+			// Real data the inspector did collect.
+			siteKey: ctx.clientId,
+			ipAddress,
+			ipInfo: ctx.ipInfo,
+			headers,
+			reason: FrictionlessReason.ACCESS_POLICY_BLOCK,
+			result: {
+				status: CaptchaStatus.disapproved,
+				reason: ResultReason.ACCESS_POLICY_BLOCK,
+			},
+			// Rule identity — the whole point of writing this record.
+			ruleHash,
+			ruleType,
+			ruleDescription,
+			// blocked + deleted are stamped inside storeBlockedSession so
+			// the synthetic record is unmistakably a block-middleware
+			// artefact and can never be picked up by the captcha flow.
+		};
+		void this.db.storeBlockedSession(session);
 	}
 
 	protected isApiUnrelatedRoute(url: string): boolean {

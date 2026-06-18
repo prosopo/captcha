@@ -44,7 +44,18 @@ type DecideFn = DecisionMachineRunner["decide"];
 // every mock call site.
 const asPuzzleRecord = (
 	partial: Partial<PuzzleCaptchaStored>,
-): PuzzleCaptchaRecord => partial as unknown as PuzzleCaptchaRecord;
+): PuzzleCaptchaRecord => {
+	// Ensure `submittedAtTimestamp` is set on every mocked record (defaults
+	// to "now"). The verify path's submit→verify recency check reads this
+	// field directly off the record; undefined would resolve to +Infinity
+	// and disapprove every test by default. Tests that need recency to
+	// fail set submittedAtTimestamp explicitly to a stale value.
+	const withDefaults: Partial<PuzzleCaptchaStored> = {
+		submittedAtTimestamp: new Date(),
+		...partial,
+	};
+	return withDefaults as unknown as PuzzleCaptchaRecord;
+};
 
 vi.mock("@polkadot/util", async (importOriginal) => {
 	const actual = await importOriginal<typeof import("@polkadot/util")>();
@@ -478,6 +489,9 @@ describe("PuzzleCaptchaManager", () => {
 					dappAccount,
 					result: { status: CaptchaStatus.approved },
 					serverChecked: false,
+					// Stale submit time → submit→verify delta exceeds any
+					// sane timeout. Triggers the recency-fail branch.
+					submittedAtTimestamp: new Date(0),
 				}),
 			);
 			vi.mocked(verifyRecency).mockImplementation(() => false);

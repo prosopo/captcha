@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { array, boolean, number, object, type output, string, z } from "zod";
+import {
+	DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
+	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
+} from "../config/timeouts.js";
 import { CaptchaType } from "./captchaType/captchaType.js";
 import { CaptchaTypeSpec } from "./captchaType/captchaTypeSpec.js";
 
@@ -179,6 +183,14 @@ export const SpamFilterRulesSchema = object({
 
 export const trafficFilterAbuserScoreThresholdDefault = 0.5;
 
+// Operators almost always want `blockDatacenter` to catch scraping/automation
+// traffic but not legitimate consumer relays that exit from datacenter IPs
+// (Apple's iCloud Private Relay being the canonical example). Entries are
+// compared case-insensitively against `IPInfoResult.datacenterName`, which
+// comes from the upstream ipapi `datacenter.datacenter` field.
+const MAX_DATACENTER_ALLOWLIST_ENTRIES = 50;
+const MAX_DATACENTER_ALLOWLIST_ENTRY_LENGTH = 128;
+
 export const TrafficFilterSchema = object({
 	blockVpn: boolean().optional().default(false),
 	blockProxy: boolean().optional().default(false),
@@ -190,6 +202,11 @@ export const TrafficFilterSchema = object({
 		.optional()
 		.default(trafficFilterAbuserScoreThresholdDefault),
 	blockDatacenter: boolean().optional().default(false),
+	datacenterNameAllowlist: array(
+		string().min(1).max(MAX_DATACENTER_ALLOWLIST_ENTRY_LENGTH),
+	)
+		.max(MAX_DATACENTER_ALLOWLIST_ENTRIES)
+		.optional(),
 	blockMobile: boolean().optional().default(false),
 	blockSatellite: boolean().optional().default(false),
 	blockCrawler: boolean().optional().default(false),
@@ -224,13 +241,29 @@ export type IHoneypotSettings = output<typeof HoneypotSettingsSchema>;
 export const ClientSettingsSchema = object({
 	captchaType: CaptchaTypeSpec.optional().default(captchaTypeDefault),
 	domains: array(string()).min(1),
+	// Maximum ms between user submission and the dapp's /verify call.
+	verifiedTimeout: number()
+		.int()
+		.min(1000)
+		.max(600000)
+		.optional()
+		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
+	// Maximum ms between challenge issuance and the user's submission to
+	// /pow/solution or /puzzle/solution. Bounds how long the user has to
+	// solve the challenge before the submission is rejected as stale.
+	// Distinct from `verifiedTimeout` (which gates submission → /verify).
+	solutionTimeout: number()
+		.int()
+		.min(1000)
+		.max(600000)
+		.optional()
+		.default(DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT),
 	frictionlessThreshold: number()
 		.min(0)
 		.max(1)
 		.optional()
 		.default(frictionlessThresholdDefault),
 	powDifficulty: number()
-		.int()
 		.positive()
 		.min(1)
 		.max(10)

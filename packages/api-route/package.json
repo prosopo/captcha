@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/api-route",
-	"version": "2.6.46",
+	"version": "2.6.47",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"type": "module",

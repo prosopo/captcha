@@ -1,5 +1,140 @@
 # @prosopo/types-database
 
+## 4.10.4
+### Patch Changes
+
+- Updated dependencies [46fedf4]
+  - @prosopo/types@4.7.1
+  - @prosopo/user-access-policy@3.10.4
+
+## 4.10.3
+### Patch Changes
+
+- 3a46191: feat(traffic-filter): allowlist datacenter operators by name
+  
+  Apple's iCloud Private Relay exits from datacenter IPs, so sites with
+  `blockDatacenter: true` were dropping legitimate Safari traffic. ipapi
+  already reports the operator name verbatim in `datacenter.datacenter`
+  — expose it on `IPInfoResult.datacenterName` and let `TrafficFilter`
+  carry an optional `datacenterNameAllowlist` so operators can opt the
+  relay traffic through without disabling the rest of the rule. Match
+  is case-/whitespace-insensitive; the allowlist only suppresses the
+  datacenter check, so a VPN/Tor/Proxy/Abuser hit on the same IP still
+  blocks. New field is wired through Zod (capped 50 × 128 chars) and
+  the Mongoose client settings schema so it persists.
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/types@4.7.0
+  - @prosopo/user-access-policy@3.10.3
+
+## 4.10.2
+### Patch Changes
+
+- 4626340: perf(provider): cut p95 on /captcha/frictionless and /captcha/image
+  
+  Replaces the `$match → $sample` random-captcha lookup with an indexed
+  range scan over a new `{datasetId, solved, randomKey}` compound index;
+  reorders the `sampleContextEntropy` aggregation so `$sample` runs
+  before `$lookup`; batches three pairs of independent awaits in the
+  frictionless handler via `Promise.all`. Adds an integration test
+  asserting via `.explain()` and wall-clock timing that the new paths
+  are quantifiably faster. The legacy aggregation remains as a fallback
+  in `getRandomCaptcha` so deployment can precede the
+  providerBackfillCaptchaRandomKey rollout.
+- Updated dependencies [4626340]
+- Updated dependencies [6962179]
+  - @prosopo/types@4.6.1
+  - @prosopo/user-access-policy@3.10.2
+
+## 4.10.1
+### Patch Changes
+
+- 44eaebf: Fix `providedIp.lower` being persisted as BSON `Long` instead of `Decimal128` on `usercommitments`, which aborted the central-streaming sweep on a `CastError` and stopped *all* records from being streamed off the affected provider node.
+  
+  Three changes, each addressing one half of the regression introduced by #2681 ("lifecycle timestamps + submit→verify recency window"):
+  
+  - **provider.ts** — `updateDappUserCommitment` and `updatePuzzleCaptchaRecord` now branch between pipeline-form (`updateOne(filter, [{ $set: ... }])`) and ordinary `$set`. The pipeline form bypasses Mongoose schema casting, so a `bigint` IP half lands on disk as BSON Int64 (Long) rather than going through the `bigint → string → Decimal128` setter on `CompositeIpAddressRecordSchemaObj`. The pipeline form is only used when an `$ifNull` is genuinely required; the `imgCaptchaTasks` side-update call site only carries `providedIp`/`metadata`, so it now takes the ordinary path and the setter runs.
+  - **captcha.ts** — `CaptchaDatabase.saveCaptchas` normalises `ipAddress` / `providedIp` composite-IP halves on each lean doc before the `bulkWrite`. `Model.bulkWrite` skips setters, so a Long-typed `lower` (whose unsigned value exceeds `Number.MAX_SAFE_INTEGER` — every IPv6 lower with bit 63 set) hits the Decimal128 caster raw and the ordered bulkWrite aborts the entire batch. Normalisation converts the Long via `Long.fromBits(low, high, /*unsigned*/ true).toString() → Decimal128`, matching what the original schema setter would have produced.
+  - **types-database/provider.ts** — `CompositeIpAddressRecordSchemaObj.lower/upper` setters extracted into a shared `normaliseIpHalf` that also handles BSON `Long`. Defensive cover for the `updateOne`/`save`/`create` paths the streamer uses (those *do* run setters); does not run under `bulkWrite`, which is why the captcha.ts normalisation is also needed.
+  
+  Long-class checks use duck-typed `_bsontype === "Long"` rather than `instanceof Long` to stay robust against hoisting differences between the top-level `bson` import and the copy the MongoDB driver uses for deserialisation.
+  
+  Regression test under `packages/database/src/tests/integration/providedIpPipelineCast.integration.test.ts` pins both halves: ordinary `$set` writes Decimal128, `saveCaptchas` drains a Long-poisoned lean doc through to a clean Decimal128 at central, and a negative-control test keeps the underlying Mongoose pipeline-cast behaviour visible so a future regression on either side is unambiguous.
+- Updated dependencies [55b1388]
+  - @prosopo/types@4.6.0
+  - @prosopo/logger@1.0.3
+  - @prosopo/user-access-policy@3.10.1
+  - @prosopo/common@3.1.39
+
+## 4.10.0
+### Minor Changes
+
+- 9b91e85: Log + persist access-policy block decisions. When `blockMiddleware` 401s a request, the inspector now emits a structured `"Access policy block"` log line carrying the matched rule's identity (`ruleHash`, `ruleType`, `ruleDescription`, `policyType`) and the request's user-scope (ja4 / ip / userAgent / userId / countryCode / asn), and writes a synthetic `Session` record with `blocked: true`, `deleted: true`, `reason: ACCESS_POLICY_BLOCK`, and the same rule fields surfaced on three new optional columns (`ruleHash`, `ruleType`, `ruleDescription`). Persistence is fire-and-forget and any Mongo failure is swallowed-and-logged so the 401 response is never delayed. The new fields are gated by `blocked: true` so legit sessions stay untouched, and two sparse indexes (`{siteKey, blocked, createdAt}`, `{ruleHash}`) keep the per-rule and per-client block aggregations the Traffic page will query off the existing sessions collection without bloating the index on normal traffic.
+- c80a05b: Split `solutionTimeout` (challenge issuance → user submission) from `verifiedTimeout` (submission → dapp's /verify call) on `UserSettings`. Historically `verifiedTimeout` gated both windows in `verifyRecency` (at /pow|puzzle/solution submit) and in `serverVerifyPowCaptchaSolution` (at /verify), even though its doc comment only described the latter. Adds `solutionTimeout` to `ClientSettingsSchema` (zod) and `UserSettingsSchema` (mongoose) with `DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT` (60s) as default. `submitPoWCaptchaSolution` and `submitPuzzleCaptchaSolution` now use `solutionTimeout` for the recency check and fall back to `verifiedTimeout` for pre-existing client records so behaviour is preserved until those records are backfilled. The `/verify` path is unchanged. Operators can now tighten `verifiedTimeout` (e.g. 20s) to invalidate stale solutions at verify time without also shrinking the user's solve budget.
+
+### Patch Changes
+
+- Updated dependencies [9b91e85]
+- Updated dependencies [c1c7998]
+- Updated dependencies [c80a05b]
+  - @prosopo/types@4.5.0
+  - @prosopo/user-access-policy@3.10.0
+
+## 4.9.2
+### Patch Changes
+
+- Updated dependencies [b520cd9]
+  - @prosopo/user-access-policy@3.9.1
+
+## 4.9.1
+### Patch Changes
+
+- 3973078: Track every lifecycle timestamp on every captcha type, and switch the dapp-verify recency check from issuance→verify to **submit→verify** with the window sourced from per-client settings.
+  
+  ### Lifecycle timestamps
+  
+  `StoredCaptcha` (the base shared by PoW, Puzzle, and Image/UserCommitment) gains three new fields:
+  
+  - `submittedAtTimestamp` — set once on the first user-submission write, never overwritten.
+  - `verifiedAtTimestamp` — set once when the dapp first calls /verify, never overwritten.
+  - `failedAtTimestamp` — set once on the first non-approved terminal state, never overwritten.
+  
+  `lastUpdatedTimestamp` keeps its "last write of any kind" meaning. The new fields use `$ifNull` in aggregation-pipeline updates so the stamp lands only on the first transition — concurrent or repeat writes are no-ops on the lifecycle stamps.
+  
+  ### Submit→verify window
+  
+  The dapp-verify recency check used to be `now - challengeTimestamp <= timeout`. The window was issuance→verify, which gave bots room to stockpile pre-solved solutions and redeem them many seconds (sometimes minutes) later from the time they reached the provider.
+  
+  The check is now `now - challengeRecord.submittedAtTimestamp <= clientSettings.verifiedTimeout`. The window measures from the moment the user's solution actually arrived. Combined with the new lifecycle fields, this measurably tightens the stockpile attack surface — the data showed 1564 records / 21% on Twickets where a correct PoW was submitted but the dapp never verified, p99 issuance→submit of 31s on that cohort, and records up to 1.26 min.
+  
+  ### Settings move
+  
+  `verifiedTimeout` moves to `ClientSettingsSchema` (per-client, operator-set via the portal). Default stays at 120000ms for back-compat; auto-submit dapps (Twickets et al.) should set it to ~10000ms.
+  
+  Removed from request bodies entirely:
+  
+  - `ServerPowCaptchaVerifyRequestBody`
+  - `ServerPuzzleCaptchaVerifyRequestBody`
+  - `SubmitPowCaptchaSolutionBody`
+  - `SubmitPuzzleCaptchaSolutionBody`
+  
+  The client field was client-controlled and unsigned — any caller could raise the recency ceiling. It's now server-determined.
+  
+  `ProviderApiInterface.submitPow/PuzzleCaptchaSolution` lose their `timeout` parameter (no longer forwarded). The verify wrappers keep their `recencyLimit` parameter for caller back-compat but the value is no longer transmitted; server reads from the client settings instead.
+  
+  ### Migration
+  
+  Pre-PR records with `userSubmitted=true` but no `submittedAtTimestamp` will fail the new recency check. The submit window is short (120s default verifiedTimeout) so the migration cliff is naturally bounded — records in flight at deploy time expire within ~2 minutes.
+  
+  348 provider unit tests + 28 database tests pass.
+- Updated dependencies [70ef67a]
+- Updated dependencies [4da8941]
+- Updated dependencies [f69724f]
+- Updated dependencies [4226c59]
+- Updated dependencies [3973078]
+  - @prosopo/user-access-policy@3.9.0
+  - @prosopo/types@4.4.1
+
 ## 4.9.0
 ### Minor Changes
 

@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/dotenv",
-	"version": "3.0.43",
+	"version": "3.0.44",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"exports": {

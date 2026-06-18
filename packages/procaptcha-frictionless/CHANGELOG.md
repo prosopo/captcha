@@ -1,5 +1,88 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.11.8
+### Patch Changes
+
+- 46fedf4: Auto-start image/puzzle widget after PoW escalation so the user does not need to click the checkbox a second time.
+- Updated dependencies [46fedf4]
+  - @prosopo/procaptcha-react@2.9.74
+  - @prosopo/procaptcha-puzzle@2.10.16
+  - @prosopo/types@4.7.1
+  - @prosopo/api@3.5.1
+  - @prosopo/detector@3.4.44
+  - @prosopo/load-balancer@2.9.18
+  - @prosopo/procaptcha-common@2.10.25
+  - @prosopo/procaptcha-pow@2.10.1
+
+## 2.11.7
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/types@4.7.0
+  - @prosopo/api@3.5.0
+  - @prosopo/procaptcha-pow@2.10.0
+  - @prosopo/detector@3.4.43
+  - @prosopo/load-balancer@2.9.17
+  - @prosopo/procaptcha-common@2.10.24
+  - @prosopo/procaptcha-puzzle@2.10.15
+  - @prosopo/procaptcha-react@2.9.73
+
+## 2.11.6
+### Patch Changes
+
+- Updated dependencies [4626340]
+  - @prosopo/types@4.6.1
+  - @prosopo/api@3.4.14
+  - @prosopo/detector@3.4.42
+  - @prosopo/load-balancer@2.9.16
+  - @prosopo/procaptcha-common@2.10.23
+  - @prosopo/procaptcha-pow@2.9.10
+  - @prosopo/procaptcha-puzzle@2.10.14
+  - @prosopo/procaptcha-react@2.9.72
+
+## 2.11.5
+### Patch Changes
+
+- Updated dependencies [55b1388]
+  - @prosopo/types@4.6.0
+  - @prosopo/procaptcha-pow@2.9.9
+  - @prosopo/procaptcha-puzzle@2.10.13
+  - @prosopo/procaptcha-react@2.9.71
+  - @prosopo/api@3.4.13
+  - @prosopo/common@3.1.39
+  - @prosopo/detector@3.4.41
+  - @prosopo/load-balancer@2.9.15
+  - @prosopo/procaptcha-common@2.10.22
+
+## 2.11.4
+### Patch Changes
+
+- Updated dependencies [9b91e85]
+- Updated dependencies [c80a05b]
+  - @prosopo/types@4.5.0
+  - @prosopo/api@3.4.12
+  - @prosopo/detector@3.4.40
+  - @prosopo/load-balancer@2.9.14
+  - @prosopo/procaptcha-common@2.10.21
+  - @prosopo/procaptcha-pow@2.9.8
+  - @prosopo/procaptcha-puzzle@2.10.12
+  - @prosopo/procaptcha-react@2.9.70
+
+## 2.11.3
+### Patch Changes
+
+- Updated dependencies [f69724f]
+- Updated dependencies [3973078]
+  - @prosopo/types@4.4.1
+  - @prosopo/api@3.4.11
+  - @prosopo/procaptcha-pow@2.9.7
+  - @prosopo/procaptcha-puzzle@2.10.11
+  - @prosopo/detector@3.4.39
+  - @prosopo/load-balancer@2.9.13
+  - @prosopo/procaptcha-common@2.10.20
+  - @prosopo/procaptcha-react@2.9.69
+
 ## 2.11.2
 ### Patch Changes
 

@@ -465,6 +465,10 @@ export class PowCaptchaManager extends CaptchaManager {
 			raw: {
 				...this.postPowContext.raw,
 				...(behavioralDataPacked && { behavioralDataPacked }),
+				// SIMD readings are decrypted and attached to the session above
+				// (decryptAndAttachSimdReadingsIfAbsent) before this re-fetch, so
+				// they are available here in decoded form for the routing machine.
+				...(sessionRecord.simdReadings && { simd: sessionRecord.simdReadings }),
 			},
 		};
 
@@ -573,8 +577,12 @@ export class PowCaptchaManager extends CaptchaManager {
 		let failResult: CaptchaResult | undefined;
 		let failReason: string | undefined;
 
-		const recent = verifyRecency(challenge, timeout);
-		if (!recent) {
+		const submittedAt = challengeRecord.submittedAtTimestamp;
+		const submitToVerifyMs =
+			submittedAt instanceof Date
+				? Date.now() - submittedAt.getTime()
+				: Number.POSITIVE_INFINITY;
+		if (submitToVerifyMs > timeout) {
 			failResult = {
 				status: CaptchaStatus.disapproved,
 				reason: ResultReason.TIMESTAMP_TOO_OLD,

@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/database",
-	"version": "3.13.10",
+	"version": "3.14.4",
 	"description": "Prosopo database plugins for provider",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -45,6 +45,7 @@
 		"@prosopo/types-database": "workspace:*",
 		"@prosopo/user-access-policy": "workspace:*",
 		"@prosopo/util": "workspace:*",
+		"bson": "6.10.4",
 		"make-dir": "3.1.0",
 		"mongodb": "6.15.0",
 		"mongodb-memory-server": "10.3.0",

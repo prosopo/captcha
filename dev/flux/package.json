@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/flux",
-	"version": "2.6.55",
+	"version": "2.6.56",
 	"description": "Tools for managing Flux deployment",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",

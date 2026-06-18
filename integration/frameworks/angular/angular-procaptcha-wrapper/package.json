@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/angular-procaptcha-wrapper",
-	"version": "1.1.78",
+	"version": "1.1.84",
 	"type": "module",
 	"engines": {
 		"node": "^24",
@@ -18,11 +18,11 @@
 		"@prosopo/procaptcha-wrapper": "workspace:*"
 	},
 	"peerDependencies": {
-		"@angular/core": "^20.3.9"
+		"@angular/core": "20.3.25"
 	},
 	"devDependencies": {
-		"@prosopo/config": "workspace:*",
 		"@angular/compiler-cli": "20.3.9",
+		"@prosopo/config": "workspace:*",
 		"@types/node": "22.10.2",
 		"del-cli": "6.0.0",
 		"ng-packagr": "^20.3.0"

@@ -406,7 +406,6 @@ export const Manager = (
 				finalY,
 				puzzleEvents,
 				userTimestampSignature.signature.toString(),
-				config.captchas.puzzle.verifiedTimeout,
 				encryptedBehavioralData,
 				salt,
 				simdReadings,

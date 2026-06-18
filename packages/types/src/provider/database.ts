@@ -180,6 +180,10 @@ export interface StoredCaptcha {
 	ja4: string;
 	userSubmitted: boolean;
 	serverChecked: boolean;
+	// Set once on first transition; never overwritten.
+	submittedAtTimestamp?: Date;
+	verifiedAtTimestamp?: Date;
+	failedAtTimestamp?: Date;
 	// The full ipinfo payload from `IpInfoService.lookup()`. Persisted
 	// either by the provider's ipInfoMiddleware (at request time) or by
 	// the CHECK_IP_INFO backfill job. Consumers read individual fields
@@ -285,6 +289,9 @@ export const UserCommitmentSchema = object({
 	parsedUserAgentInfo: any().optional(),
 	storedAtTimestamp: date().optional(),
 	requestedAtTimestamp: date(),
+	submittedAtTimestamp: date().optional(),
+	verifiedAtTimestamp: date().optional(),
+	failedAtTimestamp: date().optional(),
 	lastUpdatedTimestamp: date().optional(),
 	pendingStage: boolean().optional(),
 	sessionId: string().optional(),
@@ -404,6 +411,10 @@ export const SessionSchema = object({
 		.optional()
 		.transform((v) => v as FrictionlessReason | undefined),
 	blocked: boolean().optional(),
+	// See Session.ruleHash — populated on synthetic blocked-session records.
+	ruleHash: string().optional(),
+	ruleType: string().array().optional(),
+	ruleDescription: string().optional(),
 	// Full ipinfo payload from ipInfoMiddleware at session-creation
 	// time. Replaces the flat `countryCode` / `geolocation` fields —
 	// consumers narrow on `ipInfo.isValid` and read whichever sub-field
@@ -463,6 +474,14 @@ export type Session = {
 	siteKey?: string;
 	reason?: FrictionlessReason;
 	blocked?: boolean;
+	// When `blocked` is true, these record which access-policy rule matched
+	// at the request-time block middleware. Populated only on synthetic
+	// "blocked session" records the inspector writes when it 401s a request,
+	// so the Traffic page can surface "why are we blocking traffic for this
+	// site?" without an extra Mongo lookup against the rules collection.
+	ruleHash?: string; // == the redis-key suffix of the matched rule
+	ruleType?: string[]; // populated scope fields, e.g. ['ja4Hash'], ['ja4Hash','coords']
+	ruleDescription?: string; // operator-set description copied from the rule's AccessPolicy
 	// Full ipinfo payload from ipInfoMiddleware at session-creation
 	// time. Replaces the flat `countryCode` / `geolocation` fields.
 	ipInfo?: IPInfoResponse;
@@ -517,6 +536,9 @@ export const PoWCaptchaStoredSchema = object({
 	// From StoredCaptcha
 	result: CaptchaResultSchema,
 	requestedAtTimestamp: date(),
+	submittedAtTimestamp: date().optional(),
+	verifiedAtTimestamp: date().optional(),
+	failedAtTimestamp: date().optional(),
 	ipAddress: CompositeIpAddressSchema,
 	providedIp: CompositeIpAddressSchema.optional(),
 	metadata: StoredCaptchaMetadataSchema.optional(),

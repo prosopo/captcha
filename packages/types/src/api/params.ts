@@ -78,4 +78,5 @@ export enum ApiParams {
 	hp = "hp",
 	clientMetaData = "clientMetaData",
 	honeypot = "honeypot",
+	fingerprintProof = "fingerprintProof",
 }

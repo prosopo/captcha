@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/angular-procaptcha-integration-demo",
-	"version": "1.1.78",
+	"version": "1.1.84",
 	"engines": {
 		"node": "^24",
 		"npm": "^11"
@@ -16,7 +16,7 @@
 	},
 	"dependencies": {
 		"@angular/common": "^20.3.9",
-		"@angular/core": "^20.3.9",
+		"@angular/core": "^20.3.25",
 		"@angular/platform-browser": "^20.3.9",
 		"@angular/router": "^20.3.9",
 		"@prosopo/angular-procaptcha-wrapper": "workspace:*"

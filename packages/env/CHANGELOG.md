@@ -1,5 +1,78 @@
 # @prosopo/env
 
+## 3.5.17
+### Patch Changes
+
+- Updated dependencies [46fedf4]
+  - @prosopo/types@4.7.1
+  - @prosopo/database@3.14.4
+  - @prosopo/ipinfo@0.2.22
+  - @prosopo/keyring@2.9.42
+  - @prosopo/types-env@2.9.26
+
+## 3.5.16
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/ipinfo@0.2.21
+  - @prosopo/types@4.7.0
+  - @prosopo/database@3.14.3
+  - @prosopo/keyring@2.9.41
+  - @prosopo/types-env@2.9.25
+
+## 3.5.15
+### Patch Changes
+
+- Updated dependencies [4626340]
+- Updated dependencies [5f47c42]
+  - @prosopo/database@3.14.2
+  - @prosopo/types@4.6.1
+  - @prosopo/ipinfo@0.2.20
+  - @prosopo/keyring@2.9.40
+  - @prosopo/types-env@2.9.24
+
+## 3.5.14
+### Patch Changes
+
+- Updated dependencies [55b1388]
+- Updated dependencies [44eaebf]
+  - @prosopo/types@4.6.0
+  - @prosopo/database@3.14.1
+  - @prosopo/keyring@2.9.39
+  - @prosopo/logger@1.0.3
+  - @prosopo/common@3.1.39
+  - @prosopo/ipinfo@0.2.19
+  - @prosopo/types-env@2.9.23
+
+## 3.5.13
+### Patch Changes
+
+- Updated dependencies [9b91e85]
+- Updated dependencies [c80a05b]
+  - @prosopo/database@3.14.0
+  - @prosopo/types@4.5.0
+  - @prosopo/ipinfo@0.2.18
+  - @prosopo/keyring@2.9.38
+  - @prosopo/types-env@2.9.22
+
+## 3.5.12
+### Patch Changes
+
+  - @prosopo/database@3.13.12
+  - @prosopo/types-env@2.9.21
+
+## 3.5.11
+### Patch Changes
+
+- Updated dependencies [f69724f]
+- Updated dependencies [3973078]
+  - @prosopo/types@4.4.1
+  - @prosopo/database@3.13.11
+  - @prosopo/ipinfo@0.2.17
+  - @prosopo/keyring@2.9.37
+  - @prosopo/types-env@2.9.20
+
 ## 3.5.10
 ### Patch Changes
 

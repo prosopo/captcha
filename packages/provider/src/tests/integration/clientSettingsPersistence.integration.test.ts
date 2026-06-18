@@ -51,6 +51,8 @@ const FULLY_POPULATED_SETTINGS = {
 	imageThreshold: 0.81,
 	imageMaxRounds: 12,
 	autoBanScoreThreshold: 0.95,
+	verifiedTimeout: 120000,
+	solutionTimeout: 60000,
 	puzzleTolerance: 20,
 	disallowWebView: true,
 	contextAware: {
@@ -115,6 +117,7 @@ const FULLY_POPULATED_SETTINGS = {
 		blockAbuser: true,
 		abuserScoreThreshold: 0.33,
 		blockDatacenter: true,
+		datacenterNameAllowlist: ["iCloud Private Relay"],
 		blockMobile: false,
 		blockSatellite: true,
 		blockCrawler: true,
