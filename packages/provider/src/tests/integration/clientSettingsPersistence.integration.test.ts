@@ -243,8 +243,46 @@ describe("Client settings Mongo persistence", () => {
 		expect(stored.spamFilter).toMatchObject(
 			FULLY_POPULATED_SETTINGS.spamFilter,
 		);
-		expect(stored.trafficFilter).toMatchObject(
-			FULLY_POPULATED_SETTINGS.trafficFilter,
+
+		// trafficFilter — per-field rather than wholesale, since this is the
+		// schema most frequently extended (each new opt-in / allowlist /
+		// threshold lands here). Per-field asserts surface the dropped name
+		// directly rather than dumping the whole nested object diff.
+		const trafficFilter = stored.trafficFilter;
+		expect(trafficFilter).toBeDefined();
+		if (!trafficFilter) return;
+		expect(trafficFilter.blockVpn).toBe(
+			FULLY_POPULATED_SETTINGS.trafficFilter.blockVpn,
+		);
+		expect(trafficFilter.blockProxy).toBe(
+			FULLY_POPULATED_SETTINGS.trafficFilter.blockProxy,
+		);
+		expect(trafficFilter.blockTor).toBe(
+			FULLY_POPULATED_SETTINGS.trafficFilter.blockTor,
+		);
+		expect(trafficFilter.blockAbuser).toBe(
+			FULLY_POPULATED_SETTINGS.trafficFilter.blockAbuser,
+		);
+		expect(trafficFilter.abuserScoreThreshold).toBe(
+			FULLY_POPULATED_SETTINGS.trafficFilter.abuserScoreThreshold,
+		);
+		expect(trafficFilter.blockDatacenter).toBe(
+			FULLY_POPULATED_SETTINGS.trafficFilter.blockDatacenter,
+		);
+		expect(trafficFilter.datacenterNameAllowlist).toEqual(
+			FULLY_POPULATED_SETTINGS.trafficFilter.datacenterNameAllowlist,
+		);
+		expect(trafficFilter.skipExtrasOnValidDnsPath).toBe(
+			FULLY_POPULATED_SETTINGS.trafficFilter.skipExtrasOnValidDnsPath,
+		);
+		expect(trafficFilter.blockMobile).toBe(
+			FULLY_POPULATED_SETTINGS.trafficFilter.blockMobile,
+		);
+		expect(trafficFilter.blockSatellite).toBe(
+			FULLY_POPULATED_SETTINGS.trafficFilter.blockSatellite,
+		);
+		expect(trafficFilter.blockCrawler).toBe(
+			FULLY_POPULATED_SETTINGS.trafficFilter.blockCrawler,
 		);
 	}, 60_000);
 });
