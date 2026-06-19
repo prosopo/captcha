@@ -440,6 +440,10 @@ export const SessionSchema = object({
 	// indicator reflects when the catcher's CPU fingerprint became
 	// available relative to the user's journey.
 	simdReadingsStage: SimdReadingsStageSchema.optional(),
+	entropyMathRandomFingerprint: string().optional(),
+	entropyCryptoFingerprint: string().optional(),
+	entropyWallClockOffsetMs: number().optional(),
+	entropyMathRandomFirst: number().optional(),
 	dnsEvent: object({
 		resolverIp: string().optional(),
 		peerIp: string().optional(),
@@ -497,6 +501,10 @@ export type Session = {
 	simdReadings?: SimdReadings;
 	// Stage at which the readings first arrived.
 	simdReadingsStage?: SimdReadingsStage;
+	entropyMathRandomFingerprint?: string;
+	entropyCryptoFingerprint?: string;
+	entropyWallClockOffsetMs?: number;
+	entropyMathRandomFirst?: number;
 	// DNS observation merge target — populated by the dns-event sidecar
 	// via POST /v1/prosopo/provider/admin/dns/event. At most one DNS
 	// event + one HTTP event per session under normal usage; the

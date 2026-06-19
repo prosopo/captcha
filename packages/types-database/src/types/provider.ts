@@ -664,6 +664,10 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	// Stage at which the SIMD readings first arrived on this session
 	// (frictionless / challenge / submit). First-hop-wins.
 	simdReadingsStage: { type: String, required: false },
+	entropyMathRandomFingerprint: { type: String, required: false },
+	entropyCryptoFingerprint: { type: String, required: false },
+	entropyWallClockOffsetMs: { type: Number, required: false },
+	entropyMathRandomFirst: { type: Number, required: false },
 	// DNS observation merge target. Populated by
 	// POST /v1/prosopo/provider/admin/dns/event from the dns-event
 	// sidecar (see types/provider/database.ts → Session.dnsEvent).
@@ -687,6 +691,10 @@ SessionRecordSchema.index({ blocked: 1 });
 SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
 SessionRecordSchema.index({ userSitekeyIpHash: 1 });
 SessionRecordSchema.index({ providerSelectEntropy: 1 });
+SessionRecordSchema.index(
+	{ siteKey: 1, entropyMathRandomFingerprint: 1, createdAt: -1 },
+	{ sparse: true },
+);
 SessionRecordSchema.index({ token: 1 });
 SessionRecordSchema.index({ siteKey: 1 }, { background: true, sparse: true });
 // Traffic-page aggregations group blocked-session records by rule. Sparse
