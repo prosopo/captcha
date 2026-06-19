@@ -1,24 +1,40 @@
 # Cert-getter addendum to provider.Caddyfile. Concatenated onto the
-# base file by ansible (playbooks/provider.yml) when
-# `cert_getter: true` is set on the host in hosts.{env}.yml — currently
-# pronode4 only. Defines an extra HTTPS site for the load-balanced
-# pronode.prosopo.io hostname.
+# base file by ansible (playbooks/provider.yml) on every pronode —
+# the addendum name is historical: the cert is distributed to all
+# pronodes from the cert getter (pronode4), and every pronode
+# terminates TLS for the global hostnames.
 #
-# Why a single cert getter:
-#   pronode.prosopo.io is DNS-round-robined across every pronode, which
-#   breaks ACME HTTP-01 per-node renewal (the challenge lands on
-#   whichever node DNS hands out, usually not the one renewing). We
-#   solve this by having exactly one node (the cert getter) own ACME for
-#   the hostname, using DNS-01 against the Bunny DNS zone that
-#   pronode.prosopo.io is delegated to. The PEM is provisioned by
-#   certbot outside Caddy (see playbooks/providerCertbotProvision.yml)
-#   and dropped into the bind-mounted /certs/pronode-global/ dir. The
-#   other pronodes don't carry this block — distribution of the PEM to
-#   the rest of the fleet is a manual ansible step done out of band.
-https://{$CADDY_GLOBAL_DOMAIN}:8443 {
-	# Static PEM provisioned by certbot's deploy hook. Caddy does not
-	# poll file-based certs, so the deploy hook must run `caddy reload`
-	# after copying the new PEM in.
+# Hostnames covered (single PEM, multi-SAN):
+#   pronode.prosopo.io        — dual-stack (latency-routed across all
+#                               pronodes; both A and AAAA where set up).
+#   ipv4.pronode.prosopo.io   — IPv4-only routing (A records only) for
+#                               clients/services that need a guaranteed
+#                               v4 path so the observed src IP matches
+#                               the user's real v4 address.
+#   ipv6.pronode.prosopo.io   — IPv6-only routing (AAAA records only),
+#                               symmetric to the v4 variant.
+#
+# Why wildcard cert:
+#   The PEM is a wildcard issued for {pronode.prosopo.io, *.pronode.prosopo.io}.
+#   Adding another `<prefix>.pronode.prosopo.io` (e.g. for future
+#   regional pins, canary hostnames, dns-trap subzones) needs only a
+#   Bunny DNS record and a hostname in the site block below — no
+#   re-issuance.
+#
+# Cert provisioning:
+#   pronode4 (the cert getter) obtains and renews via certbot DNS-01
+#   against Bunny — see playbooks/providerCertbotProvision.yml. The
+#   PEM is fetched from pronode4 and written into every pronode's
+#   ./docker/certs/pronode-global/ on the next deploy
+#   (playbooks/provider.yml's pre_tasks).
+https://{$CADDY_GLOBAL_DOMAIN}:8443,
+https://ipv4.{$CADDY_GLOBAL_DOMAIN}:8443,
+https://ipv6.{$CADDY_GLOBAL_DOMAIN}:8443 {
+	# Static PEM provisioned by certbot's deploy hook on the cert
+	# getter and distributed to peers on deploy. Caddy does not poll
+	# file-based certs, so each renewal needs a reload (the deploy
+	# hook handles it on the cert getter; the distribute step in
+	# provider.yml does it on peers via force-recreate).
 	tls /certs/pronode-global/fullchain.pem /certs/pronode-global/privkey.pem
 	import provider_site
 }
