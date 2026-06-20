@@ -86,6 +86,72 @@ export const runDecisionMachine = async (
 	const { req, res } = handle;
 	let { botScore, scoreComponents } = input;
 
+	// UA-mismatch + context-aware are non-score short-circuits: they never
+	// touch botScore, they just route to an image captcha and return. Keep
+	// them first so the autoBan check below operates on the full *score-based*
+	// signal rather than tripping on requests we'd already image-route anyway.
+	const userAgentMismatchResponse = await runUserAgentMismatchCheck(
+		input,
+		handle,
+	);
+	if (userAgentMismatchResponse) return userAgentMismatchResponse;
+
+	const contextResponse = await runContextAwareValidation(input, handle);
+	if (contextResponse) return contextResponse;
+
+	// Accumulate every score-based penalty *before* deciding routing, so
+	// autoBan compares against the same sum the bot-score-above-threshold
+	// branch sees. Previously autoBan ran first against `baseBotScore + lScore`
+	// only, which meant thresholds > 1 were unreachable for clients whose
+	// detector saturates at 1.0 — autoBan would never fire even when the
+	// post-penalty score (with unverifiedHost / webview / oldTimestamp added)
+	// comfortably exceeded the operator-set threshold.
+	//
+	// Each penalty branch still records the FrictionlessReason it would
+	// otherwise route on; the routing decision (image vs autoBan 401 vs
+	// bot_score_above_threshold vs default_pow) is made once at the end.
+	const webViewTripped =
+		clientRecord.settings.disallowWebView === true && input.webView === true;
+	if (webViewTripped) {
+		tasks.logger.info(() => ({ msg: "WebView detected" }));
+		const scoreUpdate = tasks.frictionlessManager.scoreIncreaseWebView(
+			input.baseBotScore,
+			botScore,
+			scoreComponents,
+		);
+		botScore = scoreUpdate.score;
+		scoreComponents = scoreUpdate.scoreComponents;
+		tasks.frictionlessManager.updateScore(botScore, scoreComponents);
+	}
+
+	const timestampTripped = FrictionlessManager.timestampTooOld(input.timestamp);
+	if (timestampTripped) {
+		const scoreUpdate = tasks.frictionlessManager.scoreIncreaseTimestamp(
+			input.timestamp,
+			input.baseBotScore,
+			botScore,
+			scoreComponents,
+		);
+		botScore = scoreUpdate.score;
+		scoreComponents = scoreUpdate.scoreComponents;
+		tasks.frictionlessManager.updateScore(botScore, scoreComponents);
+	}
+
+	const hostVerified = await tasks.frictionlessManager.hostVerified(
+		input.providerSelectEntropy,
+	);
+	if (!hostVerified.verified) {
+		const scoreUpdate = tasks.frictionlessManager.scoreIncreaseUnverifiedHost(
+			hostVerified.domain,
+			input.baseBotScore,
+			botScore,
+			scoreComponents,
+		);
+		botScore = scoreUpdate.score;
+		scoreComponents = scoreUpdate.scoreComponents;
+		tasks.frictionlessManager.updateScore(botScore, scoreComponents);
+	}
+
 	const autoBanThreshold = clientRecord.settings.autoBanScoreThreshold;
 	if (autoBanThreshold !== undefined && Number(botScore) >= autoBanThreshold) {
 		req.logger.info(() => ({
@@ -109,26 +175,10 @@ export const runDecisionMachine = async (
 		return res.status(401).json({ error: "Unauthorized" });
 	}
 
-	const userAgentMismatchResponse = await runUserAgentMismatchCheck(
-		input,
-		handle,
-	);
-	if (userAgentMismatchResponse) return userAgentMismatchResponse;
-
-	const contextResponse = await runContextAwareValidation(input, handle);
-	if (contextResponse) return contextResponse;
-
-	if (clientRecord.settings.disallowWebView && input.webView) {
-		tasks.logger.info(() => ({ msg: "WebView detected" }));
-		const scoreUpdate = tasks.frictionlessManager.scoreIncreaseWebView(
-			input.baseBotScore,
-			botScore,
-			scoreComponents,
-		);
-		botScore = scoreUpdate.score;
-		scoreComponents = scoreUpdate.scoreComponents;
-		tasks.frictionlessManager.updateScore(botScore, scoreComponents);
-
+	// Penalty-driven image-captcha routes. Order preserved from the
+	// pre-refactor flow (webview → timestamp); each only fires if autoBan
+	// didn't already 401 above.
+	if (webViewTripped) {
 		req.logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {
@@ -153,17 +203,7 @@ export const runDecisionMachine = async (
 		);
 	}
 
-	if (FrictionlessManager.timestampTooOld(input.timestamp)) {
-		const scoreUpdate = tasks.frictionlessManager.scoreIncreaseTimestamp(
-			input.timestamp,
-			input.baseBotScore,
-			botScore,
-			scoreComponents,
-		);
-		botScore = scoreUpdate.score;
-		scoreComponents = scoreUpdate.scoreComponents;
-		tasks.frictionlessManager.updateScore(botScore, scoreComponents);
-
+	if (timestampTripped) {
 		req.logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {
@@ -187,21 +227,6 @@ export const runDecisionMachine = async (
 				headers: flatHeaders,
 			}),
 		);
-	}
-
-	const hostVerified = await tasks.frictionlessManager.hostVerified(
-		input.providerSelectEntropy,
-	);
-	if (!hostVerified.verified) {
-		const scoreUpdate = tasks.frictionlessManager.scoreIncreaseUnverifiedHost(
-			hostVerified.domain,
-			input.baseBotScore,
-			botScore,
-			scoreComponents,
-		);
-		botScore = scoreUpdate.score;
-		scoreComponents = scoreUpdate.scoreComponents;
-		tasks.frictionlessManager.updateScore(botScore, scoreComponents);
 	}
 
 	if (Number(botScore) > input.botThreshold) {
