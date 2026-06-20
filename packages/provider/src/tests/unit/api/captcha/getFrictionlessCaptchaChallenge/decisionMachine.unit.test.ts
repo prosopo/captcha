@@ -199,9 +199,6 @@ describe("runDecisionMachine", () => {
 
 	describe("auto-ban threshold (post-penalty)", () => {
 		it("fires when unverifiedHost penalty pushes the score over the threshold", async () => {
-			// baseScore 1.0 (saturated by catcher), +0.2 host penalty → 1.2 >= 1.1.
-			// Pre-refactor this would have escaped autoBan because the check ran
-			// against the pre-penalty score (1.0).
 			const input = buildInput({
 				botScore: 1.0,
 				baseBotScore: 1.0,
@@ -234,7 +231,7 @@ describe("runDecisionMachine", () => {
 			).not.toHaveBeenCalled();
 		});
 
-		it("fires when webView penalty pushes the score over the threshold (pre-refactor would have routed to image)", async () => {
+		it("fires when webView penalty pushes the score over the threshold", async () => {
 			const input = buildInput({
 				botScore: 1.0,
 				baseBotScore: 1.0,
@@ -330,8 +327,6 @@ describe("runDecisionMachine", () => {
 			const { res, handle } = buildHandle();
 			await runDecisionMachine(input as never, handle as never);
 
-			// 0.5 + 0.2 = 0.7 < 1.1 → no autoBan; bot-score-above-threshold
-			// branch fires instead because 0.7 > botThreshold 0.5.
 			expect(
 				input.tasks.frictionlessManager.registerBlockedSession,
 			).not.toHaveBeenCalled();
@@ -367,10 +362,7 @@ describe("runDecisionMachine", () => {
 			).toHaveBeenCalled();
 		});
 
-		it("when both webView and autoBan would trip, autoBan wins (refactor intent)", async () => {
-			// Confirms the new ordering: penalties accumulate, autoBan is
-			// checked, and only if it doesn't fire do the per-reason image
-			// routes (webview, timestamp) run.
+		it("when both webView and autoBan would trip, autoBan wins", async () => {
 			const input = buildInput({
 				botScore: 1.0,
 				baseBotScore: 1.0,

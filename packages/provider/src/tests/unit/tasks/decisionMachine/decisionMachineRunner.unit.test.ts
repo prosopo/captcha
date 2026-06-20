@@ -343,9 +343,7 @@ describe("DecisionMachineRunner", () => {
 		]);
 	});
 
-	it("treats omitted session fields as undefined (back-compat)", async () => {
-		// Sanity check: minimal verify input still routes cleanly through
-		// the artifact, none of the new fields are required.
+	it("treats omitted session fields as undefined", async () => {
 		const artifact = buildArtifact(
 			`module.exports = (input) => ({
 				decision: input.score === undefined ? "allow" : "deny",

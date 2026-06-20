@@ -980,7 +980,6 @@ describe("ImgCaptchaManager", () => {
 				expect(input.ruleType).toEqual(sessionRecord.ruleType);
 				expect(input.webView).toBe(sessionRecord.webView);
 				expect(input.iFrame).toBe(sessionRecord.iFrame);
-				// `score` is the locally-recomputed value.
 				expect(typeof input.score).toBe("number");
 			} finally {
 				// biome-ignore lint/suspicious/noExplicitAny: tests

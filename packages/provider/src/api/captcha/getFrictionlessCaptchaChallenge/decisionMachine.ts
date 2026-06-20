@@ -86,10 +86,6 @@ export const runDecisionMachine = async (
 	const { req, res } = handle;
 	let { botScore, scoreComponents } = input;
 
-	// UA-mismatch + context-aware are non-score short-circuits: they never
-	// touch botScore, they just route to an image captcha and return. Keep
-	// them first so the autoBan check below operates on the full *score-based*
-	// signal rather than tripping on requests we'd already image-route anyway.
 	const userAgentMismatchResponse = await runUserAgentMismatchCheck(
 		input,
 		handle,
@@ -99,17 +95,8 @@ export const runDecisionMachine = async (
 	const contextResponse = await runContextAwareValidation(input, handle);
 	if (contextResponse) return contextResponse;
 
-	// Accumulate every score-based penalty *before* deciding routing, so
-	// autoBan compares against the same sum the bot-score-above-threshold
-	// branch sees. Previously autoBan ran first against `baseBotScore + lScore`
-	// only, which meant thresholds > 1 were unreachable for clients whose
-	// detector saturates at 1.0 — autoBan would never fire even when the
-	// post-penalty score (with unverifiedHost / webview / oldTimestamp added)
-	// comfortably exceeded the operator-set threshold.
-	//
-	// Each penalty branch still records the FrictionlessReason it would
-	// otherwise route on; the routing decision (image vs autoBan 401 vs
-	// bot_score_above_threshold vs default_pow) is made once at the end.
+	// Accumulate all score penalties before evaluating autoBan so the
+	// threshold compares against the full sum.
 	const webViewTripped =
 		clientRecord.settings.disallowWebView === true && input.webView === true;
 	if (webViewTripped) {
@@ -175,9 +162,6 @@ export const runDecisionMachine = async (
 		return res.status(401).json({ error: "Unauthorized" });
 	}
 
-	// Penalty-driven image-captcha routes. Order preserved from the
-	// pre-refactor flow (webview → timestamp); each only fires if autoBan
-	// didn't already 401 above.
 	if (webViewTripped) {
 		req.logger.info(() => ({
 			msg: "Frictionless decision",

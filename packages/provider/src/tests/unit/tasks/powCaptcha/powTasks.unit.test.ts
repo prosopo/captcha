@@ -1033,7 +1033,6 @@ describe("PowCaptchaManager", () => {
 				expect(input.ruleType).toEqual(sessionRecord.ruleType);
 				expect(input.webView).toBe(sessionRecord.webView);
 				expect(input.iFrame).toBe(sessionRecord.iFrame);
-				// `score` is the locally-recomputed value, not session.score.
 				expect(typeof input.score).toBe("number");
 			} finally {
 				restoreDecisionMachine();
