@@ -19,7 +19,9 @@ import {
 	DecisionMachineCaptchaTypeSchema,
 } from "../client/captchaType/captchaType.js";
 import type { RequestHeaders } from "../provider/api.js";
+import type { ScoreComponents } from "../provider/database.js";
 import type { SimdReadings } from "../provider/detection.js";
+import type { FrictionlessReason } from "../provider/reasons.js";
 
 export type EnrichedDnsEvent = {
 	peerIp?: string;
@@ -84,6 +86,40 @@ export type DecisionMachineInput = {
 	// challenge record). Undefined for invalid lookups.
 	ipInfo?: IPInfoResponse;
 	dnsEvent?: EnrichedDnsEvent;
+	// --- Session-derived fields, populated when the verifying request was
+	// preceded by a frictionless session. All are forwarded verbatim from
+	// the Session record loaded inside the verify path so rules can key on
+	// the same signals the internal scorer/router uses.
+	// Frictionless bot score after all components (incl. dnsAsymmetry) are
+	// applied. Compared against `threshold` to drive the issue-time decision.
+	score?: number;
+	threshold?: number;
+	// Granular breakdown that produced `score`. Same shape stored on the
+	// Session record — see ScoreComponents in @prosopo/types.
+	scoreComponents?: ScoreComponents;
+	// Hashed prefix of decrypted client behavioural payload — extremely
+	// low-cardinality for automation (same code path → same hash) and a
+	// useful clustering key for "deny this exact bot family".
+	decryptedHeadHash?: string;
+	// Stable per-(user, sitekey, ip) hash for cross-request bucketing.
+	userSitekeyIpHash?: string;
+	// Random uint chosen at session creation; not security-sensitive on
+	// its own, but useful for sticky cohorting in DM rules.
+	providerSelectEntropy?: number;
+	// WASM SIMD CPU fingerprint readings. Bots usually present a single
+	// canonical reading; real browsers vary.
+	simdReadings?: SimdReadings;
+	// FrictionlessReason returned by the routing-phase decision machine,
+	// e.g. BOT_SCORE_ABOVE_THRESHOLD / CONTEXT_AWARE_VALIDATION_FAILED.
+	frictionlessReason?: FrictionlessReason;
+	// `ruleType` populated by the request-time access-policy block
+	// middleware (e.g. ["ja4Hash"], ["ja4Hash","coords"]). Empty when no
+	// hard block fired.
+	ruleType?: string[];
+	// Whether the session was flagged as a webview environment.
+	webView?: boolean;
+	// Whether the session was flagged as iframe-embedded.
+	iFrame?: boolean;
 };
 
 export type DecisionMachineOutput = {

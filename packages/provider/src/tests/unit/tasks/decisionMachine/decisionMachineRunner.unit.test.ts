@@ -20,6 +20,7 @@ import {
 	DecisionMachineDecision,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
+	FrictionlessReason,
 	type RoutingMachineInput,
 	type RoutingMachineInputBase,
 } from "@prosopo/types";
@@ -258,6 +259,112 @@ describe("DecisionMachineRunner", () => {
 		});
 
 		// Should default to allow because artifact doesn't match captcha type
+		expect(result.decision).toBe(DecisionMachineDecision.Allow);
+	});
+
+	it("forwards session-derived fields verbatim to the artifact", async () => {
+		// Echo back every session-derived field as a tag so we can assert the
+		// runner doesn't strip or rename anything en route to the artifact.
+		const artifact = buildArtifact(
+			`module.exports = {
+				decide: (input) => ({
+					decision: "deny",
+					reason: "echo",
+					tags: [
+						"score:" + (input.score ?? "u"),
+						"threshold:" + (input.threshold ?? "u"),
+						"sc.base:" + (input.scoreComponents && input.scoreComponents.baseScore !== undefined ? input.scoreComponents.baseScore : "u"),
+						"sc.unverifiedHost:" + (input.scoreComponents && input.scoreComponents.unverifiedHost !== undefined ? input.scoreComponents.unverifiedHost : "u"),
+						"sc.dnsAsymmetry:" + (input.scoreComponents && input.scoreComponents.dnsAsymmetry !== undefined ? input.scoreComponents.dnsAsymmetry : "u"),
+						"headHash:" + (input.decryptedHeadHash ?? "u"),
+						"userSitekeyIpHash:" + (input.userSitekeyIpHash ?? "u"),
+						"providerSelectEntropy:" + (input.providerSelectEntropy ?? "u"),
+						"simdSupported:" + (input.simdReadings && input.simdReadings.supported !== undefined ? input.simdReadings.supported : "u"),
+						"frictionlessReason:" + (input.frictionlessReason ?? "u"),
+						"ruleType:" + (input.ruleType ? input.ruleType.join(",") : "u"),
+						"webView:" + (input.webView === undefined ? "u" : input.webView),
+						"iFrame:" + (input.iFrame === undefined ? "u" : input.iFrame),
+					],
+				}),
+			};`,
+			DecisionMachineScope.Dapp,
+			"dapp",
+		);
+		(db.getDecisionMachineArtifact as unknown as ReturnType<typeof vi.fn>)
+			.mockResolvedValueOnce(artifact)
+			.mockResolvedValueOnce(undefined);
+
+		const result = await runner.decide({
+			userAccount: "user",
+			dappAccount: "dapp",
+			captchaResult: "passed",
+			headers: {},
+			score: 1.2,
+			threshold: 0.27,
+			scoreComponents: {
+				baseScore: 1,
+				unverifiedHost: 0.2,
+				dnsAsymmetry: 0.5,
+				triggeredDetectors: [27],
+				shadowDomPenalty: false,
+			},
+			decryptedHeadHash:
+				"01111101001101111100111111011100111111011111011111001111110111000101001101110111110011111101110010011110110100010101011011000100",
+			userSitekeyIpHash: "abc123",
+			providerSelectEntropy: 891,
+			simdReadings: {
+				supported: true,
+				schema: 1,
+				timerResolutionMs: 0.1,
+				runsPerOp: 3,
+				durationMs: 200,
+				ops: [],
+			},
+			frictionlessReason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
+			ruleType: ["ja4Hash"],
+			webView: false,
+			iFrame: true,
+		});
+
+		expect(result.decision).toBe(DecisionMachineDecision.Deny);
+		expect(result.tags).toEqual([
+			"score:1.2",
+			"threshold:0.27",
+			"sc.base:1",
+			"sc.unverifiedHost:0.2",
+			"sc.dnsAsymmetry:0.5",
+			"headHash:01111101001101111100111111011100111111011111011111001111110111000101001101110111110011111101110010011110110100010101011011000100",
+			"userSitekeyIpHash:abc123",
+			"providerSelectEntropy:891",
+			"simdSupported:true",
+			`frictionlessReason:${FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD}`,
+			"ruleType:ja4Hash",
+			"webView:false",
+			"iFrame:true",
+		]);
+	});
+
+	it("treats omitted session fields as undefined (back-compat)", async () => {
+		// Sanity check: minimal verify input still routes cleanly through
+		// the artifact, none of the new fields are required.
+		const artifact = buildArtifact(
+			`module.exports = (input) => ({
+				decision: input.score === undefined ? "allow" : "deny",
+				reason: "min",
+			});`,
+			DecisionMachineScope.Global,
+		);
+		(db.getDecisionMachineArtifact as unknown as ReturnType<typeof vi.fn>)
+			.mockResolvedValueOnce(undefined)
+			.mockResolvedValueOnce(artifact);
+
+		const result = await runner.decide({
+			userAccount: "user",
+			dappAccount: "dapp",
+			captchaResult: "passed",
+			headers: {},
+		});
+
 		expect(result.decision).toBe(DecisionMachineDecision.Allow);
 	});
 
