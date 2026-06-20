@@ -25,9 +25,12 @@ import {
 	type Captcha,
 	type CaptchaSolution,
 	CaptchaStatus,
+	CaptchaType,
+	FrictionlessReason,
 	IpAddressType,
 	type PendingImageCaptchaRequest,
 	type RequestHeaders,
+	type Session,
 	type UserCommitment,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
@@ -869,6 +872,121 @@ describe("ImgCaptchaManager", () => {
 			// Restore original decision machine
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(imgCaptchaManager as any).decisionMachineRunner.decide = originalDecide;
+		});
+
+		it("forwards every session-derived field into the decide() input", async () => {
+			const userAccount = "userAccount";
+			const dappAccount = "dappAccount";
+			const commitmentId = "commitmentId-fields";
+			const ipAddress = getIPAddress("1.1.1.1");
+			const headers: RequestHeaders = { a: "1" };
+			const sessionId = "session-fields";
+
+			const commitment: Partial<UserCommitment> = {
+				id: commitmentId,
+				userAccount,
+				dappAccount,
+				providerAccount: "providerAccount",
+				datasetId: "datasetId",
+				result: { status: CaptchaStatus.approved },
+				userSignature: "",
+				userSubmitted: true,
+				serverChecked: false,
+				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
+				ipAddress: {
+					lower: ipAddress.bigInt(),
+					upper: 0n,
+					type: IpAddressType.v4,
+				},
+				headers,
+				ja4: "ja4",
+				lastUpdatedTimestamp: new Date(),
+				sessionId,
+			};
+
+			const sessionRecord: Session = {
+				sessionId,
+				createdAt: new Date(),
+				token: "test-token",
+				score: 0.42,
+				threshold: 0.27,
+				scoreComponents: {
+					baseScore: 1,
+					unverifiedHost: 0.2,
+					dnsAsymmetry: 0.5,
+					triggeredDetectors: [27],
+					shadowDomPenalty: false,
+				},
+				providerSelectEntropy: 891,
+				ipAddress: {
+					lower: ipAddress.bigInt(),
+					upper: 0n,
+					type: IpAddressType.v4,
+				},
+				captchaType: CaptchaType.image,
+				webView: false,
+				iFrame: true,
+				decryptedHeadHash: "h".repeat(16),
+				userSitekeyIpHash: "ush",
+				reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
+				ruleType: ["ja4Hash"],
+				simdReadings: {
+					supported: true,
+					schema: 1,
+					timerResolutionMs: 0.1,
+					runsPerOp: 3,
+					durationMs: 200,
+					ops: [],
+				},
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getDappUserCommitmentById as any).mockResolvedValue(commitment);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getSessionRecordBySessionId as any) = vi
+				.fn()
+				.mockResolvedValue(sessionRecord);
+
+			const originalDecide =
+				// biome-ignore lint/suspicious/noExplicitAny: tests
+				(imgCaptchaManager as any).decisionMachineRunner.decide;
+			const decideSpy = vi
+				.fn()
+				.mockResolvedValue({ decision: "allow" } as const);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(imgCaptchaManager as any).decisionMachineRunner.decide = decideSpy;
+
+			try {
+				await imgCaptchaManager.verifyImageCaptchaSolution(
+					userAccount,
+					dappAccount,
+					commitmentId,
+					mockEnv,
+				);
+
+				expect(decideSpy).toHaveBeenCalledOnce();
+				const input = decideSpy.mock.calls[0]?.[0];
+				expect(input.captchaType).toBe(CaptchaType.image);
+				expect(input.threshold).toBe(sessionRecord.threshold);
+				expect(input.scoreComponents).toEqual(sessionRecord.scoreComponents);
+				expect(input.decryptedHeadHash).toBe(sessionRecord.decryptedHeadHash);
+				expect(input.userSitekeyIpHash).toBe(sessionRecord.userSitekeyIpHash);
+				expect(input.providerSelectEntropy).toBe(
+					sessionRecord.providerSelectEntropy,
+				);
+				expect(input.simdReadings).toEqual(sessionRecord.simdReadings);
+				expect(input.frictionlessReason).toBe(sessionRecord.reason);
+				expect(input.ruleType).toEqual(sessionRecord.ruleType);
+				expect(input.webView).toBe(sessionRecord.webView);
+				expect(input.iFrame).toBe(sessionRecord.iFrame);
+				// `score` is the locally-recomputed value.
+				expect(typeof input.score).toBe("number");
+			} finally {
+				// biome-ignore lint/suspicious/noExplicitAny: tests
+				(imgCaptchaManager as any).decisionMachineRunner.decide =
+					originalDecide;
+			}
 		});
 	});
 

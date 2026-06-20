@@ -308,8 +308,7 @@ describe("DecisionMachineRunner", () => {
 				triggeredDetectors: [27],
 				shadowDomPenalty: false,
 			},
-			decryptedHeadHash:
-				"01111101001101111100111111011100111111011111011111001111110111000101001101110111110011111101110010011110110100010101011011000100",
+			decryptedHeadHash: "0".repeat(128),
 			userSitekeyIpHash: "abc123",
 			providerSelectEntropy: 891,
 			simdReadings: {
@@ -333,7 +332,7 @@ describe("DecisionMachineRunner", () => {
 			"sc.base:1",
 			"sc.unverifiedHost:0.2",
 			"sc.dnsAsymmetry:0.5",
-			"headHash:01111101001101111100111111011100111111011111011111001111110111000101001101110111110011111101110010011110110100010101011011000100",
+			`headHash:${"0".repeat(128)}`,
 			"userSitekeyIpHash:abc123",
 			"providerSelectEntropy:891",
 			"simdSupported:true",
