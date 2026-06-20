@@ -1,5 +1,10 @@
 # @prosopo/svelte-procaptcha-wrapper
 
+## 1.1.86
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.88
+
 ## 1.1.85
 ### Patch Changes
 

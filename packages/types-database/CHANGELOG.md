@@ -1,5 +1,14 @@
 # @prosopo/types-database
 
+## 4.10.6
+### Patch Changes
+
+- 0f3750b: Add optional `entropyMathRandomFingerprint`, `entropyCryptoFingerprint`, `entropyWallClockOffsetMs` and `entropyMathRandomFirst` fields on `Session` (Zod + Mongoose) and the frictionless `decryptPayload` → `setSessionParams` → `createSession` chain. Sparse compound index `{ siteKey, entropyMathRandomFingerprint, createdAt: -1 }` for query support.
+- Updated dependencies [89ab6fc]
+- Updated dependencies [0f3750b]
+  - @prosopo/types@4.7.3
+  - @prosopo/user-access-policy@3.10.6
+
 ## 4.10.5
 ### Patch Changes
 
