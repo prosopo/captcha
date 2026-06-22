@@ -198,8 +198,9 @@ describe("ImgCaptchaManager", () => {
 			fatal: vi.fn().mockImplementation(loggerOuter.fatal.bind(loggerOuter)),
 			warn: vi.fn().mockImplementation(loggerOuter.warn.bind(loggerOuter)),
 			// Child logger binds context but routes to the same spies so
-			// existing `.mock.calls` assertions keep working.
-			with() {
+			// existing `.mock.calls` assertions keep working. Mirrors the
+			// real `Logger.with(obj)` signature.
+			with(_obj: object) {
 				return this;
 			},
 		} as unknown as Logger;
