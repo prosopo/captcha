@@ -1,5 +1,18 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.11.11
+### Patch Changes
+
+- Updated dependencies [bb98af1]
+  - @prosopo/types@4.7.4
+  - @prosopo/api@3.5.4
+  - @prosopo/detector@3.4.47
+  - @prosopo/load-balancer@2.9.21
+  - @prosopo/procaptcha-common@2.10.28
+  - @prosopo/procaptcha-pow@2.10.4
+  - @prosopo/procaptcha-puzzle@2.10.19
+  - @prosopo/procaptcha-react@2.9.77
+
 ## 2.11.10
 ### Patch Changes
 

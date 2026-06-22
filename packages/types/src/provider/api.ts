@@ -49,6 +49,7 @@ import {
 	type UserAccount,
 } from "../datasets/index.js";
 import {
+	DecisionMachineKind,
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
@@ -637,6 +638,7 @@ export const UpdateDecisionMachineBody = object({
 	[ApiParams.decisionMachineVersion]: string().optional(),
 	[ApiParams.decisionMachineCaptchaType]:
 		DecisionMachineCaptchaTypeSchema.optional(),
+	[ApiParams.decisionMachineKind]: nativeEnum(DecisionMachineKind).optional(),
 	[ApiParams.dapp]: string().optional(),
 });
 
@@ -672,6 +674,7 @@ export const DecisionMachineSummarySchema = object({
 	_id: string(),
 	scope: nativeEnum(DecisionMachineScope),
 	dappAccount: string().nullish(),
+	kind: nativeEnum(DecisionMachineKind).nullish(),
 	runtime: nativeEnum(DecisionMachineRuntime),
 	language: nativeEnum(DecisionMachineLanguage).nullish(),
 	name: string().nullish(),
