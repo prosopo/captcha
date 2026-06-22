@@ -50,7 +50,11 @@ class ApiUpdateDecisionMachineEndpoint
 
 			logger.info(() => ({
 				msg: "Updating decision machine",
-				data: { decisionMachineScope, dappAccount: dapp, kind: decisionMachineKind },
+				data: {
+					decisionMachineScope,
+					dappAccount: dapp,
+					kind: decisionMachineKind,
+				},
 			}));
 
 			const result = await this.clientTaskManager.updateDecisionMachine(

@@ -296,7 +296,11 @@ export class DecisionMachineRunner {
 			cachedGlobal !== null
 				? Promise.resolve(cachedGlobal)
 				: this.db
-						.getDecisionMachineArtifact(DecisionMachineScope.Global, undefined, kind)
+						.getDecisionMachineArtifact(
+							DecisionMachineScope.Global,
+							undefined,
+							kind,
+						)
 						.then((a) => {
 							this.setCachedArtifact(
 								DecisionMachineScope.Global,
