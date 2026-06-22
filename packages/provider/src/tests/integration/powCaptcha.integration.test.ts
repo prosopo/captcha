@@ -129,7 +129,7 @@ describe("PoW Integration Tests", () => {
 		baseUrl = `${protocol}://localhost:${testPort}`;
 
 		// Start MongoDB container
-		mongoContainer = await new GenericContainer("mongo:6.0.17")
+		mongoContainer = await new GenericContainer("mongo:6.0.28")
 			.withExposedPorts(27017)
 			.withEnvironment({
 				MONGO_INITDB_ROOT_USERNAME: "root",
