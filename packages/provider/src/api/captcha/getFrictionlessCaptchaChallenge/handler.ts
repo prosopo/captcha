@@ -41,7 +41,10 @@ import { runDecisionMachine } from "./decisionMachine.js";
 import { decryptIncomingSimdReadings } from "./decryptSimdReadings.js";
 import { attachHoneypot } from "./honeypotResponse.js";
 import { resolveSessionDedup } from "./sessionDedup.js";
-import { runConfiguredCaptchaTypeShortCircuit } from "./shortCircuit.js";
+import {
+	runConfiguredCaptchaTypeShortCircuit,
+	runEmptyDetectorPoolPowFallback,
+} from "./shortCircuit.js";
 
 export default (
 	env: ProviderEnvironment,
@@ -206,24 +209,34 @@ export default (
 					? req.ipInfo.asnNumber
 					: undefined;
 
+			const shortCircuitInput = {
+				tasks,
+				env,
+				clientRecord,
+				token,
+				dapp,
+				ipAddress,
+				ipInfo: req.ipInfo,
+				flatHeaders,
+				sessionMode,
+				userSitekeyIpHash,
+				requestId: req.requestId,
+				logger: req.logger,
+			};
+
 			const shortCircuitResponse = await runConfiguredCaptchaTypeShortCircuit(
-				{
-					tasks,
-					env,
-					clientRecord,
-					token,
-					dapp,
-					ipAddress,
-					ipInfo: req.ipInfo,
-					flatHeaders,
-					sessionMode,
-					userSitekeyIpHash,
-					requestId: req.requestId,
-					logger: req.logger,
-				},
+				shortCircuitInput,
 				res,
 			);
 			if (shortCircuitResponse) return shortCircuitResponse;
+
+			// No detector bundle loaded (empty/uninitialised pool) ⇒ cannot run
+			// frictionless detection, so degrade to a real PoW challenge.
+			const emptyPoolResponse = await runEmptyDetectorPoolPowFallback(
+				shortCircuitInput,
+				res,
+			);
+			if (emptyPoolResponse) return emptyPoolResponse;
 
 			const lScore = tasks.frictionlessManager.checkLangRules(
 				req.headers["accept-language"] || "",

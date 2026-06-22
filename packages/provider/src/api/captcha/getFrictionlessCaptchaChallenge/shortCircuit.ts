@@ -24,6 +24,7 @@ import type { ClientRecord } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { Response } from "express";
 import type { getCompositeIpAddress } from "../../../compositeIpAddress.js";
+import { getDetectorBundlePool } from "../../../tasks/detection/bundlePool.js";
 import type { Tasks } from "../../../tasks/index.js";
 import { DEFAULT_FRICTIONLESS_THRESHOLD } from "./constants.js";
 import { attachHoneypot } from "./honeypotResponse.js";
@@ -43,6 +44,64 @@ export type ShortCircuitInput = {
 	logger: Logger;
 };
 
+// Builds the session params used by the bypass paths (configured captcha type
+// and empty-pool fallback). Score 0 — these paths do not run bot detection, so
+// the session is created as a plain challenge rather than a scored one.
+const buildBypassSessionParams = (input: ShortCircuitInput) => ({
+	token: input.token,
+	score: 0,
+	threshold:
+		input.clientRecord.settings?.frictionlessThreshold ??
+		DEFAULT_FRICTIONLESS_THRESHOLD,
+	scoreComponents: { baseScore: 0 } as ScoreComponents,
+	ipAddress: input.ipAddress,
+	webView: false,
+	iFrame: false,
+	decryptedHeadHash: "",
+	siteKey: input.dapp,
+	ipInfo: input.ipInfo,
+	headers: input.flatHeaders,
+	mode: input.sessionMode,
+	userSitekeyIpHash: input.userSitekeyIpHash,
+});
+
+/**
+ * Fallback when the detector bundle pool is initialised but empty (empty pool
+ * dir / all bundles failed to load). Without a bundle the provider cannot run
+ * frictionless detection, so it degrades to serving a real PoW challenge rather
+ * than failing the request.
+ *
+ * Returns null (proceed with the normal detection path) when:
+ *   - the pool was never initialised (`null`) — the pool feature is not active
+ *     on this provider, so the legacy key-pool decryption path is used; or
+ *   - the pool has at least one bundle.
+ */
+export const runEmptyDetectorPoolPowFallback = async (
+	input: ShortCircuitInput,
+	res: Response,
+): Promise<Response | null> => {
+	const pool = getDetectorBundlePool();
+	if (!pool || pool.size() > 0) {
+		return null;
+	}
+
+	input.logger.warn(() => ({
+		msg: "Frictionless decision",
+		data: {
+			requestId: input.requestId,
+			decision: "empty_detector_pool_pow_fallback",
+			captchaType: CaptchaType.pow,
+		},
+	}));
+
+	attachHoneypot(res, input.clientRecord);
+	return res.json(
+		await input.tasks.frictionlessManager.sendPowCaptcha(
+			buildBypassSessionParams(input),
+		),
+	);
+};
+
 // Bypasses the bot-detection decision machine when the sitekey is configured
 // for a concrete captcha type. Returns null for fully-frictionless sitekeys.
 export const runConfiguredCaptchaTypeShortCircuit = async (
@@ -54,23 +113,7 @@ export const runConfiguredCaptchaTypeShortCircuit = async (
 		return null;
 	}
 
-	const sessionParams = {
-		token: input.token,
-		score: 0,
-		threshold:
-			input.clientRecord.settings?.frictionlessThreshold ??
-			DEFAULT_FRICTIONLESS_THRESHOLD,
-		scoreComponents: { baseScore: 0 } as ScoreComponents,
-		ipAddress: input.ipAddress,
-		webView: false,
-		iFrame: false,
-		decryptedHeadHash: "",
-		siteKey: input.dapp,
-		ipInfo: input.ipInfo,
-		headers: input.flatHeaders,
-		mode: input.sessionMode,
-		userSitekeyIpHash: input.userSitekeyIpHash,
-	};
+	const sessionParams = buildBypassSessionParams(input);
 
 	input.logger.info(() => ({
 		msg: "Frictionless decision",
