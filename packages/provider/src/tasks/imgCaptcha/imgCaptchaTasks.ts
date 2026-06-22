@@ -962,7 +962,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			if (
 				contextAwareEnabled &&
 				sessionRecord.reason ===
-				FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED
+					FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED
 			) {
 				this.logger.info(() => ({
 					msg: "Context aware validation failed",
@@ -1067,9 +1067,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 		const finalResult = isApproved
 			? { status: CaptchaStatus.approved as const }
 			: commitmentUpdates.result || {
-				status: CaptchaStatus.disapproved as const,
-				reason: failureStatus,
-			};
+					status: CaptchaStatus.disapproved as const,
+					reason: failureStatus,
+				};
 
 		if (solution.sessionId) {
 			writePromises.push(
