@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import type { EnvironmentTypes, RandomProvider } from "@prosopo/types";
+import type { IpMode } from "./balancer.js";
 
 // Base DNS endpoint per env — the `pronode.prosopo.io` family is latency-routed
 // (A/AAAA records across the pronode fleet). Clients hit this URL's `/healthz`
@@ -25,11 +26,31 @@ const DNS_ENDPOINT: Record<EnvironmentTypes, string> = {
 	production: "https://pronode.prosopo.io",
 };
 
-// Cached, in-flight pin per environment. Keyed on `env` so the first
-// caller's healthz round-trip is shared by everything that follows in the
-// same browser tab. Cleared automatically if the healthz fetch rejects so
-// the next caller retries instead of inheriting the rejection.
-const pinPromiseCache: Map<EnvironmentTypes, Promise<string>> = new Map();
+// Apply the `ipv4.` / `ipv6.` DNS label to a hostname. The single-stack
+// sub-zones only resolve to A or AAAA records respectively, so this pins the
+// network path before TLS negotiation. Ansible provisions the matching certs
+// for both `ipv4.{global}` and `ipv4.pronodeN.{global}`.
+const withIpModeLabel = (hostname: string, ipMode?: IpMode): string =>
+	ipMode ? `${ipMode}.${hostname}` : hostname;
+
+const applyIpModeToUrl = (url: string, ipMode?: IpMode): string => {
+	if (!ipMode) return url;
+	try {
+		const parsed = new URL(url);
+		parsed.hostname = withIpModeLabel(parsed.hostname, ipMode);
+		return parsed.toString().replace(/\/$/, "");
+	} catch {
+		return url;
+	}
+};
+
+// Cached, in-flight pin per (env, ipMode). Keyed so dual-stack and single-stack
+// callers maintain separate stickiness — they hit different /healthz endpoints
+// and shouldn't share each other's resolution.
+type CacheKey = `${EnvironmentTypes}|${IpMode | "dual"}`;
+const cacheKey = (env: EnvironmentTypes, ipMode?: IpMode): CacheKey =>
+	`${env}|${ipMode ?? "dual"}`;
+const pinPromiseCache: Map<CacheKey, Promise<string>> = new Map();
 
 const fetchPinnedHost = async (baseUrl: string): Promise<string> => {
 	const res = await fetch(`${baseUrl}/healthz`, {
@@ -50,36 +71,48 @@ const fetchPinnedHost = async (baseUrl: string): Promise<string> => {
 const resolveBaseUrl = (env: EnvironmentTypes): string =>
 	DNS_ENDPOINT[env] ?? DNS_ENDPOINT.development;
 
-const resolvePinnedUrl = async (env: EnvironmentTypes): Promise<string> => {
-	const base = resolveBaseUrl(env);
-	// Development never has a global hostname to pin against; just use the
+const resolvePinnedUrl = async (
+	env: EnvironmentTypes,
+	ipMode?: IpMode,
+): Promise<string> => {
+	// The base for /healthz already carries the ipv4./ipv6. label when one is
+	// requested, so DNS keeps the discovery request on the same single-stack
+	// path as the captcha calls that follow.
+	const base = applyIpModeToUrl(resolveBaseUrl(env), ipMode);
+	// Development has no global hostname to /healthz against; use the
 	// hardcoded local URL.
 	if (env === "development") return base;
 
-	const cached = pinPromiseCache.get(env);
+	const key = cacheKey(env, ipMode);
+	const cached = pinPromiseCache.get(key);
 	if (cached) return cached;
 
 	const promise = (async () => {
 		try {
 			const host = await fetchPinnedHost(base);
 			const parsed = new URL(base);
-			parsed.hostname = host;
+			// /healthz returns the bare pronodeN.prosopo.io (env.config.host).
+			// Re-apply the ipMode label so the per-pronode URL stays on the same
+			// single-stack sub-zone (`ipv4.pronode4.prosopo.io`).
+			parsed.hostname = withIpModeLabel(host, ipMode);
 			return parsed.toString().replace(/\/$/, "");
 		} catch {
 			// Healthz unreachable / malformed — fall back to the load-balanced
-			// hostname. Clients will still work, they just lose stickiness.
+			// hostname (with the ipMode label still applied). Clients still
+			// work, they just lose per-pronode stickiness.
 			return base;
 		}
 	})();
 
-	pinPromiseCache.set(env, promise);
+	pinPromiseCache.set(key, promise);
 	return promise;
 };
 
 export const getRandomActiveProvider = async (
 	env: EnvironmentTypes,
+	ipMode?: IpMode,
 ): Promise<RandomProvider> => {
-	const url = await resolvePinnedUrl(env);
+	const url = await resolvePinnedUrl(env, ipMode);
 	return {
 		providerAccount: "dns-routed",
 		provider: { url },

@@ -39,6 +39,7 @@ vi.mock("@prosopo/procaptcha-common", () => ({
 		};
 	}),
 	getProcaptchaRandomActiveProvider: mocks.getProcaptchaRandomActiveProvider,
+	pickIpMode: vi.fn(() => undefined),
 }));
 
 vi.mock("../detectorLoader.js", () => ({

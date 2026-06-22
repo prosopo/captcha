@@ -15,6 +15,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
 	getProcaptchaRandomActiveProvider,
+	pickIpMode,
 	providerRetry,
 } from "../providers.js";
 
@@ -39,8 +40,39 @@ describe("providers", () => {
 
 			const result = await getProcaptchaRandomActiveProvider("production");
 
-			expect(getRandomActiveProvider).toHaveBeenCalledWith("production");
+			expect(getRandomActiveProvider).toHaveBeenCalledWith(
+				"production",
+				undefined,
+			);
 			expect(result.provider.url).toBe("https://pronode.prosopo.io");
+		});
+
+		it("forwards the ipMode parameter to the load-balancer resolver", async () => {
+			const { getRandomActiveProvider } = await import(
+				"@prosopo/load-balancer"
+			);
+
+			await getProcaptchaRandomActiveProvider("production", "ipv4");
+
+			expect(getRandomActiveProvider).toHaveBeenCalledWith(
+				"production",
+				"ipv4",
+			);
+		});
+	});
+
+	describe("pickIpMode", () => {
+		it("picks ipv4 when both flags are set", () => {
+			expect(pickIpMode({ ipv4: true, ipv6: true })).toBe("ipv4");
+		});
+
+		it("returns undefined when neither flag is set", () => {
+			expect(pickIpMode({})).toBeUndefined();
+			expect(pickIpMode(undefined)).toBeUndefined();
+		});
+
+		it("returns ipv6 when only ipv6 is set", () => {
+			expect(pickIpMode({ ipv6: true })).toBe("ipv6");
 		});
 	});
 

@@ -36,7 +36,7 @@ afterEach(() => {
 	globalThis.fetch = originalFetch;
 });
 
-describe("getRandomActiveProvider", () => {
+describe("getRandomActiveProvider (dual stack)", () => {
 	it("uses the local URL directly in development (no healthz round-trip)", async () => {
 		const mocked = mockHealthzFetch("ignored");
 		const result = await getRandomActiveProvider("development");
@@ -56,7 +56,7 @@ describe("getRandomActiveProvider", () => {
 		expect(result.provider.url).toBe("https://staging-pronode2.prosopo.io");
 	});
 
-	it("caches the pinned URL for repeat callers in the same env", async () => {
+	it("caches the pinned URL for repeat callers in the same env + ipMode", async () => {
 		const mocked = mockHealthzFetch("pronode3.prosopo.io");
 		await getRandomActiveProvider("production");
 		await getRandomActiveProvider("production");
@@ -80,5 +80,45 @@ describe("getRandomActiveProvider", () => {
 		globalThis.fetch = mocked as any;
 		const result = await getRandomActiveProvider("production");
 		expect(result.provider.url).toBe("https://pronode.prosopo.io");
+	});
+});
+
+describe("getRandomActiveProvider (single stack ipMode)", () => {
+	it("hits ipv4.pronode.prosopo.io/healthz and pins to ipv4.pronodeN", async () => {
+		const mocked = mockHealthzFetch("pronode4.prosopo.io");
+		const result = await getRandomActiveProvider("production", "ipv4");
+		expect(result.provider.url).toBe("https://ipv4.pronode4.prosopo.io");
+		expect(mocked).toHaveBeenCalledWith(
+			"https://ipv4.pronode.prosopo.io/healthz",
+			expect.any(Object),
+		);
+	});
+
+	it("hits ipv6 staging /healthz and pins to ipv6.staging-pronodeN", async () => {
+		const mocked = mockHealthzFetch("staging-pronode2.prosopo.io");
+		const result = await getRandomActiveProvider("staging", "ipv6");
+		expect(result.provider.url).toBe(
+			"https://ipv6.staging-pronode2.prosopo.io",
+		);
+		expect(mocked).toHaveBeenCalledWith(
+			"https://ipv6.staging.pronode.prosopo.io/healthz",
+			expect.any(Object),
+		);
+	});
+
+	it("falls back to the ipv4-labelled global URL when ipv4 /healthz fails", async () => {
+		mockHealthzFetch("ignored", false, 500);
+		const result = await getRandomActiveProvider("production", "ipv4");
+		expect(result.provider.url).toBe("https://ipv4.pronode.prosopo.io");
+	});
+
+	it("keeps the dual-stack cache and the ipv4 cache separate", async () => {
+		const mocked = mockHealthzFetch("pronode9.prosopo.io");
+		await getRandomActiveProvider("production");
+		await getRandomActiveProvider("production", "ipv4");
+		await getRandomActiveProvider("production");
+		await getRandomActiveProvider("production", "ipv4");
+		// One healthz per (env, ipMode) combination.
+		expect(mocked).toHaveBeenCalledTimes(2);
 	});
 });

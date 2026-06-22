@@ -12,16 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { getRandomActiveProvider } from "@prosopo/load-balancer";
+import { type IpMode, getRandomActiveProvider } from "@prosopo/load-balancer";
 import type { EnvironmentTypes, RandomProvider } from "@prosopo/types";
+
+// Translate the user-facing ipv4/ipv6 booleans (set via ProcaptchaRenderOptions
+// or data-ipv4/data-ipv6) into the load-balancer's IpMode selector. ipv4 wins
+// if both are set; neither set leaves DNS in dual-stack mode (undefined).
+export const pickIpMode = (
+	flags: { ipv4?: boolean; ipv6?: boolean } | undefined,
+): IpMode | undefined => {
+	if (flags?.ipv4) return "ipv4";
+	if (flags?.ipv6) return "ipv6";
+	return undefined;
+};
 
 // Thin wrapper over the load-balancer's static-DNS endpoint resolver. Kept as
 // a separate export so widget packages (procaptcha, procaptcha-pow, …) import
 // from procaptcha-common rather than reaching into load-balancer directly.
 export const getProcaptchaRandomActiveProvider = async (
 	defaultEnvironment: EnvironmentTypes,
+	ipMode?: IpMode,
 ): Promise<RandomProvider> => {
-	return getRandomActiveProvider(defaultEnvironment);
+	return getRandomActiveProvider(defaultEnvironment, ipMode);
 };
 
 export const providerRetry = async (
