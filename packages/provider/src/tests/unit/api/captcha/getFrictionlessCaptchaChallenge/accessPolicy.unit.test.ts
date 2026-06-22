@@ -159,8 +159,9 @@ describe("handleAccessPolicy", () => {
 			const { tasks, input } = buildInput();
 			input.botScore = startScore;
 			input.baseBotScore = startScore;
-			input.clientRecord = {
-				settings: { imageMaxRounds: 5, autoBanScoreThreshold: threshold },
+			(input.clientRecord as { settings: Record<string, unknown> }).settings = {
+				imageMaxRounds: 5,
+				autoBanScoreThreshold: threshold,
 			};
 			input.userAccessPolicy = {
 				type: AccessPolicyType.Restrict,
