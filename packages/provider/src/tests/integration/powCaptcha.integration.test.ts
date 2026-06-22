@@ -304,7 +304,7 @@ describe("PoW Integration Tests", () => {
 				await new Promise((resolve) => setTimeout(resolve, 1000));
 			}
 		}
-	});
+	}, 120_000);
 
 	afterAll(async () => {
 		// Close server first

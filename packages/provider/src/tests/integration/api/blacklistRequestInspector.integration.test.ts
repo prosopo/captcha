@@ -126,7 +126,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			await db.getRedisAccessRulesConnection().getClient();
 
 			accessRulesStorage = env.getDb().getUserAccessRulesStorage();
-		});
+		}, 120_000);
 
 		beforeEach(async () => {
 			[siteKeyMnemonic, siteKey] = await generateMnemonic();

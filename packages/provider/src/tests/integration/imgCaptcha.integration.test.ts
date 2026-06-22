@@ -268,7 +268,7 @@ describe("Image Captcha Integration Tests", () => {
 				await new Promise((resolve) => setTimeout(resolve, 1000));
 			}
 		}
-	});
+	}, 120_000);
 
 	beforeEach(async () => {
 		// Create a new site key to avoid conflicts with other tests
