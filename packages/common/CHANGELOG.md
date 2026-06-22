@@ -1,5 +1,12 @@
 # @prosopo/common
 
+## 3.1.40
+### Patch Changes
+
+- Updated dependencies [edcd450]
+  - @prosopo/locale@3.2.5
+  - @prosopo/logger@1.0.4
+
 ## 3.1.39
 ### Patch Changes
 

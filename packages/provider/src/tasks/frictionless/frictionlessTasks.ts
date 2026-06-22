@@ -128,6 +128,10 @@ export class FrictionlessManager extends CaptchaManager {
 			headers: params.headers,
 			mode: params.mode,
 			simdReadings: params.simdReadings,
+			entropyMathRandomFingerprint: params.entropyMathRandomFingerprint,
+			entropyCryptoFingerprint: params.entropyCryptoFingerprint,
+			entropyWallClockOffsetMs: params.entropyWallClockOffsetMs,
+			entropyMathRandomFirst: params.entropyMathRandomFirst,
 		};
 	}
 
@@ -164,6 +168,10 @@ export class FrictionlessManager extends CaptchaManager {
 		headers?: RequestHeaders,
 		mode?: ModeEnum,
 		simdReadings?: Session["simdReadings"],
+		entropyMathRandomFingerprint?: Session["entropyMathRandomFingerprint"],
+		entropyCryptoFingerprint?: Session["entropyCryptoFingerprint"],
+		entropyWallClockOffsetMs?: Session["entropyWallClockOffsetMs"],
+		entropyMathRandomFirst?: Session["entropyMathRandomFirst"],
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
@@ -194,6 +202,10 @@ export class FrictionlessManager extends CaptchaManager {
 			...(simdReadings && {
 				simdReadingsStage: SimdReadingsStage.frictionless,
 			}),
+			entropyMathRandomFingerprint,
+			entropyCryptoFingerprint,
+			entropyWallClockOffsetMs,
+			entropyMathRandomFirst,
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);
@@ -355,6 +367,10 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.headers,
 			effectiveParams.mode,
 			effectiveParams.simdReadings,
+			effectiveParams.entropyMathRandomFingerprint,
+			effectiveParams.entropyCryptoFingerprint,
+			effectiveParams.entropyWallClockOffsetMs,
+			effectiveParams.entropyMathRandomFirst,
 		);
 
 		// Fire-and-forget served-counter writes. Skipped when there's no
@@ -559,6 +575,10 @@ export class FrictionlessManager extends CaptchaManager {
 		let decryptionFailed = false;
 		let triggeredDetectors: number[] | undefined;
 		let shadowDomPenalty: boolean | undefined;
+		let entropyMathRandomFingerprint: string | undefined;
+		let entropyCryptoFingerprint: string | undefined;
+		let entropyWallClockOffsetMs: number | undefined;
+		let entropyMathRandomFirst: number | undefined;
 		for (const [keyIndex, key] of decryptKeys.entries()) {
 			try {
 				this.logger.info(() => ({
@@ -578,6 +598,10 @@ export class FrictionlessManager extends CaptchaManager {
 				const i = decrypted.isIframe;
 				const td = decrypted.triggeredDetectors;
 				const sd = decrypted.shadowDomPenalty;
+				const ef = decrypted.entropyMathRandomFingerprint;
+				const ec = decrypted.entropyCryptoFingerprint;
+				const eo = decrypted.entropyWallClockOffsetMs;
+				const em = decrypted.entropyMathRandomFirst;
 				this.logger.debug(() => ({
 					msg: "Successfully decrypted score",
 					data: {
@@ -591,6 +615,10 @@ export class FrictionlessManager extends CaptchaManager {
 						iFrame: i,
 						triggeredDetectors: td,
 						shadowDomPenalty: sd,
+						entropyMathRandomFingerprint: ef,
+						entropyCryptoFingerprint: ec,
+						entropyWallClockOffsetMs: eo,
+						entropyMathRandomFirst: em,
 					},
 				}));
 				baseBotScore = s;
@@ -602,6 +630,10 @@ export class FrictionlessManager extends CaptchaManager {
 				iFrame = i;
 				triggeredDetectors = td;
 				shadowDomPenalty = sd;
+				entropyMathRandomFingerprint = ef;
+				entropyCryptoFingerprint = ec;
+				entropyWallClockOffsetMs = eo;
+				entropyMathRandomFirst = em;
 				break;
 			} catch (err) {
 				// check if the next index exists, if not, log an error
@@ -668,6 +700,10 @@ export class FrictionlessManager extends CaptchaManager {
 			decryptionFailed,
 			triggeredDetectors,
 			shadowDomPenalty,
+			entropyMathRandomFingerprint,
+			entropyCryptoFingerprint,
+			entropyWallClockOffsetMs,
+			entropyMathRandomFirst,
 		};
 	}
 

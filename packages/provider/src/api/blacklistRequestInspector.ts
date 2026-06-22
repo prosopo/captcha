@@ -252,6 +252,7 @@ export const getPrioritisedAccessRule = async (
 	userAccessRulesStorage: AccessRulesStorage,
 	userScope: UserScope | UserScopeRecord,
 	clientId?: string,
+	options?: { blockOnly?: boolean },
 ): Promise<AccessRule[]> => {
 	const parsedUserScope = userScopeInput.parse(userScope);
 
@@ -264,6 +265,7 @@ export const getPrioritisedAccessRule = async (
 		policyScopeMatch: FilterScopeMatch.Greedy,
 		userScope: parsedUserScope,
 		userScopeMatch: FilterScopeMatch.Greedy,
+		...(options?.blockOnly && { blockOnly: true }),
 	};
 
 	const candidates = await userAccessRulesStorage.findRules(
@@ -372,6 +374,13 @@ export class BlacklistRequestInspector {
 					asn,
 				),
 				clientId,
+				// Request-time middleware only ever fires on Block policies
+				// (Restrict rules flow through and let the captcha-creation
+				// path decorate the response). Restrict the Redis-side
+				// candidate pool so the SERVER_SIDE_RANK_TOP_N cap can't
+				// crowd out hard-block rules in clients with dense Restrict
+				// rule populations.
+				{ blockOnly: true },
 			);
 			// Skip policies that have explicitly opted out of request-time
 			// enforcement (`deferToVerify`). Those are matched again from

@@ -723,6 +723,17 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 					: undefined,
 				ipInfo: challengeRecord.ipInfo,
 				dnsEvent: enrichedDnsEvent,
+				score,
+				threshold: sessionRecord?.threshold,
+				scoreComponents: sessionRecord?.scoreComponents,
+				decryptedHeadHash: sessionRecord?.decryptedHeadHash,
+				userSitekeyIpHash: sessionRecord?.userSitekeyIpHash,
+				providerSelectEntropy: sessionRecord?.providerSelectEntropy,
+				simdReadings: sessionRecord?.simdReadings,
+				frictionlessReason: sessionRecord?.reason,
+				ruleType: sessionRecord?.ruleType,
+				webView: sessionRecord?.webView,
+				iFrame: sessionRecord?.iFrame,
 			};
 
 			const decision = await this.decisionMachineRunner.decide(
