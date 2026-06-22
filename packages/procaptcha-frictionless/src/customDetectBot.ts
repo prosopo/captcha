@@ -61,8 +61,14 @@ const customDetectBot: BotDetectionFunction = async (
 	]);
 	const ext = new ExtClass();
 
+	// The detector bundle still expects the legacy 5-arg signature
+	// `(env, randomProviderSelectorFn, container, restart, accountGenerator)`.
+	// Until the bundle is rebuilt without the provider selector, hand it a
+	// noop selector that resolves to the static DNS endpoint — the detector
+	// no longer uses the returned RandomProvider for routing.
 	const detectionResult = await detect(
 		config.defaultEnvironment,
+		async () => getProcaptchaRandomActiveProvider(config.defaultEnvironment),
 		container,
 		restartFn,
 		() => ext.getAccount(config),
