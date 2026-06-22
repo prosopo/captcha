@@ -98,7 +98,6 @@ export type DecisionMachineInput = {
 	scoreComponents?: ScoreComponents;
 	decryptedHeadHash?: string;
 	userSitekeyIpHash?: string;
-	providerSelectEntropy?: number;
 	simdReadings?: SimdReadings;
 	frictionlessReason?: FrictionlessReason;
 	ruleType?: string[];

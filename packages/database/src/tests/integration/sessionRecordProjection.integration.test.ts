@@ -29,8 +29,7 @@ import { ProviderDatabase } from "../../databases/provider.js";
 // Symptom: every PoW submission that the post-PoW routing machine escalated
 // to image/puzzle failed with `DATABASE.SESSION_STORE_FAILED`. The wrapped
 // Mongoose `ValidationError` listed `token`, `score`, `threshold`,
-// `providerSelectEntropy`, `ipAddress.lower`, and `ipAddress.type` as
-// missing required fields.
+// `ipAddress.lower`, and `ipAddress.type` as missing required fields.
 //
 // Root cause: `submitPoWCaptchaSolution.buildEscalation` fetches the
 // originating session via `ProviderDatabase.getSessionRecordBySessionId`
@@ -106,7 +105,6 @@ describe("getSessionRecordBySessionId projection", () => {
 			score: 0.42,
 			threshold: 0.5,
 			scoreComponents: { baseScore: 0.42, lScore: 0.1 },
-			providerSelectEntropy: 0.7,
 			ipAddress,
 			captchaType: CaptchaType.pow,
 			mode: undefined,
@@ -137,7 +135,6 @@ describe("getSessionRecordBySessionId projection", () => {
 		expect(got.token).toBe("tok-roundtrip");
 		expect(got.score).toBe(0.42);
 		expect(got.threshold).toBe(0.5);
-		expect(got.providerSelectEntropy).toBe(0.7);
 		expect(got.ipAddress).toBeDefined();
 		expect(got.ipAddress?.type).toBe(IpAddressType.v4);
 		expect(got.ipAddress?.lower).toBeDefined();
@@ -180,7 +177,6 @@ describe("getSessionRecordBySessionId projection", () => {
 			score: 0.6,
 			threshold: 0.5,
 			scoreComponents: { baseScore: 0.6 },
-			providerSelectEntropy: 0.3,
 			ipAddress: ipv4Composite(16843009n),
 			captchaType: CaptchaType.pow,
 			webView: false,
@@ -204,7 +200,6 @@ describe("getSessionRecordBySessionId projection", () => {
 				score: origin.score,
 				threshold: origin.threshold,
 				scoreComponents: origin.scoreComponents,
-				providerSelectEntropy: origin.providerSelectEntropy,
 				ipAddress: origin.ipAddress,
 				captchaType: CaptchaType.image,
 				webView: origin.webView,
@@ -239,12 +234,7 @@ describe("getSessionRecordBySessionId projection", () => {
 
 		// Sanity: production-failure paths are in this list.
 		expect(requiredPathsWithoutDefault).toEqual(
-			expect.arrayContaining([
-				"token",
-				"score",
-				"threshold",
-				"providerSelectEntropy",
-			]),
+			expect.arrayContaining(["token", "score", "threshold"]),
 		);
 
 		const sessionId = "session-required-fields";
@@ -255,7 +245,6 @@ describe("getSessionRecordBySessionId projection", () => {
 			score: 0.1,
 			threshold: 0.2,
 			scoreComponents: { baseScore: 0.1 },
-			providerSelectEntropy: 0.4,
 			ipAddress: ipv4Composite(16843009n),
 			captchaType: CaptchaType.pow,
 			webView: false,

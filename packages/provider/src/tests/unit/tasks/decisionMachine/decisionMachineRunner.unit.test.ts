@@ -278,7 +278,6 @@ describe("DecisionMachineRunner", () => {
 						"sc.dnsAsymmetry:" + (input.scoreComponents && input.scoreComponents.dnsAsymmetry !== undefined ? input.scoreComponents.dnsAsymmetry : "u"),
 						"headHash:" + (input.decryptedHeadHash ?? "u"),
 						"userSitekeyIpHash:" + (input.userSitekeyIpHash ?? "u"),
-						"providerSelectEntropy:" + (input.providerSelectEntropy ?? "u"),
 						"simdSupported:" + (input.simdReadings && input.simdReadings.supported !== undefined ? input.simdReadings.supported : "u"),
 						"frictionlessReason:" + (input.frictionlessReason ?? "u"),
 						"ruleType:" + (input.ruleType ? input.ruleType.join(",") : "u"),
@@ -310,7 +309,6 @@ describe("DecisionMachineRunner", () => {
 			},
 			decryptedHeadHash: "0".repeat(128),
 			userSitekeyIpHash: "abc123",
-			providerSelectEntropy: 891,
 			simdReadings: {
 				supported: true,
 				schema: 1,
@@ -334,7 +332,6 @@ describe("DecisionMachineRunner", () => {
 			"sc.dnsAsymmetry:0.5",
 			`headHash:${"0".repeat(128)}`,
 			"userSitekeyIpHash:abc123",
-			"providerSelectEntropy:891",
 			"simdSupported:true",
 			`frictionlessReason:${FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD}`,
 			"ruleType:ja4Hash",

@@ -675,7 +675,6 @@ describe("PuzzleCaptchaManager", () => {
 					triggeredDetectors: [27],
 					shadowDomPenalty: false,
 				},
-				providerSelectEntropy: 891,
 				ipAddress: getCompositeIpAddress(ipAddress),
 				captchaType: CaptchaType.puzzle,
 				webView: false,
@@ -716,9 +715,6 @@ describe("PuzzleCaptchaManager", () => {
 			expect(input.scoreComponents).toEqual(sessionRecord.scoreComponents);
 			expect(input.decryptedHeadHash).toBe(sessionRecord.decryptedHeadHash);
 			expect(input.userSitekeyIpHash).toBe(sessionRecord.userSitekeyIpHash);
-			expect(input.providerSelectEntropy).toBe(
-				sessionRecord.providerSelectEntropy,
-			);
 			expect(input.simdReadings).toEqual(sessionRecord.simdReadings);
 			expect(input.frictionlessReason).toBe(sessionRecord.reason);
 			expect(input.ruleType).toEqual(sessionRecord.ruleType);

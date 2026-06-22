@@ -61,7 +61,6 @@ export const runConfiguredCaptchaTypeShortCircuit = async (
 			input.clientRecord.settings?.frictionlessThreshold ??
 			DEFAULT_FRICTIONLESS_THRESHOLD,
 		scoreComponents: { baseScore: 0 } as ScoreComponents,
-		providerSelectEntropy: 0,
 		ipAddress: input.ipAddress,
 		webView: false,
 		iFrame: false,

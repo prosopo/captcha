@@ -54,7 +54,6 @@ export type DecisionMachineInput = {
 	userId: string | undefined;
 	webView: boolean;
 	decryptedHeadHash: string;
-	providerSelectEntropy: number;
 	baseBotScore: number;
 	botScore: number;
 	scoreComponents: ScoreComponents;
@@ -115,21 +114,6 @@ export const runDecisionMachine = async (
 	if (timestampTripped) {
 		const scoreUpdate = tasks.frictionlessManager.scoreIncreaseTimestamp(
 			input.timestamp,
-			input.baseBotScore,
-			botScore,
-			scoreComponents,
-		);
-		botScore = scoreUpdate.score;
-		scoreComponents = scoreUpdate.scoreComponents;
-		tasks.frictionlessManager.updateScore(botScore, scoreComponents);
-	}
-
-	const hostVerified = await tasks.frictionlessManager.hostVerified(
-		input.providerSelectEntropy,
-	);
-	if (!hostVerified.verified) {
-		const scoreUpdate = tasks.frictionlessManager.scoreIncreaseUnverifiedHost(
-			hostVerified.domain,
 			input.baseBotScore,
 			botScore,
 			scoreComponents,

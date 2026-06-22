@@ -509,7 +509,6 @@ describe("PowCaptchaManager", () => {
 				score: 0.5,
 				threshold: 0.5,
 				scoreComponents: { baseScore: 0.5 },
-				providerSelectEntropy: 13337,
 				ipAddress: getCompositeIpAddress(ipAddress),
 				captchaType: CaptchaType.pow,
 				webView: false,
@@ -594,7 +593,6 @@ describe("PowCaptchaManager", () => {
 				score: 0.5,
 				threshold: 0.5,
 				scoreComponents: { baseScore: 0.5 },
-				providerSelectEntropy: 13337,
 				ipAddress: getCompositeIpAddress(ipAddress),
 				captchaType: CaptchaType.pow,
 				webView: false,
@@ -975,7 +973,6 @@ describe("PowCaptchaManager", () => {
 					triggeredDetectors: [27],
 					shadowDomPenalty: false,
 				},
-				providerSelectEntropy: 891,
 				ipAddress: getCompositeIpAddress(ipAddress),
 				captchaType: CaptchaType.pow,
 				webView: false,
@@ -1025,9 +1022,6 @@ describe("PowCaptchaManager", () => {
 				expect(input.scoreComponents).toEqual(sessionRecord.scoreComponents);
 				expect(input.decryptedHeadHash).toBe(sessionRecord.decryptedHeadHash);
 				expect(input.userSitekeyIpHash).toBe(sessionRecord.userSitekeyIpHash);
-				expect(input.providerSelectEntropy).toBe(
-					sessionRecord.providerSelectEntropy,
-				);
 				expect(input.simdReadings).toEqual(sessionRecord.simdReadings);
 				expect(input.frictionlessReason).toBe(sessionRecord.reason);
 				expect(input.ruleType).toEqual(sessionRecord.ruleType);
