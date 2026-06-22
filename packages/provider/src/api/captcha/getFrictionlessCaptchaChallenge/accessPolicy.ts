@@ -110,11 +110,11 @@ export const handleAccessPolicy = async (
 		};
 	}
 
-	// Re-evaluate autoBan after the access-policy bump. Without this, a
-	// non-block policy (image/pow/puzzle routing) bypasses autoBan even
-	// when its score bump pushes the session over the threshold — the
-	// later runDecisionMachine autoBan check never runs because the
-	// access-policy outcome short-circuits before it.
+	// Defensive: re-evaluate autoBan after the access-policy bump so the
+	// non-block branches below can't dispatch to image/pow/puzzle when
+	// the bumped score now meets the threshold. The autoBan check added
+	// to runDecisionMachine (#2738) doesn't cover this path because
+	// handleAccessPolicy short-circuits before runDecisionMachine runs.
 	const autoBanThreshold = clientRecord.settings.autoBanScoreThreshold;
 	if (autoBanThreshold !== undefined && Number(botScore) >= autoBanThreshold) {
 		logger.info(() => ({

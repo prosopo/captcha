@@ -2,12 +2,15 @@
 "@prosopo/provider": patch
 ---
 
-fix(provider): apply autoBanScoreThreshold after access-policy bump
+fix(provider): defensive autoBan re-check inside access-policy path
 
-`handleAccessPolicy` applies `scoreIncreaseAccessPolicy` and then short-circuits
-to `sendImageCaptcha` / `sendPowCaptcha` / `sendPuzzleCaptcha` for non-block
-policies. The autoBan check in `runDecisionMachine` never sees the post-bump
-score because the access-policy outcome returns first. Re-evaluate the
-threshold after the bump so a session whose access-policy penalty pushes it
-over `autoBanScoreThreshold` is registered as `AUTO_BAN_SCORE` and 401's,
-regardless of whether the policy routes to image, pow, or puzzle.
+`runDecisionMachine` already re-evaluates `autoBanScoreThreshold` after the
+webView / timestamp / unverifiedHost score bumps (#2738). `handleAccessPolicy`
+runs *before* `runDecisionMachine` and applies its own
+`scoreIncreaseAccessPolicy` bump, but for non-block policies it short-circuits
+straight to `sendImageCaptcha` / `sendPowCaptcha` / `sendPuzzleCaptcha` —
+bypassing the downstream autoBan check. Close that gap by re-evaluating the
+threshold inside `handleAccessPolicy` right after the bump.
+
+No live traffic was observed hitting this path; this is a defensive close,
+not a fix for an active incident.
