@@ -13,119 +13,24 @@
 // limitations under the License.
 
 import type { EnvironmentTypes, RandomProvider } from "@prosopo/types";
-import { type HardcodedProvider, loadBalancer } from "./index.js";
 
-// Keyed by env so a prefetch and a later call with a different env don't share.
-const providerPromiseCache: Map<
-	EnvironmentTypes,
-	Promise<HardcodedProvider[]>
-> = new Map();
-
-/** Optional custom loader for server-side caching (e.g. cacheFile with ETag). */
-let customProviderLoader:
-	| ((env: EnvironmentTypes) => Promise<HardcodedProvider[]>)
-	| null = null;
-
-/**
- * Set a custom provider loader that replaces the default HTTP fetch.
- * Use this on the server side to inject cacheFile-based loading with
- * ETag/Last-Modified support for disk persistence across restarts.
- */
-export function setProviderLoader(
-	loader: (env: EnvironmentTypes) => Promise<HardcodedProvider[]>,
-): void {
-	customProviderLoader = loader;
-}
-
-export function _resetCache() {
-	providerPromiseCache.clear();
-}
-
-/**
- * Selects a weighted random provider using the entropy value.
- * Providers with higher weights are more likely to be selected.
- *
- * @param providers - Array of providers with weights
- * @param entropy - Random seed value for deterministic selection
- * @returns Selected provider
- */
-export function selectWeightedProvider(
-	providers: HardcodedProvider[],
-	entropy: number,
-): HardcodedProvider {
-	if (providers.length === 0) {
-		throw new Error("No providers available");
-	}
-
-	const totalWeight = providers.reduce((sum, p) => sum + p.weight, 0);
-
-	// Use entropy to generate a value between 0 and totalWeight-1
-	const randomValue = entropy % totalWeight;
-
-	// Select provider based on cumulative weight
-	let cumulativeWeight = 0;
-	for (const provider of providers) {
-		cumulativeWeight += provider.weight;
-		if (randomValue < cumulativeWeight) {
-			return provider;
-		}
-	}
-
-	// Fallback (should never reach here)
-	const selectedProvider = providers[providers.length - 1];
-	if (!selectedProvider) {
-		throw new Error("No providers available");
-	}
-	return selectedProvider;
-}
-
-/** Load providers using the custom loader if set, otherwise the default fetch. */
-const loadProviders = async (
-	env: EnvironmentTypes,
-): Promise<HardcodedProvider[]> => {
-	if (customProviderLoader) {
-		return customProviderLoader(env);
-	}
-	return loadBalancer(env);
-};
-
-// Caches the in-flight Promise (not the resolved array) so concurrent callers
-// share a single network request rather than racing.
-const getProvidersPromise = (
-	env: EnvironmentTypes,
-): Promise<HardcodedProvider[]> => {
-	const existing = providerPromiseCache.get(env);
-	if (existing) return existing;
-	const promise = loadProviders(env).catch((err) => {
-		providerPromiseCache.delete(env);
-		throw err;
-	});
-	providerPromiseCache.set(env, promise);
-	return promise;
-};
-
-/**
- * Pre-warms the provider cache for a given environment without requiring entropy.
- * Call this as early as possible to avoid a cold-cache delay when getRandomActiveProvider is first used.
- */
-export const prefetchProviders = async (
-	env: EnvironmentTypes,
-): Promise<void> => {
-	await getProvidersPromise(env);
+// Static DNS endpoints — load balancing happens at the DNS layer (latency-routed
+// A/AAAA records across the pronode fleet). `providerAccount` is a fixed
+// placeholder; the real backend identity is established by TLS termination at
+// the chosen node and is no longer signalled to clients.
+const DNS_ENDPOINT: Record<EnvironmentTypes, string> = {
+	development: "http://localhost:9229",
+	staging: "https://staging.pronode.prosopo.io",
+	production: "https://pronode.prosopo.io",
 };
 
 export const getRandomActiveProvider = async (
 	env: EnvironmentTypes,
-	entropy: number,
 ): Promise<RandomProvider> => {
-	const providers = await getProvidersPromise(env);
-	const randomProviderObj = selectWeightedProvider(providers, entropy);
-
 	return {
-		providerAccount: randomProviderObj.address,
+		providerAccount: "dns-routed",
 		provider: {
-			url: randomProviderObj.url,
-			datasetId: randomProviderObj.datasetId,
+			url: DNS_ENDPOINT[env] ?? DNS_ENDPOINT.development,
 		},
 	};
 };

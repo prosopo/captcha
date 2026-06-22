@@ -13,14 +13,15 @@
 // limitations under the License.
 
 import { getRandomActiveProvider } from "@prosopo/load-balancer";
-import type { EnvironmentTypes } from "@prosopo/types";
+import type { EnvironmentTypes, RandomProvider } from "@prosopo/types";
 
+// Thin wrapper over the load-balancer's static-DNS endpoint resolver. Kept as
+// a separate export so widget packages (procaptcha, procaptcha-pow, …) import
+// from procaptcha-common rather than reaching into load-balancer directly.
 export const getProcaptchaRandomActiveProvider = async (
 	defaultEnvironment: EnvironmentTypes,
-) => {
-	const randomNumberU8a = window.crypto.getRandomValues(new Uint8Array(10));
-	const randomNumber = randomNumberU8a.reduce((a, b) => a + b, 0);
-	return await getRandomActiveProvider(defaultEnvironment, randomNumber);
+): Promise<RandomProvider> => {
+	return getRandomActiveProvider(defaultEnvironment);
 };
 
 export const providerRetry = async (

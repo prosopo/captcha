@@ -80,16 +80,14 @@ export default class ProviderApi
 {
 	public getCaptchaChallenge(
 		userAccount: string,
-		randomProvider: RandomProvider,
+		_randomProvider: RandomProvider,
 		sessionId?: string,
 		simdReadings?: string,
 	): Promise<CaptchaResponseBody> {
-		const { provider } = randomProvider;
 		const dappAccount = this.account;
 		const body: CaptchaRequestBodyType = {
 			[ApiParams.dapp]: dappAccount,
 			[ApiParams.user]: userAccount,
-			[ApiParams.datasetId]: provider.datasetId,
 		};
 		if (sessionId) {
 			body[ApiParams.sessionId] = sessionId;
