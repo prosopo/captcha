@@ -35,6 +35,11 @@ export enum DecisionMachineRuntime {
 	Node = "node",
 }
 
+export enum DecisionMachineKind {
+	Routing = "routing",
+	Decision = "decision",
+}
+
 /**
  * Decision machine scope defines the specificity level of an artifact.
  * Only ONE artifact is selected per request based on scope priority.
