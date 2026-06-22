@@ -175,15 +175,32 @@ export async function startProviderApi(
 	// https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
 	apiApp.set("trust proxy", 1);
 
-	// `exposedHeaders` lets the browser surface our custom response headers
-	// to fetch() callers — without this the widget can't read x-prosopo-meta
-	// for the honeypot transport. Same effect as the
-	// Access-Control-Expose-Headers response header.
-	// `maxAge: 86400` lets browsers cache the CORS preflight for 24h. Without
-	// it (the cors default), browsers re-fire OPTIONS before every request to
-	// /captcha/* — every fetch ships custom Prosopo-Site-Key / Prosopo-User
-	// headers, which makes the request non-simple and forces preflight.
-	apiApp.use(cors({ exposedHeaders: ["x-prosopo-meta"], maxAge: 86400 }));
+	// `allowedHeaders` enumerates every request header the widget ever sends
+	// so the browser caches ONE preflight that covers all future combinations.
+	// Default behaviour (echo `Access-Control-Request-Headers`) caches one
+	// preflight per unique header combo, which means hops that add or drop
+	// a header (e.g. unauthenticated /captcha vs admin /admin) re-fire OPTIONS.
+	// `exposedHeaders` is the response-side mirror — without `x-prosopo-meta`
+	// listed here the widget can't read the honeypot payload from fetch().
+	// `maxAge: 86400` lets browsers cache the preflight result for 24h; the
+	// cors default is unset and most browsers fall back to 5s, so without
+	// this every /captcha/* call repays the OPTIONS round-trip.
+	apiApp.use(
+		cors({
+			exposedHeaders: ["x-prosopo-meta"],
+			allowedHeaders: [
+				"Accept",
+				"Accept-Language",
+				"Authorization",
+				"Content-Language",
+				"Content-Type",
+				"Prosopo-Site-Key",
+				"Prosopo-User",
+				"x-prosopo-meta",
+			],
+			maxAge: 86400,
+		}),
+	);
 	apiApp.use(express.json({ limit: "50mb" }));
 
 	// Put this first so that no middleware runs on it
