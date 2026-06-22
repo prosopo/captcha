@@ -32,3 +32,14 @@ Replace client-side weighted-random provider selection with static DNS endpoints
 - Removed dead `setProviderLoader` / `prefetchProviders` / `selectWeightedProvider`
   plumbing from `@prosopo/load-balancer`. The server's cacheFile-based loader
   setup in `startProviderApi` goes with them.
+- `getRandomActiveProvider` now hits `/healthz` on the global hostname once per
+  page load, reads the responding pronode's identity from the JSON body, and
+  pins subsequent captcha calls to that pronode (`https://pronodeN.prosopo.io`)
+  so session creation and submission land on the same backend. Falls back to
+  the dual-stack global hostname when `/healthz` is unreachable.
+- `/healthz` now returns `{ ok: true, host: <pronode-identity> }` instead of
+  `"OK"` to support the above pinning.
+- CORS preflight is now cached for 24h (`maxAge: 86400`) — previously the
+  browser refired an OPTIONS preflight before every captcha call because
+  the custom `Prosopo-Site-Key` / `Prosopo-User` headers make the request
+  non-simple and the default `maxAge` is 5s.
