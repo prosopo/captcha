@@ -1,5 +1,22 @@
 # @prosopo/database
 
+## 3.14.7
+### Patch Changes
+
+- bb98af1: Add `DecisionMachineKind` (`routing` | `decision`) to separate routing and decision artifacts on the same provider.
+  
+  - New `DecisionMachineKind` enum in `@prosopo/types`.
+  - `DecisionMachineArtifact` and the Mongoose `DecisionMachineArtifactRecordSchema` gain an optional `kind` field; the unique compound index becomes `(scope, dappAccount, kind)` so a routing machine and a decision machine can coexist for the same scope/dapp.
+  - `ProviderApi.updateDecisionMachine` accepts an optional `kind` 10th arg; the `apiUpdateDecisionMachineEndpoint` admin handler reads `decisionMachineKind` from the request body and forwards it.
+  - `ClientTaskManager.updateDecisionMachine` and the artifact-listing returns include `kind`.
+  - `ProviderDatabase.getDecisionMachineArtifact` filters by `kind` when supplied; `upsertDecisionMachineArtifact` defaults missing `kind` to `Routing` for backward compatibility on existing rows.
+  - `DecisionMachineRunner` keys its in-memory cache by `(scope, kind, dappAccount)` and selects the appropriate artifact for `runDecisionMachine` (kind=`decision`), `runRoutingMachine` (kind=`routing`) and `runCounterMachine` (kind=`routing`).
+  - `DecisionMachineArtifactRecordSchema.captchaType` enum now includes `CaptchaType.puzzle` alongside `pow`/`image`.
+- Updated dependencies [bb98af1]
+  - @prosopo/types@4.7.4
+  - @prosopo/types-database@4.10.7
+  - @prosopo/user-access-policy@3.10.7
+
 ## 3.14.6
 ### Patch Changes
 
