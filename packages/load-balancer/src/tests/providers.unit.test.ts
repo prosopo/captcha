@@ -40,7 +40,7 @@ describe("getRandomActiveProvider (dual stack)", () => {
 	it("uses the local URL directly in development (no healthz round-trip)", async () => {
 		const mocked = mockHealthzFetch("ignored");
 		const result = await getRandomActiveProvider("development");
-		expect(result.provider.url).toBe("http://localhost:9229");
+		expect(result.provider.url).toBe("https://localhost:9229");
 		expect(mocked).not.toHaveBeenCalled();
 	});
 

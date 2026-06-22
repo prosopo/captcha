@@ -21,7 +21,7 @@ import type { IpMode } from "./balancer.js";
 // subsequent captcha calls to that pronode so session creation and submission
 // land on the same backend.
 const DNS_ENDPOINT: Record<EnvironmentTypes, string> = {
-	development: "http://localhost:9229",
+	development: "https://localhost:9229",
 	staging: "https://staging.pronode.prosopo.io",
 	production: "https://pronode.prosopo.io",
 };
