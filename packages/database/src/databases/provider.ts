@@ -34,6 +34,7 @@ import {
 	type DatasetWithIdsAndTree,
 	DatasetWithIdsAndTreeSchema,
 	type DecisionMachineArtifact,
+	DecisionMachineKind,
 	type DecisionMachineScope,
 	type Hash,
 	type IPInfoResponse,
@@ -2614,9 +2615,11 @@ export class ProviderDatabase
 	): Promise<void> {
 		const now = new Date();
 		const dappAccount = artifact.dappAccount ?? null;
+		const kind = artifact.kind ?? DecisionMachineKind.Routing;
 		const filter = {
 			scope: artifact.scope,
 			dappAccount,
+			kind,
 		};
 
 		await this.tables?.decisionMachine.updateOne(
@@ -2625,11 +2628,13 @@ export class ProviderDatabase
 				$set: {
 					scope: artifact.scope,
 					dappAccount,
+					kind,
 					runtime: artifact.runtime,
 					language: artifact.language,
 					source: artifact.source,
 					name: artifact.name,
 					version: artifact.version,
+					captchaType: artifact.captchaType,
 					updatedAt: now,
 				},
 				$setOnInsert: {
@@ -2650,11 +2655,15 @@ export class ProviderDatabase
 	async getDecisionMachineArtifact(
 		scope: DecisionMachineScope,
 		dappAccount?: string,
+		kind?: DecisionMachineKind,
 	): Promise<DecisionMachineArtifact | undefined> {
-		const filter = {
+		const filter: Record<string, unknown> = {
 			scope,
 			dappAccount: dappAccount ?? null,
 		};
+		if (kind !== undefined) {
+			filter.kind = kind;
+		}
 		const doc = await this.tables?.decisionMachine
 			.findOne(filter)
 			.lean<DecisionMachineArtifact>();
