@@ -149,7 +149,8 @@ describe("handleAccessPolicy", () => {
 		// sendPowCaptcha and the later autoBan check in runDecisionMachine
 		// never ran. Each route must now register AUTO_BAN_SCORE and 401.
 		const withAutoBanInput = (
-			captchaType: typeof CaptchaType.image
+			captchaType:
+				| typeof CaptchaType.image
 				| typeof CaptchaType.pow
 				| typeof CaptchaType.puzzle,
 			threshold = 1.1,
@@ -207,15 +208,13 @@ describe("handleAccessPolicy", () => {
 				expect.objectContaining({ reason: "AUTO_BAN_SCORE" }),
 			);
 			expect(res.status).toHaveBeenCalledWith(401);
-			expect(tasks.frictionlessManager.sendPuzzleCaptcha).not.toHaveBeenCalled();
+			expect(
+				tasks.frictionlessManager.sendPuzzleCaptcha,
+			).not.toHaveBeenCalled();
 		});
 
 		it("still routes when bumped score stays below threshold", async () => {
-			const { tasks, input } = withAutoBanInput(
-				CaptchaType.puzzle,
-				1.5,
-				1.0,
-			);
+			const { tasks, input } = withAutoBanInput(CaptchaType.puzzle, 1.5, 1.0);
 			const res = buildRes();
 			const r = await handleAccessPolicy(input as never, res as never);
 			expect(r.handled).toBe(true);
