@@ -580,12 +580,15 @@ export class FrictionlessManager extends CaptchaManager {
 		let entropyWallClockOffsetMs: number | undefined;
 		let entropyMathRandomFirst: number | undefined;
 		for (const [keyIndex, key] of decryptKeys.entries()) {
+			// Bind the redacted key + index once so every line in this iteration
+			// carries it without repeating the field in each `data` block.
+			const keyLogger = this.logger.with({
+				key: this.redactKeyForLogging(key),
+				keyIndex,
+			});
 			try {
-				this.logger.info(() => ({
+				keyLogger.info(() => ({
 					msg: "Attempting to decrypt score",
-					data: {
-						key: this.redactKeyForLogging(key),
-					},
 				}));
 				const decrypted = await getBotScore(token, headHash, key as string);
 				decryptedHeadHash = decrypted.decryptedHeadHash || "";
@@ -602,10 +605,9 @@ export class FrictionlessManager extends CaptchaManager {
 				const ec = decrypted.entropyCryptoFingerprint;
 				const eo = decrypted.entropyWallClockOffsetMs;
 				const em = decrypted.entropyMathRandomFirst;
-				this.logger.debug(() => ({
+				keyLogger.debug(() => ({
 					msg: "Successfully decrypted score",
 					data: {
-						key: this.redactKeyForLogging(key),
 						baseBotScore: s,
 						timestamp: t,
 						entropy: p,
@@ -638,7 +640,7 @@ export class FrictionlessManager extends CaptchaManager {
 			} catch (err) {
 				// check if the next index exists, if not, log an error
 				if (keyIndex === decryptKeys.length - 1) {
-					this.logger.warn(() => ({
+					keyLogger.warn(() => ({
 						msg: "Error decrypting score: no more keys to try",
 					}));
 					baseBotScore = 1;
