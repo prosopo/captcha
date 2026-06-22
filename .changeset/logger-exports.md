@@ -1,5 +1,5 @@
 ---
-"@prosopo/logger": patch
+"@prosopo/logger": major
 "@prosopo/api-express-router": patch
 ---
 
