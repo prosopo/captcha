@@ -17,6 +17,7 @@ import { ProsopoEnvError } from "@prosopo/common";
 import {
 	ExtensionLoader,
 	getProcaptchaRandomActiveProvider,
+	pickIpMode,
 } from "@prosopo/procaptcha-common";
 import type {
 	BotDetectionFunction,
@@ -76,8 +77,11 @@ const customDetectBot: BotDetectionFunction = async (
 
 	// Resolve the static DNS endpoint for this env. No client-side random
 	// selection anymore — the DNS layer load-balances across the pronode fleet.
+	// `pickIpMode(config)` honours the dapp's data-ipv4 / data-ipv6 preference
+	// so frictionless and the subsequent captcha hops stay on the same stack.
 	const provider = await getProcaptchaRandomActiveProvider(
 		config.defaultEnvironment,
+		pickIpMode(config),
 	);
 
 	const providerApi = new ProviderApi(
