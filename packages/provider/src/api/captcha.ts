@@ -42,13 +42,7 @@ import submitPuzzleCaptchaSolution from "./captcha/submitPuzzleCaptchaSolution.j
  * promise and forwarded to `next`, rather than propagating synchronously.
  */
 export const asyncHandler =
-	(
-		handler: (
-			req: Request,
-			res: Response,
-			next: NextFunction,
-		) => unknown,
-	) =>
+	(handler: (req: Request, res: Response, next: NextFunction) => unknown) =>
 	(req: Request, res: Response, next: NextFunction): void => {
 		Promise.resolve()
 			.then(() => handler(req, res, next))
