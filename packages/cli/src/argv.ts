@@ -61,7 +61,7 @@ export function processArgs(
 	authAccount: KeyringPair,
 	config: ProsopoConfigOutput,
 ) {
-	const logger = getLogger(LogLevel.enum.info, "CLI");
+	const logger = getLogger(LogLevel.enum.info, "cli");
 
 	const commandManager = yargs(hideBin(args))
 		.usage("Usage: $0 [global options] <command> [options]")

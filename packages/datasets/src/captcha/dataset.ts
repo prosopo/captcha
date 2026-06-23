@@ -27,7 +27,7 @@ import {
 } from "./captcha.js";
 import { CaptchaMerkleTree } from "./merkle.js";
 
-const logger = getLogger("info", import.meta.url);
+const logger = getLogger("info", "datasets:captcha");
 
 export async function hashDatasetItems(
 	datasetRaw: Dataset | DatasetRaw,
