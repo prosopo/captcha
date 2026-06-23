@@ -41,6 +41,13 @@ export const getMongoCompressors = (
 		const protocolIndex = url.indexOf("://");
 		const urlWithoutProtocol =
 			protocolIndex !== -1 ? url.slice(protocolIndex + 3) : url;
+
+		// No host present (e.g. "" or "mongodb://") means there is nothing to
+		// compress to; treat it as local and skip compression.
+		if (urlWithoutProtocol.trim() === "") {
+			return [];
+		}
+
 		const parsedUrl = new URL(`mongodb://${urlWithoutProtocol}`);
 		const hostname = parsedUrl.hostname;
 

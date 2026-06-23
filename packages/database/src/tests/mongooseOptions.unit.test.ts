@@ -11,10 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { ServerApiVersion } from "mongodb";
 import { describe, expect, it } from "vitest";
 import {
 	type MongoCompressor,
 	getMongoCompressors,
+	getMongoConnectionOptions,
 } from "../mongooseOptions.js";
 
 const DEFAULT_COMPRESSORS: MongoCompressor[] = [
@@ -111,9 +113,11 @@ describe("getMongoCompressors", () => {
 		}
 	});
 
-	it("returns empty array when no host is present", () => {
-		const hostlessUrls = ["", "mongodb://", "not-a-url"];
-		for (const url of hostlessUrls) {
+	it("returns empty array for hostless URLs and bare single-label hosts", () => {
+		// "" and "mongodb://" have no host; "not-a-url" parses to a single-label
+		// host, which (like a container name) is treated as local.
+		const urls = ["", "mongodb://", "not-a-url"];
+		for (const url of urls) {
 			expect(getMongoCompressors(url)).toEqual([]);
 		}
 	});
@@ -127,5 +131,75 @@ describe("getMongoCompressors", () => {
 		const url =
 			"mongodb://example.com:27017/db?authSource=admin&retryWrites=true";
 		expect(getMongoCompressors(url)).toEqual(DEFAULT_COMPRESSORS);
+	});
+});
+
+describe("getMongoConnectionOptions", () => {
+	const appName = "test-app";
+
+	it("throws on an empty or whitespace-only URL", () => {
+		expect(() => getMongoConnectionOptions({ url: "", appName })).toThrow(
+			/cannot be empty/,
+		);
+		expect(() => getMongoConnectionOptions({ url: "   ", appName })).toThrow(
+			/cannot be empty/,
+		);
+	});
+
+	it("applies sensible defaults", () => {
+		const options = getMongoConnectionOptions({
+			url: "mongodb://example.com:27017/db",
+			appName,
+		});
+		expect(options.appName).toBe(appName);
+		expect(options.maxPoolSize).toBe(10);
+		expect(options.minPoolSize).toBe(0);
+		expect(options.serverApi).toEqual({
+			version: ServerApiVersion.v1,
+			strict: false,
+			deprecationErrors: false,
+		});
+	});
+
+	it("uses no compressors for localhost", () => {
+		const options = getMongoConnectionOptions({
+			url: "mongodb://localhost:27017/db",
+			appName,
+		});
+		expect(options.compressors).toEqual([]);
+	});
+
+	it("uses default compressors for a remote host", () => {
+		const options = getMongoConnectionOptions({
+			url: "mongodb://cluster.mongodb.net/db",
+			appName,
+		});
+		expect(options.compressors).toEqual(DEFAULT_COMPRESSORS);
+	});
+
+	it("applies pool size overrides", () => {
+		const options = getMongoConnectionOptions({
+			url: "mongodb://example.com:27017/db",
+			appName,
+			maxPoolSize: 50,
+			minPoolSize: 5,
+		});
+		expect(options.maxPoolSize).toBe(50);
+		expect(options.minPoolSize).toBe(5);
+	});
+
+	it("only sets dbName when provided", () => {
+		const withDbName = getMongoConnectionOptions({
+			url: "mongodb://example.com:27017/db",
+			appName,
+			dbName: "mydb",
+		});
+		expect(withDbName.dbName).toBe("mydb");
+
+		const withoutDbName = getMongoConnectionOptions({
+			url: "mongodb://example.com:27017/db",
+			appName,
+		});
+		expect(withoutDbName.dbName).toBeUndefined();
 	});
 });
