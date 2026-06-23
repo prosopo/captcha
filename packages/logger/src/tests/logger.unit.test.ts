@@ -13,7 +13,13 @@
 // limitations under the License.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getLogger, stringifyBigInts } from "../logger.js";
+import {
+	getLogger,
+	parseDirectives,
+	resolveLevel,
+	setGlobalDirectives,
+	stringifyBigInts,
+} from "../logger.js";
 describe("unpackError", () => {
 	let captured: string[] = [];
 
@@ -130,5 +136,92 @@ describe("stringifyBigInts", () => {
 			{ name: "object", value: bigInt3.toString() },
 			"third",
 		]);
+	});
+});
+
+describe("parseDirectives", () => {
+	it("parses a bare level as the global default (empty-string key)", () => {
+		const directives = parseDirectives("debug");
+		expect(directives.get("")).toBe("debug");
+	});
+
+	it("parses scope=level pairs", () => {
+		const directives = parseDirectives("provider:db=debug,provider:api=trace");
+		expect(directives.get("provider:db")).toBe("debug");
+		expect(directives.get("provider:api")).toBe("trace");
+	});
+
+	it("ignores empty and invalid entries", () => {
+		const directives = parseDirectives(" , provider:db=debug , bogus=nope ");
+		expect(directives.get("provider:db")).toBe("debug");
+		expect(directives.has("bogus")).toBe(false);
+	});
+});
+
+describe("resolveLevel", () => {
+	it("returns an exact scope match", () => {
+		const directives = parseDirectives("provider:db=debug");
+		expect(resolveLevel("provider:db", directives, "info")).toBe("debug");
+	});
+
+	it("returns the most specific matching prefix", () => {
+		const directives = parseDirectives("provider=warn,provider:db=debug");
+		expect(resolveLevel("provider:db:query", directives, "info")).toBe("debug");
+	});
+
+	it("falls back to the global default when no scope matches", () => {
+		const directives = parseDirectives("other=trace,error");
+		expect(resolveLevel("provider:db", directives, "info")).toBe("error");
+	});
+
+	it("falls back to the supplied fallback when nothing matches", () => {
+		const directives = parseDirectives("other=trace");
+		expect(resolveLevel("provider:db", directives, "info")).toBe("info");
+	});
+});
+
+describe("Logger.with subscope + directives", () => {
+	let captured: string[] = [];
+
+	beforeEach(() => {
+		captured = [];
+		const capture = (...args: unknown[]): void => {
+			captured.push(String(args[0]));
+		};
+		vi.spyOn(console, "debug").mockImplementation(capture);
+		vi.spyOn(console, "info").mockImplementation(capture);
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+		setGlobalDirectives("");
+	});
+
+	it("concatenates parent scope with subscope", () => {
+		setGlobalDirectives("parent:child=debug");
+		const child = getLogger("info", "parent").with({}, "child");
+		child.debug(() => ({ msg: "hello" }));
+		expect(captured.length).toBe(1);
+	});
+
+	it("uses the subscope directly when the parent scope is empty (no leading colon)", () => {
+		setGlobalDirectives("admin=debug");
+		const child = getLogger("info", "").with({}, "admin");
+		child.debug(() => ({ msg: "hello" }));
+		// If the scope were ":admin" the "admin" directive would not match and the
+		// debug line would be suppressed.
+		expect(captured.length).toBe(1);
+	});
+
+	it("re-resolves directives at print time rather than baking them in (no sticky level)", () => {
+		setGlobalDirectives("admin=debug");
+		const child = getLogger("info", "").with({}, "admin");
+		// Directive removed after the child was created.
+		setGlobalDirectives("");
+		child.debug(() => ({ msg: "should be suppressed" }));
+		expect(captured.length).toBe(0);
+		// The inherited info level still applies.
+		child.info(() => ({ msg: "visible" }));
+		expect(captured.length).toBe(1);
 	});
 });

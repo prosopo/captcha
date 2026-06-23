@@ -230,9 +230,11 @@ export class NativeLogger implements Logger {
 		newLogger.defaultData = { ...this.defaultData, ...obj };
 		newLogger.setPretty(this.getPretty());
 		newLogger.setPrintStack(this.getPrintStack());
-		newLogger.setLogLevel(
-			resolveLevel(newScope, getGlobalDirectives(), this.getLogLevel()),
-		);
+		// Inherit the parent's configured level as the fallback only. Directives
+		// are applied dynamically at print time (see print()), so we must NOT bake
+		// the currently-resolved level in here — otherwise a directive active now
+		// would stick to this child even after setGlobalDirectives() clears it.
+		newLogger.setLogLevel(this.getLogLevel());
 		return newLogger;
 	}
 
