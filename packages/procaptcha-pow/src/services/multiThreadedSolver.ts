@@ -61,7 +61,7 @@ export const solvePoWParallel = (
 		return Promise.resolve(solvePoW(data, difficulty));
 	}
 
-	return new Promise<number>((resolve, reject) => {
+	return new Promise<number>((resolve) => {
 		let workers: Worker[] = [];
 		let settled = false;
 
@@ -70,6 +70,19 @@ export const solvePoWParallel = (
 				worker.terminate();
 			}
 			workers = [];
+		};
+
+		// A worker failing to load or execute (e.g. module workers blocked by
+		// CSP, or an environment where `Worker` exists but construction/exec
+		// fails) shouldn't fail the captcha. Fall back to the synchronous
+		// solver instead, as documented.
+		const fallbackToSync = (): void => {
+			if (settled) {
+				return;
+			}
+			settled = true;
+			cleanup();
+			resolve(solvePoW(data, difficulty));
 		};
 
 		try {
@@ -87,17 +100,8 @@ export const solvePoWParallel = (
 					resolve(event.data);
 				};
 
-				worker.onerror = (event: ErrorEvent): void => {
-					if (settled) {
-						return;
-					}
-					settled = true;
-					cleanup();
-					reject(
-						event.error instanceof Error
-							? event.error
-							: new Error(event.message || "PoW worker error"),
-					);
+				worker.onerror = (): void => {
+					fallbackToSync();
 				};
 
 				const request: PowWorkerRequest = {
@@ -110,9 +114,8 @@ export const solvePoWParallel = (
 
 				workers.push(worker);
 			}
-		} catch (error) {
-			cleanup();
-			reject(error instanceof Error ? error : new Error(String(error)));
+		} catch {
+			fallbackToSync();
 		}
 	});
 };

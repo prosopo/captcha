@@ -35,6 +35,20 @@ export const solvePoWOffset = (
 	start: number,
 	step: number,
 ): number => {
+	if (!Number.isInteger(start)) {
+		throw new Error(`solvePoWOffset: start must be an integer, got ${start}`);
+	}
+	if (!Number.isInteger(step) || step < 1) {
+		throw new Error(
+			`solvePoWOffset: step must be a positive integer, got ${step}`,
+		);
+	}
+	if (!Number.isInteger(difficulty) || difficulty < 0) {
+		throw new Error(
+			`solvePoWOffset: difficulty must be a non-negative integer, got ${difficulty}`,
+		);
+	}
+
 	let nonce = start;
 	const prefix = "0".repeat(difficulty);
 
