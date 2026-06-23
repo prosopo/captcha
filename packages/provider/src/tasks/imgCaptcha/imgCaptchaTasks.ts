@@ -764,7 +764,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				}
 			} catch (error) {
 				logger.warn(() => ({
-					msg: "Failed to check user access policies in server Image verification",
+					msg: "Failed to check user access policies in server image verification",
 					error,
 				}));
 			}
