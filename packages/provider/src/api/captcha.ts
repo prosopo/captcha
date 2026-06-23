@@ -47,7 +47,7 @@ export const asyncHandler =
 			req: Request,
 			res: Response,
 			next: NextFunction,
-		) => Promise<unknown>,
+		) => void | Promise<unknown>,
 	) =>
 	(req: Request, res: Response, next: NextFunction): void => {
 		Promise.resolve()
