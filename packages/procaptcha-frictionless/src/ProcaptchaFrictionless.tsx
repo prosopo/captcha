@@ -159,15 +159,20 @@ export const ProcaptchaFrictionless = ({
 	const renderForCaptchaType = async (
 		captchaType: string,
 		frictionlessState: FrictionlessState,
+		autoStart = false,
 	) => {
 		const onEscalate = (
 			next: CaptchaType.image | CaptchaType.puzzle,
 			newSessionId: string,
 		) => {
-			void renderForCaptchaType(next, {
-				...frictionlessState,
-				sessionId: newSessionId,
-			});
+			void renderForCaptchaType(
+				next,
+				{
+					...frictionlessState,
+					sessionId: newSessionId,
+				},
+				true,
+			);
 		};
 
 		if (captchaType === CaptchaType.image) {
@@ -178,6 +183,7 @@ export const ProcaptchaFrictionless = ({
 					callbacks={callbacks}
 					frictionlessState={frictionlessState}
 					i18n={i18n}
+					autoStart={autoStart}
 				/>,
 			);
 		} else if (captchaType === CaptchaType.puzzle) {
@@ -188,6 +194,7 @@ export const ProcaptchaFrictionless = ({
 					callbacks={callbacks}
 					frictionlessState={frictionlessState}
 					i18n={i18n}
+					autoStart={autoStart}
 				/>,
 			);
 		} else {

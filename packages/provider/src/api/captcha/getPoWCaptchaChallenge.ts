@@ -43,8 +43,6 @@ export default (
 		next: NextFunction,
 	) => {
 		let parsed: GetPowCaptchaChallengeRequestBodyTypeOutput;
-		const tasks = new Tasks(env);
-		tasks.setLogger(req.logger);
 
 		try {
 			parsed = GetPowCaptchaChallengeRequestBody.parse(req.body);
@@ -63,6 +61,9 @@ export default (
 		validateSiteKey(dapp);
 		validateAddr(user);
 
+		// Maintenance-mode short-circuit must run before `new Tasks(env, ...)`
+		// because the Tasks constructor calls `env.getDb()`, which throws when
+		// `env.db` is undefined (the maintenance-mode case).
 		if (getMaintenanceMode()) {
 			req.logger.info(() => ({
 				msg: "Maintenance mode active - returning dummy PoW challenge",
@@ -70,6 +71,9 @@ export default (
 			}));
 			return res.json(buildPowMaintenanceResponse(user, dapp));
 		}
+
+		const tasks = new Tasks(env);
+		tasks.setLogger(req.logger);
 
 		try {
 			const clientSettings = await tasks.db.getClientRecord(dapp);

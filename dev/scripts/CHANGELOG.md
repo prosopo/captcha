@@ -1,5 +1,178 @@
 # @prosopo/scripts
 
+## 3.1.111
+### Patch Changes
+
+- Updated dependencies [1bb2bb1]
+- Updated dependencies [12cd0a6]
+- Updated dependencies [12cd0a6]
+  - @prosopo/provider@4.12.0
+  - @prosopo/types@4.8.0
+  - @prosopo/types-env@2.10.0
+  - @prosopo/env@3.6.0
+  - @prosopo/cli@3.6.47
+  - @prosopo/datasets@3.1.40
+  - @prosopo/keyring@2.9.46
+
+## 3.1.110
+### Patch Changes
+
+- Updated dependencies [bb98af1]
+- Updated dependencies [d50e7d8]
+- Updated dependencies [77b7c66]
+  - @prosopo/provider@4.11.6
+  - @prosopo/types@4.7.4
+  - @prosopo/cli@3.6.46
+  - @prosopo/datasets@3.1.39
+  - @prosopo/env@3.5.20
+  - @prosopo/keyring@2.9.45
+  - @prosopo/types-env@2.9.29
+
+## 3.1.109
+### Patch Changes
+
+- Updated dependencies [89ab6fc]
+- Updated dependencies [0f3750b]
+- Updated dependencies [281c62a]
+  - @prosopo/provider@4.11.5
+  - @prosopo/types@4.7.3
+  - @prosopo/cli@3.6.45
+  - @prosopo/datasets@3.1.38
+  - @prosopo/env@3.5.19
+  - @prosopo/keyring@2.9.44
+  - @prosopo/types-env@2.9.28
+
+## 3.1.108
+### Patch Changes
+
+- Updated dependencies [e89860e]
+- Updated dependencies [edcd450]
+- Updated dependencies [5295c4b]
+  - @prosopo/provider@4.11.4
+  - @prosopo/util@3.3.1
+  - @prosopo/types@4.7.2
+  - @prosopo/locale@3.2.5
+  - @prosopo/cli@3.6.44
+  - @prosopo/datasets@3.1.37
+  - @prosopo/keyring@2.9.43
+  - @prosopo/logger@1.0.4
+  - @prosopo/env@3.5.18
+  - @prosopo/common@3.1.40
+  - @prosopo/types-env@2.9.27
+  - @prosopo/dotenv@3.0.45
+
+## 3.1.107
+### Patch Changes
+
+- Updated dependencies [46fedf4]
+  - @prosopo/types@4.7.1
+  - @prosopo/cli@3.6.43
+  - @prosopo/datasets@3.1.36
+  - @prosopo/env@3.5.17
+  - @prosopo/keyring@2.9.42
+  - @prosopo/provider@4.11.3
+  - @prosopo/types-env@2.9.26
+
+## 3.1.106
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/provider@4.11.2
+  - @prosopo/types@4.7.0
+  - @prosopo/env@3.5.16
+  - @prosopo/cli@3.6.42
+  - @prosopo/datasets@3.1.35
+  - @prosopo/keyring@2.9.41
+  - @prosopo/types-env@2.9.25
+
+## 3.1.105
+### Patch Changes
+
+- Updated dependencies [4626340]
+  - @prosopo/provider@4.11.1
+  - @prosopo/types@4.6.1
+  - @prosopo/cli@3.6.41
+  - @prosopo/datasets@3.1.34
+  - @prosopo/env@3.5.15
+  - @prosopo/keyring@2.9.40
+  - @prosopo/types-env@2.9.24
+
+## 3.1.104
+### Patch Changes
+
+- Updated dependencies [55b1388]
+  - @prosopo/util@3.3.0
+  - @prosopo/provider@4.11.0
+  - @prosopo/types@4.6.0
+  - @prosopo/cli@3.6.40
+  - @prosopo/datasets@3.1.33
+  - @prosopo/keyring@2.9.39
+  - @prosopo/logger@1.0.3
+  - @prosopo/common@3.1.39
+  - @prosopo/env@3.5.14
+  - @prosopo/types-env@2.9.23
+  - @prosopo/dotenv@3.0.44
+
+## 3.1.103
+### Patch Changes
+
+- Updated dependencies [9b91e85]
+- Updated dependencies [c1c7998]
+- Updated dependencies [c80a05b]
+  - @prosopo/provider@4.10.0
+  - @prosopo/types@4.5.0
+  - @prosopo/cli@3.6.39
+  - @prosopo/env@3.5.13
+  - @prosopo/datasets@3.1.32
+  - @prosopo/keyring@2.9.38
+  - @prosopo/types-env@2.9.22
+
+## 3.1.102
+### Patch Changes
+
+  - @prosopo/provider@4.9.2
+  - @prosopo/env@3.5.12
+  - @prosopo/cli@3.6.38
+  - @prosopo/types-env@2.9.21
+
+## 3.1.101
+### Patch Changes
+
+- Updated dependencies [4da8941]
+- Updated dependencies [f69724f]
+- Updated dependencies [3973078]
+- Updated dependencies [73b9f92]
+  - @prosopo/provider@4.9.1
+  - @prosopo/types@4.4.1
+  - @prosopo/cli@3.6.37
+  - @prosopo/datasets@3.1.31
+  - @prosopo/env@3.5.11
+  - @prosopo/keyring@2.9.37
+  - @prosopo/types-env@2.9.20
+
+## 3.1.100
+### Patch Changes
+
+- Updated dependencies [bc3813d]
+- Updated dependencies [2d66d8e]
+- Updated dependencies [4d05e3f]
+- Updated dependencies [f305c37]
+  - @prosopo/provider@4.9.0
+  - @prosopo/types@4.4.0
+  - @prosopo/types-env@2.9.19
+  - @prosopo/cli@3.6.36
+  - @prosopo/datasets@3.1.30
+  - @prosopo/env@3.5.10
+  - @prosopo/keyring@2.9.36
+
+## 3.1.99
+### Patch Changes
+
+- Updated dependencies [8a30164]
+  - @prosopo/provider@4.8.1
+  - @prosopo/cli@3.6.35
+
 ## 3.1.98
 ### Patch Changes
 

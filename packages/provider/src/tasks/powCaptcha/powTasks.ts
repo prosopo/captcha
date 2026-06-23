@@ -49,7 +49,12 @@ import type {
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
-import { at, extractData, verifyRecency } from "@prosopo/util";
+import {
+	assertCoordsSafe,
+	at,
+	extractData,
+	verifyRecency,
+} from "@prosopo/util";
 import {
 	getCompositeIpAddress,
 	getIpAddressFromComposite,
@@ -61,6 +66,11 @@ import {
 } from "../../util/usageCounters.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
+import {
+	computeDnsAsymmetry,
+	enrichDnsEvent,
+	getIpInfoAsn,
+} from "../dnsEvent/enrichDnsEvent.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import {
 	type RoutingContext,
@@ -207,22 +217,55 @@ export class PowCaptchaManager extends CaptchaManager {
 
 		const difficulty = challengeRecord.difficulty;
 
-		// Extract coordinates from salt if provided
+		// Extract coordinates from salt if provided. Invalid salt input
+		// disapproves the request rather than persisting partial data.
 		let coords: [number, number][][] | undefined;
+		let saltDecodeError: unknown;
 		if (salt) {
 			try {
 				const extractedData = extractData(salt);
-				// Convert extracted data to coordinate pairs
 				if (extractedData.length >= 2) {
-					coords = [[[extractedData[0], extractedData[1]] as [number, number]]];
+					const built: [number, number][][] = [
+						[[extractedData[0], extractedData[1]] as [number, number]],
+					];
+					assertCoordsSafe(built, "coords");
+					coords = built;
 				}
 			} catch (error) {
+				saltDecodeError = error;
 				this.logger.warn(() => ({
 					msg: "Failed to extract coordinates from salt",
 					error,
 					salt,
 				}));
 			}
+		}
+
+		if (saltDecodeError) {
+			const badSaltResult = {
+				status: CaptchaStatus.disapproved,
+				reason: ResultReason.CAPTCHA_INVALID_SALT,
+			};
+			const writePromises: Promise<void>[] = [
+				this.db.updatePowCaptchaRecordResult(
+					challenge,
+					badSaltResult,
+					false, // serverChecked
+					true, // userSubmitted
+					userTimestampSignature,
+					undefined, // never persist the bad coords
+				),
+			];
+			if (challengeRecord.sessionId) {
+				writePromises.push(
+					this.updateSessionRecordWithCache(challengeRecord.sessionId, {
+						userSubmitted: true,
+						result: badSaltResult,
+					}),
+				);
+			}
+			await Promise.all(writePromises);
+			return { verified: false };
 		}
 
 		if (!verifyRecency(challenge, timeout)) {
@@ -460,6 +503,10 @@ export class PowCaptchaManager extends CaptchaManager {
 			raw: {
 				...this.postPowContext.raw,
 				...(behavioralDataPacked && { behavioralDataPacked }),
+				// SIMD readings are decrypted and attached to the session above
+				// (decryptAndAttachSimdReadingsIfAbsent) before this re-fetch, so
+				// they are available here in decoded form for the routing machine.
+				...(sessionRecord.simdReadings && { simd: sessionRecord.simdReadings }),
 			},
 		};
 
@@ -516,11 +563,15 @@ export class PowCaptchaManager extends CaptchaManager {
 			reason,
 		});
 
+		// Bind the challenge/dappAccount context once so every log line in this
+		// method carries it without repeating the fields in each `data` block.
+		const logger = this.logger.with({ challenge, dappAccount });
+
 		const challengeRecord =
 			await this.db.getPowCaptchaRecordByChallenge(challenge);
 
 		if (!challengeRecord) {
-			this.logger.debug(() => ({
+			logger.debug(() => ({
 				msg: `No record of this challenge: ${challenge}`,
 			}));
 
@@ -568,8 +619,12 @@ export class PowCaptchaManager extends CaptchaManager {
 		let failResult: CaptchaResult | undefined;
 		let failReason: string | undefined;
 
-		const recent = verifyRecency(challenge, timeout);
-		if (!recent) {
+		const submittedAt = challengeRecord.submittedAtTimestamp;
+		const submitToVerifyMs =
+			submittedAt instanceof Date
+				? Date.now() - submittedAt.getTime()
+				: Number.POSITIVE_INFINITY;
+		if (submitToVerifyMs > timeout) {
 			failResult = {
 				status: CaptchaStatus.disapproved,
 				reason: ResultReason.TIMESTAMP_TOO_OLD,
@@ -595,12 +650,10 @@ export class PowCaptchaManager extends CaptchaManager {
 				);
 
 				if (blockPolicy) {
-					this.logger.info(() => ({
+					logger.info(() => ({
 						msg: "User blocked by access policy in server PoW verification",
 						data: {
-							challenge,
 							userAccount: challengeRecord.userAccount,
-							dappAccount,
 							policy: blockPolicy,
 						},
 					}));
@@ -611,7 +664,7 @@ export class PowCaptchaManager extends CaptchaManager {
 					failReason = "API.ACCESS_POLICY_BLOCK";
 				}
 			} catch (error) {
-				this.logger.warn(() => ({
+				logger.warn(() => ({
 					msg: "Failed to check user access policies in server PoW verification",
 					error,
 				}));
@@ -624,9 +677,9 @@ export class PowCaptchaManager extends CaptchaManager {
 				const isSpam = await this.checkSpamEmail(email);
 				if (isSpam) {
 					const emailDomain = email.split("@")[1] || "unknown";
-					this.logger.info(() => ({
+					logger.info(() => ({
 						msg: "Spam email domain detected in server PoW verification",
-						data: { challenge, dappAccount, emailDomain },
+						data: { emailDomain },
 					}));
 					failResult = {
 						status: CaptchaStatus.disapproved,
@@ -635,7 +688,7 @@ export class PowCaptchaManager extends CaptchaManager {
 					failReason = "API.SPAM_EMAIL_DOMAIN";
 				}
 			} catch (error) {
-				this.logger.warn(() => ({
+				logger.warn(() => ({
 					msg: "Failed to check spam email domain in server PoW verification",
 					error,
 				}));
@@ -651,9 +704,9 @@ export class PowCaptchaManager extends CaptchaManager {
 		) {
 			const result = evaluateEmailSpamRules(email, spamFilter.emailRules);
 			if (result.isSpam) {
-				this.logger.info(() => ({
+				logger.info(() => ({
 					msg: "Spam filter rejected email in PoW verification",
-					data: { challenge, dappAccount, reason: result.reason },
+					data: { reason: result.reason },
 				}));
 				failResult = {
 					status: CaptchaStatus.disapproved,
@@ -663,21 +716,36 @@ export class PowCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		// Traffic filter: block VPN/proxy/Tor/abuser etc. Resolved in
-		// CaptchaManager so all three verify paths (pow/image/puzzle)
-		// share the same "compute effective filter, optionally fresh
-		// lookup, run check" logic.
+		const sessionRecord = challengeRecord.sessionId
+			? await this.db.getSessionRecordBySessionId(challengeRecord.sessionId)
+			: undefined;
+
+		const enrichedDnsEvent = await enrichDnsEvent(
+			sessionRecord?.dnsEvent,
+			env.ipInfoService,
+			ip ?? challengeRecord.ipInfo?.ip,
+		);
+
 		if (!failResult) {
 			const check = await this.resolveTrafficFilterCheck(
 				env,
 				challengeRecord.ipInfo,
 				trafficFilter,
 				ip,
+				enrichedDnsEvent,
 			);
 			if (check.isBlocked) {
-				this.logger.info(() => ({
+				logger.info(() => ({
 					msg: "Traffic filter rejected request in PoW verification",
-					data: { challenge, dappAccount, ip, reason: check.reason },
+					data: {
+						ip,
+						reason: check.reason,
+						dnsPeerIp: enrichedDnsEvent?.peerIp,
+						dnsResolverIp: enrichedDnsEvent?.resolverIp,
+						dnsPeerAsn: getIpInfoAsn(enrichedDnsEvent?.peerIpInfo),
+						dnsResolverAsn: getIpInfoAsn(enrichedDnsEvent?.resolverIpInfo),
+						dnsPathValid: enrichedDnsEvent?.pathValid,
+					},
 				}));
 				failResult = {
 					status: CaptchaStatus.disapproved,
@@ -711,13 +779,14 @@ export class PowCaptchaManager extends CaptchaManager {
 				const ipValidation = await deepValidateIpAddress(
 					ip,
 					challengeIpAddress,
-					this.logger,
+					logger,
 					env.ipInfoService,
 					ipValidationRules,
+					enrichedDnsEvent?.peerIp,
 				);
 
 				if (!ipValidation.isValid) {
-					this.logger.error(() => ({
+					logger.error(() => ({
 						msg: "IP validation failed for PoW captcha",
 						data: {
 							ip,
@@ -736,19 +805,26 @@ export class PowCaptchaManager extends CaptchaManager {
 		}
 
 		let score: number | undefined;
-		if (challengeRecord.sessionId) {
-			const sessionRecord = await this.db.getSessionRecordBySessionId(
-				challengeRecord.sessionId,
+		if (sessionRecord) {
+			const dnsAsymmetry = computeDnsAsymmetry(
+				enrichedDnsEvent,
+				challengeRecord.ipInfo,
 			);
-			if (sessionRecord) {
-				score = computeFrictionlessScore(sessionRecord?.scoreComponents);
-				this.logger.info(() => ({
-					data: {
-						scoreComponents: { ...(sessionRecord?.scoreComponents || {}) },
-						score,
-					},
-				}));
+			if (dnsAsymmetry > 0) {
+				sessionRecord.scoreComponents = {
+					...sessionRecord.scoreComponents,
+					dnsAsymmetry,
+				};
 			}
+			score = computeFrictionlessScore(sessionRecord?.scoreComponents);
+			logger.info(() => ({
+				data: {
+					scoreComponents: { ...(sessionRecord?.scoreComponents || {}) },
+					score,
+					dnsPeerAsn: getIpInfoAsn(enrichedDnsEvent?.peerIpInfo),
+					dnsResolverAsn: getIpInfoAsn(enrichedDnsEvent?.resolverIpInfo),
+				},
+			}));
 		}
 
 		// Decision machine evaluation (only if no prior failures)
@@ -765,20 +841,30 @@ export class PowCaptchaManager extends CaptchaManager {
 					countryCode: challengeRecord.ipInfo?.isValid
 						? challengeRecord.ipInfo.countryCode
 						: undefined,
+					ipInfo: challengeRecord.ipInfo,
+					dnsEvent: enrichedDnsEvent,
+					score,
+					threshold: sessionRecord?.threshold,
+					scoreComponents: sessionRecord?.scoreComponents,
+					decryptedHeadHash: sessionRecord?.decryptedHeadHash,
+					userSitekeyIpHash: sessionRecord?.userSitekeyIpHash,
+					simdReadings: sessionRecord?.simdReadings,
+					frictionlessReason: sessionRecord?.reason,
+					ruleType: sessionRecord?.ruleType,
+					webView: sessionRecord?.webView,
+					iFrame: sessionRecord?.iFrame,
 				};
 
 				const decision = await this.decisionMachineRunner.decide(
 					decisionInput,
-					this.logger,
+					logger,
 				);
 
 				if (decision.decision === DecisionMachineDecision.Deny) {
-					this.logger.info(() => ({
+					logger.info(() => ({
 						msg: "Decision machine denied PoW captcha in server verification",
 						data: {
-							challenge,
 							userAccount: challengeRecord.userAccount,
-							dappAccount,
 							reason: decision.reason,
 							score: decision.score,
 							tags: decision.tags,
@@ -797,10 +883,9 @@ export class PowCaptchaManager extends CaptchaManager {
 					};
 					failReason = dmReason;
 				} else {
-					this.logger.debug(() => ({
+					logger.debug(() => ({
 						msg: "Decision machine allowed PoW captcha",
 						data: {
-							challenge,
 							reason: decision.reason,
 							score: decision.score,
 							tags: decision.tags,
@@ -808,7 +893,7 @@ export class PowCaptchaManager extends CaptchaManager {
 					}));
 				}
 			} catch (error) {
-				this.logger?.error(() => ({
+				logger.error(() => ({
 					msg: "Failed to run decision machine in server PoW verification",
 					err: error,
 				}));
