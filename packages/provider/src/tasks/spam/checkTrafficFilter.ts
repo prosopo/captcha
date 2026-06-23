@@ -14,6 +14,7 @@
 
 import {
 	type IPInfoResponse,
+	type IPInfoResult,
 	type ITrafficFilter,
 	ResultReason,
 	trafficFilterAbuserScoreThresholdDefault,
@@ -37,23 +38,36 @@ type EvaluateOptions = {
 	suppressVpnDatacenterInteraction: boolean;
 };
 
-// Datacenter names come from the upstream `datacenter.datacenter` field, which
-// is human-curated and may drift in casing/whitespace across records (e.g.
-// "iCloud Private Relay" vs "icloud private relay"). Compare trimmed and
-// lowercased so an operator can paste the value verbatim from one record and
-// still match the others.
-const isDatacenterNameAllowlisted = (
-	datacenterName: string | undefined,
+// Match the allowlist against `datacenterName`, `providerName`
+// (`company.name`), and `asnOrganization` — case-insensitive, whitespace
+// trimmed. The upstream ipapi only populates `datacenter.datacenter` for
+// curated named ranges, so falling back to providerName and asnOrganization
+// lets the allowlist also catch generic CDN / cloud-provider IPs that come
+// back with `is_datacenter: true` but no datacenter name.
+const isDatacenterAllowlisted = (
+	ipInfo: IPInfoResult,
 	allowlist: ReadonlyArray<string> | undefined,
 ): boolean => {
-	if (!datacenterName || !allowlist || allowlist.length === 0) {
+	if (!allowlist || allowlist.length === 0) {
 		return false;
 	}
-	const needle = datacenterName.trim().toLowerCase();
-	if (!needle) {
+	const candidates: string[] = [];
+	for (const value of [
+		ipInfo.datacenterName,
+		ipInfo.providerName,
+		ipInfo.asnOrganization,
+	]) {
+		if (typeof value !== "string") continue;
+		const trimmed = value.trim().toLowerCase();
+		if (trimmed) candidates.push(trimmed);
+	}
+	if (candidates.length === 0) {
 		return false;
 	}
-	return allowlist.some((entry) => entry.trim().toLowerCase() === needle);
+	const normalisedAllowlist = allowlist.map((entry) =>
+		entry.trim().toLowerCase(),
+	);
+	return candidates.some((c) => normalisedAllowlist.includes(c));
 };
 
 const evaluateIpInfo = (
@@ -98,10 +112,7 @@ const evaluateIpInfo = (
 			ipInfo.isVPN &&
 			!trafficFilter.blockVpn
 		) &&
-		!isDatacenterNameAllowlisted(
-			ipInfo.datacenterName,
-			trafficFilter.datacenterNameAllowlist,
-		)
+		!isDatacenterAllowlisted(ipInfo, trafficFilter.datacenterNameAllowlist)
 	) {
 		return { isBlocked: true, reason: ResultReason.DATACENTER_BLOCKED };
 	}
@@ -139,21 +150,31 @@ const evaluateIpInfo = (
  * has opted in to blocking VPN traffic explicitly.
  *
  * The datacenter rule also honours `datacenterNameAllowlist`: consumer
- * relays such as Apple's iCloud Private Relay route through datacenter
- * ranges and are reported as `is_datacenter=true` by upstream, but the
- * exiting users are real humans. Operators can list the upstream
- * `datacenter.datacenter` names they want to allow through.
+ * relays route through datacenter ranges and are reported as
+ * `is_datacenter=true` by upstream but the exiting users are real humans.
+ * Operators can list the datacenter, provider, or ASN organisation names
+ * they want to allow through — see `isDatacenterAllowlisted`.
+ *
+ * When `trafficFilter.skipExtrasOnValidDnsPath` is on and the catcher
+ * confirmed the DNS path matched the connection path (`pathValid: true`),
+ * the extras evaluation is skipped. This stops public-DoH resolver IPs
+ * from tripping the datacenter rule for ordinary users.
  */
 export const checkTrafficFilter = (
 	ipInfo: IPInfoResponse | undefined,
 	trafficFilter: Partial<ITrafficFilter>,
 	extraIpInfos?: ReadonlyArray<IPInfoResponse | undefined>,
+	dnsPathValid?: boolean,
 ): TrafficCheckResult => {
 	const primary = evaluateIpInfo(ipInfo, trafficFilter, {
 		suppressVpnDatacenterInteraction: true,
 	});
 	if (primary.isBlocked) {
 		return primary;
+	}
+
+	if (trafficFilter.skipExtrasOnValidDnsPath && dnsPathValid === true) {
+		return { isBlocked: false };
 	}
 
 	for (const extra of extraIpInfos ?? []) {

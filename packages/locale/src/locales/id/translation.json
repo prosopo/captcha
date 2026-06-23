@@ -436,6 +436,7 @@
 		"NO_CAPTCHA": "No captcha found",
 		"NO_SESSION_FOUND": "No session found",
 		"IP_ADDRESS_MISMATCH": "Alamat IP tidak cocok",
+		"INVALID_SALT": "Salt tidak valid",
 		"INVALID_TOKEN": "Invalid token",
 		"INVALID_SOLUTION": "Invalid solution",
 		"DECRYPTION_ERROR": "Error decrypting"

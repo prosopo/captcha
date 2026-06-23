@@ -22,7 +22,6 @@ import { TouchEventPoint } from '@prosopo/types';
 
 declare const detect: (env: EnvironmentTypes, randomProviderSelectorFn: RandomProviderSelectorFn, container: HTMLElement | undefined, restart: () => void, accountGenerator: () => Promise<Account>) => Promise<{
     token: string;
-    provider?: RandomProvider;
     shadowDomCleanup: () => void;
     encryptHeadHash: string;
     mouseTracker?: {
@@ -56,6 +55,6 @@ export default detect;
  */
 export declare function encryptData(data: string): Promise<string>;
 
-declare type RandomProviderSelectorFn = (env: EnvironmentTypes, entropy: number) => Promise<RandomProvider>;
+declare type RandomProviderSelectorFn = (env: EnvironmentTypes) => Promise<RandomProvider>;
 
 export { }
