@@ -500,7 +500,6 @@ export class BlacklistRequestInspector {
 			score: 1,
 			threshold: 0,
 			scoreComponents: { baseScore: 1 },
-			providerSelectEntropy: 0,
 			captchaType: CaptchaType.frictionless,
 			webView: false,
 			iFrame: false,

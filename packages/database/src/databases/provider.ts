@@ -692,6 +692,21 @@ export class ProviderDatabase
 	/**
 	 * @description Get a dataset by Id
 	 */
+	/**
+	 * Returns the most recently uploaded dataset's ID. Used as the per-provider
+	 * default when a client doesn't pin a specific dataset (which it can't
+	 * under DNS-based routing — clients don't know which provider they'll hit).
+	 */
+	async getMostRecentDatasetId(): Promise<string | undefined> {
+		const dataset = await this.tables?.dataset
+			.findOne()
+			.sort({ _id: -1 })
+			.lean<DatasetBase>();
+
+		const datasetId = dataset?.datasetId;
+		return typeof datasetId === "string" ? datasetId : undefined;
+	}
+
 	async getDatasetDetails(datasetId: Hash): Promise<DatasetBase> {
 		if (!isHex(datasetId)) {
 			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
@@ -1633,7 +1648,6 @@ export class ProviderDatabase
 				score: 1,
 				threshold: 1,
 				scoreComponents: 1,
-				providerSelectEntropy: 1,
 				ipAddress: 1,
 				ipInfo: 1,
 				webView: 1,
