@@ -117,7 +117,6 @@ export const handleAccessPolicy = async (
 		logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {
-				requestId,
 				decision: "auto_ban_score",
 				botScore,
 				autoBanThreshold,
