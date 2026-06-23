@@ -51,7 +51,7 @@ jobs:
           node-version: '24'
           cache: 'npm'
 
-      - uses: prosopo/captcha/.github/actions/npm@gha
+      - uses: prosopo/github_actions/.github/actions/npm@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
         with:
           npm_ci_args: '--include=dev --no-audit --no-fund --prefer-offline'
 
