@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,18 +26,23 @@ export function getDefaultSiteKeys(): ISite[] {
 		CaptchaType.image,
 		CaptchaType.pow,
 		CaptchaType.frictionless,
-		CaptchaType.invisible,
+		CaptchaType.puzzle,
 	];
 	const sites: ISite[] = [];
 	for (const captchaType of captchaTypes) {
 		const secret = `${DEV_PHRASE}//${captchaType}`;
 		const pair = getPair(secret);
+		// Settings are written explicitly rather than relying on schema defaults
+		// so dev seeds are self-describing and stay stable when defaults change.
 		sites.push({
 			pair: pair,
 			address: pair.address,
 			secret: secret,
 			settings: ClientSettingsSchema.parse({
 				captchaType: captchaType,
+				domains: ["localhost"],
+				imageMaxRounds: 2,
+				frictionlessThreshold: 0.8,
 			}),
 		});
 	}
@@ -50,7 +55,7 @@ export function getDefaultProviders(): IProviderAccount[] {
 	);
 	return [
 		{
-			url: "http://localhost:9229",
+			url: "https://localhost:9229",
 			pair: pair,
 			address: pair.address,
 			datasetFile: "./dev/data/captchas.json",

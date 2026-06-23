@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,8 +13,10 @@
 // limitations under the License.
 export { default as commandProviderSetDataset } from "./providerSetDataset.js";
 export { default as commandStoreCaptchasExternally } from "./storeCaptchasExternally.js";
+export { default as commandUpdateSpamEmailDomains } from "./updateSpamEmailDomains.js";
 export { default as commandVersion } from "./version.js";
 export { default as commandSiteKeyRegister } from "./siteKeyRegister.js";
 export { default as commandSiteKeyRegisterApi } from "./siteKeyRegisterApi.js";
 export { default as commandEnsureExternalIndexes } from "./ensureExternalIndexes.js";
 export { default as commandEnsureIndexes } from "./ensureIndexes.js";
+export { default as commandMigrateAbuserScoreThreshold } from "./migrateAbuserScoreThreshold.js";

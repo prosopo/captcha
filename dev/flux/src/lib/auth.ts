@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,8 +13,9 @@
 // limitations under the License.
 
 import { base64Encode } from "@polkadot/util-crypto";
-import { ProsopoError, getLogger } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { loadEnv } from "@prosopo/dotenv";
+import { getLogger } from "@prosopo/logger";
 import qs from "qs";
 import { errorHandler } from "../errorHandler.js";
 import { sign } from "./sep256k1Sign.js";

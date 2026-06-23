@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Logger } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import type { RedisClientType } from "redis";
-import { type ZodType, z } from "zod";
+import { type ZodType, type ZodTypeDef, z } from "zod";
 
 export const REDIS_BATCH_SIZE = 1_000;
 
@@ -67,9 +67,14 @@ export const fetchRedisHashRecords = async (
 	};
 };
 
+// `recordSchema` is intentionally typed with `unknown` as the input
+// position. Some schemas use `z.preprocess` (e.g. accessPolicyInput's
+// deferToVerify boolean coercion from Redis strings), which widens the
+// zod input type. The strict `ZodType<T, ZodTypeDef, T>` form rejects
+// those at the call site even though they parse correctly at runtime.
 export const parseRedisRecords = <T>(
 	records: unknown[],
-	recordSchema: ZodType<T>,
+	recordSchema: ZodType<T, ZodTypeDef, unknown>,
 	logger: Logger,
 ): T[] =>
 	records.flatMap((record) => {

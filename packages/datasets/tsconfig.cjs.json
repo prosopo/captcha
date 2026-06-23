@@ -18,10 +18,10 @@
 			"path": "../common/tsconfig.cjs.json"
 		},
 		{
-			"path": "../types/tsconfig.cjs.json"
+			"path": "../logger/tsconfig.cjs.json"
 		},
 		{
-			"path": "../types-database/tsconfig.cjs.json"
+			"path": "../types/tsconfig.cjs.json"
 		},
 		{
 			"path": "../util/tsconfig.cjs.json"

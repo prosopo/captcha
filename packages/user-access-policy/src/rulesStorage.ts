@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,6 +33,15 @@ export type AccessRulesFilter = {
 	 */
 	userScopeMatch?: FilterScopeMatch;
 	groupId?: string;
+	/**
+	 * Restrict the result to Block-type rules. Hot-path callers
+	 * (checkForHardBlock, blockMiddleware) set this so the Redis-side
+	 * candidate pool excludes Restrict and routing-Block rules before
+	 * the SERVER_SIDE_RANK_TOP_N cap is applied — without it, dense
+	 * Restrict populations can push the hard-block rules past the cap
+	 * and the lookup misses them.
+	 */
+	blockOnly?: boolean;
 };
 
 export type AccessRuleEntry = {

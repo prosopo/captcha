@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,26 +12,42 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type {
+	RegisterSitekeysBodyTypeOutput,
+	RemoveSitekeysBodyTypeOutput,
+} from "@prosopo/types";
 import type { IUserSettings, Tier } from "../client/index.js";
 import type { CaptchaSolution } from "../datasets/index.js";
+import type {
+	DecisionMachineCaptchaType,
+	DecisionMachineLanguage,
+	DecisionMachineRuntime,
+	DecisionMachineScope,
+} from "../decisionMachine/index.js";
 import type { ProcaptchaToken, StoredEvents } from "../procaptcha/index.js";
+import type { ClientMetaData } from "../provider/database.js";
 import type {
 	ApiResponse,
 	CaptchaResponseBody,
 	CaptchaSolutionResponse,
 	GetPowCaptchaResponse,
+	GetPuzzleCaptchaResponse,
 	ImageVerificationResponse,
 	PowCaptchaSolutionResponse,
 	Provider,
 	ProviderRegistered,
+	PuzzleCaptchaSolutionResponse,
 	RandomProvider,
 	UpdateProviderClientsResponse,
+	VerificationResponse,
 } from "../provider/index.js";
 
 export interface ProviderApiInterface {
 	getCaptchaChallenge(
 		userAccount: string,
 		randomProvider: RandomProvider,
+		sessionId?: string,
+		simdReadings?: string,
 	): Promise<CaptchaResponseBody>;
 	submitCaptchaSolution(
 		captchas: CaptchaSolution[],
@@ -40,6 +56,9 @@ export interface ProviderApiInterface {
 		timestamp: string,
 		providerRequestHashSignature: string,
 		userRequestHashSignature: string,
+		behavioralData?: string,
+		simdReadings?: string,
+		clientMetaData?: ClientMetaData,
 	): Promise<CaptchaSolutionResponse>;
 	verifyDappUser(
 		token: ProcaptchaToken,
@@ -50,6 +69,8 @@ export interface ProviderApiInterface {
 	getPowCaptchaChallenge(
 		userAccount: string,
 		dappAccount: string,
+		sessionId?: string,
+		simdReadings?: string,
 	): Promise<GetPowCaptchaResponse>;
 	submitPowCaptchaSolution(
 		challenge: GetPowCaptchaResponse,
@@ -57,9 +78,37 @@ export interface ProviderApiInterface {
 		dappAccount: string,
 		nonce: number,
 		userTimestampSignature: string,
-		timeout?: number,
+		behavioralData?: string,
 		salt?: string,
+		simdReadings?: string,
+		clientMetaData?: ClientMetaData,
 	): Promise<PowCaptchaSolutionResponse>;
+	getPuzzleCaptchaChallenge(
+		userAccount: string,
+		dappAccount: string,
+		sessionId?: string,
+		simdReadings?: string,
+	): Promise<GetPuzzleCaptchaResponse>;
+	submitPuzzleCaptchaSolution(
+		challenge: GetPuzzleCaptchaResponse,
+		userAccount: string,
+		dappAccount: string,
+		finalX: number,
+		finalY: number,
+		puzzleEvents: Array<{ x: number; y: number; t: number }>,
+		userTimestampSignature: string,
+		behavioralData?: string,
+		salt?: string,
+		simdReadings?: string,
+		clientMetaData?: ClientMetaData,
+	): Promise<PuzzleCaptchaSolutionResponse>;
+	submitPuzzleCaptchaVerify(
+		token: string,
+		signatureHex: string,
+		user: string,
+		ip?: string,
+		email?: string,
+	): Promise<VerificationResponse>;
 	submitUserEvents(
 		events: StoredEvents,
 		string: string,
@@ -70,17 +119,36 @@ export interface ProviderApiInterface {
 		siteKey: string,
 		tier: Tier,
 		settings: IUserSettings,
-		timestamp: string,
-		signature: string,
+		jwt: string,
 	): Promise<ApiResponse>;
-	updateDetectorKey(
-		detectorKey: string,
-		timestamp: string,
-		signature: string,
+	registerSiteKeys(
+		siteKeys: RegisterSitekeysBodyTypeOutput,
+		jwt: string,
 	): Promise<ApiResponse>;
+	removeSiteKey(siteKey: string, jwt: string): Promise<ApiResponse>;
+	removeSiteKeys(
+		siteKeys: RemoveSitekeysBodyTypeOutput,
+		jwt: string,
+	): Promise<ApiResponse>;
+	updateDetectorKey(detectorKey: string, jwt: string): Promise<ApiResponse>;
 	removeDetectorKey(
 		detectorKey: string,
-		timestamp: string,
-		signature: string,
+		jwt: string,
+		expirationInSeconds?: number,
 	): Promise<ApiResponse>;
+	updateDecisionMachine(
+		scope: DecisionMachineScope,
+		runtime: DecisionMachineRuntime,
+		source: string,
+		jwt: string,
+		dappAccount?: string,
+		language?: DecisionMachineLanguage,
+		name?: string,
+		version?: string,
+		captchaType?: DecisionMachineCaptchaType,
+	): Promise<ApiResponse>;
+	getAllDecisionMachines(jwt: string): Promise<ApiResponse>;
+	getDecisionMachine(id: string, jwt: string): Promise<ApiResponse>;
+	removeDecisionMachine(id: string, jwt: string): Promise<ApiResponse>;
+	removeAllDecisionMachines(jwt: string): Promise<ApiResponse>;
 }

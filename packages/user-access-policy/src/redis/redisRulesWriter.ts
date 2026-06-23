@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,11 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {
-	type Logger,
-	chunkIntoBatches,
-	executeBatchesSequentially,
-} from "@prosopo/common";
+import { chunkIntoBatches, executeBatchesSequentially } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import type { RedisClientType } from "redis";
 import { REDIS_BATCH_SIZE } from "#policy/redis/redisClient.js";
 import type { AccessRule } from "#policy/rule.js";
@@ -102,6 +99,15 @@ export class RedisRulesWriter implements AccessRulesWriter {
 			queries.hSet(ruleKey, ruleValue);
 
 			if (expiresUnixTimestamp) {
+				// Redis expireAt expects seconds. Validate that timestamp is in seconds, not milliseconds.
+				// Unix timestamps in milliseconds (since 1970) are > 10 billion
+				// Unix timestamps in seconds won't reach 10 billion until year 2286
+				const MILLISECOND_THRESHOLD = 10_000_000_000;
+				if (expiresUnixTimestamp > MILLISECOND_THRESHOLD) {
+					throw new Error(
+						`Invalid expiry timestamp: ${expiresUnixTimestamp}. Timestamp must be in seconds, not milliseconds.`,
+					);
+				}
 				queries.expireAt(ruleKey, expiresUnixTimestamp);
 			}
 

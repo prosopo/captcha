@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,57 +13,89 @@
 // limitations under the License.
 
 import { stringToHex, u8aToHex } from "@polkadot/util";
-import { type Logger, ProsopoEnvError } from "@prosopo/common";
+import { ProsopoEnvError } from "@prosopo/common";
+import type { RedisWriteQueue } from "@prosopo/database";
 import {
 	compareCaptchaSolutions,
 	computePendingRequestHash,
 	parseAndSortCaptchaSolutions,
 } from "@prosopo/datasets";
-import type { KeyringPair } from "@prosopo/types";
+import type { Logger } from "@prosopo/logger";
 import {
 	ApiParams,
+	type BehavioralDataPacked,
 	type Captcha,
 	type CaptchaSolution,
 	CaptchaStatus,
+	CaptchaType,
+	type ClientMetaData,
 	DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
 	type DappUserSolutionResult,
+	DecisionMachineDecision,
+	type DecisionMachineInput,
 	type Hash,
 	type IPAddress,
+	type IPInfoResponse,
+	type ISpamFilterRules,
+	type ITrafficFilter,
 	type ImageVerificationResponse,
+	type KeyringPair,
+	type PendingImageCaptchaRequest,
 	type ProsopoCaptchaCountConfigSchemaOutput,
 	type ProsopoConfigOutput,
 	type RequestHeaders,
+	ResultReason,
+	SimdReadingsStage,
+	type UserCommitment,
 } from "@prosopo/types";
-import type {
-	ClientRecord,
-	IProviderDatabase,
-	PendingCaptchaRequest,
-	UserCommitment,
-} from "@prosopo/types-database";
+import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import { at, extractData } from "@prosopo/util";
 import { randomAsHex, signatureVerify } from "@prosopo/util-crypto";
 import {
 	getCompositeIpAddress,
 	getIpAddressFromComposite,
 } from "../../compositeIpAddress.js";
-import { constructPairList, containsIdenticalPairs } from "../../pairs.js";
+import {
+	constructPairList,
+	containsIdenticalPairs,
+	peelCheckboxPrefix,
+} from "../../pairs.js";
 import { checkLangRules } from "../../rules/lang.js";
 import { deepValidateIpAddress, shuffleArray } from "../../util.js";
+import {
+	type UsageCounters,
+	buildAllWindowIncrements,
+} from "../../util/usageCounters.js";
 import { CaptchaManager } from "../captchaManager.js";
+import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
+import {
+	computeDnsAsymmetry,
+	enrichDnsEvent,
+	getIpInfoAsn,
+} from "../dnsEvent/enrichDnsEvent.js";
 import { FrictionlessReason } from "../frictionless/frictionlessTasks.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
+import { evaluateEmailSpamRules } from "../spam/evaluateEmailSpamRules.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
 
 export class ImgCaptchaManager extends CaptchaManager {
+	private decisionMachineRunner: DecisionMachineRunner;
+	private readonly usageCounters: UsageCounters | null;
+
 	constructor(
 		db: IProviderDatabase,
 		pair: KeyringPair,
 		config: ProsopoConfigOutput,
 		logger?: Logger,
+		writeQueue?: RedisWriteQueue | null,
+		usageCounters?: UsageCounters | null,
 	) {
-		super(db, pair, config, logger);
+		super(db, pair, config, logger, writeQueue);
 		this.config = config;
+		this.decisionMachineRunner = new DecisionMachineRunner(db);
+		this.usageCounters = usageCounters ?? null;
 	}
 
 	async getCaptchaWithProof(
@@ -93,6 +125,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		captchaConfig: ProsopoCaptchaCountConfigSchemaOutput,
 		threshold: number,
 		sessionId?: string,
+		ipInfo?: IPInfoResponse,
 	): Promise<{
 		captchas: Captcha[];
 		requestHash: string;
@@ -149,17 +182,18 @@ export class ImgCaptchaManager extends CaptchaManager {
 			// if 2 captchas with 30s time limit, this will add to 1 minute (30s * 2)
 			.map((captcha) => captcha.timeLimitMs || DEFAULT_IMAGE_CAPTCHA_TIMEOUT)
 			.reduce((a, b) => a + b, 0);
-		const deadlineTs = timeLimit + currentTime;
+		const deadlineDate = new Date(timeLimit + currentTime);
 
 		await this.db.storePendingImageCommitment(
 			userAccount,
 			requestHash,
 			salt,
-			deadlineTs,
-			currentTime,
+			deadlineDate,
+			new Date(currentTime),
 			getCompositeIpAddress(ipAddress),
 			threshold,
 			sessionId,
+			ipInfo,
 		);
 		return {
 			captchas,
@@ -181,6 +215,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 	 * @param ipAddress
 	 * @param headers
 	 * @param ja4
+	 * @param behavioralData
 	 * @return {Promise<DappUserSolutionResult>} result containing the contract event
 	 */
 	async dappUserSolution(
@@ -194,7 +229,29 @@ export class ImgCaptchaManager extends CaptchaManager {
 		ipAddress: IPAddress,
 		headers: RequestHeaders,
 		ja4: string,
+		behavioralData?: string,
+		ipInfo?: IPInfoResponse,
+		simdReadings?: string,
+		clientMetaData?: ClientMetaData,
 	): Promise<DappUserSolutionResult> {
+		// Decoded once and reused — img submit may attach to multiple sessions.
+		const decodedSimdReadings = simdReadings
+			? await this.decryptSimdReadingsForAttach(simdReadings)
+			: undefined;
+		const pushSimdAttachIfAny = (
+			sessionId: string,
+			writes: Promise<void>[],
+		): void => {
+			if (decodedSimdReadings) {
+				writes.push(
+					this.recordSessionSimdReadingsIfAbsentWithCache(
+						sessionId,
+						decodedSimdReadings,
+						SimdReadingsStage.submit,
+					),
+				);
+			}
+		};
 		// check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
 		const verification = signatureVerify(
 			stringToHex(timestamp.toString()),
@@ -254,8 +311,15 @@ export class ImgCaptchaManager extends CaptchaManager {
 			const { storedCaptchas, receivedCaptchas, captchaIds } =
 				await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas);
 
-			const flat = receivedCaptchas.map((c) => extractData(c.salt));
-			const pairs = flat.map((list) => constructPairList(list));
+			const rawFlat = receivedCaptchas.map((c) => extractData(c.salt));
+			const { checkbox: checkboxCoordPair, flat } = peelCheckboxPrefix(
+				rawFlat,
+				receivedCaptchas.map((c) => c.solution.length),
+			);
+			const shapePairs = flat.map((list) => constructPairList(list));
+			const pairs: [number, number][][] = checkboxCoordPair
+				? [[checkboxCoordPair], ...shapePairs]
+				: shapePairs;
 
 			const { tree, commitmentId } =
 				buildTreeAndGetCommitmentId(receivedCaptchas);
@@ -271,6 +335,59 @@ export class ImgCaptchaManager extends CaptchaManager {
 			// Only do stuff if the request is in the local DB
 			// prevent this request hash from being used twice
 			await this.db.updatePendingImageCommitmentStatus(requestHash);
+
+			// Process behavioral data if provided
+			let behavioralDataPacked: BehavioralDataPacked | undefined;
+			let deviceCapability: string | undefined;
+			if (behavioralData) {
+				try {
+					// Get decryption keys: detector keys from DB first, then env var as fallback
+					const decryptKeys = [
+						// Process DB keys first, then env var key last as env key will likely be invalid
+						...(await this.getDetectorKeys()),
+						process.env.BOT_DECRYPTION_KEY,
+					];
+
+					// Decrypt the behavioral data (returns unpacked format)
+					const decryptedData = await this.decryptBehavioralData(
+						behavioralData,
+						decryptKeys,
+					);
+
+					if (decryptedData) {
+						// Log behavioral analytics using unpacked data counts
+						this.logger?.info(() => ({
+							msg: "Behavioral analysis completed",
+							data: {
+								userAccount,
+								dappAccount,
+								requestHash,
+								mouseEventsCount: decryptedData.collector1?.length || 0,
+								touchEventsCount: decryptedData.collector2?.length || 0,
+								clickEventsCount: decryptedData.collector3?.length || 0,
+								deviceCapability: decryptedData.deviceCapability,
+							},
+						}));
+
+						// Convert to packed format for storage
+						behavioralDataPacked = {
+							c1: decryptedData.collector1 || [],
+							c2: decryptedData.collector2 || [],
+							c3: decryptedData.collector3 || [],
+							d: decryptedData.deviceCapability,
+						};
+
+						deviceCapability = decryptedData.deviceCapability;
+					}
+				} catch (error) {
+					this.logger?.error(() => ({
+						msg: "Failed to process behavioral data",
+						err: error,
+					}));
+					// Don't fail the captcha if behavioral analysis fails
+				}
+			}
+
 			const commit: UserCommitment = {
 				id: commitmentId,
 				userAccount: userAccount,
@@ -282,10 +399,22 @@ export class ImgCaptchaManager extends CaptchaManager {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
 				ipAddress: getCompositeIpAddress(ipAddress),
 				headers,
 				sessionId: pendingRecord.sessionId,
 				ja4,
+				ipInfo,
+				pending: false,
+				salt: pendingRecord.salt,
+				requestHash: pendingRecord[ApiParams.requestHash],
+				threshold: pendingRecord.threshold,
+				deadlineTimestamp: pendingRecord.deadlineTimestamp,
+				...(behavioralDataPacked && { behavioralDataPacked }),
+				...(deviceCapability && { deviceCapability }),
+				...(clientMetaData?.hp && {
+					clientMetaData: { hp: clientMetaData.hp },
+				}),
 			};
 			await this.db.storeUserImageCaptchaSolution(receivedCaptchas, commit);
 
@@ -305,12 +434,28 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 			const totalImages = storedCaptchas[0]?.items.length || 0;
 
-			if (containsIdenticalPairs(pairs)) {
-				await this.db.disapproveDappUserCommitment(
-					commitmentId,
-					"CAPTCHA.INVALID_SOLUTION",
-					pairs,
-				);
+			if (containsIdenticalPairs(pairs) && process.env.NODE_ENV !== "test") {
+				// Write commitment disapproval and session update in parallel
+				const writePromises: Promise<void>[] = [
+					this.db.disapproveDappUserCommitment(
+						commitmentId,
+						"CAPTCHA.INVALID_SOLUTION",
+						pairs,
+					),
+				];
+				if (pendingRecord.sessionId) {
+					writePromises.push(
+						this.updateSessionRecordWithCache(pendingRecord.sessionId, {
+							userSubmitted: true,
+							result: {
+								status: CaptchaStatus.disapproved,
+								reason: ResultReason.CAPTCHA_INVALID_SOLUTION,
+							},
+						}),
+					);
+					pushSimdAttachIfAny(pendingRecord.sessionId, writePromises);
+				}
+				await Promise.all(writePromises);
 				response = {
 					captchas: captchaIds.map((id) => ({
 						captchaId: id,
@@ -336,13 +481,42 @@ export class ImgCaptchaManager extends CaptchaManager {
 					})),
 					verified: true,
 				};
-				await this.db.approveDappUserCommitment(commitmentId, pairs);
+				// Write commitment approval and session update in parallel
+				const writePromises: Promise<void>[] = [
+					this.db.approveDappUserCommitment(commitmentId, pairs),
+				];
+				if (pendingRecord.sessionId) {
+					writePromises.push(
+						this.updateSessionRecordWithCache(pendingRecord.sessionId, {
+							userSubmitted: true,
+							result: { status: CaptchaStatus.approved },
+						}),
+					);
+					pushSimdAttachIfAny(pendingRecord.sessionId, writePromises);
+				}
+				await Promise.all(writePromises);
 			} else {
-				await this.db.disapproveDappUserCommitment(
-					commitmentId,
-					"CAPTCHA.INVALID_SOLUTION",
-					pairs,
-				);
+				// Write commitment disapproval and session update in parallel
+				const writePromises: Promise<void>[] = [
+					this.db.disapproveDappUserCommitment(
+						commitmentId,
+						"CAPTCHA.INVALID_SOLUTION",
+						pairs,
+					),
+				];
+				if (pendingRecord.sessionId) {
+					writePromises.push(
+						this.updateSessionRecordWithCache(pendingRecord.sessionId, {
+							userSubmitted: true,
+							result: {
+								status: CaptchaStatus.disapproved,
+								reason: ResultReason.CAPTCHA_INVALID_SOLUTION,
+							},
+						}),
+					);
+					pushSimdAttachIfAny(pendingRecord.sessionId, writePromises);
+				}
+				await Promise.all(writePromises);
 				response = {
 					captchas: captchaIds.map((id) => ({
 						captchaId: id,
@@ -402,17 +576,17 @@ export class ImgCaptchaManager extends CaptchaManager {
 	/**
 	 * Validate that a Dapp User is responding to their own pending captcha request
 	 * @param {string} requestHash
-	 * @param {PendingCaptchaRequest} pendingRecord
+	 * @param {PendingImageCaptchaRequest} pendingRecord
 	 * @param {string} userAccount
 	 * @param {string[]} captchaIds
 	 */
 	async validateDappUserSolutionRequestIsPending(
 		requestHash: string,
-		pendingRecord: PendingCaptchaRequest,
+		pendingRecord: PendingImageCaptchaRequest,
 		userAccount: string,
 		captchaIds: string[],
 	): Promise<boolean> {
-		const currentTime = Date.now();
+		const currentTime = new Date();
 		// only proceed if there is a pending record
 		if (!pendingRecord) {
 			this.logger.info(() => ({
@@ -486,17 +660,30 @@ export class ImgCaptchaManager extends CaptchaManager {
 		ip?: string,
 		disallowWebView?: boolean,
 		contextAwareEnabled = false,
+		userAccessRulesStorage?: AccessRulesStorage,
+		email?: string,
+		spamEmailDomainCheckingEnabled = false,
+		spamFilter?: ISpamFilterRules,
+		trafficFilter?: ITrafficFilter,
+		storeMetadata = false,
 	): Promise<ImageVerificationResponse> {
+		// Bind the commitmentId/dapp context once so every log line in this
+		// method carries it without repeating the fields in each `data` block.
+		const logger = this.logger.with({ commitmentId, dapp });
+
 		const solution = await (commitmentId
 			? this.getDappUserCommitmentById(commitmentId)
 			: this.getDappUserCommitmentByAccount(user, dapp));
 
 		// No solution exists
 		if (!solution) {
-			this.logger.debug(() => ({
+			logger.debug(() => ({
 				msg: "Not verified - no solution found",
 			}));
-			return { status: "API.USER_NOT_VERIFIED_NO_SOLUTION", verified: false };
+			return {
+				status: "API.USER_NOT_VERIFIED_NO_SOLUTION",
+				verified: false,
+			};
 		}
 
 		// -- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING --
@@ -504,7 +691,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 		// solution has already been checked by the server. Moving this code around could result in solutions being
 		// re-usable.
 		if (solution.serverChecked) {
-			return { status: "API.USER_ALREADY_VERIFIED", verified: false };
+			return {
+				status: "API.USER_ALREADY_VERIFIED",
+				verified: false,
+			};
 		}
 
 		await this.db.markDappUserCommitmentsChecked([solution.id]);
@@ -512,19 +702,24 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 		// A solution exists but is disapproved
 		if (solution.result.status === CaptchaStatus.disapproved) {
-			return { status: "API.USER_NOT_VERIFIED", verified: false };
+			return {
+				status: solution.result.reason || "API.USER_NOT_VERIFIED",
+				verified: false,
+			};
 		}
 
 		maxVerifiedTime = maxVerifiedTime || 60 * 1000; // Default to 1 minute
 
-		// Check if solution was completed recently
 		const currentTime = Date.now();
+		const submittedAt = solution.submittedAtTimestamp;
 		const timeSinceCompletion =
-			currentTime - solution.requestedAtTimestamp.getTime();
+			submittedAt instanceof Date
+				? currentTime - submittedAt.getTime()
+				: Number.POSITIVE_INFINITY;
 
 		// A solution exists but has timed out
 		if (timeSinceCompletion > maxVerifiedTime) {
-			this.logger.debug(() => ({
+			logger.debug(() => ({
 				msg: "Not verified - timed out",
 			}));
 			return {
@@ -533,6 +728,140 @@ export class ImgCaptchaManager extends CaptchaManager {
 			};
 		}
 
+		// Accumulate commitment updates in memory to batch writes.
+		// Instead of writing after each check, we collect all updates and
+		// perform a single batch write at the end.
+		const commitmentUpdates: Partial<UserCommitment> = {};
+		let failStatus: ResultReason | undefined;
+
+		// Check user access policies for hard blocks
+		if (userAccessRulesStorage) {
+			try {
+				const blockPolicy = await this.checkForHardBlock(
+					userAccessRulesStorage,
+					solution,
+					solution.userAccount,
+					solution.headers,
+					solution.coords,
+					solution.ipInfo?.isValid ? solution.ipInfo.countryCode : undefined,
+					solution.ipInfo?.isValid ? solution.ipInfo.asnNumber : undefined,
+				);
+
+				if (blockPolicy) {
+					logger.info(() => ({
+						msg: "User blocked by access policy in server image verification",
+						data: {
+							userAccount: solution.userAccount,
+							dappAccount: solution.dappAccount,
+							policy: blockPolicy,
+						},
+					}));
+					commitmentUpdates.result = {
+						status: CaptchaStatus.disapproved,
+						reason: ResultReason.ACCESS_POLICY_BLOCK,
+					};
+					failStatus = ResultReason.ACCESS_POLICY_BLOCK;
+				}
+			} catch (error) {
+				logger.warn(() => ({
+					msg: "Failed to check user access policies in server image verification",
+					error,
+				}));
+			}
+		}
+
+		// Check email domain against spam list if email is provided
+		if (!failStatus && email && spamEmailDomainCheckingEnabled) {
+			try {
+				const isSpam = await this.checkSpamEmail(email);
+				if (isSpam) {
+					const emailDomain = email.split("@")[1] || "unknown";
+					logger.info(() => ({
+						msg: "Spam email domain detected in server image verification",
+						data: { emailDomain },
+					}));
+					commitmentUpdates.result = {
+						status: CaptchaStatus.disapproved,
+						reason: ResultReason.SPAM_EMAIL_DOMAIN,
+					};
+					failStatus = ResultReason.SPAM_EMAIL_DOMAIN;
+				}
+			} catch (error) {
+				logger.warn(() => ({
+					msg: "Failed to check spam email domain in server image verification",
+					error,
+				}));
+			}
+		}
+
+		// Spam filter: configurable per-site email pattern rules
+		if (
+			!failStatus &&
+			spamFilter?.enabled &&
+			spamFilter.emailRules?.enabled &&
+			email
+		) {
+			const result = evaluateEmailSpamRules(email, spamFilter.emailRules);
+			if (result.isSpam) {
+				logger.info(() => ({
+					msg: "Spam filter rejected email in image verification",
+					data: { reason: result.reason },
+				}));
+				commitmentUpdates.result = {
+					status: CaptchaStatus.disapproved,
+					reason: ResultReason.SPAM_EMAIL_RULE,
+				};
+				failStatus = ResultReason.SPAM_EMAIL_RULE;
+			}
+		}
+
+		const sessionRecord = solution.sessionId
+			? await this.db.getSessionRecordBySessionId(solution.sessionId)
+			: undefined;
+
+		const enrichedDnsEvent = await enrichDnsEvent(
+			sessionRecord?.dnsEvent,
+			env.ipInfoService,
+			ip ?? solution.ipInfo?.ip,
+		);
+
+		if (!failStatus) {
+			const check = await this.resolveTrafficFilterCheck(
+				env,
+				solution.ipInfo,
+				trafficFilter,
+				ip,
+				enrichedDnsEvent,
+			);
+			if (check.isBlocked) {
+				logger.info(() => ({
+					msg: "Traffic filter rejected request",
+					data: {
+						ip,
+						reason: check.reason,
+						dnsPeerIp: enrichedDnsEvent?.peerIp,
+						dnsResolverIp: enrichedDnsEvent?.resolverIp,
+						dnsPeerAsn: getIpInfoAsn(enrichedDnsEvent?.peerIpInfo),
+						dnsResolverAsn: getIpInfoAsn(enrichedDnsEvent?.resolverIpInfo),
+						dnsPathValid: enrichedDnsEvent?.pathValid,
+					},
+				}));
+				commitmentUpdates.result = {
+					status: CaptchaStatus.disapproved,
+					reason: check.reason,
+				};
+				failStatus = check.reason;
+			}
+		}
+
+		// Persist dapp-server-provided metadata when the site opts in.
+		// Gated purely by `storeMetadata` — independent of the spam-email
+		// checks above, which inspect the email but never write it.
+		if (storeMetadata && email) {
+			commitmentUpdates.metadata = { email };
+		}
+
+		// IP validation: accumulate providedIp update
 		if (ip) {
 			const solutionIpAddress = getIpAddressFromComposite(solution.ipAddress);
 			// Get client settings for IP validation rules
@@ -540,73 +869,227 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 			const ipValidationRules = clientRecord?.settings?.ipValidationRules;
 
-			await this.db.updateDappUserCommitment(solution.id, {
-				providedIp: getCompositeIpAddress(ip),
-			});
+			// Accumulate providedIp instead of writing immediately
+			commitmentUpdates.providedIp = getCompositeIpAddress(ip);
 
-			const ipValidation = await deepValidateIpAddress(
-				ip,
-				solutionIpAddress,
-				this.logger,
-				env.config.ipApi.apiKey,
-				env.config.ipApi.baseUrl,
-				ipValidationRules,
-			);
+			if (!failStatus && ipValidationRules?.enabled === true) {
+				const ipValidation = await deepValidateIpAddress(
+					ip,
+					solutionIpAddress,
+					logger,
+					env.ipInfoService,
+					ipValidationRules,
+					enrichedDnsEvent?.peerIp,
+				);
 
-			if (!ipValidation.isValid) {
-				this.logger.error(() => ({
-					msg: "IP validation failed for image captcha",
-					data: {
-						ip,
-						solutionIp: solutionIpAddress.address,
-						error: ipValidation.errorMessage,
-						distanceKm: ipValidation.distanceKm,
-					},
-				}));
-				return { status: "API.USER_NOT_VERIFIED", verified: false };
+				if (!ipValidation.isValid) {
+					logger.error(() => ({
+						msg: "IP validation failed for image captcha",
+						data: {
+							ip,
+							solutionIp: solutionIpAddress.address,
+							error: ipValidation.errorMessage,
+							distanceKm: ipValidation.distanceKm,
+						},
+					}));
+					failStatus = ResultReason.FAILED_IP_VALIDATION;
+				}
 			}
 		}
 
-		const isApproved = solution.result.status === CaptchaStatus.approved;
+		let isApproved =
+			!failStatus && solution.result.status === CaptchaStatus.approved;
+		let failureStatus = failStatus || ResultReason.USER_NOT_VERIFIED;
+
+		// Solved-counter writes: fire-and-forget, only on successful image
+		// captcha verification (before any decision-machine veto runs). The
+		// user did the visual work so we record it.
+		if (
+			!failStatus &&
+			solution.result.status === CaptchaStatus.approved &&
+			this.usageCounters
+		) {
+			const ipValue = ip ?? "";
+			this.usageCounters.incrManyAsync(
+				solution.dappAccount,
+				buildAllWindowIncrements(
+					"solved",
+					CaptchaType.image,
+					ipValue,
+					solution.userAccount,
+					enrichedDnsEvent?.peerIp,
+				),
+			);
+		}
 
 		let score: number | undefined;
-		if (solution.sessionId) {
-			const sessionRecord = await this.db.getSessionRecordBySessionId(
-				solution.sessionId,
+		if (sessionRecord) {
+			const dnsAsymmetry = computeDnsAsymmetry(
+				enrichedDnsEvent,
+				solution.ipInfo,
 			);
-			if (sessionRecord) {
-				score = computeFrictionlessScore(sessionRecord?.scoreComponents);
-				this.logger.info(() => ({
-					data: {
-						scoreComponents: sessionRecord?.scoreComponents,
-						score: score,
-					},
-				}));
-
-				if (
-					disallowWebView === true &&
-					(sessionRecord.scoreComponents.webView || 0) > 0
-				) {
-					this.logger.info(() => ({
-						msg: "Disallowing webview access - user not verified",
-					}));
-					return { status: "API.USER_NOT_VERIFIED", verified: false };
-				}
-				if (
-					contextAwareEnabled &&
-					sessionRecord.reason ===
-						FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED
-				) {
-					this.logger.info(() => ({
-						msg: "Context aware validation failed",
-					}));
-					//return { status: "API.USER_NOT_VERIFIED", verified: false };
-				}
+			if (dnsAsymmetry > 0) {
+				sessionRecord.scoreComponents = {
+					...sessionRecord.scoreComponents,
+					dnsAsymmetry,
+				};
 			}
+			score = computeFrictionlessScore(sessionRecord?.scoreComponents);
+			logger.info(() => ({
+				data: {
+					scoreComponents: sessionRecord?.scoreComponents,
+					score: score,
+					dnsPeerAsn: getIpInfoAsn(enrichedDnsEvent?.peerIpInfo),
+					dnsResolverAsn: getIpInfoAsn(enrichedDnsEvent?.resolverIpInfo),
+				},
+			}));
+
+			if (
+				!failStatus &&
+				disallowWebView === true &&
+				(sessionRecord.webView === true ||
+					(sessionRecord.scoreComponents.webView || 0) > 0)
+			) {
+				logger.info(() => ({
+					msg: "Disallowing webview access - user not verified",
+				}));
+				commitmentUpdates.result = {
+					status: CaptchaStatus.disapproved,
+					reason: ResultReason.DISALLOWED_WEBVIEW,
+				};
+				failStatus = ResultReason.DISALLOWED_WEBVIEW;
+				isApproved = false;
+				failureStatus = ResultReason.DISALLOWED_WEBVIEW;
+			}
+			if (
+				contextAwareEnabled &&
+				sessionRecord.reason ===
+					FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED
+			) {
+				logger.info(() => ({
+					msg: "Context aware validation failed",
+				}));
+				//return { status: "API.USER_NOT_VERIFIED", verified: false };
+			}
+		}
+
+		// Decision machine evaluation (only if still approved)
+		if (isApproved) {
+			const decisionInput: DecisionMachineInput = {
+				userAccount: solution.userAccount,
+				dappAccount: solution.dappAccount,
+				captchaResult: "passed",
+				headers: solution.headers,
+				captchaType: CaptchaType.image,
+				countryCode: solution.ipInfo?.isValid
+					? solution.ipInfo.countryCode
+					: undefined,
+				ipInfo: solution.ipInfo,
+				dnsEvent: enrichedDnsEvent,
+				score,
+				threshold: sessionRecord?.threshold,
+				scoreComponents: sessionRecord?.scoreComponents,
+				decryptedHeadHash: sessionRecord?.decryptedHeadHash,
+				userSitekeyIpHash: sessionRecord?.userSitekeyIpHash,
+				simdReadings: sessionRecord?.simdReadings,
+				frictionlessReason: sessionRecord?.reason,
+				ruleType: sessionRecord?.ruleType,
+				webView: sessionRecord?.webView,
+				iFrame: sessionRecord?.iFrame,
+			};
+
+			try {
+				const decision = await this.decisionMachineRunner.decide(
+					decisionInput,
+					logger,
+				);
+				if (decision.decision === DecisionMachineDecision.Deny) {
+					// Decision machines are operator-authored JS — their `reason`
+					// is just `string | undefined`. Cast to `ResultReason` at the
+					// boundary so the strict types on `CaptchaResult` hold.
+					const dmReason = (decision.reason ||
+						ResultReason.CAPTCHA_DECISION_MACHINE_DENIED) as ResultReason;
+					logger.info(() => ({
+						msg: "Decision machine denied user verification",
+						data: {
+							reason: decision.reason,
+						},
+					}));
+					commitmentUpdates.result = {
+						status: CaptchaStatus.disapproved,
+						reason: dmReason,
+					};
+					isApproved = false;
+					failureStatus = dmReason;
+				}
+			} catch (error) {
+				logger.error(() => ({
+					msg: "Failed to process decision machine",
+					err: error,
+				}));
+			}
+		}
+
+		// Batch writes: separate non-streaming updates from streaming result writes.
+		// - providedIp / metadata use updateDappUserCommitment (no central streaming)
+		// - approve/disapprove use dedicated methods that trigger centralStreamer
+		const writePromises: Promise<void>[] = [];
+
+		// Write non-streaming metadata fields if accumulated.
+		const sideUpdates: Partial<UserCommitment> = {};
+		if (commitmentUpdates.providedIp) {
+			sideUpdates.providedIp = commitmentUpdates.providedIp;
+		}
+		if (commitmentUpdates.metadata) {
+			sideUpdates.metadata = commitmentUpdates.metadata;
+		}
+		if (Object.keys(sideUpdates).length > 0) {
+			writePromises.push(
+				this.db.updateDappUserCommitment(solution.id, sideUpdates),
+			);
+		}
+
+		// Write result via the streaming-aware methods
+		if (commitmentId) {
+			if (isApproved) {
+				writePromises.push(this.db.approveDappUserCommitment(commitmentId));
+			} else if (commitmentUpdates.result) {
+				writePromises.push(
+					this.db.disapproveDappUserCommitment(
+						commitmentId,
+						commitmentUpdates.result.reason,
+					),
+				);
+			}
+		}
+
+		// Update session with final server verification result (different collection)
+		const finalResult = isApproved
+			? { status: CaptchaStatus.approved as const }
+			: commitmentUpdates.result || {
+					status: CaptchaStatus.disapproved as const,
+					reason: failureStatus,
+				};
+
+		if (solution.sessionId) {
+			writePromises.push(
+				this.updateSessionRecordWithCache(
+					solution.sessionId,
+					{
+						serverChecked: true,
+						result: finalResult,
+					},
+					true,
+				),
+			);
+		}
+
+		if (writePromises.length > 0) {
+			await Promise.all(writePromises);
 		}
 
 		return {
-			status: isApproved ? "API.USER_VERIFIED" : "API.USER_NOT_VERIFIED",
+			status: isApproved ? ResultReason.USER_VERIFIED : failureStatus,
 			verified: isApproved,
 			commitmentId: solution.id.toString(),
 			...(score && { score }),
@@ -623,6 +1106,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		translateFn: (key: string) => string,
 		score?: number,
 		commitmentId?: Hash,
+		reason?: string,
 	): ImageVerificationResponse {
 		return {
 			...super.getVerificationResponse(
@@ -630,6 +1114,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				clientRecord,
 				translateFn,
 				score,
+				reason,
 			),
 			...(commitmentId && {
 				[ApiParams.commitmentId]: commitmentId,

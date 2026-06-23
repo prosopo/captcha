@@ -1,6 +1,4 @@
-import { ProviderApi } from "@prosopo/api";
-import { loadBalancer } from "@prosopo/load-balancer";
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,6 +11,9 @@ import { loadBalancer } from "@prosopo/load-balancer";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { ProviderApi } from "@prosopo/api";
+import { loadBalancer } from "@prosopo/load-balancer";
 import {
 	type CaptchaType,
 	ClientSettingsSchema,
@@ -20,7 +21,7 @@ import {
 	type KeyringPair,
 	Tier,
 } from "@prosopo/types";
-import { u8aToHex } from "@prosopo/util";
+import { imageMaxRoundsDefault } from "@prosopo/types";
 
 export const registerSiteKey = async (
 	siteKey: string,
@@ -32,9 +33,6 @@ export const registerSiteKey = async (
 			EnvironmentTypesSchema.enum.development,
 		);
 		for (const provider of providers) {
-			const timestamp = Date.now();
-			const signature = u8aToHex(adminPair.sign(timestamp.toString()));
-
 			const providerApi = new ProviderApi(provider.url, adminPair.address);
 
 			const response = await providerApi.registerSiteKey(
@@ -45,9 +43,9 @@ export const registerSiteKey = async (
 					domains: ["localhost", "0.0.0.0", "127.0.0.0", "example.com"],
 					frictionlessThreshold: 0.5,
 					powDifficulty: 4,
+					imageMaxRounds: imageMaxRoundsDefault,
 				}),
-				timestamp.toString(),
-				signature,
+				adminPair.jwtIssue(),
 			);
 		}
 	} catch (err) {

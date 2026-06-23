@@ -1,5 +1,90 @@
 # @prosopo/file-server
 
+## 2.6.45
+### Patch Changes
+
+- Updated dependencies [edcd450]
+  - @prosopo/util@3.3.1
+
+## 2.6.44
+### Patch Changes
+
+- Updated dependencies [55b1388]
+  - @prosopo/util@3.3.0
+
+## 2.6.43
+### Patch Changes
+
+- Updated dependencies [6ca1125]
+  - @prosopo/util@3.2.15
+
+## 2.6.42
+### Patch Changes
+
+- Updated dependencies [6567ce0]
+  - @prosopo/util@3.2.14
+
+## 2.6.41
+### Patch Changes
+
+- Updated dependencies [72a1218]
+  - @prosopo/util@3.2.13
+
+## 2.6.40
+### Patch Changes
+
+- Updated dependencies [4aae4e6]
+  - @prosopo/util@3.2.12
+
+## 2.6.39
+### Patch Changes
+
+- Updated dependencies [a25dffa]
+  - @prosopo/util@3.2.11
+
+## 2.6.38
+### Patch Changes
+
+- Updated dependencies [346edd7]
+  - @prosopo/util@3.2.10
+
+## 2.6.37
+### Patch Changes
+
+- Updated dependencies [22bfee7]
+  - @prosopo/util@3.2.9
+
+## 2.6.36
+### Patch Changes
+
+- Updated dependencies [e0fb3d6]
+- Updated dependencies [f3f23e3]
+  - @prosopo/util@3.2.8
+
+## 2.6.35
+### Patch Changes
+
+- Updated dependencies [e1ea65f]
+  - @prosopo/util@3.2.7
+
+## 2.6.34
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/util@3.2.6
+
+## 2.6.33
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+- Updated dependencies [a53526b]
+- Updated dependencies [0a38892]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [3acc333]
+  - @prosopo/util@3.2.5
+
 ## 2.6.32
 ### Patch Changes
 

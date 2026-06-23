@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,13 +13,30 @@
 // limitations under the License.
 
 // vite.config.js
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const certPath = path.resolve(__dirname, "../../certs");
+const keyPath = path.join(certPath, "server.key");
+const crtPath = path.join(certPath, "server.crt");
+
+// Check if certificates exist
+const useTls = fs.existsSync(keyPath) && fs.existsSync(crtPath);
 
 export default defineConfig({
 	server: {
 		port: 9269,
 		host: true,
 		cors: true,
+		https: useTls
+			? {
+					key: fs.readFileSync(keyPath),
+					cert: fs.readFileSync(crtPath),
+				}
+			: undefined,
 		watch: {
 			// Ensure the dev server watches the `dist/bundle` public directory so
 			// changes there trigger a full reload.

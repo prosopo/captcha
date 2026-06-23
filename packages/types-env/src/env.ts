@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Logger } from "@prosopo/common";
 import type { Keyring } from "@prosopo/keyring";
+import type { Logger } from "@prosopo/logger";
 import type { KeyringPair } from "@prosopo/types";
 import type { AssetsResolver, EnvironmentTypes } from "@prosopo/types";
 import type { ProsopoBasicConfigOutput } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
+import type { IIpInfoService } from "./ipinfo.js";
 
 export interface ProsopoEnvironment {
 	config: ProsopoBasicConfigOutput;
@@ -28,6 +29,7 @@ export interface ProsopoEnvironment {
 	keyring: Keyring;
 	pair: KeyringPair | undefined;
 	authAccount: KeyringPair | undefined;
+	ipInfoService: IIpInfoService;
 	getDb(): IProviderDatabase;
 	isReady(): Promise<void>;
 	importDatabase(): Promise<void>;

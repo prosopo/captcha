@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Logger } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import { type IPComparison, IPValidationAction } from "@prosopo/types";
 import type { IIPValidationRules, IPComparisonResult } from "@prosopo/types";
 import { describe, expect, it } from "vitest";
@@ -31,6 +31,7 @@ const mockLogger = {
 
 describe("evaluateIpValidationRules", () => {
 	const baseRules: IIPValidationRules = {
+		enabled: true,
 		actions: {
 			countryChangeAction: IPValidationAction.Flag,
 			cityChangeAction: IPValidationAction.Allow,
@@ -267,6 +268,7 @@ describe("evaluateIpValidationRules", () => {
 
 	it("returns no flag if one condition is true but requireAllConditions is true", () => {
 		const requireAllRules: IIPValidationRules = {
+			enabled: true,
 			actions: {
 				countryChangeAction: IPValidationAction.Reject,
 				cityChangeAction: IPValidationAction.Allow,

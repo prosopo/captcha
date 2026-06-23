@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,13 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { LogLevel, type Logger, getLogger } from "@prosopo/common";
 import { ProviderEnvironment } from "@prosopo/env";
+import { LogLevel, type Logger, getLogger } from "@prosopo/logger";
 import { Tasks } from "@prosopo/provider";
 import {
 	ContextType,
 	type KeyringPair,
 	contextAwareThresholdDefault,
+	imageMaxRoundsDefault,
+	puzzleToleranceDefault,
 } from "@prosopo/types";
 import {
 	CaptchaTypeSpec,
@@ -37,6 +39,12 @@ export const SiteKeyRegisterCommandArgsSpec = z.object({
 	pow_difficulty: z.number(),
 	domains: z.array(z.string()),
 	image_threshold: z.number().max(1).min(0),
+	image_max_rounds: z
+		.number()
+		.int()
+		.positive()
+		.optional()
+		.default(imageMaxRoundsDefault),
 });
 
 export default (
@@ -86,6 +94,11 @@ export default (
 					type: "number" as const,
 					demandOption: false,
 					desc: "Image threshold for settings",
+				} as const)
+				.option("image_max_rounds", {
+					type: "number" as const,
+					demandOption: false,
+					desc: "Image max rounds for settings",
 				} as const),
 		handler: async (argv: ArgumentsCamelCase) => {
 			try {
@@ -99,6 +112,7 @@ export default (
 					pow_difficulty,
 					domains,
 					image_threshold,
+					image_max_rounds,
 				} = SiteKeyRegisterCommandArgsSpec.parse(argv);
 				const tasks = new Tasks(env);
 				await tasks.clientTaskManager.registerSiteKey(sitekey, tier, {
@@ -107,6 +121,8 @@ export default (
 					domains: domains || [],
 					powDifficulty: pow_difficulty as number,
 					imageThreshold: image_threshold as number,
+					imageMaxRounds: image_max_rounds as number,
+					puzzleTolerance: puzzleToleranceDefault,
 					disallowWebView: false,
 					contextAware: {
 						enabled: false,
@@ -117,6 +133,8 @@ export default (
 							},
 						},
 					},
+					verifiedTimeout: 60000,
+					solutionTimeout: 60000,
 				});
 				logger.info(() => ({
 					data: { sitekey },

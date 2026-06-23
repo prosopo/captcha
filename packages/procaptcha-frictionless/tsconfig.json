@@ -25,10 +25,10 @@
 			"path": "../locale"
 		},
 		{
-			"path": "../load-balancer"
+			"path": "../procaptcha-pow"
 		},
 		{
-			"path": "../procaptcha-pow"
+			"path": "../procaptcha-puzzle"
 		},
 		{
 			"path": "../procaptcha-react"

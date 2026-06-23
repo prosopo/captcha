@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
 import type { DetectorResult } from "@prosopo/types";
 import getBotScoreFromPayload from "./decodePayload.js";
 
-const DEFAULT_ENTROPY = 13837;
-
 export const getBotScore = async (
 	payload: string,
 	headHash: string,
@@ -29,29 +27,42 @@ export const getBotScore = async (
 	)) as DetectorResult;
 	const baseBotScore: number = result.score;
 	const timestamp: number = result.timestamp;
-	const providerSelectEntropy: number = result.providerSelectEntropy;
 	const userId: string = result.userId;
 	const userAgent: string = result.userAgent;
 	const isWebView: boolean = result.isWebView ?? false;
 	const isIframe: boolean = result.isIframe ?? false;
 	const decryptedHeadHash: string = result.decryptedHeadHash;
+	const triggeredDetectors: number[] | undefined = result.triggeredDetectors;
+	const shadowDomPenalty: boolean | undefined = result.shadowDomPenalty;
+	const entropyMathRandomFingerprint: string | undefined =
+		result.entropyMathRandomFingerprint;
+	const entropyCryptoFingerprint: string | undefined =
+		result.entropyCryptoFingerprint;
+	const entropyWallClockOffsetMs: number | undefined =
+		result.entropyWallClockOffsetMs;
+	const entropyMathRandomFirst: number | undefined =
+		result.entropyMathRandomFirst;
 
-	if (baseBotScore === undefined) {
+	if (baseBotScore === undefined || Number.isNaN(baseBotScore)) {
 		return {
 			baseBotScore: 1,
 			timestamp: 0,
-			providerSelectEntropy: DEFAULT_ENTROPY,
 		};
 	}
 
 	return {
 		baseBotScore,
 		timestamp,
-		providerSelectEntropy,
 		userId,
 		userAgent,
 		isWebView,
 		isIframe,
 		decryptedHeadHash,
+		triggeredDetectors,
+		shadowDomPenalty,
+		entropyMathRandomFingerprint,
+		entropyCryptoFingerprint,
+		entropyWallClockOffsetMs,
+		entropyMathRandomFirst,
 	};
 };

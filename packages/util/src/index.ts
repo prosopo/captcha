@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,9 +25,14 @@ export * from "./choice.js";
 export * from "./permutations.js";
 export * from "./version.js";
 export * from "./hex.js";
+export * from "./coords.js";
 export * from "./checks.js";
 export * from "./ip.js";
 export { verifyRecency } from "./verifyRecency.js";
 export { getIPAddress } from "./ip.js";
 export * from "./fetchWithEtag.js";
 export * from "./binaryString.js";
+export * from "./date.js";
+export * from "./email.js";
+export * from "./domainValidation.js";
+export * from "./bigint.js";

@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,6 +29,8 @@ const userAttributesSchema: SchemaDefinition<UserAttributesRecord> = {
 	headersHash: { type: String, required: false },
 	headHash: { type: String, required: false },
 	coords: { type: String, required: false },
+	countryCode: { type: String, required: false },
+	asn: { type: Number, required: false },
 } satisfies AllKeys<UserAttributesRecord>;
 
 const userIpSchema: SchemaDefinition<UserIpRecord> = {
@@ -54,6 +56,7 @@ const accessPolicySchema: SchemaDefinition<AccessPolicy> = {
 	powDifficulty: { type: Number, required: false },
 	unsolvedImagesCount: { type: Number, required: false },
 	frictionlessScore: { type: Number, required: false },
+	deferToVerify: { type: Boolean, required: false },
 } satisfies AllKeys<AccessPolicy>;
 
 export const accessRuleMongooseSchema: SchemaDefinition<AccessRuleRecord> = {

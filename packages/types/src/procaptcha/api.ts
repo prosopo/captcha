@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 
 import type { ProviderApiInterface } from "../api/index.js";
 import type { CaptchaSolution } from "../datasets/index.js";
+import type { ClientMetaData } from "../provider/database.js";
 import type { CaptchaResponseBody, RandomProvider } from "../provider/index.js";
 import type { TCaptchaSubmitResult } from "./client.js";
 
@@ -29,6 +30,12 @@ export interface ProcaptchaApiInterface {
 		solutions: CaptchaSolution[],
 		timestamp: string,
 		providerRequestHashSignature: string,
+		behavioralData?: string,
+		simdReadings?: string,
+		clientMetaData?: ClientMetaData,
 	): Promise<TCaptchaSubmitResult>;
-	getCaptchaChallenge(sessionId?: string): Promise<CaptchaResponseBody>;
+	getCaptchaChallenge(
+		sessionId?: string,
+		simdReadings?: string,
+	): Promise<CaptchaResponseBody>;
 }

@@ -1,0 +1,4 @@
+[submodule "packages/fingerprintjs"]
+	path = packages/fingerprintjs
+	url = git@github.com:prosopo/fingerprintjs.git
+	branch = master

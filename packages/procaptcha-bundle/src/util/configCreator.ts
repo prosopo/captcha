@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,8 @@ function createConfig(
 	web2 = true,
 	invisible = false,
 	userAccountAddress?: string,
+	ipv4 = false,
+	ipv6 = false,
 ): ProcaptchaClientConfigOutput {
 	if (!siteKey) {
 		siteKey = process.env.PROSOPO_SITE_KEY || "";
@@ -45,6 +47,8 @@ function createConfig(
 		mode: invisible ? "invisible" : "visible",
 		theme,
 		language,
+		ipv4,
+		ipv6,
 	});
 }
 

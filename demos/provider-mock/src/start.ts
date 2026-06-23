@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import { handleErrors } from "@prosopo/api-express-router";
-import { LogLevel, getLogger } from "@prosopo/common";
 import { i18nMiddleware } from "@prosopo/locale";
+import { LogLevel, getLogger } from "@prosopo/logger";
 import cors from "cors";
 import express from "express";
 import { prosopoRouter } from "./api.js";

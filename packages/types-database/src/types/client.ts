@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,18 +13,27 @@
 // limitations under the License.
 
 import {
+	CaptchaType,
 	ContextType,
+	DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
+	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
 	type IUserData,
 	type IUserSettings,
 	type Timestamp,
 	abuseScoreThresholdDefault,
 	abuseScoreThresholdExceedActionDefault,
+	captchaTypeDefault,
 	cityChangeActionDefault,
 	contextAwareThresholdDefault,
 	countryChangeActionDefault,
 	distanceExceedActionDefault,
 	distanceThresholdKmDefault,
+	domainsDefault,
+	frictionlessThresholdDefault,
+	imageMaxRoundsDefault,
+	imageThresholdDefault,
 	ispChangeActionDefault,
+	powDifficultyDefault,
 	requireAllConditionsDefault,
 } from "@prosopo/types";
 import mongoose from "mongoose";
@@ -35,6 +44,11 @@ import type { ClientRecord, Tables } from "./provider.js";
 export type UserDataRecord = mongoose.Document & IUserData;
 
 export const IPValidationRulesSchema = new Schema({
+	enabled: {
+		type: Boolean,
+		default: false,
+		required: true,
+	},
 	actions: {
 		countryChangeAction: {
 			type: Schema.Types.Mixed,
@@ -99,12 +113,42 @@ export const IPValidationRulesSchema = new Schema({
 });
 
 export const UserSettingsSchema = new Schema({
-	captchaType: String,
-	frictionlessThreshold: Number,
-	powDifficulty: Number,
-	imageThreshold: Number,
+	captchaType: {
+		type: String,
+		enum: CaptchaType,
+		default: captchaTypeDefault,
+	},
+	verifiedTimeout: {
+		type: Number,
+		default: DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
+	},
+	solutionTimeout: {
+		type: Number,
+		default: DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
+	},
+	frictionlessThreshold: {
+		type: Number,
+		default: frictionlessThresholdDefault,
+	},
+	powDifficulty: { type: Number, default: powDifficultyDefault },
+	imageThreshold: {
+		type: Number,
+		default: imageThresholdDefault,
+	},
+	imageMaxRounds: {
+		type: Number,
+		default: imageMaxRoundsDefault,
+		required: false,
+	},
+	puzzleTolerance: {
+		type: Number,
+		required: false,
+	},
 	ipValidationRules: IPValidationRulesSchema,
-	domains: [String],
+	domains: {
+		type: [String],
+		default: domainsDefault,
+	},
 	disallowWebView: {
 		type: Boolean,
 		default: false,
@@ -123,6 +167,53 @@ export const UserSettingsSchema = new Schema({
 					threshold: contextAwareThresholdDefault,
 				},
 			},
+		},
+	},
+	spamEmailDomainCheckEnabled: {
+		type: Boolean,
+		default: false,
+		required: false,
+	},
+	autoBanScoreThreshold: {
+		type: Number,
+		min: 0,
+		required: false,
+	},
+	spamFilter: {
+		enabled: { type: Boolean, default: false },
+		emailRules: {
+			enabled: { type: Boolean, default: false },
+			maxLocalPartDots: { type: Number, required: false },
+			normaliseGmail: { type: Boolean, default: false },
+			useDefaultPatterns: { type: Boolean, default: false },
+			customRegexBlocklist: { type: [String], default: [] },
+		},
+	},
+	trafficFilter: {
+		blockVpn: { type: Boolean, default: false },
+		blockProxy: { type: Boolean, default: false },
+		blockTor: { type: Boolean, default: false },
+		blockAbuser: { type: Boolean, default: true },
+		abuserScoreThreshold: { type: Number, min: 0, max: 1, default: 0 },
+		blockDatacenter: { type: Boolean, default: false },
+		datacenterNameAllowlist: { type: [String], required: false },
+		skipExtrasOnValidDnsPath: { type: Boolean, default: false },
+		blockMobile: { type: Boolean, default: false },
+		blockSatellite: { type: Boolean, default: false },
+		blockCrawler: { type: Boolean, default: false },
+	},
+	storeMetadata: {
+		type: Boolean,
+		default: false,
+		required: false,
+	},
+	honeypot: {
+		enabled: { type: Boolean, default: false },
+		question: { type: String, required: false },
+		encodingType: {
+			type: String,
+			enum: ["morse", "semaphore"],
+			default: "morse",
 		},
 	},
 });

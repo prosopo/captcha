@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,13 +14,23 @@
 
 import { ApiParams } from "@prosopo/types";
 
-export function getParentForm(widgetElement: Element): HTMLFormElement | null {
+type ParentForm = HTMLFormElement | null;
+
+export function getParentForm(widgetElement: Element): ParentForm {
+	const parentForm = widgetElement.closest("form") as ParentForm;
+
+	if (parentForm) {
+		return parentForm;
+	}
+
+	// fallback for widgets inside a shadow DOM
+
 	const rootWidgetNode = widgetElement.getRootNode();
+	if (rootWidgetNode instanceof ShadowRoot) {
+		return rootWidgetNode.host.closest("form") as ParentForm;
+	}
 
-	const topWidgetElement =
-		rootWidgetNode instanceof ShadowRoot ? rootWidgetNode.host : widgetElement;
-
-	return topWidgetElement.closest("form") as HTMLFormElement;
+	return null;
 }
 
 export const removeProcaptchaResponse = () => {

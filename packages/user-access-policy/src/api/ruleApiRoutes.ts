@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,8 @@ import type {
 	ApiRoutes,
 	ApiRoutesProvider,
 } from "@prosopo/api-route";
-import type { AllEnumValues, Logger } from "@prosopo/common";
+import type { AllEnumValues } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import { FetchRulesEndpoint } from "#policy/api/read/fetchRules.js";
 import { FindRuleIdsEndpoint } from "#policy/api/read/findRuleIds.js";
 import { GetMissingIdsEndpoint } from "#policy/api/read/getMissingIds.js";

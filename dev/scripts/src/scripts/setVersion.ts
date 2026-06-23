@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { parse, stringify } from "@iarna/toml";
-import { getLogger, parseLogLevel } from "@prosopo/common";
 import { loadEnv } from "@prosopo/dotenv";
+import { getLogger, parseLogLevel } from "@prosopo/logger";
 import { getRootDir } from "@prosopo/workspace";
 
 // We have to load env here if we're importing this file from cli/index.ts, otherwise, the env is loaded after the

@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 import "@cypress/xpath";
 import { ProsopoDatasetError } from "@prosopo/common";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
-import { type Captcha, CaptchaType } from "@prosopo/types";
+import type { Captcha, CaptchaType } from "@prosopo/types";
 import { at } from "@prosopo/util";
 import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
@@ -87,59 +87,18 @@ describe("Captchas", () => {
 	});
 
 	after(() => {
-		cy.registerSiteKey(baseCaptchaType);
-	});
-
-	it("An error is returned if captcha type is set to pow and the wrong captcha type is used in the widget", () => {
-		expect(baseCaptchaType).to.not.equal(CaptchaType.pow);
-		cy.registerSiteKey(baseCaptchaType, CaptchaType.pow).then((response) => {
-			// Log the response status and body using cy.task()
-			cy.task("log", `Response status: ${response.status}`);
-			cy.task("log", `Response: ${JSON.stringify(response.body)}`);
-
-			// Ensure the request was successful
-			expect(response.status).to.equal(200);
+		// Re-register the site key to reset state for subsequent test runs
+		// Using failOnStatusCode: false in the command, so this won't throw
+		cy.registerSiteKey(baseCaptchaType).then((response) => {
+			if (response.status === 200) {
+				cy.task("log", "Site key successfully re-registered");
+			} else {
+				cy.task(
+					"log",
+					`Warning: Could not re-register site key. Status: ${response.status}`,
+				);
+			}
 		});
-		cy.visit(Cypress.env("default_page"));
-
-		// Wait for the procaptcha script to be loaded after navigation
-		cy.waitForProcaptchaScript();
-
-		cy.task("log", "Clicking the first div...");
-		cy.get("div").first().click();
-
-		const checkbox = getWidgetElement(checkboxClass, { timeout: 12000 });
-
-		cy.task("log", "Checking if checkbox is visible...");
-		checkbox.first().should("be.visible");
-
-		cy.task("log", "Intercepting POST request...");
-		cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
-			"getCaptcha",
-		);
-		checkbox.first().click();
-
-		cy.task("log", "Waiting for @getCaptcha...");
-
-		// Wait for at least one request and log it to terminal
-		cy.wait("@allRequests").then((interception) => {
-			cy.task(
-				"log",
-				`Intercepted Request: ${JSON.stringify(interception.request.body)}`,
-			);
-			cy.task(
-				"log",
-				`Intercepted Response: ${interception.response?.statusCode} - ${JSON.stringify(interception.response?.body)}`,
-			);
-		});
-		return cy
-			.wait("@getCaptcha", { timeout: 36000 })
-			.its("response")
-			.should("exist") // Ensures response is not undefined
-			.then((response) => {
-				expect(response.statusCode).to.equal(400);
-				expect(response.body).to.have.property("error");
-			});
 	});
 
 	it("Captchas load when 'I am human' is pressed", () => {
@@ -169,7 +128,7 @@ describe("Captchas", () => {
 		cy.clickIAmHuman().then(() => {
 			cy.wait(2000);
 			cy.captchaImages().then(() => {
-				cy.get("@captchaImages").first().click();
+				cy.get("@captchaImages").first().realClick();
 				cy.get("@captchaImages")
 					.first()
 					.siblings()

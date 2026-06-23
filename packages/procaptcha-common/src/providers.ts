@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,15 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { getRandomActiveProvider } from "@prosopo/load-balancer";
-import type { EnvironmentTypes } from "@prosopo/types";
+import { type IpMode, getRandomActiveProvider } from "@prosopo/load-balancer";
+import type { EnvironmentTypes, RandomProvider } from "@prosopo/types";
 
+// Translate the user-facing ipv4/ipv6 booleans (set via ProcaptchaRenderOptions
+// or data-ipv4/data-ipv6) into the load-balancer's IpMode selector. ipv4 wins
+// if both are set; neither set leaves DNS in dual-stack mode (undefined).
+export const pickIpMode = (
+	flags: { ipv4?: boolean; ipv6?: boolean } | undefined,
+): IpMode | undefined => {
+	if (flags?.ipv4) return "ipv4";
+	if (flags?.ipv6) return "ipv6";
+	return undefined;
+};
+
+// Thin wrapper over the load-balancer's static-DNS endpoint resolver. Kept as
+// a separate export so widget packages (procaptcha, procaptcha-pow, …) import
+// from procaptcha-common rather than reaching into load-balancer directly.
 export const getProcaptchaRandomActiveProvider = async (
 	defaultEnvironment: EnvironmentTypes,
-) => {
-	const randomNumberU8a = window.crypto.getRandomValues(new Uint8Array(10));
-	const randomNumber = randomNumberU8a.reduce((a, b) => a + b, 0);
-	return await getRandomActiveProvider(defaultEnvironment, randomNumber);
+	ipMode?: IpMode,
+): Promise<RandomProvider> => {
+	return getRandomActiveProvider(defaultEnvironment, ipMode);
 };
 
 export const providerRetry = async (

@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Logger } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
+import type { IIpInfoService } from "@prosopo/types-env";
 import { Address4 } from "ip-address";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as ipComparisonModule from "../../services/ipComparison.js";
@@ -20,6 +21,7 @@ import { deepValidateIpAddress } from "../../util.js";
 
 describe("deepValidateIpAddress", () => {
 	let mockLogger: Logger;
+	let mockIpInfoService: IIpInfoService;
 	const compareIPsSpy = vi.spyOn(ipComparisonModule, "compareIPs");
 
 	beforeEach(() => {
@@ -30,6 +32,11 @@ describe("deepValidateIpAddress", () => {
 			log: vi.fn(),
 			warn: vi.fn(),
 		} as unknown as Logger;
+		mockIpInfoService = {
+			initialize: vi.fn(),
+			lookup: vi.fn(),
+			isAvailable: vi.fn().mockReturnValue(true),
+		};
 		vi.clearAllMocks();
 	});
 
@@ -41,8 +48,7 @@ describe("deepValidateIpAddress", () => {
 			ip,
 			challengeIp,
 			mockLogger,
-			"test-api-key",
-			"test-api-url",
+			mockIpInfoService,
 		);
 
 		expect(result.isValid).toBe(true);
@@ -83,8 +89,7 @@ describe("deepValidateIpAddress", () => {
 			ip,
 			challengeIp,
 			mockLogger,
-			"test-api-key",
-			"test-api-url",
+			mockIpInfoService,
 		);
 
 		expect(result.isValid).toBe(false);
@@ -126,8 +131,7 @@ describe("deepValidateIpAddress", () => {
 			ip,
 			challengeIp,
 			mockLogger,
-			"test-api-key",
-			"test-api-url",
+			mockIpInfoService,
 		);
 
 		expect(result.isValid).toBe(true);

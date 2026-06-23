@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 import { builtinModules } from "node:module";
 import { loadEnv } from "@prosopo/dotenv";
 import { defineConfig } from "cypress";
+import { configureVisualRegression } from "cypress-visual-regression";
 import vitePreprocessor from "cypress-vite";
 
 const allExternal = [
@@ -25,15 +26,23 @@ loadEnv();
 
 export default defineConfig({
 	video: true,
+	screenshotsFolder: "./cypress/snapshots/actual",
+	trashAssetsBeforeRuns: true,
 	headers: { "Accept-Encoding": "gzip, deflate" },
 	env: {
 		...process.env,
 		// For the client-example, the default page is the captcha type. For the client-bundle-example, the default_page
 		// is sometimes passed via --env default_page='/THE_PAGE.html'" inside package.json scripts.
-		default_page: `/${process.env.CAPTCHA_TYPE || ""}`,
+		default_page: "/",
+		visualRegressionType: "regression",
+		visualRegressionBaseDirectory: "cypress/snapshots/baseline",
+		visualRegressionDiffDirectory: "cypress/snapshots/diff",
+		visualRegressionGenerateDiff: "fail",
+		visualRegressionFailSilently: false,
 	},
 	e2e: {
 		setupNodeEvents(on, config) {
+			configureVisualRegression(on);
 			on(
 				"file:preprocessor",
 				vitePreprocessor({

@@ -13,6 +13,9 @@
 			"path": "../../packages/common/tsconfig.cjs.json"
 		},
 		{
+			"path": "../../packages/logger/tsconfig.cjs.json"
+		},
+		{
 			"path": "../../packages/util/tsconfig.cjs.json"
 		},
 		{

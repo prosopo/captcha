@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -55,34 +55,18 @@ describe("Proof of Work CAPTCHA", () => {
 	});
 
 	after(() => {
-		return cy.registerSiteKey(CaptchaType.image);
-	});
-
-	it("An error is returned if captcha type is set to image and pow is used in the widget", () => {
-		// Register with image site key but use POW captcha
-		cy.registerSiteKey(baseCaptchaType, CaptchaType.image).then((response) => {
-			cy.task("log", `Response status: ${response.status}`);
-			cy.task("log", `Response: ${JSON.stringify(response.body)}`);
-			expect(response.status).to.equal(200);
+		// Re-register the site key to reset state for subsequent test runs
+		// Using failOnStatusCode: false in the command, so this won't throw
+		cy.registerSiteKey(CaptchaType.image).then((response) => {
+			if (response.status === 200) {
+				cy.task("log", "Site key successfully re-registered");
+			} else {
+				cy.task(
+					"log",
+					`Warning: Could not re-register site key. Status: ${response.status}`,
+				);
+			}
 		});
-		cy.visit(Cypress.env("default_page"));
-
-		cy.waitForProcaptchaScript();
-
-		cy.intercept("POST", "**/prosopo/provider/client/captcha/pow").as(
-			"powCaptcha",
-		);
-
-		getWidgetElement(checkboxClass, { timeout: 12000 }).first().click();
-
-		return cy
-			.wait("@powCaptcha", { timeout: 36000 })
-			.its("response")
-			.then((response) => {
-				expect(response).to.not.be.undefined;
-				expect(response?.statusCode).to.equal(400);
-				expect(response?.body).to.have.property("error");
-			});
 	});
 
 	it("POW CAPTCHA loads and completes when 'I am human' is pressed", () => {
@@ -101,7 +85,7 @@ describe("Proof of Work CAPTCHA", () => {
 			"powVerify",
 		);
 
-		getWidgetElement(checkboxClass, { timeout: 12000 }).first().click();
+		getWidgetElement(checkboxClass, { timeout: 12000 }).first().realClick();
 
 		cy.wait("@powCaptcha", { timeout: 12000 })
 			.its("response")

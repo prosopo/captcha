@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { PolicyScope, UserIp, UserScope } from "#policy/rule.js";
+import {
+	AccessPolicyType,
+	type PolicyScope,
+	type UserIp,
+	type UserScope,
+} from "#policy/rule.js";
 import { userScopeSchema } from "#policy/ruleInput/userScopeInput.js";
 import {
 	type AccessRulesFilter,
@@ -52,6 +57,10 @@ const userIpQueries: Record<keyof UserIp, QueryBuilder> = {
 		if (scope.numericIp !== undefined) {
 			return ""; // handled by numericIp
 		}
+		// When all IP fields are undefined, numericIp handler already emits all ismissing clauses
+		if (value === undefined && scope.numericIpMaskMax === undefined) {
+			return "";
+		}
 		return value !== undefined
 			? `@numericIpMaskMin:[-inf ${value}]`
 			: "ismissing(@numericIpMaskMin)";
@@ -59,6 +68,10 @@ const userIpQueries: Record<keyof UserIp, QueryBuilder> = {
 	numericIpMaskMax: (value, scope) => {
 		if (scope.numericIp !== undefined) {
 			return ""; // handled by numericIp
+		}
+		// When all IP fields are undefined, numericIp handler already emits all ismissing clauses
+		if (value === undefined && scope.numericIpMaskMin === undefined) {
+			return "";
 		}
 		return value !== undefined
 			? `@numericIpMaskMax:[${value} +inf]`
@@ -125,6 +138,10 @@ const FIELDS_REQUIRING_ESCAPE: ReadonlySet<keyof UserScope> = new Set([
 	"coords",
 ]);
 
+// Fields indexed as NUMERIC in RediSearch — must use range syntax `@x:[N N]`,
+// not the TAG syntax `@x:{N}`, or lookups silently return no results.
+const NUMERIC_FIELDS: ReadonlySet<keyof UserScope> = new Set(["asn"]);
+
 const getUserScopeFieldQuery = (
 	fieldName: keyof UserScope,
 	fieldValue: unknown,
@@ -142,6 +159,11 @@ const getUserScopeFieldQuery = (
 	}
 
 	const stringValue = String(fieldValue);
+
+	if (NUMERIC_FIELDS.has(fieldName)) {
+		return `@${fieldName}:[${stringValue} ${stringValue}]`;
+	}
+
 	// Only escape fields that may contain special characters (like coords with JSON)
 	const queryValue = FIELDS_REQUIRING_ESCAPE.has(fieldName)
 		? escapeTagValue(stringValue)
@@ -184,6 +206,10 @@ export const getRulesRedisQuery = (
 
 	if (filter.groupId) {
 		queryParts.push(`@groupId:{${filter.groupId}}`);
+	}
+
+	if (filter.blockOnly) {
+		queryParts.push(`@type:{${AccessPolicyType.Block}}`);
 	}
 
 	const policyScopeQuery = getPolicyScopeQuery(

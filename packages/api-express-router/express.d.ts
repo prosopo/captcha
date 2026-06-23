@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Logger } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
+import type { IPInfoResponse } from "@prosopo/types";
 import type { TFunction } from "i18next";
 
 declare global {
@@ -27,6 +28,7 @@ declare global {
 			ja4: string;
 			logger: Logger;
 			requestId?: string;
+			ipInfo?: IPInfoResponse;
 		}
 	}
 }

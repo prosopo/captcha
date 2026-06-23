@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
 // limitations under the License.
 
 export * from "./tasks/index.js";
+export { updateSpamEmailDomains } from "./tasks/spam/updateSpamEmailDomains.js";
 export * from "./util.js";
 export * from "./api/block.js";
 export * from "./api/captcha.js";
@@ -20,12 +21,16 @@ export * from "./api/verify.js";
 export * from "./api/ja4Middleware.js";
 export * from "./api/public.js";
 export * from "./api/domainMiddleware.js";
+export * from "./api/startProviderApi.js";
 export * from "./schedulers/captchaScheduler.js";
 export * from "./schedulers/getClientList.js";
 export * from "./schedulers/setClientEntropy.js";
+export * from "./schedulers/updateSpamEmailDomains.js";
 export * from "./api/headerCheckMiddleware.js";
 export * from "./api/admin/createApiAdminRoutesProvider.js";
 export * from "./api/ignoreMiddleware.js";
 export * from "./api/robotsMiddleware.js";
 export * from "./compositeIpAddress.js";
 export * from "./services/ipComparison.js";
+export * from "./api/blacklistRequestInspector.js";
+export { FrictionlessReason } from "./tasks/frictionless/frictionlessTasks.js";

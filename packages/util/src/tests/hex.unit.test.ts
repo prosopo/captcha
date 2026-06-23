@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -93,5 +93,19 @@ describe("extractData", () => {
 	test("it extracts data from the start and end of the string 4", () => {
 		const result = extractData(embedData(hex, [99999, 99999]));
 		expect(result).to.deep.equal([99999, 99999]);
+	});
+
+	test("throws when a value slice decodes to NaN (length=0)", () => {
+		const malformed = "0x010200";
+		expect(() => extractData(malformed)).to.throw(/invalid value/);
+	});
+
+	test("throws when the count byte itself is non-hex (NaN)", () => {
+		expect(() => extractData("0xzz")).to.throw(/invalid value/);
+	});
+
+	test("throws when a value parses above Number.MAX_SAFE_INTEGER", () => {
+		const malformed = `0x010610${"f".repeat(16)}`;
+		expect(() => extractData(malformed)).to.throw(/invalid value/);
 	});
 });

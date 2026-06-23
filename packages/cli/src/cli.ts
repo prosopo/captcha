@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import process from "node:process";
-import { LogLevel, getLogger } from "@prosopo/common";
 import { loadEnv } from "@prosopo/dotenv";
 import { getPair } from "@prosopo/keyring";
 import { loadI18next } from "@prosopo/locale";
+import { LogLevel, getLogger } from "@prosopo/logger";
 import type { ProsopoConfigOutput } from "@prosopo/types";
 import { isMain } from "@prosopo/util";
 import { processArgs } from "./argv.js";

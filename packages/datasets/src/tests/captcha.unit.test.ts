@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import {
 	type Item,
 	type MerkleProof,
 } from "@prosopo/types";
-import type { SolutionRecord } from "@prosopo/types-database";
+import type { SolutionRecord } from "@prosopo/types";
 import { at, get } from "@prosopo/util";
 import { beforeAll, describe, expect, test } from "vitest";
 import { NO_SOLUTION_VALUE, getSolutionValueToHash } from "../captcha/index.js";

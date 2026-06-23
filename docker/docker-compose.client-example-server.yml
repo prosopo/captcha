@@ -13,7 +13,7 @@ services:
         env_file:
             - ../.env.${NODE_ENV}
         ports:
-            - '9228:9228'
+            - '127.0.0.1:9228:9228'
         networks:
             internal:
             external:
@@ -65,7 +65,7 @@ services:
             - 208.67.222.222
     database1:
         container_name: database1
-        image: mongo:6.0.17
+        image: mongo:8.2.3
         volumes:
             - /data/client-example-server:/data/db
         ports:

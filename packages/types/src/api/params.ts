@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -53,5 +53,31 @@ export enum ApiParams {
 	expirationInSeconds = "expirationInSeconds",
 	enabled = "enabled",
 	headHash = "headHash",
+	behavioralData = "behavioralData",
+	simdReadings = "simdReadings",
+	decisionMachineScope = "decisionMachineScope",
+	decisionMachineRuntime = "decisionMachineRuntime",
+	decisionMachineSource = "decisionMachineSource",
+	decisionMachineLanguage = "decisionMachineLanguage",
+	decisionMachineName = "decisionMachineName",
+	decisionMachineVersion = "decisionMachineVersion",
+	decisionMachineCaptchaType = "decisionMachineCaptchaType",
+	decisionMachineKind = "decisionMachineKind",
 	salt = "salt",
+	email = "email",
+	targetX = "targetX",
+	targetY = "targetY",
+	originX = "originX",
+	originY = "originY",
+	finalX = "finalX",
+	finalY = "finalY",
+	puzzleEvents = "puzzleEvents",
+	tolerance = "tolerance",
+	mode = "mode",
+	reason = "reason",
+	escalation = "escalation",
+	hp = "hp",
+	clientMetaData = "clientMetaData",
+	honeypot = "honeypot",
+	fingerprintProof = "fingerprintProof",
 }

@@ -6,7 +6,7 @@ import { u8aToHex } from "@prosopo/util";
 import { lodash } from "@prosopo/util/lodash";
 import cliProgress from "cli-progress";
 import sharp from "sharp";
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.

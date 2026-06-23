@@ -1,5 +1,490 @@
 # @prosopo/api
 
+## 3.5.5
+### Patch Changes
+
+- 12cd0a6: Replace client-side weighted-random provider selection with static DNS endpoints.
+  
+  - Removed the `providerSelectEntropy` field from `DetectorResult`, `Session`, the
+    Mongoose `SessionRecordSchema` (including its standalone index), and every
+    call-site that threaded it through frictionless / image / pow / puzzle flows.
+  - Removed `FrictionlessManager.hostVerified` and its decision-machine call site
+    — there's nothing to verify when the DNS layer picks the host.
+  - `getRandomActiveProvider(env)` now returns the per-environment static DNS
+    endpoint (`pronode.prosopo.io` family) instead of fetching the provider list
+    and weighted-selecting. The entropy parameter is gone.
+  - `getProcaptchaRandomActiveProvider` is now a thin re-export so widget packages
+    keep importing from `procaptcha-common`.
+  - `FrontendProvider.datasetId` is dropped; `CaptchaRequestBody.datasetId` is
+    optional. The server falls back to its own most-recently-uploaded dataset
+    (`env.datasetId`, populated from `db.getMostRecentDatasetId()` at startup) —
+    clients can't pin a dataset under DNS routing because they don't know which
+    pronode they'll hit.
+  - Removed dead `setProviderLoader` / `prefetchProviders` / `selectWeightedProvider`
+    plumbing from `@prosopo/load-balancer`. The server's cacheFile-based loader
+    setup in `startProviderApi` goes with them.
+  - `getRandomActiveProvider` now hits `/healthz` on the global hostname once per
+    page load, reads the responding pronode's identity from the JSON body, and
+    pins subsequent captcha calls to that pronode (`https://pronodeN.prosopo.io`)
+    so session creation and submission land on the same backend. Falls back to
+    the dual-stack global hostname when `/healthz` is unreachable.
+  - `/healthz` now returns `{ ok: true, host: <pronode-identity> }` instead of
+    `"OK"` to support the above pinning.
+  - CORS preflight is now cached for 24h (`maxAge: 86400`) — previously the
+    browser refired an OPTIONS preflight before every captcha call because
+    the custom `Prosopo-Site-Key` / `Prosopo-User` headers make the request
+    non-simple and the default `maxAge` is 5s.
+- Updated dependencies [12cd0a6]
+- Updated dependencies [12cd0a6]
+  - @prosopo/types@4.8.0
+
+## 3.5.4
+### Patch Changes
+
+- bb98af1: Add `DecisionMachineKind` (`routing` | `decision`) to separate routing and decision artifacts on the same provider.
+  
+  - New `DecisionMachineKind` enum in `@prosopo/types`.
+  - `DecisionMachineArtifact` and the Mongoose `DecisionMachineArtifactRecordSchema` gain an optional `kind` field; the unique compound index becomes `(scope, dappAccount, kind)` so a routing machine and a decision machine can coexist for the same scope/dapp.
+  - `ProviderApi.updateDecisionMachine` accepts an optional `kind` 10th arg; the `apiUpdateDecisionMachineEndpoint` admin handler reads `decisionMachineKind` from the request body and forwards it.
+  - `ClientTaskManager.updateDecisionMachine` and the artifact-listing returns include `kind`.
+  - `ProviderDatabase.getDecisionMachineArtifact` filters by `kind` when supplied; `upsertDecisionMachineArtifact` defaults missing `kind` to `Routing` for backward compatibility on existing rows.
+  - `DecisionMachineRunner` keys its in-memory cache by `(scope, kind, dappAccount)` and selects the appropriate artifact for `runDecisionMachine` (kind=`decision`), `runRoutingMachine` (kind=`routing`) and `runCounterMachine` (kind=`routing`).
+  - `DecisionMachineArtifactRecordSchema.captchaType` enum now includes `CaptchaType.puzzle` alongside `pow`/`image`.
+- Updated dependencies [bb98af1]
+  - @prosopo/types@4.7.4
+
+## 3.5.3
+### Patch Changes
+
+- Updated dependencies [89ab6fc]
+- Updated dependencies [0f3750b]
+  - @prosopo/types@4.7.3
+
+## 3.5.2
+### Patch Changes
+
+- Updated dependencies [edcd450]
+- Updated dependencies [5295c4b]
+  - @prosopo/types@4.7.2
+
+## 3.5.1
+### Patch Changes
+
+- Updated dependencies [46fedf4]
+  - @prosopo/types@4.7.1
+
+## 3.5.0
+### Minor Changes
+
+- dde23e8: Internal bot-detection signal improvements.
+
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/types@4.7.0
+
+## 3.4.14
+### Patch Changes
+
+- Updated dependencies [4626340]
+  - @prosopo/types@4.6.1
+
+## 3.4.13
+### Patch Changes
+
+- Updated dependencies [55b1388]
+  - @prosopo/types@4.6.0
+
+## 3.4.12
+### Patch Changes
+
+- Updated dependencies [9b91e85]
+- Updated dependencies [c80a05b]
+  - @prosopo/types@4.5.0
+
+## 3.4.11
+### Patch Changes
+
+- 3973078: Track every lifecycle timestamp on every captcha type, and switch the dapp-verify recency check from issuance→verify to **submit→verify** with the window sourced from per-client settings.
+  
+  ### Lifecycle timestamps
+  
+  `StoredCaptcha` (the base shared by PoW, Puzzle, and Image/UserCommitment) gains three new fields:
+  
+  - `submittedAtTimestamp` — set once on the first user-submission write, never overwritten.
+  - `verifiedAtTimestamp` — set once when the dapp first calls /verify, never overwritten.
+  - `failedAtTimestamp` — set once on the first non-approved terminal state, never overwritten.
+  
+  `lastUpdatedTimestamp` keeps its "last write of any kind" meaning. The new fields use `$ifNull` in aggregation-pipeline updates so the stamp lands only on the first transition — concurrent or repeat writes are no-ops on the lifecycle stamps.
+  
+  ### Submit→verify window
+  
+  The dapp-verify recency check used to be `now - challengeTimestamp <= timeout`. The window was issuance→verify, which gave bots room to stockpile pre-solved solutions and redeem them many seconds (sometimes minutes) later from the time they reached the provider.
+  
+  The check is now `now - challengeRecord.submittedAtTimestamp <= clientSettings.verifiedTimeout`. The window measures from the moment the user's solution actually arrived. Combined with the new lifecycle fields, this tightens the stockpile attack surface.
+  
+  ### Settings move
+  
+  `verifiedTimeout` moves to `ClientSettingsSchema` (per-client, operator-set via the portal). Default stays at 120000ms for back-compat; auto-submit dapps should set it to ~10000ms.
+  
+  Removed from request bodies entirely:
+  
+  - `ServerPowCaptchaVerifyRequestBody`
+  - `ServerPuzzleCaptchaVerifyRequestBody`
+  - `SubmitPowCaptchaSolutionBody`
+  - `SubmitPuzzleCaptchaSolutionBody`
+  
+  The client field was client-controlled and unsigned — any caller could raise the recency ceiling. It's now server-determined.
+  
+  `ProviderApiInterface.submitPow/PuzzleCaptchaSolution` lose their `timeout` parameter (no longer forwarded). The verify wrappers keep their `recencyLimit` parameter for caller back-compat but the value is no longer transmitted; server reads from the client settings instead.
+  
+  ### Migration
+  
+  Pre-PR records with `userSubmitted=true` but no `submittedAtTimestamp` will fail the new recency check. The submit window is short (120s default verifiedTimeout) so the migration cliff is naturally bounded — records in flight at deploy time expire within ~2 minutes.
+  
+  348 provider unit tests + 28 database tests pass.
+- Updated dependencies [f69724f]
+- Updated dependencies [3973078]
+  - @prosopo/types@4.4.1
+
+## 3.4.10
+### Patch Changes
+
+- Updated dependencies [bc3813d]
+- Updated dependencies [4d05e3f]
+  - @prosopo/types@4.4.0
+
+## 3.4.9
+### Patch Changes
+
+- Updated dependencies [b03dad1]
+  - @prosopo/types@4.3.1
+
+## 3.4.8
+### Patch Changes
+
+- Updated dependencies [a1d60db]
+- Updated dependencies [2392aaf]
+  - @prosopo/types@4.3.0
+
+## 3.4.7
+### Patch Changes
+
+- 6c26669: Add per-site honeypot trap. When enabled, the provider attaches an encoded question (morse or semaphore, base64-wrapped) in the `x-prosopo-meta` response header on frictionless responses. The widget renders the value into an off-screen hidden input with `name="email_confirm"`; bots that auto-fill text inputs populate it and the value rides back on the solution submit as `clientMetaData.hp`, which is persisted on the `StoredCaptcha` record. Falls back to a random phrase from `PROSOPO_HONEYPOT_PHRASE_BANK_PATH` when no custom question is configured.
+- Updated dependencies [6c26669]
+- Updated dependencies [f7f9ec5]
+  - @prosopo/types@4.2.1
+
+## 3.4.6
+### Patch Changes
+
+- Updated dependencies [20cae63]
+- Updated dependencies [4d9923e]
+  - @prosopo/types@4.2.0
+
+## 3.4.5
+### Patch Changes
+
+- Updated dependencies [d351362]
+  - @prosopo/types@4.1.4
+
+## 3.4.4
+### Patch Changes
+
+- Updated dependencies [e2711ae]
+- Updated dependencies [5786629]
+  - @prosopo/types@4.1.3
+
+## 3.4.3
+### Patch Changes
+
+  - @prosopo/types@4.1.2
+
+## 3.4.2
+### Patch Changes
+
+- 91958da: Puzzle captcha + maintenance mode hardening, plus a refactor of the
+  frictionless handler into focused modules.
+  
+  - **Puzzle captcha now records checkbox-click coordinates like POW.** Adds an
+    optional `salt` field to `SubmitPuzzleCaptchaSolutionBody`; the puzzle
+    widget hashes the click coords into the salt and the server decodes them
+    into the puzzle record's `coords` field on submit. New `start(x, y)`
+    parameters on `procaptcha-puzzle` Manager + widget.
+  - **Fix puzzle "No session found" caused by stale Redis dedup.** The
+    `/frictionless` dedup path is now Mongo-authoritative — Redis is no
+    longer consulted as a session source. A concurrent `/captcha/{type}`
+    invalidation could previously race a fire-and-forget Redis repopulation
+    in the `/frictionless` dedup branch, leaving Redis pointing at a
+    Mongo-deleted session for the full 1-hour TTL. Stale pointers are now
+    evicted lazily.
+  - **Maintenance mode operates without MongoDB.** `/frictionless` and
+    `/captcha/{pow,puzzle}` short-circuit to dummy responses before any DB
+    call, and `Environment.isReady()` tolerates a Mongo connect failure when
+    `MAINTENANCE_MODE=true` so the provider can start with Mongo down.
+  - **Refactor `getFrictionlessCaptchaChallenge.ts` into focused modules** under
+    `getFrictionlessCaptchaChallenge/` (handler, sessionDedup, shortCircuit,
+    accessPolicy, decisionMachine, decryptSimdReadings, constants). Original
+    import path preserved via a re-export shim.
+  - **Move `RedisWriteQueue` from `@prosopo/provider` to `@prosopo/database`**
+    (where the Redis connection itself lives), and clear residual Redis
+    session keys at provider startup via `Environment.cleanup()` so a
+    previously-crashed run can't leak stale dedup pointers.
+  - Adds puzzle-type branch to access-policy handling in `/frictionless`.
+- Updated dependencies [91958da]
+  - @prosopo/types@4.1.1
+
+## 3.4.1
+### Patch Changes
+
+- Updated dependencies [6a741ce]
+  - @prosopo/types@4.1.0
+
+## 3.4.0
+### Minor Changes
+
+- d865319: Add puzzle captcha (drag-to-target challenge) as a new captcha type:
+  provider endpoints, manager + widget package, types, demo pages, and
+  a `puzzleTolerance` site setting.
+
+### Patch Changes
+
+- 3c0be68: Add a new admin-only endpoint `POST /v1/prosopo/provider/admin/counters/clear-all`
+  for deleting per-sitekey usage counters from Redis. Intended for manual
+  testing of routing decision machines and staging-environment resets — not
+  part of the hot path.
+  
+  - `ClearAllCountersBody` (optional `dapp`) and `ClearAllCountersResponse`
+    (`success`, `deletedCount`, `scope`) zod schemas in `@prosopo/types`,
+    plus `AdminApiPaths.ClearAllCounters` and a 10/60s rate limit.
+  - `UsageCounters.clearAll(dappAccount?)` in the provider, using Redis
+    `SCAN` + `DEL` in 500-key batches. Returns null on Redis failure so
+    callers can surface the underlying error.
+  - `ApiClearAllCountersEndpoint` wired through `ApiAdminRoutesProvider`.
+  - `ProviderApi.clearAllCounters(jwt, dappAccount?)` client method.
+- 4aae4e6: Plumb the WASM SIMD CPU fingerprint readings (collected by the catcher
+  client per https://blog.azerpas.com/writing/wasm-simd-fingerprinting/)
+  through the captcha flow and onto the linked `Session` record.
+  Collection-only — no scoring or classification yet.
+  
+  The readings are sent at the earliest moment they're available so the
+  signal lands on the session as soon as possible:
+  
+  1. **Captcha-challenge GET** (PoW / Puzzle / Image) — the procaptcha
+     Manager calls `frictionlessState.getSimdReadings(0)` (non-blocking
+     cache check) and attaches it to the challenge-request body. The
+     provider handler decodes and patches the linked session via
+     `updateSessionRecord`.
+  2. **Solution submission** (PoW / Puzzle / Image) — same non-blocking
+     check on the submit body. Acts as a backup if the benchmark wasn't
+     ready in time for the challenge GET.
+  
+  Frictionless init itself stays SIMD-free (benchmark is too slow to gate
+  the first hop).
+  
+  Surface area:
+  
+  - `SimdReadings` discriminated union + `SimdOpReadingRecord` /
+    `SimdOpCategory` in `@prosopo/types`, plus `simdReadingsCodec` shared
+    encode/decode helpers so the browser SDK and the provider use the same
+    pipe-safe wire format.
+  - Optional `simdReadings: string()` on `CaptchaRequestBody`,
+    `GetPowCaptchaChallengeRequestBody`, `GetPuzzleCaptchaChallengeRequestBody`,
+    `CaptchaSolutionBody`, `SubmitPowCaptchaSolutionBody`, and
+    `SubmitPuzzleCaptchaSolutionBody`.
+  - `FrictionlessState.getSimdReadings` + `BotDetectionFunctionResult.getSimdReadings`
+    so the catcher's prefetched benchmark is consumed at the request sites.
+  - `ProcaptchaApiInterface.{getCaptchaChallenge, submitCaptchaSolution}` and
+    the `ProviderApi.{getCaptchaChallenge, getPowCaptchaChallenge, getPuzzleCaptchaChallenge,
+    submitCaptchaSolution, submitPowCaptchaSolution, submitPuzzleCaptchaSolution}`
+    client methods accept the field.
+  - Provider challenge + solution handlers decode via `decodeSimdReadings`
+    and `updateSessionRecord` (Mongoose `Mixed`, Zod discriminated-union
+    validation at the edge). The challenge-GET patch is fire-and-forget.
+  
+  Backward-compatible: older catcher clients omit the field at every layer;
+  the session record omits it in turn.
+- Updated dependencies [3c0be68]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [d865319]
+- Updated dependencies [753304b]
+- Updated dependencies [8bb7286]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [4aae4e6]
+  - @prosopo/types@4.0.0
+
+## 3.3.2
+### Patch Changes
+
+- 819ed95: Adding invisible mode to session data
+- Updated dependencies [819ed95]
+  - @prosopo/types@3.16.1
+
+## 3.3.1
+### Patch Changes
+
+- f6a4402: API endpoint for removing site keys
+- Updated dependencies [f6a4402]
+- Updated dependencies [99dfb44]
+  - @prosopo/types@3.16.0
+
+## 3.3.0
+### Minor Changes
+
+- 3e54c0a: Rate limits by client
+
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+
+## 3.2.11
+### Patch Changes
+
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+  - @prosopo/types@3.14.1
+
+## 3.2.10
+### Patch Changes
+
+- 7be39c4: Add register site keys endpoint def
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+  - @prosopo/types@3.14.0
+
+## 3.2.9
+### Patch Changes
+
+  - @prosopo/types@3.13.3
+
+## 3.2.8
+### Patch Changes
+
+  - @prosopo/types@3.13.2
+
+## 3.2.7
+### Patch Changes
+
+  - @prosopo/types@3.13.1
+
+## 3.2.6
+### Patch Changes
+
+- Updated dependencies [e6d9553]
+  - @prosopo/types@3.13.0
+
+## 3.2.5
+### Patch Changes
+
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/types@3.12.3
+
+## 3.2.4
+### Patch Changes
+
+- adb89a6: Disposable email checking
+- Updated dependencies [adb89a6]
+  - @prosopo/types@3.12.2
+
+## 3.2.3
+### Patch Changes
+
+- Updated dependencies [a90eb54]
+  - @prosopo/types@3.12.1
+
+## 3.2.2
+### Patch Changes
+
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/types@3.12.0
+
+## 3.2.1
+### Patch Changes
+
+- Updated dependencies [8148587]
+  - @prosopo/types@3.11.1
+
+## 3.2.0
+### Minor Changes
+
+- 7f6ffc5: Store behavioural for image challenges
+
+### Patch Changes
+
+- Updated dependencies [7f6ffc5]
+  - @prosopo/types@3.11.0
+
+## 3.1.49
+### Patch Changes
+
+- 93fa086: Add decision engine endpoints
+- Updated dependencies [93fa086]
+  - @prosopo/types@3.10.2
+
+## 3.1.48
+### Patch Changes
+
+- Updated dependencies [cde7550]
+  - @prosopo/types@3.10.1
+
+## 3.1.47
+### Patch Changes
+
+- Updated dependencies [ad6d622]
+  - @prosopo/types@3.10.0
+
+## 3.1.46
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+  - @prosopo/types@3.9.0
+
+## 3.1.45
+### Patch Changes
+
+- Updated dependencies [d2431cd]
+  - @prosopo/types@3.8.4
+
+## 3.1.44
+### Patch Changes
+
+- Updated dependencies [bd6995b]
+  - @prosopo/types@3.8.3
+
+## 3.1.43
+### Patch Changes
+
+- 9633e58: Add captcha type to decision machine and run on image verification"
+- Updated dependencies [9633e58]
+  - @prosopo/types@3.8.2
+
+## 3.1.42
+### Patch Changes
+
+- f52a5c1: Adding decision machine to provider for behavior detection
+- Updated dependencies [f52a5c1]
+  - @prosopo/types@3.8.1
+
+## 3.1.41
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 7543d17: mouse movements bot stopping
+- 3acc333: Release 3.3.0
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [7543d17]
+- Updated dependencies [3acc333]
+  - @prosopo/types@3.8.0
+
 ## 3.1.40
 ### Patch Changes
 

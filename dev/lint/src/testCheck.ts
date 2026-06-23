@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -76,8 +76,37 @@ const testCheck = (args: {
 		} else {
 			// package has no test script
 			if (testFiles.length > 0) {
-				// but has test files
-				throw new Error(`${pkgJsonPath} has test files but no test script!`);
+				// but has test files - add test script and copy vite config
+				console.log(`Adding test script to ${pkgJsonPath}`);
+
+				// Add test script to package.json
+				if (!pkgJson.scripts) {
+					pkgJson.scripts = {};
+				}
+				pkgJson.scripts.test = "vitest run --config vite.test.config.ts";
+
+				// Write updated package.json
+				fs.writeFileSync(pkgJsonPath, `${JSON.stringify(pkgJson, null, 2)}\n`);
+
+				// Copy vite.test.config.ts to package directory
+				const sourceConfigPath = path.resolve(
+					path.dirname(args.pkg),
+					"packages/dev-private/src/vite.test.config.ts",
+				);
+				const destConfigPath = path.join(
+					path.dirname(pkgJsonPath),
+					"vite.test.config.ts",
+				);
+
+				if (fs.existsSync(sourceConfigPath)) {
+					const configContent = fs.readFileSync(sourceConfigPath, "utf8");
+					fs.writeFileSync(destConfigPath, configContent);
+					console.log(`Copied vite.test.config.ts to ${destConfigPath}`);
+				} else {
+					throw new Error(
+						`Could not find vite.test.config.ts at ${sourceConfigPath}`,
+					);
+				}
 			} // else has no test files - fine
 		}
 	}

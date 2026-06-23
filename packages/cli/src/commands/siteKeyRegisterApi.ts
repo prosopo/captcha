@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,15 +13,15 @@
 // limitations under the License.
 
 import { ProviderApi } from "@prosopo/api";
-import { LogLevel, type Logger, getLogger } from "@prosopo/common";
 import { ProviderEnvironment } from "@prosopo/env";
+import { LogLevel, type Logger, getLogger } from "@prosopo/logger";
 import type { KeyringPair } from "@prosopo/types";
 import {
 	CaptchaTypeSpec,
 	type ProsopoConfigOutput,
 	Tier,
+	puzzleToleranceDefault,
 } from "@prosopo/types";
-import { u8aToHex } from "@prosopo/util";
 import type { ArgumentsCamelCase, Argv } from "yargs";
 import { z } from "zod";
 import { SiteKeyRegisterCommandArgsSpec } from "./siteKeyRegister.js";
@@ -86,6 +86,11 @@ export default (
 					type: "number" as const,
 					demandOption: false,
 					desc: "Image threshold for settings",
+				} as const)
+				.option("image_max_rounds", {
+					type: "number" as const,
+					demandOption: false,
+					desc: "Max image rounds",
 				} as const),
 		handler: async (argv: ArgumentsCamelCase) => {
 			try {
@@ -99,10 +104,10 @@ export default (
 					domains,
 					pow_difficulty,
 					image_threshold,
+					image_max_rounds,
 				} = SiteKeyRegisterApiCommandArgsSpec.parse(argv);
 				const api = new ProviderApi(url as string, pair.address);
-				const timestamp = new Date().getTime().toString();
-				const signature = u8aToHex(authAccount.sign(timestamp));
+				const jwt = pair.jwtIssue();
 				await api.registerSiteKey(
 					sitekey as string,
 					argv.tier as Tier,
@@ -112,10 +117,13 @@ export default (
 						domains: domains || [],
 						powDifficulty: pow_difficulty as number,
 						imageThreshold: image_threshold as number,
+						imageMaxRounds: image_max_rounds as number,
+						puzzleTolerance: puzzleToleranceDefault,
 						disallowWebView: false,
+						verifiedTimeout: 60000,
+						solutionTimeout: 60000,
 					},
-					timestamp,
-					signature,
+					jwt,
 				);
 				logger.info(() => ({
 					data: { sitekey },

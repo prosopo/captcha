@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,8 +17,9 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import { type AllKeys, LogLevel, type Logger } from "@prosopo/common";
-import { type ZodType, z } from "zod";
+import type { AllKeys } from "@prosopo/common";
+import { LogLevel, type Logger } from "@prosopo/logger";
+import { type ZodType, type ZodTypeDef, z } from "zod";
 import type {
 	AccessPolicy,
 	AccessRule,
@@ -28,6 +29,7 @@ import type {
 import {
 	accessPolicyInput,
 	policyScopeInput,
+	sanitizeAccessPolicy,
 } from "#policy/ruleInput/policyInput.js";
 import {
 	type UserScopeInput,
@@ -54,7 +56,9 @@ type ParsedInsertRulesGroup = InsertRulesGroup & {
 
 type ParsedInsertRuleGroups = ParsedInsertRulesGroup[];
 
-type InsertRulesSchema = ZodType<InsertRulesGroup[]>;
+// Input position widened to `unknown` because `accessPolicyInput` uses
+// `z.preprocess` on `deferToVerify` for Redis string round-tripping.
+type InsertRulesSchema = ZodType<InsertRulesGroup[], ZodTypeDef, unknown>;
 
 export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 	public constructor(
@@ -76,7 +80,10 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 
 	async processRequest(
 		args: ParsedInsertRuleGroups,
+		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
+		const log = logger ?? this.logger;
+
 		const timeoutPromise = new Promise<ApiEndpointResponse>((resolve) => {
 			setTimeout(() => {
 				resolve({
@@ -92,7 +99,7 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 
 		const createRulesPromise = this.createRuleGroups(args)
 			.then((insertedIds) => {
-				this.logger.info(() => ({
+				log.info(() => ({
 					msg: "Endpoint inserted access rules",
 					data: {
 						userScopesCount: userScopesCount,
@@ -101,7 +108,7 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 					},
 				}));
 
-				this.logger.debug(() => ({
+				log.debug(() => ({
 					msg: "Inserted access rules details",
 					data: {
 						insertedIds,
@@ -114,8 +121,8 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 				};
 			})
 			.catch((error) => {
-				if (LogLevel.enum.debug === this.logger.getLogLevel()) {
-					this.logger.error(() => ({
+				if (LogLevel.enum.debug === log.getLogLevel()) {
+					log.error(() => ({
 						err: error,
 						data: { args },
 						msg: "Failed to insert access rules",
@@ -145,10 +152,12 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 	): Promise<string[]> {
 		const ruleEntries: AccessRuleEntry[] = [];
 		const policyScopes = group.policyScopes || [];
+		// Sanitize the access policy to remove unnecessary fields from block policies
+		const sanitizedPolicy = sanitizeAccessPolicy(group.accessPolicy);
 
 		for (const userScope of group.userScopes) {
 			const ruleBase: AccessRule = {
-				...group.accessPolicy,
+				...sanitizedPolicy,
 				...userScope,
 				...(group.groupId ? { groupId: group.groupId } : {}),
 			};
@@ -160,6 +169,7 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 							...ruleBase,
 							...policyScope,
 						},
+						expiresUnixTimestamp: group.expiresUnixTimestamp,
 					});
 				}
 			} else {

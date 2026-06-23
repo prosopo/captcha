@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,11 +13,9 @@
 // limitations under the License.
 
 import type { ApiEndpoint } from "@prosopo/api-route";
-import {
-	type LogLevel,
-	ProsopoApiError,
-	stringifyBigInts,
-} from "@prosopo/common";
+import { ProsopoApiError } from "@prosopo/common";
+import type { LogLevel } from "@prosopo/logger";
+import { stringifyBigInts } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import type { ZodType } from "zod";
 import type { ApiExpressEndpointAdapter } from "./apiExpressEndpointAdapter.js";

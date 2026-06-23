@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 import type { IncomingHttpHeaders } from "node:http";
 import { Readable } from "node:stream";
 import { handleErrors } from "@prosopo/api-express-router";
-import { type Logger, getLogger } from "@prosopo/common";
+import { type Logger, getLogger } from "@prosopo/logger";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { randomAsHex } from "@prosopo/util-crypto";
 import type { NextFunction, Request, Response } from "express";
@@ -75,6 +75,24 @@ export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
 		// Parse the TLS Client Hello
 		const clientHello = await readTlsClientHello(readableStream);
 
+		// NOTE: read-tls-client-hello's calculateJa4FromHelloData has three known
+		// deviations from the Rust/AWS-Lambda reference implementation:
+		//
+		// 1. TLS 1.3 detection: checks whether the supported_versions extension
+		//    (0x002b) is *present* and unconditionally emits "13". The spec
+		//    requires parsing the extension body and picking the highest
+		//    non-GREASE version, so a ClientHello advertising only TLS 1.2 via
+		//    supported_versions would be mis-fingerprinted as "t13…".
+		//
+		// 2. Single-byte ALPN protocol: duplicates the first character as the
+		//    last (e.g. "h" → "hh"), whereas the spec uses "0" for the missing
+		//    last position (i.e. "h0").
+		//
+		// 3. Non-alphanumeric ALPN bytes: decoded via Buffer.toString('ascii')
+		//    which strips the high bit of bytes ≥ 128; the spec requires
+		//    rendering each non-alphanumeric byte as two lowercase hex digits
+		//    (e.g. 0xAD → "ad"). Common ALPN values ("h2", "http/1.1") are
+		//    unaffected because their first and last bytes are alphanumeric.
 		const ja4PlusFingerprint = calculateJa4FromHelloData(clientHello);
 
 		return { ja4PlusFingerprint };

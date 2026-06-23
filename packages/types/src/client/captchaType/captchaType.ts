@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,9 +18,16 @@ enum CaptchaType {
 	image = "image",
 	pow = "pow",
 	frictionless = "frictionless",
-	invisible = "invisible",
+	puzzle = "puzzle",
 }
 
 const CaptchaTypeSchema = z.nativeEnum(CaptchaType);
 
-export { CaptchaType, CaptchaTypeSchema };
+// Decision machines only work with pow and image captcha types (not frictionless)
+const DecisionMachineCaptchaTypeSchema = z.union([
+	z.literal(CaptchaType.pow),
+	z.literal(CaptchaType.image),
+	z.literal(CaptchaType.puzzle),
+]);
+
+export { CaptchaType, CaptchaTypeSchema, DecisionMachineCaptchaTypeSchema };

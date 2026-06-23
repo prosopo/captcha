@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,20 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import Signer from "@polkadot/extension-base/page/Signer";
 import type { InjectedAccount } from "@polkadot/extension-inject/types";
 import type { InjectedExtension } from "@polkadot/extension-inject/types";
 import { stringToU8a } from "@polkadot/util";
-import { getFingerprint } from "@prosopo/fingerprint";
+import { getFingerprint, prefetchFingerprint } from "@prosopo/fingerprint";
 import { Keyring } from "@prosopo/keyring";
 import type { KeyringPair } from "@prosopo/types";
 import type { Account, ProcaptchaClientConfigOutput } from "@prosopo/types";
 import { u8aToHex, version } from "@prosopo/util";
 import { hexHash } from "@prosopo/util-crypto";
 import type { KeypairType } from "@prosopo/util-crypto";
+import { getCryptoWorkerManager } from "../workers/CryptoWorkerManager.js";
 import { Extension } from "./Extension.js";
 
-const SignerLoader = async () =>
-	(await import("@polkadot/extension-base/page/Signer")).default;
+prefetchFingerprint();
+getCryptoWorkerManager().prewarm();
+
 const EntropyToMnemonicLoader = async () =>
 	(await import("@prosopo/util-crypto")).entropyToMnemonic;
 
@@ -39,7 +42,7 @@ export class ExtensionWeb2 extends Extension {
 		config: ProcaptchaClientConfigOutput,
 	): Promise<Account> {
 		const account = await this.createAccount(config);
-		const extension: InjectedExtension = await this.createExtension(account);
+		const extension: InjectedExtension = this.createExtension(account);
 
 		return {
 			account,
@@ -47,10 +50,7 @@ export class ExtensionWeb2 extends Extension {
 		};
 	}
 
-	private async createExtension(
-		account: AccountWithKeyPair,
-	): Promise<InjectedExtension> {
-		const Signer = await SignerLoader();
+	private createExtension(account: AccountWithKeyPair): InjectedExtension {
 		const signer = new Signer(async () => {
 			return;
 		});
@@ -92,8 +92,18 @@ export class ExtensionWeb2 extends Extension {
 		const entropy = hexHash(browserEntropy, 128).slice(2);
 
 		const u8Entropy = stringToU8a(entropy);
-		const entropyToMnemonic = await EntropyToMnemonicLoader();
-		const mnemonic = entropyToMnemonic(u8Entropy);
+
+		let mnemonic: string;
+
+		// Try to use Web Worker for entropy-to-mnemonic conversion to avoid blocking
+		try {
+			const workerManager = getCryptoWorkerManager();
+			mnemonic = await workerManager.entropyToMnemonic(u8Entropy);
+		} catch (workerError) {
+			const entropyToMnemonic = await EntropyToMnemonicLoader();
+			mnemonic = entropyToMnemonic(u8Entropy);
+		}
+
 		const type: KeypairType = "sr25519";
 		const keyring = new Keyring({
 			type,

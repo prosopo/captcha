@@ -1,10 +1,8 @@
 # @prosopo/server
 
-npm package to make verifying Procaptcha soltions easy.
+Server-side package for verifying [Prosopo Procaptcha](https://prosopo.io) tokens.
 
 ## Installation
-
-You can install this library with:
 
 ```bash
 npm install @prosopo/server --save
@@ -12,32 +10,20 @@ npm install @prosopo/server --save
 
 ## Basic Usage
 
-Simply import the `ProsopoServer` class and instantiate it with your Procaptcha API key.
-
 ```typescript
-import { ApiParams, ProcaptchaResponse } from '@prosopo/types'
-import { ProsopoServer } from '@prosopo/server'
+import { ProsopoServer } from "@prosopo/server"
+import { getServerConfig } from "@prosopo/server"
+import { getPair } from "@prosopo/keyring"
 
-async function getProsopoServer() {
-    const config = getProsopoConfig()
-    const pairType = (process.env.PAIR_TYPE as KeypairType) || ('sr25519' as KeypairType)
-    const ss58Format = parseInt(process.env.SS58_FORMAT || '') || 42
-    const pair = await getPair(pairType, ss58Format, process.env.PROSOPO_SITE_PRIVATE_KEY)
-    const prosopoServer = new ProsopoServer(pair, config)
+const config = getServerConfig()
+const pair = getPair(process.env.PROSOPO_SITE_PRIVATE_KEY, config.account.address)
+const server = new ProsopoServer(config, pair)
+
+// Verify a Procaptcha token from the client
+const result = await server.isVerified(token)
+if (result.verified) {
+    // user passed the captcha
 }
-
-async function protectedFunction(server: ProsopoServer, payload: ProcaptchaResponse) {
-    if (await server.isVerified(payload[ApiParams.procaptchaResponse])) {
-        // perform CAPTCHA protected action
-    }
-}
-
-const payload = getPayloadFromRequest() // your request payload
-getProsopoServer().then((server) => {
-    protectedFunction(server, payload).then(() => {
-        // ...
-    })
-})
 ```
 
-The full example can be seen [here](https://github.com/prosopo/captcha/blob/main/demos/client-example-server/src/app.ts).
+See the [client-example-server](https://github.com/prosopo/captcha/tree/main/demos/client-example-server) for a full working example, and the [docs](https://docs.prosopo.io) for integration instructions.

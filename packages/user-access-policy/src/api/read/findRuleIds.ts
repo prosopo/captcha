@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,11 +17,8 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import {
-	type AllKeys,
-	type Logger,
-	executeBatchesSequentially,
-} from "@prosopo/common";
+import { type AllKeys, executeBatchesSequentially } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import { type ZodType, z } from "zod";
 import {
 	type AccessRulesFilterInput,
@@ -56,7 +53,9 @@ export class FindRuleIdsEndpoint implements ApiEndpoint<FindRulesSchema> {
 
 	async processRequest(
 		args: AccessRulesFilterInput[],
+		logger?: Logger,
 	): Promise<RuleIdsEndpointResponse> {
+		const log = logger ?? this.logger;
 		const ruleIdBatches = await executeBatchesSequentially(
 			args,
 			async (rulesFilterInput) => {
@@ -76,7 +75,7 @@ export class FindRuleIdsEndpoint implements ApiEndpoint<FindRulesSchema> {
 		// Set() automatically removes duplicates
 		const uniqueRuleIds = [...new Set(ruleIds)];
 
-		this.logger.info(() => ({
+		log.info(() => ({
 			msg: "Endpoint found rules",
 			data: {
 				totalFoundCount: ruleIds.length,

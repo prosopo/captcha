@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,4 +21,19 @@ export const getWindowCallback = (callbackName: string) => {
 		);
 	}
 	return fn;
+};
+
+/**
+ * Procaptcha depends on secure-context-only browser APIs (e.g. SubtleCrypto)
+ * to run a challenge. These are unavailable when the widget is served over
+ * plain HTTP, which otherwise surfaces as a cryptic provider-selection
+ * failure. The browser already treats HTTPS and localhost as secure contexts,
+ * so this only flags genuine HTTP origins. Non-browser (SSR) environments are
+ * treated as secure since the HTTP restriction does not apply there.
+ */
+export const isSecureBrowserContext = (): boolean => {
+	if (typeof window === "undefined") {
+		return true;
+	}
+	return window.isSecureContext === true;
 };

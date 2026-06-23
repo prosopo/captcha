@@ -1,5 +1,544 @@
 # @prosopo/procaptcha-react
 
+## 2.9.78
+### Patch Changes
+
+- 005b817: fix(procaptcha-react): hold image-captcha Manager in a useRef
+  
+  Image widget rebuilt the Manager on every render, so the closure
+  variables that hold the checkbox click coords (set on start) were
+  overwritten by `(0, 0)` on the next render — including the re-render
+  that fires immediately after `setLoading(true)` in the click handler.
+  By the time `submit()` ran, it was on a newer Manager instance that
+  had never seen the click, so every captcha persisted
+  `coords[0] = [[0, 0]]`. Matches the pattern PoW and Puzzle already use.
+- Updated dependencies [12cd0a6]
+- Updated dependencies [12cd0a6]
+  - @prosopo/procaptcha-common@2.11.0
+  - @prosopo/types@4.8.0
+  - @prosopo/procaptcha@2.10.39
+
+## 2.9.77
+### Patch Changes
+
+- Updated dependencies [bb98af1]
+  - @prosopo/types@4.7.4
+  - @prosopo/procaptcha@2.10.38
+  - @prosopo/procaptcha-common@2.10.28
+
+## 2.9.76
+### Patch Changes
+
+- Updated dependencies [89ab6fc]
+- Updated dependencies [0f3750b]
+  - @prosopo/types@4.7.3
+  - @prosopo/procaptcha@2.10.37
+  - @prosopo/procaptcha-common@2.10.27
+
+## 2.9.75
+### Patch Changes
+
+- Updated dependencies [edcd450]
+- Updated dependencies [5295c4b]
+  - @prosopo/util@3.3.1
+  - @prosopo/types@4.7.2
+  - @prosopo/locale@3.2.5
+  - @prosopo/procaptcha@2.10.36
+  - @prosopo/common@3.1.40
+  - @prosopo/procaptcha-common@2.10.26
+
+## 2.9.74
+### Patch Changes
+
+- 46fedf4: Auto-start image/puzzle widget after PoW escalation so the user does not need to click the checkbox a second time.
+- Updated dependencies [46fedf4]
+  - @prosopo/types@4.7.1
+  - @prosopo/procaptcha@2.10.35
+  - @prosopo/procaptcha-common@2.10.25
+
+## 2.9.73
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/types@4.7.0
+  - @prosopo/procaptcha@2.10.34
+  - @prosopo/procaptcha-common@2.10.24
+
+## 2.9.72
+### Patch Changes
+
+- Updated dependencies [4626340]
+  - @prosopo/types@4.6.1
+  - @prosopo/procaptcha@2.10.33
+  - @prosopo/procaptcha-common@2.10.23
+
+## 2.9.71
+### Patch Changes
+
+- Updated dependencies [55b1388]
+  - @prosopo/util@3.3.0
+  - @prosopo/types@4.6.0
+  - @prosopo/procaptcha@2.10.32
+  - @prosopo/common@3.1.39
+  - @prosopo/procaptcha-common@2.10.22
+
+## 2.9.70
+### Patch Changes
+
+- Updated dependencies [9b91e85]
+- Updated dependencies [c80a05b]
+  - @prosopo/types@4.5.0
+  - @prosopo/procaptcha@2.10.31
+  - @prosopo/procaptcha-common@2.10.21
+
+## 2.9.69
+### Patch Changes
+
+- Updated dependencies [f69724f]
+- Updated dependencies [3973078]
+  - @prosopo/types@4.4.1
+  - @prosopo/procaptcha@2.10.30
+  - @prosopo/procaptcha-common@2.10.20
+
+## 2.9.68
+### Patch Changes
+
+- 2d66d8e: Image-captcha widget now forwards the trusted checkbox click `(clientX, clientY)` through `manager.start(x, y)`. `Manager.submit` embeds the pair as a 2-number prefix on the first captcha's solution salt. Provider peels the prefix via length math against `solution.length` (no protocol version flag — older clients keep working unchanged) and prepends it as the first entry of `pairs`, which is written to `UserCommitment.coords`. Adds `peelCheckboxPrefix` helper in `pairs.ts` with round-trip unit tests.
+- Updated dependencies [bc3813d]
+- Updated dependencies [2d66d8e]
+- Updated dependencies [4d05e3f]
+  - @prosopo/types@4.4.0
+  - @prosopo/procaptcha@2.10.29
+  - @prosopo/procaptcha-common@2.10.19
+
+## 2.9.67
+### Patch Changes
+
+- Updated dependencies [b03dad1]
+  - @prosopo/types@4.3.1
+  - @prosopo/procaptcha@2.10.28
+  - @prosopo/procaptcha-common@2.10.18
+
+## 2.9.66
+### Patch Changes
+
+- Updated dependencies [a1d60db]
+- Updated dependencies [2392aaf]
+- Updated dependencies [6ca1125]
+  - @prosopo/types@4.3.0
+  - @prosopo/util@3.2.15
+  - @prosopo/common@3.1.38
+  - @prosopo/procaptcha@2.10.27
+  - @prosopo/procaptcha-common@2.10.17
+
+## 2.9.65
+### Patch Changes
+
+- d3db08d: feat(widget): bait AI responses with empty input + decoded label, portaled into the dapp's form
+  
+  Redesigns the honeypot so it can actually catch AI agents instead of being inert:
+  
+  - Empty input + decoded label: the encoded morse/semaphore question moves from `input.value` to an offscreen `<label>` (base64-decoded at render). Naive form-fillers and humans leave the empty input alone; agents that read the DOM as a prompt write into the empty field, captured as `clientMetaData.hp` on submit.
+  - Portaled to light DOM, inside the dapp's `<form>`: widget stays in shadow DOM, but the honeypot portals via `react-dom/createPortal` into the enclosing form (`document.body` fallback). Bots no longer have to traverse `.shadowRoot` to reach it (which was tripping `@prosopo/catcher`'s shadow-DOM guard and wiping the bot's value), and the bait sits where bots actually look — `form.querySelectorAll('input')`.
+  - `form="<useId>-d"`: opaque per-instance non-existent form id disassociates the input from native form submission while keeping it DOM-discoverable. Dapp backends don't receive a stray `email_confirm=` field.
+  - Shared `<Honeypot />` extracted to `@prosopo/procaptcha-common`.
+  - `procaptcha-bundle` Vite config now routes the Honeypot module into a per-build opaque chunk (`c<random8hex>-<hash>.js`) so the URL doesn't identify the component or stay stable across builds for static blocklisting.
+- Updated dependencies [d3db08d]
+  - @prosopo/procaptcha-common@2.10.16
+  - @prosopo/procaptcha@2.10.26
+
+## 2.9.64
+### Patch Changes
+
+- 6c26669: Add per-site honeypot trap. When enabled, the provider attaches an encoded question (morse or semaphore, base64-wrapped) in the `x-prosopo-meta` response header on frictionless responses. The widget renders the value into an off-screen hidden input with `name="email_confirm"`; bots that auto-fill text inputs populate it and the value rides back on the solution submit as `clientMetaData.hp`, which is persisted on the `StoredCaptcha` record. Falls back to a random phrase from `PROSOPO_HONEYPOT_PHRASE_BANK_PATH` when no custom question is configured.
+- f7f9ec5: feat(provider,widget): reserved always-pass / always-fail test site keys
+  
+  Add two fixed, well-known reserved site keys (`ALWAYS_PASS_SITE_KEY` /
+  `ALWAYS_FAIL_SITE_KEY`) that force a deterministic captcha verdict for CI/CD and
+  integration testing, constant across production, staging and development.
+  
+  - `@prosopo/types`: shared constants + `getTestSiteKeyMode`, imported by both the
+    provider and the widget.
+  - `@prosopo/provider`: short-circuits the `submit*` and `verify` endpoints (verify
+    runs before the signature check, so no dapp secret is needed), serves an
+    invisible PoW session from the frictionless handler, and bypasses domain
+    middleware. Works in every environment with no DB record.
+  - `@prosopo/procaptcha-common` / `-react` / `-frictionless`: render a prominent
+    `TestModeBanner` warning (always pass/fail) plus a console warning so a test key
+    can never ship to production unnoticed.
+  
+  always-pass verifies at both the submit and verify layers; always-fail fails at
+  both. Safe in production by design: the override only weakens protection for a
+  dapp that deliberately opts in, mirroring reCAPTCHA's public test keys.
+- Updated dependencies [6c26669]
+- Updated dependencies [f7f9ec5]
+  - @prosopo/types@4.2.1
+  - @prosopo/procaptcha@2.10.25
+  - @prosopo/procaptcha-common@2.10.15
+
+## 2.9.63
+### Patch Changes
+
+- Updated dependencies [0fd81af]
+  - @prosopo/common@3.1.37
+  - @prosopo/procaptcha@2.10.24
+  - @prosopo/procaptcha-common@2.10.14
+
+## 2.9.62
+### Patch Changes
+
+- Updated dependencies [20cae63]
+- Updated dependencies [4d9923e]
+  - @prosopo/types@4.2.0
+  - @prosopo/procaptcha@2.10.23
+  - @prosopo/procaptcha-common@2.10.13
+
+## 2.9.61
+### Patch Changes
+
+- Updated dependencies [d351362]
+  - @prosopo/types@4.1.4
+  - @prosopo/procaptcha@2.10.22
+  - @prosopo/procaptcha-common@2.10.12
+
+## 2.9.60
+### Patch Changes
+
+- Updated dependencies [6567ce0]
+- Updated dependencies [e2711ae]
+- Updated dependencies [5786629]
+  - @prosopo/util@3.2.14
+  - @prosopo/types@4.1.3
+  - @prosopo/locale@3.2.4
+  - @prosopo/procaptcha@2.10.21
+  - @prosopo/common@3.1.36
+  - @prosopo/procaptcha-common@2.10.11
+
+## 2.9.59
+### Patch Changes
+
+- Updated dependencies [72a1218]
+- Updated dependencies [566c1f6]
+  - @prosopo/util@3.2.13
+  - @prosopo/widget-skeleton@2.8.3
+  - @prosopo/procaptcha@2.10.20
+  - @prosopo/types@4.1.2
+  - @prosopo/procaptcha-common@2.10.10
+
+## 2.9.58
+### Patch Changes
+
+- Updated dependencies [53bfd45]
+- Updated dependencies [91958da]
+  - @prosopo/procaptcha-common@2.10.9
+  - @prosopo/locale@3.2.3
+  - @prosopo/types@4.1.1
+  - @prosopo/procaptcha@2.10.19
+  - @prosopo/common@3.1.35
+
+## 2.9.57
+### Patch Changes
+
+- Updated dependencies [6a741ce]
+  - @prosopo/types@4.1.0
+  - @prosopo/procaptcha@2.10.18
+  - @prosopo/procaptcha-common@2.10.8
+
+## 2.9.56
+### Patch Changes
+
+  - @prosopo/procaptcha-common@2.10.7
+  - @prosopo/procaptcha@2.10.17
+
+## 2.9.55
+### Patch Changes
+
+- Updated dependencies [3c0be68]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [d865319]
+- Updated dependencies [753304b]
+- Updated dependencies [8bb7286]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [4993813]
+- Updated dependencies [5f1ae53]
+  - @prosopo/types@4.0.0
+  - @prosopo/locale@3.2.2
+  - @prosopo/util@3.2.12
+  - @prosopo/procaptcha@2.10.16
+  - @prosopo/common@3.1.34
+  - @prosopo/widget-skeleton@2.8.2
+  - @prosopo/procaptcha-common@2.10.6
+
+## 2.9.54
+### Patch Changes
+
+- Updated dependencies [819ed95]
+  - @prosopo/types@3.16.1
+  - @prosopo/procaptcha@2.10.15
+  - @prosopo/procaptcha-common@2.10.5
+
+## 2.9.53
+### Patch Changes
+
+- Updated dependencies [f6a4402]
+- Updated dependencies [99dfb44]
+  - @prosopo/types@3.16.0
+  - @prosopo/procaptcha@2.10.14
+  - @prosopo/procaptcha-common@2.10.4
+
+## 2.9.52
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+  - @prosopo/procaptcha@2.10.13
+  - @prosopo/procaptcha-common@2.10.3
+
+## 2.9.51
+### Patch Changes
+
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+- Updated dependencies [b94890c]
+  - @prosopo/types@3.14.1
+  - @prosopo/locale@3.2.1
+  - @prosopo/common@3.1.33
+  - @prosopo/procaptcha@2.10.12
+  - @prosopo/procaptcha-common@2.10.2
+
+## 2.9.50
+### Patch Changes
+
+- Updated dependencies [06970d2]
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+- Updated dependencies [dd3e06e]
+  - @prosopo/procaptcha-common@2.10.1
+  - @prosopo/widget-skeleton@2.8.1
+  - @prosopo/locale@3.2.0
+  - @prosopo/types@3.14.0
+  - @prosopo/procaptcha@2.10.11
+  - @prosopo/common@3.1.32
+
+## 2.9.49
+### Patch Changes
+
+- Updated dependencies [73df23c]
+- Updated dependencies [8139819]
+- Updated dependencies [4a9c518]
+  - @prosopo/procaptcha-common@2.10.0
+  - @prosopo/widget-skeleton@2.8.0
+  - @prosopo/common@3.1.31
+  - @prosopo/procaptcha@2.10.10
+
+## 2.9.48
+### Patch Changes
+
+- Updated dependencies [a25dffa]
+  - @prosopo/util@3.2.11
+  - @prosopo/procaptcha@2.10.9
+  - @prosopo/types@3.13.3
+  - @prosopo/procaptcha-common@2.9.41
+
+## 2.9.47
+### Patch Changes
+
+- Updated dependencies [346edd7]
+  - @prosopo/util@3.2.10
+  - @prosopo/procaptcha@2.10.8
+  - @prosopo/types@3.13.2
+  - @prosopo/procaptcha-common@2.9.40
+
+## 2.9.46
+### Patch Changes
+
+- Updated dependencies [22bfee7]
+- Updated dependencies [20192d2]
+  - @prosopo/util@3.2.9
+  - @prosopo/widget-skeleton@2.7.14
+  - @prosopo/procaptcha@2.10.7
+  - @prosopo/types@3.13.1
+  - @prosopo/procaptcha-common@2.9.39
+
+## 2.9.45
+### Patch Changes
+
+- Updated dependencies [e0fb3d6]
+- Updated dependencies [e6d9553]
+- Updated dependencies [f3f23e3]
+  - @prosopo/util@3.2.8
+  - @prosopo/types@3.13.0
+  - @prosopo/procaptcha@2.10.6
+  - @prosopo/procaptcha-common@2.9.38
+
+## 2.9.44
+### Patch Changes
+
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/types@3.12.3
+  - @prosopo/util@3.2.7
+  - @prosopo/procaptcha-common@2.9.37
+  - @prosopo/procaptcha@2.10.5
+
+## 2.9.43
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/locale@3.1.29
+  - @prosopo/types@3.12.2
+  - @prosopo/util@3.2.6
+  - @prosopo/common@3.1.30
+  - @prosopo/procaptcha@2.10.4
+  - @prosopo/procaptcha-common@2.9.36
+
+## 2.9.42
+### Patch Changes
+
+- Updated dependencies [c5ee492]
+- Updated dependencies [a90eb54]
+  - @prosopo/common@3.1.29
+  - @prosopo/types@3.12.1
+  - @prosopo/procaptcha@2.10.3
+  - @prosopo/procaptcha-common@2.9.35
+
+## 2.9.41
+### Patch Changes
+
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/types@3.12.0
+  - @prosopo/procaptcha-common@2.9.34
+  - @prosopo/procaptcha@2.10.2
+
+## 2.9.40
+### Patch Changes
+
+- Updated dependencies [8148587]
+  - @prosopo/types@3.11.1
+  - @prosopo/procaptcha@2.10.1
+  - @prosopo/procaptcha-common@2.9.33
+
+## 2.9.39
+### Patch Changes
+
+- Updated dependencies [7f6ffc5]
+  - @prosopo/procaptcha@2.10.0
+  - @prosopo/types@3.11.0
+  - @prosopo/procaptcha-common@2.9.32
+
+## 2.9.38
+### Patch Changes
+
+- Updated dependencies [93fa086]
+  - @prosopo/types@3.10.2
+  - @prosopo/procaptcha@2.9.38
+  - @prosopo/procaptcha-common@2.9.31
+
+## 2.9.37
+### Patch Changes
+
+- Updated dependencies [cde7550]
+  - @prosopo/types@3.10.1
+  - @prosopo/procaptcha@2.9.37
+  - @prosopo/procaptcha-common@2.9.30
+
+## 2.9.36
+### Patch Changes
+
+- Updated dependencies [ad6d622]
+  - @prosopo/types@3.10.0
+  - @prosopo/procaptcha@2.9.36
+  - @prosopo/procaptcha-common@2.9.29
+
+## 2.9.35
+### Patch Changes
+
+- 592adf1: Don't make people wait so long for a new session
+- Updated dependencies [ff58a70]
+  - @prosopo/types@3.9.0
+  - @prosopo/procaptcha@2.9.35
+  - @prosopo/procaptcha-common@2.9.28
+
+## 2.9.34
+### Patch Changes
+
+  - @prosopo/procaptcha@2.9.34
+
+## 2.9.33
+### Patch Changes
+
+- Updated dependencies [d2431cd]
+  - @prosopo/types@3.8.4
+  - @prosopo/procaptcha@2.9.33
+  - @prosopo/procaptcha-common@2.9.27
+
+## 2.9.32
+### Patch Changes
+
+  - @prosopo/procaptcha@2.9.32
+
+## 2.9.31
+### Patch Changes
+
+- Updated dependencies [bd6995b]
+  - @prosopo/types@3.8.3
+  - @prosopo/procaptcha@2.9.31
+  - @prosopo/procaptcha-common@2.9.26
+
+## 2.9.30
+### Patch Changes
+
+- Updated dependencies [9633e58]
+  - @prosopo/types@3.8.2
+  - @prosopo/procaptcha@2.9.30
+  - @prosopo/procaptcha-common@2.9.25
+
+## 2.9.29
+### Patch Changes
+
+- Updated dependencies [f52a5c1]
+  - @prosopo/types@3.8.1
+  - @prosopo/procaptcha@2.9.29
+  - @prosopo/procaptcha-common@2.9.24
+
+## 2.9.28
+### Patch Changes
+
+  - @prosopo/procaptcha@2.9.28
+
+## 2.9.27
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+- Updated dependencies [a53526b]
+- Updated dependencies [f3cf586]
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [7543d17]
+- Updated dependencies [fe9fe22]
+- Updated dependencies [3acc333]
+  - @prosopo/util@3.2.5
+  - @prosopo/procaptcha-common@2.9.23
+  - @prosopo/types@3.8.0
+  - @prosopo/widget-skeleton@2.7.13
+  - @prosopo/procaptcha@2.9.27
+  - @prosopo/common@3.1.28
+  - @prosopo/locale@3.1.28
+
+## 2.9.26
+### Patch Changes
+
+  - @prosopo/procaptcha@2.9.26
+
 ## 2.9.25
 ### Patch Changes
 

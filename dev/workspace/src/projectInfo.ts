@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,6 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import fs from "node:fs";
+import path from "node:path";
 
 // Top Level
 
@@ -103,3 +106,56 @@ export const getWidgetSkeletonPkgDir = () =>
 	`${getPackagesDir()}/widget-skeleton`;
 
 export const getLocalePkgDir = () => `${getPackagesDir()}/locale`;
+
+/**
+ * Finds the workspace root directory (captcha-private)
+ */
+export const findWorkspaceRoot = (name?: string): string => {
+	const currentDir = process.cwd();
+	const lintDirPattern = /(.+)\/captcha\/dev\/lint$/;
+	const match = currentDir.match(lintDirPattern);
+	name = name || "@prosopo/captcha-private";
+
+	if (match?.[1]) {
+		return match[1];
+	}
+
+	const websitePath = path.join(currentDir, "packages", "prosopo-website");
+	if (fs.existsSync(websitePath)) {
+		return currentDir;
+	}
+
+	let dir = currentDir;
+	const maxDepth = 5;
+
+	for (let i = 0; i < maxDepth; i++) {
+		const packageJsonPath = path.join(dir, "package.json");
+
+		if (fs.existsSync(packageJsonPath)) {
+			try {
+				const packageJson = JSON.parse(
+					fs.readFileSync(packageJsonPath, "utf8"),
+				);
+				if (packageJson.name === name) {
+					return dir;
+				}
+			} catch (e) {
+				// Continue if there's an error
+			}
+		}
+
+		const parentDir = path.dirname(dir);
+		if (parentDir === dir) {
+			// We've reached the root of the filesystem
+			break;
+		}
+
+		dir = parentDir;
+	}
+
+	// If all approaches fail, warn but return current directory
+	console.warn(
+		"Warning: Could not find workspace root. Using current directory.",
+	);
+	return currentDir;
+};

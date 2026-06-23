@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,4 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export const version = process.env.PROSOPO_PACKAGE_VERSION || "dev";
+// Guarded to remain loadable in browser runtimes (e.g. vite dev/preview)
+// where `process` isn't defined. Note: the inner access must be
+// `process.env.PROSOPO_PACKAGE_VERSION` (no optional chaining) so that Vite's
+// `define` AST replacement matches and substitutes the build-time version.
+const envVersion =
+	typeof process !== "undefined"
+		? process.env.PROSOPO_PACKAGE_VERSION
+		: undefined;
+export const version = envVersion || "dev";

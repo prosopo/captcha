@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { array, boolean, number, object, type output, string, z } from "zod";
+import {
+	DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
+	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
+} from "../config/timeouts.js";
 import { CaptchaType } from "./captchaType/captchaType.js";
 import { CaptchaTypeSpec } from "./captchaType/captchaTypeSpec.js";
 
@@ -20,7 +24,9 @@ export const domainsDefault: string[] = [];
 export const frictionlessThresholdDefault = 0.5;
 export const powDifficultyDefault = 4;
 export const imageThresholdDefault = 0.8;
+export const imageMaxRoundsDefault = 32;
 export const contextAwareThresholdDefault = 0.7;
+export const puzzleToleranceDefault = 15;
 
 // IP Validation Rules
 export enum IPValidationAction {
@@ -62,6 +68,7 @@ const IPValidationSchema = object({
 });
 
 export const IPValidationRulesSchema = object({
+	enabled: boolean().optional().default(false),
 	actions: object({
 		countryChangeAction: IPValidationActionSchema.optional().default(
 			countryChangeActionDefault,
@@ -108,7 +115,11 @@ export const ContextTypeSchema = z.nativeEnum(ContextType);
 // Individual context configuration
 export const ContextConfigSchema = z.object({
 	type: ContextTypeSchema,
-	threshold: number().optional().default(contextAwareThresholdDefault),
+	threshold: number()
+		.min(Number((contextAwareThresholdDefault - 0.2).toFixed(2)))
+		.max(Number((contextAwareThresholdDefault + 0.2).toFixed(2)))
+		.optional()
+		.default(contextAwareThresholdDefault),
 });
 
 export type IContextConfig = z.infer<typeof ContextConfigSchema>;
@@ -127,19 +138,174 @@ const ContextAwareSchema = object({
 
 export type IContextAware = z.infer<typeof ContextAwareSchema>;
 
+// Spam filter rules
+export const maxLocalPartDotsDefault = 2;
+
+const MAX_REGEX_PATTERN_LENGTH = 256;
+const MAX_CUSTOM_REGEX_PATTERNS = 50;
+
+// Patterns that enable catastrophic backtracking or uncontrolled execution
+const DANGEROUS_REGEX_TOKENS = /(\(\?[<!=])|(\(\?P[<])|(\(\?\{)|(\{[\d,]{4,})/;
+
+const safeRegexPattern = string()
+	.max(MAX_REGEX_PATTERN_LENGTH)
+	.refine(
+		(raw) => {
+			try {
+				new RegExp(raw, "i");
+				return true;
+			} catch {
+				return false;
+			}
+		},
+		{ message: "Invalid regular expression syntax" },
+	)
+	.refine((raw) => !DANGEROUS_REGEX_TOKENS.test(raw), {
+		message:
+			"Pattern uses disallowed features (lookahead, lookbehind, or large quantifiers)",
+	});
+
+export const EmailSpamRulesSchema = object({
+	enabled: boolean().optional().default(false),
+	maxLocalPartDots: number().int().min(0).optional(),
+	normaliseGmail: boolean().optional().default(false),
+	useDefaultPatterns: boolean().optional().default(false),
+	customRegexBlocklist: array(safeRegexPattern)
+		.max(MAX_CUSTOM_REGEX_PATTERNS)
+		.optional()
+		.default([]),
+});
+
+export const SpamFilterRulesSchema = object({
+	enabled: boolean().optional().default(false),
+	emailRules: EmailSpamRulesSchema.optional(),
+});
+
+export const trafficFilterAbuserScoreThresholdDefault = 0.5;
+
+// Operators almost always want `blockDatacenter` to catch scraping/automation
+// traffic but not legitimate consumer relays that exit from datacenter IPs.
+// Entries match case-insensitively against `datacenterName`, `providerName`,
+// or `asnOrganization` — upstream populates `datacenter.datacenter` only for
+// curated named ranges, so the providerName / asnOrganization fallback is
+// needed to reach generic CDN and cloud-provider IPs.
+const MAX_DATACENTER_ALLOWLIST_ENTRIES = 50;
+const MAX_DATACENTER_ALLOWLIST_ENTRY_LENGTH = 128;
+
+export const TrafficFilterSchema = object({
+	blockVpn: boolean().optional().default(false),
+	blockProxy: boolean().optional().default(false),
+	blockTor: boolean().optional().default(false),
+	blockAbuser: boolean().optional().default(true),
+	abuserScoreThreshold: number()
+		.min(0)
+		.max(1)
+		.optional()
+		.default(trafficFilterAbuserScoreThresholdDefault),
+	blockDatacenter: boolean().optional().default(false),
+	datacenterNameAllowlist: array(
+		string().min(1).max(MAX_DATACENTER_ALLOWLIST_ENTRY_LENGTH),
+	)
+		.max(MAX_DATACENTER_ALLOWLIST_ENTRIES)
+		.optional(),
+	// Opt-in: when the catcher confirmed `dnsEvent.pathValid === true`, skip
+	// the datacenter / VPN / proxy / Tor evaluation on the DNS peer +
+	// resolver IPs. Otherwise users on public DoH resolvers (whose resolver
+	// IPs are necessarily datacenter) trip the rule.
+	skipExtrasOnValidDnsPath: boolean().optional().default(false),
+	blockMobile: boolean().optional().default(false),
+	blockSatellite: boolean().optional().default(false),
+	blockCrawler: boolean().optional().default(false),
+});
+
+export type IEmailSpamRules = output<typeof EmailSpamRulesSchema>;
+export type ISpamFilterRules = output<typeof SpamFilterRulesSchema>;
+export type ITrafficFilter = output<typeof TrafficFilterSchema>;
+
+// Encoding used when serialising the honeypot question into the rendered
+// hidden input. Humans don't see the field; bots that auto-fill text inputs
+// receive an encoded string they can't trivially decode.
+export enum EncodingType {
+	morse = "morse",
+	semaphore = "semaphore",
+}
+
+export const EncodingTypeSchema = z.nativeEnum(EncodingType);
+
+export const honeypotEncodingTypeDefault = EncodingType.morse;
+
+export const HoneypotSettingsSchema = object({
+	enabled: boolean().optional().default(false),
+	question: string().optional(),
+	encodingType: EncodingTypeSchema.optional().default(
+		honeypotEncodingTypeDefault,
+	),
+});
+
+export type IHoneypotSettings = output<typeof HoneypotSettingsSchema>;
+
 export const ClientSettingsSchema = object({
 	captchaType: CaptchaTypeSpec.optional().default(captchaTypeDefault),
-	domains: array(string())
+	domains: array(string()).min(1),
+	// Maximum ms between user submission and the dapp's /verify call.
+	verifiedTimeout: number()
+		.int()
+		.min(1000)
+		.max(600000)
 		.optional()
-		.default([...domainsDefault]),
+		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
+	// Maximum ms between challenge issuance and the user's submission to
+	// /pow/solution or /puzzle/solution. Bounds how long the user has to
+	// solve the challenge before the submission is rejected as stale.
+	// Distinct from `verifiedTimeout` (which gates submission → /verify).
+	solutionTimeout: number()
+		.int()
+		.min(1000)
+		.max(600000)
+		.optional()
+		.default(DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT),
 	frictionlessThreshold: number()
+		.min(0)
+		.max(1)
 		.optional()
 		.default(frictionlessThresholdDefault),
-	powDifficulty: number().optional().default(powDifficultyDefault),
-	imageThreshold: number().optional().default(imageThresholdDefault),
+	powDifficulty: number()
+		.positive()
+		.min(1)
+		.max(10)
+		.optional()
+		.default(powDifficultyDefault),
+	imageThreshold: number()
+		.min(0)
+		.max(1)
+		.optional()
+		.default(imageThresholdDefault),
+	imageMaxRounds: number()
+		.int()
+		.min(2)
+		.optional()
+		.default(imageMaxRoundsDefault),
+	// Detector score at or above which the frictionless flow blocks the
+	// request outright instead of issuing a challenge. Undefined disables.
+	autoBanScoreThreshold: number().min(0).optional(),
+	puzzleTolerance: number()
+		.int()
+		.min(5)
+		.max(50)
+		.optional()
+		.default(puzzleToleranceDefault),
 	ipValidationRules: IPValidationRulesSchema.optional(),
 	disallowWebView: boolean().optional().default(false).optional(),
 	contextAware: ContextAwareSchema.optional(),
+	spamEmailDomainCheckEnabled: boolean().optional(),
+	spamFilter: SpamFilterRulesSchema.optional(),
+	trafficFilter: TrafficFilterSchema.optional(),
+	// When true, the provider persists the metadata (`email`, ...) that
+	// dapp servers attach to `/verify` requests on the captcha record.
+	// Off by default — opt in to enable downstream analysis (e.g. judging
+	// whether the submitted emails are mostly spam).
+	storeMetadata: boolean().optional(),
+	honeypot: HoneypotSettingsSchema.optional(),
 });
 
 export type IUserSettings = output<typeof ClientSettingsSchema>;

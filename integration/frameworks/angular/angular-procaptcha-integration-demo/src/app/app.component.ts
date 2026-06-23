@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,7 +30,6 @@ import { environment } from "../environments/environment";
 export class AppComponent {
 	procaptchaSettings: ProcaptchaRenderOptions = {
 		siteKey: environment.PROCATCHA_SITE_KEY,
-		captchaType: "pow",
 		language: "en",
 		callback: (token: string) => {
 			console.log("verified", token);

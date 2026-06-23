@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,8 +22,12 @@ import { buildTreeAndGetCommitmentId } from "../../../../tasks/imgCaptcha/imgCap
 
 vi.mock("@prosopo/datasets", () => ({
 	CaptchaMerkleTree: vi.fn().mockImplementation(() => ({
-		build: vi.fn(),
-		root: { hash: "mockedRootHash" },
+		// biome-ignore lint/suspicious/noExplicitAny: tests
+		build: vi.fn(function (this: any) {
+			this.root = { hash: "mockedRootHash" };
+		}),
+		root: null, // Initially null, set by build
+		getRoot: vi.fn().mockReturnValue({ hash: "mockedRootHash" }),
 	})),
 	computeCaptchaSolutionHash: vi.fn(),
 }));
@@ -36,6 +40,12 @@ describe("buildTreeAndGetCommitmentId", () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
+		// Reset the mock implementation to the default state to ensure test isolation
+		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+		(CaptchaMerkleTree as any).mockImplementation(() => ({
+			build: vi.fn(),
+			root: { hash: "mockedRootHash" },
+		}));
 	});
 
 	it("should build a tree and return the commitmentId", () => {
@@ -60,11 +70,17 @@ describe("buildTreeAndGetCommitmentId", () => {
 	});
 
 	it("should throw an error if commitmentId does not exist", () => {
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(CaptchaMerkleTree as any).mockImplementation(() => ({
-			build: vi.fn(),
-			root: { hash: null },
-		}));
+		// Override the mock for this specific test
+		const originalMock = vi.mocked(CaptchaMerkleTree);
+		vi.mocked(CaptchaMerkleTree).mockImplementationOnce(
+			() =>
+				({
+					build: vi.fn(),
+					root: { hash: null },
+					getRoot: vi.fn().mockReturnValue({ hash: null }),
+					// biome-ignore lint/suspicious/noExplicitAny: tests
+				}) as any,
+		);
 
 		expect(() => buildTreeAndGetCommitmentId(mockCaptchaSolutions)).toThrow(
 			new ProsopoEnvError(
@@ -76,6 +92,12 @@ describe("buildTreeAndGetCommitmentId", () => {
 					},
 				},
 			),
+		);
+
+		// Restore the original mock
+		vi.mocked(CaptchaMerkleTree).mockImplementation(
+			// biome-ignore lint/style/noNonNullAssertion: tests
+			originalMock.getMockImplementation()!,
 		);
 	});
 });

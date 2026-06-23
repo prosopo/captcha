@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,11 +16,14 @@ import { handleErrors } from "@prosopo/api-express-router";
 import { ClientApiPaths } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import express, { type Router } from "express";
+import checkSpamEmail from "./captcha/checkSpamEmail.js";
 import getFrictionlessCaptchaChallenge from "./captcha/getFrictionlessCaptchaChallenge.js";
 import getImageCaptchaChallenge from "./captcha/getImageCaptchaChallenge.js";
 import getPoWCaptchaChallenge from "./captcha/getPoWCaptchaChallenge.js";
+import getPuzzleCaptchaChallenge from "./captcha/getPuzzleCaptchaChallenge.js";
 import submitImageCaptchaSolution from "./captcha/submitImageCaptchaSolution.js";
 import submitPoWCaptchaSolution from "./captcha/submitPoWCaptchaSolution.js";
+import submitPuzzleCaptchaSolution from "./captcha/submitPuzzleCaptchaSolution.js";
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -31,7 +34,21 @@ import submitPoWCaptchaSolution from "./captcha/submitPoWCaptchaSolution.js";
 export function prosopoRouter(env: ProviderEnvironment): Router {
 	const router = express.Router();
 
-	const userAccessRulesStorage = env.getDb().getUserAccessRulesStorage();
+	// Maintenance-mode / Redis-down startup: the storage isn't initialised.
+	// Pass `undefined` through; the captcha endpoints short-circuit before
+	// any access-rules lookup when MAINTENANCE_MODE is on.
+	let userAccessRulesStorage: ReturnType<
+		ReturnType<ProviderEnvironment["getDb"]>["getUserAccessRulesStorage"]
+	>;
+	try {
+		userAccessRulesStorage = env.getDb().getUserAccessRulesStorage();
+	} catch (err) {
+		env.logger.warn(() => ({
+			msg: "User access rules storage unavailable; captcha endpoints will skip access-policy checks",
+			err,
+		}));
+		userAccessRulesStorage = undefined as never;
+	}
 
 	/**
 	 * Provides a Captcha puzzle to a Dapp User
@@ -44,7 +61,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	 * Receives solved CAPTCHA challenges from the user, stores to database, and checks against solution commitment
 	 */
 	router.post(ClientApiPaths.SubmitImageCaptchaSolution, (req, res, next) =>
-		submitImageCaptchaSolution(env, userAccessRulesStorage)(req, res, next),
+		submitImageCaptchaSolution(env)(req, res, next),
 	);
 
 	/**
@@ -72,6 +89,27 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				res,
 				next,
 			),
+	);
+
+	/**
+	 * Supplies a Puzzle challenge to a Dapp User
+	 */
+	router.post(ClientApiPaths.GetPuzzleCaptchaChallenge, (req, res, next) =>
+		getPuzzleCaptchaChallenge(env, userAccessRulesStorage)(req, res, next),
+	);
+
+	/**
+	 * Verifies a user's Puzzle solution as being approved or not
+	 */
+	router.post(ClientApiPaths.SubmitPuzzleCaptchaSolution, (req, res, next) =>
+		submitPuzzleCaptchaSolution(env)(req, res, next),
+	);
+
+	/**
+	 * Checks if an email domain is spam
+	 */
+	router.post(ClientApiPaths.CheckSpamEmail, (req, res, next) =>
+		checkSpamEmail(env)(req, res, next),
 	);
 
 	// Your error handler should always be at the end of your application stack. Apparently it means not only after all

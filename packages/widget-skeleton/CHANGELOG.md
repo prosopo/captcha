@@ -1,5 +1,58 @@
 # @prosopo/widget-skeleton
 
+## 2.8.3
+### Patch Changes
+
+- 566c1f6: Emit a classic-script IIFE build of the procaptcha bundle
+  (`procaptcha.bundle.iife.js`, ~1.5 MB / 634 KB gzipped) alongside the
+  existing ES-module bundle, so customer integrations can pair
+  `<script type="module">` with `<script nomodule>`. Crawlers and runtimes
+  that do not execute module scripts (notably Ahrefs' renderer) currently
+  skip the bundle entirely and never see the rendered widget link;
+  shipping a `nomodule` fallback restores backlink discoverability.
+  
+  Runtime bundle-name lookup now takes a list of candidate filenames so
+  each variant finds its own `<script>` tag in the DOM. The IIFE config
+  disables `manualChunks`, sets `inlineDynamicImports: true`, and uses
+  `emptyOutDir: false` to co-exist with the ESM build in `dist/bundle/`.
+  
+  Widget logo anchor hygiene: drop the `#widget` URL fragment, the
+  visually-hidden 10000px-offset marketing span, the SVG `<title>`, the
+  `aria-label`, and the redundant `prosopo-logo` wrapper. Visible logo
+  and "Prosopo" text are unchanged.
+
+## 2.8.2
+### Patch Changes
+
+- 5f1ae53: Small CSS change and test file change
+
+## 2.8.1
+### Patch Changes
+
+- 06970d2: Missed review comments
+- dd3e06e: CSS hot fix
+
+## 2.8.0
+### Minor Changes
+
+- 73df23c: Stop widget css from being overriden
+
+### Patch Changes
+
+- 8139819: prosopo namespacing for css
+
+## 2.7.14
+### Patch Changes
+
+- 20192d2: Move widget html out of shadow dom
+
+## 2.7.13
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+
 ## 2.7.12
 ### Patch Changes
 

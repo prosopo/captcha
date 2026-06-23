@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export * from "./util/captcha/components/frictionlessCaptcha.js";
-export * from "./util/captcha/components/powCaptcha.js";
-export * from "./util/captcha/components/imageCaptcha.js";
-export * from "./util/captcha/captchaComponentProvider.js";
+export * from "./util/captcha/components/bundleCaptcha.js";

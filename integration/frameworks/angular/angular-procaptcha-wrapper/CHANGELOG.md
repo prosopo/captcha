@@ -1,5 +1,236 @@
 # @prosopo/angular-procaptcha-wrapper
 
+## 1.1.88
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.90
+
+## 1.1.87
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.89
+
+## 1.1.86
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.88
+
+## 1.1.85
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.87
+
+## 1.1.84
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.86
+
+## 1.1.83
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.85
+
+## 1.1.82
+### Patch Changes
+
+- 4c71a9f: chore(deps): bump @angular/core from 20.3.16 to 20.3.25
+  - @prosopo/procaptcha-wrapper@2.6.84
+
+## 1.1.81
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.83
+
+## 1.1.80
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.82
+
+## 1.1.79
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.81
+
+## 1.1.78
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.80
+
+## 1.1.77
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.79
+
+## 1.1.76
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.78
+
+## 1.1.75
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.77
+
+## 1.1.74
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.76
+
+## 1.1.73
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.75
+
+## 1.1.72
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.74
+
+## 1.1.71
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.73
+
+## 1.1.70
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.72
+
+## 1.1.69
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.71
+
+## 1.1.68
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.70
+
+## 1.1.67
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.69
+
+## 1.1.66
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.68
+
+## 1.1.65
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.67
+
+## 1.1.64
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.66
+
+## 1.1.63
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.65
+
+## 1.1.62
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.64
+
+## 1.1.61
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.63
+
+## 1.1.60
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.62
+
+## 1.1.59
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.61
+
+## 1.1.58
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.60
+
+## 1.1.57
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.59
+
+## 1.1.56
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.58
+
+## 1.1.55
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.57
+
+## 1.1.54
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.56
+
+## 1.1.53
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.55
+
+## 1.1.52
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.54
+
+## 1.1.51
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.53
+
+## 1.1.50
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.52
+
+## 1.1.49
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.51
+
+## 1.1.48
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.50
+
+## 1.1.47
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.49
+
+## 1.1.46
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.48
+
+## 1.1.45
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.47
+
+## 1.1.44
+### Patch Changes
+
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+- Updated dependencies [0a38892]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [3acc333]
+  - @prosopo/procaptcha-wrapper@2.6.46
+
 ## 1.1.43
 ### Patch Changes
 

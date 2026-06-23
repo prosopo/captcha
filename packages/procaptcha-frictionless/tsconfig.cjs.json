@@ -15,13 +15,13 @@
 			"path": "../detector/tsconfig.cjs.json"
 		},
 		{
-			"path": "../load-balancer/tsconfig.cjs.json"
-		},
-		{
 			"path": "../locale/tsconfig.cjs.json"
 		},
 		{
 			"path": "../procaptcha-pow/tsconfig.cjs.json"
+		},
+		{
+			"path": "../procaptcha-puzzle/tsconfig.cjs.json"
 		},
 		{
 			"path": "../procaptcha-react/tsconfig.cjs.json"

@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import fs from "node:fs";
+import { builtinModules } from "node:module";
 import path from "node:path";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
@@ -29,6 +30,13 @@ function resolveEntryFile(): string {
 		supportedEntries.find((entry) => fs.existsSync(path.resolve(entry))) ||
 		defaultEntry
 	);
+}
+
+const nodeExternals: Record<string, string> = {};
+for (const m of builtinModules) {
+	const key = m.indexOf("node:") === -1 ? `node:${m}` : m;
+	nodeExternals[key] = `commonjs ${m}`;
+	nodeExternals[m] = `commonjs ${m}`;
 }
 
 export default (mode: string) => {
@@ -52,12 +60,7 @@ export default (mode: string) => {
 				),
 			},
 		},
-		externals: {
-			"node:url": "commonjs url",
-			url: "commonjs url",
-			"node:path": "commonjs path",
-			"node:fs": "commonjs fs",
-		},
+		externals: nodeExternals,
 		entry: resolveEntryFile(),
 		output: {
 			filename: `${libraryName}.[name].bundle.js`,

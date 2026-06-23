@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,5 +13,6 @@
 // limitations under the License.
 export * from "./user.js";
 export * from "./settings.js";
+export * from "./testSiteKeys.js";
 export * from "./captchaType/captchaType.js";
 export * from "./captchaType/captchaTypeSpec.js";

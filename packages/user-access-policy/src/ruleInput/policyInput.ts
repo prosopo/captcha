@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,11 @@ import {
 	type PolicyScope,
 } from "#policy/rule.js";
 
+// `satisfies ZodType<AccessPolicy>` is intentionally omitted: the
+// `deferToVerify` preprocess widens the schema's input type to `unknown`
+// (preprocess accepts anything), which fails the
+// `ZodType<T, ZodTypeDef, T>` identity check. The `AllKeys<AccessPolicy>`
+// constraint still catches missing-field regressions.
 export const accessPolicyInput = z.object({
 	type: z.nativeEnum(AccessPolicyType),
 	captchaType: CaptchaTypeSchema.optional(),
@@ -35,7 +40,22 @@ export const accessPolicyInput = z.object({
 	unsolvedImagesCount: z.coerce.number().optional(),
 	// used to increase the user's score
 	frictionlessScore: z.coerce.number().optional(),
-} satisfies AllKeys<AccessPolicy>) satisfies ZodType<AccessPolicy>;
+	// Skip the request-time block middleware and only fire at verify.
+	// Redis stores booleans as strings — preprocess so "true"/"false"
+	// round-trip to the JS boolean the matcher expects.
+	deferToVerify: z
+		.preprocess((v) => (typeof v === "string" ? v === "true" : v), z.boolean())
+		.optional(),
+} satisfies AllKeys<AccessPolicy>);
+
+// Sanitize block policies by removing captchaType and solvedImagesCount
+export const sanitizeAccessPolicy = (policy: AccessPolicy): AccessPolicy => {
+	if (policy.type === AccessPolicyType.Block) {
+		const { captchaType, solvedImagesCount, ...blockPolicy } = policy;
+		return blockPolicy;
+	}
+	return policy;
+};
 
 export const policyScopeInput = z.object({
 	clientId: z.coerce.string().optional(),

@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { AccountId } from "@polkadot/types/interfaces/runtime";
-import type { TranslationKey } from "@prosopo/locale";
 import {
 	array,
 	custom,
@@ -25,6 +24,7 @@ import {
 	number as zNumber,
 	undefined as zUndefined,
 } from "zod";
+import type { ResultReason } from "../provider/reasons.js";
 
 export enum CaptchaTypes {
 	SelectAll = "SelectAll",
@@ -70,11 +70,16 @@ export interface Captcha extends CaptchaWithoutId {
 	assetURI?: string;
 	datasetId?: string;
 	datasetContentId?: string;
+	// Storage-only random pivot in [0,1). Stamped on insert and indexed
+	// by `{datasetId, solved, randomKey}` to make `getRandomCaptcha` an
+	// O(log n + N) range scan. Absent on the wire — never serialised
+	// back to widgets or APIs.
+	randomKey?: number;
 }
 
 export interface CaptchaResult {
 	status: CaptchaStatus;
-	reason?: TranslationKey;
+	reason?: ResultReason;
 }
 
 export enum CaptchaStatus {

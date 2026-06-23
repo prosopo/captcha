@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,3 +17,4 @@ console.debug(makeDir);
 export * from "./base/index.js";
 export * from "./databases/index.js";
 export * from "./mongooseOptions.js";
+export * from "./redisCache.js";

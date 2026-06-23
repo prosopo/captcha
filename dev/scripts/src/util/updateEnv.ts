@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,8 +14,8 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import type { Logger } from "@prosopo/common";
 import { getEnv } from "@prosopo/dotenv";
+import type { Logger } from "@prosopo/logger";
 import { at } from "@prosopo/util";
 import dotenv from "dotenv";
 import fg from "fast-glob";

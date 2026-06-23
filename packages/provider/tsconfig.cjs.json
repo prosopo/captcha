@@ -24,6 +24,9 @@
 			"path": "../common/tsconfig.cjs.json"
 		},
 		{
+			"path": "../logger/tsconfig.cjs.json"
+		},
+		{
 			"path": "../database/tsconfig.cjs.json"
 		},
 		{
@@ -31,6 +34,9 @@
 		},
 		{
 			"path": "../env/tsconfig.cjs.json"
+		},
+		{
+			"path": "../ipinfo/tsconfig.cjs.json"
 		},
 		{
 			"path": "../load-balancer/tsconfig.cjs.json"
@@ -61,6 +67,9 @@
 		},
 		{
 			"path": "../locale/tsconfig.cjs.json"
+		},
+		{
+			"path": "../redis-client/tsconfig.cjs.json"
 		}
 	]
 }

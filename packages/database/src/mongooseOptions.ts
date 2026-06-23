@@ -14,74 +14,55 @@
 import { ServerApiVersion } from "mongodb";
 import type { ConnectOptions } from "mongoose";
 
+export type MongoCompressor = "zstd" | "none" | "snappy" | "zlib";
+
+const DEFAULT_COMPRESSORS: MongoCompressor[] = [
+	"zstd",
+	"snappy",
+	"zlib",
+	"none",
+];
+
 /**
  * Determines MongoDB compression settings based on whether the connection URL is a remote domain.
  * Remote domains (e.g., abc.com, x.y.com) will use compression, while local connections
- * (e.g., localhost, container names like "database", "db", "mongo", or IP addresses) will not.
+ * (e.g., localhost, container names like "database", "db", "mongo") will not.
  *
  * @param url - The MongoDB connection URL string
  * @param compressors - Optional array of compressor strings. Defaults to ["zstd", "snappy", "zlib", "none"]
  * @returns Array of compressor strings if the URL is a remote domain, empty array otherwise
  */
 export const getMongoCompressors = (
-    url: string,
-    compressors: ("zstd" | "none" | "snappy" | "zlib")[] = [
-        "zstd",
-        "snappy",
-        "zlib",
-        "none",
-    ],
-): ("zstd" | "none" | "snappy" | "zlib")[] => {
-    try {
-        // Extract the part after "://" to handle any protocol (mongodb://, mongodb+srv://, etc.)
-        const protocolIndex = url.indexOf("://");
-        const urlWithoutProtocol =
-            protocolIndex !== -1 ? url.slice(protocolIndex + 3) : url;
-        const parsedUrl = new URL(`mongodb://${urlWithoutProtocol}`);
-        const hostname = parsedUrl.hostname;
+	url: string,
+	compressors: MongoCompressor[] = DEFAULT_COMPRESSORS,
+): MongoCompressor[] => {
+	try {
+		// Extract the part after "://" to handle any protocol (mongodb://, mongodb+srv://, etc.)
+		const protocolIndex = url.indexOf("://");
+		const urlWithoutProtocol =
+			protocolIndex !== -1 ? url.slice(protocolIndex + 3) : url;
+		const parsedUrl = new URL(`mongodb://${urlWithoutProtocol}`);
+		const hostname = parsedUrl.hostname;
 
-        // Localhost variants should not use compression
-        const isLocalhost =
-            hostname === "localhost" ||
-            hostname === "127.0.0.1" ||
-            hostname === "::1" ||
-            hostname === "[::1]";
+		// Localhost variants should not use compression. Note: URL normalises a
+		// bracketed IPv6 loopback ("[::1]") to "[::1]" in hostname.
+		const isLocalhost =
+			hostname === "localhost" ||
+			hostname === "127.0.0.1" ||
+			hostname === "[::1]";
 
-        // If it's localhost, no compression
-        if (isLocalhost) {
-            return [];
-        }
+		if (isLocalhost) {
+			return [];
+		}
 
-        // Domains and IP addresses (IPv4/IPv6) include dots or colons
-        return hostname.includes(".") ||
-            hostname.includes(":")
-            ? compressors
-            : [];
-    } catch {
-        // If URI parsing fails, default to compression
-        return compressors;
-    }
+		// Domains and IP addresses (IPv4/IPv6) include dots or colons; bare
+		// single-label hostnames (container/service names) do not.
+		return hostname.includes(".") || hostname.includes(":") ? compressors : [];
+	} catch {
+		// If URI parsing fails, default to compression
+		return compressors;
+	}
 };
-
-export interface MongoConnectionOptions extends Partial<ConnectOptions> {
-    serverApi: {
-        version: ServerApiVersion;
-        strict: boolean;
-        deprecationErrors: boolean;
-    };
-    maxPoolSize: number;
-    minPoolSize: number;
-    connectTimeoutMS: number;
-    socketTimeoutMS: number;
-    maxIdleTimeMS: number;
-    appName: string;
-    serverSelectionTimeoutMS: number;
-    keepAlive: boolean;
-    keepAliveInitialDelay: number;
-    maxConnecting: number;
-    compressors: ("zstd" | "none" | "snappy" | "zlib")[];
-    dbName?: string;
-}
 
 /**
  * Returns default mongoose connection options with the ability to override specific values.
@@ -90,53 +71,47 @@ export interface MongoConnectionOptions extends Partial<ConnectOptions> {
  * @param options.url - MongoDB connection URL string
  * @param options.appName - Application name (typically from fileURLToPath(import.meta.url))
  * @param options.maxPoolSize - Maximum pool size (default: 10)
+ * @param options.minPoolSize - Minimum pool size (default: 0)
  * @param options.dbName - Optional database name
  * @returns Mongoose connection options object
  */
-export const getMongoConnectionOptions = (
-    options: {
-        url: string;
-        appName: string;
-        maxPoolSize?: number;
-        dbName?: string;
-    },
-): MongoConnectionOptions => {
-    const {
-        url,
-        appName,
-        maxPoolSize = 10,
-        dbName,
-    } = options;
+export const getMongoConnectionOptions = (options: {
+	url: string;
+	appName: string;
+	maxPoolSize?: number;
+	minPoolSize?: number;
+	dbName?: string;
+}): ConnectOptions => {
+	const { url, appName, maxPoolSize = 10, minPoolSize = 0, dbName } = options;
 
-    if (!url || url.trim() === "") {
-        throw new Error("MongoDB connection URL is required and cannot be empty");
-    }
+	if (!url || url.trim() === "") {
+		throw new Error("MongoDB connection URL is required and cannot be empty");
+	}
 
-    const compressors = getMongoCompressors(url);
+	const compressors = getMongoCompressors(url);
 
-    const connectionOptions: MongoConnectionOptions = {
-        serverApi: {
-            version: ServerApiVersion.v1,
-            strict: true,
-            deprecationErrors: true,
-        },
-        maxPoolSize, // allow up to N connections at any given time. >1 connection allows parallel db operations
-        minPoolSize: 0, // allow pool to close idle connections down to this amount, 0 keep no connections open if they've been idle for longer than maxIdleTimeMS
-        maxConnecting: 2, // maximum number of concurrent connection attempts
-        connectTimeoutMS: 10000, // max time to connect to the database
-        socketTimeoutMS: 30000, // max time to wait for a response from the database when doing an operation
-        maxIdleTimeMS: 300000, // max time spent idle before closing the connection
-        appName,
-        serverSelectionTimeoutMS: 20000, // max time to wait for a response from the database
-        keepAlive: true, // enable keep-alive
-        keepAliveInitialDelay: 120000, // initial delay before sending keep-alive probes (2 minutes)
-        compressors,
-    };
+	const connectionOptions: ConnectOptions = {
+		serverApi: {
+			version: ServerApiVersion.v1,
+			// strict mode rejects any command outside the Stable API; leave it
+			// off so non-stable operations (index/admin commands etc.) keep working.
+			strict: false,
+			deprecationErrors: false,
+		},
+		maxPoolSize, // allow up to N connections at any given time. >1 connection allows parallel db operations
+		minPoolSize, // pool may close idle connections down to this amount (0 = close all idle past maxIdleTimeMS)
+		maxConnecting: 2, // maximum number of concurrent connection attempts
+		connectTimeoutMS: 10000, // max time to connect to the database
+		socketTimeoutMS: 30000, // max time to wait for a response from the database when doing an operation
+		maxIdleTimeMS: 300000, // max time spent idle before closing the connection
+		appName,
+		serverSelectionTimeoutMS: 20000, // max time to wait for a response from the database
+		compressors,
+	};
 
-    if (dbName) {
-        connectionOptions.dbName = dbName;
-    }
+	if (dbName) {
+		connectionOptions.dbName = dbName;
+	}
 
-    return connectionOptions;
+	return connectionOptions;
 };
-

@@ -1,5 +1,84 @@
 # @prosopo/api-route
 
+## 2.6.48
+### Patch Changes
+
+  - @prosopo/logger@1.0.4
+
+## 2.6.47
+### Patch Changes
+
+  - @prosopo/logger@1.0.3
+
+## 2.6.46
+### Patch Changes
+
+- Updated dependencies [97cf7bd]
+- Updated dependencies [6ca1125]
+- Updated dependencies [32a591b]
+  - @prosopo/logger@1.0.2
+
+## 2.6.45
+### Patch Changes
+
+- 0fd81af: Extract the logger into its own `@prosopo/logger` package, out of `@prosopo/common`. Consumers now import logger symbols from `@prosopo/logger`; `@prosopo/common` no longer re-exports them. Unused `@prosopo/common` dependencies pruned where the only usage was the logger.
+- Updated dependencies [0fd81af]
+  - @prosopo/logger@1.0.1
+
+## 2.6.44
+### Patch Changes
+
+  - @prosopo/common@3.1.36
+
+## 2.6.43
+### Patch Changes
+
+  - @prosopo/common@3.1.35
+
+## 2.6.42
+### Patch Changes
+
+- Updated dependencies [4993813]
+  - @prosopo/common@3.1.34
+
+## 2.6.41
+### Patch Changes
+
+  - @prosopo/common@3.1.33
+
+## 2.6.40
+### Patch Changes
+
+  - @prosopo/common@3.1.32
+
+## 2.6.39
+### Patch Changes
+
+- Updated dependencies [4a9c518]
+  - @prosopo/common@3.1.31
+
+## 2.6.38
+### Patch Changes
+
+  - @prosopo/common@3.1.30
+
+## 2.6.37
+### Patch Changes
+
+- Updated dependencies [c5ee492]
+  - @prosopo/common@3.1.29
+
+## 2.6.36
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+- Updated dependencies [0a38892]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [3acc333]
+  - @prosopo/common@3.1.28
+
 ## 2.6.35
 ### Patch Changes
 

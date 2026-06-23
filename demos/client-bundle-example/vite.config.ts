@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { loadEnv } from "@prosopo/dotenv";
 import { type UserConfig, defineConfig } from "vite";
 import explanationInjector from "./src/plugins/explanation-injector.js";
@@ -22,6 +23,11 @@ import navigationInjector from "./src/plugins/navigation-injector.js";
 import statusLogInjector from "./src/plugins/status-log-injector.js";
 
 loadEnv();
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const certPath = path.resolve(__dirname, "../../certs");
+const keyPath = path.join(certPath, "server.key");
+const crtPath = path.join(certPath, "server.crt");
 
 // Function to copy contents of a directory to another directory
 function copyDirContents(src: string, dest: string) {
@@ -86,12 +92,23 @@ function moveDirectoryContents(
 }
 
 export default defineConfig(({ command, mode }) => {
+	// Check if certificates exist
+	const useTls = fs.existsSync(keyPath) && fs.existsSync(crtPath);
+
+	console.log({ useTls });
+
 	return {
 		watch: false,
-		mode: "development",
+		mode,
 		server: {
 			host: true,
 			cors: true,
+			https: useTls
+				? {
+						key: fs.readFileSync(keyPath),
+						cert: fs.readFileSync(crtPath),
+					}
+				: undefined,
 		},
 		define: {
 			"import.meta.env.PROSOPO_SITE_KEY": JSON.stringify(
@@ -100,8 +117,8 @@ export default defineConfig(({ command, mode }) => {
 			"import.meta.env.PROSOPO_SITE_KEY_IMAGE": JSON.stringify(
 				process.env.PROSOPO_SITE_KEY_IMAGE,
 			),
-			"import.meta.env.PROSOPO_SITE_KEY_SLIDER": JSON.stringify(
-				process.env.PROSOPO_SITE_KEY_SLIDER,
+			"import.meta.env.PROSOPO_SITE_KEY_PUZZLE": JSON.stringify(
+				process.env.PROSOPO_SITE_KEY_PUZZLE,
 			),
 			"import.meta.env.PROSOPO_SITE_KEY_POW": JSON.stringify(
 				process.env.PROSOPO_SITE_KEY_POW,
@@ -114,7 +131,7 @@ export default defineConfig(({ command, mode }) => {
 			),
 			"import.meta.env.VITE_BUNDLE_URL": JSON.stringify(
 				process.env.VITE_BUNDLE_URL ||
-					"http://localhost:9269/procaptcha.bundle.js",
+					"https://localhost:9269/procaptcha.bundle.js",
 			),
 			"import.meta.env.PROSOPO_WEB2": JSON.stringify(
 				process.env.PROSOPO_WEB2 || "true",
@@ -180,6 +197,22 @@ export default defineConfig(({ command, mode }) => {
 					"invisible-frictionless-explicit": path.resolve(
 						__dirname,
 						"src/invisible-frictionless-explicit.html",
+					),
+					"puzzle-implicit": path.resolve(
+						__dirname,
+						"src/puzzle-implicit.html",
+					),
+					"puzzle-explicit": path.resolve(
+						__dirname,
+						"src/puzzle-explicit.html",
+					),
+					"invisible-puzzle-implicit": path.resolve(
+						__dirname,
+						"src/invisible-puzzle-implicit.html",
+					),
+					"invisible-puzzle-explicit": path.resolve(
+						__dirname,
+						"src/invisible-puzzle-explicit.html",
 					),
 				},
 			},

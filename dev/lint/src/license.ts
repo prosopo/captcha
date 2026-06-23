@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -116,6 +116,7 @@ const license = async (args: {
 				"**/packages/keyring/src/pair/**",
 				"**/packages/types/src/keyring/keyring/**",
 				"**/packages/types/src/keyring/pair/**",
+				"**/packages/fingerprintjs/**",
 			],
 		})
 		.filter((file) => fs.lstatSync(file).isFile());

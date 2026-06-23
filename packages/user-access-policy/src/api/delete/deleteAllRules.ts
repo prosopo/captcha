@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import type { Logger } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import type { AccessRulesStorage } from "#policy/rulesStorage.js";
 
 export class DeleteAllRulesEndpoint implements ApiEndpoint<undefined> {
@@ -28,10 +28,11 @@ export class DeleteAllRulesEndpoint implements ApiEndpoint<undefined> {
 
 	public getRequestArgsSchema(): undefined {}
 
-	async processRequest(): Promise<ApiEndpointResponse> {
+	async processRequest(logger?: Logger): Promise<ApiEndpointResponse> {
+		const log = logger ?? this.logger;
 		const deletedCount = await this.accessRulesStorage.deleteAllRules();
 
-		this.logger.info(() => ({
+		log.info(() => ({
 			msg: "Endpoint deleted all access rules",
 			data: { deletedCount },
 		}));

@@ -23,6 +23,9 @@
 			"path": "../../packages/database"
 		},
 		{
+			"path": "../../packages/logger"
+		},
+		{
 			"path": "../../packages/dotenv"
 		},
 		{

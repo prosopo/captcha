@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ describe("Config utility functions", () => {
 
 	describe("getProcaptchaScript", () => {
 		it("should return null when no matching script is found", () => {
-			const result = getProcaptchaScript("nonexistent");
+			const result = getProcaptchaScript(["nonexistent"]);
 			expect(result).toBeNull();
 		});
 
@@ -43,14 +43,14 @@ describe("Config utility functions", () => {
 			script.src = "https://example.com/procaptcha.js";
 			document.body.appendChild(script);
 
-			const result = getProcaptchaScript("procaptcha");
+			const result = getProcaptchaScript(["procaptcha"]);
 			expect(result).toBe(script);
 		});
 	});
 
 	describe("extractParams", () => {
 		it("should return undefined values when no matching script is found", () => {
-			const result = extractParams("nonexistent");
+			const result = extractParams(["nonexistent"]);
 			expect(result).toEqual({
 				onloadUrlCallback: undefined,
 				renderExplicit: undefined,
@@ -63,7 +63,7 @@ describe("Config utility functions", () => {
 				"https://example.com/procaptcha.js?onload=onloadCallback&render=explicit";
 			document.body.appendChild(script);
 
-			const result = extractParams("procaptcha");
+			const result = extractParams(["procaptcha"]);
 			expect(result).toEqual({
 				onloadUrlCallback: "onloadCallback",
 				renderExplicit: "explicit",
@@ -75,7 +75,7 @@ describe("Config utility functions", () => {
 			script.src = "https://example.com/procaptcha.js?onload=onloadCallback";
 			document.body.appendChild(script);
 
-			const result = extractParams("procaptcha");
+			const result = extractParams(["procaptcha"]);
 			expect(result).toEqual({
 				onloadUrlCallback: "onloadCallback",
 				renderExplicit: undefined,
@@ -87,7 +87,7 @@ describe("Config utility functions", () => {
 			script.src = "https://example.com/procaptcha.js";
 			document.body.appendChild(script);
 
-			const result = extractParams("procaptcha");
+			const result = extractParams(["procaptcha"]);
 			expect(result).toEqual({
 				onloadUrlCallback: undefined,
 				renderExplicit: undefined,

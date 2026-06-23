@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,10 +48,10 @@ export default function navigationInjector(): Plugin {
 				implicit: { path: "frictionless-implicit.html", exists: true },
 				explicit: { path: "frictionless-explicit.html", exists: true },
 			},
-			// slider: {
-			// 	implicit: { path: "slider-implicit.html", exists: true },
-			// 	explicit: { path: "slider-explicit.html", exists: true },
-			// },
+			puzzle: {
+				implicit: { path: "puzzle-implicit.html", exists: true },
+				explicit: { path: "puzzle-explicit.html", exists: true },
+			},
 		},
 		invisible: {
 			image: {
@@ -72,10 +72,10 @@ export default function navigationInjector(): Plugin {
 					exists: true,
 				},
 			},
-			// slider: {
-			// 	implicit: { path: "invisible-slider-implicit.html", exists: true },
-			// 	explicit: { path: "invisible-slider-explicit.html", exists: true },
-			// },
+			puzzle: {
+				implicit: { path: "invisible-puzzle-implicit.html", exists: true },
+				explicit: { path: "invisible-puzzle-explicit.html", exists: true },
+			},
 		},
 	};
 

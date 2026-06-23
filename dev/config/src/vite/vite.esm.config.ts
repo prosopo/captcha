@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import VitePluginCopy from "./vite-plugin-copy.js";
 export default async function (
 	name: string,
 	tsConfigPath: string,
-	entry?: string | Record<string, string>,
+	entry?: string | string[] | Record<string, string>,
 ): Promise<UserConfig> {
 	console.info(`ViteEsmConfig: ${name}`);
 	const projectExternal = await getExternalsFromReferences(tsConfigPath, [

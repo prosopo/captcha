@@ -1,5 +1,58 @@
 # @prosopo/client-bundle-example
 
+## 2.10.18
+### Patch Changes
+
+- 5d87beb: chore(client-bundle-example): register invisible-puzzle explicit/implicit pages as Vite build entries so they are emitted in `dist` and reachable from the demo navigation.
+
+## 2.10.17
+### Patch Changes
+
+- 273926d: Fix `/captcha/{type}` endpoints looping with "No session found" when the
+  Redis session cache and Mongo diverge: on a session lookup miss the cache
+  entry is now invalidated, so the next `/frictionless` falls through and
+  creates a fresh session instead of resurrecting the dead one.
+  
+  Add invisible-mode support to the puzzle captcha widget: the
+  execute-event handler now drives the full phase transition
+  (`start` → `setChallengeData` → `dragging`), and the puzzle overlay is
+  rendered in invisible mode so the user can still solve the (inherently
+  interactive) drag challenge — only the checkbox UI is hidden.
+  
+  Add `invisible-puzzle-implicit.html` / `invisible-puzzle-explicit.html`
+  demo pages, and surface both standard and invisible puzzle entries in
+  the client-bundle-example navbar.
+- 5335647: Remove the obsolete `captchaType` render option from the client-bundle-example
+  demos; captcha type is now server-driven per site key, so the prop was a no-op.
+
+## 2.10.16
+### Patch Changes
+
+- dbcd098: Fix bug with chrome on ios
+
+## 2.10.15
+### Patch Changes
+
+- f5c8725: Fix bug with chrome on ios
+
+## 2.10.14
+### Patch Changes
+
+- 676c5f2: Use HTTPS in developmentwq
+- c1d738f: Update env for tests
+
+## 2.10.13
+### Patch Changes
+
+- 8148587: Clustering
+
+## 2.10.12
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+
 ## 2.10.11
 ### Patch Changes
 

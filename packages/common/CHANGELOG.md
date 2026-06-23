@@ -1,5 +1,101 @@
 # @prosopo/common
 
+## 3.1.40
+### Patch Changes
+
+- Updated dependencies [edcd450]
+  - @prosopo/locale@3.2.5
+  - @prosopo/logger@1.0.4
+
+## 3.1.39
+### Patch Changes
+
+  - @prosopo/logger@1.0.3
+
+## 3.1.38
+### Patch Changes
+
+- Updated dependencies [97cf7bd]
+- Updated dependencies [6ca1125]
+- Updated dependencies [32a591b]
+  - @prosopo/logger@1.0.2
+
+## 3.1.37
+### Patch Changes
+
+- 0fd81af: Extract the logger into its own `@prosopo/logger` package, out of `@prosopo/common`. Consumers now import logger symbols from `@prosopo/logger`; `@prosopo/common` no longer re-exports them. Unused `@prosopo/common` dependencies pruned where the only usage was the logger.
+- Updated dependencies [0fd81af]
+  - @prosopo/logger@1.0.1
+
+## 3.1.36
+### Patch Changes
+
+- Updated dependencies [5786629]
+  - @prosopo/locale@3.2.4
+
+## 3.1.35
+### Patch Changes
+
+- Updated dependencies [53bfd45]
+  - @prosopo/locale@3.2.3
+
+## 3.1.34
+### Patch Changes
+
+- 4993813: Standardise provider error logging so every error is queryable via a single
+  top-level `err` field, and so the logged value is the locale-stable
+  translation key (e.g. `CAPTCHA.NO_SESSION_FOUND`) rather than the translated
+  message text (`"No session found"`, `"Aucune session trouvée"`, etc.).
+  
+  - `ProsopoBaseError.logError()` now emits `{ err: translationKey, data: { errorType, context } }` instead of `{ data: { errorType, errorParams: { error, context } } }`. OpenObserve queries can drop `data_errorparams_error` and `data_errorparams_context_translationmessage`.
+  - The redundant `translationMessage` injection into wrapped-error context is removed (it was the source of the locale-variant strings).
+  - `NativeLogger.unpackError()` prefers `e.translationKey` over `e.message` when surfacing an error via `logger.error(() => ({ err }))`, so catch-and-log sites are standardised automatically.
+  - Removed two `console.error` calls in `verify.ts` and an accidental debug `console.log(JSON.stringify(effectiveRules, null, 2))` in `util.ts` that were both bypassing `req.logger` (no `requestId`, and in the JSON dump case exploding into ~20 separate log entries per call).
+  - HTTP response shape is unchanged: `unwrapError()` still uses `i18n.t(err.message)` for the response body, and `jsonError.key` still carries the translation key for clients.
+- Updated dependencies [4aae4e6]
+  - @prosopo/locale@3.2.2
+
+## 3.1.33
+### Patch Changes
+
+- Updated dependencies [b94890c]
+  - @prosopo/locale@3.2.1
+
+## 3.1.32
+### Patch Changes
+
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+  - @prosopo/locale@3.2.0
+
+## 3.1.31
+### Patch Changes
+
+- 4a9c518: fix/catcher-demo-vitest
+
+## 3.1.30
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/locale@3.1.29
+
+## 3.1.29
+### Patch Changes
+
+- c5ee492: fix/portal-traffic-report
+
+## 3.1.28
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+- Updated dependencies [0a38892]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [fe9fe22]
+- Updated dependencies [3acc333]
+  - @prosopo/locale@3.1.28
+
 ## 3.1.27
 ### Patch Changes
 

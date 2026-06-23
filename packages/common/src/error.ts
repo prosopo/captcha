@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,10 +13,10 @@
 // limitations under the License.
 
 import type { TranslationKey } from "@prosopo/locale";
+import { type LogLevel, type Logger, getLogger } from "@prosopo/logger";
 import type { ApiJsonError } from "@prosopo/types";
 import type { TFunction } from "i18next";
 import { ZodError } from "zod";
-import { type LogLevel, type Logger, getLogger } from "./logger.js";
 
 type BaseErrorOptions<ContextType> = {
 	name?: string;
@@ -63,12 +63,7 @@ export abstract class ProsopoBaseError<
 		if (error instanceof Error) {
 			super(i18n.t(error.message));
 			this.translationKey = options?.translationKey;
-			this.context = {
-				...(options?.context as ContextType),
-				...(options?.translationKey
-					? { translationMessage: i18n.t(options.translationKey) }
-					: {}),
-			};
+			this.context = options?.context;
 		} else {
 			super(i18n.t(error));
 			this.translationKey = error;
@@ -78,13 +73,19 @@ export abstract class ProsopoBaseError<
 	}
 
 	private logError(logger: Logger, logLevel: LogLevel, errorName?: string) {
-		const errorParams = { error: this.message, context: this.context };
-		const errorMessage = { errorType: errorName || this.name, errorParams };
+		// `err` at the top level is the queryable, locale-stable identifier in
+		// log aggregators — prefer the translation key over the translated
+		// message so dashboards can filter on a constant.
+		const err = this.translationKey || this.message;
+		const data = {
+			errorType: errorName || this.name,
+			...(this.context ? { context: this.context } : {}),
+		};
 		if (logLevel === "debug") {
-			logger.debug(() => ({ data: { ...errorMessage, stack: this.stack } }));
+			logger.debug(() => ({ err, data: { ...data, stack: this.stack } }));
 			return;
 		}
-		logger.error(() => ({ data: { ...errorMessage } }));
+		logger.error(() => ({ err, data }));
 	}
 }
 
@@ -214,6 +215,8 @@ export const unwrapError = (
 		jsonError.key =
 			contextTranslationKey || err.translationKey || "API.UNKNOWN";
 		jsonError.message = i18n.t(err.message);
+		jsonError.data = err.context.data as Record<string, unknown> | undefined;
+
 		const contextCode =
 			typeof err.context.code === "number" ? err.context.code : undefined;
 		code = contextCode ?? jsonError.code;

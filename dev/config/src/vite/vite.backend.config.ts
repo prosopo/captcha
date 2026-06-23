@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ export default async function (
 	packageVersion: string,
 	bundleName: string,
 	packageDir: string,
-	entry: string | string[],
+	entry: string | string[] | Record<string, string>,
 	command?: string,
 	mode?: string,
 	outputDir?: string,
@@ -80,8 +80,15 @@ export default async function (
 	let entriesAbsolute: string[];
 	if (typeof entry === "string") {
 		entriesAbsolute = [path.resolve(packageDir, entry)];
-	} else {
+	} else if (Array.isArray(entry)) {
 		entriesAbsolute = entry.map((e) => path.resolve(packageDir, e));
+	} else {
+		entriesAbsolute = Object.fromEntries(
+			Object.entries(entry).map(([key, value]) => [
+				key,
+				path.resolve(packageDir, value),
+			]),
+		) as unknown as string[];
 	}
 
 	// drop console logs if in production mode

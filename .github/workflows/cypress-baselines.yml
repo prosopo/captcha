@@ -1,0 +1,143 @@
+# Regenerate visual-regression baseline snapshots and open a PR with the
+# updated PNGs. Intended to be triggered manually after an intentional visual
+# change to the captcha widget. Runs the same Docker/services setup as the
+# main cypress workflow, but invokes cypress with `visualRegressionType=base`
+# so the plugin writes baselines instead of comparing.
+
+name: cypress-baselines
+
+on:
+  workflow_dispatch:
+    inputs:
+      configs:
+        description: "Comma-separated configs to regenerate (image,frictionless,pow,invisible). Default: all four."
+        required: false
+        default: "image,frictionless,pow,invisible"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
+  GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
+  CARGO_TERM_COLOR: always
+  NODE_OPTIONS: "--max-old-space-size=4096"
+  NODE_ENV: "test"
+  NODE_TLS_REJECT_UNAUTHORIZED: "0"
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set NX_PARALLEL environment variable
+        run: echo "NX_PARALLEL=$(nproc)" >> $GITHUB_ENV
+
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PROSOPONATOR_PAT }}
+          submodules: "recursive"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - uses: prosopo/captcha/.github/actions/npm@gha
+        with:
+          npm_ci_args: '--include=dev --no-audit --no-fund --prefer-offline'
+
+      - name: Setup certs
+        run: |
+          ./setup_certs.sh
+          ./install_cert.sh
+
+      - name: Setup env
+        run: |
+          set -euxo pipefail
+          cp demos/client-example-server/env.development demos/client-example-server/.env.test
+          cp demos/client-bundle-example/env.development demos/client-bundle-example/.env.test
+          cp dev/scripts/env.test .env.test
+          cp dev/scripts/env.test dev/scripts/.env.test
+          cp dev/scripts/env.test packages/cli/.env.test
+          cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
+          sed -i 's|http://localhost|https://localhost|g' demos/client-bundle-example/.env.test
+          sed -i 's|http://localhost|https://localhost|g' .env.test
+          sed -i 's|http://localhost|https://localhost|g' dev/scripts/.env.test
+          sed -i 's|http://localhost|https://localhost|g' packages/cli/.env.test
+          sed -i 's|http://localhost|https://localhost|g' packages/procaptcha-bundle/.env.test
+          sed -i '/^PROSOPO_VERIFICATION_TYPE=/s/=.*/=local/' demos/client-example-server/.env.test
+
+      - run: npx turbo run build
+
+      - name: Start the docker images
+        run: |
+          docker compose --file ./docker/docker-compose.test.yml up -d --remove-orphans --force-recreate --always-recreate-deps
+          docker container ls
+          sleep 10s
+
+      - run: NODE_ENV="test" npm run setup
+
+      - run: NODE_ENV="development" npx turbo run @prosopo/procaptcha-bundle#bundle
+
+      - name: Regenerate image baselines
+        if: contains(inputs.configs, 'image')
+        run: |
+          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:baselines:image" --success "first" --kill-others
+
+      - name: Regenerate frictionless baselines
+        if: contains(inputs.configs, 'frictionless')
+        run: |
+          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:baselines:frictionless" --success "first" --kill-others
+
+      - name: Regenerate pow baselines
+        if: contains(inputs.configs, 'pow')
+        run: |
+          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:baselines:pow" --success "first" --kill-others
+
+      - name: Regenerate invisible baselines
+        if: contains(inputs.configs, 'invisible')
+        run: |
+          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:baselines:invisible" --success "first" --kill-others
+
+      - run: docker compose --file ./docker/docker-compose.test.yml down
+        if: always()
+
+      - name: Write changeset for baseline regeneration
+        run: |
+          cat > ".changeset/regen-baselines-${{ github.run_id }}.md" <<'EOF'
+          ---
+          "@prosopo/cypress-shared": patch
+          ---
+
+          Regenerate visual snapshot baselines.
+          EOF
+
+      - name: Open PR with regenerated baselines
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.PROSOPONATOR_PAT }}
+          add-paths: |
+            demos/cypress-shared/cypress/snapshots/baseline/**
+            .changeset/regen-baselines-*.md
+          commit-message: "chore(cypress): regenerate visual snapshot baselines"
+          title: "chore(cypress): regenerate visual snapshot baselines"
+          body: |
+            Automated baseline regeneration via the `cypress-baselines` workflow.
+
+            Configs regenerated: `${{ inputs.configs }}`
+            Triggered by: @${{ github.actor }}
+            Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            Review the PNG changes carefully — each one represents an intentional visual change to the captcha widget.
+          branch: chore/regenerate-cypress-baselines-${{ github.run_id }}
+          delete-branch: true
+          base: ${{ github.ref_name }}

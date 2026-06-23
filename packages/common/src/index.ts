@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,6 +13,5 @@
 // limitations under the License.
 
 export * from "./error.js";
-export * from "./logger.js";
-export * from "./utils.js";
-export * from "./batches.js";
+export * from "./utils/utils.js";
+export * from "./utils/batches.js";

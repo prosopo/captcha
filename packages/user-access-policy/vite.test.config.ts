@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@ import path from "node:path";
 // limitations under the License.
 import { ViteTestConfig } from "@prosopo/config";
 import dotenv from "dotenv";
+import { mergeConfig } from "vitest/config";
 process.env.NODE_ENV = "test";
 // if .env.test exists at this level, use it, otherwise use the one at the root
 const envFile = `.env.${process.env.NODE_ENV || "development"}`;
@@ -29,4 +30,14 @@ if (fs.existsSync(envFile)) {
 
 dotenv.config({ path: envPath });
 
-export default ViteTestConfig();
+// All integration tests in this package share one redis-stack instance
+// at localhost:6379, and they both write to the global access-rules
+// index. With vitest's default parallel file execution, the suites
+// trample each other's data (row counts diverge, indexes get dropped
+// mid-query). Force serial file execution so test isolation matches
+// the redis isolation the suites already rely on.
+export default mergeConfig(ViteTestConfig(), {
+	test: {
+		fileParallelism: false,
+	},
+});

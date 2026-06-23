@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 
 import path from "node:path";
 import { defaultConfig, getSecret } from "@prosopo/cli";
-import { LogLevel, ProsopoEnvError, getLogger } from "@prosopo/common";
+import { ProsopoEnvError } from "@prosopo/common";
 import { getEnvFile } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
 import {
@@ -22,6 +22,7 @@ import {
 	getDefaultSiteKeys,
 	getPair,
 } from "@prosopo/keyring";
+import { LogLevel, getLogger } from "@prosopo/logger";
 import type { IProviderAccount } from "@prosopo/types";
 import { get } from "@prosopo/util";
 import fse from "fs-extra";
@@ -52,8 +53,8 @@ function getDefaultProvider(): IProviderAccount {
 	const host = process.env.PROSOPO_PROVIDER_HOST || "localhost";
 	return {
 		url: process.env.PROSOPO_API_PORT
-			? `http://${host}:${process.env.PROSOPO_API_PORT}`
-			: `http://${host}:9229`,
+			? `https://${host}:${process.env.PROSOPO_API_PORT}`
+			: `https://${host}:9229`,
 		datasetFile: getDatasetFilePath(),
 		address: process.env.PROSOPO_PROVIDER_ADDRESS || "",
 		secret: getSecret(),

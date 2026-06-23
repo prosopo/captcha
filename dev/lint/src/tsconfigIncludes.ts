@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -86,7 +86,7 @@ const checkTsconfigIncludes = (args: {
 		.parse(pkgJson.workspaces)
 		.map((g) => `${path.dirname(args.pkg)}/${g}/tsconfig{,.+}.json`);
 	const tsconfigPaths = fg.globSync(globs, {
-		ignore: ["**packages/docs**"],
+		ignore: ["**packages/docs**", "**/packages/fingerprintjs/**"],
 	});
 	for (const tsconfigPath of tsconfigPaths) {
 		console.log("Checking", tsconfigPath);

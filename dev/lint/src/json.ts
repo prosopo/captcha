@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -81,7 +81,11 @@ const json = async (args: {
 			`!${path.dirname(args.pkg)}/${g}/**/node_modules/**`,
 		]);
 	// glob the json files
-	const jsonPaths = fg.globSync(globs, { ignore: ignorePaths });
+	// hardcoded ignores forked fpjs
+	const hardcodedIgnores = ["**/packages/fingerprintjs/**"];
+	const jsonPaths = fg.globSync(globs, {
+		ignore: [...ignorePaths, ...hardcodedIgnores],
+	});
 	for (const jsonPath of jsonPaths) {
 		console.log("Checking", jsonPath);
 		const content = fs.readFileSync(jsonPath, "utf8");

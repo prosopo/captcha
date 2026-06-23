@@ -1,5 +1,607 @@
 # @prosopo/procaptcha
 
+## 2.10.39
+### Patch Changes
+
+- 12cd0a6: Add ipv4-only / ipv6-only provider DNS routing via `data-ipv4` / `data-ipv6`.
+  
+  Dapps that need to pin captcha traffic to a single IP stack can now do so:
+  
+  ```html
+  <div class="procaptcha" data-sitekey="..." data-ipv4="true"></div>
+  ```
+  
+  What happens under the hood:
+  
+  - The widget reads `data-ipv4` / `data-ipv6` (or the matching `ipv4` / `ipv6`
+    booleans on `ProcaptchaRenderOptions` / explicit `render(...)`) and threads
+    them through `ProcaptchaConfigSchema`.
+  - `pickIpMode(config)` resolves them into an `IpMode` (`"ipv4"` / `"ipv6"` /
+    `undefined`); `ipv4` wins if both are set.
+  - The frictionless / image / pow / puzzle managers pass the `IpMode` into
+    `getProcaptchaRandomActiveProvider`, which calls `/healthz` on the matching
+    single-stack global hostname (`ipv4.pronode.prosopo.io` or
+    `ipv6.pronode.prosopo.io`) and pins subsequent captcha calls to
+    `ipv4.pronodeN.prosopo.io` / `ipv6.pronodeN.prosopo.io`. The dual-stack
+    cache and the single-stack caches are kept separate.
+  - `convertHostedProvider` now accepts an optional `IpMode` and, when set,
+    selects the matching `ipv4` / `ipv6` sub-object from the provider-list JSON.
+    Top-level `ipv4` / `ipv6` keys are skipped by default so existing dual-stack
+    callers keep working.
+  - New helpers in `@prosopo/load-balancer`: `IpMode`, `stripIpModeLabel`,
+    `getProviderHostname`.
+  
+  Coordinated with the matching `captcha-private` change that publishes the
+  `ipv4` / `ipv6` sub-objects to S3.
+- Updated dependencies [12cd0a6]
+- Updated dependencies [12cd0a6]
+  - @prosopo/procaptcha-common@2.11.0
+  - @prosopo/api@3.5.5
+  - @prosopo/types@4.8.0
+  - @prosopo/datasets@3.1.40
+
+## 2.10.38
+### Patch Changes
+
+- Updated dependencies [bb98af1]
+  - @prosopo/types@4.7.4
+  - @prosopo/api@3.5.4
+  - @prosopo/datasets@3.1.39
+  - @prosopo/procaptcha-common@2.10.28
+
+## 2.10.37
+### Patch Changes
+
+- Updated dependencies [89ab6fc]
+- Updated dependencies [0f3750b]
+  - @prosopo/types@4.7.3
+  - @prosopo/api@3.5.3
+  - @prosopo/datasets@3.1.38
+  - @prosopo/procaptcha-common@2.10.27
+
+## 2.10.36
+### Patch Changes
+
+- Updated dependencies [edcd450]
+- Updated dependencies [5295c4b]
+  - @prosopo/util@3.3.1
+  - @prosopo/types@4.7.2
+  - @prosopo/datasets@3.1.37
+  - @prosopo/api@3.5.2
+  - @prosopo/common@3.1.40
+  - @prosopo/procaptcha-common@2.10.26
+
+## 2.10.35
+### Patch Changes
+
+- Updated dependencies [46fedf4]
+  - @prosopo/types@4.7.1
+  - @prosopo/api@3.5.1
+  - @prosopo/datasets@3.1.36
+  - @prosopo/procaptcha-common@2.10.25
+
+## 2.10.34
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/types@4.7.0
+  - @prosopo/api@3.5.0
+  - @prosopo/datasets@3.1.35
+  - @prosopo/procaptcha-common@2.10.24
+
+## 2.10.33
+### Patch Changes
+
+- Updated dependencies [4626340]
+  - @prosopo/types@4.6.1
+  - @prosopo/api@3.4.14
+  - @prosopo/datasets@3.1.34
+  - @prosopo/procaptcha-common@2.10.23
+
+## 2.10.32
+### Patch Changes
+
+- Updated dependencies [55b1388]
+  - @prosopo/util@3.3.0
+  - @prosopo/types@4.6.0
+  - @prosopo/datasets@3.1.33
+  - @prosopo/api@3.4.13
+  - @prosopo/common@3.1.39
+  - @prosopo/procaptcha-common@2.10.22
+
+## 2.10.31
+### Patch Changes
+
+- Updated dependencies [9b91e85]
+- Updated dependencies [c80a05b]
+  - @prosopo/types@4.5.0
+  - @prosopo/api@3.4.12
+  - @prosopo/datasets@3.1.32
+  - @prosopo/procaptcha-common@2.10.21
+
+## 2.10.30
+### Patch Changes
+
+- Updated dependencies [f69724f]
+- Updated dependencies [3973078]
+  - @prosopo/types@4.4.1
+  - @prosopo/api@3.4.11
+  - @prosopo/datasets@3.1.31
+  - @prosopo/procaptcha-common@2.10.20
+
+## 2.10.29
+### Patch Changes
+
+- 2d66d8e: Image-captcha widget now forwards the trusted checkbox click `(clientX, clientY)` through `manager.start(x, y)`. `Manager.submit` embeds the pair as a 2-number prefix on the first captcha's solution salt. Provider peels the prefix via length math against `solution.length` (no protocol version flag — older clients keep working unchanged) and prepends it as the first entry of `pairs`, which is written to `UserCommitment.coords`. Adds `peelCheckboxPrefix` helper in `pairs.ts` with round-trip unit tests.
+- Updated dependencies [bc3813d]
+- Updated dependencies [4d05e3f]
+  - @prosopo/types@4.4.0
+  - @prosopo/api@3.4.10
+  - @prosopo/datasets@3.1.30
+  - @prosopo/procaptcha-common@2.10.19
+
+## 2.10.28
+### Patch Changes
+
+- Updated dependencies [b03dad1]
+  - @prosopo/types@4.3.1
+  - @prosopo/api@3.4.9
+  - @prosopo/datasets@3.1.29
+  - @prosopo/procaptcha-common@2.10.18
+
+## 2.10.27
+### Patch Changes
+
+- Updated dependencies [a1d60db]
+- Updated dependencies [2392aaf]
+- Updated dependencies [6ca1125]
+  - @prosopo/types@4.3.0
+  - @prosopo/util@3.2.15
+  - @prosopo/api@3.4.8
+  - @prosopo/common@3.1.38
+  - @prosopo/datasets@3.1.28
+  - @prosopo/procaptcha-common@2.10.17
+
+## 2.10.26
+### Patch Changes
+
+- Updated dependencies [d3db08d]
+  - @prosopo/procaptcha-common@2.10.16
+
+## 2.10.25
+### Patch Changes
+
+- 6c26669: Add per-site honeypot trap. When enabled, the provider attaches an encoded question (morse or semaphore, base64-wrapped) in the `x-prosopo-meta` response header on frictionless responses. The widget renders the value into an off-screen hidden input with `name="email_confirm"`; bots that auto-fill text inputs populate it and the value rides back on the solution submit as `clientMetaData.hp`, which is persisted on the `StoredCaptcha` record. Falls back to a random phrase from `PROSOPO_HONEYPOT_PHRASE_BANK_PATH` when no custom question is configured.
+- Updated dependencies [6c26669]
+- Updated dependencies [f7f9ec5]
+  - @prosopo/types@4.2.1
+  - @prosopo/api@3.4.7
+  - @prosopo/procaptcha-common@2.10.15
+  - @prosopo/datasets@3.1.27
+
+## 2.10.24
+### Patch Changes
+
+- Updated dependencies [0fd81af]
+  - @prosopo/common@3.1.37
+  - @prosopo/datasets@3.1.26
+  - @prosopo/procaptcha-common@2.10.14
+
+## 2.10.23
+### Patch Changes
+
+- Updated dependencies [20cae63]
+- Updated dependencies [4d9923e]
+  - @prosopo/types@4.2.0
+  - @prosopo/api@3.4.6
+  - @prosopo/datasets@3.1.25
+  - @prosopo/procaptcha-common@2.10.13
+
+## 2.10.22
+### Patch Changes
+
+- Updated dependencies [d351362]
+  - @prosopo/types@4.1.4
+  - @prosopo/api@3.4.5
+  - @prosopo/datasets@3.1.24
+  - @prosopo/procaptcha-common@2.10.12
+
+## 2.10.21
+### Patch Changes
+
+- Updated dependencies [6567ce0]
+- Updated dependencies [e2711ae]
+- Updated dependencies [5786629]
+  - @prosopo/util@3.2.14
+  - @prosopo/types@4.1.3
+  - @prosopo/datasets@3.1.23
+  - @prosopo/api@3.4.4
+  - @prosopo/common@3.1.36
+  - @prosopo/procaptcha-common@2.10.11
+
+## 2.10.20
+### Patch Changes
+
+- Updated dependencies [72a1218]
+  - @prosopo/util@3.2.13
+  - @prosopo/datasets@3.1.22
+  - @prosopo/types@4.1.2
+  - @prosopo/procaptcha-common@2.10.10
+  - @prosopo/api@3.4.3
+
+## 2.10.19
+### Patch Changes
+
+- Updated dependencies [53bfd45]
+- Updated dependencies [91958da]
+  - @prosopo/procaptcha-common@2.10.9
+  - @prosopo/api@3.4.2
+  - @prosopo/types@4.1.1
+  - @prosopo/common@3.1.35
+  - @prosopo/datasets@3.1.21
+
+## 2.10.18
+### Patch Changes
+
+- Updated dependencies [6a741ce]
+  - @prosopo/types@4.1.0
+  - @prosopo/api@3.4.1
+  - @prosopo/datasets@3.1.20
+  - @prosopo/procaptcha-common@2.10.8
+
+## 2.10.17
+### Patch Changes
+
+  - @prosopo/procaptcha-common@2.10.7
+
+## 2.10.16
+### Patch Changes
+
+- 4aae4e6: Plumb the WASM SIMD CPU fingerprint readings (collected by the catcher
+  client per https://blog.azerpas.com/writing/wasm-simd-fingerprinting/)
+  through the captcha flow and onto the linked `Session` record.
+  Collection-only — no scoring or classification yet.
+  
+  The readings are sent at the earliest moment they're available so the
+  signal lands on the session as soon as possible:
+  
+  1. **Captcha-challenge GET** (PoW / Puzzle / Image) — the procaptcha
+     Manager calls `frictionlessState.getSimdReadings(0)` (non-blocking
+     cache check) and attaches it to the challenge-request body. The
+     provider handler decodes and patches the linked session via
+     `updateSessionRecord`.
+  2. **Solution submission** (PoW / Puzzle / Image) — same non-blocking
+     check on the submit body. Acts as a backup if the benchmark wasn't
+     ready in time for the challenge GET.
+  
+  Frictionless init itself stays SIMD-free (benchmark is too slow to gate
+  the first hop).
+  
+  Surface area:
+  
+  - `SimdReadings` discriminated union + `SimdOpReadingRecord` /
+    `SimdOpCategory` in `@prosopo/types`, plus `simdReadingsCodec` shared
+    encode/decode helpers so the browser SDK and the provider use the same
+    pipe-safe wire format.
+  - Optional `simdReadings: string()` on `CaptchaRequestBody`,
+    `GetPowCaptchaChallengeRequestBody`, `GetPuzzleCaptchaChallengeRequestBody`,
+    `CaptchaSolutionBody`, `SubmitPowCaptchaSolutionBody`, and
+    `SubmitPuzzleCaptchaSolutionBody`.
+  - `FrictionlessState.getSimdReadings` + `BotDetectionFunctionResult.getSimdReadings`
+    so the catcher's prefetched benchmark is consumed at the request sites.
+  - `ProcaptchaApiInterface.{getCaptchaChallenge, submitCaptchaSolution}` and
+    the `ProviderApi.{getCaptchaChallenge, getPowCaptchaChallenge, getPuzzleCaptchaChallenge,
+    submitCaptchaSolution, submitPowCaptchaSolution, submitPuzzleCaptchaSolution}`
+    client methods accept the field.
+  - Provider challenge + solution handlers decode via `decodeSimdReadings`
+    and `updateSessionRecord` (Mongoose `Mixed`, Zod discriminated-union
+    validation at the edge). The challenge-GET patch is fire-and-forget.
+  
+  Backward-compatible: older catcher clients omit the field at every layer;
+  the session record omits it in turn.
+- Updated dependencies [3c0be68]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [d865319]
+- Updated dependencies [753304b]
+- Updated dependencies [8bb7286]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [4993813]
+  - @prosopo/types@4.0.0
+  - @prosopo/api@3.4.0
+  - @prosopo/util@3.2.12
+  - @prosopo/common@3.1.34
+  - @prosopo/datasets@3.1.19
+  - @prosopo/procaptcha-common@2.10.6
+
+## 2.10.15
+### Patch Changes
+
+- Updated dependencies [819ed95]
+  - @prosopo/types@3.16.1
+  - @prosopo/api@3.3.2
+  - @prosopo/datasets@3.1.18
+  - @prosopo/procaptcha-common@2.10.5
+
+## 2.10.14
+### Patch Changes
+
+- Updated dependencies [f6a4402]
+- Updated dependencies [99dfb44]
+  - @prosopo/types@3.16.0
+  - @prosopo/api@3.3.1
+  - @prosopo/datasets@3.1.17
+  - @prosopo/procaptcha-common@2.10.4
+
+## 2.10.13
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+  - @prosopo/api@3.3.0
+  - @prosopo/datasets@3.1.16
+  - @prosopo/procaptcha-common@2.10.3
+
+## 2.10.12
+### Patch Changes
+
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+  - @prosopo/types@3.14.1
+  - @prosopo/api@3.2.11
+  - @prosopo/common@3.1.33
+  - @prosopo/datasets@3.1.15
+  - @prosopo/procaptcha-common@2.10.2
+
+## 2.10.11
+### Patch Changes
+
+- Updated dependencies [06970d2]
+- Updated dependencies [fc514dd]
+- Updated dependencies [7be39c4]
+- Updated dependencies [42650db]
+- Updated dependencies [dd3e06e]
+  - @prosopo/procaptcha-common@2.10.1
+  - @prosopo/types@3.14.0
+  - @prosopo/api@3.2.10
+  - @prosopo/common@3.1.32
+  - @prosopo/datasets@3.1.14
+
+## 2.10.10
+### Patch Changes
+
+- Updated dependencies [73df23c]
+- Updated dependencies [8139819]
+- Updated dependencies [4a9c518]
+  - @prosopo/procaptcha-common@2.10.0
+  - @prosopo/common@3.1.31
+  - @prosopo/datasets@3.1.13
+
+## 2.10.9
+### Patch Changes
+
+- Updated dependencies [a25dffa]
+  - @prosopo/util@3.2.11
+  - @prosopo/datasets@3.1.12
+  - @prosopo/types@3.13.3
+  - @prosopo/procaptcha-common@2.9.41
+  - @prosopo/api@3.2.9
+
+## 2.10.8
+### Patch Changes
+
+- Updated dependencies [346edd7]
+  - @prosopo/util@3.2.10
+  - @prosopo/datasets@3.1.11
+  - @prosopo/types@3.13.2
+  - @prosopo/procaptcha-common@2.9.40
+  - @prosopo/api@3.2.8
+
+## 2.10.7
+### Patch Changes
+
+- Updated dependencies [22bfee7]
+  - @prosopo/util@3.2.9
+  - @prosopo/datasets@3.1.10
+  - @prosopo/types@3.13.1
+  - @prosopo/procaptcha-common@2.9.39
+  - @prosopo/api@3.2.7
+
+## 2.10.6
+### Patch Changes
+
+- Updated dependencies [e0fb3d6]
+- Updated dependencies [e6d9553]
+- Updated dependencies [f3f23e3]
+  - @prosopo/util@3.2.8
+  - @prosopo/types@3.13.0
+  - @prosopo/datasets@3.1.9
+  - @prosopo/api@3.2.6
+  - @prosopo/procaptcha-common@2.9.38
+
+## 2.10.5
+### Patch Changes
+
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/types@3.12.3
+  - @prosopo/util@3.2.7
+  - @prosopo/procaptcha-common@2.9.37
+  - @prosopo/api@3.2.5
+  - @prosopo/datasets@3.1.8
+
+## 2.10.4
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/types@3.12.2
+  - @prosopo/util@3.2.6
+  - @prosopo/api@3.2.4
+  - @prosopo/common@3.1.30
+  - @prosopo/datasets@3.1.7
+  - @prosopo/procaptcha-common@2.9.36
+
+## 2.10.3
+### Patch Changes
+
+- Updated dependencies [c5ee492]
+- Updated dependencies [a90eb54]
+  - @prosopo/common@3.1.29
+  - @prosopo/types@3.12.1
+  - @prosopo/datasets@3.1.6
+  - @prosopo/api@3.2.3
+  - @prosopo/procaptcha-common@2.9.35
+
+## 2.10.2
+### Patch Changes
+
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/types@3.12.0
+  - @prosopo/procaptcha-common@2.9.34
+  - @prosopo/api@3.2.2
+  - @prosopo/datasets@3.1.5
+
+## 2.10.1
+### Patch Changes
+
+- Updated dependencies [8148587]
+  - @prosopo/types@3.11.1
+  - @prosopo/api@3.2.1
+  - @prosopo/datasets@3.1.4
+  - @prosopo/procaptcha-common@2.9.33
+
+## 2.10.0
+### Minor Changes
+
+- 7f6ffc5: Store behavioural for image challenges
+
+### Patch Changes
+
+- Updated dependencies [7f6ffc5]
+  - @prosopo/types@3.11.0
+  - @prosopo/api@3.2.0
+  - @prosopo/datasets@3.1.3
+  - @prosopo/procaptcha-common@2.9.32
+
+## 2.9.38
+### Patch Changes
+
+- Updated dependencies [93fa086]
+  - @prosopo/types@3.10.2
+  - @prosopo/api@3.1.49
+  - @prosopo/datasets@3.1.2
+  - @prosopo/procaptcha-common@2.9.31
+
+## 2.9.37
+### Patch Changes
+
+- Updated dependencies [cde7550]
+  - @prosopo/types@3.10.1
+  - @prosopo/api@3.1.48
+  - @prosopo/datasets@3.1.1
+  - @prosopo/procaptcha-common@2.9.30
+
+## 2.9.36
+### Patch Changes
+
+- Updated dependencies [ad6d622]
+  - @prosopo/datasets@3.1.0
+  - @prosopo/types@3.10.0
+  - @prosopo/api@3.1.47
+  - @prosopo/procaptcha-common@2.9.29
+
+## 2.9.35
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+  - @prosopo/types@3.9.0
+  - @prosopo/api@3.1.46
+  - @prosopo/datasets@3.0.63
+  - @prosopo/procaptcha-common@2.9.28
+
+## 2.9.34
+### Patch Changes
+
+  - @prosopo/datasets@3.0.62
+
+## 2.9.33
+### Patch Changes
+
+- Updated dependencies [d2431cd]
+  - @prosopo/types@3.8.4
+  - @prosopo/datasets@3.0.61
+  - @prosopo/api@3.1.45
+  - @prosopo/procaptcha-common@2.9.27
+
+## 2.9.32
+### Patch Changes
+
+  - @prosopo/datasets@3.0.60
+
+## 2.9.31
+### Patch Changes
+
+- Updated dependencies [bd6995b]
+  - @prosopo/types@3.8.3
+  - @prosopo/api@3.1.44
+  - @prosopo/datasets@3.0.59
+  - @prosopo/procaptcha-common@2.9.26
+
+## 2.9.30
+### Patch Changes
+
+- Updated dependencies [9633e58]
+  - @prosopo/types@3.8.2
+  - @prosopo/api@3.1.43
+  - @prosopo/datasets@3.0.58
+  - @prosopo/procaptcha-common@2.9.25
+
+## 2.9.29
+### Patch Changes
+
+- Updated dependencies [f52a5c1]
+  - @prosopo/types@3.8.1
+  - @prosopo/api@3.1.42
+  - @prosopo/datasets@3.0.57
+  - @prosopo/procaptcha-common@2.9.24
+
+## 2.9.28
+### Patch Changes
+
+  - @prosopo/datasets@3.0.56
+
+## 2.9.27
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 7543d17: mouse movements bot stopping
+- 3acc333: Release 3.3.0
+- Updated dependencies [a53526b]
+- Updated dependencies [f3cf586]
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [7543d17]
+- Updated dependencies [3acc333]
+  - @prosopo/util@3.2.5
+  - @prosopo/procaptcha-common@2.9.23
+  - @prosopo/util-crypto@13.5.29
+  - @prosopo/types@3.8.0
+  - @prosopo/datasets@3.0.55
+  - @prosopo/common@3.1.28
+  - @prosopo/api@3.1.41
+
+## 2.9.26
+### Patch Changes
+
+  - @prosopo/datasets@3.0.54
+
 ## 2.9.25
 ### Patch Changes
 
