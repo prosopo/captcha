@@ -43,6 +43,14 @@ describe("targetForDifficulty", () => {
 			);
 		}
 	});
+
+	it("fails closed on a non-finite difficulty", () => {
+		// a non-finite difficulty must throw rather than be coerced to 0, which
+		// would otherwise make every hash satisfy the difficulty
+		for (const bad of [Number.NaN, Number.POSITIVE_INFINITY]) {
+			expect(() => targetForDifficulty(bad)).toThrow();
+		}
+	});
 });
 
 describe("hashMeetsDifficulty", () => {
@@ -61,6 +69,11 @@ describe("hashMeetsDifficulty", () => {
 				);
 			}
 		}
+	});
+
+	it("fails closed on a non-finite difficulty", () => {
+		const hash = hashOf("nan-guard");
+		expect(() => hashMeetsDifficulty(hash, Number.NaN)).toThrow();
 	});
 
 	it("is monotonic — meeting harder difficulty implies meeting easier", () => {

@@ -23,8 +23,15 @@ const BATCH_SIZE = 1_000;
 const HEX_BITS_PER_DIFFICULTY = 4;
 const HASH_BITS = 256;
 
-const bitsRequired = (difficulty: number): number =>
-	Math.round(HEX_BITS_PER_DIFFICULTY * difficulty);
+const bitsRequired = (difficulty: number): number => {
+	// Fail closed: a non-finite difficulty (NaN/Infinity) would otherwise be
+	// coerced to 0 by the downstream bitwise ops, making every hash satisfy the
+	// difficulty and solvePoW return nonce 0 immediately.
+	if (!Number.isFinite(difficulty)) {
+		throw new Error(`Invalid PoW difficulty: ${difficulty}`);
+	}
+	return Math.round(HEX_BITS_PER_DIFFICULTY * difficulty);
+};
 
 export const targetForDifficulty = (difficulty: number): bigint => {
 	const bits = bitsRequired(difficulty);
