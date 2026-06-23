@@ -288,14 +288,15 @@ describe("unwrapError still produces a translated HTTP response", () => {
 	});
 
 	it("falls back to a 5xx reason phrase for an unmapped server-error code", () => {
+		// 599 is unassigned, so it exercises the fallback rather than a real phrase.
 		const err = new ProsopoApiError("CAPTCHA.NO_SESSION_FOUND", {
-			context: { code: 511 },
+			context: { code: 599 },
 			i18n: englishI18n,
 			silent: true,
 		});
 
 		const { code, statusMessage } = unwrapError(err, englishI18n);
-		expect(code).toBe(511);
+		expect(code).toBe(599);
 		expect(statusMessage).toBe("Internal Server Error");
 	});
 });

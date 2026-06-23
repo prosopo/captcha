@@ -270,7 +270,8 @@ export const unwrapError = (
 	// Derive the HTTP reason phrase from the final status code rather than
 	// hardcoding "Bad Request", so a 401/403/500 response carries the correct
 	// status message. For codes absent from the map, fall back by class so an
-	// unlisted 5xx (e.g. 505, 511) doesn't report a 4xx "Bad Request" phrase.
+	// unmapped 5xx (e.g. a non-standard 599) doesn't report a 4xx "Bad Request"
+	// phrase.
 	const statusMessage =
 		STATUS_MESSAGES[code] ??
 		(code >= 500 ? "Internal Server Error" : "Bad Request");
