@@ -44,7 +44,10 @@ const report = (label: string, baselineMs: number, optimisedMs: number) => {
 	);
 };
 
-describe("solvePoW benchmark", () => {
+// These benchmarks run 1M-iteration, timing-based comparisons that are slow and
+// prone to noise on shared CI runners, so they are skipped by default. Set
+// RUN_BENCHMARKS=true to run them locally when validating the optimisation.
+describe.runIf(process.env.RUN_BENCHMARKS === "true")("solvePoW benchmark", () => {
 	const ITERATIONS = 1_000_000;
 	const data = "benchmark-challenge-data";
 
