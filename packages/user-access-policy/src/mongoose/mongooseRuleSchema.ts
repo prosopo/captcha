@@ -56,6 +56,7 @@ const accessPolicySchema: SchemaDefinition<AccessPolicy> = {
 	powDifficulty: { type: Number, required: false },
 	unsolvedImagesCount: { type: Number, required: false },
 	frictionlessScore: { type: Number, required: false },
+	deferToVerify: { type: Boolean, required: false },
 } satisfies AllKeys<AccessPolicy>;
 
 export const accessRuleMongooseSchema: SchemaDefinition<AccessRuleRecord> = {

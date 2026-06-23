@@ -15,7 +15,7 @@
 import crypto from "node:crypto";
 import type { AllKeys } from "@prosopo/common";
 import { getIPAddress } from "@prosopo/util";
-import { Address4 } from "ip-address";
+import { Address4, Address6 } from "ip-address";
 import { type ZodType, z } from "zod";
 import type { UserAttributes, UserIp, UserScope } from "#policy/rule.js";
 import type { UserAttributesRecord, UserIpRecord } from "#policy/ruleRecord.js";
@@ -77,14 +77,14 @@ const userIpInput = z
 
 		// Assuming ipMask is already validated to be a string in CIDR format
 		if ("string" === typeof ipMask) {
-			// Create an Address4 object from the CIDR string.
-			// Address4 automatically understands CIDR notation and represents the entire network range.
-			const ipObject = new Address4(ipMask);
+			// Try IPv4 CIDR first (e.g., 192.168.1.0/24); fall back to IPv6
+			// CIDR (e.g., 2001:db8::/32). Both Address4 and Address6 understand
+			// CIDR notation and expose start/end addresses for the network.
+			const ipObject = Address4.isValid(ipMask)
+				? new Address4(ipMask)
+				: new Address6(ipMask);
 
-			// The minimum IP in the CIDR range is the start address of the network.
 			numericUserIp.numericIpMaskMin = ipObject.startAddress().bigInt();
-
-			// The maximum IP in the CIDR range is the end address of the network.
 			numericUserIp.numericIpMaskMax = ipObject.endAddress().bigInt();
 		}
 

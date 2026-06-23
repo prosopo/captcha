@@ -90,23 +90,20 @@ http://:9090 {
 	metrics /metrics
 }
 
-# Main site: bound on :8443. Layer4 (above) proxies non-trap-subzone
-# SNI connections from :443 in. ACME issuer is restricted to HTTP-01
-# because TLS-ALPN-01 requires control of :443. The :80 redirect
-# server is auto-created by Caddy (auto_https=on); it serves both
-# ACME HTTP-01 challenges AND HTTP→HTTPS redirects targeting port
-# 443 (i.e. the layer4 listener), which forwards non-matching SNIs
-# back to this same :8443 server.
-https://{$CADDY_DOMAIN}:8443 {
-
-	tls {
-		issuer acme {
-			disable_tlsalpn_challenge
-		}
-	}
-	
+# Shared route/handler config. Imported by the per-host site below
+# ({$CADDY_DOMAIN} = pronodeN.prosopo.io) and, on the cert getter, by
+# the global site for the load-balanced pronode.prosopo.io hostname
+# defined in provider.cert-getter.Caddyfile. Only the TLS strategy
+# differs between the two: per-host uses ACME HTTP-01 (A record points
+# to one IP per pronodeN), global uses a PEM provisioned by certbot on
+# the cert getter (see ansible playbooks/providerCertbotProvision.yml).
+(provider_site) {
 	handle /robots.txt {
-		uri strip_prefix / # removes leading /, so it looks directly in root
+		# Serve /srv/static/robots.txt. Do NOT strip the leading slash:
+		# file_server prepends `root` to the request path, so `/robots.txt`
+		# already resolves to `/srv/static/robots.txt`. Rewriting the path to
+		# `robots.txt` (no leading slash) makes file_server issue a 308
+		# canonical redirect to re-add the slash, which loops forever (#3467).
 		root * /srv/static
 		file_server
 		header Content-Type "text/plain"
@@ -289,4 +286,31 @@ https://{$CADDY_DOMAIN}:8443 {
 	log {
 		format json
 	}
+}
+
+# Per-host site: bound on :8443. Layer4 (above) proxies non-trap-subzone
+# SNI connections from :443 in. ACME issuer is restricted to HTTP-01
+# because TLS-ALPN-01 requires control of :443. The :80 redirect server
+# is auto-created by Caddy (auto_https=on); it serves both ACME HTTP-01
+# challenges AND HTTP→HTTPS redirects targeting port 443 (i.e. the
+# layer4 listener), which forwards non-matching SNIs back to this same
+# :8443.
+#
+# Three SNIs share one site block and one cert lineage so Caddy issues a
+# single multi-SAN cert covering {host}, ipv4.{host}, ipv6.{host}. The
+# single-stack variants exist as their own DNS records (A only for
+# ipv4.{host}, AAAA only for ipv6.{host}) so callers that need to pin a
+# specific IP stack can do so without losing TLS. The new captcha
+# DNS-routing client returns the per-host name from /healthz and the
+# load-balancer prepends `ipv4.` / `ipv6.`, so without these SANs the
+# single-stack path would fail the TLS handshake.
+https://{$CADDY_DOMAIN}:8443,
+https://ipv4.{$CADDY_DOMAIN}:8443,
+https://ipv6.{$CADDY_DOMAIN}:8443 {
+	tls {
+		issuer acme {
+			disable_tlsalpn_challenge
+		}
+	}
+	import provider_site
 }

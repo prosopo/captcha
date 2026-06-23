@@ -48,20 +48,25 @@ const ruleGroupInput = z
 		return ruleGroup;
 	});
 
-export const accessRuleInput: ZodType<AccessRule> = z
+// Explicit `ZodType<…, ZodTypeDef, unknown>` annotation rather than the
+// strict-identity form because `accessPolicyInput.shape.deferToVerify`
+// uses `z.preprocess` which widens the input position to `unknown`. The
+// relaxed annotation is portable for declaration emit; the `transform`
+// pins the OUTPUT to AccessRule.
+export const accessRuleInput: ZodType<AccessRule, z.ZodTypeDef, unknown> = z
 	.object({
 		...accessPolicyInput.shape,
 		...policyScopeInput.shape,
 	})
 	.and(userScopeInput)
 	.and(ruleGroupInput)
-	// transform is used for type safety only - plain "satisfies ZodType<x>" doesn't work after ".and()"
 	.transform((ruleInput: AccessRuleInput): AccessRule => ruleInput);
 
-export const ruleEntryInput = z.object({
-	rule: accessRuleInput,
-	expiresUnixTimestamp: z.coerce.number().optional(),
-} satisfies AllKeys<AccessRuleEntry>) satisfies ZodType<AccessRuleEntry>;
+export const ruleEntryInput: ZodType<AccessRuleEntry, z.ZodTypeDef, unknown> =
+	z.object({
+		rule: accessRuleInput,
+		expiresUnixTimestamp: z.coerce.number().optional(),
+	} satisfies AllKeys<AccessRuleEntry>);
 
 export type AccessRulesFilterInput = AccessRulesFilter & {
 	userScope?: UserScopeInput;
@@ -79,6 +84,7 @@ export const accessRulesFilterInput = z.object({
 		.nativeEnum(FilterScopeMatch)
 		.default(FilterScopeMatch.Exact),
 	groupId: z.string().optional(),
+	blockOnly: z.boolean().optional(),
 } satisfies AllKeys<AccessRulesFilterInput>) satisfies ZodType<AccessRulesFilterInput>;
 
 export const getAccessRuleFiltersFromInput = (

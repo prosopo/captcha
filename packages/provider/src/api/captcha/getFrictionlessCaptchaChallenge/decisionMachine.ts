@@ -55,7 +55,6 @@ export type DecisionMachineInput = {
 	userId: string | undefined;
 	webView: boolean;
 	decryptedHeadHash: string;
-	providerSelectEntropy: number;
 	baseBotScore: number;
 	botScore: number;
 	scoreComponents: ScoreComponents;
@@ -87,12 +86,49 @@ export const runDecisionMachine = async (
 	const { req, res } = handle;
 	let { botScore, scoreComponents } = input;
 
+	const userAgentMismatchResponse = await runUserAgentMismatchCheck(
+		input,
+		handle,
+	);
+	if (userAgentMismatchResponse) return userAgentMismatchResponse;
+
+	const contextResponse = await runContextAwareValidation(input, handle);
+	if (contextResponse) return contextResponse;
+
+	// Accumulate all score penalties before evaluating autoBan so the
+	// threshold compares against the full sum.
+	const webViewTripped =
+		clientRecord.settings.disallowWebView === true && input.webView === true;
+	if (webViewTripped) {
+		tasks.logger.info(() => ({ msg: "WebView detected" }));
+		const scoreUpdate = tasks.frictionlessManager.scoreIncreaseWebView(
+			input.baseBotScore,
+			botScore,
+			scoreComponents,
+		);
+		botScore = scoreUpdate.score;
+		scoreComponents = scoreUpdate.scoreComponents;
+		tasks.frictionlessManager.updateScore(botScore, scoreComponents);
+	}
+
+	const timestampTripped = FrictionlessManager.timestampTooOld(input.timestamp);
+	if (timestampTripped) {
+		const scoreUpdate = tasks.frictionlessManager.scoreIncreaseTimestamp(
+			input.timestamp,
+			input.baseBotScore,
+			botScore,
+			scoreComponents,
+		);
+		botScore = scoreUpdate.score;
+		scoreComponents = scoreUpdate.scoreComponents;
+		tasks.frictionlessManager.updateScore(botScore, scoreComponents);
+	}
+
 	const autoBanThreshold = clientRecord.settings.autoBanScoreThreshold;
 	if (autoBanThreshold !== undefined && Number(botScore) >= autoBanThreshold) {
 		req.logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {
-				requestId: req.requestId,
 				decision: "auto_ban_score",
 				botScore,
 				autoBanThreshold,
@@ -111,30 +147,10 @@ export const runDecisionMachine = async (
 		return res.status(401).json({ error: "Unauthorized" });
 	}
 
-	const userAgentMismatchResponse = await runUserAgentMismatchCheck(
-		input,
-		handle,
-	);
-	if (userAgentMismatchResponse) return userAgentMismatchResponse;
-
-	const contextResponse = await runContextAwareValidation(input, handle);
-	if (contextResponse) return contextResponse;
-
-	if (clientRecord.settings.disallowWebView && input.webView) {
-		tasks.logger.info(() => ({ msg: "WebView detected" }));
-		const scoreUpdate = tasks.frictionlessManager.scoreIncreaseWebView(
-			input.baseBotScore,
-			botScore,
-			scoreComponents,
-		);
-		botScore = scoreUpdate.score;
-		scoreComponents = scoreUpdate.scoreComponents;
-		tasks.frictionlessManager.updateScore(botScore, scoreComponents);
-
+	if (webViewTripped) {
 		req.logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {
-				requestId: req.requestId,
 				decision: "webview_detected",
 				captchaType: CaptchaType.image,
 			},
@@ -156,21 +172,10 @@ export const runDecisionMachine = async (
 		);
 	}
 
-	if (FrictionlessManager.timestampTooOld(input.timestamp)) {
-		const scoreUpdate = tasks.frictionlessManager.scoreIncreaseTimestamp(
-			input.timestamp,
-			input.baseBotScore,
-			botScore,
-			scoreComponents,
-		);
-		botScore = scoreUpdate.score;
-		scoreComponents = scoreUpdate.scoreComponents;
-		tasks.frictionlessManager.updateScore(botScore, scoreComponents);
-
+	if (timestampTripped) {
 		req.logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {
-				requestId: req.requestId,
 				decision: "timestamp_too_old",
 				captchaType: CaptchaType.image,
 			},
@@ -193,21 +198,6 @@ export const runDecisionMachine = async (
 		);
 	}
 
-	const hostVerified = await tasks.frictionlessManager.hostVerified(
-		input.providerSelectEntropy,
-	);
-	if (!hostVerified.verified) {
-		const scoreUpdate = tasks.frictionlessManager.scoreIncreaseUnverifiedHost(
-			hostVerified.domain,
-			input.baseBotScore,
-			botScore,
-			scoreComponents,
-		);
-		botScore = scoreUpdate.score;
-		scoreComponents = scoreUpdate.scoreComponents;
-		tasks.frictionlessManager.updateScore(botScore, scoreComponents);
-	}
-
 	if (Number(botScore) > input.botThreshold) {
 		req.logger.info(() => ({
 			msg: "Bot score is greater than threshold",
@@ -220,7 +210,6 @@ export const runDecisionMachine = async (
 		req.logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {
-				requestId: req.requestId,
 				decision: "bot_score_above_threshold",
 				captchaType: CaptchaType.image,
 			},
@@ -245,7 +234,6 @@ export const runDecisionMachine = async (
 	req.logger.info(() => ({
 		msg: "Frictionless decision",
 		data: {
-			requestId: req.requestId,
 			decision: "default_pow",
 			captchaType: CaptchaType.pow,
 		},
@@ -294,7 +282,6 @@ const runUserAgentMismatchCheck = async (
 	req.logger.info(() => ({
 		msg: "Frictionless decision",
 		data: {
-			requestId: req.requestId,
 			decision: "user_agent_mismatch",
 			captchaType: CaptchaType.image,
 		},
@@ -368,7 +355,6 @@ const runContextAwareValidation = async (
 	req.logger.info(() => ({
 		msg: "Frictionless decision",
 		data: {
-			requestId: req.requestId,
 			decision: "context_aware_failed",
 			captchaType: CaptchaType.image,
 			sim,

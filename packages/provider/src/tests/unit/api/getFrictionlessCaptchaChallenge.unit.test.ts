@@ -36,9 +36,7 @@ type MockTasks = {
 		scoreIncreaseAccessPolicy: MockFn;
 		scoreIncreaseWebView: MockFn;
 		scoreIncreaseTimestamp: MockFn;
-		scoreIncreaseUnverifiedHost: MockFn;
 		updateScore: MockFn;
-		hostVerified: MockFn;
 	};
 	db: {
 		getSessionRecordByToken: MockFn;
@@ -166,16 +164,7 @@ vi.mock("../../../tasks/index.js", async () => {
 							scoreComponents: sc,
 						}),
 					),
-					scoreIncreaseUnverifiedHost: vi.fn(
-						(d: unknown, bs: number, score: number, sc: unknown) => ({
-							score,
-							scoreComponents: sc,
-						}),
-					),
 					updateScore: vi.fn(),
-					hostVerified: vi
-						.fn()
-						.mockResolvedValue({ verified: true, domain: "example.com" }),
 				},
 				db: {
 					getSessionRecordByToken: vi.fn().mockResolvedValue(null),
@@ -232,16 +221,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 					scoreComponents: sc,
 				}),
 			),
-			scoreIncreaseUnverifiedHost: vi.fn(
-				(d: unknown, bs: number, score: number, sc: unknown) => ({
-					score,
-					scoreComponents: sc,
-				}),
-			),
 			updateScore: vi.fn(),
-			hostVerified: vi
-				.fn()
-				.mockResolvedValue({ verified: true, domain: "example.com" }),
 		},
 		db: {
 			getSessionRecordByToken: vi.fn().mockResolvedValue(null),
@@ -287,7 +267,6 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue({
 			baseBotScore: 0,
 			timestamp: Date.now(),
-			providerSelectEntropy: 0,
 			userId: "u",
 			userAgent: "844bc172f032bdd2d0baae3536c1d66c",
 			webView: true,
@@ -318,7 +297,6 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValueOnce({
 			baseBotScore: 0,
 			timestamp: Date.now(),
-			providerSelectEntropy: 0,
 			userId: "u",
 			userAgent: "844bc172f032bdd2d0baae3536c1d66c",
 			webView: false,
@@ -358,7 +336,6 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue({
 			baseBotScore: 0,
 			timestamp: Date.now(),
-			providerSelectEntropy: 0,
 			userId: "u",
 			userAgent: "844bc172f032bdd2d0baae3536c1d66c",
 			webView: true, // even if webView true
@@ -402,7 +379,6 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue({
 			baseBotScore: 0,
 			timestamp: Date.now(),
-			providerSelectEntropy: 0,
 			userId: "u",
 			userAgent: "844bc172f032bdd2d0baae3536c1d66c",
 			webView: false, // even if webView false
@@ -437,7 +413,6 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue({
 			baseBotScore: 0,
 			timestamp: Date.now(),
-			providerSelectEntropy: 0,
 			userId: "u",
 			userAgent: "844bc172f032bdd2d0baae3536c1d66c",
 			webView: false,
@@ -619,7 +594,6 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue({
 				baseBotScore: 0,
 				timestamp: Date.now(),
-				providerSelectEntropy: 0,
 				userId: "u",
 				userAgent: "844bc172f032bdd2d0baae3536c1d66c",
 				webView: false,

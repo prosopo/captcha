@@ -50,7 +50,7 @@ class ApiToggleMaintenanceModeEndpoint
 	): Promise<ApiEndpointResponse> {
 		const { enabled } = args;
 
-		logger = logger || getLogger("info", import.meta.url);
+		logger = logger || getLogger("info", "provider:admin:maintenance:toggle");
 
 		const previousMode = getMaintenanceMode();
 
