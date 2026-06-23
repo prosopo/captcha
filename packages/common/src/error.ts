@@ -12,12 +12,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { STATUS_CODES } from "node:http";
 import type { TranslationKey } from "@prosopo/locale";
 import { type LogLevel, type Logger, getLogger } from "@prosopo/logger";
 import type { ApiJsonError } from "@prosopo/types";
 import type { TFunction } from "i18next";
 import { ZodError } from "zod";
+
+// HTTP reason phrases keyed by status code. Defined locally rather than
+// imported from `node:http`'s `STATUS_CODES`, because this module is also
+// bundled for the browser, where `node:http` is not available.
+const STATUS_MESSAGES: Record<number, string> = {
+	400: "Bad Request",
+	401: "Unauthorized",
+	402: "Payment Required",
+	403: "Forbidden",
+	404: "Not Found",
+	405: "Method Not Allowed",
+	408: "Request Timeout",
+	409: "Conflict",
+	410: "Gone",
+	413: "Payload Too Large",
+	415: "Unsupported Media Type",
+	422: "Unprocessable Entity",
+	429: "Too Many Requests",
+	500: "Internal Server Error",
+	501: "Not Implemented",
+	502: "Bad Gateway",
+	503: "Service Unavailable",
+	504: "Gateway Timeout",
+};
 
 type BaseErrorOptions<ContextType> = {
 	name?: string;
@@ -247,7 +270,7 @@ export const unwrapError = (
 	// Derive the HTTP reason phrase from the final status code rather than
 	// hardcoding "Bad Request", so a 401/403/500 response carries the correct
 	// status message.
-	const statusMessage = STATUS_CODES[code] ?? "Bad Request";
+	const statusMessage = STATUS_MESSAGES[code] ?? "Bad Request";
 	return { code, statusMessage, jsonError };
 };
 
