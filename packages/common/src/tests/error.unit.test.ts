@@ -286,4 +286,16 @@ describe("unwrapError still produces a translated HTTP response", () => {
 		expect(code).toBe(401);
 		expect(statusMessage).toBe("Unauthorized");
 	});
+
+	it("falls back to a 5xx reason phrase for an unmapped server-error code", () => {
+		const err = new ProsopoApiError("CAPTCHA.NO_SESSION_FOUND", {
+			context: { code: 511 },
+			i18n: englishI18n,
+			silent: true,
+		});
+
+		const { code, statusMessage } = unwrapError(err, englishI18n);
+		expect(code).toBe(511);
+		expect(statusMessage).toBe("Internal Server Error");
+	});
 });

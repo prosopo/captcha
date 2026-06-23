@@ -269,8 +269,11 @@ export const unwrapError = (
 	jsonError.code = code;
 	// Derive the HTTP reason phrase from the final status code rather than
 	// hardcoding "Bad Request", so a 401/403/500 response carries the correct
-	// status message.
-	const statusMessage = STATUS_MESSAGES[code] ?? "Bad Request";
+	// status message. For codes absent from the map, fall back by class so an
+	// unlisted 5xx (e.g. 505, 511) doesn't report a 4xx "Bad Request" phrase.
+	const statusMessage =
+		STATUS_MESSAGES[code] ??
+		(code >= 500 ? "Internal Server Error" : "Bad Request");
 	return { code, statusMessage, jsonError };
 };
 
