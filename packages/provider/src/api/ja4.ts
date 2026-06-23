@@ -94,7 +94,7 @@ export class Ja4ParseError extends Error {
  * header (wrong record type, wrong message type, declared lengths exceeding the
  * buffer, odd cipher-suite length).
  *
- * Extension-level malformation (truncated extension body, malformed SNI/ALPN
+ * Extension-level malformation (truncated extension body, malformed ALPN
  * entries) is handled defensively: parsing stops at the first bad entry and
  * a fingerprint is produced from whatever was successfully parsed. This matches
  * the Rust reference implementation and avoids turning extension parse errors
@@ -125,6 +125,11 @@ export function calculateJa4(data: Buffer): string {
 	// Slice to the record boundary so subsequent parsing cannot bleed into
 	// bytes beyond this TLS record (e.g. a concatenated second record).
 	data = data.subarray(0, RECORD_HEADER_LENGTH + recordLen);
+	// A record shorter than the handshake header is structurally invalid; guard
+	// here so the 3-byte msgLen read below cannot throw a raw RangeError.
+	if (data.length < RECORD_HEADER_LENGTH + HANDSHAKE_HEADER_LENGTH) {
+		throw new Ja4ParseError("Record too short for handshake header");
+	}
 
 	// Handshake header
 	const msgType = data.readUInt8(offset);
@@ -196,7 +201,6 @@ export function calculateJa4(data: Buffer): string {
 
 	const extIds: number[] = [];
 	const sigAlgorithms: number[] = [];
-	const serverNames: string[] = [];
 	const alpnProtocols: Buffer[] = [];
 
 	let extOffset = offset;
@@ -229,38 +233,25 @@ export function calculateJa4(data: Buffer): string {
 			// 2-byte list length, then 2-byte algorithm entries (order preserved).
 			if (extData.length >= 2) {
 				const algLen = extData.readUInt16BE(0);
-				for (let i = 2; i + 1 < extData.length && i < algLen + 2; i += 2) {
+				// Cap to the declared list length so an odd/short algLen cannot let
+				// a 2-byte read straddle past the advertised list.
+				for (let i = 2; i + 1 < extData.length && i + 1 < algLen + 2; i += 2) {
 					const alg = extData.readUInt16BE(i);
 					if (!isGrease(alg)) sigAlgorithms.push(alg);
 				}
 			}
-		} else if (extId === EXT_SERVER_NAME) {
-			// 2-byte list length, entries: type(1) + name_len(2) + name bytes.
-			// Only type 0 (host_name) is used.
-			if (extData.length >= 2) {
-				let sniOff = 2;
-				while (sniOff + 3 <= extData.length) {
-					const nameType = extData.readUInt8(sniOff);
-					sniOff += 1;
-					const nameLen = extData.readUInt16BE(sniOff);
-					sniOff += 2;
-					if (sniOff + nameLen > extData.length) break;
-					if (nameType === 0) {
-						serverNames.push(
-							extData.subarray(sniOff, sniOff + nameLen).toString("utf8"),
-						);
-					}
-					sniOff += nameLen;
-				}
-			}
 		} else if (extId === EXT_ALPN) {
-			// 2-byte total length, then length-prefixed raw protocol byte strings.
+			// 2-byte list length, then length-prefixed raw protocol byte strings.
+			// Bound parsing to the declared list length so trailing bytes after
+			// the advertised list cannot be treated as extra protocols.
 			if (extData.length >= 2) {
+				const listLen = extData.readUInt16BE(0);
+				const listEnd = Math.min(extData.length, 2 + listLen);
 				let alpnOff = 2;
-				while (alpnOff < extData.length) {
+				while (alpnOff < listEnd) {
 					const protoLen = extData.readUInt8(alpnOff);
 					alpnOff += 1;
-					if (alpnOff + protoLen > extData.length) break;
+					if (alpnOff + protoLen > listEnd) break;
 					alpnProtocols.push(extData.subarray(alpnOff, alpnOff + protoLen));
 					alpnOff += protoLen;
 				}
@@ -270,7 +261,10 @@ export function calculateJa4(data: Buffer): string {
 
 	// Build fingerprint
 	const versionStr = tlsVersionStr(clientVersion);
-	const sni = serverNames.length > 0 ? "d" : "i";
+	// JA4 SNI indicator reflects presence of the SNI extension itself, not a
+	// successfully parsed host_name — a present-but-empty/malformed list is
+	// still "d".
+	const sni = extIds.includes(EXT_SERVER_NAME) ? "d" : "i";
 	const [alpnFirst, alpnLast] =
 		// alpnProtocols.length > 0 guard above ensures [0] is defined
 		alpnProtocols.length > 0 ? alpnFirstLast(alpnProtocols[0]!) : ["0", "0"];
