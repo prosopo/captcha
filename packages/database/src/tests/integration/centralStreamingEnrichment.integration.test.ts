@@ -132,7 +132,6 @@ describe("CentralDbStreamer end-to-end: UserCommitmentSchema.parse → streamIma
 	});
 
 	afterAll(async () => {
-		// biome-ignore lint/suspicious/noExplicitAny: test access to private field
 		const db = (streamer as unknown as { db: { close: () => Promise<void> } })
 			.db;
 		await db.close();
@@ -158,7 +157,6 @@ describe("CentralDbStreamer end-to-end: UserCommitmentSchema.parse → streamIma
 		streamer.streamImageRecord(commitmentRecord as UserCommitmentRecord);
 
 		// streamImageRecord is fire-and-forget — poll until the upsert lands.
-		// biome-ignore lint/suspicious/noExplicitAny: test access to private field
 		const tables = (
 			streamer as unknown as {
 				db: {

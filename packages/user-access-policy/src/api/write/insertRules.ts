@@ -19,7 +19,7 @@ import {
 } from "@prosopo/api-route";
 import type { AllKeys } from "@prosopo/common";
 import { LogLevel, type Logger } from "@prosopo/logger";
-import { type ZodType, z } from "zod";
+import { type ZodType, type ZodTypeDef, z } from "zod";
 import type {
 	AccessPolicy,
 	AccessRule,
@@ -56,7 +56,9 @@ type ParsedInsertRulesGroup = InsertRulesGroup & {
 
 type ParsedInsertRuleGroups = ParsedInsertRulesGroup[];
 
-type InsertRulesSchema = ZodType<InsertRulesGroup[]>;
+// Input position widened to `unknown` because `accessPolicyInput` uses
+// `z.preprocess` on `deferToVerify` for Redis string round-tripping.
+type InsertRulesSchema = ZodType<InsertRulesGroup[], ZodTypeDef, unknown>;
 
 export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 	public constructor(

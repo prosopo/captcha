@@ -14,6 +14,7 @@
 import { ProsopoApiError } from "@prosopo/common";
 import {
 	CaptchaType,
+	type FrictionlessReason,
 	type PowCaptchaSolutionEscalation,
 	type PowCaptchaSolutionResponse,
 	SubmitPowCaptchaSolutionBody,
@@ -68,13 +69,13 @@ export default (env: ProviderEnvironment) =>
 			challenge,
 			signature,
 			nonce,
-			verifiedTimeout,
 			dapp,
 			user,
 			behavioralData,
 			salt,
 			simdReadings,
 			clientMetaData,
+			fingerprintProof,
 		} = parsed;
 
 		validateSiteKey(dapp);
@@ -114,6 +115,20 @@ export default (env: ProviderEnvironment) =>
 				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
 					? req.ipInfo.countryCode
 					: undefined;
+			// Observability for the proof-of-fingerprint flow: the validation
+			// itself runs inside the closed-source routing machine (no logger), so
+			// log here at the provider boundary whether a proof arrived.
+			req.logger.info(() => ({
+				msg: fingerprintProof
+					? "fingerprintProof detected"
+					: "no fingerprintProof on PoW submission",
+				data: {
+					fingerprintProofPresent: fingerprintProof !== undefined,
+					fingerprintProofBytes: fingerprintProof?.length ?? 0,
+					challenge,
+				},
+			}));
+
 			tasks.powCaptchaManager.setPostPowContext({
 				ip: req.ip || "",
 				countryCode,
@@ -124,14 +139,25 @@ export default (env: ProviderEnvironment) =>
 					headers: flatHeaders,
 					userAgent,
 					...(req.ja4 && { ja4: req.ja4 }),
+					...(fingerprintProof && { fingerprintProof }),
 				},
 			});
 
+			// `solutionTimeout` gates issuance → submit; falls back to
+			// `verifiedTimeout` for records that pre-date the field, since
+			// historically that value covered both windows. Mongoose `default`
+			// doesn't fire on reads, so the runtime value can be undefined
+			// even though the parsed schema type says `number`.
+			const persistedSolutionTimeout = clientRecord.settings.solutionTimeout as
+				| number
+				| undefined;
+			const submitWindowMs: number =
+				persistedSolutionTimeout ?? clientRecord.settings.verifiedTimeout;
 			const result = await tasks.powCaptchaManager.verifyPowCaptchaSolution(
 				challenge,
 				signature.provider.challenge,
 				nonce,
-				verifiedTimeout,
+				submitWindowMs,
 				signature.user.timestamp,
 				getIPAddress(req.ip || ""),
 				flatHeaders,
@@ -140,6 +166,20 @@ export default (env: ProviderEnvironment) =>
 				simdReadings,
 				clientMetaData,
 			);
+
+			// Surface the routing machine's post-PoW decision (escalation +
+			// selection reason, e.g. FINGERPRINT_PROOF_INVALID) at the provider
+			// boundary so the fingerprint outcome is visible in provider logs.
+			if (result.routingOutput) {
+				req.logger.info(() => ({
+					msg: "post-PoW routing decision",
+					data: {
+						routedCaptchaType: result.routingOutput?.captchaType,
+						routingReason: result.routingOutput?.reason,
+						challenge,
+					},
+				}));
+			}
 
 			const escalation = await buildEscalation(tasks, result, challenge);
 			const response: PowCaptchaSolutionResponse = {
@@ -199,14 +239,20 @@ const buildEscalation = async (
 		captchaType: CaptchaType.image | CaptchaType.puzzle;
 		solvedImagesCount?: number;
 		powDifficulty?: number;
+		reason?: string;
 	};
+
+	// Prefer the routing machine's own selection reason (e.g. an invalid
+	// fingerprint proof) for the escalated captcha record; fall back to the
+	// originating session's reason when the machine didn't supply one.
+	const selectionReason =
+		(routed.reason as FrictionlessReason | undefined) ?? originSession.reason;
 
 	const newSession = await tasks.frictionlessManager.createSession(
 		originSession.token,
 		originSession.score,
 		originSession.threshold,
 		originSession.scoreComponents,
-		originSession.providerSelectEntropy,
 		originSession.ipAddress,
 		routed.captchaType,
 		originSession.siteKey ?? powRecord.dappAccount,
@@ -218,7 +264,7 @@ const buildEscalation = async (
 		originSession.webView,
 		originSession.iFrame,
 		originSession.decryptedHeadHash,
-		originSession.reason,
+		selectionReason,
 		undefined,
 		undefined,
 		originSession.ipInfo,

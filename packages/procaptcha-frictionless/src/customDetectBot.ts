@@ -15,28 +15,16 @@
 import { ProviderApi } from "@prosopo/api";
 import { ProsopoEnvError } from "@prosopo/common";
 import {
-	getRandomActiveProvider,
-	prefetchProviders,
-} from "@prosopo/load-balancer";
-import { ExtensionLoader } from "@prosopo/procaptcha-common";
-import { EnvironmentTypesSchema } from "@prosopo/types";
+	ExtensionLoader,
+	getProcaptchaRandomActiveProvider,
+	pickIpMode,
+} from "@prosopo/procaptcha-common";
 import type {
 	BotDetectionFunction,
 	ProcaptchaClientConfigOutput,
 } from "@prosopo/types";
 import type { BotDetectionFunctionResult } from "@prosopo/types";
 import { DetectorLoader } from "./detectorLoader.js";
-
-if (typeof window !== "undefined") {
-	const envHint =
-		typeof process !== "undefined"
-			? process.env?.PROSOPO_DEFAULT_ENVIRONMENT
-			: undefined;
-	const parsedEnv = EnvironmentTypesSchema.safeParse(envHint);
-	if (parsedEnv.success) {
-		prefetchProviders(parsedEnv.data).catch(() => undefined);
-	}
-}
 
 export const withTimeout = async <T>(
 	promise: Promise<T>,
@@ -71,13 +59,17 @@ const customDetectBot: BotDetectionFunction = async (
 	const [ExtClass, detect] = await Promise.all([
 		ExtensionLoader(config.web2),
 		DetectorLoader(),
-		prefetchProviders(config.defaultEnvironment),
 	]);
 	const ext = new ExtClass();
 
+	// The detector bundle still expects the legacy 5-arg signature
+	// `(env, randomProviderSelectorFn, container, restart, accountGenerator)`.
+	// Until the bundle is rebuilt without the provider selector, hand it a
+	// noop selector that resolves to the static DNS endpoint — the detector
+	// no longer uses the returned RandomProvider for routing.
 	const detectionResult = await detect(
 		config.defaultEnvironment,
-		getRandomActiveProvider,
+		async () => getProcaptchaRandomActiveProvider(config.defaultEnvironment),
 		container,
 		restartFn,
 		() => ext.getAccount(config),
@@ -89,12 +81,14 @@ const customDetectBot: BotDetectionFunction = async (
 		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
 	}
 
-	// Get random active provider with timeout
-	const provider = detectionResult.provider;
-
-	if (!provider) {
-		throw new Error("Provider Selection Failed");
-	}
+	// Resolve the static DNS endpoint for this env. No client-side random
+	// selection anymore — the DNS layer load-balances across the pronode fleet.
+	// `pickIpMode(config)` honours the dapp's data-ipv4 / data-ipv6 preference
+	// so frictionless and the subsequent captcha hops stay on the same stack.
+	const provider = await getProcaptchaRandomActiveProvider(
+		config.defaultEnvironment,
+		pickIpMode(config),
+	);
 
 	const providerApi = new ProviderApi(
 		provider.provider.url,

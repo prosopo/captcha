@@ -17,6 +17,12 @@
 		},
 		{
 			"path": "../fingerprintjs"
+		},
+		{
+			"path": "../types"
+		},
+		{
+			"path": "../util-crypto"
 		}
 	]
 }

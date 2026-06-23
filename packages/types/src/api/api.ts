@@ -78,7 +78,6 @@ export interface ProviderApiInterface {
 		dappAccount: string,
 		nonce: number,
 		userTimestampSignature: string,
-		timeout?: number,
 		behavioralData?: string,
 		salt?: string,
 		simdReadings?: string,
@@ -98,7 +97,6 @@ export interface ProviderApiInterface {
 		finalY: number,
 		puzzleEvents: Array<{ x: number; y: number; t: number }>,
 		userTimestampSignature: string,
-		timeout?: number,
 		behavioralData?: string,
 		salt?: string,
 		simdReadings?: string,
@@ -107,7 +105,6 @@ export interface ProviderApiInterface {
 	submitPuzzleCaptchaVerify(
 		token: string,
 		signatureHex: string,
-		recencyLimit: number,
 		user: string,
 		ip?: string,
 		email?: string,

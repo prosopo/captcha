@@ -18,11 +18,13 @@ import {
 	type BehavioralDataPacked,
 	CaptchaStatus,
 	CaptchaType,
+	FrictionlessReason,
 	type KeyringPair,
 	POW_SEPARATOR,
 	type PoWCaptchaStored,
 	type PoWChallengeId,
 	type RequestHeaders,
+	ResultReason,
 	type Session,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
@@ -199,6 +201,7 @@ describe("PowCaptchaManager", () => {
 				dappAccount: pair.address,
 				userAccount,
 				requestedAtTimestamp: new Date(requestedAtTimestamp),
+				submittedAtTimestamp: new Date(),
 				result: { status: CaptchaStatus.pending },
 				userSubmitted: false,
 				serverChecked: false,
@@ -247,8 +250,6 @@ describe("PowCaptchaManager", () => {
 				challenge,
 				timeout,
 			];
-
-			expect(verifyRecency).toHaveBeenCalledWith(...verifyRecencyArgs);
 
 			const checKPowSignatureArgs1: Parameters<typeof checkPowSignature> = [
 				requestedAtTimestamp.toString(),
@@ -306,6 +307,7 @@ describe("PowCaptchaManager", () => {
 				dappAccount: pair.address,
 				userAccount: "testUserAccount",
 				requestedAtTimestamp: new Date(12345),
+				submittedAtTimestamp: new Date(),
 				result: { status: CaptchaStatus.pending },
 				userSubmitted: false,
 				serverChecked: false,
@@ -343,8 +345,68 @@ describe("PowCaptchaManager", () => {
 					)
 				).verified,
 			).toBe(false);
+		});
 
-			expect(verifyRecency).toHaveBeenCalledWith(challenge, timeout);
+		it("auto-fails with CAPTCHA_INVALID_SALT when salt decodes to invalid coords", async () => {
+			const challenge: PoWChallengeId = `${12345}${POW_SEPARATOR}userAccount${POW_SEPARATOR}dappAccount`;
+			const difficulty = 4;
+			const signature = "testSignature";
+			const nonce = 12345;
+			const timeout = 1000;
+			const timestampSignature = "testTimestampSignature";
+			const ipAddress = getIPAddress("1.1.1.1");
+			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				dappAccount: pair.address,
+				userAccount: "testUserAccount",
+				requestedAtTimestamp: new Date(12345),
+				submittedAtTimestamp: new Date(),
+				result: { status: CaptchaStatus.pending },
+				userSubmitted: false,
+				serverChecked: false,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers,
+				ja4: "ja4",
+				providerSignature: "testSignature",
+				difficulty,
+				lastUpdatedTimestamp: new Date(0),
+			};
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.updatePowCaptchaRecordResult as any).mockResolvedValue(true);
+
+			const malformedSalt = "0x010200";
+
+			const result = await powCaptchaManager.verifyPowCaptchaSolution(
+				challenge,
+				signature,
+				nonce,
+				timeout,
+				timestampSignature,
+				ipAddress,
+				headers,
+				undefined, // behavioralData
+				malformedSalt,
+			);
+
+			expect(result.verified).toBe(false);
+			expect(db.updatePowCaptchaRecordResult).toHaveBeenCalledWith(
+				challenge,
+				{
+					status: CaptchaStatus.disapproved,
+					reason: ResultReason.CAPTCHA_INVALID_SALT,
+				},
+				false, // serverChecked
+				true, // userSubmitted
+				timestampSignature,
+				undefined, // coords must NOT be the bad value
+			);
+			expect(verifyRecency).not.toHaveBeenCalled();
+			expect(validateSolution).not.toHaveBeenCalled();
 		});
 	});
 
@@ -360,6 +422,7 @@ describe("PowCaptchaManager", () => {
 				dappAccount,
 				userAccount,
 				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
 				serverChecked: false,
 				result: { status: CaptchaStatus.approved },
 				ipAddress: getCompositeIpAddress(getIPAddress("1.1.1.1")),
@@ -380,7 +443,6 @@ describe("PowCaptchaManager", () => {
 
 			expect(result.verified).toBe(true);
 			expect(db.getPowCaptchaRecordByChallenge).toHaveBeenCalledWith(challenge);
-			expect(verifyRecency).toHaveBeenCalledWith(challenge, timeout);
 
 			const markDappUserPoWCommitmentsCheckedArgs: Parameters<
 				typeof db.markDappUserPoWCommitmentsChecked
@@ -428,6 +490,7 @@ describe("PowCaptchaManager", () => {
 				dappAccount,
 				userAccount,
 				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
 				result: { status: CaptchaStatus.approved },
 				userSubmitted: true,
 				serverChecked: false,
@@ -446,7 +509,6 @@ describe("PowCaptchaManager", () => {
 				score: 0.5,
 				threshold: 0.5,
 				scoreComponents: { baseScore: 0.5 },
-				providerSelectEntropy: 13337,
 				ipAddress: getCompositeIpAddress(ipAddress),
 				captchaType: CaptchaType.pow,
 				webView: false,
@@ -512,6 +574,7 @@ describe("PowCaptchaManager", () => {
 				dappAccount,
 				userAccount,
 				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
 				result: { status: CaptchaStatus.approved },
 				userSubmitted: true,
 				serverChecked: false,
@@ -530,7 +593,6 @@ describe("PowCaptchaManager", () => {
 				score: 0.5,
 				threshold: 0.5,
 				scoreComponents: { baseScore: 0.5 },
-				providerSelectEntropy: 13337,
 				ipAddress: getCompositeIpAddress(ipAddress),
 				captchaType: CaptchaType.pow,
 				webView: false,
@@ -596,6 +658,7 @@ describe("PowCaptchaManager", () => {
 				dappAccount,
 				userAccount,
 				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
 				result: { status: CaptchaStatus.approved },
 				userSubmitted: true,
 				serverChecked: false,
@@ -660,6 +723,7 @@ describe("PowCaptchaManager", () => {
 				dappAccount,
 				userAccount,
 				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
 				result: { status: CaptchaStatus.approved },
 				userSubmitted: true,
 				serverChecked: false,
@@ -710,6 +774,7 @@ describe("PowCaptchaManager", () => {
 				dappAccount,
 				userAccount,
 				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
 				result: { status: CaptchaStatus.approved },
 				userSubmitted: true,
 				serverChecked: false,
@@ -769,6 +834,7 @@ describe("PowCaptchaManager", () => {
 				dappAccount,
 				userAccount,
 				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
 				result: { status: CaptchaStatus.approved },
 				userSubmitted: true,
 				serverChecked: false,
@@ -818,6 +884,7 @@ describe("PowCaptchaManager", () => {
 				dappAccount,
 				userAccount,
 				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
 				result: { status: CaptchaStatus.approved },
 				userSubmitted: true,
 				serverChecked: false,
@@ -856,6 +923,115 @@ describe("PowCaptchaManager", () => {
 				restoreDecisionMachine();
 			}
 		});
+
+		it("forwards every session-derived field into the decide() input", async () => {
+			const dappAccount = "dappAccount";
+			const timestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
+			const timeout = 1000;
+			const ipAddress = getIPAddress("1.1.1.1");
+			const headers: RequestHeaders = { a: "1" };
+			const sessionId = "test-session-id";
+			const behavioralDataPacked: BehavioralDataPacked = {
+				c1: [1],
+				c2: [2],
+				c3: [3],
+				d: "d",
+			};
+
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				difficulty: 4,
+				dappAccount,
+				userAccount,
+				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
+				result: { status: CaptchaStatus.approved },
+				userSubmitted: true,
+				serverChecked: false,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers,
+				ja4: "ja4",
+				providerSignature: "sig",
+				lastUpdatedTimestamp: new Date(),
+				behavioralDataPacked,
+				deviceCapability: "dc",
+				sessionId,
+			};
+
+			const sessionRecord: Session = {
+				sessionId,
+				createdAt: new Date(),
+				token: "test-token",
+				score: 0.42,
+				threshold: 0.27,
+				scoreComponents: {
+					baseScore: 1,
+					unverifiedHost: 0.2,
+					dnsAsymmetry: 0.5,
+					triggeredDetectors: [27],
+					shadowDomPenalty: false,
+				},
+				ipAddress: getCompositeIpAddress(ipAddress),
+				captchaType: CaptchaType.pow,
+				webView: false,
+				iFrame: true,
+				decryptedHeadHash: "h".repeat(16),
+				userSitekeyIpHash: "ush",
+				reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
+				ruleType: ["ja4Hash"],
+				simdReadings: {
+					supported: true,
+					schema: 1,
+					timerResolutionMs: 0.1,
+					runsPerOp: 3,
+					durationMs: 200,
+					ops: [],
+				},
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getSessionRecordBySessionId as any) = vi
+				.fn()
+				.mockResolvedValue(sessionRecord);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(verifyRecency as any).mockImplementation(() => true);
+
+			const decideSpy = vi
+				.fn()
+				.mockResolvedValue({ decision: "allow" } as const);
+			mockDecisionMachine(decideSpy);
+
+			try {
+				await powCaptchaManager.serverVerifyPowCaptchaSolution(
+					dappAccount,
+					challenge,
+					timeout,
+					mockEnv,
+				);
+
+				expect(decideSpy).toHaveBeenCalledOnce();
+				const input = decideSpy.mock.calls[0]?.[0];
+				expect(input.captchaType).toBe(CaptchaType.pow);
+				expect(input.threshold).toBe(sessionRecord.threshold);
+				expect(input.scoreComponents).toEqual(sessionRecord.scoreComponents);
+				expect(input.decryptedHeadHash).toBe(sessionRecord.decryptedHeadHash);
+				expect(input.userSitekeyIpHash).toBe(sessionRecord.userSitekeyIpHash);
+				expect(input.simdReadings).toEqual(sessionRecord.simdReadings);
+				expect(input.frictionlessReason).toBe(sessionRecord.reason);
+				expect(input.ruleType).toEqual(sessionRecord.ruleType);
+				expect(input.webView).toBe(sessionRecord.webView);
+				expect(input.iFrame).toBe(sessionRecord.iFrame);
+				expect(typeof input.score).toBe("number");
+			} finally {
+				restoreDecisionMachine();
+			}
+		});
 	});
 
 	describe("IP Validation Guard Conditions", () => {
@@ -875,6 +1051,7 @@ describe("PowCaptchaManager", () => {
 				serverChecked: false,
 				difficulty: 4,
 				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
 				ipAddress: getCompositeIpAddress(ip),
 				headers: { a: "1", b: "2", c: "3" },
 				ja4: "ja4",
@@ -931,6 +1108,7 @@ describe("PowCaptchaManager", () => {
 					status: CaptchaStatus.approved,
 				},
 				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
 				ipAddress: getCompositeIpAddress(ip),
 				headers: { a: "1", b: "2", c: "3" },
 				ja4: "ja4",
@@ -992,6 +1170,7 @@ describe("PowCaptchaManager", () => {
 					status: CaptchaStatus.approved,
 				},
 				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
 				ipAddress: getCompositeIpAddress(ip),
 				userAccount: "userAccount",
 				headers: { a: "1", b: "2", c: "3" },
@@ -1054,6 +1233,7 @@ describe("PowCaptchaManager", () => {
 					status: CaptchaStatus.approved,
 				},
 				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
 				ipAddress: getCompositeIpAddress(ip),
 				userAccount: "userAccount",
 				headers: { a: "1", b: "2", c: "3" },
@@ -1105,6 +1285,7 @@ describe("PowCaptchaManager", () => {
 					status: CaptchaStatus.approved,
 				},
 				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
 				ipAddress: getCompositeIpAddress("1.1.1.1"),
 				userAccount: "userAccount",
 				headers: { a: "1", b: "2", c: "3" },
@@ -1191,6 +1372,7 @@ describe("PowCaptchaManager", () => {
 				dappAccount,
 				userAccount,
 				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
 				result: { status: CaptchaStatus.approved },
 				userSubmitted: true,
 				serverChecked: false,
@@ -1340,6 +1522,7 @@ module.exports = (input) => {
 				dappAccount,
 				userAccount,
 				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
 				result: { status: CaptchaStatus.approved },
 				userSubmitted: true,
 				serverChecked: false,
@@ -1448,6 +1631,7 @@ module.exports = (input) => {
 				dappAccount,
 				userAccount,
 				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
 				result: { status: CaptchaStatus.approved },
 				userSubmitted: true,
 				serverChecked: false,
@@ -1552,6 +1736,7 @@ module.exports = (input) => {
 				dappAccount,
 				userAccount,
 				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
 				result: { status: CaptchaStatus.approved },
 				userSubmitted: true,
 				serverChecked: false,
@@ -1618,6 +1803,7 @@ module.exports = (input) => {
 				dappAccount,
 				userAccount,
 				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
 				result: { status: CaptchaStatus.approved },
 				userSubmitted: true,
 				serverChecked: false,
@@ -1690,6 +1876,7 @@ module.exports = (input) => {
 				dappAccount,
 				userAccount,
 				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
 				result: { status: CaptchaStatus.approved },
 				userSubmitted: true,
 				serverChecked: false,
@@ -1751,6 +1938,7 @@ module.exports = (input) => {
 				dappAccount,
 				userAccount,
 				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
 				result: { status: CaptchaStatus.approved },
 				userSubmitted: true,
 				serverChecked: false,
@@ -1817,6 +2005,7 @@ module.exports = (input) => {
 				dappAccount,
 				userAccount,
 				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
 				result: { status: CaptchaStatus.approved },
 				userSubmitted: true,
 				serverChecked: false,
@@ -1874,6 +2063,7 @@ module.exports = (input) => {
 				dappAccount,
 				userAccount,
 				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
 				result: { status: CaptchaStatus.approved },
 				userSubmitted: true,
 				serverChecked: false,
@@ -1944,6 +2134,7 @@ module.exports = (input) => {
 				dappAccount: pair.address,
 				userAccount,
 				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
 				result: { status: CaptchaStatus.pending },
 				userSubmitted: false,
 				serverChecked: false,
@@ -1996,6 +2187,7 @@ module.exports = (input) => {
 				dappAccount: pair.address,
 				userAccount,
 				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
 				result: { status: CaptchaStatus.pending },
 				userSubmitted: false,
 				serverChecked: false,
@@ -2051,6 +2243,7 @@ module.exports = (input) => {
 				dappAccount: pair.address,
 				userAccount,
 				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(0),
 				result: { status: CaptchaStatus.pending },
 				userSubmitted: false,
 				serverChecked: false,
@@ -2104,6 +2297,7 @@ module.exports = (input) => {
 				dappAccount: pair.address,
 				userAccount,
 				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
 				result: { status: CaptchaStatus.pending },
 				userSubmitted: false,
 				serverChecked: false,
@@ -2153,6 +2347,7 @@ module.exports = (input) => {
 				dappAccount,
 				userAccount,
 				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
 				serverChecked: false,
 				result: { status: CaptchaStatus.approved },
 				sessionId,
@@ -2196,6 +2391,7 @@ module.exports = (input) => {
 				dappAccount,
 				userAccount,
 				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(0),
 				serverChecked: false,
 				result: { status: CaptchaStatus.approved },
 				sessionId,
@@ -2249,6 +2445,7 @@ module.exports = (input) => {
 					dappAccount: pair.address,
 					userAccount,
 					requestedAtTimestamp: new Date(timestamp),
+					submittedAtTimestamp: new Date(),
 					result: { status: CaptchaStatus.pending },
 					userSubmitted: false,
 					serverChecked: false,
@@ -2306,6 +2503,7 @@ module.exports = (input) => {
 					dappAccount: pair.address,
 					userAccount,
 					requestedAtTimestamp: new Date(timestamp),
+					submittedAtTimestamp: new Date(0),
 					result: { status: CaptchaStatus.pending },
 					userSubmitted: false,
 					serverChecked: false,
@@ -2367,6 +2565,7 @@ module.exports = (input) => {
 					dappAccount,
 					userAccount,
 					requestedAtTimestamp: new Date(timestamp),
+					submittedAtTimestamp: new Date(),
 					result: { status: CaptchaStatus.approved },
 					userSubmitted: true,
 					serverChecked: false,
@@ -2432,6 +2631,7 @@ module.exports = (input) => {
 					dappAccount,
 					userAccount,
 					requestedAtTimestamp: new Date(timestamp),
+					submittedAtTimestamp: new Date(),
 					result: { status: CaptchaStatus.approved },
 					userSubmitted: true,
 					serverChecked: false,
@@ -2490,6 +2690,7 @@ module.exports = (input) => {
 					dappAccount,
 					userAccount,
 					requestedAtTimestamp: new Date(timestamp),
+					submittedAtTimestamp: new Date(0),
 					result: { status: CaptchaStatus.approved },
 					userSubmitted: true,
 					serverChecked: false,
@@ -2543,6 +2744,7 @@ module.exports = (input) => {
 					dappAccount,
 					userAccount,
 					requestedAtTimestamp: new Date(timestamp),
+					submittedAtTimestamp: new Date(0),
 					result: { status: CaptchaStatus.approved },
 					userSubmitted: true,
 					serverChecked: false,

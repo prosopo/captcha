@@ -436,6 +436,7 @@
 		"NO_CAPTCHA": "キャプチャが見つかりません",
 		"NO_SESSION_FOUND": "セッションが見つかりません",
 		"IP_ADDRESS_MISMATCH": "IPアドレスが一致しません",
+		"INVALID_SALT": "無効なソルト",
 		"INVALID_TOKEN": "無効なトークン",
 		"INVALID_SOLUTION": "無効なソリューション",
 		"DECRYPTION_ERROR": "復号エラー"

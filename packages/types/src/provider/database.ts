@@ -43,6 +43,7 @@ import {
 	PowChallengeIdSchema,
 } from "../datasets/index.js";
 import type {
+	DecisionMachineKind,
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
@@ -180,6 +181,10 @@ export interface StoredCaptcha {
 	ja4: string;
 	userSubmitted: boolean;
 	serverChecked: boolean;
+	// Set once on first transition; never overwritten.
+	submittedAtTimestamp?: Date;
+	verifiedAtTimestamp?: Date;
+	failedAtTimestamp?: Date;
 	// The full ipinfo payload from `IpInfoService.lookup()`. Persisted
 	// either by the provider's ipInfoMiddleware (at request time) or by
 	// the CHECK_IP_INFO backfill job. Consumers read individual fields
@@ -285,6 +290,9 @@ export const UserCommitmentSchema = object({
 	parsedUserAgentInfo: any().optional(),
 	storedAtTimestamp: date().optional(),
 	requestedAtTimestamp: date(),
+	submittedAtTimestamp: date().optional(),
+	verifiedAtTimestamp: date().optional(),
+	failedAtTimestamp: date().optional(),
 	lastUpdatedTimestamp: date().optional(),
 	pendingStage: boolean().optional(),
 	sessionId: string().optional(),
@@ -381,7 +389,6 @@ export const SessionSchema = object({
 	score: number(),
 	threshold: number(),
 	scoreComponents: ScoreComponentsSchema,
-	providerSelectEntropy: number(),
 	ipAddress: CompositeIpAddressSchema,
 	captchaType: nativeEnum(CaptchaType),
 	mode: nativeEnum(ModeEnum).optional(),
@@ -404,6 +411,10 @@ export const SessionSchema = object({
 		.optional()
 		.transform((v) => v as FrictionlessReason | undefined),
 	blocked: boolean().optional(),
+	// See Session.ruleHash — populated on synthetic blocked-session records.
+	ruleHash: string().optional(),
+	ruleType: string().array().optional(),
+	ruleDescription: string().optional(),
 	// Full ipinfo payload from ipInfoMiddleware at session-creation
 	// time. Replaces the flat `countryCode` / `geolocation` fields —
 	// consumers narrow on `ipInfo.isValid` and read whichever sub-field
@@ -429,6 +440,10 @@ export const SessionSchema = object({
 	// indicator reflects when the catcher's CPU fingerprint became
 	// available relative to the user's journey.
 	simdReadingsStage: SimdReadingsStageSchema.optional(),
+	entropyMathRandomFingerprint: string().optional(),
+	entropyCryptoFingerprint: string().optional(),
+	entropyWallClockOffsetMs: number().optional(),
+	entropyMathRandomFirst: number().optional(),
 	dnsEvent: object({
 		resolverIp: string().optional(),
 		peerIp: string().optional(),
@@ -445,7 +460,6 @@ export type Session = {
 	score: number;
 	threshold: number;
 	scoreComponents: ScoreComponents;
-	providerSelectEntropy: number;
 	ipAddress: CompositeIpAddress;
 	captchaType: CaptchaType;
 	mode?: ModeEnum;
@@ -463,6 +477,14 @@ export type Session = {
 	siteKey?: string;
 	reason?: FrictionlessReason;
 	blocked?: boolean;
+	// When `blocked` is true, these record which access-policy rule matched
+	// at the request-time block middleware. Populated only on synthetic
+	// "blocked session" records the inspector writes when it 401s a request,
+	// so the Traffic page can surface "why are we blocking traffic for this
+	// site?" without an extra Mongo lookup against the rules collection.
+	ruleHash?: string; // == the redis-key suffix of the matched rule
+	ruleType?: string[]; // populated scope fields, e.g. ['ja4Hash'], ['ja4Hash','coords']
+	ruleDescription?: string; // operator-set description copied from the rule's AccessPolicy
 	// Full ipinfo payload from ipInfoMiddleware at session-creation
 	// time. Replaces the flat `countryCode` / `geolocation` fields.
 	ipInfo?: IPInfoResponse;
@@ -478,6 +500,10 @@ export type Session = {
 	simdReadings?: SimdReadings;
 	// Stage at which the readings first arrived.
 	simdReadingsStage?: SimdReadingsStage;
+	entropyMathRandomFingerprint?: string;
+	entropyCryptoFingerprint?: string;
+	entropyWallClockOffsetMs?: number;
+	entropyMathRandomFirst?: number;
 	// DNS observation merge target — populated by the dns-event sidecar
 	// via POST /v1/prosopo/provider/admin/dns/event. At most one DNS
 	// event + one HTTP event per session under normal usage; the
@@ -517,6 +543,9 @@ export const PoWCaptchaStoredSchema = object({
 	// From StoredCaptcha
 	result: CaptchaResultSchema,
 	requestedAtTimestamp: date(),
+	submittedAtTimestamp: date().optional(),
+	verifiedAtTimestamp: date().optional(),
+	failedAtTimestamp: date().optional(),
 	ipAddress: CompositeIpAddressSchema,
 	providedIp: CompositeIpAddressSchema.optional(),
 	metadata: StoredCaptchaMetadataSchema.optional(),
@@ -619,6 +648,7 @@ export type DetectorKey = {
 export type DecisionMachineArtifact = {
 	scope: DecisionMachineScope;
 	dappAccount?: string;
+	kind?: DecisionMachineKind;
 	runtime: DecisionMachineRuntime;
 	language?: DecisionMachineLanguage;
 	source: string;

@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/config",
-	"version": "3.3.1",
+	"version": "3.3.3",
 	"description": "Prosopo config library",
 	"type": "module",
 	"scripts": {
@@ -22,7 +22,7 @@
 		"@rollup/plugin-typescript": "11.1.6",
 		"@rollup/plugin-wasm": "6.2.2",
 		"@vitejs/plugin-react": "5.1.0",
-		"esbuild": "0.25.9",
+		"esbuild": "0.28.1",
 		"fast-glob": "3.3.2",
 		"html-webpack-plugin": "5.6.0",
 		"mini-css-extract-plugin": "2.9.1",
@@ -67,7 +67,7 @@
 		"vitest": "3.2.4",
 		"webpack": "5.102.1",
 		"webpack-cli": "5.1.4",
-		"webpack-dev-server": "5.2.2"
+		"webpack-dev-server": "5.2.5"
 	},
 	"repository": {
 		"type": "git",
