@@ -1,6 +1,9 @@
 ---
 "@prosopo/provider": minor
 "@prosopo/database": minor
+"@prosopo/types": minor
+"@prosopo/api": minor
+"@prosopo/procaptcha-frictionless": minor
 ---
 
 feat(provider): detector bundle pool foundations + empty-pool PoW fallback

@@ -41,6 +41,7 @@ import {
 } from "../../util/usageCounters.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
+import { getDetectorBundlePool } from "../detection/bundlePool.js";
 import { getBotScore } from "../detection/getBotScore.js";
 import { type RoutingContext, applyRouter } from "./routingMachine.js";
 
@@ -476,23 +477,56 @@ export class FrictionlessManager extends CaptchaManager {
 		return `${start}...${middle}...${end}`;
 	}
 
-	async decryptPayload(token: string, headHash: string) {
-		const decryptKeys = [
+	/**
+	 * Resolve the decrypt attempts for a payload. Prefers the per-session pool
+	 * bundle (a single deterministic decrypt with its own RSA keypair + inner
+	 * cipher config); falls back to brute-forcing the legacy detector-key pool
+	 * when no bundle is assigned (bundled detector) or the binding can't be
+	 * resolved (expired/missing). Also returns the resolved bundleId so the
+	 * caller can promote it onto the session for the later behavioural hop.
+	 */
+	async resolveDecryptAttempts(detectorSessionId?: string): Promise<{
+		attempts: { key: string; innerConfig?: string }[];
+		bundleId?: string;
+	}> {
+		if (detectorSessionId && this.writeQueue) {
+			const bundleId =
+				await this.writeQueue.getDetectorBundle(detectorSessionId);
+			const bundle = bundleId
+				? getDetectorBundlePool()?.get(bundleId)
+				: undefined;
+			if (bundleId && bundle) {
+				return {
+					attempts: [
+						{ key: bundle.privateKey, innerConfig: bundle.innerConfig },
+					],
+					bundleId,
+				};
+			}
+		}
+		const keys = [
 			// Process DB keys first, then env var key last as env key will likely be invalid
 			...(await this.getDetectorKeys()),
 			process.env.BOT_DECRYPTION_KEY,
-		].filter((k) => k);
+		].filter((k): k is string => !!k);
+		return { attempts: keys.map((key) => ({ key })) };
+	}
+
+	async decryptPayload(
+		token: string,
+		headHash: string,
+		detectorSessionId?: string,
+	) {
+		const { attempts: decryptKeys, bundleId } =
+			await this.resolveDecryptAttempts(detectorSessionId);
 
 		this.logger.debug(() => {
-			const loggedKeys = decryptKeys.map((key) =>
-				this.redactKeyForLogging(key),
-			);
-
 			return {
 				msg: "Decrypting score",
 				data: {
 					keysLength: decryptKeys.length,
-					keys: loggedKeys,
+					bundleId,
+					usingBundle: bundleId !== undefined,
 				},
 			};
 		});
@@ -513,15 +547,20 @@ export class FrictionlessManager extends CaptchaManager {
 		let entropyCryptoFingerprint: string | undefined;
 		let entropyWallClockOffsetMs: number | undefined;
 		let entropyMathRandomFirst: number | undefined;
-		for (const [keyIndex, key] of decryptKeys.entries()) {
+		for (const [keyIndex, attempt] of decryptKeys.entries()) {
 			try {
 				this.logger.info(() => ({
 					msg: "Attempting to decrypt score",
 					data: {
-						key: this.redactKeyForLogging(key),
+						key: this.redactKeyForLogging(attempt.key),
 					},
 				}));
-				const decrypted = await getBotScore(token, headHash, key as string);
+				const decrypted = await getBotScore(
+					token,
+					headHash,
+					attempt.key,
+					attempt.innerConfig,
+				);
 				decryptedHeadHash = decrypted.decryptedHeadHash || "";
 				const s = decrypted.baseBotScore;
 				const t = decrypted.timestamp;
@@ -538,7 +577,7 @@ export class FrictionlessManager extends CaptchaManager {
 				this.logger.debug(() => ({
 					msg: "Successfully decrypted score",
 					data: {
-						key: this.redactKeyForLogging(key),
+						key: this.redactKeyForLogging(attempt.key),
 						baseBotScore: s,
 						timestamp: t,
 						userId: a,
@@ -626,6 +665,9 @@ export class FrictionlessManager extends CaptchaManager {
 			entropyCryptoFingerprint,
 			entropyWallClockOffsetMs,
 			entropyMathRandomFirst,
+			// The pool bundle used (if any) — promoted onto the session so the
+			// later behavioural-data hop can resolve the same keypair/inner cfg.
+			bundleId,
 		};
 	}
 

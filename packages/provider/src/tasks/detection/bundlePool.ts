@@ -162,3 +162,17 @@ export function initDetectorBundlePool(
 export function getDetectorBundlePool(): DetectorBundlePool | null {
 	return globalPool;
 }
+
+/**
+ * Hot-swap the global pool's contents (admin "emergency push" channel). Creates
+ * the global pool if it does not exist yet. Returns the new bundle count.
+ */
+export function replaceDetectorBundlePool(
+	bundles: Map<string, PoolBundle>,
+): number {
+	if (!globalPool) {
+		globalPool = new DetectorBundlePool();
+	}
+	globalPool.replace(bundles);
+	return globalPool.size();
+}

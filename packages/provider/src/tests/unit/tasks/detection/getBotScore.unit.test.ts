@@ -54,6 +54,7 @@ describe("getBotScore", () => {
 			"payload",
 			"headHash",
 			"privateKey",
+			undefined,
 		);
 	});
 
@@ -136,6 +137,7 @@ describe("getBotScore", () => {
 			"testPayload",
 			"testHeadHash",
 			"testPrivateKey",
+			undefined,
 		);
 	});
 
@@ -155,6 +157,7 @@ describe("getBotScore", () => {
 		expect(decodePayloadModule.default).toHaveBeenCalledWith(
 			"testPayload",
 			"testHeadHash",
+			undefined,
 			undefined,
 		);
 	});

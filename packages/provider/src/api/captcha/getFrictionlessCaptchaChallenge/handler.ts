@@ -68,8 +68,15 @@ export default (
 				}));
 			});
 
-			const { token, headHash, dapp, user, mode, simdReadings } =
-				GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
+			const {
+				token,
+				headHash,
+				dapp,
+				user,
+				mode,
+				simdReadings,
+				detectorSessionId,
+			} = GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
 
 			const normalizedIp = normalizeRequestIp(req.ip, req.logger);
 			const sessionMode =
@@ -259,7 +266,11 @@ export default (
 			// them depends on the others' outputs — running them in
 			// series previously added up to ~50-80ms on the hot path.
 			const [decryptedPayload, validation, accessPolicies] = await Promise.all([
-				tasks.frictionlessManager.decryptPayload(token, headHash),
+				tasks.frictionlessManager.decryptPayload(
+					token,
+					headHash,
+					detectorSessionId,
+				),
 				tasks.frictionlessManager.isValidRequest(
 					clientRecord,
 					CaptchaType.frictionless,

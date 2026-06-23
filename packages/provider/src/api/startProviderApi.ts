@@ -40,6 +40,7 @@ import cors from "cors";
 import express from "express";
 import type { Request } from "express";
 import rateLimit from "express-rate-limit";
+import { initDetectorBundlePool } from "../tasks/detection/bundlePool.js";
 import { createApiAdminRoutesProvider } from "./admin/createApiAdminRoutesProvider.js";
 import { blockMiddleware } from "./block.js";
 import { prosopoRouter } from "./captcha.js";
@@ -72,7 +73,15 @@ export const isTlsAvailable = (): boolean => {
 export const getClientApiPathsExpectingProsopoHeaders =
 	(): ClientApiPaths[] => {
 		const paths = Object.values(ClientApiPaths).filter(
-			(path) => path.indexOf("verify") === -1 && path.indexOf("spam") === -1,
+			(path) =>
+				path.indexOf("verify") === -1 &&
+				path.indexOf("spam") === -1 &&
+				// Detector-bundle assignment runs before the user account exists
+				// (it's needed to load the detector that mints it), so it can't
+				// carry the Prosopo-User header. It only hands out an obfuscated
+				// bundle keyed to an ephemeral session id; the site-key still
+				// rides in the body and it is rate-limited.
+				path.indexOf("detector/assign") === -1,
 		);
 		return paths as ClientApiPaths[];
 	};
@@ -138,6 +147,27 @@ export async function startProviderApi(
 	port?: number,
 ): Promise<Server> {
 	env.logger.info(() => ({ msg: "Starting Prosopo API" }));
+
+	// Load the precomputed detector bundle pool into memory IF a pool directory
+	// is present. Two distinct states:
+	//   - directory absent  ⇒ pool feature not provisioned on this provider ⇒
+	//     leave the pool uninitialised (null) ⇒ legacy detector-key path.
+	//   - directory present ⇒ pool feature ON ⇒ initialise it. If it then turns
+	//     out empty, the frictionless flow degrades to a real PoW challenge
+	//     (the empty-pool fallback) rather than silently using legacy keys.
+	const detectorPoolDir =
+		process.env.PROSOPO_DETECTOR_POOL_DIR ?? "/app/data/detector-pool";
+	if (fs.existsSync(detectorPoolDir)) {
+		initDetectorBundlePool(detectorPoolDir, {
+			info: (msg, data) => env.logger.info(() => ({ msg, data })),
+			warn: (msg, data) => env.logger.warn(() => ({ msg, data })),
+		});
+	} else {
+		env.logger.info(() => ({
+			msg: "No detector bundle pool directory; using legacy detector path",
+			data: { detectorPoolDir },
+		}));
+	}
 
 	const apiApp = express();
 	const apiPort = port || env.config.server?.port;

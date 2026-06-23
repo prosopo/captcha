@@ -16,6 +16,8 @@ import {
 	AdminApiPaths,
 	ApiParams,
 	type ApiResponse,
+	type AssignDetectorBundleRequestBodyOutput,
+	type AssignDetectorBundleResponse,
 	type CaptchaRequestBodyType,
 	type CaptchaResponseBody,
 	type CaptchaSolution,
@@ -314,6 +316,24 @@ export default class ProviderApi
 		});
 	}
 
+	/**
+	 * Assigns a precomputed detector bundle for this session. Returns
+	 * `useProviderBundle: false` when the provider has no pool (the client then
+	 * falls back to the bundled detector).
+	 */
+	public async assignDetectorBundle(
+		dapp: string,
+	): Promise<AssignDetectorBundleResponse> {
+		const body: AssignDetectorBundleRequestBodyOutput = {
+			[ApiParams.dapp]: dapp,
+		};
+		return this.post(ClientApiPaths.AssignDetectorBundle, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+			},
+		});
+	}
+
 	public async getFrictionlessCaptcha(
 		token: string,
 		headHash: string,
@@ -321,6 +341,7 @@ export default class ProviderApi
 		user: string,
 		mode?: ModeEnum,
 		simdReadings?: string,
+		detectorSessionId?: string,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const body: GetFrictionlessCaptchaChallengeRequestBodyOutput = {
 			[ApiParams.token]: token,
@@ -329,6 +350,9 @@ export default class ProviderApi
 			[ApiParams.user]: user,
 			...(mode && { [ApiParams.mode]: mode }),
 			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
+			...(detectorSessionId && {
+				[ApiParams.detectorSessionId]: detectorSessionId,
+			}),
 		};
 		const { data, headers } = await this.postWithHeaders<
 			GetFrictionlessCaptchaResponse,

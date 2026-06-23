@@ -16,6 +16,7 @@ import { handleErrors } from "@prosopo/api-express-router";
 import { ClientApiPaths } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import express, { type Router } from "express";
+import assignDetectorBundle from "./captcha/assignDetectorBundle.js";
 import checkSpamEmail from "./captcha/checkSpamEmail.js";
 import getFrictionlessCaptchaChallenge from "./captcha/getFrictionlessCaptchaChallenge.js";
 import getImageCaptchaChallenge from "./captcha/getImageCaptchaChallenge.js";
@@ -89,6 +90,14 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				res,
 				next,
 			),
+	);
+
+	/**
+	 * Assigns a precomputed detector bundle for this session (or signals the
+	 * bundled fallback when no pool is loaded).
+	 */
+	router.post(ClientApiPaths.AssignDetectorBundle, (req, res, next) =>
+		assignDetectorBundle(env)(req, res, next),
 	);
 
 	/**

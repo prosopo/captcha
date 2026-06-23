@@ -24,7 +24,16 @@ import type {
 	ProcaptchaClientConfigOutput,
 } from "@prosopo/types";
 import type { BotDetectionFunctionResult } from "@prosopo/types";
-import { DetectorLoader } from "./detectorLoader.js";
+import {
+	DetectorLoader,
+	DetectorLoaderFromScript,
+	type DetectorType,
+} from "./detectorLoader.js";
+
+// Upper bound on the best-effort detector-bundle assignment probe. If the
+// provider is slow/unreachable we abandon the probe and use the bundled
+// detector rather than letting it delay (or stall) the detection flow.
+const ASSIGN_TIMEOUT_MS = 2000;
 
 export const withTimeout = async <T>(
 	promise: Promise<T>,
@@ -56,9 +65,66 @@ const customDetectBot: BotDetectionFunction = async (
 	container: HTMLElement | undefined,
 	restartFn: () => void,
 ): Promise<BotDetectionFunctionResult> => {
+	if (!config.account.address) {
+		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
+	}
+
+	// Resolve the static DNS endpoint for this env. No client-side random
+	// selection anymore — the DNS layer load-balances across the pronode fleet.
+	// `pickIpMode(config)` honours the dapp's data-ipv4 / data-ipv6 preference
+	// so frictionless and the subsequent captcha hops stay on the same stack.
+	// Resolved up front (before detection) so we can ask the provider for a
+	// per-session detector bundle.
+	const provider = await getProcaptchaRandomActiveProvider(
+		config.defaultEnvironment,
+		pickIpMode(config),
+	);
+
+	const providerApi = new ProviderApi(
+		provider.provider.url,
+		config.account.address,
+	);
+
+	// Ask the provider for a per-session detector bundle. When it has a pool it
+	// returns the obfuscated detector (each with its own keys + inner cipher)
+	// plus a detectorSessionId; otherwise it signals the bundled fallback.
+	//
+	// The bundled detector is always loaded in parallel as the fallback, and the
+	// assign probe is time-bounded, so this best-effort hop can NEVER stall or
+	// break the flow: ANY failure (no pool, network, decode, timeout) degrades to
+	// the bundled detector + legacy key-pool decryption. The no-pool path is
+	// therefore behaviourally identical to not asking at all.
+	const bundledDetectPromise = DetectorLoader();
+	let detectorSessionId: string | undefined;
+	let providerDetect: DetectorType | undefined;
+	try {
+		const assigned = await withTimeout(
+			providerApi.assignDetectorBundle(config.account.address),
+			ASSIGN_TIMEOUT_MS,
+		);
+		if (assigned.useProviderBundle && assigned.detectorScript) {
+			detectorSessionId = assigned.detectorSessionId;
+			providerDetect = await withTimeout(
+				DetectorLoaderFromScript(assigned.detectorScript),
+				ASSIGN_TIMEOUT_MS,
+			);
+		}
+	} catch {
+		// best-effort — fall back to the bundled detector below
+	}
+	let detectPromise: Promise<DetectorType>;
+	if (providerDetect !== undefined) {
+		detectPromise = Promise.resolve(providerDetect);
+		// The bundled load is now unused; swallow any rejection so it doesn't
+		// surface as an unhandled promise rejection.
+		void bundledDetectPromise.catch(() => undefined);
+	} else {
+		detectPromise = bundledDetectPromise;
+	}
+
 	const [ExtClass, detect] = await Promise.all([
 		ExtensionLoader(config.web2),
-		DetectorLoader(),
+		detectPromise,
 	]);
 	const ext = new ExtClass();
 
@@ -77,24 +143,6 @@ const customDetectBot: BotDetectionFunction = async (
 
 	const userAccount = detectionResult.userAccount;
 
-	if (!config.account.address) {
-		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
-	}
-
-	// Resolve the static DNS endpoint for this env. No client-side random
-	// selection anymore — the DNS layer load-balances across the pronode fleet.
-	// `pickIpMode(config)` honours the dapp's data-ipv4 / data-ipv6 preference
-	// so frictionless and the subsequent captcha hops stay on the same stack.
-	const provider = await getProcaptchaRandomActiveProvider(
-		config.defaultEnvironment,
-		pickIpMode(config),
-	);
-
-	const providerApi = new ProviderApi(
-		provider.provider.url,
-		config.account.address,
-	);
-
 	// SIMD readings deliberately omitted from the frictionless hop. The WASM
 	// benchmark is a CPU-bound loop that contends with BotScoreWorker if it
 	// runs during detection; deferring it until after the POST is in flight
@@ -108,6 +156,7 @@ const customDetectBot: BotDetectionFunction = async (
 		userAccount.account.address,
 		config.mode,
 		undefined,
+		detectorSessionId,
 	);
 	if (detectionResult.getSimdReadings) {
 		// Fire-and-forget: triggers the memoised prefetch inside the catcher

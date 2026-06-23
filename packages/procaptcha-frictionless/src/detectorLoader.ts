@@ -12,7 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-type DetectorType = typeof import("@prosopo/detector").default;
+export type DetectorType = typeof import("@prosopo/detector").default;
 
+/** Loads the detector bundled into the widget (legacy / fallback path). */
 export const DetectorLoader = async (): Promise<DetectorType> =>
 	(await import("@prosopo/detector")).default;
+
+/**
+ * Loads a detector from a provider-served obfuscated ESM string (the per-session
+ * pool bundle). Evaluated via a blob URL — the served module is self-contained
+ * (no imports), so dynamic `import()` of the blob yields its default export.
+ */
+export const DetectorLoaderFromScript = async (
+	script: string,
+): Promise<DetectorType> => {
+	const blob = new Blob([script], { type: "text/javascript" });
+	const url = URL.createObjectURL(blob);
+	try {
+		const mod = (await import(/* @vite-ignore */ url)) as {
+			default: DetectorType;
+		};
+		return mod.default;
+	} finally {
+		URL.revokeObjectURL(url);
+	}
+};
