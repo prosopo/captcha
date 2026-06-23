@@ -13,7 +13,11 @@
 // limitations under the License.
 
 import type { ApiEndpoint } from "@prosopo/api-route";
-import { ProsopoApiError, ProsopoBaseError, unwrapError } from "@prosopo/common";
+import {
+	ProsopoApiError,
+	ProsopoBaseError,
+	unwrapError,
+} from "@prosopo/common";
 import type { LogLevel } from "@prosopo/logger";
 import { stringifyBigInts } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
