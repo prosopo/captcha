@@ -64,7 +64,6 @@ describe("decryptPayload", () => {
 				return {
 					baseBotScore: 1,
 					timestamp: Date.now(),
-					providerSelectEntropy: 1,
 				};
 			}),
 		}));
@@ -81,125 +80,12 @@ describe("decryptPayload", () => {
 		expect(result).toEqual({
 			baseBotScore: 1,
 			timestamp: expect.any(Number),
-			providerSelectEntropy: 1,
 			userId: undefined,
 			userAgent: undefined,
 			webView: false,
 			iFrame: false,
 			decryptedHeadHash: "",
 			decryptionFailed: false,
-		});
-	});
-	it("should get values from the payload when some values are undefined", async () => {
-		vi.doMock("../../../../tasks/detection/getBotScore.ts", () => ({
-			getBotScore: vi.fn().mockImplementation(() => {
-				return {
-					baseBotScore: 1,
-					timestamp: Date.now(),
-				};
-			}),
-		}));
-		const fmImport = await import(
-			"../../../../tasks/frictionless/frictionlessTasks.js"
-		);
-		const frictionlessTaskManager = new fmImport.FrictionlessManager(
-			db,
-			pair,
-			config,
-		);
-
-		const result = await frictionlessTaskManager.decryptPayload(
-			"payload",
-			"headHash",
-		);
-		expect(result).toEqual({
-			baseBotScore: 1,
-			timestamp: expect.any(Number),
-			providerSelectEntropy: fmImport.DEFAULT_ENTROPY - 1,
-			userId: undefined,
-			userAgent: undefined,
-			webView: false,
-			iFrame: false,
-			decryptedHeadHash: "",
-			decryptionFailed: true,
-		});
-	});
-	it("should set values for the payload when there are keys but they fail to decrypt", async () => {
-		vi.doMock("../../../../tasks/detection/getBotScore.ts", () => ({
-			getBotScore: vi.fn().mockImplementationOnce(() => {
-				throw Error();
-			}),
-		}));
-		const fmImport = await import(
-			"../../../../tasks/frictionless/frictionlessTasks.js"
-		);
-		db = {
-			updateFrictionlessTokenRecord: vi.fn(),
-			storeFrictionlessTokenRecord: vi.fn(),
-			storeSessionRecord: vi.fn(),
-			getDetectorKeys: vi.fn(() => Promise.resolve(["test-key1", "test-key2"])),
-		} as unknown as IProviderDatabase;
-		const frictionlessTaskManager = new fmImport.FrictionlessManager(
-			db,
-			pair,
-			config,
-		);
-
-		const result = await frictionlessTaskManager.decryptPayload(
-			"payload",
-			"headHash",
-		);
-		expect(result).toEqual({
-			baseBotScore: 1,
-			timestamp: expect.any(Number),
-			providerSelectEntropy: fmImport.DEFAULT_ENTROPY + 1,
-			userId: undefined,
-			userAgent: undefined,
-			webView: false,
-			iFrame: false,
-			decryptedHeadHash: "",
-			decryptionFailed: true,
-		});
-	});
-	it("should set values for the payload when there are no keys", async () => {
-		vi.unmock("../../../../tasks/detection/getBotScore.ts");
-		vi.doMock("../../../../tasks/detection/getBotScore.ts", () => ({
-			getBotScore: vi.fn().mockImplementation(() => {
-				throw new Error();
-			}),
-		}));
-		// override process.env.BOT_DECRYPTION_KEY,
-		process.env.BOT_DECRYPTION_KEY = "";
-
-		const fmImport = await import(
-			"../../../../tasks/frictionless/frictionlessTasks.js"
-		);
-		const db2 = {
-			updateFrictionlessTokenRecord: vi.fn(),
-			storeFrictionlessTokenRecord: vi.fn(),
-			storeSessionRecord: vi.fn(),
-			getDetectorKeys: vi.fn(() => Promise.resolve([])),
-		} as unknown as IProviderDatabase;
-		const frictionlessTaskManager = new fmImport.FrictionlessManager(
-			db2,
-			pair,
-			config,
-		);
-
-		const result = await frictionlessTaskManager.decryptPayload(
-			"payload",
-			"headHash",
-		);
-		expect(result).toEqual({
-			baseBotScore: 1,
-			timestamp: expect.any(Number),
-			providerSelectEntropy: fmImport.DEFAULT_ENTROPY - 3,
-			userId: undefined,
-			userAgent: undefined,
-			webView: false,
-			iFrame: false,
-			decryptedHeadHash: "",
-			decryptionFailed: true,
 		});
 	});
 });

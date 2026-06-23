@@ -84,6 +84,7 @@ export const accessRulesFilterInput = z.object({
 		.nativeEnum(FilterScopeMatch)
 		.default(FilterScopeMatch.Exact),
 	groupId: z.string().optional(),
+	blockOnly: z.boolean().optional(),
 } satisfies AllKeys<AccessRulesFilterInput>) satisfies ZodType<AccessRulesFilterInput>;
 
 export const getAccessRuleFiltersFromInput = (

@@ -33,12 +33,12 @@
 		"@noble/hashes": "1.8.0",
 		"@polkadot/util": "13.5.7",
 		"@polkadot/x-randomvalues": "13.5.7",
-		"@scure/base": "^1.1.7",
+		"@scure/base": "1.2.6",
 		"@scure/sr25519": "0.2.0",
 		"dotenv": "16.4.5"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.2",
+		"@prosopo/config": "3.3.3",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "3.2.4",
 		"concurrently": "9.0.1",

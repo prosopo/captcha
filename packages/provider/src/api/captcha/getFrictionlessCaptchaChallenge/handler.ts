@@ -57,7 +57,6 @@ export default (
 				req.logger.info(() => ({
 					msg: "Frictionless response finished",
 					data: {
-						requestId: req.requestId,
 						status: res.statusCode,
 						path: req.path,
 						method: req.method,
@@ -75,7 +74,6 @@ export default (
 			req.logger.info(() => ({
 				msg: "Frictionless handler entry",
 				data: {
-					requestId: req.requestId,
 					token,
 					user,
 					dapp,
@@ -177,7 +175,6 @@ export default (
 				req.logger.info(() => ({
 					msg: "Frictionless decision",
 					data: {
-						requestId: req.requestId,
 						decision: "reuse_session",
 						captchaType: dedup.captchaType,
 						sessionId: dedup.sessionId,
@@ -218,7 +215,6 @@ export default (
 					flatHeaders,
 					sessionMode,
 					userSitekeyIpHash,
-					requestId: req.requestId,
 					logger: req.logger,
 				},
 				res,
@@ -262,7 +258,6 @@ export default (
 			const {
 				baseBotScore,
 				timestamp,
-				providerSelectEntropy,
 				userId,
 				userAgent,
 				webView,
@@ -271,6 +266,10 @@ export default (
 				decryptionFailed,
 				triggeredDetectors,
 				shadowDomPenalty,
+				entropyMathRandomFingerprint,
+				entropyCryptoFingerprint,
+				entropyWallClockOffsetMs,
+				entropyMathRandomFirst,
 			} = decryptedPayload;
 
 			req.logger.debug(() => ({
@@ -278,7 +277,6 @@ export default (
 				data: {
 					baseBotScore,
 					timestamp,
-					providerSelectEntropy,
 					userId,
 					userAgent,
 					webView,
@@ -316,7 +314,6 @@ export default (
 				score: botScore,
 				threshold: botThreshold,
 				scoreComponents,
-				providerSelectEntropy,
 				ipAddress,
 				webView,
 				iFrame,
@@ -326,6 +323,18 @@ export default (
 				headers: flatHeaders,
 				mode: sessionMode,
 				...(decodedSimdReadings && { simdReadings: decodedSimdReadings }),
+				...(entropyMathRandomFingerprint !== undefined && {
+					entropyMathRandomFingerprint,
+				}),
+				...(entropyCryptoFingerprint !== undefined && {
+					entropyCryptoFingerprint,
+				}),
+				...(entropyWallClockOffsetMs !== undefined && {
+					entropyWallClockOffsetMs,
+				}),
+				...(entropyMathRandomFirst !== undefined && {
+					entropyMathRandomFirst,
+				}),
 			});
 
 			const ipInfoMobile =
@@ -363,7 +372,6 @@ export default (
 					dapp,
 					ipInfo: req.ipInfo,
 					flatHeaders,
-					requestId: req.requestId,
 					logger: req.logger,
 					userScope,
 				},
@@ -389,7 +397,6 @@ export default (
 					userId,
 					webView,
 					decryptedHeadHash,
-					providerSelectEntropy,
 					baseBotScore,
 					botScore,
 					scoreComponents,

@@ -1,5 +1,10 @@
 # @prosopo/locale
 
+## 3.2.5
+### Patch Changes
+
+- edcd450: Validate salt-encoded coords in PoW and puzzle verification and add a `CAPTCHA_INVALID_SALT` result reason. Invalid input now produces a disapproval rather than a partial write.
+
 ## 3.2.4
 ### Patch Changes
 
