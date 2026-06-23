@@ -24,9 +24,10 @@ const EXT_SIGNATURE_ALGORITHMS = 0x000d;
 const EXT_ALPN = 0x0010;
 const EXT_SUPPORTED_VERSIONS = 0x002b;
 
-// GREASE values match the pattern 0x?a?a (RFC 8701).
+// GREASE values (RFC 8701) are the 16 uint16s with equal bytes from the set
+// {0x0a, 0x1a, …, 0xfa}: low nibble of each byte is 0xa and high byte == low byte.
 function isGrease(id: number): boolean {
-	return (id & 0x0f0f) === 0x0a0a;
+	return (id & 0x0f0f) === 0x0a0a && id >> 8 === (id & 0xff);
 }
 
 function hash12(input: string): string {

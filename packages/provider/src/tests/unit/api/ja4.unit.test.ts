@@ -280,6 +280,19 @@ describe("calculateJa4 — ALPN", () => {
 		expect(fp.slice(8, 10)).toBe("h1");
 	});
 
+	it("renders non-alphanumeric ALPN bytes as 2-char lowercase hex", () => {
+		// Protocol bytes 0x2f ('/') and 0xad are non-alphanumeric → "2f" and "ad".
+		const proto = Buffer.from([0x02, 0x2f, 0xad]); // length=2, bytes 0x2f 0xad
+		const outer = Buffer.allocUnsafe(2 + proto.length);
+		outer.writeUInt16BE(proto.length, 0);
+		proto.copy(outer, 2);
+		const fp = calculateJa4(
+			buildClientHello(0x0303, [0xc02f], [{ id: 0x0010, data: outer }]),
+		);
+		// first char "2f", last char "ad" → chunk[8..12] = "2fad"
+		expect(fp.slice(8, 12)).toBe("2fad");
+	});
+
 	it("uses '0' for last when single-byte ALPN protocol", () => {
 		const proto = Buffer.from([0x01, 0x68]); // length=1, 'h'
 		const outer = Buffer.allocUnsafe(2 + proto.length);
