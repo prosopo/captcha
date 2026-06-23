@@ -29,7 +29,7 @@ vi.mock("../../../api/validateAddress.js", () => ({
 	validateAddr: vi.fn(),
 }));
 
-const loggerOuter = getLogger("info", import.meta.url);
+const loggerOuter = getLogger("info", "test:header-check-middleware");
 
 describe("headerCheckMiddleware", () => {
 	let mockEnv: ProviderEnvironment;
@@ -158,10 +158,13 @@ describe("headerCheckMiddleware", () => {
 		const middleware = headerCheckMiddleware(mockEnv);
 		await middleware(mockReq, mockRes, mockNext);
 
-		expect(mockLogger.with).toHaveBeenCalledWith({
-			user: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
-			siteKey: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
-		});
+		expect(mockLogger.with).toHaveBeenCalledWith(
+			{
+				user: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				siteKey: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			},
+			"header-check",
+		);
 	});
 
 	it("calls handleErrors when validation throws", async () => {
