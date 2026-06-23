@@ -133,10 +133,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	/**
 	 * Checks if an email domain is spam
 	 */
-	router.post(
-		ClientApiPaths.CheckSpamEmail,
-		asyncHandler(checkSpamEmail(env)),
-	);
+	router.post(ClientApiPaths.CheckSpamEmail, asyncHandler(checkSpamEmail(env)));
 
 	// Your error handler should always be at the end of your application stack. Apparently it means not only after all
 	// app.use() but also after all your app.get() and app.post() calls.
