@@ -23,7 +23,7 @@ import { calculateJa4 } from "./ja4.js";
 export const DEFAULT_JA4 = "ja4";
 
 export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
-	logger = logger || getLogger("info", import.meta.url);
+	logger = logger || getLogger("info", "provider:ja4");
 
 	// Default JA4+ fingerprint for development
 	if (process.env.NODE_ENV === "development") {
@@ -72,9 +72,12 @@ export const ja4Middleware = (env: ProviderEnvironment) => {
 			const ja4 = await getJA4(req.headers, req.logger);
 
 			req.ja4 = ja4.ja4PlusFingerprint || "";
-			req.logger = req.logger.with({
-				ja4: req.ja4,
-			});
+			req.logger = req.logger.with(
+				{
+					ja4: req.ja4,
+				},
+				"ja4",
+			);
 			next();
 		} catch (err) {
 			return handleErrors(err as Error, req, res, next);
