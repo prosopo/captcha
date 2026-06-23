@@ -15,8 +15,6 @@
 import { stringifyBigInts } from "@prosopo/util";
 import { z } from "zod";
 
-export { stringifyBigInts };
-
 export type LogObject = object;
 export type LogRecord = {
 	err?: unknown;
@@ -50,12 +48,14 @@ export type Logger = {
 	setFormat(format: Format): void;
 };
 
-export const InfoLevel = "info";
-export const DebugLevel = "debug";
-export const TraceLevel = "trace";
-export const WarnLevel = "warn";
-export const ErrorLevel = "error";
-export const FatalLevel = "fatal";
+// Level string constants are internal to this module; consumers use the
+// `LogLevel` enum/type or the string literals it parses.
+const InfoLevel = "info";
+const DebugLevel = "debug";
+const TraceLevel = "trace";
+const WarnLevel = "warn";
+const ErrorLevel = "error";
+const FatalLevel = "fatal";
 
 export const LogLevel = z.enum([
 	InfoLevel,
@@ -67,11 +67,7 @@ export const LogLevel = z.enum([
 ]);
 export type LogLevel = z.infer<typeof LogLevel>;
 
-export type LevelMap = {
-	[K in LogLevel]: number;
-};
-
-const logLevelMap: LevelMap = {
+const logLevelMap: Record<LogLevel, number> = {
 	[TraceLevel]: 0,
 	[DebugLevel]: 1,
 	[InfoLevel]: 2,
@@ -98,8 +94,8 @@ export function getLogger(logLevel: LogLevel, scope: string): Logger {
 const inBrowser =
 	typeof window !== "undefined" && typeof window.document !== "undefined";
 
-export const FormatJson = "json";
-export const FormatPlain = "plain";
+const FormatJson = "json";
+const FormatPlain = "plain";
 export const Format = z.enum([FormatJson, FormatPlain]);
 export type Format = z.infer<typeof Format>;
 
@@ -118,7 +114,7 @@ export class NativeLogger implements Logger {
 
 	constructor(
 		private scope: string,
-		private levelMap: LevelMap = logLevelMap,
+		private levelMap: Record<LogLevel, number> = logLevelMap,
 	) {
 		this.level = InfoLevel; // default log level
 		this.levelNum = this.levelMap[this.level];

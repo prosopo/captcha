@@ -74,6 +74,23 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	}, [i18n, config.language]);
 
 	useEffect(() => {
+		if (props.autoStart) {
+			setLoading(true);
+			setShowRetry(false);
+			manager.current.start().then(
+				(challenge) => {
+					if (challenge) {
+						setChallengeData(challenge);
+						setPuzzlePhase("dragging");
+					}
+					setLoading(false);
+				},
+				() => setLoading(false),
+			);
+		}
+	}, [props.autoStart]);
+
+	useEffect(() => {
 		if (!state.error) return undefined;
 		setLoading(false);
 		setPuzzlePhase("checkbox");

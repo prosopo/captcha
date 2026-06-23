@@ -18,8 +18,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // reference the same spies the tests assert against.
 const mocks = vi.hoisted(() => ({
 	getFrictionlessCaptcha: vi.fn(),
-	getRandomActiveProvider: vi.fn(),
-	prefetchProviders: vi.fn(async () => undefined),
+	getProcaptchaRandomActiveProvider: vi.fn(),
 	detect: vi.fn(),
 }));
 
@@ -27,11 +26,6 @@ vi.mock("@prosopo/api", () => ({
 	ProviderApi: vi.fn(() => ({
 		getFrictionlessCaptcha: mocks.getFrictionlessCaptcha,
 	})),
-}));
-
-vi.mock("@prosopo/load-balancer", () => ({
-	getRandomActiveProvider: mocks.getRandomActiveProvider,
-	prefetchProviders: mocks.prefetchProviders,
 }));
 
 vi.mock("@prosopo/procaptcha-common", () => ({
@@ -44,6 +38,8 @@ vi.mock("@prosopo/procaptcha-common", () => ({
 			}
 		};
 	}),
+	getProcaptchaRandomActiveProvider: mocks.getProcaptchaRandomActiveProvider,
+	pickIpMode: vi.fn(() => undefined),
 }));
 
 vi.mock("../detectorLoader.js", () => ({
@@ -65,10 +61,6 @@ const makeDetectionResult = (
 	token: "TOKEN",
 	encryptHeadHash: "HASH",
 	userAccount: { account: { address: "5FakeUserAccountAddress" } },
-	provider: {
-		provider: { url: "https://provider.test" },
-		providerAccount: "5Provider",
-	},
 	getSimdReadings,
 	mouseTracker: undefined,
 	touchTracker: undefined,
@@ -83,10 +75,12 @@ const captchaResponse = {
 
 beforeEach(() => {
 	mocks.getFrictionlessCaptcha.mockReset();
-	mocks.getRandomActiveProvider.mockReset();
-	mocks.prefetchProviders.mockReset();
+	mocks.getProcaptchaRandomActiveProvider.mockReset();
 	mocks.detect.mockReset();
-	mocks.prefetchProviders.mockResolvedValue(undefined);
+	mocks.getProcaptchaRandomActiveProvider.mockResolvedValue({
+		providerAccount: "dns-routed",
+		provider: { url: "https://provider.test" },
+	});
 	mocks.getFrictionlessCaptcha.mockResolvedValue(captchaResponse);
 });
 
