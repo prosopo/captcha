@@ -34,6 +34,7 @@ vi.mock("../../../../../tasks/frictionless/frictionlessTasks.js", () => ({
 		WEBVIEW_DETECTED: "WEBVIEW_DETECTED",
 		OLD_TIMESTAMP: "OLD_TIMESTAMP",
 		BOT_SCORE_ABOVE_THRESHOLD: "BOT_SCORE_ABOVE_THRESHOLD",
+		AUTO_BAN_SCORE: "AUTO_BAN_SCORE",
 	},
 }));
 
@@ -63,13 +64,9 @@ const buildInput = (overrides: Partial<Record<string, unknown>> = {}) => ({
 				score,
 				scoreComponents: sc,
 			})),
-			scoreIncreaseUnverifiedHost: vi.fn((_d, _bs, score, sc) => ({
-				score,
-				scoreComponents: sc,
-			})),
 			updateScore: vi.fn(),
-			hostVerified: vi.fn().mockResolvedValue({ verified: true, domain: "ok" }),
 			getClientContextEntropy: vi.fn().mockResolvedValue(undefined),
+			registerBlockedSession: vi.fn().mockResolvedValue(undefined),
 		},
 	},
 	env: { config: { captchas: { solved: { count: 4 } } } },
@@ -91,7 +88,6 @@ const buildInput = (overrides: Partial<Record<string, unknown>> = {}) => ({
 	userId: "uid",
 	webView: false,
 	decryptedHeadHash: "",
-	providerSelectEntropy: 0,
 	baseBotScore: 0,
 	botScore: 0.1,
 	scoreComponents: { baseScore: 0 },
@@ -107,7 +103,10 @@ const buildHandle = (uaHeader = "ua", prosopoUser = "uid") => {
 		requestId: "rid",
 		i18n: { t: (s: string) => s },
 	};
-	const res = { json: vi.fn().mockReturnValue("done") };
+	const res = {
+		json: vi.fn().mockReturnValue("done"),
+		status: vi.fn().mockReturnThis(),
+	};
 	const next = vi.fn();
 	return { req, res, next, handle: { req, res, next } };
 };
@@ -177,18 +176,110 @@ describe("runDecisionMachine", () => {
 		).not.toHaveBeenCalled();
 	});
 
-	it("bumps score on unverified host without sending a response", async () => {
-		const input = buildInput();
-		input.tasks.frictionlessManager.hostVerified.mockResolvedValueOnce({
-			verified: false,
-			domain: "bad",
+	describe("auto-ban threshold (post-penalty)", () => {
+		it("fires when webView penalty pushes the score over the threshold", async () => {
+			const input = buildInput({
+				botScore: 1.0,
+				baseBotScore: 1.0,
+				botThreshold: 0.5,
+				webView: true,
+				clientRecord: {
+					settings: {
+						imageMaxRounds: 8,
+						disallowWebView: true,
+						autoBanScoreThreshold: 1.1,
+					},
+				},
+			});
+			input.tasks.frictionlessManager.scoreIncreaseWebView.mockImplementationOnce(
+				(_bs, score, sc) => ({ score: score + 0.3, scoreComponents: sc }),
+			);
+			const { res, handle } = buildHandle();
+			await runDecisionMachine(input as never, handle as never);
+
+			expect(
+				input.tasks.frictionlessManager.registerBlockedSession,
+			).toHaveBeenCalledWith(
+				expect.objectContaining({ reason: "AUTO_BAN_SCORE" }),
+			);
+			expect(res.status).toHaveBeenCalledWith(401);
+			expect(
+				input.tasks.frictionlessManager.sendImageCaptcha,
+			).not.toHaveBeenCalled();
 		});
-		const { handle } = buildHandle();
-		await runDecisionMachine(input as never, handle as never);
-		expect(
-			input.tasks.frictionlessManager.scoreIncreaseUnverifiedHost,
-		).toHaveBeenCalled();
-		// Still falls through to default PoW since score stayed below threshold.
-		expect(input.tasks.frictionlessManager.sendPowCaptcha).toHaveBeenCalled();
+
+		it("fires when timestamp_too_old penalty pushes the score over the threshold", async () => {
+			timestampTooOldMock.mockReturnValueOnce(true);
+			const input = buildInput({
+				botScore: 1.0,
+				baseBotScore: 1.0,
+				botThreshold: 0.5,
+				clientRecord: {
+					settings: { imageMaxRounds: 8, autoBanScoreThreshold: 1.1 },
+				},
+			});
+			input.tasks.frictionlessManager.scoreIncreaseTimestamp.mockImplementationOnce(
+				(_t, _bs, score, sc) => ({ score: score + 0.5, scoreComponents: sc }),
+			);
+			const { res, handle } = buildHandle();
+			await runDecisionMachine(input as never, handle as never);
+
+			expect(
+				input.tasks.frictionlessManager.registerBlockedSession,
+			).toHaveBeenCalledWith(
+				expect.objectContaining({ reason: "AUTO_BAN_SCORE" }),
+			);
+			expect(res.status).toHaveBeenCalledWith(401);
+			expect(
+				input.tasks.frictionlessManager.sendImageCaptcha,
+			).not.toHaveBeenCalled();
+		});
+
+		it("fires when the pre-penalty score already exceeds the threshold (no penalties needed)", async () => {
+			const input = buildInput({
+				botScore: 1.2,
+				baseBotScore: 1.0,
+				clientRecord: {
+					settings: { imageMaxRounds: 8, autoBanScoreThreshold: 1.1 },
+				},
+			});
+			const { res, handle } = buildHandle();
+			await runDecisionMachine(input as never, handle as never);
+
+			expect(
+				input.tasks.frictionlessManager.registerBlockedSession,
+			).toHaveBeenCalledWith(
+				expect.objectContaining({ reason: "AUTO_BAN_SCORE" }),
+			);
+			expect(res.status).toHaveBeenCalledWith(401);
+		});
+
+		it("when both webView and autoBan would trip, autoBan wins", async () => {
+			const input = buildInput({
+				botScore: 1.0,
+				baseBotScore: 1.0,
+				botThreshold: 0.5,
+				webView: true,
+				clientRecord: {
+					settings: {
+						imageMaxRounds: 8,
+						disallowWebView: true,
+						autoBanScoreThreshold: 1.1,
+					},
+				},
+			});
+			input.tasks.frictionlessManager.scoreIncreaseWebView.mockImplementationOnce(
+				(_bs, score, sc) => ({ score: score + 0.2, scoreComponents: sc }),
+			);
+			const { handle } = buildHandle();
+			await runDecisionMachine(input as never, handle as never);
+
+			expect(
+				input.tasks.frictionlessManager.registerBlockedSession,
+			).toHaveBeenCalled();
+			expect(
+				input.tasks.frictionlessManager.sendImageCaptcha,
+			).not.toHaveBeenCalled();
+		});
 	});
 });

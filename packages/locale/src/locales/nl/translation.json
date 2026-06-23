@@ -436,6 +436,7 @@
 		"NO_CAPTCHA": "Geen captcha gevonden",
 		"NO_SESSION_FOUND": "Geen sessie gevonden",
 		"IP_ADDRESS_MISMATCH": "IP-adressen komen niet overeen",
+		"INVALID_SALT": "Ongeldig salt",
 		"INVALID_TOKEN": "Ongeldige token",
 		"INVALID_SOLUTION": "Ongeldige oplossing",
 		"DECRYPTION_ERROR": "Fout bij decoderen"
