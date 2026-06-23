@@ -39,8 +39,11 @@ export type Logger = {
 	/**
 	 * Creates a child logger with merged default data and an optional subscope appended to the
 	 * current scope (e.g. parent "database" + subscope "queries" → "database:queries").
-	 * The child's effective level is resolved from PROSOPO_LOG_LEVEL directives for the new scope,
-	 * falling back to the parent's level when no directive matches.
+	 * The child's configured level is snapshotted at creation by resolving PROSOPO_LOG_LEVEL
+	 * directives for the new scope, falling back to the parent's level when no directive matches.
+	 * At emit time `print()` re-resolves directives for the scope, using the child's own configured
+	 * level (this snapshot) as the fallback — so later directive changes are honoured, but a direct
+	 * `setLogLevel()` on the child overrides the snapshot.
 	 */
 	with(obj: LogObject, subscope?: string): Logger;
 	getPretty(): boolean;
@@ -221,10 +224,13 @@ export class NativeLogger implements Logger {
 	}
 
 	with(obj: LogObject, subscope?: string): Logger {
-		const newScope = subscope
+		// Trim so a whitespace-only subscope is treated as absent and the
+		// resulting scope matches the trimmed keys produced by parseDirectives().
+		const trimmedSubscope = subscope?.trim();
+		const newScope = trimmedSubscope
 			? this.scope
-				? `${this.scope}:${subscope}`
-				: subscope
+				? `${this.scope}:${trimmedSubscope}`
+				: trimmedSubscope
 			: this.scope;
 		const newLogger = new NativeLogger(newScope, this.levelMap);
 		newLogger.defaultData = { ...this.defaultData, ...obj };

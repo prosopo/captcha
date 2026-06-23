@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
 	getLogger,
 	parseDirectives,
@@ -22,7 +22,7 @@ import {
 	stringifyBigInts,
 } from "../logger.js";
 describe("stringifyBigInts", () => {
-	it("should strigify big int", () => {
+	it("should stringify big int", () => {
 		const bigInt = BigInt(12345678901234567890n);
 
 		const stringified = stringifyBigInts(bigInt);
@@ -136,14 +136,54 @@ describe("resolveLevel", () => {
 });
 
 describe("setGlobalDirectives", () => {
-	it("takes effect immediately on newly created loggers", () => {
-		setGlobalDirectives("warn,test-scope=trace");
+	// Always restore the global directives so a failing assertion can't leak
+	// state into later tests.
+	afterEach(() => {
+		setGlobalDirectives("");
+	});
+
+	it("affects an existing logger's filtering at emit time", () => {
 		const logger = getLogger("info", "test-scope");
-		// The logger starts at info but the directive says trace for test-scope.
-		// Effective level resolved in print(), so a trace log should still pass
-		// through (we just verify the scope is set).
-		expect(logger.getScope()).toBe("test-scope");
-		setGlobalDirectives(""); // reset
+		const debugSpy = vi.spyOn(console, "debug").mockImplementation(() => {});
+		try {
+			// Globally warn: a debug message from a logger created at info is suppressed.
+			setGlobalDirectives("warn");
+			logger.debug(() => ({ msg: "hidden" }));
+			expect(debugSpy).not.toHaveBeenCalled();
+
+			// Raising test-scope to trace at runtime lets the same logger emit debug.
+			setGlobalDirectives("warn,test-scope=trace");
+			logger.debug(() => ({ msg: "shown" }));
+			expect(debugSpy).toHaveBeenCalledTimes(1);
+		} finally {
+			debugSpy.mockRestore();
+		}
+	});
+});
+
+describe("emitted record", () => {
+	afterEach(() => {
+		setGlobalDirectives("");
+	});
+
+	it("uses the message level rather than the logger's configured level", () => {
+		setGlobalDirectives("trace");
+		const logger = getLogger("info", "record-scope");
+		const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+		try {
+			logger.error(() => ({ msg: "boom" }));
+			expect(errorSpy).toHaveBeenCalledTimes(1);
+			const output = errorSpy.mock.calls[0]?.[0];
+			expect(typeof output).toBe("string");
+			const record: { level: string; scope: string; msg: string } = JSON.parse(
+				output as string,
+			);
+			expect(record.level).toBe("error");
+			expect(record.scope).toBe("record-scope");
+			expect(record.msg).toBe("boom");
+		} finally {
+			errorSpy.mockRestore();
+		}
 	});
 });
 
@@ -158,6 +198,18 @@ describe("Logger.with subscope", () => {
 		const parent = getLogger("info", "");
 		const child = parent.with({}, "request");
 		expect(child.getScope()).toBe("request");
+	});
+
+	it("trims surrounding whitespace from the subscope", () => {
+		const parent = getLogger("info", "provider");
+		const child = parent.with({}, "  request  ");
+		expect(child.getScope()).toBe("provider:request");
+	});
+
+	it("treats a whitespace-only subscope as absent", () => {
+		const parent = getLogger("info", "provider");
+		const child = parent.with({}, "   ");
+		expect(child.getScope()).toBe("provider");
 	});
 
 	it("inherits default data from parent", () => {
