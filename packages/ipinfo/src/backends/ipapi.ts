@@ -103,6 +103,7 @@ export class IpapiBackend {
 					providerType: data.company?.type || data.asn?.type,
 					asnNumber: data.asn?.asn,
 					asnOrganization: data.asn?.org,
+					datacenterName: data.datacenter?.datacenter,
 
 					country: data.location?.country,
 					countryCode: data.location?.country_code,

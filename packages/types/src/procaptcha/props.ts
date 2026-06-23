@@ -94,4 +94,8 @@ export interface ProcaptchaProps {
 	// solution that the provider chose to escalate can be transitioned into
 	// the appropriate image/puzzle widget without a full restart.
 	onEscalate?: ProcaptchaEscalationHandler;
+	// When true the widget calls manager.start() on mount instead of waiting
+	// for a checkbox click. Set by ProcaptchaFrictionless after a PoW
+	// escalation so the user doesn't have to click the checkbox a second time.
+	autoStart?: boolean;
 }

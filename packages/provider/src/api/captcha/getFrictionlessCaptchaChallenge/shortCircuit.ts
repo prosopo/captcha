@@ -39,7 +39,6 @@ export type ShortCircuitInput = {
 	flatHeaders: RequestHeaders;
 	sessionMode: ModeEnum | undefined;
 	userSitekeyIpHash: string;
-	requestId: string | undefined;
 	logger: Logger;
 };
 
@@ -61,7 +60,6 @@ export const runConfiguredCaptchaTypeShortCircuit = async (
 			input.clientRecord.settings?.frictionlessThreshold ??
 			DEFAULT_FRICTIONLESS_THRESHOLD,
 		scoreComponents: { baseScore: 0 } as ScoreComponents,
-		providerSelectEntropy: 0,
 		ipAddress: input.ipAddress,
 		webView: false,
 		iFrame: false,
@@ -76,7 +74,6 @@ export const runConfiguredCaptchaTypeShortCircuit = async (
 	input.logger.info(() => ({
 		msg: "Frictionless decision",
 		data: {
-			requestId: input.requestId,
 			decision: "configured_captcha_type",
 			captchaType: configuredType,
 		},

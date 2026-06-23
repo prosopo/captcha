@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/util",
-	"version": "3.2.14",
+	"version": "3.3.1",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
@@ -47,7 +47,7 @@
 		"seedrandom": "3.0.5"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.1",
+		"@prosopo/config": "3.3.3",
 		"@types/lodash": "4.17.7",
 		"@types/node": "22.10.2",
 		"@types/seedrandom": "3.0.8",
@@ -64,7 +64,8 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/prosopo/captcha.git"
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "packages/util"
 	},
 	"bugs": {
 		"url": "https://github.com/prosopo/captcha/issues"

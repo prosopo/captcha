@@ -2,11 +2,60 @@
 {
 	# debug
 	http_port {$CADDY_HTTP_PORT:80}
-	auto_https {$CADDY_AUTO_HTTPS:disable_redirects}
+	# `auto_https` intentionally omitted — its valid Caddyfile values
+	# are off / disable_redirects / disable_certs / ignore_loaded_certs,
+	# none of which match the default ("fully on"). Letting it default
+	# means Caddy auto-creates the :80 server with BOTH HTTP-01 ACME
+	# challenge handling AND HTTP→HTTPS redirects targeting port 443
+	# (the global https_port; layer4 below sits on it and SNI-routes
+	# the request back to the :8443 main site for non-trap subzones).
+	# The previous setting `disable_redirects` plus an explicit
+	# `http://{$CADDY_DOMAIN}` site left Caddy nowhere to inject the
+	# challenge handler, so renewals were silently broken.
 	admin {$CADDY_ADMIN_API::2020} # set the admin api to run on localhost:2020 (default is 2019 which can conflict with caddy daemon)
 
 	# Caddy must be told custom rate_limit module its order
 	order rate_limit before basicauth
+
+	# Layer-4 SNI router on :443. Lets the dns sidecar serve the
+	# pixel endpoint on the standard HTTPS port — sessions get
+	# `https://{sessionId}.t.{host}/...` instead of dragging a :9362
+	# port suffix through every URL.
+	#
+	# Connections whose ClientHello SNI matches the dns-trap subzone
+	# pattern `*.t.{$CADDY_DOMAIN}` are proxied raw (TLS not
+	# terminated here) to the dns container which has its own
+	# Let's-Encrypt cert. Everything else falls through to Caddy's
+	# normal HTTPS server, bound on :8443 below so :443 is free for
+	# this router. Provided by `github.com/mholt/caddy-l4` (baked
+	# into the prosopo/caddy image at 2.5.7-dns-3455+).
+	layer4 {
+		:443 {
+			@dns_subzone tls sni *.t.{$CADDY_DOMAIN}
+			route @dns_subzone {
+				# dns sidecar ≥0.1.6 reads PROXY v2 when DNS_PROXY_PROTOCOL=1,
+				# so we send the real client peer through instead of letting
+				# the sidecar see Caddy's docker bridge IP. Without this every
+				# `dnsEvent.peerIp` is `172.19.0.x` and fails to correlate
+				# with `ipInfo.ip`.
+				proxy {
+					proxy_protocol v2
+					upstream dns:443
+				}
+			}
+			route {
+				# Forward the real client IP to the local HTTPS server
+				# via PROXY protocol v2. Without this the upstream sees
+				# every request as coming from 127.0.0.1 and Caddy's
+				# rate-limit keyed on {remote_host} 429s the whole
+				# fleet within seconds.
+				proxy {
+					proxy_protocol v2
+					upstream 127.0.0.1:8443
+				}
+			}
+		}
+	}
 
 	client_hello {
 		# Configure the maximum allowed ClientHello packet size in bytes (1-16384)
@@ -15,7 +64,15 @@
 
 	servers {
 		protocols h1 h2
+		# Order matters: proxy_protocol must run before tls so the
+		# PROXY header is consumed first, then the TLS bytes are read.
+		# `allow 127.0.0.1` restricts who can send a PROXY header —
+		# only layer4 (local) is permitted, anyone else's request is
+		# treated as a normal connection.
 		listener_wrappers {
+			proxy_protocol {
+				allow 127.0.0.1/32
+			}
 			client_hello
 			tls
 		}
@@ -33,15 +90,20 @@ http://:9090 {
 	metrics /metrics
 }
 
-{$CADDY_DOMAIN} {
-
-    @httpOnly {
-        protocol http
-    }
-    redir @httpOnly https://{host}{uri}
-	
+# Shared route/handler config. Imported by the per-host site below
+# ({$CADDY_DOMAIN} = pronodeN.prosopo.io) and, on the cert getter, by
+# the global site for the load-balanced pronode.prosopo.io hostname
+# defined in provider.cert-getter.Caddyfile. Only the TLS strategy
+# differs between the two: per-host uses ACME HTTP-01 (A record points
+# to one IP per pronodeN), global uses a PEM provisioned by certbot on
+# the cert getter (see ansible playbooks/providerCertbotProvision.yml).
+(provider_site) {
 	handle /robots.txt {
-		uri strip_prefix / # removes leading /, so it looks directly in root
+		# Serve /srv/static/robots.txt. Do NOT strip the leading slash:
+		# file_server prepends `root` to the request path, so `/robots.txt`
+		# already resolves to `/srv/static/robots.txt`. Rewriting the path to
+		# `robots.txt` (no leading slash) makes file_server issue a 308
+		# canonical redirect to re-add the slash, which loops forever (#3467).
 		root * /srv/static
 		file_server
 		header Content-Type "text/plain"
@@ -224,4 +286,31 @@ http://:9090 {
 	log {
 		format json
 	}
+}
+
+# Per-host site: bound on :8443. Layer4 (above) proxies non-trap-subzone
+# SNI connections from :443 in. ACME issuer is restricted to HTTP-01
+# because TLS-ALPN-01 requires control of :443. The :80 redirect server
+# is auto-created by Caddy (auto_https=on); it serves both ACME HTTP-01
+# challenges AND HTTP→HTTPS redirects targeting port 443 (i.e. the
+# layer4 listener), which forwards non-matching SNIs back to this same
+# :8443.
+#
+# Three SNIs share one site block and one cert lineage so Caddy issues a
+# single multi-SAN cert covering {host}, ipv4.{host}, ipv6.{host}. The
+# single-stack variants exist as their own DNS records (A only for
+# ipv4.{host}, AAAA only for ipv6.{host}) so callers that need to pin a
+# specific IP stack can do so without losing TLS. The new captcha
+# DNS-routing client returns the per-host name from /healthz and the
+# load-balancer prepends `ipv4.` / `ipv6.`, so without these SANs the
+# single-stack path would fail the TLS handshake.
+https://{$CADDY_DOMAIN}:8443,
+https://ipv4.{$CADDY_DOMAIN}:8443,
+https://ipv6.{$CADDY_DOMAIN}:8443 {
+	tls {
+		issuer acme {
+			disable_tlsalpn_challenge
+		}
+	}
+	import provider_site
 }

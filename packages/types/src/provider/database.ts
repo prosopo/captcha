@@ -43,6 +43,7 @@ import {
 	PowChallengeIdSchema,
 } from "../datasets/index.js";
 import type {
+	DecisionMachineKind,
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
@@ -151,6 +152,20 @@ export interface ClientMetaData {
 	hp?: string;
 }
 
+/**
+ * Internal classification labels applied by superadmins from the audit page to
+ * build supervised ML training sets. Stored directly on the captcha record
+ * (see {@link StoredCaptcha.label}); not part of the captcha verification flow.
+ */
+export enum CaptchaLabel {
+	human = "human",
+	bot = "bot",
+	suspicious = "suspicious",
+	unknown = "unknown",
+}
+
+export const CaptchaLabelSchema = nativeEnum(CaptchaLabel);
+
 export interface StoredCaptcha {
 	result: {
 		status: CaptchaStatus;
@@ -166,6 +181,10 @@ export interface StoredCaptcha {
 	ja4: string;
 	userSubmitted: boolean;
 	serverChecked: boolean;
+	// Set once on first transition; never overwritten.
+	submittedAtTimestamp?: Date;
+	verifiedAtTimestamp?: Date;
+	failedAtTimestamp?: Date;
 	// The full ipinfo payload from `IpInfoService.lookup()`. Persisted
 	// either by the provider's ipInfoMiddleware (at request time) or by
 	// the CHECK_IP_INFO backfill job. Consumers read individual fields
@@ -193,6 +212,13 @@ export interface StoredCaptcha {
 	// Current behavioral data storage format (packed)
 	deviceCapability?: string;
 	behavioralDataPacked?: BehavioralDataPacked;
+	// Internal ML labelling, written by superadmins via the audit page. Not part
+	// of the captcha verification flow; used to build supervised training sets.
+	// See `CaptchaLabel`.
+	label?: CaptchaLabel;
+	labelReason?: string;
+	labelledBy?: string;
+	labelledAt?: Date;
 }
 
 export interface UserCommitment extends StoredCaptcha {
@@ -255,8 +281,18 @@ export const UserCommitmentSchema = object({
 	ja4: string(),
 	userSubmitted: boolean(),
 	serverChecked: boolean(),
+	// The full ipinfo payload — optional and not validated nominally
+	// because IPInfoResponse is a discriminated union and consumers
+	// only need to narrow at read time. Mirrors PoWCaptchaStoredSchema.
+	// Omitting these dropped enrichment on every commitment because Zod
+	// strips unknown keys by default.
+	ipInfo: any().optional(),
+	parsedUserAgentInfo: any().optional(),
 	storedAtTimestamp: date().optional(),
 	requestedAtTimestamp: date(),
+	submittedAtTimestamp: date().optional(),
+	verifiedAtTimestamp: date().optional(),
+	failedAtTimestamp: date().optional(),
 	lastUpdatedTimestamp: date().optional(),
 	pendingStage: boolean().optional(),
 	sessionId: string().optional(),
@@ -270,6 +306,11 @@ export const UserCommitmentSchema = object({
 	// Behavioral data fields
 	deviceCapability: string().optional(),
 	behavioralDataPacked: BehavioralDataPackedSchema.optional(),
+	// Internal ML labelling (see StoredCaptcha.label)
+	label: CaptchaLabelSchema.optional(),
+	labelReason: string().optional(),
+	labelledBy: string().optional(),
+	labelledAt: date().optional(),
 }) satisfies ZodType<UserCommitment, ZodTypeDef, unknown>;
 
 // Zod schema for ScoreComponents
@@ -281,6 +322,8 @@ export const ScoreComponentsSchema = object({
 	unverifiedHost: number().optional(),
 	webView: number().optional(),
 	triggeredDetectors: array(number()).optional(),
+	shadowDomPenalty: boolean().optional(),
+	dnsAsymmetry: number().optional(),
 });
 
 // Zod schema for the WASM SIMD CPU fingerprint readings collected by the
@@ -334,6 +377,8 @@ export interface ScoreComponents {
 	unverifiedHost?: number;
 	webView?: number;
 	triggeredDetectors?: number[];
+	shadowDomPenalty?: boolean;
+	dnsAsymmetry?: number;
 }
 
 // Zod schema for Session
@@ -344,7 +389,6 @@ export const SessionSchema = object({
 	score: number(),
 	threshold: number(),
 	scoreComponents: ScoreComponentsSchema,
-	providerSelectEntropy: number(),
 	ipAddress: CompositeIpAddressSchema,
 	captchaType: nativeEnum(CaptchaType),
 	mode: nativeEnum(ModeEnum).optional(),
@@ -367,6 +411,10 @@ export const SessionSchema = object({
 		.optional()
 		.transform((v) => v as FrictionlessReason | undefined),
 	blocked: boolean().optional(),
+	// See Session.ruleHash — populated on synthetic blocked-session records.
+	ruleHash: string().optional(),
+	ruleType: string().array().optional(),
+	ruleDescription: string().optional(),
 	// Full ipinfo payload from ipInfoMiddleware at session-creation
 	// time. Replaces the flat `countryCode` / `geolocation` fields —
 	// consumers narrow on `ipInfo.isValid` and read whichever sub-field
@@ -392,6 +440,16 @@ export const SessionSchema = object({
 	// indicator reflects when the catcher's CPU fingerprint became
 	// available relative to the user's journey.
 	simdReadingsStage: SimdReadingsStageSchema.optional(),
+	entropyMathRandomFingerprint: string().optional(),
+	entropyCryptoFingerprint: string().optional(),
+	entropyWallClockOffsetMs: number().optional(),
+	entropyMathRandomFirst: number().optional(),
+	dnsEvent: object({
+		resolverIp: string().optional(),
+		peerIp: string().optional(),
+		pathValid: boolean().optional(),
+		receivedAt: date(),
+	}).optional(),
 }) satisfies ZodType<Session, ZodTypeDef, unknown>;
 
 // Session now includes all frictionless token fields
@@ -402,7 +460,6 @@ export type Session = {
 	score: number;
 	threshold: number;
 	scoreComponents: ScoreComponents;
-	providerSelectEntropy: number;
 	ipAddress: CompositeIpAddress;
 	captchaType: CaptchaType;
 	mode?: ModeEnum;
@@ -420,6 +477,14 @@ export type Session = {
 	siteKey?: string;
 	reason?: FrictionlessReason;
 	blocked?: boolean;
+	// When `blocked` is true, these record which access-policy rule matched
+	// at the request-time block middleware. Populated only on synthetic
+	// "blocked session" records the inspector writes when it 401s a request,
+	// so the Traffic page can surface "why are we blocking traffic for this
+	// site?" without an extra Mongo lookup against the rules collection.
+	ruleHash?: string; // == the redis-key suffix of the matched rule
+	ruleType?: string[]; // populated scope fields, e.g. ['ja4Hash'], ['ja4Hash','coords']
+	ruleDescription?: string; // operator-set description copied from the rule's AccessPolicy
 	// Full ipinfo payload from ipInfoMiddleware at session-creation
 	// time. Replaces the flat `countryCode` / `geolocation` fields.
 	ipInfo?: IPInfoResponse;
@@ -435,6 +500,31 @@ export type Session = {
 	simdReadings?: SimdReadings;
 	// Stage at which the readings first arrived.
 	simdReadingsStage?: SimdReadingsStage;
+	entropyMathRandomFingerprint?: string;
+	entropyCryptoFingerprint?: string;
+	entropyWallClockOffsetMs?: number;
+	entropyMathRandomFirst?: number;
+	// DNS observation merge target — populated by the dns-event sidecar
+	// via POST /v1/prosopo/provider/admin/dns/event. At most one DNS
+	// event + one HTTP event per session under normal usage; the
+	// resolver/peer IP mismatch is the signal that flags a residential
+	// proxy that doesn't tunnel DNS.
+	dnsEvent?: {
+		// Source IP of the UDP/53 query that hit the auth nameserver for
+		// {sessionId}.{subzone}. That's the resolver the user's proxy
+		// chain actually used — leaks even when HTTP traffic is proxied.
+		resolverIp?: string;
+		// Peer IP of the TLS connection that hit the pixel endpoint. The
+		// proxy exit IP from the user's perspective.
+		peerIp?: string;
+		// True iff the HTTPS request path matched HMAC(sessionId, secret).
+		// False indicates a scanner / replayed sessionId / wrong secret.
+		pathValid?: boolean;
+		// Wall-clock time the first event for this session was received
+		// by the provider. Subsequent events update the individual fields
+		// above but don't bump this timestamp.
+		receivedAt: Date;
+	};
 };
 
 // Zod schema for PoWCaptchaStored
@@ -453,6 +543,9 @@ export const PoWCaptchaStoredSchema = object({
 	// From StoredCaptcha
 	result: CaptchaResultSchema,
 	requestedAtTimestamp: date(),
+	submittedAtTimestamp: date().optional(),
+	verifiedAtTimestamp: date().optional(),
+	failedAtTimestamp: date().optional(),
 	ipAddress: CompositeIpAddressSchema,
 	providedIp: CompositeIpAddressSchema.optional(),
 	metadata: StoredCaptchaMetadataSchema.optional(),
@@ -475,6 +568,11 @@ export const PoWCaptchaStoredSchema = object({
 	clickEvents: array(object({}).catchall(any())).optional(),
 	deviceCapability: string().optional(),
 	behavioralDataPacked: BehavioralDataPackedSchema.optional(),
+	// Internal ML labelling (see StoredCaptcha.label)
+	label: CaptchaLabelSchema.optional(),
+	labelReason: string().optional(),
+	labelledBy: string().optional(),
+	labelledAt: date().optional(),
 }) satisfies ZodType<PoWCaptchaStored, ZodTypeDef, unknown>;
 
 export type PendingImageCaptchaRequest = {
@@ -550,6 +648,7 @@ export type DetectorKey = {
 export type DecisionMachineArtifact = {
 	scope: DecisionMachineScope;
 	dappAccount?: string;
+	kind?: DecisionMachineKind;
 	runtime: DecisionMachineRuntime;
 	language?: DecisionMachineLanguage;
 	source: string;

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { stringifyBigInts } from "@prosopo/util";
 import { z } from "zod";
 
 export type LogObject = object;
@@ -34,11 +35,15 @@ export type Logger = {
 	fatal(fn: LogRecordFn): void;
 	log(level: LogLevel, fn: LogRecordFn): void;
 	/**
-	 * Creates a new logger instance which includes the given object in every log message. Akin to a child logger.
-	 * This is useful for adding context to log messages, such as user IDs, request IDs, etc.
-	 * @param obj An object to log, which will be added to every log message.
+	 * Creates a child logger with merged default data and an optional subscope appended to the
+	 * current scope (e.g. parent "database" + subscope "queries" → "database:queries").
+	 * The child's configured level is snapshotted at creation by resolving PROSOPO_LOG_LEVEL
+	 * directives for the new scope, falling back to the parent's level when no directive matches.
+	 * At emit time `print()` re-resolves directives for the scope, using the child's own configured
+	 * level (this snapshot) as the fallback — so later directive changes are honoured, but a direct
+	 * `setLogLevel()` on the child overrides the snapshot.
 	 */
-	with(obj: LogObject): Logger;
+	with(obj: LogObject, subscope?: string): Logger;
 	getPretty(): boolean;
 	setPretty(pretty: boolean): void;
 	getPrintStack(): boolean;
@@ -47,12 +52,14 @@ export type Logger = {
 	setFormat(format: Format): void;
 };
 
-export const InfoLevel = "info";
-export const DebugLevel = "debug";
-export const TraceLevel = "trace";
-export const WarnLevel = "warn";
-export const ErrorLevel = "error";
-export const FatalLevel = "fatal";
+// Level string constants are internal to this module; consumers use the
+// `LogLevel` enum/type or the string literals it parses.
+const InfoLevel = "info";
+const DebugLevel = "debug";
+const TraceLevel = "trace";
+const WarnLevel = "warn";
+const ErrorLevel = "error";
+const FatalLevel = "fatal";
 
 export const LogLevel = z.enum([
 	InfoLevel,
@@ -64,25 +71,107 @@ export const LogLevel = z.enum([
 ]);
 export type LogLevel = z.infer<typeof LogLevel>;
 
-export type LevelMap = {
-	[K in LogLevel]: number;
-};
-
-const logLevelMap: LevelMap = {
-	[TraceLevel]: 5,
-	[DebugLevel]: 4,
-	[InfoLevel]: 3,
-	[WarnLevel]: 2,
-	[ErrorLevel]: 1,
-	[FatalLevel]: 0,
+const logLevelMap: Record<LogLevel, number> = {
+	[TraceLevel]: 0,
+	[DebugLevel]: 1,
+	[InfoLevel]: 2,
+	[WarnLevel]: 3,
+	[ErrorLevel]: 4,
+	[FatalLevel]: 5,
 };
 
 export function parseLogLevel(
 	level: string | undefined,
 	or: LogLevel = InfoLevel,
 ): LogLevel {
-	const result = LogLevel.safeParse(level);
-	return result.success ? result.data : or;
+	if (!level) return or;
+	// Handle directive strings like "warn,database=trace" — extract the bare global level.
+	for (const part of level.split(",")) {
+		const trimmed = part.trim();
+		if (trimmed && !trimmed.includes("=")) {
+			const parsed = LogLevel.safeParse(trimmed);
+			if (parsed.success) return parsed.data;
+		}
+	}
+	return or;
+}
+
+// ---------------------------------------------------------------------------
+// Directive-based filtering
+//
+// PROSOPO_LOG_LEVEL supports both a bare level and a comma-separated directive
+// string with optional per-scope overrides, e.g.:
+//   "warn"                         – global floor
+//   "warn,database=trace"          – global warn, database:* gets trace
+//   "database=trace,http=debug"    – per-scope only, no global default
+//
+// Scope segments are separated by ":" mirroring module paths, e.g.
+//   "provider:db=debug" matches any logger whose scope starts with "provider:db".
+// ---------------------------------------------------------------------------
+
+export type Directives = Map<string, LogLevel>;
+
+/**
+ * Parse a PROSOPO_LOG_LEVEL directive string into a scope→level map.
+ * An entry with an empty-string key represents the global default.
+ */
+export function parseDirectives(raw: string): Directives {
+	const map: Directives = new Map();
+	for (const part of raw.split(",")) {
+		const trimmed = part.trim();
+		if (!trimmed) continue;
+		const eqIdx = trimmed.indexOf("=");
+		if (eqIdx === -1) {
+			const parsed = LogLevel.safeParse(trimmed);
+			if (parsed.success) map.set("", parsed.data);
+		} else {
+			const scope = trimmed.slice(0, eqIdx).trim();
+			const parsed = LogLevel.safeParse(trimmed.slice(eqIdx + 1).trim());
+			if (parsed.success) map.set(scope, parsed.data);
+		}
+	}
+	return map;
+}
+
+/**
+ * Find the most specific directive that matches the given scope.
+ * Walks from the full scope up to the empty-string global default.
+ * Returns the fallback if nothing matches.
+ */
+export function resolveLevel(
+	scope: string,
+	directives: Directives,
+	fallback: LogLevel,
+): LogLevel {
+	if (directives.has(scope)) return directives.get(scope) as LogLevel;
+	const parts = scope.split(":");
+	for (let i = parts.length - 1; i > 0; i--) {
+		const prefix = parts.slice(0, i).join(":");
+		if (directives.has(prefix)) return directives.get(prefix) as LogLevel;
+	}
+	if (directives.has("")) return directives.get("") as LogLevel;
+	return fallback;
+}
+
+let _globalDirectives: Directives | undefined;
+
+function getGlobalDirectives(): Directives {
+	if (!_globalDirectives) {
+		const raw =
+			typeof process !== "undefined"
+				? (process.env?.PROSOPO_LOG_LEVEL ?? "")
+				: "";
+		_globalDirectives = parseDirectives(raw);
+	}
+	return _globalDirectives;
+}
+
+/**
+ * Override the global directives at runtime (useful in tests or at app startup).
+ * Accepts the same directive string as PROSOPO_LOG_LEVEL.
+ */
+export function setGlobalDirectives(raw: string): void {
+	_globalDirectives = parseDirectives(raw);
 }
 
 // Create a new logger with the given level and scope
@@ -95,8 +184,8 @@ export function getLogger(logLevel: LogLevel, scope: string): Logger {
 const inBrowser =
 	typeof window !== "undefined" && typeof window.document !== "undefined";
 
-export const FormatJson = "json";
-export const FormatPlain = "plain";
+const FormatJson = "json";
+const FormatPlain = "plain";
 export const Format = z.enum([FormatJson, FormatPlain]);
 export type Format = z.infer<typeof Format>;
 
@@ -108,17 +197,15 @@ export class NativeLogger implements Logger {
 	// this provides utility for adding properties to every log message
 	private defaultData: LogObject | undefined;
 	private level: LogLevel;
-	private levelNum: number;
 	private pretty = 0; // pretty print indentation level - 0 = no pretty print, 2 = 2 spaces, etc
 	private printStack = false; // whether to print the stack trace in the log
 	private format: Format = FormatJson;
 
 	constructor(
 		private scope: string,
-		private levelMap: LevelMap = logLevelMap,
+		private levelMap: Record<LogLevel, number> = logLevelMap,
 	) {
 		this.level = InfoLevel; // default log level
-		this.levelNum = this.levelMap[this.level];
 	}
 
 	setFormat(format: Format): void {
@@ -132,10 +219,22 @@ export class NativeLogger implements Logger {
 		return this.format;
 	}
 
-	with(obj: LogObject): Logger {
-		const newLogger = new NativeLogger(this.scope);
+	with(obj: LogObject, subscope?: string): Logger {
+		// Trim so a whitespace-only subscope is treated as absent and the
+		// resulting scope matches the trimmed keys produced by parseDirectives().
+		const trimmedSubscope = subscope?.trim();
+		const newScope = trimmedSubscope
+			? this.scope
+				? `${this.scope}:${trimmedSubscope}`
+				: trimmedSubscope
+			: this.scope;
+		const newLogger = new NativeLogger(newScope, this.levelMap);
 		newLogger.defaultData = { ...this.defaultData, ...obj };
-		newLogger.setLogLevel(this.getLogLevel());
+		newLogger.setPretty(this.getPretty());
+		newLogger.setPrintStack(this.getPrintStack());
+		newLogger.setLogLevel(
+			resolveLevel(newScope, getGlobalDirectives(), this.getLogLevel()),
+		);
 		return newLogger;
 	}
 
@@ -161,75 +260,46 @@ export class NativeLogger implements Logger {
 
 	setLogLevel(level: LogLevel): void {
 		this.level = level;
-		this.levelNum = this.levelMap[level];
 	}
 
 	getLogLevel(): LogLevel {
 		return this.level;
 	}
 
-	private unpackError(err: Error | object): { msg: string; data: LogRecord } {
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		const e: any = err; // allow additional properties
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		const data: any = { ...err };
-		data.name = e.name || "Error";
-		if (this.printStack) {
-			if (e.stack) {
-				data.stack = e.stack;
-			}
-			if (e.stacktrace) {
-				data.stacktrace = e.stacktrace; // for compatibility with some environments
-			}
+	private unpackError(err: Error | object): {
+		msg: string;
+		data: Record<string, unknown>;
+	} {
+		const e = err as Record<string, unknown>;
+		const data: Record<string, unknown> = {};
+
+		for (const key of Object.getOwnPropertyNames(err)) {
+			if (!this.printStack && (key === "stack" || key === "stacktrace"))
+				continue;
+			data[key] = e[key];
 		}
-		if (e.cause) {
-			data.cause = e.cause; // include cause if available
+
+		if (!data.name) {
+			data.name = (err as { name?: unknown }).name ?? "Error";
 		}
-		if (e.code) {
-			data.code = e.code; // include code if available
-		}
-		if (e.details) {
-			data.details = e.details; // include details if available
-		}
-		if (e.context) {
-			data.context = e.context; // include context if available
-		}
-		if (e.data) {
-			data.data = e.data; // include data if available
-		}
-		if (e.info) {
-			data.info = e.info; // include info if available
-		}
-		if (e.metadata) {
-			data.metadata = e.metadata; // include metadata if available
-		}
-		if (e.status) {
-			data.status = e.status; // include status if available
-		}
-		if (e.statusCode) {
-			data.statusCode = e.statusCode; // include statusCode if available
-		}
-		if (e.cause) {
-			// chainload errors can have a cause property
-			if (e.cause instanceof Error) {
-				// recurse into the cause
-				data.cause = this.unpackError(e.cause as Error);
+
+		// Recursively unpack the cause chain
+		const cause = e.cause;
+		if (cause !== undefined) {
+			if (
+				cause instanceof Error ||
+				(typeof cause === "object" && cause !== null)
+			) {
+				data.cause = this.unpackError(cause as Error | object);
 			} else {
-				// if the cause is not an error, just include it as is
-				data.cause = e.cause;
+				data.cause = cause;
 			}
 		}
+
 		// Prefer translationKey when present (e.g. ProsopoBaseError) so the
 		// top-level `err` field is locale-stable and queryable.
-		const msg = e.translationKey || e.message || e.msg || "";
-		if (e.message && e.msg) {
-			// duplicate message, defer msg to data
-			data.msg = e.msg;
-		}
-		return {
-			msg,
-			data,
-		};
+		const msg = String(e.translationKey ?? e.message ?? e.msg ?? "");
+		return { msg, data };
 	}
 
 	private print(
@@ -237,14 +307,19 @@ export class NativeLogger implements Logger {
 		fn: LogRecordFn,
 		level: LogLevel,
 	): void {
-		if (this.levelMap[level] > this.levelNum) {
-			return; // skip logging if the level is higher than the current log level
+		// Re-resolve at print time so directives set after construction are respected.
+		const effectiveLevelNum =
+			this.levelMap[
+				resolveLevel(this.scope, getGlobalDirectives(), this.level)
+			];
+		if (this.levelMap[level] < effectiveLevelNum) {
+			return; // skip logging if the level is below the effective threshold
 		}
 		const ts = new Date().toISOString();
 		// populate the log fields using the fn
 		let { data, msg, err } = fn();
 		let errMsg: string | undefined;
-		let errData: LogRecord | undefined;
+		let errData: Record<string, unknown> | undefined;
 		if (err) {
 			if (err instanceof Error || typeof err === "object") {
 				// if it's an instance of Error, unpack the standard fields (e.g. message, name, stack, etc)
@@ -267,8 +342,8 @@ export class NativeLogger implements Logger {
 			data?: LogObject;
 			msg?: string;
 			err?: string;
-			errData?: LogRecord;
-		} = { scope: this.scope, ts, level: this.level };
+			errData?: Record<string, unknown>;
+		} = { scope: this.scope, ts, level };
 		if (data) {
 			baseRecord.data = data;
 		}
@@ -348,35 +423,3 @@ export class NativeLogger implements Logger {
 		}
 	}
 }
-
-/**
- * Recursively converts BigInt values to strings throughout an object, array, or primitive value.
- *
- * BigInts must be cast to strings before applying JSON.stringify(), as it cannot serialize BigInt values and will
- * throw "TypeError: Do not know how to serialize a BigInt".
- *
- * @param value - The value to process (can be a primitive, object, or array)
- * @returns The same value with all BigInt instances converted to strings
- */
-export const stringifyBigInts = (value: unknown): unknown => {
-	if ("bigint" === typeof value) {
-		return value.toString();
-	}
-
-	if (isObject(value)) {
-		for (const key of Object.keys(value)) {
-			value[key] = stringifyBigInts(value[key]);
-		}
-	}
-
-	if (Array.isArray(value)) {
-		for (let i = 0; i < value.length; i++) {
-			value[i] = stringifyBigInts(value[i]);
-		}
-	}
-
-	return value;
-};
-
-const isObject = (value: unknown): value is Record<string, unknown> =>
-	Object === value?.constructor;

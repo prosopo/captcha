@@ -1,5 +1,72 @@
 # @prosopo/angular-procaptcha-integration-demo
 
+## 1.1.88
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.88
+
+## 1.1.87
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.87
+
+## 1.1.86
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.86
+
+## 1.1.85
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.85
+
+## 1.1.84
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.84
+
+## 1.1.83
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.83
+
+## 1.1.82
+### Patch Changes
+
+- 4c71a9f: chore(deps): bump @angular/core from 20.3.16 to 20.3.25
+- Updated dependencies [4c71a9f]
+  - @prosopo/angular-procaptcha-wrapper@1.1.82
+
+## 1.1.81
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.81
+
+## 1.1.80
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.80
+
+## 1.1.79
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.79
+
+## 1.1.78
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.78
+
+## 1.1.77
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.77
+
+## 1.1.76
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.76
+
 ## 1.1.75
 ### Patch Changes
 

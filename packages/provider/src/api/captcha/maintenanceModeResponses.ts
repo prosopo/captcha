@@ -15,6 +15,7 @@
 import { randomUUID } from "node:crypto";
 import {
 	ApiParams,
+	type CaptchaResponseBody,
 	type CaptchaType,
 	type GetFrictionlessCaptchaResponse,
 	type GetPowCaptchaResponse,
@@ -61,6 +62,21 @@ export const buildPowMaintenanceResponse = (
 		},
 	};
 };
+
+// Image-only clients still hit this endpoint in maintenance mode (the
+// frictionless route returns CaptchaType.pow, but direct image-mode
+// integrations don't go through frictionless). Empty captchas matches
+// what /submit/image returns in maintenance mode so the surfaces stay
+// in sync: nothing to solve, nothing to verify.
+export const buildImageMaintenanceResponse = (): CaptchaResponseBody => ({
+	[ApiParams.status]: "ok",
+	[ApiParams.captchas]: [],
+	[ApiParams.requestHash]: "",
+	[ApiParams.timestamp]: Date.now().toString(),
+	[ApiParams.signature]: {
+		[ApiParams.provider]: { [ApiParams.requestHash]: "" },
+	},
+});
 
 // Tolerance is intentionally generous: the widget uses it client-side to
 // decide whether the drop counts as "complete". Submit doesn't validate

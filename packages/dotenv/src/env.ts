@@ -22,7 +22,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const logger = getLogger(
 	parseLogLevel(process.env.PROSOPO_LOG_LEVEL, LogLevel.enum.info),
-	import.meta.url,
+	"dotenv",
 );
 
 export function getEnv() {

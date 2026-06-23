@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/database",
-	"version": "3.13.6",
+	"version": "3.15.0",
 	"description": "Prosopo database plugins for provider",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -27,7 +27,8 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+ssh://git@github.com/prosopo/captcha.git"
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "packages/database"
 	},
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
@@ -37,20 +38,21 @@
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
 		"@polkadot/util": "13.5.7",
-		"@prosopo/common": "3.1.37",
-		"@prosopo/logger": "1.0.1",
-		"@prosopo/redis-client": "1.0.22",
-		"@prosopo/types": "4.2.1",
-		"@prosopo/types-database": "4.7.8",
-		"@prosopo/user-access-policy": "3.7.10",
-		"@prosopo/util": "3.2.14",
+		"@prosopo/common": "3.1.40",
+		"@prosopo/logger": "1.0.4",
+		"@prosopo/redis-client": "1.0.25",
+		"@prosopo/types": "4.8.0",
+		"@prosopo/types-database": "4.11.0",
+		"@prosopo/user-access-policy": "3.10.8",
+		"@prosopo/util": "3.3.1",
+		"bson": "6.10.4",
 		"make-dir": "3.1.0",
 		"mongodb": "6.15.0",
 		"mongodb-memory-server": "10.3.0",
 		"mongoose": "8.13.0"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.1",
+		"@prosopo/config": "3.3.3",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "3.2.4",
 		"concurrently": "9.0.1",

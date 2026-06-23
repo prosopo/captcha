@@ -16,18 +16,48 @@ import { sha256 } from "@noble/hashes/sha256";
 // batching prevents complete lock of Browser renders during resolution
 const BATCH_SIZE = 1_000;
 
+// Difficulty is interpreted as "hex-character leading zeros" for backward
+// compatibility with integer values (e.g. difficulty 4 ≡ 4 hex zeros ≡ 16 bits
+// ≡ threshold = 2^240). Fractional values quantise to bit-level granularity:
+// each 0.25 step ≡ 1 bit (so 4.25 = 17 bits, 4.5 = 18 bits, 4.75 = 19 bits).
+const HEX_BITS_PER_DIFFICULTY = 4;
+const HASH_BITS = 256;
+
+const bitsRequired = (difficulty: number): number =>
+	Math.round(HEX_BITS_PER_DIFFICULTY * difficulty);
+
+export const targetForDifficulty = (difficulty: number): bigint => {
+	const bits = bitsRequired(difficulty);
+	if (bits <= 0) return 1n << BigInt(HASH_BITS);
+	if (bits >= HASH_BITS) return 1n;
+	return 1n << BigInt(HASH_BITS - bits);
+};
+
+const hashToBigInt = (hash: Uint8Array): bigint => {
+	let value = 0n;
+	for (const byte of hash) {
+		value = (value << 8n) | BigInt(byte);
+	}
+	return value;
+};
+
+export const hashMeetsDifficulty = (
+	hash: Uint8Array,
+	difficulty: number,
+): boolean => hashToBigInt(hash) < targetForDifficulty(difficulty);
+
 export const solvePoW = async (
 	data: string,
 	difficulty: number,
 ): Promise<number> => {
+	const target = targetForDifficulty(difficulty);
 	let nonce = 0;
-	const prefix = "0".repeat(difficulty);
 
 	while (true) {
 		const message = new TextEncoder().encode(nonce + data);
-		const hashHex = bufferToHex(sha256(message));
+		const hash = sha256(message);
 
-		if (hashHex.startsWith(prefix)) {
+		if (hashToBigInt(hash) < target) {
 			return nonce;
 		}
 
@@ -39,11 +69,6 @@ export const solvePoW = async (
 		}
 	}
 };
-
-const bufferToHex = (buffer: Uint8Array): string =>
-	Array.from(buffer)
-		.map((byte) => byte.toString(16).padStart(2, "0"))
-		.join("");
 
 /**
  * Usage:

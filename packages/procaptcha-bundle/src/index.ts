@@ -40,8 +40,11 @@ const implicitRender = async () => {
 
 	// Set siteKey from renderOptions or from the first element's data-sitekey attribute
 	if (elements.length) {
-		const siteKey = at(elements, 0).getAttribute("data-sitekey");
-		const web3 = at(elements, 0).getAttribute("data-web3");
+		const firstElement = at(elements, 0);
+		const siteKey = firstElement.getAttribute("data-sitekey");
+		const web3 = firstElement.getAttribute("data-web3");
+		const ipv4 = firstElement.getAttribute("data-ipv4") === "true";
+		const ipv6 = firstElement.getAttribute("data-ipv6") === "true";
 		if (!siteKey) {
 			console.error("No site key found");
 			return;
@@ -51,6 +54,8 @@ const implicitRender = async () => {
 			elements,
 			{
 				siteKey: siteKey,
+				ipv4,
+				ipv6,
 			},
 			!(web3 === "true"),
 		);
@@ -67,12 +72,16 @@ const implicitRender = async () => {
 		for (const button of invisibleButtons) {
 			const siteKey = button.getAttribute("data-sitekey") || "";
 			const callback = button.getAttribute("data-callback") || "";
+			const ipv4 = button.getAttribute("data-ipv4") === "true";
+			const ipv6 = button.getAttribute("data-ipv6") === "true";
 
 			const root = await widgetFactory.createWidgets(
 				[button],
 				{
 					siteKey: siteKey,
 					callback: callback,
+					ipv4,
+					ipv6,
 				},
 				true,
 				true,
