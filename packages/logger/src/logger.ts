@@ -67,11 +67,7 @@ export const LogLevel = z.enum([
 ]);
 export type LogLevel = z.infer<typeof LogLevel>;
 
-type LevelMap = {
-	[K in LogLevel]: number;
-};
-
-const logLevelMap: LevelMap = {
+const logLevelMap: Record<LogLevel, number> = {
 	[TraceLevel]: 0,
 	[DebugLevel]: 1,
 	[InfoLevel]: 2,
@@ -118,7 +114,7 @@ export class NativeLogger implements Logger {
 
 	constructor(
 		private scope: string,
-		private levelMap: LevelMap = logLevelMap,
+		private levelMap: Record<LogLevel, number> = logLevelMap,
 	) {
 		this.level = InfoLevel; // default log level
 		this.levelNum = this.levelMap[this.level];
