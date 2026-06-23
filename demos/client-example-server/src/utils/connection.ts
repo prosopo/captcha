@@ -11,13 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { fileURLToPath } from "node:url";
+import { getMongoConnectionOptions } from "@prosopo/database";
 import {
 	AutoIncrementID,
 	type AutoIncrementIDOptions,
 } from "@typegoose/auto-increment";
-import { getMongoConnectionOptions } from "@prosopo/database";
 import mongoose, { type Connection } from "mongoose";
-import { fileURLToPath } from "url";
 import UserSchema from "../models/user.js";
 
 function connectionFactory(uri: string): Connection {

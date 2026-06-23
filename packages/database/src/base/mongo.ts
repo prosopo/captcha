@@ -1,4 +1,3 @@
-import { ProsopoDBError } from "@prosopo/common";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,11 +11,12 @@ import { ProsopoDBError } from "@prosopo/common";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { fileURLToPath } from "node:url";
+import { ProsopoDBError } from "@prosopo/common";
 import { type Logger, getLogger } from "@prosopo/logger";
 import type { IDatabase } from "@prosopo/types-database";
-import { getMongoConnectionOptions } from "../mongooseOptions.js";
 import mongoose, { type Connection } from "mongoose";
-import { fileURLToPath } from "url";
+import { getMongoConnectionOptions } from "../mongooseOptions.js";
 
 mongoose.set("strictQuery", false);
 
