@@ -123,10 +123,14 @@ jobs:
             fi
 
             echo "PR #$n is behind but passing. Updating its branch..."
-            gh api \
+            if ! gh api \
               --method PUT \
               -H "Accept: application/vnd.github+json" \
-              "/repos/$REPO/pulls/$n/update-branch"
+              "/repos/$REPO/pulls/$n/update-branch"; then
+              echo "Failed to update PR #$n; skipping."
+              echo "::endgroup::"
+              continue
+            fi
 
             echo "Updated PR #$n. Done (one per run)."
             echo "::endgroup::"
