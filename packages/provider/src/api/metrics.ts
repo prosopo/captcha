@@ -41,8 +41,12 @@ const PREFIX = "prosopo_";
 const LATENCY_BUCKETS = [
 	0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10,
 ];
-// Bot-score buckets (scores are 0..1).
-const SCORE_BUCKETS = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1];
+// Bot-score buckets. The score starts in 0..1 (0=human .. 1=bot) but language
+// rules add unbounded per-language penalties on top, so it can exceed 1 — the
+// upper buckets capture that tail rather than dumping it all into +Inf.
+const SCORE_BUCKETS = [
+	0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.5, 2, 3, 5, 10,
+];
 
 // The set of API paths we expose as the `route` label. Restricting to the known
 // enum values keeps label cardinality bounded — anything unmatched is recorded
@@ -127,7 +131,7 @@ const buildMetrics = (): ProviderMetrics => {
 	});
 	const botScore = new Histogram({
 		name: `${PREFIX}bot_score`,
-		help: "Distribution of frictionless bot scores (0=human .. 1=bot)",
+		help: "Distribution of frictionless bot scores (0=human .. 1=bot; language-rule penalties can push it above 1)",
 		buckets: SCORE_BUCKETS,
 		registers: [registry],
 	});
@@ -160,6 +164,11 @@ const buildMetrics = (): ProviderMetrics => {
 		help: "1 when the provider is in maintenance mode, else 0",
 		registers: [registry],
 	});
+	// Seed from the env default so the series is always present from boot and
+	// reflects MAINTENANCE_MODE even before the admin toggle is ever called.
+	maintenanceMode.set(
+		process.env.MAINTENANCE_MODE?.toLowerCase() === "true" ? 1 : 0,
+	);
 	const redisReady = new Gauge({
 		name: `${PREFIX}redis_ready`,
 		help: "1 when the given redis connection is ready, else 0",
