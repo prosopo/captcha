@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Supply-chain guard: fail CI if any package.json declares a non-exact (floating)
-// version for a runtime dependency, or if package-lock.json is missing integrity
-// hashes for resolved registry packages.
+// version in dependencies, devDependencies or optionalDependencies, or if
+// package-lock.json is missing integrity hashes for resolved registry packages.
+// (peerDependencies are exempt — see the note below.)
 //
 // Floating ranges (^, ~, *, >=, "latest", ...) let `npm install` silently pull a
 // newer release than the one that was reviewed. When that newer release is
