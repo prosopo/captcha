@@ -54,9 +54,9 @@ import {
 	DecisionMachineRuntime,
 	DecisionMachineScope,
 } from "../decisionMachine/index.js";
-import {
-	type ChallengeSignature,
-	type RequestHashSignature,
+import type {
+	ChallengeSignature,
+	RequestHashSignature,
 } from "../procaptcha/index.js";
 
 export type ApiJsonError = {
