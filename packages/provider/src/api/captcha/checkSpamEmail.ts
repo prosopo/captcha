@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import { ProsopoApiError } from "@prosopo/common";
-import type { ProviderEnvironment } from "@prosopo/types-env";
 import { INPUT_LIMITS, boundedString } from "@prosopo/types";
+import type { ProviderEnvironment } from "@prosopo/types-env";
 import { extractDomainFromEmail } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import { object } from "zod";

@@ -42,7 +42,6 @@ import { ModeEnum } from "../config/mode.js";
 import { DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED } from "../config/timeouts.js";
 import {
 	type Captcha,
-	CaptchaSolutionSchema,
 	type DappAccount,
 	type DatasetID,
 	type PoWChallengeId,
@@ -50,16 +49,14 @@ import {
 	type UserAccount,
 } from "../datasets/index.js";
 import {
+	DecisionMachineKind,
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
 } from "../decisionMachine/index.js";
 import {
 	type ChallengeSignature,
-	ProcaptchaTokenSpec,
 	type RequestHashSignature,
-	RequestHashSignatureSchema,
-	TimestampSignatureSchema,
 } from "../procaptcha/index.js";
 
 export type ApiJsonError = {
@@ -208,7 +205,6 @@ export type Provider = {
 
 export type FrontendProvider = {
 	url: string;
-	datasetId: string;
 };
 
 export type RandomProvider = {
@@ -265,7 +261,7 @@ export const CaptchaRequestBody = object({
 	[ApiParams.datasetId]: union([
 		boundedString(INPUT_LIMITS.ID),
 		array(number()),
-	]),
+	]).optional(),
 	[ApiParams.sessionId]: boundedString(INPUT_LIMITS.ID).optional(),
 	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
 });
@@ -291,15 +287,34 @@ export const ClientMetaDataSchema = object({
 	[ApiParams.hp]: boundedString(INPUT_LIMITS.TEXT).optional(),
 });
 
+// Request-body-level bounded variants of shared schemas. The shared schemas
+// (`ProcaptchaTokenSpec`, `CaptchaSolutionSchema`, `*SignatureSchema`) are also
+// used for response/DB shapes, so rather than bound them at source we cap them
+// here, where they flow in as untrusted request input.
+const BoundedProcaptchaTokenSpec = boundedString(INPUT_LIMITS.TOKEN).startsWith(
+	"0x",
+);
+
+const BoundedCaptchaSolutionSchema = object({
+	captchaId: boundedString(INPUT_LIMITS.ID),
+	captchaContentId: boundedString(INPUT_LIMITS.ID),
+	solution: boundedString(INPUT_LIMITS.ID).array(),
+	salt: boundedString(INPUT_LIMITS.ID),
+});
+
 export const CaptchaSolutionBody = object({
 	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
-	[ApiParams.captchas]: array(CaptchaSolutionSchema),
+	[ApiParams.captchas]: array(BoundedCaptchaSolutionSchema),
 	[ApiParams.requestHash]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.timestamp]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.signature]: object({
-		[ApiParams.user]: TimestampSignatureSchema,
-		[ApiParams.provider]: RequestHashSignatureSchema,
+		[ApiParams.user]: object({
+			[ApiParams.timestamp]: boundedString(INPUT_LIMITS.TOKEN),
+		}),
+		[ApiParams.provider]: object({
+			[ApiParams.requestHash]: boundedString(INPUT_LIMITS.TOKEN),
+		}),
 	}),
 	[ApiParams.behavioralData]: boundedString(INPUT_LIMITS.TOKEN).optional(),
 	// Compact encoded SimdReadings produced by @prosopo/catcher's
@@ -312,7 +327,7 @@ export const CaptchaSolutionBody = object({
 export type CaptchaSolutionBodyType = zInfer<typeof CaptchaSolutionBody>;
 
 export const VerifySolutionBody = object({
-	[ApiParams.token]: ProcaptchaTokenSpec,
+	[ApiParams.token]: BoundedProcaptchaTokenSpec,
 	[ApiParams.dappSignature]: boundedString(INPUT_LIMITS.TOKEN),
 	[ApiParams.maxVerifiedTime]: number()
 		.optional()
@@ -419,7 +434,7 @@ export interface PowCaptchaSolutionResponse extends ApiResponse {
  * Request body for the server to verify a PoW captcha solution.
  */
 export const ServerPowCaptchaVerifyRequestBody = object({
-	[ApiParams.token]: ProcaptchaTokenSpec,
+	[ApiParams.token]: BoundedProcaptchaTokenSpec,
 	[ApiParams.dappSignature]: boundedString(INPUT_LIMITS.TOKEN),
 	[ApiParams.ip]: boundedString(INPUT_LIMITS.ID).optional(),
 	[ApiParams.email]: boundedString(INPUT_LIMITS.EMAIL).email().optional(),
@@ -502,6 +517,7 @@ export const SubmitPowCaptchaSolutionBody = object({
 	[ApiParams.salt]: boundedString(INPUT_LIMITS.ID).optional(),
 	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
 	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
+	[ApiParams.fingerprintProof]: string().optional(),
 });
 
 export type SubmitPowCaptchaSolutionBodyType = input<
@@ -583,7 +599,7 @@ export type SubmitPuzzleCaptchaSolutionBodyTypeOutput = output<
 >;
 
 export const ServerPuzzleCaptchaVerifyRequestBody = object({
-	[ApiParams.token]: ProcaptchaTokenSpec,
+	[ApiParams.token]: BoundedProcaptchaTokenSpec,
 	[ApiParams.dappSignature]: boundedString(INPUT_LIMITS.TOKEN),
 	[ApiParams.ip]: boundedString(INPUT_LIMITS.ID).optional(),
 	[ApiParams.email]: boundedString(INPUT_LIMITS.EMAIL).email().optional(),
@@ -640,6 +656,7 @@ export const UpdateDecisionMachineBody = object({
 	[ApiParams.decisionMachineVersion]: boundedString(INPUT_LIMITS.ID).optional(),
 	[ApiParams.decisionMachineCaptchaType]:
 		DecisionMachineCaptchaTypeSchema.optional(),
+	[ApiParams.decisionMachineKind]: nativeEnum(DecisionMachineKind).optional(),
 	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID).optional(),
 });
 
@@ -675,6 +692,7 @@ export const DecisionMachineSummarySchema = object({
 	_id: string(),
 	scope: nativeEnum(DecisionMachineScope),
 	dappAccount: string().nullish(),
+	kind: nativeEnum(DecisionMachineKind).nullish(),
 	runtime: nativeEnum(DecisionMachineRuntime),
 	language: nativeEnum(DecisionMachineLanguage).nullish(),
 	name: string().nullish(),
