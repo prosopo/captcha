@@ -57,7 +57,6 @@ export default (
 				req.logger.info(() => ({
 					msg: "Frictionless response finished",
 					data: {
-						requestId: req.requestId,
 						status: res.statusCode,
 						path: req.path,
 						method: req.method,
@@ -75,7 +74,6 @@ export default (
 			req.logger.info(() => ({
 				msg: "Frictionless handler entry",
 				data: {
-					requestId: req.requestId,
 					token,
 					user,
 					dapp,
@@ -177,7 +175,6 @@ export default (
 				req.logger.info(() => ({
 					msg: "Frictionless decision",
 					data: {
-						requestId: req.requestId,
 						decision: "reuse_session",
 						captchaType: dedup.captchaType,
 						sessionId: dedup.sessionId,
@@ -218,7 +215,6 @@ export default (
 					flatHeaders,
 					sessionMode,
 					userSitekeyIpHash,
-					requestId: req.requestId,
 					logger: req.logger,
 				},
 				res,
@@ -376,7 +372,6 @@ export default (
 					dapp,
 					ipInfo: req.ipInfo,
 					flatHeaders,
-					requestId: req.requestId,
 					logger: req.logger,
 					userScope,
 				},
