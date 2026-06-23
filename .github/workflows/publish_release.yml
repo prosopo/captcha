@@ -14,6 +14,10 @@ on:
 permissions:
   contents: write
   packages: write
+  # Required so npm CLI can mint an OIDC token for trusted publishing.
+  # Without this, `npm publish` falls back to legacy NPM_TOKEN auth.
+  # See https://docs.npmjs.com/trusted-publishers
+  id-token: write
 
 defaults:
   run:
@@ -46,13 +50,6 @@ jobs:
           node-version: '24'
           cache: 'npm'
 
-      - name: Setup npm registry
-        run: |
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
-
-      - name: Verify npm registry auth
-        run: npm whoami --registry https://registry.npmjs.org/
-
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -70,7 +67,7 @@ jobs:
           echo "version=$version" >> $GITHUB_OUTPUT
           echo "Version: $version"
 
-      - run: npm ci --ignore-scripts --include=dev
+      - run: npm ci --ignore-scripts --include=dev --no-audit --no-fund --prefer-offline
 
       - name: Build packages
         run: |
@@ -98,9 +95,31 @@ jobs:
           echo "✅ Build verification passed"
 
       - name: Publish to npm
+        # Trusted publishing: npm CLI auto-exchanges the GitHub OIDC token
+        # (granted via `id-token: write` above) for a short-lived registry
+        # token. No NPM_TOKEN secret required. Each workspace package must
+        # be registered as a trusted publisher on npmjs.com pointing at
+        # this workflow file.
+        #
+        # `npm --workspaces publish` blindly tries every workspace which
+        # fails the whole release the moment one package is already at
+        # its current version on the registry (the common case in a
+        # changeset-driven monorepo — only bumped packages get fresh
+        # versions). `changeset publish` consults `.changeset/` + the
+        # registry and only publishes packages whose local version is
+        # ahead of npm.
+        #
+        # NPM_CONFIG_PROVENANCE=true is the env-var form of
+        # `npm publish --provenance`; changeset publish delegates to npm
+        # CLI and inherits the flag, so each tarball gets a Sigstore
+        # attestation linking it to this workflow run. Provenance
+        # verification requires `repository.url` on every published
+        # manifest to match the OIDC claim.
+        env:
+          NPM_CONFIG_PROVENANCE: 'true'
         run: |
-          echo "Publishing all packages to npm"
-          npm --workspaces publish --access=public
+          echo "Publishing changed packages via @changesets/cli"
+          npx @changesets/cli publish
 
       - name: Publish production image to Docker Hub
         run: |

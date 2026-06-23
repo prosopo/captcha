@@ -1,5 +1,262 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.12.0
+### Minor Changes
+
+- 12cd0a6: Replace client-side weighted-random provider selection with static DNS endpoints.
+  
+  - Removed the `providerSelectEntropy` field from `DetectorResult`, `Session`, the
+    Mongoose `SessionRecordSchema` (including its standalone index), and every
+    call-site that threaded it through frictionless / image / pow / puzzle flows.
+  - Removed `FrictionlessManager.hostVerified` and its decision-machine call site
+    — there's nothing to verify when the DNS layer picks the host.
+  - `getRandomActiveProvider(env)` now returns the per-environment static DNS
+    endpoint (`pronode.prosopo.io` family) instead of fetching the provider list
+    and weighted-selecting. The entropy parameter is gone.
+  - `getProcaptchaRandomActiveProvider` is now a thin re-export so widget packages
+    keep importing from `procaptcha-common`.
+  - `FrontendProvider.datasetId` is dropped; `CaptchaRequestBody.datasetId` is
+    optional. The server falls back to its own most-recently-uploaded dataset
+    (`env.datasetId`, populated from `db.getMostRecentDatasetId()` at startup) —
+    clients can't pin a dataset under DNS routing because they don't know which
+    pronode they'll hit.
+  - Removed dead `setProviderLoader` / `prefetchProviders` / `selectWeightedProvider`
+    plumbing from `@prosopo/load-balancer`. The server's cacheFile-based loader
+    setup in `startProviderApi` goes with them.
+  - `getRandomActiveProvider` now hits `/healthz` on the global hostname once per
+    page load, reads the responding pronode's identity from the JSON body, and
+    pins subsequent captcha calls to that pronode (`https://pronodeN.prosopo.io`)
+    so session creation and submission land on the same backend. Falls back to
+    the dual-stack global hostname when `/healthz` is unreachable.
+  - `/healthz` now returns `{ ok: true, host: <pronode-identity> }` instead of
+    `"OK"` to support the above pinning.
+  - CORS preflight is now cached for 24h (`maxAge: 86400`) — previously the
+    browser refired an OPTIONS preflight before every captcha call because
+    the custom `Prosopo-Site-Key` / `Prosopo-User` headers make the request
+    non-simple and the default `maxAge` is 5s.
+
+### Patch Changes
+
+- 12cd0a6: Add ipv4-only / ipv6-only provider DNS routing via `data-ipv4` / `data-ipv6`.
+  
+  Dapps that need to pin captcha traffic to a single IP stack can now do so:
+  
+  ```html
+  <div class="procaptcha" data-sitekey="..." data-ipv4="true"></div>
+  ```
+  
+  What happens under the hood:
+  
+  - The widget reads `data-ipv4` / `data-ipv6` (or the matching `ipv4` / `ipv6`
+    booleans on `ProcaptchaRenderOptions` / explicit `render(...)`) and threads
+    them through `ProcaptchaConfigSchema`.
+  - `pickIpMode(config)` resolves them into an `IpMode` (`"ipv4"` / `"ipv6"` /
+    `undefined`); `ipv4` wins if both are set.
+  - The frictionless / image / pow / puzzle managers pass the `IpMode` into
+    `getProcaptchaRandomActiveProvider`, which calls `/healthz` on the matching
+    single-stack global hostname (`ipv4.pronode.prosopo.io` or
+    `ipv6.pronode.prosopo.io`) and pins subsequent captcha calls to
+    `ipv4.pronodeN.prosopo.io` / `ipv6.pronodeN.prosopo.io`. The dual-stack
+    cache and the single-stack caches are kept separate.
+  - `convertHostedProvider` now accepts an optional `IpMode` and, when set,
+    selects the matching `ipv4` / `ipv6` sub-object from the provider-list JSON.
+    Top-level `ipv4` / `ipv6` keys are skipped by default so existing dual-stack
+    callers keep working.
+  - New helpers in `@prosopo/load-balancer`: `IpMode`, `stripIpModeLabel`,
+    `getProviderHostname`.
+  
+  Coordinated with the matching `captcha-private` change that publishes the
+  `ipv4` / `ipv6` sub-objects to S3.
+- Updated dependencies [12cd0a6]
+- Updated dependencies [005b817]
+- Updated dependencies [12cd0a6]
+  - @prosopo/procaptcha-common@2.11.0
+  - @prosopo/detector@3.5.0
+  - @prosopo/api@3.5.5
+  - @prosopo/types@4.8.0
+  - @prosopo/procaptcha-react@2.9.78
+  - @prosopo/procaptcha-pow@2.10.5
+  - @prosopo/procaptcha-puzzle@2.10.20
+
+## 2.11.11
+### Patch Changes
+
+- Updated dependencies [bb98af1]
+  - @prosopo/types@4.7.4
+  - @prosopo/api@3.5.4
+  - @prosopo/detector@3.4.47
+  - @prosopo/load-balancer@2.9.21
+  - @prosopo/procaptcha-common@2.10.28
+  - @prosopo/procaptcha-pow@2.10.4
+  - @prosopo/procaptcha-puzzle@2.10.19
+  - @prosopo/procaptcha-react@2.9.77
+
+## 2.11.10
+### Patch Changes
+
+- Updated dependencies [89ab6fc]
+- Updated dependencies [0f3750b]
+  - @prosopo/types@4.7.3
+  - @prosopo/api@3.5.3
+  - @prosopo/detector@3.4.46
+  - @prosopo/load-balancer@2.9.20
+  - @prosopo/procaptcha-common@2.10.27
+  - @prosopo/procaptcha-pow@2.10.3
+  - @prosopo/procaptcha-puzzle@2.10.18
+  - @prosopo/procaptcha-react@2.9.76
+
+## 2.11.9
+### Patch Changes
+
+- Updated dependencies [edcd450]
+- Updated dependencies [5295c4b]
+  - @prosopo/types@4.7.2
+  - @prosopo/locale@3.2.5
+  - @prosopo/procaptcha-pow@2.10.2
+  - @prosopo/procaptcha-puzzle@2.10.17
+  - @prosopo/procaptcha-react@2.9.75
+  - @prosopo/api@3.5.2
+  - @prosopo/common@3.1.40
+  - @prosopo/detector@3.4.45
+  - @prosopo/load-balancer@2.9.19
+  - @prosopo/procaptcha-common@2.10.26
+
+## 2.11.8
+### Patch Changes
+
+- 46fedf4: Auto-start image/puzzle widget after PoW escalation so the user does not need to click the checkbox a second time.
+- Updated dependencies [46fedf4]
+  - @prosopo/procaptcha-react@2.9.74
+  - @prosopo/procaptcha-puzzle@2.10.16
+  - @prosopo/types@4.7.1
+  - @prosopo/api@3.5.1
+  - @prosopo/detector@3.4.44
+  - @prosopo/load-balancer@2.9.18
+  - @prosopo/procaptcha-common@2.10.25
+  - @prosopo/procaptcha-pow@2.10.1
+
+## 2.11.7
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/types@4.7.0
+  - @prosopo/api@3.5.0
+  - @prosopo/procaptcha-pow@2.10.0
+  - @prosopo/detector@3.4.43
+  - @prosopo/load-balancer@2.9.17
+  - @prosopo/procaptcha-common@2.10.24
+  - @prosopo/procaptcha-puzzle@2.10.15
+  - @prosopo/procaptcha-react@2.9.73
+
+## 2.11.6
+### Patch Changes
+
+- Updated dependencies [4626340]
+  - @prosopo/types@4.6.1
+  - @prosopo/api@3.4.14
+  - @prosopo/detector@3.4.42
+  - @prosopo/load-balancer@2.9.16
+  - @prosopo/procaptcha-common@2.10.23
+  - @prosopo/procaptcha-pow@2.9.10
+  - @prosopo/procaptcha-puzzle@2.10.14
+  - @prosopo/procaptcha-react@2.9.72
+
+## 2.11.5
+### Patch Changes
+
+- Updated dependencies [55b1388]
+  - @prosopo/types@4.6.0
+  - @prosopo/procaptcha-pow@2.9.9
+  - @prosopo/procaptcha-puzzle@2.10.13
+  - @prosopo/procaptcha-react@2.9.71
+  - @prosopo/api@3.4.13
+  - @prosopo/common@3.1.39
+  - @prosopo/detector@3.4.41
+  - @prosopo/load-balancer@2.9.15
+  - @prosopo/procaptcha-common@2.10.22
+
+## 2.11.4
+### Patch Changes
+
+- Updated dependencies [9b91e85]
+- Updated dependencies [c80a05b]
+  - @prosopo/types@4.5.0
+  - @prosopo/api@3.4.12
+  - @prosopo/detector@3.4.40
+  - @prosopo/load-balancer@2.9.14
+  - @prosopo/procaptcha-common@2.10.21
+  - @prosopo/procaptcha-pow@2.9.8
+  - @prosopo/procaptcha-puzzle@2.10.12
+  - @prosopo/procaptcha-react@2.9.70
+
+## 2.11.3
+### Patch Changes
+
+- Updated dependencies [f69724f]
+- Updated dependencies [3973078]
+  - @prosopo/types@4.4.1
+  - @prosopo/api@3.4.11
+  - @prosopo/procaptcha-pow@2.9.7
+  - @prosopo/procaptcha-puzzle@2.10.11
+  - @prosopo/detector@3.4.39
+  - @prosopo/load-balancer@2.9.13
+  - @prosopo/procaptcha-common@2.10.20
+  - @prosopo/procaptcha-react@2.9.69
+
+## 2.11.2
+### Patch Changes
+
+- Updated dependencies [bc3813d]
+- Updated dependencies [2d66d8e]
+- Updated dependencies [4d05e3f]
+  - @prosopo/types@4.4.0
+  - @prosopo/procaptcha-react@2.9.68
+  - @prosopo/api@3.4.10
+  - @prosopo/detector@3.4.38
+  - @prosopo/load-balancer@2.9.12
+  - @prosopo/procaptcha-common@2.10.19
+  - @prosopo/procaptcha-pow@2.9.6
+  - @prosopo/procaptcha-puzzle@2.10.10
+
+## 2.11.1
+### Patch Changes
+
+- Updated dependencies [b03dad1]
+  - @prosopo/types@4.3.1
+  - @prosopo/api@3.4.9
+  - @prosopo/detector@3.4.37
+  - @prosopo/load-balancer@2.9.11
+  - @prosopo/procaptcha-common@2.10.18
+  - @prosopo/procaptcha-pow@2.9.5
+  - @prosopo/procaptcha-puzzle@2.10.9
+  - @prosopo/procaptcha-react@2.9.67
+
+## 2.11.0
+### Minor Changes
+
+- 2392aaf: Integrate the prosopo/dns sidecar against the procaptcha provider.
+  
+  - New admin endpoint `POST /v1/prosopo/provider/admin/dns/event` ingests batched DNS observation events from the sidecar (auth: admin sr25519 JWT) and merges resolver / peer IPs onto the matching Session record under a new `Session.dnsEvent` field.
+  - Frictionless response carries a per-session `dns_url` when the pronode has `DNS_EVENT_SUBZONE` + `DNS_EVENT_HMAC_SECRET` set. The HMAC path mirrors the sidecar's Rust implementation so both sides agree without shared per-request state.
+  - The frictionless bundle fires one no-cors GET to `dns_url` on detection completion (fire-and-forget; failures never affect the captcha flow).
+  - `dns_url` is included on the `reuse_session` short-circuit path too, not only the new-session path — otherwise repeat visits from the same user/IP/sitekey combination silently dropped the observation hop.
+  - Deploy compose entry for the sidecar plus a Caddy `layer4` SNI-passthrough block so the sidecar terminates TLS itself (no Cloudflare token needed). Caddy image must be rebuilt with the `caddy-l4` plugin.
+
+### Patch Changes
+
+- Updated dependencies [a1d60db]
+- Updated dependencies [2392aaf]
+  - @prosopo/types@4.3.0
+  - @prosopo/api@3.4.8
+  - @prosopo/common@3.1.38
+  - @prosopo/detector@3.4.36
+  - @prosopo/load-balancer@2.9.10
+  - @prosopo/procaptcha-common@2.10.17
+  - @prosopo/procaptcha-pow@2.9.4
+  - @prosopo/procaptcha-puzzle@2.10.8
+  - @prosopo/procaptcha-react@2.9.66
+
 ## 2.10.3
 ### Patch Changes
 

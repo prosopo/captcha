@@ -43,8 +43,6 @@ export default (
 		next: NextFunction,
 	) => {
 		let parsed: GetPuzzleCaptchaChallengeRequestBodyTypeOutput;
-		const tasks = new Tasks(env, req.logger);
-		tasks.setLogger(req.logger);
 
 		try {
 			parsed = GetPuzzleCaptchaChallengeRequestBody.parse(req.body);
@@ -63,6 +61,9 @@ export default (
 		validateSiteKey(dapp);
 		validateAddr(user);
 
+		// Maintenance-mode short-circuit must run before `new Tasks(env, ...)`
+		// because the Tasks constructor calls `env.getDb()`, which throws when
+		// `env.db` is undefined (the maintenance-mode case).
 		if (getMaintenanceMode()) {
 			req.logger.info(() => ({
 				msg: "Maintenance mode active - returning dummy puzzle challenge",
@@ -70,6 +71,9 @@ export default (
 			}));
 			return res.json(buildPuzzleMaintenanceResponse(user, dapp));
 		}
+
+		const tasks = new Tasks(env, req.logger);
+		tasks.setLogger(req.logger);
 
 		try {
 			const clientSettings = await tasks.db.getClientRecord(dapp);
@@ -96,6 +100,10 @@ export default (
 				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
 					? req.ipInfo.countryCode
 					: undefined;
+			const asn =
+				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
+					? req.ipInfo.asnNumber
+					: undefined;
 
 			const userScope = getRequestUserScope(
 				flatten(req.headers),
@@ -105,6 +113,7 @@ export default (
 				undefined, // headHash
 				undefined, // coords
 				countryCode,
+				asn,
 			);
 			const userAccessPolicy = (
 				await tasks.puzzleCaptchaManager.getPrioritisedAccessPolicies(

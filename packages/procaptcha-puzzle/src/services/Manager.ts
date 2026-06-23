@@ -19,6 +19,7 @@ import {
 	ExtensionLoader,
 	buildUpdateState,
 	getProcaptchaRandomActiveProvider,
+	pickIpMode,
 	providerRetry,
 } from "@prosopo/procaptcha-common";
 import { getDefaultEvents } from "@prosopo/procaptcha-common";
@@ -248,8 +249,10 @@ export const Manager = (
 				if (frictionlessState?.provider) {
 					getRandomProviderResponse = frictionlessState.provider;
 				} else {
+					const currentConfig = getConfig();
 					getRandomProviderResponse = await getProcaptchaRandomActiveProvider(
-						getConfig().defaultEnvironment,
+						currentConfig.defaultEnvironment,
+						pickIpMode(currentConfig),
 					);
 				}
 
@@ -406,7 +409,6 @@ export const Manager = (
 				finalY,
 				puzzleEvents,
 				userTimestampSignature.signature.toString(),
-				config.captchas.puzzle.verifiedTimeout,
 				encryptedBehavioralData,
 				salt,
 				simdReadings,

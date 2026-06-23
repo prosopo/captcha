@@ -36,6 +36,9 @@
 			"path": "../env/tsconfig.cjs.json"
 		},
 		{
+			"path": "../ipinfo/tsconfig.cjs.json"
+		},
+		{
 			"path": "../load-balancer/tsconfig.cjs.json"
 		},
 		{

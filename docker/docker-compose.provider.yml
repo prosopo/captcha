@@ -74,7 +74,7 @@ services:
     profiles:
       - production
       - staging
-    image: mongo:6.0.17
+    image: mongo:6.0.28
     command: mongod --wiredTigerCacheSizeGB 2.0
     deploy:
       resources:
@@ -132,6 +132,15 @@ services:
       - ./provider.Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
       - caddy_config:/config
+      # PEM for the load-balanced pronode.prosopo.io hostname. The cert
+      # getter (pronode4) obtains it via certbot DNS-01 against Bunny,
+      # then provider.yml's distribute step rsyncs it to every pronode
+      # under ./certs/pronode-global/. The site block in
+      # provider.cert-getter.Caddyfile references the path inside the
+      # container. KEEP THIS MOUNT — removing it breaks TLS for the
+      # global hostname on the next `up --force-recreate` even though
+      # an already-running container keeps the old mount alive.
+      - ./certs/pronode-global:/certs/pronode-global:ro
     networks:
       external:
       internal:
@@ -218,6 +227,61 @@ services:
       - ./ipinfo/ipapi_database_ram:/usr/src/app/ipapi_database_ram:ro
       # Config override
       - ./ipinfo/config:/usr/src/app/config:ro
+  dns:
+    # DNS observation sidecar. Caddy fronts TLS for *.t.{CADDY_DOMAIN}
+    # and reverse-proxies HTTP to this container — see provider.Caddyfile.
+    container_name: dns
+    profiles:
+      - production
+      - staging
+    image: prosopo/dns:${DNS_VERSION?DNS_VERSION must be set}
+    cap_add:
+      - NET_BIND_SERVICE
+    env_file:
+      - ../.env.1.${NODE_ENV}
+    ports:
+      # Bind on the host's external IPv4 specifically — systemd-resolved
+      # already claims 0.0.0.0:53 indirectly via stub-resolver iptables.
+      # ${HOST_IPV4} is exported by the ansible playbook.
+      - "${HOST_IPV4}:53:53/udp"
+      - "${HOST_IPV4}:53:53/tcp"
+      # No host port for the HTTPS pixel: Caddy's layer4 block on :443
+      # SNI-routes `*.t.{CADDY_DOMAIN}` straight to dns:443 over the
+      # docker network. URLs no longer carry a :9362 suffix.
+    environment:
+      - DNS_HTTPS_PORT=443
+      - DNS_HTTPS_BIND=0.0.0.0
+      # Caddy `layer4` raw-proxies *.t.{CADDY_DOMAIN} to dns:443 with a
+      # PROXY v2 header so the sidecar sees the real client peer instead
+      # of Caddy's docker bridge address. Must be paired with
+      # `proxy_protocol v2` on the @dns_subzone route in provider.Caddyfile.
+      - DNS_PROXY_PROTOCOL=1
+      # Dual-stack: serve AAAA pointing at the host's public ipv6
+      # alongside the existing A record. Without this, v6-preferring
+      # browsers happy-eyeballs back to v4 for the pixel and
+      # `dnsEvent.peerIp` records the v4 exit instead of the real v6.
+      # Unset on v4-only hosts — the sidecar (≥0.1.7) treats blank as
+      # "no AAAA" and serves A only.
+      - DNS_AAAA_RECORD=${HOST_IPV6:-}
+      # Tight shipper batch flush. Default 1000ms adds ~500ms average
+      # buffering latency to every dnsEvent on the way to provider1's
+      # admin endpoint. Empty batches are skipped (see shipper.rs), so
+      # the cost on idle hosts is just a tokio tick wakeup. Real POST
+      # volume is bounded by the event rate, not the flush rate.
+      - DNS_SHIPPER_FLUSH_MS=50
+    volumes:
+      - /data/dns:/data
+      # dns-tenants.json is rendered per host by ansible
+      # (playbooks/provider.yml) before `compose up`. Pronodes come and
+      # go independently; a single repo-checked-in file would make every
+      # host re-deploy on every tenant change. The file is .gitignored.
+      - ./dns-tenants.json:/etc/dns/tenants.json:ro
+    networks:
+      external:
+      internal:
+        ipv4_address: 172.18.0.10
+        ipv6_address: fd00:aaaa::a
+    restart: unless-stopped
 networks:
   internal:
     enable_ipv6: true

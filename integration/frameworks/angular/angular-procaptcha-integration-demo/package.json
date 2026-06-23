@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/angular-procaptcha-integration-demo",
-	"version": "1.1.75",
+	"version": "1.1.88",
 	"engines": {
 		"node": "^24",
 		"npm": "^11"
@@ -15,11 +15,11 @@
 		"dev": "npm run start"
 	},
 	"dependencies": {
-		"@angular/common": "^20.3.9",
-		"@angular/core": "^20.3.9",
-		"@angular/platform-browser": "^20.3.9",
-		"@angular/router": "^20.3.9",
-		"@prosopo/angular-procaptcha-wrapper": "1.1.75"
+		"@angular/common": "20.3.16",
+		"@angular/core": "20.3.25",
+		"@angular/platform-browser": "20.3.16",
+		"@angular/router": "20.3.16",
+		"@prosopo/angular-procaptcha-wrapper": "1.1.88"
 	},
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -31,20 +31,25 @@
 		}
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.1",
-		"@angular-builders/custom-webpack": "^20.0.0",
-		"@angular-devkit/build-angular": "^20.3.8",
-		"@angular/cli": "^20.3.8",
-		"@angular/compiler-cli": "^20.3.9",
-		"@types/jasmine": "~5.1.0",
+		"@prosopo/config": "3.3.3",
+		"@angular-builders/custom-webpack": "20.0.0",
+		"@angular-devkit/build-angular": "20.3.28",
+		"@angular/cli": "20.3.16",
+		"@angular/compiler-cli": "20.3.16",
+		"@types/jasmine": "5.1.15",
 		"@types/node": "22.10.2",
 		"del-cli": "6.0.0",
 		"dotenv-webpack": "8.1.0",
-		"jasmine-core": "~5.6.0",
-		"karma": "~6.4.0",
-		"karma-chrome-launcher": "~3.2.0",
-		"karma-jasmine": "~5.1.0",
-		"karma-jasmine-html-reporter": "~2.1.0",
-		"typescript": "~5.8.3"
+		"jasmine-core": "5.6.0",
+		"karma": "6.4.4",
+		"karma-chrome-launcher": "3.2.0",
+		"karma-jasmine": "5.1.0",
+		"karma-jasmine-html-reporter": "2.1.0",
+		"typescript": "5.8.3"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "integration/frameworks/angular/angular-procaptcha-integration-demo"
 	}
 }

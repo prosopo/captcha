@@ -57,8 +57,10 @@ export class Tasks {
 	writeQueue: RedisWriteQueue | null;
 	decisionMachineRunner: DecisionMachineRunner;
 	usageCounters: UsageCounters | null;
+	env: ProviderEnvironment;
 
 	constructor(env: ProviderEnvironment, logger?: Logger) {
+		this.env = env;
 		this.config = env.config;
 		this.db = env.getDb();
 		this.captchaConfig = env.config.captchas;

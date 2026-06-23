@@ -18,6 +18,7 @@ import { type Logger, getLogger } from "@prosopo/logger";
 import {
 	ApiParams,
 	type CaptchaType,
+	type EnrichedDnsEvent,
 	type IPInfoResponse,
 	type ITrafficFilter,
 	type KeyringPair,
@@ -51,6 +52,7 @@ import {
 import { getIpAddressFromComposite } from "../compositeIpAddress.js";
 import type { BehavioralDataResult } from "./detection/decodeBehavior.js";
 import type { SimdReadingsResult } from "./detection/decodeSimd.js";
+import { extraIpInfosFromEnrichedDnsEvent } from "./dnsEvent/enrichDnsEvent.js";
 import { checkSpamEmail as checkSpamEmailFn } from "./spam/checkSpamEmail.js";
 import {
 	type TrafficCheckResult,
@@ -59,14 +61,25 @@ import {
 
 /**
  * Finds a hard block policy from access policies.
- * A hard block is a Block policy without a captchaType specified.
- * Policies with captchaType are for captcha type selection, not hard blocking.
+ *
+ * A hard block is a Block policy that either (a) has no captchaType (the
+ * historical "block all challenge types" case) or (b) has the
+ * `deferToVerify` flag set. The deferred case is also caught here so a
+ * Block policy that opted out of the request-time middleware still
+ * disapproves the commitment at verify and the dApp's verify call returns
+ * `{verified:false}`.
+ *
+ * Policies with captchaType (but without deferToVerify) are still routing
+ * rules, not hard blocks — they pick which challenge type to serve, not
+ * whether to reject.
  */
 const findHardBlockPolicy = (
 	accessPolicies: AccessPolicy[],
 ): AccessPolicy | undefined => {
 	return accessPolicies.find(
-		(policy) => policy.type === AccessPolicyType.Block && !policy.captchaType,
+		(policy) =>
+			policy.type === AccessPolicyType.Block &&
+			(policy.deferToVerify || !policy.captchaType),
 	);
 };
 
@@ -455,11 +468,13 @@ export class CaptchaManager {
 		userAccessRulesStorage: AccessRulesStorage,
 		clientId: string,
 		userScope: UserScope | UserScopeRecord,
+		options?: { blockOnly?: boolean },
 	) {
 		return getPrioritisedAccessRule(
 			userAccessRulesStorage,
 			userScope,
 			clientId,
+			options,
 		);
 	}
 
@@ -592,6 +607,7 @@ export class CaptchaManager {
 		headers: RequestHeaders,
 		coords?: [number, number][][],
 		countryCode?: string,
+		asn?: number,
 	): Promise<AccessPolicy | undefined> {
 		// Get headHash from session record if available
 		let headHash: string | undefined;
@@ -617,12 +633,18 @@ export class CaptchaManager {
 			headHash,
 			coordsString,
 			countryCode,
+			asn,
 		);
 
 		const accessPolicies = await this.getPrioritisedAccessPolicies(
 			userAccessRulesStorage,
 			challengeRecord.dappAccount,
 			userScope,
+			// Hard-block lookup only — restrict the Redis-side candidate
+			// pool to Block rules so the SERVER_SIDE_RANK_TOP_N cap can't
+			// crowd a hard-block out of the top-N with Restrict or
+			// routing-Block (captchaType-scoped) entries.
+			{ blockOnly: true },
 		);
 
 		return findHardBlockPolicy(accessPolicies);
@@ -646,6 +668,8 @@ export class CaptchaManager {
 	 * - If the dapp's server passed up the end user's current IP via the
 	 *   verify call, look that up fresh — it's the "now" IP for filtering
 	 *   and may differ from the IP that originally requested the captcha.
+	 * - When the session carries a `dnsEvent`, its `peerIp` and `resolverIp`
+	 *   are enriched and passed alongside the primary IP.
 	 * - `blockAbuser` defaults to true so abusive networks are always
 	 *   blocked even when the site hasn't configured a trafficFilter.
 	 * - Returns `{ isBlocked: false }` if every filter flag is off, without
@@ -660,16 +684,24 @@ export class CaptchaManager {
 		recordIpInfo: IPInfoResponse | undefined,
 		trafficFilter: Partial<ITrafficFilter> | undefined,
 		currentIp?: string,
+		enrichedDnsEvent?: EnrichedDnsEvent,
 	): Promise<TrafficCheckResult> {
 		const effective = { blockAbuser: true, ...trafficFilter };
 		const hasAny = Object.values(effective).some((v) => v);
 		if (!hasAny) {
 			return { isBlocked: false };
 		}
+
 		const ipInfo = currentIp
 			? await env.ipInfoService.lookup(currentIp)
 			: recordIpInfo;
-		return checkTrafficFilter(ipInfo, effective);
+
+		return checkTrafficFilter(
+			ipInfo,
+			effective,
+			extraIpInfosFromEnrichedDnsEvent(enrichedDnsEvent),
+			enrichedDnsEvent?.pathValid,
+		);
 	}
 
 	static canClientSeeScore(tier: Tier, score?: number) {

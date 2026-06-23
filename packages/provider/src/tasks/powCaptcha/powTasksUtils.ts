@@ -15,6 +15,7 @@
 import { sha256 } from "@noble/hashes/sha256";
 import { stringToHex } from "@polkadot/util";
 import { ProsopoApiError } from "@prosopo/common";
+import { hashMeetsDifficulty } from "@prosopo/util";
 import { signatureVerify } from "@prosopo/util-crypto";
 
 export const validateSolution = (
@@ -22,10 +23,10 @@ export const validateSolution = (
 	challenge: string,
 	difficulty: number,
 ): boolean =>
-	Array.from(sha256(new TextEncoder().encode(nonce + challenge)))
-		.map((byte) => byte.toString(16).padStart(2, "0"))
-		.join("")
-		.startsWith("0".repeat(difficulty));
+	hashMeetsDifficulty(
+		sha256(new TextEncoder().encode(nonce + challenge)),
+		difficulty,
+	);
 
 export const checkPowSignature = (
 	message: string,
