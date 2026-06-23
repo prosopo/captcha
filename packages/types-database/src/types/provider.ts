@@ -610,7 +610,6 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 		shadowDomPenalty: { type: Boolean, required: false },
 		dnsAsymmetry: { type: Number, required: false },
 	},
-	providerSelectEntropy: { type: Number, required: true },
 	ipAddress: CompositeIpAddressRecordSchemaObj,
 	captchaType: { type: String, enum: CaptchaType, required: true },
 	mode: { type: String, enum: ModeEnum, required: false },
@@ -691,7 +690,6 @@ SessionRecordSchema.index({ deleted: 1 });
 SessionRecordSchema.index({ blocked: 1 });
 SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
 SessionRecordSchema.index({ userSitekeyIpHash: 1 });
-SessionRecordSchema.index({ providerSelectEntropy: 1 });
 SessionRecordSchema.index(
 	{ siteKey: 1, entropyMathRandomFingerprint: 1, createdAt: -1 },
 	{ sparse: true },

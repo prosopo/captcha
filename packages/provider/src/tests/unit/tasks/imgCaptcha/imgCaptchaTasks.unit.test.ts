@@ -918,7 +918,6 @@ describe("ImgCaptchaManager", () => {
 					triggeredDetectors: [27],
 					shadowDomPenalty: false,
 				},
-				providerSelectEntropy: 891,
 				ipAddress: {
 					lower: ipAddress.bigInt(),
 					upper: 0n,
@@ -972,9 +971,6 @@ describe("ImgCaptchaManager", () => {
 				expect(input.scoreComponents).toEqual(sessionRecord.scoreComponents);
 				expect(input.decryptedHeadHash).toBe(sessionRecord.decryptedHeadHash);
 				expect(input.userSitekeyIpHash).toBe(sessionRecord.userSitekeyIpHash);
-				expect(input.providerSelectEntropy).toBe(
-					sessionRecord.providerSelectEntropy,
-				);
 				expect(input.simdReadings).toEqual(sessionRecord.simdReadings);
 				expect(input.frictionlessReason).toBe(sessionRecord.reason);
 				expect(input.ruleType).toEqual(sessionRecord.ruleType);

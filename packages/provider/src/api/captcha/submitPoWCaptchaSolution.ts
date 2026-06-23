@@ -253,7 +253,6 @@ const buildEscalation = async (
 		originSession.score,
 		originSession.threshold,
 		originSession.scoreComponents,
-		originSession.providerSelectEntropy,
 		originSession.ipAddress,
 		routed.captchaType,
 		originSession.siteKey ?? powRecord.dappAccount,
