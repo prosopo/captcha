@@ -55,7 +55,8 @@ export default async function (
 	// Rollup bundle stats (rollup-plugin-visualizer treemap). Off by default —
 	// set PROSOPO_BUNDLE_STATS=true to generate the stats page and open it in
 	// the browser once the bundle has been built.
-	const openBundleStats = process.env.PROSOPO_BUNDLE_STATS === "true";
+	const openBundleStats =
+		process.env.PROSOPO_BUNDLE_STATS?.trim().toLowerCase() === "true";
 	// NODE_ENV must be wrapped in quotes.
 	// If NODE_ENV ends up out of sync (one set to development and the other set to production), it causes
 	// issues like this: https://github.com/hashicorp/next-mdx-remote/pull/323
