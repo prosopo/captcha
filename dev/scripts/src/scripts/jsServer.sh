@@ -4,11 +4,11 @@ set -eux pipefail # stop on errors, print commands, fail on pipe fails
 docker rm -f "$(docker ps -qa -f name=js_server)" || true
 docker rm -f "$(docker ps -qa -f expose=80)" || true
 
-pnpm run build -w @prosopo/procaptcha-bundle
+pnpm --filter @prosopo/procaptcha-bundle run build
 
-NODE_ENV=development pnpm run bundle -w @prosopo/procaptcha-bundle
+NODE_ENV=development pnpm --filter @prosopo/procaptcha-bundle run bundle
 
-VERSION=$(npm view @prosopo/util | grep latest | cut -f2 -d ' ')
+VERSION=$(pnpm view @prosopo/util | grep latest | cut -f2 -d ' ')
 
 # Set the JS location in the container
 JS_FOLDER="/usr/share/nginx/html/js"

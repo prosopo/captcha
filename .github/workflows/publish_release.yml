@@ -68,7 +68,7 @@ jobs:
           echo "version=$version" >> $GITHUB_OUTPUT
           echo "Version: $version"
 
-      - run: pnpm install --frozen-lockfile --ignore-scripts --include=dev
+      - run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Build packages
         run: |

@@ -48,7 +48,7 @@ jobs:
           git config user.name "prosoponator[bot]"
           git config user.email "dev@prosopo.io"
 
-      - run: pnpm install --frozen-lockfile --ignore-scripts --include=dev
+      - run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Detect changesets
         id: detect
@@ -70,10 +70,10 @@ jobs:
       - name: Version bump
         if: steps.detect.outputs.has_changesets == 'true'
         run: |
-          pnpm install -g @changesets/cli
+          pnpm add -g @changesets/cli
           npx @changesets/cli version --verbose
           
-          pnpm install --ignore-scripts --include=dev
+          pnpm install --ignore-scripts
           
           # Set the version of root and docker/images/provider to match @prosopo/cli
           root_version=$(pnpm --filter @prosopo/cli pkg get version | jq -r '.["@prosopo/cli"]')
@@ -87,7 +87,7 @@ jobs:
           
           git add -u .
 
-      - run: pnpm install --frozen-lockfile --ignore-scripts --include=dev
+      - run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Build packages
         run: |

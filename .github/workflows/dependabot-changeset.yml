@@ -1,7 +1,7 @@
 # Makes Dependabot PRs pass the `changesets` check (and keeps the lockfile in sync).
 #
 # On every Dependabot PR this:
-#   1. refreshes package-lock.json with `pnpm install` (safety; Dependabot usually does this itself),
+#   1. refreshes pnpm-lock.yaml with `pnpm install` (safety; Dependabot usually does this itself),
 #   2. derives which *versioned* workspace packages had their package.json changed,
 #   3. writes a patch changeset for them describing the bump,
 #   4. commits the lockfile + changeset back onto the PR branch.
@@ -63,11 +63,12 @@ jobs:
           node-version: "24"
 
       # Refresh the lockfile against the bumped package.json files.
-      # --ignore-scripts: --package-lock-only does not install node_modules, so the
-      # root `prepare` hook (husky) would otherwise fail with "husky: not found"
-      # (exit 127) and abort before the lockfile is refreshed.
+      # --lockfile-only: refresh pnpm-lock.yaml without installing node_modules.
+      # --ignore-scripts: without node_modules the root `prepare` hook (husky)
+      # would otherwise fail with "husky: not found" (exit 127) and abort before
+      # the lockfile is refreshed.
       - name: Update lockfile
-        run: pnpm install --package-lock-only --workspaces --include-workspace-root --ignore-scripts
+        run: pnpm install --lockfile-only --ignore-scripts
 
       - name: Generate changeset
         env:

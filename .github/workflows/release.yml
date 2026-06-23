@@ -93,7 +93,7 @@ jobs:
           git config user.email "dev@prosopo.io"
 
 
-      - run: pnpm install --frozen-lockfile --ignore-scripts --include=dev
+      - run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: detect changesets
         run: |
@@ -133,11 +133,11 @@ jobs:
 
       - name: version
         run: |
-          pnpm install -g @changesets/cli
+          pnpm add -g @changesets/cli
           npx @changesets/cli version --verbose
           git status
 
-          pnpm install --ignore-scripts --include=dev
+          pnpm install --ignore-scripts
           # Set the version of the root package.json and the docker/images/provider/package.json to the same as @prosopo/cli
           root_version=$(pnpm --filter @prosopo/cli pkg get version | jq -r '.["@prosopo/cli"]')
           echo "root_version=$root_version" >> $GITHUB_ENV
@@ -183,9 +183,9 @@ jobs:
       - name: lint
         if: ${{ env.affected != '[]' }}
         run: |
-          pnpm run build:tsc -w @prosopo/config
-          pnpm run build:tsc -w @prosopo/lint
-          pnpm run build:tsc -w @prosopo/procaptcha-integration-build-config
+          pnpm --filter @prosopo/config run build:tsc
+          pnpm --filter @prosopo/lint run build:tsc
+          pnpm --filter @prosopo/procaptcha-integration-build-config run build:tsc
           pnpm run lint-fix
           # Amend the previous commit with any lint fixes
           if [ -n "$(git status --porcelain)" ]; then
