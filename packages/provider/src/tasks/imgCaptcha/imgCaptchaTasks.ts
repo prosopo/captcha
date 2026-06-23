@@ -399,6 +399,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
 				ipAddress: getCompositeIpAddress(ipAddress),
 				headers,
 				sessionId: pendingRecord.sessionId,
@@ -705,10 +706,12 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 		maxVerifiedTime = maxVerifiedTime || 60 * 1000; // Default to 1 minute
 
-		// Check if solution was completed recently
 		const currentTime = Date.now();
+		const submittedAt = solution.submittedAtTimestamp;
 		const timeSinceCompletion =
-			currentTime - solution.requestedAtTimestamp.getTime();
+			submittedAt instanceof Date
+				? currentTime - submittedAt.getTime()
+				: Number.POSITIVE_INFINITY;
 
 		// A solution exists but has timed out
 		if (timeSinceCompletion > maxVerifiedTime) {
@@ -981,6 +984,16 @@ export class ImgCaptchaManager extends CaptchaManager {
 					: undefined,
 				ipInfo: solution.ipInfo,
 				dnsEvent: enrichedDnsEvent,
+				score,
+				threshold: sessionRecord?.threshold,
+				scoreComponents: sessionRecord?.scoreComponents,
+				decryptedHeadHash: sessionRecord?.decryptedHeadHash,
+				userSitekeyIpHash: sessionRecord?.userSitekeyIpHash,
+				simdReadings: sessionRecord?.simdReadings,
+				frictionlessReason: sessionRecord?.reason,
+				ruleType: sessionRecord?.ruleType,
+				webView: sessionRecord?.webView,
+				iFrame: sessionRecord?.iFrame,
 			};
 
 			try {

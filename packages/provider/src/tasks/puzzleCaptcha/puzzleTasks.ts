@@ -40,7 +40,12 @@ import {
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
-import { at, extractData, verifyRecency } from "@prosopo/util";
+import {
+	assertCoordsSafe,
+	at,
+	extractData,
+	verifyRecency,
+} from "@prosopo/util";
 import {
 	getCompositeIpAddress,
 	getIpAddressFromComposite,
@@ -194,15 +199,21 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		}
 
 		// Extract coordinates from salt if provided — mirrors the POW
-		// flow so the puzzle record carries the checkbox click telemetry.
+		// flow. Invalid salt input disapproves the request.
 		let coords: [number, number][][] | undefined;
+		let saltDecodeError: unknown;
 		if (salt) {
 			try {
 				const extractedData = extractData(salt);
 				if (extractedData.length >= 2) {
-					coords = [[[extractedData[0], extractedData[1]] as [number, number]]];
+					const built: [number, number][][] = [
+						[[extractedData[0], extractedData[1]] as [number, number]],
+					];
+					assertCoordsSafe(built, "coords");
+					coords = built;
 				}
 			} catch (error) {
+				saltDecodeError = error;
 				this.logger.warn(() => ({
 					msg: "Failed to extract coordinates from salt",
 					error,
@@ -218,6 +229,28 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 			this.logger.debug(() => ({
 				msg: `Challenge already submitted: ${challenge}`,
 			}));
+			return false;
+		}
+
+		if (saltDecodeError) {
+			const badSaltResult = {
+				status: CaptchaStatus.disapproved,
+				reason: ResultReason.CAPTCHA_INVALID_SALT,
+			};
+			await this.db.updatePuzzleCaptchaRecordResult(
+				challenge,
+				badSaltResult,
+				false, // serverChecked
+				true, // userSubmitted
+				userTimestampSignature,
+				undefined, // never persist the bad coords
+			);
+			if (challengeRecord.sessionId) {
+				await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
+					userSubmitted: true,
+					result: badSaltResult,
+				});
+			}
 			return false;
 		}
 
@@ -444,8 +477,12 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		});
 		// -- END WARNING --
 
-		const recent = verifyRecency(challenge, timeout);
-		if (!recent) {
+		const submittedAt = challengeRecord.submittedAtTimestamp;
+		const submitToVerifyMs =
+			submittedAt instanceof Date
+				? Date.now() - submittedAt.getTime()
+				: Number.POSITIVE_INFINITY;
+		if (submitToVerifyMs > timeout) {
 			const disapprovedResult = {
 				status: CaptchaStatus.disapproved,
 				reason: ResultReason.TIMESTAMP_TOO_OLD,
@@ -686,6 +723,16 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 					: undefined,
 				ipInfo: challengeRecord.ipInfo,
 				dnsEvent: enrichedDnsEvent,
+				score,
+				threshold: sessionRecord?.threshold,
+				scoreComponents: sessionRecord?.scoreComponents,
+				decryptedHeadHash: sessionRecord?.decryptedHeadHash,
+				userSitekeyIpHash: sessionRecord?.userSitekeyIpHash,
+				simdReadings: sessionRecord?.simdReadings,
+				frictionlessReason: sessionRecord?.reason,
+				ruleType: sessionRecord?.ruleType,
+				webView: sessionRecord?.webView,
+				iFrame: sessionRecord?.iFrame,
 			};
 
 			const decision = await this.decisionMachineRunner.decide(

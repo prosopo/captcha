@@ -12,25 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Ti18n } from "@prosopo/locale";
-import type {
-	FrictionlessState,
-	ProcaptchaCallbacks,
-	ProcaptchaClientConfigInput,
-} from "@prosopo/types";
+import type { ProcaptchaProps } from "@prosopo/types";
 import { type LazyExoticComponent, Suspense, lazy } from "react";
 import type { ReactElement } from "react";
 
 //https://github.com/microsoft/TypeScript/issues/42873
 const ProcaptchaWidget: LazyExoticComponent<
-	(props: {
-		config: ProcaptchaClientConfigInput;
-		callbacks: ProcaptchaCallbacks;
-		frictionlessState?: FrictionlessState;
-		i18n: Ti18n;
-	}) => ReactElement
+	(props: ProcaptchaProps) => ReactElement
 > = lazy(async () => import("./ProcaptchaWidget.js"));
-type ProcaptchaProps = React.ComponentProps<typeof ProcaptchaWidget>;
 
 const Procaptcha = (props: ProcaptchaProps) => (
 	<Suspense>

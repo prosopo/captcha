@@ -1,5 +1,174 @@
 # @prosopo/procaptcha-pow
 
+## 2.10.5
+### Patch Changes
+
+- 12cd0a6: Add ipv4-only / ipv6-only provider DNS routing via `data-ipv4` / `data-ipv6`.
+  
+  Dapps that need to pin captcha traffic to a single IP stack can now do so:
+  
+  ```html
+  <div class="procaptcha" data-sitekey="..." data-ipv4="true"></div>
+  ```
+  
+  What happens under the hood:
+  
+  - The widget reads `data-ipv4` / `data-ipv6` (or the matching `ipv4` / `ipv6`
+    booleans on `ProcaptchaRenderOptions` / explicit `render(...)`) and threads
+    them through `ProcaptchaConfigSchema`.
+  - `pickIpMode(config)` resolves them into an `IpMode` (`"ipv4"` / `"ipv6"` /
+    `undefined`); `ipv4` wins if both are set.
+  - The frictionless / image / pow / puzzle managers pass the `IpMode` into
+    `getProcaptchaRandomActiveProvider`, which calls `/healthz` on the matching
+    single-stack global hostname (`ipv4.pronode.prosopo.io` or
+    `ipv6.pronode.prosopo.io`) and pins subsequent captcha calls to
+    `ipv4.pronodeN.prosopo.io` / `ipv6.pronodeN.prosopo.io`. The dual-stack
+    cache and the single-stack caches are kept separate.
+  - `convertHostedProvider` now accepts an optional `IpMode` and, when set,
+    selects the matching `ipv4` / `ipv6` sub-object from the provider-list JSON.
+    Top-level `ipv4` / `ipv6` keys are skipped by default so existing dual-stack
+    callers keep working.
+  - New helpers in `@prosopo/load-balancer`: `IpMode`, `stripIpModeLabel`,
+    `getProviderHostname`.
+  
+  Coordinated with the matching `captcha-private` change that publishes the
+  `ipv4` / `ipv6` sub-objects to S3.
+- Updated dependencies [12cd0a6]
+- Updated dependencies [12cd0a6]
+  - @prosopo/procaptcha-common@2.11.0
+  - @prosopo/api@3.5.5
+  - @prosopo/types@4.8.0
+  - @prosopo/fingerprint@2.7.5
+
+## 2.10.4
+### Patch Changes
+
+- Updated dependencies [bb98af1]
+  - @prosopo/types@4.7.4
+  - @prosopo/api@3.5.4
+  - @prosopo/fingerprint@2.7.4
+  - @prosopo/procaptcha-common@2.10.28
+
+## 2.10.3
+### Patch Changes
+
+- Updated dependencies [89ab6fc]
+- Updated dependencies [0f3750b]
+  - @prosopo/types@4.7.3
+  - @prosopo/api@3.5.3
+  - @prosopo/fingerprint@2.7.3
+  - @prosopo/procaptcha-common@2.10.27
+
+## 2.10.2
+### Patch Changes
+
+- Updated dependencies [edcd450]
+- Updated dependencies [5295c4b]
+  - @prosopo/util@3.3.1
+  - @prosopo/types@4.7.2
+  - @prosopo/locale@3.2.5
+  - @prosopo/api@3.5.2
+  - @prosopo/common@3.1.40
+  - @prosopo/fingerprint@2.7.2
+  - @prosopo/procaptcha-common@2.10.26
+
+## 2.10.1
+### Patch Changes
+
+- Updated dependencies [46fedf4]
+  - @prosopo/types@4.7.1
+  - @prosopo/api@3.5.1
+  - @prosopo/fingerprint@2.7.1
+  - @prosopo/procaptcha-common@2.10.25
+
+## 2.10.0
+### Minor Changes
+
+- dde23e8: Internal bot-detection signal improvements.
+
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/types@4.7.0
+  - @prosopo/fingerprint@2.7.0
+  - @prosopo/api@3.5.0
+  - @prosopo/procaptcha-common@2.10.24
+
+## 2.9.10
+### Patch Changes
+
+- Updated dependencies [4626340]
+  - @prosopo/types@4.6.1
+  - @prosopo/api@3.4.14
+  - @prosopo/procaptcha-common@2.10.23
+
+## 2.9.9
+### Patch Changes
+
+- Updated dependencies [55b1388]
+  - @prosopo/util@3.3.0
+  - @prosopo/types@4.6.0
+  - @prosopo/api@3.4.13
+  - @prosopo/common@3.1.39
+  - @prosopo/procaptcha-common@2.10.22
+
+## 2.9.8
+### Patch Changes
+
+- Updated dependencies [9b91e85]
+- Updated dependencies [c80a05b]
+  - @prosopo/types@4.5.0
+  - @prosopo/api@3.4.12
+  - @prosopo/procaptcha-common@2.10.21
+
+## 2.9.7
+### Patch Changes
+
+- 3973078: Track every lifecycle timestamp on every captcha type, and switch the dapp-verify recency check from issuance→verify to **submit→verify** with the window sourced from per-client settings.
+  
+  ### Lifecycle timestamps
+  
+  `StoredCaptcha` (the base shared by PoW, Puzzle, and Image/UserCommitment) gains three new fields:
+  
+  - `submittedAtTimestamp` — set once on the first user-submission write, never overwritten.
+  - `verifiedAtTimestamp` — set once when the dapp first calls /verify, never overwritten.
+  - `failedAtTimestamp` — set once on the first non-approved terminal state, never overwritten.
+  
+  `lastUpdatedTimestamp` keeps its "last write of any kind" meaning. The new fields use `$ifNull` in aggregation-pipeline updates so the stamp lands only on the first transition — concurrent or repeat writes are no-ops on the lifecycle stamps.
+  
+  ### Submit→verify window
+  
+  The dapp-verify recency check used to be `now - challengeTimestamp <= timeout`. The window was issuance→verify, which gave bots room to stockpile pre-solved solutions and redeem them many seconds (sometimes minutes) later from the time they reached the provider.
+  
+  The check is now `now - challengeRecord.submittedAtTimestamp <= clientSettings.verifiedTimeout`. The window measures from the moment the user's solution actually arrived. Combined with the new lifecycle fields, this tightens the stockpile attack surface.
+  
+  ### Settings move
+  
+  `verifiedTimeout` moves to `ClientSettingsSchema` (per-client, operator-set via the portal). Default stays at 120000ms for back-compat; auto-submit dapps should set it to ~10000ms.
+  
+  Removed from request bodies entirely:
+  
+  - `ServerPowCaptchaVerifyRequestBody`
+  - `ServerPuzzleCaptchaVerifyRequestBody`
+  - `SubmitPowCaptchaSolutionBody`
+  - `SubmitPuzzleCaptchaSolutionBody`
+  
+  The client field was client-controlled and unsigned — any caller could raise the recency ceiling. It's now server-determined.
+  
+  `ProviderApiInterface.submitPow/PuzzleCaptchaSolution` lose their `timeout` parameter (no longer forwarded). The verify wrappers keep their `recencyLimit` parameter for caller back-compat but the value is no longer transmitted; server reads from the client settings instead.
+  
+  ### Migration
+  
+  Pre-PR records with `userSubmitted=true` but no `submittedAtTimestamp` will fail the new recency check. The submit window is short (120s default verifiedTimeout) so the migration cliff is naturally bounded — records in flight at deploy time expire within ~2 minutes.
+  
+  348 provider unit tests + 28 database tests pass.
+- Updated dependencies [f69724f]
+- Updated dependencies [3973078]
+  - @prosopo/types@4.4.1
+  - @prosopo/api@3.4.11
+  - @prosopo/procaptcha-common@2.10.20
+
 ## 2.9.6
 ### Patch Changes
 

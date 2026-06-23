@@ -243,7 +243,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 
 			// We don't want to expose any other errors to the client
 			try {
-				const { token, dappSignature, verifiedTimeout, ip, email } = parsed;
+				const { token, dappSignature, ip, email } = parsed;
 
 				// This can error if the token is invalid
 				const { dapp, user, timestamp, challenge, providerUrl } =
@@ -312,7 +312,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					await tasks.powCaptchaManager.serverVerifyPowCaptchaSolution(
 						dapp,
 						challenge,
-						verifiedTimeout,
+						clientRecord.settings.verifiedTimeout,
 						env,
 						ip,
 						userAccessRulesStorage,
@@ -393,7 +393,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 
 			// We don't want to expose any other errors to the client
 			try {
-				const { token, dappSignature, verifiedTimeout, ip, email } = parsed;
+				const { token, dappSignature, ip, email } = parsed;
 
 				// This can error if the token is invalid
 				const { dapp, user, timestamp, challenge, providerUrl } =
@@ -462,7 +462,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					await tasks.puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
 						dapp,
 						challenge,
-						verifiedTimeout,
+						clientRecord.settings.verifiedTimeout,
 						env,
 						ip,
 						userAccessRulesStorage,

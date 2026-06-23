@@ -38,10 +38,7 @@ import {
 } from "../client/captchaType/captchaType.js";
 import { ClientSettingsSchema, Tier } from "../client/index.js";
 import { ModeEnum } from "../config/mode.js";
-import {
-	DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED,
-	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
-} from "../config/timeouts.js";
+import { DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED } from "../config/timeouts.js";
 import {
 	type Captcha,
 	CaptchaSolutionSchema,
@@ -52,6 +49,7 @@ import {
 	type UserAccount,
 } from "../datasets/index.js";
 import {
+	DecisionMachineKind,
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
@@ -210,7 +208,6 @@ export type Provider = {
 
 export type FrontendProvider = {
 	url: string;
-	datasetId: string;
 };
 
 export type RandomProvider = {
@@ -264,7 +261,7 @@ export interface CaptchaIdAndProof {
 export const CaptchaRequestBody = object({
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
-	[ApiParams.datasetId]: union([string(), array(number())]),
+	[ApiParams.datasetId]: union([string(), array(number())]).optional(),
 	[ApiParams.sessionId]: string().optional(),
 	[ApiParams.simdReadings]: string().optional(),
 });
@@ -415,17 +412,11 @@ export interface PowCaptchaSolutionResponse extends ApiResponse {
 }
 
 /**
- * Request body for the server to verify a PoW captcha solution
- * @param {string} token - The Procaptcha token
- * @param {string} dappUserSignature - The signature proving ownership of the site key
- * @param {number} verifiedTimeout - The maximum time in milliseconds since the captcha was requested
+ * Request body for the server to verify a PoW captcha solution.
  */
 export const ServerPowCaptchaVerifyRequestBody = object({
 	[ApiParams.token]: ProcaptchaTokenSpec,
 	[ApiParams.dappSignature]: string(),
-	[ApiParams.verifiedTimeout]: number()
-		.optional()
-		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 	[ApiParams.ip]: string().optional(),
 	[ApiParams.email]: string().email().optional(),
 });
@@ -503,13 +494,11 @@ export const SubmitPowCaptchaSolutionBody = object({
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
 	[ApiParams.nonce]: number(),
-	[ApiParams.verifiedTimeout]: number()
-		.optional()
-		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 	[ApiParams.behavioralData]: string().optional(),
 	[ApiParams.salt]: string().optional(),
 	[ApiParams.simdReadings]: string().optional(),
 	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
+	[ApiParams.fingerprintProof]: string().optional(),
 });
 
 export type SubmitPowCaptchaSolutionBodyType = input<
@@ -576,9 +565,6 @@ export const SubmitPuzzleCaptchaSolutionBody = object({
 	}),
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
-	[ApiParams.verifiedTimeout]: number()
-		.optional()
-		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 	[ApiParams.behavioralData]: string().optional(),
 	[ApiParams.salt]: string().optional(),
 	[ApiParams.simdReadings]: string().optional(),
@@ -596,9 +582,6 @@ export type SubmitPuzzleCaptchaSolutionBodyTypeOutput = output<
 export const ServerPuzzleCaptchaVerifyRequestBody = object({
 	[ApiParams.token]: ProcaptchaTokenSpec,
 	[ApiParams.dappSignature]: string(),
-	[ApiParams.verifiedTimeout]: number()
-		.optional()
-		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 	[ApiParams.ip]: string().optional(),
 	[ApiParams.email]: string().email().optional(),
 });
@@ -654,6 +637,7 @@ export const UpdateDecisionMachineBody = object({
 	[ApiParams.decisionMachineVersion]: string().optional(),
 	[ApiParams.decisionMachineCaptchaType]:
 		DecisionMachineCaptchaTypeSchema.optional(),
+	[ApiParams.decisionMachineKind]: nativeEnum(DecisionMachineKind).optional(),
 	[ApiParams.dapp]: string().optional(),
 });
 
@@ -689,6 +673,7 @@ export const DecisionMachineSummarySchema = object({
 	_id: string(),
 	scope: nativeEnum(DecisionMachineScope),
 	dappAccount: string().nullish(),
+	kind: nativeEnum(DecisionMachineKind).nullish(),
 	runtime: nativeEnum(DecisionMachineRuntime),
 	language: nativeEnum(DecisionMachineLanguage).nullish(),
 	name: string().nullish(),

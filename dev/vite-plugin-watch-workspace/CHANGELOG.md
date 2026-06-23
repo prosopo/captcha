@@ -1,5 +1,10 @@
 # @prosopo/vite-plugin-watch-workspace
 
+## 2.6.32
+### Patch Changes
+
+- 7a97bba: chore(deps): bump esbuild from 0.25.9 to 0.28.1
+
 ## 2.6.31
 ### Patch Changes
 
