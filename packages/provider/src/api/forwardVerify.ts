@@ -54,7 +54,20 @@ export async function forwardVerifyIfNotIssuer(args: {
 		return null;
 	}
 
-	const providers = await getProviders(env.defaultEnvironment);
+	// Loading the provider list can fail (e.g. network/RPC error). Honour the
+	// "returns null when the issuer cannot be determined" contract and degrade
+	// gracefully to local verification rather than surfacing a 500.
+	let providers: Awaited<ReturnType<typeof getProviders>>;
+	try {
+		providers = await getProviders(env.defaultEnvironment);
+	} catch (error) {
+		logger.warn(() => ({
+			msg: "Failed to load provider list; verifying locally",
+			err: error instanceof Error ? error : new Error(String(error)),
+			data: { providerUrl },
+		}));
+		return null;
+	}
 
 	// SSRF guard: only ever forward to a url that belongs to a known provider.
 	const issuer = providers.find((provider) => provider.url === providerUrl);

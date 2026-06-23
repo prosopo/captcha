@@ -102,6 +102,24 @@ describe("forwardVerifyIfNotIssuer", () => {
 		expect(forwardVerify).not.toHaveBeenCalled();
 	});
 
+	it("returns null (verify locally) when the provider list fails to load", async () => {
+		getProviders.mockRejectedValue(new Error("network error"));
+
+		const result = await forwardVerifyIfNotIssuer({
+			env: mockEnv(),
+			logger,
+			path: ClientApiPaths.VerifyPowCaptchaSolution,
+			providerUrl: OTHER_URL,
+			dapp: "dapp",
+			user: "user",
+			body: {},
+		});
+
+		expect(result).toBeNull();
+		expect(forwardVerify).not.toHaveBeenCalled();
+		expect(logger.warn).toHaveBeenCalled();
+	});
+
 	it("forwards to the issuing provider and returns its response", async () => {
 		const response = { status: "ok", verified: true };
 		forwardVerify.mockResolvedValue(response);
