@@ -24,6 +24,7 @@ const buildLogger = (): Logger =>
 		info: vi.fn(),
 		warn: vi.fn(),
 		error: vi.fn(),
+		with: vi.fn().mockReturnThis(),
 	}) as unknown as Logger;
 
 describe("ApiClearAllCountersEndpoint", () => {

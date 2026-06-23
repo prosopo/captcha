@@ -20,6 +20,15 @@ import {
 	resolveLevel,
 	setGlobalDirectives,
 } from "../logger.js";
+
+// print() re-resolves PROSOPO_LOG_LEVEL directives at print time, so a stray
+// env value (e.g. PROSOPO_LOG_LEVEL=fatal) would otherwise suppress output that
+// these tests expect. Reset directives before every test to keep the suite
+// deterministic regardless of the developer's environment.
+beforeEach(() => {
+	setGlobalDirectives("");
+});
+
 describe("unpackError", () => {
 	let captured: string[] = [];
 
