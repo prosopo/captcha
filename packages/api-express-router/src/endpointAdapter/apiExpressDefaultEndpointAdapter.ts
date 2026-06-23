@@ -14,7 +14,8 @@
 
 import type { ApiEndpoint } from "@prosopo/api-route";
 import { ProsopoApiError, ProsopoBaseError, unwrapError } from "@prosopo/common";
-import { type LogLevel, stringifyBigInts } from "@prosopo/logger";
+import type { LogLevel } from "@prosopo/logger";
+import { stringifyBigInts } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import type { ZodType } from "zod";
 import type { ApiExpressEndpointAdapter } from "./apiExpressEndpointAdapter.js";

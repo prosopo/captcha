@@ -86,6 +86,7 @@
 		"NO_CAPTCHA": "No captcha found",
 		"NO_SESSION_FOUND": "No session found",
 		"IP_ADDRESS_MISMATCH": "IP address mismatch detected",
+		"INVALID_SALT": "Invalid salt",
 		"INVALID_TOKEN": "Invalid token",
 		"INVALID_SOLUTION": "Invalid solution",
 		"DECRYPTION_ERROR": "Error decrypting"

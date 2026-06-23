@@ -54,7 +54,6 @@ export type DecisionMachineInput = {
 	userId: string | undefined;
 	webView: boolean;
 	decryptedHeadHash: string;
-	providerSelectEntropy: number;
 	baseBotScore: number;
 	botScore: number;
 	scoreComponents: ScoreComponents;
@@ -86,6 +85,44 @@ export const runDecisionMachine = async (
 	const { req, res } = handle;
 	let { botScore, scoreComponents } = input;
 
+	const userAgentMismatchResponse = await runUserAgentMismatchCheck(
+		input,
+		handle,
+	);
+	if (userAgentMismatchResponse) return userAgentMismatchResponse;
+
+	const contextResponse = await runContextAwareValidation(input, handle);
+	if (contextResponse) return contextResponse;
+
+	// Accumulate all score penalties before evaluating autoBan so the
+	// threshold compares against the full sum.
+	const webViewTripped =
+		clientRecord.settings.disallowWebView === true && input.webView === true;
+	if (webViewTripped) {
+		tasks.logger.info(() => ({ msg: "WebView detected" }));
+		const scoreUpdate = tasks.frictionlessManager.scoreIncreaseWebView(
+			input.baseBotScore,
+			botScore,
+			scoreComponents,
+		);
+		botScore = scoreUpdate.score;
+		scoreComponents = scoreUpdate.scoreComponents;
+		tasks.frictionlessManager.updateScore(botScore, scoreComponents);
+	}
+
+	const timestampTripped = FrictionlessManager.timestampTooOld(input.timestamp);
+	if (timestampTripped) {
+		const scoreUpdate = tasks.frictionlessManager.scoreIncreaseTimestamp(
+			input.timestamp,
+			input.baseBotScore,
+			botScore,
+			scoreComponents,
+		);
+		botScore = scoreUpdate.score;
+		scoreComponents = scoreUpdate.scoreComponents;
+		tasks.frictionlessManager.updateScore(botScore, scoreComponents);
+	}
+
 	const autoBanThreshold = clientRecord.settings.autoBanScoreThreshold;
 	if (autoBanThreshold !== undefined && Number(botScore) >= autoBanThreshold) {
 		req.logger.info(() => ({
@@ -109,26 +146,7 @@ export const runDecisionMachine = async (
 		return res.status(401).json({ error: "Unauthorized" });
 	}
 
-	const userAgentMismatchResponse = await runUserAgentMismatchCheck(
-		input,
-		handle,
-	);
-	if (userAgentMismatchResponse) return userAgentMismatchResponse;
-
-	const contextResponse = await runContextAwareValidation(input, handle);
-	if (contextResponse) return contextResponse;
-
-	if (clientRecord.settings.disallowWebView && input.webView) {
-		tasks.logger.info(() => ({ msg: "WebView detected" }));
-		const scoreUpdate = tasks.frictionlessManager.scoreIncreaseWebView(
-			input.baseBotScore,
-			botScore,
-			scoreComponents,
-		);
-		botScore = scoreUpdate.score;
-		scoreComponents = scoreUpdate.scoreComponents;
-		tasks.frictionlessManager.updateScore(botScore, scoreComponents);
-
+	if (webViewTripped) {
 		req.logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {
@@ -153,17 +171,7 @@ export const runDecisionMachine = async (
 		);
 	}
 
-	if (FrictionlessManager.timestampTooOld(input.timestamp)) {
-		const scoreUpdate = tasks.frictionlessManager.scoreIncreaseTimestamp(
-			input.timestamp,
-			input.baseBotScore,
-			botScore,
-			scoreComponents,
-		);
-		botScore = scoreUpdate.score;
-		scoreComponents = scoreUpdate.scoreComponents;
-		tasks.frictionlessManager.updateScore(botScore, scoreComponents);
-
+	if (timestampTripped) {
 		req.logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {
@@ -187,21 +195,6 @@ export const runDecisionMachine = async (
 				headers: flatHeaders,
 			}),
 		);
-	}
-
-	const hostVerified = await tasks.frictionlessManager.hostVerified(
-		input.providerSelectEntropy,
-	);
-	if (!hostVerified.verified) {
-		const scoreUpdate = tasks.frictionlessManager.scoreIncreaseUnverifiedHost(
-			hostVerified.domain,
-			input.baseBotScore,
-			botScore,
-			scoreComponents,
-		);
-		botScore = scoreUpdate.score;
-		scoreComponents = scoreUpdate.scoreComponents;
-		tasks.frictionlessManager.updateScore(botScore, scoreComponents);
 	}
 
 	if (Number(botScore) > input.botThreshold) {

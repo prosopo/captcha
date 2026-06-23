@@ -43,6 +43,7 @@ import {
 	PowChallengeIdSchema,
 } from "../datasets/index.js";
 import type {
+	DecisionMachineKind,
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
@@ -388,7 +389,6 @@ export const SessionSchema = object({
 	score: number(),
 	threshold: number(),
 	scoreComponents: ScoreComponentsSchema,
-	providerSelectEntropy: number(),
 	ipAddress: CompositeIpAddressSchema,
 	captchaType: nativeEnum(CaptchaType),
 	mode: nativeEnum(ModeEnum).optional(),
@@ -440,6 +440,10 @@ export const SessionSchema = object({
 	// indicator reflects when the catcher's CPU fingerprint became
 	// available relative to the user's journey.
 	simdReadingsStage: SimdReadingsStageSchema.optional(),
+	entropyMathRandomFingerprint: string().optional(),
+	entropyCryptoFingerprint: string().optional(),
+	entropyWallClockOffsetMs: number().optional(),
+	entropyMathRandomFirst: number().optional(),
 	dnsEvent: object({
 		resolverIp: string().optional(),
 		peerIp: string().optional(),
@@ -456,7 +460,6 @@ export type Session = {
 	score: number;
 	threshold: number;
 	scoreComponents: ScoreComponents;
-	providerSelectEntropy: number;
 	ipAddress: CompositeIpAddress;
 	captchaType: CaptchaType;
 	mode?: ModeEnum;
@@ -497,6 +500,10 @@ export type Session = {
 	simdReadings?: SimdReadings;
 	// Stage at which the readings first arrived.
 	simdReadingsStage?: SimdReadingsStage;
+	entropyMathRandomFingerprint?: string;
+	entropyCryptoFingerprint?: string;
+	entropyWallClockOffsetMs?: number;
+	entropyMathRandomFirst?: number;
 	// DNS observation merge target — populated by the dns-event sidecar
 	// via POST /v1/prosopo/provider/admin/dns/event. At most one DNS
 	// event + one HTTP event per session under normal usage; the
@@ -641,6 +648,7 @@ export type DetectorKey = {
 export type DecisionMachineArtifact = {
 	scope: DecisionMachineScope;
 	dappAccount?: string;
+	kind?: DecisionMachineKind;
 	runtime: DecisionMachineRuntime;
 	language?: DecisionMachineLanguage;
 	source: string;

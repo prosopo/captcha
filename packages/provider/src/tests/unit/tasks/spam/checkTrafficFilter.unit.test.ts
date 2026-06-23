@@ -37,6 +37,7 @@ const allBlocked: ITrafficFilter = {
 	blockAbuser: true,
 	abuserScoreThreshold: 0,
 	blockDatacenter: true,
+	skipExtrasOnValidDnsPath: false,
 	blockMobile: true,
 	blockSatellite: true,
 	blockCrawler: true,
@@ -404,6 +405,133 @@ describe("checkTrafficFilter", () => {
 				],
 			);
 			expect(result).toEqual({ isBlocked: false });
+		});
+
+		it("matches the allowlist against providerName when datacenterName is absent", () => {
+			// Upstream often sets is_datacenter without setting
+			// datacenter.datacenter; company.name (providerName) is the
+			// next-best fallback.
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					providerName: "iCloud Private Relay",
+				}),
+				{ ...allBlocked, datacenterNameAllowlist: ["iCloud Private Relay"] },
+			);
+			expect(result).toEqual({ isBlocked: false });
+		});
+
+		it("matches the allowlist against asnOrganization when neither datacenterName nor providerName carries the operator", () => {
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					asnOrganization: "Cloudflare, Inc.",
+				}),
+				{ ...allBlocked, datacenterNameAllowlist: ["Cloudflare, Inc."] },
+			);
+			expect(result).toEqual({ isBlocked: false });
+		});
+
+		it("still blocks datacenter IPs that carry none of the three name fields", () => {
+			const result = checkTrafficFilter(baseInfo({ isDatacenter: true }), {
+				...allBlocked,
+				datacenterNameAllowlist: ["iCloud Private Relay"],
+			});
+			expect(result).toEqual({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+	});
+
+	describe("skipExtrasOnValidDnsPath", () => {
+		it("skips the extras evaluation when the catcher confirmed a valid DNS path and the setting is on", () => {
+			const result = checkTrafficFilter(
+				baseInfo({ ip: "192.0.2.1" }),
+				{ ...allBlocked, skipExtrasOnValidDnsPath: true },
+				[
+					baseInfo({
+						ip: "162.158.213.93",
+						isDatacenter: true,
+						asnOrganization: "Cloudflare, Inc.",
+					}),
+				],
+				true,
+			);
+			expect(result).toEqual({ isBlocked: false });
+		});
+
+		it("still evaluates extras when the setting is off, even if pathValid is true", () => {
+			const result = checkTrafficFilter(
+				baseInfo({ ip: "192.0.2.1" }),
+				{ ...allBlocked, skipExtrasOnValidDnsPath: false },
+				[
+					baseInfo({
+						ip: "162.158.213.93",
+						isDatacenter: true,
+						asnOrganization: "Cloudflare, Inc.",
+					}),
+				],
+				true,
+			);
+			expect(result).toEqual({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+
+		it("still evaluates extras when the setting is on but the DNS path did not validate", () => {
+			const result = checkTrafficFilter(
+				baseInfo({ ip: "192.0.2.1" }),
+				{ ...allBlocked, skipExtrasOnValidDnsPath: true },
+				[
+					baseInfo({
+						ip: "162.158.213.93",
+						isDatacenter: true,
+						asnOrganization: "Cloudflare, Inc.",
+					}),
+				],
+				false,
+			);
+			expect(result).toEqual({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+
+		it("still evaluates extras when the setting is on but pathValid is undefined", () => {
+			const result = checkTrafficFilter(
+				baseInfo({ ip: "192.0.2.1" }),
+				{ ...allBlocked, skipExtrasOnValidDnsPath: true },
+				[
+					baseInfo({
+						ip: "162.158.213.93",
+						isDatacenter: true,
+						asnOrganization: "Cloudflare, Inc.",
+					}),
+				],
+				undefined,
+			);
+			expect(result).toEqual({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+
+		it("still blocks on the primary IP regardless of pathValid", () => {
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					datacenterName: "Amazon AWS",
+				}),
+				{ ...allBlocked, skipExtrasOnValidDnsPath: true },
+				[],
+				true,
+			);
+			expect(result).toEqual({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
 		});
 	});
 });

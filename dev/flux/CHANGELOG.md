@@ -1,5 +1,14 @@
 # @prosopo/flux
 
+## 2.6.57
+### Patch Changes
+
+- Updated dependencies [edcd450]
+  - @prosopo/util@3.3.1
+  - @prosopo/logger@1.0.4
+  - @prosopo/common@3.1.40
+  - @prosopo/dotenv@3.0.45
+
 ## 2.6.56
 ### Patch Changes
 
