@@ -528,7 +528,7 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.token]: boundedString(INPUT_LIMITS.TOKEN),
 	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
-	[ApiParams.headHash]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.headHash]: boundedString(INPUT_LIMITS.TOKEN),
 	[ApiParams.mode]: nativeEnum(ModeEnum).optional(),
 	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
 });
