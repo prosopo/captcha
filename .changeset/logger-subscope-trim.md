@@ -2,4 +2,4 @@
 "@prosopo/logger": patch
 ---
 
-Trim whitespace from subscopes in Logger.with so they match directive keys, clarify with() JSDoc, and bump the @prosopo/fingerprintjs submodule to align its @prosopo/config dependency with the workspace (3.3.3).
+Trim whitespace from subscopes in Logger.with so they match directive keys, and clarify the with() JSDoc to describe the snapshot-at-creation level plus emit-time directive re-resolution.

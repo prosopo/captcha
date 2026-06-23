@@ -200,10 +200,10 @@ describe("resolveLevel", () => {
 });
 
 describe("setGlobalDirectives", () => {
-	// Always restore the global directives so a failing assertion can't leak
-	// state into later tests.
+	// Restore the env-derived directives so a failing assertion can't leak state
+	// into later tests, without clobbering a non-empty PROSOPO_LOG_LEVEL.
 	afterEach(() => {
-		setGlobalDirectives("");
+		setGlobalDirectives(process.env.PROSOPO_LOG_LEVEL ?? "");
 	});
 
 	it("affects an existing logger's filtering at emit time", () => {
@@ -227,7 +227,7 @@ describe("setGlobalDirectives", () => {
 
 describe("emitted record", () => {
 	afterEach(() => {
-		setGlobalDirectives("");
+		setGlobalDirectives(process.env.PROSOPO_LOG_LEVEL ?? "");
 	});
 
 	it("uses the message level rather than the logger's configured level", () => {
@@ -276,10 +276,27 @@ describe("Logger.with subscope", () => {
 		expect(child.getScope()).toBe("provider");
 	});
 
-	it("inherits default data from parent", () => {
+	it("merges parent and child default data into emitted records", () => {
+		setGlobalDirectives("trace");
 		const parent = getLogger("info", "test").with({ requestId: "abc" });
 		const child = parent.with({ extra: 1 });
-		// Can't inspect defaultData directly but verify scope is unchanged
-		expect(child.getScope()).toBe("test");
+		const infoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
+		try {
+			child.info(() => ({ data: { perCall: true } }));
+			expect(infoSpy).toHaveBeenCalledTimes(1);
+			const output = infoSpy.mock.calls[0]?.[0];
+			expect(typeof output).toBe("string");
+			const record: { scope: string; data: Record<string, unknown> } =
+				JSON.parse(output as string);
+			expect(record.scope).toBe("test");
+			expect(record.data).toMatchObject({
+				requestId: "abc",
+				extra: 1,
+				perCall: true,
+			});
+		} finally {
+			infoSpy.mockRestore();
+			setGlobalDirectives(process.env.PROSOPO_LOG_LEVEL ?? "");
+		}
 	});
 });
