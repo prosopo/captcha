@@ -30,6 +30,7 @@ const userAttributesSchema: SchemaDefinition<UserAttributesRecord> = {
 	headHash: { type: String, required: false },
 	coords: { type: String, required: false },
 	countryCode: { type: String, required: false },
+	asn: { type: Number, required: false },
 } satisfies AllKeys<UserAttributesRecord>;
 
 const userIpSchema: SchemaDefinition<UserIpRecord> = {
@@ -55,6 +56,7 @@ const accessPolicySchema: SchemaDefinition<AccessPolicy> = {
 	powDifficulty: { type: Number, required: false },
 	unsolvedImagesCount: { type: Number, required: false },
 	frictionlessScore: { type: Number, required: false },
+	deferToVerify: { type: Boolean, required: false },
 } satisfies AllKeys<AccessPolicy>;
 
 export const accessRuleMongooseSchema: SchemaDefinition<AccessRuleRecord> = {

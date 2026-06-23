@@ -12,7 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { PolicyScope, UserIp, UserScope } from "#policy/rule.js";
+import {
+	AccessPolicyType,
+	type PolicyScope,
+	type UserIp,
+	type UserScope,
+} from "#policy/rule.js";
 import { userScopeSchema } from "#policy/ruleInput/userScopeInput.js";
 import {
 	type AccessRulesFilter,
@@ -133,6 +138,10 @@ const FIELDS_REQUIRING_ESCAPE: ReadonlySet<keyof UserScope> = new Set([
 	"coords",
 ]);
 
+// Fields indexed as NUMERIC in RediSearch — must use range syntax `@x:[N N]`,
+// not the TAG syntax `@x:{N}`, or lookups silently return no results.
+const NUMERIC_FIELDS: ReadonlySet<keyof UserScope> = new Set(["asn"]);
+
 const getUserScopeFieldQuery = (
 	fieldName: keyof UserScope,
 	fieldValue: unknown,
@@ -150,6 +159,11 @@ const getUserScopeFieldQuery = (
 	}
 
 	const stringValue = String(fieldValue);
+
+	if (NUMERIC_FIELDS.has(fieldName)) {
+		return `@${fieldName}:[${stringValue} ${stringValue}]`;
+	}
+
 	// Only escape fields that may contain special characters (like coords with JSON)
 	const queryValue = FIELDS_REQUIRING_ESCAPE.has(fieldName)
 		? escapeTagValue(stringValue)
@@ -192,6 +206,10 @@ export const getRulesRedisQuery = (
 
 	if (filter.groupId) {
 		queryParts.push(`@groupId:{${filter.groupId}}`);
+	}
+
+	if (filter.blockOnly) {
+		queryParts.push(`@type:{${AccessPolicyType.Block}}`);
 	}
 
 	const policyScopeQuery = getPolicyScopeQuery(

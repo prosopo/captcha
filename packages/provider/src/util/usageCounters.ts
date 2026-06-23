@@ -223,6 +223,7 @@ export const buildAllWindowIncrements = (
 	captchaType: CounterSpec["captchaType"],
 	ip: string,
 	userAccount: string,
+	peerIp?: string,
 ): CounterIncrement[] => {
 	const out: CounterIncrement[] = [];
 	for (const window of [
@@ -240,6 +241,12 @@ export const buildAllWindowIncrements = (
 				value: userAccount,
 			},
 		);
+		if (peerIp && peerIp !== ip) {
+			out.push({
+				spec: { kind, captchaType, dimension: "peerIp", window },
+				value: peerIp,
+			});
+		}
 		if (captchaType !== "any") {
 			out.push(
 				{
@@ -256,6 +263,17 @@ export const buildAllWindowIncrements = (
 					value: userAccount,
 				},
 			);
+			if (peerIp && peerIp !== ip) {
+				out.push({
+					spec: {
+						kind,
+						captchaType: "any",
+						dimension: "peerIp",
+						window,
+					},
+					value: peerIp,
+				});
+			}
 		}
 	}
 	return out;

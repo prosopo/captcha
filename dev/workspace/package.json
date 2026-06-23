@@ -27,13 +27,14 @@
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
 	"devDependencies": {
-		"@prosopo/config": "3.3.1",
+		"@prosopo/config": "3.3.3",
 		"@types/node": "22.10.2",
 		"del-cli": "6.0.0"
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/prosopo/captcha.git"
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "dev/workspace"
 	},
 	"bugs": {
 		"url": "https://github.com/prosopo/captcha/issues"

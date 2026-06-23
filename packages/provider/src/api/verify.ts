@@ -69,9 +69,9 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 	router.post(
 		ClientApiPaths.VerifyImageCaptchaSolutionDapp,
 		async (req, res, next) => {
-			const tasks = new Tasks(env, req.logger);
-
-			// If in maintenance mode, always return verified before any checks
+			// Maintenance-mode short-circuit must run before `new Tasks(env, ...)`
+			// because the Tasks constructor calls `env.getDb()`, which throws when
+			// `env.db` is undefined (the maintenance-mode case).
 			if (getMaintenanceMode()) {
 				req.logger.info(() => ({
 					msg: "Maintenance mode active - returning verified for image captcha verification",
@@ -82,6 +82,8 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				};
 				return res.json(verificationResponse);
 			}
+
+			const tasks = new Tasks(env, req.logger);
 
 			// We can be helpful and provide a more detailed error message when there are missing fields
 			let parsed: VerifySolutionBodyTypeOutput;
@@ -190,9 +192,9 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 	router.post(
 		ClientApiPaths.VerifyPowCaptchaSolution,
 		async (req, res, next) => {
-			const tasks = new Tasks(env, req.logger);
-
-			// If in maintenance mode, always return verified before any checks
+			// Maintenance-mode short-circuit must run before `new Tasks(env, ...)`
+			// because the Tasks constructor calls `env.getDb()`, which throws when
+			// `env.db` is undefined (the maintenance-mode case).
 			if (getMaintenanceMode()) {
 				req.logger.info(() => ({
 					msg: "Maintenance mode active - returning verified for PoW captcha verification",
@@ -203,6 +205,8 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				};
 				return res.json(verificationResponse);
 			}
+
+			const tasks = new Tasks(env, req.logger);
 
 			let parsed: ServerPowCaptchaVerifyRequestBodyOutput;
 
@@ -221,7 +225,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 
 			// We don't want to expose any other errors to the client
 			try {
-				const { token, dappSignature, verifiedTimeout, ip, email } = parsed;
+				const { token, dappSignature, ip, email } = parsed;
 
 				// This can error if the token is invalid
 				const { dapp, user, timestamp, challenge } =
@@ -273,7 +277,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					await tasks.powCaptchaManager.serverVerifyPowCaptchaSolution(
 						dapp,
 						challenge,
-						verifiedTimeout,
+						clientRecord.settings.verifiedTimeout,
 						env,
 						ip,
 						userAccessRulesStorage,
@@ -321,9 +325,9 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 	router.post(
 		ClientApiPaths.VerifyPuzzleCaptchaSolution,
 		async (req, res, next) => {
-			const tasks = new Tasks(env, req.logger);
-
-			// If in maintenance mode, always return verified before any checks
+			// Maintenance-mode short-circuit must run before `new Tasks(env, ...)`
+			// because the Tasks constructor calls `env.getDb()`, which throws when
+			// `env.db` is undefined (the maintenance-mode case).
 			if (getMaintenanceMode()) {
 				req.logger.info(() => ({
 					msg: "Maintenance mode active - returning verified for puzzle captcha verification",
@@ -334,6 +338,8 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				};
 				return res.json(verificationResponse);
 			}
+
+			const tasks = new Tasks(env, req.logger);
 
 			let parsed: ServerPuzzleCaptchaVerifyRequestBodyOutput;
 
@@ -352,7 +358,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 
 			// We don't want to expose any other errors to the client
 			try {
-				const { token, dappSignature, verifiedTimeout, ip, email } = parsed;
+				const { token, dappSignature, ip, email } = parsed;
 
 				// This can error if the token is invalid
 				const { dapp, user, timestamp, challenge } =
@@ -404,7 +410,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					await tasks.puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
 						dapp,
 						challenge,
-						verifiedTimeout,
+						clientRecord.settings.verifiedTimeout,
 						env,
 						ip,
 						userAccessRulesStorage,

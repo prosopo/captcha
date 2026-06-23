@@ -38,10 +38,7 @@ import {
 } from "../client/captchaType/captchaType.js";
 import { ClientSettingsSchema, Tier } from "../client/index.js";
 import { ModeEnum } from "../config/mode.js";
-import {
-	DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED,
-	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
-} from "../config/timeouts.js";
+import { DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED } from "../config/timeouts.js";
 import {
 	type Captcha,
 	CaptchaSolutionSchema,
@@ -52,6 +49,7 @@ import {
 	type UserAccount,
 } from "../datasets/index.js";
 import {
+	DecisionMachineKind,
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
@@ -143,6 +141,8 @@ export enum AdminApiPaths {
 	ClearAllCounters = "/v1/prosopo/provider/admin/counters/clear-all",
 	SiteKeyRemove = "/v1/prosopo/provider/admin/sitekey/remove",
 	SiteKeysRemove = "/v1/prosopo/provider/admin/sitekeys/remove",
+	// Receives batched DNS observation events from the dns sidecar.
+	DnsEvent = "/v1/prosopo/provider/admin/dns/event",
 }
 
 export type CombinedApiPaths = ClientApiPaths | AdminApiPaths;
@@ -184,6 +184,10 @@ export const ProviderDefaultRateLimits = {
 	[AdminApiPaths.ClearAllCounters]: { windowMs: 60000, limit: 10 },
 	[AdminApiPaths.SiteKeyRemove]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.SiteKeysRemove]: { windowMs: 60000, limit: 5 },
+	// Sidecar batches events and POSTs at shipper_flush_ms cadence
+	// (1s default), so a high per-minute ceiling is fine. Single ingest
+	// path per pronode → no cross-tenant fairness concerns.
+	[AdminApiPaths.DnsEvent]: { windowMs: 60000, limit: 600 },
 };
 
 type RateLimit = {
@@ -204,7 +208,6 @@ export type Provider = {
 
 export type FrontendProvider = {
 	url: string;
-	datasetId: string;
 };
 
 export type RandomProvider = {
@@ -258,7 +261,7 @@ export interface CaptchaIdAndProof {
 export const CaptchaRequestBody = object({
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
-	[ApiParams.datasetId]: union([string(), array(number())]),
+	[ApiParams.datasetId]: union([string(), array(number())]).optional(),
 	[ApiParams.sessionId]: string().optional(),
 	[ApiParams.simdReadings]: string().optional(),
 });
@@ -393,6 +396,8 @@ export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 	// field after reading the header, so downstream widget code consumes it
 	// the same way regardless of transport.
 	[ApiParams.hp]?: string;
+	// Per-session DNS observation URL; undefined when no dns sidecar.
+	dns_url?: string;
 }
 
 export interface PowCaptchaSolutionEscalation {
@@ -407,17 +412,11 @@ export interface PowCaptchaSolutionResponse extends ApiResponse {
 }
 
 /**
- * Request body for the server to verify a PoW captcha solution
- * @param {string} token - The Procaptcha token
- * @param {string} dappUserSignature - The signature proving ownership of the site key
- * @param {number} verifiedTimeout - The maximum time in milliseconds since the captcha was requested
+ * Request body for the server to verify a PoW captcha solution.
  */
 export const ServerPowCaptchaVerifyRequestBody = object({
 	[ApiParams.token]: ProcaptchaTokenSpec,
 	[ApiParams.dappSignature]: string(),
-	[ApiParams.verifiedTimeout]: number()
-		.optional()
-		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 	[ApiParams.ip]: string().optional(),
 	[ApiParams.email]: string().email().optional(),
 });
@@ -425,6 +424,42 @@ export const ServerPowCaptchaVerifyRequestBody = object({
 export type ServerPowCaptchaVerifyRequestBodyOutput = output<
 	typeof ServerPowCaptchaVerifyRequestBody
 >;
+
+// ── DNS observation event ingestion (wire-compat with the dns sidecar) ─
+export const DnsEventKindSchema = union([
+	string().regex(/^dns$/),
+	string().regex(/^http$/),
+]);
+export type DnsEventKind = "dns" | "http";
+
+export const DnsEventSchema = object({
+	kind: DnsEventKindSchema,
+	ts: string(), // ISO-8601 UTC (serde default for chrono DateTime<Utc>)
+	src_ip: string(),
+	// Per-session ID carried in the URL subdomain — captures the procaptcha
+	// sessionId. Named `jti` on the wire for cross-product compatibility
+	// with Protect's session identifier.
+	jti: string().optional(),
+	site_key: string().optional(),
+	subzone: string().optional(),
+	qname: string().optional(),
+	qtype: string().optional(),
+	sni: string().optional(),
+	path: string().optional(),
+	user_agent: string().optional(),
+	path_valid: boolean().optional(),
+});
+export type DnsEvent = output<typeof DnsEventSchema>;
+
+export const DnsEventBatchSchema = object({
+	events: array(DnsEventSchema),
+});
+export type DnsEventBatch = output<typeof DnsEventBatchSchema>;
+
+export interface DnsEventResponseBody extends ApiResponse {
+	stored: number;
+	errors: number;
+}
 
 export const GetPowCaptchaChallengeRequestBody = object({
 	[ApiParams.user]: string(),
@@ -459,13 +494,11 @@ export const SubmitPowCaptchaSolutionBody = object({
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
 	[ApiParams.nonce]: number(),
-	[ApiParams.verifiedTimeout]: number()
-		.optional()
-		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 	[ApiParams.behavioralData]: string().optional(),
 	[ApiParams.salt]: string().optional(),
 	[ApiParams.simdReadings]: string().optional(),
 	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
+	[ApiParams.fingerprintProof]: string().optional(),
 });
 
 export type SubmitPowCaptchaSolutionBodyType = input<
@@ -532,9 +565,6 @@ export const SubmitPuzzleCaptchaSolutionBody = object({
 	}),
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
-	[ApiParams.verifiedTimeout]: number()
-		.optional()
-		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 	[ApiParams.behavioralData]: string().optional(),
 	[ApiParams.salt]: string().optional(),
 	[ApiParams.simdReadings]: string().optional(),
@@ -552,9 +582,6 @@ export type SubmitPuzzleCaptchaSolutionBodyTypeOutput = output<
 export const ServerPuzzleCaptchaVerifyRequestBody = object({
 	[ApiParams.token]: ProcaptchaTokenSpec,
 	[ApiParams.dappSignature]: string(),
-	[ApiParams.verifiedTimeout]: number()
-		.optional()
-		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 	[ApiParams.ip]: string().optional(),
 	[ApiParams.email]: string().email().optional(),
 });
@@ -610,6 +637,7 @@ export const UpdateDecisionMachineBody = object({
 	[ApiParams.decisionMachineVersion]: string().optional(),
 	[ApiParams.decisionMachineCaptchaType]:
 		DecisionMachineCaptchaTypeSchema.optional(),
+	[ApiParams.decisionMachineKind]: nativeEnum(DecisionMachineKind).optional(),
 	[ApiParams.dapp]: string().optional(),
 });
 
@@ -645,6 +673,7 @@ export const DecisionMachineSummarySchema = object({
 	_id: string(),
 	scope: nativeEnum(DecisionMachineScope),
 	dappAccount: string().nullish(),
+	kind: nativeEnum(DecisionMachineKind).nullish(),
 	runtime: nativeEnum(DecisionMachineRuntime),
 	language: nativeEnum(DecisionMachineLanguage).nullish(),
 	name: string().nullish(),
