@@ -468,11 +468,13 @@ export class CaptchaManager {
 		userAccessRulesStorage: AccessRulesStorage,
 		clientId: string,
 		userScope: UserScope | UserScopeRecord,
+		options?: { blockOnly?: boolean },
 	) {
 		return getPrioritisedAccessRule(
 			userAccessRulesStorage,
 			userScope,
 			clientId,
+			options,
 		);
 	}
 
@@ -638,6 +640,11 @@ export class CaptchaManager {
 			userAccessRulesStorage,
 			challengeRecord.dappAccount,
 			userScope,
+			// Hard-block lookup only — restrict the Redis-side candidate
+			// pool to Block rules so the SERVER_SIDE_RANK_TOP_N cap can't
+			// crowd a hard-block out of the top-N with Restrict or
+			// routing-Block (captchaType-scoped) entries.
+			{ blockOnly: true },
 		);
 
 		return findHardBlockPolicy(accessPolicies);
@@ -693,6 +700,7 @@ export class CaptchaManager {
 			ipInfo,
 			effective,
 			extraIpInfosFromEnrichedDnsEvent(enrichedDnsEvent),
+			enrichedDnsEvent?.pathValid,
 		);
 	}
 
