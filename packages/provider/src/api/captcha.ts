@@ -36,8 +36,12 @@ import submitPuzzleCaptchaSolution from "./captcha/submitPuzzleCaptchaSolution.j
  * promises inside the async handler - is forwarded to Express's error handler.
  * Without this, Express 4 does not observe the rejection and the request hangs
  * instead of returning the intended 4xx response.
+ *
+ * The handler is invoked inside `Promise.resolve().then(...)` so that even a
+ * truly synchronous throw (from a non-async handler) is captured as a rejected
+ * promise and forwarded to `next`, rather than propagating synchronously.
  */
-const asyncHandler =
+export const asyncHandler =
 	(
 		handler: (
 			req: Request,
@@ -46,7 +50,9 @@ const asyncHandler =
 		) => Promise<unknown>,
 	) =>
 	(req: Request, res: Response, next: NextFunction): void => {
-		Promise.resolve(handler(req, res, next)).catch(next);
+		Promise.resolve()
+			.then(() => handler(req, res, next))
+			.catch(next);
 	};
 
 /**
