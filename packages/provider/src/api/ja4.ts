@@ -144,6 +144,9 @@ export function calculateJa4(data: Buffer): string {
 	if (data.length - offset < msgLen) {
 		throw new Ja4ParseError("Handshake message length exceeds record");
 	}
+	// Cap to the ClientHello message boundary so trailing bytes or additional
+	// handshake messages within the record can't be fingerprinted.
+	data = data.subarray(0, offset + msgLen);
 
 	// ClientHello body: version(2) + random(32) + session_id_len(1)
 	if (data.length - offset < 35) {
