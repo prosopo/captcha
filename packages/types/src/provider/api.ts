@@ -49,6 +49,7 @@ import {
 	type UserAccount,
 } from "../datasets/index.js";
 import {
+	DecisionMachineKind,
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
@@ -207,7 +208,6 @@ export type Provider = {
 
 export type FrontendProvider = {
 	url: string;
-	datasetId: string;
 };
 
 export type RandomProvider = {
@@ -261,7 +261,7 @@ export interface CaptchaIdAndProof {
 export const CaptchaRequestBody = object({
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
-	[ApiParams.datasetId]: union([string(), array(number())]),
+	[ApiParams.datasetId]: union([string(), array(number())]).optional(),
 	[ApiParams.sessionId]: string().optional(),
 	[ApiParams.simdReadings]: string().optional(),
 });
@@ -637,6 +637,7 @@ export const UpdateDecisionMachineBody = object({
 	[ApiParams.decisionMachineVersion]: string().optional(),
 	[ApiParams.decisionMachineCaptchaType]:
 		DecisionMachineCaptchaTypeSchema.optional(),
+	[ApiParams.decisionMachineKind]: nativeEnum(DecisionMachineKind).optional(),
 	[ApiParams.dapp]: string().optional(),
 });
 
@@ -672,6 +673,7 @@ export const DecisionMachineSummarySchema = object({
 	_id: string(),
 	scope: nativeEnum(DecisionMachineScope),
 	dappAccount: string().nullish(),
+	kind: nativeEnum(DecisionMachineKind).nullish(),
 	runtime: nativeEnum(DecisionMachineRuntime),
 	language: nativeEnum(DecisionMachineLanguage).nullish(),
 	name: string().nullish(),

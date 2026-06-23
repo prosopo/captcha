@@ -137,6 +137,7 @@
 		"NO_CAPTCHA": "Kein Captcha gefunden",
 		"NO_SESSION_FOUND": "Keine Session gefunden",
 		"IP_ADDRESS_MISMATCH": "IP-Adresse stimmt nicht überein",
+		"INVALID_SALT": "Ungültiges Salt",
 		"INVALID_TOKEN": "Ungültiges Token",
 		"INVALID_SOLUTION": "Ungültige Lösung",
 		"DECRYPTION_ERROR": "Fehler beim Entschlüsseln"

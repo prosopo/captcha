@@ -262,7 +262,6 @@ export default (
 			const {
 				baseBotScore,
 				timestamp,
-				providerSelectEntropy,
 				userId,
 				userAgent,
 				webView,
@@ -271,6 +270,10 @@ export default (
 				decryptionFailed,
 				triggeredDetectors,
 				shadowDomPenalty,
+				entropyMathRandomFingerprint,
+				entropyCryptoFingerprint,
+				entropyWallClockOffsetMs,
+				entropyMathRandomFirst,
 			} = decryptedPayload;
 
 			req.logger.debug(() => ({
@@ -278,7 +281,6 @@ export default (
 				data: {
 					baseBotScore,
 					timestamp,
-					providerSelectEntropy,
 					userId,
 					userAgent,
 					webView,
@@ -316,7 +318,6 @@ export default (
 				score: botScore,
 				threshold: botThreshold,
 				scoreComponents,
-				providerSelectEntropy,
 				ipAddress,
 				webView,
 				iFrame,
@@ -326,6 +327,18 @@ export default (
 				headers: flatHeaders,
 				mode: sessionMode,
 				...(decodedSimdReadings && { simdReadings: decodedSimdReadings }),
+				...(entropyMathRandomFingerprint !== undefined && {
+					entropyMathRandomFingerprint,
+				}),
+				...(entropyCryptoFingerprint !== undefined && {
+					entropyCryptoFingerprint,
+				}),
+				...(entropyWallClockOffsetMs !== undefined && {
+					entropyWallClockOffsetMs,
+				}),
+				...(entropyMathRandomFirst !== undefined && {
+					entropyMathRandomFirst,
+				}),
 			});
 
 			const ipInfoMobile =
@@ -389,7 +402,6 @@ export default (
 					userId,
 					webView,
 					decryptedHeadHash,
-					providerSelectEntropy,
 					baseBotScore,
 					botScore,
 					scoreComponents,
