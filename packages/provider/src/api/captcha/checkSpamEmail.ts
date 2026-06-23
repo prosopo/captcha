@@ -13,18 +13,19 @@
 // limitations under the License.
 
 import { ProsopoApiError } from "@prosopo/common";
+import { INPUT_LIMITS, safeLine } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { extractDomainFromEmail } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
-import { object, string } from "zod";
+import { object } from "zod";
 import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
 import { checkSpamEmail as checkSpamEmailFn } from "../../tasks/spam/checkSpamEmail.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 
 const CheckSpamEmailRequestBody = object({
-	email: string(),
-	dapp: string(),
+	email: safeLine(INPUT_LIMITS.EMAIL),
+	dapp: safeLine(INPUT_LIMITS.ID),
 });
 
 export default (env: ProviderEnvironment) =>

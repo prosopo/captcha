@@ -201,7 +201,11 @@ export async function startProviderApi(
 			maxAge: 86400,
 		}),
 	);
-	apiApp.use(express.json({ limit: "50mb" }));
+	// Coarse request body-size backstop. Generous enough for legitimate
+	// payloads (captcha solutions, behavioural/simd readings, DNS event
+	// batches) but bounds oversized-payload abuse before parsing; the
+	// per-field caps in @prosopo/types (`INPUT_LIMITS`) are the finer control.
+	apiApp.use(express.json({ limit: "1mb" }));
 
 	// Put this first so that no middleware runs on it
 	apiApp.use(publicRouter(env));
