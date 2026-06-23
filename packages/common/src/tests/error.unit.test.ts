@@ -274,4 +274,16 @@ describe("unwrapError still produces a translated HTTP response", () => {
 			"CAPTCHA.NO_SESSION_FOUND",
 		);
 	});
+
+	it("derives statusMessage from the resolved status code, not a hardcoded 'Bad Request'", () => {
+		const err = new ProsopoApiError("CAPTCHA.NO_SESSION_FOUND", {
+			context: { code: 401 },
+			i18n: englishI18n,
+			silent: true,
+		});
+
+		const { code, statusMessage } = unwrapError(err, englishI18n);
+		expect(code).toBe(401);
+		expect(statusMessage).toBe("Unauthorized");
+	});
 });
