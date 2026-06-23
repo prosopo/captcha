@@ -19,7 +19,9 @@ import {
 	DecisionMachineCaptchaTypeSchema,
 } from "../client/captchaType/captchaType.js";
 import type { RequestHeaders } from "../provider/api.js";
+import type { ScoreComponents } from "../provider/database.js";
 import type { SimdReadings } from "../provider/detection.js";
+import type { FrictionlessReason } from "../provider/reasons.js";
 
 export type EnrichedDnsEvent = {
 	peerIp?: string;
@@ -31,6 +33,11 @@ export type EnrichedDnsEvent = {
 
 export enum DecisionMachineRuntime {
 	Node = "node",
+}
+
+export enum DecisionMachineKind {
+	Routing = "routing",
+	Decision = "decision",
 }
 
 /**
@@ -84,6 +91,19 @@ export type DecisionMachineInput = {
 	// challenge record). Undefined for invalid lookups.
 	ipInfo?: IPInfoResponse;
 	dnsEvent?: EnrichedDnsEvent;
+	// Session-derived fields forwarded from the Session record loaded at
+	// the verify path. Undefined when no frictionless session preceded.
+	score?: number;
+	threshold?: number;
+	scoreComponents?: ScoreComponents;
+	decryptedHeadHash?: string;
+	userSitekeyIpHash?: string;
+	providerSelectEntropy?: number;
+	simdReadings?: SimdReadings;
+	frictionlessReason?: FrictionlessReason;
+	ruleType?: string[];
+	webView?: boolean;
+	iFrame?: boolean;
 };
 
 export type DecisionMachineOutput = {

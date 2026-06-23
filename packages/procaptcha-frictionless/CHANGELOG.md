@@ -1,5 +1,76 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.11.11
+### Patch Changes
+
+- Updated dependencies [bb98af1]
+  - @prosopo/types@4.7.4
+  - @prosopo/api@3.5.4
+  - @prosopo/detector@3.4.47
+  - @prosopo/load-balancer@2.9.21
+  - @prosopo/procaptcha-common@2.10.28
+  - @prosopo/procaptcha-pow@2.10.4
+  - @prosopo/procaptcha-puzzle@2.10.19
+  - @prosopo/procaptcha-react@2.9.77
+
+## 2.11.10
+### Patch Changes
+
+- Updated dependencies [89ab6fc]
+- Updated dependencies [0f3750b]
+  - @prosopo/types@4.7.3
+  - @prosopo/api@3.5.3
+  - @prosopo/detector@3.4.46
+  - @prosopo/load-balancer@2.9.20
+  - @prosopo/procaptcha-common@2.10.27
+  - @prosopo/procaptcha-pow@2.10.3
+  - @prosopo/procaptcha-puzzle@2.10.18
+  - @prosopo/procaptcha-react@2.9.76
+
+## 2.11.9
+### Patch Changes
+
+- Updated dependencies [edcd450]
+- Updated dependencies [5295c4b]
+  - @prosopo/types@4.7.2
+  - @prosopo/locale@3.2.5
+  - @prosopo/procaptcha-pow@2.10.2
+  - @prosopo/procaptcha-puzzle@2.10.17
+  - @prosopo/procaptcha-react@2.9.75
+  - @prosopo/api@3.5.2
+  - @prosopo/common@3.1.40
+  - @prosopo/detector@3.4.45
+  - @prosopo/load-balancer@2.9.19
+  - @prosopo/procaptcha-common@2.10.26
+
+## 2.11.8
+### Patch Changes
+
+- 46fedf4: Auto-start image/puzzle widget after PoW escalation so the user does not need to click the checkbox a second time.
+- Updated dependencies [46fedf4]
+  - @prosopo/procaptcha-react@2.9.74
+  - @prosopo/procaptcha-puzzle@2.10.16
+  - @prosopo/types@4.7.1
+  - @prosopo/api@3.5.1
+  - @prosopo/detector@3.4.44
+  - @prosopo/load-balancer@2.9.18
+  - @prosopo/procaptcha-common@2.10.25
+  - @prosopo/procaptcha-pow@2.10.1
+
+## 2.11.7
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/types@4.7.0
+  - @prosopo/api@3.5.0
+  - @prosopo/procaptcha-pow@2.10.0
+  - @prosopo/detector@3.4.43
+  - @prosopo/load-balancer@2.9.17
+  - @prosopo/procaptcha-common@2.10.24
+  - @prosopo/procaptcha-puzzle@2.10.15
+  - @prosopo/procaptcha-react@2.9.73
+
 ## 2.11.6
 ### Patch Changes
 

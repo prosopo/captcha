@@ -16,12 +16,15 @@ import { stringToHex, u8aToHex } from "@polkadot/util";
 import { ProsopoApiError } from "@prosopo/common";
 import {
 	CaptchaStatus,
+	CaptchaType,
+	FrictionlessReason,
 	type KeyringPair,
 	POW_SEPARATOR,
 	type PoWChallengeId,
 	type PuzzleCaptchaStored,
 	type RequestHeaders,
 	ResultReason,
+	type Session,
 } from "@prosopo/types";
 import type {
 	IProviderDatabase,
@@ -259,6 +262,57 @@ describe("PuzzleCaptchaManager", () => {
 			expect(result).toBe(false);
 			expect(validatePuzzleSolution).not.toHaveBeenCalled();
 			expect(db.updatePuzzleCaptchaRecordResult).not.toHaveBeenCalled();
+		});
+
+		it("auto-fails with CAPTCHA_INVALID_SALT when salt decodes to invalid coords", async () => {
+			const a = buildArgs();
+			const challengeRecord: Partial<PuzzleCaptchaStored> = {
+				challenge: a.challenge,
+				dappAccount: a.dappAccount,
+				userAccount: a.userAccount,
+				targetX: 100,
+				targetY: 100,
+				tolerance: 15,
+				ipAddress: getCompositeIpAddress(a.ipAddress),
+				result: { status: CaptchaStatus.pending },
+				userSubmitted: false,
+			};
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord(challengeRecord),
+			);
+			vi.mocked(db.updatePuzzleCaptchaRecordResult).mockResolvedValue(
+				undefined,
+			);
+
+			const malformedSalt = "0x010200";
+
+			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
+				a.challenge,
+				a.providerSignature,
+				100,
+				100,
+				[],
+				1000,
+				a.userSignature,
+				a.ipAddress,
+				a.headers,
+				undefined, // behavioralData
+				malformedSalt,
+			);
+
+			expect(result).toBe(false);
+			expect(validatePuzzleSolution).not.toHaveBeenCalled();
+			expect(db.updatePuzzleCaptchaRecordResult).toHaveBeenCalledWith(
+				a.challenge,
+				{
+					status: CaptchaStatus.disapproved,
+					reason: ResultReason.CAPTCHA_INVALID_SALT,
+				},
+				false, // serverChecked
+				true, // userSubmitted
+				a.userSignature,
+				undefined, // coords must NOT be the bad value
+			);
 		});
 
 		it("returns false and records a timeout when the challenge is not recent", async () => {
@@ -590,6 +644,87 @@ describe("PuzzleCaptchaManager", () => {
 					}),
 				}),
 			);
+		});
+
+		it("forwards every session-derived field into the decide() input", async () => {
+			const sessionId = "puzzle-session-id";
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord({
+					challenge,
+					dappAccount,
+					userAccount: "user",
+					result: { status: CaptchaStatus.approved },
+					serverChecked: false,
+					headers: { a: "1" },
+					sessionId,
+				}),
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+
+			const ipAddress = getIPAddress("1.1.1.1");
+			const sessionRecord: Session = {
+				sessionId,
+				createdAt: new Date(),
+				token: "test-token",
+				score: 0.42,
+				threshold: 0.27,
+				scoreComponents: {
+					baseScore: 1,
+					unverifiedHost: 0.2,
+					dnsAsymmetry: 0.5,
+					triggeredDetectors: [27],
+					shadowDomPenalty: false,
+				},
+				providerSelectEntropy: 891,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				captchaType: CaptchaType.puzzle,
+				webView: false,
+				iFrame: true,
+				decryptedHeadHash: "h".repeat(16),
+				userSitekeyIpHash: "ush",
+				reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
+				ruleType: ["ja4Hash"],
+				simdReadings: {
+					supported: true,
+					schema: 1,
+					timerResolutionMs: 0.1,
+					runsPerOp: 3,
+					durationMs: 200,
+					ops: [],
+				},
+			};
+			vi.mocked(db.getSessionRecordBySessionId).mockResolvedValue(
+				sessionRecord,
+			);
+
+			const decideSpy = vi
+				.fn()
+				.mockResolvedValue({ decision: "allow" } as const);
+			mockDecisionMachine(decideSpy);
+
+			await puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+				dappAccount,
+				challenge,
+				1000,
+				mockEnv,
+			);
+
+			expect(decideSpy).toHaveBeenCalledOnce();
+			const input = decideSpy.mock.calls[0]?.[0];
+			expect(input.captchaType).toBe(CaptchaType.puzzle);
+			expect(input.threshold).toBe(sessionRecord.threshold);
+			expect(input.scoreComponents).toEqual(sessionRecord.scoreComponents);
+			expect(input.decryptedHeadHash).toBe(sessionRecord.decryptedHeadHash);
+			expect(input.userSitekeyIpHash).toBe(sessionRecord.userSitekeyIpHash);
+			expect(input.providerSelectEntropy).toBe(
+				sessionRecord.providerSelectEntropy,
+			);
+			expect(input.simdReadings).toEqual(sessionRecord.simdReadings);
+			expect(input.frictionlessReason).toBe(sessionRecord.reason);
+			expect(input.ruleType).toEqual(sessionRecord.ruleType);
+			expect(input.webView).toBe(sessionRecord.webView);
+			expect(input.iFrame).toBe(sessionRecord.iFrame);
+			expect(typeof input.score).toBe("number");
 		});
 	});
 });

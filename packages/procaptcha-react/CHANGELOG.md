@@ -1,5 +1,52 @@
 # @prosopo/procaptcha-react
 
+## 2.9.77
+### Patch Changes
+
+- Updated dependencies [bb98af1]
+  - @prosopo/types@4.7.4
+  - @prosopo/procaptcha@2.10.38
+  - @prosopo/procaptcha-common@2.10.28
+
+## 2.9.76
+### Patch Changes
+
+- Updated dependencies [89ab6fc]
+- Updated dependencies [0f3750b]
+  - @prosopo/types@4.7.3
+  - @prosopo/procaptcha@2.10.37
+  - @prosopo/procaptcha-common@2.10.27
+
+## 2.9.75
+### Patch Changes
+
+- Updated dependencies [edcd450]
+- Updated dependencies [5295c4b]
+  - @prosopo/util@3.3.1
+  - @prosopo/types@4.7.2
+  - @prosopo/locale@3.2.5
+  - @prosopo/procaptcha@2.10.36
+  - @prosopo/common@3.1.40
+  - @prosopo/procaptcha-common@2.10.26
+
+## 2.9.74
+### Patch Changes
+
+- 46fedf4: Auto-start image/puzzle widget after PoW escalation so the user does not need to click the checkbox a second time.
+- Updated dependencies [46fedf4]
+  - @prosopo/types@4.7.1
+  - @prosopo/procaptcha@2.10.35
+  - @prosopo/procaptcha-common@2.10.25
+
+## 2.9.73
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/types@4.7.0
+  - @prosopo/procaptcha@2.10.34
+  - @prosopo/procaptcha-common@2.10.24
+
 ## 2.9.72
 ### Patch Changes
 

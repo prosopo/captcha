@@ -90,21 +90,14 @@ http://:9090 {
 	metrics /metrics
 }
 
-# Main site: bound on :8443. Layer4 (above) proxies non-trap-subzone
-# SNI connections from :443 in. ACME issuer is restricted to HTTP-01
-# because TLS-ALPN-01 requires control of :443. The :80 redirect
-# server is auto-created by Caddy (auto_https=on); it serves both
-# ACME HTTP-01 challenges AND HTTP→HTTPS redirects targeting port
-# 443 (i.e. the layer4 listener), which forwards non-matching SNIs
-# back to this same :8443 server.
-https://{$CADDY_DOMAIN}:8443 {
-
-	tls {
-		issuer acme {
-			disable_tlsalpn_challenge
-		}
-	}
-	
+# Shared route/handler config. Imported by the per-host site below
+# ({$CADDY_DOMAIN} = pronodeN.prosopo.io) and, on the cert getter, by
+# the global site for the load-balanced pronode.prosopo.io hostname
+# defined in provider.cert-getter.Caddyfile. Only the TLS strategy
+# differs between the two: per-host uses ACME HTTP-01 (A record points
+# to one IP per pronodeN), global uses a PEM provisioned by certbot on
+# the cert getter (see ansible playbooks/providerCertbotProvision.yml).
+(provider_site) {
 	handle /robots.txt {
 		# Serve /srv/static/robots.txt. Do NOT strip the leading slash:
 		# file_server prepends `root` to the request path, so `/robots.txt`
@@ -293,4 +286,20 @@ https://{$CADDY_DOMAIN}:8443 {
 	log {
 		format json
 	}
+}
+
+# Per-host site: bound on :8443. Layer4 (above) proxies non-trap-subzone
+# SNI connections from :443 in. ACME issuer is restricted to HTTP-01
+# because TLS-ALPN-01 requires control of :443. The :80 redirect server
+# is auto-created by Caddy (auto_https=on); it serves both ACME HTTP-01
+# challenges AND HTTP→HTTPS redirects targeting port 443 (i.e. the
+# layer4 listener), which forwards non-matching SNIs back to this same
+# :8443.
+https://{$CADDY_DOMAIN}:8443 {
+	tls {
+		issuer acme {
+			disable_tlsalpn_challenge
+		}
+	}
+	import provider_site
 }

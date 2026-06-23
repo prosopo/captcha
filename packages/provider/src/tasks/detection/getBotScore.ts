@@ -37,6 +37,14 @@ export const getBotScore = async (
 	const decryptedHeadHash: string = result.decryptedHeadHash;
 	const triggeredDetectors: number[] | undefined = result.triggeredDetectors;
 	const shadowDomPenalty: boolean | undefined = result.shadowDomPenalty;
+	const entropyMathRandomFingerprint: string | undefined =
+		result.entropyMathRandomFingerprint;
+	const entropyCryptoFingerprint: string | undefined =
+		result.entropyCryptoFingerprint;
+	const entropyWallClockOffsetMs: number | undefined =
+		result.entropyWallClockOffsetMs;
+	const entropyMathRandomFirst: number | undefined =
+		result.entropyMathRandomFirst;
 
 	if (baseBotScore === undefined || Number.isNaN(baseBotScore)) {
 		return {
@@ -57,5 +65,9 @@ export const getBotScore = async (
 		decryptedHeadHash,
 		triggeredDetectors,
 		shadowDomPenalty,
+		entropyMathRandomFingerprint,
+		entropyCryptoFingerprint,
+		entropyWallClockOffsetMs,
+		entropyMathRandomFirst,
 	};
 };

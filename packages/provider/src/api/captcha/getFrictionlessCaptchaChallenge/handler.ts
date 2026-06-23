@@ -271,6 +271,10 @@ export default (
 				decryptionFailed,
 				triggeredDetectors,
 				shadowDomPenalty,
+				entropyMathRandomFingerprint,
+				entropyCryptoFingerprint,
+				entropyWallClockOffsetMs,
+				entropyMathRandomFirst,
 			} = decryptedPayload;
 
 			req.logger.debug(() => ({
@@ -326,6 +330,18 @@ export default (
 				headers: flatHeaders,
 				mode: sessionMode,
 				...(decodedSimdReadings && { simdReadings: decodedSimdReadings }),
+				...(entropyMathRandomFingerprint !== undefined && {
+					entropyMathRandomFingerprint,
+				}),
+				...(entropyCryptoFingerprint !== undefined && {
+					entropyCryptoFingerprint,
+				}),
+				...(entropyWallClockOffsetMs !== undefined && {
+					entropyWallClockOffsetMs,
+				}),
+				...(entropyMathRandomFirst !== undefined && {
+					entropyMathRandomFirst,
+				}),
 			});
 
 			const ipInfoMobile =

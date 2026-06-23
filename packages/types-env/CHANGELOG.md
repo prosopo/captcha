@@ -1,5 +1,49 @@
 # @prosopo/types-env
 
+## 2.9.29
+### Patch Changes
+
+- Updated dependencies [bb98af1]
+  - @prosopo/types@4.7.4
+  - @prosopo/types-database@4.10.7
+  - @prosopo/keyring@2.9.45
+
+## 2.9.28
+### Patch Changes
+
+- Updated dependencies [89ab6fc]
+- Updated dependencies [0f3750b]
+  - @prosopo/types@4.7.3
+  - @prosopo/types-database@4.10.6
+  - @prosopo/keyring@2.9.44
+
+## 2.9.27
+### Patch Changes
+
+- Updated dependencies [edcd450]
+- Updated dependencies [5295c4b]
+  - @prosopo/types@4.7.2
+  - @prosopo/types-database@4.10.5
+  - @prosopo/keyring@2.9.43
+  - @prosopo/logger@1.0.4
+
+## 2.9.26
+### Patch Changes
+
+- Updated dependencies [46fedf4]
+  - @prosopo/types@4.7.1
+  - @prosopo/keyring@2.9.42
+  - @prosopo/types-database@4.10.4
+
+## 2.9.25
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/types@4.7.0
+  - @prosopo/types-database@4.10.3
+  - @prosopo/keyring@2.9.41
+
 ## 2.9.24
 ### Patch Changes
 
