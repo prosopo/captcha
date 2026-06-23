@@ -265,9 +265,10 @@ export function calculateJa4(data: Buffer): string {
 	// successfully parsed host_name — a present-but-empty/malformed list is
 	// still "d".
 	const sni = extIds.includes(EXT_SERVER_NAME) ? "d" : "i";
-	const [alpnFirst, alpnLast] =
-		// alpnProtocols.length > 0 guard above ensures [0] is defined
-		alpnProtocols.length > 0 ? alpnFirstLast(alpnProtocols[0]!) : ["0", "0"];
+	const firstAlpn = alpnProtocols[0];
+	const [alpnFirst, alpnLast] = firstAlpn
+		? alpnFirstLast(firstAlpn)
+		: ["0", "0"];
 
 	const nonGreaseCiphers = cipherSuites.filter((c) => !isGrease(c));
 	const nonGreaseExts = extIds.filter((e) => !isGrease(e));

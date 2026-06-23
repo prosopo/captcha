@@ -166,7 +166,7 @@ describe("calculateJa4 — fingerprint format", () => {
 		// First chunk is t + version(2) + sni(1) + cipherCount(2) + extCount(2)
 		// + alpn first/last. ALPN chars are 1 char for alphanumeric bytes but
 		// 2-char hex otherwise, so the chunk is at least 10 (not exactly 10).
-		expect(parts[0].length).toBeGreaterThanOrEqual(10);
+		expect(parts[0]?.length ?? 0).toBeGreaterThanOrEqual(10);
 		expect(parts[1]).toHaveLength(12);
 		expect(parts[2]).toHaveLength(12);
 		expect(parts[1]).toMatch(/^[0-9a-f]+$/);
