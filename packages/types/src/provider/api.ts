@@ -32,7 +32,12 @@ import {
 	type infer as zInfer,
 } from "zod";
 import { ApiParams } from "../api/params.js";
-import { INPUT_LIMITS, boundedString } from "../api/sanitise.js";
+import {
+	INPUT_LIMITS,
+	boundedString,
+	safeLine,
+	safeText,
+} from "../api/sanitise.js";
 import {
 	type CaptchaType,
 	DecisionMachineCaptchaTypeSchema,
@@ -284,7 +289,7 @@ export interface CaptchaResponseBody extends ApiResponse {
 // record, no automatic verdict. The TS shape (`ClientMetaData`) lives in
 // ./database.ts — this schema is the wire-level zod for request bodies.
 export const ClientMetaDataSchema = object({
-	[ApiParams.hp]: boundedString(INPUT_LIMITS.TEXT).optional(),
+	[ApiParams.hp]: safeText(INPUT_LIMITS.TEXT).optional(),
 });
 
 // Request-body-level bounded variants of shared schemas. The shared schemas
@@ -465,7 +470,7 @@ export const DnsEventSchema = object({
 	qtype: boundedString(INPUT_LIMITS.ID).optional(),
 	sni: boundedString(INPUT_LIMITS.ID).optional(),
 	path: boundedString(INPUT_LIMITS.URL).optional(),
-	user_agent: boundedString(INPUT_LIMITS.TEXT).optional(),
+	user_agent: safeLine(INPUT_LIMITS.TEXT).optional(),
 	path_valid: boolean().optional(),
 });
 export type DnsEvent = output<typeof DnsEventSchema>;
@@ -648,11 +653,11 @@ export const UpdateDetectorKeyBody = object({
 export const UpdateDecisionMachineBody = object({
 	[ApiParams.decisionMachineScope]: nativeEnum(DecisionMachineScope),
 	[ApiParams.decisionMachineRuntime]: nativeEnum(DecisionMachineRuntime),
-	[ApiParams.decisionMachineSource]: boundedString(INPUT_LIMITS.LONG_TEXT),
+	[ApiParams.decisionMachineSource]: safeText(INPUT_LIMITS.LONG_TEXT),
 	[ApiParams.decisionMachineLanguage]: nativeEnum(
 		DecisionMachineLanguage,
 	).optional(),
-	[ApiParams.decisionMachineName]: boundedString(INPUT_LIMITS.NAME).optional(),
+	[ApiParams.decisionMachineName]: safeLine(INPUT_LIMITS.NAME).optional(),
 	[ApiParams.decisionMachineVersion]: boundedString(INPUT_LIMITS.ID).optional(),
 	[ApiParams.decisionMachineCaptchaType]:
 		DecisionMachineCaptchaTypeSchema.optional(),

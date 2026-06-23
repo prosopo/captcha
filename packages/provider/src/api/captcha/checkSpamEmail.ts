@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { ProsopoApiError } from "@prosopo/common";
-import { INPUT_LIMITS, boundedString } from "@prosopo/types";
+import { INPUT_LIMITS, safeLine } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { extractDomainFromEmail } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
@@ -24,8 +24,8 @@ import { checkSpamEmail as checkSpamEmailFn } from "../../tasks/spam/checkSpamEm
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 
 const CheckSpamEmailRequestBody = object({
-	email: boundedString(INPUT_LIMITS.EMAIL),
-	dapp: boundedString(INPUT_LIMITS.ID),
+	email: safeLine(INPUT_LIMITS.EMAIL),
+	dapp: safeLine(INPUT_LIMITS.ID),
 });
 
 export default (env: ProviderEnvironment) =>
