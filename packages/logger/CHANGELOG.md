@@ -1,5 +1,11 @@
 # @prosopo/logger
 
+## 1.0.4
+### Patch Changes
+
+- Updated dependencies [edcd450]
+  - @prosopo/util@3.3.1
+
 ## 1.0.3
 ### Patch Changes
 

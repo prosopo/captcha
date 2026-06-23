@@ -57,7 +57,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 
 		beforeAll(async () => {
 			// Start MongoDB container
-			mongoContainer = await new GenericContainer("mongo:6.0.17")
+			mongoContainer = await new GenericContainer("mongo:6.0.28")
 				.withExposedPorts(27017)
 				.withEnvironment({
 					MONGO_INITDB_ROOT_USERNAME: "root",
@@ -126,7 +126,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			await db.getRedisAccessRulesConnection().getClient();
 
 			accessRulesStorage = env.getDb().getUserAccessRulesStorage();
-		});
+		}, 120_000);
 
 		beforeEach(async () => {
 			[siteKeyMnemonic, siteKey] = await generateMnemonic();

@@ -25,6 +25,7 @@ export * from "./choice.js";
 export * from "./permutations.js";
 export * from "./version.js";
 export * from "./hex.js";
+export * from "./coords.js";
 export * from "./checks.js";
 export * from "./ip.js";
 export { verifyRecency } from "./verifyRecency.js";

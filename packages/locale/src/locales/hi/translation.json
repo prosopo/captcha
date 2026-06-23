@@ -436,6 +436,7 @@
 		"NO_CAPTCHA": "कई कपच नह मल",
 		"NO_SESSION_FOUND": "कई सतर नह मल",
 		"IP_ADDRESS_MISMATCH": "IP पते मेल नहीं खाते",
+		"INVALID_SALT": "अमान्य सॉल्ट",
 		"INVALID_TOKEN": "अमनय टकन",
 		"INVALID_SOLUTION": "अमनय समधन",
 		"DECRYPTION_ERROR": "डकरपशन तरट"

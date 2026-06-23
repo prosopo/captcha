@@ -140,4 +140,104 @@ describe("handleAccessPolicy", () => {
 		expect(r.handled).toBe(true);
 		expect(tasks.frictionlessManager.sendPuzzleCaptcha).toHaveBeenCalled();
 	});
+
+	describe("auto-ban threshold (post-policy bump)", () => {
+		// Repro: site has autoBanScoreThreshold=1.1, session arrives at
+		// access policy with botScore=1.0. The access-policy bump adds
+		// +0.1 → 1.1, which meets the threshold. Pre-fix the access
+		// policy short-circuited to sendImageCaptcha / sendPuzzleCaptcha /
+		// sendPowCaptcha and the later autoBan check in runDecisionMachine
+		// never ran. Each route must now register AUTO_BAN_SCORE and 401.
+		const withAutoBanInput = (
+			captchaType:
+				| typeof CaptchaType.image
+				| typeof CaptchaType.pow
+				| typeof CaptchaType.puzzle,
+			threshold = 1.1,
+			startScore = 1.0,
+		) => {
+			const { tasks, input } = buildInput();
+			input.botScore = startScore;
+			input.baseBotScore = startScore;
+			(input.clientRecord as { settings: Record<string, unknown> }).settings = {
+				imageMaxRounds: 5,
+				autoBanScoreThreshold: threshold,
+			};
+			input.userAccessPolicy = {
+				type: AccessPolicyType.Restrict,
+				captchaType,
+			};
+			return { tasks, input };
+		};
+
+		it("fires when image-typed access policy bump crosses threshold", async () => {
+			const { tasks, input } = withAutoBanInput(CaptchaType.image);
+			const res = buildRes();
+			const r = await handleAccessPolicy(input as never, res as never);
+			expect(r.handled).toBe(true);
+			expect(
+				tasks.frictionlessManager.registerBlockedSession,
+			).toHaveBeenCalledWith(
+				expect.objectContaining({ reason: "AUTO_BAN_SCORE" }),
+			);
+			expect(res.status).toHaveBeenCalledWith(401);
+			expect(tasks.frictionlessManager.sendImageCaptcha).not.toHaveBeenCalled();
+		});
+
+		it("fires when pow-typed access policy bump crosses threshold", async () => {
+			const { tasks, input } = withAutoBanInput(CaptchaType.pow);
+			const res = buildRes();
+			const r = await handleAccessPolicy(input as never, res as never);
+			expect(r.handled).toBe(true);
+			expect(
+				tasks.frictionlessManager.registerBlockedSession,
+			).toHaveBeenCalledWith(
+				expect.objectContaining({ reason: "AUTO_BAN_SCORE" }),
+			);
+			expect(res.status).toHaveBeenCalledWith(401);
+			expect(tasks.frictionlessManager.sendPowCaptcha).not.toHaveBeenCalled();
+		});
+
+		it("fires when puzzle-typed access policy bump crosses threshold", async () => {
+			const { tasks, input } = withAutoBanInput(CaptchaType.puzzle);
+			const res = buildRes();
+			const r = await handleAccessPolicy(input as never, res as never);
+			expect(r.handled).toBe(true);
+			expect(
+				tasks.frictionlessManager.registerBlockedSession,
+			).toHaveBeenCalledWith(
+				expect.objectContaining({ reason: "AUTO_BAN_SCORE" }),
+			);
+			expect(res.status).toHaveBeenCalledWith(401);
+			expect(
+				tasks.frictionlessManager.sendPuzzleCaptcha,
+			).not.toHaveBeenCalled();
+		});
+
+		it("still routes when bumped score stays below threshold", async () => {
+			const { tasks, input } = withAutoBanInput(CaptchaType.puzzle, 1.5, 1.0);
+			const res = buildRes();
+			const r = await handleAccessPolicy(input as never, res as never);
+			expect(r.handled).toBe(true);
+			expect(
+				tasks.frictionlessManager.registerBlockedSession,
+			).not.toHaveBeenCalled();
+			expect(tasks.frictionlessManager.sendPuzzleCaptcha).toHaveBeenCalled();
+		});
+
+		it("does nothing when autoBanScoreThreshold is undefined", async () => {
+			const { tasks, input } = buildInput();
+			input.botScore = 5.0;
+			input.userAccessPolicy = {
+				type: AccessPolicyType.Restrict,
+				captchaType: CaptchaType.puzzle,
+			};
+			const res = buildRes();
+			await handleAccessPolicy(input as never, res as never);
+			expect(
+				tasks.frictionlessManager.registerBlockedSession,
+			).not.toHaveBeenCalled();
+			expect(tasks.frictionlessManager.sendPuzzleCaptcha).toHaveBeenCalled();
+		});
+	});
 });

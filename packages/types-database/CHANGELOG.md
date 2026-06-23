@@ -1,5 +1,114 @@
 # @prosopo/types-database
 
+## 4.11.0
+### Minor Changes
+
+- 12cd0a6: Replace client-side weighted-random provider selection with static DNS endpoints.
+  
+  - Removed the `providerSelectEntropy` field from `DetectorResult`, `Session`, the
+    Mongoose `SessionRecordSchema` (including its standalone index), and every
+    call-site that threaded it through frictionless / image / pow / puzzle flows.
+  - Removed `FrictionlessManager.hostVerified` and its decision-machine call site
+    — there's nothing to verify when the DNS layer picks the host.
+  - `getRandomActiveProvider(env)` now returns the per-environment static DNS
+    endpoint (`pronode.prosopo.io` family) instead of fetching the provider list
+    and weighted-selecting. The entropy parameter is gone.
+  - `getProcaptchaRandomActiveProvider` is now a thin re-export so widget packages
+    keep importing from `procaptcha-common`.
+  - `FrontendProvider.datasetId` is dropped; `CaptchaRequestBody.datasetId` is
+    optional. The server falls back to its own most-recently-uploaded dataset
+    (`env.datasetId`, populated from `db.getMostRecentDatasetId()` at startup) —
+    clients can't pin a dataset under DNS routing because they don't know which
+    pronode they'll hit.
+  - Removed dead `setProviderLoader` / `prefetchProviders` / `selectWeightedProvider`
+    plumbing from `@prosopo/load-balancer`. The server's cacheFile-based loader
+    setup in `startProviderApi` goes with them.
+  - `getRandomActiveProvider` now hits `/healthz` on the global hostname once per
+    page load, reads the responding pronode's identity from the JSON body, and
+    pins subsequent captcha calls to that pronode (`https://pronodeN.prosopo.io`)
+    so session creation and submission land on the same backend. Falls back to
+    the dual-stack global hostname when `/healthz` is unreachable.
+  - `/healthz` now returns `{ ok: true, host: <pronode-identity> }` instead of
+    `"OK"` to support the above pinning.
+  - CORS preflight is now cached for 24h (`maxAge: 86400`) — previously the
+    browser refired an OPTIONS preflight before every captcha call because
+    the custom `Prosopo-Site-Key` / `Prosopo-User` headers make the request
+    non-simple and the default `maxAge` is 5s.
+
+### Patch Changes
+
+- Updated dependencies [12cd0a6]
+- Updated dependencies [12cd0a6]
+  - @prosopo/types@4.8.0
+  - @prosopo/user-access-policy@3.10.8
+
+## 4.10.7
+### Patch Changes
+
+- bb98af1: Add `DecisionMachineKind` (`routing` | `decision`) to separate routing and decision artifacts on the same provider.
+  
+  - New `DecisionMachineKind` enum in `@prosopo/types`.
+  - `DecisionMachineArtifact` and the Mongoose `DecisionMachineArtifactRecordSchema` gain an optional `kind` field; the unique compound index becomes `(scope, dappAccount, kind)` so a routing machine and a decision machine can coexist for the same scope/dapp.
+  - `ProviderApi.updateDecisionMachine` accepts an optional `kind` 10th arg; the `apiUpdateDecisionMachineEndpoint` admin handler reads `decisionMachineKind` from the request body and forwards it.
+  - `ClientTaskManager.updateDecisionMachine` and the artifact-listing returns include `kind`.
+  - `ProviderDatabase.getDecisionMachineArtifact` filters by `kind` when supplied; `upsertDecisionMachineArtifact` defaults missing `kind` to `Routing` for backward compatibility on existing rows.
+  - `DecisionMachineRunner` keys its in-memory cache by `(scope, kind, dappAccount)` and selects the appropriate artifact for `runDecisionMachine` (kind=`decision`), `runRoutingMachine` (kind=`routing`) and `runCounterMachine` (kind=`routing`).
+  - `DecisionMachineArtifactRecordSchema.captchaType` enum now includes `CaptchaType.puzzle` alongside `pow`/`image`.
+- Updated dependencies [bb98af1]
+  - @prosopo/types@4.7.4
+  - @prosopo/user-access-policy@3.10.7
+
+## 4.10.6
+### Patch Changes
+
+- 0f3750b: Add optional `entropyMathRandomFingerprint`, `entropyCryptoFingerprint`, `entropyWallClockOffsetMs` and `entropyMathRandomFirst` fields on `Session` (Zod + Mongoose) and the frictionless `decryptPayload` → `setSessionParams` → `createSession` chain. Sparse compound index `{ siteKey, entropyMathRandomFingerprint, createdAt: -1 }` for query support.
+- Updated dependencies [89ab6fc]
+- Updated dependencies [0f3750b]
+  - @prosopo/types@4.7.3
+  - @prosopo/user-access-policy@3.10.6
+
+## 4.10.5
+### Patch Changes
+
+- 5295c4b: Traffic-filter `datacenterNameAllowlist` now matches `datacenterName`, `providerName`, or `asnOrganization` (was: `datacenterName` only). Lets the allowlist reach IPs where upstream sets `is_datacenter: true` without populating `datacenter.datacenter`.
+  
+  New opt-in `trafficFilter.skipExtrasOnValidDnsPath` (default `false`): when on and `dnsEvent.pathValid === true`, skip the filter evaluation on the DNS peer and resolver IPs.
+- Updated dependencies [e89860e]
+- Updated dependencies [edcd450]
+- Updated dependencies [5295c4b]
+  - @prosopo/user-access-policy@3.10.5
+  - @prosopo/types@4.7.2
+  - @prosopo/locale@3.2.5
+  - @prosopo/logger@1.0.4
+  - @prosopo/common@3.1.40
+
+## 4.10.4
+### Patch Changes
+
+- Updated dependencies [46fedf4]
+  - @prosopo/types@4.7.1
+  - @prosopo/user-access-policy@3.10.4
+
+## 4.10.3
+### Patch Changes
+
+- 3a46191: feat(traffic-filter): allowlist datacenter operators by name
+  
+  Apple's iCloud Private Relay exits from datacenter IPs, so sites with
+  `blockDatacenter: true` were dropping legitimate Safari traffic. ipapi
+  already reports the operator name verbatim in `datacenter.datacenter`
+  — expose it on `IPInfoResult.datacenterName` and let `TrafficFilter`
+  carry an optional `datacenterNameAllowlist` so operators can opt the
+  relay traffic through without disabling the rest of the rule. Match
+  is case-/whitespace-insensitive; the allowlist only suppresses the
+  datacenter check, so a VPN/Tor/Proxy/Abuser hit on the same IP still
+  blocks. New field is wired through Zod (capped 50 × 128 chars) and
+  the Mongoose client settings schema so it persists.
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/types@4.7.0
+  - @prosopo/user-access-policy@3.10.3
+
 ## 4.10.2
 ### Patch Changes
 
@@ -78,11 +187,11 @@
   
   The dapp-verify recency check used to be `now - challengeTimestamp <= timeout`. The window was issuance→verify, which gave bots room to stockpile pre-solved solutions and redeem them many seconds (sometimes minutes) later from the time they reached the provider.
   
-  The check is now `now - challengeRecord.submittedAtTimestamp <= clientSettings.verifiedTimeout`. The window measures from the moment the user's solution actually arrived. Combined with the new lifecycle fields, this measurably tightens the stockpile attack surface — the data showed 1564 records / 21% on Twickets where a correct PoW was submitted but the dapp never verified, p99 issuance→submit of 31s on that cohort, and records up to 1.26 min.
+  The check is now `now - challengeRecord.submittedAtTimestamp <= clientSettings.verifiedTimeout`. The window measures from the moment the user's solution actually arrived. Combined with the new lifecycle fields, this tightens the stockpile attack surface.
   
   ### Settings move
   
-  `verifiedTimeout` moves to `ClientSettingsSchema` (per-client, operator-set via the portal). Default stays at 120000ms for back-compat; auto-submit dapps (Twickets et al.) should set it to ~10000ms.
+  `verifiedTimeout` moves to `ClientSettingsSchema` (per-client, operator-set via the portal). Default stays at 120000ms for back-compat; auto-submit dapps should set it to ~10000ms.
   
   Removed from request bodies entirely:
   
