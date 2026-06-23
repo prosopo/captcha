@@ -80,11 +80,16 @@ jobs:
             # Poll until GitHub finishes computing the merge state (it is lazy
             # and returns UNKNOWN right after a base change).
             for attempt in $(seq 1 "$POLL_ATTEMPTS"); do
-              read -r mergeable state < <(
+              if ! out=$(
                 gh pr view "$n" --repo "$REPO" \
                   --json mergeable,mergeStateStatus \
                   --jq '"\(.mergeable) \(.mergeStateStatus)"'
-              )
+              ); then
+                echo "Failed to fetch merge state for PR #$n; skipping."
+                mergeable="UNKNOWN"; state="UNKNOWN"
+                break
+              fi
+              read -r mergeable state <<<"$out"
               echo "attempt $attempt: mergeable=$mergeable mergeStateStatus=$state"
               if [ "$mergeable" != "UNKNOWN" ] && [ "$state" != "UNKNOWN" ]; then
                 break
