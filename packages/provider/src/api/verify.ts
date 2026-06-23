@@ -84,8 +84,6 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				return res.json(verificationResponse);
 			}
 
-			const tasks = new Tasks(env, req.logger);
-
 			// We can be helpful and provide a more detailed error message when there are missing fields
 			let parsed: VerifySolutionBodyTypeOutput;
 			try {
@@ -135,6 +133,11 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				if (forwarded) {
 					return res.json(forwarded);
 				}
+
+				// Only construct Tasks (which opens the DB) once we know this node
+				// is the issuer and must verify locally — non-issuer nodes forward
+				// above and never touch the DB.
+				const tasks = new Tasks(env, req.logger);
 
 				// Do this before checking the db
 				validateAddress(dapp, false, 42);
@@ -224,8 +227,6 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				return res.json(verificationResponse);
 			}
 
-			const tasks = new Tasks(env, req.logger);
-
 			let parsed: ServerPowCaptchaVerifyRequestBodyOutput;
 
 			// We can be helpful and provide a more detailed error message when there are missing fields
@@ -277,6 +278,11 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				if (forwarded) {
 					return res.json(forwarded);
 				}
+
+				// Only construct Tasks (which opens the DB) once we know this node
+				// is the issuer and must verify locally — non-issuer nodes forward
+				// above and never touch the DB.
+				const tasks = new Tasks(env, req.logger);
 
 				// Do this before checking the db
 				validateAddress(dapp, false, 42);
@@ -374,8 +380,6 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				return res.json(verificationResponse);
 			}
 
-			const tasks = new Tasks(env, req.logger);
-
 			let parsed: ServerPuzzleCaptchaVerifyRequestBodyOutput;
 
 			// We can be helpful and provide a more detailed error message when there are missing fields
@@ -427,6 +431,11 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				if (forwarded) {
 					return res.json(forwarded);
 				}
+
+				// Only construct Tasks (which opens the DB) once we know this node
+				// is the issuer and must verify locally — non-issuer nodes forward
+				// above and never touch the DB.
+				const tasks = new Tasks(env, req.logger);
 
 				// Do this before checking the db
 				validateAddress(dapp, false, 42);

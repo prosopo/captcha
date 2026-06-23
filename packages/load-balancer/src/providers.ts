@@ -13,7 +13,11 @@
 // limitations under the License.
 
 import type { EnvironmentTypes, RandomProvider } from "@prosopo/types";
-import type { IpMode } from "./balancer.js";
+import {
+	type HardcodedProvider,
+	type IpMode,
+	loadBalancer,
+} from "./balancer.js";
 
 // Base DNS endpoint per env — the `pronode.prosopo.io` family is latency-routed
 // (A/AAAA records across the pronode fleet). Clients hit this URL's `/healthz`
@@ -108,6 +112,14 @@ const resolvePinnedUrl = async (
 	return promise;
 };
 
+// Cached, in-flight provider-list load per env. The list rarely changes, so a
+// single fetch is shared across callers rather than re-fetching the
+// provider-list JSON on every verify-forward decision.
+const providerListPromiseCache: Map<
+	EnvironmentTypes,
+	Promise<HardcodedProvider[]>
+> = new Map();
+
 /**
  * Returns the full (cached) list of active providers for an environment.
  * Used to look up a provider by url/address, e.g. to find the provider that
@@ -116,7 +128,17 @@ const resolvePinnedUrl = async (
 export const getProviders = async (
 	env: EnvironmentTypes,
 ): Promise<HardcodedProvider[]> => {
-	return getProvidersPromise(env);
+	const cached = providerListPromiseCache.get(env);
+	if (cached) return cached;
+
+	const promise = loadBalancer(env).catch((err) => {
+		// Don't cache failures — a transient fetch error shouldn't poison the
+		// cache for the lifetime of the process.
+		providerListPromiseCache.delete(env);
+		throw err;
+	});
+	providerListPromiseCache.set(env, promise);
+	return promise;
 };
 
 export const getRandomActiveProvider = async (

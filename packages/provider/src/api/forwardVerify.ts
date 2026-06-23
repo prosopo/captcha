@@ -80,6 +80,8 @@ export async function forwardVerifyIfNotIssuer(args: {
 		data: { providerUrl, path, dapp },
 	}));
 
-	const providerApi = new ProviderApi(providerUrl, dapp);
+	// Forward to the vetted canonical url from the provider list rather than the
+	// raw token string (defence-in-depth; survives any future url normalisation).
+	const providerApi = new ProviderApi(issuer.url, dapp);
 	return providerApi.forwardVerify(path, body, user);
 }
