@@ -122,7 +122,38 @@ jobs:
               continue
             fi
 
-            echo "PR #$n is behind but passing. Updating its branch..."
+            # Skip PRs with unresolved review conversations. A branch update
+            # won't unblock them, and we should not flywheel a PR that still has
+            # open feedback toward an auto-merge.
+            owner="${REPO%/*}"; name="${REPO#*/}"
+            if ! unresolved=$(
+              gh api graphql \
+                -f owner="$owner" -f name="$name" -F number="$n" \
+                -f query='
+                  query($owner:String!, $name:String!, $number:Int!) {
+                    repository(owner: $owner, name: $name) {
+                      pullRequest(number: $number) {
+                        reviewThreads(first: 100) {
+                          nodes { isResolved }
+                          pageInfo { hasNextPage }
+                        }
+                      }
+                    }
+                  }' \
+                --jq '[ .data.repository.pullRequest.reviewThreads.nodes[]
+                        | select(.isResolved == false) ] | length'
+            ); then
+              echo "Failed to fetch review threads for PR #$n; skipping."
+              echo "::endgroup::"
+              continue
+            fi
+            if [ "$unresolved" -gt 0 ]; then
+              echo "PR #$n has $unresolved unresolved conversation(s); skipping."
+              echo "::endgroup::"
+              continue
+            fi
+
+            echo "PR #$n is behind, passing, and has no open conversations. Updating its branch..."
             if ! gh api \
               --method PUT \
               -H "Accept: application/vnd.github+json" \
