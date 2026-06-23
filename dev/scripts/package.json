@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/scripts",
-	"version": "3.1.94",
+	"version": "3.1.111",
 	"description": "Dev scripts for working with prosopo packages",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -31,18 +31,18 @@
 		"@iarna/toml": "2.2.5",
 		"@polkadot/util": "13.5.7",
 		"@polkadot/util-crypto": "13.5.7",
-		"@prosopo/cli": "3.6.30",
-		"@prosopo/common": "3.1.38",
-		"@prosopo/logger": "1.0.2",
-		"@prosopo/datasets": "3.1.28",
-		"@prosopo/dotenv": "3.0.43",
-		"@prosopo/env": "3.5.7",
-		"@prosopo/keyring": "2.9.34",
-		"@prosopo/locale": "3.2.4",
-		"@prosopo/provider": "4.7.0",
-		"@prosopo/types": "4.3.0",
-		"@prosopo/types-env": "2.9.16",
-		"@prosopo/util": "3.2.15",
+		"@prosopo/cli": "3.6.47",
+		"@prosopo/common": "3.1.40",
+		"@prosopo/logger": "1.0.4",
+		"@prosopo/datasets": "3.1.40",
+		"@prosopo/dotenv": "3.0.45",
+		"@prosopo/env": "3.6.0",
+		"@prosopo/keyring": "2.9.46",
+		"@prosopo/locale": "3.2.5",
+		"@prosopo/provider": "4.12.0",
+		"@prosopo/types": "4.8.0",
+		"@prosopo/types-env": "2.10.0",
+		"@prosopo/util": "3.3.1",
 		"@prosopo/util-crypto": "13.5.29",
 		"@prosopo/workspace": "3.1.20",
 		"dotenv": "16.4.5",
@@ -51,7 +51,7 @@
 		"yargs": "17.7.2"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.1",
+		"@prosopo/config": "3.3.3",
 		"@types/fs-extra": "11.0.4",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "3.2.4",
@@ -63,5 +63,10 @@
 		"typescript": "5.6.2",
 		"vite": "6.4.1",
 		"vitest": "3.2.4"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "dev/scripts"
 	}
 }

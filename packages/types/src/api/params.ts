@@ -62,6 +62,7 @@ export enum ApiParams {
 	decisionMachineName = "decisionMachineName",
 	decisionMachineVersion = "decisionMachineVersion",
 	decisionMachineCaptchaType = "decisionMachineCaptchaType",
+	decisionMachineKind = "decisionMachineKind",
 	salt = "salt",
 	email = "email",
 	targetX = "targetX",
@@ -78,4 +79,5 @@ export enum ApiParams {
 	hp = "hp",
 	clientMetaData = "clientMetaData",
 	honeypot = "honeypot",
+	fingerprintProof = "fingerprintProof",
 }

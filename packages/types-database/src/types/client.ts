@@ -15,6 +15,8 @@
 import {
 	CaptchaType,
 	ContextType,
+	DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
+	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
 	type IUserData,
 	type IUserSettings,
 	type Timestamp,
@@ -116,6 +118,14 @@ export const UserSettingsSchema = new Schema({
 		enum: CaptchaType,
 		default: captchaTypeDefault,
 	},
+	verifiedTimeout: {
+		type: Number,
+		default: DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
+	},
+	solutionTimeout: {
+		type: Number,
+		default: DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
+	},
 	frictionlessThreshold: {
 		type: Number,
 		default: frictionlessThresholdDefault,
@@ -186,6 +196,8 @@ export const UserSettingsSchema = new Schema({
 		blockAbuser: { type: Boolean, default: true },
 		abuserScoreThreshold: { type: Number, min: 0, max: 1, default: 0 },
 		blockDatacenter: { type: Boolean, default: false },
+		datacenterNameAllowlist: { type: [String], required: false },
+		skipExtrasOnValidDnsPath: { type: Boolean, default: false },
 		blockMobile: { type: Boolean, default: false },
 		blockSatellite: { type: Boolean, default: false },
 		blockCrawler: { type: Boolean, default: false },

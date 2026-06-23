@@ -46,12 +46,17 @@ class ApiUpdateDecisionMachineEndpoint
 				decisionMachineName,
 				decisionMachineVersion,
 				decisionMachineCaptchaType,
+				decisionMachineKind,
 				dapp,
 			} = args;
 
 			logger.info(() => ({
 				msg: "Updating decision machine",
-				data: { decisionMachineScope, dappAccount: dapp },
+				data: {
+					decisionMachineScope,
+					dappAccount: dapp,
+					kind: decisionMachineKind,
+				},
 			}));
 
 			const result = await this.clientTaskManager.updateDecisionMachine(
@@ -63,6 +68,7 @@ class ApiUpdateDecisionMachineEndpoint
 				decisionMachineName,
 				decisionMachineVersion,
 				decisionMachineCaptchaType,
+				decisionMachineKind,
 			);
 
 			logger.info(() => ({

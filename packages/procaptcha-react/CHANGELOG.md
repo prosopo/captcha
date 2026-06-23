@@ -1,5 +1,125 @@
 # @prosopo/procaptcha-react
 
+## 2.9.78
+### Patch Changes
+
+- 005b817: fix(procaptcha-react): hold image-captcha Manager in a useRef
+  
+  Image widget rebuilt the Manager on every render, so the closure
+  variables that hold the checkbox click coords (set on start) were
+  overwritten by `(0, 0)` on the next render — including the re-render
+  that fires immediately after `setLoading(true)` in the click handler.
+  By the time `submit()` ran, it was on a newer Manager instance that
+  had never seen the click, so every captcha persisted
+  `coords[0] = [[0, 0]]`. Matches the pattern PoW and Puzzle already use.
+- Updated dependencies [12cd0a6]
+- Updated dependencies [12cd0a6]
+  - @prosopo/procaptcha-common@2.11.0
+  - @prosopo/types@4.8.0
+  - @prosopo/procaptcha@2.10.39
+
+## 2.9.77
+### Patch Changes
+
+- Updated dependencies [bb98af1]
+  - @prosopo/types@4.7.4
+  - @prosopo/procaptcha@2.10.38
+  - @prosopo/procaptcha-common@2.10.28
+
+## 2.9.76
+### Patch Changes
+
+- Updated dependencies [89ab6fc]
+- Updated dependencies [0f3750b]
+  - @prosopo/types@4.7.3
+  - @prosopo/procaptcha@2.10.37
+  - @prosopo/procaptcha-common@2.10.27
+
+## 2.9.75
+### Patch Changes
+
+- Updated dependencies [edcd450]
+- Updated dependencies [5295c4b]
+  - @prosopo/util@3.3.1
+  - @prosopo/types@4.7.2
+  - @prosopo/locale@3.2.5
+  - @prosopo/procaptcha@2.10.36
+  - @prosopo/common@3.1.40
+  - @prosopo/procaptcha-common@2.10.26
+
+## 2.9.74
+### Patch Changes
+
+- 46fedf4: Auto-start image/puzzle widget after PoW escalation so the user does not need to click the checkbox a second time.
+- Updated dependencies [46fedf4]
+  - @prosopo/types@4.7.1
+  - @prosopo/procaptcha@2.10.35
+  - @prosopo/procaptcha-common@2.10.25
+
+## 2.9.73
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/types@4.7.0
+  - @prosopo/procaptcha@2.10.34
+  - @prosopo/procaptcha-common@2.10.24
+
+## 2.9.72
+### Patch Changes
+
+- Updated dependencies [4626340]
+  - @prosopo/types@4.6.1
+  - @prosopo/procaptcha@2.10.33
+  - @prosopo/procaptcha-common@2.10.23
+
+## 2.9.71
+### Patch Changes
+
+- Updated dependencies [55b1388]
+  - @prosopo/util@3.3.0
+  - @prosopo/types@4.6.0
+  - @prosopo/procaptcha@2.10.32
+  - @prosopo/common@3.1.39
+  - @prosopo/procaptcha-common@2.10.22
+
+## 2.9.70
+### Patch Changes
+
+- Updated dependencies [9b91e85]
+- Updated dependencies [c80a05b]
+  - @prosopo/types@4.5.0
+  - @prosopo/procaptcha@2.10.31
+  - @prosopo/procaptcha-common@2.10.21
+
+## 2.9.69
+### Patch Changes
+
+- Updated dependencies [f69724f]
+- Updated dependencies [3973078]
+  - @prosopo/types@4.4.1
+  - @prosopo/procaptcha@2.10.30
+  - @prosopo/procaptcha-common@2.10.20
+
+## 2.9.68
+### Patch Changes
+
+- 2d66d8e: Image-captcha widget now forwards the trusted checkbox click `(clientX, clientY)` through `manager.start(x, y)`. `Manager.submit` embeds the pair as a 2-number prefix on the first captcha's solution salt. Provider peels the prefix via length math against `solution.length` (no protocol version flag — older clients keep working unchanged) and prepends it as the first entry of `pairs`, which is written to `UserCommitment.coords`. Adds `peelCheckboxPrefix` helper in `pairs.ts` with round-trip unit tests.
+- Updated dependencies [bc3813d]
+- Updated dependencies [2d66d8e]
+- Updated dependencies [4d05e3f]
+  - @prosopo/types@4.4.0
+  - @prosopo/procaptcha@2.10.29
+  - @prosopo/procaptcha-common@2.10.19
+
+## 2.9.67
+### Patch Changes
+
+- Updated dependencies [b03dad1]
+  - @prosopo/types@4.3.1
+  - @prosopo/procaptcha@2.10.28
+  - @prosopo/procaptcha-common@2.10.18
+
 ## 2.9.66
 ### Patch Changes
 

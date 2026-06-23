@@ -57,7 +57,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 
 		beforeAll(async () => {
 			// Start MongoDB container
-			mongoContainer = await new GenericContainer("mongo:6.0.17")
+			mongoContainer = await new GenericContainer("mongo:6.0.28")
 				.withExposedPorts(27017)
 				.withEnvironment({
 					MONGO_INITDB_ROOT_USERNAME: "root",
@@ -126,7 +126,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			await db.getRedisAccessRulesConnection().getClient();
 
 			accessRulesStorage = env.getDb().getUserAccessRulesStorage();
-		});
+		}, 120_000);
 
 		beforeEach(async () => {
 			[siteKeyMnemonic, siteKey] = await generateMnemonic();
@@ -158,80 +158,21 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				siteKey,
 			);
 
-			expect(spy).toHaveBeenCalledTimes(6);
+			// One query, matchingFieldsOnly=true engages server-side
+			// specificity rank in FT.AGGREGATE — every returned rule
+			// already applies, so JS rank is a defensive pass.
+			expect(spy).toHaveBeenCalledTimes(1);
 			expect(spy).toHaveBeenCalledWith(
 				{
 					policyScope: {
 						clientId: siteKey,
 					},
-					policyScopeMatch: FilterScopeMatch.Exact,
+					policyScopeMatch: FilterScopeMatch.Greedy,
 					userScope: userScopeInput.parse({
 						ja4Hash: ja4Hash1,
 						userAgent: userAgent1,
 					}),
-					userScopeMatch: FilterScopeMatch.Exact,
-				},
-				true,
-				true,
-			);
-			expect(spy).toHaveBeenCalledWith(
-				{
-					policyScope: {
-						clientId: siteKey,
-					},
-					policyScopeMatch: FilterScopeMatch.Exact,
-					userScope: userScopeInput.parse({
-						userAgent: userAgent1,
-					}),
-					userScopeMatch: FilterScopeMatch.Exact,
-				},
-				true,
-				true,
-			);
-			expect(spy).toHaveBeenCalledWith(
-				{
-					policyScope: {
-						clientId: siteKey,
-					},
-					policyScopeMatch: FilterScopeMatch.Exact,
-					userScope: userScopeInput.parse({
-						ja4Hash: ja4Hash1,
-					}),
-					userScopeMatch: FilterScopeMatch.Exact,
-				},
-				true,
-				true,
-			);
-			expect(spy).toHaveBeenCalledWith(
-				{
-					policyScopeMatch: FilterScopeMatch.Exact,
-					userScope: userScopeInput.parse({
-						ja4Hash: ja4Hash1,
-						userAgent: userAgent1,
-					}),
-					userScopeMatch: FilterScopeMatch.Exact,
-				},
-				true,
-				true,
-			);
-			expect(spy).toHaveBeenCalledWith(
-				{
-					policyScopeMatch: FilterScopeMatch.Exact,
-					userScope: userScopeInput.parse({
-						userAgent: userAgent1,
-					}),
-					userScopeMatch: FilterScopeMatch.Exact,
-				},
-				true,
-				true,
-			);
-			expect(spy).toHaveBeenCalledWith(
-				{
-					policyScopeMatch: FilterScopeMatch.Exact,
-					userScope: userScopeInput.parse({
-						ja4Hash: ja4Hash1,
-					}),
-					userScopeMatch: FilterScopeMatch.Exact,
+					userScopeMatch: FilterScopeMatch.Greedy,
 				},
 				true,
 				true,
@@ -263,81 +204,22 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				siteKey,
 			);
 
-			expect(spy).toHaveBeenCalledTimes(6);
-
-			expect(spy).toHaveBeenCalledWith(
-				{
-					policyScopeMatch: FilterScopeMatch.Exact,
-					userScope: userScopeInput.parse({
-						ja4Hash: ja4Hash1,
-						userAgent: userAgent1,
-					}),
-					userScopeMatch: FilterScopeMatch.Exact,
-				},
-				true,
-				true,
-			);
-			expect(spy).toHaveBeenCalledWith(
-				{
-					policyScopeMatch: FilterScopeMatch.Exact,
-					userScope: userScopeInput.parse({
-						userAgent: userAgent1,
-					}),
-					userScopeMatch: FilterScopeMatch.Exact,
-				},
-				true,
-				true,
-			);
-			expect(spy).toHaveBeenCalledWith(
-				{
-					policyScopeMatch: FilterScopeMatch.Exact,
-					userScope: userScopeInput.parse({
-						ja4Hash: ja4Hash1,
-					}),
-					userScopeMatch: FilterScopeMatch.Exact,
-				},
-				true,
-				true,
-			);
+			// matchingFieldsOnly=true: the strict AND-of-disjunctions
+			// filter already excludes this rule at the Redis side
+			// because @userAgentHash on the rule doesn't equal the
+			// request's userAgentHash.
+			expect(spy).toHaveBeenCalledTimes(1);
 			expect(spy).toHaveBeenCalledWith(
 				{
 					policyScope: {
 						clientId: siteKey,
 					},
-					policyScopeMatch: FilterScopeMatch.Exact,
+					policyScopeMatch: FilterScopeMatch.Greedy,
 					userScope: userScopeInput.parse({
 						ja4Hash: ja4Hash1,
 						userAgent: userAgent1,
 					}),
-					userScopeMatch: FilterScopeMatch.Exact,
-				},
-				true,
-				true,
-			);
-			expect(spy).toHaveBeenCalledWith(
-				{
-					policyScope: {
-						clientId: siteKey,
-					},
-					policyScopeMatch: FilterScopeMatch.Exact,
-					userScope: userScopeInput.parse({
-						userAgent: userAgent1,
-					}),
-					userScopeMatch: FilterScopeMatch.Exact,
-				},
-				true,
-				true,
-			);
-			expect(spy).toHaveBeenCalledWith(
-				{
-					policyScope: {
-						clientId: siteKey,
-					},
-					policyScopeMatch: FilterScopeMatch.Exact,
-					userScope: userScopeInput.parse({
-						ja4Hash: ja4Hash1,
-					}),
-					userScopeMatch: FilterScopeMatch.Exact,
+					userScopeMatch: FilterScopeMatch.Greedy,
 				},
 				true,
 				true,
@@ -377,7 +259,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				siteKey,
 			);
 
-			expect(spy).toHaveBeenCalledTimes(6);
+			expect(spy).toHaveBeenCalledTimes(1);
 
 			expect(result.length).toBe(2);
 		});
@@ -411,7 +293,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				siteKey,
 			);
 
-			expect(spy).toHaveBeenCalledTimes(6);
+			expect(spy).toHaveBeenCalledTimes(1);
 
 			expect(result.length).toBe(2);
 			expect(result).toStrictEqual([accessRule1, accessRule2]);

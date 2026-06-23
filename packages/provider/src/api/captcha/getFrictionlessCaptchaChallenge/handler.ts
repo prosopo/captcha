@@ -57,7 +57,6 @@ export default (
 				req.logger.info(() => ({
 					msg: "Frictionless response finished",
 					data: {
-						requestId: req.requestId,
 						status: res.statusCode,
 						path: req.path,
 						method: req.method,
@@ -65,14 +64,9 @@ export default (
 				}));
 			});
 
-			const tasks = new Tasks(env, req.logger);
 			const { token, headHash, dapp, user, mode, simdReadings } =
 				GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
 
-			const decodedSimdReadings = await decryptIncomingSimdReadings(
-				tasks.frictionlessManager,
-				simdReadings,
-			);
 			const normalizedIp = normalizeRequestIp(req.ip, req.logger);
 			const sessionMode =
 				mode === ModeEnum.invisible ? ModeEnum.invisible : undefined;
@@ -80,7 +74,6 @@ export default (
 			req.logger.info(() => ({
 				msg: "Frictionless handler entry",
 				data: {
-					requestId: req.requestId,
 					token,
 					user,
 					dapp,
@@ -92,7 +85,9 @@ export default (
 				},
 			}));
 
-			// Maintenance mode: short-circuit before any DB access. The matching
+			// Maintenance mode: short-circuit before constructing Tasks. The
+			// Tasks constructor calls `env.getDb()`, which throws when `env.db`
+			// is undefined (the maintenance-mode case). The matching
 			// /captcha/{type} and /submit/{type} endpoints also short-circuit so
 			// the captcha widget keeps rendering while Mongo is unavailable.
 			if (getMaintenanceMode()) {
@@ -108,10 +103,12 @@ export default (
 				);
 			}
 
-			// Reserved CI test site keys: serve an invisible PoW session (no DB
-			// record required) so the flow is deterministic and non-interactive.
-			// The verdict is forced at /submit/pow and /verify based on which
-			// reserved key it is.
+			// Reserved CI test site keys: serve an invisible PoW session
+			// (no DB record required) so the flow is deterministic and
+			// non-interactive. The verdict is forced at /submit/pow and
+			// /verify based on which reserved key it is. Checked before
+			// any async work so the test path stays free of decrypts /
+			// DB lookups.
 			if (isReservedTestSiteKey(dapp)) {
 				req.logger.warn(() => ({
 					msg: "Reserved TEST site key - returning invisible PoW session",
@@ -125,13 +122,22 @@ export default (
 				);
 			}
 
+			const tasks = new Tasks(env, req.logger);
 			const userSitekeyIpHash = hashUserIp(user, normalizedIp, dapp);
-			const { existingToken, dedup } = await resolveSessionDedup(
-				tasks,
-				token,
-				userSitekeyIpHash,
-				req.logger,
-			);
+
+			// Fan out the three independent async dependencies in
+			// parallel: SIMD reading decrypt, session dedup lookup, and
+			// the client record fetch. The original sequential ordering
+			// paid for each in series on every request and dominated p50
+			// on the hottest endpoint. Errors in any branch surface via
+			// Promise.all rejection, which the outer catch already
+			// handles.
+			const [decodedSimdReadings, { existingToken, dedup }, clientRecord] =
+				await Promise.all([
+					decryptIncomingSimdReadings(tasks.frictionlessManager, simdReadings),
+					resolveSessionDedup(tasks, token, userSitekeyIpHash, req.logger),
+					tasks.db.getClientRecord(dapp),
+				]);
 
 			if (existingToken) {
 				req.logger.info(() => ({
@@ -146,8 +152,6 @@ export default (
 					}),
 				);
 			}
-
-			const clientRecord = await tasks.db.getClientRecord(dapp);
 
 			if (!clientRecord) {
 				return next(
@@ -171,7 +175,6 @@ export default (
 				req.logger.info(() => ({
 					msg: "Frictionless decision",
 					data: {
-						requestId: req.requestId,
 						decision: "reuse_session",
 						captchaType: dedup.captchaType,
 						sessionId: dedup.sessionId,
@@ -195,6 +198,10 @@ export default (
 				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
 					? req.ipInfo.countryCode
 					: undefined;
+			const asn =
+				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
+					? req.ipInfo.asnNumber
+					: undefined;
 
 			const shortCircuitResponse = await runConfiguredCaptchaTypeShortCircuit(
 				{
@@ -208,7 +215,6 @@ export default (
 					flatHeaders,
 					sessionMode,
 					userSitekeyIpHash,
-					requestId: req.requestId,
 					logger: req.logger,
 				},
 				res,
@@ -219,10 +225,39 @@ export default (
 				req.headers["accept-language"] || "",
 			);
 
+			const userScope = getRequestUserScope(
+				flatten(req.headers),
+				req.ja4,
+				normalizedIp,
+				user,
+				undefined,
+				undefined,
+				countryCode,
+				asn,
+			);
+
+			// Fan out the three independent post-shortcircuit awaits:
+			// payload decrypt (CPU-bound crypto), validation (cheap
+			// async), and the Redis-backed access-policy lookup. None of
+			// them depends on the others' outputs — running them in
+			// series previously added up to ~50-80ms on the hot path.
+			const [decryptedPayload, validation, accessPolicies] = await Promise.all([
+				tasks.frictionlessManager.decryptPayload(token, headHash),
+				tasks.frictionlessManager.isValidRequest(
+					clientRecord,
+					CaptchaType.frictionless,
+					env,
+				),
+				tasks.frictionlessManager.getPrioritisedAccessPolicies(
+					userAccessRulesStorage,
+					dapp,
+					userScope,
+				),
+			]);
+
 			const {
 				baseBotScore,
 				timestamp,
-				providerSelectEntropy,
 				userId,
 				userAgent,
 				webView,
@@ -230,14 +265,18 @@ export default (
 				decryptedHeadHash,
 				decryptionFailed,
 				triggeredDetectors,
-			} = await tasks.frictionlessManager.decryptPayload(token, headHash);
+				shadowDomPenalty,
+				entropyMathRandomFingerprint,
+				entropyCryptoFingerprint,
+				entropyWallClockOffsetMs,
+				entropyMathRandomFirst,
+			} = decryptedPayload;
 
 			req.logger.debug(() => ({
 				msg: "Decrypted payload",
 				data: {
 					baseBotScore,
 					timestamp,
-					providerSelectEntropy,
 					userId,
 					userAgent,
 					webView,
@@ -246,11 +285,7 @@ export default (
 
 			let botScore = baseBotScore + lScore;
 
-			const { valid, reason } = await tasks.frictionlessManager.isValidRequest(
-				clientRecord,
-				CaptchaType.frictionless,
-				env,
-			);
+			const { valid, reason } = validation;
 
 			if (!valid) {
 				return next(
@@ -271,6 +306,7 @@ export default (
 				...(lScore && { lScore }),
 				...(triggeredDetectors &&
 					triggeredDetectors.length > 0 && { triggeredDetectors }),
+				...(shadowDomPenalty !== undefined && { shadowDomPenalty }),
 			};
 
 			tasks.frictionlessManager.setSessionParams({
@@ -278,7 +314,6 @@ export default (
 				score: botScore,
 				threshold: botThreshold,
 				scoreComponents,
-				providerSelectEntropy,
 				ipAddress,
 				webView,
 				iFrame,
@@ -288,6 +323,18 @@ export default (
 				headers: flatHeaders,
 				mode: sessionMode,
 				...(decodedSimdReadings && { simdReadings: decodedSimdReadings }),
+				...(entropyMathRandomFingerprint !== undefined && {
+					entropyMathRandomFingerprint,
+				}),
+				...(entropyCryptoFingerprint !== undefined && {
+					entropyCryptoFingerprint,
+				}),
+				...(entropyWallClockOffsetMs !== undefined && {
+					entropyWallClockOffsetMs,
+				}),
+				...(entropyMathRandomFirst !== undefined && {
+					entropyMathRandomFirst,
+				}),
 			});
 
 			const ipInfoMobile =
@@ -311,22 +358,7 @@ export default (
 				},
 			});
 
-			const userScope = getRequestUserScope(
-				flatten(req.headers),
-				req.ja4,
-				normalizedIp,
-				user,
-				undefined,
-				undefined,
-				countryCode,
-			);
-			const userAccessPolicy = (
-				await tasks.frictionlessManager.getPrioritisedAccessPolicies(
-					userAccessRulesStorage,
-					dapp,
-					userScope,
-				)
-			)[0];
+			const userAccessPolicy = accessPolicies[0];
 
 			const accessPolicyOutcome = await handleAccessPolicy(
 				{
@@ -340,7 +372,6 @@ export default (
 					dapp,
 					ipInfo: req.ipInfo,
 					flatHeaders,
-					requestId: req.requestId,
 					logger: req.logger,
 					userScope,
 				},
@@ -366,7 +397,6 @@ export default (
 					userId,
 					webView,
 					decryptedHeadHash,
-					providerSelectEntropy,
 					baseBotScore,
 					botScore,
 					scoreComponents,

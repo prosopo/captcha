@@ -1,10 +1,18 @@
-// Writes a patch changeset for the versioned workspace packages whose package.json
-// changed in a Dependabot PR, so the `changesets` check passes. Invoked by
-// .github/workflows/dependabot-changeset.yml — see that file for the why.
+// Writes a changeset for a Dependabot PR so the `changesets` check passes. Invoked
+// by .github/workflows/dependabot-changeset.yml — see that file for the why.
 //
-// No-op (writes nothing) when only the root package.json, private packages, or
-// non-package files (e.g. github-actions bumps) changed, because the `changesets`
-// check does not require a changeset in those cases.
+// For each versioned (named, non-private) workspace package whose package.json
+// changed, writes a `patch` entry. When ONLY private workspace packages changed
+// (e.g. a devDependency bump inside a `"private": true` package), writes an *empty*
+// changeset instead: `changeset status` still fails with "Some packages have been
+// changed but no changesets were found" for a changed private package — that error
+// is gated purely on whether any changeset file exists, not on the package's
+// privacy — so an empty changeset is required. This matches changesets' own
+// guidance: "If this change doesn't need a release, run `changeset add --empty`".
+//
+// No-op (writes nothing) when only the root package.json or non-package files
+// (e.g. github-actions bumps) changed, because `changeset status` does not treat
+// those as changed packages.
 
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -34,8 +42,13 @@ const changed = git(
 	.filter(Boolean);
 
 const packages = [];
+// Whether any named workspace package changed, private or not. `changeset status`
+// requires a changeset for private packages too, so we must not no-op when one
+// changed — we fall back to an empty changeset below.
+let sawWorkspacePackageChange = false;
 for (const path of changed) {
-	// Skip the repo root: it is private (devDependency bumps there need no changeset).
+	// Skip the repo root: it is private and `changeset status` does not treat a root
+	// package.json change as a changed package, so it needs no changeset.
 	if (path === "package.json") continue;
 	if (!existsSync(path)) continue; // deleted package.json
 	let pkg;
@@ -44,26 +57,38 @@ for (const path of changed) {
 	} catch {
 		continue;
 	}
-	// changesets ignores private and unnamed packages, so we must too.
-	if (pkg.private === true || typeof pkg.name !== "string") continue;
+	if (typeof pkg.name !== "string") continue; // unnamed: not a real workspace package
+	sawWorkspacePackageChange = true;
+	// Private packages are excluded from the per-package frontmatter (changesets
+	// won't publish them); the empty-changeset fallback below covers them.
+	if (pkg.private === true) continue;
 	packages.push(pkg.name);
 }
 
 const unique = [...new Set(packages)].sort();
 
-if (unique.length === 0) {
-	console.log("No versioned package changed; no changeset needed.");
+if (unique.length === 0 && !sawWorkspacePackageChange) {
+	console.log("No workspace package changed; no changeset needed.");
 	process.exit(0);
 }
 
-const frontmatter = unique.map((name) => `"${name}": patch`).join("\n");
 // Single-line summary; collapse any newlines from the PR title.
 const summary = prTitle.replace(/\s+/g, " ").trim();
 
-const contents = `---\n${frontmatter}\n---\n\n${summary}\n`;
+// Versioned packages -> frontmatter entries; private-only -> empty changeset.
+const frontmatter =
+	unique.length > 0
+		? `${unique.map((name) => `"${name}": patch`).join("\n")}\n`
+		: "";
+
+const contents = `---\n${frontmatter}---\n\n${summary}\n`;
 
 // Deterministic filename per PR so repeated synchronize runs overwrite rather than pile up.
 const file = join(".changeset", `dependabot-${prNumber}.md`);
 writeFileSync(file, contents);
 
-console.log(`Wrote ${file} for: ${unique.join(", ")}`);
+console.log(
+	unique.length > 0
+		? `Wrote ${file} for: ${unique.join(", ")}`
+		: `Wrote empty changeset ${file} (only private packages changed)`,
+);

@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { stringifyBigInts } from "@prosopo/util";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	getLogger,
 	parseDirectives,
 	resolveLevel,
 	setGlobalDirectives,
-	stringifyBigInts,
 } from "../logger.js";
 describe("unpackError", () => {
 	let captured: string[] = [];

@@ -14,6 +14,7 @@
 
 import {
 	type IPInfoResponse,
+	type IPInfoResult,
 	type ITrafficFilter,
 	ResultReason,
 	trafficFilterAbuserScoreThresholdDefault,
@@ -33,17 +34,46 @@ export type TrafficCheckResult =
 	| { isBlocked: false }
 	| { isBlocked: true; reason: TrafficBlockReason };
 
-/**
- * Checks whether a request should be blocked based on traffic filter
- * settings and the request's already-resolved IP info (attached to
- * `req.ipInfo` by `ipInfoMiddleware`). Each filter (VPN, proxy, Tor,
- * abuser, etc.) is evaluated independently. A missing or invalid
- * `ipInfo` falls back to "not blocked" so an outage in the upstream
- * service can't block all traffic.
- */
-export const checkTrafficFilter = (
+type EvaluateOptions = {
+	suppressVpnDatacenterInteraction: boolean;
+};
+
+// Match the allowlist against `datacenterName`, `providerName`
+// (`company.name`), and `asnOrganization` — case-insensitive, whitespace
+// trimmed. The upstream ipapi only populates `datacenter.datacenter` for
+// curated named ranges, so falling back to providerName and asnOrganization
+// lets the allowlist also catch generic CDN / cloud-provider IPs that come
+// back with `is_datacenter: true` but no datacenter name.
+const isDatacenterAllowlisted = (
+	ipInfo: IPInfoResult,
+	allowlist: ReadonlyArray<string> | undefined,
+): boolean => {
+	if (!allowlist || allowlist.length === 0) {
+		return false;
+	}
+	const candidates: string[] = [];
+	for (const value of [
+		ipInfo.datacenterName,
+		ipInfo.providerName,
+		ipInfo.asnOrganization,
+	]) {
+		if (typeof value !== "string") continue;
+		const trimmed = value.trim().toLowerCase();
+		if (trimmed) candidates.push(trimmed);
+	}
+	if (candidates.length === 0) {
+		return false;
+	}
+	const normalisedAllowlist = allowlist.map((entry) =>
+		entry.trim().toLowerCase(),
+	);
+	return candidates.some((c) => normalisedAllowlist.includes(c));
+};
+
+const evaluateIpInfo = (
 	ipInfo: IPInfoResponse | undefined,
 	trafficFilter: Partial<ITrafficFilter>,
+	options: EvaluateOptions,
 ): TrafficCheckResult => {
 	if (!ipInfo || !ipInfo.isValid) {
 		return { isBlocked: false };
@@ -74,7 +104,16 @@ export const checkTrafficFilter = (
 		}
 	}
 
-	if (trafficFilter.blockDatacenter && ipInfo.isDatacenter) {
+	if (
+		trafficFilter.blockDatacenter &&
+		ipInfo.isDatacenter &&
+		!(
+			options.suppressVpnDatacenterInteraction &&
+			ipInfo.isVPN &&
+			!trafficFilter.blockVpn
+		) &&
+		!isDatacenterAllowlisted(ipInfo, trafficFilter.datacenterNameAllowlist)
+	) {
 		return { isBlocked: true, reason: ResultReason.DATACENTER_BLOCKED };
 	}
 
@@ -88,6 +127,63 @@ export const checkTrafficFilter = (
 
 	if (trafficFilter.blockCrawler && ipInfo.isCrawler) {
 		return { isBlocked: true, reason: ResultReason.CRAWLER_BLOCKED };
+	}
+
+	return { isBlocked: false };
+};
+
+/**
+ * Checks whether a request should be blocked based on traffic filter
+ * settings and the request's already-resolved IP info (attached to
+ * `req.ipInfo` by `ipInfoMiddleware`). Each filter (VPN, proxy, Tor,
+ * abuser, etc.) is evaluated independently. A missing or invalid
+ * `ipInfo` falls back to "not blocked" so an outage in the upstream
+ * service can't block all traffic.
+ *
+ * One cross-filter rule: when an operator enables `blockDatacenter` but
+ * leaves `blockVpn` off, commercial VPNs that exit from datacenter IPs
+ * (which is most of them — Mullvad, NordVPN, ProtonVPN, etc. all run on
+ * AWS/OVH/Hetzner) would otherwise be caught by the datacenter rule.
+ * Operators almost never intend that: "block data centers" is about
+ * scraping/automation traffic, not VPN end-users. So the datacenter
+ * rule is suppressed for IPs also flagged as VPN unless the operator
+ * has opted in to blocking VPN traffic explicitly.
+ *
+ * The datacenter rule also honours `datacenterNameAllowlist`: consumer
+ * relays route through datacenter ranges and are reported as
+ * `is_datacenter=true` by upstream but the exiting users are real humans.
+ * Operators can list the datacenter, provider, or ASN organisation names
+ * they want to allow through — see `isDatacenterAllowlisted`.
+ *
+ * When `trafficFilter.skipExtrasOnValidDnsPath` is on and the catcher
+ * confirmed the DNS path matched the connection path (`pathValid: true`),
+ * the extras evaluation is skipped. This stops public-DoH resolver IPs
+ * from tripping the datacenter rule for ordinary users.
+ */
+export const checkTrafficFilter = (
+	ipInfo: IPInfoResponse | undefined,
+	trafficFilter: Partial<ITrafficFilter>,
+	extraIpInfos?: ReadonlyArray<IPInfoResponse | undefined>,
+	dnsPathValid?: boolean,
+): TrafficCheckResult => {
+	const primary = evaluateIpInfo(ipInfo, trafficFilter, {
+		suppressVpnDatacenterInteraction: true,
+	});
+	if (primary.isBlocked) {
+		return primary;
+	}
+
+	if (trafficFilter.skipExtrasOnValidDnsPath && dnsPathValid === true) {
+		return { isBlocked: false };
+	}
+
+	for (const extra of extraIpInfos ?? []) {
+		const result = evaluateIpInfo(extra, trafficFilter, {
+			suppressVpnDatacenterInteraction: false,
+		});
+		if (result.isBlocked) {
+			return result;
+		}
 	}
 
 	return { isBlocked: false };

@@ -1,5 +1,187 @@
 # @prosopo/cli
 
+## 3.6.47
+### Patch Changes
+
+- Updated dependencies [1bb2bb1]
+- Updated dependencies [12cd0a6]
+- Updated dependencies [12cd0a6]
+  - @prosopo/provider@4.12.0
+  - @prosopo/api@3.5.5
+  - @prosopo/types@4.8.0
+  - @prosopo/env@3.6.0
+  - @prosopo/keyring@2.9.46
+
+## 3.6.46
+### Patch Changes
+
+- Updated dependencies [bb98af1]
+- Updated dependencies [d50e7d8]
+- Updated dependencies [77b7c66]
+  - @prosopo/provider@4.11.6
+  - @prosopo/types@4.7.4
+  - @prosopo/api@3.5.4
+  - @prosopo/env@3.5.20
+  - @prosopo/keyring@2.9.45
+
+## 3.6.45
+### Patch Changes
+
+- Updated dependencies [89ab6fc]
+- Updated dependencies [0f3750b]
+- Updated dependencies [281c62a]
+  - @prosopo/provider@4.11.5
+  - @prosopo/types@4.7.3
+  - @prosopo/api@3.5.3
+  - @prosopo/env@3.5.19
+  - @prosopo/keyring@2.9.44
+
+## 3.6.44
+### Patch Changes
+
+- Updated dependencies [e89860e]
+- Updated dependencies [edcd450]
+- Updated dependencies [5295c4b]
+  - @prosopo/provider@4.11.4
+  - @prosopo/util@3.3.1
+  - @prosopo/types@4.7.2
+  - @prosopo/locale@3.2.5
+  - @prosopo/keyring@2.9.43
+  - @prosopo/logger@1.0.4
+  - @prosopo/env@3.5.18
+  - @prosopo/api@3.5.2
+  - @prosopo/common@3.1.40
+  - @prosopo/dotenv@3.0.45
+
+## 3.6.43
+### Patch Changes
+
+- Updated dependencies [46fedf4]
+  - @prosopo/types@4.7.1
+  - @prosopo/api@3.5.1
+  - @prosopo/env@3.5.17
+  - @prosopo/keyring@2.9.42
+  - @prosopo/provider@4.11.3
+
+## 3.6.42
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/provider@4.11.2
+  - @prosopo/types@4.7.0
+  - @prosopo/api@3.5.0
+  - @prosopo/env@3.5.16
+  - @prosopo/keyring@2.9.41
+
+## 3.6.41
+### Patch Changes
+
+- Updated dependencies [4626340]
+  - @prosopo/provider@4.11.1
+  - @prosopo/types@4.6.1
+  - @prosopo/api@3.4.14
+  - @prosopo/env@3.5.15
+  - @prosopo/keyring@2.9.40
+
+## 3.6.40
+### Patch Changes
+
+- Updated dependencies [55b1388]
+  - @prosopo/util@3.3.0
+  - @prosopo/provider@4.11.0
+  - @prosopo/types@4.6.0
+  - @prosopo/keyring@2.9.39
+  - @prosopo/logger@1.0.3
+  - @prosopo/api@3.4.13
+  - @prosopo/common@3.1.39
+  - @prosopo/env@3.5.14
+  - @prosopo/dotenv@3.0.44
+
+## 3.6.39
+### Patch Changes
+
+- c80a05b: Split `solutionTimeout` (challenge issuance → user submission) from `verifiedTimeout` (submission → dapp's /verify call) on `UserSettings`. Historically `verifiedTimeout` gated both windows in `verifyRecency` (at /pow|puzzle/solution submit) and in `serverVerifyPowCaptchaSolution` (at /verify), even though its doc comment only described the latter. Adds `solutionTimeout` to `ClientSettingsSchema` (zod) and `UserSettingsSchema` (mongoose) with `DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT` (60s) as default. `submitPoWCaptchaSolution` and `submitPuzzleCaptchaSolution` now use `solutionTimeout` for the recency check and fall back to `verifiedTimeout` for pre-existing client records so behaviour is preserved until those records are backfilled. The `/verify` path is unchanged. Operators can now tighten `verifiedTimeout` (e.g. 20s) to invalidate stale solutions at verify time without also shrinking the user's solve budget.
+- Updated dependencies [9b91e85]
+- Updated dependencies [c1c7998]
+- Updated dependencies [c80a05b]
+  - @prosopo/provider@4.10.0
+  - @prosopo/types@4.5.0
+  - @prosopo/env@3.5.13
+  - @prosopo/api@3.4.12
+  - @prosopo/keyring@2.9.38
+
+## 3.6.38
+### Patch Changes
+
+  - @prosopo/provider@4.9.2
+  - @prosopo/env@3.5.12
+
+## 3.6.37
+### Patch Changes
+
+- Updated dependencies [4da8941]
+- Updated dependencies [f69724f]
+- Updated dependencies [3973078]
+- Updated dependencies [73b9f92]
+  - @prosopo/provider@4.9.1
+  - @prosopo/types@4.4.1
+  - @prosopo/api@3.4.11
+  - @prosopo/env@3.5.11
+  - @prosopo/keyring@2.9.37
+
+## 3.6.36
+### Patch Changes
+
+- Updated dependencies [bc3813d]
+- Updated dependencies [2d66d8e]
+- Updated dependencies [4d05e3f]
+- Updated dependencies [f305c37]
+  - @prosopo/provider@4.9.0
+  - @prosopo/types@4.4.0
+  - @prosopo/api@3.4.10
+  - @prosopo/env@3.5.10
+  - @prosopo/keyring@2.9.36
+
+## 3.6.35
+### Patch Changes
+
+- Updated dependencies [8a30164]
+  - @prosopo/provider@4.8.1
+
+## 3.6.34
+### Patch Changes
+
+- Updated dependencies [2f459ce]
+- Updated dependencies [2f459ce]
+  - @prosopo/provider@4.8.0
+  - @prosopo/env@3.5.9
+
+## 3.6.33
+### Patch Changes
+
+- b24ea03: Caddy now SNI-routes :443 with caddy-l4. Pixel URL drops the :9362 port; HTTP-01 ACME renewals keep working via auto-managed :80.
+- 3420831: DNS sidecar event merge: atomic dotted-path `$set` so DNS + HTTP legs co-occur on one session (was clobbering: prior projection omitted `dnsEvent`, every write started from `undefined`). Caddy now forwards PROXY-protocol v2 on the `*.t.{domain}` route and the sidecar (≥0.1.6) reads it, so `dnsEvent.peerIp` records the real client IP instead of the docker bridge address.
+
+## 3.6.32
+### Patch Changes
+
+- Updated dependencies [b03dad1]
+  - @prosopo/provider@4.7.2
+  - @prosopo/types@4.3.1
+  - @prosopo/env@3.5.8
+  - @prosopo/api@3.4.9
+  - @prosopo/keyring@2.9.35
+
+## 3.6.31
+### Patch Changes
+
+- 936e987: Republish under npm trusted publishing.
+  
+  No runtime change. The v3.6.30 publish landed only a partial slice of the workspace before npm rejected the rest (provenance verification + repository-field mismatch). Cutting a fresh version so every package gets a clean publish under the new OIDC-based workflow with provenance attestations attached.
+- Updated dependencies [936e987]
+  - @prosopo/provider@4.7.1
+
 ## 3.6.30
 ### Patch Changes
 

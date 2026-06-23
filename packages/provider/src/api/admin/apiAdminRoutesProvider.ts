@@ -69,7 +69,10 @@ class ApiAdminRoutesProvider implements ApiRoutesProvider {
 			),
 			[AdminApiPaths.ToggleMaintenanceMode]:
 				new ApiToggleMaintenanceModeEndpoint(),
-			[AdminApiPaths.DnsEvent]: new ApiDnsEventEndpoint(this.tasks.db),
+			[AdminApiPaths.DnsEvent]: new ApiDnsEventEndpoint(
+				this.tasks.db,
+				this.tasks.env.ipInfoService,
+			),
 		};
 	}
 }

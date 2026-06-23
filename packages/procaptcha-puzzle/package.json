@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-puzzle",
-	"version": "2.10.8",
+	"version": "2.10.20",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "dist/index.js",
@@ -30,18 +30,18 @@
 	"browserslist": ["> 0.5%, last 2 versions, not dead"],
 	"dependencies": {
 		"@polkadot/util": "13.5.7",
-		"@prosopo/api": "3.4.8",
-		"@prosopo/common": "3.1.38",
-		"@prosopo/locale": "3.2.4",
-		"@prosopo/procaptcha-common": "2.10.17",
-		"@prosopo/types": "4.3.0",
-		"@prosopo/util": "3.2.15",
+		"@prosopo/api": "3.5.5",
+		"@prosopo/common": "3.1.40",
+		"@prosopo/locale": "3.2.5",
+		"@prosopo/procaptcha-common": "2.11.0",
+		"@prosopo/types": "4.8.0",
+		"@prosopo/util": "3.3.1",
 		"@prosopo/util-crypto": "13.5.29",
 		"@prosopo/widget-skeleton": "2.8.3",
 		"react": "18.3.1"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.1",
+		"@prosopo/config": "3.3.3",
 		"@emotion/react": "11.11.1",
 		"@emotion/styled": "11.11.0",
 		"@types/node": "22.5.5",
@@ -57,7 +57,8 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/prosopo/captcha.git"
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "packages/procaptcha-puzzle"
 	},
 	"bugs": {
 		"url": "https://github.com/prosopo/captcha/issues"
