@@ -44,12 +44,14 @@ export const getMongoCompressors = (
 		const parsedUrl = new URL(`mongodb://${urlWithoutProtocol}`);
 		const hostname = parsedUrl.hostname;
 
-		// Localhost variants should not use compression. Note: URL normalises a
-		// bracketed IPv6 loopback ("[::1]") to "[::1]" in hostname.
+		// Localhost variants should not use compression. Node's URL keeps the
+		// brackets on an IPv6 loopback ("[::1]"); the bare "::1" form is included
+		// defensively in case a host arrives unbracketed.
 		const isLocalhost =
 			hostname === "localhost" ||
 			hostname === "127.0.0.1" ||
-			hostname === "[::1]";
+			hostname === "[::1]" ||
+			hostname === "::1";
 
 		if (isLocalhost) {
 			return [];
@@ -85,7 +87,9 @@ export const getMongoConnectionOptions = (options: {
 	const { url, appName, maxPoolSize = 10, minPoolSize = 0, dbName } = options;
 
 	if (!url || url.trim() === "") {
-		throw new Error("MongoDB connection URL is required and cannot be empty");
+		throw new Error(
+			"MongoDB connection URL is required and cannot be empty or whitespace-only",
+		);
 	}
 
 	const compressors = getMongoCompressors(url);
