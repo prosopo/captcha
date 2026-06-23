@@ -55,7 +55,7 @@ jobs:
 
       - uses: prosopo/captcha/.github/actions/npm@gha
         with:
-          npm_ci_args: '--include=dev'
+          npm_ci_args: '--include=dev --no-audit --no-fund --prefer-offline'
 
       # clean the nx cache
       - run: npx nx reset

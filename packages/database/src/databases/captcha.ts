@@ -40,7 +40,7 @@ const isBsonLong = (value: unknown): boolean =>
 import type { RootFilterQuery } from "mongoose";
 import { MongoDatabase } from "../base/index.js";
 
-const logger = getLogger("info", import.meta.url);
+const logger = getLogger("info", "database:captcha");
 
 enum TableNames {
 	frictionlessToken = "frictionlessToken",

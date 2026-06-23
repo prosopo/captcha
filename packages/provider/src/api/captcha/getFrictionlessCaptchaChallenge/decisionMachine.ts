@@ -128,7 +128,6 @@ export const runDecisionMachine = async (
 		req.logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {
-				requestId: req.requestId,
 				decision: "auto_ban_score",
 				botScore,
 				autoBanThreshold,
@@ -150,7 +149,6 @@ export const runDecisionMachine = async (
 		req.logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {
-				requestId: req.requestId,
 				decision: "webview_detected",
 				captchaType: CaptchaType.image,
 			},
@@ -175,7 +173,6 @@ export const runDecisionMachine = async (
 		req.logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {
-				requestId: req.requestId,
 				decision: "timestamp_too_old",
 				captchaType: CaptchaType.image,
 			},
@@ -209,7 +206,6 @@ export const runDecisionMachine = async (
 		req.logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {
-				requestId: req.requestId,
 				decision: "bot_score_above_threshold",
 				captchaType: CaptchaType.image,
 			},
@@ -233,7 +229,6 @@ export const runDecisionMachine = async (
 	req.logger.info(() => ({
 		msg: "Frictionless decision",
 		data: {
-			requestId: req.requestId,
 			decision: "default_pow",
 			captchaType: CaptchaType.pow,
 		},
@@ -281,7 +276,6 @@ const runUserAgentMismatchCheck = async (
 	req.logger.info(() => ({
 		msg: "Frictionless decision",
 		data: {
-			requestId: req.requestId,
 			decision: "user_agent_mismatch",
 			captchaType: CaptchaType.image,
 		},
@@ -354,7 +348,6 @@ const runContextAwareValidation = async (
 	req.logger.info(() => ({
 		msg: "Frictionless decision",
 		data: {
-			requestId: req.requestId,
 			decision: "context_aware_failed",
 			captchaType: CaptchaType.image,
 			sim,

@@ -295,7 +295,18 @@ http://:9090 {
 # challenges AND HTTP→HTTPS redirects targeting port 443 (i.e. the
 # layer4 listener), which forwards non-matching SNIs back to this same
 # :8443.
-https://{$CADDY_DOMAIN}:8443 {
+#
+# Three SNIs share one site block and one cert lineage so Caddy issues a
+# single multi-SAN cert covering {host}, ipv4.{host}, ipv6.{host}. The
+# single-stack variants exist as their own DNS records (A only for
+# ipv4.{host}, AAAA only for ipv6.{host}) so callers that need to pin a
+# specific IP stack can do so without losing TLS. The new captcha
+# DNS-routing client returns the per-host name from /healthz and the
+# load-balancer prepends `ipv4.` / `ipv6.`, so without these SANs the
+# single-stack path would fail the TLS handshake.
+https://{$CADDY_DOMAIN}:8443,
+https://ipv4.{$CADDY_DOMAIN}:8443,
+https://ipv6.{$CADDY_DOMAIN}:8443 {
 	tls {
 		issuer acme {
 			disable_tlsalpn_challenge
