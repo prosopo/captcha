@@ -1,5 +1,83 @@
 # @prosopo/types
 
+## 4.8.0
+### Minor Changes
+
+- 12cd0a6: Replace client-side weighted-random provider selection with static DNS endpoints.
+  
+  - Removed the `providerSelectEntropy` field from `DetectorResult`, `Session`, the
+    Mongoose `SessionRecordSchema` (including its standalone index), and every
+    call-site that threaded it through frictionless / image / pow / puzzle flows.
+  - Removed `FrictionlessManager.hostVerified` and its decision-machine call site
+    — there's nothing to verify when the DNS layer picks the host.
+  - `getRandomActiveProvider(env)` now returns the per-environment static DNS
+    endpoint (`pronode.prosopo.io` family) instead of fetching the provider list
+    and weighted-selecting. The entropy parameter is gone.
+  - `getProcaptchaRandomActiveProvider` is now a thin re-export so widget packages
+    keep importing from `procaptcha-common`.
+  - `FrontendProvider.datasetId` is dropped; `CaptchaRequestBody.datasetId` is
+    optional. The server falls back to its own most-recently-uploaded dataset
+    (`env.datasetId`, populated from `db.getMostRecentDatasetId()` at startup) —
+    clients can't pin a dataset under DNS routing because they don't know which
+    pronode they'll hit.
+  - Removed dead `setProviderLoader` / `prefetchProviders` / `selectWeightedProvider`
+    plumbing from `@prosopo/load-balancer`. The server's cacheFile-based loader
+    setup in `startProviderApi` goes with them.
+  - `getRandomActiveProvider` now hits `/healthz` on the global hostname once per
+    page load, reads the responding pronode's identity from the JSON body, and
+    pins subsequent captcha calls to that pronode (`https://pronodeN.prosopo.io`)
+    so session creation and submission land on the same backend. Falls back to
+    the dual-stack global hostname when `/healthz` is unreachable.
+  - `/healthz` now returns `{ ok: true, host: <pronode-identity> }` instead of
+    `"OK"` to support the above pinning.
+  - CORS preflight is now cached for 24h (`maxAge: 86400`) — previously the
+    browser refired an OPTIONS preflight before every captcha call because
+    the custom `Prosopo-Site-Key` / `Prosopo-User` headers make the request
+    non-simple and the default `maxAge` is 5s.
+- 12cd0a6: Add ipv4-only / ipv6-only provider DNS routing via `data-ipv4` / `data-ipv6`.
+  
+  Dapps that need to pin captcha traffic to a single IP stack can now do so:
+  
+  ```html
+  <div class="procaptcha" data-sitekey="..." data-ipv4="true"></div>
+  ```
+  
+  What happens under the hood:
+  
+  - The widget reads `data-ipv4` / `data-ipv6` (or the matching `ipv4` / `ipv6`
+    booleans on `ProcaptchaRenderOptions` / explicit `render(...)`) and threads
+    them through `ProcaptchaConfigSchema`.
+  - `pickIpMode(config)` resolves them into an `IpMode` (`"ipv4"` / `"ipv6"` /
+    `undefined`); `ipv4` wins if both are set.
+  - The frictionless / image / pow / puzzle managers pass the `IpMode` into
+    `getProcaptchaRandomActiveProvider`, which calls `/healthz` on the matching
+    single-stack global hostname (`ipv4.pronode.prosopo.io` or
+    `ipv6.pronode.prosopo.io`) and pins subsequent captcha calls to
+    `ipv4.pronodeN.prosopo.io` / `ipv6.pronodeN.prosopo.io`. The dual-stack
+    cache and the single-stack caches are kept separate.
+  - `convertHostedProvider` now accepts an optional `IpMode` and, when set,
+    selects the matching `ipv4` / `ipv6` sub-object from the provider-list JSON.
+    Top-level `ipv4` / `ipv6` keys are skipped by default so existing dual-stack
+    callers keep working.
+  - New helpers in `@prosopo/load-balancer`: `IpMode`, `stripIpModeLabel`,
+    `getProviderHostname`.
+  
+  Coordinated with the matching `captcha-private` change that publishes the
+  `ipv4` / `ipv6` sub-objects to S3.
+
+## 4.7.4
+### Patch Changes
+
+- bb98af1: Add `DecisionMachineKind` (`routing` | `decision`) to separate routing and decision artifacts on the same provider.
+  
+  - New `DecisionMachineKind` enum in `@prosopo/types`.
+  - `DecisionMachineArtifact` and the Mongoose `DecisionMachineArtifactRecordSchema` gain an optional `kind` field; the unique compound index becomes `(scope, dappAccount, kind)` so a routing machine and a decision machine can coexist for the same scope/dapp.
+  - `ProviderApi.updateDecisionMachine` accepts an optional `kind` 10th arg; the `apiUpdateDecisionMachineEndpoint` admin handler reads `decisionMachineKind` from the request body and forwards it.
+  - `ClientTaskManager.updateDecisionMachine` and the artifact-listing returns include `kind`.
+  - `ProviderDatabase.getDecisionMachineArtifact` filters by `kind` when supplied; `upsertDecisionMachineArtifact` defaults missing `kind` to `Routing` for backward compatibility on existing rows.
+  - `DecisionMachineRunner` keys its in-memory cache by `(scope, kind, dappAccount)` and selects the appropriate artifact for `runDecisionMachine` (kind=`decision`), `runRoutingMachine` (kind=`routing`) and `runCounterMachine` (kind=`routing`).
+  - `DecisionMachineArtifactRecordSchema.captchaType` enum now includes `CaptchaType.puzzle` alongside `pow`/`image`.
+
 ## 4.7.3
 ### Patch Changes
 

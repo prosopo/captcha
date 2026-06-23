@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/datasets",
-	"version": "3.1.38",
+	"version": "3.1.40",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
@@ -44,12 +44,12 @@
 		"@polkadot/util": "13.5.7",
 		"@prosopo/common": "3.1.40",
 		"@prosopo/logger": "1.0.4",
-		"@prosopo/types": "4.7.3",
+		"@prosopo/types": "4.8.0",
 		"@prosopo/util": "3.3.1",
 		"@prosopo/util-crypto": "13.5.29"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.2",
+		"@prosopo/config": "3.3.3",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "3.2.4",
 		"concurrently": "9.0.1",

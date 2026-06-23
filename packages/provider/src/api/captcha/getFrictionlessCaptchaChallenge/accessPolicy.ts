@@ -107,6 +107,37 @@ export const handleAccessPolicy = async (
 		};
 	}
 
+	// Defensive: re-evaluate autoBan after the access-policy bump so the
+	// non-block branches below can't dispatch to image/pow/puzzle when
+	// the bumped score now meets the threshold. The autoBan check added
+	// to runDecisionMachine (#2738) doesn't cover this path because
+	// handleAccessPolicy short-circuits before runDecisionMachine runs.
+	const autoBanThreshold = clientRecord.settings.autoBanScoreThreshold;
+	if (autoBanThreshold !== undefined && Number(botScore) >= autoBanThreshold) {
+		logger.info(() => ({
+			msg: "Frictionless decision",
+			data: {
+				requestId,
+				decision: "auto_ban_score",
+				botScore,
+				autoBanThreshold,
+				captchaType: userAccessPolicy.captchaType,
+			},
+		}));
+		await tasks.frictionlessManager.registerBlockedSession({
+			solvedImagesCount: clientRecord.settings.imageMaxRounds,
+			userSitekeyIpHash: input.userSitekeyIpHash,
+			reason: FrictionlessReason.AUTO_BAN_SCORE,
+			siteKey: input.dapp,
+			ipInfo: input.ipInfo,
+			headers: input.flatHeaders,
+		});
+		return {
+			handled: true,
+			response: res.status(401).json({ error: "Unauthorized" }),
+		};
+	}
+
 	const captchaTypeBaseParams = {
 		userSitekeyIpHash: input.userSitekeyIpHash,
 		reason: FrictionlessReason.USER_ACCESS_POLICY,

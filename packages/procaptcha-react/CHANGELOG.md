@@ -1,5 +1,31 @@
 # @prosopo/procaptcha-react
 
+## 2.9.78
+### Patch Changes
+
+- 005b817: fix(procaptcha-react): hold image-captcha Manager in a useRef
+  
+  Image widget rebuilt the Manager on every render, so the closure
+  variables that hold the checkbox click coords (set on start) were
+  overwritten by `(0, 0)` on the next render — including the re-render
+  that fires immediately after `setLoading(true)` in the click handler.
+  By the time `submit()` ran, it was on a newer Manager instance that
+  had never seen the click, so every captcha persisted
+  `coords[0] = [[0, 0]]`. Matches the pattern PoW and Puzzle already use.
+- Updated dependencies [12cd0a6]
+- Updated dependencies [12cd0a6]
+  - @prosopo/procaptcha-common@2.11.0
+  - @prosopo/types@4.8.0
+  - @prosopo/procaptcha@2.10.39
+
+## 2.9.77
+### Patch Changes
+
+- Updated dependencies [bb98af1]
+  - @prosopo/types@4.7.4
+  - @prosopo/procaptcha@2.10.38
+  - @prosopo/procaptcha-common@2.10.28
+
 ## 2.9.76
 ### Patch Changes
 

@@ -43,6 +43,7 @@ import {
 	PowChallengeIdSchema,
 } from "../datasets/index.js";
 import type {
+	DecisionMachineKind,
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
@@ -388,7 +389,6 @@ export const SessionSchema = object({
 	score: number(),
 	threshold: number(),
 	scoreComponents: ScoreComponentsSchema,
-	providerSelectEntropy: number(),
 	ipAddress: CompositeIpAddressSchema,
 	captchaType: nativeEnum(CaptchaType),
 	mode: nativeEnum(ModeEnum).optional(),
@@ -460,7 +460,6 @@ export type Session = {
 	score: number;
 	threshold: number;
 	scoreComponents: ScoreComponents;
-	providerSelectEntropy: number;
 	ipAddress: CompositeIpAddress;
 	captchaType: CaptchaType;
 	mode?: ModeEnum;
@@ -649,6 +648,7 @@ export type DetectorKey = {
 export type DecisionMachineArtifact = {
 	scope: DecisionMachineScope;
 	dappAccount?: string;
+	kind?: DecisionMachineKind;
 	runtime: DecisionMachineRuntime;
 	language?: DecisionMachineLanguage;
 	source: string;

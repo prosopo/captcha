@@ -258,7 +258,6 @@ export default (
 			const {
 				baseBotScore,
 				timestamp,
-				providerSelectEntropy,
 				userId,
 				userAgent,
 				webView,
@@ -278,7 +277,6 @@ export default (
 				data: {
 					baseBotScore,
 					timestamp,
-					providerSelectEntropy,
 					userId,
 					userAgent,
 					webView,
@@ -316,7 +314,6 @@ export default (
 				score: botScore,
 				threshold: botThreshold,
 				scoreComponents,
-				providerSelectEntropy,
 				ipAddress,
 				webView,
 				iFrame,
@@ -400,7 +397,6 @@ export default (
 					userId,
 					webView,
 					decryptedHeadHash,
-					providerSelectEntropy,
 					baseBotScore,
 					botScore,
 					scoreComponents,
