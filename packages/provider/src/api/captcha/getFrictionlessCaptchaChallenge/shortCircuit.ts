@@ -39,7 +39,6 @@ export type ShortCircuitInput = {
 	flatHeaders: RequestHeaders;
 	sessionMode: ModeEnum | undefined;
 	userSitekeyIpHash: string;
-	requestId: string | undefined;
 	logger: Logger;
 };
 
@@ -75,7 +74,6 @@ export const runConfiguredCaptchaTypeShortCircuit = async (
 	input.logger.info(() => ({
 		msg: "Frictionless decision",
 		data: {
-			requestId: input.requestId,
 			decision: "configured_captcha_type",
 			captchaType: configuredType,
 		},
