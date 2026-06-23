@@ -40,7 +40,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: "24"
 
       # No `npm install` needed — the check only reads JSON files.
       - name: Check dependencies are pinned to exact versions
