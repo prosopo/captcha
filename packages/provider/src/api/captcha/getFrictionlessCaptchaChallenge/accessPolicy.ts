@@ -37,7 +37,6 @@ export type AccessPolicyInput = {
 	dapp: string;
 	ipInfo: IPInfoResponse | undefined;
 	flatHeaders: RequestHeaders;
-	requestId: string | undefined;
 	logger: Logger;
 	userScope: UserScope;
 };
@@ -64,12 +63,11 @@ export const handleAccessPolicy = async (
 		};
 	}
 
-	const { tasks, clientRecord, userAccessPolicy, logger, requestId } = input;
+	const { tasks, clientRecord, userAccessPolicy, logger } = input;
 
 	logger.info(() => ({
 		msg: "User access policy matched",
 		data: {
-			requestId,
 			policy: userAccessPolicy,
 			captchaType: userAccessPolicy.captchaType,
 			userScope: input.userScope,
@@ -90,7 +88,6 @@ export const handleAccessPolicy = async (
 		logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {
-				requestId,
 				decision: "block",
 				captchaType: CaptchaType.image,
 			},
@@ -110,6 +107,36 @@ export const handleAccessPolicy = async (
 		};
 	}
 
+	// Defensive: re-evaluate autoBan after the access-policy bump so the
+	// non-block branches below can't dispatch to image/pow/puzzle when
+	// the bumped score now meets the threshold. The autoBan check added
+	// to runDecisionMachine (#2738) doesn't cover this path because
+	// handleAccessPolicy short-circuits before runDecisionMachine runs.
+	const autoBanThreshold = clientRecord.settings.autoBanScoreThreshold;
+	if (autoBanThreshold !== undefined && Number(botScore) >= autoBanThreshold) {
+		logger.info(() => ({
+			msg: "Frictionless decision",
+			data: {
+				decision: "auto_ban_score",
+				botScore,
+				autoBanThreshold,
+				captchaType: userAccessPolicy.captchaType,
+			},
+		}));
+		await tasks.frictionlessManager.registerBlockedSession({
+			solvedImagesCount: clientRecord.settings.imageMaxRounds,
+			userSitekeyIpHash: input.userSitekeyIpHash,
+			reason: FrictionlessReason.AUTO_BAN_SCORE,
+			siteKey: input.dapp,
+			ipInfo: input.ipInfo,
+			headers: input.flatHeaders,
+		});
+		return {
+			handled: true,
+			response: res.status(401).json({ error: "Unauthorized" }),
+		};
+	}
+
 	const captchaTypeBaseParams = {
 		userSitekeyIpHash: input.userSitekeyIpHash,
 		reason: FrictionlessReason.USER_ACCESS_POLICY,
@@ -122,7 +149,6 @@ export const handleAccessPolicy = async (
 		logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {
-				requestId,
 				decision: "user_access_policy",
 				captchaType: CaptchaType.image,
 			},
@@ -148,7 +174,6 @@ export const handleAccessPolicy = async (
 		logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {
-				requestId,
 				decision: "user_access_policy",
 				captchaType: CaptchaType.pow,
 			},
@@ -166,7 +191,6 @@ export const handleAccessPolicy = async (
 		logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {
-				requestId,
 				decision: "user_access_policy",
 				captchaType: CaptchaType.puzzle,
 			},

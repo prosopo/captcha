@@ -475,7 +475,6 @@ describe("BlacklistRequestInspector blocked-session persistence", () => {
 		// validation at write time.
 		expect(written.score).toBe(1);
 		expect(written.threshold).toBe(0);
-		expect(written.providerSelectEntropy).toBe(0);
 		expect(written.captchaType).toBe("frictionless");
 		const result = written.result as Record<string, unknown>;
 		expect(result.status).toBe("Disapproved");

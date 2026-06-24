@@ -37,6 +37,7 @@ import {
 } from "@prosopo/user-access-policy";
 import type { NextFunction, Request, Response } from "express";
 import { getCompositeIpAddress } from "../compositeIpAddress.js";
+import { recordBlockedRequest } from "./metrics.js";
 
 export const getRequestUserScope = (
 	requestHeaders: Record<string, unknown>,
@@ -252,6 +253,7 @@ export const getPrioritisedAccessRule = async (
 	userAccessRulesStorage: AccessRulesStorage,
 	userScope: UserScope | UserScopeRecord,
 	clientId?: string,
+	options?: { blockOnly?: boolean },
 ): Promise<AccessRule[]> => {
 	const parsedUserScope = userScopeInput.parse(userScope);
 
@@ -264,6 +266,7 @@ export const getPrioritisedAccessRule = async (
 		policyScopeMatch: FilterScopeMatch.Greedy,
 		userScope: parsedUserScope,
 		userScopeMatch: FilterScopeMatch.Greedy,
+		...(options?.blockOnly && { blockOnly: true }),
 	};
 
 	const candidates = await userAccessRulesStorage.findRules(
@@ -348,6 +351,7 @@ export class BlacklistRequestInspector {
 				msg: "Request without IP",
 			}));
 
+			recordBlockedRequest("no_ip");
 			return true;
 		}
 
@@ -379,6 +383,13 @@ export class BlacklistRequestInspector {
 					asn,
 				),
 				clientId,
+				// Request-time middleware only ever fires on Block policies
+				// (Restrict rules flow through and let the captcha-creation
+				// path decorate the response). Restrict the Redis-side
+				// candidate pool so the SERVER_SIDE_RANK_TOP_N cap can't
+				// crowd out hard-block rules in clients with dense Restrict
+				// rule populations.
+				{ blockOnly: true },
 			);
 			// Skip policies that have explicitly opted out of request-time
 			// enforcement (`deferToVerify`). Those are matched again from
@@ -395,6 +406,7 @@ export class BlacklistRequestInspector {
 
 			const isBlock = AccessPolicyType.Block === accessPolicy.type;
 			if (isBlock) {
+				recordBlockedRequest("access_policy");
 				// `Restrict` policies aren't logged or persisted here — those
 				// don't 403, they let the request through with modified
 				// captcha params and the downstream captcha-creation path
@@ -421,6 +433,7 @@ export class BlacklistRequestInspector {
 				msg: "Block Middleware Error",
 			}));
 
+			recordBlockedRequest("error");
 			return true;
 		}
 	}
@@ -498,7 +511,6 @@ export class BlacklistRequestInspector {
 			score: 1,
 			threshold: 0,
 			scoreComponents: { baseScore: 1 },
-			providerSelectEntropy: 0,
 			captchaType: CaptchaType.frictionless,
 			webView: false,
 			iFrame: false,

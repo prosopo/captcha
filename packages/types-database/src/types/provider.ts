@@ -21,6 +21,7 @@ import {
 	type CompositeIpAddress,
 	ContextType,
 	type DecisionMachineArtifact,
+	DecisionMachineKind,
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
@@ -609,7 +610,6 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 		shadowDomPenalty: { type: Boolean, required: false },
 		dnsAsymmetry: { type: Number, required: false },
 	},
-	providerSelectEntropy: { type: Number, required: true },
 	ipAddress: CompositeIpAddressRecordSchemaObj,
 	captchaType: { type: String, enum: CaptchaType, required: true },
 	mode: { type: String, enum: ModeEnum, required: false },
@@ -664,6 +664,10 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	// Stage at which the SIMD readings first arrived on this session
 	// (frictionless / challenge / submit). First-hop-wins.
 	simdReadingsStage: { type: String, required: false },
+	entropyMathRandomFingerprint: { type: String, required: false },
+	entropyCryptoFingerprint: { type: String, required: false },
+	entropyWallClockOffsetMs: { type: Number, required: false },
+	entropyMathRandomFirst: { type: Number, required: false },
 	// DNS observation merge target. Populated by
 	// POST /v1/prosopo/provider/admin/dns/event from the dns-event
 	// sidecar (see types/provider/database.ts → Session.dnsEvent).
@@ -686,7 +690,10 @@ SessionRecordSchema.index({ deleted: 1 });
 SessionRecordSchema.index({ blocked: 1 });
 SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
 SessionRecordSchema.index({ userSitekeyIpHash: 1 });
-SessionRecordSchema.index({ providerSelectEntropy: 1 });
+SessionRecordSchema.index(
+	{ siteKey: 1, entropyMathRandomFingerprint: 1, createdAt: -1 },
+	{ sparse: true },
+);
 SessionRecordSchema.index({ token: 1 });
 SessionRecordSchema.index({ siteKey: 1 }, { background: true, sparse: true });
 // Traffic-page aggregations group blocked-session records by rule. Sparse
@@ -738,6 +745,11 @@ export const DecisionMachineArtifactRecordSchema =
 			required: true,
 		},
 		dappAccount: { type: String, required: false },
+		kind: {
+			type: String,
+			enum: Object.values(DecisionMachineKind),
+			required: false,
+		},
 		runtime: {
 			type: String,
 			enum: Object.values(DecisionMachineRuntime),
@@ -753,15 +765,15 @@ export const DecisionMachineArtifactRecordSchema =
 		version: { type: String, required: false },
 		captchaType: {
 			type: String,
-			enum: [CaptchaType.pow, CaptchaType.image],
+			enum: [CaptchaType.pow, CaptchaType.image, CaptchaType.puzzle],
 			required: false,
 		},
 		createdAt: { type: Date, required: true },
 		updatedAt: { type: Date, required: true },
 	});
-// Unique index: one artifact per (scope, dappAccount) combination
+// Unique index: one artifact per (scope, dappAccount, kind) combination
 DecisionMachineArtifactRecordSchema.index(
-	{ scope: 1, dappAccount: 1 },
+	{ scope: 1, dappAccount: 1, kind: 1 },
 	{ unique: true },
 );
 DecisionMachineArtifactRecordSchema.index({ updatedAt: -1 });
@@ -1094,6 +1106,7 @@ export interface IProviderDatabase extends IDatabase {
 	getDecisionMachineArtifact(
 		scope: DecisionMachineScope,
 		dappAccount?: string,
+		kind?: DecisionMachineKind,
 	): Promise<DecisionMachineArtifact | undefined>;
 
 	getAllDecisionMachineArtifacts(): Promise<
