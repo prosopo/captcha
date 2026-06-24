@@ -32,6 +32,7 @@ import {
 import { timestampDecayFunction } from "../../../tasks/frictionless/frictionlessTasksUtils.js";
 import type { Tasks } from "../../../tasks/index.js";
 import { hashUserAgent } from "../../../utils/hashUserAgent.js";
+import { recordFrictionlessDecision } from "../../metrics.js";
 import {
 	determineContextType,
 	getContextThreshold,
@@ -134,6 +135,7 @@ export const runDecisionMachine = async (
 				token: input.token,
 			},
 		}));
+		recordFrictionlessDecision("auto_ban_score");
 		await tasks.frictionlessManager.registerBlockedSession({
 			solvedImagesCount: clientRecord.settings.imageMaxRounds,
 			userSitekeyIpHash,
@@ -153,6 +155,7 @@ export const runDecisionMachine = async (
 				captchaType: CaptchaType.image,
 			},
 		}));
+		recordFrictionlessDecision("webview_detected");
 		attachHoneypot(res, clientRecord);
 		return res.json(
 			await tasks.frictionlessManager.sendImageCaptcha({
@@ -177,6 +180,7 @@ export const runDecisionMachine = async (
 				captchaType: CaptchaType.image,
 			},
 		}));
+		recordFrictionlessDecision("timestamp_too_old");
 		attachHoneypot(res, clientRecord);
 		return res.json(
 			await tasks.frictionlessManager.sendImageCaptcha({
@@ -210,6 +214,7 @@ export const runDecisionMachine = async (
 				captchaType: CaptchaType.image,
 			},
 		}));
+		recordFrictionlessDecision("bot_score_above_threshold");
 		attachHoneypot(res, clientRecord);
 		return res.json(
 			await tasks.frictionlessManager.sendImageCaptcha({
@@ -233,6 +238,7 @@ export const runDecisionMachine = async (
 			captchaType: CaptchaType.pow,
 		},
 	}));
+	recordFrictionlessDecision("default_pow");
 	attachHoneypot(res, clientRecord);
 	return res.json(
 		await tasks.frictionlessManager.sendPowCaptcha({
@@ -280,6 +286,7 @@ const runUserAgentMismatchCheck = async (
 			captchaType: CaptchaType.image,
 		},
 	}));
+	recordFrictionlessDecision("user_agent_mismatch");
 	attachHoneypot(res, input.clientRecord);
 	return res.json(
 		await input.tasks.frictionlessManager.sendImageCaptcha({
@@ -354,6 +361,7 @@ const runContextAwareValidation = async (
 			threshold,
 		},
 	}));
+	recordFrictionlessDecision("context_aware_failed");
 	attachHoneypot(res, clientRecord);
 	return res.json(
 		await tasks.frictionlessManager.sendImageCaptcha({
