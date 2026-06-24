@@ -95,7 +95,7 @@ export function prosopoRouter(): Router {
 
 	router.get("/test", async (req, res) => {
 		try {
-			const logger = getLogger("info", import.meta.url);
+			const logger = getLogger("info", "providerMock:api:test");
 			const ja4PlusFingerprint = await getJA4(req.headers, logger);
 			await db.connect();
 			await db.addOrUpdateJA4Record({
