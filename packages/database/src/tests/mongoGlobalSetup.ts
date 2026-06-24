@@ -11,19 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-import { fileURLToPath } from "node:url";
-import { ViteTestConfig } from "@prosopo/config";
-process.env.NODE_ENV = "test";
-
-const config = ViteTestConfig();
+import { MongoBinary } from "mongodb-memory-server";
 
 // Pre-download the mongod binary once, in the parent process, before the test
-// forks spawn. Avoids the flaky concurrent-download lockfile race in
-// mongodb-memory-server. See ./src/tests/mongoGlobalSetup.ts.
-config.test = config.test || {};
-config.test.globalSetup = [
-	fileURLToPath(new URL("./src/tests/mongoGlobalSetup.ts", import.meta.url)),
-];
-
-export default config;
+// forks spawn. The integration tests each call `MongoMemoryServer.create()` in
+// isolated fork processes; on a clean environment (e.g. CI) those forks would
+// otherwise race to download the same binary concurrently, tripping the flaky
+// lockfile mechanism in mongodb-memory-server and intermittently failing with
+// lockfile errors. Ensuring the binary exists up-front means the forks always
+// find it cached on disk and never download in parallel.
+export default async function setup(): Promise<void> {
+	await MongoBinary.getPath();
+}
