@@ -81,10 +81,7 @@ export async function forwardVerifyIfNotIssuer(args: {
 
 	// If this node is the provider that issued the token, verify locally rather
 	// than forwarding to ourselves (which would just add a redundant hop/loop).
-	const self = env.pair
-		? providers.find((provider) => provider.address === env.pair?.address)
-		: undefined;
-	if (self?.url === providerUrl) {
+	if (env.pair?.address && issuer.address === env.pair.address) {
 		return null;
 	}
 
