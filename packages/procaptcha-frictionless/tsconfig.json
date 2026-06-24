@@ -25,9 +25,6 @@
 			"path": "../locale"
 		},
 		{
-			"path": "../load-balancer"
-		},
-		{
 			"path": "../procaptcha-pow"
 		},
 		{

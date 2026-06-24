@@ -274,4 +274,29 @@ describe("unwrapError still produces a translated HTTP response", () => {
 			"CAPTCHA.NO_SESSION_FOUND",
 		);
 	});
+
+	it("derives statusMessage from the resolved status code, not a hardcoded 'Bad Request'", () => {
+		const err = new ProsopoApiError("CAPTCHA.NO_SESSION_FOUND", {
+			context: { code: 401 },
+			i18n: englishI18n,
+			silent: true,
+		});
+
+		const { code, statusMessage } = unwrapError(err, englishI18n);
+		expect(code).toBe(401);
+		expect(statusMessage).toBe("Unauthorized");
+	});
+
+	it("falls back to a 5xx reason phrase for an unmapped server-error code", () => {
+		// 599 is unassigned, so it exercises the fallback rather than a real phrase.
+		const err = new ProsopoApiError("CAPTCHA.NO_SESSION_FOUND", {
+			context: { code: 599 },
+			i18n: englishI18n,
+			silent: true,
+		});
+
+		const { code, statusMessage } = unwrapError(err, englishI18n);
+		expect(code).toBe(599);
+		expect(statusMessage).toBe("Internal Server Error");
+	});
 });
