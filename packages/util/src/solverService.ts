@@ -46,6 +46,18 @@ export const hashMeetsDifficulty = (
 	difficulty: number,
 ): boolean => hashToBigInt(hash) < targetForDifficulty(difficulty);
 
+// Reused across every nonce attempt — allocating a fresh TextEncoder in the
+// tight solve loop is pure overhead.
+const textEncoder = new TextEncoder();
+
+// Core per-nonce check shared by solvePoW and solvePoWOffset: hash `nonce + data`
+// and test it against the precomputed difficulty target.
+const nonceMeetsTarget = (
+	nonce: number,
+	data: string,
+	target: bigint,
+): boolean => hashToBigInt(sha256(textEncoder.encode(nonce + data))) < target;
+
 export const solvePoW = async (
 	data: string,
 	difficulty: number,
@@ -54,10 +66,7 @@ export const solvePoW = async (
 	let nonce = 0;
 
 	while (true) {
-		const message = new TextEncoder().encode(nonce + data);
-		const hash = sha256(message);
-
-		if (hashToBigInt(hash) < target) {
+		if (nonceMeetsTarget(nonce, data, target)) {
 			return nonce;
 		}
 
@@ -111,10 +120,7 @@ export const solvePoWOffset = (
 	let nonce = start;
 
 	while (true) {
-		const message = new TextEncoder().encode(nonce + data);
-		const hash = sha256(message);
-
-		if (hashToBigInt(hash) < target) {
+		if (nonceMeetsTarget(nonce, data, target)) {
 			return nonce;
 		}
 

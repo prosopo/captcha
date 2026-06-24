@@ -13,6 +13,11 @@
 // limitations under the License.
 import { solvePoW } from "@prosopo/util";
 import type { PowWorkerRequest, PowWorkerResponse } from "./powWorker.js";
+// "?worker&inline" makes Vite bundle the worker and inline it into the consuming
+// bundle, so there is no separate chunk file to resolve at build time. This also
+// keeps the worker module from being tree-shaken away (it is only referenced at
+// runtime, never statically imported).
+import PowWorkerConstructor from "./powWorker.js?worker&inline";
 
 // Hardcoded, build-time substituted number of web workers used to solve a PoW
 // challenge in parallel. Each worker explores a disjoint slice of the nonce
@@ -37,8 +42,7 @@ const getWorkerCount = (): number =>
  * environments without web worker support (e.g. SSR) fail fast and fall back to
  * the synchronous solver.
  */
-const spawnWorker = (): Worker =>
-	new Worker(new URL("./powWorker.js", import.meta.url), { type: "module" });
+const spawnWorker = (): Worker => new PowWorkerConstructor();
 
 /**
  * Solve a PoW challenge across a pool of web workers.
@@ -89,9 +93,7 @@ export const solvePoWParallel = (
 			for (let i = 0; i < workerCount; i++) {
 				const worker = spawnWorker();
 
-				worker.onmessage = (
-					event: MessageEvent<PowWorkerResponse>,
-				): void => {
+				worker.onmessage = (event: MessageEvent<PowWorkerResponse>): void => {
 					if (settled) {
 						return;
 					}
