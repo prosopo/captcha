@@ -42,7 +42,7 @@ import { ImgCaptchaManager } from "../../../../tasks/imgCaptcha/imgCaptchaTasks.
 import { buildTreeAndGetCommitmentId } from "../../../../tasks/imgCaptcha/imgCaptchaTasksUtils.js";
 import { shuffleArray } from "../../../../util.js";
 
-const loggerOuter = getLogger("info", import.meta.url);
+const loggerOuter = getLogger("info", "test:img-captcha-tasks");
 
 // Mock dependencies
 vi.mock("@prosopo/datasets", () => ({

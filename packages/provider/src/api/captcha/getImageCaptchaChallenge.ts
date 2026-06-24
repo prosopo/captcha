@@ -33,6 +33,7 @@ import { Tasks } from "../../tasks/index.js";
 import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 import { getRequestUserScope } from "../blacklistRequestInspector.js";
+import { recordCaptchaIssueError, recordCaptchaIssued } from "../metrics.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 import { buildImageMaintenanceResponse } from "./maintenanceModeResponses.js";
 
@@ -256,8 +257,10 @@ export default (
 					sessionId,
 				},
 			}));
+			recordCaptchaIssued(CaptchaType.image);
 			return res.json(captchaResponse);
 		} catch (err) {
+			recordCaptchaIssueError(CaptchaType.image);
 			req.logger.error(() => ({
 				err,
 				data: req.params,
