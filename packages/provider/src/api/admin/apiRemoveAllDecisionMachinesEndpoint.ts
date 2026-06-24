@@ -37,9 +37,9 @@ class ApiRemoveAllDecisionMachinesEndpoint
 		args: unknown,
 		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
-		logger =
-			logger ||
-			getLogger("info", "provider:admin:decision-machines:remove-all");
+		logger = logger
+			? logger.with({}, "admin:decision-machines:remove-all")
+			: getLogger("info", "provider:admin:decision-machines:remove-all");
 		try {
 			logger.info(() => ({
 				msg: "Removing all decision machines",

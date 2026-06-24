@@ -74,6 +74,7 @@ jobs:
 
           for n in "${prs[@]}"; do
             echo "::group::PR #$n"
+            echo "Considering https://github.com/$REPO/pull/$n"
 
             mergeable=""
             state=""
