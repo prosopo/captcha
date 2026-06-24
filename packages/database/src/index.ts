@@ -16,4 +16,5 @@ import makeDir from "make-dir";
 console.debug(makeDir);
 export * from "./base/index.js";
 export * from "./databases/index.js";
+export * from "./mongooseOptions.js";
 export * from "./redisCache.js";

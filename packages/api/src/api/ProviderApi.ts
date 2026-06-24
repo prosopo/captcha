@@ -74,6 +74,13 @@ import {
 } from "@prosopo/types";
 import { ApiClient } from "./apiClient.js";
 
+// Marker header set on a forwarded verify request so the receiving provider
+// knows the request has already been proxied once and must not forward it
+// again. Lowercase to match Express's normalised `req.headers` keys. A spoofed
+// value only makes a provider verify locally (the safe default), so it carries
+// no trust assumption.
+export const VERIFY_FORWARDED_HEADER = "prosopo-verify-forwarded";
+
 export default class ProviderApi
 	extends ApiClient
 	implements ProviderApiInterface
@@ -374,6 +381,26 @@ export default class ProviderApi
 		return this.fetch(PublicApiPaths.GetProviderDetails, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
+			},
+		});
+	}
+
+	/**
+	 * Forwards an already-parsed verify request body to a verify path on this
+	 * provider, verbatim. Used by a pronode to proxy a verification request
+	 * through to the provider that issued the token (the one the client
+	 * happened to contact is not necessarily the issuer).
+	 */
+	public forwardVerify(
+		path: ClientApiPaths,
+		body: object,
+		user: string,
+	): Promise<VerificationResponse> {
+		return this.post(path, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": user,
+				[VERIFY_FORWARDED_HEADER]: "true",
 			},
 		});
 	}
