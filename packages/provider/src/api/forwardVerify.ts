@@ -37,6 +37,20 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
  * @param user - The user account (used as the `Prosopo-User` header)
  * @param body - The original, already-parsed request body, forwarded verbatim
  */
+// Strip the `ipv4.`/`ipv6.` single-stack DNS label and any trailing slash so a
+// token's `providerUrl` and a provider-list entry compare equal regardless of
+// which stack the token was minted on. Falls back to a trailing-slash-trimmed
+// string if the url can't be parsed.
+function normalizeProviderUrl(url: string): string {
+	try {
+		const parsed = new URL(url);
+		parsed.hostname = parsed.hostname.replace(/^(ipv4|ipv6)\./, "");
+		return parsed.toString().replace(/\/$/, "");
+	} catch {
+		return url.replace(/\/$/, "");
+	}
+}
+
 export async function forwardVerifyIfNotIssuer(args: {
 	env: ProviderEnvironment;
 	logger: Logger;
@@ -70,7 +84,14 @@ export async function forwardVerifyIfNotIssuer(args: {
 	}
 
 	// SSRF guard: only ever forward to a url that belongs to a known provider.
-	const issuer = providers.find((provider) => provider.url === providerUrl);
+	// Match on a normalised url so a single-stack issuer (a token minted with an
+	// `ipv4.`/`ipv6.`-labelled hostname, as `getRandomActiveProvider` can hand
+	// back) still resolves to its canonical dual-stack provider-list entry. We
+	// still forward to the vetted `issuer.url`, so the guard is unchanged.
+	const normalizedProviderUrl = normalizeProviderUrl(providerUrl);
+	const issuer = providers.find(
+		(provider) => normalizeProviderUrl(provider.url) === normalizedProviderUrl,
+	);
 	if (!issuer) {
 		logger.warn(() => ({
 			msg: "Token providerUrl is not a known provider; verifying locally",

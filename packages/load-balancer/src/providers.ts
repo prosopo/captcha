@@ -157,3 +157,9 @@ export const getRandomActiveProvider = async (
 export const _resetPinCache = () => {
 	pinPromiseCache.clear();
 };
+
+// Test-only escape hatch to isolate the provider-list cache between cases.
+// Not exported from the package index — internal use only.
+export const _resetProviderListCache = () => {
+	providerListPromiseCache.clear();
+};

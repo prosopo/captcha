@@ -142,4 +142,39 @@ describe("forwardVerifyIfNotIssuer", () => {
 			"user",
 		);
 	});
+
+	it("matches a single-stack (ipv4./ipv6.-labelled) issuer url to its dual-stack provider entry", async () => {
+		const response = { status: "ok", verified: true };
+		forwardVerify.mockResolvedValue(response);
+
+		// Token minted with the single-stack hostname; provider list only holds
+		// the canonical dual-stack `OTHER_URL`. Normalisation should still match.
+		const result = await forwardVerifyIfNotIssuer({
+			env: mockEnv(),
+			logger,
+			path: ClientApiPaths.VerifyPowCaptchaSolution,
+			providerUrl: "https://ipv4.other.provider",
+			dapp: "dapp",
+			user: "user",
+			body: {},
+		});
+
+		expect(result).toBe(response);
+		expect(forwardVerify).toHaveBeenCalledTimes(1);
+	});
+
+	it("treats a single-stack url for this node as self (verifies locally, no forward)", async () => {
+		const result = await forwardVerifyIfNotIssuer({
+			env: mockEnv(),
+			logger,
+			path: ClientApiPaths.VerifyPowCaptchaSolution,
+			providerUrl: "https://ipv6.self.provider",
+			dapp: "dapp",
+			user: "user",
+			body: {},
+		});
+
+		expect(result).toBeNull();
+		expect(forwardVerify).not.toHaveBeenCalled();
+	});
 });
