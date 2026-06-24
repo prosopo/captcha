@@ -37,7 +37,7 @@ export function requestLoggerMiddleware(env: ProviderEnvironment) {
 
 		const logger = getLogger(
 			parseLogLevel(env.config.logLevel),
-			"request-logger",
+			"provider:request",
 		).with({
 			requestId,
 			...(user ? { user } : {}),

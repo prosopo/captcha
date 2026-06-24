@@ -14,7 +14,13 @@
 
 import { stringifyBigInts } from "@prosopo/util";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getLogger } from "../logger.js";
+import {
+	getLogger,
+	parseDirectives,
+	parseLogLevel,
+	resolveLevel,
+	setGlobalDirectives,
+} from "../logger.js";
 describe("unpackError", () => {
 	let captured: string[] = [];
 
@@ -80,7 +86,7 @@ describe("unpackError", () => {
 });
 
 describe("stringifyBigInts", () => {
-	it("should strigify big int", () => {
+	it("should stringify big int", () => {
 		const bigInt = BigInt(12345678901234567890n);
 
 		const stringified = stringifyBigInts(bigInt);
@@ -131,5 +137,166 @@ describe("stringifyBigInts", () => {
 			{ name: "object", value: bigInt3.toString() },
 			"third",
 		]);
+	});
+});
+
+describe("parseLogLevel", () => {
+	it("parses a bare level", () => {
+		expect(parseLogLevel("warn")).toBe("warn");
+	});
+
+	it("extracts the global level from a directive string", () => {
+		expect(parseLogLevel("warn,database=trace")).toBe("warn");
+	});
+
+	it("returns the fallback for a directives-only string", () => {
+		expect(parseLogLevel("database=trace", "info")).toBe("info");
+	});
+
+	it("returns the fallback for undefined", () => {
+		expect(parseLogLevel(undefined, "info")).toBe("info");
+	});
+});
+
+describe("parseDirectives", () => {
+	it("parses a bare global level", () => {
+		const d = parseDirectives("warn");
+		expect(d.get("")).toBe("warn");
+	});
+
+	it("parses per-scope overrides", () => {
+		const d = parseDirectives("warn,database=trace");
+		expect(d.get("")).toBe("warn");
+		expect(d.get("database")).toBe("trace");
+	});
+
+	it("parses directives-only (no global default)", () => {
+		const d = parseDirectives("database=trace");
+		expect(d.has("")).toBe(false);
+		expect(d.get("database")).toBe("trace");
+	});
+});
+
+describe("resolveLevel", () => {
+	it("matches the exact scope", () => {
+		const d = parseDirectives("warn,database:mongo=trace");
+		expect(resolveLevel("database:mongo", d, "info")).toBe("trace");
+	});
+
+	it("matches a prefix when exact scope has no entry", () => {
+		const d = parseDirectives("warn,database=debug");
+		expect(resolveLevel("database:mongo:queries", d, "info")).toBe("debug");
+	});
+
+	it("falls back to global default when no scope matches", () => {
+		const d = parseDirectives("warn,database=debug");
+		expect(resolveLevel("provider:request", d, "info")).toBe("warn");
+	});
+
+	it("returns fallback when directives are empty", () => {
+		const d = parseDirectives("");
+		expect(resolveLevel("any:scope", d, "info")).toBe("info");
+	});
+});
+
+describe("setGlobalDirectives", () => {
+	// Restore the env-derived directives so a failing assertion can't leak state
+	// into later tests, without clobbering a non-empty PROSOPO_LOG_LEVEL.
+	afterEach(() => {
+		setGlobalDirectives(process.env.PROSOPO_LOG_LEVEL ?? "");
+	});
+
+	it("affects an existing logger's filtering at emit time", () => {
+		const logger = getLogger("info", "test-scope");
+		const debugSpy = vi.spyOn(console, "debug").mockImplementation(() => {});
+		try {
+			// Globally warn: a debug message from a logger created at info is suppressed.
+			setGlobalDirectives("warn");
+			logger.debug(() => ({ msg: "hidden" }));
+			expect(debugSpy).not.toHaveBeenCalled();
+
+			// Raising test-scope to trace at runtime lets the same logger emit debug.
+			setGlobalDirectives("warn,test-scope=trace");
+			logger.debug(() => ({ msg: "shown" }));
+			expect(debugSpy).toHaveBeenCalledTimes(1);
+		} finally {
+			debugSpy.mockRestore();
+		}
+	});
+});
+
+describe("emitted record", () => {
+	afterEach(() => {
+		setGlobalDirectives(process.env.PROSOPO_LOG_LEVEL ?? "");
+	});
+
+	it("uses the message level rather than the logger's configured level", () => {
+		setGlobalDirectives("trace");
+		const logger = getLogger("info", "record-scope");
+		const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+		try {
+			logger.error(() => ({ msg: "boom" }));
+			expect(errorSpy).toHaveBeenCalledTimes(1);
+			const output = errorSpy.mock.calls[0]?.[0];
+			expect(typeof output).toBe("string");
+			const record: { level: string; scope: string; msg: string } = JSON.parse(
+				output as string,
+			);
+			expect(record.level).toBe("error");
+			expect(record.scope).toBe("record-scope");
+			expect(record.msg).toBe("boom");
+		} finally {
+			errorSpy.mockRestore();
+		}
+	});
+});
+
+describe("Logger.with subscope", () => {
+	it("appends subscope to parent scope", () => {
+		const parent = getLogger("info", "provider");
+		const child = parent.with({}, "request");
+		expect(child.getScope()).toBe("provider:request");
+	});
+
+	it("does not produce a leading colon when parent scope is empty", () => {
+		const parent = getLogger("info", "");
+		const child = parent.with({}, "request");
+		expect(child.getScope()).toBe("request");
+	});
+
+	it("trims surrounding whitespace from the subscope", () => {
+		const parent = getLogger("info", "provider");
+		const child = parent.with({}, "  request  ");
+		expect(child.getScope()).toBe("provider:request");
+	});
+
+	it("treats a whitespace-only subscope as absent", () => {
+		const parent = getLogger("info", "provider");
+		const child = parent.with({}, "   ");
+		expect(child.getScope()).toBe("provider");
+	});
+
+	it("merges parent and child default data into emitted records", () => {
+		setGlobalDirectives("trace");
+		const parent = getLogger("info", "test").with({ requestId: "abc" });
+		const child = parent.with({ extra: 1 });
+		const infoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
+		try {
+			child.info(() => ({ data: { perCall: true } }));
+			expect(infoSpy).toHaveBeenCalledTimes(1);
+			const output = infoSpy.mock.calls[0]?.[0];
+			expect(typeof output).toBe("string");
+			const record: { scope: string; data: Record<string, unknown> } =
+				JSON.parse(output as string);
+			expect(record.scope).toBe("test");
+			expect(record.data).toMatchObject({
+				requestId: "abc",
+				extra: 1,
+				perCall: true,
+			});
+		} finally {
+			infoSpy.mockRestore();
+			setGlobalDirectives(process.env.PROSOPO_LOG_LEVEL ?? "");
+		}
 	});
 });
