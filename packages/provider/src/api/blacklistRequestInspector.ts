@@ -280,10 +280,12 @@ export class BlacklistRequestInspector {
 		private readonly userAccessRulesStorage: AccessRulesStorage,
 		private readonly environmentReadinessWaiter: () => Promise<void>,
 		// Optional so existing test-suite construction (where the DB isn't
-		// always plumbed) keeps working. When provided, every request that
-		// the inspector decides to block (403) also writes a synthetic
-		// `blocked=true, deleted=true` session record so the Traffic page
-		// can aggregate per-rule block counts.
+		// always plumbed) keeps working. When provided, requests blocked by a
+		// matched access-policy `Block` rule also write a synthetic
+		// `blocked=true, deleted=true` session record so the Traffic page can
+		// aggregate per-rule block counts. Other 403 cases (missing IP, or a
+		// fail-closed middleware error) are not persisted, since there's no
+		// matched rule to attribute them to.
 		private readonly db?: IProviderDatabase,
 	) {}
 
@@ -309,9 +311,11 @@ export class BlacklistRequestInspector {
 		);
 
 		if (shouldAbortRequest) {
-			// A blocklist denial (blocked IP / JA4 / user) is a 403 Forbidden,
-			// not a 401 Unauthorized - the client isn't lacking credentials,
-			// it is denied access.
+			// Any deny decision from shouldAbortRequest - a matched Block rule
+			// (blocked IP / JA4 / user / country / ASN), a request with no IP, or
+			// a fail-closed middleware error - is a 403 Forbidden, not a 401
+			// Unauthorized: the client isn't lacking credentials, it is denied
+			// access.
 			res.status(403).json({ error: "Forbidden" });
 			return;
 		}
@@ -392,7 +396,7 @@ export class BlacklistRequestInspector {
 			const isBlock = AccessPolicyType.Block === accessPolicy.type;
 			if (isBlock) {
 				// `Restrict` policies aren't logged or persisted here — those
-				// don't 401, they let the request through with modified
+				// don't 403, they let the request through with modified
 				// captcha params and the downstream captcha-creation path
 				// already writes a normal session record.
 				this.recordBlockDecision(
@@ -425,7 +429,7 @@ export class BlacklistRequestInspector {
 	 * Emit a structured log line and (if a DB is wired) persist a synthetic
 	 * Session record for the request we're about to block (403). Fire-and-forget on
 	 * the Mongo side — the structured log line is the source of truth and
-	 * the 401 response is never delayed by a persistence failure.
+	 * the 403 response is never delayed by a persistence failure.
 	 *
 	 * Carries the matched rule's identity (hash + ruleType + description)
 	 * so the Traffic page can surface "what's blocking traffic for this

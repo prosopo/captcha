@@ -21,6 +21,7 @@ import {
 	type AccessRulesStorage,
 	type UserScope,
 } from "@prosopo/user-access-policy";
+import type { NextFunction, Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
 import {
 	BlacklistRequestInspector,
@@ -703,6 +704,80 @@ describe("BlacklistRequestInspector blocked-session persistence", () => {
 		await Promise.resolve();
 		const written = spy.mock.calls[0]?.[0] as Record<string, unknown>;
 		expect(written.ruleType).toEqual(["ipMask"]);
+	});
+});
+
+describe("BlacklistRequestInspector.abortRequestForBlockedUsers", () => {
+	const mockLogger = {
+		info: vi.fn(),
+		debug: vi.fn(),
+		error: vi.fn(),
+		warn: vi.fn(),
+	} as unknown as Logger;
+
+	const buildResponse = (): {
+		res: Response;
+		status: ReturnType<typeof vi.fn>;
+		json: ReturnType<typeof vi.fn>;
+	} => {
+		const json = vi.fn();
+		const status = vi.fn(() => ({ json }));
+		return { res: { status } as unknown as Response, status, json };
+	};
+
+	const buildRequest = (overrides: Partial<Request>): Request =>
+		({
+			ip: "1.1.1.1",
+			url: "/v1/prosopo/provider/client/captcha/frictionless",
+			ja4: "unrelated-ja4",
+			headers: {},
+			body: {},
+			logger: mockLogger,
+			...overrides,
+		}) as unknown as Request;
+
+	it("responds 403 Forbidden and does not call next() when the request is denied", async () => {
+		// Missing IP on an api route is a deny path in shouldAbortRequest, so
+		// no storage/rules setup is needed to exercise the abort response.
+		const inspector = new BlacklistRequestInspector(
+			{
+				findRules: vi.fn().mockResolvedValue([]),
+			} as unknown as AccessRulesStorage,
+			async () => undefined,
+		);
+		const { res, status, json } = buildResponse();
+		const next: NextFunction = vi.fn();
+
+		await inspector.abortRequestForBlockedUsers(
+			buildRequest({ ip: "" }),
+			res,
+			next,
+		);
+
+		expect(status).toHaveBeenCalledWith(403);
+		expect(json).toHaveBeenCalledWith({ error: "Forbidden" });
+		expect(next).not.toHaveBeenCalled();
+	});
+
+	it("calls next() and does not write a status when the request is allowed", async () => {
+		const inspector = new BlacklistRequestInspector(
+			{
+				findRules: vi.fn().mockResolvedValue([]),
+			} as unknown as AccessRulesStorage,
+			async () => undefined,
+		);
+		const { res, status } = buildResponse();
+		const next: NextFunction = vi.fn();
+
+		// Non-api route short-circuits shouldAbortRequest to false (allow).
+		await inspector.abortRequestForBlockedUsers(
+			buildRequest({ url: "/favicon.ico" }),
+			res,
+			next,
+		);
+
+		expect(next).toHaveBeenCalledTimes(1);
+		expect(status).not.toHaveBeenCalled();
 	});
 });
 
