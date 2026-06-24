@@ -18,6 +18,7 @@ import type { ProviderEnvironment } from "@prosopo/env";
 import { type ProviderDetails, PublicApiPaths } from "@prosopo/types";
 import { version } from "@prosopo/util";
 import express, { type Router } from "express";
+import { metricsEnabled, metricsHandler } from "./metrics.js";
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -27,9 +28,26 @@ import express, { type Router } from "express";
 export function publicRouter(env: ProviderEnvironment): Router {
 	const router = express.Router();
 
+	// The `host` field is the per-pronode identity (e.g. `pronode4.prosopo.io`).
+	// Clients hit `pronode.prosopo.io/healthz` to discover which pronode the
+	// DNS layer picked, then pin all subsequent captcha calls to that host so
+	// session creation and submission land on the same backend. `config.host`
+	// is set per-pronode via ansible inventory (CADDY_DOMAIN). Falls back to
+	// the request's Host header in the rare case it's unset.
 	router.get(PublicApiPaths.Healthz, (req, res) => {
-		res.status(200).send("OK");
+		const host =
+			env.config.host && env.config.host.length > 0
+				? env.config.host
+				: req.hostname;
+		return res.status(200).json({ ok: true, host });
 	});
+
+	// Prometheus metrics endpoint. Lives in the public router so it runs before
+	// rate-limiting, auth and blocking middleware — scrapes are never throttled
+	// or blocked. Vector scrapes this over the internal docker network.
+	if (metricsEnabled()) {
+		router.get(PublicApiPaths.Metrics, metricsHandler(env));
+	}
 
 	/**
 	 * Gets public details of the provider

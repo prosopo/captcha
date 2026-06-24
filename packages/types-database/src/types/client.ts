@@ -196,6 +196,8 @@ export const UserSettingsSchema = new Schema({
 		blockAbuser: { type: Boolean, default: true },
 		abuserScoreThreshold: { type: Number, min: 0, max: 1, default: 0 },
 		blockDatacenter: { type: Boolean, default: false },
+		datacenterNameAllowlist: { type: [String], required: false },
+		skipExtrasOnValidDnsPath: { type: Boolean, default: false },
 		blockMobile: { type: Boolean, default: false },
 		blockSatellite: { type: Boolean, default: false },
 		blockCrawler: { type: Boolean, default: false },

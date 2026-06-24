@@ -19,6 +19,9 @@ import {
 	DecisionMachineCaptchaTypeSchema,
 } from "../client/captchaType/captchaType.js";
 import type { RequestHeaders } from "../provider/api.js";
+import type { ScoreComponents } from "../provider/database.js";
+import type { SimdReadings } from "../provider/detection.js";
+import type { FrictionlessReason } from "../provider/reasons.js";
 
 export type EnrichedDnsEvent = {
 	peerIp?: string;
@@ -30,6 +33,11 @@ export type EnrichedDnsEvent = {
 
 export enum DecisionMachineRuntime {
 	Node = "node",
+}
+
+export enum DecisionMachineKind {
+	Routing = "routing",
+	Decision = "decision",
 }
 
 /**
@@ -83,6 +91,18 @@ export type DecisionMachineInput = {
 	// challenge record). Undefined for invalid lookups.
 	ipInfo?: IPInfoResponse;
 	dnsEvent?: EnrichedDnsEvent;
+	// Session-derived fields forwarded from the Session record loaded at
+	// the verify path. Undefined when no frictionless session preceded.
+	score?: number;
+	threshold?: number;
+	scoreComponents?: ScoreComponents;
+	decryptedHeadHash?: string;
+	userSitekeyIpHash?: string;
+	simdReadings?: SimdReadings;
+	frictionlessReason?: FrictionlessReason;
+	ruleType?: string[];
+	webView?: boolean;
+	iFrame?: boolean;
 };
 
 export type DecisionMachineOutput = {
@@ -201,6 +221,12 @@ export interface RoutingMachineRawSignals {
 	userAgent: string;
 	ja4?: string;
 	behavioralDataPacked?: DecisionMachineBehavioralDataPacked;
+	fingerprintProof?: string;
+	// Decoded per-CPU WASM SIMD fingerprint readings, when the client submitted
+	// them with the PoW solution (decrypted and attached to the session, then
+	// surfaced here for the post-pow routing machine). Undefined when absent or
+	// unsupported on the client.
+	simd?: SimdReadings;
 }
 
 export type RoutingMachinePhase = "route" | "postPow";
@@ -225,6 +251,10 @@ export interface RoutingMachineOutput {
 	captchaType: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle;
 	solvedImagesCount?: number;
 	powDifficulty?: number;
+	// Optional selection reason the machine can attach to explain an escalation
+	// (e.g. why it chose image over pow). Persisted to `session.reason` by the
+	// provider. Free-form string because machines are operator-authored.
+	reason?: string;
 }
 
 export const RoutingMachineOutputSchema = z.object({
@@ -235,4 +265,5 @@ export const RoutingMachineOutputSchema = z.object({
 	]),
 	solvedImagesCount: z.number().int().positive().optional(),
 	powDifficulty: z.number().positive().optional(),
+	reason: z.string().optional(),
 });

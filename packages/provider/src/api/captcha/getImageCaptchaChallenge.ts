@@ -33,6 +33,7 @@ import { Tasks } from "../../tasks/index.js";
 import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 import { getRequestUserScope } from "../blacklistRequestInspector.js";
+import { recordCaptchaIssueError, recordCaptchaIssued } from "../metrics.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 import { buildImageMaintenanceResponse } from "./maintenanceModeResponses.js";
 
@@ -72,7 +73,32 @@ export default (
 			);
 		}
 
-		const { datasetId, user, dapp, sessionId, simdReadings } = parsed;
+		const {
+			datasetId: clientDatasetId,
+			user,
+			dapp,
+			sessionId,
+			simdReadings,
+		} = parsed;
+
+		// Clients no longer send datasetId (DNS routes them to an arbitrary
+		// pronode; they can't know in advance which dataset to pin). Fall back
+		// to the env's default — populated from the most-recently-uploaded
+		// dataset at startup, see `Environment.isReady` in packages/env.
+		const datasetId = clientDatasetId ?? env.datasetId;
+
+		if (!datasetId) {
+			return next(
+				new ProsopoApiError("API.BAD_REQUEST", {
+					context: {
+						code: 400,
+						error: "No dataset available. Please upload a dataset first.",
+					},
+					i18n: req.i18n,
+					logger: req.logger,
+				}),
+			);
+		}
 
 		validateSiteKey(dapp);
 		validateAddr(user);
@@ -231,8 +257,10 @@ export default (
 					sessionId,
 				},
 			}));
+			recordCaptchaIssued(CaptchaType.image);
 			return res.json(captchaResponse);
 		} catch (err) {
+			recordCaptchaIssueError(CaptchaType.image);
 			req.logger.error(() => ({
 				err,
 				data: req.params,

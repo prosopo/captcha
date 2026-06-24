@@ -27,7 +27,7 @@
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
 	"devDependencies": {
-		"@prosopo/config": "3.3.2",
+		"@prosopo/config": "3.3.3",
 		"@types/node": "22.10.2",
 		"del-cli": "6.0.0"
 	},

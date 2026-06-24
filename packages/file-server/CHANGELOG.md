@@ -1,5 +1,11 @@
 # @prosopo/file-server
 
+## 2.6.45
+### Patch Changes
+
+- Updated dependencies [edcd450]
+  - @prosopo/util@3.3.1
+
 ## 2.6.44
 ### Patch Changes
 

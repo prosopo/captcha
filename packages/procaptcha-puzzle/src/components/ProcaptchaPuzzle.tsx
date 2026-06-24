@@ -33,6 +33,7 @@ export const ProcaptchaPuzzle = (props: ProcaptchaProps) => (
 			callbacks={props.callbacks}
 			frictionlessState={props.frictionlessState}
 			i18n={props.i18n}
+			autoStart={props.autoStart}
 		/>
 	</Suspense>
 );
