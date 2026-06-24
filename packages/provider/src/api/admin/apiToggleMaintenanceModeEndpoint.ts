@@ -20,6 +20,7 @@ import {
 import { type Logger, getLogger } from "@prosopo/logger";
 import { ToggleMaintenanceModeBody } from "@prosopo/types";
 import type { z } from "zod";
+import { setMaintenanceModeGauge } from "../metrics.js";
 
 type ToggleMaintenanceModeBodyType = typeof ToggleMaintenanceModeBody;
 
@@ -61,6 +62,7 @@ class ApiToggleMaintenanceModeEndpoint
 		}));
 
 		setMaintenanceMode(enabled);
+		setMaintenanceModeGauge(enabled);
 
 		const currentMode = getMaintenanceMode();
 
