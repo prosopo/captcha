@@ -185,6 +185,17 @@ describe("parseDirectives", () => {
 		expect(directives.has("bogus")).toBe(false);
 	});
 
+	it("ignores an empty-scope entry like '=debug' (only a bare level sets the global default)", () => {
+		const directives = parseDirectives("=debug");
+		expect(directives.has("")).toBe(false);
+	});
+
+	it("does not let an empty-scope entry override a real scope's level", () => {
+		const directives = parseDirectives("=debug,provider:db=warn");
+		expect(directives.has("")).toBe(false);
+		expect(directives.get("provider:db")).toBe("warn");
+	});
+
 	it("parses per-scope overrides", () => {
 		const d = parseDirectives("warn,database=trace");
 		expect(d.get("")).toBe("warn");
@@ -217,6 +228,26 @@ describe("resolveLevel", () => {
 	it("falls back to the supplied fallback when nothing matches", () => {
 		const directives = parseDirectives("other=trace");
 		expect(resolveLevel("provider:db", directives, "info")).toBe("info");
+	});
+
+	it("matches the exact scope", () => {
+		const d = parseDirectives("warn,database:mongo=trace");
+		expect(resolveLevel("database:mongo", d, "info")).toBe("trace");
+	});
+
+	it("matches a prefix when exact scope has no entry", () => {
+		const d = parseDirectives("warn,database=debug");
+		expect(resolveLevel("database:mongo:queries", d, "info")).toBe("debug");
+	});
+
+	it("falls back to global default when no scope matches", () => {
+		const d = parseDirectives("warn,database=debug");
+		expect(resolveLevel("provider:request", d, "info")).toBe("warn");
+	});
+
+	it("returns fallback when directives are empty", () => {
+		const d = parseDirectives("");
+		expect(resolveLevel("any:scope", d, "info")).toBe("info");
 	});
 });
 
@@ -263,28 +294,6 @@ describe("Logger.with subscope + directives", () => {
 		// The inherited info level still applies.
 		child.info(() => ({ msg: "visible" }));
 		expect(captured.length).toBe(1);
-	});
-});
-
-describe("resolveLevel", () => {
-	it("matches the exact scope", () => {
-		const d = parseDirectives("warn,database:mongo=trace");
-		expect(resolveLevel("database:mongo", d, "info")).toBe("trace");
-	});
-
-	it("matches a prefix when exact scope has no entry", () => {
-		const d = parseDirectives("warn,database=debug");
-		expect(resolveLevel("database:mongo:queries", d, "info")).toBe("debug");
-	});
-
-	it("falls back to global default when no scope matches", () => {
-		const d = parseDirectives("warn,database=debug");
-		expect(resolveLevel("provider:request", d, "info")).toBe("warn");
-	});
-
-	it("returns fallback when directives are empty", () => {
-		const d = parseDirectives("");
-		expect(resolveLevel("any:scope", d, "info")).toBe("info");
 	});
 });
 
