@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import type { RedisWriteQueue } from "@prosopo/database";
 import {
 	FrictionlessPenalties,
 	type KeyringPair,
@@ -24,9 +28,19 @@ describe("decryptPayload", () => {
 	let db: IProviderDatabase;
 	let pair: KeyringPair;
 	let config: ProsopoConfigOutput;
-	const detectorKey = process.env.BOT_DECRYPTION_KEY;
+	let dir: string;
+
 	beforeEach(() => {
-		process.env.BOT_DECRYPTION_KEY = "";
+		// A pool with a single bundle, resolvable by id "bundle-0". The pool is
+		// initialised inside each test AFTER vi.resetModules() so it lands on the
+		// same bundlePool module instance the manager imports.
+		dir = mkdtempSync(join(tmpdir(), "decrypt-pool-"));
+		writeFileSync(join(dir, "bundle-0.js"), "JS");
+		writeFileSync(
+			join(dir, "bundle-0.json"),
+			JSON.stringify({ privateKey: "PK", innerConfig: "CFG" }),
+		);
+
 		vi.clearAllMocks();
 		vi.resetAllMocks();
 		vi.resetModules();
@@ -34,7 +48,6 @@ describe("decryptPayload", () => {
 			updateFrictionlessTokenRecord: vi.fn(),
 			storeFrictionlessTokenRecord: vi.fn(),
 			storeSessionRecord: vi.fn(),
-			getDetectorKeys: vi.fn(() => Promise.resolve(["test-key"])),
 		} as unknown as IProviderDatabase;
 
 		pair = {
@@ -55,10 +68,10 @@ describe("decryptPayload", () => {
 	});
 
 	afterEach(() => {
-		process.env.BOT_DECRYPTION_KEY = detectorKey;
+		rmSync(dir, { recursive: true, force: true });
 	});
 
-	it("should get values from the payload", async () => {
+	it("should get values from the payload when the session bundle resolves", async () => {
 		vi.doMock("../../../../tasks/detection/getBotScore.ts", () => ({
 			getBotScore: vi.fn().mockImplementation(() => {
 				return {
@@ -67,15 +80,33 @@ describe("decryptPayload", () => {
 				};
 			}),
 		}));
+		// Init the pool on the post-reset module instance the manager will use.
+		const { initDetectorBundlePool } = await import(
+			"../../../../tasks/detection/bundlePool.js"
+		);
+		initDetectorBundlePool(dir);
+
 		const FrictionlessManager = (
 			await import("../../../../tasks/frictionless/frictionlessTasks.js")
 		).FrictionlessManager;
 
-		const frictionlessTaskManager = new FrictionlessManager(db, pair, config);
+		// Redis binding resolves detectorSessionId → bundle-0.
+		const writeQueue = {
+			getDetectorBundle: vi.fn().mockResolvedValue("bundle-0"),
+		} as unknown as RedisWriteQueue;
+
+		const frictionlessTaskManager = new FrictionlessManager(
+			db,
+			pair,
+			config,
+			undefined,
+			writeQueue,
+		);
 
 		const result = await frictionlessTaskManager.decryptPayload(
 			"payload",
 			"headHash",
+			"det-1",
 		);
 		expect(result).toEqual({
 			baseBotScore: 1,
@@ -86,6 +117,24 @@ describe("decryptPayload", () => {
 			iFrame: false,
 			decryptedHeadHash: "",
 			decryptionFailed: false,
+			bundleId: "bundle-0",
 		});
+	});
+
+	it("fails closed (treated as bot) when no detector bundle can be resolved", async () => {
+		const FrictionlessManager = (
+			await import("../../../../tasks/frictionless/frictionlessTasks.js")
+		).FrictionlessManager;
+
+		// No writeQueue / no detectorSessionId ⇒ no bundle ⇒ no decrypt attempt.
+		const frictionlessTaskManager = new FrictionlessManager(db, pair, config);
+
+		const result = await frictionlessTaskManager.decryptPayload(
+			"payload",
+			"headHash",
+		);
+		expect(result.decryptionFailed).toBe(true);
+		expect(result.baseBotScore).toBe(1);
+		expect(result.bundleId).toBeUndefined();
 	});
 });

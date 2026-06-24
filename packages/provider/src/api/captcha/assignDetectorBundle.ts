@@ -43,12 +43,23 @@ export default (env: ProviderEnvironment) =>
 			};
 
 			const pool = getDetectorBundlePool();
+			// DEBUG(detector-pool): remove. Observe assign decisions.
+			req.logger.info(() => ({
+				msg: `[POOL-DEBUG] assign requested — pool ${pool ? `size=${pool.size()}` : "NOT INITIALISED (no dir) → legacy"}`,
+			}));
 			if (!pool || pool.size() === 0) {
+				req.logger.info(() => ({
+					msg: "[POOL-DEBUG] assign → useProviderBundle=false (bundled detector fallback)",
+				}));
 				return res.json(noBundle);
 			}
 
 			const { bundleId, bundle } = pool.pickRandom();
 			const detectorSessionId = `det-${uuidv4()}`;
+			// DEBUG(detector-pool): remove.
+			req.logger.info(() => ({
+				msg: `[POOL-DEBUG] assign picked bundleId=${bundleId} for detectorSessionId=${detectorSessionId} (script ${bundle.js.length} bytes)`,
+			}));
 
 			// Persist the ephemeral session→bundle binding. If Redis is
 			// unavailable we cannot guarantee the decrypt side can resolve the
@@ -67,6 +78,10 @@ export default (env: ProviderEnvironment) =>
 				return res.json(noBundle);
 			}
 
+			// DEBUG(detector-pool): remove.
+			req.logger.info(() => ({
+				msg: `[POOL-DEBUG] assign → useProviderBundle=true, served bundleId=${bundleId}, binding stored (TTL ~60s)`,
+			}));
 			const response: AssignDetectorBundleResponse = {
 				[ApiParams.useProviderBundle]: true,
 				[ApiParams.detectorSessionId]: detectorSessionId,

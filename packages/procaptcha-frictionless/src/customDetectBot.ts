@@ -25,14 +25,14 @@ import type {
 } from "@prosopo/types";
 import type { BotDetectionFunctionResult } from "@prosopo/types";
 import {
-	DetectorLoader,
 	DetectorLoaderFromScript,
 	type DetectorType,
 } from "./detectorLoader.js";
 
-// Upper bound on the best-effort detector-bundle assignment probe. If the
-// provider is slow/unreachable we abandon the probe and use the bundled
-// detector rather than letting it delay (or stall) the detection flow.
+// Upper bound on the detector-bundle assignment + load probe. The detector
+// lives ONLY in the provider-served pool bundles, so if the provider is
+// slow/unreachable we abandon the probe and signal `detectorUnavailable`, and
+// the provider serves a PoW challenge instead of running detection.
 const ASSIGN_TIMEOUT_MS = 2000;
 
 export const withTimeout = async <T>(
@@ -85,22 +85,26 @@ const customDetectBot: BotDetectionFunction = async (
 		config.account.address,
 	);
 
-	// Ask the provider for a per-session detector bundle. When it has a pool it
+	// Ask the provider for a per-session detector bundle. The detector lives ONLY
+	// in the provider-served pool: when the provider has a populated pool it
 	// returns the obfuscated detector (each with its own keys + inner cipher)
-	// plus a detectorSessionId; otherwise it signals the bundled fallback.
-	//
-	// The bundled detector is always loaded in parallel as the fallback, and the
-	// assign probe is time-bounded, so this best-effort hop can NEVER stall or
-	// break the flow: ANY failure (no pool, network, decode, timeout) degrades to
-	// the bundled detector + legacy key-pool decryption. The no-pool path is
-	// therefore behaviourally identical to not asking at all.
-	const bundledDetectPromise = DetectorLoader();
+	// plus a detectorSessionId. When it cannot (no pool, network, decode, or
+	// timeout) we have NO detector to run — there is no bundled fallback — so we
+	// signal `detectorUnavailable` and the provider serves a PoW challenge.
 	let detectorSessionId: string | undefined;
 	let providerDetect: DetectorType | undefined;
+	// DEBUG(detector-pool): remove. Observe the client side of the flow.
+	console.log(
+		`[POOL-DEBUG] resolved provider ${provider.provider.url}; requesting detector bundle…`,
+	);
 	try {
 		const assigned = await withTimeout(
 			providerApi.assignDetectorBundle(config.account.address),
 			ASSIGN_TIMEOUT_MS,
+		);
+		// DEBUG(detector-pool): remove.
+		console.log(
+			`[POOL-DEBUG] assign response: useProviderBundle=${assigned.useProviderBundle}${assigned.detectorSessionId ? `, detectorSessionId=${assigned.detectorSessionId}` : ""}${assigned.detectorScript ? `, script=${assigned.detectorScript.length} bytes` : ""}`,
 		);
 		if (assigned.useProviderBundle && assigned.detectorScript) {
 			detectorSessionId = assigned.detectorSessionId;
@@ -109,24 +113,69 @@ const customDetectBot: BotDetectionFunction = async (
 				ASSIGN_TIMEOUT_MS,
 			);
 		}
-	} catch {
-		// best-effort — fall back to the bundled detector below
-	}
-	let detectPromise: Promise<DetectorType>;
-	if (providerDetect !== undefined) {
-		detectPromise = Promise.resolve(providerDetect);
-		// The bundled load is now unused; swallow any rejection so it doesn't
-		// surface as an unhandled promise rejection.
-		void bundledDetectPromise.catch(() => undefined);
-	} else {
-		detectPromise = bundledDetectPromise;
+	} catch (err) {
+		// No detector available — fall through to the PoW request below.
+		// DEBUG(detector-pool): remove.
+		console.log(
+			"[POOL-DEBUG] assign/provider-bundle load failed → no detector → PoW",
+			err,
+		);
 	}
 
-	const [ExtClass, detect] = await Promise.all([
-		ExtensionLoader(config.web2),
-		detectPromise,
-	]);
+	const ExtClass = await ExtensionLoader(config.web2);
 	const ext = new ExtClass();
+
+	// No provider detector ⇒ no detection is possible. Request a PoW challenge
+	// directly: send no token and the detectorUnavailable flag so the provider
+	// serves PoW rather than attempting to score an absent payload.
+	if (providerDetect === undefined) {
+		// DEBUG(detector-pool): remove.
+		console.log(
+			"[POOL-DEBUG] no provider detector → requesting PoW (detectorUnavailable=true)",
+		);
+		const userAccount = await ext.getAccount(config);
+		const powCaptcha = await withTimeout(
+			providerApi.getFrictionlessCaptcha(
+				undefined,
+				undefined,
+				config.account.address,
+				userAccount.account.address,
+				config.mode,
+				undefined,
+				undefined,
+				true,
+			),
+			10000,
+		);
+		if (powCaptcha.dns_url) {
+			try {
+				void fetch(powCaptcha.dns_url, {
+					method: "GET",
+					mode: "no-cors",
+					credentials: "omit",
+					keepalive: true,
+					cache: "no-store",
+				}).catch(() => undefined);
+			} catch {
+				/* swallow */
+			}
+		}
+		return {
+			captchaType: powCaptcha.captchaType,
+			sessionId: powCaptcha.sessionId,
+			provider: provider,
+			status: powCaptcha.status,
+			userAccount: userAccount,
+			error: powCaptcha.error,
+			hp: powCaptcha.hp,
+		};
+	}
+
+	// DEBUG(detector-pool): remove.
+	console.log(
+		`[POOL-DEBUG] using PROVIDER-SERVED detector (blob import), detectorSessionId=${detectorSessionId}`,
+	);
+	const detect: DetectorType = providerDetect;
 
 	// The detector bundle still expects the legacy 5-arg signature
 	// `(env, randomProviderSelectorFn, container, restart, accountGenerator)`.

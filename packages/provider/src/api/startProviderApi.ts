@@ -148,26 +148,25 @@ export async function startProviderApi(
 ): Promise<Server> {
 	env.logger.info(() => ({ msg: "Starting Prosopo API" }));
 
-	// Load the precomputed detector bundle pool into memory IF a pool directory
-	// is present. Two distinct states:
-	//   - directory absent  ⇒ pool feature not provisioned on this provider ⇒
-	//     leave the pool uninitialised (null) ⇒ legacy detector-key path.
-	//   - directory present ⇒ pool feature ON ⇒ initialise it. If it then turns
-	//     out empty, the frictionless flow degrades to a real PoW challenge
-	//     (the empty-pool fallback) rather than silently using legacy keys.
+	// Load the precomputed detector bundle pool into memory. The detector lives
+	// ONLY in these provider-served pool bundles — there is no bundled/legacy
+	// detector to fall back to. The pool is ALWAYS initialised (a missing or
+	// empty directory yields an empty pool, not an uninitialised one), leaving a
+	// single binary decision at request time:
+	//   - pool has bundles ⇒ serve a per-session detector + decrypt with its key.
+	//   - pool empty (missing dir, empty dir, or all bundles failed to load) ⇒
+	//     no detection is possible ⇒ the frictionless flow serves a real PoW
+	//     challenge (the empty-pool fallback).
 	const detectorPoolDir =
 		process.env.PROSOPO_DETECTOR_POOL_DIR ?? "/app/data/detector-pool";
-	if (fs.existsSync(detectorPoolDir)) {
-		initDetectorBundlePool(detectorPoolDir, {
-			info: (msg, data) => env.logger.info(() => ({ msg, data })),
-			warn: (msg, data) => env.logger.warn(() => ({ msg, data })),
-		});
-	} else {
-		env.logger.info(() => ({
-			msg: "No detector bundle pool directory; using legacy detector path",
-			data: { detectorPoolDir },
-		}));
-	}
+	const pool = initDetectorBundlePool(detectorPoolDir, {
+		info: (msg, data) => env.logger.info(() => ({ msg, data })),
+		warn: (msg, data) => env.logger.warn(() => ({ msg, data })),
+	});
+	// DEBUG(detector-pool): remove.
+	env.logger.info(() => ({
+		msg: `[POOL-DEBUG] boot: detector pool loaded from ${detectorPoolDir} — ${pool.size()} bundle(s). ${pool.size() === 0 ? "EMPTY ⇒ frictionless ALWAYS serves PoW." : "Per-session serving is ACTIVE."}`,
+	}));
 
 	const apiApp = express();
 	const apiPort = port || env.config.server?.port;

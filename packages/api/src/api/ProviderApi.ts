@@ -335,23 +335,29 @@ export default class ProviderApi
 	}
 
 	public async getFrictionlessCaptcha(
-		token: string,
-		headHash: string,
+		token: string | undefined,
+		headHash: string | undefined,
 		dapp: string,
 		user: string,
 		mode?: ModeEnum,
 		simdReadings?: string,
 		detectorSessionId?: string,
+		detectorUnavailable?: boolean,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const body: GetFrictionlessCaptchaChallengeRequestBodyOutput = {
-			[ApiParams.token]: token,
-			[ApiParams.headHash]: headHash,
 			[ApiParams.dapp]: dapp,
 			[ApiParams.user]: user,
+			// Empty strings when the detector was unavailable — the provider gates
+			// on the detectorUnavailable flag and PoW-fallbacks before decrypt.
+			[ApiParams.token]: token ?? "",
+			[ApiParams.headHash]: headHash ?? "",
 			...(mode && { [ApiParams.mode]: mode }),
 			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
 			...(detectorSessionId && {
 				[ApiParams.detectorSessionId]: detectorSessionId,
+			}),
+			...(detectorUnavailable && {
+				[ApiParams.detectorUnavailable]: true,
 			}),
 		};
 		const { data, headers } = await this.postWithHeaders<

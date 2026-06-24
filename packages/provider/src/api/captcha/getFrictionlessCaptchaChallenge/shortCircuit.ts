@@ -42,6 +42,10 @@ export type ShortCircuitInput = {
 	userSitekeyIpHash: string;
 	requestId: string | undefined;
 	logger: Logger;
+	// Set when the client reported it had no provider detector bundle to run
+	// (no pool, assign failed, or blob load failed). The detector lives only on
+	// providers, so this means no detection happened ⇒ serve PoW.
+	detectorUnavailable: boolean;
 };
 
 // Builds the session params used by the bypass paths (configured captcha type
@@ -66,30 +70,42 @@ const buildBypassSessionParams = (input: ShortCircuitInput) => ({
 });
 
 /**
- * Fallback when the detector bundle pool is initialised but empty (empty pool
- * dir / all bundles failed to load). Without a bundle the provider cannot run
- * frictionless detection, so it degrades to serving a real PoW challenge rather
- * than failing the request.
+ * Universal "no detector ⇒ PoW" fallback. The detector lives only in the
+ * provider-served pool bundles; when none is available for this request there
+ * is no way to run (or decrypt) frictionless detection, so the provider serves
+ * a real PoW challenge rather than the request failing or silently passing.
  *
- * Returns null (proceed with the normal detection path) when:
- *   - the pool was never initialised (`null`) — the pool feature is not active
- *     on this provider, so the legacy key-pool decryption path is used; or
- *   - the pool has at least one bundle.
+ * Fires when EITHER:
+ *   - the pool is empty (missing dir, empty dir, or all bundles failed to
+ *     load) — no provider has a bundle to assign; or
+ *   - the client reported `detectorUnavailable` (it couldn't fetch/run a
+ *     bundle this session) — even if the pool itself is populated.
+ *
+ * Returns null (proceed with normal scored detection) only when the pool has at
+ * least one bundle AND the client ran one.
  */
-export const runEmptyDetectorPoolPowFallback = async (
+export const runNoDetectorPowFallback = async (
 	input: ShortCircuitInput,
 	res: Response,
 ): Promise<Response | null> => {
 	const pool = getDetectorBundlePool();
-	if (!pool || pool.size() > 0) {
+	const poolEmpty = !pool || pool.size() === 0;
+	if (!poolEmpty && !input.detectorUnavailable) {
 		return null;
 	}
 
+	const reason = poolEmpty
+		? "empty_detector_pool_pow_fallback"
+		: "client_detector_unavailable_pow_fallback";
+	// DEBUG(detector-pool): remove.
+	input.logger.info(() => ({
+		msg: `[POOL-DEBUG] no detector available (${poolEmpty ? "pool EMPTY" : "client reported detectorUnavailable"}) → serving a real PoW challenge`,
+	}));
 	input.logger.warn(() => ({
 		msg: "Frictionless decision",
 		data: {
 			requestId: input.requestId,
-			decision: "empty_detector_pool_pow_fallback",
+			decision: reason,
 			captchaType: CaptchaType.pow,
 		},
 	}));

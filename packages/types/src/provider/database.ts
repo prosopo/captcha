@@ -474,6 +474,13 @@ export type Session = {
 	webView: boolean;
 	iFrame: boolean;
 	decryptedHeadHash: string;
+	// The provider-assigned detector pool bundle this session's detector ran
+	// from, promoted off the short-lived detectorSessionId→bundleId Redis
+	// binding at frictionless-decrypt time. Later hops (PoW/puzzle solution
+	// submit, SIMD attach) resolve the same bundle's keypair + inner cipher
+	// from this durable field to decrypt the behavioural/SIMD payloads — the
+	// detector lives only on providers, so there is no key pool to fall back to.
+	bundleId?: string;
 	siteKey?: string;
 	reason?: FrictionlessReason;
 	blocked?: boolean;

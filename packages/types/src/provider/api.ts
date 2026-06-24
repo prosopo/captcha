@@ -516,15 +516,21 @@ export type SubmitPowCaptchaSolutionBodyType = input<
 
 export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	[ApiParams.dapp]: string(),
+	// Empty string when the client had no provider detector to run
+	// (detectorUnavailable) — gate on the flag below, not on token contents.
 	[ApiParams.token]: string(),
 	[ApiParams.user]: string(),
 	[ApiParams.headHash]: string(),
 	[ApiParams.mode]: nativeEnum(ModeEnum).optional(),
 	[ApiParams.simdReadings]: string().optional(),
-	// Present when the detector came from a provider-assigned pool bundle; the
-	// provider uses it to resolve the exact keypair/inner-config for decryption.
-	// Absent ⇒ legacy bundled detector ⇒ key-pool decryption.
+	// Identifies the provider-assigned pool bundle the detector ran from; the
+	// provider resolves the exact keypair/inner-config for decryption from it.
 	[ApiParams.detectorSessionId]: string().optional(),
+	// Set by the client when it could not obtain/run a provider detector bundle
+	// (no pool, assign failed, or blob load failed). The detector now lives ONLY
+	// on providers, so with no bundle there is no detection ⇒ the provider must
+	// fall back to a PoW challenge.
+	[ApiParams.detectorUnavailable]: boolean().optional(),
 });
 
 export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<

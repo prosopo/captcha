@@ -41,7 +41,6 @@ import {
 } from "../../util/usageCounters.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
-import { getDetectorBundlePool } from "../detection/bundlePool.js";
 import { getBotScore } from "../detection/getBotScore.js";
 import { type RoutingContext, applyRouter } from "./routingMachine.js";
 
@@ -111,6 +110,7 @@ export class FrictionlessManager extends CaptchaManager {
 			webView: params.webView ?? false,
 			iFrame: params.iFrame ?? false,
 			decryptedHeadHash: params.decryptedHeadHash,
+			bundleId: params.bundleId,
 			siteKey: params.siteKey,
 			ipInfo: params.ipInfo,
 			headers: params.headers,
@@ -159,6 +159,7 @@ export class FrictionlessManager extends CaptchaManager {
 		entropyCryptoFingerprint?: Session["entropyCryptoFingerprint"],
 		entropyWallClockOffsetMs?: Session["entropyWallClockOffsetMs"],
 		entropyMathRandomFirst?: Session["entropyMathRandomFirst"],
+		bundleId?: Session["bundleId"],
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
@@ -176,6 +177,7 @@ export class FrictionlessManager extends CaptchaManager {
 			webView,
 			iFrame,
 			decryptedHeadHash,
+			bundleId,
 			reason,
 			siteKey,
 			blocked,
@@ -329,6 +331,7 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.entropyCryptoFingerprint,
 			effectiveParams.entropyWallClockOffsetMs,
 			effectiveParams.entropyMathRandomFirst,
+			effectiveParams.bundleId,
 		);
 
 		// Fire-and-forget served-counter writes. Skipped when there's no
@@ -478,38 +481,34 @@ export class FrictionlessManager extends CaptchaManager {
 	}
 
 	/**
-	 * Resolve the decrypt attempts for a payload. Prefers the per-session pool
-	 * bundle (a single deterministic decrypt with its own RSA keypair + inner
-	 * cipher config); falls back to brute-forcing the legacy detector-key pool
-	 * when no bundle is assigned (bundled detector) or the binding can't be
-	 * resolved (expired/missing). Also returns the resolved bundleId so the
-	 * caller can promote it onto the session for the later behavioural hop.
+	 * Resolve the decrypt attempt for a payload. The detector lives only in the
+	 * provider-served pool bundles, so this is a SINGLE deterministic decrypt
+	 * with the session's own RSA keypair + inner cipher config, resolved from the
+	 * `detectorSessionId → bundleId` Redis binding. There is no legacy key pool:
+	 * if the binding can't be resolved (expired/missing) the caller fails closed
+	 * (score treated as bot ⇒ PoW). Also returns the resolved bundleId so the
+	 * caller can promote it onto the session for the later behavioural/SIMD hops.
 	 */
 	async resolveDecryptAttempts(detectorSessionId?: string): Promise<{
 		attempts: { key: string; innerConfig?: string }[];
 		bundleId?: string;
 	}> {
-		if (detectorSessionId && this.writeQueue) {
-			const bundleId =
-				await this.writeQueue.getDetectorBundle(detectorSessionId);
-			const bundle = bundleId
-				? getDetectorBundlePool()?.get(bundleId)
-				: undefined;
-			if (bundleId && bundle) {
-				return {
-					attempts: [
-						{ key: bundle.privateKey, innerConfig: bundle.innerConfig },
-					],
-					bundleId,
-				};
-			}
+		const bundle = await this.resolveBundleByDetectorSession(detectorSessionId);
+		if (bundle) {
+			// DEBUG(detector-pool): remove.
+			this.logger.info(() => ({
+				msg: `[POOL-DEBUG] decrypt: detectorSessionId=${detectorSessionId} → bundleId=${bundle.bundleId} → SINGLE deterministic decrypt with that bundle's key + inner config`,
+			}));
+			return {
+				attempts: [{ key: bundle.key, innerConfig: bundle.innerConfig }],
+				bundleId: bundle.bundleId,
+			};
 		}
-		const keys = [
-			// Process DB keys first, then env var key last as env key will likely be invalid
-			...(await this.getDetectorKeys()),
-			process.env.BOT_DECRYPTION_KEY,
-		].filter((k): k is string => !!k);
-		return { attempts: keys.map((key) => ({ key })) };
+		// DEBUG(detector-pool): remove.
+		this.logger.info(() => ({
+			msg: `[POOL-DEBUG] decrypt: no detector bundle resolved (detectorSessionId=${detectorSessionId ?? "none"}, expired/missing/absent) → fail closed (treated as bot ⇒ PoW)`,
+		}));
+		return { attempts: [] };
 	}
 
 	async decryptPayload(
@@ -634,6 +633,10 @@ export class FrictionlessManager extends CaptchaManager {
 			decryptedHeadHash = "";
 			decryptionFailed = true;
 		}
+		// DEBUG(detector-pool): remove.
+		this.logger.info(() => ({
+			msg: `[POOL-DEBUG] decrypt outcome: ${decryptionFailed ? "FAILED (fail-closed → baseBotScore=1, treated as bot ⇒ PoW)" : `OK (baseBotScore=${baseBotScore})`}${bundleId ? ` via pool bundleId=${bundleId}` : " (no bundle)"}`,
+		}));
 		this.logger.info(() => ({
 			msg: "decryptPayload result",
 			data: {

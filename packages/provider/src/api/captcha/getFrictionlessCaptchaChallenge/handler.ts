@@ -43,7 +43,7 @@ import { attachHoneypot } from "./honeypotResponse.js";
 import { resolveSessionDedup } from "./sessionDedup.js";
 import {
 	runConfiguredCaptchaTypeShortCircuit,
-	runEmptyDetectorPoolPowFallback,
+	runNoDetectorPowFallback,
 } from "./shortCircuit.js";
 
 export default (
@@ -76,6 +76,7 @@ export default (
 				mode,
 				simdReadings,
 				detectorSessionId,
+				detectorUnavailable,
 			} = GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
 
 			const normalizedIp = normalizeRequestIp(req.ip, req.logger);
@@ -146,7 +147,11 @@ export default (
 			// handles.
 			const [decodedSimdReadings, { existingToken, dedup }, clientRecord] =
 				await Promise.all([
-					decryptIncomingSimdReadings(tasks.frictionlessManager, simdReadings),
+					decryptIncomingSimdReadings(
+						tasks.frictionlessManager,
+						simdReadings,
+						detectorSessionId,
+					),
 					resolveSessionDedup(tasks, token, userSitekeyIpHash, req.logger),
 					tasks.db.getClientRecord(dapp),
 				]);
@@ -229,6 +234,7 @@ export default (
 				userSitekeyIpHash,
 				requestId: req.requestId,
 				logger: req.logger,
+				detectorUnavailable: detectorUnavailable ?? false,
 			};
 
 			const shortCircuitResponse = await runConfiguredCaptchaTypeShortCircuit(
@@ -237,13 +243,15 @@ export default (
 			);
 			if (shortCircuitResponse) return shortCircuitResponse;
 
-			// No detector bundle loaded (empty/uninitialised pool) ⇒ cannot run
-			// frictionless detection, so degrade to a real PoW challenge.
-			const emptyPoolResponse = await runEmptyDetectorPoolPowFallback(
+			// No detector available — empty/uninitialised pool, or the client
+			// reported it couldn't fetch/run a provider bundle. The detector lives
+			// only on providers, so there is nothing to score ⇒ serve a real PoW
+			// challenge instead of the (now removed) legacy key-pool path.
+			const noDetectorResponse = await runNoDetectorPowFallback(
 				shortCircuitInput,
 				res,
 			);
-			if (emptyPoolResponse) return emptyPoolResponse;
+			if (noDetectorResponse) return noDetectorResponse;
 
 			const lScore = tasks.frictionlessManager.checkLangRules(
 				req.headers["accept-language"] || "",
@@ -298,6 +306,7 @@ export default (
 				entropyCryptoFingerprint,
 				entropyWallClockOffsetMs,
 				entropyMathRandomFirst,
+				bundleId,
 			} = decryptedPayload;
 
 			req.logger.debug(() => ({
@@ -350,6 +359,10 @@ export default (
 				ipInfo: req.ipInfo,
 				headers: flatHeaders,
 				mode: sessionMode,
+				// Promote the resolved pool bundle onto the session so later hops
+				// (SIMD attach, PoW/puzzle/image solution submit) can resolve the
+				// same keypair + inner cipher to decrypt their payloads.
+				...(bundleId && { bundleId }),
 				...(decodedSimdReadings && { simdReadings: decodedSimdReadings }),
 				...(entropyMathRandomFingerprint !== undefined && {
 					entropyMathRandomFingerprint,

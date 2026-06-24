@@ -12,11 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Type-only import: the detector is NOT bundled into the widget. It lives only
+// in the provider-served pool bundles, loaded at runtime via a blob URL below.
 export type DetectorType = typeof import("@prosopo/detector").default;
-
-/** Loads the detector bundled into the widget (legacy / fallback path). */
-export const DetectorLoader = async (): Promise<DetectorType> =>
-	(await import("@prosopo/detector")).default;
 
 /**
  * Loads a detector from a provider-served obfuscated ESM string (the per-session
@@ -29,9 +27,15 @@ export const DetectorLoaderFromScript = async (
 	const blob = new Blob([script], { type: "text/javascript" });
 	const url = URL.createObjectURL(blob);
 	try {
+		// DEBUG(detector-pool): remove.
+		console.log(
+			`[POOL-DEBUG] blob import of provider-served detector (${url})`,
+		);
 		const mod = (await import(/* @vite-ignore */ url)) as {
 			default: DetectorType;
 		};
+		// DEBUG(detector-pool): remove.
+		console.log("[POOL-DEBUG] blob import OK — provider detector evaluated");
 		return mod.default;
 	} finally {
 		URL.revokeObjectURL(url);

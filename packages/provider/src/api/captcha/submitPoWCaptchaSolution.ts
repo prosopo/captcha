@@ -271,6 +271,13 @@ const buildEscalation = async (
 		originSession.headers,
 		originSession.mode,
 		originSession.simdReadings,
+		originSession.entropyMathRandomFingerprint,
+		originSession.entropyCryptoFingerprint,
+		originSession.entropyWallClockOffsetMs,
+		originSession.entropyMathRandomFirst,
+		// Carry the detector pool bundle forward so the escalated image/puzzle
+		// solve can decrypt the (same-origin) behavioural payload.
+		originSession.bundleId,
 	);
 
 	return {

@@ -18,13 +18,14 @@ import type { FrictionlessManager } from "../../../tasks/frictionless/frictionle
 export const decryptIncomingSimdReadings = async (
 	manager: FrictionlessManager,
 	encrypted: string | undefined,
+	detectorSessionId: string | undefined,
 ): Promise<SimdReadings | undefined> => {
 	if (!encrypted) return undefined;
-	const decryptKeys = [
-		...(await manager.getDetectorKeys()),
-		process.env.BOT_DECRYPTION_KEY,
-	];
-	const decrypted = await manager.decryptSimdReadings(encrypted, decryptKeys);
+	// The detector lives only in provider pool bundles; resolve this session's
+	// bundle from its detectorSessionId binding and decrypt with it (no key pool).
+	const bundle =
+		await manager.resolveBundleByDetectorSession(detectorSessionId);
+	const decrypted = await manager.decryptSimdReadings(encrypted, bundle);
 	if (!decrypted) return undefined;
 	// Drop the inner replay-protection timestamp; not part of the persisted readings.
 	const { timestamp: _ignored, ...readings } = decrypted;

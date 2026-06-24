@@ -799,25 +799,16 @@ describe("CaptchaManager", () => {
 			vi.mocked(decryptFn).mockReset();
 		});
 
-		it("should return null when no decryption keys are provided", async () => {
+		it("should return null when no bundle is provided", async () => {
 			const result = await captchaManager.decryptBehavioralData(
 				"encryptedData",
-				[],
+				undefined,
 			);
 			expect(result).toBeNull();
 			expect(decryptFn).not.toHaveBeenCalled();
 		});
 
-		it("should return null when all provided keys are undefined", async () => {
-			const result = await captchaManager.decryptBehavioralData(
-				"encryptedData",
-				[undefined, undefined],
-			);
-			expect(result).toBeNull();
-			expect(decryptFn).not.toHaveBeenCalled();
-		});
-
-		it("should return the result when the first valid key succeeds", async () => {
+		it("should decrypt with the bundle's key + inner config", async () => {
 			const mockResult: BehavioralDataResult = {
 				collector1: [{ event: "click" }],
 				collector2: [],
@@ -829,44 +820,28 @@ describe("CaptchaManager", () => {
 
 			const result = await captchaManager.decryptBehavioralData(
 				"encryptedData",
-				["key1", "key2"],
+				{
+					key: "pk",
+					innerConfig: "cfg",
+				},
 			);
 			expect(result).toEqual(mockResult);
 			expect(decryptFn).toHaveBeenCalledTimes(1);
-			expect(decryptFn).toHaveBeenCalledWith("encryptedData", "key1");
+			expect(decryptFn).toHaveBeenCalledWith("encryptedData", "pk", "cfg");
 		});
 
-		it("should try the next key when the first key fails", async () => {
-			const mockResult: BehavioralDataResult = {
-				collector1: [],
-				collector2: [],
-				collector3: [],
-				deviceCapability: "mobile",
-				timestamp: 2000,
-			};
-			vi.mocked(decryptFn)
-				.mockRejectedValueOnce(new Error("bad key"))
-				.mockResolvedValueOnce(mockResult);
-
-			const result = await captchaManager.decryptBehavioralData(
-				"encryptedData",
-				["badKey", "goodKey"],
-			);
-			expect(result).toEqual(mockResult);
-			expect(decryptFn).toHaveBeenCalledTimes(2);
-			expect(decryptFn).toHaveBeenNthCalledWith(1, "encryptedData", "badKey");
-			expect(decryptFn).toHaveBeenNthCalledWith(2, "encryptedData", "goodKey");
-		});
-
-		it("should return null when all valid keys fail", async () => {
+		it("should return null when the bundle fails to decrypt", async () => {
 			vi.mocked(decryptFn).mockRejectedValue(new Error("decrypt failed"));
 
 			const result = await captchaManager.decryptBehavioralData(
 				"encryptedData",
-				["key1", "key2"],
+				{
+					key: "pk",
+					innerConfig: "cfg",
+				},
 			);
 			expect(result).toBeNull();
-			expect(decryptFn).toHaveBeenCalledTimes(2);
+			expect(decryptFn).toHaveBeenCalledTimes(1);
 		});
 	});
 
