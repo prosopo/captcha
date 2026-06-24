@@ -66,7 +66,7 @@ jobs:
       # root `prepare` hook (husky) would otherwise fail with "husky: not found"
       # (exit 127) and abort before the lockfile is refreshed.
       - name: Update lockfile
-        run: npm install --package-lock-only --workspaces --include-workspace-root --ignore-scripts
+        run: npm install --package-lock-only --workspaces --include-workspace-root --ignore-scripts --no-audit --no-fund --prefer-offline
 
       - name: Generate changeset
         env:
