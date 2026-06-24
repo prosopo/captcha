@@ -40,6 +40,7 @@ describe("Admin Routes Provider", () => {
 			error: vi.fn(),
 			warn: vi.fn(),
 			debug: vi.fn(),
+			with: vi.fn().mockReturnThis(),
 		};
 	});
 
