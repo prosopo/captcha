@@ -229,6 +229,16 @@ describe("calculateJa4 — SNI flag", () => {
 		const fp = calculateJa4(buildClientHello(0x0303, [0xc02f], []));
 		expect(fp[3]).toBe("i");
 	});
+
+	it("sets 'd' when the SNI extension is present but empty (no host_name)", () => {
+		// JA4 keys the flag off the extension's presence, not a parsed host_name.
+		// Well-formed empty SNI: a server_name_list of length 0.
+		const emptySni = Buffer.from([0x00, 0x00]);
+		const fp = calculateJa4(
+			buildClientHello(0x0303, [0xc02f], [{ id: 0x0000, data: emptySni }]),
+		);
+		expect(fp[3]).toBe("d");
+	});
 });
 
 describe("calculateJa4 — counts", () => {
@@ -238,6 +248,23 @@ describe("calculateJa4 — counts", () => {
 			buildClientHello(0x0303, [0x0a0a, 0x1301, 0x1302], []),
 		);
 		expect(fp.slice(4, 6)).toBe("02");
+	});
+
+	it("counts a GREASE-lookalike with unequal bytes (0x0a1a) as a real cipher", () => {
+		// 0x0a1a matches the nibble pattern but the bytes differ, so it is NOT a
+		// real RFC 8701 GREASE value and must be counted/hashed.
+		const fp = calculateJa4(buildClientHello(0x0303, [0x0a1a, 0x1301], []));
+		expect(fp.slice(4, 6)).toBe("02");
+
+		// Being a real cipher, it must also contribute to the cipher hash:
+		// dropping it changes the hash, unlike a true GREASE value.
+		const withLookalike = calculateJa4(
+			buildClientHello(0x0303, [0x0a1a, 0x1301], []),
+		).split("_")[1];
+		const withoutLookalike = calculateJa4(
+			buildClientHello(0x0303, [0x1301], []),
+		).split("_")[1];
+		expect(withLookalike).not.toBe(withoutLookalike);
 	});
 
 	it("extension count excludes GREASE", () => {
