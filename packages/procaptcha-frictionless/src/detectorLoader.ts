@@ -12,9 +12,60 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Type-only import: the detector is NOT bundled into the widget. It lives only
-// in the provider-served pool bundles, loaded at runtime via a blob URL below.
-export type DetectorType = typeof import("@prosopo/detector").default;
+import type {
+	Account,
+	BehavioralData,
+	ClickEventPoint,
+	EnvironmentTypes,
+	MouseMovementPoint,
+	PackedBehavioralData,
+	RandomProvider,
+	TouchEventPoint,
+} from "@prosopo/types";
+
+// The detector is NOT bundled into the widget — it lives only in the
+// provider-served pool bundles, loaded at runtime via a blob URL below. So the
+// signature is declared locally here (mirroring `@prosopo/detector`'s default
+// export) from shared @prosopo/types primitives, rather than importing the
+// detector package as a build-time type dependency.
+type RandomProviderSelectorFn = (
+	env: EnvironmentTypes,
+) => Promise<RandomProvider>;
+
+export type DetectorType = (
+	env: EnvironmentTypes,
+	randomProviderSelectorFn: RandomProviderSelectorFn,
+	container: HTMLElement | undefined,
+	restart: () => void,
+	accountGenerator: () => Promise<Account>,
+) => Promise<{
+	token: string;
+	shadowDomCleanup: () => void;
+	encryptHeadHash: string;
+	mouseTracker?: {
+		start: () => void;
+		stop: () => void;
+		getData: () => MouseMovementPoint[];
+		clear: () => void;
+	};
+	touchTracker?: {
+		start: () => void;
+		stop: () => void;
+		getData: () => TouchEventPoint[];
+		clear: () => void;
+	};
+	clickTracker?: {
+		start: () => void;
+		stop: () => void;
+		getData: () => ClickEventPoint[];
+		clear: () => void;
+	};
+	hasTouchSupport?: string;
+	encryptBehavioralData?: (data: string) => Promise<string>;
+	packBehavioralData?: (behavioralData: BehavioralData) => PackedBehavioralData;
+	getSimdReadings?: (timeoutMs?: number) => Promise<string | undefined>;
+	userAccount: Account;
+}>;
 
 /**
  * Loads a detector from a provider-served obfuscated ESM string (the per-session
