@@ -37,7 +37,7 @@ jobs:
     if: github.event.pull_request.draft == false
     steps:
       - name: Print contexts
-        uses: prosopo/captcha/.github/actions/print_contexts@gha
+        uses: prosopo/github_actions/.github/actions/print_contexts@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
         with:
           INPUTS_CONTEXT: ${{ toJson(inputs) }}
           NEEDS_CONTEXT: ${{ toJson(needs) }}
@@ -47,16 +47,16 @@ jobs:
       - name: Set NX_PARALLEL environment variable
         run: echo "NX_PARALLEL=$(nproc)" >> $GITHUB_ENV
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           token: ${{ secrets.PROSOPONATOR_PAT }}
           submodules: "recursive"
 
-      - uses: prosopo/captcha/.github/actions/npm@gha
+      - uses: prosopo/github_actions/.github/actions/npm@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
         with:
           npm_ci_args: '--include=dev --no-audit --no-fund --prefer-offline'
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '24'
           cache: 'npm'
@@ -74,14 +74,14 @@ jobs:
       - run: NODE_ENV="production" npx turbo run @prosopo/cli#bundle
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       # We cannot create the images in a single step because the output of buildx is not compatible with
       # `docker load`. https://stackoverflow.com/a/72952846/1178971
 
       # create the provider image for AMD64
       - name: Build the Provider Container
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: ${{github.workspace}}
           file: ${{github.workspace}}/docker/images/provider/src/Dockerfile

@@ -21,7 +21,10 @@ import {
 	type ScoreComponents,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import type { AccessRulesStorage } from "@prosopo/user-access-policy";
+import {
+	AccessPolicyType,
+	type AccessRulesStorage,
+} from "@prosopo/user-access-policy";
 import { flatten } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import { getCompositeIpAddress } from "../../../compositeIpAddress.js";
@@ -33,6 +36,11 @@ import { normalizeRequestIp } from "../../../utils/normalizeRequestIp.js";
 import { getMaintenanceMode } from "../../admin/apiToggleMaintenanceModeEndpoint.js";
 import { getRequestUserScope } from "../../blacklistRequestInspector.js";
 import { buildDnsEventUrl } from "../../dnsEventUrl.js";
+import {
+	recordBotScore,
+	recordDetectorTriggered,
+	recordFrictionlessDecision,
+} from "../../metrics.js";
 import { isReservedTestSiteKey } from "../../testSiteKey.js";
 import { buildFrictionlessMaintenanceResponse } from "../maintenanceModeResponses.js";
 import { handleAccessPolicy } from "./accessPolicy.js";
@@ -164,32 +172,97 @@ export default (
 			}
 
 			if (dedup) {
-				req.logger.info(() => ({
-					msg: "Reusing existing session for user-IP-sitekey combination",
-					data: {
-						userSitekeyIpHash,
-						sessionId: dedup.sessionId,
-						captchaType: dedup.captchaType,
-					},
-				}));
-				req.logger.info(() => ({
-					msg: "Frictionless decision",
-					data: {
-						decision: "reuse_session",
-						captchaType: dedup.captchaType,
-						sessionId: dedup.sessionId,
-					},
-				}));
-				attachHoneypot(res, clientRecord);
-				return res.json({
-					[ApiParams.captchaType]: dedup.captchaType as
-						| CaptchaType.image
-						| CaptchaType.pow
-						| CaptchaType.puzzle,
-					[ApiParams.sessionId]: dedup.sessionId,
-					[ApiParams.status]: "ok",
-					dns_url: buildDnsEventUrl(dedup.sessionId),
-				});
+				// A reused session must still honour an active user access policy.
+				// This fast-path returns before handleAccessPolicy / runDecisionMachine
+				// below, so a cached session whose captchaType conflicts with the
+				// policy — e.g. an IP rate-limit rule forcing `image` over a
+				// previously-cached `pow` session — would be served as-is and then
+				// hard-rejected at the /captcha/{type} gate with INCORRECT_CAPTCHA_TYPE.
+				// Re-check the policy here; on conflict evict the stale session and
+				// fall through so the access policy (or decision machine) selects the
+				// correct captcha type.
+				const dedupCountryCode =
+					req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
+						? req.ipInfo.countryCode
+						: undefined;
+				const dedupAsn =
+					req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
+						? req.ipInfo.asnNumber
+						: undefined;
+				const dedupUserScope = getRequestUserScope(
+					flatten(req.headers),
+					req.ja4,
+					normalizedIp,
+					user,
+					undefined,
+					undefined,
+					dedupCountryCode,
+					dedupAsn,
+				);
+				const dedupAccessPolicy = (
+					await tasks.frictionlessManager.getPrioritisedAccessPolicies(
+						userAccessRulesStorage,
+						dapp,
+						dedupUserScope,
+					)
+				)[0];
+				const dedupConflictsWithPolicy =
+					dedupAccessPolicy !== undefined &&
+					(dedupAccessPolicy.type === AccessPolicyType.Block ||
+						(dedupAccessPolicy.captchaType !== undefined &&
+							dedupAccessPolicy.captchaType !== dedup.captchaType));
+
+				if (dedupConflictsWithPolicy) {
+					req.logger.info(() => ({
+						msg: "Evicting reused session: cached captchaType conflicts with access policy",
+						data: {
+							userSitekeyIpHash,
+							sessionId: dedup.sessionId,
+							cachedCaptchaType: dedup.captchaType,
+							policyType: dedupAccessPolicy.type,
+							policyCaptchaType: dedupAccessPolicy.captchaType,
+						},
+					}));
+					// Mongo is authoritative for dedup (see resolveSessionDedup): mark
+					// the stale session deleted so the next request doesn't re-reuse it,
+					// and drop the Redis pointers up front to avoid a resurrection race.
+					await tasks.db.checkAndRemoveSession(dedup.sessionId);
+					await Promise.all([
+						tasks.writeQueue?.invalidateCachedSession(dedup.sessionId) ??
+							Promise.resolve(),
+						tasks.writeQueue?.invalidateCachedSessionByHash(
+							userSitekeyIpHash,
+						) ?? Promise.resolve(),
+					]);
+				} else {
+					req.logger.info(() => ({
+						msg: "Reusing existing session for user-IP-sitekey combination",
+						data: {
+							userSitekeyIpHash,
+							sessionId: dedup.sessionId,
+							captchaType: dedup.captchaType,
+						},
+					}));
+					req.logger.info(() => ({
+						msg: "Frictionless decision",
+						data: {
+							decision: "reuse_session",
+							captchaType: dedup.captchaType,
+							sessionId: dedup.sessionId,
+						},
+					}));
+					recordFrictionlessDecision("reuse_session");
+					attachHoneypot(res, clientRecord);
+					return res.json({
+						[ApiParams.captchaType]: dedup.captchaType as
+							| CaptchaType.image
+							| CaptchaType.pow
+							| CaptchaType.puzzle,
+						[ApiParams.sessionId]: dedup.sessionId,
+						[ApiParams.status]: "ok",
+						dns_url: buildDnsEventUrl(dedup.sessionId),
+					});
+				}
 			}
 
 			const ipAddress = getCompositeIpAddress(normalizedIp);
@@ -295,6 +368,11 @@ export default (
 						logger: req.logger,
 					}),
 				);
+			}
+
+			recordBotScore(botScore);
+			if (triggeredDetectors && triggeredDetectors.length > 0) {
+				recordDetectorTriggered(triggeredDetectors);
 			}
 
 			const botThreshold =

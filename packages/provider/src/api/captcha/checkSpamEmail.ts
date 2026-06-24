@@ -22,6 +22,7 @@ import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
 import { checkSpamEmail as checkSpamEmailFn } from "../../tasks/spam/checkSpamEmail.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
+import { recordSpamEmail } from "../metrics.js";
 
 const CheckSpamEmailRequestBody = object({
 	email: safeLine(INPUT_LIMITS.EMAIL),
@@ -34,8 +35,22 @@ export default (env: ProviderEnvironment) =>
 		res: Response,
 		next: NextFunction,
 	) => {
+		let email: string;
+		let dapp: string;
 		try {
-			const { email, dapp } = CheckSpamEmailRequestBody.parse(req.body);
+			({ email, dapp } = CheckSpamEmailRequestBody.parse(req.body));
+		} catch (err) {
+			// A malformed request body is a client error (400), not a 500.
+			return next(
+				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
+					context: { code: 400, error: err },
+					i18n: req.i18n,
+					logger: req.logger,
+				}),
+			);
+		}
+
+		try {
 			const emailDomain = extractDomainFromEmail(email);
 			req.logger.info(() => ({
 				msg: "Check spam email handler entry",
@@ -99,6 +114,7 @@ export default (env: ProviderEnvironment) =>
 					isSpam,
 				},
 			}));
+			recordSpamEmail(isSpam ? "spam" : "ham");
 			return res.json({
 				isSpam,
 				emailDomain,

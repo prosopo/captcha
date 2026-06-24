@@ -126,6 +126,9 @@ export function parseDirectives(raw: string): Directives {
 			if (parsed.success) map.set("", parsed.data);
 		} else {
 			const scope = trimmed.slice(0, eqIdx).trim();
+			// Ignore entries with an empty scope (e.g. "=debug") — only a bare
+			// level (no "=") may set the global default.
+			if (!scope) continue;
 			const parsed = LogLevel.safeParse(trimmed.slice(eqIdx + 1).trim());
 			if (parsed.success) map.set(scope, parsed.data);
 		}
@@ -229,12 +232,22 @@ export class NativeLogger implements Logger {
 				: trimmedSubscope
 			: this.scope;
 		const newLogger = new NativeLogger(newScope, this.levelMap);
-		newLogger.defaultData = { ...this.defaultData, ...obj };
+		// Avoid allocating an empty defaultData object when scoping only
+		// (e.g. with({}, "subscope")). Reuse the parent reference when obj has no
+		// keys, and skip merging entirely when neither side has data.
+		const hasObjData = Object.keys(obj).length > 0;
+		if (hasObjData) {
+			newLogger.defaultData = { ...this.defaultData, ...obj };
+		} else if (this.defaultData) {
+			newLogger.defaultData = this.defaultData;
+		}
 		newLogger.setPretty(this.getPretty());
 		newLogger.setPrintStack(this.getPrintStack());
-		newLogger.setLogLevel(
-			resolveLevel(newScope, getGlobalDirectives(), this.getLogLevel()),
-		);
+		// Inherit the parent's configured level as the fallback only. Directives
+		// are applied dynamically at print time (see print()), so we must NOT bake
+		// the currently-resolved level in here — otherwise a directive active now
+		// would stick to this child even after setGlobalDirectives() clears it.
+		newLogger.setLogLevel(this.getLogLevel());
 		return newLogger;
 	}
 
