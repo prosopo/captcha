@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { VERIFY_FORWARDED_HEADER } from "@prosopo/api";
 import { handleErrors, verifySignature } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
 import {
@@ -34,6 +35,7 @@ import { validateAddress } from "@prosopo/util-crypto";
 import express, { type Router } from "express";
 import { Tasks } from "../tasks/tasks.js";
 import { getMaintenanceMode } from "./admin/apiToggleMaintenanceModeEndpoint.js";
+import { forwardVerifyIfNotIssuer } from "./forwardVerify.js";
 import { metricsEnabled, recordCaptchaVerify } from "./metrics.js";
 import {
 	isReservedTestSiteKey,
@@ -143,8 +145,6 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				return res.json(verificationResponse);
 			}
 
-			const tasks = new Tasks(env, req.logger);
-
 			// We can be helpful and provide a more detailed error message when there are missing fields
 			let parsed: VerifySolutionBodyTypeOutput;
 			try {
@@ -163,7 +163,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			const { dappSignature, token, ip, maxVerifiedTime, email } = parsed;
 			try {
 				// This can error if the token is invalid
-				const { user, dapp, timestamp, commitmentId } =
+				const { user, dapp, timestamp, commitmentId, providerUrl } =
 					decodeProcaptchaOutput(token);
 
 				// Reserved CI test site keys force a deterministic verdict before
@@ -177,6 +177,29 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					};
 					return res.json(verificationResponse);
 				}
+
+				// A client can verify against any pronode: if this node did not
+				// issue the token, forward the request to the provider that did
+				// and return its result. Only this provider can verify its own
+				// commitment, so do this before any local lookup.
+				const forwarded = await forwardVerifyIfNotIssuer({
+					env,
+					logger: req.logger,
+					path: ClientApiPaths.VerifyImageCaptchaSolutionDapp,
+					providerUrl,
+					dapp,
+					user,
+					body: parsed,
+					alreadyForwarded: req.headers[VERIFY_FORWARDED_HEADER] !== undefined,
+				});
+				if (forwarded) {
+					return res.json(forwarded);
+				}
+
+				// Only construct Tasks (which opens the DB) once we know this node
+				// is the issuer and must verify locally — non-issuer nodes forward
+				// above and never touch the DB.
+				const tasks = new Tasks(env, req.logger);
 
 				// Do this before checking the db
 				validateAddress(dapp, false, 42);
@@ -266,8 +289,6 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				return res.json(verificationResponse);
 			}
 
-			const tasks = new Tasks(env, req.logger);
-
 			let parsed: ServerPowCaptchaVerifyRequestBodyOutput;
 
 			// We can be helpful and provide a more detailed error message when there are missing fields
@@ -288,7 +309,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				const { token, dappSignature, ip, email } = parsed;
 
 				// This can error if the token is invalid
-				const { dapp, user, timestamp, challenge } =
+				const { dapp, user, timestamp, challenge, providerUrl } =
 					decodeProcaptchaOutput(token);
 
 				// Reserved CI test site keys force a deterministic verdict before
@@ -302,6 +323,29 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					};
 					return res.json(verificationResponse);
 				}
+
+				// A client can verify against any pronode: if this node did not
+				// issue the token, forward the request to the provider that did
+				// and return its result. Only this provider can verify its own
+				// challenge, so do this before any local lookup.
+				const forwarded = await forwardVerifyIfNotIssuer({
+					env,
+					logger: req.logger,
+					path: ClientApiPaths.VerifyPowCaptchaSolution,
+					providerUrl,
+					dapp,
+					user,
+					body: parsed,
+					alreadyForwarded: req.headers[VERIFY_FORWARDED_HEADER] !== undefined,
+				});
+				if (forwarded) {
+					return res.json(forwarded);
+				}
+
+				// Only construct Tasks (which opens the DB) once we know this node
+				// is the issuer and must verify locally — non-issuer nodes forward
+				// above and never touch the DB.
+				const tasks = new Tasks(env, req.logger);
 
 				// Do this before checking the db
 				validateAddress(dapp, false, 42);
@@ -399,8 +443,6 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				return res.json(verificationResponse);
 			}
 
-			const tasks = new Tasks(env, req.logger);
-
 			let parsed: ServerPuzzleCaptchaVerifyRequestBodyOutput;
 
 			// We can be helpful and provide a more detailed error message when there are missing fields
@@ -421,7 +463,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				const { token, dappSignature, ip, email } = parsed;
 
 				// This can error if the token is invalid
-				const { dapp, user, timestamp, challenge } =
+				const { dapp, user, timestamp, challenge, providerUrl } =
 					decodeProcaptchaOutput(token);
 
 				// Reserved CI test site keys force a deterministic verdict before
@@ -435,6 +477,29 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					};
 					return res.json(verificationResponse);
 				}
+
+				// A client can verify against any pronode: if this node did not
+				// issue the token, forward the request to the provider that did
+				// and return its result. Only this provider can verify its own
+				// challenge, so do this before any local lookup.
+				const forwarded = await forwardVerifyIfNotIssuer({
+					env,
+					logger: req.logger,
+					path: ClientApiPaths.VerifyPuzzleCaptchaSolution,
+					providerUrl,
+					dapp,
+					user,
+					body: parsed,
+					alreadyForwarded: req.headers[VERIFY_FORWARDED_HEADER] !== undefined,
+				});
+				if (forwarded) {
+					return res.json(forwarded);
+				}
+
+				// Only construct Tasks (which opens the DB) once we know this node
+				// is the issuer and must verify locally — non-issuer nodes forward
+				// above and never touch the DB.
+				const tasks = new Tasks(env, req.logger);
 
 				// Do this before checking the db
 				validateAddress(dapp, false, 42);
