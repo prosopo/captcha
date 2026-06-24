@@ -24,7 +24,7 @@ import { checkIfTaskIsRunning } from "../../../util.js";
 
 vi.mock("@prosopo/env", async () => {
 	const { getLogger } = await import("@prosopo/logger");
-	const loggerOuter = getLogger("info", import.meta.url);
+	const loggerOuter = getLogger("info", "test:set-client-entropy");
 	const mockLogger = {
 		debug: vi.fn().mockImplementation(loggerOuter.debug.bind(loggerOuter)),
 		log: vi.fn().mockImplementation(loggerOuter.log.bind(loggerOuter)),

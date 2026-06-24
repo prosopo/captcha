@@ -15,9 +15,11 @@
 import { handleErrors } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/env";
+import { PublicApiPaths } from "@prosopo/types";
 import { version } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { metricsHandler } from "../../../api/metrics.js";
 import { publicRouter } from "../../../api/public.js";
 
 vi.mock("@prosopo/api-express-router", () => ({
@@ -228,6 +230,97 @@ describe("publicRouter", () => {
 		);
 
 		expect(errorHandlerLayer).toBeDefined();
+	});
+
+	// Restores an env var to its prior state — deleting it when it was unset,
+	// because `process.env.X = undefined` stores the truthy string "undefined".
+	const restoreEnv = (key: string, previous: string | undefined) => {
+		if (previous === undefined) {
+			delete process.env[key];
+		} else {
+			process.env[key] = previous;
+		}
+	};
+
+	it("should register the /metrics route when metrics are enabled", () => {
+		const previous = process.env.PROSOPO_METRICS_ENABLED;
+		process.env.PROSOPO_METRICS_ENABLED = "true";
+		try {
+			const router = publicRouter(mockEnv);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			const layers = (router as any).stack || [];
+			const metricsLayer = layers.find(
+				(layer: { route?: { path?: string } }) =>
+					layer.route?.path === PublicApiPaths.Metrics,
+			);
+			expect(metricsLayer).toBeDefined();
+		} finally {
+			restoreEnv("PROSOPO_METRICS_ENABLED", previous);
+		}
+	});
+
+	it("should NOT register the /metrics route when metrics are disabled", () => {
+		const previous = process.env.PROSOPO_METRICS_ENABLED;
+		process.env.PROSOPO_METRICS_ENABLED = "false";
+		try {
+			const router = publicRouter(mockEnv);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			const layers = (router as any).stack || [];
+			const metricsLayer = layers.find(
+				(layer: { route?: { path?: string } }) =>
+					layer.route?.path === PublicApiPaths.Metrics,
+			);
+			expect(metricsLayer).toBeUndefined();
+		} finally {
+			restoreEnv("PROSOPO_METRICS_ENABLED", previous);
+		}
+	});
+
+	it("should serve Prometheus-formatted metrics with the correct content type", async () => {
+		const setMock = vi.fn();
+		const endMock = vi.fn();
+		const metricsRes = {
+			set: setMock,
+			end: endMock,
+			status: vi.fn().mockReturnThis(),
+			send: vi.fn(),
+		} as unknown as Response;
+		const metricsReq = { headers: {} } as Request;
+
+		await metricsHandler(mockEnv)(metricsReq, metricsRes, mockNext);
+
+		expect(setMock).toHaveBeenCalledWith(
+			"Content-Type",
+			expect.stringContaining("text/plain"),
+		);
+		const body = endMock.mock.calls[0]?.[0] as string;
+		expect(body).toContain("prosopo_");
+		// readiness gauge is refreshed from the live DB connection at scrape time
+		// (assert presence, not value — the registry is a shared singleton so the
+		// gauge value can leak across tests)
+		expect(body).toContain("prosopo_redis_ready");
+	});
+
+	it("should reject scrapes without the bearer token when PROSOPO_METRICS_TOKEN is set", async () => {
+		const previous = process.env.PROSOPO_METRICS_TOKEN;
+		process.env.PROSOPO_METRICS_TOKEN = "secret";
+		try {
+			const statusMock = vi.fn().mockReturnThis();
+			const sendMock = vi.fn();
+			const metricsRes = {
+				status: statusMock,
+				send: sendMock,
+				set: vi.fn(),
+				end: vi.fn(),
+			} as unknown as Response;
+			const metricsReq = { headers: {} } as Request;
+
+			await metricsHandler(mockEnv)(metricsReq, metricsRes, mockNext);
+
+			expect(statusMock).toHaveBeenCalledWith(401);
+		} finally {
+			restoreEnv("PROSOPO_METRICS_TOKEN", previous);
+		}
 	});
 
 	it("should calculate awaiting time correctly", async () => {
