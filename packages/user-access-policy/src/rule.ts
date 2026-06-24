@@ -27,6 +27,18 @@ export type AccessPolicy = {
 	powDifficulty?: number;
 	unsolvedImagesCount?: number;
 	frictionlessScore?: number;
+	// When true, a Block policy does NOT fire at the request-time
+	// blockMiddleware (so the user does not see a 401 on the captcha
+	// challenge endpoint) — it fires at the verify step instead, marking
+	// the commitment ACCESS_POLICY_BLOCK / disapproved. The verify
+	// response returns `{verified:false}` to the dApp's server while the
+	// user-facing widget completes normally. Mirrors the existing
+	// coords-rule deferral pattern: the middleware blanks coords out of
+	// the userScope, so coords rules can only ever be matched in the
+	// verify path; `deferToVerify` is the explicit form for non-coords
+	// signals (ja4, headersHash, etc.) when the operator wants the
+	// attacker to pay the captcha-solving cost before being rejected.
+	deferToVerify?: boolean;
 };
 
 export type PolicyScope = {
@@ -46,6 +58,8 @@ export type UserAttributes = {
 	userAgentHash?: string;
 	headHash?: string;
 	coords?: string;
+	countryCode?: string;
+	asn?: number;
 };
 
 export type UserScope = UserAttributes & UserIp;

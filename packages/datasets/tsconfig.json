@@ -19,10 +19,10 @@
 			"path": "../common"
 		},
 		{
-			"path": "../types"
+			"path": "../logger"
 		},
 		{
-			"path": "../types-database"
+			"path": "../types"
 		},
 		{
 			"path": "../util"

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Logger } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import type { FtAggregateWithCursorOptions } from "@redis/search/dist/lib/commands/AGGREGATE_WITHCURSOR.js";
 import type { RedisClientType } from "redis";
 import { z } from "zod";
@@ -29,6 +29,7 @@ export const aggregateRedisKeys = async (
 	query: string,
 	logger: Logger,
 	batchHandler?: (keys: string[]) => Promise<void>,
+	maxKeys?: number,
 ): Promise<string[]> => {
 	const keyField = "__key";
 
@@ -38,8 +39,13 @@ export const aggregateRedisKeys = async (
 	});
 
 	const foundKeys: string[] = [];
+	let stopRequested = false;
 
 	const addRecordKeys = async (records: object[]) => {
+		if (stopRequested) {
+			return;
+		}
+
 		const parsedRecords = parseRedisRecords(records, recordSchema, logger);
 
 		const recordKeys = parsedRecords.map((record) => record[keyField]);
@@ -47,6 +53,24 @@ export const aggregateRedisKeys = async (
 		if (batchHandler) {
 			await batchHandler(recordKeys);
 		} else {
+			if (
+				maxKeys !== undefined &&
+				foundKeys.length + recordKeys.length > maxKeys
+			) {
+				const remaining = Math.max(0, maxKeys - foundKeys.length);
+				foundKeys.push(...recordKeys.slice(0, remaining));
+				stopRequested = true;
+
+				logger.warn(() => ({
+					msg: "Redis aggregation candidate cap hit; truncating result set. This can suppress less-frequent rules and should be investigated.",
+					data: {
+						maxKeys,
+						query,
+					},
+				}));
+				return;
+			}
+
 			foundKeys.push(...recordKeys);
 
 			logger.debug(() => ({
@@ -68,6 +92,7 @@ export const aggregateRedisKeys = async (
 			LOAD: `@${keyField}`,
 		},
 		addRecordKeys,
+		() => stopRequested,
 	);
 
 	return foundKeys;
@@ -78,6 +103,7 @@ const executeAggregation = async (
 	query: string,
 	aggregateOptions: FtAggregateWithCursorOptions,
 	handleBatch: (records: object[]) => Promise<void>,
+	shouldStop?: () => boolean,
 ): Promise<void> => {
 	const initialReply = await client.ft.aggregateWithCursor(
 		ACCESS_RULES_REDIS_INDEX_NAME,
@@ -89,7 +115,7 @@ const executeAggregation = async (
 
 	let cursor = initialReply.cursor;
 
-	while (0 !== cursor) {
+	while (0 !== cursor && !shouldStop?.()) {
 		const batchReply = await client.ft.cursorRead(
 			ACCESS_RULES_REDIS_INDEX_NAME,
 			cursor,

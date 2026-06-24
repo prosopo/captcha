@@ -26,11 +26,14 @@ export function getDefaultSiteKeys(): ISite[] {
 		CaptchaType.image,
 		CaptchaType.pow,
 		CaptchaType.frictionless,
+		CaptchaType.puzzle,
 	];
 	const sites: ISite[] = [];
 	for (const captchaType of captchaTypes) {
 		const secret = `${DEV_PHRASE}//${captchaType}`;
 		const pair = getPair(secret);
+		// Settings are written explicitly rather than relying on schema defaults
+		// so dev seeds are self-describing and stay stable when defaults change.
 		sites.push({
 			pair: pair,
 			address: pair.address,
@@ -38,6 +41,8 @@ export function getDefaultSiteKeys(): ISite[] {
 			settings: ClientSettingsSchema.parse({
 				captchaType: captchaType,
 				domains: ["localhost"],
+				imageMaxRounds: 2,
+				frictionlessThreshold: 0.8,
 			}),
 		});
 	}
@@ -50,7 +55,7 @@ export function getDefaultProviders(): IProviderAccount[] {
 	);
 	return [
 		{
-			url: "http://localhost:9229",
+			url: "https://localhost:9229",
 			pair: pair,
 			address: pair.address,
 			datasetFile: "./dev/data/captchas.json",

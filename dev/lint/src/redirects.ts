@@ -14,6 +14,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { findWorkspaceRoot } from "@prosopo/workspace";
 import fg from "fast-glob";
 import type { Argv } from "yargs";
 import { z } from "zod";
@@ -36,63 +37,11 @@ enum Mode {
 }
 
 /**
- * Finds the workspace root directory (captcha-private)
- */
-const findWorkspaceRoot = (): string => {
-	const currentDir = process.cwd();
-	const lintDirPattern = /(.+)\/captcha\/dev\/lint$/;
-	const match = currentDir.match(lintDirPattern);
-
-	if (match?.[1]) {
-		return match[1];
-	}
-
-	const websitePath = path.join(currentDir, "packages", "prosopo-website");
-	if (fs.existsSync(websitePath)) {
-		return currentDir;
-	}
-
-	let dir = currentDir;
-	const maxDepth = 5;
-
-	for (let i = 0; i < maxDepth; i++) {
-		const packageJsonPath = path.join(dir, "package.json");
-
-		if (fs.existsSync(packageJsonPath)) {
-			try {
-				const packageJson = JSON.parse(
-					fs.readFileSync(packageJsonPath, "utf8"),
-				);
-				if (packageJson.name === "@prosopo/captcha-private") {
-					return dir;
-				}
-			} catch (e) {
-				// Continue if there's an error
-			}
-		}
-
-		const parentDir = path.dirname(dir);
-		if (parentDir === dir) {
-			// We've reached the root of the filesystem
-			break;
-		}
-
-		dir = parentDir;
-	}
-
-	// If all approaches fail, warn but return current directory
-	console.warn(
-		"Warning: Could not find workspace root. Using current directory.",
-	);
-	return currentDir;
-};
-
-/**
  * Check if a URL is an internal link
  * @param url - The URL to check
  * @returns boolean indicating whether the URL is an internal link
  */
-const isInternalLink = (url: string): boolean => {
+export const isInternalLink = (url: string): boolean => {
 	// Skip empty URLs, fragments, and mailto links
 	if (!url || url.startsWith("#") || url.startsWith("mailto:")) {
 		return false;
@@ -105,8 +54,15 @@ const isInternalLink = (url: string): boolean => {
 		return true; // No protocol means internal link
 	}
 
-	// If it has a protocol but points to prosopo.io, it's still internal
-	return url.includes("prosopo.io");
+	// Match the host exactly. A substring check would falsely flag
+	// third-party URLs that contain "prosopo.io" in the path
+	// (e.g. https://uk.trustpilot.com/review/prosopo.io).
+	try {
+		const { hostname } = new URL(url);
+		return hostname === "prosopo.io" || hostname.endsWith(".prosopo.io");
+	} catch {
+		return false;
+	}
 };
 
 /**
@@ -114,7 +70,7 @@ const isInternalLink = (url: string): boolean => {
  * @param url - The URL to check
  * @returns boolean indicating whether the URL should have a trailing slash
  */
-const needsTrailingSlash = (url: string): boolean => {
+export const needsTrailingSlash = (url: string): boolean => {
 	// URLs that already end with a slash are fine
 	if (url.endsWith("/")) {
 		return false;
@@ -130,8 +86,12 @@ const needsTrailingSlash = (url: string): boolean => {
 		return false;
 	}
 
-	// Skip Nunjucks template variables - URLs containing {{ }} syntax
-	if (url.includes("{{") && url.includes("}}")) {
+	// If the URL ends with a Nunjucks template expression (e.g. `{{ siteUrl }}`
+	// or `/products/{{ slug }}`) we can't tell at lint time whether the
+	// rendered URL ends in a slash, so skip. URLs with templated *middles*
+	// (e.g. `{{ site.url }}/products/foo`) are still audited — appending a
+	// trailing slash to the static suffix is always safe.
+	if (url.trimEnd().endsWith("}}")) {
 		return false;
 	}
 
@@ -160,6 +120,36 @@ const needsTrailingSlash = (url: string): boolean => {
 };
 
 /**
+ * Extract the URL portion from a markdown link's parenthesised content,
+ * tolerating spaces inside Nunjucks `{{ ... }}` template expressions.
+ *
+ * Markdown allows an optional title after the URL: `[text](url "title")`.
+ * A naïve `split(" ")` mangles templated URLs because `{{ site.url }}`
+ * contains spaces inside the braces.
+ */
+export const extractMarkdownUrl = (urlPart: string): string => {
+	let depth = 0;
+	for (let i = 0; i < urlPart.length; i++) {
+		const two = urlPart.slice(i, i + 2);
+		if (two === "{{") {
+			depth++;
+			i++;
+			continue;
+		}
+		if (two === "}}") {
+			depth = Math.max(0, depth - 1);
+			i++;
+			continue;
+		}
+		const ch = urlPart[i] || "";
+		if (depth === 0 && /\s/.test(ch)) {
+			return urlPart.slice(0, i);
+		}
+	}
+	return urlPart;
+};
+
+/**
  * Extract links from markdown format
  * @param content - The file content
  * @returns Array of URLs and their line numbers
@@ -178,9 +168,7 @@ const extractMarkdownLinks = (
 		match = markdownLinkRegex.exec(line);
 		while (match !== null) {
 			if (match[2]) {
-				const urlPart = match[2];
-				// Handle cases with title: [text](url "title") by getting the first part
-				const url = urlPart.split(" ")[0];
+				const url = extractMarkdownUrl(match[2]);
 				if (url) {
 					links.push({
 						url,
@@ -230,6 +218,32 @@ const extractHtmlLinks = (
 };
 
 /**
+ * Build the rewritten link text with a trailing slash appended to the URL.
+ * Pure function — returns `originalText` unchanged if the URL doesn't appear
+ * in any of the recognised wrappers (quoted, parenthesised, parenthesised
+ * with a following markdown title).
+ */
+export const buildReplacementText = (
+	originalText: string,
+	url: string,
+): string => {
+	const urlWithSlash = `${url}/`;
+	if (originalText.includes(`"${url}"`)) {
+		return originalText.replace(`"${url}"`, `"${urlWithSlash}"`);
+	}
+	if (originalText.includes(`'${url}'`)) {
+		return originalText.replace(`'${url}'`, `'${urlWithSlash}'`);
+	}
+	if (originalText.includes(`(${url})`)) {
+		return originalText.replace(`(${url})`, `(${urlWithSlash})`);
+	}
+	if (originalText.includes(`(${url} `)) {
+		return originalText.replace(`(${url} `, `(${urlWithSlash} `);
+	}
+	return originalText;
+};
+
+/**
  * Extract all links from a file (both markdown and HTML)
  * @param filePath - The path to the file
  * @returns Array of links with file path, line number, and URL
@@ -247,33 +261,9 @@ const extractLinksFromFile = async (filePath: string): Promise<FileLink[]> => {
 		const allLinks = [...mdLinks, ...htmlLinks].map((link) => {
 			const internal = isInternalLink(link.url);
 			const needsSlash = internal && needsTrailingSlash(link.url);
-
-			// Create replacement text if needed
-			let replacementText = link.originalText;
-			if (needsSlash) {
-				const urlWithSlash = `${link.url}/`;
-				if (link.originalText.includes(`"${link.url}"`)) {
-					replacementText = link.originalText.replace(
-						`"${link.url}"`,
-						`"${urlWithSlash}"`,
-					);
-				} else if (link.originalText.includes(`'${link.url}'`)) {
-					replacementText = link.originalText.replace(
-						`'${link.url}'`,
-						`'${urlWithSlash}'`,
-					);
-				} else if (link.originalText.includes(`(${link.url})`)) {
-					replacementText = link.originalText.replace(
-						`(${link.url})`,
-						`(${urlWithSlash})`,
-					);
-				} else if (link.originalText.includes(`(${link.url} `)) {
-					replacementText = link.originalText.replace(
-						`(${link.url} `,
-						`(${urlWithSlash} `,
-					);
-				}
-			}
+			const replacementText = needsSlash
+				? buildReplacementText(link.originalText, link.url)
+				: link.originalText;
 
 			return {
 				filePath,

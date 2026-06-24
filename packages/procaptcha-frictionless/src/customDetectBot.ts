@@ -14,16 +14,14 @@
 
 import { ProviderApi } from "@prosopo/api";
 import { ProsopoEnvError } from "@prosopo/common";
-import { getRandomActiveProvider } from "@prosopo/load-balancer";
-import { ExtensionLoader } from "@prosopo/procaptcha-common";
+import {
+	ExtensionLoader,
+	getProcaptchaRandomActiveProvider,
+	pickIpMode,
+} from "@prosopo/procaptcha-common";
 import type {
-	Account,
 	BotDetectionFunction,
-	ClickEventPoint,
-	MouseMovementPoint,
 	ProcaptchaClientConfigOutput,
-	RandomProvider,
-	TouchEventPoint,
 } from "@prosopo/types";
 import type { BotDetectionFunctionResult } from "@prosopo/types";
 import { DetectorLoader } from "./detectorLoader.js";
@@ -58,42 +56,24 @@ const customDetectBot: BotDetectionFunction = async (
 	container: HTMLElement | undefined,
 	restartFn: () => void,
 ): Promise<BotDetectionFunctionResult> => {
-	const ext = new (await ExtensionLoader(config.web2))();
+	const [ExtClass, detect] = await Promise.all([
+		ExtensionLoader(config.web2),
+		DetectorLoader(),
+	]);
+	const ext = new ExtClass();
 
-	const detect = await DetectorLoader();
-	const detectionResult = (await detect(
+	// The detector bundle still expects the legacy 5-arg signature
+	// `(env, randomProviderSelectorFn, container, restart, accountGenerator)`.
+	// Until the bundle is rebuilt without the provider selector, hand it a
+	// noop selector that resolves to the static DNS endpoint — the detector
+	// no longer uses the returned RandomProvider for routing.
+	const detectionResult = await detect(
 		config.defaultEnvironment,
-		getRandomActiveProvider,
+		async () => getProcaptchaRandomActiveProvider(config.defaultEnvironment),
 		container,
 		restartFn,
 		() => ext.getAccount(config),
-	)) as {
-		token: string;
-		provider?: RandomProvider;
-		encryptHeadHash: string;
-		mouseTracker?: {
-			start: () => void;
-			stop: () => void;
-			getData: () => MouseMovementPoint[];
-			clear: () => void;
-		};
-		touchTracker?: {
-			start: () => void;
-			stop: () => void;
-			getData: () => TouchEventPoint[];
-			clear: () => void;
-		};
-		clickTracker?: {
-			start: () => void;
-			stop: () => void;
-			getData: () => ClickEventPoint[];
-			clear: () => void;
-		};
-		hasTouchSupport?: string;
-		encryptBehavioralData?: (data: string) => Promise<string>;
-		packBehavioralData?: (data: string) => Promise<string>;
-		userAccount: Account;
-	};
+	);
 
 	const userAccount = detectionResult.userAccount;
 
@@ -101,28 +81,56 @@ const customDetectBot: BotDetectionFunction = async (
 		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
 	}
 
-	// Get random active provider with timeout
-	const provider = detectionResult.provider;
-
-	if (!provider) {
-		throw new Error("Provider Selection Failed");
-	}
+	// Resolve the static DNS endpoint for this env. No client-side random
+	// selection anymore — the DNS layer load-balances across the pronode fleet.
+	// `pickIpMode(config)` honours the dapp's data-ipv4 / data-ipv6 preference
+	// so frictionless and the subsequent captcha hops stay on the same stack.
+	const provider = await getProcaptchaRandomActiveProvider(
+		config.defaultEnvironment,
+		pickIpMode(config),
+	);
 
 	const providerApi = new ProviderApi(
 		provider.provider.url,
 		config.account.address,
 	);
 
-	// Get frictionless captcha with timeout
-	const captcha = await withTimeout(
-		providerApi.getFrictionlessCaptcha(
-			detectionResult.token,
-			detectionResult.encryptHeadHash,
-			config.account.address,
-			userAccount.account.address,
-		),
-		10000, // 10 second timeout
+	// SIMD readings deliberately omitted from the frictionless hop. The WASM
+	// benchmark is a CPU-bound loop that contends with BotScoreWorker if it
+	// runs during detection; deferring it until after the POST is in flight
+	// lets it complete in the worker thread while the network round-trip
+	// burns. Readings still attach on the challenge GET and on solution
+	// submit (first-hop-wins server-side).
+	const captchaPromise = providerApi.getFrictionlessCaptcha(
+		detectionResult.token,
+		detectionResult.encryptHeadHash,
+		config.account.address,
+		userAccount.account.address,
+		config.mode,
+		undefined,
 	);
+	if (detectionResult.getSimdReadings) {
+		// Fire-and-forget: triggers the memoised prefetch inside the catcher
+		// so the next hop sees a hot benchmark. We never await the result here.
+		void detectionResult.getSimdReadings(60_000).catch(() => undefined);
+	}
+	const captcha = await withTimeout(captchaPromise, 10000);
+
+	// Fire-and-forget DNS observation beacon. Failures swallowed —
+	// observation must never break the captcha flow.
+	if (captcha.dns_url) {
+		try {
+			void fetch(captcha.dns_url, {
+				method: "GET",
+				mode: "no-cors",
+				credentials: "omit",
+				keepalive: true,
+				cache: "no-store",
+			}).catch(() => undefined);
+		} catch {
+			/* swallow */
+		}
+	}
 
 	return {
 		captchaType: captcha.captchaType,
@@ -131,6 +139,7 @@ const customDetectBot: BotDetectionFunction = async (
 		status: captcha.status,
 		userAccount: userAccount,
 		error: captcha.error,
+		hp: captcha.hp,
 		// Map specific trackers to generic behavioral collectors
 		behaviorCollector1: detectionResult.mouseTracker,
 		behaviorCollector2: detectionResult.touchTracker,
@@ -138,6 +147,7 @@ const customDetectBot: BotDetectionFunction = async (
 		deviceCapability: detectionResult.hasTouchSupport,
 		encryptBehavioralData: detectionResult.encryptBehavioralData,
 		packBehavioralData: detectionResult.packBehavioralData,
+		getSimdReadings: detectionResult.getSimdReadings,
 	};
 };
 

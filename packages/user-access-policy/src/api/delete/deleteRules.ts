@@ -17,7 +17,8 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import { type Logger, executeBatchesSequentially } from "@prosopo/common";
+import { executeBatchesSequentially } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import { type ZodType, z } from "zod";
 import {
 	type AccessRulesFilterInput,
@@ -40,7 +41,9 @@ export class DeleteRulesEndpoint implements ApiEndpoint<DeleteRulesSchema> {
 
 	async processRequest(
 		args: AccessRulesFilterInput[],
+		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
+		const log = logger ?? this.logger;
 		let deletedCount = 0;
 
 		for (const rulesFilterInput of args) {
@@ -57,7 +60,7 @@ export class DeleteRulesEndpoint implements ApiEndpoint<DeleteRulesSchema> {
 
 					deletedCount += uniqueRuleIds.length;
 
-					this.logger.info(() => ({
+					log.info(() => ({
 						msg: "Endpoint deleted rules",
 						data: {
 							rulesFilterInput,

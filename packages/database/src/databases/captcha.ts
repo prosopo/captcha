@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type Logger, ProsopoDBError, getLogger } from "@prosopo/common";
+import { ProsopoDBError } from "@prosopo/common";
+import { type Logger, getLogger } from "@prosopo/logger";
 import {
 	type CaptchaProperties,
 	type ICaptchaDatabase,
@@ -24,6 +25,18 @@ import {
 	type Tables,
 	type UserCommitmentRecord,
 } from "@prosopo/types-database";
+import { Decimal128, Long } from "bson";
+
+// Duck-typed check for BSON Long. Avoids `instanceof Long` because the
+// MongoDB driver uses its bundled `bson` copy when deserialising, and
+// hoisting differences across npm trees can put the `Long` class from
+// this file's import on a different identity than the one stamped on
+// the lean-doc values — which would silently skip the normalisation.
+const isBsonLong = (value: unknown): boolean =>
+	typeof value === "object" &&
+	value !== null &&
+	"_bsontype" in value &&
+	(value as { _bsontype: string })._bsontype === "Long";
 import type { RootFilterQuery } from "mongoose";
 import { MongoDatabase } from "../base/index.js";
 
@@ -123,6 +136,57 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		this.indexesEnsured = true;
 	}
 
+	/**
+	 * Convert a BSON `Long` (which Mongoose's Decimal128 caster rejects)
+	 * into a Decimal128 with the *unsigned* numeric value — so a Long
+	 * representing an IPv6 lower half with bit 63 set (signed Long shows
+	 * as a negative integer) converts to a positive Decimal128 that
+	 * matches what `bigint→string→Decimal128` would have produced if the
+	 * schema setter had run on the original write.
+	 *
+	 * Production background: pipeline-form updates (`updateOne(filter,
+	 * [{ $set: ... }])`) bypass Mongoose schema casting, so a `bigint`
+	 * passed for an IP half is serialised by the driver as BSON Int64
+	 * (Long) instead of going through the `Decimal128` setter. The
+	 * central-streaming sweep below reads those docs via `.lean()` and
+	 * tries to replay them with `bulkWrite`, but `bulkWrite` also skips
+	 * setters — so the cast fires raw and throws. Normalising the lean
+	 * doc here is the only place that's guaranteed to run before the
+	 * bulkWrite sees it.
+	 */
+	private static normaliseCompositeIp<
+		T extends { lower?: unknown; upper?: unknown } | undefined,
+	>(ip: T): T {
+		if (!ip) return ip;
+		const normaliseHalf = (v: unknown): unknown => {
+			if (isBsonLong(v)) {
+				const lng = v as { low: number; high: number };
+				return Decimal128.fromString(
+					Long.fromBits(lng.low, lng.high, true).toString(),
+				);
+			}
+			return v;
+		};
+		return {
+			...ip,
+			lower: normaliseHalf(ip.lower),
+			upper: normaliseHalf(ip.upper),
+		};
+	}
+
+	private static normaliseDocCompositeIps<
+		T extends {
+			ipAddress?: { lower?: unknown; upper?: unknown };
+			providedIp?: { lower?: unknown; upper?: unknown };
+		},
+	>(doc: T): T {
+		return {
+			...doc,
+			ipAddress: CaptchaDatabase.normaliseCompositeIp(doc.ipAddress),
+			providedIp: CaptchaDatabase.normaliseCompositeIp(doc.providedIp),
+		};
+	}
+
 	async saveCaptchas(
 		sessionEvents: StoredSession[],
 		imageCaptchaEvents: UserCommitmentRecord[],
@@ -135,7 +199,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 					const { _id, ...safeDoc } = document;
 					return {
 						insertOne: {
-							document: safeDoc,
+							document: CaptchaDatabase.normaliseDocCompositeIps(safeDoc),
 						},
 					};
 				}),
@@ -154,10 +218,11 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 				imageCaptchaEvents.map((doc) => {
 					// remove the _id field to avoid problems when upserting
 					const { _id, ...safeDoc } = doc;
+					const normalised = CaptchaDatabase.normaliseDocCompositeIps(safeDoc);
 					return {
 						updateOne: {
-							filter: { id: safeDoc.id },
-							update: { $set: safeDoc },
+							filter: { id: normalised.id },
+							update: { $set: normalised },
 							upsert: true,
 						},
 					};
@@ -178,10 +243,11 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 				powCaptchaEvents.map((doc) => {
 					// remove the _id field to avoid problems when upserting
 					const { _id, ...safeDoc } = doc;
+					const normalised = CaptchaDatabase.normaliseDocCompositeIps(safeDoc);
 					return {
 						updateOne: {
-							filter: { challenge: safeDoc.challenge },
-							update: { $set: safeDoc },
+							filter: { challenge: normalised.challenge },
+							update: { $set: normalised },
 							upsert: true,
 						},
 					};

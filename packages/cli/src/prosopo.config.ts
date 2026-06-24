@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { parseLogLevel } from "@prosopo/common";
+import { parseLogLevel } from "@prosopo/logger";
 import {
 	DatabaseTypes,
 	EnvironmentTypesSchema,
@@ -46,6 +46,39 @@ const getLRules = () => {
 		return JSON.parse(process.env.L_RULES);
 	} catch (e) {
 		return {};
+	}
+};
+
+const isStringArray = (value: unknown): value is string[] =>
+	Array.isArray(value) && value.every((item) => typeof item === "string");
+
+const getDnsServers = (): string[] | undefined => {
+	if (!process.env.PROSOPO_DNS_SERVERS) {
+		return undefined;
+	}
+	try {
+		const parsed = JSON.parse(process.env.PROSOPO_DNS_SERVERS);
+		if (isStringArray(parsed)) {
+			return parsed as string[];
+		}
+		return undefined;
+	} catch (e) {
+		return undefined;
+	}
+};
+
+const getSpamEmailDomainsUrls = (): string[] | undefined => {
+	if (!process.env.SPAM_EMAIL_DOMAINS_URLS) {
+		return undefined;
+	}
+	try {
+		const parsed = JSON.parse(process.env.SPAM_EMAIL_DOMAINS_URLS);
+		if (isStringArray(parsed)) {
+			return parsed as string[];
+		}
+		return undefined;
+	} catch (e) {
+		return undefined;
 	}
 };
 
@@ -125,8 +158,12 @@ export default function getConfig(
 			clientEntropyScheduler: {
 				schedule: process.env.CLIENT_ENTROPY_SCHEDULE,
 			},
+			spamEmailDomainsScheduler: {
+				schedule: process.env.SPAM_EMAIL_DOMAINS_SCHEDULE,
+			},
 		},
 		lRules: getLRules(),
+		spamEmailDomainsUrls: getSpamEmailDomainsUrls(),
 		authAccount: {
 			address: getAddress(admin),
 			password: getPassword(admin),
@@ -136,5 +173,7 @@ export default function getConfig(
 			apiKey: process.env.PROSOPO_IPAPI_KEY,
 			baseUrl: process.env.PROSOPO_IPAPI_URL,
 		},
+		maxmindDbPath: process.env.MAXMIND_DB_PATH,
+		dnsServers: getDnsServers(),
 	} as ProsopoConfigInput);
 }

@@ -15,7 +15,7 @@
 import { getCheckboxInteractiveArea } from "../elements/checkbox.js";
 import { createWidgetSkeletonElement } from "../elements/skeleton.js";
 import type { Theme } from "../theme.js";
-import { createWebComponent } from "./createWebComponent.js";
+import { applyDefaultStyles } from "./createWebComponent.js";
 
 /**
  * Creates a widget skeleton and attaches it to the provided container
@@ -30,22 +30,20 @@ export function createWidgetSkeleton(
 	theme: Theme,
 	webComponentTag: string,
 ): { widgetInteractiveArea: HTMLElement; webComponent: HTMLElement } {
+	const host = document.createElement(webComponentTag);
+	applyDefaultStyles(host);
+
 	const widget = createWidgetSkeletonElement(theme);
-	const webComponent = createWebComponent(webComponentTag);
-	const webComponentRoot = getWebComponentRoot(webComponent);
-	webComponentRoot.appendChild(widget);
+	host.appendChild(widget);
 
 	container.innerHTML = "";
-	container.appendChild(webComponent);
+	container.appendChild(host);
 
-	const widgetInteractiveArea = getCheckboxInteractiveArea(webComponent);
+	const widgetInteractiveArea = getCheckboxInteractiveArea(host);
 
 	if (!(widgetInteractiveArea instanceof HTMLElement)) {
 		throw new Error("Fail to initialize widget: interactive area is not found");
 	}
 
-	return { widgetInteractiveArea, webComponent };
+	return { widgetInteractiveArea, webComponent: host };
 }
-
-const getWebComponentRoot = (webComponent: HTMLElement) =>
-	webComponent.shadowRoot || webComponent;

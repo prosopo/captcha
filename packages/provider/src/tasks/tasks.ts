@@ -1,10 +1,3 @@
-import {
-	type Logger,
-	ProsopoEnvError,
-	getLogger,
-	parseLogLevel,
-} from "@prosopo/common";
-import type { KeyringPair } from "@prosopo/types";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,17 +11,33 @@ import type { KeyringPair } from "@prosopo/types";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { ProsopoEnvError } from "@prosopo/common";
+import { CentralDbStreamer, ProviderDatabase } from "@prosopo/database";
+import { RedisWriteQueue } from "@prosopo/database";
+import { type Logger, getLogger, parseLogLevel } from "@prosopo/logger";
+import type { KeyringPair } from "@prosopo/types";
 import type {
 	ProsopoCaptchaCountConfigSchemaOutput,
 	ProsopoConfigOutput,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import { UsageCounters } from "../util/usageCounters.js";
 import { ClientTaskManager } from "./client/clientTasks.js";
 import { DatasetManager } from "./dataset/datasetTasks.js";
+import { DecisionMachineRunner } from "./decisionMachine/decisionMachineRunner.js";
 import { FrictionlessManager } from "./frictionless/frictionlessTasks.js";
 import { ImgCaptchaManager } from "./imgCaptcha/imgCaptchaTasks.js";
 import { PowCaptchaManager } from "./powCaptcha/powTasks.js";
+import { PuzzleCaptchaManager } from "./puzzleCaptcha/puzzleTasks.js";
+
+/**
+ * Singleton write queue manager.
+ * Ensures only one flush timer exists across all Tasks instances.
+ */
+let globalWriteQueue: RedisWriteQueue | null = null;
+let flushStarted = false;
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -40,12 +49,18 @@ export class Tasks {
 	config: ProsopoConfigOutput;
 	pair: KeyringPair;
 	powCaptchaManager: PowCaptchaManager;
+	puzzleCaptchaManager: PuzzleCaptchaManager;
 	datasetManager: DatasetManager;
 	imgCaptchaManager: ImgCaptchaManager;
 	clientTaskManager: ClientTaskManager;
 	frictionlessManager: FrictionlessManager;
+	writeQueue: RedisWriteQueue | null;
+	decisionMachineRunner: DecisionMachineRunner;
+	usageCounters: UsageCounters | null;
+	env: ProviderEnvironment;
 
 	constructor(env: ProviderEnvironment, logger?: Logger) {
+		this.env = env;
 		this.config = env.config;
 		this.db = env.getDb();
 		this.captchaConfig = env.config.captchas;
@@ -58,11 +73,40 @@ export class Tasks {
 		}
 		this.pair = env.pair;
 
+		if (
+			this.config.mongoCaptchaUri &&
+			this.db instanceof ProviderDatabase &&
+			!this.db.hasCentralDbStreamer()
+		) {
+			const streamer = new CentralDbStreamer(
+				this.config.mongoCaptchaUri,
+				this.logger,
+			);
+			this.db.setCentralDbStreamer(streamer);
+			this.logger.info(() => ({
+				msg: "Central DB streamer initialized for real-time captcha data streaming",
+			}));
+		}
+
+		// Initialize write queue from existing Redis connection
+		this.writeQueue = this.initWriteQueue();
+		this.decisionMachineRunner = new DecisionMachineRunner(this.db);
+		this.usageCounters = this.initUsageCounters();
+
 		this.powCaptchaManager = new PowCaptchaManager(
 			this.db,
 			this.pair,
 			this.config,
 			this.logger,
+			this.writeQueue,
+			this.usageCounters,
+		);
+		this.puzzleCaptchaManager = new PuzzleCaptchaManager(
+			this.db,
+			this.pair,
+			this.config,
+			this.logger,
+			this.usageCounters,
 		);
 		this.datasetManager = new DatasetManager(
 			this.config,
@@ -75,6 +119,8 @@ export class Tasks {
 			this.pair,
 			this.config,
 			this.logger,
+			this.writeQueue,
+			this.usageCounters,
 		);
 		this.clientTaskManager = new ClientTaskManager(
 			this.config,
@@ -86,13 +132,91 @@ export class Tasks {
 			this.pair,
 			this.config,
 			this.logger,
+			this.writeQueue,
+			this.decisionMachineRunner,
+			this.usageCounters,
 		);
+	}
+
+	private initUsageCounters(): UsageCounters | null {
+		if (!(this.db instanceof ProviderDatabase)) return null;
+		try {
+			return new UsageCounters(this.db.getRedisConnection(), this.logger);
+		} catch {
+			return null;
+		}
+	}
+
+	private initWriteQueue(): RedisWriteQueue | null {
+		if (globalWriteQueue) {
+			return globalWriteQueue;
+		}
+
+		if (!(this.db instanceof ProviderDatabase)) {
+			return null;
+		}
+
+		try {
+			const redisConnection = this.db.getRedisConnection();
+			globalWriteQueue = new RedisWriteQueue(redisConnection, this.logger);
+
+			if (!flushStarted) {
+				flushStarted = true;
+				const db = this.db;
+				const logger = this.logger;
+				globalWriteQueue.startPeriodicFlush(async (queue) => {
+					await Tasks.flushWriteQueue(queue, db, logger);
+				}, 10_000);
+			}
+
+			return globalWriteQueue;
+		} catch {
+			this.logger.debug(() => ({
+				msg: "Redis not available for write queue - falling back to direct writes",
+			}));
+			return null;
+		}
+	}
+
+	/**
+	 * Flush queued session records from Redis to MongoDB in bulk.
+	 * Called periodically by the write queue timer.
+	 *
+	 * Note: PoW challenge and pending image commitment records are written
+	 * directly to MongoDB (not queued) because verification endpoints need
+	 * to read them immediately after creation. Session records are safe to
+	 * queue because they are not read in the immediate request path.
+	 */
+	static async flushWriteQueue(
+		queue: RedisWriteQueue,
+		db: IProviderDatabase,
+		logger: Logger,
+	): Promise<void> {
+		const sessionRecords = await queue.drainSessionRecords();
+		if (sessionRecords.length > 0) {
+			logger.info(() => ({
+				msg: `Flushing ${sessionRecords.length} queued session records to MongoDB`,
+			}));
+			for (const { record } of sessionRecords) {
+				try {
+					await db.storeSessionRecord(
+						record as Parameters<typeof db.storeSessionRecord>[0],
+					);
+				} catch (error) {
+					logger.error(() => ({
+						msg: "Failed to flush queued session record",
+						err: error,
+					}));
+				}
+			}
+		}
 	}
 
 	setLogger(logger: Logger): void {
 		// Use a logger from the request
 		this.logger = logger;
 		this.powCaptchaManager.logger = logger;
+		this.puzzleCaptchaManager.logger = logger;
 		this.datasetManager.logger = logger;
 		this.imgCaptchaManager.logger = logger;
 		this.clientTaskManager.logger = logger;

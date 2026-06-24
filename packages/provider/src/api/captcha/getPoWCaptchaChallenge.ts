@@ -18,6 +18,7 @@ import {
 	GetPowCaptchaChallengeRequestBody,
 	type GetPowCaptchaChallengeRequestBodyTypeOutput,
 	type GetPowCaptchaResponse,
+	SimdReadingsStage,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
@@ -26,8 +27,11 @@ import type { NextFunction, Request, Response } from "express";
 import { getCompositeIpAddress } from "../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
+import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
+import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 import { getRequestUserScope } from "../blacklistRequestInspector.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
+import { buildPowMaintenanceResponse } from "./maintenanceModeResponses.js";
 
 export default (
 	env: ProviderEnvironment,
@@ -39,8 +43,6 @@ export default (
 		next: NextFunction,
 	) => {
 		let parsed: GetPowCaptchaChallengeRequestBodyTypeOutput;
-		const tasks = new Tasks(env);
-		tasks.setLogger(req.logger);
 
 		try {
 			parsed = GetPowCaptchaChallengeRequestBody.parse(req.body);
@@ -54,10 +56,24 @@ export default (
 			);
 		}
 
-		const { user, dapp, sessionId } = parsed;
+		const { user, dapp, sessionId, simdReadings } = parsed;
 
 		validateSiteKey(dapp);
 		validateAddr(user);
+
+		// Maintenance-mode short-circuit must run before `new Tasks(env, ...)`
+		// because the Tasks constructor calls `env.getDb()`, which throws when
+		// `env.db` is undefined (the maintenance-mode case).
+		if (getMaintenanceMode()) {
+			req.logger.info(() => ({
+				msg: "Maintenance mode active - returning dummy PoW challenge",
+				data: { dapp, user, sessionId },
+			}));
+			return res.json(buildPowMaintenanceResponse(user, dapp));
+		}
+
+		const tasks = new Tasks(env);
+		tasks.setLogger(req.logger);
 
 		try {
 			const clientSettings = await tasks.db.getClientRecord(dapp);
@@ -72,11 +88,32 @@ export default (
 				);
 			}
 
+			const normalizedIp = normalizeRequestIp(req.ip, req.logger);
+			if (!normalizedIp) {
+				req.logger.warn(() => ({
+					msg: "Request missing IP; geoblocking will be skipped",
+				}));
+			}
+
+			// Get country code for geoblocking from middleware-provided IP info
+			const countryCode =
+				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
+					? req.ipInfo.countryCode
+					: undefined;
+			const asn =
+				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
+					? req.ipInfo.asnNumber
+					: undefined;
+
 			const userScope = getRequestUserScope(
 				flatten(req.headers),
 				req.ja4,
-				req.ip,
+				normalizedIp,
 				user,
+				undefined, // headHash
+				undefined, // coords
+				countryCode,
+				asn,
 			);
 			const userAccessPolicy = (
 				await tasks.powCaptchaManager.getPrioritisedAccessPolicies(
@@ -97,7 +134,7 @@ export default (
 				env,
 				sessionId,
 				userAccessPolicy,
-				req.ip,
+				normalizedIp,
 			);
 
 			if (!valid) {
@@ -142,6 +179,21 @@ export default (
 				difficulty,
 			);
 
+			if (validSessionId && simdReadings) {
+				await tasks.frictionlessManager
+					.decryptAndAttachSimdReadingsIfAbsent(
+						validSessionId,
+						simdReadings,
+						SimdReadingsStage.challenge,
+					)
+					.catch((updateErr) => {
+						req.logger.warn(() => ({
+							err: updateErr,
+							msg: "Failed to patch session with SIMD readings on PoW challenge",
+						}));
+					});
+			}
+
 			await tasks.db.storePowCaptchaRecord(
 				challenge.challenge,
 				{
@@ -151,10 +203,18 @@ export default (
 				},
 				challenge.difficulty,
 				challenge.providerSignature,
-				getCompositeIpAddress(req.ip || ""),
+				getCompositeIpAddress(normalizedIp),
 				flatten(req.headers),
 				req.ja4,
 				validSessionId,
+				undefined,
+				undefined,
+				undefined,
+				// Persist the full ipinfo payload — consumers (portal,
+				// anomaly detection, CHECK_IP_INFO backfill) read the
+				// individual flags off this object instead of separate
+				// flat fields.
+				req.ipInfo,
 			);
 
 			const getPowCaptchaResponse: GetPowCaptchaResponse = {

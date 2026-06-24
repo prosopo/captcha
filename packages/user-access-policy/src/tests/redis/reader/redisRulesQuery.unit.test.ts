@@ -50,7 +50,7 @@ describe("getRulesRedisQuery", () => {
 		const query = getRulesRedisQuery(filter, true);
 
 		expect(query).toBe(
-			"( ( @numericIp:[100 100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@userId) ismissing(@headersHash) ismissing(@headHash) ismissing(@coords) )",
+			"( ( @numericIp:[100 100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@userId) ismissing(@headersHash) ismissing(@headHash) ismissing(@coords) ismissing(@countryCode) ismissing(@asn) )",
 		);
 	});
 
@@ -126,7 +126,7 @@ describe("getRulesRedisQuery", () => {
 		const query = getRulesRedisQuery(filter, true);
 
 		expect(query).toBe(
-			"( ( @numericIp:[100 100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) ismissing(@headHash) ismissing(@coords) )",
+			"( ( @numericIp:[100 100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) ismissing(@headHash) ismissing(@coords) ismissing(@countryCode) ismissing(@asn) )",
 		);
 	});
 
@@ -146,8 +146,81 @@ describe("getRulesRedisQuery", () => {
 		const query = getRulesRedisQuery(filter, true);
 
 		expect(query).toBe(
-			"( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[200 +inf] @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) ismissing(@headHash) ismissing(@coords) )",
+			"( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[200 +inf] @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) ismissing(@headHash) ismissing(@coords) ismissing(@countryCode) ismissing(@asn) )",
 		);
+	});
+
+	it("emits NUMERIC range syntax for asn, not TAG syntax", () => {
+		const filter = {
+			userScope: {
+				asn: 205016,
+			},
+			userScopeMatch: FilterScopeMatch.Greedy,
+		} as AccessRulesFilter;
+
+		const query = getRulesRedisQuery(filter, false);
+
+		// asn is indexed as NUMERIC; TAG syntax (@asn:{205016}) would silently
+		// fail to match. Must use range syntax.
+		expect(query).toContain("@asn:[205016 205016]");
+		expect(query).not.toContain("@asn:{");
+	});
+
+	it("does not duplicate ismissing for numericIpMaskMin and numericIpMaskMax when matchingFieldsOnly is true and all IP fields are undefined", () => {
+		const filter = {
+			userScope: {
+				userId: "user123",
+			},
+			userScopeMatch: FilterScopeMatch.Exact,
+		} as AccessRulesFilter;
+
+		const query = getRulesRedisQuery(filter, true);
+
+		// numericIp handler emits all three ismissing clauses when all IP fields are undefined.
+		// The individual numericIpMaskMin and numericIpMaskMax handlers should not duplicate them.
+		const numericIpMaskMinMatches = query.match(
+			/ismissing\(@numericIpMaskMin\)/g,
+		);
+		const numericIpMaskMaxMatches = query.match(
+			/ismissing\(@numericIpMaskMax\)/g,
+		);
+
+		expect(numericIpMaskMinMatches).toHaveLength(1);
+		expect(numericIpMaskMaxMatches).toHaveLength(1);
+		expect(query).toContain("ismissing(@numericIp)");
+		expect(query).toContain("@userId:{user123}");
+	});
+
+	it("emits ismissing for numericIpMaskMin when numericIpMaskMax is defined but numericIpMaskMin is not", () => {
+		const filter = {
+			userScope: {
+				numericIpMaskMax: BigInt(200),
+			},
+			userScopeMatch: FilterScopeMatch.Exact,
+		} as AccessRulesFilter;
+
+		const query = getRulesRedisQuery(filter, true);
+
+		// numericIp handler returns "" because numericIpMaskMax is defined.
+		// numericIpMaskMin handler should still emit ismissing since the numericIp handler didn't cover it.
+		expect(query).toContain("ismissing(@numericIpMaskMin)");
+		expect(query).toContain("@numericIpMaskMax:[200 +inf]");
+		expect(query).not.toContain("ismissing(@numericIpMaskMax)");
+	});
+
+	it("emits ismissing for numericIpMaskMax when numericIpMaskMin is defined but numericIpMaskMax is not", () => {
+		const filter = {
+			userScope: {
+				numericIpMaskMin: BigInt(100),
+			},
+			userScopeMatch: FilterScopeMatch.Exact,
+		} as AccessRulesFilter;
+
+		const query = getRulesRedisQuery(filter, true);
+
+		expect(query).toContain("@numericIpMaskMin:[-inf 100]");
+		expect(query).toContain("ismissing(@numericIpMaskMax)");
+		expect(query).not.toContain("ismissing(@numericIpMaskMin)");
 	});
 
 	it("includes headHash in query when provided", () => {
@@ -223,5 +296,54 @@ describe("getRulesRedisQuery", () => {
 		expect(query).toContain("@ja4Hash:{ja4Hash}");
 		expect(query).toContain("@headHash:{abc123def456}");
 		expect(query).toContain("ismissing(@userAgentHash)");
+	});
+
+	it("prepends @type:{block} when blockOnly is set on the filter", () => {
+		const filter = {
+			userScope: {
+				ja4Hash: "ja4Hash",
+			},
+			userScopeMatch: FilterScopeMatch.Greedy,
+			blockOnly: true,
+		} as AccessRulesFilter;
+
+		const query = getRulesRedisQuery(filter, false);
+
+		expect(query).toContain("@type:{block}");
+		// blockOnly precedes the userScope clause so callers get the
+		// pre-filter benefit on a single Redis pass.
+		const typeIdx = query.indexOf("@type:{block}");
+		const userScopeIdx = query.indexOf("@ja4Hash");
+		expect(typeIdx).toBeGreaterThanOrEqual(0);
+		expect(typeIdx).toBeLessThan(userScopeIdx);
+	});
+
+	it("omits @type:{block} when blockOnly is not set", () => {
+		const filter = {
+			userScope: {
+				ja4Hash: "ja4Hash",
+			},
+			userScopeMatch: FilterScopeMatch.Greedy,
+		} as AccessRulesFilter;
+
+		const query = getRulesRedisQuery(filter, false);
+
+		expect(query).not.toContain("@type:");
+	});
+
+	it("composes blockOnly with clientId policy scope", () => {
+		const filter = {
+			policyScope: { clientId: "site-A" },
+			policyScopeMatch: FilterScopeMatch.Greedy,
+			userScope: { ja4Hash: "ja4Hash" },
+			userScopeMatch: FilterScopeMatch.Greedy,
+			blockOnly: true,
+		} as AccessRulesFilter;
+
+		const query = getRulesRedisQuery(filter, false);
+
+		expect(query).toContain("@type:{block}");
+		expect(query).toContain("@clientId:{site-A}");
+		expect(query).toContain("@ja4Hash:{ja4Hash}");
 	});
 });

@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Logger } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
+import type { IPInfoResponse } from "@prosopo/types";
 import type { TFunction } from "i18next";
 export interface AugmentedRequest {
 	t: TFunction;
@@ -24,6 +25,7 @@ export interface AugmentedRequest {
 	ja4: string;
 	logger: Logger;
 	requestId?: string;
+	ipInfo?: IPInfoResponse;
 }
 
 declare global {
@@ -38,6 +40,7 @@ declare global {
 			ja4: string;
 			logger: Logger;
 			requestId?: string;
+			ipInfo?: IPInfoResponse;
 		}
 	}
 }

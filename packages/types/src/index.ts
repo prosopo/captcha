@@ -15,6 +15,7 @@ export * from "./api/index.js";
 export * from "./client/index.js";
 export * from "./config/index.js";
 export * from "./datasets/index.js";
+export * from "./decisionMachine/index.js";
 export * from "./provider/index.js";
 export * from "./procaptcha/index.js";
 export * from "./procaptcha-bundle/index.js";

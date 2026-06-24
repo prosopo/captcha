@@ -1,5 +1,510 @@
 # @prosopo/user-access-policy
 
+## 3.10.8
+### Patch Changes
+
+- Updated dependencies [12cd0a6]
+- Updated dependencies [12cd0a6]
+  - @prosopo/api@3.5.5
+  - @prosopo/types@4.8.0
+
+## 3.10.7
+### Patch Changes
+
+- Updated dependencies [bb98af1]
+  - @prosopo/types@4.7.4
+  - @prosopo/api@3.5.4
+
+## 3.10.6
+### Patch Changes
+
+- Updated dependencies [89ab6fc]
+- Updated dependencies [0f3750b]
+  - @prosopo/types@4.7.3
+  - @prosopo/api@3.5.3
+
+## 3.10.5
+### Patch Changes
+
+- e89860e: Add an indexed `type` field on the access-rules Redis index and a `blockOnly` filter on `findRules`. The request-time block middleware and the verify-time hard-block check now pre-filter the candidate pool to Block rules at the Redis layer, so dense Restrict / routing-Block populations can no longer push hard-block rules past the server-side ranking cap. Schema rehash triggers automatic index recreate on next provider start.
+- Updated dependencies [edcd450]
+- Updated dependencies [5295c4b]
+  - @prosopo/util@3.3.1
+  - @prosopo/types@4.7.2
+  - @prosopo/logger@1.0.4
+  - @prosopo/api@3.5.2
+  - @prosopo/common@3.1.40
+  - @prosopo/api-route@2.6.48
+  - @prosopo/redis-client@1.0.25
+
+## 3.10.4
+### Patch Changes
+
+- Updated dependencies [46fedf4]
+  - @prosopo/types@4.7.1
+  - @prosopo/api@3.5.1
+
+## 3.10.3
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/types@4.7.0
+  - @prosopo/api@3.5.0
+
+## 3.10.2
+### Patch Changes
+
+- 6962179: fix(user-access-policy): make findRulesRanked robust to typeless candidates and IPv6 numericIp
+  
+  Two production-fatal bugs in `findRulesRanked`, both surfacing as `failed to execute ranked search query` with empty results — i.e. no rules match the request and a Block rule that should fire is silently skipped.
+  
+  1. **Typeless candidates abort the aggregate.** `SEVERITY_EXPR = '(@type == "block")'` dereferenced `@type` directly, so any candidate document missing `type` triggered `Could not find the value for a parameter name, consider using EXISTS if applicable for type`. Sources of typeless candidates in production: stale RediSearch index entries pointing at a hash whose `type` was `HDEL`'d or whose key was `DEL`'d (visible after mass cleanups), and partial-write races in the writer. Fix: `FILTER exists(@type)` step at the start of the pipeline drops malformed candidates before any APPLY runs.
+  
+  2. **`FT.AGGREGATE LOAD` returns NUMERIC fields as doubles.** RediSearch stores NUMERIC values in the index as 8-byte doubles, so any `numericIp` / `numericIpMaskMin` / `numericIpMaskMax` past `Number.MAX_SAFE_INTEGER` (every IPv6 rule) round-tripped as scientific notation (`5.59112965392e+37`) and `z.coerce.bigint()` threw `Cannot convert … to a BigInt`. The hash itself preserves the full 38-digit string. Fix: use the aggregate purely as a ranker (it returns top-N keys by spec/severity); read the field values via `HGETALL` over those keys, same pattern as `findRulesGreedy`. One extra round-trip over ≤20 keys.
+  
+  Adds three regression tests: two simulate the typeless candidate via `HDEL` (single rule + co-resident valid rule), one inserts an IPv6 `numericIp` past `2**53` and asserts the bigint comes back intact. All three fail without the respective fix.
+- Updated dependencies [4626340]
+  - @prosopo/types@4.6.1
+  - @prosopo/api@3.4.14
+
+## 3.10.1
+### Patch Changes
+
+- Updated dependencies [55b1388]
+  - @prosopo/util@3.3.0
+  - @prosopo/types@4.6.0
+  - @prosopo/logger@1.0.3
+  - @prosopo/api@3.4.13
+  - @prosopo/common@3.1.39
+  - @prosopo/api-route@2.6.47
+  - @prosopo/redis-client@1.0.24
+
+## 3.10.0
+### Minor Changes
+
+- c1c7998: Server-side specificity rank for the access-rule lookup. Strict-match callers (the `blockMiddleware` and the verify-time `checkForHardBlock`) now issue one `FT.AGGREGATE` with `APPLY exists()` for specificity, `APPLY @type == "block"` for the severity tiebreak, `SORTBY @_rank DESC`, and `LIMIT 0 20`. Node receives at most 20 fully-populated rules — no follow-up HGETALL per candidate, no JS-side rank, no silent truncation past the LIMIT (which only applies after Redis has scored every candidate the strict filter returned).
+  
+  Supersedes both the v3.6.38 regression (`b520cd94c` — FT.AGGREGATE WITHCURSOR materialising ~1190 hashes per request, pegged provider1 at ~125% CPU on pronode10) and the 3.6.38-hotfix1 shape that reverted to FT.SEARCH (re-opened the 1000-candidate silent-truncation bug). The greedy/admin path (`matchingFieldsOnly=false`) keeps the FT.AGGREGATE+CURSOR approach with a generous `GREEDY_MAX_CANDIDATES` cap since those callers do not run on the per-request hot path.
+  
+  `packages/provider/src/api/blacklistRequestInspector.ts` flips `getPrioritisedAccessRule` to `matchingFieldsOnly: true` to engage the new path. The defensive JS `rankCandidateRules` is kept so any drift between the Redis-side score and the JS semantics surfaces as ordering, not as letting traffic through. New benchmark integration test seeds 10k rules across a realistic specificity distribution and asserts p50 < 80ms / p99 < 250ms over 200 lookups; local measurement is steady at p50 ≈ 20ms, p99 ≈ 24ms.
+
+### Patch Changes
+
+- Updated dependencies [9b91e85]
+- Updated dependencies [c80a05b]
+  - @prosopo/types@4.5.0
+  - @prosopo/api@3.4.12
+
+## 3.9.1
+### Patch Changes
+
+- b520cd9: Paginate the greedy `findRules` RediSearch query via `FT.AGGREGATE WITHCURSOR` so the candidate set is no longer truncated at `REDIS_BATCH_SIZE` (1000). Under high-volume bot traffic, a single popular ja4 fingerprint can be carried by thousands of rules; the OR-style greedy query returned > 1000 candidates and `FT.SEARCH`'s LIMIT silently dropped the tail — block rules emitted by less-frequent detectors sat past offset 1000 and never reached the JS-side specificity sort, letting matching requests through. Aggregation cursors return the full result set, so ranking sees every candidate.
+
+## 3.9.0
+### Minor Changes
+
+- 4da8941: Add `deferToVerify` flag on `AccessPolicy` so a Block policy can skip the request-time `blockMiddleware` (no 401 at the captcha endpoint) and fire instead at the verify step. The behaviour mirrors the existing coords-rule deferral pattern: today the middleware blanks out coords from the userScope, so coords-only rules can only ever match in the verify path. `deferToVerify` is the explicit version of that for other signals (ja4Hash, headersHash, etc.) — useful when you want the attacker to pay the captcha-solving cost and the dApp to silently receive `{verified: false}` instead of the bot's frontend seeing a 401.
+  
+  Wiring:
+  
+  - `BlacklistRequestInspector.shouldAbortRequest` filters out matching policies that have `deferToVerify` before picking the top hit. Those policies never short-circuit the middleware.
+  - `CaptchaManager.findHardBlockPolicy` widens its matcher: a Block policy now counts as a hard block when it has either no `captchaType` (existing behaviour) **or** `deferToVerify === true`. The check is invoked from `imgCaptchaTasks.dappUserSolution`, `powTasks.serverVerifyPowCaptcha`, and `puzzleTasks.verifyPuzzleCaptchaSolution`, so the deferral applies to all three captcha types.
+  - Persistence: `deferToVerify` lands on the mongo `accessPolicySchema` (Boolean) and the zod `accessPolicyInput` (with a string→boolean preprocess so the Redis round-trip works).
+  
+  Motivating use case: a set of spoofed-JA4 hard-block rules pushed 2026-06-12. Marking those `deferToVerify: true` would still reject the attacker at verify but force them to complete N image captcha rounds and surface behavioural data on the commitment record before the rejection — useful for both telemetry and operator-side friction.
+
+### Patch Changes
+
+- 70ef67a: Add explicit `ZodType<T, ZodTypeDef, unknown>` annotations to `accessRuleInput`, `ruleEntryInput`, and `fetchRulesResponse`. The `z.preprocess` on `deferToVerify` widens the input position to `unknown`; without an explicit annotation TS emits an unnameable inferred type and parent repos that import these schemas fail typecheck with TS2742.
+- 4226c59: Support IPv6 in access rule input transforms.
+  
+  The portal-side ticket [prosopo/captcha-private#3379](https://github.com/prosopo/captcha-private/issues/3379) enables IPv6 rule creation. The CIDR parser in `userScopeInput` and the numeric→string reverse path in `transformRule` were both IPv4-only and would crash or produce wrong addresses when an IPv6 rule reached the provider.
+  
+  - `userScopeInput.ts`: dispatch CIDR parsing to `Address4` vs `Address6` via `Address4.isValid`; both expose `startAddress()/endAddress().bigInt()`.
+  - `transformRule.ts`: `getStringIpFromNumeric` now uses `Address6.fromBigInt(...).correctForm()` for numeric values above `2^32 - 1`, keeping `Address4.fromInteger(...)` for IPv4 range.
+  - Adds a round-trip unit test for `2001:db8::1` + `/32` mask, plus three IPv6 CIDR cases (`/32`, `/64`, `/10`) alongside the existing IPv4 set.
+- Updated dependencies [f69724f]
+- Updated dependencies [3973078]
+  - @prosopo/types@4.4.1
+  - @prosopo/api@3.4.11
+
+## 3.8.1
+### Patch Changes
+
+- Updated dependencies [bc3813d]
+- Updated dependencies [4d05e3f]
+  - @prosopo/types@4.4.0
+  - @prosopo/api@3.4.10
+
+## 3.8.0
+### Minor Changes
+
+- 2f459ce: Add `asn` as a user-scope field for access rules. The captcha provider can now block / restrict by Autonomous System Number, matching what the protect/bumblebee tier already supports. ASN is read from `ipInfo.asnNumber` and threaded through `getRequestUserScope` and `checkForHardBlock` at all challenge entry points. Redis index gains a NUMERIC `asn` field with range-syntax lookups.
+
+## 3.7.12
+### Patch Changes
+
+- Updated dependencies [b03dad1]
+  - @prosopo/types@4.3.1
+  - @prosopo/api@3.4.9
+
+## 3.7.11
+### Patch Changes
+
+- Updated dependencies [a1d60db]
+- Updated dependencies [2392aaf]
+- Updated dependencies [97cf7bd]
+- Updated dependencies [6ca1125]
+- Updated dependencies [32a591b]
+  - @prosopo/types@4.3.0
+  - @prosopo/logger@1.0.2
+  - @prosopo/util@3.2.15
+  - @prosopo/api@3.4.8
+  - @prosopo/common@3.1.38
+  - @prosopo/api-route@2.6.46
+  - @prosopo/redis-client@1.0.23
+
+## 3.7.10
+### Patch Changes
+
+- Updated dependencies [6c26669]
+- Updated dependencies [f7f9ec5]
+  - @prosopo/types@4.2.1
+  - @prosopo/api@3.4.7
+
+## 3.7.9
+### Patch Changes
+
+- 0fd81af: Extract the logger into its own `@prosopo/logger` package, out of `@prosopo/common`. Consumers now import logger symbols from `@prosopo/logger`; `@prosopo/common` no longer re-exports them. Unused `@prosopo/common` dependencies pruned where the only usage was the logger.
+- Updated dependencies [0fd81af]
+  - @prosopo/api-route@2.6.45
+  - @prosopo/common@3.1.37
+  - @prosopo/logger@1.0.1
+  - @prosopo/redis-client@1.0.22
+
+## 3.7.8
+### Patch Changes
+
+- Updated dependencies [20cae63]
+- Updated dependencies [4d9923e]
+  - @prosopo/types@4.2.0
+  - @prosopo/api@3.4.6
+
+## 3.7.7
+### Patch Changes
+
+- Updated dependencies [d351362]
+  - @prosopo/types@4.1.4
+  - @prosopo/api@3.4.5
+
+## 3.7.6
+### Patch Changes
+
+- Updated dependencies [6567ce0]
+- Updated dependencies [e2711ae]
+- Updated dependencies [5786629]
+  - @prosopo/util@3.2.14
+  - @prosopo/types@4.1.3
+  - @prosopo/api@3.4.4
+  - @prosopo/common@3.1.36
+  - @prosopo/api-route@2.6.44
+  - @prosopo/redis-client@1.0.21
+
+## 3.7.5
+### Patch Changes
+
+- Updated dependencies [72a1218]
+  - @prosopo/util@3.2.13
+  - @prosopo/types@4.1.2
+  - @prosopo/api@3.4.3
+
+## 3.7.4
+### Patch Changes
+
+- Updated dependencies [91958da]
+  - @prosopo/api@3.4.2
+  - @prosopo/types@4.1.1
+  - @prosopo/common@3.1.35
+  - @prosopo/api-route@2.6.43
+  - @prosopo/redis-client@1.0.20
+
+## 3.7.3
+### Patch Changes
+
+- Updated dependencies [6a741ce]
+  - @prosopo/types@4.1.0
+  - @prosopo/api@3.4.1
+
+## 3.7.2
+### Patch Changes
+
+- 72a0483: User Access Policy (UAP) rule endpoints now use the per-request logger
+  passed by the express adapter, instead of the long-lived app logger
+  captured at construction time. This means every "Endpoint inserted access
+  rules" / "Endpoint fetched rules" / "Endpoint deleted rules" / etc. log
+  line now carries `requestId`, `siteKey`, and `user`, matching the rest of
+  the provider API and making the logs queryable per-request in OpenObserve.
+  
+  Each `processRequest(args, logger?)` resolves to the request logger when
+  present and falls back to `this.logger` otherwise, preserving behaviour
+  when called directly (e.g. from a script or unit test that doesn't pass
+  a logger). The express adapter at
+  `api-express-router/.../apiExpressDefaultEndpointAdapter.ts` already
+  passes `request.logger` — no router-level changes needed.
+  
+  Touched endpoints (all under `packages/user-access-policy/src/api/`):
+  `InsertRulesEndpoint`, `RehashRulesEndpoint`, `FetchRulesEndpoint`,
+  `FindRuleIdsEndpoint`, `GetMissingIdsEndpoint`, `DeleteRulesEndpoint`,
+  `DeleteAllRulesEndpoint`, `DeleteRuleGroupsEndpoint`.
+- Updated dependencies [3c0be68]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [d865319]
+- Updated dependencies [753304b]
+- Updated dependencies [8bb7286]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [4993813]
+  - @prosopo/types@4.0.0
+  - @prosopo/api@3.4.0
+  - @prosopo/util@3.2.12
+  - @prosopo/common@3.1.34
+  - @prosopo/api-route@2.6.42
+  - @prosopo/redis-client@1.0.19
+
+## 3.7.1
+### Patch Changes
+
+- Updated dependencies [819ed95]
+  - @prosopo/types@3.16.1
+  - @prosopo/api@3.3.2
+
+## 3.7.0
+### Minor Changes
+
+- 60ba3b1: Fix for rules that expire before being removed from index.
+
+## 3.6.24
+### Patch Changes
+
+- Updated dependencies [f6a4402]
+- Updated dependencies [99dfb44]
+  - @prosopo/types@3.16.0
+  - @prosopo/api@3.3.1
+
+## 3.6.23
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+  - @prosopo/api@3.3.0
+
+## 3.6.22
+### Patch Changes
+
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+  - @prosopo/types@3.14.1
+  - @prosopo/api@3.2.11
+  - @prosopo/common@3.1.33
+  - @prosopo/api-route@2.6.41
+  - @prosopo/redis-client@1.0.18
+
+## 3.6.21
+### Patch Changes
+
+- Updated dependencies [fc514dd]
+- Updated dependencies [7be39c4]
+- Updated dependencies [42650db]
+  - @prosopo/types@3.14.0
+  - @prosopo/api@3.2.10
+  - @prosopo/common@3.1.32
+  - @prosopo/api-route@2.6.40
+  - @prosopo/redis-client@1.0.17
+
+## 3.6.20
+### Patch Changes
+
+- Updated dependencies [4a9c518]
+  - @prosopo/common@3.1.31
+  - @prosopo/api-route@2.6.39
+  - @prosopo/redis-client@1.0.16
+
+## 3.6.19
+### Patch Changes
+
+- Updated dependencies [a25dffa]
+  - @prosopo/util@3.2.11
+  - @prosopo/types@3.13.3
+  - @prosopo/api@3.2.9
+
+## 3.6.18
+### Patch Changes
+
+- Updated dependencies [346edd7]
+  - @prosopo/util@3.2.10
+  - @prosopo/types@3.13.2
+  - @prosopo/api@3.2.8
+
+## 3.6.17
+### Patch Changes
+
+- Updated dependencies [22bfee7]
+  - @prosopo/util@3.2.9
+  - @prosopo/types@3.13.1
+  - @prosopo/api@3.2.7
+
+## 3.6.16
+### Patch Changes
+
+- Updated dependencies [e0fb3d6]
+- Updated dependencies [e6d9553]
+- Updated dependencies [f3f23e3]
+  - @prosopo/util@3.2.8
+  - @prosopo/types@3.13.0
+  - @prosopo/api@3.2.6
+
+## 3.6.15
+### Patch Changes
+
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/types@3.12.3
+  - @prosopo/util@3.2.7
+  - @prosopo/api@3.2.5
+
+## 3.6.14
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/types@3.12.2
+  - @prosopo/util@3.2.6
+  - @prosopo/api@3.2.4
+  - @prosopo/common@3.1.30
+  - @prosopo/api-route@2.6.38
+  - @prosopo/redis-client@1.0.15
+
+## 3.6.13
+### Patch Changes
+
+- Updated dependencies [c5ee492]
+- Updated dependencies [a90eb54]
+  - @prosopo/common@3.1.29
+  - @prosopo/types@3.12.1
+  - @prosopo/api-route@2.6.37
+  - @prosopo/redis-client@1.0.14
+  - @prosopo/api@3.2.3
+
+## 3.6.12
+### Patch Changes
+
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/types@3.12.0
+  - @prosopo/api@3.2.2
+
+## 3.6.11
+### Patch Changes
+
+- Updated dependencies [8148587]
+  - @prosopo/types@3.11.1
+  - @prosopo/api@3.2.1
+
+## 3.6.10
+### Patch Changes
+
+- Updated dependencies [7f6ffc5]
+  - @prosopo/types@3.11.0
+  - @prosopo/api@3.2.0
+
+## 3.6.9
+### Patch Changes
+
+- Updated dependencies [93fa086]
+  - @prosopo/types@3.10.2
+  - @prosopo/api@3.1.49
+
+## 3.6.8
+### Patch Changes
+
+- Updated dependencies [cde7550]
+  - @prosopo/types@3.10.1
+  - @prosopo/api@3.1.48
+
+## 3.6.7
+### Patch Changes
+
+- Updated dependencies [ad6d622]
+  - @prosopo/types@3.10.0
+  - @prosopo/api@3.1.47
+
+## 3.6.6
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+  - @prosopo/types@3.9.0
+  - @prosopo/api@3.1.46
+
+## 3.6.5
+### Patch Changes
+
+- Updated dependencies [d2431cd]
+  - @prosopo/types@3.8.4
+  - @prosopo/api@3.1.45
+
+## 3.6.4
+### Patch Changes
+
+- bd6995b: Adding UAP based geoblocking rules
+- Updated dependencies [bd6995b]
+  - @prosopo/types@3.8.3
+  - @prosopo/api@3.1.44
+
+## 3.6.3
+### Patch Changes
+
+- Updated dependencies [9633e58]
+  - @prosopo/types@3.8.2
+  - @prosopo/api@3.1.43
+
+## 3.6.2
+### Patch Changes
+
+- Updated dependencies [f52a5c1]
+  - @prosopo/types@3.8.1
+  - @prosopo/api@3.1.42
+
+## 3.6.1
+### Patch Changes
+
+- ed87b6f: Fix authentication in uaps
+
+## 3.6.0
+### Minor Changes
+
+- 17854a7: fix deleteAll endpoint throwing a recursion limit when too many rules are in redis
+
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+- Updated dependencies [a53526b]
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [7543d17]
+- Updated dependencies [3acc333]
+  - @prosopo/util@3.2.5
+  - @prosopo/types@3.8.0
+  - @prosopo/redis-client@1.0.13
+  - @prosopo/api-route@2.6.36
+  - @prosopo/common@3.1.28
+  - @prosopo/api@3.1.41
+
 ## 3.5.37
 ### Patch Changes
 

@@ -1,5 +1,90 @@
 # @prosopo/fingerprint
 
+## 2.7.5
+### Patch Changes
+
+- Updated dependencies [12cd0a6]
+- Updated dependencies [12cd0a6]
+  - @prosopo/types@4.8.0
+
+## 2.7.4
+### Patch Changes
+
+- Updated dependencies [bb98af1]
+  - @prosopo/types@4.7.4
+
+## 2.7.3
+### Patch Changes
+
+- Updated dependencies [89ab6fc]
+- Updated dependencies [0f3750b]
+  - @prosopo/types@4.7.3
+
+## 2.7.2
+### Patch Changes
+
+- Updated dependencies [edcd450]
+- Updated dependencies [5295c4b]
+  - @prosopo/types@4.7.2
+
+## 2.7.1
+### Patch Changes
+
+- Updated dependencies [46fedf4]
+  - @prosopo/types@4.7.1
+
+## 2.7.0
+### Minor Changes
+
+- dde23e8: Internal bot-detection signal improvements.
+
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/types@4.7.0
+
+## 2.6.31
+### Patch Changes
+
+- 642d064: Bump `@prosopo/fingerprintjs` to 5.2.0 to mirror the upstream v5.2.0
+  release brought into the fork by the earlier upstream merge. Also
+  aligns the fork's `@prosopo/config` devDependency with the workspace
+  pin (3.3.0 → 3.3.1).
+- Updated dependencies [642d064]
+  - @prosopo/fingerprintjs@5.3.0
+
+## 2.6.30
+### Patch Changes
+
+- 4aae4e6: Drop `webGlExtensions` from the FpJS visitorId source list to remove the
+  1.5–2s WebGL extension/parameter walk from the account-creation critical
+  path. Done at the wrapper level — `@prosopo/fingerprint` now calls
+  `loadSources(sources, opts, ['webGlExtensions'])` directly instead of the
+  default `FingerprintJS.load().get()`, so the fork's source list is
+  unchanged. `webGlBasics` (vendor + `UNMASKED_RENDERER_WEBGL`) is kept
+  because that's where most of WebGL's entropy lives; the slow extension
+  walk is largely redundant with the basics + canvas signals already in the
+  hash. Existing visitorIds will rotate once on first load.
+  
+  Also merges upstream FpJS v5.2.0 into the fork, picking up the new
+  `userAgentData` entropy source, Firefox zoom fix for font preferences,
+  and dep bumps.
+- Updated dependencies [4aae4e6]
+  - @prosopo/fingerprintjs@5.2.0
+
+## 2.6.29
+### Patch Changes
+
+- 730c61e: Speed up captcha
+
+## 2.6.28
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+
 ## 2.6.27
 ### Patch Changes
 

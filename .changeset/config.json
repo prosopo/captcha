@@ -5,7 +5,7 @@
 	"prettier": false,
 	"fixed": [],
 	"linked": [],
-	"access": "restricted",
+	"access": "public",
 	"baseBranch": "origin/main",
 	"updateInternalDependencies": "patch",
 	"ignore": []

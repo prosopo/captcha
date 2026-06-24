@@ -12,15 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { RedisWriteQueue } from "@prosopo/database";
 import { type ProsopoConfigOutput, ScheduledTaskStatus } from "@prosopo/types";
-import { Environment } from "./env.js";
+import { Environment, isMaintenanceMode } from "./env.js";
 
 export class ProviderEnvironment extends Environment {
 	declare config: ProsopoConfigOutput;
 
 	cleanup(): void {
-		this.getDb()
-			.cleanupScheduledTaskStatus(ScheduledTaskStatus.Running)
+		// Maintenance mode (or any startup that failed to bring the DB up) means
+		// neither Mongo collections nor Redis connections are wired. Skip both
+		// cleanup tasks — they'd throw synchronously and crash boot.
+		const dbConnected = this.db?.connected ?? false;
+		if (!dbConnected || isMaintenanceMode()) {
+			this.logger.warn(() => ({
+				msg: "Skipping startup cleanup — DB not connected (maintenance mode or boot-time DB failure)",
+			}));
+			return;
+		}
+
+		this.db
+			?.cleanupScheduledTaskStatus(ScheduledTaskStatus.Running)
 			.catch((err) => {
 				this.logger.error(() => ({
 					msg: "Failed to cleanup running scheduled tasks",
@@ -28,5 +40,26 @@ export class ProviderEnvironment extends Environment {
 					data: { failedFuncName: this.cleanup.name },
 				}));
 			});
+
+		// Wipe any Redis session keys carried over from an earlier (possibly
+		// crashed) provider run. A stale hash → sessionId mapping can
+		// resurrect a Mongo-deleted session and break the next captcha
+		// attempt for that user+IP+sitekey.
+		try {
+			const redisConnection = this.getDb().getRedisConnection();
+			const writeQueue = new RedisWriteQueue(redisConnection, this.logger);
+			writeQueue.clearAllSessionRecords().catch((err) => {
+				this.logger.error(() => ({
+					msg: "Failed to clear Redis session records at startup",
+					err,
+					data: { failedFuncName: this.cleanup.name },
+				}));
+			});
+		} catch (err) {
+			this.logger.warn(() => ({
+				msg: "Skipped Redis session cleanup — no Redis connection",
+				err,
+			}));
+		}
 	}
 }

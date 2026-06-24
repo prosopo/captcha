@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect, it } from "vitest";
-import { validateDomain } from "../url.js";
+import {
+	buildDomainSuffixCandidates,
+	decodeGoogleTranslateHost,
+	validateDomain,
+} from "../url.js";
 
 describe("url", () => {
 	it("validates valid domains", () => {
@@ -59,5 +63,123 @@ describe("url", () => {
 				`${"a".repeat(62)}.${"a".repeat(62)}.${"a".repeat(62)}.${"a".repeat(62)}.co`,
 			),
 		).to.equal(false);
+	});
+	it("does not validate a domain containing consecutive dots", () => {
+		expect(validateDomain("google..com")).to.equal(false);
+	});
+	it("does not validate a domain with a trailing dot", () => {
+		expect(validateDomain("google.com.")).to.equal(false);
+	});
+});
+
+describe("buildDomainSuffixCandidates", () => {
+	it("should return all suffix candidates for a multi-level domain, excluding the TLD", () => {
+		const result = buildDomainSuffixCandidates("mail.fakemail.app");
+		expect(result).toEqual(["mail.fakemail.app", "fakemail.app"]);
+	});
+
+	it("should return a single element for a two-level domain", () => {
+		const result = buildDomainSuffixCandidates("fakemail.app");
+		expect(result).toEqual(["fakemail.app"]);
+	});
+
+	it("should return an empty array for a domain without dots (TLD only)", () => {
+		const result = buildDomainSuffixCandidates("localhost");
+		expect(result).toEqual([]);
+	});
+
+	it("should return an empty array for an empty string", () => {
+		const result = buildDomainSuffixCandidates("");
+		expect(result).toEqual([]);
+	});
+
+	it("should handle deep subdomains correctly, excluding the TLD", () => {
+		const result = buildDomainSuffixCandidates("a.b.c.d.example.com");
+		expect(result).toEqual([
+			"a.b.c.d.example.com",
+			"b.c.d.example.com",
+			"c.d.example.com",
+			"d.example.com",
+			"example.com",
+		]);
+	});
+
+	it("should return an empty array for a domain with consecutive dots (empty label)", () => {
+		const result = buildDomainSuffixCandidates("test..domain");
+		expect(result).toEqual([]);
+	});
+
+	it("should strip a trailing dot (FQDN notation) and return valid candidates", () => {
+		const result = buildDomainSuffixCandidates("example.com.");
+		expect(result).toEqual(["example.com"]);
+	});
+
+	it("should return an empty array for a domain starting with a dot (empty label)", () => {
+		const result = buildDomainSuffixCandidates(".example.com");
+		expect(result).toEqual([]);
+	});
+
+	it("should normalize to lowercase", () => {
+		const result = buildDomainSuffixCandidates("Mail.FakeMail.App");
+		expect(result).toEqual(["mail.fakemail.app", "fakemail.app"]);
+	});
+
+	it("should trim surrounding whitespace before processing", () => {
+		const result = buildDomainSuffixCandidates("  example.com  ");
+		expect(result).toEqual(["example.com"]);
+	});
+
+	it("should return candidates in order from most specific to least specific", () => {
+		const result = buildDomainSuffixCandidates("sub.domain.tld");
+		expect(result[0]).toBe("sub.domain.tld");
+		expect(result[result.length - 1]).toBe("domain.tld");
+	});
+});
+
+describe("decodeGoogleTranslateHost", () => {
+	it("decodes a simple two-label domain", () => {
+		expect(decodeGoogleTranslateHost("prosopo-io.translate.goog")).toBe(
+			"prosopo.io",
+		);
+	});
+
+	it("decodes a domain with subdomains", () => {
+		expect(decodeGoogleTranslateHost("www-example-com.translate.goog")).toBe(
+			"www.example.com",
+		);
+	});
+
+	it("decodes a domain containing a dash (double-dash encoding)", () => {
+		expect(decodeGoogleTranslateHost("my--site-com.translate.goog")).toBe(
+			"my-site.com",
+		);
+	});
+
+	it("decodes a domain with mixed dashes and subdomains", () => {
+		expect(decodeGoogleTranslateHost("foo-my--site-co-uk.translate.goog")).toBe(
+			"foo.my-site.co.uk",
+		);
+	});
+
+	it("is case-insensitive on the suffix", () => {
+		expect(decodeGoogleTranslateHost("Prosopo-IO.Translate.Goog")).toBe(
+			"prosopo.io",
+		);
+	});
+
+	it("ignores a trailing dot on the FQDN", () => {
+		expect(decodeGoogleTranslateHost("prosopo-io.translate.goog.")).toBe(
+			"prosopo.io",
+		);
+	});
+
+	it("returns null for non-translate.goog hosts", () => {
+		expect(decodeGoogleTranslateHost("prosopo.io")).toBeNull();
+		expect(decodeGoogleTranslateHost("translate.google.com")).toBeNull();
+		expect(decodeGoogleTranslateHost("translate.goog")).toBeNull();
+	});
+
+	it("returns null for an empty encoded subdomain", () => {
+		expect(decodeGoogleTranslateHost(".translate.goog")).toBeNull();
 	});
 });

@@ -1,4 +1,4 @@
-import { getLogger } from "@prosopo/common";
+import { getLogger } from "@prosopo/logger";
 import { errorHandler } from "../errorHandler.js";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
 //

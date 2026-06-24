@@ -17,7 +17,8 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import type { AllKeys, Logger } from "@prosopo/common";
+import type { AllKeys } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import { type ZodType, z } from "zod";
 import { ruleEntryInput } from "#policy/ruleInput/ruleInput.js";
 import type {
@@ -35,9 +36,17 @@ export type FetchRulesResponse = {
 	ruleEntries: AccessRuleEntry[];
 };
 
-export const fetchRulesResponse = z.object({
+// Explicit annotation with `unknown` input position rather than the
+// strict identity form because `ruleEntryInput.rule` transitively uses
+// `z.preprocess` on `deferToVerify`. Required for portable declaration
+// emit; the `AllKeys<...>` constraint still catches missing fields.
+export const fetchRulesResponse: ZodType<
+	FetchRulesResponse,
+	z.ZodTypeDef,
+	unknown
+> = z.object({
 	ruleEntries: ruleEntryInput.array(),
-} satisfies AllKeys<FetchRulesResponse>) satisfies ZodType<FetchRulesResponse>;
+} satisfies AllKeys<FetchRulesResponse>);
 
 export type FetchRulesEndpointResponse = ApiEndpointResponse & {
 	data?: FetchRulesResponse;
@@ -57,10 +66,12 @@ export class FetchRulesEndpoint implements ApiEndpoint<FetchRulesSchema> {
 
 	async processRequest(
 		args: FetchRulesOptions,
+		logger?: Logger,
 	): Promise<FetchRulesEndpointResponse> {
+		const log = logger ?? this.logger;
 		const ruleEntries = await this.accessRulesStorage.fetchRules(args.ids);
 
-		this.logger.info(() => ({
+		log.info(() => ({
 			msg: "Endpoint fetched rules",
 			data: {
 				requestedCount: args.ids.length,
@@ -68,7 +79,7 @@ export class FetchRulesEndpoint implements ApiEndpoint<FetchRulesSchema> {
 			},
 		}));
 
-		this.logger.debug(() => ({
+		log.debug(() => ({
 			msg: "Fetched rule details",
 			data: {
 				ruleEntries: ruleEntries,

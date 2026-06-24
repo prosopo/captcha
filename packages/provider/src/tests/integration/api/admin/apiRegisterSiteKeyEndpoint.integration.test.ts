@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { ApiEndpointResponseStatus } from "@prosopo/api-route";
-import type { Logger } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import {
 	CaptchaType,
 	ContextType,
@@ -63,7 +63,11 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 				domains: [],
 				frictionlessThreshold: 0.5,
 				imageThreshold: 0.5,
+				imageMaxRounds: 3,
 				powDifficulty: 0.5,
+				verifiedTimeout: 120000,
+				solutionTimeout: 60000,
+				puzzleTolerance: 15,
 				disallowWebView: false,
 				contextAware: {
 					enabled: false,
@@ -99,7 +103,11 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 				domains: [],
 				frictionlessThreshold: 0.5,
 				imageThreshold: 0.5,
+				imageMaxRounds: 3,
 				powDifficulty: 0.5,
+				verifiedTimeout: 120000,
+				solutionTimeout: 60000,
+				puzzleTolerance: 15,
 				disallowWebView: false,
 				contextAware: {
 					enabled: false,

@@ -21,6 +21,8 @@ import {
 	type CaptchaResponseBody,
 	CaptchaType,
 	type ProsopoCaptchaCountConfigSchemaOutput,
+	SimdReadingsStage,
+	imageMaxRoundsDefault,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
@@ -28,8 +30,11 @@ import { flatten, getIPAddress } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
+import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
+import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 import { getRequestUserScope } from "../blacklistRequestInspector.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
+import { buildImageMaintenanceResponse } from "./maintenanceModeResponses.js";
 
 export default (
 	env: ProviderEnvironment,
@@ -40,10 +45,10 @@ export default (
 		res: Response,
 		next: NextFunction,
 	) => {
-		const tasks = new Tasks(env, req.logger);
 		let parsed: CaptchaRequestBodyTypeOutput;
 
-		if (!req.ip) {
+		const normalizedIp = normalizeRequestIp(req.ip, req.logger);
+		if (!normalizedIp) {
 			return next(
 				new ProsopoApiError("API.BAD_REQUEST", {
 					context: { code: 400, error: "IP address not found" },
@@ -53,7 +58,7 @@ export default (
 			);
 		}
 
-		const ipAddress = getIPAddress(req.ip || "");
+		const ipAddress = getIPAddress(normalizedIp);
 
 		try {
 			parsed = CaptchaRequestBody.parse(req.body);
@@ -67,10 +72,48 @@ export default (
 			);
 		}
 
-		const { datasetId, user, dapp, sessionId } = parsed;
+		const {
+			datasetId: clientDatasetId,
+			user,
+			dapp,
+			sessionId,
+			simdReadings,
+		} = parsed;
+
+		// Clients no longer send datasetId (DNS routes them to an arbitrary
+		// pronode; they can't know in advance which dataset to pin). Fall back
+		// to the env's default — populated from the most-recently-uploaded
+		// dataset at startup, see `Environment.isReady` in packages/env.
+		const datasetId = clientDatasetId ?? env.datasetId;
+
+		if (!datasetId) {
+			return next(
+				new ProsopoApiError("API.BAD_REQUEST", {
+					context: {
+						code: 400,
+						error: "No dataset available. Please upload a dataset first.",
+					},
+					i18n: req.i18n,
+					logger: req.logger,
+				}),
+			);
+		}
 
 		validateSiteKey(dapp);
 		validateAddr(user);
+
+		// Maintenance-mode short-circuit must run before `new Tasks(env, ...)`
+		// because the Tasks constructor calls `env.getDb()`, which throws when
+		// `env.db` is undefined (the maintenance-mode case).
+		if (getMaintenanceMode()) {
+			req.logger.info(() => ({
+				msg: "Maintenance mode active - returning dummy image challenge",
+				data: { dapp, user, sessionId },
+			}));
+			return res.json(buildImageMaintenanceResponse());
+		}
+
+		const tasks = new Tasks(env, req.logger);
 
 		try {
 			const clientRecord = await tasks.db.getClientRecord(dapp);
@@ -85,11 +128,25 @@ export default (
 				);
 			}
 
+			// Get country code for geoblocking from middleware-provided IP info
+			const countryCode =
+				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
+					? req.ipInfo.countryCode
+					: undefined;
+			const asn =
+				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
+					? req.ipInfo.asnNumber
+					: undefined;
+
 			const userScope = getRequestUserScope(
 				flatten(req.headers),
 				req.ja4,
-				req.ip,
+				normalizedIp,
 				user,
+				undefined, // headHash
+				undefined, // coords
+				countryCode,
+				asn,
 			);
 			const userAccessPolicy = (
 				await tasks.imgCaptchaManager.getPrioritisedAccessPolicies(
@@ -110,7 +167,7 @@ export default (
 				env,
 				sessionId,
 				userAccessPolicy,
-				req.ip,
+				normalizedIp,
 			);
 
 			if (!valid) {
@@ -129,10 +186,12 @@ export default (
 
 			const captchaConfig: ProsopoCaptchaCountConfigSchemaOutput = {
 				solved: {
-					count:
+					count: Math.min(
 						solvedImagesCount ||
-						userAccessPolicy?.solvedImagesCount ||
-						env.config.captchas.solved.count,
+							userAccessPolicy?.solvedImagesCount ||
+							env.config.captchas.solved.count,
+						clientRecord.settings.imageMaxRounds ?? imageMaxRoundsDefault,
+					),
 				},
 				unsolved: {
 					count:
@@ -140,6 +199,21 @@ export default (
 						env.config.captchas.unsolved.count,
 				},
 			};
+
+			if (validSessionId && simdReadings) {
+				await tasks.frictionlessManager
+					.decryptAndAttachSimdReadingsIfAbsent(
+						validSessionId,
+						simdReadings,
+						SimdReadingsStage.challenge,
+					)
+					.catch((updateErr) => {
+						req.logger.warn(() => ({
+							err: updateErr,
+							msg: "Failed to patch session with SIMD readings on image challenge",
+						}));
+					});
+			}
 
 			const taskData =
 				await tasks.imgCaptchaManager.getRandomCaptchasAndRequestHash(
@@ -149,6 +223,10 @@ export default (
 					captchaConfig,
 					clientRecord.settings.imageThreshold ?? 0.8,
 					validSessionId,
+					// Persist the full ipinfo payload — consumers read
+					// individual flags off this object instead of separate
+					// flat fields.
+					req.ipInfo,
 				);
 			const captchaResponse: CaptchaResponseBody = {
 				[ApiParams.status]: "ok",

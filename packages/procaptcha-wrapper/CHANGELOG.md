@@ -1,5 +1,314 @@
 # @prosopo/procaptcha-wrapper
 
+## 2.6.90
+### Patch Changes
+
+- Updated dependencies [12cd0a6]
+- Updated dependencies [12cd0a6]
+  - @prosopo/types@4.8.0
+
+## 2.6.89
+### Patch Changes
+
+- Updated dependencies [bb98af1]
+  - @prosopo/types@4.7.4
+
+## 2.6.88
+### Patch Changes
+
+- Updated dependencies [89ab6fc]
+- Updated dependencies [0f3750b]
+  - @prosopo/types@4.7.3
+
+## 2.6.87
+### Patch Changes
+
+- Updated dependencies [edcd450]
+- Updated dependencies [5295c4b]
+  - @prosopo/types@4.7.2
+  - @prosopo/locale@3.2.5
+
+## 2.6.86
+### Patch Changes
+
+- Updated dependencies [46fedf4]
+  - @prosopo/types@4.7.1
+
+## 2.6.85
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/types@4.7.0
+
+## 2.6.84
+### Patch Changes
+
+- Updated dependencies [4626340]
+  - @prosopo/types@4.6.1
+
+## 2.6.83
+### Patch Changes
+
+- Updated dependencies [55b1388]
+  - @prosopo/types@4.6.0
+
+## 2.6.82
+### Patch Changes
+
+- Updated dependencies [9b91e85]
+- Updated dependencies [c80a05b]
+  - @prosopo/types@4.5.0
+
+## 2.6.81
+### Patch Changes
+
+- Updated dependencies [f69724f]
+- Updated dependencies [3973078]
+  - @prosopo/types@4.4.1
+
+## 2.6.80
+### Patch Changes
+
+- Updated dependencies [bc3813d]
+- Updated dependencies [4d05e3f]
+  - @prosopo/types@4.4.0
+
+## 2.6.79
+### Patch Changes
+
+- Updated dependencies [b03dad1]
+  - @prosopo/types@4.3.1
+
+## 2.6.78
+### Patch Changes
+
+- Updated dependencies [a1d60db]
+- Updated dependencies [2392aaf]
+  - @prosopo/types@4.3.0
+
+## 2.6.77
+### Patch Changes
+
+- Updated dependencies [6c26669]
+- Updated dependencies [f7f9ec5]
+  - @prosopo/types@4.2.1
+
+## 2.6.76
+### Patch Changes
+
+- Updated dependencies [20cae63]
+- Updated dependencies [4d9923e]
+  - @prosopo/types@4.2.0
+
+## 2.6.75
+### Patch Changes
+
+- Updated dependencies [d351362]
+  - @prosopo/types@4.1.4
+
+## 2.6.74
+### Patch Changes
+
+- Updated dependencies [e2711ae]
+- Updated dependencies [5786629]
+  - @prosopo/types@4.1.3
+  - @prosopo/locale@3.2.4
+
+## 2.6.73
+### Patch Changes
+
+  - @prosopo/types@4.1.2
+
+## 2.6.72
+### Patch Changes
+
+- Updated dependencies [53bfd45]
+- Updated dependencies [91958da]
+  - @prosopo/locale@3.2.3
+  - @prosopo/types@4.1.1
+
+## 2.6.71
+### Patch Changes
+
+- Updated dependencies [6a741ce]
+  - @prosopo/types@4.1.0
+
+## 2.6.70
+### Patch Changes
+
+- Updated dependencies [3c0be68]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [d865319]
+- Updated dependencies [753304b]
+- Updated dependencies [8bb7286]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [4aae4e6]
+  - @prosopo/types@4.0.0
+  - @prosopo/locale@3.2.2
+
+## 2.6.69
+### Patch Changes
+
+- Updated dependencies [819ed95]
+  - @prosopo/types@3.16.1
+
+## 2.6.68
+### Patch Changes
+
+- Updated dependencies [f6a4402]
+- Updated dependencies [99dfb44]
+  - @prosopo/types@3.16.0
+
+## 2.6.67
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+
+## 2.6.66
+### Patch Changes
+
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+- Updated dependencies [b94890c]
+  - @prosopo/types@3.14.1
+  - @prosopo/locale@3.2.1
+
+## 2.6.65
+### Patch Changes
+
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+  - @prosopo/locale@3.2.0
+  - @prosopo/types@3.14.0
+
+## 2.6.64
+### Patch Changes
+
+  - @prosopo/types@3.13.3
+
+## 2.6.63
+### Patch Changes
+
+  - @prosopo/types@3.13.2
+
+## 2.6.62
+### Patch Changes
+
+  - @prosopo/types@3.13.1
+
+## 2.6.61
+### Patch Changes
+
+- Updated dependencies [e6d9553]
+  - @prosopo/types@3.13.0
+
+## 2.6.60
+### Patch Changes
+
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/types@3.12.3
+
+## 2.6.59
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/locale@3.1.29
+  - @prosopo/types@3.12.2
+
+## 2.6.58
+### Patch Changes
+
+- Updated dependencies [a90eb54]
+  - @prosopo/types@3.12.1
+
+## 2.6.57
+### Patch Changes
+
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/types@3.12.0
+
+## 2.6.56
+### Patch Changes
+
+- Updated dependencies [8148587]
+  - @prosopo/types@3.11.1
+
+## 2.6.55
+### Patch Changes
+
+- Updated dependencies [7f6ffc5]
+  - @prosopo/types@3.11.0
+
+## 2.6.54
+### Patch Changes
+
+- Updated dependencies [93fa086]
+  - @prosopo/types@3.10.2
+
+## 2.6.53
+### Patch Changes
+
+- Updated dependencies [cde7550]
+  - @prosopo/types@3.10.1
+
+## 2.6.52
+### Patch Changes
+
+- Updated dependencies [ad6d622]
+  - @prosopo/types@3.10.0
+
+## 2.6.51
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+  - @prosopo/types@3.9.0
+
+## 2.6.50
+### Patch Changes
+
+- Updated dependencies [d2431cd]
+  - @prosopo/types@3.8.4
+
+## 2.6.49
+### Patch Changes
+
+- Updated dependencies [bd6995b]
+  - @prosopo/types@3.8.3
+
+## 2.6.48
+### Patch Changes
+
+- Updated dependencies [9633e58]
+  - @prosopo/types@3.8.2
+
+## 2.6.47
+### Patch Changes
+
+- Updated dependencies [f52a5c1]
+  - @prosopo/types@3.8.1
+
+## 2.6.46
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [7543d17]
+- Updated dependencies [fe9fe22]
+- Updated dependencies [3acc333]
+  - @prosopo/types@3.8.0
+  - @prosopo/locale@3.1.28
+
 ## 2.6.45
 ### Patch Changes
 

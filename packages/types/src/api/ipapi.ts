@@ -100,7 +100,7 @@ export interface IPApiResponse {
 	is_bogon: boolean;
 	is_mobile: boolean;
 	is_satellite: boolean;
-	is_crawler: boolean | string;
+	is_crawler: boolean;
 	is_datacenter: boolean;
 	is_tor: boolean;
 	is_proxy: boolean;
@@ -128,6 +128,7 @@ export interface IPInfoResult {
 	isAbuser: boolean;
 	isMobile: boolean;
 	isSatellite: boolean;
+	isCrawler: boolean;
 
 	// Provider information
 	providerName?: string;
@@ -140,6 +141,13 @@ export interface IPInfoResult {
 		| "isp";
 	asnNumber?: number;
 	asnOrganization?: string;
+
+	// Datacenter operator name taken verbatim from the upstream
+	// `datacenter.datacenter` field. Distinct from `providerName`, which
+	// also accepts company.name; this one is reserved for strict name
+	// comparisons (e.g. the traffic filter's datacenter allowlist for
+	// iCloud Private Relay).
+	datacenterName?: string;
 
 	// Geolocation
 	country?: string;

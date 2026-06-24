@@ -1,5 +1,436 @@
 # @prosopo/load-balancer
 
+## 2.10.0
+### Minor Changes
+
+- 12cd0a6: Replace client-side weighted-random provider selection with static DNS endpoints.
+  
+  - Removed the `providerSelectEntropy` field from `DetectorResult`, `Session`, the
+    Mongoose `SessionRecordSchema` (including its standalone index), and every
+    call-site that threaded it through frictionless / image / pow / puzzle flows.
+  - Removed `FrictionlessManager.hostVerified` and its decision-machine call site
+    — there's nothing to verify when the DNS layer picks the host.
+  - `getRandomActiveProvider(env)` now returns the per-environment static DNS
+    endpoint (`pronode.prosopo.io` family) instead of fetching the provider list
+    and weighted-selecting. The entropy parameter is gone.
+  - `getProcaptchaRandomActiveProvider` is now a thin re-export so widget packages
+    keep importing from `procaptcha-common`.
+  - `FrontendProvider.datasetId` is dropped; `CaptchaRequestBody.datasetId` is
+    optional. The server falls back to its own most-recently-uploaded dataset
+    (`env.datasetId`, populated from `db.getMostRecentDatasetId()` at startup) —
+    clients can't pin a dataset under DNS routing because they don't know which
+    pronode they'll hit.
+  - Removed dead `setProviderLoader` / `prefetchProviders` / `selectWeightedProvider`
+    plumbing from `@prosopo/load-balancer`. The server's cacheFile-based loader
+    setup in `startProviderApi` goes with them.
+  - `getRandomActiveProvider` now hits `/healthz` on the global hostname once per
+    page load, reads the responding pronode's identity from the JSON body, and
+    pins subsequent captcha calls to that pronode (`https://pronodeN.prosopo.io`)
+    so session creation and submission land on the same backend. Falls back to
+    the dual-stack global hostname when `/healthz` is unreachable.
+  - `/healthz` now returns `{ ok: true, host: <pronode-identity> }` instead of
+    `"OK"` to support the above pinning.
+  - CORS preflight is now cached for 24h (`maxAge: 86400`) — previously the
+    browser refired an OPTIONS preflight before every captcha call because
+    the custom `Prosopo-Site-Key` / `Prosopo-User` headers make the request
+    non-simple and the default `maxAge` is 5s.
+- 12cd0a6: Add ipv4-only / ipv6-only provider DNS routing via `data-ipv4` / `data-ipv6`.
+  
+  Dapps that need to pin captcha traffic to a single IP stack can now do so:
+  
+  ```html
+  <div class="procaptcha" data-sitekey="..." data-ipv4="true"></div>
+  ```
+  
+  What happens under the hood:
+  
+  - The widget reads `data-ipv4` / `data-ipv6` (or the matching `ipv4` / `ipv6`
+    booleans on `ProcaptchaRenderOptions` / explicit `render(...)`) and threads
+    them through `ProcaptchaConfigSchema`.
+  - `pickIpMode(config)` resolves them into an `IpMode` (`"ipv4"` / `"ipv6"` /
+    `undefined`); `ipv4` wins if both are set.
+  - The frictionless / image / pow / puzzle managers pass the `IpMode` into
+    `getProcaptchaRandomActiveProvider`, which calls `/healthz` on the matching
+    single-stack global hostname (`ipv4.pronode.prosopo.io` or
+    `ipv6.pronode.prosopo.io`) and pins subsequent captcha calls to
+    `ipv4.pronodeN.prosopo.io` / `ipv6.pronodeN.prosopo.io`. The dual-stack
+    cache and the single-stack caches are kept separate.
+  - `convertHostedProvider` now accepts an optional `IpMode` and, when set,
+    selects the matching `ipv4` / `ipv6` sub-object from the provider-list JSON.
+    Top-level `ipv4` / `ipv6` keys are skipped by default so existing dual-stack
+    callers keep working.
+  - New helpers in `@prosopo/load-balancer`: `IpMode`, `stripIpModeLabel`,
+    `getProviderHostname`.
+  
+  Coordinated with the matching `captcha-private` change that publishes the
+  `ipv4` / `ipv6` sub-objects to S3.
+
+### Patch Changes
+
+- Updated dependencies [12cd0a6]
+- Updated dependencies [12cd0a6]
+  - @prosopo/types@4.8.0
+
+## 2.9.21
+### Patch Changes
+
+- Updated dependencies [bb98af1]
+  - @prosopo/types@4.7.4
+
+## 2.9.20
+### Patch Changes
+
+- Updated dependencies [89ab6fc]
+- Updated dependencies [0f3750b]
+  - @prosopo/types@4.7.3
+
+## 2.9.19
+### Patch Changes
+
+- Updated dependencies [edcd450]
+- Updated dependencies [5295c4b]
+  - @prosopo/types@4.7.2
+  - @prosopo/common@3.1.40
+
+## 2.9.18
+### Patch Changes
+
+- Updated dependencies [46fedf4]
+  - @prosopo/types@4.7.1
+
+## 2.9.17
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/types@4.7.0
+
+## 2.9.16
+### Patch Changes
+
+- Updated dependencies [4626340]
+  - @prosopo/types@4.6.1
+
+## 2.9.15
+### Patch Changes
+
+- Updated dependencies [55b1388]
+  - @prosopo/types@4.6.0
+  - @prosopo/common@3.1.39
+
+## 2.9.14
+### Patch Changes
+
+- Updated dependencies [9b91e85]
+- Updated dependencies [c80a05b]
+  - @prosopo/types@4.5.0
+
+## 2.9.13
+### Patch Changes
+
+- Updated dependencies [f69724f]
+- Updated dependencies [3973078]
+  - @prosopo/types@4.4.1
+
+## 2.9.12
+### Patch Changes
+
+- Updated dependencies [bc3813d]
+- Updated dependencies [4d05e3f]
+  - @prosopo/types@4.4.0
+
+## 2.9.11
+### Patch Changes
+
+- Updated dependencies [b03dad1]
+  - @prosopo/types@4.3.1
+
+## 2.9.10
+### Patch Changes
+
+- Updated dependencies [a1d60db]
+- Updated dependencies [2392aaf]
+  - @prosopo/types@4.3.0
+  - @prosopo/common@3.1.38
+
+## 2.9.9
+### Patch Changes
+
+- Updated dependencies [6c26669]
+- Updated dependencies [f7f9ec5]
+  - @prosopo/types@4.2.1
+
+## 2.9.8
+### Patch Changes
+
+- Updated dependencies [0fd81af]
+  - @prosopo/common@3.1.37
+
+## 2.9.7
+### Patch Changes
+
+- Updated dependencies [20cae63]
+- Updated dependencies [4d9923e]
+  - @prosopo/types@4.2.0
+
+## 2.9.6
+### Patch Changes
+
+- Updated dependencies [d351362]
+  - @prosopo/types@4.1.4
+
+## 2.9.5
+### Patch Changes
+
+- Updated dependencies [e2711ae]
+- Updated dependencies [5786629]
+  - @prosopo/types@4.1.3
+  - @prosopo/common@3.1.36
+
+## 2.9.4
+### Patch Changes
+
+  - @prosopo/types@4.1.2
+
+## 2.9.3
+### Patch Changes
+
+- Updated dependencies [91958da]
+  - @prosopo/types@4.1.1
+  - @prosopo/common@3.1.35
+
+## 2.9.2
+### Patch Changes
+
+- Updated dependencies [6a741ce]
+  - @prosopo/types@4.1.0
+
+## 2.9.1
+### Patch Changes
+
+- 4aae4e6: Pull the frictionless POST critical path down by ~340ms on the test
+  hardware via four focused changes:
+  
+  - **Inline Signer.** `@polkadot/extension-base/page/Signer` is now a
+    static import in `ExtensionWeb2`. It's 0.5KB on disk but its dynamic
+    import was costing ~190ms of network round-trip; inlining removes
+    one separate chunk fetch + parse from the critical path.
+  
+  - **Pre-warm the CryptoWorker.** `CryptoWorkerManager` gains a public
+    `prewarm()` that actually spawns the Worker and lets its script
+    parse during chunk-load time. Previously the call at module load
+    only instantiated the manager class; the worker itself spun up
+    lazily on the first `runTask`, putting the ~500ms worker module-eval
+    inside the first `createAccount()` call. Now it overlaps with chunk
+    loading and is hot by the time it's needed.
+  
+  - **Prefetch providers at module load with an env-keyed cache.**
+    `prefetchProviders` and `getRandomActiveProvider` share an in-flight
+    `Promise<HardcodedProvider[]>` keyed by environment, so a module-load
+    prefetch and the later `customDetectBot` Promise.all reuse the same
+    network call. `procaptcha-frictionless` triggers the prefetch from
+    module-import time using `PROSOPO_DEFAULT_ENVIRONMENT` (browser-safe
+    `typeof process` guard + `EnvironmentTypesSchema.safeParse`), so the
+    HTTP fetch overlaps with chunk download instead of running as part
+    of the detection Promise.all.
+  
+  - **Lazy-load the three captcha solvers.** `ProcaptchaFrictionless`
+    no longer statically imports `Procaptcha`, `ProcaptchaPuzzle`, and
+    `ProcaptchaPow`; each is `await import(...)` at the point the
+    frictionless response picks a type. Two of the three wrappers used
+    to be dead weight in the initial bundle; now only the chosen solver
+    is downloaded, after the frictionless POST has fired. Pulls ~64KB
+    of solver UI (chosen wrapper + Emotion dev runtime + builder + lazy
+    shim) out of the initial captchaRenderer chunk.
+  
+  Combined with the earlier worker-related changes, the frictionless POST
+  on the puzzle-implicit test page is now ~1290ms vs ~1630ms before this
+  batch, and ~6500ms in the original baseline. The remaining floor is
+  dominated by the BotScoreWorker's obfuscated bundle parse + run.
+- Updated dependencies [3c0be68]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [d865319]
+- Updated dependencies [753304b]
+- Updated dependencies [8bb7286]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [4993813]
+  - @prosopo/types@4.0.0
+  - @prosopo/common@3.1.34
+
+## 2.9.0
+### Minor Changes
+
+- 33a6c57: Provider speed ups
+
+### Patch Changes
+
+- Updated dependencies [819ed95]
+  - @prosopo/types@3.16.1
+
+## 2.8.40
+### Patch Changes
+
+- Updated dependencies [f6a4402]
+- Updated dependencies [99dfb44]
+  - @prosopo/types@3.16.0
+
+## 2.8.39
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+
+## 2.8.38
+### Patch Changes
+
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+  - @prosopo/types@3.14.1
+  - @prosopo/common@3.1.33
+
+## 2.8.37
+### Patch Changes
+
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+  - @prosopo/types@3.14.0
+  - @prosopo/common@3.1.32
+
+## 2.8.36
+### Patch Changes
+
+- Updated dependencies [4a9c518]
+  - @prosopo/common@3.1.31
+
+## 2.8.35
+### Patch Changes
+
+  - @prosopo/types@3.13.3
+
+## 2.8.34
+### Patch Changes
+
+  - @prosopo/types@3.13.2
+
+## 2.8.33
+### Patch Changes
+
+  - @prosopo/types@3.13.1
+
+## 2.8.32
+### Patch Changes
+
+- Updated dependencies [e6d9553]
+  - @prosopo/types@3.13.0
+
+## 2.8.31
+### Patch Changes
+
+- 730c61e: Speed up captcha
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/types@3.12.3
+
+## 2.8.30
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/types@3.12.2
+  - @prosopo/common@3.1.30
+
+## 2.8.29
+### Patch Changes
+
+- Updated dependencies [c5ee492]
+- Updated dependencies [a90eb54]
+  - @prosopo/common@3.1.29
+  - @prosopo/types@3.12.1
+
+## 2.8.28
+### Patch Changes
+
+- 676c5f2: Use HTTPS in developmentwq
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/types@3.12.0
+
+## 2.8.27
+### Patch Changes
+
+- Updated dependencies [8148587]
+  - @prosopo/types@3.11.1
+
+## 2.8.26
+### Patch Changes
+
+- Updated dependencies [7f6ffc5]
+  - @prosopo/types@3.11.0
+
+## 2.8.25
+### Patch Changes
+
+- Updated dependencies [93fa086]
+  - @prosopo/types@3.10.2
+
+## 2.8.24
+### Patch Changes
+
+- Updated dependencies [cde7550]
+  - @prosopo/types@3.10.1
+
+## 2.8.23
+### Patch Changes
+
+- Updated dependencies [ad6d622]
+  - @prosopo/types@3.10.0
+
+## 2.8.22
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+  - @prosopo/types@3.9.0
+
+## 2.8.21
+### Patch Changes
+
+- Updated dependencies [d2431cd]
+  - @prosopo/types@3.8.4
+
+## 2.8.20
+### Patch Changes
+
+- Updated dependencies [bd6995b]
+  - @prosopo/types@3.8.3
+
+## 2.8.19
+### Patch Changes
+
+- Updated dependencies [9633e58]
+  - @prosopo/types@3.8.2
+
+## 2.8.18
+### Patch Changes
+
+- Updated dependencies [f52a5c1]
+  - @prosopo/types@3.8.1
+
+## 2.8.17
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [7543d17]
+- Updated dependencies [3acc333]
+  - @prosopo/types@3.8.0
+  - @prosopo/common@3.1.28
+
 ## 2.8.16
 ### Patch Changes
 

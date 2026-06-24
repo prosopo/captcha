@@ -18,6 +18,9 @@
 			"path": "../common/tsconfig.cjs.json"
 		},
 		{
+			"path": "../logger/tsconfig.cjs.json"
+		},
+		{
 			"path": "../types/tsconfig.cjs.json"
 		},
 		{
@@ -27,10 +30,10 @@
 			"path": "../user-access-policy/tsconfig.cjs.json"
 		},
 		{
-			"path": "../locale/tsconfig.cjs.json"
+			"path": "../redis-client/tsconfig.cjs.json"
 		},
 		{
-			"path": "../redis-client/tsconfig.cjs.json"
+			"path": "../util/tsconfig.cjs.json"
 		}
 	]
 }

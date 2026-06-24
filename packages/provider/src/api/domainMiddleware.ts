@@ -13,19 +13,41 @@
 // limitations under the License.
 
 import { handleErrors } from "@prosopo/api-express-router";
-import { type Logger, ProsopoApiError } from "@prosopo/common";
+import { ProsopoApiError } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import { decodeGoogleTranslateHost, parseUrl } from "@prosopo/util";
 import { validateAddress } from "@prosopo/util-crypto";
 import type { NextFunction, Request, Response } from "express";
 import type { TFunction } from "i18next";
 import { ZodError } from "zod";
 import { Tasks } from "../tasks/index.js";
+import { getMaintenanceMode } from "./admin/apiToggleMaintenanceModeEndpoint.js";
+import { isReservedTestSiteKey } from "./testSiteKey.js";
 
 export const domainMiddleware = (env: ProviderEnvironment) => {
-	const tasks = new Tasks(env);
+	// Resolve Tasks (and its DB handle) lazily. In maintenance-mode startup the
+	// DB isn't initialised, so constructing Tasks eagerly here would call
+	// env.getDb() and crash boot. Build it on the first request that actually
+	// needs domain validation (i.e. once maintenance mode is off).
+	let cachedTasks: Tasks | undefined;
 
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
+			// If maintenance mode is active, skip domain validation
+			if (getMaintenanceMode()) {
+				req.logger.info(() => ({
+					msg: "Maintenance mode active - skipping domain validation",
+				}));
+				next();
+				return;
+			}
+
+			if (!cachedTasks) {
+				cachedTasks = new Tasks(env);
+			}
+			const tasks = cachedTasks;
+
 			const siteKey = req.headers["prosopo-site-key"] as string;
 			if (!siteKey)
 				throw siteKeyNotRegisteredError(
@@ -38,6 +60,14 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 				validateAddress(siteKey, false, 42);
 			} catch (err) {
 				throw invalidSiteKeyError(req.i18n, siteKey, req.logger);
+			}
+
+			// Reserved CI test site keys have no DB record and no domain
+			// allowlist; let them through so the deterministic test flow works in
+			// every environment and from any origin.
+			if (isReservedTestSiteKey(siteKey)) {
+				next();
+				return;
 			}
 
 			const clientSettings = await tasks.db.getClientRecord(siteKey);
@@ -57,10 +87,14 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 			if (!origin)
 				throw unauthorizedOriginError(req.i18n, undefined, req.logger);
 
-			for (const domain of allowedDomains) {
-				if (tasks.clientTaskManager.domainPatternMatcher(origin, domain)) {
-					next();
-					return;
+			const candidateOrigins = [origin, ...googleTranslateOrigins(origin)];
+
+			for (const candidate of candidateOrigins) {
+				for (const domain of allowedDomains) {
+					if (tasks.clientTaskManager.domainPatternMatcher(candidate, domain)) {
+						next();
+						return;
+					}
 				}
 			}
 
@@ -78,6 +112,19 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 			}
 		}
 	};
+};
+
+// If the origin is a Google Translate proxy URL, return the decoded original
+// origin(s) so the domain check can still match the site's allowed domains.
+const googleTranslateOrigins = (origin: string): string[] => {
+	try {
+		const url = parseUrl(origin);
+		const decodedHost = decodeGoogleTranslateHost(url.hostname);
+		if (!decodedHost) return [];
+		return [`${url.protocol}//${decodedHost}`];
+	} catch {
+		return [];
+	}
 };
 
 const siteKeyNotRegisteredError = (

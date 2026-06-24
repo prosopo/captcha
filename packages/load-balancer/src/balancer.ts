@@ -32,16 +32,42 @@ const HardcodedProviderSchema = z.object({
 
 export type HardcodedProvider = z.infer<typeof HardcodedProviderSchema>;
 
+export type IpMode = "ipv4" | "ipv6";
+
+// Top-level keys reserved by providerListJson for the ipv4-only / ipv6-only
+// sub-lists. They appear alongside the dual-stack provider entries in the
+// fetched JSON; the converter skips them so existing dual-stack consumers
+// keep working.
+const IP_MODE_KEYS: ReadonlyArray<IpMode> = ["ipv4", "ipv6"];
+
 type hostedProviders = Record<string, unknown>;
+
+const isProviderRecord = (value: unknown): value is hostedProviders =>
+	typeof value === "object" && value !== null;
 
 export const convertHostedProvider = (
 	provider: hostedProviders,
+	ipMode?: IpMode,
 ): HardcodedProvider[] => {
-	const providers = Object.values(provider).map((p) =>
-		HardcodedProviderSchema.parse(p),
-	);
+	const source =
+		ipMode && isProviderRecord(provider[ipMode])
+			? (provider[ipMode] as hostedProviders)
+			: provider;
+
+	const providers = Object.entries(source)
+		.filter(([key]) => !IP_MODE_KEYS.includes(key as IpMode))
+		.map(([, value]) => HardcodedProviderSchema.parse(value));
 	return providers.sort((a, b) => a.url.localeCompare(b.url));
 };
+
+// Strip the leading `ipv4.` / `ipv6.` label that providerListJson prepends for
+// the single-stack sub-lists so callers can derive a stable identity from the
+// provider URL regardless of which ipMode was requested.
+export const stripIpModeLabel = (hostname: string): string =>
+	hostname.replace(/^ipv[46]\./, "");
+
+export const getProviderHostname = (provider: HardcodedProvider): string =>
+	stripIpModeLabel(new URL(provider.url).hostname);
 
 export const getLoadBalancerUrl = (environment: EnvironmentTypes): string => {
 	if (environment === "production") {
@@ -62,9 +88,9 @@ export const loadBalancer = async (
 		return [
 			{
 				address: "5EjTA28bKSbFPPyMbUjNtArxyqjwq38r1BapVmLZShaqEedV",
-				url: "http://localhost:9229",
+				url: "https://localhost:9229",
 				datasetId:
-					"0x9f460e81ac9c71b486f796a21bb36e2263694756a6621134d110da217fd3ef25",
+					"0x7984714b92d61fd92fd6a7bc9b56b729481470bcc771c19c382ec679acf02e67",
 				weight: 1,
 			},
 		];

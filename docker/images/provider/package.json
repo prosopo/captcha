@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/provider-docker",
-	"version": "3.5.18",
+	"version": "3.6.47",
 	"engines": {
 		"node": "^24",
 		"npm": "^11"
@@ -27,5 +27,10 @@
 		"build": "npm run clean && cp -r src dist && NODE_ENV=$NODE_ENV docker buildx build --progress=plain --tag $(npm run --silent docker-tag) --platform linux/amd64 -f ./dist/Dockerfile ../../../",
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
 		"publish:docker": "docker push $(NODE_ENV=$NODE_ENV npm run --silent docker-tag)"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "docker/images/provider"
 	}
 }

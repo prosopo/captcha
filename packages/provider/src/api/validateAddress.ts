@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type Logger, ProsopoApiError } from "@prosopo/common";
+import { ProsopoApiError } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
+import type { Logger } from "@prosopo/logger";
 import { validateAddress } from "@prosopo/util-crypto";
 
 export const validateSiteKey = (siteKey: string, logger?: Logger) => {

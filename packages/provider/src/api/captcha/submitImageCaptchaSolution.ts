@@ -20,26 +20,23 @@ import {
 	type DappUserSolutionResult,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import { flatten, getIPAddress } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
+import { resolveTestSiteKeyVerdict } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 
-export default (
-	env: ProviderEnvironment,
-	userAccessRulesStorage: AccessRulesStorage,
-) =>
+export default (env: ProviderEnvironment) =>
 	async (
 		req: Request & AugmentedRequest,
 		res: Response,
 		next: NextFunction,
 	) => {
-		const tasks = new Tasks(env, req.logger);
-
-		// If in maintenance mode, always return verified
+		// Maintenance-mode short-circuit must run before `new Tasks(env, ...)`
+		// because the Tasks constructor calls `env.getDb()`, which throws when
+		// `env.db` is undefined (the maintenance-mode case).
 		if (getMaintenanceMode()) {
 			req.logger.info(() => ({
 				msg: "Maintenance mode active - returning verified for image captcha",
@@ -51,6 +48,8 @@ export default (
 			};
 			return res.json(result);
 		}
+
+		const tasks = new Tasks(env, req.logger);
 
 		let parsed: CaptchaSolutionBodyType;
 		try {
@@ -69,6 +68,18 @@ export default (
 
 		validateSiteKey(dapp);
 		validateAddr(user);
+
+		// Reserved CI test site keys force a deterministic verdict before any DB
+		// lookup, so they work in every environment without a registered record.
+		const testVerdict = resolveTestSiteKeyVerdict(dapp, req.logger);
+		if (testVerdict !== null) {
+			const result: CaptchaSolutionResponse = {
+				status: "ok",
+				captchas: [],
+				verified: testVerdict,
+			};
+			return res.json(result);
+		}
 
 		try {
 			const clientRecord = await tasks.db.getClientRecord(parsed.dapp);
@@ -95,6 +106,13 @@ export default (
 					getIPAddress(req.ip || ""),
 					flatten(req.headers),
 					req.ja4,
+					parsed[ApiParams.behavioralData],
+					// Persist the full ipinfo payload — consumers read
+					// individual flags off this object instead of separate
+					// flat fields.
+					req.ipInfo,
+					parsed[ApiParams.simdReadings],
+					parsed[ApiParams.clientMetaData],
 				);
 
 			const returnValue: CaptchaSolutionResponse = {

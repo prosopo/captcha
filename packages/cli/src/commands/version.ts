@@ -1,4 +1,4 @@
-import { LogLevel, type Logger, getLogger } from "@prosopo/common";
+import { LogLevel, type Logger, getLogger } from "@prosopo/logger";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");

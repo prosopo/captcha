@@ -1,5 +1,17 @@
 # @prosopo/vite-plugin-watch-workspace
 
+## 2.6.32
+### Patch Changes
+
+- 7a97bba: chore(deps): bump esbuild from 0.25.9 to 0.28.1
+
+## 2.6.31
+### Patch Changes
+
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+
 ## 2.6.30
 ### Patch Changes
 

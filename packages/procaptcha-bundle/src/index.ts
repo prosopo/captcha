@@ -16,12 +16,11 @@ import { getWindowCallback } from "@prosopo/procaptcha-common";
 import type { ProcaptchaRenderOptions } from "@prosopo/types";
 import { at } from "@prosopo/util";
 import type { Root } from "react-dom/client";
-import { getCaptchaType } from "./util/captcha/captchaType.js";
 import { extractParams, getProcaptchaScript } from "./util/config.js";
 import { WidgetFactory } from "./util/widgetFactory.js";
 import { WidgetThemeResolver } from "./util/widgetThemeResolver.js";
 
-const BUNDLE_NAME = "procaptcha.bundle.js";
+const BUNDLE_NAMES = ["procaptcha.bundle.iife.js", "procaptcha.bundle.js"];
 let procaptchaRoots: Root[] = [];
 
 const widgetFactory = new WidgetFactory(new WidgetThemeResolver());
@@ -41,20 +40,22 @@ const implicitRender = async () => {
 
 	// Set siteKey from renderOptions or from the first element's data-sitekey attribute
 	if (elements.length) {
-		const siteKey = at(elements, 0).getAttribute("data-sitekey");
-		const web3 = at(elements, 0).getAttribute("data-web3");
+		const firstElement = at(elements, 0);
+		const siteKey = firstElement.getAttribute("data-sitekey");
+		const web3 = firstElement.getAttribute("data-web3");
+		const ipv4 = firstElement.getAttribute("data-ipv4") === "true";
+		const ipv6 = firstElement.getAttribute("data-ipv6") === "true";
 		if (!siteKey) {
 			console.error("No site key found");
 			return;
 		}
 
-		const captchaType = getCaptchaType(elements);
-
 		const root = await widgetFactory.createWidgets(
 			elements,
 			{
-				captchaType: captchaType,
 				siteKey: siteKey,
+				ipv4,
+				ipv6,
 			},
 			!(web3 === "true"),
 		);
@@ -71,15 +72,16 @@ const implicitRender = async () => {
 		for (const button of invisibleButtons) {
 			const siteKey = button.getAttribute("data-sitekey") || "";
 			const callback = button.getAttribute("data-callback") || "";
-
-			const captchaType = getCaptchaType([button]);
+			const ipv4 = button.getAttribute("data-ipv4") === "true";
+			const ipv6 = button.getAttribute("data-ipv6") === "true";
 
 			const root = await widgetFactory.createWidgets(
 				[button],
 				{
-					captchaType: captchaType,
 					siteKey: siteKey,
 					callback: callback,
+					ipv4,
+					ipv6,
 				},
 				true,
 				true,
@@ -211,12 +213,12 @@ declare global {
 const start = () => {
 	// onLoadUrlCallback defines the name of the callback function to be called when the script is loaded
 	// onRenderExplicit takes values of either explicit or implicit
-	const { onloadUrlCallback, renderExplicit } = extractParams(BUNDLE_NAME);
+	const { onloadUrlCallback, renderExplicit } = extractParams(BUNDLE_NAMES);
 	let readyCalled = false;
 
 	// Render the Procaptcha component implicitly if renderExplicit is not set to explicit
 	if (renderExplicit !== "explicit") {
-		getProcaptchaScript(BUNDLE_NAME)?.addEventListener("load", () => {
+		getProcaptchaScript(BUNDLE_NAMES)?.addEventListener("load", () => {
 			ready(implicitRender);
 			readyCalled = true;
 		});
@@ -228,7 +230,7 @@ const start = () => {
 
 	if (onloadUrlCallback) {
 		// Add event listener to the script tag to call the callback function when the script is loaded
-		getProcaptchaScript(BUNDLE_NAME)?.addEventListener("load", () => {
+		getProcaptchaScript(BUNDLE_NAMES)?.addEventListener("load", () => {
 			const onloadCallback = getWindowCallback(onloadUrlCallback);
 			ready(onloadCallback);
 		});

@@ -14,113 +14,118 @@
 
 import { stringToHex, u8aToHex } from "@polkadot/util";
 import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
-import type { Logger } from "@prosopo/common";
+import type { RedisWriteQueue } from "@prosopo/database";
+import type { Logger } from "@prosopo/logger";
 import type { KeyringPair, ProsopoConfigOutput } from "@prosopo/types";
 import {
+	CaptchaType,
+	DecisionMachineDecision,
+	type DecisionMachineInput,
+} from "@prosopo/types";
+import {
 	ApiParams,
+	type BehavioralDataPacked,
 	type CaptchaResult,
 	CaptchaStatus,
+	type ClientMetaData,
+	type DecisionMachineBehavioralDataPacked,
 	type IPAddress,
+	type ISpamFilterRules,
+	type ITrafficFilter,
 	POW_SEPARATOR,
 	type PoWCaptcha,
 	type PoWChallengeId,
 	type RequestHeaders,
+	ResultReason,
+	type RoutingMachineBaseline,
+	type RoutingMachineOutput,
+	type RoutingMachinePlatform,
+	type RoutingMachineRawSignals,
+	SimdReadingsStage,
 } from "@prosopo/types";
 import type {
-	BehavioralDataPacked,
 	IProviderDatabase,
 	PoWCaptchaRecord,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import {
-	type AccessPolicy,
-	AccessPolicyType,
-	type AccessRulesStorage,
-} from "@prosopo/user-access-policy";
-import { at, extractData, verifyRecency } from "@prosopo/util";
-import { getRequestUserScope } from "../../api/blacklistRequestInspector.js";
+	assertCoordsSafe,
+	at,
+	extractData,
+	verifyRecency,
+} from "@prosopo/util";
 import {
 	getCompositeIpAddress,
 	getIpAddressFromComposite,
 } from "../../compositeIpAddress.js";
 import { deepValidateIpAddress } from "../../util.js";
+import {
+	type UsageCounters,
+	buildAllWindowIncrements,
+} from "../../util/usageCounters.js";
 import { CaptchaManager } from "../captchaManager.js";
+import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
+import {
+	computeDnsAsymmetry,
+	enrichDnsEvent,
+	getIpInfoAsn,
+} from "../dnsEvent/enrichDnsEvent.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
+import {
+	type RoutingContext,
+	applyRouter,
+} from "../frictionless/routingMachine.js";
+import { evaluateEmailSpamRules } from "../spam/evaluateEmailSpamRules.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
 
 /**
- * Finds a hard block policy from access policies.
- * A hard block is a Block policy without a captchaType specified.
- * Policies with captchaType are for captcha type selection, not hard blocking.
+ * Request-side data the handler can supply for the post-pow routing pass.
+ * Score, dapp/user account, and behavioural data are filled in by
+ * `verifyPowCaptchaSolution` once the challenge record and decrypted
+ * behavioural payload are in hand.
  */
-const findHardBlockPolicy = (
-	accessPolicies: AccessPolicy[],
-): AccessPolicy | undefined => {
-	return accessPolicies.find(
-		(policy) => policy.type === AccessPolicyType.Block && !policy.captchaType,
-	);
+export interface PostPowRoutingContext {
+	ip: string;
+	countryCode?: string;
+	platform: RoutingMachinePlatform;
+	raw: Omit<RoutingMachineRawSignals, "behavioralDataPacked">;
+}
+
+export type VerifyPowCaptchaSolutionResult = {
+	verified: boolean;
+	routingOutput?: RoutingMachineOutput;
 };
 
 const DEFAULT_POW_DIFFICULTY = 4;
 
 export class PowCaptchaManager extends CaptchaManager {
 	POW_SEPARATOR: string;
+	private decisionMachineRunner: DecisionMachineRunner;
+	private readonly usageCounters: UsageCounters | null;
+	private postPowContext?: PostPowRoutingContext;
 
 	constructor(
 		db: IProviderDatabase,
 		pair: KeyringPair,
 		config: ProsopoConfigOutput,
 		logger?: Logger,
+		writeQueue?: RedisWriteQueue | null,
+		usageCounters?: UsageCounters | null,
 	) {
-		super(db, pair, config, logger);
+		super(db, pair, config, logger, writeQueue);
 		this.POW_SEPARATOR = POW_SEPARATOR;
+		this.decisionMachineRunner = new DecisionMachineRunner(db);
+		this.usageCounters = usageCounters ?? null;
 	}
 
 	/**
-	 * Checks if a user should be hard blocked based on access policies
-	 * Only checks for Block policies without captchaType
-	 *
-	 * @returns The blocking policy if user should be blocked, undefined otherwise
+	 * Provide the request-side data needed to run the post-pow routing pass
+	 * inside `verifyPowCaptchaSolution`. When unset, the routing pass is
+	 * skipped and verification behaves exactly as before.
 	 */
-	private async checkForHardBlock(
-		userAccessRulesStorage: AccessRulesStorage,
-		challengeRecord: PoWCaptchaRecord,
-		userAccount: string,
-		headers: RequestHeaders,
-		coords?: [number, number][][],
-	): Promise<AccessPolicy | undefined> {
-		// Get headHash from session record if available
-		let headHash: string | undefined;
-		if (challengeRecord.sessionId) {
-			const sessionRecord = await this.db.getSessionRecordBySessionId(
-				challengeRecord.sessionId,
-			);
-			headHash = sessionRecord?.decryptedHeadHash;
-		}
-
-		// Serialize coords to string for querying
-		const coordsString = coords ? JSON.stringify(coords) : undefined;
-
-		const ipAddressRecord = getIpAddressFromComposite(
-			challengeRecord.ipAddress,
-		);
-
-		const userScope = getRequestUserScope(
-			headers,
-			challengeRecord.ja4,
-			ipAddressRecord.address,
-			userAccount,
-			headHash,
-			coordsString,
-		);
-
-		const accessPolicies = await this.getPrioritisedAccessPolicies(
-			userAccessRulesStorage,
-			challengeRecord.dappAccount,
-			userScope,
-		);
-
-		return findHardBlockPolicy(accessPolicies);
+	setPostPowContext(ctx: PostPowRoutingContext): void {
+		this.postPowContext = ctx;
 	}
 
 	/**
@@ -158,13 +163,13 @@ export class PowCaptchaManager extends CaptchaManager {
 	 * @description Verifies a PoW Captcha for a given user and dapp
 	 *
 	 * @param {string} challenge - the starting string for the PoW challenge
-	 * @param {string} difficulty - how many leading zeroes the solution must have
 	 * @param {string} providerChallengeSignature - proof that the Provider provided the challenge
 	 * @param {string} nonce - the string that the user has found that satisfies the PoW challenge
 	 * @param {number} timeout - the time in milliseconds since the Provider was selected to provide the PoW captcha
 	 * @param {string} userTimestampSignature
 	 * @param ipAddress
 	 * @param headers
+	 * @param behavioralData
 	 * @param salt
 	 */
 	async verifyPowCaptchaSolution(
@@ -177,7 +182,9 @@ export class PowCaptchaManager extends CaptchaManager {
 		headers: RequestHeaders,
 		behavioralData?: string,
 		salt?: string,
-	): Promise<boolean> {
+		simdReadings?: string,
+		clientMetaData?: ClientMetaData,
+	): Promise<VerifyPowCaptchaSolutionResult> {
 		// Check signatures before doing DB reads to avoid unnecessary network connections
 		checkPowSignature(
 			challenge,
@@ -205,21 +212,27 @@ export class PowCaptchaManager extends CaptchaManager {
 				msg: `No record of this challenge: ${challenge}`,
 			}));
 			// no record of this challenge
-			return false;
+			return { verified: false };
 		}
 
 		const difficulty = challengeRecord.difficulty;
 
-		// Extract coordinates from salt if provided
+		// Extract coordinates from salt if provided. Invalid salt input
+		// disapproves the request rather than persisting partial data.
 		let coords: [number, number][][] | undefined;
+		let saltDecodeError: unknown;
 		if (salt) {
 			try {
 				const extractedData = extractData(salt);
-				// Convert extracted data to coordinate pairs
 				if (extractedData.length >= 2) {
-					coords = [[[extractedData[0], extractedData[1]] as [number, number]]];
+					const built: [number, number][][] = [
+						[[extractedData[0], extractedData[1]] as [number, number]],
+					];
+					assertCoordsSafe(built, "coords");
+					coords = built;
 				}
 			} catch (error) {
+				saltDecodeError = error;
 				this.logger.warn(() => ({
 					msg: "Failed to extract coordinates from salt",
 					error,
@@ -228,19 +241,59 @@ export class PowCaptchaManager extends CaptchaManager {
 			}
 		}
 
+		if (saltDecodeError) {
+			const badSaltResult = {
+				status: CaptchaStatus.disapproved,
+				reason: ResultReason.CAPTCHA_INVALID_SALT,
+			};
+			const writePromises: Promise<void>[] = [
+				this.db.updatePowCaptchaRecordResult(
+					challenge,
+					badSaltResult,
+					false, // serverChecked
+					true, // userSubmitted
+					userTimestampSignature,
+					undefined, // never persist the bad coords
+				),
+			];
+			if (challengeRecord.sessionId) {
+				writePromises.push(
+					this.updateSessionRecordWithCache(challengeRecord.sessionId, {
+						userSubmitted: true,
+						result: badSaltResult,
+					}),
+				);
+			}
+			await Promise.all(writePromises);
+			return { verified: false };
+		}
+
 		if (!verifyRecency(challenge, timeout)) {
-			await this.db.updatePowCaptchaRecordResult(
-				challenge,
-				{
-					status: CaptchaStatus.disapproved,
-					reason: "CAPTCHA.INVALID_TIMESTAMP",
-				},
-				false, //serverchecked
-				true, // usersubmitted
-				userTimestampSignature,
-				coords,
-			);
-			return false;
+			const timeoutResult = {
+				status: CaptchaStatus.disapproved,
+				reason: ResultReason.CAPTCHA_INVALID_TIMESTAMP,
+			};
+			// Write pow record and session update in parallel
+			const writePromises: Promise<void>[] = [
+				this.db.updatePowCaptchaRecordResult(
+					challenge,
+					timeoutResult,
+					false, //serverchecked
+					true, // usersubmitted
+					userTimestampSignature,
+					coords,
+				),
+			];
+			if (challengeRecord.sessionId) {
+				writePromises.push(
+					this.updateSessionRecordWithCache(challengeRecord.sessionId, {
+						userSubmitted: true,
+						result: timeoutResult,
+					}),
+				);
+			}
+			await Promise.all(writePromises);
+			return { verified: false };
 		}
 
 		const correct = validateSolution(nonce, challenge, difficulty);
@@ -249,20 +302,37 @@ export class PowCaptchaManager extends CaptchaManager {
 		if (!correct) {
 			result = {
 				status: CaptchaStatus.disapproved,
-				reason: "CAPTCHA.INVALID_SOLUTION",
+				reason: ResultReason.CAPTCHA_INVALID_SOLUTION,
 			};
 		}
 
-		await this.db.updatePowCaptchaRecordResult(
-			challenge,
-			result,
-			false,
-			true,
-			userTimestampSignature,
-			coords,
-		);
+		// Solved-counter writes: fire-and-forget, only on successful PoW math.
+		// Runs before the decision-machine verify-phase veto so a denied
+		// solution still counts as "solved" from the routing-machine's
+		// perspective (the user did the work).
+		if (correct && this.usageCounters) {
+			const dappAccount = at(challengeSplit, 2);
+			this.usageCounters.incrManyAsync(
+				dappAccount,
+				buildAllWindowIncrements(
+					"solved",
+					CaptchaType.pow,
+					ipAddress.address,
+					userAccount,
+				),
+			);
+		}
 
-		// Process behavioral data if provided
+		// Accumulate behavioral data for a combined write with the result update.
+		// Previously this was a separate DB write; now we merge it into a single
+		// updatePowCaptchaRecord call below.
+		let behavioralUpdates: Partial<PoWCaptchaRecord> = {};
+		// Hoisted so the post-pow routing pass (below) can feed it into the
+		// routing machine. Falsy if behavioural data was absent or failed to
+		// decrypt — in either case routing still runs but without this signal.
+		let decryptedBehavioralDataPacked:
+			| DecisionMachineBehavioralDataPacked
+			| undefined;
 		if (behavioralData) {
 			try {
 				// Get decryption keys: detector keys from DB first, then env var as fallback
@@ -272,34 +342,42 @@ export class PowCaptchaManager extends CaptchaManager {
 					process.env.BOT_DECRYPTION_KEY,
 				];
 
-				// Decrypt the behavioral data directly to packed format
-				const packedData = await this.decryptBehavioralDataPacked(
+				// Decrypt the behavioral data (returns unpacked format)
+				const decryptedData = await this.decryptBehavioralData(
 					behavioralData,
 					decryptKeys,
 				);
 
-				if (packedData) {
+				if (decryptedData) {
 					const dappAccount = at(challengeSplit, 2);
-					// Log behavioral analytics using packed data counts
+					// Log behavioral analytics using unpacked data counts
 					this.logger?.info(() => ({
 						msg: "Behavioral analysis completed",
 						data: {
 							userAccount,
 							dappAccount,
 							challenge,
-							mouseEventsCount: packedData.c1.length,
-							touchEventsCount: packedData.c2.length,
-							clickEventsCount: packedData.c3.length,
-							deviceCapability: packedData.d,
+							mouseEventsCount: decryptedData.collector1?.length || 0,
+							touchEventsCount: decryptedData.collector2?.length || 0,
+							clickEventsCount: decryptedData.collector3?.length || 0,
+							deviceCapability: decryptedData.deviceCapability,
 							captchaResult: correct ? "passed" : "failed",
 						},
 					}));
 
-					// Store the packed data directly to database
-					await this.db.updatePowCaptchaRecord(challenge, {
+					// Convert to packed format — will be written with the result update
+					const packedData: BehavioralDataPacked = {
+						c1: decryptedData.collector1 || [],
+						c2: decryptedData.collector2 || [],
+						c3: decryptedData.collector3 || [],
+						d: decryptedData.deviceCapability,
+					};
+
+					behavioralUpdates = {
 						behavioralDataPacked: packedData,
-						deviceCapability: packedData.d,
-					});
+						deviceCapability: decryptedData.deviceCapability,
+					};
+					decryptedBehavioralDataPacked = packedData;
 				}
 			} catch (error) {
 				this.logger?.error(() => ({
@@ -310,7 +388,141 @@ export class PowCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		return correct;
+		// Write behavioral data first (sequential) so it's present when
+		// updatePowCaptchaRecordResult triggers centralStreamer.streamPowUpdate(),
+		// which reads back the full record.
+		const recordUpdates: Partial<PoWCaptchaRecord> = { ...behavioralUpdates };
+		if (clientMetaData?.hp) {
+			recordUpdates.clientMetaData = { hp: clientMetaData.hp };
+		}
+		if (Object.keys(recordUpdates).length > 0) {
+			await this.db.updatePowCaptchaRecord(challenge, recordUpdates);
+		}
+
+		// Then write result + session in parallel (different documents/collections).
+		const writePromises: Promise<void>[] = [
+			this.db.updatePowCaptchaRecordResult(
+				challenge,
+				result,
+				false,
+				true,
+				userTimestampSignature,
+				coords,
+			),
+		];
+
+		if (challengeRecord.sessionId) {
+			const linkedSessionId = challengeRecord.sessionId;
+			writePromises.push(
+				this.updateSessionRecordWithCache(linkedSessionId, {
+					userSubmitted: true,
+					result,
+				}),
+			);
+			if (simdReadings) {
+				writePromises.push(
+					this.decryptAndAttachSimdReadingsIfAbsent(
+						linkedSessionId,
+						simdReadings,
+						SimdReadingsStage.submit,
+					),
+				);
+			}
+		}
+
+		await Promise.all(writePromises);
+
+		// Post-pow routing: only meaningful on a verified solution. The routing
+		// machine re-examines the (now richer) signals — score from the original
+		// session, decrypted behavioural data, counters — and may escalate the
+		// user to an image/puzzle captcha. Returning baseline (pow) means "done".
+		if (!correct || !this.postPowContext) {
+			return { verified: correct };
+		}
+
+		const routingOutput = await this.runPostPowRouting({
+			challengeRecord,
+			challengeSplit,
+			behavioralDataPacked: decryptedBehavioralDataPacked,
+		});
+		return { verified: correct, routingOutput };
+	}
+
+	/**
+	 * Resolve the originating session, build a full RoutingContext, and run the
+	 * post-pow phase of the routing machine. Returns the machine's output, or
+	 * undefined when prerequisites are missing (no session, no score) — in
+	 * which case the caller treats the result as "no escalation".
+	 */
+	private async runPostPowRouting(args: {
+		challengeRecord: PoWCaptchaRecord;
+		challengeSplit: string[];
+		behavioralDataPacked?: DecisionMachineBehavioralDataPacked;
+	}): Promise<RoutingMachineOutput | undefined> {
+		if (!this.postPowContext) return undefined;
+
+		const { challengeRecord, challengeSplit, behavioralDataPacked } = args;
+
+		if (!challengeRecord.sessionId) {
+			this.logger.debug(() => ({
+				msg: "Skipping post-pow routing: PoW record has no linked session",
+			}));
+			return undefined;
+		}
+
+		const sessionRecord = await this.db.getSessionRecordBySessionId(
+			challengeRecord.sessionId,
+		);
+		if (!sessionRecord) {
+			this.logger.debug(() => ({
+				msg: "Skipping post-pow routing: session record not found",
+				data: { sessionId: challengeRecord.sessionId },
+			}));
+			return undefined;
+		}
+
+		const score = computeFrictionlessScore(sessionRecord.scoreComponents);
+		const dappAccount = at(challengeSplit, 2);
+		const userAccount = at(challengeSplit, 1);
+
+		// Enrich platform.isWebView from the session — that flag is only
+		// derivable from the encrypted bot-detection payload at frictionless
+		// time, not from the submit request alone.
+		const platform = {
+			...this.postPowContext.platform,
+			isWebView: sessionRecord.webView,
+		};
+
+		const ctx: RoutingContext = {
+			dappAccount,
+			userAccount,
+			ip: this.postPowContext.ip,
+			countryCode: this.postPowContext.countryCode,
+			score,
+			platform,
+			raw: {
+				...this.postPowContext.raw,
+				...(behavioralDataPacked && { behavioralDataPacked }),
+				// SIMD readings are decrypted and attached to the session above
+				// (decryptAndAttachSimdReadingsIfAbsent) before this re-fetch, so
+				// they are available here in decoded form for the routing machine.
+				...(sessionRecord.simdReadings && { simd: sessionRecord.simdReadings }),
+			},
+		};
+
+		const baseline: RoutingMachineBaseline = {
+			captchaType: CaptchaType.pow,
+			powDifficulty: challengeRecord.difficulty,
+		};
+
+		return applyRouter(
+			this.decisionMachineRunner,
+			this.usageCounters,
+			baseline,
+			ctx,
+			this.logger,
+			"postPow",
+		);
 	}
 
 	/**
@@ -323,6 +535,13 @@ export class PowCaptchaManager extends CaptchaManager {
 	 * @param env - provider environment
 	 * @param ip - optional IP address for validation
 	 * @param userAccessRulesStorage - storage for querying user access policies
+	 * @param email
+	 * @param spamEmailDomainCheckingEnabled
+	 * @param spamFilter
+	 * @param trafficFilter
+	 * @param storeMetadata - when true, persists the dapp-server-provided
+	 *   `email` (and any future metadata fields) on the captcha record so
+	 *   it can be inspected for spam-rate analysis.
 	 */
 	async serverVerifyPowCaptchaSolution(
 		dappAccount: string,
@@ -331,18 +550,32 @@ export class PowCaptchaManager extends CaptchaManager {
 		env: ProviderEnvironment,
 		ip?: string,
 		userAccessRulesStorage?: AccessRulesStorage,
-	): Promise<{ verified: boolean; score?: number }> {
-		const notVerifiedResponse = { verified: false };
+		email?: string,
+		spamEmailDomainCheckingEnabled = false,
+		spamFilter?: ISpamFilterRules,
+		trafficFilter?: ITrafficFilter,
+		storeMetadata = false,
+	): Promise<{ verified: boolean; score?: number; reason?: string }> {
+		const notVerified = (
+			reason: string,
+		): { verified: false; reason: string } => ({
+			verified: false,
+			reason,
+		});
+
+		// Bind the challenge/dappAccount context once so every log line in this
+		// method carries it without repeating the fields in each `data` block.
+		const logger = this.logger.with({ challenge, dappAccount });
 
 		const challengeRecord =
 			await this.db.getPowCaptchaRecordByChallenge(challenge);
 
 		if (!challengeRecord) {
-			this.logger.debug(() => ({
+			logger.debug(() => ({
 				msg: `No record of this challenge: ${challenge}`,
 			}));
 
-			return notVerifiedResponse;
+			return notVerified("CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND");
 		}
 
 		if (challengeRecord.result.status !== CaptchaStatus.approved) {
@@ -354,7 +587,8 @@ export class PowCaptchaManager extends CaptchaManager {
 			});
 		}
 
-		if (challengeRecord.serverChecked) return notVerifiedResponse;
+		if (challengeRecord.serverChecked)
+			return notVerified("API.USER_ALREADY_VERIFIED");
 
 		const challengeDappAccount = challengeRecord.dappAccount;
 
@@ -377,13 +611,29 @@ export class PowCaptchaManager extends CaptchaManager {
 		]);
 		// -- END WARNING --
 
-		const recent = verifyRecency(challenge, timeout);
-		if (!recent) {
-			return notVerifiedResponse;
+		// Accumulate all pow captcha record updates in memory.
+		// Instead of writing to the database after each validation check,
+		// we collect updates and perform a single batch write at the end.
+		// This reduces 6-11 individual writes down to 1-2 writes.
+		const powRecordUpdates: Partial<PoWCaptchaRecord> = {};
+		let failResult: CaptchaResult | undefined;
+		let failReason: string | undefined;
+
+		const submittedAt = challengeRecord.submittedAtTimestamp;
+		const submitToVerifyMs =
+			submittedAt instanceof Date
+				? Date.now() - submittedAt.getTime()
+				: Number.POSITIVE_INFINITY;
+		if (submitToVerifyMs > timeout) {
+			failResult = {
+				status: CaptchaStatus.disapproved,
+				reason: ResultReason.TIMESTAMP_TOO_OLD,
+			};
+			failReason = "API.TIMESTAMP_TOO_OLD";
 		}
 
 		// Check user access policies for hard blocks
-		if (userAccessRulesStorage) {
+		if (!failResult && userAccessRulesStorage) {
 			try {
 				const blockPolicy = await this.checkForHardBlock(
 					userAccessRulesStorage,
@@ -391,29 +641,129 @@ export class PowCaptchaManager extends CaptchaManager {
 					challengeRecord.userAccount,
 					challengeRecord.headers,
 					challengeRecord.coords,
+					challengeRecord.ipInfo?.isValid
+						? challengeRecord.ipInfo.countryCode
+						: undefined,
+					challengeRecord.ipInfo?.isValid
+						? challengeRecord.ipInfo.asnNumber
+						: undefined,
 				);
 
 				if (blockPolicy) {
-					this.logger.info(() => ({
+					logger.info(() => ({
 						msg: "User blocked by access policy in server PoW verification",
 						data: {
-							challenge,
 							userAccount: challengeRecord.userAccount,
-							dappAccount,
 							policy: blockPolicy,
 						},
 					}));
-					return notVerifiedResponse;
+					failResult = {
+						status: CaptchaStatus.disapproved,
+						reason: ResultReason.ACCESS_POLICY_BLOCK,
+					};
+					failReason = "API.ACCESS_POLICY_BLOCK";
 				}
 			} catch (error) {
-				this.logger.warn(() => ({
+				logger.warn(() => ({
 					msg: "Failed to check user access policies in server PoW verification",
 					error,
 				}));
 			}
 		}
 
-		if (ip) {
+		// Check email domain against spam list if email is provided
+		if (!failResult && email && spamEmailDomainCheckingEnabled) {
+			try {
+				const isSpam = await this.checkSpamEmail(email);
+				if (isSpam) {
+					const emailDomain = email.split("@")[1] || "unknown";
+					logger.info(() => ({
+						msg: "Spam email domain detected in server PoW verification",
+						data: { emailDomain },
+					}));
+					failResult = {
+						status: CaptchaStatus.disapproved,
+						reason: ResultReason.SPAM_EMAIL_DOMAIN,
+					};
+					failReason = "API.SPAM_EMAIL_DOMAIN";
+				}
+			} catch (error) {
+				logger.warn(() => ({
+					msg: "Failed to check spam email domain in server PoW verification",
+					error,
+				}));
+			}
+		}
+
+		// Spam filter: configurable per-site email pattern rules
+		if (
+			!failResult &&
+			spamFilter?.enabled &&
+			spamFilter.emailRules?.enabled &&
+			email
+		) {
+			const result = evaluateEmailSpamRules(email, spamFilter.emailRules);
+			if (result.isSpam) {
+				logger.info(() => ({
+					msg: "Spam filter rejected email in PoW verification",
+					data: { reason: result.reason },
+				}));
+				failResult = {
+					status: CaptchaStatus.disapproved,
+					reason: ResultReason.SPAM_EMAIL_RULE,
+				};
+				failReason = "API.SPAM_EMAIL_RULE";
+			}
+		}
+
+		const sessionRecord = challengeRecord.sessionId
+			? await this.db.getSessionRecordBySessionId(challengeRecord.sessionId)
+			: undefined;
+
+		const enrichedDnsEvent = await enrichDnsEvent(
+			sessionRecord?.dnsEvent,
+			env.ipInfoService,
+			ip ?? challengeRecord.ipInfo?.ip,
+		);
+
+		if (!failResult) {
+			const check = await this.resolveTrafficFilterCheck(
+				env,
+				challengeRecord.ipInfo,
+				trafficFilter,
+				ip,
+				enrichedDnsEvent,
+			);
+			if (check.isBlocked) {
+				logger.info(() => ({
+					msg: "Traffic filter rejected request in PoW verification",
+					data: {
+						ip,
+						reason: check.reason,
+						dnsPeerIp: enrichedDnsEvent?.peerIp,
+						dnsResolverIp: enrichedDnsEvent?.resolverIp,
+						dnsPeerAsn: getIpInfoAsn(enrichedDnsEvent?.peerIpInfo),
+						dnsResolverAsn: getIpInfoAsn(enrichedDnsEvent?.resolverIpInfo),
+						dnsPathValid: enrichedDnsEvent?.pathValid,
+					},
+				}));
+				failResult = {
+					status: CaptchaStatus.disapproved,
+					reason: check.reason,
+				};
+				failReason = check.reason;
+			}
+		}
+
+		// Persist dapp-server-provided metadata when the site opts in.
+		// Gated purely by `storeMetadata` — independent of the spam-email
+		// checks above, which inspect the email but never write it.
+		if (storeMetadata && email) {
+			powRecordUpdates.metadata = { email };
+		}
+
+		// IP validation: store provided IP and validate if rules enabled
+		if (!failResult && ip) {
 			const challengeIpAddress = getIpAddressFromComposite(
 				challengeRecord.ipAddress,
 			);
@@ -422,124 +772,176 @@ export class PowCaptchaManager extends CaptchaManager {
 			const clientRecord = await this.db.getClientRecord(dappAccount);
 			const ipValidationRules = clientRecord?.settings?.ipValidationRules;
 
-			await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
-				providedIp: getCompositeIpAddress(ip),
-			});
+			// Accumulate providedIp update instead of writing immediately
+			powRecordUpdates.providedIp = getCompositeIpAddress(ip);
 
-			const ipValidation = await deepValidateIpAddress(
-				ip,
-				challengeIpAddress,
-				this.logger,
-				env.config.ipApi.apiKey,
-				env.config.ipApi.baseUrl,
-				ipValidationRules,
-			);
+			if (ipValidationRules?.enabled === true) {
+				const ipValidation = await deepValidateIpAddress(
+					ip,
+					challengeIpAddress,
+					logger,
+					env.ipInfoService,
+					ipValidationRules,
+					enrichedDnsEvent?.peerIp,
+				);
 
-			if (!ipValidation.isValid) {
-				this.logger.error(() => ({
-					msg: "IP validation failed for PoW captcha",
-					data: {
-						ip,
-						challengeIp: challengeIpAddress.address,
-						error: ipValidation.errorMessage,
-						distanceKm: ipValidation.distanceKm,
-					},
-				}));
-				return notVerifiedResponse;
+				if (!ipValidation.isValid) {
+					logger.error(() => ({
+						msg: "IP validation failed for PoW captcha",
+						data: {
+							ip,
+							challengeIp: challengeIpAddress.address,
+							error: ipValidation.errorMessage,
+							distanceKm: ipValidation.distanceKm,
+						},
+					}));
+					failResult = {
+						status: CaptchaStatus.disapproved,
+						reason: ResultReason.FAILED_IP_VALIDATION,
+					};
+					failReason = "API.FAILED_IP_VALIDATION";
+				}
 			}
 		}
 
 		let score: number | undefined;
-		if (challengeRecord.sessionId) {
-			const sessionRecord = await this.db.getSessionRecordBySessionId(
-				challengeRecord.sessionId,
+		if (sessionRecord) {
+			const dnsAsymmetry = computeDnsAsymmetry(
+				enrichedDnsEvent,
+				challengeRecord.ipInfo,
 			);
-			if (sessionRecord) {
-				score = computeFrictionlessScore(sessionRecord?.scoreComponents);
-				this.logger.info(() => ({
-					data: {
-						scoreComponents: { ...(sessionRecord?.scoreComponents || {}) },
-						score,
-					},
-				}));
+			if (dnsAsymmetry > 0) {
+				sessionRecord.scoreComponents = {
+					...sessionRecord.scoreComponents,
+					dnsAsymmetry,
+				};
 			}
+			score = computeFrictionlessScore(sessionRecord?.scoreComponents);
+			logger.info(() => ({
+				data: {
+					scoreComponents: { ...(sessionRecord?.scoreComponents || {}) },
+					score,
+					dnsPeerAsn: getIpInfoAsn(enrichedDnsEvent?.peerIpInfo),
+					dnsResolverAsn: getIpInfoAsn(enrichedDnsEvent?.resolverIpInfo),
+				},
+			}));
+		}
+
+		// Decision machine evaluation (only if no prior failures)
+		if (!failResult) {
+			try {
+				const decisionInput: DecisionMachineInput = {
+					userAccount: challengeRecord.userAccount,
+					dappAccount: challengeRecord.dappAccount,
+					captchaResult: "passed",
+					headers: challengeRecord.headers,
+					captchaType: CaptchaType.pow,
+					behavioralDataPacked: challengeRecord.behavioralDataPacked,
+					deviceCapability: challengeRecord.deviceCapability,
+					countryCode: challengeRecord.ipInfo?.isValid
+						? challengeRecord.ipInfo.countryCode
+						: undefined,
+					ipInfo: challengeRecord.ipInfo,
+					dnsEvent: enrichedDnsEvent,
+					score,
+					threshold: sessionRecord?.threshold,
+					scoreComponents: sessionRecord?.scoreComponents,
+					decryptedHeadHash: sessionRecord?.decryptedHeadHash,
+					userSitekeyIpHash: sessionRecord?.userSitekeyIpHash,
+					simdReadings: sessionRecord?.simdReadings,
+					frictionlessReason: sessionRecord?.reason,
+					ruleType: sessionRecord?.ruleType,
+					webView: sessionRecord?.webView,
+					iFrame: sessionRecord?.iFrame,
+				};
+
+				const decision = await this.decisionMachineRunner.decide(
+					decisionInput,
+					logger,
+				);
+
+				if (decision.decision === DecisionMachineDecision.Deny) {
+					logger.info(() => ({
+						msg: "Decision machine denied PoW captcha in server verification",
+						data: {
+							userAccount: challengeRecord.userAccount,
+							reason: decision.reason,
+							score: decision.score,
+							tags: decision.tags,
+						},
+					}));
+
+					// Decision machines are operator-authored JS — their `reason`
+					// is just `string | undefined`. Cast to `ResultReason` at the
+					// boundary so the strict types on `CaptchaResult` hold; the
+					// canonical fallback is used when the DM returns no reason.
+					const dmReason = (decision.reason ||
+						ResultReason.CAPTCHA_DECISION_MACHINE_DENIED) as ResultReason;
+					failResult = {
+						status: CaptchaStatus.disapproved,
+						reason: dmReason,
+					};
+					failReason = dmReason;
+				} else {
+					logger.debug(() => ({
+						msg: "Decision machine allowed PoW captcha",
+						data: {
+							reason: decision.reason,
+							score: decision.score,
+							tags: decision.tags,
+						},
+					}));
+				}
+			} catch (error) {
+				logger.error(() => ({
+					msg: "Failed to run decision machine in server PoW verification",
+					err: error,
+				}));
+				// Don't fail the captcha if decision machine fails - default to allow
+			}
+		}
+
+		// Single batch write: combine all accumulated pow record updates + result
+		const finalResult: CaptchaResult = failResult || {
+			status: CaptchaStatus.approved,
+		};
+		if (failResult) {
+			powRecordUpdates.result = failResult;
+		}
+
+		// Write pow record updates and session update in parallel
+		const writePromises: Promise<void>[] = [];
+
+		if (Object.keys(powRecordUpdates).length > 0) {
+			writePromises.push(
+				this.db.updatePowCaptchaRecord(
+					challengeRecord.challenge,
+					powRecordUpdates,
+				),
+			);
+		}
+
+		if (challengeRecord.sessionId) {
+			writePromises.push(
+				this.updateSessionRecordWithCache(
+					challengeRecord.sessionId,
+					{
+						serverChecked: true,
+						result: finalResult,
+					},
+					true,
+				),
+			);
+		}
+
+		if (writePromises.length > 0) {
+			await Promise.all(writePromises);
+		}
+
+		if (failReason) {
+			return notVerified(failReason);
 		}
 
 		return { verified: true, ...(score ? { score } : {}) };
-	}
-
-	/**
-	 * Decrypts behavioral data in packed format
-	 * @param encryptedData - The encrypted behavioral data
-	 * @param decryptKeys - Array of possible decryption keys to try
-	 * @returns Packed behavioral data in {c1, c2, c3, d} format, or null if decryption fails
-	 */
-	private async decryptBehavioralDataPacked(
-		encryptedData: string,
-		decryptKeys: (string | undefined)[],
-	): Promise<BehavioralDataPacked | null> {
-		const decryptBehavioralData = (
-			await import("../detection/decodeBehavior.js")
-		).default;
-
-		const validKeys = decryptKeys.filter((k) => k);
-
-		if (validKeys.length === 0) {
-			this.logger?.error(() => ({
-				msg: "No decryption keys provided for behavioral data",
-			}));
-			return null;
-		}
-
-		// Try each key until one succeeds
-		for (const [keyIndex, key] of validKeys.entries()) {
-			try {
-				this.logger?.debug(() => ({
-					msg: "Attempting to decrypt behavioral data",
-					data: {
-						keyIndex: keyIndex + 1,
-						totalKeys: validKeys.length,
-					},
-				}));
-
-				// Decrypt and parse the JSON - data from client is already in packed format: {c1, c2, c3, d}
-				const result = (await decryptBehavioralData(
-					encryptedData,
-					key,
-				)) as unknown as BehavioralDataPacked;
-
-				this.logger?.info(() => ({
-					msg: "Behavioral data decrypted successfully",
-					data: {
-						keyIndex: keyIndex + 1,
-						c1Length: result.c1?.length || 0,
-						c2Length: result.c2?.length || 0,
-						c3Length: result.c3?.length || 0,
-						deviceCapability: result.d,
-					},
-				}));
-
-				return result;
-			} catch (error) {
-				this.logger?.debug(() => ({
-					msg: "Failed to decrypt with key, trying next",
-					data: {
-						keyIndex: keyIndex + 1,
-						totalKeys: validKeys.length,
-						err: error,
-					},
-				}));
-				// Continue to next key
-			}
-		}
-
-		// All keys failed
-		this.logger?.error(() => ({
-			msg: "Failed to decrypt behavioral data with all available keys",
-			data: {
-				totalKeysAttempted: validKeys.length,
-			},
-		}));
-		return null;
 	}
 }

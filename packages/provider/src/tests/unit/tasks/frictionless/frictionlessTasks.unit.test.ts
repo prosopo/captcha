@@ -14,9 +14,11 @@
 
 import {
 	CaptchaType,
+	ClientSettingsSchema,
 	FrictionlessPenalties,
 	type KeyringPair,
 	type ProsopoConfigOutput,
+	imageMaxRoundsDefault,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import {
@@ -125,8 +127,8 @@ describe("Frictionless Task Manager", () => {
 			const mockScore = 0.5;
 			const mockThreshold = 0.7;
 			const mockScoreComponents = { baseScore: 0.5 };
-			const mockEntropy = 12345;
 			const mockIpAddress = getCompositeIpAddress("127.0.0.1");
+			const mockSiteKey = "mockSiteKey";
 
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.storeSessionRecord as any).mockResolvedValue(undefined);
@@ -136,9 +138,9 @@ describe("Frictionless Task Manager", () => {
 				mockScore,
 				mockThreshold,
 				mockScoreComponents,
-				mockEntropy,
 				mockIpAddress,
 				CaptchaType.image,
+				mockSiteKey,
 			);
 
 			expect(session).toHaveProperty("sessionId");
@@ -147,7 +149,100 @@ describe("Frictionless Task Manager", () => {
 			expect(session).toHaveProperty("threshold", mockThreshold);
 			expect(session).toHaveProperty("captchaType", CaptchaType.image);
 			expect(session).toHaveProperty("createdAt");
+			expect(session).toHaveProperty("ipAddress", mockIpAddress);
+			expect(session).toHaveProperty("siteKey", mockSiteKey);
 			expect(db.storeSessionRecord).toHaveBeenCalledWith(session);
+		});
+
+		it("threads ipInfo from setSessionParams through to the stored session record", async () => {
+			// setSessionParams({ ipInfo: ... }) → sendImageCaptcha →
+			// createSession → storeSessionRecord. The full payload from
+			// the request-time ipInfoMiddleware must land on the
+			// session record, not be silently dropped along the way.
+			const mockIpAddress = getCompositeIpAddress("1.2.3.4");
+			const stubIpInfo = {
+				ip: "1.2.3.4",
+				isValid: true as const,
+				isVPN: true,
+				isTor: false,
+				isProxy: false,
+				isDatacenter: true,
+				isAbuser: false,
+				isMobile: false,
+				isSatellite: false,
+				isCrawler: false,
+				countryCode: "DE",
+				asnNumber: 12345,
+			};
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.storeSessionRecord as any).mockResolvedValue(undefined);
+
+			frictionlessTaskManager.setSessionParams({
+				token: "tok-ipinfo",
+				score: 0.5,
+				threshold: 0.7,
+				scoreComponents: { baseScore: 0.5 },
+				ipAddress: mockIpAddress,
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "",
+				siteKey: "siteKey-ipinfo",
+				ipInfo: stubIpInfo,
+			});
+
+			await frictionlessTaskManager.sendImageCaptcha({
+				solvedImagesCount: 0,
+			});
+
+			// Inspect the session that storeSessionRecord was actually
+			// called with — the ipInfo we set must be on it.
+			expect(db.storeSessionRecord).toHaveBeenCalledWith(
+				expect.objectContaining({ ipInfo: stubIpInfo }),
+			);
+		});
+
+		it("threads ipInfo through registerBlockedSession too", async () => {
+			// The blocked-session path constructs a Session record
+			// independently of sendImageCaptcha; make sure ipInfo is
+			// carried through there as well.
+			const mockIpAddress = getCompositeIpAddress("1.2.3.4");
+			const stubIpInfo = {
+				ip: "1.2.3.4",
+				isValid: true as const,
+				isVPN: false,
+				isTor: true,
+				isProxy: false,
+				isDatacenter: false,
+				isAbuser: false,
+				isMobile: false,
+				isSatellite: false,
+				isCrawler: false,
+				countryCode: "GB",
+			};
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.storeSessionRecord as any).mockResolvedValue(undefined);
+
+			frictionlessTaskManager.setSessionParams({
+				token: "tok-blocked",
+				score: 0.9,
+				threshold: 0.5,
+				scoreComponents: { baseScore: 0.9 },
+				ipAddress: mockIpAddress,
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "",
+				siteKey: "siteKey-blocked",
+				ipInfo: stubIpInfo,
+			});
+
+			await frictionlessTaskManager.registerBlockedSession({});
+
+			expect(db.storeSessionRecord).toHaveBeenCalledWith(
+				expect.objectContaining({
+					ipInfo: stubIpInfo,
+					blocked: true,
+				}),
+			);
 		});
 
 		it("should create image captcha session correctly", async () => {
@@ -155,8 +250,8 @@ describe("Frictionless Task Manager", () => {
 			const mockScore = 0.5;
 			const mockThreshold = 0.7;
 			const mockScoreComponents = { baseScore: 0.5 };
-			const mockEntropy = 12345;
 			const mockIpAddress = getCompositeIpAddress("127.0.0.1");
+			const mockSiteKey = "mockSiteKey";
 
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.storeSessionRecord as any).mockResolvedValue(undefined);
@@ -166,11 +261,11 @@ describe("Frictionless Task Manager", () => {
 				score: mockScore,
 				threshold: mockThreshold,
 				scoreComponents: mockScoreComponents,
-				providerSelectEntropy: mockEntropy,
 				ipAddress: mockIpAddress,
 				webView: false,
 				iFrame: false,
 				decryptedHeadHash: "",
+				siteKey: mockSiteKey,
 			});
 
 			const response = await frictionlessTaskManager.sendImageCaptcha({
@@ -187,8 +282,8 @@ describe("Frictionless Task Manager", () => {
 			const mockScore = 0.5;
 			const mockThreshold = 0.7;
 			const mockScoreComponents = { baseScore: 0.5 };
-			const mockEntropy = 12345;
 			const mockIpAddress = getCompositeIpAddress("127.0.0.1");
+			const mockSiteKey = "mockSiteKey";
 
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.storeSessionRecord as any).mockResolvedValue(undefined);
@@ -198,11 +293,11 @@ describe("Frictionless Task Manager", () => {
 				score: mockScore,
 				threshold: mockThreshold,
 				scoreComponents: mockScoreComponents,
-				providerSelectEntropy: mockEntropy,
 				ipAddress: mockIpAddress,
 				webView: false,
 				iFrame: false,
 				decryptedHeadHash: "",
+				siteKey: mockSiteKey,
 			});
 
 			const response = await frictionlessTaskManager.sendPowCaptcha({
@@ -212,6 +307,163 @@ describe("Frictionless Task Manager", () => {
 			expect(response).toHaveProperty("captchaType", CaptchaType.pow);
 			expect(response).toHaveProperty("sessionId");
 			expect(response).toHaveProperty("status", "ok");
+		});
+
+		it("should create puzzle captcha session correctly", async () => {
+			const mockToken = "mockToken123";
+			const mockScore = 0.5;
+			const mockThreshold = 0.7;
+			const mockScoreComponents = { baseScore: 0.5 };
+			const mockIpAddress = getCompositeIpAddress("127.0.0.1");
+			const mockSiteKey = "mockSiteKey";
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.storeSessionRecord as any).mockResolvedValue(undefined);
+
+			frictionlessTaskManager.setSessionParams({
+				token: mockToken,
+				score: mockScore,
+				threshold: mockThreshold,
+				scoreComponents: mockScoreComponents,
+				ipAddress: mockIpAddress,
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "",
+				siteKey: mockSiteKey,
+			});
+
+			const response = await frictionlessTaskManager.sendPuzzleCaptcha();
+
+			expect(response).toHaveProperty("captchaType", CaptchaType.puzzle);
+			expect(response).toHaveProperty("sessionId");
+			expect(response).toHaveProperty("status", "ok");
+		});
+
+		it("should throw when sendPuzzleCaptcha is called without session params", async () => {
+			await expect(frictionlessTaskManager.sendPuzzleCaptcha()).rejects.toThrow(
+				/Session parameters must be set/,
+			);
+		});
+	});
+
+	describe("ClientSettingsSchema defaults", () => {
+		it("defaults imageMaxRounds to 32", () => {
+			expect(imageMaxRoundsDefault).toBe(32);
+			const parsed = ClientSettingsSchema.parse({
+				captchaType: CaptchaType.image,
+				domains: ["localhost"],
+			});
+			expect(parsed.imageMaxRounds).toBe(32);
+		});
+	});
+
+	describe("Session caching with RedisWriteQueue", () => {
+		it("should cache session in Redis after creation when writeQueue is set", async () => {
+			const mockWriteQueue = {
+				cacheSession: vi.fn().mockResolvedValue(true),
+				cacheSessionByHash: vi.fn().mockResolvedValue(true),
+				getCachedSession: vi.fn().mockResolvedValue(null),
+				getCachedSessionByHash: vi.fn().mockResolvedValue(null),
+				invalidateCachedSession: vi.fn().mockResolvedValue(undefined),
+				queueSessionRecord: vi.fn().mockResolvedValue(true),
+				drainSessionRecords: vi.fn().mockResolvedValue([]),
+				startPeriodicFlush: vi.fn(),
+				stopPeriodicFlush: vi.fn(),
+				isReady: vi.fn().mockReturnValue(true),
+			};
+
+			frictionlessTaskManager.writeQueue =
+				mockWriteQueue as unknown as import("@prosopo/database").RedisWriteQueue;
+
+			frictionlessTaskManager.setSessionParams({
+				token: "test-token",
+				score: 0.5,
+				threshold: 0.5,
+				scoreComponents: { baseScore: 0.5 },
+				ipAddress: getCompositeIpAddress("1.1.1.1"),
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "abc",
+				siteKey: "test-dapp",
+			});
+
+			const response = await frictionlessTaskManager.sendPowCaptcha();
+
+			expect(response).toHaveProperty("captchaType", CaptchaType.pow);
+			expect(db.storeSessionRecord).toHaveBeenCalledOnce();
+
+			// Allow fire-and-forget cache promises to settle
+			await new Promise((resolve) => setTimeout(resolve, 10));
+
+			// Should have cached the session by sessionId
+			expect(mockWriteQueue.cacheSession).toHaveBeenCalledOnce();
+			const cacheArgs = mockWriteQueue.cacheSession.mock.calls[0] as unknown[];
+			expect(cacheArgs[0]).toBe(response.sessionId);
+		});
+
+		it("should cache session by hash when userSitekeyIpHash is provided", async () => {
+			const mockWriteQueue = {
+				cacheSession: vi.fn().mockResolvedValue(true),
+				cacheSessionByHash: vi.fn().mockResolvedValue(true),
+				getCachedSession: vi.fn().mockResolvedValue(null),
+				getCachedSessionByHash: vi.fn().mockResolvedValue(null),
+				invalidateCachedSession: vi.fn().mockResolvedValue(undefined),
+				queueSessionRecord: vi.fn().mockResolvedValue(true),
+				drainSessionRecords: vi.fn().mockResolvedValue([]),
+				startPeriodicFlush: vi.fn(),
+				stopPeriodicFlush: vi.fn(),
+				isReady: vi.fn().mockReturnValue(true),
+			};
+
+			frictionlessTaskManager.writeQueue =
+				mockWriteQueue as unknown as import("@prosopo/database").RedisWriteQueue;
+
+			frictionlessTaskManager.setSessionParams({
+				token: "test-token",
+				score: 0.5,
+				threshold: 0.5,
+				scoreComponents: { baseScore: 0.5 },
+				ipAddress: getCompositeIpAddress("1.1.1.1"),
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "abc",
+				siteKey: "test-dapp",
+			});
+
+			const userSitekeyIpHash = "test-hash-123";
+			await frictionlessTaskManager.sendPowCaptcha({
+				userSitekeyIpHash,
+			});
+
+			// Allow fire-and-forget cache promises to settle
+			await new Promise((resolve) => setTimeout(resolve, 10));
+
+			// Should have cached by both sessionId and hash
+			expect(mockWriteQueue.cacheSession).toHaveBeenCalledOnce();
+			expect(mockWriteQueue.cacheSessionByHash).toHaveBeenCalledWith(
+				userSitekeyIpHash,
+				expect.any(String),
+			);
+		});
+
+		it("should not cache when writeQueue is not set", async () => {
+			frictionlessTaskManager.setSessionParams({
+				token: "test-token",
+				score: 0.5,
+				threshold: 0.5,
+				scoreComponents: { baseScore: 0.5 },
+				ipAddress: getCompositeIpAddress("1.1.1.1"),
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "abc",
+				siteKey: "test-dapp",
+			});
+
+			// No writeQueue set - should still work without caching
+			const response = await frictionlessTaskManager.sendPowCaptcha();
+
+			expect(response).toHaveProperty("captchaType", CaptchaType.pow);
+			expect(db.storeSessionRecord).toHaveBeenCalledOnce();
 		});
 	});
 });

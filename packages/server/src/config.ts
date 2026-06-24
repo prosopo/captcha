@@ -32,5 +32,5 @@ export const getServerUrl = (): string => {
 		}
 		return `${process.env.PROSOPO_SERVER_URL}:${process.env.PROSOPO_SERVER_PORT || 9228}`;
 	}
-	return "http://localhost:9228";
+	return "https://localhost:9228";
 };

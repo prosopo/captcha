@@ -12,7 +12,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { LogLevel, getLogger } from "@prosopo/common";
+import { LogLevel, getLogger } from "@prosopo/logger";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import {

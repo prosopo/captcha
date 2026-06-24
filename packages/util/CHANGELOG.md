@@ -1,5 +1,102 @@
 # @prosopo/util
 
+## 3.3.1
+### Patch Changes
+
+- edcd450: Validate salt-encoded coords in PoW and puzzle verification and add a `CAPTCHA_INVALID_SALT` result reason. Invalid input now produces a disapproval rather than a partial write.
+
+## 3.3.0
+### Minor Changes
+
+- 55b1388: Bit-level granular PoW difficulty via target-threshold check. `solvePoW` (client) and `validateSolution` (server) now compare the hash as a 256-bit big-endian integer against `target = 2^(256 - round(4 * difficulty))`, shared via `targetForDifficulty` / `hashMeetsDifficulty` in `@prosopo/util`. Integer difficulties produce *identical* behaviour to the legacy hex-prefix check (d=4 ≡ 16 leading zero bits ≡ threshold 2^240), so existing clients, configs, anomaly detectors, and stored records are unchanged. Fractional values quantise to bit-level granularity: each 0.25 step ≡ 1 bit ≡ 2× work, so providers can tune d=4.25, d=4.5, d=4.75 to fill the 16× gap between today's d=4 and d=5 — useful for landing on a sensible mobile UX. `powDifficulty` in `ClientSettingsSchema` and `RoutingMachineOutputSchema` drops `.int()`; wire format (nonce as `u32`, difficulty as `number`) is unchanged.
+
+## 3.2.15
+### Patch Changes
+
+- 6ca1125: Move stringifyBigInts to @prosopo/util where generic utilities belong. Re-exported from @prosopo/logger for backward compatibility.
+
+## 3.2.14
+### Patch Changes
+
+- 6567ce0: feat(provider): allow Google Translate proxy domains through the domain check middleware
+  
+  Google Translate proxies a site under `<encoded>.translate.goog` (e.g.
+  `prosopo-io.translate.goog`), encoding `.` as `-` and `-` as `--`. With the
+  previous implementation the proxied host never matched a site's allowed
+  domains and the captcha widget broke on translated pages.
+  
+  Add `decodeGoogleTranslateHost` to `@prosopo/util` which reverses the
+  encoding, and update the provider's `domainMiddleware` so that when the
+  request origin is a `*.translate.goog` URL it also tries the decoded
+  origin against the site's allowed domains.
+  
+  Closes #2585.
+
+## 3.2.13
+### Patch Changes
+
+- 72a1218: Restore Vite build-time substitution of the package version.
+  
+  The `process` guard added in #2551 introduced optional chaining
+  (`process.env?.PROSOPO_PACKAGE_VERSION`), which Vite's `define` plugin
+  no longer matches because the AST node becomes an OptionalMemberExpression
+  instead of a plain MemberExpression. As a result the build-time version
+  was never inlined and bundled servers reported `version: "dev"` from the
+  `/v1/prosopo/provider/public/details` endpoint.
+  
+  Drop the `?.` while keeping the `typeof process !== "undefined"` guard
+  so the guard still protects browser runtimes and Vite's define
+  substitution works again.
+
+## 3.2.12
+### Patch Changes
+
+- 4aae4e6: Guard the `process.env` reads in `i18nSharedOptions` and `version` so both
+  packages are loadable in a plain browser runtime (e.g. Vite dev/preview
+  servers) where `process` is undefined. Without the guard, any consumer that
+  side-effectfully imports `@prosopo/types` — which transitively reaches
+  `@prosopo/locale` via `LanguageSchema` — would crash the page with
+  `ReferenceError: process is not defined`.
+
+## 3.2.11
+### Patch Changes
+
+- a25dffa: Cache based on last modified
+
+## 3.2.10
+### Patch Changes
+
+- 346edd7: Fix exports for browser
+
+## 3.2.9
+### Patch Changes
+
+- 22bfee7: Stream large files to avoid loading entire file into RAM
+
+## 3.2.8
+### Patch Changes
+
+- e0fb3d6: Invalidate domains with incorrect dots
+- f3f23e3: Improve localhost detection
+
+## 3.2.7
+### Patch Changes
+
+- e1ea65f: Better spam email domain checking
+
+## 3.2.6
+### Patch Changes
+
+- adb89a6: Disposable email checking
+
+## 3.2.5
+### Patch Changes
+
+- a53526b: enhance/pow-client-solution
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+
 ## 3.2.4
 ### Patch Changes
 

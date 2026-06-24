@@ -19,7 +19,7 @@ export const checkLangRules = (
 ): number => {
 	const lConfig = config.lRules;
 	let lScore = 0;
-	if (lConfig) {
+	if (lConfig && acceptLanguage) {
 		const languages = acceptLanguage
 			.split(",")
 			.map((lang) => lang.trim().split(";")[0]);

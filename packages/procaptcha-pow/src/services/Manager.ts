@@ -16,19 +16,27 @@ import { stringToHex } from "@polkadot/util/string";
 import { ProviderApi } from "@prosopo/api";
 import { ProsopoEnvError } from "@prosopo/common";
 import {
+	FINGERPRINT_DISCLOSURE_KEYS,
+	encodeFingerprintProof,
+	getFingerprintProof,
+} from "@prosopo/fingerprint";
+import {
 	ExtensionLoader,
 	buildUpdateState,
 	getProcaptchaRandomActiveProvider,
+	pickIpMode,
 	providerRetry,
 } from "@prosopo/procaptcha-common";
 import { getDefaultEvents } from "@prosopo/procaptcha-common";
 import {
 	type Account,
 	ApiParams,
+	CaptchaType,
 	type FrictionlessState,
 	type ProcaptchaCallbacks,
 	type ProcaptchaClientConfigInput,
 	ProcaptchaConfigSchema,
+	type ProcaptchaEscalationHandler,
 	type ProcaptchaState,
 	type ProcaptchaStateUpdateFn,
 	encodeProcaptchaOutput,
@@ -43,6 +51,11 @@ export const Manager = (
 	onStateUpdate: ProcaptchaStateUpdateFn,
 	callbacks: ProcaptchaCallbacks,
 	frictionlessState?: FrictionlessState,
+	onEscalate?: ProcaptchaEscalationHandler,
+	// Reads the live honeypot input value at submit time. Returns undefined
+	// when the input doesn't exist (honeypot disabled) or hasn't been filled.
+	// Bots that auto-fill text inputs populate it; humans never see it.
+	getHoneypotValue?: () => string | undefined,
 ) => {
 	const events = getDefaultEvents(callbacks);
 
@@ -205,8 +218,10 @@ export const Manager = (
 				if (frictionlessState?.provider) {
 					getRandomProviderResponse = frictionlessState.provider;
 				} else {
+					const currentConfig = getConfig();
 					getRandomProviderResponse = await getProcaptchaRandomActiveProvider(
-						getConfig().defaultEnvironment,
+						currentConfig.defaultEnvironment,
+						pickIpMode(currentConfig),
 					);
 				}
 
@@ -214,10 +229,18 @@ export const Manager = (
 
 				const providerApi = new ProviderApi(providerUrl, getDappAccount());
 
+				// Non-blocking check (timeoutMs=0): only attach SIMD readings if
+				// the benchmark prefetched by the catcher has already resolved.
+				// We want this signal as early as possible — first request that
+				// has it wins; later attach points (submission) are backups.
+				const simdReadingsOnChallenge = frictionlessState?.getSimdReadings
+					? await frictionlessState.getSimdReadings(0)
+					: undefined;
 				const challenge = await providerApi.getPowCaptchaChallenge(
 					userAccount,
 					getDappAccount(),
 					frictionlessState?.sessionId,
+					simdReadingsOnChallenge,
 				);
 
 				if (challenge.error) {
@@ -298,17 +321,63 @@ export const Manager = (
 						}
 					}
 
+					const simdReadings = frictionlessState?.getSimdReadings
+						? await frictionlessState.getSimdReadings()
+						: undefined;
+					const hpValue = getHoneypotValue?.();
+					const clientMetaData = hpValue ? { hp: hpValue } : undefined;
+					// Best-effort proof of fingerprint; submission proceeds without it
+					// if a proof can't be produced (e.g. fingerprint unavailable).
+					// Only the validator-checked keys are disclosed to keep the
+					// payload small (see FINGERPRINT_DISCLOSURE_KEYS).
+					let fingerprintProof: string | undefined;
+					try {
+						fingerprintProof = encodeFingerprintProof(
+							await getFingerprintProof(FINGERPRINT_DISCLOSURE_KEYS),
+						);
+					} catch {
+						fingerprintProof = undefined;
+					}
+					// Test hook for exercising the provider's fingerprint failure
+					// path. In a browser console set:
+					//   window.__prosopoFingerprintProofTest__ = "malformed" // → image
+					//   window.__prosopoFingerprintProofTest__ = "omit"      // → image
+					// Never set in production; unset/any other value = normal proof.
+					const fpTest = (globalThis as Record<string, unknown>)
+						.__prosopoFingerprintProofTest__;
+					if (fpTest === "omit") {
+						fingerprintProof = undefined;
+					} else if (typeof fpTest === "string" && fpTest.length > 0) {
+						fingerprintProof = "invalid-fingerprint-proof";
+					}
 					const verifiedSolution = await providerApi.submitPowCaptchaSolution(
 						challenge,
 						getAccount().account.account.address,
 						getDappAccount(),
 						solution,
 						userTimestampSignature.signature.toString(),
-						config.captchas.pow.verifiedTimeout,
 						encryptedBehavioralData,
 						salt,
+						simdReadings,
+						clientMetaData,
+						fingerprintProof,
 					);
-					if (verifiedSolution[ApiParams.verified]) {
+					const escalation = verifiedSolution[ApiParams.escalation];
+					if (
+						escalation &&
+						(escalation[ApiParams.captchaType] === CaptchaType.image ||
+							escalation[ApiParams.captchaType] === CaptchaType.puzzle)
+					) {
+						// Provider accepted the PoW but wants the user to complete a
+						// follow-up image/puzzle challenge. Hand off to the wrapper —
+						// don't fire onHuman or onFailed; the wrapper mounts the next
+						// widget and the standard success/failure path resumes there.
+						updateState({ loading: false });
+						onEscalate?.(
+							escalation[ApiParams.captchaType],
+							escalation[ApiParams.sessionId],
+						);
+					} else if (verifiedSolution[ApiParams.verified]) {
 						updateState({
 							isHuman: true,
 							loading: false,

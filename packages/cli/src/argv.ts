@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { LogLevel, type Logger, getLogger } from "@prosopo/common";
+import { LogLevel, type Logger, getLogger } from "@prosopo/logger";
 import type { KeyringPair } from "@prosopo/types";
 import type { ProsopoConfigOutput } from "@prosopo/types";
 import yargs, { type CommandModule } from "yargs";
@@ -20,10 +20,12 @@ import { hideBin } from "yargs/helpers";
 import {
 	commandEnsureExternalIndexes,
 	commandEnsureIndexes,
+	commandMigrateAbuserScoreThreshold,
 	commandProviderSetDataset,
 	commandSiteKeyRegister,
 	commandSiteKeyRegisterApi,
 	commandStoreCaptchasExternally,
+	commandUpdateSpamEmailDomains,
 	commandVersion,
 } from "./commands/index.js";
 
@@ -43,8 +45,10 @@ function getCommands(
 	return [
 		commandEnsureIndexes(pair, config, { logger }),
 		commandEnsureExternalIndexes(pair, config, { logger }),
+		commandMigrateAbuserScoreThreshold(pair, config, { logger }),
 		commandProviderSetDataset(pair, config, { logger }),
 		commandStoreCaptchasExternally(pair, config, { logger }),
+		commandUpdateSpamEmailDomains(pair, config, { logger }),
 		commandSiteKeyRegister(pair, config, { logger }),
 		commandSiteKeyRegisterApi(pair, authAccount, config, { logger }),
 		commandVersion(pair, config, { logger }),

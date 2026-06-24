@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type Logger, ProsopoDBError } from "@prosopo/common";
+import { ProsopoDBError } from "@prosopo/common";
 import { MongoDatabase } from "@prosopo/database";
+import type { Logger } from "@prosopo/logger";
 import type { Tables } from "@prosopo/types-database";
 import type mongoose from "mongoose";
 import { Schema } from "mongoose";

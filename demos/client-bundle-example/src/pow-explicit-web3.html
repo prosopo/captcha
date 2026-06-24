@@ -172,7 +172,6 @@
             window.updateCaptchaStatus(`Rendering the CAPTCHA for account ${account}`, 'info');
             const widgetId = render(document.getElementById('procaptcha-container'), {
                 siteKey: import.meta.env.PROSOPO_SITE_KEY_POW,
-                captchaType: "pow",
                 callback: handleCaptchaResponse,
                 "failed-callback": handleCaptchaFailed,
                 web3:true,

@@ -20,28 +20,20 @@ import type {
 	ProcaptchaClientConfigOutput,
 	ProcaptchaRenderOptions,
 } from "@prosopo/types";
-import type { CaptchaType } from "@prosopo/types";
 import type { ReactNode } from "react";
 import { type Root, createRoot } from "react-dom/client";
 import { createConfig } from "../configCreator.js";
 import { setLanguage } from "../language.js";
 import { setValidChallengeLength } from "../timeout.js";
-import type { CaptchaComponentProvider } from "./captchaComponentProvider.js";
+import { BundleCaptcha } from "./components/bundleCaptcha.js";
 
 interface RenderSettings {
 	identifierPrefix: string;
 	emotionCacheKey: string;
 	webComponentTag: string;
-	defaultCaptchaType: CaptchaType;
 }
 
 class CaptchaRenderer {
-	private readonly captchaComponentProvider: CaptchaComponentProvider;
-
-	constructor(captchaComponentProvider: CaptchaComponentProvider) {
-		this.captchaComponentProvider = captchaComponentProvider;
-	}
-
 	public renderCaptcha(
 		settings: RenderSettings,
 		container: HTMLElement,
@@ -51,11 +43,8 @@ class CaptchaRenderer {
 		i18n: Ti18n,
 		invisible: boolean,
 		widgetContainer: HTMLElement,
+		sourceElement?: Element,
 	): Root {
-		const captchaType =
-			(renderOptions?.captchaType as CaptchaType) ||
-			settings.defaultCaptchaType;
-
 		const config = createConfig(
 			renderOptions.siteKey,
 			renderOptions.theme,
@@ -63,8 +52,14 @@ class CaptchaRenderer {
 			isWeb2,
 			invisible,
 			renderOptions.userAccountAddress,
+			renderOptions.ipv4,
+			renderOptions.ipv6,
 		);
-		this.readAndValidateSettings(container, config, renderOptions);
+		this.readAndValidateSettings(
+			sourceElement || container,
+			config,
+			renderOptions,
+		);
 
 		const reactRoot = this.createReactRoot(
 			container,
@@ -76,14 +71,13 @@ class CaptchaRenderer {
 			container,
 		);
 
-		const captchaComponent = this.captchaComponentProvider.getCaptchaComponent(
-			captchaType,
-			{
-				config: config,
-				i18n: i18n,
-				callbacks,
-				container: widgetContainer,
-			},
+		const captchaComponent = (
+			<BundleCaptcha
+				config={config}
+				callbacks={callbacks}
+				i18n={i18n}
+				container={widgetContainer}
+			/>
 		);
 
 		this.renderCaptchaComponent(reactRoot, emotionCache, captchaComponent);

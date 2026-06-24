@@ -16,28 +16,50 @@ import "@cypress/xpath";
 import { ProsopoDatasetError } from "@prosopo/common";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import type { Captcha, CaptchaType } from "@prosopo/types";
-import { checkboxClass, getWidgetElement } from "../support/commands.js";
+import {
+	buildTestSolutions,
+	checkboxClass,
+	getWidgetElement,
+} from "../support/commands.js";
 
 const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "image";
 
 describe("Captchas", () => {
 	before(() => {
-		// Call registerSiteKey and handle response here
-		return cy.registerSiteKey(baseCaptchaType).then((response) => {
-			// Log the response status and body using cy.task()
-			cy.task("log", `Response status: ${response.status}`);
-			cy.task("log", `Response: ${JSON.stringify(response.body)}`);
+		// Call registerSiteKey and handle response here with retry logic
+		const registerWithRetry = (
+			retries = 3,
+			delay = 2000,
+		): Cypress.Chainable => {
+			return cy.registerSiteKey(baseCaptchaType).then((response) => {
+				// Log the response status and body using cy.task()
+				cy.task("log", `Response status: ${response.status}`);
+				cy.task("log", `Response: ${JSON.stringify(response.body)}`);
 
-			// Ensure the request was successful
-			expect(response.status).to.equal(200);
-		});
+				// If request failed and we have retries left, try again
+				if (response.status !== 200 && retries > 0) {
+					cy.task(
+						"log",
+						`Site key registration failed. Retrying... (${retries} attempts left)`,
+					);
+					cy.wait(delay);
+					return registerWithRetry(retries - 1, delay);
+				}
+
+				// Ensure the request was successful
+				expect(
+					response.status,
+					"Site key registration should return 200",
+				).to.equal(200);
+				return cy.wrap(response);
+			});
+		};
+
+		return registerWithRetry();
 	});
 
 	beforeEach(() => {
-		const solutions = datasetWithSolutionHashes.captchas.map((captcha) => ({
-			captchaContentId: captcha.captchaContentId,
-			solution: captcha.solution,
-		}));
+		const solutions = buildTestSolutions(datasetWithSolutionHashes.captchas);
 
 		if (!solutions) {
 			throw new ProsopoDatasetError(
@@ -55,18 +77,39 @@ describe("Captchas", () => {
 		console.log(`Visiting page: ${page}`);
 
 		// visit the base URL specified on command line when running cypress
-		return cy.visit(page).then(() => {
-			// Wait for the procaptcha script to be loaded
-			// This ensures tests work with both async and non-async script loading
-			cy.waitForProcaptchaScript();
-			getWidgetElement(checkboxClass).should("be.visible");
-			// wrap the solutions to make them available to the tests
-			cy.wrap(solutions).as("solutions");
-		});
+		return cy
+			.visit(page, {
+				timeout: 30000,
+				failOnStatusCode: false, // Don't fail immediately on non-2xx status codes
+			})
+			.then(() => {
+				// Wait for the procaptcha script to be loaded
+				// This ensures tests work with both async and non-async script loading
+				cy.waitForProcaptchaScript();
+
+				// Wait for widget to be visible with longer timeout for CI
+				getWidgetElement(checkboxClass, { timeout: 15000 }).should(
+					"be.visible",
+				);
+
+				// wrap the solutions to make them available to the tests
+				cy.wrap(solutions).as("solutions");
+			});
 	});
 
 	after(() => {
-		return cy.registerSiteKey(baseCaptchaType);
+		// Re-register the site key to reset state for subsequent test runs
+		// Using failOnStatusCode: false in the command, so this won't throw
+		cy.registerSiteKey(baseCaptchaType).then((response) => {
+			if (response.status === 200) {
+				cy.task("log", "Site key successfully re-registered");
+			} else {
+				cy.task(
+					"log",
+					`Warning: Could not re-register site key. Status: ${response.status}`,
+				);
+			}
+		});
 	});
 
 	it("Selecting the incorrect images fails the captcha", () => {
@@ -75,20 +118,40 @@ describe("Captchas", () => {
 			.then((console) => {
 				cy.spy(console, "log").as("log");
 			});
+
+		// Intercept the solution POST so we can wait for the server response
+		cy.intercept("POST", "**/prosopo/provider/client/solution").as(
+			"postSolution",
+		);
+
 		cy.clickIAmHuman().then(() => {
 			// Make sure the images are loaded
 			cy.captchaImages().then(() => {
 				cy.get("@captchas").each((captcha: Captcha) => {
 					cy.log("in each function");
-					// Click correct images and submit the solution
+					// Click next without selecting any images (incorrect answer)
 					cy.clickNextButton();
+					// wait a bit for the next captcha to load
+					cy.wait(500);
 				});
 			});
+
+			// Wait for the solution POST to complete — the server needs to
+			// process the incorrect answers before the onFailed callback fires
+			cy.wait("@postSolution", { timeout: 30000 });
+
+			// Wait for the UI to process the server response
+			cy.wait(1000);
+
 			getWidgetElement(checkboxClass).first().should("not.be.checked");
 		});
 
 		// check the logs by going through all recorded calls
-		cy.get("@log").should("have.been.calledWith", "Challenge failed");
+		// Use a generous timeout — CI can be slow processing the failure callback
+		cy.get("@log", { timeout: 15000 }).should(
+			"have.been.calledWith",
+			"Challenge failed",
+		);
 	});
 
 	it("Selecting the correct images passes the captcha", () => {
@@ -97,23 +160,36 @@ describe("Captchas", () => {
 			.then((console) => {
 				cy.spy(console, "log").as("log");
 			});
-		cy.clickIAmHuman().then(() => {
-			// Make sure the images are loaded
-			cy.captchaImages().then(() => {
-				// Solve the captchas
-				cy.get("@captchas")
-					.each((captcha: Captcha) => {
-						cy.log("in each function");
-						// Click correct images and submit the solution
-						cy.clickCorrectCaptchaImages(captcha);
-					})
-					.then(() => {
-						// Get inputs of type checkbox
-						getWidgetElement(checkboxClass).first().should("be.checked");
-					});
-			});
+
+		// Click "I am human" button
+		cy.clickIAmHuman();
+
+		// Wait for images to load
+		cy.captchaImages();
+
+		// Solve the captchas
+		cy.get("@captchas").each((captcha: Captcha, index: number) => {
+			cy.log(`Solving captcha ${index + 1}: ${captcha.captchaContentId}`);
+			// Click correct images and submit the solution
+			cy.clickCorrectCaptchaImages(captcha);
+			// Wait for the next captcha to fully load before continuing
+			// This is critical for CICD where the second round can be slower
+			cy.wait(1200); // Increased wait time for CI to ensure next captcha loads
 		});
+
+		// Wait for solution to be processed
+		cy.wait(2000);
+
+		// Verify checkbox is checked
+		getWidgetElement(checkboxClass, { timeout: 15000 })
+			.first()
+			.should("be.checked");
+
 		// check the logs by going through all recorded calls
-		cy.get("@log").should("have.been.calledWith", "Challenge passed");
+		// Use a generous timeout — CI can be slow processing the callback
+		cy.get("@log", { timeout: 15000 }).should(
+			"have.been.calledWith",
+			"Challenge passed",
+		);
 	});
 });

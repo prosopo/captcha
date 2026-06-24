@@ -13,7 +13,10 @@
 // limitations under the License.
 
 import { afterEach, describe, expect, it } from "vitest";
-import { getWindowCallback } from "../elements/window.js";
+import {
+	getWindowCallback,
+	isSecureBrowserContext,
+} from "../elements/window.js";
 
 describe("elements/window", () => {
 	describe("getWindowCallback", () => {
@@ -101,6 +104,34 @@ describe("elements/window", () => {
 			const result = getWindowCallback("testRegularCallback");
 			expect(result).toBe(regularFn);
 			expect(result(5)).toBe(10);
+		});
+	});
+
+	describe("isSecureBrowserContext", () => {
+		const originalIsSecureContext = window.isSecureContext;
+
+		const setIsSecureContext = (value: boolean): void => {
+			Object.defineProperty(window, "isSecureContext", {
+				value,
+				configurable: true,
+				writable: true,
+			});
+		};
+
+		afterEach(() => {
+			setIsSecureContext(originalIsSecureContext);
+		});
+
+		it("should return true in a secure context (HTTPS/localhost)", () => {
+			setIsSecureContext(true);
+
+			expect(isSecureBrowserContext()).toBe(true);
+		});
+
+		it("should return false in an insecure context (plain HTTP)", () => {
+			setIsSecureContext(false);
+
+			expect(isSecureBrowserContext()).toBe(false);
 		});
 	});
 });

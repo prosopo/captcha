@@ -13,16 +13,12 @@
 // limitations under the License.
 
 import type { Languages } from "@prosopo/locale";
-import type { CaptchaType } from "@prosopo/types";
-
-export type Features = `${CaptchaType}`;
 
 // note: do not use any Zod-related types inside the interface,
 // as this interface is re-exported by '@prosopo/procaptcha-wrapper' to external customers
 export interface ProcaptchaRenderOptions {
 	siteKey: string;
 	theme?: "light" | "dark";
-	captchaType?: Features;
 	callback?: string | ((token: string) => void);
 	"challenge-valid-length"?: string; // seconds for successful challenge to be valid
 	"chalexpired-callback"?: string | (() => void);
@@ -36,4 +32,10 @@ export interface ProcaptchaRenderOptions {
 	size?: "invisible";
 	web3?: boolean;
 	userAccountAddress?: string;
+	// When true, restrict provider DNS resolution to A records only. Mutually
+	// exclusive with `ipv6`; if both are set, `ipv4` wins (dual-stack is the
+	// default when neither is set).
+	ipv4?: boolean;
+	// When true, restrict provider DNS resolution to AAAA records only.
+	ipv6?: boolean;
 }

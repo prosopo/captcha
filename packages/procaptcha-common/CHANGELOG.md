@@ -1,5 +1,538 @@
 # @prosopo/procaptcha-common
 
+## 2.11.0
+### Minor Changes
+
+- 12cd0a6: Replace client-side weighted-random provider selection with static DNS endpoints.
+  
+  - Removed the `providerSelectEntropy` field from `DetectorResult`, `Session`, the
+    Mongoose `SessionRecordSchema` (including its standalone index), and every
+    call-site that threaded it through frictionless / image / pow / puzzle flows.
+  - Removed `FrictionlessManager.hostVerified` and its decision-machine call site
+    — there's nothing to verify when the DNS layer picks the host.
+  - `getRandomActiveProvider(env)` now returns the per-environment static DNS
+    endpoint (`pronode.prosopo.io` family) instead of fetching the provider list
+    and weighted-selecting. The entropy parameter is gone.
+  - `getProcaptchaRandomActiveProvider` is now a thin re-export so widget packages
+    keep importing from `procaptcha-common`.
+  - `FrontendProvider.datasetId` is dropped; `CaptchaRequestBody.datasetId` is
+    optional. The server falls back to its own most-recently-uploaded dataset
+    (`env.datasetId`, populated from `db.getMostRecentDatasetId()` at startup) —
+    clients can't pin a dataset under DNS routing because they don't know which
+    pronode they'll hit.
+  - Removed dead `setProviderLoader` / `prefetchProviders` / `selectWeightedProvider`
+    plumbing from `@prosopo/load-balancer`. The server's cacheFile-based loader
+    setup in `startProviderApi` goes with them.
+  - `getRandomActiveProvider` now hits `/healthz` on the global hostname once per
+    page load, reads the responding pronode's identity from the JSON body, and
+    pins subsequent captcha calls to that pronode (`https://pronodeN.prosopo.io`)
+    so session creation and submission land on the same backend. Falls back to
+    the dual-stack global hostname when `/healthz` is unreachable.
+  - `/healthz` now returns `{ ok: true, host: <pronode-identity> }` instead of
+    `"OK"` to support the above pinning.
+  - CORS preflight is now cached for 24h (`maxAge: 86400`) — previously the
+    browser refired an OPTIONS preflight before every captcha call because
+    the custom `Prosopo-Site-Key` / `Prosopo-User` headers make the request
+    non-simple and the default `maxAge` is 5s.
+- 12cd0a6: Add ipv4-only / ipv6-only provider DNS routing via `data-ipv4` / `data-ipv6`.
+  
+  Dapps that need to pin captcha traffic to a single IP stack can now do so:
+  
+  ```html
+  <div class="procaptcha" data-sitekey="..." data-ipv4="true"></div>
+  ```
+  
+  What happens under the hood:
+  
+  - The widget reads `data-ipv4` / `data-ipv6` (or the matching `ipv4` / `ipv6`
+    booleans on `ProcaptchaRenderOptions` / explicit `render(...)`) and threads
+    them through `ProcaptchaConfigSchema`.
+  - `pickIpMode(config)` resolves them into an `IpMode` (`"ipv4"` / `"ipv6"` /
+    `undefined`); `ipv4` wins if both are set.
+  - The frictionless / image / pow / puzzle managers pass the `IpMode` into
+    `getProcaptchaRandomActiveProvider`, which calls `/healthz` on the matching
+    single-stack global hostname (`ipv4.pronode.prosopo.io` or
+    `ipv6.pronode.prosopo.io`) and pins subsequent captcha calls to
+    `ipv4.pronodeN.prosopo.io` / `ipv6.pronodeN.prosopo.io`. The dual-stack
+    cache and the single-stack caches are kept separate.
+  - `convertHostedProvider` now accepts an optional `IpMode` and, when set,
+    selects the matching `ipv4` / `ipv6` sub-object from the provider-list JSON.
+    Top-level `ipv4` / `ipv6` keys are skipped by default so existing dual-stack
+    callers keep working.
+  - New helpers in `@prosopo/load-balancer`: `IpMode`, `stripIpModeLabel`,
+    `getProviderHostname`.
+  
+  Coordinated with the matching `captcha-private` change that publishes the
+  `ipv4` / `ipv6` sub-objects to S3.
+
+### Patch Changes
+
+- Updated dependencies [12cd0a6]
+- Updated dependencies [12cd0a6]
+  - @prosopo/load-balancer@2.10.0
+  - @prosopo/types@4.8.0
+  - @prosopo/account@2.8.47
+
+## 2.10.28
+### Patch Changes
+
+- Updated dependencies [bb98af1]
+  - @prosopo/types@4.7.4
+  - @prosopo/account@2.8.46
+  - @prosopo/load-balancer@2.9.21
+
+## 2.10.27
+### Patch Changes
+
+- Updated dependencies [89ab6fc]
+- Updated dependencies [0f3750b]
+  - @prosopo/types@4.7.3
+  - @prosopo/account@2.8.45
+  - @prosopo/load-balancer@2.9.20
+
+## 2.10.26
+### Patch Changes
+
+- Updated dependencies [edcd450]
+- Updated dependencies [5295c4b]
+  - @prosopo/types@4.7.2
+  - @prosopo/account@2.8.44
+  - @prosopo/load-balancer@2.9.19
+
+## 2.10.25
+### Patch Changes
+
+- Updated dependencies [46fedf4]
+  - @prosopo/types@4.7.1
+  - @prosopo/account@2.8.43
+  - @prosopo/load-balancer@2.9.18
+
+## 2.10.24
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/types@4.7.0
+  - @prosopo/account@2.8.42
+  - @prosopo/load-balancer@2.9.17
+
+## 2.10.23
+### Patch Changes
+
+- Updated dependencies [4626340]
+  - @prosopo/types@4.6.1
+  - @prosopo/account@2.8.41
+  - @prosopo/load-balancer@2.9.16
+
+## 2.10.22
+### Patch Changes
+
+- Updated dependencies [55b1388]
+  - @prosopo/types@4.6.0
+  - @prosopo/account@2.8.40
+  - @prosopo/load-balancer@2.9.15
+
+## 2.10.21
+### Patch Changes
+
+- Updated dependencies [9b91e85]
+- Updated dependencies [c80a05b]
+  - @prosopo/types@4.5.0
+  - @prosopo/account@2.8.39
+  - @prosopo/load-balancer@2.9.14
+
+## 2.10.20
+### Patch Changes
+
+- Updated dependencies [f69724f]
+- Updated dependencies [3973078]
+  - @prosopo/types@4.4.1
+  - @prosopo/account@2.8.38
+  - @prosopo/load-balancer@2.9.13
+
+## 2.10.19
+### Patch Changes
+
+- Updated dependencies [bc3813d]
+- Updated dependencies [4d05e3f]
+  - @prosopo/types@4.4.0
+  - @prosopo/account@2.8.37
+  - @prosopo/load-balancer@2.9.12
+
+## 2.10.18
+### Patch Changes
+
+- Updated dependencies [b03dad1]
+  - @prosopo/types@4.3.1
+  - @prosopo/account@2.8.36
+  - @prosopo/load-balancer@2.9.11
+
+## 2.10.17
+### Patch Changes
+
+- Updated dependencies [a1d60db]
+- Updated dependencies [2392aaf]
+  - @prosopo/types@4.3.0
+  - @prosopo/account@2.8.35
+  - @prosopo/load-balancer@2.9.10
+
+## 2.10.16
+### Patch Changes
+
+- d3db08d: feat(widget): bait AI responses with empty input + decoded label, portaled into the dapp's form
+  
+  Redesigns the honeypot so it can actually catch AI agents instead of being inert:
+  
+  - Empty input + decoded label: the encoded morse/semaphore question moves from `input.value` to an offscreen `<label>` (base64-decoded at render). Naive form-fillers and humans leave the empty input alone; agents that read the DOM as a prompt write into the empty field, captured as `clientMetaData.hp` on submit.
+  - Portaled to light DOM, inside the dapp's `<form>`: widget stays in shadow DOM, but the honeypot portals via `react-dom/createPortal` into the enclosing form (`document.body` fallback). Bots no longer have to traverse `.shadowRoot` to reach it (which was tripping `@prosopo/catcher`'s shadow-DOM guard and wiping the bot's value), and the bait sits where bots actually look — `form.querySelectorAll('input')`.
+  - `form="<useId>-d"`: opaque per-instance non-existent form id disassociates the input from native form submission while keeping it DOM-discoverable. Dapp backends don't receive a stray `email_confirm=` field.
+  - Shared `<Honeypot />` extracted to `@prosopo/procaptcha-common`.
+  - `procaptcha-bundle` Vite config now routes the Honeypot module into a per-build opaque chunk (`c<random8hex>-<hash>.js`) so the URL doesn't identify the component or stay stable across builds for static blocklisting.
+
+## 2.10.15
+### Patch Changes
+
+- f7f9ec5: feat(provider,widget): reserved always-pass / always-fail test site keys
+  
+  Add two fixed, well-known reserved site keys (`ALWAYS_PASS_SITE_KEY` /
+  `ALWAYS_FAIL_SITE_KEY`) that force a deterministic captcha verdict for CI/CD and
+  integration testing, constant across production, staging and development.
+  
+  - `@prosopo/types`: shared constants + `getTestSiteKeyMode`, imported by both the
+    provider and the widget.
+  - `@prosopo/provider`: short-circuits the `submit*` and `verify` endpoints (verify
+    runs before the signature check, so no dapp secret is needed), serves an
+    invisible PoW session from the frictionless handler, and bypasses domain
+    middleware. Works in every environment with no DB record.
+  - `@prosopo/procaptcha-common` / `-react` / `-frictionless`: render a prominent
+    `TestModeBanner` warning (always pass/fail) plus a console warning so a test key
+    can never ship to production unnoticed.
+  
+  always-pass verifies at both the submit and verify layers; always-fail fails at
+  both. Safe in production by design: the override only weakens protection for a
+  dapp that deliberately opts in, mirroring reCAPTCHA's public test keys.
+- Updated dependencies [6c26669]
+- Updated dependencies [f7f9ec5]
+  - @prosopo/types@4.2.1
+  - @prosopo/account@2.8.34
+  - @prosopo/load-balancer@2.9.9
+
+## 2.10.14
+### Patch Changes
+
+  - @prosopo/account@2.8.33
+  - @prosopo/load-balancer@2.9.8
+
+## 2.10.13
+### Patch Changes
+
+- Updated dependencies [20cae63]
+- Updated dependencies [4d9923e]
+  - @prosopo/types@4.2.0
+  - @prosopo/account@2.8.32
+  - @prosopo/load-balancer@2.9.7
+
+## 2.10.12
+### Patch Changes
+
+- Updated dependencies [d351362]
+  - @prosopo/types@4.1.4
+  - @prosopo/account@2.8.31
+  - @prosopo/load-balancer@2.9.6
+
+## 2.10.11
+### Patch Changes
+
+- Updated dependencies [e2711ae]
+- Updated dependencies [5786629]
+  - @prosopo/types@4.1.3
+  - @prosopo/account@2.8.30
+  - @prosopo/load-balancer@2.9.5
+
+## 2.10.10
+### Patch Changes
+
+- Updated dependencies [566c1f6]
+  - @prosopo/widget-skeleton@2.8.3
+  - @prosopo/account@2.8.29
+  - @prosopo/types@4.1.2
+  - @prosopo/load-balancer@2.9.4
+
+## 2.10.9
+### Patch Changes
+
+- 53bfd45: Detect when the widget is served over plain HTTP (an insecure browser context)
+  and show a clear "Procaptcha requires a secure (HTTPS) connection" message
+  instead of failing later with a cryptic `Provider Selection Failed` error.
+  Procaptcha depends on secure-context-only browser APIs (e.g. SubtleCrypto), so
+  the frictionless widget now short-circuits before the provider-selection retry
+  loop when `window.isSecureContext` is false. Adds the `WIDGET.INSECURE_CONTEXT`
+  translation key across all locales and an `isSecureBrowserContext` helper.
+- Updated dependencies [91958da]
+  - @prosopo/types@4.1.1
+  - @prosopo/account@2.8.28
+  - @prosopo/load-balancer@2.9.3
+
+## 2.10.8
+### Patch Changes
+
+- Updated dependencies [6a741ce]
+  - @prosopo/types@4.1.0
+  - @prosopo/account@2.8.27
+  - @prosopo/load-balancer@2.9.2
+
+## 2.10.7
+### Patch Changes
+
+- Updated dependencies [642d064]
+  - @prosopo/account@2.8.26
+
+## 2.10.6
+### Patch Changes
+
+- Updated dependencies [3c0be68]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [d865319]
+- Updated dependencies [753304b]
+- Updated dependencies [8bb7286]
+- Updated dependencies [f9ea09d]
+- Updated dependencies [4aae4e6]
+- Updated dependencies [5f1ae53]
+  - @prosopo/types@4.0.0
+  - @prosopo/account@2.8.25
+  - @prosopo/load-balancer@2.9.1
+  - @prosopo/widget-skeleton@2.8.2
+
+## 2.10.5
+### Patch Changes
+
+- Updated dependencies [819ed95]
+- Updated dependencies [33a6c57]
+  - @prosopo/types@3.16.1
+  - @prosopo/load-balancer@2.9.0
+  - @prosopo/account@2.8.24
+
+## 2.10.4
+### Patch Changes
+
+- Updated dependencies [f6a4402]
+- Updated dependencies [99dfb44]
+  - @prosopo/types@3.16.0
+  - @prosopo/account@2.8.23
+  - @prosopo/load-balancer@2.8.40
+
+## 2.10.3
+### Patch Changes
+
+- Updated dependencies [3e54c0a]
+  - @prosopo/types@3.15.0
+  - @prosopo/account@2.8.22
+  - @prosopo/load-balancer@2.8.39
+
+## 2.10.2
+### Patch Changes
+
+- Updated dependencies [946a8ba]
+- Updated dependencies [5614814]
+  - @prosopo/types@3.14.1
+  - @prosopo/account@2.8.21
+  - @prosopo/load-balancer@2.8.38
+
+## 2.10.1
+### Patch Changes
+
+- 06970d2: Missed review comments
+- dd3e06e: CSS hot fix
+- Updated dependencies [06970d2]
+- Updated dependencies [fc514dd]
+- Updated dependencies [42650db]
+- Updated dependencies [dd3e06e]
+  - @prosopo/widget-skeleton@2.8.1
+  - @prosopo/types@3.14.0
+  - @prosopo/account@2.8.20
+  - @prosopo/load-balancer@2.8.37
+
+## 2.10.0
+### Minor Changes
+
+- 73df23c: Stop widget css from being overriden
+
+### Patch Changes
+
+- 8139819: prosopo namespacing for css
+- Updated dependencies [73df23c]
+- Updated dependencies [8139819]
+  - @prosopo/widget-skeleton@2.8.0
+  - @prosopo/account@2.8.19
+  - @prosopo/load-balancer@2.8.36
+
+## 2.9.41
+### Patch Changes
+
+  - @prosopo/account@2.8.18
+  - @prosopo/types@3.13.3
+  - @prosopo/load-balancer@2.8.35
+
+## 2.9.40
+### Patch Changes
+
+  - @prosopo/account@2.8.17
+  - @prosopo/types@3.13.2
+  - @prosopo/load-balancer@2.8.34
+
+## 2.9.39
+### Patch Changes
+
+- Updated dependencies [20192d2]
+  - @prosopo/widget-skeleton@2.7.14
+  - @prosopo/account@2.8.16
+  - @prosopo/types@3.13.1
+  - @prosopo/load-balancer@2.8.33
+
+## 2.9.38
+### Patch Changes
+
+- Updated dependencies [e6d9553]
+  - @prosopo/types@3.13.0
+  - @prosopo/account@2.8.15
+  - @prosopo/load-balancer@2.8.32
+
+## 2.9.37
+### Patch Changes
+
+- Updated dependencies [730c61e]
+- Updated dependencies [d5082a9]
+- Updated dependencies [e1ea65f]
+- Updated dependencies [c316257]
+  - @prosopo/load-balancer@2.8.31
+  - @prosopo/account@2.8.14
+  - @prosopo/types@3.12.3
+
+## 2.9.36
+### Patch Changes
+
+- Updated dependencies [adb89a6]
+  - @prosopo/types@3.12.2
+  - @prosopo/account@2.8.13
+  - @prosopo/load-balancer@2.8.30
+
+## 2.9.35
+### Patch Changes
+
+- Updated dependencies [a90eb54]
+  - @prosopo/types@3.12.1
+  - @prosopo/account@2.8.12
+  - @prosopo/load-balancer@2.8.29
+
+## 2.9.34
+### Patch Changes
+
+- Updated dependencies [676c5f2]
+- Updated dependencies [feaca02]
+  - @prosopo/load-balancer@2.8.28
+  - @prosopo/types@3.12.0
+  - @prosopo/account@2.8.11
+
+## 2.9.33
+### Patch Changes
+
+- Updated dependencies [8148587]
+  - @prosopo/types@3.11.1
+  - @prosopo/account@2.8.10
+  - @prosopo/load-balancer@2.8.27
+
+## 2.9.32
+### Patch Changes
+
+- Updated dependencies [7f6ffc5]
+  - @prosopo/types@3.11.0
+  - @prosopo/account@2.8.9
+  - @prosopo/load-balancer@2.8.26
+
+## 2.9.31
+### Patch Changes
+
+- Updated dependencies [93fa086]
+  - @prosopo/types@3.10.2
+  - @prosopo/account@2.8.8
+  - @prosopo/load-balancer@2.8.25
+
+## 2.9.30
+### Patch Changes
+
+- Updated dependencies [cde7550]
+  - @prosopo/types@3.10.1
+  - @prosopo/account@2.8.7
+  - @prosopo/load-balancer@2.8.24
+
+## 2.9.29
+### Patch Changes
+
+- Updated dependencies [ad6d622]
+  - @prosopo/types@3.10.0
+  - @prosopo/account@2.8.6
+  - @prosopo/load-balancer@2.8.23
+
+## 2.9.28
+### Patch Changes
+
+- Updated dependencies [ff58a70]
+  - @prosopo/types@3.9.0
+  - @prosopo/account@2.8.5
+  - @prosopo/load-balancer@2.8.22
+
+## 2.9.27
+### Patch Changes
+
+- Updated dependencies [d2431cd]
+  - @prosopo/types@3.8.4
+  - @prosopo/account@2.8.4
+  - @prosopo/load-balancer@2.8.21
+
+## 2.9.26
+### Patch Changes
+
+- Updated dependencies [bd6995b]
+  - @prosopo/types@3.8.3
+  - @prosopo/account@2.8.3
+  - @prosopo/load-balancer@2.8.20
+
+## 2.9.25
+### Patch Changes
+
+- Updated dependencies [9633e58]
+  - @prosopo/types@3.8.2
+  - @prosopo/account@2.8.2
+  - @prosopo/load-balancer@2.8.19
+
+## 2.9.24
+### Patch Changes
+
+- Updated dependencies [f52a5c1]
+  - @prosopo/types@3.8.1
+  - @prosopo/account@2.8.1
+  - @prosopo/load-balancer@2.8.18
+
+## 2.9.23
+### Patch Changes
+
+- f3cf586: fix/widget-parent-detection
+- 0a38892: feat/cross-os-testing
+- a8faa9a: bump license year
+- 3acc333: Release 3.3.0
+- Updated dependencies [3acc333]
+- Updated dependencies [0a38892]
+- Updated dependencies [1ee3d80]
+- Updated dependencies [a8faa9a]
+- Updated dependencies [6a4d57d]
+- Updated dependencies [7543d17]
+- Updated dependencies [3acc333]
+  - @prosopo/types@3.8.0
+  - @prosopo/widget-skeleton@2.7.13
+  - @prosopo/load-balancer@2.8.17
+  - @prosopo/account@2.8.0
+
 ## 2.9.22
 ### Patch Changes
 

@@ -12,4 +12,3 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 export * from "./types/index.js";
-export type { PendingCaptchaRequest } from "./provider/pendingCaptchaRequest.js";

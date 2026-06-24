@@ -12,5 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 export * from "./HttpClientBase.js";
+export { HttpError } from "./HttpError.js";
 export { default as ProviderApi } from "./ProviderApi.js";
 export { ApiClient } from "./apiClient.js";

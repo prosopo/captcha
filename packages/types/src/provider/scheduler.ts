@@ -17,6 +17,7 @@ export enum ScheduledTaskNames {
 	StoreCommitmentsExternal = "StoreCommitmentsExternal",
 	GetClientList = "GetClientList",
 	SetClientEntropy = "SetClientEntropy",
+	UpdateSpamEmailDomains = "UpdateSpamEmailDomains",
 }
 
 export enum ScheduledTaskStatus {
