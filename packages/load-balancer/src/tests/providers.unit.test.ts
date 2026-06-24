@@ -13,7 +13,20 @@
 // limitations under the License.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { _resetPinCache, getRandomActiveProvider } from "../providers.js";
+import {
+	_resetPinCache,
+	_resetProviderListCache,
+	getProviders,
+	getRandomActiveProvider,
+} from "../providers.js";
+
+// Mock the underlying load balancer so getProviders' caching/failure semantics
+// can be exercised without real network calls. getRandomActiveProvider tests
+// don't use loadBalancer, so this mock leaves them unaffected.
+const loadBalancer = vi.fn();
+vi.mock("../balancer.js", () => ({
+	loadBalancer: (...args: unknown[]) => loadBalancer(...args),
+}));
 
 const originalFetch = globalThis.fetch;
 
@@ -120,5 +133,57 @@ describe("getRandomActiveProvider (single stack ipMode)", () => {
 		await getRandomActiveProvider("production", "ipv4");
 		// One healthz per (env, ipMode) combination.
 		expect(mocked).toHaveBeenCalledTimes(2);
+	});
+});
+
+describe("getProviders", () => {
+	beforeEach(() => {
+		_resetProviderListCache();
+		loadBalancer.mockReset();
+	});
+
+	it("loads the provider list once and serves repeat callers from cache", async () => {
+		const providers = [
+			{ address: "5xyz", url: "https://p1", datasetId: "0x0" },
+		];
+		loadBalancer.mockResolvedValue(providers);
+
+		const first = await getProviders("production");
+		const second = await getProviders("production");
+
+		expect(first).toBe(providers);
+		expect(second).toBe(providers);
+		expect(loadBalancer).toHaveBeenCalledTimes(1);
+	});
+
+	it("dedupes concurrent in-flight loads into a single call", async () => {
+		const providers = [
+			{ address: "5xyz", url: "https://p1", datasetId: "0x0" },
+		];
+		loadBalancer.mockResolvedValue(providers);
+
+		const [a, b] = await Promise.all([
+			getProviders("production"),
+			getProviders("production"),
+		]);
+
+		expect(a).toBe(providers);
+		expect(b).toBe(providers);
+		expect(loadBalancer).toHaveBeenCalledTimes(1);
+	});
+
+	it("does not cache failures — a rejected load is retried on the next call", async () => {
+		const providers = [
+			{ address: "5xyz", url: "https://p1", datasetId: "0x0" },
+		];
+		loadBalancer
+			.mockRejectedValueOnce(new Error("transient"))
+			.mockResolvedValueOnce(providers);
+
+		await expect(getProviders("production")).rejects.toThrow("transient");
+		// The failure must have cleared the cache, so the next call retries.
+		const retry = await getProviders("production");
+		expect(retry).toBe(providers);
+		expect(loadBalancer).toHaveBeenCalledTimes(2);
 	});
 });
