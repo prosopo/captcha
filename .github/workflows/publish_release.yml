@@ -67,7 +67,7 @@ jobs:
           echo "version=$version" >> $GITHUB_OUTPUT
           echo "Version: $version"
 
-      - run: npm ci --ignore-scripts --include=dev
+      - run: npm ci --ignore-scripts --include=dev --no-audit --no-fund --prefer-offline
 
       - name: Build packages
         run: |

@@ -37,6 +37,7 @@ import {
 } from "@prosopo/user-access-policy";
 import type { NextFunction, Request, Response } from "express";
 import { getCompositeIpAddress } from "../compositeIpAddress.js";
+import { recordBlockedRequest } from "./metrics.js";
 
 export const getRequestUserScope = (
 	requestHeaders: Record<string, unknown>,
@@ -343,6 +344,7 @@ export class BlacklistRequestInspector {
 				msg: "Request without IP",
 			}));
 
+			recordBlockedRequest("no_ip");
 			return true;
 		}
 
@@ -397,6 +399,7 @@ export class BlacklistRequestInspector {
 
 			const isBlock = AccessPolicyType.Block === accessPolicy.type;
 			if (isBlock) {
+				recordBlockedRequest("access_policy");
 				// `Restrict` policies aren't logged or persisted here — those
 				// don't 401, they let the request through with modified
 				// captcha params and the downstream captcha-creation path
@@ -423,6 +426,7 @@ export class BlacklistRequestInspector {
 				msg: "Block Middleware Error",
 			}));
 
+			recordBlockedRequest("error");
 			return true;
 		}
 	}
