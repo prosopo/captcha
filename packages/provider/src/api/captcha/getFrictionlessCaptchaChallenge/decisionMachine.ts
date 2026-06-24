@@ -32,6 +32,7 @@ import {
 import { timestampDecayFunction } from "../../../tasks/frictionless/frictionlessTasksUtils.js";
 import type { Tasks } from "../../../tasks/index.js";
 import { hashUserAgent } from "../../../utils/hashUserAgent.js";
+import { recordFrictionlessDecision } from "../../metrics.js";
 import {
 	determineContextType,
 	getContextThreshold,
@@ -128,13 +129,13 @@ export const runDecisionMachine = async (
 		req.logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {
-				requestId: req.requestId,
 				decision: "auto_ban_score",
 				botScore,
 				autoBanThreshold,
 				token: input.token,
 			},
 		}));
+		recordFrictionlessDecision("auto_ban_score");
 		await tasks.frictionlessManager.registerBlockedSession({
 			solvedImagesCount: clientRecord.settings.imageMaxRounds,
 			userSitekeyIpHash,
@@ -150,11 +151,11 @@ export const runDecisionMachine = async (
 		req.logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {
-				requestId: req.requestId,
 				decision: "webview_detected",
 				captchaType: CaptchaType.image,
 			},
 		}));
+		recordFrictionlessDecision("webview_detected");
 		attachHoneypot(res, clientRecord);
 		return res.json(
 			await tasks.frictionlessManager.sendImageCaptcha({
@@ -175,11 +176,11 @@ export const runDecisionMachine = async (
 		req.logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {
-				requestId: req.requestId,
 				decision: "timestamp_too_old",
 				captchaType: CaptchaType.image,
 			},
 		}));
+		recordFrictionlessDecision("timestamp_too_old");
 		attachHoneypot(res, clientRecord);
 		return res.json(
 			await tasks.frictionlessManager.sendImageCaptcha({
@@ -209,11 +210,11 @@ export const runDecisionMachine = async (
 		req.logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {
-				requestId: req.requestId,
 				decision: "bot_score_above_threshold",
 				captchaType: CaptchaType.image,
 			},
 		}));
+		recordFrictionlessDecision("bot_score_above_threshold");
 		attachHoneypot(res, clientRecord);
 		return res.json(
 			await tasks.frictionlessManager.sendImageCaptcha({
@@ -233,11 +234,11 @@ export const runDecisionMachine = async (
 	req.logger.info(() => ({
 		msg: "Frictionless decision",
 		data: {
-			requestId: req.requestId,
 			decision: "default_pow",
 			captchaType: CaptchaType.pow,
 		},
 	}));
+	recordFrictionlessDecision("default_pow");
 	attachHoneypot(res, clientRecord);
 	return res.json(
 		await tasks.frictionlessManager.sendPowCaptcha({
@@ -281,11 +282,11 @@ const runUserAgentMismatchCheck = async (
 	req.logger.info(() => ({
 		msg: "Frictionless decision",
 		data: {
-			requestId: req.requestId,
 			decision: "user_agent_mismatch",
 			captchaType: CaptchaType.image,
 		},
 	}));
+	recordFrictionlessDecision("user_agent_mismatch");
 	attachHoneypot(res, input.clientRecord);
 	return res.json(
 		await input.tasks.frictionlessManager.sendImageCaptcha({
@@ -354,13 +355,13 @@ const runContextAwareValidation = async (
 	req.logger.info(() => ({
 		msg: "Frictionless decision",
 		data: {
-			requestId: req.requestId,
 			decision: "context_aware_failed",
 			captchaType: CaptchaType.image,
 			sim,
 			threshold,
 		},
 	}));
+	recordFrictionlessDecision("context_aware_failed");
 	attachHoneypot(res, clientRecord);
 	return res.json(
 		await tasks.frictionlessManager.sendImageCaptcha({
