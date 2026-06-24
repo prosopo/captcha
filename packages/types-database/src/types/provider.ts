@@ -21,6 +21,7 @@ import {
 	type CompositeIpAddress,
 	ContextType,
 	type DecisionMachineArtifact,
+	DecisionMachineKind,
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
@@ -58,6 +59,7 @@ import {
 	ScheduledTaskStatus,
 } from "@prosopo/types";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
+import { Long } from "bson";
 import type mongoose from "mongoose";
 import { type Document, type Model, type ObjectId, Schema } from "mongoose";
 import { any, date, nativeEnum, object, type infer as zInfer } from "zod";
@@ -82,22 +84,61 @@ export const ClientRecordSchema = new Schema<ClientRecord>({
 // Set an index on the account field, ascending
 ClientRecordSchema.index({ account: 1 });
 
+// IP-half setter shared by `lower` and `upper`. Normalises every input
+// shape the writers and the sweep can hand us into something Mongoose's
+// Decimal128 caster will accept:
+//
+//   - `bigint`       — produced by `getCompositeIpAddress` on every fresh
+//                      write; stringify so the caster sees a numeric
+//                      string instead of an unsupported type.
+//   - BSON `Long`    — produced when a *pipeline-form* update wrote a
+//                      `bigint` value to disk (pipeline updates skip
+//                      schema casting, so the driver serialised the
+//                      bigint as Int64). The central-streaming sweep
+//                      reads these via `.lean()` and replays them through
+//                      `bulkWrite { $set: leanDoc }`; without this branch
+//                      the cast throws and the entire batch aborts. Use
+//                      the *unsigned* representation so an IPv6 lower
+//                      with bit 63 set converts to a positive Decimal128
+//                      — matching what `bigint→string` would have
+//                      produced if the setter had run on write.
+//   - everything else (string / number / Decimal128) — pass through; the
+//                      caster handles them natively.
+// Duck-typed Long check rather than `instanceof Long`: the MongoDB
+// driver deserialises with its bundled `bson` copy, and hoisting
+// differences can place that `Long` constructor on a different class
+// identity than the one this file imports — which would silently skip
+// normalisation here. Same defence as the helper in
+// `CaptchaDatabase.normaliseCompositeIp` (database/captcha.ts).
+const isBsonLong = (value: unknown): boolean =>
+	typeof value === "object" &&
+	value !== null &&
+	"_bsontype" in value &&
+	(value as { _bsontype: string })._bsontype === "Long";
+
+const normaliseIpHalf = (
+	value: bigint | number | string | Long | unknown,
+): bigint | number | string | unknown => {
+	if (typeof value === "bigint") return value.toString();
+	if (isBsonLong(value)) {
+		const lng = value as { low: number; high: number };
+		return Long.fromBits(lng.low, lng.high, true).toString();
+	}
+	return value;
+};
+
 export const CompositeIpAddressRecordSchemaObj = {
 	lower: {
 		// INT64 isn't enough capable - it reserves extra bits for the sign bit, etc, so Decimal128 guarantees no overflow
 		type: Schema.Types.Decimal128,
 		required: true,
-		// without casting to string Mongoose not able to set bigint to Decimal128
-		set: (value: bigint | string | number) =>
-			"bigint" === typeof value ? value.toString() : value,
+		set: normaliseIpHalf,
 	},
 	upper: {
 		// INT64 isn't enough capable - it reserves extra bits for the sign bit, etc, so Decimal128 guarantees no overflow
 		type: Schema.Types.Decimal128,
 		required: false,
-		// without casting to string Mongoose not able to set bigint to Decimal128
-		set: (value: bigint | string | number) =>
-			"bigint" === typeof value ? value.toString() : value,
+		set: normaliseIpHalf,
 	},
 	type: { type: String, enum: IpAddressType, required: true },
 };
@@ -130,6 +171,12 @@ export const CaptchaRecordSchema = new Schema<Captcha>({
 	solved: { type: Boolean, required: true },
 	target: { type: String, required: true },
 	salt: { type: String, required: true },
+	// Random pivot in [0,1) stamped at insert time and never updated.
+	// Powers `ProviderDatabase.getRandomCaptcha`, which walks at most
+	// `sampleSize` keys of the compound index below instead of
+	// materialising the full matched set via `$sample`. Pre-existing
+	// rows are filled by providerBackfillCaptchaRandomKey.yml.
+	randomKey: { type: Number, required: false },
 	items: {
 		type: [
 			new Schema<Item>(
@@ -150,12 +197,19 @@ CaptchaRecordSchema.index({ captchaId: 1 });
 CaptchaRecordSchema.index({ datasetId: 1 });
 // Set an index on the datasetId and solved fields, ascending
 CaptchaRecordSchema.index({ datasetId: 1, solved: 1 });
+// Indexed random sampling — range scan on `randomKey` for a given
+// (datasetId, solved) returns N random captchas in O(log n + N) instead
+// of materialising the full matched set.
+CaptchaRecordSchema.index({ datasetId: 1, solved: 1, randomKey: 1 });
 
 export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	challenge: { type: String, required: true },
 	dappAccount: { type: String, required: true },
 	userAccount: { type: String, required: true },
 	requestedAtTimestamp: { type: Date, required: true },
+	submittedAtTimestamp: { type: Date, required: false },
+	verifiedAtTimestamp: { type: Date, required: false },
+	failedAtTimestamp: { type: Date, required: false },
 	lastUpdatedTimestamp: { type: Date, required: false },
 	result: {
 		status: { type: String, enum: CaptchaStatus, required: true },
@@ -259,6 +313,9 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 	dappAccount: { type: String, required: true },
 	userAccount: { type: String, required: true },
 	requestedAtTimestamp: { type: Date, required: true },
+	submittedAtTimestamp: { type: Date, required: false },
+	verifiedAtTimestamp: { type: Date, required: false },
+	failedAtTimestamp: { type: Date, required: false },
 	lastUpdatedTimestamp: { type: Date, required: false },
 	result: {
 		status: { type: String, enum: CaptchaStatus, required: true },
@@ -392,6 +449,9 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	serverChecked: { type: Boolean, required: true },
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
 	requestedAtTimestamp: { type: Date, required: true },
+	submittedAtTimestamp: { type: Date, required: false },
+	verifiedAtTimestamp: { type: Date, required: false },
+	failedAtTimestamp: { type: Date, required: false },
 	lastUpdatedTimestamp: { type: Date, required: false },
 	// See `StoredCaptcha.pendingStage`.
 	pendingStage: { type: Boolean, required: false },
@@ -550,7 +610,6 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 		shadowDomPenalty: { type: Boolean, required: false },
 		dnsAsymmetry: { type: Number, required: false },
 	},
-	providerSelectEntropy: { type: Number, required: true },
 	ipAddress: CompositeIpAddressRecordSchemaObj,
 	captchaType: { type: String, enum: CaptchaType, required: true },
 	mode: { type: String, enum: ModeEnum, required: false },
@@ -568,6 +627,13 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	siteKey: { type: String, required: false },
 	reason: { type: String, required: false },
 	blocked: { type: Boolean, required: false },
+	// On synthetic blocked-session records (blocked=true, deleted=true)
+	// these carry the identity of the access-policy rule that fired at the
+	// request-time block middleware — the Traffic page joins on these to
+	// surface which rules are blocking traffic and at what volume.
+	ruleHash: { type: String, required: false },
+	ruleType: { type: [String], required: false },
+	ruleDescription: { type: String, required: false },
 	// Full ipinfo payload — replaces flat `countryCode` / `geolocation`
 	// fields. Mirrors the captcha record schemas (PoW / Puzzle /
 	// UserCommitment).
@@ -598,6 +664,10 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	// Stage at which the SIMD readings first arrived on this session
 	// (frictionless / challenge / submit). First-hop-wins.
 	simdReadingsStage: { type: String, required: false },
+	entropyMathRandomFingerprint: { type: String, required: false },
+	entropyCryptoFingerprint: { type: String, required: false },
+	entropyWallClockOffsetMs: { type: Number, required: false },
+	entropyMathRandomFirst: { type: Number, required: false },
 	// DNS observation merge target. Populated by
 	// POST /v1/prosopo/provider/admin/dns/event from the dns-event
 	// sidecar (see types/provider/database.ts → Session.dnsEvent).
@@ -620,9 +690,19 @@ SessionRecordSchema.index({ deleted: 1 });
 SessionRecordSchema.index({ blocked: 1 });
 SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
 SessionRecordSchema.index({ userSitekeyIpHash: 1 });
-SessionRecordSchema.index({ providerSelectEntropy: 1 });
+SessionRecordSchema.index(
+	{ siteKey: 1, entropyMathRandomFingerprint: 1, createdAt: -1 },
+	{ sparse: true },
+);
 SessionRecordSchema.index({ token: 1 });
 SessionRecordSchema.index({ siteKey: 1 }, { background: true, sparse: true });
+// Traffic-page aggregations group blocked-session records by rule. Sparse
+// so legit sessions (no rule fields) don't bloat the index.
+SessionRecordSchema.index(
+	{ siteKey: 1, blocked: 1, createdAt: 1 },
+	{ background: true, sparse: true },
+);
+SessionRecordSchema.index({ ruleHash: 1 }, { background: true, sparse: true });
 // Compound indexes for session aggregation queries
 SessionRecordSchema.index({
 	createdAt: 1,
@@ -665,6 +745,11 @@ export const DecisionMachineArtifactRecordSchema =
 			required: true,
 		},
 		dappAccount: { type: String, required: false },
+		kind: {
+			type: String,
+			enum: Object.values(DecisionMachineKind),
+			required: false,
+		},
 		runtime: {
 			type: String,
 			enum: Object.values(DecisionMachineRuntime),
@@ -680,15 +765,15 @@ export const DecisionMachineArtifactRecordSchema =
 		version: { type: String, required: false },
 		captchaType: {
 			type: String,
-			enum: [CaptchaType.pow, CaptchaType.image],
+			enum: [CaptchaType.pow, CaptchaType.image, CaptchaType.puzzle],
 			required: false,
 		},
 		createdAt: { type: Date, required: true },
 		updatedAt: { type: Date, required: true },
 	});
-// Unique index: one artifact per (scope, dappAccount) combination
+// Unique index: one artifact per (scope, dappAccount, kind) combination
 DecisionMachineArtifactRecordSchema.index(
-	{ scope: 1, dappAccount: 1 },
+	{ scope: 1, dappAccount: 1, kind: 1 },
 	{ unique: true },
 );
 DecisionMachineArtifactRecordSchema.index({ updatedAt: -1 });
@@ -942,6 +1027,8 @@ export interface IProviderDatabase extends IDatabase {
 
 	storeSessionRecord(sessionRecord: Session): Promise<void>;
 
+	storeBlockedSession(sessionRecord: Session): Promise<void>;
+
 	getSessionRecordBySessionId(sessionId: string): Promise<Session | undefined>;
 
 	getSessionRecordByToken(token: string): Promise<Session | undefined>;
@@ -1019,6 +1106,7 @@ export interface IProviderDatabase extends IDatabase {
 	getDecisionMachineArtifact(
 		scope: DecisionMachineScope,
 		dappAccount?: string,
+		kind?: DecisionMachineKind,
 	): Promise<DecisionMachineArtifact | undefined>;
 
 	getAllDecisionMachineArtifacts(): Promise<

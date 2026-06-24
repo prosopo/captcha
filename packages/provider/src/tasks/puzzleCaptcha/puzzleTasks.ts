@@ -40,7 +40,12 @@ import {
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
-import { at, extractData, verifyRecency } from "@prosopo/util";
+import {
+	assertCoordsSafe,
+	at,
+	extractData,
+	verifyRecency,
+} from "@prosopo/util";
 import {
 	getCompositeIpAddress,
 	getIpAddressFromComposite,
@@ -194,15 +199,21 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		}
 
 		// Extract coordinates from salt if provided — mirrors the POW
-		// flow so the puzzle record carries the checkbox click telemetry.
+		// flow. Invalid salt input disapproves the request.
 		let coords: [number, number][][] | undefined;
+		let saltDecodeError: unknown;
 		if (salt) {
 			try {
 				const extractedData = extractData(salt);
 				if (extractedData.length >= 2) {
-					coords = [[[extractedData[0], extractedData[1]] as [number, number]]];
+					const built: [number, number][][] = [
+						[[extractedData[0], extractedData[1]] as [number, number]],
+					];
+					assertCoordsSafe(built, "coords");
+					coords = built;
 				}
 			} catch (error) {
+				saltDecodeError = error;
 				this.logger.warn(() => ({
 					msg: "Failed to extract coordinates from salt",
 					error,
@@ -218,6 +229,28 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 			this.logger.debug(() => ({
 				msg: `Challenge already submitted: ${challenge}`,
 			}));
+			return false;
+		}
+
+		if (saltDecodeError) {
+			const badSaltResult = {
+				status: CaptchaStatus.disapproved,
+				reason: ResultReason.CAPTCHA_INVALID_SALT,
+			};
+			await this.db.updatePuzzleCaptchaRecordResult(
+				challenge,
+				badSaltResult,
+				false, // serverChecked
+				true, // userSubmitted
+				userTimestampSignature,
+				undefined, // never persist the bad coords
+			);
+			if (challengeRecord.sessionId) {
+				await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
+					userSubmitted: true,
+					result: badSaltResult,
+				});
+			}
 			return false;
 		}
 
@@ -400,11 +433,15 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 	): Promise<{ verified: boolean; score?: number }> {
 		const notVerifiedResponse = { verified: false };
 
+		// Bind the challenge/dappAccount context once so every log line in this
+		// method carries it without repeating the fields in each `data` block.
+		const logger = this.logger.with({ challenge, dappAccount });
+
 		const challengeRecord =
 			await this.db.getPuzzleCaptchaRecordByChallenge(challenge);
 
 		if (!challengeRecord) {
-			this.logger.debug(() => ({
+			logger.debug(() => ({
 				msg: `No record of this challenge: ${challenge}`,
 			}));
 
@@ -444,8 +481,12 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		});
 		// -- END WARNING --
 
-		const recent = verifyRecency(challenge, timeout);
-		if (!recent) {
+		const submittedAt = challengeRecord.submittedAtTimestamp;
+		const submitToVerifyMs =
+			submittedAt instanceof Date
+				? Date.now() - submittedAt.getTime()
+				: Number.POSITIVE_INFINITY;
+		if (submitToVerifyMs > timeout) {
 			const disapprovedResult = {
 				status: CaptchaStatus.disapproved,
 				reason: ResultReason.TIMESTAMP_TOO_OLD,
@@ -480,12 +521,10 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				);
 
 				if (blockPolicy) {
-					this.logger.info(() => ({
+					logger.info(() => ({
 						msg: "User blocked by access policy in server puzzle verification",
 						data: {
-							challenge,
 							userAccount: challengeRecord.userAccount,
-							dappAccount,
 							policy: blockPolicy,
 						},
 					}));
@@ -505,7 +544,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 					return notVerifiedResponse;
 				}
 			} catch (error) {
-				this.logger.warn(() => ({
+				logger.warn(() => ({
 					msg: "Failed to check user access policies in server puzzle verification",
 					error,
 				}));
@@ -518,9 +557,9 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				const isSpam = await this.checkSpamEmail(email);
 				if (isSpam) {
 					const emailDomain = email.split("@")[1] || "unknown";
-					this.logger.info(() => ({
+					logger.info(() => ({
 						msg: "Spam email domain detected in server puzzle verification",
-						data: { challenge, dappAccount, emailDomain },
+						data: { emailDomain },
 					}));
 					await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
 						result: {
@@ -531,7 +570,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 					return notVerifiedResponse;
 				}
 			} catch (error) {
-				this.logger.warn(() => ({
+				logger.warn(() => ({
 					msg: "Failed to check spam email domain in server puzzle verification",
 					error,
 				}));
@@ -557,11 +596,9 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				enrichedDnsEvent,
 			);
 			if (check.isBlocked) {
-				this.logger.info(() => ({
+				logger.info(() => ({
 					msg: "Traffic filter rejected request in puzzle verification",
 					data: {
-						challenge,
-						dappAccount,
 						ip,
 						reason: check.reason,
 						dnsPeerIp: enrichedDnsEvent?.peerIp,
@@ -614,14 +651,14 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				const ipValidation = await deepValidateIpAddress(
 					ip,
 					challengeIpAddress,
-					this.logger,
+					logger,
 					env.ipInfoService,
 					ipValidationRules,
 					enrichedDnsEvent?.peerIp,
 				);
 
 				if (!ipValidation.isValid) {
-					this.logger.error(() => ({
+					logger.error(() => ({
 						msg: "IP validation failed for puzzle captcha",
 						data: {
 							ip,
@@ -661,7 +698,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				};
 			}
 			score = computeFrictionlessScore(sessionRecord?.scoreComponents);
-			this.logger.info(() => ({
+			logger.info(() => ({
 				data: {
 					scoreComponents: { ...(sessionRecord?.scoreComponents || {}) },
 					score,
@@ -686,20 +723,28 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 					: undefined,
 				ipInfo: challengeRecord.ipInfo,
 				dnsEvent: enrichedDnsEvent,
+				score,
+				threshold: sessionRecord?.threshold,
+				scoreComponents: sessionRecord?.scoreComponents,
+				decryptedHeadHash: sessionRecord?.decryptedHeadHash,
+				userSitekeyIpHash: sessionRecord?.userSitekeyIpHash,
+				simdReadings: sessionRecord?.simdReadings,
+				frictionlessReason: sessionRecord?.reason,
+				ruleType: sessionRecord?.ruleType,
+				webView: sessionRecord?.webView,
+				iFrame: sessionRecord?.iFrame,
 			};
 
 			const decision = await this.decisionMachineRunner.decide(
 				decisionInput,
-				this.logger,
+				logger,
 			);
 
 			if (decision.decision === DecisionMachineDecision.Deny) {
-				this.logger.info(() => ({
+				logger.info(() => ({
 					msg: "Decision machine denied puzzle captcha in server verification",
 					data: {
-						challenge,
 						userAccount: challengeRecord.userAccount,
-						dappAccount,
 						reason: decision.reason,
 						score: decision.score,
 						tags: decision.tags,
@@ -726,17 +771,16 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				return notVerifiedResponse;
 			}
 
-			this.logger.debug(() => ({
+			logger.debug(() => ({
 				msg: "Decision machine allowed puzzle captcha",
 				data: {
-					challenge,
 					reason: decision.reason,
 					score: decision.score,
 					tags: decision.tags,
 				},
 			}));
 		} catch (error) {
-			this.logger?.error(() => ({
+			logger.error(() => ({
 				msg: "Failed to run decision machine in server puzzle verification",
 				err: error,
 			}));

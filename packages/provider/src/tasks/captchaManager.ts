@@ -61,14 +61,25 @@ import {
 
 /**
  * Finds a hard block policy from access policies.
- * A hard block is a Block policy without a captchaType specified.
- * Policies with captchaType are for captcha type selection, not hard blocking.
+ *
+ * A hard block is a Block policy that either (a) has no captchaType (the
+ * historical "block all challenge types" case) or (b) has the
+ * `deferToVerify` flag set. The deferred case is also caught here so a
+ * Block policy that opted out of the request-time middleware still
+ * disapproves the commitment at verify and the dApp's verify call returns
+ * `{verified:false}`.
+ *
+ * Policies with captchaType (but without deferToVerify) are still routing
+ * rules, not hard blocks — they pick which challenge type to serve, not
+ * whether to reject.
  */
 const findHardBlockPolicy = (
 	accessPolicies: AccessPolicy[],
 ): AccessPolicy | undefined => {
 	return accessPolicies.find(
-		(policy) => policy.type === AccessPolicyType.Block && !policy.captchaType,
+		(policy) =>
+			policy.type === AccessPolicyType.Block &&
+			(policy.deferToVerify || !policy.captchaType),
 	);
 };
 
@@ -89,7 +100,7 @@ export class CaptchaManager {
 		this.pair = pair;
 		this.db = db;
 		this.config = config;
-		this.logger = logger || getLogger("info", import.meta.url);
+		this.logger = logger || getLogger("info", "provider:captcha-manager");
 		this.writeQueue = writeQueue ?? null;
 	}
 
@@ -457,11 +468,13 @@ export class CaptchaManager {
 		userAccessRulesStorage: AccessRulesStorage,
 		clientId: string,
 		userScope: UserScope | UserScopeRecord,
+		options?: { blockOnly?: boolean },
 	) {
 		return getPrioritisedAccessRule(
 			userAccessRulesStorage,
 			userScope,
 			clientId,
+			options,
 		);
 	}
 
@@ -627,6 +640,11 @@ export class CaptchaManager {
 			userAccessRulesStorage,
 			challengeRecord.dappAccount,
 			userScope,
+			// Hard-block lookup only — restrict the Redis-side candidate
+			// pool to Block rules so the SERVER_SIDE_RANK_TOP_N cap can't
+			// crowd a hard-block out of the top-N with Restrict or
+			// routing-Block (captchaType-scoped) entries.
+			{ blockOnly: true },
 		);
 
 		return findHardBlockPolicy(accessPolicies);
@@ -682,6 +700,7 @@ export class CaptchaManager {
 			ipInfo,
 			effective,
 			extraIpInfosFromEnrichedDnsEvent(enrichedDnsEvent),
+			enrichedDnsEvent?.pathValid,
 		);
 	}
 

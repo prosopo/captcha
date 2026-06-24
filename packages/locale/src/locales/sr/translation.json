@@ -436,6 +436,7 @@
 		"NO_CAPTCHA": "Капча није пронађена",
 		"NO_SESSION_FOUND": "Сесија није пронађена",
 		"IP_ADDRESS_MISMATCH": "IP адресе се не подударају",
+		"INVALID_SALT": "Неважећа со",
 		"INVALID_TOKEN": "Неважећи токен",
 		"INVALID_SOLUTION": "Неважеће решење",
 		"DECRYPTION_ERROR": "Грешка при дешифровању"

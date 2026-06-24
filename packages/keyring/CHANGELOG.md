@@ -1,5 +1,75 @@
 # @prosopo/keyring
 
+## 2.9.46
+### Patch Changes
+
+- Updated dependencies [12cd0a6]
+- Updated dependencies [12cd0a6]
+  - @prosopo/types@4.8.0
+
+## 2.9.45
+### Patch Changes
+
+- Updated dependencies [bb98af1]
+  - @prosopo/types@4.7.4
+
+## 2.9.44
+### Patch Changes
+
+- Updated dependencies [89ab6fc]
+- Updated dependencies [0f3750b]
+  - @prosopo/types@4.7.3
+
+## 2.9.43
+### Patch Changes
+
+- Updated dependencies [edcd450]
+- Updated dependencies [5295c4b]
+  - @prosopo/util@3.3.1
+  - @prosopo/types@4.7.2
+  - @prosopo/common@3.1.40
+
+## 2.9.42
+### Patch Changes
+
+- Updated dependencies [46fedf4]
+  - @prosopo/types@4.7.1
+
+## 2.9.41
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/types@4.7.0
+
+## 2.9.40
+### Patch Changes
+
+- Updated dependencies [4626340]
+  - @prosopo/types@4.6.1
+
+## 2.9.39
+### Patch Changes
+
+- Updated dependencies [55b1388]
+  - @prosopo/util@3.3.0
+  - @prosopo/types@4.6.0
+  - @prosopo/common@3.1.39
+
+## 2.9.38
+### Patch Changes
+
+- Updated dependencies [9b91e85]
+- Updated dependencies [c80a05b]
+  - @prosopo/types@4.5.0
+
+## 2.9.37
+### Patch Changes
+
+- Updated dependencies [f69724f]
+- Updated dependencies [3973078]
+  - @prosopo/types@4.4.1
+
 ## 2.9.36
 ### Patch Changes
 
