@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { VERIFY_FORWARDED_HEADER } from "@prosopo/api";
 import { handleErrors, verifySignature } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
 import {
@@ -189,6 +190,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					dapp,
 					user,
 					body: parsed,
+					alreadyForwarded: req.headers[VERIFY_FORWARDED_HEADER] !== undefined,
 				});
 				if (forwarded) {
 					return res.json(forwarded);
@@ -334,6 +336,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					dapp,
 					user,
 					body: parsed,
+					alreadyForwarded: req.headers[VERIFY_FORWARDED_HEADER] !== undefined,
 				});
 				if (forwarded) {
 					return res.json(forwarded);
@@ -487,6 +490,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					dapp,
 					user,
 					body: parsed,
+					alreadyForwarded: req.headers[VERIFY_FORWARDED_HEADER] !== undefined,
 				});
 				if (forwarded) {
 					return res.json(forwarded);

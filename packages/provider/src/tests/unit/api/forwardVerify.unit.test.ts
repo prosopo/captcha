@@ -177,4 +177,25 @@ describe("forwardVerifyIfNotIssuer", () => {
 		expect(result).toBeNull();
 		expect(forwardVerify).not.toHaveBeenCalled();
 	});
+
+	it("does not forward an already-forwarded request (loop breaker, independent of env.pair)", async () => {
+		// env.pair is absent, so the address-based self-check can't fire. The
+		// alreadyForwarded marker must still stop a second forward hop even when
+		// the token points at another known provider.
+		const result = await forwardVerifyIfNotIssuer({
+			env: {
+				defaultEnvironment: "development",
+			} as unknown as ProviderEnvironment,
+			logger,
+			path: ClientApiPaths.VerifyPowCaptchaSolution,
+			providerUrl: OTHER_URL,
+			dapp: "dapp",
+			user: "user",
+			body: {},
+			alreadyForwarded: true,
+		});
+
+		expect(result).toBeNull();
+		expect(forwardVerify).not.toHaveBeenCalled();
+	});
 });

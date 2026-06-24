@@ -59,8 +59,18 @@ export async function forwardVerifyIfNotIssuer(args: {
 	dapp: string;
 	user: string;
 	body: object;
+	alreadyForwarded?: boolean;
 }): Promise<VerificationResponse | null> {
-	const { env, logger, path, providerUrl, dapp, user, body } = args;
+	const { env, logger, path, providerUrl, dapp, user, body, alreadyForwarded } =
+		args;
+
+	// Loop breaker independent of env.pair: if this request was itself forwarded
+	// to us (marker header set by ProviderApi.forwardVerify), never forward it
+	// again. Guards against a self-forward loop when env.pair is unavailable and
+	// the token's providerUrl resolves back to this node.
+	if (alreadyForwarded) {
+		return null;
+	}
 
 	// No issuer url in the token → we can't forward; verify locally (this also
 	// preserves behaviour for any older tokens that omit providerUrl).
