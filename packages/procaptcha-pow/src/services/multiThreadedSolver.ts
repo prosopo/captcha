@@ -27,13 +27,32 @@ const POW_WORKER_COUNT = Number.parseInt(
 	10,
 );
 
+// Hard ceiling on workers regardless of configuration, so a misconfigured build
+// can't spawn an unbounded number of workers and freeze the page.
+const MAX_POW_WORKERS = 16;
+
 /**
  * Number of workers to use, guaranteed to be a sane positive integer.
+ *
+ * The configured count is clamped to a hard maximum and, where the browser
+ * exposes it, to `navigator.hardwareConcurrency` — spawning more workers than
+ * CPU cores does not speed up a CPU-bound PoW search and only risks freezing the
+ * page.
  */
-const getWorkerCount = (): number =>
-	Number.isFinite(POW_WORKER_COUNT) && POW_WORKER_COUNT > 0
-		? Math.floor(POW_WORKER_COUNT)
-		: 1;
+const getWorkerCount = (): number => {
+	if (!Number.isFinite(POW_WORKER_COUNT) || POW_WORKER_COUNT < 1) {
+		return 1;
+	}
+
+	const hardwareLimit =
+		typeof navigator !== "undefined" &&
+		Number.isFinite(navigator.hardwareConcurrency) &&
+		navigator.hardwareConcurrency > 0
+			? navigator.hardwareConcurrency
+			: MAX_POW_WORKERS;
+
+	return Math.min(Math.floor(POW_WORKER_COUNT), hardwareLimit, MAX_POW_WORKERS);
+};
 
 /**
  * Spawn a single PoW web worker.
