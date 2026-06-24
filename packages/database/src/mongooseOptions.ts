@@ -24,13 +24,15 @@ const DEFAULT_COMPRESSORS: MongoCompressor[] = [
 ];
 
 /**
- * Determines MongoDB compression settings based on whether the connection URL is a remote domain.
- * Remote domains (e.g., abc.com, x.y.com) will use compression, while local connections
- * (e.g., localhost, container names like "database", "db", "mongo") will not.
+ * Determines MongoDB compression settings based on whether the connection points
+ * at a remote host. Compression is enabled for domains (e.g. abc.com) and for
+ * IPv4/IPv6 hosts (anything whose hostname contains a "." or ":"), and disabled
+ * for localhost and bare single-label hosts (container/service names like
+ * "database", "db", "mongo") or when no host is present.
  *
  * @param url - The MongoDB connection URL string
  * @param compressors - Optional array of compressor strings. Defaults to ["zstd", "snappy", "zlib", "none"]
- * @returns Array of compressor strings if the URL is a remote domain, empty array otherwise
+ * @returns A new array of compressor strings when compression is enabled, empty array otherwise
  */
 export const getMongoCompressors = (
 	url: string,
@@ -65,11 +67,14 @@ export const getMongoCompressors = (
 		}
 
 		// Domains and IP addresses (IPv4/IPv6) include dots or colons; bare
-		// single-label hostnames (container/service names) do not.
-		return hostname.includes(".") || hostname.includes(":") ? compressors : [];
+		// single-label hostnames (container/service names) do not. Return a copy
+		// so callers can't mutate the shared DEFAULT_COMPRESSORS constant.
+		return hostname.includes(".") || hostname.includes(":")
+			? [...compressors]
+			: [];
 	} catch {
 		// If URI parsing fails, default to compression
-		return compressors;
+		return [...compressors];
 	}
 };
 
