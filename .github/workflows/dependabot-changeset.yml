@@ -48,14 +48,14 @@ jobs:
       PR_NUMBER: ${{ github.event.pull_request.number }}
       PR_TITLE: ${{ github.event.pull_request.title }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           token: ${{ secrets.PROSOPONATOR_PAT }}
           submodules: "recursive"
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           # Match `engines` (node ^24 / npm ^11) and the tests.yml jobs so the
           # regenerated lockfile is identical to what the rest of CI produces.
@@ -66,7 +66,8 @@ jobs:
       # root `prepare` hook (husky) would otherwise fail with "husky: not found"
       # (exit 127) and abort before the lockfile is refreshed.
       - name: Update lockfile
-        run: npm install --package-lock-only --workspaces --include-workspace-root --ignore-scripts
+        run: npm install --package-lock-only --workspaces --include-workspace-root --ignore-scripts --no-audit --no-fund --prefer-offline
+
 
       - name: Generate changeset
         env:
