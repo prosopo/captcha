@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { CaptchaType, ContextType } from "@prosopo/types";
+import { AccessPolicyType } from "@prosopo/user-access-policy";
 import { type Mock, beforeEach, describe, expect, it, vi } from "vitest";
 import getHandler from "../../../api/captcha/getFrictionlessCaptchaChallenge.js";
 import { FrictionlessReason } from "../../../tasks/frictionless/frictionlessTasks.js";
@@ -42,6 +43,7 @@ type MockTasks = {
 		getSessionRecordByToken: MockFn;
 		getSessionByuserSitekeyIpHash: MockFn;
 		getClientRecord: MockFn;
+		checkAndRemoveSession: MockFn;
 	};
 	logger: Record<string, unknown>;
 };
@@ -170,6 +172,7 @@ vi.mock("../../../tasks/index.js", async () => {
 					getSessionRecordByToken: vi.fn().mockResolvedValue(null),
 					getSessionByuserSitekeyIpHash: vi.fn().mockResolvedValue(null),
 					getClientRecord: vi.fn(),
+					checkAndRemoveSession: vi.fn().mockResolvedValue(undefined),
 				},
 				logger: mockLogger as unknown as Record<string, unknown>,
 			}),
@@ -227,6 +230,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			getSessionRecordByToken: vi.fn().mockResolvedValue(null),
 			getSessionByuserSitekeyIpHash: vi.fn().mockResolvedValue(null),
 			getClientRecord: vi.fn(),
+			checkAndRemoveSession: vi.fn().mockResolvedValue(undefined),
 		},
 		logger: mockLogger as unknown as Record<string, unknown>,
 	});
@@ -463,6 +467,100 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 				siteKey: "siteBlocked",
 				reason: FrictionlessReason.ACCESS_POLICY_BLOCK,
 			}),
+		);
+	});
+
+	it("evicts the reused session and re-routes when an access policy forces a different captchaType", async () => {
+		const clientRecord = {
+			account: "siteDedupConflict",
+			settings: {
+				captchaType: CaptchaType.frictionless,
+				frictionlessThreshold: 0.5,
+				imageMaxRounds: 2,
+				disallowWebView: false,
+			},
+		};
+		tasksInstance.db.getClientRecord.mockResolvedValue(clientRecord);
+
+		// A previously-cached pow session for this user+IP+sitekey.
+		tasksInstance.db.getSessionByuserSitekeyIpHash.mockResolvedValue({
+			sessionId: "stale-pow-session",
+			captchaType: CaptchaType.pow,
+		});
+
+		// An access rule (e.g. IP rate-limit) now forces image for this scope.
+		tasksInstance.frictionlessManager.getPrioritisedAccessPolicies.mockResolvedValue(
+			[{ type: AccessPolicyType.Restrict, captchaType: CaptchaType.image }],
+		);
+
+		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue({
+			baseBotScore: 0,
+			timestamp: Date.now(),
+			userId: "u",
+			userAgent: "844bc172f032bdd2d0baae3536c1d66c",
+			webView: false,
+			iFrame: false,
+			decryptedHeadHash: "abc",
+			decryptionFailed: false,
+		});
+
+		const body = {
+			token: "tConflict",
+			headHash: "hhConflict",
+			dapp: "siteDedupConflict",
+			user: "u",
+		};
+		const { req, res, next } = buildReqRes(body);
+
+		// biome-ignore lint/suspicious/noExplicitAny: mock request
+		await handler(req as any, res as any, next);
+
+		expect(next).not.toHaveBeenCalled();
+		// The stale pow session is evicted rather than reused...
+		expect(tasksInstance.db.checkAndRemoveSession).toHaveBeenCalledWith(
+			"stale-pow-session",
+		);
+		// ...and the request falls through to the access policy, which serves image.
+		expect(
+			tasksInstance.frictionlessManager.sendImageCaptcha,
+		).toHaveBeenCalled();
+	});
+
+	it("reuses the cached session when no access policy conflicts with its captchaType", async () => {
+		const clientRecord = {
+			account: "siteDedupOk",
+			settings: {
+				captchaType: CaptchaType.frictionless,
+				frictionlessThreshold: 0.5,
+				disallowWebView: false,
+			},
+		};
+		tasksInstance.db.getClientRecord.mockResolvedValue(clientRecord);
+
+		tasksInstance.db.getSessionByuserSitekeyIpHash.mockResolvedValue({
+			sessionId: "live-pow-session",
+			captchaType: CaptchaType.pow,
+		});
+		// No matching access policy (default mock returns []) → reuse as-is.
+
+		const body = {
+			token: "tOk",
+			headHash: "hhOk",
+			dapp: "siteDedupOk",
+			user: "u",
+		};
+		const { req, res, next } = buildReqRes(body);
+
+		// biome-ignore lint/suspicious/noExplicitAny: mock request
+		await handler(req as any, res as any, next);
+
+		expect(next).not.toHaveBeenCalled();
+		expect(tasksInstance.db.checkAndRemoveSession).not.toHaveBeenCalled();
+		expect(
+			tasksInstance.frictionlessManager.sendImageCaptcha,
+		).not.toHaveBeenCalled();
+		expect(res.json).toHaveBeenCalledWith(
+			expect.objectContaining({ sessionId: "live-pow-session" }),
 		);
 	});
 

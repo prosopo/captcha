@@ -40,7 +40,9 @@ class ApiClearAllCountersEndpoint
 		args: z.infer<ClearAllCountersBodyType>,
 		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
-		logger = logger || getLogger("info", "provider:admin:counters:clear");
+		logger = logger
+			? logger.with({}, "admin:counters:clear-all")
+			: getLogger("info", "provider:admin:counters:clear-all");
 		const dappAccount = args.dapp;
 		const scope = dappAccount ?? "all";
 		try {
