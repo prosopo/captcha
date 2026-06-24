@@ -1,0 +1,172 @@
+# Flywheel: after a merge to the base branch, find one open PR that is
+# out-of-date (behind base) but otherwise passing + conflict-free, and press
+# its "Update branch" button. Updating retriggers the PR's CI; if it goes green
+# and the PR has auto-merge enabled, it merges -> another push to base -> this
+# workflow runs again -> the next stale PR gets updated, and so on.
+#
+# Only ONE PR is updated per run, on purpose: updating every stale PR at once
+# makes them all up-to-date simultaneously, the first merges, the rest are
+# instantly stale again, and a full CI run is burned on each for nothing.
+#
+# Uses PROSOPONATOR_PAT (not the default GITHUB_TOKEN) so the branch update is
+# attributed to a real user and therefore retriggers the PR's CI workflows.
+
+name: auto-update-pr
+
+on:
+  push:
+    branches: [main]
+  # backstop: catches the case where a stale PR's CI failed and stalled the
+  # flywheel, then the base later moved for some other reason.
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+# Single-flight: never let two runs race to update PRs and double-spend CI.
+concurrency:
+  group: auto-update-pr
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  update-stale-pr:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
+      REPO: ${{ github.repository }}
+      BASE: main
+      # how long to wait for GitHub to finish computing mergeability per PR
+      POLL_ATTEMPTS: "6"
+      POLL_SLEEP_SECONDS: "10"
+    steps:
+      - name: Update one stale-but-passing PR
+        run: |
+          set -euo pipefail
+
+          # Open, non-draft PRs targeting BASE that have auto-merge enabled,
+          # oldest first (lowest number) for FIFO fairness.
+          # Drop the `.autoMergeRequest != null` filter to also flywheel PRs
+          # that don't yet have auto-merge enabled.
+          mapfile -t prs < <(
+            gh pr list --repo "$REPO" --state open --base "$BASE" --limit 100 \
+              --json number,isDraft,autoMergeRequest \
+              --jq '[ .[]
+                      | select(.isDraft == false)
+                      | select(.autoMergeRequest != null)
+                      | .number ]
+                    | sort
+                    | .[]'
+          )
+
+          if [ "${#prs[@]}" -eq 0 ]; then
+            echo "No open auto-merge PRs targeting $BASE. Nothing to do."
+            exit 0
+          fi
+
+          echo "Candidate PRs (auto-merge, targeting $BASE): ${prs[*]}"
+
+          for n in "${prs[@]}"; do
+            echo "::group::PR #$n"
+            echo "Considering https://github.com/$REPO/pull/$n"
+
+            mergeable=""
+            state=""
+            # Poll until GitHub finishes computing the merge state (it is lazy
+            # and returns UNKNOWN right after a base change).
+            for attempt in $(seq 1 "$POLL_ATTEMPTS"); do
+              if ! out=$(
+                gh pr view "$n" --repo "$REPO" \
+                  --json mergeable,mergeStateStatus \
+                  --jq '"\(.mergeable) \(.mergeStateStatus)"'
+              ); then
+                echo "Failed to fetch merge state for PR #$n; skipping."
+                mergeable="UNKNOWN"; state="UNKNOWN"
+                break
+              fi
+              read -r mergeable state <<<"$out"
+              echo "attempt $attempt: mergeable=$mergeable mergeStateStatus=$state"
+              if [ "$mergeable" != "UNKNOWN" ] && [ "$state" != "UNKNOWN" ]; then
+                break
+              fi
+              sleep "$POLL_SLEEP_SECONDS"
+            done
+
+            if [ "$mergeable" = "UNKNOWN" ] || [ "$state" = "UNKNOWN" ]; then
+              echo "Merge state still computing after polling; skipping PR #$n."
+              echo "::endgroup::"
+              continue
+            fi
+
+            # CONFLICTING => real conflicts, author must resolve. Skip.
+            if [ "$mergeable" != "MERGEABLE" ]; then
+              echo "PR #$n is not mergeable ($mergeable); skipping."
+              echo "::endgroup::"
+              continue
+            fi
+
+            # mergeStateStatus meanings we care about:
+            #   BEHIND  -> conflict-free, checks/reviews otherwise satisfied,
+            #              only blocker is being out of date. THIS is the target.
+            #   CLEAN   -> already up to date and ready (auto-merge handles it).
+            #   BLOCKED/UNSTABLE/DIRTY -> failing/pending checks, missing review,
+            #              or conflicts: not something a branch update fixes.
+            if [ "$state" != "BEHIND" ]; then
+              echo "PR #$n mergeStateStatus=$state (not BEHIND); skipping."
+              echo "::endgroup::"
+              continue
+            fi
+
+            # Skip PRs with unresolved review conversations. A branch update
+            # won't unblock them, and we should not flywheel a PR that still has
+            # open feedback toward an auto-merge.
+            owner="${REPO%/*}"; name="${REPO#*/}"
+            if ! unresolved=$(
+              gh api graphql \
+                -f owner="$owner" -f name="$name" -F number="$n" \
+                -f query='
+                  query($owner:String!, $name:String!, $number:Int!) {
+                    repository(owner: $owner, name: $name) {
+                      pullRequest(number: $number) {
+                        reviewThreads(first: 100) {
+                          nodes { isResolved }
+                          pageInfo { hasNextPage }
+                        }
+                      }
+                    }
+                  }' \
+                --jq '[ .data.repository.pullRequest.reviewThreads.nodes[]
+                        | select(.isResolved == false) ] | length'
+            ); then
+              echo "Failed to fetch review threads for PR #$n; skipping."
+              echo "::endgroup::"
+              continue
+            fi
+            if [ "$unresolved" -gt 0 ]; then
+              echo "PR #$n has $unresolved unresolved conversation(s); skipping."
+              echo "::endgroup::"
+              continue
+            fi
+
+            echo "PR #$n is behind, passing, and has no open conversations. Updating its branch..."
+            if ! gh api \
+              --method PUT \
+              -H "Accept: application/vnd.github+json" \
+              "/repos/$REPO/pulls/$n/update-branch"; then
+              echo "Failed to update PR #$n; skipping."
+              echo "::endgroup::"
+              continue
+            fi
+
+            echo "Updated PR #$n. Done (one per run)."
+            echo "::endgroup::"
+            exit 0
+          done
+
+          echo "No behind-but-passing PR found this run."
