@@ -37,7 +37,7 @@ vi.mock("../../../tasks/detection/decodeBehavior.js", () => ({
 	default: vi.fn(),
 }));
 
-const loggerOuter = getLogger("info", import.meta.url);
+const loggerOuter = getLogger("info", "test:captcha-manager");
 
 const defaultUserSettings: IUserSettings = {
 	frictionlessThreshold: 0.8,
