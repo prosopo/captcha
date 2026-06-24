@@ -68,7 +68,6 @@ jobs:
       - name: Update lockfile
         run: npm install --package-lock-only --workspaces --include-workspace-root --ignore-scripts --no-audit --no-fund --prefer-offline
 
-
       - name: Generate changeset
         env:
           GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
