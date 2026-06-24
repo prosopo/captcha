@@ -34,7 +34,7 @@ import type { Connection } from "mongoose";
 import { z } from "zod";
 import type { UserInterface } from "../models/user.js";
 
-const logger = getLogger("info", "clientExampleServer:auth");
+const logger = getLogger("info", "client-example-server:auth");
 
 const SubscribeBodySpec = ProcaptchaResponse.merge(
 	z.object({

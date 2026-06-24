@@ -55,7 +55,7 @@ class ApiDnsEventEndpoint implements ApiEndpoint<DnsEventBatchSchemaType> {
 		args: z.infer<DnsEventBatchSchemaType>,
 		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
-		logger = logger || getLogger("info", "provider:admin:dnsEvent");
+		logger = logger || getLogger("info", "provider:admin:dns-event");
 		const { events } = args;
 
 		let stored = 0;
