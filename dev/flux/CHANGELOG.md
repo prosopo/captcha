@@ -1,5 +1,22 @@
 # @prosopo/flux
 
+## 2.6.58
+### Patch Changes
+
+- 6322861: chore(deps): bump qs from 6.13.0 to 6.15.2 in /dev/flux
+- Updated dependencies [dfb0c53]
+- Updated dependencies [7ebb78f]
+- Updated dependencies [849af99]
+- Updated dependencies [a5ba27b]
+- Updated dependencies [948d36b]
+- Updated dependencies [41e0e11]
+- Updated dependencies [11f1e8c]
+- Updated dependencies [3c80664]
+  - @prosopo/common@3.1.41
+  - @prosopo/logger@2.0.0
+  - @prosopo/util@3.3.2
+  - @prosopo/dotenv@3.0.46
+
 ## 2.6.57
 ### Patch Changes
 

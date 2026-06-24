@@ -1,5 +1,20 @@
 # @prosopo/types-env
 
+## 2.10.1
+### Patch Changes
+
+- 48612cd: chore(deps-dev): bump vitest from 3.2.4 to 3.2.6 in /packages/types-env
+- Updated dependencies [7ebb78f]
+- Updated dependencies [948d36b]
+- Updated dependencies [41e0e11]
+- Updated dependencies [3c80664]
+- Updated dependencies [b166037]
+- Updated dependencies [1111ff2]
+  - @prosopo/logger@2.0.0
+  - @prosopo/types@4.9.0
+  - @prosopo/keyring@2.9.47
+  - @prosopo/types-database@4.11.1
+
 ## 2.10.0
 ### Minor Changes
 

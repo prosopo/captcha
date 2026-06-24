@@ -1,5 +1,15 @@
 # @prosopo/dotenv
 
+## 3.0.46
+### Patch Changes
+
+- 11f1e8c: Replace vague logger scopes (empty strings, import.meta.url, generic "CLI") with structured colon-delimited names following the convention package:subsystem:action.
+- Updated dependencies [7ebb78f]
+- Updated dependencies [948d36b]
+- Updated dependencies [41e0e11]
+- Updated dependencies [3c80664]
+  - @prosopo/logger@2.0.0
+
 ## 3.0.45
 ### Patch Changes
 

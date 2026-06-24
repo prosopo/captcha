@@ -1,5 +1,22 @@
 # @prosopo/procaptcha-bundle
 
+## 4.1.20
+### Patch Changes
+
+- Updated dependencies [849af99]
+- Updated dependencies [6ecc576]
+- Updated dependencies [a5ba27b]
+- Updated dependencies [619dc9f]
+- Updated dependencies [11f1e8c]
+- Updated dependencies [b166037]
+- Updated dependencies [1111ff2]
+  - @prosopo/util@3.3.2
+  - @prosopo/widget-skeleton@2.8.4
+  - @prosopo/dotenv@3.0.46
+  - @prosopo/types@4.9.0
+  - @prosopo/procaptcha-common@2.11.1
+  - @prosopo/procaptcha-frictionless@2.12.1
+
 ## 4.1.19
 ### Patch Changes
 

@@ -1,5 +1,33 @@
 # @prosopo/api-express-router
 
+## 3.1.32
+### Patch Changes
+
+- a444abe: chore(deps): bump uuid from 14.0.0 to 14.0.1
+- 8c8898d: chore(deps): bump uuid from 11.1.0 to 14.0.0 in /packages/api-express-router
+- 41e0e11: Tighten @prosopo/logger public exports: drop the stringifyBigInts re-export (import it from @prosopo/util instead) and stop exporting internal-only symbols (level/format string constants and LevelMap).
+- 11f1e8c: Replace vague logger scopes (empty strings, import.meta.url, generic "CLI") with structured colon-delimited names following the convention package:subsystem:action.
+- Updated dependencies [dfb0c53]
+- Updated dependencies [7ebb78f]
+- Updated dependencies [b9f5eca]
+- Updated dependencies [849af99]
+- Updated dependencies [a5ba27b]
+- Updated dependencies [d1fbde3]
+- Updated dependencies [948d36b]
+- Updated dependencies [41e0e11]
+- Updated dependencies [11f1e8c]
+- Updated dependencies [3c80664]
+- Updated dependencies [a26e9d0]
+- Updated dependencies [b166037]
+- Updated dependencies [1111ff2]
+  - @prosopo/common@3.1.41
+  - @prosopo/logger@2.0.0
+  - @prosopo/util-crypto@13.5.30
+  - @prosopo/util@3.3.2
+  - @prosopo/types@4.9.0
+  - @prosopo/api-route@2.6.49
+  - @prosopo/env@3.6.1
+
 ## 3.1.31
 ### Patch Changes
 
