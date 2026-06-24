@@ -37,7 +37,7 @@ class ApiGetDecisionMachineEndpoint
 		args: z.infer<GetDecisionMachineBodyType>,
 		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
-		logger = logger || getLogger("info", "");
+		logger = logger || getLogger("info", "provider:admin:decision-machine:get");
 		try {
 			const { id } = args;
 
