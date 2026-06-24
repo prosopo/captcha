@@ -20,9 +20,9 @@ vi.mock("@prosopo/util-crypto", () => ({
 	randomAsHex: vi.fn().mockReturnValue("0123456789abcdef0123456789abcdef"),
 }));
 
-vi.mock("read-tls-client-hello", () => ({
-	calculateJa4FromHelloData: vi.fn().mockReturnValue("ja4+1234567890abcdef"),
-	readTlsClientHello: vi.fn().mockResolvedValue({}),
+vi.mock("../../../api/ja4.js", () => ({
+	calculateJa4: vi.fn().mockReturnValue("t13d1516h2_8daaf6152771_b0da82dd1658"),
+	Ja4ParseError: class Ja4ParseError extends Error {},
 }));
 
 describe("getJA4", () => {
@@ -100,7 +100,9 @@ describe("getJA4", () => {
 
 		const result = await getJA4(headers);
 
-		expect(result.ja4PlusFingerprint).toBe("ja4+1234567890abcdef");
+		expect(result.ja4PlusFingerprint).toBe(
+			"t13d1516h2_8daaf6152771_b0da82dd1658",
+		);
 		process.env.NODE_ENV = originalNodeEnv;
 	});
 
@@ -118,7 +120,9 @@ describe("getJA4", () => {
 
 		const result = await getJA4(headers);
 
-		expect(result.ja4PlusFingerprint).toBe("ja4+1234567890abcdef");
+		expect(result.ja4PlusFingerprint).toBe(
+			"t13d1516h2_8daaf6152771_b0da82dd1658",
+		);
 
 		process.env.NODE_ENV = originalNodeEnv;
 	});
@@ -138,7 +142,9 @@ describe("getJA4", () => {
 
 		const result = await getJA4(headers);
 
-		expect(result.ja4PlusFingerprint).toBe("ja4+1234567890abcdef");
+		expect(result.ja4PlusFingerprint).toBe(
+			"t13d1516h2_8daaf6152771_b0da82dd1658",
+		);
 
 		process.env.NODE_ENV = originalNodeEnv;
 	});
@@ -159,15 +165,19 @@ describe("getJA4", () => {
 
 		const result = await getJA4(headers);
 
-		expect(result.ja4PlusFingerprint).toBe("ja4+1234567890abcdef");
+		expect(result.ja4PlusFingerprint).toBe(
+			"t13d1516h2_8daaf6152771_b0da82dd1658",
+		);
 
 		process.env.NODE_ENV = originalNodeEnv;
 	});
 
 	it("should handle errors during TLS parsing", async () => {
 		vi.mocked(
-			await import("read-tls-client-hello"),
-		).readTlsClientHello.mockRejectedValueOnce(new Error("Parse error"));
+			await import("../../../api/ja4.js"),
+		).calculateJa4.mockImplementationOnce(() => {
+			throw new Error("Parse error");
+		});
 
 		const validClientHello = Buffer.alloc(10);
 		validClientHello[5] = 0x01;
