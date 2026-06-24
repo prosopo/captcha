@@ -62,28 +62,29 @@ class ApiExpressDefaultEndpointAdapter implements ApiExpressEndpointAdapter {
 				err: error,
 			}));
 
-			// Errors that already carry a proper status code (e.g. a 400 admin
-			// auth/validation error) should surface that code with the standard
-			// `{ error: ... }` JSON envelope rather than a hardcoded 500. For
-			// truly-unexpected errors fall back to this adapter's configured
-			// errorStatusCode.
-			if (error instanceof ProsopoBaseError) {
-				const { code, statusMessage, jsonError } = unwrapError(
-					error,
-					request.i18n,
-				);
-				response.statusMessage = statusMessage;
-				response.status(code).json({ error: jsonError });
-				return;
-			}
+			// Errors that already carry an explicit HTTP status code (e.g. a 400
+			// admin auth/validation error) should surface that code with the
+			// standard `{ error: ... }` JSON envelope. Everything else — base
+			// errors without a status code, or non-Prosopo errors — is treated as
+			// an unexpected failure and mapped to this adapter's configured
+			// errorStatusCode. In both cases the envelope is produced by
+			// `unwrapError` so the message/key stay consistent and localised.
+			const responseError =
+				error instanceof ProsopoApiError ||
+				(error instanceof ProsopoBaseError &&
+					typeof error.context?.code === "number")
+					? error
+					: new ProsopoApiError("API.UNKNOWN", {
+							context: { code: this.errorStatusCode },
+							silent: true,
+						});
 
-			response.status(this.errorStatusCode).json({
-				error: {
-					code: this.errorStatusCode,
-					key: "API.UNKNOWN",
-					message: "An internal server error occurred.",
-				},
-			});
+			const { code, statusMessage, jsonError } = unwrapError(
+				responseError,
+				request.i18n,
+			);
+			response.statusMessage = statusMessage;
+			response.status(code).json({ error: jsonError });
 		}
 	}
 }
