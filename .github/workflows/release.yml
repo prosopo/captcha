@@ -132,11 +132,11 @@ jobs:
 
       - name: version
         run: |
-          npm i -g @changesets/cli
+          npm i -g @changesets/cli --no-audit --no-fund --prefer-offline
           npx @changesets/cli version --verbose
           git status
 
-          npm i --ignore-scripts --include=dev
+          npm i --ignore-scripts --include=dev --no-audit --no-fund --prefer-offline
           # Set the version of the root package.json and the docker/images/provider/package.json to the same as @prosopo/cli
           root_version=$(npm -w @prosopo/cli pkg get version | jq -r '.["@prosopo/cli"]')
           echo "root_version=$root_version" >> $GITHUB_ENV
