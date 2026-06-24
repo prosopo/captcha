@@ -229,6 +229,14 @@ describe("calculateJa4 — SNI flag", () => {
 		const fp = calculateJa4(buildClientHello(0x0303, [0xc02f], []));
 		expect(fp[3]).toBe("i");
 	});
+
+	it("sets 'd' when the SNI extension is present but empty (no host_name)", () => {
+		// JA4 keys the flag off the extension's presence, not a parsed host_name.
+		const fp = calculateJa4(
+			buildClientHello(0x0303, [0xc02f], [{ id: 0x0000, data: Buffer.alloc(0) }]),
+		);
+		expect(fp[3]).toBe("d");
+	});
 });
 
 describe("calculateJa4 — counts", () => {
@@ -237,6 +245,13 @@ describe("calculateJa4 — counts", () => {
 		const fp = calculateJa4(
 			buildClientHello(0x0303, [0x0a0a, 0x1301, 0x1302], []),
 		);
+		expect(fp.slice(4, 6)).toBe("02");
+	});
+
+	it("counts a GREASE-lookalike with unequal bytes (0x0a1a) as a real cipher", () => {
+		// 0x0a1a matches the nibble pattern but the bytes differ, so it is NOT a
+		// real RFC 8701 GREASE value and must be counted/hashed.
+		const fp = calculateJa4(buildClientHello(0x0303, [0x0a1a, 0x1301], []));
 		expect(fp.slice(4, 6)).toBe("02");
 	});
 
