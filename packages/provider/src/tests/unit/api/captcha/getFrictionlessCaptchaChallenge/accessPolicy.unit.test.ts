@@ -48,7 +48,6 @@ const buildInput = () => {
 			dapp: "dapp",
 			ipInfo: undefined,
 			flatHeaders: {},
-			requestId: "rid",
 			logger: { info: vi.fn(), warn: vi.fn(), debug: vi.fn(), error: vi.fn() },
 			userScope: {} as never,
 		},

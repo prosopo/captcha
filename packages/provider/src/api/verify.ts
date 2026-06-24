@@ -16,6 +16,7 @@ import { handleErrors, verifySignature } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
 import {
 	ApiParams,
+	CaptchaType,
 	ClientApiPaths,
 	type ImageVerificationResponse,
 	ServerPowCaptchaVerifyRequestBody,
@@ -33,7 +34,37 @@ import { validateAddress } from "@prosopo/util-crypto";
 import express, { type Router } from "express";
 import { Tasks } from "../tasks/tasks.js";
 import { getMaintenanceMode } from "./admin/apiToggleMaintenanceModeEndpoint.js";
-import { resolveTestSiteKeyVerdict } from "./testSiteKey.js";
+import { metricsEnabled, recordCaptchaVerify } from "./metrics.js";
+import {
+	isReservedTestSiteKey,
+	resolveTestSiteKeyVerdict,
+} from "./testSiteKey.js";
+
+// Derives the metrics `source` label for a verify request: maintenance mode and
+// reserved CI test site keys return a verdict without a real verification, so
+// they are labelled separately to keep the real human solve-rate clean.
+const deriveVerifySource = (
+	body: unknown,
+): "real" | "test_key" | "maintenance" => {
+	if (getMaintenanceMode()) return "maintenance";
+	try {
+		const token = (body as { token?: string })?.token;
+		if (token) {
+			const { dapp } = decodeProcaptchaOutput(token);
+			if (isReservedTestSiteKey(dapp)) return "test_key";
+		}
+	} catch {
+		// Malformed/undecodable token — treat as a real request.
+	}
+	return "real";
+};
+
+// Maps each verify route to its captcha type for metrics labelling.
+const VERIFY_PATH_TYPE: Partial<Record<ClientApiPaths, CaptchaType>> = {
+	[ClientApiPaths.VerifyImageCaptchaSolutionDapp]: CaptchaType.image,
+	[ClientApiPaths.VerifyPowCaptchaSolution]: CaptchaType.pow,
+	[ClientApiPaths.VerifyPuzzleCaptchaSolution]: CaptchaType.puzzle,
+};
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -55,6 +86,35 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 		}));
 		userAccessRulesStorage = undefined as never;
 	}
+
+	// Records the outcome of every verify response (type + verified/failed +
+	// source) in one place by observing the JSON body, rather than threading a
+	// metric call through each of the maintenance/test-key/no-challenge/real
+	// return paths. Only successful (2xx) responses are counted; thrown errors
+	// go through handleErrors and are captured by the http_requests_total
+	// status label instead.
+	router.use((req, res, next) => {
+		if (!metricsEnabled()) return next();
+		const type = VERIFY_PATH_TYPE[req.path as ClientApiPaths];
+		if (!type) return next();
+		const originalJson = res.json.bind(res);
+		res.json = (body: unknown) => {
+			if (res.statusCode < 300) {
+				const verified = !!(
+					body &&
+					typeof body === "object" &&
+					(body as { verified?: unknown }).verified
+				);
+				recordCaptchaVerify({
+					type,
+					verified,
+					source: deriveVerifySource(req.body),
+				});
+			}
+			return originalJson(body);
+		};
+		next();
+	});
 
 	/**
 	 * Verifies a dapp's solution as being approved or not
