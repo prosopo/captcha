@@ -23,7 +23,7 @@ import { Tasks } from "../../../tasks/tasks.js";
 
 vi.mock("@prosopo/env", async () => {
 	const { getLogger } = await import("@prosopo/logger");
-	const loggerOuter = getLogger("info", import.meta.url);
+	const loggerOuter = getLogger("info", "test:captcha-scheduler");
 	const mockLogger = {
 		debug: vi.fn().mockImplementation(loggerOuter.debug.bind(loggerOuter)),
 		log: vi.fn().mockImplementation(loggerOuter.log.bind(loggerOuter)),

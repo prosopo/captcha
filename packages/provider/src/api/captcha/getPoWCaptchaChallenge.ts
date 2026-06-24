@@ -30,6 +30,7 @@ import { Tasks } from "../../tasks/index.js";
 import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 import { getRequestUserScope } from "../blacklistRequestInspector.js";
+import { recordCaptchaIssueError, recordCaptchaIssued } from "../metrics.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 import { buildPowMaintenanceResponse } from "./maintenanceModeResponses.js";
 
@@ -240,8 +241,10 @@ export default (
 					session: sessionId,
 				},
 			}));
+			recordCaptchaIssued(CaptchaType.pow);
 			return res.json(getPowCaptchaResponse);
 		} catch (err) {
+			recordCaptchaIssueError(CaptchaType.pow);
 			req.logger.error(() => ({
 				err,
 				body: req.body,

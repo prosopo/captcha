@@ -42,7 +42,7 @@ import { ImgCaptchaManager } from "../../../../tasks/imgCaptcha/imgCaptchaTasks.
 import { buildTreeAndGetCommitmentId } from "../../../../tasks/imgCaptcha/imgCaptchaTasksUtils.js";
 import { shuffleArray } from "../../../../util.js";
 
-const loggerOuter = getLogger("info", import.meta.url);
+const loggerOuter = getLogger("info", "test:img-captcha-tasks");
 
 // Mock dependencies
 vi.mock("@prosopo/datasets", () => ({
@@ -197,6 +197,12 @@ describe("ImgCaptchaManager", () => {
 			trace: vi.fn().mockImplementation(loggerOuter.trace.bind(loggerOuter)),
 			fatal: vi.fn().mockImplementation(loggerOuter.fatal.bind(loggerOuter)),
 			warn: vi.fn().mockImplementation(loggerOuter.warn.bind(loggerOuter)),
+			// Child logger binds context but routes to the same spies so
+			// existing `.mock.calls` assertions keep working. Mirrors the
+			// real `Logger.with(obj)` signature.
+			with(_obj: object) {
+				return this;
+			},
 		} as unknown as Logger;
 		logger = mockLogger;
 
