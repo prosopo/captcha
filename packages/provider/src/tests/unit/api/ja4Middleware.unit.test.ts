@@ -21,7 +21,7 @@ vi.mock("@prosopo/util-crypto", () => ({
 }));
 
 vi.mock("../../../api/ja4.js", () => ({
-	calculateJa4: vi.fn().mockReturnValue("ja4+1234567890abcdef"),
+	calculateJa4: vi.fn().mockReturnValue("t13d1516h2_8daaf6152771_b0da82dd1658"),
 	Ja4ParseError: class Ja4ParseError extends Error {},
 }));
 
@@ -100,7 +100,9 @@ describe("getJA4", () => {
 
 		const result = await getJA4(headers);
 
-		expect(result.ja4PlusFingerprint).toBe("ja4+1234567890abcdef");
+		expect(result.ja4PlusFingerprint).toBe(
+			"t13d1516h2_8daaf6152771_b0da82dd1658",
+		);
 		process.env.NODE_ENV = originalNodeEnv;
 	});
 
@@ -118,7 +120,9 @@ describe("getJA4", () => {
 
 		const result = await getJA4(headers);
 
-		expect(result.ja4PlusFingerprint).toBe("ja4+1234567890abcdef");
+		expect(result.ja4PlusFingerprint).toBe(
+			"t13d1516h2_8daaf6152771_b0da82dd1658",
+		);
 
 		process.env.NODE_ENV = originalNodeEnv;
 	});
@@ -138,7 +142,9 @@ describe("getJA4", () => {
 
 		const result = await getJA4(headers);
 
-		expect(result.ja4PlusFingerprint).toBe("ja4+1234567890abcdef");
+		expect(result.ja4PlusFingerprint).toBe(
+			"t13d1516h2_8daaf6152771_b0da82dd1658",
+		);
 
 		process.env.NODE_ENV = originalNodeEnv;
 	});
@@ -159,7 +165,9 @@ describe("getJA4", () => {
 
 		const result = await getJA4(headers);
 
-		expect(result.ja4PlusFingerprint).toBe("ja4+1234567890abcdef");
+		expect(result.ja4PlusFingerprint).toBe(
+			"t13d1516h2_8daaf6152771_b0da82dd1658",
+		);
 
 		process.env.NODE_ENV = originalNodeEnv;
 	});
