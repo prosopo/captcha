@@ -667,13 +667,17 @@ export class ImgCaptchaManager extends CaptchaManager {
 		trafficFilter?: ITrafficFilter,
 		storeMetadata = false,
 	): Promise<ImageVerificationResponse> {
+		// Bind the commitmentId/dapp context once so every log line in this
+		// method carries it without repeating the fields in each `data` block.
+		const logger = this.logger.with({ commitmentId, dapp });
+
 		const solution = await (commitmentId
 			? this.getDappUserCommitmentById(commitmentId)
 			: this.getDappUserCommitmentByAccount(user, dapp));
 
 		// No solution exists
 		if (!solution) {
-			this.logger.debug(() => ({
+			logger.debug(() => ({
 				msg: "Not verified - no solution found",
 			}));
 			return {
@@ -715,7 +719,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 		// A solution exists but has timed out
 		if (timeSinceCompletion > maxVerifiedTime) {
-			this.logger.debug(() => ({
+			logger.debug(() => ({
 				msg: "Not verified - timed out",
 			}));
 			return {
@@ -744,7 +748,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				);
 
 				if (blockPolicy) {
-					this.logger.info(() => ({
+					logger.info(() => ({
 						msg: "User blocked by access policy in server image verification",
 						data: {
 							userAccount: solution.userAccount,
@@ -759,8 +763,8 @@ export class ImgCaptchaManager extends CaptchaManager {
 					failStatus = ResultReason.ACCESS_POLICY_BLOCK;
 				}
 			} catch (error) {
-				this.logger.warn(() => ({
-					msg: "Failed to check user access policies in server Image verification",
+				logger.warn(() => ({
+					msg: "Failed to check user access policies in server image verification",
 					error,
 				}));
 			}
@@ -772,9 +776,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 				const isSpam = await this.checkSpamEmail(email);
 				if (isSpam) {
 					const emailDomain = email.split("@")[1] || "unknown";
-					this.logger.info(() => ({
+					logger.info(() => ({
 						msg: "Spam email domain detected in server image verification",
-						data: { commitmentId, dapp, emailDomain },
+						data: { emailDomain },
 					}));
 					commitmentUpdates.result = {
 						status: CaptchaStatus.disapproved,
@@ -783,7 +787,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 					failStatus = ResultReason.SPAM_EMAIL_DOMAIN;
 				}
 			} catch (error) {
-				this.logger.warn(() => ({
+				logger.warn(() => ({
 					msg: "Failed to check spam email domain in server image verification",
 					error,
 				}));
@@ -799,9 +803,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 		) {
 			const result = evaluateEmailSpamRules(email, spamFilter.emailRules);
 			if (result.isSpam) {
-				this.logger.info(() => ({
+				logger.info(() => ({
 					msg: "Spam filter rejected email in image verification",
-					data: { commitmentId, dapp, reason: result.reason },
+					data: { reason: result.reason },
 				}));
 				commitmentUpdates.result = {
 					status: CaptchaStatus.disapproved,
@@ -830,11 +834,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 				enrichedDnsEvent,
 			);
 			if (check.isBlocked) {
-				this.logger.info(() => ({
+				logger.info(() => ({
 					msg: "Traffic filter rejected request",
 					data: {
-						commitmentId,
-						dapp,
 						ip,
 						reason: check.reason,
 						dnsPeerIp: enrichedDnsEvent?.peerIp,
@@ -874,14 +876,14 @@ export class ImgCaptchaManager extends CaptchaManager {
 				const ipValidation = await deepValidateIpAddress(
 					ip,
 					solutionIpAddress,
-					this.logger,
+					logger,
 					env.ipInfoService,
 					ipValidationRules,
 					enrichedDnsEvent?.peerIp,
 				);
 
 				if (!ipValidation.isValid) {
-					this.logger.error(() => ({
+					logger.error(() => ({
 						msg: "IP validation failed for image captcha",
 						data: {
 							ip,
@@ -933,7 +935,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				};
 			}
 			score = computeFrictionlessScore(sessionRecord?.scoreComponents);
-			this.logger.info(() => ({
+			logger.info(() => ({
 				data: {
 					scoreComponents: sessionRecord?.scoreComponents,
 					score: score,
@@ -948,7 +950,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				(sessionRecord.webView === true ||
 					(sessionRecord.scoreComponents.webView || 0) > 0)
 			) {
-				this.logger.info(() => ({
+				logger.info(() => ({
 					msg: "Disallowing webview access - user not verified",
 				}));
 				commitmentUpdates.result = {
@@ -964,7 +966,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				sessionRecord.reason ===
 					FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED
 			) {
-				this.logger.info(() => ({
+				logger.info(() => ({
 					msg: "Context aware validation failed",
 				}));
 				//return { status: "API.USER_NOT_VERIFIED", verified: false };
@@ -999,7 +1001,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			try {
 				const decision = await this.decisionMachineRunner.decide(
 					decisionInput,
-					this.logger,
+					logger,
 				);
 				if (decision.decision === DecisionMachineDecision.Deny) {
 					// Decision machines are operator-authored JS — their `reason`
@@ -1007,10 +1009,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 					// boundary so the strict types on `CaptchaResult` hold.
 					const dmReason = (decision.reason ||
 						ResultReason.CAPTCHA_DECISION_MACHINE_DENIED) as ResultReason;
-					this.logger?.info(() => ({
+					logger.info(() => ({
 						msg: "Decision machine denied user verification",
 						data: {
-							commitmentId,
 							reason: decision.reason,
 						},
 					}));
@@ -1022,7 +1023,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 					failureStatus = dmReason;
 				}
 			} catch (error) {
-				this.logger?.error(() => ({
+				logger.error(() => ({
 					msg: "Failed to process decision machine",
 					err: error,
 				}));

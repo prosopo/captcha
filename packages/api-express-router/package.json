@@ -32,11 +32,12 @@
 		"@prosopo/env": "3.6.0",
 		"@prosopo/locale": "3.2.5",
 		"@prosopo/types": "4.8.0",
+		"@prosopo/util": "3.3.1",
 		"@prosopo/util-crypto": "13.5.29",
 		"dotenv": "16.4.5",
 		"express": "4.21.2",
 		"i18next": "24.1.0",
-		"uuid": "11.1.0",
+		"uuid": "14.0.0",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
