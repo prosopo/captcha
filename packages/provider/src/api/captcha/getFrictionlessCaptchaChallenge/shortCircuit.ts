@@ -23,6 +23,7 @@ import {
 import type { ClientRecord } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { Response } from "express";
+import { v4 as uuidv4 } from "uuid";
 import type { getCompositeIpAddress } from "../../../compositeIpAddress.js";
 import { getDetectorBundlePool } from "../../../tasks/detection/bundlePool.js";
 import type { Tasks } from "../../../tasks/index.js";
@@ -52,7 +53,11 @@ export type ShortCircuitInput = {
 // and empty-pool fallback). Score 0 — these paths do not run bot detection, so
 // the session is created as a plain challenge rather than a scored one.
 const buildBypassSessionParams = (input: ShortCircuitInput) => ({
-	token: input.token,
+	// The bypass paths create a session without a decryption token. When the
+	// client had no detector to run (detectorUnavailable) it sends an empty
+	// token, but `sendCaptcha` requires a truthy token, and the session needs a
+	// unique value for dedup — so synthesise one when absent.
+	token: input.token || `nodetector-${uuidv4()}`,
 	score: 0,
 	threshold:
 		input.clientRecord.settings?.frictionlessThreshold ??

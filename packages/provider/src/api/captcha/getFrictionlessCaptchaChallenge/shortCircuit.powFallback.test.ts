@@ -26,12 +26,13 @@ vi.mock("./honeypotResponse.js", () => ({ attachHoneypot: vi.fn() }));
 const makeInput = (
 	sendPowCaptcha: (params: unknown) => Promise<unknown>,
 	detectorUnavailable = false,
+	token = "0xtoken",
 ): ShortCircuitInput => {
 	const input = {
 		tasks: { frictionlessManager: { sendPowCaptcha } },
 		env: { config: {} },
 		clientRecord: { settings: {} },
-		token: "0xtoken",
+		token,
 		dapp: "site-key",
 		ipAddress: { ip: "1.2.3.4" },
 		ipInfo: undefined,
@@ -84,6 +85,25 @@ describe("runNoDetectorPowFallback", () => {
 		expect(sendPowCaptcha).toHaveBeenCalledTimes(1);
 		expect(json).toHaveBeenCalledWith({ captchaType: "pow" });
 		expect(result).not.toBeNull();
+	});
+
+	it("synthesises a non-empty session token when the client sent an empty token (detectorUnavailable)", async () => {
+		initDetectorBundlePool(dir); // empty ⇒ pow fallback
+		let captured: { token?: string } | undefined;
+		const sendPowCaptcha = vi.fn(async (params: unknown) => {
+			captured = params as { token?: string };
+			return { captchaType: "pow" };
+		});
+		const { res } = makeRes();
+
+		// Empty token (the client had no detector to run) must not reach
+		// sendPowCaptcha as a falsy value — its session-param validation rejects
+		// an empty token, which previously 400'd the no-detector PoW flow.
+		await runNoDetectorPowFallback(makeInput(sendPowCaptcha, true, ""), res);
+
+		expect(sendPowCaptcha).toHaveBeenCalledTimes(1);
+		expect(captured?.token).toBeTruthy();
+		expect(captured?.token).toMatch(/^nodetector-/);
 	});
 
 	it("serves a PoW captcha when the client reports detectorUnavailable, even with a populated pool", async () => {
