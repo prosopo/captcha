@@ -1,5 +1,32 @@
 # @prosopo/client-example-server
 
+## 2.7.103
+### Patch Changes
+
+- 9fe3c06: make util fn for mongoose connection config, standardise mongoose connections
+- Replace `import.meta.url`-derived logger scopes with stable, kebab-case service
+  names (e.g. `provider:admin:dns-event`, `client-example-server:app`) so
+  `PROSOPO_LOG_LEVEL` directive matching is deterministic across builds.
+- Updated dependencies [dfb0c53]
+- Updated dependencies [7ebb78f]
+- Updated dependencies [849af99]
+- Updated dependencies [a5ba27b]
+- Updated dependencies [9fe3c06]
+- Updated dependencies [948d36b]
+- Updated dependencies [41e0e11]
+- Updated dependencies [11f1e8c]
+- Updated dependencies [3c80664]
+- Updated dependencies [b166037]
+- Updated dependencies [1111ff2]
+  - @prosopo/common@3.1.41
+  - @prosopo/logger@2.0.0
+  - @prosopo/util@3.3.2
+  - @prosopo/database@3.15.1
+  - @prosopo/dotenv@3.0.46
+  - @prosopo/types@4.9.0
+  - @prosopo/keyring@2.9.47
+  - @prosopo/server@2.10.25
+
 ## 2.7.102
 ### Patch Changes
 

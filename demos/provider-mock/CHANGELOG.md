@@ -1,5 +1,43 @@
 # @prosopo/provider-mock
 
+## 2.8.112
+### Patch Changes
+
+- Replace `import.meta.url`-derived logger scopes with stable, kebab-case service
+  names (e.g. `provider:admin:dns-event`, `client-example-server:app`) so
+  `PROSOPO_LOG_LEVEL` directive matching is deterministic across builds.
+- Updated dependencies [f643912]
+- Updated dependencies [dfb0c53]
+- Updated dependencies [a444abe]
+- Updated dependencies [8c8898d]
+- Updated dependencies [9cf7204]
+- Updated dependencies [7ebb78f]
+- Updated dependencies [5b0dea0]
+- Updated dependencies [c9de110]
+- Updated dependencies [9fe3c06]
+- Updated dependencies [2defea0]
+- Updated dependencies [411aed2]
+- Updated dependencies [30b198b]
+- Updated dependencies [948d36b]
+- Updated dependencies [41e0e11]
+- Updated dependencies [11f1e8c]
+- Updated dependencies [3c80664]
+- Updated dependencies [c672cd7]
+- Updated dependencies [7a2bc13]
+- Updated dependencies [b166037]
+- Updated dependencies [1111ff2]
+- Updated dependencies [6a7b122]
+- Updated dependencies [d3cc224]
+- Updated dependencies
+  - @prosopo/provider@4.13.0
+  - @prosopo/common@3.1.41
+  - @prosopo/api-express-router@3.1.32
+  - @prosopo/logger@2.0.0
+  - @prosopo/database@3.15.1
+  - @prosopo/dotenv@3.0.46
+  - @prosopo/types@4.9.0
+  - @prosopo/types-database@4.11.1
+
 ## 2.8.111
 ### Patch Changes
 

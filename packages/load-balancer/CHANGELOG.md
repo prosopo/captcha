@@ -1,5 +1,16 @@
 # @prosopo/load-balancer
 
+## 2.10.1
+### Patch Changes
+
+- 6a7b122: Allow a client to send a captcha verify request to any pronode: a provider that did not issue the token now forwards the verification to the issuing provider (decoded from the token's providerUrl, SSRF-guarded against the known provider list) and returns its response, mirroring the AWS Lambda verify endpoint. Falls back to local verification when this node is the issuer, the provider list can't be loaded, or the issuer can't be determined.
+- Updated dependencies [dfb0c53]
+- Updated dependencies [11f1e8c]
+- Updated dependencies [b166037]
+- Updated dependencies [1111ff2]
+  - @prosopo/common@3.1.41
+  - @prosopo/types@4.9.0
+
 ## 2.10.0
 ### Minor Changes
 

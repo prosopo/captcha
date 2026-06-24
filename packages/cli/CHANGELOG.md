@@ -1,5 +1,42 @@
 # @prosopo/cli
 
+## 3.6.48
+### Patch Changes
+
+- 11f1e8c: Replace vague logger scopes (empty strings, import.meta.url, generic "CLI") with structured colon-delimited names following the convention package:subsystem:action.
+- Updated dependencies [f643912]
+- Updated dependencies [dfb0c53]
+- Updated dependencies [a444abe]
+- Updated dependencies [9cf7204]
+- Updated dependencies [7ebb78f]
+- Updated dependencies [849af99]
+- Updated dependencies [5b0dea0]
+- Updated dependencies [a5ba27b]
+- Updated dependencies [c9de110]
+- Updated dependencies [2defea0]
+- Updated dependencies [411aed2]
+- Updated dependencies [30b198b]
+- Updated dependencies [948d36b]
+- Updated dependencies [41e0e11]
+- Updated dependencies [11f1e8c]
+- Updated dependencies [3c80664]
+- Updated dependencies [c672cd7]
+- Updated dependencies [7a2bc13]
+- Updated dependencies [b166037]
+- Updated dependencies [1111ff2]
+- Updated dependencies [6a7b122]
+- Updated dependencies [d3cc224]
+- Updated dependencies
+  - @prosopo/provider@4.13.0
+  - @prosopo/common@3.1.41
+  - @prosopo/logger@2.0.0
+  - @prosopo/util@3.3.2
+  - @prosopo/dotenv@3.0.46
+  - @prosopo/types@4.9.0
+  - @prosopo/api@3.5.6
+  - @prosopo/env@3.6.1
+  - @prosopo/keyring@2.9.47
+
 ## 3.6.47
 ### Patch Changes
 

@@ -1,5 +1,11 @@
 # @prosopo/svelte-procaptcha-integration-demo
 
+## 1.1.89
+### Patch Changes
+
+- 1008a56: chore(deps): bump svelte from 5.51.2 to 5.55.7 in /integration/frameworks/svelte/svelte-procaptcha-integration-demo
+  - @prosopo/svelte-procaptcha-wrapper@1.1.89
+
 ## 1.1.88
 ### Patch Changes
 

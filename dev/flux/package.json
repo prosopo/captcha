@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/flux",
-	"version": "2.6.57",
+	"version": "2.6.58",
 	"description": "Tools for managing Flux deployment",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -33,10 +33,10 @@
 		"@noble/curves": "1.9.2",
 		"@polkadot/util": "13.5.7",
 		"@polkadot/util-crypto": "13.5.7",
-		"@prosopo/common": "3.1.40",
-		"@prosopo/logger": "1.0.4",
-		"@prosopo/dotenv": "3.0.45",
-		"@prosopo/util": "3.3.1",
+		"@prosopo/common": "3.1.41",
+		"@prosopo/logger": "2.0.0",
+		"@prosopo/dotenv": "3.0.46",
+		"@prosopo/util": "3.3.2",
 		"openpgp": "5.11.3",
 		"qs": "6.15.2",
 		"socket.io-client": "4.7.5",
@@ -45,7 +45,7 @@
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.3",
+		"@prosopo/config": "3.3.4",
 		"@types/node": "22.10.2",
 		"@types/qs": "6.9.18",
 		"@vitest/coverage-v8": "3.2.4",
