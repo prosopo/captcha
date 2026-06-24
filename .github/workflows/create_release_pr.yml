@@ -69,10 +69,10 @@ jobs:
       - name: Version bump
         if: steps.detect.outputs.has_changesets == 'true'
         run: |
-          npm i -g @changesets/cli
+          npm i -g @changesets/cli --no-audit --no-fund --prefer-offline
           npx @changesets/cli version --verbose
-          
-          npm i --ignore-scripts --include=dev
+
+          npm i --ignore-scripts --include=dev --no-audit --no-fund --prefer-offline
           
           # Set the version of root and docker/images/provider to match @prosopo/cli
           root_version=$(npm -w @prosopo/cli pkg get version | jq -r '.["@prosopo/cli"]')
