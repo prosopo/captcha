@@ -31,13 +31,14 @@ export class ProviderEnvironment extends Environment {
 			return;
 		}
 
+		const errorLog = this.logger.with({ failedFuncName: this.cleanup.name });
+
 		this.db
 			?.cleanupScheduledTaskStatus(ScheduledTaskStatus.Running)
 			.catch((err) => {
-				this.logger.error(() => ({
+				errorLog.error(() => ({
 					msg: "Failed to cleanup running scheduled tasks",
 					err,
-					data: { failedFuncName: this.cleanup.name },
 				}));
 			});
 
@@ -49,10 +50,9 @@ export class ProviderEnvironment extends Environment {
 			const redisConnection = this.getDb().getRedisConnection();
 			const writeQueue = new RedisWriteQueue(redisConnection, this.logger);
 			writeQueue.clearAllSessionRecords().catch((err) => {
-				this.logger.error(() => ({
+				errorLog.error(() => ({
 					msg: "Failed to clear Redis session records at startup",
 					err,
-					data: { failedFuncName: this.cleanup.name },
 				}));
 			});
 		} catch (err) {
