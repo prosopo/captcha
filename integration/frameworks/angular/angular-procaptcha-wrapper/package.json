@@ -12,6 +12,7 @@
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
 		"build": "ng-packagr -p ng-package.json",
+		"build:esm": "npm run build",
 		"dev": "npm run build -- --watch"
 	},
 	"dependencies": {

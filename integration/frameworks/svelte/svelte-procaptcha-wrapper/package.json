@@ -20,6 +20,7 @@
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
 		"svpkg": "svelte-package -i ./src -o ./dist",
 		"build": "npm run svpkg && del-cli --verbose ./.svelte-kit",
+		"build:esm": "npm run build",
 		"dev": "npm run svpkg -- -w"
 	},
 	"dependencies": {
