@@ -64,7 +64,7 @@ export default (mode: string) => {
 		entry: resolveEntryFile(),
 		output: {
 			filename: `${libraryName}.[name].bundle.js`,
-			path: path.resolve("./dist"),
+			path: path.resolve("./dist/bundle/webpack"),
 			publicPath: "/",
 		},
 		module: {

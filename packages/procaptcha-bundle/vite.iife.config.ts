@@ -46,7 +46,7 @@ for (const p of packages) {
 
 const copyDir = {
 	srcDir: `${workspaceRoot}/packages/locale/src/locales`,
-	destDir: `${workspaceRoot}/packages/procaptcha-bundle/dist/bundle/locales`,
+	destDir: `${workspaceRoot}/packages/procaptcha-bundle/dist/bundle/iife/locales`,
 };
 
 const localeFiles = await fg.glob(
@@ -77,6 +77,7 @@ export default defineConfig(async ({ command, mode }) => {
 		},
 		build: {
 			...frontendConfig.build,
+			outDir: path.resolve("./dist/bundle/iife"),
 			assetsDir: "",
 			emptyOutDir: false,
 			lib: {

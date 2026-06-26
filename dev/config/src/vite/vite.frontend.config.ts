@@ -170,7 +170,7 @@ export default async function (
 		define,
 
 		build: {
-			outDir: path.resolve(dir, "dist/bundle"),
+			outDir: path.resolve(dir, "dist/bundle/es"),
 			minify: isProduction,
 			ssr: false,
 			lib: {
@@ -200,7 +200,7 @@ export default async function (
 				watch: false,
 
 				output: {
-					dir: path.resolve(dir, "dist/bundle"),
+					dir: path.resolve(dir, "dist/bundle/es"),
 					entryFileNames: `${bundleName}.bundle.js`,
 				},
 
@@ -261,7 +261,7 @@ export default async function (
 					typescript({
 						tsconfig: path.resolve("./tsconfig.json"),
 						compilerOptions: { rootDir: path.resolve("./src") },
-						outDir: path.resolve(dir, "dist/bundle"),
+						outDir: path.resolve(dir, "dist/bundle/es"),
 					}),
 				],
 			},

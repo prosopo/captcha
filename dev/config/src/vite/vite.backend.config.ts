@@ -41,7 +41,7 @@ export default async function (
 	// Output directory is custom or relative to directory of the package
 	const outDir = outputDir
 		? path.resolve(outputDir)
-		: path.resolve(packageDir, "dist/bundle");
+		: path.resolve(packageDir, "dist/bundle/es");
 
 	// Get rid of any dependencies we don't want to bundle
 	const { external, internal } = filterDependencies(deps, [
