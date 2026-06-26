@@ -44,19 +44,19 @@
 			"outputs": ["dist/tsc/cjs/**", "*.tsbuildinfo"]
 		},
 		"build:bundle": {
-			"dependsOn": ["@prosopo/config#build"],
+			"dependsOn": ["^build:esm", "@prosopo/config#build"],
 			"outputs": ["dist/bundle/es/**"]
 		},
 		"build:bundle:es": {
-			"dependsOn": ["@prosopo/config#build"],
+			"dependsOn": ["^build:esm", "@prosopo/config#build"],
 			"outputs": ["dist/bundle/es/**"]
 		},
 		"build:bundle:iife": {
-			"dependsOn": ["@prosopo/config#build"],
+			"dependsOn": ["^build:esm", "@prosopo/config#build"],
 			"outputs": ["dist/bundle/iife/**"]
 		},
 		"build:bundle:webpack": {
-			"dependsOn": ["@prosopo/config#build"],
+			"dependsOn": ["^build:esm", "@prosopo/config#build"],
 			"outputs": ["dist/bundle/webpack/**"]
 		},
 		"typecheck": {
