@@ -19,7 +19,6 @@
 		"build:bundle:iife": "echo \"@prosopo/datasets: no iife bundle build (not supported for this package)\"",
 		"build:bundle:webpack": "echo \"@prosopo/datasets: no webpack bundle build (not supported for this package)\"",
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"typecheck": "tsc --project tsconfig.types.json",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
 		"cli": "node ./dist/vite/esm/cli.js"
 	},

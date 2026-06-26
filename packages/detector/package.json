@@ -24,8 +24,7 @@
 		"build:bundle:es": "echo \"@prosopo/detector: no es bundle build (not supported for this package)\"",
 		"build:bundle:iife": "echo \"@prosopo/detector: no iife bundle build (not supported for this package)\"",
 		"build:bundle:webpack": "echo \"@prosopo/detector: no webpack bundle build (not supported for this package)\"",
-		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"typecheck": "tsc --project tsconfig.types.json"
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo"
 	},
 	"type": "module",
 	"dependencies": {

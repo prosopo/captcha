@@ -26,7 +26,6 @@
 		"build:bundle:iife": "echo \"@prosopo/vue-procaptcha-integration-demo: no iife bundle build (not supported for this package)\"",
 		"build:bundle:webpack": "echo \"@prosopo/vue-procaptcha-integration-demo: no webpack bundle build (not supported for this package)\"",
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"typecheck": "vue-tsc --project tsconfig.json",
 		"dev": "NODE_ENV=${NODE_ENV:-development}; vite dev --port=9331 --mode=$NODE_ENV"
 	},
 	"dependencies": {

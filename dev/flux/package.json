@@ -29,7 +29,6 @@
 		"build:bundle:es": "echo \"@prosopo/flux: no es bundle build (not supported for this package)\"",
 		"build:bundle:iife": "echo \"@prosopo/flux: no iife bundle build (not supported for this package)\"",
 		"build:bundle:webpack": "echo \"@prosopo/flux: no webpack bundle build (not supported for this package)\"",
-		"typecheck": "tsc --project tsconfig.types.json",
 		"cli": "node dist/vite/esm/index.js"
 	},
 	"author": "Prosopo Limited",

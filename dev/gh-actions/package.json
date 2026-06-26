@@ -14,7 +14,6 @@
 		"build:bundle:es": "echo \"@prosopo/gh-actions: no es bundle build (not supported for this package)\"",
 		"build:bundle:iife": "echo \"@prosopo/gh-actions: no iife bundle build (not supported for this package)\"",
 		"build:bundle:webpack": "echo \"@prosopo/gh-actions: no webpack bundle build (not supported for this package)\"",
-		"typecheck": "tsc --project tsconfig.types.json",
 		"start": "npx tsx src/index.ts"
 	},
 	"author": "",

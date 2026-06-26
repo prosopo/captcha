@@ -42,7 +42,6 @@
 		"serve:bundle": "npm -w @prosopo/procaptcha-bundle run serve",
 		"populate-data": "npm -w @prosopo/provider run populate-data",
 		"test:all": "turbo run test --concurrency=1",
-		"typecheck": "turbo run typecheck",
 		"lint:license": "npm run -w @prosopo/lint start -- license --pkg $(pwd) --ignore @prosopo/fingerprintjs",
 		"lint-fix:license": "npm run --silent lint:license -- --fix",
 		"lint:js": "biome check .",

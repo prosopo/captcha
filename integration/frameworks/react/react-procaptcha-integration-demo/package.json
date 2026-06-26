@@ -25,7 +25,6 @@
 		"build:bundle:es": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.config.ts --mode $NODE_ENV",
 		"build:bundle:iife": "echo \"@prosopo/react-procaptcha-integration-demo: no iife bundle build (not supported for this package)\"",
 		"build:bundle:webpack": "echo \"@prosopo/react-procaptcha-integration-demo: no webpack bundle build (not supported for this package)\"",
-		"typecheck": "tsc --project tsconfig.types.json",
 		"dev": "NODE_ENV=${NODE_ENV:-development}; vite dev --port=9330 --mode=$NODE_ENV",
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo"
 	},

@@ -15,7 +15,6 @@
 		"build:bundle:iife": "echo \"@prosopo/lint: no iife bundle build (not supported for this package)\"",
 		"build:bundle:webpack": "echo \"@prosopo/lint: no webpack bundle build (not supported for this package)\"",
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"typecheck": "tsc --project tsconfig.types.json",
 		"start": "node dist/vite/esm/index.js",
 		"test": "vitest run"
 	},

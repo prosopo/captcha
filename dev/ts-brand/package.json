@@ -25,7 +25,6 @@
 		"build:bundle:es": "echo \"@prosopo/ts-brand: no es bundle build (not supported for this package)\"",
 		"build:bundle:iife": "echo \"@prosopo/ts-brand: no iife bundle build (not supported for this package)\"",
 		"build:bundle:webpack": "echo \"@prosopo/ts-brand: no webpack bundle build (not supported for this package)\"",
-		"typecheck": "tsc --project tsconfig.types.json",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
 	},
 	"author": "Prosopo Limited",

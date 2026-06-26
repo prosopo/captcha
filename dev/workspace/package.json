@@ -22,8 +22,7 @@
 		"build:bundle:es": "echo \"@prosopo/workspace: no es bundle build (not supported for this package)\"",
 		"build:bundle:iife": "echo \"@prosopo/workspace: no iife bundle build (not supported for this package)\"",
 		"build:bundle:webpack": "echo \"@prosopo/workspace: no webpack bundle build (not supported for this package)\"",
-		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"typecheck": "tsc --project tsconfig.types.json"
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo"
 	},
 	"engines": {
 		"node": "^24",

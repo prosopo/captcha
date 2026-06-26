@@ -29,8 +29,7 @@
 		"build:bundle:es": "echo \"@prosopo/procaptcha-puzzle: no es bundle build (not supported for this package)\"",
 		"build:bundle:iife": "echo \"@prosopo/procaptcha-puzzle: no iife bundle build (not supported for this package)\"",
 		"build:bundle:webpack": "echo \"@prosopo/procaptcha-puzzle: no webpack bundle build (not supported for this package)\"",
-		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"typecheck": "tsc --project tsconfig.types.json"
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo"
 	},
 	"browserslist": [
 		"> 0.5%, last 2 versions, not dead"

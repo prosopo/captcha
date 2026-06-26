@@ -28,8 +28,7 @@
 		"build:bundle:webpack": "echo \"@prosopo/client-example-server: no webpack bundle build (not supported for this package)\"",
 		"dev": "NODE_ENV=${NODE_ENV:-development}; vite serve --mode=$NODE_ENV --config ./vite.config.ts --host",
 		"start": "NODE_ENV=${NODE_ENV:-development}; node ./dist/vite/esm/app.js",
-		"start:bundle": "node ./dist/bundle/es/prosopo_client_example_server.app.bundle.js",
-		"typecheck": "tsc --project tsconfig.types.json"
+		"start:bundle": "node ./dist/bundle/es/prosopo_client_example_server.app.bundle.js"
 	},
 	"repository": {
 		"type": "git",

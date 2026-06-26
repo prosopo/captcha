@@ -9,72 +9,114 @@
 		"vite.config.*",
 		"vite.*.config.*"
 	],
-	"globalEnv": ["NODE_ENV"],
+	"globalEnv": [
+		"NODE_ENV"
+	],
 	"ui": "tui",
 	"concurrency": "100%",
 	"daemon": false,
 	"envMode": "loose",
 	"tasks": {
 		"build": {
-			"dependsOn": ["^build", "@prosopo/config#build"],
-			"outputs": ["dist/vite/esm/**"]
+			"dependsOn": [
+				"^build",
+				"@prosopo/config#build"
+			],
+			"outputs": [
+				"dist/vite/esm/**"
+			]
 		},
 		"build:esm": {
-			"dependsOn": ["^build:esm", "@prosopo/config#build"],
-			"outputs": ["dist/vite/esm/**"]
+			"dependsOn": [
+				"^build:esm",
+				"@prosopo/config#build"
+			],
+			"outputs": [
+				"dist/vite/esm/**"
+			]
 		},
 		"build:cjs": {
-			"dependsOn": ["^build:cjs", "@prosopo/config#build"],
-			"outputs": ["dist/vite/cjs/**"]
+			"dependsOn": [
+				"^build:cjs",
+				"@prosopo/config#build"
+			],
+			"outputs": [
+				"dist/vite/cjs/**"
+			]
 		},
 		"build:types": {
-			"dependsOn": ["^build:types", "@prosopo/fingerprintjs#build:tsc"],
-			"outputs": ["dist/types/**", "*.tsbuildinfo"]
+			"dependsOn": [
+				"^build:types"
+			],
+			"outputs": [
+				"dist/types/**",
+				"*.tsbuildinfo"
+			]
 		},
 		"build:tsc": {
-			"dependsOn": ["^build:tsc", "^build:types"],
-			"outputs": ["dist/tsc/**", "*.tsbuildinfo"]
+			"dependsOn": [
+				"^build:tsc",
+				"^build:types"
+			],
+			"outputs": [
+				"dist/tsc/**",
+				"*.tsbuildinfo"
+			]
 		},
 		"build:bundle": {
-			"dependsOn": ["^build:esm", "@prosopo/config#build", "@prosopo/fingerprintjs#build"],
-			"outputs": ["dist/bundle/es/**"]
+			"dependsOn": [
+				"^build:esm",
+				"@prosopo/config#build"
+			],
+			"outputs": [
+				"dist/bundle/es/**"
+			]
 		},
 		"build:bundle:es": {
-			"dependsOn": ["^build:esm", "@prosopo/config#build", "@prosopo/fingerprintjs#build"],
-			"outputs": ["dist/bundle/es/**"]
+			"dependsOn": [
+				"^build:esm",
+				"@prosopo/config#build"
+			],
+			"outputs": [
+				"dist/bundle/es/**"
+			]
 		},
 		"build:bundle:iife": {
-			"dependsOn": ["^build:esm", "@prosopo/config#build", "@prosopo/fingerprintjs#build"],
-			"outputs": ["dist/bundle/iife/**"]
+			"dependsOn": [
+				"^build:esm",
+				"@prosopo/config#build"
+			],
+			"outputs": [
+				"dist/bundle/iife/**"
+			]
 		},
 		"build:bundle:webpack": {
-			"dependsOn": ["^build:esm", "@prosopo/config#build", "@prosopo/fingerprintjs#build"],
-			"outputs": ["dist/bundle/webpack/**"]
-		},
-		"typecheck": {
-			"dependsOn": ["^typecheck"]
+			"dependsOn": [
+				"^build:esm",
+				"@prosopo/config#build"
+			],
+			"outputs": [
+				"dist/bundle/webpack/**"
+			]
 		},
 		"test": {
-			"dependsOn": ["@prosopo/config#build"]
+			"dependsOn": [
+				"@prosopo/config#build"
+			]
 		},
-		"lint": { "dependsOn": ["^lint"] },
-		"@prosopo/fingerprintjs#build": {
-			"dependsOn": ["^build"],
-			"outputs": ["dist/**"]
-		},
-		"@prosopo/fingerprintjs#build:cjs": {
-			"dependsOn": ["^build:cjs"],
-			"outputs": ["dist/**"]
-		},
-		"@prosopo/fingerprintjs#build:tsc": {
-			"dependsOn": ["^build:tsc"],
-			"outputs": ["dist/**"]
+		"lint": {
+			"dependsOn": [
+				"^lint"
+			]
 		},
 		"clean": {
 			"cache": false
 		},
 		"clean:deps": {
-			"dependsOn": ["clean", "^clean"],
+			"dependsOn": [
+				"clean",
+				"^clean"
+			],
 			"cache": false
 		}
 	},

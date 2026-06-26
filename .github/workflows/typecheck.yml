@@ -61,5 +61,5 @@ jobs:
         with:
           npm_ci_args: '--include=dev --no-audit --no-fund --prefer-offline'
 
-      - run: npx turbo run typecheck
+      - run: npx turbo run build:types
 

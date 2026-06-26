@@ -27,8 +27,7 @@
 		"build:bundle:iife": "echo \"@prosopo/env: no iife bundle build (not supported for this package)\"",
 		"build:bundle:webpack": "echo \"@prosopo/env: no webpack bundle build (not supported for this package)\"",
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --project tsconfig.types.json"
+		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts --mode $NODE_ENV"
 	},
 	"dependencies": {
 		"@prosopo/ipinfo": "0.2.27",

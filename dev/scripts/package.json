@@ -26,7 +26,6 @@
 		"build:bundle:es": "echo \"@prosopo/scripts: no es bundle build (not supported for this package)\"",
 		"build:bundle:iife": "echo \"@prosopo/scripts: no iife bundle build (not supported for this package)\"",
 		"build:bundle:webpack": "echo \"@prosopo/scripts: no webpack bundle build (not supported for this package)\"",
-		"typecheck": "tsc --project tsconfig.types.json",
 		"cli": "node dist/vite/esm/cli/index.js",
 		"setup": "node dist/vite/esm/cli/index.js setup"
 	},

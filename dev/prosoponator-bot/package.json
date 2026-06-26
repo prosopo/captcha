@@ -14,7 +14,6 @@
 		"build:bundle:es": "echo \"@prosopo/prosoponator-bot: no es bundle build (not supported for this package)\"",
 		"build:bundle:iife": "echo \"@prosopo/prosoponator-bot: no iife bundle build (not supported for this package)\"",
 		"build:bundle:webpack": "echo \"@prosopo/prosoponator-bot: no webpack bundle build (not supported for this package)\"",
-		"typecheck": "tsc --project tsconfig.types.json",
 		"start": "npx tsx src/index.ts"
 	},
 	"author": "",

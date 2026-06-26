@@ -54,7 +54,6 @@
 		"build:bundle:es": "echo \"@prosopo/cypress-shared: no es bundle build (not supported for this package)\"",
 		"build:bundle:iife": "echo \"@prosopo/cypress-shared: no iife bundle build (not supported for this package)\"",
 		"build:bundle:webpack": "echo \"@prosopo/cypress-shared: no webpack bundle build (not supported for this package)\"",
-		"typecheck": "tsc --project tsconfig.types.json",
 		"cypress:open:client-bundle-example:image": "NODE_TLS_REJECT_UNAUTHORIZED=0 CAPTCHA_TYPE=image CYPRESS_BASE_URL='https://localhost:9232' cypress open --config-file cypress.image.config.js",
 		"cypress:run:client-bundle-example:image": "NODE_TLS_REJECT_UNAUTHORIZED=0 CAPTCHA_TYPE=image CYPRESS_BASE_URL='https://localhost:9232' cypress run --browser chrome --config-file cypress.image.config.js",
 		"cypress:open:client-bundle-example:frictionless": "NODE_TLS_REJECT_UNAUTHORIZED=0 CAPTCHA_TYPE=frictionless CYPRESS_BASE_URL='https://localhost:9232' cypress open --config-file cypress.frictionless.config.js",

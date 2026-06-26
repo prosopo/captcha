@@ -25,7 +25,6 @@
 		"build:bundle:iife": "echo \"@prosopo/client-bundle-example: no iife bundle build (not supported for this package)\"",
 		"build:bundle:webpack": "echo \"@prosopo/client-bundle-example: no webpack bundle build (not supported for this package)\"",
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"typecheck": "tsc --project tsconfig.types.json",
 		"start": "NODE_ENV=${NODE_ENV:-development}; vite serve ./src --port 9232 --config vite.config.ts --mode=$NODE_ENV"
 	},
 	"version": "2.10.18",

@@ -2,7 +2,7 @@
 	"extends": "../tsconfig.json",
 	"compilerOptions": {
 		"rootDir": "./src",
-		"outDir": "./dist/tsc/cjs"
+		"outDir": "./dist/vite/cjs"
 	},
 	"include": ["./src"],
 	"references": [

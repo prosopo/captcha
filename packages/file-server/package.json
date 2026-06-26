@@ -27,7 +27,6 @@
 		"build:bundle:iife": "echo \"@prosopo/file-server: no iife bundle build (not supported for this package)\"",
 		"build:bundle:webpack": "echo \"@prosopo/file-server: no webpack bundle build (not supported for this package)\"",
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"typecheck": "tsc --project tsconfig.types.json",
 		"start": "node ./dist/vite/esm/index.js"
 	},
 	"dependencies": {
