@@ -33,15 +33,7 @@
 		},
 		"build:tsc": {
 			"dependsOn": ["^build:tsc", "^build:types"],
-			"outputs": ["dist/tsc/esm/**", "*.tsbuildinfo"]
-		},
-		"build:tsc:esm": {
-			"dependsOn": ["^build:tsc:esm", "^build:types"],
-			"outputs": ["dist/tsc/esm/**", "*.tsbuildinfo"]
-		},
-		"build:tsc:cjs": {
-			"dependsOn": ["^build:tsc:cjs", "^build:types"],
-			"outputs": ["dist/tsc/cjs/**", "*.tsbuildinfo"]
+			"outputs": ["dist/tsc/**", "*.tsbuildinfo"]
 		},
 		"build:bundle": {
 			"dependsOn": ["^build:esm", "@prosopo/config#build", "@prosopo/fingerprintjs#build"],

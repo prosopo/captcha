@@ -1,7 +1,7 @@
 {
 	"compilerOptions": {
 		"rootDir": "./src",
-		"outDir": "./dist/tsc/esm",
+		"outDir": "./dist/tsc",
 		"noPropertyAccessFromIndexSignature": false,
 		"exactOptionalPropertyTypes": false,
 		"noUncheckedIndexedAccess": true,

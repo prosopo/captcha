@@ -15,8 +15,6 @@
 		"build:all:cjs": "turbo run build:cjs",
 		"build:all:types": "turbo run build:types",
 		"build:all:tsc": "turbo run build:tsc",
-		"build:all:tsc:esm": "turbo run build:tsc:esm",
-		"build:all:tsc:cjs": "turbo run build:tsc:cjs",
 		"build:all:bundle": "turbo run build:bundle",
 		"bundle:all": "turbo run build:bundle",
 		"bundle:iife:all": "turbo run build:bundle:iife",
