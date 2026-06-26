@@ -24,7 +24,7 @@
 		"build:types": "tsc -p tsconfig.types.json",
 		"build:tsc": "npm run build:tsc:esm",
 		"build:tsc:esm": "tsc --build --verbose tsconfig.json",
-		"build:tsc:cjs": "echo \"@prosopo/provider-mock: no tsc cjs build (ESM-first codebase; CommonJS tsc compile is not viable — use build:cjs (vite) for CommonJS output)\"",
+		"build:tsc:cjs": "echo \"@prosopo/provider-mock: no tsc cjs build (source uses import.meta, which tsc cannot emit as CommonJS; use build:cjs (vite) for CommonJS output)\"",
 		"build:bundle": "npm run build:bundle:es",
 		"build:bundle:es": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.config.ts --mode $NODE_ENV",
 		"build:bundle:iife": "echo \"@prosopo/provider-mock: no iife bundle build (not supported for this package)\"",
