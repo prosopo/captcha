@@ -99,10 +99,12 @@
 			"require": "./dist/vite/cjs/index.cjs"
 		},
 		"./webpack": {
+			"types": "./dist/types/webpack/index.d.ts",
 			"import": "./dist/vite/esm/webpack/index.js",
 			"require": "./dist/vite/cjs/webpack/cjs/index.cjs"
 		},
 		"./webpack/webpack.config": {
+			"types": "./dist/types/webpack/webpack.config.d.ts",
 			"import": "./dist/vite/esm/webpack/webpack.config.js",
 			"require": "./dist/vite/cjs/webpack/webpack.config.cjs"
 		}

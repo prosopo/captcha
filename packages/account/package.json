@@ -16,11 +16,13 @@
 			"require": "./dist/vite/cjs/index.cjs"
 		},
 		"./extension/ExtensionWeb2": {
+			"types": "./dist/types/extension/ExtensionWeb2.d.ts",
 			"import": "./dist/vite/esm/extension/ExtensionWeb2.js",
 			"require": "./dist/vite/cjs/extension/ExtensionWeb2.cjs",
 			"default": "./dist/vite/esm/extension/ExtensionWeb2.js"
 		},
 		"./extension/ExtensionWeb3": {
+			"types": "./dist/types/extension/ExtensionWeb3.d.ts",
 			"import": "./dist/vite/esm/extension/ExtensionWeb3.js",
 			"require": "./dist/vite/cjs/extension/ExtensionWeb3.cjs",
 			"default": "./dist/vite/esm/extension/ExtensionWeb3.js"
