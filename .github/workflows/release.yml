@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Print contexts
-        uses: prosopo/github_actions/.github/actions/print_contexts@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
+        uses: prosopo/github_actions/.github/actions/print_contexts@2394d5e7a22fc39b15dadb7c4154b0ee0c36dec3 # split-npm-turbo-caches
         with:
           INPUTS_CONTEXT: ${{ toJson(inputs) }}
           NEEDS_CONTEXT: ${{ toJson(needs) }}

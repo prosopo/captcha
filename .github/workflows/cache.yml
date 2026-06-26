@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Print contexts
-        uses: prosopo/github_actions/.github/actions/print_contexts@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
+        uses: prosopo/github_actions/.github/actions/print_contexts@2394d5e7a22fc39b15dadb7c4154b0ee0c36dec3 # split-npm-turbo-caches
         with:
           INPUTS_CONTEXT: ${{ toJson(inputs) }}
           NEEDS_CONTEXT: ${{ toJson(needs) }}
@@ -53,7 +53,7 @@ jobs:
       # don't restore the cache, otherwise we get artifacts left over from the previous run sit in the cache for eternity. Do a clean build every time.
       - run: npm cache clean --force
 
-      - uses: prosopo/github_actions/.github/actions/npm@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
+      - uses: prosopo/github_actions/.github/actions/npm@2394d5e7a22fc39b15dadb7c4154b0ee0c36dec3 # split-npm-turbo-caches
         with:
           npm_ci_args: '--include=dev --no-audit --no-fund --prefer-offline'
 
@@ -72,5 +72,12 @@ jobs:
       - run: NODE_ENV=development npx turbo run bundle:webpack
 
       - name: Save npm cache
-        uses: prosopo/github_actions/.github/actions/save_npm_cache@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
+        uses: prosopo/github_actions/.github/actions/save_npm_cache@2394d5e7a22fc39b15dadb7c4154b0ee0c36dec3 # split-npm-turbo-caches
+
+      # turbo build outputs are cached separately from the npm cache because
+      # they invalidate on (almost) every commit, while the npm cache only
+      # changes with the lockfile. Consumer workflows restore this via the
+      # turbo-<os>-<arch>- prefix.
+      - name: Save turbo cache
+        uses: prosopo/github_actions/.github/actions/save_turbo_cache@2394d5e7a22fc39b15dadb7c4154b0ee0c36dec3 # split-npm-turbo-caches
 

@@ -37,7 +37,7 @@ jobs:
     if: github.event.pull_request.draft == false
     steps:
       - name: Print contexts
-        uses: prosopo/github_actions/.github/actions/print_contexts@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
+        uses: prosopo/github_actions/.github/actions/print_contexts@2394d5e7a22fc39b15dadb7c4154b0ee0c36dec3 # split-npm-turbo-caches
         with:
           INPUTS_CONTEXT: ${{ toJson(inputs) }}
           NEEDS_CONTEXT: ${{ toJson(needs) }}
@@ -57,7 +57,10 @@ jobs:
           node-version: '24'
           cache: 'npm'
 
-      - uses: prosopo/github_actions/.github/actions/npm@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
+      # restore the turbo build cache (separate from the npm cache; populated
+      # by cache.yml on push:main and keyed under the turbo-<os>-<arch>- prefix)
+      - uses: prosopo/github_actions/.github/actions/restore_turbo_cache@2394d5e7a22fc39b15dadb7c4154b0ee0c36dec3 # split-npm-turbo-caches
+      - uses: prosopo/github_actions/.github/actions/npm@2394d5e7a22fc39b15dadb7c4154b0ee0c36dec3 # split-npm-turbo-caches
         with:
           npm_ci_args: '--include=dev --no-audit --no-fund --prefer-offline'
 
