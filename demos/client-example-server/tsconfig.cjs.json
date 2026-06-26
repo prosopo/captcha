@@ -2,7 +2,7 @@
 	"extends": "../../tsconfig.cjs.json",
 	"compilerOptions": {
 		"rootDir": "./src",
-		"outDir": "./dist",
+		"outDir": "./dist/tsc/cjs",
 		"lib": ["dom", "dom.iterable", "esnext"]
 	},
 	"include": ["src", "src/**/*.json"],

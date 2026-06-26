@@ -2,7 +2,7 @@
 	"extends": "../../tsconfig.esm.json",
 	"compilerOptions": {
 		"rootDir": "./src",
-		"outDir": "./dist",
+		"outDir": "./dist/tsc/esm",
 		"lib": ["es6", "dom"],
 		"jsxImportSource": "@emotion/react"
 	},

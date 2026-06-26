@@ -2,7 +2,7 @@
 	"extends": "../../tsconfig.cjs.json",
 	"compilerOptions": {
 		"rootDir": "./src",
-		"outDir": "./dist/cjs",
+		"outDir": "./dist/tsc/cjs",
 		"lib": ["es6", "dom"]
 	},
 	"include": [
