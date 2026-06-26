@@ -28,7 +28,7 @@
 			"outputs": ["dist/vite/cjs/**"]
 		},
 		"build:types": {
-			"dependsOn": ["^build:types"],
+			"dependsOn": ["^build:types", "@prosopo/fingerprintjs#build:tsc"],
 			"outputs": ["dist/types/**", "*.tsbuildinfo"]
 		},
 		"build:tsc": {
@@ -44,19 +44,19 @@
 			"outputs": ["dist/tsc/cjs/**", "*.tsbuildinfo"]
 		},
 		"build:bundle": {
-			"dependsOn": ["^build:esm", "@prosopo/config#build"],
+			"dependsOn": ["^build:esm", "@prosopo/config#build", "@prosopo/fingerprintjs#build"],
 			"outputs": ["dist/bundle/es/**"]
 		},
 		"build:bundle:es": {
-			"dependsOn": ["^build:esm", "@prosopo/config#build"],
+			"dependsOn": ["^build:esm", "@prosopo/config#build", "@prosopo/fingerprintjs#build"],
 			"outputs": ["dist/bundle/es/**"]
 		},
 		"build:bundle:iife": {
-			"dependsOn": ["^build:esm", "@prosopo/config#build"],
+			"dependsOn": ["^build:esm", "@prosopo/config#build", "@prosopo/fingerprintjs#build"],
 			"outputs": ["dist/bundle/iife/**"]
 		},
 		"build:bundle:webpack": {
-			"dependsOn": ["^build:esm", "@prosopo/config#build"],
+			"dependsOn": ["^build:esm", "@prosopo/config#build", "@prosopo/fingerprintjs#build"],
 			"outputs": ["dist/bundle/webpack/**"]
 		},
 		"typecheck": {
