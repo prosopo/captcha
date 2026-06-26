@@ -3,25 +3,35 @@
 	"tasks": {
 		"build": {
 			"dependsOn": ["^build"],
-			"outputs": ["dist/**", "*.tsbuildinfo"]
+			"outputs": ["dist/vite/esm/**"]
 		},
-		"build:tsc": {
-			"dependsOn": ["^build:tsc"],
-			"outputs": ["dist/**", "*.tsbuildinfo"]
+		"build:esm": {
+			"dependsOn": ["^build:esm"],
+			"outputs": ["dist/vite/esm/**"]
 		},
 		"build:cjs": {
 			"dependsOn": ["^build:cjs"],
-			"outputs": ["dist/**", "*.tsbuildinfo"]
+			"outputs": ["dist/vite/cjs/**"]
 		},
-		"bundle": {
-			"outputs": ["dist/**", "*.tsbuildinfo"]
+		"build:types": {
+			"dependsOn": ["^build:types"],
+			"outputs": ["dist/types/**", "*.tsbuildinfo"]
 		},
-		"bundle:webpack": {
-			"outputs": ["dist/**", "*.tsbuildinfo"]
+		"build:tsc": {
+			"dependsOn": ["^build:tsc"],
+			"outputs": ["dist/tsc/esm/**", "*.tsbuildinfo"]
+		},
+		"build:tsc:esm": {
+			"dependsOn": ["^build:tsc:esm"],
+			"outputs": ["dist/tsc/esm/**", "*.tsbuildinfo"]
+		},
+		"build:tsc:cjs": {
+			"dependsOn": ["^build:tsc:cjs"],
+			"outputs": ["dist/tsc/cjs/**", "*.tsbuildinfo"]
 		},
 		"typecheck": {
 			"dependsOn": ["^typecheck"],
-			"outputs": ["dist/**", "*.tsbuildinfo"]
+			"outputs": ["dist/types/**", "*.tsbuildinfo"]
 		},
 		"test": {},
 		"lint": { "dependsOn": ["^lint"] },

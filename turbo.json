@@ -17,27 +17,47 @@
 	"tasks": {
 		"build": {
 			"dependsOn": ["^build", "@prosopo/config#build"],
-			"outputs": ["dist/**", "*.tsbuildinfo"]
+			"outputs": ["dist/vite/esm/**"]
 		},
-		"build:tsc": {
-			"dependsOn": ["^build:tsc"],
-			"outputs": ["dist/**", "*.tsbuildinfo"]
+		"build:esm": {
+			"dependsOn": ["^build:esm", "@prosopo/config#build"],
+			"outputs": ["dist/vite/esm/**"]
 		},
 		"build:cjs": {
 			"dependsOn": ["^build:cjs", "@prosopo/config#build"],
-			"outputs": ["dist/**", "*.tsbuildinfo"]
+			"outputs": ["dist/vite/cjs/**"]
 		},
-		"bundle": {
-			"dependsOn": ["@prosopo/config#build"],
-			"outputs": ["dist/**", "*.tsbuildinfo"]
+		"build:types": {
+			"dependsOn": ["^build:types"],
+			"outputs": ["dist/types/**", "*.tsbuildinfo"]
 		},
-		"bundle:iife": {
-			"dependsOn": ["@prosopo/config#build"],
-			"outputs": ["dist/**", "*.tsbuildinfo"]
+		"build:tsc": {
+			"dependsOn": ["^build:tsc"],
+			"outputs": ["dist/tsc/esm/**", "*.tsbuildinfo"]
 		},
-		"bundle:webpack": {
+		"build:tsc:esm": {
+			"dependsOn": ["^build:tsc:esm"],
+			"outputs": ["dist/tsc/esm/**", "*.tsbuildinfo"]
+		},
+		"build:tsc:cjs": {
+			"dependsOn": ["^build:tsc:cjs"],
+			"outputs": ["dist/tsc/cjs/**", "*.tsbuildinfo"]
+		},
+		"build:bundle": {
 			"dependsOn": ["@prosopo/config#build"],
-			"outputs": ["dist/**", "*.tsbuildinfo"]
+			"outputs": ["dist/bundle/es/**"]
+		},
+		"build:bundle:es": {
+			"dependsOn": ["@prosopo/config#build"],
+			"outputs": ["dist/bundle/es/**"]
+		},
+		"build:bundle:iife": {
+			"dependsOn": ["@prosopo/config#build"],
+			"outputs": ["dist/bundle/iife/**"]
+		},
+		"build:bundle:webpack": {
+			"dependsOn": ["@prosopo/config#build"],
+			"outputs": ["dist/bundle/webpack/**"]
 		},
 		"typecheck": {
 			"dependsOn": ["^typecheck"]
