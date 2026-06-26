@@ -6,21 +6,28 @@
 		"node": "^24",
 		"npm": "^11"
 	},
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
+	"main": "dist/vite/esm/index.js",
+	"types": "dist/types/index.d.ts",
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.cjs"
+			"types": "./dist/types/index.d.ts",
+			"import": "./dist/vite/esm/index.js",
+			"require": "./dist/vite/cjs/index.cjs"
 		}
 	},
 	"scripts": {
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
-		"build:cross-env": "vite build --config vite.esm.config.ts",
+		"build": "npm run build:esm",
+		"build:esm": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"build:types": "tsc -p tsconfig.types.json",
+		"build:tsc": "npm run build:tsc:esm",
+		"build:tsc:esm": "tsc --build --verbose tsconfig.json",
+		"build:tsc:cjs": "tsc --build --verbose tsconfig.cjs.json",
+		"build:bundle": "npm run build:bundle:es",
+		"build:bundle:es": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.config.ts --mode $NODE_ENV",
+		"build:bundle:iife": "",
+		"build:bundle:webpack": "",
 		"typecheck": "tsc --project tsconfig.types.json",
-		"bundle": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.config.ts --mode $NODE_ENV",
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo"
 	},
 	"dependencies": {

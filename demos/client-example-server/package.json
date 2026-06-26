@@ -2,13 +2,13 @@
 	"name": "@prosopo/client-example-server",
 	"version": "2.7.103",
 	"description": "Backend for client-example",
-	"main": "dist/app.js",
-	"types": "dist/app.d.ts",
+	"main": "dist/vite/esm/app.js",
+	"types": "dist/types/app.d.ts",
 	"exports": {
 		".": {
-			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.cjs",
-			"types": "./dist/app.d.ts"
+			"import": "./dist/vite/esm/index.js",
+			"require": "./dist/vite/cjs/index.cjs",
+			"types": "./dist/types/app.d.ts"
 		}
 	},
 	"type": "module",
@@ -17,15 +17,21 @@
 		"npm": "^11"
 	},
 	"scripts": {
-		"dev": "NODE_ENV=${NODE_ENV:-development}; vite serve --mode=$NODE_ENV --config ./vite.config.ts --host",
-		"start": "NODE_ENV=${NODE_ENV:-development}; node ./dist/app.js",
-		"start:bundle": "node ./dist/bundle/prosopo_client_example_server.app.bundle.js",
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
-		"build:cross-env": "vite build --config vite.esm.config.ts",
-		"build:tsc": "tsc --build --verbose",
+		"build": "npm run build:esm",
+		"build:esm": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --project tsconfig.types.json",
-		"bundle": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.config.ts --mode $NODE_ENV"
+		"build:types": "tsc -p tsconfig.types.json",
+		"build:tsc": "npm run build:tsc:esm",
+		"build:tsc:esm": "tsc --build --verbose tsconfig.json",
+		"build:tsc:cjs": "tsc --build --verbose tsconfig.cjs.json",
+		"build:bundle": "npm run build:bundle:es",
+		"build:bundle:es": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.config.ts --mode $NODE_ENV",
+		"build:bundle:iife": "",
+		"build:bundle:webpack": "",
+		"dev": "NODE_ENV=${NODE_ENV:-development}; vite serve --mode=$NODE_ENV --config ./vite.config.ts --host",
+		"start": "NODE_ENV=${NODE_ENV:-development}; node ./dist/vite/esm/app.js",
+		"start:bundle": "node ./dist/bundle/es/prosopo_client_example_server.app.bundle.js",
+		"typecheck": "tsc --project tsconfig.types.json"
 	},
 	"repository": {
 		"type": "git",

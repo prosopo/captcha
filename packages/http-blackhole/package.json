@@ -1,17 +1,25 @@
 {
 	"name": "@prosopo/http-blackhole",
 	"version": "1.0.26",
-	"main": "dist/index.js",
+	"main": "dist/vite/esm/index.js",
 	"type": "module",
 	"engines": {
 		"node": "^24",
 		"npm": "^11"
 	},
 	"scripts": {
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
-		"build:cross-env": "vite build --config vite.esm.config.ts",
+		"build": "npm run build:esm",
+		"build:esm": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"start": "node dist/index.js"
+		"build:types": "",
+		"build:tsc": "npm run build:tsc:esm",
+		"build:tsc:esm": "tsc --build --verbose tsconfig.json",
+		"build:tsc:cjs": "",
+		"build:bundle": "",
+		"build:bundle:es": "",
+		"build:bundle:iife": "",
+		"build:bundle:webpack": "",
+		"start": "node dist/vite/esm/index.js"
 	},
 	"author": "",
 	"dependencies": {

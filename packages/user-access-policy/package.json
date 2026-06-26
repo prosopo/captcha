@@ -8,35 +8,42 @@
 	},
 	"exports": {
 		".": {
-			"types": "./dist/.export.d.ts",
-			"import": "./dist/.export.js",
-			"require": "./dist/cjs/.export.cjs"
+			"types": "./dist/types/.export.d.ts",
+			"import": "./dist/vite/esm/.export.js",
+			"require": "./dist/vite/cjs/.export.cjs"
 		},
 		"./api": {
-			"types": "./dist/api/.export.d.ts",
-			"import": "./dist/api/.export.js",
-			"require": "./dist/cjs/api/.export.cjs"
+			"types": "./dist/types/api/.export.d.ts",
+			"import": "./dist/vite/esm/api/.export.js",
+			"require": "./dist/vite/cjs/api/.export.cjs"
 		},
 		"./redis": {
-			"types": "./dist/redis/.export.d.ts",
-			"import": "./dist/redis/.export.js",
-			"require": "./dist/cjs/redis/.export.cjs"
+			"types": "./dist/types/redis/.export.d.ts",
+			"import": "./dist/vite/esm/redis/.export.js",
+			"require": "./dist/vite/cjs/redis/.export.cjs"
 		},
 		"./mongoose": {
-			"types": "./dist/mongoose/.export.d.ts",
-			"import": "./dist/mongoose/.export.js",
-			"require": "./dist/cjs/mongoose/.export.cjs"
+			"types": "./dist/types/mongoose/.export.d.ts",
+			"import": "./dist/vite/esm/mongoose/.export.js",
+			"require": "./dist/vite/cjs/mongoose/.export.cjs"
 		}
 	},
 	"imports": {
 		"#policy/*": "./dist/*"
 	},
 	"scripts": {
-		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
-		"build:cross-env": "vite build --config vite.esm.config.ts",
-		"build:tsc": "tsc --build --verbose",
+		"build": "npm run build:esm",
+		"build:esm": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"build:types": "tsc -p tsconfig.types.json",
+		"build:tsc": "npm run build:tsc:esm",
+		"build:tsc:esm": "tsc --build --verbose tsconfig.json",
+		"build:tsc:cjs": "tsc --build --verbose tsconfig.cjs.json",
+		"build:bundle": "",
+		"build:bundle:es": "",
+		"build:bundle:iife": "",
+		"build:bundle:webpack": "",
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
 		"typecheck": "tsc --project tsconfig.types.json",
 		"test:unit": "NODE_ENV=${NODE_ENV:-test}; TEST_TYPE=unit npx vitest run --config ./vite.test.config.ts",
 		"test:integration": "NODE_ENV=${NODE_ENV:-test}; NX_PARALLEL=1 TEST_TYPE=integration npx vitest run --config ./vite.test.config.ts",

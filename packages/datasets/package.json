@@ -9,35 +9,46 @@
 		"npm": "^11"
 	},
 	"scripts": {
-		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
-		"build:cross-env": "vite build --config vite.esm.config.ts",
-		"build:tsc": "tsc --build --verbose",
+		"build": "npm run build:esm",
+		"build:esm": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"build:types": "tsc -p tsconfig.types.json",
+		"build:tsc": "npm run build:tsc:esm",
+		"build:tsc:esm": "tsc --build --verbose tsconfig.json",
+		"build:tsc:cjs": "tsc --build --verbose tsconfig.cjs.json",
+		"build:bundle": "",
+		"build:bundle:es": "",
+		"build:bundle:iife": "",
+		"build:bundle:webpack": "",
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
 		"typecheck": "tsc --project tsconfig.types.json",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
-		"cli": "node ./dist/cli.js"
+		"cli": "node ./dist/vite/esm/cli.js"
 	},
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
+	"main": "dist/vite/esm/index.js",
+	"types": "dist/types/index.d.ts",
 	"type": "module",
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.cjs"
+			"types": "./dist/types/index.d.ts",
+			"import": "./dist/vite/esm/index.js",
+			"require": "./dist/vite/cjs/index.cjs"
 		},
 		"./captcha": {
-			"types": "./dist/captcha/index.d.ts",
-			"import": "./dist/captcha/index.js",
-			"require": "./dist/cjs/captcha/index.cjs",
-			"default": "./dist/captcha/index.js"
+			"types": "./dist/types/captcha/index.d.ts",
+			"import": "./dist/vite/esm/captcha/index.js",
+			"require": "./dist/vite/cjs/captcha/index.cjs",
+			"default": "./dist/vite/esm/captcha/index.js"
 		}
 	},
 	"typesVersions": {
 		"*": {
-			"types": ["dist/types"],
-			"captcha": ["dist/captcha"]
+			"types": [
+				"dist/types"
+			],
+			"captcha": [
+				"dist/captcha"
+			]
 		}
 	},
 	"dependencies": {

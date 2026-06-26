@@ -7,10 +7,20 @@
 	},
 	"type": "module",
 	"scripts": {
+		"build": "npm run build:esm",
+		"build:esm": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"build:types": "",
+		"build:tsc": "npm run build:tsc:esm",
+		"build:tsc:esm": "tsc --build --verbose tsconfig.json",
+		"build:tsc:cjs": "tsc --build --verbose tsconfig.cjs.json",
+		"build:bundle": "",
+		"build:bundle:es": "",
+		"build:bundle:iife": "",
+		"build:bundle:webpack": "NODE_ENV=${NODE_ENV:-development}; MODE=${MODE:-$NODE_ENV}; webpack build --config webpack.config.cjs --mode $MODE",
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
 		"ng": "ng",
 		"start": "ng serve",
-		"build": "ng build",
 		"watch": "ng build --watch --configuration development",
 		"dev": "npm run start"
 	},
@@ -21,13 +31,13 @@
 		"@angular/router": "20.3.25",
 		"@prosopo/angular-procaptcha-wrapper": "1.1.90"
 	},
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
+	"main": "dist/vite/esm/index.js",
+	"types": "dist/types/index.d.ts",
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.cjs"
+			"types": "./dist/types/index.d.ts",
+			"import": "./dist/vite/esm/index.js",
+			"require": "./dist/vite/cjs/index.cjs"
 		}
 	},
 	"devDependencies": {

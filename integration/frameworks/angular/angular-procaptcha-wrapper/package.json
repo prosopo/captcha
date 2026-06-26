@@ -7,11 +7,21 @@
 		"npm": "^11"
 	},
 	"main": "dist/fesm2022/prosopo-angular-procaptcha-wrapper.mjs",
-	"typings": "dist/index.d.ts",
+	"typings": "dist/types/index.d.ts",
 	"module": "dist/fesm2022/prosopo-angular-procaptcha-wrapper.mjs",
 	"scripts": {
+		"build": "npm run build:esm",
+		"build:esm": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"build:types": "",
+		"build:tsc": "npm run build:tsc:esm",
+		"build:tsc:esm": "tsc --build --verbose tsconfig.json",
+		"build:tsc:cjs": "tsc --build --verbose tsconfig.cjs.json",
+		"build:bundle": "",
+		"build:bundle:es": "",
+		"build:bundle:iife": "",
+		"build:bundle:webpack": "",
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "ng-packagr -p ng-package.json",
 		"dev": "npm run build -- --watch"
 	},
 	"dependencies": {

@@ -6,20 +6,30 @@
 		"node": "^24",
 		"npm": "^11"
 	},
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
+	"main": "dist/vite/esm/index.js",
+	"types": "dist/types/index.d.ts",
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"svelte": "./dist/index.js",
-			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.cjs"
+			"types": "./dist/types/index.d.ts",
+			"svelte": "./dist/vite/esm/index.js",
+			"import": "./dist/vite/esm/index.js",
+			"require": "./dist/vite/cjs/index.cjs"
 		}
 	},
 	"scripts": {
+		"build": "npm run build:esm",
+		"build:esm": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"build:types": "",
+		"build:tsc": "npm run build:tsc:esm",
+		"build:tsc:esm": "tsc --build --verbose tsconfig.json",
+		"build:tsc:cjs": "tsc --build --verbose tsconfig.cjs.json",
+		"build:bundle": "",
+		"build:bundle:es": "",
+		"build:bundle:iife": "",
+		"build:bundle:webpack": "",
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
 		"svpkg": "svelte-package -i ./src -o ./dist",
-		"build": "npm run svpkg && del-cli --verbose ./.svelte-kit",
 		"dev": "npm run svpkg -- -w"
 	},
 	"dependencies": {

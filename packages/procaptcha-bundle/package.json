@@ -3,7 +3,7 @@
 	"version": "4.1.20",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
-	"main": "dist/index.js",
+	"main": "dist/vite/esm/index.js",
 	"type": "module",
 	"sideEffects": false,
 	"engines": {
@@ -12,32 +12,38 @@
 	},
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.cjs"
+			"types": "./dist/types/index.d.ts",
+			"import": "./dist/vite/esm/index.js",
+			"require": "./dist/vite/cjs/index.cjs"
 		},
 		"./components": {
-			"import": "./dist/components.js",
-			"require": "./dist/components.cjs"
+			"import": "./dist/vite/esm/components.js",
+			"require": "./dist/vite/cjs/components.cjs"
 		}
 	},
-	"types": "dist/index.d.ts",
+	"types": "dist/types/index.d.ts",
 	"source": "./src/index.tsx",
 	"scripts": {
-		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
-		"build:cross-env": "vite build --config vite.esm.config.ts",
-		"build:tsc": "tsc --build --verbose",
+		"build": "npm run build:esm",
+		"build:esm": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"build:types": "tsc -p tsconfig.types.json",
+		"build:tsc": "npm run build:tsc:esm",
+		"build:tsc:esm": "tsc --build --verbose tsconfig.json",
+		"build:tsc:cjs": "tsc --build --verbose tsconfig.cjs.json",
+		"build:bundle": "npm run build:bundle:es",
+		"build:bundle:es": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.config.ts --mode $NODE_ENV",
+		"build:bundle:iife": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.iife.config.ts --mode $NODE_ENV",
+		"build:bundle:webpack": "NODE_ENV=${NODE_ENV:-development}; MODE=${MODE:-$NODE_ENV}; webpack build --config webpack.config.cjs --mode $MODE",
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
 		"typecheck": "tsc --project tsconfig.types.json",
-		"bundle": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.config.ts --mode $NODE_ENV",
-		"bundle:iife": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.iife.config.ts --mode $NODE_ENV",
 		"start": "NODE_ENV=${NODE_ENV:-development}; vite serve --mode $NODE_ENV --host",
-		"bundle:webpack": "NODE_ENV=${NODE_ENV:-development}; MODE=${MODE:-$NODE_ENV}; webpack build --config webpack.config.cjs --mode $MODE",
 		"serve": "NODE_ENV=${NODE_ENV:-development}; vite serve --config vite.serve.config.ts --mode $NODE_ENV --host",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
 	},
-	"browserslist": ["> 0.5%, last 2 versions, not dead"],
+	"browserslist": [
+		"> 0.5%, last 2 versions, not dead"
+	],
 	"dependencies": {
 		"@prosopo/dotenv": "3.0.46",
 		"@prosopo/locale": "3.2.5",

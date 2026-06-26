@@ -9,37 +9,44 @@
 		"npm": "^11"
 	},
 	"scripts": {
-		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
-		"build:cross-env": "vite build --config vite.esm.config.ts",
-		"build:tsc": "tsc --build --verbose",
+		"build": "npm run build:esm",
+		"build:esm": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"build:types": "tsc -p tsconfig.types.json",
+		"build:tsc": "npm run build:tsc:esm",
+		"build:tsc:esm": "tsc --build --verbose tsconfig.json",
+		"build:tsc:cjs": "tsc --build --verbose tsconfig.cjs.json",
+		"build:bundle": "",
+		"build:bundle:es": "",
+		"build:bundle:iife": "",
+		"build:bundle:webpack": "",
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
 		"typecheck": "tsc --project tsconfig.types.json",
-		"cli": "node ./dist/js/cli.js",
+		"cli": "node ./dist/vite/esm/js/cli.js",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
 	},
-	"main": "dist/index.js",
+	"main": "dist/vite/esm/index.js",
 	"type": "module",
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.cjs"
+			"types": "./dist/types/index.d.ts",
+			"import": "./dist/vite/esm/index.js",
+			"require": "./dist/vite/cjs/index.cjs"
 		},
 		"./lodash": {
-			"types": "./dist/lodash.d.ts",
-			"import": "./dist/lodash.js",
-			"require": "./dist/cjs/lodash.cjs",
-			"default": "./dist/lodash.js"
+			"types": "./dist/types/lodash.d.ts",
+			"import": "./dist/vite/esm/lodash.js",
+			"require": "./dist/vite/cjs/lodash.cjs",
+			"default": "./dist/vite/esm/lodash.js"
 		},
 		"./node": {
-			"types": "./dist/node.d.ts",
-			"import": "./dist/node.js",
-			"require": "./dist/cjs/node.cjs",
-			"default": "./dist/node.js"
+			"types": "./dist/types/node.d.ts",
+			"import": "./dist/vite/esm/node.js",
+			"require": "./dist/vite/cjs/node.cjs",
+			"default": "./dist/vite/esm/node.js"
 		}
 	},
-	"types": "dist/index.d.ts",
+	"types": "dist/types/index.d.ts",
 	"dependencies": {
 		"@noble/hashes": "1.8.0",
 		"ip-address": "10.0.1",
