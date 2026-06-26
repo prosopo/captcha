@@ -66,6 +66,18 @@
 			"dependsOn": ["@prosopo/config#build"]
 		},
 		"lint": { "dependsOn": ["^lint"] },
+		"@prosopo/fingerprintjs#build": {
+			"dependsOn": ["^build"],
+			"outputs": ["dist/**"]
+		},
+		"@prosopo/fingerprintjs#build:cjs": {
+			"dependsOn": ["^build:cjs"],
+			"outputs": ["dist/**"]
+		},
+		"@prosopo/fingerprintjs#build:tsc": {
+			"dependsOn": ["^build:tsc"],
+			"outputs": ["dist/**"]
+		},
 		"clean": {
 			"cache": false
 		},
