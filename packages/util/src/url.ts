@@ -27,6 +27,14 @@ const isIPAddress = (hostname: string): boolean => {
 	}
 };
 
+/** Prepends `https://` to a URL that has no http(s) protocol. Empty input is returned unchanged. */
+export const prependProtocolToUrl = (url: string): string => {
+	if (url && url.length > 0 && !url.startsWith("http")) {
+		return `https://${url}`;
+	}
+	return url;
+};
+
 export const getURLProtocol = (url: URL) => {
 	if (!isIPAddress(url.hostname)) {
 		return "https";
