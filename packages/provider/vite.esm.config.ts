@@ -26,7 +26,7 @@ export default async function () {
 		plugins: [
 			VitePluginCopy({
 				srcDir: "src",
-				destDir: "dist",
+				destDir: "dist/vite/esm",
 				include: ["**/detection/*.js"],
 			}),
 		],

@@ -43,7 +43,7 @@ const packageName = "@prosopo/procaptcha-bundle";
 const entry = "./src/index.ts";
 const copyOptions = copyTo
 	? {
-			srcDir: "./dist/bundle",
+			srcDir: "./dist/bundle/es",
 			destDir: copyTo,
 		}
 	: undefined;
@@ -61,7 +61,7 @@ for (const packageName of packages) {
 
 const copyDir = {
 	srcDir: `${workspaceRoot}/packages/locale/src/locales`,
-	destDir: `${workspaceRoot}/packages/procaptcha-bundle/dist/bundle/locales`,
+	destDir: `${workspaceRoot}/packages/procaptcha-bundle/dist/bundle/es/locales`,
 };
 
 const localeFiles = await fg.glob(
@@ -101,7 +101,7 @@ export default defineConfig(async ({ command, mode }) => {
 					manualChunks(id: string) {
 						if (
 							id.includes(
-								"packages/procaptcha-common/dist/reactComponents/Honeypot",
+								"packages/procaptcha-common/dist/vite/esm/reactComponents/Honeypot",
 							)
 						) {
 							return honeypotChunkName;
@@ -110,15 +110,15 @@ export default defineConfig(async ({ command, mode }) => {
 							return "web3Chunk";
 						}
 						// Split up the extension code into 2 chunks
-						if (id.includes("packages/account/dist/extension")) {
+						if (id.includes("packages/account/dist/vite/esm/extension")) {
 							if (id.includes("ExtensionWeb3.js")) {
 								return "web3Chunk";
 							}
 							return "web2Chunk";
 						}
 						if (
-							id.includes("packages/common/dist") ||
-							id.includes("packages/logger/dist")
+							id.includes("packages/common/dist/vite/esm") ||
+							id.includes("packages/logger/dist/vite/esm")
 						) {
 							return "commonChunk";
 						}
@@ -131,7 +131,7 @@ export default defineConfig(async ({ command, mode }) => {
 						if (id.includes("@polkadot/keyring")) {
 							return "web3Chunk";
 						}
-						if (id.includes("packages/util-crypto/dist")) {
+						if (id.includes("packages/util-crypto/dist/vite/esm")) {
 							return "utilCryptoChunk";
 						}
 						if (id.includes("@noble/hash") || id.includes("@noble/curves")) {

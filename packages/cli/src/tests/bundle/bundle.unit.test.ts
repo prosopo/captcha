@@ -27,7 +27,7 @@ describe("provider bundle", () => {
 
 		// run bundle and get version
 		const { stdout: runOut, stderr: runErr } = await execPromise(
-			`cd ${rootDir} && node dist/bundle/provider.cli.bundle.js version`,
+			`cd ${rootDir} && node dist/bundle/es/provider.cli.bundle.js version`,
 		);
 		assert(/{"version":"\d+\.\d+\.\d+"}/.test(runOut));
 	}, 120000);

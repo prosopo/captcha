@@ -157,7 +157,7 @@ export default defineConfig(({ command, mode }) => {
 			commonjsOptions: {
 				transformMixedEsModules: true,
 			},
-			outDir: "dist",
+			outDir: "dist/bundle/es",
 			emptyOutDir: false,
 			rollupOptions: {
 				input: {
@@ -230,21 +230,21 @@ export default defineConfig(({ command, mode }) => {
 					// Only copy assets and other non-HTML files since HTML files are processed by Vite
 					const srcAssetsDir = path.resolve(__dirname, "src/assets");
 
-					const destAssetsDir = path.resolve(__dirname, "dist/assets");
+					const destAssetsDir = path.resolve(__dirname, "dist/bundle/es/assets");
 					if (fs.existsSync(srcAssetsDir)) {
 						copyDirContents(srcAssetsDir, destAssetsDir);
 					}
 
 					// Copy any other necessary directories
 					const srcPluginsDir = path.resolve(__dirname, "src/plugins");
-					const destPluginsDir = path.resolve(__dirname, "dist/plugins");
+					const destPluginsDir = path.resolve(__dirname, "dist/bundle/es/plugins");
 					if (fs.existsSync(srcPluginsDir)) {
 						copyDirContents(srcPluginsDir, destPluginsDir);
 					}
 
 					// Final step: move any content from dist/src to dist root
-					const distSrcDir = path.resolve(__dirname, "dist/src");
-					const distDir = path.resolve(__dirname, "dist");
+					const distSrcDir = path.resolve(__dirname, "dist/bundle/es/src");
+					const distDir = path.resolve(__dirname, "dist/bundle/es");
 					if (fs.existsSync(distSrcDir)) {
 						console.log("Moving files from dist/src to dist root...");
 						moveDirectoryContents(distSrcDir, distDir, true);

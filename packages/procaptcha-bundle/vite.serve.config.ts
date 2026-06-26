@@ -44,5 +44,5 @@ export default defineConfig({
 		},
 	},
 	// Change the default public directory if needed
-	publicDir: "dist/bundle", // assets in the "assets" folder at the project root will be served
+	publicDir: "dist/bundle/es", // assets in the "assets" folder at the project root will be served
 });

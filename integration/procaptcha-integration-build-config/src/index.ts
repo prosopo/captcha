@@ -31,7 +31,7 @@ function createIntegrationViteConfig(
 		envDir: path.resolve(configSettings.directory, "../.."),
 		plugins: [dts(configSettings.dtsPluginOptions)],
 		build: {
-			outDir: path.resolve(configSettings.directory, "./dist"),
+			outDir: path.resolve(configSettings.directory, "./dist/bundle/es"),
 			emptyOutDir: false,
 			lib: {
 				name: configSettings.name,
