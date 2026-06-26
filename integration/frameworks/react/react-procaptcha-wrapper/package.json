@@ -25,8 +25,8 @@
 		"build:tsc:cjs": "tsc --build --verbose tsconfig.cjs.json",
 		"build:bundle": "npm run build:bundle:es",
 		"build:bundle:es": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.config.ts --mode $NODE_ENV",
-		"build:bundle:iife": "",
-		"build:bundle:webpack": "",
+		"build:bundle:iife": "echo \"@prosopo/react-procaptcha-wrapper: no iife bundle build (not supported for this package)\"",
+		"build:bundle:webpack": "echo \"@prosopo/react-procaptcha-wrapper: no webpack bundle build (not supported for this package)\"",
 		"typecheck": "tsc --project tsconfig.types.json",
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo"
 	},
