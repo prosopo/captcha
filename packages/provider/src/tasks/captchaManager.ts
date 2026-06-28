@@ -318,7 +318,43 @@ export class CaptchaManager {
 					: Promise.resolve(),
 			]);
 
-			const sessionRecord = await this.db.checkAndRemoveSession(sessionId);
+			let sessionRecord = await this.db.checkAndRemoveSession(sessionId);
+			let resolvedSessionId = sessionId;
+			if (!sessionRecord && this.writeQueue) {
+				// Origin session was consumed (or never existed). Before
+				// returning NO_SESSION_FOUND, check whether a post-PoW
+				// escalation minted a follow-up session for this origin.
+				// `buildEscalation` in submitPoWCaptchaSolution.ts writes
+				// this mapping when the routing machine returns image or
+				// puzzle from postPow. Real-world widgets and dapps that
+				// don't fully wire `onEscalate` keep calling /captcha/*
+				// with the original sessionId — without this fallback they
+				// see CAPTCHA.NO_SESSION_FOUND and the user lands on the
+				// FAQ page.
+				const escalationSessionId =
+					await this.writeQueue.getCachedSessionEscalation(sessionId);
+				if (escalationSessionId && escalationSessionId !== sessionId) {
+					this.logger.info(() => ({
+						msg: "Resolving origin sessionId to escalation",
+						data: {
+							account: clientSettings.account,
+							originSessionId: sessionId,
+							escalationSessionId,
+						},
+					}));
+					const escalationRecord =
+						await this.db.checkAndRemoveSession(escalationSessionId);
+					if (escalationRecord) {
+						sessionRecord = escalationRecord;
+						resolvedSessionId = escalationSessionId;
+					}
+					// The escalation mapping is single-use: once we've
+					// followed it (or tried to and the escalation session
+					// is also gone), drop the pointer so subsequent
+					// retries don't keep chasing a dead reference.
+					await this.writeQueue.invalidateCachedSessionEscalation(sessionId);
+				}
+			}
 			if (!sessionRecord) {
 				this.logger.warn(() => ({
 					msg: "No session found",
@@ -350,6 +386,12 @@ export class CaptchaManager {
 					type: requestedCaptchaType,
 				};
 			}
+			// From here on, `sessionId` (the variable) tracks whichever
+			// sessionId we actually resolved against. Subsequent cache
+			// invalidations and downstream consumers should use that, not
+			// the originally requested id — otherwise the escalation
+			// session's own cache entries leak past the consume.
+			sessionId = resolvedSessionId;
 
 			// Invalidate the Redis session cache so that subsequent
 			// requests do not receive this now-deleted sessionId from
