@@ -58,6 +58,8 @@
 		"cypress:run:client-bundle-example:pow": "NODE_TLS_REJECT_UNAUTHORIZED=0 CAPTCHA_TYPE=pow CYPRESS_BASE_URL='https://localhost:9232' cypress run --config-file cypress.pow.config.js --browser chrome",
 		"cypress:open:client-bundle-example:invisible": "NODE_TLS_REJECT_UNAUTHORIZED=0 CAPTCHA_TYPE=image CYPRESS_BASE_URL='https://localhost:9232' cypress open --config-file cypress.invisible.config.js",
 		"cypress:run:client-bundle-example:invisible": "NODE_TLS_REJECT_UNAUTHORIZED=0 CAPTCHA_TYPE=image CYPRESS_BASE_URL='https://localhost:9232' cypress run --config-file cypress.invisible.config.js --browser chrome",
+		"cypress:open:client-bundle-example:escalation": "NODE_TLS_REJECT_UNAUTHORIZED=0 CAPTCHA_TYPE=frictionless CYPRESS_BASE_URL='https://localhost:9232' cypress open --config-file cypress.escalation.config.js",
+		"cypress:run:client-bundle-example:escalation": "NODE_TLS_REJECT_UNAUTHORIZED=0 CAPTCHA_TYPE=frictionless CYPRESS_BASE_URL='https://localhost:9232' cypress run --config-file cypress.escalation.config.js --browser chrome",
 		"cypress:baselines:image": "NODE_TLS_REJECT_UNAUTHORIZED=0 CAPTCHA_TYPE=image CYPRESS_BASE_URL='https://localhost:9232' cypress run --browser chrome --config-file cypress.image.config.js --env visualRegressionType=base",
 		"cypress:baselines:frictionless": "NODE_TLS_REJECT_UNAUTHORIZED=0 CAPTCHA_TYPE=frictionless CYPRESS_BASE_URL='https://localhost:9232' cypress run --browser chrome --config-file cypress.frictionless.config.js --env visualRegressionType=base",
 		"cypress:baselines:pow": "NODE_TLS_REJECT_UNAUTHORIZED=0 CAPTCHA_TYPE=pow CYPRESS_BASE_URL='https://localhost:9232' cypress run --browser chrome --config-file cypress.pow.config.js --env visualRegressionType=base",

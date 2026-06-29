@@ -16,8 +16,13 @@ import "cypress-real-events";
 
 import {
 	AdminApiPaths,
+	ApiParams,
 	type Captcha,
 	type CaptchaType,
+	DecisionMachineKind,
+	DecisionMachineLanguage,
+	DecisionMachineRuntime,
+	DecisionMachineScope,
 	type IUserSettings,
 	Tier,
 	puzzleToleranceDefault,
@@ -81,6 +86,21 @@ declare global {
 
 			// Wait for the procaptcha script to load and be ready
 			waitForProcaptchaScript(): Cypress.Chainable<void>;
+
+			// Publish a routing-kind decision machine scoped to the given dapp.
+			// Used by the escalation flow tests to force `route()` to return a
+			// specific captchaType after PoW completes.
+			installRoutingMachine(
+				siteKey: string,
+				source: string,
+				name?: string,
+				// biome-ignore lint/suspicious/noExplicitAny: tests
+			): Cypress.Chainable<Response<any>>;
+
+			// Wipe all decision/routing machine artifacts. Used as test teardown
+			// so a failed run doesn't leak forced-routing into sibling tests.
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			removeAllDecisionMachines(): Cypress.Chainable<Response<any>>;
 		}
 	}
 }
@@ -400,6 +420,69 @@ function registerSiteKey(
 	});
 }
 
+function adminJwtAndUrl(path: AdminApiPaths): { url: string; jwt: string } {
+	const pair = getPair(Cypress.env("PROSOPO_PROVIDER_MNEMONIC"));
+	return {
+		url: `https://localhost:9229${path}`,
+		jwt: pair.jwtIssue(),
+	};
+}
+
+function installRoutingMachine(
+	siteKey: string,
+	source: string,
+	name = "cypress-forced-image",
+) {
+	return cy.then(() => {
+		const { url, jwt } = adminJwtAndUrl(AdminApiPaths.UpdateDecisionMachine);
+		return cy.request({
+			method: "POST",
+			url,
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${jwt}`,
+			},
+			body: {
+				// Dapp scope so the machine only fires for this test's siteKey
+				// and can't leak into parallel runs that hit the same provider.
+				[ApiParams.decisionMachineScope]: DecisionMachineScope.Dapp,
+				[ApiParams.dapp]: siteKey,
+				[ApiParams.decisionMachineRuntime]: DecisionMachineRuntime.Node,
+				[ApiParams.decisionMachineSource]: source,
+				[ApiParams.decisionMachineLanguage]: DecisionMachineLanguage.JavaScript,
+				[ApiParams.decisionMachineName]: name,
+				[ApiParams.decisionMachineVersion]: "1.0.0",
+				// Routing kind: this machine runs at the post-PoW `route()` phase
+				// and decides whether to escalate to image/puzzle.
+				[ApiParams.decisionMachineKind]: DecisionMachineKind.Routing,
+			},
+			failOnStatusCode: false,
+			retryOnNetworkFailure: false,
+			timeout: 10000,
+		});
+	});
+}
+
+function removeAllDecisionMachines() {
+	return cy.then(() => {
+		const { url, jwt } = adminJwtAndUrl(
+			AdminApiPaths.RemoveAllDecisionMachines,
+		);
+		return cy.request({
+			method: "POST",
+			url,
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${jwt}`,
+			},
+			body: {},
+			failOnStatusCode: false,
+			retryOnNetworkFailure: false,
+			timeout: 10000,
+		});
+	});
+}
+
 Cypress.Commands.add("clickIAmHuman", clickIAmHuman);
 Cypress.Commands.add("clickCheckbox", clickCheckbox);
 Cypress.Commands.add("captchaImages", captchaImages);
@@ -409,3 +492,5 @@ Cypress.Commands.add("clickNextButton", clickNextButton);
 Cypress.Commands.add("elementExists", elementExists);
 Cypress.Commands.add("registerSiteKey", registerSiteKey);
 Cypress.Commands.add("waitForProcaptchaScript", waitForProcaptchaScript);
+Cypress.Commands.add("installRoutingMachine", installRoutingMachine);
+Cypress.Commands.add("removeAllDecisionMachines", removeAllDecisionMachines);
