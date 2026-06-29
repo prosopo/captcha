@@ -1,5 +1,22 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.12.2
+### Patch Changes
+
+- 970bca2: feat(provider): record the page URL a frictionless session originated from and require it
+  
+  The frictionless client now reports the page it was rendered on (built from `window.location.origin + pathname`) in the challenge request, and the provider stores it on the session as `currentUrl`. The value is reduced to scheme + host + path on both the client and the provider (`sanitisePageUrl`): the query string, fragment and any embedded `user:pass@` credentials are stripped so URL-borne secrets (tokens, reset codes, session ids) are never persisted. A session whose request carries no usable page URL is treated as a bot signal and forced down the image-captcha path (`FrictionlessReason.MISSING_CURRENT_URL`).
+- Updated dependencies [8986976]
+- Updated dependencies [970bca2]
+  - @prosopo/types@4.9.1
+  - @prosopo/api@3.5.7
+  - @prosopo/common@3.1.42
+  - @prosopo/detector@3.5.2
+  - @prosopo/procaptcha-common@2.11.2
+  - @prosopo/procaptcha-pow@2.10.7
+  - @prosopo/procaptcha-puzzle@2.10.22
+  - @prosopo/procaptcha-react@2.9.80
+
 ## 2.12.1
 ### Patch Changes
 
