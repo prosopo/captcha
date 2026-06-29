@@ -334,24 +334,66 @@ export class CaptchaManager {
 				const escalationSessionId =
 					await this.writeQueue.getCachedSessionEscalation(sessionId);
 				if (escalationSessionId && escalationSessionId !== sessionId) {
-					this.logger.info(() => ({
-						msg: "Resolving origin sessionId to escalation",
-						data: {
-							account: clientSettings.account,
-							originSessionId: sessionId,
-							escalationSessionId,
-						},
-					}));
-					const escalationRecord =
-						await this.db.checkAndRemoveSession(escalationSessionId);
-					if (escalationRecord) {
-						sessionRecord = escalationRecord;
-						resolvedSessionId = escalationSessionId;
+					// Peek (read-only) at the escalation session before
+					// consuming. If its captchaType doesn't match what the
+					// widget is asking for, leave the session intact so a
+					// subsequent /captcha/{escalationType} call carrying
+					// the escalation sessionId (returned in the PoW-submit
+					// envelope) can still succeed. Consuming here on
+					// mismatch would surface INCORRECT_CAPTCHA_TYPE *and*
+					// destroy the only remaining route to recovery.
+					const peekedEscalationRecord =
+						await this.db.getSessionRecordBySessionId(escalationSessionId);
+					if (peekedEscalationRecord) {
+						this.logger.info(() => ({
+							msg: "Resolving origin sessionId to escalation",
+							data: {
+								account: clientSettings.account,
+								originSessionId: sessionId,
+								escalationSessionId,
+								escalationCaptchaType: peekedEscalationRecord.captchaType,
+								requestedCaptchaType,
+							},
+						}));
+						if (peekedEscalationRecord.captchaType === requestedCaptchaType) {
+							const consumedEscalationRecord =
+								await this.db.checkAndRemoveSession(escalationSessionId);
+							if (consumedEscalationRecord) {
+								sessionRecord = consumedEscalationRecord;
+								resolvedSessionId = escalationSessionId;
+							}
+						} else {
+							// Type mismatch: do NOT consume the escalation
+							// session, drop the pointer, and surface
+							// INCORRECT_CAPTCHA_TYPE directly. A widget
+							// that knows how to follow the PoW-submit
+							// escalation envelope can still reach
+							// `escalationSessionId` via the correct
+							// /captcha/{type} endpoint.
+							this.logger.warn(() => ({
+								msg: "Escalation captcha type does not match requested type",
+								data: {
+									account: clientSettings.account,
+									originSessionId: sessionId,
+									escalationSessionId,
+									escalationCaptchaType: peekedEscalationRecord.captchaType,
+									requestedCaptchaType,
+								},
+							}));
+							await this.writeQueue.invalidateCachedSessionEscalation(
+								sessionId,
+							);
+							return {
+								valid: false,
+								reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+								type: requestedCaptchaType,
+							};
+						}
 					}
 					// The escalation mapping is single-use: once we've
 					// followed it (or tried to and the escalation session
-					// is also gone), drop the pointer so subsequent
-					// retries don't keep chasing a dead reference.
+					// is gone), drop the pointer so subsequent retries
+					// don't keep chasing a dead reference.
 					await this.writeQueue.invalidateCachedSessionEscalation(sessionId);
 				}
 			}
