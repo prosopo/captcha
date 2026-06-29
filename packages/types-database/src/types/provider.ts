@@ -625,6 +625,9 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	iFrame: { type: Boolean, required: true, default: false },
 	decryptedHeadHash: { type: String, required: false, default: "" },
 	siteKey: { type: String, required: false },
+	// Full page URL the widget was rendered on (origin + path only; query
+	// string, fragment and credentials stripped). See Session.currentUrl.
+	currentUrl: { type: String, required: false },
 	reason: { type: String, required: false },
 	blocked: { type: Boolean, required: false },
 	// On synthetic blocked-session records (blocked=true, deleted=true)

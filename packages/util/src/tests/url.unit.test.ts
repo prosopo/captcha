@@ -15,6 +15,7 @@ import { describe, expect, it } from "vitest";
 import {
 	buildDomainSuffixCandidates,
 	decodeGoogleTranslateHost,
+	sanitisePageUrl,
 	validateDomain,
 } from "../url.js";
 
@@ -181,5 +182,42 @@ describe("decodeGoogleTranslateHost", () => {
 
 	it("returns null for an empty encoded subdomain", () => {
 		expect(decodeGoogleTranslateHost(".translate.goog")).toBeNull();
+	});
+});
+
+describe("sanitisePageUrl", () => {
+	it("keeps scheme, host, port and path", () => {
+		expect(sanitisePageUrl("https://example.com/checkout/step-2")).toBe(
+			"https://example.com/checkout/step-2",
+		);
+		expect(sanitisePageUrl("http://example.com:8080/a/b")).toBe(
+			"http://example.com:8080/a/b",
+		);
+	});
+
+	it("strips the query string and fragment", () => {
+		expect(
+			sanitisePageUrl("https://example.com/reset?token=secret#section"),
+		).toBe("https://example.com/reset");
+	});
+
+	it("strips embedded credentials", () => {
+		expect(sanitisePageUrl("https://user:pass@example.com/account")).toBe(
+			"https://example.com/account",
+		);
+	});
+
+	it("rejects non-http(s) schemes", () => {
+		expect(sanitisePageUrl("javascript:alert(1)")).toBeUndefined();
+		expect(sanitisePageUrl("data:text/html,<h1>x</h1>")).toBeUndefined();
+		expect(sanitisePageUrl("ftp://example.com/file")).toBeUndefined();
+	});
+
+	it("returns undefined for missing or malformed input", () => {
+		expect(sanitisePageUrl(undefined)).toBeUndefined();
+		expect(sanitisePageUrl(null)).toBeUndefined();
+		expect(sanitisePageUrl("")).toBeUndefined();
+		expect(sanitisePageUrl("not a url")).toBeUndefined();
+		expect(sanitisePageUrl("/relative/path")).toBeUndefined();
 	});
 });

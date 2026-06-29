@@ -60,6 +60,10 @@ export type DecisionMachineInput = {
 	scoreComponents: ScoreComponents;
 	token: string;
 	botThreshold: number;
+	// Sanitised page URL the widget reported (origin + path, no query /
+	// fragment / credentials). Undefined when the client didn't report a
+	// usable page URL — see the missing-currentUrl gate below.
+	currentUrl: string | undefined;
 };
 
 type ExpressHandle = {
@@ -85,6 +89,36 @@ export const runDecisionMachine = async (
 	} = input;
 	const { req, res } = handle;
 	let { botScore, scoreComponents } = input;
+
+	// A real widget running on a real page always reports the page URL it was
+	// rendered on. Its absence (client never sent it, or it wasn't a usable
+	// http(s) URL) is treated as a bot signal: force an image captcha rather
+	// than allowing a frictionless / PoW pass.
+	if (!input.currentUrl) {
+		req.logger.info(() => ({
+			msg: "Frictionless decision",
+			data: {
+				decision: "missing_current_url",
+				captchaType: CaptchaType.image,
+				token: input.token,
+			},
+		}));
+		recordFrictionlessDecision("missing_current_url");
+		attachHoneypot(res, clientRecord);
+		return res.json(
+			await tasks.frictionlessManager.sendImageCaptcha({
+				solvedImagesCount: Math.min(
+					env.config.captchas.solved.count,
+					clientRecord.settings.imageMaxRounds,
+				),
+				userSitekeyIpHash,
+				reason: FrictionlessReason.MISSING_CURRENT_URL,
+				siteKey: dapp,
+				ipInfo,
+				headers: flatHeaders,
+			}),
+		);
+	}
 
 	const userAgentMismatchResponse = await runUserAgentMismatchCheck(
 		input,

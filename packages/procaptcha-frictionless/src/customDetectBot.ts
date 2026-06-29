@@ -26,6 +26,24 @@ import type {
 import type { BotDetectionFunctionResult } from "@prosopo/types";
 import { DetectorLoader } from "./detectorLoader.js";
 
+// The page the widget is rendered on, reduced to origin + path. Deliberately
+// built from `origin` + `pathname` (never `href`) so the query string,
+// fragment, and any embedded `user:pass@` credentials never leave the browser
+// — sites routinely carry tokens / session ids / reset codes in those parts.
+// Returns undefined in non-browser contexts (SSR / tests) or for opaque
+// origins; the provider then treats the session as having no page URL and
+// forces an image captcha.
+const getCurrentPageUrl = (): string | undefined => {
+	if (typeof window === "undefined" || !window.location) {
+		return undefined;
+	}
+	const { origin, pathname } = window.location;
+	if (!origin || origin === "null") {
+		return undefined;
+	}
+	return `${origin}${pathname || ""}`;
+};
+
 export const withTimeout = async <T>(
 	promise: Promise<T>,
 	ms: number,
@@ -108,6 +126,7 @@ const customDetectBot: BotDetectionFunction = async (
 		userAccount.account.address,
 		config.mode,
 		undefined,
+		getCurrentPageUrl(),
 	);
 	if (detectionResult.getSimdReadings) {
 		// Fire-and-forget: triggers the memoised prefetch inside the catcher

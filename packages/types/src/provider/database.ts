@@ -403,6 +403,11 @@ export const SessionSchema = object({
 	iFrame: boolean(),
 	decryptedHeadHash: string(),
 	siteKey: string().optional(),
+	// Full page URL the widget was rendered on (origin + path only — query
+	// string, fragment and any embedded credentials are stripped client- and
+	// server-side). Reported by the client in the frictionless payload; its
+	// absence forces an image captcha. Optional so older sessions still parse.
+	currentUrl: string().optional(),
 	// Selection reason: writes go through `FrictionlessReason`, but the
 	// schema accepts any string at runtime so old records (or unforeseen
 	// values) still parse. Output type is cast back to the enum so the
@@ -475,6 +480,11 @@ export type Session = {
 	iFrame: boolean;
 	decryptedHeadHash: string;
 	siteKey?: string;
+	// Full page URL the widget was rendered on (origin + path only — query
+	// string, fragment and any embedded credentials are stripped client- and
+	// server-side). Reported by the client in the frictionless payload; its
+	// absence forces an image captcha.
+	currentUrl?: string;
 	reason?: FrictionlessReason;
 	blocked?: boolean;
 	// When `blocked` is true, these record which access-policy rule matched
