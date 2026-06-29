@@ -26,11 +26,17 @@ import { checkboxClass, getWidgetElement } from "../support/commands.js";
 // being right.
 const baseCaptchaType = CaptchaType.frictionless;
 
-// Routing machine source: always escalate to image. Hand-rolled string so
-// the published machine source is exactly what the routing runner will
-// `eval` server-side; do not import this from TS — runtime is `node`.
+// Routing machine source: escalate ONLY at the post-PoW phase. The same
+// `route()` export is consulted by `sendCaptcha` at frictionless time too;
+// returning image there would short-circuit the widget to /captcha/image
+// before any PoW challenge fires, defeating the whole test. Returning
+// undefined makes applyRouter fall back to the baseline (pow) at that
+// phase, then at postPow phase the machine escalates to image.
+// Hand-rolled string so the published machine source is exactly what the
+// runner `eval`s server-side; do not import from TS — runtime is `node`.
 const FORCE_IMAGE_ROUTING_MACHINE = `
 	module.exports.route = function (input) {
+		if (input && input.phase !== 'postPow') return undefined;
 		return { captchaType: 'image' };
 	};
 `;
