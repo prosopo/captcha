@@ -90,36 +90,6 @@ export const runDecisionMachine = async (
 	const { req, res } = handle;
 	let { botScore, scoreComponents } = input;
 
-	// A real widget running on a real page always reports the page URL it was
-	// rendered on. Its absence (client never sent it, or it wasn't a usable
-	// http(s) URL) is treated as a bot signal: force an image captcha rather
-	// than allowing a frictionless / PoW pass.
-	if (!input.currentUrl) {
-		req.logger.info(() => ({
-			msg: "Frictionless decision",
-			data: {
-				decision: "missing_current_url",
-				captchaType: CaptchaType.image,
-				token: input.token,
-			},
-		}));
-		recordFrictionlessDecision("missing_current_url");
-		attachHoneypot(res, clientRecord);
-		return res.json(
-			await tasks.frictionlessManager.sendImageCaptcha({
-				solvedImagesCount: Math.min(
-					env.config.captchas.solved.count,
-					clientRecord.settings.imageMaxRounds,
-				),
-				userSitekeyIpHash,
-				reason: FrictionlessReason.MISSING_CURRENT_URL,
-				siteKey: dapp,
-				ipInfo,
-				headers: flatHeaders,
-			}),
-		);
-	}
-
 	const userAgentMismatchResponse = await runUserAgentMismatchCheck(
 		input,
 		handle,
@@ -258,6 +228,34 @@ export const runDecisionMachine = async (
 				),
 				userSitekeyIpHash,
 				reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
+				siteKey: dapp,
+				ipInfo,
+				headers: flatHeaders,
+			}),
+		);
+	}
+
+	// Checked last, just before the PoW fallthrough: a request that reported
+	// no usable page URL gets an image captcha rather than a frictionless pass.
+	if (!input.currentUrl) {
+		req.logger.info(() => ({
+			msg: "Frictionless decision",
+			data: {
+				decision: "missing_current_url",
+				captchaType: CaptchaType.image,
+				token: input.token,
+			},
+		}));
+		recordFrictionlessDecision("missing_current_url");
+		attachHoneypot(res, clientRecord);
+		return res.json(
+			await tasks.frictionlessManager.sendImageCaptcha({
+				solvedImagesCount: Math.min(
+					env.config.captchas.solved.count,
+					clientRecord.settings.imageMaxRounds,
+				),
+				userSitekeyIpHash,
+				reason: FrictionlessReason.MISSING_CURRENT_URL,
 				siteKey: dapp,
 				ipInfo,
 				headers: flatHeaders,
