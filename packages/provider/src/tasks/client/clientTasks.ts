@@ -511,6 +511,7 @@ export class ClientTaskManager {
 			name?: string;
 			version?: string;
 			captchaType?: DecisionMachineCaptchaType;
+			source: string;
 			createdAt: string;
 			updatedAt: string;
 		}[]
@@ -526,6 +527,7 @@ export class ClientTaskManager {
 			name: artifact.name,
 			version: artifact.version,
 			captchaType: artifact.captchaType,
+			source: artifact.source,
 			createdAt: artifact.createdAt.toISOString(),
 			updatedAt: artifact.updatedAt.toISOString(),
 		}));
