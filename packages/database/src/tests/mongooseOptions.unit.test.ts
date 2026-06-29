@@ -19,7 +19,12 @@ import {
 	getMongoConnectionOptions,
 } from "../mongooseOptions.js";
 
-const DEFAULT_COMPRESSORS: MongoCompressor[] = [
+// The shipped default is empty — the provider CLI is a vite ESM bundle and
+// the mongo driver loads native compressors via `require`, which is undefined
+// in the bundle. Callers can still opt in by passing an explicit compressor
+// list; the host-based gating logic continues to apply to those.
+const DEFAULT_COMPRESSORS: MongoCompressor[] = [];
+const EXPLICIT_COMPRESSORS: MongoCompressor[] = [
 	"zstd",
 	"snappy",
 	"zlib",
@@ -27,7 +32,7 @@ const DEFAULT_COMPRESSORS: MongoCompressor[] = [
 ];
 
 describe("getMongoCompressors", () => {
-	it("returns default compressors for remote domains", () => {
+	it("returns the default (empty) compressors for remote domains", () => {
 		const urls = [
 			"mongodb://user:pass@example.com:27017/db",
 			"mongodb://abc.com/db",
@@ -40,6 +45,19 @@ describe("getMongoCompressors", () => {
 		}
 	});
 
+	it("returns the explicit compressor list for remote domains when provided", () => {
+		const urls = [
+			"mongodb://user:pass@example.com:27017/db",
+			"mongodb://abc.com/db",
+			"mongodb://cluster.mongodb.net/db",
+		];
+		for (const url of urls) {
+			expect(getMongoCompressors(url, EXPLICIT_COMPRESSORS)).toEqual(
+				EXPLICIT_COMPRESSORS,
+			);
+		}
+	});
+
 	it("returns empty array for local hostnames without dots", () => {
 		const urls = [
 			"mongodb://database:27017/db",
@@ -48,7 +66,7 @@ describe("getMongoCompressors", () => {
 			"mongodb://container-name/db",
 		];
 		for (const url of urls) {
-			expect(getMongoCompressors(url)).toEqual([]);
+			expect(getMongoCompressors(url, EXPLICIT_COMPRESSORS)).toEqual([]);
 		}
 	});
 
@@ -59,29 +77,33 @@ describe("getMongoCompressors", () => {
 			"mongodb://[::1]:27017/db",
 		];
 		for (const url of urls) {
-			expect(getMongoCompressors(url)).toEqual([]);
+			expect(getMongoCompressors(url, EXPLICIT_COMPRESSORS)).toEqual([]);
 		}
 	});
 
-	it("returns compressors for IP addresses (treated as remote)", () => {
+	it("returns the explicit list for IP addresses (treated as remote)", () => {
 		const urls = [
 			"mongodb://192.168.1.1:27017/db",
 			"mongodb://10.0.0.1/db",
 			"mongodb://172.16.0.1:27017/db",
 		];
 		for (const url of urls) {
-			expect(getMongoCompressors(url)).toEqual(DEFAULT_COMPRESSORS);
+			expect(getMongoCompressors(url, EXPLICIT_COMPRESSORS)).toEqual(
+				EXPLICIT_COMPRESSORS,
+			);
 		}
 	});
 
-	it("returns compressors for IPv6 addresses (treated as remote)", () => {
+	it("returns the explicit list for IPv6 addresses (treated as remote)", () => {
 		const urls = [
 			"mongodb://[2001:0db8::1]:27017/db",
 			"mongodb://[2001:0db8:85a3::8a2e:0370:7334]/db",
 			"mongodb://[::ffff:192.168.1.1]:27017/db",
 		];
 		for (const url of urls) {
-			expect(getMongoCompressors(url)).toEqual(DEFAULT_COMPRESSORS);
+			expect(getMongoCompressors(url, EXPLICIT_COMPRESSORS)).toEqual(
+				EXPLICIT_COMPRESSORS,
+			);
 		}
 	});
 
@@ -101,15 +123,19 @@ describe("getMongoCompressors", () => {
 
 	it("handles mongodb+srv:// URLs", () => {
 		const url = "mongodb+srv://cluster.mongodb.net/db";
-		expect(getMongoCompressors(url)).toEqual(DEFAULT_COMPRESSORS);
+		expect(getMongoCompressors(url, EXPLICIT_COMPRESSORS)).toEqual(
+			EXPLICIT_COMPRESSORS,
+		);
 	});
 
-	it("returns default compressors when the host cannot be parsed", () => {
+	it("returns the provided list when the host cannot be parsed", () => {
 		// Bare (unbracketed) IPv6 with a port is not a valid URL host, so URL
-		// parsing throws and we fall back to compression.
+		// parsing throws and we fall back to the provided compressors.
 		const unparseableUrls = ["mongodb://::1:27017/db", "mongodb://[bad"];
 		for (const url of unparseableUrls) {
-			expect(getMongoCompressors(url)).toEqual(DEFAULT_COMPRESSORS);
+			expect(getMongoCompressors(url, EXPLICIT_COMPRESSORS)).toEqual(
+				EXPLICIT_COMPRESSORS,
+			);
 		}
 	});
 
@@ -118,19 +144,23 @@ describe("getMongoCompressors", () => {
 		// host, which (like a container name) is treated as local.
 		const urls = ["", "mongodb://", "not-a-url"];
 		for (const url of urls) {
-			expect(getMongoCompressors(url)).toEqual([]);
+			expect(getMongoCompressors(url, EXPLICIT_COMPRESSORS)).toEqual([]);
 		}
 	});
 
 	it("handles URLs with authentication", () => {
 		const url = "mongodb://user:password@example.com:27017/db";
-		expect(getMongoCompressors(url)).toEqual(DEFAULT_COMPRESSORS);
+		expect(getMongoCompressors(url, EXPLICIT_COMPRESSORS)).toEqual(
+			EXPLICIT_COMPRESSORS,
+		);
 	});
 
 	it("handles URLs with query parameters", () => {
 		const url =
 			"mongodb://example.com:27017/db?authSource=admin&retryWrites=true";
-		expect(getMongoCompressors(url)).toEqual(DEFAULT_COMPRESSORS);
+		expect(getMongoCompressors(url, EXPLICIT_COMPRESSORS)).toEqual(
+			EXPLICIT_COMPRESSORS,
+		);
 	});
 });
 
@@ -169,7 +199,7 @@ describe("getMongoConnectionOptions", () => {
 		expect(options.compressors).toEqual([]);
 	});
 
-	it("uses default compressors for a remote host", () => {
+	it("uses no compressors for a remote host (default is no compression)", () => {
 		const options = getMongoConnectionOptions({
 			url: "mongodb://cluster.mongodb.net/db",
 			appName,
