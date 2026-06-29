@@ -31,6 +31,7 @@ import { getCompositeIpAddress } from "../../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../../express.js";
 import { Tasks } from "../../../tasks/index.js";
 import { derivePlatform } from "../../../utils/devicePlatform.js";
+import { hashUserAgent } from "../../../utils/hashUserAgent.js";
 import { hashUserIp } from "../../../utils/hashUserIp.js";
 import { normalizeRequestIp } from "../../../utils/normalizeRequestIp.js";
 import { getMaintenanceMode } from "../../admin/apiToggleMaintenanceModeEndpoint.js";
@@ -344,14 +345,14 @@ export default (
 			]);
 
 			const {
-				baseBotScore,
-				timestamp,
-				userId,
-				userAgent,
+				baseBotScore: rawBaseBotScore,
+				timestamp: rawTimestamp,
+				userId: rawUserId,
+				userAgent: rawUserAgent,
 				webView,
 				iFrame,
 				decryptedHeadHash,
-				decryptionFailed,
+				decryptionFailed: rawDecryptionFailed,
 				triggeredDetectors,
 				shadowDomPenalty,
 				entropyMathRandomFingerprint,
@@ -359,6 +360,30 @@ export default (
 				entropyWallClockOffsetMs,
 				entropyMathRandomFirst,
 			} = decryptedPayload;
+
+			// Test-only override: cypress can't produce a server-decryptable
+			// detector token (no public-key exchange in the test bundle), so
+			// `decryptionFailed` always trips and the frictionless flow's UA
+			// + score + timestamp gates short-circuit every request to image.
+			// With this env var set, synthesise the decrypted-payload values
+			// from the live request so the flow reaches the default-PoW path
+			// — which is what production hits when the bot detector is happy
+			// and lets cypress exercise the post-PoW route() escalation.
+			// Explicitly named so it can't be set in prod by accident.
+			const detectorOverride =
+				process.env.PROSOPO_TEST_FRICTIONLESS_DETECTOR_OVERRIDE === "1";
+			const baseBotScore = detectorOverride ? 0 : rawBaseBotScore;
+			const timestamp = detectorOverride ? Date.now() : rawTimestamp;
+			const userId = detectorOverride
+				? (req.headers["prosopo-user"] as string | undefined)
+				: rawUserId;
+			// `runUserAgentMismatchCheck` compares the *hashed* request UA to
+			// `input.userAgent`, so the synthesised override must already be
+			// hashed for the equality check to clear.
+			const userAgent = detectorOverride
+				? hashUserAgent((req.headers["user-agent"] as string) ?? "")
+				: rawUserAgent;
+			const decryptionFailed = detectorOverride ? false : rawDecryptionFailed;
 
 			req.logger.debug(() => ({
 				msg: "Decrypted payload",
@@ -368,6 +393,7 @@ export default (
 					userId,
 					userAgent,
 					webView,
+					...(detectorOverride && { detectorOverride: true }),
 				},
 			}));
 
