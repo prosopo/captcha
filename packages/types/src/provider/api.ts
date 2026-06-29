@@ -712,8 +712,13 @@ export type DecisionMachineSummary = z.infer<
 	typeof DecisionMachineSummarySchema
 >;
 
+// Includes the full compiled `source` for every artifact so operators can
+// audit exactly which code is live on a provider in a single call, without
+// a follow-up get-by-id per machine.
 export const GetAllDecisionMachinesResponse = array(
-	DecisionMachineSummarySchema,
+	DecisionMachineSummarySchema.extend({
+		source: string(),
+	}),
 );
 
 export type GetAllDecisionMachinesResponseType = z.infer<
