@@ -374,6 +374,10 @@ export const deepValidateIpAddress = async (
 	distanceKm?: number;
 	shouldFlag?: boolean;
 }> => {
+	const log = logger.with({
+		challengeIp: challengeIpAddress.address,
+		providedIp: ip,
+	});
 	if (
 		ipValidationRules?.forceConsistentIp === true &&
 		dnsPeerIp &&
@@ -398,12 +402,8 @@ export const deepValidateIpAddress = async (
 		}
 		// IP mismatch - continue to distance checking if not forcing consistent IPs
 		if (ipValidationRules?.forceConsistentIp === true) {
-			logger.info(() => ({
+			log.info(() => ({
 				msg: "IP validation failed - forceConsistentIp is true",
-				data: {
-					challengeIp: challengeIpAddress.address,
-					providedIp: ip,
-				},
 			}));
 			return {
 				isValid: false,
@@ -421,12 +421,10 @@ export const deepValidateIpAddress = async (
 		const comparison = await compareIPs(challengeIpString, ip, ipInfoService);
 
 		if ("error" in comparison) {
-			logger.error(() => ({
+			log.error(() => ({
 				msg: "Failed to get IP distance comparison",
 				data: {
 					error: comparison.error,
-					challengeIp: challengeIpString,
-					providedIp: ip,
 				},
 			}));
 			// If we can't do distance comparison and IPs don't match exactly, be strict
@@ -444,22 +442,18 @@ export const deepValidateIpAddress = async (
 
 		// If no validation rules provided, use legacy logic (1000km threshold)
 		if (!ipValidationRules) {
-			logger.info(() => ({
+			log.info(() => ({
 				msg: "No IP validation rules provided, using legacy logic",
 				data: {
-					challengeIp: challengeIpString,
-					providedIp: ip,
 					distanceKm: distanceKm,
 				},
 			}));
 			// Legacy distance > 1000km -> fail and log
 			if (distanceKm !== undefined && distanceKm > 1000) {
 				const errorMessage = `IP addresses are too far apart: ${distanceKm.toFixed(2)}km (>1000km limit)`;
-				logger.info(() => ({
+				log.info(() => ({
 					msg: "IP validation failed - distance too great",
 					data: {
-						challengeIp: challengeIpString,
-						providedIp: ip,
 						distanceKm: distanceKm,
 						comparison: comparison.comparison,
 					},
@@ -472,11 +466,9 @@ export const deepValidateIpAddress = async (
 			}
 
 			// Legacy distance <= 1000km -> allow flag
-			logger.info(() => ({
+			log.info(() => ({
 				msg: "IP addresses differ but within acceptable distance",
 				data: {
-					challengeIp: challengeIpString,
-					providedIp: ip,
 					distanceKm: distanceKm,
 					comparison: comparison.comparison,
 				},
@@ -517,10 +509,9 @@ export const deepValidateIpAddress = async (
 				};
 		}
 	} catch (error) {
-		logger.error(() => ({
+		log.error(() => ({
 			msg: "Error during IP distance validation",
 			err: error,
-			data: { challengeIp: challengeIpAddress.address, providedIp: ip },
 		}));
 		// Something weird going on -> allow but flag
 		return {
