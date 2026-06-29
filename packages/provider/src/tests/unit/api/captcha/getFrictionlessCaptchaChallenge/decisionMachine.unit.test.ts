@@ -35,6 +35,7 @@ vi.mock("../../../../../tasks/frictionless/frictionlessTasks.js", () => ({
 		OLD_TIMESTAMP: "OLD_TIMESTAMP",
 		BOT_SCORE_ABOVE_THRESHOLD: "BOT_SCORE_ABOVE_THRESHOLD",
 		AUTO_BAN_SCORE: "AUTO_BAN_SCORE",
+		MISSING_CURRENT_URL: "MISSING_CURRENT_URL",
 	},
 }));
 
@@ -93,6 +94,7 @@ const buildInput = (overrides: Partial<Record<string, unknown>> = {}) => ({
 	scoreComponents: { baseScore: 0 },
 	token: "tok",
 	botThreshold: 0.5,
+	currentUrl: "https://example.com/page",
 	...overrides,
 });
 
@@ -165,6 +167,25 @@ describe("runDecisionMachine", () => {
 			input.tasks.frictionlessManager.sendImageCaptcha.mock.calls[0]?.[0];
 		expect(args.reason).toBe("BOT_SCORE_ABOVE_THRESHOLD");
 	});
+
+	it.each([undefined, ""])(
+		"returns image captcha when currentUrl is missing (%s)",
+		async (missing) => {
+			const input = buildInput({ currentUrl: missing });
+			const { res, handle } = buildHandle();
+			await runDecisionMachine(input as never, handle as never);
+			expect(
+				input.tasks.frictionlessManager.sendImageCaptcha,
+			).toHaveBeenCalled();
+			const args =
+				input.tasks.frictionlessManager.sendImageCaptcha.mock.calls[0]?.[0];
+			expect(args.reason).toBe("MISSING_CURRENT_URL");
+			expect(
+				input.tasks.frictionlessManager.sendPowCaptcha,
+			).not.toHaveBeenCalled();
+			expect(res.json).toHaveBeenCalled();
+		},
+	);
 
 	it("returns pow captcha when nothing trips (default path)", async () => {
 		const input = buildInput();

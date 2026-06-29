@@ -25,7 +25,7 @@ import {
 	AccessPolicyType,
 	type AccessRulesStorage,
 } from "@prosopo/user-access-policy";
-import { flatten } from "@prosopo/util";
+import { flatten, sanitisePageUrl } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import { getCompositeIpAddress } from "../../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../../express.js";
@@ -72,8 +72,23 @@ export default (
 				}));
 			});
 
-			const { token, headHash, dapp, user, mode, simdReadings } =
-				GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
+			const {
+				token,
+				headHash,
+				dapp,
+				user,
+				mode,
+				simdReadings,
+				currentUrl: reportedCurrentUrl,
+			} = GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
+
+			// Re-sanitise whatever the client reported: keep only scheme + host
+			// + path and drop the query string, fragment and any embedded
+			// credentials so we never persist secrets carried in the page URL.
+			// undefined when the field is absent or not a usable http(s) URL —
+			// the decision machine treats that as "not reported" and forces an
+			// image captcha.
+			const currentUrl = sanitisePageUrl(reportedCurrentUrl);
 
 			const normalizedIp = normalizeRequestIp(req.ip, req.logger);
 			const sessionMode =
@@ -397,6 +412,7 @@ export default (
 				iFrame,
 				decryptedHeadHash,
 				siteKey: dapp,
+				...(currentUrl && { currentUrl }),
 				ipInfo: req.ipInfo,
 				headers: flatHeaders,
 				mode: sessionMode,
@@ -480,6 +496,7 @@ export default (
 					scoreComponents,
 					token,
 					botThreshold,
+					currentUrl,
 				},
 				{ req, res, next },
 			);

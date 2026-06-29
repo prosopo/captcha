@@ -274,6 +274,11 @@ export const buildEscalation = async (
 		originSession.headers,
 		originSession.mode,
 		originSession.simdReadings,
+		originSession.entropyMathRandomFingerprint,
+		originSession.entropyCryptoFingerprint,
+		originSession.entropyWallClockOffsetMs,
+		originSession.entropyMathRandomFirst,
+		originSession.currentUrl,
 	);
 
 	// Record the origin → escalation sessionId mapping so a /captcha/*

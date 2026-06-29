@@ -76,8 +76,19 @@ type MockRes = {
 
 // Helper to build req/res/next
 const buildReqRes = (body: unknown, ip = "127.0.0.1") => {
+	// The decision machine forces an image captcha when no page URL is
+	// reported, so default one in for any body that doesn't set it. Tests
+	// exercising the missing-URL path pass `currentUrl` explicitly (e.g.
+	// undefined) to opt out of this default.
+	const reqBody: unknown =
+		body && typeof body === "object" && !("currentUrl" in body)
+			? {
+					...(body as Record<string, unknown>),
+					currentUrl: "https://example.com/page",
+				}
+			: body;
 	const req: MockReq = {
-		body,
+		body: reqBody,
 		headers: { "prosopo-user": "u", "user-agent": "ua" },
 		ip,
 		ja4: {},
