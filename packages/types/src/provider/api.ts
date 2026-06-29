@@ -537,6 +537,13 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	[ApiParams.headHash]: boundedString(INPUT_LIMITS.TOKEN),
 	[ApiParams.mode]: nativeEnum(ModeEnum).optional(),
 	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	// Full page URL the widget was rendered on (origin + path, no query
+	// string / fragment / credentials). Sent by the client so the provider
+	// can record which page a session originated from; re-sanitised
+	// server-side and gated in the decision machine (a missing value forces
+	// an image captcha). Optional on the wire so the schema still parses for
+	// older clients — the decision machine handles absence.
+	[ApiParams.currentUrl]: boundedString(INPUT_LIMITS.URL).optional(),
 });
 
 export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<

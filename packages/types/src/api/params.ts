@@ -55,6 +55,7 @@ export enum ApiParams {
 	headHash = "headHash",
 	behavioralData = "behavioralData",
 	simdReadings = "simdReadings",
+	currentUrl = "currentUrl",
 	decisionMachineScope = "decisionMachineScope",
 	decisionMachineRuntime = "decisionMachineRuntime",
 	decisionMachineSource = "decisionMachineSource",

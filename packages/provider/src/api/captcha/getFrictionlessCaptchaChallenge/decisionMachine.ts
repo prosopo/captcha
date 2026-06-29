@@ -60,6 +60,10 @@ export type DecisionMachineInput = {
 	scoreComponents: ScoreComponents;
 	token: string;
 	botThreshold: number;
+	// Sanitised page URL the widget reported (origin + path, no query /
+	// fragment / credentials). Undefined when the client didn't report a
+	// usable page URL — see the missing-currentUrl gate below.
+	currentUrl: string | undefined;
 };
 
 type ExpressHandle = {
@@ -224,6 +228,34 @@ export const runDecisionMachine = async (
 				),
 				userSitekeyIpHash,
 				reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
+				siteKey: dapp,
+				ipInfo,
+				headers: flatHeaders,
+			}),
+		);
+	}
+
+	// Checked last, just before the PoW fallthrough: a request that reported
+	// no usable page URL gets an image captcha rather than a frictionless pass.
+	if (!input.currentUrl) {
+		req.logger.info(() => ({
+			msg: "Frictionless decision",
+			data: {
+				decision: "missing_current_url",
+				captchaType: CaptchaType.image,
+				token: input.token,
+			},
+		}));
+		recordFrictionlessDecision("missing_current_url");
+		attachHoneypot(res, clientRecord);
+		return res.json(
+			await tasks.frictionlessManager.sendImageCaptcha({
+				solvedImagesCount: Math.min(
+					env.config.captchas.solved.count,
+					clientRecord.settings.imageMaxRounds,
+				),
+				userSitekeyIpHash,
+				reason: FrictionlessReason.MISSING_CURRENT_URL,
 				siteKey: dapp,
 				ipInfo,
 				headers: flatHeaders,

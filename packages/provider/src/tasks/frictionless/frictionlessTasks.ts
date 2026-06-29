@@ -111,6 +111,7 @@ export class FrictionlessManager extends CaptchaManager {
 			iFrame: params.iFrame ?? false,
 			decryptedHeadHash: params.decryptedHeadHash,
 			siteKey: params.siteKey,
+			currentUrl: params.currentUrl,
 			ipInfo: params.ipInfo,
 			headers: params.headers,
 			mode: params.mode,
@@ -158,6 +159,7 @@ export class FrictionlessManager extends CaptchaManager {
 		entropyCryptoFingerprint?: Session["entropyCryptoFingerprint"],
 		entropyWallClockOffsetMs?: Session["entropyWallClockOffsetMs"],
 		entropyMathRandomFirst?: Session["entropyMathRandomFirst"],
+		currentUrl?: Session["currentUrl"],
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
@@ -177,6 +179,7 @@ export class FrictionlessManager extends CaptchaManager {
 			decryptedHeadHash,
 			reason,
 			siteKey,
+			currentUrl,
 			blocked,
 			deleted,
 			ipInfo,
@@ -328,6 +331,7 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.entropyCryptoFingerprint,
 			effectiveParams.entropyWallClockOffsetMs,
 			effectiveParams.entropyMathRandomFirst,
+			effectiveParams.currentUrl,
 		);
 
 		// Fire-and-forget served-counter writes. Skipped when there's no
@@ -392,6 +396,11 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.headers,
 			effectiveParams.mode,
 			effectiveParams.simdReadings,
+			effectiveParams.entropyMathRandomFingerprint,
+			effectiveParams.entropyCryptoFingerprint,
+			effectiveParams.entropyWallClockOffsetMs,
+			effectiveParams.entropyMathRandomFirst,
+			effectiveParams.currentUrl,
 		);
 	}
 
