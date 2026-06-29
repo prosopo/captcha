@@ -37,7 +37,6 @@ export type AccessPolicyInput = {
 	dapp: string;
 	ipInfo: IPInfoResponse | undefined;
 	flatHeaders: RequestHeaders;
-	requestId: string | undefined;
 	logger: Logger;
 	userScope: UserScope;
 };
@@ -64,12 +63,11 @@ export const handleAccessPolicy = async (
 		};
 	}
 
-	const { tasks, clientRecord, userAccessPolicy, logger, requestId } = input;
+	const { tasks, clientRecord, userAccessPolicy, logger } = input;
 
 	logger.info(() => ({
 		msg: "User access policy matched",
 		data: {
-			requestId,
 			policy: userAccessPolicy,
 			captchaType: userAccessPolicy.captchaType,
 			userScope: input.userScope,
@@ -90,7 +88,6 @@ export const handleAccessPolicy = async (
 		logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {
-				requestId,
 				decision: "block",
 				captchaType: CaptchaType.image,
 			},
@@ -120,7 +117,6 @@ export const handleAccessPolicy = async (
 		logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {
-				requestId,
 				decision: "auto_ban_score",
 				botScore,
 				autoBanThreshold,
@@ -153,7 +149,6 @@ export const handleAccessPolicy = async (
 		logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {
-				requestId,
 				decision: "user_access_policy",
 				captchaType: CaptchaType.image,
 			},
@@ -179,7 +174,6 @@ export const handleAccessPolicy = async (
 		logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {
-				requestId,
 				decision: "user_access_policy",
 				captchaType: CaptchaType.pow,
 			},
@@ -197,7 +191,6 @@ export const handleAccessPolicy = async (
 		logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {
-				requestId,
 				decision: "user_access_policy",
 				captchaType: CaptchaType.puzzle,
 			},

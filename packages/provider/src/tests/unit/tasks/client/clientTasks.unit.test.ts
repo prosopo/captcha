@@ -33,7 +33,7 @@ import {
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ClientTaskManager } from "../../../../tasks/client/clientTasks.js";
 
-const loggerOuter = getLogger("info", import.meta.url);
+const loggerOuter = getLogger("info", "test:client-tasks");
 
 type TestScheduledTaskRecord = Pick<
 	ScheduledTaskRecord,

@@ -46,7 +46,6 @@ const buildInput = (overrides: Partial<Record<string, unknown>> = {}) => {
 			flatHeaders: {},
 			sessionMode: undefined,
 			userSitekeyIpHash: "hash",
-			requestId: "rid",
 			logger: { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() },
 			...overrides,
 		},

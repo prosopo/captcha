@@ -15,15 +15,15 @@
 	},
 	"author": "",
 	"dependencies": {
-		"dotenv": "^17.2.0"
+		"dotenv": "17.3.1"
 	},
 	"license": "Apache-2.0",
 	"description": "",
 	"devDependencies": {
-		"@prosopo/config": "3.3.3",
-		"@types/node": "^24.0.13",
-		"tsx": "^4.20.3",
-		"typescript": "^5.8.3"
+		"@prosopo/config": "3.3.4",
+		"@types/node": "24.10.13",
+		"tsx": "4.20.3",
+		"typescript": "5.9.3"
 	},
 	"repository": {
 		"type": "git",

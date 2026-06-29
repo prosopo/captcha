@@ -1,5 +1,11 @@
 # @prosopo/util
 
+## 3.3.2
+### Patch Changes
+
+- 849af99: chore(deps-dev): bump vitest from 3.2.4 to 3.2.6 in /packages/util
+- a5ba27b: chore(deps-dev): bump vite from 6.4.1 to 6.4.3 in /packages/util
+
 ## 3.3.1
 ### Patch Changes
 

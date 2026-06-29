@@ -1,5 +1,18 @@
 # @prosopo/common
 
+## 3.1.41
+### Patch Changes
+
+- dfb0c53: fix: derive HTTP status message from actual status code
+  
+  `unwrapError` hardcoded `statusMessage = "Bad Request"` regardless of the resolved status code, so 401/403/500 responses (copied onto `response.statusMessage` by `errorHandler`) carried the wrong reason phrase. The reason phrase is now derived from the final status code via a local `STATUS_MESSAGES` map (a subset of `node:http`'s `STATUS_CODES`, kept local so this module stays browser-bundle compatible; unmapped codes fall back to a reason phrase by class — 5xx to "Internal Server Error", otherwise "Bad Request").
+- 11f1e8c: Replace vague logger scopes (empty strings, import.meta.url, generic "CLI") with structured colon-delimited names following the convention package:subsystem:action.
+- Updated dependencies [7ebb78f]
+- Updated dependencies [948d36b]
+- Updated dependencies [41e0e11]
+- Updated dependencies [3c80664]
+  - @prosopo/logger@2.0.0
+
 ## 3.1.40
 ### Patch Changes
 

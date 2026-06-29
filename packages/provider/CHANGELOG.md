@@ -1,5 +1,102 @@
 # @prosopo/provider
 
+## 4.13.1
+### Patch Changes
+
+- ec363e9: fix(provider): resolve origin sessionId to escalation when post-PoW route() escalates to image/puzzle
+  
+  When the decision machine's route() phase escalates the user from PoW to an image/puzzle captcha, `buildEscalation` mints a fresh session — but the originating session has already been consumed by the preceding /captcha/pow request. Widgets that didn't switch to the escalation sessionId on the next /captcha/* call (older bundled SDKs, hand-rolled wrappers, network-retry races, tab races) landed on NO_SESSION_FOUND. Production deploy of R1/R2 escalations at 18:39 UTC caused a 4.6× spike in CAPTCHA.NO_SESSION_FOUND (363/hr → 1,668/hr); rate dropped immediately once the routing artifact was deleted.
+  
+  Records an origin → escalation sessionId mapping in Redis at the moment `buildEscalation` creates the new session. On the next /captcha/* request, `isValidRequest` falls back to that mapping when `checkAndRemoveSession` returns null for the supplied sessionId, then invalidates the mapping (single-use). When Redis is unavailable the escalation still returns to the client unchanged — those deployments accept the widget must handle the new sessionId on its own.
+- Updated dependencies [ec363e9]
+  - @prosopo/database@3.15.2
+  - @prosopo/env@3.6.2
+  - @prosopo/api-express-router@3.1.33
+
+## 4.13.0
+### Minor Changes
+
+- 1111ff2: Add a Prometheus `/metrics` endpoint to the provider/pronode API and instrument the captcha pipeline with a full metrics suite via `prom-client`. The endpoint is served on the existing internal API port (added to `PublicApiPaths`), gated by `PROSOPO_METRICS_ENABLED` (default on), and scraped by Vector over the internal docker network.
+  
+  Exposes: HTTP request counts/durations by route/method/status; captcha issued and verify outcomes by type/result/source; frictionless routing decisions; bot-score distribution and triggered detectors; blocked-request, domain-validation and spam-email outcomes; maintenance-mode and redis-readiness gauges; and default Node process metrics. High-cardinality identifiers (site key, user, IP, session) are kept out of labels and remain in the structured logs.
+- 6a7b122: Allow a client to send a captcha verify request to any pronode: a provider that did not issue the token now forwards the verification to the issuing provider (decoded from the token's providerUrl, SSRF-guarded against the known provider list) and returns its response, mirroring the AWS Lambda verify endpoint. Falls back to local verification when this node is the issuer, the provider list can't be loaded, or the issuer can't be determined.
+
+### Patch Changes
+
+- f643912: Admin endpoints now narrow req.logger with a subscope instead of creating a fresh logger, preserving request context (requestId, user, siteKey) in all admin endpoint logs.
+- a444abe: chore(deps): bump uuid from 14.0.0 to 14.0.1
+- 9cf7204: chore(deps): bump uuid from 11.1.0 to 14.0.0 in /packages/provider
+- 5b0dea0: chore(deps-dev): bump vitest from 3.2.4 to 3.2.6 in /packages/provider
+- c9de110: Frictionless: honour an active user access policy on the session-dedup fast path. A reused session whose captchaType conflicts with the policy — e.g. an IP rate-limit rule (`IP_HIGH_REQUEST_RATE_SIMPLE`) forcing `image` over a previously-cached `pow` session — was served as-is and then hard-rejected at the `/captcha/{type}` gate with `INCORRECT_CAPTCHA_TYPE`, breaking the widget. The dedup branch now re-checks the policy, and on conflict evicts the stale session and falls through so the access policy (or decision machine) selects the correct captcha type.
+- 2defea0: Add JA4 unit coverage for the empty-SNI 'd' flag and a GREASE-lookalike cipher that must be counted and hashed.
+- 411aed2: Replace `read-tls-client-hello` with a spec-compliant JA4 implementation.
+  
+  Drops the external dependency and adds `packages/provider/src/api/ja4.ts`, a
+  self-contained JA4 parser that matches the Rust/AWS-Lambda reference:
+  
+  - TLS 1.3 detection: parses the `supported_versions` extension body to pick
+    the highest non-GREASE version, instead of assuming `"13"` on extension presence
+  - Single-byte ALPN: uses `"0"` for the missing last position (e.g. `"h"` → `"h0"`)
+  - Non-alphanumeric ALPN bytes: rendered as 2-char lowercase hex (e.g. `"/"` → `"2f"`)
+  - Validates that cipher-suite length is even; throws `Ja4ParseError` if not
+  - Parses `Buffer` directly — no `Readable` stream wrapping required
+- 30b198b: Use child loggers (Logger.with) to bind request/challenge context once instead of repeating it in every log data block.
+- 11f1e8c: Replace vague logger scopes (empty strings, import.meta.url, generic "CLI") with structured colon-delimited names following the convention package:subsystem:action.
+- c672cd7: Return `403 Forbidden` (was `401 Unauthorized`) for requests denied by the
+  blocklist / access-policy block middleware. The client isn't lacking
+  credentials — it is denied access — so 403 is the correct status. The response
+  body changes from `{ "error": "Unauthorized" }` to `{ "error": "Forbidden" }`.
+- 7a2bc13: Forward synchronous validation throws in captcha route handlers to Express's error handler. `validateSiteKey`/`validateAddr` throw `ProsopoApiError` synchronously inside the async captcha handlers, but the route wiring invoked the handler without awaiting or attaching a `.catch`, so Express 4 never observed the rejected promise and the request hung instead of returning the intended 4xx response. Each handler is now wrapped in an `asyncHandler` adapter that forwards any rejection to `next(err)`.
+- b166037: fix(provider): length-bound and sanitise request inputs across the provider API endpoints.
+  
+  - Add shared zod helpers in `@prosopo/types` (`INPUT_LIMITS`, `boundedString`, `safeText`, `safeLine`): every request string field is now length-bounded, and human freetext additionally rejects control characters (null bytes etc.). Typing fields as strings already blocks Mongo operator injection; the control-character rejection covers the remaining log/header-injection vectors.
+  - Apply the helpers across the provider request schemas (image/pow/puzzle captcha challenge & solution bodies, frictionless challenge, server verify, DNS event ingestion, sitekey register/remove, detector-key and decision-machine admin bodies, and the spam-email check). Tokens, signatures, behavioural/simd readings and decision-machine source get generous caps; accounts/site-keys/hashes/ids get tight ones.
+  
+  - Lower the provider API body-parser cap from 50 MB to 1 MB (`express.json` in `startProviderApi.ts`) as a coarse oversized-payload backstop before parsing.
+  
+  Email and IP fields are treated as length-bounded strings (email keeps its existing format check where present).
+- d3cc224: Return 400 (CAPTCHA.PARSE_ERROR) instead of 500 for a malformed checkSpamEmail request body
+- Replace `import.meta.url`-derived logger scopes with stable, kebab-case service
+  names (e.g. `provider:admin:dns-event`, `client-example-server:app`) so
+  `PROSOPO_LOG_LEVEL` directive matching is deterministic across builds.
+- Updated dependencies [dfb0c53]
+- Updated dependencies [a444abe]
+- Updated dependencies [8c8898d]
+- Updated dependencies [7ebb78f]
+- Updated dependencies [7daea2e]
+- Updated dependencies [b9f5eca]
+- Updated dependencies [849af99]
+- Updated dependencies [48612cd]
+- Updated dependencies [a5ba27b]
+- Updated dependencies [d1fbde3]
+- Updated dependencies [9fe3c06]
+- Updated dependencies [948d36b]
+- Updated dependencies [41e0e11]
+- Updated dependencies [11f1e8c]
+- Updated dependencies [3c80664]
+- Updated dependencies [a26e9d0]
+- Updated dependencies [b166037]
+- Updated dependencies [1111ff2]
+- Updated dependencies [6a7b122]
+  - @prosopo/common@3.1.41
+  - @prosopo/api-express-router@3.1.32
+  - @prosopo/logger@2.0.0
+  - @prosopo/user-access-policy@3.10.9
+  - @prosopo/util-crypto@13.5.30
+  - @prosopo/util@3.3.2
+  - @prosopo/types-env@2.10.1
+  - @prosopo/database@3.15.1
+  - @prosopo/datasets@3.1.41
+  - @prosopo/types@4.9.0
+  - @prosopo/api@3.5.6
+  - @prosopo/load-balancer@2.10.1
+  - @prosopo/api-route@2.6.49
+  - @prosopo/env@3.6.1
+  - @prosopo/ipinfo@0.2.27
+  - @prosopo/keyring@2.9.47
+  - @prosopo/redis-client@1.0.26
+  - @prosopo/types-database@4.11.1
+
 ## 4.12.0
 ### Minor Changes
 

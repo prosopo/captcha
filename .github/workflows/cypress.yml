@@ -39,7 +39,7 @@ jobs:
     if: github.event.pull_request.draft == false
     steps:
       - name: Print contexts
-        uses: prosopo/captcha/.github/actions/print_contexts@gha
+        uses: prosopo/github_actions/.github/actions/print_contexts@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
         with:
           INPUTS_CONTEXT: ${{ toJson(inputs) }}
           NEEDS_CONTEXT: ${{ toJson(needs) }}
@@ -49,19 +49,19 @@ jobs:
       - name: Set NX_PARALLEL environment variable
         run: echo "NX_PARALLEL=$(nproc)" >> $GITHUB_ENV
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           token: ${{ secrets.PROSOPONATOR_PAT }}
           submodules: "recursive"
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '24'
           cache: 'npm'
 
-      - uses: prosopo/captcha/.github/actions/npm@gha
+      - uses: prosopo/github_actions/.github/actions/npm@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
         with:
-          npm_ci_args: '--include=dev'
+          npm_ci_args: '--include=dev --no-audit --no-fund --prefer-offline'
 
       # setup certs
       - name: Setup certs
@@ -126,7 +126,7 @@ jobs:
           npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:invisible" --success "first" --kill-others
 
       # after the test run completes store videos and any screenshots
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         # store screenshots only on failures
         if: failure()
         with:
@@ -135,7 +135,7 @@ jobs:
           if-no-files-found: ignore  # 'warn' or 'error' are also available, defaults to `warn`
 
       # after the test run completes store videos and any screenshots
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         # store videos only on failures
         if: failure()
         with:
@@ -144,7 +144,7 @@ jobs:
           if-no-files-found: ignore   # 'warn' or 'error' are also available, defaults to `warn`
 
       # visual-regression diffs (and the actual frames that produced them) when snapshots don't match
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: cypress-snapshot-diffs

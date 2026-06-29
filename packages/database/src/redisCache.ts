@@ -341,6 +341,108 @@ export class RedisWriteQueue {
 		}
 	}
 
+	/**
+	 * Cache an origin → escalation sessionId mapping for the post-PoW
+	 * escalation flow.
+	 *
+	 * Background: when the routing machine returns image/puzzle from the
+	 * postPow phase, `buildEscalation` (`api/captcha/submitPoWCaptchaSolution.ts`)
+	 * mints a new session with a fresh `sessionId` and returns it on the
+	 * `escalation` field. A widget that handles the escalation cleanly
+	 * mounts the next captcha with the new sessionId. But there are
+	 * several real-world paths where the widget keeps using the original
+	 * sessionId for the follow-up `/captcha/{type}` request — bundled SDK
+	 * versions that predate the escalation handler, dapps that hand-roll
+	 * the wrapper, network-glitch retries, or browser-tab races. The
+	 * original session has been consumed and soft-deleted by the
+	 * preceding `/captcha/pow`, so the follow-up gets
+	 * `CAPTCHA.NO_SESSION_FOUND` and the user sees an inline error → FAQ.
+	 *
+	 * This mapping lets `isValidRequest` resolve the original sessionId
+	 * forward to the live escalation session and proceed normally.
+	 *
+	 * TTL is short on purpose: escalation handoffs complete in seconds
+	 * (the user solves the follow-up immediately) and a stale mapping
+	 * pointing at a long-gone session would just produce a different
+	 * shape of NO_SESSION_FOUND.
+	 */
+	async cacheSessionEscalation(
+		originSessionId: string,
+		escalationSessionId: string,
+		ttlSeconds = 600,
+	): Promise<boolean> {
+		const client = await this.getClient();
+		if (!client) {
+			return false;
+		}
+
+		try {
+			const key = `cache:session:escalation:${originSessionId}`;
+			await client.set(key, escalationSessionId, { EX: ttlSeconds });
+			return true;
+		} catch (error) {
+			this.logger.warn(() => ({
+				msg: "Failed to cache session escalation mapping in Redis",
+				err: error,
+				originSessionId,
+				escalationSessionId,
+			}));
+			return false;
+		}
+	}
+
+	/**
+	 * Resolve an original sessionId to its escalation sessionId, if one was
+	 * recorded. Returns null when there is no mapping (either no escalation
+	 * happened, or the TTL has elapsed).
+	 */
+	async getCachedSessionEscalation(
+		originSessionId: string,
+	): Promise<string | null> {
+		const client = await this.getClient();
+		if (!client) {
+			return null;
+		}
+
+		try {
+			const key = `cache:session:escalation:${originSessionId}`;
+			return await client.get(key);
+		} catch (error) {
+			this.logger.warn(() => ({
+				msg: "Failed to get cached session escalation mapping from Redis",
+				err: error,
+				originSessionId,
+			}));
+			return null;
+		}
+	}
+
+	/**
+	 * Invalidate an escalation mapping. Called when the escalation session
+	 * itself is consumed so subsequent retries on the origin sessionId fall
+	 * through to the standard NO_SESSION_FOUND path rather than chasing a
+	 * second-hand stale pointer.
+	 */
+	async invalidateCachedSessionEscalation(
+		originSessionId: string,
+	): Promise<void> {
+		const client = await this.getClient();
+		if (!client) {
+			return;
+		}
+
+		try {
+			const key = `cache:session:escalation:${originSessionId}`;
+			await client.del(key);
+		} catch (error) {
+			this.logger.warn(() => ({
+				msg: "Failed to invalidate cached session escalation mapping",
+				err: error,
+				originSessionId,
+			}));
+		}
+	}
+
 	// ── Session write queue ─────────────────────────────────────────────
 
 	/**

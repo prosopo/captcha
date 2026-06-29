@@ -15,7 +15,12 @@
 import { handleErrors } from "@prosopo/api-express-router";
 import { ClientApiPaths } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import express, { type Router } from "express";
+import express, {
+	type NextFunction,
+	type Request,
+	type Response,
+	type Router,
+} from "express";
 import assignDetectorBundle from "./captcha/assignDetectorBundle.js";
 import checkSpamEmail from "./captcha/checkSpamEmail.js";
 import getFrictionlessCaptchaChallenge from "./captcha/getFrictionlessCaptchaChallenge.js";
@@ -25,6 +30,25 @@ import getPuzzleCaptchaChallenge from "./captcha/getPuzzleCaptchaChallenge.js";
 import submitImageCaptchaSolution from "./captcha/submitImageCaptchaSolution.js";
 import submitPoWCaptchaSolution from "./captcha/submitPoWCaptchaSolution.js";
 import submitPuzzleCaptchaSolution from "./captcha/submitPuzzleCaptchaSolution.js";
+
+/**
+ * Wraps an async route handler so that any rejection - including synchronous
+ * throws (e.g. from validateSiteKey/validateAddr) that become rejected
+ * promises inside the async handler - is forwarded to Express's error handler.
+ * Without this, Express 4 does not observe the rejection and the request hangs
+ * instead of returning the intended 4xx response.
+ *
+ * The handler is invoked inside `Promise.resolve().then(...)` so that even a
+ * truly synchronous throw (from a non-async handler) is captured as a rejected
+ * promise and forwarded to `next`, rather than propagating synchronously.
+ */
+export const asyncHandler =
+	(handler: (req: Request, res: Response, next: NextFunction) => unknown) =>
+	(req: Request, res: Response, next: NextFunction): void => {
+		Promise.resolve()
+			.then(() => handler(req, res, next))
+			.catch(next);
+	};
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -54,29 +78,33 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	/**
 	 * Provides a Captcha puzzle to a Dapp User
 	 */
-	router.post(ClientApiPaths.GetImageCaptchaChallenge, (req, res, next) =>
-		getImageCaptchaChallenge(env, userAccessRulesStorage)(req, res, next),
+	router.post(
+		ClientApiPaths.GetImageCaptchaChallenge,
+		asyncHandler(getImageCaptchaChallenge(env, userAccessRulesStorage)),
 	);
 
 	/**
 	 * Receives solved CAPTCHA challenges from the user, stores to database, and checks against solution commitment
 	 */
-	router.post(ClientApiPaths.SubmitImageCaptchaSolution, (req, res, next) =>
-		submitImageCaptchaSolution(env)(req, res, next),
+	router.post(
+		ClientApiPaths.SubmitImageCaptchaSolution,
+		asyncHandler(submitImageCaptchaSolution(env)),
 	);
 
 	/**
 	 * Supplies a PoW challenge to a Dapp User
 	 */
-	router.post(ClientApiPaths.GetPowCaptchaChallenge, (req, res, next) =>
-		getPoWCaptchaChallenge(env, userAccessRulesStorage)(req, res, next),
+	router.post(
+		ClientApiPaths.GetPowCaptchaChallenge,
+		asyncHandler(getPoWCaptchaChallenge(env, userAccessRulesStorage)),
 	);
 
 	/**
 	 * Verifies a user's PoW solution as being approved or not
 	 */
-	router.post(ClientApiPaths.SubmitPowCaptchaSolution, (req, res, next) =>
-		submitPoWCaptchaSolution(env)(req, res, next),
+	router.post(
+		ClientApiPaths.SubmitPowCaptchaSolution,
+		asyncHandler(submitPoWCaptchaSolution(env)),
 	);
 
 	/**
@@ -84,12 +112,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	 */
 	router.post(
 		ClientApiPaths.GetFrictionlessCaptchaChallenge,
-		(req, res, next) =>
-			getFrictionlessCaptchaChallenge(env, userAccessRulesStorage)(
-				req,
-				res,
-				next,
-			),
+		asyncHandler(getFrictionlessCaptchaChallenge(env, userAccessRulesStorage)),
 	);
 
 	/**
@@ -103,23 +126,23 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	/**
 	 * Supplies a Puzzle challenge to a Dapp User
 	 */
-	router.post(ClientApiPaths.GetPuzzleCaptchaChallenge, (req, res, next) =>
-		getPuzzleCaptchaChallenge(env, userAccessRulesStorage)(req, res, next),
+	router.post(
+		ClientApiPaths.GetPuzzleCaptchaChallenge,
+		asyncHandler(getPuzzleCaptchaChallenge(env, userAccessRulesStorage)),
 	);
 
 	/**
 	 * Verifies a user's Puzzle solution as being approved or not
 	 */
-	router.post(ClientApiPaths.SubmitPuzzleCaptchaSolution, (req, res, next) =>
-		submitPuzzleCaptchaSolution(env)(req, res, next),
+	router.post(
+		ClientApiPaths.SubmitPuzzleCaptchaSolution,
+		asyncHandler(submitPuzzleCaptchaSolution(env)),
 	);
 
 	/**
 	 * Checks if an email domain is spam
 	 */
-	router.post(ClientApiPaths.CheckSpamEmail, (req, res, next) =>
-		checkSpamEmail(env)(req, res, next),
-	);
+	router.post(ClientApiPaths.CheckSpamEmail, asyncHandler(checkSpamEmail(env)));
 
 	// Your error handler should always be at the end of your application stack. Apparently it means not only after all
 	// app.use() but also after all your app.get() and app.post() calls.

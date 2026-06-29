@@ -49,6 +49,7 @@ import { headerCheckMiddleware } from "./headerCheckMiddleware.js";
 import { ignoreMiddleware } from "./ignoreMiddleware.js";
 import { ipInfoMiddleware } from "./ipInfoMiddleware.js";
 import { ja4Middleware } from "./ja4Middleware.js";
+import { metricsMiddleware } from "./metrics.js";
 import { publicRouter } from "./public.js";
 import { robotsMiddleware } from "./robotsMiddleware.js";
 import { prosopoVerifyRouter } from "./verify.js";
@@ -230,10 +231,18 @@ export async function startProviderApi(
 			maxAge: 86400,
 		}),
 	);
-	apiApp.use(express.json({ limit: "50mb" }));
+	// Coarse request body-size backstop. Generous enough for legitimate
+	// payloads (captcha solutions, behavioural/simd readings, DNS event
+	// batches) but bounds oversized-payload abuse before parsing; the
+	// per-field caps in @prosopo/types (`INPUT_LIMITS`) are the finer control.
+	apiApp.use(express.json({ limit: "1mb" }));
 
 	// Put this first so that no middleware runs on it
 	apiApp.use(publicRouter(env));
+
+	// Time and count every request below this point (route/method/status).
+	// Mounted after the public router so the /metrics scrape isn't self-counted.
+	apiApp.use(metricsMiddleware());
 
 	// Rate limiting
 	// In test environments, disable rate limiting to allow parallel tests

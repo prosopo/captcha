@@ -215,8 +215,11 @@ export default (env: ProviderEnvironment) =>
  * session of the chosen captcha type, carrying forward the originating
  * session's risk profile (score, headers, IP, etc.). Returns undefined when
  * the router decided to keep the user on PoW (i.e. no escalation needed).
+ *
+ * Exported for unit testing only — the handler above is the production entry
+ * point.
  */
-const buildEscalation = async (
+export const buildEscalation = async (
 	tasks: Tasks,
 	result: { verified: boolean; routingOutput?: { captchaType: CaptchaType } },
 	challenge: string,
@@ -279,6 +282,19 @@ const buildEscalation = async (
 		// solve can decrypt the (same-origin) behavioural payload.
 		originSession.bundleId,
 	);
+
+	// Record the origin → escalation sessionId mapping so a /captcha/*
+	// request that arrives carrying the originating sessionId (because the
+	// widget didn't switch to the escalation id, or a network retry fired
+	// on the old state) resolves forward to `newSession` instead of
+	// landing on NO_SESSION_FOUND. See `cacheSessionEscalation` in
+	// `packages/database/src/redisCache.ts` for the full rationale.
+	if (tasks.writeQueue) {
+		await tasks.writeQueue.cacheSessionEscalation(
+			powRecord.sessionId,
+			newSession.sessionId,
+		);
+	}
 
 	return {
 		captchaType: routed.captchaType,

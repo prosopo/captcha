@@ -36,7 +36,7 @@
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"sideEffects": false,
 	"devDependencies": {
-		"@prosopo/config": "3.3.3",
+		"@prosopo/config": "3.3.4",
 		"@types/node": "22.10.2",
 		"del-cli": "6.0.0"
 	}

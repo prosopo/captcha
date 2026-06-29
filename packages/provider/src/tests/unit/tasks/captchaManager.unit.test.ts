@@ -21,7 +21,12 @@ import {
 	type Session,
 	contextAwareThresholdDefault,
 } from "@prosopo/types";
-import { CaptchaType, type IUserSettings, Tier } from "@prosopo/types";
+import {
+	CaptchaType,
+	type IUserSettings,
+	ResultReason,
+	Tier,
+} from "@prosopo/types";
 import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import {
@@ -37,7 +42,7 @@ vi.mock("../../../tasks/detection/decodeBehavior.js", () => ({
 	default: vi.fn(),
 }));
 
-const loggerOuter = getLogger("info", import.meta.url);
+const loggerOuter = getLogger("info", "test:captcha-manager");
 
 const defaultUserSettings: IUserSettings = {
 	frictionlessThreshold: 0.8,
@@ -103,6 +108,9 @@ describe("CaptchaManager", () => {
 			invalidateCachedSession: vi.fn().mockResolvedValue(undefined),
 			invalidateCachedSessionByHash: vi.fn().mockResolvedValue(undefined),
 			getCachedSession: vi.fn().mockResolvedValue(null),
+			cacheSessionEscalation: vi.fn().mockResolvedValue(true),
+			getCachedSessionEscalation: vi.fn().mockResolvedValue(null),
+			invalidateCachedSessionEscalation: vi.fn().mockResolvedValue(undefined),
 		} as unknown as RedisWriteQueue;
 
 		captchaManager = new CaptchaManager(
@@ -328,6 +336,201 @@ describe("CaptchaManager", () => {
 				"hash-xyz",
 			);
 		});
+		// ---------- post-PoW escalation fallback ----------
+		//
+		// When the routing machine returns image/puzzle from postPow,
+		// `submitPoWCaptchaSolution.buildEscalation` mints a new session
+		// with a fresh sessionId and writes an `origin → escalation`
+		// mapping into Redis. A widget that handles the escalation
+		// response correctly switches to the new sessionId. But several
+		// real-world paths keep using the original sessionId for the
+		// follow-up `/captcha/{type}` request — old bundled SDKs, dapps
+		// that hand-roll the wrapper, network-glitch retries, browser-tab
+		// races. Without the fallback below, those requests landed on
+		// CAPTCHA.NO_SESSION_FOUND because the origin session had already
+		// been consumed by the preceding /captcha/pow. The four tests
+		// below pin the contract.
+
+		it("resolves to the escalation session when the origin sessionId is consumed and an escalation mapping exists", async () => {
+			// Origin session was consumed by the earlier /captcha/pow:
+			// checkAndRemoveSession returns undefined for the origin id.
+			// The escalation session is still live: checkAndRemoveSession
+			// returns it for the escalation id.
+			const checkAndRemove = db.checkAndRemoveSession as unknown as ReturnType<
+				typeof vi.fn
+			>;
+			checkAndRemove.mockImplementation(async (sessionId: string) => {
+				if (sessionId === "escalation-id") {
+					return {
+						sessionId: "escalation-id",
+						captchaType: CaptchaType.image,
+						userSitekeyIpHash: "hash-xyz",
+					} as Pick<Session, "sessionId" | "captchaType" | "userSitekeyIpHash">;
+				}
+				return undefined;
+			});
+			(
+				mockWriteQueue.getCachedSessionEscalation as unknown as ReturnType<
+					typeof vi.fn
+				>
+			).mockResolvedValueOnce("escalation-id");
+
+			const result = await captchaManager.isValidRequest(
+				{
+					account: "account",
+					tier: Tier.Free,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.frictionless,
+					},
+				},
+				CaptchaType.image,
+				mockEnv,
+				"origin-id",
+				undefined,
+				"127.0.0.1",
+			);
+
+			expect(result).toEqual({
+				valid: true,
+				type: CaptchaType.image,
+				sessionId: "escalation-id",
+			});
+			// The escalation mapping is single-use: invalidate so the
+			// next retry on origin-id falls through to NO_SESSION_FOUND
+			// instead of chasing a now-consumed escalation.
+			expect(
+				mockWriteQueue.invalidateCachedSessionEscalation,
+			).toHaveBeenCalledWith("origin-id");
+			// The escalation session's own cache entries must also be
+			// invalidated (it's been consumed).
+			expect(mockWriteQueue.invalidateCachedSession).toHaveBeenCalledWith(
+				"escalation-id",
+			);
+			expect(mockWriteQueue.invalidateCachedSessionByHash).toHaveBeenCalledWith(
+				"hash-xyz",
+			);
+		});
+
+		it("returns NO_SESSION_FOUND when origin is consumed AND escalation session is also gone", async () => {
+			// Both the origin and the escalation have been consumed (the
+			// user-double-click-the-button case: PoW solved → escalation
+			// minted → user solves escalation → user/widget then retries
+			// PoW submit with the original sessionId, finds neither
+			// alive).
+			(
+				db.checkAndRemoveSession as unknown as ReturnType<typeof vi.fn>
+			).mockResolvedValue(undefined);
+			(
+				mockWriteQueue.getCachedSessionEscalation as unknown as ReturnType<
+					typeof vi.fn
+				>
+			).mockResolvedValueOnce("escalation-id");
+
+			const result = await captchaManager.isValidRequest(
+				{
+					account: "account",
+					tier: Tier.Free,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.frictionless,
+					},
+				},
+				CaptchaType.image,
+				mockEnv,
+				"origin-id",
+				undefined,
+				"127.0.0.1",
+			);
+
+			expect(result).toEqual({
+				valid: false,
+				reason: ResultReason.CAPTCHA_NO_SESSION_FOUND,
+				type: CaptchaType.image,
+			});
+			// Even when the escalation can't be resolved, the mapping is
+			// dropped so retries fall through cleanly rather than
+			// repeating the same Redis round-trip.
+			expect(
+				mockWriteQueue.invalidateCachedSessionEscalation,
+			).toHaveBeenCalledWith("origin-id");
+		});
+
+		it("falls through to NO_SESSION_FOUND when no escalation mapping was recorded", async () => {
+			// Origin consumed, no postPow escalation happened, no mapping
+			// in Redis — should behave exactly like before the fix.
+			(
+				db.checkAndRemoveSession as unknown as ReturnType<typeof vi.fn>
+			).mockResolvedValue(undefined);
+			(
+				mockWriteQueue.getCachedSessionEscalation as unknown as ReturnType<
+					typeof vi.fn
+				>
+			).mockResolvedValueOnce(null);
+
+			const result = await captchaManager.isValidRequest(
+				{
+					account: "account",
+					tier: Tier.Free,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.frictionless,
+					},
+				},
+				CaptchaType.pow,
+				mockEnv,
+				"origin-id",
+				undefined,
+				"127.0.0.1",
+			);
+
+			expect(result).toEqual({
+				valid: false,
+				reason: ResultReason.CAPTCHA_NO_SESSION_FOUND,
+				type: CaptchaType.pow,
+			});
+			// No mapping to invalidate; the early-out should not call
+			// `invalidateCachedSessionEscalation` for `null` mappings.
+			expect(
+				mockWriteQueue.invalidateCachedSessionEscalation,
+			).not.toHaveBeenCalled();
+		});
+
+		it("does not consult the escalation mapping when origin session is still live", async () => {
+			// Origin session is live (typical happy path). The mapping
+			// lookup must NOT run — it would just be wasted Redis round
+			// trips, and we don't want to invalidate something that may
+			// still be needed if the widget DOES handle the escalation
+			// correctly later.
+			(
+				db.checkAndRemoveSession as unknown as ReturnType<typeof vi.fn>
+			).mockResolvedValue({
+				sessionId: "origin-id",
+				captchaType: CaptchaType.pow,
+			} as Pick<Session, "sessionId" | "captchaType">);
+
+			await captchaManager.isValidRequest(
+				{
+					account: "account",
+					tier: Tier.Free,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.frictionless,
+					},
+				},
+				CaptchaType.pow,
+				mockEnv,
+				"origin-id",
+				undefined,
+				"127.0.0.1",
+			);
+
+			expect(mockWriteQueue.getCachedSessionEscalation).not.toHaveBeenCalled();
+			expect(
+				mockWriteQueue.invalidateCachedSessionEscalation,
+			).not.toHaveBeenCalled();
+		});
+
 		it("should not throw when writeQueue is null and session is consumed", async () => {
 			const managerWithoutRedis = new CaptchaManager(
 				db,

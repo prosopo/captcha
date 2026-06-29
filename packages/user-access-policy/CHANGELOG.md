@@ -1,5 +1,28 @@
 # @prosopo/user-access-policy
 
+## 3.10.9
+### Patch Changes
+
+- 7daea2e: chore(deps-dev): bump vitest from 3.2.4 to 3.2.6 in /packages/user-access-policy
+- Updated dependencies [dfb0c53]
+- Updated dependencies [7ebb78f]
+- Updated dependencies [849af99]
+- Updated dependencies [a5ba27b]
+- Updated dependencies [948d36b]
+- Updated dependencies [41e0e11]
+- Updated dependencies [11f1e8c]
+- Updated dependencies [3c80664]
+- Updated dependencies [b166037]
+- Updated dependencies [1111ff2]
+- Updated dependencies [6a7b122]
+  - @prosopo/common@3.1.41
+  - @prosopo/logger@2.0.0
+  - @prosopo/util@3.3.2
+  - @prosopo/types@4.9.0
+  - @prosopo/api@3.5.6
+  - @prosopo/api-route@2.6.49
+  - @prosopo/redis-client@1.0.26
+
 ## 3.10.8
 ### Patch Changes
 

@@ -139,7 +139,6 @@ export const runConfiguredCaptchaTypeShortCircuit = async (
 	input.logger.info(() => ({
 		msg: "Frictionless decision",
 		data: {
-			requestId: input.requestId,
 			decision: "configured_captcha_type",
 			captchaType: configuredType,
 		},

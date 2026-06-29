@@ -1,5 +1,11 @@
 # @prosopo/widget-skeleton
 
+## 2.8.4
+### Patch Changes
+
+- 6ecc576: chore(deps-dev): bump vitest from 3.2.4 to 3.2.6 in /packages/widget-skeleton
+- 619dc9f: chore(deps-dev): bump vite from 6.4.1 to 6.4.3 in /packages/widget-skeleton
+
 ## 2.8.3
 ### Patch Changes
 
