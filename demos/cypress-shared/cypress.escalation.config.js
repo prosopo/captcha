@@ -18,11 +18,12 @@ import { defineConfig } from "cypress";
 import { configureVisualRegression } from "cypress-visual-regression";
 import vitePreprocessor from "cypress-vite";
 
+loadEnv();
+
 const allExternal = [
 	...builtinModules,
 	...builtinModules.map((m) => `node:${m}`),
 ];
-loadEnv();
 
 export default defineConfig({
 	video: true,
@@ -31,9 +32,9 @@ export default defineConfig({
 	headers: { "Accept-Encoding": "gzip, deflate" },
 	env: {
 		...process.env,
-		// For the client-example, the default page is the captcha type. For the client-bundle-example, the default_page
-		// is sometimes passed via --env default_page='/THE_PAGE.html'" inside package.json scripts.
-		default_page: "/",
+		// Frictionless entry point — that's where the post-PoW route()
+		// escalation surfaces in production.
+		default_page: "/frictionless-explicit.html",
 		visualRegressionType: "regression",
 		visualRegressionBaseDirectory: "cypress/snapshots/baseline",
 		visualRegressionDiffDirectory: "cypress/snapshots/diff",
@@ -60,26 +61,17 @@ export default defineConfig({
 							external: allExternal,
 						},
 					},
+					plugins: [],
 				}),
 			);
-			// Add task event for logging to the terminal
 			on("task", {
 				log(message) {
 					console.log(message);
-					return null; // Cypress requires tasks to return something
+					return null;
 				},
 			});
 		},
-		excludeSpecPattern: [
-			"cypress/e2e/**/frictionless.cy.ts",
-			"cypress/e2e/**/invisible.cy.ts",
-			"cypress/e2e/**/pow.cy.ts",
-			// Escalation spec drives the frictionless flow + installs a
-			// dapp-scoped routing machine; it has its own
-			// cypress.escalation.config.js and must not be pulled into
-			// the image config's catch-all.
-			"cypress/e2e/**/escalation.cy.ts",
-		],
+		specPattern: ["cypress/e2e/**/escalation.cy.ts"],
 	},
 	component: {
 		devServer: {
