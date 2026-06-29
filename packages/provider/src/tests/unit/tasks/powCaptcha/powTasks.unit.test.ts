@@ -27,7 +27,10 @@ import {
 	ResultReason,
 	type Session,
 } from "@prosopo/types";
-import type { IProviderDatabase } from "@prosopo/types-database";
+import type {
+	IProviderDatabase,
+	PoWCaptchaRecord,
+} from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import {
 	AccessPolicyType,
@@ -407,6 +410,113 @@ describe("PowCaptchaManager", () => {
 			);
 			expect(verifyRecency).not.toHaveBeenCalled();
 			expect(validateSolution).not.toHaveBeenCalled();
+		});
+
+		it("escalates a verified solve to an image captcha when coords are missing and a session is linked", async () => {
+			const requestedAtTimestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${requestedAtTimestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${pair.address}`;
+			const difficulty = 4;
+			const providerSignature = "testSignature";
+			const userSignature = "testTimestampSignature";
+			const nonce = 12345;
+			const timeout = 1000;
+			const ipAddress = getIPAddress("1.1.1.1");
+			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				difficulty,
+				dappAccount: pair.address,
+				userAccount,
+				requestedAtTimestamp: new Date(requestedAtTimestamp),
+				submittedAtTimestamp: new Date(),
+				result: { status: CaptchaStatus.pending },
+				userSubmitted: false,
+				serverChecked: false,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers,
+				ja4: "ja4",
+				providerSignature,
+				lastUpdatedTimestamp: new Date(),
+				sessionId: "linked-session-id",
+			};
+			vi.mocked(verifyRecency).mockReturnValue(true);
+			vi.mocked(checkPowSignature).mockImplementation(() => undefined);
+			vi.mocked(validateSolution).mockReturnValue(true);
+			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
+				challengeRecord as unknown as PoWCaptchaRecord,
+			);
+			vi.mocked(db.updatePowCaptchaRecordResult).mockResolvedValue(undefined);
+			vi.mocked(db.getSessionRecordBySessionId).mockResolvedValue(undefined);
+
+			const result = await powCaptchaManager.verifyPowCaptchaSolution(
+				challenge,
+				providerSignature,
+				nonce,
+				timeout,
+				userSignature,
+				ipAddress,
+				headers,
+				undefined, // behavioralData
+				undefined, // salt — no coords supplied
+			);
+
+			expect(result.verified).toBe(true);
+			expect(result.routingOutput).toEqual({
+				captchaType: CaptchaType.image,
+				reason: FrictionlessReason.MISSING_COORDINATES,
+			});
+		});
+
+		it("does not escalate a verified solve with missing coords when no session is linked", async () => {
+			const requestedAtTimestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${requestedAtTimestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${pair.address}`;
+			const difficulty = 4;
+			const providerSignature = "testSignature";
+			const userSignature = "testTimestampSignature";
+			const nonce = 12345;
+			const timeout = 1000;
+			const ipAddress = getIPAddress("1.1.1.1");
+			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				difficulty,
+				dappAccount: pair.address,
+				userAccount,
+				requestedAtTimestamp: new Date(requestedAtTimestamp),
+				submittedAtTimestamp: new Date(),
+				result: { status: CaptchaStatus.pending },
+				userSubmitted: false,
+				serverChecked: false,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers,
+				ja4: "ja4",
+				providerSignature,
+				lastUpdatedTimestamp: new Date(),
+			};
+			vi.mocked(verifyRecency).mockReturnValue(true);
+			vi.mocked(checkPowSignature).mockImplementation(() => undefined);
+			vi.mocked(validateSolution).mockReturnValue(true);
+			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
+				challengeRecord as unknown as PoWCaptchaRecord,
+			);
+			vi.mocked(db.updatePowCaptchaRecordResult).mockResolvedValue(undefined);
+
+			const result = await powCaptchaManager.verifyPowCaptchaSolution(
+				challenge,
+				providerSignature,
+				nonce,
+				timeout,
+				userSignature,
+				ipAddress,
+				headers,
+				undefined, // behavioralData
+				undefined, // salt — no coords supplied
+			);
+
+			expect(result.verified).toBe(true);
+			expect(result.routingOutput).toBeUndefined();
 		});
 	});
 

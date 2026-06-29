@@ -29,6 +29,7 @@ import {
 	CaptchaStatus,
 	type ClientMetaData,
 	type DecisionMachineBehavioralDataPacked,
+	FrictionlessReason,
 	type IPAddress,
 	type ISpamFilterRules,
 	type ITrafficFilter,
@@ -432,19 +433,47 @@ export class PowCaptchaManager extends CaptchaManager {
 
 		await Promise.all(writePromises);
 
+		if (!correct) {
+			return { verified: correct };
+		}
+
+		// A verified solve that arrived without click coordinates didn't come
+		// through the official widget's checkbox/salt path — every current
+		// widget embeds the click position in the salt (see procaptcha-pow
+		// Manager). Treat absent coords as a weak bot signal and escalate to an
+		// image captcha rather than approving outright. Escalation carries the
+		// originating session's risk profile forward, so it only applies when a
+		// session is linked; without one buildEscalation can't mint a follow-up
+		// and the solve falls through to a normal pass.
+		const escalateForMissingCoords =
+			!coords && Boolean(challengeRecord.sessionId);
+
 		// Post-pow routing: only meaningful on a verified solution. The routing
 		// machine re-examines the (now richer) signals — score from the original
 		// session, decrypted behavioural data, counters — and may escalate the
 		// user to an image/puzzle captcha. Returning baseline (pow) means "done".
-		if (!correct || !this.postPowContext) {
-			return { verified: correct };
+		let routingOutput = this.postPowContext
+			? await this.runPostPowRouting({
+					challengeRecord,
+					challengeSplit,
+					behavioralDataPacked: decryptedBehavioralDataPacked,
+				})
+			: undefined;
+
+		// Missing coords forces at least an image escalation, unless the routing
+		// machine already escalated to a visual challenge (image/puzzle) that we
+		// would keep anyway.
+		if (
+			escalateForMissingCoords &&
+			routingOutput?.captchaType !== CaptchaType.image &&
+			routingOutput?.captchaType !== CaptchaType.puzzle
+		) {
+			routingOutput = {
+				captchaType: CaptchaType.image,
+				reason: FrictionlessReason.MISSING_COORDINATES,
+			};
 		}
 
-		const routingOutput = await this.runPostPowRouting({
-			challengeRecord,
-			challengeSplit,
-			behavioralDataPacked: decryptedBehavioralDataPacked,
-		});
 		return { verified: correct, routingOutput };
 	}
 
