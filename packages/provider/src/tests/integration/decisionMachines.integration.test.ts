@@ -410,6 +410,12 @@ describe("Decision Machine Database Integration Tests", () => {
 				expect(machine).toHaveProperty("runtime");
 				expect(machine).toHaveProperty("createdAt");
 				expect(machine).toHaveProperty("updatedAt");
+
+				// The full compiled source is included so operators can audit
+				// exactly which code is live without a per-machine get-by-id call.
+				expect(machine).toHaveProperty("source");
+				expect(typeof machine.source).toBe("string");
+				expect(machine.source.length).toBeGreaterThan(0);
 			}
 
 			// Find the machine we just created
@@ -422,6 +428,7 @@ describe("Decision Machine Database Integration Tests", () => {
 			expect(createdMachine?.runtime).toBe(DecisionMachineRuntime.Node);
 			expect(createdMachine?.language).toBe(DecisionMachineLanguage.JavaScript);
 			expect(createdMachine?.version).toBe("1.0.0");
+			expect(typeof createdMachine?.source).toBe("string");
 		});
 
 		it("should return valid MongoDB ObjectId format for _id in getAllDecisionMachines", async () => {
@@ -545,7 +552,7 @@ describe("Decision Machine Database Integration Tests", () => {
 			expect(machine).toHaveProperty("createdAt");
 			expect(machine).toHaveProperty("updatedAt");
 
-			// Verify the source field is present (not included in getAll)
+			// Verify the source field is present (get-all now includes it too)
 			expect(typeof machine.source).toBe("string");
 			expect(machine.source.length).toBeGreaterThan(0);
 		});
