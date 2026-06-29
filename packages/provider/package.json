@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/provider",
-	"version": "4.13.2",
+	"version": "4.13.3",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"type": "module",
