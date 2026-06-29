@@ -16,12 +16,13 @@ import type { ConnectOptions } from "mongoose";
 
 export type MongoCompressor = "zstd" | "none" | "snappy" | "zlib";
 
-const DEFAULT_COMPRESSORS: MongoCompressor[] = [
-	"zstd",
-	"snappy",
-	"zlib",
-	"none",
-];
+// The default is empty (no compression) because the provider CLI ships as a
+// vite ESM bundle and the mongodb driver loads native compressor modules
+// (@mongodb-js/zstd, @mongodb-js/snappy) via CommonJS `require`, which is
+// undefined in the bundle — any negotiated native compressor crashes the
+// connection with MongoMissingDependencyError. Callers that run unbundled and
+// want compression can pass an explicit list.
+const DEFAULT_COMPRESSORS: MongoCompressor[] = [];
 
 /**
  * Determines MongoDB compression settings based on whether the connection points
@@ -31,7 +32,7 @@ const DEFAULT_COMPRESSORS: MongoCompressor[] = [
  * "database", "db", "mongo") or when no host is present.
  *
  * @param url - The MongoDB connection URL string
- * @param compressors - Optional array of compressor strings. Defaults to ["zstd", "snappy", "zlib", "none"]
+ * @param compressors - Optional array of compressor strings. Defaults to [] (no compression)
  * @returns A new array of compressor strings when compression is enabled, empty array otherwise
  */
 export const getMongoCompressors = (
