@@ -188,15 +188,19 @@ export default (
 			}
 
 			if (dedup) {
-				// A reused session must still honour an active user access policy.
-				// This fast-path returns before handleAccessPolicy / runDecisionMachine
-				// below, so a cached session whose captchaType conflicts with the
-				// policy — e.g. an IP rate-limit rule forcing `image` over a
-				// previously-cached `pow` session — would be served as-is and then
-				// hard-rejected at the /captcha/{type} gate with INCORRECT_CAPTCHA_TYPE.
-				// Re-check the policy here; on conflict evict the stale session and
-				// fall through so the access policy (or decision machine) selects the
-				// correct captcha type.
+				// A reused session must still honour an active user access policy
+				// AND the configured routing machine. This fast-path returns
+				// before handleAccessPolicy / runDecisionMachine below, so a
+				// cached session whose captchaType conflicts with either gate —
+				// e.g. an IP rate-limit rule forcing `image`, or a routing
+				// machine published after this dedup pointer was minted that
+				// now wants `puzzle` — would be served as-is and then either
+				// hard-rejected at the /captcha/{type} gate with
+				// INCORRECT_CAPTCHA_TYPE or escalated by the post-PoW router
+				// into a session the widget can't follow. Re-check both here
+				// and on conflict evict the stale session so the request falls
+				// through to the access policy / decision machine, which will
+				// re-derive the correct captcha type.
 				const dedupCountryCode =
 					req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
 						? req.ipInfo.countryCode
@@ -205,8 +209,14 @@ export default (
 					req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
 						? req.ipInfo.asnNumber
 						: undefined;
+				const dedupIsMobile =
+					req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
+						? req.ipInfo.isMobile
+						: undefined;
+				const dedupFlatHeaders = flatten(req.headers);
+				const dedupUserAgent = String(req.headers["user-agent"] ?? "");
 				const dedupUserScope = getRequestUserScope(
-					flatten(req.headers),
+					dedupFlatHeaders,
 					req.ja4,
 					normalizedIp,
 					user,
@@ -228,15 +238,73 @@ export default (
 						(dedupAccessPolicy.captchaType !== undefined &&
 							dedupAccessPolicy.captchaType !== dedup.captchaType));
 
-				if (dedupConflictsWithPolicy) {
+				// Ask the routing machine (if any) what it would pick now,
+				// using the cached session's signals as the baseline. If it
+				// disagrees with the cached captchaType, evict.
+				//
+				// The router input intentionally mirrors the inputs the cached
+				// session was created under: `score` and `webView` come from
+				// the persisted session, the rest (UA, JA4, country, mobile)
+				// come from the current request. A routing machine that only
+				// reads the captchaType (e.g. blanket-escalate-to-puzzle) will
+				// behave identically. One that mixes per-request signals with
+				// session-derived ones gets the request-time view of every
+				// input that's available without re-decrypting the payload.
+				const cachedCaptchaType = dedup.captchaType as
+					| CaptchaType.image
+					| CaptchaType.pow
+					| CaptchaType.puzzle;
+				const dedupRouted = normalizedIp
+					? await tasks.frictionlessManager.applyRoutingMachine(
+							{
+								captchaType: cachedCaptchaType,
+								...(dedup.session.solvedImagesCount !== undefined && {
+									solvedImagesCount: dedup.session.solvedImagesCount,
+								}),
+								...(dedup.session.powDifficulty !== undefined && {
+									powDifficulty: dedup.session.powDifficulty,
+								}),
+							},
+							{
+								dappAccount: dapp,
+								userAccount: user,
+								ip: normalizedIp,
+								...(dedupCountryCode && { countryCode: dedupCountryCode }),
+								score: dedup.session.score,
+								platform: derivePlatform(
+									dedupUserAgent,
+									dedup.session.webView,
+									{
+										...(typeof dedupIsMobile === "boolean" && {
+											isMobile: dedupIsMobile,
+										}),
+									},
+								),
+								raw: {
+									headers: dedupFlatHeaders,
+									userAgent: dedupUserAgent,
+									...(req.ja4 && { ja4: req.ja4 }),
+								},
+							},
+						)
+					: { captchaType: cachedCaptchaType };
+				const dedupConflictsWithRouting =
+					dedupRouted.captchaType !== cachedCaptchaType;
+
+				if (dedupConflictsWithPolicy || dedupConflictsWithRouting) {
 					req.logger.info(() => ({
-						msg: "Evicting reused session: cached captchaType conflicts with access policy",
+						msg: "Evicting reused session: cached captchaType conflicts with access policy or routing machine",
 						data: {
 							userSitekeyIpHash,
 							sessionId: dedup.sessionId,
 							cachedCaptchaType: dedup.captchaType,
-							policyType: dedupAccessPolicy.type,
-							policyCaptchaType: dedupAccessPolicy.captchaType,
+							...(dedupConflictsWithPolicy && {
+								policyType: dedupAccessPolicy?.type,
+								policyCaptchaType: dedupAccessPolicy?.captchaType,
+							}),
+							...(dedupConflictsWithRouting && {
+								routedCaptchaType: dedupRouted.captchaType,
+							}),
 						},
 					}));
 					// Mongo is authoritative for dedup (see resolveSessionDedup): mark
