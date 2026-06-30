@@ -1,5 +1,10 @@
 # @prosopo/flux
 
+## 2.6.60
+### Patch Changes
+
+  - @prosopo/common@3.1.43
+
 ## 2.6.59
 ### Patch Changes
 
