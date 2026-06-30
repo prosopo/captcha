@@ -350,6 +350,7 @@ export default class ProviderApi
 		simdReadings?: string,
 		detectorSessionId?: string,
 		detectorUnavailable?: boolean,
+		currentUrl?: string,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const body: GetFrictionlessCaptchaChallengeRequestBodyOutput = {
 			[ApiParams.dapp]: dapp,
@@ -366,6 +367,7 @@ export default class ProviderApi
 			...(detectorUnavailable && {
 				[ApiParams.detectorUnavailable]: true,
 			}),
+			...(currentUrl && { [ApiParams.currentUrl]: currentUrl }),
 		};
 		const { data, headers } = await this.postWithHeaders<
 			GetFrictionlessCaptchaResponse,

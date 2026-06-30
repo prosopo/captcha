@@ -281,6 +281,7 @@ export const buildEscalation = async (
 		// Carry the detector pool bundle forward so the escalated image/puzzle
 		// solve can decrypt the (same-origin) behavioural payload.
 		originSession.bundleId,
+		originSession.currentUrl,
 	);
 
 	// Record the origin → escalation sessionId mapping so a /captcha/*

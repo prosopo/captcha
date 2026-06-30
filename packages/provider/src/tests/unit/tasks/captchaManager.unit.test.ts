@@ -77,6 +77,7 @@ describe("CaptchaManager", () => {
 	beforeEach(() => {
 		db = {
 			checkAndRemoveSession: vi.fn(),
+			getSessionRecordBySessionId: vi.fn(),
 		} as unknown as IProviderDatabase;
 
 		pair = {
@@ -354,8 +355,9 @@ describe("CaptchaManager", () => {
 		it("resolves to the escalation session when the origin sessionId is consumed and an escalation mapping exists", async () => {
 			// Origin session was consumed by the earlier /captcha/pow:
 			// checkAndRemoveSession returns undefined for the origin id.
-			// The escalation session is still live: checkAndRemoveSession
-			// returns it for the escalation id.
+			// The escalation session is still live: the peek returns it
+			// and, because its captchaType matches the requested type,
+			// checkAndRemoveSession is then called to consume it.
 			const checkAndRemove = db.checkAndRemoveSession as unknown as ReturnType<
 				typeof vi.fn
 			>;
@@ -369,6 +371,13 @@ describe("CaptchaManager", () => {
 				}
 				return undefined;
 			});
+			(
+				db.getSessionRecordBySessionId as unknown as ReturnType<typeof vi.fn>
+			).mockResolvedValueOnce({
+				sessionId: "escalation-id",
+				captchaType: CaptchaType.image,
+				userSitekeyIpHash: "hash-xyz",
+			} as Pick<Session, "sessionId" | "captchaType" | "userSitekeyIpHash">);
 			(
 				mockWriteQueue.getCachedSessionEscalation as unknown as ReturnType<
 					typeof vi.fn
@@ -417,10 +426,14 @@ describe("CaptchaManager", () => {
 			// user-double-click-the-button case: PoW solved → escalation
 			// minted → user solves escalation → user/widget then retries
 			// PoW submit with the original sessionId, finds neither
-			// alive).
+			// alive). The read-only peek returns undefined so we never
+			// reach the consume step.
 			(
 				db.checkAndRemoveSession as unknown as ReturnType<typeof vi.fn>
 			).mockResolvedValue(undefined);
+			(
+				db.getSessionRecordBySessionId as unknown as ReturnType<typeof vi.fn>
+			).mockResolvedValueOnce(undefined);
 			(
 				mockWriteQueue.getCachedSessionEscalation as unknown as ReturnType<
 					typeof vi.fn
@@ -451,6 +464,64 @@ describe("CaptchaManager", () => {
 			// Even when the escalation can't be resolved, the mapping is
 			// dropped so retries fall through cleanly rather than
 			// repeating the same Redis round-trip.
+			expect(
+				mockWriteQueue.invalidateCachedSessionEscalation,
+			).toHaveBeenCalledWith("origin-id");
+		});
+
+		it("returns INCORRECT_CAPTCHA_TYPE without consuming the escalation session when the type does not match", async () => {
+			// The widget escalated from pow → image but ignored the
+			// PoW-submit envelope and is still calling /captcha/pow with
+			// the origin sessionId. We MUST NOT consume the escalation
+			// session here — it's the user's only path to recovery
+			// (a well-behaved widget can still reach /captcha/image with
+			// the escalation sessionId from the PoW-submit response).
+			const checkAndRemove = db.checkAndRemoveSession as unknown as ReturnType<
+				typeof vi.fn
+			>;
+			checkAndRemove.mockResolvedValue(undefined);
+			(
+				db.getSessionRecordBySessionId as unknown as ReturnType<typeof vi.fn>
+			).mockResolvedValueOnce({
+				sessionId: "escalation-id",
+				captchaType: CaptchaType.image,
+				userSitekeyIpHash: "hash-xyz",
+			} as Pick<Session, "sessionId" | "captchaType" | "userSitekeyIpHash">);
+			(
+				mockWriteQueue.getCachedSessionEscalation as unknown as ReturnType<
+					typeof vi.fn
+				>
+			).mockResolvedValueOnce("escalation-id");
+
+			const result = await captchaManager.isValidRequest(
+				{
+					account: "account",
+					tier: Tier.Free,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.frictionless,
+					},
+				},
+				CaptchaType.pow,
+				mockEnv,
+				"origin-id",
+				undefined,
+				"127.0.0.1",
+			);
+
+			expect(result).toEqual({
+				valid: false,
+				reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+				type: CaptchaType.pow,
+			});
+			// Crucially: the escalation session must NOT have been consumed.
+			// checkAndRemoveSession was called once for the origin sessionId
+			// (which returned undefined) and must not have been called for
+			// the escalation sessionId.
+			const consumeCalls = checkAndRemove.mock.calls.map((c) => c[0]);
+			expect(consumeCalls).toEqual(["origin-id"]);
+			expect(consumeCalls).not.toContain("escalation-id");
+			// The mapping is single-use and was followed; drop it.
 			expect(
 				mockWriteQueue.invalidateCachedSessionEscalation,
 			).toHaveBeenCalledWith("origin-id");

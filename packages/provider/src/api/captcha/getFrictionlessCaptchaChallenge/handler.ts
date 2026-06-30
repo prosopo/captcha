@@ -25,12 +25,13 @@ import {
 	AccessPolicyType,
 	type AccessRulesStorage,
 } from "@prosopo/user-access-policy";
-import { flatten } from "@prosopo/util";
+import { flatten, sanitisePageUrl } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import { getCompositeIpAddress } from "../../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../../express.js";
 import { Tasks } from "../../../tasks/index.js";
 import { derivePlatform } from "../../../utils/devicePlatform.js";
+import { hashUserAgent } from "../../../utils/hashUserAgent.js";
 import { hashUserIp } from "../../../utils/hashUserIp.js";
 import { normalizeRequestIp } from "../../../utils/normalizeRequestIp.js";
 import { getMaintenanceMode } from "../../admin/apiToggleMaintenanceModeEndpoint.js";
@@ -84,7 +85,16 @@ export default (
 				simdReadings,
 				detectorSessionId,
 				detectorUnavailable,
+				currentUrl: reportedCurrentUrl,
 			} = GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
+
+			// Re-sanitise whatever the client reported: keep only scheme + host
+			// + path and drop the query string, fragment and any embedded
+			// credentials so we never persist secrets carried in the page URL.
+			// undefined when the field is absent or not a usable http(s) URL —
+			// the decision machine treats that as "not reported" and forces an
+			// image captcha.
+			const currentUrl = sanitisePageUrl(reportedCurrentUrl);
 
 			const normalizedIp = normalizeRequestIp(req.ip, req.logger);
 			const sessionMode =
@@ -187,15 +197,19 @@ export default (
 			}
 
 			if (dedup) {
-				// A reused session must still honour an active user access policy.
-				// This fast-path returns before handleAccessPolicy / runDecisionMachine
-				// below, so a cached session whose captchaType conflicts with the
-				// policy — e.g. an IP rate-limit rule forcing `image` over a
-				// previously-cached `pow` session — would be served as-is and then
-				// hard-rejected at the /captcha/{type} gate with INCORRECT_CAPTCHA_TYPE.
-				// Re-check the policy here; on conflict evict the stale session and
-				// fall through so the access policy (or decision machine) selects the
-				// correct captcha type.
+				// A reused session must still honour an active user access policy
+				// AND the configured routing machine. This fast-path returns
+				// before handleAccessPolicy / runDecisionMachine below, so a
+				// cached session whose captchaType conflicts with either gate —
+				// e.g. an IP rate-limit rule forcing `image`, or a routing
+				// machine published after this dedup pointer was minted that
+				// now wants `puzzle` — would be served as-is and then either
+				// hard-rejected at the /captcha/{type} gate with
+				// INCORRECT_CAPTCHA_TYPE or escalated by the post-PoW router
+				// into a session the widget can't follow. Re-check both here
+				// and on conflict evict the stale session so the request falls
+				// through to the access policy / decision machine, which will
+				// re-derive the correct captcha type.
 				const dedupCountryCode =
 					req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
 						? req.ipInfo.countryCode
@@ -204,8 +218,14 @@ export default (
 					req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
 						? req.ipInfo.asnNumber
 						: undefined;
+				const dedupIsMobile =
+					req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
+						? req.ipInfo.isMobile
+						: undefined;
+				const dedupFlatHeaders = flatten(req.headers);
+				const dedupUserAgent = String(req.headers["user-agent"] ?? "");
 				const dedupUserScope = getRequestUserScope(
-					flatten(req.headers),
+					dedupFlatHeaders,
 					req.ja4,
 					normalizedIp,
 					user,
@@ -227,15 +247,73 @@ export default (
 						(dedupAccessPolicy.captchaType !== undefined &&
 							dedupAccessPolicy.captchaType !== dedup.captchaType));
 
-				if (dedupConflictsWithPolicy) {
+				// Ask the routing machine (if any) what it would pick now,
+				// using the cached session's signals as the baseline. If it
+				// disagrees with the cached captchaType, evict.
+				//
+				// The router input intentionally mirrors the inputs the cached
+				// session was created under: `score` and `webView` come from
+				// the persisted session, the rest (UA, JA4, country, mobile)
+				// come from the current request. A routing machine that only
+				// reads the captchaType (e.g. blanket-escalate-to-puzzle) will
+				// behave identically. One that mixes per-request signals with
+				// session-derived ones gets the request-time view of every
+				// input that's available without re-decrypting the payload.
+				const cachedCaptchaType = dedup.captchaType as
+					| CaptchaType.image
+					| CaptchaType.pow
+					| CaptchaType.puzzle;
+				const dedupRouted = normalizedIp
+					? await tasks.frictionlessManager.applyRoutingMachine(
+							{
+								captchaType: cachedCaptchaType,
+								...(dedup.session.solvedImagesCount !== undefined && {
+									solvedImagesCount: dedup.session.solvedImagesCount,
+								}),
+								...(dedup.session.powDifficulty !== undefined && {
+									powDifficulty: dedup.session.powDifficulty,
+								}),
+							},
+							{
+								dappAccount: dapp,
+								userAccount: user,
+								ip: normalizedIp,
+								...(dedupCountryCode && { countryCode: dedupCountryCode }),
+								score: dedup.session.score,
+								platform: derivePlatform(
+									dedupUserAgent,
+									dedup.session.webView,
+									{
+										...(typeof dedupIsMobile === "boolean" && {
+											isMobile: dedupIsMobile,
+										}),
+									},
+								),
+								raw: {
+									headers: dedupFlatHeaders,
+									userAgent: dedupUserAgent,
+									...(req.ja4 && { ja4: req.ja4 }),
+								},
+							},
+						)
+					: { captchaType: cachedCaptchaType };
+				const dedupConflictsWithRouting =
+					dedupRouted.captchaType !== cachedCaptchaType;
+
+				if (dedupConflictsWithPolicy || dedupConflictsWithRouting) {
 					req.logger.info(() => ({
-						msg: "Evicting reused session: cached captchaType conflicts with access policy",
+						msg: "Evicting reused session: cached captchaType conflicts with access policy or routing machine",
 						data: {
 							userSitekeyIpHash,
 							sessionId: dedup.sessionId,
 							cachedCaptchaType: dedup.captchaType,
-							policyType: dedupAccessPolicy.type,
-							policyCaptchaType: dedupAccessPolicy.captchaType,
+							...(dedupConflictsWithPolicy && {
+								policyType: dedupAccessPolicy?.type,
+								policyCaptchaType: dedupAccessPolicy?.captchaType,
+							}),
+							...(dedupConflictsWithRouting && {
+								routedCaptchaType: dedupRouted.captchaType,
+							}),
 						},
 					}));
 					// Mongo is authoritative for dedup (see resolveSessionDedup): mark
@@ -362,14 +440,14 @@ export default (
 			]);
 
 			const {
-				baseBotScore,
-				timestamp,
-				userId,
-				userAgent,
+				baseBotScore: rawBaseBotScore,
+				timestamp: rawTimestamp,
+				userId: rawUserId,
+				userAgent: rawUserAgent,
 				webView,
 				iFrame,
 				decryptedHeadHash,
-				decryptionFailed,
+				decryptionFailed: rawDecryptionFailed,
 				triggeredDetectors,
 				shadowDomPenalty,
 				entropyMathRandomFingerprint,
@@ -379,6 +457,30 @@ export default (
 				bundleId,
 			} = decryptedPayload;
 
+			// Test-only override: cypress can't produce a server-decryptable
+			// detector token (no public-key exchange in the test bundle), so
+			// `decryptionFailed` always trips and the frictionless flow's UA
+			// + score + timestamp gates short-circuit every request to image.
+			// With this env var set, synthesise the decrypted-payload values
+			// from the live request so the flow reaches the default-PoW path
+			// — which is what production hits when the bot detector is happy
+			// and lets cypress exercise the post-PoW route() escalation.
+			// Explicitly named so it can't be set in prod by accident.
+			const detectorOverride =
+				process.env.PROSOPO_TEST_FRICTIONLESS_DETECTOR_OVERRIDE === "1";
+			const baseBotScore = detectorOverride ? 0 : rawBaseBotScore;
+			const timestamp = detectorOverride ? Date.now() : rawTimestamp;
+			const userId = detectorOverride
+				? (req.headers["prosopo-user"] as string | undefined)
+				: rawUserId;
+			// `runUserAgentMismatchCheck` compares the *hashed* request UA to
+			// `input.userAgent`, so the synthesised override must already be
+			// hashed for the equality check to clear.
+			const userAgent = detectorOverride
+				? hashUserAgent((req.headers["user-agent"] as string) ?? "")
+				: rawUserAgent;
+			const decryptionFailed = detectorOverride ? false : rawDecryptionFailed;
+
 			req.logger.debug(() => ({
 				msg: "Decrypted payload",
 				data: {
@@ -387,6 +489,7 @@ export default (
 					userId,
 					userAgent,
 					webView,
+					...(detectorOverride && { detectorOverride: true }),
 				},
 			}));
 
@@ -431,6 +534,7 @@ export default (
 				iFrame,
 				decryptedHeadHash,
 				siteKey: dapp,
+				...(currentUrl && { currentUrl }),
 				ipInfo: req.ipInfo,
 				headers: flatHeaders,
 				mode: sessionMode,
@@ -518,6 +622,7 @@ export default (
 					scoreComponents,
 					token,
 					botThreshold,
+					currentUrl,
 				},
 				{ req, res, next },
 			);

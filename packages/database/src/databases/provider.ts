@@ -1660,6 +1660,13 @@ export class ProviderDatabase
 				userSitekeyIpHash: 1,
 				simdReadings: 1,
 				dnsEvent: 1,
+				// captchaType is required by the peek-before-consume path
+				// in `CaptchaManager.isValidRequest` — without it, every
+				// escalation peek would compare `undefined !== <requested>`
+				// and forcibly return INCORRECT_CAPTCHA_TYPE on the happy
+				// path too. Keep this projection in sync with whatever
+				// fields the read-only callers need.
+				captchaType: 1,
 				"headers.user-agent": 1,
 				"headers.accept": 1,
 				"headers.accept-language": 1,

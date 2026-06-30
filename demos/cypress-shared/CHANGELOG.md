@@ -1,5 +1,18 @@
 # @prosopo/cypress-shared
 
+## 2.8.95
+### Patch Changes
+
+- 779b3a7: test(cypress): cover the post-PoW route() escalation end-to-end. New spec drives a real frictionless session through PoW, installs a routing-kind decision machine that forces image escalation, asserts the PoW-submit response carries an escalation envelope with `captchaType: image`, and waits for the image-captcha modal to mount. Adds `installRoutingMachine` + `removeAllDecisionMachines` chainables on the shared cypress harness, plus a CI matrix step.
+
+## 2.8.94
+### Patch Changes
+
+- Updated dependencies [8986976]
+- Updated dependencies [970bca2]
+  - @prosopo/types@4.9.1
+  - @prosopo/util@3.3.3
+
 ## 2.8.93
 ### Patch Changes
 

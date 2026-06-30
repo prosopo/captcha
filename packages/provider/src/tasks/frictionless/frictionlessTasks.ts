@@ -26,6 +26,7 @@ import {
 	type ProsopoConfigOutput,
 	type RequestHeaders,
 	type RoutingMachineBaseline,
+	type RoutingMachineOutput,
 	type ScoreComponents,
 	type Session,
 	SimdReadingsStage,
@@ -98,6 +99,31 @@ export class FrictionlessManager extends CaptchaManager {
 		this.routingContext = ctx;
 	}
 
+	/**
+	 * Evaluate the configured routing machine against an arbitrary baseline +
+	 * context, without going through `sendCaptcha`. Used by the dedup
+	 * short-circuit to ask "if we reused this cached session, would the
+	 * current routing machine still pick the same captchaType?" — if not,
+	 * the cached session is evicted and the request falls through into the
+	 * normal decision-machine flow (which will run the router again with
+	 * fully-derived inputs).
+	 *
+	 * Returns the supplied baseline on any failure (no machine, machine
+	 * throws, counter fetch failure, etc.), matching applyRouter's contract.
+	 */
+	async applyRoutingMachine(
+		baseline: RoutingMachineBaseline,
+		ctx: RoutingContext,
+	): Promise<RoutingMachineOutput> {
+		return applyRouter(
+			this.decisionMachineRunner,
+			this.usageCounters,
+			baseline,
+			ctx,
+			this.logger,
+		);
+	}
+
 	setSessionParams(
 		params: Omit<Session, "sessionId" | "createdAt" | "captchaType">,
 	): void {
@@ -112,6 +138,7 @@ export class FrictionlessManager extends CaptchaManager {
 			decryptedHeadHash: params.decryptedHeadHash,
 			bundleId: params.bundleId,
 			siteKey: params.siteKey,
+			currentUrl: params.currentUrl,
 			ipInfo: params.ipInfo,
 			headers: params.headers,
 			mode: params.mode,
@@ -160,6 +187,7 @@ export class FrictionlessManager extends CaptchaManager {
 		entropyWallClockOffsetMs?: Session["entropyWallClockOffsetMs"],
 		entropyMathRandomFirst?: Session["entropyMathRandomFirst"],
 		bundleId?: Session["bundleId"],
+		currentUrl?: Session["currentUrl"],
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
@@ -180,6 +208,7 @@ export class FrictionlessManager extends CaptchaManager {
 			bundleId,
 			reason,
 			siteKey,
+			currentUrl,
 			blocked,
 			deleted,
 			ipInfo,
@@ -332,6 +361,7 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.entropyWallClockOffsetMs,
 			effectiveParams.entropyMathRandomFirst,
 			effectiveParams.bundleId,
+			effectiveParams.currentUrl,
 		);
 
 		// Fire-and-forget served-counter writes. Skipped when there's no
@@ -396,6 +426,12 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.headers,
 			effectiveParams.mode,
 			effectiveParams.simdReadings,
+			effectiveParams.entropyMathRandomFingerprint,
+			effectiveParams.entropyCryptoFingerprint,
+			effectiveParams.entropyWallClockOffsetMs,
+			effectiveParams.entropyMathRandomFirst,
+			effectiveParams.bundleId,
+			effectiveParams.currentUrl,
 		);
 	}
 

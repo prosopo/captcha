@@ -556,6 +556,13 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	// on providers, so with no bundle there is no detection ⇒ the provider must
 	// fall back to a PoW challenge.
 	[ApiParams.detectorUnavailable]: boolean().optional(),
+	// Full page URL the widget was rendered on (origin + path, no query
+	// string / fragment / credentials). Sent by the client so the provider
+	// can record which page a session originated from; re-sanitised
+	// server-side and gated in the decision machine (a missing value forces
+	// an image captcha). Optional on the wire so the schema still parses for
+	// older clients — the decision machine handles absence.
+	[ApiParams.currentUrl]: boundedString(INPUT_LIMITS.URL).optional(),
 });
 
 export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<
@@ -770,8 +777,13 @@ export type DecisionMachineSummary = z.infer<
 	typeof DecisionMachineSummarySchema
 >;
 
+// Includes the full compiled `source` for every artifact so operators can
+// audit exactly which code is live on a provider in a single call, without
+// a follow-up get-by-id per machine.
 export const GetAllDecisionMachinesResponse = array(
-	DecisionMachineSummarySchema,
+	DecisionMachineSummarySchema.extend({
+		source: string(),
+	}),
 );
 
 export type GetAllDecisionMachinesResponseType = z.infer<

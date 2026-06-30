@@ -29,6 +29,13 @@ export enum FrictionlessReason {
 	WEBVIEW_DETECTED = "WEBVIEW_DETECTED",
 	AUTO_BAN_SCORE = "AUTO_BAN_SCORE",
 	FINGERPRINT_PROOF_INVALID = "FINGERPRINT_PROOF_INVALID",
+	MISSING_CURRENT_URL = "MISSING_CURRENT_URL",
+	// A verified PoW solve arrived without click coordinates encoded in its
+	// salt. Every current widget embeds the checkbox click position, so absent
+	// coords mean the solve didn't come through the official widget path; such
+	// solves are escalated to an image captcha rather than approved outright
+	// (see verifyPowCaptchaSolution in @prosopo/provider).
+	MISSING_COORDINATES = "MISSING_COORDINATES",
 }
 
 /**
