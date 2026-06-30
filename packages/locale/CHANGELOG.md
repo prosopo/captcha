@@ -1,5 +1,10 @@
 # @prosopo/locale
 
+## 3.2.6
+### Patch Changes
+
+- f9e8c94: chore(deps): bump i18next-fs-backend from 2.6.0 to 2.6.6
+
 ## 3.2.5
 ### Patch Changes
 

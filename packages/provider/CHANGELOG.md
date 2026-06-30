@@ -1,5 +1,27 @@
 # @prosopo/provider
 
+## 4.13.4
+### Patch Changes
+
+- 55b0850: fix(provider): on equal specificity, pick the harshest matching access rule. Specificity remains the primary criterion (a more-specific rule still wins), but the equal-specificity tiebreaker is extended from the previous Block-vs-Restrict-only severity check to a full harshness ordering: Block > Restrict[image, rounds DESC] > Restrict[puzzle] > Restrict[pow]. `deferToVerify` continues to control request-time vs verify-time enforcement and doesn't affect ranking.
+- 7a434e0: feat(provider): escalate verified PoW solves with missing coordinates to an image captcha. Every current widget embeds the checkbox click position in the solution salt, so a verified solve that arrives without coordinates didn't come through the official widget path. Such session-linked solves are now escalated to an image captcha via the existing post-PoW routing/escalation mechanism instead of being approved outright. Adds the `MISSING_COORDINATES` FrictionlessReason.
+- Updated dependencies [f9e8c94]
+- Updated dependencies [7a434e0]
+  - @prosopo/locale@3.2.6
+  - @prosopo/types@4.9.2
+  - @prosopo/api-express-router@3.1.35
+  - @prosopo/common@3.1.43
+  - @prosopo/types-database@4.11.3
+  - @prosopo/api@3.5.8
+  - @prosopo/database@3.15.4
+  - @prosopo/datasets@3.1.43
+  - @prosopo/env@3.6.4
+  - @prosopo/ipinfo@0.2.29
+  - @prosopo/keyring@2.9.49
+  - @prosopo/load-balancer@2.10.3
+  - @prosopo/types-env@2.10.3
+  - @prosopo/user-access-policy@3.10.11
+
 ## 4.13.3
 ### Patch Changes
 
