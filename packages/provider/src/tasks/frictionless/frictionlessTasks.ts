@@ -495,19 +495,11 @@ export class FrictionlessManager extends CaptchaManager {
 	}> {
 		const bundle = await this.resolveBundleByDetectorSession(detectorSessionId);
 		if (bundle) {
-			// DEBUG(detector-pool): remove.
-			this.logger.info(() => ({
-				msg: `[POOL-DEBUG] decrypt: detectorSessionId=${detectorSessionId} → bundleId=${bundle.bundleId} → SINGLE deterministic decrypt with that bundle's key + inner config`,
-			}));
 			return {
 				attempts: [{ key: bundle.key, innerConfig: bundle.innerConfig }],
 				bundleId: bundle.bundleId,
 			};
 		}
-		// DEBUG(detector-pool): remove.
-		this.logger.info(() => ({
-			msg: `[POOL-DEBUG] decrypt: no detector bundle resolved (detectorSessionId=${detectorSessionId ?? "none"}, expired/missing/absent) → fail closed (treated as bot ⇒ PoW)`,
-		}));
 		return { attempts: [] };
 	}
 
@@ -633,10 +625,6 @@ export class FrictionlessManager extends CaptchaManager {
 			decryptedHeadHash = "";
 			decryptionFailed = true;
 		}
-		// DEBUG(detector-pool): remove.
-		this.logger.info(() => ({
-			msg: `[POOL-DEBUG] decrypt outcome: ${decryptionFailed ? "FAILED (fail-closed → baseBotScore=1, treated as bot ⇒ PoW)" : `OK (baseBotScore=${baseBotScore})`}${bundleId ? ` via pool bundleId=${bundleId}` : " (no bundle)"}`,
-		}));
 		this.logger.info(() => ({
 			msg: "decryptPayload result",
 			data: {

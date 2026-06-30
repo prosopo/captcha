@@ -16,10 +16,8 @@ import type {
 	Account,
 	BehavioralData,
 	ClickEventPoint,
-	EnvironmentTypes,
 	MouseMovementPoint,
 	PackedBehavioralData,
-	RandomProvider,
 	TouchEventPoint,
 } from "@prosopo/types";
 
@@ -28,13 +26,7 @@ import type {
 // signature is declared locally here (mirroring `@prosopo/detector`'s default
 // export) from shared @prosopo/types primitives, rather than importing the
 // detector package as a build-time type dependency.
-type RandomProviderSelectorFn = (
-	env: EnvironmentTypes,
-) => Promise<RandomProvider>;
-
 export type DetectorType = (
-	env: EnvironmentTypes,
-	randomProviderSelectorFn: RandomProviderSelectorFn,
 	container: HTMLElement | undefined,
 	restart: () => void,
 	accountGenerator: () => Promise<Account>,
@@ -78,15 +70,9 @@ export const DetectorLoaderFromScript = async (
 	const blob = new Blob([script], { type: "text/javascript" });
 	const url = URL.createObjectURL(blob);
 	try {
-		// DEBUG(detector-pool): remove.
-		console.log(
-			`[POOL-DEBUG] blob import of provider-served detector (${url})`,
-		);
 		const mod = (await import(/* @vite-ignore */ url)) as {
 			default: DetectorType;
 		};
-		// DEBUG(detector-pool): remove.
-		console.log("[POOL-DEBUG] blob import OK — provider detector evaluated");
 		return mod.default;
 	} finally {
 		URL.revokeObjectURL(url);

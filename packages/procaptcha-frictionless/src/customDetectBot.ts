@@ -93,18 +93,10 @@ const customDetectBot: BotDetectionFunction = async (
 	// signal `detectorUnavailable` and the provider serves a PoW challenge.
 	let detectorSessionId: string | undefined;
 	let providerDetect: DetectorType | undefined;
-	// DEBUG(detector-pool): remove. Observe the client side of the flow.
-	console.log(
-		`[POOL-DEBUG] resolved provider ${provider.provider.url}; requesting detector bundle…`,
-	);
 	try {
 		const assigned = await withTimeout(
 			providerApi.assignDetectorBundle(config.account.address),
 			ASSIGN_TIMEOUT_MS,
-		);
-		// DEBUG(detector-pool): remove.
-		console.log(
-			`[POOL-DEBUG] assign response: useProviderBundle=${assigned.useProviderBundle}${assigned.detectorSessionId ? `, detectorSessionId=${assigned.detectorSessionId}` : ""}${assigned.detectorScript ? `, script=${assigned.detectorScript.length} bytes` : ""}`,
 		);
 		if (assigned.useProviderBundle && assigned.detectorScript) {
 			detectorSessionId = assigned.detectorSessionId;
@@ -113,13 +105,8 @@ const customDetectBot: BotDetectionFunction = async (
 				ASSIGN_TIMEOUT_MS,
 			);
 		}
-	} catch (err) {
+	} catch {
 		// No detector available — fall through to the PoW request below.
-		// DEBUG(detector-pool): remove.
-		console.log(
-			"[POOL-DEBUG] assign/provider-bundle load failed → no detector → PoW",
-			err,
-		);
 	}
 
 	const ExtClass = await ExtensionLoader(config.web2);
@@ -129,10 +116,6 @@ const customDetectBot: BotDetectionFunction = async (
 	// directly: send no token and the detectorUnavailable flag so the provider
 	// serves PoW rather than attempting to score an absent payload.
 	if (providerDetect === undefined) {
-		// DEBUG(detector-pool): remove.
-		console.log(
-			"[POOL-DEBUG] no provider detector → requesting PoW (detectorUnavailable=true)",
-		);
 		const userAccount = await ext.getAccount(config);
 		const powCaptcha = await withTimeout(
 			providerApi.getFrictionlessCaptcha(
@@ -171,20 +154,9 @@ const customDetectBot: BotDetectionFunction = async (
 		};
 	}
 
-	// DEBUG(detector-pool): remove.
-	console.log(
-		`[POOL-DEBUG] using PROVIDER-SERVED detector (blob import), detectorSessionId=${detectorSessionId}`,
-	);
 	const detect: DetectorType = providerDetect;
 
-	// The detector bundle still expects the legacy 5-arg signature
-	// `(env, randomProviderSelectorFn, container, restart, accountGenerator)`.
-	// Until the bundle is rebuilt without the provider selector, hand it a
-	// noop selector that resolves to the static DNS endpoint — the detector
-	// no longer uses the returned RandomProvider for routing.
 	const detectionResult = await detect(
-		config.defaultEnvironment,
-		async () => getProcaptchaRandomActiveProvider(config.defaultEnvironment),
 		container,
 		restartFn,
 		() => ext.getAccount(config),

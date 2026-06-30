@@ -102,10 +102,6 @@ export const runNoDetectorPowFallback = async (
 	const reason = poolEmpty
 		? "empty_detector_pool_pow_fallback"
 		: "client_detector_unavailable_pow_fallback";
-	// DEBUG(detector-pool): remove.
-	input.logger.info(() => ({
-		msg: `[POOL-DEBUG] no detector available (${poolEmpty ? "pool EMPTY" : "client reported detectorUnavailable"}) → serving a real PoW challenge`,
-	}));
 	input.logger.warn(() => ({
 		msg: "Frictionless decision",
 		data: {

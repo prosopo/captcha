@@ -160,14 +160,10 @@ export async function startProviderApi(
 	//     challenge (the empty-pool fallback).
 	const detectorPoolDir =
 		process.env.PROSOPO_DETECTOR_POOL_DIR ?? "/app/data/detector-pool";
-	const pool = initDetectorBundlePool(detectorPoolDir, {
+	initDetectorBundlePool(detectorPoolDir, {
 		info: (msg, data) => env.logger.info(() => ({ msg, data })),
 		warn: (msg, data) => env.logger.warn(() => ({ msg, data })),
 	});
-	// DEBUG(detector-pool): remove.
-	env.logger.info(() => ({
-		msg: `[POOL-DEBUG] boot: detector pool loaded from ${detectorPoolDir} — ${pool.size()} bundle(s). ${pool.size() === 0 ? "EMPTY ⇒ frictionless ALWAYS serves PoW." : "Per-session serving is ACTIVE."}`,
-	}));
 
 	const apiApp = express();
 	const apiPort = port || env.config.server?.port;
