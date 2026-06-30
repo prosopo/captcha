@@ -13,7 +13,11 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/logger";
-import { FrictionlessReason, type IPInfoResponse } from "@prosopo/types";
+import {
+	CaptchaType,
+	FrictionlessReason,
+	type IPInfoResponse,
+} from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import {
 	AccessPolicyType,
@@ -936,5 +940,118 @@ describe("rankCandidateRules", () => {
 			undefined,
 		);
 		expect(ranked[0]).toEqual(specificRestrict);
+	});
+
+	// Issue #3713: at equal specificity, harshness picks the winner.
+	// Ordering: Block > Restrict[image, rounds DESC] > Restrict[puzzle] >
+	// Restrict[pow]. Specificity stays the primary criterion — these tests
+	// use equal-specificity setups to isolate the new tiebreaker.
+
+	it("on equal specificity, ranks Restrict tiers as image > puzzle > pow", () => {
+		const powRule: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			captchaType: CaptchaType.pow,
+		};
+		const puzzleRule: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			captchaType: CaptchaType.puzzle,
+		};
+		const imageRule: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			captchaType: CaptchaType.image,
+		};
+		const ranked = rankCandidateRules(
+			[powRule, puzzleRule, imageRule],
+			request,
+			undefined,
+		);
+		expect(ranked).toEqual([imageRule, puzzleRule, powRule]);
+	});
+
+	it("on equal specificity, image with more solvedImagesCount is harsher", () => {
+		const twoRounds: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			captchaType: CaptchaType.image,
+			solvedImagesCount: 2,
+		};
+		const fourRounds: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			captchaType: CaptchaType.image,
+			solvedImagesCount: 4,
+		};
+		const ranked = rankCandidateRules(
+			[twoRounds, fourRounds],
+			request,
+			undefined,
+		);
+		expect(ranked[0]).toEqual(fourRounds);
+		expect(ranked[1]).toEqual(twoRounds);
+	});
+
+	it("on equal specificity, Block beats every Restrict captcha tier", () => {
+		const block: AccessRule = {
+			type: AccessPolicyType.Block,
+			ja4Hash: "ja4-A",
+		};
+		const image: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			captchaType: CaptchaType.image,
+			solvedImagesCount: 9,
+		};
+		const ranked = rankCandidateRules([image, block], request, undefined);
+		expect(ranked[0]).toEqual(block);
+	});
+
+	// `deferToVerify` is a fire-time flag, not a harshness signal — a
+	// deferred Block at equal specificity still ranks ahead of a Restrict so
+	// downstream verify-time consumers (which iterate the same ranked array)
+	// still see the Block first.
+	it("on equal specificity, a deferToVerify Block still outranks a Restrict", () => {
+		const deferredBlock: AccessRule = {
+			type: AccessPolicyType.Block,
+			ja4Hash: "ja4-A",
+			deferToVerify: true,
+		};
+		const restrict: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			captchaType: CaptchaType.image,
+			solvedImagesCount: 4,
+		};
+		const ranked = rankCandidateRules(
+			[restrict, deferredBlock],
+			request,
+			undefined,
+		);
+		expect(ranked[0]).toEqual(deferredBlock);
+	});
+
+	it("a more-specific pow Restrict still beats a less-specific image Restrict", () => {
+		// Harshness is only the equal-specificity tiebreaker. A narrower
+		// pow rule (ja4 + asn) still wins over a broader image rule (ja4).
+		const broadImage: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			captchaType: CaptchaType.image,
+			solvedImagesCount: 4,
+		};
+		const specificPow: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			asn: 205016,
+			captchaType: CaptchaType.pow,
+		};
+		const ranked = rankCandidateRules(
+			[broadImage, specificPow],
+			request,
+			undefined,
+		);
+		expect(ranked[0]).toEqual(specificPow);
 	});
 });
