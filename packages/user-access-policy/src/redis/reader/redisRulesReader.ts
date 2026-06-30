@@ -80,6 +80,7 @@ const SPECIFICITY_EXPR = [
 	"exists(@coords)",
 	"exists(@countryCode)",
 	"exists(@asn)",
+	"exists(@os)",
 	"exists(@numericIp)",
 	"exists(@numericIpMaskMin)",
 ].join(" + ");
@@ -119,6 +120,7 @@ const RULE_LOAD_FIELDS = [
 	"@coords",
 	"@countryCode",
 	"@asn",
+	"@os",
 	"@numericIp",
 	"@numericIpMaskMin",
 	"@numericIpMaskMax",
