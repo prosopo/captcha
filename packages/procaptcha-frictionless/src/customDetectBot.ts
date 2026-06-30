@@ -175,10 +175,8 @@ const customDetectBot: BotDetectionFunction = async (
 
 	const detect: DetectorType = providerDetect;
 
-	const detectionResult = await detect(
-		container,
-		restartFn,
-		() => ext.getAccount(config),
+	const detectionResult = await detect(container, restartFn, () =>
+		ext.getAccount(config),
 	);
 
 	const userAccount = detectionResult.userAccount;
