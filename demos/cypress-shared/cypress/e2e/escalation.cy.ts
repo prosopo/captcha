@@ -131,6 +131,15 @@ describe("Post-PoW route() escalation surfaces the image captcha", () => {
 		cy.intercept("POST", "**/prosopo/provider/client/pow/solution").as(
 			"powSubmit",
 		);
+		// `imageChallenge` is the UI contract: it only fires if the frictionless
+		// wrapper's onEscalate handler was actually invoked AND the freshly
+		// loaded Procaptcha image widget mounted and ran its autoStart effect.
+		// A regression in any link of that chain (e.g. the ProcaptchaPow
+		// Suspense wrapper dropping `onEscalate` from its forwarded props)
+		// will block this request from ever leaving the page.
+		cy.intercept("POST", "**/prosopo/provider/client/captcha/image").as(
+			"imageChallenge",
+		);
 
 		// Kick the flow off.
 		getWidgetElement(checkboxClass, { timeout: 12000 }).first().realClick();
@@ -170,19 +179,27 @@ describe("Post-PoW route() escalation surfaces the image captcha", () => {
 				expect(response?.body.verified).to.equal(false);
 			});
 
-		// The escalation envelope above is the server-side contract that
-		// captcha#2771 + #2779 are about. The procaptcha-frictionless
-		// wrapper consumes it and mounts the image widget — that re-mount
-		// + /captcha/image fetch is covered by:
-		//   - procaptcha-pow `Manager` unit tests (onEscalate fired with
-		//     the right type + sessionId)
-		//   - the integration test in #2779 (Mongo + Redis pointer survival,
-		//     escalation session reachable by checkAndRemoveSession)
-		// It does not reliably re-render inside headless Cypress because
-		// the frictionlessState handoff to the freshly-loaded Procaptcha
-		// image module relies on dynamic imports that the test bundle
-		// doesn't always resolve in time — that's a widget bundling
-		// quirk, not a regression in the server-side contract this PR
-		// guards.
+		// UI contract: once the wrapper receives the escalation envelope it
+		// must mount the image widget, whose autoStart effect kicks off
+		// /captcha/image. Asserting the request is the cheapest signal that
+		// the whole client-side handoff actually executed end-to-end. The
+		// real regression we're guarding here is a missing prop on the
+		// Suspense wrapper around ProcaptchaWidget swallowing `onEscalate`
+		// before it reaches Manager — in that case Manager.start silently
+		// no-ops onEscalate?.(), no further request fires, and the user
+		// stares at a spinning checkbox.
+		cy.wait("@imageChallenge", { timeout: 30000 })
+			.its("response")
+			.then((response) => {
+				expect(response?.statusCode).to.equal(200);
+				expect(response?.body).to.have.property("captchas");
+				expect(response?.body.captchas).to.have.length.gte(1);
+			});
+
+		// And the image modal should be visible to the user — same DOM
+		// surface the image-flow tests reach via cy.captchaImages().
+		getWidgetElement(".prosopo-modalInner p", { timeout: 15000 }).should(
+			"be.visible",
+		);
 	});
 });
