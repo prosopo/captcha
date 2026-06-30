@@ -196,18 +196,55 @@ const ruleSpecificity = (
 	return score;
 };
 
-// On equal specificity, the more severe outcome wins. This is a safety
-// property: a request that matches both a Block rule and a Restrict rule
-// of equal specificity must be blocked, never restricted-but-let-through.
-const policySeverity = (rule: AccessRule): number =>
-	rule.type === AccessPolicyType.Block ? 1 : 0;
+// Per-captcha-type harshness ranks for Restrict rules (issue #3713).
+// Gaps of 10 between tiers leave room for `solvedImagesCount` (image rule
+// rounds) to break ties within the image tier without crossing into the
+// puzzle tier. A misconfigured rule with rounds >= 10 still ranks above
+// puzzle/pow — which is correct: a 12-round image is harsher than puzzle.
+const CAPTCHA_TYPE_HARSHNESS: Record<CaptchaType, number> = {
+	[CaptchaType.image]: 30,
+	[CaptchaType.puzzle]: 20,
+	[CaptchaType.pow]: 10,
+	// Frictionless isn't a routing target for Restrict rules but include it
+	// so the Record is total over CaptchaType — keeps the type-checker honest
+	// if the enum grows. Restrict-with-frictionless wouldn't make operational
+	// sense and ranks at the bottom of the captcha tiers if it ever appears.
+	[CaptchaType.frictionless]: 0,
+};
+
+// Harshness ordering across all matching rules (issue #3713):
+//   Block  >  Restrict[image, rounds DESC]  >  Restrict[puzzle]  >  Restrict[pow]
+// Block beats every Restrict regardless of specificity — a request matched
+// by both must be blocked, not routed to a captcha. This is a strict change
+// from the prior "specificity, then severity-as-tiebreaker" rule, and
+// supersedes the historical safety comment about equal-specificity ties.
+//
+// `deferToVerify` doesn't affect this ordering: it controls *when* a Block
+// fires (request-time vs verify-time), not how severe it is. The flag rides
+// on the chosen rule and downstream consumers (`findHardBlockPolicy`,
+// blockMiddleware's `enforceable` filter) read it after ranking.
+const ruleHarshness = (rule: AccessRule): number => {
+	if (rule.type === AccessPolicyType.Block) {
+		return Number.MAX_SAFE_INTEGER;
+	}
+	if (rule.captchaType === undefined) {
+		return 0;
+	}
+	const base = CAPTCHA_TYPE_HARSHNESS[rule.captchaType];
+	const rounds = rule.solvedImagesCount ?? 0;
+	return base + rounds;
+};
 
 /**
  * Rank the candidate rules a single Redis query returned. A rule "applies" iff
  * every populated field on the rule equals the corresponding request field
- * (IP fields use range semantics). The most specific applicable rule wins;
- * on tie, the more severe (Block over Restrict) wins. Client-scoped rules
- * outrank global rules of equal user-scope specificity.
+ * (IP fields use range semantics).
+ *
+ * Ordering (issue #3713): harshness DESC, then specificity DESC as tiebreaker.
+ * Block always wins over Restrict regardless of specificity. Within Restrict,
+ * image (with `solvedImagesCount` DESC) beats puzzle beats pow. Client-scoped
+ * rules outrank global rules of equal user-scope specificity within the same
+ * harshness tier.
  */
 export const rankCandidateRules = (
 	rules: AccessRule[],
@@ -217,13 +254,14 @@ export const rankCandidateRules = (
 	rules
 		.filter((rule) => ruleApplies(rule, request, requestClientId))
 		.sort((a, b) => {
-			const specDelta =
-				ruleSpecificity(b, requestClientId) -
-				ruleSpecificity(a, requestClientId);
-			if (specDelta !== 0) {
-				return specDelta;
+			const harshDelta = ruleHarshness(b) - ruleHarshness(a);
+			if (harshDelta !== 0) {
+				return harshDelta;
 			}
-			return policySeverity(b) - policySeverity(a);
+			return (
+				ruleSpecificity(b, requestClientId) -
+				ruleSpecificity(a, requestClientId)
+			);
 		});
 
 /**

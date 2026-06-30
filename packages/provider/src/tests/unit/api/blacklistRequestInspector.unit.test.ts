@@ -13,7 +13,11 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/logger";
-import { FrictionlessReason, type IPInfoResponse } from "@prosopo/types";
+import {
+	CaptchaType,
+	FrictionlessReason,
+	type IPInfoResponse,
+} from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import {
 	AccessPolicyType,
@@ -902,7 +906,7 @@ describe("rankCandidateRules", () => {
 		expect(ranked).toEqual([]);
 	});
 
-	it("on equal specificity, Block wins over Restrict (safety tiebreaker)", () => {
+	it("on equal specificity, Block wins over Restrict", () => {
 		const restrict: AccessRule = {
 			type: AccessPolicyType.Restrict,
 			ja4Hash: "ja4-A",
@@ -917,10 +921,10 @@ describe("rankCandidateRules", () => {
 		expect(ranked[1]).toEqual(restrict);
 	});
 
-	it("specificity still beats severity (a more-specific Restrict beats a less-specific Block)", () => {
-		// A Restrict matching ja4 + asn (2 fields) outranks a Block matching
-		// only ja4 (1 field) — the operator intentionally narrowed the policy
-		// for this combination.
+	// Issue #3713: harshness now dominates specificity. Block always wins
+	// over Restrict — even a less-specific Block beats a more-specific
+	// Restrict.
+	it("Block beats Restrict regardless of specificity", () => {
 		const broadBlock: AccessRule = {
 			type: AccessPolicyType.Block,
 			ja4Hash: "ja4-A",
@@ -929,12 +933,130 @@ describe("rankCandidateRules", () => {
 			type: AccessPolicyType.Restrict,
 			ja4Hash: "ja4-A",
 			asn: 205016,
+			captchaType: CaptchaType.image,
+			solvedImagesCount: 4,
 		};
 		const ranked = rankCandidateRules(
-			[broadBlock, specificRestrict],
+			[specificRestrict, broadBlock],
 			request,
 			undefined,
 		);
-		expect(ranked[0]).toEqual(specificRestrict);
+		expect(ranked[0]).toEqual(broadBlock);
+		expect(ranked[1]).toEqual(specificRestrict);
+	});
+
+	it("ranks Restrict tiers as image > puzzle > pow", () => {
+		const powRule: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			captchaType: CaptchaType.pow,
+		};
+		const puzzleRule: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			captchaType: CaptchaType.puzzle,
+		};
+		const imageRule: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			captchaType: CaptchaType.image,
+		};
+		const ranked = rankCandidateRules(
+			[powRule, puzzleRule, imageRule],
+			request,
+			undefined,
+		);
+		expect(ranked).toEqual([imageRule, puzzleRule, powRule]);
+	});
+
+	it("among image rules, more solvedImagesCount is harsher", () => {
+		const twoRounds: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			captchaType: CaptchaType.image,
+			solvedImagesCount: 2,
+		};
+		const fourRounds: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			captchaType: CaptchaType.image,
+			solvedImagesCount: 4,
+		};
+		const ranked = rankCandidateRules(
+			[twoRounds, fourRounds],
+			request,
+			undefined,
+		);
+		expect(ranked[0]).toEqual(fourRounds);
+		expect(ranked[1]).toEqual(twoRounds);
+	});
+
+	it("an image rule beats a puzzle rule even when puzzle is more specific", () => {
+		const broadImage: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			captchaType: CaptchaType.image,
+			solvedImagesCount: 2,
+		};
+		const specificPuzzle: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			asn: 205016,
+			captchaType: CaptchaType.puzzle,
+		};
+		const ranked = rankCandidateRules(
+			[specificPuzzle, broadImage],
+			request,
+			undefined,
+		);
+		expect(ranked[0]).toEqual(broadImage);
+	});
+
+	// `deferToVerify` is a fire-time flag, not a harshness signal — a
+	// deferred Block still ranks ahead of any Restrict so the verify-time
+	// hard-block lookup (which iterates the same ranked array) still finds
+	// the Block first.
+	it("a deferToVerify Block still outranks a non-deferred Restrict", () => {
+		const deferredBlock: AccessRule = {
+			type: AccessPolicyType.Block,
+			ja4Hash: "ja4-A",
+			deferToVerify: true,
+		};
+		const restrict: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			asn: 205016,
+			captchaType: CaptchaType.image,
+			solvedImagesCount: 4,
+		};
+		const ranked = rankCandidateRules(
+			[restrict, deferredBlock],
+			request,
+			undefined,
+		);
+		expect(ranked[0]).toEqual(deferredBlock);
+	});
+
+	it("breaks harshness ties by specificity", () => {
+		const broadImage: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			captchaType: CaptchaType.image,
+			solvedImagesCount: 2,
+		};
+		const specificImage: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			asn: 205016,
+			captchaType: CaptchaType.image,
+			solvedImagesCount: 2,
+		};
+		const ranked = rankCandidateRules(
+			[broadImage, specificImage],
+			request,
+			undefined,
+		);
+		expect(ranked[0]).toEqual(specificImage);
+		expect(ranked[1]).toEqual(broadImage);
 	});
 });
