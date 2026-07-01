@@ -32,6 +32,10 @@ const userAttributesSchema = z.object({
 	coords: z.coerce.string().optional(),
 	countryCode: z.coerce.string().optional(),
 	asn: z.coerce.number().int().nonnegative().optional(),
+	// Plain lowercase OS tag (see `classifyOs`). Loose `string` like
+	// countryCode: a stale/unknown value just never matches a request rather
+	// than failing the whole rule parse.
+	os: z.coerce.string().optional(),
 } satisfies AllKeys<UserAttributes>) satisfies ZodType<UserAttributes>;
 
 const userAttributesInput = z
