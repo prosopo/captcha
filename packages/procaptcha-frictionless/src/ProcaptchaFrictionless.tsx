@@ -275,14 +275,33 @@ export const ProcaptchaFrictionless = ({
 		});
 	};
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+	// Track which config identity has already been started for. Host
+	// pages often recreate the `callbacks` object (and sometimes the whole
+	// `config`) on every render, which — before this guard — re-fired
+	// the outer effect on every parent re-render and triggered a fresh
+	// `/frictionless` call each time. On the 2026-07-01 iPhone WKWebView
+	// incident we saw three frictionless calls fan out in 3 ms for the
+	// same user and site key, each carrying its own sessionId, producing
+	// "No session found" cascades and eventually an image-escalation
+	// storm.
+	//
+	// Dep list is now the primitive identity of the widget (site key +
+	// language + mode); the per-identity ref guard makes React StrictMode
+	// double-invocation and same-identity re-renders idempotent.
+	// `callbacks` and `detectBot` intentionally do NOT participate —
+	// they're read via the closure captured by `start()` at call time,
+	// so the latest values are still visible without triggering effect
+	// re-runs.
+	const startedForKeyRef = useRef<string | null>(null);
+	// biome-ignore lint/correctness/useExhaustiveDependencies: intentional — see comment above.
 	useEffect(() => {
-		const detectAndSetComponent = async () => {
-			await start();
-		};
-
-		detectAndSetComponent();
-	}, [config, callbacks, detectBot, config.language]);
+		const key = `${config.account?.address ?? ""}|${config.language ?? ""}|${
+			config.mode ?? ""
+		}`;
+		if (startedForKeyRef.current === key) return;
+		startedForKeyRef.current = key;
+		void start();
+	}, [config.account?.address, config.language, config.mode]);
 
 	return (
 		<>
