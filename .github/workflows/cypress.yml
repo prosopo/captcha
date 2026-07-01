@@ -114,6 +114,11 @@ jobs:
           npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:image" --success "first" --kill-others
 
       - name: Run the cypress tests on client-bundle-example explicit rendering with frictionless captcha
+        env:
+          # Committed test detector-pool fixture (throwaway keys) so the browser
+          # is served a real per-session bundle and frictionless runs genuine
+          # detection instead of the empty-pool PoW fallback.
+          PROSOPO_DETECTOR_POOL_DIR: ${{ github.workspace }}/packages/provider/fixtures/detector-pool
         run: |
           npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionless" --success "first" --kill-others
 

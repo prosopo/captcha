@@ -116,6 +116,11 @@ jobs:
         env:
           NX_PARALLEL: "1"
           SKIP_REDIS: "true"
+          # Committed test detector-pool fixture (throwaway keys). A non-empty
+          # pool makes the provider run scored detection instead of the
+          # empty-pool PoW fallback, so frictionless integration tests exercise
+          # the real decrypt path.
+          PROSOPO_DETECTOR_POOL_DIR: ${{ github.workspace }}/packages/provider/fixtures/detector-pool
         run: |
           npx concurrently \
             "NODE_ENV=test npm run start:provider" \

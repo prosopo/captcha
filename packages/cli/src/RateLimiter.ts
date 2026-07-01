@@ -127,5 +127,13 @@ export const getRateLimitConfig = () => {
 			windowMs: process.env.PROSOPO_DNS_EVENT_WINDOW,
 			limit: process.env.PROSOPO_DNS_EVENT_LIMIT,
 		},
+		[ClientApiPaths.AssignDetectorBundle]: {
+			windowMs: process.env.PROSOPO_ASSIGN_DETECTOR_BUNDLE_WINDOW,
+			limit: process.env.PROSOPO_ASSIGN_DETECTOR_BUNDLE_LIMIT,
+		},
+		[AdminApiPaths.ReplaceDetectorPool]: {
+			windowMs: process.env.PROSOPO_REPLACE_DETECTOR_POOL_WINDOW,
+			limit: process.env.PROSOPO_REPLACE_DETECTOR_POOL_LIMIT,
+		},
 	};
 };

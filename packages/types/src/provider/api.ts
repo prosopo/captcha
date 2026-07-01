@@ -26,6 +26,7 @@ import {
 	number,
 	object,
 	type output,
+	record,
 	string,
 	union,
 	type z,
@@ -92,6 +93,9 @@ export enum ClientApiPaths {
 	GetProviderStatus = "/v1/prosopo/provider/client/status",
 	SubmitUserEvents = "/v1/prosopo/provider/client/events",
 	CheckSpamEmail = "/v1/prosopo/provider/client/spam/email",
+	// Assigns a precomputed detector bundle for this session and returns its
+	// obfuscated script inline (or signals the bundled fallback when no pool).
+	AssignDetectorBundle = "/v1/prosopo/provider/client/detector/assign",
 }
 
 export enum PublicApiPaths {
@@ -146,6 +150,9 @@ export enum AdminApiPaths {
 	SiteKeysRemove = "/v1/prosopo/provider/admin/sitekeys/remove",
 	// Receives batched DNS observation events from the dns sidecar.
 	DnsEvent = "/v1/prosopo/provider/admin/dns/event",
+	// Hot-swaps the in-memory detector bundle pool (emergency push channel,
+	// avoids a redeploy to rotate the pool).
+	ReplaceDetectorPool = "/v1/prosopo/provider/admin/detector/pool/replace",
 }
 
 export type CombinedApiPaths = ClientApiPaths | AdminApiPaths;
@@ -172,6 +179,7 @@ export const ProviderDefaultRateLimits = {
 	},
 	[ClientApiPaths.GetProviderStatus]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.CheckSpamEmail]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.AssignDetectorBundle]: { windowMs: 60000, limit: 60 },
 	[PublicApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
 	[AdminApiPaths.SiteKeyRegister]: { windowMs: 60000, limit: 5 },
@@ -191,6 +199,7 @@ export const ProviderDefaultRateLimits = {
 	// (1s default), so a high per-minute ceiling is fine. Single ingest
 	// path per pronode → no cross-tenant fairness concerns.
 	[AdminApiPaths.DnsEvent]: { windowMs: 60000, limit: 600 },
+	[AdminApiPaths.ReplaceDetectorPool]: { windowMs: 60000, limit: 5 },
 };
 
 type RateLimit = {
@@ -532,11 +541,21 @@ export type SubmitPowCaptchaSolutionBodyType = input<
 
 export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
+	// Empty string when the client had no provider detector to run
+	// (detectorUnavailable) — gate on the flag below, not on token contents.
 	[ApiParams.token]: boundedString(INPUT_LIMITS.TOKEN),
 	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.headHash]: boundedString(INPUT_LIMITS.TOKEN),
 	[ApiParams.mode]: nativeEnum(ModeEnum).optional(),
 	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	// Identifies the provider-assigned pool bundle the detector ran from; the
+	// provider resolves the exact keypair/inner-config for decryption from it.
+	[ApiParams.detectorSessionId]: boundedString(INPUT_LIMITS.ID).optional(),
+	// Set by the client when it could not obtain/run a provider detector bundle
+	// (no pool, assign failed, or blob load failed). The detector now lives ONLY
+	// on providers, so with no bundle there is no detection ⇒ the provider must
+	// fall back to a PoW challenge.
+	[ApiParams.detectorUnavailable]: boolean().optional(),
 	// Full page URL the widget was rendered on (origin + path, no query
 	// string / fragment / credentials). Sent by the client so the provider
 	// can record which page a session originated from; re-sanitised
@@ -549,6 +568,45 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<
 	typeof GetFrictionlessCaptchaChallengeRequestBody
 >;
+
+// ── Detector bundle pool ────────────────────────────────────────────────
+
+export const AssignDetectorBundleRequestBody = object({
+	[ApiParams.dapp]: string(),
+});
+
+export type AssignDetectorBundleRequestBodyOutput = output<
+	typeof AssignDetectorBundleRequestBody
+>;
+
+export interface AssignDetectorBundleResponse extends ApiResponse {
+	// When false, no pool is available (dev / empty pool) — the client falls
+	// back to the bundled detector and sends no detectorSessionId.
+	[ApiParams.useProviderBundle]: boolean;
+	[ApiParams.detectorSessionId]?: string;
+	// The obfuscated, self-contained detector ESM, served inline.
+	[ApiParams.detectorScript]?: string;
+}
+
+export const ReplaceDetectorPoolBody = object({
+	// Map of bundleId -> { js, privateKey, innerConfig }.
+	bundles: record(
+		string(),
+		object({
+			js: string(),
+			privateKey: string(),
+			innerConfig: string(),
+		}),
+	),
+});
+
+export type ReplaceDetectorPoolBodyType = output<
+	typeof ReplaceDetectorPoolBody
+>;
+
+export interface ReplaceDetectorPoolResponse extends ApiResponse {
+	count: number;
+}
 
 export type SubmitPowCaptchaSolutionBodyTypeOutput = output<
 	typeof SubmitPowCaptchaSolutionBody

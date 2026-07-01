@@ -40,6 +40,7 @@ import cors from "cors";
 import express from "express";
 import type { Request } from "express";
 import rateLimit from "express-rate-limit";
+import { initDetectorBundlePool } from "../tasks/detection/bundlePool.js";
 import { createApiAdminRoutesProvider } from "./admin/createApiAdminRoutesProvider.js";
 import { blockMiddleware } from "./block.js";
 import { prosopoRouter } from "./captcha.js";
@@ -73,7 +74,15 @@ export const isTlsAvailable = (): boolean => {
 export const getClientApiPathsExpectingProsopoHeaders =
 	(): ClientApiPaths[] => {
 		const paths = Object.values(ClientApiPaths).filter(
-			(path) => path.indexOf("verify") === -1 && path.indexOf("spam") === -1,
+			(path) =>
+				path.indexOf("verify") === -1 &&
+				path.indexOf("spam") === -1 &&
+				// Detector-bundle assignment runs before the user account exists
+				// (it's needed to load the detector that mints it), so it can't
+				// carry the Prosopo-User header. It only hands out an obfuscated
+				// bundle keyed to an ephemeral session id; the site-key still
+				// rides in the body and it is rate-limited.
+				path.indexOf("detector/assign") === -1,
 		);
 		return paths as ClientApiPaths[];
 	};
@@ -139,6 +148,22 @@ export async function startProviderApi(
 	port?: number,
 ): Promise<Server> {
 	env.logger.info(() => ({ msg: "Starting Prosopo API" }));
+
+	// Load the precomputed detector bundle pool into memory. The detector lives
+	// ONLY in these provider-served pool bundles — there is no bundled/legacy
+	// detector to fall back to. The pool is ALWAYS initialised (a missing or
+	// empty directory yields an empty pool, not an uninitialised one), leaving a
+	// single binary decision at request time:
+	//   - pool has bundles ⇒ serve a per-session detector + decrypt with its key.
+	//   - pool empty (missing dir, empty dir, or all bundles failed to load) ⇒
+	//     no detection is possible ⇒ the frictionless flow serves a real PoW
+	//     challenge (the empty-pool fallback).
+	const detectorPoolDir =
+		process.env.PROSOPO_DETECTOR_POOL_DIR ?? "/app/data/detector-pool";
+	initDetectorBundlePool(detectorPoolDir, {
+		info: (msg, data) => env.logger.info(() => ({ msg, data })),
+		warn: (msg, data) => env.logger.warn(() => ({ msg, data })),
+	});
 
 	const apiApp = express();
 	const apiPort = port || env.config.server?.port;

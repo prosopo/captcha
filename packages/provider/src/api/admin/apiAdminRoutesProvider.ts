@@ -26,6 +26,7 @@ import { ApiRemoveDecisionMachineEndpoint } from "./apiRemoveDecisionMachineEndp
 import { ApiRemoveDetectorKeyEndpoint } from "./apiRemoveDetectorKeyEndpoint.js";
 import { ApiRemoveSiteKeyEndpoint } from "./apiRemoveSiteKeyEndpoint.js";
 import { ApiRemoveSiteKeysEndpoint } from "./apiRemoveSiteKeysEndpoint.js";
+import { ApiReplaceDetectorPoolEndpoint } from "./apiReplaceDetectorPoolEndpoint.js";
 import { ApiToggleMaintenanceModeEndpoint } from "./apiToggleMaintenanceModeEndpoint.js";
 import { ApiUpdateDecisionMachineEndpoint } from "./apiUpdateDecisionMachineEndpoint.js";
 import { ApiUpdateDetectorKeyEndpoint } from "./apiUpdateDetectorKeyEndpoint.js";
@@ -73,6 +74,7 @@ class ApiAdminRoutesProvider implements ApiRoutesProvider {
 				this.tasks.db,
 				this.tasks.env.ipInfoService,
 			),
+			[AdminApiPaths.ReplaceDetectorPool]: new ApiReplaceDetectorPoolEndpoint(),
 		};
 	}
 }

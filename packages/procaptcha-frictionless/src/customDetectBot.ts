@@ -24,7 +24,16 @@ import type {
 	ProcaptchaClientConfigOutput,
 } from "@prosopo/types";
 import type { BotDetectionFunctionResult } from "@prosopo/types";
-import { DetectorLoader } from "./detectorLoader.js";
+import {
+	DetectorLoaderFromScript,
+	type DetectorType,
+} from "./detectorLoader.js";
+
+// Upper bound on the detector-bundle assignment + load probe. The detector
+// lives ONLY in the provider-served pool bundles, so if the provider is
+// slow/unreachable we abandon the probe and signal `detectorUnavailable`, and
+// the provider serves a PoW challenge instead of running detection.
+const ASSIGN_TIMEOUT_MS = 2000;
 
 // The page the widget is rendered on, reduced to origin + path. Deliberately
 // built from `origin` + `pathname` (never `href`) so the query string,
@@ -74,27 +83,6 @@ const customDetectBot: BotDetectionFunction = async (
 	container: HTMLElement | undefined,
 	restartFn: () => void,
 ): Promise<BotDetectionFunctionResult> => {
-	const [ExtClass, detect] = await Promise.all([
-		ExtensionLoader(config.web2),
-		DetectorLoader(),
-	]);
-	const ext = new ExtClass();
-
-	// The detector bundle still expects the legacy 5-arg signature
-	// `(env, randomProviderSelectorFn, container, restart, accountGenerator)`.
-	// Until the bundle is rebuilt without the provider selector, hand it a
-	// noop selector that resolves to the static DNS endpoint — the detector
-	// no longer uses the returned RandomProvider for routing.
-	const detectionResult = await detect(
-		config.defaultEnvironment,
-		async () => getProcaptchaRandomActiveProvider(config.defaultEnvironment),
-		container,
-		restartFn,
-		() => ext.getAccount(config),
-	);
-
-	const userAccount = detectionResult.userAccount;
-
 	if (!config.account.address) {
 		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
 	}
@@ -103,6 +91,8 @@ const customDetectBot: BotDetectionFunction = async (
 	// selection anymore — the DNS layer load-balances across the pronode fleet.
 	// `pickIpMode(config)` honours the dapp's data-ipv4 / data-ipv6 preference
 	// so frictionless and the subsequent captcha hops stay on the same stack.
+	// Resolved up front (before detection) so we can ask the provider for a
+	// per-session detector bundle.
 	const provider = await getProcaptchaRandomActiveProvider(
 		config.defaultEnvironment,
 		pickIpMode(config),
@@ -112,6 +102,84 @@ const customDetectBot: BotDetectionFunction = async (
 		provider.provider.url,
 		config.account.address,
 	);
+
+	// Ask the provider for a per-session detector bundle. The detector lives ONLY
+	// in the provider-served pool: when the provider has a populated pool it
+	// returns the obfuscated detector (each with its own keys + inner cipher)
+	// plus a detectorSessionId. When it cannot (no pool, network, decode, or
+	// timeout) we have NO detector to run — there is no bundled fallback — so we
+	// signal `detectorUnavailable` and the provider serves a PoW challenge.
+	let detectorSessionId: string | undefined;
+	let providerDetect: DetectorType | undefined;
+	try {
+		const assigned = await withTimeout(
+			providerApi.assignDetectorBundle(config.account.address),
+			ASSIGN_TIMEOUT_MS,
+		);
+		if (assigned.useProviderBundle && assigned.detectorScript) {
+			detectorSessionId = assigned.detectorSessionId;
+			providerDetect = await withTimeout(
+				DetectorLoaderFromScript(assigned.detectorScript),
+				ASSIGN_TIMEOUT_MS,
+			);
+		}
+	} catch {
+		// No detector available — fall through to the PoW request below.
+	}
+
+	const ExtClass = await ExtensionLoader(config.web2);
+	const ext = new ExtClass();
+
+	// No provider detector ⇒ no detection is possible. Request a PoW challenge
+	// directly: send no token and the detectorUnavailable flag so the provider
+	// serves PoW rather than attempting to score an absent payload.
+	if (providerDetect === undefined) {
+		const userAccount = await ext.getAccount(config);
+		const powCaptcha = await withTimeout(
+			providerApi.getFrictionlessCaptcha(
+				undefined,
+				undefined,
+				config.account.address,
+				userAccount.account.address,
+				config.mode,
+				undefined,
+				undefined,
+				true,
+				getCurrentPageUrl(),
+			),
+			10000,
+		);
+		if (powCaptcha.dns_url) {
+			try {
+				void fetch(powCaptcha.dns_url, {
+					method: "GET",
+					mode: "no-cors",
+					credentials: "omit",
+					keepalive: true,
+					cache: "no-store",
+				}).catch(() => undefined);
+			} catch {
+				/* swallow */
+			}
+		}
+		return {
+			captchaType: powCaptcha.captchaType,
+			sessionId: powCaptcha.sessionId,
+			provider: provider,
+			status: powCaptcha.status,
+			userAccount: userAccount,
+			error: powCaptcha.error,
+			hp: powCaptcha.hp,
+		};
+	}
+
+	const detect: DetectorType = providerDetect;
+
+	const detectionResult = await detect(container, restartFn, () =>
+		ext.getAccount(config),
+	);
+
+	const userAccount = detectionResult.userAccount;
 
 	// SIMD readings deliberately omitted from the frictionless hop. The WASM
 	// benchmark is a CPU-bound loop that contends with BotScoreWorker if it
@@ -125,6 +193,8 @@ const customDetectBot: BotDetectionFunction = async (
 		config.account.address,
 		userAccount.account.address,
 		config.mode,
+		undefined,
+		detectorSessionId,
 		undefined,
 		getCurrentPageUrl(),
 	);
