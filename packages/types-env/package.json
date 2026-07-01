@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/types-env",
-	"version": "2.10.3",
+	"version": "2.10.4",
 	"description": "Types for prosopo environment",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -39,7 +39,7 @@
 		"@prosopo/logger": "2.0.1",
 		"@prosopo/keyring": "2.9.49",
 		"@prosopo/types": "4.9.2",
-		"@prosopo/types-database": "4.11.3"
+		"@prosopo/types-database": "4.11.4"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.3.4",

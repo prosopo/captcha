@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-puzzle",
-	"version": "2.10.23",
+	"version": "2.10.24",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "dist/index.js",
@@ -30,7 +30,7 @@
 	"browserslist": ["> 0.5%, last 2 versions, not dead"],
 	"dependencies": {
 		"@polkadot/util": "13.5.7",
-		"@prosopo/api": "3.5.8",
+		"@prosopo/api": "3.5.9",
 		"@prosopo/common": "3.1.43",
 		"@prosopo/locale": "3.2.6",
 		"@prosopo/procaptcha-common": "2.11.3",

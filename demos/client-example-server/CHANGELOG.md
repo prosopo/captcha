@@ -1,5 +1,11 @@
 # @prosopo/client-example-server
 
+## 2.7.107
+### Patch Changes
+
+  - @prosopo/database@3.15.5
+  - @prosopo/server@2.10.28
+
 ## 2.7.106
 ### Patch Changes
 
