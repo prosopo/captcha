@@ -1,5 +1,10 @@
 # @prosopo/types-env
 
+## 2.10.4
+### Patch Changes
+
+  - @prosopo/types-database@4.11.4
+
 ## 2.10.3
 ### Patch Changes
 

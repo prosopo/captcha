@@ -1,5 +1,11 @@
 # @prosopo/server
 
+## 2.10.28
+### Patch Changes
+
+- Updated dependencies [8814425]
+  - @prosopo/api@3.5.9
+
 ## 2.10.27
 ### Patch Changes
 

@@ -1,5 +1,10 @@
 # @prosopo/procaptcha-react
 
+## 2.9.82
+### Patch Changes
+
+  - @prosopo/procaptcha@2.10.43
+
 ## 2.9.81
 ### Patch Changes
 
