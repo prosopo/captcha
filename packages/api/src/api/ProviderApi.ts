@@ -108,10 +108,7 @@ export default class ProviderApi
 	//
 	// Skipped when sessionId is absent — those calls carry no shared server
 	// state to race on.
-	private readonly inFlightChallenges = new Map<
-		string,
-		Promise<unknown>
-	>();
+	private readonly inFlightChallenges = new Map<string, Promise<unknown>>();
 
 	private dedupedPost<T, U>(
 		path: string,
@@ -121,9 +118,7 @@ export default class ProviderApi
 	): Promise<T> {
 		if (!sessionId) return this.post<T, U>(path, body, init);
 		const key = `${path}|${sessionId}`;
-		const existing = this.inFlightChallenges.get(key) as
-			| Promise<T>
-			| undefined;
+		const existing = this.inFlightChallenges.get(key) as Promise<T> | undefined;
 		if (existing) return existing;
 		const p = this.post<T, U>(path, body, init).finally(() => {
 			this.inFlightChallenges.delete(key);
