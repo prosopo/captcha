@@ -66,6 +66,19 @@ export type UserAttributes = {
 	// drop/limit requests from a given OS even when the client omits client
 	// hints.
 	os?: string;
+	// Arbitrary-header matching (see `headerMatch.ts` and the portal Header
+	// Restriction card). A header rule carries `headerName` + `headerValue` +
+	// `headerOperator`; unlike the other dimensions these are checked in code
+	// against the raw request headers — Redis TAG can't express substring
+	// `contains` or per-rule operators — so they are not part of the Redis
+	// matching query. `headerMatch` is the indexed sentinel (always
+	// `HEADER_RULE_MARKER`) that makes such a rule a matching candidate for
+	// every request, so an allow-list rule still fires on a request that omits
+	// the target header.
+	headerMatch?: string;
+	headerName?: string;
+	headerValue?: string;
+	headerOperator?: string;
 };
 
 export type UserScope = UserAttributes & UserIp;

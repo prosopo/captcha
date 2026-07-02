@@ -48,6 +48,7 @@ import {
 import {
 	getPrioritisedAccessRule,
 	getRequestUserScope,
+	normalizeHeadersForMatching,
 } from "../api/blacklistRequestInspector.js";
 import { getIpAddressFromComposite } from "../compositeIpAddress.js";
 import type { BehavioralDataResult } from "./detection/decodeBehavior.js";
@@ -553,12 +554,14 @@ export class CaptchaManager {
 		clientId: string,
 		userScope: UserScope | UserScopeRecord,
 		options?: { blockOnly?: boolean },
+		requestHeaders: Record<string, string> = {},
 	) {
 		return getPrioritisedAccessRule(
 			userAccessRulesStorage,
 			userScope,
 			clientId,
 			options,
+			requestHeaders,
 		);
 	}
 
@@ -729,6 +732,10 @@ export class CaptchaManager {
 			// crowd a hard-block out of the top-N with Restrict or
 			// routing-Block (captchaType-scoped) entries.
 			{ blockOnly: true },
+			// Raw headers for the in-code header-condition check. Available
+			// on the verify path too, so header rules fire there (e.g. an
+			// allow-list rule marked deferToVerify).
+			normalizeHeadersForMatching(headers),
 		);
 
 		return findHardBlockPolicy(accessPolicies);
