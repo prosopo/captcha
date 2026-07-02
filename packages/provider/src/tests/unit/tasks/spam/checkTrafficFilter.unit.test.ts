@@ -444,6 +444,94 @@ describe("checkTrafficFilter", () => {
 		});
 	});
 
+	describe("providerType ISP suppression", () => {
+		it("does not block datacenter IPs whose providerType is 'isp'", () => {
+			// Consumer ISPs (e.g. Afrihost, Comcast) are sometimes flagged
+			// is_datacenter=true by upstream but their eyeball ranges carry
+			// real end-users.
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					providerType: "isp",
+					providerName: "afrihost.co.za",
+					asnOrganization: "AFRIHOST SP (PTY) LTD",
+				}),
+				allBlocked,
+			);
+			expect(result).toEqual({ isBlocked: false });
+		});
+
+		it("still blocks datacenter IPs when providerType is 'hosting'", () => {
+			const result = checkTrafficFilter(
+				baseInfo({ isDatacenter: true, providerType: "hosting" }),
+				allBlocked,
+			);
+			expect(result).toEqual({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+
+		it("still blocks datacenter IPs when providerType is missing", () => {
+			// Preserves the pre-fix behavior for upstream responses that
+			// don't carry providerType at all.
+			const result = checkTrafficFilter(
+				baseInfo({ isDatacenter: true }),
+				allBlocked,
+			);
+			expect(result).toEqual({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+
+		it("does not let ISP classification bypass earlier rules", () => {
+			// The ISP suppression only affects the datacenter rule. A Tor
+			// exit or VPN that also reports providerType='isp' must still
+			// trip whichever earlier rule fires first.
+			const torResult = checkTrafficFilter(
+				baseInfo({
+					isTor: true,
+					isDatacenter: true,
+					providerType: "isp",
+				}),
+				allBlocked,
+			);
+			expect(torResult).toEqual({
+				isBlocked: true,
+				reason: "API.TOR_BLOCKED",
+			});
+
+			const vpnResult = checkTrafficFilter(
+				baseInfo({
+					isVPN: true,
+					isDatacenter: true,
+					providerType: "isp",
+				}),
+				allBlocked,
+			);
+			expect(vpnResult).toEqual({
+				isBlocked: true,
+				reason: "API.VPN_BLOCKED",
+			});
+		});
+
+		it("applies ISP suppression to extra IPs as well", () => {
+			const result = checkTrafficFilter(
+				baseInfo({ ip: "192.0.2.1" }),
+				allBlocked,
+				[
+					baseInfo({
+						ip: "198.51.100.10",
+						isDatacenter: true,
+						providerType: "isp",
+					}),
+				],
+			);
+			expect(result).toEqual({ isBlocked: false });
+		});
+	});
+
 	describe("skipExtrasOnValidDnsPath", () => {
 		it("skips the extras evaluation when the catcher confirmed a valid DNS path and the setting is on", () => {
 			const result = checkTrafficFilter(
