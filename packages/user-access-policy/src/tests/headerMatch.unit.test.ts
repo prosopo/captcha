@@ -139,9 +139,9 @@ describe("evaluateHeaderCondition", () => {
 
 	for (const c of cases) {
 		it(c.name, () => {
-			expect(
-				evaluateHeaderCondition(c.header, c.op, c.value, headers),
-			).toBe(c.expected);
+			expect(evaluateHeaderCondition(c.header, c.op, c.value, headers)).toBe(
+				c.expected,
+			);
 		});
 	}
 
