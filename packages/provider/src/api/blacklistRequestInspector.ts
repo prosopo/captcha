@@ -30,8 +30,10 @@ import {
 	type AccessRule,
 	type AccessRulesStorage,
 	FilterScopeMatch,
+	HEADER_RULE_MARKER,
 	type UserScope,
 	type UserScopeRecord,
+	accessRuleHeaderMatches,
 	classifyOs,
 	makeAccessRuleHash,
 	userScopeInput,
@@ -60,6 +62,7 @@ export const getRequestUserScope = (
 	| "countryCode"
 	| "asn"
 	| "os"
+	| "headerMatch"
 > => {
 	const userAgent = requestHeaders["user-agent"]
 		? requestHeaders["user-agent"].toString()
@@ -79,7 +82,30 @@ export const getRequestUserScope = (
 		// allow-list (block everything not on the list) still matches requests
 		// whose UA we can't classify.
 		os: classifyOs(userAgent),
+		// Sentinel that makes every header-restriction rule a matching
+		// candidate for this request (the concrete header condition is then
+		// checked in code — see `accessRuleHeaderMatches`). Always present so an
+		// allow-list header rule fires even on a request that omits the header.
+		headerMatch: HEADER_RULE_MARKER,
 	};
+};
+
+// Normalise a raw request-header bag into the lower-cased `{name: value}` map
+// the in-code header matcher expects. Array-valued headers are joined the same
+// way `sanitizeRequestHeaders` collapses them, so a `contains` check sees the
+// same string the session record would store.
+export const normalizeHeadersForMatching = (
+	headers: Record<string, unknown>,
+): Record<string, string> => {
+	const out: Record<string, string> = {};
+	for (const [key, value] of Object.entries(headers)) {
+		if (typeof value === "string") {
+			out[key.toLowerCase()] = value;
+		} else if (Array.isArray(value)) {
+			out[key.toLowerCase()] = value.map((v) => String(v)).join(", ");
+		}
+	}
+	return out;
 };
 
 // Scalar user-scope fields (i.e. everything except the IP triple, which is
@@ -95,6 +121,12 @@ const SCALAR_USER_SCOPE_FIELDS = [
 	"countryCode",
 	"asn",
 	"os",
+	// The header-rule candidacy sentinel. Its equality check ("1" === "1") is
+	// always trivially true; the real header condition (name/value/operator) is
+	// evaluated separately by `accessRuleHeaderMatches`. Listed here so a header
+	// rule scores one specificity point, mirroring `exists(@headerMatch)` in the
+	// reader's SPECIFICITY_EXPR.
+	"headerMatch",
 ] as const satisfies ReadonlyArray<keyof UserScope>;
 
 // Derive the populated-scope field list for a matched rule (the same shape
@@ -167,6 +199,7 @@ const ruleApplies = (
 	rule: AccessRule,
 	request: UserScope,
 	requestClientId: string | undefined,
+	requestHeaders: Record<string, string>,
 ): boolean => {
 	// Client-scoped rules: rule.clientId must equal the request's clientId.
 	// Rules without a clientId are global and apply to any client.
@@ -182,7 +215,13 @@ const ruleApplies = (
 			return false;
 		}
 	}
-	return ruleIpMatchesRequest(rule, request.numericIp);
+	if (!ruleIpMatchesRequest(rule, request.numericIp)) {
+		return false;
+	}
+	// Arbitrary-header condition (equals / contains / their negations). Checked
+	// against the raw request headers because Redis can't express it; a rule
+	// with no header condition passes this trivially.
+	return accessRuleHeaderMatches(rule, requestHeaders);
 };
 
 const ruleSpecificity = (
@@ -259,9 +298,12 @@ export const rankCandidateRules = (
 	rules: AccessRule[],
 	request: UserScope,
 	requestClientId: string | undefined,
+	requestHeaders: Record<string, string> = {},
 ): AccessRule[] =>
 	rules
-		.filter((rule) => ruleApplies(rule, request, requestClientId))
+		.filter((rule) =>
+			ruleApplies(rule, request, requestClientId, requestHeaders),
+		)
 		.sort((a, b) => {
 			const specDelta =
 				ruleSpecificity(b, requestClientId) -
@@ -300,6 +342,10 @@ export const getPrioritisedAccessRule = async (
 	userScope: UserScope | UserScopeRecord,
 	clientId?: string,
 	options?: { blockOnly?: boolean },
+	// Raw request headers (lower-cased name → value) for the in-code header
+	// condition check. Optional so existing callers/tests that don't exercise
+	// header rules keep working; header rules simply never match without it.
+	requestHeaders: Record<string, string> = {},
 ): Promise<AccessRule[]> => {
 	const parsedUserScope = userScopeInput.parse(userScope);
 
@@ -321,7 +367,12 @@ export const getPrioritisedAccessRule = async (
 		true,
 	);
 
-	return rankCandidateRules(candidates, parsedUserScope, clientId);
+	return rankCandidateRules(
+		candidates,
+		parsedUserScope,
+		clientId,
+		requestHeaders,
+	);
 };
 
 export class BlacklistRequestInspector {
@@ -436,6 +487,7 @@ export class BlacklistRequestInspector {
 				// crowd out hard-block rules in clients with dense Restrict
 				// rule populations.
 				{ blockOnly: true },
+				normalizeHeadersForMatching(requestHeaders),
 			);
 			// Skip policies that have explicitly opted out of request-time
 			// enforcement (`deferToVerify`). Those are matched again from

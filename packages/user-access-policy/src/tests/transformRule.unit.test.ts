@@ -116,6 +116,10 @@ describe("transformRule", () => {
 		countryCode: "US",
 		asn: 205016,
 		os: "macos",
+		headerMatch: "1",
+		headerName: "x-test",
+		headerValue: "test",
+		headerOperator: "equals",
 	} satisfies AccessRule;
 
 	it("should transform access rule record into rule", () => {
