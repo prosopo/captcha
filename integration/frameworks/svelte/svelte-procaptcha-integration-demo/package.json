@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/svelte-procaptcha-integration-demo",
-	"version": "1.1.91",
+	"version": "1.1.92",
 	"type": "module",
 	"engines": {
 		"node": "^24",
@@ -25,7 +25,7 @@
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo"
 	},
 	"dependencies": {
-		"@prosopo/svelte-procaptcha-wrapper": "1.1.91",
+		"@prosopo/svelte-procaptcha-wrapper": "1.1.92",
 		"svelte": "5.55.7"
 	},
 	"devDependencies": {

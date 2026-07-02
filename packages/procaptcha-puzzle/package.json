@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-puzzle",
-	"version": "2.10.24",
+	"version": "2.10.25",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "dist/index.js",
@@ -27,14 +27,16 @@
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --project tsconfig.types.json"
 	},
-	"browserslist": ["> 0.5%, last 2 versions, not dead"],
+	"browserslist": [
+		"> 0.5%, last 2 versions, not dead"
+	],
 	"dependencies": {
 		"@polkadot/util": "13.5.7",
-		"@prosopo/api": "3.5.9",
+		"@prosopo/api": "3.5.10",
 		"@prosopo/common": "3.1.43",
 		"@prosopo/locale": "3.2.6",
-		"@prosopo/procaptcha-common": "2.11.3",
-		"@prosopo/types": "4.9.2",
+		"@prosopo/procaptcha-common": "2.11.4",
+		"@prosopo/types": "4.9.3",
 		"@prosopo/util": "3.3.3",
 		"@prosopo/util-crypto": "13.5.30",
 		"@prosopo/widget-skeleton": "2.8.4",
