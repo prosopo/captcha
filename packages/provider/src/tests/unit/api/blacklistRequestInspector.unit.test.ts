@@ -50,6 +50,7 @@ describe("getRequestUserScope", () => {
 			ip: rawIp,
 			userId: "testuser",
 			os: "unknown",
+			headerMatch: "1",
 		});
 	});
 	it("should return a user scope with ja4Hash and userAgent and ip", () => {
@@ -66,6 +67,7 @@ describe("getRequestUserScope", () => {
 			userAgent: userAgent,
 			ip: rawIp,
 			os: "unknown",
+			headerMatch: "1",
 		});
 	});
 	it("should return a user scope with userAgent and ip", () => {
@@ -80,6 +82,7 @@ describe("getRequestUserScope", () => {
 			userAgent: userAgent,
 			ip: rawIp,
 			os: "unknown",
+			headerMatch: "1",
 		});
 	});
 	it("should return a user scope with userAgent", () => {
@@ -91,6 +94,7 @@ describe("getRequestUserScope", () => {
 		expect(userScope).toEqual({
 			userAgent: userAgent,
 			os: "unknown",
+			headerMatch: "1",
 		});
 	});
 
@@ -1114,5 +1118,100 @@ describe("rankCandidateRules", () => {
 			undefined,
 		);
 		expect(ranked[0]).toEqual(specificPow);
+	});
+});
+
+describe("rankCandidateRules — header conditions", () => {
+	// Real requests always carry the header-rule sentinel (see
+	// getRequestUserScope), so header rules are matching candidates.
+	const request: UserScope = {
+		ja4Hash: "ja4-A",
+		headerMatch: "1",
+	};
+
+	const denyEquals: AccessRule = {
+		type: AccessPolicyType.Block,
+		headerMatch: "1",
+		headerName: "cf-worker",
+		headerOperator: "equals",
+		headerValue: "example.com",
+	};
+
+	it("blocks a request whose header equals the target value", () => {
+		const ranked = rankCandidateRules([denyEquals], request, undefined, {
+			"cf-worker": "example.com",
+		});
+		expect(ranked).toEqual([denyEquals]);
+	});
+
+	it("does not block when the header value differs", () => {
+		const ranked = rankCandidateRules([denyEquals], request, undefined, {
+			"cf-worker": "other.com",
+		});
+		expect(ranked).toEqual([]);
+	});
+
+	it("does not block when the header is absent (deny/equals)", () => {
+		const ranked = rankCandidateRules([denyEquals], request, undefined, {});
+		expect(ranked).toEqual([]);
+	});
+
+	it("blocks a request whose header contains the substring", () => {
+		const denyContains: AccessRule = {
+			type: AccessPolicyType.Block,
+			headerMatch: "1",
+			headerName: "x-app-version",
+			headerOperator: "contains",
+			headerValue: "beta",
+		};
+		const hit = rankCandidateRules([denyContains], request, undefined, {
+			"x-app-version": "2.0.0-beta.3",
+		});
+		expect(hit).toEqual([denyContains]);
+		const miss = rankCandidateRules([denyContains], request, undefined, {
+			"x-app-version": "2.0.0",
+		});
+		expect(miss).toEqual([]);
+	});
+
+	// Allow-list desugars to negated operators: block unless the header matches.
+	const allowEquals: AccessRule = {
+		type: AccessPolicyType.Block,
+		headerMatch: "1",
+		headerName: "x-secret",
+		headerOperator: "notEquals",
+		headerValue: "letmein",
+	};
+
+	it("allow-list lets a matching request through (notEquals)", () => {
+		const ranked = rankCandidateRules([allowEquals], request, undefined, {
+			"x-secret": "letmein",
+		});
+		expect(ranked).toEqual([]);
+	});
+
+	it("allow-list blocks a request missing the required header (notEquals)", () => {
+		const ranked = rankCandidateRules([allowEquals], request, undefined, {});
+		expect(ranked).toEqual([allowEquals]);
+	});
+
+	it("allow-list blocks a request with the wrong value (notEquals)", () => {
+		const ranked = rankCandidateRules([allowEquals], request, undefined, {
+			"x-secret": "nope",
+		});
+		expect(ranked).toEqual([allowEquals]);
+	});
+
+	it("does not match a header rule when the request lacks the sentinel", () => {
+		// A scope without headerMatch (e.g. a caller that didn't populate it)
+		// must not fire header rules — the sentinel gates candidacy.
+		const scopeWithoutSentinel: UserScope = { ja4Hash: "ja4-A" };
+		const ranked = rankCandidateRules(
+			[denyEquals],
+			scopeWithoutSentinel,
+			undefined,
+			{ "cf-worker": "example.com" },
+		);
+		expect(ranked).toEqual([]);
 	});
 });
