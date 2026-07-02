@@ -107,6 +107,7 @@ const evaluateIpInfo = (
 	if (
 		trafficFilter.blockDatacenter &&
 		ipInfo.isDatacenter &&
+		ipInfo.providerType !== "isp" &&
 		!(
 			options.suppressVpnDatacenterInteraction &&
 			ipInfo.isVPN &&
@@ -154,6 +155,14 @@ const evaluateIpInfo = (
  * `is_datacenter=true` by upstream but the exiting users are real humans.
  * Operators can list the datacenter, provider, or ASN organisation names
  * they want to allow through — see `isDatacenterAllowlisted`.
+ *
+ * The datacenter rule also short-circuits when upstream classifies the
+ * provider as an ISP (`providerType === "isp"`). Consumer ISPs like
+ * Afrihost, Comcast, or BT are sometimes flagged `is_datacenter=true` by
+ * upstream heuristics — usually because part of the ASN hosts B2B or
+ * hosting services — but the eyeball ranges behind those ASNs carry
+ * ordinary end-users. The ISP categorisation is stronger evidence of
+ * consumer traffic than the datacenter boolean.
  *
  * When `trafficFilter.skipExtrasOnValidDnsPath` is on and the catcher
  * confirmed the DNS path matched the connection path (`pathValid: true`),
