@@ -56,6 +56,10 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 			() => hpRef.current?.value || undefined,
 		),
 	);
+	// See procaptcha-pow ProcaptchaWidget — same session-invalidation
+	// recovery contract with coords preservation across a re-mint.
+	const lastCoordsRef = useRef<{ x: number; y: number } | null>(null);
+	const sessionInvalidatedFiredRef = useRef(false);
 	const theme = "light" === props.config.theme ? lightTheme : darkTheme;
 
 	useEffect(() => {
@@ -73,27 +77,33 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 		}
 	}, [i18n, config.language]);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: manager.current is stable across renders
 	useEffect(() => {
-		if (props.autoStart) {
-			setLoading(true);
-			manager.current.start().then(
-				() => setLoading(false),
-				() => setLoading(false),
-			);
-		}
-	}, [props.autoStart]);
+		if (!props.autoStart) return;
+		setLoading(true);
+		const coords = props.startCoords;
+		lastCoordsRef.current = coords ?? null;
+		manager.current.start(coords?.x ?? 0, coords?.y ?? 0).then(
+			() => setLoading(false),
+			() => setLoading(false),
+		);
+	}, [props.autoStart, props.startCoords]);
 
 	useEffect(() => {
-		if (state.error) {
-			setLoading(false);
-			if (state.error.key === "CAPTCHA.NO_SESSION_FOUND" && frictionlessState) {
-				setTimeout(() => {
-					frictionlessState.restart();
-				}, 100);
-			}
+		if (!state.error) return;
+		setLoading(false);
+		if (state.error.key !== "CAPTCHA.NO_SESSION_FOUND") return;
+		if (props.onSessionInvalidated && !sessionInvalidatedFiredRef.current) {
+			sessionInvalidatedFiredRef.current = true;
+			const coords = lastCoordsRef.current;
+			props.onSessionInvalidated(coords?.x, coords?.y);
+			return;
 		}
-	}, [state.error, frictionlessState]);
+		if (frictionlessState) {
+			setTimeout(() => {
+				frictionlessState.restart();
+			}, 100);
+		}
+	}, [state.error, frictionlessState, props.onSessionInvalidated]);
 
 	// Add event listener for the execute event
 	useEffect(() => {
@@ -201,6 +211,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 						y = nativeEvent.clientY;
 					}
 
+					lastCoordsRef.current = { x, y };
 					await manager.current.start(x, y);
 					setLoading(false);
 				}}

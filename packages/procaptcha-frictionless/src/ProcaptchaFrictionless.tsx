@@ -30,6 +30,11 @@ import {
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { useEffect, useRef, useState } from "react";
 import customDetectBot from "./customDetectBot.js";
+import {
+	type RetryCoords,
+	consumeRetryMountProps,
+	handleSessionInvalidated,
+} from "./sessionInvalidatedRecovery.js";
 
 // Each session uses exactly one solver — chosen by the /frictionless response.
 const ProcaptchaLoader = async () =>
@@ -89,6 +94,16 @@ export const ProcaptchaFrictionless = ({
 }: ProcaptchaFrictionlessProps) => {
 	const stateRef = useRef(defaultLoadingState(0));
 	const events = getDefaultEvents(callbacks);
+	// Coords carried over from an `onSessionInvalidated` event on the inner
+	// widget. Consumed once by the next `renderForCaptchaType` — the resumed
+	// widget mounts with `autoStart` + `startCoords` so the user doesn't have
+	// to click the checkbox a second time and the checkbox click position is
+	// preserved in the eventual solution salt.
+	const pendingRetryCoordsRef = useRef<RetryCoords | null>(null);
+	// One-shot outer guard so a persistently broken session doesn't loop.
+	// After we've retried once, a second NO_SESSION_FOUND falls back to the
+	// inner widget's own `frictionlessState.restart()` path.
+	const sessionInvalidatedFiredRef = useRef(false);
 
 	useEffect(() => {
 		if (config.language) {
@@ -175,6 +190,35 @@ export const ProcaptchaFrictionless = ({
 			);
 		};
 
+		// The provider returned NO_SESSION_FOUND on the inner widget's
+		// challenge fetch — the sessionId minted upstream is no longer usable
+		// (usually because a duplicate /captcha/{type} POST from a WebView
+		// mount storm consumed it first). Re-run the frictionless flow to
+		// mint a fresh session, then re-mount the inner widget with the
+		// preserved checkbox click coords so the user is not asked to click a
+		// second time. One-shot per outer widget lifetime — if the retry
+		// also fails, fall through to the inner widget's existing
+		// `frictionlessState.restart()` path.
+		const onSessionInvalidated = (x?: number, y?: number) => {
+			const { shouldRestart } = handleSessionInvalidated(
+				x,
+				y,
+				sessionInvalidatedFiredRef,
+				pendingRetryCoordsRef,
+			);
+			if (!shouldRestart) return;
+			resetState(0);
+			void start();
+		};
+
+		// Consume any pending retry coords now — the resumed widget owns them
+		// for exactly one auto-fired `manager.start(x, y)`. Cleared so a
+		// subsequent escalation/re-render doesn't accidentally re-inject.
+		const { autoStart: resumedAutoStart, startCoords } = consumeRetryMountProps(
+			pendingRetryCoordsRef,
+			autoStart,
+		);
+
 		if (captchaType === CaptchaType.image) {
 			const Procaptcha = await ProcaptchaLoader();
 			setComponentToRender(
@@ -183,7 +227,9 @@ export const ProcaptchaFrictionless = ({
 					callbacks={callbacks}
 					frictionlessState={frictionlessState}
 					i18n={i18n}
-					autoStart={autoStart}
+					autoStart={resumedAutoStart}
+					startCoords={startCoords}
+					onSessionInvalidated={onSessionInvalidated}
 				/>,
 			);
 		} else if (captchaType === CaptchaType.puzzle) {
@@ -194,7 +240,9 @@ export const ProcaptchaFrictionless = ({
 					callbacks={callbacks}
 					frictionlessState={frictionlessState}
 					i18n={i18n}
-					autoStart={autoStart}
+					autoStart={resumedAutoStart}
+					startCoords={startCoords}
+					onSessionInvalidated={onSessionInvalidated}
 				/>,
 			);
 		} else {
@@ -206,6 +254,9 @@ export const ProcaptchaFrictionless = ({
 					frictionlessState={frictionlessState}
 					i18n={i18n}
 					onEscalate={onEscalate}
+					autoStart={resumedAutoStart}
+					startCoords={startCoords}
+					onSessionInvalidated={onSessionInvalidated}
 				/>,
 			);
 		}
