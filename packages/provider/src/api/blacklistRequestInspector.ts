@@ -301,7 +301,9 @@ export const rankCandidateRules = (
 	requestHeaders: Record<string, string> = {},
 ): AccessRule[] =>
 	rules
-		.filter((rule) => ruleApplies(rule, request, requestClientId, requestHeaders))
+		.filter((rule) =>
+			ruleApplies(rule, request, requestClientId, requestHeaders),
+		)
 		.sort((a, b) => {
 			const specDelta =
 				ruleSpecificity(b, requestClientId) -

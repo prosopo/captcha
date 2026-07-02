@@ -71,7 +71,7 @@ export const evaluateHeaderCondition = (
 		case "equals":
 			return actual !== undefined && actual === value;
 		case "contains":
-			return actual !== undefined && actual.includes(value);
+			return actual?.includes(value) ?? false;
 		case "notEquals":
 			return actual === undefined || actual !== value;
 		case "notContains":
