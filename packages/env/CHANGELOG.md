@@ -1,5 +1,212 @@
 # @prosopo/env
 
+## 3.6.6
+### Patch Changes
+
+- Updated dependencies [18d0287]
+  - @prosopo/types@4.9.3
+  - @prosopo/database@3.15.6
+  - @prosopo/ipinfo@0.2.30
+  - @prosopo/keyring@2.9.50
+  - @prosopo/types-env@2.10.5
+
+## 3.6.5
+### Patch Changes
+
+  - @prosopo/database@3.15.5
+  - @prosopo/types-env@2.10.4
+
+## 3.6.4
+### Patch Changes
+
+- Updated dependencies [7a434e0]
+  - @prosopo/types@4.9.2
+  - @prosopo/common@3.1.43
+  - @prosopo/database@3.15.4
+  - @prosopo/ipinfo@0.2.29
+  - @prosopo/keyring@2.9.49
+  - @prosopo/types-env@2.10.3
+
+## 3.6.3
+### Patch Changes
+
+- Updated dependencies [3e0ef08]
+- Updated dependencies [8986976]
+- Updated dependencies [970bca2]
+  - @prosopo/database@3.15.3
+  - @prosopo/types@4.9.1
+  - @prosopo/common@3.1.42
+  - @prosopo/ipinfo@0.2.28
+  - @prosopo/keyring@2.9.48
+  - @prosopo/types-env@2.10.2
+  - @prosopo/logger@2.0.1
+
+## 3.6.2
+### Patch Changes
+
+- Updated dependencies [ec363e9]
+  - @prosopo/database@3.15.2
+
+## 3.6.1
+### Patch Changes
+
+- Updated dependencies [dfb0c53]
+- Updated dependencies [7ebb78f]
+- Updated dependencies [b9f5eca]
+- Updated dependencies [48612cd]
+- Updated dependencies [d1fbde3]
+- Updated dependencies [9fe3c06]
+- Updated dependencies [948d36b]
+- Updated dependencies [41e0e11]
+- Updated dependencies [11f1e8c]
+- Updated dependencies [3c80664]
+- Updated dependencies [a26e9d0]
+- Updated dependencies [b166037]
+- Updated dependencies [1111ff2]
+  - @prosopo/common@3.1.41
+  - @prosopo/logger@2.0.0
+  - @prosopo/util-crypto@13.5.30
+  - @prosopo/types-env@2.10.1
+  - @prosopo/database@3.15.1
+  - @prosopo/types@4.9.0
+  - @prosopo/ipinfo@0.2.27
+  - @prosopo/keyring@2.9.47
+
+## 3.6.0
+### Minor Changes
+
+- 12cd0a6: Replace client-side weighted-random provider selection with static DNS endpoints.
+  
+  - Removed the `providerSelectEntropy` field from `DetectorResult`, `Session`, the
+    Mongoose `SessionRecordSchema` (including its standalone index), and every
+    call-site that threaded it through frictionless / image / pow / puzzle flows.
+  - Removed `FrictionlessManager.hostVerified` and its decision-machine call site
+    — there's nothing to verify when the DNS layer picks the host.
+  - `getRandomActiveProvider(env)` now returns the per-environment static DNS
+    endpoint (`pronode.prosopo.io` family) instead of fetching the provider list
+    and weighted-selecting. The entropy parameter is gone.
+  - `getProcaptchaRandomActiveProvider` is now a thin re-export so widget packages
+    keep importing from `procaptcha-common`.
+  - `FrontendProvider.datasetId` is dropped; `CaptchaRequestBody.datasetId` is
+    optional. The server falls back to its own most-recently-uploaded dataset
+    (`env.datasetId`, populated from `db.getMostRecentDatasetId()` at startup) —
+    clients can't pin a dataset under DNS routing because they don't know which
+    pronode they'll hit.
+  - Removed dead `setProviderLoader` / `prefetchProviders` / `selectWeightedProvider`
+    plumbing from `@prosopo/load-balancer`. The server's cacheFile-based loader
+    setup in `startProviderApi` goes with them.
+  - `getRandomActiveProvider` now hits `/healthz` on the global hostname once per
+    page load, reads the responding pronode's identity from the JSON body, and
+    pins subsequent captcha calls to that pronode (`https://pronodeN.prosopo.io`)
+    so session creation and submission land on the same backend. Falls back to
+    the dual-stack global hostname when `/healthz` is unreachable.
+  - `/healthz` now returns `{ ok: true, host: <pronode-identity> }` instead of
+    `"OK"` to support the above pinning.
+  - CORS preflight is now cached for 24h (`maxAge: 86400`) — previously the
+    browser refired an OPTIONS preflight before every captcha call because
+    the custom `Prosopo-Site-Key` / `Prosopo-User` headers make the request
+    non-simple and the default `maxAge` is 5s.
+
+### Patch Changes
+
+- Updated dependencies [12cd0a6]
+- Updated dependencies [12cd0a6]
+  - @prosopo/types@4.8.0
+  - @prosopo/types-env@2.10.0
+  - @prosopo/database@3.15.0
+  - @prosopo/ipinfo@0.2.26
+  - @prosopo/keyring@2.9.46
+
+## 3.5.20
+### Patch Changes
+
+- Updated dependencies [bb98af1]
+  - @prosopo/types@4.7.4
+  - @prosopo/database@3.14.7
+  - @prosopo/ipinfo@0.2.25
+  - @prosopo/keyring@2.9.45
+  - @prosopo/types-env@2.9.29
+
+## 3.5.19
+### Patch Changes
+
+- Updated dependencies [89ab6fc]
+- Updated dependencies [0f3750b]
+  - @prosopo/types@4.7.3
+  - @prosopo/database@3.14.6
+  - @prosopo/ipinfo@0.2.24
+  - @prosopo/keyring@2.9.44
+  - @prosopo/types-env@2.9.28
+
+## 3.5.18
+### Patch Changes
+
+- Updated dependencies [edcd450]
+- Updated dependencies [5295c4b]
+  - @prosopo/database@3.14.5
+  - @prosopo/types@4.7.2
+  - @prosopo/keyring@2.9.43
+  - @prosopo/logger@1.0.4
+  - @prosopo/common@3.1.40
+  - @prosopo/ipinfo@0.2.23
+  - @prosopo/types-env@2.9.27
+
+## 3.5.17
+### Patch Changes
+
+- Updated dependencies [46fedf4]
+  - @prosopo/types@4.7.1
+  - @prosopo/database@3.14.4
+  - @prosopo/ipinfo@0.2.22
+  - @prosopo/keyring@2.9.42
+  - @prosopo/types-env@2.9.26
+
+## 3.5.16
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/ipinfo@0.2.21
+  - @prosopo/types@4.7.0
+  - @prosopo/database@3.14.3
+  - @prosopo/keyring@2.9.41
+  - @prosopo/types-env@2.9.25
+
+## 3.5.15
+### Patch Changes
+
+- Updated dependencies [4626340]
+- Updated dependencies [5f47c42]
+  - @prosopo/database@3.14.2
+  - @prosopo/types@4.6.1
+  - @prosopo/ipinfo@0.2.20
+  - @prosopo/keyring@2.9.40
+  - @prosopo/types-env@2.9.24
+
+## 3.5.14
+### Patch Changes
+
+- Updated dependencies [55b1388]
+- Updated dependencies [44eaebf]
+  - @prosopo/types@4.6.0
+  - @prosopo/database@3.14.1
+  - @prosopo/keyring@2.9.39
+  - @prosopo/logger@1.0.3
+  - @prosopo/common@3.1.39
+  - @prosopo/ipinfo@0.2.19
+  - @prosopo/types-env@2.9.23
+
+## 3.5.13
+### Patch Changes
+
+- Updated dependencies [9b91e85]
+- Updated dependencies [c80a05b]
+  - @prosopo/database@3.14.0
+  - @prosopo/types@4.5.0
+  - @prosopo/ipinfo@0.2.18
+  - @prosopo/keyring@2.9.38
+  - @prosopo/types-env@2.9.22
+
 ## 3.5.12
 ### Patch Changes
 

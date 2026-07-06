@@ -100,7 +100,7 @@ export class CaptchaManager {
 		this.pair = pair;
 		this.db = db;
 		this.config = config;
-		this.logger = logger || getLogger("info", import.meta.url);
+		this.logger = logger || getLogger("info", "provider:captcha-manager");
 		this.writeQueue = writeQueue ?? null;
 	}
 
@@ -318,7 +318,85 @@ export class CaptchaManager {
 					: Promise.resolve(),
 			]);
 
-			const sessionRecord = await this.db.checkAndRemoveSession(sessionId);
+			let sessionRecord = await this.db.checkAndRemoveSession(sessionId);
+			let resolvedSessionId = sessionId;
+			if (!sessionRecord && this.writeQueue) {
+				// Origin session was consumed (or never existed). Before
+				// returning NO_SESSION_FOUND, check whether a post-PoW
+				// escalation minted a follow-up session for this origin.
+				// `buildEscalation` in submitPoWCaptchaSolution.ts writes
+				// this mapping when the routing machine returns image or
+				// puzzle from postPow. Real-world widgets and dapps that
+				// don't fully wire `onEscalate` keep calling /captcha/*
+				// with the original sessionId — without this fallback they
+				// see CAPTCHA.NO_SESSION_FOUND and the user lands on the
+				// FAQ page.
+				const escalationSessionId =
+					await this.writeQueue.getCachedSessionEscalation(sessionId);
+				if (escalationSessionId && escalationSessionId !== sessionId) {
+					// Peek (read-only) at the escalation session before
+					// consuming. If its captchaType doesn't match what the
+					// widget is asking for, leave the session intact so a
+					// subsequent /captcha/{escalationType} call carrying
+					// the escalation sessionId (returned in the PoW-submit
+					// envelope) can still succeed. Consuming here on
+					// mismatch would surface INCORRECT_CAPTCHA_TYPE *and*
+					// destroy the only remaining route to recovery.
+					const peekedEscalationRecord =
+						await this.db.getSessionRecordBySessionId(escalationSessionId);
+					if (peekedEscalationRecord) {
+						this.logger.info(() => ({
+							msg: "Resolving origin sessionId to escalation",
+							data: {
+								account: clientSettings.account,
+								originSessionId: sessionId,
+								escalationSessionId,
+								escalationCaptchaType: peekedEscalationRecord.captchaType,
+								requestedCaptchaType,
+							},
+						}));
+						if (peekedEscalationRecord.captchaType === requestedCaptchaType) {
+							const consumedEscalationRecord =
+								await this.db.checkAndRemoveSession(escalationSessionId);
+							if (consumedEscalationRecord) {
+								sessionRecord = consumedEscalationRecord;
+								resolvedSessionId = escalationSessionId;
+							}
+						} else {
+							// Type mismatch: do NOT consume the escalation
+							// session, drop the pointer, and surface
+							// INCORRECT_CAPTCHA_TYPE directly. A widget
+							// that knows how to follow the PoW-submit
+							// escalation envelope can still reach
+							// `escalationSessionId` via the correct
+							// /captcha/{type} endpoint.
+							this.logger.warn(() => ({
+								msg: "Escalation captcha type does not match requested type",
+								data: {
+									account: clientSettings.account,
+									originSessionId: sessionId,
+									escalationSessionId,
+									escalationCaptchaType: peekedEscalationRecord.captchaType,
+									requestedCaptchaType,
+								},
+							}));
+							await this.writeQueue.invalidateCachedSessionEscalation(
+								sessionId,
+							);
+							return {
+								valid: false,
+								reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+								type: requestedCaptchaType,
+							};
+						}
+					}
+					// The escalation mapping is single-use: once we've
+					// followed it (or tried to and the escalation session
+					// is gone), drop the pointer so subsequent retries
+					// don't keep chasing a dead reference.
+					await this.writeQueue.invalidateCachedSessionEscalation(sessionId);
+				}
+			}
 			if (!sessionRecord) {
 				this.logger.warn(() => ({
 					msg: "No session found",
@@ -350,6 +428,12 @@ export class CaptchaManager {
 					type: requestedCaptchaType,
 				};
 			}
+			// From here on, `sessionId` (the variable) tracks whichever
+			// sessionId we actually resolved against. Subsequent cache
+			// invalidations and downstream consumers should use that, not
+			// the originally requested id — otherwise the escalation
+			// session's own cache entries leak past the consume.
+			sessionId = resolvedSessionId;
 
 			// Invalidate the Redis session cache so that subsequent
 			// requests do not receive this now-deleted sessionId from
@@ -468,11 +552,13 @@ export class CaptchaManager {
 		userAccessRulesStorage: AccessRulesStorage,
 		clientId: string,
 		userScope: UserScope | UserScopeRecord,
+		options?: { blockOnly?: boolean },
 	) {
 		return getPrioritisedAccessRule(
 			userAccessRulesStorage,
 			userScope,
 			clientId,
+			options,
 		);
 	}
 
@@ -638,6 +724,11 @@ export class CaptchaManager {
 			userAccessRulesStorage,
 			challengeRecord.dappAccount,
 			userScope,
+			// Hard-block lookup only — restrict the Redis-side candidate
+			// pool to Block rules so the SERVER_SIDE_RANK_TOP_N cap can't
+			// crowd a hard-block out of the top-N with Restrict or
+			// routing-Block (captchaType-scoped) entries.
+			{ blockOnly: true },
 		);
 
 		return findHardBlockPolicy(accessPolicies);
@@ -693,6 +784,7 @@ export class CaptchaManager {
 			ipInfo,
 			effective,
 			extraIpInfosFromEnrichedDnsEvent(enrichedDnsEvent),
+			enrichedDnsEvent?.pathValid,
 		);
 	}
 

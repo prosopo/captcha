@@ -1,5 +1,221 @@
 # @prosopo/cli
 
+## 3.6.55
+### Patch Changes
+
+- Updated dependencies [5068381]
+  - @prosopo/provider@4.14.2
+
+## 3.6.54
+### Patch Changes
+
+- Updated dependencies [18d0287]
+  - @prosopo/types@4.9.3
+  - @prosopo/api@3.5.10
+  - @prosopo/env@3.6.6
+  - @prosopo/keyring@2.9.50
+  - @prosopo/provider@4.14.1
+
+## 3.6.53
+### Patch Changes
+
+- Updated dependencies [ca78a0c]
+- Updated dependencies [8814425]
+  - @prosopo/provider@4.14.0
+  - @prosopo/api@3.5.9
+  - @prosopo/env@3.6.5
+
+## 3.6.52
+### Patch Changes
+
+- Updated dependencies [55b0850]
+- Updated dependencies [f9e8c94]
+- Updated dependencies [7a434e0]
+  - @prosopo/provider@4.13.4
+  - @prosopo/locale@3.2.6
+  - @prosopo/types@4.9.2
+  - @prosopo/common@3.1.43
+  - @prosopo/api@3.5.8
+  - @prosopo/env@3.6.4
+  - @prosopo/keyring@2.9.49
+
+## 3.6.51
+### Patch Changes
+
+- Updated dependencies [acf19f8]
+  - @prosopo/provider@4.13.3
+
+## 3.6.50
+### Patch Changes
+
+- Updated dependencies [3e0ef08]
+- Updated dependencies [8986976]
+- Updated dependencies [970bca2]
+  - @prosopo/provider@4.13.2
+  - @prosopo/types@4.9.1
+  - @prosopo/util@3.3.3
+  - @prosopo/api@3.5.7
+  - @prosopo/env@3.6.3
+  - @prosopo/common@3.1.42
+  - @prosopo/keyring@2.9.48
+  - @prosopo/logger@2.0.1
+  - @prosopo/dotenv@3.0.47
+
+## 3.6.49
+### Patch Changes
+
+- Updated dependencies [ec363e9]
+  - @prosopo/provider@4.13.1
+  - @prosopo/env@3.6.2
+
+## 3.6.48
+### Patch Changes
+
+- 11f1e8c: Replace vague logger scopes (empty strings, import.meta.url, generic "CLI") with structured colon-delimited names following the convention package:subsystem:action.
+- Updated dependencies [f643912]
+- Updated dependencies [dfb0c53]
+- Updated dependencies [a444abe]
+- Updated dependencies [9cf7204]
+- Updated dependencies [7ebb78f]
+- Updated dependencies [849af99]
+- Updated dependencies [5b0dea0]
+- Updated dependencies [a5ba27b]
+- Updated dependencies [c9de110]
+- Updated dependencies [2defea0]
+- Updated dependencies [411aed2]
+- Updated dependencies [30b198b]
+- Updated dependencies [948d36b]
+- Updated dependencies [41e0e11]
+- Updated dependencies [11f1e8c]
+- Updated dependencies [3c80664]
+- Updated dependencies [c672cd7]
+- Updated dependencies [7a2bc13]
+- Updated dependencies [b166037]
+- Updated dependencies [1111ff2]
+- Updated dependencies [6a7b122]
+- Updated dependencies [d3cc224]
+- Updated dependencies
+  - @prosopo/provider@4.13.0
+  - @prosopo/common@3.1.41
+  - @prosopo/logger@2.0.0
+  - @prosopo/util@3.3.2
+  - @prosopo/dotenv@3.0.46
+  - @prosopo/types@4.9.0
+  - @prosopo/api@3.5.6
+  - @prosopo/env@3.6.1
+  - @prosopo/keyring@2.9.47
+
+## 3.6.47
+### Patch Changes
+
+- Updated dependencies [1bb2bb1]
+- Updated dependencies [12cd0a6]
+- Updated dependencies [12cd0a6]
+  - @prosopo/provider@4.12.0
+  - @prosopo/api@3.5.5
+  - @prosopo/types@4.8.0
+  - @prosopo/env@3.6.0
+  - @prosopo/keyring@2.9.46
+
+## 3.6.46
+### Patch Changes
+
+- Updated dependencies [bb98af1]
+- Updated dependencies [d50e7d8]
+- Updated dependencies [77b7c66]
+  - @prosopo/provider@4.11.6
+  - @prosopo/types@4.7.4
+  - @prosopo/api@3.5.4
+  - @prosopo/env@3.5.20
+  - @prosopo/keyring@2.9.45
+
+## 3.6.45
+### Patch Changes
+
+- Updated dependencies [89ab6fc]
+- Updated dependencies [0f3750b]
+- Updated dependencies [281c62a]
+  - @prosopo/provider@4.11.5
+  - @prosopo/types@4.7.3
+  - @prosopo/api@3.5.3
+  - @prosopo/env@3.5.19
+  - @prosopo/keyring@2.9.44
+
+## 3.6.44
+### Patch Changes
+
+- Updated dependencies [e89860e]
+- Updated dependencies [edcd450]
+- Updated dependencies [5295c4b]
+  - @prosopo/provider@4.11.4
+  - @prosopo/util@3.3.1
+  - @prosopo/types@4.7.2
+  - @prosopo/locale@3.2.5
+  - @prosopo/keyring@2.9.43
+  - @prosopo/logger@1.0.4
+  - @prosopo/env@3.5.18
+  - @prosopo/api@3.5.2
+  - @prosopo/common@3.1.40
+  - @prosopo/dotenv@3.0.45
+
+## 3.6.43
+### Patch Changes
+
+- Updated dependencies [46fedf4]
+  - @prosopo/types@4.7.1
+  - @prosopo/api@3.5.1
+  - @prosopo/env@3.5.17
+  - @prosopo/keyring@2.9.42
+  - @prosopo/provider@4.11.3
+
+## 3.6.42
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/provider@4.11.2
+  - @prosopo/types@4.7.0
+  - @prosopo/api@3.5.0
+  - @prosopo/env@3.5.16
+  - @prosopo/keyring@2.9.41
+
+## 3.6.41
+### Patch Changes
+
+- Updated dependencies [4626340]
+  - @prosopo/provider@4.11.1
+  - @prosopo/types@4.6.1
+  - @prosopo/api@3.4.14
+  - @prosopo/env@3.5.15
+  - @prosopo/keyring@2.9.40
+
+## 3.6.40
+### Patch Changes
+
+- Updated dependencies [55b1388]
+  - @prosopo/util@3.3.0
+  - @prosopo/provider@4.11.0
+  - @prosopo/types@4.6.0
+  - @prosopo/keyring@2.9.39
+  - @prosopo/logger@1.0.3
+  - @prosopo/api@3.4.13
+  - @prosopo/common@3.1.39
+  - @prosopo/env@3.5.14
+  - @prosopo/dotenv@3.0.44
+
+## 3.6.39
+### Patch Changes
+
+- c80a05b: Split `solutionTimeout` (challenge issuance → user submission) from `verifiedTimeout` (submission → dapp's /verify call) on `UserSettings`. Historically `verifiedTimeout` gated both windows in `verifyRecency` (at /pow|puzzle/solution submit) and in `serverVerifyPowCaptchaSolution` (at /verify), even though its doc comment only described the latter. Adds `solutionTimeout` to `ClientSettingsSchema` (zod) and `UserSettingsSchema` (mongoose) with `DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT` (60s) as default. `submitPoWCaptchaSolution` and `submitPuzzleCaptchaSolution` now use `solutionTimeout` for the recency check and fall back to `verifiedTimeout` for pre-existing client records so behaviour is preserved until those records are backfilled. The `/verify` path is unchanged. Operators can now tighten `verifiedTimeout` (e.g. 20s) to invalidate stale solutions at verify time without also shrinking the user's solve budget.
+- Updated dependencies [9b91e85]
+- Updated dependencies [c1c7998]
+- Updated dependencies [c80a05b]
+  - @prosopo/provider@4.10.0
+  - @prosopo/types@4.5.0
+  - @prosopo/env@3.5.13
+  - @prosopo/api@3.4.12
+  - @prosopo/keyring@2.9.38
+
 ## 3.6.38
 ### Patch Changes
 

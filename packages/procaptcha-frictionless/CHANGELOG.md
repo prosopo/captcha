@@ -1,5 +1,281 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.12.5
+### Patch Changes
+
+- 18d0287: fix(procaptcha-frictionless,procaptcha-pow,procaptcha-puzzle,procaptcha-react): auto-recover from `CAPTCHA.NO_SESSION_FOUND` on the inner widget without asking the user to click the checkbox a second time, and without dropping the click coordinates that would otherwise land in the solution salt as `(0, 0)`.
+  
+  Motivation. The in-flight dedupe added in the previous change only collapses `/captcha/{type}` POSTs that overlap in flight. A duplicate POST that fires ~1 s after the first has already settled (observed on iPhone WKWebView, incident 2026-07-01 21:23 UTC) still lands on a consumed session and returns `NO_SESSION_FOUND`. The pre-existing recovery for that case was a `setTimeout(restart, 100)` that tore the whole widget down and lost the checkbox click position.
+  
+  - `ProcaptchaProps` gains two optional props: `onSessionInvalidated(x?, y?)` and `startCoords: { x, y }`. Widgets not mounted under a recovery-aware parent still fall back to `frictionlessState.restart()`.
+  - `procaptcha-pow`, `procaptcha-puzzle`, and `procaptcha-react` widgets now track the last `manager.start(x, y)` coords in a ref (either from the checkbox click or from `startCoords`) and, on the first `CAPTCHA.NO_SESSION_FOUND`, invoke `onSessionInvalidated(x, y)` instead of calling `restart()`. A per-instance ref makes it strictly one-shot — a second failure falls back to the existing restart path so a persistently broken session doesn't loop.
+  - `ProcaptchaFrictionless` wires `onSessionInvalidated` through to each inner widget: it stashes the retry coords in a ref, re-runs its own `start()` (which re-invokes `/frictionless` and mints a fresh sessionId), then re-mounts the inner widget with `autoStart={true}` and `startCoords={x, y}`. The inner widget auto-fires `manager.start(x, y)` on mount so the eventual submit still embeds the real checkbox click position in the salt.
+  - The recovery decision (one-shot fire, coord validation — `(0, 0)` and partial pairs are discarded because they're what an `autoStart` mount or an untrusted pointer event emits rather than a real click, and the consume-and-clear pending-coords ref) is extracted into `sessionInvalidatedRecovery.ts` with dedicated unit tests.
+- Updated dependencies [18d0287]
+  - @prosopo/types@4.9.3
+  - @prosopo/procaptcha-pow@2.10.10
+  - @prosopo/procaptcha-puzzle@2.10.25
+  - @prosopo/procaptcha-react@2.9.83
+  - @prosopo/api@3.5.10
+  - @prosopo/detector@3.5.4
+  - @prosopo/procaptcha-common@2.11.4
+
+## 2.12.4
+### Patch Changes
+
+- 8814425: fix(api,procaptcha-frictionless): collapse the WKWebView "No session found" mount storm. Two independent client-side amplifiers were stacking to produce a cascade of `CAPTCHA.NO_SESSION_FOUND` errors during the frictionless → PoW hand-off in iPhone WKWebView.
+  
+  - `ProcaptchaFrictionless`'s outer `useEffect` depended on `[config, callbacks, detectBot, config.language]`. Host pages that recreate the `callbacks` object on every render (the common React pattern) refired the effect on each parent re-render and triggered a fresh `/frictionless` call each time. Deps are now the primitive widget identity (`config.account?.address`, `config.language`, `config.mode`) plus a `startedForKeyRef` guard, so React StrictMode double-invocation and same-identity re-renders are idempotent. `callbacks` and `detectBot` are still read live via the closure captured by `start()`.
+  - `ProviderApi` had no in-flight guard on the three challenge-fetch calls, so a WKWebView duplicate POST (microseconds-apart) would race for the atomic `checkAndRemoveSession` on the same sessionId; the loser saw `NO_SESSION_FOUND`. A per-`(path, sessionId)` in-flight dedupe now attaches duplicate calls to the same Promise. Entry drops on settle, so a genuine retry after a real network error still fires a fresh POST; skipped when there's no sessionId to race on.
+- Updated dependencies [8814425]
+  - @prosopo/api@3.5.9
+  - @prosopo/procaptcha-pow@2.10.9
+  - @prosopo/procaptcha-puzzle@2.10.24
+  - @prosopo/procaptcha-react@2.9.82
+
+## 2.12.3
+### Patch Changes
+
+- Updated dependencies [f9e8c94]
+- Updated dependencies [0983c51]
+- Updated dependencies [7a434e0]
+  - @prosopo/locale@3.2.6
+  - @prosopo/procaptcha-pow@2.10.8
+  - @prosopo/procaptcha-puzzle@2.10.23
+  - @prosopo/types@4.9.2
+  - @prosopo/common@3.1.43
+  - @prosopo/procaptcha-react@2.9.81
+  - @prosopo/api@3.5.8
+  - @prosopo/detector@3.5.3
+  - @prosopo/procaptcha-common@2.11.3
+
+## 2.12.2
+### Patch Changes
+
+- 970bca2: feat(provider): record the page URL a frictionless session originated from and require it
+  
+  The frictionless client now reports the page it was rendered on (built from `window.location.origin + pathname`) in the challenge request, and the provider stores it on the session as `currentUrl`. The value is reduced to scheme + host + path on both the client and the provider (`sanitisePageUrl`): the query string, fragment and any embedded `user:pass@` credentials are stripped so URL-borne secrets (tokens, reset codes, session ids) are never persisted. A session whose request carries no usable page URL is treated as a bot signal and forced down the image-captcha path (`FrictionlessReason.MISSING_CURRENT_URL`).
+- Updated dependencies [8986976]
+- Updated dependencies [970bca2]
+  - @prosopo/types@4.9.1
+  - @prosopo/api@3.5.7
+  - @prosopo/common@3.1.42
+  - @prosopo/detector@3.5.2
+  - @prosopo/procaptcha-common@2.11.2
+  - @prosopo/procaptcha-pow@2.10.7
+  - @prosopo/procaptcha-puzzle@2.10.22
+  - @prosopo/procaptcha-react@2.9.80
+
+## 2.12.1
+### Patch Changes
+
+- Updated dependencies [dfb0c53]
+- Updated dependencies [6ecc576]
+- Updated dependencies [619dc9f]
+- Updated dependencies [11f1e8c]
+- Updated dependencies [b166037]
+- Updated dependencies [1111ff2]
+- Updated dependencies [6a7b122]
+  - @prosopo/common@3.1.41
+  - @prosopo/widget-skeleton@2.8.4
+  - @prosopo/types@4.9.0
+  - @prosopo/api@3.5.6
+  - @prosopo/detector@3.5.1
+  - @prosopo/procaptcha-common@2.11.1
+  - @prosopo/procaptcha-pow@2.10.6
+  - @prosopo/procaptcha-puzzle@2.10.21
+  - @prosopo/procaptcha-react@2.9.79
+
+## 2.12.0
+### Minor Changes
+
+- 12cd0a6: Replace client-side weighted-random provider selection with static DNS endpoints.
+  
+  - Removed the `providerSelectEntropy` field from `DetectorResult`, `Session`, the
+    Mongoose `SessionRecordSchema` (including its standalone index), and every
+    call-site that threaded it through frictionless / image / pow / puzzle flows.
+  - Removed `FrictionlessManager.hostVerified` and its decision-machine call site
+    — there's nothing to verify when the DNS layer picks the host.
+  - `getRandomActiveProvider(env)` now returns the per-environment static DNS
+    endpoint (`pronode.prosopo.io` family) instead of fetching the provider list
+    and weighted-selecting. The entropy parameter is gone.
+  - `getProcaptchaRandomActiveProvider` is now a thin re-export so widget packages
+    keep importing from `procaptcha-common`.
+  - `FrontendProvider.datasetId` is dropped; `CaptchaRequestBody.datasetId` is
+    optional. The server falls back to its own most-recently-uploaded dataset
+    (`env.datasetId`, populated from `db.getMostRecentDatasetId()` at startup) —
+    clients can't pin a dataset under DNS routing because they don't know which
+    pronode they'll hit.
+  - Removed dead `setProviderLoader` / `prefetchProviders` / `selectWeightedProvider`
+    plumbing from `@prosopo/load-balancer`. The server's cacheFile-based loader
+    setup in `startProviderApi` goes with them.
+  - `getRandomActiveProvider` now hits `/healthz` on the global hostname once per
+    page load, reads the responding pronode's identity from the JSON body, and
+    pins subsequent captcha calls to that pronode (`https://pronodeN.prosopo.io`)
+    so session creation and submission land on the same backend. Falls back to
+    the dual-stack global hostname when `/healthz` is unreachable.
+  - `/healthz` now returns `{ ok: true, host: <pronode-identity> }` instead of
+    `"OK"` to support the above pinning.
+  - CORS preflight is now cached for 24h (`maxAge: 86400`) — previously the
+    browser refired an OPTIONS preflight before every captcha call because
+    the custom `Prosopo-Site-Key` / `Prosopo-User` headers make the request
+    non-simple and the default `maxAge` is 5s.
+
+### Patch Changes
+
+- 12cd0a6: Add ipv4-only / ipv6-only provider DNS routing via `data-ipv4` / `data-ipv6`.
+  
+  Dapps that need to pin captcha traffic to a single IP stack can now do so:
+  
+  ```html
+  <div class="procaptcha" data-sitekey="..." data-ipv4="true"></div>
+  ```
+  
+  What happens under the hood:
+  
+  - The widget reads `data-ipv4` / `data-ipv6` (or the matching `ipv4` / `ipv6`
+    booleans on `ProcaptchaRenderOptions` / explicit `render(...)`) and threads
+    them through `ProcaptchaConfigSchema`.
+  - `pickIpMode(config)` resolves them into an `IpMode` (`"ipv4"` / `"ipv6"` /
+    `undefined`); `ipv4` wins if both are set.
+  - The frictionless / image / pow / puzzle managers pass the `IpMode` into
+    `getProcaptchaRandomActiveProvider`, which calls `/healthz` on the matching
+    single-stack global hostname (`ipv4.pronode.prosopo.io` or
+    `ipv6.pronode.prosopo.io`) and pins subsequent captcha calls to
+    `ipv4.pronodeN.prosopo.io` / `ipv6.pronodeN.prosopo.io`. The dual-stack
+    cache and the single-stack caches are kept separate.
+  - `convertHostedProvider` now accepts an optional `IpMode` and, when set,
+    selects the matching `ipv4` / `ipv6` sub-object from the provider-list JSON.
+    Top-level `ipv4` / `ipv6` keys are skipped by default so existing dual-stack
+    callers keep working.
+  - New helpers in `@prosopo/load-balancer`: `IpMode`, `stripIpModeLabel`,
+    `getProviderHostname`.
+  
+  Coordinated with the matching `captcha-private` change that publishes the
+  `ipv4` / `ipv6` sub-objects to S3.
+- Updated dependencies [12cd0a6]
+- Updated dependencies [005b817]
+- Updated dependencies [12cd0a6]
+  - @prosopo/procaptcha-common@2.11.0
+  - @prosopo/detector@3.5.0
+  - @prosopo/api@3.5.5
+  - @prosopo/types@4.8.0
+  - @prosopo/procaptcha-react@2.9.78
+  - @prosopo/procaptcha-pow@2.10.5
+  - @prosopo/procaptcha-puzzle@2.10.20
+
+## 2.11.11
+### Patch Changes
+
+- Updated dependencies [bb98af1]
+  - @prosopo/types@4.7.4
+  - @prosopo/api@3.5.4
+  - @prosopo/detector@3.4.47
+  - @prosopo/load-balancer@2.9.21
+  - @prosopo/procaptcha-common@2.10.28
+  - @prosopo/procaptcha-pow@2.10.4
+  - @prosopo/procaptcha-puzzle@2.10.19
+  - @prosopo/procaptcha-react@2.9.77
+
+## 2.11.10
+### Patch Changes
+
+- Updated dependencies [89ab6fc]
+- Updated dependencies [0f3750b]
+  - @prosopo/types@4.7.3
+  - @prosopo/api@3.5.3
+  - @prosopo/detector@3.4.46
+  - @prosopo/load-balancer@2.9.20
+  - @prosopo/procaptcha-common@2.10.27
+  - @prosopo/procaptcha-pow@2.10.3
+  - @prosopo/procaptcha-puzzle@2.10.18
+  - @prosopo/procaptcha-react@2.9.76
+
+## 2.11.9
+### Patch Changes
+
+- Updated dependencies [edcd450]
+- Updated dependencies [5295c4b]
+  - @prosopo/types@4.7.2
+  - @prosopo/locale@3.2.5
+  - @prosopo/procaptcha-pow@2.10.2
+  - @prosopo/procaptcha-puzzle@2.10.17
+  - @prosopo/procaptcha-react@2.9.75
+  - @prosopo/api@3.5.2
+  - @prosopo/common@3.1.40
+  - @prosopo/detector@3.4.45
+  - @prosopo/load-balancer@2.9.19
+  - @prosopo/procaptcha-common@2.10.26
+
+## 2.11.8
+### Patch Changes
+
+- 46fedf4: Auto-start image/puzzle widget after PoW escalation so the user does not need to click the checkbox a second time.
+- Updated dependencies [46fedf4]
+  - @prosopo/procaptcha-react@2.9.74
+  - @prosopo/procaptcha-puzzle@2.10.16
+  - @prosopo/types@4.7.1
+  - @prosopo/api@3.5.1
+  - @prosopo/detector@3.4.44
+  - @prosopo/load-balancer@2.9.18
+  - @prosopo/procaptcha-common@2.10.25
+  - @prosopo/procaptcha-pow@2.10.1
+
+## 2.11.7
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/types@4.7.0
+  - @prosopo/api@3.5.0
+  - @prosopo/procaptcha-pow@2.10.0
+  - @prosopo/detector@3.4.43
+  - @prosopo/load-balancer@2.9.17
+  - @prosopo/procaptcha-common@2.10.24
+  - @prosopo/procaptcha-puzzle@2.10.15
+  - @prosopo/procaptcha-react@2.9.73
+
+## 2.11.6
+### Patch Changes
+
+- Updated dependencies [4626340]
+  - @prosopo/types@4.6.1
+  - @prosopo/api@3.4.14
+  - @prosopo/detector@3.4.42
+  - @prosopo/load-balancer@2.9.16
+  - @prosopo/procaptcha-common@2.10.23
+  - @prosopo/procaptcha-pow@2.9.10
+  - @prosopo/procaptcha-puzzle@2.10.14
+  - @prosopo/procaptcha-react@2.9.72
+
+## 2.11.5
+### Patch Changes
+
+- Updated dependencies [55b1388]
+  - @prosopo/types@4.6.0
+  - @prosopo/procaptcha-pow@2.9.9
+  - @prosopo/procaptcha-puzzle@2.10.13
+  - @prosopo/procaptcha-react@2.9.71
+  - @prosopo/api@3.4.13
+  - @prosopo/common@3.1.39
+  - @prosopo/detector@3.4.41
+  - @prosopo/load-balancer@2.9.15
+  - @prosopo/procaptcha-common@2.10.22
+
+## 2.11.4
+### Patch Changes
+
+- Updated dependencies [9b91e85]
+- Updated dependencies [c80a05b]
+  - @prosopo/types@4.5.0
+  - @prosopo/api@3.4.12
+  - @prosopo/detector@3.4.40
+  - @prosopo/load-balancer@2.9.14
+  - @prosopo/procaptcha-common@2.10.21
+  - @prosopo/procaptcha-pow@2.9.8
+  - @prosopo/procaptcha-puzzle@2.10.12
+  - @prosopo/procaptcha-react@2.9.70
+
 ## 2.11.3
 ### Patch Changes
 

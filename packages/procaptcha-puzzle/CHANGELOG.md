@@ -1,5 +1,186 @@
 # @prosopo/procaptcha-puzzle
 
+## 2.10.25
+### Patch Changes
+
+- 18d0287: fix(procaptcha-frictionless,procaptcha-pow,procaptcha-puzzle,procaptcha-react): auto-recover from `CAPTCHA.NO_SESSION_FOUND` on the inner widget without asking the user to click the checkbox a second time, and without dropping the click coordinates that would otherwise land in the solution salt as `(0, 0)`.
+  
+  Motivation. The in-flight dedupe added in the previous change only collapses `/captcha/{type}` POSTs that overlap in flight. A duplicate POST that fires ~1 s after the first has already settled (observed on iPhone WKWebView, incident 2026-07-01 21:23 UTC) still lands on a consumed session and returns `NO_SESSION_FOUND`. The pre-existing recovery for that case was a `setTimeout(restart, 100)` that tore the whole widget down and lost the checkbox click position.
+  
+  - `ProcaptchaProps` gains two optional props: `onSessionInvalidated(x?, y?)` and `startCoords: { x, y }`. Widgets not mounted under a recovery-aware parent still fall back to `frictionlessState.restart()`.
+  - `procaptcha-pow`, `procaptcha-puzzle`, and `procaptcha-react` widgets now track the last `manager.start(x, y)` coords in a ref (either from the checkbox click or from `startCoords`) and, on the first `CAPTCHA.NO_SESSION_FOUND`, invoke `onSessionInvalidated(x, y)` instead of calling `restart()`. A per-instance ref makes it strictly one-shot — a second failure falls back to the existing restart path so a persistently broken session doesn't loop.
+  - `ProcaptchaFrictionless` wires `onSessionInvalidated` through to each inner widget: it stashes the retry coords in a ref, re-runs its own `start()` (which re-invokes `/frictionless` and mints a fresh sessionId), then re-mounts the inner widget with `autoStart={true}` and `startCoords={x, y}`. The inner widget auto-fires `manager.start(x, y)` on mount so the eventual submit still embeds the real checkbox click position in the salt.
+  - The recovery decision (one-shot fire, coord validation — `(0, 0)` and partial pairs are discarded because they're what an `autoStart` mount or an untrusted pointer event emits rather than a real click, and the consume-and-clear pending-coords ref) is extracted into `sessionInvalidatedRecovery.ts` with dedicated unit tests.
+- Updated dependencies [18d0287]
+  - @prosopo/types@4.9.3
+  - @prosopo/api@3.5.10
+  - @prosopo/procaptcha-common@2.11.4
+
+## 2.10.24
+### Patch Changes
+
+- Updated dependencies [8814425]
+  - @prosopo/api@3.5.9
+
+## 2.10.23
+### Patch Changes
+
+- 0983c51: fix(procaptcha-pow): forward all props through the Suspense wrapper so `onEscalate` and `autoStart` reach the inner widget. The PoW (and puzzle) wrappers were enumerating props by name and silently dropping `onEscalate`, which meant the Manager closure captured `onEscalate=undefined`. When the provider returned a post-PoW escalation envelope, `onEscalate?.()` no-op'd, the frictionless wrapper was never told to swap in the image widget, and the user was left with a spinning PoW checkbox forever. Both wrappers now spread props, matching the image (`Procaptcha`) sibling.
+- Updated dependencies [f9e8c94]
+- Updated dependencies [7a434e0]
+  - @prosopo/locale@3.2.6
+  - @prosopo/types@4.9.2
+  - @prosopo/common@3.1.43
+  - @prosopo/api@3.5.8
+  - @prosopo/procaptcha-common@2.11.3
+
+## 2.10.22
+### Patch Changes
+
+- Updated dependencies [8986976]
+- Updated dependencies [970bca2]
+  - @prosopo/types@4.9.1
+  - @prosopo/util@3.3.3
+  - @prosopo/api@3.5.7
+  - @prosopo/common@3.1.42
+  - @prosopo/procaptcha-common@2.11.2
+
+## 2.10.21
+### Patch Changes
+
+- Updated dependencies [dfb0c53]
+- Updated dependencies [b9f5eca]
+- Updated dependencies [849af99]
+- Updated dependencies [6ecc576]
+- Updated dependencies [a5ba27b]
+- Updated dependencies [d1fbde3]
+- Updated dependencies [619dc9f]
+- Updated dependencies [11f1e8c]
+- Updated dependencies [a26e9d0]
+- Updated dependencies [b166037]
+- Updated dependencies [1111ff2]
+- Updated dependencies [6a7b122]
+  - @prosopo/common@3.1.41
+  - @prosopo/util-crypto@13.5.30
+  - @prosopo/util@3.3.2
+  - @prosopo/widget-skeleton@2.8.4
+  - @prosopo/types@4.9.0
+  - @prosopo/api@3.5.6
+  - @prosopo/procaptcha-common@2.11.1
+
+## 2.10.20
+### Patch Changes
+
+- 12cd0a6: Add ipv4-only / ipv6-only provider DNS routing via `data-ipv4` / `data-ipv6`.
+  
+  Dapps that need to pin captcha traffic to a single IP stack can now do so:
+  
+  ```html
+  <div class="procaptcha" data-sitekey="..." data-ipv4="true"></div>
+  ```
+  
+  What happens under the hood:
+  
+  - The widget reads `data-ipv4` / `data-ipv6` (or the matching `ipv4` / `ipv6`
+    booleans on `ProcaptchaRenderOptions` / explicit `render(...)`) and threads
+    them through `ProcaptchaConfigSchema`.
+  - `pickIpMode(config)` resolves them into an `IpMode` (`"ipv4"` / `"ipv6"` /
+    `undefined`); `ipv4` wins if both are set.
+  - The frictionless / image / pow / puzzle managers pass the `IpMode` into
+    `getProcaptchaRandomActiveProvider`, which calls `/healthz` on the matching
+    single-stack global hostname (`ipv4.pronode.prosopo.io` or
+    `ipv6.pronode.prosopo.io`) and pins subsequent captcha calls to
+    `ipv4.pronodeN.prosopo.io` / `ipv6.pronodeN.prosopo.io`. The dual-stack
+    cache and the single-stack caches are kept separate.
+  - `convertHostedProvider` now accepts an optional `IpMode` and, when set,
+    selects the matching `ipv4` / `ipv6` sub-object from the provider-list JSON.
+    Top-level `ipv4` / `ipv6` keys are skipped by default so existing dual-stack
+    callers keep working.
+  - New helpers in `@prosopo/load-balancer`: `IpMode`, `stripIpModeLabel`,
+    `getProviderHostname`.
+  
+  Coordinated with the matching `captcha-private` change that publishes the
+  `ipv4` / `ipv6` sub-objects to S3.
+- Updated dependencies [12cd0a6]
+- Updated dependencies [12cd0a6]
+  - @prosopo/procaptcha-common@2.11.0
+  - @prosopo/api@3.5.5
+  - @prosopo/types@4.8.0
+
+## 2.10.19
+### Patch Changes
+
+- Updated dependencies [bb98af1]
+  - @prosopo/types@4.7.4
+  - @prosopo/api@3.5.4
+  - @prosopo/procaptcha-common@2.10.28
+
+## 2.10.18
+### Patch Changes
+
+- Updated dependencies [89ab6fc]
+- Updated dependencies [0f3750b]
+  - @prosopo/types@4.7.3
+  - @prosopo/api@3.5.3
+  - @prosopo/procaptcha-common@2.10.27
+
+## 2.10.17
+### Patch Changes
+
+- Updated dependencies [edcd450]
+- Updated dependencies [5295c4b]
+  - @prosopo/util@3.3.1
+  - @prosopo/types@4.7.2
+  - @prosopo/locale@3.2.5
+  - @prosopo/api@3.5.2
+  - @prosopo/common@3.1.40
+  - @prosopo/procaptcha-common@2.10.26
+
+## 2.10.16
+### Patch Changes
+
+- 46fedf4: Auto-start image/puzzle widget after PoW escalation so the user does not need to click the checkbox a second time.
+- Updated dependencies [46fedf4]
+  - @prosopo/types@4.7.1
+  - @prosopo/api@3.5.1
+  - @prosopo/procaptcha-common@2.10.25
+
+## 2.10.15
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/types@4.7.0
+  - @prosopo/api@3.5.0
+  - @prosopo/procaptcha-common@2.10.24
+
+## 2.10.14
+### Patch Changes
+
+- Updated dependencies [4626340]
+  - @prosopo/types@4.6.1
+  - @prosopo/api@3.4.14
+  - @prosopo/procaptcha-common@2.10.23
+
+## 2.10.13
+### Patch Changes
+
+- Updated dependencies [55b1388]
+  - @prosopo/util@3.3.0
+  - @prosopo/types@4.6.0
+  - @prosopo/api@3.4.13
+  - @prosopo/common@3.1.39
+  - @prosopo/procaptcha-common@2.10.22
+
+## 2.10.12
+### Patch Changes
+
+- Updated dependencies [9b91e85]
+- Updated dependencies [c80a05b]
+  - @prosopo/types@4.5.0
+  - @prosopo/api@3.4.12
+  - @prosopo/procaptcha-common@2.10.21
+
 ## 2.10.11
 ### Patch Changes
 
@@ -19,11 +200,11 @@
   
   The dapp-verify recency check used to be `now - challengeTimestamp <= timeout`. The window was issuance→verify, which gave bots room to stockpile pre-solved solutions and redeem them many seconds (sometimes minutes) later from the time they reached the provider.
   
-  The check is now `now - challengeRecord.submittedAtTimestamp <= clientSettings.verifiedTimeout`. The window measures from the moment the user's solution actually arrived. Combined with the new lifecycle fields, this measurably tightens the stockpile attack surface — the data showed 1564 records / 21% on Twickets where a correct PoW was submitted but the dapp never verified, p99 issuance→submit of 31s on that cohort, and records up to 1.26 min.
+  The check is now `now - challengeRecord.submittedAtTimestamp <= clientSettings.verifiedTimeout`. The window measures from the moment the user's solution actually arrived. Combined with the new lifecycle fields, this tightens the stockpile attack surface.
   
   ### Settings move
   
-  `verifiedTimeout` moves to `ClientSettingsSchema` (per-client, operator-set via the portal). Default stays at 120000ms for back-compat; auto-submit dapps (Twickets et al.) should set it to ~10000ms.
+  `verifiedTimeout` moves to `ClientSettingsSchema` (per-client, operator-set via the portal). Default stays at 120000ms for back-compat; auto-submit dapps should set it to ~10000ms.
   
   Removed from request bodies entirely:
   

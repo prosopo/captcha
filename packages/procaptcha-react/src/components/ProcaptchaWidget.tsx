@@ -40,14 +40,26 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 	const [state, updateState] = useProcaptcha(useState, useRef);
 	const [loading, setLoading] = useState(false);
 	const hpRef = useRef<HTMLInputElement>(null);
-	const manager = Manager(
-		config,
-		state,
-		updateState,
-		callbacks,
-		frictionlessState,
-		() => hpRef.current?.value || undefined,
+	// Held in a ref so the closure variables that capture the checkbox
+	// click coords (set on start) survive across re-renders and are
+	// still in scope when submit() runs. PoW and Puzzle widgets do the
+	// same — recreating Manager on every render loses the (x,y) by the
+	// time the user submits, which is why image captcha was persisting
+	// coords[0] = [[0,0]] for every session.
+	const manager = useRef(
+		Manager(
+			config,
+			state,
+			updateState,
+			callbacks,
+			frictionlessState,
+			() => hpRef.current?.value || undefined,
+		),
 	);
+	// See procaptcha-pow ProcaptchaWidget — same session-invalidation
+	// recovery contract with coords preservation across a re-mint.
+	const lastCoordsRef = useRef<{ x: number; y: number } | null>(null);
+	const sessionInvalidatedFiredRef = useRef(false);
 	const theme = "light" === props.config.theme ? lightTheme : darkTheme;
 
 	useEffect(() => {
@@ -66,15 +78,32 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 	}, [i18n, config.language]);
 
 	useEffect(() => {
-		if (state.error) {
-			setLoading(false);
-			if (state.error.key === "CAPTCHA.NO_SESSION_FOUND" && frictionlessState) {
-				setTimeout(() => {
-					frictionlessState.restart();
-				}, 100);
-			}
+		if (!props.autoStart) return;
+		setLoading(true);
+		const coords = props.startCoords;
+		lastCoordsRef.current = coords ?? null;
+		manager.current.start(coords?.x ?? 0, coords?.y ?? 0).then(
+			() => setLoading(false),
+			() => setLoading(false),
+		);
+	}, [props.autoStart, props.startCoords]);
+
+	useEffect(() => {
+		if (!state.error) return;
+		setLoading(false);
+		if (state.error.key !== "CAPTCHA.NO_SESSION_FOUND") return;
+		if (props.onSessionInvalidated && !sessionInvalidatedFiredRef.current) {
+			sessionInvalidatedFiredRef.current = true;
+			const coords = lastCoordsRef.current;
+			props.onSessionInvalidated(coords?.x, coords?.y);
+			return;
 		}
-	}, [state.error, frictionlessState]);
+		if (frictionlessState) {
+			setTimeout(() => {
+				frictionlessState.restart();
+			}, 100);
+		}
+	}, [state.error, frictionlessState, props.onSessionInvalidated]);
 
 	// Add event listener for the execute event
 	useEffect(() => {
@@ -86,10 +115,10 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 			});
 
 			// If we need to load a challenge or do other initialization
-			if (!state.challenge && manager.start) {
+			if (!state.challenge && manager.current.start) {
 				console.log("No challenge set, attempting to start verification");
 				try {
-					manager.start();
+					manager.current.start();
 				} catch (error) {
 					console.error("Error starting verification:", error);
 				}
@@ -105,7 +134,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 				handleExecuteEvent,
 			);
 		};
-	}, [manager, state.challenge, updateState]); // Add dependencies
+	}, [state.challenge, updateState]);
 
 	const honeypot = frictionlessState?.hp ? (
 		<Honeypot ref={hpRef} encodedQuestion={frictionlessState.hp} />
@@ -121,11 +150,11 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 							challenge={state.challenge}
 							index={state.index}
 							solutions={state.solutions}
-							onSubmit={manager.submit}
-							onCancel={manager.cancel}
-							onClick={manager.select}
-							onNext={manager.nextRound}
-							onReload={manager.reload}
+							onSubmit={manager.current.submit}
+							onCancel={manager.current.cancel}
+							onClick={manager.current.select}
+							onNext={manager.current.nextRound}
+							onReload={manager.current.reload}
 							themeColor={config.theme ?? "light"}
 						/>
 					) : null}
@@ -143,11 +172,11 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 						challenge={state.challenge}
 						index={state.index}
 						solutions={state.solutions}
-						onSubmit={manager.submit}
-						onCancel={manager.cancel}
-						onClick={manager.select}
-						onNext={manager.nextRound}
-						onReload={manager.reload}
+						onSubmit={manager.current.submit}
+						onCancel={manager.current.cancel}
+						onClick={manager.current.select}
+						onNext={manager.current.nextRound}
+						onReload={manager.current.reload}
 						themeColor={config.theme ?? "light"}
 					/>
 				) : (
@@ -182,7 +211,8 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 						y = nativeEvent.clientY;
 					}
 
-					await manager.start(x, y);
+					lastCoordsRef.current = { x, y };
+					await manager.current.start(x, y);
 					setLoading(false);
 				}}
 				checked={state.isHuman}

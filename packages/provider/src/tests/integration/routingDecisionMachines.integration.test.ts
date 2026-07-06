@@ -174,7 +174,6 @@ describe("Routing Decision Machines (live local Mongo + Redis)", () => {
 			score: 0.4,
 			threshold: 0.5,
 			scoreComponents: { baseScore: 0.4 },
-			providerSelectEntropy: 0,
 			ipAddress: { lower: 16909060n, type: IpAddressType.v4 },
 			webView: false,
 			iFrame: false,

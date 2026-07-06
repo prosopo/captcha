@@ -46,6 +46,15 @@ const Procaptcha = (props: ProcaptchaProps) => {
 			() => hpRef.current?.value || undefined,
 		),
 	);
+	// Coordinates of the last `manager.start(x, y)` invocation from this widget
+	// instance — either the checkbox click, or a `startCoords` handoff from a
+	// prior `onSessionInvalidated` cycle. Held in a ref so the current values
+	// survive re-renders and are readable from the `state.error` effect.
+	const lastCoordsRef = useRef<{ x: number; y: number } | null>(null);
+	// One-shot guard: a widget instance only escalates a single NO_SESSION_FOUND
+	// to `onSessionInvalidated`. If the retry also fails, we fall through to
+	// the pre-existing `frictionlessState.restart()` path instead of looping.
+	const sessionInvalidatedFiredRef = useRef(false);
 
 	useEffect(() => {
 		if (config.language) {
@@ -63,15 +72,37 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	}, [i18n, config.language]);
 
 	useEffect(() => {
-		if (state.error) {
+		if (!props.autoStart) return;
+		setLoading(true);
+		const coords = props.startCoords;
+		lastCoordsRef.current = coords ?? null;
+		manager.current.start(coords?.x ?? 0, coords?.y ?? 0).finally(() => {
 			setLoading(false);
-			if (state.error.key === "CAPTCHA.NO_SESSION_FOUND" && frictionlessState) {
-				setTimeout(() => {
-					frictionlessState.restart();
-				}, 100);
-			}
+		});
+	}, [props.autoStart, props.startCoords]);
+
+	useEffect(() => {
+		if (!state.error) return;
+		setLoading(false);
+		if (state.error.key !== "CAPTCHA.NO_SESSION_FOUND") return;
+		if (props.onSessionInvalidated && !sessionInvalidatedFiredRef.current) {
+			// Preserve the checkbox coords across the retry so the resumed
+			// submit still carries the real entry-point telemetry. The
+			// frictionless wrapper mints a fresh session and re-mounts this
+			// widget with matching `autoStart` + `startCoords`.
+			sessionInvalidatedFiredRef.current = true;
+			const coords = lastCoordsRef.current;
+			props.onSessionInvalidated(coords?.x, coords?.y);
+			return;
 		}
-	}, [state.error, frictionlessState]);
+		if (frictionlessState) {
+			// Fallback for widgets not mounted under a recovery-aware parent,
+			// or a second NO_SESSION_FOUND after we've already retried once.
+			setTimeout(() => {
+				frictionlessState.restart();
+			}, 100);
+		}
+	}, [state.error, frictionlessState, props.onSessionInvalidated]);
 
 	// Add event listener for the execute event (works for invisible mode)
 	useEffect(() => {
@@ -149,6 +180,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 						y = mouseOrTouchEvent.clientY;
 					}
 
+					lastCoordsRef.current = { x, y };
 					await manager.current.start(x, y);
 					setLoading(false);
 				}}

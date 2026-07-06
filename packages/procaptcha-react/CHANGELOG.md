@@ -1,5 +1,158 @@
 # @prosopo/procaptcha-react
 
+## 2.9.83
+### Patch Changes
+
+- 18d0287: fix(procaptcha-frictionless,procaptcha-pow,procaptcha-puzzle,procaptcha-react): auto-recover from `CAPTCHA.NO_SESSION_FOUND` on the inner widget without asking the user to click the checkbox a second time, and without dropping the click coordinates that would otherwise land in the solution salt as `(0, 0)`.
+  
+  Motivation. The in-flight dedupe added in the previous change only collapses `/captcha/{type}` POSTs that overlap in flight. A duplicate POST that fires ~1 s after the first has already settled (observed on iPhone WKWebView, incident 2026-07-01 21:23 UTC) still lands on a consumed session and returns `NO_SESSION_FOUND`. The pre-existing recovery for that case was a `setTimeout(restart, 100)` that tore the whole widget down and lost the checkbox click position.
+  
+  - `ProcaptchaProps` gains two optional props: `onSessionInvalidated(x?, y?)` and `startCoords: { x, y }`. Widgets not mounted under a recovery-aware parent still fall back to `frictionlessState.restart()`.
+  - `procaptcha-pow`, `procaptcha-puzzle`, and `procaptcha-react` widgets now track the last `manager.start(x, y)` coords in a ref (either from the checkbox click or from `startCoords`) and, on the first `CAPTCHA.NO_SESSION_FOUND`, invoke `onSessionInvalidated(x, y)` instead of calling `restart()`. A per-instance ref makes it strictly one-shot — a second failure falls back to the existing restart path so a persistently broken session doesn't loop.
+  - `ProcaptchaFrictionless` wires `onSessionInvalidated` through to each inner widget: it stashes the retry coords in a ref, re-runs its own `start()` (which re-invokes `/frictionless` and mints a fresh sessionId), then re-mounts the inner widget with `autoStart={true}` and `startCoords={x, y}`. The inner widget auto-fires `manager.start(x, y)` on mount so the eventual submit still embeds the real checkbox click position in the salt.
+  - The recovery decision (one-shot fire, coord validation — `(0, 0)` and partial pairs are discarded because they're what an `autoStart` mount or an untrusted pointer event emits rather than a real click, and the consume-and-clear pending-coords ref) is extracted into `sessionInvalidatedRecovery.ts` with dedicated unit tests.
+- Updated dependencies [18d0287]
+  - @prosopo/types@4.9.3
+  - @prosopo/procaptcha@2.10.44
+  - @prosopo/procaptcha-common@2.11.4
+
+## 2.9.82
+### Patch Changes
+
+  - @prosopo/procaptcha@2.10.43
+
+## 2.9.81
+### Patch Changes
+
+- Updated dependencies [f9e8c94]
+- Updated dependencies [7a434e0]
+  - @prosopo/locale@3.2.6
+  - @prosopo/types@4.9.2
+  - @prosopo/common@3.1.43
+  - @prosopo/procaptcha@2.10.42
+  - @prosopo/procaptcha-common@2.11.3
+
+## 2.9.80
+### Patch Changes
+
+- Updated dependencies [8986976]
+- Updated dependencies [970bca2]
+  - @prosopo/types@4.9.1
+  - @prosopo/util@3.3.3
+  - @prosopo/common@3.1.42
+  - @prosopo/procaptcha@2.10.41
+  - @prosopo/procaptcha-common@2.11.2
+
+## 2.9.79
+### Patch Changes
+
+- Updated dependencies [dfb0c53]
+- Updated dependencies [849af99]
+- Updated dependencies [6ecc576]
+- Updated dependencies [a5ba27b]
+- Updated dependencies [619dc9f]
+- Updated dependencies [11f1e8c]
+- Updated dependencies [b166037]
+- Updated dependencies [1111ff2]
+  - @prosopo/common@3.1.41
+  - @prosopo/util@3.3.2
+  - @prosopo/widget-skeleton@2.8.4
+  - @prosopo/types@4.9.0
+  - @prosopo/procaptcha@2.10.40
+  - @prosopo/procaptcha-common@2.11.1
+
+## 2.9.78
+### Patch Changes
+
+- 005b817: fix(procaptcha-react): hold image-captcha Manager in a useRef
+  
+  Image widget rebuilt the Manager on every render, so the closure
+  variables that hold the checkbox click coords (set on start) were
+  overwritten by `(0, 0)` on the next render — including the re-render
+  that fires immediately after `setLoading(true)` in the click handler.
+  By the time `submit()` ran, it was on a newer Manager instance that
+  had never seen the click, so every captcha persisted
+  `coords[0] = [[0, 0]]`. Matches the pattern PoW and Puzzle already use.
+- Updated dependencies [12cd0a6]
+- Updated dependencies [12cd0a6]
+  - @prosopo/procaptcha-common@2.11.0
+  - @prosopo/types@4.8.0
+  - @prosopo/procaptcha@2.10.39
+
+## 2.9.77
+### Patch Changes
+
+- Updated dependencies [bb98af1]
+  - @prosopo/types@4.7.4
+  - @prosopo/procaptcha@2.10.38
+  - @prosopo/procaptcha-common@2.10.28
+
+## 2.9.76
+### Patch Changes
+
+- Updated dependencies [89ab6fc]
+- Updated dependencies [0f3750b]
+  - @prosopo/types@4.7.3
+  - @prosopo/procaptcha@2.10.37
+  - @prosopo/procaptcha-common@2.10.27
+
+## 2.9.75
+### Patch Changes
+
+- Updated dependencies [edcd450]
+- Updated dependencies [5295c4b]
+  - @prosopo/util@3.3.1
+  - @prosopo/types@4.7.2
+  - @prosopo/locale@3.2.5
+  - @prosopo/procaptcha@2.10.36
+  - @prosopo/common@3.1.40
+  - @prosopo/procaptcha-common@2.10.26
+
+## 2.9.74
+### Patch Changes
+
+- 46fedf4: Auto-start image/puzzle widget after PoW escalation so the user does not need to click the checkbox a second time.
+- Updated dependencies [46fedf4]
+  - @prosopo/types@4.7.1
+  - @prosopo/procaptcha@2.10.35
+  - @prosopo/procaptcha-common@2.10.25
+
+## 2.9.73
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/types@4.7.0
+  - @prosopo/procaptcha@2.10.34
+  - @prosopo/procaptcha-common@2.10.24
+
+## 2.9.72
+### Patch Changes
+
+- Updated dependencies [4626340]
+  - @prosopo/types@4.6.1
+  - @prosopo/procaptcha@2.10.33
+  - @prosopo/procaptcha-common@2.10.23
+
+## 2.9.71
+### Patch Changes
+
+- Updated dependencies [55b1388]
+  - @prosopo/util@3.3.0
+  - @prosopo/types@4.6.0
+  - @prosopo/procaptcha@2.10.32
+  - @prosopo/common@3.1.39
+  - @prosopo/procaptcha-common@2.10.22
+
+## 2.9.70
+### Patch Changes
+
+- Updated dependencies [9b91e85]
+- Updated dependencies [c80a05b]
+  - @prosopo/types@4.5.0
+  - @prosopo/procaptcha@2.10.31
+  - @prosopo/procaptcha-common@2.10.21
+
 ## 2.9.69
 ### Patch Changes
 

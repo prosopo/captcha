@@ -1,5 +1,164 @@
 # @prosopo/user-access-policy
 
+## 3.11.1
+### Patch Changes
+
+- Updated dependencies [18d0287]
+  - @prosopo/types@4.9.3
+  - @prosopo/api@3.5.10
+
+## 3.11.0
+### Minor Changes
+
+- ca78a0c: Add an `os` (operating system) match dimension to user access policies.
+  
+  The provider now classifies each request's operating system server-side from the User-Agent (`classifyOs`, returning one of `windows`/`macos`/`ios`/`android`/`linux`/`unknown`) and threads it into the user scope used to match access rules, so a `Block` or `Restrict` rule can target a specific OS. The OS is always populated (falling back to `unknown`) and derived from the full User-Agent rather than the easily-omitted `sec-ch-ua-platform` client hint, so it cannot be bypassed by dropping client hints. `os` is stored and indexed in Redis as a TAG (mirroring `countryCode`) and contributes one point to rule specificity ranking.
+
+### Patch Changes
+
+- Updated dependencies [8814425]
+  - @prosopo/api@3.5.9
+
+## 3.10.11
+### Patch Changes
+
+- Updated dependencies [7a434e0]
+  - @prosopo/types@4.9.2
+  - @prosopo/common@3.1.43
+  - @prosopo/api@3.5.8
+
+## 3.10.10
+### Patch Changes
+
+- Updated dependencies [8986976]
+- Updated dependencies [970bca2]
+  - @prosopo/types@4.9.1
+  - @prosopo/util@3.3.3
+  - @prosopo/api@3.5.7
+  - @prosopo/common@3.1.42
+  - @prosopo/logger@2.0.1
+  - @prosopo/api-route@2.6.50
+  - @prosopo/redis-client@1.0.27
+
+## 3.10.9
+### Patch Changes
+
+- 7daea2e: chore(deps-dev): bump vitest from 3.2.4 to 3.2.6 in /packages/user-access-policy
+- Updated dependencies [dfb0c53]
+- Updated dependencies [7ebb78f]
+- Updated dependencies [849af99]
+- Updated dependencies [a5ba27b]
+- Updated dependencies [948d36b]
+- Updated dependencies [41e0e11]
+- Updated dependencies [11f1e8c]
+- Updated dependencies [3c80664]
+- Updated dependencies [b166037]
+- Updated dependencies [1111ff2]
+- Updated dependencies [6a7b122]
+  - @prosopo/common@3.1.41
+  - @prosopo/logger@2.0.0
+  - @prosopo/util@3.3.2
+  - @prosopo/types@4.9.0
+  - @prosopo/api@3.5.6
+  - @prosopo/api-route@2.6.49
+  - @prosopo/redis-client@1.0.26
+
+## 3.10.8
+### Patch Changes
+
+- Updated dependencies [12cd0a6]
+- Updated dependencies [12cd0a6]
+  - @prosopo/api@3.5.5
+  - @prosopo/types@4.8.0
+
+## 3.10.7
+### Patch Changes
+
+- Updated dependencies [bb98af1]
+  - @prosopo/types@4.7.4
+  - @prosopo/api@3.5.4
+
+## 3.10.6
+### Patch Changes
+
+- Updated dependencies [89ab6fc]
+- Updated dependencies [0f3750b]
+  - @prosopo/types@4.7.3
+  - @prosopo/api@3.5.3
+
+## 3.10.5
+### Patch Changes
+
+- e89860e: Add an indexed `type` field on the access-rules Redis index and a `blockOnly` filter on `findRules`. The request-time block middleware and the verify-time hard-block check now pre-filter the candidate pool to Block rules at the Redis layer, so dense Restrict / routing-Block populations can no longer push hard-block rules past the server-side ranking cap. Schema rehash triggers automatic index recreate on next provider start.
+- Updated dependencies [edcd450]
+- Updated dependencies [5295c4b]
+  - @prosopo/util@3.3.1
+  - @prosopo/types@4.7.2
+  - @prosopo/logger@1.0.4
+  - @prosopo/api@3.5.2
+  - @prosopo/common@3.1.40
+  - @prosopo/api-route@2.6.48
+  - @prosopo/redis-client@1.0.25
+
+## 3.10.4
+### Patch Changes
+
+- Updated dependencies [46fedf4]
+  - @prosopo/types@4.7.1
+  - @prosopo/api@3.5.1
+
+## 3.10.3
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/types@4.7.0
+  - @prosopo/api@3.5.0
+
+## 3.10.2
+### Patch Changes
+
+- 6962179: fix(user-access-policy): make findRulesRanked robust to typeless candidates and IPv6 numericIp
+  
+  Two production-fatal bugs in `findRulesRanked`, both surfacing as `failed to execute ranked search query` with empty results — i.e. no rules match the request and a Block rule that should fire is silently skipped.
+  
+  1. **Typeless candidates abort the aggregate.** `SEVERITY_EXPR = '(@type == "block")'` dereferenced `@type` directly, so any candidate document missing `type` triggered `Could not find the value for a parameter name, consider using EXISTS if applicable for type`. Sources of typeless candidates in production: stale RediSearch index entries pointing at a hash whose `type` was `HDEL`'d or whose key was `DEL`'d (visible after mass cleanups), and partial-write races in the writer. Fix: `FILTER exists(@type)` step at the start of the pipeline drops malformed candidates before any APPLY runs.
+  
+  2. **`FT.AGGREGATE LOAD` returns NUMERIC fields as doubles.** RediSearch stores NUMERIC values in the index as 8-byte doubles, so any `numericIp` / `numericIpMaskMin` / `numericIpMaskMax` past `Number.MAX_SAFE_INTEGER` (every IPv6 rule) round-tripped as scientific notation (`5.59112965392e+37`) and `z.coerce.bigint()` threw `Cannot convert … to a BigInt`. The hash itself preserves the full 38-digit string. Fix: use the aggregate purely as a ranker (it returns top-N keys by spec/severity); read the field values via `HGETALL` over those keys, same pattern as `findRulesGreedy`. One extra round-trip over ≤20 keys.
+  
+  Adds three regression tests: two simulate the typeless candidate via `HDEL` (single rule + co-resident valid rule), one inserts an IPv6 `numericIp` past `2**53` and asserts the bigint comes back intact. All three fail without the respective fix.
+- Updated dependencies [4626340]
+  - @prosopo/types@4.6.1
+  - @prosopo/api@3.4.14
+
+## 3.10.1
+### Patch Changes
+
+- Updated dependencies [55b1388]
+  - @prosopo/util@3.3.0
+  - @prosopo/types@4.6.0
+  - @prosopo/logger@1.0.3
+  - @prosopo/api@3.4.13
+  - @prosopo/common@3.1.39
+  - @prosopo/api-route@2.6.47
+  - @prosopo/redis-client@1.0.24
+
+## 3.10.0
+### Minor Changes
+
+- c1c7998: Server-side specificity rank for the access-rule lookup. Strict-match callers (the `blockMiddleware` and the verify-time `checkForHardBlock`) now issue one `FT.AGGREGATE` with `APPLY exists()` for specificity, `APPLY @type == "block"` for the severity tiebreak, `SORTBY @_rank DESC`, and `LIMIT 0 20`. Node receives at most 20 fully-populated rules — no follow-up HGETALL per candidate, no JS-side rank, no silent truncation past the LIMIT (which only applies after Redis has scored every candidate the strict filter returned).
+  
+  Supersedes both the v3.6.38 regression (`b520cd94c` — FT.AGGREGATE WITHCURSOR materialising ~1190 hashes per request, pegged provider1 at ~125% CPU on pronode10) and the 3.6.38-hotfix1 shape that reverted to FT.SEARCH (re-opened the 1000-candidate silent-truncation bug). The greedy/admin path (`matchingFieldsOnly=false`) keeps the FT.AGGREGATE+CURSOR approach with a generous `GREEDY_MAX_CANDIDATES` cap since those callers do not run on the per-request hot path.
+  
+  `packages/provider/src/api/blacklistRequestInspector.ts` flips `getPrioritisedAccessRule` to `matchingFieldsOnly: true` to engage the new path. The defensive JS `rankCandidateRules` is kept so any drift between the Redis-side score and the JS semantics surfaces as ordering, not as letting traffic through. New benchmark integration test seeds 10k rules across a realistic specificity distribution and asserts p50 < 80ms / p99 < 250ms over 200 lookups; local measurement is steady at p50 ≈ 20ms, p99 ≈ 24ms.
+
+### Patch Changes
+
+- Updated dependencies [9b91e85]
+- Updated dependencies [c80a05b]
+  - @prosopo/types@4.5.0
+  - @prosopo/api@3.4.12
+
 ## 3.9.1
 ### Patch Changes
 

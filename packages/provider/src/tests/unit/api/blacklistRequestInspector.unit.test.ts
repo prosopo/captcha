@@ -13,13 +13,19 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/logger";
-import type { IPInfoResponse } from "@prosopo/types";
+import {
+	CaptchaType,
+	FrictionlessReason,
+	type IPInfoResponse,
+} from "@prosopo/types";
+import type { IProviderDatabase } from "@prosopo/types-database";
 import {
 	AccessPolicyType,
 	type AccessRule,
 	type AccessRulesStorage,
 	type UserScope,
 } from "@prosopo/user-access-policy";
+import type { NextFunction, Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
 import {
 	BlacklistRequestInspector,
@@ -43,6 +49,7 @@ describe("getRequestUserScope", () => {
 			userAgent: userAgent,
 			ip: rawIp,
 			userId: "testuser",
+			os: "unknown",
 		});
 	});
 	it("should return a user scope with ja4Hash and userAgent and ip", () => {
@@ -58,6 +65,7 @@ describe("getRequestUserScope", () => {
 			ja4Hash: ja4,
 			userAgent: userAgent,
 			ip: rawIp,
+			os: "unknown",
 		});
 	});
 	it("should return a user scope with userAgent and ip", () => {
@@ -71,6 +79,7 @@ describe("getRequestUserScope", () => {
 		expect(userScope).toEqual({
 			userAgent: userAgent,
 			ip: rawIp,
+			os: "unknown",
 		});
 	});
 	it("should return a user scope with userAgent", () => {
@@ -81,6 +90,7 @@ describe("getRequestUserScope", () => {
 		const userScope = getRequestUserScope(requestHeaders);
 		expect(userScope).toEqual({
 			userAgent: userAgent,
+			os: "unknown",
 		});
 	});
 
@@ -154,6 +164,63 @@ describe("BlacklistRequestInspector.shouldAbortRequest", () => {
 		// at the earliest entry point (blockMiddleware).
 		const hasCountry = seenScopes.some((scope) => scope.countryCode === "DE");
 		expect(hasCountry).toBe(true);
+	});
+
+	it("threads the OS classified from the request UA into the access-rule lookup", async () => {
+		const seenScopes: Array<Record<string, unknown>> = [];
+		const storage = buildStorage(async (filter) => {
+			const f = filter as { userScope: Record<string, unknown> };
+			seenScopes.push(f.userScope);
+			return [];
+		});
+		const inspector = new BlacklistRequestInspector(
+			storage,
+			async () => undefined,
+		);
+
+		await inspector.shouldAbortRequest(
+			"/v1/prosopo/provider/client/captcha/frictionless",
+			"1.1.1.1",
+			"ja4hash",
+			{
+				"user-agent":
+					"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+			},
+			{},
+			mockLogger,
+			validIpInfo("DE"),
+		);
+
+		// OS is classified server-side from the UA, so an os-based access rule
+		// can fire at the earliest entry point (blockMiddleware).
+		const hasOs = seenScopes.some((scope) => scope.os === "windows");
+		expect(hasOs).toBe(true);
+	});
+
+	it("always classifies an OS (falls back to 'unknown') so allow-list rules can match unrecognised UAs", async () => {
+		const seenScopes: Array<Record<string, unknown>> = [];
+		const storage = buildStorage(async (filter) => {
+			const f = filter as { userScope: Record<string, unknown> };
+			seenScopes.push(f.userScope);
+			return [];
+		});
+		const inspector = new BlacklistRequestInspector(
+			storage,
+			async () => undefined,
+		);
+
+		await inspector.shouldAbortRequest(
+			"/v1/prosopo/provider/client/captcha/frictionless",
+			"1.1.1.1",
+			"ja4hash",
+			{},
+			{},
+			mockLogger,
+			validIpInfo("DE"),
+		);
+
+		expect(seenScopes.length).toBeGreaterThan(0);
+		expect(seenScopes.every((scope) => scope.os === "unknown")).toBe(true);
 	});
 
 	it("does not pass countryCode when req.ipInfo is missing", async () => {
@@ -328,6 +395,456 @@ describe("BlacklistRequestInspector.shouldAbortRequest", () => {
 	});
 });
 
+// Coverage for the synthetic blocked-session persistence + structured log
+// the inspector emits at the 401 decision point. Separate `describe` so the
+// fixtures (a stub `IProviderDatabase` with a spyable storeBlockedSession,
+// and a logger that records arguments) don't bleed into the abort-decision
+// fixtures above.
+describe("BlacklistRequestInspector blocked-session persistence", () => {
+	// Logger stub that captures the lazy log payloads so individual assertions
+	// can inspect what was logged without depending on call order across
+	// info/debug/warn calls.
+	const captureLogger = () => {
+		const calls: Array<{
+			level: "info" | "warn" | "error" | "debug";
+			payload: ReturnType<() => Record<string, unknown>>;
+		}> = [];
+		const lvl = (level: "info" | "warn" | "error" | "debug") =>
+			vi.fn((fn: () => Record<string, unknown>) => {
+				calls.push({ level, payload: fn() });
+			});
+		return {
+			logger: {
+				info: lvl("info"),
+				warn: lvl("warn"),
+				error: lvl("error"),
+				debug: lvl("debug"),
+			} as unknown as Logger,
+			calls,
+		};
+	};
+
+	const buildStorage = (rules: Partial<AccessRule>[]): AccessRulesStorage =>
+		({
+			findRules: vi.fn().mockResolvedValue(rules),
+		}) as unknown as AccessRulesStorage;
+
+	const buildDb = (
+		impl?: (session: unknown) => Promise<void>,
+	): { db: IProviderDatabase; spy: ReturnType<typeof vi.fn> } => {
+		const spy = vi.fn(impl ?? (async () => undefined));
+		return {
+			db: { storeBlockedSession: spy } as unknown as IProviderDatabase,
+			spy,
+		};
+	};
+
+	const validIpInfo = (countryCode: string): IPInfoResponse => ({
+		ip: "1.1.1.1",
+		isValid: true,
+		isVPN: false,
+		isTor: false,
+		isProxy: false,
+		isDatacenter: false,
+		isAbuser: false,
+		isMobile: false,
+		isSatellite: false,
+		isCrawler: false,
+		countryCode,
+	});
+
+	const BOT_JA4 = "t13d1313h2_f57a46bbacb6_7f0f34a4126d";
+	const BOT_UA =
+		"Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15";
+
+	it("emits a structured 'Access policy block' log line on Block decisions, carrying the matched rule's identity", async () => {
+		const { logger, calls } = captureLogger();
+		const storage = buildStorage([
+			{
+				type: AccessPolicyType.Block,
+				ja4Hash: BOT_JA4,
+				description: "ja4 block — custom (Twickets-targeted)",
+			},
+		]);
+		const inspector = new BlacklistRequestInspector(
+			storage,
+			async () => undefined,
+		);
+
+		const shouldAbort = await inspector.shouldAbortRequest(
+			"/v1/prosopo/provider/client/captcha/frictionless",
+			"1.1.1.1",
+			BOT_JA4,
+			{ "user-agent": BOT_UA, "prosopo-site-key": "sk-twickets" },
+			{},
+			logger,
+			validIpInfo("GB"),
+		);
+		expect(shouldAbort).toBe(true);
+
+		const blockLog = calls.find((c) => c.payload.msg === "Access policy block");
+		expect(blockLog).toBeDefined();
+		const data = blockLog?.payload.data as Record<string, unknown>;
+		expect(data.policyType).toBe(AccessPolicyType.Block);
+		expect(typeof data.ruleHash).toBe("string");
+		// Rule was scoped only on ja4Hash — derived ruleType reflects that.
+		expect(data.ruleType).toEqual(["ja4Hash"]);
+		expect(data.ruleDescription).toBe("ja4 block — custom (Twickets-targeted)");
+		const userScope = data.userScope as Record<string, unknown>;
+		expect(userScope.ja4).toBe(BOT_JA4);
+		expect(userScope.userAgent).toBe(BOT_UA);
+		expect(userScope.ip).toBe("1.1.1.1");
+		expect(userScope.countryCode).toBe("GB");
+	});
+
+	it("calls db.storeBlockedSession with blocked=true, ACCESS_POLICY_BLOCK reason and the rule identity on Block decisions", async () => {
+		const { logger } = captureLogger();
+		const { db, spy } = buildDb();
+		const storage = buildStorage([
+			{
+				type: AccessPolicyType.Block,
+				ja4Hash: BOT_JA4,
+				description: "ja4 block — Solver",
+			},
+		]);
+		const inspector = new BlacklistRequestInspector(
+			storage,
+			async () => undefined,
+			db,
+		);
+
+		const shouldAbort = await inspector.shouldAbortRequest(
+			"/v1/prosopo/provider/client/captcha/frictionless",
+			"1.1.1.1",
+			BOT_JA4,
+			{ "user-agent": BOT_UA },
+			{},
+			logger,
+			validIpInfo("GB"),
+		);
+		expect(shouldAbort).toBe(true);
+		// Fire-and-forget — give the microtask queue a tick to drain the
+		// void'd promise before asserting on the spy.
+		await Promise.resolve();
+		expect(spy).toHaveBeenCalledTimes(1);
+		const written = spy.mock.calls[0]?.[0] as Record<string, unknown>;
+		expect(written.reason).toBe(FrictionlessReason.ACCESS_POLICY_BLOCK);
+		expect(written.ruleHash).toEqual(expect.any(String));
+		expect(written.ruleType).toEqual(["ja4Hash"]);
+		expect(written.ruleDescription).toBe("ja4 block — Solver");
+		const headers = written.headers as Record<string, unknown>;
+		expect(headers["user-agent"]).toBe(BOT_UA);
+		// Sentinel required-field values that the request never reached
+		// the point of populating — asserted so the schema-required fields
+		// can never silently regress to undefined and trip Mongoose
+		// validation at write time.
+		expect(written.score).toBe(1);
+		expect(written.threshold).toBe(0);
+		expect(written.captchaType).toBe("frictionless");
+		const result = written.result as Record<string, unknown>;
+		expect(result.status).toBe("Disapproved");
+	});
+
+	it("does NOT call storeBlockedSession when no rule matches", async () => {
+		const { logger } = captureLogger();
+		const { db, spy } = buildDb();
+		const storage = buildStorage([]); // no rules match
+		const inspector = new BlacklistRequestInspector(
+			storage,
+			async () => undefined,
+			db,
+		);
+
+		const shouldAbort = await inspector.shouldAbortRequest(
+			"/v1/prosopo/provider/client/captcha/frictionless",
+			"1.1.1.1",
+			"clean-ja4",
+			{ "user-agent": "clean-ua" },
+			{},
+			logger,
+			validIpInfo("GB"),
+		);
+		expect(shouldAbort).toBe(false);
+		await Promise.resolve();
+		expect(spy).not.toHaveBeenCalled();
+	});
+
+	it("does NOT call storeBlockedSession when matched policy is Restrict (not Block)", async () => {
+		const { logger } = captureLogger();
+		const { db, spy } = buildDb();
+		const storage = buildStorage([
+			{
+				type: AccessPolicyType.Restrict,
+				ja4Hash: BOT_JA4,
+				description: "restrict — higher image rounds",
+			},
+		]);
+		const inspector = new BlacklistRequestInspector(
+			storage,
+			async () => undefined,
+			db,
+		);
+
+		const shouldAbort = await inspector.shouldAbortRequest(
+			"/v1/prosopo/provider/client/captcha/frictionless",
+			"1.1.1.1",
+			BOT_JA4,
+			{ "user-agent": BOT_UA },
+			{},
+			logger,
+			validIpInfo("GB"),
+		);
+		// Restrict policies don't 401 at middleware — they let the request
+		// through with modified captcha params; the downstream captcha-
+		// creation path then writes a normal session record. So no
+		// blocked-session doc should be created here.
+		expect(shouldAbort).toBe(false);
+		await Promise.resolve();
+		expect(spy).not.toHaveBeenCalled();
+	});
+
+	it("does NOT call storeBlockedSession when only matching Block policy has deferToVerify=true", async () => {
+		const { logger } = captureLogger();
+		const { db, spy } = buildDb();
+		const storage = buildStorage([
+			{
+				type: AccessPolicyType.Block,
+				deferToVerify: true,
+				ja4Hash: BOT_JA4,
+				description: "deferred ja4 block",
+			},
+		]);
+		const inspector = new BlacklistRequestInspector(
+			storage,
+			async () => undefined,
+			db,
+		);
+
+		const shouldAbort = await inspector.shouldAbortRequest(
+			"/v1/prosopo/provider/client/captcha/frictionless",
+			"1.1.1.1",
+			BOT_JA4,
+			{ "user-agent": BOT_UA },
+			{},
+			logger,
+			validIpInfo("GB"),
+		);
+		// deferToVerify policies are filtered before the block decision so
+		// the request passes through unimpeded — the verify-step path
+		// already writes its own commitment record.
+		expect(shouldAbort).toBe(false);
+		await Promise.resolve();
+		expect(spy).not.toHaveBeenCalled();
+	});
+
+	it("still 401s when storeBlockedSession rejects (DB write must not block the response)", async () => {
+		const { logger, calls } = captureLogger();
+		const { db } = buildDb(async () => {
+			throw new Error("simulated mongo failure");
+		});
+		const storage = buildStorage([
+			{
+				type: AccessPolicyType.Block,
+				ja4Hash: BOT_JA4,
+				description: "ja4 block — Solver",
+			},
+		]);
+		const inspector = new BlacklistRequestInspector(
+			storage,
+			async () => undefined,
+			db,
+		);
+
+		const shouldAbort = await inspector.shouldAbortRequest(
+			"/v1/prosopo/provider/client/captcha/frictionless",
+			"1.1.1.1",
+			BOT_JA4,
+			{ "user-agent": BOT_UA },
+			{},
+			logger,
+			validIpInfo("GB"),
+		);
+		// The block decision returns synchronously; the void'd promise can
+		// reject in the background without affecting the 401.
+		expect(shouldAbort).toBe(true);
+		// Structured "Access policy block" log line still landed.
+		expect(calls.some((c) => c.payload.msg === "Access policy block")).toBe(
+			true,
+		);
+	});
+
+	it("works without a db dependency — log fires, no persistence attempt", async () => {
+		const { logger, calls } = captureLogger();
+		const storage = buildStorage([
+			{
+				type: AccessPolicyType.Block,
+				ja4Hash: BOT_JA4,
+				description: "ja4 block — Solver",
+			},
+		]);
+		// Constructor with the legacy 2-arg form (no db) — existing
+		// production code paths that construct the inspector without a db
+		// must keep working.
+		const inspector = new BlacklistRequestInspector(
+			storage,
+			async () => undefined,
+		);
+
+		const shouldAbort = await inspector.shouldAbortRequest(
+			"/v1/prosopo/provider/client/captcha/frictionless",
+			"1.1.1.1",
+			BOT_JA4,
+			{ "user-agent": BOT_UA },
+			{},
+			logger,
+			validIpInfo("GB"),
+		);
+		expect(shouldAbort).toBe(true);
+		expect(calls.some((c) => c.payload.msg === "Access policy block")).toBe(
+			true,
+		);
+	});
+
+	it("derives ruleType as ['ip'] when the rule scopes on numericIp", async () => {
+		const { logger } = captureLogger();
+		const { db, spy } = buildDb();
+		// 1.1.1.1 == 16843009 as a big-int integer-encoded IPv4.
+		const storage = buildStorage([
+			{
+				type: AccessPolicyType.Block,
+				numericIp: 16843009n,
+				description: "single-IP block — 1.1.1.1",
+			},
+		]);
+		const inspector = new BlacklistRequestInspector(
+			storage,
+			async () => undefined,
+			db,
+		);
+
+		const shouldAbort = await inspector.shouldAbortRequest(
+			"/v1/prosopo/provider/client/captcha/frictionless",
+			"1.1.1.1",
+			"unrelated-ja4",
+			{ "user-agent": BOT_UA },
+			{},
+			logger,
+			validIpInfo("GB"),
+		);
+		expect(shouldAbort).toBe(true);
+		await Promise.resolve();
+		const written = spy.mock.calls[0]?.[0] as Record<string, unknown>;
+		expect(written.ruleType).toEqual(["ip"]);
+	});
+
+	it("derives ruleType as ['ipMask'] when the rule scopes on a CIDR range", async () => {
+		const { logger } = captureLogger();
+		const { db, spy } = buildDb();
+		// 1.1.1.0/24 → numericIpMaskMin=16843008, max=16843263
+		const storage = buildStorage([
+			{
+				type: AccessPolicyType.Block,
+				numericIpMaskMin: 16843008n,
+				numericIpMaskMax: 16843263n,
+				description: "CIDR block 1.1.1.0/24",
+			},
+		]);
+		const inspector = new BlacklistRequestInspector(
+			storage,
+			async () => undefined,
+			db,
+		);
+
+		const shouldAbort = await inspector.shouldAbortRequest(
+			"/v1/prosopo/provider/client/captcha/frictionless",
+			"1.1.1.1",
+			"unrelated-ja4",
+			{ "user-agent": BOT_UA },
+			{},
+			logger,
+			validIpInfo("GB"),
+		);
+		expect(shouldAbort).toBe(true);
+		await Promise.resolve();
+		const written = spy.mock.calls[0]?.[0] as Record<string, unknown>;
+		expect(written.ruleType).toEqual(["ipMask"]);
+	});
+});
+
+describe("BlacklistRequestInspector.abortRequestForBlockedUsers", () => {
+	const mockLogger = {
+		info: vi.fn(),
+		debug: vi.fn(),
+		error: vi.fn(),
+		warn: vi.fn(),
+	} as unknown as Logger;
+
+	const buildResponse = (): {
+		res: Response;
+		status: ReturnType<typeof vi.fn>;
+		json: ReturnType<typeof vi.fn>;
+	} => {
+		const json = vi.fn();
+		const status = vi.fn(() => ({ json }));
+		return { res: { status } as unknown as Response, status, json };
+	};
+
+	const buildRequest = (overrides: Partial<Request>): Request =>
+		({
+			ip: "1.1.1.1",
+			url: "/v1/prosopo/provider/client/captcha/frictionless",
+			ja4: "unrelated-ja4",
+			headers: {},
+			body: {},
+			logger: mockLogger,
+			...overrides,
+		}) as unknown as Request;
+
+	it("responds 403 Forbidden and does not call next() when the request is denied", async () => {
+		// Missing IP on an api route is a deny path in shouldAbortRequest, so
+		// no storage/rules setup is needed to exercise the abort response.
+		const inspector = new BlacklistRequestInspector(
+			{
+				findRules: vi.fn().mockResolvedValue([]),
+			} as unknown as AccessRulesStorage,
+			async () => undefined,
+		);
+		const { res, status, json } = buildResponse();
+		const next: NextFunction = vi.fn();
+
+		await inspector.abortRequestForBlockedUsers(
+			buildRequest({ ip: "" }),
+			res,
+			next,
+		);
+
+		expect(status).toHaveBeenCalledWith(403);
+		expect(json).toHaveBeenCalledWith({ error: "Forbidden" });
+		expect(next).not.toHaveBeenCalled();
+	});
+
+	it("calls next() and does not write a status when the request is allowed", async () => {
+		const inspector = new BlacklistRequestInspector(
+			{
+				findRules: vi.fn().mockResolvedValue([]),
+			} as unknown as AccessRulesStorage,
+			async () => undefined,
+		);
+		const { res, status } = buildResponse();
+		const next: NextFunction = vi.fn();
+
+		// Non-api route short-circuits shouldAbortRequest to false (allow).
+		await inspector.abortRequestForBlockedUsers(
+			buildRequest({ url: "/favicon.ico" }),
+			res,
+			next,
+		);
+
+		expect(next).toHaveBeenCalledTimes(1);
+		expect(status).not.toHaveBeenCalled();
+	});
+});
+
 describe("rankCandidateRules", () => {
 	const request: UserScope = {
 		ja4Hash: "ja4-A",
@@ -484,5 +1001,118 @@ describe("rankCandidateRules", () => {
 			undefined,
 		);
 		expect(ranked[0]).toEqual(specificRestrict);
+	});
+
+	// Issue #3713: at equal specificity, harshness picks the winner.
+	// Ordering: Block > Restrict[image, rounds DESC] > Restrict[puzzle] >
+	// Restrict[pow]. Specificity stays the primary criterion — these tests
+	// use equal-specificity setups to isolate the new tiebreaker.
+
+	it("on equal specificity, ranks Restrict tiers as image > puzzle > pow", () => {
+		const powRule: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			captchaType: CaptchaType.pow,
+		};
+		const puzzleRule: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			captchaType: CaptchaType.puzzle,
+		};
+		const imageRule: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			captchaType: CaptchaType.image,
+		};
+		const ranked = rankCandidateRules(
+			[powRule, puzzleRule, imageRule],
+			request,
+			undefined,
+		);
+		expect(ranked).toEqual([imageRule, puzzleRule, powRule]);
+	});
+
+	it("on equal specificity, image with more solvedImagesCount is harsher", () => {
+		const twoRounds: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			captchaType: CaptchaType.image,
+			solvedImagesCount: 2,
+		};
+		const fourRounds: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			captchaType: CaptchaType.image,
+			solvedImagesCount: 4,
+		};
+		const ranked = rankCandidateRules(
+			[twoRounds, fourRounds],
+			request,
+			undefined,
+		);
+		expect(ranked[0]).toEqual(fourRounds);
+		expect(ranked[1]).toEqual(twoRounds);
+	});
+
+	it("on equal specificity, Block beats every Restrict captcha tier", () => {
+		const block: AccessRule = {
+			type: AccessPolicyType.Block,
+			ja4Hash: "ja4-A",
+		};
+		const image: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			captchaType: CaptchaType.image,
+			solvedImagesCount: 9,
+		};
+		const ranked = rankCandidateRules([image, block], request, undefined);
+		expect(ranked[0]).toEqual(block);
+	});
+
+	// `deferToVerify` is a fire-time flag, not a harshness signal — a
+	// deferred Block at equal specificity still ranks ahead of a Restrict so
+	// downstream verify-time consumers (which iterate the same ranked array)
+	// still see the Block first.
+	it("on equal specificity, a deferToVerify Block still outranks a Restrict", () => {
+		const deferredBlock: AccessRule = {
+			type: AccessPolicyType.Block,
+			ja4Hash: "ja4-A",
+			deferToVerify: true,
+		};
+		const restrict: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			captchaType: CaptchaType.image,
+			solvedImagesCount: 4,
+		};
+		const ranked = rankCandidateRules(
+			[restrict, deferredBlock],
+			request,
+			undefined,
+		);
+		expect(ranked[0]).toEqual(deferredBlock);
+	});
+
+	it("a more-specific pow Restrict still beats a less-specific image Restrict", () => {
+		// Harshness is only the equal-specificity tiebreaker. A narrower
+		// pow rule (ja4 + asn) still wins over a broader image rule (ja4).
+		const broadImage: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			captchaType: CaptchaType.image,
+			solvedImagesCount: 4,
+		};
+		const specificPow: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			asn: 205016,
+			captchaType: CaptchaType.pow,
+		};
+		const ranked = rankCandidateRules(
+			[broadImage, specificPow],
+			request,
+			undefined,
+		);
+		expect(ranked[0]).toEqual(specificPow);
 	});
 });

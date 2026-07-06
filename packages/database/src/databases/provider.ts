@@ -34,6 +34,7 @@ import {
 	type DatasetWithIdsAndTree,
 	DatasetWithIdsAndTreeSchema,
 	type DecisionMachineArtifact,
+	DecisionMachineKind,
 	type DecisionMachineScope,
 	type Hash,
 	type IPInfoResponse,
@@ -91,7 +92,7 @@ import {
 	accessRulesRedisIndex,
 	createRedisAccessRulesStorage,
 } from "@prosopo/user-access-policy/redis";
-import { buildDomainSuffixCandidates } from "@prosopo/util";
+import { assertCoordsSafe, buildDomainSuffixCandidates } from "@prosopo/util";
 import type { ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
 import type { CentralDbStreamer } from "./centralDbStreamer.js";
@@ -403,7 +404,17 @@ export class ProviderDatabase
 								Captcha,
 								"captchaId"
 							>,
-							update: { $set: captchaDoc },
+							// `$setOnInsert` stamps `randomKey` once on the
+							// initial insert and leaves it untouched on
+							// re-imports of the same captchaId. See
+							// `getRandomCaptcha` and the
+							// providerBackfillCaptchaRandomKey playbook for
+							// the corresponding read path and one-shot
+							// backfill of pre-existing rows.
+							update: {
+								$set: captchaDoc,
+								$setOnInsert: { randomKey: Math.random() },
+							},
 							upsert: true,
 						},
 					})),
@@ -544,26 +555,65 @@ export class ProviderDatabase
 			});
 		}
 		const sampleSize = size ? Math.abs(Math.trunc(size)) : 1;
-		const filter: Pick<Captcha, "datasetId" | "solved"> = { datasetId, solved };
-		const cursor = this.tables?.captcha.aggregate([
-			{ $match: filter },
-			{ $sample: { size: sampleSize } },
-			{
-				$project: {
-					datasetId: 1,
-					datasetContentId: 1,
-					captchaId: 1,
-					captchaContentId: 1,
-					items: 1,
-					target: 1,
-				},
-			},
-		]);
-		const docs = await cursor;
+		const projection = {
+			_id: 0,
+			datasetId: 1,
+			datasetContentId: 1,
+			captchaId: 1,
+			captchaContentId: 1,
+			items: 1,
+			target: 1,
+		};
+		// Indexed random sampling via `randomKey` and the
+		// `{datasetId, solved, randomKey}` compound index. Pick a pivot in
+		// [0,1) and walk the next `sampleSize` keys; wrap to the start of
+		// the range when the pivot lands near 1.0. Each branch reads at
+		// most `sampleSize` index keys, replacing the previous `$sample`
+		// aggregation that materialised the full matched set (~20K docs,
+		// ~140ms avg, max 721ms). `datasetId` is hex (validated above) but
+		// the `Hash` alias permits `number[]`, which Mongoose's strict
+		// FilterQuery rejects, hence the cast.
+		const baseFilter = { datasetId: datasetId as string, solved };
+		const pivot = Math.random();
+		const head =
+			(await this.tables?.captcha
+				.find({ ...baseFilter, randomKey: { $gte: pivot } }, projection)
+				.sort({ randomKey: 1 })
+				.limit(sampleSize)
+				.lean<Captcha[]>()) ?? [];
+		let docs: Captcha[] = head;
+		if (docs.length < sampleSize) {
+			const tail =
+				(await this.tables?.captcha
+					.find({ ...baseFilter, randomKey: { $lt: pivot } }, projection)
+					.sort({ randomKey: 1 })
+					.limit(sampleSize - docs.length)
+					.lean<Captcha[]>()) ?? [];
+			docs = docs.concat(tail);
+		}
 
-		if (docs?.length) {
-			// drop the _id field
-			return docs.map(({ _id, ...keepAttrs }) => keepAttrs) as Captcha[];
+		// Fallback for the gap between deploying this code and the
+		// providerBackfillCaptchaRandomKey playbook completing:
+		// pre-existing captcha docs have no `randomKey`, so the range
+		// queries above skip them entirely. The old aggregation works
+		// regardless. Once backfill is verified across all pronodes this
+		// fallback can be deleted.
+		if (docs.length === 0) {
+			const fallback =
+				(await this.tables?.captcha
+					.aggregate([
+						{ $match: baseFilter },
+						{ $sample: { size: sampleSize } },
+						{ $project: projection },
+					])
+					.exec()) ?? [];
+			if (fallback.length > 0) {
+				return fallback.map(({ _id, ...keep }) => keep) as Captcha[];
+			}
+		}
+
+		if (docs.length > 0) {
+			return docs;
 		}
 
 		throw new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
@@ -642,6 +692,21 @@ export class ProviderDatabase
 	/**
 	 * @description Get a dataset by Id
 	 */
+	/**
+	 * Returns the most recently uploaded dataset's ID. Used as the per-provider
+	 * default when a client doesn't pin a specific dataset (which it can't
+	 * under DNS-based routing — clients don't know which provider they'll hit).
+	 */
+	async getMostRecentDatasetId(): Promise<string | undefined> {
+		const dataset = await this.tables?.dataset
+			.findOne()
+			.sort({ _id: -1 })
+			.lean<DatasetBase>();
+
+		const datasetId = dataset?.datasetId;
+		return typeof datasetId === "string" ? datasetId : undefined;
+	}
+
 	async getDatasetDetails(datasetId: Hash): Promise<DatasetBase> {
 		if (!isHex(datasetId)) {
 			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
@@ -903,6 +968,8 @@ export class ProviderDatabase
 		const tables = this.getTables();
 		const timestamp = new Date();
 		const isDisapproved = result.status === CaptchaStatus.disapproved;
+		// Defence-in-depth: validate coords before write.
+		assertCoordsSafe(coords, "coords");
 		const setStage: Record<string, unknown> = {
 			result,
 			serverChecked,
@@ -1163,6 +1230,8 @@ export class ProviderDatabase
 		const tables = this.getTables();
 		const timestamp = lastUpdatedTimestamp ?? new Date();
 		const isDisapproved = result.status === CaptchaStatus.disapproved;
+		// Defence-in-depth: validate coords before write.
+		assertCoordsSafe(coords, "coords");
 		const setStage: Record<string, unknown> = {
 			result,
 			serverChecked,
@@ -1230,26 +1299,42 @@ export class ProviderDatabase
 	): Promise<void> {
 		const tables = this.getTables();
 		const timestamp = new Date();
-		const setStage: Record<string, unknown> = {
+		const baseSet: Record<string, unknown> = {
 			...updates,
 			pendingStage: true,
 		};
+		const pipelineExprs: Record<string, unknown> = {};
 		if (updates.serverChecked === true) {
-			setStage.verifiedAtTimestamp = {
+			pipelineExprs.verifiedAtTimestamp = {
 				$ifNull: ["$verifiedAtTimestamp", timestamp],
 			};
 		}
 		if (updates.userSubmitted === true) {
-			setStage.submittedAtTimestamp = {
+			pipelineExprs.submittedAtTimestamp = {
 				$ifNull: ["$submittedAtTimestamp", timestamp],
 			};
 		}
 		if (updates.result?.status === CaptchaStatus.disapproved) {
-			setStage.failedAtTimestamp = {
+			pipelineExprs.failedAtTimestamp = {
 				$ifNull: ["$failedAtTimestamp", timestamp],
 			};
 		}
-		await tables.puzzlecaptcha.updateOne({ challenge }, [{ $set: setStage }]);
+		// Prefer ordinary `$set` so Mongoose schema casting fires — without
+		// it, a `bigint` in a composite-IP half (e.g. `providedIp.lower`)
+		// gets serialised as BSON Long instead of going through the
+		// `bigint→string→Decimal128` setter on
+		// `CompositeIpAddressRecordSchemaObj`, leaving the on-disk type
+		// out of sync with the schema and breaking downstream casts in the
+		// central-streaming sweep. Only fall back to the pipeline form
+		// when an `$ifNull` (or other aggregation expression) is actually
+		// required.
+		if (Object.keys(pipelineExprs).length === 0) {
+			await tables.puzzlecaptcha.updateOne({ challenge }, { $set: baseSet });
+			return;
+		}
+		await tables.puzzlecaptcha.updateOne({ challenge }, [
+			{ $set: { ...baseSet, ...pipelineExprs } },
+		]);
 	}
 
 	/** @description Get serverChecked Dapp User image captcha commitments from the commitments table
@@ -1339,27 +1424,39 @@ export class ProviderDatabase
 	) {
 		const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
 		const timestamp = new Date();
-		const setStage: Record<string, unknown> = {
+		const baseSet: Record<string, unknown> = {
 			...updates,
 			lastUpdatedAtTimestamp: timestamp,
 			pendingStage: true,
 		};
+		const pipelineExprs: Record<string, unknown> = {};
 		if (updates.userSubmitted === true) {
-			setStage.submittedAtTimestamp = {
+			pipelineExprs.submittedAtTimestamp = {
 				$ifNull: ["$submittedAtTimestamp", timestamp],
 			};
 		}
 		if (updates.serverChecked === true) {
-			setStage.verifiedAtTimestamp = {
+			pipelineExprs.verifiedAtTimestamp = {
 				$ifNull: ["$verifiedAtTimestamp", timestamp],
 			};
 		}
 		if (updates.result?.status === CaptchaStatus.disapproved) {
-			setStage.failedAtTimestamp = {
+			pipelineExprs.failedAtTimestamp = {
 				$ifNull: ["$failedAtTimestamp", timestamp],
 			};
 		}
-		await this.tables?.commitment.updateOne(filter, [{ $set: setStage }]);
+		// Prefer ordinary `$set` so Mongoose schema casting fires — see the
+		// matching comment on `updatePuzzleCaptchaRecord`. The
+		// `imgCaptchaTasks` side-update call site (line ~1037) only
+		// populates `providedIp` / `metadata`, so this branch takes the
+		// non-pipeline path and the `bigint → Decimal128` setter runs.
+		if (Object.keys(pipelineExprs).length === 0) {
+			await this.tables?.commitment.updateOne(filter, { $set: baseSet });
+			return;
+		}
+		await this.tables?.commitment.updateOne(filter, [
+			{ $set: { ...baseSet, ...pipelineExprs } },
+		]);
 	}
 
 	/**
@@ -1473,20 +1570,121 @@ export class ProviderDatabase
 	}
 
 	/**
+	 * Persist a synthetic Session record for a request that was 401'd at the
+	 * request-time block middleware. The record is written with
+	 * `blocked=true` + `deleted=true` so the captcha flow can't pick it up
+	 * downstream, and with sentinel values for the schema-required fields
+	 * the blocked request never had a chance to populate (score / threshold /
+	 * captchaType / etc.).
+	 *
+	 * Designed for fire-and-forget: callers `void`-cast the promise and any
+	 * Mongo error is swallowed-and-logged so the 401 response is never
+	 * delayed by a persistence failure. The structured log line at the call
+	 * site is the source of truth either way.
+	 *
+	 * Mirrors `storeSessionRecord` enough that the Traffic-page
+	 * aggregations can read these records out of the central-streamer
+	 * pipeline once the UI work lands.
+	 */
+	async storeBlockedSession(record: Session): Promise<void> {
+		try {
+			const stored: Session = {
+				...record,
+				blocked: true,
+				deleted: true,
+				// Stamp storedAtTimestamp so the existing TTL index on the
+				// sessions collection sweeps the record after one day.
+				storedAtTimestamp: record.storedAtTimestamp ?? record.createdAt,
+				lastUpdatedTimestamp: record.lastUpdatedTimestamp ?? record.createdAt,
+			};
+			await this.tables.session.create(stored);
+			this.centralStreamer?.streamSessionRecord(
+				stored as unknown as StoredSession,
+				(ts) =>
+					this.tables.session
+						.updateOne(
+							{
+								sessionId: stored.sessionId,
+								lastUpdatedTimestamp: { $lte: ts },
+							},
+							{ $set: { storedAtTimestamp: ts } },
+						)
+						.then(() => {}),
+			);
+		} catch (err) {
+			// Swallow — the structured log line at the inspector's call site
+			// captures the same information for OO2, and a 401 must not be
+			// delayed by Mongo write trouble.
+			this.logger.warn(() => ({
+				err,
+				msg: "Failed to persist blocked session record",
+				data: { sessionId: record.sessionId, siteKey: record.siteKey },
+			}));
+		}
+	}
+
+	/**
 	 * Get a session record by sessionId
 	 */
 	async getSessionRecordBySessionId(
 		sessionId: string,
 	): Promise<Session | undefined> {
 		const filter: Pick<SessionRecord, "sessionId"> = { sessionId };
+		// Projection lists every field a caller of this function actually
+		// reads. `headers` is selected by individual key rather than as a
+		// whole blob: the flattened `req.headers` persisted at frictionless
+		// time can contain `x-tls-clienthello` (a base64-encoded full TLS
+		// ClientHello, multi-KB per session). That field is only consumed
+		// by `ja4Middleware` from the live `req.headers` at the entry
+		// point — never re-read off the persisted Session — so it just
+		// bloats every subsequent lookup. The enumerated list below covers
+		// the headers `buildEscalation` forwards onto the escalation
+		// session. New headers that need to round-trip must be added
+		// here explicitly.
 		const doc = await this.tables.session
 			.findOne(filter, {
 				sessionId: 1,
-				ipInfo: 1,
+				token: 1,
+				score: 1,
+				threshold: 1,
 				scoreComponents: 1,
+				ipAddress: 1,
+				ipInfo: 1,
 				webView: 1,
-				reason: 1,
+				iFrame: 1,
 				decryptedHeadHash: 1,
+				siteKey: 1,
+				reason: 1,
+				mode: 1,
+				solvedImagesCount: 1,
+				userSitekeyIpHash: 1,
+				simdReadings: 1,
+				dnsEvent: 1,
+				// captchaType is required by the peek-before-consume path
+				// in `CaptchaManager.isValidRequest` — without it, every
+				// escalation peek would compare `undefined !== <requested>`
+				// and forcibly return INCORRECT_CAPTCHA_TYPE on the happy
+				// path too. Keep this projection in sync with whatever
+				// fields the read-only callers need.
+				captchaType: 1,
+				"headers.user-agent": 1,
+				"headers.accept": 1,
+				"headers.accept-language": 1,
+				"headers.accept-encoding": 1,
+				"headers.sec-ch-ua": 1,
+				"headers.sec-ch-ua-mobile": 1,
+				"headers.sec-ch-ua-platform": 1,
+				"headers.sec-ch-ua-platform-version": 1,
+				"headers.sec-fetch-dest": 1,
+				"headers.sec-fetch-mode": 1,
+				"headers.sec-fetch-site": 1,
+				"headers.sec-fetch-user": 1,
+				"headers.referer": 1,
+				"headers.origin": 1,
+				"headers.prosopo-user": 1,
+				"headers.prosopo-site-key": 1,
+				"headers.prosopo-type": 1,
+				"headers.x-tls-version": 1,
 			})
 			.lean<Session>();
 		return doc || undefined;
@@ -2438,9 +2636,11 @@ export class ProviderDatabase
 	): Promise<void> {
 		const now = new Date();
 		const dappAccount = artifact.dappAccount ?? null;
+		const kind = artifact.kind ?? DecisionMachineKind.Routing;
 		const filter = {
 			scope: artifact.scope,
 			dappAccount,
+			kind,
 		};
 
 		await this.tables?.decisionMachine.updateOne(
@@ -2449,11 +2649,13 @@ export class ProviderDatabase
 				$set: {
 					scope: artifact.scope,
 					dappAccount,
+					kind,
 					runtime: artifact.runtime,
 					language: artifact.language,
 					source: artifact.source,
 					name: artifact.name,
 					version: artifact.version,
+					captchaType: artifact.captchaType,
 					updatedAt: now,
 				},
 				$setOnInsert: {
@@ -2474,11 +2676,15 @@ export class ProviderDatabase
 	async getDecisionMachineArtifact(
 		scope: DecisionMachineScope,
 		dappAccount?: string,
+		kind?: DecisionMachineKind,
 	): Promise<DecisionMachineArtifact | undefined> {
-		const filter = {
+		const filter: Record<string, unknown> = {
 			scope,
 			dappAccount: dappAccount ?? null,
 		};
+		if (kind !== undefined) {
+			filter.kind = kind;
+		}
 		const doc = await this.tables?.decisionMachine
 			.findOne(filter)
 			.lean<DecisionMachineArtifact>();
@@ -2586,7 +2792,14 @@ export class ProviderDatabase
 			});
 		}
 
-		// Use aggregation to join with session records and filter by context
+		// Use aggregation to join with session records and filter by
+		// context. `$sample` runs *before* `$lookup` so the join only
+		// processes the bounded random pool (`max`) instead of every
+		// matched powcaptcha. The previous ordering let `$lookup` chew
+		// through the full match (>30K docs for the busiest dapp,
+		// ~4.7s per call) before the trailing `$limit` had any effect.
+		// A second `$sample` after the post-join filter trims down to
+		// the requested `size`.
 		// biome-ignore lint/suspicious/noExplicitAny: Dynamic pipeline construction requires flexible typing
 		const pipeline: any[] = [
 			{
@@ -2597,6 +2810,7 @@ export class ProviderDatabase
 					},
 				},
 			},
+			{ $sample: { size: max } },
 			{
 				$lookup: {
 					from: "sessions",
@@ -2629,7 +2843,6 @@ export class ProviderDatabase
 		}
 
 		pipeline.push(
-			{ $limit: max },
 			{ $sample: { size } },
 			{
 				$project: {

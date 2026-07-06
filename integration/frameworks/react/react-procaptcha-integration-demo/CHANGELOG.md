@@ -1,5 +1,70 @@
 # @prosopo/react-procaptcha-integration-demo
 
+## 1.1.92
+### Patch Changes
+
+  - @prosopo/react-procaptcha-wrapper@1.1.92
+
+## 1.1.91
+### Patch Changes
+
+  - @prosopo/react-procaptcha-wrapper@1.1.91
+
+## 1.1.90
+### Patch Changes
+
+  - @prosopo/react-procaptcha-wrapper@1.1.90
+
+## 1.1.89
+### Patch Changes
+
+  - @prosopo/react-procaptcha-wrapper@1.1.89
+
+## 1.1.88
+### Patch Changes
+
+  - @prosopo/react-procaptcha-wrapper@1.1.88
+
+## 1.1.87
+### Patch Changes
+
+  - @prosopo/react-procaptcha-wrapper@1.1.87
+
+## 1.1.86
+### Patch Changes
+
+  - @prosopo/react-procaptcha-wrapper@1.1.86
+
+## 1.1.85
+### Patch Changes
+
+  - @prosopo/react-procaptcha-wrapper@1.1.85
+
+## 1.1.84
+### Patch Changes
+
+  - @prosopo/react-procaptcha-wrapper@1.1.84
+
+## 1.1.83
+### Patch Changes
+
+  - @prosopo/react-procaptcha-wrapper@1.1.83
+
+## 1.1.82
+### Patch Changes
+
+  - @prosopo/react-procaptcha-wrapper@1.1.82
+
+## 1.1.81
+### Patch Changes
+
+  - @prosopo/react-procaptcha-wrapper@1.1.81
+
+## 1.1.80
+### Patch Changes
+
+  - @prosopo/react-procaptcha-wrapper@1.1.80
+
 ## 1.1.79
 ### Patch Changes
 

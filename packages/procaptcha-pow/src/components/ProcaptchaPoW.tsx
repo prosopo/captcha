@@ -26,13 +26,14 @@ const ProcaptchaWidget: LazyExoticComponent<ProcaptchaWidgetComponent> = lazy(
 	async () => import("./ProcaptchaWidget.js"),
 );
 
+// Spread props rather than enumerating: the inner ProcaptchaWidget consumes
+// `onEscalate` (passed by ProcaptchaFrictionless so a route()-escalated PoW
+// solve can mount the image widget) and `autoStart`. Listing props by name
+// silently dropped both, so the Manager closure captured
+// `onEscalate=undefined` and the post-PoW escalation envelope no-op'd in the
+// browser — the user just saw the PoW checkbox spin forever.
 export const ProcaptchaPow = (props: ProcaptchaProps) => (
 	<Suspense>
-		<ProcaptchaWidget
-			config={props.config}
-			callbacks={props.callbacks}
-			frictionlessState={props.frictionlessState}
-			i18n={props.i18n}
-		/>
+		<ProcaptchaWidget {...props} />
 	</Suspense>
 );

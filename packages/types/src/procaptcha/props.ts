@@ -94,4 +94,21 @@ export interface ProcaptchaProps {
 	// solution that the provider chose to escalate can be transitioned into
 	// the appropriate image/puzzle widget without a full restart.
 	onEscalate?: ProcaptchaEscalationHandler;
+	// When true the widget calls manager.start() on mount instead of waiting
+	// for a checkbox click. Set by ProcaptchaFrictionless after a PoW
+	// escalation so the user doesn't have to click the checkbox a second time.
+	autoStart?: boolean;
+	// Called by the inner widget when the provider returns
+	// CAPTCHA.NO_SESSION_FOUND on the challenge fetch. The frictionless
+	// wrapper re-runs the frictionless flow to mint a new sessionId and
+	// re-mounts the widget in place. Coords are the checkbox click position
+	// the user already made — preserved so the retried submit still carries
+	// real entry-point telemetry instead of (0, 0).
+	onSessionInvalidated?: (x?: number, y?: number) => void;
+	// When provided together with `autoStart`, the widget invokes
+	// `manager.start(x, y)` on mount with these coordinates. Used by
+	// ProcaptchaFrictionless to resume a fresh session after
+	// `onSessionInvalidated` fires without asking the user to click the
+	// checkbox a second time.
+	startCoords?: { x: number; y: number };
 }

@@ -1,5 +1,30 @@
 # @prosopo/lint
 
+## 2.8.37
+### Patch Changes
+
+- Updated dependencies [970bca2]
+  - @prosopo/util@3.3.3
+
+## 2.8.36
+### Patch Changes
+
+- Updated dependencies [849af99]
+- Updated dependencies [a5ba27b]
+  - @prosopo/util@3.3.2
+
+## 2.8.35
+### Patch Changes
+
+- Updated dependencies [edcd450]
+  - @prosopo/util@3.3.1
+
+## 2.8.34
+### Patch Changes
+
+- Updated dependencies [55b1388]
+  - @prosopo/util@3.3.0
+
 ## 2.8.33
 ### Patch Changes
 

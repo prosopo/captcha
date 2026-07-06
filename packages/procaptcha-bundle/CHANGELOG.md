@@ -1,5 +1,169 @@
 # @prosopo/procaptcha-bundle
 
+## 4.1.24
+### Patch Changes
+
+- Updated dependencies [18d0287]
+  - @prosopo/types@4.9.3
+  - @prosopo/procaptcha-frictionless@2.12.5
+  - @prosopo/procaptcha-common@2.11.4
+
+## 4.1.23
+### Patch Changes
+
+- Updated dependencies [8814425]
+  - @prosopo/procaptcha-frictionless@2.12.4
+
+## 4.1.22
+### Patch Changes
+
+- Updated dependencies [f9e8c94]
+- Updated dependencies [7a434e0]
+  - @prosopo/locale@3.2.6
+  - @prosopo/types@4.9.2
+  - @prosopo/procaptcha-frictionless@2.12.3
+  - @prosopo/procaptcha-common@2.11.3
+
+## 4.1.21
+### Patch Changes
+
+- Updated dependencies [8986976]
+- Updated dependencies [970bca2]
+  - @prosopo/types@4.9.1
+  - @prosopo/util@3.3.3
+  - @prosopo/procaptcha-frictionless@2.12.2
+  - @prosopo/procaptcha-common@2.11.2
+  - @prosopo/dotenv@3.0.47
+
+## 4.1.20
+### Patch Changes
+
+- Updated dependencies [849af99]
+- Updated dependencies [6ecc576]
+- Updated dependencies [a5ba27b]
+- Updated dependencies [619dc9f]
+- Updated dependencies [11f1e8c]
+- Updated dependencies [b166037]
+- Updated dependencies [1111ff2]
+  - @prosopo/util@3.3.2
+  - @prosopo/widget-skeleton@2.8.4
+  - @prosopo/dotenv@3.0.46
+  - @prosopo/types@4.9.0
+  - @prosopo/procaptcha-common@2.11.1
+  - @prosopo/procaptcha-frictionless@2.12.1
+
+## 4.1.19
+### Patch Changes
+
+- 12cd0a6: Add ipv4-only / ipv6-only provider DNS routing via `data-ipv4` / `data-ipv6`.
+  
+  Dapps that need to pin captcha traffic to a single IP stack can now do so:
+  
+  ```html
+  <div class="procaptcha" data-sitekey="..." data-ipv4="true"></div>
+  ```
+  
+  What happens under the hood:
+  
+  - The widget reads `data-ipv4` / `data-ipv6` (or the matching `ipv4` / `ipv6`
+    booleans on `ProcaptchaRenderOptions` / explicit `render(...)`) and threads
+    them through `ProcaptchaConfigSchema`.
+  - `pickIpMode(config)` resolves them into an `IpMode` (`"ipv4"` / `"ipv6"` /
+    `undefined`); `ipv4` wins if both are set.
+  - The frictionless / image / pow / puzzle managers pass the `IpMode` into
+    `getProcaptchaRandomActiveProvider`, which calls `/healthz` on the matching
+    single-stack global hostname (`ipv4.pronode.prosopo.io` or
+    `ipv6.pronode.prosopo.io`) and pins subsequent captcha calls to
+    `ipv4.pronodeN.prosopo.io` / `ipv6.pronodeN.prosopo.io`. The dual-stack
+    cache and the single-stack caches are kept separate.
+  - `convertHostedProvider` now accepts an optional `IpMode` and, when set,
+    selects the matching `ipv4` / `ipv6` sub-object from the provider-list JSON.
+    Top-level `ipv4` / `ipv6` keys are skipped by default so existing dual-stack
+    callers keep working.
+  - New helpers in `@prosopo/load-balancer`: `IpMode`, `stripIpModeLabel`,
+    `getProviderHostname`.
+  
+  Coordinated with the matching `captcha-private` change that publishes the
+  `ipv4` / `ipv6` sub-objects to S3.
+- Updated dependencies [12cd0a6]
+- Updated dependencies [12cd0a6]
+  - @prosopo/procaptcha-common@2.11.0
+  - @prosopo/procaptcha-frictionless@2.12.0
+  - @prosopo/types@4.8.0
+
+## 4.1.18
+### Patch Changes
+
+- Updated dependencies [bb98af1]
+  - @prosopo/types@4.7.4
+  - @prosopo/procaptcha-common@2.10.28
+  - @prosopo/procaptcha-frictionless@2.11.11
+
+## 4.1.17
+### Patch Changes
+
+- Updated dependencies [89ab6fc]
+- Updated dependencies [0f3750b]
+  - @prosopo/types@4.7.3
+  - @prosopo/procaptcha-common@2.10.27
+  - @prosopo/procaptcha-frictionless@2.11.10
+
+## 4.1.16
+### Patch Changes
+
+- Updated dependencies [edcd450]
+- Updated dependencies [5295c4b]
+  - @prosopo/util@3.3.1
+  - @prosopo/types@4.7.2
+  - @prosopo/locale@3.2.5
+  - @prosopo/procaptcha-common@2.10.26
+  - @prosopo/procaptcha-frictionless@2.11.9
+  - @prosopo/dotenv@3.0.45
+
+## 4.1.15
+### Patch Changes
+
+- Updated dependencies [46fedf4]
+  - @prosopo/procaptcha-frictionless@2.11.8
+  - @prosopo/types@4.7.1
+  - @prosopo/procaptcha-common@2.10.25
+
+## 4.1.14
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/types@4.7.0
+  - @prosopo/procaptcha-common@2.10.24
+  - @prosopo/procaptcha-frictionless@2.11.7
+
+## 4.1.13
+### Patch Changes
+
+- Updated dependencies [4626340]
+  - @prosopo/types@4.6.1
+  - @prosopo/procaptcha-common@2.10.23
+  - @prosopo/procaptcha-frictionless@2.11.6
+
+## 4.1.12
+### Patch Changes
+
+- Updated dependencies [55b1388]
+  - @prosopo/util@3.3.0
+  - @prosopo/types@4.6.0
+  - @prosopo/procaptcha-common@2.10.22
+  - @prosopo/procaptcha-frictionless@2.11.5
+  - @prosopo/dotenv@3.0.44
+
+## 4.1.11
+### Patch Changes
+
+- Updated dependencies [9b91e85]
+- Updated dependencies [c80a05b]
+  - @prosopo/types@4.5.0
+  - @prosopo/procaptcha-common@2.10.21
+  - @prosopo/procaptcha-frictionless@2.11.4
+
 ## 4.1.10
 ### Patch Changes
 

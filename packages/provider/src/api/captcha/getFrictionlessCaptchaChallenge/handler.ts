@@ -21,18 +21,27 @@ import {
 	type ScoreComponents,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import type { AccessRulesStorage } from "@prosopo/user-access-policy";
-import { flatten } from "@prosopo/util";
+import {
+	AccessPolicyType,
+	type AccessRulesStorage,
+} from "@prosopo/user-access-policy";
+import { flatten, sanitisePageUrl } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import { getCompositeIpAddress } from "../../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../../express.js";
 import { Tasks } from "../../../tasks/index.js";
 import { derivePlatform } from "../../../utils/devicePlatform.js";
+import { hashUserAgent } from "../../../utils/hashUserAgent.js";
 import { hashUserIp } from "../../../utils/hashUserIp.js";
 import { normalizeRequestIp } from "../../../utils/normalizeRequestIp.js";
 import { getMaintenanceMode } from "../../admin/apiToggleMaintenanceModeEndpoint.js";
 import { getRequestUserScope } from "../../blacklistRequestInspector.js";
 import { buildDnsEventUrl } from "../../dnsEventUrl.js";
+import {
+	recordBotScore,
+	recordDetectorTriggered,
+	recordFrictionlessDecision,
+} from "../../metrics.js";
 import { isReservedTestSiteKey } from "../../testSiteKey.js";
 import { buildFrictionlessMaintenanceResponse } from "../maintenanceModeResponses.js";
 import { handleAccessPolicy } from "./accessPolicy.js";
@@ -57,7 +66,6 @@ export default (
 				req.logger.info(() => ({
 					msg: "Frictionless response finished",
 					data: {
-						requestId: req.requestId,
 						status: res.statusCode,
 						path: req.path,
 						method: req.method,
@@ -65,8 +73,23 @@ export default (
 				}));
 			});
 
-			const { token, headHash, dapp, user, mode, simdReadings } =
-				GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
+			const {
+				token,
+				headHash,
+				dapp,
+				user,
+				mode,
+				simdReadings,
+				currentUrl: reportedCurrentUrl,
+			} = GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
+
+			// Re-sanitise whatever the client reported: keep only scheme + host
+			// + path and drop the query string, fragment and any embedded
+			// credentials so we never persist secrets carried in the page URL.
+			// undefined when the field is absent or not a usable http(s) URL —
+			// the decision machine treats that as "not reported" and forces an
+			// image captcha.
+			const currentUrl = sanitisePageUrl(reportedCurrentUrl);
 
 			const normalizedIp = normalizeRequestIp(req.ip, req.logger);
 			const sessionMode =
@@ -75,7 +98,6 @@ export default (
 			req.logger.info(() => ({
 				msg: "Frictionless handler entry",
 				data: {
-					requestId: req.requestId,
 					token,
 					user,
 					dapp,
@@ -105,17 +127,12 @@ export default (
 				);
 			}
 
-			const tasks = new Tasks(env, req.logger);
-
-			const decodedSimdReadings = await decryptIncomingSimdReadings(
-				tasks.frictionlessManager,
-				simdReadings,
-			);
-
-			// Reserved CI test site keys: serve an invisible PoW session (no DB
-			// record required) so the flow is deterministic and non-interactive.
-			// The verdict is forced at /submit/pow and /verify based on which
-			// reserved key it is.
+			// Reserved CI test site keys: serve an invisible PoW session
+			// (no DB record required) so the flow is deterministic and
+			// non-interactive. The verdict is forced at /submit/pow and
+			// /verify based on which reserved key it is. Checked before
+			// any async work so the test path stays free of decrypts /
+			// DB lookups.
 			if (isReservedTestSiteKey(dapp)) {
 				req.logger.warn(() => ({
 					msg: "Reserved TEST site key - returning invisible PoW session",
@@ -129,13 +146,22 @@ export default (
 				);
 			}
 
+			const tasks = new Tasks(env, req.logger);
 			const userSitekeyIpHash = hashUserIp(user, normalizedIp, dapp);
-			const { existingToken, dedup } = await resolveSessionDedup(
-				tasks,
-				token,
-				userSitekeyIpHash,
-				req.logger,
-			);
+
+			// Fan out the three independent async dependencies in
+			// parallel: SIMD reading decrypt, session dedup lookup, and
+			// the client record fetch. The original sequential ordering
+			// paid for each in series on every request and dominated p50
+			// on the hottest endpoint. Errors in any branch surface via
+			// Promise.all rejection, which the outer catch already
+			// handles.
+			const [decodedSimdReadings, { existingToken, dedup }, clientRecord] =
+				await Promise.all([
+					decryptIncomingSimdReadings(tasks.frictionlessManager, simdReadings),
+					resolveSessionDedup(tasks, token, userSitekeyIpHash, req.logger),
+					tasks.db.getClientRecord(dapp),
+				]);
 
 			if (existingToken) {
 				req.logger.info(() => ({
@@ -151,8 +177,6 @@ export default (
 				);
 			}
 
-			const clientRecord = await tasks.db.getClientRecord(dapp);
-
 			if (!clientRecord) {
 				return next(
 					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
@@ -164,33 +188,165 @@ export default (
 			}
 
 			if (dedup) {
-				req.logger.info(() => ({
-					msg: "Reusing existing session for user-IP-sitekey combination",
-					data: {
-						userSitekeyIpHash,
-						sessionId: dedup.sessionId,
-						captchaType: dedup.captchaType,
-					},
-				}));
-				req.logger.info(() => ({
-					msg: "Frictionless decision",
-					data: {
-						requestId: req.requestId,
-						decision: "reuse_session",
-						captchaType: dedup.captchaType,
-						sessionId: dedup.sessionId,
-					},
-				}));
-				attachHoneypot(res, clientRecord);
-				return res.json({
-					[ApiParams.captchaType]: dedup.captchaType as
-						| CaptchaType.image
-						| CaptchaType.pow
-						| CaptchaType.puzzle,
-					[ApiParams.sessionId]: dedup.sessionId,
-					[ApiParams.status]: "ok",
-					dns_url: buildDnsEventUrl(dedup.sessionId),
-				});
+				// A reused session must still honour an active user access policy
+				// AND the configured routing machine. This fast-path returns
+				// before handleAccessPolicy / runDecisionMachine below, so a
+				// cached session whose captchaType conflicts with either gate —
+				// e.g. an IP rate-limit rule forcing `image`, or a routing
+				// machine published after this dedup pointer was minted that
+				// now wants `puzzle` — would be served as-is and then either
+				// hard-rejected at the /captcha/{type} gate with
+				// INCORRECT_CAPTCHA_TYPE or escalated by the post-PoW router
+				// into a session the widget can't follow. Re-check both here
+				// and on conflict evict the stale session so the request falls
+				// through to the access policy / decision machine, which will
+				// re-derive the correct captcha type.
+				const dedupCountryCode =
+					req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
+						? req.ipInfo.countryCode
+						: undefined;
+				const dedupAsn =
+					req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
+						? req.ipInfo.asnNumber
+						: undefined;
+				const dedupIsMobile =
+					req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
+						? req.ipInfo.isMobile
+						: undefined;
+				const dedupFlatHeaders = flatten(req.headers);
+				const dedupUserAgent = String(req.headers["user-agent"] ?? "");
+				const dedupUserScope = getRequestUserScope(
+					dedupFlatHeaders,
+					req.ja4,
+					normalizedIp,
+					user,
+					undefined,
+					undefined,
+					dedupCountryCode,
+					dedupAsn,
+				);
+				const dedupAccessPolicy = (
+					await tasks.frictionlessManager.getPrioritisedAccessPolicies(
+						userAccessRulesStorage,
+						dapp,
+						dedupUserScope,
+					)
+				)[0];
+				const dedupConflictsWithPolicy =
+					dedupAccessPolicy !== undefined &&
+					(dedupAccessPolicy.type === AccessPolicyType.Block ||
+						(dedupAccessPolicy.captchaType !== undefined &&
+							dedupAccessPolicy.captchaType !== dedup.captchaType));
+
+				// Ask the routing machine (if any) what it would pick now,
+				// using the cached session's signals as the baseline. If it
+				// disagrees with the cached captchaType, evict.
+				//
+				// The router input intentionally mirrors the inputs the cached
+				// session was created under: `score` and `webView` come from
+				// the persisted session, the rest (UA, JA4, country, mobile)
+				// come from the current request. A routing machine that only
+				// reads the captchaType (e.g. blanket-escalate-to-puzzle) will
+				// behave identically. One that mixes per-request signals with
+				// session-derived ones gets the request-time view of every
+				// input that's available without re-decrypting the payload.
+				const cachedCaptchaType = dedup.captchaType as
+					| CaptchaType.image
+					| CaptchaType.pow
+					| CaptchaType.puzzle;
+				const dedupRouted = normalizedIp
+					? await tasks.frictionlessManager.applyRoutingMachine(
+							{
+								captchaType: cachedCaptchaType,
+								...(dedup.session.solvedImagesCount !== undefined && {
+									solvedImagesCount: dedup.session.solvedImagesCount,
+								}),
+								...(dedup.session.powDifficulty !== undefined && {
+									powDifficulty: dedup.session.powDifficulty,
+								}),
+							},
+							{
+								dappAccount: dapp,
+								userAccount: user,
+								ip: normalizedIp,
+								...(dedupCountryCode && { countryCode: dedupCountryCode }),
+								score: dedup.session.score,
+								platform: derivePlatform(
+									dedupUserAgent,
+									dedup.session.webView,
+									{
+										...(typeof dedupIsMobile === "boolean" && {
+											isMobile: dedupIsMobile,
+										}),
+									},
+								),
+								raw: {
+									headers: dedupFlatHeaders,
+									userAgent: dedupUserAgent,
+									...(req.ja4 && { ja4: req.ja4 }),
+								},
+							},
+						)
+					: { captchaType: cachedCaptchaType };
+				const dedupConflictsWithRouting =
+					dedupRouted.captchaType !== cachedCaptchaType;
+
+				if (dedupConflictsWithPolicy || dedupConflictsWithRouting) {
+					req.logger.info(() => ({
+						msg: "Evicting reused session: cached captchaType conflicts with access policy or routing machine",
+						data: {
+							userSitekeyIpHash,
+							sessionId: dedup.sessionId,
+							cachedCaptchaType: dedup.captchaType,
+							...(dedupConflictsWithPolicy && {
+								policyType: dedupAccessPolicy?.type,
+								policyCaptchaType: dedupAccessPolicy?.captchaType,
+							}),
+							...(dedupConflictsWithRouting && {
+								routedCaptchaType: dedupRouted.captchaType,
+							}),
+						},
+					}));
+					// Mongo is authoritative for dedup (see resolveSessionDedup): mark
+					// the stale session deleted so the next request doesn't re-reuse it,
+					// and drop the Redis pointers up front to avoid a resurrection race.
+					await tasks.db.checkAndRemoveSession(dedup.sessionId);
+					await Promise.all([
+						tasks.writeQueue?.invalidateCachedSession(dedup.sessionId) ??
+							Promise.resolve(),
+						tasks.writeQueue?.invalidateCachedSessionByHash(
+							userSitekeyIpHash,
+						) ?? Promise.resolve(),
+					]);
+				} else {
+					req.logger.info(() => ({
+						msg: "Reusing existing session for user-IP-sitekey combination",
+						data: {
+							userSitekeyIpHash,
+							sessionId: dedup.sessionId,
+							captchaType: dedup.captchaType,
+						},
+					}));
+					req.logger.info(() => ({
+						msg: "Frictionless decision",
+						data: {
+							decision: "reuse_session",
+							captchaType: dedup.captchaType,
+							sessionId: dedup.sessionId,
+						},
+					}));
+					recordFrictionlessDecision("reuse_session");
+					attachHoneypot(res, clientRecord);
+					return res.json({
+						[ApiParams.captchaType]: dedup.captchaType as
+							| CaptchaType.image
+							| CaptchaType.pow
+							| CaptchaType.puzzle,
+						[ApiParams.sessionId]: dedup.sessionId,
+						[ApiParams.status]: "ok",
+						dns_url: buildDnsEventUrl(dedup.sessionId),
+					});
+				}
 			}
 
 			const ipAddress = getCompositeIpAddress(normalizedIp);
@@ -216,7 +372,6 @@ export default (
 					flatHeaders,
 					sessionMode,
 					userSitekeyIpHash,
-					requestId: req.requestId,
 					logger: req.logger,
 				},
 				res,
@@ -227,39 +382,92 @@ export default (
 				req.headers["accept-language"] || "",
 			);
 
+			const userScope = getRequestUserScope(
+				flatten(req.headers),
+				req.ja4,
+				normalizedIp,
+				user,
+				undefined,
+				undefined,
+				countryCode,
+				asn,
+			);
+
+			// Fan out the three independent post-shortcircuit awaits:
+			// payload decrypt (CPU-bound crypto), validation (cheap
+			// async), and the Redis-backed access-policy lookup. None of
+			// them depends on the others' outputs — running them in
+			// series previously added up to ~50-80ms on the hot path.
+			const [decryptedPayload, validation, accessPolicies] = await Promise.all([
+				tasks.frictionlessManager.decryptPayload(token, headHash),
+				tasks.frictionlessManager.isValidRequest(
+					clientRecord,
+					CaptchaType.frictionless,
+					env,
+				),
+				tasks.frictionlessManager.getPrioritisedAccessPolicies(
+					userAccessRulesStorage,
+					dapp,
+					userScope,
+				),
+			]);
+
 			const {
-				baseBotScore,
-				timestamp,
-				providerSelectEntropy,
-				userId,
-				userAgent,
+				baseBotScore: rawBaseBotScore,
+				timestamp: rawTimestamp,
+				userId: rawUserId,
+				userAgent: rawUserAgent,
 				webView,
 				iFrame,
 				decryptedHeadHash,
-				decryptionFailed,
+				decryptionFailed: rawDecryptionFailed,
 				triggeredDetectors,
 				shadowDomPenalty,
-			} = await tasks.frictionlessManager.decryptPayload(token, headHash);
+				entropyMathRandomFingerprint,
+				entropyCryptoFingerprint,
+				entropyWallClockOffsetMs,
+				entropyMathRandomFirst,
+			} = decryptedPayload;
+
+			// Test-only override: cypress can't produce a server-decryptable
+			// detector token (no public-key exchange in the test bundle), so
+			// `decryptionFailed` always trips and the frictionless flow's UA
+			// + score + timestamp gates short-circuit every request to image.
+			// With this env var set, synthesise the decrypted-payload values
+			// from the live request so the flow reaches the default-PoW path
+			// — which is what production hits when the bot detector is happy
+			// and lets cypress exercise the post-PoW route() escalation.
+			// Explicitly named so it can't be set in prod by accident.
+			const detectorOverride =
+				process.env.PROSOPO_TEST_FRICTIONLESS_DETECTOR_OVERRIDE === "1";
+			const baseBotScore = detectorOverride ? 0 : rawBaseBotScore;
+			const timestamp = detectorOverride ? Date.now() : rawTimestamp;
+			const userId = detectorOverride
+				? (req.headers["prosopo-user"] as string | undefined)
+				: rawUserId;
+			// `runUserAgentMismatchCheck` compares the *hashed* request UA to
+			// `input.userAgent`, so the synthesised override must already be
+			// hashed for the equality check to clear.
+			const userAgent = detectorOverride
+				? hashUserAgent((req.headers["user-agent"] as string) ?? "")
+				: rawUserAgent;
+			const decryptionFailed = detectorOverride ? false : rawDecryptionFailed;
 
 			req.logger.debug(() => ({
 				msg: "Decrypted payload",
 				data: {
 					baseBotScore,
 					timestamp,
-					providerSelectEntropy,
 					userId,
 					userAgent,
 					webView,
+					...(detectorOverride && { detectorOverride: true }),
 				},
 			}));
 
 			let botScore = baseBotScore + lScore;
 
-			const { valid, reason } = await tasks.frictionlessManager.isValidRequest(
-				clientRecord,
-				CaptchaType.frictionless,
-				env,
-			);
+			const { valid, reason } = validation;
 
 			if (!valid) {
 				return next(
@@ -269,6 +477,11 @@ export default (
 						logger: req.logger,
 					}),
 				);
+			}
+
+			recordBotScore(botScore);
+			if (triggeredDetectors && triggeredDetectors.length > 0) {
+				recordDetectorTriggered(triggeredDetectors);
 			}
 
 			const botThreshold =
@@ -288,16 +501,28 @@ export default (
 				score: botScore,
 				threshold: botThreshold,
 				scoreComponents,
-				providerSelectEntropy,
 				ipAddress,
 				webView,
 				iFrame,
 				decryptedHeadHash,
 				siteKey: dapp,
+				...(currentUrl && { currentUrl }),
 				ipInfo: req.ipInfo,
 				headers: flatHeaders,
 				mode: sessionMode,
 				...(decodedSimdReadings && { simdReadings: decodedSimdReadings }),
+				...(entropyMathRandomFingerprint !== undefined && {
+					entropyMathRandomFingerprint,
+				}),
+				...(entropyCryptoFingerprint !== undefined && {
+					entropyCryptoFingerprint,
+				}),
+				...(entropyWallClockOffsetMs !== undefined && {
+					entropyWallClockOffsetMs,
+				}),
+				...(entropyMathRandomFirst !== undefined && {
+					entropyMathRandomFirst,
+				}),
 			});
 
 			const ipInfoMobile =
@@ -321,23 +546,7 @@ export default (
 				},
 			});
 
-			const userScope = getRequestUserScope(
-				flatten(req.headers),
-				req.ja4,
-				normalizedIp,
-				user,
-				undefined,
-				undefined,
-				countryCode,
-				asn,
-			);
-			const userAccessPolicy = (
-				await tasks.frictionlessManager.getPrioritisedAccessPolicies(
-					userAccessRulesStorage,
-					dapp,
-					userScope,
-				)
-			)[0];
+			const userAccessPolicy = accessPolicies[0];
 
 			const accessPolicyOutcome = await handleAccessPolicy(
 				{
@@ -351,7 +560,6 @@ export default (
 					dapp,
 					ipInfo: req.ipInfo,
 					flatHeaders,
-					requestId: req.requestId,
 					logger: req.logger,
 					userScope,
 				},
@@ -377,12 +585,12 @@ export default (
 					userId,
 					webView,
 					decryptedHeadHash,
-					providerSelectEntropy,
 					baseBotScore,
 					botScore,
 					scoreComponents,
 					token,
 					botThreshold,
+					currentUrl,
 				},
 				{ req, res, next },
 			);

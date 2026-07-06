@@ -1,5 +1,26 @@
 # @prosopo/config
 
+## 3.3.4
+### Patch Changes
+
+- fe996e4: feat(config): gate the rollup bundle visualiser behind `PROSOPO_BUNDLE_STATS`.
+  
+  The frontend bundle stats page (rollup-plugin-visualizer treemap) is now off by
+  default. Set `PROSOPO_BUNDLE_STATS=true` to generate the report and open it in
+  the browser once the bundle has been built; otherwise no report is emitted and
+  no browser window is opened.
+
+## 3.3.3
+### Patch Changes
+
+- e3c399d: chore(deps-dev): bump webpack-dev-server from 5.2.2 to 5.2.5 in /dev/config
+- c523319: chore(deps-dev): bump webpack-dev-server from 5.2.2 to 5.2.5
+
+## 3.3.2
+### Patch Changes
+
+- 7a97bba: chore(deps): bump esbuild from 0.25.9 to 0.28.1
+
 ## 3.3.1
 ### Patch Changes
 

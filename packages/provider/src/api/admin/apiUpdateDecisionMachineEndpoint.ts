@@ -34,7 +34,9 @@ class ApiUpdateDecisionMachineEndpoint
 		args: z.infer<UpdateDecisionMachineBodyType>,
 		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
-		logger = logger || getLogger("info", "");
+		logger = logger
+			? logger.with({}, "admin:decision-machine:update")
+			: getLogger("info", "provider:admin:decision-machine:update");
 		try {
 			const {
 				decisionMachineScope,
@@ -44,12 +46,17 @@ class ApiUpdateDecisionMachineEndpoint
 				decisionMachineName,
 				decisionMachineVersion,
 				decisionMachineCaptchaType,
+				decisionMachineKind,
 				dapp,
 			} = args;
 
 			logger.info(() => ({
 				msg: "Updating decision machine",
-				data: { decisionMachineScope, dappAccount: dapp },
+				data: {
+					decisionMachineScope,
+					dappAccount: dapp,
+					kind: decisionMachineKind,
+				},
 			}));
 
 			const result = await this.clientTaskManager.updateDecisionMachine(
@@ -61,6 +68,7 @@ class ApiUpdateDecisionMachineEndpoint
 				decisionMachineName,
 				decisionMachineVersion,
 				decisionMachineCaptchaType,
+				decisionMachineKind,
 			);
 
 			logger.info(() => ({

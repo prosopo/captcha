@@ -196,3 +196,46 @@ export const buildDomainSuffixCandidates = (domain: string): string[] => {
 	}
 	return candidates;
 };
+
+/**
+ * @description Reduces a page URL to just the page a user is on: scheme +
+ * host (+ port) + path. The query string, fragment and any embedded
+ * credentials (`user:pass@`) are dropped so we never persist secrets that a
+ * site may carry in its URL (tokens, session ids, reset codes, …).
+ *
+ * Only http(s) pages are accepted; anything else (javascript:, data:,
+ * malformed input, etc.) returns undefined so callers can treat it as "not
+ * reported". The client already builds this from `origin + pathname`, but the
+ * provider re-runs it on whatever arrives over the wire — never trust the
+ * client to have stripped the sensitive parts.
+ *
+ * @param raw The raw URL string reported by the client.
+ * @returns The sanitised "origin + path" URL, or undefined when the input is
+ *          missing or not a usable http(s) URL.
+ */
+export const sanitisePageUrl = (
+	raw: string | undefined | null,
+): string | undefined => {
+	if (!raw || typeof raw !== "string") {
+		return undefined;
+	}
+
+	let url: URL;
+	try {
+		url = new URL(raw);
+	} catch {
+		return undefined;
+	}
+
+	if (url.protocol !== "http:" && url.protocol !== "https:") {
+		return undefined;
+	}
+
+	// Strip everything that could carry credentials or per-request secrets.
+	url.search = "";
+	url.hash = "";
+	url.username = "";
+	url.password = "";
+
+	return url.toString();
+};

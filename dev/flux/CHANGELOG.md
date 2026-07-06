@@ -1,5 +1,54 @@
 # @prosopo/flux
 
+## 2.6.60
+### Patch Changes
+
+  - @prosopo/common@3.1.43
+
+## 2.6.59
+### Patch Changes
+
+- Updated dependencies [970bca2]
+  - @prosopo/util@3.3.3
+  - @prosopo/common@3.1.42
+  - @prosopo/logger@2.0.1
+  - @prosopo/dotenv@3.0.47
+
+## 2.6.58
+### Patch Changes
+
+- 6322861: chore(deps): bump qs from 6.13.0 to 6.15.2 in /dev/flux
+- Updated dependencies [dfb0c53]
+- Updated dependencies [7ebb78f]
+- Updated dependencies [849af99]
+- Updated dependencies [a5ba27b]
+- Updated dependencies [948d36b]
+- Updated dependencies [41e0e11]
+- Updated dependencies [11f1e8c]
+- Updated dependencies [3c80664]
+  - @prosopo/common@3.1.41
+  - @prosopo/logger@2.0.0
+  - @prosopo/util@3.3.2
+  - @prosopo/dotenv@3.0.46
+
+## 2.6.57
+### Patch Changes
+
+- Updated dependencies [edcd450]
+  - @prosopo/util@3.3.1
+  - @prosopo/logger@1.0.4
+  - @prosopo/common@3.1.40
+  - @prosopo/dotenv@3.0.45
+
+## 2.6.56
+### Patch Changes
+
+- Updated dependencies [55b1388]
+  - @prosopo/util@3.3.0
+  - @prosopo/logger@1.0.3
+  - @prosopo/common@3.1.39
+  - @prosopo/dotenv@3.0.44
+
 ## 2.6.55
 ### Patch Changes
 

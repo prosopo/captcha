@@ -1,5 +1,40 @@
 # @prosopo/logger
 
+## 2.0.1
+### Patch Changes
+
+- Updated dependencies [970bca2]
+  - @prosopo/util@3.3.3
+
+## 2.0.0
+### Major Changes
+
+- 41e0e11: Tighten @prosopo/logger public exports: drop the stringifyBigInts re-export (import it from @prosopo/util instead) and stop exporting internal-only symbols (level/format string constants and LevelMap).
+
+### Minor Changes
+
+- 948d36b: Add directive-based scope filtering via PROSOPO_LOG_LEVEL and subscope support to with(). PROSOPO_LOG_LEVEL now accepts comma-separated directives like "warn,database=trace" to set per-scope log levels. Directives are resolved at print time, so child loggers created via with() pick up directive changes made after construction (e.g. via setGlobalDirectives) instead of having the level resolved at with() time baked in.
+
+### Patch Changes
+
+- 7ebb78f: chore(deps-dev): bump vite from 6.4.1 to 6.4.3 in /packages/logger
+- 3c80664: Trim whitespace from subscopes in Logger.with so they match directive keys, and clarify the with() JSDoc to describe the snapshot-at-creation level plus emit-time directive re-resolution.
+- Updated dependencies [849af99]
+- Updated dependencies [a5ba27b]
+  - @prosopo/util@3.3.2
+
+## 1.0.4
+### Patch Changes
+
+- Updated dependencies [edcd450]
+  - @prosopo/util@3.3.1
+
+## 1.0.3
+### Patch Changes
+
+- Updated dependencies [55b1388]
+  - @prosopo/util@3.3.0
+
 ## 1.0.2
 ### Patch Changes
 

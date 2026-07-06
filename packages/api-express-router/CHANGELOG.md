@@ -1,5 +1,147 @@
 # @prosopo/api-express-router
 
+## 3.1.37
+### Patch Changes
+
+- Updated dependencies [18d0287]
+  - @prosopo/types@4.9.3
+  - @prosopo/env@3.6.6
+
+## 3.1.36
+### Patch Changes
+
+  - @prosopo/env@3.6.5
+
+## 3.1.35
+### Patch Changes
+
+- Updated dependencies [f9e8c94]
+- Updated dependencies [7a434e0]
+  - @prosopo/locale@3.2.6
+  - @prosopo/types@4.9.2
+  - @prosopo/common@3.1.43
+  - @prosopo/env@3.6.4
+
+## 3.1.34
+### Patch Changes
+
+- Updated dependencies [8986976]
+- Updated dependencies [970bca2]
+  - @prosopo/types@4.9.1
+  - @prosopo/util@3.3.3
+  - @prosopo/env@3.6.3
+  - @prosopo/common@3.1.42
+  - @prosopo/logger@2.0.1
+  - @prosopo/api-route@2.6.50
+
+## 3.1.33
+### Patch Changes
+
+  - @prosopo/env@3.6.2
+
+## 3.1.32
+### Patch Changes
+
+- a444abe: chore(deps): bump uuid from 14.0.0 to 14.0.1
+- 8c8898d: chore(deps): bump uuid from 11.1.0 to 14.0.0 in /packages/api-express-router
+- 41e0e11: Tighten @prosopo/logger public exports: drop the stringifyBigInts re-export (import it from @prosopo/util instead) and stop exporting internal-only symbols (level/format string constants and LevelMap).
+- 11f1e8c: Replace vague logger scopes (empty strings, import.meta.url, generic "CLI") with structured colon-delimited names following the convention package:subsystem:action.
+- Updated dependencies [dfb0c53]
+- Updated dependencies [7ebb78f]
+- Updated dependencies [b9f5eca]
+- Updated dependencies [849af99]
+- Updated dependencies [a5ba27b]
+- Updated dependencies [d1fbde3]
+- Updated dependencies [948d36b]
+- Updated dependencies [41e0e11]
+- Updated dependencies [11f1e8c]
+- Updated dependencies [3c80664]
+- Updated dependencies [a26e9d0]
+- Updated dependencies [b166037]
+- Updated dependencies [1111ff2]
+  - @prosopo/common@3.1.41
+  - @prosopo/logger@2.0.0
+  - @prosopo/util-crypto@13.5.30
+  - @prosopo/util@3.3.2
+  - @prosopo/types@4.9.0
+  - @prosopo/api-route@2.6.49
+  - @prosopo/env@3.6.1
+
+## 3.1.31
+### Patch Changes
+
+- Updated dependencies [12cd0a6]
+- Updated dependencies [12cd0a6]
+  - @prosopo/types@4.8.0
+  - @prosopo/env@3.6.0
+
+## 3.1.30
+### Patch Changes
+
+- Updated dependencies [bb98af1]
+  - @prosopo/types@4.7.4
+  - @prosopo/env@3.5.20
+
+## 3.1.29
+### Patch Changes
+
+- Updated dependencies [89ab6fc]
+- Updated dependencies [0f3750b]
+  - @prosopo/types@4.7.3
+  - @prosopo/env@3.5.19
+
+## 3.1.28
+### Patch Changes
+
+- Updated dependencies [edcd450]
+- Updated dependencies [5295c4b]
+  - @prosopo/types@4.7.2
+  - @prosopo/locale@3.2.5
+  - @prosopo/logger@1.0.4
+  - @prosopo/env@3.5.18
+  - @prosopo/common@3.1.40
+  - @prosopo/api-route@2.6.48
+
+## 3.1.27
+### Patch Changes
+
+- Updated dependencies [46fedf4]
+  - @prosopo/types@4.7.1
+  - @prosopo/env@3.5.17
+
+## 3.1.26
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/types@4.7.0
+  - @prosopo/env@3.5.16
+
+## 3.1.25
+### Patch Changes
+
+- Updated dependencies [4626340]
+  - @prosopo/types@4.6.1
+  - @prosopo/env@3.5.15
+
+## 3.1.24
+### Patch Changes
+
+- Updated dependencies [55b1388]
+  - @prosopo/types@4.6.0
+  - @prosopo/logger@1.0.3
+  - @prosopo/common@3.1.39
+  - @prosopo/env@3.5.14
+  - @prosopo/api-route@2.6.47
+
+## 3.1.23
+### Patch Changes
+
+- Updated dependencies [9b91e85]
+- Updated dependencies [c80a05b]
+  - @prosopo/types@4.5.0
+  - @prosopo/env@3.5.13
+
 ## 3.1.22
 ### Patch Changes
 

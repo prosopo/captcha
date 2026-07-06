@@ -23,6 +23,7 @@ import type { TFunction } from "i18next";
 import { ZodError } from "zod";
 import { Tasks } from "../tasks/index.js";
 import { getMaintenanceMode } from "./admin/apiToggleMaintenanceModeEndpoint.js";
+import { recordDomainValidation } from "./metrics.js";
 import { isReservedTestSiteKey } from "./testSiteKey.js";
 
 export const domainMiddleware = (env: ProviderEnvironment) => {
@@ -66,6 +67,7 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 			// allowlist; let them through so the deterministic test flow works in
 			// every environment and from any origin.
 			if (isReservedTestSiteKey(siteKey)) {
+				recordDomainValidation("test_key");
 				next();
 				return;
 			}
@@ -92,6 +94,7 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 			for (const candidate of candidateOrigins) {
 				for (const domain of allowedDomains) {
 					if (tasks.clientTaskManager.domainPatternMatcher(candidate, domain)) {
+						recordDomainValidation("allowed");
 						next();
 						return;
 					}
@@ -100,6 +103,7 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 
 			throw unauthorizedOriginError(req.i18n, origin, req.logger);
 		} catch (err) {
+			recordDomainValidation("rejected");
 			if (
 				err instanceof ProsopoApiError ||
 				err instanceof ZodError ||

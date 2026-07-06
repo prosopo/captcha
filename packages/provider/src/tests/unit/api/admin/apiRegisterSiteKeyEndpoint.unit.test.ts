@@ -24,6 +24,7 @@ describe("ApiRegisterSiteKeyEndpoint", () => {
 	};
 	let mockLogger: {
 		info: ReturnType<typeof vi.fn>;
+		with: ReturnType<typeof vi.fn>;
 	};
 
 	beforeEach(() => {
@@ -33,6 +34,7 @@ describe("ApiRegisterSiteKeyEndpoint", () => {
 		};
 		mockLogger = {
 			info: vi.fn(),
+			with: vi.fn().mockReturnThis(),
 		};
 		endpoint = new ApiRegisterSiteKeyEndpoint(mockClientTaskManager as never);
 	});
@@ -61,6 +63,7 @@ describe("ApiRegisterSiteKeyEndpoint", () => {
 			imageThreshold: 0.5,
 			imageMaxRounds: 3,
 			verifiedTimeout: 120000,
+			solutionTimeout: 60000,
 			puzzleTolerance: 15,
 		};
 

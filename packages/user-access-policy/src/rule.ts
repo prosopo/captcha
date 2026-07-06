@@ -60,6 +60,12 @@ export type UserAttributes = {
 	coords?: string;
 	countryCode?: string;
 	asn?: number;
+	// Operating system classified server-side from the request User-Agent (see
+	// `classifyOs`). Stored as a plain lowercase tag — one of `OsName` — and
+	// matched like `countryCode` (exact equality, not hashed). Lets a rule
+	// drop/limit requests from a given OS even when the client omits client
+	// hints.
+	os?: string;
 };
 
 export type UserScope = UserAttributes & UserIp;

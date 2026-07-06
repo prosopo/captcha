@@ -74,6 +74,11 @@ export default defineConfig({
 			"cypress/e2e/**/frictionless.cy.ts",
 			"cypress/e2e/**/invisible.cy.ts",
 			"cypress/e2e/**/pow.cy.ts",
+			// Escalation spec drives the frictionless flow + installs a
+			// dapp-scoped routing machine; it has its own
+			// cypress.escalation.config.js and must not be pulled into
+			// the image config's catch-all.
+			"cypress/e2e/**/escalation.cy.ts",
 		],
 	},
 	component: {

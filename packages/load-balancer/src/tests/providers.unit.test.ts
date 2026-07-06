@@ -12,309 +12,178 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { type HardcodedProvider, loadBalancer } from "../index.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+	_resetPinCache,
+	_resetProviderListCache,
+	getProviders,
 	getRandomActiveProvider,
-	selectWeightedProvider,
 } from "../providers.js";
-import { _resetCache } from "../providers.js";
 
-vi.mock("../index.js", () => ({
-	loadBalancer: vi.fn(),
+// Mock the underlying load balancer so getProviders' caching/failure semantics
+// can be exercised without real network calls. getRandomActiveProvider tests
+// don't use loadBalancer, so this mock leaves them unaffected.
+const loadBalancer = vi.fn();
+vi.mock("../balancer.js", () => ({
+	loadBalancer: (...args: unknown[]) => loadBalancer(...args),
 }));
 
-describe("selectWeightedProvider", () => {
-	it("selects provider based on weight distribution", () => {
-		const providers = [
-			{
-				address: "address1",
-				url: "url1",
-				datasetId: "dataset1",
-				weight: 1,
-			},
-			{
-				address: "address2",
-				url: "url2",
-				datasetId: "dataset2",
-				weight: 3,
-			},
-			{
-				address: "address3",
-				url: "url3",
-				datasetId: "dataset3",
-				weight: 1,
-			},
-		];
+const originalFetch = globalThis.fetch;
 
-		// Total weight = 5
-		// Provider 1: weight 1 (covers entropy 0-0)
-		// Provider 2: weight 3 (covers entropy 1-3)
-		// Provider 3: weight 1 (covers entropy 4-4)
+const mockHealthzFetch = (host: string, ok = true, status = 200) => {
+	const mocked = vi.fn(async () => ({
+		ok,
+		status,
+		json: async () => ({ ok: true, host }),
+	}));
+	// biome-ignore lint/suspicious/noExplicitAny: minimal Response stub for the unit test
+	globalThis.fetch = mocked as any;
+	return mocked;
+};
 
-		// Entropy 0 should select provider1
-		expect(selectWeightedProvider(providers, 0).address).toBe("address1");
+beforeEach(() => {
+	_resetPinCache();
+});
 
-		// Entropy 1-3 should select provider2
-		expect(selectWeightedProvider(providers, 1).address).toBe("address2");
-		expect(selectWeightedProvider(providers, 2).address).toBe("address2");
-		expect(selectWeightedProvider(providers, 3).address).toBe("address2");
+afterEach(() => {
+	globalThis.fetch = originalFetch;
+});
 
-		// Entropy 4 should select provider3
-		expect(selectWeightedProvider(providers, 4).address).toBe("address3");
-
-		// Entropy wraps around with modulo
-		expect(selectWeightedProvider(providers, 5).address).toBe("address1");
-		expect(selectWeightedProvider(providers, 6).address).toBe("address2");
+describe("getRandomActiveProvider (dual stack)", () => {
+	it("uses the local URL directly in development (no healthz round-trip)", async () => {
+		const mocked = mockHealthzFetch("ignored");
+		const result = await getRandomActiveProvider("development");
+		expect(result.provider.url).toBe("https://localhost:9229");
+		expect(mocked).not.toHaveBeenCalled();
 	});
 
-	it("handles equal weights correctly", () => {
-		const providers = [
-			{
-				address: "address1",
-				url: "url1",
-				datasetId: "dataset1",
-				weight: 1,
-			},
-			{
-				address: "address2",
-				url: "url2",
-				datasetId: "dataset2",
-				weight: 1,
-			},
-		];
-
-		// Total weight = 2
-		expect(selectWeightedProvider(providers, 0).address).toBe("address1");
-		expect(selectWeightedProvider(providers, 1).address).toBe("address2");
-		expect(selectWeightedProvider(providers, 2).address).toBe("address1");
-		expect(selectWeightedProvider(providers, 3).address).toBe("address2");
+	it("pins to the host returned by /healthz in production", async () => {
+		mockHealthzFetch("pronode7.prosopo.io");
+		const result = await getRandomActiveProvider("production");
+		expect(result.provider.url).toBe("https://pronode7.prosopo.io");
 	});
 
-	it("handles single provider", () => {
-		const providers = [
-			{
-				address: "address1",
-				url: "url1",
-				datasetId: "dataset1",
-				weight: 10,
-			},
-		];
-
-		// All entropy values should select the only provider
-		expect(selectWeightedProvider(providers, 0).address).toBe("address1");
-		expect(selectWeightedProvider(providers, 5).address).toBe("address1");
-		expect(selectWeightedProvider(providers, 100).address).toBe("address1");
+	it("pins to the host returned by /healthz in staging", async () => {
+		mockHealthzFetch("staging-pronode2.prosopo.io");
+		const result = await getRandomActiveProvider("staging");
+		expect(result.provider.url).toBe("https://staging-pronode2.prosopo.io");
 	});
 
-	it("throws error for empty provider list", () => {
-		expect(() => selectWeightedProvider([], 0)).toThrow(
-			"No providers available",
-		);
+	it("caches the pinned URL for repeat callers in the same env + ipMode", async () => {
+		const mocked = mockHealthzFetch("pronode3.prosopo.io");
+		await getRandomActiveProvider("production");
+		await getRandomActiveProvider("production");
+		await getRandomActiveProvider("production");
+		expect(mocked).toHaveBeenCalledTimes(1);
 	});
 
-	it("heavily weighted provider is selected more often", () => {
-		const providers = [
-			{
-				address: "address1",
-				url: "url1",
-				datasetId: "dataset1",
-				weight: 1,
-			},
-			{
-				address: "address2",
-				url: "url2",
-				datasetId: "dataset2",
-				weight: 99,
-			},
-		];
-
-		// Total weight = 100
-		// Provider 1: entropy 0 (1% of the time)
-		// Provider 2: entropy 1-99 (99% of the time)
-
-		const selections = { address1: 0, address2: 0 };
-		for (let i = 0; i < 100; i++) {
-			const selected = selectWeightedProvider(providers, i);
-			if (selected.address === "address1") {
-				selections.address1++;
-			} else {
-				selections.address2++;
-			}
-		}
-
-		expect(selections.address1).toBe(1);
-		expect(selections.address2).toBe(99);
+	it("falls back to the dual-stack base URL when /healthz responds non-OK", async () => {
+		mockHealthzFetch("ignored", false, 503);
+		const result = await getRandomActiveProvider("production");
+		expect(result.provider.url).toBe("https://pronode.prosopo.io");
 	});
 
-	it("handles maximum weight value (100)", () => {
-		const providers = [
-			{
-				address: "address1",
-				url: "url1",
-				datasetId: "dataset1",
-				weight: 100,
-			},
-			{
-				address: "address2",
-				url: "url2",
-				datasetId: "dataset2",
-				weight: 100,
-			},
-		];
-
-		// Total weight = 200
-		const selections = { address1: 0, address2: 0 };
-		for (let i = 0; i < 200; i++) {
-			const selected = selectWeightedProvider(providers, i);
-			if (selected.address === "address1") {
-				selections.address1++;
-			} else {
-				selections.address2++;
-			}
-		}
-
-		// Each should get selected 100 times (50%)
-		expect(selections.address1).toBe(100);
-		expect(selections.address2).toBe(100);
-	});
-
-	it("correctly handles providers without values for weight", () => {
-		// Providers without weight field should default to weight 1
-		const providers = [
-			{
-				address: "address1",
-				url: "url1",
-				datasetId: "dataset1",
-				// No weight field
-			},
-			{
-				address: "address2",
-				url: "url2",
-				datasetId: "dataset2",
-				weight: 3,
-			},
-		];
-
-		// Mock the providers to simulate what comes from the API
-		// The real providers will have weight added by zod schema default
-		const providersWithDefaults = [
-			{ ...providers[0], weight: 1 },
-			providers[1],
-		];
-
-		// Total weight = 4 (1 + 3)
-		// address1 (weight 1) should get entropy 0 (25%)
-		// address2 (weight 3) should get entropy 1-3 (75%)
-
-		const selections = { address1: 0, address2: 0 };
-		for (let i = 0; i < 100; i++) {
-			const selected = selectWeightedProvider(
-				providersWithDefaults as HardcodedProvider[],
-				i,
-			);
-			if (selected.address === "address1") {
-				selections.address1++;
-			} else {
-				selections.address2++;
-			}
-		}
-
-		// address1 should get ~25% and address2 should get ~75%
-		expect(selections.address1).toBe(25);
-		expect(selections.address2).toBe(75);
+	it("falls back to the dual-stack base URL when /healthz body is malformed", async () => {
+		const mocked = vi.fn(async () => ({
+			ok: true,
+			status: 200,
+			json: async () => ({ ok: true }),
+		}));
+		// biome-ignore lint/suspicious/noExplicitAny: minimal Response stub for the unit test
+		globalThis.fetch = mocked as any;
+		const result = await getRandomActiveProvider("production");
+		expect(result.provider.url).toBe("https://pronode.prosopo.io");
 	});
 });
 
-describe("getRandomActiveProvider", () => {
+describe("getRandomActiveProvider (single stack ipMode)", () => {
+	it("hits ipv4.pronode.prosopo.io/healthz and pins to ipv4.pronodeN", async () => {
+		const mocked = mockHealthzFetch("pronode4.prosopo.io");
+		const result = await getRandomActiveProvider("production", "ipv4");
+		expect(result.provider.url).toBe("https://ipv4.pronode4.prosopo.io");
+		expect(mocked).toHaveBeenCalledWith(
+			"https://ipv4.pronode.prosopo.io/healthz",
+			expect.any(Object),
+		);
+	});
+
+	it("hits ipv6 staging /healthz and pins to ipv6.staging-pronodeN", async () => {
+		const mocked = mockHealthzFetch("staging-pronode2.prosopo.io");
+		const result = await getRandomActiveProvider("staging", "ipv6");
+		expect(result.provider.url).toBe(
+			"https://ipv6.staging-pronode2.prosopo.io",
+		);
+		expect(mocked).toHaveBeenCalledWith(
+			"https://ipv6.staging.pronode.prosopo.io/healthz",
+			expect.any(Object),
+		);
+	});
+
+	it("falls back to the ipv4-labelled global URL when ipv4 /healthz fails", async () => {
+		mockHealthzFetch("ignored", false, 500);
+		const result = await getRandomActiveProvider("production", "ipv4");
+		expect(result.provider.url).toBe("https://ipv4.pronode.prosopo.io");
+	});
+
+	it("keeps the dual-stack cache and the ipv4 cache separate", async () => {
+		const mocked = mockHealthzFetch("pronode9.prosopo.io");
+		await getRandomActiveProvider("production");
+		await getRandomActiveProvider("production", "ipv4");
+		await getRandomActiveProvider("production");
+		await getRandomActiveProvider("production", "ipv4");
+		// One healthz per (env, ipMode) combination.
+		expect(mocked).toHaveBeenCalledTimes(2);
+	});
+});
+
+describe("getProviders", () => {
 	beforeEach(() => {
-		_resetCache();
-		vi.clearAllMocks();
-		vi.resetAllMocks();
-		vi.resetModules();
+		_resetProviderListCache();
+		loadBalancer.mockReset();
 	});
 
-	it("returns a random provider when providers list is populated", async () => {
-		const mockProviders = [
-			{ address: "address1", url: "url1", datasetId: "dataset1", weight: 1 },
-			{ address: "address2", url: "url2", datasetId: "dataset2", weight: 1 },
+	it("loads the provider list once and serves repeat callers from cache", async () => {
+		const providers = [
+			{ address: "5xyz", url: "https://p1", datasetId: "0x0" },
 		];
-		(loadBalancer as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
-			mockProviders,
-		);
+		loadBalancer.mockResolvedValue(providers);
 
-		const result = await getRandomActiveProvider("development", 1);
+		const first = await getProviders("production");
+		const second = await getProviders("production");
 
-		expect(result.providerAccount).toBe("address2");
-		expect(result.provider.url).toBe("url2");
-		expect(result.provider.datasetId).toBe("dataset2");
-	});
-
-	it("loads providers only once when called multiple times", async () => {
-		const mockProviders = [
-			{ address: "address1", url: "url1", datasetId: "dataset1", weight: 1 },
-		];
-		(loadBalancer as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
-			mockProviders,
-		);
-
-		await getRandomActiveProvider("development", 123);
-		await getRandomActiveProvider("development", 456);
-
+		expect(first).toBe(providers);
+		expect(second).toBe(providers);
 		expect(loadBalancer).toHaveBeenCalledTimes(1);
 	});
 
-	it("handles empty providers list gracefully", async () => {
-		(loadBalancer as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+	it("dedupes concurrent in-flight loads into a single call", async () => {
+		const providers = [
+			{ address: "5xyz", url: "https://p1", datasetId: "0x0" },
+		];
+		loadBalancer.mockResolvedValue(providers);
 
-		await expect(getRandomActiveProvider("development", 123)).rejects.toThrow();
+		const [a, b] = await Promise.all([
+			getProviders("production"),
+			getProviders("production"),
+		]);
+
+		expect(a).toBe(providers);
+		expect(b).toBe(providers);
+		expect(loadBalancer).toHaveBeenCalledTimes(1);
 	});
 
-	it("respects provider weights when selecting", async () => {
-		const mockProviders = [
-			{ address: "address1", url: "url1", datasetId: "dataset1", weight: 1 },
-			{ address: "address2", url: "url2", datasetId: "dataset2", weight: 3 },
+	it("does not cache failures — a rejected load is retried on the next call", async () => {
+		const providers = [
+			{ address: "5xyz", url: "https://p1", datasetId: "0x0" },
 		];
-		(loadBalancer as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
-			mockProviders,
-		);
+		loadBalancer
+			.mockRejectedValueOnce(new Error("transient"))
+			.mockResolvedValueOnce(providers);
 
-		// Total weight = 4
-		// address1 gets entropy 0 (25%)
-		// address2 gets entropy 1-3 (75%)
-
-		const result0 = await getRandomActiveProvider("development", 0);
-		expect(result0.providerAccount).toBe("address1");
-
-		_resetCache();
-		const result1 = await getRandomActiveProvider("development", 1);
-		expect(result1.providerAccount).toBe("address2");
-
-		_resetCache();
-		const result2 = await getRandomActiveProvider("development", 2);
-		expect(result2.providerAccount).toBe("address2");
-
-		_resetCache();
-		const result3 = await getRandomActiveProvider("development", 3);
-		expect(result3.providerAccount).toBe("address2");
-	});
-
-	it("handles providers with missing weight field (defaults to 1)", async () => {
-		// Simulate providers returned from loadBalancer where one has weight and one doesn't
-		const mockProviders = [
-			{ address: "address1", url: "url1", datasetId: "dataset1", weight: 1 },
-			{ address: "address2", url: "url2", datasetId: "dataset2", weight: 1 },
-		];
-		(loadBalancer as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
-			mockProviders,
-		);
-
-		// With equal weights, distribution should be 50/50
-		const result0 = await getRandomActiveProvider("development", 0);
-		expect(result0.providerAccount).toBe("address1");
-
-		_resetCache();
-		const result1 = await getRandomActiveProvider("development", 1);
-		expect(result1.providerAccount).toBe("address2");
+		await expect(getProviders("production")).rejects.toThrow("transient");
+		// The failure must have cleared the cache, so the next call retries.
+		const retry = await getProviders("production");
+		expect(retry).toBe(providers);
+		expect(loadBalancer).toHaveBeenCalledTimes(2);
 	});
 });
