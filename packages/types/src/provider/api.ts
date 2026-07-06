@@ -151,24 +151,30 @@ export enum AdminApiPaths {
 export type CombinedApiPaths = ClientApiPaths | AdminApiPaths;
 
 export const ProviderDefaultRateLimits = {
-	[ClientApiPaths.GetImageCaptchaChallenge]: { windowMs: 60000, limit: 30 },
-	[ClientApiPaths.GetPowCaptchaChallenge]: { windowMs: 60000, limit: 60 },
-	[ClientApiPaths.SubmitImageCaptchaSolution]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.GetImageCaptchaChallenge]: { windowMs: 60000, limit: 150 },
+	[ClientApiPaths.GetPowCaptchaChallenge]: { windowMs: 60000, limit: 300 },
+	[ClientApiPaths.SubmitImageCaptchaSolution]: {
+		windowMs: 60000,
+		limit: 300,
+	},
 	[ClientApiPaths.GetFrictionlessCaptchaChallenge]: {
 		windowMs: 60000,
-		limit: 60,
+		limit: 300,
 	},
-	[ClientApiPaths.SubmitPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
-	[ClientApiPaths.VerifyPowCaptchaSolution]: { windowMs: 60000, limit: 3000 },
-	[ClientApiPaths.GetPuzzleCaptchaChallenge]: { windowMs: 60000, limit: 60 },
-	[ClientApiPaths.SubmitPuzzleCaptchaSolution]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.SubmitPowCaptchaSolution]: { windowMs: 60000, limit: 300 },
+	[ClientApiPaths.VerifyPowCaptchaSolution]: { windowMs: 60000, limit: 15000 },
+	[ClientApiPaths.GetPuzzleCaptchaChallenge]: { windowMs: 60000, limit: 300 },
+	[ClientApiPaths.SubmitPuzzleCaptchaSolution]: {
+		windowMs: 60000,
+		limit: 300,
+	},
 	[ClientApiPaths.VerifyPuzzleCaptchaSolution]: {
 		windowMs: 60000,
-		limit: 3000,
+		limit: 15000,
 	},
 	[ClientApiPaths.VerifyImageCaptchaSolutionDapp]: {
 		windowMs: 60000,
-		limit: 3000,
+		limit: 15000,
 	},
 	[ClientApiPaths.GetProviderStatus]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.CheckSpamEmail]: { windowMs: 60000, limit: 60 },
