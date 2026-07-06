@@ -52,8 +52,8 @@ const buttonStyleBase: CSSProperties = {
 	// min, not fixed: long localized labels wrap to two lines in narrow widgets
 	// and the button must grow to keep the text inside its rounded fill.
 	minHeight: "42px",
-	// Softly rounded action buttons (overridden per-theme by shape.button).
-	borderRadius: "8px",
+	// Full pill — the Material 3 shape for the action row.
+	borderRadius: "100px",
 	border: "none",
 	transition:
 		"background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, filter 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
@@ -93,6 +93,7 @@ const Button: React.FC<ButtonProps> = ({
 			...baseStyle,
 			backgroundColor: theme.palette.primary.main,
 			color: theme.palette.primary.contrastText,
+			boxShadow: theme.elevation.buttonPrimary,
 			filter: hover ? "brightness(1.06)" : "none",
 		};
 	}, [buttonType, hover, theme]);

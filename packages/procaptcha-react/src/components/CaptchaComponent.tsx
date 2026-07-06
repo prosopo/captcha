@@ -67,6 +67,7 @@ const CaptchaComponent = ({
 					display: "flex",
 					flexDirection: "column",
 					border: `1px solid ${theme.palette.border}`,
+					boxShadow: theme.elevation.card,
 					borderRadius: theme.shape.card,
 					backgroundColor: theme.palette.background.default,
 					userSelect: "none",
