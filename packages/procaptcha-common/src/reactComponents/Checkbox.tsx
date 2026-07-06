@@ -45,6 +45,16 @@ const checkboxBefore = css`{
     }
 }`;
 
+// In forced-colors mode (Windows High Contrast) backgrounds are overridden, so
+// the custom-painted tick can disappear — fall back to the native control,
+// which the OS draws in system colors. !important beats the inline styles.
+const checkboxForcedColors = css`
+	@media (forced-colors: active) {
+		appearance: auto !important;
+		background-image: none !important;
+	}
+`;
+
 const baseStyle: CSSProperties = {
 	width: "28px",
 	height: "28px",
@@ -113,7 +123,6 @@ export const Checkbox: FC<CheckboxProps> = ({
 		}
 	`;
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: TODO fix
 	const checkboxStyle: CSSProperties = useMemo(() => {
 		// White (token) tick painted directly onto the box so the checked state is
 		// identical in light and dark mode — the native control can't be themed.
@@ -121,13 +130,11 @@ export const Checkbox: FC<CheckboxProps> = ({
 		const checkImage = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='${tickColor}' d='M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E")`;
 		return {
 			...baseStyle,
-			appearance: "none",
 			flex: 1,
 			margin: "15px",
 			minWidth: "28px",
 			minHeight: "28px",
 			borderRadius: "6px",
-			borderStyle: "solid",
 			borderWidth: "2px",
 			borderColor: checked
 				? theme.palette.checkbox.fill
@@ -166,7 +173,7 @@ export const Checkbox: FC<CheckboxProps> = ({
 					id={id}
 					onMouseEnter={() => setHover(true)}
 					onMouseLeave={() => setHover(false)}
-					css={checkboxBefore}
+					css={[checkboxBefore, checkboxForcedColors]}
 					type={"checkbox"}
 					aria-live={"assertive"}
 					aria-label={labelText}

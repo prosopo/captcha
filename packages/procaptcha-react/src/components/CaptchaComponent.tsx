@@ -67,7 +67,6 @@ const CaptchaComponent = ({
 					display: "flex",
 					flexDirection: "column",
 					border: `1px solid ${theme.palette.border}`,
-					boxShadow: theme.elevation.card,
 					borderRadius: theme.shape.card,
 					backgroundColor: theme.palette.background.default,
 					userSelect: "none",
@@ -96,7 +95,7 @@ const CaptchaComponent = ({
 						<div
 							style={{
 								backgroundColor: theme.palette.primaryContainer.main,
-									borderRadius: theme.shape.header,
+								borderRadius: theme.shape.header,
 								width: "100%",
 								marginTop: fullSpacing,
 							}}
@@ -118,11 +117,11 @@ const CaptchaComponent = ({
 									{":"}
 									&nbsp;
 									<span
-											style={{
-												color: theme.palette.titleAccent,
-												fontWeight: 800,
-											}}
-										>{`${at(challenge.captchas, index).target} `}</span>
+										style={{
+											color: theme.palette.titleAccent,
+											fontWeight: 800,
+										}}
+									>{`${at(challenge.captchas, index).target} `}</span>
 								</p>
 								<p
 									style={{
@@ -130,7 +129,7 @@ const CaptchaComponent = ({
 										fontWeight: 500,
 										lineHeight: 1.4,
 										fontSize: "0.8rem",
-											opacity: 0.8,
+										opacity: 0.8,
 									}}
 								>
 									{t("WIDGET.IF_NONE_CLICK_NEXT")}

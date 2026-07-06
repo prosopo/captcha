@@ -142,8 +142,6 @@ function getWidgetStyles(theme: Theme): string {
     background-color: ${theme.palette.surface};
     border-color: ${theme.palette.border};
     border-radius: ${WIDGET_BORDER_RADIUS};
-    box-shadow: ${theme.elevation.widget};
-    transition: box-shadow 0.15s ease;
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
@@ -154,10 +152,6 @@ function getWidgetStyles(theme: Theme): string {
     min-height: ${WIDGET_INNER_HEIGHT}px;
     height: 100%;
     direction: ltr !important;
-}
-
-.prosopo-widget__content:hover {
-    box-shadow: ${theme.elevation.widgetHover};
 }
 </style>
 `;

@@ -68,7 +68,7 @@ export const CaptchaWidget = ({
 		>
 			{items.map((item, index) => {
 				const hash = getHash(item);
-					const selected = solution.some((s) => s[0] === hash);
+				const selected = solution.some((s) => s[0] === hash);
 				const imageStyle: Properties<string | number, string> = {
 					// enable the items in the grid to grow in width to use up excess space
 					flexGrow: 1,
@@ -151,9 +151,7 @@ export const CaptchaWidget = ({
 									// make bg half opacity, i.e. shadowing the item's img
 									backgroundColor: theme.palette.overlay,
 									borderRadius: theme.shape.tileSelected,
-									visibility: solution.some((s) => s[0] === hash)
-										? "visible"
-										: "hidden",
+									visibility: selected ? "visible" : "hidden",
 								}}
 							>
 								<svg

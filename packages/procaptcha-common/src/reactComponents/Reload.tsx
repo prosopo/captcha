@@ -43,13 +43,13 @@ export const ReloadButton: FC<ReloadButtonProps> = ({
 	const buttonStyle = useMemo(() => {
 		return {
 			...buttonStyleBase,
-			// Material 3 tonal icon button.
-			backgroundColor: theme.palette.primaryContainer.main,
+			// Material 3 tonal icon button; hover swaps to the state-layer fill so
+			// the feedback is visible in dark mode too (a brightness filter is not).
+			backgroundColor: hover
+				? theme.palette.primaryContainer.hover
+				: theme.palette.primaryContainer.main,
 			color: theme.palette.primaryContainer.contrastText,
-			border: "none",
-			borderRadius: "50%",
-			transition: "filter 0.25s, background-color 0.25s",
-			filter: hover ? "brightness(0.95)" : "none",
+			transition: "background-color 0.25s",
 			justifyContent: "center",
 			alignItems: "center",
 			margin: "0 auto",

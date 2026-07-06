@@ -215,31 +215,18 @@ export const PuzzleCanvas = ({
 		? "Not quite \u2014 try again"
 		: "Drag the piece to the target";
 
-	const isDark = theme.palette.mode === "dark";
-
-	const headerBorderColor = showRetry ? theme.palette.error.main : "transparent";
+	const headerBorderColor = showRetry
+		? theme.palette.error.main
+		: "transparent";
 
 	const headerTextColor = showRetry
 		? theme.palette.error.main
 		: theme.palette.onSurface;
 
-	// Material 3 purple tonal puzzle surface + affordances.
+	// Material 3 purple tonal puzzle surface + affordances (mode-specific values
+	// come from the theme's puzzle tokens).
 	const puzzleAreaBg = `linear-gradient(135deg, ${theme.palette.surface} 0%, ${theme.palette.primaryContainer.main} 50%, ${theme.palette.surface} 100%)`;
-	const targetBorderColor = isDark
-		? "rgba(184, 180, 217, 0.6)"
-		: "rgba(78, 67, 159, 0.55)";
-	const targetFillColor = isDark
-		? "rgba(184, 180, 217, 0.12)"
-		: "rgba(78, 67, 159, 0.1)";
-	const pieceGradient = isDark
-		? "radial-gradient(circle at 40% 40%, #b8b4d9, #695fad)"
-		: "radial-gradient(circle at 40% 40%, #8c85c1, #4e439f)";
-	const pieceShadowBase = isDark
-		? "0 2px 6px rgba(0, 0, 0, 0.5)"
-		: "0 2px 6px rgba(78, 67, 159, 0.35)";
-	const pieceShadowDrag = isDark
-		? "0 4px 12px rgba(0, 0, 0, 0.6)"
-		: "0 4px 12px rgba(78, 67, 159, 0.55)";
+	const puzzle = theme.palette.puzzle;
 
 	return (
 		<div
@@ -279,8 +266,7 @@ export const PuzzleCanvas = ({
 						width: `${CONTAINER_WIDTH}px`,
 						boxSizing: "border-box",
 						textAlign: "center",
-						fontFamily:
-							theme.font.fontFamily,
+						fontFamily: theme.font.fontFamily,
 						fontSize: "14px",
 						fontWeight: 500,
 						color: headerTextColor,
@@ -320,8 +306,8 @@ export const PuzzleCanvas = ({
 							width: `${TARGET_SIZE}px`,
 							height: `${TARGET_SIZE}px`,
 							borderRadius: "50%",
-							border: `2px dashed ${targetBorderColor}`,
-							backgroundColor: targetFillColor,
+							border: `2px dashed ${puzzle.targetBorder}`,
+							backgroundColor: puzzle.targetFill,
 							boxSizing: "border-box",
 						}}
 					/>
@@ -336,15 +322,15 @@ export const PuzzleCanvas = ({
 							width: `${PIECE_SIZE}px`,
 							height: `${PIECE_SIZE}px`,
 							borderRadius: "50%",
-							background: pieceGradient,
+							background: puzzle.pieceGradient,
 							cursor: submitting
 								? "default"
 								: isDragging.current
 									? "grabbing"
 									: "grab",
 							boxShadow: isDragging.current
-								? pieceShadowDrag
-								: pieceShadowBase,
+								? puzzle.pieceShadowDrag
+								: puzzle.pieceShadow,
 							transition: isDragging.current
 								? "none"
 								: "box-shadow 0.2s ease, left 0.3s ease, top 0.3s ease",
