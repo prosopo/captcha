@@ -44,6 +44,7 @@ import { createApiAdminRoutesProvider } from "./admin/createApiAdminRoutesProvid
 import { blockMiddleware } from "./block.js";
 import { prosopoRouter } from "./captcha.js";
 import { domainMiddleware } from "./domainMiddleware.js";
+import { handshakeTimingMiddleware } from "./handshakeTimingMiddleware.js";
 import { headerCheckMiddleware } from "./headerCheckMiddleware.js";
 import { ignoreMiddleware } from "./ignoreMiddleware.js";
 import { ipInfoMiddleware } from "./ipInfoMiddleware.js";
@@ -291,6 +292,7 @@ export async function startProviderApi(
 	apiApp.use(requestLoggerMiddleware(env));
 	apiApp.use(i18Middleware);
 	apiApp.use(ja4Middleware(env));
+	apiApp.use(handshakeTimingMiddleware(env));
 	apiApp.use(ipInfoMiddleware(env));
 
 	// Run Header check middleware on all client routes

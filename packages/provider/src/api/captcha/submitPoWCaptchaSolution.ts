@@ -140,6 +140,12 @@ export default (env: ProviderEnvironment) =>
 					userAgent,
 					...(req.ja4 && { ja4: req.ja4 }),
 					...(fingerprintProof && { fingerprintProof }),
+					...(req.tcpToChelloMs !== undefined && {
+						tcpToChelloMs: req.tcpToChelloMs,
+					}),
+					...(req.chelloToHandshakeMs !== undefined && {
+						chelloToHandshakeMs: req.chelloToHandshakeMs,
+					}),
 				},
 			});
 

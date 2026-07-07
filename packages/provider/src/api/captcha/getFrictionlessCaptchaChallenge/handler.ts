@@ -284,6 +284,21 @@ export default (
 									headers: dedupFlatHeaders,
 									userAgent: dedupUserAgent,
 									...(req.ja4 && { ja4: req.ja4 }),
+									// Timing values are per-connection so they come from
+									// the current request even in the dedup replay path —
+									// dedup.session was created on a different TCP conn.
+									...(req.tcpToChelloMs !== undefined && {
+										tcpToChelloMs: req.tcpToChelloMs,
+									}),
+									...(req.chelloToHandshakeMs !== undefined && {
+										chelloToHandshakeMs: req.chelloToHandshakeMs,
+									}),
+									// currentUrl uses the cached session's value to
+									// match the rest of the dedup routing input (score,
+									// webView, captchaType are all pulled from dedup).
+									...(dedup.session.currentUrl && {
+										currentUrl: dedup.session.currentUrl,
+									}),
 								},
 							},
 						)
@@ -523,6 +538,12 @@ export default (
 				...(entropyMathRandomFirst !== undefined && {
 					entropyMathRandomFirst,
 				}),
+				...(req.tcpToChelloMs !== undefined && {
+					tcpToChelloMs: req.tcpToChelloMs,
+				}),
+				...(req.chelloToHandshakeMs !== undefined && {
+					chelloToHandshakeMs: req.chelloToHandshakeMs,
+				}),
 			});
 
 			const ipInfoMobile =
@@ -543,6 +564,13 @@ export default (
 					headers: flatHeaders,
 					userAgent: safeUserAgent,
 					...(req.ja4 && { ja4: req.ja4 }),
+					...(req.tcpToChelloMs !== undefined && {
+						tcpToChelloMs: req.tcpToChelloMs,
+					}),
+					...(req.chelloToHandshakeMs !== undefined && {
+						chelloToHandshakeMs: req.chelloToHandshakeMs,
+					}),
+					...(currentUrl && { currentUrl }),
 				},
 			});
 
