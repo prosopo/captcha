@@ -449,6 +449,15 @@ export const SessionSchema = object({
 	entropyCryptoFingerprint: string().optional(),
 	entropyWallClockOffsetMs: number().optional(),
 	entropyMathRandomFirst: number().optional(),
+	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
+	// plugin (X-TLS-TCP-To-Chello-Ms / X-TLS-Chello-To-Handshake-Ms).
+	// Server-observed millisecond deltas across the TLS handshake
+	// lifecycle — elevated values indicate the client's ClientHello
+	// traversed a proxy chain before reaching Caddy. Optional so
+	// pre-migration sessions parse and dev requests that skip TLS still
+	// write.
+	tcpToChelloMs: number().optional(),
+	chelloToHandshakeMs: number().optional(),
 	dnsEvent: object({
 		resolverIp: string().optional(),
 		peerIp: string().optional(),
@@ -514,6 +523,12 @@ export type Session = {
 	entropyCryptoFingerprint?: string;
 	entropyWallClockOffsetMs?: number;
 	entropyMathRandomFirst?: number;
+	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
+	// plugin. See the SessionSchema block above for full semantics —
+	// elevated values indicate the client's ClientHello traversed a
+	// proxy chain before reaching Caddy.
+	tcpToChelloMs?: number;
+	chelloToHandshakeMs?: number;
 	// DNS observation merge target — populated by the dns-event sidecar
 	// via POST /v1/prosopo/provider/admin/dns/event. At most one DNS
 	// event + one HTTP event per session under normal usage; the

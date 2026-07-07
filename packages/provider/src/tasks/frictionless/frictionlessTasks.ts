@@ -146,6 +146,8 @@ export class FrictionlessManager extends CaptchaManager {
 			entropyCryptoFingerprint: params.entropyCryptoFingerprint,
 			entropyWallClockOffsetMs: params.entropyWallClockOffsetMs,
 			entropyMathRandomFirst: params.entropyMathRandomFirst,
+			tcpToChelloMs: params.tcpToChelloMs,
+			chelloToHandshakeMs: params.chelloToHandshakeMs,
 		};
 	}
 
@@ -186,6 +188,8 @@ export class FrictionlessManager extends CaptchaManager {
 		entropyWallClockOffsetMs?: Session["entropyWallClockOffsetMs"],
 		entropyMathRandomFirst?: Session["entropyMathRandomFirst"],
 		currentUrl?: Session["currentUrl"],
+		tcpToChelloMs?: Session["tcpToChelloMs"],
+		chelloToHandshakeMs?: Session["chelloToHandshakeMs"],
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
@@ -220,6 +224,8 @@ export class FrictionlessManager extends CaptchaManager {
 			entropyCryptoFingerprint,
 			entropyWallClockOffsetMs,
 			entropyMathRandomFirst,
+			tcpToChelloMs,
+			chelloToHandshakeMs,
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);
@@ -358,6 +364,8 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.entropyWallClockOffsetMs,
 			effectiveParams.entropyMathRandomFirst,
 			effectiveParams.currentUrl,
+			effectiveParams.tcpToChelloMs,
+			effectiveParams.chelloToHandshakeMs,
 		);
 
 		// Fire-and-forget served-counter writes. Skipped when there's no
@@ -427,6 +435,8 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.entropyWallClockOffsetMs,
 			effectiveParams.entropyMathRandomFirst,
 			effectiveParams.currentUrl,
+			effectiveParams.tcpToChelloMs,
+			effectiveParams.chelloToHandshakeMs,
 		);
 	}
 
