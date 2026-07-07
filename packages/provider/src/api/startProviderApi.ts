@@ -39,7 +39,7 @@ import type { JWT } from "@prosopo/util-crypto";
 import cors from "cors";
 import express from "express";
 import type { Request } from "express";
-import rateLimit from "express-rate-limit";
+import rateLimit, { type Options } from "express-rate-limit";
 import { createApiAdminRoutesProvider } from "./admin/createApiAdminRoutesProvider.js";
 import { blockMiddleware } from "./block.js";
 import { prosopoRouter } from "./captcha.js";
@@ -229,6 +229,20 @@ export async function startProviderApi(
 			...getExpressApiRuleRateLimits(),
 		};
 		const adminPaths = Object.values(AdminApiPaths);
+		// Log 429s so operators can alarm on sustained rate limiting.
+		const rateLimitHandler =
+			(path: string): Options["handler"] =>
+			(req, res, _next, options) => {
+				env.logger.warn(() => ({
+					msg: "Rate limit exceeded",
+					data: {
+						path,
+						ip: req.ip,
+						siteKey: req.headers["prosopo-site-key"],
+					},
+				}));
+				res.status(options.statusCode).send(options.message);
+			};
 		for (const [path, limit] of Object.entries(rateLimits)) {
 			const enumPath = path as CombinedApiPaths;
 			// For admin paths, key by authenticated user instead of IP
@@ -238,6 +252,7 @@ export async function startProviderApi(
 					enumPath,
 					rateLimit({
 						...limit,
+						handler: rateLimitHandler(enumPath),
 						keyGenerator: (req) => {
 							const user = getUserFromJWT(req);
 							// Fall back to IP if no user found (shouldn't happen for admin routes with auth)
@@ -254,6 +269,7 @@ export async function startProviderApi(
 					enumPath,
 					rateLimit({
 						...limit,
+						handler: rateLimitHandler(enumPath),
 						keyGenerator: (req) => {
 							const siteKey = req.headers["prosopo-site-key"] as string;
 							// Fall back to IP if no site key found (shouldn't happen for verify routes with headerCheckMiddleware)
@@ -262,7 +278,10 @@ export async function startProviderApi(
 					}),
 				);
 			} else {
-				apiApp.use(enumPath, rateLimit(limit));
+				apiApp.use(
+					enumPath,
+					rateLimit({ ...limit, handler: rateLimitHandler(enumPath) }),
+				);
 			}
 		}
 	}
