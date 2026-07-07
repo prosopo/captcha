@@ -26,6 +26,13 @@ export interface AugmentedRequest {
 	logger: Logger;
 	requestId?: string;
 	ipInfo?: IPInfoResponse;
+	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
+	// plugin (X-TLS-TCP-To-Chello-Ms / X-TLS-Chello-To-Handshake-Ms).
+	// Undefined when the request did not traverse a TLS-terminating
+	// Caddy with the chaddy plugin (e.g. plaintext dev requests) or when
+	// the plugin failed to capture timing for that connection.
+	tcpToChelloMs?: number;
+	chelloToHandshakeMs?: number;
 }
 
 declare global {
@@ -41,6 +48,8 @@ declare global {
 			logger: Logger;
 			requestId?: string;
 			ipInfo?: IPInfoResponse;
+			tcpToChelloMs?: number;
+			chelloToHandshakeMs?: number;
 		}
 	}
 }
