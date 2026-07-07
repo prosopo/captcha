@@ -1,5 +1,12 @@
 # @prosopo/types-database
 
+## 4.11.7
+### Patch Changes
+
+- Updated dependencies [6cb3218]
+  - @prosopo/types@4.9.5
+  - @prosopo/user-access-policy@3.11.3
+
 ## 4.11.6
 ### Patch Changes
 
