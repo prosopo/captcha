@@ -227,6 +227,20 @@ export interface RoutingMachineRawSignals {
 	// surfaced here for the post-pow routing machine). Undefined when absent or
 	// unsupported on the client.
 	simd?: SimdReadings;
+	// Server-observed TLS handshake timing deltas forwarded by the chaddy
+	// Caddy plugin (X-TLS-TCP-To-Chello-Ms / X-TLS-Chello-To-Handshake-Ms).
+	// Elevated values indicate the client's ClientHello traversed a proxy
+	// chain before reaching Caddy. Undefined when the request did not
+	// traverse a chaddy-enabled ingress (e.g. dev requests, HTTP/3).
+	tcpToChelloMs?: number;
+	chelloToHandshakeMs?: number;
+	// Full page URL the widget was rendered on (origin + path only; query
+	// string, fragment and any embedded credentials are stripped client- and
+	// server-side). Available on the `route` phase from the freshly decrypted
+	// frictionless payload, and on the `postPow` phase from the persisted
+	// Session record. Undefined when the client omitted it or the session
+	// pre-dates the field.
+	currentUrl?: string;
 }
 
 export type RoutingMachinePhase = "route" | "postPow";
