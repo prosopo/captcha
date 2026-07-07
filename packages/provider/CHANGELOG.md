@@ -1,5 +1,26 @@
 # @prosopo/provider
 
+## 4.14.4
+### Patch Changes
+
+- 6cb3218: feat(provider): relax captcha-flow rate limits 5x and log 429s
+  
+  - Default rate limits for the captcha-flow endpoints (get/submit image, PoW, frictionless and puzzle challenges, plus the verify endpoints) are now 5x more permissive. The previous defaults were rate limiting legitimate widget traffic.
+  - The provider now logs a warning whenever a request is rejected with a 429, including the path, IP and site key, so operators can alarm on sustained rate limiting.
+- Updated dependencies [6cb3218]
+  - @prosopo/types@4.9.5
+  - @prosopo/api@3.5.12
+  - @prosopo/api-express-router@3.1.39
+  - @prosopo/database@3.15.8
+  - @prosopo/datasets@3.1.46
+  - @prosopo/env@3.6.8
+  - @prosopo/ipinfo@0.2.32
+  - @prosopo/keyring@2.9.52
+  - @prosopo/load-balancer@2.10.6
+  - @prosopo/types-database@4.11.7
+  - @prosopo/types-env@2.10.7
+  - @prosopo/user-access-policy@3.11.3
+
 ## 4.14.3
 ### Patch Changes
 
