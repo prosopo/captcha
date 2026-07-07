@@ -40,6 +40,8 @@ export type ShortCircuitInput = {
 	sessionMode: ModeEnum | undefined;
 	userSitekeyIpHash: string;
 	logger: Logger;
+	tcpToChelloMs?: number;
+	chelloToHandshakeMs?: number;
 };
 
 // Bypasses the bot-detection decision machine when the sitekey is configured
@@ -69,6 +71,12 @@ export const runConfiguredCaptchaTypeShortCircuit = async (
 		headers: input.flatHeaders,
 		mode: input.sessionMode,
 		userSitekeyIpHash: input.userSitekeyIpHash,
+		...(input.tcpToChelloMs !== undefined && {
+			tcpToChelloMs: input.tcpToChelloMs,
+		}),
+		...(input.chelloToHandshakeMs !== undefined && {
+			chelloToHandshakeMs: input.chelloToHandshakeMs,
+		}),
 	};
 
 	input.logger.info(() => ({
