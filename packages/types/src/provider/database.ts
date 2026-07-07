@@ -449,6 +449,15 @@ export const SessionSchema = object({
 	entropyCryptoFingerprint: string().optional(),
 	entropyWallClockOffsetMs: number().optional(),
 	entropyMathRandomFirst: number().optional(),
+	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
+	// plugin (X-TLS-TCP-To-Chello-Ms / X-TLS-Chello-To-Handshake-Ms).
+	// Mirrors Bumblebee's ConnectionMetadata.tcp_to_chello_ms /
+	// chello_to_handshake_ms fields — persisted here so per-session analytics
+	// can join to the two deltas the same way Optimus's session_headers
+	// row already carries them. Optional so pre-migration sessions parse
+	// and dev requests that skip TLS still write.
+	tcpToChelloMs: number().optional(),
+	chelloToHandshakeMs: number().optional(),
 	dnsEvent: object({
 		resolverIp: string().optional(),
 		peerIp: string().optional(),
@@ -514,6 +523,13 @@ export type Session = {
 	entropyCryptoFingerprint?: string;
 	entropyWallClockOffsetMs?: number;
 	entropyMathRandomFirst?: number;
+	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
+	// plugin. Mirrors Bumblebee's ConnectionMetadata.tcp_to_chello_ms /
+	// chello_to_handshake_ms fields — persisted here so per-session
+	// analytics can join to the two deltas the same way Optimus's
+	// session_headers row already carries them.
+	tcpToChelloMs?: number;
+	chelloToHandshakeMs?: number;
 	// DNS observation merge target — populated by the dns-event sidecar
 	// via POST /v1/prosopo/provider/admin/dns/event. At most one DNS
 	// event + one HTTP event per session under normal usage; the

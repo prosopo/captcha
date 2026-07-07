@@ -523,6 +523,12 @@ export default (
 				...(entropyMathRandomFirst !== undefined && {
 					entropyMathRandomFirst,
 				}),
+				...(req.tcpToChelloMs !== undefined && {
+					tcpToChelloMs: req.tcpToChelloMs,
+				}),
+				...(req.chelloToHandshakeMs !== undefined && {
+					chelloToHandshakeMs: req.chelloToHandshakeMs,
+				}),
 			});
 
 			const ipInfoMobile =
