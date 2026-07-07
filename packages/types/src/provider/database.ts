@@ -451,11 +451,11 @@ export const SessionSchema = object({
 	entropyMathRandomFirst: number().optional(),
 	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
 	// plugin (X-TLS-TCP-To-Chello-Ms / X-TLS-Chello-To-Handshake-Ms).
-	// Mirrors Bumblebee's ConnectionMetadata.tcp_to_chello_ms /
-	// chello_to_handshake_ms fields — persisted here so per-session analytics
-	// can join to the two deltas the same way Optimus's session_headers
-	// row already carries them. Optional so pre-migration sessions parse
-	// and dev requests that skip TLS still write.
+	// Server-observed millisecond deltas across the TLS handshake
+	// lifecycle — elevated values indicate the client's ClientHello
+	// traversed a proxy chain before reaching Caddy. Optional so
+	// pre-migration sessions parse and dev requests that skip TLS still
+	// write.
 	tcpToChelloMs: number().optional(),
 	chelloToHandshakeMs: number().optional(),
 	dnsEvent: object({
@@ -524,10 +524,9 @@ export type Session = {
 	entropyWallClockOffsetMs?: number;
 	entropyMathRandomFirst?: number;
 	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
-	// plugin. Mirrors Bumblebee's ConnectionMetadata.tcp_to_chello_ms /
-	// chello_to_handshake_ms fields — persisted here so per-session
-	// analytics can join to the two deltas the same way Optimus's
-	// session_headers row already carries them.
+	// plugin. See the SessionSchema block above for full semantics —
+	// elevated values indicate the client's ClientHello traversed a
+	// proxy chain before reaching Caddy.
 	tcpToChelloMs?: number;
 	chelloToHandshakeMs?: number;
 	// DNS observation merge target — populated by the dns-event sidecar

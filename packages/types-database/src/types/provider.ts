@@ -673,10 +673,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	entropyMathRandomFirst: { type: Number, required: false },
 	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
 	// plugin (X-TLS-TCP-To-Chello-Ms / X-TLS-Chello-To-Handshake-Ms).
-	// Mirrors Bumblebee's ConnectionMetadata.tcp_to_chello_ms /
-	// chello_to_handshake_ms — persisted here so per-session analytics
-	// can join the two deltas the same way Optimus's session_headers row
-	// already does.
+	// See @prosopo/types Session.tcpToChelloMs for full semantics.
 	tcpToChelloMs: { type: Number, required: false },
 	chelloToHandshakeMs: { type: Number, required: false },
 	// DNS observation merge target. Populated by

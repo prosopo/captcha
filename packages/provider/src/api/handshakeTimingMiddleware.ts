@@ -19,9 +19,11 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 
 // Header names forwarded by the chaddy Caddy plugin per-TLS-connection.
-// The two values mirror Bumblebee's ConnectionMetadata.tcp_to_chello_ms /
-// chello_to_handshake_ms fields — same signal, same units, applied to the
-// captcha ingress path (Caddy → provider) instead of the Bumblebee ingress.
+// Both are server-observed millisecond deltas across the TLS handshake
+// lifecycle. Elevated values indicate the client's ClientHello traversed
+// a proxy chain before reaching Caddy — the CH bytes only reach the
+// terminating TCP stack after every hop, so the deltas inflate with the
+// full client-to-exit RTT rather than just the last-mile RTT.
 const HEADER_TCP_TO_CHELLO = "x-tls-tcp-to-chello-ms";
 const HEADER_CHELLO_TO_HANDSHAKE = "x-tls-chello-to-handshake-ms";
 
