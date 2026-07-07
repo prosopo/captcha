@@ -1,5 +1,46 @@
 # @prosopo/provider
 
+## 4.14.3
+### Patch Changes
+
+- de12b31: feat(provider): capture and persist per-TLS-connection handshake timings
+  
+  Adds `handshakeTimingMiddleware` that reads two new headers forwarded by the chaddy Caddy plugin and threads the values through to the frictionless session store, so every persisted Session document carries them alongside `ipInfo` / `headers` / the entropy fingerprints.
+  
+  - `X-TLS-TCP-To-Chello-Ms` — server-observed ms from TCP accept to first ClientHello byte
+  - `X-TLS-Chello-To-Handshake-Ms` — server-observed ms from ClientHello to handshake complete
+  
+  Elevated values indicate the client's ClientHello traversed a proxy chain before reaching Caddy — the CH bytes only reach the terminating TCP stack after every hop, so the deltas inflate with the full client-to-exit RTT rather than just the last-mile RTT.
+  
+  Middleware wires in immediately after `ja4Middleware` in `startProviderApi`. Both fields are optional throughout (`tcpToChelloMs?: number`, `chelloToHandshakeMs?: number`) on `Session`, `SessionSchema`, and the Mongoose model, so pre-migration documents parse and dev requests that skipped TLS still write cleanly. `express.d.ts` extends `AugmentedRequest` and `Express.Request` with the same two optional fields. No handlers are modified beyond the frictionless captcha challenge path; persisting on the other captcha-type storage paths (image / PoW / puzzle direct) is a follow-up.
+  
+  Depends on chaddy plugin support for emitting the two headers.
+- 770954b: feat(provider): surface handshake timings and currentUrl to routing machines
+  
+  Extends `RoutingMachineRawSignals` with three optional fields so operator-authored routing machines can read them alongside JA4, headers, UA, and SIMD:
+  
+  - `tcpToChelloMs?: number`
+  - `chelloToHandshakeMs?: number`
+  - `currentUrl?: string`
+  
+  Threaded through every raw-signal construction site — the frictionless hot path, the dedup routing replay, `submitPoWCaptchaSolution`, and the postPow routing context construction. Timing values come from the current request (per-connection, fresh at every entry). `currentUrl` comes from the freshly decrypted frictionless payload at the `route` phase and from the persisted Session at the `postPow` phase, since the submit request's Referer is the captcha iframe rather than the host page.
+  
+  Follows the earlier PR that added the middleware capture and Session persistence for the two timing fields; this PR completes the surface by making them visible to operator-authored routers.
+- Updated dependencies [de12b31]
+- Updated dependencies [770954b]
+  - @prosopo/types@4.9.4
+  - @prosopo/types-database@4.11.6
+  - @prosopo/api@3.5.11
+  - @prosopo/api-express-router@3.1.38
+  - @prosopo/database@3.15.7
+  - @prosopo/datasets@3.1.45
+  - @prosopo/env@3.6.7
+  - @prosopo/ipinfo@0.2.31
+  - @prosopo/keyring@2.9.51
+  - @prosopo/load-balancer@2.10.5
+  - @prosopo/types-env@2.10.6
+  - @prosopo/user-access-policy@3.11.2
+
 ## 4.14.2
 ### Patch Changes
 

@@ -1,5 +1,12 @@
 # @prosopo/datasets
 
+## 3.1.45
+### Patch Changes
+
+- Updated dependencies [de12b31]
+- Updated dependencies [770954b]
+  - @prosopo/types@4.9.4
+
 ## 3.1.44
 ### Patch Changes
 
