@@ -187,7 +187,10 @@ export default (env: ProviderEnvironment) =>
 				}));
 			}
 
-			const escalation = await buildEscalation(tasks, result, challenge);
+			const escalation = await buildEscalation(tasks, result, challenge, {
+				tcpToChelloMs: req.tcpToChelloMs,
+				chelloToHandshakeMs: req.chelloToHandshakeMs,
+			});
 			const response: PowCaptchaSolutionResponse = {
 				status: "ok",
 				// On escalation the user is not done — they still need to clear
@@ -229,6 +232,14 @@ export const buildEscalation = async (
 	tasks: Tasks,
 	result: { verified: boolean; routingOutput?: { captchaType: CaptchaType } },
 	challenge: string,
+	// TLS handshake timings are per-connection: they must come from the
+	// current PoW-submit request, not from `originSession` (whose values
+	// belong to a different TCP connection made during the earlier
+	// frictionless request).
+	handshakeTiming?: {
+		tcpToChelloMs?: number;
+		chelloToHandshakeMs?: number;
+	},
 ): Promise<PowCaptchaSolutionEscalation | undefined> => {
 	if (!result.verified || !result.routingOutput) return undefined;
 	const routedType = result.routingOutput.captchaType;
@@ -285,6 +296,8 @@ export const buildEscalation = async (
 		originSession.entropyWallClockOffsetMs,
 		originSession.entropyMathRandomFirst,
 		originSession.currentUrl,
+		handshakeTiming?.tcpToChelloMs,
+		handshakeTiming?.chelloToHandshakeMs,
 	);
 
 	// Record the origin → escalation sessionId mapping so a /captcha/*

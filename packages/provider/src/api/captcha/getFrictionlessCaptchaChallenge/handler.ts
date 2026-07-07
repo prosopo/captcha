@@ -388,6 +388,12 @@ export default (
 					sessionMode,
 					userSitekeyIpHash,
 					logger: req.logger,
+					...(req.tcpToChelloMs !== undefined && {
+						tcpToChelloMs: req.tcpToChelloMs,
+					}),
+					...(req.chelloToHandshakeMs !== undefined && {
+						chelloToHandshakeMs: req.chelloToHandshakeMs,
+					}),
 				},
 				res,
 			);
