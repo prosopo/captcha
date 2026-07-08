@@ -34,10 +34,6 @@ export type TrafficCheckResult =
 	| { isBlocked: false }
 	| { isBlocked: true; reason: TrafficBlockReason };
 
-type EvaluateOptions = {
-	suppressVpnDatacenterInteraction: boolean;
-};
-
 // Match the allowlist against `datacenterName`, `providerName`
 // (`company.name`), and `asnOrganization` — case-insensitive, whitespace
 // trimmed. The upstream ipapi only populates `datacenter.datacenter` for
@@ -73,7 +69,7 @@ const isDatacenterAllowlisted = (
 const evaluateIpInfo = (
 	ipInfo: IPInfoResponse | undefined,
 	trafficFilter: Partial<ITrafficFilter>,
-	options: EvaluateOptions,
+	isDnsExtra = false,
 ): TrafficCheckResult => {
 	if (!ipInfo || !ipInfo.isValid) {
 		return { isBlocked: false };
@@ -104,15 +100,17 @@ const evaluateIpInfo = (
 		}
 	}
 
+	const datacenterSuppressedByCategory =
+		(ipInfo.isVPN && !trafficFilter.blockVpn) ||
+		(ipInfo.isProxy && !trafficFilter.blockProxy) ||
+		(ipInfo.isTor && !trafficFilter.blockTor) ||
+		(ipInfo.isCrawler && !trafficFilter.blockCrawler);
+
 	if (
 		trafficFilter.blockDatacenter &&
 		ipInfo.isDatacenter &&
 		ipInfo.providerType !== "isp" &&
-		!(
-			options.suppressVpnDatacenterInteraction &&
-			ipInfo.isVPN &&
-			!trafficFilter.blockVpn
-		) &&
+		!datacenterSuppressedByCategory &&
 		!isDatacenterAllowlisted(ipInfo, trafficFilter.datacenterNameAllowlist)
 	) {
 		return { isBlocked: true, reason: ResultReason.DATACENTER_BLOCKED };
@@ -126,7 +124,11 @@ const evaluateIpInfo = (
 		return { isBlocked: true, reason: ResultReason.SATELLITE_BLOCKED };
 	}
 
-	if (trafficFilter.blockCrawler && ipInfo.isCrawler) {
+	// Skip the crawler check on DNS extras (peer/resolver). Public DNS
+	// resolvers like 8.8.8.8 (Google) and 1.1.1.1 (Cloudflare) share IP
+	// space with search crawlers, so is_crawler on a resolver is the
+	// resolver itself, not a crawler visiting the captcha endpoint.
+	if (!isDnsExtra && trafficFilter.blockCrawler && ipInfo.isCrawler) {
 		return { isBlocked: true, reason: ResultReason.CRAWLER_BLOCKED };
 	}
 
@@ -141,14 +143,22 @@ const evaluateIpInfo = (
  * `ipInfo` falls back to "not blocked" so an outage in the upstream
  * service can't block all traffic.
  *
- * One cross-filter rule: when an operator enables `blockDatacenter` but
- * leaves `blockVpn` off, commercial VPNs that exit from datacenter IPs
- * (which is most of them — Mullvad, NordVPN, ProtonVPN, etc. all run on
- * AWS/OVH/Hetzner) would otherwise be caught by the datacenter rule.
- * Operators almost never intend that: "block data centers" is about
- * scraping/automation traffic, not VPN end-users. So the datacenter
- * rule is suppressed for IPs also flagged as VPN unless the operator
- * has opted in to blocking VPN traffic explicitly.
+ * One cross-filter rule: "block datacenters" is about scraping and
+ * automation traffic, not VPN/proxy/Tor end-users or search crawlers,
+ * all of which sit on datacenter infrastructure by design. So the
+ * datacenter rule is suppressed for IPs whose more specific category
+ * (VPN, proxy, Tor, crawler) the operator has left unblocked. If the
+ * operator has opted into blocking that category, the earlier category
+ * check fires first and short-circuits before the datacenter rule is
+ * reached. This applies uniformly to the primary request IP and to the
+ * enriched DNS extras (peer/resolver).
+ *
+ * One extras-specific rule: the crawler check is skipped entirely on
+ * DNS extras. Public DNS resolvers (Google `8.8.8.8`, Cloudflare
+ * `1.1.1.1`) share IP space with search crawlers, so `is_crawler=true`
+ * on a resolver is the resolver itself, not a crawler visiting the
+ * captcha endpoint. Applying `blockCrawler` to a resolver would
+ * false-positive on ordinary users who resolve via public DoH.
  *
  * The datacenter rule also honours `datacenterNameAllowlist`: consumer
  * relays route through datacenter ranges and are reported as
@@ -175,9 +185,7 @@ export const checkTrafficFilter = (
 	extraIpInfos?: ReadonlyArray<IPInfoResponse | undefined>,
 	dnsPathValid?: boolean,
 ): TrafficCheckResult => {
-	const primary = evaluateIpInfo(ipInfo, trafficFilter, {
-		suppressVpnDatacenterInteraction: true,
-	});
+	const primary = evaluateIpInfo(ipInfo, trafficFilter);
 	if (primary.isBlocked) {
 		return primary;
 	}
@@ -187,9 +195,7 @@ export const checkTrafficFilter = (
 	}
 
 	for (const extra of extraIpInfos ?? []) {
-		const result = evaluateIpInfo(extra, trafficFilter, {
-			suppressVpnDatacenterInteraction: false,
-		});
+		const result = evaluateIpInfo(extra, trafficFilter, true);
 		if (result.isBlocked) {
 			return result;
 		}
