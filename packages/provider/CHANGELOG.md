@@ -1,5 +1,71 @@
 # @prosopo/provider
 
+## 4.15.0
+### Minor Changes
+
+- 7d7e767: perf(access-rules): split-query hot path + verdict cache with LRU and singleflight
+  
+  Reworks the block-lookup Redis path so per-request latency is bounded by matching-rules-per-request rather than total rules in the tenant. Rule populations in the 10k+ range no longer degrade tail latency.
+  
+  Key changes:
+  
+  - **Split-query read path**: `redisRulesSplitQuery.ts` builds one FT sub-query per populated request field (numericIp exact + CIDR, ja4Hash, userId, headHash, coords, countryCode, asn), each hitting a discriminating posting-list index instead of a single wide FT.AGGREGATE that scaled linearly in total rule count.
+  - **`clientId="global"` sentinel**: writer stamps the sentinel on rules with no clientId so queries probe `@clientId:{X|global|ismissing}` instead of the expensive `ismissing()` set-difference walk. Transition-safe — legacy rules match via the ismissing branch until a rehash migrates them.
+  - **HardBlockVerdictCache**: bounded LRU + TTL (10 s / 50k entries) with real LRU move-to-tail on hit and **singleflight `getOrCompute`** dedupe of concurrent misses — the wave-1 stampede fix for the frontend retry-loop shape.
+  - **Request-scoped memo**: attached to `req` so blockMiddleware + downstream in-request checks share one Redis round-trip.
+  
+  Measured impact under 100-concurrent × 10-wave retry storm against a 19.3k-rule population: wave-1 p99 drops from 23 ms → 3 ms, throughput jumps from 28.5k → 61.5k req/s per process, 50 identical concurrent misses collapse to 1 storage call.
+
+### Patch Changes
+
+- 17bc76e: feat: switch handshake timings from milliseconds to microseconds
+  
+  Milliseconds bucket fast handshakes (local proxies, same-DC clients) to 0/1 and destroy the distribution shape we need for proxy detection. `time.Now()` on Linux is ~1μs precise via vDSO — μs is the honest resolution ceiling.
+  
+  Wire changes (must land together with the paired chaddy release):
+  
+  - Headers consumed by `handshakeTimingMiddleware`: `x-tls-tcp-to-chello-ms` / `x-tls-chello-to-handshake-ms` → `x-tls-tcp-to-chello-us` / `x-tls-chello-to-handshake-us`.
+  - Request augmentation, `HandshakeTiming` fields, decision-machine input, `Session` shape (Zod + Mongoose schemas): `tcpToChelloMs` / `chelloToHandshakeMs` → `tcpToChelloUs` / `chelloToHandshakeUs`.
+  - New sessions in `captchastorage.sessions` will now write `tcpToChelloUs` / `chelloToHandshakeUs` in μs. Historical `*Ms` fields on existing session records remain as-is (not migrated) — analytics that read both must range-scan by field name.
+  
+  Rollout: deploy paired chaddy image (emits `-Us` headers) simultaneously; the deploy-order window drops timing signal but no data corruption is possible (mismatched header names simply resolve to `undefined`).
+- 2e68a8d: fix(provider): persist TLS handshake timings on escalation + short-circuit sessions
+  
+  `buildEscalation` (post-PoW image/puzzle escalation) and `runConfiguredCaptchaTypeShortCircuit` (sitekeys with a configured captchaType) both bypass `FrictionlessManager.setSessionParams`, so `req.tcpToChelloMs` / `req.chelloToHandshakeMs` were captured by the middleware but never landed on the resulting session record.
+  
+  Threads the current request's per-connection timings through both paths:
+  
+  - New optional `handshakeTiming` arg on `buildEscalation`, forwarded to `createSession`. Timings come from the current PoW-submit request, not from `originSession` (whose values belong to the earlier frictionless request's TCP connection).
+  - New optional `tcpToChelloMs` / `chelloToHandshakeMs` on `ShortCircuitInput`, spread into the locally-built `sessionParams`.
+  
+  The frictionless main path (`sendCaptcha` / `registerBlockedSession`) was already correct — it merges from `setSessionParams`, which the handler populates.
+- 4e77fa8: fix(provider): DNS-enriched extras now honour traffic filter toggles
+  
+  `checkTrafficFilter` previously applied the "VPN on datacenter" suppression only to the primary request IP: the enriched DNS peer/resolver IPs still tripped `DATACENTER_BLOCKED` even when the operator had `blockVpn` off. Real-world impact: Surfshark (and similar) users whose primary IP was a `providerType=isp` datacenter passed the primary check, but their DNS resolver — also on a datacenter range flagged as VPN — was blocked. The extras path silently overrode the operator's toggles.
+  
+  Changes:
+  
+  - Extras now go through the same evaluator as the primary IP — the internal `EvaluateOptions` / `suppressVpnDatacenterInteraction` split is gone.
+  - Datacenter suppression is extended from VPN to all four overlapping categories: VPN, proxy, Tor, and crawler. If any of those flags is set on the IP and the operator has that specific `block*` toggle off, the datacenter rule is suppressed. Same rationale as the original VPN carve-out — those categories live on datacenter infrastructure by design.
+  - Crawler check is skipped entirely on DNS extras. Public DNS resolvers like `8.8.8.8` and `1.1.1.1` share IP ranges with search crawlers, so `is_crawler=true` on a resolver is the resolver, not a crawler visiting the endpoint.
+  
+  Unit tests updated (`checkTrafficFilter.unit.test.ts`): the "does NOT apply VPN-datacenter suppression to extra IPs" test was flipped to assert the new behaviour, and coverage added for proxy/Tor/crawler suppression on both primary and extras, plus the extras-only crawler-skip.
+- Updated dependencies [7d7e767]
+- Updated dependencies [b3f351b]
+- Updated dependencies [17bc76e]
+  - @prosopo/user-access-policy@3.12.0
+  - @prosopo/load-balancer@2.10.7
+  - @prosopo/types@4.9.6
+  - @prosopo/types-database@4.11.8
+  - @prosopo/database@3.15.9
+  - @prosopo/api@3.5.13
+  - @prosopo/api-express-router@3.1.40
+  - @prosopo/datasets@3.1.47
+  - @prosopo/env@3.6.9
+  - @prosopo/ipinfo@0.2.33
+  - @prosopo/keyring@2.9.53
+  - @prosopo/types-env@2.10.8
+
 ## 4.14.4
 ### Patch Changes
 
