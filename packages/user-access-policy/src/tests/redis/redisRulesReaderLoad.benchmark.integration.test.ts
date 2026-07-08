@@ -220,322 +220,297 @@ describe("redisRulesReader load-shape benchmark (17k IP-only rules)", () => {
 		);
 	}, 60_000);
 
-	test(
-		`split-query hot path stays flat under ${IP_RULE_COUNT + CIDR_RULE_COUNT + MIXED_RULE_COUNT} rules`,
-		async () => {
-			// Warm-up: first call pays for RediSearch index page-in.
+	test(`split-query hot path stays flat under ${IP_RULE_COUNT + CIDR_RULE_COUNT + MIXED_RULE_COUNT} rules`, async () => {
+		// Warm-up: first call pays for RediSearch index page-in.
+		await reader.findRules(
+			{
+				policyScope: { clientId: "warmup" },
+				policyScopeMatch: FilterScopeMatch.Greedy,
+				userScope: { numericIp: ipv4(999_999) },
+				userScopeMatch: FilterScopeMatch.Greedy,
+				blockOnly: true,
+			},
+			true,
+		);
+
+		const samples: number[] = [];
+		for (let i = 0; i < QUERY_COUNT; i++) {
+			// Half the queries target seeded IPs (hits), half target IPs
+			// outside the seeded range (misses). Both must be fast.
+			const isHit = i % 2 === 0;
+			const numericIp = isHit
+				? ipv4(i % IP_RULE_COUNT)
+				: ipv4(IP_RULE_COUNT + i + 1_000_000);
+
+			const start = performance.now();
 			await reader.findRules(
 				{
-					policyScope: { clientId: "warmup" },
+					policyScope: { clientId: `client${i % 30}` },
 					policyScopeMatch: FilterScopeMatch.Greedy,
-					userScope: { numericIp: ipv4(999_999) },
+					userScope: {
+						numericIp,
+						ja4Hash: `t13d_load_${i % 50}`,
+						userAgentHash: `ua${i % 100}`,
+						countryCode: `C${i % 30}`,
+						asn: 1000 + (i % 500),
+					},
 					userScopeMatch: FilterScopeMatch.Greedy,
 					blockOnly: true,
 				},
 				true,
 			);
+			samples.push(performance.now() - start);
+		}
 
-			const samples: number[] = [];
-			for (let i = 0; i < QUERY_COUNT; i++) {
-				// Half the queries target seeded IPs (hits), half target IPs
-				// outside the seeded range (misses). Both must be fast.
-				const isHit = i % 2 === 0;
-				const numericIp = isHit
-					? ipv4(i % IP_RULE_COUNT)
-					: ipv4(IP_RULE_COUNT + i + 1_000_000);
+		samples.sort((a, b) => a - b);
+		const p50 = percentile(samples, 0.5);
+		const p99 = percentile(samples, 0.99);
+		const avg = samples.reduce((a, b) => a + b, 0) / samples.length;
 
-				const start = performance.now();
-				await reader.findRules(
-					{
-						policyScope: { clientId: `client${i % 30}` },
-						policyScopeMatch: FilterScopeMatch.Greedy,
-						userScope: {
-							numericIp,
-							ja4Hash: `t13d_load_${i % 50}`,
-							userAgentHash: `ua${i % 100}`,
-							countryCode: `C${i % 30}`,
-							asn: 1000 + (i % 500),
+		console.log(
+			`split-query load: avg=${avg.toFixed(2)}ms  p50=${p50.toFixed(2)}ms  p99=${p99.toFixed(2)}ms  n=${samples.length}  (${IP_RULE_COUNT} IPs + ${CIDR_RULE_COUNT} CIDRs + ${MIXED_RULE_COUNT} mixed)`,
+		);
+
+		expect(p50).toBeLessThan(P50_LATENCY_MS);
+		expect(p99).toBeLessThan(P99_LATENCY_MS);
+	}, 300_000);
+
+	test("finds exact-IP bulk-ban rule for matching request", async () => {
+		// Pick an IP known to have been seeded as an individual-IP ban.
+		const targetIp = ipv4(42);
+		const results = await reader.findRules(
+			{
+				policyScope: { clientId: "client1" },
+				policyScopeMatch: FilterScopeMatch.Greedy,
+				userScope: {
+					numericIp: targetIp,
+					ja4Hash: "t13d_load_1",
+				},
+				userScopeMatch: FilterScopeMatch.Greedy,
+				blockOnly: true,
+			},
+			true,
+		);
+
+		// The exact-IP rule must be among the returned candidates —
+		// this is the "rule that must never be missed" property.
+		const found = results.find((r) => r.numericIp === targetIp);
+		expect(found).toBeDefined();
+		expect(found?.type).toBe(AccessPolicyType.Block);
+	}, 60_000);
+
+	test("finds CIDR-range bulk-ban rule for request IP inside the range", async () => {
+		// Pick a CIDR range and a request IP known to fall inside it.
+		const { min, max } = ipv4CidrRange(7);
+		const requestIp = min + 42n;
+		expect(requestIp).toBeLessThanOrEqual(max);
+
+		const results = await reader.findRules(
+			{
+				policyScope: { clientId: "client1" },
+				policyScopeMatch: FilterScopeMatch.Greedy,
+				userScope: { numericIp: requestIp },
+				userScopeMatch: FilterScopeMatch.Greedy,
+				blockOnly: true,
+			},
+			true,
+		);
+
+		const found = results.find(
+			(r) =>
+				r.numericIpMaskMin === min &&
+				r.numericIpMaskMax === max &&
+				r.type === AccessPolicyType.Block,
+		);
+		expect(found).toBeDefined();
+	}, 60_000);
+
+	test("finds ja4-scoped rule via the split-query ja4 probe", async () => {
+		// The mixed population includes ja4-scoped rules; a request
+		// with matching ja4Hash must surface the rule even when the
+		// request IP has no matching numericIp entry.
+		const results = await reader.findRules(
+			{
+				policyScope: { clientId: "client0" },
+				policyScopeMatch: FilterScopeMatch.Greedy,
+				userScope: {
+					numericIp: ipv4(999_998),
+					ja4Hash: "t13d_load_0",
+				},
+				userScopeMatch: FilterScopeMatch.Greedy,
+				blockOnly: true,
+			},
+			true,
+		);
+
+		const ja4Rule = results.find(
+			(r) => r.ja4Hash === "t13d_load_0" && r.clientId === "client0",
+		);
+		expect(ja4Rule).toBeDefined();
+	}, 60_000);
+
+	test("returns no match when request IP is outside every rule range", async () => {
+		// Way outside every seeded range.
+		const results = await reader.findRules(
+			{
+				policyScope: { clientId: "client99" },
+				policyScopeMatch: FilterScopeMatch.Greedy,
+				userScope: { numericIp: ipv4(9_999_999) },
+				userScopeMatch: FilterScopeMatch.Greedy,
+				blockOnly: true,
+			},
+			true,
+		);
+
+		// No IP-scoped rule should apply; only fall-through matches
+		// (mixed rules keyed on other fields) could surface here, and
+		// we're not populating any of those on this request.
+		const ipMatch = results.find(
+			(r) =>
+				r.numericIp !== undefined ||
+				(r.numericIpMaskMin !== undefined && r.numericIpMaskMax !== undefined),
+		);
+		expect(ipMatch).toBeUndefined();
+	}, 60_000);
+
+	test(`concurrent retry-storm: ${STORM_CONCURRENCY} in-flight × ${STORM_WAVE_COUNT} waves against ${IP_RULE_COUNT + CIDR_RULE_COUNT + MIXED_RULE_COUNT} rules`, async () => {
+		// Emulates the incident's frontend-retry pattern: the client
+		// keeps retrying the same banned scope, and each retry starts
+		// before the previous one has completed. In production the
+		// provider-side verdict cache absorbs waves 2..N; here we run
+		// the reader directly (no cache) so the numbers show the
+		// worst-case Redis-only path — what the cache is protecting
+		// against under stampede.
+		//
+		// A single scope is used across every request so the FT
+		// probes are byte-for-byte identical. That means every wave
+		// is a candidate for the same posting-list intersections;
+		// under the *old* single-query path this would compound with
+		// the per-request APPLY(exists()×11) cost and crush tail
+		// latency. Under the split path each probe still hits its
+		// own posting list and the only added cost is command
+		// queuing on the shared TCP connection.
+
+		// Warm-up: page the index in and let redis-client establish
+		// pipelines before the first measured wave.
+		await reader.findRules(
+			{
+				policyScope: { clientId: "client1" },
+				policyScopeMatch: FilterScopeMatch.Greedy,
+				userScope: { numericIp: ipv4(999_997) },
+				userScopeMatch: FilterScopeMatch.Greedy,
+				blockOnly: true,
+			},
+			true,
+		);
+
+		// Identical scope for every request. Hits a real rule
+		// (ipv4(42) is in the seeded IP-ban range) so each response
+		// carries the same non-empty verdict payload.
+		const stormScope = {
+			numericIp: ipv4(42),
+			ja4Hash: "t13d_load_1",
+			userAgentHash: "ua5",
+			countryCode: "C5",
+			asn: 1005,
+		};
+		const clientId = "client1";
+
+		const allSamples: number[] = [];
+		const perWave: Array<{
+			wave: number;
+			p50: number;
+			p99: number;
+			min: number;
+			max: number;
+			elapsedMs: number;
+		}> = [];
+
+		for (let wave = 0; wave < STORM_WAVE_COUNT; wave++) {
+			const waveStart = performance.now();
+			const waveSamples: number[] = [];
+
+			// Fire all N requests in parallel and wait for the whole
+			// wave to complete. This mirrors a burst of retries
+			// arriving inside one event-loop turn — every request
+			// starts before any has completed, so the redis client's
+			// command queue depth peaks at N.
+			await Promise.all(
+				Array.from({ length: STORM_CONCURRENCY }, async () => {
+					const start = performance.now();
+					const results = await reader.findRules(
+						{
+							policyScope: { clientId },
+							policyScopeMatch: FilterScopeMatch.Greedy,
+							userScope: stormScope,
+							userScopeMatch: FilterScopeMatch.Greedy,
+							blockOnly: true,
 						},
-						userScopeMatch: FilterScopeMatch.Greedy,
-						blockOnly: true,
-					},
-					true,
-				);
-				samples.push(performance.now() - start);
-			}
+						true,
+					);
+					const dur = performance.now() - start;
+					waveSamples.push(dur);
+					// Sanity: the storm scope has a matching exact-IP
+					// block rule, so every response must include it.
+					// A regression that drops responses under
+					// concurrency shows up here rather than as a
+					// silent under-count of samples.
+					expect(
+						results.find((r) => r.numericIp === stormScope.numericIp),
+					).toBeDefined();
+				}),
+			);
 
-			samples.sort((a, b) => a - b);
-			const p50 = percentile(samples, 0.5);
-			const p99 = percentile(samples, 0.99);
-			const avg = samples.reduce((a, b) => a + b, 0) / samples.length;
+			const waveElapsed = performance.now() - waveStart;
+			waveSamples.sort((a, b) => a - b);
+			const p50 = percentile(waveSamples, 0.5);
+			const p99 = percentile(waveSamples, 0.99);
+			const min = waveSamples[0] ?? 0;
+			const max = waveSamples[waveSamples.length - 1] ?? 0;
+			perWave.push({
+				wave: wave + 1,
+				p50,
+				p99,
+				min,
+				max,
+				elapsedMs: waveElapsed,
+			});
+			allSamples.push(...waveSamples);
+		}
 
+		allSamples.sort((a, b) => a - b);
+		const overallP50 = percentile(allSamples, 0.5);
+		const overallP99 = percentile(allSamples, 0.99);
+		const overallAvg =
+			allSamples.reduce((a, b) => a + b, 0) / allSamples.length;
+		const totalRequests = STORM_CONCURRENCY * STORM_WAVE_COUNT;
+		const totalElapsed = perWave.reduce((sum, w) => sum + w.elapsedMs, 0);
+		const throughput = (totalRequests * 1000) / totalElapsed;
+
+		console.log(
+			`storm ${STORM_CONCURRENCY}×${STORM_WAVE_COUNT}: avg=${overallAvg.toFixed(2)}ms  p50=${overallP50.toFixed(2)}ms  p99=${overallP99.toFixed(2)}ms  ` +
+				`throughput=${throughput.toFixed(0)} req/s  total=${totalElapsed.toFixed(0)}ms`,
+		);
+		// Per-wave breakdown so a regression that only affects
+		// first-wave stampede (cache-miss shape) shows up
+		// independently from steady-state numbers.
+		for (const w of perWave) {
 			console.log(
-				`split-query load: avg=${avg.toFixed(2)}ms  p50=${p50.toFixed(2)}ms  p99=${p99.toFixed(2)}ms  n=${samples.length}  (${IP_RULE_COUNT} IPs + ${CIDR_RULE_COUNT} CIDRs + ${MIXED_RULE_COUNT} mixed)`,
+				`  wave ${w.wave.toString().padStart(2)}: p50=${w.p50.toFixed(2)}ms  p99=${w.p99.toFixed(2)}ms  ` +
+					`min=${w.min.toFixed(2)}ms  max=${w.max.toFixed(2)}ms  wave-elapsed=${w.elapsedMs.toFixed(0)}ms`,
 			);
+		}
 
-			expect(p50).toBeLessThan(P50_LATENCY_MS);
-			expect(p99).toBeLessThan(P99_LATENCY_MS);
-		},
-		300_000,
-	);
-
-	test(
-		"finds exact-IP bulk-ban rule for matching request",
-		async () => {
-			// Pick an IP known to have been seeded as an individual-IP ban.
-			const targetIp = ipv4(42);
-			const results = await reader.findRules(
-				{
-					policyScope: { clientId: "client1" },
-					policyScopeMatch: FilterScopeMatch.Greedy,
-					userScope: {
-						numericIp: targetIp,
-						ja4Hash: "t13d_load_1",
-					},
-					userScopeMatch: FilterScopeMatch.Greedy,
-					blockOnly: true,
-				},
-				true,
-			);
-
-			// The exact-IP rule must be among the returned candidates —
-			// this is the "rule that must never be missed" property.
-			const found = results.find((r) => r.numericIp === targetIp);
-			expect(found).toBeDefined();
-			expect(found?.type).toBe(AccessPolicyType.Block);
-		},
-		60_000,
-	);
-
-	test(
-		"finds CIDR-range bulk-ban rule for request IP inside the range",
-		async () => {
-			// Pick a CIDR range and a request IP known to fall inside it.
-			const { min, max } = ipv4CidrRange(7);
-			const requestIp = min + 42n;
-			expect(requestIp).toBeLessThanOrEqual(max);
-
-			const results = await reader.findRules(
-				{
-					policyScope: { clientId: "client1" },
-					policyScopeMatch: FilterScopeMatch.Greedy,
-					userScope: { numericIp: requestIp },
-					userScopeMatch: FilterScopeMatch.Greedy,
-					blockOnly: true,
-				},
-				true,
-			);
-
-			const found = results.find(
-				(r) =>
-					r.numericIpMaskMin === min &&
-					r.numericIpMaskMax === max &&
-					r.type === AccessPolicyType.Block,
-			);
-			expect(found).toBeDefined();
-		},
-		60_000,
-	);
-
-	test(
-		"finds ja4-scoped rule via the split-query ja4 probe",
-		async () => {
-			// The mixed population includes ja4-scoped rules; a request
-			// with matching ja4Hash must surface the rule even when the
-			// request IP has no matching numericIp entry.
-			const results = await reader.findRules(
-				{
-					policyScope: { clientId: "client0" },
-					policyScopeMatch: FilterScopeMatch.Greedy,
-					userScope: {
-						numericIp: ipv4(999_998),
-						ja4Hash: "t13d_load_0",
-					},
-					userScopeMatch: FilterScopeMatch.Greedy,
-					blockOnly: true,
-				},
-				true,
-			);
-
-			const ja4Rule = results.find(
-				(r) => r.ja4Hash === "t13d_load_0" && r.clientId === "client0",
-			);
-			expect(ja4Rule).toBeDefined();
-		},
-		60_000,
-	);
-
-	test(
-		"returns no match when request IP is outside every rule range",
-		async () => {
-			// Way outside every seeded range.
-			const results = await reader.findRules(
-				{
-					policyScope: { clientId: "client99" },
-					policyScopeMatch: FilterScopeMatch.Greedy,
-					userScope: { numericIp: ipv4(9_999_999) },
-					userScopeMatch: FilterScopeMatch.Greedy,
-					blockOnly: true,
-				},
-				true,
-			);
-
-			// No IP-scoped rule should apply; only fall-through matches
-			// (mixed rules keyed on other fields) could surface here, and
-			// we're not populating any of those on this request.
-			const ipMatch = results.find(
-				(r) =>
-					r.numericIp !== undefined ||
-					(r.numericIpMaskMin !== undefined &&
-						r.numericIpMaskMax !== undefined),
-			);
-			expect(ipMatch).toBeUndefined();
-		},
-		60_000,
-	);
-
-	test(
-		`concurrent retry-storm: ${STORM_CONCURRENCY} in-flight × ${STORM_WAVE_COUNT} waves against ${IP_RULE_COUNT + CIDR_RULE_COUNT + MIXED_RULE_COUNT} rules`,
-		async () => {
-			// Emulates the incident's frontend-retry pattern: the client
-			// keeps retrying the same banned scope, and each retry starts
-			// before the previous one has completed. In production the
-			// provider-side verdict cache absorbs waves 2..N; here we run
-			// the reader directly (no cache) so the numbers show the
-			// worst-case Redis-only path — what the cache is protecting
-			// against under stampede.
-			//
-			// A single scope is used across every request so the FT
-			// probes are byte-for-byte identical. That means every wave
-			// is a candidate for the same posting-list intersections;
-			// under the *old* single-query path this would compound with
-			// the per-request APPLY(exists()×11) cost and crush tail
-			// latency. Under the split path each probe still hits its
-			// own posting list and the only added cost is command
-			// queuing on the shared TCP connection.
-
-			// Warm-up: page the index in and let redis-client establish
-			// pipelines before the first measured wave.
-			await reader.findRules(
-				{
-					policyScope: { clientId: "client1" },
-					policyScopeMatch: FilterScopeMatch.Greedy,
-					userScope: { numericIp: ipv4(999_997) },
-					userScopeMatch: FilterScopeMatch.Greedy,
-					blockOnly: true,
-				},
-				true,
-			);
-
-			// Identical scope for every request. Hits a real rule
-			// (ipv4(42) is in the seeded IP-ban range) so each response
-			// carries the same non-empty verdict payload.
-			const stormScope = {
-				numericIp: ipv4(42),
-				ja4Hash: "t13d_load_1",
-				userAgentHash: "ua5",
-				countryCode: "C5",
-				asn: 1005,
-			};
-			const clientId = "client1";
-
-			const allSamples: number[] = [];
-			const perWave: Array<{
-				wave: number;
-				p50: number;
-				p99: number;
-				min: number;
-				max: number;
-				elapsedMs: number;
-			}> = [];
-
-			for (let wave = 0; wave < STORM_WAVE_COUNT; wave++) {
-				const waveStart = performance.now();
-				const waveSamples: number[] = [];
-
-				// Fire all N requests in parallel and wait for the whole
-				// wave to complete. This mirrors a burst of retries
-				// arriving inside one event-loop turn — every request
-				// starts before any has completed, so the redis client's
-				// command queue depth peaks at N.
-				await Promise.all(
-					Array.from({ length: STORM_CONCURRENCY }, async () => {
-						const start = performance.now();
-						const results = await reader.findRules(
-							{
-								policyScope: { clientId },
-								policyScopeMatch: FilterScopeMatch.Greedy,
-								userScope: stormScope,
-								userScopeMatch: FilterScopeMatch.Greedy,
-								blockOnly: true,
-							},
-							true,
-						);
-						const dur = performance.now() - start;
-						waveSamples.push(dur);
-						// Sanity: the storm scope has a matching exact-IP
-						// block rule, so every response must include it.
-						// A regression that drops responses under
-						// concurrency shows up here rather than as a
-						// silent under-count of samples.
-						expect(
-							results.find((r) => r.numericIp === stormScope.numericIp),
-						).toBeDefined();
-					}),
-				);
-
-				const waveElapsed = performance.now() - waveStart;
-				waveSamples.sort((a, b) => a - b);
-				const p50 = percentile(waveSamples, 0.5);
-				const p99 = percentile(waveSamples, 0.99);
-				const min = waveSamples[0] ?? 0;
-				const max = waveSamples[waveSamples.length - 1] ?? 0;
-				perWave.push({
-					wave: wave + 1,
-					p50,
-					p99,
-					min,
-					max,
-					elapsedMs: waveElapsed,
-				});
-				allSamples.push(...waveSamples);
-			}
-
-			allSamples.sort((a, b) => a - b);
-			const overallP50 = percentile(allSamples, 0.5);
-			const overallP99 = percentile(allSamples, 0.99);
-			const overallAvg =
-				allSamples.reduce((a, b) => a + b, 0) / allSamples.length;
-			const totalRequests = STORM_CONCURRENCY * STORM_WAVE_COUNT;
-			const totalElapsed = perWave.reduce((sum, w) => sum + w.elapsedMs, 0);
-			const throughput = (totalRequests * 1000) / totalElapsed;
-
-			console.log(
-				`storm ${STORM_CONCURRENCY}×${STORM_WAVE_COUNT}: avg=${overallAvg.toFixed(2)}ms  p50=${overallP50.toFixed(2)}ms  p99=${overallP99.toFixed(2)}ms  ` +
-					`throughput=${throughput.toFixed(0)} req/s  total=${totalElapsed.toFixed(0)}ms`,
-			);
-			// Per-wave breakdown so a regression that only affects
-			// first-wave stampede (cache-miss shape) shows up
-			// independently from steady-state numbers.
-			for (const w of perWave) {
-				console.log(
-					`  wave ${w.wave.toString().padStart(2)}: p50=${w.p50.toFixed(2)}ms  p99=${w.p99.toFixed(2)}ms  ` +
-						`min=${w.min.toFixed(2)}ms  max=${w.max.toFixed(2)}ms  wave-elapsed=${w.elapsedMs.toFixed(0)}ms`,
-				);
-			}
-
-			expect(overallP50).toBeLessThan(STORM_P50_LATENCY_MS);
-			expect(overallP99).toBeLessThan(STORM_P99_LATENCY_MS);
-			// Wave-1 stampede check: even the cold-cache wave (which is
-			// what the production cache absorbs) has to stay tractable —
-			// a regression that only hurts first-request-per-scope
-			// latency would otherwise hide behind steady-state numbers.
-			const firstWave = perWave[0];
-			expect(firstWave).toBeDefined();
-			if (firstWave) {
-				expect(firstWave.p99).toBeLessThan(STORM_P99_LATENCY_MS);
-			}
-		},
-		300_000,
-	);
+		expect(overallP50).toBeLessThan(STORM_P50_LATENCY_MS);
+		expect(overallP99).toBeLessThan(STORM_P99_LATENCY_MS);
+		// Wave-1 stampede check: even the cold-cache wave (which is
+		// what the production cache absorbs) has to stay tractable —
+		// a regression that only hurts first-request-per-scope
+		// latency would otherwise hide behind steady-state numbers.
+		const firstWave = perWave[0];
+		expect(firstWave).toBeDefined();
+		if (firstWave) {
+			expect(firstWave.p99).toBeLessThan(STORM_P99_LATENCY_MS);
+		}
+	}, 300_000);
 });

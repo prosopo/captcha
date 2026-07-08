@@ -28,7 +28,11 @@ describe("buildScopedBlockSubQueries", () => {
 		const kinds = subs.map((s) => s.kind).sort();
 		// Two field probes + one fall-through for "no user-scope
 		// constraint" rules. No IP sub-queries because request has no IP.
-		expect(kinds).toEqual(["field:ja4Hash", "field:userAgentHash", "no-user-scope"]);
+		expect(kinds).toEqual([
+			"field:ja4Hash",
+			"field:userAgentHash",
+			"no-user-scope",
+		]);
 	});
 
 	it("emits both ip-exact and ip-mask sub-queries when request has an IP", () => {
@@ -47,19 +51,12 @@ describe("buildScopedBlockSubQueries", () => {
 		expect(ipExact?.query).toContain("@numericIp:[3232235777 3232235777]");
 
 		const ipMask = subs.find((s) => s.kind === "ip:mask");
-		expect(ipMask?.query).toContain(
-			"@numericIpMaskMin:[-inf 3232235777]",
-		);
-		expect(ipMask?.query).toContain(
-			"@numericIpMaskMax:[3232235777 +inf]",
-		);
+		expect(ipMask?.query).toContain("@numericIpMaskMin:[-inf 3232235777]");
+		expect(ipMask?.query).toContain("@numericIpMaskMax:[3232235777 +inf]");
 	});
 
 	it("scopes every sub-query with @type:{block} and @clientId probe", () => {
-		const subs = buildScopedBlockSubQueries(
-			{ ja4Hash: "abc" },
-			"client-A",
-		);
+		const subs = buildScopedBlockSubQueries({ ja4Hash: "abc" }, "client-A");
 
 		for (const sub of subs) {
 			expect(sub.query).toContain("@type:{block}");
@@ -74,10 +71,7 @@ describe("buildScopedBlockSubQueries", () => {
 	});
 
 	it("skips the client-specific probe when no clientId is passed", () => {
-		const subs = buildScopedBlockSubQueries(
-			{ ja4Hash: "abc" },
-			undefined,
-		);
+		const subs = buildScopedBlockSubQueries({ ja4Hash: "abc" }, undefined);
 
 		for (const sub of subs) {
 			// No client-scoped probe — request is scoped to global rules
@@ -88,10 +82,7 @@ describe("buildScopedBlockSubQueries", () => {
 	});
 
 	it("emits a no-user-scope fall-through query with ismissing() over every user-scope field", () => {
-		const subs = buildScopedBlockSubQueries(
-			{ ja4Hash: "abc" },
-			"client-A",
-		);
+		const subs = buildScopedBlockSubQueries({ ja4Hash: "abc" }, "client-A");
 
 		const fallThrough = subs.find((s) => s.kind === "no-user-scope");
 		expect(fallThrough).toBeDefined();
@@ -136,8 +127,6 @@ describe("buildScopedBlockSubQueries", () => {
 		expect(coordsSub).toBeDefined();
 		// Coords hold JSON with brackets and commas — every one must be
 		// backslash-escaped or the TAG query silently returns no matches.
-		expect(coordsSub?.query).toContain(
-			"@coords:{\\[\\[\\[100\\,200\\]\\]\\]}",
-		);
+		expect(coordsSub?.query).toContain("@coords:{\\[\\[\\[100\\,200\\]\\]\\]}");
 	});
 });

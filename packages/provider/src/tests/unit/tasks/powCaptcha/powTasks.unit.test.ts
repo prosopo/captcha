@@ -38,6 +38,7 @@ import {
 } from "@prosopo/user-access-policy";
 import { getIPAddress, verifyRecency } from "@prosopo/util";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { getVerdictCache } from "../../../../api/blacklistRequestInspector.js";
 import { getCompositeIpAddress } from "../../../../compositeIpAddress.js";
 import { PowCaptchaManager } from "../../../../tasks/powCaptcha/powTasks.js";
 import {
@@ -108,6 +109,11 @@ describe("PowCaptchaManager", () => {
 	};
 
 	beforeEach(() => {
+		// Verdict cache is a process-wide singleton — reset between
+		// tests so a cached "no rule" verdict can't satisfy a lookup
+		// that expects to see this test's mocked storage response.
+		getVerdictCache().clear();
+
 		db = {
 			storePowCaptchaRecord: vi.fn(),
 			getPowCaptchaRecordByChallenge: vi.fn(),

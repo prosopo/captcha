@@ -251,9 +251,9 @@ describe("hardBlockCacheKey", () => {
 	});
 
 	it("distinguishes different IPs", () => {
-		expect(
-			hardBlockCacheKey("client-A", { numericIp: 1n }, true),
-		).not.toBe(hardBlockCacheKey("client-A", { numericIp: 2n }, true));
+		expect(hardBlockCacheKey("client-A", { numericIp: 1n }, true)).not.toBe(
+			hardBlockCacheKey("client-A", { numericIp: 2n }, true),
+		);
 	});
 
 	it("distinguishes blockOnly true vs false", () => {

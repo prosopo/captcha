@@ -28,7 +28,14 @@ import {
 	accessRulesRedisIndex,
 	createRedisAccessRulesStorage,
 } from "@prosopo/user-access-policy/redis";
-import { afterAll, beforeAll, beforeEach, describe, expect, test } from "vitest";
+import {
+	afterAll,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	test,
+} from "vitest";
 import {
 	getPrioritisedAccessRule,
 	getVerdictCache,
@@ -214,9 +221,7 @@ describe("blacklistRequestInspector storm behaviour", () => {
 		await executeBatchesSequentially(
 			chunkIntoBatches(rules, 1000),
 			async (batch) => {
-				await accessRulesStorage.insertRules(
-					batch.map((rule) => ({ rule })),
-				);
+				await accessRulesStorage.insertRules(batch.map((rule) => ({ rule })));
 			},
 		);
 	}, 300_000);
@@ -234,334 +239,314 @@ describe("blacklistRequestInspector storm behaviour", () => {
 		getVerdictCache().clear();
 	});
 
-	test(
-		`pure retry storm: ${STORM_CONCURRENCY} in-flight × ${STORM_WAVE_COUNT} waves through getPrioritisedAccessRule`,
-		async () => {
-			// Warm-up: page the FT index in and let the redis-client
-			// pipeline settle.
-			await getPrioritisedAccessRule(
-				accessRulesStorage,
-				{ numericIp: ipv4(999_997) },
-				"warmup",
-				{ blockOnly: true },
-			);
-			// Warm-up populated the cache with a "no match" verdict for
-			// the warm-up scope; clear so subsequent measurements aren't
-			// affected by any of it.
-			getVerdictCache().clear();
+	test(`pure retry storm: ${STORM_CONCURRENCY} in-flight × ${STORM_WAVE_COUNT} waves through getPrioritisedAccessRule`, async () => {
+		// Warm-up: page the FT index in and let the redis-client
+		// pipeline settle.
+		await getPrioritisedAccessRule(
+			accessRulesStorage,
+			{ numericIp: ipv4(999_997) },
+			"warmup",
+			{ blockOnly: true },
+		);
+		// Warm-up populated the cache with a "no match" verdict for
+		// the warm-up scope; clear so subsequent measurements aren't
+		// affected by any of it.
+		getVerdictCache().clear();
 
-			const allSamples: number[] = [];
-			type WaveStat = {
-				wave: number;
-				cacheSizeAfter: number;
-				p50: number;
-				p99: number;
-				min: number;
-				max: number;
-				elapsedMs: number;
-			};
-			const perWave: WaveStat[] = [];
+		const allSamples: number[] = [];
+		type WaveStat = {
+			wave: number;
+			cacheSizeAfter: number;
+			p50: number;
+			p99: number;
+			min: number;
+			max: number;
+			elapsedMs: number;
+		};
+		const perWave: WaveStat[] = [];
 
-			for (let wave = 0; wave < STORM_WAVE_COUNT; wave++) {
-				const waveStart = performance.now();
-				const waveSamples: number[] = [];
+		for (let wave = 0; wave < STORM_WAVE_COUNT; wave++) {
+			const waveStart = performance.now();
+			const waveSamples: number[] = [];
 
-				await Promise.all(
-					Array.from({ length: STORM_CONCURRENCY }, async () => {
-						const start = performance.now();
-						const results = await getPrioritisedAccessRule(
-							accessRulesStorage,
-							HOT_SCOPE.userScope,
-							HOT_SCOPE.clientId,
-							{ blockOnly: true },
-						);
-						const dur = performance.now() - start;
-						waveSamples.push(dur);
-						// The hot scope's numericIp matches a seeded
-						// bulk-ban rule — every response must include it.
-						expect(
-							results.find(
-								(r) => r.numericIp === HOT_SCOPE.userScope.numericIp,
-							),
-						).toBeDefined();
-					}),
-				);
-
-				waveSamples.sort((a, b) => a - b);
-				perWave.push({
-					wave: wave + 1,
-					cacheSizeAfter: getVerdictCache().size(),
-					p50: percentile(waveSamples, 0.5),
-					p99: percentile(waveSamples, 0.99),
-					min: waveSamples[0] ?? 0,
-					max: waveSamples[waveSamples.length - 1] ?? 0,
-					elapsedMs: performance.now() - waveStart,
-				});
-				allSamples.push(...waveSamples);
-			}
-
-			allSamples.sort((a, b) => a - b);
-			const overallP50 = percentile(allSamples, 0.5);
-			const overallP99 = percentile(allSamples, 0.99);
-			const overallAvg =
-				allSamples.reduce((a, b) => a + b, 0) / allSamples.length;
-			const totalRequests = STORM_CONCURRENCY * STORM_WAVE_COUNT;
-			const totalElapsed = perWave.reduce((sum, w) => sum + w.elapsedMs, 0);
-			const throughput = (totalRequests * 1000) / totalElapsed;
-
-			console.log(
-				`pure storm ${STORM_CONCURRENCY}×${STORM_WAVE_COUNT}: avg=${overallAvg.toFixed(2)}ms  ` +
-					`p50=${overallP50.toFixed(2)}ms  p99=${overallP99.toFixed(2)}ms  ` +
-					`throughput=${throughput.toFixed(0)} req/s`,
-			);
-			for (const w of perWave) {
-				console.log(
-					`  wave ${w.wave.toString().padStart(2)}: ` +
-						`p50=${w.p50.toFixed(2)}ms  p99=${w.p99.toFixed(2)}ms  ` +
-						`min=${w.min.toFixed(2)}ms  max=${w.max.toFixed(2)}ms  ` +
-						`elapsed=${w.elapsedMs.toFixed(0)}ms  ` +
-						`cacheSize=${w.cacheSizeAfter}`,
-				);
-			}
-
-			expect(overallP50).toBeLessThan(PURE_STORM_P50_LATENCY_MS);
-			expect(overallP99).toBeLessThan(PURE_STORM_P99_LATENCY_MS);
-
-			// Steady-state (wave 2..N) must be materially faster than
-			// wave 1. If it isn't, the cache is broken — every wave
-			// would be hitting Redis. Threshold is generous because
-			// cache lookups are ~microseconds vs 20ms wave-1 tail;
-			// even a modest 2x improvement means the cache is engaged.
-			const firstWave = perWave[0];
-			const steadyStateSamples: number[] = [];
-			for (let i = 1; i < perWave.length; i++) {
-				// perWave[i] doesn't retain the raw sample list; use
-				// the p50 as a proxy since we asserted its correctness
-				// implicitly via the overall thresholds.
-				const w = perWave[i];
-				if (w) steadyStateSamples.push(w.p50);
-			}
-			const steadyStateAvgP50 =
-				steadyStateSamples.reduce((a, b) => a + b, 0) /
-				steadyStateSamples.length;
-			expect(firstWave).toBeDefined();
-			if (firstWave) {
-				// Cache must give at least 2x on the steady-state p50 vs
-				// wave 1 p50, or something's wrong (cache disabled, TTL
-				// 0, keying broken, etc.).
-				expect(steadyStateAvgP50 * 2).toBeLessThan(firstWave.p50);
-			}
-
-			// After the storm, the cache holds exactly one entry — the
-			// hot scope. Confirms the cache key is stable and the same
-			// scope always coalesces onto the same entry.
-			expect(getVerdictCache().size()).toBe(1);
-		},
-		300_000,
-	);
-
-	test(
-		`mixed realistic: ${MIXED_CONCURRENCY} in-flight × ${MIXED_WAVE_COUNT} waves with ${Math.round(MIXED_HOT_SCOPE_RATIO * 100)}% hot-scope`,
-		async () => {
-			// Reset the unique-scope counter so runs are deterministic.
-			uniqueCounter = 0;
-
-			await getPrioritisedAccessRule(
-				accessRulesStorage,
-				{ numericIp: ipv4(999_996) },
-				"warmup",
-				{ blockOnly: true },
-			);
-			getVerdictCache().clear();
-			uniqueCounter = 0;
-
-			const hotPerWave = Math.floor(
-				MIXED_CONCURRENCY * MIXED_HOT_SCOPE_RATIO,
-			);
-			const uniquePerWave = MIXED_CONCURRENCY - hotPerWave;
-
-			const hotSamples: number[] = [];
-			const uniqueSamples: number[] = [];
-			type WaveStat = {
-				wave: number;
-				hotP99: number;
-				uniqueP99: number;
-				cacheSizeAfter: number;
-				elapsedMs: number;
-			};
-			const perWave: WaveStat[] = [];
-
-			for (let wave = 0; wave < MIXED_WAVE_COUNT; wave++) {
-				const waveStart = performance.now();
-				const waveHot: number[] = [];
-				const waveUnique: number[] = [];
-
-				// Build the request set for this wave. Interleave hot
-				// and unique so they don't run in sequential blocks —
-				// production traffic doesn't batch by scope.
-				type Req = { kind: "hot" | "unique"; scope: typeof HOT_SCOPE };
-				const requests: Req[] = [];
-				for (let i = 0; i < hotPerWave; i++) {
-					requests.push({ kind: "hot", scope: HOT_SCOPE });
-				}
-				for (let i = 0; i < uniquePerWave; i++) {
-					requests.push({ kind: "unique", scope: buildUniqueScope() });
-				}
-				// Deterministic shuffle so hot/unique interleave.
-				for (let i = requests.length - 1; i > 0; i--) {
-					const j = (i * 2654435761) % (i + 1);
-					const a = requests[i];
-					const b = requests[j];
-					if (a !== undefined && b !== undefined) {
-						requests[i] = b;
-						requests[j] = a;
-					}
-				}
-
-				await Promise.all(
-					requests.map(async (req) => {
-						const start = performance.now();
-						await getPrioritisedAccessRule(
-							accessRulesStorage,
-							req.scope.userScope,
-							req.scope.clientId,
-							{ blockOnly: true },
-						);
-						const dur = performance.now() - start;
-						if (req.kind === "hot") {
-							waveHot.push(dur);
-						} else {
-							waveUnique.push(dur);
-						}
-					}),
-				);
-
-				waveHot.sort((a, b) => a - b);
-				waveUnique.sort((a, b) => a - b);
-				perWave.push({
-					wave: wave + 1,
-					hotP99: percentile(waveHot, 0.99),
-					uniqueP99: percentile(waveUnique, 0.99),
-					cacheSizeAfter: getVerdictCache().size(),
-					elapsedMs: performance.now() - waveStart,
-				});
-				hotSamples.push(...waveHot);
-				uniqueSamples.push(...waveUnique);
-			}
-
-			hotSamples.sort((a, b) => a - b);
-			uniqueSamples.sort((a, b) => a - b);
-			const hotP50 = percentile(hotSamples, 0.5);
-			const hotP99 = percentile(hotSamples, 0.99);
-			const uniqueP50 = percentile(uniqueSamples, 0.5);
-			const uniqueP99 = percentile(uniqueSamples, 0.99);
-			const totalRequests = MIXED_CONCURRENCY * MIXED_WAVE_COUNT;
-			const totalElapsed = perWave.reduce((sum, w) => sum + w.elapsedMs, 0);
-			const throughput = (totalRequests * 1000) / totalElapsed;
-
-			console.log(
-				`mixed ${MIXED_CONCURRENCY}×${MIXED_WAVE_COUNT} ` +
-					`(${Math.round(MIXED_HOT_SCOPE_RATIO * 100)}% hot / ` +
-					`${100 - Math.round(MIXED_HOT_SCOPE_RATIO * 100)}% unique):  ` +
-					`throughput=${throughput.toFixed(0)} req/s`,
-			);
-			console.log(
-				`  hot    (n=${hotSamples.length}): p50=${hotP50.toFixed(2)}ms  p99=${hotP99.toFixed(2)}ms`,
-			);
-			console.log(
-				`  unique (n=${uniqueSamples.length}): p50=${uniqueP50.toFixed(2)}ms  p99=${uniqueP99.toFixed(2)}ms`,
-			);
-			for (const w of perWave) {
-				console.log(
-					`  wave ${w.wave.toString().padStart(2)}: ` +
-						`hot p99=${w.hotP99.toFixed(2)}ms  ` +
-						`unique p99=${w.uniqueP99.toFixed(2)}ms  ` +
-						`elapsed=${w.elapsedMs.toFixed(0)}ms  ` +
-						`cacheSize=${w.cacheSizeAfter}`,
-				);
-			}
-
-			// Both hot and unique paths must stay under the ceilings;
-			// unique is allowed a higher tail because every request hits
-			// Redis under the wave's concurrency load.
-			expect(uniqueP50).toBeLessThan(MIXED_P50_LATENCY_MS);
-			expect(uniqueP99).toBeLessThan(MIXED_P99_LATENCY_MS);
-
-			// Hot-path lookups must be materially faster than unique on
-			// average — cache hits are microseconds, cache misses are
-			// milliseconds. Threshold is a modest 2x because the hot-
-			// scope p50 is dragged up by the wave-1 stampede: every
-			// hot request in wave 1 misses the cache simultaneously
-			// (no in-flight dedupe today), so ~1/N_waves of hot samples
-			// pay the cache-miss cost. Even with that drag, the hot
-			// path stays well ahead — 2x is the alarm threshold, not
-			// the performance target.
-			expect(hotP50 * 2).toBeLessThan(uniqueP50);
-
-			// Cache grew by roughly (unique requests + 1 hot entry).
-			// Cache correctness under concurrency: no dupes for the same
-			// key. Size must equal the total unique scopes plus the
-			// hot scope's single entry.
-			const expectedCacheSize = uniquePerWave * MIXED_WAVE_COUNT + 1;
-			expect(getVerdictCache().size()).toBe(expectedCacheSize);
-		},
-		600_000,
-	);
-
-	test(
-		"singleflight: N concurrent identical wave-1 misses collapse to 1 storage call",
-		async () => {
-			// The wave-1 stampede protection: N identical requests
-			// arriving before the first has populated the cache all
-			// join the same in-flight Promise instead of racing to
-			// Redis. This is the retry-loop-storm shape.
-			getVerdictCache().clear();
-
-			let storageCallCount = 0;
-			const originalFindRules = accessRulesStorage.findRules.bind(
-				accessRulesStorage,
-			);
-			accessRulesStorage.findRules = async (...args) => {
-				storageCallCount++;
-				return originalFindRules(...args);
-			};
-
-			try {
-				const concurrency = 50;
-				const results = await Promise.all(
-					Array.from({ length: concurrency }, () =>
-						getPrioritisedAccessRule(
-							accessRulesStorage,
-							HOT_SCOPE.userScope,
-							HOT_SCOPE.clientId,
-							{ blockOnly: true },
-						),
-					),
-				);
-
-				console.log(
-					`singleflight: ${concurrency} concurrent identical requests → ${storageCallCount} storage call(s)`,
-				);
-
-				// One storage call handles the whole burst. Every
-				// waiter received the same resolved verdict, and the
-				// cache holds exactly one entry.
-				expect(storageCallCount).toBe(1);
-				expect(getVerdictCache().size()).toBe(1);
-				// All 50 requests must return a verdict that contains
-				// the matching block rule — the singleflight resolution
-				// must not "swallow" the value for any joiner.
-				for (const r of results) {
+			await Promise.all(
+				Array.from({ length: STORM_CONCURRENCY }, async () => {
+					const start = performance.now();
+					const results = await getPrioritisedAccessRule(
+						accessRulesStorage,
+						HOT_SCOPE.userScope,
+						HOT_SCOPE.clientId,
+						{ blockOnly: true },
+					);
+					const dur = performance.now() - start;
+					waveSamples.push(dur);
+					// The hot scope's numericIp matches a seeded
+					// bulk-ban rule — every response must include it.
 					expect(
-						r.find(
-							(rule) => rule.numericIp === HOT_SCOPE.userScope.numericIp,
-						),
+						results.find((r) => r.numericIp === HOT_SCOPE.userScope.numericIp),
 					).toBeDefined();
-				}
-			} finally {
-				accessRulesStorage.findRules = originalFindRules;
+				}),
+			);
+
+			waveSamples.sort((a, b) => a - b);
+			perWave.push({
+				wave: wave + 1,
+				cacheSizeAfter: getVerdictCache().size(),
+				p50: percentile(waveSamples, 0.5),
+				p99: percentile(waveSamples, 0.99),
+				min: waveSamples[0] ?? 0,
+				max: waveSamples[waveSamples.length - 1] ?? 0,
+				elapsedMs: performance.now() - waveStart,
+			});
+			allSamples.push(...waveSamples);
+		}
+
+		allSamples.sort((a, b) => a - b);
+		const overallP50 = percentile(allSamples, 0.5);
+		const overallP99 = percentile(allSamples, 0.99);
+		const overallAvg =
+			allSamples.reduce((a, b) => a + b, 0) / allSamples.length;
+		const totalRequests = STORM_CONCURRENCY * STORM_WAVE_COUNT;
+		const totalElapsed = perWave.reduce((sum, w) => sum + w.elapsedMs, 0);
+		const throughput = (totalRequests * 1000) / totalElapsed;
+
+		console.log(
+			`pure storm ${STORM_CONCURRENCY}×${STORM_WAVE_COUNT}: avg=${overallAvg.toFixed(2)}ms  ` +
+				`p50=${overallP50.toFixed(2)}ms  p99=${overallP99.toFixed(2)}ms  ` +
+				`throughput=${throughput.toFixed(0)} req/s`,
+		);
+		for (const w of perWave) {
+			console.log(
+				`  wave ${w.wave.toString().padStart(2)}: ` +
+					`p50=${w.p50.toFixed(2)}ms  p99=${w.p99.toFixed(2)}ms  ` +
+					`min=${w.min.toFixed(2)}ms  max=${w.max.toFixed(2)}ms  ` +
+					`elapsed=${w.elapsedMs.toFixed(0)}ms  ` +
+					`cacheSize=${w.cacheSizeAfter}`,
+			);
+		}
+
+		expect(overallP50).toBeLessThan(PURE_STORM_P50_LATENCY_MS);
+		expect(overallP99).toBeLessThan(PURE_STORM_P99_LATENCY_MS);
+
+		// Steady-state (wave 2..N) must be materially faster than
+		// wave 1. If it isn't, the cache is broken — every wave
+		// would be hitting Redis. Threshold is generous because
+		// cache lookups are ~microseconds vs 20ms wave-1 tail;
+		// even a modest 2x improvement means the cache is engaged.
+		const firstWave = perWave[0];
+		const steadyStateSamples: number[] = [];
+		for (let i = 1; i < perWave.length; i++) {
+			// perWave[i] doesn't retain the raw sample list; use
+			// the p50 as a proxy since we asserted its correctness
+			// implicitly via the overall thresholds.
+			const w = perWave[i];
+			if (w) steadyStateSamples.push(w.p50);
+		}
+		const steadyStateAvgP50 =
+			steadyStateSamples.reduce((a, b) => a + b, 0) / steadyStateSamples.length;
+		expect(firstWave).toBeDefined();
+		if (firstWave) {
+			// Cache must give at least 2x on the steady-state p50 vs
+			// wave 1 p50, or something's wrong (cache disabled, TTL
+			// 0, keying broken, etc.).
+			expect(steadyStateAvgP50 * 2).toBeLessThan(firstWave.p50);
+		}
+
+		// After the storm, the cache holds exactly one entry — the
+		// hot scope. Confirms the cache key is stable and the same
+		// scope always coalesces onto the same entry.
+		expect(getVerdictCache().size()).toBe(1);
+	}, 300_000);
+
+	test(`mixed realistic: ${MIXED_CONCURRENCY} in-flight × ${MIXED_WAVE_COUNT} waves with ${Math.round(MIXED_HOT_SCOPE_RATIO * 100)}% hot-scope`, async () => {
+		// Reset the unique-scope counter so runs are deterministic.
+		uniqueCounter = 0;
+
+		await getPrioritisedAccessRule(
+			accessRulesStorage,
+			{ numericIp: ipv4(999_996) },
+			"warmup",
+			{ blockOnly: true },
+		);
+		getVerdictCache().clear();
+		uniqueCounter = 0;
+
+		const hotPerWave = Math.floor(MIXED_CONCURRENCY * MIXED_HOT_SCOPE_RATIO);
+		const uniquePerWave = MIXED_CONCURRENCY - hotPerWave;
+
+		const hotSamples: number[] = [];
+		const uniqueSamples: number[] = [];
+		type WaveStat = {
+			wave: number;
+			hotP99: number;
+			uniqueP99: number;
+			cacheSizeAfter: number;
+			elapsedMs: number;
+		};
+		const perWave: WaveStat[] = [];
+
+		for (let wave = 0; wave < MIXED_WAVE_COUNT; wave++) {
+			const waveStart = performance.now();
+			const waveHot: number[] = [];
+			const waveUnique: number[] = [];
+
+			// Build the request set for this wave. Interleave hot
+			// and unique so they don't run in sequential blocks —
+			// production traffic doesn't batch by scope.
+			type Req = { kind: "hot" | "unique"; scope: typeof HOT_SCOPE };
+			const requests: Req[] = [];
+			for (let i = 0; i < hotPerWave; i++) {
+				requests.push({ kind: "hot", scope: HOT_SCOPE });
 			}
-		},
-		60_000,
-	);
+			for (let i = 0; i < uniquePerWave; i++) {
+				requests.push({ kind: "unique", scope: buildUniqueScope() });
+			}
+			// Deterministic shuffle so hot/unique interleave.
+			for (let i = requests.length - 1; i > 0; i--) {
+				const j = (i * 2654435761) % (i + 1);
+				const a = requests[i];
+				const b = requests[j];
+				if (a !== undefined && b !== undefined) {
+					requests[i] = b;
+					requests[j] = a;
+				}
+			}
+
+			await Promise.all(
+				requests.map(async (req) => {
+					const start = performance.now();
+					await getPrioritisedAccessRule(
+						accessRulesStorage,
+						req.scope.userScope,
+						req.scope.clientId,
+						{ blockOnly: true },
+					);
+					const dur = performance.now() - start;
+					if (req.kind === "hot") {
+						waveHot.push(dur);
+					} else {
+						waveUnique.push(dur);
+					}
+				}),
+			);
+
+			waveHot.sort((a, b) => a - b);
+			waveUnique.sort((a, b) => a - b);
+			perWave.push({
+				wave: wave + 1,
+				hotP99: percentile(waveHot, 0.99),
+				uniqueP99: percentile(waveUnique, 0.99),
+				cacheSizeAfter: getVerdictCache().size(),
+				elapsedMs: performance.now() - waveStart,
+			});
+			hotSamples.push(...waveHot);
+			uniqueSamples.push(...waveUnique);
+		}
+
+		hotSamples.sort((a, b) => a - b);
+		uniqueSamples.sort((a, b) => a - b);
+		const hotP50 = percentile(hotSamples, 0.5);
+		const hotP99 = percentile(hotSamples, 0.99);
+		const uniqueP50 = percentile(uniqueSamples, 0.5);
+		const uniqueP99 = percentile(uniqueSamples, 0.99);
+		const totalRequests = MIXED_CONCURRENCY * MIXED_WAVE_COUNT;
+		const totalElapsed = perWave.reduce((sum, w) => sum + w.elapsedMs, 0);
+		const throughput = (totalRequests * 1000) / totalElapsed;
+
+		console.log(
+			`mixed ${MIXED_CONCURRENCY}×${MIXED_WAVE_COUNT} ` +
+				`(${Math.round(MIXED_HOT_SCOPE_RATIO * 100)}% hot / ` +
+				`${100 - Math.round(MIXED_HOT_SCOPE_RATIO * 100)}% unique):  ` +
+				`throughput=${throughput.toFixed(0)} req/s`,
+		);
+		console.log(
+			`  hot    (n=${hotSamples.length}): p50=${hotP50.toFixed(2)}ms  p99=${hotP99.toFixed(2)}ms`,
+		);
+		console.log(
+			`  unique (n=${uniqueSamples.length}): p50=${uniqueP50.toFixed(2)}ms  p99=${uniqueP99.toFixed(2)}ms`,
+		);
+		for (const w of perWave) {
+			console.log(
+				`  wave ${w.wave.toString().padStart(2)}: ` +
+					`hot p99=${w.hotP99.toFixed(2)}ms  ` +
+					`unique p99=${w.uniqueP99.toFixed(2)}ms  ` +
+					`elapsed=${w.elapsedMs.toFixed(0)}ms  ` +
+					`cacheSize=${w.cacheSizeAfter}`,
+			);
+		}
+
+		// Both hot and unique paths must stay under the ceilings;
+		// unique is allowed a higher tail because every request hits
+		// Redis under the wave's concurrency load.
+		expect(uniqueP50).toBeLessThan(MIXED_P50_LATENCY_MS);
+		expect(uniqueP99).toBeLessThan(MIXED_P99_LATENCY_MS);
+
+		// Hot-path lookups must be materially faster than unique on
+		// average — cache hits are microseconds, cache misses are
+		// milliseconds. Threshold is a modest 2x because the hot-
+		// scope p50 is dragged up by the wave-1 stampede: every
+		// hot request in wave 1 misses the cache simultaneously
+		// (no in-flight dedupe today), so ~1/N_waves of hot samples
+		// pay the cache-miss cost. Even with that drag, the hot
+		// path stays well ahead — 2x is the alarm threshold, not
+		// the performance target.
+		expect(hotP50 * 2).toBeLessThan(uniqueP50);
+
+		// Cache grew by roughly (unique requests + 1 hot entry).
+		// Cache correctness under concurrency: no dupes for the same
+		// key. Size must equal the total unique scopes plus the
+		// hot scope's single entry.
+		const expectedCacheSize = uniquePerWave * MIXED_WAVE_COUNT + 1;
+		expect(getVerdictCache().size()).toBe(expectedCacheSize);
+	}, 600_000);
+
+	test("singleflight: N concurrent identical wave-1 misses collapse to 1 storage call", async () => {
+		// The wave-1 stampede protection: N identical requests
+		// arriving before the first has populated the cache all
+		// join the same in-flight Promise instead of racing to
+		// Redis. This is the retry-loop-storm shape.
+		getVerdictCache().clear();
+
+		let storageCallCount = 0;
+		const originalFindRules =
+			accessRulesStorage.findRules.bind(accessRulesStorage);
+		accessRulesStorage.findRules = async (...args) => {
+			storageCallCount++;
+			return originalFindRules(...args);
+		};
+
+		try {
+			const concurrency = 50;
+			const results = await Promise.all(
+				Array.from({ length: concurrency }, () =>
+					getPrioritisedAccessRule(
+						accessRulesStorage,
+						HOT_SCOPE.userScope,
+						HOT_SCOPE.clientId,
+						{ blockOnly: true },
+					),
+				),
+			);
+
+			console.log(
+				`singleflight: ${concurrency} concurrent identical requests → ${storageCallCount} storage call(s)`,
+			);
+
+			// One storage call handles the whole burst. Every
+			// waiter received the same resolved verdict, and the
+			// cache holds exactly one entry.
+			expect(storageCallCount).toBe(1);
+			expect(getVerdictCache().size()).toBe(1);
+			// All 50 requests must return a verdict that contains
+			// the matching block rule — the singleflight resolution
+			// must not "swallow" the value for any joiner.
+			for (const r of results) {
+				expect(
+					r.find((rule) => rule.numericIp === HOT_SCOPE.userScope.numericIp),
+				).toBeDefined();
+			}
+		} finally {
+			accessRulesStorage.findRules = originalFindRules;
+		}
+	}, 60_000);
 });

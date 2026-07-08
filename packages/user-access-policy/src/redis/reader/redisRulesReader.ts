@@ -185,8 +185,7 @@ export class RedisRulesReader implements AccessRulesReader {
 			// rules". Guard so an accidentally-empty filter can't return
 			// the full global rule set. The exact literal must stay in
 			// sync with GLOBAL_MATCH_CLAUSE_INNER over there.
-			query ===
-				`( @clientId:{global} | ismissing(@clientId) )`
+			query === "( @clientId:{global} | ismissing(@clientId) )"
 		) {
 			return [];
 		}
