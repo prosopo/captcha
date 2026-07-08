@@ -159,6 +159,59 @@ export function inverseWeights(values: readonly number[]): number[] {
 	return raw.map((value) => clampWeight(value * factor));
 }
 
+// Result of classifying a pool's weights for upward spikes.
+export interface WeightSpike {
+	index: number;
+	weight: number;
+	// how many standard deviations above the mean this weight is
+	sigma: 1 | 2;
+}
+
+export interface SpikeReport {
+	mean: number;
+	stddev: number;
+	spikes: WeightSpike[];
+}
+
+/** Population mean and standard deviation of a list of numbers. */
+export function meanStddev(values: readonly number[]): {
+	mean: number;
+	stddev: number;
+} {
+	if (values.length === 0) {
+		return { mean: 0, stddev: 0 };
+	}
+	const mean = values.reduce((acc, v) => acc + v, 0) / values.length;
+	const variance =
+		values.reduce((acc, v) => acc + (v - mean) ** 2, 0) / values.length;
+	return { mean, stddev: Math.sqrt(variance) };
+}
+
+/**
+ * Flag weights that spike upward relative to the pool mean:
+ *  - `> mean + 2·stddev` is reported at sigma 2 (the more severe tier);
+ *  - `> mean + 1·stddev` (but not 2σ) is reported at sigma 1.
+ * Only the max side is considered. Pools with fewer than 2 members or zero
+ * variance produce no spikes.
+ */
+export function detectWeightSpikes(weights: readonly number[]): SpikeReport {
+	const { mean, stddev } = meanStddev(weights);
+	if (weights.length < 2 || stddev === 0) {
+		return { mean, stddev, spikes: [] };
+	}
+	const oneSigma = mean + stddev;
+	const twoSigma = mean + 2 * stddev;
+	const spikes: WeightSpike[] = [];
+	weights.forEach((weight, index) => {
+		if (weight > twoSigma) {
+			spikes.push({ index, weight, sigma: 2 });
+		} else if (weight > oneSigma) {
+			spikes.push({ index, weight, sigma: 1 });
+		}
+	});
+	return { mean, stddev, spikes };
+}
+
 function assertWeight(weight: number): void {
 	if (!Number.isInteger(weight) || weight < 0) {
 		throw new Error(`Weight must be a non-negative integer, got ${weight}`);

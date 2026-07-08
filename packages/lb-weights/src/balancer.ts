@@ -24,6 +24,7 @@ import {
 	DEFAULT_WEIGHT,
 	changedUpdates,
 	clampWeight,
+	detectWeightSpikes,
 	equalWeights,
 	inverseWeights,
 } from "./weights.js";
@@ -136,6 +137,34 @@ export async function runCycle(deps: BalancerDeps): Promise<void> {
 		const metricByRecordId = new Map<number, number>(
 			measured.map((m) => [m.record.Id, m.metric]),
 		);
+
+		// Detect upward weight spikes vs the pool mean and log a warning per tier.
+		const { mean, stddev, spikes } = detectWeightSpikes(
+			updates.map((u) => u.weight),
+		);
+		for (const spike of spikes) {
+			const record = pool.members[spike.index];
+			const detail = {
+				domain: pool.domain,
+				subdomain: pool.name,
+				ip: record?.Value,
+				recordId: record?.Id,
+				weight: spike.weight,
+				mean,
+				stddev,
+			};
+			if (spike.sigma === 2) {
+				logger.warn(() => ({
+					msg: "Weight spike >2σ above pool mean",
+					data: { ...detail, threshold: mean + 2 * stddev },
+				}));
+			} else {
+				logger.warn(() => ({
+					msg: "Weight spike >1σ above pool mean",
+					data: { ...detail, threshold: mean + stddev },
+				}));
+			}
+		}
 
 		logger.info(() => ({
 			msg: "Computed weights for pool",

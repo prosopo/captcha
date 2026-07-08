@@ -142,6 +142,38 @@ describe("runCycle", () => {
 		expect(applied.map((u) => u.weight)).toEqual([100, 100]);
 	});
 
+	it("logs a >2σ warning when one node's weight spikes", async () => {
+		// one fast node (metric 0) among many slow ones => a large weight spike
+		const members = [
+			member(1, "10.0.0.1", 50),
+			member(2, "10.0.0.2", 50),
+			member(3, "10.0.0.3", 50),
+			member(4, "10.0.0.4", 50),
+			member(5, "10.0.0.5", 50),
+			member(6, "10.0.0.6", 50),
+		];
+		const { client } = makeClient(zone(members));
+		const warn = vi.spyOn(logger, "warn");
+		await runCycle({
+			client,
+			config: config(),
+			logger,
+			fetchMetric: metricFetcher({
+				"10.0.0.1": 0,
+				"10.0.0.2": 9,
+				"10.0.0.3": 9,
+				"10.0.0.4": 9,
+				"10.0.0.5": 9,
+				"10.0.0.6": 9,
+			}),
+		});
+		const messages = warn.mock.calls.map((call) => call[0]().msg);
+		expect(
+			messages.some((m) => typeof m === "string" && m.includes("2σ")),
+		).toBe(true);
+		warn.mockRestore();
+	});
+
 	it("does not apply weights in dry-run mode", async () => {
 		const { client, setWeights } = makeClient(
 			zone([member(1, "10.0.0.1", 50), member(2, "10.0.0.2", 50)]),
