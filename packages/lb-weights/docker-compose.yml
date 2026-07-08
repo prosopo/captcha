@@ -1,0 +1,75 @@
+# Runs the lb-weights service alongside Vector (log shipper) and OpenObserve
+# (log storage/UI). All config lives in this package directory.
+#
+#   docker compose --env-file .env up --build
+#
+# OpenObserve UI: http://localhost:5080 (login with OO_USERNAME / OO_PASSWORD)
+services:
+    lb-weights:
+        container_name: lb-weights
+        build:
+            # build context is the repo root; the package depends on other
+            # workspace packages
+            context: ../..
+            dockerfile: packages/lb-weights/Dockerfile
+        env_file:
+            - .env
+        labels:
+            - "vector.lb-weights=true" # enable log collection by vector
+        restart: unless-stopped
+        networks:
+            - lb-weights
+        logging:
+            driver: "json-file"
+            options:
+                max-size: "100m"
+                max-file: "1"
+
+    vector:
+        container_name: lb-weights-vector
+        image: timberio/vector:latest-debian
+        env_file:
+            - .env
+        volumes:
+            - ./vector.toml:/etc/vector/vector.toml:ro
+            # needed to read docker container logs + events
+            - /var/run/docker.sock:/var/run/docker.sock
+            - vector_data:/var/lib/vector
+        command: ["--config", "/etc/vector/vector.toml"]
+        restart: unless-stopped
+        depends_on:
+            - openobserve
+        networks:
+            - lb-weights
+        logging:
+            driver: "json-file"
+            options:
+                max-size: "100m"
+                max-file: "1"
+
+    openobserve:
+        container_name: lb-weights-openobserve
+        image: public.ecr.aws/zinclabs/openobserve:latest
+        environment:
+            ZO_ROOT_USER_EMAIL: "${OO_USERNAME:?set OO_USERNAME in .env}"
+            ZO_ROOT_USER_PASSWORD: "${OO_PASSWORD:?set OO_PASSWORD in .env}"
+        ports:
+            - "5080:5080"
+        volumes:
+            - openobserve_data:/data
+        restart: unless-stopped
+        networks:
+            - lb-weights
+        logging:
+            driver: "json-file"
+            options:
+                max-size: "100m"
+                max-file: "1"
+
+networks:
+    lb-weights:
+        name: lb-weights
+
+volumes:
+    vector_data:
+    openobserve_data:

@@ -1,0 +1,76 @@
+# Vector configuration for the lb-weights service.
+#
+# Collects the structured JSON logs emitted by the lb-weights container and
+# forwards them to a local OpenObserve instance for querying/dashboards.
+#
+# Environment variables required:
+# - OO_HOST:      identifier for this host (added to every record)
+# - OO_ORG:       OpenObserve organisation (default "default")
+# - OO_STREAM:    OpenObserve stream name (e.g. "lb_weights")
+# - OO_USERNAME:  OpenObserve basic-auth user (root user email)
+# - OO_PASSWORD:  OpenObserve basic-auth password
+
+[api]
+enabled = true
+address = "127.0.0.1:8686"
+
+# Source: logs from any container labelled vector.lb-weights=true
+[sources.lb_weights]
+type = "docker_logs"
+include_labels = ["vector.lb-weights=true"]
+
+# Transform: parse the JSON log line and attach host/container metadata
+[transforms.lb_weights_format]
+type = "remap"
+inputs = ["lb_weights"]
+source = '''
+output = {}
+message_str = string(.message) ?? ""
+parsed = parse_json(message_str) ?? null
+if parsed != null {
+    output = parsed
+} else {
+    output.message = message_str
+}
+output.host = get_env_var("OO_HOST") ?? "unknown"
+output.container_name = .container_name
+output.image = .image
+output.stream = .stream
+output.source_type = .source_type
+. = output
+'''
+
+# Sink: forward to the local OpenObserve instance
+[sinks.openobserve]
+type = "http"
+inputs = ["lb_weights_format"]
+uri = "http://openobserve:5080/api/${OO_ORG:-default}/${OO_STREAM:-lb_weights}/_json"
+method = "post"
+compression = "gzip"
+
+[sinks.openobserve.auth]
+strategy = "basic"
+user = "${OO_USERNAME:?err}"
+password = "${OO_PASSWORD:?err}"
+
+[sinks.openobserve.encoding]
+codec = "json"
+timestamp_format = "rfc3339"
+
+[sinks.openobserve.healthcheck]
+enabled = true
+
+[sinks.openobserve.batch]
+timeout_secs = 15
+
+[sinks.openobserve.request]
+rate_limit_duration_secs = 1
+rate_limit_num = 10
+retry_max_attempts = 5
+retry_initial_backoff_secs = 1
+retry_max_backoff_secs = 30
+
+[sinks.openobserve.buffer]
+type = "disk"
+max_size = 268435488
+when_full = "drop_newest"
