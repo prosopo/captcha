@@ -14,3 +14,7 @@
 export * from "./types.js";
 export * from "./weights.js";
 export * from "./bunny.js";
+export * from "./config.js";
+export * from "./metrics.js";
+export * from "./pools.js";
+export * from "./balancer.js";

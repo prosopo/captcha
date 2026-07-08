@@ -12,7 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { type Logger, LogLevel, getLogger } from "@prosopo/logger";
-import { type BunnyZone, type WeightUpdate, bunnyZoneSchema } from "./types.js";
+import { z } from "zod";
+import {
+	type BunnyZone,
+	type WeightUpdate,
+	bunnyZoneSchema,
+} from "./types.js";
+
+const zoneListSchema = z.object({
+	Items: z.array(bunnyZoneSchema),
+});
 
 const DEFAULT_BASE_URL = "https://api.bunny.net";
 
@@ -47,6 +56,22 @@ export class BunnyDnsClient {
 			Accept: "application/json",
 			"Content-Type": "application/json",
 		};
+	}
+
+	/** List all DNS zones (with their records) on the account. */
+	async listZones(): Promise<BunnyZone[]> {
+		const url = `${this.baseUrl}/dnszone?page=1&perPage=1000`;
+		const response = await this.fetchFn(url, {
+			method: "GET",
+			headers: this.headers(),
+		});
+		if (!response.ok) {
+			throw new Error(
+				`Failed to list zones: ${response.status} ${response.statusText}`,
+			);
+		}
+		const json: unknown = await response.json();
+		return zoneListSchema.parse(json).Items;
 	}
 
 	/** Read a single DNS zone including its records. */

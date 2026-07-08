@@ -113,6 +113,33 @@ export function changedUpdates(
 	return updates.filter((update) => current.get(update.recordId) !== update.weight);
 }
 
+/**
+ * Turn a set of "cost" metric values (e.g. CPU usage, where lower is better)
+ * into integer weights where a lower metric yields a higher weight.
+ *
+ * Steps, matching the intended inverse-weighting scheme:
+ *  1. negate each value so lower cost becomes a larger number;
+ *  2. shift every value up by the minimum negated value (i.e. subtract the min)
+ *     so the smallest becomes 0 and all are non-negative;
+ *  3. add 1 so no node ends up with weight 0 (which would starve it of traffic);
+ *  4. ceil so weights are integers, as Bunny requires.
+ *
+ * An empty input yields an empty result.
+ */
+export function inverseWeights(values: readonly number[]): number[] {
+	if (values.length === 0) {
+		return [];
+	}
+	for (const value of values) {
+		if (!Number.isFinite(value)) {
+			throw new Error(`Metric value must be finite, got ${value}`);
+		}
+	}
+	const negated = values.map((value) => -value);
+	const minNegated = Math.min(...negated);
+	return negated.map((value) => Math.ceil(value - minNegated + 1));
+}
+
 function assertWeight(weight: number): void {
 	if (!Number.isInteger(weight) || weight < 0) {
 		throw new Error(`Weight must be a non-negative integer, got ${weight}`);
