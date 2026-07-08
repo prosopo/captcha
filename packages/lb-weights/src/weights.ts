@@ -13,8 +13,20 @@
 // limitations under the License.
 import type { BunnyRecord, WeightUpdate } from "./types.js";
 
-// Bunny stores weights as integers; equal weighting across a pool uses 100.
-export const DEFAULT_WEIGHT = 100;
+// Bunny DNS constraints: a record's routing Weight is an integer in [0, 100]
+// (see https://docs.bunny.net/dns/records — "Routing Weight ... between 0-100").
+export const MAX_WEIGHT = 100;
+// A weight of 0 would starve a node of traffic, so the effective minimum we
+// ever assign is 1. Bunny's hard minimum is 0.
+export const MIN_WEIGHT = 1;
+
+// Equal weighting across a pool uses the maximum weight.
+export const DEFAULT_WEIGHT = MAX_WEIGHT;
+
+/** Clamp a weight to Bunny's supported integer range [MIN_WEIGHT, MAX_WEIGHT]. */
+export function clampWeight(weight: number): number {
+	return Math.min(MAX_WEIGHT, Math.max(MIN_WEIGHT, Math.ceil(weight)));
+}
 
 /**
  * Group records that form a single load-balanced pool (same Name + Type).
@@ -122,7 +134,9 @@ export function changedUpdates(
  *  2. shift every value up by the minimum negated value (i.e. subtract the min)
  *     so the smallest becomes 0 and all are non-negative;
  *  3. add 1 so no node ends up with weight 0 (which would starve it of traffic);
- *  4. ceil so weights are integers, as Bunny requires.
+ *  4. scale proportionally so the largest weight fits Bunny's max (100),
+ *     preserving the ratio between nodes;
+ *  5. ceil + clamp so weights are integers within Bunny's [1, 100] range.
  *
  * An empty input yields an empty result.
  */
@@ -137,7 +151,12 @@ export function inverseWeights(values: readonly number[]): number[] {
 	}
 	const negated = values.map((value) => -value);
 	const minNegated = Math.min(...negated);
-	return negated.map((value) => Math.ceil(value - minNegated + 1));
+	const raw = negated.map((value) => value - minNegated + 1); // floats >= 1
+	// Scale down proportionally if the largest would exceed Bunny's max weight,
+	// so ratios between nodes are preserved rather than flattened by clamping.
+	const maxRaw = Math.max(...raw);
+	const factor = maxRaw > MAX_WEIGHT ? MAX_WEIGHT / maxRaw : 1;
+	return raw.map((value) => clampWeight(value * factor));
 }
 
 function assertWeight(weight: number): void {

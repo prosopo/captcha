@@ -23,6 +23,7 @@ import type { BunnyRecord, WeightUpdate } from "./types.js";
 import {
 	DEFAULT_WEIGHT,
 	changedUpdates,
+	clampWeight,
 	equalWeights,
 	inverseWeights,
 } from "./weights.js";
@@ -128,7 +129,8 @@ export async function runCycle(deps: BalancerDeps): Promise<void> {
 
 		const updates: WeightUpdate[] = pool.members.map((record) => ({
 			recordId: record.Id,
-			weight: weightByRecordId.get(record.Id) ?? DEFAULT_WEIGHT,
+			// clamp defensively: Bunny only accepts integer weights in [1, 100]
+			weight: clampWeight(weightByRecordId.get(record.Id) ?? DEFAULT_WEIGHT),
 		}));
 		const toApply = changedUpdates(pool.members, updates);
 		const metricByRecordId = new Map<number, number>(

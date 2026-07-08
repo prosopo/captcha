@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect, it } from "vitest";
-import { inverseWeights } from "../weights.js";
+import { MAX_WEIGHT, MIN_WEIGHT, clampWeight, inverseWeights } from "../weights.js";
 
 describe("inverseWeights", () => {
 	it("gives the lowest metric the highest weight", () => {
@@ -43,5 +43,31 @@ describe("inverseWeights", () => {
 
 	it("throws on non-finite values", () => {
 		expect(() => inverseWeights([1, Number.NaN])).toThrow();
+	});
+
+	it("never exceeds Bunny's max weight even for a large spread", () => {
+		const weights = inverseWeights([0, 1000, 5000, 9999]);
+		for (const weight of weights) {
+			expect(weight).toBeLessThanOrEqual(MAX_WEIGHT);
+			expect(weight).toBeGreaterThanOrEqual(MIN_WEIGHT);
+			expect(Number.isInteger(weight)).toBe(true);
+		}
+		// lowest cost (0) still ends up at the top of the range
+		expect(weights[0]).toBe(MAX_WEIGHT);
+	});
+
+	it("preserves ordering after scaling into range", () => {
+		const weights = inverseWeights([0, 200, 400]);
+		expect(weights[0]).toBeGreaterThanOrEqual(weights[1] ?? 0);
+		expect(weights[1]).toBeGreaterThanOrEqual(weights[2] ?? 0);
+	});
+});
+
+describe("clampWeight", () => {
+	it("clamps into [MIN_WEIGHT, MAX_WEIGHT] and rounds up", () => {
+		expect(clampWeight(0)).toBe(MIN_WEIGHT);
+		expect(clampWeight(150)).toBe(MAX_WEIGHT);
+		expect(clampWeight(12.1)).toBe(13);
+		expect(clampWeight(-5)).toBe(MIN_WEIGHT);
 	});
 });
