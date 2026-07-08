@@ -38,6 +38,10 @@ import {
 } from "@prosopo/user-access-policy";
 import type { NextFunction, Request, Response } from "express";
 import { getCompositeIpAddress } from "../compositeIpAddress.js";
+import {
+	HardBlockVerdictCache,
+	hardBlockCacheKey,
+} from "./hardBlockVerdictCache.js";
 import { recordBlockedRequest } from "./metrics.js";
 
 export const getRequestUserScope = (
@@ -295,13 +299,89 @@ export const rankCandidateRules = (
  *    mismatch between the Redis-side score and the JS semantics surfaces
  *    as ordering rather than letting traffic through.
  */
+// Process-wide TTL cache for hard-block verdicts. Same key across
+// requests collapses to one Redis round-trip within the TTL window.
+// The workload this defends against is burst-y traffic with high scope
+// overlap — every identical banned scope would otherwise hit the
+// FT.AGGREGATE against the full rule set on every request. The cache
+// is process-scoped: multi-process providers each maintain their own;
+// staleness is bounded by DEFAULT_VERDICT_CACHE_TTL_MS.
+const verdictCache = new HardBlockVerdictCache();
+
+// Exposed for tests + admin tooling that needs to bound the staleness
+// window after a rule mutation. Not on the request path.
+export const getVerdictCache = (): HardBlockVerdictCache => verdictCache;
+
+// Per-request memo attached to the Express request. Multiple middlewares
+// / task-level checks in the same request that call
+// getPrioritisedAccessRule with the same inputs share one Redis
+// round-trip. No TTL — the map lives for the request lifetime only.
+type RequestMemo = Map<string, AccessRule[]>;
+const REQUEST_MEMO_SYMBOL = Symbol.for("prosopo.accessRuleRequestMemo");
+type RequestWithMemo = {
+	[REQUEST_MEMO_SYMBOL]?: RequestMemo;
+};
+
+const getOrCreateRequestMemo = (
+	requestMemoHost: RequestWithMemo,
+): RequestMemo => {
+	let memo = requestMemoHost[REQUEST_MEMO_SYMBOL];
+	if (memo === undefined) {
+		memo = new Map();
+		requestMemoHost[REQUEST_MEMO_SYMBOL] = memo;
+	}
+	return memo;
+};
+
+export type GetPrioritisedAccessRuleOptions = {
+	blockOnly?: boolean;
+	// When provided, results are memoised against this host object for
+	// the request lifetime. Callers pass `req` directly; middleware
+	// chains that share the same request object share one Redis
+	// round-trip per (scope, blockOnly) combination.
+	requestMemoHost?: object;
+	// Test/ops hook: skip the process-wide cache. Individual callers
+	// (e.g. an admin write endpoint that must observe the just-inserted
+	// rule) can bypass without flushing everyone else.
+	skipCache?: boolean;
+};
+
 export const getPrioritisedAccessRule = async (
 	userAccessRulesStorage: AccessRulesStorage,
 	userScope: UserScope | UserScopeRecord,
 	clientId?: string,
-	options?: { blockOnly?: boolean },
+	options?: GetPrioritisedAccessRuleOptions,
 ): Promise<AccessRule[]> => {
 	const parsedUserScope = userScopeInput.parse(userScope);
+	const blockOnly = options?.blockOnly ?? false;
+	const skipCache = options?.skipCache ?? false;
+	const requestMemoHost = options?.requestMemoHost as
+		| RequestWithMemo
+		| undefined;
+
+	const cacheKey = hardBlockCacheKey(clientId, parsedUserScope, blockOnly);
+
+	// Request-scoped memo first — zero staleness, cheapest lookup.
+	const requestMemo = requestMemoHost
+		? getOrCreateRequestMemo(requestMemoHost)
+		: undefined;
+	if (requestMemo !== undefined) {
+		const memoHit = requestMemo.get(cacheKey);
+		if (memoHit !== undefined) {
+			return memoHit;
+		}
+	}
+
+	// Process-wide cache: absorbs burst traffic with identical scope.
+	// Bounded staleness (DEFAULT_VERDICT_CACHE_TTL_MS). Callers that
+	// must bypass (e.g. write-path revalidation) pass skipCache=true.
+	if (!skipCache) {
+		const cached = verdictCache.get(cacheKey);
+		if (cached !== undefined) {
+			requestMemo?.set(cacheKey, cached);
+			return cached;
+		}
+	}
 
 	const filter = {
 		...(clientId && {
@@ -312,16 +392,23 @@ export const getPrioritisedAccessRule = async (
 		policyScopeMatch: FilterScopeMatch.Greedy,
 		userScope: parsedUserScope,
 		userScopeMatch: FilterScopeMatch.Greedy,
-		...(options?.blockOnly && { blockOnly: true }),
+		...(blockOnly && { blockOnly: true }),
 	};
 
 	const candidates = await userAccessRulesStorage.findRules(
 		filter,
-		true, // matchingFieldsOnly — engages server-side specificity rank
+		true, // matchingFieldsOnly — engages the split-query hot path
 		true,
 	);
 
-	return rankCandidateRules(candidates, parsedUserScope, clientId);
+	const ranked = rankCandidateRules(candidates, parsedUserScope, clientId);
+
+	if (!skipCache) {
+		verdictCache.set(cacheKey, ranked);
+	}
+	requestMemo?.set(cacheKey, ranked);
+
+	return ranked;
 };
 
 export class BlacklistRequestInspector {
@@ -357,6 +444,10 @@ export class BlacklistRequestInspector {
 			request.body,
 			request.logger,
 			request.ipInfo,
+			// Share the per-request memo so a downstream captcha task
+			// hitting checkForHardBlock in the same request reuses this
+			// lookup rather than re-querying Redis.
+			request,
 		);
 
 		if (shouldAbortRequest) {
@@ -380,6 +471,7 @@ export class BlacklistRequestInspector {
 		requestBody: Record<string, unknown>,
 		logger: Logger,
 		ipInfo?: IPInfoResponse,
+		requestMemoHost?: object,
 	): Promise<boolean> {
 		// Skip this middleware for non-api routes like /json /favicon.ico etc
 		if (this.isApiUnrelatedRoute(requestedRoute)) {
@@ -435,7 +527,7 @@ export class BlacklistRequestInspector {
 				// candidate pool so the SERVER_SIDE_RANK_TOP_N cap can't
 				// crowd out hard-block rules in clients with dense Restrict
 				// rule populations.
-				{ blockOnly: true },
+				{ blockOnly: true, requestMemoHost },
 			);
 			// Skip policies that have explicitly opted out of request-time
 			// enforcement (`deferToVerify`). Those are matched again from
