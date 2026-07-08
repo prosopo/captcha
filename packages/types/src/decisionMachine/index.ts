@@ -228,12 +228,12 @@ export interface RoutingMachineRawSignals {
 	// unsupported on the client.
 	simd?: SimdReadings;
 	// Server-observed TLS handshake timing deltas forwarded by the chaddy
-	// Caddy plugin (X-TLS-TCP-To-Chello-Ms / X-TLS-Chello-To-Handshake-Ms).
+	// Caddy plugin (X-TLS-TCP-To-Chello-Us / X-TLS-Chello-To-Handshake-Us).
 	// Elevated values indicate the client's ClientHello traversed a proxy
 	// chain before reaching Caddy. Undefined when the request did not
 	// traverse a chaddy-enabled ingress (e.g. dev requests, HTTP/3).
-	tcpToChelloMs?: number;
-	chelloToHandshakeMs?: number;
+	tcpToChelloUs?: number;
+	chelloToHandshakeUs?: number;
 	// Full page URL the widget was rendered on (origin + path only; query
 	// string, fragment and any embedded credentials are stripped client- and
 	// server-side). Available on the `route` phase from the freshly decrypted

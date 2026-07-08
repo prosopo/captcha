@@ -287,11 +287,11 @@ export default (
 									// Timing values are per-connection so they come from
 									// the current request even in the dedup replay path —
 									// dedup.session was created on a different TCP conn.
-									...(req.tcpToChelloMs !== undefined && {
-										tcpToChelloMs: req.tcpToChelloMs,
+									...(req.tcpToChelloUs !== undefined && {
+										tcpToChelloUs: req.tcpToChelloUs,
 									}),
-									...(req.chelloToHandshakeMs !== undefined && {
-										chelloToHandshakeMs: req.chelloToHandshakeMs,
+									...(req.chelloToHandshakeUs !== undefined && {
+										chelloToHandshakeUs: req.chelloToHandshakeUs,
 									}),
 									// currentUrl uses the cached session's value to
 									// match the rest of the dedup routing input (score,
@@ -388,11 +388,11 @@ export default (
 					sessionMode,
 					userSitekeyIpHash,
 					logger: req.logger,
-					...(req.tcpToChelloMs !== undefined && {
-						tcpToChelloMs: req.tcpToChelloMs,
+					...(req.tcpToChelloUs !== undefined && {
+						tcpToChelloUs: req.tcpToChelloUs,
 					}),
-					...(req.chelloToHandshakeMs !== undefined && {
-						chelloToHandshakeMs: req.chelloToHandshakeMs,
+					...(req.chelloToHandshakeUs !== undefined && {
+						chelloToHandshakeUs: req.chelloToHandshakeUs,
 					}),
 				},
 				res,
@@ -544,11 +544,11 @@ export default (
 				...(entropyMathRandomFirst !== undefined && {
 					entropyMathRandomFirst,
 				}),
-				...(req.tcpToChelloMs !== undefined && {
-					tcpToChelloMs: req.tcpToChelloMs,
+				...(req.tcpToChelloUs !== undefined && {
+					tcpToChelloUs: req.tcpToChelloUs,
 				}),
-				...(req.chelloToHandshakeMs !== undefined && {
-					chelloToHandshakeMs: req.chelloToHandshakeMs,
+				...(req.chelloToHandshakeUs !== undefined && {
+					chelloToHandshakeUs: req.chelloToHandshakeUs,
 				}),
 			});
 
@@ -570,11 +570,11 @@ export default (
 					headers: flatHeaders,
 					userAgent: safeUserAgent,
 					...(req.ja4 && { ja4: req.ja4 }),
-					...(req.tcpToChelloMs !== undefined && {
-						tcpToChelloMs: req.tcpToChelloMs,
+					...(req.tcpToChelloUs !== undefined && {
+						tcpToChelloUs: req.tcpToChelloUs,
 					}),
-					...(req.chelloToHandshakeMs !== undefined && {
-						chelloToHandshakeMs: req.chelloToHandshakeMs,
+					...(req.chelloToHandshakeUs !== undefined && {
+						chelloToHandshakeUs: req.chelloToHandshakeUs,
 					}),
 					...(currentUrl && { currentUrl }),
 				},
