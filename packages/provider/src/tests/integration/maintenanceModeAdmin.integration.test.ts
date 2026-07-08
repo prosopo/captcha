@@ -30,7 +30,10 @@
 //   - admin auth is still enforced (401 without a JWT).
 
 import { generateKeyPairSync } from "node:crypto";
+import { readFileSync } from "node:fs";
 import type { Server } from "node:net";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { ApiEndpointResponseStatus } from "@prosopo/api-route";
 import { ProviderEnvironment } from "@prosopo/env";
 import { generateMnemonic } from "@prosopo/keyring";
@@ -49,6 +52,7 @@ import {
 } from "@prosopo/types";
 import { randomAsHex } from "@prosopo/util-crypto";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
+import { Agent, fetch } from "undici";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 interface AdminResponse {
@@ -56,6 +60,21 @@ interface AdminResponse {
 	data?: { activeDetectorKeys?: string[] };
 	error?: string;
 }
+
+// The provider serves HTTPS with the repo's self-signed cert when it is present
+// (see startProviderApi/isTlsAvailable). Build a dispatcher that trusts THAT
+// cert as a CA — proper certificate validation, not a bypass. Returns undefined
+// when there is no cert (the server runs over plain HTTP, e.g. in CI).
+const certPath = path.resolve(
+	path.dirname(fileURLToPath(import.meta.url)),
+	"../../../../../certs/server.crt",
+);
+const buildDispatcher = (): Agent | undefined => {
+	if (!isTlsAvailable()) {
+		return undefined;
+	}
+	return new Agent({ connect: { ca: readFileSync(certPath, "utf8") } });
+};
 
 // A valid detector key is the base64 of a PEM (pkcs8) private key — that's what
 // ClientTaskManager.updateDetectorKey validates before storing.
@@ -88,20 +107,20 @@ describe("Maintenance mode — admin endpoints stay available", () => {
 	let baseUrl: string;
 	let adminAccount: string;
 	let adminJwt: string;
-	let priorTlsReject: string | undefined;
+	// undici dispatcher that trusts the provider's own self-signed cert (only
+	// set when the server is serving HTTPS). We pin the cert as a trusted CA
+	// rather than disabling certificate validation.
+	let dispatcher: Agent | undefined;
 
 	beforeAll(async () => {
 		// Boot the provider process already in maintenance mode. Read at request
 		// time by the handlers and (now) drives the background DB connect.
 		process.env.MAINTENANCE_MODE = "true";
-		// When local TLS certs are present the provider serves HTTPS with a
-		// self-signed cert; let the in-test fetch client accept it.
-		priorTlsReject = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
-		process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 		testPort = 30000 + (process.pid % 10000) + Math.floor(Math.random() * 5000);
 		const protocol = isTlsAvailable() ? "https" : "http";
 		baseUrl = `${protocol}://localhost:${testPort}`;
+		dispatcher = buildDispatcher();
 
 		mongoContainer = await new GenericContainer("mongo:6.0.28")
 			.withExposedPorts(27017)
@@ -200,12 +219,10 @@ describe("Maintenance mode — admin endpoints stay available", () => {
 				console.error("Error stopping mongo container:", error);
 			}
 		}
-		process.env.MAINTENANCE_MODE = undefined;
-		if (priorTlsReject === undefined) {
-			process.env.NODE_TLS_REJECT_UNAUTHORIZED = undefined;
-		} else {
-			process.env.NODE_TLS_REJECT_UNAUTHORIZED = priorTlsReject;
+		if (dispatcher) {
+			await dispatcher.close();
 		}
+		process.env.MAINTENANCE_MODE = undefined;
 	});
 
 	const adminHeaders = (): Record<string, string> => ({
@@ -242,6 +259,7 @@ describe("Maintenance mode — admin endpoints stay available", () => {
 					"Prosopo-User": userId,
 				},
 				body: JSON.stringify(body),
+				dispatcher,
 			},
 		);
 
@@ -264,6 +282,7 @@ describe("Maintenance mode — admin endpoints stay available", () => {
 			method: "POST",
 			headers: adminHeaders(),
 			body: JSON.stringify(registerBody),
+			dispatcher,
 		});
 
 		expect(response.status).toBe(200);
@@ -286,6 +305,7 @@ describe("Maintenance mode — admin endpoints stay available", () => {
 				tier: Tier.Free,
 				settings: minimalSettings(),
 			}),
+			dispatcher,
 		});
 		expect(await env.getDb().getClientRecord(siteKey)).toBeDefined();
 
@@ -293,6 +313,7 @@ describe("Maintenance mode — admin endpoints stay available", () => {
 			method: "POST",
 			headers: adminHeaders(),
 			body: JSON.stringify({ siteKey }),
+			dispatcher,
 		});
 
 		expect(response.status).toBe(200);
@@ -310,6 +331,7 @@ describe("Maintenance mode — admin endpoints stay available", () => {
 				method: "POST",
 				headers: adminHeaders(),
 				body: JSON.stringify({ detectorKey }),
+				dispatcher,
 			},
 		);
 		expect(addResponse.status).toBe(200);
@@ -323,6 +345,7 @@ describe("Maintenance mode — admin endpoints stay available", () => {
 				method: "POST",
 				headers: adminHeaders(),
 				body: JSON.stringify({ detectorKey }),
+				dispatcher,
 			},
 		);
 		expect(removeResponse.status).toBe(200);
@@ -336,6 +359,7 @@ describe("Maintenance mode — admin endpoints stay available", () => {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ siteKey, tier: Tier.Free }),
+			dispatcher,
 		});
 
 		expect(response.status).toBe(401);
