@@ -19,17 +19,17 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 
 // Header names forwarded by the chaddy Caddy plugin per-TLS-connection.
-// Both are server-observed millisecond deltas across the TLS handshake
+// Both are server-observed microsecond deltas across the TLS handshake
 // lifecycle. Elevated values indicate the client's ClientHello traversed
 // a proxy chain before reaching Caddy — the CH bytes only reach the
 // terminating TCP stack after every hop, so the deltas inflate with the
 // full client-to-exit RTT rather than just the last-mile RTT.
-const HEADER_TCP_TO_CHELLO = "x-tls-tcp-to-chello-ms";
-const HEADER_CHELLO_TO_HANDSHAKE = "x-tls-chello-to-handshake-ms";
+const HEADER_TCP_TO_CHELLO = "x-tls-tcp-to-chello-us";
+const HEADER_CHELLO_TO_HANDSHAKE = "x-tls-chello-to-handshake-us";
 
 export interface HandshakeTiming {
-	tcpToChelloMs?: number;
-	chelloToHandshakeMs?: number;
+	tcpToChelloUs?: number;
+	chelloToHandshakeUs?: number;
 }
 
 const parseTimingHeader = (
@@ -61,12 +61,12 @@ export const getHandshakeTiming = (
 ): HandshakeTiming => {
 	const log = logger ?? getLogger("info", "provider:handshake-timing");
 	return {
-		tcpToChelloMs: parseTimingHeader(
+		tcpToChelloUs: parseTimingHeader(
 			headers[HEADER_TCP_TO_CHELLO],
 			log,
 			HEADER_TCP_TO_CHELLO,
 		),
-		chelloToHandshakeMs: parseTimingHeader(
+		chelloToHandshakeUs: parseTimingHeader(
 			headers[HEADER_CHELLO_TO_HANDSHAKE],
 			log,
 			HEADER_CHELLO_TO_HANDSHAKE,
@@ -82,20 +82,20 @@ export const handshakeTimingMiddleware = (env: ProviderEnvironment) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
 			const timing = getHandshakeTiming(req.headers, req.logger);
-			if (timing.tcpToChelloMs !== undefined) {
-				req.tcpToChelloMs = timing.tcpToChelloMs;
+			if (timing.tcpToChelloUs !== undefined) {
+				req.tcpToChelloUs = timing.tcpToChelloUs;
 			}
-			if (timing.chelloToHandshakeMs !== undefined) {
-				req.chelloToHandshakeMs = timing.chelloToHandshakeMs;
+			if (timing.chelloToHandshakeUs !== undefined) {
+				req.chelloToHandshakeUs = timing.chelloToHandshakeUs;
 			}
 			if (
-				timing.tcpToChelloMs !== undefined ||
-				timing.chelloToHandshakeMs !== undefined
+				timing.tcpToChelloUs !== undefined ||
+				timing.chelloToHandshakeUs !== undefined
 			) {
 				req.logger = req.logger.with(
 					{
-						tcpToChelloMs: timing.tcpToChelloMs,
-						chelloToHandshakeMs: timing.chelloToHandshakeMs,
+						tcpToChelloUs: timing.tcpToChelloUs,
+						chelloToHandshakeUs: timing.chelloToHandshakeUs,
 					},
 					"handshakeTiming",
 				);

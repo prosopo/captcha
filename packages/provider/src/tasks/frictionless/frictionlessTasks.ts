@@ -146,8 +146,8 @@ export class FrictionlessManager extends CaptchaManager {
 			entropyCryptoFingerprint: params.entropyCryptoFingerprint,
 			entropyWallClockOffsetMs: params.entropyWallClockOffsetMs,
 			entropyMathRandomFirst: params.entropyMathRandomFirst,
-			tcpToChelloMs: params.tcpToChelloMs,
-			chelloToHandshakeMs: params.chelloToHandshakeMs,
+			tcpToChelloUs: params.tcpToChelloUs,
+			chelloToHandshakeUs: params.chelloToHandshakeUs,
 		};
 	}
 
@@ -188,8 +188,8 @@ export class FrictionlessManager extends CaptchaManager {
 		entropyWallClockOffsetMs?: Session["entropyWallClockOffsetMs"],
 		entropyMathRandomFirst?: Session["entropyMathRandomFirst"],
 		currentUrl?: Session["currentUrl"],
-		tcpToChelloMs?: Session["tcpToChelloMs"],
-		chelloToHandshakeMs?: Session["chelloToHandshakeMs"],
+		tcpToChelloUs?: Session["tcpToChelloUs"],
+		chelloToHandshakeUs?: Session["chelloToHandshakeUs"],
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
@@ -224,8 +224,8 @@ export class FrictionlessManager extends CaptchaManager {
 			entropyCryptoFingerprint,
 			entropyWallClockOffsetMs,
 			entropyMathRandomFirst,
-			tcpToChelloMs,
-			chelloToHandshakeMs,
+			tcpToChelloUs,
+			chelloToHandshakeUs,
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);
@@ -364,8 +364,8 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.entropyWallClockOffsetMs,
 			effectiveParams.entropyMathRandomFirst,
 			effectiveParams.currentUrl,
-			effectiveParams.tcpToChelloMs,
-			effectiveParams.chelloToHandshakeMs,
+			effectiveParams.tcpToChelloUs,
+			effectiveParams.chelloToHandshakeUs,
 		);
 
 		// Fire-and-forget served-counter writes. Skipped when there's no
@@ -435,8 +435,8 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.entropyWallClockOffsetMs,
 			effectiveParams.entropyMathRandomFirst,
 			effectiveParams.currentUrl,
-			effectiveParams.tcpToChelloMs,
-			effectiveParams.chelloToHandshakeMs,
+			effectiveParams.tcpToChelloUs,
+			effectiveParams.chelloToHandshakeUs,
 		);
 	}
 

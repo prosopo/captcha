@@ -33,64 +33,64 @@ const mockLogger = (): Logger => {
 describe("getHandshakeTiming", () => {
 	it("returns both values when both headers are present and parseable", () => {
 		const headers: IncomingHttpHeaders = {
-			"x-tls-tcp-to-chello-ms": "42",
-			"x-tls-chello-to-handshake-ms": "137",
+			"x-tls-tcp-to-chello-us": "42",
+			"x-tls-chello-to-handshake-us": "137",
 		};
 		const result = getHandshakeTiming(headers, mockLogger());
-		expect(result.tcpToChelloMs).toBe(42);
-		expect(result.chelloToHandshakeMs).toBe(137);
+		expect(result.tcpToChelloUs).toBe(42);
+		expect(result.chelloToHandshakeUs).toBe(137);
 	});
 
-	it("returns 0 for legitimate zero-ms measurements", () => {
+	it("returns 0 for legitimate zero-us measurements", () => {
 		const headers: IncomingHttpHeaders = {
-			"x-tls-tcp-to-chello-ms": "0",
-			"x-tls-chello-to-handshake-ms": "0",
+			"x-tls-tcp-to-chello-us": "0",
+			"x-tls-chello-to-handshake-us": "0",
 		};
 		const result = getHandshakeTiming(headers, mockLogger());
-		expect(result.tcpToChelloMs).toBe(0);
-		expect(result.chelloToHandshakeMs).toBe(0);
+		expect(result.tcpToChelloUs).toBe(0);
+		expect(result.chelloToHandshakeUs).toBe(0);
 	});
 
 	it("returns undefined when a header is missing", () => {
 		const headers: IncomingHttpHeaders = {
-			"x-tls-tcp-to-chello-ms": "5",
+			"x-tls-tcp-to-chello-us": "5",
 		};
 		const result = getHandshakeTiming(headers, mockLogger());
-		expect(result.tcpToChelloMs).toBe(5);
-		expect(result.chelloToHandshakeMs).toBeUndefined();
+		expect(result.tcpToChelloUs).toBe(5);
+		expect(result.chelloToHandshakeUs).toBeUndefined();
 	});
 
 	it("returns undefined for both when neither header is present", () => {
 		const headers: IncomingHttpHeaders = {};
 		const result = getHandshakeTiming(headers, mockLogger());
-		expect(result.tcpToChelloMs).toBeUndefined();
-		expect(result.chelloToHandshakeMs).toBeUndefined();
+		expect(result.tcpToChelloUs).toBeUndefined();
+		expect(result.chelloToHandshakeUs).toBeUndefined();
 	});
 
 	it("rejects non-numeric header values", () => {
 		const headers: IncomingHttpHeaders = {
-			"x-tls-tcp-to-chello-ms": "not-a-number",
-			"x-tls-chello-to-handshake-ms": "137",
+			"x-tls-tcp-to-chello-us": "not-a-number",
+			"x-tls-chello-to-handshake-us": "137",
 		};
 		const result = getHandshakeTiming(headers, mockLogger());
-		expect(result.tcpToChelloMs).toBeUndefined();
-		expect(result.chelloToHandshakeMs).toBe(137);
+		expect(result.tcpToChelloUs).toBeUndefined();
+		expect(result.chelloToHandshakeUs).toBe(137);
 	});
 
 	it("rejects negative values", () => {
 		const headers: IncomingHttpHeaders = {
-			"x-tls-tcp-to-chello-ms": "-3",
+			"x-tls-tcp-to-chello-us": "-3",
 		};
 		const result = getHandshakeTiming(headers, mockLogger());
-		expect(result.tcpToChelloMs).toBeUndefined();
+		expect(result.tcpToChelloUs).toBeUndefined();
 	});
 
 	it("takes the first value when the header is repeated (string[])", () => {
 		const headers: IncomingHttpHeaders = {
-			"x-tls-tcp-to-chello-ms": ["17", "99"],
+			"x-tls-tcp-to-chello-us": ["17", "99"],
 		};
 		const result = getHandshakeTiming(headers, mockLogger());
-		expect(result.tcpToChelloMs).toBe(17);
+		expect(result.tcpToChelloUs).toBe(17);
 	});
 });
 

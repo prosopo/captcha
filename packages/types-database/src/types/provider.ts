@@ -672,10 +672,10 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	entropyWallClockOffsetMs: { type: Number, required: false },
 	entropyMathRandomFirst: { type: Number, required: false },
 	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
-	// plugin (X-TLS-TCP-To-Chello-Ms / X-TLS-Chello-To-Handshake-Ms).
-	// See @prosopo/types Session.tcpToChelloMs for full semantics.
-	tcpToChelloMs: { type: Number, required: false },
-	chelloToHandshakeMs: { type: Number, required: false },
+	// plugin (X-TLS-TCP-To-Chello-Us / X-TLS-Chello-To-Handshake-Us).
+	// See @prosopo/types Session.tcpToChelloUs for full semantics.
+	tcpToChelloUs: { type: Number, required: false },
+	chelloToHandshakeUs: { type: Number, required: false },
 	// DNS observation merge target. Populated by
 	// POST /v1/prosopo/provider/admin/dns/event from the dns-event
 	// sidecar (see types/provider/database.ts → Session.dnsEvent).
