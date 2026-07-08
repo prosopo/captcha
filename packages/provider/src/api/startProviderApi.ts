@@ -147,9 +147,13 @@ export async function startProviderApi(
 	const apiEndpointAdapter = createApiExpressDefaultEndpointAdapter(
 		parseLogLevel(env.config.logLevel),
 	);
-	// Maintenance-mode / DB-down startup: skip the admin/access-rule wiring
-	// since both rely on DB-backed Tasks construction. Captcha endpoints
-	// short-circuit on maintenance-mode at the handler.
+	// Admin + access-rule routes both rely on a DB-backed Tasks/storage. In
+	// maintenance mode the DB handle is created and connected in the background
+	// (see Environment.isReady), so env.getDb() returns a handle and these
+	// routes register and keep working — that's what keeps admin operations
+	// (rules, detector keys, site keys, decision machines) available while the
+	// captcha path short-circuits. The try/catch is a safety net for the case
+	// where no DB is configured at all.
 	let apiRuleRoutesProvider: AccessRuleApiRoutes | undefined;
 	let apiAdminRoutesProvider:
 		| ReturnType<typeof createApiAdminRoutesProvider>
