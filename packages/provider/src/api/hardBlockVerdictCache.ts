@@ -17,11 +17,13 @@ import type { AccessRule, UserScope } from "@prosopo/user-access-policy";
 // Process-wide TTL for cached hard-block verdicts. Under burst traffic
 // against a large bulk-banned scope population, every identical request
 // otherwise re-runs the full FT.AGGREGATE against tens of thousands of
-// rules. A 30s window collapses N identical scopes to one Redis
-// round-trip while keeping operator-added rules effective within a
-// bounded lag. Tuned short enough that new rules take effect on the
-// next few requests rather than needing an explicit flush.
-export const DEFAULT_VERDICT_CACHE_TTL_MS = 30_000;
+// rules. A 10s window still absorbs typical retry-loop bursts (which
+// complete in single-digit seconds) while bounding operator-response
+// lag: a rule add/remove is reflected in at most 10s of cached
+// "stale" verdicts. For true zero-lag invalidation the write path
+// would need to broadcast a flush signal (Redis pub/sub); the 10s TTL
+// is the no-broadcast fallback.
+export const DEFAULT_VERDICT_CACHE_TTL_MS = 10_000;
 
 // Bounded so a wide-open unique-scope attack can't grow the map
 // unboundedly. 50k entries × ~1 KiB per rule payload ≈ 50 MiB
