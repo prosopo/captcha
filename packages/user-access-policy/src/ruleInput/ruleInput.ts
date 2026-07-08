@@ -73,6 +73,12 @@ export type AccessRulesFilterInput = AccessRulesFilter & {
 	policyScopes?: PolicyScope[];
 };
 
+// `satisfies ZodType<AccessRulesFilterInput>` is intentionally omitted:
+// `policyScopeInput.clientId` uses `z.preprocess` to unwrap the Redis
+// `global` sentinel, which widens the input type to `unknown`. The
+// output type is still `AccessRulesFilterInput` (Zod's `_output`); the
+// downstream `DeleteRulesSchema` / `FindRulesSchema` use the relaxed
+// `ZodType<T, ZodTypeDef, unknown>` form for the same reason.
 export const accessRulesFilterInput = z.object({
 	policyScope: policyScopeInput.optional(),
 	policyScopes: z.array(policyScopeInput).optional(),
@@ -85,7 +91,7 @@ export const accessRulesFilterInput = z.object({
 		.default(FilterScopeMatch.Exact),
 	groupId: z.string().optional(),
 	blockOnly: z.boolean().optional(),
-} satisfies AllKeys<AccessRulesFilterInput>) satisfies ZodType<AccessRulesFilterInput>;
+} satisfies AllKeys<AccessRulesFilterInput>);
 
 export const getAccessRuleFiltersFromInput = (
 	filterInput: AccessRulesFilterInput,
