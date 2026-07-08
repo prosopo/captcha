@@ -14,10 +14,11 @@
 
 import type { AllKeys } from "@prosopo/common";
 import { CaptchaTypeSchema } from "@prosopo/types";
-import { type ZodType, z } from "zod";
+import { z } from "zod";
 import {
 	type AccessPolicy,
 	AccessPolicyType,
+	GLOBAL_CLIENT_SCOPE_SENTINEL,
 	type PolicyScope,
 } from "#policy/rule.js";
 
@@ -57,6 +58,19 @@ export const sanitizeAccessPolicy = (policy: AccessPolicy): AccessPolicy => {
 	return policy;
 };
 
+// `satisfies ZodType<PolicyScope>` is intentionally omitted (matches
+// accessPolicyInput above): the `preprocess` wrapper widens the schema's
+// input type to `unknown`, which fails the `ZodType<T, ZodTypeDef, T>`
+// identity check. The `AllKeys<PolicyScope>` constraint still catches
+// missing-field regressions.
 export const policyScopeInput = z.object({
-	clientId: z.coerce.string().optional(),
-} satisfies AllKeys<PolicyScope>) satisfies ZodType<PolicyScope>;
+	// `getRedisRuleValue` stamps a sentinel string on global rules so the
+	// read-time query can probe `@clientId:{global}` cheaply. Undo the
+	// stamp here so consumers (rankCandidateRules, response payloads,
+	// tests) continue to see `undefined` for global rules — the mongoose
+	// side and the API input side never emit the sentinel.
+	clientId: z.preprocess(
+		(v) => (v === GLOBAL_CLIENT_SCOPE_SENTINEL ? undefined : v),
+		z.coerce.string().optional(),
+	),
+} satisfies AllKeys<PolicyScope>);

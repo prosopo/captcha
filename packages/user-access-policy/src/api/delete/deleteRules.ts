@@ -27,7 +27,13 @@ import {
 } from "#policy/ruleInput/ruleInput.js";
 import type { AccessRulesStorage } from "#policy/rulesStorage.js";
 
-type DeleteRulesSchema = ZodType<AccessRulesFilterInput[]>;
+// `unknown` input position — see accessRulesFilterInput's block comment
+// for why the strict-identity form doesn't fit here.
+type DeleteRulesSchema = ZodType<
+	AccessRulesFilterInput[],
+	z.ZodTypeDef,
+	unknown
+>;
 
 export class DeleteRulesEndpoint implements ApiEndpoint<DeleteRulesSchema> {
 	public constructor(

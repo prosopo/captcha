@@ -80,6 +80,12 @@ export const ACCESS_RULES_REDIS_INDEX_NAME = "index:user-access-rules";
 // names take space, so we use an acronym instead of the long-tailed one
 export const ACCESS_RULE_REDIS_KEY_PREFIX = "uar:";
 
+// Re-exported from #policy/rule.js — that module is types-only so both
+// the parse side (policyInput.ts) and the write/index side (this file
+// and redisRulesWriter.ts) can import the sentinel without pulling
+// transformRule into a cycle.
+export { GLOBAL_CLIENT_SCOPE_SENTINEL } from "#policy/rule.js";
+
 export const accessRulesRedisIndex: RedisIndex = {
 	name: ACCESS_RULES_REDIS_INDEX_NAME,
 	schema: accessRuleRedisSchema,
