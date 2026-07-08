@@ -118,6 +118,30 @@ describe("checkTrafficFilter", () => {
 		expect(result).toEqual({ isBlocked: false });
 	});
 
+	it("does not block proxy-on-datacenter IPs when blockDatacenter is on but blockProxy is off", () => {
+		const result = checkTrafficFilter(
+			baseInfo({ isDatacenter: true, isProxy: true }),
+			{ ...allBlocked, blockProxy: false },
+		);
+		expect(result).toEqual({ isBlocked: false });
+	});
+
+	it("does not block Tor-on-datacenter IPs when blockDatacenter is on but blockTor is off", () => {
+		const result = checkTrafficFilter(
+			baseInfo({ isDatacenter: true, isTor: true }),
+			{ ...allBlocked, blockTor: false },
+		);
+		expect(result).toEqual({ isBlocked: false });
+	});
+
+	it("does not block crawler-on-datacenter IPs when blockDatacenter is on but blockCrawler is off", () => {
+		const result = checkTrafficFilter(
+			baseInfo({ isDatacenter: true, isCrawler: true }),
+			{ ...allBlocked, blockCrawler: false },
+		);
+		expect(result).toEqual({ isBlocked: false });
+	});
+
 	it("still blocks raw datacenter (non-VPN) IPs when blockDatacenter is on and blockVpn is off", () => {
 		const result = checkTrafficFilter(
 			baseInfo({ isDatacenter: true, isVPN: false }),
@@ -229,12 +253,24 @@ describe("checkTrafficFilter", () => {
 			});
 		});
 
-		it("does NOT apply VPN-datacenter suppression to extra IPs", () => {
+		it("applies VPN-datacenter suppression to extra IPs when blockVpn is off", () => {
 			const noVpnBlock: ITrafficFilter = { ...allBlocked, blockVpn: false };
 			const result = checkTrafficFilter(cleanPrimary, noVpnBlock, [
 				baseInfo({
 					ip: "198.51.100.10",
 					isVPN: true,
+					isDatacenter: true,
+				}),
+			]);
+			expect(result).toEqual({ isBlocked: false });
+		});
+
+		it("still blocks a datacenter extra that is not a VPN when blockVpn is off", () => {
+			const noVpnBlock: ITrafficFilter = { ...allBlocked, blockVpn: false };
+			const result = checkTrafficFilter(cleanPrimary, noVpnBlock, [
+				baseInfo({
+					ip: "198.51.100.10",
+					isVPN: false,
 					isDatacenter: true,
 				}),
 			]);
@@ -278,6 +314,64 @@ describe("checkTrafficFilter", () => {
 				baseInfo({ ip: "198.51.100.10", isDatacenter: true }),
 			]);
 			expect(result).toEqual({ isBlocked: true, reason: "API.TOR_BLOCKED" });
+		});
+
+		it("does not check the crawler flag on extra IPs even when blockCrawler is on", () => {
+			const result = checkTrafficFilter(cleanPrimary, allBlocked, [
+				baseInfo({ ip: "8.8.8.8", isCrawler: true }),
+			]);
+			expect(result).toEqual({ isBlocked: false });
+		});
+
+		it("still blocks the crawler flag on the primary IP when an extra is present", () => {
+			const result = checkTrafficFilter(
+				baseInfo({ isCrawler: true }),
+				allBlocked,
+				[baseInfo({ ip: "8.8.8.8" })],
+			);
+			expect(result).toEqual({
+				isBlocked: true,
+				reason: "API.CRAWLER_BLOCKED",
+			});
+		});
+
+		it("applies proxy-datacenter suppression to extra IPs when blockProxy is off", () => {
+			const noProxyBlock: ITrafficFilter = { ...allBlocked, blockProxy: false };
+			const result = checkTrafficFilter(cleanPrimary, noProxyBlock, [
+				baseInfo({
+					ip: "198.51.100.10",
+					isProxy: true,
+					isDatacenter: true,
+				}),
+			]);
+			expect(result).toEqual({ isBlocked: false });
+		});
+
+		it("applies Tor-datacenter suppression to extra IPs when blockTor is off", () => {
+			const noTorBlock: ITrafficFilter = { ...allBlocked, blockTor: false };
+			const result = checkTrafficFilter(cleanPrimary, noTorBlock, [
+				baseInfo({
+					ip: "198.51.100.10",
+					isTor: true,
+					isDatacenter: true,
+				}),
+			]);
+			expect(result).toEqual({ isBlocked: false });
+		});
+
+		it("applies crawler-datacenter suppression to extra IPs when blockCrawler is off", () => {
+			const noCrawlerBlock: ITrafficFilter = {
+				...allBlocked,
+				blockCrawler: false,
+			};
+			const result = checkTrafficFilter(cleanPrimary, noCrawlerBlock, [
+				baseInfo({
+					ip: "198.51.100.10",
+					isCrawler: true,
+					isDatacenter: true,
+				}),
+			]);
+			expect(result).toEqual({ isBlocked: false });
 		});
 	});
 
