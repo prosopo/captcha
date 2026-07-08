@@ -38,6 +38,7 @@
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
 		"@prosopo/common": "3.1.43",
+		"@prosopo/logger": "2.0.1",
 		"@prosopo/types": "4.9.6",
 		"zod": "3.23.8"
 	},
