@@ -140,11 +140,11 @@ export default (env: ProviderEnvironment) =>
 					userAgent,
 					...(req.ja4 && { ja4: req.ja4 }),
 					...(fingerprintProof && { fingerprintProof }),
-					...(req.tcpToChelloMs !== undefined && {
-						tcpToChelloMs: req.tcpToChelloMs,
+					...(req.tcpToChelloUs !== undefined && {
+						tcpToChelloUs: req.tcpToChelloUs,
 					}),
-					...(req.chelloToHandshakeMs !== undefined && {
-						chelloToHandshakeMs: req.chelloToHandshakeMs,
+					...(req.chelloToHandshakeUs !== undefined && {
+						chelloToHandshakeUs: req.chelloToHandshakeUs,
 					}),
 				},
 			});
@@ -188,8 +188,8 @@ export default (env: ProviderEnvironment) =>
 			}
 
 			const escalation = await buildEscalation(tasks, result, challenge, {
-				tcpToChelloMs: req.tcpToChelloMs,
-				chelloToHandshakeMs: req.chelloToHandshakeMs,
+				tcpToChelloUs: req.tcpToChelloUs,
+				chelloToHandshakeUs: req.chelloToHandshakeUs,
 			});
 			const response: PowCaptchaSolutionResponse = {
 				status: "ok",
@@ -237,8 +237,8 @@ export const buildEscalation = async (
 	// belong to a different TCP connection made during the earlier
 	// frictionless request).
 	handshakeTiming?: {
-		tcpToChelloMs?: number;
-		chelloToHandshakeMs?: number;
+		tcpToChelloUs?: number;
+		chelloToHandshakeUs?: number;
 	},
 ): Promise<PowCaptchaSolutionEscalation | undefined> => {
 	if (!result.verified || !result.routingOutput) return undefined;
@@ -296,8 +296,8 @@ export const buildEscalation = async (
 		originSession.entropyWallClockOffsetMs,
 		originSession.entropyMathRandomFirst,
 		originSession.currentUrl,
-		handshakeTiming?.tcpToChelloMs,
-		handshakeTiming?.chelloToHandshakeMs,
+		handshakeTiming?.tcpToChelloUs,
+		handshakeTiming?.chelloToHandshakeUs,
 	);
 
 	// Record the origin → escalation sessionId mapping so a /captcha/*
