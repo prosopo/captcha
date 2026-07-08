@@ -124,10 +124,7 @@ const evaluateIpInfo = (
 		return { isBlocked: true, reason: ResultReason.SATELLITE_BLOCKED };
 	}
 
-	// Skip the crawler check on DNS extras (peer/resolver). Public DNS
-	// resolvers like 8.8.8.8 (Google) and 1.1.1.1 (Cloudflare) share IP
-	// space with search crawlers, so is_crawler on a resolver is the
-	// resolver itself, not a crawler visiting the captcha endpoint.
+	// Public DNS resolvers share IP space with search crawlers.
 	if (!isDnsExtra && trafficFilter.blockCrawler && ipInfo.isCrawler) {
 		return { isBlocked: true, reason: ResultReason.CRAWLER_BLOCKED };
 	}
@@ -143,22 +140,14 @@ const evaluateIpInfo = (
  * `ipInfo` falls back to "not blocked" so an outage in the upstream
  * service can't block all traffic.
  *
- * One cross-filter rule: "block datacenters" is about scraping and
- * automation traffic, not VPN/proxy/Tor end-users or search crawlers,
- * all of which sit on datacenter infrastructure by design. So the
- * datacenter rule is suppressed for IPs whose more specific category
- * (VPN, proxy, Tor, crawler) the operator has left unblocked. If the
- * operator has opted into blocking that category, the earlier category
- * check fires first and short-circuits before the datacenter rule is
- * reached. This applies uniformly to the primary request IP and to the
- * enriched DNS extras (peer/resolver).
+ * Cross-filter rule: the datacenter rule is suppressed when the IP
+ * carries a more specific category the operator has left unblocked —
+ * VPN, proxy, Tor, or crawler. All four legitimately sit on datacenter
+ * infrastructure, so "block datacenters" (a scraping rule) shouldn't
+ * catch them out the back door. Applies to primary and DNS extras.
  *
- * One extras-specific rule: the crawler check is skipped entirely on
- * DNS extras. Public DNS resolvers (Google `8.8.8.8`, Cloudflare
- * `1.1.1.1`) share IP space with search crawlers, so `is_crawler=true`
- * on a resolver is the resolver itself, not a crawler visiting the
- * captcha endpoint. Applying `blockCrawler` to a resolver would
- * false-positive on ordinary users who resolve via public DoH.
+ * Extras-only rule: the crawler check is skipped on DNS extras. Public
+ * DNS resolvers share IP space with search crawlers.
  *
  * The datacenter rule also honours `datacenterNameAllowlist`: consumer
  * relays route through datacenter ranges and are reported as

@@ -135,9 +135,6 @@ describe("checkTrafficFilter", () => {
 	});
 
 	it("does not block crawler-on-datacenter IPs when blockDatacenter is on but blockCrawler is off", () => {
-		// Search crawlers live on datacenter infra by definition. If the
-		// operator opted crawlers in, the datacenter rule shouldn't catch
-		// them out the back door.
 		const result = checkTrafficFilter(
 			baseInfo({ isDatacenter: true, isCrawler: true }),
 			{ ...allBlocked, blockCrawler: false },
@@ -257,10 +254,6 @@ describe("checkTrafficFilter", () => {
 		});
 
 		it("applies VPN-datacenter suppression to extra IPs when blockVpn is off", () => {
-			// A VPN user's DNS resolver typically sits on the VPN provider's
-			// datacenter range. If the operator hasn't opted into blocking
-			// VPN traffic, that resolver shouldn't drop the request either
-			// — the extras must honour the same VPN toggle as the primary.
 			const noVpnBlock: ITrafficFilter = { ...allBlocked, blockVpn: false };
 			const result = checkTrafficFilter(cleanPrimary, noVpnBlock, [
 				baseInfo({
@@ -324,9 +317,6 @@ describe("checkTrafficFilter", () => {
 		});
 
 		it("does not check the crawler flag on extra IPs even when blockCrawler is on", () => {
-			// Google 8.8.8.8 and Cloudflare 1.1.1.1 share IP space with
-			// search crawlers, so is_crawler=true on a resolver would
-			// false-positive block ordinary users.
 			const result = checkTrafficFilter(cleanPrimary, allBlocked, [
 				baseInfo({ ip: "8.8.8.8", isCrawler: true }),
 			]);
