@@ -34,15 +34,55 @@ import { DetectorLoader } from "./detectorLoader.js";
 // Returns undefined in non-browser contexts (SSR / tests) or for opaque
 // origins; the provider then treats the session as having no page URL and
 // forces an image captcha.
+//
+// When we're loaded inside an iframe (Protect's site-wide embed) the local
+// `window.location` is the iframe URL, which conveys nothing about the page
+// the user is actually on — every session across the tenant ends up
+// reporting the same widget endpoint. Same-origin iframes let us read the
+// top frame directly; cross-origin iframes fall through to `document.referrer`,
+// which the browser fills with the embedding page URL subject to
+// Referrer-Policy. Only when both are unavailable do we fall back to the
+// iframe's own URL, matching the previous behaviour.
+const sanitiseHref = (href: string): string | undefined => {
+	try {
+		const u = new URL(href);
+		if (!u.origin || u.origin === "null") return undefined;
+		return `${u.origin}${u.pathname || ""}`;
+	} catch {
+		return undefined;
+	}
+};
+
 const getCurrentPageUrl = (): string | undefined => {
 	if (typeof window === "undefined" || !window.location) {
 		return undefined;
 	}
-	const { origin, pathname } = window.location;
-	if (!origin || origin === "null") {
-		return undefined;
+	const local = (() => {
+		const { origin, pathname } = window.location;
+		if (!origin || origin === "null") return undefined;
+		return `${origin}${pathname || ""}`;
+	})();
+
+	// Top window — the iframe path doesn't apply.
+	if (window === window.top) return local;
+
+	// Same-origin iframe — read the top URL directly.
+	try {
+		const topHref = window.top?.location?.href;
+		const sanitised = topHref ? sanitiseHref(topHref) : undefined;
+		if (sanitised) return sanitised;
+	} catch {
+		/* cross-origin — fall through */
 	}
-	return `${origin}${pathname || ""}`;
+
+	// Cross-origin iframe — the embedding page URL comes via referrer,
+	// subject to the parent's Referrer-Policy header.
+	if (typeof document !== "undefined" && document.referrer) {
+		const fromReferrer = sanitiseHref(document.referrer);
+		if (fromReferrer) return fromReferrer;
+	}
+
+	return local;
 };
 
 export const withTimeout = async <T>(
