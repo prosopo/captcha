@@ -280,7 +280,12 @@ export const ProcaptchaFrictionless = ({
 				stateRef.current.attemptCount += 1;
 
 				const configOutput = ProcaptchaConfigSchema.parse(config);
-				const result = await detectBot(configOutput, container, restart);
+				// After the first attempt, tell detection this is a retry so it
+				// re-selects a random provider from the list rather than re-using
+				// the DNS-routed pronode that just failed.
+				const result = await detectBot(configOutput, container, restart, {
+					attempt: stateRef.current.attemptCount,
+				});
 
 				if (result.error?.message) {
 					stateRef.current = {

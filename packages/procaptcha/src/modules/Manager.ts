@@ -82,6 +82,9 @@ export function Manager(
 
 	let checkboxClickX = 0;
 	let checkboxClickY = 0;
+	// URL of the provider used on the previous attempt. On a retry we exclude it
+	// from the candidate pool so the fallback lands on a different provider.
+	let previousProviderUrl: string | undefined;
 
 	/**
 	 * Build the config on demand, using the optional config passed in from the outside. State may override various
@@ -148,9 +151,11 @@ export function Manager(
 						await getProcaptchaRandomActiveProvider(
 							currentConfig.defaultEnvironment,
 							pickIpMode(currentConfig),
+							{ attempt: state.attemptCount, excludeUrl: previousProviderUrl },
 						);
 
 					const providerUrl = getRandomProviderResponse.provider.url;
+					previousProviderUrl = providerUrl;
 					// get the provider api inst
 					const providerApi = await loadProviderApi(providerUrl);
 

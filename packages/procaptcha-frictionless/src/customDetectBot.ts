@@ -22,6 +22,7 @@ import {
 import type {
 	BotDetectionFunction,
 	ProcaptchaClientConfigOutput,
+	ProviderSelectRetryContext,
 } from "@prosopo/types";
 import type { BotDetectionFunctionResult } from "@prosopo/types";
 import { DetectorLoader } from "./detectorLoader.js";
@@ -73,6 +74,7 @@ const customDetectBot: BotDetectionFunction = async (
 	config: ProcaptchaClientConfigOutput,
 	container: HTMLElement | undefined,
 	restartFn: () => void,
+	retryContext?: ProviderSelectRetryContext,
 ): Promise<BotDetectionFunctionResult> => {
 	const [ExtClass, detect] = await Promise.all([
 		ExtensionLoader(config.web2),
@@ -99,13 +101,17 @@ const customDetectBot: BotDetectionFunction = async (
 		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
 	}
 
-	// Resolve the static DNS endpoint for this env. No client-side random
-	// selection anymore — the DNS layer load-balances across the pronode fleet.
-	// `pickIpMode(config)` honours the dapp's data-ipv4 / data-ipv6 preference
-	// so frictionless and the subsequent captcha hops stay on the same stack.
+	// On the first attempt this resolves the static DNS endpoint for this env —
+	// the DNS layer load-balances across the pronode fleet. On a retry
+	// (`retryContext.attempt > 1`) the previously used pronode errored, so we
+	// pick a random provider straight from the list instead of re-pinning the
+	// same one. `pickIpMode(config)` honours the dapp's data-ipv4 / data-ipv6
+	// preference so frictionless and the subsequent captcha hops stay on the
+	// same stack.
 	const provider = await getProcaptchaRandomActiveProvider(
 		config.defaultEnvironment,
 		pickIpMode(config),
+		retryContext,
 	);
 
 	const providerApi = new ProviderApi(

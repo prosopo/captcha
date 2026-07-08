@@ -224,6 +224,17 @@ export type RandomProvider = {
 	provider: FrontendProvider;
 };
 
+// Context handed to provider selection when the widget re-selects a provider
+// after an error. `attempt` is the 1-indexed try count (1 = first, healthy
+// try; >1 = a fallback retry). On a retry the widget picks a random provider
+// straight from the provider list instead of the DNS-routed endpoint so a
+// single down provider isn't hammered; `excludeUrl` drops the provider that
+// just failed from the candidate pool when it is known.
+export type ProviderSelectRetryContext = {
+	attempt: number;
+	excludeUrl?: string;
+};
+
 type RateLimitSchemaType = ZodObject<{
 	windowMs: ZodDefault<ZodOptional<ZodNumber>>;
 	limit: ZodDefault<ZodOptional<ZodNumber>>;
