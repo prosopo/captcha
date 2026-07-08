@@ -55,6 +55,17 @@ const CIDR_RULE_COUNT = 1_300;
 const MIXED_RULE_COUNT = 1_000;
 const QUERY_COUNT = 300;
 
+// Concurrent-storm config. Emulates a frontend retry storm: N requests
+// in flight against Redis at once, sustained across multiple waves,
+// with an identical banned scope so every request would hit the same
+// FT probes. In production the process-wide verdict cache absorbs
+// waves 2..N; this benchmark measures the reader path directly (no
+// cache) so wave 1 numbers stand in for what the cache is protecting
+// and wave 2..N numbers show the split query's steady-state behaviour
+// under sustained connection multiplexing.
+const STORM_CONCURRENCY = 100;
+const STORM_WAVE_COUNT = 10;
+
 // CI thresholds. Localhost warm-cache measurements land around
 // p50 = 5-15 ms, p99 = 30-50 ms; thresholds set well above that to
 // absorb noisy shared runners. A regression to the single-query design
@@ -63,6 +74,13 @@ const QUERY_COUNT = 300;
 // performance target.
 const P50_LATENCY_MS = 120;
 const P99_LATENCY_MS = 400;
+
+// Storm-mode thresholds: same story but with headroom for the extra
+// tail from redis-client command queuing under N-in-flight concurrency.
+// The single TCP connection multiplexes commands, so p99 grows with
+// concurrency even when each command is individually cheap.
+const STORM_P50_LATENCY_MS = 200;
+const STORM_P99_LATENCY_MS = 800;
 
 const ipv4 = (i: number): bigint => {
 	// 10.0.0.0/8 range — private, unambiguous, plenty of room to spread
@@ -374,5 +392,150 @@ describe("redisRulesReader load-shape benchmark (17k IP-only rules)", () => {
 			expect(ipMatch).toBeUndefined();
 		},
 		60_000,
+	);
+
+	test(
+		`concurrent retry-storm: ${STORM_CONCURRENCY} in-flight × ${STORM_WAVE_COUNT} waves against ${IP_RULE_COUNT + CIDR_RULE_COUNT + MIXED_RULE_COUNT} rules`,
+		async () => {
+			// Emulates the incident's frontend-retry pattern: the client
+			// keeps retrying the same banned scope, and each retry starts
+			// before the previous one has completed. In production the
+			// provider-side verdict cache absorbs waves 2..N; here we run
+			// the reader directly (no cache) so the numbers show the
+			// worst-case Redis-only path — what the cache is protecting
+			// against under stampede.
+			//
+			// A single scope is used across every request so the FT
+			// probes are byte-for-byte identical. That means every wave
+			// is a candidate for the same posting-list intersections;
+			// under the *old* single-query path this would compound with
+			// the per-request APPLY(exists()×11) cost and crush tail
+			// latency. Under the split path each probe still hits its
+			// own posting list and the only added cost is command
+			// queuing on the shared TCP connection.
+
+			// Warm-up: page the index in and let redis-client establish
+			// pipelines before the first measured wave.
+			await reader.findRules(
+				{
+					policyScope: { clientId: "client1" },
+					policyScopeMatch: FilterScopeMatch.Greedy,
+					userScope: { numericIp: ipv4(999_997) },
+					userScopeMatch: FilterScopeMatch.Greedy,
+					blockOnly: true,
+				},
+				true,
+			);
+
+			// Identical scope for every request. Hits a real rule
+			// (ipv4(42) is in the seeded IP-ban range) so each response
+			// carries the same non-empty verdict payload.
+			const stormScope = {
+				numericIp: ipv4(42),
+				ja4Hash: "t13d_load_1",
+				userAgentHash: "ua5",
+				countryCode: "C5",
+				asn: 1005,
+			};
+			const clientId = "client1";
+
+			const allSamples: number[] = [];
+			const perWave: Array<{
+				wave: number;
+				p50: number;
+				p99: number;
+				min: number;
+				max: number;
+				elapsedMs: number;
+			}> = [];
+
+			for (let wave = 0; wave < STORM_WAVE_COUNT; wave++) {
+				const waveStart = performance.now();
+				const waveSamples: number[] = [];
+
+				// Fire all N requests in parallel and wait for the whole
+				// wave to complete. This mirrors a burst of retries
+				// arriving inside one event-loop turn — every request
+				// starts before any has completed, so the redis client's
+				// command queue depth peaks at N.
+				await Promise.all(
+					Array.from({ length: STORM_CONCURRENCY }, async () => {
+						const start = performance.now();
+						const results = await reader.findRules(
+							{
+								policyScope: { clientId },
+								policyScopeMatch: FilterScopeMatch.Greedy,
+								userScope: stormScope,
+								userScopeMatch: FilterScopeMatch.Greedy,
+								blockOnly: true,
+							},
+							true,
+						);
+						const dur = performance.now() - start;
+						waveSamples.push(dur);
+						// Sanity: the storm scope has a matching exact-IP
+						// block rule, so every response must include it.
+						// A regression that drops responses under
+						// concurrency shows up here rather than as a
+						// silent under-count of samples.
+						expect(
+							results.find((r) => r.numericIp === stormScope.numericIp),
+						).toBeDefined();
+					}),
+				);
+
+				const waveElapsed = performance.now() - waveStart;
+				waveSamples.sort((a, b) => a - b);
+				const p50 = percentile(waveSamples, 0.5);
+				const p99 = percentile(waveSamples, 0.99);
+				const min = waveSamples[0] ?? 0;
+				const max = waveSamples[waveSamples.length - 1] ?? 0;
+				perWave.push({
+					wave: wave + 1,
+					p50,
+					p99,
+					min,
+					max,
+					elapsedMs: waveElapsed,
+				});
+				allSamples.push(...waveSamples);
+			}
+
+			allSamples.sort((a, b) => a - b);
+			const overallP50 = percentile(allSamples, 0.5);
+			const overallP99 = percentile(allSamples, 0.99);
+			const overallAvg =
+				allSamples.reduce((a, b) => a + b, 0) / allSamples.length;
+			const totalRequests = STORM_CONCURRENCY * STORM_WAVE_COUNT;
+			const totalElapsed = perWave.reduce((sum, w) => sum + w.elapsedMs, 0);
+			const throughput = (totalRequests * 1000) / totalElapsed;
+
+			console.log(
+				`storm ${STORM_CONCURRENCY}×${STORM_WAVE_COUNT}: avg=${overallAvg.toFixed(2)}ms  p50=${overallP50.toFixed(2)}ms  p99=${overallP99.toFixed(2)}ms  ` +
+					`throughput=${throughput.toFixed(0)} req/s  total=${totalElapsed.toFixed(0)}ms`,
+			);
+			// Per-wave breakdown so a regression that only affects
+			// first-wave stampede (cache-miss shape) shows up
+			// independently from steady-state numbers.
+			for (const w of perWave) {
+				console.log(
+					`  wave ${w.wave.toString().padStart(2)}: p50=${w.p50.toFixed(2)}ms  p99=${w.p99.toFixed(2)}ms  ` +
+						`min=${w.min.toFixed(2)}ms  max=${w.max.toFixed(2)}ms  wave-elapsed=${w.elapsedMs.toFixed(0)}ms`,
+				);
+			}
+
+			expect(overallP50).toBeLessThan(STORM_P50_LATENCY_MS);
+			expect(overallP99).toBeLessThan(STORM_P99_LATENCY_MS);
+			// Wave-1 stampede check: even the cold-cache wave (which is
+			// what the production cache absorbs) has to stay tractable —
+			// a regression that only hurts first-request-per-scope
+			// latency would otherwise hide behind steady-state numbers.
+			const firstWave = perWave[0];
+			expect(firstWave).toBeDefined();
+			if (firstWave) {
+				expect(firstWave.p99).toBeLessThan(STORM_P99_LATENCY_MS);
+			}
+		},
+		300_000,
 	);
 });
