@@ -38,15 +38,31 @@ type CacheEntry = {
 };
 
 /**
- * Bounded TTL cache for hard-block verdicts. Insertion-order eviction
- * (Map iteration order = insertion order) approximates LRU on the write
- * side; lazy expiry drops stale entries on read. Not a real LRU because
- * the hard-block workload is dominated by hot-scope repeat traffic where
- * insertion-order eviction and LRU converge — the extra bookkeeping
- * cost of a doubly-linked-list LRU would eat the win we're chasing.
+ * Bounded LRU + TTL cache for hard-block verdicts, with singleflight
+ * dedupe of concurrent misses.
+ *
+ * Eviction is real LRU: `get()` moves the hit entry to the tail of the
+ * Map's iteration order (Map iteration = insertion order in JS), so
+ * `set()` drops the least-recently-used entry once the cap is reached.
+ * Absolute TTL is preserved on hit — `expiresAt` is set at insert and
+ * never refreshed, so a hot key can't stay stale beyond ttlMs no matter
+ * how often it's accessed.
+ *
+ * `getOrCompute()` is the singleflight entry point: if a concurrent
+ * caller is already computing the value for `key`, joiners return the
+ * same in-flight Promise instead of racing to the underlying storage.
+ * Kills the wave-1 stampede where N identical concurrent requests all
+ * miss the cache simultaneously and all hit Redis before the first has
+ * populated the entry.
  */
 export class HardBlockVerdictCache {
 	private readonly store = new Map<string, CacheEntry>();
+	// Keyed by cache key; each Promise resolves to the value the
+	// computer produced. Populated at getOrCompute call time and cleared
+	// in a finally so a rejected computation doesn't wedge future
+	// callers on the same key. See getOrCompute for the ordering
+	// guarantees.
+	private readonly inflight = new Map<string, Promise<AccessRule[]>>();
 
 	constructor(
 		private readonly ttlMs: number = DEFAULT_VERDICT_CACHE_TTL_MS,
@@ -62,13 +78,25 @@ export class HardBlockVerdictCache {
 			this.store.delete(key);
 			return undefined;
 		}
+		// LRU move-to-tail. delete + set is O(1) and re-orders the key
+		// to the end of the Map's iteration order without touching
+		// `expiresAt` — the absolute TTL is preserved so a hot key
+		// can't outlive its freshness window.
+		this.store.delete(key);
+		this.store.set(key, entry);
 		return entry.value;
 	}
 
 	set(key: string, value: AccessRule[]): void {
+		// If the key already exists, delete first so the re-insert
+		// lands at the tail (as an LRU update) rather than in its old
+		// slot. Size check runs against the post-delete state so an
+		// update never triggers a spurious eviction.
+		this.store.delete(key);
 		if (this.store.size >= this.maxEntries) {
-			// Map iteration order is insertion order — first entry is the
-			// oldest. Drop until we're under the cap. Usually just one.
+			// Map iteration order is insertion order — with move-to-tail
+			// in get() this makes the first entry the least-recently-
+			// used. Drop until we're under the cap. Usually just one.
 			const oldest = this.store.keys().next().value;
 			if (oldest !== undefined) {
 				this.store.delete(oldest);
@@ -80,15 +108,75 @@ export class HardBlockVerdictCache {
 		});
 	}
 
+	/**
+	 * Cache lookup with singleflight dedupe of concurrent misses.
+	 *
+	 * Fast path: cache hit → return immediately (with LRU move-to-tail
+	 * via `get()`).
+	 *
+	 * Slow path: cache miss →
+	 *   1. If an in-flight Promise exists for this key, join it. This
+	 *      is the coalescing behaviour — N concurrent identical misses
+	 *      all await the same underlying storage call.
+	 *   2. Otherwise, invoke `compute()`, register the Promise, and
+	 *      populate the cache with the result on resolve. The Promise
+	 *      is removed from the in-flight map in a `finally` so a
+	 *      rejection doesn't wedge future callers.
+	 *
+	 * Rejection semantics: if `compute()` throws, all joined waiters
+	 * see the same rejection. Callers should handle it — the underlying
+	 * `getPrioritisedAccessRule` catches its own storage errors and
+	 * returns `[]` (fail-open), so in practice this never propagates.
+	 */
+	async getOrCompute(
+		key: string,
+		compute: () => Promise<AccessRule[]>,
+	): Promise<AccessRule[]> {
+		const cached = this.get(key);
+		if (cached !== undefined) {
+			return cached;
+		}
+		const existing = this.inflight.get(key);
+		if (existing !== undefined) {
+			return existing;
+		}
+		const promise = (async () => {
+			const value = await compute();
+			this.set(key, value);
+			return value;
+		})();
+		this.inflight.set(key, promise);
+		try {
+			return await promise;
+		} finally {
+			// Only delete our own entry — a subsequent unrelated
+			// getOrCompute for the same key could have already
+			// replaced it in the map (race not possible in single-
+			// threaded Node event loop, but defensive against future
+			// changes).
+			if (this.inflight.get(key) === promise) {
+				this.inflight.delete(key);
+			}
+		}
+	}
+
 	// Test/ops hook — the running cache is not exposed on the wire, but
 	// admin tooling (e.g. a rule-mutation notifier) may need to flush
-	// after a bulk insert to bound the staleness window.
+	// after a bulk insert to bound the staleness window. Clears both
+	// the stored entries and any in-flight Promises so a rule mutation
+	// can't leave a stale computation in flight.
 	clear(): void {
 		this.store.clear();
+		this.inflight.clear();
 	}
 
 	size(): number {
 		return this.store.size;
+	}
+
+	// Test hook: number of in-flight computations. Not on the hot path.
+	inflightSize(): number {
+		return this.inflight.size;
 	}
 }
 

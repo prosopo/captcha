@@ -57,15 +57,54 @@ describe("HardBlockVerdictCache", () => {
 		expect(cache.get("key")).toBeUndefined();
 	});
 
-	it("evicts the oldest entry when max size is reached", () => {
+	it("evicts the least-recently-used entry when max size is reached", () => {
 		const cache = new HardBlockVerdictCache(30_000, 2);
 		cache.set("a", [rule("A")]);
 		cache.set("b", [rule("B")]);
 		cache.set("c", [rule("C")]);
-		// Insertion order: a → b → c. `a` was oldest, must be evicted.
+		// No access between inserts, so LRU order matches insertion
+		// order: `a` was least-recently-used, must be evicted.
 		expect(cache.get("a")).toBeUndefined();
 		expect(cache.get("b")).toBeDefined();
 		expect(cache.get("c")).toBeDefined();
+		expect(cache.size()).toBe(2);
+	});
+
+	it("LRU: accessing an entry moves it to the tail so it survives eviction", () => {
+		const cache = new HardBlockVerdictCache(30_000, 2);
+		cache.set("a", [rule("A")]);
+		cache.set("b", [rule("B")]);
+		// Touch `a` — it's now most-recently-used, `b` becomes the
+		// oldest and will be evicted next.
+		expect(cache.get("a")).toBeDefined();
+		cache.set("c", [rule("C")]);
+		expect(cache.get("a")).toBeDefined();
+		expect(cache.get("b")).toBeUndefined();
+		expect(cache.get("c")).toBeDefined();
+	});
+
+	it("LRU move-to-tail preserves absolute TTL (no sliding refresh)", () => {
+		const cache = new HardBlockVerdictCache(1_000, 100);
+		cache.set("k", [rule("A")]);
+		vi.advanceTimersByTime(500);
+		// Access at 500ms — should NOT refresh expiresAt.
+		expect(cache.get("k")).toBeDefined();
+		vi.advanceTimersByTime(499);
+		expect(cache.get("k")).toBeDefined();
+		// Sliding TTL would keep this alive; absolute TTL expires it.
+		vi.advanceTimersByTime(2);
+		expect(cache.get("k")).toBeUndefined();
+	});
+
+	it("set() on an existing key re-inserts at the tail without triggering an eviction", () => {
+		const cache = new HardBlockVerdictCache(30_000, 2);
+		cache.set("a", [rule("A")]);
+		cache.set("b", [rule("B")]);
+		// Re-set `a` — capacity is still 2 after the internal delete+
+		// insert, so `b` should NOT be evicted.
+		cache.set("a", [rule("A2")]);
+		expect(cache.get("a")).toBeDefined();
+		expect(cache.get("b")).toBeDefined();
 		expect(cache.size()).toBe(2);
 	});
 
@@ -76,6 +115,107 @@ describe("HardBlockVerdictCache", () => {
 		cache.clear();
 		expect(cache.size()).toBe(0);
 		expect(cache.get("a")).toBeUndefined();
+	});
+
+	describe("singleflight (getOrCompute)", () => {
+		beforeEach(() => {
+			// Singleflight tests are async and use real timers; the
+			// outer describe's fake timers block promise resolution
+			// on some setups.
+			vi.useRealTimers();
+		});
+
+		it("dedupes N concurrent identical misses to one compute call", async () => {
+			const cache = new HardBlockVerdictCache(30_000, 100);
+			let calls = 0;
+			const compute = async () => {
+				calls++;
+				// Force the compute to actually yield so the other 99
+				// callers race to the inflight map before we resolve.
+				await new Promise((resolve) => setTimeout(resolve, 5));
+				return [rule("A")];
+			};
+
+			const results = await Promise.all(
+				Array.from({ length: 100 }, () => cache.getOrCompute("k", compute)),
+			);
+
+			expect(calls).toBe(1);
+			// All 100 waiters received the same resolved value.
+			expect(results).toHaveLength(100);
+			for (const r of results) {
+				expect(r).toHaveLength(1);
+				expect(r[0]?.description).toBe("rule-A");
+			}
+			// Cache is populated so subsequent lookups don't re-compute.
+			expect(cache.get("k")).toBeDefined();
+			// In-flight map is cleared once compute resolved.
+			expect(cache.inflightSize()).toBe(0);
+		});
+
+		it("does not dedupe different keys", async () => {
+			const cache = new HardBlockVerdictCache(30_000, 100);
+			let calls = 0;
+			const compute = async (id: string) => {
+				calls++;
+				await new Promise((resolve) => setTimeout(resolve, 5));
+				return [rule(id)];
+			};
+
+			await Promise.all([
+				cache.getOrCompute("k1", () => compute("A")),
+				cache.getOrCompute("k2", () => compute("B")),
+				cache.getOrCompute("k3", () => compute("C")),
+			]);
+
+			expect(calls).toBe(3);
+		});
+
+		it("rejection propagates to all waiters and does not wedge future calls", async () => {
+			const cache = new HardBlockVerdictCache(30_000, 100);
+			let calls = 0;
+			const failThenSucceed = async () => {
+				calls++;
+				await new Promise((resolve) => setTimeout(resolve, 5));
+				if (calls === 1) {
+					throw new Error("boom");
+				}
+				return [rule("A")];
+			};
+
+			// Wave 1: all waiters share the same rejection.
+			const wave1 = await Promise.allSettled([
+				cache.getOrCompute("k", failThenSucceed),
+				cache.getOrCompute("k", failThenSucceed),
+				cache.getOrCompute("k", failThenSucceed),
+			]);
+			expect(calls).toBe(1);
+			for (const r of wave1) {
+				expect(r.status).toBe("rejected");
+			}
+
+			// Wave 2: the in-flight entry from wave 1 was cleared on
+			// rejection, so wave 2 starts a fresh compute. Would wedge
+			// forever if the rejected Promise stayed in the inflight
+			// map.
+			const wave2 = await cache.getOrCompute("k", failThenSucceed);
+			expect(calls).toBe(2);
+			expect(wave2).toHaveLength(1);
+		});
+
+		it("fast-paths a cache hit without touching the inflight map", async () => {
+			const cache = new HardBlockVerdictCache(30_000, 100);
+			cache.set("k", [rule("prefilled")]);
+			let calls = 0;
+			const compute = async () => {
+				calls++;
+				return [rule("computed")];
+			};
+			const result = await cache.getOrCompute("k", compute);
+			expect(calls).toBe(0);
+			expect(result[0]?.description).toBe("rule-prefilled");
+			expect(cache.inflightSize()).toBe(0);
+		});
 	});
 });
 

@@ -372,17 +372,6 @@ export const getPrioritisedAccessRule = async (
 		}
 	}
 
-	// Process-wide cache: absorbs burst traffic with identical scope.
-	// Bounded staleness (DEFAULT_VERDICT_CACHE_TTL_MS). Callers that
-	// must bypass (e.g. write-path revalidation) pass skipCache=true.
-	if (!skipCache) {
-		const cached = verdictCache.get(cacheKey);
-		if (cached !== undefined) {
-			requestMemo?.set(cacheKey, cached);
-			return cached;
-		}
-	}
-
 	const filter = {
 		...(clientId && {
 			policyScope: {
@@ -395,19 +384,32 @@ export const getPrioritisedAccessRule = async (
 		...(blockOnly && { blockOnly: true }),
 	};
 
-	const candidates = await userAccessRulesStorage.findRules(
-		filter,
-		true, // matchingFieldsOnly — engages the split-query hot path
-		true,
-	);
+	// The compute closure defers work until the singleflight coordinator
+	// decides who does the actual storage call. When N concurrent
+	// callers race for the same scope, only one closure runs — the
+	// others await the same Promise. Kills the wave-1 stampede where
+	// every retry-storm identity misses simultaneously.
+	const compute = async (): Promise<AccessRule[]> => {
+		const candidates = await userAccessRulesStorage.findRules(
+			filter,
+			true, // matchingFieldsOnly — engages the split-query hot path
+			true,
+		);
+		return rankCandidateRules(candidates, parsedUserScope, clientId);
+	};
 
-	const ranked = rankCandidateRules(candidates, parsedUserScope, clientId);
-
-	if (!skipCache) {
-		verdictCache.set(cacheKey, ranked);
+	// Process-wide cache with singleflight dedupe: absorbs burst traffic
+	// with identical scope, and coalesces concurrent identical misses
+	// onto one storage call. Callers that must bypass (e.g. write-path
+	// revalidation) pass skipCache=true.
+	let ranked: AccessRule[];
+	if (skipCache) {
+		ranked = await compute();
+	} else {
+		ranked = await verdictCache.getOrCompute(cacheKey, compute);
 	}
-	requestMemo?.set(cacheKey, ranked);
 
+	requestMemo?.set(cacheKey, ranked);
 	return ranked;
 };
 

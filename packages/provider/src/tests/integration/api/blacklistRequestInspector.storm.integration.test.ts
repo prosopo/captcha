@@ -509,13 +509,12 @@ describe("blacklistRequestInspector storm behaviour", () => {
 	);
 
 	test(
-		"cache-miss stampede: N concurrent identical requests all miss cache on wave 1",
+		"singleflight: N concurrent identical wave-1 misses collapse to 1 storage call",
 		async () => {
-			// Explicitly measures the wave-1 stampede shape — the case
-			// the cache does NOT currently protect against. If a later
-			// change adds singleflight / in-flight dedupe to the cache,
-			// this test would need updating to expect fewer storage
-			// calls than concurrent requests.
+			// The wave-1 stampede protection: N identical requests
+			// arriving before the first has populated the cache all
+			// join the same in-flight Promise instead of racing to
+			// Redis. This is the retry-loop-storm shape.
 			getVerdictCache().clear();
 
 			let storageCallCount = 0;
@@ -529,7 +528,7 @@ describe("blacklistRequestInspector storm behaviour", () => {
 
 			try {
 				const concurrency = 50;
-				await Promise.all(
+				const results = await Promise.all(
 					Array.from({ length: concurrency }, () =>
 						getPrioritisedAccessRule(
 							accessRulesStorage,
@@ -541,15 +540,24 @@ describe("blacklistRequestInspector storm behaviour", () => {
 				);
 
 				console.log(
-					`stampede: ${concurrency} concurrent identical requests → ${storageCallCount} storage calls`,
+					`singleflight: ${concurrency} concurrent identical requests → ${storageCallCount} storage call(s)`,
 				);
 
-				// Documented current behaviour: no in-flight dedupe.
-				// Every wave-1 request that arrives before the first
-				// resolves goes to storage. This is the shape the
-				// process-wide cache does NOT absorb.
-				expect(storageCallCount).toBe(concurrency);
+				// One storage call handles the whole burst. Every
+				// waiter received the same resolved verdict, and the
+				// cache holds exactly one entry.
+				expect(storageCallCount).toBe(1);
 				expect(getVerdictCache().size()).toBe(1);
+				// All 50 requests must return a verdict that contains
+				// the matching block rule — the singleflight resolution
+				// must not "swallow" the value for any joiner.
+				for (const r of results) {
+					expect(
+						r.find(
+							(rule) => rule.numericIp === HOT_SCOPE.userScope.numericIp,
+						),
+					).toBeDefined();
+				}
 			} finally {
 				accessRulesStorage.findRules = originalFindRules;
 			}
