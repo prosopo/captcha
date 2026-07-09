@@ -401,6 +401,13 @@ export const SessionSchema = object({
 	userSitekeyIpHash: string().optional(),
 	webView: boolean(),
 	iFrame: boolean(),
+	// True when this session was minted by the post-PoW routing machine
+	// as an escalation of a prior session (see `buildEscalation` in
+	// submitPoWCaptchaSolution). Absent / false on ordinary
+	// frictionless-created sessions. Persisted so analytics can separate
+	// "user hit the widget cold" from "user got escalated into a
+	// stronger captcha after a low-confidence PoW".
+	isEscalation: boolean().optional(),
 	decryptedHeadHash: string(),
 	siteKey: string().optional(),
 	// Full page URL the widget was rendered on (origin + path only — query
@@ -487,6 +494,9 @@ export type Session = {
 	userSitekeyIpHash?: string;
 	webView: boolean;
 	iFrame: boolean;
+	// True when this session was minted by the post-PoW routing machine
+	// as an escalation. Undefined / false on ordinary frictionless sessions.
+	isEscalation?: boolean;
 	decryptedHeadHash: string;
 	siteKey?: string;
 	// Full page URL the widget was rendered on (origin + path only — query
