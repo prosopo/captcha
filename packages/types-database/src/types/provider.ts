@@ -630,8 +630,15 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	decryptedHeadHash: { type: String, required: false, default: "" },
 	siteKey: { type: String, required: false },
 	// Full page URL the widget was rendered on (origin + path only; query
-	// string, fragment and credentials stripped). See Session.currentUrl.
+	// string, fragment and credentials stripped). See Session.currentUrl —
+	// `currentUrl` is the top-frame URL, `iframeUrl` is the widget's own
+	// frame URL when embedded (undefined when the widget IS the top frame).
 	currentUrl: { type: String, required: false },
+	iframeUrl: { type: String, required: false },
+	// Computed at session-creation time from (currentUrl, iframeUrl) via
+	// isProtectDeployment. Persisted only when true so ordinary sessions
+	// stay slim and the sparse index below only carries Protect records.
+	isProtect: { type: Boolean, required: false },
 	reason: { type: String, required: false },
 	blocked: { type: Boolean, required: false },
 	// On synthetic blocked-session records (blocked=true, deleted=true)
@@ -720,6 +727,14 @@ SessionRecordSchema.index({ ruleHash: 1 }, { background: true, sparse: true });
 // minted by the post-PoW router.
 SessionRecordSchema.index(
 	{ isEscalation: 1, createdAt: 1 },
+	{ background: true, sparse: true },
+);
+// Protect analytics — same rationale as isEscalation. Only sessions minted
+// through a `protect.<tenant>` iframe carry the field, so the sparse index
+// stays small and lets us cheaply filter "give me Protect sessions in the
+// last N days" without a full collection scan.
+SessionRecordSchema.index(
+	{ isProtect: 1, createdAt: 1 },
 	{ background: true, sparse: true },
 );
 // Compound indexes for session aggregation queries
