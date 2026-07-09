@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/provider-docker",
-	"version": "3.6.58",
+	"version": "3.6.59",
 	"engines": {
 		"node": "^24",
 		"npm": "^11"
