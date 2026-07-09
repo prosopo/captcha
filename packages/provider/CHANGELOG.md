@@ -1,5 +1,29 @@
 # @prosopo/provider
 
+## 4.15.1
+### Patch Changes
+
+- 494883f: Add a sparse compound index on `{ isEscalation: 1, createdAt: 1 }` to the Session collection. Sparse so ordinary frictionless sessions (which omit the field) don't add index entries.
+- 8bde5df: Persist `isEscalation: true` on Session records minted by the post-PoW routing machine.
+  
+  The escalation path in `submitPoWCaptchaSolution.buildEscalation` creates a follow-up session (image or puzzle) whenever the router decides the PoW-verified user still needs a stronger challenge. Analytics couldn't previously separate those escalated sessions from cold frictionless sessions since both shared the same shape — every downstream count that wanted to reason about "did we escalate this user?" had to reverse-engineer the origin/escalation link from the redis cache mapping.
+  
+  The field is optional on the schema and only written when true, so ordinary frictionless sessions stay slim and older records still parse.
+- Updated dependencies [494883f]
+- Updated dependencies [8bde5df]
+  - @prosopo/types-database@4.11.9
+  - @prosopo/database@3.15.10
+  - @prosopo/types@4.9.7
+  - @prosopo/types-env@2.10.9
+  - @prosopo/env@3.6.10
+  - @prosopo/api@3.5.14
+  - @prosopo/api-express-router@3.1.41
+  - @prosopo/datasets@3.1.48
+  - @prosopo/ipinfo@0.2.34
+  - @prosopo/keyring@2.9.54
+  - @prosopo/load-balancer@2.10.8
+  - @prosopo/user-access-policy@3.12.1
+
 ## 4.15.0
 ### Minor Changes
 
