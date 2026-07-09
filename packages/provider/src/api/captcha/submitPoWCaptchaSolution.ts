@@ -298,6 +298,7 @@ export const buildEscalation = async (
 		originSession.currentUrl,
 		handshakeTiming?.tcpToChelloUs,
 		handshakeTiming?.chelloToHandshakeUs,
+		true,
 	);
 
 	// Record the origin → escalation sessionId mapping so a /captcha/*

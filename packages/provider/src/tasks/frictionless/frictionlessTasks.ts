@@ -190,6 +190,7 @@ export class FrictionlessManager extends CaptchaManager {
 		currentUrl?: Session["currentUrl"],
 		tcpToChelloUs?: Session["tcpToChelloUs"],
 		chelloToHandshakeUs?: Session["chelloToHandshakeUs"],
+		isEscalation?: Session["isEscalation"],
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
@@ -206,6 +207,10 @@ export class FrictionlessManager extends CaptchaManager {
 			userSitekeyIpHash,
 			webView,
 			iFrame,
+			// Only persist the escalation flag when it's actually true —
+			// avoids polluting analytics with `false` on every plain
+			// frictionless session.
+			...(isEscalation && { isEscalation: true }),
 			decryptedHeadHash,
 			reason,
 			siteKey,

@@ -623,6 +623,10 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	userSitekeyIpHash: { type: String, required: false },
 	webView: { type: Boolean, required: true, default: false },
 	iFrame: { type: Boolean, required: true, default: false },
+	// True when this session was created by the post-PoW routing machine as
+	// an escalation of an earlier session. Optional so ordinary
+	// frictionless-created sessions can omit it and stay slim.
+	isEscalation: { type: Boolean, required: false },
 	decryptedHeadHash: { type: String, required: false, default: "" },
 	siteKey: { type: String, required: false },
 	// Full page URL the widget was rendered on (origin + path only; query
