@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/svelte-procaptcha-wrapper",
-	"version": "1.1.95",
+	"version": "1.1.96",
 	"type": "module",
 	"engines": {
 		"node": "^24",
@@ -23,7 +23,7 @@
 		"dev": "npm run svpkg -- -w"
 	},
 	"dependencies": {
-		"@prosopo/procaptcha-wrapper": "2.6.97"
+		"@prosopo/procaptcha-wrapper": "2.6.98"
 	},
 	"peerDependencies": {
 		"svelte": "^5.0.0"
