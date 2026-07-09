@@ -299,11 +299,15 @@ export default (
 									...(req.chelloToHandshakeUs !== undefined && {
 										chelloToHandshakeUs: req.chelloToHandshakeUs,
 									}),
-									// currentUrl uses the cached session's value to
-									// match the rest of the dedup routing input (score,
-									// webView, captchaType are all pulled from dedup).
+									// currentUrl / iframeUrl use the cached session's
+									// values to match the rest of the dedup routing input
+									// (score, webView, captchaType are all pulled from
+									// dedup).
 									...(dedup.session.currentUrl && {
 										currentUrl: dedup.session.currentUrl,
+									}),
+									...(dedup.session.iframeUrl && {
+										iframeUrl: dedup.session.iframeUrl,
 									}),
 								},
 							},
@@ -584,6 +588,7 @@ export default (
 						chelloToHandshakeUs: req.chelloToHandshakeUs,
 					}),
 					...(currentUrl && { currentUrl }),
+					...(iframeUrl && { iframeUrl }),
 				},
 			});
 
@@ -632,6 +637,7 @@ export default (
 					token,
 					botThreshold,
 					currentUrl,
+					iframeUrl,
 				},
 				{ req, res, next },
 			);

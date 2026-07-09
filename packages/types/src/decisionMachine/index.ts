@@ -240,7 +240,13 @@ export interface RoutingMachineRawSignals {
 	// frictionless payload, and on the `postPow` phase from the persisted
 	// Session record. Undefined when the client omitted it or the session
 	// pre-dates the field.
+	//
+	// When the widget is embedded, `currentUrl` is the top-frame URL and
+	// `iframeUrl` is the widget's own frame URL. `iframeUrl` is undefined
+	// when the widget IS the top frame (nothing to distinguish) or when the
+	// client / persisted session pre-dates the field.
 	currentUrl?: string;
+	iframeUrl?: string;
 }
 
 export type RoutingMachinePhase = "route" | "postPow";
