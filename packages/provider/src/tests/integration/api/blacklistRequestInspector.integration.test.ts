@@ -34,7 +34,10 @@ import {
 	it,
 	vi,
 } from "vitest";
-import { getPrioritisedAccessRule } from "../../../api/blacklistRequestInspector.js";
+import {
+	getPrioritisedAccessRule,
+	getVerdictCache,
+} from "../../../api/blacklistRequestInspector.js";
 
 describe("blacklistRequestInspector Integration Tests", () => {
 	/**
@@ -133,6 +136,10 @@ describe("blacklistRequestInspector Integration Tests", () => {
 
 			// Clear the access rules storage before each test
 			await accessRulesStorage.deleteAllRules();
+			// Process-wide verdict cache is not reset by deleteAllRules; a
+			// prior test's cached "no rule found" would otherwise mask the
+			// rules the current test just inserted for the TTL window.
+			getVerdictCache().clear();
 		});
 
 		it("should return a rule when a JA4-UserAgent rule exists and the user matches the User Agent and the JA4", async () => {

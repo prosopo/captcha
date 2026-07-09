@@ -25,7 +25,7 @@ import {
 	AccessPolicyType,
 	type AccessRulesStorage,
 } from "@prosopo/user-access-policy";
-import { flatten, sanitisePageUrl } from "@prosopo/util";
+import { flatten, isProtectDeployment, sanitisePageUrl } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import { getCompositeIpAddress } from "../../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../../express.js";
@@ -81,6 +81,7 @@ export default (
 				mode,
 				simdReadings,
 				currentUrl: reportedCurrentUrl,
+				iframeUrl: reportedIframeUrl,
 			} = GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
 
 			// Re-sanitise whatever the client reported: keep only scheme + host
@@ -89,7 +90,18 @@ export default (
 			// undefined when the field is absent or not a usable http(s) URL —
 			// the decision machine treats that as "not reported" and forces an
 			// image captcha.
+			//
+			// `iframeUrl` is only populated when the widget was embedded and
+			// is optional — its absence just means "widget was the top frame".
+			// It's not gated in the decision machine; recorded for analytics.
 			const currentUrl = sanitisePageUrl(reportedCurrentUrl);
+			const iframeUrl = sanitisePageUrl(reportedIframeUrl);
+			// Cheap boolean tag ("is the widget being loaded through Protect's
+			// site-wide iframe endpoint?") derived from the two sanitised
+			// URLs so downstream analytics can filter Protect sessions
+			// without re-parsing hosts. Only persisted when true — see the
+			// sparse index on {isProtect, createdAt}.
+			const isProtect = isProtectDeployment(currentUrl, iframeUrl);
 
 			const normalizedIp = normalizeRequestIp(req.ip, req.logger);
 			const sessionMode =
@@ -284,6 +296,25 @@ export default (
 									headers: dedupFlatHeaders,
 									userAgent: dedupUserAgent,
 									...(req.ja4 && { ja4: req.ja4 }),
+									// Timing values are per-connection so they come from
+									// the current request even in the dedup replay path —
+									// dedup.session was created on a different TCP conn.
+									...(req.tcpToChelloUs !== undefined && {
+										tcpToChelloUs: req.tcpToChelloUs,
+									}),
+									...(req.chelloToHandshakeUs !== undefined && {
+										chelloToHandshakeUs: req.chelloToHandshakeUs,
+									}),
+									// currentUrl / iframeUrl use the cached session's
+									// values to match the rest of the dedup routing input
+									// (score, webView, captchaType are all pulled from
+									// dedup).
+									...(dedup.session.currentUrl && {
+										currentUrl: dedup.session.currentUrl,
+									}),
+									...(dedup.session.iframeUrl && {
+										iframeUrl: dedup.session.iframeUrl,
+									}),
 								},
 							},
 						)
@@ -373,6 +404,12 @@ export default (
 					sessionMode,
 					userSitekeyIpHash,
 					logger: req.logger,
+					...(req.tcpToChelloUs !== undefined && {
+						tcpToChelloUs: req.tcpToChelloUs,
+					}),
+					...(req.chelloToHandshakeUs !== undefined && {
+						chelloToHandshakeUs: req.chelloToHandshakeUs,
+					}),
 				},
 				res,
 			);
@@ -507,6 +544,8 @@ export default (
 				decryptedHeadHash,
 				siteKey: dapp,
 				...(currentUrl && { currentUrl }),
+				...(iframeUrl && { iframeUrl }),
+				...(isProtect && { isProtect: true }),
 				ipInfo: req.ipInfo,
 				headers: flatHeaders,
 				mode: sessionMode,
@@ -522,6 +561,12 @@ export default (
 				}),
 				...(entropyMathRandomFirst !== undefined && {
 					entropyMathRandomFirst,
+				}),
+				...(req.tcpToChelloUs !== undefined && {
+					tcpToChelloUs: req.tcpToChelloUs,
+				}),
+				...(req.chelloToHandshakeUs !== undefined && {
+					chelloToHandshakeUs: req.chelloToHandshakeUs,
 				}),
 			});
 
@@ -543,6 +588,14 @@ export default (
 					headers: flatHeaders,
 					userAgent: safeUserAgent,
 					...(req.ja4 && { ja4: req.ja4 }),
+					...(req.tcpToChelloUs !== undefined && {
+						tcpToChelloUs: req.tcpToChelloUs,
+					}),
+					...(req.chelloToHandshakeUs !== undefined && {
+						chelloToHandshakeUs: req.chelloToHandshakeUs,
+					}),
+					...(currentUrl && { currentUrl }),
+					...(iframeUrl && { iframeUrl }),
 				},
 			});
 
@@ -591,6 +644,7 @@ export default (
 					token,
 					botThreshold,
 					currentUrl,
+					iframeUrl,
 				},
 				{ req, res, next },
 			);

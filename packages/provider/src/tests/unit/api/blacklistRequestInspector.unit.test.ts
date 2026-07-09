@@ -26,10 +26,11 @@ import {
 	type UserScope,
 } from "@prosopo/user-access-policy";
 import type { NextFunction, Request, Response } from "express";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	BlacklistRequestInspector,
 	getRequestUserScope,
+	getVerdictCache,
 	rankCandidateRules,
 } from "../../../api/blacklistRequestInspector.js";
 
@@ -109,6 +110,14 @@ describe("getRequestUserScope", () => {
 });
 
 describe("BlacklistRequestInspector.shouldAbortRequest", () => {
+	// getPrioritisedAccessRule uses a module-level verdict cache
+	// singleton; without a per-test reset a cached verdict from one
+	// test would satisfy the lookup in another that expects to see its
+	// own mocked storage response.
+	beforeEach(() => {
+		getVerdictCache().clear();
+	});
+
 	const mockLogger = {
 		info: vi.fn(),
 		debug: vi.fn(),
@@ -401,6 +410,13 @@ describe("BlacklistRequestInspector.shouldAbortRequest", () => {
 // and a logger that records arguments) don't bleed into the abort-decision
 // fixtures above.
 describe("BlacklistRequestInspector blocked-session persistence", () => {
+	// Same rationale as the sibling describe: clear the verdict cache
+	// singleton so a hit cached by an earlier test can't satisfy this
+	// test's lookup and skip the mocked storage.
+	beforeEach(() => {
+		getVerdictCache().clear();
+	});
+
 	// Logger stub that captures the lazy log payloads so individual assertions
 	// can inspect what was logged without depending on call order across
 	// info/debug/warn calls.

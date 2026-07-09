@@ -382,6 +382,7 @@ export default class ProviderApi
 		mode?: ModeEnum,
 		simdReadings?: string,
 		currentUrl?: string,
+		iframeUrl?: string,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const body: GetFrictionlessCaptchaChallengeRequestBodyOutput = {
 			[ApiParams.token]: token,
@@ -391,6 +392,7 @@ export default class ProviderApi
 			...(mode && { [ApiParams.mode]: mode }),
 			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
 			...(currentUrl && { [ApiParams.currentUrl]: currentUrl }),
+			...(iframeUrl && { [ApiParams.iframeUrl]: iframeUrl }),
 		};
 		const { data, headers } = await this.postWithHeaders<
 			GetFrictionlessCaptchaResponse,

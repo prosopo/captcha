@@ -20,6 +20,7 @@ import {
 	REDIS_QUERY_DIALECT,
 	getRulesRedisQuery,
 } from "#policy/redis/reader/redisRulesQuery.js";
+import { buildScopedBlockSubQueries } from "#policy/redis/reader/redisRulesSplitQuery.js";
 import {
 	REDIS_BATCH_SIZE,
 	fetchRedisHashRecords,
@@ -62,6 +63,16 @@ export const SERVER_SIDE_RANK_TOP_N = 20;
 // admin tooling depends on the full result set; not on the hot
 // per-request path.
 const GREEDY_MAX_CANDIDATES = REDIS_BATCH_SIZE * 10;
+
+// Per-sub-query cap on the hot split-query path. Each sub-query probes a
+// single discriminating index (a specific numericIp value, a specific
+// ja4Hash value, etc.) so the natural cardinality is tiny — typically
+// 1–5. The cap only fires on pathological rule-set shapes (e.g. many
+// duplicate-value rules against one attribute) and prevents a bad shape
+// from tanking the request. It intentionally lets the union grow past
+// SERVER_SIDE_RANK_TOP_N because JS-side rankCandidateRules picks the
+// winner and the extra candidates are cheap to HGETALL.
+const SPLIT_MAX_CANDIDATES_PER_SUB = 500;
 
 // Fields that contribute one specificity point each. Mirrors
 // SCALAR_USER_SCOPE_FIELDS + clientId + ip-constraint in
@@ -166,16 +177,38 @@ export class RedisRulesReader implements AccessRulesReader {
 	): Promise<AccessRule[]> {
 		const query = getRulesRedisQuery(filter, matchingFieldsOnly);
 
-		if (skipEmptyUserScopes && query === "ismissing(@clientId)") {
-			// We don't want to accidentally return all rules when the filter is empty
+		if (
+			skipEmptyUserScopes &&
+			// Sentinel query shape emitted by getPolicyScopeQuery when the
+			// caller passed neither a userScope nor a clientId — i.e. an
+			// empty filter that would otherwise resolve to "all global
+			// rules". Guard so an accidentally-empty filter can't return
+			// the full global rule set. The exact literal must stay in
+			// sync with GLOBAL_MATCH_CLAUSE_INNER over there.
+			query === "( @clientId:{global} | ismissing(@clientId) )"
+		) {
 			return [];
 		}
 
-		// Hot path: strict-match callers (blockMiddleware /
-		// checkForHardBlock) get server-side specificity ranking via
-		// FT.AGGREGATE — Redis returns the top N candidates already
-		// sorted, no HGETALL fanout. See SPECIFICITY_EXPR / RANK_EXPR
-		// above for the score definition.
+		// Hot path (checkForHardBlock / blockMiddleware): the strict-match
+		// caller passes blockOnly + a userScope, and every field returned
+		// gets JS-side re-ranked by rankCandidateRules anyway. Route it
+		// through the split-query path — one FT probe per populated
+		// request field, each using its own posting list — instead of the
+		// single wide FT.AGGREGATE whose APPLY step scaled linearly in
+		// the tenant's total rule count and tipped over under large
+		// bulk-ban populations.
+		if (
+			matchingFieldsOnly &&
+			filter.blockOnly &&
+			filter.userScope !== undefined
+		) {
+			return this.findBlockRulesSplit(filter);
+		}
+
+		// Non-hot-path matchingFieldsOnly (e.g. Restrict-only lookups):
+		// keep the pre-existing server-side-ranked single query. Not on
+		// the hot path so the APPLY overhead is acceptable.
 		if (matchingFieldsOnly) {
 			return this.findRulesRanked(filter, query);
 		}
@@ -184,6 +217,111 @@ export class RedisRulesReader implements AccessRulesReader {
 		// HGETALL fanout path. Cap at REDIS_BATCH_SIZE; truncation past
 		// that point is the known liability tracked in #2689.
 		return this.findRulesGreedy(filter, query);
+	}
+
+	// Union candidate keys from each split sub-query, de-dupe, HGETALL,
+	// parse, hand back to `getPrioritisedAccessRule` for JS-side ranking.
+	// Ranking stays in JS because rankCandidateRules already encodes the
+	// strict "every populated rule field matches request" semantics —
+	// FT can't express that shape cheaply and the previous server-side
+	// APPLY / SORTBY imposed the linear-per-rule cost we're eliminating.
+	private async findBlockRulesSplit(
+		filter: AccessRulesFilter,
+	): Promise<AccessRule[]> {
+		const userScope = filter.userScope;
+		if (userScope === undefined) {
+			return [];
+		}
+		const clientId = filter.policyScope?.clientId;
+
+		const subQueries = buildScopedBlockSubQueries(userScope, clientId);
+
+		try {
+			const keyLists = await Promise.all(
+				subQueries.map((sub) =>
+					aggregateRedisKeys(
+						this.client,
+						sub.query,
+						this.logger,
+						undefined,
+						// Per-sub-query cap. Each probe hits a discriminating
+						// index (e.g. numericIp posting list), so the natural
+						// cardinality is tiny — this cap only fires on
+						// pathological rule-set shapes and mirrors
+						// SPLIT_MAX_CANDIDATES_PER_SUB below.
+						SPLIT_MAX_CANDIDATES_PER_SUB,
+					).catch((err) => {
+						// One sub-query failing (e.g. a transient RediSearch
+						// error) shouldn't drop the whole lookup — the other
+						// probes may still find the applicable rule. Log and
+						// continue with an empty result for this probe.
+						this.logger.error(() => ({
+							err,
+							data: {
+								inspect: util.inspect(
+									{ subKind: sub.kind, query: sub.query },
+									{ depth: null },
+								),
+							},
+							msg: "failed to execute split block sub-query",
+						}));
+						return [];
+					}),
+				),
+			);
+
+			const uniqueKeys = new Set<string>();
+			for (const list of keyLists) {
+				for (const key of list) {
+					uniqueKeys.add(key);
+				}
+			}
+
+			if (uniqueKeys.size === 0) {
+				return [];
+			}
+
+			const ruleKeys = [...uniqueKeys];
+
+			this.logger.debug(() => ({
+				msg: "Executed split block sub-queries",
+				data: {
+					inspect: util.inspect(
+						{
+							subQueryCount: subQueries.length,
+							uniqueCandidates: ruleKeys.length,
+							perSubQueryCounts: keyLists.map((l, i) => ({
+								kind: subQueries[i]?.kind,
+								found: l.length,
+							})),
+							filter,
+						},
+						{ depth: null },
+					),
+				},
+			}));
+
+			const { records } = await fetchRedisHashRecords(
+				this.client,
+				ruleKeys,
+				this.logger,
+			);
+
+			const nonEmptyRecords = records.filter(
+				(record) => Object.keys(record).length > 0,
+			);
+
+			return parseRedisRecords(nonEmptyRecords, accessRuleInput, this.logger);
+		} catch (e) {
+			this.logger.error(() => ({
+				err: e,
+				data: {
+					inspect: util.inspect({ filter }, { depth: null }),
+				},
+				msg: "failed to execute split block query set",
+			}));
+			return [];
+		}
 	}
 
 	private async findRulesRanked(

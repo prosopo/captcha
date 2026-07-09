@@ -552,7 +552,14 @@ export class CaptchaManager {
 		userAccessRulesStorage: AccessRulesStorage,
 		clientId: string,
 		userScope: UserScope | UserScopeRecord,
-		options?: { blockOnly?: boolean },
+		options?: {
+			blockOnly?: boolean;
+			// When a caller has an Express request in scope (e.g. the
+			// verify handler), passing it here shares the per-request memo
+			// with the block middleware — a duplicate lookup within one
+			// request collapses to zero extra Redis round-trips.
+			requestMemoHost?: object;
+		},
 	) {
 		return getPrioritisedAccessRule(
 			userAccessRulesStorage,

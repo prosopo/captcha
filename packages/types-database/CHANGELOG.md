@@ -1,5 +1,86 @@
 # @prosopo/types-database
 
+## 4.11.10
+### Patch Changes
+
+- 85e8857: Record both the top-frame URL and the widget's own iframe URL on frictionless sessions.
+  
+  Previously the client only sent one field (`currentUrl`), which for embedded widgets resolved to the top-frame URL — so we lost visibility into which iframe endpoint the session was actually loaded through. Now the client sends both:
+  
+  - `currentUrl`: the top-frame URL (same resolution rules as before — same-origin iframes read `window.top.location.href` directly; cross-origin iframes fall back to `document.referrer`).
+  - `iframeUrl`: the widget's own frame URL when embedded. Undefined when the widget IS the top frame (nothing to distinguish).
+  
+  Both fields are sanitised client- and server-side (origin + path only; query string, fragment and any embedded credentials stripped). The provider persists both on the `Session` record and re-uses them on post-PoW escalation sessions. Only `currentUrl` is gated in the frictionless decision machine (unchanged — missing `currentUrl` still forces an image captcha); `iframeUrl` is recorded for analytics.
+  
+  Both fields are also surfaced to the decision machines as raw signals: `RoutingMachineRawSignals` gains an optional `iframeUrl` populated from the freshly decrypted frictionless payload on the `route` phase, from the persisted Session record on the `postPow` phase, and from the cached Session in the dedup replay path — matching how `currentUrl` is already threaded through.
+  
+  Additionally, sessions carry a new computed boolean `isProtect`, set at session-creation time when the widget iframe was served from `protect.<tenant>` and embedded in a page on the same tenant (subdomain-of matching, dot-boundary safe — see `isProtectDeployment` in `@prosopo/util`). Persisted only when true (same pattern as `isEscalation`) and backed by a sparse `{isProtect, createdAt}` index so analytics can cheaply retrieve Protect sessions without re-parsing URLs. Post-PoW escalation sessions inherit the flag from the origin session.
+- Updated dependencies [85e8857]
+  - @prosopo/types@4.9.8
+  - @prosopo/user-access-policy@3.12.2
+  - @prosopo/common@3.1.44
+  - @prosopo/logger@2.0.2
+
+## 4.11.9
+### Patch Changes
+
+- 494883f: Add a sparse compound index on `{ isEscalation: 1, createdAt: 1 }` to the Session collection. Sparse so ordinary frictionless sessions (which omit the field) don't add index entries.
+- 8bde5df: Persist `isEscalation: true` on Session records minted by the post-PoW routing machine.
+  
+  The escalation path in `submitPoWCaptchaSolution.buildEscalation` creates a follow-up session (image or puzzle) whenever the router decides the PoW-verified user still needs a stronger challenge. Analytics couldn't previously separate those escalated sessions from cold frictionless sessions since both shared the same shape — every downstream count that wanted to reason about "did we escalate this user?" had to reverse-engineer the origin/escalation link from the redis cache mapping.
+  
+  The field is optional on the schema and only written when true, so ordinary frictionless sessions stay slim and older records still parse.
+- Updated dependencies [8bde5df]
+  - @prosopo/types@4.9.7
+  - @prosopo/user-access-policy@3.12.1
+
+## 4.11.8
+### Patch Changes
+
+- 17bc76e: feat: switch handshake timings from milliseconds to microseconds
+  
+  Milliseconds bucket fast handshakes (local proxies, same-DC clients) to 0/1 and destroy the distribution shape we need for proxy detection. `time.Now()` on Linux is ~1μs precise via vDSO — μs is the honest resolution ceiling.
+  
+  Wire changes (must land together with the paired chaddy release):
+  
+  - Headers consumed by `handshakeTimingMiddleware`: `x-tls-tcp-to-chello-ms` / `x-tls-chello-to-handshake-ms` → `x-tls-tcp-to-chello-us` / `x-tls-chello-to-handshake-us`.
+  - Request augmentation, `HandshakeTiming` fields, decision-machine input, `Session` shape (Zod + Mongoose schemas): `tcpToChelloMs` / `chelloToHandshakeMs` → `tcpToChelloUs` / `chelloToHandshakeUs`.
+  - New sessions in `captchastorage.sessions` will now write `tcpToChelloUs` / `chelloToHandshakeUs` in μs. Historical `*Ms` fields on existing session records remain as-is (not migrated) — analytics that read both must range-scan by field name.
+  
+  Rollout: deploy paired chaddy image (emits `-Us` headers) simultaneously; the deploy-order window drops timing signal but no data corruption is possible (mismatched header names simply resolve to `undefined`).
+- Updated dependencies [7d7e767]
+- Updated dependencies [b3f351b]
+- Updated dependencies [17bc76e]
+  - @prosopo/user-access-policy@3.12.0
+  - @prosopo/types@4.9.6
+
+## 4.11.7
+### Patch Changes
+
+- Updated dependencies [6cb3218]
+  - @prosopo/types@4.9.5
+  - @prosopo/user-access-policy@3.11.3
+
+## 4.11.6
+### Patch Changes
+
+- de12b31: feat(provider): capture and persist per-TLS-connection handshake timings
+  
+  Adds `handshakeTimingMiddleware` that reads two new headers forwarded by the chaddy Caddy plugin and threads the values through to the frictionless session store, so every persisted Session document carries them alongside `ipInfo` / `headers` / the entropy fingerprints.
+  
+  - `X-TLS-TCP-To-Chello-Ms` — server-observed ms from TCP accept to first ClientHello byte
+  - `X-TLS-Chello-To-Handshake-Ms` — server-observed ms from ClientHello to handshake complete
+  
+  Elevated values indicate the client's ClientHello traversed a proxy chain before reaching Caddy — the CH bytes only reach the terminating TCP stack after every hop, so the deltas inflate with the full client-to-exit RTT rather than just the last-mile RTT.
+  
+  Middleware wires in immediately after `ja4Middleware` in `startProviderApi`. Both fields are optional throughout (`tcpToChelloMs?: number`, `chelloToHandshakeMs?: number`) on `Session`, `SessionSchema`, and the Mongoose model, so pre-migration documents parse and dev requests that skipped TLS still write cleanly. `express.d.ts` extends `AugmentedRequest` and `Express.Request` with the same two optional fields. No handlers are modified beyond the frictionless captcha challenge path; persisting on the other captcha-type storage paths (image / PoW / puzzle direct) is a follow-up.
+  
+  Depends on chaddy plugin support for emitting the two headers.
+- Updated dependencies [de12b31]
+- Updated dependencies [770954b]
+  - @prosopo/types@4.9.4
+  - @prosopo/user-access-policy@3.11.2
+
 ## 4.11.5
 ### Patch Changes
 

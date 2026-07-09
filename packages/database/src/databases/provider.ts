@@ -1652,6 +1652,7 @@ export class ProviderDatabase
 				ipInfo: 1,
 				webView: 1,
 				iFrame: 1,
+				isEscalation: 1,
 				decryptedHeadHash: 1,
 				siteKey: 1,
 				reason: 1,

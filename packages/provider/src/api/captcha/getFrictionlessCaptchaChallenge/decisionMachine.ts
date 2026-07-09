@@ -64,6 +64,10 @@ export type DecisionMachineInput = {
 	// fragment / credentials). Undefined when the client didn't report a
 	// usable page URL — see the missing-currentUrl gate below.
 	currentUrl: string | undefined;
+	// Sanitised iframe URL when the widget was embedded (origin + path only).
+	// Undefined when the widget was the top frame — not gated in the machine;
+	// forwarded to the routing machine's raw signals for analytics.
+	iframeUrl: string | undefined;
 };
 
 type ExpressHandle = {

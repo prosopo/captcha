@@ -1,5 +1,59 @@
 # @prosopo/database
 
+## 3.15.11
+### Patch Changes
+
+- Updated dependencies [85e8857]
+  - @prosopo/types@4.9.8
+  - @prosopo/types-database@4.11.10
+  - @prosopo/util@3.3.4
+  - @prosopo/user-access-policy@3.12.2
+  - @prosopo/common@3.1.44
+  - @prosopo/logger@2.0.2
+  - @prosopo/redis-client@1.0.28
+
+## 3.15.10
+### Patch Changes
+
+- 494883f: Add a sparse compound index on `{ isEscalation: 1, createdAt: 1 }` to the Session collection. Sparse so ordinary frictionless sessions (which omit the field) don't add index entries.
+- 8bde5df: Persist `isEscalation: true` on Session records minted by the post-PoW routing machine.
+  
+  The escalation path in `submitPoWCaptchaSolution.buildEscalation` creates a follow-up session (image or puzzle) whenever the router decides the PoW-verified user still needs a stronger challenge. Analytics couldn't previously separate those escalated sessions from cold frictionless sessions since both shared the same shape — every downstream count that wanted to reason about "did we escalate this user?" had to reverse-engineer the origin/escalation link from the redis cache mapping.
+  
+  The field is optional on the schema and only written when true, so ordinary frictionless sessions stay slim and older records still parse.
+- Updated dependencies [494883f]
+- Updated dependencies [8bde5df]
+  - @prosopo/types-database@4.11.9
+  - @prosopo/types@4.9.7
+  - @prosopo/user-access-policy@3.12.1
+
+## 3.15.9
+### Patch Changes
+
+- Updated dependencies [7d7e767]
+- Updated dependencies [b3f351b]
+- Updated dependencies [17bc76e]
+  - @prosopo/user-access-policy@3.12.0
+  - @prosopo/types@4.9.6
+  - @prosopo/types-database@4.11.8
+
+## 3.15.8
+### Patch Changes
+
+- Updated dependencies [6cb3218]
+  - @prosopo/types@4.9.5
+  - @prosopo/types-database@4.11.7
+  - @prosopo/user-access-policy@3.11.3
+
+## 3.15.7
+### Patch Changes
+
+- Updated dependencies [de12b31]
+- Updated dependencies [770954b]
+  - @prosopo/types@4.9.4
+  - @prosopo/types-database@4.11.6
+  - @prosopo/user-access-policy@3.11.2
+
 ## 3.15.6
 ### Patch Changes
 

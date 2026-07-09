@@ -22,26 +22,80 @@ import {
 import type {
 	BotDetectionFunction,
 	ProcaptchaClientConfigOutput,
+	ProviderSelectRetryContext,
 } from "@prosopo/types";
 import type { BotDetectionFunctionResult } from "@prosopo/types";
 import { DetectorLoader } from "./detectorLoader.js";
 
-// The page the widget is rendered on, reduced to origin + path. Deliberately
-// built from `origin` + `pathname` (never `href`) so the query string,
-// fragment, and any embedded `user:pass@` credentials never leave the browser
-// — sites routinely carry tokens / session ids / reset codes in those parts.
-// Returns undefined in non-browser contexts (SSR / tests) or for opaque
-// origins; the provider then treats the session as having no page URL and
-// forces an image captcha.
-const getCurrentPageUrl = (): string | undefined => {
+// The page(s) the widget is rendered on, reduced to origin + path.
+// Deliberately built from `origin` + `pathname` (never `href`) so the query
+// string, fragment, and any embedded `user:pass@` credentials never leave the
+// browser — sites routinely carry tokens / session ids / reset codes in those
+// parts.
+//
+// Returns two fields:
+//   - `currentUrl`: the top-frame URL as best we can determine it. Same-origin
+//     iframes read it directly; cross-origin iframes fall back to
+//     `document.referrer`, which the browser fills with the embedding page URL
+//     subject to Referrer-Policy. When neither is available the field falls
+//     back to the local (iframe) URL so the provider still sees a value.
+//   - `iframeUrl`: the widget's own frame URL when we're embedded. Undefined
+//     when the widget IS the top frame — nothing to distinguish. Emitted so
+//     downstream analytics can separate "Protect's site-wide iframe endpoint"
+//     from "the page the user was actually on".
+//
+// Both fields are undefined in non-browser contexts (SSR / tests) or for
+// opaque origins.
+const sanitiseHref = (href: string): string | undefined => {
+	try {
+		const u = new URL(href);
+		if (!u.origin || u.origin === "null") return undefined;
+		return `${u.origin}${u.pathname || ""}`;
+	} catch {
+		return undefined;
+	}
+};
+
+type PageUrls = {
+	currentUrl: string | undefined;
+	iframeUrl: string | undefined;
+};
+
+const getCurrentPageUrls = (): PageUrls => {
 	if (typeof window === "undefined" || !window.location) {
-		return undefined;
+		return { currentUrl: undefined, iframeUrl: undefined };
 	}
-	const { origin, pathname } = window.location;
-	if (!origin || origin === "null") {
-		return undefined;
+	const local = (() => {
+		const { origin, pathname } = window.location;
+		if (!origin || origin === "null") return undefined;
+		return `${origin}${pathname || ""}`;
+	})();
+
+	// Top window — no iframe distinction, report the local URL only.
+	if (window === window.top) {
+		return { currentUrl: local, iframeUrl: undefined };
 	}
-	return `${origin}${pathname || ""}`;
+
+	// Same-origin iframe — read the top URL directly.
+	try {
+		const topHref = window.top?.location?.href;
+		const sanitised = topHref ? sanitiseHref(topHref) : undefined;
+		if (sanitised) return { currentUrl: sanitised, iframeUrl: local };
+	} catch {
+		/* cross-origin — fall through */
+	}
+
+	// Cross-origin iframe — the embedding page URL comes via referrer,
+	// subject to the parent's Referrer-Policy header.
+	if (typeof document !== "undefined" && document.referrer) {
+		const fromReferrer = sanitiseHref(document.referrer);
+		if (fromReferrer) return { currentUrl: fromReferrer, iframeUrl: local };
+	}
+
+	// Referrer unavailable — fall back to the iframe URL for `currentUrl` so
+	// the provider still sees a value, and echo it as `iframeUrl` so
+	// downstream can tell the top frame was not observed.
+	return { currentUrl: local, iframeUrl: local };
 };
 
 export const withTimeout = async <T>(
@@ -73,6 +127,7 @@ const customDetectBot: BotDetectionFunction = async (
 	config: ProcaptchaClientConfigOutput,
 	container: HTMLElement | undefined,
 	restartFn: () => void,
+	retryContext?: ProviderSelectRetryContext,
 ): Promise<BotDetectionFunctionResult> => {
 	const [ExtClass, detect] = await Promise.all([
 		ExtensionLoader(config.web2),
@@ -99,13 +154,17 @@ const customDetectBot: BotDetectionFunction = async (
 		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
 	}
 
-	// Resolve the static DNS endpoint for this env. No client-side random
-	// selection anymore — the DNS layer load-balances across the pronode fleet.
-	// `pickIpMode(config)` honours the dapp's data-ipv4 / data-ipv6 preference
-	// so frictionless and the subsequent captcha hops stay on the same stack.
+	// On the first attempt this resolves the static DNS endpoint for this env —
+	// the DNS layer load-balances across the pronode fleet. On a retry
+	// (`retryContext.attempt > 1`) the previously used pronode errored, so we
+	// pick a random provider straight from the list instead of re-pinning the
+	// same one. `pickIpMode(config)` honours the dapp's data-ipv4 / data-ipv6
+	// preference so frictionless and the subsequent captcha hops stay on the
+	// same stack.
 	const provider = await getProcaptchaRandomActiveProvider(
 		config.defaultEnvironment,
 		pickIpMode(config),
+		retryContext,
 	);
 
 	const providerApi = new ProviderApi(
@@ -119,6 +178,7 @@ const customDetectBot: BotDetectionFunction = async (
 	// lets it complete in the worker thread while the network round-trip
 	// burns. Readings still attach on the challenge GET and on solution
 	// submit (first-hop-wins server-side).
+	const { currentUrl, iframeUrl } = getCurrentPageUrls();
 	const captchaPromise = providerApi.getFrictionlessCaptcha(
 		detectionResult.token,
 		detectionResult.encryptHeadHash,
@@ -126,7 +186,8 @@ const customDetectBot: BotDetectionFunction = async (
 		userAccount.account.address,
 		config.mode,
 		undefined,
-		getCurrentPageUrl(),
+		currentUrl,
+		iframeUrl,
 	);
 	if (detectionResult.getSimdReadings) {
 		// Fire-and-forget: triggers the memoised prefetch inside the catcher

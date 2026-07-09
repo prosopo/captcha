@@ -27,7 +27,9 @@ import {
 } from "#policy/ruleInput/ruleInput.js";
 import type { AccessRulesStorage } from "#policy/rulesStorage.js";
 
-type FindRulesSchema = ZodType<AccessRulesFilterInput[]>;
+// `unknown` input position — see accessRulesFilterInput's block comment
+// for why the strict-identity form doesn't fit here.
+type FindRulesSchema = ZodType<AccessRulesFilterInput[], z.ZodTypeDef, unknown>;
 
 export type RuleIdsResponse = {
 	ruleIds: string[];

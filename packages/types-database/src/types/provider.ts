@@ -623,11 +623,22 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	userSitekeyIpHash: { type: String, required: false },
 	webView: { type: Boolean, required: true, default: false },
 	iFrame: { type: Boolean, required: true, default: false },
+	// True when this session was created by the post-PoW routing machine as
+	// an escalation of an earlier session. Optional so ordinary
+	// frictionless-created sessions can omit it and stay slim.
+	isEscalation: { type: Boolean, required: false },
 	decryptedHeadHash: { type: String, required: false, default: "" },
 	siteKey: { type: String, required: false },
 	// Full page URL the widget was rendered on (origin + path only; query
-	// string, fragment and credentials stripped). See Session.currentUrl.
+	// string, fragment and credentials stripped). See Session.currentUrl —
+	// `currentUrl` is the top-frame URL, `iframeUrl` is the widget's own
+	// frame URL when embedded (undefined when the widget IS the top frame).
 	currentUrl: { type: String, required: false },
+	iframeUrl: { type: String, required: false },
+	// Computed at session-creation time from (currentUrl, iframeUrl) via
+	// isProtectDeployment. Persisted only when true so ordinary sessions
+	// stay slim and the sparse index below only carries Protect records.
+	isProtect: { type: Boolean, required: false },
 	reason: { type: String, required: false },
 	blocked: { type: Boolean, required: false },
 	// On synthetic blocked-session records (blocked=true, deleted=true)
@@ -671,6 +682,11 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	entropyCryptoFingerprint: { type: String, required: false },
 	entropyWallClockOffsetMs: { type: Number, required: false },
 	entropyMathRandomFirst: { type: Number, required: false },
+	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
+	// plugin (X-TLS-TCP-To-Chello-Us / X-TLS-Chello-To-Handshake-Us).
+	// See @prosopo/types Session.tcpToChelloUs for full semantics.
+	tcpToChelloUs: { type: Number, required: false },
+	chelloToHandshakeUs: { type: Number, required: false },
 	// DNS observation merge target. Populated by
 	// POST /v1/prosopo/provider/admin/dns/event from the dns-event
 	// sidecar (see types/provider/database.ts → Session.dnsEvent).
@@ -706,6 +722,21 @@ SessionRecordSchema.index(
 	{ background: true, sparse: true },
 );
 SessionRecordSchema.index({ ruleHash: 1 }, { background: true, sparse: true });
+// Escalation analytics — sparse because ordinary frictionless sessions
+// omit the field, so the index only carries the small subset of records
+// minted by the post-PoW router.
+SessionRecordSchema.index(
+	{ isEscalation: 1, createdAt: 1 },
+	{ background: true, sparse: true },
+);
+// Protect analytics — same rationale as isEscalation. Only sessions minted
+// through a `protect.<tenant>` iframe carry the field, so the sparse index
+// stays small and lets us cheaply filter "give me Protect sessions in the
+// last N days" without a full collection scan.
+SessionRecordSchema.index(
+	{ isProtect: 1, createdAt: 1 },
+	{ background: true, sparse: true },
+);
 // Compound indexes for session aggregation queries
 SessionRecordSchema.index({
 	createdAt: 1,
