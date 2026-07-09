@@ -239,3 +239,55 @@ export const sanitisePageUrl = (
 
 	return url.toString();
 };
+
+/**
+ * @description Decides whether a frictionless session came through a Protect
+ * deployment — i.e. the widget was served from `protect.<tenant>` and embedded
+ * into a page hosted at the same tenant.
+ *
+ * A site is deemed to be running Protect when the widget iframe's host starts
+ * with `protect.` AND the tail (host minus the leading `protect.` label) either
+ * equals the top-frame host or the top-frame host is a subdomain of it.
+ *
+ * Examples (tail = "client.com"):
+ *   - top `client.com`         + iframe `protect.client.com` → true
+ *   - top `www.client.com`     + iframe `protect.client.com` → true (subdomain)
+ *   - top `foo.client.com`     + iframe `protect.client.com` → true (subdomain)
+ *   - top `attackerclient.com` + iframe `protect.client.com` → false (no dot
+ *     boundary — endsWith is guarded against the "attackerclient.com" case)
+ *   - top `client.com`         + iframe `protect.other.com`  → false
+ *
+ * Returns false when either URL is missing / unparseable, when the iframe host
+ * doesn't start with `protect.`, or when the tail collapses to empty / a bare
+ * TLD. Deliberately does no PSL / registrable-domain lookup — we don't want a
+ * dependency here and the `protect.<tenant>` DNS record is under our control
+ * anyway, so an exact suffix check is safe.
+ *
+ * @param currentUrl The top-frame URL as recorded on the session.
+ * @param iframeUrl The widget's own frame URL as recorded on the session.
+ * @returns True when the session looks like a Protect deployment.
+ */
+export const isProtectDeployment = (
+	currentUrl: string | undefined | null,
+	iframeUrl: string | undefined | null,
+): boolean => {
+	if (!currentUrl || !iframeUrl) return false;
+
+	let currentHost: string;
+	let iframeHost: string;
+	try {
+		currentHost = new URL(currentUrl).hostname.toLowerCase();
+		iframeHost = new URL(iframeUrl).hostname.toLowerCase();
+	} catch {
+		return false;
+	}
+	if (!currentHost || !iframeHost) return false;
+
+	const prefix = "protect.";
+	if (!iframeHost.startsWith(prefix)) return false;
+	const tail = iframeHost.slice(prefix.length);
+	// Reject bare TLDs / empty tails: at minimum we need a label + dot + TLD.
+	if (!tail || !tail.includes(".")) return false;
+
+	return currentHost === tail || currentHost.endsWith(`.${tail}`);
+};

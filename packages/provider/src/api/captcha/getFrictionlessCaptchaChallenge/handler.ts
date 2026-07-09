@@ -25,7 +25,7 @@ import {
 	AccessPolicyType,
 	type AccessRulesStorage,
 } from "@prosopo/user-access-policy";
-import { flatten, sanitisePageUrl } from "@prosopo/util";
+import { flatten, isProtectDeployment, sanitisePageUrl } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import { getCompositeIpAddress } from "../../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../../express.js";
@@ -96,6 +96,12 @@ export default (
 			// It's not gated in the decision machine; recorded for analytics.
 			const currentUrl = sanitisePageUrl(reportedCurrentUrl);
 			const iframeUrl = sanitisePageUrl(reportedIframeUrl);
+			// Cheap boolean tag ("is the widget being loaded through Protect's
+			// site-wide iframe endpoint?") derived from the two sanitised
+			// URLs so downstream analytics can filter Protect sessions
+			// without re-parsing hosts. Only persisted when true — see the
+			// sparse index on {isProtect, createdAt}.
+			const isProtect = isProtectDeployment(currentUrl, iframeUrl);
 
 			const normalizedIp = normalizeRequestIp(req.ip, req.logger);
 			const sessionMode =
@@ -539,6 +545,7 @@ export default (
 				siteKey: dapp,
 				...(currentUrl && { currentUrl }),
 				...(iframeUrl && { iframeUrl }),
+				...(isProtect && { isProtect: true }),
 				ipInfo: req.ipInfo,
 				headers: flatHeaders,
 				mode: sessionMode,

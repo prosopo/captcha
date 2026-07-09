@@ -139,6 +139,7 @@ export class FrictionlessManager extends CaptchaManager {
 			siteKey: params.siteKey,
 			currentUrl: params.currentUrl,
 			iframeUrl: params.iframeUrl,
+			isProtect: params.isProtect,
 			ipInfo: params.ipInfo,
 			headers: params.headers,
 			mode: params.mode,
@@ -193,6 +194,7 @@ export class FrictionlessManager extends CaptchaManager {
 		chelloToHandshakeUs?: Session["chelloToHandshakeUs"],
 		isEscalation?: Session["isEscalation"],
 		iframeUrl?: Session["iframeUrl"],
+		isProtect?: Session["isProtect"],
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
@@ -218,6 +220,11 @@ export class FrictionlessManager extends CaptchaManager {
 			siteKey,
 			currentUrl,
 			iframeUrl,
+			// Same rationale as isEscalation above: only persist the flag
+			// when it's actually true so non-Protect sessions stay slim and
+			// the sparse index on {isProtect, createdAt} carries only the
+			// Protect subset.
+			...(isProtect && { isProtect: true }),
 			blocked,
 			deleted,
 			ipInfo,
@@ -376,6 +383,7 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.chelloToHandshakeUs,
 			undefined,
 			effectiveParams.iframeUrl,
+			effectiveParams.isProtect,
 		);
 
 		// Fire-and-forget served-counter writes. Skipped when there's no
@@ -449,6 +457,7 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.chelloToHandshakeUs,
 			undefined,
 			effectiveParams.iframeUrl,
+			effectiveParams.isProtect,
 		);
 	}
 

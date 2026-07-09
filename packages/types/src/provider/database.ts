@@ -420,6 +420,13 @@ export const SessionSchema = object({
 	// when the widget IS the top frame (nothing to distinguish).
 	currentUrl: string().optional(),
 	iframeUrl: string().optional(),
+	// True when this session looks like a Protect deployment: the widget
+	// iframe was served from `protect.<tenant>` and embedded in a page on
+	// the same tenant (see isProtectDeployment in @prosopo/util for the
+	// exact rule). Persisted only when true — matches the `isEscalation`
+	// pattern so ordinary sessions stay slim and a sparse index carries
+	// only the Protect subset.
+	isProtect: boolean().optional(),
 	// Selection reason: writes go through `FrictionlessReason`, but the
 	// schema accepts any string at runtime so old records (or unforeseen
 	// values) still parse. Output type is cast back to the enum so the
@@ -514,6 +521,10 @@ export type Session = {
 	// when the widget IS the top frame (nothing to distinguish).
 	currentUrl?: string;
 	iframeUrl?: string;
+	// True when this session looks like a Protect deployment — widget
+	// iframe served from `protect.<tenant>`, embedded in a page on the
+	// same tenant. Undefined/absent on non-Protect sessions.
+	isProtect?: boolean;
 	reason?: FrictionlessReason;
 	blocked?: boolean;
 	// When `blocked` is true, these record which access-policy rule matched

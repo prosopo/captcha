@@ -15,6 +15,7 @@ import { describe, expect, it } from "vitest";
 import {
 	buildDomainSuffixCandidates,
 	decodeGoogleTranslateHost,
+	isProtectDeployment,
 	sanitisePageUrl,
 	validateDomain,
 } from "../url.js";
@@ -219,5 +220,88 @@ describe("sanitisePageUrl", () => {
 		expect(sanitisePageUrl("")).toBeUndefined();
 		expect(sanitisePageUrl("not a url")).toBeUndefined();
 		expect(sanitisePageUrl("/relative/path")).toBeUndefined();
+	});
+});
+
+describe("isProtectDeployment", () => {
+	it("returns true when the iframe is on protect.<tenant> and the top frame is on the tenant", () => {
+		expect(
+			isProtectDeployment(
+				"https://client.com/",
+				"https://protect.client.com/widget",
+			),
+		).toBe(true);
+	});
+
+	it("returns true when the top frame is a subdomain of the tenant", () => {
+		expect(
+			isProtectDeployment(
+				"https://www.client.com/",
+				"https://protect.client.com/widget",
+			),
+		).toBe(true);
+		expect(
+			isProtectDeployment(
+				"https://foo.client.com/",
+				"https://protect.client.com/widget",
+			),
+		).toBe(true);
+	});
+
+	it("is case-insensitive on host", () => {
+		expect(
+			isProtectDeployment(
+				"https://CLIENT.com/",
+				"https://Protect.Client.COM/widget",
+			),
+		).toBe(true);
+	});
+
+	it("rejects hosts that share a suffix without a dot boundary", () => {
+		expect(
+			isProtectDeployment(
+				"https://attackerclient.com/",
+				"https://protect.client.com/widget",
+			),
+		).toBe(false);
+	});
+
+	it("rejects mismatched tenants", () => {
+		expect(
+			isProtectDeployment(
+				"https://client.com/",
+				"https://protect.other.com/widget",
+			),
+		).toBe(false);
+	});
+
+	it("rejects iframes not served from protect.<something>", () => {
+		expect(
+			isProtectDeployment(
+				"https://client.com/",
+				"https://widget.client.com/",
+			),
+		).toBe(false);
+		expect(
+			isProtectDeployment("https://client.com/", "https://client.com/widget"),
+		).toBe(false);
+	});
+
+	it("rejects a bare protect. prefix with no tail", () => {
+		// URL parser will normally reject these; guard both defensively.
+		expect(
+			isProtectDeployment("https://client.com/", "https://protect./widget"),
+		).toBe(false);
+	});
+
+	it("returns false when either URL is missing or unparseable", () => {
+		expect(
+			isProtectDeployment(undefined, "https://protect.client.com/"),
+		).toBe(false);
+		expect(isProtectDeployment("https://client.com/", undefined)).toBe(false);
+		expect(isProtectDeployment(null, null)).toBe(false);
+		expect(
+			isProtectDeployment("not a url", "https://protect.client.com/"),
+		).toBe(false);
 	});
 });
