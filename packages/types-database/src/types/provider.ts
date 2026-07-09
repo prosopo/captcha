@@ -715,6 +715,13 @@ SessionRecordSchema.index(
 	{ background: true, sparse: true },
 );
 SessionRecordSchema.index({ ruleHash: 1 }, { background: true, sparse: true });
+// Escalation analytics — sparse because ordinary frictionless sessions
+// omit the field, so the index only carries the small subset of records
+// minted by the post-PoW router.
+SessionRecordSchema.index(
+	{ isEscalation: 1, createdAt: 1 },
+	{ background: true, sparse: true },
+);
 // Compound indexes for session aggregation queries
 SessionRecordSchema.index({
 	createdAt: 1,
