@@ -356,8 +356,7 @@ export class NativeLogger implements Logger {
 		// `data.requestId` for backwards compat with existing dashboards.
 		const dataMaybeRequestId = data as { requestId?: unknown } | undefined;
 		const reqId =
-			dataMaybeRequestId &&
-			typeof dataMaybeRequestId.requestId === "string"
+			dataMaybeRequestId && typeof dataMaybeRequestId.requestId === "string"
 				? dataMaybeRequestId.requestId
 				: undefined;
 		const baseRecord: {
