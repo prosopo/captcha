@@ -348,15 +348,31 @@ export class NativeLogger implements Logger {
 		if (this.defaultData) {
 			data = { ...this.defaultData, ...data };
 		}
+		// Promote `requestId` (set via `.with({requestId})` in the request
+		// logger middleware) to a top-level `req_id` on the emitted record.
+		// OpenObserve indexes top-level fields as their own columns, so this
+		// makes `WHERE req_id = '…'` cheap and lets us correlate to Caddy's
+		// `X-Request-ID` without a schema alias per stream. Keep the copy in
+		// `data.requestId` for backwards compat with existing dashboards.
+		const dataMaybeRequestId = data as { requestId?: unknown } | undefined;
+		const reqId =
+			dataMaybeRequestId &&
+			typeof dataMaybeRequestId.requestId === "string"
+				? dataMaybeRequestId.requestId
+				: undefined;
 		const baseRecord: {
 			scope: string;
 			ts: string;
 			level: LogLevel;
+			req_id?: string;
 			data?: LogObject;
 			msg?: string;
 			err?: string;
 			errData?: Record<string, unknown>;
 		} = { scope: this.scope, ts, level };
+		if (reqId) {
+			baseRecord.req_id = reqId;
+		}
 		if (data) {
 			baseRecord.data = data;
 		}
