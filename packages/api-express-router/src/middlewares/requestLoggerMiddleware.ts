@@ -27,13 +27,18 @@ const getHeaderValue = (
 	return undefined;
 };
 
+const HEALTH_CHECK_PATHS = new Set(["/healthz", "/health", "/readyz"]);
+
 export function requestLoggerMiddleware(env: ProviderEnvironment) {
 	return (req: Request, res: Response, next: NextFunction) => {
+		// Honour an inbound `x-request-id` (Caddy/upstream proxy assigns one and
+		// we want the same value to link Caddy access logs to Node app logs).
+		// Fall back to `e-<uuid>` when the upstream didn't set one.
 		const requestId =
-			(req.headers["x-request-id"] as string) || `e-${uuidv4()}`; // use prefix to differentiate from other IDs
+			(req.headers["x-request-id"] as string) || `e-${uuidv4()}`;
 		const user = getHeaderValue(req, "prosopo-user");
 		const siteKey = getHeaderValue(req, "prosopo-site-key");
-		const sessionId = req.body?.sessionId ? req.body.sessionId : null;
+		const sessionId = req.body?.sessionId ? req.body.sessionId : undefined;
 
 		const logger = getLogger(
 			parseLogLevel(env.config.logLevel),
@@ -45,11 +50,55 @@ export function requestLoggerMiddleware(env: ProviderEnvironment) {
 			...(sessionId ? { sessionId } : {}),
 		});
 
-		// Attach logger to the request
 		req.logger = logger;
 		req.requestId = requestId;
 
-		// Continue to next middleware
+		// Mirror the requestId back to the client so downstream systems can
+		// correlate their own logs to ours.
+		res.setHeader("x-request-id", requestId);
+
+		// Skip request/response envelope logging for high-volume health probes
+		// so they don't drown out useful captcha-endpoint entries.
+		if (HEALTH_CHECK_PATHS.has(req.path)) {
+			next();
+			return;
+		}
+
+		// Emit a single request-received line so every endpoint has an entry
+		// log in OpenObserve even when the handler itself doesn't log. Kept at
+		// info level; drop to debug if the volume becomes a problem.
+		const startNs = process.hrtime.bigint();
+		logger.info(() => ({
+			msg: "Request received",
+			data: {
+				method: req.method,
+				path: req.path,
+			},
+		}));
+
+		// Log a response-finished line. `finish` fires when the response was
+		// sent successfully; `close` fires when the client disconnects before
+		// the response was fully sent. Guard against both firing (once() would
+		// only cover a single event source).
+		let finished = false;
+		const emitFinish = (outcome: "finish" | "close") => {
+			if (finished) return;
+			finished = true;
+			const durationMs = Number(process.hrtime.bigint() - startNs) / 1e6;
+			logger.info(() => ({
+				msg: "Response sent",
+				data: {
+					method: req.method,
+					path: req.path,
+					status: res.statusCode,
+					durationMs,
+					outcome,
+				},
+			}));
+		};
+		res.on("finish", () => emitFinish("finish"));
+		res.on("close", () => emitFinish("close"));
+
 		next();
 	};
 }
