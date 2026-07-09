@@ -126,7 +126,7 @@ export const Checkbox: FC<CheckboxProps> = ({
 	const checkboxStyle: CSSProperties = useMemo(() => {
 		// White (token) tick painted directly onto the box so the checked state is
 		// identical in light and dark mode — the native control can't be themed.
-		const tickColor = theme.palette.checkbox.tick.replace("#", "%23");
+		const tickColor = encodeURIComponent(theme.palette.checkbox.tick);
 		const checkImage = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='${tickColor}' d='M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E")`;
 		return {
 			...baseStyle,
