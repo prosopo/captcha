@@ -81,6 +81,7 @@ export default (
 				mode,
 				simdReadings,
 				currentUrl: reportedCurrentUrl,
+				iframeUrl: reportedIframeUrl,
 			} = GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
 
 			// Re-sanitise whatever the client reported: keep only scheme + host
@@ -89,7 +90,12 @@ export default (
 			// undefined when the field is absent or not a usable http(s) URL —
 			// the decision machine treats that as "not reported" and forces an
 			// image captcha.
+			//
+			// `iframeUrl` is only populated when the widget was embedded and
+			// is optional — its absence just means "widget was the top frame".
+			// It's not gated in the decision machine; recorded for analytics.
 			const currentUrl = sanitisePageUrl(reportedCurrentUrl);
+			const iframeUrl = sanitisePageUrl(reportedIframeUrl);
 
 			const normalizedIp = normalizeRequestIp(req.ip, req.logger);
 			const sessionMode =
@@ -528,6 +534,7 @@ export default (
 				decryptedHeadHash,
 				siteKey: dapp,
 				...(currentUrl && { currentUrl }),
+				...(iframeUrl && { iframeUrl }),
 				ipInfo: req.ipInfo,
 				headers: flatHeaders,
 				mode: sessionMode,

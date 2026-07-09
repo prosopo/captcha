@@ -27,22 +27,25 @@ import type {
 import type { BotDetectionFunctionResult } from "@prosopo/types";
 import { DetectorLoader } from "./detectorLoader.js";
 
-// The page the widget is rendered on, reduced to origin + path. Deliberately
-// built from `origin` + `pathname` (never `href`) so the query string,
-// fragment, and any embedded `user:pass@` credentials never leave the browser
-// — sites routinely carry tokens / session ids / reset codes in those parts.
-// Returns undefined in non-browser contexts (SSR / tests) or for opaque
-// origins; the provider then treats the session as having no page URL and
-// forces an image captcha.
+// The page(s) the widget is rendered on, reduced to origin + path.
+// Deliberately built from `origin` + `pathname` (never `href`) so the query
+// string, fragment, and any embedded `user:pass@` credentials never leave the
+// browser — sites routinely carry tokens / session ids / reset codes in those
+// parts.
 //
-// When we're loaded inside an iframe (Protect's site-wide embed) the local
-// `window.location` is the iframe URL, which conveys nothing about the page
-// the user is actually on — every session across the tenant ends up
-// reporting the same widget endpoint. Same-origin iframes let us read the
-// top frame directly; cross-origin iframes fall through to `document.referrer`,
-// which the browser fills with the embedding page URL subject to
-// Referrer-Policy. Only when both are unavailable do we fall back to the
-// iframe's own URL, matching the previous behaviour.
+// Returns two fields:
+//   - `currentUrl`: the top-frame URL as best we can determine it. Same-origin
+//     iframes read it directly; cross-origin iframes fall back to
+//     `document.referrer`, which the browser fills with the embedding page URL
+//     subject to Referrer-Policy. When neither is available the field falls
+//     back to the local (iframe) URL so the provider still sees a value.
+//   - `iframeUrl`: the widget's own frame URL when we're embedded. Undefined
+//     when the widget IS the top frame — nothing to distinguish. Emitted so
+//     downstream analytics can separate "Protect's site-wide iframe endpoint"
+//     from "the page the user was actually on".
+//
+// Both fields are undefined in non-browser contexts (SSR / tests) or for
+// opaque origins.
 const sanitiseHref = (href: string): string | undefined => {
 	try {
 		const u = new URL(href);
@@ -53,9 +56,14 @@ const sanitiseHref = (href: string): string | undefined => {
 	}
 };
 
-const getCurrentPageUrl = (): string | undefined => {
+type PageUrls = {
+	currentUrl: string | undefined;
+	iframeUrl: string | undefined;
+};
+
+const getCurrentPageUrls = (): PageUrls => {
 	if (typeof window === "undefined" || !window.location) {
-		return undefined;
+		return { currentUrl: undefined, iframeUrl: undefined };
 	}
 	const local = (() => {
 		const { origin, pathname } = window.location;
@@ -63,14 +71,16 @@ const getCurrentPageUrl = (): string | undefined => {
 		return `${origin}${pathname || ""}`;
 	})();
 
-	// Top window — the iframe path doesn't apply.
-	if (window === window.top) return local;
+	// Top window — no iframe distinction, report the local URL only.
+	if (window === window.top) {
+		return { currentUrl: local, iframeUrl: undefined };
+	}
 
 	// Same-origin iframe — read the top URL directly.
 	try {
 		const topHref = window.top?.location?.href;
 		const sanitised = topHref ? sanitiseHref(topHref) : undefined;
-		if (sanitised) return sanitised;
+		if (sanitised) return { currentUrl: sanitised, iframeUrl: local };
 	} catch {
 		/* cross-origin — fall through */
 	}
@@ -79,10 +89,13 @@ const getCurrentPageUrl = (): string | undefined => {
 	// subject to the parent's Referrer-Policy header.
 	if (typeof document !== "undefined" && document.referrer) {
 		const fromReferrer = sanitiseHref(document.referrer);
-		if (fromReferrer) return fromReferrer;
+		if (fromReferrer) return { currentUrl: fromReferrer, iframeUrl: local };
 	}
 
-	return local;
+	// Referrer unavailable — fall back to the iframe URL for `currentUrl` so
+	// the provider still sees a value, and echo it as `iframeUrl` so
+	// downstream can tell the top frame was not observed.
+	return { currentUrl: local, iframeUrl: local };
 };
 
 export const withTimeout = async <T>(
@@ -165,6 +178,7 @@ const customDetectBot: BotDetectionFunction = async (
 	// lets it complete in the worker thread while the network round-trip
 	// burns. Readings still attach on the challenge GET and on solution
 	// submit (first-hop-wins server-side).
+	const { currentUrl, iframeUrl } = getCurrentPageUrls();
 	const captchaPromise = providerApi.getFrictionlessCaptcha(
 		detectionResult.token,
 		detectionResult.encryptHeadHash,
@@ -172,7 +186,8 @@ const customDetectBot: BotDetectionFunction = async (
 		userAccount.account.address,
 		config.mode,
 		undefined,
-		getCurrentPageUrl(),
+		currentUrl,
+		iframeUrl,
 	);
 	if (detectionResult.getSimdReadings) {
 		// Fire-and-forget: triggers the memoised prefetch inside the catcher

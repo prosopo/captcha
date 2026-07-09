@@ -138,6 +138,7 @@ export class FrictionlessManager extends CaptchaManager {
 			decryptedHeadHash: params.decryptedHeadHash,
 			siteKey: params.siteKey,
 			currentUrl: params.currentUrl,
+			iframeUrl: params.iframeUrl,
 			ipInfo: params.ipInfo,
 			headers: params.headers,
 			mode: params.mode,
@@ -191,6 +192,7 @@ export class FrictionlessManager extends CaptchaManager {
 		tcpToChelloUs?: Session["tcpToChelloUs"],
 		chelloToHandshakeUs?: Session["chelloToHandshakeUs"],
 		isEscalation?: Session["isEscalation"],
+		iframeUrl?: Session["iframeUrl"],
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
@@ -215,6 +217,7 @@ export class FrictionlessManager extends CaptchaManager {
 			reason,
 			siteKey,
 			currentUrl,
+			iframeUrl,
 			blocked,
 			deleted,
 			ipInfo,
@@ -371,6 +374,8 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.currentUrl,
 			effectiveParams.tcpToChelloUs,
 			effectiveParams.chelloToHandshakeUs,
+			undefined,
+			effectiveParams.iframeUrl,
 		);
 
 		// Fire-and-forget served-counter writes. Skipped when there's no
@@ -442,6 +447,8 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.currentUrl,
 			effectiveParams.tcpToChelloUs,
 			effectiveParams.chelloToHandshakeUs,
+			undefined,
+			effectiveParams.iframeUrl,
 		);
 	}
 

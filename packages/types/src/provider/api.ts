@@ -560,7 +560,16 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	// server-side and gated in the decision machine (a missing value forces
 	// an image captcha). Optional on the wire so the schema still parses for
 	// older clients — the decision machine handles absence.
+	//
+	// When the widget is embedded in an iframe, `currentUrl` is resolved to
+	// the top-frame URL (same-origin: read directly; cross-origin: via
+	// `document.referrer`). `iframeUrl` carries the widget's own frame URL
+	// alongside so analytics can distinguish "Protect's site-wide iframe
+	// endpoint" from "the page the user was actually on". Undefined when the
+	// widget IS the top frame — nothing to distinguish. Re-sanitised
+	// server-side; not gated in the decision machine.
 	[ApiParams.currentUrl]: boundedString(INPUT_LIMITS.URL).optional(),
+	[ApiParams.iframeUrl]: boundedString(INPUT_LIMITS.URL).optional(),
 });
 
 export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<
