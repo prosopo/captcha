@@ -73,8 +73,7 @@ export default (
 			return res.json(buildPowMaintenanceResponse(user, dapp));
 		}
 
-		const tasks = new Tasks(env);
-		tasks.setLogger(req.logger);
+		const tasks = new Tasks(env, req.logger);
 
 		try {
 			const clientSettings = await tasks.db.getClientRecord(dapp);

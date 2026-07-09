@@ -213,7 +213,16 @@ export class Tasks {
 	}
 
 	setLogger(logger: Logger): void {
-		// Use a logger from the request
+		// Use a logger from the request.
+		//
+		// The Tasks instance and its managers are constructed per-request, so
+		// overwriting their `.logger` refs is safe. `this.db`, however, is a
+		// process-wide singleton from `env.getDb()` — mutating `db.logger` here
+		// races between concurrent requests and stamps the wrong user/siteKey/
+		// sessionId onto log lines emitted from inside DB methods. If a DB
+		// method needs request context in its log output, wrap the call in the
+		// caller (which already has the per-request logger via `this.logger`)
+		// or thread the logger through as an explicit argument.
 		this.logger = logger;
 		this.powCaptchaManager.logger = logger;
 		this.puzzleCaptchaManager.logger = logger;
@@ -221,6 +230,5 @@ export class Tasks {
 		this.imgCaptchaManager.logger = logger;
 		this.clientTaskManager.logger = logger;
 		this.frictionlessManager.logger = logger;
-		this.db.logger = logger; // Ensure the database also uses the new logger
 	}
 }
