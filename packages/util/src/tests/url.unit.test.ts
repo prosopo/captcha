@@ -277,10 +277,7 @@ describe("isProtectDeployment", () => {
 
 	it("rejects iframes not served from protect.<something>", () => {
 		expect(
-			isProtectDeployment(
-				"https://client.com/",
-				"https://widget.client.com/",
-			),
+			isProtectDeployment("https://client.com/", "https://widget.client.com/"),
 		).toBe(false);
 		expect(
 			isProtectDeployment("https://client.com/", "https://client.com/widget"),
@@ -295,9 +292,9 @@ describe("isProtectDeployment", () => {
 	});
 
 	it("returns false when either URL is missing or unparseable", () => {
-		expect(
-			isProtectDeployment(undefined, "https://protect.client.com/"),
-		).toBe(false);
+		expect(isProtectDeployment(undefined, "https://protect.client.com/")).toBe(
+			false,
+		);
 		expect(isProtectDeployment("https://client.com/", undefined)).toBe(false);
 		expect(isProtectDeployment(null, null)).toBe(false);
 		expect(
