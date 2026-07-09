@@ -203,4 +203,45 @@ describe("Admin Routes Provider", () => {
 			expect(mockEnv.db.isConnected()).toBe(false);
 		});
 	});
+
+	describe("Maintenance mode", () => {
+		afterEach(() => {
+			process.env.MAINTENANCE_MODE = undefined;
+		});
+
+		// The admin router must stay registered and functional while
+		// MAINTENANCE_MODE is on — that's how operators add/remove access
+		// rules, detector keys, site keys and decision machines during an
+		// outage. env.getDb() returns a background-connecting handle in
+		// maintenance mode, so building the provider must not throw.
+		it("registers all admin routes when maintenance mode is on", () => {
+			process.env.MAINTENANCE_MODE = "true";
+
+			const adminRoutes = createApiAdminRoutesProvider(mockEnv);
+			const routes = adminRoutes.getRoutes();
+
+			expect(routes[AdminApiPaths.SiteKeyRegister]).toBeDefined();
+			expect(routes[AdminApiPaths.SiteKeyRemove]).toBeDefined();
+			expect(routes[AdminApiPaths.UpdateDetectorKey]).toBeDefined();
+			expect(routes[AdminApiPaths.RemoveDetectorKey]).toBeDefined();
+			expect(routes[AdminApiPaths.UpdateDecisionMachine]).toBeDefined();
+			expect(routes[AdminApiPaths.ToggleMaintenanceMode]).toBeDefined();
+		});
+
+		it("still invokes the DB-backed detector-key endpoint in maintenance mode", async () => {
+			process.env.MAINTENANCE_MODE = "true";
+
+			const adminRoutes = createApiAdminRoutesProvider(mockEnv);
+			const routes = adminRoutes.getRoutes();
+
+			const endpoint = routes[AdminApiPaths.RemoveDetectorKey];
+			expect(endpoint).toBeDefined();
+
+			const result = await endpoint?.processRequest(
+				{ detectorKey: "some-detector-key" },
+				mockLogger,
+			);
+			expect(result).toBeDefined();
+		});
+	});
 });
