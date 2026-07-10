@@ -13,7 +13,10 @@
 // limitations under the License.
 
 import { describe, expect, it } from "vitest";
-import { buildScopedBlockSubQueries } from "#policy/redis/reader/redisRulesSplitQuery.js";
+import {
+	buildScopedBlockSubQueries,
+	buildScopedRulesSubQueries,
+} from "#policy/redis/reader/redisRulesSplitQuery.js";
 
 describe("buildScopedBlockSubQueries", () => {
 	it("emits one sub-query per populated user-scope field", () => {
@@ -128,5 +131,77 @@ describe("buildScopedBlockSubQueries", () => {
 		// Coords hold JSON with brackets and commas — every one must be
 		// backslash-escaped or the TAG query silently returns no matches.
 		expect(coordsSub?.query).toContain("@coords:{\\[\\[\\[100\\,200\\]\\]\\]}");
+	});
+});
+
+describe("buildScopedRulesSubQueries", () => {
+	it("omits @type:{block} when blockOnly is not set", () => {
+		// The non-block path — used by the frictionless access-policy
+		// lookup — must not filter on rule type so both Block and
+		// Restrict rules are returned. JS-side rankCandidateRules then
+		// picks the right one via severity + specificity.
+		const subs = buildScopedRulesSubQueries(
+			{ numericIp: 1376899398n },
+			"client-A",
+		);
+
+		for (const sub of subs) {
+			expect(sub.query).not.toContain("@type:{block}");
+		}
+	});
+
+	it("includes @type:{block} when blockOnly is true", () => {
+		const subs = buildScopedRulesSubQueries(
+			{ numericIp: 1376899398n },
+			"client-A",
+			{ blockOnly: true },
+		);
+
+		for (const sub of subs) {
+			expect(sub.query).toContain("@type:{block}");
+		}
+	});
+
+	it("emits the same probe kinds regardless of blockOnly", () => {
+		// The probe set is driven by populated request scope, not by
+		// rule-type filter. blockOnly only narrows what each probe
+		// returns; the shape of the split stays identical.
+		const withoutBlock = buildScopedRulesSubQueries(
+			{ numericIp: 1376899398n, ja4Hash: "abc" },
+			"client-A",
+		);
+		const withBlock = buildScopedRulesSubQueries(
+			{ numericIp: 1376899398n, ja4Hash: "abc" },
+			"client-A",
+			{ blockOnly: true },
+		);
+
+		expect(withoutBlock.map((s) => s.kind).sort()).toEqual(
+			withBlock.map((s) => s.kind).sort(),
+		);
+	});
+
+	it("produces an ip-exact probe that hits the numericIp posting list", () => {
+		// This is the regression guard for the Twickets rule-lookup bug:
+		// a request with a specific IP must generate a probe that hits
+		// the @numericIp posting list, so a Restrict rule scoped only
+		// to `clientId + numericIp` is fetched even when the tenant has
+		// thousands of higher-specificity irrelevant rules on other
+		// scopes. The previous FT.AGGREGATE ranker capped candidates at
+		// top-20 by populated-field count and truncated the specific-IP
+		// rule below higher-specificity SUDDEN_VOLUME_INCREASE / SIMD
+		// rules that also matched the greedy `ismissing(@field)`
+		// disjunction.
+		const subs = buildScopedRulesSubQueries(
+			{ numericIp: 1376899398n },
+			"5EZVvsHMrKCFKp5NYNoTyDjTjetoVo1Z4UNNbTwJf1GfN6Xm",
+		);
+
+		const ipExact = subs.find((s) => s.kind === "ip:exact");
+		expect(ipExact).toBeDefined();
+		expect(ipExact?.query).toContain("@numericIp:[1376899398 1376899398]");
+		expect(ipExact?.query).toContain(
+			"@clientId:{5EZVvsHMrKCFKp5NYNoTyDjTjetoVo1Z4UNNbTwJf1GfN6Xm}",
+		);
 	});
 });
