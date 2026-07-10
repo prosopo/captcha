@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-frictionless",
-	"version": "2.12.11",
+	"version": "2.12.12",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "dist/index.js",
@@ -28,16 +28,18 @@
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --project tsconfig.types.json"
 	},
-	"browserslist": ["> 0.5%, last 2 versions, not dead"],
+	"browserslist": [
+		"> 0.5%, last 2 versions, not dead"
+	],
 	"dependencies": {
 		"@prosopo/api": "3.5.15",
-		"@prosopo/common": "3.1.44",
+		"@prosopo/common": "3.1.45",
 		"@prosopo/detector": "3.5.9",
 		"@prosopo/locale": "3.2.6",
-		"@prosopo/procaptcha-common": "2.11.9",
-		"@prosopo/procaptcha-pow": "2.10.15",
-		"@prosopo/procaptcha-puzzle": "2.10.30",
-		"@prosopo/procaptcha-react": "2.9.88",
+		"@prosopo/procaptcha-common": "2.11.10",
+		"@prosopo/procaptcha-pow": "2.10.16",
+		"@prosopo/procaptcha-puzzle": "2.10.31",
+		"@prosopo/procaptcha-react": "2.9.89",
 		"@prosopo/types": "4.9.8",
 		"@prosopo/widget-skeleton": "2.8.4",
 		"dotenv": "16.4.5",

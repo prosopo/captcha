@@ -1,5 +1,10 @@
 # @prosopo/keyring
 
+## 2.9.56
+### Patch Changes
+
+  - @prosopo/common@3.1.45
+
 ## 2.9.55
 ### Patch Changes
 
