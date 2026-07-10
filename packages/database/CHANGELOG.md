@@ -1,5 +1,17 @@
 # @prosopo/database
 
+## 3.15.12
+### Patch Changes
+
+- 29b5c6a: Include `currentUrl` and `iframeUrl` in the `getSessionRecordBySessionId` projection so `buildEscalation` forwards them onto the escalated session. Without this, every post-PoW routed session was persisted with `currentUrl: undefined`, dropping URL attribution on the PoW → image/puzzle hop.
+- Updated dependencies [6abff15]
+- Updated dependencies [b07b448]
+  - @prosopo/logger@2.0.3
+  - @prosopo/user-access-policy@3.12.3
+  - @prosopo/common@3.1.45
+  - @prosopo/redis-client@1.0.29
+  - @prosopo/types-database@4.11.11
+
 ## 3.15.11
 ### Patch Changes
 
