@@ -20,7 +20,7 @@ import {
 	REDIS_QUERY_DIALECT,
 	getRulesRedisQuery,
 } from "#policy/redis/reader/redisRulesQuery.js";
-import { buildScopedBlockSubQueries } from "#policy/redis/reader/redisRulesSplitQuery.js";
+import { buildScopedRulesSubQueries } from "#policy/redis/reader/redisRulesSplitQuery.js";
 import {
 	REDIS_BATCH_SIZE,
 	fetchRedisHashRecords,
@@ -137,6 +137,39 @@ const RULE_LOAD_FIELDS = [
 	"@numericIpMaskMax",
 ] as const;
 
+// Populated-field count for reader-level rank (mirrors the JS ranker's
+// specificity semantics without any request-scope dependence — the reader
+// doesn't have the request scope). Enough to preserve the sort the old
+// FT.AGGREGATE ranker imposed on findRules callers.
+const readerSpecificity = (rule: AccessRule): number => {
+	let score = 0;
+	if (rule.clientId !== undefined) score++;
+	if (rule.userId !== undefined) score++;
+	if (rule.ja4Hash !== undefined) score++;
+	if (rule.headersHash !== undefined) score++;
+	if (rule.userAgentHash !== undefined) score++;
+	if (rule.headHash !== undefined) score++;
+	if (rule.coords !== undefined) score++;
+	if (rule.countryCode !== undefined) score++;
+	if (rule.asn !== undefined) score++;
+	if (rule.os !== undefined) score++;
+	if (rule.numericIp !== undefined) score++;
+	if (rule.numericIpMaskMin !== undefined) score++;
+	return score;
+};
+
+// Sort by (specificity desc, block-first). Matches the ranking the old
+// FT.AGGREGATE `RANK_EXPR = (_spec * 2) + _sev` imposed server-side, so
+// callers that consume the reader directly see the same ordering.
+const sortByReaderRank = (rules: AccessRule[]): AccessRule[] =>
+	[...rules].sort((a, b) => {
+		const specDelta = readerSpecificity(b) - readerSpecificity(a);
+		if (specDelta !== 0) return specDelta;
+		const aBlock = a.type === AccessPolicyType.Block ? 1 : 0;
+		const bBlock = b.type === AccessPolicyType.Block ? 1 : 0;
+		return bBlock - aBlock;
+	});
+
 export class RedisRulesReader implements AccessRulesReader {
 	constructor(
 		private readonly client: RedisClientType,
@@ -190,27 +223,24 @@ export class RedisRulesReader implements AccessRulesReader {
 			return [];
 		}
 
-		// Hot path (checkForHardBlock / blockMiddleware): the strict-match
-		// caller passes blockOnly + a userScope, and every field returned
-		// gets JS-side re-ranked by rankCandidateRules anyway. Route it
-		// through the split-query path — one FT probe per populated
-		// request field, each using its own posting list — instead of the
-		// single wide FT.AGGREGATE whose APPLY step scaled linearly in
-		// the tenant's total rule count and tipped over under large
-		// bulk-ban populations.
-		if (
-			matchingFieldsOnly &&
-			filter.blockOnly &&
-			filter.userScope !== undefined
-		) {
-			return this.findBlockRulesSplit(filter);
-		}
-
-		// Non-hot-path matchingFieldsOnly (e.g. Restrict-only lookups):
-		// keep the pre-existing server-side-ranked single query. Not on
-		// the hot path so the APPLY overhead is acceptable.
-		if (matchingFieldsOnly) {
-			return this.findRulesRanked(filter, query);
+		// Hot path (all strict-match lookups): route every
+		// matchingFieldsOnly caller through the split-query path — one FT
+		// probe per populated request field, each using its own posting
+		// list — instead of the single wide FT.AGGREGATE. `blockOnly`
+		// narrows the sub-queries to `@type:{block}` for the hard-block
+		// middleware; every other caller (frictionless access-policy
+		// lookup, verify-time hard-block re-check) fetches both Block
+		// and Restrict rules and lets `rankCandidateRules` pick.
+		//
+		// The previous FT.AGGREGATE ranker used for the non-block path
+		// silently dropped specific-IP Restrict rules from the top-N
+		// when many higher-specificity irrelevant rules matched the
+		// greedy `ismissing(@field)` disjunction — the union-of-probes
+		// shape here can't hit that failure mode because each probe
+		// only returns rules where the probed field is actually
+		// populated with the request's value.
+		if (matchingFieldsOnly && filter.userScope !== undefined) {
+			return this.findRulesSplit(filter);
 		}
 
 		// Admin / internal callers (greedy mode): keep the FT.SEARCH +
@@ -225,7 +255,11 @@ export class RedisRulesReader implements AccessRulesReader {
 	// strict "every populated rule field matches request" semantics —
 	// FT can't express that shape cheaply and the previous server-side
 	// APPLY / SORTBY imposed the linear-per-rule cost we're eliminating.
-	private async findBlockRulesSplit(
+	//
+	// Handles both blockOnly (hard-block middleware) and non-blockOnly
+	// (frictionless access-policy lookup) callers via the `blockOnly`
+	// flag on the sub-query builder.
+	private async findRulesSplit(
 		filter: AccessRulesFilter,
 	): Promise<AccessRule[]> {
 		const userScope = filter.userScope;
@@ -234,7 +268,9 @@ export class RedisRulesReader implements AccessRulesReader {
 		}
 		const clientId = filter.policyScope?.clientId;
 
-		const subQueries = buildScopedBlockSubQueries(userScope, clientId);
+		const subQueries = buildScopedRulesSubQueries(userScope, clientId, {
+			...(filter.blockOnly === true && { blockOnly: true }),
+		});
 
 		try {
 			const keyLists = await Promise.all(
@@ -263,7 +299,7 @@ export class RedisRulesReader implements AccessRulesReader {
 									{ depth: null },
 								),
 							},
-							msg: "failed to execute split block sub-query",
+							msg: "failed to execute split rule sub-query",
 						}));
 						return [];
 					}),
@@ -284,7 +320,7 @@ export class RedisRulesReader implements AccessRulesReader {
 			const ruleKeys = [...uniqueKeys];
 
 			this.logger.debug(() => ({
-				msg: "Executed split block sub-queries",
+				msg: "Executed split rule sub-queries",
 				data: {
 					inspect: util.inspect(
 						{
@@ -311,14 +347,28 @@ export class RedisRulesReader implements AccessRulesReader {
 				(record) => Object.keys(record).length > 0,
 			);
 
-			return parseRedisRecords(nonEmptyRecords, accessRuleInput, this.logger);
+			const parsedRules = parseRedisRecords(
+				nonEmptyRecords,
+				accessRuleInput,
+				this.logger,
+			);
+
+			// Preserve the reader-level (specificity desc, block-first)
+			// ordering the old FT.AGGREGATE ranker gave. Split sub-queries
+			// return keys per-probe (i.e. in insertion order), so without
+			// this sort the caller sees candidates in a shape the previous
+			// implementation never returned. Downstream callers
+			// (`rankCandidateRules` in the provider) do a full re-sort, so
+			// this is purely a defence against silent behaviour changes
+			// for anyone else that consumes the reader directly.
+			return sortByReaderRank(parsedRules);
 		} catch (e) {
 			this.logger.error(() => ({
 				err: e,
 				data: {
 					inspect: util.inspect({ filter }, { depth: null }),
 				},
-				msg: "failed to execute split block query set",
+				msg: "failed to execute split rule query set",
 			}));
 			return [];
 		}

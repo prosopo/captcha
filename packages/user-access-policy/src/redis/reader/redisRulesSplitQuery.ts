@@ -93,7 +93,7 @@ type SubQuery = {
 
 /**
  * Build the set of FT sub-queries that together cover every rule that
- * could apply to a request for hard-block resolution.
+ * could apply to a request.
  *
  * The single-query design this replaces produced one FT.AGGREGATE whose
  * candidate set was the entire scope's rule pool — the APPLY / SORTBY
@@ -105,19 +105,32 @@ type SubQuery = {
  * instead of forcing a full-set scan.
  *
  * A single fall-through probe covers rules with no user-scope constraint
- * (client-wide block); those are rare so the ismissing()-heavy query is
- * cheap in practice.
+ * (client-wide restriction); those are rare so the ismissing()-heavy
+ * query is cheap in practice.
  *
  * Rank + strict-match filtering happens in JS via `rankCandidateRules`
  * after the union — the FT layer is used purely as a candidate fetcher.
+ *
+ * `blockOnly` narrows the candidate set to rules with `type:{block}` —
+ * used by the hard-block middleware which never needs Restrict rules.
+ * Every other caller passes false so both Block and Restrict rules are
+ * fetched; the JS-side ranker picks the right one via specificity +
+ * severity. Merging the block and restrict paths behind one split-query
+ * fixed the Twickets IP-rule regression: the previous FT.AGGREGATE ranker
+ * used for non-block lookups was truncating specific-IP restrict rules
+ * out of the top-N when many higher-specificity irrelevant rules matched
+ * the greedy `ismissing()` disjunction.
  */
-export const buildScopedBlockSubQueries = (
+export const buildScopedRulesSubQueries = (
 	userScope: UserScope,
 	clientId: string | undefined,
+	options: { blockOnly?: boolean } = {},
 ): SubQuery[] => {
-	const typeClause = `@type:{${AccessPolicyType.Block}}`;
+	const typeClause = options.blockOnly
+		? `@type:{${AccessPolicyType.Block}} `
+		: "";
 	const scopeClause = buildScopeClause(clientId);
-	const prefix = `${typeClause} ${scopeClause}`;
+	const prefix = `${typeClause}${scopeClause}`;
 
 	const subQueries: SubQuery[] = [];
 
@@ -168,3 +181,15 @@ export const buildScopedBlockSubQueries = (
 
 	return subQueries;
 };
+
+/**
+ * Backwards-compatible alias for the previous block-only builder. New
+ * callers should use `buildScopedRulesSubQueries` directly.
+ *
+ * @deprecated use `buildScopedRulesSubQueries(..., { blockOnly: true })`
+ */
+export const buildScopedBlockSubQueries = (
+	userScope: UserScope,
+	clientId: string | undefined,
+): SubQuery[] =>
+	buildScopedRulesSubQueries(userScope, clientId, { blockOnly: true });
