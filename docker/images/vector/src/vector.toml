@@ -810,6 +810,46 @@ source = '''
 '''
 
 # =============================================================================
+# MONGODB EXPORTER METRICS (Percona)
+# =============================================================================
+# Source: Richer MongoDB metrics from the percona/mongodb_exporter sidecar.
+# Adds replication, per-collection/index stats, query exec stats and connection
+# pool detail that the built-in mongodb_metrics source above does not expose.
+[sources.mongodb_exporter_metrics]
+type = "prometheus_scrape"
+endpoints = [ "http://mongodb-exporter:9216/metrics" ]
+scrape_interval_secs = 30
+
+# Transform: Add host and environment tags to MongoDB exporter metrics
+[transforms.mongodb_exporter_metrics_format]
+type = "remap"
+inputs = ["mongodb_exporter_metrics"]
+source = '''
+.tags.host=get_env_var!("OO_HOST")
+.tags.env=get_env_var!("NODE_ENV")
+'''
+
+# =============================================================================
+# SMARTCTL DISK HEALTH METRICS
+# =============================================================================
+# Source: Disk SMART health metrics from the smartctl-exporter sidecar.
+# Reallocated sectors, temperature, wear levelling and predicted failure for the
+# host's physical disks — not captured by host_metrics or cadvisor.
+[sources.smartctl_metrics]
+type = "prometheus_scrape"
+endpoints = [ "http://smartctl-exporter:9633/metrics" ]
+scrape_interval_secs = 30
+
+# Transform: Add host and environment tags to smartctl metrics
+[transforms.smartctl_metrics_format]
+type = "remap"
+inputs = ["smartctl_metrics"]
+source = '''
+.tags.host=get_env_var!("OO_HOST")
+.tags.env=get_env_var!("NODE_ENV")
+'''
+
+# =============================================================================
 # METRICS SINKS
 # =============================================================================
 
@@ -817,7 +857,7 @@ source = '''
 # Uses Prometheus Remote Write protocol for efficient metric transmission
 [sinks.oo_metrics]
 type = "prometheus_remote_write"
-inputs = ["host_metrics_format", "vector_metrics_format", "cadvisor_metrics_format", "mongodb_metrics_format", "redis_metrics_format", "caddy_metrics_format"]
+inputs = ["host_metrics_format", "vector_metrics_format", "cadvisor_metrics_format", "mongodb_metrics_format", "mongodb_exporter_metrics_format", "smartctl_metrics_format", "redis_metrics_format", "caddy_metrics_format"]
 endpoint = "https://oo.prosopo.io/api/dev_organization_29569_u24VnjrjN7XrP35/prometheus/api/v1/write"
 
 [sinks.oo_metrics.auth]
@@ -844,7 +884,7 @@ when_full = "drop_newest"
 # Backup destination for metrics redundancy and disaster recovery
 [sinks.oo2_metrics]
 type = "prometheus_remote_write"
-inputs = ["host_metrics_format", "vector_metrics_format", "cadvisor_metrics_format", "mongodb_metrics_format", "redis_metrics_format", "caddy_metrics_format"]
+inputs = ["host_metrics_format", "vector_metrics_format", "cadvisor_metrics_format", "mongodb_metrics_format", "mongodb_exporter_metrics_format", "smartctl_metrics_format", "redis_metrics_format", "caddy_metrics_format"]
 endpoint = "https://oo2.prosopo.io/api/default/prometheus/api/v1/write"
 
 [sinks.oo2_metrics.auth]
