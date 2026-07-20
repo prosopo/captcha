@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/account",
-	"version": "2.8.58",
+	"version": "2.8.59",
 	"description": "Services and Utils for Prosopo account gen and management",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
