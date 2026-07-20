@@ -1,5 +1,11 @@
 # @prosopo/procaptcha-common
 
+## 2.11.11
+### Patch Changes
+
+- Updated dependencies [ced80a4]
+  - @prosopo/account@2.8.58
+
 ## 2.11.10
 ### Patch Changes
 
