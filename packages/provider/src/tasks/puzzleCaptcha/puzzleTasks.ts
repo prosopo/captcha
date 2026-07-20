@@ -690,6 +690,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 			const dnsAsymmetry = computeDnsAsymmetry(
 				enrichedDnsEvent,
 				challengeRecord.ipInfo,
+				trafficFilter,
 			);
 			if (dnsAsymmetry > 0) {
 				sessionRecord.scoreComponents = {
