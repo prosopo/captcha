@@ -135,6 +135,15 @@ const customDetectBot: BotDetectionFunction = async (
 	]);
 	const ext = new ExtClass();
 
+	// Kick off account generation as soon as the ExtensionWeb2 class is
+	// loaded, before `detect()` starts. sr25519 keypair derivation runs in
+	// the CryptoWorker (see ExtensionWeb2.createAccount), so this fires the
+	// worker task at the earliest possible point in the widget lifecycle.
+	// Wrapped as a memoised factory so `detect()`'s Promise.all pattern still
+	// works and a second call inside detect doesn't re-derive.
+	const accountPromise = ext.getAccount(config);
+	const accountGenerator = () => accountPromise;
+
 	// The detector bundle still expects the legacy 5-arg signature
 	// `(env, randomProviderSelectorFn, container, restart, accountGenerator)`.
 	// Until the bundle is rebuilt without the provider selector, hand it a
@@ -145,7 +154,7 @@ const customDetectBot: BotDetectionFunction = async (
 		async () => getProcaptchaRandomActiveProvider(config.defaultEnvironment),
 		container,
 		restartFn,
-		() => ext.getAccount(config),
+		accountGenerator,
 	);
 
 	const userAccount = detectionResult.userAccount;
