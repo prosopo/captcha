@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import type { PuzzleEvent } from "@prosopo/types";
+import type { Theme } from "@prosopo/widget-skeleton";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 interface PuzzleCanvasProps {
@@ -27,6 +28,7 @@ interface PuzzleCanvasProps {
 	) => void;
 	showRetry: boolean;
 	submitting: boolean;
+	theme: Theme;
 }
 
 const CONTAINER_WIDTH = 300;
@@ -50,6 +52,7 @@ export const PuzzleCanvas = ({
 	onComplete,
 	showRetry,
 	submitting,
+	theme,
 }: PuzzleCanvasProps) => {
 	const [posX, setPosX] = useState<number>(originX);
 	const [posY, setPosY] = useState<number>(originY);
@@ -213,10 +216,17 @@ export const PuzzleCanvas = ({
 		: "Drag the piece to the target";
 
 	const headerBorderColor = showRetry
-		? "rgba(220, 53, 69, 0.4)"
+		? theme.palette.error.main
 		: "transparent";
 
-	const headerTextColor = showRetry ? "#dc3545" : "#333";
+	const headerTextColor = showRetry
+		? theme.palette.error.main
+		: theme.palette.onSurface;
+
+	// Material 3 purple tonal puzzle surface + affordances (mode-specific values
+	// come from the theme's puzzle tokens).
+	const puzzleAreaBg = `linear-gradient(135deg, ${theme.palette.surface} 0%, ${theme.palette.primaryContainer.main} 50%, ${theme.palette.surface} 100%)`;
+	const puzzle = theme.palette.puzzle;
 
 	return (
 		<div
@@ -250,20 +260,17 @@ export const PuzzleCanvas = ({
 				{/* Instruction text */}
 				<div
 					style={{
-						backgroundColor: "#fff",
-						borderRadius: "8px 8px 0 0",
+						backgroundColor: theme.palette.surface,
+						borderRadius: "20px 20px 0 0",
 						padding: "12px 20px",
 						width: `${CONTAINER_WIDTH}px`,
 						boxSizing: "border-box",
 						textAlign: "center",
-						fontFamily:
-							'-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+						fontFamily: theme.font.fontFamily,
 						fontSize: "14px",
 						fontWeight: 500,
 						color: headerTextColor,
 						borderBottom: `2px solid ${headerBorderColor}`,
-						boxShadow:
-							"0px 11px 15px -7px rgba(0,0,0,0.2), 0px 24px 38px 3px rgba(0,0,0,0.14), 0px 9px 46px 8px rgba(0,0,0,0.12)",
 						transition: "color 0.3s ease, border-color 0.3s ease",
 					}}
 				>
@@ -277,13 +284,10 @@ export const PuzzleCanvas = ({
 						position: "relative",
 						width: `${CONTAINER_WIDTH}px`,
 						height: `${CONTAINER_HEIGHT}px`,
-						background:
-							"linear-gradient(135deg, #e8eaf6 0%, #c5cae9 50%, #e8eaf6 100%)",
-						borderRadius: "0 0 8px 8px",
+						background: puzzleAreaBg,
+						borderRadius: "0 0 20px 20px",
 						overflow: "hidden",
 						userSelect: "none",
-						boxShadow:
-							"0px 11px 15px -7px rgba(0,0,0,0.2), 0px 24px 38px 3px rgba(0,0,0,0.14), 0px 9px 46px 8px rgba(0,0,0,0.12)",
 						opacity: submitting ? 0.6 : 1,
 						pointerEvents: submitting ? "none" : "auto",
 						transition: "opacity 0.2s ease",
@@ -298,8 +302,8 @@ export const PuzzleCanvas = ({
 							width: `${TARGET_SIZE}px`,
 							height: `${TARGET_SIZE}px`,
 							borderRadius: "50%",
-							border: "2px dashed rgba(74, 144, 217, 0.6)",
-							backgroundColor: "rgba(74, 144, 217, 0.08)",
+							border: `2px dashed ${puzzle.targetBorder}`,
+							backgroundColor: puzzle.targetFill,
 							boxSizing: "border-box",
 						}}
 					/>
@@ -314,19 +318,21 @@ export const PuzzleCanvas = ({
 							width: `${PIECE_SIZE}px`,
 							height: `${PIECE_SIZE}px`,
 							borderRadius: "50%",
-							background:
-								"radial-gradient(circle at 40% 40%, #6ab0ff, #4a90d9)",
+							background: puzzle.pieceGradient,
 							cursor: submitting
 								? "default"
 								: isDragging.current
 									? "grabbing"
 									: "grab",
-							boxShadow: isDragging.current
-								? "0 4px 12px rgba(74, 144, 217, 0.5)"
-								: "0 2px 6px rgba(74, 144, 217, 0.3)",
+							// Shadowless drag feedback: an outline ring in place of a
+							// lifted drop shadow.
+							outline: isDragging.current
+								? `3px solid ${puzzle.targetBorder}`
+								: "none",
+							outlineOffset: "2px",
 							transition: isDragging.current
 								? "none"
-								: "box-shadow 0.2s ease, left 0.3s ease, top 0.3s ease",
+								: "outline 0.2s ease, left 0.3s ease, top 0.3s ease",
 						}}
 					/>
 				</div>

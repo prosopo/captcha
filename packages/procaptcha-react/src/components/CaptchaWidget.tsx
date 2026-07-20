@@ -68,6 +68,7 @@ export const CaptchaWidget = ({
 		>
 			{items.map((item, index) => {
 				const hash = getHash(item);
+				const selected = solution.some((s) => s[0] === hash);
 				const imageStyle: Properties<string | number, string> = {
 					// enable the items in the grid to grow in width to use up excess space
 					flexGrow: 1,
@@ -113,7 +114,13 @@ export const CaptchaWidget = ({
 									overflow: "hidden",
 									borderStyle: "solid",
 									borderWidth: "1px",
-									borderColor: theme.palette.grey[300],
+									borderColor: theme.palette.tile.border,
+									borderRadius: selected
+										? theme.shape.tileSelected
+										: theme.shape.tile,
+									transform: selected ? "scale(0.9)" : "none",
+									transition:
+										"transform 200ms cubic-bezier(0.2, 0, 0, 1), border-radius 200ms",
 								}}
 								src={item.data}
 								// biome-ignore lint/a11y/noRedundantAlt: has to contain image
@@ -142,23 +149,26 @@ export const CaptchaWidget = ({
 									alignItems: "center",
 									justifyContent: "center",
 									// make bg half opacity, i.e. shadowing the item's img
-									backgroundColor: "rgba(0,0,0,0.5)",
-									visibility: solution.some((s) => s[0] === hash)
-										? "visible"
-										: "hidden",
+									backgroundColor: theme.palette.overlay,
+									borderRadius: theme.shape.tileSelected,
+									visibility: selected ? "visible" : "hidden",
 								}}
 							>
 								<svg
 									style={{
-										backgroundColor: "transparent",
+										// rounded "secondary container" badge holding the tick
+										backgroundColor: theme.palette.checkbox.fill,
 										// img must be displayed as block otherwise gets a bottom whitespace border
 										display: "block",
-										// how big the overlay icon is
-										width: "35%",
-										height: "35%",
+										// how big the overlay badge is
+										width: "34px",
+										height: "34px",
+										padding: "7px",
+										borderRadius: "50%",
+										boxSizing: "border-box",
 										transition: "fill 200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
 										userSelect: "none",
-										fill: "currentcolor",
+										fill: theme.palette.checkbox.tick,
 									}}
 									focusable="false"
 									color="#fff"
