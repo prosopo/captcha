@@ -1,5 +1,96 @@
 # @prosopo/provider
 
+## 4.15.4
+### Patch Changes
+
+- 44fe294: feat(provider): support `deferToVerify: true` on Restrict rules — serve the challenge, fail at verify
+  
+  Extends `findHardBlockPolicy` in `captchaManager.ts` so that a Restrict rule with `deferToVerify: true` is treated as a hard-block at verify time.
+  
+  Behaviour:
+  
+  - **Frictionless**: the Restrict rule fires as normal — the client is served the configured `captchaType` and `solvedImagesCount` (e.g. `image` / 8 rounds). Compute burden of the challenge is imposed on the caller.
+  - **Verify**: `checkForHardBlock` matches the same rule and marks the commitment `Disapproved` with `ACCESS_POLICY_BLOCK`, so the dApp's `verify()` returns `{verified: false}` regardless of whether the client's solution was correct.
+  
+  Motivation: PROXY_POOL_TLS_NARROW targets solving-farm-backed residential proxy pools that solve image captchas at ~100% (they use human solvers), so we can't stop them by demanding correctness — only by wasting their compute. The existing Restrict/image/8-rounds shape imposes the cost but still lets them through if they solve. Layering `deferToVerify: true` closes that loop: they burn 8 image rounds per session AND fail verify.
+  
+  Test coverage updated in `captchaManager.unit.test.ts`:
+  
+  - Restrict + deferToVerify → returns the policy (new behaviour).
+  - Restrict without deferToVerify → returns undefined (routing rule, unchanged).
+  - All existing Block cases (Block+deferToVerify, Block+no-captchaType, Block+captchaType-without-defer) continue to behave as before.
+
+## 4.15.3
+### Patch Changes
+
+- 6abff15: Fix request-scoped logger fields leaking across concurrent captcha requests, and give every endpoint a proper request/response envelope in OpenObserve.
+  
+  Three interlocking changes:
+  
+  - **`Tasks.setLogger` no longer mutates `db.logger`.** `env.getDb()` returns a
+    process-wide singleton; overwriting `db.logger` on every request meant two
+    concurrent captcha submits raced, and whichever request landed second
+    stamped its `user`/`siteKey`/`sessionId` bindings onto the *other* request's
+    DB-level log lines. In practice you'd see a `PuzzleCaptcha record updated
+    successfully` for user A's challenge tagged with user B's account and site
+    key, breaking log-based forensics. `setLogger` still updates the per-request
+    Tasks instance and its per-request manager instances (those are safe —
+    they're constructed inside the Tasks constructor) but stops mutating the
+    shared DB. Callers in `getPoWCaptchaChallenge` and `getPuzzleCaptchaChallenge`
+    now pass `req.logger` directly into `new Tasks(env, req.logger)` and drop
+    the redundant `.setLogger(req.logger)` call that followed.
+  
+  - **`requestLoggerMiddleware` now emits `Request received` and `Response sent`
+    envelope lines on every route** (with `method`, `path`, `status`,
+    `durationMs`, and the request id). Previously only `/frictionless` had a
+    `res.on('finish', ...)` block, so `getPow/PuzzleCaptchaChallenge`,
+    `submitPow/PuzzleCaptchaSolution`, `verify.ts` etc. produced no envelope in
+    OO — a challenge issued by one endpoint and verified by another shared
+    nothing you could group on. Health-probe paths (`/healthz`, `/health`,
+    `/readyz`) are excluded so they don't drown the stream. The middleware
+    also now mirrors `x-request-id` back on the outbound response so callers
+    downstream of the Node process can correlate without depending on Caddy.
+  
+  - **`requestId` (set on the request logger via `.with({requestId})`) is
+    promoted to a top-level `req_id` field on the emitted JSON log record.**
+    OpenObserve indexes top-level fields as their own columns, so
+    `WHERE req_id = '…'` is now cheap; previously the id only lived inside
+    `data.requestId`, which flattened to `data_requestid` in OO's ingestion
+    and had no top-level column. `data.requestId` is preserved for backwards
+    compatibility with existing dashboards. Two new unit tests in
+    `@prosopo/logger` cover the promotion and the "absent when unset" case.
+- b07b448: fix(user-access-policy): route non-block strict-match rule lookups through the split-query path
+  
+  Live 2026-07-10 Twickets regression: a portal-authored Restrict/image rule scoped to `clientId + numericIp` was silently dropped from the frictionless access-policy lookup even though the rule was correctly stored in Redis and indexed. The DM then fell through to `default_pow` and served POW instead of the configured image challenge.
+  
+  Root cause: the `findRulesRanked` FT.AGGREGATE ranker used for non-block lookups capped candidates at `SERVER_SIDE_RANK_TOP_N = 20` after a server-side `SORTBY @_rank`. Under Greedy matching with `matchingFieldsOnly=true`, the query is a wide OR that matches every rule missing `headHash`, `coords`, or `headersHash` — for a Twickets-shaped tenant (~860 candidates) the top 20 slots were filled by higher-specificity SIMD_REPLAY and SUDDEN_VOLUME_INCREASE Block rules that didn't actually apply to the request. The specific-IP Restrict rule (specificity 2) was pushed out; Node saw only irrelevant candidates; `rankCandidateRules` filtered them all out via `ruleApplies`; the lookup returned `[]`.
+  
+  Fix: extend the existing `findBlockRulesSplit` path (previously the hot path for `blockOnly=true` callers) to cover every `matchingFieldsOnly` call. Each sub-query hits a discriminating posting list (exact numericIp, exact ja4Hash, etc.), so the ip:exact probe returns exactly the rules literally matching the request IP — the specific-IP rule can no longer be pushed off the end by irrelevant candidates from other probes. `blockOnly` is now a flag on the sub-query builder that narrows probes to `@type:{block}` when set. Split reader now sorts candidates by (specificity desc, block-first) so direct reader consumers see the same order the old FT.AGGREGATE ranker gave.
+  
+  Regression coverage added:
+  
+  - Unit: `buildScopedRulesSubQueries` emits/omits `@type:{block}` correctly per `blockOnly` flag and produces the same probe shape either way.
+  - Integration: specific-IP Restrict rule survives when 40 higher-specificity irrelevant Block rules co-exist on the same tenant (mirrors the live Twickets shape).
+  
+  Benchmarks unchanged: split hot path p50=1.4ms / p99=2.2ms across 19,300 seeded rules; 100×10 concurrent storm holds ~990 req/s.
+- Updated dependencies [6abff15]
+- Updated dependencies [29b5c6a]
+- Updated dependencies [b07b448]
+  - @prosopo/logger@2.0.3
+  - @prosopo/api-express-router@3.1.43
+  - @prosopo/database@3.15.12
+  - @prosopo/user-access-policy@3.12.3
+  - @prosopo/api-route@2.6.52
+  - @prosopo/common@3.1.45
+  - @prosopo/datasets@3.1.50
+  - @prosopo/env@3.6.12
+  - @prosopo/ipinfo@0.2.36
+  - @prosopo/redis-client@1.0.29
+  - @prosopo/types-database@4.11.11
+  - @prosopo/types-env@2.10.11
+  - @prosopo/keyring@2.9.56
+  - @prosopo/load-balancer@2.10.10
+
 ## 4.15.2
 ### Patch Changes
 

@@ -1,5 +1,12 @@
 # @prosopo/procaptcha-bundle
 
+## 4.1.31
+### Patch Changes
+
+  - @prosopo/dotenv@3.0.49
+  - @prosopo/procaptcha-frictionless@2.12.12
+  - @prosopo/procaptcha-common@2.11.10
+
 ## 4.1.30
 ### Patch Changes
 

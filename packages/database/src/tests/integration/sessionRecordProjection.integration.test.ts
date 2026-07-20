@@ -115,6 +115,8 @@ describe("getSessionRecordBySessionId projection", () => {
 			decryptedHeadHash: "head-hash-xyz",
 			siteKey: "site-key-1",
 			reason: "user-passed",
+			currentUrl: "https://example.com/checkout",
+			iframeUrl: "https://widget.example.com/embed",
 			headers: {
 				"user-agent": "Mozilla/5.0",
 				"accept-language": "en-GB",
@@ -151,6 +153,13 @@ describe("getSessionRecordBySessionId projection", () => {
 		expect(got.iFrame).toBe(false);
 		expect(got.decryptedHeadHash).toBe("head-hash-xyz");
 		expect(got.reason).toBe("user-passed");
+		// currentUrl / iframeUrl are forwarded onto the escalation session so
+		// downstream analytics (attack attribution, per-URL routing) survive
+		// the PoW → image/puzzle hop. Missed on the original projection
+		// (2026-07-09): 100% of escalation sessions were storing
+		// `currentUrl: undefined` in prod.
+		expect(got.currentUrl).toBe("https://example.com/checkout");
+		expect(got.iframeUrl).toBe("https://widget.example.com/embed");
 
 		// Headers come back so `buildEscalation` can forward them onto the
 		// escalation session, but the multi-KB `x-tls-clienthello` is

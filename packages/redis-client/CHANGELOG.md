@@ -1,5 +1,11 @@
 # @prosopo/redis-client
 
+## 1.0.29
+### Patch Changes
+
+- Updated dependencies [6abff15]
+  - @prosopo/logger@2.0.3
+
 ## 1.0.28
 ### Patch Changes
 
