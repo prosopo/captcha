@@ -271,8 +271,6 @@ export const PuzzleCanvas = ({
 						fontWeight: 500,
 						color: headerTextColor,
 						borderBottom: `2px solid ${headerBorderColor}`,
-						boxShadow:
-							"0px 11px 15px -7px rgba(0,0,0,0.2), 0px 24px 38px 3px rgba(0,0,0,0.14), 0px 9px 46px 8px rgba(0,0,0,0.12)",
 						transition: "color 0.3s ease, border-color 0.3s ease",
 					}}
 				>
@@ -290,8 +288,6 @@ export const PuzzleCanvas = ({
 						borderRadius: "0 0 20px 20px",
 						overflow: "hidden",
 						userSelect: "none",
-						boxShadow:
-							"0px 11px 15px -7px rgba(0,0,0,0.2), 0px 24px 38px 3px rgba(0,0,0,0.14), 0px 9px 46px 8px rgba(0,0,0,0.12)",
 						opacity: submitting ? 0.6 : 1,
 						pointerEvents: submitting ? "none" : "auto",
 						transition: "opacity 0.2s ease",
@@ -328,12 +324,15 @@ export const PuzzleCanvas = ({
 								: isDragging.current
 									? "grabbing"
 									: "grab",
-							boxShadow: isDragging.current
-								? puzzle.pieceShadowDrag
-								: puzzle.pieceShadow,
+							// Shadowless drag feedback: an outline ring in place of a
+							// lifted drop shadow.
+							outline: isDragging.current
+								? `3px solid ${puzzle.targetBorder}`
+								: "none",
+							outlineOffset: "2px",
 							transition: isDragging.current
 								? "none"
-								: "box-shadow 0.2s ease, left 0.3s ease, top 0.3s ease",
+								: "outline 0.2s ease, left 0.3s ease, top 0.3s ease",
 						}}
 					/>
 				</div>

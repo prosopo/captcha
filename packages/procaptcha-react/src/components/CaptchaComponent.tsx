@@ -107,11 +107,14 @@ const CaptchaComponent = ({
 									fontFamily: theme.font.fontFamily,
 								}}
 							>
+								{/* M3 "title medium" for the instruction, "body medium" for the
+								    supporting line — the type scale carries the hierarchy rather
+								    than ad-hoc weights. */}
 								<p
 									style={{
+										...theme.typography.titleMedium,
 										color: theme.palette.primaryContainer.contrastText,
-										fontWeight: 700,
-										lineHeight: 1.5,
+										margin: 0,
 									}}
 								>
 									{t("WIDGET.SELECT_ALL")}
@@ -120,17 +123,16 @@ const CaptchaComponent = ({
 									<span
 										style={{
 											color: theme.palette.titleAccent,
-											fontWeight: 800,
+											fontWeight: 700,
 										}}
 									>{`${at(challenge.captchas, index).target} `}</span>
 								</p>
 								<p
 									style={{
-										color: theme.palette.primaryContainer.contrastText,
-										fontWeight: 500,
-										lineHeight: 1.4,
-										fontSize: "0.8rem",
-										opacity: 0.8,
+										...theme.typography.bodyMedium,
+										// De-emphasis via the onSurfaceVariant role, not opacity.
+										color: theme.palette.onSurfaceVariant,
+										margin: "4px 0 0 0",
 									}}
 								>
 									{t("WIDGET.IF_NONE_CLICK_NEXT")}

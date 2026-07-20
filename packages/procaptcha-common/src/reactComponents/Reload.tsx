@@ -20,13 +20,13 @@ interface ReloadButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 	onReload: () => void;
 }
 
+// M3 icon button: a 40dp circular container holding a 24dp icon.
 const buttonStyleBase = {
 	border: "none",
-	paddingTop: "6px",
-	paddingBottom: "6px",
+	padding: "8px",
 	cursor: "pointer",
-	height: "42px",
-	width: "42px",
+	height: "40px",
+	width: "40px",
 	borderRadius: "50%",
 	display: "flex",
 };
@@ -40,9 +40,19 @@ export const ReloadButton: FC<ReloadButtonProps> = ({
 		[themeColor],
 	);
 	const [hover, setHover] = useState(false);
+	// M3 requires a visible focus indicator; matched imperatively so the ring is
+	// keyboard-only.
+	const [focusVisible, setFocusVisible] = useState(false);
 	const buttonStyle = useMemo(() => {
 		return {
 			...buttonStyleBase,
+			...(focusVisible
+				? {
+						// M3 focus indicator: 3dp outline, 2dp offset.
+						outline: `3px solid ${theme.palette.primary.main}`,
+						outlineOffset: "2px",
+					}
+				: {}),
 			// Material 3 tonal icon button; hover swaps to the state-layer fill so
 			// the feedback is visible in dark mode too (a brightness filter is not).
 			backgroundColor: hover
@@ -54,7 +64,7 @@ export const ReloadButton: FC<ReloadButtonProps> = ({
 			alignItems: "center",
 			margin: "0 auto",
 		};
-	}, [hover, theme]);
+	}, [hover, theme, focusVisible]);
 	return (
 		<button
 			className="reload-button"
@@ -63,14 +73,16 @@ export const ReloadButton: FC<ReloadButtonProps> = ({
 			style={buttonStyle}
 			onMouseEnter={() => setHover(true)}
 			onMouseLeave={() => setHover(false)}
+			onFocus={(e) => setFocusVisible(e.target.matches(":focus-visible"))}
+			onBlur={() => setFocusVisible(false)}
 			onClick={(e) => {
 				e.preventDefault();
 				onReload();
 			}}
 		>
 			<svg
-				width="16px"
-				height="16px"
+				width="24px"
+				height="24px"
 				viewBox="0 0 16 16"
 				version="1.1"
 				xmlns="http://www.w3.org/2000/svg"
