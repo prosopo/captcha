@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/scripts",
-	"version": "3.1.127",
+	"version": "3.1.128",
 	"description": "Dev scripts for working with prosopo packages",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -31,7 +31,7 @@
 		"@iarna/toml": "2.2.5",
 		"@polkadot/util": "13.5.7",
 		"@polkadot/util-crypto": "13.5.7",
-		"@prosopo/cli": "3.6.63",
+		"@prosopo/cli": "3.6.64",
 		"@prosopo/common": "3.1.45",
 		"@prosopo/logger": "2.0.3",
 		"@prosopo/datasets": "3.1.50",

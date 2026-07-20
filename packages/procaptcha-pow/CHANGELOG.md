@@ -1,5 +1,10 @@
 # @prosopo/procaptcha-pow
 
+## 2.10.18
+### Patch Changes
+
+  - @prosopo/procaptcha-common@2.11.12
+
 ## 2.10.17
 ### Patch Changes
 
