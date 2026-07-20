@@ -13,7 +13,14 @@
 // limitations under the License.
 
 import type { IIpInfoService } from "@prosopo/ipinfo";
-import type { EnrichedDnsEvent, IPInfoResponse, Session } from "@prosopo/types";
+import type {
+	EnrichedDnsEvent,
+	IPInfoResponse,
+	ITrafficFilter,
+	Session,
+} from "@prosopo/types";
+import { trafficFilterAbuserScoreThresholdDefault } from "@prosopo/types";
+import { isDatacenterAllowlisted } from "../spam/checkTrafficFilter.js";
 
 export type { EnrichedDnsEvent };
 
@@ -67,26 +74,78 @@ export const extraIpInfosFromEnrichedDnsEvent = (
 	return out;
 };
 
+/**
+ * Score the DNS path for asymmetry between the client's DNS resolver / peer
+ * IPs and its connection IP. The score sums four kinds of signal:
+ *
+ *   - `pathValid=false` (protocol-layer failure — always counted)
+ *   - resolver / peer classified `isDatacenter`
+ *   - resolver / peer classified `isAbuser`
+ *   - client IP is a consumer ISP but resolver is datacenter (compound)
+ *
+ * When `trafficFilter` is supplied, the datacenter and abuser contributions
+ * are gated on the same rules `checkTrafficFilter` uses for the client IP:
+ *
+ *   - `blockDatacenter` must be opted in (default off); IPs whose
+ *     `providerType === "isp"` short-circuit; named allowlist skips
+ *   - `blockAbuser` opt-in (default on) with the abuser-score threshold
+ *   - cross-category suppression: VPN / proxy / Tor / crawler IPs that also
+ *     carry `isDatacenter=true` are NOT counted as datacenter when the
+ *     operator hasn't opted into blocking that more specific category —
+ *     mirrors the `datacenterSuppressedByCategory` rule in evaluateIpInfo.
+ *
+ * `pathValid` is a protocol signal, not a category — it always contributes
+ * regardless of trafficFilter. When `trafficFilter` is omitted, all
+ * datacenter / abuser flags count (preserves the pre-gating behaviour for
+ * admin / diagnostic recompute callers).
+ */
 export const computeDnsAsymmetry = (
 	enriched: EnrichedDnsEvent | undefined,
 	clientIpInfo: IPInfoResponse | undefined,
+	trafficFilter?: Partial<ITrafficFilter>,
 ): number => {
 	if (!enriched) return 0;
 	let score = 0;
 	if (enriched.pathValid === false) score += 0.3;
-	if (enriched.resolverIpInfo?.isValid) {
-		if (enriched.resolverIpInfo.isDatacenter) score += 0.3;
-		if (enriched.resolverIpInfo.isAbuser) score += 0.2;
-	}
-	if (enriched.peerIpInfo?.isValid) {
-		if (enriched.peerIpInfo.isDatacenter) score += 0.2;
-		if (enriched.peerIpInfo.isAbuser) score += 0.2;
-	}
+
+	const countDc = (ip: IPInfoResponse | undefined): boolean => {
+		if (!ip?.isValid || !ip.isDatacenter) return false;
+		if (!trafficFilter) return true;
+		// Cross-category suppression: don't penalise datacenter classification
+		// when the operator has left the more specific category unblocked.
+		if (
+			(ip.isVPN && trafficFilter.blockVpn !== true) ||
+			(ip.isProxy && trafficFilter.blockProxy !== true) ||
+			(ip.isTor && trafficFilter.blockTor !== true) ||
+			(ip.isCrawler && trafficFilter.blockCrawler !== true)
+		) {
+			return false;
+		}
+		if (trafficFilter.blockDatacenter !== true) return false;
+		if (ip.providerType === "isp") return false;
+		return !isDatacenterAllowlisted(ip, trafficFilter.datacenterNameAllowlist);
+	};
+
+	const countAbuser = (ip: IPInfoResponse | undefined): boolean => {
+		if (!ip?.isValid || !ip.isAbuser) return false;
+		if (!trafficFilter) return true;
+		if (trafficFilter.blockAbuser === false) return false;
+		const threshold =
+			trafficFilter.abuserScoreThreshold ??
+			trafficFilterAbuserScoreThresholdDefault;
+		const maxScore = Math.max(ip.abuserScore ?? 0, ip.companyAbuserScore ?? 0);
+		return maxScore >= threshold;
+	};
+
+	if (countDc(enriched.resolverIpInfo)) score += 0.3;
+	if (countAbuser(enriched.resolverIpInfo)) score += 0.2;
+	if (countDc(enriched.peerIpInfo)) score += 0.2;
+	if (countAbuser(enriched.peerIpInfo)) score += 0.2;
+
 	if (
 		clientIpInfo?.isValid &&
 		clientIpInfo.providerType === "isp" &&
-		enriched.resolverIpInfo?.isValid &&
-		enriched.resolverIpInfo.isDatacenter
+		countDc(enriched.resolverIpInfo)
 	) {
 		score += 0.2;
 	}

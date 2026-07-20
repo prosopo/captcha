@@ -40,7 +40,7 @@ export type TrafficCheckResult =
 // curated named ranges, so falling back to providerName and asnOrganization
 // lets the allowlist also catch generic CDN / cloud-provider IPs that come
 // back with `is_datacenter: true` but no datacenter name.
-const isDatacenterAllowlisted = (
+export const isDatacenterAllowlisted = (
 	ipInfo: IPInfoResult,
 	allowlist: ReadonlyArray<string> | undefined,
 ): boolean => {
