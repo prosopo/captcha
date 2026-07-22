@@ -18,6 +18,8 @@ import type { IDatabase } from "./mongo.js";
 import {
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
+	type PuzzleCaptchaRecord,
+	PuzzleCaptchaRecordSchema,
 	type SessionRecord,
 	SessionRecordSchema,
 	type UserCommitmentRecord,
@@ -39,11 +41,17 @@ export const StoredPoWCaptchaRecordSchema: Schema = new Schema({
 });
 StoredPoWCaptchaRecordSchema.index({ sessionId: 1 });
 
+export const StoredPuzzleCaptchaRecordSchema: Schema = new Schema({
+	...PuzzleCaptchaRecordSchema.obj,
+});
+StoredPuzzleCaptchaRecordSchema.index({ sessionId: 1 });
+
 export interface ICaptchaDatabase extends IDatabase {
 	saveCaptchas(
 		sessionEvents: StoredSession[],
 		imageCaptchaEvents: UserCommitmentRecord[],
 		powCaptchaEvents: PoWCaptchaRecord[],
+		puzzleCaptchaEvents?: PuzzleCaptchaRecord[],
 	): Promise<void>;
 	getCaptchas(
 		filter: RootFilterQuery<CaptchaProperties>,
@@ -51,6 +59,7 @@ export interface ICaptchaDatabase extends IDatabase {
 	): Promise<{
 		userCommitmentRecords: UserCommitmentRecord[];
 		powCaptchaRecords: PoWCaptchaRecord[];
+		puzzleCaptchaRecords: PuzzleCaptchaRecord[];
 	}>;
 }
 

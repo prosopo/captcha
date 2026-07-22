@@ -15,6 +15,7 @@
 import { type Logger, getLogger } from "@prosopo/logger";
 import type {
 	PoWCaptchaRecord,
+	PuzzleCaptchaRecord,
 	StoredSession,
 	UserCommitmentRecord,
 } from "@prosopo/types-database";
@@ -193,6 +194,54 @@ export class CentralDbStreamer {
 				this.logger.error(() => ({
 					err,
 					msg: "Failed to fetch image record for central DB streaming",
+				}));
+			});
+	}
+
+	/**
+	 * Stream a puzzle captcha record (create or update) to the central DB.
+	 * Fire-and-forget: errors are logged, never thrown.
+	 */
+	streamPuzzleRecord(
+		record: PuzzleCaptchaRecord,
+		markStored?: MarkStoredCallback,
+	): void {
+		const timestamp = this.getRecordTimestamp(record);
+		this.ensureConnected()
+			.then(() => {
+				const { _id, ...safeDoc } = record;
+				return this.db.tables.puzzlecaptcha.updateOne(
+					{ challenge: safeDoc.challenge },
+					{ $set: safeDoc },
+					{ upsert: true },
+				);
+			})
+			.then(() => markStored?.(timestamp))
+			.catch((err: unknown) => {
+				this.logger.error(() => ({
+					err,
+					msg: "Failed to stream puzzle record to central DB",
+				}));
+			});
+	}
+
+	/**
+	 * Stream a partial puzzle update by fetching the full record first, then upserting.
+	 */
+	streamPuzzleUpdate(
+		getFullRecord: () => Promise<PuzzleCaptchaRecord | null>,
+		markStored?: MarkStoredCallback,
+	): void {
+		getFullRecord()
+			.then((record) => {
+				if (record) {
+					this.streamPuzzleRecord(record, markStored);
+				}
+			})
+			.catch((err: unknown) => {
+				this.logger.error(() => ({
+					err,
+					msg: "Failed to fetch puzzle record for central DB streaming",
 				}));
 			});
 	}

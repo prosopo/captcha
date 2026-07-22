@@ -1118,6 +1118,19 @@ export class ProviderDatabase
 				},
 				msg: "PuzzleCaptcha record added successfully",
 			}));
+			this.centralStreamer?.streamPuzzleRecord(
+				puzzleCaptchaRecord as PuzzleCaptchaRecord,
+				(ts) =>
+					this.tables.puzzlecaptcha
+						.updateOne(
+							{ challenge, lastUpdatedTimestamp: { $lte: ts } },
+							{
+								$set: { storedAtTimestamp: ts },
+								$unset: { pendingStage: 1 },
+							},
+						)
+						.then(() => {}),
+			);
 		} catch (error) {
 			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
 				context: {
@@ -1276,6 +1289,19 @@ export class ProviderDatabase
 				},
 				msg: "PuzzleCaptcha record updated successfully",
 			}));
+			this.centralStreamer?.streamPuzzleUpdate(
+				() => this.getPuzzleCaptchaRecordByChallenge(challenge),
+				(ts) =>
+					this.tables.puzzlecaptcha
+						.updateOne(
+							{ challenge, lastUpdatedTimestamp: { $lte: ts } },
+							{
+								$set: { storedAtTimestamp: ts },
+								$unset: { pendingStage: 1 },
+							},
+						)
+						.then(() => {}),
+			);
 		} catch (error) {
 			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
 				context: {
@@ -1330,11 +1356,37 @@ export class ProviderDatabase
 		// required.
 		if (Object.keys(pipelineExprs).length === 0) {
 			await tables.puzzlecaptcha.updateOne({ challenge }, { $set: baseSet });
+			this.centralStreamer?.streamPuzzleUpdate(
+				() => this.getPuzzleCaptchaRecordByChallenge(challenge),
+				(ts) =>
+					this.tables.puzzlecaptcha
+						.updateOne(
+							{ challenge, lastUpdatedTimestamp: { $lte: ts } },
+							{
+								$set: { storedAtTimestamp: ts },
+								$unset: { pendingStage: 1 },
+							},
+						)
+						.then(() => {}),
+			);
 			return;
 		}
 		await tables.puzzlecaptcha.updateOne({ challenge }, [
 			{ $set: { ...baseSet, ...pipelineExprs } },
 		]);
+		this.centralStreamer?.streamPuzzleUpdate(
+			() => this.getPuzzleCaptchaRecordByChallenge(challenge),
+			(ts) =>
+				this.tables.puzzlecaptcha
+					.updateOne(
+						{ challenge, lastUpdatedTimestamp: { $lte: ts } },
+						{
+							$set: { storedAtTimestamp: ts },
+							$unset: { pendingStage: 1 },
+						},
+					)
+					.then(() => {}),
+		);
 	}
 
 	/** @description Get serverChecked Dapp User image captcha commitments from the commitments table
