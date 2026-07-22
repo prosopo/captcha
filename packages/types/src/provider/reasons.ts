@@ -36,6 +36,14 @@ export enum FrictionlessReason {
 	// solves are escalated to an image captcha rather than approved outright
 	// (see verifyPowCaptchaSolution in @prosopo/provider).
 	MISSING_COORDINATES = "MISSING_COORDINATES",
+	// The detector payload could not be decrypted: no bundle resolved for the
+	// session (expired/missing Redis binding, bundle no longer in the pool), or
+	// the ciphertext did not open with the bundle's keys. Distinct from a high
+	// bot score — we learned nothing about this client, rather than learning
+	// something bad — so it gets its own short image challenge instead of
+	// falling through to the old-timestamp path, which used to catch it by
+	// accident via the synthetic `timestamp = 0`.
+	DECRYPTION_FAILED = "DECRYPTION_FAILED",
 }
 
 /**

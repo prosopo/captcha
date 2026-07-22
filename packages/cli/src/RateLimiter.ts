@@ -71,14 +71,6 @@ export const getRateLimitConfig = () => {
 			windowMs: process.env.PROSOPO_SITE_KEYS_REMOVE_WINDOW,
 			limit: process.env.PROSOPO_SITE_KEYS_REMOVE_LIMIT,
 		},
-		[AdminApiPaths.UpdateDetectorKey]: {
-			windowMs: process.env.PROSOPO_UPDATE_DETECTOR_KEY_WINDOW,
-			limit: process.env.PROSOPO_UPDATE_DETECTOR_KEY_LIMIT,
-		},
-		[AdminApiPaths.RemoveDetectorKey]: {
-			windowMs: process.env.PROSOPO_REMOVE_DETECTOR_KEY_WINDOW,
-			limit: process.env.PROSOPO_REMOVE_DETECTOR_KEY_LIMIT,
-		},
 		[AdminApiPaths.ToggleMaintenanceMode]: {
 			windowMs: process.env.PROSOPO_TOGGLE_MAINTENANCE_MODE_WINDOW,
 			limit: process.env.PROSOPO_TOGGLE_MAINTENANCE_MODE_LIMIT,
@@ -126,6 +118,14 @@ export const getRateLimitConfig = () => {
 		[AdminApiPaths.DnsEvent]: {
 			windowMs: process.env.PROSOPO_DNS_EVENT_WINDOW,
 			limit: process.env.PROSOPO_DNS_EVENT_LIMIT,
+		},
+		[ClientApiPaths.AssignDetectorBundle]: {
+			windowMs: process.env.PROSOPO_ASSIGN_DETECTOR_BUNDLE_WINDOW,
+			limit: process.env.PROSOPO_ASSIGN_DETECTOR_BUNDLE_LIMIT,
+		},
+		[AdminApiPaths.ReplaceDetectorPool]: {
+			windowMs: process.env.PROSOPO_REPLACE_DETECTOR_POOL_WINDOW,
+			limit: process.env.PROSOPO_REPLACE_DETECTOR_POOL_LIMIT,
 		},
 	};
 };

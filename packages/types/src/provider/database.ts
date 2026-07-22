@@ -510,6 +510,13 @@ export type Session = {
 	// as an escalation. Undefined / false on ordinary frictionless sessions.
 	isEscalation?: boolean;
 	decryptedHeadHash: string;
+	// The provider-assigned detector pool bundle this session's detector ran
+	// from, promoted off the short-lived detectorSessionId→bundleId Redis
+	// binding at frictionless-decrypt time. Later hops (PoW/puzzle solution
+	// submit, SIMD attach) resolve the same bundle's keypair + inner cipher
+	// from this durable field to decrypt the behavioural/SIMD payloads — the
+	// detector lives only on providers, so there is no key pool to fall back to.
+	bundleId?: string;
 	siteKey?: string;
 	// Full page URL the widget was rendered on (origin + path only — query
 	// string, fragment and any embedded credentials are stripped client- and
@@ -682,12 +689,6 @@ export const UserCommitmentWithSolutionsSchema = UserCommitmentSchema.extend({
 export type UserCommitmentWithSolutions = zInfer<
 	typeof UserCommitmentWithSolutionsSchema
 >;
-
-export type DetectorKey = {
-	detectorKey: string;
-	createdAt: Date;
-	expiresAt?: Date;
-};
 
 /**
  * Decision machine artifact stored in the database.

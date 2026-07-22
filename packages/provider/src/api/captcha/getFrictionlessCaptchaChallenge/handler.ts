@@ -50,7 +50,10 @@ import { runDecisionMachine } from "./decisionMachine.js";
 import { decryptIncomingSimdReadings } from "./decryptSimdReadings.js";
 import { attachHoneypot } from "./honeypotResponse.js";
 import { resolveSessionDedup } from "./sessionDedup.js";
-import { runConfiguredCaptchaTypeShortCircuit } from "./shortCircuit.js";
+import {
+	runConfiguredCaptchaTypeShortCircuit,
+	runNoDetectorPowFallback,
+} from "./shortCircuit.js";
 
 export default (
 	env: ProviderEnvironment,
@@ -80,6 +83,8 @@ export default (
 				user,
 				mode,
 				simdReadings,
+				detectorSessionId,
+				detectorUnavailable,
 				currentUrl: reportedCurrentUrl,
 				iframeUrl: reportedIframeUrl,
 			} = GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
@@ -170,7 +175,11 @@ export default (
 			// handles.
 			const [decodedSimdReadings, { existingToken, dedup }, clientRecord] =
 				await Promise.all([
-					decryptIncomingSimdReadings(tasks.frictionlessManager, simdReadings),
+					decryptIncomingSimdReadings(
+						tasks.frictionlessManager,
+						simdReadings,
+						detectorSessionId,
+					),
 					resolveSessionDedup(tasks, token, userSitekeyIpHash, req.logger),
 					tasks.db.getClientRecord(dapp),
 				]);
@@ -391,29 +400,43 @@ export default (
 					? req.ipInfo.asnNumber
 					: undefined;
 
+			const shortCircuitInput = {
+				tasks,
+				env,
+				clientRecord,
+				token,
+				dapp,
+				ipAddress,
+				ipInfo: req.ipInfo,
+				flatHeaders,
+				sessionMode,
+				userSitekeyIpHash,
+				requestId: req.requestId,
+				logger: req.logger,
+				detectorUnavailable: detectorUnavailable ?? false,
+				...(req.tcpToChelloUs !== undefined && {
+					tcpToChelloUs: req.tcpToChelloUs,
+				}),
+				...(req.chelloToHandshakeUs !== undefined && {
+					chelloToHandshakeUs: req.chelloToHandshakeUs,
+				}),
+			};
+
 			const shortCircuitResponse = await runConfiguredCaptchaTypeShortCircuit(
-				{
-					tasks,
-					env,
-					clientRecord,
-					token,
-					dapp,
-					ipAddress,
-					ipInfo: req.ipInfo,
-					flatHeaders,
-					sessionMode,
-					userSitekeyIpHash,
-					logger: req.logger,
-					...(req.tcpToChelloUs !== undefined && {
-						tcpToChelloUs: req.tcpToChelloUs,
-					}),
-					...(req.chelloToHandshakeUs !== undefined && {
-						chelloToHandshakeUs: req.chelloToHandshakeUs,
-					}),
-				},
+				shortCircuitInput,
 				res,
 			);
 			if (shortCircuitResponse) return shortCircuitResponse;
+
+			// No detector available — empty/uninitialised pool, or the client
+			// reported it couldn't fetch/run a provider bundle. The detector lives
+			// only on providers, so there is nothing to score ⇒ serve a real PoW
+			// challenge instead of the (now removed) legacy key-pool path.
+			const noDetectorResponse = await runNoDetectorPowFallback(
+				shortCircuitInput,
+				res,
+			);
+			if (noDetectorResponse) return noDetectorResponse;
 
 			const lScore = tasks.frictionlessManager.checkLangRules(
 				req.headers["accept-language"] || "",
@@ -436,7 +459,11 @@ export default (
 			// them depends on the others' outputs — running them in
 			// series previously added up to ~50-80ms on the hot path.
 			const [decryptedPayload, validation, accessPolicies] = await Promise.all([
-				tasks.frictionlessManager.decryptPayload(token, headHash),
+				tasks.frictionlessManager.decryptPayload(
+					token,
+					headHash,
+					detectorSessionId,
+				),
 				tasks.frictionlessManager.isValidRequest(
 					clientRecord,
 					CaptchaType.frictionless,
@@ -464,6 +491,7 @@ export default (
 				entropyCryptoFingerprint,
 				entropyWallClockOffsetMs,
 				entropyMathRandomFirst,
+				bundleId,
 			} = decryptedPayload;
 
 			// Test-only override: cypress can't produce a server-decryptable
@@ -549,6 +577,10 @@ export default (
 				ipInfo: req.ipInfo,
 				headers: flatHeaders,
 				mode: sessionMode,
+				// Promote the resolved pool bundle onto the session so later hops
+				// (SIMD attach, PoW/puzzle/image solution submit) can resolve the
+				// same keypair + inner cipher to decrypt their payloads.
+				...(bundleId && { bundleId }),
 				...(decodedSimdReadings && { simdReadings: decodedSimdReadings }),
 				...(entropyMathRandomFingerprint !== undefined && {
 					entropyMathRandomFingerprint,

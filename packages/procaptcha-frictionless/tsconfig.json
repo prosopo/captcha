@@ -19,9 +19,6 @@
 			"path": "../../dev/config/tsconfig.json"
 		},
 		{
-			"path": "../detector"
-		},
-		{
 			"path": "../locale"
 		},
 		{

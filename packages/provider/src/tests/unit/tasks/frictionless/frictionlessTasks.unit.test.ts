@@ -38,7 +38,6 @@ describe("Frictionless Task Manager", () => {
 	beforeEach(() => {
 		db = {
 			storeSessionRecord: vi.fn(),
-			getDetectorKeys: vi.fn(() => Promise.resolve(["test-key"])),
 		} as unknown as IProviderDatabase;
 
 		pair = {

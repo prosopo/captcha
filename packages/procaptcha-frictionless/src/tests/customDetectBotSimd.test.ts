@@ -19,12 +19,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
 	getFrictionlessCaptcha: vi.fn(),
 	getProcaptchaRandomActiveProvider: vi.fn(),
+	assignDetectorBundle: vi.fn(),
 	detect: vi.fn(),
 }));
 
 vi.mock("@prosopo/api", () => ({
 	ProviderApi: vi.fn(() => ({
 		getFrictionlessCaptcha: mocks.getFrictionlessCaptcha,
+		assignDetectorBundle: mocks.assignDetectorBundle,
 	})),
 }));
 
@@ -43,7 +45,7 @@ vi.mock("@prosopo/procaptcha-common", () => ({
 }));
 
 vi.mock("../detectorLoader.js", () => ({
-	DetectorLoader: vi.fn(async () => mocks.detect),
+	DetectorLoaderFromScript: vi.fn(async () => mocks.detect),
 }));
 
 import customDetectBot from "../customDetectBot.js";
@@ -76,10 +78,18 @@ const captchaResponse = {
 beforeEach(() => {
 	mocks.getFrictionlessCaptcha.mockReset();
 	mocks.getProcaptchaRandomActiveProvider.mockReset();
+	mocks.assignDetectorBundle.mockReset();
 	mocks.detect.mockReset();
 	mocks.getProcaptchaRandomActiveProvider.mockResolvedValue({
 		providerAccount: "dns-routed",
 		provider: { url: "https://provider.test" },
+	});
+	// Provider serves a per-session detector bundle (the only detector source).
+	mocks.assignDetectorBundle.mockResolvedValue({
+		useProviderBundle: true,
+		detectorSessionId: "det-1",
+		detectorScript: "SELF_CONTAINED_ESM",
+		status: "ok",
 	});
 	mocks.getFrictionlessCaptcha.mockResolvedValue(captchaResponse);
 });

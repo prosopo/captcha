@@ -50,6 +50,7 @@ import {
 	getRequestUserScope,
 } from "../api/blacklistRequestInspector.js";
 import { getIpAddressFromComposite } from "../compositeIpAddress.js";
+import { getDetectorBundlePool } from "./detection/bundlePool.js";
 import type { BehavioralDataResult } from "./detection/decodeBehavior.js";
 import type { SimdReadingsResult } from "./detection/decodeSimd.js";
 import { extraIpInfosFromEnrichedDnsEvent } from "./dnsEvent/enrichDnsEvent.js";
@@ -58,6 +59,18 @@ import {
 	type TrafficCheckResult,
 	checkTrafficFilter,
 } from "./spam/checkTrafficFilter.js";
+
+/**
+ * The per-session decryption material for a detector pool bundle: the bundle's
+ * own RSA private key (outer transport) plus its inner ChaCha20-Poly1305 config
+ * (the anti-`window.crypto` symmetric layer). Every payload a session's detector
+ * produces — score, SIMD readings, behavioural data — is encrypted with these,
+ * so decryption is a single deterministic attempt, never a key-pool brute force.
+ */
+export interface PoolBundleDecrypt {
+	key: string;
+	innerConfig: string;
+}
 
 /**
  * Finds a hard block policy from access policies.
@@ -142,33 +155,37 @@ export class CaptchaManager {
 	}
 
 	/**
-	 * Decrypt with the active detector keys and strip the throwaway
-	 * `timestamp` field. Returns `undefined` when no key decrypts.
+	 * Decrypt with the session's detector pool bundle and strip the throwaway
+	 * `timestamp` field. Returns `undefined` when no bundle is resolved or
+	 * decryption fails.
 	 */
 	public async decryptSimdReadingsForAttach(
 		simdReadingsCiphertext: string,
+		bundle: PoolBundleDecrypt | undefined,
 	): Promise<NonNullable<Session["simdReadings"]> | undefined> {
-		const decryptKeys = [
-			...(await this.getDetectorKeys()),
-			process.env.BOT_DECRYPTION_KEY,
-		];
 		const decrypted = await this.decryptSimdReadings(
 			simdReadingsCiphertext,
-			decryptKeys,
+			bundle,
 		);
 		if (!decrypted) return undefined;
 		const { timestamp: _ignored, ...readings } = decrypted;
 		return readings;
 	}
 
-	/** Decrypt + first-hop-wins attach. No-op on decrypt failure. */
+	/**
+	 * Decrypt + first-hop-wins attach. Resolves the session's detector pool
+	 * bundle (promoted onto the session record at frictionless time) to decrypt.
+	 * No-op on decrypt failure / no bundle.
+	 */
 	public async decryptAndAttachSimdReadingsIfAbsent(
 		sessionId: string,
 		simdReadingsCiphertext: string,
 		stage: SimdReadingsStage,
 	): Promise<void> {
+		const bundle = await this.resolveBundleBySessionId(sessionId);
 		const readings = await this.decryptSimdReadingsForAttach(
 			simdReadingsCiphertext,
+			bundle,
 		);
 		if (!readings) return;
 		await this.recordSessionSimdReadingsIfAbsentWithCache(
@@ -577,120 +594,128 @@ export class CaptchaManager {
 		);
 	}
 
-	async getDetectorKeys(): Promise<string[]> {
-		return await this.db.getDetectorKeys();
+	/**
+	 * Resolve a detector pool bundle's decryption material from a `bundleId`
+	 * (in-memory pool lookup). Returns undefined when the id is absent or the
+	 * bundle is no longer in the pool.
+	 */
+	resolveBundleById(bundleId?: string | null): PoolBundleDecrypt | undefined {
+		const bundle = bundleId
+			? getDetectorBundlePool()?.get(bundleId)
+			: undefined;
+		return bundle
+			? { key: bundle.privateKey, innerConfig: bundle.innerConfig }
+			: undefined;
+	}
+
+	/**
+	 * Resolve the detector pool bundle for a session via its short-lived
+	 * `detectorSessionId → bundleId` Redis binding (used at the frictionless hop,
+	 * before the binding is promoted onto the durable session record). Returns
+	 * the bundleId too so the caller can promote it onto the session.
+	 */
+	async resolveBundleByDetectorSession(
+		detectorSessionId?: string,
+	): Promise<(PoolBundleDecrypt & { bundleId: string }) | undefined> {
+		if (!detectorSessionId || !this.writeQueue) return undefined;
+		const bundleId = await this.writeQueue.getDetectorBundle(detectorSessionId);
+		const decrypt = this.resolveBundleById(bundleId);
+		return bundleId && decrypt ? { ...decrypt, bundleId } : undefined;
+	}
+
+	/**
+	 * Resolve the detector pool bundle for a session via the `bundleId` promoted
+	 * onto its durable session record (used at later hops — SIMD attach,
+	 * PoW/puzzle/image solution submit — after the Redis binding has expired).
+	 * Cache-first (Redis), Mongo fallback.
+	 */
+	async resolveBundleBySessionId(
+		sessionId?: string,
+	): Promise<PoolBundleDecrypt | undefined> {
+		if (!sessionId) return undefined;
+		const cached = this.writeQueue
+			? await this.writeQueue.getCachedSession(sessionId)
+			: undefined;
+		const cachedBundleId =
+			typeof cached?.bundleId === "string" ? cached.bundleId : undefined;
+		const bundleId =
+			cachedBundleId ??
+			(await this.db.getSessionRecordBySessionId(sessionId))?.bundleId;
+		return this.resolveBundleById(bundleId);
 	}
 
 	/**
 	 * Decrypt the catcher's WASM SIMD CPU fingerprint readings via the
 	 * obfuscated `decodeSimd.js` bundle (source lives in the private
-	 * @prosopo/catcher repo). Mirrors `decryptBehavioralData`: tries each
-	 * detector key in turn (loaded by the caller, with the env-var key as
-	 * fallback). Returns null when no key works so the caller can drop
-	 * the field rather than fail the whole request.
+	 * @prosopo/catcher repo). The detector lives only in provider-served pool
+	 * bundles, so decryption uses that session's single bundle (RSA key + inner
+	 * cipher) — there is no key pool. Returns null when no bundle is resolved or
+	 * decryption fails, so the caller can drop the field rather than fail the
+	 * whole request.
 	 */
 	async decryptSimdReadings(
 		encryptedData: string,
-		decryptKeys: (string | undefined)[],
+		bundle: PoolBundleDecrypt | undefined,
 	): Promise<SimdReadingsResult | null> {
-		const decryptSimdReadings = (await import("./detection/decodeSimd.js"))
-			.default;
-
-		const validKeys = decryptKeys.filter((k) => k);
-		if (validKeys.length === 0) {
-			this.logger?.error(() => ({
-				msg: "No decryption keys provided for SIMD readings",
+		if (!bundle) {
+			this.logger?.warn(() => ({
+				msg: "No detector bundle resolved for SIMD readings — dropping field",
 			}));
 			return null;
 		}
-
-		for (const [keyIndex, key] of validKeys.entries()) {
-			try {
-				return await decryptSimdReadings(encryptedData, key);
-			} catch (err) {
-				this.logger?.debug(() => ({
-					msg: "Failed to decrypt SIMD readings with key, trying next",
-					data: {
-						keyIndex: keyIndex + 1,
-						totalKeys: validKeys.length,
-						err,
-					},
-				}));
-			}
+		const decryptSimdReadings = (await import("./detection/decodeSimd.js"))
+			.default;
+		try {
+			return await decryptSimdReadings(
+				encryptedData,
+				bundle.key,
+				bundle.innerConfig,
+			);
+		} catch (err) {
+			this.logger?.warn(() => ({
+				msg: "Failed to decrypt SIMD readings with the session's bundle",
+				data: { err },
+			}));
+			return null;
 		}
-
-		this.logger?.warn(() => ({
-			msg: "Failed to decrypt SIMD readings with all available keys",
-			data: { totalKeysAttempted: validKeys.length },
-		}));
-		return null;
 	}
 
 	async decryptBehavioralData(
 		encryptedData: string,
-		decryptKeys: (string | undefined)[],
+		bundle: PoolBundleDecrypt | undefined,
 	): Promise<BehavioralDataResult | null> {
-		const decryptBehavioralData = (
-			await import("./detection/decodeBehavior.js")
-		).default;
-
-		const validKeys = decryptKeys.filter((k) => k);
-
-		if (validKeys.length === 0) {
-			this.logger?.error(() => ({
-				msg: "No decryption keys provided for behavioral data",
+		if (!bundle) {
+			this.logger?.warn(() => ({
+				msg: "No detector bundle resolved for behavioral data — dropping field",
 			}));
 			return null;
 		}
-
-		// Try each key until one succeeds
-		for (const [keyIndex, key] of validKeys.entries()) {
-			try {
-				this.logger?.debug(() => ({
-					msg: "Attempting to decrypt behavioral data",
-					data: {
-						keyIndex: keyIndex + 1,
-						totalKeys: validKeys.length,
-					},
-				}));
-
-				// Decrypt behavioral data - returns unpacked format: {collector1, collector2, collector3, deviceCapability, timestamp}
-				const result = await decryptBehavioralData(encryptedData, key);
-
-				this.logger?.info(() => ({
-					msg: "Behavioral data decrypted successfully",
-					data: {
-						keyIndex: keyIndex + 1,
-						c1Length: result.collector1?.length || 0,
-						c2Length: result.collector2?.length || 0,
-						c3Length: result.collector3?.length || 0,
-						deviceCapability: result.deviceCapability,
-					},
-				}));
-
-				return result;
-			} catch (error) {
-				this.logger?.debug(() => ({
-					msg: "Failed to decrypt with key, trying next",
-					data: {
-						keyIndex: keyIndex + 1,
-						totalKeys: validKeys.length,
-						err: error,
-					},
-				}));
-				// Continue to next key
-			}
+		const decryptBehavioralData = (
+			await import("./detection/decodeBehavior.js")
+		).default;
+		try {
+			const result = await decryptBehavioralData(
+				encryptedData,
+				bundle.key,
+				bundle.innerConfig,
+			);
+			this.logger?.info(() => ({
+				msg: "Behavioral data decrypted successfully",
+				data: {
+					c1Length: result.collector1?.length || 0,
+					c2Length: result.collector2?.length || 0,
+					c3Length: result.collector3?.length || 0,
+					deviceCapability: result.deviceCapability,
+				},
+			}));
+			return result;
+		} catch (error) {
+			this.logger?.warn(() => ({
+				msg: "Failed to decrypt behavioral data with the session's bundle",
+				data: { err: error },
+			}));
+			return null;
 		}
-
-		// All keys failed
-		this.logger?.error(() => ({
-			msg: "Failed to decrypt behavioral data with all available keys",
-			data: {
-				totalKeysAttempted: validKeys.length,
-			},
-		}));
-
-		return null;
 	}
 
 	/**
