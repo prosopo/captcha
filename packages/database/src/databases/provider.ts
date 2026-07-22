@@ -65,8 +65,6 @@ import {
 	ClientRecordSchema,
 	DatasetRecordSchema,
 	DecisionMachineArtifactRecordSchema,
-	DetectorRecordSchema,
-	type DetectorSchema,
 	type IProviderDatabase,
 	type IUserDataSlim,
 	type PoWCaptchaRecord,
@@ -167,11 +165,6 @@ const PROVIDER_TABLES = [
 		collectionName: TableNames.session,
 		modelName: "Session",
 		schema: SessionRecordSchema,
-	},
-	{
-		collectionName: TableNames.detector,
-		modelName: "Detector",
-		schema: DetectorRecordSchema,
 	},
 	{
 		collectionName: TableNames.decisionMachine,
@@ -2576,53 +2569,6 @@ export class ProviderDatabase
 			})
 			.lean<ClientRecord>();
 		return doc ? doc : undefined;
-	}
-
-	/**
-	 * @description Store a detector key
-	 */
-	async storeDetectorKey(detectorKey: string): Promise<void> {
-		return this.tables?.detector.create({
-			detectorKey,
-			createdAt: new Date(),
-		});
-	}
-
-	/**
-	 * @description Remove a detector key
-	 * @param detectorKey The detector key to remove
-	 * @param expirationInSeconds Optional expiration time in seconds (default is 10 minutes)
-	 * */
-	async removeDetectorKey(
-		detectorKey: string,
-		expirationInSeconds?: number,
-	): Promise<void> {
-		const filter: Pick<DetectorSchema, "detectorKey"> = { detectorKey };
-
-		const expiresAt = new Date(
-			Date.now() + (expirationInSeconds || 10 * 60) * 1000,
-		);
-
-		await this.tables?.detector.updateOne(filter, {
-			$set: { expiresAt },
-		});
-	}
-
-	/**
-	 * @description Get valid detector keys
-	 */
-	async getDetectorKeys(): Promise<string[]> {
-		const keyRecords = await this.tables?.detector
-			.find(
-				{
-					$or: [{ expiresAt: { $exists: false } }, { expiresAt: null }],
-				},
-				{ detectorKey: 1 },
-			)
-			.sort({ createdAt: -1 }) // Sort by createdAt in descending order
-			.lean<DetectorSchema[]>(); // Improve performance by returning a plain object
-
-		return (keyRecords || []).map((record) => record.detectorKey);
 	}
 
 	/**

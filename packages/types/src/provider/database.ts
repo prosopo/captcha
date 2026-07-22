@@ -690,12 +690,6 @@ export type UserCommitmentWithSolutions = zInfer<
 	typeof UserCommitmentWithSolutionsSchema
 >;
 
-export type DetectorKey = {
-	detectorKey: string;
-	createdAt: Date;
-	expiresAt?: Date;
-};
-
 /**
  * Decision machine artifact stored in the database.
  * The combination of scope + dappAccount uniquely identifies one artifact.

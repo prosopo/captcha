@@ -23,13 +23,11 @@ import { ApiRegisterSiteKeyEndpoint } from "./apiRegisterSiteKeyEndpoint.js";
 import { ApiRegisterSiteKeysEndpoint } from "./apiRegisterSiteKeysEndpoint.js";
 import { ApiRemoveAllDecisionMachinesEndpoint } from "./apiRemoveAllDecisionMachinesEndpoint.js";
 import { ApiRemoveDecisionMachineEndpoint } from "./apiRemoveDecisionMachineEndpoint.js";
-import { ApiRemoveDetectorKeyEndpoint } from "./apiRemoveDetectorKeyEndpoint.js";
 import { ApiRemoveSiteKeyEndpoint } from "./apiRemoveSiteKeyEndpoint.js";
 import { ApiRemoveSiteKeysEndpoint } from "./apiRemoveSiteKeysEndpoint.js";
 import { ApiReplaceDetectorPoolEndpoint } from "./apiReplaceDetectorPoolEndpoint.js";
 import { ApiToggleMaintenanceModeEndpoint } from "./apiToggleMaintenanceModeEndpoint.js";
 import { ApiUpdateDecisionMachineEndpoint } from "./apiUpdateDecisionMachineEndpoint.js";
-import { ApiUpdateDetectorKeyEndpoint } from "./apiUpdateDetectorKeyEndpoint.js";
 
 class ApiAdminRoutesProvider implements ApiRoutesProvider {
 	public constructor(private readonly tasks: Tasks) {}
@@ -40,12 +38,6 @@ class ApiAdminRoutesProvider implements ApiRoutesProvider {
 				this.tasks.clientTaskManager,
 			),
 			[AdminApiPaths.SiteKeysRegister]: new ApiRegisterSiteKeysEndpoint(
-				this.tasks.clientTaskManager,
-			),
-			[AdminApiPaths.UpdateDetectorKey]: new ApiUpdateDetectorKeyEndpoint(
-				this.tasks.clientTaskManager,
-			),
-			[AdminApiPaths.RemoveDetectorKey]: new ApiRemoveDetectorKeyEndpoint(
 				this.tasks.clientTaskManager,
 			),
 			[AdminApiPaths.UpdateDecisionMachine]:

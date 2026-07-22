@@ -137,8 +137,6 @@ export type TSubmitPuzzleCaptchaSolutionURL =
 export enum AdminApiPaths {
 	SiteKeyRegister = "/v1/prosopo/provider/admin/sitekey/register",
 	SiteKeysRegister = "/v1/prosopo/provider/admin/sitekeys/register",
-	UpdateDetectorKey = "/v1/prosopo/provider/admin/detector/update",
-	RemoveDetectorKey = "/v1/prosopo/provider/admin/detector/remove",
 	ToggleMaintenanceMode = "/v1/prosopo/provider/admin/maintenance/toggle",
 	UpdateDecisionMachine = "/v1/prosopo/provider/admin/decision-machine/update",
 	GetAllDecisionMachines = "/v1/prosopo/provider/admin/decision-machine/get-all",
@@ -190,8 +188,6 @@ export const ProviderDefaultRateLimits = {
 	[ClientApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
 	[AdminApiPaths.SiteKeyRegister]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.SiteKeysRegister]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.UpdateDetectorKey]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.RemoveDetectorKey]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.ToggleMaintenanceMode]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.UpdateDecisionMachine]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.GetAllDecisionMachines]: { windowMs: 60000, limit: 60 },
@@ -388,12 +384,6 @@ export interface VerificationResponse extends ApiResponse {
 	[ApiParams.verified]: boolean;
 	[ApiParams.score]?: number;
 	[ApiParams.reason]?: string;
-}
-
-export interface UpdateDetectorKeyResponse extends ApiResponse {
-	data: {
-		activeDetectorKeys: string[];
-	};
 }
 
 export interface UpdateDecisionMachineResponse extends ApiResponse {
@@ -738,10 +728,6 @@ export const RemoveSitekeysBody = array(
 	}),
 );
 
-export const UpdateDetectorKeyBody = object({
-	[ApiParams.detectorKey]: boundedString(INPUT_LIMITS.TOKEN),
-});
-
 export const UpdateDecisionMachineBody = object({
 	[ApiParams.decisionMachineScope]: nativeEnum(DecisionMachineScope),
 	[ApiParams.decisionMachineRuntime]: nativeEnum(DecisionMachineRuntime),
@@ -840,18 +826,6 @@ export const RemoveAllDecisionMachinesResponse = object({
 
 export type RemoveAllDecisionMachinesResponseType = z.infer<
 	typeof RemoveAllDecisionMachinesResponse
->;
-
-export const RemoveDetectorKeyBodySpec = object({
-	[ApiParams.detectorKey]: boundedString(INPUT_LIMITS.TOKEN),
-	[ApiParams.expirationInSeconds]: number().positive().optional(),
-});
-
-export type RemoveDetectorKeyBodyInput = input<
-	typeof RemoveDetectorKeyBodySpec
->;
-export type RemoveDetectorKeyBodyOutput = output<
-	typeof RemoveDetectorKeyBodySpec
 >;
 
 export const ToggleMaintenanceModeBody = object({

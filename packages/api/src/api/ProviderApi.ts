@@ -49,7 +49,6 @@ import {
 	type RandomProvider,
 	type RegisterSitekeyBodyTypeOutput,
 	type RegisterSitekeysBodyTypeOutput,
-	RemoveDetectorKeyBodySpec,
 	RemoveSitekeyBody,
 	RemoveSitekeysBody,
 	type RemoveSitekeysBodyTypeOutput,
@@ -61,8 +60,6 @@ import {
 	type Tier,
 	ToggleMaintenanceModeBody,
 	UpdateDecisionMachineBody,
-	UpdateDetectorKeyBody,
-	type UpdateDetectorKeyResponse,
 	type UpdateProviderClientsResponse,
 	type VerificationResponse,
 	type VerifySolutionBodyTypeInput,
@@ -571,22 +568,6 @@ export default class ProviderApi
 		);
 	}
 
-	public updateDetectorKey(
-		detectorKey: string,
-		jwt: string,
-	): Promise<UpdateDetectorKeyResponse> {
-		return this.post(
-			AdminApiPaths.UpdateDetectorKey,
-			UpdateDetectorKeyBody.parse({ detectorKey }),
-			{
-				headers: {
-					"Prosopo-Site-Key": this.account,
-					Authorization: `Bearer ${jwt}`,
-				},
-			},
-		);
-	}
-
 	public updateDecisionMachine(
 		scope: DecisionMachineScope,
 		runtime: DecisionMachineRuntime,
@@ -680,26 +661,6 @@ export default class ProviderApi
 		return this.post(
 			AdminApiPaths.ClearAllCounters,
 			ClearAllCountersBody.parse({ [ApiParams.dapp]: dappAccount }),
-			{
-				headers: {
-					"Prosopo-Site-Key": this.account,
-					Authorization: `Bearer ${jwt}`,
-				},
-			},
-		);
-	}
-
-	public removeDetectorKey(
-		detectorKey: string,
-		jwt: string,
-		expirationInSeconds?: number,
-	): Promise<ApiResponse> {
-		return this.post(
-			AdminApiPaths.RemoveDetectorKey,
-			RemoveDetectorKeyBodySpec.parse({
-				detectorKey,
-				expirationInSeconds,
-			}),
 			{
 				headers: {
 					"Prosopo-Site-Key": this.account,

@@ -25,10 +25,13 @@ import { Tasks } from "../../tasks/index.js";
  *
  * When the provider has a non-empty pool it picks a random bundle, records the
  * (short-TTL) `detectorSessionId → bundleId` binding in Redis, and returns the
- * obfuscated detector script inline. When no pool is loaded (dev / not yet
- * provisioned) it returns `useProviderBundle: false` so the client falls back
- * to the bundled detector and the legacy key-pool decryption path — keeping the
- * flow working everywhere without a pool.
+ * obfuscated detector script inline.
+ *
+ * When it cannot (no pool loaded, or Redis unavailable so the binding could not
+ * be persisted) it returns `useProviderBundle: false`. There is NO bundled
+ * detector and no legacy key pool to fall back to — the client then reports
+ * `detectorUnavailable` on the frictionless hop and the provider serves a
+ * challenge instead of attempting to score an absent payload.
  */
 export default (env: ProviderEnvironment) =>
 	async (

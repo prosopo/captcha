@@ -70,7 +70,6 @@ describe("Write queue integration with captcha flows", () => {
 		it("should cache PoW session in Redis after creation", async () => {
 			const db: IProviderDatabase = {
 				storeSessionRecord: vi.fn(),
-				getDetectorKeys: vi.fn(() => Promise.resolve(["test-key"])),
 			} as unknown as IProviderDatabase;
 
 			const pair: KeyringPair = {
@@ -133,7 +132,6 @@ describe("Write queue integration with captcha flows", () => {
 		it("should cache image session in Redis after creation", async () => {
 			const db: IProviderDatabase = {
 				storeSessionRecord: vi.fn(),
-				getDetectorKeys: vi.fn(() => Promise.resolve(["test-key"])),
 			} as unknown as IProviderDatabase;
 
 			const pair: KeyringPair = {

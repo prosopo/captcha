@@ -87,22 +87,6 @@ describe("Admin Routes Provider", () => {
 			expect(routes).toHaveProperty(AdminApiPaths.ToggleMaintenanceMode);
 			expect(routes[AdminApiPaths.ToggleMaintenanceMode]).toBeDefined();
 		});
-
-		it("should register POST /admin/update-detector-key endpoint", () => {
-			const adminRoutes = createApiAdminRoutesProvider(mockEnv);
-			const routes = adminRoutes.getRoutes();
-
-			expect(routes).toHaveProperty(AdminApiPaths.UpdateDetectorKey);
-			expect(routes[AdminApiPaths.UpdateDetectorKey]).toBeDefined();
-		});
-
-		it("should register POST /admin/remove-detector-key endpoint", () => {
-			const adminRoutes = createApiAdminRoutesProvider(mockEnv);
-			const routes = adminRoutes.getRoutes();
-
-			expect(routes).toHaveProperty(AdminApiPaths.RemoveDetectorKey);
-			expect(routes[AdminApiPaths.RemoveDetectorKey]).toBeDefined();
-		});
 	});
 
 	describe("Site Key Registration Endpoint", () => {
@@ -151,45 +135,6 @@ describe("Admin Routes Provider", () => {
 		});
 	});
 
-	describe("Detector Key Management Endpoints", () => {
-		it("should handle POST /admin/update-detector-key endpoint", async () => {
-			const adminRoutes = createApiAdminRoutesProvider(mockEnv);
-			const routes = adminRoutes.getRoutes();
-
-			const endpoint = routes[AdminApiPaths.UpdateDetectorKey];
-			expect(endpoint).toBeDefined();
-
-			// Test that the endpoint can be called (validation happens internally)
-			const result = await endpoint?.processRequest(
-				{
-					detectorKey: "some-detector-key",
-					action: "add",
-				},
-				mockLogger,
-			);
-
-			expect(result).toBeDefined();
-		});
-
-		it("should handle POST /admin/remove-detector-key endpoint", async () => {
-			const adminRoutes = createApiAdminRoutesProvider(mockEnv);
-			const routes = adminRoutes.getRoutes();
-
-			const endpoint = routes[AdminApiPaths.RemoveDetectorKey];
-			expect(endpoint).toBeDefined();
-
-			// Test that the endpoint can be called (validation happens internally)
-			const result = await endpoint?.processRequest(
-				{
-					detectorKey: "some-detector-key",
-				},
-				mockLogger,
-			);
-
-			expect(result).toBeDefined();
-		});
-	});
-
 	describe("Error Handling", () => {
 		it("should handle database connection errors", async () => {
 			// Mock database disconnection
@@ -222,26 +167,8 @@ describe("Admin Routes Provider", () => {
 
 			expect(routes[AdminApiPaths.SiteKeyRegister]).toBeDefined();
 			expect(routes[AdminApiPaths.SiteKeyRemove]).toBeDefined();
-			expect(routes[AdminApiPaths.UpdateDetectorKey]).toBeDefined();
-			expect(routes[AdminApiPaths.RemoveDetectorKey]).toBeDefined();
 			expect(routes[AdminApiPaths.UpdateDecisionMachine]).toBeDefined();
 			expect(routes[AdminApiPaths.ToggleMaintenanceMode]).toBeDefined();
-		});
-
-		it("still invokes the DB-backed detector-key endpoint in maintenance mode", async () => {
-			process.env.MAINTENANCE_MODE = "true";
-
-			const adminRoutes = createApiAdminRoutesProvider(mockEnv);
-			const routes = adminRoutes.getRoutes();
-
-			const endpoint = routes[AdminApiPaths.RemoveDetectorKey];
-			expect(endpoint).toBeDefined();
-
-			const result = await endpoint?.processRequest(
-				{ detectorKey: "some-detector-key" },
-				mockLogger,
-			);
-			expect(result).toBeDefined();
 		});
 	});
 });
