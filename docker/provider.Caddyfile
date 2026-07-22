@@ -158,6 +158,24 @@ http://:9090 {
 			log_key
 		}
 
+		# Compress proxied responses. Inside a `route` block directive order is
+		# literal, so this must sit above `reverse_proxy` to wrap its response.
+		#
+		# The detector-pool bundle is the reason this exists: ~830 KB of
+		# obfuscated JS returned inline from /detector/assign once per
+		# frictionless session, previously uncompressed. It still compresses well
+		# despite being obfuscated (the obfuscator's string-array encoding is very
+		# repetitive) — measured 2.6x with gzip and 3.1x with zstd, taking a
+		# single provider at 15k sessions/hour from ~9.15 TB/month of egress to
+		# ~3 TB.
+		#
+		# zstd is listed first so browsers that support it get the better ratio,
+		# with gzip as the fallback: Caddy honours the client's Accept-Encoding
+		# and picks the first listed encoding it accepts. Responses under
+		# `minimum_length` (512 bytes by default) are left alone, which covers
+		# every small JSON reply the API returns.
+		encode zstd gzip
+
 		# reverse proxy to the provider container
 		reverse_proxy {$CADDY_PROVIDER_CONTAINER_NAME:provider1}:{$CADDY_PROVIDER_PORT:9229} {$CADDY_PROVIDER_CONTAINER_NAME:provider2}:{$CADDY_PROVIDER_PORT2:9339} {
 			# https://caddyserver.com/docs/modules/http.handlers.reverse_proxy
