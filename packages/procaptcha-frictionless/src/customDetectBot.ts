@@ -142,17 +142,35 @@ const customDetectBot: BotDetectionFunction = async (
 		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
 	}
 
+	const ipMode = pickIpMode(config);
+
+	// Start the extension/account module load now rather than after the bundle
+	// assignment. It depends on nothing above, so it overlaps the provider-pin
+	// `/healthz` round-trip and the assign request for free; it is awaited below
+	// at the point `ExtClass` is first needed.
+	//
+	// This is what survives of main's parallel-pin optimisation. That change
+	// warmed BOTH `pinPromiseCache` keys — with and without ipMode — because the
+	// catcher-internal provider selector called with no ipMode while the awaited
+	// call passed one. The 3-arg detector has no provider selector at all, so
+	// only the `(env, ipMode)` key is ever used now and warming the bare-env key
+	// would just issue a healthz request nothing consumes. Nor can the pin be
+	// moved off the critical path the way it was before: the detector now comes
+	// FROM the provider, so resolving the provider is a hard prerequisite of
+	// having anything to run, not something that can proceed alongside it.
+	const extClassPromise = ExtensionLoader(config.web2);
+
 	// On the first attempt this resolves the static DNS endpoint for this env —
 	// the DNS layer load-balances across the pronode fleet. On a retry
 	// (`retryContext.attempt > 1`) the previously used pronode errored, so we
 	// pick a random provider straight from the list instead of re-pinning the
 	// same one. `pickIpMode(config)` honours the dapp's data-ipv4 / data-ipv6
 	// preference so frictionless and the subsequent captcha hops stay on the
-	// same stack. Resolved up front (before detection) so we can ask the
-	// provider for a per-session detector bundle.
+	// same stack. Resolved up front — before detection rather than alongside it —
+	// because the detector bundle is served BY this provider.
 	const provider = await getProcaptchaRandomActiveProvider(
 		config.defaultEnvironment,
-		pickIpMode(config),
+		ipMode,
 		retryContext,
 	);
 
@@ -185,7 +203,7 @@ const customDetectBot: BotDetectionFunction = async (
 		// No detector available — fall through to the PoW request below.
 	}
 
-	const ExtClass = await ExtensionLoader(config.web2);
+	const ExtClass = await extClassPromise;
 	const ext = new ExtClass();
 
 	// No provider detector ⇒ no detection is possible. Request a PoW challenge

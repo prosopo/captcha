@@ -28,7 +28,9 @@ const writeBundle = (
 	dir: string,
 	id: string,
 	js: string,
-	secrets: { privateKey?: string; innerConfig?: string } | string,
+	secrets:
+		| { privateKey?: string; innerConfig?: string; release?: string }
+		| string,
 ): void => {
 	writeFileSync(join(dir, `${id}.js`), js);
 	writeFileSync(
