@@ -126,9 +126,7 @@ describe("CentralDbStreamer end-to-end: puzzle records", () => {
 		).db.tables;
 
 		const stored = await waitForDoc(() =>
-			tables.puzzlecaptcha
-				.findOne({ challenge })
-				.lean<PuzzleCaptchaRecord>(),
+			tables.puzzlecaptcha.findOne({ challenge }).lean<PuzzleCaptchaRecord>(),
 		);
 
 		expect(stored).not.toBeNull();
@@ -198,9 +196,7 @@ describe("CentralDbStreamer end-to-end: puzzle records", () => {
 
 		// Wait until the first (pending) write lands before firing the second.
 		const afterFirst = await waitForDoc(() =>
-			tables.puzzlecaptcha
-				.findOne({ challenge })
-				.lean<PuzzleCaptchaRecord>(),
+			tables.puzzlecaptcha.findOne({ challenge }).lean<PuzzleCaptchaRecord>(),
 		);
 		expect(afterFirst?.result?.status).toBe(CaptchaStatus.pending);
 
@@ -247,9 +243,7 @@ describe("CentralDbStreamer end-to-end: puzzle records", () => {
 		).db.tables;
 
 		const stored = await waitForDoc(() =>
-			tables.puzzlecaptcha
-				.findOne({ challenge })
-				.lean<PuzzleCaptchaRecord>(),
+			tables.puzzlecaptcha.findOne({ challenge }).lean<PuzzleCaptchaRecord>(),
 		);
 
 		expect(fetchCalled).toBe(true);
