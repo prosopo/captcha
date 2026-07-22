@@ -35,12 +35,29 @@ export const setLanguage = (
 	element: Element,
 	config: ProcaptchaClientConfigInput,
 ) => {
+	const resolved = resolveLanguage(renderOptions, element);
+
+	if (resolved) {
+		config.language = resolved;
+	}
+};
+
+// Resolves the site-owner language before an i18n singleton has been created,
+// so the widget can boot i18n with the correct language on first init instead
+// of having to run a post-mount changeLanguage() effect. Returning `undefined`
+// preserves the existing "fall back to browser detection" behaviour.
+export const resolveLanguage = (
+	renderOptions: ProcaptchaRenderOptions | undefined,
+	element: Element,
+): string | undefined => {
 	const languageAttribute =
 		renderOptions?.language || element.getAttribute("data-language");
 
-	if (languageAttribute) {
-		config.language = validateLanguage(languageAttribute);
+	if (!languageAttribute) {
+		return undefined;
 	}
+
+	return validateLanguage(languageAttribute);
 };
 
 const validateLanguage = (languageAttribute: string | typeof Languages) => {

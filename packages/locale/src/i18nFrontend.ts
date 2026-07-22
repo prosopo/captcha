@@ -37,6 +37,7 @@ const getLoadPath = (language: string, namespace: string) => {
 
 export function initializeI18n(
 	i18nLoadedCallback?: (value: typeof i18n) => void,
+	lng?: string,
 ) {
 	if (!i18n.isInitialized) {
 		i18n
@@ -54,6 +55,13 @@ export function initializeI18n(
 			.use(initReactI18next)
 			.init({
 				...i18nSharedOptions,
+				// When the site owner has resolved a language upfront (via widget
+				// config or data-language) we set `lng` explicitly so i18next skips
+				// browser detection. This is the single source of truth for the
+				// widget language and prevents the flash-of-wrong-language race
+				// where child components read the browser-detected language on
+				// first render before an effect can call changeLanguage().
+				...(lng ? { lng } : {}),
 				backend: {
 					backends: [
 						HttpBackend, // if a namespace can't be loaded via normal http-backend loadPath, then the inMemoryLocalBackend will try to return the correct resources
