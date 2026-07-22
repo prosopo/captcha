@@ -30,6 +30,16 @@ import { defineConfig } from "vite";
 // static URL blocklists.
 const honeypotChunkName = `c${randomBytes(4).toString("hex")}`;
 
+// Per-build opaque chunk name for the module that holds `@prosopo/fingerprint`
+// + `@prosopo/fingerprintjs`. Same rationale as `honeypotChunkName` — but the
+// primary reason for pulling these into a single shared chunk is dedup: prior
+// to this the module was inlined into multiple downstream chunks (widget
+// bundle + procaptcha-pow), each with its own module-local `componentsCache`,
+// so the fingerprint sources (canvas / WebGL `getContext` / `getParameter` /
+// `getImageData` — expensive on real GPUs) ran twice per widget session. One
+// shared chunk = one module instance = one populated cache = one run.
+const sharedBrowserChunkName = `b${randomBytes(4).toString("hex")}`;
+
 // load env using our util because vite loadEnv is not working for .env.development
 loadEnv();
 
@@ -105,6 +115,20 @@ export default defineConfig(async ({ command, mode }) => {
 							)
 						) {
 							return honeypotChunkName;
+						}
+						// Force @prosopo/fingerprint + @prosopo/fingerprintjs into one
+						// shared chunk. Without this, Vite inlines them into every
+						// downstream chunk that imports them (widget bundle for the
+						// account/frictionless flow, procaptcha-pow for the challenge
+						// proof), giving each chunk its own module-local
+						// `componentsCache` — so the canvas / WebGL fingerprint sources
+						// run once per copy, costing ~220ms of main-thread work per
+						// duplicate. One chunk = one instance = one cache hit.
+						if (
+							id.includes("packages/fingerprint/dist") ||
+							id.includes("packages/fingerprintjs/dist")
+						) {
+							return sharedBrowserChunkName;
 						}
 						if (id.includes("wasm-crypto-wasm")) {
 							return "web3Chunk";
