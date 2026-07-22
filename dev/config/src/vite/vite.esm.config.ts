@@ -20,6 +20,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import { getExternalsFromReferences } from "../dependencies.js";
 import VitePluginCloseAndCopy from "./vite-plugin-close-and-copy.js";
 import VitePluginCopy from "./vite-plugin-copy.js";
+import VitePluginExternalizeObfuscatorDeadCode from "./vite-plugin-externalize-obfuscator-deadcode.js";
 
 export default async function (
 	name: string,
@@ -49,6 +50,7 @@ export default async function (
 	return defineConfig({
 		ssr: { external: allExternal },
 		plugins: [
+			VitePluginExternalizeObfuscatorDeadCode(),
 			// @ts-ignore
 			noBundlePlugin({
 				root: "src",

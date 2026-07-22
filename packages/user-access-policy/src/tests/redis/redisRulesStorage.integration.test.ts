@@ -279,9 +279,7 @@ describe("redisAccessRulesStorage", () => {
 				expect(afterDeleteIndexRecordsCount).toBe(0);
 			});
 		},
-		{
-			timeout: 240_000,
-		},
+		240_000,
 	);
 
 	describe("reader", () => {
