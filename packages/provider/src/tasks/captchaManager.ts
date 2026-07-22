@@ -75,25 +75,33 @@ export interface PoolBundleDecrypt {
 /**
  * Finds a hard block policy from access policies.
  *
- * A hard block is a Block policy that either (a) has no captchaType (the
- * historical "block all challenge types" case) or (b) has the
- * `deferToVerify` flag set. The deferred case is also caught here so a
- * Block policy that opted out of the request-time middleware still
- * disapproves the commitment at verify and the dApp's verify call returns
- * `{verified:false}`.
+ * A hard block is either:
+ *   (a) A Block policy with no captchaType (the historical "block all
+ *       challenge types" case).
+ *   (b) A Block policy with `deferToVerify: true` — request-time
+ *       middleware skips these, so verify-time is the only place they
+ *       can reject the commitment.
+ *   (c) A Restrict policy with `deferToVerify: true` — the frictionless
+ *       flow serves the rule's captchaType/solvedImagesCount normally
+ *       (imposing the compute burden of the challenge), then verify
+ *       marks the commitment disapproved regardless of solve outcome.
+ *       Used by PROXY_POOL_TLS_NARROW to force a solving farm to burn
+ *       8 image rounds per session while still failing verify — bots
+ *       solve at 100% so we can't stop them by demanding correctness,
+ *       only by wasting their compute.
  *
- * Policies with captchaType (but without deferToVerify) are still routing
- * rules, not hard blocks — they pick which challenge type to serve, not
- * whether to reject.
+ * Policies with captchaType and without `deferToVerify` are pure routing
+ * rules — they pick which challenge type to serve, not whether to reject.
  */
 const findHardBlockPolicy = (
 	accessPolicies: AccessPolicy[],
 ): AccessPolicy | undefined => {
-	return accessPolicies.find(
-		(policy) =>
-			policy.type === AccessPolicyType.Block &&
-			(policy.deferToVerify || !policy.captchaType),
-	);
+	return accessPolicies.find((policy) => {
+		if (policy.deferToVerify === true) {
+			return true;
+		}
+		return policy.type === AccessPolicyType.Block && !policy.captchaType;
+	});
 };
 
 export class CaptchaManager {
@@ -569,7 +577,14 @@ export class CaptchaManager {
 		userAccessRulesStorage: AccessRulesStorage,
 		clientId: string,
 		userScope: UserScope | UserScopeRecord,
-		options?: { blockOnly?: boolean },
+		options?: {
+			blockOnly?: boolean;
+			// When a caller has an Express request in scope (e.g. the
+			// verify handler), passing it here shares the per-request memo
+			// with the block middleware — a duplicate lookup within one
+			// request collapses to zero extra Redis round-trips.
+			requestMemoHost?: object;
+		},
 	) {
 		return getPrioritisedAccessRule(
 			userAccessRulesStorage,

@@ -537,6 +537,18 @@ export class PowCaptchaManager extends CaptchaManager {
 				// (decryptAndAttachSimdReadingsIfAbsent) before this re-fetch, so
 				// they are available here in decoded form for the routing machine.
 				...(sessionRecord.simdReadings && { simd: sessionRecord.simdReadings }),
+				// currentUrl / iframeUrl were captured at frictionless time
+				// from the widget's payload — the submit request has no
+				// equivalent signal (its Referer is the captcha iframe, not
+				// the host page) so we surface them from the persisted
+				// session. iframeUrl is only present when the widget was
+				// embedded at frictionless time.
+				...(sessionRecord.currentUrl && {
+					currentUrl: sessionRecord.currentUrl,
+				}),
+				...(sessionRecord.iframeUrl && {
+					iframeUrl: sessionRecord.iframeUrl,
+				}),
 			},
 		};
 
@@ -839,6 +851,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			const dnsAsymmetry = computeDnsAsymmetry(
 				enrichedDnsEvent,
 				challengeRecord.ipInfo,
+				trafficFilter,
 			);
 			if (dnsAsymmetry > 0) {
 				sessionRecord.scoreComponents = {

@@ -1,5 +1,96 @@
 # @prosopo/procaptcha
 
+## 2.10.52
+### Patch Changes
+
+  - @prosopo/procaptcha-common@2.11.12
+
+## 2.10.51
+### Patch Changes
+
+  - @prosopo/procaptcha-common@2.11.11
+
+## 2.10.50
+### Patch Changes
+
+  - @prosopo/common@3.1.45
+  - @prosopo/datasets@3.1.50
+  - @prosopo/procaptcha-common@2.11.10
+
+## 2.10.49
+### Patch Changes
+
+- Updated dependencies [85e8857]
+  - @prosopo/api@3.5.15
+  - @prosopo/types@4.9.8
+  - @prosopo/util@3.3.4
+  - @prosopo/common@3.1.44
+  - @prosopo/datasets@3.1.49
+  - @prosopo/procaptcha-common@2.11.9
+
+## 2.10.48
+### Patch Changes
+
+- Updated dependencies [8bde5df]
+  - @prosopo/types@4.9.7
+  - @prosopo/api@3.5.14
+  - @prosopo/datasets@3.1.48
+  - @prosopo/procaptcha-common@2.11.8
+
+## 2.10.47
+### Patch Changes
+
+- b3f351b: fix(procaptcha): random provider re-selection + backoff on error fallback
+  
+  When a provider errored, the widget retried the same DNS-routed endpoint immediately and in a tight loop. A fleet of widgets whose provider was unhealthy could therefore accidentally DDoS the provider fleet — retrying the same (possibly-down) endpoint as fast as the event loop allowed.
+  
+  The error-fallback path now:
+  
+  - **Re-selects a different provider on retry.** The first attempt still hits the DNS-routed endpoint (unchanged happy path, preserves session stickiness). On a retry the widget picks a random provider straight from the provider list (`getRandomProviderFromList`), weighted by provider capacity and excluding the URL that just failed. In development the list holds only the single local provider, so a retry simply re-targets that provider.
+  - **Backs off between retries.** `providerRetry` now waits an exponential-backoff-with-full-jitter delay (0.5s → 1s → 2s → 4s …, capped at 10s) before retrying, so a down provider is no longer hammered and a fleet of clients that all errored at once don't reconverge into a thundering herd.
+  
+  Applies to the image, PoW and puzzle managers and the frictionless detection flow. New shared `ProviderSelectRetryContext` type; `BotDetectionFunction` gains an optional retry-context argument.
+- Updated dependencies [b3f351b]
+- Updated dependencies [17bc76e]
+  - @prosopo/procaptcha-common@2.11.7
+  - @prosopo/types@4.9.6
+  - @prosopo/api@3.5.13
+  - @prosopo/datasets@3.1.47
+
+## 2.10.46
+### Patch Changes
+
+- Updated dependencies [6cb3218]
+  - @prosopo/types@4.9.5
+  - @prosopo/api@3.5.12
+  - @prosopo/datasets@3.1.46
+  - @prosopo/procaptcha-common@2.11.6
+
+## 2.10.45
+### Patch Changes
+
+- Updated dependencies [de12b31]
+- Updated dependencies [770954b]
+  - @prosopo/types@4.9.4
+  - @prosopo/api@3.5.11
+  - @prosopo/datasets@3.1.45
+  - @prosopo/procaptcha-common@2.11.5
+
+## 2.10.44
+### Patch Changes
+
+- Updated dependencies [18d0287]
+  - @prosopo/types@4.9.3
+  - @prosopo/api@3.5.10
+  - @prosopo/datasets@3.1.44
+  - @prosopo/procaptcha-common@2.11.4
+
+## 2.10.43
+### Patch Changes
+
+- Updated dependencies [8814425]
+  - @prosopo/api@3.5.9
+
 ## 2.10.42
 ### Patch Changes
 

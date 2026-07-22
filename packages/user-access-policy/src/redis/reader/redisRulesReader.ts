@@ -20,6 +20,7 @@ import {
 	REDIS_QUERY_DIALECT,
 	getRulesRedisQuery,
 } from "#policy/redis/reader/redisRulesQuery.js";
+import { buildScopedRulesSubQueries } from "#policy/redis/reader/redisRulesSplitQuery.js";
 import {
 	REDIS_BATCH_SIZE,
 	fetchRedisHashRecords,
@@ -63,6 +64,16 @@ export const SERVER_SIDE_RANK_TOP_N = 20;
 // per-request path.
 const GREEDY_MAX_CANDIDATES = REDIS_BATCH_SIZE * 10;
 
+// Per-sub-query cap on the hot split-query path. Each sub-query probes a
+// single discriminating index (a specific numericIp value, a specific
+// ja4Hash value, etc.) so the natural cardinality is tiny — typically
+// 1–5. The cap only fires on pathological rule-set shapes (e.g. many
+// duplicate-value rules against one attribute) and prevents a bad shape
+// from tanking the request. It intentionally lets the union grow past
+// SERVER_SIDE_RANK_TOP_N because JS-side rankCandidateRules picks the
+// winner and the extra candidates are cheap to HGETALL.
+const SPLIT_MAX_CANDIDATES_PER_SUB = 500;
+
 // Fields that contribute one specificity point each. Mirrors
 // SCALAR_USER_SCOPE_FIELDS + clientId + ip-constraint in
 // blacklistRequestInspector.ruleSpecificity. numericIp and the
@@ -80,6 +91,7 @@ const SPECIFICITY_EXPR = [
 	"exists(@coords)",
 	"exists(@countryCode)",
 	"exists(@asn)",
+	"exists(@os)",
 	"exists(@numericIp)",
 	"exists(@numericIpMaskMin)",
 ].join(" + ");
@@ -119,10 +131,44 @@ const RULE_LOAD_FIELDS = [
 	"@coords",
 	"@countryCode",
 	"@asn",
+	"@os",
 	"@numericIp",
 	"@numericIpMaskMin",
 	"@numericIpMaskMax",
 ] as const;
+
+// Populated-field count for reader-level rank (mirrors the JS ranker's
+// specificity semantics without any request-scope dependence — the reader
+// doesn't have the request scope). Enough to preserve the sort the old
+// FT.AGGREGATE ranker imposed on findRules callers.
+const readerSpecificity = (rule: AccessRule): number => {
+	let score = 0;
+	if (rule.clientId !== undefined) score++;
+	if (rule.userId !== undefined) score++;
+	if (rule.ja4Hash !== undefined) score++;
+	if (rule.headersHash !== undefined) score++;
+	if (rule.userAgentHash !== undefined) score++;
+	if (rule.headHash !== undefined) score++;
+	if (rule.coords !== undefined) score++;
+	if (rule.countryCode !== undefined) score++;
+	if (rule.asn !== undefined) score++;
+	if (rule.os !== undefined) score++;
+	if (rule.numericIp !== undefined) score++;
+	if (rule.numericIpMaskMin !== undefined) score++;
+	return score;
+};
+
+// Sort by (specificity desc, block-first). Matches the ranking the old
+// FT.AGGREGATE `RANK_EXPR = (_spec * 2) + _sev` imposed server-side, so
+// callers that consume the reader directly see the same ordering.
+const sortByReaderRank = (rules: AccessRule[]): AccessRule[] =>
+	[...rules].sort((a, b) => {
+		const specDelta = readerSpecificity(b) - readerSpecificity(a);
+		if (specDelta !== 0) return specDelta;
+		const aBlock = a.type === AccessPolicyType.Block ? 1 : 0;
+		const bBlock = b.type === AccessPolicyType.Block ? 1 : 0;
+		return bBlock - aBlock;
+	});
 
 export class RedisRulesReader implements AccessRulesReader {
 	constructor(
@@ -164,24 +210,168 @@ export class RedisRulesReader implements AccessRulesReader {
 	): Promise<AccessRule[]> {
 		const query = getRulesRedisQuery(filter, matchingFieldsOnly);
 
-		if (skipEmptyUserScopes && query === "ismissing(@clientId)") {
-			// We don't want to accidentally return all rules when the filter is empty
+		if (
+			skipEmptyUserScopes &&
+			// Sentinel query shape emitted by getPolicyScopeQuery when the
+			// caller passed neither a userScope nor a clientId — i.e. an
+			// empty filter that would otherwise resolve to "all global
+			// rules". Guard so an accidentally-empty filter can't return
+			// the full global rule set. The exact literal must stay in
+			// sync with GLOBAL_MATCH_CLAUSE_INNER over there.
+			query === "( @clientId:{global} | ismissing(@clientId) )"
+		) {
 			return [];
 		}
 
-		// Hot path: strict-match callers (blockMiddleware /
-		// checkForHardBlock) get server-side specificity ranking via
-		// FT.AGGREGATE — Redis returns the top N candidates already
-		// sorted, no HGETALL fanout. See SPECIFICITY_EXPR / RANK_EXPR
-		// above for the score definition.
-		if (matchingFieldsOnly) {
-			return this.findRulesRanked(filter, query);
+		// Hot path (all strict-match lookups): route every
+		// matchingFieldsOnly caller through the split-query path — one FT
+		// probe per populated request field, each using its own posting
+		// list — instead of the single wide FT.AGGREGATE. `blockOnly`
+		// narrows the sub-queries to `@type:{block}` for the hard-block
+		// middleware; every other caller (frictionless access-policy
+		// lookup, verify-time hard-block re-check) fetches both Block
+		// and Restrict rules and lets `rankCandidateRules` pick.
+		//
+		// The previous FT.AGGREGATE ranker used for the non-block path
+		// silently dropped specific-IP Restrict rules from the top-N
+		// when many higher-specificity irrelevant rules matched the
+		// greedy `ismissing(@field)` disjunction — the union-of-probes
+		// shape here can't hit that failure mode because each probe
+		// only returns rules where the probed field is actually
+		// populated with the request's value.
+		if (matchingFieldsOnly && filter.userScope !== undefined) {
+			return this.findRulesSplit(filter);
 		}
 
 		// Admin / internal callers (greedy mode): keep the FT.SEARCH +
 		// HGETALL fanout path. Cap at REDIS_BATCH_SIZE; truncation past
 		// that point is the known liability tracked in #2689.
 		return this.findRulesGreedy(filter, query);
+	}
+
+	// Union candidate keys from each split sub-query, de-dupe, HGETALL,
+	// parse, hand back to `getPrioritisedAccessRule` for JS-side ranking.
+	// Ranking stays in JS because rankCandidateRules already encodes the
+	// strict "every populated rule field matches request" semantics —
+	// FT can't express that shape cheaply and the previous server-side
+	// APPLY / SORTBY imposed the linear-per-rule cost we're eliminating.
+	//
+	// Handles both blockOnly (hard-block middleware) and non-blockOnly
+	// (frictionless access-policy lookup) callers via the `blockOnly`
+	// flag on the sub-query builder.
+	private async findRulesSplit(
+		filter: AccessRulesFilter,
+	): Promise<AccessRule[]> {
+		const userScope = filter.userScope;
+		if (userScope === undefined) {
+			return [];
+		}
+		const clientId = filter.policyScope?.clientId;
+
+		const subQueries = buildScopedRulesSubQueries(userScope, clientId, {
+			...(filter.blockOnly === true && { blockOnly: true }),
+		});
+
+		try {
+			const keyLists = await Promise.all(
+				subQueries.map((sub) =>
+					aggregateRedisKeys(
+						this.client,
+						sub.query,
+						this.logger,
+						undefined,
+						// Per-sub-query cap. Each probe hits a discriminating
+						// index (e.g. numericIp posting list), so the natural
+						// cardinality is tiny — this cap only fires on
+						// pathological rule-set shapes and mirrors
+						// SPLIT_MAX_CANDIDATES_PER_SUB below.
+						SPLIT_MAX_CANDIDATES_PER_SUB,
+					).catch((err) => {
+						// One sub-query failing (e.g. a transient RediSearch
+						// error) shouldn't drop the whole lookup — the other
+						// probes may still find the applicable rule. Log and
+						// continue with an empty result for this probe.
+						this.logger.error(() => ({
+							err,
+							data: {
+								inspect: util.inspect(
+									{ subKind: sub.kind, query: sub.query },
+									{ depth: null },
+								),
+							},
+							msg: "failed to execute split rule sub-query",
+						}));
+						return [];
+					}),
+				),
+			);
+
+			const uniqueKeys = new Set<string>();
+			for (const list of keyLists) {
+				for (const key of list) {
+					uniqueKeys.add(key);
+				}
+			}
+
+			if (uniqueKeys.size === 0) {
+				return [];
+			}
+
+			const ruleKeys = [...uniqueKeys];
+
+			this.logger.debug(() => ({
+				msg: "Executed split rule sub-queries",
+				data: {
+					inspect: util.inspect(
+						{
+							subQueryCount: subQueries.length,
+							uniqueCandidates: ruleKeys.length,
+							perSubQueryCounts: keyLists.map((l, i) => ({
+								kind: subQueries[i]?.kind,
+								found: l.length,
+							})),
+							filter,
+						},
+						{ depth: null },
+					),
+				},
+			}));
+
+			const { records } = await fetchRedisHashRecords(
+				this.client,
+				ruleKeys,
+				this.logger,
+			);
+
+			const nonEmptyRecords = records.filter(
+				(record) => Object.keys(record).length > 0,
+			);
+
+			const parsedRules = parseRedisRecords(
+				nonEmptyRecords,
+				accessRuleInput,
+				this.logger,
+			);
+
+			// Preserve the reader-level (specificity desc, block-first)
+			// ordering the old FT.AGGREGATE ranker gave. Split sub-queries
+			// return keys per-probe (i.e. in insertion order), so without
+			// this sort the caller sees candidates in a shape the previous
+			// implementation never returned. Downstream callers
+			// (`rankCandidateRules` in the provider) do a full re-sort, so
+			// this is purely a defence against silent behaviour changes
+			// for anyone else that consumes the reader directly.
+			return sortByReaderRank(parsedRules);
+		} catch (e) {
+			this.logger.error(() => ({
+				err: e,
+				data: {
+					inspect: util.inspect({ filter }, { depth: null }),
+				},
+				msg: "failed to execute split rule query set",
+			}));
+			return [];
+		}
 	}
 
 	private async findRulesRanked(

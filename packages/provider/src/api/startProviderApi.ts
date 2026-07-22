@@ -39,12 +39,13 @@ import type { JWT } from "@prosopo/util-crypto";
 import cors from "cors";
 import express from "express";
 import type { Request } from "express";
-import rateLimit from "express-rate-limit";
+import rateLimit, { type Options } from "express-rate-limit";
 import { initDetectorBundlePool } from "../tasks/detection/bundlePool.js";
 import { createApiAdminRoutesProvider } from "./admin/createApiAdminRoutesProvider.js";
 import { blockMiddleware } from "./block.js";
 import { prosopoRouter } from "./captcha.js";
 import { domainMiddleware } from "./domainMiddleware.js";
+import { handshakeTimingMiddleware } from "./handshakeTimingMiddleware.js";
 import { headerCheckMiddleware } from "./headerCheckMiddleware.js";
 import { ignoreMiddleware } from "./ignoreMiddleware.js";
 import { ipInfoMiddleware } from "./ipInfoMiddleware.js";
@@ -171,9 +172,13 @@ export async function startProviderApi(
 	const apiEndpointAdapter = createApiExpressDefaultEndpointAdapter(
 		parseLogLevel(env.config.logLevel),
 	);
-	// Maintenance-mode / DB-down startup: skip the admin/access-rule wiring
-	// since both rely on DB-backed Tasks construction. Captcha endpoints
-	// short-circuit on maintenance-mode at the handler.
+	// Admin + access-rule routes both rely on a DB-backed Tasks/storage. In
+	// maintenance mode the DB handle is created and connected in the background
+	// (see Environment.isReady), so env.getDb() returns a handle and these
+	// routes register and keep working — that's what keeps admin operations
+	// (rules, detector keys, site keys, decision machines) available while the
+	// captcha path short-circuits. The try/catch is a safety net for the case
+	// where no DB is configured at all.
 	let apiRuleRoutesProvider: AccessRuleApiRoutes | undefined;
 	let apiAdminRoutesProvider:
 		| ReturnType<typeof createApiAdminRoutesProvider>
@@ -253,6 +258,20 @@ export async function startProviderApi(
 			...getExpressApiRuleRateLimits(),
 		};
 		const adminPaths = Object.values(AdminApiPaths);
+		// Log 429s so operators can alarm on sustained rate limiting.
+		const rateLimitHandler =
+			(path: string): Options["handler"] =>
+			(req, res, _next, options) => {
+				env.logger.warn(() => ({
+					msg: "Rate limit exceeded",
+					data: {
+						path,
+						ip: req.ip,
+						siteKey: req.headers["prosopo-site-key"],
+					},
+				}));
+				res.status(options.statusCode).send(options.message);
+			};
 		for (const [path, limit] of Object.entries(rateLimits)) {
 			const enumPath = path as CombinedApiPaths;
 			// For admin paths, key by authenticated user instead of IP
@@ -262,6 +281,7 @@ export async function startProviderApi(
 					enumPath,
 					rateLimit({
 						...limit,
+						handler: rateLimitHandler(enumPath),
 						keyGenerator: (req) => {
 							const user = getUserFromJWT(req);
 							// Fall back to IP if no user found (shouldn't happen for admin routes with auth)
@@ -278,6 +298,7 @@ export async function startProviderApi(
 					enumPath,
 					rateLimit({
 						...limit,
+						handler: rateLimitHandler(enumPath),
 						keyGenerator: (req) => {
 							const siteKey = req.headers["prosopo-site-key"] as string;
 							// Fall back to IP if no site key found (shouldn't happen for verify routes with headerCheckMiddleware)
@@ -286,7 +307,10 @@ export async function startProviderApi(
 					}),
 				);
 			} else {
-				apiApp.use(enumPath, rateLimit(limit));
+				apiApp.use(
+					enumPath,
+					rateLimit({ ...limit, handler: rateLimitHandler(enumPath) }),
+				);
 			}
 		}
 	}
@@ -297,6 +321,7 @@ export async function startProviderApi(
 	apiApp.use(requestLoggerMiddleware(env));
 	apiApp.use(i18Middleware);
 	apiApp.use(ja4Middleware(env));
+	apiApp.use(handshakeTimingMiddleware(env));
 	apiApp.use(ipInfoMiddleware(env));
 
 	// Run Header check middleware on all client routes

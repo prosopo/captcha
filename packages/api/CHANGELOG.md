@@ -1,5 +1,63 @@
 # @prosopo/api
 
+## 3.5.15
+### Patch Changes
+
+- 85e8857: Record both the top-frame URL and the widget's own iframe URL on frictionless sessions.
+  
+  Previously the client only sent one field (`currentUrl`), which for embedded widgets resolved to the top-frame URL — so we lost visibility into which iframe endpoint the session was actually loaded through. Now the client sends both:
+  
+  - `currentUrl`: the top-frame URL (same resolution rules as before — same-origin iframes read `window.top.location.href` directly; cross-origin iframes fall back to `document.referrer`).
+  - `iframeUrl`: the widget's own frame URL when embedded. Undefined when the widget IS the top frame (nothing to distinguish).
+  
+  Both fields are sanitised client- and server-side (origin + path only; query string, fragment and any embedded credentials stripped). The provider persists both on the `Session` record and re-uses them on post-PoW escalation sessions. Only `currentUrl` is gated in the frictionless decision machine (unchanged — missing `currentUrl` still forces an image captcha); `iframeUrl` is recorded for analytics.
+  
+  Both fields are also surfaced to the decision machines as raw signals: `RoutingMachineRawSignals` gains an optional `iframeUrl` populated from the freshly decrypted frictionless payload on the `route` phase, from the persisted Session record on the `postPow` phase, and from the cached Session in the dedup replay path — matching how `currentUrl` is already threaded through.
+  
+  Additionally, sessions carry a new computed boolean `isProtect`, set at session-creation time when the widget iframe was served from `protect.<tenant>` and embedded in a page on the same tenant (subdomain-of matching, dot-boundary safe — see `isProtectDeployment` in `@prosopo/util`). Persisted only when true (same pattern as `isEscalation`) and backed by a sparse `{isProtect, createdAt}` index so analytics can cheaply retrieve Protect sessions without re-parsing URLs. Post-PoW escalation sessions inherit the flag from the origin session.
+- Updated dependencies [85e8857]
+  - @prosopo/types@4.9.8
+
+## 3.5.14
+### Patch Changes
+
+- Updated dependencies [8bde5df]
+  - @prosopo/types@4.9.7
+
+## 3.5.13
+### Patch Changes
+
+- Updated dependencies [b3f351b]
+- Updated dependencies [17bc76e]
+  - @prosopo/types@4.9.6
+
+## 3.5.12
+### Patch Changes
+
+- Updated dependencies [6cb3218]
+  - @prosopo/types@4.9.5
+
+## 3.5.11
+### Patch Changes
+
+- Updated dependencies [de12b31]
+- Updated dependencies [770954b]
+  - @prosopo/types@4.9.4
+
+## 3.5.10
+### Patch Changes
+
+- Updated dependencies [18d0287]
+  - @prosopo/types@4.9.3
+
+## 3.5.9
+### Patch Changes
+
+- 8814425: fix(api,procaptcha-frictionless): collapse the WKWebView "No session found" mount storm. Two independent client-side amplifiers were stacking to produce a cascade of `CAPTCHA.NO_SESSION_FOUND` errors during the frictionless → PoW hand-off in iPhone WKWebView.
+  
+  - `ProcaptchaFrictionless`'s outer `useEffect` depended on `[config, callbacks, detectBot, config.language]`. Host pages that recreate the `callbacks` object on every render (the common React pattern) refired the effect on each parent re-render and triggered a fresh `/frictionless` call each time. Deps are now the primitive widget identity (`config.account?.address`, `config.language`, `config.mode`) plus a `startedForKeyRef` guard, so React StrictMode double-invocation and same-identity re-renders are idempotent. `callbacks` and `detectBot` are still read live via the closure captured by `start()`.
+  - `ProviderApi` had no in-flight guard on the three challenge-fetch calls, so a WKWebView duplicate POST (microseconds-apart) would race for the atomic `checkAndRemoveSession` on the same sessionId; the loser saw `NO_SESSION_FOUND`. A per-`(path, sessionId)` in-flight dedupe now attaches duplicate calls to the same Promise. Entry drops on settle, so a genuine retry after a real network error still fires a fresh POST; skipped when there's no sessionId to race on.
+
 ## 3.5.8
 ### Patch Changes
 

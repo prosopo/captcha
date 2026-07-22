@@ -75,6 +75,11 @@ export const Manager = (
 	let storedClickX: number | undefined;
 	let storedClickY: number | undefined;
 
+	// URL of the provider used on the previous attempt. Kept outside the
+	// resetState-cleared closure state so a retry can exclude it from the
+	// candidate pool and land on a different provider.
+	let previousProviderUrl: string | undefined;
+
 	const defaultState = (): Partial<ProcaptchaState> => {
 		return {
 			// note order matters! see buildUpdateState. These fields are set in order, so disable modal first, then set loading to false, etc.
@@ -253,10 +258,12 @@ export const Manager = (
 					getRandomProviderResponse = await getProcaptchaRandomActiveProvider(
 						currentConfig.defaultEnvironment,
 						pickIpMode(currentConfig),
+						{ attempt: state.attemptCount, excludeUrl: previousProviderUrl },
 					);
 				}
 
 				const providerUrl = getRandomProviderResponse.provider.url;
+				previousProviderUrl = providerUrl;
 
 				const providerApi = new ProviderApi(providerUrl, getDappAccount());
 

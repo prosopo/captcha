@@ -57,6 +57,10 @@ const Procaptcha = (props: ProcaptchaProps) => {
 			() => hpRef.current?.value || undefined,
 		),
 	);
+	// See ProcaptchaWidget (procaptcha-pow) — same session-invalidation
+	// recovery contract with coords preservation across a re-mint.
+	const lastCoordsRef = useRef<{ x: number; y: number } | null>(null);
+	const sessionInvalidatedFiredRef = useRef(false);
 
 	useEffect(() => {
 		if (config.language) {
@@ -74,21 +78,22 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	}, [i18n, config.language]);
 
 	useEffect(() => {
-		if (props.autoStart) {
-			setLoading(true);
-			setShowRetry(false);
-			manager.current.start().then(
-				(challenge) => {
-					if (challenge) {
-						setChallengeData(challenge);
-						setPuzzlePhase("dragging");
-					}
-					setLoading(false);
-				},
-				() => setLoading(false),
-			);
-		}
-	}, [props.autoStart]);
+		if (!props.autoStart) return;
+		setLoading(true);
+		setShowRetry(false);
+		const coords = props.startCoords;
+		lastCoordsRef.current = coords ?? null;
+		manager.current.start(coords?.x ?? 0, coords?.y ?? 0).then(
+			(challenge) => {
+				if (challenge) {
+					setChallengeData(challenge);
+					setPuzzlePhase("dragging");
+				}
+				setLoading(false);
+			},
+			() => setLoading(false),
+		);
+	}, [props.autoStart, props.startCoords]);
 
 	useEffect(() => {
 		if (!state.error) return undefined;
@@ -96,14 +101,21 @@ const Procaptcha = (props: ProcaptchaProps) => {
 		setPuzzlePhase("checkbox");
 		setChallengeData(null);
 		setShowRetry(false);
-		if (state.error.key === "CAPTCHA.NO_SESSION_FOUND" && frictionlessState) {
+		if (state.error.key !== "CAPTCHA.NO_SESSION_FOUND") return undefined;
+		if (props.onSessionInvalidated && !sessionInvalidatedFiredRef.current) {
+			sessionInvalidatedFiredRef.current = true;
+			const coords = lastCoordsRef.current;
+			props.onSessionInvalidated(coords?.x, coords?.y);
+			return undefined;
+		}
+		if (frictionlessState) {
 			const timer = setTimeout(() => {
 				frictionlessState.restart();
 			}, 100);
 			return () => clearTimeout(timer);
 		}
 		return undefined;
-	}, [state.error, frictionlessState]);
+	}, [state.error, frictionlessState, props.onSessionInvalidated]);
 
 	// Add event listener for the execute event (works for invisible mode)
 	useEffect(() => {
@@ -256,6 +268,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 							y = mouseOrTouchEvent.clientY;
 						}
 
+						lastCoordsRef.current = { x, y };
 						const challenge = await manager.current.start(x, y);
 
 						if (challenge) {

@@ -247,9 +247,17 @@ describe("redisRulesReader ranked-path benchmark", () => {
 		expect(p99).toBeLessThan(P99_LATENCY_MS);
 	}, 120_000);
 
-	test("ranked findRules result size is bounded by SERVER_SIDE_RANK_TOP_N", async () => {
-		// Fully-populated request that should apply to many seeded rules
-		// — the new path must cap at SERVER_SIDE_RANK_TOP_N (20).
+	test("split findRules returns every applicable candidate (no server-side rank cap)", async () => {
+		// The old FT.AGGREGATE ranker capped candidates at
+		// SERVER_SIDE_RANK_TOP_N=20 which silently dropped
+		// specific-IP Restrict rules when a tenant had many
+		// higher-specificity irrelevant rules — the 2026-07-10
+		// Twickets regression. The split path per-probe uses
+		// discriminating posting lists, so each probe returns only
+		// rules that actually match the probed field. The union of
+		// all probes has no artificial size cap; the only bound is
+		// SPLIT_MAX_CANDIDATES_PER_SUB (500) per sub-query, which
+		// only fires on pathological rule-set shapes.
 		const { clientId, scope } = buildBenchmarkRequest(0);
 		const results = await reader.findRules(
 			{
@@ -260,7 +268,7 @@ describe("redisRulesReader ranked-path benchmark", () => {
 			},
 			true,
 		);
-		expect(results.length).toBeLessThanOrEqual(20);
+		// Must return something for a fully-populated request.
 		expect(results.length).toBeGreaterThan(0);
 	}, 60_000);
 

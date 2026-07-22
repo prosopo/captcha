@@ -34,17 +34,13 @@ export type TrafficCheckResult =
 	| { isBlocked: false }
 	| { isBlocked: true; reason: TrafficBlockReason };
 
-type EvaluateOptions = {
-	suppressVpnDatacenterInteraction: boolean;
-};
-
 // Match the allowlist against `datacenterName`, `providerName`
 // (`company.name`), and `asnOrganization` — case-insensitive, whitespace
 // trimmed. The upstream ipapi only populates `datacenter.datacenter` for
 // curated named ranges, so falling back to providerName and asnOrganization
 // lets the allowlist also catch generic CDN / cloud-provider IPs that come
 // back with `is_datacenter: true` but no datacenter name.
-const isDatacenterAllowlisted = (
+export const isDatacenterAllowlisted = (
 	ipInfo: IPInfoResult,
 	allowlist: ReadonlyArray<string> | undefined,
 ): boolean => {
@@ -73,7 +69,7 @@ const isDatacenterAllowlisted = (
 const evaluateIpInfo = (
 	ipInfo: IPInfoResponse | undefined,
 	trafficFilter: Partial<ITrafficFilter>,
-	options: EvaluateOptions,
+	isDnsExtra = false,
 ): TrafficCheckResult => {
 	if (!ipInfo || !ipInfo.isValid) {
 		return { isBlocked: false };
@@ -104,14 +100,17 @@ const evaluateIpInfo = (
 		}
 	}
 
+	const datacenterSuppressedByCategory =
+		(ipInfo.isVPN && !trafficFilter.blockVpn) ||
+		(ipInfo.isProxy && !trafficFilter.blockProxy) ||
+		(ipInfo.isTor && !trafficFilter.blockTor) ||
+		(ipInfo.isCrawler && !trafficFilter.blockCrawler);
+
 	if (
 		trafficFilter.blockDatacenter &&
 		ipInfo.isDatacenter &&
-		!(
-			options.suppressVpnDatacenterInteraction &&
-			ipInfo.isVPN &&
-			!trafficFilter.blockVpn
-		) &&
+		ipInfo.providerType !== "isp" &&
+		!datacenterSuppressedByCategory &&
 		!isDatacenterAllowlisted(ipInfo, trafficFilter.datacenterNameAllowlist)
 	) {
 		return { isBlocked: true, reason: ResultReason.DATACENTER_BLOCKED };
@@ -125,7 +124,8 @@ const evaluateIpInfo = (
 		return { isBlocked: true, reason: ResultReason.SATELLITE_BLOCKED };
 	}
 
-	if (trafficFilter.blockCrawler && ipInfo.isCrawler) {
+	// Public DNS resolvers share IP space with search crawlers.
+	if (!isDnsExtra && trafficFilter.blockCrawler && ipInfo.isCrawler) {
 		return { isBlocked: true, reason: ResultReason.CRAWLER_BLOCKED };
 	}
 
@@ -140,20 +140,28 @@ const evaluateIpInfo = (
  * `ipInfo` falls back to "not blocked" so an outage in the upstream
  * service can't block all traffic.
  *
- * One cross-filter rule: when an operator enables `blockDatacenter` but
- * leaves `blockVpn` off, commercial VPNs that exit from datacenter IPs
- * (which is most of them — Mullvad, NordVPN, ProtonVPN, etc. all run on
- * AWS/OVH/Hetzner) would otherwise be caught by the datacenter rule.
- * Operators almost never intend that: "block data centers" is about
- * scraping/automation traffic, not VPN end-users. So the datacenter
- * rule is suppressed for IPs also flagged as VPN unless the operator
- * has opted in to blocking VPN traffic explicitly.
+ * Cross-filter rule: the datacenter rule is suppressed when the IP
+ * carries a more specific category the operator has left unblocked —
+ * VPN, proxy, Tor, or crawler. All four legitimately sit on datacenter
+ * infrastructure, so "block datacenters" (a scraping rule) shouldn't
+ * catch them out the back door. Applies to primary and DNS extras.
+ *
+ * Extras-only rule: the crawler check is skipped on DNS extras. Public
+ * DNS resolvers share IP space with search crawlers.
  *
  * The datacenter rule also honours `datacenterNameAllowlist`: consumer
  * relays route through datacenter ranges and are reported as
  * `is_datacenter=true` by upstream but the exiting users are real humans.
  * Operators can list the datacenter, provider, or ASN organisation names
  * they want to allow through — see `isDatacenterAllowlisted`.
+ *
+ * The datacenter rule also short-circuits when upstream classifies the
+ * provider as an ISP (`providerType === "isp"`). Consumer ISPs like
+ * Afrihost, Comcast, or BT are sometimes flagged `is_datacenter=true` by
+ * upstream heuristics — usually because part of the ASN hosts B2B or
+ * hosting services — but the eyeball ranges behind those ASNs carry
+ * ordinary end-users. The ISP categorisation is stronger evidence of
+ * consumer traffic than the datacenter boolean.
  *
  * When `trafficFilter.skipExtrasOnValidDnsPath` is on and the catcher
  * confirmed the DNS path matched the connection path (`pathValid: true`),
@@ -166,9 +174,7 @@ export const checkTrafficFilter = (
 	extraIpInfos?: ReadonlyArray<IPInfoResponse | undefined>,
 	dnsPathValid?: boolean,
 ): TrafficCheckResult => {
-	const primary = evaluateIpInfo(ipInfo, trafficFilter, {
-		suppressVpnDatacenterInteraction: true,
-	});
+	const primary = evaluateIpInfo(ipInfo, trafficFilter);
 	if (primary.isBlocked) {
 		return primary;
 	}
@@ -178,9 +184,7 @@ export const checkTrafficFilter = (
 	}
 
 	for (const extra of extraIpInfos ?? []) {
-		const result = evaluateIpInfo(extra, trafficFilter, {
-			suppressVpnDatacenterInteraction: false,
-		});
+		const result = evaluateIpInfo(extra, trafficFilter, true);
 		if (result.isBlocked) {
 			return result;
 		}

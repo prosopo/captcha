@@ -1,5 +1,136 @@
 # @prosopo/cli
 
+## 3.6.64
+### Patch Changes
+
+- b0d446f: test(account): unit tests for CryptoWorker + ExtensionWeb2 keypair-derivation paths
+  
+  Adds unit coverage for the code changed in the sr25519-in-worker perf PR (#2830):
+  
+  - `cryptoWorker.unit.test.ts` — exercises the primitives (`entropyToMnemonic`, `mnemonicToMiniSecret`, `sr25519FromSeed`) the CryptoWorker's task dispatch calls into, and asserts the composed `entropyToKeypair` pipeline produces:
+    - a keypair byte-equivalent (address + publicKey) to `keyring.addFromMnemonic(mnemonic)`
+    - signatures that verify cross-instance (`addFromPair`-derived sig verifies against `addFromMnemonic`'s public key, and vice-versa)
+    - deterministic output for identical entropy input
+    - proper input-validation rejection for non-BIP39 entropy sizes
+  - `ExtensionWeb2.unit.test.ts` — mocks `getCryptoWorkerManager` + `getFingerprint` to lock down both branches of `createAccount`:
+    - **worker branch** — `entropyToKeypair` resolves with raw bytes, `addFromPair` produces the expected address
+    - **fallback branch** — `entropyToKeypair` rejects (worker unavailable), falls through to `entropyToMnemonic` + `addFromMnemonic` on main thread, produces the *same* address
+    - A/B check confirming worker and fallback branches derive identical addresses for the same fingerprint — the invariant that lets us swap the paths without breaking session identity for users whose worker fails
+  
+  Also wires up a `test` script and `vite.test.config.ts` in `@prosopo/account`, which had none previously.
+  
+  **cli patch**: sync bump so the release cuts a new tag (root version follows `@prosopo/cli`) and the tag-triggered `publish_release` + downstream `deploy-procaptcha-bundle` republishes the CDN bundle with the sr25519-in-worker perf improvements from #2830. Without this, the `test(account)` bump alone leaves cli at its current version, the release script computes the same root version as the previous tag, and no new `v*.*.*` tag → no publish → no CDN republish.
+
+## 3.6.63
+### Patch Changes
+
+- Updated dependencies [e2f0a29]
+  - @prosopo/provider@4.15.5
+
+## 3.6.62
+### Patch Changes
+
+- Updated dependencies [44fe294]
+  - @prosopo/provider@4.15.4
+
+## 3.6.61
+### Patch Changes
+
+- Updated dependencies [6abff15]
+- Updated dependencies [b07b448]
+  - @prosopo/logger@2.0.3
+  - @prosopo/provider@4.15.3
+  - @prosopo/common@3.1.45
+  - @prosopo/dotenv@3.0.49
+  - @prosopo/env@3.6.12
+  - @prosopo/keyring@2.9.56
+
+## 3.6.60
+### Patch Changes
+
+- Updated dependencies [550d20a]
+- Updated dependencies [85e8857]
+  - @prosopo/env@3.6.11
+  - @prosopo/provider@4.15.2
+  - @prosopo/api@3.5.15
+  - @prosopo/types@4.9.8
+  - @prosopo/util@3.3.4
+  - @prosopo/common@3.1.44
+  - @prosopo/keyring@2.9.55
+  - @prosopo/logger@2.0.2
+  - @prosopo/dotenv@3.0.48
+
+## 3.6.59
+### Patch Changes
+
+- Updated dependencies [494883f]
+- Updated dependencies [8bde5df]
+  - @prosopo/provider@4.15.1
+  - @prosopo/types@4.9.7
+  - @prosopo/env@3.6.10
+  - @prosopo/api@3.5.14
+  - @prosopo/keyring@2.9.54
+
+## 3.6.58
+### Patch Changes
+
+- Updated dependencies [7d7e767]
+- Updated dependencies [b3f351b]
+- Updated dependencies [17bc76e]
+- Updated dependencies [2e68a8d]
+- Updated dependencies [4e77fa8]
+  - @prosopo/provider@4.15.0
+  - @prosopo/types@4.9.6
+  - @prosopo/api@3.5.13
+  - @prosopo/env@3.6.9
+  - @prosopo/keyring@2.9.53
+
+## 3.6.57
+### Patch Changes
+
+- Updated dependencies [6cb3218]
+  - @prosopo/types@4.9.5
+  - @prosopo/provider@4.14.4
+  - @prosopo/api@3.5.12
+  - @prosopo/env@3.6.8
+  - @prosopo/keyring@2.9.52
+
+## 3.6.56
+### Patch Changes
+
+- Updated dependencies [de12b31]
+- Updated dependencies [770954b]
+  - @prosopo/provider@4.14.3
+  - @prosopo/types@4.9.4
+  - @prosopo/api@3.5.11
+  - @prosopo/env@3.6.7
+  - @prosopo/keyring@2.9.51
+
+## 3.6.55
+### Patch Changes
+
+- Updated dependencies [5068381]
+  - @prosopo/provider@4.14.2
+
+## 3.6.54
+### Patch Changes
+
+- Updated dependencies [18d0287]
+  - @prosopo/types@4.9.3
+  - @prosopo/api@3.5.10
+  - @prosopo/env@3.6.6
+  - @prosopo/keyring@2.9.50
+  - @prosopo/provider@4.14.1
+
+## 3.6.53
+### Patch Changes
+
+- Updated dependencies [ca78a0c]
+- Updated dependencies [8814425]
+  - @prosopo/provider@4.14.0
+  - @prosopo/api@3.5.9
+  - @prosopo/env@3.6.5
+
 ## 3.6.52
 ### Patch Changes
 

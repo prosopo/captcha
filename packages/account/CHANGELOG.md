@@ -1,5 +1,105 @@
 # @prosopo/account
 
+## 2.8.59
+### Patch Changes
+
+- b0d446f: test(account): unit tests for CryptoWorker + ExtensionWeb2 keypair-derivation paths
+  
+  Adds unit coverage for the code changed in the sr25519-in-worker perf PR (#2830):
+  
+  - `cryptoWorker.unit.test.ts` — exercises the primitives (`entropyToMnemonic`, `mnemonicToMiniSecret`, `sr25519FromSeed`) the CryptoWorker's task dispatch calls into, and asserts the composed `entropyToKeypair` pipeline produces:
+    - a keypair byte-equivalent (address + publicKey) to `keyring.addFromMnemonic(mnemonic)`
+    - signatures that verify cross-instance (`addFromPair`-derived sig verifies against `addFromMnemonic`'s public key, and vice-versa)
+    - deterministic output for identical entropy input
+    - proper input-validation rejection for non-BIP39 entropy sizes
+  - `ExtensionWeb2.unit.test.ts` — mocks `getCryptoWorkerManager` + `getFingerprint` to lock down both branches of `createAccount`:
+    - **worker branch** — `entropyToKeypair` resolves with raw bytes, `addFromPair` produces the expected address
+    - **fallback branch** — `entropyToKeypair` rejects (worker unavailable), falls through to `entropyToMnemonic` + `addFromMnemonic` on main thread, produces the *same* address
+    - A/B check confirming worker and fallback branches derive identical addresses for the same fingerprint — the invariant that lets us swap the paths without breaking session identity for users whose worker fails
+  
+  Also wires up a `test` script and `vite.test.config.ts` in `@prosopo/account`, which had none previously.
+  
+  **cli patch**: sync bump so the release cuts a new tag (root version follows `@prosopo/cli`) and the tag-triggered `publish_release` + downstream `deploy-procaptcha-bundle` republishes the CDN bundle with the sr25519-in-worker perf improvements from #2830. Without this, the `test(account)` bump alone leaves cli at its current version, the release script computes the same root version as the previous tag, and no new `v*.*.*` tag → no publish → no CDN republish.
+
+## 2.8.58
+### Patch Changes
+
+- ced80a4: perf(account,procaptcha-frictionless): move sr25519 keypair derivation into CryptoWorker + trim critical-path round-trips
+  
+  Reduces the frictionless client-side gap (last widget-bundle chunk → `POST /v1/prosopo/provider/client/captcha/frictionless`) by ~1s on constrained hardware (measured at 30x CPU throttle, mean over 5 samples: **3431ms → 2434ms, −997ms / −29%**).
+  
+  Three changes in one PR because they interact:
+  
+  1. **sr25519 keypair derivation moves off the main thread.** `ExtensionWeb2.createAccount` was calling `keyring.addFromMnemonic(mnemonic)` synchronously on the main thread. Internally that's `mnemonicToMiniSecret` → `sr25519FromSeed` → a scalar multiplication on Ristretto25519 via `@noble/curves`, dominated by `wNAFCached` / `getPrecomputes` / `multiply`. On a mid-tier laptop that's ~500ms of blocking main-thread work sitting inside the giant `HandlePostMessage → RunMicrotasks` task that also runs the DOM-bound detectors. CryptoWorker now does the derivation and returns the raw `{publicKey, secretKey}` bytes; main thread wraps them with `keyring.addFromPair(...)` which is cheap byte-packaging — no ECC work.
+  
+  2. **`entropyToMnemonic` + keypair derivation fused into a single worker task (`entropyToKeypair`).** Previously two sequential worker round-trips would have been needed (entropy → mnemonic on worker → return → mnemonic → keypair on worker → return). Fusing saves one postMessage transit (~30-80ms under throttle) on the critical path. The existing `entropyToMnemonic` task stays for callers that still want the mnemonic string standalone.
+  
+  3. **`CryptoWorkerManager.testWorker()` removed.** It was a Blob-URL-era defensive check — post-construction failures already surface via `worker.onerror` (which cleans up so the next `runTask` reinitialises), and task-level failures surface via `runTask`'s 10s timeout + reject (which triggers the main-thread fallback). Under Vite's `?worker&inline` constructor the round-trip is pure overhead. Removing it saves ~30-80ms per worker init on constrained hardware.
+  
+  Also: `customDetectBot` starts `ext.getAccount(config)` before calling `detect()` so the CryptoWorker task overlaps with the detector's module.evaluate + botScore work instead of gating them at the end.
+  
+  Fallback path is preserved end-to-end: worker construction failure or task timeout falls back to synchronous main-thread derivation via `entropyToMnemonic` + `keyring.addFromMnemonic`, matching prior behaviour for browsers that block workers (CSP, embedded WebViews).
+  
+  Measurement setup: Chrome via CDP, 30x CPU throttling, 5 samples each on identical hardware, gap timed from last js chunk `finish` → `healthz` request start (proxy for “widget can send frictionless POST”). Both sides use the same generation of the catcher-derived detector blob, so the delta reflects only the captcha-side changes.
+
+## 2.8.57
+### Patch Changes
+
+  - @prosopo/common@3.1.45
+  - @prosopo/keyring@2.9.56
+
+## 2.8.56
+### Patch Changes
+
+- Updated dependencies [85e8857]
+  - @prosopo/types@4.9.8
+  - @prosopo/util@3.3.4
+  - @prosopo/common@3.1.44
+  - @prosopo/fingerprint@2.7.14
+  - @prosopo/keyring@2.9.55
+
+## 2.8.55
+### Patch Changes
+
+- Updated dependencies [8bde5df]
+  - @prosopo/types@4.9.7
+  - @prosopo/fingerprint@2.7.13
+  - @prosopo/keyring@2.9.54
+
+## 2.8.54
+### Patch Changes
+
+- Updated dependencies [b3f351b]
+- Updated dependencies [17bc76e]
+  - @prosopo/types@4.9.6
+  - @prosopo/fingerprint@2.7.12
+  - @prosopo/keyring@2.9.53
+
+## 2.8.53
+### Patch Changes
+
+- Updated dependencies [6cb3218]
+  - @prosopo/types@4.9.5
+  - @prosopo/fingerprint@2.7.11
+  - @prosopo/keyring@2.9.52
+
+## 2.8.52
+### Patch Changes
+
+- Updated dependencies [de12b31]
+- Updated dependencies [770954b]
+  - @prosopo/types@4.9.4
+  - @prosopo/fingerprint@2.7.10
+  - @prosopo/keyring@2.9.51
+
+## 2.8.51
+### Patch Changes
+
+- Updated dependencies [18d0287]
+  - @prosopo/types@4.9.3
+  - @prosopo/fingerprint@2.7.9
+  - @prosopo/keyring@2.9.50
+
 ## 2.8.50
 ### Patch Changes
 

@@ -1,5 +1,35 @@
 # @prosopo/vue-procaptcha-wrapper
 
+## 1.1.97
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.99
+
+## 1.1.96
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.98
+
+## 1.1.95
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.97
+
+## 1.1.94
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.96
+
+## 1.1.93
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.95
+
+## 1.1.92
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.94
+
 ## 1.1.91
 ### Patch Changes
 

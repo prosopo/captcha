@@ -158,24 +158,30 @@ export enum AdminApiPaths {
 export type CombinedApiPaths = ClientApiPaths | AdminApiPaths;
 
 export const ProviderDefaultRateLimits = {
-	[ClientApiPaths.GetImageCaptchaChallenge]: { windowMs: 60000, limit: 30 },
-	[ClientApiPaths.GetPowCaptchaChallenge]: { windowMs: 60000, limit: 60 },
-	[ClientApiPaths.SubmitImageCaptchaSolution]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.GetImageCaptchaChallenge]: { windowMs: 60000, limit: 150 },
+	[ClientApiPaths.GetPowCaptchaChallenge]: { windowMs: 60000, limit: 300 },
+	[ClientApiPaths.SubmitImageCaptchaSolution]: {
+		windowMs: 60000,
+		limit: 300,
+	},
 	[ClientApiPaths.GetFrictionlessCaptchaChallenge]: {
 		windowMs: 60000,
-		limit: 60,
+		limit: 300,
 	},
-	[ClientApiPaths.SubmitPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
-	[ClientApiPaths.VerifyPowCaptchaSolution]: { windowMs: 60000, limit: 3000 },
-	[ClientApiPaths.GetPuzzleCaptchaChallenge]: { windowMs: 60000, limit: 60 },
-	[ClientApiPaths.SubmitPuzzleCaptchaSolution]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.SubmitPowCaptchaSolution]: { windowMs: 60000, limit: 300 },
+	[ClientApiPaths.VerifyPowCaptchaSolution]: { windowMs: 60000, limit: 15000 },
+	[ClientApiPaths.GetPuzzleCaptchaChallenge]: { windowMs: 60000, limit: 300 },
+	[ClientApiPaths.SubmitPuzzleCaptchaSolution]: {
+		windowMs: 60000,
+		limit: 300,
+	},
 	[ClientApiPaths.VerifyPuzzleCaptchaSolution]: {
 		windowMs: 60000,
-		limit: 3000,
+		limit: 15000,
 	},
 	[ClientApiPaths.VerifyImageCaptchaSolutionDapp]: {
 		windowMs: 60000,
-		limit: 3000,
+		limit: 15000,
 	},
 	[ClientApiPaths.GetProviderStatus]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.CheckSpamEmail]: { windowMs: 60000, limit: 60 },
@@ -225,6 +231,17 @@ export type FrontendProvider = {
 export type RandomProvider = {
 	providerAccount: string;
 	provider: FrontendProvider;
+};
+
+// Context handed to provider selection when the widget re-selects a provider
+// after an error. `attempt` is the 1-indexed try count (1 = first, healthy
+// try; >1 = a fallback retry). On a retry the widget picks a random provider
+// straight from the provider list instead of the DNS-routed endpoint so a
+// single down provider isn't hammered; `excludeUrl` drops the provider that
+// just failed from the candidate pool when it is known.
+export type ProviderSelectRetryContext = {
+	attempt: number;
+	excludeUrl?: string;
 };
 
 type RateLimitSchemaType = ZodObject<{
@@ -562,7 +579,16 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	// server-side and gated in the decision machine (a missing value forces
 	// an image captcha). Optional on the wire so the schema still parses for
 	// older clients — the decision machine handles absence.
+	//
+	// When the widget is embedded in an iframe, `currentUrl` is resolved to
+	// the top-frame URL (same-origin: read directly; cross-origin: via
+	// `document.referrer`). `iframeUrl` carries the widget's own frame URL
+	// alongside so analytics can distinguish "Protect's site-wide iframe
+	// endpoint" from "the page the user was actually on". Undefined when the
+	// widget IS the top frame — nothing to distinguish. Re-sanitised
+	// server-side; not gated in the decision machine.
 	[ApiParams.currentUrl]: boundedString(INPUT_LIMITS.URL).optional(),
+	[ApiParams.iframeUrl]: boundedString(INPUT_LIMITS.URL).optional(),
 });
 
 export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BlacklistRequestInspector } from "../../../api/blacklistRequestInspector.js";
 import { blockMiddleware } from "../../../api/block.js";
 
@@ -22,6 +22,11 @@ vi.mock("../../../api/blacklistRequestInspector.js");
 describe("blockMiddleware", () => {
 	beforeEach(() => {
 		vi.mocked(BlacklistRequestInspector).mockClear();
+		process.env.MAINTENANCE_MODE = undefined;
+	});
+
+	afterEach(() => {
+		process.env.MAINTENANCE_MODE = undefined;
 	});
 	const buildMockEnv = (
 		getUserAccessRulesStorageImpl: () => unknown = () => ({
@@ -59,6 +64,21 @@ describe("blockMiddleware", () => {
 		// Lazy phase: inspector built and wired on first hit.
 		expect(BlacklistRequestInspector).toHaveBeenCalledTimes(1);
 		expect(mockAbort).toHaveBeenCalledTimes(1);
+	});
+
+	it("skips the blocklist check entirely when maintenance mode is on", async () => {
+		process.env.MAINTENANCE_MODE = "true";
+		const { env, mockDb } = buildMockEnv();
+
+		const middleware = blockMiddleware(env);
+		const next = vi.fn();
+		await middleware({} as never, {} as never, next);
+
+		// next() invoked directly; the DB/storage is never consulted and no
+		// inspector is built, so a down Redis can't gate maintenance requests.
+		expect(next).toHaveBeenCalledTimes(1);
+		expect(BlacklistRequestInspector).not.toHaveBeenCalled();
+		expect(mockDb.getUserAccessRulesStorage).not.toHaveBeenCalled();
 	});
 
 	it("skips the blocklist check when access-rules storage is unavailable", async () => {

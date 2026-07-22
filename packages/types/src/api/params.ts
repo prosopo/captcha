@@ -61,6 +61,7 @@ export enum ApiParams {
 	behavioralData = "behavioralData",
 	simdReadings = "simdReadings",
 	currentUrl = "currentUrl",
+	iframeUrl = "iframeUrl",
 	decisionMachineScope = "decisionMachineScope",
 	decisionMachineRuntime = "decisionMachineRuntime",
 	decisionMachineSource = "decisionMachineSource",

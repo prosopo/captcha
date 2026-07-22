@@ -1,5 +1,180 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.12.14
+### Patch Changes
+
+  - @prosopo/procaptcha-common@2.11.12
+  - @prosopo/procaptcha-pow@2.10.18
+  - @prosopo/procaptcha-puzzle@2.10.33
+  - @prosopo/procaptcha-react@2.9.91
+
+## 2.12.13
+### Patch Changes
+
+- ced80a4: perf(account,procaptcha-frictionless): move sr25519 keypair derivation into CryptoWorker + trim critical-path round-trips
+  
+  Reduces the frictionless client-side gap (last widget-bundle chunk → `POST /v1/prosopo/provider/client/captcha/frictionless`) by ~1s on constrained hardware (measured at 30x CPU throttle, mean over 5 samples: **3431ms → 2434ms, −997ms / −29%**).
+  
+  Three changes in one PR because they interact:
+  
+  1. **sr25519 keypair derivation moves off the main thread.** `ExtensionWeb2.createAccount` was calling `keyring.addFromMnemonic(mnemonic)` synchronously on the main thread. Internally that's `mnemonicToMiniSecret` → `sr25519FromSeed` → a scalar multiplication on Ristretto25519 via `@noble/curves`, dominated by `wNAFCached` / `getPrecomputes` / `multiply`. On a mid-tier laptop that's ~500ms of blocking main-thread work sitting inside the giant `HandlePostMessage → RunMicrotasks` task that also runs the DOM-bound detectors. CryptoWorker now does the derivation and returns the raw `{publicKey, secretKey}` bytes; main thread wraps them with `keyring.addFromPair(...)` which is cheap byte-packaging — no ECC work.
+  
+  2. **`entropyToMnemonic` + keypair derivation fused into a single worker task (`entropyToKeypair`).** Previously two sequential worker round-trips would have been needed (entropy → mnemonic on worker → return → mnemonic → keypair on worker → return). Fusing saves one postMessage transit (~30-80ms under throttle) on the critical path. The existing `entropyToMnemonic` task stays for callers that still want the mnemonic string standalone.
+  
+  3. **`CryptoWorkerManager.testWorker()` removed.** It was a Blob-URL-era defensive check — post-construction failures already surface via `worker.onerror` (which cleans up so the next `runTask` reinitialises), and task-level failures surface via `runTask`'s 10s timeout + reject (which triggers the main-thread fallback). Under Vite's `?worker&inline` constructor the round-trip is pure overhead. Removing it saves ~30-80ms per worker init on constrained hardware.
+  
+  Also: `customDetectBot` starts `ext.getAccount(config)` before calling `detect()` so the CryptoWorker task overlaps with the detector's module.evaluate + botScore work instead of gating them at the end.
+  
+  Fallback path is preserved end-to-end: worker construction failure or task timeout falls back to synchronous main-thread derivation via `entropyToMnemonic` + `keyring.addFromMnemonic`, matching prior behaviour for browsers that block workers (CSP, embedded WebViews).
+  
+  Measurement setup: Chrome via CDP, 30x CPU throttling, 5 samples each on identical hardware, gap timed from last js chunk `finish` → `healthz` request start (proxy for “widget can send frictionless POST”). Both sides use the same generation of the catcher-derived detector blob, so the delta reflects only the captcha-side changes.
+  - @prosopo/procaptcha-common@2.11.11
+  - @prosopo/procaptcha-pow@2.10.17
+  - @prosopo/procaptcha-puzzle@2.10.32
+  - @prosopo/procaptcha-react@2.9.90
+
+## 2.12.12
+### Patch Changes
+
+  - @prosopo/common@3.1.45
+  - @prosopo/procaptcha-pow@2.10.16
+  - @prosopo/procaptcha-puzzle@2.10.31
+  - @prosopo/procaptcha-react@2.9.89
+  - @prosopo/procaptcha-common@2.11.10
+
+## 2.12.11
+### Patch Changes
+
+- 85e8857: Record both the top-frame URL and the widget's own iframe URL on frictionless sessions.
+  
+  Previously the client only sent one field (`currentUrl`), which for embedded widgets resolved to the top-frame URL — so we lost visibility into which iframe endpoint the session was actually loaded through. Now the client sends both:
+  
+  - `currentUrl`: the top-frame URL (same resolution rules as before — same-origin iframes read `window.top.location.href` directly; cross-origin iframes fall back to `document.referrer`).
+  - `iframeUrl`: the widget's own frame URL when embedded. Undefined when the widget IS the top frame (nothing to distinguish).
+  
+  Both fields are sanitised client- and server-side (origin + path only; query string, fragment and any embedded credentials stripped). The provider persists both on the `Session` record and re-uses them on post-PoW escalation sessions. Only `currentUrl` is gated in the frictionless decision machine (unchanged — missing `currentUrl` still forces an image captcha); `iframeUrl` is recorded for analytics.
+  
+  Both fields are also surfaced to the decision machines as raw signals: `RoutingMachineRawSignals` gains an optional `iframeUrl` populated from the freshly decrypted frictionless payload on the `route` phase, from the persisted Session record on the `postPow` phase, and from the cached Session in the dedup replay path — matching how `currentUrl` is already threaded through.
+  
+  Additionally, sessions carry a new computed boolean `isProtect`, set at session-creation time when the widget iframe was served from `protect.<tenant>` and embedded in a page on the same tenant (subdomain-of matching, dot-boundary safe — see `isProtectDeployment` in `@prosopo/util`). Persisted only when true (same pattern as `isEscalation`) and backed by a sparse `{isProtect, createdAt}` index so analytics can cheaply retrieve Protect sessions without re-parsing URLs. Post-PoW escalation sessions inherit the flag from the origin session.
+- Updated dependencies [85e8857]
+  - @prosopo/api@3.5.15
+  - @prosopo/types@4.9.8
+  - @prosopo/procaptcha-pow@2.10.15
+  - @prosopo/procaptcha-puzzle@2.10.30
+  - @prosopo/common@3.1.44
+  - @prosopo/detector@3.5.9
+  - @prosopo/procaptcha-common@2.11.9
+  - @prosopo/procaptcha-react@2.9.88
+
+## 2.12.10
+### Patch Changes
+
+- Updated dependencies [8bde5df]
+  - @prosopo/types@4.9.7
+  - @prosopo/api@3.5.14
+  - @prosopo/detector@3.5.8
+  - @prosopo/procaptcha-common@2.11.8
+  - @prosopo/procaptcha-pow@2.10.14
+  - @prosopo/procaptcha-puzzle@2.10.29
+  - @prosopo/procaptcha-react@2.9.87
+
+## 2.12.9
+### Patch Changes
+
+- 35d2784: Report the top-frame URL as `currentUrl` when the widget runs inside an iframe.
+  
+  Previously the frictionless client always sent `window.location.origin + pathname`, which is the iframe's own URL — so every session loaded through Protect's site-wide iframe (`protect.<tenant>.live/...`) reported the same widget endpoint regardless of which page the user was actually on. Downstream detectors (HEAD_HASH_OUTLIER's proxy-pool signal in particular) then saw diverse-geography traffic on one URL+UA fingerprint and treated our own iframe as a bot cluster.
+  
+  Resolution order for `currentUrl`:
+  1. Top window → local `location.href` (widget is the top frame).
+  2. Same-origin iframe → `window.top.location.href`.
+  3. Cross-origin iframe → `document.referrer` (browser fills it subject to Referrer-Policy).
+  4. Fallback → the iframe's own `location.href` so the field is never empty.
+  
+  Origin+path sanitisation is preserved across all paths — the query string, fragment and any embedded credentials are still stripped before the URL leaves the browser.
+
+## 2.12.8
+### Patch Changes
+
+- b3f351b: fix(procaptcha): random provider re-selection + backoff on error fallback
+  
+  When a provider errored, the widget retried the same DNS-routed endpoint immediately and in a tight loop. A fleet of widgets whose provider was unhealthy could therefore accidentally DDoS the provider fleet — retrying the same (possibly-down) endpoint as fast as the event loop allowed.
+  
+  The error-fallback path now:
+  
+  - **Re-selects a different provider on retry.** The first attempt still hits the DNS-routed endpoint (unchanged happy path, preserves session stickiness). On a retry the widget picks a random provider straight from the provider list (`getRandomProviderFromList`), weighted by provider capacity and excluding the URL that just failed. In development the list holds only the single local provider, so a retry simply re-targets that provider.
+  - **Backs off between retries.** `providerRetry` now waits an exponential-backoff-with-full-jitter delay (0.5s → 1s → 2s → 4s …, capped at 10s) before retrying, so a down provider is no longer hammered and a fleet of clients that all errored at once don't reconverge into a thundering herd.
+  
+  Applies to the image, PoW and puzzle managers and the frictionless detection flow. New shared `ProviderSelectRetryContext` type; `BotDetectionFunction` gains an optional retry-context argument.
+- Updated dependencies [b3f351b]
+- Updated dependencies [17bc76e]
+  - @prosopo/procaptcha-common@2.11.7
+  - @prosopo/procaptcha-puzzle@2.10.28
+  - @prosopo/procaptcha-pow@2.10.13
+  - @prosopo/types@4.9.6
+  - @prosopo/procaptcha-react@2.9.86
+  - @prosopo/api@3.5.13
+  - @prosopo/detector@3.5.7
+
+## 2.12.7
+### Patch Changes
+
+- Updated dependencies [6cb3218]
+  - @prosopo/types@4.9.5
+  - @prosopo/api@3.5.12
+  - @prosopo/detector@3.5.6
+  - @prosopo/procaptcha-common@2.11.6
+  - @prosopo/procaptcha-pow@2.10.12
+  - @prosopo/procaptcha-puzzle@2.10.27
+  - @prosopo/procaptcha-react@2.9.85
+
+## 2.12.6
+### Patch Changes
+
+- Updated dependencies [de12b31]
+- Updated dependencies [770954b]
+  - @prosopo/types@4.9.4
+  - @prosopo/api@3.5.11
+  - @prosopo/detector@3.5.5
+  - @prosopo/procaptcha-common@2.11.5
+  - @prosopo/procaptcha-pow@2.10.11
+  - @prosopo/procaptcha-puzzle@2.10.26
+  - @prosopo/procaptcha-react@2.9.84
+
+## 2.12.5
+### Patch Changes
+
+- 18d0287: fix(procaptcha-frictionless,procaptcha-pow,procaptcha-puzzle,procaptcha-react): auto-recover from `CAPTCHA.NO_SESSION_FOUND` on the inner widget without asking the user to click the checkbox a second time, and without dropping the click coordinates that would otherwise land in the solution salt as `(0, 0)`.
+  
+  Motivation. The in-flight dedupe added in the previous change only collapses `/captcha/{type}` POSTs that overlap in flight. A duplicate POST that fires ~1 s after the first has already settled (observed on iPhone WKWebView, incident 2026-07-01 21:23 UTC) still lands on a consumed session and returns `NO_SESSION_FOUND`. The pre-existing recovery for that case was a `setTimeout(restart, 100)` that tore the whole widget down and lost the checkbox click position.
+  
+  - `ProcaptchaProps` gains two optional props: `onSessionInvalidated(x?, y?)` and `startCoords: { x, y }`. Widgets not mounted under a recovery-aware parent still fall back to `frictionlessState.restart()`.
+  - `procaptcha-pow`, `procaptcha-puzzle`, and `procaptcha-react` widgets now track the last `manager.start(x, y)` coords in a ref (either from the checkbox click or from `startCoords`) and, on the first `CAPTCHA.NO_SESSION_FOUND`, invoke `onSessionInvalidated(x, y)` instead of calling `restart()`. A per-instance ref makes it strictly one-shot — a second failure falls back to the existing restart path so a persistently broken session doesn't loop.
+  - `ProcaptchaFrictionless` wires `onSessionInvalidated` through to each inner widget: it stashes the retry coords in a ref, re-runs its own `start()` (which re-invokes `/frictionless` and mints a fresh sessionId), then re-mounts the inner widget with `autoStart={true}` and `startCoords={x, y}`. The inner widget auto-fires `manager.start(x, y)` on mount so the eventual submit still embeds the real checkbox click position in the salt.
+  - The recovery decision (one-shot fire, coord validation — `(0, 0)` and partial pairs are discarded because they're what an `autoStart` mount or an untrusted pointer event emits rather than a real click, and the consume-and-clear pending-coords ref) is extracted into `sessionInvalidatedRecovery.ts` with dedicated unit tests.
+- Updated dependencies [18d0287]
+  - @prosopo/types@4.9.3
+  - @prosopo/procaptcha-pow@2.10.10
+  - @prosopo/procaptcha-puzzle@2.10.25
+  - @prosopo/procaptcha-react@2.9.83
+  - @prosopo/api@3.5.10
+  - @prosopo/detector@3.5.4
+  - @prosopo/procaptcha-common@2.11.4
+
+## 2.12.4
+### Patch Changes
+
+- 8814425: fix(api,procaptcha-frictionless): collapse the WKWebView "No session found" mount storm. Two independent client-side amplifiers were stacking to produce a cascade of `CAPTCHA.NO_SESSION_FOUND` errors during the frictionless → PoW hand-off in iPhone WKWebView.
+  
+  - `ProcaptchaFrictionless`'s outer `useEffect` depended on `[config, callbacks, detectBot, config.language]`. Host pages that recreate the `callbacks` object on every render (the common React pattern) refired the effect on each parent re-render and triggered a fresh `/frictionless` call each time. Deps are now the primitive widget identity (`config.account?.address`, `config.language`, `config.mode`) plus a `startedForKeyRef` guard, so React StrictMode double-invocation and same-identity re-renders are idempotent. `callbacks` and `detectBot` are still read live via the closure captured by `start()`.
+  - `ProviderApi` had no in-flight guard on the three challenge-fetch calls, so a WKWebView duplicate POST (microseconds-apart) would race for the atomic `checkAndRemoveSession` on the same sessionId; the loser saw `NO_SESSION_FOUND`. A per-`(path, sessionId)` in-flight dedupe now attaches duplicate calls to the same Promise. Entry drops on settle, so a genuine retry after a real network error still fires a fresh POST; skipped when there's no sessionId to race on.
+- Updated dependencies [8814425]
+  - @prosopo/api@3.5.9
+  - @prosopo/procaptcha-pow@2.10.9
+  - @prosopo/procaptcha-puzzle@2.10.24
+  - @prosopo/procaptcha-react@2.9.82
+
 ## 2.12.3
 ### Patch Changes
 

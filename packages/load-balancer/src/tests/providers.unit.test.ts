@@ -13,11 +13,13 @@
 // limitations under the License.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { HardcodedProvider } from "../balancer.js";
 import {
 	_resetPinCache,
 	_resetProviderListCache,
 	getProviders,
 	getRandomActiveProvider,
+	getRandomProviderFromList,
 } from "../providers.js";
 
 // Mock the underlying load balancer so getProviders' caching/failure semantics
@@ -185,5 +187,132 @@ describe("getProviders", () => {
 		const retry = await getProviders("production");
 		expect(retry).toBe(providers);
 		expect(loadBalancer).toHaveBeenCalledTimes(2);
+	});
+});
+
+describe("getRandomProviderFromList", () => {
+	const providerList: HardcodedProvider[] = [
+		{
+			address: "5A",
+			url: "https://provider-a.io",
+			datasetId: "0x0",
+			weight: 1,
+		},
+		{
+			address: "5B",
+			url: "https://provider-b.io",
+			datasetId: "0x0",
+			weight: 1,
+		},
+		{
+			address: "5C",
+			url: "https://provider-c.io",
+			datasetId: "0x0",
+			weight: 1,
+		},
+	];
+
+	beforeEach(() => {
+		_resetProviderListCache();
+		_resetPinCache();
+		loadBalancer.mockReset();
+	});
+
+	it("picks a provider from the list (not the DNS-routed endpoint)", async () => {
+		loadBalancer.mockResolvedValue(providerList);
+		// random just above 1/3 lands in the second bucket (uniform weights).
+		const result = await getRandomProviderFromList(
+			"production",
+			undefined,
+			undefined,
+			() => 0.4,
+		);
+		expect(result.provider.url).toBe("https://provider-b.io");
+		expect(result.providerAccount).toBe("5B");
+	});
+
+	it("excludes the provider that just failed when others remain", async () => {
+		loadBalancer.mockResolvedValue(providerList);
+		// random=0 would normally pick the first entry; excluding provider-a
+		// shifts the pool so index 0 is provider-b.
+		const result = await getRandomProviderFromList(
+			"production",
+			undefined,
+			"https://provider-a.io",
+			() => 0,
+		);
+		expect(result.provider.url).not.toBe("https://provider-a.io");
+		expect(result.provider.url).toBe("https://provider-b.io");
+	});
+
+	it("ignores a trailing slash when matching the excluded url", async () => {
+		loadBalancer.mockResolvedValue(providerList);
+		const result = await getRandomProviderFromList(
+			"production",
+			undefined,
+			"https://provider-a.io/",
+			() => 0,
+		);
+		expect(result.provider.url).toBe("https://provider-b.io");
+	});
+
+	it("still returns the only provider in development even if it is excluded", async () => {
+		const single: HardcodedProvider[] = [
+			{
+				address: "5Local",
+				url: "https://localhost:9229",
+				datasetId: "0x0",
+				weight: 1,
+			},
+		];
+		loadBalancer.mockResolvedValue(single);
+		const result = await getRandomProviderFromList(
+			"development",
+			undefined,
+			"https://localhost:9229",
+			() => 0,
+		);
+		expect(result.provider.url).toBe("https://localhost:9229");
+	});
+
+	it("applies the ipv4 label to the chosen provider url", async () => {
+		loadBalancer.mockResolvedValue(providerList);
+		const result = await getRandomProviderFromList(
+			"production",
+			"ipv4",
+			undefined,
+			() => 0,
+		);
+		expect(result.provider.url).toBe("https://ipv4.provider-a.io");
+	});
+
+	it("weights the pick by provider weight", async () => {
+		const weighted: HardcodedProvider[] = [
+			{ address: "5A", url: "https://a.io", datasetId: "0x0", weight: 1 },
+			{ address: "5B", url: "https://b.io", datasetId: "0x0", weight: 99 },
+		];
+		loadBalancer.mockResolvedValue(weighted);
+		// threshold = 0.5 * 100 = 50 → after subtracting weight 1 (still 49),
+		// lands on the heavy second provider.
+		const result = await getRandomProviderFromList(
+			"production",
+			undefined,
+			undefined,
+			() => 0.5,
+		);
+		expect(result.provider.url).toBe("https://b.io");
+	});
+
+	it("falls back to the DNS-routed endpoint when the list is empty", async () => {
+		loadBalancer.mockResolvedValue([]);
+		const result = await getRandomProviderFromList(
+			"development",
+			undefined,
+			undefined,
+			() => 0,
+		);
+		// Development resolves the local URL without a healthz round-trip.
+		expect(result.provider.url).toBe("https://localhost:9229");
+		expect(result.providerAccount).toBe("dns-routed");
 	});
 });

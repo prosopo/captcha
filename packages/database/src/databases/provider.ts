@@ -1652,6 +1652,7 @@ export class ProviderDatabase
 				ipInfo: 1,
 				webView: 1,
 				iFrame: 1,
+				isEscalation: 1,
 				decryptedHeadHash: 1,
 				siteKey: 1,
 				reason: 1,
@@ -1660,6 +1661,8 @@ export class ProviderDatabase
 				userSitekeyIpHash: 1,
 				simdReadings: 1,
 				dnsEvent: 1,
+				currentUrl: 1,
+				iframeUrl: 1,
 				// captchaType is required by the peek-before-consume path
 				// in `CaptchaManager.isValidRequest` — without it, every
 				// escalation peek would compare `undefined !== <requested>`

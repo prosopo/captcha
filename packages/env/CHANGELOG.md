@@ -1,5 +1,91 @@
 # @prosopo/env
 
+## 3.6.12
+### Patch Changes
+
+- Updated dependencies [6abff15]
+- Updated dependencies [29b5c6a]
+  - @prosopo/logger@2.0.3
+  - @prosopo/database@3.15.12
+  - @prosopo/common@3.1.45
+  - @prosopo/ipinfo@0.2.36
+  - @prosopo/types-env@2.10.11
+  - @prosopo/keyring@2.9.56
+
+## 3.6.11
+### Patch Changes
+
+- 550d20a: Keep the provider admin endpoints working while `MAINTENANCE_MODE` is on. Previously the admin/access-rule router was skipped entirely at boot in maintenance mode — `Environment.isReady()` never connected the DB, so `env.getDb()` threw and the DB-backed `Tasks` couldn't be constructed — which meant adding/removing site keys (access rules), detector keys and decision machines all 404'd on a node in maintenance mode.
+  
+  Now, in maintenance mode `Environment.isReady()` creates the `ProviderDatabase` handle and connects in the **background** (without awaiting), so a slow or unavailable Mongo/Redis socket still can't gate boot, but `env.getDb()` returns a usable handle and the admin endpoints register and function. The captcha request path is unchanged — it still short-circuits to a maintenance "pass" before touching the DB. `blockMiddleware` now has an explicit maintenance-mode skip (it previously relied on `env.getDb()` throwing to no-op) so the blocklist/Redis lookup stays off the captcha hot path.
+- Updated dependencies [85e8857]
+  - @prosopo/types@4.9.8
+  - @prosopo/common@3.1.44
+  - @prosopo/database@3.15.11
+  - @prosopo/ipinfo@0.2.35
+  - @prosopo/keyring@2.9.55
+  - @prosopo/types-env@2.10.10
+  - @prosopo/logger@2.0.2
+
+## 3.6.10
+### Patch Changes
+
+- Updated dependencies [494883f]
+- Updated dependencies [8bde5df]
+  - @prosopo/database@3.15.10
+  - @prosopo/types@4.9.7
+  - @prosopo/types-env@2.10.9
+  - @prosopo/ipinfo@0.2.34
+  - @prosopo/keyring@2.9.54
+
+## 3.6.9
+### Patch Changes
+
+- Updated dependencies [b3f351b]
+- Updated dependencies [17bc76e]
+  - @prosopo/types@4.9.6
+  - @prosopo/database@3.15.9
+  - @prosopo/ipinfo@0.2.33
+  - @prosopo/keyring@2.9.53
+  - @prosopo/types-env@2.10.8
+
+## 3.6.8
+### Patch Changes
+
+- Updated dependencies [6cb3218]
+  - @prosopo/types@4.9.5
+  - @prosopo/database@3.15.8
+  - @prosopo/ipinfo@0.2.32
+  - @prosopo/keyring@2.9.52
+  - @prosopo/types-env@2.10.7
+
+## 3.6.7
+### Patch Changes
+
+- Updated dependencies [de12b31]
+- Updated dependencies [770954b]
+  - @prosopo/types@4.9.4
+  - @prosopo/database@3.15.7
+  - @prosopo/ipinfo@0.2.31
+  - @prosopo/keyring@2.9.51
+  - @prosopo/types-env@2.10.6
+
+## 3.6.6
+### Patch Changes
+
+- Updated dependencies [18d0287]
+  - @prosopo/types@4.9.3
+  - @prosopo/database@3.15.6
+  - @prosopo/ipinfo@0.2.30
+  - @prosopo/keyring@2.9.50
+  - @prosopo/types-env@2.10.5
+
+## 3.6.5
+### Patch Changes
+
+  - @prosopo/database@3.15.5
+  - @prosopo/types-env@2.10.4
+
 ## 3.6.4
 ### Patch Changes
 

@@ -139,6 +139,8 @@ export class FrictionlessManager extends CaptchaManager {
 			bundleId: params.bundleId,
 			siteKey: params.siteKey,
 			currentUrl: params.currentUrl,
+			iframeUrl: params.iframeUrl,
+			isProtect: params.isProtect,
 			ipInfo: params.ipInfo,
 			headers: params.headers,
 			mode: params.mode,
@@ -147,6 +149,8 @@ export class FrictionlessManager extends CaptchaManager {
 			entropyCryptoFingerprint: params.entropyCryptoFingerprint,
 			entropyWallClockOffsetMs: params.entropyWallClockOffsetMs,
 			entropyMathRandomFirst: params.entropyMathRandomFirst,
+			tcpToChelloUs: params.tcpToChelloUs,
+			chelloToHandshakeUs: params.chelloToHandshakeUs,
 		};
 	}
 
@@ -188,6 +192,11 @@ export class FrictionlessManager extends CaptchaManager {
 		entropyMathRandomFirst?: Session["entropyMathRandomFirst"],
 		bundleId?: Session["bundleId"],
 		currentUrl?: Session["currentUrl"],
+		tcpToChelloUs?: Session["tcpToChelloUs"],
+		chelloToHandshakeUs?: Session["chelloToHandshakeUs"],
+		isEscalation?: Session["isEscalation"],
+		iframeUrl?: Session["iframeUrl"],
+		isProtect?: Session["isProtect"],
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
@@ -204,11 +213,21 @@ export class FrictionlessManager extends CaptchaManager {
 			userSitekeyIpHash,
 			webView,
 			iFrame,
+			// Only persist the escalation flag when it's actually true —
+			// avoids polluting analytics with `false` on every plain
+			// frictionless session.
+			...(isEscalation && { isEscalation: true }),
 			decryptedHeadHash,
 			bundleId,
 			reason,
 			siteKey,
 			currentUrl,
+			iframeUrl,
+			// Same rationale as isEscalation above: only persist the flag
+			// when it's actually true so non-Protect sessions stay slim and
+			// the sparse index on {isProtect, createdAt} carries only the
+			// Protect subset.
+			...(isProtect && { isProtect: true }),
 			blocked,
 			deleted,
 			ipInfo,
@@ -223,6 +242,8 @@ export class FrictionlessManager extends CaptchaManager {
 			entropyCryptoFingerprint,
 			entropyWallClockOffsetMs,
 			entropyMathRandomFirst,
+			tcpToChelloUs,
+			chelloToHandshakeUs,
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);
@@ -362,6 +383,11 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.entropyMathRandomFirst,
 			effectiveParams.bundleId,
 			effectiveParams.currentUrl,
+			effectiveParams.tcpToChelloUs,
+			effectiveParams.chelloToHandshakeUs,
+			undefined,
+			effectiveParams.iframeUrl,
+			effectiveParams.isProtect,
 		);
 
 		// Fire-and-forget served-counter writes. Skipped when there's no
@@ -432,6 +458,11 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.entropyMathRandomFirst,
 			effectiveParams.bundleId,
 			effectiveParams.currentUrl,
+			effectiveParams.tcpToChelloUs,
+			effectiveParams.chelloToHandshakeUs,
+			undefined,
+			effectiveParams.iframeUrl,
+			effectiveParams.isProtect,
 		);
 	}
 

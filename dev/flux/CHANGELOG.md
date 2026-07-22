@@ -1,5 +1,22 @@
 # @prosopo/flux
 
+## 2.6.62
+### Patch Changes
+
+- Updated dependencies [6abff15]
+  - @prosopo/logger@2.0.3
+  - @prosopo/common@3.1.45
+  - @prosopo/dotenv@3.0.49
+
+## 2.6.61
+### Patch Changes
+
+- Updated dependencies [85e8857]
+  - @prosopo/util@3.3.4
+  - @prosopo/common@3.1.44
+  - @prosopo/logger@2.0.2
+  - @prosopo/dotenv@3.0.48
+
 ## 2.6.60
 ### Patch Changes
 

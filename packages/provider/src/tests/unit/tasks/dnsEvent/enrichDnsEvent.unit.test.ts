@@ -13,9 +13,15 @@
 // limitations under the License.
 
 import type { IIpInfoService } from "@prosopo/ipinfo";
-import type { IPInfoResponse, Session } from "@prosopo/types";
+import type {
+	EnrichedDnsEvent,
+	IPInfoResponse,
+	ITrafficFilter,
+	Session,
+} from "@prosopo/types";
 import { describe, expect, it, vi } from "vitest";
 import {
+	computeDnsAsymmetry,
 	enrichDnsEvent,
 	extraIpInfosFromEnrichedDnsEvent,
 } from "../../../../tasks/dnsEvent/enrichDnsEvent.js";
@@ -121,6 +127,249 @@ describe("enrichDnsEvent", () => {
 			"1.2.3.4",
 		);
 		expect(result?.peerIpInfo).toBeUndefined();
+	});
+});
+
+describe("computeDnsAsymmetry", () => {
+	const enrichedWith = (
+		overrides: Partial<EnrichedDnsEvent>,
+	): EnrichedDnsEvent => ({
+		peerIp: undefined,
+		resolverIp: undefined,
+		pathValid: true,
+		...overrides,
+	});
+
+	// A resolver/peer IP that ipapi flags as datacenter+VPN — the common
+	// consumer-VPN case (e.g. CDN77, Datacamp, M247).
+	const dcVpn = (overrides: Partial<IPInfoResponse> = {}): IPInfoResponse =>
+		baseInfo({ isDatacenter: true, isVPN: true, ...overrides });
+
+	const filterAllowingVpn: Partial<ITrafficFilter> = {
+		blockVpn: false,
+		blockProxy: false,
+		blockTor: false,
+		blockCrawler: false,
+		blockDatacenter: true,
+		blockAbuser: true,
+	};
+
+	it("returns 0 when the enriched event is undefined", () => {
+		expect(computeDnsAsymmetry(undefined, undefined)).toBe(0);
+	});
+
+	it("adds 0.3 for pathValid=false regardless of trafficFilter", () => {
+		expect(
+			computeDnsAsymmetry(enrichedWith({ pathValid: false }), undefined),
+		).toBeCloseTo(0.3);
+		expect(
+			computeDnsAsymmetry(
+				enrichedWith({ pathValid: false }),
+				undefined,
+				filterAllowingVpn,
+			),
+		).toBeCloseTo(0.3);
+	});
+
+	describe("legacy path (no trafficFilter)", () => {
+		it("counts every datacenter and abuser flag on resolver + peer", () => {
+			const score = computeDnsAsymmetry(
+				enrichedWith({
+					resolverIpInfo: baseInfo({ isDatacenter: true, isAbuser: true }),
+					peerIpInfo: baseInfo({ isDatacenter: true, isAbuser: true }),
+				}),
+				undefined,
+			);
+			// 0.3 (resolver DC) + 0.2 (resolver abuser) + 0.2 (peer DC)
+			// + 0.2 (peer abuser) = 0.9
+			expect(score).toBeCloseTo(0.9);
+		});
+
+		it("adds the client-ISP + resolver-DC compound signal", () => {
+			const score = computeDnsAsymmetry(
+				enrichedWith({
+					resolverIpInfo: baseInfo({ isDatacenter: true }),
+				}),
+				baseInfo({ providerType: "isp" }),
+			);
+			// 0.3 (resolver DC) + 0.2 (client-ISP compound) = 0.5
+			expect(score).toBeCloseTo(0.5);
+		});
+
+		it("caps the score at 1", () => {
+			const score = computeDnsAsymmetry(
+				enrichedWith({
+					pathValid: false,
+					resolverIpInfo: baseInfo({ isDatacenter: true, isAbuser: true }),
+					peerIpInfo: baseInfo({ isDatacenter: true, isAbuser: true }),
+				}),
+				baseInfo({ providerType: "isp" }),
+			);
+			// 0.3 + 0.3 + 0.2 + 0.2 + 0.2 + 0.2 = 1.4 → capped at 1
+			expect(score).toBe(1);
+		});
+	});
+
+	describe("cross-category suppression", () => {
+		it("suppresses datacenter penalty when isVPN and blockVpn is off", () => {
+			const score = computeDnsAsymmetry(
+				enrichedWith({
+					resolverIpInfo: dcVpn(),
+					peerIpInfo: dcVpn(),
+				}),
+				undefined,
+				filterAllowingVpn,
+			);
+			expect(score).toBe(0);
+		});
+
+		it("keeps the datacenter penalty when isVPN but blockVpn is on", () => {
+			const score = computeDnsAsymmetry(
+				enrichedWith({ resolverIpInfo: dcVpn(), peerIpInfo: dcVpn() }),
+				undefined,
+				{ ...filterAllowingVpn, blockVpn: true },
+			);
+			expect(score).toBeCloseTo(0.5);
+		});
+
+		it("suppresses when isProxy and blockProxy off", () => {
+			const score = computeDnsAsymmetry(
+				enrichedWith({
+					resolverIpInfo: baseInfo({ isDatacenter: true, isProxy: true }),
+				}),
+				undefined,
+				filterAllowingVpn,
+			);
+			expect(score).toBe(0);
+		});
+
+		it("suppresses when isTor and blockTor off", () => {
+			const score = computeDnsAsymmetry(
+				enrichedWith({
+					resolverIpInfo: baseInfo({ isDatacenter: true, isTor: true }),
+				}),
+				undefined,
+				filterAllowingVpn,
+			);
+			expect(score).toBe(0);
+		});
+
+		it("suppresses when isCrawler and blockCrawler off", () => {
+			const score = computeDnsAsymmetry(
+				enrichedWith({
+					resolverIpInfo: baseInfo({ isDatacenter: true, isCrawler: true }),
+				}),
+				undefined,
+				filterAllowingVpn,
+			);
+			expect(score).toBe(0);
+		});
+
+		it("does not affect the client-ISP compound when resolver DC is suppressed", () => {
+			const score = computeDnsAsymmetry(
+				enrichedWith({ resolverIpInfo: dcVpn() }),
+				baseInfo({ providerType: "isp" }),
+				filterAllowingVpn,
+			);
+			// resolver DC suppressed by VPN → compound also 0
+			expect(score).toBe(0);
+		});
+	});
+
+	describe("datacenter gating", () => {
+		it("does not count datacenter when blockDatacenter is not opted in", () => {
+			const score = computeDnsAsymmetry(
+				enrichedWith({
+					resolverIpInfo: baseInfo({ isDatacenter: true }),
+					peerIpInfo: baseInfo({ isDatacenter: true }),
+				}),
+				undefined,
+				{ ...filterAllowingVpn, blockDatacenter: false },
+			);
+			expect(score).toBe(0);
+		});
+
+		it("short-circuits datacenter when providerType is isp", () => {
+			const score = computeDnsAsymmetry(
+				enrichedWith({
+					resolverIpInfo: baseInfo({
+						isDatacenter: true,
+						providerType: "isp",
+					}),
+					peerIpInfo: baseInfo({
+						isDatacenter: true,
+						providerType: "isp",
+					}),
+				}),
+				undefined,
+				filterAllowingVpn,
+			);
+			expect(score).toBe(0);
+		});
+
+		it("skips datacenter when the operator has allowlisted its name", () => {
+			const score = computeDnsAsymmetry(
+				enrichedWith({
+					resolverIpInfo: baseInfo({
+						isDatacenter: true,
+						datacenterName: "iCloud Private Relay",
+					}),
+					peerIpInfo: baseInfo({
+						isDatacenter: true,
+						providerName: "iCloud Private Relay",
+					}),
+				}),
+				undefined,
+				{
+					...filterAllowingVpn,
+					datacenterNameAllowlist: ["icloud private relay"],
+				},
+			);
+			expect(score).toBe(0);
+		});
+	});
+
+	describe("abuser gating", () => {
+		it("does not count abuser when blockAbuser is false", () => {
+			const score = computeDnsAsymmetry(
+				enrichedWith({
+					resolverIpInfo: baseInfo({ isAbuser: true, abuserScore: 1 }),
+					peerIpInfo: baseInfo({ isAbuser: true, abuserScore: 1 }),
+				}),
+				undefined,
+				{ ...filterAllowingVpn, blockAbuser: false },
+			);
+			expect(score).toBe(0);
+		});
+
+		it("does not count abuser when the score is below the threshold", () => {
+			const score = computeDnsAsymmetry(
+				enrichedWith({
+					resolverIpInfo: baseInfo({
+						isAbuser: true,
+						abuserScore: 0.02,
+						companyAbuserScore: 0.01,
+					}),
+				}),
+				undefined,
+				{ ...filterAllowingVpn, abuserScoreThreshold: 0.5 },
+			);
+			expect(score).toBe(0);
+		});
+
+		it("counts abuser when the score meets the threshold", () => {
+			const score = computeDnsAsymmetry(
+				enrichedWith({
+					resolverIpInfo: baseInfo({
+						isAbuser: true,
+						abuserScore: 0.6,
+					}),
+				}),
+				undefined,
+				{ ...filterAllowingVpn, abuserScoreThreshold: 0.5 },
+			);
+			expect(score).toBeCloseTo(0.2);
+		});
 	});
 });
 

@@ -152,6 +152,72 @@ export const getRandomActiveProvider = async (
 	};
 };
 
+// Compare two provider URLs ignoring a trailing slash so a stored "failed" URL
+// still matches its list entry regardless of formatting.
+const sameProviderUrl = (a: string, b: string): boolean =>
+	a.replace(/\/$/, "") === b.replace(/\/$/, "");
+
+// Weighted random pick — providers advertise a capacity weight (1-100), so
+// fallback traffic is spread in proportion to capacity rather than uniformly.
+// Returns undefined only for an empty list (callers guard against that).
+const pickWeightedProvider = (
+	providers: HardcodedProvider[],
+	random: () => number,
+): HardcodedProvider | undefined => {
+	const totalWeight = providers.reduce((sum, p) => sum + p.weight, 0);
+	let threshold = random() * totalWeight;
+	let chosen: HardcodedProvider | undefined;
+	for (const provider of providers) {
+		chosen = provider;
+		threshold -= provider.weight;
+		if (threshold < 0) break;
+	}
+	return chosen;
+};
+
+/**
+ * Pick a random provider directly from the provider list, bypassing the
+ * DNS-routed endpoint. This is the error-fallback path: once a provider has
+ * errored, retrying it re-hits the same (possibly-down) endpoint, and a fleet
+ * of widgets doing that in a tight loop can accidentally DDoS the provider — so
+ * instead we spread the retry across the fleet by choosing a random provider
+ * from the list. `excludeUrl` (the provider that just failed) is dropped from
+ * the pool when other providers remain. In development the list holds only the
+ * single local provider, so this naturally degrades to retrying that provider.
+ * `random` is injectable so tests can make the pick deterministic.
+ */
+export const getRandomProviderFromList = async (
+	env: EnvironmentTypes,
+	ipMode?: IpMode,
+	excludeUrl?: string,
+	random: () => number = Math.random,
+): Promise<RandomProvider> => {
+	const providers = await getProviders(env);
+	if (providers.length === 0) {
+		// Nothing to choose from — fall back to the DNS-routed endpoint.
+		return getRandomActiveProvider(env, ipMode);
+	}
+
+	// Only exclude the failed provider when at least one other remains, so we
+	// never end up with an empty pool (e.g. a single-provider environment).
+	const eligible =
+		excludeUrl && providers.length > 1
+			? providers.filter(
+					(p) => !sameProviderUrl(applyIpModeToUrl(p.url, ipMode), excludeUrl),
+				)
+			: providers;
+	const pool = eligible.length > 0 ? eligible : providers;
+
+	const chosen = pickWeightedProvider(pool, random);
+	if (!chosen) {
+		return getRandomActiveProvider(env, ipMode);
+	}
+	return {
+		providerAccount: chosen.address,
+		provider: { url: applyIpModeToUrl(chosen.url, ipMode) },
+	};
+};
+
 // Test-only escape hatch so tests can isolate the healthz cache between
 // cases. Not exported from the package index — internal use only.
 export const _resetPinCache = () => {

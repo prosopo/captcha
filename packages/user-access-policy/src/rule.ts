@@ -18,6 +18,18 @@ export enum AccessPolicyType {
 	Restrict = "restrict",
 }
 
+// Sentinel stamped on the Redis `clientId` field for rules that would
+// otherwise store undefined (i.e. global rules). Lets the read path
+// probe `@clientId:{global}` via the posting-list index instead of the
+// expensive `ismissing(@clientId)` set-difference walk that degrades
+// sharply once the global rule set grows into the 10k+ range. The
+// reader converts it back to `undefined` at parse time so downstream
+// code sees the original AccessRule shape. Kept in this types-only
+// module so both the writer/index side and the parser/input side can
+// import it without pulling in a circular dependency through
+// transformRule.
+export const GLOBAL_CLIENT_SCOPE_SENTINEL = "global";
+
 export type AccessPolicy = {
 	type: AccessPolicyType;
 	captchaType?: CaptchaType;
@@ -60,6 +72,12 @@ export type UserAttributes = {
 	coords?: string;
 	countryCode?: string;
 	asn?: number;
+	// Operating system classified server-side from the request User-Agent (see
+	// `classifyOs`). Stored as a plain lowercase tag — one of `OsName` — and
+	// matched like `countryCode` (exact equality, not hashed). Lets a rule
+	// drop/limit requests from a given OS even when the client omits client
+	// hints.
+	os?: string;
 };
 
 export type UserScope = UserAttributes & UserIp;

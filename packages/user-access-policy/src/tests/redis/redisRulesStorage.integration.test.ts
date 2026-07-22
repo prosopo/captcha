@@ -1629,6 +1629,106 @@ describe("redisAccessRulesStorage", () => {
 				),
 			).toBe(true);
 		});
+
+		test("specific-IP Restrict rule survives when many higher-specificity irrelevant rules co-exist (2026-07-10 Twickets regression)", async () => {
+			// Regression guard for the 2026-07-10 Twickets incident: a
+			// portal-authored Restrict rule with scope
+			// `clientId + numericIp` (specificity 2, severity 0) was
+			// silently dropped from the frictionless access-policy lookup
+			// when the tenant had many higher-specificity irrelevant
+			// rules on the same clientId. The old FT.AGGREGATE ranker
+			// used for non-block lookups capped candidates at top-20 by
+			// populated-field count; those 20 slots got filled by rules
+			// with clientId + numericIp + numericIpMaskMin (SIMD_REPLAY
+			// v6 shape, specificity 3, severity 1) or
+			// clientId + ja4Hash + coords (SUDDEN_VOLUME_INCREASE shape,
+			// specificity 3, severity 1) that all matched the greedy
+			// `ismissing(@headHash) | ismissing(@coords) | ismissing(@headersHash)`
+			// disjunction. None of them applied to the request under
+			// `ruleApplies` — they were emitted from other users'
+			// activity — so the JS-side ranker returned [] and the
+			// frictionless decision fell through to `default_pow`.
+			//
+			// The split-query path can't hit that failure: each probe
+			// hits a discriminating posting list, so the ip:exact probe
+			// returns exactly the rules that literally match this IP.
+			const clientId = getUniqueString();
+
+			// The rule that must survive: a portal "Too Many Requests"
+			// Restrict/image rule scoped only to (clientId, numericIp).
+			const targetIp = 1376899398n; // 82.17.209.70 — Twickets rule
+			const targetRule: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				clientId,
+				numericIp: targetIp,
+				description: "Too Many Requests",
+			};
+
+			// 40 irrelevant Block rules with higher specificity than
+			// the target rule. Two shapes drawn from the live Twickets
+			// tenant that dominated the top-20:
+			//
+			//   (a) SIMD_REPLAY v6-style — clientId + numericIp +
+			//       numericIpMaskMin. These have a *different* numericIp
+			//       from the request, so the exact-IP probe skips them.
+			//   (b) SUDDEN_VOLUME_INCREASE-style — clientId + ja4Hash +
+			//       coords. Different ja4Hash from the request so those
+			//       probes miss them too.
+			//
+			// Under the old ranker every one of these would fill the top
+			// slots and push the target rule off the end.
+			const irrelevantRules: AccessRule[] = [];
+			for (let i = 0; i < 20; i++) {
+				irrelevantRules.push({
+					type: AccessPolicyType.Block,
+					clientId,
+					numericIp: BigInt(2000000000 + i),
+					numericIpMaskMin: BigInt(2000000000 + i),
+					numericIpMaskMax: BigInt(2000000000 + i),
+					description: "SIMD_REPLAY",
+				});
+			}
+			for (let i = 0; i < 20; i++) {
+				irrelevantRules.push({
+					type: AccessPolicyType.Block,
+					clientId,
+					ja4Hash: `t13d_other_${i}`,
+					coords: `[[[${100 + i},${200 + i}]]]`,
+					description: "SUDDEN_VOLUME_INCREASE",
+				});
+			}
+
+			await insertRules([targetRule, ...irrelevantRules]);
+
+			// Frictionless access-policy lookup shape — greedy match,
+			// matchingFieldsOnly=true, no blockOnly.
+			const found = await accessRulesReader.findRules(
+				{
+					policyScope: { clientId },
+					policyScopeMatch: FilterScopeMatch.Greedy,
+					userScope: {
+						numericIp: targetIp,
+						ja4Hash: "t13d1516h2_request_ja4",
+						userAgentHash: "sha256:request_ua",
+						userId: getUniqueString(),
+					},
+					userScopeMatch: FilterScopeMatch.Greedy,
+				},
+				true, // matchingFieldsOnly — production hot path
+			);
+
+			// The target rule MUST come back. Under the old ranker it
+			// was truncated; under the split path the ip:exact probe
+			// returns exactly this one rule, so it can't be crowded
+			// out by irrelevant candidates from other probes.
+			const targetFound = found.find(
+				(r) =>
+					r.type === AccessPolicyType.Restrict &&
+					r.numericIp === targetIp &&
+					r.description === "Too Many Requests",
+			);
+			expect(targetFound).toBeDefined();
+		});
 	});
 
 	afterAll(async () => {

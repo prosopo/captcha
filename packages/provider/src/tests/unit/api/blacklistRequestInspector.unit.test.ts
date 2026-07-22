@@ -26,10 +26,11 @@ import {
 	type UserScope,
 } from "@prosopo/user-access-policy";
 import type { NextFunction, Request, Response } from "express";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	BlacklistRequestInspector,
 	getRequestUserScope,
+	getVerdictCache,
 	rankCandidateRules,
 } from "../../../api/blacklistRequestInspector.js";
 
@@ -49,6 +50,7 @@ describe("getRequestUserScope", () => {
 			userAgent: userAgent,
 			ip: rawIp,
 			userId: "testuser",
+			os: "unknown",
 		});
 	});
 	it("should return a user scope with ja4Hash and userAgent and ip", () => {
@@ -64,6 +66,7 @@ describe("getRequestUserScope", () => {
 			ja4Hash: ja4,
 			userAgent: userAgent,
 			ip: rawIp,
+			os: "unknown",
 		});
 	});
 	it("should return a user scope with userAgent and ip", () => {
@@ -77,6 +80,7 @@ describe("getRequestUserScope", () => {
 		expect(userScope).toEqual({
 			userAgent: userAgent,
 			ip: rawIp,
+			os: "unknown",
 		});
 	});
 	it("should return a user scope with userAgent", () => {
@@ -87,6 +91,7 @@ describe("getRequestUserScope", () => {
 		const userScope = getRequestUserScope(requestHeaders);
 		expect(userScope).toEqual({
 			userAgent: userAgent,
+			os: "unknown",
 		});
 	});
 
@@ -105,6 +110,14 @@ describe("getRequestUserScope", () => {
 });
 
 describe("BlacklistRequestInspector.shouldAbortRequest", () => {
+	// getPrioritisedAccessRule uses a module-level verdict cache
+	// singleton; without a per-test reset a cached verdict from one
+	// test would satisfy the lookup in another that expects to see its
+	// own mocked storage response.
+	beforeEach(() => {
+		getVerdictCache().clear();
+	});
+
 	const mockLogger = {
 		info: vi.fn(),
 		debug: vi.fn(),
@@ -160,6 +173,63 @@ describe("BlacklistRequestInspector.shouldAbortRequest", () => {
 		// at the earliest entry point (blockMiddleware).
 		const hasCountry = seenScopes.some((scope) => scope.countryCode === "DE");
 		expect(hasCountry).toBe(true);
+	});
+
+	it("threads the OS classified from the request UA into the access-rule lookup", async () => {
+		const seenScopes: Array<Record<string, unknown>> = [];
+		const storage = buildStorage(async (filter) => {
+			const f = filter as { userScope: Record<string, unknown> };
+			seenScopes.push(f.userScope);
+			return [];
+		});
+		const inspector = new BlacklistRequestInspector(
+			storage,
+			async () => undefined,
+		);
+
+		await inspector.shouldAbortRequest(
+			"/v1/prosopo/provider/client/captcha/frictionless",
+			"1.1.1.1",
+			"ja4hash",
+			{
+				"user-agent":
+					"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+			},
+			{},
+			mockLogger,
+			validIpInfo("DE"),
+		);
+
+		// OS is classified server-side from the UA, so an os-based access rule
+		// can fire at the earliest entry point (blockMiddleware).
+		const hasOs = seenScopes.some((scope) => scope.os === "windows");
+		expect(hasOs).toBe(true);
+	});
+
+	it("always classifies an OS (falls back to 'unknown') so allow-list rules can match unrecognised UAs", async () => {
+		const seenScopes: Array<Record<string, unknown>> = [];
+		const storage = buildStorage(async (filter) => {
+			const f = filter as { userScope: Record<string, unknown> };
+			seenScopes.push(f.userScope);
+			return [];
+		});
+		const inspector = new BlacklistRequestInspector(
+			storage,
+			async () => undefined,
+		);
+
+		await inspector.shouldAbortRequest(
+			"/v1/prosopo/provider/client/captcha/frictionless",
+			"1.1.1.1",
+			"ja4hash",
+			{},
+			{},
+			mockLogger,
+			validIpInfo("DE"),
+		);
+
+		expect(seenScopes.length).toBeGreaterThan(0);
+		expect(seenScopes.every((scope) => scope.os === "unknown")).toBe(true);
 	});
 
 	it("does not pass countryCode when req.ipInfo is missing", async () => {
@@ -340,6 +410,13 @@ describe("BlacklistRequestInspector.shouldAbortRequest", () => {
 // and a logger that records arguments) don't bleed into the abort-decision
 // fixtures above.
 describe("BlacklistRequestInspector blocked-session persistence", () => {
+	// Same rationale as the sibling describe: clear the verdict cache
+	// singleton so a hit cached by an earlier test can't satisfy this
+	// test's lookup and skip the mocked storage.
+	beforeEach(() => {
+		getVerdictCache().clear();
+	});
+
 	// Logger stub that captures the lazy log payloads so individual assertions
 	// can inspect what was logged without depending on call order across
 	// info/debug/warn calls.

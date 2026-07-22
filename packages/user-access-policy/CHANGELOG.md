@@ -1,5 +1,104 @@
 # @prosopo/user-access-policy
 
+## 3.12.3
+### Patch Changes
+
+- b07b448: fix(user-access-policy): route non-block strict-match rule lookups through the split-query path
+  
+  Live 2026-07-10 Twickets regression: a portal-authored Restrict/image rule scoped to `clientId + numericIp` was silently dropped from the frictionless access-policy lookup even though the rule was correctly stored in Redis and indexed. The DM then fell through to `default_pow` and served POW instead of the configured image challenge.
+  
+  Root cause: the `findRulesRanked` FT.AGGREGATE ranker used for non-block lookups capped candidates at `SERVER_SIDE_RANK_TOP_N = 20` after a server-side `SORTBY @_rank`. Under Greedy matching with `matchingFieldsOnly=true`, the query is a wide OR that matches every rule missing `headHash`, `coords`, or `headersHash` — for a Twickets-shaped tenant (~860 candidates) the top 20 slots were filled by higher-specificity SIMD_REPLAY and SUDDEN_VOLUME_INCREASE Block rules that didn't actually apply to the request. The specific-IP Restrict rule (specificity 2) was pushed out; Node saw only irrelevant candidates; `rankCandidateRules` filtered them all out via `ruleApplies`; the lookup returned `[]`.
+  
+  Fix: extend the existing `findBlockRulesSplit` path (previously the hot path for `blockOnly=true` callers) to cover every `matchingFieldsOnly` call. Each sub-query hits a discriminating posting list (exact numericIp, exact ja4Hash, etc.), so the ip:exact probe returns exactly the rules literally matching the request IP — the specific-IP rule can no longer be pushed off the end by irrelevant candidates from other probes. `blockOnly` is now a flag on the sub-query builder that narrows probes to `@type:{block}` when set. Split reader now sorts candidates by (specificity desc, block-first) so direct reader consumers see the same order the old FT.AGGREGATE ranker gave.
+  
+  Regression coverage added:
+  
+  - Unit: `buildScopedRulesSubQueries` emits/omits `@type:{block}` correctly per `blockOnly` flag and produces the same probe shape either way.
+  - Integration: specific-IP Restrict rule survives when 40 higher-specificity irrelevant Block rules co-exist on the same tenant (mirrors the live Twickets shape).
+  
+  Benchmarks unchanged: split hot path p50=1.4ms / p99=2.2ms across 19,300 seeded rules; 100×10 concurrent storm holds ~990 req/s.
+- Updated dependencies [6abff15]
+  - @prosopo/logger@2.0.3
+  - @prosopo/api-route@2.6.52
+  - @prosopo/common@3.1.45
+  - @prosopo/redis-client@1.0.29
+
+## 3.12.2
+### Patch Changes
+
+- Updated dependencies [85e8857]
+  - @prosopo/api@3.5.15
+  - @prosopo/types@4.9.8
+  - @prosopo/util@3.3.4
+  - @prosopo/common@3.1.44
+  - @prosopo/logger@2.0.2
+  - @prosopo/api-route@2.6.51
+  - @prosopo/redis-client@1.0.28
+
+## 3.12.1
+### Patch Changes
+
+- Updated dependencies [8bde5df]
+  - @prosopo/types@4.9.7
+  - @prosopo/api@3.5.14
+
+## 3.12.0
+### Minor Changes
+
+- 7d7e767: perf(access-rules): split-query hot path + verdict cache with LRU and singleflight
+  
+  Reworks the block-lookup Redis path so per-request latency is bounded by matching-rules-per-request rather than total rules in the tenant. Rule populations in the 10k+ range no longer degrade tail latency.
+  
+  Key changes:
+  
+  - **Split-query read path**: `redisRulesSplitQuery.ts` builds one FT sub-query per populated request field (numericIp exact + CIDR, ja4Hash, userId, headHash, coords, countryCode, asn), each hitting a discriminating posting-list index instead of a single wide FT.AGGREGATE that scaled linearly in total rule count.
+  - **`clientId="global"` sentinel**: writer stamps the sentinel on rules with no clientId so queries probe `@clientId:{X|global|ismissing}` instead of the expensive `ismissing()` set-difference walk. Transition-safe — legacy rules match via the ismissing branch until a rehash migrates them.
+  - **HardBlockVerdictCache**: bounded LRU + TTL (10 s / 50k entries) with real LRU move-to-tail on hit and **singleflight `getOrCompute`** dedupe of concurrent misses — the wave-1 stampede fix for the frontend retry-loop shape.
+  - **Request-scoped memo**: attached to `req` so blockMiddleware + downstream in-request checks share one Redis round-trip.
+  
+  Measured impact under 100-concurrent × 10-wave retry storm against a 19.3k-rule population: wave-1 p99 drops from 23 ms → 3 ms, throughput jumps from 28.5k → 61.5k req/s per process, 50 identical concurrent misses collapse to 1 storage call.
+
+### Patch Changes
+
+- Updated dependencies [b3f351b]
+- Updated dependencies [17bc76e]
+  - @prosopo/types@4.9.6
+  - @prosopo/api@3.5.13
+
+## 3.11.3
+### Patch Changes
+
+- Updated dependencies [6cb3218]
+  - @prosopo/types@4.9.5
+  - @prosopo/api@3.5.12
+
+## 3.11.2
+### Patch Changes
+
+- Updated dependencies [de12b31]
+- Updated dependencies [770954b]
+  - @prosopo/types@4.9.4
+  - @prosopo/api@3.5.11
+
+## 3.11.1
+### Patch Changes
+
+- Updated dependencies [18d0287]
+  - @prosopo/types@4.9.3
+  - @prosopo/api@3.5.10
+
+## 3.11.0
+### Minor Changes
+
+- ca78a0c: Add an `os` (operating system) match dimension to user access policies.
+  
+  The provider now classifies each request's operating system server-side from the User-Agent (`classifyOs`, returning one of `windows`/`macos`/`ios`/`android`/`linux`/`unknown`) and threads it into the user scope used to match access rules, so a `Block` or `Restrict` rule can target a specific OS. The OS is always populated (falling back to `unknown`) and derived from the full User-Agent rather than the easily-omitted `sec-ch-ua-platform` client hint, so it cannot be bypassed by dropping client hints. `os` is stored and indexed in Redis as a TAG (mirroring `countryCode`) and contributes one point to rule specificity ranking.
+
+### Patch Changes
+
+- Updated dependencies [8814425]
+  - @prosopo/api@3.5.9
+
 ## 3.10.11
 ### Patch Changes
 

@@ -103,7 +103,7 @@ describe("customDetectBot SIMD deferral", () => {
 
 		expect(mocks.getFrictionlessCaptcha).toHaveBeenCalledTimes(1);
 		const args = mocks.getFrictionlessCaptcha.mock.calls[0];
-		// args: token, headHash, dappAccount, userAccount, mode, simdReadings, currentUrl
+		// args: token, headHash, dappAccount, userAccount, mode, simdReadings, currentUrl, iframeUrl
 		expect(args?.[5]).toBeUndefined();
 	});
 

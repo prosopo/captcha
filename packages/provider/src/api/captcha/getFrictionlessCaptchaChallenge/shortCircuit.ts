@@ -47,6 +47,8 @@ export type ShortCircuitInput = {
 	// (no pool, assign failed, or blob load failed). The detector lives only on
 	// providers, so this means no detection happened ⇒ serve PoW.
 	detectorUnavailable: boolean;
+	tcpToChelloUs?: number;
+	chelloToHandshakeUs?: number;
 };
 
 // Builds the session params used by the bypass paths (configured captcha type
@@ -72,6 +74,12 @@ const buildBypassSessionParams = (input: ShortCircuitInput) => ({
 	headers: input.flatHeaders,
 	mode: input.sessionMode,
 	userSitekeyIpHash: input.userSitekeyIpHash,
+	...(input.tcpToChelloUs !== undefined && {
+		tcpToChelloUs: input.tcpToChelloUs,
+	}),
+	...(input.chelloToHandshakeUs !== undefined && {
+		chelloToHandshakeUs: input.chelloToHandshakeUs,
+	}),
 });
 
 /**

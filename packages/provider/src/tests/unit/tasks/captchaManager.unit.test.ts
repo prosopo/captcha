@@ -1257,20 +1257,48 @@ describe("CaptchaManager", () => {
 			expect(result).toEqual(deferBlockNoType);
 		});
 
-		// Restrict + deferToVerify is non-sensical for hard-block purposes
-		// (deferToVerify on Restrict has its own meaning at middleware
-		// time, see blacklistRequestInspector tests). The hard-block
-		// matcher must stay Block-only — accidentally letting a Restrict
-		// pass through here would deny-list any restrict-throttled user.
-		it("should return undefined for Restrict + deferToVerify (hard block is Block-only)", async () => {
+		// Restrict + deferToVerify: the frictionless flow serves the
+		// rule's captchaType (image / N rounds) as normal — imposing the
+		// compute burden — and verify hard-blocks regardless of solve
+		// outcome. Used by PROXY_POOL_TLS_NARROW to force a solving farm
+		// to burn N image rounds per session while still failing verify.
+		// Bots solve at 100%, so correctness gating doesn't stop them —
+		// wasting their compute does.
+		it("should return the policy for Restrict + deferToVerify=true (verify-time hard block after serving captcha)", async () => {
 			const restrictDefer: AccessPolicy = {
 				type: AccessPolicyType.Restrict,
+				captchaType: CaptchaType.image,
+				solvedImagesCount: 8,
 				deferToVerify: true,
 			};
 			vi.spyOn(
 				captchaManager,
 				"getPrioritisedAccessPolicies",
 			).mockResolvedValue([restrictDefer]);
+
+			const result = await captchaManager.checkForHardBlock(
+				{} as AccessRulesStorage,
+				mockChallengeRecord,
+				"userAccount",
+				mockHeaders,
+			);
+			expect(result).toEqual(restrictDefer);
+		});
+
+		// Restrict rules WITHOUT deferToVerify are pure routing rules —
+		// they pick which challenge type to serve, not whether to reject.
+		// The hard-block matcher must NOT return them, or every
+		// image-throttled user would be denied outright.
+		it("should return undefined for Restrict without deferToVerify (routing rules are not hard blocks)", async () => {
+			const restrictRoute: AccessPolicy = {
+				type: AccessPolicyType.Restrict,
+				captchaType: CaptchaType.image,
+				solvedImagesCount: 4,
+			};
+			vi.spyOn(
+				captchaManager,
+				"getPrioritisedAccessPolicies",
+			).mockResolvedValue([restrictRoute]);
 
 			const result = await captchaManager.checkForHardBlock(
 				{} as AccessRulesStorage,

@@ -74,7 +74,6 @@ export default (
 		}
 
 		const tasks = new Tasks(env, req.logger);
-		tasks.setLogger(req.logger);
 
 		try {
 			const clientSettings = await tasks.db.getClientRecord(dapp);
