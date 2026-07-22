@@ -44,11 +44,22 @@ class ApiReplaceDetectorPoolEndpoint
 		logger = logger || getLogger("info", "");
 		try {
 			const bundles = new Map<string, PoolBundle>(Object.entries(args.bundles));
-			const count = replaceDetectorBundlePool(bundles);
-			logger.info(() => ({ msg: "Detector bundle pool replaced", count }));
+			const activeLogger = logger;
+			const { count, persisted } = replaceDetectorBundlePool(bundles, {
+				warn: (msg, data) => activeLogger.warn(() => ({ msg, data })),
+				info: (msg, data) => activeLogger.info(() => ({ msg, data })),
+			});
+			logger.info(() => ({
+				msg: "Detector bundle pool replaced",
+				count,
+				// false ⇒ the pool is live but only in memory; it will be lost on
+				// the next restart and the node will fall back to whatever is on
+				// disk (possibly nothing). Worth alarming on.
+				persisted,
+			}));
 			return {
 				status: ApiEndpointResponseStatus.SUCCESS,
-				data: { count },
+				data: { count, persisted },
 			};
 		} catch (error) {
 			logger.error(() => ({

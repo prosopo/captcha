@@ -32,12 +32,8 @@ export const computeFrictionlessScore = (
 
 export const timestampDecayFunction = (
 	timestamp: number,
-	decryptionFailed: boolean,
 	imageMaxRounds: number,
 ): number => {
-	if (decryptionFailed) {
-		return Math.min(imageMaxRounds, 6);
-	}
 	const max = new Date().getTime();
 	if (max - timestamp > 3600000) {
 		return Math.min(imageMaxRounds, 12);

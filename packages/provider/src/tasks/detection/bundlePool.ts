@@ -29,8 +29,25 @@
  */
 
 import { randomInt } from "node:crypto";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import {
+	existsSync,
+	mkdirSync,
+	readFileSync,
+	readdirSync,
+	renameSync,
+	rmSync,
+	writeFileSync,
+} from "node:fs";
 import { extname, join } from "node:path";
+
+/**
+ * Default on-disk location of the pool inside the provider container. Backed by
+ * a host volume (see docker-compose.provider.yml) so a pushed pool survives
+ * container restarts — nothing is baked into the image, which matters because
+ * `prosopo/provider` is a public Docker Hub image and each bundle ships with its
+ * own RSA private key.
+ */
+export const DEFAULT_DETECTOR_POOL_DIR = "/app/data/detector-pool";
 
 /** One precomputed pool bundle: browser JS + its paired server secrets. */
 export interface PoolBundle {
@@ -40,6 +57,14 @@ export interface PoolBundle {
 	readonly privateKey: string;
 	/** Base64-encoded InnerCipherConfig (inner symmetric layer). */
 	readonly innerConfig: string;
+	/**
+	 * The release the bundle was built from (e.g. "3.6.64"), stamped by the
+	 * catcher `bundle:pool` script. The widget no longer carries a detector — it
+	 * runs whatever the provider serves — so the only guard against serving a
+	 * detector built from a different release is this field. Optional for pools
+	 * built before stamping existed; those load with a warning.
+	 */
+	readonly release?: string;
 }
 
 interface LoadLogger {
@@ -61,7 +86,11 @@ export class DetectorBundlePool {
 	 * without a readable, well-formed `.json` sibling is skipped (logged). Safe
 	 * to call on a missing directory (yields an empty pool).
 	 */
-	loadFromDir(dir: string, logger: LoadLogger = {}): void {
+	loadFromDir(
+		dir: string,
+		logger: LoadLogger = {},
+		expectedRelease?: string,
+	): void {
 		const next = new Map<string, PoolBundle>();
 		if (!existsSync(dir)) {
 			logger.warn?.("bundle pool directory does not exist", { dir });
@@ -70,6 +99,8 @@ export class DetectorBundlePool {
 			return;
 		}
 
+		let mismatched = 0;
+		let unstamped = 0;
 		for (const entry of readdirSync(dir)) {
 			if (extname(entry) !== ".js") {
 				continue;
@@ -82,6 +113,7 @@ export class DetectorBundlePool {
 				const secrets = JSON.parse(readFileSync(jsonPath, "utf8")) as {
 					privateKey?: unknown;
 					innerConfig?: unknown;
+					release?: unknown;
 				};
 				if (
 					typeof secrets.privateKey !== "string" ||
@@ -92,10 +124,23 @@ export class DetectorBundlePool {
 					});
 					continue;
 				}
+				const release =
+					typeof secrets.release === "string" ? secrets.release : undefined;
+				// Reject bundles built from a different release. The widget runs
+				// whatever we serve and the two only agree by convention, so a
+				// mismatched detector fails at runtime with no build-time signal.
+				if (expectedRelease && release && release !== expectedRelease) {
+					mismatched++;
+					continue;
+				}
+				if (expectedRelease && !release) {
+					unstamped++;
+				}
 				next.set(bundleId, {
 					js,
 					privateKey: secrets.privateKey,
 					innerConfig: secrets.innerConfig,
+					...(release && { release }),
 				});
 			} catch (error) {
 				logger.warn?.("failed to load bundle pool entry", {
@@ -103,6 +148,19 @@ export class DetectorBundlePool {
 					error: error instanceof Error ? error.message : String(error),
 				});
 			}
+		}
+
+		if (mismatched > 0) {
+			logger.warn?.("skipped bundle pool entries built for another release", {
+				skipped: mismatched,
+				expectedRelease,
+			});
+		}
+		if (unstamped > 0) {
+			logger.warn?.("bundle pool entries have no release stamp", {
+				count: unstamped,
+				expectedRelease,
+			});
 		}
 
 		this.replace(next);
@@ -146,16 +204,57 @@ export class DetectorBundlePool {
 
 /** Process-global pool singleton (mirrors bumblebee's OnceCell). */
 let globalPool: DetectorBundlePool | null = null;
+/** Where {@link initDetectorBundlePool} last loaded from — the persist target. */
+let globalPoolDir: string = DEFAULT_DETECTOR_POOL_DIR;
 
 /** Initialise the global pool from `dir`. Idempotent (reloads on each call). */
 export function initDetectorBundlePool(
 	dir: string,
 	logger: LoadLogger = {},
+	expectedRelease?: string,
 ): DetectorBundlePool {
 	const pool = new DetectorBundlePool();
-	pool.loadFromDir(dir, logger);
+	pool.loadFromDir(dir, logger, expectedRelease);
 	globalPool = pool;
+	globalPoolDir = dir;
 	return pool;
+}
+
+/**
+ * Write a pool to `dir` in the same `{id}.js` / `{id}.json` layout
+ * {@link DetectorBundlePool.loadFromDir} reads, so a pushed pool is picked up
+ * again on the next boot instead of vanishing with the process.
+ *
+ * Staged into a sibling directory and renamed into place so a crash mid-write
+ * can't leave a half-written pool that would load as a partial set. Throws on
+ * failure — the caller decides whether an unpersisted push is acceptable.
+ */
+export function persistDetectorBundlePool(
+	bundles: Map<string, PoolBundle>,
+	dir: string = globalPoolDir,
+): void {
+	const staging = `${dir}.staging`;
+	rmSync(staging, { recursive: true, force: true });
+	mkdirSync(staging, { recursive: true });
+
+	for (const [bundleId, bundle] of bundles) {
+		writeFileSync(join(staging, `${bundleId}.js`), bundle.js, "utf8");
+		writeFileSync(
+			join(staging, `${bundleId}.json`),
+			JSON.stringify({
+				privateKey: bundle.privateKey,
+				innerConfig: bundle.innerConfig,
+				...(bundle.release && { release: bundle.release }),
+			}),
+			// Secrets: owner read/write only. The volume is host-mounted, so this
+			// is the only thing standing between the pool and any other process
+			// sharing the mount.
+			{ encoding: "utf8", mode: 0o600 },
+		);
+	}
+
+	rmSync(dir, { recursive: true, force: true });
+	renameSync(staging, dir);
 }
 
 /** Get the global pool, or `null` if {@link initDetectorBundlePool} was never called. */
@@ -164,15 +263,34 @@ export function getDetectorBundlePool(): DetectorBundlePool | null {
 }
 
 /**
- * Hot-swap the global pool's contents (admin "emergency push" channel). Creates
- * the global pool if it does not exist yet. Returns the new bundle count.
+ * Hot-swap the global pool's contents (admin "emergency push" channel) and
+ * write it to the pool directory so it survives a restart. Creates the global
+ * pool if it does not exist yet.
+ *
+ * The in-memory swap happens first and is never rolled back: a running provider
+ * serving the new pool is the point of the push, and it is strictly better than
+ * a provider serving the old one. A failed persist is reported so the caller can
+ * warn — the pool is live but will be lost on the next restart.
  */
 export function replaceDetectorBundlePool(
 	bundles: Map<string, PoolBundle>,
-): number {
+	logger: LoadLogger = {},
+): { count: number; persisted: boolean } {
 	if (!globalPool) {
 		globalPool = new DetectorBundlePool();
 	}
 	globalPool.replace(bundles);
-	return globalPool.size();
+
+	let persisted = false;
+	try {
+		persistDetectorBundlePool(bundles);
+		persisted = true;
+	} catch (error) {
+		logger.warn?.("failed to persist detector bundle pool to disk", {
+			dir: globalPoolDir,
+			error: error instanceof Error ? error.message : String(error),
+		});
+	}
+
+	return { count: globalPool.size(), persisted };
 }

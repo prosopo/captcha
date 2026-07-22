@@ -605,13 +605,18 @@ export interface AssignDetectorBundleResponse extends ApiResponse {
 }
 
 export const ReplaceDetectorPoolBody = object({
-	// Map of bundleId -> { js, privateKey, innerConfig }.
+	// Map of bundleId -> { js, privateKey, innerConfig, release }.
 	bundles: record(
 		string(),
 		object({
 			js: string(),
 			privateKey: string(),
 			innerConfig: string(),
+			// Release the bundle was built from, e.g. "3.6.64". The widget runs
+			// whatever the provider serves, so this is the only guard against a
+			// pool built from a different release. Optional for pools predating
+			// the stamp.
+			release: string().optional(),
 		}),
 	),
 });
@@ -622,6 +627,9 @@ export type ReplaceDetectorPoolBodyType = output<
 
 export interface ReplaceDetectorPoolResponse extends ApiResponse {
 	count: number;
+	// False when the pool went live in memory but could not be written to the
+	// pool directory — it will not survive a provider restart.
+	persisted?: boolean;
 }
 
 export type SubmitPowCaptchaSolutionBodyTypeOutput = output<

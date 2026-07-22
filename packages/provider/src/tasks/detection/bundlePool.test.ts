@@ -20,6 +20,8 @@ import {
 	DetectorBundlePool,
 	getDetectorBundlePool,
 	initDetectorBundlePool,
+	persistDetectorBundlePool,
+	replaceDetectorBundlePool,
 } from "./bundlePool.js";
 
 const writeBundle = (
@@ -148,5 +150,80 @@ describe("DetectorBundlePool", () => {
 		const pool = initDetectorBundlePool(dir);
 		expect(getDetectorBundlePool()).toBe(pool);
 		expect(getDetectorBundlePool()?.size()).toBe(1);
+	});
+	it("skips bundles stamped with a different release", () => {
+		writeBundle(dir, "match", "JS", {
+			privateKey: "PK",
+			innerConfig: "C",
+			release: "3.6.64",
+		});
+		writeBundle(dir, "stale", "JS", {
+			privateKey: "PK",
+			innerConfig: "C",
+			release: "3.6.10",
+		});
+		const pool = new DetectorBundlePool();
+		pool.loadFromDir(dir, {}, "3.6.64");
+		expect(pool.get("match")).toBeDefined();
+		expect(pool.get("stale")).toBeUndefined();
+		expect(pool.size()).toBe(1);
+	});
+
+	it("loads every bundle when no expected release is given", () => {
+		writeBundle(dir, "a", "JS", {
+			privateKey: "PK",
+			innerConfig: "C",
+			release: "3.6.10",
+		});
+		writeBundle(dir, "b", "JS", { privateKey: "PK", innerConfig: "C" });
+		const pool = new DetectorBundlePool();
+		pool.loadFromDir(dir);
+		expect(pool.size()).toBe(2);
+	});
+
+	it("keeps unstamped bundles when a release is expected", () => {
+		// Pools built before stamping existed still load — warned about, not dropped.
+		writeBundle(dir, "legacy", "JS", { privateKey: "PK", innerConfig: "C" });
+		const pool = new DetectorBundlePool();
+		pool.loadFromDir(dir, {}, "3.6.64");
+		expect(pool.get("legacy")).toBeDefined();
+	});
+
+	it("persists a pushed pool so it reloads after a restart", () => {
+		initDetectorBundlePool(dir);
+		const { count, persisted } = replaceDetectorBundlePool(
+			new Map([
+				[
+					"pushed",
+					{
+						js: "PJS",
+						privateKey: "PPK",
+						innerConfig: "PC",
+						release: "3.6.64",
+					},
+				],
+			]),
+		);
+		expect(count).toBe(1);
+		expect(persisted).toBe(true);
+
+		// Simulate a restart: fresh pool, same directory.
+		const reloaded = new DetectorBundlePool();
+		reloaded.loadFromDir(dir);
+		expect(reloaded.get("pushed")?.js).toBe("PJS");
+		expect(reloaded.get("pushed")?.privateKey).toBe("PPK");
+		expect(reloaded.get("pushed")?.release).toBe("3.6.64");
+	});
+
+	it("persist replaces the previous pool rather than merging into it", () => {
+		writeBundle(dir, "old", "JS", { privateKey: "PK", innerConfig: "C" });
+		persistDetectorBundlePool(
+			new Map([["new", { js: "NJS", privateKey: "NPK", innerConfig: "NC" }]]),
+			dir,
+		);
+		const reloaded = new DetectorBundlePool();
+		reloaded.loadFromDir(dir);
+		expect(reloaded.get("old")).toBeUndefined();
+		expect(reloaded.size()).toBe(1);
 	});
 });

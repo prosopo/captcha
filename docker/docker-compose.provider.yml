@@ -12,6 +12,14 @@ services:
     pull_policy: always
     env_file:
       - ../.env.1.${NODE_ENV}
+    volumes:
+      # Detector bundle pool, host-mounted so a pushed pool survives container
+      # restarts. Never bake this into the image: prosopo/provider is a public
+      # Docker Hub image and every bundle ships with its own RSA private key.
+      # provider1 and provider2 run different image versions, so they each get
+      # their own pool — bundles stamped with another release are skipped at
+      # load (PROSOPO_DETECTOR_POOL_RELEASE).
+      - ./data/detector-pool.1:/app/data/detector-pool
     ports:
       - '127.0.0.1:9229:9229'
     networks:
@@ -47,6 +55,10 @@ services:
     pull_policy: build
     env_file:
       - ../.env.2.${NODE_ENV}
+    volumes:
+      # See provider1 — separate pool because this container runs the previous
+      # image version.
+      - ./data/detector-pool.2:/app/data/detector-pool
     ports:
       - '127.0.0.1:9339:9339'
     networks:
