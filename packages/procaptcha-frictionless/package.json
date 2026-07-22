@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-frictionless",
-	"version": "2.12.14",
+	"version": "2.12.15",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "dist/index.js",

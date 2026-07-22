@@ -1,5 +1,11 @@
 # @prosopo/procaptcha-bundle
 
+## 4.1.34
+### Patch Changes
+
+- Updated dependencies [d0f3a52]
+  - @prosopo/procaptcha-frictionless@2.12.15
+
 ## 4.1.33
 ### Patch Changes
 
