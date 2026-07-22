@@ -1,5 +1,12 @@
 # @prosopo/procaptcha-common
 
+## 2.11.13
+### Patch Changes
+
+  - @prosopo/types@4.9.9
+  - @prosopo/account@2.8.60
+  - @prosopo/load-balancer@2.10.11
+
 ## 2.11.12
 ### Patch Changes
 
