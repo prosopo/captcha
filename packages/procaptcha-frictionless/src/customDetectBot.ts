@@ -129,6 +129,34 @@ const customDetectBot: BotDetectionFunction = async (
 	restartFn: () => void,
 	retryContext?: ProviderSelectRetryContext,
 ): Promise<BotDetectionFunctionResult> => {
+	// Kick off the provider-pin resolution (which hits `/healthz` on the
+	// load-balancer DNS endpoint) in parallel with the module loaders and
+	// the whole `detect()` flow. `getProcaptchaRandomActiveProvider` is
+	// memoised via `pinPromiseCache` keyed on `(env, ipMode)`, so the
+	// in-flight promise is reused when catcher's internal provider selector
+	// and the awaited `getProcaptchaRandomActiveProvider(...)` below reach
+	// for it — no duplicate healthz request. Before this ordering change
+	// the healthz round-trip was fully serial with `detect()`, adding
+	// ~100–200ms to the frictionless critical path on cold DNS/TLS.
+	//
+	// We warm both cache keys because the catcher-internal selector call
+	// (line ~145 below) passes no ipMode, while the awaited call further
+	// down passes `pickIpMode(config)`. Same key when the dapp opts into
+	// neither ipv4 nor ipv6 (dual stack — the common case); different
+	// keys when the dapp is pinned to a single stack. Fire-and-forget on
+	// both — the real synchronisation happens at the awaits below.
+	const ipMode = pickIpMode(config);
+	void getProcaptchaRandomActiveProvider(config.defaultEnvironment).catch(
+		() => undefined,
+	);
+	if (ipMode !== undefined) {
+		void getProcaptchaRandomActiveProvider(
+			config.defaultEnvironment,
+			ipMode,
+			retryContext,
+		).catch(() => undefined);
+	}
+
 	const [ExtClass, detect] = await Promise.all([
 		ExtensionLoader(config.web2),
 		DetectorLoader(),
@@ -161,9 +189,12 @@ const customDetectBot: BotDetectionFunction = async (
 	// same one. `pickIpMode(config)` honours the dapp's data-ipv4 / data-ipv6
 	// preference so frictionless and the subsequent captcha hops stay on the
 	// same stack.
+	//
+	// This await usually hits the in-flight/resolved promise warmed at the
+	// top of this function — see the prefetch call there.
 	const provider = await getProcaptchaRandomActiveProvider(
 		config.defaultEnvironment,
-		pickIpMode(config),
+		ipMode,
 		retryContext,
 	);
 
