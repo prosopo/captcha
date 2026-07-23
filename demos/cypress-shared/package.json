@@ -30,7 +30,7 @@
 		"@prosopo/keyring": "2.9.57",
 		"@prosopo/types-database": "4.11.12",
 		"@types/node": "22.5.5",
-		"@vitest/coverage-v8": "3.2.4",
+		"@vitest/coverage-v8": "4.1.10",
 		"concurrently": "9.0.1",
 		"cypress": "13.14.2",
 		"cypress-real-events": "1.15.0",
@@ -41,8 +41,8 @@
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
-		"vite": "6.4.1",
-		"vitest": "3.2.4"
+		"vite": "8.1.5",
+		"vitest": "4.1.10"
 	},
 	"scripts": {
 		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",

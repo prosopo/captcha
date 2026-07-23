@@ -73,8 +73,6 @@ export default function (tsConfigPath?: string) {
 			minify: false,
 			sourcemap: false,
 			rollupOptions: {
-				maxParallelFileOps: 1,
-				cache: false,
 				output: {
 					sourcemap: false,
 				},
@@ -82,7 +80,9 @@ export default function (tsConfigPath?: string) {
 		},
 		test: {
 			//root: getRootDir(),
-			reporters: ["basic"],
+			// vitest 4 removed the "basic" reporter; the default reporter with
+			// summary disabled reproduces its terse output.
+			reporters: [["default", { summary: false }]],
 			include: [include],
 			watch: false,
 			exclude: ["**/node_modules/**", "**/dist/**"],
@@ -96,12 +96,9 @@ export default function (tsConfigPath?: string) {
 				enabled: true,
 			},
 			pool: "threads", // use threads for tests that should be run sequentially
-			poolOptions: {
-				threads: {
-					minThreads: 1,
-					maxThreads: 1,
-				},
-			},
+			// vitest 4 removed poolOptions; sequential execution is now expressed via
+			// fileParallelism instead of min/maxThreads.
+			fileParallelism: false,
 			testTimeout: 10000,
 		},
 		plugins: plugins,

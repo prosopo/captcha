@@ -185,8 +185,21 @@ export async function getDependencies(
 	}
 
 	let concat = "";
-	const { stdout, stderr } = await exec(cmd);
-	concat = stdout + stderr;
+	// `npm ls` exits non-zero on any invalid/unmet/extraneous dependency (e.g.
+	// Vite 8's optional `yaml` peer being satisfied by a hoisted v1 from
+	// cosmiconfig). It still prints the full tree to stdout in that case, so we
+	// tolerate the non-zero exit and parse whatever was emitted.
+	try {
+		const { stdout, stderr } = await exec(cmd);
+		concat = stdout + stderr;
+	} catch (error) {
+		const execError = error as { stdout?: string; stderr?: string };
+		if (typeof execError.stdout === "string") {
+			concat = execError.stdout + (execError.stderr ?? "");
+		} else {
+			throw error;
+		}
+	}
 
 	let deps: string[] = [];
 	let peerDeps: string[] = [];
