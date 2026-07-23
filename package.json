@@ -72,12 +72,7 @@
 		"node": "^24",
 		"npm": "^11"
 	},
-	"workspaces": [
-		"dev/*",
-		"packages/*",
-		"demos/*",
-		"integration/*"
-	],
+	"workspaces": ["dev/*", "packages/*", "demos/*", "integration/*"],
 	"devDependencies": {
 		"@biomejs/biome": "1.9.1",
 		"@changesets/cli": "2.29.7",
