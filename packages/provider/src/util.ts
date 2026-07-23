@@ -227,10 +227,39 @@ export const evaluateIpValidationRules = (
 		});
 	}
 
+	// Same-subscriber precondition for the geo-drift rules.
+	// Why: ipapi normalises `company.name` to the corporate parent, so a
+	// dual-stack or CGNAT customer whose v4 and v6 legs egress through
+	// different POPs of the same operator (e.g. AT&T BellSouth v4 pool +
+	// AT&T Internet v6 pool) resolves to the same provider string even
+	// when the underlying ASNs differ. In that case, city drift and
+	// large geographic distance between the two addresses are expected.
+	const ip1Provider = comparison.comparison.ip1Details?.provider;
+	const ip2Provider = comparison.comparison.ip2Details?.provider;
+	const ip1ConnectionType = comparison.comparison.ip1Details?.connectionType;
+	const ip2ConnectionType = comparison.comparison.ip2Details?.connectionType;
+	const sameTrustedProvider =
+		!comparison.comparison.differentProviders &&
+		!!ip1Provider &&
+		ip1Provider !== "Unknown" &&
+		ip1CountryCode === ip2CountryCode &&
+		ip1ConnectionType !== "datacenter" &&
+		ip2ConnectionType !== "datacenter";
+
+	if (sameTrustedProvider) {
+		logger.info(() => ({
+			msg: "Skipping city and distance IP validation rules for same trusted provider",
+			data: {
+				provider: ip1Provider,
+				countryCode: ip1CountryCode,
+			},
+		}));
+	}
+
 	// Check for city change
 	const ip1City = comparison.comparison.ip1Details?.city;
 	const ip2City = comparison.comparison.ip2Details?.city;
-	if (ip1City !== ip2City) {
+	if (!sameTrustedProvider && ip1City !== ip2City) {
 		conditions.push({
 			met: true,
 			action: effectiveRules.actions.cityChangeAction,
@@ -240,8 +269,6 @@ export const evaluateIpValidationRules = (
 
 	// Check for ISP change
 	if (comparison.comparison.differentProviders) {
-		const ip1Provider = comparison.comparison.ip1Details?.provider;
-		const ip2Provider = comparison.comparison.ip2Details?.provider;
 		conditions.push({
 			met: true,
 			action: effectiveRules.actions.ispChangeAction,
@@ -252,6 +279,7 @@ export const evaluateIpValidationRules = (
 	// Check for distance exceed condition
 	const distanceKm = comparison.comparison.distanceKm;
 	if (
+		!sameTrustedProvider &&
 		distanceKm !== undefined &&
 		distanceKm > effectiveRules.distanceThresholdKm
 	) {
