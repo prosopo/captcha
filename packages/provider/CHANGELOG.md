@@ -1,5 +1,23 @@
 # @prosopo/provider
 
+## 4.15.7
+### Patch Changes
+
+- 6b17995: fix(provider): skip city and distance IP validation rules for same trusted provider
+  
+  Dual-stack and CGNAT subscribers routinely egress via different POPs of the same operator (e.g. AT&T's BellSouth v4 pool + AT&T Internet v6 pool — distinct ASNs but identical `company.name` from ipapi). The city-change and distance-exceed rules previously fired on such traffic, producing PoW captcha rejections with `City changed from Laredo to Los Angeles; IP addresses are 1930km apart` even though the ISP-change rule correctly recognised the provider match.
+  
+  `evaluateIpValidationRules` now gates the city-change and distance-exceed rule blocks on a `sameTrustedProvider` precondition: both providers match (non-`"Unknown"`), same `countryCode`, and neither endpoint is a datacenter (guards against AWS/Cloudflare same-`company.name` false negatives where "same corporate owner" absolutely does not mean "same subscriber"). Country-change, ISP-change, VPN/proxy, and abuse-score rules are unchanged.
+- b394cc5: fix(provider): stop treating apex-TLS-handshake failure as spam-email evidence
+  
+  `checkSpamEmail` was auto-rejecting any email domain whose apex website failed a modern TLS handshake (`https://<domain>` → `EPROTO` / `unsupported protocol`). This is a property of the web server, not the email domain — small-business domains routinely host mail on modern providers (Zoho / Google / Fastmail) while the apex site runs legacy Apache with only TLSv1.0 and an expired self-signed cert, and modern Node/OpenSSL 3 refuses those handshakes.
+  
+  The `tlsError → return true` short-circuit is removed. The TLS observation is still logged (as `info`, for signal), and the check now falls through to the remaining DNS signals (redirect-target spam lookup, CNAME spam lookup, MX-target spam lookup) — those are the signals that actually reflect email reputation. Existing coverage on those paths is unchanged; two unit tests cover the new behaviour (apex TLS error alone is not spam; spam via MX is still caught when apex has a TLS error).
+- Updated dependencies [446f53b]
+  - @prosopo/database@3.15.14
+  - @prosopo/env@3.6.14
+  - @prosopo/api-express-router@3.1.45
+
 ## 4.15.6
 ### Patch Changes
 
