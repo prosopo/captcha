@@ -17,6 +17,7 @@ import { u8aToHex } from "@prosopo/util";
 import { Option, Struct, str, u32 } from "scale-ts";
 import { number, object, string, type infer as zInfer } from "zod";
 import { ApiParams } from "../api/params.js";
+import { CaptchaTypeSchema } from "../client/captchaType/captchaType.js";
 
 export const RequestHashSignatureSchema = object({
 	[ApiParams.requestHash]: string(),
@@ -54,6 +55,11 @@ export const ProcaptchaOutputSchema = object({
 		[ApiParams.provider]: SignatureTypesSchema,
 		[ApiParams.user]: SignatureTypesSchema,
 	}),
+	// Declares which captcha flow minted the token so @prosopo/server can
+	// dispatch to the correct verify endpoint. Optional for backwards
+	// compatibility with tokens minted before this field existed — see
+	// the v1/v2 codec split below.
+	[ApiParams.captchaType]: CaptchaTypeSchema.optional(),
 });
 
 /**
@@ -63,10 +69,11 @@ export const ProcaptchaOutputSchema = object({
  */
 export type ProcaptchaOutput = zInfer<typeof ProcaptchaOutputSchema>;
 
-/**
- * The codec for encoding and decoding the procaptcha output to a hex string.
- */
-export const ProcaptchaTokenCodec = Struct({
+// Frozen v1 layout — kept so decodeProcaptchaOutput can still parse tokens
+// minted by client bundles that shipped before captchaType was added. DO NOT
+// modify: existing tokens on the wire are encoded against this exact struct
+// and changing the field order or types would break decode round-trip.
+export const ProcaptchaTokenCodecV1 = Struct({
 	[ApiParams.commitmentId]: Option(str),
 	[ApiParams.providerUrl]: Option(str),
 	[ApiParams.dapp]: str,
@@ -86,6 +93,35 @@ export const ProcaptchaTokenCodec = Struct({
 	}),
 });
 
+/**
+ * The codec for encoding and decoding the procaptcha output to a hex string.
+ *
+ * v2 appends `captchaType: Option(str)` to the v1 layout so @prosopo/server
+ * can dispatch verify calls to the right endpoint (puzzle/pow/image). Legacy
+ * tokens minted against v1 remain decodable via the fallback in
+ * decodeProcaptchaOutput.
+ */
+export const ProcaptchaTokenCodec = Struct({
+	[ApiParams.commitmentId]: Option(str),
+	[ApiParams.providerUrl]: Option(str),
+	[ApiParams.dapp]: str,
+	[ApiParams.user]: str,
+	[ApiParams.challenge]: Option(str),
+	[ApiParams.nonce]: Option(u32),
+	[ApiParams.timestamp]: str,
+	[ApiParams.signature]: Struct({
+		[ApiParams.provider]: Struct({
+			[ApiParams.challenge]: Option(str),
+			[ApiParams.requestHash]: Option(str),
+		}),
+		[ApiParams.user]: Struct({
+			[ApiParams.timestamp]: Option(str),
+			[ApiParams.requestHash]: Option(str),
+		}),
+	}),
+	[ApiParams.captchaType]: Option(str),
+});
+
 export const ProcaptchaTokenSpec = string().startsWith("0x");
 export type ProcaptchaToken = zInfer<typeof ProcaptchaTokenSpec>;
 
@@ -98,6 +134,7 @@ export const encodeProcaptchaOutput = (
 			[ApiParams.providerUrl]: undefined,
 			[ApiParams.challenge]: undefined,
 			[ApiParams.nonce]: undefined,
+			[ApiParams.captchaType]: undefined,
 			// override any optional fields by spreading the procaptchaOutput
 			...procaptchaOutput,
 			signature: {
@@ -120,7 +157,18 @@ export const encodeProcaptchaOutput = (
 export const decodeProcaptchaOutput = (
 	procaptchaToken: ProcaptchaToken,
 ): ProcaptchaOutput => {
-	return ProcaptchaOutputSchema.parse(
-		ProcaptchaTokenCodec.dec(hexToU8a(procaptchaToken)),
-	);
+	const bytes = hexToU8a(procaptchaToken);
+	// Try the current (v2) codec first; fall back to the frozen v1 layout for
+	// tokens minted by older client bundles that predate the captchaType field.
+	// Split the two failure modes carefully: catch only the v2 decode step
+	// (binary layout mismatch → try v1), NOT the schema parse (unknown enum
+	// values / malformed shape must surface as ZodError, not be silently
+	// dropped by the fallback).
+	let v2Decoded: unknown;
+	try {
+		v2Decoded = ProcaptchaTokenCodec.dec(bytes);
+	} catch {
+		return ProcaptchaOutputSchema.parse(ProcaptchaTokenCodecV1.dec(bytes));
+	}
+	return ProcaptchaOutputSchema.parse(v2Decoded);
 };

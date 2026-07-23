@@ -404,6 +404,7 @@ export const Manager = (
 											userTimestampSignature.signature.toString(),
 									},
 								},
+								[ApiParams.captchaType]: CaptchaType.pow,
 							}),
 						);
 						setValidChallengeTimeout();
