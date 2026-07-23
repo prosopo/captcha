@@ -12,7 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import {
+	mkdtempSync,
+	readdirSync,
+	rmSync,
+	statSync,
+	writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -215,6 +221,29 @@ describe("DetectorBundlePool", () => {
 		expect(reloaded.get("pushed")?.js).toBe("PJS");
 		expect(reloaded.get("pushed")?.privateKey).toBe("PPK");
 		expect(reloaded.get("pushed")?.release).toBe("3.6.64");
+	});
+
+	it("persists without replacing the pool directory itself", () => {
+		// In the container the pool dir is a bind-mount point: removing or
+		// renaming over it fails with EBUSY. Pin the property that makes this
+		// safe — the directory we were given must survive the write untouched.
+		const before = statSync(dir).ino;
+		persistDetectorBundlePool(
+			new Map([["b", { js: "JS", privateKey: "PK", innerConfig: "C" }]]),
+			dir,
+		);
+		expect(statSync(dir).ino).toBe(before);
+		const reloaded = new DetectorBundlePool();
+		reloaded.loadFromDir(dir);
+		expect(reloaded.get("b")?.js).toBe("JS");
+	});
+
+	it("leaves no temp files behind", () => {
+		persistDetectorBundlePool(
+			new Map([["b", { js: "JS", privateKey: "PK", innerConfig: "C" }]]),
+			dir,
+		);
+		expect(readdirSync(dir).filter((f) => f.includes(".tmp"))).toEqual([]);
 	});
 
 	it("persist replaces the previous pool rather than merging into it", () => {

@@ -225,22 +225,39 @@ export function initDetectorBundlePool(
  * {@link DetectorBundlePool.loadFromDir} reads, so a pushed pool is picked up
  * again on the next boot instead of vanishing with the process.
  *
- * Staged into a sibling directory and renamed into place so a crash mid-write
- * can't leave a half-written pool that would load as a partial set. Throws on
- * failure — the caller decides whether an unpersisted push is acceptable.
+ * Writes *into* `dir` and never replaces the directory itself. In the provider
+ * container `dir` is a bind-mount point, and removing or renaming over a mount
+ * point from inside the container fails with EBUSY ("Device or resource busy")
+ * — which is exactly what an earlier stage-into-a-sibling-and-rename version of
+ * this function did on every push.
+ *
+ * Each file is still written to a temp name and renamed into place, so a reader
+ * never observes a partially-written bundle; renames within one directory are
+ * atomic and don't touch the mount. Bundles no longer in the pool are then
+ * pruned, giving replace semantics rather than an ever-growing merge.
+ *
+ * Throws on failure — the caller decides whether an unpersisted push is
+ * acceptable.
  */
 export function persistDetectorBundlePool(
 	bundles: Map<string, PoolBundle>,
 	dir: string = globalPoolDir,
 ): void {
-	const staging = `${dir}.staging`;
-	rmSync(staging, { recursive: true, force: true });
-	mkdirSync(staging, { recursive: true });
+	// No-op when the directory already exists (the mounted case).
+	mkdirSync(dir, { recursive: true });
 
+	const written = new Set<string>();
 	for (const [bundleId, bundle] of bundles) {
-		writeFileSync(join(staging, `${bundleId}.js`), bundle.js, "utf8");
+		const jsName = `${bundleId}.js`;
+		const jsonName = `${bundleId}.json`;
+
+		const jsTmp = join(dir, `.${jsName}.tmp`);
+		writeFileSync(jsTmp, bundle.js, "utf8");
+		renameSync(jsTmp, join(dir, jsName));
+
+		const jsonTmp = join(dir, `.${jsonName}.tmp`);
 		writeFileSync(
-			join(staging, `${bundleId}.json`),
+			jsonTmp,
 			JSON.stringify({
 				privateKey: bundle.privateKey,
 				innerConfig: bundle.innerConfig,
@@ -251,10 +268,24 @@ export function persistDetectorBundlePool(
 			// sharing the mount.
 			{ encoding: "utf8", mode: 0o600 },
 		);
+		renameSync(jsonTmp, join(dir, jsonName));
+
+		written.add(jsName);
+		written.add(jsonName);
 	}
 
-	rmSync(dir, { recursive: true, force: true });
-	renameSync(staging, dir);
+	// Drop bundles that are no longer in the pool so the on-disk set matches
+	// memory. Only ever touches `{id}.js` / `{id}.json`, leaving anything else
+	// in the directory (manifest.json is matched and removed with them, which is
+	// intended — a stale manifest describing a replaced pool is worse than none).
+	for (const entry of readdirSync(dir)) {
+		if (
+			(extname(entry) === ".js" || extname(entry) === ".json") &&
+			!written.has(entry)
+		) {
+			rmSync(join(dir, entry), { force: true });
+		}
+	}
 }
 
 /** Get the global pool, or `null` if {@link initDetectorBundlePool} was never called. */
