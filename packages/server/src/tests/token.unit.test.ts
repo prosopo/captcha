@@ -23,8 +23,8 @@ import { hexToU8a } from "@polkadot/util";
 import {
 	ApiParams,
 	CaptchaType,
-	ProcaptchaOutputSchema,
 	type ProcaptchaOutput,
+	ProcaptchaOutputSchema,
 	ProcaptchaTokenCodec,
 	ProcaptchaTokenCodecV1,
 	decodeProcaptchaOutput,
@@ -116,15 +116,12 @@ describe("procaptcha token codec — legacy v1 fallback", () => {
 				...output,
 				signature: {
 					provider: {
-						challenge:
-							output.signature.provider?.challenge || undefined,
-						requestHash:
-							output.signature.provider?.requestHash || undefined,
+						challenge: output.signature.provider?.challenge || undefined,
+						requestHash: output.signature.provider?.requestHash || undefined,
 					},
 					user: {
 						timestamp: output.signature.user?.timestamp || undefined,
-						requestHash:
-							output.signature.user?.requestHash || undefined,
+						requestHash: output.signature.user?.requestHash || undefined,
 					},
 				},
 			}),

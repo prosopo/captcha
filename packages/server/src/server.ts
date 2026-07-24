@@ -19,8 +19,8 @@ import { loadBalancer } from "@prosopo/load-balancer";
 import { type LogLevel, type Logger, getLogger } from "@prosopo/logger";
 import type { KeyringPair } from "@prosopo/types";
 import {
-	CaptchaType,
 	type CaptchaTimeoutOutput,
+	CaptchaType,
 	ProcaptchaOutputSchema,
 	type ProcaptchaToken,
 	type ProsopoServerConfigOutput,
@@ -181,7 +181,11 @@ export class ProsopoServer {
 		);
 	}
 
-	private isRecent(timestamp: number, timeoutMs: number, label: string): boolean {
+	private isRecent(
+		timestamp: number,
+		timeoutMs: number,
+		label: string,
+	): boolean {
 		if (!timestamp) return false;
 		const recent = Date.now() - timestamp < timeoutMs;
 		if (!recent) {

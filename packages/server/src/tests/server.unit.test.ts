@@ -33,12 +33,12 @@ import {
 	encodeProcaptchaOutput,
 } from "@prosopo/types";
 import {
+	type MockInstance,
 	afterEach,
 	beforeEach,
 	describe,
 	expect,
 	it,
-	type MockInstance,
 	vi,
 } from "vitest";
 import { ProsopoServer } from "../server.js";
@@ -51,44 +51,45 @@ const buildConfig = (
 	powCachedMs: number,
 	imageCachedMs: number,
 	puzzleCachedMs: number,
-): ProsopoServerConfigOutput => ({
-	userAccountAddress: undefined,
-	web2: true,
-	solutionThreshold: 80,
-	dappName: "test",
-	serverUrl: undefined,
-	logLevel: "info",
-	defaultEnvironment: "development",
-	networks: {
-		development: {
-			endpoint: "wss://ignored",
-			dappContract: { address: DAPP },
-			procaptchaContract: { address: DAPP },
-			proxyContract: { address: DAPP },
+): ProsopoServerConfigOutput =>
+	({
+		userAccountAddress: undefined,
+		web2: true,
+		solutionThreshold: 80,
+		dappName: "test",
+		serverUrl: undefined,
+		logLevel: "info",
+		defaultEnvironment: "development",
+		networks: {
+			development: {
+				endpoint: "wss://ignored",
+				dappContract: { address: DAPP },
+				procaptchaContract: { address: DAPP },
+				proxyContract: { address: DAPP },
+			},
 		},
-	},
-	account: { address: DAPP },
-	timeouts: {
-		image: {
-			challengeTimeout: 10_000,
-			solutionTimeout: 10_000,
-			verifiedTimeout: 10_000,
-			cachedTimeout: imageCachedMs,
+		account: { address: DAPP },
+		timeouts: {
+			image: {
+				challengeTimeout: 10_000,
+				solutionTimeout: 10_000,
+				verifiedTimeout: 10_000,
+				cachedTimeout: imageCachedMs,
+			},
+			pow: {
+				verifiedTimeout: 10_000,
+				solutionTimeout: 10_000,
+				cachedTimeout: powCachedMs,
+			},
+			puzzle: {
+				verifiedTimeout: 10_000,
+				solutionTimeout: 10_000,
+				cachedTimeout: puzzleCachedMs,
+			},
+			contract: { maxVerifiedTime: 10_000 },
 		},
-		pow: {
-			verifiedTimeout: 10_000,
-			solutionTimeout: 10_000,
-			cachedTimeout: powCachedMs,
-		},
-		puzzle: {
-			verifiedTimeout: 10_000,
-			solutionTimeout: 10_000,
-			cachedTimeout: puzzleCachedMs,
-		},
-		contract: { maxVerifiedTime: 10_000 },
-	},
-	// biome-ignore lint/suspicious/noExplicitAny: config schema uses union types the test doesn't need
-} as any);
+		// biome-ignore lint/suspicious/noExplicitAny: config schema uses union types the test doesn't need
+	}) as any;
 
 const buildToken = (
 	timestamp: number,

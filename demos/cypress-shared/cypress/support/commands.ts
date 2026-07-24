@@ -81,6 +81,7 @@ declare global {
 			registerSiteKey(
 				baseCaptchaType: CaptchaType,
 				captchaType?: CaptchaType,
+				settingsOverrides?: Partial<IUserSettings>,
 				// biome-ignore lint/suspicious/noExplicitAny: tests
 			): Cypress.Chainable<Response<any>>;
 
@@ -366,6 +367,7 @@ function elementExists(selector: string) {
 function registerSiteKey(
 	baseCaptchaType: CaptchaType,
 	captchaType?: CaptchaType,
+	settingsOverrides?: Partial<IUserSettings>,
 ) {
 	const siteKey = Cypress.env(
 		`PROSOPO_SITE_KEY_${baseCaptchaType.toUpperCase()}`,
@@ -397,6 +399,7 @@ function registerSiteKey(
 			disallowWebView: false,
 			verifiedTimeout: 60000,
 			solutionTimeout: 60000,
+			...settingsOverrides,
 		};
 
 		// Use cy.request() to ensure Cypress correctly queues the request

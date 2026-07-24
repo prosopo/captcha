@@ -4,6 +4,7 @@
 "@prosopo/procaptcha-pow": patch
 "@prosopo/procaptcha-puzzle": patch
 "@prosopo/procaptcha": patch
+"@prosopo/cypress-shared": patch
 ---
 
 fix(server): dispatch verify by captchaType so puzzle tokens hit the puzzle endpoint
