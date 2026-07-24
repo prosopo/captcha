@@ -16,43 +16,77 @@
 // End-to-end proof that puzzle server-verify works. Before the
 // puzzle-server-verify fix, `@prosopo/server`'s dispatch had no puzzle branch
 // so puzzle tokens hit the pow endpoint and 404'd, leaving customers with
-// silent `verified: false` responses on legitimate solvers. This test locks
-// in the full chain: widget mints a puzzle token → demo dapp POSTs it back to
-// its server → server calls `prosopoServer.isVerified(token)` → SDK dispatches
-// to the puzzle endpoint → provider verifies against the puzzlecaptchas
-// collection → `status-success` renders.
+// silent `verified: false` responses on legitimate solvers.
+//
+// This test drives the puzzle-implicit demo page: fill signup form → click
+// submit → puzzle widget appears → drag piece anywhere → widget mints token
+// → form POSTs token to demo dapp's /signup → dapp calls
+// prosopoServer.isVerified(token) → SDK dispatches to the puzzle endpoint
+// → provider verifies against puzzlecaptchas → /signup returns
+// { message: "user created" }.
+//
+// If the dispatch bug were reintroduced, /signup would return a rejection
+// message (verified:false from isVerified) and this test would fail on the
+// message assertion. Mirrors correct.captcha.signup.cy.ts for the image path.
 //
 // The puzzle tolerance is registered at 999 px, well beyond the 300×200
 // canvas diagonal (~360 px), so any release point in the puzzle area passes.
-// That lets Cypress simulate the drag without pixel-perfect target hitting,
-// which matches the bot-solvable posture we want to test.
+// That lets Cypress simulate the drag without pixel-perfect target hitting.
 
 import { CaptchaType } from "@prosopo/types";
 import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
-const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "image";
+const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "puzzle";
 
 // Big enough to swallow any click inside the canvas — the check is Euclidean
 // distance to the target centre, and the canvas is 300×200. Anything ≥ ~360
-// admits any release point; 999 gives generous headroom.
+// admits any release point; 999 gives generous headroom and lets the widget
+// accept a scripted release without needing pixel-perfect target hitting.
 const LAX_PUZZLE_TOLERANCE = 999;
 
-describe("Puzzle CAPTCHA", () => {
-	beforeEach(() => {
-		cy.registerSiteKey(baseCaptchaType, CaptchaType.puzzle, {
-			puzzleTolerance: LAX_PUZZLE_TOLERANCE,
-		}).then((response) => {
-			cy.task("log", `Response status: ${response.status}`);
-			cy.task("log", `Response: ${JSON.stringify(response.body)}`);
-			expect(response.status).to.equal(200);
-		});
+describe("Puzzle CAPTCHA — signup", () => {
+	before(() => {
+		const registerWithRetry = (
+			retries = 3,
+			delay = 2000,
+		): Cypress.Chainable => {
+			return cy
+				.registerSiteKey(baseCaptchaType, CaptchaType.puzzle, {
+					puzzleTolerance: LAX_PUZZLE_TOLERANCE,
+				})
+				.then((response) => {
+					cy.task("log", `Response status: ${response.status}`);
+					cy.task("log", `Response: ${JSON.stringify(response.body)}`);
+					if (response.status !== 200 && retries > 0) {
+						cy.task(
+							"log",
+							`Site key registration failed. Retrying... (${retries} attempts left)`,
+						);
+						cy.wait(delay);
+						return registerWithRetry(retries - 1, delay);
+					}
+					expect(
+						response.status,
+						"Site key registration should return 200",
+					).to.equal(200);
+					return cy.wrap(response);
+				});
+		};
 
+		return registerWithRetry();
+	});
+
+	beforeEach(() => {
 		cy.intercept("/dummy").as("dummy");
 
-		return cy.visit(Cypress.env("default_page")).then(() => {
-			cy.waitForProcaptchaScript();
-			getWidgetElement(checkboxClass).should("be.visible");
-		});
+		return cy
+			.visit(Cypress.env("default_page"), {
+				timeout: 30000,
+				failOnStatusCode: false,
+			})
+			.then(() => {
+				cy.waitForProcaptchaScript();
+			});
 	});
 
 	after(() => {
@@ -70,18 +104,8 @@ describe("Puzzle CAPTCHA", () => {
 		});
 	});
 
-	it("puzzle mints a captchaType-puzzle token and server-verifies via the puzzle endpoint", () => {
-		cy.visit(Cypress.env("default_page"));
-
-		cy.waitForProcaptchaScript();
-
-		// Intercept the two browser-visible moments in the puzzle path.
-		// The final server-verify (customer dapp → provider) is a
-		// server-to-server call and is not visible to cypress; the
-		// .status-success assertion below is the end-to-end proof that the
-		// SDK dispatched to the puzzle endpoint correctly — without the fix
-		// this PR contains, the customer server would receive verified:false
-		// and never render .status-success.
+	it("puzzle token verifies via /signup — proves the SDK dispatched to the puzzle endpoint", () => {
+		cy.intercept("POST", "/signup").as("signup");
 		cy.intercept("POST", "**/prosopo/provider/client/captcha/puzzle").as(
 			"puzzleChallenge",
 		);
@@ -89,22 +113,47 @@ describe("Puzzle CAPTCHA", () => {
 			"puzzleSolution",
 		);
 
-		// Click "I am human" to kick off the puzzle flow.
-		getWidgetElement(checkboxClass, { timeout: 12000 }).first().realClick();
+		// Fill signup form.
+		const uniqueId = `puzzle-test-${Cypress._.random(0, 1e6)}`;
+		cy.get('input[id="name"]', { timeout: 10000 })
+			.should("be.visible")
+			.clear()
+			.type("test", { delay: 50 });
+		cy.get('input[id="email"]', { timeout: 10000 })
+			.should("be.visible")
+			.clear()
+			.type(`${uniqueId}@prosopo.io`, { delay: 50 });
+		cy.get('input[type="password"]', { timeout: 10000 })
+			.should("be.visible")
+			.clear()
+			.type("password", { delay: 50 });
 
-		// The provider serves a puzzle challenge (target coords + canvas image).
-		cy.wait("@puzzleChallenge", { timeout: 12000 })
+		cy.get('button[data-cy="submit-button"]', { timeout: 10000 })
+			.first()
+			.should("be.visible")
+			.should("not.be.disabled")
+			.realClick();
+
+		// The widget starts the puzzle flow — first with an "I am human"
+		// checkbox, then the drag canvas. Some puzzle-implicit flows skip the
+		// checkbox and go straight to the drag, so tolerate either.
+		getWidgetElement(checkboxClass, { timeout: 12000 })
+			.first()
+			.then(($checkbox) => {
+				if ($checkbox.length && !$checkbox.is(":checked")) {
+					cy.wrap($checkbox).realClick();
+				}
+			});
+
+		cy.wait("@puzzleChallenge", { timeout: 15000 })
 			.its("response")
 			.then((response) => {
 				expect(response).to.not.be.undefined;
 				expect(response?.statusCode).to.equal(200);
 			});
 
-		// Puzzle canvas renders; drag the piece anywhere within the canvas.
-		// Any release point passes because the tolerance was raised to swallow
-		// the whole canvas. See LAX_PUZZLE_TOLERANCE above.
-		// The widget renders inside a shadow root, so route the lookup through
-		// getWidgetElement (which sets includeShadowDom: true).
+		// Drag the piece anywhere within the canvas. Any release point passes
+		// because the tolerance was raised to swallow the whole canvas.
 		getWidgetElement('[data-cy="prosopo-puzzle-piece"]', { timeout: 15000 })
 			.first()
 			.then(($piece) => {
@@ -140,9 +189,6 @@ describe("Puzzle CAPTCHA", () => {
 				});
 			});
 
-		// Client → provider: submit puzzle solution. Must be verified=true —
-		// this is the client-side verification the widget performs before
-		// minting the token.
 		cy.wait("@puzzleSolution", { timeout: 30000 })
 			.its("response")
 			.then((response) => {
@@ -151,14 +197,30 @@ describe("Puzzle CAPTCHA", () => {
 				expect(response?.body.verified).to.equal(true);
 			});
 
-		// UI confirmation that the whole chain completed — the demo dapp only
-		// renders .status-success when its server-side isVerified() returns
-		// true, which requires the SDK to have dispatched to the puzzle
-		// endpoint (the fix under test).
-		cy.get(".status-success", { timeout: 15000 }).should("exist");
-		cy.get(".status-success").should(
-			"contain",
-			"Challenge passed successfully",
-		);
+		// The proof: /signup uses prosopoServer.isVerified, which — with
+		// this PR's dispatch — must send the puzzle token to the puzzle
+		// endpoint. If that dispatch were still routing puzzle tokens to
+		// the pow endpoint, isVerified would return verified:false and
+		// /signup would respond with a rejection message instead of
+		// "user created".
+		cy.wait("@signup", { timeout: 30000 }).then((interception) => {
+			cy.task(
+				"log",
+				`Signup response status: ${interception.response?.statusCode}`,
+			);
+			expect(interception.response, "Signup response should exist").to.exist;
+			expect(
+				interception.response?.statusCode,
+				"Signup should return 200",
+			).to.equal(200);
+
+			const body = interception.response?.body;
+			cy.task("log", `Signup response body: ${JSON.stringify(body)}`);
+			expect(body, "Response body should exist").to.exist;
+			expect(
+				body?.message,
+				"Message should indicate user was created",
+			).to.equal("user created");
+		});
 	});
 });

@@ -32,7 +32,11 @@ export default defineConfig({
 	headers: { "Accept-Encoding": "gzip, deflate" },
 	env: {
 		...process.env,
-		default_page: "/puzzle-explicit.html",
+		// puzzle-implicit.html has a signup form wired to /signup on the
+		// demo dapp server, matching how correct.captcha.signup.cy.ts drives
+		// the image path. That /signup call is what exercises
+		// prosopoServer.isVerified() → puzzle endpoint (the fix under test).
+		default_page: "/puzzle-implicit.html",
 		visualRegressionType: "regression",
 		visualRegressionBaseDirectory: "cypress/snapshots/baseline",
 		visualRegressionDiffDirectory: "cypress/snapshots/diff",
