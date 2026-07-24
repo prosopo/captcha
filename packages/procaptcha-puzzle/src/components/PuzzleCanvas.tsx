@@ -305,7 +305,6 @@ export const PuzzleCanvas = ({
 					/>
 					{/* Puzzle piece */}
 					<div
-						data-cy="prosopo-puzzle-piece"
 						onMouseDown={handlePieceMouseDown}
 						onTouchStart={handlePieceTouchStart}
 						style={{
