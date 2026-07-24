@@ -288,10 +288,16 @@ export const ClientSettingsSchema = object({
 	// Detector score at or above which the frictionless flow blocks the
 	// request outright instead of issuing a challenge. Undefined disables.
 	autoBanScoreThreshold: number().min(0).optional(),
+	// Tolerance in pixels between the release point and the puzzle target
+	// centre (Euclidean distance). Default 15 matches what real solvers
+	// actually hit. The ceiling is deliberately larger than the puzzle
+	// canvas diagonal (~360 px on a 300×200 canvas) so end-to-end tests
+	// can raise it high enough that a scripted release anywhere on the
+	// canvas passes. Real sites should never need more than a few tens.
 	puzzleTolerance: number()
 		.int()
 		.min(5)
-		.max(50)
+		.max(1000)
 		.optional()
 		.default(puzzleToleranceDefault),
 	ipValidationRules: IPValidationRulesSchema.optional(),

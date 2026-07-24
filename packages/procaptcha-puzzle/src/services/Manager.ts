@@ -26,6 +26,7 @@ import { getDefaultEvents } from "@prosopo/procaptcha-common";
 import {
 	type Account,
 	ApiParams,
+	CaptchaType,
 	type FrictionlessState,
 	type GetPuzzleCaptchaResponse,
 	type ProcaptchaCallbacks,
@@ -442,6 +443,7 @@ export const Manager = (
 									userTimestampSignature.signature.toString(),
 							},
 						},
+						[ApiParams.captchaType]: CaptchaType.puzzle,
 					}),
 				);
 				setValidChallengeTimeout();
