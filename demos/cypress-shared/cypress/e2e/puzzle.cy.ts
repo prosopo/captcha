@@ -75,15 +75,18 @@ describe("Puzzle CAPTCHA", () => {
 
 		cy.waitForProcaptchaScript();
 
-		// Intercept the three interesting network moments in the puzzle path.
+		// Intercept the two browser-visible moments in the puzzle path.
+		// The final server-verify (customer dapp → provider) is a
+		// server-to-server call and is not visible to cypress; the
+		// .status-success assertion below is the end-to-end proof that the
+		// SDK dispatched to the puzzle endpoint correctly — without the fix
+		// this PR contains, the customer server would receive verified:false
+		// and never render .status-success.
 		cy.intercept("POST", "**/prosopo/provider/client/captcha/puzzle").as(
 			"puzzleChallenge",
 		);
 		cy.intercept("POST", "**/prosopo/provider/client/puzzle/solution").as(
 			"puzzleSolution",
-		);
-		cy.intercept("POST", "**/prosopo/provider/client/puzzle/verify").as(
-			"puzzleServerVerify",
 		);
 
 		// Click "I am human" to kick off the puzzle flow.
@@ -148,19 +151,10 @@ describe("Puzzle CAPTCHA", () => {
 				expect(response?.body.verified).to.equal(true);
 			});
 
-		// The end-to-end proof: the demo dapp forwards the puzzle token to its
-		// server, which calls prosopoServer.isVerified(token). With the fix
-		// in this PR, isVerified dispatches to the puzzle endpoint. Watch for
-		// that request and its verified: true response.
-		cy.wait("@puzzleServerVerify", { timeout: 30000 })
-			.its("response")
-			.then((response) => {
-				expect(response).to.not.be.undefined;
-				expect(response?.statusCode).to.equal(200);
-				expect(response?.body.verified).to.equal(true);
-			});
-
-		// UI confirmation that the whole chain completed.
+		// UI confirmation that the whole chain completed — the demo dapp only
+		// renders .status-success when its server-side isVerified() returns
+		// true, which requires the SDK to have dispatched to the puzzle
+		// endpoint (the fix under test).
 		cy.get(".status-success", { timeout: 15000 }).should("exist");
 		cy.get(".status-success").should(
 			"contain",
