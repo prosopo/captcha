@@ -27,7 +27,6 @@
 // That lets Cypress simulate the drag without pixel-perfect target hitting,
 // which matches the bot-solvable posture we want to test.
 
-import "@cypress/xpath";
 import { CaptchaType } from "@prosopo/types";
 import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
@@ -101,50 +100,40 @@ describe("Puzzle CAPTCHA", () => {
 		// Puzzle canvas renders; drag the piece anywhere within the canvas.
 		// Any release point passes because the tolerance was raised to swallow
 		// the whole canvas. See LAX_PUZZLE_TOLERANCE above.
-		cy.get("body", { timeout: 15000 }).then(($body) => {
-			// The piece is rendered as a coloured circle inside the container.
-			// Find it via the container ref by looking for the puzzle piece
-			// element in the shadow-like structure. We use a lax XPath because
-			// the widget's DOM shape can change and this test only needs to
-			// grab *a* draggable element in the canvas.
-			cy.xpath(
-				"//div[contains(@style, 'grab') or contains(@style, 'grabbing')]",
-				{ timeout: 10000 },
-			)
-				.first()
-				.then(($piece) => {
-					const piece = $piece[0];
-					if (!piece) throw new Error("puzzle piece not found");
-					const rect = piece.getBoundingClientRect();
-					const startX = rect.left + rect.width / 2;
-					const startY = rect.top + rect.height / 2;
-					// Release ~80 px away in an arbitrary direction — lax
-					// tolerance ensures this counts as "on target".
-					const endX = startX + 80;
-					const endY = startY + 40;
-					cy.wrap(piece)
-						.trigger("mousedown", {
-							button: 0,
-							clientX: startX,
-							clientY: startY,
-							force: true,
-						})
-						.trigger("mousemove", {
-							clientX: endX,
-							clientY: endY,
-							force: true,
-						});
-					cy.document().then((doc) => {
-						const evt = new MouseEvent("mouseup", {
-							clientX: endX,
-							clientY: endY,
-							bubbles: true,
-							cancelable: true,
-						});
-						doc.dispatchEvent(evt);
+		cy.get('[data-cy="prosopo-puzzle-piece"]', { timeout: 15000 })
+			.first()
+			.then(($piece) => {
+				const piece = $piece[0];
+				if (!piece) throw new Error("puzzle piece not found");
+				const rect = piece.getBoundingClientRect();
+				const startX = rect.left + rect.width / 2;
+				const startY = rect.top + rect.height / 2;
+				// Release ~80 px away in an arbitrary direction — lax
+				// tolerance ensures this counts as "on target".
+				const endX = startX + 80;
+				const endY = startY + 40;
+				cy.wrap(piece)
+					.trigger("mousedown", {
+						button: 0,
+						clientX: startX,
+						clientY: startY,
+						force: true,
+					})
+					.trigger("mousemove", {
+						clientX: endX,
+						clientY: endY,
+						force: true,
 					});
+				cy.document().then((doc) => {
+					const evt = new MouseEvent("mouseup", {
+						clientX: endX,
+						clientY: endY,
+						bubbles: true,
+						cancelable: true,
+					});
+					doc.dispatchEvent(evt);
 				});
-		});
+			});
 
 		// Client → provider: submit puzzle solution. Must be verified=true —
 		// this is the client-side verification the widget performs before

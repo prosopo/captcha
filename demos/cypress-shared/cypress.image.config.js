@@ -74,6 +74,11 @@ export default defineConfig({
 			"cypress/e2e/**/frictionless.cy.ts",
 			"cypress/e2e/**/invisible.cy.ts",
 			"cypress/e2e/**/pow.cy.ts",
+			// Puzzle spec drives puzzle-explicit.html and expects the puzzle
+			// canvas to render — swaps the site key to puzzle mode via a
+			// bespoke lax-tolerance registration. Runs under its own
+			// cypress.puzzle.config.js.
+			"cypress/e2e/**/puzzle.cy.ts",
 			// Escalation spec drives the frictionless flow + installs a
 			// dapp-scoped routing machine; it has its own
 			// cypress.escalation.config.js and must not be pulled into
