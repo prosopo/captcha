@@ -113,37 +113,12 @@ describe("Puzzle CAPTCHA — signup", () => {
 			"puzzleSolution",
 		);
 
-		// Fill signup form.
-		const uniqueId = `puzzle-test-${Cypress._.random(0, 1e6)}`;
-		cy.get('input[id="name"]', { timeout: 10000 })
-			.should("be.visible")
-			.clear()
-			.type("test", { delay: 50 });
-		cy.get('input[id="email"]', { timeout: 10000 })
-			.should("be.visible")
-			.clear()
-			.type(`${uniqueId}@prosopo.io`, { delay: 50 });
-		cy.get('input[type="password"]', { timeout: 10000 })
-			.should("be.visible")
-			.clear()
-			.type("password", { delay: 50 });
-
-		cy.get('button[data-cy="submit-button"]', { timeout: 10000 })
+		// Widget renders implicitly. Wait for the "I am human" checkbox and
+		// click it to open the puzzle canvas.
+		getWidgetElement(checkboxClass, { timeout: 15000 })
 			.first()
 			.should("be.visible")
-			.should("not.be.disabled")
 			.realClick();
-
-		// The widget starts the puzzle flow — first with an "I am human"
-		// checkbox, then the drag canvas. Some puzzle-implicit flows skip the
-		// checkbox and go straight to the drag, so tolerate either.
-		getWidgetElement(checkboxClass, { timeout: 12000 })
-			.first()
-			.then(($checkbox) => {
-				if ($checkbox.length && !$checkbox.is(":checked")) {
-					cy.wrap($checkbox).realClick();
-				}
-			});
 
 		cy.wait("@puzzleChallenge", { timeout: 15000 })
 			.its("response")
@@ -196,6 +171,29 @@ describe("Puzzle CAPTCHA — signup", () => {
 				expect(response?.statusCode).to.equal(200);
 				expect(response?.body.verified).to.equal(true);
 			});
+
+		// Widget has minted the token into the hidden procaptcha-response
+		// input. Now fill the form and click submit — onActionHandler grabs
+		// the token and POSTs it to /signup.
+		const uniqueId = `puzzle-test-${Cypress._.random(0, 1e6)}`;
+		cy.get('input[id="name"]', { timeout: 10000 })
+			.should("be.visible")
+			.clear()
+			.type("test", { delay: 50 });
+		cy.get('input[id="email"]', { timeout: 10000 })
+			.should("be.visible")
+			.clear()
+			.type(`${uniqueId}@prosopo.io`, { delay: 50 });
+		cy.get('input[type="password"]', { timeout: 10000 })
+			.should("be.visible")
+			.clear()
+			.type("password", { delay: 50 });
+
+		cy.get('button[data-cy="submit-button"]', { timeout: 10000 })
+			.first()
+			.should("be.visible")
+			.should("not.be.disabled")
+			.realClick();
 
 		// The proof: /signup uses prosopoServer.isVerified, which — with
 		// this PR's dispatch — must send the puzzle token to the puzzle
