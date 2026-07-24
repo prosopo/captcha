@@ -100,7 +100,9 @@ describe("Puzzle CAPTCHA", () => {
 		// Puzzle canvas renders; drag the piece anywhere within the canvas.
 		// Any release point passes because the tolerance was raised to swallow
 		// the whole canvas. See LAX_PUZZLE_TOLERANCE above.
-		cy.get('[data-cy="prosopo-puzzle-piece"]', { timeout: 15000 })
+		// The widget renders inside a shadow root, so route the lookup through
+		// getWidgetElement (which sets includeShadowDom: true).
+		getWidgetElement('[data-cy="prosopo-puzzle-piece"]', { timeout: 15000 })
 			.first()
 			.then(($piece) => {
 				const piece = $piece[0];
