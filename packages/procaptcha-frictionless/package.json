@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-frictionless",
-	"version": "2.12.17",
+	"version": "2.12.18",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "dist/index.js",
@@ -36,7 +36,7 @@
 		"@prosopo/locale": "3.2.7",
 		"@prosopo/procaptcha-common": "2.11.14",
 		"@prosopo/procaptcha-pow": "2.10.20",
-		"@prosopo/procaptcha-puzzle": "2.10.35",
+		"@prosopo/procaptcha-puzzle": "2.10.36",
 		"@prosopo/procaptcha-react": "2.9.93",
 		"@prosopo/types": "4.9.10",
 		"@prosopo/widget-skeleton": "2.8.4",
