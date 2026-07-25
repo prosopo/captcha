@@ -177,9 +177,9 @@ describe("getRandomActiveProvider (single stack ipMode)", () => {
 
 	it("throws for ipv4 mode when /healthz fails (no fallback to ipv4.pronode.prosopo.io)", async () => {
 		mockHealthzFetch("ignored", false, 500);
-		await expect(
-			getRandomActiveProvider("production", "ipv4"),
-		).rejects.toThrow(/healthz responded with 500/);
+		await expect(getRandomActiveProvider("production", "ipv4")).rejects.toThrow(
+			/healthz responded with 500/,
+		);
 	});
 
 	it("keeps the dual-stack cache and the ipv4 cache separate", async () => {
