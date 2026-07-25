@@ -398,8 +398,7 @@ export const Manager = (
 						// treat it as "no coords" so the escalated widget doesn't
 						// re-encode a fake click into its salt. Matches the
 						// filter applied in handleSessionInvalidated.
-						const isRealClick =
-							checkboxClickX !== 0 || checkboxClickY !== 0;
+						const isRealClick = checkboxClickX !== 0 || checkboxClickY !== 0;
 						onEscalate?.(
 							escalation[ApiParams.captchaType],
 							escalation[ApiParams.sessionId],
