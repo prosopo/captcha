@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 4.9.12
+### Patch Changes
+
+- a0cb39e: fix(traffic-filter): default skipExtrasOnValidDnsPath to true
+
 ## 4.9.11
 ### Patch Changes
 
