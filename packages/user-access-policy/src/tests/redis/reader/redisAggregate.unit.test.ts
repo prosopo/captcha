@@ -55,11 +55,7 @@ describe("searchRedisKeysBounded", () => {
 			500,
 		);
 
-		expect(keys).toEqual([
-			"access_rule:a",
-			"access_rule:b",
-			"access_rule:c",
-		]);
+		expect(keys).toEqual(["access_rule:a", "access_rule:b", "access_rule:c"]);
 	});
 
 	it("passes the caller's cap through as the FT.SEARCH LIMIT size", async () => {
