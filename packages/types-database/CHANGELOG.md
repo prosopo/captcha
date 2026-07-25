@@ -1,5 +1,13 @@
 # @prosopo/types-database
 
+## 4.11.15
+### Patch Changes
+
+- a0cb39e: fix(traffic-filter): default skipExtrasOnValidDnsPath to true
+- Updated dependencies [a0cb39e]
+  - @prosopo/types@4.9.12
+  - @prosopo/user-access-policy@3.12.7
+
 ## 4.11.14
 ### Patch Changes
 
