@@ -237,13 +237,17 @@ export default (
 					dedupCountryCode,
 					dedupAsn,
 				);
+				// Skip deferToVerify policies — they enforce at verify time
+				// only; using them here to invalidate a dedup session would
+				// prematurely eject a user whose frictionless flow should
+				// complete normally before the block fires downstream.
 				const dedupAccessPolicy = (
 					await tasks.frictionlessManager.getPrioritisedAccessPolicies(
 						userAccessRulesStorage,
 						dapp,
 						dedupUserScope,
 					)
-				)[0];
+				).find((p) => !p.deferToVerify);
 				const dedupConflictsWithPolicy =
 					dedupAccessPolicy !== undefined &&
 					(dedupAccessPolicy.type === AccessPolicyType.Block ||
@@ -599,7 +603,13 @@ export default (
 				},
 			});
 
-			const userAccessPolicy = accessPolicies[0];
+			// Skip deferToVerify policies at the frictionless entry — they
+			// enforce at verify time only. handleAccessPolicy treats a
+			// Block policy as a 401 short-circuit; a deferToVerify Block
+			// hitting here would 401 the frictionless response, defeating
+			// the "solve normally, block at verify" contract deferToVerify
+			// is meant to enable.
+			const userAccessPolicy = accessPolicies.find((p) => !p.deferToVerify);
 
 			const accessPolicyOutcome = await handleAccessPolicy(
 				{

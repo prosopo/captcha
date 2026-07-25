@@ -13,18 +13,25 @@
 // limitations under the License.
 /// <reference types="cypress" />
 
-// End-to-end proof that a user-access-policy Block rule stops a captcha
-// request at the middleware boundary (403 Forbidden, endpoint never
-// runs). Zero cypress coverage existed for this before — the block
-// middleware path (packages/provider/src/api/blacklistRequestInspector.ts)
-// only had unit / integration tests.
+// End-to-end proof of both user-access-policy Block paths:
 //
-// The spec tests request-time blocking with `deferToVerify: false` (the
-// default). The deferToVerify=true variant (block-at-verify) currently
-// interacts with a Block-policy sanitiser that strips `captchaType`,
-// tripping the `INCORRECT_CAPTCHA_TYPE` check in captchaManager
-// isValidRequest — worth its own dedicated test + fix once we sort that
-// path out.
+//   1. Request-time block (`deferToVerify: false`, the default) —
+//      blockMiddleware in packages/provider/src/api/blacklistRequestInspector.ts
+//      short-circuits the /captcha/* request with 403 Forbidden before the
+//      endpoint handler runs.
+//   2. Defer-to-verify block (`deferToVerify: true`) — request-time
+//      middleware skips the rule, the widget mounts and issues its
+//      /captcha/* request normally, and the block fires at verify time
+//      via checkForHardBlock (stamps ACCESS_POLICY_BLOCK on the record).
+//      The widget-side flow completes successfully; the dApp's server
+//      verify is what returns verified:false.
+//
+// Prior to the fix in getImageCaptchaChallenge et al (and the defensive
+// tweak in captchaManager.isValidRequest), path 2 was broken:
+// sanitizeAccessPolicy strips `captchaType` from every Block policy on
+// write, and isValidRequest compared the (undefined) captchaType against
+// the request type, returning 400 INCORRECT_CAPTCHA_TYPE and preventing
+// the widget from ever solving.
 
 import "@cypress/xpath";
 import { CaptchaType } from "@prosopo/types";
@@ -32,7 +39,7 @@ import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
 const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "image";
 
-describe("User access policy blocks a captcha request at the middleware", () => {
+describe("User access policy Block rules", () => {
 	const siteKey: string = Cypress.env(
 		`PROSOPO_SITE_KEY_${baseCaptchaType.toUpperCase()}`,
 	);
@@ -41,11 +48,14 @@ describe("User access policy blocks a captcha request at the middleware", () => 
 	// userScope filters matches every request for that sitekey — perfect
 	// for a deterministic block. Expires an hour out so a crashed test
 	// cleans itself up eventually even if `after()` never runs.
-	const buildBlockRule = () => [
+	const buildBlockRule = (opts: { deferToVerify: boolean }) => [
 		{
 			accessPolicy: {
 				type: "block",
-				description: "cypress-test-access-block",
+				description: `cypress-test-access-block-${
+					opts.deferToVerify ? "defer" : "request"
+				}`,
+				...(opts.deferToVerify && { deferToVerify: true }),
 			},
 			policyScopes: [{ clientId: siteKey }],
 			// Empty userScope object matches every user — the clientId scope
@@ -84,23 +94,24 @@ describe("User access policy blocks a captcha request at the middleware", () => 
 	});
 
 	beforeEach(() => {
-		// Belt + braces: clear any stale rules and reinsert the fresh one
-		// each test so re-runs don't accumulate.
+		// Clear before each — the two tests install different rule shapes.
 		cy.deleteAllAccessRules();
-		cy.addAccessRules(buildBlockRule()).then((response) => {
-			expect(response.status).to.equal(200);
-		});
 	});
 
 	after(() => {
-		// MUST run — the rule blocks EVERY request for the image sitekey
-		// while it's in place. Leaving it in Redis would break every
-		// subsequent test that hits this sitekey.
+		// MUST run — a leftover Block rule would break every subsequent
+		// test that hits the image sitekey.
 		cy.deleteAllAccessRules();
 		cy.registerSiteKey(CaptchaType.image);
 	});
 
 	it("blockMiddleware 403s the /captcha/* request when a per-clientId Block rule matches", () => {
+		cy.addAccessRules(buildBlockRule({ deferToVerify: false })).then(
+			(response) => {
+				expect(response.status).to.equal(200);
+			},
+		);
+
 		// Match every captcha challenge endpoint — the default demo page
 		// happens to fire /captcha/frictionless first (per its site key
 		// registration), but a change of demo page shouldn't break the
@@ -135,6 +146,47 @@ describe("User access policy blocks a captcha request at the middleware", () => 
 					response?.body,
 					"403 body should carry the { error: 'Forbidden' } shape from blockMiddleware",
 				).to.deep.equal({ error: "Forbidden" });
+			});
+	});
+
+	it("deferToVerify Block lets the /captcha/* request through (200), not 400 INCORRECT_CAPTCHA_TYPE", () => {
+		cy.addAccessRules(buildBlockRule({ deferToVerify: true })).then(
+			(response) => {
+				expect(response.status).to.equal(200);
+			},
+		);
+
+		cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
+			"anyCaptcha",
+		);
+		cy.visit(Cypress.env("default_page"), {
+			timeout: 30000,
+			failOnStatusCode: false,
+		});
+		cy.waitForProcaptchaScript();
+
+		getWidgetElement(checkboxClass, { timeout: 15000 })
+			.first()
+			.should("be.visible")
+			.realClick();
+
+		// The regression guard: pre-fix this returned 400 with
+		// INCORRECT_CAPTCHA_TYPE because sanitizeAccessPolicy stripped
+		// captchaType from the Block policy, then isValidRequest compared
+		// (undefined) captchaType against the request. Both call-site
+		// filters and the defensive relaxation in isValidRequest are what
+		// keep this at 200. The actual block will fire later at verify
+		// time via checkForHardBlock — that surface is exercised by the
+		// unit tests in packages/provider/src/tests/unit/tasks/
+		// captchaManager.unit.test.ts and by the block middleware's own
+		// integration tests.
+		cy.wait("@anyCaptcha", { timeout: 15000 })
+			.its("response")
+			.then((response) => {
+				expect(
+					response?.statusCode,
+					"deferToVerify Block must NOT block at request time",
+				).to.equal(200);
 			});
 	});
 });
