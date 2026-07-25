@@ -208,11 +208,13 @@ export const TrafficFilterSchema = object({
 	)
 		.max(MAX_DATACENTER_ALLOWLIST_ENTRIES)
 		.optional(),
-	// Opt-in: when the catcher confirmed `dnsEvent.pathValid === true`, skip
-	// the datacenter / VPN / proxy / Tor evaluation on the DNS peer +
-	// resolver IPs. Otherwise users on public DoH resolvers (whose resolver
-	// IPs are necessarily datacenter) trip the rule.
-	skipExtrasOnValidDnsPath: boolean().optional().default(false),
+	// When the catcher confirmed `dnsEvent.pathValid === true`, skip the
+	// datacenter / VPN / proxy / Tor evaluation on the DNS peer + resolver
+	// IPs. Default on: without this, users on public DoH resolvers or ISP
+	// shared anycast resolvers (whose resolver IPs are necessarily
+	// datacenter or high-abuser) trip the rule despite the visitor being
+	// a real user on a real network.
+	skipExtrasOnValidDnsPath: boolean().optional().default(true),
 	blockMobile: boolean().optional().default(false),
 	blockSatellite: boolean().optional().default(false),
 	blockCrawler: boolean().optional().default(false),
