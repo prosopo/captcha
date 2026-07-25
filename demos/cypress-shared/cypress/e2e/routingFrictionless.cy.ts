@@ -70,6 +70,10 @@ describe("Routing machine at the frictionless phase picks the captcha type", () 
 		).then((response) => {
 			expect(response.status).to.equal(200);
 		});
+		// Prime the page + widget script cache. Each `it` then re-visits
+		// AFTER setting up intercepts — the frictionless widget auto-fires
+		// /frictionless on mount, so intercepts have to be in place BEFORE
+		// that mount (same pattern as escalation.cy.ts).
 		return cy.visit(Cypress.env("default_page")).then(() => {
 			cy.waitForProcaptchaScript();
 			getWidgetElement(checkboxClass).should("be.visible");
@@ -81,10 +85,11 @@ describe("Routing machine at the frictionless phase picks the captcha type", () 
 		cy.registerSiteKey(CaptchaType.image);
 	});
 
-	// Injects the routing-target header into every /frictionless request the
-	// widget fires. The provider forwards it into `raw.headers` on the
-	// routing input, where our test DM reads it above.
-	const withRoutingHeader = (target: "image" | "puzzle") => {
+	// Mounts the widget from scratch with intercepts already primed.
+	// `target` decides which captchaType the test DM returns via the
+	// `X-Test-Route-To` header — routed all the way through the request
+	// interceptor into raw.headers on the DM input.
+	const primeAndVisit = (target: "image" | "puzzle") => {
 		cy.intercept(
 			"POST",
 			"**/prosopo/provider/client/captcha/frictionless",
@@ -92,21 +97,19 @@ describe("Routing machine at the frictionless phase picks the captcha type", () 
 				req.headers["x-test-route-to"] = target;
 			},
 		).as("frictionless");
-	};
-
-	it("routes straight to image when the DM returns image at frictionless phase", () => {
-		withRoutingHeader("image");
-		// Neither pow nor puzzle should be issued — the image path should be
-		// the only captcha challenge the widget requests.
 		cy.intercept("POST", "**/prosopo/provider/client/captcha/pow").as("pow");
-		cy.intercept("POST", "**/prosopo/provider/client/captcha/puzzle").as(
-			"puzzle",
-		);
 		cy.intercept("POST", "**/prosopo/provider/client/captcha/image").as(
 			"image",
 		);
+		cy.intercept("POST", "**/prosopo/provider/client/captcha/puzzle").as(
+			"puzzle",
+		);
+		cy.visit(Cypress.env("default_page"));
+		cy.waitForProcaptchaScript();
+	};
 
-		getWidgetElement(checkboxClass, { timeout: 12000 }).first().realClick();
+	it("routes straight to image when the DM returns image at frictionless phase", () => {
+		primeAndVisit("image");
 
 		cy.wait("@frictionless", { timeout: 15000 })
 			.its("response")
@@ -115,6 +118,11 @@ describe("Routing machine at the frictionless phase picks the captcha type", () 
 				expect(response?.body).to.have.property("captchaType");
 				expect(response?.body.captchaType).to.equal(CaptchaType.image);
 			});
+
+		// User needs to tick the image widget's checkbox to request the
+		// image challenge — the frictionless routing selects the widget
+		// type but doesn't auto-start it.
+		getWidgetElement(checkboxClass, { timeout: 12000 }).first().realClick();
 
 		cy.wait("@image", { timeout: 15000 })
 			.its("response")
@@ -131,16 +139,7 @@ describe("Routing machine at the frictionless phase picks the captcha type", () 
 	});
 
 	it("routes straight to puzzle when the DM returns puzzle at frictionless phase", () => {
-		withRoutingHeader("puzzle");
-		cy.intercept("POST", "**/prosopo/provider/client/captcha/pow").as("pow");
-		cy.intercept("POST", "**/prosopo/provider/client/captcha/image").as(
-			"image",
-		);
-		cy.intercept("POST", "**/prosopo/provider/client/captcha/puzzle").as(
-			"puzzle",
-		);
-
-		getWidgetElement(checkboxClass, { timeout: 12000 }).first().realClick();
+		primeAndVisit("puzzle");
 
 		cy.wait("@frictionless", { timeout: 15000 })
 			.its("response")
@@ -148,6 +147,8 @@ describe("Routing machine at the frictionless phase picks the captcha type", () 
 				expect(response?.statusCode).to.equal(200);
 				expect(response?.body.captchaType).to.equal(CaptchaType.puzzle);
 			});
+
+		getWidgetElement(checkboxClass, { timeout: 12000 }).first().realClick();
 
 		cy.wait("@puzzle", { timeout: 15000 })
 			.its("response")

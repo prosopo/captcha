@@ -86,6 +86,9 @@ describe("Post-PoW route() escalation surfaces the puzzle captcha", () => {
 	});
 
 	it("mounts the puzzle widget after PoW solves and route() escalates to puzzle", () => {
+		// Fresh visit so the intercepts below are in place BEFORE the widget
+		// script mounts and fires its first requests. Mirrors the
+		// intercept-first pattern in escalation.cy.ts.
 		cy.intercept("POST", "**/prosopo/provider/client/captcha/frictionless").as(
 			"frictionless",
 		);
@@ -102,6 +105,9 @@ describe("Post-PoW route() escalation surfaces the puzzle captcha", () => {
 		cy.intercept("POST", "**/prosopo/provider/client/captcha/puzzle").as(
 			"puzzleChallenge",
 		);
+
+		cy.visit(Cypress.env("default_page"));
+		cy.waitForProcaptchaScript();
 
 		getWidgetElement(checkboxClass, { timeout: 12000 }).first().realClick();
 
