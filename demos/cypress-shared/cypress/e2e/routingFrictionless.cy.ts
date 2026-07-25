@@ -89,7 +89,7 @@ describe("Routing machine at the frictionless phase picks the captcha type", () 
 	// `target` decides which captchaType the test DM returns via the
 	// `X-Test-Route-To` header — routed all the way through the request
 	// interceptor into raw.headers on the DM input.
-	const primeAndVisit = (target: "image" | "puzzle") => {
+	const primeAndVisit = (target: "image" | "puzzle" | "pow") => {
 		cy.intercept(
 			"POST",
 			"**/prosopo/provider/client/captcha/frictionless",
@@ -163,5 +163,30 @@ describe("Routing machine at the frictionless phase picks the captcha type", () 
 		getWidgetElement('[data-cy="prosopo-puzzle-piece"]', {
 			timeout: 15000,
 		}).should("be.visible");
+	});
+
+	it("routes straight to pow when the DM returns pow at frictionless phase", () => {
+		// Baseline path — the frictionless flow ordinarily lands on pow
+		// when the score is under threshold. Explicitly returning `pow`
+		// from the routing DM asserts the DM CAN pin this outcome, and
+		// that the widget wires up the pow challenge (guarding against a
+		// future refactor that treats "pow" as the frictionless default
+		// and never actually calls /captcha/pow when the DM asks for it).
+		primeAndVisit("pow");
+
+		cy.wait("@frictionless", { timeout: 15000 })
+			.its("response")
+			.then((response) => {
+				expect(response?.statusCode).to.equal(200);
+				expect(response?.body.captchaType).to.equal(CaptchaType.pow);
+			});
+
+		getWidgetElement(checkboxClass, { timeout: 12000 }).first().realClick();
+
+		cy.wait("@pow", { timeout: 15000 })
+			.its("response")
+			.then((response) => {
+				expect(response?.statusCode).to.equal(200);
+			});
 	});
 });

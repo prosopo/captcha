@@ -155,11 +155,19 @@ jobs:
         run: |
           npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:postPowPuzzle" --success "first" --kill-others
 
-      - name: Run the cypress tests for decide() decision machine deny at verify
+      - name: Run the cypress tests for decide() decision machine deny at verify — image
         run: |
           npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:decisionMachineDeny" --success "first" --kill-others
 
-      - name: Run the cypress tests for user access policy block at verify
+      - name: Run the cypress tests for decide() decision machine deny at verify — pow
+        run: |
+          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:decisionMachineDenyPow" --success "first" --kill-others
+
+      - name: Run the cypress tests for decide() decision machine deny at verify — puzzle
+        run: |
+          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:decisionMachineDenyPuzzle" --success "first" --kill-others
+
+      - name: Run the cypress tests for user access policy blocks (request-time + defer-to-verify)
         run: |
           npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:accessPolicy" --success "first" --kill-others
 

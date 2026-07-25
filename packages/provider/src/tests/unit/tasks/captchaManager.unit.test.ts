@@ -861,6 +861,102 @@ describe("CaptchaManager", () => {
 			});
 		});
 
+		// The pre-fix behaviour: a Block policy with no captchaType (the
+		// sanitiser strips it from every Block on write) reached
+		// isValidRequest and tripped the captchaType-equality check
+		// (`undefined !== "image"` → INCORRECT_CAPTCHA_TYPE), which broke
+		// every /captcha/* request for any user matching a Block rule —
+		// including the deferToVerify variant whose whole point is to
+		// solve normally then block at verify. isValidRequest now only
+		// enforces the captchaType check when the policy actually pins
+		// one; callers should also filter deferToVerify at the site (see
+		// getImageCaptchaChallenge etc.), but this defensive guard
+		// backstops that.
+		it("validates a request when the matched Block policy has no captchaType (defensive against the sanitiser-strips-captchaType bug)", async () => {
+			const strippedBlock: AccessPolicy = {
+				type: AccessPolicyType.Block,
+			};
+
+			const result = await captchaManager.isValidRequest(
+				{
+					account: "account",
+					tier: Tier.Free,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.image,
+					},
+				},
+				CaptchaType.image,
+				mockEnv,
+				undefined,
+				strippedBlock,
+			);
+
+			expect(result).toEqual({
+				valid: true,
+				type: CaptchaType.image,
+			});
+		});
+
+		it("validates a request when the matched Block policy is deferToVerify (no request-time enforcement)", async () => {
+			const deferredBlock: AccessPolicy = {
+				type: AccessPolicyType.Block,
+				deferToVerify: true,
+			};
+
+			const result = await captchaManager.isValidRequest(
+				{
+					account: "account",
+					tier: Tier.Free,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.image,
+					},
+				},
+				CaptchaType.image,
+				mockEnv,
+				undefined,
+				deferredBlock,
+			);
+
+			expect(result).toEqual({
+				valid: true,
+				type: CaptchaType.image,
+			});
+		});
+
+		// Preserved behaviour: a Restrict policy that pins a captchaType
+		// still enforces the type check. Regression guard so the
+		// defensive relaxation above doesn't accidentally silence type
+		// mismatches on genuine Restrict rules.
+		it("still returns INCORRECT_CAPTCHA_TYPE for a Restrict policy pinning a different captchaType", async () => {
+			const restrictPow: AccessPolicy = {
+				type: AccessPolicyType.Restrict,
+				captchaType: CaptchaType.pow,
+			};
+
+			const result = await captchaManager.isValidRequest(
+				{
+					account: "account",
+					tier: Tier.Free,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.frictionless,
+					},
+				},
+				CaptchaType.image,
+				mockEnv,
+				undefined,
+				restrictPow,
+			);
+
+			expect(result).toEqual({
+				valid: false,
+				reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+				type: CaptchaType.image,
+			});
+		});
+
 		// Commenting out since this is old logic and I'm in a rush
 		// it("should not validate a request when IP address mismatches for frictionless session", async () => {
 		// 	// biome-ignore lint/suspicious/noExplicitAny: tests

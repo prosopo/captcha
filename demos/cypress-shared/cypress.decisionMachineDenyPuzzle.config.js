@@ -18,11 +18,12 @@ import { defineConfig } from "cypress";
 import { configureVisualRegression } from "cypress-visual-regression";
 import vitePreprocessor from "cypress-vite";
 
+loadEnv();
+
 const allExternal = [
 	...builtinModules,
 	...builtinModules.map((m) => `node:${m}`),
 ];
-loadEnv();
 
 export default defineConfig({
 	video: true,
@@ -31,9 +32,9 @@ export default defineConfig({
 	headers: { "Accept-Encoding": "gzip, deflate" },
 	env: {
 		...process.env,
-		// For the client-example, the default page is the captcha type. For the client-bundle-example, the default_page
-		// is sometimes passed via --env default_page='/THE_PAGE.html'" inside package.json scripts.
-		default_page: "/",
+		// puzzle-implicit renders a signup form with a puzzle widget —
+		// mirrors puzzle.cy.ts's demo choice.
+		default_page: "/puzzle-implicit.html",
 		visualRegressionType: "regression",
 		visualRegressionBaseDirectory: "cypress/snapshots/baseline",
 		visualRegressionDiffDirectory: "cypress/snapshots/diff",
@@ -59,44 +60,18 @@ export default defineConfig({
 						rollupOptions: {
 							external: allExternal,
 						},
+						plugins: [],
 					},
 				}),
 			);
-			// Add task event for logging to the terminal
 			on("task", {
 				log(message) {
 					console.log(message);
-					return null; // Cypress requires tasks to return something
+					return null;
 				},
 			});
 		},
-		excludeSpecPattern: [
-			"cypress/e2e/**/frictionless.cy.ts",
-			"cypress/e2e/**/invisible.cy.ts",
-			"cypress/e2e/**/pow.cy.ts",
-			// Puzzle spec drives puzzle-explicit.html and expects the puzzle
-			// canvas to render — swaps the site key to puzzle mode via a
-			// bespoke lax-tolerance registration. Runs under its own
-			// cypress.puzzle.config.js.
-			"cypress/e2e/**/puzzle.cy.ts",
-			// Escalation spec drives the frictionless flow + installs a
-			// dapp-scoped routing machine; it has its own
-			// cypress.escalation.config.js and must not be pulled into
-			// the image config's catch-all.
-			"cypress/e2e/**/escalation.cy.ts",
-			// Frictionless-phase routing / post-PoW puzzle escalation /
-			// decision-machine deny / access-policy specs each have their
-			// own config with the right default_page + captcha type. The
-			// image config's catch-all would otherwise mount them under
-			// CAPTCHA_TYPE=image with the wrong sitekey + demo page and
-			// fail before the actual test logic runs.
-			"cypress/e2e/**/routingFrictionless.cy.ts",
-			"cypress/e2e/**/postPowPuzzle.cy.ts",
-			"cypress/e2e/**/decisionMachineDeny.cy.ts",
-			"cypress/e2e/**/decisionMachineDenyPow.cy.ts",
-			"cypress/e2e/**/decisionMachineDenyPuzzle.cy.ts",
-			"cypress/e2e/**/accessPolicy.cy.ts",
-		],
+		specPattern: ["cypress/e2e/**/decisionMachineDenyPuzzle.cy.ts"],
 	},
 	component: {
 		devServer: {

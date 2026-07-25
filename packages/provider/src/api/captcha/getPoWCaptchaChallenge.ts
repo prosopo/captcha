@@ -115,13 +115,17 @@ export default (
 				countryCode,
 				asn,
 			);
+			// Skip deferToVerify policies at request time — see
+			// getImageCaptchaChallenge for the full rationale (sanitiser
+			// strips captchaType from Block policies → INCORRECT_CAPTCHA_TYPE
+			// fires when a deferToVerify Block rule leaks into isValidRequest).
 			const userAccessPolicy = (
 				await tasks.powCaptchaManager.getPrioritisedAccessPolicies(
 					userAccessRulesStorage,
 					dapp,
 					userScope,
 				)
-			)[0];
+			).find((p) => !p.deferToVerify);
 
 			const {
 				valid,
