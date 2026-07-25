@@ -734,6 +734,8 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				ruleType: sessionRecord?.ruleType,
 				webView: sessionRecord?.webView,
 				iFrame: sessionRecord?.iFrame,
+				coords: challengeRecord.coords,
+				puzzleEvents: challengeRecord.puzzleEvents,
 			};
 
 			const decision = await this.decisionMachineRunner.decide(
