@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha",
-	"version": "2.10.54",
+	"version": "2.10.55",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "./dist/index.js",
@@ -36,7 +36,7 @@
 		"@prosopo/api": "3.5.17",
 		"@prosopo/common": "3.1.46",
 		"@prosopo/datasets": "3.1.52",
-		"@prosopo/procaptcha-common": "2.11.14",
+		"@prosopo/procaptcha-common": "2.11.15",
 		"@prosopo/types": "4.9.10",
 		"@prosopo/util": "3.3.4",
 		"@prosopo/util-crypto": "13.5.30"

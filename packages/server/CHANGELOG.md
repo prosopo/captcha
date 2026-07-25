@@ -1,5 +1,11 @@
 # @prosopo/server
 
+## 2.10.38
+### Patch Changes
+
+- Updated dependencies [a39c4ec]
+  - @prosopo/load-balancer@2.10.13
+
 ## 2.10.37
 ### Patch Changes
 
