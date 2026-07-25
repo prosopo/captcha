@@ -84,6 +84,16 @@ export default defineConfig({
 			// cypress.escalation.config.js and must not be pulled into
 			// the image config's catch-all.
 			"cypress/e2e/**/escalation.cy.ts",
+			// Frictionless-phase routing / post-PoW puzzle escalation /
+			// decision-machine deny / access-policy specs each have their
+			// own config with the right default_page + captcha type. The
+			// image config's catch-all would otherwise mount them under
+			// CAPTCHA_TYPE=image with the wrong sitekey + demo page and
+			// fail before the actual test logic runs.
+			"cypress/e2e/**/routingFrictionless.cy.ts",
+			"cypress/e2e/**/postPowPuzzle.cy.ts",
+			"cypress/e2e/**/decisionMachineDeny.cy.ts",
+			"cypress/e2e/**/accessPolicy.cy.ts",
 		],
 	},
 	component: {
