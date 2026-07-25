@@ -38,7 +38,10 @@ import type {
 	AccessRulesFilter,
 	AccessRulesReader,
 } from "#policy/rulesStorage.js";
-import { aggregateRedisKeys } from "./redisAggregate.js";
+import {
+	aggregateRedisKeys,
+	searchRedisKeysBounded,
+} from "./redisAggregate.js";
 
 // Server-side specificity ranking config.
 //
@@ -275,11 +278,19 @@ export class RedisRulesReader implements AccessRulesReader {
 		try {
 			const keyLists = await Promise.all(
 				subQueries.map((sub) =>
-					aggregateRedisKeys(
+					// FT.SEARCH NOCONTENT (via searchRedisKeysBounded) rather
+					// than FT.AGGREGATE with LOAD @__key. The aggregate reply
+					// path in `@redis/client` 5.x calls transformTuplesReply
+					// on every result row; when the RediSearch coordinator
+					// returns a null tuple (observed continuously on
+					// field:ja4Hash probes in prod), that throws
+					// `Cannot read properties of null (reading 'length')` and
+					// the whole sub-query resolves empty via the .catch below.
+					// NOCONTENT returns a flat `[total, key1, key2, ...]`
+					// array so there is no nested tuple that can be null.
+					searchRedisKeysBounded(
 						this.client,
 						sub.query,
-						this.logger,
-						undefined,
 						// Per-sub-query cap. Each probe hits a discriminating
 						// index (e.g. numericIp posting list), so the natural
 						// cardinality is tiny — this cap only fires on
