@@ -1,5 +1,11 @@
 # @prosopo/cli
 
+## 3.6.73
+### Patch Changes
+
+- Updated dependencies [ae7e7f0]
+  - @prosopo/provider@4.15.13
+
 ## 3.6.72
 ### Patch Changes
 
