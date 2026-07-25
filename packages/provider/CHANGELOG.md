@@ -1,5 +1,34 @@
 # @prosopo/provider
 
+## 4.15.11
+### Patch Changes
+
+- b9ca0e7: feat(decision-machine): thread puzzle fields and forward checkbox coords on escalation
+  
+  - Add optional `coords` and `puzzleEvents` to `DecisionMachineInput` so decision machines can gate on entry-point telemetry and puzzle drag trails.
+  - Populate `coords` on the pow, puzzle and image `decide()` inputs. Puzzle also passes `puzzleEvents`. Image gains `behavioralDataPacked` / `deviceCapability` — previously always undefined, which silently disabled the global synthetic-mouse-timing check on the one captcha type it targets.
+  - Extend `ProcaptchaEscalationHandler` with an optional `coords` argument so the PoW widget can forward its trusted checkbox click through the PoW→image/puzzle escalation. The frictionless wrapper prefers escalation coords over pending retry coords. Puzzle and image widgets already accept `startCoords`, so the escalated widget now seeds the salt with the real (x, y) instead of (0, 0).
+- fde6896: fix(user-access-policy,common,provider): quiet two high-volume log spammers
+  
+  - `user-access-policy`: switch the split-query sub-probes from `FT.AGGREGATE + LOAD @__key` to `FT.SEARCH NOCONTENT`. The aggregate reply path in `@redis/client` 5.x can throw on a null result row and the sub-query then silently returns `[]`; the NOCONTENT reply shape doesn't have that failure mode. Removes ~2k error logs per hour without changing lookup semantics.
+  - `common`: `ProsopoBaseError` auto-logs now carry a `msg` field (mirroring the translation key). Previously every auto-logged error landed in the "undefined msg" bucket in log dashboards (~800/hour).
+  - `provider`: add the missing `msg` on the image-verify catch that emits the same pattern.
+- Updated dependencies [b9ca0e7]
+- Updated dependencies [fde6896]
+  - @prosopo/types@4.9.11
+  - @prosopo/user-access-policy@3.12.6
+  - @prosopo/common@3.1.47
+  - @prosopo/api@3.5.18
+  - @prosopo/api-express-router@3.1.48
+  - @prosopo/database@3.15.17
+  - @prosopo/datasets@3.1.53
+  - @prosopo/env@3.6.17
+  - @prosopo/ipinfo@0.2.39
+  - @prosopo/keyring@2.9.59
+  - @prosopo/load-balancer@2.10.14
+  - @prosopo/types-database@4.11.14
+  - @prosopo/types-env@2.10.14
+
 ## 4.15.10
 ### Patch Changes
 

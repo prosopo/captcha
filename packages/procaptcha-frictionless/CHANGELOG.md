@@ -1,5 +1,24 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.12.20
+### Patch Changes
+
+- b9ca0e7: feat(decision-machine): thread puzzle fields and forward checkbox coords on escalation
+  
+  - Add optional `coords` and `puzzleEvents` to `DecisionMachineInput` so decision machines can gate on entry-point telemetry and puzzle drag trails.
+  - Populate `coords` on the pow, puzzle and image `decide()` inputs. Puzzle also passes `puzzleEvents`. Image gains `behavioralDataPacked` / `deviceCapability` — previously always undefined, which silently disabled the global synthetic-mouse-timing check on the one captcha type it targets.
+  - Extend `ProcaptchaEscalationHandler` with an optional `coords` argument so the PoW widget can forward its trusted checkbox click through the PoW→image/puzzle escalation. The frictionless wrapper prefers escalation coords over pending retry coords. Puzzle and image widgets already accept `startCoords`, so the escalated widget now seeds the salt with the real (x, y) instead of (0, 0).
+- Updated dependencies [b9ca0e7]
+- Updated dependencies [fde6896]
+  - @prosopo/types@4.9.11
+  - @prosopo/procaptcha-pow@2.10.22
+  - @prosopo/common@3.1.47
+  - @prosopo/api@3.5.18
+  - @prosopo/detector@3.5.12
+  - @prosopo/procaptcha-common@2.11.16
+  - @prosopo/procaptcha-puzzle@2.10.38
+  - @prosopo/procaptcha-react@2.9.95
+
 ## 2.12.19
 ### Patch Changes
 
