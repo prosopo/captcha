@@ -41,6 +41,7 @@ import express from "express";
 import type { Request } from "express";
 import rateLimit, { type Options } from "express-rate-limit";
 import { createApiAdminRoutesProvider } from "./admin/createApiAdminRoutesProvider.js";
+import { getVerdictCache } from "./blacklistRequestInspector.js";
 import { blockMiddleware } from "./block.js";
 import { prosopoRouter } from "./captcha.js";
 import { domainMiddleware } from "./domainMiddleware.js";
@@ -318,6 +319,26 @@ export async function startProviderApi(
 				userAccessRuleRoute,
 				authMiddleware(env.pair, env.authAccount),
 			);
+		}
+		// Rule mutations must invalidate the process-wide verdict cache —
+		// otherwise a fresh Block rule takes up to DEFAULT_VERDICT_CACHE_TTL_MS
+		// (10s) to fire, and — worse for correctness — a Block rule DELETED
+		// from Redis keeps blocking requests until its cached verdict
+		// expires. The cache clear runs on the response's `finish` event so
+		// the write has already landed by the time we flush. Registered on
+		// each rule route explicitly (rather than a shared path prefix) so
+		// we only touch requests that could plausibly mutate rules.
+		for (const userAccessRuleRoute in userAccessRuleRoutes) {
+			apiApp.use(userAccessRuleRoute, (req, res, next) => {
+				if (req.method === "POST") {
+					res.on("finish", () => {
+						if (res.statusCode >= 200 && res.statusCode < 300) {
+							getVerdictCache().clear();
+						}
+					});
+				}
+				next();
+			});
 		}
 		apiApp.use(
 			apiExpressRouterFactory.createRouter(
