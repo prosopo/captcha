@@ -39,7 +39,7 @@
 		"@prosopo/util": "3.3.4",
 		"openpgp": "5.11.3",
 		"qs": "6.15.2",
-		"socket.io-client": "4.7.5",
+		"socket.io-client": "4.8.3",
 		"varuint-bitcoin": "1.1.2",
 		"yargs": "17.7.2",
 		"zod": "3.23.8"
