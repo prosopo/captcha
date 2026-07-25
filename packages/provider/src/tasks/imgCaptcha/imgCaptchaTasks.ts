@@ -982,6 +982,8 @@ export class ImgCaptchaManager extends CaptchaManager {
 				captchaResult: "passed",
 				headers: solution.headers,
 				captchaType: CaptchaType.image,
+				behavioralDataPacked: solution.behavioralDataPacked,
+				deviceCapability: solution.deviceCapability,
 				countryCode: solution.ipInfo?.isValid
 					? solution.ipInfo.countryCode
 					: undefined,
@@ -997,6 +999,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				ruleType: sessionRecord?.ruleType,
 				webView: sessionRecord?.webView,
 				iFrame: sessionRecord?.iFrame,
+				coords: solution.coords,
 			};
 
 			try {

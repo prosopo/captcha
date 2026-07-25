@@ -895,6 +895,7 @@ export class PowCaptchaManager extends CaptchaManager {
 					ruleType: sessionRecord?.ruleType,
 					webView: sessionRecord?.webView,
 					iFrame: sessionRecord?.iFrame,
+					coords: challengeRecord.coords,
 				};
 
 				const decision = await this.decisionMachineRunner.decide(
