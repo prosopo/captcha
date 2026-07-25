@@ -98,10 +98,33 @@ declare global {
 				// biome-ignore lint/suspicious/noExplicitAny: tests
 			): Cypress.Chainable<Response<any>>;
 
+			// Publish a decision-kind decision machine scoped to the given dapp.
+			// Runs at the verify phase and can deny an otherwise-approved solve.
+			installDecisionMachine(
+				siteKey: string,
+				source: string,
+				name?: string,
+				// biome-ignore lint/suspicious/noExplicitAny: tests
+			): Cypress.Chainable<Response<any>>;
+
 			// Wipe all decision/routing machine artifacts. Used as test teardown
 			// so a failed run doesn't leak forced-routing into sibling tests.
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			removeAllDecisionMachines(): Cypress.Chainable<Response<any>>;
+
+			// Insert one or more access rules via the user-access-policy
+			// admin API. `rules` is the `InsertRulesGroup[]` body the endpoint
+			// accepts (see packages/user-access-policy/src/api/write/insertRules.ts).
+			addAccessRules(
+				// biome-ignore lint/suspicious/noExplicitAny: rule shape lives in @prosopo/user-access-policy but isn't re-exported cleanly for cypress
+				rules: any[],
+				// biome-ignore lint/suspicious/noExplicitAny: tests
+			): Cypress.Chainable<Response<any>>;
+
+			// Delete every access rule on the provider. Cypress teardown only
+			// — never call from production code paths.
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			deleteAllAccessRules(): Cypress.Chainable<Response<any>>;
 		}
 	}
 }
@@ -431,10 +454,14 @@ function adminJwtAndUrl(path: AdminApiPaths): { url: string; jwt: string } {
 	};
 }
 
-function installRoutingMachine(
+// Shared body-builder for both DM kinds. Keeps installRoutingMachine and
+// installDecisionMachine in lockstep — same scope, runtime, language,
+// version — so a divergence in one path can only ever be intentional.
+function installMachine(
 	siteKey: string,
 	source: string,
-	name = "cypress-forced-image",
+	kind: DecisionMachineKind,
+	name: string,
 ) {
 	return cy.then(() => {
 		const { url, jwt } = adminJwtAndUrl(AdminApiPaths.UpdateDecisionMachine);
@@ -455,15 +482,35 @@ function installRoutingMachine(
 				[ApiParams.decisionMachineLanguage]: DecisionMachineLanguage.JavaScript,
 				[ApiParams.decisionMachineName]: name,
 				[ApiParams.decisionMachineVersion]: "1.0.0",
-				// Routing kind: this machine runs at the post-PoW `route()` phase
-				// and decides whether to escalate to image/puzzle.
-				[ApiParams.decisionMachineKind]: DecisionMachineKind.Routing,
+				[ApiParams.decisionMachineKind]: kind,
 			},
 			failOnStatusCode: false,
 			retryOnNetworkFailure: false,
 			timeout: 10000,
 		});
 	});
+}
+
+function installRoutingMachine(
+	siteKey: string,
+	source: string,
+	name = "cypress-forced-image",
+) {
+	// Routing kind runs at frictionless `route()` (baseline pick) and post-PoW
+	// `route()` (escalation). The same machine covers both phases; specs gate
+	// per-phase inside the source string via `input.phase`.
+	return installMachine(siteKey, source, DecisionMachineKind.Routing, name);
+}
+
+function installDecisionMachine(
+	siteKey: string,
+	source: string,
+	name = "cypress-forced-decision",
+) {
+	// Decision kind runs at the verify phase — after the user's solve has
+	// already validated — and can flip an approved solve to disapproved by
+	// returning `{ decision: 'deny', reason }`.
+	return installMachine(siteKey, source, DecisionMachineKind.Decision, name);
 }
 
 function removeAllDecisionMachines() {
@@ -486,6 +533,56 @@ function removeAllDecisionMachines() {
 	});
 }
 
+// Access-rule endpoints live under `/v1/prosopo/user-access-policy/rules/*` —
+// not under the admin prefix — but they use the same JWT + admin-pair auth as
+// the admin routes (see startProviderApi.ts:314-321). Hardcode the paths here
+// so cypress-shared doesn't need to depend on @prosopo/user-access-policy.
+const ACCESS_RULE_INSERT_PATH =
+	"/v1/prosopo/user-access-policy/rules/insert-many";
+const ACCESS_RULE_DELETE_ALL_PATH =
+	"/v1/prosopo/user-access-policy/rules/delete-all";
+
+// biome-ignore lint/suspicious/noExplicitAny: rule shape lives in @prosopo/user-access-policy
+function addAccessRules(rules: any[]) {
+	return cy.then(() => {
+		const pair = getPair(Cypress.env("PROSOPO_PROVIDER_MNEMONIC"));
+		const jwt = pair.jwtIssue();
+		return cy.request({
+			method: "POST",
+			url: `https://localhost:9229${ACCESS_RULE_INSERT_PATH}`,
+			headers: {
+				"Content-Type": "application/json",
+				"Prosopo-Site-Key": pair.address,
+				Authorization: `Bearer ${jwt}`,
+			},
+			body: rules,
+			failOnStatusCode: false,
+			retryOnNetworkFailure: false,
+			timeout: 10000,
+		});
+	});
+}
+
+function deleteAllAccessRules() {
+	return cy.then(() => {
+		const pair = getPair(Cypress.env("PROSOPO_PROVIDER_MNEMONIC"));
+		const jwt = pair.jwtIssue();
+		return cy.request({
+			method: "POST",
+			url: `https://localhost:9229${ACCESS_RULE_DELETE_ALL_PATH}`,
+			headers: {
+				"Content-Type": "application/json",
+				"Prosopo-Site-Key": pair.address,
+				Authorization: `Bearer ${jwt}`,
+			},
+			body: {},
+			failOnStatusCode: false,
+			retryOnNetworkFailure: false,
+			timeout: 10000,
+		});
+	});
+}
+
 Cypress.Commands.add("clickIAmHuman", clickIAmHuman);
 Cypress.Commands.add("clickCheckbox", clickCheckbox);
 Cypress.Commands.add("captchaImages", captchaImages);
@@ -496,4 +593,7 @@ Cypress.Commands.add("elementExists", elementExists);
 Cypress.Commands.add("registerSiteKey", registerSiteKey);
 Cypress.Commands.add("waitForProcaptchaScript", waitForProcaptchaScript);
 Cypress.Commands.add("installRoutingMachine", installRoutingMachine);
+Cypress.Commands.add("installDecisionMachine", installDecisionMachine);
 Cypress.Commands.add("removeAllDecisionMachines", removeAllDecisionMachines);
+Cypress.Commands.add("addAccessRules", addAccessRules);
+Cypress.Commands.add("deleteAllAccessRules", deleteAllAccessRules);
