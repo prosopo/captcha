@@ -1,5 +1,11 @@
 # @prosopo/provider
 
+## 4.15.10
+### Patch Changes
+
+- Updated dependencies [a39c4ec]
+  - @prosopo/load-balancer@2.10.13
+
 ## 4.15.9
 ### Patch Changes
 
