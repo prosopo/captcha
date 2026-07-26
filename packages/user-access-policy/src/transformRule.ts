@@ -18,7 +18,7 @@ import { Address4, Address6 } from "ip-address";
 import { z } from "zod";
 import type { AccessRule } from "./rule.js";
 import {
-	accessPolicyInput,
+	accessPolicyInputShape,
 	policyScopeInput,
 } from "./ruleInput/policyInput.js";
 import { accessRuleInput } from "./ruleInput/ruleInput.js";
@@ -56,7 +56,7 @@ export const transformAccessRuleIntoRecord = (
 
 const accessRuleToRecordScheme = z
 	.object({
-		...accessPolicyInput.shape,
+		...accessPolicyInputShape.shape,
 		...policyScopeInput.shape,
 		...userScopeSchema.shape,
 		groupId: z.coerce.string().optional(),

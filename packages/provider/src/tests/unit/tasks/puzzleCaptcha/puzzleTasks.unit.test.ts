@@ -31,7 +31,7 @@ import type {
 	PuzzleCaptchaRecord,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import { getIPAddress, verifyRecency } from "@prosopo/util";
+import { embedData, getIPAddress, verifyRecency } from "@prosopo/util";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getCompositeIpAddress } from "../../../../compositeIpAddress.js";
 import type { DecisionMachineRunner } from "../../../../tasks/decisionMachine/decisionMachineRunner.js";
@@ -407,6 +407,72 @@ describe("PuzzleCaptchaManager", () => {
 			);
 		});
 
+		// Locks in the contract added by the puzzle DM threading PR (#2873):
+		// the widget encodes the trusted checkbox click into the salt as
+		// [x, y]; the provider decodes and persists them as coords[0][0].
+		// The cypress spec only asserts /captcha/puzzle fires — this test
+		// asserts the coords actually land on the record, so a regression
+		// that drops the decode (or writes [0,0]) surfaces here.
+		it("extracts checkbox click coords from salt and persists them as coords[0][0]", async () => {
+			const a = buildArgs();
+			const challengeRecord: Partial<PuzzleCaptchaStored> = {
+				challenge: a.challenge,
+				dappAccount: a.dappAccount,
+				userAccount: a.userAccount,
+				targetX: 100,
+				targetY: 100,
+				tolerance: 15,
+				ipAddress: getCompositeIpAddress(a.ipAddress),
+				result: { status: CaptchaStatus.pending },
+			};
+
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord(challengeRecord),
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+			vi.mocked(validatePuzzleSolution).mockReturnValue(true);
+
+			// Match the widget's client-side salt encoding (see
+			// procaptcha-puzzle/src/services/Manager.ts submitSolution):
+			// random hex + embedData(x, y). We use a fixed hex string
+			// here rather than randomAsHex — the file-wide `u8aToHex`
+			// mock (line 143) returns "0xsigned" for every call, which
+			// breaks randomAsHex's byte→hex conversion, so a literal is
+			// the only reliable way to hand embedData a long-enough hex
+			// buffer in this test file.
+			const clickX = 158;
+			const clickY = 42;
+			const coordsToEmbed = [clickX, clickY];
+			const salt = embedData(`0x${"a".repeat(64)}`, coordsToEmbed);
+
+			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
+				a.challenge,
+				a.providerSignature,
+				102,
+				101,
+				[{ x: 1, y: 1, t: 1 }],
+				1000,
+				a.userSignature,
+				a.ipAddress,
+				a.headers,
+				undefined, // behavioralData
+				salt,
+			);
+
+			expect(result).toBe(true);
+			expect(db.updatePuzzleCaptchaRecordResult).toHaveBeenCalledWith(
+				a.challenge,
+				{ status: CaptchaStatus.approved },
+				false,
+				true,
+				a.userSignature,
+				// The whole contract: coords[0] is the "click" tile, coords[0][0]
+				// is the [x, y] pair the widget embedded. A regression that drops
+				// the decode or writes [0, 0] fails this exact match.
+				[[[clickX, clickY]]],
+			);
+		});
+
 		it("returns false and disapproves when the solution is outside tolerance", async () => {
 			const a = buildArgs();
 			const challengeRecord: Partial<PuzzleCaptchaStored> = {
@@ -644,6 +710,82 @@ describe("PuzzleCaptchaManager", () => {
 					}),
 				}),
 			);
+		});
+
+		// Locks in the ordering: checkForHardBlock at line ~509 short-
+		// circuits before the decisionMachineRunner.decide() call at
+		// line ~741. If a request matches BOTH a hard-block access
+		// policy AND a DM that would deny with a different reason, the
+		// commitment must carry ACCESS_POLICY_BLOCK — not the DM's
+		// reason. Guards against a refactor that accidentally flips the
+		// order (letting DM decide first and win the reason field),
+		// which would break audit trails that distinguish operator-set
+		// blocks from DM-set denies.
+		it("access-policy hard block wins over DM deny — commitment reason is ACCESS_POLICY_BLOCK", async () => {
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord({
+					challenge,
+					dappAccount,
+					userAccount: "user",
+					result: { status: CaptchaStatus.approved },
+					serverChecked: false,
+					headers: { a: "1" },
+				}),
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+
+			// Stub checkForHardBlock to return a matching Block policy.
+			// The real path queries userAccessRulesStorage via
+			// getPrioritisedAccessPolicies; short-circuiting the method
+			// avoids reconstructing that whole Redis fixture for one
+			// order-of-operations assertion.
+			const originalCheckForHardBlock = puzzleCaptchaManager.checkForHardBlock;
+			puzzleCaptchaManager.checkForHardBlock = vi.fn().mockResolvedValue({
+				type: "block",
+				description: "test-hard-block",
+			});
+
+			// DM would ALSO deny with a distinguishable reason — this is
+			// the whole point: the assertion below must match the AP
+			// reason, not this one.
+			const decideSpy = vi.fn().mockResolvedValue({
+				decision: "deny",
+				reason: "CAPTCHA.DM_WOULD_HAVE_DENIED",
+				score: 0,
+			});
+			mockDecisionMachine(decideSpy);
+
+			try {
+				const result =
+					await puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+						dappAccount,
+						challenge,
+						1000,
+						mockEnv,
+						undefined, // ip
+						// Truthy storage triggers the checkForHardBlock branch;
+						// the stub above ignores whatever's passed here.
+						// biome-ignore lint/suspicious/noExplicitAny: test stub
+						{} as any,
+					);
+
+				expect(result.verified).toBe(false);
+				// AP reason wins. DM's reason must NOT appear.
+				expect(db.updatePuzzleCaptchaRecord).toHaveBeenCalledWith(
+					challenge,
+					expect.objectContaining({
+						result: expect.objectContaining({
+							status: CaptchaStatus.disapproved,
+							reason: ResultReason.ACCESS_POLICY_BLOCK,
+						}),
+					}),
+				);
+				// DM should never have been consulted — checkForHardBlock
+				// short-circuits before the DM branch runs.
+				expect(decideSpy).not.toHaveBeenCalled();
+			} finally {
+				puzzleCaptchaManager.checkForHardBlock = originalCheckForHardBlock;
+			}
 		});
 
 		it("forwards every session-derived field into the decide() input", async () => {
