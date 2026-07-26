@@ -189,6 +189,53 @@ describe("redisAccessRulesStorage", () => {
 				expect(indexRecordsCount).toBe(1);
 			});
 
+			// The existing "inserts time limited rule" test above only
+			// checks that the TTL is *set* on the Redis key. Neither
+			// side actually verifies the rule stops matching once its
+			// TTL fires — which is the property operators care about
+			// (temporary bans should self-clear). Guard against a
+			// regression that persists rules past their expiry (e.g. a
+			// future writer that swaps `expireAt` for `persist` by
+			// accident, or an index rebuild that resurrects expired
+			// records).
+			test("expired rule is no longer returned by the reader after its TTL fires", async () => {
+				const accessRule: AccessRule = {
+					type: AccessPolicyType.Block,
+					clientId: `expiring-${getUniqueString()}`,
+				};
+				const ruleKey = getAccessRuleRedisKey(accessRule);
+				// 2 s expiry — long enough that the "before expiry" check
+				// races the write cleanly, short enough that the test
+				// completes in a reasonable timeout. Redis TTL granularity
+				// is 1 s so anything shorter is under-resolution.
+				const expirationTimestampInSeconds = Math.floor(Date.now() / 1000) + 2;
+
+				await accessRulesWriter.insertRules([
+					{
+						rule: accessRule,
+						expiresUnixTimestamp: expirationTimestampInSeconds,
+					},
+				]);
+
+				// Sanity: the rule exists immediately after write.
+				const initialRecord = await redisClient.hGetAll(ruleKey);
+				expect(initialRecord).toEqual(accessRule);
+
+				// Wait past the TTL. Add ~1s slack for Redis's per-key
+				// expiry sweep — the docs guarantee expired keys stop
+				// answering reads but the actual key deletion is lazy.
+				await new Promise((resolve) => setTimeout(resolve, 3500));
+
+				// After expiry: hGetAll returns {} (Redis treats an
+				// expired key as non-existent for reads).
+				const expiredRecord = await redisClient.hGetAll(ruleKey);
+				expect(expiredRecord).toEqual({});
+
+				// And the RediSearch index no longer counts it.
+				const indexRecordsCount = await getIndexRecordsCount(indexName);
+				expect(indexRecordsCount).toBe(0);
+			}, 10_000);
+
 			test("deletes rules", async () => {
 				// given
 				const johnAccessRule: AccessRule = {
