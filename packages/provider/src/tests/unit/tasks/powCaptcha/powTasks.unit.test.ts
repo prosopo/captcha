@@ -930,6 +930,24 @@ describe("PowCaptchaManager", () => {
 				);
 
 				expect(result.verified).toBe(false);
+				// The DM's reason string must land on the commitment record.
+				// Without this assertion the /pow/verify wire response could
+				// change reasons and no test would catch it — critical for the
+				// "punish the bot but don't tip them off" pattern where the
+				// dApp needs to distinguish CAPTCHA.BOT_DETECTED from
+				// ACCESS_POLICY_BLOCK from DM-defined reasons on the audit
+				// trail. Cast to any because the DM's `reason` string is
+				// looser than the typed ResultReason enum by design.
+				// biome-ignore lint/suspicious/noExplicitAny: reason enum widened at DM boundary
+				expect(db.updatePowCaptchaRecord as any).toHaveBeenCalledWith(
+					challenge,
+					expect.objectContaining({
+						result: expect.objectContaining({
+							status: CaptchaStatus.disapproved,
+							reason: "Suspicious device detected",
+						}),
+					}),
+				);
 			} finally {
 				restoreDecisionMachine();
 			}
