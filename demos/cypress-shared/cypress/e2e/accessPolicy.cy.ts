@@ -34,8 +34,14 @@
 // the widget from ever solving.
 
 import "@cypress/xpath";
-import { CaptchaType } from "@prosopo/types";
-import { checkboxClass, getWidgetElement } from "../support/commands.js";
+import { ProsopoDatasetError } from "@prosopo/common";
+import { datasetWithSolutionHashes } from "@prosopo/datasets";
+import { type Captcha, CaptchaType } from "@prosopo/types";
+import {
+	buildTestSolutions,
+	checkboxClass,
+	getWidgetElement,
+} from "../support/commands.js";
 
 const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "image";
 
@@ -188,5 +194,115 @@ describe("User access policy Block rules", () => {
 					"deferToVerify Block must NOT block at request time",
 				).to.equal(200);
 			});
+	});
+
+	it("deferToVerify Block fires at verify time — widget solves normally but /signup returns 401", () => {
+		// The full end-to-end shape of "solve normally, block at verify"
+		// that the previous `it` only covered halfway. Drive an image solve
+		// through the signup demo; the widget mints a token, the demo
+		// server hands the token to prosopo-server which POSTs
+		// /image/dapp-user-commitment/verify on the provider, and
+		// checkForHardBlock inside serverVerifyUserImageCaptcha stamps
+		// ACCESS_POLICY_BLOCK on the commitment record — the provider
+		// returns verified:false, the demo server returns 401.
+		cy.addAccessRules(buildBlockRule({ deferToVerify: true })).then(
+			(response) => {
+				expect(response.status).to.equal(200);
+			},
+		);
+
+		const solutions = buildTestSolutions(datasetWithSolutionHashes.captchas);
+		if (!solutions) {
+			throw new ProsopoDatasetError(
+				"DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED",
+				{ context: { datasetWithSolutionHashes } },
+			);
+		}
+
+		cy.intercept("POST", "/signup").as("signup");
+		// Intercept /captcha/image specifically — the widget goes
+		// through /captcha/frictionless first and the shared clickIAmHuman
+		// helper's `**/captcha/**` intercept can catch the frictionless
+		// response instead of the image challenge, breaking its
+		// `body.captchas` assertion. Wait on the specific endpoint here
+		// and expose the captchas array to downstream steps under the
+		// same @captchas alias captchaImages expects.
+		cy.intercept("POST", "**/prosopo/provider/client/captcha/image").as(
+			"imageChallenge",
+		);
+		cy.visit(Cypress.env("default_page"), {
+			timeout: 30000,
+			failOnStatusCode: false,
+		});
+		cy.waitForProcaptchaScript();
+		cy.wrap(solutions).as("solutions");
+
+		// Some demo pages render a modal-open button — click it if present.
+		cy.elementExists("button[type='button']:nth-of-type(2)").then(
+			(confirmBtn: unknown) => {
+				if (confirmBtn) {
+					cy.wrap(confirmBtn).realClick();
+				}
+			},
+		);
+
+		getWidgetElement(checkboxClass, { timeout: 15000 })
+			.first()
+			.should("be.visible")
+			.realClick();
+
+		cy.wait("@imageChallenge", { timeout: 30000 })
+			.its("response")
+			.then((response) => {
+				expect(response?.statusCode).to.equal(200);
+				expect(response?.body).to.have.property("captchas");
+				cy.wrap(response?.body.captchas).as("captchas");
+			});
+
+		cy.captchaImages();
+
+		cy.get("@captchas").each((captcha: Captcha, index: number) => {
+			cy.log(`Solving captcha ${index + 1}: ${captcha.captchaContentId}`);
+			cy.clickCorrectCaptchaImages(captcha);
+			cy.wait(1200);
+		});
+
+		// Widget minted the token — checkbox ticks. deferToVerify means
+		// the block does NOT fire on the widget path.
+		getWidgetElement(`${checkboxClass}:checked`, { timeout: 15000 }).should(
+			"have.length.gte",
+			1,
+		);
+
+		const uniqueId = `access-defer-${Cypress._.random(0, 1e6)}`;
+		cy.get('input[id="name"]', { timeout: 10000 })
+			.should("be.visible")
+			.clear()
+			.type("test", { delay: 50 });
+		cy.get('input[id="email"]', { timeout: 10000 })
+			.should("be.visible")
+			.clear()
+			.type(`${uniqueId}@prosopo.io`, { delay: 50 });
+		cy.get('input[type="password"]', { timeout: 10000 })
+			.should("be.visible")
+			.clear()
+			.type("password", { delay: 50 });
+
+		cy.get('button[data-cy="submit-button"]', { timeout: 10000 })
+			.first()
+			.should("be.visible")
+			.should("not.be.disabled");
+		cy.get('button[data-cy="submit-button"]').first().realClick();
+
+		cy.wait("@signup", { timeout: 20000 }).then((interception) => {
+			expect(
+				interception.response?.statusCode,
+				"deferToVerify block should surface as 401 from /signup at verify time",
+			).to.equal(401);
+			expect(
+				interception.response?.body?.verified,
+				"signup body should carry verified:false",
+			).to.equal(false);
+		});
 	});
 });

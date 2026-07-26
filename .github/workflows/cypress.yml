@@ -171,6 +171,14 @@ jobs:
         run: |
           npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:accessPolicy" --success "first" --kill-others
 
+      - name: Run the cypress tests for user access policy Restrict rules
+        run: |
+          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:accessPolicyRestrict" --success "first" --kill-others
+
+      - name: Run the cypress tests for user access policy conflict resolution (specificity + harshness)
+        run: |
+          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:accessPolicyConflicts" --success "first" --kill-others
+
       # after the test run completes store videos and any screenshots
       - uses: actions/upload-artifact@v7
         # store screenshots only on failures
