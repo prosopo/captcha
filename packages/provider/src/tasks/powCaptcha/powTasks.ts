@@ -622,6 +622,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		if (challengeRecord.result.status !== CaptchaStatus.approved) {
 			throw new ProsopoApiError("CAPTCHA.INVALID_SOLUTION", {
 				context: {
+					code: 400,
 					failedFuncName: this.serverVerifyPowCaptchaSolution.name,
 					challenge,
 				},

@@ -451,6 +451,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		if (challengeRecord.result.status !== CaptchaStatus.approved) {
 			throw new ProsopoApiError("CAPTCHA.INVALID_SOLUTION", {
 				context: {
+					code: 400,
 					failedFuncName: this.serverVerifyPuzzleCaptchaSolution.name,
 					challenge,
 				},
