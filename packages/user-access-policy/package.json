@@ -61,7 +61,7 @@
 		"@prosopo/config": "3.3.4",
 		"@prosopo/util-crypto": "13.5.30",
 		"@types/node": "22.10.2",
-		"mongoose": "8.13.0",
+		"mongoose": "8.24.1",
 		"vite": "6.4.1",
 		"vitest": "3.2.6",
 		"yargs": "17.7.2"
