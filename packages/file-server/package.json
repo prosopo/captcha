@@ -29,7 +29,7 @@
 		"@prosopo/util": "3.3.4",
 		"dotenv": "16.4.5",
 		"express": "4.21.2",
-		"sharp": "0.33.5"
+		"sharp": "0.35.3"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.3.4",
