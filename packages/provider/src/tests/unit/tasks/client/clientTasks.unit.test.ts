@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { type Logger, getLogger } from "@prosopo/logger";
+import { Types } from "mongoose";
 import {
 	ContextType,
 	DecisionMachineLanguage,
@@ -323,7 +324,7 @@ describe("ClientTaskManager", () => {
 			ScheduledTaskRecord,
 			"updated" | "_id" | "status" | "processName"
 		> = {
-			_id: 0,
+			_id: new Types.ObjectId(),
 			status: ScheduledTaskStatus.Completed,
 			processName: ScheduledTaskNames.StoreCommitmentsExternal,
 			// Last task ran at time 1
@@ -408,7 +409,7 @@ describe("ClientTaskManager", () => {
 			ScheduledTaskRecord,
 			"updated" | "_id" | "status" | "processName"
 		> = {
-			_id: 0,
+			_id: new Types.ObjectId(),
 			status: ScheduledTaskStatus.Completed,
 			processName: ScheduledTaskNames.StoreCommitmentsExternal,
 			// Last task ran at time 1

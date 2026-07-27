@@ -31,7 +31,6 @@ import type { IIpInfoService } from "@prosopo/types-env";
 import { at } from "@prosopo/util";
 import { decodeAddress, encodeAddress } from "@prosopo/util-crypto";
 import { Address4, Address6 } from "ip-address";
-import type { ObjectId } from "mongoose";
 import { compareIPs } from "./services/ipComparison.js";
 
 export function encodeStringAddress(address: string) {
@@ -75,7 +74,7 @@ export async function checkIfTaskIsRunning(
 	// TODO: This is a temporary fix to prevent failed tasks from blocking the next task
 	if (runningTask && runningTask.datetime.getTime() > twoMinutesAgo) {
 		const completedTask = await db.getScheduledTaskStatus(
-			runningTask._id as ObjectId,
+			runningTask._id,
 			ScheduledTaskStatus.Completed,
 		);
 		return !completedTask;

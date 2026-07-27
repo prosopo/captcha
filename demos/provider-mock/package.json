@@ -37,7 +37,7 @@
 		"@prosopo/types-database": "4.11.16",
 		"cors": "2.8.5",
 		"express": "4.21.2",
-		"mongoose": "8.13.0"
+		"mongoose": "8.24.1"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.3.4",

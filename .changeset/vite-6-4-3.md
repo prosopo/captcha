@@ -40,4 +40,4 @@
 "@prosopo/vite-plugin-watch-workspace": patch
 ---
 
-chore(deps): bump vite from 6.4.1 to 6.4.3
+chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes

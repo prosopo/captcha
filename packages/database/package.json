@@ -47,9 +47,9 @@
 		"@prosopo/util": "3.3.4",
 		"bson": "6.10.4",
 		"make-dir": "3.1.0",
-		"mongodb": "6.15.0",
+		"mongodb": "6.20.0",
 		"mongodb-memory-server": "10.3.0",
-		"mongoose": "8.13.0"
+		"mongoose": "8.24.1"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.3.4",
