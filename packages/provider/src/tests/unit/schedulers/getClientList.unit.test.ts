@@ -35,13 +35,15 @@ vi.mock("@prosopo/env", async () => {
 		warn: vi.fn().mockImplementation(loggerOuter.warn.bind(loggerOuter)),
 	} as unknown as Logger;
 	return {
-		ProviderEnvironment: vi.fn().mockImplementation(() => ({
-			isReady: vi.fn().mockResolvedValue(true),
-			logger: mockLogger,
-			getDb: vi.fn().mockReturnValue({
-				getLastScheduledTaskStatus: vi.fn().mockResolvedValue(undefined),
-			}),
-		})),
+		ProviderEnvironment: vi.fn().mockImplementation(function () {
+			return {
+				isReady: vi.fn().mockResolvedValue(true),
+				logger: mockLogger,
+				getDb: vi.fn().mockReturnValue({
+					getLastScheduledTaskStatus: vi.fn().mockResolvedValue(undefined),
+				}),
+			};
+		}),
 	};
 });
 
@@ -82,7 +84,9 @@ describe("getClientList", () => {
 			start: vi.fn(),
 		};
 
-		vi.mocked(Tasks).mockImplementation(() => mockTasks as unknown as Tasks);
+		vi.mocked(Tasks).mockImplementation(function () {
+			return mockTasks as unknown as Tasks;
+		});
 		vi.mocked(checkIfTaskIsRunning).mockResolvedValue(false);
 		vi.mocked(CronJob).mockImplementation(
 			(cronSchedule, onTick) =>

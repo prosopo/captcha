@@ -21,14 +21,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { buildTreeAndGetCommitmentId } from "../../../../tasks/imgCaptcha/imgCaptchaTasksUtils.js";
 
 vi.mock("@prosopo/datasets", () => ({
-	CaptchaMerkleTree: vi.fn().mockImplementation(() => ({
-		// biome-ignore lint/suspicious/noExplicitAny: tests
-		build: vi.fn(function (this: any) {
-			this.root = { hash: "mockedRootHash" };
-		}),
-		root: null, // Initially null, set by build
-		getRoot: vi.fn().mockReturnValue({ hash: "mockedRootHash" }),
-	})),
+	// The code under test does `new CaptchaMerkleTree()`. vitest 4 requires the
+	// implementation to be constructible, so this is a class rather than the
+	// arrow that worked under vitest 3.
+	CaptchaMerkleTree: vi.fn().mockImplementation(
+		class CaptchaMerkleTreeMock {
+			root: { hash: string } | null = null; // set by build()
+			build = vi.fn(() => {
+				this.root = { hash: "mockedRootHash" };
+			});
+			getRoot = vi.fn().mockReturnValue({ hash: "mockedRootHash" });
+		},
+	),
 	computeCaptchaSolutionHash: vi.fn(),
 }));
 
@@ -42,10 +46,12 @@ describe("buildTreeAndGetCommitmentId", () => {
 		vi.clearAllMocks();
 		// Reset the mock implementation to the default state to ensure test isolation
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(CaptchaMerkleTree as any).mockImplementation(() => ({
-			build: vi.fn(),
-			root: { hash: "mockedRootHash" },
-		}));
+		(CaptchaMerkleTree as any).mockImplementation(function () {
+			return {
+				build: vi.fn(),
+				root: { hash: "mockedRootHash" },
+			};
+		});
 	});
 
 	it("should build a tree and return the commitmentId", () => {

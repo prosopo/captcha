@@ -41,6 +41,18 @@
 			}
 		}
 	},
+	"overrides": [
+		{
+			"include": ["**/*.test.ts", "**/*.test.tsx"],
+			"linter": {
+				"rules": {
+					"complexity": {
+						"useArrowFunction": "off"
+					}
+				}
+			}
+		}
+	],
 	"javascript": {
 		"parser": {
 			"unsafeParameterDecoratorsEnabled": true

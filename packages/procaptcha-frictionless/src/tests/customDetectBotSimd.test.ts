@@ -26,7 +26,6 @@ vi.mock("@prosopo/api", () => ({
 	// customDetectBot does `new ProviderApi(...)`, so the implementation has to
 	// be constructible. vitest 3 tolerated an arrow function here; under vitest 4
 	// it throws "is not a constructor" — arrows have no [[Construct]] slot.
-	// biome-ignore lint/complexity/useArrowFunction: an arrow is not constructible, which is the whole point here
 	ProviderApi: vi.fn(function () {
 		return {
 			getFrictionlessCaptcha: mocks.getFrictionlessCaptcha,
