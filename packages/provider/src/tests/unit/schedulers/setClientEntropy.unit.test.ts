@@ -88,14 +88,13 @@ describe("setClientEntropy", () => {
 			return mockTasks as unknown as Tasks;
 		});
 		vi.mocked(checkIfTaskIsRunning).mockResolvedValue(false);
-		vi.mocked(CronJob).mockImplementation(
-			(cronSchedule, onTick) =>
-				({
-					start: mockCronJob.start,
-					cronSchedule,
-					onTick,
-				}) as unknown as CronJob,
-		);
+		vi.mocked(CronJob).mockImplementation(function (cronSchedule, onTick) {
+			return {
+				start: mockCronJob.start,
+				cronSchedule,
+				onTick,
+			} as unknown as CronJob;
+		});
 	});
 
 	it("creates ProviderEnvironment and waits for readiness", async () => {
