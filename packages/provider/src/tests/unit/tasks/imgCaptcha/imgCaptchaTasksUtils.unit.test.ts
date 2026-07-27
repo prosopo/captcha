@@ -21,18 +21,20 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { buildTreeAndGetCommitmentId } from "../../../../tasks/imgCaptcha/imgCaptchaTasksUtils.js";
 
 vi.mock("@prosopo/datasets", () => ({
-	// The code under test does `new CaptchaMerkleTree()`. vitest 4 requires the
-	// implementation to be constructible, so this is a class rather than the
-	// arrow that worked under vitest 3.
-	CaptchaMerkleTree: vi.fn().mockImplementation(
-		class CaptchaMerkleTreeMock {
-			root: { hash: string } | null = null; // set by build()
-			build = vi.fn(() => {
+	// The code under test does `new CaptchaMerkleTree()`. vitest 4 requires a
+	// constructible implementation, so this is a function expression rather than
+	// the arrow that worked under vitest 3. (A class would also be constructible
+	// but is not assignable to mockImplementation's `(...args) => any`.)
+	CaptchaMerkleTree: vi.fn().mockImplementation(function () {
+		return {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			build: vi.fn(function (this: any) {
 				this.root = { hash: "mockedRootHash" };
-			});
-			getRoot = vi.fn().mockReturnValue({ hash: "mockedRootHash" });
-		},
-	),
+			}),
+			root: null, // set by build()
+			getRoot: vi.fn().mockReturnValue({ hash: "mockedRootHash" }),
+		};
+	}),
 	computeCaptchaSolutionHash: vi.fn(),
 }));
 
