@@ -52,9 +52,18 @@ export default async function (
 		"biome",
 	]);
 
+	// `punycode` is a deprecated Node builtin that the userland npm package
+	// shadows. Rolldown prefix-matches string externals, so listing the builtin
+	// also externalises deep imports like "punycode/punycode.es6.js" (which
+	// uri-js pulls in). Rollup did not, so this only bites under Vite 8. The
+	// provider image ships the bundle with no node_modules, so an external
+	// subpath is an immediate "Cannot find module" at boot. Bare "punycode"
+	// stays external via the node: alias below.
+	const bundledBuiltins = builtinModules.filter((m) => m !== "punycode");
+
 	// Add the node builtins (path, fs, os, etc.) to the external list
 	const allExternal = [
-		...builtinModules,
+		...bundledBuiltins,
 		...builtinModules.map((m) => `node:${m}`),
 		...external,
 		...optionalPeerDependencies,
