@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { type Logger, getLogger } from "@prosopo/logger";
-import { Types } from "mongoose";
 import {
 	ContextType,
 	DecisionMachineLanguage,
@@ -31,6 +30,7 @@ import {
 	type ScheduledTaskRecord,
 	ScheduledTaskSchema,
 } from "@prosopo/types-database";
+import { Types } from "mongoose";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ClientTaskManager } from "../../../../tasks/client/clientTasks.js";
 
