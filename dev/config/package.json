@@ -61,7 +61,7 @@
 		"tslib": "2.7.0",
 		"tsx": "4.20.6",
 		"typescript": "5.6.2",
-		"vite": "6.4.1",
+		"vite": "6.4.3",
 		"vite-bundle-visualizer": "1.2.1",
 		"vite-plugin-node-polyfills": "0.24.0",
 		"vite-tsconfig-paths": "5.1.4",
