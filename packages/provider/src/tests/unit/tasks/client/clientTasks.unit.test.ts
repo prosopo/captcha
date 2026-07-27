@@ -30,7 +30,7 @@ import {
 	type ScheduledTaskRecord,
 	ScheduledTaskSchema,
 } from "@prosopo/types-database";
-import { Types } from "mongoose";
+import type { Types } from "mongoose";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ClientTaskManager } from "../../../../tasks/client/clientTasks.js";
 
@@ -324,7 +324,7 @@ describe("ClientTaskManager", () => {
 			ScheduledTaskRecord,
 			"updated" | "_id" | "status" | "processName"
 		> = {
-			_id: new Types.ObjectId(),
+			_id: 0 as unknown as Types.ObjectId,
 			status: ScheduledTaskStatus.Completed,
 			processName: ScheduledTaskNames.StoreCommitmentsExternal,
 			// Last task ran at time 1
@@ -409,7 +409,7 @@ describe("ClientTaskManager", () => {
 			ScheduledTaskRecord,
 			"updated" | "_id" | "status" | "processName"
 		> = {
-			_id: new Types.ObjectId(),
+			_id: 0 as unknown as Types.ObjectId,
 			status: ScheduledTaskStatus.Completed,
 			processName: ScheduledTaskNames.StoreCommitmentsExternal,
 			// Last task ran at time 1
