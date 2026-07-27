@@ -451,6 +451,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		if (challengeRecord.result.status !== CaptchaStatus.approved) {
 			throw new ProsopoApiError("CAPTCHA.INVALID_SOLUTION", {
 				context: {
+					code: 400,
 					failedFuncName: this.serverVerifyPuzzleCaptchaSolution.name,
 					challenge,
 				},
@@ -734,6 +735,8 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				ruleType: sessionRecord?.ruleType,
 				webView: sessionRecord?.webView,
 				iFrame: sessionRecord?.iFrame,
+				coords: challengeRecord.coords,
+				puzzleEvents: challengeRecord.puzzleEvents,
 			};
 
 			const decision = await this.decisionMachineRunner.decide(

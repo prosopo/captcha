@@ -1,5 +1,60 @@
 # @prosopo/database
 
+## 3.15.19
+### Patch Changes
+
+- Updated dependencies [c61dfb5]
+  - @prosopo/user-access-policy@3.12.8
+  - @prosopo/types-database@4.11.16
+
+## 3.15.18
+### Patch Changes
+
+- Updated dependencies [a0cb39e]
+  - @prosopo/types@4.9.12
+  - @prosopo/types-database@4.11.15
+  - @prosopo/user-access-policy@3.12.7
+
+## 3.15.17
+### Patch Changes
+
+- Updated dependencies [b9ca0e7]
+- Updated dependencies [fde6896]
+  - @prosopo/types@4.9.11
+  - @prosopo/user-access-policy@3.12.6
+  - @prosopo/common@3.1.47
+  - @prosopo/types-database@4.11.14
+
+## 3.15.16
+### Patch Changes
+
+- a41c1b5: fix(database): puzzle records now persist submittedAtTimestamp / verifiedAtTimestamp / failedAtTimestamp
+  
+  Puzzle server-verify was returning verified:false on every solved puzzle in production. Root cause: updatePuzzleCaptchaRecordResult wrote submittedAtTimestamp via a $ifNull aggregation expression inside a pipeline $set, and mongoose silently dropped it on the wire — 0 of the last 3002 submitted puzzle records had the field. Reading the record back in serverVerifyPuzzleCaptchaSolution then treated missing submittedAtTimestamp as Number.POSITIVE_INFINITY, tripping submitToVerifyMs > timeout → TIMESTAMP_TOO_OLD on every request.
+  
+  - Rewrite updatePuzzleCaptchaRecordResult and updatePuzzleCaptchaRecord to write the timestamp fields directly (no $ifNull). Safe because puzzle rejects re-submissions at puzzleTasks.ts:228-233 — each stamp is only ever written once. The change also lets both writes drop the pipeline form and use a plain $set.
+  - Add submittedAtTimestamp to the projection in getPuzzleCaptchaRecordByChallenge — the recency check couldn't see the field even after it was persisted, because the projection stripped it.
+  - Reinstate the puzzle end-to-end cypress spec that was reverted in PR #2855 (it was correctly surfacing this bug — the previous decision to remove it was wrong). The puzzle piece gets a data-cy selector gated on NODE_ENV !== "production" so esbuild strips it from production bundles — cypress builds with NODE_ENV=development to include the selector for the test, but real deploys don't ship a bot-friendly querySelector.
+
+## 3.15.15
+### Patch Changes
+
+- Updated dependencies [0a4f902]
+  - @prosopo/types@4.9.10
+  - @prosopo/types-database@4.11.13
+  - @prosopo/user-access-policy@3.12.5
+
+## 3.15.14
+### Patch Changes
+
+- 446f53b: test(database): prime CentralDbStreamer connection in beforeAll to remove startup race
+  
+  `CentralDbStreamer` calls `ensureConnected` lazily on the first fire-and-forget stream, so `db.tables.<collection>` is populated by an async mongoose model registration that the tests don't await. On a fast CI runner the test's synchronous `tables.<collection>.findOne(...)` can execute before that registration lands, throwing `TypeError: Cannot read properties of undefined (reading 'findOne')` — observed intermittently on `puzzleCentralStreaming.integration.test.ts > streamPuzzleUpdate fetches the full record and streams it` (the failing case has an extra promise hop through `getFullRecord()`, which widens the race).
+  
+  `beforeAll` in the two affected integration tests now awaits `db.connect()` directly (via the same cast style already used by `afterAll` for `db.close()`), guaranteeing `db.tables.*` is populated before any test reads from it. `MongoDatabase.connect()` is idempotent (base/mongo.ts:85) and mongoose's `connection.model(name, schema)` returns the existing model when re-registered with the same schema instance, so the streamer's later lazy `ensureConnected` call is safe.
+  
+  Purely a test-race fix — no production code changes.
+
 ## 3.15.13
 ### Patch Changes
 

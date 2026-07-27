@@ -100,6 +100,16 @@ describe("CentralDbStreamer end-to-end: puzzle records", () => {
 	beforeAll(async () => {
 		mongod = await MongoMemoryServer.create();
 		streamer = new CentralDbStreamer(mongod.getUri(), logger);
+		// Prime the streamer's mongoose connection so `db.tables.<name>` is
+		// populated before tests race to read from it. The streamer's own
+		// `ensureConnected` is called lazily on the first stream, which
+		// leaves a window where a synchronous `tables.<name>.findOne(...)`
+		// throws on `undefined`. `MongoDatabase.connect()` is idempotent
+		// (mongo.ts:85) so the streamer's later ensureConnected reuse is
+		// safe.
+		await (
+			streamer as unknown as { db: { connect: () => Promise<void> } }
+		).db.connect();
 	});
 
 	afterAll(async () => {

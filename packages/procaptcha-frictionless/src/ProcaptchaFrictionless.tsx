@@ -175,10 +175,12 @@ export const ProcaptchaFrictionless = ({
 		captchaType: string,
 		frictionlessState: FrictionlessState,
 		autoStart = false,
+		escalationCoords?: RetryCoords,
 	) => {
 		const onEscalate = (
 			next: CaptchaType.image | CaptchaType.puzzle,
 			newSessionId: string,
+			coords?: RetryCoords,
 		) => {
 			void renderForCaptchaType(
 				next,
@@ -187,6 +189,7 @@ export const ProcaptchaFrictionless = ({
 					sessionId: newSessionId,
 				},
 				true,
+				coords,
 			);
 		};
 
@@ -214,10 +217,13 @@ export const ProcaptchaFrictionless = ({
 		// Consume any pending retry coords now — the resumed widget owns them
 		// for exactly one auto-fired `manager.start(x, y)`. Cleared so a
 		// subsequent escalation/re-render doesn't accidentally re-inject.
-		const { autoStart: resumedAutoStart, startCoords } = consumeRetryMountProps(
-			pendingRetryCoordsRef,
-			autoStart,
-		);
+		// Escalation coords (from a PoW→image/puzzle handoff) take precedence
+		// over pending retry coords when both are present, because escalation
+		// is the current transition and the pending retry belongs to a prior
+		// widget instance that never got to consume them.
+		const { autoStart: resumedAutoStart, startCoords: retryStartCoords } =
+			consumeRetryMountProps(pendingRetryCoordsRef, autoStart);
+		const startCoords = escalationCoords ?? retryStartCoords;
 
 		if (captchaType === CaptchaType.image) {
 			const Procaptcha = await ProcaptchaLoader();

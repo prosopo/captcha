@@ -15,8 +15,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { HardcodedProvider } from "../balancer.js";
 import {
+	_resetHealthzRetryPolicy,
 	_resetPinCache,
 	_resetProviderListCache,
+	_setHealthzRetryPolicy,
 	getProviders,
 	getRandomActiveProvider,
 	getRandomProviderFromList,
@@ -45,10 +47,14 @@ const mockHealthzFetch = (host: string, ok = true, status = 200) => {
 
 beforeEach(() => {
 	_resetPinCache();
+	// Keep the retry policy but drop backoff to zero so failure-path tests
+	// don't sit waiting on real timers.
+	_setHealthzRetryPolicy({ baseDelayMs: 0, maxDelayMs: 0 });
 });
 
 afterEach(() => {
 	globalThis.fetch = originalFetch;
+	_resetHealthzRetryPolicy();
 });
 
 describe("getRandomActiveProvider (dual stack)", () => {
@@ -79,13 +85,16 @@ describe("getRandomActiveProvider (dual stack)", () => {
 		expect(mocked).toHaveBeenCalledTimes(1);
 	});
 
-	it("falls back to the dual-stack base URL when /healthz responds non-OK", async () => {
-		mockHealthzFetch("ignored", false, 503);
-		const result = await getRandomActiveProvider("production");
-		expect(result.provider.url).toBe("https://pronode.prosopo.io");
+	it("throws after all healthz retries are exhausted (does not fall back to LB hostname)", async () => {
+		const mocked = mockHealthzFetch("ignored", false, 503);
+		await expect(getRandomActiveProvider("production")).rejects.toThrow(
+			/healthz responded with 503/,
+		);
+		// 3 attempts total = initial + 2 retries.
+		expect(mocked).toHaveBeenCalledTimes(3);
 	});
 
-	it("falls back to the dual-stack base URL when /healthz body is malformed", async () => {
+	it("throws when the healthz body is malformed after retries", async () => {
 		const mocked = vi.fn(async () => ({
 			ok: true,
 			status: 200,
@@ -93,8 +102,53 @@ describe("getRandomActiveProvider (dual stack)", () => {
 		}));
 		// biome-ignore lint/suspicious/noExplicitAny: minimal Response stub for the unit test
 		globalThis.fetch = mocked as any;
+		await expect(getRandomActiveProvider("production")).rejects.toThrow(
+			/missing host field/,
+		);
+		expect(mocked).toHaveBeenCalledTimes(3);
+	});
+
+	it("retries a transient healthz failure and pins on the eventual success", async () => {
+		let call = 0;
+		const mocked = vi.fn(async () => {
+			call++;
+			if (call === 1) {
+				return { ok: false, status: 503, json: async () => ({}) };
+			}
+			return {
+				ok: true,
+				status: 200,
+				json: async () => ({ ok: true, host: "pronode8.prosopo.io" }),
+			};
+		});
+		// biome-ignore lint/suspicious/noExplicitAny: minimal Response stub for the unit test
+		globalThis.fetch = mocked as any;
 		const result = await getRandomActiveProvider("production");
-		expect(result.provider.url).toBe("https://pronode.prosopo.io");
+		expect(result.provider.url).toBe("https://pronode8.prosopo.io");
+		expect(mocked).toHaveBeenCalledTimes(2);
+	});
+
+	it("evicts a failed pin so the next captcha attempt retries healthz fresh", async () => {
+		let call = 0;
+		const mocked = vi.fn(async () => {
+			call++;
+			if (call <= 3) {
+				return { ok: false, status: 502, json: async () => ({}) };
+			}
+			return {
+				ok: true,
+				status: 200,
+				json: async () => ({ ok: true, host: "pronode9.prosopo.io" }),
+			};
+		});
+		// biome-ignore lint/suspicious/noExplicitAny: minimal Response stub for the unit test
+		globalThis.fetch = mocked as any;
+		await expect(getRandomActiveProvider("production")).rejects.toThrow();
+		// First call failed 3 times; a fresh call must be able to retry — not
+		// return the poisoned cached rejection.
+		const result = await getRandomActiveProvider("production");
+		expect(result.provider.url).toBe("https://pronode9.prosopo.io");
+		expect(mocked).toHaveBeenCalledTimes(4);
 	});
 });
 
@@ -121,10 +175,11 @@ describe("getRandomActiveProvider (single stack ipMode)", () => {
 		);
 	});
 
-	it("falls back to the ipv4-labelled global URL when ipv4 /healthz fails", async () => {
+	it("throws for ipv4 mode when /healthz fails (no fallback to ipv4.pronode.prosopo.io)", async () => {
 		mockHealthzFetch("ignored", false, 500);
-		const result = await getRandomActiveProvider("production", "ipv4");
-		expect(result.provider.url).toBe("https://ipv4.pronode.prosopo.io");
+		await expect(getRandomActiveProvider("production", "ipv4")).rejects.toThrow(
+			/healthz responded with 500/,
+		);
 	});
 
 	it("keeps the dual-stack cache and the ipv4 cache separate", async () => {

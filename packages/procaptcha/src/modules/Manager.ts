@@ -32,6 +32,7 @@ import {
 	ApiParams,
 	type CaptchaResponseBody,
 	type CaptchaSolution,
+	CaptchaType,
 	type FrictionlessState,
 	type ProcaptchaCallbacks,
 	type ProcaptchaClientConfigInput,
@@ -386,6 +387,7 @@ export function Manager(
 									[ApiParams.timestamp]: userTimestampSignature.signature,
 								},
 							},
+							[ApiParams.captchaType]: CaptchaType.image,
 						}),
 					);
 					setValidChallengeTimeout();

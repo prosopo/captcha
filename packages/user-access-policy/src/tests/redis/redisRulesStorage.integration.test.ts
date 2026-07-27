@@ -113,170 +113,223 @@ describe("redisAccessRulesStorage", () => {
 		redisClient = await result.getClient();
 	});
 
-	describe("writer", () => {
-		let accessRulesWriter: AccessRulesWriter;
+	describe(
+		"writer",
+		() => {
+			let accessRulesWriter: AccessRulesWriter;
 
-		beforeAll(() => {
-			accessRulesWriter = new RedisRulesWriter(redisClient, mockLogger);
-		});
+			beforeAll(() => {
+				accessRulesWriter = new RedisRulesWriter(redisClient, mockLogger);
+			});
 
-		test("inserts rule", async () => {
-			const testIndexName = indexName;
-			// given
-			const accessRule: AccessRule = {
-				type: AccessPolicyType.Block,
-				clientId: "clientId",
-			};
-			const accessRuleKey = getAccessRuleRedisKey(accessRule);
+			test("inserts rule", async () => {
+				const testIndexName = indexName;
+				// given
+				const accessRule: AccessRule = {
+					type: AccessPolicyType.Block,
+					clientId: "clientId",
+				};
+				const accessRuleKey = getAccessRuleRedisKey(accessRule);
 
-			// when
-			await accessRulesWriter.insertRules([
-				{
-					rule: accessRule,
-				},
-			]);
+				// when
+				await accessRulesWriter.insertRules([
+					{
+						rule: accessRule,
+					},
+				]);
 
-			// then
-			const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
-			const indexRecordsCount = await getIndexRecordsCount(testIndexName);
+				// then
+				const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
+				const indexRecordsCount = await getIndexRecordsCount(testIndexName);
 
-			expect(insertedAccessRule).toEqual(accessRule);
-			expect(indexRecordsCount).toEqual(1);
-		});
+				expect(insertedAccessRule).toEqual(accessRule);
+				expect(indexRecordsCount).toEqual(1);
+			});
 
-		test("inserts time limited rule", async () => {
-			// given
-			const accessRule: AccessRule = {
-				type: AccessPolicyType.Block,
-				clientId: "clientId",
-			};
-			const accessRuleKey = getAccessRuleRedisKey(accessRule);
-			// 1 hour from now.
-			const expireIn = 60 * 60; // seconds
-			const expirationTimestamp = new Date(
-				Date.now() + expireIn * 1000,
-			).getTime();
-			const expirationTimestampInSeconds = Math.floor(
-				expirationTimestamp / 1000,
-			);
-
-			// when
-			await accessRulesWriter.insertRules([
-				{
-					rule: accessRule,
-					expiresUnixTimestamp: expirationTimestampInSeconds,
-				},
-			]);
-			const ruleKey = getAccessRuleRedisKey(accessRule);
-			// then
-			const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
-			const insertedExpirationResult = await redisClient.expireAt(
-				ruleKey,
-				expirationTimestampInSeconds,
-			);
-			const indexRecordsCount = await getIndexRecordsCount(indexName);
-
-			const recordExpirySeconds = await redisClient.ttl(ruleKey);
-
-			expect(insertedAccessRule).toEqual(accessRule);
-			expect(insertedExpirationResult).toBe(1);
-			expect(recordExpirySeconds).toBeLessThanOrEqual(
-				expirationTimestampInSeconds,
-			);
-
-			expect(indexRecordsCount).toBe(1);
-		});
-
-		test("deletes rules", async () => {
-			// given
-			const johnAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
-				clientId: getUniqueString(),
-			};
-			const johnAccessRuleKey = getAccessRuleRedisKey(johnAccessRule);
-
-			const doeAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
-				clientId: getUniqueString(),
-			};
-			const doeAccessRuleKey = getAccessRuleRedisKey(doeAccessRule);
-
-			await insertRules([johnAccessRule, doeAccessRule]);
-
-			// when
-			await accessRulesWriter.deleteRules([
-				johnAccessRuleKey.slice(ACCESS_RULE_REDIS_KEY_PREFIX.length),
-			]);
-
-			// then
-			const presentAccessRule = await redisClient.hGetAll(doeAccessRuleKey);
-			const indexRecordsCount = await getIndexRecordsCount(indexName);
-
-			expect(presentAccessRule).toEqual(doeAccessRule);
-			expect(indexRecordsCount).toBe(1);
-		});
-
-		test("deletes all rules", async () => {
-			// given
-			const johnAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
-				clientId: getUniqueString(),
-			};
-			const doeAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
-				clientId: getUniqueString(),
-			};
-
-			await insertRules([johnAccessRule, doeAccessRule]);
-
-			// when
-			await accessRulesWriter.deleteAllRules();
-
-			// then
-			const indexRecordsCount = await getIndexRecordsCount(indexName);
-
-			expect(indexRecordsCount).toBe(0);
-		});
-
-		test("deletes all rules when there are 1 million rules", async () => {
-			// given
-			const rulesCount = 1_000_000;
-			const batchSize = 10_000;
-			const numBatches = Math.ceil(rulesCount / batchSize);
-
-			// Insert rules in batches to avoid memory exhaustion
-			// Don't create 1M objects in memory at once!
-			for (let i = 0; i < numBatches; i++) {
-				const currentBatchSize = Math.min(
-					batchSize,
-					rulesCount - i * batchSize,
-				);
-				const batchRules: AccessRule[] = Array.from(
-					{ length: currentBatchSize },
-					() => ({
-						type: AccessPolicyType.Block,
-						clientId: getUniqueString(),
-					}),
+			test("inserts time limited rule", async () => {
+				// given
+				const accessRule: AccessRule = {
+					type: AccessPolicyType.Block,
+					clientId: "clientId",
+				};
+				const accessRuleKey = getAccessRuleRedisKey(accessRule);
+				// 1 hour from now.
+				const expireIn = 60 * 60; // seconds
+				const expirationTimestamp = new Date(
+					Date.now() + expireIn * 1000,
+				).getTime();
+				const expirationTimestampInSeconds = Math.floor(
+					expirationTimestamp / 1000,
 				);
 
-				await insertRules(batchRules);
-			}
+				// when
+				await accessRulesWriter.insertRules([
+					{
+						rule: accessRule,
+						expiresUnixTimestamp: expirationTimestampInSeconds,
+					},
+				]);
+				const ruleKey = getAccessRuleRedisKey(accessRule);
+				// then
+				const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
+				const insertedExpirationResult = await redisClient.expireAt(
+					ruleKey,
+					expirationTimestampInSeconds,
+				);
+				const indexRecordsCount = await getIndexRecordsCount(indexName);
 
-			// verify that there are 1 million rules in the database
-			const beforeDeleteIndexRecordsCount =
-				await getIndexRecordsCount(indexName);
-			expect(beforeDeleteIndexRecordsCount).toBe(rulesCount);
+				const recordExpirySeconds = await redisClient.ttl(ruleKey);
 
-			// when
-			await accessRulesWriter.deleteAllRules();
+				expect(insertedAccessRule).toEqual(accessRule);
+				expect(insertedExpirationResult).toBe(1);
+				expect(recordExpirySeconds).toBeLessThanOrEqual(
+					expirationTimestampInSeconds,
+				);
 
-			// then
-			const afterDeleteIndexRecordsCount =
-				await getIndexRecordsCount(indexName);
+				expect(indexRecordsCount).toBe(1);
+			});
 
-			expect(afterDeleteIndexRecordsCount).toBe(0);
-		});
-	}, 240_000);
+			// The existing "inserts time limited rule" test above only
+			// checks that the TTL is *set* on the Redis key. Neither
+			// side actually verifies the rule stops matching once its
+			// TTL fires — which is the property operators care about
+			// (temporary bans should self-clear). Guard against a
+			// regression that persists rules past their expiry (e.g. a
+			// future writer that swaps `expireAt` for `persist` by
+			// accident, or an index rebuild that resurrects expired
+			// records).
+			test("expired rule is no longer returned by the reader after its TTL fires", async () => {
+				const accessRule: AccessRule = {
+					type: AccessPolicyType.Block,
+					clientId: `expiring-${getUniqueString()}`,
+				};
+				const ruleKey = getAccessRuleRedisKey(accessRule);
+				// 2 s expiry — long enough that the "before expiry" check
+				// races the write cleanly, short enough that the test
+				// completes in a reasonable timeout. Redis TTL granularity
+				// is 1 s so anything shorter is under-resolution.
+				const expirationTimestampInSeconds = Math.floor(Date.now() / 1000) + 2;
+
+				await accessRulesWriter.insertRules([
+					{
+						rule: accessRule,
+						expiresUnixTimestamp: expirationTimestampInSeconds,
+					},
+				]);
+
+				// Sanity: the rule exists immediately after write.
+				const initialRecord = await redisClient.hGetAll(ruleKey);
+				expect(initialRecord).toEqual(accessRule);
+
+				// Wait past the TTL. Add ~1s slack for Redis's per-key
+				// expiry sweep — the docs guarantee expired keys stop
+				// answering reads but the actual key deletion is lazy.
+				await new Promise((resolve) => setTimeout(resolve, 3500));
+
+				// After expiry: hGetAll returns {} (Redis treats an
+				// expired key as non-existent for reads).
+				const expiredRecord = await redisClient.hGetAll(ruleKey);
+				expect(expiredRecord).toEqual({});
+
+				// And the RediSearch index no longer counts it.
+				const indexRecordsCount = await getIndexRecordsCount(indexName);
+				expect(indexRecordsCount).toBe(0);
+			}, 10_000);
+
+			test("deletes rules", async () => {
+				// given
+				const johnAccessRule: AccessRule = {
+					type: AccessPolicyType.Block,
+					clientId: getUniqueString(),
+				};
+				const johnAccessRuleKey = getAccessRuleRedisKey(johnAccessRule);
+
+				const doeAccessRule: AccessRule = {
+					type: AccessPolicyType.Block,
+					clientId: getUniqueString(),
+				};
+				const doeAccessRuleKey = getAccessRuleRedisKey(doeAccessRule);
+
+				await insertRules([johnAccessRule, doeAccessRule]);
+
+				// when
+				await accessRulesWriter.deleteRules([
+					johnAccessRuleKey.slice(ACCESS_RULE_REDIS_KEY_PREFIX.length),
+				]);
+
+				// then
+				const presentAccessRule = await redisClient.hGetAll(doeAccessRuleKey);
+				const indexRecordsCount = await getIndexRecordsCount(indexName);
+
+				expect(presentAccessRule).toEqual(doeAccessRule);
+				expect(indexRecordsCount).toBe(1);
+			});
+
+			test("deletes all rules", async () => {
+				// given
+				const johnAccessRule: AccessRule = {
+					type: AccessPolicyType.Block,
+					clientId: getUniqueString(),
+				};
+				const doeAccessRule: AccessRule = {
+					type: AccessPolicyType.Block,
+					clientId: getUniqueString(),
+				};
+
+				await insertRules([johnAccessRule, doeAccessRule]);
+
+				// when
+				await accessRulesWriter.deleteAllRules();
+
+				// then
+				const indexRecordsCount = await getIndexRecordsCount(indexName);
+
+				expect(indexRecordsCount).toBe(0);
+			});
+
+			test("deletes all rules when there are 1 million rules", async () => {
+				// given
+				const rulesCount = 1_000_000;
+				const batchSize = 10_000;
+				const numBatches = Math.ceil(rulesCount / batchSize);
+
+				// Insert rules in batches to avoid memory exhaustion
+				// Don't create 1M objects in memory at once!
+				for (let i = 0; i < numBatches; i++) {
+					const currentBatchSize = Math.min(
+						batchSize,
+						rulesCount - i * batchSize,
+					);
+					const batchRules: AccessRule[] = Array.from(
+						{ length: currentBatchSize },
+						() => ({
+							type: AccessPolicyType.Block,
+							clientId: getUniqueString(),
+						}),
+					);
+
+					await insertRules(batchRules);
+				}
+
+				// verify that there are 1 million rules in the database
+				const beforeDeleteIndexRecordsCount =
+					await getIndexRecordsCount(indexName);
+				expect(beforeDeleteIndexRecordsCount).toBe(rulesCount);
+
+				// when
+				await accessRulesWriter.deleteAllRules();
+
+				// then
+				const afterDeleteIndexRecordsCount =
+					await getIndexRecordsCount(indexName);
+
+				expect(afterDeleteIndexRecordsCount).toBe(0);
+			});
+		},
+		{
+			timeout: 240_000,
+		},
+	);
 
 	describe("reader", () => {
 		let accessRulesReader: AccessRulesReader;

@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/common",
-	"version": "3.1.46",
+	"version": "3.1.47",
 	"description": "Prosopo common library",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -41,7 +41,7 @@
 	"devDependencies": {
 		"@prosopo/config": "3.3.4",
 		"@types/node": "22.10.2",
-		"@prosopo/types": "4.9.9",
+		"@prosopo/types": "4.9.12",
 		"@vitest/coverage-v8": "4.1.10",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
@@ -50,8 +50,8 @@
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
-		"vite": "8.1.5",
-		"vitest": "4.1.10"
+		"vite": "6.4.1",
+		"vitest": "3.2.4"
 	},
 	"repository": {
 		"type": "git",

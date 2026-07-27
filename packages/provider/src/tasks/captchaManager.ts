@@ -280,9 +280,17 @@ export class CaptchaManager {
 			},
 		}));
 
-		// User Access Policies override default behaviour
+		// User Access Policies override default behaviour. Only enforce the
+		// captchaType check when the policy actually pins a captchaType —
+		// Block policies have their captchaType stripped by
+		// sanitizeAccessPolicy on write, and a policy without a pinned
+		// captchaType should apply to all captcha types (not reject all of
+		// them). Callers should filter out `deferToVerify` policies before
+		// passing them here — see getImageCaptchaChallenge et al. — but
+		// this defensive guard also stops a mis-filtered deferToVerify
+		// Block from breaking every /captcha/* request.
 		if (
-			userAccessPolicy &&
+			userAccessPolicy?.captchaType !== undefined &&
 			userAccessPolicy.captchaType !== requestedCaptchaType
 		) {
 			this.logger.warn(() => ({

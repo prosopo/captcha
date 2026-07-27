@@ -1,5 +1,62 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.12.21
+### Patch Changes
+
+- Updated dependencies [a0cb39e]
+  - @prosopo/types@4.9.12
+  - @prosopo/api@3.5.19
+  - @prosopo/detector@3.5.13
+  - @prosopo/procaptcha-common@2.11.17
+  - @prosopo/procaptcha-pow@2.10.23
+  - @prosopo/procaptcha-puzzle@2.10.39
+  - @prosopo/procaptcha-react@2.9.96
+
+## 2.12.20
+### Patch Changes
+
+- b9ca0e7: feat(decision-machine): thread puzzle fields and forward checkbox coords on escalation
+  
+  - Add optional `coords` and `puzzleEvents` to `DecisionMachineInput` so decision machines can gate on entry-point telemetry and puzzle drag trails.
+  - Populate `coords` on the pow, puzzle and image `decide()` inputs. Puzzle also passes `puzzleEvents`. Image gains `behavioralDataPacked` / `deviceCapability` — previously always undefined, which silently disabled the global synthetic-mouse-timing check on the one captcha type it targets.
+  - Extend `ProcaptchaEscalationHandler` with an optional `coords` argument so the PoW widget can forward its trusted checkbox click through the PoW→image/puzzle escalation. The frictionless wrapper prefers escalation coords over pending retry coords. Puzzle and image widgets already accept `startCoords`, so the escalated widget now seeds the salt with the real (x, y) instead of (0, 0).
+- Updated dependencies [b9ca0e7]
+- Updated dependencies [fde6896]
+  - @prosopo/types@4.9.11
+  - @prosopo/procaptcha-pow@2.10.22
+  - @prosopo/common@3.1.47
+  - @prosopo/api@3.5.18
+  - @prosopo/detector@3.5.12
+  - @prosopo/procaptcha-common@2.11.16
+  - @prosopo/procaptcha-puzzle@2.10.38
+  - @prosopo/procaptcha-react@2.9.95
+
+## 2.12.19
+### Patch Changes
+
+  - @prosopo/procaptcha-common@2.11.15
+  - @prosopo/procaptcha-pow@2.10.21
+  - @prosopo/procaptcha-puzzle@2.10.37
+  - @prosopo/procaptcha-react@2.9.94
+
+## 2.12.18
+### Patch Changes
+
+- Updated dependencies [a41c1b5]
+  - @prosopo/procaptcha-puzzle@2.10.36
+
+## 2.12.17
+### Patch Changes
+
+- Updated dependencies [0a4f902]
+  - @prosopo/types@4.9.10
+  - @prosopo/procaptcha-pow@2.10.20
+  - @prosopo/procaptcha-puzzle@2.10.35
+  - @prosopo/api@3.5.17
+  - @prosopo/detector@3.5.11
+  - @prosopo/procaptcha-common@2.11.14
+  - @prosopo/procaptcha-react@2.9.93
+
 ## 2.12.16
 ### Patch Changes
 
