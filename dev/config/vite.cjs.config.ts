@@ -14,9 +14,13 @@ import path from "node:path";
 // limitations under the License.
 import ViteCommonJSConfig from "./src/vite/vite.commonjs.config.js";
 
+// See vite.esm.config.ts — webpack.config is a public entry point that no in-graph
+// module imports by default, so rolldown prunes its default export unless it is
+// listed as an entry here.
 export default function () {
 	return ViteCommonJSConfig(
 		path.basename("."),
 		path.resolve("./tsconfig.json"),
+		["src/index.ts", "src/webpack/webpack.config.ts"],
 	);
 }

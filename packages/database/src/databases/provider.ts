@@ -93,7 +93,10 @@ import {
 	createRedisAccessRulesStorage,
 } from "@prosopo/user-access-policy/redis";
 import { assertCoordsSafe, buildDomainSuffixCandidates } from "@prosopo/util";
-import type { ObjectId } from "mongoose";
+// Types.ObjectId is the bson-backed id that Document._id carries. mongoose's bare
+// ObjectId export is the *schema* type, which as of mongoose 8.24 no longer
+// structurally matches it (missing _bsontype/toHexString/...).
+import type { Types } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
 import type { CentralDbStreamer } from "./centralDbStreamer.js";
 
@@ -2455,7 +2458,7 @@ export class ProviderDatabase
 	 * @description Get a scheduled task status record by task ID and status
 	 */
 	async getScheduledTaskStatus(
-		taskId: ObjectId,
+		taskId: Types.ObjectId,
 		status: ScheduledTaskStatus,
 	): Promise<ScheduledTaskRecord | undefined> {
 		const filter: Pick<ScheduledTaskRecord, "_id" | "status"> = {
@@ -2501,7 +2504,7 @@ export class ProviderDatabase
 	async createScheduledTaskStatus(
 		taskName: ScheduledTaskNames,
 		status: ScheduledTaskStatus,
-	): Promise<ObjectId> {
+	): Promise<Types.ObjectId> {
 		const now = new Date();
 		const doc = ScheduledTaskSchema.parse({
 			processName: taskName,
@@ -2516,7 +2519,7 @@ export class ProviderDatabase
 	 * @description Update the status of a scheduled task and an optional result
 	 */
 	async updateScheduledTaskStatus(
-		taskId: ObjectId,
+		taskId: Types.ObjectId,
 		status: ScheduledTaskStatus,
 		result?: ScheduledTaskResult,
 	): Promise<void> {

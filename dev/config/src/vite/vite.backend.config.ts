@@ -20,6 +20,7 @@ import css from "rollup-plugin-import-css";
 import type { UserConfig } from "vite";
 import { filterDependencies, getDependencies } from "../dependencies.js";
 import { default as ClosePlugin } from "./vite-plugin-close-and-copy.js";
+import VitePluginExternalizeObfuscatorDeadCode from "./vite-plugin-externalize-obfuscator-deadcode.js";
 import VitePluginFixAbsoluteImports from "./vite-plugin-fix-absolute-imports.js";
 
 export default async function (
@@ -51,9 +52,18 @@ export default async function (
 		"biome",
 	]);
 
+	// `punycode` is a deprecated Node builtin that the userland npm package
+	// shadows. Rolldown prefix-matches string externals, so listing the builtin
+	// also externalises deep imports like "punycode/punycode.es6.js" (which
+	// uri-js pulls in). Rollup did not, so this only bites under Vite 8. The
+	// provider image ships the bundle with no node_modules, so an external
+	// subpath is an immediate "Cannot find module" at boot. Bare "punycode"
+	// stays external via the node: alias below.
+	const bundledBuiltins = builtinModules.filter((m) => m !== "punycode");
+
 	// Add the node builtins (path, fs, os, etc.) to the external list
 	const allExternal = [
-		...builtinModules,
+		...bundledBuiltins,
 		...builtinModules.map((m) => `node:${m}`),
 		...external,
 		...optionalPeerDependencies,
@@ -128,7 +138,7 @@ export default async function (
 			},
 			modulePreload: { polyfill: false },
 			rollupOptions: {
-				treeshake: "smallest",
+				treeshake: { moduleSideEffects: true },
 				external: allExternal,
 				watch: false,
 				output: {
@@ -139,6 +149,7 @@ export default async function (
 			},
 		},
 		plugins: [
+			VitePluginExternalizeObfuscatorDeadCode(),
 			// plugin to replace stuff like import blah from string_encoder/lib/string_encoder.js with import blah from string_encoder
 			VitePluginFixAbsoluteImports(),
 			// plugin to close the bundle after build if not in serve mode

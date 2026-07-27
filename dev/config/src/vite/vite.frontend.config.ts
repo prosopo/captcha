@@ -27,6 +27,7 @@ import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { filterDependencies, getDependencies } from "../dependencies.js";
 import { VitePluginCloseAndCopy } from "./index.js";
 import type { ClosePluginOptions } from "./vite-plugin-close-and-copy.js";
+import VitePluginExternalizeObfuscatorDeadCode from "./vite-plugin-externalize-obfuscator-deadcode.js";
 
 export default async function (
 	packageName: string,
@@ -190,12 +191,9 @@ export default async function (
 				treeshake: {
 					annotations: false,
 					propertyReadSideEffects: false,
-					tryCatchDeoptimization: false,
 					moduleSideEffects: "no-external", //true,
-					preset: "smallest",
 					unknownGlobalSideEffects: false,
 				},
-				experimentalLogSideEffects: false,
 				external: rollupExternal,
 				watch: false,
 
@@ -205,9 +203,6 @@ export default async function (
 				},
 
 				plugins: [
-					nodePolyfills({
-						include: ["crypto"],
-					}),
 					// biome-ignore lint/suspicious/noExplicitAny: has to be any to represent object prototype
 					css() as any,
 					// biome-ignore lint/suspicious/noExplicitAny: has to be any to represent object prototype
@@ -267,6 +262,13 @@ export default async function (
 			},
 		},
 		plugins: [
+			VitePluginExternalizeObfuscatorDeadCode(),
+			// node polyfills must be a top-level Vite plugin (not inside
+			// build.rollupOptions.plugins) so its inject sub-plugin initialises
+			// before transform runs under Rolldown/Vite 8.
+			nodePolyfills({
+				include: ["crypto"],
+			}),
 			// Not sure if we need this plugin or not, it works without it
 			// @ts-ignore
 			viteReact(),

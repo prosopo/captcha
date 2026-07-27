@@ -62,12 +62,14 @@ vi.mock("../../../../api/validateAddress.js", () => ({
 }));
 
 vi.mock("../../../../tasks/index.js", () => ({
-	Tasks: vi.fn().mockImplementation(() => ({
-		setLogger: vi.fn(),
-		db: mockedDbMethods,
-		...mockedManagers,
-		logger: { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() },
-	})),
+	Tasks: vi.fn().mockImplementation(function () {
+		return {
+			setLogger: vi.fn(),
+			db: mockedDbMethods,
+			...mockedManagers,
+			logger: { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() },
+		};
+	}),
 }));
 
 import getPowChallenge from "../../../../api/captcha/getPoWCaptchaChallenge.js";

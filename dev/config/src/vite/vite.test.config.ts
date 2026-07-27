@@ -73,8 +73,6 @@ export default function (tsConfigPath?: string) {
 			minify: false,
 			sourcemap: false,
 			rollupOptions: {
-				maxParallelFileOps: 1,
-				cache: false,
 				output: {
 					sourcemap: false,
 				},
@@ -82,7 +80,9 @@ export default function (tsConfigPath?: string) {
 		},
 		test: {
 			//root: getRootDir(),
-			reporters: ["basic"],
+			// vitest 4 removed the "basic" reporter; the default reporter with
+			// summary disabled reproduces its terse output.
+			reporters: [["default", { summary: false }]],
 			include: [include],
 			watch: false,
 			exclude: ["**/node_modules/**", "**/dist/**"],
@@ -96,11 +96,7 @@ export default function (tsConfigPath?: string) {
 				enabled: true,
 			},
 			pool: "forks", // forks is slower than 'threads' but more compatible with low-level libs (e.g. bcrypt)
-			poolOptions: {
-				forks: {
-					isolate: true,
-				},
-			},
+			isolate: true,
 			sequence: {
 				shuffle: true,
 			},
