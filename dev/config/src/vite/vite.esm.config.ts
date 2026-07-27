@@ -77,6 +77,16 @@ export default async function (
 			rollupOptions: {
 				treeshake: false,
 				external: allExternal,
+				output: {
+					// Rolldown otherwise emits a CJS-interop runtime that does
+					// `createRequire(import.meta.url)` from "node:module" at module
+					// scope. That is fatal in a browser: anything importing such a
+					// package (e.g. catcher-demo importing @prosopo/util) dies with
+					// 'Module "node:module" has been externalized for browser
+					// compatibility' before React can mount. Rollup emitted no such
+					// runtime, so this only bites under Vite 8.
+					polyfillRequire: false,
+				},
 			},
 		},
 		esbuild: {
