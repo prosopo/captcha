@@ -138,7 +138,13 @@ export default async function (
 			},
 			modulePreload: { polyfill: false },
 			rollupOptions: {
-				treeshake: { moduleSideEffects: true },
+				treeshake: {
+					// Rolldown has no `preset` support, so Rollup's "smallest" could
+					// not be carried over. Honouring pure annotations recovers part
+					// of that without the risk of moduleSideEffects: false.
+					annotations: true,
+					moduleSideEffects: true,
+				},
 				external: allExternal,
 				watch: false,
 				output: {

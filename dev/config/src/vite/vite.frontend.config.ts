@@ -189,9 +189,18 @@ export default async function (
 
 			rollupOptions: {
 				treeshake: {
-					annotations: false,
+					// Respect /*#__PURE__*/ annotations. Ignoring them retained
+					// dead library calls that every consumer then shipped;
+					// honouring them cuts ~17KB gzip off the widget bundle with
+					// a byte-identical detector.
+					annotations: true,
 					propertyReadSideEffects: false,
-					moduleSideEffects: "no-external", //true,
+					// Measured alternatives, both rejected:
+					//   moduleSideEffects: false        -> widget 8KB gzip LARGER
+					//   propertyWriteSideEffects: false -> detector dies on load
+					//                                     ("Maximum call stack
+					//                                     size exceeded")
+					moduleSideEffects: "no-external",
 					unknownGlobalSideEffects: false,
 				},
 				external: rollupExternal,
