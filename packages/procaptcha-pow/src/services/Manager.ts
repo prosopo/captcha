@@ -23,11 +23,12 @@ import {
 import {
 	ExtensionLoader,
 	buildUpdateState,
+	getDefaultEvents,
 	getProcaptchaRandomActiveProvider,
+	getSimdReadingsForSubmit,
 	pickIpMode,
 	providerRetry,
 } from "@prosopo/procaptcha-common";
-import { getDefaultEvents } from "@prosopo/procaptcha-common";
 import {
 	type Account,
 	ApiParams,
@@ -337,9 +338,9 @@ export const Manager = (
 						}
 					}
 
-					const simdReadings = frictionlessState?.getSimdReadings
-						? await frictionlessState.getSimdReadings()
-						: undefined;
+					// Wait 5 secs for ongoing SIMD, else submit without
+					const simdReadings =
+						await getSimdReadingsForSubmit(frictionlessState);
 					const hpValue = getHoneypotValue?.();
 					const clientMetaData = hpValue ? { hp: hpValue } : undefined;
 					// Best-effort proof of fingerprint; submission proceeds without it
