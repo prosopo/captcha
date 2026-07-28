@@ -18,11 +18,12 @@ import { ProsopoEnvError } from "@prosopo/common";
 import {
 	ExtensionLoader,
 	buildUpdateState,
+	getDefaultEvents,
 	getProcaptchaRandomActiveProvider,
+	getSimdReadingsForSubmit,
 	pickIpMode,
 	providerRetry,
 } from "@prosopo/procaptcha-common";
-import { getDefaultEvents } from "@prosopo/procaptcha-common";
 import {
 	type Account,
 	ApiParams,
@@ -404,9 +405,10 @@ export const Manager = (
 				salt = embedData(randomSalt, coords);
 			}
 
-			const simdReadings = frictionlessState?.getSimdReadings
-				? await frictionlessState.getSimdReadings()
-				: undefined;
+			// Last hop we control — block on the benchmark (capped at 5s) rather
+			// than attaching only what already happens to be resolved.
+			// See getSimdReadingsForSubmit.
+			const simdReadings = await getSimdReadingsForSubmit(frictionlessState);
 			const hpValue = getHoneypotValue?.();
 			const clientMetaData = hpValue ? { hp: hpValue } : undefined;
 			const verifiedSolution = await providerApi.submitPuzzleCaptchaSolution(
