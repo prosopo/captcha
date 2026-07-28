@@ -343,9 +343,7 @@ export function Manager(
 					}
 				}
 
-				// Last hop we control — block on the benchmark (capped at 5s)
-				// rather than attaching only what already happens to be
-				// resolved. See getSimdReadingsForSubmit.
+				// Wait 5 secs for ongoing SIMD, else submit without
 				const simdReadings = await getSimdReadingsForSubmit(frictionlessState);
 				const hpValue = getHoneypotValue?.();
 				const clientMetaData = hpValue ? { hp: hpValue } : undefined;
