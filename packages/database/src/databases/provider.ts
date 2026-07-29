@@ -91,7 +91,10 @@ import {
 	createRedisAccessRulesStorage,
 } from "@prosopo/user-access-policy/redis";
 import { assertCoordsSafe, buildDomainSuffixCandidates } from "@prosopo/util";
-import type { ObjectId } from "mongoose";
+// Types.ObjectId is the bson-backed id that Document._id carries. mongoose's bare
+// ObjectId export is the *schema* type, which as of mongoose 8.24 no longer
+// structurally matches it (missing _bsontype/toHexString/...).
+import type { Types } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
 import type { CentralDbStreamer } from "./centralDbStreamer.js";
 
@@ -1111,6 +1114,19 @@ export class ProviderDatabase
 				},
 				msg: "PuzzleCaptcha record added successfully",
 			}));
+			this.centralStreamer?.streamPuzzleRecord(
+				puzzleCaptchaRecord as PuzzleCaptchaRecord,
+				(ts) =>
+					this.tables.puzzlecaptcha
+						.updateOne(
+							{ challenge, lastUpdatedTimestamp: { $lte: ts } },
+							{
+								$set: { storedAtTimestamp: ts },
+								$unset: { pendingStage: 1 },
+							},
+						)
+						.then(() => {}),
+			);
 		} catch (error) {
 			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
 				context: {
@@ -1156,6 +1172,12 @@ export class ProviderDatabase
 						userAccount: 1,
 						dappAccount: 1,
 						requestedAtTimestamp: 1,
+						// submittedAtTimestamp gates the submit → verify
+						// recency check in serverVerifyPuzzleCaptchaSolution.
+						// Missing it here silently trips the "too old" path
+						// even on freshly-solved puzzles because the code
+						// treats a missing field as Number.POSITIVE_INFINITY.
+						submittedAtTimestamp: 1,
 						ipAddress: 1,
 						headers: 1,
 						ja4: 1,
@@ -1225,6 +1247,16 @@ export class ProviderDatabase
 		const isDisapproved = result.status === CaptchaStatus.disapproved;
 		// Defence-in-depth: validate coords before write.
 		assertCoordsSafe(coords, "coords");
+		// submittedAtTimestamp / failedAtTimestamp are direct writes rather
+		// than `$ifNull` pipeline exprs: puzzle refuses re-submission at
+		// `puzzleTasks.ts:228-233` (single-use challenge), so both fields are
+		// only ever written by the one submit that lands. A prior attempt to
+		// use `$ifNull` inside a pipeline `$set` was silently dropping the
+		// timestamps on the wire — 0 of the last 3002 submitted puzzle records
+		// had `submittedAtTimestamp` set — which then always tripped the
+		// `submitToVerifyMs > timeout → TIMESTAMP_TOO_OLD` disapproval branch
+		// in `serverVerifyPuzzleCaptchaSolution`. That looked to customers
+		// like every solved puzzle failing server-verify.
 		const setStage: Record<string, unknown> = {
 			result,
 			serverChecked,
@@ -1233,21 +1265,14 @@ export class ProviderDatabase
 			lastUpdatedTimestamp: timestamp,
 			pendingStage: true,
 			...(coords && { coords }),
+			...(userSubmitted && { submittedAtTimestamp: timestamp }),
+			...(isDisapproved && { failedAtTimestamp: timestamp }),
 		};
-		if (userSubmitted) {
-			setStage.submittedAtTimestamp = {
-				$ifNull: ["$submittedAtTimestamp", timestamp],
-			};
-		}
-		if (isDisapproved) {
-			setStage.failedAtTimestamp = {
-				$ifNull: ["$failedAtTimestamp", timestamp],
-			};
-		}
 		try {
-			const updateResult = await tables.puzzlecaptcha.updateOne({ challenge }, [
+			const updateResult = await tables.puzzlecaptcha.updateOne(
+				{ challenge },
 				{ $set: setStage },
-			]);
+			);
 			if (updateResult.matchedCount === 0) {
 				const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
 					context: {
@@ -1269,6 +1294,19 @@ export class ProviderDatabase
 				},
 				msg: "PuzzleCaptcha record updated successfully",
 			}));
+			this.centralStreamer?.streamPuzzleUpdate(
+				() => this.getPuzzleCaptchaRecordByChallenge(challenge),
+				(ts) =>
+					this.tables.puzzlecaptcha
+						.updateOne(
+							{ challenge, lastUpdatedTimestamp: { $lte: ts } },
+							{
+								$set: { storedAtTimestamp: ts },
+								$unset: { pendingStage: 1 },
+							},
+						)
+						.then(() => {}),
+			);
 		} catch (error) {
 			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
 				context: {
@@ -1292,42 +1330,39 @@ export class ProviderDatabase
 	): Promise<void> {
 		const tables = this.getTables();
 		const timestamp = new Date();
+		// verifiedAtTimestamp / submittedAtTimestamp / failedAtTimestamp are
+		// direct writes, not `$ifNull` pipeline exprs — see the matching
+		// note on `updatePuzzleCaptchaRecordResult`. Puzzle challenges are
+		// single-use so each stamp only ever gets one write in its lifetime.
+		// The pipeline-`$ifNull` variant was silently dropping these fields
+		// on the wire, which broke server-verify's recency check.
 		const baseSet: Record<string, unknown> = {
 			...updates,
 			pendingStage: true,
+			...(updates.serverChecked === true && {
+				verifiedAtTimestamp: timestamp,
+			}),
+			...(updates.userSubmitted === true && {
+				submittedAtTimestamp: timestamp,
+			}),
+			...(updates.result?.status === CaptchaStatus.disapproved && {
+				failedAtTimestamp: timestamp,
+			}),
 		};
-		const pipelineExprs: Record<string, unknown> = {};
-		if (updates.serverChecked === true) {
-			pipelineExprs.verifiedAtTimestamp = {
-				$ifNull: ["$verifiedAtTimestamp", timestamp],
-			};
-		}
-		if (updates.userSubmitted === true) {
-			pipelineExprs.submittedAtTimestamp = {
-				$ifNull: ["$submittedAtTimestamp", timestamp],
-			};
-		}
-		if (updates.result?.status === CaptchaStatus.disapproved) {
-			pipelineExprs.failedAtTimestamp = {
-				$ifNull: ["$failedAtTimestamp", timestamp],
-			};
-		}
-		// Prefer ordinary `$set` so Mongoose schema casting fires — without
-		// it, a `bigint` in a composite-IP half (e.g. `providedIp.lower`)
-		// gets serialised as BSON Long instead of going through the
-		// `bigint→string→Decimal128` setter on
-		// `CompositeIpAddressRecordSchemaObj`, leaving the on-disk type
-		// out of sync with the schema and breaking downstream casts in the
-		// central-streaming sweep. Only fall back to the pipeline form
-		// when an `$ifNull` (or other aggregation expression) is actually
-		// required.
-		if (Object.keys(pipelineExprs).length === 0) {
-			await tables.puzzlecaptcha.updateOne({ challenge }, { $set: baseSet });
-			return;
-		}
-		await tables.puzzlecaptcha.updateOne({ challenge }, [
-			{ $set: { ...baseSet, ...pipelineExprs } },
-		]);
+		await tables.puzzlecaptcha.updateOne({ challenge }, { $set: baseSet });
+		this.centralStreamer?.streamPuzzleUpdate(
+			() => this.getPuzzleCaptchaRecordByChallenge(challenge),
+			(ts) =>
+				this.tables.puzzlecaptcha
+					.updateOne(
+						{ challenge, lastUpdatedTimestamp: { $lte: ts } },
+						{
+							$set: { storedAtTimestamp: ts },
+							$unset: { pendingStage: 1 },
+						},
+					)
+					.then(() => {}),
+		);
 	}
 
 	/** @description Get serverChecked Dapp User image captcha commitments from the commitments table
@@ -2416,7 +2451,7 @@ export class ProviderDatabase
 	 * @description Get a scheduled task status record by task ID and status
 	 */
 	async getScheduledTaskStatus(
-		taskId: ObjectId,
+		taskId: Types.ObjectId,
 		status: ScheduledTaskStatus,
 	): Promise<ScheduledTaskRecord | undefined> {
 		const filter: Pick<ScheduledTaskRecord, "_id" | "status"> = {
@@ -2462,7 +2497,7 @@ export class ProviderDatabase
 	async createScheduledTaskStatus(
 		taskName: ScheduledTaskNames,
 		status: ScheduledTaskStatus,
-	): Promise<ObjectId> {
+	): Promise<Types.ObjectId> {
 		const now = new Date();
 		const doc = ScheduledTaskSchema.parse({
 			processName: taskName,
@@ -2477,7 +2512,7 @@ export class ProviderDatabase
 	 * @description Update the status of a scheduled task and an optional result
 	 */
 	async updateScheduledTaskStatus(
-		taskId: ObjectId,
+		taskId: Types.ObjectId,
 		status: ScheduledTaskStatus,
 		result?: ScheduledTaskResult,
 	): Promise<void> {

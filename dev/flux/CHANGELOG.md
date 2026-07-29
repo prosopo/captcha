@@ -1,5 +1,16 @@
 # @prosopo/flux
 
+## 2.6.64
+### Patch Changes
+
+- Updated dependencies [fde6896]
+  - @prosopo/common@3.1.47
+
+## 2.6.63
+### Patch Changes
+
+  - @prosopo/common@3.1.46
+
 ## 2.6.62
 ### Patch Changes
 

@@ -18,14 +18,16 @@ import { ProsopoEnvError } from "@prosopo/common";
 import {
 	ExtensionLoader,
 	buildUpdateState,
+	getDefaultEvents,
 	getProcaptchaRandomActiveProvider,
+	getSimdReadingsForSubmit,
 	pickIpMode,
 	providerRetry,
 } from "@prosopo/procaptcha-common";
-import { getDefaultEvents } from "@prosopo/procaptcha-common";
 import {
 	type Account,
 	ApiParams,
+	CaptchaType,
 	type FrictionlessState,
 	type GetPuzzleCaptchaResponse,
 	type ProcaptchaCallbacks,
@@ -403,9 +405,8 @@ export const Manager = (
 				salt = embedData(randomSalt, coords);
 			}
 
-			const simdReadings = frictionlessState?.getSimdReadings
-				? await frictionlessState.getSimdReadings()
-				: undefined;
+			// Wait 5 secs for ongoing SIMD, else submit without
+			const simdReadings = await getSimdReadingsForSubmit(frictionlessState);
 			const hpValue = getHoneypotValue?.();
 			const clientMetaData = hpValue ? { hp: hpValue } : undefined;
 			const verifiedSolution = await providerApi.submitPuzzleCaptchaSolution(
@@ -442,6 +443,7 @@ export const Manager = (
 									userTimestampSignature.signature.toString(),
 							},
 						},
+						[ApiParams.captchaType]: CaptchaType.puzzle,
 					}),
 				);
 				setValidChallengeTimeout();

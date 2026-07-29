@@ -1,5 +1,83 @@
 # @prosopo/procaptcha-puzzle
 
+## 2.10.39
+### Patch Changes
+
+- Updated dependencies [a0cb39e]
+  - @prosopo/types@4.9.12
+  - @prosopo/api@3.5.19
+  - @prosopo/procaptcha-common@2.11.17
+
+## 2.10.38
+### Patch Changes
+
+- Updated dependencies [b9ca0e7]
+- Updated dependencies [fde6896]
+  - @prosopo/types@4.9.11
+  - @prosopo/common@3.1.47
+  - @prosopo/api@3.5.18
+  - @prosopo/procaptcha-common@2.11.16
+
+## 2.10.37
+### Patch Changes
+
+  - @prosopo/procaptcha-common@2.11.15
+
+## 2.10.36
+### Patch Changes
+
+- a41c1b5: fix(database): puzzle records now persist submittedAtTimestamp / verifiedAtTimestamp / failedAtTimestamp
+  
+  Puzzle server-verify was returning verified:false on every solved puzzle in production. Root cause: updatePuzzleCaptchaRecordResult wrote submittedAtTimestamp via a $ifNull aggregation expression inside a pipeline $set, and mongoose silently dropped it on the wire — 0 of the last 3002 submitted puzzle records had the field. Reading the record back in serverVerifyPuzzleCaptchaSolution then treated missing submittedAtTimestamp as Number.POSITIVE_INFINITY, tripping submitToVerifyMs > timeout → TIMESTAMP_TOO_OLD on every request.
+  
+  - Rewrite updatePuzzleCaptchaRecordResult and updatePuzzleCaptchaRecord to write the timestamp fields directly (no $ifNull). Safe because puzzle rejects re-submissions at puzzleTasks.ts:228-233 — each stamp is only ever written once. The change also lets both writes drop the pipeline form and use a plain $set.
+  - Add submittedAtTimestamp to the projection in getPuzzleCaptchaRecordByChallenge — the recency check couldn't see the field even after it was persisted, because the projection stripped it.
+  - Reinstate the puzzle end-to-end cypress spec that was reverted in PR #2855 (it was correctly surfacing this bug — the previous decision to remove it was wrong). The puzzle piece gets a data-cy selector gated on NODE_ENV !== "production" so esbuild strips it from production bundles — cypress builds with NODE_ENV=development to include the selector for the test, but real deploys don't ship a bot-friendly querySelector.
+
+## 2.10.35
+### Patch Changes
+
+- 0a4f902: fix(server): dispatch verify by captchaType so puzzle tokens hit the puzzle endpoint
+  
+  Puzzle tokens were silently failing server-side verification. `ProsopoServer.verifyProvider` only had two branches — `challenge` present → PoW verify, absent → image verify — but puzzle tokens carry a challenge too, so they were routed to `/VerifyPowCaptchaSolution` and 404'd on the pow record lookup (`captchastorage.puzzlecaptchas.serverChecked` stayed 0/N in prod). Customers using the puzzle flow got `verified: false` on legitimate solvers.
+  
+  Fix in two parts:
+  
+  - `@prosopo/types`: adds `captchaType?: CaptchaType` to `ProcaptchaOutputSchema` and appends `Option(str)` to `ProcaptchaTokenCodec`. The pre-existing binary layout is preserved in a frozen `ProcaptchaTokenCodecV1`, and `decodeProcaptchaOutput` falls back to it for tokens minted by client bundles that predate this field.
+  - `@prosopo/server`: `verifyProvider` now dispatches on `captchaType` (puzzle → `submitPuzzleCaptchaVerify`, pow → `submitPowCaptchaVerify`, image → `verifyDappUser`) with per-type `cachedTimeout` recency checks. The legacy challenge heuristic is kept as a fallback for old tokens with a `warn`-level log so ops can see the tail-off.
+  - `@prosopo/procaptcha-pow` / `procaptcha-puzzle` / `procaptcha`: each Manager now sets the correct `captchaType` on the object passed to `encodeProcaptchaOutput`.
+  
+  Backwards compatibility: pow and image tokens minted by any prior client bundle continue to verify. Puzzle tokens minted by old bundles still fall through to the pow branch and 404 — same behaviour as before — until the customer upgrades both the client bundle and `@prosopo/server` together.
+- Updated dependencies [0a4f902]
+  - @prosopo/types@4.9.10
+  - @prosopo/api@3.5.17
+  - @prosopo/procaptcha-common@2.11.14
+
+## 2.10.34
+### Patch Changes
+
+- b500d56: fix(widget): enforce single language across widget, kill browser/config race
+  
+  `WidgetFactory.getCaptchaRenderer()` booted the i18n singleton with the
+  browser-detected language before the site-owner `renderOptions.language` /
+  `data-language` had been resolved, and each widget then called
+  `i18n.changeLanguage(config.language)` from a post-mount effect. Any child
+  component that read `useTranslation()` between first render and the async
+  `changeLanguage` resolution rendered in the browser language, then re-rendered
+  in the site-owner language — the multi-language flash customers reported.
+  
+  Resolve the site-owner language in `WidgetFactory.createWidget()` before the
+  lazy renderer load and thread it into `loadI18next(false, lng)`, so the
+  singleton boots (or reconciles via `changeLanguage` + await) with the correct
+  language before React mounts. Site-owner language wins; falls back to browser
+  detection only when no `language` / `data-language` is set.
+- Updated dependencies [b500d56]
+  - @prosopo/locale@3.2.7
+  - @prosopo/common@3.1.46
+  - @prosopo/types@4.9.9
+  - @prosopo/api@3.5.16
+  - @prosopo/procaptcha-common@2.11.13
+
 ## 2.10.33
 ### Patch Changes
 

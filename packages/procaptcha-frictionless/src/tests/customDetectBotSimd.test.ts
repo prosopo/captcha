@@ -24,10 +24,15 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@prosopo/api", () => ({
-	ProviderApi: vi.fn(() => ({
-		getFrictionlessCaptcha: mocks.getFrictionlessCaptcha,
-		assignDetectorBundle: mocks.assignDetectorBundle,
-	})),
+	// customDetectBot does `new ProviderApi(...)`, so the implementation has to
+	// be constructible. vitest 3 tolerated an arrow function here; under vitest 4
+	// it throws "is not a constructor" — arrows have no [[Construct]] slot.
+	ProviderApi: vi.fn(function () {
+		return {
+			getFrictionlessCaptcha: mocks.getFrictionlessCaptcha,
+			assignDetectorBundle: mocks.assignDetectorBundle,
+		};
+	}),
 }));
 
 vi.mock("@prosopo/procaptcha-common", () => ({

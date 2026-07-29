@@ -210,8 +210,8 @@ export default function formFillerInjector(): Plugin {
 	return {
 		name: "form-filler-injector",
 		transformIndexHtml: {
-			enforce: "post", // Run after other HTML transforms
-			transform(html: string, ctx: IndexHtmlTransformContext): string {
+			order: "post", // Run after other HTML transforms
+			handler(html: string, ctx: IndexHtmlTransformContext): string {
 				// Skip if no HTML body is found
 				if (!html.includes("<body") || !html.includes("</body>")) {
 					return html;

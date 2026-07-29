@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/types-env",
-	"version": "2.10.11",
+	"version": "2.10.16",
 	"description": "Types for prosopo environment",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -37,22 +37,22 @@
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
 		"@prosopo/logger": "2.0.3",
-		"@prosopo/keyring": "2.9.56",
-		"@prosopo/types": "4.9.8",
-		"@prosopo/types-database": "4.11.11"
+		"@prosopo/keyring": "2.9.60",
+		"@prosopo/types": "4.9.12",
+		"@prosopo/types-database": "4.11.16"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.3.4",
 		"@types/node": "22.10.2",
-		"@vitest/coverage-v8": "3.2.4",
+		"@vitest/coverage-v8": "4.1.10",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
-		"vite": "6.4.1",
-		"vitest": "3.2.6"
+		"vite": "8.1.5",
+		"vitest": "4.1.10"
 	},
 	"sideEffects": false
 }

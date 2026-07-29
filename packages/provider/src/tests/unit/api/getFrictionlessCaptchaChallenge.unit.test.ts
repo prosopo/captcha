@@ -142,7 +142,9 @@ vi.mock("../../../utils/hashUserIp.js", () => ({
 
 // Mock getMaintenanceMode
 vi.mock("../../../api/admin/apiToggleMaintenanceModeEndpoint.js", () => ({
-	getMaintenanceMode: vi.fn(() => false),
+	getMaintenanceMode: vi.fn(function () {
+		return false;
+	}),
 }));
 
 // Mock getRequestUserScope
@@ -152,7 +154,9 @@ vi.mock("../../../api/blacklistRequestInspector.js", () => ({
 
 // Mock getCompositeIpAddress
 vi.mock("../../../compositeIpAddress.js", () => ({
-	getCompositeIpAddress: vi.fn((ip: string) => ip),
+	getCompositeIpAddress: vi.fn(function (ip: string) {
+		return ip;
+	}),
 }));
 
 vi.mock("../../../tasks/index.js", async () => {
@@ -266,10 +270,16 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 					scoreComponents: sc,
 				}),
 			),
-			scoreIncreaseWebView: vi.fn((bs: number, score: number, sc: unknown) => ({
-				score,
-				scoreComponents: sc,
-			})),
+			scoreIncreaseWebView: vi.fn(function (
+				bs: number,
+				score: number,
+				sc: unknown,
+			) {
+				return {
+					score,
+					scoreComponents: sc,
+				};
+			}),
 			scoreIncreaseTimestamp: vi.fn(
 				(t: number, bs: number, score: number, sc: unknown) => ({
 					score,
@@ -290,7 +300,9 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		tasksInstance = makeMockTasks();
-		(Tasks as unknown as Mock).mockImplementation(() => tasksInstance);
+		(Tasks as unknown as Mock).mockImplementation(function () {
+			return tasksInstance;
+		});
 	});
 
 	it("uses webview or default when both contexts exist", async () => {

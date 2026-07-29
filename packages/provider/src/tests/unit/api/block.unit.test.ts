@@ -49,9 +49,15 @@ describe("blockMiddleware", () => {
 	it("constructs BlacklistRequestInspector lazily on first request", async () => {
 		const { env, mockDb } = buildMockEnv();
 		const mockAbort = vi.fn();
-		vi.mocked(BlacklistRequestInspector).mockReturnValue({
-			abortRequestForBlockedUsers: mockAbort,
-		} as never);
+		// blockMiddleware does `new BlacklistRequestInspector(...)`. vitest 4 no
+		// longer routes mockReturnValue through a construct call — the mock's own
+		// [[Construct]] wins and the returned stub is ignored — so the
+		// implementation has to be a constructible function.
+		vi.mocked(BlacklistRequestInspector).mockImplementation(function () {
+			return {
+				abortRequestForBlockedUsers: mockAbort,
+			} as never;
+		});
 
 		const middleware = blockMiddleware(env);
 
@@ -98,9 +104,15 @@ describe("blockMiddleware", () => {
 	it("caches the inspector across requests", async () => {
 		const { env } = buildMockEnv();
 		const mockAbort = vi.fn();
-		vi.mocked(BlacklistRequestInspector).mockReturnValue({
-			abortRequestForBlockedUsers: mockAbort,
-		} as never);
+		// blockMiddleware does `new BlacklistRequestInspector(...)`. vitest 4 no
+		// longer routes mockReturnValue through a construct call — the mock's own
+		// [[Construct]] wins and the returned stub is ignored — so the
+		// implementation has to be a constructible function.
+		vi.mocked(BlacklistRequestInspector).mockImplementation(function () {
+			return {
+				abortRequestForBlockedUsers: mockAbort,
+			} as never;
+		});
 
 		const middleware = blockMiddleware(env);
 		await middleware({} as never, {} as never, vi.fn() as never);

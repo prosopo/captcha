@@ -23,6 +23,34 @@ import {
 } from "#policy/redis/redisClient.js";
 import { ACCESS_RULES_REDIS_INDEX_NAME } from "#policy/redis/redisRuleIndex.js";
 
+// Bounded-cap variant of `aggregateRedisKeys` for hot-path sub-queries.
+// Uses FT.SEARCH NOCONTENT rather than FT.AGGREGATE + LOAD @__key so the
+// reply is a flat `[total, key1, key2, ...]` list decoded by
+// `SEARCH_NOCONTENT.transformReply`, never a nested tuples array. That
+// side-steps a crash in `@redis/client` 5.x where a `null` tuple returned
+// by the RediSearch coordinator (seen consistently on the split-query
+// ja4Hash probes in prod — several thousand per hour of
+// `TypeError: Cannot read properties of null (reading 'length')`) makes
+// `transformTuplesReply` throw and the whole sub-query resolve empty.
+// Cap fits in a single call because callers pass a small `maxKeys`
+// (SPLIT_MAX_CANDIDATES_PER_SUB, currently 500) — no cursor needed.
+export const searchRedisKeysBounded = async (
+	client: RedisClientType,
+	query: string,
+	maxKeys: number,
+): Promise<string[]> => {
+	const reply = await client.ft.searchNoContent(
+		ACCESS_RULES_REDIS_INDEX_NAME,
+		query,
+		{
+			DIALECT: REDIS_QUERY_DIALECT,
+			LIMIT: { from: 0, size: maxKeys },
+		},
+	);
+
+	return reply.documents;
+};
+
 // aggregation is used for cases when we need to get "unlimited" search results
 export const aggregateRedisKeys = async (
 	client: RedisClientType,

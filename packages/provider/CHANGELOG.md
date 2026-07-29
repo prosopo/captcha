@@ -1,5 +1,164 @@
 # @prosopo/provider
 
+## 4.15.14
+### Patch Changes
+
+- c61dfb5: fix(access-policy): reject Block+captchaType at schema level; add follow-up test coverage
+  
+  **Fix.** The `sanitizeAccessPolicy` helper silently strips `captchaType` and `solvedImagesCount` from Block policies at write time, which meant operators writing e.g. `--block --ip X --captchaType image` got a rule that actually blocked EVERY captcha type for that IP — not just image. Same root cause as the Block+deferToVerify request-time 400 bug (see #2885). Rejecting at input surfaces the mismatch loudly with a message that points the operator at Restrict:
+  
+  ```
+  Block policies cannot pin a captchaType — Block always applies to every
+  captcha type. Use a Restrict policy if you want to narrow the effect to
+  one captcha type.
+  ```
+  
+  `accessPolicyInput` now has a `superRefine` that rejects Block+captchaType and Block+solvedImagesCount. The read path still accepts the legacy shape (records written before the refinement landed can still be parsed by the reader). The `addUserAccessPolicy` script was updated to only emit those fields for Restrict, so its `--block` path no longer 400s.
+  
+  **Follow-up tests added** — closing the gaps flagged in the previous session:
+  
+  - **Coord threading lands on the puzzle record** (`puzzleTasks.unit.test.ts`) — extends the verify-puzzle-solution suite to encode a real salt with `(158, 42)`, submit, and assert `coords[0][0] === [158, 42]` on the persisted record. Guards against a regression that drops the salt decode or writes `[0, 0]` — the whole point of the puzzle DM threading PR (#2873).
+  - **DM deny reason lands on the pow commitment** (`powTasks.unit.test.ts`) — pow's existing "should deny when decision machine returns deny" test only asserted `verified:false`; now also asserts the DM's reason string is persisted on the commitment.
+  - **checkForHardBlock wins over DM deny at verify** (`puzzleTasks.unit.test.ts`) — stubs `checkForHardBlock` to match, stubs the DM to also deny with a distinguishable reason, asserts the commitment carries `ACCESS_POLICY_BLOCK` and that the DM was never consulted. Locks in the ordering that the audit trail depends on.
+  - **Rule expiry** (`redisRulesStorage.integration.test.ts`) — inserts a rule with a 2 s TTL, waits past expiry, asserts the Redis hash is gone and the RediSearch index no longer counts it. The existing "inserts time limited rule" test only verified the TTL was set, not that expired rules stop matching.
+- Updated dependencies [c61dfb5]
+  - @prosopo/user-access-policy@3.12.8
+  - @prosopo/database@3.15.19
+  - @prosopo/types-database@4.11.16
+  - @prosopo/env@3.6.19
+  - @prosopo/types-env@2.10.16
+  - @prosopo/api-express-router@3.1.50
+
+## 4.15.13
+### Patch Changes
+
+- ae7e7f0: fix(access-policy): stop request-time rejection of Block+deferToVerify rules; expand DM cypress coverage to all captcha types
+  
+  **The bug.** Block-type access policies with `deferToVerify: true` — the "solve normally, block silently at verify" pattern — were breaking every /captcha/* request instead. `sanitizeAccessPolicy` strips `captchaType` from every Block policy on write, and the captcha challenge handlers (`getImageCaptchaChallenge`, `getPoWCaptchaChallenge`, `getPuzzleCaptchaChallenge`) fetched the matching policy via `getPrioritisedAccessPolicies` (which does NOT filter out `deferToVerify: true` rules) and passed it to `captchaManager.isValidRequest` — where the `userAccessPolicy.captchaType !== requestedCaptchaType` check reduced to `undefined !== "image"` → 400 INCORRECT_CAPTCHA_TYPE. Same shape at the frictionless entry point in `handleAccessPolicy`, which would 401 instead of letting the flow complete.
+  
+  **The fix.** Filter `deferToVerify` policies out at every request-time load site (mirrors what `blockMiddleware` already does), plus a defensive relaxation of the captchaType check in `isValidRequest` so a policy without a pinned captchaType no longer trips the mismatch. Unit tests added for the request-time filter and the defensive check.
+  
+  **New cypress coverage.** Extended the previously-added routing / decision-machine / access-policy specs so every branch is exercised:
+  
+  - `accessPolicy.cy.ts` — request-time Block (403) AND defer-to-verify Block (200 at request time, block at verify). The second `it` is the regression guard for the bug above.
+  - `decisionMachineDenyPow.cy.ts` + `decisionMachineDenyPuzzle.cy.ts` — decide() DM deny at verify for pow and puzzle (image was already covered). Each captcha task calls decisionMachineRunner.decide() separately, so per-type specs guard against a single verify path dropping the deny hook.
+  - `routingFrictionless.cy.ts` — added the pow branch (baseline pass-through) so all three captcha types are covered end-to-end.
+
+## 4.15.12
+### Patch Changes
+
+- Updated dependencies [a0cb39e]
+  - @prosopo/types@4.9.12
+  - @prosopo/types-database@4.11.15
+  - @prosopo/api@3.5.19
+  - @prosopo/api-express-router@3.1.49
+  - @prosopo/database@3.15.18
+  - @prosopo/datasets@3.1.54
+  - @prosopo/env@3.6.18
+  - @prosopo/ipinfo@0.2.40
+  - @prosopo/keyring@2.9.60
+  - @prosopo/load-balancer@2.10.15
+  - @prosopo/types-env@2.10.15
+  - @prosopo/user-access-policy@3.12.7
+
+## 4.15.11
+### Patch Changes
+
+- b9ca0e7: feat(decision-machine): thread puzzle fields and forward checkbox coords on escalation
+  
+  - Add optional `coords` and `puzzleEvents` to `DecisionMachineInput` so decision machines can gate on entry-point telemetry and puzzle drag trails.
+  - Populate `coords` on the pow, puzzle and image `decide()` inputs. Puzzle also passes `puzzleEvents`. Image gains `behavioralDataPacked` / `deviceCapability` — previously always undefined, which silently disabled the global synthetic-mouse-timing check on the one captcha type it targets.
+  - Extend `ProcaptchaEscalationHandler` with an optional `coords` argument so the PoW widget can forward its trusted checkbox click through the PoW→image/puzzle escalation. The frictionless wrapper prefers escalation coords over pending retry coords. Puzzle and image widgets already accept `startCoords`, so the escalated widget now seeds the salt with the real (x, y) instead of (0, 0).
+- fde6896: fix(user-access-policy,common,provider): quiet two high-volume log spammers
+  
+  - `user-access-policy`: switch the split-query sub-probes from `FT.AGGREGATE + LOAD @__key` to `FT.SEARCH NOCONTENT`. The aggregate reply path in `@redis/client` 5.x can throw on a null result row and the sub-query then silently returns `[]`; the NOCONTENT reply shape doesn't have that failure mode. Removes ~2k error logs per hour without changing lookup semantics.
+  - `common`: `ProsopoBaseError` auto-logs now carry a `msg` field (mirroring the translation key). Previously every auto-logged error landed in the "undefined msg" bucket in log dashboards (~800/hour).
+  - `provider`: add the missing `msg` on the image-verify catch that emits the same pattern.
+- Updated dependencies [b9ca0e7]
+- Updated dependencies [fde6896]
+  - @prosopo/types@4.9.11
+  - @prosopo/user-access-policy@3.12.6
+  - @prosopo/common@3.1.47
+  - @prosopo/api@3.5.18
+  - @prosopo/api-express-router@3.1.48
+  - @prosopo/database@3.15.17
+  - @prosopo/datasets@3.1.53
+  - @prosopo/env@3.6.17
+  - @prosopo/ipinfo@0.2.39
+  - @prosopo/keyring@2.9.59
+  - @prosopo/load-balancer@2.10.14
+  - @prosopo/types-database@4.11.14
+  - @prosopo/types-env@2.10.14
+
+## 4.15.10
+### Patch Changes
+
+- Updated dependencies [a39c4ec]
+  - @prosopo/load-balancer@2.10.13
+
+## 4.15.9
+### Patch Changes
+
+- Updated dependencies [a41c1b5]
+  - @prosopo/database@3.15.16
+  - @prosopo/env@3.6.16
+  - @prosopo/api-express-router@3.1.47
+
+## 4.15.8
+### Patch Changes
+
+- Updated dependencies [0a4f902]
+  - @prosopo/types@4.9.10
+  - @prosopo/api@3.5.17
+  - @prosopo/api-express-router@3.1.46
+  - @prosopo/database@3.15.15
+  - @prosopo/datasets@3.1.52
+  - @prosopo/env@3.6.15
+  - @prosopo/ipinfo@0.2.38
+  - @prosopo/keyring@2.9.58
+  - @prosopo/load-balancer@2.10.12
+  - @prosopo/types-database@4.11.13
+  - @prosopo/types-env@2.10.13
+  - @prosopo/user-access-policy@3.12.5
+
+## 4.15.7
+### Patch Changes
+
+- 6b17995: fix(provider): skip city and distance IP validation rules for same trusted provider
+  
+  Dual-stack and CGNAT subscribers routinely egress via different POPs of the same operator (e.g. AT&T's BellSouth v4 pool + AT&T Internet v6 pool — distinct ASNs but identical `company.name` from ipapi). The city-change and distance-exceed rules previously fired on such traffic, producing PoW captcha rejections with `City changed from Laredo to Los Angeles; IP addresses are 1930km apart` even though the ISP-change rule correctly recognised the provider match.
+  
+  `evaluateIpValidationRules` now gates the city-change and distance-exceed rule blocks on a `sameTrustedProvider` precondition: both providers match (non-`"Unknown"`), same `countryCode`, and neither endpoint is a datacenter (guards against AWS/Cloudflare same-`company.name` false negatives where "same corporate owner" absolutely does not mean "same subscriber"). Country-change, ISP-change, VPN/proxy, and abuse-score rules are unchanged.
+- b394cc5: fix(provider): stop treating apex-TLS-handshake failure as spam-email evidence
+  
+  `checkSpamEmail` was auto-rejecting any email domain whose apex website failed a modern TLS handshake (`https://<domain>` → `EPROTO` / `unsupported protocol`). This is a property of the web server, not the email domain — small-business domains routinely host mail on modern providers (Zoho / Google / Fastmail) while the apex site runs legacy Apache with only TLSv1.0 and an expired self-signed cert, and modern Node/OpenSSL 3 refuses those handshakes.
+  
+  The `tlsError → return true` short-circuit is removed. The TLS observation is still logged (as `info`, for signal), and the check now falls through to the remaining DNS signals (redirect-target spam lookup, CNAME spam lookup, MX-target spam lookup) — those are the signals that actually reflect email reputation. Existing coverage on those paths is unchanged; two unit tests cover the new behaviour (apex TLS error alone is not spam; spam via MX is still caught when apex has a TLS error).
+- Updated dependencies [446f53b]
+  - @prosopo/database@3.15.14
+  - @prosopo/env@3.6.14
+  - @prosopo/api-express-router@3.1.45
+
+## 4.15.6
+### Patch Changes
+
+- Updated dependencies [2bba03a]
+- Updated dependencies [b500d56]
+  - @prosopo/database@3.15.13
+  - @prosopo/types-database@4.11.12
+  - @prosopo/locale@3.2.7
+  - @prosopo/env@3.6.13
+  - @prosopo/types-env@2.10.12
+  - @prosopo/api-express-router@3.1.44
+  - @prosopo/common@3.1.46
+  - @prosopo/types@4.9.9
+  - @prosopo/datasets@3.1.51
+  - @prosopo/keyring@2.9.57
+  - @prosopo/load-balancer@2.10.11
+  - @prosopo/user-access-policy@3.12.4
+  - @prosopo/api@3.5.16
+  - @prosopo/ipinfo@0.2.37
+
 ## 4.15.5
 ### Patch Changes
 

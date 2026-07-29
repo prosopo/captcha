@@ -23,16 +23,23 @@ vi.mock("@prosopo/database", () => ({
 	ProviderDatabase: mockProviderDatabase,
 }));
 
+// env.ts does `new IpInfoService(...)` / `new Keyring(...)`. vitest 4 requires a
+// constructible implementation — an arrow has no [[Construct]] slot and the mock
+// throws ("did not use 'function' or 'class' in its implementation").
 vi.mock("@prosopo/ipinfo", () => ({
-	IpInfoService: vi.fn().mockImplementation(() => ({
-		initialize: mockIpInfoInit,
-	})),
+	IpInfoService: vi.fn().mockImplementation(function () {
+		return {
+			initialize: mockIpInfoInit,
+		};
+	}),
 }));
 
 vi.mock("@prosopo/keyring", () => ({
-	Keyring: vi.fn().mockImplementation(() => ({
-		addPair: vi.fn((p) => p),
-	})),
+	Keyring: vi.fn().mockImplementation(function () {
+		return {
+			addPair: vi.fn((p) => p),
+		};
+	}),
 	getPair: vi.fn(() => ({
 		address: "addr",
 		isLocked: false,
@@ -90,11 +97,13 @@ describe("Environment.isReady — maintenance mode startup tolerance", () => {
 	});
 
 	it("throws when DB connect fails and maintenance mode is off", async () => {
-		mockProviderDatabase.mockImplementation(() => ({
-			connect: vi.fn().mockRejectedValue(new Error("ECONNREFUSED")),
-			connected: false,
-			connection: { readyState: 0 },
-		}));
+		mockProviderDatabase.mockImplementation(function () {
+			return {
+				connect: vi.fn().mockRejectedValue(new Error("ECONNREFUSED")),
+				connected: false,
+				connection: { readyState: 0 },
+			};
+		});
 
 		const env = buildEnv();
 		await expect(env.isReady()).rejects.toMatchObject({
@@ -105,11 +114,13 @@ describe("Environment.isReady — maintenance mode startup tolerance", () => {
 	it("creates the DB handle and connects in the background when maintenance mode is on", async () => {
 		process.env.MAINTENANCE_MODE = "true";
 		const connect = vi.fn().mockResolvedValue(undefined);
-		mockProviderDatabase.mockImplementation(() => ({
-			connect,
-			connected: false,
-			connection: { readyState: 0 },
-		}));
+		mockProviderDatabase.mockImplementation(function () {
+			return {
+				connect,
+				connected: false,
+				connection: { readyState: 0 },
+			};
+		});
 
 		const env = buildEnv();
 		await env.isReady();
@@ -127,11 +138,13 @@ describe("Environment.isReady — maintenance mode startup tolerance", () => {
 	it("does not gate boot when the background DB connect fails in maintenance mode", async () => {
 		process.env.MAINTENANCE_MODE = "true";
 		const connect = vi.fn().mockRejectedValue(new Error("ECONNREFUSED"));
-		mockProviderDatabase.mockImplementation(() => ({
-			connect,
-			connected: false,
-			connection: { readyState: 0 },
-		}));
+		mockProviderDatabase.mockImplementation(function () {
+			return {
+				connect,
+				connected: false,
+				connection: { readyState: 0 },
+			};
+		});
 
 		const env = buildEnv();
 		// Unlike the maintenance-off path, a failing connect must NOT reject
@@ -148,11 +161,13 @@ describe("Environment.isReady — maintenance mode startup tolerance", () => {
 
 	it("still completes the normal connect path when Mongo is up", async () => {
 		const connect = vi.fn().mockResolvedValue(undefined);
-		mockProviderDatabase.mockImplementation(() => ({
-			connect,
-			connected: true,
-			connection: { readyState: 1 },
-		}));
+		mockProviderDatabase.mockImplementation(function () {
+			return {
+				connect,
+				connected: true,
+				connection: { readyState: 1 },
+			};
+		});
 
 		const env = buildEnv();
 		await env.isReady();

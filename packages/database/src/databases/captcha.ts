@@ -18,7 +18,9 @@ import {
 	type CaptchaProperties,
 	type ICaptchaDatabase,
 	type PoWCaptchaRecord,
+	type PuzzleCaptchaRecord,
 	StoredPoWCaptchaRecordSchema,
+	StoredPuzzleCaptchaRecordSchema,
 	type StoredSession,
 	StoredSessionRecordSchema,
 	StoredUserCommitmentRecordSchema,
@@ -47,6 +49,7 @@ enum TableNames {
 	session = "session",
 	commitment = "commitment",
 	powcaptcha = "powcaptcha",
+	puzzlecaptcha = "puzzlecaptcha",
 }
 
 const CAPTCHA_TABLES = [
@@ -64,6 +67,11 @@ const CAPTCHA_TABLES = [
 		collectionName: TableNames.commitment,
 		modelName: "UserCommitment",
 		schema: StoredUserCommitmentRecordSchema,
+	},
+	{
+		collectionName: TableNames.puzzlecaptcha,
+		modelName: "PuzzleCaptcha",
+		schema: StoredPuzzleCaptchaRecordSchema,
 	},
 ];
 
@@ -191,6 +199,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		sessionEvents: StoredSession[],
 		imageCaptchaEvents: UserCommitmentRecord[],
 		powCaptchaEvents: PoWCaptchaRecord[],
+		puzzleCaptchaEvents: PuzzleCaptchaRecord[] = [],
 	) {
 		await this.connect();
 		if (sessionEvents.length) {
@@ -264,6 +273,31 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 			}));
 		}
 
+		if (puzzleCaptchaEvents.length) {
+			const result = await this.tables.puzzlecaptcha.bulkWrite(
+				puzzleCaptchaEvents.map((doc) => {
+					const { _id, ...safeDoc } = doc;
+					const normalised = CaptchaDatabase.normaliseDocCompositeIps(safeDoc);
+					return {
+						updateOne: {
+							filter: { challenge: normalised.challenge },
+							update: { $set: normalised },
+							upsert: true,
+						},
+					};
+				}),
+			);
+			logger.info(() => ({
+				data: {
+					upsertedCount: result.upsertedCount,
+					matchedCount: result.matchedCount,
+					modifiedCount: result.modifiedCount,
+					totalProcessed: puzzleCaptchaEvents.length,
+				},
+				msg: "Mongo Saved Puzzle Events",
+			}));
+		}
+
 		await this.close();
 	}
 
@@ -273,6 +307,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 	): Promise<{
 		userCommitmentRecords: UserCommitmentRecord[];
 		powCaptchaRecords: PoWCaptchaRecord[];
+		puzzleCaptchaRecords: PuzzleCaptchaRecord[];
 	}> {
 		await this.connect();
 
@@ -287,9 +322,15 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 				.limit(limit)
 				.lean<PoWCaptchaRecord[]>();
 
+			const puzzleCaptchaResults = await this.tables.puzzlecaptcha
+				.find(filter)
+				.limit(limit)
+				.lean<PuzzleCaptchaRecord[]>();
+
 			return {
 				userCommitmentRecords: commitmentResults,
 				powCaptchaRecords: powCaptchaResults,
+				puzzleCaptchaRecords: puzzleCaptchaResults,
 			};
 		} catch (error) {
 			throw new ProsopoDBError("DATABASE.QUERY_ERROR", {

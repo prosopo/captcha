@@ -60,7 +60,9 @@ import {
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import { Long } from "bson";
 import type mongoose from "mongoose";
-import { type Document, type Model, type ObjectId, Schema } from "mongoose";
+// Types.ObjectId (not the bare ObjectId export, which is the schema type) is what
+// Document._id carries; the two stopped matching structurally in mongoose 8.24.
+import { type Document, type Model, Schema, type Types } from "mongoose";
 import { any, date, nativeEnum, object, type infer as zInfer } from "zod";
 import { UserSettingsSchema } from "./client.js";
 import type { IDatabase } from "./mongo.js";
@@ -958,17 +960,17 @@ export interface IProviderDatabase extends IDatabase {
 	): Promise<ScheduledTaskRecord | undefined>;
 
 	getScheduledTaskStatus(
-		taskId: ObjectId,
+		taskId: Types.ObjectId,
 		status: ScheduledTaskStatus,
 	): Promise<ScheduledTaskRecord | undefined>;
 
 	createScheduledTaskStatus(
 		task: ScheduledTaskNames,
 		status: ScheduledTaskStatus,
-	): Promise<ObjectId>;
+	): Promise<Types.ObjectId>;
 
 	updateScheduledTaskStatus(
-		taskId: ObjectId,
+		taskId: Types.ObjectId,
 		status: ScheduledTaskStatus,
 		result?: ScheduledTaskResult,
 	): Promise<void>;

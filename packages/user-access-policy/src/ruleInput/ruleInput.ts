@@ -20,7 +20,7 @@ import {
 	type AccessRulesFilter,
 	FilterScopeMatch,
 } from "#policy/rulesStorage.js";
-import { accessPolicyInput, policyScopeInput } from "./policyInput.js";
+import { accessPolicyInputShape, policyScopeInput } from "./policyInput.js";
 import { type UserScopeInput, userScopeInput } from "./userScopeInput.js";
 
 type RuleGroupInput = {
@@ -49,13 +49,20 @@ const ruleGroupInput = z
 	});
 
 // Explicit `ZodType<…, ZodTypeDef, unknown>` annotation rather than the
-// strict-identity form because `accessPolicyInput.shape.deferToVerify`
+// strict-identity form because `accessPolicyInputShape.shape.deferToVerify`
 // uses `z.preprocess` which widens the input position to `unknown`. The
 // relaxed annotation is portable for declaration emit; the `transform`
 // pins the OUTPUT to AccessRule.
+//
+// Uses the unrefined `accessPolicyInputShape` (not `accessPolicyInput`)
+// because the API-write refinement rejecting Block+captchaType is a
+// write-time input guard — the READ path (Redis reader → accessRuleInput
+// parse) must still accept the legacy shapes for records written before
+// the refinement landed. Otherwise the reader would throw on every
+// pre-existing Block rule that carried a stripped captchaType field.
 export const accessRuleInput: ZodType<AccessRule, z.ZodTypeDef, unknown> = z
 	.object({
-		...accessPolicyInput.shape,
+		...accessPolicyInputShape.shape,
 		...policyScopeInput.shape,
 	})
 	.and(userScopeInput)

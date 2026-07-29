@@ -115,13 +115,15 @@ export default (
 				countryCode,
 				asn,
 			);
+			// Skip deferToVerify policies at request time — see
+			// getImageCaptchaChallenge for the full rationale.
 			const userAccessPolicy = (
 				await tasks.puzzleCaptchaManager.getPrioritisedAccessPolicies(
 					userAccessRulesStorage,
 					dapp,
 					userScope,
 				)
-			)[0];
+			).find((p) => !p.deferToVerify);
 
 			const {
 				valid,

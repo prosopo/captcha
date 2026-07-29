@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 export { default as VitePluginCloseAndCopy } from "./vite-plugin-close-and-copy.js";
+export { default as VitePluginExternalizeObfuscatorDeadCode } from "./vite-plugin-externalize-obfuscator-deadcode.js";
 export { default as ViteTestConfig } from "./vite.test.config.js";
 export { default as ViteThreadsTestConfig } from "./vite.threads.test.config.js";
 export { default as VitePluginSourceMapExclude } from "./vite-plugin-sourcemap-exclude.js";

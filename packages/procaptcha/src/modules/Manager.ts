@@ -22,16 +22,18 @@ import {
 import {
 	ExtensionLoader,
 	buildUpdateState,
+	getDefaultEvents,
 	getProcaptchaRandomActiveProvider,
+	getSimdReadingsForSubmit,
 	pickIpMode,
 	providerRetry,
 } from "@prosopo/procaptcha-common";
-import { getDefaultEvents } from "@prosopo/procaptcha-common";
 import {
 	type Account,
 	ApiParams,
 	type CaptchaResponseBody,
 	type CaptchaSolution,
+	CaptchaType,
 	type FrictionlessState,
 	type ProcaptchaCallbacks,
 	type ProcaptchaClientConfigInput,
@@ -341,9 +343,8 @@ export function Manager(
 					}
 				}
 
-				const simdReadings = frictionlessState?.getSimdReadings
-					? await frictionlessState.getSimdReadings()
-					: undefined;
+				// Wait 5 secs for ongoing SIMD, else submit without
+				const simdReadings = await getSimdReadingsForSubmit(frictionlessState);
 				const hpValue = getHoneypotValue?.();
 				const clientMetaData = hpValue ? { hp: hpValue } : undefined;
 				// send the commitment to the provider
@@ -386,6 +387,7 @@ export function Manager(
 									[ApiParams.timestamp]: userTimestampSignature.signature,
 								},
 							},
+							[ApiParams.captchaType]: CaptchaType.image,
 						}),
 					);
 					setValidChallengeTimeout();

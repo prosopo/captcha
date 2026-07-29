@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-puzzle",
-	"version": "2.10.33",
+	"version": "2.10.39",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "dist/index.js",
@@ -30,11 +30,11 @@
 	"browserslist": ["> 0.5%, last 2 versions, not dead"],
 	"dependencies": {
 		"@polkadot/util": "13.5.7",
-		"@prosopo/api": "3.5.15",
-		"@prosopo/common": "3.1.45",
-		"@prosopo/locale": "3.2.6",
-		"@prosopo/procaptcha-common": "2.11.12",
-		"@prosopo/types": "4.9.8",
+		"@prosopo/api": "3.5.19",
+		"@prosopo/common": "3.1.47",
+		"@prosopo/locale": "3.2.7",
+		"@prosopo/procaptcha-common": "2.11.17",
+		"@prosopo/types": "4.9.12",
 		"@prosopo/util": "3.3.4",
 		"@prosopo/util-crypto": "13.5.30",
 		"@prosopo/widget-skeleton": "2.8.4",
@@ -45,15 +45,15 @@
 		"@emotion/react": "11.11.1",
 		"@emotion/styled": "11.11.0",
 		"@types/node": "22.5.5",
-		"@vitest/coverage-v8": "3.2.4",
+		"@vitest/coverage-v8": "4.1.10",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
-		"vite": "6.4.1",
-		"vitest": "3.2.4"
+		"vite": "8.1.5",
+		"vitest": "4.1.10"
 	},
 	"repository": {
 		"type": "git",
