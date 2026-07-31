@@ -12,5 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export { IpInfoService } from "./IpInfoService.js";
+export { IpInfoService, isNonRoutable } from "./IpInfoService.js";
+export type { IpInfoBackends } from "./IpInfoService.js";
+// The backends and their injection seams are part of the surface: without them
+// a consumer cannot substitute either backend, and callers that already know an
+// address is private cannot skip the lookup.
+export { IpapiBackend } from "./backends/ipapi.js";
+export type { FetchFn, IpapiBackendConfig } from "./backends/ipapi.js";
+export { MaxMindBackend } from "./backends/maxmind.js";
+export type { MaxMindBackendConfig, OpenReader } from "./backends/maxmind.js";
 export type { IIpInfoService, IpInfoServiceConfig } from "./types.js";
