@@ -11,14 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { isMain } from "@prosopo/util";
-import { main } from "./fileServer.js";
+import { ViteTestConfig } from "@prosopo/config";
 
-export * from "./fileServer.js";
+process.env.NODE_ENV = "test";
 
-//if main process
-if (isMain(import.meta.url)) {
-	main().catch((error) => {
-		console.error(error);
-	});
-}
+export default ViteTestConfig();
