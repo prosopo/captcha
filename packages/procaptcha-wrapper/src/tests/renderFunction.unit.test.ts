@@ -181,6 +181,40 @@ describe("loadRenderFunction", () => {
 		await loading;
 	});
 
+	it("removes the tag when the script loads but is the wrong script", async () => {
+		// Same reasoning as a failed load: a retry must not find a stale tag
+		// sitting on the id it is about to reuse.
+		const loading = loadRenderFunction(SCRIPT_URL, SCRIPT_ID);
+		await settleScript("load");
+		await expect(loading).rejects.toThrow();
+
+		expect(document.getElementById(SCRIPT_ID)).toBeNull();
+	});
+
+	it("leaves a retry with exactly one tag after a wrong-script load", async () => {
+		const first = loadRenderFunction(SCRIPT_URL, SCRIPT_ID);
+		await settleScript("load");
+		await expect(first).rejects.toThrow();
+
+		const second = loadRenderFunction(SCRIPT_URL, SCRIPT_ID);
+		await Promise.resolve();
+		window.procaptcha = { render: noopRender };
+		lastScript().dispatchEvent(new Event("load"));
+
+		await expect(second).resolves.toBe(noopRender);
+		expect(document.querySelectorAll(`#${SCRIPT_ID}`)).toHaveLength(1);
+	});
+
+	it("keeps the tag when the script loads successfully", async () => {
+		const loading = loadRenderFunction(SCRIPT_URL, SCRIPT_ID);
+		await Promise.resolve();
+		window.procaptcha = { render: noopRender };
+		lastScript().dispatchEvent(new Event("load"));
+		await loading;
+
+		expect(document.getElementById(SCRIPT_ID)).not.toBeNull();
+	});
+
 	it("throws when the script loads but installs no procaptcha global", async () => {
 		const loading = loadRenderFunction(SCRIPT_URL, SCRIPT_ID);
 		await settleScript("load");

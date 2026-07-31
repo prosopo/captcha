@@ -31,6 +31,10 @@ export const loadRenderFunction = async (
 	});
 
 	if (undefined === window.procaptcha?.render) {
+		// The script loaded but is not the one we wanted. Leaving the tag behind
+		// would let a retry append a second tag carrying the same id, just as a
+		// failed load would.
+		document.getElementById(scriptId)?.remove();
 		throw new Error("Render script does not contain the render function");
 	}
 
