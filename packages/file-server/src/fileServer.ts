@@ -102,10 +102,18 @@ export const toInt = (
 	return Number.isNaN(parsed) ? undefined : parsed;
 };
 
-/** Read configuration from the environment, loading the matching .env first. */
+/**
+ * Read configuration from the environment, loading the matching .env first.
+ *
+ * The .env load is skipped when a caller supplies its own `env`: dotenv writes
+ * into `process.env` and cannot populate an arbitrary object, so loading it
+ * would mutate global state without affecting a single value read below.
+ */
 export const getEnv = (env: NodeJS.ProcessEnv = process.env): FileServerEnv => {
-	const path = env.NODE_ENV ? `.env.${env.NODE_ENV}` : ".env";
-	dotenv.config({ path });
+	if (env === process.env) {
+		const path = env.NODE_ENV ? `.env.${env.NODE_ENV}` : ".env";
+		dotenv.config({ path });
+	}
 	return {
 		port: env.PROSOPO_FILE_SERVER_PORT || DEFAULT_PORT,
 		paths: parseArray(env.PROSOPO_FILE_SERVER_PATHS || "[]"),

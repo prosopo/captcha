@@ -255,6 +255,31 @@ describe("getEnv", () => {
 		// Never coerced, so a non-numeric port reaches listen() untouched.
 		expect(getEnv({ PROSOPO_FILE_SERVER_PORT: "4000" }).port).toBe("4000");
 	});
+
+	it("does not mutate process.env when a custom env is supplied", () => {
+		// dotenv writes into process.env and cannot populate an arbitrary object,
+		// so loading it for an injected env would be a side effect with no effect.
+		process.env.NODE_ENV = "test";
+		const before = { ...process.env };
+
+		getEnv({ PROSOPO_FILE_SERVER_PORT: "4000" });
+
+		expect({ ...process.env }).toEqual(before);
+	});
+
+	it("reads process.env when no env is supplied", () => {
+		process.env.PROSOPO_FILE_SERVER_PORT = "4321";
+
+		expect(getEnv().port).toBe("4321");
+	});
+
+	it("falls back to the unsuffixed .env when NODE_ENV is unset", () => {
+		// Assigning undefined would store the string "undefined", so remove it.
+		Reflect.deleteProperty(process.env, "NODE_ENV");
+		process.env.PROSOPO_FILE_SERVER_PORT = "4322";
+
+		expect(getEnv().port).toBe("4322");
+	});
 });
 
 describe("createApp static serving", () => {
