@@ -21,7 +21,11 @@
 import type { Asn, City, ReaderModel } from "@maxmind/geoip2-node";
 import type { IPInfoResult } from "@prosopo/types";
 import { describe, expect, it, vi } from "vitest";
-import { MaxMindBackend, type OpenReader } from "../backends/maxmind.js";
+import {
+	MaxMindBackend,
+	type MaxMindUserType,
+	type OpenReader,
+} from "../backends/maxmind.js";
 
 const IP = "8.8.8.8";
 const CITY_DB = "/dbs/GeoLite2-City.mmdb";
@@ -418,7 +422,10 @@ describe("MaxMindBackend.lookup", () => {
 			return expectValid(await backend.lookup(IP)).providerType;
 		};
 
-		const expected: Record<string, string | undefined> = {
+		// Typed as a total Record over the union, so adding a user type to
+		// MaxMindUserType without deciding its mapping fails the type check
+		// rather than silently falling through to undefined at runtime.
+		const expected: Record<MaxMindUserType, string | undefined> = {
 			hosting: "hosting",
 			content_delivery_network: "hosting",
 			college: "education",
@@ -433,6 +440,10 @@ describe("MaxMindBackend.lookup", () => {
 			cafe: "isp",
 			traveler: "isp",
 			router: "isp",
+			// Deliberately unmapped: neither is a provider type the consumers
+			// route on, so both reach the `default` arm and report "no data".
+			consumer_privacy_network: undefined,
+			search_engine_spider: undefined,
 		};
 
 		for (const [userType, providerType] of Object.entries(expected)) {

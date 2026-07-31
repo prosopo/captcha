@@ -185,7 +185,7 @@ export class MaxMindBackend {
 	}
 }
 
-type MaxMindUserType =
+export type MaxMindUserType =
 	| "business"
 	| "cafe"
 	| "cellular"
