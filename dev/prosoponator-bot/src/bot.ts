@@ -14,96 +14,192 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 
-async function disapprove(args: string[]) {
-	console.log("disapprove");
-	const token =
-		core.getInput("github-token") ||
-		process.env.GITHUB_TOKEN ||
-		process.env.GH_TOKEN ||
-		"";
-	const octokit = github.getOctokit(token);
-	console.log("reacting");
-	octokit.rest.reactions.createForIssueComment({
-		owner: github.context.repo.owner,
-		repo: github.context.repo.repo,
-		comment_id: github.context.payload.comment?.id || -1,
-		content: "+1",
-	});
-	console.log("disapproving");
-	octokit.rest.pulls.createReview({
-		owner: github.context.repo.owner,
-		repo: github.context.repo.repo,
-		pull_number: github.context.payload.issue?.number || -1,
-		event: "REQUEST_CHANGES",
-		body: `Disapproved by @${github.context.actor}`,
-	});
-	console.log("done");
+/** The name the bot answers to, as the first word of a comment. */
+export const TAG = "prosoponator";
+
+/**
+ * The comment author's relationship to the repository, as GitHub reports it.
+ *
+ * Only the write-bearing values are acted on. Anything else — including
+ * `CONTRIBUTOR`, which merely means the account has had a pull request merged
+ * once — gets no say over whether a pull request is approved.
+ */
+export const PRIVILEGED_ASSOCIATIONS: ReadonlySet<string> = new Set([
+	"OWNER",
+	"MEMBER",
+	"COLLABORATOR",
+]);
+
+/** The parts of an issue comment event the bot acts on. */
+export interface CommentEvent {
+	eventName: string;
+	actor: string;
+	repo: { owner: string; repo: string };
+	commentId: number | undefined;
+	issueNumber: number | undefined;
+	commentBody: string | undefined;
+	authorAssociation: string | undefined;
 }
 
-async function approve(args: string[]) {
-	console.log("approve");
-	const token =
-		core.getInput("github-token") ||
-		process.env.GITHUB_TOKEN ||
-		process.env.GH_TOKEN ||
-		"";
-	const octokit = github.getOctokit(token);
-	console.log("reacting");
-	octokit.rest.reactions.createForIssueComment({
-		owner: github.context.repo.owner,
-		repo: github.context.repo.repo,
-		comment_id: github.context.payload.comment?.id || -1,
-		content: "+1",
-	});
-	console.log("approving");
-	octokit.rest.pulls.createReview({
-		owner: github.context.repo.owner,
-		repo: github.context.repo.repo,
-		pull_number: github.context.payload.issue?.number || -1,
-		event: "APPROVE",
-		body: `Approved by @${github.context.actor}`,
-	});
-	console.log("done");
+/** The octokit calls the bot makes. */
+export interface GitHubApi {
+	react: (input: {
+		owner: string;
+		repo: string;
+		comment_id: number;
+		content: "+1" | "confused";
+	}) => Promise<unknown>;
+	review: (input: {
+		owner: string;
+		repo: string;
+		pull_number: number;
+		event: "APPROVE" | "REQUEST_CHANGES";
+		body: string;
+	}) => Promise<unknown>;
+	comment: (input: {
+		owner: string;
+		repo: string;
+		issue_number: number;
+		body: string;
+	}) => Promise<unknown>;
 }
 
-async function help(args: string[]) {
-	console.log("help");
-	const token =
-		core.getInput("github-token") ||
-		process.env.GITHUB_TOKEN ||
-		process.env.GH_TOKEN ||
-		"";
+export interface BotDeps {
+	api: GitHubApi;
+	event: CommentEvent;
+	log: (...values: unknown[]) => void;
+}
+
+/**
+ * The token, in the order the action's inputs take precedence.
+ *
+ * Returns undefined rather than "" when nothing is set. The empty string used
+ * to be handed to `getOctokit` as though it were a token, so an unconfigured
+ * action built an unauthenticated client and failed with a 401 on its first
+ * write — after it had already reacted to the comment.
+ */
+export const resolveToken = (
+	getInput: (name: string) => string,
+	env: Record<string, string | undefined>,
+): string | undefined => {
+	// Each source is consulted only if the ones before it had nothing, so a
+	// workflow that supplies the input never has its environment read.
+	for (const read of [
+		(): string | undefined => getInput("github-token"),
+		(): string | undefined => env.GITHUB_TOKEN,
+		(): string | undefined => env.GH_TOKEN,
+	]) {
+		const candidate = read();
+		if (candidate !== undefined && candidate !== "") {
+			return candidate;
+		}
+	}
+	return undefined;
+};
+
+/** Read the event the action was triggered by out of the action's context. */
+export const readCommentEvent = (): CommentEvent => {
+	const payload = github.context.payload;
+	return {
+		eventName: github.context.eventName,
+		actor: github.context.actor,
+		repo: github.context.repo,
+		commentId: payload.comment?.id,
+		issueNumber: payload.issue?.number,
+		commentBody: payload.comment?.body,
+		authorAssociation: payload.comment?.author_association,
+	};
+};
+
+/** Bind the octokit client down to the three calls the bot actually makes. */
+export const createGitHubApi = (token: string): GitHubApi => {
 	const octokit = github.getOctokit(token);
-	octokit.rest.issues.createComment({
-		owner: github.context.repo.owner,
-		repo: github.context.repo.repo,
-		issue_number: github.context.payload.issue?.number || -1,
+	return {
+		react: octokit.rest.reactions.createForIssueComment,
+		review: octokit.rest.pulls.createReview,
+		comment: octokit.rest.issues.createComment,
+	};
+};
+
+export const defaultDeps = (): BotDeps => {
+	const token = resolveToken(core.getInput, process.env);
+	if (token === undefined) {
+		throw new Error(
+			"no github token: set the github-token input, GITHUB_TOKEN or GH_TOKEN",
+		);
+	}
+	return {
+		api: createGitHubApi(token),
+		event: readCommentEvent(),
+		log: console.log,
+	};
+};
+
+const requireCommentId = (event: CommentEvent): number => {
+	// This used to fall back to -1, which GitHub answers with a 404 that the
+	// bot then swallowed, so a malformed payload looked like a successful run.
+	if (event.commentId === undefined) {
+		throw new Error("event payload has no comment id");
+	}
+	return event.commentId;
+};
+
+const requireIssueNumber = (event: CommentEvent): number => {
+	if (event.issueNumber === undefined) {
+		throw new Error("event payload has no issue number");
+	}
+	return event.issueNumber;
+};
+
+const submitReview = async (
+	deps: BotDeps,
+	event: "APPROVE" | "REQUEST_CHANGES",
+	verb: string,
+): Promise<void> => {
+	const { api, event: context, log } = deps;
+	// The review goes first and the acknowledging reaction second. Neither used
+	// to be awaited, so the process could exit before either landed, a rejected
+	// request became an unhandled rejection rather than a failed run, and the
+	// thumbs up appeared whether or not the review had been accepted.
+	await api.review({
+		...context.repo,
+		pull_number: requireIssueNumber(context),
+		event,
+		body: `${verb} by @${context.actor}`,
+	});
+	log(`${verb} pull request`);
+	await api.react({
+		...context.repo,
+		comment_id: requireCommentId(context),
+		content: "+1",
+	});
+};
+
+export const approve = (deps: BotDeps): Promise<void> =>
+	submitReview(deps, "APPROVE", "Approved");
+
+export const disapprove = (deps: BotDeps): Promise<void> =>
+	submitReview(deps, "REQUEST_CHANGES", "Disapproved");
+
+export const help = async (deps: BotDeps): Promise<void> => {
+	await deps.api.comment({
+		...deps.event.repo,
+		issue_number: requireIssueNumber(deps.event),
 		body: `My commands are: ${Object.keys(commands).sort().join(", ")}`,
 	});
-	console.log("done");
-}
+};
 
-async function usage(args: string[]) {
-	console.log("usage");
-	const token =
-		core.getInput("github-token") ||
-		process.env.GITHUB_TOKEN ||
-		process.env.GH_TOKEN ||
-		"";
-	const octokit = github.getOctokit(token);
-	console.log("reacting");
-	octokit.rest.reactions.createForIssueComment({
-		owner: github.context.repo.owner,
-		repo: github.context.repo.repo,
-		comment_id: github.context.payload.comment?.id || -1,
+export const usage = async (deps: BotDeps): Promise<void> => {
+	await deps.api.react({
+		...deps.event.repo,
+		comment_id: requireCommentId(deps.event),
 		content: "confused",
 	});
-	console.log("done");
-}
+};
 
-const commands: {
-	[key: string]: (args: string[]) => Promise<void>;
-} = {
+export const commands: Readonly<
+	Record<string, (deps: BotDeps) => Promise<void>>
+> = {
 	disapprove,
 	approve,
 	help,
@@ -111,57 +207,113 @@ const commands: {
 	reject: disapprove,
 };
 
-const tag = "prosoponator";
+/**
+ * The command of that name, if there is one.
+ *
+ * The name comes from a comment, so a plain property access would resolve
+ * `constructor` and `toString` to functions inherited from Object.prototype —
+ * dispatched with the bot's dependencies, and silently instead of the
+ * "I do not understand" reaction the commenter should have got.
+ */
+export const lookupCommand = (
+	name: string,
+): ((deps: BotDeps) => Promise<void>) | undefined =>
+	Object.prototype.hasOwnProperty.call(commands, name)
+		? commands[name]
+		: undefined;
+
+/** A comment the bot was addressed in, once it has been understood. */
+export interface ParsedCommand {
+	command: string;
+	args: string[];
+}
+
+/** Why a comment was not treated as a command. */
+export interface NotACommand {
+	reason: string;
+}
+
+/**
+ * Pull the command out of a comment body, or explain why there is not one.
+ *
+ * The tag has to be the first word: a comment that merely mentions the bot in
+ * passing is a conversation, not an instruction.
+ */
+export const parseCommand = (
+	body: string | undefined,
+): ParsedCommand | NotACommand => {
+	if (body === undefined) {
+		// A comment payload can arrive without a body — a deleted comment, or a
+		// review comment event. This used to throw inside `split`.
+		return { reason: "Comment has no body" };
+	}
+	// Split on any whitespace, not just " ": a command on its own line, or after
+	// a newline, is the same instruction to a human reader.
+	const words = body
+		.split(/\s+/)
+		.map((word: string) => word.trim())
+		.filter((word: string) => word.length > 0);
+	if (words.length === 0) {
+		return { reason: "No words found in comment" };
+	}
+	if (words[0] !== `@${TAG}`) {
+		return { reason: "Bot not tagged in comment" };
+	}
+	const command = words[1];
+	if (command === undefined) {
+		return { reason: "No command found in comment" };
+	}
+	return { command, args: words.slice(2) };
+};
+
+export const isParsedCommand = (
+	parsed: ParsedCommand | NotACommand,
+): parsed is ParsedCommand => "command" in parsed;
 
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
  */
-async function run() {
-	if (github.context.eventName !== "issue_comment") {
-		console.log("This event is not a comment.");
+export const run = async (deps: BotDeps): Promise<void> => {
+	const { event, log } = deps;
+	if (event.eventName !== "issue_comment") {
+		log("This event is not a comment.");
 		return;
 	}
 
-	const comment = github.context.payload.comment;
-	if (!comment) {
-		console.log("No comment found in payload");
+	const parsed = parseCommand(event.commentBody);
+	if (!isParsedCommand(parsed)) {
+		log(parsed.reason);
 		return;
 	}
 
-	const body = comment.body as string;
-	const words = body
-		.split(" ")
-		.map((word) => word.trim())
-		.filter((word) => word.length > 0);
-	if (words.length === 0) {
-		console.log("No words found in comment");
-		return;
-	}
-	const target = words[0];
-	if (target !== `@${tag}`) {
-		console.log("Bot not tagged in comment");
-		return;
-	}
-	const command = words[1];
-	if (command === undefined) {
-		console.log("No command found in comment");
-		return;
-	}
-	const args = words.slice(2);
-	console.log("command", command);
-	console.log("args", args);
+	log("command", parsed.command);
+	log("args", parsed.args);
 
-	const fn = commands[command];
+	const fn = lookupCommand(parsed.command);
 	if (fn === undefined) {
-		console.log("Command not found");
-		await usage(args);
+		log("Command not found");
+		await usage(deps);
 		return;
 	}
-	await fn(args);
-}
 
-run().catch((error) => {
-	console.error(error);
-	core.setFailed(error.message);
-});
+	// The commands approve and reject pull requests, so who is asking matters.
+	// Nothing checked this before: any account that could comment on a pull
+	// request could have the bot approve it.
+	if (!PRIVILEGED_ASSOCIATIONS.has(event.authorAssociation ?? "")) {
+		log(`Ignoring command from ${event.authorAssociation ?? "unknown"}`);
+		await usage(deps);
+		return;
+	}
+
+	await fn(deps);
+};
+
+export const main = async (): Promise<void> => {
+	try {
+		await run(defaultDeps());
+	} catch (error) {
+		console.error(error);
+		core.setFailed(error instanceof Error ? error.message : String(error));
+	}
+};
