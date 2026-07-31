@@ -11,7 +11,9 @@
 		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
 		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"start": "node dist/index.js"
+		"start": "node dist/index.js",
+		"typecheck": "tsc --noEmit",
+		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
 	},
 	"author": "",
 	"dependencies": {
@@ -22,8 +24,11 @@
 	"devDependencies": {
 		"@prosopo/config": "3.3.4",
 		"@types/node": "24.10.13",
+		"@vitest/coverage-v8": "4.1.10",
 		"tsx": "4.20.3",
-		"typescript": "5.9.3"
+		"typescript": "5.9.3",
+		"vite": "8.1.5",
+		"vitest": "4.1.10"
 	},
 	"repository": {
 		"type": "git",
