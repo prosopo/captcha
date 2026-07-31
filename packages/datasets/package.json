@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/datasets",
-	"version": "3.1.54",
+	"version": "3.1.55",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
@@ -36,20 +36,24 @@
 	},
 	"typesVersions": {
 		"*": {
-			"types": ["dist/types"],
-			"captcha": ["dist/captcha"]
+			"types": [
+				"dist/types"
+			],
+			"captcha": [
+				"dist/captcha"
+			]
 		}
 	},
 	"dependencies": {
 		"@polkadot/util": "13.5.7",
-		"@prosopo/common": "3.1.47",
-		"@prosopo/logger": "2.0.3",
-		"@prosopo/types": "4.9.12",
-		"@prosopo/util": "3.3.4",
+		"@prosopo/common": "3.1.48",
+		"@prosopo/logger": "2.0.4",
+		"@prosopo/types": "4.10.0",
+		"@prosopo/util": "3.3.5",
 		"@prosopo/util-crypto": "13.5.30"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.4",
+		"@prosopo/config": "3.3.5",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "4.1.10",
 		"concurrently": "9.0.1",
