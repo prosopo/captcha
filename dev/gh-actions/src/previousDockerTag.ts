@@ -11,26 +11,60 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import {
+	type FetchTagsDeps,
+	defaultFetchTagsDeps,
+	fetchTags,
+	findPreviousTag,
+	isSemVer,
+} from "./dockerTags.js";
+import { isMain } from "./isMain.js";
 
-import { fetchTags, isSemVer, semVerLt } from "./dockerTags.js";
+export interface PreviousDockerTagDeps extends FetchTagsDeps {
+	log: (value: string) => void;
+}
 
-const main = async () => {
-	// get args
-	const args = process.argv.slice(2);
-	// tags will be sorted in descending order
-	const tags = await fetchTags(String(args[0]), String(args[1]));
-	// find the tag that is previous to the given tag
-	const target = String(args[2]);
-	for (const tag of tags) {
-		if (isSemVer(tag) === false) {
-			continue;
-		}
-		if (semVerLt(tag, target) === -1) {
-			// found the previous tag
-			console.log(tag);
-			return;
-		}
-	}
+export const defaultPreviousDockerTagDeps: PreviousDockerTagDeps = {
+	...defaultFetchTagsDeps,
+	log: (value: string): void => console.log(value),
 };
 
-main();
+/**
+ * Print the newest published tag older than `target`.
+ *
+ * Throws when there is no such tag. It previously returned having printed
+ * nothing, so a caller doing `PREV=$(npm run previousDockerTag ...)` got an
+ * empty string and carried on — deploying or diffing against nothing.
+ */
+export const previousDockerTag = async (
+	args: string[],
+	deps: PreviousDockerTagDeps = defaultPreviousDockerTagDeps,
+): Promise<string> => {
+	const [namespace, repository, target] = args;
+	if (
+		namespace === undefined ||
+		repository === undefined ||
+		target === undefined
+	) {
+		throw new Error("usage: previousDockerTag <namespace> <repository> <tag>");
+	}
+	if (!isSemVer(target)) {
+		// Comparing against a non-semver target falls back to a lexicographic
+		// comparison, which would silently return an unrelated tag.
+		throw new Error(`target tag is not semver: ${target}`);
+	}
+	// tags will be sorted in descending order
+	const tags = await fetchTags(namespace, repository, deps);
+	const previous = findPreviousTag(tags, target);
+	if (previous === undefined) {
+		throw new Error(
+			`no tag older than ${target} in ${namespace}/${repository}`,
+		);
+	}
+	deps.log(previous);
+	return previous;
+};
+
+if (isMain(import.meta.url)) {
+	await previousDockerTag(process.argv.slice(2));
+}
