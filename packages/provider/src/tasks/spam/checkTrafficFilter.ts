@@ -121,9 +121,7 @@ const evaluateIpInfo = (
 		(ipInfo.isCrawler && !trafficFilter.blockCrawler);
 
 	if (trafficFilter.blockDatacenter && ipInfo.isDatacenter) {
-		if (
-			isDatacenterDenylisted(ipInfo, trafficFilter.datacenterNameDenylist)
-		) {
+		if (isDatacenterDenylisted(ipInfo, trafficFilter.datacenterNameDenylist)) {
 			return { isBlocked: true, reason: ResultReason.DATACENTER_BLOCKED };
 		}
 		if (

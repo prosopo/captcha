@@ -727,7 +727,10 @@ describe("checkTrafficFilter", () => {
 			// Denylist only takes effect within the datacenter rule scope;
 			// it does not turn every mention into a block.
 			const result = checkTrafficFilter(
-				baseInfo({ isDatacenter: false, datacenterName: "proxy-lease-provider" }),
+				baseInfo({
+					isDatacenter: false,
+					datacenterName: "proxy-lease-provider",
+				}),
 				{
 					...allBlocked,
 					datacenterNameDenylist: ["proxy-lease-provider"],
