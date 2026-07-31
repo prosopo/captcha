@@ -55,7 +55,8 @@ export function loadEnv(
 }
 
 /**
- * Get the path to the .env file. Search up directories until `.env.${env}` is found.
+ * Get the path to the .env file. Search up directories until `${filename}.${env}`
+ * is found — or, when `env` sanitises to the empty string, plain `filename`.
  * If not found, look in the root directory, if specified, or 2 directories up from this file.
  * @param rootDir
  * @param filename
