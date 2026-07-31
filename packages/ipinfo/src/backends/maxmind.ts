@@ -16,10 +16,28 @@ import type { Asn, City, ReaderModel } from "@maxmind/geoip2-node";
 import type { Logger } from "@prosopo/logger";
 import type { IPInfoResponse, IPInfoResult } from "@prosopo/types";
 
+/**
+ * Opens a MaxMind database file. Injected so tests can exercise initialisation
+ * and lookup without shipping a .mmdb fixture, and so a failure to open one can
+ * be simulated at all — the real Reader only fails on a genuinely bad file.
+ */
+export type OpenReader = (dbPath: string) => Promise<ReaderModel>;
+
+const openReaderFromFile: OpenReader = async (
+	dbPath: string,
+): Promise<ReaderModel> => {
+	// Imported lazily: the module pulls in native-ish decoding machinery that a
+	// deployment without MaxMind databases should never pay for.
+	const { Reader } = await import("@maxmind/geoip2-node");
+	return Reader.open(dbPath);
+};
+
 export interface MaxMindBackendConfig {
 	cityDbPath?: string;
 	asnDbPath?: string;
 	logger?: Logger;
+	/** Overridden in tests; defaults to opening the file from disk. */
+	openReader?: OpenReader;
 }
 
 export class MaxMindBackend {
@@ -32,11 +50,11 @@ export class MaxMindBackend {
 	}
 
 	async initialize(): Promise<void> {
-		const { Reader } = await import("@maxmind/geoip2-node");
+		const openReader: OpenReader = this.config.openReader ?? openReaderFromFile;
 
 		if (this.config.cityDbPath) {
 			try {
-				this.cityReader = await Reader.open(this.config.cityDbPath);
+				this.cityReader = await openReader(this.config.cityDbPath);
 				this.config.logger?.info(() => ({
 					msg: "MaxMind City reader initialized",
 					data: { dbPath: this.config.cityDbPath },
@@ -52,7 +70,7 @@ export class MaxMindBackend {
 
 		if (this.config.asnDbPath) {
 			try {
-				this.asnReader = await Reader.open(this.config.asnDbPath);
+				this.asnReader = await openReader(this.config.asnDbPath);
 				this.config.logger?.info(() => ({
 					msg: "MaxMind ASN reader initialized",
 					data: { dbPath: this.config.asnDbPath },

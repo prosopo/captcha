@@ -19,13 +19,44 @@ import type {
 	IPInfoResult,
 } from "@prosopo/types";
 
-const TIMEOUT_MS = 700;
+/**
+ * Default per-lookup budget. Short on purpose: an IP lookup sits in the request
+ * path, so a slow backend must not hold up the decision that depends on it.
+ */
+export const DEFAULT_TIMEOUT_MS = 700;
+
+/** The subset of global fetch this backend uses. Injected so tests need no network. */
+export type FetchFn = (
+	url: string,
+	init: RequestInit,
+) => Promise<globalThis.Response>;
 
 export interface IpapiBackendConfig {
 	baseUrl: string;
 	apiKey?: string;
 	logger?: Logger;
+	/** Overridden in tests; defaults to the global fetch. */
+	fetch?: FetchFn;
+	/** Overridden in tests and tunable in deployment; defaults to DEFAULT_TIMEOUT_MS. */
+	timeoutMs?: number;
 }
+
+/**
+ * Parse an upstream abuser score, which arrives as a string like "0.0012 (Low)".
+ *
+ * The field is declared required by the response type but is not guaranteed by
+ * the wire: it comes from `response.json()`, which is cast, not validated. A
+ * missing value used to throw, and the throw was caught far above as a generic
+ * "Network or parsing error" — discarding an otherwise complete and successful
+ * lookup over one absent score.
+ */
+export const parseAbuserScore = (score: string | undefined): number => {
+	const parsed = Number.parseFloat(score?.split(" ")[0] || "0");
+	// A non-numeric score is unknown, not "clean"; but callers compare this
+	// against thresholds, and NaN silently fails every comparison. 0 is the
+	// same answer the empty-string fallback above already gives.
+	return Number.isNaN(parsed) ? 0 : parsed;
+};
 
 export class IpapiBackend {
 	private config: IpapiBackendConfig;
@@ -36,6 +67,10 @@ export class IpapiBackend {
 
 	isAvailable(): boolean {
 		return Boolean(this.config.baseUrl);
+	}
+
+	private get timeoutMs(): number {
+		return this.config.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 	}
 
 	async lookup(ip: string): Promise<IPInfoResponse> {
@@ -54,10 +89,11 @@ export class IpapiBackend {
 			}
 
 			const controller = new AbortController();
-			const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+			const timeoutId = setTimeout(() => controller.abort(), this.timeoutMs);
 
 			try {
-				const response = await fetch(this.config.baseUrl, {
+				const doFetch: FetchFn = this.config.fetch ?? globalThis.fetch;
+				const response = await doFetch(this.config.baseUrl, {
 					method: "POST",
 					headers: {
 						"Content-Type": "application/json",
@@ -116,12 +152,8 @@ export class IpapiBackend {
 					vpnService: data.vpn?.service,
 					vpnType: data.vpn?.type,
 
-					abuserScore: Number.parseFloat(
-						data.asn?.abuser_score.split(" ")[0] || "0",
-					),
-					companyAbuserScore: Number.parseFloat(
-						data.company?.abuser_score.split(" ")[0] || "0",
-					),
+					abuserScore: parseAbuserScore(data.asn?.abuser_score),
+					companyAbuserScore: parseAbuserScore(data.company?.abuser_score),
 				};
 
 				return result;
@@ -131,7 +163,7 @@ export class IpapiBackend {
 				if (fetchError instanceof Error && fetchError.name === "AbortError") {
 					return {
 						isValid: false,
-						error: `Request timed out after ${TIMEOUT_MS}ms`,
+						error: `Request timed out after ${this.timeoutMs}ms`,
 						ip,
 					};
 				}
