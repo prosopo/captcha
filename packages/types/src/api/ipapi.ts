@@ -118,7 +118,13 @@ export interface IPApiResponse {
 export interface IPInfoResult {
 	// Core identification
 	ip: string;
-	isValid: boolean;
+	// Literal `true`, not `boolean`: this is the discriminant that separates
+	// this from IPInfoError in IPInfoResponse. Typed as `boolean` the union is
+	// not discriminated at all — `if (!res.isValid)` narrows to nothing, so
+	// `res.error` fails to compile and consumers reach for a cast, which is
+	// exactly the check this union exists to force. Every construction site
+	// already passes a literal.
+	isValid: true;
 
 	// Threat indicators
 	isVPN: boolean;
