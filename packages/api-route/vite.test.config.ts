@@ -11,13 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { ViteTestConfig } from "@prosopo/config";
 
-export type {
-	ApiRoutes,
-	ApiRoutesProvider,
-	// ApiRouteLimit is the value type of an ApiRouteLimits record: without it,
-	// a consumer building one entry at a time has no way to name what it is
-	// building, and has to redeclare the shape.
-	ApiRouteLimit,
-	ApiRouteLimits,
-} from "./apiRoutes.js";
+process.env.NODE_ENV = "test";
+
+export default ViteTestConfig();
