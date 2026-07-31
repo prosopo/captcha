@@ -69,7 +69,10 @@ export function getEnvFile(
 	nodeEnv?: string,
 ) {
 	const env = nodeEnv || getEnv();
-	const fileNameFull = `${filename}.${env}`;
+	// getEnv strips non-word characters, so a NODE_ENV of e.g. "!!!" sanitises
+	// to the empty string. Suffixing that would look for ".env." — a file nobody
+	// creates — so fall back to the unsuffixed filename instead.
+	const fileNameFull = env ? `${filename}.${env}` : filename;
 
 	let searchPath = path.resolve(rootDir || ".");
 

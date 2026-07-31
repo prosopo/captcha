@@ -125,10 +125,10 @@ describe("dotenv/env", () => {
 			expect(getEnv()).toBe("tst");
 		});
 
-		// Documents a sharp edge rather than endorsing it: a NODE_ENV made
-		// entirely of punctuation sanitises down to "", which is truthy-checked
-		// upstream but produces the filename ".env." — see the getEnvFile test
-		// "builds a trailing-dot filename when the sanitised env is empty".
+		// A NODE_ENV made entirely of punctuation sanitises down to "". getEnv
+		// reports that faithfully; getEnvFile is responsible for not turning it
+		// into a ".env." filename — see "falls back to the unsuffixed filename
+		// when the sanitised env is empty".
 		it("returns the empty string when NODE_ENV is entirely non-word characters", () => {
 			process.env.NODE_ENV = "!!!";
 
@@ -207,9 +207,37 @@ describe("dotenv/env", () => {
 			expect(result.endsWith(".env.nonexistent-env-xyz")).toBe(true);
 		});
 
-		it("builds a trailing-dot filename when the sanitised env is empty", () => {
+		// A NODE_ENV of "!!!" sanitises to "", which must not produce the
+		// filename ".env." — nothing creates such a file, so discovery would
+		// always miss and silently fall through to the not-found path.
+		it("falls back to the unsuffixed filename when the sanitised env is empty", () => {
 			process.env.NODE_ENV = "!!!";
-			const expected = writeFile(tmpRoot, ".env.", "");
+			const expected = writeFile(tmpRoot, ".env", "");
+
+			expect(getEnvFile(tmpRoot)).toBe(expected);
+		});
+
+		it("never appends a bare dot when the sanitised env is empty", () => {
+			process.env.NODE_ENV = "!!!";
+			// No env file on disk at all, so the not-found fallback path is taken:
+			// it must carry the unsuffixed name too, not ".env.".
+			const result = getEnvFile(tmpRoot);
+
+			expect(result).toBe(path.join(tmpRoot, ".env"));
+			expect(result.endsWith(".")).toBe(false);
+		});
+
+		it("uses the unsuffixed name for a custom filename when the env is empty", () => {
+			process.env.NODE_ENV = "!!!";
+			const expected = writeFile(tmpRoot, "custom", "");
+
+			expect(getEnvFile(tmpRoot, "custom")).toBe(expected);
+		});
+
+		it("prefers the unsuffixed file over a stale trailing-dot file", () => {
+			process.env.NODE_ENV = "!!!";
+			writeFile(tmpRoot, ".env.", "");
+			const expected = writeFile(tmpRoot, ".env", "");
 
 			expect(getEnvFile(tmpRoot)).toBe(expected);
 		});
@@ -481,6 +509,14 @@ describe("dotenv/env", () => {
 
 			expect(returned).toBe(path.join(start, ".env.nonexistent-env-xyz"));
 			expect(fs.existsSync(returned)).toBe(false);
+		});
+
+		it("loads the unsuffixed file when the sanitised env is empty", () => {
+			process.env.NODE_ENV = "!!!";
+			const expected = writeFile(tmpRoot, ".env", "PROSOPO_UNSUFFIXED=yes\n");
+
+			expect(loadEnv(tmpRoot)).toBe(expected);
+			expect(process.env.PROSOPO_UNSUFFIXED).toBe("yes");
 		});
 
 		it("defaults to the current working directory when rootDir is omitted", () => {
