@@ -14,11 +14,25 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 // Top Level
 
-export const getRootDir = () =>
-	new URL("../../..", import.meta.url).pathname.slice(0, -1);
+/**
+ * The repository root — three levels up from this module, which sits at
+ * `dev/workspace/{src,dist}/`. Both the source and the built layout are the
+ * same depth, so this holds whether it is imported from `src` under vitest or
+ * from `dist` by a consumer.
+ *
+ * `fileURLToPath` rather than `new URL(...).pathname`: `pathname` is
+ * percent-encoded, so a checkout under a path containing a space or a `#`
+ * yields `%20`/`%23` and every derived path fails to resolve.
+ *
+ * `path.resolve` drops the trailing separator that URL resolution leaves on a
+ * directory, which is what the previous `.slice(0, -1)` was doing by hand.
+ */
+export const getRootDir = (): string =>
+	path.resolve(fileURLToPath(new URL("../../..", import.meta.url)));
 
 export const getCacheDir = () => `${getRootDir()}/.cache`;
 
@@ -40,15 +54,16 @@ export const getScriptsPkgDir = () => `${getDevDir()}/scripts`;
 
 // Demos
 
-export const getClientExampleDir = () => `${getDemosDir()}/client-example`;
+// `getClientExampleDir` and `getDappExampleDir` used to live here. Both
+// `demos/client-example` and `demos/dapp-example` were removed from the
+// repository, so the getters returned paths that no longer exist; neither had
+// any remaining caller.
 
 export const getClientExampleServerDir = () =>
 	`${getDemosDir()}/client-example-server`;
 
 export const getClientBundleExampleDir = () =>
 	`${getDemosDir()}/client-bundle-example`;
-
-export const getDappExampleDir = () => `${getDemosDir()}/dapp-example`;
 
 // Packages
 
@@ -107,39 +122,75 @@ export const getWidgetSkeletonPkgDir = () =>
 
 export const getLocalePkgDir = () => `${getPackagesDir()}/locale`;
 
+/** The maximum number of directories, starting at cwd, that are inspected. */
+export const WORKSPACE_ROOT_MAX_DEPTH = 5;
+
+/**
+ * The ambient state `findWorkspaceRoot` reads.
+ *
+ * Injected rather than reached for directly so the search can be exercised
+ * against a synthetic tree. Replacing `node:fs` wholesale instead would either
+ * touch the developer's real filesystem or swap out a module the rest of the
+ * run depends on.
+ */
+export interface WorkspaceRootDeps {
+	cwd: () => string;
+	existsSync: (target: string) => boolean;
+	readFileSync: (target: string) => string;
+	warn: (message: string) => void;
+}
+
+const defaultDeps: WorkspaceRootDeps = {
+	cwd: (): string => process.cwd(),
+	existsSync: (target: string): boolean => fs.existsSync(target),
+	readFileSync: (target: string): string => fs.readFileSync(target, "utf8"),
+	warn: (message: string): void => console.warn(message),
+};
+
+/** The one field of a package.json this module cares about. */
+interface NamedPackageJson {
+	name?: unknown;
+}
+
 /**
  * Finds the workspace root directory (captcha-private)
  */
-export const findWorkspaceRoot = (name?: string): string => {
-	const currentDir = process.cwd();
+export const findWorkspaceRoot = (
+	name?: string,
+	deps: WorkspaceRootDeps = defaultDeps,
+): string => {
+	const currentDir = deps.cwd();
 	const lintDirPattern = /(.+)\/captcha\/dev\/lint$/;
 	const match = currentDir.match(lintDirPattern);
-	name = name || "@prosopo/captcha-private";
+	const targetName = name || "@prosopo/captcha-private";
 
 	if (match?.[1]) {
 		return match[1];
 	}
 
 	const websitePath = path.join(currentDir, "packages", "prosopo-website");
-	if (fs.existsSync(websitePath)) {
+	if (deps.existsSync(websitePath)) {
 		return currentDir;
 	}
 
 	let dir = currentDir;
-	const maxDepth = 5;
 
-	for (let i = 0; i < maxDepth; i++) {
+	for (let i = 0; i < WORKSPACE_ROOT_MAX_DEPTH; i++) {
 		const packageJsonPath = path.join(dir, "package.json");
 
-		if (fs.existsSync(packageJsonPath)) {
+		if (deps.existsSync(packageJsonPath)) {
 			try {
-				const packageJson = JSON.parse(
-					fs.readFileSync(packageJsonPath, "utf8"),
+				// Deliberately shallow typing: this is an arbitrary file on disk,
+				// so the only safe assumption is that `name`, if present, may be
+				// anything. A malformed or unreadable package.json must not abort
+				// the ascent — a directory higher up may still be the root.
+				const packageJson: NamedPackageJson = JSON.parse(
+					deps.readFileSync(packageJsonPath),
 				);
-				if (packageJson.name === name) {
+				if (packageJson.name === targetName) {
 					return dir;
 				}
-			} catch (e) {
+			} catch {
 				// Continue if there's an error
 			}
 		}
@@ -154,8 +205,6 @@ export const findWorkspaceRoot = (name?: string): string => {
 	}
 
 	// If all approaches fail, warn but return current directory
-	console.warn(
-		"Warning: Could not find workspace root. Using current directory.",
-	);
+	deps.warn("Warning: Could not find workspace root. Using current directory.");
 	return currentDir;
 };
