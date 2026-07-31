@@ -36,6 +36,18 @@ describe("arrayBufferToBase64", () => {
 		expect(arrayBufferToBase64(bufferOf([0x00, 0x80, 0xff]))).toBe("AID/");
 	});
 
+	test("round-trips a buffer spanning multiple chunks", () => {
+		// Larger than the 0x8000 chunk size, so the chunk boundary is exercised
+		// and a regression to a single fromCharCode spread would overflow.
+		const bytes: number[] = Array.from(
+			{ length: 0x8000 * 2 + 5 },
+			(_, i) => i % 256,
+		);
+		const decoded: string = atob(arrayBufferToBase64(bufferOf(bytes)));
+		expect(decoded.length).toBe(bytes.length);
+		expect(Array.from(decoded, (c: string) => c.charCodeAt(0))).toEqual(bytes);
+	});
+
 	test("round-trips arbitrary binary data", () => {
 		const bytes: number[] = Array.from({ length: 256 }, (_, i) => i);
 		const decoded: string = atob(arrayBufferToBase64(bufferOf(bytes)));
