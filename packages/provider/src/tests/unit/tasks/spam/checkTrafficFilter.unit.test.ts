@@ -626,6 +626,202 @@ describe("checkTrafficFilter", () => {
 		});
 	});
 
+	describe("datacenterNameDenylist", () => {
+		it("blocks datacenter IPs whose name matches the denylist even when providerType is 'isp'", () => {
+			// IP-leasing platforms lease ranges from carrier ASNs; upstream
+			// reports providerType='isp' (accurate for the ASN) but the
+			// exiting traffic is proxy-pool. Operators opt these back into
+			// the datacenter block by name.
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					providerType: "isp",
+					datacenterName: "proxy-lease-provider",
+				}),
+				{
+					...allBlocked,
+					datacenterNameDenylist: ["proxy-lease-provider"],
+				},
+			);
+			expect(result).toEqual({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+
+		it("matches the denylist case-insensitively and ignores whitespace", () => {
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					providerType: "isp",
+					datacenterName: "  Proxy-Lease-Provider  ",
+				}),
+				{
+					...allBlocked,
+					datacenterNameDenylist: ["proxy-lease-provider"],
+				},
+			);
+			expect(result).toEqual({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+
+		it("matches the denylist against providerName when datacenterName is absent", () => {
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					providerType: "isp",
+					providerName: "proxy-lease-provider",
+				}),
+				{
+					...allBlocked,
+					datacenterNameDenylist: ["proxy-lease-provider"],
+				},
+			);
+			expect(result).toEqual({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+
+		it("matches the denylist against asnOrganization when neither datacenterName nor providerName carries the operator", () => {
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					providerType: "isp",
+					asnOrganization: "Proxy Lease Ltd",
+				}),
+				{
+					...allBlocked,
+					datacenterNameDenylist: ["Proxy Lease Ltd"],
+				},
+			);
+			expect(result).toEqual({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+
+		it("denylist takes precedence over the allowlist when both list the same name", () => {
+			// Contradictory config: explicit denylist wins so operators can
+			// tighten a shared allowlist entry for one specific provider.
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					datacenterName: "shared-name",
+				}),
+				{
+					...allBlocked,
+					datacenterNameAllowlist: ["shared-name"],
+					datacenterNameDenylist: ["shared-name"],
+				},
+			);
+			expect(result).toEqual({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+
+		it("does not block a non-datacenter IP even when its name matches the denylist", () => {
+			// Denylist only takes effect within the datacenter rule scope;
+			// it does not turn every mention into a block.
+			const result = checkTrafficFilter(
+				baseInfo({ isDatacenter: false, datacenterName: "proxy-lease-provider" }),
+				{
+					...allBlocked,
+					datacenterNameDenylist: ["proxy-lease-provider"],
+				},
+			);
+			expect(result).toEqual({ isBlocked: false });
+		});
+
+		it("does not fire when blockDatacenter is off", () => {
+			// Operators who don't want any datacenter block get none, even
+			// with a denylist populated. Populated but inert.
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					providerType: "isp",
+					datacenterName: "proxy-lease-provider",
+				}),
+				{
+					...allBlocked,
+					blockDatacenter: false,
+					datacenterNameDenylist: ["proxy-lease-provider"],
+				},
+			);
+			expect(result).toEqual({ isBlocked: false });
+		});
+
+		it("preserves legacy behaviour when denylist is missing or empty", () => {
+			// ISP suppression continues to fire; a missing / empty denylist
+			// must not change the existing datacenter-rule outcome.
+			const missing = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					providerType: "isp",
+					datacenterName: "some-isp",
+				}),
+				allBlocked,
+			);
+			expect(missing).toEqual({ isBlocked: false });
+
+			const empty = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					providerType: "isp",
+					datacenterName: "some-isp",
+				}),
+				{ ...allBlocked, datacenterNameDenylist: [] },
+			);
+			expect(empty).toEqual({ isBlocked: false });
+		});
+
+		it("still lets earlier category rules fire before the datacenter check", () => {
+			// A Tor exit whose name is on the denylist still trips TOR_BLOCKED
+			// first — denylist scope is the datacenter rule only.
+			const result = checkTrafficFilter(
+				baseInfo({
+					isTor: true,
+					isDatacenter: true,
+					providerType: "isp",
+					datacenterName: "proxy-lease-provider",
+				}),
+				{
+					...allBlocked,
+					datacenterNameDenylist: ["proxy-lease-provider"],
+				},
+			);
+			expect(result).toEqual({
+				isBlocked: true,
+				reason: "API.TOR_BLOCKED",
+			});
+		});
+
+		it("applies the denylist to extra IPs as well", () => {
+			const result = checkTrafficFilter(
+				baseInfo({ ip: "192.0.2.1" }),
+				{
+					...allBlocked,
+					datacenterNameDenylist: ["proxy-lease-provider"],
+				},
+				[
+					baseInfo({
+						ip: "198.51.100.10",
+						isDatacenter: true,
+						providerType: "isp",
+						datacenterName: "proxy-lease-provider",
+					}),
+				],
+			);
+			expect(result).toEqual({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+	});
+
 	describe("skipExtrasOnValidDnsPath", () => {
 		it("skips the extras evaluation when the catcher confirmed a valid DNS path and the setting is on", () => {
 			const result = checkTrafficFilter(
