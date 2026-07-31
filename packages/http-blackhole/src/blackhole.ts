@@ -75,21 +75,44 @@ export const describeRequest = (req: http.IncomingMessage): string =>
 	`${req.method ?? "UNKNOWN"} ${req.url ?? "UNKNOWN"}`;
 
 /**
+ * Records the last request line seen on a socket, so the connection-level close
+ * listener can name it.
+ *
+ * A callback rather than the map itself: `Map` is structurally assignable to
+ * `WeakMap` (both satisfy get/set/has/delete, and neither narrows
+ * `Symbol.toStringTag` to a literal), so a parameter typed `WeakMap` would
+ * happily accept a strongly-keyed `Map` and silently retain every socket the
+ * process has ever served. Narrowing the seam to a function removes the
+ * substitution entirely and leaves exactly one place that decides how requests
+ * are stored — see `createRequestLog`.
+ */
+export type RecordRequest = (socket: net.Socket, description: string) => void;
+
+/**
+ * The per-socket request log.
+ *
+ * Weak on purpose: this server holds every connection open indefinitely and is
+ * pointed at by clients under test, so a strongly-keyed map would grow for the
+ * lifetime of the process and pin each socket's buffers with it. Weakness is a
+ * property of the class, not of the type — hence a single construction site
+ * that tests can assert on directly.
+ */
+export const createRequestLog = (): WeakMap<net.Socket, string> =>
+	new WeakMap<net.Socket, string>();
+
+/**
  * Handle one request by deliberately never responding: the socket is held open
  * so the client is forced to hit its own timeout. This is the entire purpose of
  * the package — it exists to test client-side timeout handling.
- *
- * The request line is recorded against the socket so the connection-level close
- * listener can name it.
  */
 export const handleRequest = (
 	req: http.IncomingMessage,
 	logger: Logger,
-	lastRequest?: WeakMap<net.Socket, string>,
+	record?: RecordRequest,
 ): void => {
 	const description = describeRequest(req);
 	logger.log(`Received request: ${description}`);
-	lastRequest?.set(req.socket, description);
+	record?.(req.socket, description);
 	// Do nothing else: simulate an unresponsive server, keeping the socket open.
 	req.socket.setTimeout(0); // Disable socket timeout
 	req.socket.setKeepAlive(true); // Keep the socket alive
@@ -101,7 +124,7 @@ export const createBlackholeServer = (logger: Logger): http.Server => {
 	// Close is tracked per connection rather than per request, so a client that
 	// connects and then goes away without ever sending a request line is still
 	// accounted for.
-	const lastRequest = new WeakMap<net.Socket, string>();
+	const lastRequest = createRequestLog();
 
 	server.on("connection", (socket: net.Socket) => {
 		logger.log("Connection opened");
@@ -116,7 +139,9 @@ export const createBlackholeServer = (logger: Logger): http.Server => {
 	});
 
 	server.on("request", (req: http.IncomingMessage) => {
-		handleRequest(req, logger, lastRequest);
+		handleRequest(req, logger, (socket: net.Socket, description: string) => {
+			lastRequest.set(socket, description);
+		});
 	});
 
 	return server;
