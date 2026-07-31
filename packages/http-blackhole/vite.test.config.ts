@@ -11,27 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import dotenv from "dotenv";
-import {
-	createBlackholeServer,
-	createShutdown,
-	resolvePort,
-} from "./blackhole.js";
+import { ViteTestConfig } from "@prosopo/config";
 
-dotenv.config();
+process.env.NODE_ENV = "test";
 
-const PORT = resolvePort(process.env.PORT);
-
-const server = createBlackholeServer(console);
-
-server.listen(PORT, () => {
-	console.log(`http-blackhole server is listening on port ${PORT}`);
-});
-
-// Graceful shutdown on Ctrl+C or kill
-const shutdown = createShutdown(server, console, (code: number) => {
-	process.exit(code);
-});
-
-process.on("SIGINT", shutdown); // Ctrl+C
-process.on("SIGTERM", shutdown); // kill command or systemd
+export default ViteTestConfig();
