@@ -181,6 +181,13 @@ export const createApp = (
 	const app = express();
 
 	for (const loc of env.paths) {
+		if ("" === loc.trim()) {
+			// express.static("") resolves to the process working directory, which
+			// would publish the whole deployment over HTTP. A blank entry is
+			// always a config mistake, so drop it rather than honour it.
+			deps.logger.warn("ignoring empty path entry");
+			continue;
+		}
 		// allow local filesystem lookup at each location
 		// http://localhost:3000/a.jpg
 		// serve path set to /

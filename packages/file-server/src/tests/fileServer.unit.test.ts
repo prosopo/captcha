@@ -299,6 +299,43 @@ describe("createApp static serving", () => {
 		expect(logger.entries).toContain(`info Serving files from ${tmpDir}`);
 	});
 
+	it("does not serve the working directory for an empty path entry", async () => {
+		// express.static("") resolves to cwd, which would publish the whole
+		// deployment — including source and any .env files — over HTTP.
+		const url = await serve(
+			baseEnv({ paths: [""] }),
+			makeDeps({ fetch: notFoundFetch }),
+		);
+
+		const response = await fetch(`${url}/package.json`);
+
+		expect(response.status).toBe(404);
+	});
+
+	it("warns about an empty path entry", async () => {
+		const logger = createRecordingLogger();
+		await serve(baseEnv({ paths: [""] }), makeDeps({ logger }));
+
+		expect(logger.entries).toContain("warn ignoring empty path entry");
+	});
+
+	it("ignores a whitespace-only path entry", async () => {
+		const logger = createRecordingLogger();
+		await serve(baseEnv({ paths: ["   "] }), makeDeps({ logger }));
+
+		expect(logger.entries).toContain("warn ignoring empty path entry");
+	});
+
+	it("still serves the valid entries alongside an empty one", async () => {
+		fs.writeFileSync(path.join(tmpDir, "b.txt"), "kept");
+		const url = await serve(baseEnv({ paths: ["", tmpDir] }), makeDeps());
+
+		const response = await fetch(`${url}/b.txt`);
+
+		expect(response.status).toBe(200);
+		expect(await response.text()).toBe("kept");
+	});
+
 	it("falls through to the remote handler for a missing file", async () => {
 		const url = await serve(
 			baseEnv({ paths: [tmpDir] }),
