@@ -49,13 +49,28 @@ export interface IpapiBackendConfig {
  * missing value used to throw, and the throw was caught far above as a generic
  * "Network or parsing error" — discarding an otherwise complete and successful
  * lookup over one absent score.
+ *
+ * Returns `undefined` — not 0 — when the field is absent or unparseable. The
+ * scale is 0..1 with 0 meaning "clean" (see `abuserScoreThreshold`, declared
+ * `{min: 0, max: 1}`), so a literal 0 would assert cleanliness we have not
+ * established. `undefined` says "unknown" instead, and the one consumer
+ * (checkTrafficFilter) already resolves it with `?? 0`, so the effective
+ * blocking behaviour is unchanged while the distinction stays available.
+ *
+ * Fail-closed alternatives were rejected: 1 turns any upstream formatting
+ * change into a silent max-severity block indistinguishable from a genuine
+ * 1.0, and throwing reintroduces exactly the bug above — a cosmetic sub-field
+ * collapsing a good lookup into a total failure.
  */
-export const parseAbuserScore = (score: string | undefined): number => {
-	const parsed = Number.parseFloat(score?.split(" ")[0] || "0");
-	// A non-numeric score is unknown, not "clean"; but callers compare this
-	// against thresholds, and NaN silently fails every comparison. 0 is the
-	// same answer the empty-string fallback above already gives.
-	return Number.isNaN(parsed) ? 0 : parsed;
+export const parseAbuserScore = (
+	score: string | undefined,
+): number | undefined => {
+	const head = score?.split(" ")[0];
+	if (!head) {
+		return undefined;
+	}
+	const parsed = Number.parseFloat(head);
+	return Number.isNaN(parsed) ? undefined : parsed;
 };
 
 export class IpapiBackend {

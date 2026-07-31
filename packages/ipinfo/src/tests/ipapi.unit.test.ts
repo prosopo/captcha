@@ -103,27 +103,33 @@ describe("parseAbuserScore", () => {
 		expect(parseAbuserScore("0.5")).toBe(0.5);
 	});
 
-	it("treats a missing score as zero rather than throwing", () => {
+	it("reports a missing score as unknown rather than throwing", () => {
 		// The field is declared required but comes from unvalidated JSON. It used
 		// to be dereferenced directly, so an absent score threw and the throw was
 		// caught far above as a generic parsing error — discarding an otherwise
 		// complete lookup.
-		expect(parseAbuserScore(undefined)).toBe(0);
+		expect(parseAbuserScore(undefined)).toBeUndefined();
 	});
 
-	it("treats an empty string as zero", () => {
-		expect(parseAbuserScore("")).toBe(0);
+	it("reports an empty string as unknown", () => {
+		expect(parseAbuserScore("")).toBeUndefined();
 	});
 
-	it("returns zero rather than NaN for a non-numeric score", () => {
-		// Callers compare this against thresholds, and every comparison against
-		// NaN is false — the IP would silently pass checks it should not.
-		expect(parseAbuserScore("unknown")).toBe(0);
-		expect(parseAbuserScore("(Low)")).toBe(0);
+	it("reports a non-numeric score as unknown, never NaN", () => {
+		// NaN would be the worst outcome: callers compare this against
+		// thresholds, and every comparison against NaN is false, so the IP would
+		// silently pass checks it should not.
+		expect(parseAbuserScore("unknown")).toBeUndefined();
+		expect(parseAbuserScore("(Low)")).toBeUndefined();
 	});
 
-	it("handles a score of exactly zero", () => {
+	it("distinguishes a genuine zero from an unknown score", () => {
+		// 0 means "measured, and clean" on the 0..1 scale; undefined means "we
+		// have no measurement". Collapsing the two would assert cleanliness that
+		// was never established.
 		expect(parseAbuserScore("0 (Very Low)")).toBe(0);
+		expect(parseAbuserScore("0")).toBe(0);
+		expect(parseAbuserScore(undefined)).toBeUndefined();
 	});
 });
 
@@ -307,8 +313,8 @@ describe("IpapiBackend.lookup responses", () => {
 		expect(result.country).toBeUndefined();
 		expect(result.asnNumber).toBeUndefined();
 		expect(result.providerName).toBeUndefined();
-		expect(result.abuserScore).toBe(0);
-		expect(result.companyAbuserScore).toBe(0);
+		expect(result.abuserScore).toBeUndefined();
+		expect(result.companyAbuserScore).toBeUndefined();
 	});
 
 	it("keeps a successful lookup when the abuser scores are absent", async () => {
@@ -341,7 +347,7 @@ describe("IpapiBackend.lookup responses", () => {
 
 		expect(result.isValid).toBe(true);
 		expect(result.asnNumber).toBe(64512);
-		expect(result.abuserScore).toBe(0);
+		expect(result.abuserScore).toBeUndefined();
 	});
 
 	it("prefers the company name but falls back to the datacenter", async () => {

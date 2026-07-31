@@ -109,17 +109,22 @@ describe("isNonRoutable", () => {
 });
 
 describe("parseAbuserScore", () => {
-	it("accepts the optional upstream field and always yields a number", () => {
+	it("accepts the optional upstream field", () => {
 		// undefined must be in the parameter type: the wire does not guarantee
 		// the field even though the response type declares it required.
 		expectTypeOf(parseAbuserScore).parameters.toEqualTypeOf<
 			[string | undefined]
 		>();
-		expectTypeOf(parseAbuserScore).returns.toEqualTypeOf<number>();
 	});
 
-	it("never returns undefined for a missing score", () => {
-		expectTypeOf(parseAbuserScore(undefined)).toEqualTypeOf<number>();
+	it("returns an optional number, so callers must handle 'unknown'", () => {
+		// The undefined in the return type is the point: it forces every caller
+		// to decide what an unmeasured score means instead of silently reading
+		// it as the clean end of the 0..1 scale.
+		expectTypeOf(parseAbuserScore).returns.toEqualTypeOf<number | undefined>();
+		expectTypeOf(parseAbuserScore(undefined)).toEqualTypeOf<
+			number | undefined
+		>();
 	});
 });
 
