@@ -37,7 +37,7 @@ export const loadRenderFunction = async (
 	return window.procaptcha.render;
 };
 
-const loadScript = async (
+export const loadScript = async (
 	url: string,
 	attributes?: Partial<HTMLScriptElement>,
 ): Promise<void> => {
@@ -62,8 +62,14 @@ const insertScriptTag = async (
 			resolve();
 		};
 
-		scriptTag.onerror = (event: Event | string) => {
-			reject(event);
+		scriptTag.onerror = () => {
+			// Remove the tag that failed: leaving it behind means a retry would
+			// append a second tag carrying the same id, and any `getElementById`
+			// lookup would keep resolving to the dead one.
+			scriptTag.remove();
+			// The DOM hands us an Event, which carries no message and breaks any
+			// caller reading `error.message`. Report the failure as an Error.
+			reject(new Error(`Failed to load script: ${scriptTag.src}`));
 		};
 
 		target.appendChild(scriptTag);

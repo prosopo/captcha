@@ -21,7 +21,10 @@
 		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --project tsconfig.types.json"
+		"typecheck": "tsc --project tsconfig.types.json",
+		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
+		"test:watch": "NODE_ENV=${NODE_ENV:-test}; npx vitest --config ./vite.test.config.ts",
+		"test:coverage": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --coverage --config ./vite.test.config.ts"
 	},
 	"dependencies": {
 		"@prosopo/types": "4.9.12",
@@ -29,8 +32,13 @@
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.3.4",
+		"@types/jsdom": "21.1.7",
 		"@types/node": "22.10.2",
-		"del-cli": "6.0.0"
+		"@vitest/coverage-v8": "4.1.10",
+		"del-cli": "6.0.0",
+		"jsdom": "25.0.0",
+		"vite": "8.1.5",
+		"vitest": "4.1.10"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
