@@ -2,7 +2,18 @@
 
 # docker run -it --rm --env-file vector.env -v /home/geopro/bench/captcha5/vector.toml:/etc/vector/vector.toml prosopo/vector:latest
 
-FROM timberio/vector:latest-debian
+# Pinned, NOT `latest-debian`. Vector 0.57 made env-var interpolation opt-in
+# (behind --dangerously-allow-env-var-interpolation), so under 0.57 every
+# ${VAR} in vector.toml below is sent verbatim: the sink URI becomes the
+# literal `${NODE_ENV:?err}_provider_node` stream and basic auth puts
+# `${OO_USERNAME:?err}` in the Authorization header, so every write 401s.
+# Vector still starts and reports healthchecks passing, so the only symptom is
+# that nothing reaches OpenObserve. The floating tag meant a rebuild alone was
+# enough to trigger it. 0.55 interpolates by default and fails loudly on an
+# unset var. Do not add the 0.57 flag while pinned here: 0.55 does not
+# recognise it (it has the inverse, --disable-env-var-interpolation) and will
+# refuse to start.
+FROM timberio/vector:0.55.0-debian
 
 # Add Docker's official GPG key:
 RUN apt-get update \
