@@ -15,13 +15,16 @@
 import { z } from "zod";
 import translationEn from "./locales/en/translation.json" with { type: "json" };
 
-type Node =
+export type TranslationNode =
 	| {
-			[key: string]: Node | string;
+			[key: string]: TranslationNode | string;
 	  }
 	| string;
 
-function getLeafFieldPath(obj: Node): string[] {
+// Exported so the traversal can be exercised directly against shapes the
+// bundled English translation happens not to contain (deep nesting, empty
+// objects, explicitly-undefined values).
+export function getLeafFieldPath(obj: TranslationNode): string[] {
 	if (typeof obj === "string") {
 		return [];
 	}
@@ -31,6 +34,18 @@ function getLeafFieldPath(obj: Node): string[] {
 		if (value === undefined) {
 			throw new Error(`Undefined value for key ${key}`);
 		}
+
+		// A string value IS the leaf, so the path ends here. Recursing into it
+		// returns [] and the `children.map` below then contributes nothing,
+		// which is how this function used to return an empty array for every
+		// input — leaving TranslationKeysSchema an empty z.enum. That enum is
+		// spread into three mongoose `reason` fields (types-database
+		// provider.ts), and mongoose registers its enum validator even for an
+		// empty list, so every non-null reason failed validation.
+		if (typeof value === "string") {
+			return arr.concat(key);
+		}
+
 		const children = getLeafFieldPath(value);
 
 		return arr.concat(

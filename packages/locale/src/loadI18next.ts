@@ -27,9 +27,15 @@ const reconcileLanguage = async (
 
 async function loadI18next(backend: boolean, lng?: string): Promise<i18n> {
 	return new Promise((resolve, reject) => {
-		try {
-			if (backend) {
-				import("./i18nBackend.js").then(({ default: initializeI18n }) => {
+		// Every asynchronous branch below terminates in `.catch(reject)`. A
+		// synchronous try/catch cannot see a rejected dynamic import or a
+		// rejected changeLanguage(), so without these the executor would
+		// simply return and the promise would stay pending forever — callers
+		// (i18nMiddleware, and through it the whole server bootstrap) would
+		// hang rather than fail.
+		if (backend) {
+			import("./i18nBackend.js")
+				.then(({ default: initializeI18n }) => {
 					if (!i18nInstance) {
 						// pass the resolver into the i18n init fn which will resolve after i18n connected fires
 						i18nInstance = initializeI18n(resolve);
@@ -37,16 +43,18 @@ async function loadI18next(backend: boolean, lng?: string): Promise<i18n> {
 						// we've already initialised i18n so just return it
 						resolve(i18nInstance);
 					}
-				});
-			} else {
-				import("./i18nFrontend.js").then(({ default: initializeI18n }) => {
+				})
+				.catch(reject);
+		} else {
+			import("./i18nFrontend.js")
+				.then(({ default: initializeI18n }) => {
 					if (!i18nInstance) {
 						// Pass `lng` in on first init so browser detection is skipped
 						// entirely when the site owner has supplied a language. The
 						// resolver only fires on the `loaded` event, so at resolve
 						// time the target-language resources are guaranteed present.
 						i18nInstance = initializeI18n((instance) => {
-							void reconcileLanguage(instance, lng).then(resolve);
+							void reconcileLanguage(instance, lng).then(resolve).catch(reject);
 						}, lng);
 					} else {
 						// Singleton already exists (e.g. a prior widget mounted with a
@@ -54,12 +62,12 @@ async function loadI18next(backend: boolean, lng?: string): Promise<i18n> {
 						// Reconcile before resolving so callers can render synchronously
 						// against the requested language instead of seeing a flash of
 						// the previous one.
-						void reconcileLanguage(i18nInstance, lng).then(resolve);
+						void reconcileLanguage(i18nInstance, lng)
+							.then(resolve)
+							.catch(reject);
 					}
-				});
-			}
-		} catch (e) {
-			reject(e);
+				})
+				.catch(reject);
 		}
 	});
 }
