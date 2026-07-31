@@ -1,5 +1,5 @@
 ---
-"@prosopo/http-blackhole": patch
+"@prosopo/http-blackhole": minor
 ---
 
 fix(http-blackhole): make the per-socket request log unsubstitutable
@@ -17,6 +17,9 @@ the tests assert against directly, by registering a socket, dropping the only
 strong reference and forcing collection with `--expose-gc`. Weakness is a
 property of the class rather than of the type, so observing it is the only way
 to prove it.
+
+`handleRequest`'s third parameter changes type, which is breaking for anyone
+calling it directly — hence a minor rather than a patch on this 0.x/1.x package.
 
 Also covers `src/index.ts`, which was previously untested: it starts listening,
 registers both SIGINT and SIGTERM, exits zero on a clean shutdown, and ignores

@@ -53,15 +53,18 @@ const createRecordingLogger = (): Logger & { messages: string[] } => {
 const createSocket = (): net.Socket => new net.Socket();
 
 /**
- * Run a garbage collection. Exposed via `--expose-gc` in this package's vitest
- * config; without it the weakness of the request log cannot be observed, so
- * fail loudly rather than quietly skipping the assertion it underpins.
+ * Run a garbage collection. `--expose-gc` is added to NODE_OPTIONS by this
+ * package's `test` script in package.json, not by vite.test.config.ts — vitest
+ * does not forward execArgv to its pool workers. Running this file directly
+ * with a bare `vitest` will therefore fail here; without gc the weakness of the
+ * request log cannot be observed, so fail loudly rather than quietly skipping
+ * the assertion it underpins.
  */
 const forceGc = (): void => {
 	const gc: (() => void) | undefined = globalThis.gc;
 	if (undefined === gc) {
 		throw new Error(
-			"gc is not exposed; run vitest with --expose-gc (see vite.test.config.ts)",
+			"gc is not exposed; run this suite via `npm run test` in packages/http-blackhole, which sets NODE_OPTIONS=--expose-gc",
 		);
 	}
 	gc();
@@ -233,17 +236,22 @@ describe("createRequestLog", () => {
 			})();
 
 			// A single gc() call is not guaranteed to reach an object that has
-			// just become unreachable, so drive several with the microtask and
-			// macrotask queues drained in between, then give up rather than hang.
+			// just become unreachable, and FinalizationRegistry callbacks are
+			// explicitly not scheduled on any deadline — so drive gc repeatedly
+			// with the microtask and macrotask queues drained in between. The
+			// budget below (100 x 20ms = 2s) is generous rather than tight: a
+			// slow or loaded CI runner must not be able to turn "not collected
+			// yet" into a failed assertion. The test times out long before this
+			// gives up if collection genuinely never happens.
 			let attempts = 0;
 			const collect = (): void => {
-				if (attempts >= 20) {
+				if (attempts >= 100) {
 					resolve(false);
 					return;
 				}
 				attempts += 1;
 				forceGc();
-				setTimeout(collect, 10);
+				setTimeout(collect, 20);
 			};
 			collect();
 		});

@@ -168,9 +168,10 @@ describe("index entrypoint", () => {
 		await import("../index.js");
 		await waitForLog(log, "is listening on port");
 
-		// PORT=0 asks the OS for any free port, so the reported port is whatever
-		// was actually bound — proving the value came from the environment and
-		// was not the hardcoded default.
+		// The entrypoint logs the configured PORT, not the port the OS actually
+		// bound — with PORT=0 it says 0 while listening on an ephemeral port.
+		// That is what is asserted here: the value came from the environment
+		// rather than from the hardcoded default.
 		const message: string | undefined = log.mock.calls
 			.flat()
 			.find(
