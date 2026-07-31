@@ -21,7 +21,9 @@ import {
 	InvalidPortError,
 	type Logger,
 	MAX_PORT,
+	type RecordRequest,
 	createBlackholeServer,
+	createRequestLog,
 	createShutdown,
 	describeRequest,
 	handleRequest,
@@ -123,20 +125,40 @@ describe("handleRequest", () => {
 		expectTypeOf(handleRequest).returns.toEqualTypeOf<void>();
 	});
 
-	it("takes the socket-keyed request map as optional", () => {
+	it("takes the recorder as optional", () => {
 		// createBlackholeServer supplies it; direct callers should not have to.
 		expectTypeOf(handleRequest).parameters.toEqualTypeOf<
-			[http.IncomingMessage, Logger, (WeakMap<net.Socket, string> | undefined)?]
+			[http.IncomingMessage, Logger, (RecordRequest | undefined)?]
 		>();
 	});
 
-	it("declares the request map weakly, so sockets are not retained", () => {
-		// Note the type system cannot enforce this: Map is structurally
-		// assignable to WeakMap, so a caller passing a Map would compile. The
-		// declared type is the only signal, hence pinning it here.
-		expectTypeOf<Parameters<typeof handleRequest>[2]>().toEqualTypeOf<
-			WeakMap<net.Socket, string> | undefined
+	it("takes a recorder callback, not a map that a Map could impersonate", () => {
+		// A parameter typed WeakMap would accept a strongly-keyed Map, since Map
+		// is structurally assignable to it — the retention bug would compile
+		// cleanly. A function signature admits no such substitution.
+		const req = {} as http.IncomingMessage;
+		// @ts-expect-error a map is no longer accepted here
+		handleRequest(req, { log: (): void => {} }, new Map<net.Socket, string>());
+	});
+});
+
+describe("RecordRequest", () => {
+	it("takes the socket and the formatted description", () => {
+		expectTypeOf<RecordRequest>().parameters.toEqualTypeOf<
+			[net.Socket, string]
 		>();
+		expectTypeOf<RecordRequest>().returns.toEqualTypeOf<void>();
+	});
+});
+
+describe("createRequestLog", () => {
+	it("returns a WeakMap, the only thing that actually guarantees weakness", () => {
+		// Weakness is a property of the class, not of the type, so this is the
+		// single construction site the runtime test asserts against.
+		expectTypeOf(createRequestLog).returns.toEqualTypeOf<
+			WeakMap<net.Socket, string>
+		>();
+		expectTypeOf(createRequestLog).parameters.toEqualTypeOf<[]>();
 	});
 });
 
