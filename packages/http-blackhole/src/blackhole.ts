@@ -13,9 +13,13 @@
 // limitations under the License.
 
 import http from "node:http";
+import type net from "node:net";
 
-/** Port used when PORT is unset or does not parse to a non-zero number. */
+/** Port used when PORT is unset or blank. */
 export const DEFAULT_PORT = 8080;
+
+/** Highest port number the OS will accept. */
+export const MAX_PORT = 65535;
 
 /**
  * Console-shaped output sink. Injected so tests can capture output without
@@ -29,60 +33,126 @@ export interface Logger {
 /** Exit function, injected so tests do not terminate the test runner. */
 export type Exit = (code: number) => void;
 
+/** Raised when PORT is set to something that is not a usable port. */
+export class InvalidPortError extends Error {
+	constructor(value: string) {
+		super(
+			`Invalid PORT "${value}": expected a whole number between 0 and ${MAX_PORT}`,
+		);
+		this.name = "InvalidPortError";
+	}
+}
+
 /**
  * Resolve the listen port from a raw environment value.
  *
- * Note `Number(value) || DEFAULT_PORT` treats 0 as absent, so PORT=0 — which
- * would otherwise mean "pick any free port" — falls back to DEFAULT_PORT.
- * Values that parse to a number are passed straight through without a validity
- * check, so an out-of-range or fractional port surfaces later as a listen error.
+ * Unset or blank falls back to DEFAULT_PORT; anything else must be a plain
+ * decimal integer in range, or startup fails immediately rather than silently
+ * binding the wrong port. 0 is honoured, meaning "bind any free port".
  */
-export const resolvePort = (value: string | undefined): number =>
-	Number(value) || DEFAULT_PORT;
+export const resolvePort = (value: string | undefined): number => {
+	if (value === undefined) {
+		return DEFAULT_PORT;
+	}
+	const trimmed = value.trim();
+	if (trimmed === "") {
+		return DEFAULT_PORT;
+	}
+	// Deliberately stricter than Number(): hex, exponent and fractional forms
+	// in a PORT value are far more likely to be typos than intent.
+	if (!/^\d+$/.test(trimmed)) {
+		throw new InvalidPortError(value);
+	}
+	const port = Number(trimmed);
+	if (port > MAX_PORT) {
+		throw new InvalidPortError(value);
+	}
+	return port;
+};
+
+/** Human-readable request line, tolerating an unparsed method or url. */
+export const describeRequest = (req: http.IncomingMessage): string =>
+	`${req.method ?? "UNKNOWN"} ${req.url ?? "UNKNOWN"}`;
 
 /**
  * Handle one request by deliberately never responding: the socket is held open
  * so the client is forced to hit its own timeout. This is the entire purpose of
  * the package — it exists to test client-side timeout handling.
+ *
+ * The request line is recorded against the socket so the connection-level close
+ * listener can name it.
  */
 export const handleRequest = (
 	req: http.IncomingMessage,
 	logger: Logger,
+	lastRequest?: WeakMap<net.Socket, string>,
 ): void => {
-	logger.log(`Received request: ${req.method} ${req.url}`);
-	// Do nothing: simulate an unresponsive server, keeping the socket open.
+	const description = describeRequest(req);
+	logger.log(`Received request: ${description}`);
+	lastRequest?.set(req.socket, description);
+	// Do nothing else: simulate an unresponsive server, keeping the socket open.
 	req.socket.setTimeout(0); // Disable socket timeout
 	req.socket.setKeepAlive(true); // Keep the socket alive
-
-	req.socket.on("close", () => {
-		logger.log(`Connection closed by client: ${req.method} ${req.url}`);
-	});
 };
 
 /** Build the blackhole server. Does not listen — the caller decides that. */
-export const createBlackholeServer = (logger: Logger): http.Server =>
-	http.createServer((req: http.IncomingMessage) => {
-		handleRequest(req, logger);
+export const createBlackholeServer = (logger: Logger): http.Server => {
+	const server = http.createServer();
+	// Close is tracked per connection rather than per request, so a client that
+	// connects and then goes away without ever sending a request line is still
+	// accounted for.
+	const lastRequest = new WeakMap<net.Socket, string>();
+
+	server.on("connection", (socket: net.Socket) => {
+		logger.log("Connection opened");
+		socket.on("close", () => {
+			const description = lastRequest.get(socket);
+			logger.log(
+				description === undefined
+					? "Connection closed by client before any request"
+					: `Connection closed by client: ${description}`,
+			);
+		});
 	});
+
+	server.on("request", (req: http.IncomingMessage) => {
+		handleRequest(req, logger, lastRequest);
+	});
+
+	return server;
+};
 
 /**
  * Build the SIGINT/SIGTERM handler.
  *
- * Caveat: server.close() waits for in-flight connections to end, and this
- * server holds every connection open indefinitely by design. So whenever a
- * client is connected the callback never fires and the process never exits of
- * its own accord — the supervisor's grace period and SIGKILL end it instead.
+ * server.close() only stops new connections and waits for existing ones to end
+ * — and this server holds every connection open indefinitely by design, so it
+ * would wait forever. closeAllConnections() severs them so shutdown actually
+ * completes. Repeat signals are ignored, and a close failure exits non-zero
+ * rather than reporting a clean shutdown that did not happen.
  */
 export const createShutdown = (
 	server: http.Server,
 	logger: Logger,
 	exit: Exit,
 ): (() => void) => {
+	let shuttingDown = false;
 	return () => {
+		if (shuttingDown) {
+			logger.log("Shutdown already in progress; ignoring signal.");
+			return;
+		}
+		shuttingDown = true;
 		logger.log("\nShutting down http-blackhole server...");
-		server.close(() => {
+		server.close((error?: Error) => {
+			if (error) {
+				logger.log(`Server close failed: ${error.message}`);
+				exit(1);
+				return;
+			}
 			logger.log("Server closed. Exiting.");
 			exit(0);
 		});
+		server.closeAllConnections();
 	};
 };

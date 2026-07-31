@@ -14,7 +14,7 @@
 
 // Testing strategy: exercise the real node:http and node:net implementations
 // rather than mocking them, so the tests pin actual socket/server semantics
-// (in particular that close() blocks while a connection is held open). Fakes
+// (in particular that shutdown must sever held-open connections). Fakes
 // are used only for the two injected seams — the logger and the exit fn — so
 // tests can assert on output without touching the console or killing the
 // runner.
@@ -26,9 +26,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
 	DEFAULT_PORT,
 	type Exit,
+	InvalidPortError,
 	type Logger,
+	MAX_PORT,
 	createBlackholeServer,
 	createShutdown,
+	describeRequest,
 	handleRequest,
 	resolvePort,
 } from "../blackhole.js";
@@ -137,7 +140,6 @@ describe("resolvePort", () => {
 	});
 
 	it("returns the default for an empty string", () => {
-		// Number("") is 0, which is falsy, so the default applies.
 		expect(resolvePort("")).toBe(DEFAULT_PORT);
 	});
 
@@ -153,29 +155,44 @@ describe("resolvePort", () => {
 		expect(resolvePort(" 3000 ")).toBe(3000);
 	});
 
-	it("falls back to the default for a non-numeric value", () => {
-		// A typo in PORT is silently swallowed rather than failing fast.
-		expect(resolvePort("abc")).toBe(DEFAULT_PORT);
-		expect(resolvePort("8080abc")).toBe(DEFAULT_PORT);
+	it("throws on a non-numeric value rather than silently defaulting", () => {
+		expect(() => resolvePort("abc")).toThrow(InvalidPortError);
+		expect(() => resolvePort("8080abc")).toThrow(InvalidPortError);
 	});
 
-	it("falls back to the default for PORT=0", () => {
-		// 0 normally means "bind any free port", but it is falsy so it is
-		// overridden — the server can never be asked for an ephemeral port.
-		expect(resolvePort("0")).toBe(DEFAULT_PORT);
+	it("names the offending value in the error", () => {
+		expect(() => resolvePort("abc")).toThrow(
+			'Invalid PORT "abc": expected a whole number between 0 and 65535',
+		);
 	});
 
-	it("passes through values that are not valid ports", () => {
-		// No range or integer validation happens here; listen() rejects these
-		// later, at runtime.
-		expect(resolvePort("-1")).toBe(-1);
-		expect(resolvePort("99999")).toBe(99999);
-		expect(resolvePort("3000.5")).toBe(3000.5);
+	it("honours PORT=0 as a request for any free port", () => {
+		expect(resolvePort("0")).toBe(0);
 	});
 
-	it("accepts the numeric literal forms Number() understands", () => {
-		expect(resolvePort("0x1f")).toBe(31);
-		expect(resolvePort("1e3")).toBe(1000);
+	it("throws on an out-of-range port", () => {
+		expect(() => resolvePort("-1")).toThrow(InvalidPortError);
+		expect(() => resolvePort("99999")).toThrow(InvalidPortError);
+	});
+
+	it("accepts the range boundary", () => {
+		expect(resolvePort(String(MAX_PORT))).toBe(MAX_PORT);
+		expect(() => resolvePort(String(MAX_PORT + 1))).toThrow(InvalidPortError);
+	});
+
+	it("throws on a fractional port", () => {
+		expect(() => resolvePort("3000.5")).toThrow(InvalidPortError);
+	});
+
+	it("rejects numeric literal forms that are more likely typos", () => {
+		// Number() would happily read these as 31 and 1000.
+		expect(() => resolvePort("0x1f")).toThrow(InvalidPortError);
+		expect(() => resolvePort("1e3")).toThrow(InvalidPortError);
+		expect(() => resolvePort("+3000")).toThrow(InvalidPortError);
+	});
+
+	it("accepts a leading-zero port", () => {
+		expect(resolvePort("08080")).toBe(8080);
 	});
 });
 
@@ -204,25 +221,27 @@ describe("handleRequest", () => {
 		expect(writeSpy).not.toHaveBeenCalled();
 	});
 
-	it("logs when the client closes the connection", () => {
-		const logger = createRecordingLogger();
+	it("records the request line against the socket", () => {
 		const socket = createSocket();
-		handleRequest(createRequest(socket, "POST", "/bar"), logger);
-
-		socket.emit("close");
-
-		expect(logger.messages).toEqual([
-			"Received request: POST /bar",
-			"Connection closed by client: POST /bar",
-		]);
+		const lastRequest = new WeakMap<net.Socket, string>();
+		handleRequest(
+			createRequest(socket, "POST", "/bar"),
+			createRecordingLogger(),
+			lastRequest,
+		);
+		expect(lastRequest.get(socket)).toBe("POST /bar");
 	});
 
-	it("renders undefined method and url literally", () => {
-		// IncomingMessage leaves these undefined until parsed; the template
-		// stringifies them rather than guarding, so the log reads "undefined".
+	it("works without a request map", () => {
+		const logger = createRecordingLogger();
+		handleRequest(createRequest(createSocket(), "GET", "/x"), logger);
+		expect(logger.messages).toEqual(["Received request: GET /x"]);
+	});
+
+	it("labels an unparsed method and url rather than printing undefined", () => {
 		const logger = createRecordingLogger();
 		handleRequest(createRequest(createSocket(), undefined, undefined), logger);
-		expect(logger.messages).toEqual(["Received request: undefined undefined"]);
+		expect(logger.messages).toEqual(["Received request: UNKNOWN UNKNOWN"]);
 	});
 
 	it("logs an empty url as-is", () => {
@@ -244,7 +263,7 @@ describe("handleRequest", () => {
 		).toThrow("sink unavailable");
 	});
 
-	it("propagates a socket failure without logging the close message", () => {
+	it("propagates a socket failure", () => {
 		// Simulates the socket being torn down underneath us.
 		const logger = createRecordingLogger();
 		const socket = createSocket();
@@ -281,8 +300,12 @@ describe("createBlackholeServer", () => {
 			received += chunk.toString();
 		});
 
-		expect(await waitFor(() => logger.messages.length > 0)).toBe(true);
-		expect(logger.messages[0]).toBe("Received request: GET /black/hole");
+		expect(
+			await waitFor(() =>
+				logger.messages.includes("Received request: GET /black/hole"),
+			),
+		).toBe(true);
+		expect(logger.messages[0]).toBe("Connection opened");
 
 		// Give the server ample opportunity to reply; it must not.
 		await new Promise<void>((resolve) => {
@@ -301,12 +324,19 @@ describe("createBlackholeServer", () => {
 			port,
 			"GET /bye HTTP/1.1\r\nHost: localhost\r\n\r\n",
 		);
-		expect(await waitFor(() => logger.messages.length > 0)).toBe(true);
+		expect(
+			await waitFor(() =>
+				logger.messages.includes("Received request: GET /bye"),
+			),
+		).toBe(true);
 
 		socket.destroy();
 
-		expect(await waitFor(() => logger.messages.length > 1)).toBe(true);
-		expect(logger.messages[1]).toBe("Connection closed by client: GET /bye");
+		expect(
+			await waitFor(() =>
+				logger.messages.includes("Connection closed by client: GET /bye"),
+			),
+		).toBe(true);
 	});
 
 	it("serves concurrent connections independently", async () => {
@@ -317,14 +347,19 @@ describe("createBlackholeServer", () => {
 		await sendRequest(port, "GET /one HTTP/1.1\r\nHost: localhost\r\n\r\n");
 		await sendRequest(port, "GET /two HTTP/1.1\r\nHost: localhost\r\n\r\n");
 
-		expect(await waitFor(() => logger.messages.length >= 2)).toBe(true);
-		expect(logger.messages.slice(0, 2).sort()).toEqual([
-			"Received request: GET /one",
-			"Received request: GET /two",
-		]);
+		expect(
+			await waitFor(
+				() =>
+					logger.messages.includes("Received request: GET /one") &&
+					logger.messages.includes("Received request: GET /two"),
+			),
+		).toBe(true);
+		expect(
+			logger.messages.filter((message) => message === "Connection opened"),
+		).toHaveLength(2);
 	});
 
-	it("handles a connection that sends no request at all", async () => {
+	it("logs a connection that sends no request at all", async () => {
 		const logger = createRecordingLogger();
 		const server = createBlackholeServer(logger);
 		const port = await listen(server);
@@ -334,14 +369,62 @@ describe("createBlackholeServer", () => {
 		await new Promise<void>((resolve) => {
 			socket.once("connect", resolve);
 		});
+		expect(
+			await waitFor(() => logger.messages.includes("Connection opened")),
+		).toBe(true);
 
-		await new Promise<void>((resolve) => {
-			setTimeout(resolve, 200);
-		});
-		// No request line means no "request" event, so nothing is logged and the
-		// connection sits open — including the close, which is only wired up
-		// inside the request handler.
-		expect(logger.messages).toEqual([]);
+		socket.destroy();
+
+		// Close is tracked per connection, so a client that never sent a request
+		// line is still accounted for.
+		expect(
+			await waitFor(() =>
+				logger.messages.includes(
+					"Connection closed by client before any request",
+				),
+			),
+		).toBe(true);
+	});
+
+	it("names the most recent request when a keep-alive connection closes", async () => {
+		const logger = createRecordingLogger();
+		const server = createBlackholeServer(logger);
+		const port = await listen(server);
+
+		const socket = await sendRequest(
+			port,
+			"GET /first HTTP/1.1\r\nHost: localhost\r\n\r\n",
+		);
+		expect(
+			await waitFor(() =>
+				logger.messages.includes("Received request: GET /first"),
+			),
+		).toBe(true);
+
+		socket.destroy();
+
+		expect(
+			await waitFor(() =>
+				logger.messages.includes("Connection closed by client: GET /first"),
+			),
+		).toBe(true);
+	});
+});
+
+describe("describeRequest", () => {
+	it("joins the method and url", () => {
+		expect(describeRequest(createRequest(createSocket(), "PUT", "/a"))).toBe(
+			"PUT /a",
+		);
+	});
+
+	it("substitutes UNKNOWN for absent parts", () => {
+		expect(
+			describeRequest(createRequest(createSocket(), undefined, "/a")),
+		).toBe("UNKNOWN /a");
+		expect(
+			describeRequest(createRequest(createSocket(), "GET", undefined)),
+		).toBe("GET UNKNOWN");
 	});
 });
 
@@ -365,12 +448,11 @@ describe("createShutdown", () => {
 		]);
 	});
 
-	it("never completes while a connection is held open", async () => {
-		// This is the package's central hazard: the server keeps every
-		// connection open by design, and server.close() waits for in-flight
-		// connections to end. So under any real load SIGTERM never reaches
-		// process.exit(0) and the supervisor has to SIGKILL after its grace
-		// period.
+	it("completes even while a connection is held open", async () => {
+		// The package's central hazard: server.close() alone waits for in-flight
+		// connections, and this server keeps every connection open by design, so
+		// shutdown would hang until the supervisor SIGKILLed it.
+		// closeAllConnections() severs them so shutdown actually finishes.
 		const logger = createRecordingLogger();
 		const exited: number[] = [];
 		const exit: Exit = (code: number): void => {
@@ -379,19 +461,20 @@ describe("createShutdown", () => {
 		const server = createBlackholeServer(logger);
 		const port = await listen(server);
 		await sendRequest(port, "GET /stuck HTTP/1.1\r\nHost: localhost\r\n\r\n");
-		expect(await waitFor(() => logger.messages.length > 0)).toBe(true);
+		expect(
+			await waitFor(() =>
+				logger.messages.includes("Received request: GET /stuck"),
+			),
+		).toBe(true);
 
 		createShutdown(server, logger, exit)();
 
-		expect(await waitFor(() => exited.length > 0, 500)).toBe(false);
-		expect(exited).toEqual([]);
-		expect(logger.messages).toContain(
-			"\nShutting down http-blackhole server...",
-		);
-		expect(logger.messages).not.toContain("Server closed. Exiting.");
+		expect(await waitFor(() => exited.length > 0)).toBe(true);
+		expect(exited).toEqual([0]);
+		expect(logger.messages).toContain("Server closed. Exiting.");
 	});
 
-	it("completes once the stuck client goes away", async () => {
+	it("completes with many connections held open", async () => {
 		const logger = createRecordingLogger();
 		const exited: number[] = [];
 		const exit: Exit = (code: number): void => {
@@ -399,25 +482,29 @@ describe("createShutdown", () => {
 		};
 		const server = createBlackholeServer(logger);
 		const port = await listen(server);
-		const socket = await sendRequest(
-			port,
-			"GET /stuck HTTP/1.1\r\nHost: localhost\r\n\r\n",
-		);
-		expect(await waitFor(() => logger.messages.length > 0)).toBe(true);
+		for (let index = 0; index < 5; index += 1) {
+			await sendRequest(
+				port,
+				`GET /stuck/${index} HTTP/1.1\r\nHost: localhost\r\n\r\n`,
+			);
+		}
+		expect(
+			await waitFor(
+				() =>
+					logger.messages.filter((message) => message === "Connection opened")
+						.length === 5,
+			),
+		).toBe(true);
 
 		createShutdown(server, logger, exit)();
-		expect(await waitFor(() => exited.length > 0, 300)).toBe(false);
-
-		socket.destroy();
 
 		expect(await waitFor(() => exited.length > 0)).toBe(true);
 		expect(exited).toEqual([0]);
 	});
 
-	it("does not exit when the server was never listening", async () => {
-		// close() on a server that never listened errors; the callback receives
-		// the error but the code ignores it and still exits zero, reporting a
-		// clean shutdown that did not happen.
+	it("exits non-zero when the server was never listening", async () => {
+		// close() errors on a server that never listened. That error must not be
+		// reported as a clean shutdown.
 		const logger = createRecordingLogger();
 		const exited: number[] = [];
 		const exit: Exit = (code: number): void => {
@@ -429,17 +516,15 @@ describe("createShutdown", () => {
 		createShutdown(server, logger, exit)();
 
 		expect(await waitFor(() => exited.length > 0)).toBe(true);
-		expect(exited).toEqual([0]);
-		expect(logger.messages).toEqual([
-			"\nShutting down http-blackhole server...",
-			"Server closed. Exiting.",
-		]);
+		expect(exited).toEqual([1]);
+		expect(logger.messages[0]).toBe("\nShutting down http-blackhole server...");
+		expect(logger.messages[1]).toMatch(/^Server close failed: /);
+		expect(logger.messages).not.toContain("Server closed. Exiting.");
 	});
 
-	it("exits once per signal when invoked repeatedly", async () => {
-		// SIGINT then SIGTERM (or an impatient double Ctrl+C) calls close()
-		// twice. The second call errors, but the error is ignored, so exit is
-		// called again.
+	it("ignores repeat signals and exits exactly once", async () => {
+		// SIGINT then SIGTERM, or an impatient double Ctrl+C, must not close
+		// twice or exit twice.
 		const logger = createRecordingLogger();
 		const exited: number[] = [];
 		const exit: Exit = (code: number): void => {
@@ -450,11 +535,20 @@ describe("createShutdown", () => {
 		const shutdown = createShutdown(server, logger, exit);
 
 		shutdown();
+		shutdown();
 		expect(await waitFor(() => exited.length > 0)).toBe(true);
 		shutdown();
 
-		expect(await waitFor(() => exited.length > 1)).toBe(true);
-		expect(exited).toEqual([0, 0]);
+		await new Promise<void>((resolve) => {
+			setTimeout(resolve, 200);
+		});
+		expect(exited).toEqual([0]);
+		expect(
+			logger.messages.filter(
+				(message) =>
+					message === "Shutdown already in progress; ignoring signal.",
+			),
+		).toHaveLength(2);
 	});
 
 	it("propagates a logger failure before close is attempted", () => {
