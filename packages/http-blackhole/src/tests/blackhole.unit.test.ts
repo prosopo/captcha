@@ -29,7 +29,9 @@ import {
 	InvalidPortError,
 	type Logger,
 	MAX_PORT,
+	type RecordRequest,
 	createBlackholeServer,
+	createRequestLog,
 	createShutdown,
 	describeRequest,
 	handleRequest,
@@ -49,6 +51,24 @@ const createRecordingLogger = (): Logger & { messages: string[] } => {
 
 /** A real, unconnected socket — enough for the handler's socket calls. */
 const createSocket = (): net.Socket => new net.Socket();
+
+/**
+ * Run a garbage collection. `--expose-gc` is added to NODE_OPTIONS by this
+ * package's `test` script in package.json, not by vite.test.config.ts — vitest
+ * does not forward execArgv to its pool workers. Running this file directly
+ * with a bare `vitest` will therefore fail here; without gc the weakness of the
+ * request log cannot be observed, so fail loudly rather than quietly skipping
+ * the assertion it underpins.
+ */
+const forceGc = (): void => {
+	const gc: (() => void) | undefined = globalThis.gc;
+	if (undefined === gc) {
+		throw new Error(
+			"gc is not exposed; run this suite via `npm run test` in packages/http-blackhole, which sets NODE_OPTIONS=--expose-gc",
+		);
+	}
+	gc();
+};
 
 const createRequest = (
 	socket: net.Socket,
@@ -196,6 +216,65 @@ describe("resolvePort", () => {
 	});
 });
 
+describe("createRequestLog", () => {
+	it("is weakly keyed, so a served socket can still be collected", async () => {
+		// The point of the whole seam. Proven by observation rather than by the
+		// type system, which cannot distinguish a WeakMap from a Map here.
+		const collected = await new Promise<boolean>((resolve) => {
+			const log = createRequestLog();
+			const registry = new FinalizationRegistry<string>(() => {
+				resolve(true);
+			});
+
+			// Scoped so the only strong reference dies at the end of the block;
+			// the log's own reference is the one under test.
+			((): void => {
+				const socket = createSocket();
+				registry.register(socket, "socket");
+				log.set(socket, "GET /");
+				socket.destroy();
+			})();
+
+			// A single gc() call is not guaranteed to reach an object that has
+			// just become unreachable, and FinalizationRegistry callbacks are
+			// explicitly not scheduled on any deadline — so drive gc repeatedly
+			// with the microtask and macrotask queues drained in between. The
+			// budget below (100 x 20ms = 2s) is generous rather than tight: a
+			// slow or loaded CI runner must not be able to turn "not collected
+			// yet" into a failed assertion. The test times out long before this
+			// gives up if collection genuinely never happens.
+			let attempts = 0;
+			const collect = (): void => {
+				if (attempts >= 100) {
+					resolve(false);
+					return;
+				}
+				attempts += 1;
+				forceGc();
+				setTimeout(collect, 20);
+			};
+			collect();
+		});
+
+		expect(collected).toBe(true);
+	});
+
+	it("does not expose enumeration, which would defeat the weakness", () => {
+		// forEach/keys/size would each need a strong reference to every key.
+		const log: WeakMap<net.Socket, string> = createRequestLog();
+		expect(log).toBeInstanceOf(WeakMap);
+		expect("size" in log).toBe(false);
+		expect("forEach" in log).toBe(false);
+	});
+
+	it("returns a fresh log each call, so servers do not share state", () => {
+		const socket = createSocket();
+		const first = createRequestLog();
+		first.set(socket, "GET /");
+		expect(createRequestLog().get(socket)).toBeUndefined();
+	});
+});
+
 describe("handleRequest", () => {
 	it("logs the method and url", () => {
 		const logger = createRecordingLogger();
@@ -223,16 +302,39 @@ describe("handleRequest", () => {
 
 	it("records the request line against the socket", () => {
 		const socket = createSocket();
-		const lastRequest = new WeakMap<net.Socket, string>();
+		const log = createRequestLog();
 		handleRequest(
 			createRequest(socket, "POST", "/bar"),
 			createRecordingLogger(),
-			lastRequest,
+			(recorded: net.Socket, description: string) => {
+				log.set(recorded, description);
+			},
 		);
-		expect(lastRequest.get(socket)).toBe("POST /bar");
+		expect(log.get(socket)).toBe("POST /bar");
 	});
 
-	it("works without a request map", () => {
+	it("passes the request's own socket to the recorder", () => {
+		const socket = createSocket();
+		const record = vi.fn<RecordRequest>();
+		handleRequest(
+			createRequest(socket, "POST", "/bar"),
+			createRecordingLogger(),
+			record,
+		);
+		expect(record).toHaveBeenCalledWith(socket, "POST /bar");
+	});
+
+	it("records the same placeholders it logs for an unparsed request", () => {
+		const record = vi.fn<RecordRequest>();
+		handleRequest(
+			createRequest(createSocket(), undefined, undefined),
+			createRecordingLogger(),
+			record,
+		);
+		expect(record).toHaveBeenCalledWith(expect.anything(), "UNKNOWN UNKNOWN");
+	});
+
+	it("works without a recorder", () => {
 		const logger = createRecordingLogger();
 		handleRequest(createRequest(createSocket(), "GET", "/x"), logger);
 		expect(logger.messages).toEqual(["Received request: GET /x"]);
