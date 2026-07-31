@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/file-server",
-	"version": "2.6.48",
+	"version": "2.6.49",
 	"description": "Simple static file server",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -27,13 +27,13 @@
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
 	},
 	"dependencies": {
-		"@prosopo/util": "3.3.4",
+		"@prosopo/util": "3.3.5",
 		"dotenv": "16.4.5",
 		"express": "4.21.2",
 		"sharp": "0.35.3"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.4",
+		"@prosopo/config": "3.3.5",
 		"@types/node": "22.5.5",
 		"@vitest/coverage-v8": "4.1.10",
 		"concurrently": "9.0.1",
