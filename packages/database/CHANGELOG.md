@@ -1,5 +1,22 @@
 # @prosopo/database
 
+## 3.15.20
+### Patch Changes
+
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [2c47bb7]
+- Updated dependencies [0e1171c]
+- Updated dependencies [103318c]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+  - @prosopo/util@3.3.5
+  - @prosopo/types@4.10.0
+  - @prosopo/types-database@4.11.17
+  - @prosopo/common@3.1.48
+  - @prosopo/redis-client@1.0.30
+  - @prosopo/user-access-policy@3.12.9
+  - @prosopo/logger@2.0.4
+
 ## 3.15.19
 ### Patch Changes
 
