@@ -33,10 +33,8 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-	// Unstub first: one test replaces the whole `process` global, and restoring
-	// the env var onto that stub would write to the wrong object (or throw,
-	// when the stub has no env at all).
-	vi.unstubAllGlobals();
+	vi.doUnmock("../process.js");
+	vi.resetModules();
 	if (originalLogLevel === undefined) {
 		Reflect.deleteProperty(process.env, "PROSOPO_LOG_LEVEL");
 	} else {
@@ -94,29 +92,48 @@ describe("i18nSharedOptions", () => {
 		});
 	});
 
-	// The guard exists because this module is reached transitively from browser
-	// bundles, where `process` is absent or partial. Without it, importing it
-	// throws a ReferenceError and takes the whole page down.
+	// This module is reached transitively from browser bundles, where `process`
+	// is absent or partial, so both degraded shapes have to load cleanly.
 	//
-	// Only the `env` half is exercised here. Removing `process` outright is not
-	// testable in-process: vitest itself calls process.memoryUsage() between
-	// suites, so stubbing the global away fails the run rather than the module.
-	// The `typeof process !== "undefined"` arm is therefore covered by the
-	// bundler, not by this suite.
-	describe("browser runtime, where process may be partial", () => {
+	// The `process` read goes through getProcess() precisely so it can be mocked
+	// here. Stubbing the global instead is not viable: vitest itself calls
+	// process.memoryUsage() between suites, so removing the real global fails
+	// the run rather than the module under test.
+	describe("browser runtime, where process may be absent or partial", () => {
+		const mockProcess = (value: NodeJS.Process | undefined): void => {
+			vi.resetModules();
+			vi.doMock("../process.js", () => ({
+				getProcess: (): NodeJS.Process | undefined => value,
+			}));
+		};
+
+		test("loads when there is no process at all", async () => {
+			mockProcess(undefined);
+			const { i18nSharedOptions } = await import("../i18SharedOptions.js");
+			expect(i18nSharedOptions.debug).toBe(false);
+			expect(i18nSharedOptions.fallbackLng).toBe("en");
+		});
+
 		test("loads when process exists but exposes no env", async () => {
-			// Prototype-chained off the real process so vitest's own calls keep
-			// working; only `env` is shadowed away.
+			// Prototype-chained off the real process so the shape stays honest;
+			// only `env` is shadowed away.
 			const partial: NodeJS.Process = Object.create(process);
 			Reflect.defineProperty(partial, "env", {
 				value: undefined,
 				configurable: true,
 			});
-			vi.stubGlobal("process", partial);
+			mockProcess(partial);
 
-			const options = await loadOptions();
-			expect(options.debug).toBe(false);
-			expect(options.fallbackLng).toBe("en");
+			const { i18nSharedOptions } = await import("../i18SharedOptions.js");
+			expect(i18nSharedOptions.debug).toBe(false);
+			expect(i18nSharedOptions.fallbackLng).toBe("en");
+		});
+
+		test("still reads the log level when process is present", async () => {
+			process.env.PROSOPO_LOG_LEVEL = "debug";
+			mockProcess(process);
+			const { i18nSharedOptions } = await import("../i18SharedOptions.js");
+			expect(i18nSharedOptions.debug).toBe(true);
 		});
 	});
 });

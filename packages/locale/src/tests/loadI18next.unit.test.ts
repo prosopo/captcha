@@ -86,6 +86,7 @@ const loadModule = async (): Promise<
 };
 
 afterEach(() => {
+	vi.useRealTimers();
 	vi.resetModules();
 	vi.doUnmock("../i18nBackend.js");
 	vi.doUnmock("../i18nFrontend.js");
@@ -290,6 +291,124 @@ describe("loadI18next, frontend", () => {
 		await expect(loadI18next(false, "fr")).rejects.toThrow(
 			"resource fetch failed",
 		);
+	});
+});
+
+describe("loadI18next, timeout", () => {
+	// Resolution is event-driven, and events are not guaranteed. Nothing above
+	// this module times it out: cli.ts calls it with a bare .then, so a pending
+	// promise there is a boot hang with no log line to explain it.
+
+	test("resolves with the degraded instance when `loaded` never fires", async () => {
+		// Resolve rather than reject: i18next renders the key itself for a
+		// missing resource, so the widget still appears, untranslated. A
+		// rejection is unhandled at both call sites and loses the widget
+		// entirely.
+		vi.useFakeTimers();
+		const { instance } = install("../i18nBackend.js", { fire: "never" });
+		const loadI18next = await loadModule();
+		const { I18N_LOAD_TIMEOUT_MS } = await import("../loadI18next.js");
+
+		const pending = loadI18next(true);
+		await vi.advanceTimersByTimeAsync(I18N_LOAD_TIMEOUT_MS);
+
+		await expect(pending).resolves.toBe(asI18n(instance));
+	});
+
+	test("does not fire early — the instance is not handed back before the deadline", async () => {
+		vi.useFakeTimers();
+		install("../i18nBackend.js", { fire: "never" });
+		const loadI18next = await loadModule();
+		const { I18N_LOAD_TIMEOUT_MS } = await import("../loadI18next.js");
+
+		let settled = false;
+		void loadI18next(true).then(() => {
+			settled = true;
+		});
+		await vi.advanceTimersByTimeAsync(I18N_LOAD_TIMEOUT_MS - 1);
+
+		expect(settled).toBe(false);
+	});
+
+	test("rejects on timeout when no instance was ever created", async () => {
+		// Nothing to degrade to, so there is no resolution that would be honest.
+		// Rejecting at least surfaces the failure instead of hanging.
+		vi.useFakeTimers();
+		vi.doMock("../i18nBackend.js", () => new Promise<never>(() => undefined));
+		const loadI18next = await loadModule();
+		const { I18N_LOAD_TIMEOUT_MS } = await import("../loadI18next.js");
+
+		// Assert before advancing: the handler has to be attached when the timer
+		// fires, or the rejection surfaces as an unhandled one.
+		const assertion = expect(loadI18next(true)).rejects.toThrow(
+			/did not load within/,
+		);
+		await vi.advanceTimersByTimeAsync(I18N_LOAD_TIMEOUT_MS);
+		await assertion;
+	});
+
+	test("a normal load clears the timer, so a late event cannot re-settle it", async () => {
+		// i18next emits `loaded` per namespace and again after changeLanguage.
+		// Without the one-shot latch a later emission would call resolve again
+		// and leave the timer armed.
+		vi.useFakeTimers();
+		let fire: ((instance: i18n) => void) | undefined;
+		const instance: FakeI18n = {
+			language: "en",
+			changeLanguage: async (): Promise<unknown> => undefined,
+		};
+		const initialize = vi.fn<InitializeI18n>((callback) => {
+			fire = callback;
+			return asI18n(instance);
+		});
+		vi.doMock("../i18nBackend.js", () => ({ default: initialize }));
+		const loadI18next = await loadModule();
+		const { I18N_LOAD_TIMEOUT_MS } = await import("../loadI18next.js");
+
+		const pending = loadI18next(true);
+		await vi.advanceTimersByTimeAsync(0);
+		fire?.(asI18n(instance));
+		await expect(pending).resolves.toBe(asI18n(instance));
+
+		// A second emission after the deadline must be inert.
+		fire?.(asI18n(instance));
+		await vi.advanceTimersByTimeAsync(I18N_LOAD_TIMEOUT_MS * 2);
+		await expect(pending).resolves.toBe(asI18n(instance));
+	});
+
+	test("a failure arriving after the timeout cannot turn a resolved promise into a rejection", async () => {
+		// The frontend path can still fail late: the init callback fires, and the
+		// changeLanguage it triggers rejects, long after the deadline handed back
+		// the degraded instance. Calling reject then would produce an unhandled
+		// rejection on an already-settled promise.
+		vi.useFakeTimers();
+		let fire: ((instance: i18n) => void) | undefined;
+		const instance: FakeI18n = {
+			language: "en",
+			changeLanguage: async (): Promise<unknown> => {
+				throw new Error("resource fetch failed");
+			},
+		};
+		const initialize = vi.fn<InitializeI18n>((callback) => {
+			fire = callback;
+			return asI18n(instance);
+		});
+		vi.doMock("../i18nFrontend.js", () => ({ default: initialize }));
+		const loadI18next = await loadModule();
+		const { I18N_LOAD_TIMEOUT_MS } = await import("../loadI18next.js");
+
+		const pending = loadI18next(false, "fr");
+		await vi.advanceTimersByTimeAsync(I18N_LOAD_TIMEOUT_MS);
+		await expect(pending).resolves.toBe(asI18n(instance));
+
+		fire?.(asI18n(instance));
+		await vi.advanceTimersByTimeAsync(0);
+		await expect(pending).resolves.toBe(asI18n(instance));
+	});
+
+	test("the deadline is long enough not to trip a healthy cold start", async () => {
+		const { I18N_LOAD_TIMEOUT_MS } = await import("../loadI18next.js");
+		expect(I18N_LOAD_TIMEOUT_MS).toBeGreaterThanOrEqual(5_000);
 	});
 });
 
