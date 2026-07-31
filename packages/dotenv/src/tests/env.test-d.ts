@@ -13,7 +13,10 @@
 // limitations under the License.
 
 import { describe, expectTypeOf, it } from "vitest";
-import { getEnv, getEnvFile, loadEnv } from "../env.js";
+// Imported from the package entrypoint, not ../env.js: these assertions exist
+// to pin what consumers actually receive, so a barrel that stops re-exporting
+// something — or narrows it — must fail here.
+import { getEnv, getEnvFile, loadEnv } from "../index.js";
 
 describe("getEnv", () => {
 	it("always yields a string, since it falls back to development", () => {
