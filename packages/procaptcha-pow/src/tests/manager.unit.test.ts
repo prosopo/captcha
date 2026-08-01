@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { FingerprintProof } from "@prosopo/fingerprint";
-import type { IpMode } from "@prosopo/load-balancer";
+import type { pickIpMode } from "@prosopo/procaptcha-common";
 import {
 	ApiParams,
 	type BehavioralData,
@@ -46,6 +46,12 @@ import {
 	vi,
 } from "vitest";
 import { Manager } from "../services/Manager.js";
+
+// Taken from procaptcha-common rather than @prosopo/load-balancer directly, so
+// the test does not pull a dependency into this package that the source has no
+// use for.
+type IpMode = ReturnType<typeof pickIpMode>;
+
 import {
 	OTHER_PROVIDER_URL,
 	PROVIDER_URL,
