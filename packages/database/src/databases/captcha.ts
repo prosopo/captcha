@@ -203,19 +203,31 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 	) {
 		await this.connect();
 		if (sessionEvents.length) {
+			// Upsert by sessionId (same pattern as image/pow/puzzle below).
+			// The prior `insertOne` blindly re-inserted every time the sweep
+			// picked up an "unstored" record, so any record that had already
+			// been streamed via CentralDbStreamer.streamSessionRecord got a
+			// duplicate written on every sweep pass. In the current
+			// captchastorage.sessions collection ~64% of sessionIds have
+			// 2+ docs and up to 7 have been observed on a single sessionId.
 			const result = await this.tables.session.bulkWrite(
 				sessionEvents.map((document) => {
 					const { _id, ...safeDoc } = document;
+					const normalised = CaptchaDatabase.normaliseDocCompositeIps(safeDoc);
 					return {
-						insertOne: {
-							document: CaptchaDatabase.normaliseDocCompositeIps(safeDoc),
+						updateOne: {
+							filter: { sessionId: normalised.sessionId },
+							update: { $set: normalised },
+							upsert: true,
 						},
 					};
 				}),
 			);
 			logger.info(() => ({
 				data: {
-					insertedCount: result.insertedCount,
+					upsertedCount: result.upsertedCount,
+					matchedCount: result.matchedCount,
+					modifiedCount: result.modifiedCount,
 					totalProcessed: sessionEvents.length,
 				},
 				msg: "Mongo Saved Session Events",
