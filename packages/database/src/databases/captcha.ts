@@ -204,12 +204,29 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		await this.connect();
 		if (sessionEvents.length) {
 			// Upsert by sessionId (same pattern as image/pow/puzzle below).
-			// The prior `insertOne` blindly re-inserted every time the sweep
-			// picked up an "unstored" record, so any record that had already
-			// been streamed via CentralDbStreamer.streamSessionRecord got a
-			// duplicate written on every sweep pass. In the current
-			// captchastorage.sessions collection ~64% of sessionIds have
-			// 2+ docs and up to 7 have been observed on a single sessionId.
+			// Was intentionally swapped to `insertOne` in #1811 back when
+			// sessionIds were bare UUIDs: two pronodes could roll the same
+			// id, and an upsert-by-sessionId would let the second pronode's
+			// `$set` clobber the first pronode's session record. Insert-only
+			// preserved both docs at the cost of accepting duplicates.
+			//
+			// Now every sessionId is `pronode<N>-<uuidv4>` (see
+			// `getSessionIDPrefix` in frictionlessTasks.ts), so cross-pronode
+			// collision is impossible and within a single pronode the uuidv4
+			// collision probability is 2^-122 — the only doc this upsert
+			// can `$set` over is one the same pronode wrote earlier for the
+			// same session. Safe to restore.
+			//
+			// The bug this actually fixes: `saveCaptchas` is called from the
+			// sweep in `clientTasks.storeCommitmentsExternal`, which drains
+			// records marked "unstored" from local Mongo. The same central
+			// collection is also written fire-and-forget by
+			// `CentralDbStreamer.streamSessionRecord` from
+			// `ProviderDatabase.storeSessionRecord`. Every time the sweep
+			// picked up a record the streamer had already landed on central,
+			// the old `insertOne` wrote a duplicate. In a live 1h snapshot
+			// of `captchastorage.sessions` ~64% of sessionIds have 2+ docs
+			// and up to 7 have been observed on a single sessionId.
 			const result = await this.tables.session.bulkWrite(
 				sessionEvents.map((document) => {
 					const { _id, ...safeDoc } = document;
