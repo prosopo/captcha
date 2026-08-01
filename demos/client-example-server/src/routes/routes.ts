@@ -16,14 +16,17 @@ import express from "express";
 import type { Connection } from "mongoose";
 import { isAuth, login, signup } from "../controllers/auth.js";
 
-const router = express.Router();
-
 function getRoutes(
 	mongoose: Connection,
 	config: ProsopoServerConfigOutput,
 	verifyEndpoint: string,
 	verifyType: string,
 ): express.Router {
+	// A router per call: the module-level singleton this used to share meant a
+	// second getRoutes() stacked another set of handlers onto the same router,
+	// so every request ran the first call's bound config.
+	const router = express.Router();
+
 	router.post(
 		"/login",
 		login.bind(null, mongoose, config, verifyEndpoint, verifyType),
