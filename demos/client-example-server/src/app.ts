@@ -40,13 +40,14 @@ const logger = getLogger("info", "client-example-server:app");
 
 /**
  * The siteverify endpoint the deployment talks to. Non-production
- * environments get their name as a subdomain prefix.
+ * environments get their name as a subdomain prefix. An unset NODE_ENV is
+ * treated as production: prefixing it produced `undefined-api.prosopo.io`,
+ * a host that does not exist.
  */
 export const resolveVerifyEndpoint = (): string => {
+	const environment = process.env.NODE_ENV;
 	const apiPrefix =
-		process.env.NODE_ENV && process.env.NODE_ENV === "production"
-			? ""
-			: `${process.env.NODE_ENV}-`;
+		!environment || environment === "production" ? "" : `${environment}-`;
 	return (
 		process.env.PROSOPO_VERIFY_ENDPOINT ||
 		`https://${apiPrefix}api.prosopo.io/siteverify`
@@ -202,6 +203,8 @@ if (isMain(import.meta.url)) {
 		})
 		.catch((err) => {
 			logger.error(() => ({ err }));
-			process.exit();
+			// Non-zero, so a boot failure is visible to whatever supervises the
+			// process rather than reading as a clean shutdown.
+			process.exit(1);
 		});
 }

@@ -356,6 +356,12 @@ const isAuth = (req: Request, res: Response) => {
 	}
 
 	const token = at(headerParts, 1);
+	// "Bearer " with nothing after it is a malformed credential, not a server
+	// fault: jwt.verify("") throws and would otherwise surface as a 500.
+	if (!token) {
+		return res.status(401).json({ message: "not authenticated" });
+	}
+
 	let decodedToken: string | JwtPayload = "";
 	try {
 		decodedToken = jwt.verify(token, "secret");

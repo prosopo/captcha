@@ -384,7 +384,7 @@ describe("signup: matching the site key to a keyring pair", () => {
 			next,
 		);
 		expect(res.statuses).toEqual([500]);
-		expect(String(res.bodies[0])).toContain("");
+		expect(res.bodies[0]).toMatchObject({ message: expect.any(String) });
 		expect(mocks.isVerified).not.toHaveBeenCalled();
 	});
 });
@@ -768,6 +768,15 @@ describe("isAuth", () => {
 		const res = responseStub();
 		isAuth(request({ authorization: "Bearer" }), res.response);
 		expect(res.statuses).toEqual([401]);
+	});
+
+	test("refuses a Bearer header whose token is empty", () => {
+		// "Bearer " splits into two parts, so the length check passes and the
+		// empty token reached jwt.verify, which threw and read as a 500.
+		const res = responseStub();
+		isAuth(request({ authorization: "Bearer " }), res.response);
+		expect(res.statuses).toEqual([401]);
+		expect(res.bodies).toEqual([{ message: "not authenticated" }]);
 	});
 
 	test("reports a token it cannot decode, and only once", () => {

@@ -142,11 +142,16 @@ describe("resolveVerifyEndpoint", () => {
 		expect(resolveVerifyEndpoint()).toBe("https://api.prosopo.io/siteverify");
 	});
 
-	test("an unset NODE_ENV still produces a usable host", () => {
+	test("an unset NODE_ENV falls back to the production host", () => {
+		// Prefixing an absent environment produced undefined-api.prosopo.io,
+		// which resolves to nothing.
 		Reflect.deleteProperty(process.env, "NODE_ENV");
-		expect(resolveVerifyEndpoint()).toBe(
-			"https://undefined-api.prosopo.io/siteverify",
-		);
+		expect(resolveVerifyEndpoint()).toBe("https://api.prosopo.io/siteverify");
+	});
+
+	test("an empty NODE_ENV is treated the same way", () => {
+		process.env.NODE_ENV = "";
+		expect(resolveVerifyEndpoint()).toBe("https://api.prosopo.io/siteverify");
 	});
 });
 

@@ -67,10 +67,13 @@ vi.mock("@prosopo/dotenv", async (importOriginal) => {
  * Loads app.js afresh and hands back the server it opened, if any. The module
  * boots on import, so each case needs its own module registry.
  */
-const importApp = async (): Promise<Server | undefined> => {
+const importApp = async (
+	options: { expectServer?: boolean } = {},
+): Promise<Server | undefined> => {
 	vi.resetModules();
 	const listeners: Server[] = [];
 	const httpModule = await import("node:http");
+	const httpsModule = await import("node:https");
 	const createServer = httpModule.default.createServer;
 	vi.spyOn(httpModule.default, "createServer").mockImplementation(
 		(...args: Parameters<typeof createServer>) => {
@@ -80,9 +83,27 @@ const importApp = async (): Promise<Server | undefined> => {
 			return server;
 		},
 	);
+	// startServer prefers HTTPS whenever dev certificates happen to be on
+	// disk, so both factories have to be watched — otherwise the assertion
+	// depends on whether ./setup_certs.sh has been run.
+	const createSecureServer = httpsModule.default.createServer;
+	vi.spyOn(httpsModule.default, "createServer").mockImplementation(
+		(...args: Parameters<typeof createSecureServer>) => {
+			const server = createSecureServer(...args);
+			listeners.push(server);
+			mocks.servers.push(server);
+			return server;
+		},
+	);
 	await import("../app.js");
-	// The boot block is fire-and-forget, so wait for its promise chain.
-	await new Promise((resolve) => setImmediate(resolve));
+	// The boot block is fire-and-forget, so wait for its promise chain. How
+	// many turns that takes depends on the machine, so poll rather than
+	// assume a fixed number of ticks.
+	for (let attempt = 0; attempt < 100; attempt++) {
+		await new Promise((resolve) => setImmediate(resolve));
+		if (!options.expectServer) break;
+		if (listeners[0]?.listening) break;
+	}
 	return listeners[0];
 };
 
@@ -108,7 +129,7 @@ afterEach(async () => {
 
 describe("running app.js as the entrypoint", () => {
 	test("boots the server", async () => {
-		const server = await importApp();
+		const server = await importApp({ expectServer: true });
 		expect(server?.listening).toBe(true);
 	});
 
@@ -127,5 +148,7 @@ describe("running app.js as the entrypoint", () => {
 			.mockImplementation((): never => undefined as never);
 		await importApp();
 		expect(exit).toHaveBeenCalledTimes(1);
+		// A zero status would tell a supervisor the process shut down cleanly.
+		expect(exit).toHaveBeenCalledWith(1);
 	});
 });
