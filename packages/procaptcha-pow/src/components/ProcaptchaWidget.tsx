@@ -76,9 +76,17 @@ const Procaptcha = (props: ProcaptchaProps) => {
 		setLoading(true);
 		const coords = props.startCoords;
 		lastCoordsRef.current = coords ?? null;
-		manager.current.start(coords?.x ?? 0, coords?.y ?? 0).finally(() => {
-			setLoading(false);
-		});
+		manager.current
+			.start(coords?.x ?? 0, coords?.y ?? 0)
+			// The manager handles its own failures, but anything it doesn't (a
+			// reset that throws, say) would otherwise escape as an unhandled
+			// rejection and leave the widget stuck showing a spinner.
+			.catch((error: unknown) => {
+				console.error("Error starting PoW verification:", error);
+			})
+			.finally(() => {
+				setLoading(false);
+			});
 	}, [props.autoStart, props.startCoords]);
 
 	useEffect(() => {
@@ -113,7 +121,9 @@ const Procaptcha = (props: ProcaptchaProps) => {
 				// Directly start the verification process without showing any UI
 				try {
 					// Start the PoW verification process
-					manager.current.start();
+					void manager.current.start().catch((error: unknown) => {
+						console.error("Error starting PoW verification:", error);
+					});
 				} catch (error) {
 					console.error("Error starting PoW verification:", error);
 				}
@@ -181,7 +191,14 @@ const Procaptcha = (props: ProcaptchaProps) => {
 					}
 
 					lastCoordsRef.current = { x, y };
-					await manager.current.start(x, y);
+					try {
+						await manager.current.start(x, y);
+					} catch (error) {
+						// React ignores the promise this handler returns, so a
+						// rejection here would surface as an unhandled rejection and
+						// the spinner would never clear.
+						console.error("Error starting PoW verification:", error);
+					}
 					setLoading(false);
 				}}
 				labelText={isTranslationReady ? t("WIDGET.I_AM_HUMAN") : ""}
