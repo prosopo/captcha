@@ -39,6 +39,7 @@
 		"@prosopo/api": "3.5.20",
 		"@prosopo/common": "3.1.48",
 		"@prosopo/datasets": "3.1.55",
+		"@prosopo/load-balancer": "2.10.16",
 		"@prosopo/procaptcha-common": "2.11.18",
 		"@prosopo/types": "4.10.0",
 		"@prosopo/util": "3.3.5",
