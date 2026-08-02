@@ -1,5 +1,16 @@
 # @prosopo/procaptcha-pow
 
+## 2.10.25
+### Patch Changes
+
+- 34f902a: Remove the undeclared `@prosopo/load-balancer` import from the manager unit test, deriving `IpMode` from `procaptcha-common`'s `pickIpMode` instead so `lint:refs` passes.
+- 9c55bcb: Add unit and type tests for the PoW widget and Manager, and fix the defects they exposed:
+  
+  - a retried solve restarted at coordinates (0, 0), losing the real click telemetry an escalated widget depends on
+  - three paths in `ProcaptchaWidget` (checkbox change, autoStart effect, `procaptcha:execute` handler) let a rejected `manager.start()` escape as an unhandled rejection, leaving the spinner running
+- Updated dependencies [1e0cf14]
+  - @prosopo/api@3.5.21
+
 ## 2.10.24
 ### Patch Changes
 
