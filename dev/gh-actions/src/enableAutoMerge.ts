@@ -135,5 +135,10 @@ export const enableAutoMerge = async (
 };
 
 if (isMain(import.meta.url)) {
-	await enableAutoMerge();
+	// Deliberately not awaited: a top-level await cannot be emitted into
+	// the cjs bundle, so the failure is reported here instead.
+	void enableAutoMerge().catch((error: unknown) => {
+		process.exitCode = 1;
+		console.error(error);
+	});
 }

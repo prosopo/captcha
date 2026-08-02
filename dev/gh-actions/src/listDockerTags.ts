@@ -49,5 +49,10 @@ export const listDockerTags = async (
 };
 
 if (isMain(import.meta.url)) {
-	await listDockerTags(process.argv.slice(2));
+	// Deliberately not awaited: a top-level await cannot be emitted into
+	// the cjs bundle, so the failure is reported here instead.
+	void listDockerTags(process.argv.slice(2)).catch((error: unknown) => {
+		process.exitCode = 1;
+		console.error(error);
+	});
 }
