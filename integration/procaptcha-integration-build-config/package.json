@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-integration-build-config",
-	"version": "1.1.28",
+	"version": "1.1.29",
 	"type": "module",
 	"engines": {
 		"node": "^24",
@@ -29,7 +29,7 @@
 		"vite-plugin-dts": "5.0.3"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.4",
+		"@prosopo/config": "3.3.5",
 		"@types/node": "22.10.2",
 		"del-cli": "6.0.0"
 	},

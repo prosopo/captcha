@@ -1,5 +1,54 @@
 # @prosopo/provider
 
+## 4.15.15
+### Patch Changes
+
+- 103318c: feat(traffic-filter): add `datacenterNameDenylist` alongside the existing allowlist
+  
+  Operators can now name datacenter / provider / ASN organisations they want
+  force-included in the datacenter block, mirroring the shape of
+  `datacenterNameAllowlist`. Denylist entries take precedence over the
+  `providerType === "isp"` short-circuit and over the allowlist for the same
+  name, so operators can opt named providers back into the datacenter rule when
+  upstream classifies them as ISP.
+  
+  Same case-insensitive / whitespace-trimmed matching, same three name sources
+  (`datacenterName`, `providerName`, `asnOrganization`), same
+  `MAX_DATACENTER_ALLOWLIST_ENTRIES` / `MAX_DATACENTER_ALLOWLIST_ENTRY_LENGTH`
+  validators. Missing or empty denylist preserves existing behaviour.
+  
+  Wired through the mongoose `ClientSettings.trafficFilter` schema, the zod
+  `TrafficFilterSchema`, `checkTrafficFilter`, and `enrichDnsEvent.countDc` so
+  the denylist is honoured on both the primary rule and the DNS-asymmetry
+  scoring. Unit tests cover the ISP-bypass override, the allowlist-precedence
+  edge case, category-suppression interaction, and the extras path.
+- 8a400eb: fix(provider): return 400 not 500 for CAPTCHA.INVALID_SOLUTION
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [a58d007]
+- Updated dependencies [2c47bb7]
+- Updated dependencies [0e1171c]
+- Updated dependencies [103318c]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+  - @prosopo/api-route@2.6.53
+  - @prosopo/util@3.3.5
+  - @prosopo/locale@3.2.8
+  - @prosopo/types@4.10.0
+  - @prosopo/types-database@4.11.17
+  - @prosopo/ipinfo@0.3.0
+  - @prosopo/api@3.5.20
+  - @prosopo/common@3.1.48
+  - @prosopo/database@3.15.20
+  - @prosopo/datasets@3.1.55
+  - @prosopo/env@3.6.20
+  - @prosopo/keyring@2.9.61
+  - @prosopo/load-balancer@2.10.16
+  - @prosopo/redis-client@1.0.30
+  - @prosopo/types-env@2.10.17
+  - @prosopo/user-access-policy@3.12.9
+  - @prosopo/api-express-router@3.1.51
+  - @prosopo/logger@2.0.4
+
 ## 4.15.14
 ### Patch Changes
 
