@@ -194,7 +194,6 @@ describe("the verify handler", () => {
 
 	test("a thrown non-Error is still reported as a 500", async () => {
 		mocks.decodeToken.mockImplementation(() => {
-			// biome-ignore lint/complexity/noUselessThrow: exercising a non-Error throw
 			throw "not an error";
 		});
 		await createVerifyHandler(mocks.deps)(createRequest(), response.res, next);

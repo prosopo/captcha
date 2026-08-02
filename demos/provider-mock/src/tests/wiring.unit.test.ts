@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { createServer } from "node:net";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { ClientApiPaths } from "@prosopo/types";
 import type { Request, Response } from "express";
 import { afterEach, describe, expect, test, vi } from "vitest";
@@ -32,7 +32,7 @@ import {
 } from "../api.js";
 import { JA4Database } from "../db.js";
 import { isMain } from "../isMain.js";
-import { DEFAULT_API_PORT, defaultStartDeps } from "../start.js";
+import { defaultStartDeps } from "../start.js";
 import { createDeps, createRequest, createResponse } from "./fixtures.js";
 
 afterEach(() => {
@@ -249,21 +249,17 @@ describe("defaultStartDeps", () => {
 });
 
 describe("the package entrypoint", () => {
-	test("importing the package binds no port", async () => {
-		// start.ts used to call startApi() at module scope, so importing anything
-		// from the package started a server. These very imports are the proof:
-		// under the runner, isMain is false and the guard does not fire.
-		const listening = await new Promise<boolean>((resolve) => {
-			const server = createServer();
-			server.once("error", () => {
-				resolve(true);
-			});
-			server.listen(DEFAULT_API_PORT, "127.0.0.1", () => {
-				server.close(() => {
-					resolve(false);
-				});
-			});
-		});
-		expect(listening).toBe(false);
+	test("importing the package does not start the api", () => {
+		// start.ts used to call startApi() at module scope, so importing
+		// anything from the package started a server. It is now behind
+		// isMain(import.meta.url), and under a test runner argv[1] is the
+		// runner rather than start.ts, so the guard does not fire.
+		//
+		// Asserting the guard rather than probing the port: the port test only
+		// held while nothing else was bound, and CI runs the real provider
+		// alongside the suite.
+		const startUrl = new URL("../start.js", import.meta.url).href;
+		expect(isMain(startUrl)).toBe(false);
+		expect(isMain(startUrl, fileURLToPath(startUrl))).toBe(true);
 	});
 });
