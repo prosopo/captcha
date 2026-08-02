@@ -21,5 +21,8 @@ import { isMain } from "./isMain.js";
 // The bot used to run on import: bot.ts called run() at module scope and
 // index.ts only logged its own name. Importing the package now has no effect.
 if (isMain(import.meta.url)) {
-	await main();
+	// Not awaited: a top-level await cannot be emitted in the cjs build, and
+	// main() reports its own failures through core.setFailed rather than
+	// rejecting.
+	void main();
 }
