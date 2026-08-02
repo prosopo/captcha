@@ -204,3 +204,14 @@ const config_include = (config: ReturnType<typeof ViteTestConfig>): string => {
 	}
 	return include[0];
 };
+
+describe("coverage excludes", () => {
+	it("drops type-test files, which are compiled but never executed", () => {
+		// `src/**/*.d.ts` does not match `*.test-d.ts`, so without this every
+		// package reported its type tests as 0%-covered source.
+		asPackage();
+		const exclude = ViteTestConfig().test?.coverage?.exclude ?? [];
+		expect(exclude).toContain("src/**/*.test-d.ts");
+		expect(exclude).toContain("src/**/*.test-d.tsx");
+	});
+});
