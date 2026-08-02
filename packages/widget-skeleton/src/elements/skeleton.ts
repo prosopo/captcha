@@ -21,7 +21,7 @@ import {
 	WIDGET_OUTER_HEIGHT,
 	WIDGET_PADDING,
 } from "../constants.js";
-import type { Theme } from "../theme.js";
+import { type Theme, withAlpha } from "../theme.js";
 import { createCheckboxElement } from "./checkbox.js";
 import { createLogoElement } from "./logo.js";
 
@@ -139,9 +139,10 @@ function getWidgetStyles(theme: Theme): string {
 .prosopo-widget__content {
     padding: ${WIDGET_PADDING};
     border: ${WIDGET_BORDER};
-    background-color: ${theme.palette.background.default};
-    border-color: ${theme.palette.grey[300]};
+    background-color: ${theme.palette.surface};
+    border-color: ${theme.palette.border};
     border-radius: ${WIDGET_BORDER_RADIUS};
+    transition: background-image 0.15s ease, border-color 0.15s ease;
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
@@ -152,6 +153,15 @@ function getWidgetStyles(theme: Theme): string {
     min-height: ${WIDGET_INNER_HEIGHT}px;
     height: 100%;
     direction: ltr !important;
+}
+
+/* Shadowless hover: an M3 state layer (onSurface at 8%) laid over the surface
+   as a gradient overlay, so the background-color token stays untouched. */
+.prosopo-widget__content:hover {
+    background-image: linear-gradient(
+        ${withAlpha(theme.palette.onSurface, theme.stateLayer.hover)},
+        ${withAlpha(theme.palette.onSurface, theme.stateLayer.hover)}
+    );
 }
 </style>
 `;

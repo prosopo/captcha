@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
+import { darkTheme, lightTheme, withAlpha } from "@prosopo/widget-skeleton";
 import type React from "react";
 import {
 	type ButtonHTMLAttributes,
@@ -41,17 +41,19 @@ const buttonStyleBase: CSSProperties = {
 	verticalAlign: "middle",
 	appearance: undefined,
 	textDecoration: "none",
-	fontWeight: "500",
-	fontSize: "0.875rem",
-	lineHeight: "1.75",
-	letterSpacing: "0.02857em",
-	textTransform: "uppercase",
+	// Material 3 buttons use sentence case, not all-caps.
+	textTransform: "none",
 	minWidth: "64px",
-	padding: "6px 16px",
-	borderRadius: "4px",
+	// min, not fixed: long localized labels wrap to two lines in narrow widgets
+	// and the button must grow to keep the text inside its rounded fill.
+	// 40dp is the M3 button height.
+	minHeight: "40px",
+	// Full pill — the Material 3 shape for the action row.
+	borderRadius: "100px",
+	border: "none",
 	transition:
-		"background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, border-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
-	backgroundColor: "#ffffff",
+		"background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, filter 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
+	backgroundColor: "transparent",
 };
 
 const Button: React.FC<ButtonProps> = ({
@@ -65,28 +67,45 @@ const Button: React.FC<ButtonProps> = ({
 		[themeColor],
 	);
 	const [hover, setHover] = useState(false);
-	const buttonStyle = useMemo(() => {
-		const baseStyle = {
+	// M3 requires a visible focus indicator. :focus-visible is matched
+	// imperatively so the ring appears for keyboard focus but not mouse clicks,
+	// without pulling a CSS-in-JS dependency into this component.
+	const [focusVisible, setFocusVisible] = useState(false);
+	const buttonStyle: CSSProperties = useMemo(() => {
+		const baseStyle: CSSProperties = {
 			...buttonStyleBase,
-			border: `1px solid ${theme.palette.grey[500]}`,
-			boxShadow: `0px 1px 3px 0px ${theme.palette.grey[500]}`,
+			...theme.typography.labelLarge,
+			borderRadius: theme.shape.button,
 			fontFamily: theme.font.fontFamily,
 			width: "100%",
-			color: hover
-				? theme.palette.primary.contrastText
-				: theme.palette.background.contrastText,
 		};
 		if (buttonType === "cancel") {
+			// Material 3 "text" button — no fill at rest, an 8% primary state layer
+			// on hover. M3 text buttons use 12dp horizontal padding.
 			return {
 				...baseStyle,
-				backgroundColor: hover ? theme.palette.grey[600] : "transparent",
+				padding: "8px 12px",
+				backgroundColor: hover
+					? withAlpha(theme.palette.primary.main, theme.stateLayer.hover)
+					: "transparent",
+				color: theme.palette.primary.main,
 			};
 		}
+		// Material 3 "filled" button — the primary action. No resting elevation;
+		// hover is an 8% on-primary state layer composited over the fill, which is
+		// how M3 defines it (a brightness filter is not a state layer and behaves
+		// inconsistently across themes). 24dp horizontal padding.
 		return {
 			...baseStyle,
-			backgroundColor: hover
-				? theme.palette.primary.main
-				: theme.palette.background.default,
+			padding: "8px 24px",
+			backgroundColor: theme.palette.primary.main,
+			color: theme.palette.primary.contrastText,
+			boxShadow: hover
+				? `inset 0 0 0 100px ${withAlpha(
+						theme.palette.primary.contrastText,
+						theme.stateLayer.hover,
+					)}`
+				: theme.elevation.buttonPrimary,
 		};
 	}, [buttonType, hover, theme]);
 
@@ -95,7 +114,18 @@ const Button: React.FC<ButtonProps> = ({
 			{...addDataAttr({ dev: { cy: `button-${buttonType}` } })}
 			onMouseEnter={() => setHover(true)}
 			onMouseLeave={() => setHover(false)}
-			style={buttonStyle}
+			onFocus={(e) => setFocusVisible(e.target.matches(":focus-visible"))}
+			onBlur={() => setFocusVisible(false)}
+			style={{
+				...buttonStyle,
+				// M3 focus indicator: 3dp outline, 2dp offset.
+				...(focusVisible
+					? {
+							outline: `3px solid ${theme.palette.primary.main}`,
+							outlineOffset: "2px",
+						}
+					: {}),
+			}}
 			onClick={(e) => {
 				if (!e.isTrusted) {
 					return;
