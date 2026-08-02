@@ -269,14 +269,25 @@ const Procaptcha = (props: ProcaptchaProps) => {
 						}
 
 						lastCoordsRef.current = { x, y };
-						const challenge = await manager.current.start(x, y);
+						try {
+							const challenge = await manager.current.start(x, y);
 
-						if (challenge) {
-							setChallengeData(challenge);
-							setPuzzlePhase("dragging");
+							if (challenge) {
+								setChallengeData(challenge);
+								setPuzzlePhase("dragging");
+							}
+						} catch (error) {
+							// The manager reports failures through state.error;
+							// rethrowing here only produces an unhandled rejection,
+							// since nothing awaits this handler.
+							callbacks.onError?.(
+								error instanceof Error ? error : new Error(String(error)),
+							);
+						} finally {
+							// A rejected start would otherwise leave the spinner up for
+							// good, with no way back to the checkbox for the user.
+							setLoading(false);
 						}
-
-						setLoading(false);
 					}}
 					labelText={isTranslationReady ? t("WIDGET.I_AM_HUMAN") : ""}
 					error={state.error?.message}

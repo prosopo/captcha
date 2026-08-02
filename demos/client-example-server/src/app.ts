@@ -14,6 +14,7 @@
 
 import fs from "node:fs";
 import http from "node:http";
+import type { Server } from "node:http";
 import https from "node:https";
 import type { ServerOptions } from "node:https";
 import path from "node:path";
@@ -22,41 +23,50 @@ import { ProsopoEnvError } from "@prosopo/common";
 import { loadEnv } from "@prosopo/dotenv";
 import { getLogger } from "@prosopo/logger";
 import { getServerConfig } from "@prosopo/server";
-import { at } from "@prosopo/util";
+import type { ProsopoServerConfigOutput } from "@prosopo/types";
+import { at, isMain } from "@prosopo/util";
 import cors from "cors";
 import express from "express";
 import routesFactory from "./routes/routes.js";
 import connectionFactory from "./utils/connection.js";
 import memoryServerSetup from "./utils/database.js";
 
-loadEnv();
-
-enum ProsopoVerificationType {
+export enum ProsopoVerificationType {
 	api = "api",
 	local = "local",
 }
 
 const logger = getLogger("info", "client-example-server:app");
 
-async function main() {
-	loadEnv();
-
+/**
+ * The siteverify endpoint the deployment talks to. Non-production
+ * environments get their name as a subdomain prefix. An unset NODE_ENV is
+ * treated as production: prefixing it produced `undefined-api.prosopo.io`,
+ * a host that does not exist.
+ */
+export const resolveVerifyEndpoint = (): string => {
+	const environment = process.env.NODE_ENV;
 	const apiPrefix =
-		process.env.NODE_ENV && process.env.NODE_ENV === "production"
-			? ""
-			: `${process.env.NODE_ENV}-`;
-	const verifyEndpoint =
+		!environment || environment === "production" ? "" : `${environment}-`;
+	return (
 		process.env.PROSOPO_VERIFY_ENDPOINT ||
-		`https://${apiPrefix}api.prosopo.io/siteverify`;
+		`https://${apiPrefix}api.prosopo.io/siteverify`
+	);
+};
 
-	logger.info(() => ({ data: { verifyEndpoint } }));
-
-	const verifyType: ProsopoVerificationType = Object.keys(
-		ProsopoVerificationType,
-	).includes(process.env.PROSOPO_VERIFICATION_TYPE as string)
+/** Anything the enum doesn't name falls back to the hosted API. */
+export const resolveVerifyType = (): ProsopoVerificationType =>
+	Object.keys(ProsopoVerificationType).includes(
+		process.env.PROSOPO_VERIFICATION_TYPE as string,
+	)
 		? (process.env.PROSOPO_VERIFICATION_TYPE as ProsopoVerificationType)
 		: ProsopoVerificationType.api;
 
+export const isDevelopmentOrTest = (): boolean =>
+	process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";
+
+/** The express app, minus the routes, which need a database connection. */
+export const createApp = (): express.Express => {
 	const app = express();
 
 	// https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
@@ -81,15 +91,79 @@ async function main() {
 		next();
 	});
 
-	app.options("/*", (_, res) => {
-		res.sendStatus(200);
-	});
+	// No explicit OPTIONS handler: cors() above already answers preflight
+	// requests with a 204 and never calls through, so the handler that used to
+	// sit here could not run.
 
-	if (
-		!process.env.MONGO_URI &&
-		process.env.NODE_ENV !== "development" &&
-		process.env.NODE_ENV !== "test"
-	) {
+	return app;
+};
+
+export const DEFAULT_PORT = 9228;
+
+/**
+ * The port is the last segment of the configured server URL. A URL without
+ * one used to yield NaN, which node turns into an arbitrary free port — the
+ * server came up on an address nothing was configured to talk to.
+ */
+export const resolvePort = (config: ProsopoServerConfigOutput): number => {
+	if (!config.serverUrl) return DEFAULT_PORT;
+	const segments = config.serverUrl.split(":");
+	if (segments.length < 3) return DEFAULT_PORT;
+	const port = Number.parseInt(at(segments, 2));
+	return Number.isNaN(port) ? DEFAULT_PORT : port;
+};
+
+/**
+ * HTTPS in development/test when the repo's certificates exist, plain HTTP
+ * otherwise — in production Caddy terminates TLS.
+ */
+export const startServer = (
+	app: express.Express,
+	port: number,
+	dirname: string = path.dirname(fileURLToPath(import.meta.url)),
+): Server => {
+	if (isDevelopmentOrTest()) {
+		const certsDir = path.resolve(dirname, "../../../certs");
+
+		const keyPath = path.join(certsDir, "server.key");
+		const certPath = path.join(certsDir, "server.crt");
+
+		if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
+			const httpsOptions: ServerOptions = {
+				key: fs.readFileSync(keyPath),
+				cert: fs.readFileSync(certPath),
+			};
+
+			return https.createServer(httpsOptions, app).listen(port, () => {
+				logger.info(() => ({ msg: `HTTPS server started on port ${port}` }));
+			});
+		}
+		logger.warn(() => ({
+			msg: "Certificates not found, starting HTTP server instead. Run ./setup_certs.sh to enable HTTPS in development.",
+		}));
+		return http.createServer(app).listen(port, () => {
+			logger.info(() => ({ msg: `HTTP server started on port ${port}` }));
+		});
+	}
+	return http.createServer(app).listen(port, () => {
+		logger.info(() => ({
+			msg: `HTTP server started on port ${port} (TLS handled by reverse proxy)`,
+		}));
+	});
+};
+
+export async function main(): Promise<Server> {
+	loadEnv();
+
+	const verifyEndpoint = resolveVerifyEndpoint();
+
+	logger.info(() => ({ data: { verifyEndpoint } }));
+
+	const verifyType = resolveVerifyType();
+
+	const app = createApp();
+
+	if (!process.env.MONGO_URI && !isDevelopmentOrTest()) {
 		throw new Error(
 			"Cannot run mongo memory when NODE_ENV is neither development nor test",
 		);
@@ -113,57 +187,24 @@ async function main() {
 
 	app.use(routesFactory(mongoose, config, verifyEndpoint, verifyType));
 
-	const port = config.serverUrl
-		? Number.parseInt(at(config.serverUrl.split(":"), 2))
-		: 9228;
+	const port = resolvePort(config);
 
 	logger.info(() => ({ msg: "Listening on port", data: { port } }));
 
-	// Use HTTPS only in development/test when we have certificates
-	// In production, use HTTP because Caddy handles TLS termination
-	const isDev =
-		process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";
-
-	if (isDev) {
-		const __filename = fileURLToPath(import.meta.url);
-		const __dirname = path.dirname(__filename);
-		const certsDir = path.resolve(__dirname, "../../../certs");
-
-		const keyPath = path.join(certsDir, "server.key");
-		const certPath = path.join(certsDir, "server.crt");
-
-		if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
-			const httpsOptions: ServerOptions = {
-				key: fs.readFileSync(keyPath),
-				cert: fs.readFileSync(certPath),
-			};
-
-			https.createServer(httpsOptions, app).listen(port, () => {
-				logger.info(() => ({ msg: `HTTPS server started on port ${port}` }));
-			});
-		} else {
-			logger.warn(() => ({
-				msg: "Certificates not found, starting HTTP server instead. Run ./setup_certs.sh to enable HTTPS in development.",
-			}));
-			http.createServer(app).listen(port, () => {
-				logger.info(() => ({ msg: `HTTP server started on port ${port}` }));
-			});
-		}
-	} else {
-		// Production: use plain HTTP, Caddy handles TLS
-		http.createServer(app).listen(port, () => {
-			logger.info(() => ({
-				msg: `HTTP server started on port ${port} (TLS handled by reverse proxy)`,
-			}));
-		});
-	}
+	return startServer(app, port);
 }
 
-main()
-	.then(() => {
-		logger.info(() => ({ msg: "Server started" }));
-	})
-	.catch((err) => {
-		logger.error(() => ({ err }));
-		process.exit();
-	});
+// Only boot when run as a binary: importing this module (a test, or another
+// entrypoint reusing createApp) must not open a port or spin up mongo.
+if (isMain(import.meta.url)) {
+	main()
+		.then(() => {
+			logger.info(() => ({ msg: "Server started" }));
+		})
+		.catch((err) => {
+			logger.error(() => ({ err }));
+			// Non-zero, so a boot failure is visible to whatever supervises the
+			// process rather than reading as a clean shutdown.
+			process.exit(1);
+		});
+}

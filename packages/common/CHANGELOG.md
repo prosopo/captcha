@@ -1,5 +1,14 @@
 # @prosopo/common
 
+## 3.1.48
+### Patch Changes
+
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [0e1171c]
+- Updated dependencies [e14fce6]
+  - @prosopo/locale@3.2.8
+  - @prosopo/logger@2.0.4
+
 ## 3.1.47
 ### Patch Changes
 
