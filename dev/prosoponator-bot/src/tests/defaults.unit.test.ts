@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as github from "@actions/github";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import {
 	type CommentEvent,
@@ -22,6 +23,25 @@ import {
 import { isMain } from "../isMain.js";
 
 const originalRepository: string | undefined = process.env.GITHUB_REPOSITORY;
+
+/**
+ * `context.repo` falls back to the event payload's `repository` when
+ * GITHUB_REPOSITORY is unset, and inside a workflow that payload is populated —
+ * so clearing the variable alone does not reach the throwing path.
+ */
+const withoutRepository = (run: () => void): void => {
+	const payload = github.context.payload;
+	const repository = payload.repository;
+	Reflect.deleteProperty(process.env, "GITHUB_REPOSITORY");
+	Reflect.deleteProperty(payload, "repository");
+	try {
+		run();
+	} finally {
+		if (repository !== undefined) {
+			payload.repository = repository;
+		}
+	}
+};
 
 const originalEventName: string | undefined = process.env.GITHUB_EVENT_NAME;
 const originalActor: string | undefined = process.env.GITHUB_ACTOR;
@@ -143,8 +163,9 @@ describe("readCommentEvent", () => {
 	test("throws when GITHUB_REPOSITORY is not set", () => {
 		// @actions/github throws rather than guessing; main() turns it into a
 		// failed action rather than a crash.
-		Reflect.deleteProperty(process.env, "GITHUB_REPOSITORY");
-		expect(() => readCommentEvent()).toThrow("GITHUB_REPOSITORY");
+		withoutRepository(() => {
+			expect(() => readCommentEvent()).toThrow("GITHUB_REPOSITORY");
+		});
 	});
 });
 

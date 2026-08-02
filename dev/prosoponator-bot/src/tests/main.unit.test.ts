@@ -13,8 +13,28 @@
 // limitations under the License.
 
 import * as core from "@actions/core";
+import * as github from "@actions/github";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { type BotDeps, defaultDeps, main } from "../bot.js";
+
+/**
+ * `context.repo` falls back to the event payload's `repository` when
+ * GITHUB_REPOSITORY is unset, and inside a workflow that payload is populated —
+ * so clearing the variable alone does not reach the throwing path.
+ */
+const withoutRepository = (run: () => void): void => {
+	const payload = github.context.payload;
+	const repository = payload.repository;
+	Reflect.deleteProperty(process.env, "GITHUB_REPOSITORY");
+	Reflect.deleteProperty(payload, "repository");
+	try {
+		run();
+	} finally {
+		if (repository !== undefined) {
+			payload.repository = repository;
+		}
+	}
+};
 
 const saved: Record<string, string | undefined> = {};
 
@@ -80,8 +100,9 @@ describe("defaultDeps", () => {
 
 	test("propagates a context that cannot be read", () => {
 		set("GITHUB_TOKEN", "ghp_notarealtoken");
-		set("GITHUB_REPOSITORY", undefined);
-		expect(() => defaultDeps()).toThrow("GITHUB_REPOSITORY");
+		withoutRepository(() => {
+			expect(() => defaultDeps()).toThrow("GITHUB_REPOSITORY");
+		});
 	});
 });
 
