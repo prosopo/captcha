@@ -1,5 +1,11 @@
 # @prosopo/locale
 
+## 3.2.8
+### Patch Changes
+
+- 0e1171c: chore(deps): combined dependabot bumps (lodash, webpack-dev-server, sharp, i18next-http-middleware, actions/setup-node and transitive security updates)
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+
 ## 3.2.7
 ### Patch Changes
 
