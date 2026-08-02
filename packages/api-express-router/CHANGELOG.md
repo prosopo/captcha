@@ -1,5 +1,11 @@
 # @prosopo/api-express-router
 
+## 3.1.52
+### Patch Changes
+
+- 508fee8: Add unit and type test coverage for the router factory, the default endpoint adapter, the auth and request-logger middleware, and the package barrel.
+  - @prosopo/env@3.6.21
+
 ## 3.1.51
 ### Patch Changes
 
