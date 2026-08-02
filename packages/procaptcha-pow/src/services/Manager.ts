@@ -437,7 +437,10 @@ export const Manager = (
 					}
 				}
 			},
-			start,
+			// Retry with the same coordinates: a bare `start` restarts at the
+			// default (0, 0), which reads as "no real click" further down and
+			// costs the escalated widget the entry-point telemetry.
+			() => start(x, y),
 			() => {
 				resetState();
 			},
