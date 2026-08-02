@@ -19,13 +19,59 @@ import type {
 	IPInfoResult,
 } from "@prosopo/types";
 
-const TIMEOUT_MS = 700;
+/**
+ * Default per-lookup budget. Short on purpose: an IP lookup sits in the request
+ * path, so a slow backend must not hold up the decision that depends on it.
+ */
+export const DEFAULT_TIMEOUT_MS = 700;
+
+/** The subset of global fetch this backend uses. Injected so tests need no network. */
+export type FetchFn = (
+	url: string,
+	init: RequestInit,
+) => Promise<globalThis.Response>;
 
 export interface IpapiBackendConfig {
 	baseUrl: string;
 	apiKey?: string;
 	logger?: Logger;
+	/** Overridden in tests; defaults to the global fetch. */
+	fetch?: FetchFn;
+	/** Overridden in tests and tunable in deployment; defaults to DEFAULT_TIMEOUT_MS. */
+	timeoutMs?: number;
 }
+
+/**
+ * Parse an upstream abuser score, which arrives as a string like "0.0012 (Low)".
+ *
+ * The field is declared required by the response type but is not guaranteed by
+ * the wire: it comes from `response.json()`, which is cast, not validated. A
+ * missing value used to throw, and the throw was caught far above as a generic
+ * "Network or parsing error" — discarding an otherwise complete and successful
+ * lookup over one absent score.
+ *
+ * Returns `undefined` — not 0 — when the field is absent or unparseable. The
+ * scale is 0..1 with 0 meaning "clean" (see `abuserScoreThreshold`, declared
+ * `{min: 0, max: 1}`), so a literal 0 would assert cleanliness we have not
+ * established. `undefined` says "unknown" instead, and the one consumer
+ * (checkTrafficFilter) already resolves it with `?? 0`, so the effective
+ * blocking behaviour is unchanged while the distinction stays available.
+ *
+ * Fail-closed alternatives were rejected: 1 turns any upstream formatting
+ * change into a silent max-severity block indistinguishable from a genuine
+ * 1.0, and throwing reintroduces exactly the bug above — a cosmetic sub-field
+ * collapsing a good lookup into a total failure.
+ */
+export const parseAbuserScore = (
+	score: string | undefined,
+): number | undefined => {
+	const head = score?.split(" ")[0];
+	if (!head) {
+		return undefined;
+	}
+	const parsed = Number.parseFloat(head);
+	return Number.isNaN(parsed) ? undefined : parsed;
+};
 
 export class IpapiBackend {
 	private config: IpapiBackendConfig;
@@ -36,6 +82,10 @@ export class IpapiBackend {
 
 	isAvailable(): boolean {
 		return Boolean(this.config.baseUrl);
+	}
+
+	private get timeoutMs(): number {
+		return this.config.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 	}
 
 	async lookup(ip: string): Promise<IPInfoResponse> {
@@ -54,10 +104,11 @@ export class IpapiBackend {
 			}
 
 			const controller = new AbortController();
-			const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+			const timeoutId = setTimeout(() => controller.abort(), this.timeoutMs);
 
 			try {
-				const response = await fetch(this.config.baseUrl, {
+				const doFetch: FetchFn = this.config.fetch ?? globalThis.fetch;
+				const response = await doFetch(this.config.baseUrl, {
 					method: "POST",
 					headers: {
 						"Content-Type": "application/json",
@@ -116,12 +167,8 @@ export class IpapiBackend {
 					vpnService: data.vpn?.service,
 					vpnType: data.vpn?.type,
 
-					abuserScore: Number.parseFloat(
-						data.asn?.abuser_score.split(" ")[0] || "0",
-					),
-					companyAbuserScore: Number.parseFloat(
-						data.company?.abuser_score.split(" ")[0] || "0",
-					),
+					abuserScore: parseAbuserScore(data.asn?.abuser_score),
+					companyAbuserScore: parseAbuserScore(data.company?.abuser_score),
 				};
 
 				return result;
@@ -131,7 +178,7 @@ export class IpapiBackend {
 				if (fetchError instanceof Error && fetchError.name === "AbortError") {
 					return {
 						isValid: false,
-						error: `Request timed out after ${TIMEOUT_MS}ms`,
+						error: `Request timed out after ${this.timeoutMs}ms`,
 						ip,
 					};
 				}

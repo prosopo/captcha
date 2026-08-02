@@ -20,7 +20,10 @@ import type {
 	Session,
 } from "@prosopo/types";
 import { trafficFilterAbuserScoreThresholdDefault } from "@prosopo/types";
-import { isDatacenterAllowlisted } from "../spam/checkTrafficFilter.js";
+import {
+	isDatacenterAllowlisted,
+	isDatacenterDenylisted,
+} from "../spam/checkTrafficFilter.js";
 
 export type { EnrichedDnsEvent };
 
@@ -111,6 +114,13 @@ export const computeDnsAsymmetry = (
 	const countDc = (ip: IPInfoResponse | undefined): boolean => {
 		if (!ip?.isValid || !ip.isDatacenter) return false;
 		if (!trafficFilter) return true;
+		if (trafficFilter.blockDatacenter !== true) return false;
+		// Denylist wins: an explicitly listed provider counts as datacenter
+		// even when the ISP short-circuit or category suppression would
+		// otherwise exempt it.
+		if (isDatacenterDenylisted(ip, trafficFilter.datacenterNameDenylist)) {
+			return true;
+		}
 		// Cross-category suppression: don't penalise datacenter classification
 		// when the operator has left the more specific category unblocked.
 		if (
@@ -121,7 +131,6 @@ export const computeDnsAsymmetry = (
 		) {
 			return false;
 		}
-		if (trafficFilter.blockDatacenter !== true) return false;
 		if (ip.providerType === "isp") return false;
 		return !isDatacenterAllowlisted(ip, trafficFilter.datacenterNameAllowlist);
 	};

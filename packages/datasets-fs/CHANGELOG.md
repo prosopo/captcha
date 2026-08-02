@@ -1,5 +1,22 @@
 # @prosopo/datasets-fs
 
+## 3.0.104
+### Patch Changes
+
+- 0e1171c: chore(deps): combined dependabot bumps (lodash, webpack-dev-server, sharp, i18next-http-middleware, actions/setup-node and transitive security updates)
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [2c47bb7]
+- Updated dependencies [0e1171c]
+- Updated dependencies [103318c]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+- Updated dependencies [89effc8]
+  - @prosopo/util@3.3.5
+  - @prosopo/types@4.10.0
+  - @prosopo/common@3.1.48
+  - @prosopo/workspace@3.2.0
+  - @prosopo/logger@2.0.4
+
 ## 3.0.103
 ### Patch Changes
 
