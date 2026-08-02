@@ -101,5 +101,7 @@ export const main = async (
 };
 
 if (isMain(import.meta.url)) {
-	await main();
+	// Not awaited: a top-level await cannot be emitted in the cjs build, and
+	// main() already handles its own failures rather than rejecting.
+	void main();
 }
