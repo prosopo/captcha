@@ -117,7 +117,7 @@ describe("theme", () => {
 		// works while the ramp is ordered.
 		const luminance = (hex: string): number =>
 			Number.parseInt(
-				hex.length === 4 ? hex[1]!.repeat(2) : hex.slice(1, 3),
+				hex.length === 4 ? hex.slice(1, 2).repeat(2) : hex.slice(1, 3),
 				16,
 			);
 		const greys = lightTheme.palette.grey;
