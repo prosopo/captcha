@@ -1,5 +1,43 @@
 # @prosopo/types
 
+## 4.10.0
+### Minor Changes
+
+- 270a8d8: Add unit and type tests for `@prosopo/ipinfo`, with the injection seams needed to write them.
+  
+  - `IpapiBackend` accepts an injected `fetch` and a configurable `timeoutMs`; `MaxMindBackend` accepts an injected `openReader`; `IpInfoService` accepts injected backends.
+  - `parseAbuserScore` no longer throws when the upstream omits `abuser_score`. The field is declared required by the response type but is not validated on the wire, and a missing value used to turn an otherwise successful lookup into a generic "Network or parsing error".
+  - `IPInfoResult.isValid` is now the literal `true` rather than `boolean`, making `IPInfoResponse` an actually discriminated union. Previously `if (!res.isValid)` narrowed to nothing, so `res.error` did not compile and consumers had to cast.
+  - The backends, their config types and the injection seams are re-exported from the package entrypoint, along with `isNonRoutable`.
+
+### Patch Changes
+
+- 103318c: feat(traffic-filter): add `datacenterNameDenylist` alongside the existing allowlist
+  
+  Operators can now name datacenter / provider / ASN organisations they want
+  force-included in the datacenter block, mirroring the shape of
+  `datacenterNameAllowlist`. Denylist entries take precedence over the
+  `providerType === "isp"` short-circuit and over the allowlist for the same
+  name, so operators can opt named providers back into the datacenter rule when
+  upstream classifies them as ISP.
+  
+  Same case-insensitive / whitespace-trimmed matching, same three name sources
+  (`datacenterName`, `providerName`, `asnOrganization`), same
+  `MAX_DATACENTER_ALLOWLIST_ENTRIES` / `MAX_DATACENTER_ALLOWLIST_ENTRY_LENGTH`
+  validators. Missing or empty denylist preserves existing behaviour.
+  
+  Wired through the mongoose `ClientSettings.trafficFilter` schema, the zod
+  `TrafficFilterSchema`, `checkTrafficFilter`, and `enrichDnsEvent.countDc` so
+  the denylist is honoured on both the primary rule and the DNS-asymmetry
+  scoring. Unit tests cover the ISP-bypass override, the allowlist-precedence
+  edge case, category-suppression interaction, and the extras path.
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [2c47bb7]
+- Updated dependencies [0e1171c]
+- Updated dependencies [e14fce6]
+  - @prosopo/util@3.3.5
+  - @prosopo/locale@3.2.8
+
 ## 4.9.12
 ### Patch Changes
 
