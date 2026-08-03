@@ -1,5 +1,10 @@
 # @prosopo/flux
 
+## 2.6.66
+### Patch Changes
+
+- a0caef2: Add unit and type tests for the flux helpers: auth, message encryption, env formatting, secp256k1 signing, url building and the error handler.
+
 ## 2.6.65
 ### Patch Changes
 

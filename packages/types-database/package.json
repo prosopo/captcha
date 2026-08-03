@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/types-database",
-	"version": "4.11.18",
+	"version": "5.0.0",
 	"description": "Types for prosopo database",
 	"type": "module",
 	"main": "dist/index.js",
@@ -40,14 +40,14 @@
 		"@prosopo/common": "3.1.48",
 		"@prosopo/locale": "3.2.8",
 		"@prosopo/logger": "2.0.4",
-		"@prosopo/types": "4.10.0",
-		"@prosopo/user-access-policy": "3.12.10",
+		"@prosopo/types": "5.0.0",
+		"@prosopo/user-access-policy": "3.12.11",
 		"bson": "6.10.4",
 		"mongoose": "8.24.1",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.5",
+		"@prosopo/config": "3.3.6",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "4.1.10",
 		"concurrently": "9.0.1",
