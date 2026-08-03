@@ -317,7 +317,11 @@ export const ClientSettingsSchema = object({
 		.optional()
 		.default(puzzleToleranceDefault),
 	ipValidationRules: IPValidationRulesSchema.optional(),
-	disallowWebView: boolean().optional().default(false).optional(),
+	// The trailing `.optional()` that used to sit after `.default(false)` made
+	// the default unreachable, so this parsed to `undefined` rather than
+	// `false`. Both are falsy, so no consumer changed behaviour, but the
+	// declared output type said `boolean` while the value was missing.
+	disallowWebView: boolean().optional().default(false),
 	contextAware: ContextAwareSchema.optional(),
 	spamEmailDomainCheckEnabled: boolean().optional(),
 	spamFilter: SpamFilterRulesSchema.optional(),
