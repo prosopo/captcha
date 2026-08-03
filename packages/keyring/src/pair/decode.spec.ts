@@ -13,7 +13,9 @@ describe("decode", (): void => {
 		);
 	});
 
-	it("returns correct publicKey from encoded", (): void => {
+	// scrypt with the production parameters takes several seconds, which
+	// overruns the 10s default on a loaded CI runner.
+	it("returns correct publicKey from encoded", { timeout: 60000 }, (): void => {
 		const PASS = "testing";
 
 		expect((): void =>
