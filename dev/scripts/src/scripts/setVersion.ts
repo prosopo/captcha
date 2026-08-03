@@ -64,6 +64,28 @@ const find = (pth: string, filter: (pth: string) => boolean): string[] => {
 	return results;
 };
 
+// A dependency entry is either a bare version string or an inline table; only
+// the table form can carry a `path`.
+const asTable = (value: unknown): Record<string, unknown> | undefined => {
+	if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+		return value as Record<string, unknown>;
+	}
+	return undefined;
+};
+
+// Reads `package.version` out of a manifest, tolerating a path that does not
+// resolve to a readable manifest (workspace members are not always vendored).
+const versionOfManifest = (manifest: string): string | undefined => {
+	try {
+		const pkg = asTable(parse(fs.readFileSync(manifest, "utf8")).package);
+		const version = pkg?.version;
+		return typeof version === "string" ? version : undefined;
+	} catch (e) {
+		log.debug(() => ({ data: { manifest }, msg: "Could not read manifest" }));
+		return undefined;
+	}
+};
+
 export default async function setVersion(versionIn: string, ignore?: string[]) {
 	log.info(() => ({ data: { versionIn }, msg: "Setting version to" }));
 	const version = parseVersion(versionIn);
@@ -163,14 +185,23 @@ export default async function setVersion(versionIn: string, ignore?: string[]) {
 					tomlContent.dependencies ?? {},
 					tomlContent["dev-dependencies"] ?? {},
 				]) {
-					// detect any prosopo dependencies
-					for (const [key, value] of Object.entries(obj)) {
-						if (value.path) {
-							// trace path to get version
-							path.join(value.path, "Cargo.toml");
-							const depContent = fs.readFileSync(pth, "utf8");
-							const depTomlContent = parse(depContent);
-							value.version = depTomlContent.version;
+					// detect any path dependencies
+					for (const value of Object.values(obj)) {
+						const dependency = asTable(value);
+						const depPath = dependency?.path;
+						if (!dependency || typeof depPath !== "string") {
+							continue;
+						}
+						// trace the path to get the dependency's own version. The
+						// path is relative to the directory holding this manifest.
+						const depManifest = path.resolve(
+							path.dirname(pth),
+							depPath,
+							"Cargo.toml",
+						);
+						const depVersion = versionOfManifest(depManifest);
+						if (depVersion !== undefined) {
+							dependency.version = depVersion;
 						}
 					}
 				}
