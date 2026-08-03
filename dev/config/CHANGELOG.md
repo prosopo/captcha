@@ -1,5 +1,10 @@
 # @prosopo/config
 
+## 3.3.6
+### Patch Changes
+
+- c2ab027: chore(deps-dev): bump webpack-dev-server from 5.2.6 to 6.0.0
+
 ## 3.3.5
 ### Patch Changes
 
