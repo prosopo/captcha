@@ -36,6 +36,7 @@ vi.mock("../../../../../tasks/frictionless/frictionlessTasks.js", () => ({
 		BOT_SCORE_ABOVE_THRESHOLD: "BOT_SCORE_ABOVE_THRESHOLD",
 		AUTO_BAN_SCORE: "AUTO_BAN_SCORE",
 		MISSING_CURRENT_URL: "MISSING_CURRENT_URL",
+		DECRYPTION_FAILED: "DECRYPTION_FAILED",
 	},
 }));
 
@@ -119,6 +120,78 @@ describe("runDecisionMachine", () => {
 		timestampTooOldMock.mockReturnValue(false);
 		timestampDecayMock.mockClear();
 		timestampDecayMock.mockReturnValue(2);
+	});
+
+	it("short-circuits to a 3-round image captcha when decryption failed", async () => {
+		const input = buildInput({ decryptionFailed: true });
+		const { res, handle } = buildHandle();
+		await runDecisionMachine(input as never, handle as never);
+		expect(
+			input.tasks.frictionlessManager.sendImageCaptcha,
+		).toHaveBeenCalledWith(
+			expect.objectContaining({
+				solvedImagesCount: 3,
+				reason: "DECRYPTION_FAILED",
+			}),
+		);
+		expect(
+			input.tasks.frictionlessManager.sendPowCaptcha,
+		).not.toHaveBeenCalled();
+		expect(res.json).toHaveBeenCalled();
+	});
+
+	it("caps the decryption-failed rounds at the sitekey's imageMaxRounds", async () => {
+		const input = buildInput({
+			decryptionFailed: true,
+			clientRecord: { settings: { imageMaxRounds: 2, disallowWebView: false } },
+		});
+		const { handle } = buildHandle();
+		await runDecisionMachine(input as never, handle as never);
+		expect(
+			input.tasks.frictionlessManager.sendImageCaptcha,
+		).toHaveBeenCalledWith(expect.objectContaining({ solvedImagesCount: 2 }));
+	});
+
+	it("reports decryption failure as such, not as a user-agent mismatch", async () => {
+		// decryptPayload leaves userAgent/userId undefined on failure, so the UA
+		// check can never match — without the earlier short-circuit these land in
+		// USER_AGENT_MISMATCH.
+		const input = buildInput({
+			decryptionFailed: true,
+			userAgent: undefined,
+			userId: undefined,
+		});
+		const { handle } = buildHandle();
+		await runDecisionMachine(input as never, handle as never);
+		expect(
+			input.tasks.frictionlessManager.sendImageCaptcha,
+		).toHaveBeenCalledWith(
+			expect.objectContaining({ reason: "DECRYPTION_FAILED" }),
+		);
+	});
+
+	it("never hard-blocks a failed decrypt, even under autoBanScoreThreshold", async () => {
+		const input = buildInput({
+			decryptionFailed: true,
+			// what decryptPayload substitutes on failure
+			baseBotScore: 1,
+			botScore: 1,
+			timestamp: 0,
+			clientRecord: {
+				settings: {
+					imageMaxRounds: 8,
+					disallowWebView: false,
+					autoBanScoreThreshold: 0.8,
+				},
+			},
+		});
+		const { res, handle } = buildHandle();
+		await runDecisionMachine(input as never, handle as never);
+		expect(
+			input.tasks.frictionlessManager.registerBlockedSession,
+		).not.toHaveBeenCalled();
+		expect(res.status).not.toHaveBeenCalledWith(401);
+		expect(input.tasks.frictionlessManager.sendImageCaptcha).toHaveBeenCalled();
 	});
 
 	it("returns image captcha on user-agent mismatch", async () => {

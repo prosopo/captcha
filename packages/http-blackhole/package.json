@@ -22,7 +22,7 @@
 	"license": "Apache-2.0",
 	"description": "",
 	"devDependencies": {
-		"@prosopo/config": "3.3.5",
+		"@prosopo/config": "3.3.6",
 		"@types/node": "24.10.13",
 		"@vitest/coverage-v8": "4.1.10",
 		"tsx": "4.20.3",

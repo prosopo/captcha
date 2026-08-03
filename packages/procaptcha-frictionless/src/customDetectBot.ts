@@ -25,7 +25,16 @@ import type {
 	ProviderSelectRetryContext,
 } from "@prosopo/types";
 import type { BotDetectionFunctionResult } from "@prosopo/types";
-import { DetectorLoader } from "./detectorLoader.js";
+import {
+	DetectorLoaderFromScript,
+	type DetectorType,
+} from "./detectorLoader.js";
+
+// Upper bound on the detector-bundle assignment + load probe. The detector
+// lives ONLY in the provider-served pool bundles, so if the provider is
+// slow/unreachable we abandon the probe and signal `detectorUnavailable`, and
+// the provider serves a PoW challenge instead of running detection.
+const ASSIGN_TIMEOUT_MS = 2000;
 
 // The page(s) the widget is rendered on, reduced to origin + path.
 // Deliberately built from `origin` + `pathname` (never `href`) so the query
@@ -129,58 +138,27 @@ const customDetectBot: BotDetectionFunction = async (
 	restartFn: () => void,
 	retryContext?: ProviderSelectRetryContext,
 ): Promise<BotDetectionFunctionResult> => {
-	// Kick off the provider-pin resolution (which hits `/healthz` on the
-	// load-balancer DNS endpoint) in parallel with the module loaders and
-	// the whole `detect()` flow. `getProcaptchaRandomActiveProvider` is
-	// memoised via `pinPromiseCache` keyed on `(env, ipMode)`, so the
-	// in-flight promise is reused when catcher's internal provider selector
-	// and the awaited `getProcaptchaRandomActiveProvider(...)` below reach
-	// for it — no duplicate healthz request. Before this ordering change
-	// the healthz round-trip was fully serial with `detect()`, adding
-	// ~100–200ms to the frictionless critical path on cold DNS/TLS.
-	//
-	// We warm both cache keys because the catcher-internal selector call
-	// (line ~145 below) passes no ipMode, while the awaited call further
-	// down passes `pickIpMode(config)`. Same key when the dapp opts into
-	// neither ipv4 nor ipv6 (dual stack — the common case); different
-	// keys when the dapp is pinned to a single stack. Fire-and-forget on
-	// both — the real synchronisation happens at the awaits below.
-	const ipMode = pickIpMode(config);
-	void getProcaptchaRandomActiveProvider(config.defaultEnvironment).catch(
-		() => undefined,
-	);
-	if (ipMode !== undefined) {
-		void getProcaptchaRandomActiveProvider(
-			config.defaultEnvironment,
-			ipMode,
-			retryContext,
-		).catch(() => undefined);
-	}
-
-	const [ExtClass, detect] = await Promise.all([
-		ExtensionLoader(config.web2),
-		DetectorLoader(),
-	]);
-	const ext = new ExtClass();
-
-	// The detector bundle still expects the legacy 5-arg signature
-	// `(env, randomProviderSelectorFn, container, restart, accountGenerator)`.
-	// Until the bundle is rebuilt without the provider selector, hand it a
-	// noop selector that resolves to the static DNS endpoint — the detector
-	// no longer uses the returned RandomProvider for routing.
-	const detectionResult = await detect(
-		config.defaultEnvironment,
-		async () => getProcaptchaRandomActiveProvider(config.defaultEnvironment),
-		container,
-		restartFn,
-		() => ext.getAccount(config),
-	);
-
-	const userAccount = detectionResult.userAccount;
-
 	if (!config.account.address) {
 		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
 	}
+
+	const ipMode = pickIpMode(config);
+
+	// Start the extension/account module load now rather than after the bundle
+	// assignment. It depends on nothing above, so it overlaps the provider-pin
+	// `/healthz` round-trip and the assign request for free; it is awaited below
+	// at the point `ExtClass` is first needed.
+	//
+	// This is what survives of main's parallel-pin optimisation. That change
+	// warmed BOTH `pinPromiseCache` keys — with and without ipMode — because the
+	// catcher-internal provider selector called with no ipMode while the awaited
+	// call passed one. The 3-arg detector has no provider selector at all, so
+	// only the `(env, ipMode)` key is ever used now and warming the bare-env key
+	// would just issue a healthz request nothing consumes. Nor can the pin be
+	// moved off the critical path the way it was before: the detector now comes
+	// FROM the provider, so resolving the provider is a hard prerequisite of
+	// having anything to run, not something that can proceed alongside it.
+	const extClassPromise = ExtensionLoader(config.web2);
 
 	// On the first attempt this resolves the static DNS endpoint for this env —
 	// the DNS layer load-balances across the pronode fleet. On a retry
@@ -188,10 +166,8 @@ const customDetectBot: BotDetectionFunction = async (
 	// pick a random provider straight from the list instead of re-pinning the
 	// same one. `pickIpMode(config)` honours the dapp's data-ipv4 / data-ipv6
 	// preference so frictionless and the subsequent captcha hops stay on the
-	// same stack.
-	//
-	// This await usually hits the in-flight/resolved promise warmed at the
-	// top of this function — see the prefetch call there.
+	// same stack. Resolved up front — before detection rather than alongside it —
+	// because the detector bundle is served BY this provider.
 	const provider = await getProcaptchaRandomActiveProvider(
 		config.defaultEnvironment,
 		ipMode,
@@ -202,6 +178,87 @@ const customDetectBot: BotDetectionFunction = async (
 		provider.provider.url,
 		config.account.address,
 	);
+
+	// Ask the provider for a per-session detector bundle. The detector lives ONLY
+	// in the provider-served pool: when the provider has a populated pool it
+	// returns the obfuscated detector (each with its own keys + inner cipher)
+	// plus a detectorSessionId. When it cannot (no pool, network, decode, or
+	// timeout) we have NO detector to run — there is no bundled fallback — so we
+	// signal `detectorUnavailable` and the provider serves a PoW challenge.
+	let detectorSessionId: string | undefined;
+	let providerDetect: DetectorType | undefined;
+	try {
+		const assigned = await withTimeout(
+			providerApi.assignDetectorBundle(config.account.address),
+			ASSIGN_TIMEOUT_MS,
+		);
+		if (assigned.useProviderBundle && assigned.detectorScript) {
+			detectorSessionId = assigned.detectorSessionId;
+			providerDetect = await withTimeout(
+				DetectorLoaderFromScript(assigned.detectorScript),
+				ASSIGN_TIMEOUT_MS,
+			);
+		}
+	} catch {
+		// No detector available — fall through to the PoW request below.
+	}
+
+	const ExtClass = await extClassPromise;
+	const ext = new ExtClass();
+
+	// No provider detector ⇒ no detection is possible. Request a PoW challenge
+	// directly: send no token and the detectorUnavailable flag so the provider
+	// serves PoW rather than attempting to score an absent payload.
+	if (providerDetect === undefined) {
+		const userAccount = await ext.getAccount(config);
+		const { currentUrl: fallbackUrl, iframeUrl: fallbackIframeUrl } =
+			getCurrentPageUrls();
+		const powCaptcha = await withTimeout(
+			providerApi.getFrictionlessCaptcha(
+				undefined,
+				undefined,
+				config.account.address,
+				userAccount.account.address,
+				config.mode,
+				undefined,
+				undefined,
+				true,
+				fallbackUrl,
+				fallbackIframeUrl,
+			),
+			10000,
+		);
+		if (powCaptcha.dns_url) {
+			try {
+				void fetch(powCaptcha.dns_url, {
+					method: "GET",
+					mode: "no-cors",
+					credentials: "omit",
+					keepalive: true,
+					cache: "no-store",
+				}).catch(() => undefined);
+			} catch {
+				/* swallow */
+			}
+		}
+		return {
+			captchaType: powCaptcha.captchaType,
+			sessionId: powCaptcha.sessionId,
+			provider: provider,
+			status: powCaptcha.status,
+			userAccount: userAccount,
+			error: powCaptcha.error,
+			hp: powCaptcha.hp,
+		};
+	}
+
+	const detect: DetectorType = providerDetect;
+
+	const detectionResult = await detect(container, restartFn, () =>
+		ext.getAccount(config),
+	);
+
+	const userAccount = detectionResult.userAccount;
 
 	// SIMD readings deliberately omitted from the frictionless hop. The WASM
 	// benchmark is a CPU-bound loop that contends with BotScoreWorker if it
@@ -216,6 +273,8 @@ const customDetectBot: BotDetectionFunction = async (
 		config.account.address,
 		userAccount.account.address,
 		config.mode,
+		undefined,
+		detectorSessionId,
 		undefined,
 		currentUrl,
 		iframeUrl,
