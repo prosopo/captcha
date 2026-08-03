@@ -139,12 +139,21 @@ export default (
 					? req.ipInfo.asnNumber
 					: undefined;
 
+			// Pull decryptedHeadHash off the frictionless session so
+			// headHash-scoped access rules can match at challenge time —
+			// otherwise they can only fire at server-verify, after the
+			// challenge has already been issued with the client-configured
+			// image count / threshold.
+			const sessionRecord = sessionId
+				? await tasks.db.getSessionRecordBySessionId(sessionId)
+				: undefined;
+
 			const userScope = getRequestUserScope(
 				flatten(req.headers),
 				req.ja4,
 				normalizedIp,
 				user,
-				undefined, // headHash
+				sessionRecord?.decryptedHeadHash,
 				undefined, // coords
 				countryCode,
 				asn,
