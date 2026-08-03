@@ -1,5 +1,10 @@
 # @prosopo/procaptcha-common
 
+## 2.11.19
+### Patch Changes
+
+  - @prosopo/account@2.8.65
+
 ## 2.11.18
 ### Patch Changes
 

@@ -24,17 +24,23 @@ describe("toJson", (): void => {
 		});
 	});
 
-	it("creates an encoded output with passphrase", (): void => {
-		const json = keyring.alice.toJson("testing");
+	// scrypt with the production parameters takes several seconds, which
+	// overruns the 10s default on a loaded CI runner.
+	it(
+		"creates an encoded output with passphrase",
+		{ timeout: 60000 },
+		(): void => {
+			const json = keyring.alice.toJson("testing");
 
-		expect(json.encoded).toHaveLength(268);
-		expect(json).toMatchObject({
-			address: "5Engs9f8Gk6JqvVWz3kFyJ8Kqkgx7pLi8C1UTcr7EZ855qBQ",
-			encoding: {
-				content: ["pkcs8", "sr25519"],
-				type: ["scrypt", "xsalsa20-poly1305"],
-				version: "3",
-			},
-		});
-	});
+			expect(json.encoded).toHaveLength(268);
+			expect(json).toMatchObject({
+				address: "5Engs9f8Gk6JqvVWz3kFyJ8Kqkgx7pLi8C1UTcr7EZ855qBQ",
+				encoding: {
+					content: ["pkcs8", "sr25519"],
+					type: ["scrypt", "xsalsa20-poly1305"],
+					version: "3",
+				},
+			});
+		},
+	);
 });

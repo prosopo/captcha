@@ -1,5 +1,17 @@
 # @prosopo/procaptcha-puzzle
 
+## 2.10.42
+### Patch Changes
+
+  - @prosopo/procaptcha-common@2.11.19
+
+## 2.10.41
+### Patch Changes
+
+- 3f75ac4: Add unit and type test coverage for the puzzle widget, and fix two defects it uncovered: the checkbox click coordinates were wiped before reaching the solution salt, and a rejected challenge fetch left the spinner up with an unhandled rejection.
+- Updated dependencies [1e0cf14]
+  - @prosopo/api@3.5.21
+
 ## 2.10.40
 ### Patch Changes
 
