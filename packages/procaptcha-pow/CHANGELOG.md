@@ -1,5 +1,56 @@
 # @prosopo/procaptcha-pow
 
+## 2.10.26
+### Patch Changes
+
+  - @prosopo/procaptcha-common@2.11.19
+
+## 2.10.25
+### Patch Changes
+
+- 34f902a: Remove the undeclared `@prosopo/load-balancer` import from the manager unit test, deriving `IpMode` from `procaptcha-common`'s `pickIpMode` instead so `lint:refs` passes.
+- 9c55bcb: Add unit and type tests for the PoW widget and Manager, and fix the defects they exposed:
+  
+  - a retried solve restarted at coordinates (0, 0), losing the real click telemetry an escalated widget depends on
+  - three paths in `ProcaptchaWidget` (checkbox change, autoStart effect, `procaptcha:execute` handler) let a rejected `manager.start()` escape as an unhandled rejection, leaving the spinner running
+- Updated dependencies [1e0cf14]
+  - @prosopo/api@3.5.21
+
+## 2.10.24
+### Patch Changes
+
+- ab3499c: feat(procaptcha): block on SIMD readings at solution submit
+  
+  Solution submit is the last hop the client controls, so it's the last chance to
+  attach the catcher's WASM SIMD readings for a session. The image, PoW and puzzle
+  managers now wait for the benchmark there via a shared
+  `getSimdReadingsForSubmit` helper, capped at 5s, instead of attaching only
+  whatever the prefetch happened to have resolved.
+  
+  The helper passes the budget down to the detector *and* races it locally — the
+  detector ships prebuilt, so a bundle that ignores `timeoutMs` (or a benchmark
+  wedged on a busy main thread) can't hang the submission. It never rejects: a
+  missing accessor, a rejection, a synchronous throw and a timeout all resolve to
+  `undefined` and the solution is submitted without readings, so a user is never
+  failed over telemetry.
+  
+  The earlier frictionless POST and challenge GET hops are unchanged and remain
+  non-blocking.
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [2c47bb7]
+- Updated dependencies [ab3499c]
+- Updated dependencies [0e1171c]
+- Updated dependencies [103318c]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+  - @prosopo/util@3.3.5
+  - @prosopo/procaptcha-common@2.11.18
+  - @prosopo/locale@3.2.8
+  - @prosopo/types@4.10.0
+  - @prosopo/api@3.5.20
+  - @prosopo/common@3.1.48
+  - @prosopo/fingerprint@2.7.19
+
 ## 2.10.23
 ### Patch Changes
 

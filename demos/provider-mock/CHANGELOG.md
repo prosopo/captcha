@@ -1,5 +1,43 @@
 # @prosopo/provider-mock
 
+## 2.8.139
+### Patch Changes
+
+- Updated dependencies [a66273a]
+  - @prosopo/provider@4.15.17
+  - @prosopo/api-express-router@3.1.53
+
+## 2.8.138
+### Patch Changes
+
+- Updated dependencies [508fee8]
+- Updated dependencies [69f8dcd]
+  - @prosopo/api-express-router@3.1.52
+  - @prosopo/database@3.15.21
+  - @prosopo/provider@4.15.16
+  - @prosopo/types-database@4.11.18
+
+## 2.8.137
+### Patch Changes
+
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [0e1171c]
+- Updated dependencies [103318c]
+- Updated dependencies [4cd9035]
+- Updated dependencies [8fba211]
+- Updated dependencies [8a400eb]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+  - @prosopo/locale@3.2.8
+  - @prosopo/provider@4.15.15
+  - @prosopo/types@4.10.0
+  - @prosopo/types-database@4.11.17
+  - @prosopo/dotenv@3.0.50
+  - @prosopo/common@3.1.48
+  - @prosopo/database@3.15.20
+  - @prosopo/api-express-router@3.1.51
+  - @prosopo/logger@2.0.4
+
 ## 2.8.136
 ### Patch Changes
 

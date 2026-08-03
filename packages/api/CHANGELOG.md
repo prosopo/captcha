@@ -1,5 +1,19 @@
 # @prosopo/api
 
+## 3.5.21
+### Patch Changes
+
+- 1e0cf14: Add unit and type tests for the provider API client: transport behaviour (JSON error bodies vs transport errors, 400 handling, parse failures, header merging), the in-flight challenge de-duplication, every client and admin endpoint's path, body and headers, and the frictionless honeypot meta header. 128 tests, 100% statement, branch, function and line coverage. No behaviour changes.
+
+## 3.5.20
+### Patch Changes
+
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [103318c]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+  - @prosopo/types@4.10.0
+
 ## 3.5.19
 ### Patch Changes
 

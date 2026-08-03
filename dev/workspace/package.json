@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/workspace",
-	"version": "3.1.20",
+	"version": "3.2.0",
 	"description": "Prosopo workspace library",
 	"type": "module",
 	"main": "dist/index.js",
@@ -18,7 +18,8 @@
 		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --project tsconfig.types.json"
+		"typecheck": "tsc --project tsconfig.types.json",
+		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
 	},
 	"engines": {
 		"node": "^24",
@@ -27,9 +28,14 @@
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
 	"devDependencies": {
-		"@prosopo/config": "3.3.4",
+		"@prosopo/config": "3.3.5",
 		"@types/node": "22.10.2",
-		"del-cli": "6.0.0"
+		"@vitest/coverage-v8": "4.1.10",
+		"del-cli": "6.0.0",
+		"dotenv": "16.4.5",
+		"typescript": "5.6.2",
+		"vite": "8.1.5",
+		"vitest": "4.1.10"
 	},
 	"repository": {
 		"type": "git",

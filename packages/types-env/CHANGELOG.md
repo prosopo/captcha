@@ -1,5 +1,28 @@
 # @prosopo/types-env
 
+## 2.10.19
+### Patch Changes
+
+- Updated dependencies [71a5952]
+  - @prosopo/keyring@2.9.62
+
+## 2.10.18
+### Patch Changes
+
+  - @prosopo/types-database@4.11.18
+
+## 2.10.17
+### Patch Changes
+
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [103318c]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+  - @prosopo/types@4.10.0
+  - @prosopo/types-database@4.11.17
+  - @prosopo/keyring@2.9.61
+  - @prosopo/logger@2.0.4
+
 ## 2.10.16
 ### Patch Changes
 

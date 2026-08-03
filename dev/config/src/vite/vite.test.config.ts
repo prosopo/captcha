@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import fs from "node:fs";
 import path from "node:path";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { defineConfig } from "vitest/config";
@@ -30,10 +31,18 @@ export default function (tsConfigPath?: string) {
 			: "@(|)";
 	console.log(`Filtering tests by type: ${testTypeGlob}`);
 
-	// Determine coverage include paths based on current working directory
+	// Determine coverage include paths based on current working directory.
+	//
+	// Detected by looking for a package alongside the cwd rather than by
+	// matching "/packages/" in the path: workspaces also live in dev/, demos/
+	// and integration/, and those were falling through to the repo-root globs
+	// below, which match `packages/*/src/**` only — so they reported 0/0
+	// coverage no matter what their tests exercised. Neither repo root has a
+	// `src` directory, so this cannot misfire in the other direction.
 	const cwd = process.cwd();
 	const isRunningFromPackage =
-		cwd.includes("/packages/") && cwd.includes("/src") === false;
+		fs.existsSync(path.join(cwd, "package.json")) &&
+		fs.existsSync(path.join(cwd, "src"));
 
 	// If running from a package directory, include local src files
 	// If running from repo root, include all package src files

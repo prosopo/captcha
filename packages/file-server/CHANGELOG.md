@@ -1,5 +1,26 @@
 # @prosopo/file-server
 
+## 2.6.49
+### Patch Changes
+
+- 0e1171c: chore(deps): combined dependabot bumps (lodash, webpack-dev-server, sharp, i18next-http-middleware, actions/setup-node and transitive security updates)
+- f186d11: test(file-server): add vitest type tests for the server API
+  
+  The most important of these guards `FetchFn`: express exports its own
+  `Response` type, and an unqualified import silently retargets the alias at it,
+  producing errors far away at the call sites. The test pins the return as
+  `Promise<globalThis.Response>`. Also pinned: `toInt` returning
+  `number | undefined` rather than `number` (NaN is a number, so a plain `number`
+  return would hide the unparseable case), `FileServerEnv.resize` modelling
+  absence as `undefined` rather than zero, and `main` resolving to the
+  `http.Server` so callers can shut it down.
+- 9e220eb: Extract the app, remote handler and env parsing into injectable units, add unit
+  tests, and harden env parsing plus remote resize failures.
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [2c47bb7]
+- Updated dependencies [0e1171c]
+  - @prosopo/util@3.3.5
+
 ## 2.6.48
 ### Patch Changes
 

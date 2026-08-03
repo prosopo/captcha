@@ -1,5 +1,45 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.12.24
+### Patch Changes
+
+  - @prosopo/procaptcha-common@2.11.19
+  - @prosopo/procaptcha-pow@2.10.26
+  - @prosopo/procaptcha-puzzle@2.10.42
+  - @prosopo/procaptcha-react@2.9.99
+
+## 2.12.23
+### Patch Changes
+
+- Updated dependencies [1e0cf14]
+- Updated dependencies [34f902a]
+- Updated dependencies [9c55bcb]
+- Updated dependencies [3f75ac4]
+- Updated dependencies [52a6d96]
+  - @prosopo/api@3.5.21
+  - @prosopo/procaptcha-pow@2.10.25
+  - @prosopo/procaptcha-puzzle@2.10.41
+  - @prosopo/procaptcha-react@2.9.98
+
+## 2.12.22
+### Patch Changes
+
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [ab3499c]
+- Updated dependencies [0e1171c]
+- Updated dependencies [103318c]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+  - @prosopo/procaptcha-common@2.11.18
+  - @prosopo/procaptcha-pow@2.10.24
+  - @prosopo/procaptcha-puzzle@2.10.40
+  - @prosopo/locale@3.2.8
+  - @prosopo/types@4.10.0
+  - @prosopo/api@3.5.20
+  - @prosopo/common@3.1.48
+  - @prosopo/detector@3.5.14
+  - @prosopo/procaptcha-react@2.9.97
+
 ## 2.12.21
 ### Patch Changes
 

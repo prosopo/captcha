@@ -1,5 +1,52 @@
 # @prosopo/procaptcha-react
 
+## 2.9.99
+### Patch Changes
+
+  - @prosopo/procaptcha-common@2.11.19
+  - @prosopo/procaptcha@2.10.60
+
+## 2.9.98
+### Patch Changes
+
+- 52a6d96: Add unit and type tests for the React image-captcha widget: the button, modal
+  portal, captcha grid and round component, the event collector, the lazy
+  boundary, and the widget itself (visible and invisible modes, honeypot,
+  autoStart, session invalidation, the procaptcha:execute event, language
+  handling and the checkbox flow). 174 tests, 98%+ statement, line and function
+  coverage.
+  
+  Changes found while writing them:
+  
+  - A failed `manager.start()` from a checkbox click left the loading spinner up
+    permanently, with no way back to the checkbox, and produced an unhandled
+    rejection.
+  - `CaptchaComponent` wrapped an out-of-range round index, silently rendering a
+    different round's images; it now rejects the index.
+  - Removed unreachable branches in `CaptchaWidget` and `ProcaptchaWidget` that
+    read touch coordinates off a React synthetic click, which never carries them.
+    This also removed the package's `any` and `@ts-ignore` uses: the image retry
+    counter now lives in a data attribute rather than an untyped property.
+- Updated dependencies [cc022be]
+  - @prosopo/procaptcha@2.10.59
+
+## 2.9.97
+### Patch Changes
+
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [2c47bb7]
+- Updated dependencies [ab3499c]
+- Updated dependencies [0e1171c]
+- Updated dependencies [103318c]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+  - @prosopo/util@3.3.5
+  - @prosopo/procaptcha-common@2.11.18
+  - @prosopo/procaptcha@2.10.58
+  - @prosopo/locale@3.2.8
+  - @prosopo/types@4.10.0
+  - @prosopo/common@3.1.48
+
 ## 2.9.96
 ### Patch Changes
 

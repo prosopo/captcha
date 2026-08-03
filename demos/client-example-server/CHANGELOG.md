@@ -1,5 +1,47 @@
 # @prosopo/client-example-server
 
+## 2.7.125
+### Patch Changes
+
+- Updated dependencies [71a5952]
+  - @prosopo/keyring@2.9.62
+  - @prosopo/server@2.10.43
+
+## 2.7.124
+### Patch Changes
+
+- fe9424f: Add unit and type tests for the client example server, and fix the defects they exposed:
+  
+  - `getRoutes` built one module-level router shared by every call, so a second call stacked handlers on the first call's bound config.
+  - `isAuth` could fall through without sending a response, and could send twice for a malformed `Authorization` header.
+  - The `if (passwordHash)` guard in signup had no else branch, leaving a request hanging when it was falsy.
+  - A `serverUrl` without a port resolved to `NaN`, so the server listened on an arbitrary free port; it now falls back to 9228.
+  - Removed the unreachable `OPTIONS` handler (`cors()` already answers preflight) and leftover debug logging.
+  - `app.ts` no longer boots a server on import; it exports `createApp`, `startServer` and `main`, and only runs when executed directly.
+- Updated dependencies [69f8dcd]
+  - @prosopo/database@3.15.21
+  - @prosopo/server@2.10.42
+
+## 2.7.123
+### Patch Changes
+
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [2c47bb7]
+- Updated dependencies [0e1171c]
+- Updated dependencies [103318c]
+- Updated dependencies [4cd9035]
+- Updated dependencies [8fba211]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+  - @prosopo/util@3.3.5
+  - @prosopo/types@4.10.0
+  - @prosopo/dotenv@3.0.50
+  - @prosopo/common@3.1.48
+  - @prosopo/database@3.15.20
+  - @prosopo/keyring@2.9.61
+  - @prosopo/server@2.10.41
+  - @prosopo/logger@2.0.4
+
 ## 2.7.122
 ### Patch Changes
 
