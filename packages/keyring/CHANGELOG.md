@@ -1,5 +1,10 @@
 # @prosopo/keyring
 
+## 2.9.62
+### Patch Changes
+
+- 71a5952: Add unit and type tests for the keyring: pair encode/decode, mnemonic handling, account derivation, the testing keyring and the nobody pair. No behaviour changes.
+
 ## 2.9.61
 ### Patch Changes
 
