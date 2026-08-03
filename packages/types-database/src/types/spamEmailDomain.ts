@@ -22,7 +22,8 @@ export type SpamEmailDomain = {
 export type SpamEmailDomainRecord = mongoose.Document & SpamEmailDomain;
 
 export const SpamEmailDomainRecordSchema = new Schema<SpamEmailDomainRecord>({
+	// `unique` already creates the ascending index on `domain`; declaring it
+	// again with `.index()` made mongoose warn about a duplicate on every
+	// process start.
 	domain: { type: String, required: true, unique: true },
 });
-
-SpamEmailDomainRecordSchema.index({ domain: 1 });

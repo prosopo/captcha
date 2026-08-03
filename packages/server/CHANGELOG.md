@@ -1,5 +1,17 @@
 # @prosopo/server
 
+## 2.10.43
+### Patch Changes
+
+- Updated dependencies [71a5952]
+  - @prosopo/keyring@2.9.62
+
+## 2.10.42
+### Patch Changes
+
+- Updated dependencies [1e0cf14]
+  - @prosopo/api@3.5.21
+
 ## 2.10.41
 ### Patch Changes
 

@@ -1,5 +1,29 @@
 # @prosopo/provider
 
+## 4.15.17
+### Patch Changes
+
+- a66273a: Populate `userScope.headHash` from the frictionless session record in the three captcha-challenge endpoints (`getPoWCaptchaChallenge`, `getImageCaptchaChallenge`, `getPuzzleCaptchaChallenge`). Previously all three hardcoded `undefined` for the headHash slot, so access-policy rules keyed on `headHash` could only take effect at server-verify time — after the challenge was already issued at the client-configured type / difficulty. With `sessionId` in hand each endpoint now does one indexed `getSessionRecordBySessionId` lookup and forwards `sessionRecord?.decryptedHeadHash` into `getRequestUserScope`, so headHash rules can restrict or adjust the challenge at issuance. No change when the request omits `sessionId` (direct-pow etc.).
+- Updated dependencies [71a5952]
+  - @prosopo/keyring@2.9.62
+  - @prosopo/env@3.6.22
+  - @prosopo/types-env@2.10.19
+  - @prosopo/api-express-router@3.1.53
+
+## 4.15.16
+### Patch Changes
+
+- Updated dependencies [508fee8]
+- Updated dependencies [1e0cf14]
+- Updated dependencies [69f8dcd]
+  - @prosopo/api-express-router@3.1.52
+  - @prosopo/api@3.5.21
+  - @prosopo/database@3.15.21
+  - @prosopo/user-access-policy@3.12.10
+  - @prosopo/env@3.6.21
+  - @prosopo/types-database@4.11.18
+  - @prosopo/types-env@2.10.18
+
 ## 4.15.15
 ### Patch Changes
 
