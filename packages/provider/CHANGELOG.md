@@ -1,5 +1,103 @@
 # @prosopo/provider
 
+## 5.0.0
+### Major Changes
+
+- 787017b: chore(detector): remove the legacy detector-key rotation machinery
+  
+  Nothing has read these keys since the detector moved to per-session provider
+  bundles — the decrypt paths resolve a bundle's own keypair instead. Rotating
+  them was already a no-op, so the whole surface is removed rather than left
+  looking live.
+  
+  **Breaking — the admin API loses two endpoints:**
+  
+  - `POST /v1/prosopo/provider/admin/detector/update` (`AdminApiPaths.UpdateDetectorKey`)
+  - `POST /v1/prosopo/provider/admin/detector/remove` (`AdminApiPaths.RemoveDetectorKey`)
+  
+  Also removed: `ProviderApi.updateDetectorKey` / `.removeDetectorKey`;
+  `ClientTaskManager.updateDetectorKey` / `.removeDetectorKey`;
+  `IProviderDatabase.storeDetectorKey` / `.getDetectorKeys` / `.removeDetectorKey`;
+  the `detector` Mongo collection and its `DetectorRecordSchema` / `DetectorSchema`
+  / `DetectorKey` types; the `UpdateDetectorKeyBody` / `RemoveDetectorKeyBodySpec`
+  / `UpdateDetectorKeyResponse` API types; and the rate-limit config for both
+  paths.
+  
+  The `detector` collection itself is left in place on existing deployments — no
+  migration drops it. It can be dropped manually once the pool rollout is
+  confirmed.
+
+### Minor Changes
+
+- 787017b: feat(detector): serve the detector only from per-session provider bundles; PoW fallback
+  
+  The detector now lives ONLY in the provider-served, precomputed pool bundles — there is no detector bundled into the widget and no legacy detector-key pool. Each session's bundle encrypts everything it produces (bot score, SIMD readings, behavioural data) with its own RSA keypair + inner ChaCha20-Poly1305 cipher; the provider decrypts each payload with that exact bundle, resolved per session.
+  
+  - `DetectorBundlePool`: loads precomputed `{id}.js`/`{id}.json` bundle pairs from disk, uniform-random per-session selection, hot-swap `replace()` for the admin push channel.
+  - The pool is ALWAYS initialised at boot (a missing/empty dir yields an empty pool), collapsing the old three states into two: bundles present ⇒ per-session serving; no bundles ⇒ always PoW.
+  - Redis short-TTL `detectorSessionId → bundleId` binding; the resolved `bundleId` is promoted onto the durable session record so later hops (SIMD attach, PoW/puzzle/image solution submit) decrypt with the same bundle.
+  - Client: removed the inlined `@prosopo/detector` runtime import (now type-only). When no provider bundle can be obtained/run, the client signals `detectorUnavailable` and the provider serves a PoW challenge.
+  - All server decrypt paths (score, SIMD readings, behavioural data) resolve the session's bundle and pass its inner cipher; the legacy key-pool brute force and its env fallback are removed from the detection paths. Decrypt failures fail closed (treated as bot ⇒ PoW).
+- 787017b: feat(detector-pool): persist pushed pools, stamp releases, fix the failed-decrypt path
+  
+  - `ReplaceDetectorPool` gets a dedicated 128 MB body limit (~86 MB for a
+    100-bundle pool); every other route keeps the 1 MB backstop.
+  - A pushed pool is now written to the pool directory (staged + renamed) so it
+    survives a restart instead of living only in process memory. The response
+    reports `persisted` so an unpersisted push can be alarmed on. The provider
+    containers gain a host-mounted volume for it — the pool is never baked into
+    the image, which is public on Docker Hub.
+  - Bundles carry the release they were built from; providers skip bundles from
+    another release (`PROSOPO_DETECTOR_POOL_RELEASE`). The widget carries no
+    detector of its own, so nothing else tied the two together.
+  - Failed decryption is now its own decision (`DECRYPTION_FAILED`, 3 image
+    rounds) evaluated before every other check. Previously the synthetic
+    `userAgent: undefined` / `baseBotScore: 1` / `timestamp: 0` that
+    `decryptPayload` substitutes made these sessions land in USER_AGENT_MISMATCH
+    (6 rounds), or a 401 on sitekeys with `autoBanScoreThreshold` set.
+    `timestampDecayFunction` loses its now-unreachable `decryptionFailed` arm.
+
+### Patch Changes
+
+- 787017b: perf(caddy): compress proxied provider responses with zstd/gzip
+  
+  `docker/provider.Caddyfile` had no `encode` directive, and Caddy does not
+  compress by default, so every proxied response went out uncompressed. The
+  detector-pool bundle makes that expensive: ~830 KB of obfuscated JS returned
+  inline from `/detector/assign` once per frictionless session.
+  
+  Obfuscated output still compresses well (the obfuscator's string-array encoding
+  is highly repetitive) — 2.6x with gzip, 3.1x with zstd. At 15k sessions/hour a
+  single provider drops from ~9.15 TB/month of egress to ~3 TB.
+  
+  zstd is preferred with gzip as the fallback. Responses below `minimum_length`
+  (512 bytes) are untouched, which covers every small JSON reply the API returns.
+- 787017b: fix(detector-pool): persist into the pool directory instead of replacing it
+  
+  The previous stage-and-rename persist was destructive against the provider's
+  bind-mounted pool directory: it deleted the mount's contents and then failed
+  with EBUSY renaming over the mount point, wiping the on-disk pool while still
+  reporting the push as successful. Now writes each bundle via a per-file temp +
+  rename within the directory and prunes removed bundles, never touching the
+  directory itself.
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [d107d65]
+- Updated dependencies [6f19cde]
+  - @prosopo/database@4.0.0
+  - @prosopo/types@5.0.0
+  - @prosopo/types-database@5.0.0
+  - @prosopo/api@4.0.0
+  - @prosopo/api-express-router@3.1.54
+  - @prosopo/datasets@3.1.56
+  - @prosopo/env@3.6.23
+  - @prosopo/ipinfo@0.3.1
+  - @prosopo/keyring@2.9.63
+  - @prosopo/load-balancer@2.10.17
+  - @prosopo/types-env@2.10.20
+  - @prosopo/user-access-policy@3.12.11
+
 ## 4.15.17
 ### Patch Changes
 

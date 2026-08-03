@@ -1,5 +1,24 @@
 # @prosopo/procaptcha-bundle
 
+## 4.1.44
+### Patch Changes
+
+- 787017b: Keep util-crypto in the shared browser chunk. Split into its own chunk it
+  formed a Rolldown chunk cycle with the fingerprint chunk on the detector-pool
+  branch, where the detector is no longer bundled into the widget. Whichever
+  chunk evaluated first read the other's module-scope bindings before they were
+  assigned, so the widget threw on load ("init_dist is not a function", then
+  isHex reading `.test` of undefined) and never defined window.procaptcha.
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [6f19cde]
+- Updated dependencies [2bc8e73]
+  - @prosopo/types@5.0.0
+  - @prosopo/procaptcha-frictionless@2.13.0
+  - @prosopo/widget-skeleton@2.8.5
+  - @prosopo/procaptcha-common@2.11.20
+
 ## 4.1.43
 ### Patch Changes
 

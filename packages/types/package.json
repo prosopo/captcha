@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/types",
-	"version": "4.10.0",
+	"version": "5.0.0",
 	"description": "Types for prosopo TypeScript packages",
 	"type": "module",
 	"main": "dist/index.js",
@@ -48,7 +48,7 @@
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.5",
+		"@prosopo/config": "3.3.6",
 		"@types/node": "22.5.5",
 		"@vitest/coverage-v8": "4.1.10",
 		"concurrently": "9.0.1",
