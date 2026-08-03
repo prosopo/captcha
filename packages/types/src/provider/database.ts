@@ -30,6 +30,7 @@ import {
 	type infer as zInfer,
 } from "zod";
 import type { IPInfoResponse } from "../api/ipapi.js";
+import type { ChallengeCaptchaType } from "../client/captchaType/captchaType.js";
 import { CaptchaType } from "../client/index.js";
 import type { ContextType } from "../client/settings.js";
 import { ModeEnum } from "../config/mode.js";
@@ -49,6 +50,10 @@ import type {
 	DecisionMachineScope,
 } from "../decisionMachine/index.js";
 import type { PuzzleEvent, RequestHeaders } from "./api.js";
+import {
+	type ChallengeParams,
+	ChallengeParamsSchema,
+} from "./challengeParams.js";
 import type { SimdReadings } from "./detection.js";
 import type { FrictionlessReason, ResultReason } from "./reasons.js";
 
@@ -394,6 +399,9 @@ export const SessionSchema = object({
 	mode: nativeEnum(ModeEnum).optional(),
 	solvedImagesCount: number().optional(),
 	powDifficulty: number().optional(),
+	// Typed, per-challenge grouping of the two fields above plus `blocked`.
+	// Written alongside them (not instead of them) — see ChallengeParams.
+	challengeParams: ChallengeParamsSchema.optional(),
 	storedAtTimestamp: date().optional(),
 	lastUpdatedTimestamp: date().optional(),
 	pendingStage: boolean().optional(),
@@ -498,6 +506,10 @@ export type Session = {
 	mode?: ModeEnum;
 	solvedImagesCount?: number;
 	powDifficulty?: number;
+	// Discriminated view of the challenge-specific knobs above. Dual-written
+	// with the flat fields until every reader has migrated and the backfill
+	// has run; see `deriveChallengeParams`.
+	challengeParams?: ChallengeParams;
 	storedAtTimestamp?: Date;
 	lastUpdatedTimestamp?: Date;
 	// See StoredCaptcha.pendingStage — same semantics on Session records.
@@ -710,7 +722,7 @@ export type DecisionMachineArtifact = {
 	source: string;
 	name?: string;
 	version?: string;
-	captchaType?: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle;
+	captchaType?: ChallengeCaptchaType;
 	createdAt: Date;
 	updatedAt: Date;
 };

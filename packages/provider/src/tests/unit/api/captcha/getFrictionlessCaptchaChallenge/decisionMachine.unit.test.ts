@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ContextType } from "@prosopo/types";
+import { CaptchaType, ContextType } from "@prosopo/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { hashUserAgentMock, timestampTooOldMock, timestampDecayMock } =
@@ -221,6 +221,7 @@ describe("runDecisionMachine", () => {
 			expect(
 				input.tasks.frictionlessManager.registerBlockedSession,
 			).toHaveBeenCalledWith(
+				CaptchaType.image,
 				expect.objectContaining({ reason: "AUTO_BAN_SCORE" }),
 			);
 			expect(res.status).toHaveBeenCalledWith(401);
@@ -248,6 +249,7 @@ describe("runDecisionMachine", () => {
 			expect(
 				input.tasks.frictionlessManager.registerBlockedSession,
 			).toHaveBeenCalledWith(
+				CaptchaType.image,
 				expect.objectContaining({ reason: "AUTO_BAN_SCORE" }),
 			);
 			expect(res.status).toHaveBeenCalledWith(401);
@@ -270,6 +272,7 @@ describe("runDecisionMachine", () => {
 			expect(
 				input.tasks.frictionlessManager.registerBlockedSession,
 			).toHaveBeenCalledWith(
+				CaptchaType.image,
 				expect.objectContaining({ reason: "AUTO_BAN_SCORE" }),
 			);
 			expect(res.status).toHaveBeenCalledWith(401);

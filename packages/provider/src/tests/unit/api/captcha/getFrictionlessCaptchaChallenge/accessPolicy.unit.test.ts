@@ -174,9 +174,12 @@ describe("handleAccessPolicy", () => {
 			const res = buildRes();
 			const r = await handleAccessPolicy(input as never, res as never);
 			expect(r.handled).toBe(true);
+			// The blocked session is recorded against the type the policy
+			// pinned, not a hardcoded `image`.
 			expect(
 				tasks.frictionlessManager.registerBlockedSession,
 			).toHaveBeenCalledWith(
+				CaptchaType.image,
 				expect.objectContaining({ reason: "AUTO_BAN_SCORE" }),
 			);
 			expect(res.status).toHaveBeenCalledWith(401);
@@ -188,9 +191,12 @@ describe("handleAccessPolicy", () => {
 			const res = buildRes();
 			const r = await handleAccessPolicy(input as never, res as never);
 			expect(r.handled).toBe(true);
+			// The blocked session is recorded against the type the policy
+			// pinned, not a hardcoded `image`.
 			expect(
 				tasks.frictionlessManager.registerBlockedSession,
 			).toHaveBeenCalledWith(
+				CaptchaType.pow,
 				expect.objectContaining({ reason: "AUTO_BAN_SCORE" }),
 			);
 			expect(res.status).toHaveBeenCalledWith(401);
@@ -202,9 +208,12 @@ describe("handleAccessPolicy", () => {
 			const res = buildRes();
 			const r = await handleAccessPolicy(input as never, res as never);
 			expect(r.handled).toBe(true);
+			// The blocked session is recorded against the type the policy
+			// pinned, not a hardcoded `image`.
 			expect(
 				tasks.frictionlessManager.registerBlockedSession,
 			).toHaveBeenCalledWith(
+				CaptchaType.puzzle,
 				expect.objectContaining({ reason: "AUTO_BAN_SCORE" }),
 			);
 			expect(res.status).toHaveBeenCalledWith(401);

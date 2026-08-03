@@ -16,6 +16,7 @@ import type { Logger } from "@prosopo/logger";
 import {
 	ApiParams,
 	CaptchaType,
+	type ChallengeCaptchaType,
 	type CompositeIpAddress,
 	type ContextType,
 	FrictionlessReason,
@@ -30,6 +31,7 @@ import {
 	type ScoreComponents,
 	type Session,
 	SimdReadingsStage,
+	deriveChallengeParams,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { AccessPolicy } from "@prosopo/user-access-policy";
@@ -196,6 +198,17 @@ export class FrictionlessManager extends CaptchaManager {
 		iframeUrl?: Session["iframeUrl"],
 		isProtect?: Session["isProtect"],
 	): Promise<Session> {
+		// Dual-write: the flat `solvedImagesCount` / `powDifficulty` / `blocked`
+		// fields stay the source of truth for existing readers, while
+		// `challengeParams` carries the same values in the typed, per-challenge
+		// shape new readers migrate onto. Undefined for `frictionless`, which
+		// never names a concrete challenge.
+		const challengeParams = deriveChallengeParams(captchaType, {
+			solvedImagesCount,
+			powDifficulty,
+			blocked,
+		});
+
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
 			createdAt: new Date(),
@@ -208,6 +221,7 @@ export class FrictionlessManager extends CaptchaManager {
 			mode,
 			solvedImagesCount,
 			powDifficulty,
+			...(challengeParams && { challengeParams }),
 			userSitekeyIpHash,
 			webView,
 			iFrame,
@@ -297,7 +311,7 @@ export class FrictionlessManager extends CaptchaManager {
 	// kept as its own thin wrapper so call-sites read clearly, but session
 	// validation and the createSession invocation only live in one place.
 	private async sendCaptcha(
-		captchaType: CaptchaType.image | CaptchaType.pow | CaptchaType.puzzle,
+		captchaType: ChallengeCaptchaType,
 		params?: Partial<Session>,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const effectiveParams = { ...this.sessionParams, ...params };
@@ -410,8 +424,19 @@ export class FrictionlessManager extends CaptchaManager {
 		};
 	}
 
+	/**
+	 * Persist a synthetic "blocked session" record for a request that was
+	 * rejected before any challenge was issued.
+	 *
+	 * `captchaType` is the challenge this request *would* have been served —
+	 * it used to be hardcoded to `image` here, which meant every blocked
+	 * session was labelled image regardless of what the sitekey or the matched
+	 * access rule actually routes to. Callers pass it explicitly so the
+	 * recorded label matches what they already log.
+	 */
 	async registerBlockedSession(
-		params?: Partial<ImageCaptchaSessionParams>,
+		captchaType: ChallengeCaptchaType,
+		params?: Partial<Session>,
 	): Promise<void> {
 		const effectiveParams = { ...this.sessionParams, ...params };
 		if (
@@ -433,7 +458,7 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.threshold,
 			effectiveParams.scoreComponents,
 			effectiveParams.ipAddress,
-			CaptchaType.image,
+			captchaType,
 			effectiveParams.siteKey,
 			effectiveParams.solvedImagesCount,
 			undefined,
