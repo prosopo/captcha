@@ -336,17 +336,18 @@ export class PowCaptchaManager extends CaptchaManager {
 			| undefined;
 		if (behavioralData) {
 			try {
-				// Get decryption keys: detector keys from DB first, then env var as fallback
-				const decryptKeys = [
-					// Process DB keys first, then env var key last as env key will likely be invalid
-					...(await this.getDetectorKeys()),
-					process.env.BOT_DECRYPTION_KEY,
-				];
+				// The behavioural payload was encrypted by this session's detector
+				// pool bundle; resolve it from the bundleId promoted onto the
+				// session record (no key pool — the detector lives only on
+				// providers).
+				const bundle = await this.resolveBundleBySessionId(
+					challengeRecord.sessionId,
+				);
 
 				// Decrypt the behavioral data (returns unpacked format)
 				const decryptedData = await this.decryptBehavioralData(
 					behavioralData,
-					decryptKeys,
+					bundle,
 				);
 
 				if (decryptedData) {

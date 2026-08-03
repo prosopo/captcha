@@ -25,7 +25,6 @@ import {
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
-	type DetectorKey,
 	IpAddressType,
 	ModeEnum,
 	type PendingImageCaptchaRequest,
@@ -630,6 +629,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	// frictionless-created sessions can omit it and stay slim.
 	isEscalation: { type: Boolean, required: false },
 	decryptedHeadHash: { type: String, required: false, default: "" },
+	bundleId: { type: String, required: false },
 	siteKey: { type: String, required: false },
 	// Full page URL the widget was rendered on (origin + path only; query
 	// string, fragment and credentials stripped). See Session.currentUrl —
@@ -760,16 +760,6 @@ SessionRecordSchema.index(
 		partialFilterExpression: { pendingStage: true },
 	},
 );
-
-export type DetectorSchema = mongoose.Document & DetectorKey;
-export const DetectorRecordSchema = new Schema<DetectorSchema>({
-	createdAt: { type: Date, required: true },
-	detectorKey: { type: String, required: true },
-	expiresAt: { type: Date, required: false },
-});
-DetectorRecordSchema.index({ createdAt: 1 }, { unique: true });
-// TTL index for automatic cleanup of expired keys
-DetectorRecordSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 export type DecisionMachineArtifactRecord = mongoose.Document &
 	DecisionMachineArtifact;
@@ -1125,15 +1115,6 @@ export interface IProviderDatabase extends IDatabase {
 	): Promise<void>;
 
 	getUserAccessRulesStorage(): AccessRulesStorage;
-
-	storeDetectorKey(detectorKey: string): Promise<void>;
-
-	getDetectorKeys(): Promise<string[]>;
-
-	removeDetectorKey(
-		detectorKey: string,
-		expirationInSeconds?: number,
-	): Promise<void>;
 
 	upsertDecisionMachineArtifact(
 		artifact: DecisionMachineArtifact,

@@ -37,7 +37,10 @@ import {
 	determineContextType,
 	getContextThreshold,
 } from "../contextAwareValidation.js";
-import { getRoundsFromSimScore } from "./constants.js";
+import {
+	DECRYPTION_FAILED_IMAGE_ROUNDS,
+	getRoundsFromSimScore,
+} from "./constants.js";
 import { attachHoneypot } from "./honeypotResponse.js";
 
 export type DecisionMachineInput = {
@@ -93,6 +96,43 @@ export const runDecisionMachine = async (
 	} = input;
 	const { req, res } = handle;
 	let { botScore, scoreComponents } = input;
+
+	// A payload we couldn't decrypt tells us nothing about the client — it is
+	// not evidence of a bot, it is absence of evidence. Handle it explicitly and
+	// first, before any check that reads a decrypted field.
+	//
+	// This has to precede the user-agent check specifically. `decryptPayload`
+	// leaves `userAgent` and `userId` undefined on failure, so the comparison
+	// below is a real hash against `undefined` — it can never match, and every
+	// undecryptable session was being reported as USER_AGENT_MISMATCH and sized
+	// by `timestampDecayFunction`'s decryption-failed arm (6 rounds). Behind
+	// that sat two more accidents waiting on the synthetic `baseBotScore = 1` /
+	// `timestamp = 0`: a hard 401 on any sitekey with `autoBanScoreThreshold`
+	// set, and the old-timestamp branch. None of the three was meant for this.
+	if (input.decryptionFailed) {
+		req.logger.info(() => ({
+			msg: "Frictionless decision",
+			data: {
+				decision: "decryption_failed",
+				captchaType: CaptchaType.image,
+			},
+		}));
+		recordFrictionlessDecision("decryption_failed");
+		attachHoneypot(res, clientRecord);
+		return res.json(
+			await tasks.frictionlessManager.sendImageCaptcha({
+				solvedImagesCount: Math.min(
+					DECRYPTION_FAILED_IMAGE_ROUNDS,
+					clientRecord.settings.imageMaxRounds,
+				),
+				userSitekeyIpHash,
+				reason: FrictionlessReason.DECRYPTION_FAILED,
+				siteKey: dapp,
+				ipInfo,
+				headers: flatHeaders,
+			}),
+		);
+	}
 
 	const userAgentMismatchResponse = await runUserAgentMismatchCheck(
 		input,
@@ -194,7 +234,6 @@ export const runDecisionMachine = async (
 			await tasks.frictionlessManager.sendImageCaptcha({
 				solvedImagesCount: timestampDecayFunction(
 					input.timestamp,
-					input.decryptionFailed,
 					clientRecord.settings.imageMaxRounds,
 				),
 				userSitekeyIpHash,
@@ -328,7 +367,6 @@ const runUserAgentMismatchCheck = async (
 		await input.tasks.frictionlessManager.sendImageCaptcha({
 			solvedImagesCount: timestampDecayFunction(
 				input.timestamp,
-				input.decryptionFailed,
 				input.clientRecord.settings.imageMaxRounds,
 			),
 			userSitekeyIpHash: input.userSitekeyIpHash,
