@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/server",
-	"version": "2.10.43",
+	"version": "2.10.44",
 	"description": "NodeJS package for server side communication with the prosopo captcha client",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -38,18 +38,18 @@
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"sideEffects": false,
 	"dependencies": {
-		"@prosopo/api": "3.5.21",
+		"@prosopo/api": "4.0.0",
 		"@prosopo/common": "3.1.48",
 		"@prosopo/logger": "2.0.4",
-		"@prosopo/keyring": "2.9.62",
-		"@prosopo/load-balancer": "2.10.16",
-		"@prosopo/types": "4.10.0",
+		"@prosopo/keyring": "2.9.63",
+		"@prosopo/load-balancer": "2.10.17",
+		"@prosopo/types": "5.0.0",
 		"@prosopo/util": "3.3.5",
 		"i18next": "24.1.0"
 	},
 	"devDependencies": {
 		"@polkadot/util": "13.5.7",
-		"@prosopo/config": "3.3.5",
+		"@prosopo/config": "3.3.6",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "4.1.10",
 		"concurrently": "9.0.1",
