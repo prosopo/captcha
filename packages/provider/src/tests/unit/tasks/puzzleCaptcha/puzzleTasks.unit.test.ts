@@ -120,7 +120,6 @@ describe("PuzzleCaptchaManager", () => {
 			getClientRecord: vi.fn(),
 			getSessionRecordBySessionId: vi.fn(),
 			updateSessionRecord: vi.fn(),
-			getDetectorKeys: vi.fn().mockResolvedValue([]),
 			getSpamEmailDomain: vi.fn(),
 		} as unknown as IProviderDatabase;
 

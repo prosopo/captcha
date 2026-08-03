@@ -17,7 +17,7 @@
 // A provider can boot with MAINTENANCE_MODE=true (e.g. during a Mongo outage or
 // a maintenance window). The captcha request path short-circuits to a "pass" so
 // the widget keeps rendering, but operators still need the admin endpoints —
-// adding/removing site keys (access rules) and detector keys — to work so they
+// adding/removing site keys (access rules) — to work so they
 // can fix state and recover. Previously the admin router was skipped entirely at
 // boot in maintenance mode (its DB-backed Tasks couldn't be constructed), so
 // every admin call 404'd.
@@ -26,10 +26,8 @@
 // Mongo + Redis with MAINTENANCE_MODE=true and asserts, over HTTP, that:
 //   - the captcha challenge still returns a maintenance dummy (mode is active),
 //   - site keys can be registered and removed and the change lands in Mongo,
-//   - detector keys can be added and removed,
 //   - admin auth is still enforced (401 without a JWT).
 
-import { generateKeyPairSync } from "node:crypto";
 import { readFileSync } from "node:fs";
 import type { Server } from "node:net";
 import path from "node:path";
@@ -57,7 +55,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 interface AdminResponse {
 	status: ApiEndpointResponseStatus;
-	data?: { activeDetectorKeys?: string[] };
+	data?: Record<string, unknown>;
 	error?: string;
 }
 
@@ -74,14 +72,6 @@ const buildDispatcher = (): Agent | undefined => {
 		return undefined;
 	}
 	return new Agent({ connect: { ca: readFileSync(certPath, "utf8") } });
-};
-
-// A valid detector key is the base64 of a PEM (pkcs8) private key — that's what
-// ClientTaskManager.updateDetectorKey validates before storing.
-const makeDetectorKey = (): string => {
-	const { privateKey } = generateKeyPairSync("ed25519");
-	const pem = privateKey.export({ format: "pem", type: "pkcs8" }).toString();
-	return Buffer.from(pem).toString("base64");
 };
 
 const waitFor = async (
@@ -320,37 +310,6 @@ describe("Maintenance mode — admin endpoints stay available", () => {
 		const data = (await response.json()) as AdminResponse;
 		expect(data.status).toBe(ApiEndpointResponseStatus.SUCCESS);
 		expect(await env.getDb().getClientRecord(siteKey)).toBeUndefined();
-	});
-
-	it("adds and removes a detector key via the admin API", async () => {
-		const detectorKey = makeDetectorKey();
-
-		const addResponse = await fetch(
-			`${baseUrl}${AdminApiPaths.UpdateDetectorKey}`,
-			{
-				method: "POST",
-				headers: adminHeaders(),
-				body: JSON.stringify({ detectorKey }),
-				dispatcher,
-			},
-		);
-		expect(addResponse.status).toBe(200);
-		const addData = (await addResponse.json()) as AdminResponse;
-		expect(addData.status).toBe(ApiEndpointResponseStatus.SUCCESS);
-		expect(addData.data?.activeDetectorKeys).toContain(detectorKey);
-
-		const removeResponse = await fetch(
-			`${baseUrl}${AdminApiPaths.RemoveDetectorKey}`,
-			{
-				method: "POST",
-				headers: adminHeaders(),
-				body: JSON.stringify({ detectorKey }),
-				dispatcher,
-			},
-		);
-		expect(removeResponse.status).toBe(200);
-		const removeData = (await removeResponse.json()) as AdminResponse;
-		expect(removeData.status).toBe(ApiEndpointResponseStatus.SUCCESS);
 	});
 
 	it("still rejects unauthenticated admin requests with 401", async () => {

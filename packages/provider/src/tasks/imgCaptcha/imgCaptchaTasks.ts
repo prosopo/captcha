@@ -234,24 +234,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 		simdReadings?: string,
 		clientMetaData?: ClientMetaData,
 	): Promise<DappUserSolutionResult> {
-		// Decoded once and reused — img submit may attach to multiple sessions.
-		const decodedSimdReadings = simdReadings
-			? await this.decryptSimdReadingsForAttach(simdReadings)
-			: undefined;
-		const pushSimdAttachIfAny = (
-			sessionId: string,
-			writes: Promise<void>[],
-		): void => {
-			if (decodedSimdReadings) {
-				writes.push(
-					this.recordSessionSimdReadingsIfAbsentWithCache(
-						sessionId,
-						decodedSimdReadings,
-						SimdReadingsStage.submit,
-					),
-				);
-			}
-		};
 		// check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
 		const verification = signatureVerify(
 			stringToHex(timestamp.toString()),
@@ -300,6 +282,31 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 		const pendingRecord = await this.db.getPendingImageCommitment(requestHash);
 
+		// The detector lives only in provider pool bundles; resolve THIS session's
+		// bundle (promoted onto the session record at frictionless time) once and
+		// reuse it for both the SIMD readings and behavioural-data decrypts below.
+		// img submit may attach to multiple sessions, all sharing this bundle.
+		const sessionBundle = await this.resolveBundleBySessionId(
+			pendingRecord?.sessionId,
+		);
+		const decodedSimdReadings = simdReadings
+			? await this.decryptSimdReadingsForAttach(simdReadings, sessionBundle)
+			: undefined;
+		const pushSimdAttachIfAny = (
+			sessionId: string,
+			writes: Promise<void>[],
+		): void => {
+			if (decodedSimdReadings) {
+				writes.push(
+					this.recordSessionSimdReadingsIfAbsentWithCache(
+						sessionId,
+						decodedSimdReadings,
+						SimdReadingsStage.submit,
+					),
+				);
+			}
+		};
+
 		const unverifiedCaptchaIds = captchas.map((captcha) => captcha.captchaId);
 		const pendingRequest = await this.validateDappUserSolutionRequestIsPending(
 			requestHash,
@@ -341,17 +348,11 @@ export class ImgCaptchaManager extends CaptchaManager {
 			let deviceCapability: string | undefined;
 			if (behavioralData) {
 				try {
-					// Get decryption keys: detector keys from DB first, then env var as fallback
-					const decryptKeys = [
-						// Process DB keys first, then env var key last as env key will likely be invalid
-						...(await this.getDetectorKeys()),
-						process.env.BOT_DECRYPTION_KEY,
-					];
-
-					// Decrypt the behavioral data (returns unpacked format)
+					// Decrypt the behavioural data with this session's detector pool
+					// bundle (resolved above; no key pool).
 					const decryptedData = await this.decryptBehavioralData(
 						behavioralData,
-						decryptKeys,
+						sessionBundle,
 					);
 
 					if (decryptedData) {
