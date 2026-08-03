@@ -12,18 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type mongoose from "mongoose";
-import { Schema } from "mongoose";
+import { ViteTestConfig } from "@prosopo/config";
 
-export type SpamEmailDomain = {
-	domain: string;
-};
+process.env.NODE_ENV = "test";
 
-export type SpamEmailDomainRecord = mongoose.Document & SpamEmailDomain;
-
-export const SpamEmailDomainRecordSchema = new Schema<SpamEmailDomainRecord>({
-	// `unique` already creates the ascending index on `domain`; declaring it
-	// again with `.index()` made mongoose warn about a duplicate on every
-	// process start.
-	domain: { type: String, required: true, unique: true },
-});
+export default ViteTestConfig();

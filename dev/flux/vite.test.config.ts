@@ -11,19 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { ViteTestConfig } from "@prosopo/config";
 
-import type mongoose from "mongoose";
-import { Schema } from "mongoose";
-
-export type SpamEmailDomain = {
-	domain: string;
-};
-
-export type SpamEmailDomainRecord = mongoose.Document & SpamEmailDomain;
-
-export const SpamEmailDomainRecordSchema = new Schema<SpamEmailDomainRecord>({
-	// `unique` already creates the ascending index on `domain`; declaring it
-	// again with `.index()` made mongoose warn about a duplicate on every
-	// process start.
-	domain: { type: String, required: true, unique: true },
-});
+// Every network call in this package goes through `fetch`, which the tests
+// stub, so no Flux node or credentials are needed.
+export default ViteTestConfig();
