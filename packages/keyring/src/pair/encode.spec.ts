@@ -18,7 +18,13 @@ describe("encode", (): void => {
 		expect(keyring.alice.encodePkcs8()).toHaveLength(DECODED_LENGTH);
 	});
 
-	it("returns encoded PKCS8 when passphrase supplied", (): void => {
-		expect(keyring.alice.encodePkcs8("testing")).toHaveLength(ENCODED_LENGTH);
-	});
+	// scrypt with the production parameters takes several seconds, which
+	// overruns the 10s default on a loaded CI runner.
+	it(
+		"returns encoded PKCS8 when passphrase supplied",
+		{ timeout: 60000 },
+		(): void => {
+			expect(keyring.alice.encodePkcs8("testing")).toHaveLength(ENCODED_LENGTH);
+		},
+	);
 });
