@@ -1,5 +1,12 @@
 # @prosopo/env
 
+## 3.6.22
+### Patch Changes
+
+- Updated dependencies [71a5952]
+  - @prosopo/keyring@2.9.62
+  - @prosopo/types-env@2.10.19
+
 ## 3.6.21
 ### Patch Changes
 
