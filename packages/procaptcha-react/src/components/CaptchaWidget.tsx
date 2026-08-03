@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ProsopoDatasetError } from "@prosopo/common";
-import type { Captcha } from "@prosopo/types";
+import type { Captcha, HashedItem } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import type { Properties } from "csstype";
 import type React from "react";
@@ -25,8 +25,10 @@ export interface CaptchaWidgetProps {
 	themeColor: "light" | "dark";
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-const getHash = (item: any) => {
+// The type promises a hash, but the items arrive over the wire, so a
+// malformed one is still worth rejecting loudly rather than rendering a tile
+// that can never be selected.
+const getHash = (item: HashedItem): string => {
 	if (!item.hash) {
 		throw new ProsopoDatasetError("CAPTCHA.MISSING_ITEM_HASH", {
 			context: { item },
@@ -48,7 +50,6 @@ export const CaptchaWidget = ({
 	);
 
 	const fullSpacing = `${theme.spacing.unit}px`;
-	const halfSpacing = `${theme.spacing.half}px`;
 
 	return (
 		<div
@@ -87,20 +88,14 @@ export const CaptchaWidget = ({
 								padding: 0,
 								margin: 0,
 							}}
-							onClick={(e: React.MouseEvent | React.TouchEvent) => {
+							// A tap delivers a click too, and React's synthetic click
+							// carries only clientX/clientY — never `touches` — so
+							// there is one set of coordinates to read, not three.
+							onClick={(e: React.MouseEvent) => {
 								if (!e.isTrusted) {
 									return;
 								}
-								if ("touches" in e && e.touches.length > 0 && e.touches[0]) {
-									onClick(hash, e.touches[0].clientX, e.touches[0].clientY);
-									return;
-								}
-
-								if ("clientX" in e && "clientY" in e) {
-									onClick(hash, e.clientX, e.clientY);
-									return;
-								}
-								onClick(hash, 0, 0);
+								onClick(hash, e.clientX, e.clientY);
 							}}
 						>
 							<img
@@ -118,12 +113,16 @@ export const CaptchaWidget = ({
 								src={item.data}
 								// biome-ignore lint/a11y/noRedundantAlt: has to contain image
 								alt={`Captcha image ${index + 1}`}
+								// A provider that drops a single image request should not
+								// cost the user the round: retry a few times with a
+								// cache-busting query, then give up. The count lives on
+								// the element so it survives re-renders.
 								onError={(e) => {
 									const target = e.currentTarget;
-									// @ts-ignore: custom property for retry count
-									target._retryCount = (target._retryCount || 0) + 1;
-									// @ts-ignore: custom property for retry count
-									if (target._retryCount <= 3) {
+									const retryCount =
+										Number(target.dataset.retryCount ?? "0") + 1;
+									target.dataset.retryCount = String(retryCount);
+									if (retryCount <= 3) {
 										target.src = `${item.data}?retry=${Date.now()}`;
 									}
 								}}

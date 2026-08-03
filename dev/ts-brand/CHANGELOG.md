@@ -1,5 +1,10 @@
 # @prosopo/ts-brand
 
+## 3.0.32
+### Patch Changes
+
+- 33a0c50: Add runtime and type test coverage, and give getBrand a precise return type in place of `any`.
+
 ## 3.0.31
 ### Patch Changes
 
