@@ -20,6 +20,13 @@ export type Resolve<T> = T extends Function ? T : { [K in keyof T]: T[K] };
 
 export const brandKey = Symbol("brand");
 
+// Note: Resolve maps a primitive intersection into a plain object carrying the
+// primitive's methods, so a branded primitive does not satisfy its own base
+// type — `Brand<string, "X">` cannot be passed where a `string` is wanted
+// without going through unbrand() first. See brand.test-d.ts, which pins this
+// down. Making Brand conditional on the base type fixes it, but Unbrand infers
+// through Brand and stops resolving once it becomes conditional, so the two
+// have to be reworked together.
 export type Brand<T, U> = Resolve<
 	T & {
 		[brandKey]: U;
@@ -45,7 +52,11 @@ export const unbrand = <T>(value: T) => {
 	return value as Unbrand<T>;
 };
 
-export const getBrand = <T>(value: T) => {
-	// biome-ignore lint/suspicious/noExplicitAny: casting to any to access the brand key if it exists
-	return (value as any)[brandKey] || "";
+// The brand a value carries, or "" for an unbranded one. Inferring the tag
+// rather than returning `any` is what makes the result worth asserting on: an
+// `any` return silently satisfies every expectation a caller writes about it.
+export type BrandOf<T> = T extends { [brandKey]: infer U } ? U : "";
+
+export const getBrand = <T>(value: T): BrandOf<T> => {
+	return ((value as { [brandKey]?: BrandOf<T> })[brandKey] || "") as BrandOf<T>;
 };

@@ -98,6 +98,15 @@ export class ProsopoCaptchaApi implements ProcaptchaApiInterface {
 		simdReadings?: string,
 		clientMetaData?: ClientMetaData,
 	): Promise<TCaptchaSubmitResult> {
+		// Guard before building: CaptchaMerkleTree recurses on an empty layer and
+		// overflows the stack, so an empty solution set has to be rejected here
+		// rather than by inspecting the resulting tree.
+		if (solutions.length === 0) {
+			throw new ProsopoDatasetError("CAPTCHA.INVALID_CAPTCHA_CHALLENGE", {
+				context: { error: "No captcha solutions to commit to" },
+			});
+		}
+
 		const tree = new CaptchaMerkleTree();
 
 		const captchasHashed = solutions.map((captcha) =>
@@ -106,13 +115,10 @@ export class ProsopoCaptchaApi implements ProcaptchaApiInterface {
 
 		tree.build(captchasHashed);
 
-		if (!tree.root) {
-			throw new ProsopoDatasetError("CAPTCHA.INVALID_CAPTCHA_CHALLENGE", {
-				context: { error: "Merkle tree root is undefined" },
-			});
-		}
-
-		const commitmentId = tree.root.hash;
+		// A non-empty solution set always yields a root — the only case that
+		// doesn't is the empty one, rejected above.
+		// biome-ignore lint/style/noNonNullAssertion: guarded by the length check
+		const commitmentId = tree.root!.hash;
 
 		let result: CaptchaSolutionResponse;
 
