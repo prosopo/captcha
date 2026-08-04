@@ -13,7 +13,10 @@
 // limitations under the License.
 
 import { getWindowCallback } from "@prosopo/procaptcha-common";
-import type { ProcaptchaRenderOptions } from "@prosopo/types";
+import type {
+	EnvironmentTypes,
+	ProcaptchaRenderOptions,
+} from "@prosopo/types";
 import { at } from "@prosopo/util";
 import type { Root } from "react-dom/client";
 import { extractParams, getProcaptchaScript } from "./util/config.js";
@@ -24,6 +27,35 @@ const BUNDLE_NAMES = ["procaptcha.bundle.iife.js", "procaptcha.bundle.js"];
 let procaptchaRoots: Root[] = [];
 
 const widgetFactory = new WidgetFactory(new WidgetThemeResolver());
+
+/**
+ * Kick off provider resolution + detector assignment without blocking render.
+ *
+ * Loaded via dynamic import on purpose: it pulls in the provider selector and
+ * the provider API client, and importing those statically would push them into
+ * the entry chunk and delay first paint. Firing the import here starts that
+ * download in parallel with the widget's own chunks rather than after them.
+ *
+ * Fire-and-forget by design — a failed prefetch is indistinguishable from no
+ * prefetch, and the detection path falls back to resolving a provider itself.
+ */
+const startDetectorPrefetch = (
+	siteKey: string,
+	flags: { ipv4?: boolean; ipv6?: boolean },
+): void => {
+	void Promise.all([
+		import("@prosopo/procaptcha-frictionless"),
+		import("@prosopo/procaptcha-common"),
+	])
+		.then(([frictionless, common]) => {
+			frictionless.prefetchDetector(
+				process.env.PROSOPO_DEFAULT_ENVIRONMENT as EnvironmentTypes,
+				common.pickIpMode(flags),
+				siteKey,
+			);
+		})
+		.catch(() => undefined);
+};
 
 // Define a custom event name for procaptcha execution
 const PROCAPTCHA_EXECUTE_EVENT = "procaptcha:execute";
@@ -49,6 +81,13 @@ const implicitRender = async () => {
 			console.error("No site key found");
 			return;
 		}
+
+		// Everything the detector assignment needs is known right here: the site
+		// key and IP-mode flags come off the DOM, the environment is a build-time
+		// constant. Start it now so the round-trip overlaps the widget's own
+		// dynamic-import chain instead of queueing behind it —
+		// `customDetectBot` claims the in-flight promise when it eventually runs.
+		startDetectorPrefetch(siteKey, { ipv4, ipv6 });
 
 		const root = await widgetFactory.createWidgets(
 			elements,

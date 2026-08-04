@@ -13,6 +13,10 @@
 // limitations under the License.
 
 import { ProviderApi } from "@prosopo/api";
+import {
+	type PrefetchedDetector,
+	takePrefetchedDetector,
+} from "./detectorPrefetch.js";
 import { ProsopoEnvError } from "@prosopo/common";
 import {
 	ExtensionLoader,
@@ -168,11 +172,39 @@ const customDetectBot: BotDetectionFunction = async (
 	// preference so frictionless and the subsequent captcha hops stay on the
 	// same stack. Resolved up front — before detection rather than alongside it —
 	// because the detector bundle is served BY this provider.
-	const provider = await getProcaptchaRandomActiveProvider(
-		config.defaultEnvironment,
-		ipMode,
-		retryContext,
-	);
+	// The bundle entry starts provider resolution + assign as soon as it has read
+	// the site key off the DOM, which is well before React has mounted this
+	// widget. Claim that in-flight work if it exists rather than repeating it.
+	// Only valid on a first attempt: a retry is retrying *because* the pinned
+	// pronode failed, so it must re-resolve.
+	const isFirstAttempt = !retryContext || retryContext.attempt <= 1;
+	const prefetched = isFirstAttempt
+		? takePrefetchedDetector(
+				config.defaultEnvironment,
+				ipMode,
+				config.account.address,
+			)
+		: undefined;
+
+	// A prefetch that failed must not fail the flow — it is an optimisation, and
+	// the normal path below handles provider selection and assign failure
+	// already. So swallow it and re-resolve.
+	let prefetchedResult: PrefetchedDetector | undefined;
+	if (prefetched) {
+		try {
+			prefetchedResult = await prefetched;
+		} catch {
+			prefetchedResult = undefined;
+		}
+	}
+
+	const provider =
+		prefetchedResult?.provider ??
+		(await getProcaptchaRandomActiveProvider(
+			config.defaultEnvironment,
+			ipMode,
+			retryContext,
+		));
 
 	const providerApi = new ProviderApi(
 		provider.provider.url,
@@ -188,10 +220,14 @@ const customDetectBot: BotDetectionFunction = async (
 	let detectorSessionId: string | undefined;
 	let providerDetect: DetectorType | undefined;
 	try {
-		const assigned = await withTimeout(
-			providerApi.assignDetectorBundle(config.account.address),
-			ASSIGN_TIMEOUT_MS,
-		);
+		// Reuse the prefetched assignment when the entry already fetched one for
+		// this provider; otherwise issue it now.
+		const assigned =
+			prefetchedResult?.assigned ??
+			(await withTimeout(
+				providerApi.assignDetectorBundle(config.account.address),
+				ASSIGN_TIMEOUT_MS,
+			));
 		if (assigned.useProviderBundle && assigned.detectorScript) {
 			detectorSessionId = assigned.detectorSessionId;
 			providerDetect = await withTimeout(
