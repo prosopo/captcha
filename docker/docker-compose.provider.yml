@@ -177,6 +177,7 @@ services:
     container_name: redis-stack
     # unlike "redis/redis-stack-server" this image includes Insights
     image: redis/redis-stack:${REDIS_IMAGE}
+    restart: unless-stopped
     env_file:
       - ../.env.1.${NODE_ENV}
     volumes:
@@ -225,6 +226,7 @@ services:
     # IP metadata sidecar
     container_name: ipinfo
     image: prosopo/ipinfo:${IPINFO_VERSION:-0.1.0}
+    restart: unless-stopped
     # Pass the config path explicitly. The image bakes a default config.json
     # at /usr/src/app/config.json which getConfigPath() finds before the
     # mounted /usr/src/app/config/config.json — silently ignoring our
