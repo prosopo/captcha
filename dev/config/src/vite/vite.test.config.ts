@@ -58,6 +58,11 @@ export default function (tsConfigPath?: string) {
 				"src/**/*.spec.ts",
 				"src/**/*.test.tsx",
 				"src/**/*.spec.tsx",
+				// Type-test files are compiled by the typecheck pass, never
+				// executed, so they can only ever report 0% and drag the real
+				// figure down. `*.d.ts` above does not match `*.test-d.ts`.
+				"src/**/*.test-d.ts",
+				"src/**/*.test-d.tsx",
 			]
 		: [
 				"**/tests/**/*",
