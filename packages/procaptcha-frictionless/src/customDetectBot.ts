@@ -13,10 +13,6 @@
 // limitations under the License.
 
 import { ProviderApi } from "@prosopo/api";
-import {
-	type PrefetchedDetector,
-	takePrefetchedDetector,
-} from "./detectorPrefetch.js";
 import { ProsopoEnvError } from "@prosopo/common";
 import {
 	ExtensionLoader,
@@ -33,6 +29,10 @@ import {
 	DetectorLoaderFromScript,
 	type DetectorType,
 } from "./detectorLoader.js";
+import {
+	type PrefetchedDetector,
+	takePrefetchedDetector,
+} from "./detectorPrefetch.js";
 
 // Upper bound on the detector-bundle assignment + load probe. The detector
 // lives ONLY in the provider-served pool bundles, so if the provider is

@@ -30,11 +30,8 @@ vi.mock("@prosopo/procaptcha-common", () => ({
 	) => getProcaptchaRandomActiveProvider(...args),
 }));
 
-const {
-	prefetchDetector,
-	takePrefetchedDetector,
-	clearPrefetchedDetectors,
-} = await import("../detectorPrefetch.js");
+const { prefetchDetector, takePrefetchedDetector, clearPrefetchedDetectors } =
+	await import("../detectorPrefetch.js");
 
 const ENV = "staging" as EnvironmentTypes;
 const SITE_KEY = "5CcNvLUdiXFpzKDMjThGLSK9rhWHA1H4EF3zrgkpkjAdqmuP";

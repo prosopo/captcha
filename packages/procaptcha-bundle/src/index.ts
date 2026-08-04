@@ -13,10 +13,7 @@
 // limitations under the License.
 
 import { getWindowCallback } from "@prosopo/procaptcha-common";
-import type {
-	EnvironmentTypes,
-	ProcaptchaRenderOptions,
-} from "@prosopo/types";
+import type { EnvironmentTypes, ProcaptchaRenderOptions } from "@prosopo/types";
 import { at } from "@prosopo/util";
 import type { Root } from "react-dom/client";
 import { extractParams, getProcaptchaScript } from "./util/config.js";
