@@ -25,7 +25,7 @@
 		"start": "NODE_ENV=${NODE_ENV:-development}; vite serve ./src --port 9232 --config vite.config.ts --mode=$NODE_ENV",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
 	},
-	"version": "2.10.19",
+	"version": "2.10.20",
 	"devDependencies": {
 		"@emotion/cache": "11.11.0",
 		"@prosopo/config": "3.3.6",
