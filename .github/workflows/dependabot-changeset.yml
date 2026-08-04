@@ -40,7 +40,7 @@ defaults:
 jobs:
   changeset:
     name: changeset
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(vars.GH_RUNNER || '"ubuntu-latest"') }}
     if: ${{ github.actor == 'dependabot[bot]' }}
     env:
       BASE_REF: ${{ github.event.pull_request.base.ref }}
