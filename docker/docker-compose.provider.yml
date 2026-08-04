@@ -225,6 +225,12 @@ services:
     # IP metadata sidecar
     container_name: ipinfo
     image: prosopo/ipinfo:${IPINFO_VERSION:-0.1.0}
+    # Pass the config path explicitly. The image bakes a default config.json
+    # at /usr/src/app/config.json which getConfigPath() finds before the
+    # mounted /usr/src/app/config/config.json — silently ignoring our
+    # customLists and API key. Passing the path as argv[2] short-circuits
+    # that resolution order.
+    command: ["node", "src/ipapi_is_worker.js", "/usr/src/app/config/config.json"]
     # NET_ADMIN is required to check/create firewall chains, even when
     # enableFirewall is false in config.
     cap_add:
