@@ -1,5 +1,10 @@
 # @prosopo/client-bundle-example
 
+## 2.10.20
+### Patch Changes
+
+- acb1671: test(client-bundle-example): add vitest setup and cover the demo vite plugins
+
 ## 2.10.19
 ### Patch Changes
 
