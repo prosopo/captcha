@@ -31,7 +31,7 @@ defaults:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(vars.GH_RUNNER || '"ubuntu-latest"') }}
     # Skip draft PRs, but still allow manual workflow_dispatch runs (where
     # github.event.pull_request is undefined).
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
