@@ -295,6 +295,9 @@ export const buildEscalation = async (
 		originSession.entropyCryptoFingerprint,
 		originSession.entropyWallClockOffsetMs,
 		originSession.entropyMathRandomFirst,
+		// Carry the detector pool bundle forward so the escalated image/puzzle
+		// solve can decrypt the (same-origin) behavioural payload.
+		originSession.bundleId,
 		originSession.currentUrl,
 		handshakeTiming?.tcpToChelloUs,
 		handshakeTiming?.chelloToHandshakeUs,

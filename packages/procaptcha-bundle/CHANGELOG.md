@@ -1,5 +1,39 @@
 # @prosopo/procaptcha-bundle
 
+## 4.1.45
+### Patch Changes
+
+- fa4fedb: Start the detector-bundle assignment at page load instead of after the widget mounts.
+  
+  Since the detector moved into the provider-served pool, the frictionless flow cannot begin until `/detector/assign` returns. That request was issued by `customDetectBot`, which only runs once React has mounted the widget — so it queued behind the bundle's dynamic-import chain. Measured on the staging demo, `assign` did not leave the browser until **1513 ms**, of which ~700 ms was purely waiting for chunks to arrive in sequence.
+  
+  Nothing in that request depends on React, i18n or the widget config: it needs the site key (a DOM attribute), the environment (a build-time constant) and the IP-mode flags (DOM attributes). The bundle entry now kicks it off as soon as it has read those, and `customDetectBot` claims the in-flight promise instead of starting its own.
+  
+  The prefetch is loaded by dynamic import so the provider selector and API client do not land in the entry chunk and delay first paint; the entry grows by ~400 bytes. It is fire-and-forget — a failed prefetch is indistinguishable from no prefetch, and the existing fallback path still resolves a provider itself.
+  
+  The cache is single-use and keyed on `(environment, ipMode, siteKey)`, so a retry — which is retrying precisely because the pinned pronode failed — re-resolves rather than reusing a stale pin, and a second widget with different flags cannot claim another's assignment.
+- Updated dependencies [fa4fedb]
+  - @prosopo/procaptcha-frictionless@2.13.1
+
+## 4.1.44
+### Patch Changes
+
+- 787017b: Keep util-crypto in the shared browser chunk. Split into its own chunk it
+  formed a Rolldown chunk cycle with the fingerprint chunk on the detector-pool
+  branch, where the detector is no longer bundled into the widget. Whichever
+  chunk evaluated first read the other's module-scope bindings before they were
+  assigned, so the widget threw on load ("init_dist is not a function", then
+  isHex reading `.test` of undefined) and never defined window.procaptcha.
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [6f19cde]
+- Updated dependencies [2bc8e73]
+  - @prosopo/types@5.0.0
+  - @prosopo/procaptcha-frictionless@2.13.0
+  - @prosopo/widget-skeleton@2.8.5
+  - @prosopo/procaptcha-common@2.11.20
+
 ## 4.1.43
 ### Patch Changes
 

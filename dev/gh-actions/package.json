@@ -19,7 +19,7 @@
 		"@octokit/graphql": "8.1.1"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.5",
+		"@prosopo/config": "3.3.6",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "4.1.10",
 		"concurrently": "9.0.1",

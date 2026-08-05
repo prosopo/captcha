@@ -23,7 +23,9 @@ import {
 import type { ClientRecord } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { Response } from "express";
+import { v4 as uuidv4 } from "uuid";
 import type { getCompositeIpAddress } from "../../../compositeIpAddress.js";
+import { getDetectorBundlePool } from "../../../tasks/detection/bundlePool.js";
 import type { Tasks } from "../../../tasks/index.js";
 import { DEFAULT_FRICTIONLESS_THRESHOLD } from "./constants.js";
 import { attachHoneypot } from "./honeypotResponse.js";
@@ -39,9 +41,75 @@ export type ShortCircuitInput = {
 	flatHeaders: RequestHeaders;
 	sessionMode: ModeEnum | undefined;
 	userSitekeyIpHash: string;
+	requestId: string | undefined;
 	logger: Logger;
 	tcpToChelloUs?: number;
 	chelloToHandshakeUs?: number;
+};
+
+// Builds the session params used by the bypass paths (configured captcha type
+// and empty-pool fallback). Score 0 — these paths do not run bot detection, so
+// the session is created as a plain challenge rather than a scored one.
+const buildBypassSessionParams = (input: ShortCircuitInput) => ({
+	// `sendCaptcha` requires a truthy token and dedup needs a unique value, so
+	// synthesise one when the client had no detector to produce it.
+	token: input.token || `nodetector-${uuidv4()}`,
+	score: 0,
+	threshold:
+		input.clientRecord.settings?.frictionlessThreshold ??
+		DEFAULT_FRICTIONLESS_THRESHOLD,
+	scoreComponents: { baseScore: 0 } as ScoreComponents,
+	ipAddress: input.ipAddress,
+	webView: false,
+	iFrame: false,
+	decryptedHeadHash: "",
+	siteKey: input.dapp,
+	ipInfo: input.ipInfo,
+	headers: input.flatHeaders,
+	mode: input.sessionMode,
+	userSitekeyIpHash: input.userSitekeyIpHash,
+	...(input.tcpToChelloUs !== undefined && {
+		tcpToChelloUs: input.tcpToChelloUs,
+	}),
+	...(input.chelloToHandshakeUs !== undefined && {
+		chelloToHandshakeUs: input.chelloToHandshakeUs,
+	}),
+});
+
+/**
+ * Empty-pool PoW fallback. The detector lives only in the provider-served pool
+ * bundles; when this provider has none to assign (missing dir, empty dir, or
+ * all bundles failed to load) no client could have run detection, so it serves
+ * a real PoW challenge rather than failing the request.
+ *
+ * This is a provider-side condition only. Nothing a client sends — an empty
+ * token included — can reach this path; a client that ran no detector is
+ * handled by the decision machine's missing-token gate.
+ */
+export const runEmptyDetectorPoolPowFallback = async (
+	input: ShortCircuitInput,
+	res: Response,
+): Promise<Response | null> => {
+	const pool = getDetectorBundlePool();
+	if (pool && pool.size() > 0) {
+		return null;
+	}
+
+	input.logger.warn(() => ({
+		msg: "Frictionless decision",
+		data: {
+			requestId: input.requestId,
+			decision: "empty_detector_pool_pow_fallback",
+			captchaType: CaptchaType.pow,
+		},
+	}));
+
+	attachHoneypot(res, input.clientRecord);
+	return res.json(
+		await input.tasks.frictionlessManager.sendPowCaptcha(
+			buildBypassSessionParams(input),
+		),
+	);
 };
 
 // Bypasses the bot-detection decision machine when the sitekey is configured
@@ -55,29 +123,7 @@ export const runConfiguredCaptchaTypeShortCircuit = async (
 		return null;
 	}
 
-	const sessionParams = {
-		token: input.token,
-		score: 0,
-		threshold:
-			input.clientRecord.settings?.frictionlessThreshold ??
-			DEFAULT_FRICTIONLESS_THRESHOLD,
-		scoreComponents: { baseScore: 0 } as ScoreComponents,
-		ipAddress: input.ipAddress,
-		webView: false,
-		iFrame: false,
-		decryptedHeadHash: "",
-		siteKey: input.dapp,
-		ipInfo: input.ipInfo,
-		headers: input.flatHeaders,
-		mode: input.sessionMode,
-		userSitekeyIpHash: input.userSitekeyIpHash,
-		...(input.tcpToChelloUs !== undefined && {
-			tcpToChelloUs: input.tcpToChelloUs,
-		}),
-		...(input.chelloToHandshakeUs !== undefined && {
-			chelloToHandshakeUs: input.chelloToHandshakeUs,
-		}),
-	};
+	const sessionParams = buildBypassSessionParams(input);
 
 	input.logger.info(() => ({
 		msg: "Frictionless decision",

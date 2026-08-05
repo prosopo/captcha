@@ -1,5 +1,60 @@
 # @prosopo/cli
 
+## 3.7.1
+### Patch Changes
+
+- b68c3a1: Bump `@prosopo/cli` so the next release cuts 3.7.1.
+  
+  `create_release_pr` derives the repo version from this package:
+  
+  ```bash
+  root_version=$(npm -w @prosopo/cli pkg get version | jq -r '.["@prosopo/cli"]')
+  npm pkg set version="$root_version"
+  ```
+  
+  The changesets pending after v3.7.0 target `@prosopo/procaptcha-bundle`, `@prosopo/procaptcha-frictionless` and `@prosopo/client-bundle-example`. `@prosopo/cli` depends on none of them, so `changeset version` left it at 3.7.0 and the release re-cut 3.7.0 rather than 3.7.1.
+
+## 3.7.0
+### Minor Changes
+
+- 787017b: chore(detector): remove the legacy detector-key rotation machinery
+  
+  Nothing has read these keys since the detector moved to per-session provider
+  bundles — the decrypt paths resolve a bundle's own keypair instead. Rotating
+  them was already a no-op, so the whole surface is removed rather than left
+  looking live.
+  
+  **Breaking — the admin API loses two endpoints:**
+  
+  - `POST /v1/prosopo/provider/admin/detector/update` (`AdminApiPaths.UpdateDetectorKey`)
+  - `POST /v1/prosopo/provider/admin/detector/remove` (`AdminApiPaths.RemoveDetectorKey`)
+  
+  Also removed: `ProviderApi.updateDetectorKey` / `.removeDetectorKey`;
+  `ClientTaskManager.updateDetectorKey` / `.removeDetectorKey`;
+  `IProviderDatabase.storeDetectorKey` / `.getDetectorKeys` / `.removeDetectorKey`;
+  the `detector` Mongo collection and its `DetectorRecordSchema` / `DetectorSchema`
+  / `DetectorKey` types; the `UpdateDetectorKeyBody` / `RemoveDetectorKeyBodySpec`
+  / `UpdateDetectorKeyResponse` API types; and the rate-limit config for both
+  paths.
+  
+  The `detector` collection itself is left in place on existing deployments — no
+  migration drops it. It can be dropped manually once the pool rollout is
+  confirmed.
+
+### Patch Changes
+
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [6f19cde]
+  - @prosopo/provider@5.0.0
+  - @prosopo/types@5.0.0
+  - @prosopo/api@4.0.0
+  - @prosopo/env@3.6.23
+  - @prosopo/keyring@2.9.63
+
 ## 3.6.77
 ### Patch Changes
 

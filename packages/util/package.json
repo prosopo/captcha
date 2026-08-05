@@ -47,7 +47,7 @@
 		"seedrandom": "3.0.5"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.5",
+		"@prosopo/config": "3.3.6",
 		"@types/lodash": "4.17.7",
 		"@types/node": "22.10.2",
 		"@types/seedrandom": "3.0.8",

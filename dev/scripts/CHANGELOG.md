@@ -1,5 +1,29 @@
 # @prosopo/scripts
 
+## 3.1.143
+### Patch Changes
+
+- Updated dependencies [b68c3a1]
+  - @prosopo/cli@3.7.1
+
+## 3.1.142
+### Patch Changes
+
+- 0af1fa9: Add unit and type tests for the dev scripts: version setting, environment file updates, the setup and site helpers, and the exec wrapper.
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [6f19cde]
+  - @prosopo/provider@5.0.0
+  - @prosopo/types@5.0.0
+  - @prosopo/cli@3.7.0
+  - @prosopo/datasets@3.1.56
+  - @prosopo/env@3.6.23
+  - @prosopo/keyring@2.9.63
+  - @prosopo/types-env@2.10.20
+
 ## 3.1.141
 ### Patch Changes
 
