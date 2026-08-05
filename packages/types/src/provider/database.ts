@@ -143,6 +143,11 @@ export interface BehavioralDataPacked {
 // backwards compatibility (existing data and indexes already use it).
 export interface StoredCaptchaMetadata {
 	email?: string;
+	// Normalised form of `email` used by the per-email submission-count check.
+	// Kept as a separate persisted field so the count query can hit a single
+	// indexed value instead of computing a normalisation server-side. Written
+	// alongside `email` whenever `storeMetadata` is on.
+	emailNormalised?: string;
 }
 
 // Widget-controlled metadata captured during the captcha solution submission.
@@ -259,6 +264,7 @@ const BehavioralDataPackedSchema = object({
 
 export const StoredCaptchaMetadataSchema = object({
 	email: string().optional(),
+	emailNormalised: string().optional(),
 }) satisfies ZodType<StoredCaptchaMetadata, ZodTypeDef, unknown>;
 
 export const ClientMetaDataDbSchema = object({

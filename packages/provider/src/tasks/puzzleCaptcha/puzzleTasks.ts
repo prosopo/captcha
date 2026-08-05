@@ -28,6 +28,7 @@ import {
 	CaptchaStatus,
 	type ClientMetaData,
 	type IPAddress,
+	type ISpamFilterRules,
 	type ITrafficFilter,
 	POW_SEPARATOR,
 	type PoWChallengeId,
@@ -64,6 +65,7 @@ import {
 } from "../dnsEvent/enrichDnsEvent.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature } from "../powCaptcha/powTasksUtils.js";
+import { normaliseEmailForMatching } from "../spam/evaluateEmailSpamRules.js";
 import { validatePuzzleSolution } from "./puzzleTasksUtils.js";
 
 interface PuzzleCaptchaChallenge {
@@ -416,6 +418,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 	 * @param userAccessRulesStorage - storage for querying user access policies
 	 * @param email
 	 * @param spamEmailDomainCheckingEnabled
+	 * @param spamFilter
 	 * @param trafficFilter
 	 * @param storeMetadata - when true, persists the dapp-server-provided
 	 *   `email` on the captcha record for spam-rate analysis.
@@ -429,6 +432,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		userAccessRulesStorage?: AccessRulesStorage,
 		email?: string,
 		spamEmailDomainCheckingEnabled = false,
+		spamFilter?: ISpamFilterRules,
 		trafficFilter?: ITrafficFilter,
 		storeMetadata = false,
 	): Promise<{ verified: boolean; score?: number }> {
@@ -579,6 +583,44 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 			}
 		}
 
+		// Per-email submission-count check — see `imgCaptchaTasks` for the
+		// full rationale. Runs before the metadata write below so the
+		// count reflects PRIOR verified submissions only.
+		const maxEmailSubmissionCount =
+			spamFilter?.enabled && spamFilter.emailRules?.enabled
+				? spamFilter.emailRules.maxEmailSubmissionCount
+				: undefined;
+		let emailNormalised: string | undefined;
+		if (maxEmailSubmissionCount !== undefined && email && storeMetadata) {
+			emailNormalised = normaliseEmailForMatching(email);
+			if (emailNormalised) {
+				try {
+					const priorCount = await this.db.countCommitmentsByNormalisedEmail(
+						dappAccount,
+						emailNormalised,
+					);
+					if (priorCount >= maxEmailSubmissionCount) {
+						logger.info(() => ({
+							msg: "Email submission count exceeded in server puzzle verification",
+							data: { priorCount, maxEmailSubmissionCount },
+						}));
+						await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
+							result: {
+								status: CaptchaStatus.disapproved,
+								reason: ResultReason.SPAM_EMAIL_COUNT_EXCEEDED,
+							},
+						});
+						return notVerifiedResponse;
+					}
+				} catch (error) {
+					logger.warn(() => ({
+						msg: "Failed to check email submission count in server puzzle verification",
+						error,
+					}));
+				}
+			}
+		}
+
 		const sessionRecord = challengeRecord.sessionId
 			? await this.db.getSessionRecordBySessionId(challengeRecord.sessionId)
 			: undefined;
@@ -628,11 +670,15 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		}
 
 		// Persist dapp-server-provided metadata when the site opts in.
-		// Gated purely by `storeMetadata` — independent of the spam-email
-		// check above, which inspects the email but never writes it.
+		// Gated purely by `storeMetadata`; `emailNormalised` piggybacks on
+		// the same write so the per-email submission-count check has an
+		// indexed field to query against.
 		if (storeMetadata && email) {
 			await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
-				metadata: { email },
+				metadata: {
+					email,
+					emailNormalised: emailNormalised ?? normaliseEmailForMatching(email),
+				},
 			});
 		}
 
