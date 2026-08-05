@@ -30,23 +30,19 @@
 		"test:watch": "NODE_ENV=${NODE_ENV:-test}; npx vitest --config ./vite.test.config.ts",
 		"test:coverage": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --coverage --config ./vite.test.config.ts"
 	},
-	"browserslist": ["> 0.5%, last 2 versions, not dead"],
+	"browserslist": [
+		"> 0.5%, last 2 versions, not dead"
+	],
 	"dependencies": {
-		"@emotion/react": "11.11.1",
-		"@emotion/styled": "11.11.0",
 		"@prosopo/account": "2.8.66",
 		"@prosopo/load-balancer": "2.10.17",
 		"@prosopo/types": "5.0.0",
-		"@prosopo/widget-skeleton": "2.8.5",
-		"react": "18.3.1",
-		"react-dom": "18.3.1"
+		"@prosopo/widget-skeleton": "2.8.5"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.3.6",
 		"@types/jsdom": "21.1.7",
 		"@types/node": "22.10.2",
-		"@types/react": "18.3.1",
-		"@types/react-dom": "18.3.1",
 		"@vitest/coverage-v8": "4.1.10",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
