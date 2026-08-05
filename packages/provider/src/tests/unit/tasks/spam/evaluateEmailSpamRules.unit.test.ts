@@ -217,9 +217,7 @@ describe("normaliseEmailForMatching", () => {
 	it("does not collapse gmail into '@gmail.com' when the local part is all dots", () => {
 		// Contrived, but the guard exists so rotating pure-dot local parts
 		// can't all map to a single empty-local bucket.
-		expect(normaliseEmailForMatching("....@gmail.com")).toBe(
-			"....@gmail.com",
-		);
+		expect(normaliseEmailForMatching("....@gmail.com")).toBe("....@gmail.com");
 	});
 
 	it("returns trimmed lowercase input when it can't be parsed", () => {

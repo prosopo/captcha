@@ -135,11 +135,13 @@ describe("countCommitmentsByNormalisedEmail — cross-collection sum + filters",
 			requestHash: "h",
 			deadlineTimestamp: new Date(Date.now() + 60_000),
 			threshold: 0.5,
-			metadata: { email: "Alice+a@Gmail.com", emailNormalised: "alice@gmail.com" },
+			metadata: {
+				email: "Alice+a@Gmail.com",
+				emailNormalised: "alice@gmail.com",
+			},
 		});
 		await PoWModel.create({
-			challenge:
-				"1___2___pow-a" as `${number}___${string}___${string}`,
+			challenge: "1___2___pow-a" as `${number}___${string}___${string}`,
 			userAccount: "u2",
 			dappAccount: "dapp-A",
 			requestedAtTimestamp: new Date(),
@@ -157,8 +159,7 @@ describe("countCommitmentsByNormalisedEmail — cross-collection sum + filters",
 			},
 		});
 		await PuzzleModel.create({
-			challenge:
-				"1___2___puzzle-a" as `${number}___${string}___${string}`,
+			challenge: "1___2___puzzle-a" as `${number}___${string}___${string}`,
 			userAccount: "u3",
 			dappAccount: "dapp-A",
 			requestedAtTimestamp: new Date(),
@@ -200,7 +201,10 @@ describe("countCommitmentsByNormalisedEmail — cross-collection sum + filters",
 			requestHash: "h",
 			deadlineTimestamp: new Date(Date.now() + 60_000),
 			threshold: 0.5,
-			metadata: { email: "bob@example.com", emailNormalised: "bob@example.com" },
+			metadata: {
+				email: "bob@example.com",
+				emailNormalised: "bob@example.com",
+			},
 		});
 
 		// serverChecked:false — must NOT be counted even though the
@@ -208,8 +212,7 @@ describe("countCommitmentsByNormalisedEmail — cross-collection sum + filters",
 		// serverChecked filter and inflating counts with in-flight
 		// (unverified) records.
 		await PoWModel.create({
-			challenge:
-				"1___2___pow-unchecked" as `${number}___${string}___${string}`,
+			challenge: "1___2___pow-unchecked" as `${number}___${string}___${string}`,
 			userAccount: "u5",
 			dappAccount: "dapp-A",
 			requestedAtTimestamp: new Date(),
