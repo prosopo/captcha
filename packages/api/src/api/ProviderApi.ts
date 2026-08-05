@@ -399,24 +399,18 @@ export default class ProviderApi
 		mode?: ModeEnum,
 		simdReadings?: string,
 		detectorSessionId?: string,
-		detectorUnavailable?: boolean,
 		currentUrl?: string,
 		iframeUrl?: string,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const body: GetFrictionlessCaptchaChallengeRequestBodyOutput = {
 			[ApiParams.dapp]: dapp,
 			[ApiParams.user]: user,
-			// Empty strings when the detector was unavailable — the provider gates
-			// on the detectorUnavailable flag and PoW-fallbacks before decrypt.
 			[ApiParams.token]: token ?? "",
 			[ApiParams.headHash]: headHash ?? "",
 			...(mode && { [ApiParams.mode]: mode }),
 			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
 			...(detectorSessionId && {
 				[ApiParams.detectorSessionId]: detectorSessionId,
-			}),
-			...(detectorUnavailable && {
-				[ApiParams.detectorUnavailable]: true,
 			}),
 			...(currentUrl && { [ApiParams.currentUrl]: currentUrl }),
 			...(iframeUrl && { [ApiParams.iframeUrl]: iframeUrl }),

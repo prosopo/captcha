@@ -15,6 +15,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import type { Rollup } from "vite";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import VitePluginRemoveUnusedTranslations from "./vite-plugin-remove-unused-translations.js";
 
@@ -64,7 +65,11 @@ const run = async (
 	for (const source of sources) {
 		callHook(plugin.transform, source, "id.ts");
 	}
-	await callHook(plugin.writeBundle);
+	await callHook(
+		plugin.writeBundle,
+		{} as Rollup.NormalizedOutputOptions,
+		{} as Rollup.OutputBundle,
+	);
 };
 
 describe("VitePluginRemoveUnusedTranslations", () => {

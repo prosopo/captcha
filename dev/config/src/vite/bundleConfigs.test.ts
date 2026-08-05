@@ -16,7 +16,7 @@ import fs from "node:fs";
 import { builtinModules } from "node:module";
 import os from "node:os";
 import path from "node:path";
-import type { UserConfig } from "vite";
+import type { Rollup, UserConfig } from "vite";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { nodejsPolarsNativeFilePlugin } from "./NodejsPolarsNativeFilePlugin.js";
 import VitePluginCloseAndCopy from "./vite-plugin-close-and-copy.js";
@@ -49,8 +49,13 @@ const leafTsConfig = (): string => {
 	return tsConfigPath;
 };
 
+// Hand-rolled rather than `.flat(Infinity)`: a non-literal depth makes tsc
+// expand FlatArray until it gives up with TS2589.
+const flattenDeep = (value: unknown): unknown[] =>
+	Array.isArray(value) ? value.flatMap(flattenDeep) : [value];
+
 const pluginNames = (config: UserConfig): string[] =>
-	(config.plugins ?? []).flat(Number.POSITIVE_INFINITY).map((plugin) => {
+	flattenDeep(config.plugins ?? []).map((plugin) => {
 		if (plugin && typeof plugin === "object" && "name" in plugin) {
 			return String(plugin.name);
 		}
@@ -61,11 +66,13 @@ const pluginNames = (config: UserConfig): string[] =>
  * Drive the `generateBundle` hook of the inline import.meta.url plugin over a
  * fake bundle. Only that one plugin defines the hook.
  */
+type FakeBundle = Record<string, { type: string; code?: string }>;
+
 const generateBundle = async (
 	config: UserConfig,
-	bundle: Record<string, { type: string; code?: string }>,
+	bundle: FakeBundle,
 ): Promise<void> => {
-	for (const plugin of (config.plugins ?? []).flat(Number.POSITIVE_INFINITY)) {
+	for (const plugin of flattenDeep(config.plugins ?? [])) {
 		if (
 			!plugin ||
 			typeof plugin !== "object" ||
@@ -75,7 +82,11 @@ const generateBundle = async (
 		}
 		const hook = plugin.generateBundle;
 		if (typeof hook === "function") {
-			await callHook(hook, {}, bundle);
+			await callHook(
+				hook as (options: object, bundle: FakeBundle) => unknown,
+				{},
+				bundle,
+			);
 		}
 	}
 };
@@ -366,7 +377,12 @@ describe("VitePluginCloseAndCopy", () => {
 	});
 
 	it("announces the start of the build", () => {
-		expect(() => callHook(VitePluginCloseAndCopy().buildStart)).not.toThrow();
+		expect(() =>
+			callHook(
+				VitePluginCloseAndCopy().buildStart,
+				{} as Rollup.NormalizedInputOptions,
+			),
+		).not.toThrow();
 	});
 });
 

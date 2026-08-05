@@ -43,10 +43,6 @@ export type ShortCircuitInput = {
 	userSitekeyIpHash: string;
 	requestId: string | undefined;
 	logger: Logger;
-	// Set when the client reported it had no provider detector bundle to run
-	// (no pool, assign failed, or blob load failed). The detector lives only on
-	// providers, so this means no detection happened ⇒ serve PoW.
-	detectorUnavailable: boolean;
 	tcpToChelloUs?: number;
 	chelloToHandshakeUs?: number;
 };
@@ -55,10 +51,8 @@ export type ShortCircuitInput = {
 // and empty-pool fallback). Score 0 — these paths do not run bot detection, so
 // the session is created as a plain challenge rather than a scored one.
 const buildBypassSessionParams = (input: ShortCircuitInput) => ({
-	// The bypass paths create a session without a decryption token. When the
-	// client had no detector to run (detectorUnavailable) it sends an empty
-	// token, but `sendCaptcha` requires a truthy token, and the session needs a
-	// unique value for dedup — so synthesise one when absent.
+	// `sendCaptcha` requires a truthy token and dedup needs a unique value, so
+	// synthesise one when the client had no detector to produce it.
 	token: input.token || `nodetector-${uuidv4()}`,
 	score: 0,
 	threshold:
@@ -83,38 +77,29 @@ const buildBypassSessionParams = (input: ShortCircuitInput) => ({
 });
 
 /**
- * Universal "no detector ⇒ PoW" fallback. The detector lives only in the
- * provider-served pool bundles; when none is available for this request there
- * is no way to run (or decrypt) frictionless detection, so the provider serves
- * a real PoW challenge rather than the request failing or silently passing.
+ * Empty-pool PoW fallback. The detector lives only in the provider-served pool
+ * bundles; when this provider has none to assign (missing dir, empty dir, or
+ * all bundles failed to load) no client could have run detection, so it serves
+ * a real PoW challenge rather than failing the request.
  *
- * Fires when EITHER:
- *   - the pool is empty (missing dir, empty dir, or all bundles failed to
- *     load) — no provider has a bundle to assign; or
- *   - the client reported `detectorUnavailable` (it couldn't fetch/run a
- *     bundle this session) — even if the pool itself is populated.
- *
- * Returns null (proceed with normal scored detection) only when the pool has at
- * least one bundle AND the client ran one.
+ * This is a provider-side condition only. Nothing a client sends — an empty
+ * token included — can reach this path; a client that ran no detector is
+ * handled by the decision machine's missing-token gate.
  */
-export const runNoDetectorPowFallback = async (
+export const runEmptyDetectorPoolPowFallback = async (
 	input: ShortCircuitInput,
 	res: Response,
 ): Promise<Response | null> => {
 	const pool = getDetectorBundlePool();
-	const poolEmpty = !pool || pool.size() === 0;
-	if (!poolEmpty && !input.detectorUnavailable) {
+	if (pool && pool.size() > 0) {
 		return null;
 	}
 
-	const reason = poolEmpty
-		? "empty_detector_pool_pow_fallback"
-		: "client_detector_unavailable_pow_fallback";
 	input.logger.warn(() => ({
 		msg: "Frictionless decision",
 		data: {
 			requestId: input.requestId,
-			decision: reason,
+			decision: "empty_detector_pool_pow_fallback",
 			captchaType: CaptchaType.pow,
 		},
 	}));

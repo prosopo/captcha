@@ -39,6 +39,8 @@ import {
 } from "../contextAwareValidation.js";
 import {
 	DECRYPTION_FAILED_IMAGE_ROUNDS,
+	MISSING_HEAD_HASH_IMAGE_ROUNDS,
+	MISSING_TOKEN_IMAGE_ROUNDS,
 	getRoundsFromSimScore,
 } from "./constants.js";
 import { attachHoneypot } from "./honeypotResponse.js";
@@ -62,6 +64,9 @@ export type DecisionMachineInput = {
 	botScore: number;
 	scoreComponents: ScoreComponents;
 	token: string;
+	// As received from the client, before decryption — the gates below read
+	// these to tell "sent nothing" apart from "sent something we can't open".
+	headHash: string;
 	botThreshold: number;
 	// Sanitised page URL the widget reported (origin + path, no query /
 	// fragment / credentials). Undefined when the client didn't report a
@@ -79,8 +84,9 @@ type ExpressHandle = {
 	next: NextFunction;
 };
 
-// Post-validation pipeline: UA → context → webview → timestamp → host →
-// score → default-pow. Always terminates the request.
+// Post-validation pipeline: payload presence → decrypt → UA → context →
+// webview → timestamp → host → score → default-pow. Runs after the access-rule
+// ladder in the handler. Always terminates the request.
 export const runDecisionMachine = async (
 	input: DecisionMachineInput,
 	handle: ExpressHandle,
@@ -96,6 +102,60 @@ export const runDecisionMachine = async (
 	} = input;
 	const { req, res } = handle;
 	let { botScore, scoreComponents } = input;
+
+	// An absent payload is never a pass. A client that ran no detector — for any
+	// reason, self-reported or not — has told us nothing about itself, so it
+	// solves an image captcha. Only the provider itself can skip detection
+	// (maintenance mode, empty bundle pool), and both do so before this point.
+	if (!input.token) {
+		req.logger.info(() => ({
+			msg: "Frictionless decision",
+			data: {
+				decision: "missing_token",
+				captchaType: CaptchaType.image,
+			},
+		}));
+		recordFrictionlessDecision("missing_token");
+		attachHoneypot(res, clientRecord);
+		return res.json(
+			await tasks.frictionlessManager.sendImageCaptcha({
+				solvedImagesCount: Math.min(
+					MISSING_TOKEN_IMAGE_ROUNDS,
+					clientRecord.settings.imageMaxRounds,
+				),
+				userSitekeyIpHash,
+				reason: FrictionlessReason.MISSING_TOKEN,
+				siteKey: dapp,
+				ipInfo,
+				headers: flatHeaders,
+			}),
+		);
+	}
+
+	if (!input.headHash) {
+		req.logger.info(() => ({
+			msg: "Frictionless decision",
+			data: {
+				decision: "missing_head_hash",
+				captchaType: CaptchaType.image,
+			},
+		}));
+		recordFrictionlessDecision("missing_head_hash");
+		attachHoneypot(res, clientRecord);
+		return res.json(
+			await tasks.frictionlessManager.sendImageCaptcha({
+				solvedImagesCount: Math.min(
+					MISSING_HEAD_HASH_IMAGE_ROUNDS,
+					clientRecord.settings.imageMaxRounds,
+				),
+				userSitekeyIpHash,
+				reason: FrictionlessReason.MISSING_HEAD_HASH,
+				siteKey: dapp,
+				ipInfo,
+				headers: flatHeaders,
+			}),
+		);
+	}
 
 	// A payload we couldn't decrypt tells us nothing about the client — it is
 	// not evidence of a bot, it is absence of evidence. Handle it explicitly and

@@ -12,31 +12,41 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	type Mock,
+	afterEach,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
 import type { LogLevel, LogRecord } from "../logger.js";
 import { NativeLogger, getLogger, setGlobalDirectives } from "../logger.js";
 
 type Record_ = Record<string, unknown>;
 
-const parseLast = (spy: ReturnType<typeof vi.fn>): Record_ => {
+type ConsoleMock = Mock<(...args: unknown[]) => void>;
+
+const parseLast = (spy: ConsoleMock): Record_ => {
 	const calls = spy.mock.calls;
 	const last = calls[calls.length - 1];
 	return JSON.parse(String(last?.[0])) as Record_;
 };
 
-let info: ReturnType<typeof vi.fn>;
-let debug: ReturnType<typeof vi.fn>;
-let trace: ReturnType<typeof vi.fn>;
-let warn: ReturnType<typeof vi.fn>;
-let error: ReturnType<typeof vi.fn>;
+let info: ConsoleMock;
+let debug: ConsoleMock;
+let trace: ConsoleMock;
+let warn: ConsoleMock;
+let error: ConsoleMock;
 
 beforeEach(() => {
 	setGlobalDirectives("");
-	info = vi.fn();
-	debug = vi.fn();
-	trace = vi.fn();
-	warn = vi.fn();
-	error = vi.fn();
+	info = vi.fn<(...args: unknown[]) => void>();
+	debug = vi.fn<(...args: unknown[]) => void>();
+	trace = vi.fn<(...args: unknown[]) => void>();
+	warn = vi.fn<(...args: unknown[]) => void>();
+	error = vi.fn<(...args: unknown[]) => void>();
 	vi.spyOn(console, "info").mockImplementation(info);
 	vi.spyOn(console, "debug").mockImplementation(debug);
 	vi.spyOn(console, "trace").mockImplementation(trace);
@@ -69,14 +79,14 @@ describe("NativeLogger format", () => {
 describe("NativeLogger.log level dispatch", () => {
 	const cases: Array<{
 		level: LogLevel;
-		dest: () => ReturnType<typeof vi.fn>;
+		dest: () => ConsoleMock;
 	}> = [
-		{ level: "trace", dest: (): ReturnType<typeof vi.fn> => trace },
-		{ level: "debug", dest: (): ReturnType<typeof vi.fn> => debug },
-		{ level: "info", dest: (): ReturnType<typeof vi.fn> => info },
-		{ level: "warn", dest: (): ReturnType<typeof vi.fn> => warn },
-		{ level: "error", dest: (): ReturnType<typeof vi.fn> => error },
-		{ level: "fatal", dest: (): ReturnType<typeof vi.fn> => error },
+		{ level: "trace", dest: (): ConsoleMock => trace },
+		{ level: "debug", dest: (): ConsoleMock => debug },
+		{ level: "info", dest: (): ConsoleMock => info },
+		{ level: "warn", dest: (): ConsoleMock => warn },
+		{ level: "error", dest: (): ConsoleMock => error },
+		{ level: "fatal", dest: (): ConsoleMock => error },
 	];
 
 	for (const { level, dest } of cases) {
@@ -136,7 +146,7 @@ describe("NativeLogger direct level methods", () => {
 describe("error unpacking edge cases", () => {
 	it("passes a primitive cause through unchanged", () => {
 		const logger = getLogger("info", "scope");
-		const err = new Error("boom");
+		const err: Error & { cause?: unknown } = new Error("boom");
 		err.cause = "a string cause";
 
 		logger.error((): LogRecord => ({ err }));
@@ -146,7 +156,7 @@ describe("error unpacking edge cases", () => {
 
 	it("keeps a null cause out of the unpacked object", () => {
 		const logger = getLogger("info", "scope");
-		const err = new Error("boom");
+		const err: Error & { cause?: unknown } = new Error("boom");
 		err.cause = null;
 
 		logger.error((): LogRecord => ({ err }));
