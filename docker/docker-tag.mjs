@@ -47,13 +47,20 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-const manifestPath = resolve(process.cwd(), "package.json");
-const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
-
-const repository =
+// Exported so the bake driver derives image names the same way this script
+// does. Two implementations of this mapping is exactly the drift that made
+// the inline one-liners a problem.
+export const dockerRepository = (manifest) =>
 	manifest.prosopo?.dockerImage ??
 	manifest.name.replace(/^@/, "").replace(/-docker$/, "");
-const nodeEnv = process.env.NODE_ENV;
-const suffix = nodeEnv && nodeEnv !== "production" ? `-${nodeEnv}` : "";
 
-process.stdout.write(`${repository}:${manifest.version}${suffix}\n`);
+export const tagSuffix = (nodeEnv) =>
+	nodeEnv && nodeEnv !== "production" ? `-${nodeEnv}` : "";
+
+// Only print when run as a script, not when imported for the helpers above.
+if (process.argv[1] === import.meta.filename) {
+	const manifestPath = resolve(process.cwd(), "package.json");
+	const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+	const tag = `${dockerRepository(manifest)}:${manifest.version}${tagSuffix(process.env.NODE_ENV)}`;
+	process.stdout.write(`${tag}\n`);
+}
