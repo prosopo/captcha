@@ -22,6 +22,9 @@
 		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"docker-tag": "node ../../docker/docker-tag.mjs",
+		"build:docker": "docker buildx build --progress=plain --tag $(npm run --silent docker-tag) --platform linux/amd64 -f ./Dockerfile ../..",
+		"publish:docker": "docker push $(npm run --silent docker-tag)",
 		"typecheck": "tsc --project tsconfig.types.json",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
 		"bundle": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.config.ts --mode $NODE_ENV",
@@ -73,5 +76,8 @@
 		"type": "git",
 		"url": "git+https://github.com/prosopo/captcha.git",
 		"directory": "packages/cli"
+	},
+	"prosopo": {
+		"dockerImage": "prosopo/provider"
 	}
 }
