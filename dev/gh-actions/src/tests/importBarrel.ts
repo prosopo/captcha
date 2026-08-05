@@ -12,10 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// A barrel, not a script. It used to be a `main()` that logged "index.ts",
-// which is what `package.json#main` pointed at.
-export * from "./dockerTags.js";
-export * from "./enableAutoMerge.js";
-export * from "./isMain.js";
-export * from "./listDockerTags.js";
-export * from "./previousDockerTag.js";
+// Fixture for cli.unit.test.ts: importing the package must have no side
+// effects. Run as a subprocess so a stray console.log or fetch is observable.
+import "../index.js";
+
+console.log("imported");
