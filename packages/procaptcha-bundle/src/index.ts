@@ -37,9 +37,10 @@ const widgetFactory = new WidgetFactory(new WidgetThemeResolver());
  * prefetch, and the detection path falls back to resolving a provider itself.
  */
 const startDetectorPrefetch = (
-	siteKey: string,
+	siteKey: string | null,
 	flags: { ipv4?: boolean; ipv6?: boolean },
 ): void => {
+	if (!siteKey) return;
 	void Promise.all([
 		import("@prosopo/procaptcha-frictionless"),
 		import("@prosopo/procaptcha-common"),
@@ -111,6 +112,8 @@ const implicitRender = async () => {
 			const ipv4 = button.getAttribute("data-ipv4") === "true";
 			const ipv6 = button.getAttribute("data-ipv6") === "true";
 
+			startDetectorPrefetch(siteKey, { ipv4, ipv6 });
+
 			const root = await widgetFactory.createWidgets(
 				[button],
 				{
@@ -139,6 +142,8 @@ export const render = async (
 	element: Element,
 	renderOptions: ProcaptchaRenderOptions,
 ) => {
+	startDetectorPrefetch(renderOptions.siteKey, renderOptions);
+
 	const hasInvisibleSize =
 		Object.prototype.hasOwnProperty.call(renderOptions, "size") &&
 		renderOptions.size === "invisible";
