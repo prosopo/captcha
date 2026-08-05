@@ -169,6 +169,27 @@ describe("normaliseEmailForMatching", () => {
 		);
 	});
 
+	it("treats b.l.a.h@gmail.com and blah@gmail.com as equivalent", () => {
+		// Explicit lock-in of the gmail dot-collapse equivalence class
+		// (both variants delivered to the same mailbox at Google).
+		const dotted = normaliseEmailForMatching("b.l.a.h@gmail.com");
+		const plain = normaliseEmailForMatching("blah@gmail.com");
+		expect(dotted).toBe("blah@gmail.com");
+		expect(plain).toBe("blah@gmail.com");
+		expect(dotted).toBe(plain);
+	});
+
+	it("treats b.l.a.h@gmail.com and BLAH+newsletter@GoogleMail.com as equivalent", () => {
+		// Full evasion pattern: mixed dot/+tag/googlemail/casing all
+		// resolve to a single count-key.
+		const scrambled = normaliseEmailForMatching(
+			"BLAH+newsletter@GoogleMail.com",
+		);
+		const dotted = normaliseEmailForMatching("b.l.a.h@gmail.com");
+		expect(scrambled).toBe("blah@gmail.com");
+		expect(scrambled).toBe(dotted);
+	});
+
 	it("collapses googlemail into gmail", () => {
 		expect(normaliseEmailForMatching("alice+tag@googlemail.com")).toBe(
 			"alice@gmail.com",
