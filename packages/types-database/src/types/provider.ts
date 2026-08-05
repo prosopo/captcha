@@ -229,7 +229,10 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	},
 	metadata: {
 		type: new Schema(
-			{ email: { type: String, required: false } },
+			{
+				email: { type: String, required: false },
+				emailNormalised: { type: String, required: false },
+			},
 			{ _id: false },
 		),
 		required: false,
@@ -297,6 +300,21 @@ PoWCaptchaRecordSchema.index({ "ipInfo.isVPN": 1 });
 // `$not` isn't allowed inside `partialFilterExpression`.
 PoWCaptchaRecordSchema.index({ ipInfo: 1 });
 PoWCaptchaRecordSchema.index({ parsedUserAgentInfo: 1 });
+// Supports the per-email submission-count check
+// (`spamFilter.emailRules.maxEmailSubmissionCount`). The `serverChecked: 1`
+// suffix keeps the count query index-only when the filter narrows on it,
+// and the partial filter keeps the index tiny — only rows that both carry
+// a normalised email AND have been server-checked are indexed.
+PoWCaptchaRecordSchema.index(
+	{ dappAccount: 1, "metadata.emailNormalised": 1, serverChecked: 1 },
+	{
+		name: "spamEmailCount_partial",
+		partialFilterExpression: {
+			"metadata.emailNormalised": { $exists: true },
+			serverChecked: true,
+		},
+	},
+);
 // Tiny partial index serving the StoreCommitmentsExternal sweep. Only
 // records with `pendingStage: true` are indexed — typically a small
 // rolling set — so the query examines only the pending rows instead of
@@ -352,7 +370,10 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 	},
 	metadata: {
 		type: new Schema(
-			{ email: { type: String, required: false } },
+			{
+				email: { type: String, required: false },
+				emailNormalised: { type: String, required: false },
+			},
 			{ _id: false },
 		),
 		required: false,
@@ -411,6 +432,18 @@ PuzzleCaptchaRecordSchema.index(
 		partialFilterExpression: { pendingStage: true },
 	},
 );
+// See `PoWCaptchaRecordSchema.spamEmailCount_partial` — same purpose here
+// for puzzle captchas.
+PuzzleCaptchaRecordSchema.index(
+	{ dappAccount: 1, "metadata.emailNormalised": 1, serverChecked: 1 },
+	{
+		name: "spamEmailCount_partial",
+		partialFilterExpression: {
+			"metadata.emailNormalised": { $exists: true },
+			serverChecked: true,
+		},
+	},
+);
 
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	userAccount: { type: String, required: true },
@@ -434,7 +467,10 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	},
 	metadata: {
 		type: new Schema(
-			{ email: { type: String, required: false } },
+			{
+				email: { type: String, required: false },
+				emailNormalised: { type: String, required: false },
+			},
 			{ _id: false },
 		),
 		required: false,
@@ -511,6 +547,18 @@ UserCommitmentRecordSchema.index(
 	{
 		name: "pendingStage_partial",
 		partialFilterExpression: { pendingStage: true },
+	},
+);
+// See `PoWCaptchaRecordSchema.spamEmailCount_partial` — same purpose here
+// for image captchas.
+UserCommitmentRecordSchema.index(
+	{ dappAccount: 1, "metadata.emailNormalised": 1, serverChecked: 1 },
+	{
+		name: "spamEmailCount_partial",
+		partialFilterExpression: {
+			"metadata.emailNormalised": { $exists: true },
+			serverChecked: true,
+		},
 	},
 );
 
@@ -937,6 +985,17 @@ export interface IProviderDatabase extends IDatabase {
 		commitmentId: Hash,
 		updates: Partial<UserCommitment>,
 	): Promise<void>;
+
+	/**
+	 * Counts server-checked captcha records (across image, PoW and puzzle
+	 * collections) for a dapp whose `metadata.emailNormalised` equals the
+	 * given value. Backs the per-email submission-count rejection in the
+	 * verify tasks. Returns 0 when the normalised email is empty.
+	 */
+	countCommitmentsByNormalisedEmail(
+		dappAccount: string,
+		emailNormalised: string,
+	): Promise<number>;
 
 	getUnstoredDappUserPoWCommitments(
 		limit?: number,

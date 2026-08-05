@@ -16,6 +16,7 @@ import type { IEmailSpamRules } from "@prosopo/types";
 import { describe, expect, it } from "vitest";
 import {
 	evaluateEmailSpamRules,
+	normaliseEmailForMatching,
 	normaliseGmailAddress,
 } from "../../../../tasks/spam/evaluateEmailSpamRules.js";
 
@@ -158,5 +159,49 @@ describe("normaliseGmailAddress", () => {
 
 	it("returns the original string when it can't be parsed", () => {
 		expect(normaliseGmailAddress("not-an-email")).toBe("not-an-email");
+	});
+});
+
+describe("normaliseEmailForMatching", () => {
+	it("strips dots and +tag for gmail", () => {
+		expect(normaliseEmailForMatching("a.l.i.c.e+promo@gmail.com")).toBe(
+			"alice@gmail.com",
+		);
+	});
+
+	it("collapses googlemail into gmail", () => {
+		expect(normaliseEmailForMatching("alice+tag@googlemail.com")).toBe(
+			"alice@gmail.com",
+		);
+	});
+
+	it("strips +tag but keeps dots for non-gmail", () => {
+		expect(normaliseEmailForMatching("A.L.i.c.E+news@example.com")).toBe(
+			"a.l.i.c.e@example.com",
+		);
+	});
+
+	it("lowercases and trims", () => {
+		expect(normaliseEmailForMatching("  BOB@Example.COM  ")).toBe(
+			"bob@example.com",
+		);
+	});
+
+	it("does not collapse into '' when the local part starts with '+'", () => {
+		expect(normaliseEmailForMatching("+abc@example.com")).toBe(
+			"+abc@example.com",
+		);
+	});
+
+	it("does not collapse gmail into '@gmail.com' when the local part is all dots", () => {
+		// Contrived, but the guard exists so rotating pure-dot local parts
+		// can't all map to a single empty-local bucket.
+		expect(normaliseEmailForMatching("....@gmail.com")).toBe(
+			"....@gmail.com",
+		);
+	});
+
+	it("returns trimmed lowercase input when it can't be parsed", () => {
+		expect(normaliseEmailForMatching("not-an-email")).toBe("not-an-email");
 	});
 });

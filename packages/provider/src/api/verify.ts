@@ -545,6 +545,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						userAccessRulesStorage,
 						email,
 						clientRecord.settings.spamEmailDomainCheckEnabled,
+						clientRecord.settings.spamFilter,
 						clientRecord.settings.trafficFilter,
 						clientRecord.settings.storeMetadata,
 					);
