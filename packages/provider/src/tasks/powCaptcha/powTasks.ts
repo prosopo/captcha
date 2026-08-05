@@ -77,7 +77,10 @@ import {
 	type RoutingContext,
 	applyRouter,
 } from "../frictionless/routingMachine.js";
-import { evaluateEmailSpamRules } from "../spam/evaluateEmailSpamRules.js";
+import {
+	evaluateEmailSpamRules,
+	normaliseEmailForMatching,
+} from "../spam/evaluateEmailSpamRules.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
 
 /**
@@ -759,6 +762,48 @@ export class PowCaptchaManager extends CaptchaManager {
 			}
 		}
 
+		// Per-email submission-count check — see `imgCaptchaTasks` for the
+		// full rationale. Gated by `storeMetadata` because we can only
+		// count records that carry `metadata.emailNormalised`, and that
+		// field is only ever written when `storeMetadata` is on.
+		const maxEmailSubmissionCount =
+			spamFilter?.enabled && spamFilter.emailRules?.enabled
+				? spamFilter.emailRules.maxEmailSubmissionCount
+				: undefined;
+		let emailNormalised: string | undefined;
+		if (
+			!failResult &&
+			maxEmailSubmissionCount !== undefined &&
+			email &&
+			storeMetadata
+		) {
+			emailNormalised = normaliseEmailForMatching(email);
+			if (emailNormalised) {
+				try {
+					const priorCount = await this.db.countCommitmentsByNormalisedEmail(
+						dappAccount,
+						emailNormalised,
+					);
+					if (priorCount >= maxEmailSubmissionCount) {
+						logger.info(() => ({
+							msg: "Email submission count exceeded in PoW verification",
+							data: { priorCount, maxEmailSubmissionCount },
+						}));
+						failResult = {
+							status: CaptchaStatus.disapproved,
+							reason: ResultReason.SPAM_EMAIL_COUNT_EXCEEDED,
+						};
+						failReason = "API.SPAM_EMAIL_COUNT_EXCEEDED";
+					}
+				} catch (error) {
+					logger.warn(() => ({
+						msg: "Failed to check email submission count in PoW verification",
+						error,
+					}));
+				}
+			}
+		}
+
 		const sessionRecord = challengeRecord.sessionId
 			? await this.db.getSessionRecordBySessionId(challengeRecord.sessionId)
 			: undefined;
@@ -799,10 +844,14 @@ export class PowCaptchaManager extends CaptchaManager {
 		}
 
 		// Persist dapp-server-provided metadata when the site opts in.
-		// Gated purely by `storeMetadata` — independent of the spam-email
-		// checks above, which inspect the email but never write it.
+		// Gated purely by `storeMetadata`; `emailNormalised` piggybacks
+		// on the same write so the per-email submission-count check has
+		// an indexed field to query against.
 		if (storeMetadata && email) {
-			powRecordUpdates.metadata = { email };
+			powRecordUpdates.metadata = {
+				email,
+				emailNormalised: emailNormalised ?? normaliseEmailForMatching(email),
+			};
 		}
 
 		// IP validation: store provided IP and validate if rules enabled
