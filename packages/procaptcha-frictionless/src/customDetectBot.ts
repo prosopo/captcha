@@ -34,10 +34,12 @@ import {
 	takePrefetchedDetector,
 } from "./detectorPrefetch.js";
 
-// Upper bound on the detector-bundle assignment + load probe. The detector
-// lives ONLY in the provider-served pool bundles, so if the provider is
-// slow/unreachable we abandon the probe and send an empty token.
-const ASSIGN_TIMEOUT_MS = 2000;
+// Upper bound on the assign POST, which serves the detector bundle inline
+// (~215 KB gzipped). The hop is always cold — /healthz pins a different
+// hostname, so it pays fresh DNS + TLS + a CORS preflight before the download
+// even starts, measured at 6.7s against staging. Anything tighter silently
+// drops the detector and sends an empty token.
+const ASSIGN_TIMEOUT_MS = 10_000;
 
 // The page(s) the widget is rendered on, reduced to origin + path.
 // Deliberately built from `origin` + `pathname` (never `href`) so the query
@@ -227,11 +229,11 @@ const customDetectBot: BotDetectionFunction = async (
 				ASSIGN_TIMEOUT_MS,
 			));
 		if (assigned.useProviderBundle && assigned.detectorScript) {
+			// Deliberately untimed: this is a local parse + evaluate, so a timer
+			// cannot rescue a stalled main thread — it can only throw away a bundle
+			// we are already holding.
+			providerDetect = await DetectorLoaderFromScript(assigned.detectorScript);
 			detectorSessionId = assigned.detectorSessionId;
-			providerDetect = await withTimeout(
-				DetectorLoaderFromScript(assigned.detectorScript),
-				ASSIGN_TIMEOUT_MS,
-			);
 		}
 	} catch {
 		// No detector available — fall through to the PoW request below.
