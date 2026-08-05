@@ -16,6 +16,7 @@ import {
 	CaptchaType,
 	type IPInfoResponse,
 	type IPInfoResult,
+	type IPuzzleSettings,
 	type ITrafficCategoryPolicy,
 	type ITrafficFilter,
 	ResultReason,
@@ -316,6 +317,12 @@ export type ResolvedChallengePolicy = {
 	powDifficulty?: number;
 	solvedImagesCount?: number;
 	puzzleTolerance?: number;
+	// Merged puzzle render overrides across all matched challenge
+	// categories: later categories overwrite earlier ones on a per-field
+	// basis, so partial overrides on separate categories compose. Empty
+	// object means "no policy specified any puzzle setting"; undefined
+	// means no challenge matches at all (already short-circuited above).
+	puzzleSettings?: IPuzzleSettings;
 	// Categories whose policies contributed to the resolved combination.
 	sourceCategories: TrafficCategory[];
 };
@@ -348,6 +355,7 @@ export const resolveChallengePolicy = (
 	let powDifficulty: number | undefined;
 	let solvedImagesCount: number | undefined;
 	let puzzleTolerance: number | undefined;
+	let puzzleSettings: IPuzzleSettings | undefined;
 	for (const m of challenges) {
 		if (m.policy.powDifficulty !== undefined) {
 			powDifficulty =
@@ -367,6 +375,13 @@ export const resolveChallengePolicy = (
 					? m.policy.puzzleTolerance
 					: Math.min(puzzleTolerance, m.policy.puzzleTolerance);
 		}
+		// Per-field merge across categories: last-writer-wins on any sub-
+		// field that is set. If no category sets a given puzzle field, the
+		// combined object leaves it undefined and the downstream resolver
+		// falls back to clientSettings then the asset-package default.
+		if (m.policy.puzzle) {
+			puzzleSettings = { ...(puzzleSettings ?? {}), ...m.policy.puzzle };
+		}
 	}
 
 	return {
@@ -374,6 +389,7 @@ export const resolveChallengePolicy = (
 		powDifficulty,
 		solvedImagesCount,
 		puzzleTolerance,
+		puzzleSettings,
 		sourceCategories: challenges.map((m) => m.category),
 	};
 };

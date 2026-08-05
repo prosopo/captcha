@@ -24,6 +24,7 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import { flatten, getIPAddress } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../express.js";
+import { downgradePuzzleIfUnavailable } from "../../tasks/puzzle/puzzleRenderer.js";
 import { Tasks } from "../../tasks/tasks.js";
 import { derivePlatform } from "../../utils/devicePlatform.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
@@ -262,6 +263,11 @@ export const buildEscalation = async (
 		reason?: string;
 	};
 
+	// Second place a session's captchaType is decided (the other is
+	// sendCaptcha). Same reasoning: escalating into a puzzle this provider
+	// cannot render would leave the widget with a session it can never satisfy.
+	const escalatedType = downgradePuzzleIfUnavailable(routed.captchaType);
+
 	// Prefer the routing machine's own selection reason (e.g. an invalid
 	// fingerprint proof) for the escalated captcha record; fall back to the
 	// originating session's reason when the machine didn't supply one.
@@ -274,9 +280,9 @@ export const buildEscalation = async (
 		originSession.threshold,
 		originSession.scoreComponents,
 		originSession.ipAddress,
-		routed.captchaType,
+		escalatedType,
 		originSession.siteKey ?? powRecord.dappAccount,
-		routed.captchaType === CaptchaType.image
+		escalatedType === CaptchaType.image
 			? (routed.solvedImagesCount ?? originSession.solvedImagesCount)
 			: undefined,
 		undefined,
@@ -334,7 +340,7 @@ export const buildEscalation = async (
 	}
 
 	return {
-		captchaType: routed.captchaType,
+		captchaType: escalatedType,
 		sessionId: newSession.sessionId,
 	};
 };

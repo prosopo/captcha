@@ -27,6 +27,10 @@ import type { NextFunction, Request, Response } from "express";
 import { getCompositeIpAddress } from "../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
+import {
+	renderPuzzleImages,
+	resolvePuzzleRenderSettings,
+} from "../../tasks/puzzle/puzzleRenderer.js";
 import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 import { getRequestUserScope } from "../blacklistRequestInspector.js";
@@ -71,7 +75,7 @@ export default (
 				msg: "Maintenance mode active - returning dummy puzzle challenge",
 				data: { dapp, user, sessionId },
 			}));
-			return res.json(buildPuzzleMaintenanceResponse(user, dapp));
+			return res.json(await buildPuzzleMaintenanceResponse(user, dapp));
 		}
 
 		const tasks = new Tasks(env, req.logger);
@@ -194,6 +198,19 @@ export default (
 
 			const tolerance =
 				trafficPuzzleTolerance ?? clientSettings?.settings?.puzzleTolerance;
+
+			// Resolve per-render puzzle tunables the same way as tolerance:
+			// asset defaults <- clientSettings.puzzle <- trafficFilter category
+			// puzzle override. Missing sub-fields fall through to the layer
+			// beneath, so partial overrides work as expected.
+			const trafficPuzzleSettings =
+				trafficVerdict.kind === "challenge"
+					? trafficVerdict.puzzleSettings
+					: undefined;
+			const effectivePuzzleSettings = resolvePuzzleRenderSettings(
+				clientSettings?.settings?.puzzle,
+				trafficPuzzleSettings,
+			);
 			const challenge =
 				await tasks.puzzleCaptchaManager.getPuzzleCaptchaChallenge(
 					user,
@@ -240,14 +257,26 @@ export default (
 				req.ipInfo,
 			);
 
+			// Render AFTER the record is stored: the target must be durable
+			// before it is expressed in pixels, so a crash between the two
+			// cannot leave a challenge the user can see but the server cannot
+			// score. Imagery is derived from the same target that was persisted.
+			const images = await renderPuzzleImages(
+				{
+					targetX: challenge.targetX,
+					targetY: challenge.targetY,
+				},
+				effectivePuzzleSettings,
+			);
+
 			const getPuzzleCaptchaResponse: GetPuzzleCaptchaResponse = {
 				[ApiParams.status]: "ok",
 				[ApiParams.challenge]: challenge.challenge,
-				[ApiParams.targetX]: challenge.targetX,
-				[ApiParams.targetY]: challenge.targetY,
+				[ApiParams.background]: images.background,
+				[ApiParams.piece]: images.piece,
+				[ApiParams.pieceSize]: images.pieceSize,
 				[ApiParams.originX]: challenge.originX,
 				[ApiParams.originY]: challenge.originY,
-				[ApiParams.tolerance]: challenge.tolerance,
 				[ApiParams.timestamp]: challenge.requestedAtTimestamp.toString(),
 				[ApiParams.signature]: {
 					[ApiParams.provider]: {

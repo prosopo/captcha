@@ -34,6 +34,7 @@
 		"@prosopo/ipinfo": "0.3.9",
 		"@prosopo/keyring": "2.9.71",
 		"@prosopo/load-balancer": "2.10.25",
+		"@prosopo/puzzle-assets": "0.1.0",
 		"@prosopo/redis-client": "1.0.32",
 		"@prosopo/locale": "3.3.0",
 		"@prosopo/types": "5.2.0",

@@ -36,13 +36,14 @@ import { PuzzleCanvas } from "../components/PuzzleCanvas.js";
 
 const CONTAINER_WIDTH = 300;
 const CONTAINER_HEIGHT = 200;
-const PIECE_SIZE = 24;
+const PIECE_SIZE = 44;
 
 interface CanvasProps {
 	originX: number;
 	originY: number;
-	targetX: number;
-	targetY: number;
+	background: string;
+	piece: string;
+	pieceSize: number;
 	onComplete: Mock<
 		(finalX: number, finalY: number, puzzleEvents: PuzzleEvent[]) => void
 	>;
@@ -60,8 +61,9 @@ let onComplete: Mock<
 const props = (overrides: Partial<CanvasProps> = {}): CanvasProps => ({
 	originX: 20,
 	originY: 100,
-	targetX: 200,
-	targetY: 80,
+	background: "data:image/webp;base64,UklGRg==",
+	piece: "data:image/webp;base64,UklGRg==",
+	pieceSize: 44,
 	onComplete,
 	showRetry: false,
 	submitting: false,

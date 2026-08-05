@@ -24,6 +24,7 @@ import {
 	type PoWChallengeId,
 	type VerificationResponse,
 } from "@prosopo/types";
+import { renderPuzzleImages } from "../../tasks/puzzle/puzzleRenderer.js";
 
 // Maintenance mode dummies. The matching submit/verify endpoints already
 // short-circuit to `verified: true`, so these responses just need to be
@@ -107,22 +108,24 @@ export const buildImageMaintenanceResponse = (): CaptchaResponseBody => ({
 	},
 });
 
-// Tolerance is intentionally generous: the widget uses it client-side to
-// decide whether the drop counts as "complete". Submit doesn't validate
-// in maintenance mode, so any drop should resolve cleanly.
-export const buildPuzzleMaintenanceResponse = (
+// Rendered for real, because the widget now needs imagery to show anything at
+// all — there are no coordinates left to fake a challenge out of. Generation is
+// in-process and needs no database, so it works fine while Mongo is away, and
+// /submit/puzzle doesn't validate in maintenance mode so any drop resolves.
+export const buildPuzzleMaintenanceResponse = async (
 	user: string,
 	dapp: string,
-): GetPuzzleCaptchaResponse => {
+): Promise<GetPuzzleCaptchaResponse> => {
 	const timestamp = Date.now();
+	const images = await renderPuzzleImages({ targetX: 200, targetY: 100 });
 	return {
 		[ApiParams.status]: "ok",
 		[ApiParams.challenge]: buildChallenge(user, dapp),
-		[ApiParams.targetX]: 100,
-		[ApiParams.targetY]: 100,
-		[ApiParams.originX]: 0,
-		[ApiParams.originY]: 0,
-		[ApiParams.tolerance]: 1000,
+		[ApiParams.background]: images.background,
+		[ApiParams.piece]: images.piece,
+		[ApiParams.pieceSize]: images.pieceSize,
+		[ApiParams.originX]: 60,
+		[ApiParams.originY]: 100,
 		[ApiParams.timestamp]: timestamp.toString(),
 		[ApiParams.signature]: {
 			[ApiParams.provider]: { [ApiParams.challenge]: "" },
