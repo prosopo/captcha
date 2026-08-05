@@ -1,5 +1,19 @@
 # @prosopo/server
 
+## 2.10.45
+### Patch Changes
+
+- 858dbaa: test(server): cover config env resolution and server edge paths
+- Updated dependencies [9fec7bd]
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/common@3.1.49
+  - @prosopo/types@5.0.1
+  - @prosopo/api@4.0.1
+  - @prosopo/logger@2.0.5
+  - @prosopo/keyring@2.9.64
+  - @prosopo/load-balancer@2.10.18
+
 ## 2.10.44
 ### Patch Changes
 

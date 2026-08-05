@@ -1,5 +1,44 @@
 # @prosopo/provider
 
+## 5.0.1
+### Patch Changes
+
+- ce2ac41: `startProviderApi` now resolves once the server is actually listening, and rejects if the bind fails. It previously returned the server straight from `.listen()`, which resolves before the socket is bound — a bind failure such as `EADDRINUSE` then surfaced as an `'error'` event with nothing waiting on it, i.e. an uncaught exception rather than a rejection the caller could handle.
+  
+  Integration suites reserve a port from the OS instead of guessing one. Six suites picked a port from `process.pid` plus a random offset with no availability check, while CI runs a real provider alongside the tests; a collision failed the whole run with an uncaught `EADDRINUSE` even though every test passed. The retry loops that tried to work around this are gone — they retried into another unchecked port and, because the failure was never a rejection, never ran at all.
+- 2aabe73: Remove the client-controlled `detectorUnavailable` frictionless bypass. A client could set the flag and be handed a PoW challenge without any detection running. The flag is gone from the wire format, the API client and the widget; the only remaining bypasses are provider-side (maintenance mode, empty detector bundle pool).
+  
+  The frictionless decision machine now gates on payload presence after the access-rule ladder: no token serves a 3-round image captcha, a token without its head hash serves a 2-round one.
+- bcef918: Adds a per-email submission-count rate limit on the verify pipeline. Site operators can now cap how many server-checked captcha submissions any one normalised email (Gmail dot / `+tag` tricks collapsed across providers) may back before further submissions from that address are rejected with `API.SPAM_EMAIL_COUNT_EXCEEDED`.
+  
+  - New `spamFilter.emailRules.maxEmailSubmissionCount` (int, min 1, optional) on `ClientSettingsSchema`.
+  - New `metadata.emailNormalised` field on all three captcha records (image / PoW / puzzle) — written alongside `metadata.email` whenever `storeMetadata` is on. Backed by a partial index (`spamEmailCount_partial`) on each collection.
+  - New DB method `countCommitmentsByNormalisedEmail(dappAccount, emailNormalised)` sums the three per-collection counts so limits span captcha types.
+  - Puzzle verify gains a `spamFilter` parameter to bring it to parity with img/pow for the count check.
+  - English + all 31 non-English locales gain the `API.SPAM_EMAIL_COUNT_EXCEEDED` translation.
+  - Fixes silent-drift bug: `UserSettingsSchema.spamFilter.emailRules` was missing `maxEmailSubmissionCount` on the mongoose side, which strict mode would have dropped on `$set`.
+- Updated dependencies [38396b4]
+- Updated dependencies [9fec7bd]
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/env@3.6.24
+  - @prosopo/common@3.1.49
+  - @prosopo/types@5.0.1
+  - @prosopo/api@4.0.1
+  - @prosopo/logger@2.0.5
+  - @prosopo/types-database@5.0.1
+  - @prosopo/database@4.0.1
+  - @prosopo/locale@3.2.9
+  - @prosopo/api-express-router@3.1.55
+  - @prosopo/api-route@2.6.54
+  - @prosopo/datasets@3.1.57
+  - @prosopo/ipinfo@0.3.2
+  - @prosopo/keyring@2.9.64
+  - @prosopo/load-balancer@2.10.18
+  - @prosopo/redis-client@1.0.31
+  - @prosopo/types-env@2.10.21
+  - @prosopo/user-access-policy@3.12.12
+
 ## 5.0.0
 ### Major Changes
 

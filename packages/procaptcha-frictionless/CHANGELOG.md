@@ -1,5 +1,28 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.13.2
+### Patch Changes
+
+- 5d60541: Stop dropping detector bundles that arrive slowly, which made the frictionless POST go out with an empty token and no `detectorSessionId` — the provider then scored the session at 0 and served a challenge.
+  
+  `ASSIGN_TIMEOUT_MS` was 2000 ms and covered two legs. The assign POST serves the detector inline (~215 KB gzipped) over a connection that is always cold, because `/healthz` pins a different hostname than the assign target: fresh DNS, TLS and a CORS preflight all had to fit in the budget alongside the download, measured at 6.7s against staging. The cap is now 10 s and applies only to that request; the blob-URL import that parses and evaluates the bundle is untimed, since a timer cannot rescue a stalled main thread and only discards a bundle already in hand.
+  
+  `render()` and the invisible-button path now start the detector prefetch too. Only implicit render did, so pages using the explicit API — including any page that loads the bundle via dynamic import, where implicit render never runs — assigned a detector inline on the widget's critical path with no prefetch to fall back on.
+- 2aabe73: Remove the client-controlled `detectorUnavailable` frictionless bypass. A client could set the flag and be handed a PoW challenge without any detection running. The flag is gone from the wire format, the API client and the widget; the only remaining bypasses are provider-side (maintenance mode, empty detector bundle pool).
+  
+  The frictionless decision machine now gates on payload presence after the access-rule ladder: no token serves a 3-round image captcha, a token without its head hash serves a 2-round one.
+- Updated dependencies [9fec7bd]
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/common@3.1.49
+  - @prosopo/types@5.0.1
+  - @prosopo/api@4.0.1
+  - @prosopo/locale@3.2.9
+  - @prosopo/procaptcha-common@2.11.21
+  - @prosopo/procaptcha-pow@2.10.28
+  - @prosopo/procaptcha-puzzle@2.10.44
+  - @prosopo/procaptcha-react@2.9.101
+
 ## 2.13.1
 ### Patch Changes
 
