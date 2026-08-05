@@ -18,8 +18,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 interface PuzzleCanvasProps {
 	originX: number;
 	originY: number;
-	targetX: number;
-	targetY: number;
+	/** Background with the notch already cut into it, as a data URI. */
+	background: string;
+	/** The draggable piece on transparency, as a data URI. */
+	piece: string;
+	/** Piece bounding-box size in px, as rendered by the provider. */
+	pieceSize: number;
 	onComplete: (
 		finalX: number,
 		finalY: number,
@@ -31,8 +35,6 @@ interface PuzzleCanvasProps {
 
 const CONTAINER_WIDTH = 300;
 const CONTAINER_HEIGHT = 200;
-const TARGET_SIZE = 30;
-const PIECE_SIZE = 24;
 
 const SHAKE_KEYFRAMES = `
 @keyframes prosopo-puzzle-shake {
@@ -45,8 +47,9 @@ const SHAKE_KEYFRAMES = `
 export const PuzzleCanvas = ({
 	originX,
 	originY,
-	targetX,
-	targetY,
+	background,
+	piece,
+	pieceSize,
 	onComplete,
 	showRetry,
 	submitting,
@@ -277,8 +280,6 @@ export const PuzzleCanvas = ({
 						position: "relative",
 						width: `${CONTAINER_WIDTH}px`,
 						height: `${CONTAINER_HEIGHT}px`,
-						background:
-							"linear-gradient(135deg, #e8eaf6 0%, #c5cae9 50%, #e8eaf6 100%)",
 						borderRadius: "0 0 8px 8px",
 						overflow: "hidden",
 						userSelect: "none",
@@ -289,18 +290,19 @@ export const PuzzleCanvas = ({
 						transition: "opacity 0.2s ease",
 					}}
 				>
-					{/* Target zone */}
-					<div
+					{/* Background. The notch is cut into these pixels by the
+					    provider; the widget is never told where it is. */}
+					<img
+						src={background}
+						alt=""
+						draggable={false}
 						style={{
 							position: "absolute",
-							left: `${targetX - TARGET_SIZE / 2}px`,
-							top: `${targetY - TARGET_SIZE / 2}px`,
-							width: `${TARGET_SIZE}px`,
-							height: `${TARGET_SIZE}px`,
-							borderRadius: "50%",
-							border: "2px dashed rgba(74, 144, 217, 0.6)",
-							backgroundColor: "rgba(74, 144, 217, 0.08)",
-							boxSizing: "border-box",
+							inset: 0,
+							width: `${CONTAINER_WIDTH}px`,
+							height: `${CONTAINER_HEIGHT}px`,
+							pointerEvents: "none",
+							userSelect: "none",
 						}}
 					/>
 					{/* Puzzle piece */}
@@ -321,24 +323,23 @@ export const PuzzleCanvas = ({
 						onTouchStart={handlePieceTouchStart}
 						style={{
 							position: "absolute",
-							left: `${posX - PIECE_SIZE / 2}px`,
-							top: `${posY - PIECE_SIZE / 2}px`,
-							width: `${PIECE_SIZE}px`,
-							height: `${PIECE_SIZE}px`,
-							borderRadius: "50%",
-							background:
-								"radial-gradient(circle at 40% 40%, #6ab0ff, #4a90d9)",
+							left: `${posX - pieceSize / 2}px`,
+							top: `${posY - pieceSize / 2}px`,
+							width: `${pieceSize}px`,
+							height: `${pieceSize}px`,
+							backgroundImage: `url(${piece})`,
+							backgroundSize: "100% 100%",
 							cursor: submitting
 								? "default"
 								: isDragging.current
 									? "grabbing"
 									: "grab",
-							boxShadow: isDragging.current
-								? "0 4px 12px rgba(74, 144, 217, 0.5)"
-								: "0 2px 6px rgba(74, 144, 217, 0.3)",
+							filter: isDragging.current
+								? "drop-shadow(0 4px 10px rgba(0, 0, 0, 0.45))"
+								: "drop-shadow(0 2px 5px rgba(0, 0, 0, 0.35))",
 							transition: isDragging.current
 								? "none"
-								: "box-shadow 0.2s ease, left 0.3s ease, top 0.3s ease",
+								: "filter 0.2s ease, left 0.3s ease, top 0.3s ease",
 						}}
 					/>
 				</div>
