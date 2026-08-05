@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { Translator } from "@prosopo/locale";
 import {
 	type Account,
 	type Captcha,
@@ -110,5 +111,19 @@ export const frictionless = (
 	provider: randomProvider(),
 	userAccount: account(),
 	restart: () => undefined,
+	...overrides,
+});
+
+/**
+ * Translations are the locale package's job; keys stand in for copy here so the
+ * assertions name the string the widget asked for.
+ */
+export const translator = (
+	overrides: Partial<Translator> = {},
+): Translator => ({
+	t: (key: string): string => key,
+	isReady: () => true,
+	subscribe: () => () => undefined,
+	i18n: undefined as unknown as Translator["i18n"],
 	...overrides,
 });

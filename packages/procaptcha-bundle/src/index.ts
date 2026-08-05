@@ -15,13 +15,13 @@
 import { getWindowCallback } from "@prosopo/procaptcha-common";
 import type { EnvironmentTypes, ProcaptchaRenderOptions } from "@prosopo/types";
 import { at } from "@prosopo/util";
-import type { Root } from "react-dom/client";
+import type { BundleCaptchaHandle } from "./util/captcha/components/bundleCaptcha.js";
 import { extractParams, getProcaptchaScript } from "./util/config.js";
 import { WidgetFactory } from "./util/widgetFactory.js";
 import { WidgetThemeResolver } from "./util/widgetThemeResolver.js";
 
 const BUNDLE_NAMES = ["procaptcha.bundle.iife.js", "procaptcha.bundle.js"];
-let procaptchaRoots: Root[] = [];
+let procaptchaWidgets: BundleCaptchaHandle[] = [];
 
 const widgetFactory = new WidgetFactory(new WidgetThemeResolver());
 
@@ -96,7 +96,7 @@ const implicitRender = async () => {
 			!(web3 === "true"),
 		);
 
-		procaptchaRoots.push(...root);
+		procaptchaWidgets.push(...root);
 	}
 
 	// Check for invisible mode indicators (procaptcha class on buttons)
@@ -123,7 +123,7 @@ const implicitRender = async () => {
 				true,
 			);
 
-			procaptchaRoots.push(...root);
+			procaptchaWidgets.push(...root);
 
 			// Add click event listener to the button
 			button.addEventListener("click", async (event) => {
@@ -152,7 +152,7 @@ export const render = async (
 			isWeb2,
 			true,
 		);
-		procaptchaRoots.push(...roots);
+		procaptchaWidgets.push(...roots);
 		return;
 	}
 
@@ -163,7 +163,7 @@ export const render = async (
 		false,
 	);
 
-	procaptchaRoots.push(...roots);
+	procaptchaWidgets.push(...roots);
 };
 
 export default function ready(fn: () => void) {
@@ -280,10 +280,10 @@ const start = () => {
 };
 
 export const reset = () => {
-	for (const root of procaptchaRoots) {
-		root.unmount();
+	for (const widget of procaptchaWidgets) {
+		widget.destroy();
 	}
-	procaptchaRoots = [];
+	procaptchaWidgets = [];
 
 	start();
 };

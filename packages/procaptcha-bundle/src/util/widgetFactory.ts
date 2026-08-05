@@ -24,8 +24,8 @@ import {
 	darkTheme,
 	lightTheme,
 } from "@prosopo/widget-skeleton";
-import type { Root } from "react-dom/client";
 import type { CaptchaRenderer } from "./captcha/captchaRenderer.js";
+import type { BundleCaptchaHandle } from "./captcha/components/bundleCaptcha.js";
 import { resolveLanguage } from "./language.js";
 import type { WidgetThemeResolver } from "./widgetThemeResolver.js";
 
@@ -49,7 +49,7 @@ class WidgetFactory {
 		renderOptions: ProcaptchaRenderOptions,
 		isWeb2 = true,
 		invisible = false,
-	): Promise<Root[]> {
+	): Promise<BundleCaptchaHandle[]> {
 		return Promise.all(
 			containers.map((container) => {
 				const callbacks = getDefaultCallbacks(container);
@@ -71,7 +71,7 @@ class WidgetFactory {
 		callbacks: Callbacks,
 		isWeb2 = true,
 		invisible = false,
-	): Promise<Root> {
+	): Promise<BundleCaptchaHandle> {
 		renderOptions.theme = this.widgetThemeResolver.resolveWidgetTheme(
 			container,
 			renderOptions,
@@ -107,14 +107,13 @@ class WidgetFactory {
 		// language flashes visible to end users).
 		const language = resolveLanguage(renderOptions, container);
 
-		// all the captcha-rendering logic is lazy-loaded, to avoid react & zod delay the initial widget creation.
+		// all the captcha-rendering logic is lazy-loaded, so zod and the provider
+		// API don't delay the initial widget creation.
 
 		const captchaRenderer = await this.getCaptchaRenderer(language);
 
 		const captchaRoot = captchaRenderer.renderCaptcha(
 			{
-				identifierPrefix: "procaptcha-",
-				emotionCacheKey: "procaptcha",
 				webComponentTag: "prosopo-procaptcha",
 			},
 			widgetInteractiveArea,

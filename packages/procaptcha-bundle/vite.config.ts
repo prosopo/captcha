@@ -111,7 +111,7 @@ export default defineConfig(async ({ command, mode }) => {
 					manualChunks(id: string) {
 						if (
 							id.includes(
-								"packages/procaptcha-common/dist/reactComponents/Honeypot",
+								"packages/procaptcha-common/dist/components/honeypot",
 							)
 						) {
 							return honeypotChunkName;
