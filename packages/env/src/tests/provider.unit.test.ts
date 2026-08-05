@@ -112,10 +112,12 @@ beforeEach(() => {
 	mockRedisWriteQueue.mockImplementation(function () {
 		return { clearAllSessionRecords: mockClearAllSessionRecords };
 	});
+	// biome-ignore lint/performance/noDelete: assigning undefined would leave the string "undefined" in the env
 	delete process.env.MAINTENANCE_MODE;
 });
 
 afterEach(() => {
+	// biome-ignore lint/performance/noDelete: assigning undefined would leave the string "undefined" in the env
 	delete process.env.MAINTENANCE_MODE;
 });
 

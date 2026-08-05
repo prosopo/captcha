@@ -233,8 +233,13 @@ const externalsOf = (config: UserConfig): string[] => {
 	return external.map(String);
 };
 
+// Hand-rolled rather than `.flat(Infinity)`: a non-literal depth makes tsc
+// expand FlatArray until it gives up with TS2589.
+const flattenDeep = (value: unknown): unknown[] =>
+	Array.isArray(value) ? value.flatMap(flattenDeep) : [value];
+
 const pluginNamesOf = (plugins: UserConfig["plugins"]): string[] =>
-	(plugins ?? []).flat(Number.POSITIVE_INFINITY).map((plugin) => {
+	flattenDeep(plugins ?? []).map((plugin) => {
 		if (plugin && typeof plugin === "object" && "name" in plugin) {
 			return String(plugin.name);
 		}

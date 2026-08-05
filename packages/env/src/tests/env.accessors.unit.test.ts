@@ -128,10 +128,12 @@ beforeEach(() => {
 	mockAddPair.mockImplementation((pair: KeyringPair) => pair);
 	mockGetPair.mockReset();
 	mockGetPair.mockImplementation(() => stubPair());
+	// biome-ignore lint/performance/noDelete: assigning undefined would leave the string "undefined" in the env
 	delete process.env.MAINTENANCE_MODE;
 });
 
 afterEach(() => {
+	// biome-ignore lint/performance/noDelete: assigning undefined would leave the string "undefined" in the env
 	delete process.env.MAINTENANCE_MODE;
 });
 

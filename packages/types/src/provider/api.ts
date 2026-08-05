@@ -548,8 +548,8 @@ export type SubmitPowCaptchaSolutionBodyType = input<
 
 export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
-	// Empty string when the client had no provider detector to run
-	// (detectorUnavailable) — gate on the flag below, not on token contents.
+	// Empty when the client had no detector to run — never a bypass; the
+	// decision machine serves an image captcha for an absent token.
 	[ApiParams.token]: boundedString(INPUT_LIMITS.TOKEN),
 	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.headHash]: boundedString(INPUT_LIMITS.TOKEN),
@@ -558,11 +558,6 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	// Identifies the provider-assigned pool bundle the detector ran from; the
 	// provider resolves the exact keypair/inner-config for decryption from it.
 	[ApiParams.detectorSessionId]: boundedString(INPUT_LIMITS.ID).optional(),
-	// Set by the client when it could not obtain/run a provider detector bundle
-	// (no pool, assign failed, or blob load failed). The detector now lives ONLY
-	// on providers, so with no bundle there is no detection ⇒ the provider must
-	// fall back to a PoW challenge.
-	[ApiParams.detectorUnavailable]: boolean().optional(),
 	// Full page URL the widget was rendered on (origin + path, no query
 	// string / fragment / credentials). Sent by the client so the provider
 	// can record which page a session originated from; re-sanitised

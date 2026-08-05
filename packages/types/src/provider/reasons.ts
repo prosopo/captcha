@@ -44,6 +44,10 @@ export enum FrictionlessReason {
 	// falling through to the old-timestamp path, which used to catch it by
 	// accident via the synthetic `timestamp = 0`.
 	DECRYPTION_FAILED = "DECRYPTION_FAILED",
+	// The client sent no detector token, so nothing was measured about it.
+	MISSING_TOKEN = "MISSING_TOKEN",
+	// A token arrived without its accompanying head hash.
+	MISSING_HEAD_HASH = "MISSING_HEAD_HASH",
 }
 
 /**

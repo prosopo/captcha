@@ -14,7 +14,15 @@
 
 // @vitest-environment jsdom
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	type Mock,
+	afterEach,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
 import type { LogRecord } from "../logger.js";
 import { getLogger, setGlobalDirectives } from "../logger.js";
 
@@ -22,13 +30,15 @@ import { getLogger, setGlobalDirectives } from "../logger.js";
 // jsdom to exercise the dev-tools branch of print() (objects are passed to the
 // console verbatim rather than being serialised to JSON).
 
-let info: ReturnType<typeof vi.fn>;
-let error: ReturnType<typeof vi.fn>;
+type ConsoleMock = Mock<(...args: unknown[]) => void>;
+
+let info: ConsoleMock;
+let error: ConsoleMock;
 
 beforeEach(() => {
 	setGlobalDirectives("");
-	info = vi.fn();
-	error = vi.fn();
+	info = vi.fn<(...args: unknown[]) => void>();
+	error = vi.fn<(...args: unknown[]) => void>();
 	vi.spyOn(console, "info").mockImplementation(info);
 	vi.spyOn(console, "error").mockImplementation(error);
 });
