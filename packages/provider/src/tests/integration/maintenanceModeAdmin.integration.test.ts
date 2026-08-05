@@ -52,6 +52,7 @@ import { randomAsHex } from "@prosopo/util-crypto";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
 import { Agent, fetch } from "undici";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { reservePort } from "./testUtils.js";
 
 interface AdminResponse {
 	status: ApiEndpointResponseStatus;
@@ -107,7 +108,7 @@ describe("Maintenance mode — admin endpoints stay available", () => {
 		// time by the handlers and (now) drives the background DB connect.
 		process.env.MAINTENANCE_MODE = "true";
 
-		testPort = 30000 + (process.pid % 10000) + Math.floor(Math.random() * 5000);
+		testPort = await reservePort();
 		const protocol = isTlsAvailable() ? "https" : "http";
 		baseUrl = `${protocol}://localhost:${testPort}`;
 		dispatcher = buildDispatcher();
