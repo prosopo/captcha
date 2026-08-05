@@ -27,6 +27,4 @@ This monorepo also contains the following packages unrelated to Procaptcha:
 [@prosopo/vite-plugin-watch-workspace](https://www.npmjs.com/package/@prosopo/vite-plugin-watch-workspace) - a Vite
 plugin that [watches for changes in the workspace and reloads the Vite server](https://prosopo.io/articles/using-vite-to-rebuild-local-dependencies-in-an-npm-workspace/).
 
-[@prosopo/ts-brand](https://www.npmjs.com/package/@prosopo/ts-brand) - a TypeScript library for creating [branded types](https://prosopo.io/blog/typescript-branding/).
-
 
