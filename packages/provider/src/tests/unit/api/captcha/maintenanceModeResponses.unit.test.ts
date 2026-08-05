@@ -85,14 +85,16 @@ describe("maintenanceModeResponses", () => {
 	});
 
 	describe("buildPuzzleMaintenanceResponse", () => {
-		it("returns a forgiving puzzle (large tolerance) so any drop completes", () => {
-			const r = buildPuzzleMaintenanceResponse("user-addr", "dapp-addr");
+		it("returns rendered imagery rather than coordinates", async () => {
+			const r = await buildPuzzleMaintenanceResponse("user-addr", "dapp-addr");
 			expect(r[ApiParams.status]).toBe("ok");
-			expect(r[ApiParams.tolerance]).toBeGreaterThanOrEqual(1000);
-			expect(r[ApiParams.targetX]).toBe(100);
-			expect(r[ApiParams.targetY]).toBe(100);
-			expect(r[ApiParams.originX]).toBe(0);
-			expect(r[ApiParams.originY]).toBe(0);
+			expect(r[ApiParams.background]).toMatch(/^data:image\/webp;base64,/);
+			expect(r[ApiParams.piece]).toMatch(/^data:image\/webp;base64,/);
+			expect(r[ApiParams.pieceSize]).toBeGreaterThan(0);
+			// The answer must not be derivable from the response.
+			expect(JSON.stringify(r)).not.toContain("targetX");
+			expect(r[ApiParams.originX]).toBe(60);
+			expect(r[ApiParams.originY]).toBe(100);
 			expect(r[ApiParams.challenge].split(POW_SEPARATOR)).toHaveLength(4);
 			expect(
 				r[ApiParams.signature][ApiParams.provider][ApiParams.challenge],

@@ -68,8 +68,9 @@ const mocks = vi.hoisted(() => {
 			| {
 					originX: number;
 					originY: number;
-					targetX: number;
-					targetY: number;
+					background: string;
+					piece: string;
+					pieceSize: number;
 					showRetry: boolean;
 					submitting: boolean;
 					onComplete: (
@@ -121,8 +122,9 @@ vi.mock("../components/PuzzleCanvas.js", async () => {
 	interface CanvasStubProps {
 		originX: number;
 		originY: number;
-		targetX: number;
-		targetY: number;
+		background: string;
+		piece: string;
+		pieceSize: number;
 		showRetry: boolean;
 		submitting: boolean;
 		onComplete: (
@@ -411,7 +413,7 @@ describe("starting from the checkbox", () => {
 		expect(canvas()).not.toBeNull();
 		expect(mocks.canvasProps.current).toMatchObject({
 			originX: challengeResponse().originX,
-			targetY: challengeResponse().targetY,
+			piece: challengeResponse().piece,
 			submitting: false,
 			showRetry: false,
 		});
@@ -564,7 +566,10 @@ describe("finishing the drag", () => {
 
 	test("a rejected solution asks for another go on a fresh challenge", async () => {
 		mocks.submitSolution.mockResolvedValue(false);
-		const retryChallenge = challengeResponse({ originX: 40, targetX: 250 });
+		const retryChallenge = challengeResponse({
+			originX: 40,
+			piece: "data:image/webp;base64,cmV0cnk=",
+		});
 		mocks.start
 			.mockResolvedValueOnce(challengeResponse())
 			.mockResolvedValue(retryChallenge);
@@ -574,7 +579,7 @@ describe("finishing the drag", () => {
 		expect(mocks.canvasProps.current).toMatchObject({
 			showRetry: true,
 			originX: 40,
-			targetX: 250,
+			piece: "data:image/webp;base64,cmV0cnk=",
 			submitting: false,
 		});
 	});

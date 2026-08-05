@@ -407,13 +407,27 @@ export interface GetPowCaptchaResponse extends ApiResponse {
 	};
 }
 
+/**
+ * The puzzle challenge carries imagery, never coordinates.
+ *
+ * `targetX`/`targetY` used to be sent here and the widget drew the target box
+ * straight from them, which meant any client could echo the answer back and
+ * pass without a browser. The target now exists only on the challenge record;
+ * the client receives a background with the notch already cut into it and works
+ * the position out visually. `tolerance` is likewise server-side only — the
+ * client has no use for it and publishing it just tells an attacker how close
+ * a guess has to be.
+ */
 export interface GetPuzzleCaptchaResponse extends ApiResponse {
 	[ApiParams.challenge]: PoWChallengeId;
-	[ApiParams.targetX]: number;
-	[ApiParams.targetY]: number;
+	/** Background with the notch cut into it, as a data URI. */
+	[ApiParams.background]: string;
+	/** The draggable piece on transparency, as a data URI. */
+	[ApiParams.piece]: string;
+	/** Piece bounding-box size in px. */
+	[ApiParams.pieceSize]: number;
 	[ApiParams.originX]: number;
 	[ApiParams.originY]: number;
-	[ApiParams.tolerance]: number;
 	[ApiParams.timestamp]: string;
 	[ApiParams.signature]: {
 		[ApiParams.provider]: ChallengeSignature;
