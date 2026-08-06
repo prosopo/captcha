@@ -1056,6 +1056,147 @@ describe("CaptchaManager", () => {
 				sessionId: "sessionId",
 			});
 		});
+
+		// Regression guard for the class of INCORRECT_CAPTCHA_TYPE errors
+		// observed on prod at ~150/hr, concentrated on pimeyes / eyematch /
+		// 5G1hy. An anomaly detector inserts an IP restrict-to-image rule
+		// (e.g. IP_CLIENT_CROSSOVER) between the user's /frictionless response
+		// and their subsequent /captcha/pow call, so the widget's in-flight
+		// pow-typed session gets 400'd at the /captcha/pow entry gate even
+		// though the session was minted legitimately before the rule appeared.
+		//
+		// The fix: when a valid sessionId is present, the session record is
+		// authoritative for captchaType. The policy still fires at verify
+		// time via the decisionMachineRunner + checkForHardBlock, so the
+		// abuse signal is not lost.
+		describe("user access policy precedence over session", () => {
+			it("honours the session's captchaType when a restrict-to-image policy materialises between /frictionless and /captcha/{type}", async () => {
+				// Session was minted with pow (before the rule existed).
+				(
+					db.checkAndRemoveSession as unknown as ReturnType<typeof vi.fn>
+				).mockResolvedValue({
+					sessionId: "sessionId",
+					captchaType: CaptchaType.pow,
+				} as Pick<Session, "sessionId" | "captchaType">);
+
+				// Rule fires AFTER: restrict-to-image now active on this IP.
+				const restrictImagePolicy: AccessPolicy = {
+					type: AccessPolicyType.Restrict,
+					captchaType: CaptchaType.image,
+				} as AccessPolicy;
+
+				const result = await captchaManager.isValidRequest(
+					{
+						account: "account",
+						tier: Tier.Free,
+						settings: {
+							...defaultUserSettings,
+							captchaType: CaptchaType.frictionless,
+						},
+					},
+					CaptchaType.pow, // widget hits /captcha/pow with the in-flight session
+					mockEnv,
+					"sessionId",
+					restrictImagePolicy,
+					"127.0.0.1",
+				);
+
+				// Before the fix this returned INCORRECT_CAPTCHA_TYPE; after,
+				// the session's own captchaType wins because it's the
+				// authoritative record and the policy will still fire at
+				// verify time via other paths.
+				expect(result).toEqual({
+					valid: true,
+					type: CaptchaType.pow,
+					sessionId: "sessionId",
+				});
+			});
+
+			it("still rejects a session whose own captchaType does not match the requested type", async () => {
+				// Session's captchaType is image, widget hits /captcha/pow —
+				// this is a genuine mismatch (not a policy race) and must
+				// still return INCORRECT_CAPTCHA_TYPE.
+				(
+					db.checkAndRemoveSession as unknown as ReturnType<typeof vi.fn>
+				).mockResolvedValue({
+					sessionId: "sessionId",
+					captchaType: CaptchaType.image,
+				} as Pick<Session, "sessionId" | "captchaType">);
+
+				const result = await captchaManager.isValidRequest(
+					{
+						account: "account",
+						tier: Tier.Free,
+						settings: {
+							...defaultUserSettings,
+							captchaType: CaptchaType.frictionless,
+						},
+					},
+					CaptchaType.pow,
+					mockEnv,
+					"sessionId",
+					undefined,
+					"127.0.0.1",
+				);
+
+				expect(result.valid).toBe(false);
+				expect(result.reason).toBe(ResultReason.INCORRECT_CAPTCHA_TYPE);
+			});
+
+			it("enforces policy captchaType on sessionless requests (direct /captcha/{type} with no /frictionless minted session)", async () => {
+				// No sessionId, policy pins image, widget asks for pow.
+				// Sessionless callers have no minted-in-context session to
+				// trust, so policy still wins here — preserves the pre-fix
+				// behaviour for the direct-entry case.
+				const restrictImagePolicy: AccessPolicy = {
+					type: AccessPolicyType.Restrict,
+					captchaType: CaptchaType.image,
+				} as AccessPolicy;
+
+				const result = await captchaManager.isValidRequest(
+					{
+						account: "account",
+						tier: Tier.Free,
+						settings: {
+							...defaultUserSettings,
+							captchaType: CaptchaType.pow,
+						},
+					},
+					CaptchaType.pow,
+					mockEnv,
+					undefined, // no sessionId
+					restrictImagePolicy,
+				);
+
+				expect(result.valid).toBe(false);
+				expect(result.reason).toBe(ResultReason.INCORRECT_CAPTCHA_TYPE);
+			});
+
+			it("allows sessionless requests when the policy captchaType matches", async () => {
+				const restrictImagePolicy: AccessPolicy = {
+					type: AccessPolicyType.Restrict,
+					captchaType: CaptchaType.image,
+				} as AccessPolicy;
+
+				const result = await captchaManager.isValidRequest(
+					{
+						account: "account",
+						tier: Tier.Free,
+						settings: {
+							...defaultUserSettings,
+							captchaType: CaptchaType.image,
+						},
+					},
+					CaptchaType.image,
+					mockEnv,
+					undefined,
+					restrictImagePolicy,
+				);
+
+				expect(result.valid).toBe(true);
+				expect(result.type).toBe(CaptchaType.image);
+			});
+		});
 	});
 	describe("getVerificationResponse", () => {
 		it("should return a verification response with a score if the tier is not free", async () => {

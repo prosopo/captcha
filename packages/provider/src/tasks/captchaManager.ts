@@ -297,32 +297,28 @@ export class CaptchaManager {
 			},
 		}));
 
-		// User Access Policies override default behaviour. Only enforce the
-		// captchaType check when the policy actually pins a captchaType —
-		// Block policies have their captchaType stripped by
-		// sanitizeAccessPolicy on write, and a policy without a pinned
-		// captchaType should apply to all captcha types (not reject all of
-		// them). Callers should filter out `deferToVerify` policies before
-		// passing them here — see getImageCaptchaChallenge et al. — but
-		// this defensive guard also stops a mis-filtered deferToVerify
-		// Block from breaking every /captcha/* request.
-		if (
-			userAccessPolicy?.captchaType !== undefined &&
-			userAccessPolicy.captchaType !== requestedCaptchaType
-		) {
-			this.logger.warn(() => ({
-				msg: "Invalid captcha type for user access policy",
-				data: {
-					account: clientSettings.account,
-					captchaType: userAccessPolicy.captchaType,
-				},
-			}));
-			return {
-				valid: false,
-				reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
-				type: requestedCaptchaType,
-			};
-		}
+		// User Access Policies override default behaviour, but only for
+		// sessionless requests. When a sessionId is present the session record
+		// is authoritative for captchaType: it was minted by frictionless /
+		// handleAccessPolicy considering the policy state at that time, so a
+		// policy that materialises AFTER a valid session was issued must not
+		// invalidate the widget's in-flight solve. The policy still fires at
+		// verify time (decisionMachineRunner + checkForHardBlock), so the
+		// abuse signal is not lost — only the false-positive
+		// INCORRECT_CAPTCHA_TYPE on the widget's second call is avoided.
+		//
+		// Historical shape (removed 2026-08-06): the check ran up here BEFORE
+		// the sessionId lookup, so any restrict-to-image rule inserted by an
+		// anomaly detector between /frictionless and /captcha/pow surfaced
+		// as a sustained baseline of INCORRECT_CAPTCHA_TYPE 400s. The
+		// specific race is captured in captchaManager.unit.test.ts under
+		// "user access policy precedence over session".
+		//
+		// Block policies have their captchaType stripped by sanitizeAccessPolicy
+		// on write, and a policy without a pinned captchaType applies to all
+		// captcha types (not rejects all of them). deferToVerify policies are
+		// filtered by callers — see getImageCaptchaChallenge et al.
+		//
 		// Session ID
 		// All client flows now go through the unified /frictionless entry point,
 		// so a sessionId may accompany any configured captchaType (frictionless
@@ -534,6 +530,31 @@ export class CaptchaManager {
 		}
 
 		// No Session ID
+
+		// Sessionless request: policy captchaType (if pinned by an active
+		// restrict rule) still takes precedence over the client's configured
+		// captchaType, because there's no minted-in-context session to trust.
+		// This preserves the pre-2026-08-06 behaviour for the direct-entry
+		// case (widget hitting /captcha/{type} without going through
+		// /frictionless first).
+		if (
+			userAccessPolicy?.captchaType !== undefined &&
+			userAccessPolicy.captchaType !== requestedCaptchaType
+		) {
+			this.logger.warn(() => ({
+				msg: "Invalid captcha type for user access policy (sessionless)",
+				data: {
+					account: clientSettings.account,
+					captchaType: userAccessPolicy.captchaType,
+					requestedCaptchaType,
+				},
+			}));
+			return {
+				valid: false,
+				reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+				type: requestedCaptchaType,
+			};
+		}
 
 		// To pass here a user must be requesting the captchaType that is stored on the client's settings.
 		// - If `captchaType` is `image` and there is no `sessionId` then `clientSettings?.settings?.captchaType,` must be set to `image`
