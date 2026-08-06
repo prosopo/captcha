@@ -235,8 +235,21 @@ const customDetectBot: BotDetectionFunction = async (
 			providerDetect = await DetectorLoaderFromScript(assigned.detectorScript);
 			detectorSessionId = assigned.detectorSessionId;
 		}
-	} catch {
+	} catch (err) {
 		// No detector available — fall through to the PoW request below.
+		//
+		// Report it. Falling back is by design, but the reasons are not equal: a
+		// slow network is routine, whereas a bundle that throws on import means
+		// every session on this provider silently degrades to an image captcha
+		// with nothing in the client or provider logs to say why. That failure
+		// mode shipped undetected once already — an obfuscator seed emitted a
+		// bundle that died with "Class constructor X cannot be invoked without
+		// 'new'", and the only way to see it was to reproduce the import by hand.
+		// The catch stays broad; it just no longer hides what it caught.
+		console.error(
+			"Procaptcha: no detector bundle available, falling back to a server-chosen captcha:",
+			err,
+		);
 	}
 
 	const ExtClass = await extClassPromise;
