@@ -1716,6 +1716,7 @@ export class ProviderDatabase
 				solvedImagesCount: 1,
 				userSitekeyIpHash: 1,
 				simdReadings: 1,
+				bundleId: 1,
 				dnsEvent: 1,
 				currentUrl: 1,
 				iframeUrl: 1,

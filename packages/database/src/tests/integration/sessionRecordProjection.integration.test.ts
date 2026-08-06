@@ -219,6 +219,34 @@ describe("getSessionRecordBySessionId projection", () => {
 		).resolves.toBeDefined();
 	});
 
+	// Regression for the 2026-08-06 deploy: `bundleId` was added to
+	// SessionRecordSchema for the per-session detector pool but not to the
+	// projection here. `resolveBundleBySessionId` reads it on the pow /
+	// puzzle / image submit path to resolve the decrypt bundle; on a Redis
+	// cache miss the DB fallback returned `undefined` even though the
+	// session record on disk carried a valid bundleId, so every subsequent
+	// `decryptBehavioralData` / `decryptSimdReadings` failed at the bundle
+	// resolve step and both fields were dropped fleet-wide.
+	it("returns bundleId so resolveBundleBySessionId can decrypt behavioural data", async () => {
+		const sessionId = "session-bundleid-roundtrip";
+		await db.tables.session.create({
+			sessionId,
+			createdAt: new Date(),
+			token: "tok-bundleid",
+			score: 0.1,
+			threshold: 0.5,
+			scoreComponents: { baseScore: 0.1 },
+			ipAddress: ipv4Composite(16843009n),
+			captchaType: CaptchaType.pow,
+			webView: false,
+			iFrame: false,
+			bundleId: "bundle-42",
+		});
+
+		const got = await db.getSessionRecordBySessionId(sessionId);
+		expect(got?.bundleId).toBe("bundle-42");
+	});
+
 	// Schema-contract guard: any field marked `required: true` on
 	// SessionRecordSchema must be present in the projection — otherwise
 	// callers like buildEscalation that forward the field into a new
