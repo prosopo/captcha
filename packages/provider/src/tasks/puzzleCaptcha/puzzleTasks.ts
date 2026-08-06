@@ -622,7 +622,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		}
 
 		const sessionRecord = challengeRecord.sessionId
-			? await this.db.getSessionRecordBySessionId(challengeRecord.sessionId)
+			? await this.getSessionRecordWithOriginFallback(challengeRecord.sessionId)
 			: undefined;
 
 		const enrichedDnsEvent = await enrichDnsEvent(

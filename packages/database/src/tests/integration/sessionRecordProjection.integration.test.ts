@@ -247,6 +247,48 @@ describe("getSessionRecordBySessionId projection", () => {
 		expect(got?.bundleId).toBe("bundle-42");
 	});
 
+	// Regression guard for the session-chain walker
+	// (CaptchaManager.getSessionRecordWithOriginFallback). The walker needs
+	// `originSessionId` on the escalation session to know where to walk
+	// back to for missing simdReadings / dnsEvent / entropy fields. If the
+	// projection drops it, escalations look like non-escalations and the
+	// walker no-ops — puzzle / image escalations then hit the DM with
+	// undefined simdReadings and trip SIMD_ABSENT-style deny rules.
+	it("returns originSessionId so the escalation-fallback walker knows where to walk", async () => {
+		const originSessionId = "session-origin-for-chain";
+		const escalationSessionId = "session-escalation-with-origin";
+		await db.tables.session.create({
+			sessionId: originSessionId,
+			createdAt: new Date(),
+			token: "tok-origin",
+			score: 0.4,
+			threshold: 0.5,
+			scoreComponents: { baseScore: 0.4 },
+			ipAddress: ipv4Composite(16843009n),
+			captchaType: CaptchaType.pow,
+			webView: false,
+			iFrame: false,
+		});
+		await db.tables.session.create({
+			sessionId: escalationSessionId,
+			createdAt: new Date(),
+			token: "tok-escalation",
+			score: 0.4,
+			threshold: 0.5,
+			scoreComponents: { baseScore: 0.4 },
+			ipAddress: ipv4Composite(16843009n),
+			captchaType: CaptchaType.puzzle,
+			webView: false,
+			iFrame: false,
+			isEscalation: true,
+			originSessionId,
+		});
+
+		const got = await db.getSessionRecordBySessionId(escalationSessionId);
+		expect(got?.originSessionId).toBe(originSessionId);
+		expect(got?.isEscalation).toBe(true);
+	});
+
 	// Schema-contract guard: any field marked `required: true` on
 	// SessionRecordSchema must be present in the projection — otherwise
 	// callers like buildEscalation that forward the field into a new
