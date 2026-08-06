@@ -1,5 +1,11 @@
 # @prosopo/env
 
+## 3.6.25
+### Patch Changes
+
+- Updated dependencies [1fba42e]
+  - @prosopo/database@4.0.2
+
 ## 3.6.24
 ### Patch Changes
 
