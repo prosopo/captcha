@@ -414,6 +414,11 @@ export const SessionSchema = object({
 	// "user hit the widget cold" from "user got escalated into a
 	// stronger captcha after a low-confidence PoW".
 	isEscalation: boolean().optional(),
+	// SessionId of the session this one escalated from. Populated when
+	// isEscalation is true; used by the DM-input read path to fall back
+	// to the origin for fields the escalation doesn't carry itself
+	// (simdReadings, dnsEvent, etc.). Absent on non-escalation sessions.
+	originSessionId: string().optional(),
 	decryptedHeadHash: string(),
 	siteKey: string().optional(),
 	// Full page URL the widget was rendered on (origin + path only — query
@@ -515,6 +520,9 @@ export type Session = {
 	// True when this session was minted by the post-PoW routing machine
 	// as an escalation. Undefined / false on ordinary frictionless sessions.
 	isEscalation?: boolean;
+	// SessionId of the origin session this one escalated from. Populated
+	// alongside isEscalation; consumed by the DM-input read path.
+	originSessionId?: string;
 	decryptedHeadHash: string;
 	// The provider-assigned detector pool bundle this session's detector ran
 	// from, promoted off the short-lived detectorSessionId→bundleId Redis

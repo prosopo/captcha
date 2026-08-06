@@ -173,6 +173,84 @@ export class CaptchaManager {
 	}
 
 	/**
+	 * Read a session and, if it's an escalation missing one of the
+	 * inherently-origin-populated fields, walk to `originSessionId` and fill
+	 * the gap. Intended for the decision-machine input read path only —
+	 * `simdReadings`, `dnsEvent`, `entropyMathRandomFingerprint` etc. are
+	 * populated on the origin session (SIMD via pow-submit's fire-and-forget
+	 * attach; DNS via the sidecar's origin-TLS-scoped patch) and don't
+	 * automatically end up on the escalation record because
+	 * `buildEscalation` reads the origin from Mongo before the async writes
+	 * settle. Rather than duplicating the origin's state onto every
+	 * escalation at write time, keep the origin as the source of truth and
+	 * fall back to it at read time.
+	 *
+	 * Fields intentionally NOT walked:
+	 *   - captchaType / sessionId / score / threshold / scoreComponents /
+	 *     ipAddress / ipInfo / headers — these describe the escalation
+	 *     itself and must never be overridden by the origin.
+	 *   - Anything already present on the escalation — first-write wins.
+	 *
+	 * Non-escalation sessions and escalations without `originSessionId`
+	 * (older records) fall through as no-op.
+	 */
+	public async getSessionRecordWithOriginFallback(
+		sessionId: string,
+	): Promise<Session | undefined> {
+		const session = await this.db.getSessionRecordBySessionId(sessionId);
+		if (!session) return undefined;
+		if (!session.originSessionId) return session;
+
+		const needsSimd =
+			session.simdReadings === undefined || session.simdReadings === null;
+		const needsDns =
+			session.dnsEvent === undefined || session.dnsEvent === null;
+		const needsEntropyMath =
+			session.entropyMathRandomFingerprint === undefined;
+		const needsEntropyCrypto = session.entropyCryptoFingerprint === undefined;
+		const needsEntropyWall = session.entropyWallClockOffsetMs === undefined;
+		const needsEntropyFirst = session.entropyMathRandomFirst === undefined;
+
+		if (
+			!needsSimd &&
+			!needsDns &&
+			!needsEntropyMath &&
+			!needsEntropyCrypto &&
+			!needsEntropyWall &&
+			!needsEntropyFirst
+		) {
+			return session;
+		}
+
+		const origin = await this.db.getSessionRecordBySessionId(
+			session.originSessionId,
+		);
+		if (!origin) return session;
+
+		return {
+			...session,
+			...(needsSimd && origin.simdReadings && { simdReadings: origin.simdReadings }),
+			...(needsDns && origin.dnsEvent && { dnsEvent: origin.dnsEvent }),
+			...(needsEntropyMath &&
+				origin.entropyMathRandomFingerprint !== undefined && {
+					entropyMathRandomFingerprint: origin.entropyMathRandomFingerprint,
+				}),
+			...(needsEntropyCrypto &&
+				origin.entropyCryptoFingerprint !== undefined && {
+					entropyCryptoFingerprint: origin.entropyCryptoFingerprint,
+				}),
+			...(needsEntropyWall &&
+				origin.entropyWallClockOffsetMs !== undefined && {
+					entropyWallClockOffsetMs: origin.entropyWallClockOffsetMs,
+				}),
+			...(needsEntropyFirst &&
+				origin.entropyMathRandomFirst !== undefined && {
+					entropyMathRandomFirst: origin.entropyMathRandomFirst,
+				}),
+		};
+	}
+
+	/**
 	 * Decrypt + first-hop-wins attach. Resolves the session's detector pool
 	 * bundle (promoted onto the session record at frictionless time) to decrypt.
 	 * No-op on decrypt failure / no bundle.

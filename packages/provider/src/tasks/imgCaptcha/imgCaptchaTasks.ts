@@ -862,8 +862,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 			}
 		}
 
+		// Walker fills simdReadings / dnsEvent / entropy fields from the origin
+		// when this is an escalation record. See CaptchaManager.getSessionRecordWithOriginFallback.
 		const sessionRecord = solution.sessionId
-			? await this.db.getSessionRecordBySessionId(solution.sessionId)
+			? await this.getSessionRecordWithOriginFallback(solution.sessionId)
 			: undefined;
 
 		const enrichedDnsEvent = await enrichDnsEvent(
