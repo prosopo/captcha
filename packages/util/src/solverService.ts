@@ -46,6 +46,18 @@ export const hashMeetsDifficulty = (
 	difficulty: number,
 ): boolean => hashToBigInt(hash) < targetForDifficulty(difficulty);
 
+// Reused across every nonce attempt — allocating a fresh TextEncoder in the
+// tight solve loop is pure overhead.
+const textEncoder = new TextEncoder();
+
+// Core per-nonce check shared by solvePoW and solvePoWOffset: hash `nonce + data`
+// and test it against the precomputed difficulty target.
+const nonceMeetsTarget = (
+	nonce: number,
+	data: string,
+	target: bigint,
+): boolean => hashToBigInt(sha256(textEncoder.encode(nonce + data))) < target;
+
 export const solvePoW = async (
 	data: string,
 	difficulty: number,
@@ -54,10 +66,7 @@ export const solvePoW = async (
 	let nonce = 0;
 
 	while (true) {
-		const message = new TextEncoder().encode(nonce + data);
-		const hash = sha256(message);
-
-		if (hashToBigInt(hash) < target) {
+		if (nonceMeetsTarget(nonce, data, target)) {
 			return nonce;
 		}
 
@@ -67,6 +76,55 @@ export const solvePoW = async (
 			// browser handles UI rendering between Macrotasks
 			await newMacrotask();
 		}
+	}
+};
+
+/**
+ * Solve a PoW challenge while only trying a subset of the nonce space.
+ *
+ * Starting from `start`, only nonces `start, start + step, start + 2*step, ...`
+ * are tried. This allows the work to be divided across multiple solvers (e.g.
+ * web workers): with `step` workers, worker `i` uses `start = i` so that every
+ * nonce is covered exactly once across the pool with no overlap.
+ *
+ * Unlike `solvePoW`, this is synchronous and never yields to the event loop: it
+ * is intended to run inside a web worker, where blocking the (worker) thread
+ * does not affect the page's UI responsiveness.
+ *
+ * @param data - the challenge data appended to the nonce before hashing
+ * @param difficulty - the PoW difficulty (see `targetForDifficulty`)
+ * @param start - the first nonce to try (the worker's offset)
+ * @param step - the gap between consecutive nonces tried (the worker count)
+ */
+export const solvePoWOffset = (
+	data: string,
+	difficulty: number,
+	start: number,
+	step: number,
+): number => {
+	if (!Number.isInteger(start)) {
+		throw new Error(`solvePoWOffset: start must be an integer, got ${start}`);
+	}
+	if (!Number.isInteger(step) || step < 1) {
+		throw new Error(
+			`solvePoWOffset: step must be a positive integer, got ${step}`,
+		);
+	}
+	if (!Number.isFinite(difficulty) || difficulty < 0) {
+		throw new Error(
+			`solvePoWOffset: difficulty must be a non-negative number, got ${difficulty}`,
+		);
+	}
+
+	const target = targetForDifficulty(difficulty);
+	let nonce = start;
+
+	while (true) {
+		if (nonceMeetsTarget(nonce, data, target)) {
+			return nonce;
+		}
+
+		nonce += step;
 	}
 };
 

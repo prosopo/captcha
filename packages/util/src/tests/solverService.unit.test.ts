@@ -16,6 +16,7 @@ import { describe, expect, it } from "vitest";
 import {
 	hashMeetsDifficulty,
 	solvePoW,
+	solvePoWOffset,
 	targetForDifficulty,
 } from "../solverService.js";
 
@@ -100,5 +101,67 @@ describe("solvePoW", () => {
 		const nonce = await solvePoW(challenge, difficulty);
 		const hash = sha256(new TextEncoder().encode(nonce + challenge));
 		expect(hashMeetsDifficulty(hash, difficulty)).toBe(true);
+	});
+});
+
+describe("solvePoWOffset", () => {
+	const hashOfNonce = (nonce: number, data: string): Uint8Array =>
+		sha256(new TextEncoder().encode(nonce + data));
+
+	it("returns a nonce whose hash meets the difficulty", () => {
+		const challenge = "offset-roundtrip";
+		const difficulty = 2;
+		const nonce = solvePoWOffset(challenge, difficulty, 0, 1);
+		expect(hashMeetsDifficulty(hashOfNonce(nonce, challenge), difficulty)).toBe(
+			true,
+		);
+	});
+
+	it("only searches its own (start, step) slice of the nonce space", () => {
+		const challenge = "offset-disjoint";
+		const difficulty = 2;
+		const step = 4;
+		for (let start = 0; start < step; start++) {
+			const nonce = solvePoWOffset(challenge, difficulty, start, step);
+			// worker `start` must return a nonce congruent to `start` mod `step`
+			expect(nonce % step).toBe(start);
+			expect(
+				hashMeetsDifficulty(hashOfNonce(nonce, challenge), difficulty),
+			).toBe(true);
+		}
+	});
+
+	it("with (start=0, step=1) finds the same first nonce as solvePoW", async () => {
+		const challenge = "offset-matches-solvePoW";
+		const difficulty = 2;
+		const expected = await solvePoW(challenge, difficulty);
+		expect(solvePoWOffset(challenge, difficulty, 0, 1)).toBe(expected);
+	});
+
+	it("divide-and-conquer: the smallest winning nonce across a pool equals the single-threaded result", async () => {
+		const challenge = "offset-pool";
+		const difficulty = 2;
+		const step = 8;
+		const expected = await solvePoW(challenge, difficulty);
+		const poolWinners: number[] = [];
+		for (let start = 0; start < step; start++) {
+			poolWinners.push(solvePoWOffset(challenge, difficulty, start, step));
+		}
+		expect(Math.min(...poolWinners)).toBe(expected);
+	});
+
+	it("throws on a non-integer start", () => {
+		expect(() => solvePoWOffset("x", 2, 0.5, 1)).toThrow(/start/);
+	});
+
+	it("throws on a non-positive or non-integer step", () => {
+		expect(() => solvePoWOffset("x", 2, 0, 0)).toThrow(/step/);
+		expect(() => solvePoWOffset("x", 2, 0, -1)).toThrow(/step/);
+		expect(() => solvePoWOffset("x", 2, 0, 1.5)).toThrow(/step/);
+	});
+
+	it("throws on a negative or non-finite difficulty", () => {
+		expect(() => solvePoWOffset("x", -1, 0, 1)).toThrow(/difficulty/);
+		expect(() => solvePoWOffset("x", Number.NaN, 0, 1)).toThrow(/difficulty/);
 	});
 });
