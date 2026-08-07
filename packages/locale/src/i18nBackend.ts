@@ -46,6 +46,13 @@ export function initializeI18n(
 		i18n.on("loaded", () => {
 			i18nLoadedCallback?.(i18n);
 		});
+	} else {
+		// Nothing to initialise — either i18next is already up (a frontend
+		// consumer got there first) or we are not on the server. The `loaded`
+		// handler above is only registered inside the init branch, so without
+		// this the callback would never fire and loadI18next() would stay
+		// pending forever instead of handing back the instance we already have.
+		i18nLoadedCallback?.(i18n);
 	}
 	return i18n;
 }

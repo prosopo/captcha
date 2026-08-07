@@ -82,6 +82,13 @@ export function initializeI18n(
 		i18n.on("loaded", () => {
 			i18nLoadedCallback?.(i18n);
 		});
+	} else {
+		// Already initialised (e.g. useTranslation() ran first, or a second
+		// widget mounted). The `loaded` handler is only registered in the init
+		// branch, so the callback has to fire here or loadI18next() never
+		// settles. Resources are already present, so resolving immediately is
+		// correct; the caller reconciles the language afterwards.
+		i18nLoadedCallback?.(i18n);
 	}
 	return i18n;
 }
