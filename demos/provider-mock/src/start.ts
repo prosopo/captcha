@@ -14,30 +14,94 @@
 
 import { handleErrors } from "@prosopo/api-express-router";
 import { i18nMiddleware } from "@prosopo/locale";
-import { LogLevel, getLogger } from "@prosopo/logger";
+import { LogLevel, type Logger, getLogger } from "@prosopo/logger";
 import cors from "cors";
-import express from "express";
-import { prosopoRouter } from "./api.js";
-const logger = getLogger(LogLevel.enum.info, "prosopo:provider-mock:start.ts");
+import express, { type Express, type RequestHandler } from "express";
+import { type RouterDeps, prosopoRouter } from "./api.js";
+import { isMain } from "./isMain.js";
 
-async function startApi() {
-	const apiApp = express();
-	const apiPort = "9229";
+export const DEFAULT_API_PORT = 9229;
+
+type Router = ReturnType<typeof prosopoRouter>;
+
+export interface StartDeps {
+	createApp: () => Express;
+	i18n: () => Promise<RequestHandler>;
+	router: (deps?: RouterDeps) => Router;
+	logger: Logger;
+	port: number;
+	exit: (code: number) => void;
+}
+
+export const defaultStartDeps = (
+	env: NodeJS.ProcessEnv = process.env,
+): StartDeps => ({
+	createApp: express,
+	i18n: () => i18nMiddleware({}),
+	router: prosopoRouter,
+	logger: getLogger(LogLevel.enum.info, "prosopo:provider-mock:start.ts"),
+	port: readPort(env),
+	exit: (code: number): void => {
+		process.exit(code);
+	},
+});
+
+/**
+ * The port to listen on.
+ *
+ * The port used to be the string "9229" with no way to change it, so the mock
+ * could not be run twice on one machine. A value that is not a usable port is
+ * ignored rather than passed to listen, where it would either throw or — for a
+ * number out of range — bind somewhere unexpected.
+ */
+export const readPort = (env: NodeJS.ProcessEnv): number => {
+	const raw = env.PROVIDER_MOCK_PORT;
+	if (raw === undefined || raw.trim() === "") {
+		return DEFAULT_API_PORT;
+	}
+	const port = Number(raw);
+	if (!Number.isInteger(port) || port < 0 || port > 65535) {
+		return DEFAULT_API_PORT;
+	}
+	return port;
+};
+
+export const startApi = async (
+	deps: StartDeps = defaultStartDeps(),
+): Promise<Express> => {
+	const apiApp = deps.createApp();
 
 	apiApp.use(cors());
 	apiApp.use(express.json());
-	apiApp.use(await i18nMiddleware({}));
-	apiApp.use(prosopoRouter());
+	apiApp.use(await deps.i18n());
+	apiApp.use(deps.router());
 	apiApp.use(handleErrors);
 
-	apiApp.listen(apiPort, () => {
-		logger.info(() => ({
-			msg: `Prosopo app listening at http://localhost:${apiPort}`,
+	apiApp.listen(deps.port, () => {
+		deps.logger.info(() => ({
+			msg: `Prosopo app listening at http://localhost:${deps.port}`,
 		}));
 	});
-}
 
-startApi().catch((error) => {
-	logger.error(() => ({ err: error, msg: "Failed to start API" }));
-	process.exit(1);
-});
+	return apiApp;
+};
+
+export const main = async (
+	deps: StartDeps = defaultStartDeps(),
+): Promise<void> => {
+	try {
+		await startApi(deps);
+	} catch (error) {
+		deps.logger.error(() => ({
+			err: error instanceof Error ? error : new Error(String(error)),
+			msg: "Failed to start API",
+		}));
+		deps.exit(1);
+	}
+};
+
+if (isMain(import.meta.url)) {
+	// Not awaited: a top-level await cannot be emitted in the cjs build, and
+	// main() already handles its own failures rather than rejecting.
+	void main();
+}
