@@ -16,12 +16,24 @@ import { CaptchaType } from "@prosopo/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { runConfiguredCaptchaTypeShortCircuit } from "../../../../../api/captcha/getFrictionlessCaptchaChallenge/shortCircuit.js";
 
-const buildInput = (overrides: Partial<Record<string, unknown>> = {}) => {
+const buildInput = (
+	overrides: Partial<Record<string, unknown>> = {},
+	{
+		resolvedBundleId,
+	}: { resolvedBundleId?: string } = {},
+) => {
 	const tasks = {
 		frictionlessManager: {
 			sendImageCaptcha: vi.fn().mockResolvedValue({ kind: "image" }),
 			sendPowCaptcha: vi.fn().mockResolvedValue({ kind: "pow" }),
 			sendPuzzleCaptcha: vi.fn().mockResolvedValue({ kind: "puzzle" }),
+			resolveBundleByDetectorSession: vi
+				.fn()
+				.mockResolvedValue(
+					resolvedBundleId
+						? { bundleId: resolvedBundleId, key: "k", innerConfig: "c" }
+						: undefined,
+				),
 		},
 	};
 	const env = {
@@ -124,5 +136,74 @@ describe("runConfiguredCaptchaTypeShortCircuit", () => {
 		await expect(
 			runConfiguredCaptchaTypeShortCircuit(input as never, res as never),
 		).rejects.toThrow(/Unhandled configured captchaType/);
+	});
+
+	describe("bundleId promotion (regression)", () => {
+		it("promotes bundleId onto pow bypass session when client sent a detectorSessionId", async () => {
+			const { tasks, input } = buildInput(
+				{ detectorSessionId: "det-abc" },
+				{ resolvedBundleId: "bundle-7" },
+			);
+			const res = buildRes();
+			await runConfiguredCaptchaTypeShortCircuit(input as never, res as never);
+			expect(
+				tasks.frictionlessManager.resolveBundleByDetectorSession,
+			).toHaveBeenCalledWith("det-abc");
+			const args = tasks.frictionlessManager.sendPowCaptcha.mock.calls[0]?.[0];
+			expect(args.bundleId).toBe("bundle-7");
+		});
+
+		it("promotes bundleId onto image bypass session", async () => {
+			const { tasks, input } = buildInput(
+				{ detectorSessionId: "det-img" },
+				{ resolvedBundleId: "bundle-3" },
+			);
+			input.clientRecord = {
+				settings: { imageMaxRounds: 3, captchaType: CaptchaType.image },
+			};
+			const res = buildRes();
+			await runConfiguredCaptchaTypeShortCircuit(input as never, res as never);
+			const args =
+				tasks.frictionlessManager.sendImageCaptcha.mock.calls[0]?.[0];
+			expect(args.bundleId).toBe("bundle-3");
+		});
+
+		it("promotes bundleId onto puzzle bypass session", async () => {
+			const { tasks, input } = buildInput(
+				{ detectorSessionId: "det-puz" },
+				{ resolvedBundleId: "bundle-99" },
+			);
+			input.clientRecord = {
+				settings: { imageMaxRounds: 10, captchaType: CaptchaType.puzzle },
+			};
+			const res = buildRes();
+			await runConfiguredCaptchaTypeShortCircuit(input as never, res as never);
+			const args =
+				tasks.frictionlessManager.sendPuzzleCaptcha.mock.calls[0]?.[0];
+			expect(args.bundleId).toBe("bundle-99");
+		});
+
+		it("omits bundleId when detectorSessionId is absent (empty-pool fallback)", async () => {
+			const { tasks, input } = buildInput({}, { resolvedBundleId: "bundle-1" });
+			// no detectorSessionId set
+			const res = buildRes();
+			await runConfiguredCaptchaTypeShortCircuit(input as never, res as never);
+			expect(
+				tasks.frictionlessManager.resolveBundleByDetectorSession,
+			).not.toHaveBeenCalled();
+			const args = tasks.frictionlessManager.sendPowCaptcha.mock.calls[0]?.[0];
+			expect(args.bundleId).toBeUndefined();
+		});
+
+		it("omits bundleId when Redis binding has expired", async () => {
+			// resolveBundleByDetectorSession returns undefined (no binding)
+			const { tasks, input } = buildInput({
+				detectorSessionId: "det-expired",
+			});
+			const res = buildRes();
+			await runConfiguredCaptchaTypeShortCircuit(input as never, res as never);
+			const args = tasks.frictionlessManager.sendPowCaptcha.mock.calls[0]?.[0];
+			expect(args.bundleId).toBeUndefined();
+		});
 	});
 });
