@@ -804,8 +804,13 @@ export class PowCaptchaManager extends CaptchaManager {
 			}
 		}
 
+		// Walk to the origin session when this is an escalation record —
+		// simdReadings / dnsEvent / entropy fields are populated on the
+		// origin and don't automatically end up on the escalation. Non-
+		// escalations pass through unchanged (walker no-ops when there's
+		// no originSessionId).
 		const sessionRecord = challengeRecord.sessionId
-			? await this.db.getSessionRecordBySessionId(challengeRecord.sessionId)
+			? await this.getSessionRecordWithOriginFallback(challengeRecord.sessionId)
 			: undefined;
 
 		const enrichedDnsEvent = await enrichDnsEvent(

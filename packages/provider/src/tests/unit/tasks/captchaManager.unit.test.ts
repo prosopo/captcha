@@ -125,6 +125,152 @@ describe("CaptchaManager", () => {
 		vi.clearAllMocks();
 	});
 
+	// Session-chain walker. Escalation sessions (isEscalation=true) inherit
+	// their originSessionId from the pow-solve that spawned them. DM-input
+	// reads go through the walker so simdReadings / dnsEvent / entropy
+	// fields that live on the origin are surfaced on the escalation record
+	// without duplicating them at write time.
+	describe("getSessionRecordWithOriginFallback", () => {
+		const dbGet = () =>
+			db.getSessionRecordBySessionId as unknown as ReturnType<typeof vi.fn>;
+
+		it("returns the session as-is when there's no originSessionId (non-escalation)", async () => {
+			const session = {
+				sessionId: "sess",
+				captchaType: CaptchaType.pow,
+				simdReadings: undefined,
+			} as unknown as Session;
+			dbGet().mockResolvedValue(session);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("sess");
+
+			expect(got).toBe(session);
+			expect(dbGet()).toHaveBeenCalledTimes(1);
+		});
+
+		it("returns undefined when the session isn't found", async () => {
+			dbGet().mockResolvedValue(null);
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("sess");
+			expect(got).toBeUndefined();
+		});
+
+		it("skips the origin walk when the escalation already carries every fallback-eligible field", async () => {
+			const session = {
+				sessionId: "esc",
+				originSessionId: "origin",
+				captchaType: CaptchaType.puzzle,
+				simdReadings: { supported: true, results: [] },
+				dnsEvent: { receivedAt: new Date() },
+				entropyMathRandomFingerprint: "a",
+				entropyCryptoFingerprint: "b",
+				entropyWallClockOffsetMs: 0,
+				entropyMathRandomFirst: 0.1,
+			} as unknown as Session;
+			dbGet().mockResolvedValue(session);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			expect(got).toBe(session);
+			// Only one DB call — origin was never fetched.
+			expect(dbGet()).toHaveBeenCalledTimes(1);
+		});
+
+		it("fills simdReadings from origin when the escalation is missing it", async () => {
+			const origin = {
+				sessionId: "origin",
+				captchaType: CaptchaType.pow,
+				simdReadings: { supported: true, results: [1, 2, 3] },
+				dnsEvent: { receivedAt: new Date() },
+			} as unknown as Session;
+			const escalation = {
+				sessionId: "esc",
+				originSessionId: "origin",
+				captchaType: CaptchaType.puzzle,
+				// simdReadings and dnsEvent are undefined on the escalation
+				// (the exact production bug — origin's fire-and-forget writes
+				// raced buildEscalation's Mongo read).
+			} as unknown as Session;
+			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			expect(got?.simdReadings).toEqual({
+				supported: true,
+				results: [1, 2, 3],
+			});
+			expect(got?.dnsEvent).toBeDefined();
+			// The escalation's own identity is preserved — origin fields
+			// don't overwrite escalation-owned fields.
+			expect(got?.sessionId).toBe("esc");
+			expect(got?.captchaType).toBe(CaptchaType.puzzle);
+		});
+
+		it("does not fill anything when origin also lacks the fields", async () => {
+			const origin = {
+				sessionId: "origin",
+				captchaType: CaptchaType.pow,
+				simdReadings: undefined,
+				dnsEvent: undefined,
+			} as unknown as Session;
+			const escalation = {
+				sessionId: "esc",
+				originSessionId: "origin",
+				captchaType: CaptchaType.puzzle,
+			} as unknown as Session;
+			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			expect(got?.simdReadings).toBeUndefined();
+			expect(got?.dnsEvent).toBeUndefined();
+		});
+
+		it("returns the escalation unchanged when the origin session has been deleted", async () => {
+			const escalation = {
+				sessionId: "esc",
+				originSessionId: "origin-gone",
+				captchaType: CaptchaType.puzzle,
+			} as unknown as Session;
+			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(null);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			expect(got).toBe(escalation);
+		});
+
+		it("preserves escalation-owned fields — origin captchaType / sessionId / score never leak through", async () => {
+			const origin = {
+				sessionId: "origin",
+				captchaType: CaptchaType.pow,
+				score: 0.1,
+				simdReadings: { supported: true },
+			} as unknown as Session;
+			const escalation = {
+				sessionId: "esc",
+				originSessionId: "origin",
+				captchaType: CaptchaType.puzzle,
+				score: 0.5,
+			} as unknown as Session;
+			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			// simd was filled from origin
+			expect(got?.simdReadings).toEqual({ supported: true });
+			// escalation-owned fields untouched
+			expect(got?.sessionId).toBe("esc");
+			expect(got?.captchaType).toBe(CaptchaType.puzzle);
+			expect(got?.score).toBe(0.5);
+		});
+	});
+
 	describe("isValidRequest", () => {
 		it("should validate a request for an image captcha when the client settings are set to image and no session ID is passed", async () => {
 			const result = await captchaManager.isValidRequest(

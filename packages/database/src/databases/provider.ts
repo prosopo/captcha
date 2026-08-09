@@ -1718,6 +1718,7 @@ export class ProviderDatabase
 				simdReadings: 1,
 				bundleId: 1,
 				dnsEvent: 1,
+				originSessionId: 1,
 				currentUrl: 1,
 				iframeUrl: 1,
 				// captchaType is required by the peek-before-consume path

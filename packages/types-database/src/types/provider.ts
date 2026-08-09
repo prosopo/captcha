@@ -676,6 +676,15 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	// an escalation of an earlier session. Optional so ordinary
 	// frictionless-created sessions can omit it and stay slim.
 	isEscalation: { type: Boolean, required: false },
+	// SessionId of the session this one escalated from, when isEscalation is
+	// true. Read-time fallback source for fields that are inherently populated
+	// on the origin (simdReadings, dnsEvent, etc.) but not on the escalation
+	// itself — avoids the write-time race between the origin's fire-and-forget
+	// SIMD-attach / DNS-event patches and buildEscalation's Mongo read. The
+	// walker in captchaManager.getSessionRecordWithOriginFallback fills the
+	// gap only for fields that are inherently origin-populated; escalation-
+	// owned fields (captchaType, sessionId, score, etc.) are never overridden.
+	originSessionId: { type: String, required: false },
 	decryptedHeadHash: { type: String, required: false, default: "" },
 	bundleId: { type: String, required: false },
 	siteKey: { type: String, required: false },
