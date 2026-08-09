@@ -205,8 +205,7 @@ export class CaptchaManager {
 			session.simdReadings === undefined || session.simdReadings === null;
 		const needsDns =
 			session.dnsEvent === undefined || session.dnsEvent === null;
-		const needsEntropyMath =
-			session.entropyMathRandomFingerprint === undefined;
+		const needsEntropyMath = session.entropyMathRandomFingerprint === undefined;
 		const needsEntropyCrypto = session.entropyCryptoFingerprint === undefined;
 		const needsEntropyWall = session.entropyWallClockOffsetMs === undefined;
 		const needsEntropyFirst = session.entropyMathRandomFirst === undefined;
@@ -229,7 +228,8 @@ export class CaptchaManager {
 
 		return {
 			...session,
-			...(needsSimd && origin.simdReadings && { simdReadings: origin.simdReadings }),
+			...(needsSimd &&
+				origin.simdReadings && { simdReadings: origin.simdReadings }),
 			...(needsDns && origin.dnsEvent && { dnsEvent: origin.dnsEvent }),
 			...(needsEntropyMath &&
 				origin.entropyMathRandomFingerprint !== undefined && {

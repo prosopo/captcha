@@ -142,7 +142,8 @@ describe("CaptchaManager", () => {
 			} as unknown as Session;
 			dbGet().mockResolvedValue(session);
 
-			const got = await captchaManager.getSessionRecordWithOriginFallback("sess");
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("sess");
 
 			expect(got).toBe(session);
 			expect(dbGet()).toHaveBeenCalledTimes(1);
@@ -150,7 +151,8 @@ describe("CaptchaManager", () => {
 
 		it("returns undefined when the session isn't found", async () => {
 			dbGet().mockResolvedValue(null);
-			const got = await captchaManager.getSessionRecordWithOriginFallback("sess");
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("sess");
 			expect(got).toBeUndefined();
 		});
 
@@ -168,7 +170,8 @@ describe("CaptchaManager", () => {
 			} as unknown as Session;
 			dbGet().mockResolvedValue(session);
 
-			const got = await captchaManager.getSessionRecordWithOriginFallback("esc");
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
 
 			expect(got).toBe(session);
 			// Only one DB call — origin was never fetched.
@@ -192,7 +195,8 @@ describe("CaptchaManager", () => {
 			} as unknown as Session;
 			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
 
-			const got = await captchaManager.getSessionRecordWithOriginFallback("esc");
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
 
 			expect(got?.simdReadings).toEqual({
 				supported: true,
@@ -219,7 +223,8 @@ describe("CaptchaManager", () => {
 			} as unknown as Session;
 			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
 
-			const got = await captchaManager.getSessionRecordWithOriginFallback("esc");
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
 
 			expect(got?.simdReadings).toBeUndefined();
 			expect(got?.dnsEvent).toBeUndefined();
@@ -233,7 +238,8 @@ describe("CaptchaManager", () => {
 			} as unknown as Session;
 			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(null);
 
-			const got = await captchaManager.getSessionRecordWithOriginFallback("esc");
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
 
 			expect(got).toBe(escalation);
 		});
@@ -253,7 +259,8 @@ describe("CaptchaManager", () => {
 			} as unknown as Session;
 			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
 
-			const got = await captchaManager.getSessionRecordWithOriginFallback("esc");
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
 
 			// simd was filled from origin
 			expect(got?.simdReadings).toEqual({ supported: true });
