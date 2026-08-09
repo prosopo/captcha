@@ -1,5 +1,57 @@
 # @prosopo/provider
 
+## 5.0.3
+### Patch Changes
+
+- d6cb841: fix(provider): promote bundleId onto bypass-path sessions so SIMD / BDP attach can decrypt
+  
+  Sitekeys configured with a fixed `captchaType` (`pow` / `image` / `puzzle`) short-circuit
+  the frictionless bot-detection path via `runConfiguredCaptchaTypeShortCircuit` and build
+  their session via `buildBypassSessionParams`. Before this fix, that helper never wrote a
+  `bundleId` onto the session, so every subsequent `decryptAndAttachSimdReadingsIfAbsent`
+  call at `/captcha/{type}` and solution-submit resolved `bundle=undefined` and silently
+  dropped the ciphertext — SIMD readings and behavioural data never landed on the session
+  or the powcaptcha record for these sitekeys.
+  
+  The fix resolves the widget's `detectorSessionId` → `bundleId` via the existing Redis
+  binding and promotes it onto the bypass session so the attach path finds the correct
+  keypair. Empty-pool PoW fallback continues to no-op (no detector was assigned).
+- fa0d494: fix(provider): session captchaType takes precedence over restrict-policy captchaType at `/captcha/{type}` gate
+  
+  `isValidRequest` was rejecting `/captcha/{type}` calls whenever an active restrict-to-image rule pinned a different captchaType from the one the widget requested — even when a valid session existed that had been minted legitimately before the rule appeared. The check ran before the sessionId lookup, so any anomaly detector inserting a rule between the widget's `/frictionless` response and its `/captcha/pow` call surfaced as `INCORRECT_CAPTCHA_TYPE` (400).
+  
+  Observed impact: ~150/hr fleet-wide, concentrated on pimeyes / eyematch / …RsJ2zsy39, with the `IP_CLIENT_CROSSOVER` detector as the most common trigger (24h aggregation, restrict-to-image, global clientId).
+  
+  Fix: session record is authoritative for captchaType when a sessionId is present. The policy still fires at verify time via `decisionMachineRunner` + `checkForHardBlock`. Sessionless requests still enforce the policy captchaType (preserves the pre-fix behaviour for direct-entry callers).
+  
+  Regression guards added to `captchaManager.unit.test.ts`:
+  - session's captchaType wins when a restrict policy materialises mid-flight
+  - session with mismatched captchaType still rejects (not the policy-race case)
+  - sessionless request still rejected on policy captchaType mismatch
+  - sessionless request with matching policy captchaType passes
+- d6cb841: feat(provider,database,types): session chain — escalations reference origin, DM-input reads walk back for missing fields
+  
+  Adds `originSessionId` to the Session schema and populates it on escalation sessions in `submitPoWCaptchaSolution.buildEscalation`. Adds `CaptchaManager.getSessionRecordWithOriginFallback` — a session reader that, when the record is an escalation missing an inherently-origin-populated field (`simdReadings`, `dnsEvent`, `entropyMathRandom*`, `entropyCrypto*`, `entropyWallClockOffsetMs`), reads the origin session and fills the gap. Escalation-owned fields (`captchaType`, `sessionId`, `score`, `ipInfo`, `headers`, etc.) are never overridden.
+  
+  The three `serverVerify*CaptchaSolution` methods now use the walker instead of the raw `getSessionRecordBySessionId`, so decision-machine inputs on escalated puzzle / image sessions see the origin's SIMD readings and DNS event.
+  
+  Fixes the write-time race between (a) the origin's fire-and-forget SIMD attach via `scheduleMongoSimdReadingsUpdate` on pow-submit, and (b) `buildEscalation`'s immediate Mongo read — which left ~97% of escalation sessions with no `dnsEvent` and ~97% with no `simdReadings`, in turn tripping decide-machine deny rules (SIMD_ABSENT etc.) on legit escalation flows.
+  
+  Non-escalation sessions and older escalation records without `originSessionId` fall through as a no-op — no behavior change. Extra Mongo read only fires when the escalation is actually missing a fallback-eligible field.
+- Updated dependencies [d6cb841]
+  - @prosopo/database@4.0.3
+  - @prosopo/types-database@5.0.2
+  - @prosopo/types@5.0.2
+  - @prosopo/env@3.6.26
+  - @prosopo/types-env@2.10.22
+  - @prosopo/api@4.0.2
+  - @prosopo/api-express-router@3.1.57
+  - @prosopo/datasets@3.1.58
+  - @prosopo/ipinfo@0.3.3
+  - @prosopo/keyring@2.9.65
+  - @prosopo/load-balancer@2.10.19
+  - @prosopo/user-access-policy@3.12.13
+
 ## 5.0.2
 ### Patch Changes
 
