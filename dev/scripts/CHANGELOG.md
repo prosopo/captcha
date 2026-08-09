@@ -1,5 +1,19 @@
 # @prosopo/scripts
 
+## 3.1.147
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+- Updated dependencies [fa0d494]
+- Updated dependencies [d6cb841]
+  - @prosopo/provider@5.0.3
+  - @prosopo/types@5.0.2
+  - @prosopo/cli@3.7.5
+  - @prosopo/env@3.6.26
+  - @prosopo/types-env@2.10.22
+  - @prosopo/datasets@3.1.58
+  - @prosopo/keyring@2.9.65
+
 ## 3.1.146
 ### Patch Changes
 
