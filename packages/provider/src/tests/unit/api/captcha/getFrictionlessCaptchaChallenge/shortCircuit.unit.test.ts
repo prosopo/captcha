@@ -18,9 +18,7 @@ import { runConfiguredCaptchaTypeShortCircuit } from "../../../../../api/captcha
 
 const buildInput = (
 	overrides: Partial<Record<string, unknown>> = {},
-	{
-		resolvedBundleId,
-	}: { resolvedBundleId?: string } = {},
+	{ resolvedBundleId }: { resolvedBundleId?: string } = {},
 ) => {
 	const tasks = {
 		frictionlessManager: {

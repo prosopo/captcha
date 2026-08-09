@@ -66,9 +66,11 @@ export type ShortCircuitInput = {
 // so bundleId stays undefined and the attach path continues to no-op.
 const buildBypassSessionParams = async (input: ShortCircuitInput) => {
 	const bundleId = input.detectorSessionId
-		? (await input.tasks.frictionlessManager.resolveBundleByDetectorSession(
-				input.detectorSessionId,
-			))?.bundleId
+		? (
+				await input.tasks.frictionlessManager.resolveBundleByDetectorSession(
+					input.detectorSessionId,
+				)
+			)?.bundleId
 		: undefined;
 	return {
 		// `sendCaptcha` requires a truthy token and dedup needs a unique value, so
