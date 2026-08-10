@@ -1488,6 +1488,34 @@ export class ProviderDatabase
 	}
 
 	/**
+	 * Counts server-checked captcha records across image (`commitment`),
+	 * PoW and puzzle collections whose `metadata.emailNormalised` matches.
+	 * Each collection carries the same partial index
+	 * (`spamEmailCount_partial`) so all three counts hit index-only scans.
+	 * The three counts are summed — one dapp can mix captcha types over
+	 * time, and per-email rate limits should apply across the whole
+	 * verified surface, not per-type.
+	 */
+	async countCommitmentsByNormalisedEmail(
+		dappAccount: string,
+		emailNormalised: string,
+	): Promise<number> {
+		if (!emailNormalised) return 0;
+		const tables = this.getTables();
+		const filter = {
+			dappAccount,
+			serverChecked: true,
+			"metadata.emailNormalised": emailNormalised,
+		};
+		const [imgCount, powCount, puzzleCount] = await Promise.all([
+			tables.commitment.countDocuments(filter),
+			tables.powcaptcha.countDocuments(filter),
+			tables.puzzlecaptcha.countDocuments(filter),
+		]);
+		return imgCount + powCount + puzzleCount;
+	}
+
+	/**
 	 * @description Get Dapp User PoW captcha commitments that have not been counted towards the client's total
 	 * @param {number} limit Maximum number of records to return
 	 * @param {number} skip Number of records to skip (for pagination)
@@ -1688,7 +1716,9 @@ export class ProviderDatabase
 				solvedImagesCount: 1,
 				userSitekeyIpHash: 1,
 				simdReadings: 1,
+				bundleId: 1,
 				dnsEvent: 1,
+				originSessionId: 1,
 				currentUrl: 1,
 				iframeUrl: 1,
 				// captchaType is required by the peek-before-consume path

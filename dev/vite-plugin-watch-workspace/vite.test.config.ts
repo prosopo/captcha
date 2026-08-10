@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +14,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ViteTestConfig } from "@prosopo/config";
+import dotenv from "dotenv";
+process.env.NODE_ENV = "test";
+// if .env.test exists at this level, use it, otherwise use the one at the root
+const envFile = `.env.${process.env.NODE_ENV || "development"}`;
+let envPath = envFile;
+if (fs.existsSync(envFile)) {
+	envPath = path.resolve(envFile);
+} else if (fs.existsSync(`../../${envFile}`)) {
+	envPath = path.resolve(`../../${envFile}`);
+} else {
+	throw new Error(`No ${envFile} file found`);
+}
 
-// Every network call in this package goes through `fetch`, which the tests
-// stub, so no Flux node or credentials are needed.
+dotenv.config({ path: envPath });
+
 export default ViteTestConfig();
