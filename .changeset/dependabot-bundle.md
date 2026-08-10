@@ -3,7 +3,10 @@
 "@prosopo/types": patch
 "@prosopo/user-access-policy": patch
 "@prosopo/util": patch
-"@prosopo/angular-procaptcha-integration-demo": patch
 ---
 
-chore(deps): bump ip-address from 10.0.1 to 10.5.0 and @angular/core + @angular/common from 20.3.25 to 20.3.27
+chore(deps): bump ip-address from 10.0.1 to 10.5.0
+
+The @angular/core and @angular/common bumps in the angular integration demo are
+not listed here: that demo sits below the root `integration/*` workspace glob, so
+changesets does not know it and errors on a changeset naming it.
