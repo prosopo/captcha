@@ -63,27 +63,33 @@ const mergeOptions: deepmerge.Options = {
 export function createIntegrationViteConfig(
 	configSettings: IntegrationConfigSettings,
 ): UserConfig {
-	if (configSettings.directory.trim() === "") {
+	// Trim once and use the trimmed values throughout: validating the trimmed
+	// string but building paths from the raw one would let " /repo/x " pass and
+	// then resolve somewhere else entirely.
+	const directory = configSettings.directory.trim();
+	const name = configSettings.name.trim();
+
+	if (directory === "") {
 		// Left empty, every path below silently resolves against the process cwd,
 		// which is wherever the build happened to be started from.
 		throw new Error("An integration build needs the package directory");
 	}
-	if (configSettings.name.trim() === "") {
+	if (name === "") {
 		throw new Error("An integration build needs a library name");
 	}
 
 	const formats: LibraryFormats[] = ["es"];
 	const defaultConfig: UserConfig = {
-		envDir: path.resolve(configSettings.directory, ENV_DIR_RELATIVE_PATH),
+		envDir: path.resolve(directory, ENV_DIR_RELATIVE_PATH),
 		plugins: [dts(configSettings.dtsPluginOptions)],
 		build: {
-			outDir: path.resolve(configSettings.directory, "./dist"),
+			outDir: path.resolve(directory, "./dist"),
 			// The declarations and the bundle are written by separate runs, so
 			// clearing the directory here would delete whichever ran first.
 			emptyOutDir: false,
 			lib: {
-				name: configSettings.name,
-				entry: path.resolve(configSettings.directory, "./src/index.ts"),
+				name,
+				entry: path.resolve(directory, "./src/index.ts"),
 				fileName: buildFileName,
 				formats,
 			},

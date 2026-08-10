@@ -132,6 +132,20 @@ describe("createIntegrationViteConfig", () => {
 		expect(path.isAbsolute(String(libOf(config).entry))).toBe(true);
 	});
 
+	test("surrounding whitespace is trimmed, not carried into the paths", () => {
+		// Validation trims, so a padded value passes; the paths and library name
+		// have to be built from the same trimmed value or they resolve elsewhere.
+		const config = createIntegrationViteConfig(
+			settings({
+				directory: ` ${DIRECTORY} `,
+				name: " ReactProcaptchaWrapper ",
+			}),
+		);
+		expect(config.build?.outDir).toBe(path.join(DIRECTORY, "dist"));
+		expect(libOf(config).entry).toBe(path.join(DIRECTORY, "src/index.ts"));
+		expect(libOf(config).name).toBe("ReactProcaptchaWrapper");
+	});
+
 	describe("the settings it refuses", () => {
 		test("an empty directory, which would resolve against the cwd", () => {
 			expect(() =>
