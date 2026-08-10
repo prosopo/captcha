@@ -90,23 +90,20 @@ http://:9090 {
 	metrics /metrics
 }
 
-# Main site: bound on :8443. Layer4 (above) proxies non-trap-subzone
-# SNI connections from :443 in. ACME issuer is restricted to HTTP-01
-# because TLS-ALPN-01 requires control of :443. The :80 redirect
-# server is auto-created by Caddy (auto_https=on); it serves both
-# ACME HTTP-01 challenges AND HTTP→HTTPS redirects targeting port
-# 443 (i.e. the layer4 listener), which forwards non-matching SNIs
-# back to this same :8443 server.
-https://{$CADDY_DOMAIN}:8443 {
-
-	tls {
-		issuer acme {
-			disable_tlsalpn_challenge
-		}
-	}
-	
+# Shared route/handler config. Imported by the per-host site below
+# ({$CADDY_DOMAIN} = pronodeN.prosopo.io) and, on the cert getter, by
+# the global site for the load-balanced pronode.prosopo.io hostname
+# defined in provider.cert-getter.Caddyfile. Only the TLS strategy
+# differs between the two: per-host uses ACME HTTP-01 (A record points
+# to one IP per pronodeN), global uses a PEM provisioned by certbot on
+# the cert getter (see ansible playbooks/providerCertbotProvision.yml).
+(provider_site) {
 	handle /robots.txt {
-		uri strip_prefix / # removes leading /, so it looks directly in root
+		# Serve /srv/static/robots.txt. Do NOT strip the leading slash:
+		# file_server prepends `root` to the request path, so `/robots.txt`
+		# already resolves to `/srv/static/robots.txt`. Rewriting the path to
+		# `robots.txt` (no leading slash) makes file_server issue a 308
+		# canonical redirect to re-add the slash, which loops forever (#3467).
 		root * /srv/static
 		file_server
 		header Content-Type "text/plain"
@@ -160,6 +157,24 @@ https://{$CADDY_DOMAIN}:8443 {
 			}
 			log_key
 		}
+
+		# Compress proxied responses. Inside a `route` block directive order is
+		# literal, so this must sit above `reverse_proxy` to wrap its response.
+		#
+		# The detector-pool bundle is the reason this exists: ~830 KB of
+		# obfuscated JS returned inline from /detector/assign once per
+		# frictionless session, previously uncompressed. It still compresses well
+		# despite being obfuscated (the obfuscator's string-array encoding is very
+		# repetitive) — measured 2.6x with gzip and 3.1x with zstd, taking a
+		# single provider at 15k sessions/hour from ~9.15 TB/month of egress to
+		# ~3 TB.
+		#
+		# zstd is listed first so browsers that support it get the better ratio,
+		# with gzip as the fallback: Caddy honours the client's Accept-Encoding
+		# and picks the first listed encoding it accepts. Responses under
+		# `minimum_length` (512 bytes by default) are left alone, which covers
+		# every small JSON reply the API returns.
+		encode zstd gzip
 
 		# reverse proxy to the provider container
 		reverse_proxy {$CADDY_PROVIDER_CONTAINER_NAME:provider1}:{$CADDY_PROVIDER_PORT:9229} {$CADDY_PROVIDER_CONTAINER_NAME:provider2}:{$CADDY_PROVIDER_PORT2:9339} {
@@ -289,4 +304,31 @@ https://{$CADDY_DOMAIN}:8443 {
 	log {
 		format json
 	}
+}
+
+# Per-host site: bound on :8443. Layer4 (above) proxies non-trap-subzone
+# SNI connections from :443 in. ACME issuer is restricted to HTTP-01
+# because TLS-ALPN-01 requires control of :443. The :80 redirect server
+# is auto-created by Caddy (auto_https=on); it serves both ACME HTTP-01
+# challenges AND HTTP→HTTPS redirects targeting port 443 (i.e. the
+# layer4 listener), which forwards non-matching SNIs back to this same
+# :8443.
+#
+# Three SNIs share one site block and one cert lineage so Caddy issues a
+# single multi-SAN cert covering {host}, ipv4.{host}, ipv6.{host}. The
+# single-stack variants exist as their own DNS records (A only for
+# ipv4.{host}, AAAA only for ipv6.{host}) so callers that need to pin a
+# specific IP stack can do so without losing TLS. The new captcha
+# DNS-routing client returns the per-host name from /healthz and the
+# load-balancer prepends `ipv4.` / `ipv6.`, so without these SANs the
+# single-stack path would fail the TLS handshake.
+https://{$CADDY_DOMAIN}:8443,
+https://ipv4.{$CADDY_DOMAIN}:8443,
+https://ipv6.{$CADDY_DOMAIN}:8443 {
+	tls {
+		issuer acme {
+			disable_tlsalpn_challenge
+		}
+	}
+	import provider_site
 }

@@ -12,13 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Converted a chunk at a time rather than byte-by-byte: appending to a single
+// string per byte reallocates on every iteration, and spreading the whole
+// buffer into String.fromCharCode blows the argument limit (and the stack) on
+// large inputs. 0x8000 stays well inside the engine's argument cap.
+const CHUNK_SIZE = 0x8000;
+
 /** Encodes an ArrayBuffer as a base64 string. */
 export function arrayBufferToBase64(arrayBuffer: ArrayBuffer): string {
-	let binary = "";
 	const bytes = new Uint8Array(arrayBuffer);
-	const len = bytes.byteLength;
-	for (let i = 0; i < len; i++) {
-		binary += String.fromCharCode(bytes[i] as number);
+	const chunks: string[] = [];
+	for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
+		chunks.push(String.fromCharCode(...bytes.subarray(i, i + CHUNK_SIZE)));
 	}
-	return btoa(binary);
+	return btoa(chunks.join(""));
 }

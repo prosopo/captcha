@@ -32,9 +32,19 @@ const bigIntReviver = (_key: string, value: unknown): unknown =>
 
 const SESSION_KEY_PATTERNS = [
 	"cache:session:*",
+	"cache:detector:*",
 	"writeq:session:*",
 	"writeq:session:pending",
 ] as const;
+
+/**
+ * Default TTL (seconds) for the ephemeral detector-session → bundle mapping.
+ * Deliberately short: it only needs to bridge bundle assignment → the first
+ * provider call (load + run detector + submit). The bundleId is promoted onto
+ * the session record for later (behavioural) hops. An expired mapping makes
+ * decryption fail closed (invalid payload).
+ */
+export const DETECTOR_BUNDLE_TTL_SECONDS = 60;
 
 /**
  * Redis-backed write queue and read cache for reducing MongoDB load.
@@ -276,6 +286,160 @@ export class RedisWriteQueue {
 				userSitekeyIpHash,
 			}));
 			return null;
+		}
+	}
+
+	// ── Detector bundle assignment (short-TTL ephemeral mapping) ─────────
+
+	/**
+	 * Bind a detector session id to the precomputed bundle assigned to it. Short
+	 * TTL by design (see {@link DETECTOR_BUNDLE_TTL_SECONDS}). Returns false if
+	 * Redis is unavailable so the caller can fail closed.
+	 */
+	async cacheDetectorBundle(
+		detectorSessionId: string,
+		bundleId: string,
+		ttlSeconds: number = DETECTOR_BUNDLE_TTL_SECONDS,
+	): Promise<boolean> {
+		const client = await this.getClient();
+		if (!client) {
+			return false;
+		}
+		try {
+			await client.set(`cache:detector:${detectorSessionId}`, bundleId, {
+				EX: ttlSeconds,
+			});
+			return true;
+		} catch (error) {
+			this.logger.warn(() => ({
+				msg: "Failed to cache detector bundle assignment in Redis",
+				err: error,
+				detectorSessionId,
+			}));
+			return false;
+		}
+	}
+
+	/**
+	 * Resolve the bundle id assigned to a detector session id, or null if the
+	 * mapping is absent/expired (⇒ caller treats the payload as invalid).
+	 */
+	async getDetectorBundle(detectorSessionId: string): Promise<string | null> {
+		const client = await this.getClient();
+		if (!client) {
+			return null;
+		}
+		try {
+			return await client.get(`cache:detector:${detectorSessionId}`);
+		} catch (error) {
+			this.logger.warn(() => ({
+				msg: "Failed to get detector bundle assignment from Redis",
+				err: error,
+				detectorSessionId,
+			}));
+			return null;
+		}
+	}
+
+	/**
+	 * Cache an origin → escalation sessionId mapping for the post-PoW
+	 * escalation flow.
+	 *
+	 * Background: when the routing machine returns image/puzzle from the
+	 * postPow phase, `buildEscalation` (`api/captcha/submitPoWCaptchaSolution.ts`)
+	 * mints a new session with a fresh `sessionId` and returns it on the
+	 * `escalation` field. A widget that handles the escalation cleanly
+	 * mounts the next captcha with the new sessionId. But there are
+	 * several real-world paths where the widget keeps using the original
+	 * sessionId for the follow-up `/captcha/{type}` request — bundled SDK
+	 * versions that predate the escalation handler, dapps that hand-roll
+	 * the wrapper, network-glitch retries, or browser-tab races. The
+	 * original session has been consumed and soft-deleted by the
+	 * preceding `/captcha/pow`, so the follow-up gets
+	 * `CAPTCHA.NO_SESSION_FOUND` and the user sees an inline error → FAQ.
+	 *
+	 * This mapping lets `isValidRequest` resolve the original sessionId
+	 * forward to the live escalation session and proceed normally.
+	 *
+	 * TTL is short on purpose: escalation handoffs complete in seconds
+	 * (the user solves the follow-up immediately) and a stale mapping
+	 * pointing at a long-gone session would just produce a different
+	 * shape of NO_SESSION_FOUND.
+	 */
+	async cacheSessionEscalation(
+		originSessionId: string,
+		escalationSessionId: string,
+		ttlSeconds = 600,
+	): Promise<boolean> {
+		const client = await this.getClient();
+		if (!client) {
+			return false;
+		}
+
+		try {
+			const key = `cache:session:escalation:${originSessionId}`;
+			await client.set(key, escalationSessionId, { EX: ttlSeconds });
+			return true;
+		} catch (error) {
+			this.logger.warn(() => ({
+				msg: "Failed to cache session escalation mapping in Redis",
+				err: error,
+				originSessionId,
+				escalationSessionId,
+			}));
+			return false;
+		}
+	}
+
+	/**
+	 * Resolve an original sessionId to its escalation sessionId, if one was
+	 * recorded. Returns null when there is no mapping (either no escalation
+	 * happened, or the TTL has elapsed).
+	 */
+	async getCachedSessionEscalation(
+		originSessionId: string,
+	): Promise<string | null> {
+		const client = await this.getClient();
+		if (!client) {
+			return null;
+		}
+
+		try {
+			const key = `cache:session:escalation:${originSessionId}`;
+			return await client.get(key);
+		} catch (error) {
+			this.logger.warn(() => ({
+				msg: "Failed to get cached session escalation mapping from Redis",
+				err: error,
+				originSessionId,
+			}));
+			return null;
+		}
+	}
+
+	/**
+	 * Invalidate an escalation mapping. Called when the escalation session
+	 * itself is consumed so subsequent retries on the origin sessionId fall
+	 * through to the standard NO_SESSION_FOUND path rather than chasing a
+	 * second-hand stale pointer.
+	 */
+	async invalidateCachedSessionEscalation(
+		originSessionId: string,
+	): Promise<void> {
+		const client = await this.getClient();
+		if (!client) {
+			return;
+		}
+
+		try {
+			const key = `cache:session:escalation:${originSessionId}`;
+			await client.del(key);
+		} catch (error) {
+			this.logger.warn(() => ({
+				msg: "Failed to invalidate cached session escalation mapping",
+				err: error,
+				originSessionId,
+			}));
 		}
 	}
 

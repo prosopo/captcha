@@ -13,17 +13,20 @@
 // limitations under the License.
 
 import { ProsopoApiError } from "@prosopo/common";
+import { INPUT_LIMITS, safeLine } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { extractDomainFromEmail } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
-import { object, string } from "zod";
+import { object } from "zod";
 import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
 import { checkSpamEmail as checkSpamEmailFn } from "../../tasks/spam/checkSpamEmail.js";
+import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
+import { recordSpamEmail } from "../metrics.js";
 
 const CheckSpamEmailRequestBody = object({
-	email: string(),
-	dapp: string(),
+	email: safeLine(INPUT_LIMITS.EMAIL),
+	dapp: safeLine(INPUT_LIMITS.ID),
 });
 
 export default (env: ProviderEnvironment) =>
@@ -32,9 +35,22 @@ export default (env: ProviderEnvironment) =>
 		res: Response,
 		next: NextFunction,
 	) => {
+		let email: string;
+		let dapp: string;
 		try {
-			const tasks = new Tasks(env, req.logger);
-			const { email, dapp } = CheckSpamEmailRequestBody.parse(req.body);
+			({ email, dapp } = CheckSpamEmailRequestBody.parse(req.body));
+		} catch (err) {
+			// A malformed request body is a client error (400), not a 500.
+			return next(
+				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
+					context: { code: 400, error: err },
+					i18n: req.i18n,
+					logger: req.logger,
+				}),
+			);
+		}
+
+		try {
 			const emailDomain = extractDomainFromEmail(email);
 			req.logger.info(() => ({
 				msg: "Check spam email handler entry",
@@ -44,6 +60,21 @@ export default (env: ProviderEnvironment) =>
 					method: req.method,
 				},
 			}));
+
+			// Maintenance-mode short-circuit must run before `new Tasks(env, ...)`
+			// because the Tasks constructor calls `env.getDb()`, which throws when
+			// `env.db` is undefined (the maintenance-mode case). Let the user
+			// through (isSpam=false) so the form submission isn't blocked while
+			// Mongo is unavailable.
+			if (getMaintenanceMode()) {
+				req.logger.info(() => ({
+					msg: "Maintenance mode active - returning isSpam=false",
+					data: { emailDomain },
+				}));
+				return res.json({ isSpam: false, emailDomain });
+			}
+
+			const tasks = new Tasks(env, req.logger);
 			// Get client record and perform the same validation as frictionless flow
 			const clientRecord = await tasks.db.getClientRecord(dapp);
 			if (!clientRecord) {
@@ -83,6 +114,7 @@ export default (env: ProviderEnvironment) =>
 					isSpam,
 				},
 			}));
+			recordSpamEmail(isSpam ? "spam" : "ham");
 			return res.json({
 				isSpam,
 				emailDomain,

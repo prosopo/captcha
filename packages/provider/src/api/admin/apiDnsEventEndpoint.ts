@@ -55,7 +55,9 @@ class ApiDnsEventEndpoint implements ApiEndpoint<DnsEventBatchSchemaType> {
 		args: z.infer<DnsEventBatchSchemaType>,
 		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
-		logger = logger || getLogger("info", import.meta.url);
+		logger = logger
+			? logger.with({}, "admin:dns-event:ingest")
+			: getLogger("info", "provider:admin:dns-event:ingest");
 		const { events } = args;
 
 		let stored = 0;
@@ -117,6 +119,10 @@ class ApiDnsEventEndpoint implements ApiEndpoint<DnsEventBatchSchemaType> {
 				this.ipInfoService,
 				session.ipInfo?.ip,
 			);
+			// Admin recompute path — intentionally omits trafficFilter so the
+			// stored score reflects the raw DNS-path signal, independent of the
+			// site's current filter config. Live captcha decisions pass
+			// trafficFilter (see powTasks / imgCaptchaTasks / puzzleTasks).
 			const dnsAsymmetry = computeDnsAsymmetry(enriched, session.ipInfo);
 			if (dnsAsymmetry > 0) {
 				await this.db.updateSessionRecord(sessionId, {

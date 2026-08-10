@@ -43,6 +43,7 @@
 		"INVALID_BODY": "Invalid body",
 		"PARSE_ERROR": "Error parsing request",
 		"SPAM_EMAIL_RULE": "Адресу електронної пошти заблоковано правилами спам-фільтра",
+		"SPAM_EMAIL_COUNT_EXCEEDED": "Забагато надсилань з цієї адреси електронної пошти",
 		"VPN_BLOCKED": "Запити з VPN-з'єднань не дозволені для цього сайту",
 		"PROXY_BLOCKED": "Запити з проксі-серверів не дозволені для цього сайту",
 		"TOR_BLOCKED": "Запити з вихідних вузлів Tor не дозволені для цього сайту",
@@ -436,6 +437,7 @@
 		"NO_CAPTCHA": "No captcha found",
 		"NO_SESSION_FOUND": "No session found",
 		"IP_ADDRESS_MISMATCH": "IP address mismatch detected",
+		"INVALID_SALT": "Недійсна сіль",
 		"INVALID_TOKEN": "Invalid token",
 		"INVALID_SOLUTION": "Invalid solution",
 		"DECRYPTION_ERROR": "Error decrypting"

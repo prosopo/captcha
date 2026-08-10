@@ -1,5 +1,131 @@
 # @prosopo/angular-procaptcha-integration-demo
 
+## 1.1.102
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.102
+
+## 1.1.101
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.101
+
+## 1.1.100
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.100
+
+## 1.1.99
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.99
+
+## 1.1.98
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.98
+
+## 1.1.97
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.97
+
+## 1.1.96
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.96
+
+## 1.1.95
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.95
+
+## 1.1.94
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.94
+
+## 1.1.93
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.93
+
+## 1.1.92
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.92
+
+## 1.1.91
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.91
+
+## 1.1.90
+### Patch Changes
+
+- b708a1d: fix(deps): align @angular/* package versions at 20.3.25
+  
+  Bumped @angular/common, @angular/platform-browser, @angular/router, @angular/cli, and @angular/compiler-cli from 20.3.16 to 20.3.25 to match @angular/core. Since each @angular/* subpackage pins its peer @angular/core to its own exact version, the prior mix produced an unresolvable peer-dep tree when installing from scratch.
+- Updated dependencies [b708a1d]
+  - @prosopo/angular-procaptcha-wrapper@1.1.90
+
+## 1.1.89
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.89
+
+## 1.1.88
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.88
+
+## 1.1.87
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.87
+
+## 1.1.86
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.86
+
+## 1.1.85
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.85
+
+## 1.1.84
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.84
+
+## 1.1.83
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.83
+
+## 1.1.82
+### Patch Changes
+
+- 4c71a9f: chore(deps): bump @angular/core from 20.3.16 to 20.3.25
+- Updated dependencies [4c71a9f]
+  - @prosopo/angular-procaptcha-wrapper@1.1.82
+
+## 1.1.81
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.81
+
+## 1.1.80
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.80
+
+## 1.1.79
+### Patch Changes
+
+  - @prosopo/angular-procaptcha-wrapper@1.1.79
+
 ## 1.1.78
 ### Patch Changes
 

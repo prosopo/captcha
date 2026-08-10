@@ -342,6 +342,7 @@
 		"INVALID_BODY": "अमनय बड",
 		"PARSE_ERROR": "अनरध वशषण म तरट",
 		"SPAM_EMAIL_RULE": "स्पैम फ़िल्टर नियमों द्वारा ईमेल पता अवरुद्ध",
+		"SPAM_EMAIL_COUNT_EXCEEDED": "इस ईमेल पते से बहुत अधिक सबमिशन",
 		"VPN_BLOCKED": "इस साइट के लिए VPN कनेक्शन से अनुरोध की अनुमति नहीं है",
 		"PROXY_BLOCKED": "इस साइट के लिए प्रॉक्सी सर्वर से अनुरोध की अनुमति नहीं है",
 		"TOR_BLOCKED": "इस साइट के लिए Tor एक्ज़िट नोड्स से अनुरोध की अनुमति नहीं है",
@@ -436,6 +437,7 @@
 		"NO_CAPTCHA": "कई कपच नह मल",
 		"NO_SESSION_FOUND": "कई सतर नह मल",
 		"IP_ADDRESS_MISMATCH": "IP पते मेल नहीं खाते",
+		"INVALID_SALT": "अमान्य सॉल्ट",
 		"INVALID_TOKEN": "अमनय टकन",
 		"INVALID_SOLUTION": "अमनय समधन",
 		"DECRYPTION_ERROR": "डकरपशन तरट"

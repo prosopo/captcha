@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { getRandomActiveProvider } from "@prosopo/load-balancer";
 import type { Logger } from "@prosopo/logger";
 import {
 	ApiParams,
@@ -27,6 +26,7 @@ import {
 	type ProsopoConfigOutput,
 	type RequestHeaders,
 	type RoutingMachineBaseline,
+	type RoutingMachineOutput,
 	type ScoreComponents,
 	type Session,
 	SimdReadingsStage,
@@ -45,18 +45,7 @@ import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.
 import { getBotScore } from "../detection/getBotScore.js";
 import { type RoutingContext, applyRouter } from "./routingMachine.js";
 
-const getDefaultEntropy = (): number => {
-	if (process.env.PROSOPO_ENTROPY) {
-		const parsed = Number.parseInt(process.env.PROSOPO_ENTROPY);
-		if (!Number.isNaN(parsed)) {
-			return parsed;
-		}
-		// ignore invalid value and return default
-	}
-	return 13337;
-};
 const DEFAULT_MAX_TIMESTAMP_AGE = 60 * 10 * 1000; // 10 minutes
-export const DEFAULT_ENTROPY = getDefaultEntropy();
 
 const getSessionIDPrefix = (host?: string): string => {
 	return host ? host.replace(".prosopo.io", "") : "local";
@@ -110,6 +99,31 @@ export class FrictionlessManager extends CaptchaManager {
 		this.routingContext = ctx;
 	}
 
+	/**
+	 * Evaluate the configured routing machine against an arbitrary baseline +
+	 * context, without going through `sendCaptcha`. Used by the dedup
+	 * short-circuit to ask "if we reused this cached session, would the
+	 * current routing machine still pick the same captchaType?" — if not,
+	 * the cached session is evicted and the request falls through into the
+	 * normal decision-machine flow (which will run the router again with
+	 * fully-derived inputs).
+	 *
+	 * Returns the supplied baseline on any failure (no machine, machine
+	 * throws, counter fetch failure, etc.), matching applyRouter's contract.
+	 */
+	async applyRoutingMachine(
+		baseline: RoutingMachineBaseline,
+		ctx: RoutingContext,
+	): Promise<RoutingMachineOutput> {
+		return applyRouter(
+			this.decisionMachineRunner,
+			this.usageCounters,
+			baseline,
+			ctx,
+			this.logger,
+		);
+	}
+
 	setSessionParams(
 		params: Omit<Session, "sessionId" | "createdAt" | "captchaType">,
 	): void {
@@ -118,16 +132,25 @@ export class FrictionlessManager extends CaptchaManager {
 			score: params.score,
 			threshold: params.threshold,
 			scoreComponents: params.scoreComponents,
-			providerSelectEntropy: params.providerSelectEntropy,
 			ipAddress: params.ipAddress,
 			webView: params.webView ?? false,
 			iFrame: params.iFrame ?? false,
 			decryptedHeadHash: params.decryptedHeadHash,
+			bundleId: params.bundleId,
 			siteKey: params.siteKey,
+			currentUrl: params.currentUrl,
+			iframeUrl: params.iframeUrl,
+			isProtect: params.isProtect,
 			ipInfo: params.ipInfo,
 			headers: params.headers,
 			mode: params.mode,
 			simdReadings: params.simdReadings,
+			entropyMathRandomFingerprint: params.entropyMathRandomFingerprint,
+			entropyCryptoFingerprint: params.entropyCryptoFingerprint,
+			entropyWallClockOffsetMs: params.entropyWallClockOffsetMs,
+			entropyMathRandomFirst: params.entropyMathRandomFirst,
+			tcpToChelloUs: params.tcpToChelloUs,
+			chelloToHandshakeUs: params.chelloToHandshakeUs,
 		};
 	}
 
@@ -147,7 +170,6 @@ export class FrictionlessManager extends CaptchaManager {
 		score: number,
 		threshold: number,
 		scoreComponents: ScoreComponents,
-		providerSelectEntropy: number,
 		ipAddress: CompositeIpAddress,
 		captchaType: CaptchaType,
 		siteKey: string,
@@ -164,6 +186,18 @@ export class FrictionlessManager extends CaptchaManager {
 		headers?: RequestHeaders,
 		mode?: ModeEnum,
 		simdReadings?: Session["simdReadings"],
+		entropyMathRandomFingerprint?: Session["entropyMathRandomFingerprint"],
+		entropyCryptoFingerprint?: Session["entropyCryptoFingerprint"],
+		entropyWallClockOffsetMs?: Session["entropyWallClockOffsetMs"],
+		entropyMathRandomFirst?: Session["entropyMathRandomFirst"],
+		bundleId?: Session["bundleId"],
+		currentUrl?: Session["currentUrl"],
+		tcpToChelloUs?: Session["tcpToChelloUs"],
+		chelloToHandshakeUs?: Session["chelloToHandshakeUs"],
+		isEscalation?: Session["isEscalation"],
+		iframeUrl?: Session["iframeUrl"],
+		isProtect?: Session["isProtect"],
+		originSessionId?: Session["originSessionId"],
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
@@ -172,7 +206,6 @@ export class FrictionlessManager extends CaptchaManager {
 			score,
 			threshold,
 			scoreComponents,
-			providerSelectEntropy,
 			ipAddress,
 			captchaType,
 			mode,
@@ -181,9 +214,25 @@ export class FrictionlessManager extends CaptchaManager {
 			userSitekeyIpHash,
 			webView,
 			iFrame,
+			// Only persist the escalation flag when it's actually true —
+			// avoids polluting analytics with `false` on every plain
+			// frictionless session.
+			...(isEscalation && { isEscalation: true }),
+			// Origin sessionId is only meaningful for escalations. Persist
+			// alongside isEscalation so the DM-input read path can walk
+			// back for fallback fields (simdReadings, dnsEvent, etc.).
+			...(originSessionId && { originSessionId }),
 			decryptedHeadHash,
+			bundleId,
 			reason,
 			siteKey,
+			currentUrl,
+			iframeUrl,
+			// Same rationale as isEscalation above: only persist the flag
+			// when it's actually true so non-Protect sessions stay slim and
+			// the sparse index on {isProtect, createdAt} carries only the
+			// Protect subset.
+			...(isProtect && { isProtect: true }),
 			blocked,
 			deleted,
 			ipInfo,
@@ -194,6 +243,12 @@ export class FrictionlessManager extends CaptchaManager {
 			...(simdReadings && {
 				simdReadingsStage: SimdReadingsStage.frictionless,
 			}),
+			entropyMathRandomFingerprint,
+			entropyCryptoFingerprint,
+			entropyWallClockOffsetMs,
+			entropyMathRandomFirst,
+			tcpToChelloUs,
+			chelloToHandshakeUs,
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);
@@ -228,32 +283,6 @@ export class FrictionlessManager extends CaptchaManager {
 		return sessionRecord;
 	}
 
-	async hostVerified(entropy: number) {
-		const chosen = await getRandomActiveProvider(
-			this.config.defaultEnvironment,
-			entropy,
-		);
-
-		const domain = new URL(chosen.provider.url).hostname;
-		const configDomain =
-			this.config.host.indexOf("http") > -1
-				? new URL(this.config.host).hostname
-				: this.config.host;
-		this.logger.info(() => ({
-			data: { entropy, host: this.config.host, domain },
-		}));
-
-		if (domain !== configDomain) {
-			this.logger.info(() => ({
-				msg: "Host mismatch",
-				data: { expected: configDomain, got: domain, entropy },
-			}));
-			return { verified: false, domain };
-		}
-
-		return { verified: true, domain };
-	}
-
 	async sendImageCaptcha(
 		params?: Partial<ImageCaptchaSessionParams>,
 	): Promise<GetFrictionlessCaptchaResponse> {
@@ -285,7 +314,6 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.score === undefined ||
 			effectiveParams.threshold === undefined ||
 			!effectiveParams.scoreComponents ||
-			effectiveParams.providerSelectEntropy === undefined ||
 			!effectiveParams.ipAddress ||
 			effectiveParams.siteKey === undefined
 		) {
@@ -338,7 +366,6 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.score,
 			effectiveParams.threshold,
 			effectiveParams.scoreComponents,
-			effectiveParams.providerSelectEntropy,
 			effectiveParams.ipAddress,
 			finalCaptchaType,
 			effectiveParams.siteKey,
@@ -355,6 +382,17 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.headers,
 			effectiveParams.mode,
 			effectiveParams.simdReadings,
+			effectiveParams.entropyMathRandomFingerprint,
+			effectiveParams.entropyCryptoFingerprint,
+			effectiveParams.entropyWallClockOffsetMs,
+			effectiveParams.entropyMathRandomFirst,
+			effectiveParams.bundleId,
+			effectiveParams.currentUrl,
+			effectiveParams.tcpToChelloUs,
+			effectiveParams.chelloToHandshakeUs,
+			undefined,
+			effectiveParams.iframeUrl,
+			effectiveParams.isProtect,
 		);
 
 		// Fire-and-forget served-counter writes. Skipped when there's no
@@ -390,7 +428,6 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.score === undefined ||
 			effectiveParams.threshold === undefined ||
 			!effectiveParams.scoreComponents ||
-			effectiveParams.providerSelectEntropy === undefined ||
 			!effectiveParams.ipAddress ||
 			effectiveParams.siteKey === undefined
 		) {
@@ -404,7 +441,6 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.score,
 			effectiveParams.threshold,
 			effectiveParams.scoreComponents,
-			effectiveParams.providerSelectEntropy,
 			effectiveParams.ipAddress,
 			CaptchaType.image,
 			effectiveParams.siteKey,
@@ -421,6 +457,17 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.headers,
 			effectiveParams.mode,
 			effectiveParams.simdReadings,
+			effectiveParams.entropyMathRandomFingerprint,
+			effectiveParams.entropyCryptoFingerprint,
+			effectiveParams.entropyWallClockOffsetMs,
+			effectiveParams.entropyMathRandomFirst,
+			effectiveParams.bundleId,
+			effectiveParams.currentUrl,
+			effectiveParams.tcpToChelloUs,
+			effectiveParams.chelloToHandshakeUs,
+			undefined,
+			effectiveParams.iframeUrl,
+			effectiveParams.isProtect,
 		);
 	}
 
@@ -439,26 +486,6 @@ export class FrictionlessManager extends CaptchaManager {
 			scoreComponents: {
 				...scoreComponents,
 				accessPolicy: accessPolicyPenalty,
-			},
-		};
-	}
-
-	scoreIncreaseUnverifiedHost(
-		host: string,
-		baseBotScore: number,
-		botScore: number,
-		scoreComponents: ScoreComponents,
-	): { score: number; scoreComponents: ScoreComponents } {
-		this.logger.info(() => ({
-			msg: "Host not verified",
-			data: { requested: this.config.host, selected: host },
-		}));
-		botScore += this.config.penalties.PENALTY_UNVERIFIED_HOST;
-		return {
-			score: botScore,
-			scoreComponents: {
-				...scoreComponents,
-				unverifiedHost: this.config.penalties.PENALTY_UNVERIFIED_HOST,
 			},
 		};
 	}
@@ -525,23 +552,44 @@ export class FrictionlessManager extends CaptchaManager {
 		return `${start}...${middle}...${end}`;
 	}
 
-	async decryptPayload(token: string, headHash: string) {
-		const decryptKeys = [
-			// Process DB keys first, then env var key last as env key will likely be invalid
-			...(await this.getDetectorKeys()),
-			process.env.BOT_DECRYPTION_KEY,
-		].filter((k) => k);
+	/**
+	 * Resolve the decrypt attempt for a payload. The detector lives only in the
+	 * provider-served pool bundles, so this is a SINGLE deterministic decrypt
+	 * with the session's own RSA keypair + inner cipher config, resolved from the
+	 * `detectorSessionId → bundleId` Redis binding. There is no legacy key pool:
+	 * if the binding can't be resolved (expired/missing) the caller fails closed
+	 * (score treated as bot ⇒ PoW). Also returns the resolved bundleId so the
+	 * caller can promote it onto the session for the later behavioural/SIMD hops.
+	 */
+	async resolveDecryptAttempts(detectorSessionId?: string): Promise<{
+		attempts: { key: string; innerConfig?: string }[];
+		bundleId?: string;
+	}> {
+		const bundle = await this.resolveBundleByDetectorSession(detectorSessionId);
+		if (bundle) {
+			return {
+				attempts: [{ key: bundle.key, innerConfig: bundle.innerConfig }],
+				bundleId: bundle.bundleId,
+			};
+		}
+		return { attempts: [] };
+	}
+
+	async decryptPayload(
+		token: string,
+		headHash: string,
+		detectorSessionId?: string,
+	) {
+		const { attempts: decryptKeys, bundleId } =
+			await this.resolveDecryptAttempts(detectorSessionId);
 
 		this.logger.debug(() => {
-			const loggedKeys = decryptKeys.map((key) =>
-				this.redactKeyForLogging(key),
-			);
-
 			return {
 				msg: "Decrypting score",
 				data: {
 					keysLength: decryptKeys.length,
-					keys: loggedKeys,
+					bundleId,
+					usingBundle: bundleId !== undefined,
 				},
 			};
 		});
@@ -550,7 +598,6 @@ export class FrictionlessManager extends CaptchaManager {
 		// if we run out of keys and the score is still not decrypted, throw an error
 		let baseBotScore: number | undefined;
 		let timestamp: number | undefined;
-		let providerSelectEntropy: number | undefined;
 		let userId: string | undefined;
 		let userAgent: string | undefined;
 		let webView: boolean | undefined;
@@ -559,49 +606,67 @@ export class FrictionlessManager extends CaptchaManager {
 		let decryptionFailed = false;
 		let triggeredDetectors: number[] | undefined;
 		let shadowDomPenalty: boolean | undefined;
-		for (const [keyIndex, key] of decryptKeys.entries()) {
+		let entropyMathRandomFingerprint: string | undefined;
+		let entropyCryptoFingerprint: string | undefined;
+		let entropyWallClockOffsetMs: number | undefined;
+		let entropyMathRandomFirst: number | undefined;
+		for (const [keyIndex, attempt] of decryptKeys.entries()) {
 			try {
 				this.logger.info(() => ({
 					msg: "Attempting to decrypt score",
 					data: {
-						key: this.redactKeyForLogging(key),
+						key: this.redactKeyForLogging(attempt.key),
 					},
 				}));
-				const decrypted = await getBotScore(token, headHash, key as string);
+				const decrypted = await getBotScore(
+					token,
+					headHash,
+					attempt.key,
+					attempt.innerConfig,
+				);
 				decryptedHeadHash = decrypted.decryptedHeadHash || "";
 				const s = decrypted.baseBotScore;
 				const t = decrypted.timestamp;
-				const p = decrypted.providerSelectEntropy;
 				const a = decrypted.userId;
 				const u = decrypted.userAgent;
 				const w = decrypted.isWebView;
 				const i = decrypted.isIframe;
 				const td = decrypted.triggeredDetectors;
 				const sd = decrypted.shadowDomPenalty;
+				const ef = decrypted.entropyMathRandomFingerprint;
+				const ec = decrypted.entropyCryptoFingerprint;
+				const eo = decrypted.entropyWallClockOffsetMs;
+				const em = decrypted.entropyMathRandomFirst;
 				this.logger.debug(() => ({
 					msg: "Successfully decrypted score",
 					data: {
-						key: this.redactKeyForLogging(key),
+						key: this.redactKeyForLogging(attempt.key),
 						baseBotScore: s,
 						timestamp: t,
-						entropy: p,
 						userId: a,
 						userAgent: u,
 						webView: w,
 						iFrame: i,
 						triggeredDetectors: td,
 						shadowDomPenalty: sd,
+						entropyMathRandomFingerprint: ef,
+						entropyCryptoFingerprint: ec,
+						entropyWallClockOffsetMs: eo,
+						entropyMathRandomFirst: em,
 					},
 				}));
 				baseBotScore = s;
 				timestamp = t;
-				providerSelectEntropy = p;
 				userId = a;
 				userAgent = u;
 				webView = w;
 				iFrame = i;
 				triggeredDetectors = td;
 				shadowDomPenalty = sd;
+				entropyMathRandomFingerprint = ef;
+				entropyCryptoFingerprint = ec;
+				entropyWallClockOffsetMs = eo;
+				entropyMathRandomFirst = em;
 				break;
 			} catch (err) {
 				// check if the next index exists, if not, log an error
@@ -611,7 +676,6 @@ export class FrictionlessManager extends CaptchaManager {
 					}));
 					baseBotScore = 1;
 					timestamp = 0;
-					providerSelectEntropy = DEFAULT_ENTROPY + 1;
 					decryptedHeadHash = "";
 					decryptionFailed = true;
 				}
@@ -622,20 +686,14 @@ export class FrictionlessManager extends CaptchaManager {
 			baseBotScore === undefined || Number.isNaN(baseBotScore);
 		const timestampUndefined =
 			timestamp === undefined || Number.isNaN(timestamp);
-		const providerSelectEntropyUndefined =
-			providerSelectEntropy === undefined ||
-			Number.isNaN(providerSelectEntropy);
 		const undefinedCount =
-			Number(baseBotScoreUndefined) +
-			Number(timestampUndefined) +
-			Number(providerSelectEntropyUndefined);
+			Number(baseBotScoreUndefined) + Number(timestampUndefined);
 		if (undefinedCount > 0) {
 			this.logger.error(() => ({
-				msg: "Error decrypting score: baseBotScore or timestamp or providerSelectEntropy is undefined",
+				msg: "Error decrypting score: baseBotScore or timestamp is undefined",
 			}));
 			baseBotScore = 1;
 			timestamp = 0;
-			providerSelectEntropy = DEFAULT_ENTROPY - undefinedCount;
 			decryptedHeadHash = "";
 			decryptionFailed = true;
 		}
@@ -644,7 +702,6 @@ export class FrictionlessManager extends CaptchaManager {
 			data: {
 				baseBotScore: baseBotScore,
 				timestamp: timestamp,
-				entropy: providerSelectEntropy,
 				userId,
 				userAgent,
 				webView,
@@ -659,7 +716,6 @@ export class FrictionlessManager extends CaptchaManager {
 		return {
 			baseBotScore: Number(baseBotScore),
 			timestamp: Number(timestamp),
-			providerSelectEntropy: Number(providerSelectEntropy),
 			userId,
 			userAgent,
 			webView: webView || false,
@@ -668,6 +724,13 @@ export class FrictionlessManager extends CaptchaManager {
 			decryptionFailed,
 			triggeredDetectors,
 			shadowDomPenalty,
+			entropyMathRandomFingerprint,
+			entropyCryptoFingerprint,
+			entropyWallClockOffsetMs,
+			entropyMathRandomFirst,
+			// The pool bundle used (if any) — promoted onto the session so the
+			// later behavioural-data hop can resolve the same keypair/inner cfg.
+			bundleId,
 		};
 	}
 

@@ -133,6 +133,8 @@ export default (
 							},
 						},
 					},
+					verifiedTimeout: 60000,
+					solutionTimeout: 60000,
 				});
 				logger.info(() => ({
 					data: { sitekey },

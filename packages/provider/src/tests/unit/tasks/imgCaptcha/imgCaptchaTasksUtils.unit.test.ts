@@ -21,14 +21,20 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { buildTreeAndGetCommitmentId } from "../../../../tasks/imgCaptcha/imgCaptchaTasksUtils.js";
 
 vi.mock("@prosopo/datasets", () => ({
-	CaptchaMerkleTree: vi.fn().mockImplementation(() => ({
-		// biome-ignore lint/suspicious/noExplicitAny: tests
-		build: vi.fn(function (this: any) {
-			this.root = { hash: "mockedRootHash" };
-		}),
-		root: null, // Initially null, set by build
-		getRoot: vi.fn().mockReturnValue({ hash: "mockedRootHash" }),
-	})),
+	// The code under test does `new CaptchaMerkleTree()`. vitest 4 requires a
+	// constructible implementation, so this is a function expression rather than
+	// the arrow that worked under vitest 3. (A class would also be constructible
+	// but is not assignable to mockImplementation's `(...args) => any`.)
+	CaptchaMerkleTree: vi.fn().mockImplementation(function () {
+		return {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			build: vi.fn(function (this: any) {
+				this.root = { hash: "mockedRootHash" };
+			}),
+			root: null, // set by build()
+			getRoot: vi.fn().mockReturnValue({ hash: "mockedRootHash" }),
+		};
+	}),
 	computeCaptchaSolutionHash: vi.fn(),
 }));
 
@@ -42,10 +48,12 @@ describe("buildTreeAndGetCommitmentId", () => {
 		vi.clearAllMocks();
 		// Reset the mock implementation to the default state to ensure test isolation
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(CaptchaMerkleTree as any).mockImplementation(() => ({
-			build: vi.fn(),
-			root: { hash: "mockedRootHash" },
-		}));
+		(CaptchaMerkleTree as any).mockImplementation(function () {
+			return {
+				build: vi.fn(),
+				root: { hash: "mockedRootHash" },
+			};
+		});
 	});
 
 	it("should build a tree and return the commitmentId", () => {
@@ -72,15 +80,14 @@ describe("buildTreeAndGetCommitmentId", () => {
 	it("should throw an error if commitmentId does not exist", () => {
 		// Override the mock for this specific test
 		const originalMock = vi.mocked(CaptchaMerkleTree);
-		vi.mocked(CaptchaMerkleTree).mockImplementationOnce(
-			() =>
-				({
-					build: vi.fn(),
-					root: { hash: null },
-					getRoot: vi.fn().mockReturnValue({ hash: null }),
-					// biome-ignore lint/suspicious/noExplicitAny: tests
-				}) as any,
-		);
+		vi.mocked(CaptchaMerkleTree).mockImplementationOnce(function () {
+			return {
+				build: vi.fn(),
+				root: { hash: null },
+				getRoot: vi.fn().mockReturnValue({ hash: null }),
+				// biome-ignore lint/suspicious/noExplicitAny: tests
+			} as any;
+		});
 
 		expect(() => buildTreeAndGetCommitmentId(mockCaptchaSolutions)).toThrow(
 			new ProsopoEnvError(

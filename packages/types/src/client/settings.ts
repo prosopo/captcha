@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { array, boolean, number, object, type output, string, z } from "zod";
+import {
+	DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
+	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
+} from "../config/timeouts.js";
 import { CaptchaType } from "./captchaType/captchaType.js";
 import { CaptchaTypeSpec } from "./captchaType/captchaTypeSpec.js";
 
@@ -170,6 +174,12 @@ export const EmailSpamRulesSchema = object({
 		.max(MAX_CUSTOM_REGEX_PATTERNS)
 		.optional()
 		.default([]),
+	// Maximum number of previously server-checked captchas that may carry the
+	// same normalised email (dots collapsed for gmail, `+tag` stripped
+	// everywhere) before further submissions from that address are rejected.
+	// Requires `storeMetadata` to be on so the normalised email is persisted
+	// alongside each verified commitment. Undefined disables the check.
+	maxEmailSubmissionCount: number().int().min(1).optional(),
 });
 
 export const SpamFilterRulesSchema = object({
@@ -178,6 +188,15 @@ export const SpamFilterRulesSchema = object({
 });
 
 export const trafficFilterAbuserScoreThresholdDefault = 0.5;
+
+// Operators almost always want `blockDatacenter` to catch scraping/automation
+// traffic but not legitimate consumer relays that exit from datacenter IPs.
+// Entries match case-insensitively against `datacenterName`, `providerName`,
+// or `asnOrganization` — upstream populates `datacenter.datacenter` only for
+// curated named ranges, so the providerName / asnOrganization fallback is
+// needed to reach generic CDN and cloud-provider IPs.
+const MAX_DATACENTER_ALLOWLIST_ENTRIES = 50;
+const MAX_DATACENTER_ALLOWLIST_ENTRY_LENGTH = 128;
 
 export const TrafficFilterSchema = object({
 	blockVpn: boolean().optional().default(false),
@@ -190,6 +209,32 @@ export const TrafficFilterSchema = object({
 		.optional()
 		.default(trafficFilterAbuserScoreThresholdDefault),
 	blockDatacenter: boolean().optional().default(false),
+	datacenterNameAllowlist: array(
+		string().min(1).max(MAX_DATACENTER_ALLOWLIST_ENTRY_LENGTH),
+	)
+		.max(MAX_DATACENTER_ALLOWLIST_ENTRIES)
+		.optional(),
+	// Counterpart to `datacenterNameAllowlist`: any entry here forces the
+	// datacenter block for a matching name, overriding both the
+	// `providerType === "isp"` bypass and any allowlist entry for the same
+	// name. Useful for named providers that upstream classifies as ISP but
+	// operators want treated as datacenter (for example IP-leasing platforms
+	// whose ranges sit on carrier ASNs but exit as proxy pools). Same
+	// case-insensitive, whitespace-trimmed matching as the allowlist and the
+	// same three name sources (`datacenterName`, `providerName`,
+	// `asnOrganization`).
+	datacenterNameDenylist: array(
+		string().min(1).max(MAX_DATACENTER_ALLOWLIST_ENTRY_LENGTH),
+	)
+		.max(MAX_DATACENTER_ALLOWLIST_ENTRIES)
+		.optional(),
+	// When the catcher confirmed `dnsEvent.pathValid === true`, skip the
+	// datacenter / VPN / proxy / Tor evaluation on the DNS peer + resolver
+	// IPs. Default on: without this, users on public DoH resolvers or ISP
+	// shared anycast resolvers (whose resolver IPs are necessarily
+	// datacenter or high-abuser) trip the rule despite the visitor being
+	// a real user on a real network.
+	skipExtrasOnValidDnsPath: boolean().optional().default(true),
 	blockMobile: boolean().optional().default(false),
 	blockSatellite: boolean().optional().default(false),
 	blockCrawler: boolean().optional().default(false),
@@ -224,13 +269,29 @@ export type IHoneypotSettings = output<typeof HoneypotSettingsSchema>;
 export const ClientSettingsSchema = object({
 	captchaType: CaptchaTypeSpec.optional().default(captchaTypeDefault),
 	domains: array(string()).min(1),
+	// Maximum ms between user submission and the dapp's /verify call.
+	verifiedTimeout: number()
+		.int()
+		.min(1000)
+		.max(600000)
+		.optional()
+		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
+	// Maximum ms between challenge issuance and the user's submission to
+	// /pow/solution or /puzzle/solution. Bounds how long the user has to
+	// solve the challenge before the submission is rejected as stale.
+	// Distinct from `verifiedTimeout` (which gates submission → /verify).
+	solutionTimeout: number()
+		.int()
+		.min(1000)
+		.max(600000)
+		.optional()
+		.default(DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT),
 	frictionlessThreshold: number()
 		.min(0)
 		.max(1)
 		.optional()
 		.default(frictionlessThresholdDefault),
 	powDifficulty: number()
-		.int()
 		.positive()
 		.min(1)
 		.max(10)
@@ -249,14 +310,24 @@ export const ClientSettingsSchema = object({
 	// Detector score at or above which the frictionless flow blocks the
 	// request outright instead of issuing a challenge. Undefined disables.
 	autoBanScoreThreshold: number().min(0).optional(),
+	// Tolerance in pixels between the release point and the puzzle target
+	// centre (Euclidean distance). Default 15 matches what real solvers
+	// actually hit. The ceiling is deliberately larger than the puzzle
+	// canvas diagonal (~360 px on a 300×200 canvas) so end-to-end tests
+	// can raise it high enough that a scripted release anywhere on the
+	// canvas passes. Real sites should never need more than a few tens.
 	puzzleTolerance: number()
 		.int()
 		.min(5)
-		.max(50)
+		.max(1000)
 		.optional()
 		.default(puzzleToleranceDefault),
 	ipValidationRules: IPValidationRulesSchema.optional(),
-	disallowWebView: boolean().optional().default(false).optional(),
+	// The trailing `.optional()` that used to sit after `.default(false)` made
+	// the default unreachable, so this parsed to `undefined` rather than
+	// `false`. Both are falsy, so no consumer changed behaviour, but the
+	// declared output type said `boolean` while the value was missing.
+	disallowWebView: boolean().optional().default(false),
 	contextAware: ContextAwareSchema.optional(),
 	spamEmailDomainCheckEnabled: boolean().optional(),
 	spamFilter: SpamFilterRulesSchema.optional(),

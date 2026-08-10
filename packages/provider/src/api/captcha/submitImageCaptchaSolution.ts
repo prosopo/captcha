@@ -34,9 +34,9 @@ export default (env: ProviderEnvironment) =>
 		res: Response,
 		next: NextFunction,
 	) => {
-		const tasks = new Tasks(env, req.logger);
-
-		// If in maintenance mode, always return verified
+		// Maintenance-mode short-circuit must run before `new Tasks(env, ...)`
+		// because the Tasks constructor calls `env.getDb()`, which throws when
+		// `env.db` is undefined (the maintenance-mode case).
 		if (getMaintenanceMode()) {
 			req.logger.info(() => ({
 				msg: "Maintenance mode active - returning verified for image captcha",
@@ -48,6 +48,8 @@ export default (env: ProviderEnvironment) =>
 			};
 			return res.json(result);
 		}
+
+		const tasks = new Tasks(env, req.logger);
 
 		let parsed: CaptchaSolutionBodyType;
 		try {

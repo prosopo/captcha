@@ -33,7 +33,7 @@ import {
 } from "@prosopo/types";
 import { randomAsHex } from "@prosopo/util-crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { testFetch } from "./testUtils.js";
+import { reservePort, testFetch } from "./testUtils.js";
 
 const REDIS_URL = process.env.REDIS_CONNECTION_URL ?? "redis://localhost:6379";
 const REDIS_PASSWORD = process.env.REDIS_CONNECTION_PASSWORD ?? "root";
@@ -59,7 +59,7 @@ describe("Routing Decision Machines (live local Mongo + Redis)", () => {
 	let adminJwt: string;
 
 	beforeAll(async () => {
-		testPort = 20000 + (process.pid % 10000) + Math.floor(Math.random() * 5000);
+		testPort = await reservePort();
 		const protocol = isTlsAvailable() ? "https" : "http";
 		baseUrl = `${protocol}://localhost:${testPort}`;
 
@@ -174,7 +174,6 @@ describe("Routing Decision Machines (live local Mongo + Redis)", () => {
 			score: 0.4,
 			threshold: 0.5,
 			scoreComponents: { baseScore: 0.4 },
-			providerSelectEntropy: 0,
 			ipAddress: { lower: 16909060n, type: IpAddressType.v4 },
 			webView: false,
 			iFrame: false,

@@ -34,6 +34,11 @@ vi.mock("../../../../../tasks/frictionless/frictionlessTasks.js", () => ({
 		WEBVIEW_DETECTED: "WEBVIEW_DETECTED",
 		OLD_TIMESTAMP: "OLD_TIMESTAMP",
 		BOT_SCORE_ABOVE_THRESHOLD: "BOT_SCORE_ABOVE_THRESHOLD",
+		AUTO_BAN_SCORE: "AUTO_BAN_SCORE",
+		MISSING_CURRENT_URL: "MISSING_CURRENT_URL",
+		DECRYPTION_FAILED: "DECRYPTION_FAILED",
+		MISSING_TOKEN: "MISSING_TOKEN",
+		MISSING_HEAD_HASH: "MISSING_HEAD_HASH",
 	},
 }));
 
@@ -63,13 +68,9 @@ const buildInput = (overrides: Partial<Record<string, unknown>> = {}) => ({
 				score,
 				scoreComponents: sc,
 			})),
-			scoreIncreaseUnverifiedHost: vi.fn((_d, _bs, score, sc) => ({
-				score,
-				scoreComponents: sc,
-			})),
 			updateScore: vi.fn(),
-			hostVerified: vi.fn().mockResolvedValue({ verified: true, domain: "ok" }),
 			getClientContextEntropy: vi.fn().mockResolvedValue(undefined),
+			registerBlockedSession: vi.fn().mockResolvedValue(undefined),
 		},
 	},
 	env: { config: { captchas: { solved: { count: 4 } } } },
@@ -91,12 +92,13 @@ const buildInput = (overrides: Partial<Record<string, unknown>> = {}) => ({
 	userId: "uid",
 	webView: false,
 	decryptedHeadHash: "",
-	providerSelectEntropy: 0,
 	baseBotScore: 0,
 	botScore: 0.1,
 	scoreComponents: { baseScore: 0 },
 	token: "tok",
+	headHash: "0xhead",
 	botThreshold: 0.5,
+	currentUrl: "https://example.com/page",
 	...overrides,
 });
 
@@ -107,7 +109,10 @@ const buildHandle = (uaHeader = "ua", prosopoUser = "uid") => {
 		requestId: "rid",
 		i18n: { t: (s: string) => s },
 	};
-	const res = { json: vi.fn().mockReturnValue("done") };
+	const res = {
+		json: vi.fn().mockReturnValue("done"),
+		status: vi.fn().mockReturnThis(),
+	};
 	const next = vi.fn();
 	return { req, res, next, handle: { req, res, next } };
 };
@@ -118,6 +123,152 @@ describe("runDecisionMachine", () => {
 		timestampTooOldMock.mockReturnValue(false);
 		timestampDecayMock.mockClear();
 		timestampDecayMock.mockReturnValue(2);
+	});
+
+	it("serves a 3-round image captcha when the client sent no token", async () => {
+		const input = buildInput({ token: "" });
+		const { res, handle } = buildHandle();
+		await runDecisionMachine(input as never, handle as never);
+		expect(
+			input.tasks.frictionlessManager.sendImageCaptcha,
+		).toHaveBeenCalledWith(
+			expect.objectContaining({
+				solvedImagesCount: 3,
+				reason: "MISSING_TOKEN",
+			}),
+		);
+		expect(
+			input.tasks.frictionlessManager.sendPowCaptcha,
+		).not.toHaveBeenCalled();
+		expect(res.json).toHaveBeenCalled();
+	});
+
+	it("never lets a missing token reach the frictionless PoW pass", async () => {
+		// The client used to be able to declare its own detector unavailable and
+		// be handed PoW for it. An absent payload must cost an image captcha.
+		const input = buildInput({
+			token: "",
+			headHash: "",
+			botScore: 0,
+			currentUrl: "https://example.com/page",
+		});
+		const { handle } = buildHandle();
+		await runDecisionMachine(input as never, handle as never);
+		expect(
+			input.tasks.frictionlessManager.sendPowCaptcha,
+		).not.toHaveBeenCalled();
+	});
+
+	it("caps the missing-token rounds at the sitekey's imageMaxRounds", async () => {
+		const input = buildInput({
+			token: "",
+			clientRecord: { settings: { imageMaxRounds: 1, disallowWebView: false } },
+		});
+		const { handle } = buildHandle();
+		await runDecisionMachine(input as never, handle as never);
+		expect(
+			input.tasks.frictionlessManager.sendImageCaptcha,
+		).toHaveBeenCalledWith(expect.objectContaining({ solvedImagesCount: 1 }));
+	});
+
+	it("serves a 2-round image captcha when a token arrived without a head hash", async () => {
+		const input = buildInput({ headHash: "" });
+		const { handle } = buildHandle();
+		await runDecisionMachine(input as never, handle as never);
+		expect(
+			input.tasks.frictionlessManager.sendImageCaptcha,
+		).toHaveBeenCalledWith(
+			expect.objectContaining({
+				solvedImagesCount: 2,
+				reason: "MISSING_HEAD_HASH",
+			}),
+		);
+		expect(
+			input.tasks.frictionlessManager.sendPowCaptcha,
+		).not.toHaveBeenCalled();
+	});
+
+	it("prefers the missing-token reason when both are absent", async () => {
+		const input = buildInput({ token: "", headHash: "" });
+		const { handle } = buildHandle();
+		await runDecisionMachine(input as never, handle as never);
+		expect(
+			input.tasks.frictionlessManager.sendImageCaptcha,
+		).toHaveBeenCalledWith(
+			expect.objectContaining({ reason: "MISSING_TOKEN" }),
+		);
+	});
+
+	it("short-circuits to a 3-round image captcha when decryption failed", async () => {
+		const input = buildInput({ decryptionFailed: true });
+		const { res, handle } = buildHandle();
+		await runDecisionMachine(input as never, handle as never);
+		expect(
+			input.tasks.frictionlessManager.sendImageCaptcha,
+		).toHaveBeenCalledWith(
+			expect.objectContaining({
+				solvedImagesCount: 3,
+				reason: "DECRYPTION_FAILED",
+			}),
+		);
+		expect(
+			input.tasks.frictionlessManager.sendPowCaptcha,
+		).not.toHaveBeenCalled();
+		expect(res.json).toHaveBeenCalled();
+	});
+
+	it("caps the decryption-failed rounds at the sitekey's imageMaxRounds", async () => {
+		const input = buildInput({
+			decryptionFailed: true,
+			clientRecord: { settings: { imageMaxRounds: 2, disallowWebView: false } },
+		});
+		const { handle } = buildHandle();
+		await runDecisionMachine(input as never, handle as never);
+		expect(
+			input.tasks.frictionlessManager.sendImageCaptcha,
+		).toHaveBeenCalledWith(expect.objectContaining({ solvedImagesCount: 2 }));
+	});
+
+	it("reports decryption failure as such, not as a user-agent mismatch", async () => {
+		// decryptPayload leaves userAgent/userId undefined on failure, so the UA
+		// check can never match — without the earlier short-circuit these land in
+		// USER_AGENT_MISMATCH.
+		const input = buildInput({
+			decryptionFailed: true,
+			userAgent: undefined,
+			userId: undefined,
+		});
+		const { handle } = buildHandle();
+		await runDecisionMachine(input as never, handle as never);
+		expect(
+			input.tasks.frictionlessManager.sendImageCaptcha,
+		).toHaveBeenCalledWith(
+			expect.objectContaining({ reason: "DECRYPTION_FAILED" }),
+		);
+	});
+
+	it("never hard-blocks a failed decrypt, even under autoBanScoreThreshold", async () => {
+		const input = buildInput({
+			decryptionFailed: true,
+			// what decryptPayload substitutes on failure
+			baseBotScore: 1,
+			botScore: 1,
+			timestamp: 0,
+			clientRecord: {
+				settings: {
+					imageMaxRounds: 8,
+					disallowWebView: false,
+					autoBanScoreThreshold: 0.8,
+				},
+			},
+		});
+		const { res, handle } = buildHandle();
+		await runDecisionMachine(input as never, handle as never);
+		expect(
+			input.tasks.frictionlessManager.registerBlockedSession,
+		).not.toHaveBeenCalled();
+		expect(res.status).not.toHaveBeenCalledWith(401);
+		expect(input.tasks.frictionlessManager.sendImageCaptcha).toHaveBeenCalled();
 	});
 
 	it("returns image captcha on user-agent mismatch", async () => {
@@ -167,6 +318,25 @@ describe("runDecisionMachine", () => {
 		expect(args.reason).toBe("BOT_SCORE_ABOVE_THRESHOLD");
 	});
 
+	it.each([undefined, ""])(
+		"returns image captcha when currentUrl is missing (%s)",
+		async (missing) => {
+			const input = buildInput({ currentUrl: missing });
+			const { res, handle } = buildHandle();
+			await runDecisionMachine(input as never, handle as never);
+			expect(
+				input.tasks.frictionlessManager.sendImageCaptcha,
+			).toHaveBeenCalled();
+			const args =
+				input.tasks.frictionlessManager.sendImageCaptcha.mock.calls[0]?.[0];
+			expect(args.reason).toBe("MISSING_CURRENT_URL");
+			expect(
+				input.tasks.frictionlessManager.sendPowCaptcha,
+			).not.toHaveBeenCalled();
+			expect(res.json).toHaveBeenCalled();
+		},
+	);
+
 	it("returns pow captcha when nothing trips (default path)", async () => {
 		const input = buildInput();
 		const { handle } = buildHandle();
@@ -177,18 +347,110 @@ describe("runDecisionMachine", () => {
 		).not.toHaveBeenCalled();
 	});
 
-	it("bumps score on unverified host without sending a response", async () => {
-		const input = buildInput();
-		input.tasks.frictionlessManager.hostVerified.mockResolvedValueOnce({
-			verified: false,
-			domain: "bad",
+	describe("auto-ban threshold (post-penalty)", () => {
+		it("fires when webView penalty pushes the score over the threshold", async () => {
+			const input = buildInput({
+				botScore: 1.0,
+				baseBotScore: 1.0,
+				botThreshold: 0.5,
+				webView: true,
+				clientRecord: {
+					settings: {
+						imageMaxRounds: 8,
+						disallowWebView: true,
+						autoBanScoreThreshold: 1.1,
+					},
+				},
+			});
+			input.tasks.frictionlessManager.scoreIncreaseWebView.mockImplementationOnce(
+				(_bs, score, sc) => ({ score: score + 0.3, scoreComponents: sc }),
+			);
+			const { res, handle } = buildHandle();
+			await runDecisionMachine(input as never, handle as never);
+
+			expect(
+				input.tasks.frictionlessManager.registerBlockedSession,
+			).toHaveBeenCalledWith(
+				expect.objectContaining({ reason: "AUTO_BAN_SCORE" }),
+			);
+			expect(res.status).toHaveBeenCalledWith(401);
+			expect(
+				input.tasks.frictionlessManager.sendImageCaptcha,
+			).not.toHaveBeenCalled();
 		});
-		const { handle } = buildHandle();
-		await runDecisionMachine(input as never, handle as never);
-		expect(
-			input.tasks.frictionlessManager.scoreIncreaseUnverifiedHost,
-		).toHaveBeenCalled();
-		// Still falls through to default PoW since score stayed below threshold.
-		expect(input.tasks.frictionlessManager.sendPowCaptcha).toHaveBeenCalled();
+
+		it("fires when timestamp_too_old penalty pushes the score over the threshold", async () => {
+			timestampTooOldMock.mockReturnValueOnce(true);
+			const input = buildInput({
+				botScore: 1.0,
+				baseBotScore: 1.0,
+				botThreshold: 0.5,
+				clientRecord: {
+					settings: { imageMaxRounds: 8, autoBanScoreThreshold: 1.1 },
+				},
+			});
+			input.tasks.frictionlessManager.scoreIncreaseTimestamp.mockImplementationOnce(
+				(_t, _bs, score, sc) => ({ score: score + 0.5, scoreComponents: sc }),
+			);
+			const { res, handle } = buildHandle();
+			await runDecisionMachine(input as never, handle as never);
+
+			expect(
+				input.tasks.frictionlessManager.registerBlockedSession,
+			).toHaveBeenCalledWith(
+				expect.objectContaining({ reason: "AUTO_BAN_SCORE" }),
+			);
+			expect(res.status).toHaveBeenCalledWith(401);
+			expect(
+				input.tasks.frictionlessManager.sendImageCaptcha,
+			).not.toHaveBeenCalled();
+		});
+
+		it("fires when the pre-penalty score already exceeds the threshold (no penalties needed)", async () => {
+			const input = buildInput({
+				botScore: 1.2,
+				baseBotScore: 1.0,
+				clientRecord: {
+					settings: { imageMaxRounds: 8, autoBanScoreThreshold: 1.1 },
+				},
+			});
+			const { res, handle } = buildHandle();
+			await runDecisionMachine(input as never, handle as never);
+
+			expect(
+				input.tasks.frictionlessManager.registerBlockedSession,
+			).toHaveBeenCalledWith(
+				expect.objectContaining({ reason: "AUTO_BAN_SCORE" }),
+			);
+			expect(res.status).toHaveBeenCalledWith(401);
+		});
+
+		it("when both webView and autoBan would trip, autoBan wins", async () => {
+			const input = buildInput({
+				botScore: 1.0,
+				baseBotScore: 1.0,
+				botThreshold: 0.5,
+				webView: true,
+				clientRecord: {
+					settings: {
+						imageMaxRounds: 8,
+						disallowWebView: true,
+						autoBanScoreThreshold: 1.1,
+					},
+				},
+			});
+			input.tasks.frictionlessManager.scoreIncreaseWebView.mockImplementationOnce(
+				(_bs, score, sc) => ({ score: score + 0.2, scoreComponents: sc }),
+			);
+			const { handle } = buildHandle();
+			await runDecisionMachine(input as never, handle as never);
+
+			expect(
+				input.tasks.frictionlessManager.registerBlockedSession,
+			).toHaveBeenCalled();
+			expect(
+				input.tasks.frictionlessManager.sendImageCaptcha,
+			).not.toHaveBeenCalled();
+		});
 	});
 });

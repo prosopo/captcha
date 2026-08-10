@@ -18,6 +18,30 @@ import type { ApiJsonError } from "@prosopo/types";
 import type { TFunction } from "i18next";
 import { ZodError } from "zod";
 
+// HTTP reason phrases keyed by status code. Defined locally rather than
+// imported from `node:http`'s `STATUS_CODES`, because this module is also
+// bundled for the browser, where `node:http` is not available.
+const STATUS_MESSAGES: Record<number, string> = {
+	400: "Bad Request",
+	401: "Unauthorized",
+	402: "Payment Required",
+	403: "Forbidden",
+	404: "Not Found",
+	405: "Method Not Allowed",
+	408: "Request Timeout",
+	409: "Conflict",
+	410: "Gone",
+	413: "Payload Too Large",
+	415: "Unsupported Media Type",
+	422: "Unprocessable Entity",
+	429: "Too Many Requests",
+	500: "Internal Server Error",
+	501: "Not Implemented",
+	502: "Bad Gateway",
+	503: "Service Unavailable",
+	504: "Gateway Timeout",
+};
+
 type BaseErrorOptions<ContextType> = {
 	name?: string;
 	translationKey?: TranslationKey;
@@ -57,7 +81,7 @@ export abstract class ProsopoBaseError<
 		error: Error | TranslationKey,
 		options?: BaseErrorOptions<ContextType>,
 	) {
-		const logger = options?.logger || getLogger("info", import.meta.url);
+		const logger = options?.logger || getLogger("info", "common:error");
 		const logLevel = options?.logLevel || "error";
 		const i18n = options?.i18n || backupTranslationObj;
 		if (error instanceof Error) {
@@ -77,15 +101,25 @@ export abstract class ProsopoBaseError<
 		// log aggregators — prefer the translation key over the translated
 		// message so dashboards can filter on a constant.
 		const err = this.translationKey || this.message;
+		// `msg` mirrors `err` so log dashboards that group by msg (the default
+		// grouping in most log UIs) surface a stable, non-empty label rather
+		// than the "undefined" bucket ~800 auto-logged errors per hour used to
+		// land in on prod. Duplicating into two fields keeps queries against
+		// either field working without a schema change.
+		const msg = err;
 		const data = {
 			errorType: errorName || this.name,
 			...(this.context ? { context: this.context } : {}),
 		};
 		if (logLevel === "debug") {
-			logger.debug(() => ({ err, data: { ...data, stack: this.stack } }));
+			logger.debug(() => ({
+				err,
+				msg,
+				data: { ...data, stack: this.stack },
+			}));
 			return;
 		}
-		logger.error(() => ({ err, data }));
+		logger.error(() => ({ err, msg, data }));
 	}
 }
 
@@ -201,7 +235,6 @@ export const unwrapError = (
 
 	const message = i18n.t(err.message); // should be translated already
 	let jsonError: ApiJsonError = { code, message };
-	const statusMessage = "Bad Request";
 	jsonError.message = message;
 	jsonError.key = "translationKey" in err ? err.translationKey : "API.UNKNOWN";
 
@@ -244,6 +277,14 @@ export const unwrapError = (
 	}
 
 	jsonError.code = code;
+	// Derive the HTTP reason phrase from the final status code rather than
+	// hardcoding "Bad Request", so a 401/403/500 response carries the correct
+	// status message. For codes absent from the map, fall back by class so an
+	// unmapped 5xx (e.g. a non-standard 599) doesn't report a 4xx "Bad Request"
+	// phrase.
+	const statusMessage =
+		STATUS_MESSAGES[code] ??
+		(code >= 500 ? "Internal Server Error" : "Bad Request");
 	return { code, statusMessage, jsonError };
 };
 

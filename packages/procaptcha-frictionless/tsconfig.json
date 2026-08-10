@@ -19,13 +19,7 @@
 			"path": "../../dev/config/tsconfig.json"
 		},
 		{
-			"path": "../detector"
-		},
-		{
 			"path": "../locale"
-		},
-		{
-			"path": "../load-balancer"
 		},
 		{
 			"path": "../procaptcha-pow"

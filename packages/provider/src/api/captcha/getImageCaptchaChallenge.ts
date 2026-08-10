@@ -31,8 +31,11 @@ import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
 import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
+import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 import { getRequestUserScope } from "../blacklistRequestInspector.js";
+import { recordCaptchaIssueError, recordCaptchaIssued } from "../metrics.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
+import { buildImageMaintenanceResponse } from "./maintenanceModeResponses.js";
 
 export default (
 	env: ProviderEnvironment,
@@ -43,7 +46,6 @@ export default (
 		res: Response,
 		next: NextFunction,
 	) => {
-		const tasks = new Tasks(env, req.logger);
 		let parsed: CaptchaRequestBodyTypeOutput;
 
 		const normalizedIp = normalizeRequestIp(req.ip, req.logger);
@@ -71,10 +73,48 @@ export default (
 			);
 		}
 
-		const { datasetId, user, dapp, sessionId, simdReadings } = parsed;
+		const {
+			datasetId: clientDatasetId,
+			user,
+			dapp,
+			sessionId,
+			simdReadings,
+		} = parsed;
+
+		// Clients no longer send datasetId (DNS routes them to an arbitrary
+		// pronode; they can't know in advance which dataset to pin). Fall back
+		// to the env's default — populated from the most-recently-uploaded
+		// dataset at startup, see `Environment.isReady` in packages/env.
+		const datasetId = clientDatasetId ?? env.datasetId;
+
+		if (!datasetId) {
+			return next(
+				new ProsopoApiError("API.BAD_REQUEST", {
+					context: {
+						code: 400,
+						error: "No dataset available. Please upload a dataset first.",
+					},
+					i18n: req.i18n,
+					logger: req.logger,
+				}),
+			);
+		}
 
 		validateSiteKey(dapp);
 		validateAddr(user);
+
+		// Maintenance-mode short-circuit must run before `new Tasks(env, ...)`
+		// because the Tasks constructor calls `env.getDb()`, which throws when
+		// `env.db` is undefined (the maintenance-mode case).
+		if (getMaintenanceMode()) {
+			req.logger.info(() => ({
+				msg: "Maintenance mode active - returning dummy image challenge",
+				data: { dapp, user, sessionId },
+			}));
+			return res.json(buildImageMaintenanceResponse());
+		}
+
+		const tasks = new Tasks(env, req.logger);
 
 		try {
 			const clientRecord = await tasks.db.getClientRecord(dapp);
@@ -99,23 +139,41 @@ export default (
 					? req.ipInfo.asnNumber
 					: undefined;
 
+			// Pull decryptedHeadHash off the frictionless session so
+			// headHash-scoped access rules can match at challenge time —
+			// otherwise they can only fire at server-verify, after the
+			// challenge has already been issued with the client-configured
+			// image count / threshold.
+			const sessionRecord = sessionId
+				? await tasks.db.getSessionRecordBySessionId(sessionId)
+				: undefined;
+
 			const userScope = getRequestUserScope(
 				flatten(req.headers),
 				req.ja4,
 				normalizedIp,
 				user,
-				undefined, // headHash
+				sessionRecord?.decryptedHeadHash,
 				undefined, // coords
 				countryCode,
 				asn,
 			);
+			// Skip deferToVerify policies at request time — they enforce at
+			// verify time via checkForHardBlock. Without this filter a
+			// Block+deferToVerify rule matches here, and because
+			// sanitizeAccessPolicy strips `captchaType` from every Block
+			// policy on write, `isValidRequest`'s `captchaType` equality
+			// check fails (undefined !== "image") and returns 400
+			// INCORRECT_CAPTCHA_TYPE — defeating the whole "solve normally,
+			// block at verify" pattern deferToVerify is meant to enable.
+			// Mirrors blockMiddleware's own deferToVerify filter.
 			const userAccessPolicy = (
 				await tasks.imgCaptchaManager.getPrioritisedAccessPolicies(
 					userAccessRulesStorage,
 					dapp,
 					userScope,
 				)
-			)[0];
+			).find((p) => !p.deferToVerify);
 
 			const {
 				valid,
@@ -217,8 +275,10 @@ export default (
 					sessionId,
 				},
 			}));
+			recordCaptchaIssued(CaptchaType.image);
 			return res.json(captchaResponse);
 		} catch (err) {
+			recordCaptchaIssueError(CaptchaType.image);
 			req.logger.error(() => ({
 				err,
 				data: req.params,

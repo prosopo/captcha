@@ -12,9 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export const entries: Record<string, string> = {
-	".export": "src/.export.ts",
-	"api/.export": "src/api/.export.ts",
-	"redis/.export": "src/redis/.export.ts",
-	"mongoose/.export": "src/mongoose/.export.ts",
-};
+import fg from "fast-glob";
+
+// package.json maps "#policy/*" to "./dist/*", so every emitted module is
+// importable by consumers (the unit tests do exactly that). vite-plugin-no-bundle
+// emits one file per source module either way, but rolldown prunes named exports
+// that no *in-graph* module imports — rollup kept them. Left as just the four
+// .export barrels, that silently drops symbols like buildScopedBlockSubQueries
+// from dist and its importers fail with "is not a function" at runtime.
+//
+// Listing every module as an entry makes the emitted surface match what the
+// "#policy/*" mapping already promises.
+const sourceFiles = fg.sync("src/**/*.ts", {
+	cwd: import.meta.dirname,
+	ignore: ["src/tests/**"],
+	// the public barrels are named ".export.ts"; without this fast-glob skips
+	// every dotfile and the package loses its declared entry points.
+	dot: true,
+});
+
+export const entries: Record<string, string> = Object.fromEntries(
+	sourceFiles.map((file) => [
+		file.replace(/^src\//, "").replace(/\.ts$/, ""),
+		file,
+	]),
+);

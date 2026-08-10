@@ -1,5 +1,381 @@
 # @prosopo/client-example-server
 
+## 2.7.129
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+  - @prosopo/database@4.0.3
+  - @prosopo/types@5.0.2
+  - @prosopo/keyring@2.9.65
+  - @prosopo/server@2.10.46
+
+## 2.7.128
+### Patch Changes
+
+- Updated dependencies [1fba42e]
+  - @prosopo/database@4.0.2
+
+## 2.7.127
+### Patch Changes
+
+- Updated dependencies [9fec7bd]
+- Updated dependencies [2aabe73]
+- Updated dependencies [858dbaa]
+- Updated dependencies [bcef918]
+  - @prosopo/common@3.1.49
+  - @prosopo/types@5.0.1
+  - @prosopo/logger@2.0.5
+  - @prosopo/server@2.10.45
+  - @prosopo/database@4.0.1
+  - @prosopo/dotenv@3.0.51
+  - @prosopo/keyring@2.9.64
+
+## 2.7.126
+### Patch Changes
+
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [6f19cde]
+  - @prosopo/database@4.0.0
+  - @prosopo/types@5.0.0
+  - @prosopo/keyring@2.9.63
+  - @prosopo/server@2.10.44
+
+## 2.7.125
+### Patch Changes
+
+- Updated dependencies [71a5952]
+  - @prosopo/keyring@2.9.62
+  - @prosopo/server@2.10.43
+
+## 2.7.124
+### Patch Changes
+
+- fe9424f: Add unit and type tests for the client example server, and fix the defects they exposed:
+  
+  - `getRoutes` built one module-level router shared by every call, so a second call stacked handlers on the first call's bound config.
+  - `isAuth` could fall through without sending a response, and could send twice for a malformed `Authorization` header.
+  - The `if (passwordHash)` guard in signup had no else branch, leaving a request hanging when it was falsy.
+  - A `serverUrl` without a port resolved to `NaN`, so the server listened on an arbitrary free port; it now falls back to 9228.
+  - Removed the unreachable `OPTIONS` handler (`cors()` already answers preflight) and leftover debug logging.
+  - `app.ts` no longer boots a server on import; it exports `createApp`, `startServer` and `main`, and only runs when executed directly.
+- Updated dependencies [69f8dcd]
+  - @prosopo/database@3.15.21
+  - @prosopo/server@2.10.42
+
+## 2.7.123
+### Patch Changes
+
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [2c47bb7]
+- Updated dependencies [0e1171c]
+- Updated dependencies [103318c]
+- Updated dependencies [4cd9035]
+- Updated dependencies [8fba211]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+  - @prosopo/util@3.3.5
+  - @prosopo/types@4.10.0
+  - @prosopo/dotenv@3.0.50
+  - @prosopo/common@3.1.48
+  - @prosopo/database@3.15.20
+  - @prosopo/keyring@2.9.61
+  - @prosopo/server@2.10.41
+  - @prosopo/logger@2.0.4
+
+## 2.7.122
+### Patch Changes
+
+  - @prosopo/database@3.15.19
+
+## 2.7.121
+### Patch Changes
+
+- Updated dependencies [a0cb39e]
+  - @prosopo/types@4.9.12
+  - @prosopo/database@3.15.18
+  - @prosopo/keyring@2.9.60
+  - @prosopo/server@2.10.40
+
+## 2.7.120
+### Patch Changes
+
+- Updated dependencies [b9ca0e7]
+- Updated dependencies [fde6896]
+  - @prosopo/types@4.9.11
+  - @prosopo/common@3.1.47
+  - @prosopo/database@3.15.17
+  - @prosopo/keyring@2.9.59
+  - @prosopo/server@2.10.39
+
+## 2.7.119
+### Patch Changes
+
+  - @prosopo/server@2.10.38
+
+## 2.7.118
+### Patch Changes
+
+- Updated dependencies [a41c1b5]
+  - @prosopo/database@3.15.16
+
+## 2.7.117
+### Patch Changes
+
+- Updated dependencies [0a4f902]
+  - @prosopo/types@4.9.10
+  - @prosopo/server@2.10.37
+  - @prosopo/database@3.15.15
+  - @prosopo/keyring@2.9.58
+
+## 2.7.116
+### Patch Changes
+
+- Updated dependencies [446f53b]
+  - @prosopo/database@3.15.14
+
+## 2.7.115
+### Patch Changes
+
+- Updated dependencies [2bba03a]
+  - @prosopo/database@3.15.13
+  - @prosopo/common@3.1.46
+  - @prosopo/types@4.9.9
+  - @prosopo/keyring@2.9.57
+  - @prosopo/server@2.10.36
+
+## 2.7.114
+### Patch Changes
+
+- Updated dependencies [6abff15]
+- Updated dependencies [29b5c6a]
+  - @prosopo/logger@2.0.3
+  - @prosopo/database@3.15.12
+  - @prosopo/common@3.1.45
+  - @prosopo/dotenv@3.0.49
+  - @prosopo/server@2.10.35
+  - @prosopo/keyring@2.9.56
+
+## 2.7.113
+### Patch Changes
+
+- Updated dependencies [85e8857]
+  - @prosopo/types@4.9.8
+  - @prosopo/util@3.3.4
+  - @prosopo/server@2.10.34
+  - @prosopo/common@3.1.44
+  - @prosopo/database@3.15.11
+  - @prosopo/keyring@2.9.55
+  - @prosopo/logger@2.0.2
+  - @prosopo/dotenv@3.0.48
+
+## 2.7.112
+### Patch Changes
+
+- Updated dependencies [494883f]
+- Updated dependencies [8bde5df]
+  - @prosopo/database@3.15.10
+  - @prosopo/types@4.9.7
+  - @prosopo/keyring@2.9.54
+  - @prosopo/server@2.10.33
+
+## 2.7.111
+### Patch Changes
+
+- Updated dependencies [b3f351b]
+- Updated dependencies [17bc76e]
+  - @prosopo/types@4.9.6
+  - @prosopo/database@3.15.9
+  - @prosopo/server@2.10.32
+  - @prosopo/keyring@2.9.53
+
+## 2.7.110
+### Patch Changes
+
+- Updated dependencies [6cb3218]
+  - @prosopo/types@4.9.5
+  - @prosopo/database@3.15.8
+  - @prosopo/keyring@2.9.52
+  - @prosopo/server@2.10.31
+
+## 2.7.109
+### Patch Changes
+
+- Updated dependencies [de12b31]
+- Updated dependencies [770954b]
+  - @prosopo/types@4.9.4
+  - @prosopo/database@3.15.7
+  - @prosopo/keyring@2.9.51
+  - @prosopo/server@2.10.30
+
+## 2.7.108
+### Patch Changes
+
+- Updated dependencies [18d0287]
+  - @prosopo/types@4.9.3
+  - @prosopo/database@3.15.6
+  - @prosopo/keyring@2.9.50
+  - @prosopo/server@2.10.29
+
+## 2.7.107
+### Patch Changes
+
+  - @prosopo/database@3.15.5
+  - @prosopo/server@2.10.28
+
+## 2.7.106
+### Patch Changes
+
+- Updated dependencies [7a434e0]
+  - @prosopo/types@4.9.2
+  - @prosopo/common@3.1.43
+  - @prosopo/database@3.15.4
+  - @prosopo/keyring@2.9.49
+  - @prosopo/server@2.10.27
+
+## 2.7.105
+### Patch Changes
+
+- Updated dependencies [3e0ef08]
+- Updated dependencies [8986976]
+- Updated dependencies [970bca2]
+  - @prosopo/database@3.15.3
+  - @prosopo/types@4.9.1
+  - @prosopo/util@3.3.3
+  - @prosopo/common@3.1.42
+  - @prosopo/keyring@2.9.48
+  - @prosopo/server@2.10.26
+  - @prosopo/logger@2.0.1
+  - @prosopo/dotenv@3.0.47
+
+## 2.7.104
+### Patch Changes
+
+- Updated dependencies [ec363e9]
+  - @prosopo/database@3.15.2
+
+## 2.7.103
+### Patch Changes
+
+- 9fe3c06: make util fn for mongoose connection config, standardise mongoose connections
+- Replace `import.meta.url`-derived logger scopes with stable, kebab-case service
+  names (e.g. `provider:admin:dns-event`, `client-example-server:app`) so
+  `PROSOPO_LOG_LEVEL` directive matching is deterministic across builds.
+- Updated dependencies [dfb0c53]
+- Updated dependencies [7ebb78f]
+- Updated dependencies [849af99]
+- Updated dependencies [a5ba27b]
+- Updated dependencies [9fe3c06]
+- Updated dependencies [948d36b]
+- Updated dependencies [41e0e11]
+- Updated dependencies [11f1e8c]
+- Updated dependencies [3c80664]
+- Updated dependencies [b166037]
+- Updated dependencies [1111ff2]
+  - @prosopo/common@3.1.41
+  - @prosopo/logger@2.0.0
+  - @prosopo/util@3.3.2
+  - @prosopo/database@3.15.1
+  - @prosopo/dotenv@3.0.46
+  - @prosopo/types@4.9.0
+  - @prosopo/keyring@2.9.47
+  - @prosopo/server@2.10.25
+
+## 2.7.102
+### Patch Changes
+
+- Updated dependencies [12cd0a6]
+- Updated dependencies [12cd0a6]
+  - @prosopo/types@4.8.0
+  - @prosopo/keyring@2.9.46
+  - @prosopo/server@2.10.24
+
+## 2.7.101
+### Patch Changes
+
+- Updated dependencies [bb98af1]
+  - @prosopo/types@4.7.4
+  - @prosopo/keyring@2.9.45
+  - @prosopo/server@2.10.23
+
+## 2.7.100
+### Patch Changes
+
+- Updated dependencies [89ab6fc]
+- Updated dependencies [0f3750b]
+  - @prosopo/types@4.7.3
+  - @prosopo/keyring@2.9.44
+  - @prosopo/server@2.10.22
+
+## 2.7.99
+### Patch Changes
+
+- Updated dependencies [edcd450]
+- Updated dependencies [5295c4b]
+  - @prosopo/util@3.3.1
+  - @prosopo/types@4.7.2
+  - @prosopo/keyring@2.9.43
+  - @prosopo/logger@1.0.4
+  - @prosopo/server@2.10.21
+  - @prosopo/common@3.1.40
+  - @prosopo/dotenv@3.0.45
+
+## 2.7.98
+### Patch Changes
+
+- Updated dependencies [46fedf4]
+  - @prosopo/types@4.7.1
+  - @prosopo/keyring@2.9.42
+  - @prosopo/server@2.10.20
+
+## 2.7.97
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/types@4.7.0
+  - @prosopo/keyring@2.9.41
+  - @prosopo/server@2.10.19
+
+## 2.7.96
+### Patch Changes
+
+- Updated dependencies [4626340]
+  - @prosopo/types@4.6.1
+  - @prosopo/keyring@2.9.40
+  - @prosopo/server@2.10.18
+
+## 2.7.95
+### Patch Changes
+
+- Updated dependencies [55b1388]
+  - @prosopo/util@3.3.0
+  - @prosopo/types@4.6.0
+  - @prosopo/keyring@2.9.39
+  - @prosopo/logger@1.0.3
+  - @prosopo/server@2.10.17
+  - @prosopo/common@3.1.39
+  - @prosopo/dotenv@3.0.44
+
+## 2.7.94
+### Patch Changes
+
+- Updated dependencies [9b91e85]
+- Updated dependencies [c80a05b]
+  - @prosopo/types@4.5.0
+  - @prosopo/keyring@2.9.38
+  - @prosopo/server@2.10.16
+
+## 2.7.93
+### Patch Changes
+
+- Updated dependencies [f69724f]
+- Updated dependencies [3973078]
+  - @prosopo/types@4.4.1
+  - @prosopo/keyring@2.9.37
+  - @prosopo/server@2.10.15
+
 ## 2.7.92
 ### Patch Changes
 

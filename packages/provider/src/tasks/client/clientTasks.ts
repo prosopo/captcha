@@ -19,6 +19,7 @@ import type { Logger } from "@prosopo/logger";
 import {
 	type ContextType,
 	type DecisionMachineCaptchaType,
+	type DecisionMachineKind,
 	type DecisionMachineLanguage,
 	type DecisionMachineRuntime,
 	DecisionMachineScope,
@@ -427,32 +428,6 @@ export class ClientTaskManager {
 		await this.providerDB.removeClientRecords(accounts);
 	}
 
-	async updateDetectorKey(detectorKey: string): Promise<string[]> {
-		if (!isValidPrivateKey(detectorKey)) {
-			throw new ProsopoApiError("INVALID_DETECTOR_KEY", {
-				context: { detectorKey },
-				logger: this.logger,
-			});
-		}
-		await this.providerDB.storeDetectorKey(detectorKey);
-
-		const activeDetectorKeys = await this.providerDB.getDetectorKeys();
-		return activeDetectorKeys;
-	}
-
-	async removeDetectorKey(
-		detectorKey: string,
-		expirationInSeconds?: number,
-	): Promise<void> {
-		if (!isValidPrivateKey(detectorKey)) {
-			throw new ProsopoApiError("INVALID_DETECTOR_KEY", {
-				context: { detectorKey },
-				logger: this.logger,
-			});
-		}
-		await this.providerDB.removeDetectorKey(detectorKey, expirationInSeconds);
-	}
-
 	async updateDecisionMachine(
 		scope: DecisionMachineScope,
 		runtime: DecisionMachineRuntime,
@@ -462,9 +437,11 @@ export class ClientTaskManager {
 		name?: string,
 		version?: string,
 		captchaType?: DecisionMachineCaptchaType,
+		kind?: DecisionMachineKind,
 	): Promise<{
 		scope: DecisionMachineScope;
 		dappAccount?: string;
+		kind?: DecisionMachineKind;
 		updatedAt: string;
 	}> {
 		if (scope === DecisionMachineScope.Dapp && !dappAccount) {
@@ -478,6 +455,7 @@ export class ClientTaskManager {
 		await this.providerDB.upsertDecisionMachineArtifact({
 			scope,
 			dappAccount,
+			kind,
 			runtime,
 			language,
 			source,
@@ -491,6 +469,7 @@ export class ClientTaskManager {
 		return {
 			scope,
 			dappAccount,
+			kind,
 			updatedAt: now.toISOString(),
 		};
 	}
@@ -500,11 +479,13 @@ export class ClientTaskManager {
 			_id: string;
 			scope: DecisionMachineScope;
 			dappAccount?: string;
+			kind?: DecisionMachineKind;
 			runtime: DecisionMachineRuntime;
 			language?: DecisionMachineLanguage;
 			name?: string;
 			version?: string;
 			captchaType?: DecisionMachineCaptchaType;
+			source: string;
 			createdAt: string;
 			updatedAt: string;
 		}[]
@@ -514,11 +495,13 @@ export class ClientTaskManager {
 			_id: artifact._id.toString(),
 			scope: artifact.scope,
 			dappAccount: artifact.dappAccount,
+			kind: artifact.kind,
 			runtime: artifact.runtime,
 			language: artifact.language,
 			name: artifact.name,
 			version: artifact.version,
 			captchaType: artifact.captchaType,
+			source: artifact.source,
 			createdAt: artifact.createdAt.toISOString(),
 			updatedAt: artifact.updatedAt.toISOString(),
 		}));
@@ -528,6 +511,7 @@ export class ClientTaskManager {
 		_id: string;
 		scope: DecisionMachineScope;
 		dappAccount?: string;
+		kind?: DecisionMachineKind;
 		runtime: DecisionMachineRuntime;
 		language?: DecisionMachineLanguage;
 		source: string;
@@ -548,6 +532,7 @@ export class ClientTaskManager {
 			_id: artifact._id.toString(),
 			scope: artifact.scope,
 			dappAccount: artifact.dappAccount,
+			kind: artifact.kind,
 			runtime: artifact.runtime,
 			language: artifact.language,
 			source: artifact.source,

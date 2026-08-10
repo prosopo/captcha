@@ -113,176 +113,219 @@ describe("redisAccessRulesStorage", () => {
 		redisClient = await result.getClient();
 	});
 
-	describe(
-		"writer",
-		() => {
-			let accessRulesWriter: AccessRulesWriter;
+	describe("writer", () => {
+		let accessRulesWriter: AccessRulesWriter;
 
-			beforeAll(() => {
-				accessRulesWriter = new RedisRulesWriter(redisClient, mockLogger);
-			});
+		beforeAll(() => {
+			accessRulesWriter = new RedisRulesWriter(redisClient, mockLogger);
+		});
 
-			test("inserts rule", async () => {
-				const testIndexName = indexName;
-				// given
-				const accessRule: AccessRule = {
-					type: AccessPolicyType.Block,
-					clientId: "clientId",
-				};
-				const accessRuleKey = getAccessRuleRedisKey(accessRule);
+		test("inserts rule", async () => {
+			const testIndexName = indexName;
+			// given
+			const accessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: "clientId",
+			};
+			const accessRuleKey = getAccessRuleRedisKey(accessRule);
 
-				// when
-				await accessRulesWriter.insertRules([
-					{
-						rule: accessRule,
-					},
-				]);
+			// when
+			await accessRulesWriter.insertRules([
+				{
+					rule: accessRule,
+				},
+			]);
 
-				// then
-				const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
-				const indexRecordsCount = await getIndexRecordsCount(testIndexName);
+			// then
+			const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
+			const indexRecordsCount = await getIndexRecordsCount(testIndexName);
 
-				expect(insertedAccessRule).toEqual(accessRule);
-				expect(indexRecordsCount).toEqual(1);
-			});
+			expect(insertedAccessRule).toEqual(accessRule);
+			expect(indexRecordsCount).toEqual(1);
+		});
 
-			test("inserts time limited rule", async () => {
-				// given
-				const accessRule: AccessRule = {
-					type: AccessPolicyType.Block,
-					clientId: "clientId",
-				};
-				const accessRuleKey = getAccessRuleRedisKey(accessRule);
-				// 1 hour from now.
-				const expireIn = 60 * 60; // seconds
-				const expirationTimestamp = new Date(
-					Date.now() + expireIn * 1000,
-				).getTime();
-				const expirationTimestampInSeconds = Math.floor(
-					expirationTimestamp / 1000,
+		test("inserts time limited rule", async () => {
+			// given
+			const accessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: "clientId",
+			};
+			const accessRuleKey = getAccessRuleRedisKey(accessRule);
+			// 1 hour from now.
+			const expireIn = 60 * 60; // seconds
+			const expirationTimestamp = new Date(
+				Date.now() + expireIn * 1000,
+			).getTime();
+			const expirationTimestampInSeconds = Math.floor(
+				expirationTimestamp / 1000,
+			);
+
+			// when
+			await accessRulesWriter.insertRules([
+				{
+					rule: accessRule,
+					expiresUnixTimestamp: expirationTimestampInSeconds,
+				},
+			]);
+			const ruleKey = getAccessRuleRedisKey(accessRule);
+			// then
+			const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
+			const insertedExpirationResult = await redisClient.expireAt(
+				ruleKey,
+				expirationTimestampInSeconds,
+			);
+			const indexRecordsCount = await getIndexRecordsCount(indexName);
+
+			const recordExpirySeconds = await redisClient.ttl(ruleKey);
+
+			expect(insertedAccessRule).toEqual(accessRule);
+			expect(insertedExpirationResult).toBe(1);
+			expect(recordExpirySeconds).toBeLessThanOrEqual(
+				expirationTimestampInSeconds,
+			);
+
+			expect(indexRecordsCount).toBe(1);
+		});
+
+		// The existing "inserts time limited rule" test above only
+		// checks that the TTL is *set* on the Redis key. Neither
+		// side actually verifies the rule stops matching once its
+		// TTL fires — which is the property operators care about
+		// (temporary bans should self-clear). Guard against a
+		// regression that persists rules past their expiry (e.g. a
+		// future writer that swaps `expireAt` for `persist` by
+		// accident, or an index rebuild that resurrects expired
+		// records).
+		test("expired rule is no longer returned by the reader after its TTL fires", async () => {
+			const accessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: `expiring-${getUniqueString()}`,
+			};
+			const ruleKey = getAccessRuleRedisKey(accessRule);
+			// 2 s expiry — long enough that the "before expiry" check
+			// races the write cleanly, short enough that the test
+			// completes in a reasonable timeout. Redis TTL granularity
+			// is 1 s so anything shorter is under-resolution.
+			const expirationTimestampInSeconds = Math.floor(Date.now() / 1000) + 2;
+
+			await accessRulesWriter.insertRules([
+				{
+					rule: accessRule,
+					expiresUnixTimestamp: expirationTimestampInSeconds,
+				},
+			]);
+
+			// Sanity: the rule exists immediately after write.
+			const initialRecord = await redisClient.hGetAll(ruleKey);
+			expect(initialRecord).toEqual(accessRule);
+
+			// Wait past the TTL. Add ~1s slack for Redis's per-key
+			// expiry sweep — the docs guarantee expired keys stop
+			// answering reads but the actual key deletion is lazy.
+			await new Promise((resolve) => setTimeout(resolve, 3500));
+
+			// After expiry: hGetAll returns {} (Redis treats an
+			// expired key as non-existent for reads).
+			const expiredRecord = await redisClient.hGetAll(ruleKey);
+			expect(expiredRecord).toEqual({});
+
+			// And the RediSearch index no longer counts it.
+			const indexRecordsCount = await getIndexRecordsCount(indexName);
+			expect(indexRecordsCount).toBe(0);
+		}, 10_000);
+
+		test("deletes rules", async () => {
+			// given
+			const johnAccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: getUniqueString(),
+			};
+			const johnAccessRuleKey = getAccessRuleRedisKey(johnAccessRule);
+
+			const doeAccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: getUniqueString(),
+			};
+			const doeAccessRuleKey = getAccessRuleRedisKey(doeAccessRule);
+
+			await insertRules([johnAccessRule, doeAccessRule]);
+
+			// when
+			await accessRulesWriter.deleteRules([
+				johnAccessRuleKey.slice(ACCESS_RULE_REDIS_KEY_PREFIX.length),
+			]);
+
+			// then
+			const presentAccessRule = await redisClient.hGetAll(doeAccessRuleKey);
+			const indexRecordsCount = await getIndexRecordsCount(indexName);
+
+			expect(presentAccessRule).toEqual(doeAccessRule);
+			expect(indexRecordsCount).toBe(1);
+		});
+
+		test("deletes all rules", async () => {
+			// given
+			const johnAccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: getUniqueString(),
+			};
+			const doeAccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: getUniqueString(),
+			};
+
+			await insertRules([johnAccessRule, doeAccessRule]);
+
+			// when
+			await accessRulesWriter.deleteAllRules();
+
+			// then
+			const indexRecordsCount = await getIndexRecordsCount(indexName);
+
+			expect(indexRecordsCount).toBe(0);
+		});
+
+		test("deletes all rules when there are 1 million rules", async () => {
+			// given
+			const rulesCount = 1_000_000;
+			const batchSize = 10_000;
+			const numBatches = Math.ceil(rulesCount / batchSize);
+
+			// Insert rules in batches to avoid memory exhaustion
+			// Don't create 1M objects in memory at once!
+			for (let i = 0; i < numBatches; i++) {
+				const currentBatchSize = Math.min(
+					batchSize,
+					rulesCount - i * batchSize,
+				);
+				const batchRules: AccessRule[] = Array.from(
+					{ length: currentBatchSize },
+					() => ({
+						type: AccessPolicyType.Block,
+						clientId: getUniqueString(),
+					}),
 				);
 
-				// when
-				await accessRulesWriter.insertRules([
-					{
-						rule: accessRule,
-						expiresUnixTimestamp: expirationTimestampInSeconds,
-					},
-				]);
-				const ruleKey = getAccessRuleRedisKey(accessRule);
-				// then
-				const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
-				const insertedExpirationResult = await redisClient.expireAt(
-					ruleKey,
-					expirationTimestampInSeconds,
-				);
-				const indexRecordsCount = await getIndexRecordsCount(indexName);
+				await insertRules(batchRules);
+			}
 
-				const recordExpirySeconds = await redisClient.ttl(ruleKey);
+			// verify that there are 1 million rules in the database
+			const beforeDeleteIndexRecordsCount =
+				await getIndexRecordsCount(indexName);
+			expect(beforeDeleteIndexRecordsCount).toBe(rulesCount);
 
-				expect(insertedAccessRule).toEqual(accessRule);
-				expect(insertedExpirationResult).toBe(1);
-				expect(recordExpirySeconds).toBeLessThanOrEqual(
-					expirationTimestampInSeconds,
-				);
+			// when
+			await accessRulesWriter.deleteAllRules();
 
-				expect(indexRecordsCount).toBe(1);
-			});
+			// then
+			const afterDeleteIndexRecordsCount =
+				await getIndexRecordsCount(indexName);
 
-			test("deletes rules", async () => {
-				// given
-				const johnAccessRule: AccessRule = {
-					type: AccessPolicyType.Block,
-					clientId: getUniqueString(),
-				};
-				const johnAccessRuleKey = getAccessRuleRedisKey(johnAccessRule);
-
-				const doeAccessRule: AccessRule = {
-					type: AccessPolicyType.Block,
-					clientId: getUniqueString(),
-				};
-				const doeAccessRuleKey = getAccessRuleRedisKey(doeAccessRule);
-
-				await insertRules([johnAccessRule, doeAccessRule]);
-
-				// when
-				await accessRulesWriter.deleteRules([
-					johnAccessRuleKey.slice(ACCESS_RULE_REDIS_KEY_PREFIX.length),
-				]);
-
-				// then
-				const presentAccessRule = await redisClient.hGetAll(doeAccessRuleKey);
-				const indexRecordsCount = await getIndexRecordsCount(indexName);
-
-				expect(presentAccessRule).toEqual(doeAccessRule);
-				expect(indexRecordsCount).toBe(1);
-			});
-
-			test("deletes all rules", async () => {
-				// given
-				const johnAccessRule: AccessRule = {
-					type: AccessPolicyType.Block,
-					clientId: getUniqueString(),
-				};
-				const doeAccessRule: AccessRule = {
-					type: AccessPolicyType.Block,
-					clientId: getUniqueString(),
-				};
-
-				await insertRules([johnAccessRule, doeAccessRule]);
-
-				// when
-				await accessRulesWriter.deleteAllRules();
-
-				// then
-				const indexRecordsCount = await getIndexRecordsCount(indexName);
-
-				expect(indexRecordsCount).toBe(0);
-			});
-
-			test("deletes all rules when there are 1 million rules", async () => {
-				// given
-				const rulesCount = 1_000_000;
-				const batchSize = 10_000;
-				const numBatches = Math.ceil(rulesCount / batchSize);
-
-				// Insert rules in batches to avoid memory exhaustion
-				// Don't create 1M objects in memory at once!
-				for (let i = 0; i < numBatches; i++) {
-					const currentBatchSize = Math.min(
-						batchSize,
-						rulesCount - i * batchSize,
-					);
-					const batchRules: AccessRule[] = Array.from(
-						{ length: currentBatchSize },
-						() => ({
-							type: AccessPolicyType.Block,
-							clientId: getUniqueString(),
-						}),
-					);
-
-					await insertRules(batchRules);
-				}
-
-				// verify that there are 1 million rules in the database
-				const beforeDeleteIndexRecordsCount =
-					await getIndexRecordsCount(indexName);
-				expect(beforeDeleteIndexRecordsCount).toBe(rulesCount);
-
-				// when
-				await accessRulesWriter.deleteAllRules();
-
-				// then
-				const afterDeleteIndexRecordsCount =
-					await getIndexRecordsCount(indexName);
-
-				expect(afterDeleteIndexRecordsCount).toBe(0);
-			});
-		},
-		{
-			timeout: 240_000,
-		},
-	);
+			expect(afterDeleteIndexRecordsCount).toBe(0);
+		});
+		// The trailing 240_000 is the suite timeout. vitest 4 dropped the
+		// options-object overload for describe, so it has to be a plain number.
+	}, 240_000);
 
 	describe("reader", () => {
 		let accessRulesReader: AccessRulesReader;
@@ -1115,6 +1158,58 @@ describe("redisAccessRulesStorage", () => {
 			expect(foundAccessRules).toEqual([]);
 		});
 
+		test("returns all matches when the candidate set exceeds the FT.SEARCH page size", async () => {
+			// Regression: under the production traffic profile of a high-volume
+			// bot attack, the greedy `@field:{X} | @field:{Y}` query returns
+			// thousands of candidate rules sharing the dominant ja4 fingerprint.
+			// FT.SEARCH's LIMIT (1000) silently truncated the candidate set,
+			// dropping less-frequent block rules — they never reached the
+			// JS-side specificity sort, so verify let the bot through.
+			// FT.AGGREGATE WITHCURSOR paginates the result and returns all of
+			// them. This test inserts > 1000 rules so the old code would
+			// truncate; the target block rule must still come back.
+			const clientId = getUniqueString();
+			const popularJa4 = `t13d1516h2_${getUniqueString()}`;
+
+			const targetBlockRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: clientId,
+				ja4Hash: popularJa4,
+				coords: "[[[867,60]]]",
+			};
+
+			// 1500 noise rules sharing the popular ja4 but with distinct coords.
+			// 1500 > REDIS_BATCH_SIZE (1000) — guarantees the targetBlockRule's
+			// FT index position has at least a 1/3 chance of sitting past the
+			// truncation boundary on any given run. With pagination, it must
+			// always come back regardless of indexed order.
+			const noiseRules: AccessRule[] = Array.from({ length: 1500 }, (_, i) => ({
+				type: AccessPolicyType.Restrict,
+				clientId: clientId,
+				ja4Hash: popularJa4,
+				coords: `[[[${i % 1024},${60 + (i % 32)}]]]`,
+				description: `noise-${i}`,
+			}));
+
+			await insertRules([targetBlockRule, ...noiseRules]);
+
+			const indexRecordsCount = await getIndexRecordsCount(indexName);
+			expect(indexRecordsCount).toBe(1501);
+
+			const found = await accessRulesReader.findRules({
+				policyScope: { clientId: clientId },
+				policyScopeMatch: FilterScopeMatch.Greedy,
+				userScope: {
+					ja4Hash: popularJa4,
+					coords: "[[[867,60]]]",
+				},
+				userScopeMatch: FilterScopeMatch.Greedy,
+			});
+
+			expect(found.length).toBe(1501);
+			expect(found).toContainEqual(targetBlockRule);
+		}, 60_000);
+
 		test("finds rules with matchingFieldsOnly when only userId is set and all IP fields are missing", async () => {
 			// This is the exact scenario from the production error where the query
 			// contained duplicate ismissing(@numericIpMaskMin) ismissing(@numericIpMaskMax)
@@ -1147,6 +1242,535 @@ describe("redisAccessRulesStorage", () => {
 
 			// then
 			expect(foundAccessRules).toEqual([accessRule]);
+		});
+
+		test("findRulesRanked does not throw when a matched candidate is missing @type", async () => {
+			// Production repro: under 3.6.40 we observed
+			//   "Could not find the value for a parameter name, consider
+			//    using EXISTS if applicable for type"
+			// from the FT.AGGREGATE pipeline in findRulesRanked. The cause
+			// is SEVERITY_EXPR = `(@type == "block")` — a bare @type
+			// reference that fails when a candidate document lacks the
+			// `type` field. Candidates can reach the pipeline without
+			// `type` two ways: (a) a partial-write / rehash race in the
+			// writer, (b) a stale RediSearch index entry pointing at a
+			// hash whose `type` field has been HDEL'd. Either way the
+			// whole aggregate fails and the catch in findRulesRanked
+			// returns [], i.e. NO rules match — a Block rule that should
+			// fire silently lets the request through.
+			const clientId = getUniqueString();
+			const userId = getUniqueString();
+
+			const accessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: clientId,
+				userId: userId,
+			};
+
+			await insertRules([accessRule]);
+
+			// Simulate the malformed-doc scenario by removing the `type`
+			// field from the hash. The RediSearch index still references
+			// the doc (type is not part of the index schema) but the
+			// APPLY LOAD will pull an undefined @type.
+			const ruleKey = getAccessRuleRedisKey(accessRule);
+			await redisClient.hDel(ruleKey, "type");
+
+			// when - matchingFieldsOnly=true routes through findRulesRanked
+			const foundAccessRules = await accessRulesReader.findRules(
+				{
+					policyScope: { clientId: clientId },
+					policyScopeMatch: FilterScopeMatch.Exact,
+					userScope: { userId: userId },
+					userScopeMatch: FilterScopeMatch.Exact,
+				},
+				true,
+			);
+
+			// then - the typeless doc must not crash the pipeline.
+			// `type` is required to reconstruct an AccessRule, so the
+			// doc is dropped from the result rather than returned with
+			// a default. The remaining valid rules (none here) come back.
+			expect(foundAccessRules).toEqual([]);
+		});
+
+		test("findRulesRanked returns the valid rule and skips a typeless ghost candidate", async () => {
+			// Same scenario as the previous test but with a co-resident
+			// valid rule. The typeless ghost must not poison the
+			// pipeline — the valid rule still has to come back so the
+			// block decision sticks.
+			const clientId = getUniqueString();
+			const userId = getUniqueString();
+
+			const validRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: clientId,
+				userId: userId,
+				ja4Hash: "t13d1313h2_valid",
+			};
+			const ghostRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: clientId,
+				userId: userId,
+				ja4Hash: "t13d1313h2_ghost",
+			};
+
+			await insertRules([validRule, ghostRule]);
+
+			// Strip `type` from the ghost only.
+			const ghostKey = getAccessRuleRedisKey(ghostRule);
+			await redisClient.hDel(ghostKey, "type");
+
+			const foundAccessRules = await accessRulesReader.findRules(
+				{
+					policyScope: { clientId: clientId },
+					policyScopeMatch: FilterScopeMatch.Exact,
+					userScope: { userId: userId },
+					userScopeMatch: FilterScopeMatch.Greedy,
+				},
+				true,
+			);
+
+			expect(foundAccessRules).toEqual([validRule]);
+		});
+
+		test("findRulesRanked preserves bigint precision for IPv6 numericIp values", async () => {
+			// Production repro: under 3.6.40.1 we saw
+			//   "Cannot convert 5.59112965392e+37 to a BigInt"
+			// from the FT.AGGREGATE path in findRulesRanked whenever a
+			// matched candidate carries an IPv6 numericIp. The cause is
+			// that RediSearch indexes NUMERIC fields as 8-byte doubles
+			// and FT.AGGREGATE LOAD reads from that index buffer (not
+			// the underlying hash), so any value past
+			// Number.MAX_SAFE_INTEGER round-trips as scientific
+			// notation. `z.coerce.bigint()` then throws and the whole
+			// aggregate gets caught + returned as []. The aggregate is
+			// now used purely as a ranker over @__key; the field values
+			// come back via HGETALL, which preserves the original
+			// 38-digit string stored in the hash. This test inserts a
+			// rule with the same shape as the failing prod query — an
+			// IPv6 numericIp + matching userScope — and asserts the
+			// rule is returned with the bigint intact.
+			const clientId = getUniqueString();
+			const userId = getUniqueString();
+			// 38-digit IPv6 value past Number.MAX_SAFE_INTEGER. Anything
+			// > 2**53 demonstrates the precision loss; this specific
+			// value matches the order of magnitude of the prod error.
+			const ipv6NumericIp = 55878094658432211238406371356040233102n;
+
+			const accessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: clientId,
+				userId: userId,
+				numericIp: ipv6NumericIp,
+			};
+
+			await insertRules([accessRule]);
+
+			const foundAccessRules = await accessRulesReader.findRules(
+				{
+					policyScope: { clientId: clientId },
+					policyScopeMatch: FilterScopeMatch.Exact,
+					userScope: { userId: userId, numericIp: ipv6NumericIp },
+					userScopeMatch: FilterScopeMatch.Greedy,
+				},
+				true,
+			);
+
+			expect(foundAccessRules).toEqual([accessRule]);
+			expect(foundAccessRules[0]?.numericIp).toBe(ipv6NumericIp);
+		});
+
+		test("findRulesRanked preserves rank order over multiple candidates", async () => {
+			// Assumption under test: the FT.AGGREGATE -> HGETALL refactor
+			// preserves the rank order produced by SORTBY @_rank DESC.
+			// reply.results is rank-sorted; the for-of loop pushes
+			// __key in iteration order; multi.exec() returns pipeline
+			// results in queue order; the non-empty filter is stable;
+			// parseRedisRecords' flatMap is stable. Verified end-to-end
+			// here by inserting two rules whose specificity differs by
+			// exactly one extra populated field, and asserting the more
+			// specific rule comes back at index [0].
+			const clientId = getUniqueString();
+			const userId = getUniqueString();
+			const ja4 = `t13d1313h2_${getUniqueString()}`;
+
+			// 4 populated scalar fields ⇒ _spec = 4
+			const moreSpecificRule: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				clientId: clientId,
+				userId: userId,
+				ja4Hash: ja4,
+				countryCode: "GB",
+			};
+			// 2 populated scalar fields ⇒ _spec = 2
+			const lessSpecificRule: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				clientId: clientId,
+				ja4Hash: ja4,
+			};
+
+			// Insert deliberately in the LEAST-specific-first order so
+			// that any accidental "preserve insertion order" code path
+			// (e.g. forgetting SORTBY entirely) would produce
+			// [lessSpecific, moreSpecific] and the assertion would
+			// catch it.
+			await insertRules([lessSpecificRule, moreSpecificRule]);
+
+			const foundAccessRules = await accessRulesReader.findRules(
+				{
+					policyScope: { clientId: clientId },
+					policyScopeMatch: FilterScopeMatch.Exact,
+					userScope: {
+						userId: userId,
+						ja4Hash: ja4,
+						countryCode: "GB",
+					},
+					userScopeMatch: FilterScopeMatch.Greedy,
+				},
+				true,
+			);
+
+			expect(foundAccessRules).toHaveLength(2);
+			expect(foundAccessRules[0]).toEqual(moreSpecificRule);
+			expect(foundAccessRules[1]).toEqual(lessSpecificRule);
+		});
+
+		test("findRulesRanked ranks Block over Restrict at equal specificity", async () => {
+			// Assumption under test: SEVERITY_EXPR contributes its
+			// weight correctly through the HGETALL retrieval — Block
+			// rules tied on specificity with Restrict rules still come
+			// back first. RANK_EXPR = (_spec * 2) + _sev so at equal
+			// spec the Block (_sev = 1) outranks the Restrict (_sev = 0)
+			// by 1 point.
+			const clientId = getUniqueString();
+			const userId = getUniqueString();
+
+			const blockRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: clientId,
+				userId: userId,
+			};
+			const restrictRule: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				clientId: clientId,
+				userId: userId,
+				description: "tiebreaker-restrict",
+			};
+
+			// Insert restrict first; if SEVERITY tiebreaker is dropped
+			// silently the result would lead with the restrict.
+			await insertRules([restrictRule, blockRule]);
+
+			const foundAccessRules = await accessRulesReader.findRules(
+				{
+					policyScope: { clientId: clientId },
+					policyScopeMatch: FilterScopeMatch.Exact,
+					userScope: { userId: userId },
+					userScopeMatch: FilterScopeMatch.Greedy,
+				},
+				true,
+			);
+
+			expect(foundAccessRules).toHaveLength(2);
+			expect(foundAccessRules[0]?.type).toBe(AccessPolicyType.Block);
+			expect(foundAccessRules[1]?.type).toBe(AccessPolicyType.Restrict);
+		});
+
+		test("findRulesRanked: keys DEL'd between aggregate and HGETALL drop out without reordering survivors", async () => {
+			// Assumption under test: the race window between
+			// FT.AGGREGATE and the HGETALL fanout is handled by the
+			// non-empty filter, AND the surviving entries keep their
+			// relative rank order (Array.filter is stable). Mirrors the
+			// existing greedy-path "returns remaining rules when a
+			// matched document's hash key has been deleted" test but
+			// asserts the matchingFieldsOnly=true (ranked) path.
+			const clientId = getUniqueString();
+			const userId = getUniqueString();
+
+			// 3 specificity levels: the middle one will be DEL'd
+			// mid-pipeline. The other two must still come back in the
+			// correct rank order.
+			const topRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: clientId,
+				userId: userId,
+				ja4Hash: "t13d_top",
+				countryCode: "GB",
+			};
+			const middleRule: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				clientId: clientId,
+				userId: userId,
+				ja4Hash: "t13d_mid",
+			};
+			const bottomRule: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				clientId: clientId,
+				userId: userId,
+			};
+
+			await insertRules([topRule, middleRule, bottomRule]);
+
+			// Drop the middle rule's hash directly. The RediSearch
+			// index still references it for a window; FT.AGGREGATE
+			// returns 3 keys, HGETALL returns one empty + two
+			// populated. The filter must drop the empty one and the
+			// remaining two must stay in the {top, bottom} order.
+			const middleKey = getAccessRuleRedisKey(middleRule);
+			await redisClient.del(middleKey);
+
+			const foundAccessRules = await accessRulesReader.findRules(
+				{
+					policyScope: { clientId: clientId },
+					policyScopeMatch: FilterScopeMatch.Exact,
+					userScope: {
+						userId: userId,
+						ja4Hash: "t13d_top",
+						countryCode: "GB",
+					},
+					userScopeMatch: FilterScopeMatch.Greedy,
+				},
+				true,
+			);
+
+			expect(foundAccessRules).toHaveLength(2);
+			expect(foundAccessRules[0]).toEqual(topRule);
+			expect(foundAccessRules[1]).toEqual(bottomRule);
+		});
+
+		test("blockOnly filter returns only Block rules even when Restrict rules share the same user scope", async () => {
+			// Mix the two policy types across the same (clientId, ja4Hash)
+			// space so the strict-match query would otherwise return both.
+			// Without blockOnly, the result includes Restrict rules; with
+			// blockOnly the Redis-side `@type:{block}` clause excludes
+			// them before the JS sees the candidates.
+			const clientId = getUniqueString();
+			const ja4Hash = "t13d_blockonly";
+
+			const block1: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId,
+				ja4Hash,
+			};
+			const block2: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId,
+				ja4Hash,
+				coords: "[[[1,2]]]",
+			};
+			const restrict1: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				clientId,
+				ja4Hash,
+			};
+			const restrict2: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				clientId,
+				ja4Hash,
+				coords: "[[[3,4]]]",
+			};
+			const blockOtherClient: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: getUniqueString(),
+				ja4Hash,
+			};
+
+			await insertRules([
+				block1,
+				block2,
+				restrict1,
+				restrict2,
+				blockOtherClient,
+			]);
+
+			// Greedy / no blockOnly → both Block and Restrict for this
+			// clientId come back. The other-client rule is excluded by
+			// the greedy policy scope match (different clientId AND set).
+			const mixed = await accessRulesReader.findRules({
+				policyScope: { clientId },
+				policyScopeMatch: FilterScopeMatch.Greedy,
+				userScope: { ja4Hash },
+				userScopeMatch: FilterScopeMatch.Greedy,
+			});
+			const mixedTypes = mixed.map((r) => r.type).sort();
+			expect(mixed).toHaveLength(4);
+			expect(mixedTypes).toEqual([
+				AccessPolicyType.Block,
+				AccessPolicyType.Block,
+				AccessPolicyType.Restrict,
+				AccessPolicyType.Restrict,
+			]);
+
+			// Same query with blockOnly → only the two Block rules for
+			// this clientId. Restrict rules must be filtered server-side.
+			const blockOnly = await accessRulesReader.findRules({
+				policyScope: { clientId },
+				policyScopeMatch: FilterScopeMatch.Greedy,
+				userScope: { ja4Hash },
+				userScopeMatch: FilterScopeMatch.Greedy,
+				blockOnly: true,
+			});
+			expect(blockOnly).toHaveLength(2);
+			for (const rule of blockOnly) {
+				expect(rule.type).toBe(AccessPolicyType.Block);
+				expect(rule.clientId).toBe(clientId);
+			}
+			const blockHashes = new Set(blockOnly.map((r) => r.coords));
+			expect(blockHashes).toEqual(new Set([undefined, "[[[1,2]]]"]));
+		});
+
+		test("blockOnly composes with matchingFieldsOnly on the ranked hot path — Restrict rules never come back", async () => {
+			// Exercises the production hot path: greedy user-scope match
+			// with matchingFieldsOnly=true (the FT.AGGREGATE-ranked
+			// branch). The greedy ja4 query is permissive enough that
+			// `ruleApplies` is still the last word on whether a rule
+			// applies; the only guarantee this layer is supposed to
+			// uphold is that Restrict candidates are gone before JS sees
+			// them. That's what blockOnly is for.
+			const clientId = getUniqueString();
+			const ja4Hash = "t13d_hotpath";
+
+			const blockMatch: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId,
+				ja4Hash,
+			};
+			const restrictMatch: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				clientId,
+				ja4Hash,
+			};
+			const restrictMatchWithCoords: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				clientId,
+				ja4Hash,
+				coords: "[[[5,6]]]",
+			};
+
+			await insertRules([blockMatch, restrictMatch, restrictMatchWithCoords]);
+
+			const found = await accessRulesReader.findRules(
+				{
+					policyScope: { clientId },
+					policyScopeMatch: FilterScopeMatch.Greedy,
+					userScope: { ja4Hash },
+					userScopeMatch: FilterScopeMatch.Greedy,
+					blockOnly: true,
+				},
+				true, // matchingFieldsOnly — ranked path
+			);
+
+			// Restrict rules must not appear; at least the matching
+			// Block rule must be present.
+			expect(found.some((r) => r.type === AccessPolicyType.Restrict)).toBe(
+				false,
+			);
+			expect(
+				found.some(
+					(r) => r.type === AccessPolicyType.Block && r.ja4Hash === ja4Hash,
+				),
+			).toBe(true);
+		});
+
+		test("specific-IP Restrict rule survives when many higher-specificity irrelevant rules co-exist (2026-07-10 Twickets regression)", async () => {
+			// Regression guard for the 2026-07-10 Twickets incident: a
+			// portal-authored Restrict rule with scope
+			// `clientId + numericIp` (specificity 2, severity 0) was
+			// silently dropped from the frictionless access-policy lookup
+			// when the tenant had many higher-specificity irrelevant
+			// rules on the same clientId. The old FT.AGGREGATE ranker
+			// used for non-block lookups capped candidates at top-20 by
+			// populated-field count; those 20 slots got filled by rules
+			// with clientId + numericIp + numericIpMaskMin (SIMD_REPLAY
+			// v6 shape, specificity 3, severity 1) or
+			// clientId + ja4Hash + coords (SUDDEN_VOLUME_INCREASE shape,
+			// specificity 3, severity 1) that all matched the greedy
+			// `ismissing(@headHash) | ismissing(@coords) | ismissing(@headersHash)`
+			// disjunction. None of them applied to the request under
+			// `ruleApplies` — they were emitted from other users'
+			// activity — so the JS-side ranker returned [] and the
+			// frictionless decision fell through to `default_pow`.
+			//
+			// The split-query path can't hit that failure: each probe
+			// hits a discriminating posting list, so the ip:exact probe
+			// returns exactly the rules that literally match this IP.
+			const clientId = getUniqueString();
+
+			// The rule that must survive: a portal "Too Many Requests"
+			// Restrict/image rule scoped only to (clientId, numericIp).
+			const targetIp = 1376899398n; // 82.17.209.70 — Twickets rule
+			const targetRule: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				clientId,
+				numericIp: targetIp,
+				description: "Too Many Requests",
+			};
+
+			// 40 irrelevant Block rules with higher specificity than
+			// the target rule. Two shapes drawn from the live Twickets
+			// tenant that dominated the top-20:
+			//
+			//   (a) SIMD_REPLAY v6-style — clientId + numericIp +
+			//       numericIpMaskMin. These have a *different* numericIp
+			//       from the request, so the exact-IP probe skips them.
+			//   (b) SUDDEN_VOLUME_INCREASE-style — clientId + ja4Hash +
+			//       coords. Different ja4Hash from the request so those
+			//       probes miss them too.
+			//
+			// Under the old ranker every one of these would fill the top
+			// slots and push the target rule off the end.
+			const irrelevantRules: AccessRule[] = [];
+			for (let i = 0; i < 20; i++) {
+				irrelevantRules.push({
+					type: AccessPolicyType.Block,
+					clientId,
+					numericIp: BigInt(2000000000 + i),
+					numericIpMaskMin: BigInt(2000000000 + i),
+					numericIpMaskMax: BigInt(2000000000 + i),
+					description: "SIMD_REPLAY",
+				});
+			}
+			for (let i = 0; i < 20; i++) {
+				irrelevantRules.push({
+					type: AccessPolicyType.Block,
+					clientId,
+					ja4Hash: `t13d_other_${i}`,
+					coords: `[[[${100 + i},${200 + i}]]]`,
+					description: "SUDDEN_VOLUME_INCREASE",
+				});
+			}
+
+			await insertRules([targetRule, ...irrelevantRules]);
+
+			// Frictionless access-policy lookup shape — greedy match,
+			// matchingFieldsOnly=true, no blockOnly.
+			const found = await accessRulesReader.findRules(
+				{
+					policyScope: { clientId },
+					policyScopeMatch: FilterScopeMatch.Greedy,
+					userScope: {
+						numericIp: targetIp,
+						ja4Hash: "t13d1516h2_request_ja4",
+						userAgentHash: "sha256:request_ua",
+						userId: getUniqueString(),
+					},
+					userScopeMatch: FilterScopeMatch.Greedy,
+				},
+				true, // matchingFieldsOnly — production hot path
+			);
+
+			// The target rule MUST come back. Under the old ranker it
+			// was truncated; under the split path the ip:exact probe
+			// returns exactly this one rule, so it can't be crowded
+			// out by irrelevant candidates from other probes.
+			const targetFound = found.find(
+				(r) =>
+					r.type === AccessPolicyType.Restrict &&
+					r.numericIp === targetIp &&
+					r.description === "Too Many Requests",
+			);
+			expect(targetFound).toBeDefined();
 		});
 	});
 

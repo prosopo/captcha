@@ -43,6 +43,7 @@
 		"INVALID_BODY": "Cuerpo inválido",
 		"PARSE_ERROR": "Error al analizar la respuesta",
 		"SPAM_EMAIL_RULE": "Dirección de correo electrónico bloqueada por reglas de filtro de spam",
+		"SPAM_EMAIL_COUNT_EXCEEDED": "Demasiados envíos desde esta dirección de correo electrónico",
 		"VPN_BLOCKED": "Las solicitudes desde conexiones VPN no están permitidas para este sitio",
 		"PROXY_BLOCKED": "Las solicitudes desde servidores proxy no están permitidas para este sitio",
 		"TOR_BLOCKED": "Las solicitudes desde nodos de salida Tor no están permitidas para este sitio",
@@ -137,6 +138,7 @@
 		"NO_CAPTCHA": "No se encontró captcha",
 		"NO_SESSION_FOUND": "No se encontró ninguna sesión",
 		"IP_ADDRESS_MISMATCH": "Las direcciones IP no coinciden",
+		"INVALID_SALT": "Salt no válido",
 		"INVALID_TOKEN": "Token inválido",
 		"INVALID_SOLUTION": "Solución inválida",
 		"DECRYPTION_ERROR": "Error de descifrado"

@@ -463,8 +463,8 @@ export default function navigationInjector(): Plugin {
 	return {
 		name: "navigation-injector",
 		transformIndexHtml: {
-			enforce: "pre",
-			transform(html: string, ctx: IndexHtmlTransformContext): string {
+			order: "pre",
+			handler(html: string, ctx: IndexHtmlTransformContext): string {
 				// Get the relative path from the root
 				const relativePath = ctx.filename
 					? normalizePath(path.relative(process.cwd(), ctx.filename))

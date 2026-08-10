@@ -129,10 +129,17 @@ describe("CentralDbStreamer end-to-end: UserCommitmentSchema.parse → streamIma
 	beforeAll(async () => {
 		mongod = await MongoMemoryServer.create();
 		streamer = new CentralDbStreamer(mongod.getUri(), logger);
+		// Prime the streamer's mongoose connection so `db.tables.<name>` is
+		// populated before the test reads from it. Streamer writes are
+		// fire-and-forget and `ensureConnected` is called lazily, so a
+		// synchronous `tables.<name>.findOne(...)` can throw on undefined.
+		// `MongoDatabase.connect()` is idempotent (mongo.ts:85).
+		await (
+			streamer as unknown as { db: { connect: () => Promise<void> } }
+		).db.connect();
 	});
 
 	afterAll(async () => {
-		// biome-ignore lint/suspicious/noExplicitAny: test access to private field
 		const db = (streamer as unknown as { db: { close: () => Promise<void> } })
 			.db;
 		await db.close();
@@ -158,7 +165,6 @@ describe("CentralDbStreamer end-to-end: UserCommitmentSchema.parse → streamIma
 		streamer.streamImageRecord(commitmentRecord as UserCommitmentRecord);
 
 		// streamImageRecord is fire-and-forget — poll until the upsert lands.
-		// biome-ignore lint/suspicious/noExplicitAny: test access to private field
 		const tables = (
 			streamer as unknown as {
 				db: {

@@ -13,5 +13,8 @@
 // limitations under the License.
 export * from "./HttpClientBase.js";
 export { HttpError } from "./HttpError.js";
-export { default as ProviderApi } from "./ProviderApi.js";
+export {
+	default as ProviderApi,
+	VERIFY_FORWARDED_HEADER,
+} from "./ProviderApi.js";
 export { ApiClient } from "./apiClient.js";

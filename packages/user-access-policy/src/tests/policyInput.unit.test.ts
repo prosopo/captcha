@@ -15,7 +15,10 @@
 import { CaptchaType } from "@prosopo/types";
 import { describe, expect, it } from "vitest";
 import { AccessPolicyType } from "#policy/rule.js";
-import { sanitizeAccessPolicy } from "#policy/ruleInput/policyInput.js";
+import {
+	accessPolicyInput,
+	sanitizeAccessPolicy,
+} from "#policy/ruleInput/policyInput.js";
 
 describe("sanitizeAccessPolicy", () => {
 	describe("block policies", () => {
@@ -146,5 +149,70 @@ describe("sanitizeAccessPolicy", () => {
 				description: "test restrict policy",
 			});
 		});
+	});
+});
+
+// Write-time input schema — reject the fields the sanitiser used to
+// silently strip. The prior "silently strip" behaviour meant operators
+// writing `--block --captchaType image` got a rule that blocked EVERY
+// captcha type (not just image); rejecting at input surfaces the
+// mismatch so they can switch to a Restrict policy instead.
+describe("accessPolicyInput refinement", () => {
+	it("rejects Block + captchaType with a clear message pointing at Restrict", () => {
+		const result = accessPolicyInput.safeParse({
+			type: AccessPolicyType.Block,
+			captchaType: CaptchaType.image,
+		});
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			const issue = result.error.issues.find((i) =>
+				i.path.includes("captchaType"),
+			);
+			expect(issue).toBeDefined();
+			expect(issue?.message).toMatch(/Block policies cannot pin a captchaType/);
+			expect(issue?.message).toMatch(/Restrict policy/);
+		}
+	});
+
+	it("rejects Block + solvedImagesCount", () => {
+		const result = accessPolicyInput.safeParse({
+			type: AccessPolicyType.Block,
+			solvedImagesCount: 3,
+		});
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			const issue = result.error.issues.find((i) =>
+				i.path.includes("solvedImagesCount"),
+			);
+			expect(issue).toBeDefined();
+			expect(issue?.message).toMatch(
+				/Block policies cannot set solvedImagesCount/,
+			);
+		}
+	});
+
+	it("accepts Block without the disallowed fields", () => {
+		const result = accessPolicyInput.safeParse({
+			type: AccessPolicyType.Block,
+			description: "clean block",
+		});
+		expect(result.success).toBe(true);
+	});
+
+	it("accepts Block + deferToVerify (deferToVerify is orthogonal to the type-pin restriction)", () => {
+		const result = accessPolicyInput.safeParse({
+			type: AccessPolicyType.Block,
+			deferToVerify: true,
+		});
+		expect(result.success).toBe(true);
+	});
+
+	it("accepts Restrict + captchaType + solvedImagesCount (these are Restrict's whole point)", () => {
+		const result = accessPolicyInput.safeParse({
+			type: AccessPolicyType.Restrict,
+			captchaType: CaptchaType.image,
+			solvedImagesCount: 5,
+		});
+		expect(result.success).toBe(true);
 	});
 });

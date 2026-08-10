@@ -35,11 +35,16 @@ defaults:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    # GH_RUNNER unset -> GitHub-hosted. Set to a JSON array (the self-hosted
+    # fleet) -> this job's capacity requirement is appended to it: cores, RAM,
+    # disk. Runners advertise one label per step up to their own size, so a job
+    # only lands on a host big enough for it. Set to a JSON string -> used as
+    # given, which is how a repo opts back out to a hosted runner.
+    runs-on: ${{ vars.GH_RUNNER && startsWith(vars.GH_RUNNER, '[') && fromJSON(format('["{0}","4c","8g","40d"]', join(fromJSON(vars.GH_RUNNER), '","'))) || fromJSON(vars.GH_RUNNER || '"ubuntu-latest"') }}
     if: github.event.pull_request.draft == false
     steps:
       - name: Print contexts
-        uses: prosopo/captcha/.github/actions/print_contexts@gha
+        uses: prosopo/github_actions/.github/actions/print_contexts@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
         with:
           INPUTS_CONTEXT: ${{ toJson(inputs) }}
           NEEDS_CONTEXT: ${{ toJson(needs) }}
@@ -49,19 +54,19 @@ jobs:
       - name: Set NX_PARALLEL environment variable
         run: echo "NX_PARALLEL=$(nproc)" >> $GITHUB_ENV
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           token: ${{ secrets.PROSOPONATOR_PAT }}
           submodules: "recursive"
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: 'npm'
 
-      - uses: prosopo/captcha/.github/actions/npm@gha
+      - uses: prosopo/github_actions/.github/actions/npm@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
         with:
-          npm_ci_args: '--include=dev'
+          npm_ci_args: '--include=dev --no-audit --no-fund --prefer-offline'
 
       # setup certs
       - name: Setup certs
@@ -114,6 +119,11 @@ jobs:
           npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:image" --success "first" --kill-others
 
       - name: Run the cypress tests on client-bundle-example explicit rendering with frictionless captcha
+        env:
+          # Committed test detector-pool fixture (throwaway keys) so the browser
+          # is served a real per-session bundle and frictionless runs genuine
+          # detection instead of the empty-pool PoW fallback.
+          PROSOPO_DETECTOR_POOL_DIR: ${{ github.workspace }}/packages/provider/fixtures/detector-pool
         run: |
           npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionless" --success "first" --kill-others
 
@@ -121,12 +131,73 @@ jobs:
         run: |
           npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:pow" --success "first" --kill-others
 
+      - name: Run the cypress tests on client-bundle-example explicit rendering with puzzle captcha
+        run: |
+          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:puzzle" --success "first" --kill-others
+
       - name: Run the cypress tests on client-bundle-example explicit rendering with invisible captcha
         run: |
           npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:invisible" --success "first" --kill-others
 
+      - name: Run the cypress tests for the post-PoW route() escalation flow
+        env:
+          # Headless cypress can't produce a server-decryptable detector
+          # token, so without this override the frictionless flow short-
+          # circuits to image on every request and route() is never reached.
+          # Confined to this CI step + an explicit env-var name so prod can't
+          # set it by accident.
+          PROSOPO_TEST_FRICTIONLESS_DETECTOR_OVERRIDE: "1"
+        run: |
+          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:escalation" --success "first" --kill-others
+
+      - name: Run the cypress tests for the frictionless-phase routing machine
+        env:
+          # Same reason as escalation — the routing machine only reaches
+          # its route() phase when the detector override lets frictionless
+          # short-circuit fire without a real signed detector payload.
+          PROSOPO_TEST_FRICTIONLESS_DETECTOR_OVERRIDE: "1"
+          # This spec asserts the frictionless-phase captchaType directly
+          # (escalation/postPowPuzzle assert the post-PoW one, so they can
+          # start from PoW). On an empty pool runNoDetectorPowFallback
+          # answers before setRoutingContext runs, so route() is never
+          # invoked and every case returns the PoW baseline. The committed
+          # fixture pool keeps that fallback declined.
+          PROSOPO_DETECTOR_POOL_DIR: ${{ github.workspace }}/packages/provider/fixtures/detector-pool
+        run: |
+          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:routingFrictionless" --success "first" --kill-others
+
+      - name: Run the cypress tests for the post-PoW route() escalation to puzzle
+        env:
+          PROSOPO_TEST_FRICTIONLESS_DETECTOR_OVERRIDE: "1"
+        run: |
+          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:postPowPuzzle" --success "first" --kill-others
+
+      - name: Run the cypress tests for decide() decision machine deny at verify — image
+        run: |
+          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:decisionMachineDeny" --success "first" --kill-others
+
+      - name: Run the cypress tests for decide() decision machine deny at verify — pow
+        run: |
+          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:decisionMachineDenyPow" --success "first" --kill-others
+
+      - name: Run the cypress tests for decide() decision machine deny at verify — puzzle
+        run: |
+          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:decisionMachineDenyPuzzle" --success "first" --kill-others
+
+      - name: Run the cypress tests for user access policy blocks (request-time + defer-to-verify)
+        run: |
+          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:accessPolicy" --success "first" --kill-others
+
+      - name: Run the cypress tests for user access policy Restrict rules
+        run: |
+          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:accessPolicyRestrict" --success "first" --kill-others
+
+      - name: Run the cypress tests for user access policy conflict resolution (specificity + harshness)
+        run: |
+          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:accessPolicyConflicts" --success "first" --kill-others
+
       # after the test run completes store videos and any screenshots
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         # store screenshots only on failures
         if: failure()
         with:
@@ -135,7 +206,7 @@ jobs:
           if-no-files-found: ignore  # 'warn' or 'error' are also available, defaults to `warn`
 
       # after the test run completes store videos and any screenshots
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         # store videos only on failures
         if: failure()
         with:
@@ -144,7 +215,7 @@ jobs:
           if-no-files-found: ignore   # 'warn' or 'error' are also available, defaults to `warn`
 
       # visual-regression diffs (and the actual frames that produced them) when snapshots don't match
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: cypress-snapshot-diffs

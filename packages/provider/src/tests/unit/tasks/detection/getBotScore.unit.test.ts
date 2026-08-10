@@ -30,7 +30,6 @@ describe("getBotScore", () => {
 		const mockResult: DetectorResult = {
 			score: 0.85,
 			timestamp: 1234567890,
-			providerSelectEntropy: 12345,
 			userId: "user123",
 			userAgent: "Mozilla/5.0",
 			isWebView: false,
@@ -45,7 +44,6 @@ describe("getBotScore", () => {
 		expect(result).toEqual({
 			baseBotScore: 0.85,
 			timestamp: 1234567890,
-			providerSelectEntropy: 12345,
 			userId: "user123",
 			userAgent: "Mozilla/5.0",
 			isWebView: false,
@@ -56,6 +54,7 @@ describe("getBotScore", () => {
 			"payload",
 			"headHash",
 			"privateKey",
+			undefined,
 		);
 	});
 
@@ -63,7 +62,6 @@ describe("getBotScore", () => {
 		const mockResult: DetectorResult = {
 			score: undefined,
 			timestamp: 1234567890,
-			providerSelectEntropy: 12345,
 		} as unknown as DetectorResult;
 
 		vi.mocked(decodePayloadModule.default).mockResolvedValue(mockResult);
@@ -73,7 +71,6 @@ describe("getBotScore", () => {
 		expect(result).toEqual({
 			baseBotScore: 1,
 			timestamp: 0,
-			providerSelectEntropy: 13837,
 		});
 	});
 
@@ -81,7 +78,6 @@ describe("getBotScore", () => {
 		const mockResult: DetectorResult = {
 			score: 0.5,
 			timestamp: 1234567890,
-			providerSelectEntropy: 12345,
 		} as unknown as DetectorResult;
 
 		vi.mocked(decodePayloadModule.default).mockResolvedValue(mockResult);
@@ -91,7 +87,6 @@ describe("getBotScore", () => {
 		expect(result).toEqual({
 			baseBotScore: 0.5,
 			timestamp: 1234567890,
-			providerSelectEntropy: 12345,
 			userId: undefined,
 			userAgent: undefined,
 			isWebView: false,
@@ -104,7 +99,6 @@ describe("getBotScore", () => {
 		const mockResult: DetectorResult = {
 			score: 0.5,
 			timestamp: 1234567890,
-			providerSelectEntropy: 12345,
 			isWebView: undefined,
 		} as unknown as DetectorResult;
 
@@ -119,7 +113,6 @@ describe("getBotScore", () => {
 		const mockResult: DetectorResult = {
 			score: 0.5,
 			timestamp: 1234567890,
-			providerSelectEntropy: 12345,
 			isIframe: undefined,
 		} as unknown as DetectorResult;
 
@@ -134,7 +127,6 @@ describe("getBotScore", () => {
 		const mockResult: DetectorResult = {
 			score: 0.5,
 			timestamp: 1234567890,
-			providerSelectEntropy: 12345,
 		} as unknown as DetectorResult;
 
 		vi.mocked(decodePayloadModule.default).mockResolvedValue(mockResult);
@@ -145,6 +137,7 @@ describe("getBotScore", () => {
 			"testPayload",
 			"testHeadHash",
 			"testPrivateKey",
+			undefined,
 		);
 	});
 
@@ -152,7 +145,6 @@ describe("getBotScore", () => {
 		const mockResult = {
 			score: 0.5,
 			timestamp: 1234567890,
-			providerSelectEntropy: 12345,
 			userId: "",
 			userAgent: "",
 			decryptedHeadHash: "",
@@ -165,6 +157,7 @@ describe("getBotScore", () => {
 		expect(decodePayloadModule.default).toHaveBeenCalledWith(
 			"testPayload",
 			"testHeadHash",
+			undefined,
 			undefined,
 		);
 	});

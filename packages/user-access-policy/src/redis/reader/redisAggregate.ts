@@ -23,12 +23,41 @@ import {
 } from "#policy/redis/redisClient.js";
 import { ACCESS_RULES_REDIS_INDEX_NAME } from "#policy/redis/redisRuleIndex.js";
 
+// Bounded-cap variant of `aggregateRedisKeys` for hot-path sub-queries.
+// Uses FT.SEARCH NOCONTENT rather than FT.AGGREGATE + LOAD @__key so the
+// reply is a flat `[total, key1, key2, ...]` list decoded by
+// `SEARCH_NOCONTENT.transformReply`, never a nested tuples array. That
+// side-steps a crash in `@redis/client` 5.x where a `null` tuple returned
+// by the RediSearch coordinator (seen consistently on the split-query
+// ja4Hash probes in prod — several thousand per hour of
+// `TypeError: Cannot read properties of null (reading 'length')`) makes
+// `transformTuplesReply` throw and the whole sub-query resolve empty.
+// Cap fits in a single call because callers pass a small `maxKeys`
+// (SPLIT_MAX_CANDIDATES_PER_SUB, currently 500) — no cursor needed.
+export const searchRedisKeysBounded = async (
+	client: RedisClientType,
+	query: string,
+	maxKeys: number,
+): Promise<string[]> => {
+	const reply = await client.ft.searchNoContent(
+		ACCESS_RULES_REDIS_INDEX_NAME,
+		query,
+		{
+			DIALECT: REDIS_QUERY_DIALECT,
+			LIMIT: { from: 0, size: maxKeys },
+		},
+	);
+
+	return reply.documents;
+};
+
 // aggregation is used for cases when we need to get "unlimited" search results
 export const aggregateRedisKeys = async (
 	client: RedisClientType,
 	query: string,
 	logger: Logger,
 	batchHandler?: (keys: string[]) => Promise<void>,
+	maxKeys?: number,
 ): Promise<string[]> => {
 	const keyField = "__key";
 
@@ -38,8 +67,13 @@ export const aggregateRedisKeys = async (
 	});
 
 	const foundKeys: string[] = [];
+	let stopRequested = false;
 
 	const addRecordKeys = async (records: object[]) => {
+		if (stopRequested) {
+			return;
+		}
+
 		const parsedRecords = parseRedisRecords(records, recordSchema, logger);
 
 		const recordKeys = parsedRecords.map((record) => record[keyField]);
@@ -47,6 +81,24 @@ export const aggregateRedisKeys = async (
 		if (batchHandler) {
 			await batchHandler(recordKeys);
 		} else {
+			if (
+				maxKeys !== undefined &&
+				foundKeys.length + recordKeys.length > maxKeys
+			) {
+				const remaining = Math.max(0, maxKeys - foundKeys.length);
+				foundKeys.push(...recordKeys.slice(0, remaining));
+				stopRequested = true;
+
+				logger.warn(() => ({
+					msg: "Redis aggregation candidate cap hit; truncating result set. This can suppress less-frequent rules and should be investigated.",
+					data: {
+						maxKeys,
+						query,
+					},
+				}));
+				return;
+			}
+
 			foundKeys.push(...recordKeys);
 
 			logger.debug(() => ({
@@ -68,6 +120,7 @@ export const aggregateRedisKeys = async (
 			LOAD: `@${keyField}`,
 		},
 		addRecordKeys,
+		() => stopRequested,
 	);
 
 	return foundKeys;
@@ -78,6 +131,7 @@ const executeAggregation = async (
 	query: string,
 	aggregateOptions: FtAggregateWithCursorOptions,
 	handleBatch: (records: object[]) => Promise<void>,
+	shouldStop?: () => boolean,
 ): Promise<void> => {
 	const initialReply = await client.ft.aggregateWithCursor(
 		ACCESS_RULES_REDIS_INDEX_NAME,
@@ -89,7 +143,7 @@ const executeAggregation = async (
 
 	let cursor = initialReply.cursor;
 
-	while (0 !== cursor) {
+	while (0 !== cursor && !shouldStop?.()) {
 		const batchReply = await client.ft.cursorRead(
 			ACCESS_RULES_REDIS_INDEX_NAME,
 			cursor,

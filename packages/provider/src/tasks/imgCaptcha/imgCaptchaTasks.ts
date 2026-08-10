@@ -77,7 +77,10 @@ import {
 } from "../dnsEvent/enrichDnsEvent.js";
 import { FrictionlessReason } from "../frictionless/frictionlessTasks.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
-import { evaluateEmailSpamRules } from "../spam/evaluateEmailSpamRules.js";
+import {
+	evaluateEmailSpamRules,
+	normaliseEmailForMatching,
+} from "../spam/evaluateEmailSpamRules.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
 
 export class ImgCaptchaManager extends CaptchaManager {
@@ -234,24 +237,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 		simdReadings?: string,
 		clientMetaData?: ClientMetaData,
 	): Promise<DappUserSolutionResult> {
-		// Decoded once and reused — img submit may attach to multiple sessions.
-		const decodedSimdReadings = simdReadings
-			? await this.decryptSimdReadingsForAttach(simdReadings)
-			: undefined;
-		const pushSimdAttachIfAny = (
-			sessionId: string,
-			writes: Promise<void>[],
-		): void => {
-			if (decodedSimdReadings) {
-				writes.push(
-					this.recordSessionSimdReadingsIfAbsentWithCache(
-						sessionId,
-						decodedSimdReadings,
-						SimdReadingsStage.submit,
-					),
-				);
-			}
-		};
 		// check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
 		const verification = signatureVerify(
 			stringToHex(timestamp.toString()),
@@ -300,6 +285,31 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 		const pendingRecord = await this.db.getPendingImageCommitment(requestHash);
 
+		// The detector lives only in provider pool bundles; resolve THIS session's
+		// bundle (promoted onto the session record at frictionless time) once and
+		// reuse it for both the SIMD readings and behavioural-data decrypts below.
+		// img submit may attach to multiple sessions, all sharing this bundle.
+		const sessionBundle = await this.resolveBundleBySessionId(
+			pendingRecord?.sessionId,
+		);
+		const decodedSimdReadings = simdReadings
+			? await this.decryptSimdReadingsForAttach(simdReadings, sessionBundle)
+			: undefined;
+		const pushSimdAttachIfAny = (
+			sessionId: string,
+			writes: Promise<void>[],
+		): void => {
+			if (decodedSimdReadings) {
+				writes.push(
+					this.recordSessionSimdReadingsIfAbsentWithCache(
+						sessionId,
+						decodedSimdReadings,
+						SimdReadingsStage.submit,
+					),
+				);
+			}
+		};
+
 		const unverifiedCaptchaIds = captchas.map((captcha) => captcha.captchaId);
 		const pendingRequest = await this.validateDappUserSolutionRequestIsPending(
 			requestHash,
@@ -341,17 +351,11 @@ export class ImgCaptchaManager extends CaptchaManager {
 			let deviceCapability: string | undefined;
 			if (behavioralData) {
 				try {
-					// Get decryption keys: detector keys from DB first, then env var as fallback
-					const decryptKeys = [
-						// Process DB keys first, then env var key last as env key will likely be invalid
-						...(await this.getDetectorKeys()),
-						process.env.BOT_DECRYPTION_KEY,
-					];
-
-					// Decrypt the behavioral data (returns unpacked format)
+					// Decrypt the behavioural data with this session's detector pool
+					// bundle (resolved above; no key pool).
 					const decryptedData = await this.decryptBehavioralData(
 						behavioralData,
-						decryptKeys,
+						sessionBundle,
 					);
 
 					if (decryptedData) {
@@ -399,6 +403,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
 				ipAddress: getCompositeIpAddress(ipAddress),
 				headers,
 				sessionId: pendingRecord.sessionId,
@@ -666,13 +671,17 @@ export class ImgCaptchaManager extends CaptchaManager {
 		trafficFilter?: ITrafficFilter,
 		storeMetadata = false,
 	): Promise<ImageVerificationResponse> {
+		// Bind the commitmentId/dapp context once so every log line in this
+		// method carries it without repeating the fields in each `data` block.
+		const logger = this.logger.with({ commitmentId, dapp });
+
 		const solution = await (commitmentId
 			? this.getDappUserCommitmentById(commitmentId)
 			: this.getDappUserCommitmentByAccount(user, dapp));
 
 		// No solution exists
 		if (!solution) {
-			this.logger.debug(() => ({
+			logger.debug(() => ({
 				msg: "Not verified - no solution found",
 			}));
 			return {
@@ -705,14 +714,16 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 		maxVerifiedTime = maxVerifiedTime || 60 * 1000; // Default to 1 minute
 
-		// Check if solution was completed recently
 		const currentTime = Date.now();
+		const submittedAt = solution.submittedAtTimestamp;
 		const timeSinceCompletion =
-			currentTime - solution.requestedAtTimestamp.getTime();
+			submittedAt instanceof Date
+				? currentTime - submittedAt.getTime()
+				: Number.POSITIVE_INFINITY;
 
 		// A solution exists but has timed out
 		if (timeSinceCompletion > maxVerifiedTime) {
-			this.logger.debug(() => ({
+			logger.debug(() => ({
 				msg: "Not verified - timed out",
 			}));
 			return {
@@ -741,7 +752,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				);
 
 				if (blockPolicy) {
-					this.logger.info(() => ({
+					logger.info(() => ({
 						msg: "User blocked by access policy in server image verification",
 						data: {
 							userAccount: solution.userAccount,
@@ -756,8 +767,8 @@ export class ImgCaptchaManager extends CaptchaManager {
 					failStatus = ResultReason.ACCESS_POLICY_BLOCK;
 				}
 			} catch (error) {
-				this.logger.warn(() => ({
-					msg: "Failed to check user access policies in server Image verification",
+				logger.warn(() => ({
+					msg: "Failed to check user access policies in server image verification",
 					error,
 				}));
 			}
@@ -769,9 +780,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 				const isSpam = await this.checkSpamEmail(email);
 				if (isSpam) {
 					const emailDomain = email.split("@")[1] || "unknown";
-					this.logger.info(() => ({
+					logger.info(() => ({
 						msg: "Spam email domain detected in server image verification",
-						data: { commitmentId, dapp, emailDomain },
+						data: { emailDomain },
 					}));
 					commitmentUpdates.result = {
 						status: CaptchaStatus.disapproved,
@@ -780,7 +791,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 					failStatus = ResultReason.SPAM_EMAIL_DOMAIN;
 				}
 			} catch (error) {
-				this.logger.warn(() => ({
+				logger.warn(() => ({
 					msg: "Failed to check spam email domain in server image verification",
 					error,
 				}));
@@ -796,9 +807,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 		) {
 			const result = evaluateEmailSpamRules(email, spamFilter.emailRules);
 			if (result.isSpam) {
-				this.logger.info(() => ({
+				logger.info(() => ({
 					msg: "Spam filter rejected email in image verification",
-					data: { commitmentId, dapp, reason: result.reason },
+					data: { reason: result.reason },
 				}));
 				commitmentUpdates.result = {
 					status: CaptchaStatus.disapproved,
@@ -808,8 +819,53 @@ export class ImgCaptchaManager extends CaptchaManager {
 			}
 		}
 
+		// Per-email submission-count check. Runs before we persist
+		// `metadata.emailNormalised` for the current commitment so the
+		// count reflects PRIOR verified submissions only. Silently no-op
+		// when `storeMetadata` is off — nothing gets written under that
+		// mode, so no historical rows would exist to count against.
+		const maxEmailSubmissionCount =
+			spamFilter?.enabled && spamFilter.emailRules?.enabled
+				? spamFilter.emailRules.maxEmailSubmissionCount
+				: undefined;
+		let emailNormalised: string | undefined;
+		if (
+			!failStatus &&
+			maxEmailSubmissionCount !== undefined &&
+			email &&
+			storeMetadata
+		) {
+			emailNormalised = normaliseEmailForMatching(email);
+			if (emailNormalised) {
+				try {
+					const priorCount = await this.db.countCommitmentsByNormalisedEmail(
+						dapp,
+						emailNormalised,
+					);
+					if (priorCount >= maxEmailSubmissionCount) {
+						logger.info(() => ({
+							msg: "Email submission count exceeded in image verification",
+							data: { priorCount, maxEmailSubmissionCount },
+						}));
+						commitmentUpdates.result = {
+							status: CaptchaStatus.disapproved,
+							reason: ResultReason.SPAM_EMAIL_COUNT_EXCEEDED,
+						};
+						failStatus = ResultReason.SPAM_EMAIL_COUNT_EXCEEDED;
+					}
+				} catch (error) {
+					logger.warn(() => ({
+						msg: "Failed to check email submission count in image verification",
+						error,
+					}));
+				}
+			}
+		}
+
+		// Walker fills simdReadings / dnsEvent / entropy fields from the origin
+		// when this is an escalation record. See CaptchaManager.getSessionRecordWithOriginFallback.
 		const sessionRecord = solution.sessionId
-			? await this.db.getSessionRecordBySessionId(solution.sessionId)
+			? await this.getSessionRecordWithOriginFallback(solution.sessionId)
 			: undefined;
 
 		const enrichedDnsEvent = await enrichDnsEvent(
@@ -827,11 +883,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 				enrichedDnsEvent,
 			);
 			if (check.isBlocked) {
-				this.logger.info(() => ({
+				logger.info(() => ({
 					msg: "Traffic filter rejected request",
 					data: {
-						commitmentId,
-						dapp,
 						ip,
 						reason: check.reason,
 						dnsPeerIp: enrichedDnsEvent?.peerIp,
@@ -852,8 +906,16 @@ export class ImgCaptchaManager extends CaptchaManager {
 		// Persist dapp-server-provided metadata when the site opts in.
 		// Gated purely by `storeMetadata` — independent of the spam-email
 		// checks above, which inspect the email but never write it.
+		// `emailNormalised` is written alongside `email` so the per-email
+		// submission-count check has an indexed field to query against
+		// (see `countCommitmentsByNormalisedEmail`); its shape is a
+		// subset of the raw value (dots collapsed for gmail, `+tag`
+		// stripped) so it never leaks anything the raw field doesn't.
 		if (storeMetadata && email) {
-			commitmentUpdates.metadata = { email };
+			commitmentUpdates.metadata = {
+				email,
+				emailNormalised: emailNormalised ?? normaliseEmailForMatching(email),
+			};
 		}
 
 		// IP validation: accumulate providedIp update
@@ -871,14 +933,14 @@ export class ImgCaptchaManager extends CaptchaManager {
 				const ipValidation = await deepValidateIpAddress(
 					ip,
 					solutionIpAddress,
-					this.logger,
+					logger,
 					env.ipInfoService,
 					ipValidationRules,
 					enrichedDnsEvent?.peerIp,
 				);
 
 				if (!ipValidation.isValid) {
-					this.logger.error(() => ({
+					logger.error(() => ({
 						msg: "IP validation failed for image captcha",
 						data: {
 							ip,
@@ -922,6 +984,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			const dnsAsymmetry = computeDnsAsymmetry(
 				enrichedDnsEvent,
 				solution.ipInfo,
+				trafficFilter,
 			);
 			if (dnsAsymmetry > 0) {
 				sessionRecord.scoreComponents = {
@@ -930,7 +993,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				};
 			}
 			score = computeFrictionlessScore(sessionRecord?.scoreComponents);
-			this.logger.info(() => ({
+			logger.info(() => ({
 				data: {
 					scoreComponents: sessionRecord?.scoreComponents,
 					score: score,
@@ -945,7 +1008,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				(sessionRecord.webView === true ||
 					(sessionRecord.scoreComponents.webView || 0) > 0)
 			) {
-				this.logger.info(() => ({
+				logger.info(() => ({
 					msg: "Disallowing webview access - user not verified",
 				}));
 				commitmentUpdates.result = {
@@ -961,7 +1024,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				sessionRecord.reason ===
 					FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED
 			) {
-				this.logger.info(() => ({
+				logger.info(() => ({
 					msg: "Context aware validation failed",
 				}));
 				//return { status: "API.USER_NOT_VERIFIED", verified: false };
@@ -976,16 +1039,30 @@ export class ImgCaptchaManager extends CaptchaManager {
 				captchaResult: "passed",
 				headers: solution.headers,
 				captchaType: CaptchaType.image,
+				behavioralDataPacked: solution.behavioralDataPacked,
+				deviceCapability: solution.deviceCapability,
 				countryCode: solution.ipInfo?.isValid
 					? solution.ipInfo.countryCode
 					: undefined,
+				ipInfo: solution.ipInfo,
 				dnsEvent: enrichedDnsEvent,
+				score,
+				threshold: sessionRecord?.threshold,
+				scoreComponents: sessionRecord?.scoreComponents,
+				decryptedHeadHash: sessionRecord?.decryptedHeadHash,
+				userSitekeyIpHash: sessionRecord?.userSitekeyIpHash,
+				simdReadings: sessionRecord?.simdReadings,
+				frictionlessReason: sessionRecord?.reason,
+				ruleType: sessionRecord?.ruleType,
+				webView: sessionRecord?.webView,
+				iFrame: sessionRecord?.iFrame,
+				coords: solution.coords,
 			};
 
 			try {
 				const decision = await this.decisionMachineRunner.decide(
 					decisionInput,
-					this.logger,
+					logger,
 				);
 				if (decision.decision === DecisionMachineDecision.Deny) {
 					// Decision machines are operator-authored JS — their `reason`
@@ -993,10 +1070,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 					// boundary so the strict types on `CaptchaResult` hold.
 					const dmReason = (decision.reason ||
 						ResultReason.CAPTCHA_DECISION_MACHINE_DENIED) as ResultReason;
-					this.logger?.info(() => ({
+					logger.info(() => ({
 						msg: "Decision machine denied user verification",
 						data: {
-							commitmentId,
 							reason: decision.reason,
 						},
 					}));
@@ -1008,7 +1084,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 					failureStatus = dmReason;
 				}
 			} catch (error) {
-				this.logger?.error(() => ({
+				logger.error(() => ({
 					msg: "Failed to process decision machine",
 					err: error,
 				}));

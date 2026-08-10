@@ -43,6 +43,7 @@ import {
 	PowChallengeIdSchema,
 } from "../datasets/index.js";
 import type {
+	DecisionMachineKind,
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
@@ -142,6 +143,11 @@ export interface BehavioralDataPacked {
 // backwards compatibility (existing data and indexes already use it).
 export interface StoredCaptchaMetadata {
 	email?: string;
+	// Normalised form of `email` used by the per-email submission-count check.
+	// Kept as a separate persisted field so the count query can hit a single
+	// indexed value instead of computing a normalisation server-side. Written
+	// alongside `email` whenever `storeMetadata` is on.
+	emailNormalised?: string;
 }
 
 // Widget-controlled metadata captured during the captcha solution submission.
@@ -180,6 +186,10 @@ export interface StoredCaptcha {
 	ja4: string;
 	userSubmitted: boolean;
 	serverChecked: boolean;
+	// Set once on first transition; never overwritten.
+	submittedAtTimestamp?: Date;
+	verifiedAtTimestamp?: Date;
+	failedAtTimestamp?: Date;
 	// The full ipinfo payload from `IpInfoService.lookup()`. Persisted
 	// either by the provider's ipInfoMiddleware (at request time) or by
 	// the CHECK_IP_INFO backfill job. Consumers read individual fields
@@ -254,6 +264,7 @@ const BehavioralDataPackedSchema = object({
 
 export const StoredCaptchaMetadataSchema = object({
 	email: string().optional(),
+	emailNormalised: string().optional(),
 }) satisfies ZodType<StoredCaptchaMetadata, ZodTypeDef, unknown>;
 
 export const ClientMetaDataDbSchema = object({
@@ -285,6 +296,9 @@ export const UserCommitmentSchema = object({
 	parsedUserAgentInfo: any().optional(),
 	storedAtTimestamp: date().optional(),
 	requestedAtTimestamp: date(),
+	submittedAtTimestamp: date().optional(),
+	verifiedAtTimestamp: date().optional(),
+	failedAtTimestamp: date().optional(),
 	lastUpdatedTimestamp: date().optional(),
 	pendingStage: boolean().optional(),
 	sessionId: string().optional(),
@@ -381,7 +395,6 @@ export const SessionSchema = object({
 	score: number(),
 	threshold: number(),
 	scoreComponents: ScoreComponentsSchema,
-	providerSelectEntropy: number(),
 	ipAddress: CompositeIpAddressSchema,
 	captchaType: nativeEnum(CaptchaType),
 	mode: nativeEnum(ModeEnum).optional(),
@@ -394,8 +407,37 @@ export const SessionSchema = object({
 	userSitekeyIpHash: string().optional(),
 	webView: boolean(),
 	iFrame: boolean(),
+	// True when this session was minted by the post-PoW routing machine
+	// as an escalation of a prior session (see `buildEscalation` in
+	// submitPoWCaptchaSolution). Absent / false on ordinary
+	// frictionless-created sessions. Persisted so analytics can separate
+	// "user hit the widget cold" from "user got escalated into a
+	// stronger captcha after a low-confidence PoW".
+	isEscalation: boolean().optional(),
+	// SessionId of the session this one escalated from. Populated when
+	// isEscalation is true; used by the DM-input read path to fall back
+	// to the origin for fields the escalation doesn't carry itself
+	// (simdReadings, dnsEvent, etc.). Absent on non-escalation sessions.
+	originSessionId: string().optional(),
 	decryptedHeadHash: string(),
 	siteKey: string().optional(),
+	// Full page URL the widget was rendered on (origin + path only — query
+	// string, fragment and any embedded credentials are stripped client- and
+	// server-side). Reported by the client in the frictionless payload; its
+	// absence forces an image captcha. Optional so older sessions still parse.
+	//
+	// When the widget is embedded, `currentUrl` is the top-frame URL and
+	// `iframeUrl` is the widget's own frame URL. `iframeUrl` is undefined
+	// when the widget IS the top frame (nothing to distinguish).
+	currentUrl: string().optional(),
+	iframeUrl: string().optional(),
+	// True when this session looks like a Protect deployment: the widget
+	// iframe was served from `protect.<tenant>` and embedded in a page on
+	// the same tenant (see isProtectDeployment in @prosopo/util for the
+	// exact rule). Persisted only when true — matches the `isEscalation`
+	// pattern so ordinary sessions stay slim and a sparse index carries
+	// only the Protect subset.
+	isProtect: boolean().optional(),
 	// Selection reason: writes go through `FrictionlessReason`, but the
 	// schema accepts any string at runtime so old records (or unforeseen
 	// values) still parse. Output type is cast back to the enum so the
@@ -404,6 +446,10 @@ export const SessionSchema = object({
 		.optional()
 		.transform((v) => v as FrictionlessReason | undefined),
 	blocked: boolean().optional(),
+	// See Session.ruleHash — populated on synthetic blocked-session records.
+	ruleHash: string().optional(),
+	ruleType: string().array().optional(),
+	ruleDescription: string().optional(),
 	// Full ipinfo payload from ipInfoMiddleware at session-creation
 	// time. Replaces the flat `countryCode` / `geolocation` fields —
 	// consumers narrow on `ipInfo.isValid` and read whichever sub-field
@@ -429,6 +475,19 @@ export const SessionSchema = object({
 	// indicator reflects when the catcher's CPU fingerprint became
 	// available relative to the user's journey.
 	simdReadingsStage: SimdReadingsStageSchema.optional(),
+	entropyMathRandomFingerprint: string().optional(),
+	entropyCryptoFingerprint: string().optional(),
+	entropyWallClockOffsetMs: number().optional(),
+	entropyMathRandomFirst: number().optional(),
+	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
+	// plugin (X-TLS-TCP-To-Chello-Us / X-TLS-Chello-To-Handshake-Us).
+	// Server-observed microsecond deltas across the TLS handshake
+	// lifecycle — elevated values indicate the client's ClientHello
+	// traversed a proxy chain before reaching Caddy. Optional so
+	// pre-migration sessions parse and dev requests that skip TLS still
+	// write.
+	tcpToChelloUs: number().optional(),
+	chelloToHandshakeUs: number().optional(),
 	dnsEvent: object({
 		resolverIp: string().optional(),
 		peerIp: string().optional(),
@@ -445,7 +504,6 @@ export type Session = {
 	score: number;
 	threshold: number;
 	scoreComponents: ScoreComponents;
-	providerSelectEntropy: number;
 	ipAddress: CompositeIpAddress;
 	captchaType: CaptchaType;
 	mode?: ModeEnum;
@@ -459,10 +517,45 @@ export type Session = {
 	userSitekeyIpHash?: string;
 	webView: boolean;
 	iFrame: boolean;
+	// True when this session was minted by the post-PoW routing machine
+	// as an escalation. Undefined / false on ordinary frictionless sessions.
+	isEscalation?: boolean;
+	// SessionId of the origin session this one escalated from. Populated
+	// alongside isEscalation; consumed by the DM-input read path.
+	originSessionId?: string;
 	decryptedHeadHash: string;
+	// The provider-assigned detector pool bundle this session's detector ran
+	// from, promoted off the short-lived detectorSessionId→bundleId Redis
+	// binding at frictionless-decrypt time. Later hops (PoW/puzzle solution
+	// submit, SIMD attach) resolve the same bundle's keypair + inner cipher
+	// from this durable field to decrypt the behavioural/SIMD payloads — the
+	// detector lives only on providers, so there is no key pool to fall back to.
+	bundleId?: string;
 	siteKey?: string;
+	// Full page URL the widget was rendered on (origin + path only — query
+	// string, fragment and any embedded credentials are stripped client- and
+	// server-side). Reported by the client in the frictionless payload; its
+	// absence forces an image captcha.
+	//
+	// When the widget is embedded, `currentUrl` is the top-frame URL and
+	// `iframeUrl` is the widget's own frame URL. `iframeUrl` is undefined
+	// when the widget IS the top frame (nothing to distinguish).
+	currentUrl?: string;
+	iframeUrl?: string;
+	// True when this session looks like a Protect deployment — widget
+	// iframe served from `protect.<tenant>`, embedded in a page on the
+	// same tenant. Undefined/absent on non-Protect sessions.
+	isProtect?: boolean;
 	reason?: FrictionlessReason;
 	blocked?: boolean;
+	// When `blocked` is true, these record which access-policy rule matched
+	// at the request-time block middleware. Populated only on synthetic
+	// "blocked session" records the inspector writes when it 401s a request,
+	// so the Traffic page can surface "why are we blocking traffic for this
+	// site?" without an extra Mongo lookup against the rules collection.
+	ruleHash?: string; // == the redis-key suffix of the matched rule
+	ruleType?: string[]; // populated scope fields, e.g. ['ja4Hash'], ['ja4Hash','coords']
+	ruleDescription?: string; // operator-set description copied from the rule's AccessPolicy
 	// Full ipinfo payload from ipInfoMiddleware at session-creation
 	// time. Replaces the flat `countryCode` / `geolocation` fields.
 	ipInfo?: IPInfoResponse;
@@ -478,6 +571,16 @@ export type Session = {
 	simdReadings?: SimdReadings;
 	// Stage at which the readings first arrived.
 	simdReadingsStage?: SimdReadingsStage;
+	entropyMathRandomFingerprint?: string;
+	entropyCryptoFingerprint?: string;
+	entropyWallClockOffsetMs?: number;
+	entropyMathRandomFirst?: number;
+	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
+	// plugin. See the SessionSchema block above for full semantics —
+	// elevated values indicate the client's ClientHello traversed a
+	// proxy chain before reaching Caddy.
+	tcpToChelloUs?: number;
+	chelloToHandshakeUs?: number;
 	// DNS observation merge target — populated by the dns-event sidecar
 	// via POST /v1/prosopo/provider/admin/dns/event. At most one DNS
 	// event + one HTTP event per session under normal usage; the
@@ -517,6 +620,9 @@ export const PoWCaptchaStoredSchema = object({
 	// From StoredCaptcha
 	result: CaptchaResultSchema,
 	requestedAtTimestamp: date(),
+	submittedAtTimestamp: date().optional(),
+	verifiedAtTimestamp: date().optional(),
+	failedAtTimestamp: date().optional(),
 	ipAddress: CompositeIpAddressSchema,
 	providedIp: CompositeIpAddressSchema.optional(),
 	metadata: StoredCaptchaMetadataSchema.optional(),
@@ -598,12 +704,6 @@ export type UserCommitmentWithSolutions = zInfer<
 	typeof UserCommitmentWithSolutionsSchema
 >;
 
-export type DetectorKey = {
-	detectorKey: string;
-	createdAt: Date;
-	expiresAt?: Date;
-};
-
 /**
  * Decision machine artifact stored in the database.
  * The combination of scope + dappAccount uniquely identifies one artifact.
@@ -619,6 +719,7 @@ export type DetectorKey = {
 export type DecisionMachineArtifact = {
 	scope: DecisionMachineScope;
 	dappAccount?: string;
+	kind?: DecisionMachineKind;
 	runtime: DecisionMachineRuntime;
 	language?: DecisionMachineLanguage;
 	source: string;

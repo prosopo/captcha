@@ -342,6 +342,7 @@
 		"INVALID_BODY": "無効な本体",
 		"PARSE_ERROR": "リクエストの解析エラー",
 		"SPAM_EMAIL_RULE": "スパムフィルタールールによりメールアドレスがブロックされました",
+		"SPAM_EMAIL_COUNT_EXCEEDED": "このメールアドレスからの送信が多すぎます",
 		"VPN_BLOCKED": "このサイトではVPN接続からのリクエストは許可されていません",
 		"PROXY_BLOCKED": "このサイトではプロキシサーバーからのリクエストは許可されていません",
 		"TOR_BLOCKED": "このサイトではTor出口ノードからのリクエストは許可されていません",
@@ -436,6 +437,7 @@
 		"NO_CAPTCHA": "キャプチャが見つかりません",
 		"NO_SESSION_FOUND": "セッションが見つかりません",
 		"IP_ADDRESS_MISMATCH": "IPアドレスが一致しません",
+		"INVALID_SALT": "無効なソルト",
 		"INVALID_TOKEN": "無効なトークン",
 		"INVALID_SOLUTION": "無効なソリューション",
 		"DECRYPTION_ERROR": "復号エラー"

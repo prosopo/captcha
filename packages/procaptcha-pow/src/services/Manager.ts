@@ -16,12 +16,19 @@ import { stringToHex } from "@polkadot/util/string";
 import { ProviderApi } from "@prosopo/api";
 import { ProsopoEnvError } from "@prosopo/common";
 import {
+	FINGERPRINT_DISCLOSURE_KEYS,
+	encodeFingerprintProof,
+	getFingerprintProof,
+} from "@prosopo/fingerprint";
+import {
 	ExtensionLoader,
 	buildUpdateState,
+	getDefaultEvents,
 	getProcaptchaRandomActiveProvider,
+	getSimdReadingsForSubmit,
+	pickIpMode,
 	providerRetry,
 } from "@prosopo/procaptcha-common";
-import { getDefaultEvents } from "@prosopo/procaptcha-common";
 import {
 	type Account,
 	ApiParams,
@@ -52,6 +59,10 @@ export const Manager = (
 	getHoneypotValue?: () => string | undefined,
 ) => {
 	const events = getDefaultEvents(callbacks);
+
+	// URL of the provider used on the previous attempt. On a retry we exclude it
+	// from the candidate pool so the fallback lands on a different provider.
+	let previousProviderUrl: string | undefined;
 
 	const defaultState = (): Partial<ProcaptchaState> => {
 		return {
@@ -153,7 +164,17 @@ export const Manager = (
 		updateState({ successfullChallengeTimeout });
 	};
 
+	// Checkbox click coords captured on the entry-point tick (or forwarded
+	// from a session-invalidated retry). Persisted in the closure so an
+	// eventual escalation can hand them to the escalated image/puzzle widget
+	// via `onEscalate` — otherwise the escalated widget seeds (0, 0) into
+	// its own salt and the entry-point telemetry is lost across the hop.
+	let checkboxClickX = 0;
+	let checkboxClickY = 0;
+
 	const start = async (x = 0, y = 0) => {
+		checkboxClickX = x;
+		checkboxClickY = y;
 		await providerRetry(
 			async () => {
 				if (state.loading) {
@@ -212,12 +233,16 @@ export const Manager = (
 				if (frictionlessState?.provider) {
 					getRandomProviderResponse = frictionlessState.provider;
 				} else {
+					const currentConfig = getConfig();
 					getRandomProviderResponse = await getProcaptchaRandomActiveProvider(
-						getConfig().defaultEnvironment,
+						currentConfig.defaultEnvironment,
+						pickIpMode(currentConfig),
+						{ attempt: state.attemptCount, excludeUrl: previousProviderUrl },
 					);
 				}
 
 				const providerUrl = getRandomProviderResponse.provider.url;
+				previousProviderUrl = providerUrl;
 
 				const providerApi = new ProviderApi(providerUrl, getDappAccount());
 
@@ -313,22 +338,46 @@ export const Manager = (
 						}
 					}
 
-					const simdReadings = frictionlessState?.getSimdReadings
-						? await frictionlessState.getSimdReadings()
-						: undefined;
+					// Wait 5 secs for ongoing SIMD, else submit without
+					const simdReadings =
+						await getSimdReadingsForSubmit(frictionlessState);
 					const hpValue = getHoneypotValue?.();
 					const clientMetaData = hpValue ? { hp: hpValue } : undefined;
+					// Best-effort proof of fingerprint; submission proceeds without it
+					// if a proof can't be produced (e.g. fingerprint unavailable).
+					// Only the validator-checked keys are disclosed to keep the
+					// payload small (see FINGERPRINT_DISCLOSURE_KEYS).
+					let fingerprintProof: string | undefined;
+					try {
+						fingerprintProof = encodeFingerprintProof(
+							await getFingerprintProof(FINGERPRINT_DISCLOSURE_KEYS),
+						);
+					} catch {
+						fingerprintProof = undefined;
+					}
+					// Test hook for exercising the provider's fingerprint failure
+					// path. In a browser console set:
+					//   window.__prosopoFingerprintProofTest__ = "malformed" // → image
+					//   window.__prosopoFingerprintProofTest__ = "omit"      // → image
+					// Never set in production; unset/any other value = normal proof.
+					const fpTest = (globalThis as Record<string, unknown>)
+						.__prosopoFingerprintProofTest__;
+					if (fpTest === "omit") {
+						fingerprintProof = undefined;
+					} else if (typeof fpTest === "string" && fpTest.length > 0) {
+						fingerprintProof = "invalid-fingerprint-proof";
+					}
 					const verifiedSolution = await providerApi.submitPowCaptchaSolution(
 						challenge,
 						getAccount().account.account.address,
 						getDappAccount(),
 						solution,
 						userTimestampSignature.signature.toString(),
-						config.captchas.pow.verifiedTimeout,
 						encryptedBehavioralData,
 						salt,
 						simdReadings,
 						clientMetaData,
+						fingerprintProof,
 					);
 					const escalation = verifiedSolution[ApiParams.escalation];
 					if (
@@ -340,10 +389,23 @@ export const Manager = (
 						// follow-up image/puzzle challenge. Hand off to the wrapper —
 						// don't fire onHuman or onFailed; the wrapper mounts the next
 						// widget and the standard success/failure path resumes there.
+						//
+						// Forward the trusted checkbox coords captured on this widget's
+						// tick so the escalated widget seeds its salt with the real
+						// (x, y) rather than defaulting to (0, 0). Mirrors the
+						// session-invalidated retry path in ProcaptchaFrictionless.
 						updateState({ loading: false });
+						// (0, 0) is the untrusted-event / autoStart default —
+						// treat it as "no coords" so the escalated widget doesn't
+						// re-encode a fake click into its salt. Matches the
+						// filter applied in handleSessionInvalidated.
+						const isRealClick = checkboxClickX !== 0 || checkboxClickY !== 0;
 						onEscalate?.(
 							escalation[ApiParams.captchaType],
 							escalation[ApiParams.sessionId],
+							isRealClick
+								? { x: checkboxClickX, y: checkboxClickY }
+								: undefined,
 						);
 					} else if (verifiedSolution[ApiParams.verified]) {
 						updateState({
@@ -366,6 +428,7 @@ export const Manager = (
 											userTimestampSignature.signature.toString(),
 									},
 								},
+								[ApiParams.captchaType]: CaptchaType.pow,
 							}),
 						);
 						setValidChallengeTimeout();
@@ -374,7 +437,10 @@ export const Manager = (
 					}
 				}
 			},
-			start,
+			// Retry with the same coordinates: a bare `start` restarts at the
+			// default (0, 0), which reads as "no real click" further down and
+			// costs the escalated widget the entry-point telemetry.
+			() => start(x, y),
 			() => {
 				resetState();
 			},

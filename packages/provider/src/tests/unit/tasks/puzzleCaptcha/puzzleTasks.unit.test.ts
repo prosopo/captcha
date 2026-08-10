@@ -16,19 +16,22 @@ import { stringToHex, u8aToHex } from "@polkadot/util";
 import { ProsopoApiError } from "@prosopo/common";
 import {
 	CaptchaStatus,
+	CaptchaType,
+	FrictionlessReason,
 	type KeyringPair,
 	POW_SEPARATOR,
 	type PoWChallengeId,
 	type PuzzleCaptchaStored,
 	type RequestHeaders,
 	ResultReason,
+	type Session,
 } from "@prosopo/types";
 import type {
 	IProviderDatabase,
 	PuzzleCaptchaRecord,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import { getIPAddress, verifyRecency } from "@prosopo/util";
+import { embedData, getIPAddress, verifyRecency } from "@prosopo/util";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getCompositeIpAddress } from "../../../../compositeIpAddress.js";
 import type { DecisionMachineRunner } from "../../../../tasks/decisionMachine/decisionMachineRunner.js";
@@ -44,7 +47,18 @@ type DecideFn = DecisionMachineRunner["decide"];
 // every mock call site.
 const asPuzzleRecord = (
 	partial: Partial<PuzzleCaptchaStored>,
-): PuzzleCaptchaRecord => partial as unknown as PuzzleCaptchaRecord;
+): PuzzleCaptchaRecord => {
+	// Ensure `submittedAtTimestamp` is set on every mocked record (defaults
+	// to "now"). The verify path's submit→verify recency check reads this
+	// field directly off the record; undefined would resolve to +Infinity
+	// and disapprove every test by default. Tests that need recency to
+	// fail set submittedAtTimestamp explicitly to a stale value.
+	const withDefaults: Partial<PuzzleCaptchaStored> = {
+		submittedAtTimestamp: new Date(),
+		...partial,
+	};
+	return withDefaults as unknown as PuzzleCaptchaRecord;
+};
 
 vi.mock("@polkadot/util", async (importOriginal) => {
 	const actual = await importOriginal<typeof import("@polkadot/util")>();
@@ -106,8 +120,8 @@ describe("PuzzleCaptchaManager", () => {
 			getClientRecord: vi.fn(),
 			getSessionRecordBySessionId: vi.fn(),
 			updateSessionRecord: vi.fn(),
-			getDetectorKeys: vi.fn().mockResolvedValue([]),
 			getSpamEmailDomain: vi.fn(),
+			countCommitmentsByNormalisedEmail: vi.fn(),
 		} as unknown as IProviderDatabase;
 
 		pair = {
@@ -250,6 +264,57 @@ describe("PuzzleCaptchaManager", () => {
 			expect(db.updatePuzzleCaptchaRecordResult).not.toHaveBeenCalled();
 		});
 
+		it("auto-fails with CAPTCHA_INVALID_SALT when salt decodes to invalid coords", async () => {
+			const a = buildArgs();
+			const challengeRecord: Partial<PuzzleCaptchaStored> = {
+				challenge: a.challenge,
+				dappAccount: a.dappAccount,
+				userAccount: a.userAccount,
+				targetX: 100,
+				targetY: 100,
+				tolerance: 15,
+				ipAddress: getCompositeIpAddress(a.ipAddress),
+				result: { status: CaptchaStatus.pending },
+				userSubmitted: false,
+			};
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord(challengeRecord),
+			);
+			vi.mocked(db.updatePuzzleCaptchaRecordResult).mockResolvedValue(
+				undefined,
+			);
+
+			const malformedSalt = "0x010200";
+
+			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
+				a.challenge,
+				a.providerSignature,
+				100,
+				100,
+				[],
+				1000,
+				a.userSignature,
+				a.ipAddress,
+				a.headers,
+				undefined, // behavioralData
+				malformedSalt,
+			);
+
+			expect(result).toBe(false);
+			expect(validatePuzzleSolution).not.toHaveBeenCalled();
+			expect(db.updatePuzzleCaptchaRecordResult).toHaveBeenCalledWith(
+				a.challenge,
+				{
+					status: CaptchaStatus.disapproved,
+					reason: ResultReason.CAPTCHA_INVALID_SALT,
+				},
+				false, // serverChecked
+				true, // userSubmitted
+				a.userSignature,
+				undefined, // coords must NOT be the bad value
+			);
+		});
+
 		it("returns false and records a timeout when the challenge is not recent", async () => {
 			const a = buildArgs();
 			const challengeRecord: Partial<PuzzleCaptchaStored> = {
@@ -339,6 +404,72 @@ describe("PuzzleCaptchaManager", () => {
 			expect(db.updatePuzzleCaptchaRecord).toHaveBeenCalledWith(
 				a.challenge,
 				expect.objectContaining({ puzzleEvents: [{ x: 1, y: 1, t: 1 }] }),
+			);
+		});
+
+		// Locks in the contract added by the puzzle DM threading PR (#2873):
+		// the widget encodes the trusted checkbox click into the salt as
+		// [x, y]; the provider decodes and persists them as coords[0][0].
+		// The cypress spec only asserts /captcha/puzzle fires — this test
+		// asserts the coords actually land on the record, so a regression
+		// that drops the decode (or writes [0,0]) surfaces here.
+		it("extracts checkbox click coords from salt and persists them as coords[0][0]", async () => {
+			const a = buildArgs();
+			const challengeRecord: Partial<PuzzleCaptchaStored> = {
+				challenge: a.challenge,
+				dappAccount: a.dappAccount,
+				userAccount: a.userAccount,
+				targetX: 100,
+				targetY: 100,
+				tolerance: 15,
+				ipAddress: getCompositeIpAddress(a.ipAddress),
+				result: { status: CaptchaStatus.pending },
+			};
+
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord(challengeRecord),
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+			vi.mocked(validatePuzzleSolution).mockReturnValue(true);
+
+			// Match the widget's client-side salt encoding (see
+			// procaptcha-puzzle/src/services/Manager.ts submitSolution):
+			// random hex + embedData(x, y). We use a fixed hex string
+			// here rather than randomAsHex — the file-wide `u8aToHex`
+			// mock (line 143) returns "0xsigned" for every call, which
+			// breaks randomAsHex's byte→hex conversion, so a literal is
+			// the only reliable way to hand embedData a long-enough hex
+			// buffer in this test file.
+			const clickX = 158;
+			const clickY = 42;
+			const coordsToEmbed = [clickX, clickY];
+			const salt = embedData(`0x${"a".repeat(64)}`, coordsToEmbed);
+
+			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
+				a.challenge,
+				a.providerSignature,
+				102,
+				101,
+				[{ x: 1, y: 1, t: 1 }],
+				1000,
+				a.userSignature,
+				a.ipAddress,
+				a.headers,
+				undefined, // behavioralData
+				salt,
+			);
+
+			expect(result).toBe(true);
+			expect(db.updatePuzzleCaptchaRecordResult).toHaveBeenCalledWith(
+				a.challenge,
+				{ status: CaptchaStatus.approved },
+				false,
+				true,
+				a.userSignature,
+				// The whole contract: coords[0] is the "click" tile, coords[0][0]
+				// is the [x, y] pair the widget embedded. A regression that drops
+				// the decode or writes [0, 0] fails this exact match.
+				[[[clickX, clickY]]],
 			);
 		});
 
@@ -478,6 +609,9 @@ describe("PuzzleCaptchaManager", () => {
 					dappAccount,
 					result: { status: CaptchaStatus.approved },
 					serverChecked: false,
+					// Stale submit time → submit→verify delta exceeds any
+					// sane timeout. Triggers the recency-fail branch.
+					submittedAtTimestamp: new Date(0),
 				}),
 			);
 			vi.mocked(verifyRecency).mockImplementation(() => false);
@@ -576,6 +710,325 @@ describe("PuzzleCaptchaManager", () => {
 					}),
 				}),
 			);
+		});
+
+		// Locks in the ordering: checkForHardBlock at line ~509 short-
+		// circuits before the decisionMachineRunner.decide() call at
+		// line ~741. If a request matches BOTH a hard-block access
+		// policy AND a DM that would deny with a different reason, the
+		// commitment must carry ACCESS_POLICY_BLOCK — not the DM's
+		// reason. Guards against a refactor that accidentally flips the
+		// order (letting DM decide first and win the reason field),
+		// which would break audit trails that distinguish operator-set
+		// blocks from DM-set denies.
+		it("access-policy hard block wins over DM deny — commitment reason is ACCESS_POLICY_BLOCK", async () => {
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord({
+					challenge,
+					dappAccount,
+					userAccount: "user",
+					result: { status: CaptchaStatus.approved },
+					serverChecked: false,
+					headers: { a: "1" },
+				}),
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+
+			// Stub checkForHardBlock to return a matching Block policy.
+			// The real path queries userAccessRulesStorage via
+			// getPrioritisedAccessPolicies; short-circuiting the method
+			// avoids reconstructing that whole Redis fixture for one
+			// order-of-operations assertion.
+			const originalCheckForHardBlock = puzzleCaptchaManager.checkForHardBlock;
+			puzzleCaptchaManager.checkForHardBlock = vi.fn().mockResolvedValue({
+				type: "block",
+				description: "test-hard-block",
+			});
+
+			// DM would ALSO deny with a distinguishable reason — this is
+			// the whole point: the assertion below must match the AP
+			// reason, not this one.
+			const decideSpy = vi.fn().mockResolvedValue({
+				decision: "deny",
+				reason: "CAPTCHA.DM_WOULD_HAVE_DENIED",
+				score: 0,
+			});
+			mockDecisionMachine(decideSpy);
+
+			try {
+				const result =
+					await puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+						dappAccount,
+						challenge,
+						1000,
+						mockEnv,
+						undefined, // ip
+						// Truthy storage triggers the checkForHardBlock branch;
+						// the stub above ignores whatever's passed here.
+						// biome-ignore lint/suspicious/noExplicitAny: test stub
+						{} as any,
+					);
+
+				expect(result.verified).toBe(false);
+				// AP reason wins. DM's reason must NOT appear.
+				expect(db.updatePuzzleCaptchaRecord).toHaveBeenCalledWith(
+					challenge,
+					expect.objectContaining({
+						result: expect.objectContaining({
+							status: CaptchaStatus.disapproved,
+							reason: ResultReason.ACCESS_POLICY_BLOCK,
+						}),
+					}),
+				);
+				// DM should never have been consulted — checkForHardBlock
+				// short-circuits before the DM branch runs.
+				expect(decideSpy).not.toHaveBeenCalled();
+			} finally {
+				puzzleCaptchaManager.checkForHardBlock = originalCheckForHardBlock;
+			}
+		});
+
+		it("forwards every session-derived field into the decide() input", async () => {
+			const sessionId = "puzzle-session-id";
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord({
+					challenge,
+					dappAccount,
+					userAccount: "user",
+					result: { status: CaptchaStatus.approved },
+					serverChecked: false,
+					headers: { a: "1" },
+					sessionId,
+				}),
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+
+			const ipAddress = getIPAddress("1.1.1.1");
+			const sessionRecord: Session = {
+				sessionId,
+				createdAt: new Date(),
+				token: "test-token",
+				score: 0.42,
+				threshold: 0.27,
+				scoreComponents: {
+					baseScore: 1,
+					unverifiedHost: 0.2,
+					dnsAsymmetry: 0.5,
+					triggeredDetectors: [27],
+					shadowDomPenalty: false,
+				},
+				ipAddress: getCompositeIpAddress(ipAddress),
+				captchaType: CaptchaType.puzzle,
+				webView: false,
+				iFrame: true,
+				decryptedHeadHash: "h".repeat(16),
+				userSitekeyIpHash: "ush",
+				reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
+				ruleType: ["ja4Hash"],
+				simdReadings: {
+					supported: true,
+					schema: 1,
+					timerResolutionMs: 0.1,
+					runsPerOp: 3,
+					durationMs: 200,
+					ops: [],
+				},
+			};
+			vi.mocked(db.getSessionRecordBySessionId).mockResolvedValue(
+				sessionRecord,
+			);
+
+			const decideSpy = vi
+				.fn()
+				.mockResolvedValue({ decision: "allow" } as const);
+			mockDecisionMachine(decideSpy);
+
+			await puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+				dappAccount,
+				challenge,
+				1000,
+				mockEnv,
+			);
+
+			expect(decideSpy).toHaveBeenCalledOnce();
+			const input = decideSpy.mock.calls[0]?.[0];
+			expect(input.captchaType).toBe(CaptchaType.puzzle);
+			expect(input.threshold).toBe(sessionRecord.threshold);
+			expect(input.scoreComponents).toEqual(sessionRecord.scoreComponents);
+			expect(input.decryptedHeadHash).toBe(sessionRecord.decryptedHeadHash);
+			expect(input.userSitekeyIpHash).toBe(sessionRecord.userSitekeyIpHash);
+			expect(input.simdReadings).toEqual(sessionRecord.simdReadings);
+			expect(input.frictionlessReason).toBe(sessionRecord.reason);
+			expect(input.ruleType).toEqual(sessionRecord.ruleType);
+			expect(input.webView).toBe(sessionRecord.webView);
+			expect(input.iFrame).toBe(sessionRecord.iFrame);
+			expect(typeof input.score).toBe("number");
+		});
+	});
+
+	describe("serverVerifyPuzzleCaptchaSolution with maxEmailSubmissionCount", () => {
+		// Positional invoke helper — the puzzle signature now takes a
+		// spamFilter between spamEmailDomainCheckingEnabled and
+		// trafficFilter. The count check block sits below the domain
+		// check and needs `storeMetadata` on.
+		const invoke = async ({
+			challenge,
+			dappAccount,
+			email,
+			maxEmailSubmissionCount,
+			storeMetadata,
+		}: {
+			challenge: string;
+			dappAccount: string;
+			email: string | undefined;
+			maxEmailSubmissionCount: number | undefined;
+			storeMetadata: boolean;
+		}) =>
+			puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+				dappAccount,
+				challenge,
+				60_000,
+				mockEnv,
+				undefined, // ip
+				undefined, // userAccessRulesStorage
+				email,
+				false, // spamEmailDomainCheckingEnabled
+				maxEmailSubmissionCount !== undefined
+					? {
+							enabled: true,
+							emailRules: {
+								enabled: true,
+								maxEmailSubmissionCount,
+								normaliseGmail: false,
+								useDefaultPatterns: false,
+								customRegexBlocklist: [],
+							},
+						}
+					: undefined,
+				undefined, // trafficFilter
+				storeMetadata,
+			);
+
+		const seedApprovedPuzzle = (challenge: string, dappAccount: string) => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getPuzzleCaptchaRecordByChallenge as any).mockResolvedValue(
+				asPuzzleRecord({
+					challenge: challenge as PoWChallengeId,
+					dappAccount,
+					userAccount: "user",
+					result: { status: CaptchaStatus.approved },
+					serverChecked: false,
+					headers: { a: "1" },
+				}),
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.updatePuzzleCaptchaRecord as any).mockResolvedValue(undefined);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(verifyRecency as any).mockImplementation(() => true);
+			mockDecisionMachine(
+				vi.fn().mockResolvedValue({
+					decision: "allow",
+					reason: undefined,
+					score: 1,
+				}),
+			);
+		};
+
+		it("rejects with SPAM_EMAIL_COUNT_EXCEEDED at the cap", async () => {
+			const dappAccount = "dappAccount";
+			const challenge = "1___u___dappAccount";
+			seedApprovedPuzzle(challenge, dappAccount);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.countCommitmentsByNormalisedEmail as any).mockResolvedValue(2);
+
+			const result = await invoke({
+				challenge,
+				dappAccount,
+				email: "alice+promo@gmail.com",
+				maxEmailSubmissionCount: 2,
+				storeMetadata: true,
+			});
+
+			expect(result.verified).toBe(false);
+			expect(db.countCommitmentsByNormalisedEmail).toHaveBeenCalledWith(
+				dappAccount,
+				"alice@gmail.com",
+			);
+			expect(db.updatePuzzleCaptchaRecord).toHaveBeenCalledWith(
+				challenge,
+				expect.objectContaining({
+					result: expect.objectContaining({
+						status: CaptchaStatus.disapproved,
+						reason: ResultReason.SPAM_EMAIL_COUNT_EXCEEDED,
+					}),
+				}),
+			);
+		});
+
+		it("allows below the cap and writes emailNormalised to metadata", async () => {
+			const dappAccount = "dappAccount";
+			const challenge = "2___u___dappAccount";
+			seedApprovedPuzzle(challenge, dappAccount);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.countCommitmentsByNormalisedEmail as any).mockResolvedValue(1);
+
+			const result = await invoke({
+				challenge,
+				dappAccount,
+				email: "alice+a@gmail.com",
+				maxEmailSubmissionCount: 3,
+				storeMetadata: true,
+			});
+
+			expect(result.verified).toBe(true);
+			// Puzzle writes metadata via a dedicated call; that call must
+			// carry both the raw and normalised email so subsequent counts
+			// can find this record.
+			expect(db.updatePuzzleCaptchaRecord).toHaveBeenCalledWith(
+				challenge,
+				expect.objectContaining({
+					metadata: expect.objectContaining({
+						email: "alice+a@gmail.com",
+						emailNormalised: "alice@gmail.com",
+					}),
+				}),
+			);
+		});
+
+		it("skips the count query when storeMetadata is off", async () => {
+			const dappAccount = "dappAccount";
+			const challenge = "3___u___dappAccount";
+			seedApprovedPuzzle(challenge, dappAccount);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.countCommitmentsByNormalisedEmail as any).mockResolvedValue(99);
+
+			const result = await invoke({
+				challenge,
+				dappAccount,
+				email: "alice@gmail.com",
+				maxEmailSubmissionCount: 3,
+				storeMetadata: false,
+			});
+
+			expect(result.verified).toBe(true);
+			expect(db.countCommitmentsByNormalisedEmail).not.toHaveBeenCalled();
+		});
+
+		it("skips the count query when maxEmailSubmissionCount is undefined", async () => {
+			const dappAccount = "dappAccount";
+			const challenge = "4___u___dappAccount";
+			seedApprovedPuzzle(challenge, dappAccount);
+
+			const result = await invoke({
+				challenge,
+				dappAccount,
+				email: "alice@gmail.com",
+				maxEmailSubmissionCount: undefined,
+				storeMetadata: true,
+			});
+
+			expect(result.verified).toBe(true);
+			expect(db.countCommitmentsByNormalisedEmail).not.toHaveBeenCalled();
 		});
 	});
 });

@@ -35,7 +35,7 @@ services:
             - 208.67.222.222
     database:
         container_name: database
-        image: mongo:6.0.17
+        image: mongo:6.0.28
         volumes:
             - /data/db:/data/db
         ports:

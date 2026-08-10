@@ -1,5 +1,363 @@
 # @prosopo/procaptcha-common
 
+## 2.11.22
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+  - @prosopo/types@5.0.2
+  - @prosopo/account@2.8.68
+  - @prosopo/load-balancer@2.10.19
+
+## 2.11.21
+### Patch Changes
+
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/types@5.0.1
+  - @prosopo/account@2.8.67
+  - @prosopo/load-balancer@2.10.18
+
+## 2.11.20
+### Patch Changes
+
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [6f19cde]
+- Updated dependencies [2bc8e73]
+  - @prosopo/types@5.0.0
+  - @prosopo/widget-skeleton@2.8.5
+  - @prosopo/account@2.8.66
+  - @prosopo/load-balancer@2.10.17
+
+## 2.11.19
+### Patch Changes
+
+  - @prosopo/account@2.8.65
+
+## 2.11.18
+### Patch Changes
+
+- ab3499c: feat(procaptcha): block on SIMD readings at solution submit
+  
+  Solution submit is the last hop the client controls, so it's the last chance to
+  attach the catcher's WASM SIMD readings for a session. The image, PoW and puzzle
+  managers now wait for the benchmark there via a shared
+  `getSimdReadingsForSubmit` helper, capped at 5s, instead of attaching only
+  whatever the prefetch happened to have resolved.
+  
+  The helper passes the budget down to the detector *and* races it locally — the
+  detector ships prebuilt, so a bundle that ignores `timeoutMs` (or a benchmark
+  wedged on a busy main thread) can't hang the submission. It never rejects: a
+  missing accessor, a rejection, a synchronous throw and a timeout all resolve to
+  `undefined` and the solution is submitted without readings, so a user is never
+  failed over telemetry.
+  
+  The earlier frictionless POST and challenge GET hops are unchanged and remain
+  non-blocking.
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [103318c]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+  - @prosopo/types@4.10.0
+  - @prosopo/account@2.8.64
+  - @prosopo/load-balancer@2.10.16
+
+## 2.11.17
+### Patch Changes
+
+- Updated dependencies [a0cb39e]
+  - @prosopo/types@4.9.12
+  - @prosopo/account@2.8.63
+  - @prosopo/load-balancer@2.10.15
+
+## 2.11.16
+### Patch Changes
+
+- Updated dependencies [b9ca0e7]
+  - @prosopo/types@4.9.11
+  - @prosopo/account@2.8.62
+  - @prosopo/load-balancer@2.10.14
+
+## 2.11.15
+### Patch Changes
+
+- Updated dependencies [a39c4ec]
+  - @prosopo/load-balancer@2.10.13
+
+## 2.11.14
+### Patch Changes
+
+- Updated dependencies [0a4f902]
+  - @prosopo/types@4.9.10
+  - @prosopo/account@2.8.61
+  - @prosopo/load-balancer@2.10.12
+
+## 2.11.13
+### Patch Changes
+
+  - @prosopo/types@4.9.9
+  - @prosopo/account@2.8.60
+  - @prosopo/load-balancer@2.10.11
+
+## 2.11.12
+### Patch Changes
+
+- Updated dependencies [b0d446f]
+  - @prosopo/account@2.8.59
+
+## 2.11.11
+### Patch Changes
+
+- Updated dependencies [ced80a4]
+  - @prosopo/account@2.8.58
+
+## 2.11.10
+### Patch Changes
+
+  - @prosopo/account@2.8.57
+  - @prosopo/load-balancer@2.10.10
+
+## 2.11.9
+### Patch Changes
+
+- Updated dependencies [85e8857]
+  - @prosopo/types@4.9.8
+  - @prosopo/account@2.8.56
+  - @prosopo/load-balancer@2.10.9
+
+## 2.11.8
+### Patch Changes
+
+- Updated dependencies [8bde5df]
+  - @prosopo/types@4.9.7
+  - @prosopo/account@2.8.55
+  - @prosopo/load-balancer@2.10.8
+
+## 2.11.7
+### Patch Changes
+
+- b3f351b: fix(procaptcha): random provider re-selection + backoff on error fallback
+  
+  When a provider errored, the widget retried the same DNS-routed endpoint immediately and in a tight loop. A fleet of widgets whose provider was unhealthy could therefore accidentally DDoS the provider fleet — retrying the same (possibly-down) endpoint as fast as the event loop allowed.
+  
+  The error-fallback path now:
+  
+  - **Re-selects a different provider on retry.** The first attempt still hits the DNS-routed endpoint (unchanged happy path, preserves session stickiness). On a retry the widget picks a random provider straight from the provider list (`getRandomProviderFromList`), weighted by provider capacity and excluding the URL that just failed. In development the list holds only the single local provider, so a retry simply re-targets that provider.
+  - **Backs off between retries.** `providerRetry` now waits an exponential-backoff-with-full-jitter delay (0.5s → 1s → 2s → 4s …, capped at 10s) before retrying, so a down provider is no longer hammered and a fleet of clients that all errored at once don't reconverge into a thundering herd.
+  
+  Applies to the image, PoW and puzzle managers and the frictionless detection flow. New shared `ProviderSelectRetryContext` type; `BotDetectionFunction` gains an optional retry-context argument.
+- Updated dependencies [b3f351b]
+- Updated dependencies [17bc76e]
+  - @prosopo/load-balancer@2.10.7
+  - @prosopo/types@4.9.6
+  - @prosopo/account@2.8.54
+
+## 2.11.6
+### Patch Changes
+
+- Updated dependencies [6cb3218]
+  - @prosopo/types@4.9.5
+  - @prosopo/account@2.8.53
+  - @prosopo/load-balancer@2.10.6
+
+## 2.11.5
+### Patch Changes
+
+- Updated dependencies [de12b31]
+- Updated dependencies [770954b]
+  - @prosopo/types@4.9.4
+  - @prosopo/account@2.8.52
+  - @prosopo/load-balancer@2.10.5
+
+## 2.11.4
+### Patch Changes
+
+- Updated dependencies [18d0287]
+  - @prosopo/types@4.9.3
+  - @prosopo/account@2.8.51
+  - @prosopo/load-balancer@2.10.4
+
+## 2.11.3
+### Patch Changes
+
+- Updated dependencies [7a434e0]
+  - @prosopo/types@4.9.2
+  - @prosopo/account@2.8.50
+  - @prosopo/load-balancer@2.10.3
+
+## 2.11.2
+### Patch Changes
+
+- Updated dependencies [8986976]
+- Updated dependencies [970bca2]
+  - @prosopo/types@4.9.1
+  - @prosopo/account@2.8.49
+  - @prosopo/load-balancer@2.10.2
+
+## 2.11.1
+### Patch Changes
+
+- Updated dependencies [6ecc576]
+- Updated dependencies [619dc9f]
+- Updated dependencies [b166037]
+- Updated dependencies [1111ff2]
+- Updated dependencies [6a7b122]
+  - @prosopo/widget-skeleton@2.8.4
+  - @prosopo/types@4.9.0
+  - @prosopo/load-balancer@2.10.1
+  - @prosopo/account@2.8.48
+
+## 2.11.0
+### Minor Changes
+
+- 12cd0a6: Replace client-side weighted-random provider selection with static DNS endpoints.
+  
+  - Removed the `providerSelectEntropy` field from `DetectorResult`, `Session`, the
+    Mongoose `SessionRecordSchema` (including its standalone index), and every
+    call-site that threaded it through frictionless / image / pow / puzzle flows.
+  - Removed `FrictionlessManager.hostVerified` and its decision-machine call site
+    — there's nothing to verify when the DNS layer picks the host.
+  - `getRandomActiveProvider(env)` now returns the per-environment static DNS
+    endpoint (`pronode.prosopo.io` family) instead of fetching the provider list
+    and weighted-selecting. The entropy parameter is gone.
+  - `getProcaptchaRandomActiveProvider` is now a thin re-export so widget packages
+    keep importing from `procaptcha-common`.
+  - `FrontendProvider.datasetId` is dropped; `CaptchaRequestBody.datasetId` is
+    optional. The server falls back to its own most-recently-uploaded dataset
+    (`env.datasetId`, populated from `db.getMostRecentDatasetId()` at startup) —
+    clients can't pin a dataset under DNS routing because they don't know which
+    pronode they'll hit.
+  - Removed dead `setProviderLoader` / `prefetchProviders` / `selectWeightedProvider`
+    plumbing from `@prosopo/load-balancer`. The server's cacheFile-based loader
+    setup in `startProviderApi` goes with them.
+  - `getRandomActiveProvider` now hits `/healthz` on the global hostname once per
+    page load, reads the responding pronode's identity from the JSON body, and
+    pins subsequent captcha calls to that pronode (`https://pronodeN.prosopo.io`)
+    so session creation and submission land on the same backend. Falls back to
+    the dual-stack global hostname when `/healthz` is unreachable.
+  - `/healthz` now returns `{ ok: true, host: <pronode-identity> }` instead of
+    `"OK"` to support the above pinning.
+  - CORS preflight is now cached for 24h (`maxAge: 86400`) — previously the
+    browser refired an OPTIONS preflight before every captcha call because
+    the custom `Prosopo-Site-Key` / `Prosopo-User` headers make the request
+    non-simple and the default `maxAge` is 5s.
+- 12cd0a6: Add ipv4-only / ipv6-only provider DNS routing via `data-ipv4` / `data-ipv6`.
+  
+  Dapps that need to pin captcha traffic to a single IP stack can now do so:
+  
+  ```html
+  <div class="procaptcha" data-sitekey="..." data-ipv4="true"></div>
+  ```
+  
+  What happens under the hood:
+  
+  - The widget reads `data-ipv4` / `data-ipv6` (or the matching `ipv4` / `ipv6`
+    booleans on `ProcaptchaRenderOptions` / explicit `render(...)`) and threads
+    them through `ProcaptchaConfigSchema`.
+  - `pickIpMode(config)` resolves them into an `IpMode` (`"ipv4"` / `"ipv6"` /
+    `undefined`); `ipv4` wins if both are set.
+  - The frictionless / image / pow / puzzle managers pass the `IpMode` into
+    `getProcaptchaRandomActiveProvider`, which calls `/healthz` on the matching
+    single-stack global hostname (`ipv4.pronode.prosopo.io` or
+    `ipv6.pronode.prosopo.io`) and pins subsequent captcha calls to
+    `ipv4.pronodeN.prosopo.io` / `ipv6.pronodeN.prosopo.io`. The dual-stack
+    cache and the single-stack caches are kept separate.
+  - `convertHostedProvider` now accepts an optional `IpMode` and, when set,
+    selects the matching `ipv4` / `ipv6` sub-object from the provider-list JSON.
+    Top-level `ipv4` / `ipv6` keys are skipped by default so existing dual-stack
+    callers keep working.
+  - New helpers in `@prosopo/load-balancer`: `IpMode`, `stripIpModeLabel`,
+    `getProviderHostname`.
+  
+  Coordinated with the matching `captcha-private` change that publishes the
+  `ipv4` / `ipv6` sub-objects to S3.
+
+### Patch Changes
+
+- Updated dependencies [12cd0a6]
+- Updated dependencies [12cd0a6]
+  - @prosopo/load-balancer@2.10.0
+  - @prosopo/types@4.8.0
+  - @prosopo/account@2.8.47
+
+## 2.10.28
+### Patch Changes
+
+- Updated dependencies [bb98af1]
+  - @prosopo/types@4.7.4
+  - @prosopo/account@2.8.46
+  - @prosopo/load-balancer@2.9.21
+
+## 2.10.27
+### Patch Changes
+
+- Updated dependencies [89ab6fc]
+- Updated dependencies [0f3750b]
+  - @prosopo/types@4.7.3
+  - @prosopo/account@2.8.45
+  - @prosopo/load-balancer@2.9.20
+
+## 2.10.26
+### Patch Changes
+
+- Updated dependencies [edcd450]
+- Updated dependencies [5295c4b]
+  - @prosopo/types@4.7.2
+  - @prosopo/account@2.8.44
+  - @prosopo/load-balancer@2.9.19
+
+## 2.10.25
+### Patch Changes
+
+- Updated dependencies [46fedf4]
+  - @prosopo/types@4.7.1
+  - @prosopo/account@2.8.43
+  - @prosopo/load-balancer@2.9.18
+
+## 2.10.24
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/types@4.7.0
+  - @prosopo/account@2.8.42
+  - @prosopo/load-balancer@2.9.17
+
+## 2.10.23
+### Patch Changes
+
+- Updated dependencies [4626340]
+  - @prosopo/types@4.6.1
+  - @prosopo/account@2.8.41
+  - @prosopo/load-balancer@2.9.16
+
+## 2.10.22
+### Patch Changes
+
+- Updated dependencies [55b1388]
+  - @prosopo/types@4.6.0
+  - @prosopo/account@2.8.40
+  - @prosopo/load-balancer@2.9.15
+
+## 2.10.21
+### Patch Changes
+
+- Updated dependencies [9b91e85]
+- Updated dependencies [c80a05b]
+  - @prosopo/types@4.5.0
+  - @prosopo/account@2.8.39
+  - @prosopo/load-balancer@2.9.14
+
+## 2.10.20
+### Patch Changes
+
+- Updated dependencies [f69724f]
+- Updated dependencies [3973078]
+  - @prosopo/types@4.4.1
+  - @prosopo/account@2.8.38
+  - @prosopo/load-balancer@2.9.13
+
 ## 2.10.19
 ### Patch Changes
 

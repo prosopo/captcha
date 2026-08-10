@@ -43,6 +43,7 @@
 		"INVALID_BODY": "Invalid body",
 		"PARSE_ERROR": "Error parsing request",
 		"SPAM_EMAIL_RULE": "Alamat email diblokir oleh aturan filter spam",
+		"SPAM_EMAIL_COUNT_EXCEEDED": "Terlalu banyak pengiriman dari alamat email ini",
 		"VPN_BLOCKED": "Permintaan dari koneksi VPN tidak diizinkan untuk situs ini",
 		"PROXY_BLOCKED": "Permintaan dari server proxy tidak diizinkan untuk situs ini",
 		"TOR_BLOCKED": "Permintaan dari node keluar Tor tidak diizinkan untuk situs ini",
@@ -436,6 +437,7 @@
 		"NO_CAPTCHA": "No captcha found",
 		"NO_SESSION_FOUND": "No session found",
 		"IP_ADDRESS_MISMATCH": "Alamat IP tidak cocok",
+		"INVALID_SALT": "Salt tidak valid",
 		"INVALID_TOKEN": "Invalid token",
 		"INVALID_SOLUTION": "Invalid solution",
 		"DECRYPTION_ERROR": "Error decrypting"

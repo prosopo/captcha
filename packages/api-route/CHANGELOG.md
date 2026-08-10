@@ -1,5 +1,64 @@
 # @prosopo/api-route
 
+## 2.6.54
+### Patch Changes
+
+- Updated dependencies [2aabe73]
+  - @prosopo/logger@2.0.5
+
+## 2.6.53
+### Patch Changes
+
+- a58d007: test(api-route): cover the endpoint contract, and export ApiRouteLimit
+  
+  This package ships exactly one runtime value, so most of its business logic
+  lives in its types — notably the conditional signature of
+  `ApiEndpoint.processRequest`, which gives an endpoint with a schema its parsed
+  arguments and an endpoint without one no arguments at all. Both branches are
+  now covered by type tests, alongside runtime tests for the response status enum
+  (its strings cross the wire and are compared literally by clients) and for the
+  package's export surface.
+  
+  Writing them surfaced a gap: `ApiRouteLimit` was declared but never re-exported,
+  so a consumer assembling an `ApiRouteLimits` record entry by entry had no way to
+  name what it was building and had to redeclare the shape. It is now exported.
+  - @prosopo/logger@2.0.4
+
+## 2.6.52
+### Patch Changes
+
+- Updated dependencies [6abff15]
+  - @prosopo/logger@2.0.3
+
+## 2.6.51
+### Patch Changes
+
+  - @prosopo/logger@2.0.2
+
+## 2.6.50
+### Patch Changes
+
+  - @prosopo/logger@2.0.1
+
+## 2.6.49
+### Patch Changes
+
+- Updated dependencies [7ebb78f]
+- Updated dependencies [948d36b]
+- Updated dependencies [41e0e11]
+- Updated dependencies [3c80664]
+  - @prosopo/logger@2.0.0
+
+## 2.6.48
+### Patch Changes
+
+  - @prosopo/logger@1.0.4
+
+## 2.6.47
+### Patch Changes
+
+  - @prosopo/logger@1.0.3
+
 ## 2.6.46
 ### Patch Changes
 
