@@ -187,6 +187,7 @@ export const UserSettingsSchema = new Schema({
 			normaliseGmail: { type: Boolean, default: false },
 			useDefaultPatterns: { type: Boolean, default: false },
 			customRegexBlocklist: { type: [String], default: [] },
+			maxEmailSubmissionCount: { type: Number, min: 1, required: false },
 		},
 	},
 	trafficFilter: {

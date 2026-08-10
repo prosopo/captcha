@@ -24,12 +24,11 @@
 //      the captchaType-equality check accidentally rejecting matching
 //      Restricts (the same check that had the sanitiser bug for Block).
 //   2. Restrict with `captchaType: pow` on an image request →
-//      isValidRequest returns INCORRECT_CAPTCHA_TYPE with 400. This IS
-//      the intended behaviour for Restrict — an operator saying "you may
-//      only complete pow" and the widget asking for image.
-//
-// Unlike Block, Restrict has no `deferToVerify` semantics that matter at
-// request time — the pin-mismatch check fires unconditionally.
+//      session captchaType wins over the restrict pin (PR #3010): when a
+//      valid session exists, its captchaType is authoritative at the
+//      /captcha/{type} gate; the policy still fires at verify time via
+//      the decision machine. So the /captcha/image call returns 200 even
+//      though the policy pins pow.
 
 import "@cypress/xpath";
 import { CaptchaType } from "@prosopo/types";
@@ -129,17 +128,19 @@ describe("User access policy Restrict rules", () => {
 			});
 	});
 
-	it("Restrict pinning a different captchaType returns 400 INCORRECT_CAPTCHA_TYPE", () => {
-		// Restrict says "you must do pow" but the image sitekey is
-		// serving image. isValidRequest's captchaType-equality check
-		// fires (this is the intended behaviour for Restrict — it's what
-		// makes the captchaType pin do useful work).
+	it("Restrict pinning a different captchaType is overridden by the session's captchaType (200)", () => {
+		// Restrict says "you must do pow" but the widget already minted a
+		// session for the image sitekey. PR #3010 made the session
+		// captchaType authoritative at /captcha/{type} — the /captcha/image
+		// call therefore returns 200 despite the mismatched pin. The
+		// restrict policy still fires at verify time via the decision
+		// machine's hard-block path; that half is covered by the verify-
+		// time restrict tests.
 		//
 		// Intercept /captcha/image specifically (not /captcha/**) — the
-		// widget hits /captcha/frictionless FIRST which returns 200 (the
-		// pin-mismatch check only fires on the specific-type endpoint),
-		// and matching /captcha/** would catch the frictionless response
-		// before the image one and hide the real behaviour.
+		// widget hits /captcha/frictionless FIRST which returns 200, and
+		// matching /captcha/** would catch that response before the image
+		// one and hide the real behaviour.
 		cy.addAccessRules(buildRestrictRule({ captchaType: "pow" })).then(
 			(response) => {
 				expect(response.status).to.equal(200);
@@ -165,8 +166,8 @@ describe("User access policy Restrict rules", () => {
 			.then((response) => {
 				expect(
 					response?.statusCode,
-					"Restrict pinning a different captchaType should 400",
-				).to.equal(400);
+					"session captchaType wins over restrict pin at /captcha/{type}",
+				).to.equal(200);
 			});
 	});
 

@@ -43,6 +43,7 @@
 		"INVALID_BODY": "Nội dung không hợp lệ",
 		"PARSE_ERROR": "Lỗi phân tích yêu cầu",
 		"SPAM_EMAIL_RULE": "Địa chỉ email bị chặn bởi quy tắc bộ lọc spam",
+		"SPAM_EMAIL_COUNT_EXCEEDED": "Quá nhiều lượt gửi từ địa chỉ email này",
 		"VPN_BLOCKED": "Các yêu cầu từ kết nối VPN không được phép cho trang web này",
 		"PROXY_BLOCKED": "Các yêu cầu từ máy chủ proxy không được phép cho trang web này",
 		"TOR_BLOCKED": "Các yêu cầu từ nút thoát Tor không được phép cho trang web này",

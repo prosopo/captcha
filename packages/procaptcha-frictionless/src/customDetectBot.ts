@@ -34,10 +34,12 @@ import {
 	takePrefetchedDetector,
 } from "./detectorPrefetch.js";
 
-// Upper bound on the detector-bundle assignment + load probe. The detector
-// lives ONLY in the provider-served pool bundles, so if the provider is
-// slow/unreachable we abandon the probe and send an empty token.
-const ASSIGN_TIMEOUT_MS = 2000;
+// Upper bound on the assign POST, which serves the detector bundle inline
+// (~215 KB gzipped). The hop is always cold — /healthz pins a different
+// hostname, so it pays fresh DNS + TLS + a CORS preflight before the download
+// even starts, measured at 6.7s against staging. Anything tighter silently
+// drops the detector and sends an empty token.
+const ASSIGN_TIMEOUT_MS = 10_000;
 
 // The page(s) the widget is rendered on, reduced to origin + path.
 // Deliberately built from `origin` + `pathname` (never `href`) so the query
@@ -227,14 +229,27 @@ const customDetectBot: BotDetectionFunction = async (
 				ASSIGN_TIMEOUT_MS,
 			));
 		if (assigned.useProviderBundle && assigned.detectorScript) {
+			// Deliberately untimed: this is a local parse + evaluate, so a timer
+			// cannot rescue a stalled main thread — it can only throw away a bundle
+			// we are already holding.
+			providerDetect = await DetectorLoaderFromScript(assigned.detectorScript);
 			detectorSessionId = assigned.detectorSessionId;
-			providerDetect = await withTimeout(
-				DetectorLoaderFromScript(assigned.detectorScript),
-				ASSIGN_TIMEOUT_MS,
-			);
 		}
-	} catch {
+	} catch (err) {
 		// No detector available — fall through to the PoW request below.
+		//
+		// Report it. Falling back is by design, but the reasons are not equal: a
+		// slow network is routine, whereas a bundle that throws on import means
+		// every session on this provider silently degrades to an image captcha
+		// with nothing in the client or provider logs to say why. That failure
+		// mode shipped undetected once already — an obfuscator seed emitted a
+		// bundle that died with "Class constructor X cannot be invoked without
+		// 'new'", and the only way to see it was to reproduce the import by hand.
+		// The catch stays broad; it just no longer hides what it caught.
+		console.error(
+			"Procaptcha: no detector bundle available, falling back to a server-chosen captcha:",
+			err,
+		);
 	}
 
 	const ExtClass = await extClassPromise;
