@@ -15,12 +15,7 @@
 import { handleErrors } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/env";
-import {
-	HealthApiPaths,
-	type HealthResponse,
-	type ProviderDetails,
-	PublicApiPaths,
-} from "@prosopo/types";
+import { type ProviderDetails, PublicApiPaths } from "@prosopo/types";
 import { version } from "@prosopo/util";
 import express, { type Router } from "express";
 import { metricsEnabled, metricsHandler } from "./metrics.js";
@@ -53,14 +48,6 @@ export function publicRouter(env: ProviderEnvironment): Router {
 	if (metricsEnabled()) {
 		router.get(PublicApiPaths.Metrics, metricsHandler(env));
 	}
-
-	router.get(HealthApiPaths.Health, (req, res) => {
-		const response: HealthResponse = {
-			alive: true,
-			timestamp: new Date().toISOString(),
-		};
-		res.json(response);
-	});
 
 	/**
 	 * Gets public details of the provider
