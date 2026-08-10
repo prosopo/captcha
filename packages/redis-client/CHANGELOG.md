@@ -1,5 +1,33 @@
 # @prosopo/redis-client
 
+## 1.0.31
+### Patch Changes
+
+- Updated dependencies [2aabe73]
+  - @prosopo/logger@2.0.5
+
+## 1.0.30
+### Patch Changes
+
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+  - @prosopo/logger@2.0.4
+
+## 1.0.29
+### Patch Changes
+
+- Updated dependencies [6abff15]
+  - @prosopo/logger@2.0.3
+
+## 1.0.28
+### Patch Changes
+
+  - @prosopo/logger@2.0.2
+
+## 1.0.27
+### Patch Changes
+
+  - @prosopo/logger@2.0.1
+
 ## 1.0.26
 ### Patch Changes
 

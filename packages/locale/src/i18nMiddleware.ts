@@ -12,8 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type HandleOptions, handle } from "i18next-http-middleware";
+import { handle } from "i18next-http-middleware";
 import loadI18next from "./loadI18next.js";
+
+// i18next-http-middleware stopped exporting HandleOptions in 3.9.x (the
+// interface is still there, just no longer `export`ed). Derive it from handle()
+// so it keeps tracking whatever the library actually accepts.
+type HandleOptions = NonNullable<Parameters<typeof handle>[1]>;
 
 async function i18nMiddleware(
 	options: HandleOptions,

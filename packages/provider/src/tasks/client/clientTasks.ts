@@ -428,32 +428,6 @@ export class ClientTaskManager {
 		await this.providerDB.removeClientRecords(accounts);
 	}
 
-	async updateDetectorKey(detectorKey: string): Promise<string[]> {
-		if (!isValidPrivateKey(detectorKey)) {
-			throw new ProsopoApiError("INVALID_DETECTOR_KEY", {
-				context: { detectorKey },
-				logger: this.logger,
-			});
-		}
-		await this.providerDB.storeDetectorKey(detectorKey);
-
-		const activeDetectorKeys = await this.providerDB.getDetectorKeys();
-		return activeDetectorKeys;
-	}
-
-	async removeDetectorKey(
-		detectorKey: string,
-		expirationInSeconds?: number,
-	): Promise<void> {
-		if (!isValidPrivateKey(detectorKey)) {
-			throw new ProsopoApiError("INVALID_DETECTOR_KEY", {
-				context: { detectorKey },
-				logger: this.logger,
-			});
-		}
-		await this.providerDB.removeDetectorKey(detectorKey, expirationInSeconds);
-	}
-
 	async updateDecisionMachine(
 		scope: DecisionMachineScope,
 		runtime: DecisionMachineRuntime,
@@ -511,6 +485,7 @@ export class ClientTaskManager {
 			name?: string;
 			version?: string;
 			captchaType?: DecisionMachineCaptchaType;
+			source: string;
 			createdAt: string;
 			updatedAt: string;
 		}[]
@@ -526,6 +501,7 @@ export class ClientTaskManager {
 			name: artifact.name,
 			version: artifact.version,
 			captchaType: artifact.captchaType,
+			source: artifact.source,
 			createdAt: artifact.createdAt.toISOString(),
 			updatedAt: artifact.updatedAt.toISOString(),
 		}));

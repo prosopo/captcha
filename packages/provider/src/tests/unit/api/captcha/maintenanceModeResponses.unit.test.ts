@@ -16,6 +16,7 @@ import { ApiParams, CaptchaType, POW_SEPARATOR } from "@prosopo/types";
 import { describe, expect, it } from "vitest";
 import {
 	buildFrictionlessMaintenanceResponse,
+	buildMaintenanceVerificationResponse,
 	buildPowMaintenanceResponse,
 	buildPuzzleMaintenanceResponse,
 } from "../../../../api/captcha/maintenanceModeResponses.js";
@@ -97,6 +98,28 @@ describe("maintenanceModeResponses", () => {
 			expect(
 				r[ApiParams.signature][ApiParams.provider][ApiParams.challenge],
 			).toBe("");
+		});
+	});
+
+	describe("buildMaintenanceVerificationResponse", () => {
+		it("uses the localised verified status rather than a bare `ok`", () => {
+			const r = buildMaintenanceVerificationResponse(
+				(key) => `translated:${key}`,
+			);
+			expect(r[ApiParams.status]).toBe("translated:API.USER_VERIFIED");
+			expect(r[ApiParams.verified]).toBe(true);
+		});
+
+		it("always reports a score, since the tier gate needs a DB record", () => {
+			const r = buildMaintenanceVerificationResponse((key) => key);
+			// 0 is the most-human end of the scale, so a caller thresholding on
+			// `score < x` passes rather than being rejected on `undefined`.
+			expect(r[ApiParams.score]).toBe(0);
+		});
+
+		it("omits the failure-only reason field", () => {
+			const r = buildMaintenanceVerificationResponse((key) => key);
+			expect(r).not.toHaveProperty(ApiParams.reason);
 		});
 	});
 });

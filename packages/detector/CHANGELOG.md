@@ -1,5 +1,110 @@
 # @prosopo/detector
 
+## 3.5.17
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+  - @prosopo/types@5.0.2
+
+## 3.5.16
+### Patch Changes
+
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/types@5.0.1
+
+## 3.5.15
+### Patch Changes
+
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [6f19cde]
+  - @prosopo/types@5.0.0
+
+## 3.5.14
+### Patch Changes
+
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [103318c]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+  - @prosopo/types@4.10.0
+
+## 3.5.13
+### Patch Changes
+
+- Updated dependencies [a0cb39e]
+  - @prosopo/types@4.9.12
+
+## 3.5.12
+### Patch Changes
+
+- Updated dependencies [b9ca0e7]
+  - @prosopo/types@4.9.11
+
+## 3.5.11
+### Patch Changes
+
+- Updated dependencies [0a4f902]
+  - @prosopo/types@4.9.10
+
+## 3.5.10
+### Patch Changes
+
+  - @prosopo/types@4.9.9
+
+## 3.5.9
+### Patch Changes
+
+- Updated dependencies [85e8857]
+  - @prosopo/types@4.9.8
+
+## 3.5.8
+### Patch Changes
+
+- Updated dependencies [8bde5df]
+  - @prosopo/types@4.9.7
+
+## 3.5.7
+### Patch Changes
+
+- Updated dependencies [b3f351b]
+- Updated dependencies [17bc76e]
+  - @prosopo/types@4.9.6
+
+## 3.5.6
+### Patch Changes
+
+- Updated dependencies [6cb3218]
+  - @prosopo/types@4.9.5
+
+## 3.5.5
+### Patch Changes
+
+- Updated dependencies [de12b31]
+- Updated dependencies [770954b]
+  - @prosopo/types@4.9.4
+
+## 3.5.4
+### Patch Changes
+
+- Updated dependencies [18d0287]
+  - @prosopo/types@4.9.3
+
+## 3.5.3
+### Patch Changes
+
+- Updated dependencies [7a434e0]
+  - @prosopo/types@4.9.2
+
+## 3.5.2
+### Patch Changes
+
+- Updated dependencies [8986976]
+- Updated dependencies [970bca2]
+  - @prosopo/types@4.9.1
+
 ## 3.5.1
 ### Patch Changes
 

@@ -73,8 +73,7 @@ export default (
 			return res.json(buildPowMaintenanceResponse(user, dapp));
 		}
 
-		const tasks = new Tasks(env);
-		tasks.setLogger(req.logger);
+		const tasks = new Tasks(env, req.logger);
 
 		try {
 			const clientSettings = await tasks.db.getClientRecord(dapp);
@@ -106,23 +105,36 @@ export default (
 					? req.ipInfo.asnNumber
 					: undefined;
 
+			// Pull decryptedHeadHash off the frictionless session (indexed
+			// lookup on sessionId) so headHash-scoped access rules can match
+			// at challenge time — otherwise a rule keyed on the hash can only
+			// fire at server-verify, by which point the challenge has already
+			// been issued at the client-configured difficulty.
+			const sessionRecord = sessionId
+				? await tasks.db.getSessionRecordBySessionId(sessionId)
+				: undefined;
+
 			const userScope = getRequestUserScope(
 				flatten(req.headers),
 				req.ja4,
 				normalizedIp,
 				user,
-				undefined, // headHash
+				sessionRecord?.decryptedHeadHash,
 				undefined, // coords
 				countryCode,
 				asn,
 			);
+			// Skip deferToVerify policies at request time — see
+			// getImageCaptchaChallenge for the full rationale (sanitiser
+			// strips captchaType from Block policies → INCORRECT_CAPTCHA_TYPE
+			// fires when a deferToVerify Block rule leaks into isValidRequest).
 			const userAccessPolicy = (
 				await tasks.powCaptchaManager.getPrioritisedAccessPolicies(
 					userAccessRulesStorage,
 					dapp,
 					userScope,
 				)
-			)[0];
+			).find((p) => !p.deferToVerify);
 
 			const {
 				valid,

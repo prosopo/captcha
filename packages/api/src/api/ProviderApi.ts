@@ -16,6 +16,8 @@ import {
 	AdminApiPaths,
 	ApiParams,
 	type ApiResponse,
+	type AssignDetectorBundleRequestBodyOutput,
+	type AssignDetectorBundleResponse,
 	type CaptchaRequestBodyType,
 	type CaptchaResponseBody,
 	type CaptchaSolution,
@@ -47,7 +49,6 @@ import {
 	type RandomProvider,
 	type RegisterSitekeyBodyTypeOutput,
 	type RegisterSitekeysBodyTypeOutput,
-	RemoveDetectorKeyBodySpec,
 	RemoveSitekeyBody,
 	RemoveSitekeysBody,
 	type RemoveSitekeysBodyTypeOutput,
@@ -59,8 +60,6 @@ import {
 	type Tier,
 	ToggleMaintenanceModeBody,
 	UpdateDecisionMachineBody,
-	UpdateDetectorKeyBody,
-	type UpdateDetectorKeyResponse,
 	type UpdateProviderClientsResponse,
 	type VerificationResponse,
 	type VerifySolutionBodyTypeInput,
@@ -85,6 +84,48 @@ export default class ProviderApi
 	extends ApiClient
 	implements ProviderApiInterface
 {
+	// In-flight-only dedupe for the three challenge-fetch endpoints.
+	// Keyed by `${path}|${sessionId}`. If a call for a (path, sessionId)
+	// is already in flight, subsequent calls with the same key attach to
+	// the same Promise instead of sending a second POST.
+	//
+	// Motivation: iPhone WKWebView has been observed firing duplicate POSTs
+	// within microseconds of each other (see the "No session found" incident
+	// on 2026-07-01 07:51:32 — two distinct `/captcha/pow` requests hit the
+	// provider 55 µs apart with the same sessionId). The first call
+	// atomically consumes the session via `checkAndRemoveSession`; the
+	// second lands on a deleted session and returns
+	// `CAPTCHA.NO_SESSION_FOUND`. Deduping in-flight collapses those two
+	// POSTs into one.
+	//
+	// Only in-flight — not resolved-and-cached. Once the request settles we
+	// drop the entry so a legitimate retry after a network error can start
+	// a fresh POST. If the server did consume the sessionId, the retry
+	// will surface the same NO_SESSION_FOUND at that point instead of
+	// being masked here, which is the correct behaviour: the retry needs
+	// a fresh /frictionless.
+	//
+	// Skipped when sessionId is absent — those calls carry no shared server
+	// state to race on.
+	private readonly inFlightChallenges = new Map<string, Promise<unknown>>();
+
+	private dedupedPost<T, U>(
+		path: string,
+		sessionId: string | undefined,
+		body: U,
+		init: RequestInit,
+	): Promise<T> {
+		if (!sessionId) return this.post<T, U>(path, body, init);
+		const key = `${path}|${sessionId}`;
+		const existing = this.inFlightChallenges.get(key) as Promise<T> | undefined;
+		if (existing) return existing;
+		const p = this.post<T, U>(path, body, init).finally(() => {
+			this.inFlightChallenges.delete(key);
+		});
+		this.inFlightChallenges.set(key, p);
+		return p;
+	}
+
 	public getCaptchaChallenge(
 		userAccount: string,
 		_randomProvider: RandomProvider,
@@ -102,12 +143,17 @@ export default class ProviderApi
 		if (simdReadings) {
 			body[ApiParams.simdReadings] = simdReadings;
 		}
-		return this.post(ClientApiPaths.GetImageCaptchaChallenge, body, {
-			headers: {
-				"Prosopo-Site-Key": this.account,
-				"Prosopo-User": userAccount,
+		return this.dedupedPost<CaptchaResponseBody, CaptchaRequestBodyType>(
+			ClientApiPaths.GetImageCaptchaChallenge,
+			sessionId,
+			body,
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					"Prosopo-User": userAccount,
+				},
 			},
-		});
+		);
 	}
 
 	public submitCaptchaSolution(
@@ -187,7 +233,10 @@ export default class ProviderApi
 			...(sessionId && { [ApiParams.sessionId]: sessionId }),
 			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
 		};
-		return this.post(ClientApiPaths.GetPowCaptchaChallenge, body, {
+		return this.dedupedPost<
+			GetPowCaptchaResponse,
+			GetPowCaptchaChallengeRequestBodyType
+		>(ClientApiPaths.GetPowCaptchaChallenge, sessionId, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": user,
@@ -249,7 +298,10 @@ export default class ProviderApi
 			...(sessionId && { [ApiParams.sessionId]: sessionId }),
 			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
 		};
-		return this.post(ClientApiPaths.GetPuzzleCaptchaChallenge, body, {
+		return this.dedupedPost<
+			GetPuzzleCaptchaResponse,
+			GetPuzzleCaptchaChallengeRequestBodyType
+		>(ClientApiPaths.GetPuzzleCaptchaChallenge, sessionId, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": user,
@@ -321,21 +373,47 @@ export default class ProviderApi
 		});
 	}
 
+	/**
+	 * Assigns a precomputed detector bundle for this session. Returns
+	 * `useProviderBundle: false` when the provider has no pool (the client then
+	 * falls back to the bundled detector).
+	 */
+	public async assignDetectorBundle(
+		dapp: string,
+	): Promise<AssignDetectorBundleResponse> {
+		const body: AssignDetectorBundleRequestBodyOutput = {
+			[ApiParams.dapp]: dapp,
+		};
+		return this.post(ClientApiPaths.AssignDetectorBundle, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+			},
+		});
+	}
+
 	public async getFrictionlessCaptcha(
-		token: string,
-		headHash: string,
+		token: string | undefined,
+		headHash: string | undefined,
 		dapp: string,
 		user: string,
 		mode?: ModeEnum,
 		simdReadings?: string,
+		detectorSessionId?: string,
+		currentUrl?: string,
+		iframeUrl?: string,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const body: GetFrictionlessCaptchaChallengeRequestBodyOutput = {
-			[ApiParams.token]: token,
-			[ApiParams.headHash]: headHash,
 			[ApiParams.dapp]: dapp,
 			[ApiParams.user]: user,
+			[ApiParams.token]: token ?? "",
+			[ApiParams.headHash]: headHash ?? "",
 			...(mode && { [ApiParams.mode]: mode }),
 			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
+			...(detectorSessionId && {
+				[ApiParams.detectorSessionId]: detectorSessionId,
+			}),
+			...(currentUrl && { [ApiParams.currentUrl]: currentUrl }),
+			...(iframeUrl && { [ApiParams.iframeUrl]: iframeUrl }),
 		};
 		const { data, headers } = await this.postWithHeaders<
 			GetFrictionlessCaptchaResponse,
@@ -484,22 +562,6 @@ export default class ProviderApi
 		);
 	}
 
-	public updateDetectorKey(
-		detectorKey: string,
-		jwt: string,
-	): Promise<UpdateDetectorKeyResponse> {
-		return this.post(
-			AdminApiPaths.UpdateDetectorKey,
-			UpdateDetectorKeyBody.parse({ detectorKey }),
-			{
-				headers: {
-					"Prosopo-Site-Key": this.account,
-					Authorization: `Bearer ${jwt}`,
-				},
-			},
-		);
-	}
-
 	public updateDecisionMachine(
 		scope: DecisionMachineScope,
 		runtime: DecisionMachineRuntime,
@@ -593,26 +655,6 @@ export default class ProviderApi
 		return this.post(
 			AdminApiPaths.ClearAllCounters,
 			ClearAllCountersBody.parse({ [ApiParams.dapp]: dappAccount }),
-			{
-				headers: {
-					"Prosopo-Site-Key": this.account,
-					Authorization: `Bearer ${jwt}`,
-				},
-			},
-		);
-	}
-
-	public removeDetectorKey(
-		detectorKey: string,
-		jwt: string,
-		expirationInSeconds?: number,
-	): Promise<ApiResponse> {
-		return this.post(
-			AdminApiPaths.RemoveDetectorKey,
-			RemoveDetectorKeyBodySpec.parse({
-				detectorKey,
-				expirationInSeconds,
-			}),
 			{
 				headers: {
 					"Prosopo-Site-Key": this.account,

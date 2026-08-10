@@ -1,5 +1,242 @@
 # @prosopo/api-express-router
 
+## 3.1.57
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+  - @prosopo/types@5.0.2
+  - @prosopo/env@3.6.26
+
+## 3.1.56
+### Patch Changes
+
+  - @prosopo/env@3.6.25
+
+## 3.1.55
+### Patch Changes
+
+- Updated dependencies [38396b4]
+- Updated dependencies [9fec7bd]
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/env@3.6.24
+  - @prosopo/common@3.1.49
+  - @prosopo/types@5.0.1
+  - @prosopo/logger@2.0.5
+  - @prosopo/locale@3.2.9
+  - @prosopo/api-route@2.6.54
+
+## 3.1.54
+### Patch Changes
+
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [6f19cde]
+  - @prosopo/types@5.0.0
+  - @prosopo/env@3.6.23
+
+## 3.1.53
+### Patch Changes
+
+  - @prosopo/env@3.6.22
+
+## 3.1.52
+### Patch Changes
+
+- 508fee8: Add unit and type test coverage for the router factory, the default endpoint adapter, the auth and request-logger middleware, and the package barrel.
+  - @prosopo/env@3.6.21
+
+## 3.1.51
+### Patch Changes
+
+- Updated dependencies [a58d007]
+- Updated dependencies [2c47bb7]
+- Updated dependencies [0e1171c]
+- Updated dependencies [103318c]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+  - @prosopo/api-route@2.6.53
+  - @prosopo/util@3.3.5
+  - @prosopo/locale@3.2.8
+  - @prosopo/types@4.10.0
+  - @prosopo/common@3.1.48
+  - @prosopo/env@3.6.20
+  - @prosopo/logger@2.0.4
+
+## 3.1.50
+### Patch Changes
+
+  - @prosopo/env@3.6.19
+
+## 3.1.49
+### Patch Changes
+
+- Updated dependencies [a0cb39e]
+  - @prosopo/types@4.9.12
+  - @prosopo/env@3.6.18
+
+## 3.1.48
+### Patch Changes
+
+- Updated dependencies [b9ca0e7]
+- Updated dependencies [fde6896]
+  - @prosopo/types@4.9.11
+  - @prosopo/common@3.1.47
+  - @prosopo/env@3.6.17
+
+## 3.1.47
+### Patch Changes
+
+  - @prosopo/env@3.6.16
+
+## 3.1.46
+### Patch Changes
+
+- Updated dependencies [0a4f902]
+  - @prosopo/types@4.9.10
+  - @prosopo/env@3.6.15
+
+## 3.1.45
+### Patch Changes
+
+  - @prosopo/env@3.6.14
+
+## 3.1.44
+### Patch Changes
+
+- Updated dependencies [b500d56]
+  - @prosopo/locale@3.2.7
+  - @prosopo/env@3.6.13
+  - @prosopo/common@3.1.46
+  - @prosopo/types@4.9.9
+
+## 3.1.43
+### Patch Changes
+
+- 6abff15: Fix request-scoped logger fields leaking across concurrent captcha requests, and give every endpoint a proper request/response envelope in OpenObserve.
+  
+  Three interlocking changes:
+  
+  - **`Tasks.setLogger` no longer mutates `db.logger`.** `env.getDb()` returns a
+    process-wide singleton; overwriting `db.logger` on every request meant two
+    concurrent captcha submits raced, and whichever request landed second
+    stamped its `user`/`siteKey`/`sessionId` bindings onto the *other* request's
+    DB-level log lines. In practice you'd see a `PuzzleCaptcha record updated
+    successfully` for user A's challenge tagged with user B's account and site
+    key, breaking log-based forensics. `setLogger` still updates the per-request
+    Tasks instance and its per-request manager instances (those are safe —
+    they're constructed inside the Tasks constructor) but stops mutating the
+    shared DB. Callers in `getPoWCaptchaChallenge` and `getPuzzleCaptchaChallenge`
+    now pass `req.logger` directly into `new Tasks(env, req.logger)` and drop
+    the redundant `.setLogger(req.logger)` call that followed.
+  
+  - **`requestLoggerMiddleware` now emits `Request received` and `Response sent`
+    envelope lines on every route** (with `method`, `path`, `status`,
+    `durationMs`, and the request id). Previously only `/frictionless` had a
+    `res.on('finish', ...)` block, so `getPow/PuzzleCaptchaChallenge`,
+    `submitPow/PuzzleCaptchaSolution`, `verify.ts` etc. produced no envelope in
+    OO — a challenge issued by one endpoint and verified by another shared
+    nothing you could group on. Health-probe paths (`/healthz`, `/health`,
+    `/readyz`) are excluded so they don't drown the stream. The middleware
+    also now mirrors `x-request-id` back on the outbound response so callers
+    downstream of the Node process can correlate without depending on Caddy.
+  
+  - **`requestId` (set on the request logger via `.with({requestId})`) is
+    promoted to a top-level `req_id` field on the emitted JSON log record.**
+    OpenObserve indexes top-level fields as their own columns, so
+    `WHERE req_id = '…'` is now cheap; previously the id only lived inside
+    `data.requestId`, which flattened to `data_requestid` in OO's ingestion
+    and had no top-level column. `data.requestId` is preserved for backwards
+    compatibility with existing dashboards. Two new unit tests in
+    `@prosopo/logger` cover the promotion and the "absent when unset" case.
+- Updated dependencies [6abff15]
+  - @prosopo/logger@2.0.3
+  - @prosopo/api-route@2.6.52
+  - @prosopo/common@3.1.45
+  - @prosopo/env@3.6.12
+
+## 3.1.42
+### Patch Changes
+
+- Updated dependencies [550d20a]
+- Updated dependencies [85e8857]
+  - @prosopo/env@3.6.11
+  - @prosopo/types@4.9.8
+  - @prosopo/util@3.3.4
+  - @prosopo/common@3.1.44
+  - @prosopo/logger@2.0.2
+  - @prosopo/api-route@2.6.51
+
+## 3.1.41
+### Patch Changes
+
+- Updated dependencies [8bde5df]
+  - @prosopo/types@4.9.7
+  - @prosopo/env@3.6.10
+
+## 3.1.40
+### Patch Changes
+
+- Updated dependencies [b3f351b]
+- Updated dependencies [17bc76e]
+  - @prosopo/types@4.9.6
+  - @prosopo/env@3.6.9
+
+## 3.1.39
+### Patch Changes
+
+- Updated dependencies [6cb3218]
+  - @prosopo/types@4.9.5
+  - @prosopo/env@3.6.8
+
+## 3.1.38
+### Patch Changes
+
+- Updated dependencies [de12b31]
+- Updated dependencies [770954b]
+  - @prosopo/types@4.9.4
+  - @prosopo/env@3.6.7
+
+## 3.1.37
+### Patch Changes
+
+- Updated dependencies [18d0287]
+  - @prosopo/types@4.9.3
+  - @prosopo/env@3.6.6
+
+## 3.1.36
+### Patch Changes
+
+  - @prosopo/env@3.6.5
+
+## 3.1.35
+### Patch Changes
+
+- Updated dependencies [f9e8c94]
+- Updated dependencies [7a434e0]
+  - @prosopo/locale@3.2.6
+  - @prosopo/types@4.9.2
+  - @prosopo/common@3.1.43
+  - @prosopo/env@3.6.4
+
+## 3.1.34
+### Patch Changes
+
+- Updated dependencies [8986976]
+- Updated dependencies [970bca2]
+  - @prosopo/types@4.9.1
+  - @prosopo/util@3.3.3
+  - @prosopo/env@3.6.3
+  - @prosopo/common@3.1.42
+  - @prosopo/logger@2.0.1
+  - @prosopo/api-route@2.6.50
+
+## 3.1.33
+### Patch Changes
+
+  - @prosopo/env@3.6.2
+
 ## 3.1.32
 ### Patch Changes
 

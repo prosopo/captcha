@@ -27,7 +27,10 @@ import {
 	ResultReason,
 	type Session,
 } from "@prosopo/types";
-import type { IProviderDatabase } from "@prosopo/types-database";
+import type {
+	IProviderDatabase,
+	PoWCaptchaRecord,
+} from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import {
 	AccessPolicyType,
@@ -35,6 +38,7 @@ import {
 } from "@prosopo/user-access-policy";
 import { getIPAddress, verifyRecency } from "@prosopo/util";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { getVerdictCache } from "../../../../api/blacklistRequestInspector.js";
 import { getCompositeIpAddress } from "../../../../compositeIpAddress.js";
 import { PowCaptchaManager } from "../../../../tasks/powCaptcha/powTasks.js";
 import {
@@ -105,6 +109,11 @@ describe("PowCaptchaManager", () => {
 	};
 
 	beforeEach(() => {
+		// Verdict cache is a process-wide singleton — reset between
+		// tests so a cached "no rule" verdict can't satisfy a lookup
+		// that expects to see this test's mocked storage response.
+		getVerdictCache().clear();
+
 		db = {
 			storePowCaptchaRecord: vi.fn(),
 			getPowCaptchaRecordByChallenge: vi.fn(),
@@ -115,6 +124,7 @@ describe("PowCaptchaManager", () => {
 			getSessionRecordBySessionId: vi.fn(),
 			updateSessionRecord: vi.fn(),
 			getSpamEmailDomain: vi.fn(),
+			countCommitmentsByNormalisedEmail: vi.fn(),
 		} as unknown as IProviderDatabase;
 
 		pair = {
@@ -407,6 +417,113 @@ describe("PowCaptchaManager", () => {
 			);
 			expect(verifyRecency).not.toHaveBeenCalled();
 			expect(validateSolution).not.toHaveBeenCalled();
+		});
+
+		it("escalates a verified solve to an image captcha when coords are missing and a session is linked", async () => {
+			const requestedAtTimestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${requestedAtTimestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${pair.address}`;
+			const difficulty = 4;
+			const providerSignature = "testSignature";
+			const userSignature = "testTimestampSignature";
+			const nonce = 12345;
+			const timeout = 1000;
+			const ipAddress = getIPAddress("1.1.1.1");
+			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				difficulty,
+				dappAccount: pair.address,
+				userAccount,
+				requestedAtTimestamp: new Date(requestedAtTimestamp),
+				submittedAtTimestamp: new Date(),
+				result: { status: CaptchaStatus.pending },
+				userSubmitted: false,
+				serverChecked: false,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers,
+				ja4: "ja4",
+				providerSignature,
+				lastUpdatedTimestamp: new Date(),
+				sessionId: "linked-session-id",
+			};
+			vi.mocked(verifyRecency).mockReturnValue(true);
+			vi.mocked(checkPowSignature).mockImplementation(() => undefined);
+			vi.mocked(validateSolution).mockReturnValue(true);
+			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
+				challengeRecord as unknown as PoWCaptchaRecord,
+			);
+			vi.mocked(db.updatePowCaptchaRecordResult).mockResolvedValue(undefined);
+			vi.mocked(db.getSessionRecordBySessionId).mockResolvedValue(undefined);
+
+			const result = await powCaptchaManager.verifyPowCaptchaSolution(
+				challenge,
+				providerSignature,
+				nonce,
+				timeout,
+				userSignature,
+				ipAddress,
+				headers,
+				undefined, // behavioralData
+				undefined, // salt — no coords supplied
+			);
+
+			expect(result.verified).toBe(true);
+			expect(result.routingOutput).toEqual({
+				captchaType: CaptchaType.image,
+				reason: FrictionlessReason.MISSING_COORDINATES,
+			});
+		});
+
+		it("does not escalate a verified solve with missing coords when no session is linked", async () => {
+			const requestedAtTimestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${requestedAtTimestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${pair.address}`;
+			const difficulty = 4;
+			const providerSignature = "testSignature";
+			const userSignature = "testTimestampSignature";
+			const nonce = 12345;
+			const timeout = 1000;
+			const ipAddress = getIPAddress("1.1.1.1");
+			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				difficulty,
+				dappAccount: pair.address,
+				userAccount,
+				requestedAtTimestamp: new Date(requestedAtTimestamp),
+				submittedAtTimestamp: new Date(),
+				result: { status: CaptchaStatus.pending },
+				userSubmitted: false,
+				serverChecked: false,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers,
+				ja4: "ja4",
+				providerSignature,
+				lastUpdatedTimestamp: new Date(),
+			};
+			vi.mocked(verifyRecency).mockReturnValue(true);
+			vi.mocked(checkPowSignature).mockImplementation(() => undefined);
+			vi.mocked(validateSolution).mockReturnValue(true);
+			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
+				challengeRecord as unknown as PoWCaptchaRecord,
+			);
+			vi.mocked(db.updatePowCaptchaRecordResult).mockResolvedValue(undefined);
+
+			const result = await powCaptchaManager.verifyPowCaptchaSolution(
+				challenge,
+				providerSignature,
+				nonce,
+				timeout,
+				userSignature,
+				ipAddress,
+				headers,
+				undefined, // behavioralData
+				undefined, // salt — no coords supplied
+			);
+
+			expect(result.verified).toBe(true);
+			expect(result.routingOutput).toBeUndefined();
 		});
 	});
 
@@ -814,6 +931,24 @@ describe("PowCaptchaManager", () => {
 				);
 
 				expect(result.verified).toBe(false);
+				// The DM's reason string must land on the commitment record.
+				// Without this assertion the /pow/verify wire response could
+				// change reasons and no test would catch it — critical for the
+				// "punish the bot but don't tip them off" pattern where the
+				// dApp needs to distinguish CAPTCHA.BOT_DETECTED from
+				// ACCESS_POLICY_BLOCK from DM-defined reasons on the audit
+				// trail. Cast to any because the DM's `reason` string is
+				// looser than the typed ResultReason enum by design.
+				// biome-ignore lint/suspicious/noExplicitAny: reason enum widened at DM boundary
+				expect(db.updatePowCaptchaRecord as any).toHaveBeenCalledWith(
+					challenge,
+					expect.objectContaining({
+						result: expect.objectContaining({
+							status: CaptchaStatus.disapproved,
+							reason: "Suspicious device detected",
+						}),
+					}),
+				);
 			} finally {
 				restoreDecisionMachine();
 			}
@@ -2784,6 +2919,183 @@ module.exports = (input) => {
 					},
 				});
 			});
+		});
+	});
+
+	describe("serverVerifyPowCaptchaSolution with maxEmailSubmissionCount", () => {
+		// Full positional call — the count check block sits between the
+		// pattern rules and the traffic filter and needs `storeMetadata`
+		// on to be evaluated (same gating as img/puzzle).
+		const invoke = async ({
+			challenge,
+			dappAccount,
+			email,
+			maxEmailSubmissionCount,
+			storeMetadata,
+		}: {
+			challenge: PoWChallengeId;
+			dappAccount: string;
+			email: string | undefined;
+			maxEmailSubmissionCount: number | undefined;
+			storeMetadata: boolean;
+		}) =>
+			powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				60_000, // timeout
+				mockEnv,
+				undefined, // ip
+				undefined, // userAccessRulesStorage
+				email,
+				false, // spamEmailDomainCheckingEnabled
+				maxEmailSubmissionCount !== undefined
+					? {
+							enabled: true,
+							emailRules: {
+								enabled: true,
+								maxEmailSubmissionCount,
+								normaliseGmail: false,
+								useDefaultPatterns: false,
+								customRegexBlocklist: [],
+							},
+						}
+					: undefined,
+				undefined, // trafficFilter
+				storeMetadata,
+			);
+
+		const seedApprovedChallenge = (
+			challenge: PoWChallengeId,
+			dappAccount: string,
+		): PoWCaptchaStored => {
+			const record: PoWCaptchaStored = {
+				challenge,
+				difficulty: 4,
+				dappAccount,
+				userAccount: "user",
+				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
+				serverChecked: false,
+				result: { status: CaptchaStatus.approved },
+				ipAddress: getCompositeIpAddress(getIPAddress("1.1.1.1")),
+				providerSignature: "sig",
+				userSubmitted: true,
+				headers: {},
+				ja4: "j",
+			};
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(record);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(
+				undefined,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.updatePowCaptchaRecord as any).mockResolvedValue(undefined);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(verifyRecency as any).mockImplementation(() => true);
+			return record;
+		};
+
+		it("rejects with SPAM_EMAIL_COUNT_EXCEEDED at the cap", async () => {
+			const dappAccount = "dappAccount";
+			const challenge: PoWChallengeId =
+				`1${POW_SEPARATOR}u${POW_SEPARATOR}${dappAccount}` as PoWChallengeId;
+			seedApprovedChallenge(challenge, dappAccount);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.countCommitmentsByNormalisedEmail as any).mockResolvedValue(3);
+
+			const result = await invoke({
+				challenge,
+				dappAccount,
+				email: "alice+promo@gmail.com",
+				maxEmailSubmissionCount: 3,
+				storeMetadata: true,
+			});
+
+			expect(result.verified).toBe(false);
+			expect(result.reason).toBe("API.SPAM_EMAIL_COUNT_EXCEEDED");
+			expect(db.countCommitmentsByNormalisedEmail).toHaveBeenCalledWith(
+				dappAccount,
+				"alice@gmail.com",
+			);
+			// Failure result is batched into a single write.
+			expect(db.updatePowCaptchaRecord).toHaveBeenCalledWith(
+				challenge,
+				expect.objectContaining({
+					result: expect.objectContaining({
+						status: CaptchaStatus.disapproved,
+						reason: ResultReason.SPAM_EMAIL_COUNT_EXCEEDED,
+					}),
+				}),
+			);
+		});
+
+		it("allows when the prior count is below the cap and writes emailNormalised", async () => {
+			const dappAccount = "dappAccount";
+			const challenge: PoWChallengeId =
+				`2${POW_SEPARATOR}u${POW_SEPARATOR}${dappAccount}` as PoWChallengeId;
+			seedApprovedChallenge(challenge, dappAccount);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.countCommitmentsByNormalisedEmail as any).mockResolvedValue(0);
+
+			const result = await invoke({
+				challenge,
+				dappAccount,
+				email: "alice+a@googlemail.com",
+				maxEmailSubmissionCount: 3,
+				storeMetadata: true,
+			});
+
+			expect(result.verified).toBe(true);
+			// The stored metadata must carry the normalised email — this
+			// is what a subsequent count check will read.
+			expect(db.updatePowCaptchaRecord).toHaveBeenCalledWith(
+				challenge,
+				expect.objectContaining({
+					metadata: expect.objectContaining({
+						email: "alice+a@googlemail.com",
+						emailNormalised: "alice@gmail.com",
+					}),
+				}),
+			);
+		});
+
+		it("skips the count query when storeMetadata is off", async () => {
+			const dappAccount = "dappAccount";
+			const challenge: PoWChallengeId =
+				`3${POW_SEPARATOR}u${POW_SEPARATOR}${dappAccount}` as PoWChallengeId;
+			seedApprovedChallenge(challenge, dappAccount);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.countCommitmentsByNormalisedEmail as any).mockResolvedValue(99);
+
+			const result = await invoke({
+				challenge,
+				dappAccount,
+				email: "alice@gmail.com",
+				maxEmailSubmissionCount: 3,
+				storeMetadata: false,
+			});
+
+			expect(result.verified).toBe(true);
+			expect(db.countCommitmentsByNormalisedEmail).not.toHaveBeenCalled();
+		});
+
+		it("skips the count query when maxEmailSubmissionCount is undefined", async () => {
+			const dappAccount = "dappAccount";
+			const challenge: PoWChallengeId =
+				`4${POW_SEPARATOR}u${POW_SEPARATOR}${dappAccount}` as PoWChallengeId;
+			seedApprovedChallenge(challenge, dappAccount);
+
+			const result = await invoke({
+				challenge,
+				dappAccount,
+				email: "alice@gmail.com",
+				maxEmailSubmissionCount: undefined,
+				storeMetadata: true,
+			});
+
+			expect(result.verified).toBe(true);
+			expect(db.countCommitmentsByNormalisedEmail).not.toHaveBeenCalled();
 		});
 	});
 });

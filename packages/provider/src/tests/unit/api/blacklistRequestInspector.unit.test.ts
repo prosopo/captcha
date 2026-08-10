@@ -13,7 +13,11 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/logger";
-import { FrictionlessReason, type IPInfoResponse } from "@prosopo/types";
+import {
+	CaptchaType,
+	FrictionlessReason,
+	type IPInfoResponse,
+} from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import {
 	AccessPolicyType,
@@ -22,10 +26,11 @@ import {
 	type UserScope,
 } from "@prosopo/user-access-policy";
 import type { NextFunction, Request, Response } from "express";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	BlacklistRequestInspector,
 	getRequestUserScope,
+	getVerdictCache,
 	rankCandidateRules,
 } from "../../../api/blacklistRequestInspector.js";
 
@@ -45,6 +50,7 @@ describe("getRequestUserScope", () => {
 			userAgent: userAgent,
 			ip: rawIp,
 			userId: "testuser",
+			os: "unknown",
 		});
 	});
 	it("should return a user scope with ja4Hash and userAgent and ip", () => {
@@ -60,6 +66,7 @@ describe("getRequestUserScope", () => {
 			ja4Hash: ja4,
 			userAgent: userAgent,
 			ip: rawIp,
+			os: "unknown",
 		});
 	});
 	it("should return a user scope with userAgent and ip", () => {
@@ -73,6 +80,7 @@ describe("getRequestUserScope", () => {
 		expect(userScope).toEqual({
 			userAgent: userAgent,
 			ip: rawIp,
+			os: "unknown",
 		});
 	});
 	it("should return a user scope with userAgent", () => {
@@ -83,6 +91,7 @@ describe("getRequestUserScope", () => {
 		const userScope = getRequestUserScope(requestHeaders);
 		expect(userScope).toEqual({
 			userAgent: userAgent,
+			os: "unknown",
 		});
 	});
 
@@ -101,6 +110,14 @@ describe("getRequestUserScope", () => {
 });
 
 describe("BlacklistRequestInspector.shouldAbortRequest", () => {
+	// getPrioritisedAccessRule uses a module-level verdict cache
+	// singleton; without a per-test reset a cached verdict from one
+	// test would satisfy the lookup in another that expects to see its
+	// own mocked storage response.
+	beforeEach(() => {
+		getVerdictCache().clear();
+	});
+
 	const mockLogger = {
 		info: vi.fn(),
 		debug: vi.fn(),
@@ -156,6 +173,63 @@ describe("BlacklistRequestInspector.shouldAbortRequest", () => {
 		// at the earliest entry point (blockMiddleware).
 		const hasCountry = seenScopes.some((scope) => scope.countryCode === "DE");
 		expect(hasCountry).toBe(true);
+	});
+
+	it("threads the OS classified from the request UA into the access-rule lookup", async () => {
+		const seenScopes: Array<Record<string, unknown>> = [];
+		const storage = buildStorage(async (filter) => {
+			const f = filter as { userScope: Record<string, unknown> };
+			seenScopes.push(f.userScope);
+			return [];
+		});
+		const inspector = new BlacklistRequestInspector(
+			storage,
+			async () => undefined,
+		);
+
+		await inspector.shouldAbortRequest(
+			"/v1/prosopo/provider/client/captcha/frictionless",
+			"1.1.1.1",
+			"ja4hash",
+			{
+				"user-agent":
+					"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+			},
+			{},
+			mockLogger,
+			validIpInfo("DE"),
+		);
+
+		// OS is classified server-side from the UA, so an os-based access rule
+		// can fire at the earliest entry point (blockMiddleware).
+		const hasOs = seenScopes.some((scope) => scope.os === "windows");
+		expect(hasOs).toBe(true);
+	});
+
+	it("always classifies an OS (falls back to 'unknown') so allow-list rules can match unrecognised UAs", async () => {
+		const seenScopes: Array<Record<string, unknown>> = [];
+		const storage = buildStorage(async (filter) => {
+			const f = filter as { userScope: Record<string, unknown> };
+			seenScopes.push(f.userScope);
+			return [];
+		});
+		const inspector = new BlacklistRequestInspector(
+			storage,
+			async () => undefined,
+		);
+
+		await inspector.shouldAbortRequest(
+			"/v1/prosopo/provider/client/captcha/frictionless",
+			"1.1.1.1",
+			"ja4hash",
+			{},
+			{},
+			mockLogger,
+			validIpInfo("DE"),
+		);
+
+		expect(seenScopes.length).toBeGreaterThan(0);
+		expect(seenScopes.every((scope) => scope.os === "unknown")).toBe(true);
 	});
 
 	it("does not pass countryCode when req.ipInfo is missing", async () => {
@@ -336,6 +410,13 @@ describe("BlacklistRequestInspector.shouldAbortRequest", () => {
 // and a logger that records arguments) don't bleed into the abort-decision
 // fixtures above.
 describe("BlacklistRequestInspector blocked-session persistence", () => {
+	// Same rationale as the sibling describe: clear the verdict cache
+	// singleton so a hit cached by an earlier test can't satisfy this
+	// test's lookup and skip the mocked storage.
+	beforeEach(() => {
+		getVerdictCache().clear();
+	});
+
 	// Logger stub that captures the lazy log payloads so individual assertions
 	// can inspect what was logged without depending on call order across
 	// info/debug/warn calls.
@@ -936,5 +1017,118 @@ describe("rankCandidateRules", () => {
 			undefined,
 		);
 		expect(ranked[0]).toEqual(specificRestrict);
+	});
+
+	// Issue #3713: at equal specificity, harshness picks the winner.
+	// Ordering: Block > Restrict[image, rounds DESC] > Restrict[puzzle] >
+	// Restrict[pow]. Specificity stays the primary criterion — these tests
+	// use equal-specificity setups to isolate the new tiebreaker.
+
+	it("on equal specificity, ranks Restrict tiers as image > puzzle > pow", () => {
+		const powRule: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			captchaType: CaptchaType.pow,
+		};
+		const puzzleRule: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			captchaType: CaptchaType.puzzle,
+		};
+		const imageRule: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			captchaType: CaptchaType.image,
+		};
+		const ranked = rankCandidateRules(
+			[powRule, puzzleRule, imageRule],
+			request,
+			undefined,
+		);
+		expect(ranked).toEqual([imageRule, puzzleRule, powRule]);
+	});
+
+	it("on equal specificity, image with more solvedImagesCount is harsher", () => {
+		const twoRounds: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			captchaType: CaptchaType.image,
+			solvedImagesCount: 2,
+		};
+		const fourRounds: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			captchaType: CaptchaType.image,
+			solvedImagesCount: 4,
+		};
+		const ranked = rankCandidateRules(
+			[twoRounds, fourRounds],
+			request,
+			undefined,
+		);
+		expect(ranked[0]).toEqual(fourRounds);
+		expect(ranked[1]).toEqual(twoRounds);
+	});
+
+	it("on equal specificity, Block beats every Restrict captcha tier", () => {
+		const block: AccessRule = {
+			type: AccessPolicyType.Block,
+			ja4Hash: "ja4-A",
+		};
+		const image: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			captchaType: CaptchaType.image,
+			solvedImagesCount: 9,
+		};
+		const ranked = rankCandidateRules([image, block], request, undefined);
+		expect(ranked[0]).toEqual(block);
+	});
+
+	// `deferToVerify` is a fire-time flag, not a harshness signal — a
+	// deferred Block at equal specificity still ranks ahead of a Restrict so
+	// downstream verify-time consumers (which iterate the same ranked array)
+	// still see the Block first.
+	it("on equal specificity, a deferToVerify Block still outranks a Restrict", () => {
+		const deferredBlock: AccessRule = {
+			type: AccessPolicyType.Block,
+			ja4Hash: "ja4-A",
+			deferToVerify: true,
+		};
+		const restrict: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			captchaType: CaptchaType.image,
+			solvedImagesCount: 4,
+		};
+		const ranked = rankCandidateRules(
+			[restrict, deferredBlock],
+			request,
+			undefined,
+		);
+		expect(ranked[0]).toEqual(deferredBlock);
+	});
+
+	it("a more-specific pow Restrict still beats a less-specific image Restrict", () => {
+		// Harshness is only the equal-specificity tiebreaker. A narrower
+		// pow rule (ja4 + asn) still wins over a broader image rule (ja4).
+		const broadImage: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			captchaType: CaptchaType.image,
+			solvedImagesCount: 4,
+		};
+		const specificPow: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			ja4Hash: "ja4-A",
+			asn: 205016,
+			captchaType: CaptchaType.pow,
+		};
+		const ranked = rankCandidateRules(
+			[broadImage, specificPow],
+			request,
+			undefined,
+		);
+		expect(ranked[0]).toEqual(specificPow);
 	});
 });

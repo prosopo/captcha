@@ -1,5 +1,442 @@
 # @prosopo/cli
 
+## 3.7.5
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+- Updated dependencies [fa0d494]
+- Updated dependencies [d6cb841]
+  - @prosopo/provider@5.0.3
+  - @prosopo/types@5.0.2
+  - @prosopo/env@3.6.26
+  - @prosopo/api@4.0.2
+  - @prosopo/keyring@2.9.65
+
+## 3.7.4
+### Patch Changes
+
+  - @prosopo/env@3.6.25
+  - @prosopo/provider@5.0.2
+
+## 3.7.3
+### Patch Changes
+
+- b3f3807: Bump `@prosopo/cli` so the frictionless detector-logging fix can ship as a release.
+  
+  There is no cli change here. This exists purely to move the release number, and
+  the reason is structural rather than incidental.
+  
+  `create_release_pr` sets the root and `docker/images/provider` versions to
+  whatever `@prosopo/cli` is after `changeset version`. The only pending changeset
+  bumps `@prosopo/procaptcha-frictionless` (2.13.2 → 2.13.3) and
+  `@prosopo/procaptcha-bundle` (4.1.46 → 4.1.47). Neither is in cli's dependency
+  tree — cli depends on `@prosopo/provider`, `api`, `types` and friends, which is
+  why ordinary releases bump it by cascade and this one does not. So
+  `changeset version` leaves cli, and therefore the root, at 3.7.2, the release PR
+  comes out titled "Release v3.7.2" again, and no new tag is cut.
+  
+  That matters beyond a cosmetic version number, because captcha-private's own
+  `create_release_pr` derives its version from this repo's latest `v*.*.*` tag and
+  then **checks the submodule out at it**. Without a new tag it would pin the
+  submodule back to v3.7.2 — reverting the very fix this release is meant to carry.
+  
+  The provider image published for this release is therefore functionally
+  identical to 3.7.2; the payload is the widget bundle.
+
+## 3.7.2
+### Patch Changes
+
+- Updated dependencies [38396b4]
+- Updated dependencies [9fec7bd]
+- Updated dependencies [ce2ac41]
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/env@3.6.24
+  - @prosopo/common@3.1.49
+  - @prosopo/provider@5.0.1
+  - @prosopo/types@5.0.1
+  - @prosopo/api@4.0.1
+  - @prosopo/logger@2.0.5
+  - @prosopo/locale@3.2.9
+  - @prosopo/dotenv@3.0.51
+  - @prosopo/keyring@2.9.64
+
+## 3.7.1
+### Patch Changes
+
+- b68c3a1: Bump `@prosopo/cli` so the next release cuts 3.7.1.
+  
+  `create_release_pr` derives the repo version from this package:
+  
+  ```bash
+  root_version=$(npm -w @prosopo/cli pkg get version | jq -r '.["@prosopo/cli"]')
+  npm pkg set version="$root_version"
+  ```
+  
+  The changesets pending after v3.7.0 target `@prosopo/procaptcha-bundle`, `@prosopo/procaptcha-frictionless` and `@prosopo/client-bundle-example`. `@prosopo/cli` depends on none of them, so `changeset version` left it at 3.7.0 and the release re-cut 3.7.0 rather than 3.7.1.
+
+## 3.7.0
+### Minor Changes
+
+- 787017b: chore(detector): remove the legacy detector-key rotation machinery
+  
+  Nothing has read these keys since the detector moved to per-session provider
+  bundles — the decrypt paths resolve a bundle's own keypair instead. Rotating
+  them was already a no-op, so the whole surface is removed rather than left
+  looking live.
+  
+  **Breaking — the admin API loses two endpoints:**
+  
+  - `POST /v1/prosopo/provider/admin/detector/update` (`AdminApiPaths.UpdateDetectorKey`)
+  - `POST /v1/prosopo/provider/admin/detector/remove` (`AdminApiPaths.RemoveDetectorKey`)
+  
+  Also removed: `ProviderApi.updateDetectorKey` / `.removeDetectorKey`;
+  `ClientTaskManager.updateDetectorKey` / `.removeDetectorKey`;
+  `IProviderDatabase.storeDetectorKey` / `.getDetectorKeys` / `.removeDetectorKey`;
+  the `detector` Mongo collection and its `DetectorRecordSchema` / `DetectorSchema`
+  / `DetectorKey` types; the `UpdateDetectorKeyBody` / `RemoveDetectorKeyBodySpec`
+  / `UpdateDetectorKeyResponse` API types; and the rate-limit config for both
+  paths.
+  
+  The `detector` collection itself is left in place on existing deployments — no
+  migration drops it. It can be dropped manually once the pool rollout is
+  confirmed.
+
+### Patch Changes
+
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [6f19cde]
+  - @prosopo/provider@5.0.0
+  - @prosopo/types@5.0.0
+  - @prosopo/api@4.0.0
+  - @prosopo/env@3.6.23
+  - @prosopo/keyring@2.9.63
+
+## 3.6.77
+### Patch Changes
+
+- Updated dependencies [71a5952]
+- Updated dependencies [a66273a]
+  - @prosopo/keyring@2.9.62
+  - @prosopo/provider@4.15.17
+  - @prosopo/env@3.6.22
+
+## 3.6.76
+### Patch Changes
+
+- Updated dependencies [1e0cf14]
+  - @prosopo/api@3.5.21
+  - @prosopo/provider@4.15.16
+  - @prosopo/env@3.6.21
+
+## 3.6.75
+### Patch Changes
+
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [2c47bb7]
+- Updated dependencies [0e1171c]
+- Updated dependencies [103318c]
+- Updated dependencies [4cd9035]
+- Updated dependencies [8fba211]
+- Updated dependencies [8a400eb]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+- Updated dependencies [89effc8]
+  - @prosopo/util@3.3.5
+  - @prosopo/locale@3.2.8
+  - @prosopo/provider@4.15.15
+  - @prosopo/types@4.10.0
+  - @prosopo/dotenv@3.0.50
+  - @prosopo/api@3.5.20
+  - @prosopo/common@3.1.48
+  - @prosopo/env@3.6.20
+  - @prosopo/keyring@2.9.61
+  - @prosopo/workspace@3.2.0
+  - @prosopo/logger@2.0.4
+
+## 3.6.74
+### Patch Changes
+
+- Updated dependencies [c61dfb5]
+  - @prosopo/provider@4.15.14
+  - @prosopo/env@3.6.19
+
+## 3.6.73
+### Patch Changes
+
+- Updated dependencies [ae7e7f0]
+  - @prosopo/provider@4.15.13
+
+## 3.6.72
+### Patch Changes
+
+- Updated dependencies [a0cb39e]
+  - @prosopo/types@4.9.12
+  - @prosopo/api@3.5.19
+  - @prosopo/env@3.6.18
+  - @prosopo/keyring@2.9.60
+  - @prosopo/provider@4.15.12
+
+## 3.6.71
+### Patch Changes
+
+- Updated dependencies [b9ca0e7]
+- Updated dependencies [fde6896]
+  - @prosopo/types@4.9.11
+  - @prosopo/provider@4.15.11
+  - @prosopo/common@3.1.47
+  - @prosopo/api@3.5.18
+  - @prosopo/env@3.6.17
+  - @prosopo/keyring@2.9.59
+
+## 3.6.70
+### Patch Changes
+
+  - @prosopo/provider@4.15.10
+
+## 3.6.69
+### Patch Changes
+
+  - @prosopo/env@3.6.16
+  - @prosopo/provider@4.15.9
+
+## 3.6.68
+### Patch Changes
+
+- Updated dependencies [0a4f902]
+  - @prosopo/types@4.9.10
+  - @prosopo/api@3.5.17
+  - @prosopo/env@3.6.15
+  - @prosopo/keyring@2.9.58
+  - @prosopo/provider@4.15.8
+
+## 3.6.67
+### Patch Changes
+
+- Updated dependencies [6b17995]
+- Updated dependencies [b394cc5]
+  - @prosopo/provider@4.15.7
+  - @prosopo/env@3.6.14
+
+## 3.6.66
+### Patch Changes
+
+- Updated dependencies [b500d56]
+  - @prosopo/locale@3.2.7
+  - @prosopo/env@3.6.13
+  - @prosopo/provider@4.15.6
+  - @prosopo/common@3.1.46
+  - @prosopo/types@4.9.9
+  - @prosopo/keyring@2.9.57
+  - @prosopo/api@3.5.16
+
+## 3.6.65
+### Patch Changes
+
+- 6855422: test(cli): unit-test coverage for `RateLimiter.getRateLimitConfig` and `commands/validators`
+  
+  Adds two new vitest files under `@prosopo/cli/src/tests/`:
+  
+  - `RateLimiter.unit.test.ts` — 7 tests covering `getRateLimitConfig`:
+    every ClientApiPaths / AdminApiPaths / PublicApiPaths route referenced in
+    the source has a mapped entry (regression guard against silently dropping
+    routes on refactor); env vars are propagated verbatim to `windowMs` /
+    `limit`; no WINDOW/LIMIT crossover; and the config is re-read on every
+    invocation rather than cached at module load (so ops can hot-toggle a
+    rate window without restarting the provider). Snapshots and restores
+    every `PROSOPO_*` env var it touches so the suite doesn't leak state.
+  
+  - `commands/validators.unit.test.ts` — 14 tests covering the four
+    argv validators: `validateAddress`, `validateSiteKey`, `validateValue`,
+    `validateScheduleExpression`. Verifies SS58 ↔ hex address round-tripping
+    through `encodeStringAddress`; `ProsopoContractError` with
+    `CONTRACT.INVALID_ADDRESS` on garbage address input;
+    `ProsopoEnvError` with `CLI.PARAMETER_ERROR` for non-numeric values
+    (string, boolean, object, null, undefined); and cron parsing across a
+    spread of standard schedule expressions.
+  
+  No behaviour change — pure test additions. Fills a coverage gap in a
+  package that previously had a single integration-style bundle test and
+  no unit tests for these pure helpers.
+
+## 3.6.64
+### Patch Changes
+
+- b0d446f: test(account): unit tests for CryptoWorker + ExtensionWeb2 keypair-derivation paths
+  
+  Adds unit coverage for the code changed in the sr25519-in-worker perf PR (#2830):
+  
+  - `cryptoWorker.unit.test.ts` — exercises the primitives (`entropyToMnemonic`, `mnemonicToMiniSecret`, `sr25519FromSeed`) the CryptoWorker's task dispatch calls into, and asserts the composed `entropyToKeypair` pipeline produces:
+    - a keypair byte-equivalent (address + publicKey) to `keyring.addFromMnemonic(mnemonic)`
+    - signatures that verify cross-instance (`addFromPair`-derived sig verifies against `addFromMnemonic`'s public key, and vice-versa)
+    - deterministic output for identical entropy input
+    - proper input-validation rejection for non-BIP39 entropy sizes
+  - `ExtensionWeb2.unit.test.ts` — mocks `getCryptoWorkerManager` + `getFingerprint` to lock down both branches of `createAccount`:
+    - **worker branch** — `entropyToKeypair` resolves with raw bytes, `addFromPair` produces the expected address
+    - **fallback branch** — `entropyToKeypair` rejects (worker unavailable), falls through to `entropyToMnemonic` + `addFromMnemonic` on main thread, produces the *same* address
+    - A/B check confirming worker and fallback branches derive identical addresses for the same fingerprint — the invariant that lets us swap the paths without breaking session identity for users whose worker fails
+  
+  Also wires up a `test` script and `vite.test.config.ts` in `@prosopo/account`, which had none previously.
+  
+  **cli patch**: sync bump so the release cuts a new tag (root version follows `@prosopo/cli`) and the tag-triggered `publish_release` + downstream `deploy-procaptcha-bundle` republishes the CDN bundle with the sr25519-in-worker perf improvements from #2830. Without this, the `test(account)` bump alone leaves cli at its current version, the release script computes the same root version as the previous tag, and no new `v*.*.*` tag → no publish → no CDN republish.
+
+## 3.6.63
+### Patch Changes
+
+- Updated dependencies [e2f0a29]
+  - @prosopo/provider@4.15.5
+
+## 3.6.62
+### Patch Changes
+
+- Updated dependencies [44fe294]
+  - @prosopo/provider@4.15.4
+
+## 3.6.61
+### Patch Changes
+
+- Updated dependencies [6abff15]
+- Updated dependencies [b07b448]
+  - @prosopo/logger@2.0.3
+  - @prosopo/provider@4.15.3
+  - @prosopo/common@3.1.45
+  - @prosopo/dotenv@3.0.49
+  - @prosopo/env@3.6.12
+  - @prosopo/keyring@2.9.56
+
+## 3.6.60
+### Patch Changes
+
+- Updated dependencies [550d20a]
+- Updated dependencies [85e8857]
+  - @prosopo/env@3.6.11
+  - @prosopo/provider@4.15.2
+  - @prosopo/api@3.5.15
+  - @prosopo/types@4.9.8
+  - @prosopo/util@3.3.4
+  - @prosopo/common@3.1.44
+  - @prosopo/keyring@2.9.55
+  - @prosopo/logger@2.0.2
+  - @prosopo/dotenv@3.0.48
+
+## 3.6.59
+### Patch Changes
+
+- Updated dependencies [494883f]
+- Updated dependencies [8bde5df]
+  - @prosopo/provider@4.15.1
+  - @prosopo/types@4.9.7
+  - @prosopo/env@3.6.10
+  - @prosopo/api@3.5.14
+  - @prosopo/keyring@2.9.54
+
+## 3.6.58
+### Patch Changes
+
+- Updated dependencies [7d7e767]
+- Updated dependencies [b3f351b]
+- Updated dependencies [17bc76e]
+- Updated dependencies [2e68a8d]
+- Updated dependencies [4e77fa8]
+  - @prosopo/provider@4.15.0
+  - @prosopo/types@4.9.6
+  - @prosopo/api@3.5.13
+  - @prosopo/env@3.6.9
+  - @prosopo/keyring@2.9.53
+
+## 3.6.57
+### Patch Changes
+
+- Updated dependencies [6cb3218]
+  - @prosopo/types@4.9.5
+  - @prosopo/provider@4.14.4
+  - @prosopo/api@3.5.12
+  - @prosopo/env@3.6.8
+  - @prosopo/keyring@2.9.52
+
+## 3.6.56
+### Patch Changes
+
+- Updated dependencies [de12b31]
+- Updated dependencies [770954b]
+  - @prosopo/provider@4.14.3
+  - @prosopo/types@4.9.4
+  - @prosopo/api@3.5.11
+  - @prosopo/env@3.6.7
+  - @prosopo/keyring@2.9.51
+
+## 3.6.55
+### Patch Changes
+
+- Updated dependencies [5068381]
+  - @prosopo/provider@4.14.2
+
+## 3.6.54
+### Patch Changes
+
+- Updated dependencies [18d0287]
+  - @prosopo/types@4.9.3
+  - @prosopo/api@3.5.10
+  - @prosopo/env@3.6.6
+  - @prosopo/keyring@2.9.50
+  - @prosopo/provider@4.14.1
+
+## 3.6.53
+### Patch Changes
+
+- Updated dependencies [ca78a0c]
+- Updated dependencies [8814425]
+  - @prosopo/provider@4.14.0
+  - @prosopo/api@3.5.9
+  - @prosopo/env@3.6.5
+
+## 3.6.52
+### Patch Changes
+
+- Updated dependencies [55b0850]
+- Updated dependencies [f9e8c94]
+- Updated dependencies [7a434e0]
+  - @prosopo/provider@4.13.4
+  - @prosopo/locale@3.2.6
+  - @prosopo/types@4.9.2
+  - @prosopo/common@3.1.43
+  - @prosopo/api@3.5.8
+  - @prosopo/env@3.6.4
+  - @prosopo/keyring@2.9.49
+
+## 3.6.51
+### Patch Changes
+
+- Updated dependencies [acf19f8]
+  - @prosopo/provider@4.13.3
+
+## 3.6.50
+### Patch Changes
+
+- Updated dependencies [3e0ef08]
+- Updated dependencies [8986976]
+- Updated dependencies [970bca2]
+  - @prosopo/provider@4.13.2
+  - @prosopo/types@4.9.1
+  - @prosopo/util@3.3.3
+  - @prosopo/api@3.5.7
+  - @prosopo/env@3.6.3
+  - @prosopo/common@3.1.42
+  - @prosopo/keyring@2.9.48
+  - @prosopo/logger@2.0.1
+  - @prosopo/dotenv@3.0.47
+
+## 3.6.49
+### Patch Changes
+
+- Updated dependencies [ec363e9]
+  - @prosopo/provider@4.13.1
+  - @prosopo/env@3.6.2
+
 ## 3.6.48
 ### Patch Changes
 

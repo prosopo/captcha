@@ -28,6 +28,8 @@ export {
 	AccessPolicyType,
 } from "./rule.js";
 
+export { classifyOs, OS_NAMES, type OsName } from "./classifyOs.js";
+
 export {
 	type AccessRulesFilter,
 	type AccessRulesStorage,

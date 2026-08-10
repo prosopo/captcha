@@ -139,23 +139,41 @@ export default (
 					? req.ipInfo.asnNumber
 					: undefined;
 
+			// Pull decryptedHeadHash off the frictionless session so
+			// headHash-scoped access rules can match at challenge time —
+			// otherwise they can only fire at server-verify, after the
+			// challenge has already been issued with the client-configured
+			// image count / threshold.
+			const sessionRecord = sessionId
+				? await tasks.db.getSessionRecordBySessionId(sessionId)
+				: undefined;
+
 			const userScope = getRequestUserScope(
 				flatten(req.headers),
 				req.ja4,
 				normalizedIp,
 				user,
-				undefined, // headHash
+				sessionRecord?.decryptedHeadHash,
 				undefined, // coords
 				countryCode,
 				asn,
 			);
+			// Skip deferToVerify policies at request time — they enforce at
+			// verify time via checkForHardBlock. Without this filter a
+			// Block+deferToVerify rule matches here, and because
+			// sanitizeAccessPolicy strips `captchaType` from every Block
+			// policy on write, `isValidRequest`'s `captchaType` equality
+			// check fails (undefined !== "image") and returns 400
+			// INCORRECT_CAPTCHA_TYPE — defeating the whole "solve normally,
+			// block at verify" pattern deferToVerify is meant to enable.
+			// Mirrors blockMiddleware's own deferToVerify filter.
 			const userAccessPolicy = (
 				await tasks.imgCaptchaManager.getPrioritisedAccessPolicies(
 					userAccessRulesStorage,
 					dapp,
 					userScope,
 				)
-			)[0];
+			).find((p) => !p.deferToVerify);
 
 			const {
 				valid,

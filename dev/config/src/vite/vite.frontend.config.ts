@@ -27,6 +27,7 @@ import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { filterDependencies, getDependencies } from "../dependencies.js";
 import { VitePluginCloseAndCopy } from "./index.js";
 import type { ClosePluginOptions } from "./vite-plugin-close-and-copy.js";
+import VitePluginExternalizeObfuscatorDeadCode from "./vite-plugin-externalize-obfuscator-deadcode.js";
 
 export default async function (
 	packageName: string,
@@ -188,14 +189,20 @@ export default async function (
 
 			rollupOptions: {
 				treeshake: {
-					annotations: false,
+					// Respect /*#__PURE__*/ annotations. Ignoring them retained
+					// dead library calls that every consumer then shipped;
+					// honouring them cuts ~17KB gzip off the widget bundle with
+					// a byte-identical detector.
+					annotations: true,
 					propertyReadSideEffects: false,
-					tryCatchDeoptimization: false,
-					moduleSideEffects: "no-external", //true,
-					preset: "smallest",
+					// Measured alternatives, both rejected:
+					//   moduleSideEffects: false        -> widget 8KB gzip LARGER
+					//   propertyWriteSideEffects: false -> detector dies on load
+					//                                     ("Maximum call stack
+					//                                     size exceeded")
+					moduleSideEffects: "no-external",
 					unknownGlobalSideEffects: false,
 				},
-				experimentalLogSideEffects: false,
 				external: rollupExternal,
 				watch: false,
 
@@ -205,9 +212,6 @@ export default async function (
 				},
 
 				plugins: [
-					nodePolyfills({
-						include: ["crypto"],
-					}),
 					// biome-ignore lint/suspicious/noExplicitAny: has to be any to represent object prototype
 					css() as any,
 					// biome-ignore lint/suspicious/noExplicitAny: has to be any to represent object prototype
@@ -267,6 +271,13 @@ export default async function (
 			},
 		},
 		plugins: [
+			VitePluginExternalizeObfuscatorDeadCode(),
+			// node polyfills must be a top-level Vite plugin (not inside
+			// build.rollupOptions.plugins) so its inject sub-plugin initialises
+			// before transform runs under Rolldown/Vite 8.
+			nodePolyfills({
+				include: ["crypto"],
+			}),
 			// Not sure if we need this plugin or not, it works without it
 			// @ts-ignore
 			viteReact(),

@@ -18,6 +18,7 @@ import {
 	type IpMode,
 	loadBalancer,
 } from "./balancer.js";
+import { retryWithBackoff } from "./retry.js";
 
 // Base DNS endpoint per env — the `pronode.prosopo.io` family is latency-routed
 // (A/AAAA records across the pronode fleet). Clients hit this URL's `/healthz`
@@ -56,6 +57,19 @@ const cacheKey = (env: EnvironmentTypes, ipMode?: IpMode): CacheKey =>
 	`${env}|${ipMode ?? "dual"}`;
 const pinPromiseCache: Map<CacheKey, Promise<string>> = new Map();
 
+// Healthz retry policy. Healthz is a prerequisite for pinning a session to a
+// specific pronode — without a pinned host the token embeds the load-balanced
+// hostname, which isn't a registered on-chain provider and gets rejected at
+// verify time. A transient blip therefore mustn't fail immediately: retry
+// with exponential-backoff + full jitter before surfacing the error.
+const HEALTHZ_MAX_ATTEMPTS = 3;
+const HEALTHZ_RETRY_BASE_DELAY_MS = 250;
+const HEALTHZ_RETRY_MAX_DELAY_MS = 2_000;
+
+let healthzMaxAttempts = HEALTHZ_MAX_ATTEMPTS;
+let healthzRetryBaseDelayMs = HEALTHZ_RETRY_BASE_DELAY_MS;
+let healthzRetryMaxDelayMs = HEALTHZ_RETRY_MAX_DELAY_MS;
+
 const fetchPinnedHost = async (baseUrl: string): Promise<string> => {
 	const res = await fetch(`${baseUrl}/healthz`, {
 		method: "GET",
@@ -71,6 +85,13 @@ const fetchPinnedHost = async (baseUrl: string): Promise<string> => {
 	}
 	return body.host;
 };
+
+const fetchPinnedHostWithRetry = (baseUrl: string): Promise<string> =>
+	retryWithBackoff(() => fetchPinnedHost(baseUrl), {
+		maxAttempts: healthzMaxAttempts,
+		baseDelayMs: healthzRetryBaseDelayMs,
+		maxDelayMs: healthzRetryMaxDelayMs,
+	});
 
 const resolveBaseUrl = (env: EnvironmentTypes): string =>
 	DNS_ENDPOINT[env] ?? DNS_ENDPOINT.development;
@@ -93,18 +114,22 @@ const resolvePinnedUrl = async (
 
 	const promise = (async () => {
 		try {
-			const host = await fetchPinnedHost(base);
+			const host = await fetchPinnedHostWithRetry(base);
 			const parsed = new URL(base);
 			// /healthz returns the bare pronodeN.prosopo.io (env.config.host).
 			// Re-apply the ipMode label so the per-pronode URL stays on the same
 			// single-stack sub-zone (`ipv4.pronode4.prosopo.io`).
 			parsed.hostname = withIpModeLabel(host, ipMode);
 			return parsed.toString().replace(/\/$/, "");
-		} catch {
-			// Healthz unreachable / malformed — fall back to the load-balanced
-			// hostname (with the ipMode label still applied). Clients still
-			// work, they just lose per-pronode stickiness.
-			return base;
+		} catch (err) {
+			// Healthz is a prerequisite for the rest of the captcha flow — the
+			// token must embed a specific pronodeN URL for verify to accept it.
+			// Evict the cached rejection so a subsequent captcha attempt gets a
+			// fresh chance, and surface the error so the caller's own retry
+			// (`providerRetry` in @prosopo/procaptcha-common) can fall through
+			// to `getRandomProviderFromList`, which bypasses healthz entirely.
+			pinPromiseCache.delete(key);
+			throw err;
 		}
 	})();
 
@@ -152,6 +177,72 @@ export const getRandomActiveProvider = async (
 	};
 };
 
+// Compare two provider URLs ignoring a trailing slash so a stored "failed" URL
+// still matches its list entry regardless of formatting.
+const sameProviderUrl = (a: string, b: string): boolean =>
+	a.replace(/\/$/, "") === b.replace(/\/$/, "");
+
+// Weighted random pick — providers advertise a capacity weight (1-100), so
+// fallback traffic is spread in proportion to capacity rather than uniformly.
+// Returns undefined only for an empty list (callers guard against that).
+const pickWeightedProvider = (
+	providers: HardcodedProvider[],
+	random: () => number,
+): HardcodedProvider | undefined => {
+	const totalWeight = providers.reduce((sum, p) => sum + p.weight, 0);
+	let threshold = random() * totalWeight;
+	let chosen: HardcodedProvider | undefined;
+	for (const provider of providers) {
+		chosen = provider;
+		threshold -= provider.weight;
+		if (threshold < 0) break;
+	}
+	return chosen;
+};
+
+/**
+ * Pick a random provider directly from the provider list, bypassing the
+ * DNS-routed endpoint. This is the error-fallback path: once a provider has
+ * errored, retrying it re-hits the same (possibly-down) endpoint, and a fleet
+ * of widgets doing that in a tight loop can accidentally DDoS the provider — so
+ * instead we spread the retry across the fleet by choosing a random provider
+ * from the list. `excludeUrl` (the provider that just failed) is dropped from
+ * the pool when other providers remain. In development the list holds only the
+ * single local provider, so this naturally degrades to retrying that provider.
+ * `random` is injectable so tests can make the pick deterministic.
+ */
+export const getRandomProviderFromList = async (
+	env: EnvironmentTypes,
+	ipMode?: IpMode,
+	excludeUrl?: string,
+	random: () => number = Math.random,
+): Promise<RandomProvider> => {
+	const providers = await getProviders(env);
+	if (providers.length === 0) {
+		// Nothing to choose from — fall back to the DNS-routed endpoint.
+		return getRandomActiveProvider(env, ipMode);
+	}
+
+	// Only exclude the failed provider when at least one other remains, so we
+	// never end up with an empty pool (e.g. a single-provider environment).
+	const eligible =
+		excludeUrl && providers.length > 1
+			? providers.filter(
+					(p) => !sameProviderUrl(applyIpModeToUrl(p.url, ipMode), excludeUrl),
+				)
+			: providers;
+	const pool = eligible.length > 0 ? eligible : providers;
+
+	const chosen = pickWeightedProvider(pool, random);
+	if (!chosen) {
+		return getRandomActiveProvider(env, ipMode);
+	}
+	return {
+		providerAccount: chosen.address,
+		provider: { url: applyIpModeToUrl(chosen.url, ipMode) },
+	};
+};
+
 // Test-only escape hatch so tests can isolate the healthz cache between
 // cases. Not exported from the package index — internal use only.
 export const _resetPinCache = () => {
@@ -162,4 +253,27 @@ export const _resetPinCache = () => {
 // Not exported from the package index — internal use only.
 export const _resetProviderListCache = () => {
 	providerListPromiseCache.clear();
+};
+
+// Test-only override for the healthz retry policy — tests use it to disable
+// backoff delays (baseDelayMs: 0) and to shorten/lengthen the attempt count.
+// Not exported from the package index — internal use only.
+export const _setHealthzRetryPolicy = (opts: {
+	maxAttempts?: number;
+	baseDelayMs?: number;
+	maxDelayMs?: number;
+}) => {
+	if (opts.maxAttempts !== undefined) healthzMaxAttempts = opts.maxAttempts;
+	if (opts.baseDelayMs !== undefined)
+		healthzRetryBaseDelayMs = opts.baseDelayMs;
+	if (opts.maxDelayMs !== undefined) healthzRetryMaxDelayMs = opts.maxDelayMs;
+};
+
+// Test-only reset for the healthz retry policy — restores the defaults so an
+// override in one test doesn't leak into the next. Not exported from the
+// package index — internal use only.
+export const _resetHealthzRetryPolicy = () => {
+	healthzMaxAttempts = HEALTHZ_MAX_ATTEMPTS;
+	healthzRetryBaseDelayMs = HEALTHZ_RETRY_BASE_DELAY_MS;
+	healthzRetryMaxDelayMs = HEALTHZ_RETRY_MAX_DELAY_MS;
 };

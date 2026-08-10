@@ -16,7 +16,7 @@ import { chunkIntoBatches, executeBatchesSequentially } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
 import type { RedisClientType } from "redis";
 import { REDIS_BATCH_SIZE } from "#policy/redis/redisClient.js";
-import type { AccessRule } from "#policy/rule.js";
+import { type AccessRule, GLOBAL_CLIENT_SCOPE_SENTINEL } from "#policy/rule.js";
 import type {
 	AccessRuleEntry,
 	AccessRulesWriter,
@@ -120,10 +120,24 @@ export class RedisRulesWriter implements AccessRulesWriter {
 	}
 }
 
-export const getRedisRuleValue = (rule: AccessRule): Record<string, string> =>
-	Object.fromEntries(
-		Object.entries(rule).map(([key, value]) => [key, String(value)]),
-	);
+export const getRedisRuleValue = (rule: AccessRule): Record<string, string> => {
+	const record: Record<string, string> = {};
+	for (const [key, value] of Object.entries(rule)) {
+		if (value === undefined) {
+			continue;
+		}
+		record[key] = String(value);
+	}
+	// Global rules used to be stored with no clientId field at all and looked
+	// up via `ismissing(@clientId)`. Stamp the sentinel so the read path can
+	// probe `@clientId:{global}` instead — a posting-list intersection is
+	// orders of magnitude cheaper than ismissing over a large rule set.
+	// Rules with a real clientId are untouched.
+	if (record.clientId === undefined) {
+		record.clientId = GLOBAL_CLIENT_SCOPE_SENTINEL;
+	}
+	return record;
+};
 
 export class DummyRedisRulesWriter implements AccessRulesWriter {
 	constructor(private readonly logger: Logger) {}

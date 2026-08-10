@@ -93,28 +93,36 @@ export class ExtensionWeb2 extends Extension {
 
 		const u8Entropy = stringToU8a(entropy);
 
-		let mnemonic: string;
+		const type: KeypairType = "sr25519";
+		const keyring = new Keyring({ type });
+		const workerManager = getCryptoWorkerManager();
 
-		// Try to use Web Worker for entropy-to-mnemonic conversion to avoid blocking
+		// Two paths, in order of preference:
+		//
+		// 1. Worker path: entropy → mnemonic → sr25519 keypair in ONE fused
+		//    worker round-trip. sr25519 derivation is a ~500ms scalar-mul
+		//    on mid-tier hardware and was the biggest main-thread cost in
+		//    the frictionless critical path pre-worker. Doing it in the
+		//    worker lets it overlap with BotScoreWorker and main-thread
+		//    detectors. We wrap the raw keypair bytes on main via
+		//    `addFromPair` (cheap packaging — no ECC work).
+		//
+		// 2. Fallback path (worker refused to boot / CSP): synchronous
+		//    derivation on main thread. Preserves behaviour for browsers
+		//    that block workers.
 		try {
-			const workerManager = getCryptoWorkerManager();
-			mnemonic = await workerManager.entropyToMnemonic(u8Entropy);
+			const { publicKey, secretKey } =
+				await workerManager.entropyToKeypair(u8Entropy);
+			const keypair = keyring.addFromPair({ publicKey, secretKey }, {}, type);
+			const address = keypair.address;
+			return { address, name: address, keypair };
 		} catch (workerError) {
 			const entropyToMnemonic = await EntropyToMnemonicLoader();
-			mnemonic = entropyToMnemonic(u8Entropy);
+			const mnemonic = entropyToMnemonic(u8Entropy);
+			const keypair = keyring.addFromMnemonic(mnemonic);
+			const address = keypair.address;
+			return { address, name: address, keypair };
 		}
-
-		const type: KeypairType = "sr25519";
-		const keyring = new Keyring({
-			type,
-		});
-		const keypair = keyring.addFromMnemonic(mnemonic);
-		const address = keypair.address;
-		return {
-			address,
-			name: address,
-			keypair,
-		};
 	}
 }
 
