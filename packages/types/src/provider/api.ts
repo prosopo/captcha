@@ -22,6 +22,7 @@ import {
 	boolean,
 	coerce,
 	type input,
+	literal,
 	nativeEnum,
 	number,
 	object,
@@ -103,6 +104,26 @@ export enum PublicApiPaths {
 	GetProviderDetails = "/v1/prosopo/provider/public/details",
 	Metrics = "/metrics",
 }
+
+export enum HealthApiPaths {
+	Health = "/health",
+	AuthHealth = "/auth/health",
+}
+
+export const healthResponseSchema = object({
+	alive: literal(true),
+	timestamp: string(),
+});
+
+export type HealthResponse = output<typeof healthResponseSchema>;
+
+export const authHealthResponseSchema = healthResponseSchema.extend({
+	version: string(),
+	uptimeSeconds: number(),
+	name: string(),
+});
+
+export type AuthHealthResponse = output<typeof authHealthResponseSchema>;
 
 export const providerDetailsSchema = object({
 	version: string(),
