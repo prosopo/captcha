@@ -197,6 +197,7 @@ export class FrictionlessManager extends CaptchaManager {
 		isEscalation?: Session["isEscalation"],
 		iframeUrl?: Session["iframeUrl"],
 		isProtect?: Session["isProtect"],
+		originSessionId?: Session["originSessionId"],
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
@@ -217,6 +218,10 @@ export class FrictionlessManager extends CaptchaManager {
 			// avoids polluting analytics with `false` on every plain
 			// frictionless session.
 			...(isEscalation && { isEscalation: true }),
+			// Origin sessionId is only meaningful for escalations. Persist
+			// alongside isEscalation so the DM-input read path can walk
+			// back for fallback fields (simdReadings, dnsEvent, etc.).
+			...(originSessionId && { originSessionId }),
 			decryptedHeadHash,
 			bundleId,
 			reason,

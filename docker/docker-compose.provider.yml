@@ -114,7 +114,7 @@ services:
         max-size: '100m'
         max-file: '1'
     healthcheck:
-      test: [ "CMD", "mongo", "--eval", "db.adminCommand('ping')", "--quiet" ] # ping the mongo server
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')", "--quiet" ] # ping the mongo server (mongo:6 ships mongosh, the legacy mongo shell was removed in 6.0)
       interval: 5m
       retries: 3
       start_period: 30s
@@ -164,7 +164,7 @@ services:
         max-size: '100m'
         max-file: '1'
     healthcheck:
-      test: [ "CMD", "curl", "--fail", "localhost:2019/metrics" ] # ping the caddy admin api
+      test: [ "CMD", "curl", "--fail", "localhost:2020/metrics" ] # ping the caddy admin api (provider.Caddyfile moves admin to :2020 to avoid conflicting with the caddy daemon)
       interval: 5m
       retries: 3
       start_period: 30s
