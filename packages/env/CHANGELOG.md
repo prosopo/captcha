@@ -1,5 +1,139 @@
 # @prosopo/env
 
+## 3.6.26
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+  - @prosopo/database@4.0.3
+  - @prosopo/types@5.0.2
+  - @prosopo/types-env@2.10.22
+  - @prosopo/ipinfo@0.3.3
+  - @prosopo/keyring@2.9.65
+
+## 3.6.25
+### Patch Changes
+
+- Updated dependencies [1fba42e]
+  - @prosopo/database@4.0.2
+
+## 3.6.24
+### Patch Changes
+
+- 38396b4: test(env): cover environment accessors, readiness paths and provider cleanup
+- Updated dependencies [9fec7bd]
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/common@3.1.49
+  - @prosopo/types@5.0.1
+  - @prosopo/logger@2.0.5
+  - @prosopo/database@4.0.1
+  - @prosopo/ipinfo@0.3.2
+  - @prosopo/keyring@2.9.64
+  - @prosopo/types-env@2.10.21
+
+## 3.6.23
+### Patch Changes
+
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [6f19cde]
+  - @prosopo/database@4.0.0
+  - @prosopo/types@5.0.0
+  - @prosopo/ipinfo@0.3.1
+  - @prosopo/keyring@2.9.63
+  - @prosopo/types-env@2.10.20
+
+## 3.6.22
+### Patch Changes
+
+- Updated dependencies [71a5952]
+  - @prosopo/keyring@2.9.62
+  - @prosopo/types-env@2.10.19
+
+## 3.6.21
+### Patch Changes
+
+- Updated dependencies [69f8dcd]
+  - @prosopo/database@3.15.21
+  - @prosopo/types-env@2.10.18
+
+## 3.6.20
+### Patch Changes
+
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [103318c]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+  - @prosopo/types@4.10.0
+  - @prosopo/ipinfo@0.3.0
+  - @prosopo/common@3.1.48
+  - @prosopo/database@3.15.20
+  - @prosopo/keyring@2.9.61
+  - @prosopo/types-env@2.10.17
+  - @prosopo/logger@2.0.4
+
+## 3.6.19
+### Patch Changes
+
+  - @prosopo/database@3.15.19
+  - @prosopo/types-env@2.10.16
+
+## 3.6.18
+### Patch Changes
+
+- Updated dependencies [a0cb39e]
+  - @prosopo/types@4.9.12
+  - @prosopo/database@3.15.18
+  - @prosopo/ipinfo@0.2.40
+  - @prosopo/keyring@2.9.60
+  - @prosopo/types-env@2.10.15
+
+## 3.6.17
+### Patch Changes
+
+- Updated dependencies [b9ca0e7]
+- Updated dependencies [fde6896]
+  - @prosopo/types@4.9.11
+  - @prosopo/common@3.1.47
+  - @prosopo/database@3.15.17
+  - @prosopo/ipinfo@0.2.39
+  - @prosopo/keyring@2.9.59
+  - @prosopo/types-env@2.10.14
+
+## 3.6.16
+### Patch Changes
+
+- Updated dependencies [a41c1b5]
+  - @prosopo/database@3.15.16
+
+## 3.6.15
+### Patch Changes
+
+- Updated dependencies [0a4f902]
+  - @prosopo/types@4.9.10
+  - @prosopo/database@3.15.15
+  - @prosopo/ipinfo@0.2.38
+  - @prosopo/keyring@2.9.58
+  - @prosopo/types-env@2.10.13
+
+## 3.6.14
+### Patch Changes
+
+- Updated dependencies [446f53b]
+  - @prosopo/database@3.15.14
+
+## 3.6.13
+### Patch Changes
+
+- Updated dependencies [2bba03a]
+  - @prosopo/database@3.15.13
+  - @prosopo/types-env@2.10.12
+  - @prosopo/common@3.1.46
+  - @prosopo/types@4.9.9
+  - @prosopo/keyring@2.9.57
+  - @prosopo/ipinfo@0.2.37
+
 ## 3.6.12
 ### Patch Changes
 

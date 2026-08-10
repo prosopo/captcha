@@ -1,5 +1,44 @@
 # @prosopo/flux
 
+## 2.6.67
+### Patch Changes
+
+- Updated dependencies [9fec7bd]
+- Updated dependencies [2aabe73]
+  - @prosopo/common@3.1.49
+  - @prosopo/logger@2.0.5
+  - @prosopo/dotenv@3.0.51
+
+## 2.6.66
+### Patch Changes
+
+- a0caef2: Add unit and type tests for the flux helpers: auth, message encryption, env formatting, secp256k1 signing, url building and the error handler.
+
+## 2.6.65
+### Patch Changes
+
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [2c47bb7]
+- Updated dependencies [0e1171c]
+- Updated dependencies [4cd9035]
+- Updated dependencies [8fba211]
+- Updated dependencies [e14fce6]
+  - @prosopo/util@3.3.5
+  - @prosopo/dotenv@3.0.50
+  - @prosopo/common@3.1.48
+  - @prosopo/logger@2.0.4
+
+## 2.6.64
+### Patch Changes
+
+- Updated dependencies [fde6896]
+  - @prosopo/common@3.1.47
+
+## 2.6.63
+### Patch Changes
+
+  - @prosopo/common@3.1.46
+
 ## 2.6.62
 ### Patch Changes
 

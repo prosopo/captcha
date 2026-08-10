@@ -23,4 +23,5 @@ export interface BehavioralDataResult {
 export default function decryptBehavioralData(
 	encryptedData: string,
 	privateKeyString?: string,
+	innerConfigEncoded?: string,
 ): Promise<BehavioralDataResult>;

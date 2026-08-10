@@ -17,7 +17,7 @@ defaults:
 jobs:
   tag:
     name: Tag Release
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(vars.GH_RUNNER || '"ubuntu-latest"') }}
     # Only run if PR was merged and title starts with "Release"
     if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.title, 'Release v')
     steps:
@@ -35,7 +35,7 @@ jobs:
           fetch-depth: 0
           ref: main
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: 'npm'

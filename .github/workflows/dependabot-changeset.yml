@@ -40,7 +40,7 @@ defaults:
 jobs:
   changeset:
     name: changeset
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(vars.GH_RUNNER || '"ubuntu-latest"') }}
     if: ${{ github.actor == 'dependabot[bot]' }}
     env:
       BASE_REF: ${{ github.event.pull_request.base.ref }}
@@ -55,7 +55,7 @@ jobs:
           submodules: "recursive"
           fetch-depth: 0
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           # Match `engines` (node ^24 / npm ^11) and the tests.yml jobs so the
           # regenerated lockfile is identical to what the rest of CI produces.

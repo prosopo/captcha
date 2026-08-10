@@ -34,31 +34,37 @@ vi.mock("@prosopo/env", async () => {
 		warn: vi.fn().mockImplementation(loggerOuter.warn.bind(loggerOuter)),
 	} as unknown as Logger;
 	return {
-		ProviderEnvironment: vi.fn().mockImplementation(() => ({
-			isReady: vi.fn().mockResolvedValue(true),
-			logger: mockLogger,
-			getDb: vi.fn().mockReturnValue({
-				getLastScheduledTaskStatus: vi.fn().mockResolvedValue(undefined),
-			}),
-			db: {
-				getLastScheduledTaskStatus: vi.fn().mockResolvedValue(undefined),
-			},
-		})),
+		ProviderEnvironment: vi.fn().mockImplementation(function () {
+			return {
+				isReady: vi.fn().mockResolvedValue(true),
+				logger: mockLogger,
+				getDb: vi.fn().mockReturnValue({
+					getLastScheduledTaskStatus: vi.fn().mockResolvedValue(undefined),
+				}),
+				db: {
+					getLastScheduledTaskStatus: vi.fn().mockResolvedValue(undefined),
+				},
+			};
+		}),
 	};
 });
 
 vi.mock("../../../tasks/tasks.js", () => ({
-	Tasks: vi.fn().mockImplementation(() => ({
-		clientTaskManager: {
-			storeCommitmentsExternal: vi.fn().mockResolvedValue(undefined),
-		},
-	})),
+	Tasks: vi.fn().mockImplementation(function () {
+		return {
+			clientTaskManager: {
+				storeCommitmentsExternal: vi.fn().mockResolvedValue(undefined),
+			},
+		};
+	}),
 }));
 
 vi.mock("cron", () => ({
-	CronJob: vi.fn().mockImplementation((cronTime, onTick) => ({
-		start: vi.fn().mockImplementation(onTick),
-	})),
+	CronJob: vi.fn().mockImplementation(function (cronTime, onTick) {
+		return {
+			start: vi.fn().mockImplementation(onTick),
+		};
+	}),
 }));
 
 vi.mock("../../../util.js", () => ({

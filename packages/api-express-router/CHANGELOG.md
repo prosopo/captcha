@@ -1,5 +1,116 @@
 # @prosopo/api-express-router
 
+## 3.1.57
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+  - @prosopo/types@5.0.2
+  - @prosopo/env@3.6.26
+
+## 3.1.56
+### Patch Changes
+
+  - @prosopo/env@3.6.25
+
+## 3.1.55
+### Patch Changes
+
+- Updated dependencies [38396b4]
+- Updated dependencies [9fec7bd]
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/env@3.6.24
+  - @prosopo/common@3.1.49
+  - @prosopo/types@5.0.1
+  - @prosopo/logger@2.0.5
+  - @prosopo/locale@3.2.9
+  - @prosopo/api-route@2.6.54
+
+## 3.1.54
+### Patch Changes
+
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [6f19cde]
+  - @prosopo/types@5.0.0
+  - @prosopo/env@3.6.23
+
+## 3.1.53
+### Patch Changes
+
+  - @prosopo/env@3.6.22
+
+## 3.1.52
+### Patch Changes
+
+- 508fee8: Add unit and type test coverage for the router factory, the default endpoint adapter, the auth and request-logger middleware, and the package barrel.
+  - @prosopo/env@3.6.21
+
+## 3.1.51
+### Patch Changes
+
+- Updated dependencies [a58d007]
+- Updated dependencies [2c47bb7]
+- Updated dependencies [0e1171c]
+- Updated dependencies [103318c]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+  - @prosopo/api-route@2.6.53
+  - @prosopo/util@3.3.5
+  - @prosopo/locale@3.2.8
+  - @prosopo/types@4.10.0
+  - @prosopo/common@3.1.48
+  - @prosopo/env@3.6.20
+  - @prosopo/logger@2.0.4
+
+## 3.1.50
+### Patch Changes
+
+  - @prosopo/env@3.6.19
+
+## 3.1.49
+### Patch Changes
+
+- Updated dependencies [a0cb39e]
+  - @prosopo/types@4.9.12
+  - @prosopo/env@3.6.18
+
+## 3.1.48
+### Patch Changes
+
+- Updated dependencies [b9ca0e7]
+- Updated dependencies [fde6896]
+  - @prosopo/types@4.9.11
+  - @prosopo/common@3.1.47
+  - @prosopo/env@3.6.17
+
+## 3.1.47
+### Patch Changes
+
+  - @prosopo/env@3.6.16
+
+## 3.1.46
+### Patch Changes
+
+- Updated dependencies [0a4f902]
+  - @prosopo/types@4.9.10
+  - @prosopo/env@3.6.15
+
+## 3.1.45
+### Patch Changes
+
+  - @prosopo/env@3.6.14
+
+## 3.1.44
+### Patch Changes
+
+- Updated dependencies [b500d56]
+  - @prosopo/locale@3.2.7
+  - @prosopo/env@3.6.13
+  - @prosopo/common@3.1.46
+  - @prosopo/types@4.9.9
+
 ## 3.1.43
 ### Patch Changes
 

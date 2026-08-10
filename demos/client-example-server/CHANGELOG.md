@@ -1,5 +1,150 @@
 # @prosopo/client-example-server
 
+## 2.7.129
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+  - @prosopo/database@4.0.3
+  - @prosopo/types@5.0.2
+  - @prosopo/keyring@2.9.65
+  - @prosopo/server@2.10.46
+
+## 2.7.128
+### Patch Changes
+
+- Updated dependencies [1fba42e]
+  - @prosopo/database@4.0.2
+
+## 2.7.127
+### Patch Changes
+
+- Updated dependencies [9fec7bd]
+- Updated dependencies [2aabe73]
+- Updated dependencies [858dbaa]
+- Updated dependencies [bcef918]
+  - @prosopo/common@3.1.49
+  - @prosopo/types@5.0.1
+  - @prosopo/logger@2.0.5
+  - @prosopo/server@2.10.45
+  - @prosopo/database@4.0.1
+  - @prosopo/dotenv@3.0.51
+  - @prosopo/keyring@2.9.64
+
+## 2.7.126
+### Patch Changes
+
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [6f19cde]
+  - @prosopo/database@4.0.0
+  - @prosopo/types@5.0.0
+  - @prosopo/keyring@2.9.63
+  - @prosopo/server@2.10.44
+
+## 2.7.125
+### Patch Changes
+
+- Updated dependencies [71a5952]
+  - @prosopo/keyring@2.9.62
+  - @prosopo/server@2.10.43
+
+## 2.7.124
+### Patch Changes
+
+- fe9424f: Add unit and type tests for the client example server, and fix the defects they exposed:
+  
+  - `getRoutes` built one module-level router shared by every call, so a second call stacked handlers on the first call's bound config.
+  - `isAuth` could fall through without sending a response, and could send twice for a malformed `Authorization` header.
+  - The `if (passwordHash)` guard in signup had no else branch, leaving a request hanging when it was falsy.
+  - A `serverUrl` without a port resolved to `NaN`, so the server listened on an arbitrary free port; it now falls back to 9228.
+  - Removed the unreachable `OPTIONS` handler (`cors()` already answers preflight) and leftover debug logging.
+  - `app.ts` no longer boots a server on import; it exports `createApp`, `startServer` and `main`, and only runs when executed directly.
+- Updated dependencies [69f8dcd]
+  - @prosopo/database@3.15.21
+  - @prosopo/server@2.10.42
+
+## 2.7.123
+### Patch Changes
+
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [2c47bb7]
+- Updated dependencies [0e1171c]
+- Updated dependencies [103318c]
+- Updated dependencies [4cd9035]
+- Updated dependencies [8fba211]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+  - @prosopo/util@3.3.5
+  - @prosopo/types@4.10.0
+  - @prosopo/dotenv@3.0.50
+  - @prosopo/common@3.1.48
+  - @prosopo/database@3.15.20
+  - @prosopo/keyring@2.9.61
+  - @prosopo/server@2.10.41
+  - @prosopo/logger@2.0.4
+
+## 2.7.122
+### Patch Changes
+
+  - @prosopo/database@3.15.19
+
+## 2.7.121
+### Patch Changes
+
+- Updated dependencies [a0cb39e]
+  - @prosopo/types@4.9.12
+  - @prosopo/database@3.15.18
+  - @prosopo/keyring@2.9.60
+  - @prosopo/server@2.10.40
+
+## 2.7.120
+### Patch Changes
+
+- Updated dependencies [b9ca0e7]
+- Updated dependencies [fde6896]
+  - @prosopo/types@4.9.11
+  - @prosopo/common@3.1.47
+  - @prosopo/database@3.15.17
+  - @prosopo/keyring@2.9.59
+  - @prosopo/server@2.10.39
+
+## 2.7.119
+### Patch Changes
+
+  - @prosopo/server@2.10.38
+
+## 2.7.118
+### Patch Changes
+
+- Updated dependencies [a41c1b5]
+  - @prosopo/database@3.15.16
+
+## 2.7.117
+### Patch Changes
+
+- Updated dependencies [0a4f902]
+  - @prosopo/types@4.9.10
+  - @prosopo/server@2.10.37
+  - @prosopo/database@3.15.15
+  - @prosopo/keyring@2.9.58
+
+## 2.7.116
+### Patch Changes
+
+- Updated dependencies [446f53b]
+  - @prosopo/database@3.15.14
+
+## 2.7.115
+### Patch Changes
+
+- Updated dependencies [2bba03a]
+  - @prosopo/database@3.15.13
+  - @prosopo/common@3.1.46
+  - @prosopo/types@4.9.9
+  - @prosopo/keyring@2.9.57
+  - @prosopo/server@2.10.36
+
 ## 2.7.114
 ### Patch Changes
 

@@ -1,5 +1,117 @@
 # @prosopo/procaptcha-common
 
+## 2.11.22
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+  - @prosopo/types@5.0.2
+  - @prosopo/account@2.8.68
+  - @prosopo/load-balancer@2.10.19
+
+## 2.11.21
+### Patch Changes
+
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/types@5.0.1
+  - @prosopo/account@2.8.67
+  - @prosopo/load-balancer@2.10.18
+
+## 2.11.20
+### Patch Changes
+
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [6f19cde]
+- Updated dependencies [2bc8e73]
+  - @prosopo/types@5.0.0
+  - @prosopo/widget-skeleton@2.8.5
+  - @prosopo/account@2.8.66
+  - @prosopo/load-balancer@2.10.17
+
+## 2.11.19
+### Patch Changes
+
+  - @prosopo/account@2.8.65
+
+## 2.11.18
+### Patch Changes
+
+- ab3499c: feat(procaptcha): block on SIMD readings at solution submit
+  
+  Solution submit is the last hop the client controls, so it's the last chance to
+  attach the catcher's WASM SIMD readings for a session. The image, PoW and puzzle
+  managers now wait for the benchmark there via a shared
+  `getSimdReadingsForSubmit` helper, capped at 5s, instead of attaching only
+  whatever the prefetch happened to have resolved.
+  
+  The helper passes the budget down to the detector *and* races it locally — the
+  detector ships prebuilt, so a bundle that ignores `timeoutMs` (or a benchmark
+  wedged on a busy main thread) can't hang the submission. It never rejects: a
+  missing accessor, a rejection, a synchronous throw and a timeout all resolve to
+  `undefined` and the solution is submitted without readings, so a user is never
+  failed over telemetry.
+  
+  The earlier frictionless POST and challenge GET hops are unchanged and remain
+  non-blocking.
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [103318c]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+  - @prosopo/types@4.10.0
+  - @prosopo/account@2.8.64
+  - @prosopo/load-balancer@2.10.16
+
+## 2.11.17
+### Patch Changes
+
+- Updated dependencies [a0cb39e]
+  - @prosopo/types@4.9.12
+  - @prosopo/account@2.8.63
+  - @prosopo/load-balancer@2.10.15
+
+## 2.11.16
+### Patch Changes
+
+- Updated dependencies [b9ca0e7]
+  - @prosopo/types@4.9.11
+  - @prosopo/account@2.8.62
+  - @prosopo/load-balancer@2.10.14
+
+## 2.11.15
+### Patch Changes
+
+- Updated dependencies [a39c4ec]
+  - @prosopo/load-balancer@2.10.13
+
+## 2.11.14
+### Patch Changes
+
+- Updated dependencies [0a4f902]
+  - @prosopo/types@4.9.10
+  - @prosopo/account@2.8.61
+  - @prosopo/load-balancer@2.10.12
+
+## 2.11.13
+### Patch Changes
+
+  - @prosopo/types@4.9.9
+  - @prosopo/account@2.8.60
+  - @prosopo/load-balancer@2.10.11
+
+## 2.11.12
+### Patch Changes
+
+- Updated dependencies [b0d446f]
+  - @prosopo/account@2.8.59
+
+## 2.11.11
+### Patch Changes
+
+- Updated dependencies [ced80a4]
+  - @prosopo/account@2.8.58
+
 ## 2.11.10
 ### Patch Changes
 

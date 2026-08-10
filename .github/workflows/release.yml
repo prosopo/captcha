@@ -28,7 +28,7 @@ env:
 jobs:
   release:
     name: release
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(vars.GH_RUNNER || '"ubuntu-latest"') }}
     steps:
       - name: Print contexts
         uses: prosopo/github_actions/.github/actions/print_contexts@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
@@ -54,7 +54,7 @@ jobs:
           token: ${{ steps.app_token.outputs.token }}
           fetch-depth: 0 # fetch all history
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: 'npm'

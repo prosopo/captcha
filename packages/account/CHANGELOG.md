@@ -1,5 +1,132 @@
 # @prosopo/account
 
+## 2.8.68
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+  - @prosopo/types@5.0.2
+  - @prosopo/fingerprint@2.7.22
+  - @prosopo/keyring@2.9.65
+
+## 2.8.67
+### Patch Changes
+
+- Updated dependencies [9fec7bd]
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/common@3.1.49
+  - @prosopo/types@5.0.1
+  - @prosopo/fingerprint@2.7.21
+  - @prosopo/keyring@2.9.64
+
+## 2.8.66
+### Patch Changes
+
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [6f19cde]
+  - @prosopo/types@5.0.0
+  - @prosopo/fingerprint@2.7.20
+  - @prosopo/keyring@2.9.63
+
+## 2.8.65
+### Patch Changes
+
+- Updated dependencies [71a5952]
+  - @prosopo/keyring@2.9.62
+
+## 2.8.64
+### Patch Changes
+
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [2c47bb7]
+- Updated dependencies [0e1171c]
+- Updated dependencies [103318c]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+  - @prosopo/util@3.3.5
+  - @prosopo/types@4.10.0
+  - @prosopo/common@3.1.48
+  - @prosopo/fingerprint@2.7.19
+  - @prosopo/keyring@2.9.61
+
+## 2.8.63
+### Patch Changes
+
+- Updated dependencies [a0cb39e]
+  - @prosopo/types@4.9.12
+  - @prosopo/fingerprint@2.7.18
+  - @prosopo/keyring@2.9.60
+
+## 2.8.62
+### Patch Changes
+
+- Updated dependencies [b9ca0e7]
+- Updated dependencies [fde6896]
+  - @prosopo/types@4.9.11
+  - @prosopo/common@3.1.47
+  - @prosopo/fingerprint@2.7.17
+  - @prosopo/keyring@2.9.59
+
+## 2.8.61
+### Patch Changes
+
+- Updated dependencies [0a4f902]
+  - @prosopo/types@4.9.10
+  - @prosopo/fingerprint@2.7.16
+  - @prosopo/keyring@2.9.58
+
+## 2.8.60
+### Patch Changes
+
+  - @prosopo/common@3.1.46
+  - @prosopo/types@4.9.9
+  - @prosopo/keyring@2.9.57
+  - @prosopo/fingerprint@2.7.15
+
+## 2.8.59
+### Patch Changes
+
+- b0d446f: test(account): unit tests for CryptoWorker + ExtensionWeb2 keypair-derivation paths
+  
+  Adds unit coverage for the code changed in the sr25519-in-worker perf PR (#2830):
+  
+  - `cryptoWorker.unit.test.ts` — exercises the primitives (`entropyToMnemonic`, `mnemonicToMiniSecret`, `sr25519FromSeed`) the CryptoWorker's task dispatch calls into, and asserts the composed `entropyToKeypair` pipeline produces:
+    - a keypair byte-equivalent (address + publicKey) to `keyring.addFromMnemonic(mnemonic)`
+    - signatures that verify cross-instance (`addFromPair`-derived sig verifies against `addFromMnemonic`'s public key, and vice-versa)
+    - deterministic output for identical entropy input
+    - proper input-validation rejection for non-BIP39 entropy sizes
+  - `ExtensionWeb2.unit.test.ts` — mocks `getCryptoWorkerManager` + `getFingerprint` to lock down both branches of `createAccount`:
+    - **worker branch** — `entropyToKeypair` resolves with raw bytes, `addFromPair` produces the expected address
+    - **fallback branch** — `entropyToKeypair` rejects (worker unavailable), falls through to `entropyToMnemonic` + `addFromMnemonic` on main thread, produces the *same* address
+    - A/B check confirming worker and fallback branches derive identical addresses for the same fingerprint — the invariant that lets us swap the paths without breaking session identity for users whose worker fails
+  
+  Also wires up a `test` script and `vite.test.config.ts` in `@prosopo/account`, which had none previously.
+  
+  **cli patch**: sync bump so the release cuts a new tag (root version follows `@prosopo/cli`) and the tag-triggered `publish_release` + downstream `deploy-procaptcha-bundle` republishes the CDN bundle with the sr25519-in-worker perf improvements from #2830. Without this, the `test(account)` bump alone leaves cli at its current version, the release script computes the same root version as the previous tag, and no new `v*.*.*` tag → no publish → no CDN republish.
+
+## 2.8.58
+### Patch Changes
+
+- ced80a4: perf(account,procaptcha-frictionless): move sr25519 keypair derivation into CryptoWorker + trim critical-path round-trips
+  
+  Reduces the frictionless client-side gap (last widget-bundle chunk → `POST /v1/prosopo/provider/client/captcha/frictionless`) by ~1s on constrained hardware (measured at 30x CPU throttle, mean over 5 samples: **3431ms → 2434ms, −997ms / −29%**).
+  
+  Three changes in one PR because they interact:
+  
+  1. **sr25519 keypair derivation moves off the main thread.** `ExtensionWeb2.createAccount` was calling `keyring.addFromMnemonic(mnemonic)` synchronously on the main thread. Internally that's `mnemonicToMiniSecret` → `sr25519FromSeed` → a scalar multiplication on Ristretto25519 via `@noble/curves`, dominated by `wNAFCached` / `getPrecomputes` / `multiply`. On a mid-tier laptop that's ~500ms of blocking main-thread work sitting inside the giant `HandlePostMessage → RunMicrotasks` task that also runs the DOM-bound detectors. CryptoWorker now does the derivation and returns the raw `{publicKey, secretKey}` bytes; main thread wraps them with `keyring.addFromPair(...)` which is cheap byte-packaging — no ECC work.
+  
+  2. **`entropyToMnemonic` + keypair derivation fused into a single worker task (`entropyToKeypair`).** Previously two sequential worker round-trips would have been needed (entropy → mnemonic on worker → return → mnemonic → keypair on worker → return). Fusing saves one postMessage transit (~30-80ms under throttle) on the critical path. The existing `entropyToMnemonic` task stays for callers that still want the mnemonic string standalone.
+  
+  3. **`CryptoWorkerManager.testWorker()` removed.** It was a Blob-URL-era defensive check — post-construction failures already surface via `worker.onerror` (which cleans up so the next `runTask` reinitialises), and task-level failures surface via `runTask`'s 10s timeout + reject (which triggers the main-thread fallback). Under Vite's `?worker&inline` constructor the round-trip is pure overhead. Removing it saves ~30-80ms per worker init on constrained hardware.
+  
+  Also: `customDetectBot` starts `ext.getAccount(config)` before calling `detect()` so the CryptoWorker task overlaps with the detector's module.evaluate + botScore work instead of gating them at the end.
+  
+  Fallback path is preserved end-to-end: worker construction failure or task timeout falls back to synchronous main-thread derivation via `entropyToMnemonic` + `keyring.addFromMnemonic`, matching prior behaviour for browsers that block workers (CSP, embedded WebViews).
+  
+  Measurement setup: Chrome via CDP, 30x CPU throttling, 5 samples each on identical hardware, gap timed from last js chunk `finish` → `healthz` request start (proxy for “widget can send frictionless POST”). Both sides use the same generation of the catcher-derived detector blob, so the delta reflects only the captcha-side changes.
+
 ## 2.8.57
 ### Patch Changes
 

@@ -135,14 +135,14 @@ describe("evaluateIpValidationRules", () => {
 					country: "A",
 					countryCode: "A",
 					provider: "X",
-					connectionType: "residential",
+					connectionType: "datacenter",
 					isVpnOrProxy: false,
 				},
 				ip2Details: {
 					country: "A",
 					countryCode: "A",
 					provider: "X",
-					connectionType: "residential",
+					connectionType: "datacenter",
 					isVpnOrProxy: false,
 				},
 				distanceKm: 2000,
@@ -199,7 +199,7 @@ describe("evaluateIpValidationRules", () => {
 					countryCode: "A",
 					city: "CityA",
 					provider: "X",
-					connectionType: "residential",
+					connectionType: "datacenter",
 					isVpnOrProxy: false,
 				},
 				ip2Details: {
@@ -207,7 +207,7 @@ describe("evaluateIpValidationRules", () => {
 					countryCode: "A",
 					city: "CityB",
 					provider: "X",
-					connectionType: "residential",
+					connectionType: "datacenter",
 					isVpnOrProxy: false,
 				},
 				differentProviders: false,
@@ -238,7 +238,7 @@ describe("evaluateIpValidationRules", () => {
 					countryCode: "A",
 					city: "CityA",
 					provider: "X",
-					connectionType: "residential",
+					connectionType: "datacenter",
 					isVpnOrProxy: false,
 				},
 				ip2Details: {
@@ -246,7 +246,7 @@ describe("evaluateIpValidationRules", () => {
 					countryCode: "A",
 					city: "CityB",
 					provider: "X",
-					connectionType: "residential",
+					connectionType: "datacenter",
 					isVpnOrProxy: false,
 				},
 				differentProviders: false,
@@ -515,6 +515,203 @@ describe("evaluateIpValidationRules", () => {
 			mockLogger,
 		);
 		expect(result.action).toBe(IPValidationAction.Flag);
+	});
+
+	describe("same trusted provider skip", () => {
+		const sameProviderRules: IIPValidationRules = {
+			...baseRules,
+			actions: {
+				...baseRules.actions,
+				cityChangeAction: IPValidationAction.Reject,
+				distanceExceedAction: IPValidationAction.Reject,
+			},
+			distanceThresholdKm: 500,
+		};
+
+		it("skips city and distance rules when both IPs share the same non-datacenter provider in the same country (eyematch shape)", () => {
+			const comparison: IPComparisonResult = {
+				ipsMatch: false,
+				ip1: "68.153.66.63",
+				ip2: "2600:387:15:6437::7",
+				comparison: {
+					ip1Details: {
+						country: "United States",
+						countryCode: "US",
+						city: "Laredo",
+						provider: "AT&T Enterprises, LLC",
+						connectionType: "residential",
+						isVpnOrProxy: false,
+					},
+					ip2Details: {
+						country: "United States",
+						countryCode: "US",
+						city: "San Antonio",
+						provider: "AT&T Enterprises, LLC",
+						connectionType: "residential",
+						isVpnOrProxy: false,
+					},
+					distanceKm: 1930,
+					differentProviders: false,
+					differentConnectionTypes: false,
+					anyVpnOrProxy: false,
+				},
+			};
+			const result = evaluateIpValidationRules(
+				comparison,
+				sameProviderRules,
+				mockLogger,
+			);
+			expect(result.action).toBe(IPValidationAction.Allow);
+			expect(result.errorMessage).toBeUndefined();
+		});
+
+		it("does not skip when either endpoint is a datacenter (guards AWS/Cloudflare same-company case)", () => {
+			const comparison: IPComparisonResult = {
+				ipsMatch: false,
+				ip1: "ip1",
+				ip2: "ip2",
+				comparison: {
+					ip1Details: {
+						country: "United States",
+						countryCode: "US",
+						city: "Ashburn",
+						provider: "Amazon.com, Inc.",
+						connectionType: "datacenter",
+						isVpnOrProxy: false,
+					},
+					ip2Details: {
+						country: "United States",
+						countryCode: "US",
+						city: "Ashburn",
+						provider: "Amazon.com, Inc.",
+						connectionType: "datacenter",
+						isVpnOrProxy: false,
+					},
+					distanceKm: 3800,
+					differentProviders: false,
+					differentConnectionTypes: false,
+					anyVpnOrProxy: false,
+				},
+			};
+			const result = evaluateIpValidationRules(
+				comparison,
+				sameProviderRules,
+				mockLogger,
+			);
+			expect(result.action).toBe(IPValidationAction.Reject);
+			expect(result.errorMessage).toMatch(/IP addresses are 3800\.00km apart/);
+		});
+
+		it("does not skip when provider is Unknown on both sides", () => {
+			const comparison: IPComparisonResult = {
+				ipsMatch: false,
+				ip1: "ip1",
+				ip2: "ip2",
+				comparison: {
+					ip1Details: {
+						country: "United States",
+						countryCode: "US",
+						city: "A",
+						provider: "Unknown",
+						connectionType: "residential",
+						isVpnOrProxy: false,
+					},
+					ip2Details: {
+						country: "United States",
+						countryCode: "US",
+						city: "B",
+						provider: "Unknown",
+						connectionType: "residential",
+						isVpnOrProxy: false,
+					},
+					distanceKm: 2000,
+					differentProviders: false,
+					differentConnectionTypes: false,
+					anyVpnOrProxy: false,
+				},
+			};
+			const result = evaluateIpValidationRules(
+				comparison,
+				sameProviderRules,
+				mockLogger,
+			);
+			expect(result.action).toBe(IPValidationAction.Reject);
+		});
+
+		it("does not skip when country codes differ", () => {
+			const comparison: IPComparisonResult = {
+				ipsMatch: false,
+				ip1: "ip1",
+				ip2: "ip2",
+				comparison: {
+					ip1Details: {
+						country: "United States",
+						countryCode: "US",
+						city: "New York",
+						provider: "Vodafone Group",
+						connectionType: "residential",
+						isVpnOrProxy: false,
+					},
+					ip2Details: {
+						country: "United Kingdom",
+						countryCode: "GB",
+						city: "London",
+						provider: "Vodafone Group",
+						connectionType: "residential",
+						isVpnOrProxy: false,
+					},
+					distanceKm: 5500,
+					differentProviders: false,
+					differentConnectionTypes: false,
+					anyVpnOrProxy: false,
+				},
+			};
+			const result = evaluateIpValidationRules(
+				comparison,
+				sameProviderRules,
+				mockLogger,
+			);
+			expect(result.action).toBe(IPValidationAction.Reject);
+		});
+
+		it("still applies abuse-score rule even when same-provider skip fires", () => {
+			const comparison: IPComparisonResult = {
+				ipsMatch: false,
+				ip1: "ip1",
+				ip2: "ip2",
+				comparison: {
+					ip1Details: {
+						country: "United States",
+						countryCode: "US",
+						city: "Laredo",
+						provider: "AT&T Enterprises, LLC",
+						connectionType: "residential",
+						isVpnOrProxy: false,
+						abuserScore: 0.001,
+					},
+					ip2Details: {
+						country: "United States",
+						countryCode: "US",
+						city: "San Antonio",
+						provider: "AT&T Enterprises, LLC",
+						connectionType: "residential",
+						isVpnOrProxy: false,
+						abuserScore: 0.02,
+					},
+					distanceKm: 1930,
+					differentProviders: false,
+					differentConnectionTypes: false,
+					anyVpnOrProxy: false,
+				},
+			};
+			const result = evaluateIpValidationRules(
+				comparison,
+				sameProviderRules,
+				mockLogger,
+			);
+			expect(result.action).toBe(IPValidationAction.Reject);
+			expect(result.errorMessage).toContain("Abuse score");
+		});
 	});
 
 	it("returns Flag if abuse score triggers Flag action", () => {

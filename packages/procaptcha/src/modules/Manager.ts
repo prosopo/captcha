@@ -22,16 +22,18 @@ import {
 import {
 	ExtensionLoader,
 	buildUpdateState,
+	getDefaultEvents,
 	getProcaptchaRandomActiveProvider,
+	getSimdReadingsForSubmit,
 	pickIpMode,
 	providerRetry,
 } from "@prosopo/procaptcha-common";
-import { getDefaultEvents } from "@prosopo/procaptcha-common";
 import {
 	type Account,
 	ApiParams,
 	type CaptchaResponseBody,
 	type CaptchaSolution,
+	CaptchaType,
 	type FrictionlessState,
 	type ProcaptchaCallbacks,
 	type ProcaptchaClientConfigInput,
@@ -157,25 +159,25 @@ export function Manager(
 					const providerUrl = getRandomProviderResponse.provider.url;
 					previousProviderUrl = providerUrl;
 					// get the provider api inst
-					const providerApi = await loadProviderApi(providerUrl);
+					const { providerApi, siteKey } = await loadProviderApi(providerUrl);
 
 					captchaApi = new ProsopoCaptchaApi(
 						account.account.address,
 						getRandomProviderResponse,
 						providerApi,
 						config.web2,
-						config.account.address || "",
+						siteKey,
 					);
 					updateState({ captchaApi });
 				} else {
 					const providerUrl = frictionlessState.provider.provider.url;
-					const providerApi = await loadProviderApi(providerUrl);
+					const { providerApi, siteKey } = await loadProviderApi(providerUrl);
 					captchaApi = new ProsopoCaptchaApi(
 						account.account.address,
 						frictionlessState.provider,
 						providerApi,
 						config.web2,
-						config.account.address || "",
+						siteKey,
 					);
 					updateState({ captchaApi });
 				}
@@ -341,9 +343,8 @@ export function Manager(
 					}
 				}
 
-				const simdReadings = frictionlessState?.getSimdReadings
-					? await frictionlessState.getSimdReadings()
-					: undefined;
+				// Wait 5 secs for ongoing SIMD, else submit without
+				const simdReadings = await getSimdReadingsForSubmit(frictionlessState);
 				const hpValue = getHoneypotValue?.();
 				const clientMetaData = hpValue ? { hp: hpValue } : undefined;
 				// send the commitment to the provider
@@ -386,6 +387,7 @@ export function Manager(
 									[ApiParams.timestamp]: userTimestampSignature.signature,
 								},
 							},
+							[ApiParams.captchaType]: CaptchaType.image,
 						}),
 					);
 					setValidChallengeTimeout();
@@ -476,12 +478,16 @@ export function Manager(
 		updateState({ index: state.index + 1 });
 	};
 
+	// Returns the site key alongside the client so callers don't have to
+	// re-narrow `config.account.address` (optional on the config type) after
+	// this function has already proven it is set.
 	const loadProviderApi = async (providerUrl: string) => {
 		const config = getConfig();
-		if (!config.account.address) {
+		const siteKey = config.account.address;
+		if (!siteKey) {
 			throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
 		}
-		return new ProviderApi(providerUrl, config.account.address);
+		return { providerApi: new ProviderApi(providerUrl, siteKey), siteKey };
 	};
 
 	const clearTimeout = () => {
@@ -563,8 +569,7 @@ export function Manager(
 		return dappAccount;
 	};
 
-	const getExtension = (possiblyAccount?: Account) => {
-		const account = possiblyAccount || getAccount();
+	const getExtension = (account: Account) => {
 		if (!account.extension) {
 			throw new ProsopoEnvError("ACCOUNT.NO_POLKADOT_EXTENSION", {
 				context: { error: "Extension not loaded" },

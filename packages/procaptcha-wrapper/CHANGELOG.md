@@ -1,5 +1,95 @@
 # @prosopo/procaptcha-wrapper
 
+## 2.6.107
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+  - @prosopo/types@5.0.2
+
+## 2.6.106
+### Patch Changes
+
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/types@5.0.1
+  - @prosopo/locale@3.2.9
+
+## 2.6.105
+### Patch Changes
+
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [6f19cde]
+  - @prosopo/types@5.0.0
+
+## 2.6.104
+### Patch Changes
+
+- 0e1d1f7: fix(procaptcha-wrapper): export ProcaptchaLanguages as a usable type
+  
+  Writing type tests for this package's public surface exposed a real defect.
+  `Languages` in `@prosopo/locale` is a const object, so it carries no type
+  meaning of its own — re-exporting the name as `ProcaptchaLanguages` gave
+  consumers a binding they could not actually use in a type position. It is now
+  the union of the object's values, which is exactly what
+  `ProcaptchaRenderOptions["language"]` already accepts, and a type test keeps
+  the two aligned.
+  
+  The accompanying type tests pin the rest of the published contract: the
+  `RendererFunction` signature (`HTMLElement`, not a bare `Element` — the render
+  script reaches for properties only `HTMLElement` has), the optional loader
+  override on `createRenderer` that makes the renderer testable without a
+  network, and `window.procaptcha` being declared possibly-absent so consumers
+  are forced to narrow before reaching for `render`.
+- c79b252: test(procaptcha-wrapper): add unit test suite and fix script-loading defects
+  
+  Adds 37 unit tests covering the renderer and the render-script loader, reaching
+  100% statement, branch, function and line coverage, and wires the package into
+  `turbo run test` so it runs in CI.
+  
+  Fixes found while writing them:
+  
+  - Two concurrent `render()` calls both saw an empty cache and each injected a
+    script tag for the same id. The in-flight promise is now cached, not just the
+    resolved function, so the script loads once.
+  - A failed script load left the dead `<script>` tag in the document, so a retry
+    appended a second tag carrying a duplicate id.
+  - A load failure rejected with the raw DOM `Event`, which carries no message and
+    breaks any caller reading `error.message`. It now rejects with an `Error`
+    naming the url that failed.
+- Updated dependencies [0e1171c]
+- Updated dependencies [103318c]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+  - @prosopo/locale@3.2.8
+  - @prosopo/types@4.10.0
+
+## 2.6.103
+### Patch Changes
+
+- Updated dependencies [a0cb39e]
+  - @prosopo/types@4.9.12
+
+## 2.6.102
+### Patch Changes
+
+- Updated dependencies [b9ca0e7]
+  - @prosopo/types@4.9.11
+
+## 2.6.101
+### Patch Changes
+
+- Updated dependencies [0a4f902]
+  - @prosopo/types@4.9.10
+
+## 2.6.100
+### Patch Changes
+
+- Updated dependencies [b500d56]
+  - @prosopo/locale@3.2.7
+  - @prosopo/types@4.9.9
+
 ## 2.6.99
 ### Patch Changes
 

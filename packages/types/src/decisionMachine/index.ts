@@ -18,7 +18,7 @@ import {
 	CaptchaType,
 	DecisionMachineCaptchaTypeSchema,
 } from "../client/captchaType/captchaType.js";
-import type { RequestHeaders } from "../provider/api.js";
+import type { PuzzleEvent, RequestHeaders } from "../provider/api.js";
 import type { ScoreComponents } from "../provider/database.js";
 import type { SimdReadings } from "../provider/detection.js";
 import type { FrictionlessReason } from "../provider/reasons.js";
@@ -103,6 +103,17 @@ export type DecisionMachineInput = {
 	ruleType?: string[];
 	webView?: boolean;
 	iFrame?: boolean;
+	// Checkbox click + shape clicks embedded in the solution salt. For pow
+	// and puzzle this is `[[[checkboxX, checkboxY]]]` (single click); for
+	// image the outer array has one entry per tile with the first tile's
+	// inner array prefixed by the checkbox click. Missing when the client
+	// omitted the salt, produced an invalid one, or the record pre-dates
+	// coord capture.
+	coords?: [number, number][][];
+	// Puzzle-only: per-event trail of the drag from origin to target,
+	// captured client-side and persisted on the puzzle captcha record.
+	// Always undefined on pow / image inputs.
+	puzzleEvents?: PuzzleEvent[];
 };
 
 export type DecisionMachineOutput = {

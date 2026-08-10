@@ -309,6 +309,18 @@ export const PuzzleCanvas = ({
 					/>
 					{/* Puzzle piece */}
 					<div
+						// Test-only selector: gated on NODE_ENV !== "production"
+						// so esbuild constant-folds it out of production bundles.
+						// The whole point of the puzzle drag is that a bot
+						// shouldn't be able to `querySelector` its way to the
+						// interactive element; shipping a stable data-cy would
+						// hand that to any scripted solver for free. Cypress
+						// builds the bundle with NODE_ENV=development
+						// (.github/workflows/cypress.yml:110) so the selector
+						// is present under test.
+						{...(process.env.NODE_ENV !== "production" && {
+							"data-cy": "prosopo-puzzle-piece",
+						})}
 						onMouseDown={handlePieceMouseDown}
 						onTouchStart={handlePieceTouchStart}
 						style={{

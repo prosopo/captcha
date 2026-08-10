@@ -11,8 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-const main = async () => {
-	console.log("index.ts");
-};
 
-main();
+// A barrel, not a script. It used to be a `main()` that logged "index.ts",
+// which is what `package.json#main` pointed at.
+export * from "./dockerTags.js";
+export * from "./enableAutoMerge.js";
+export * from "./isMain.js";
+export * from "./listDockerTags.js";
+export * from "./previousDockerTag.js";

@@ -43,7 +43,15 @@
 			"dependsOn": ["^typecheck"]
 		},
 		"test": {
-			"dependsOn": ["@prosopo/config#build"]
+			// Also depends on ^build:tsc, not just ^build: every package resolves
+			// its workspace dependencies through `exports.types` -> dist/*.d.ts,
+			// and only build:tsc emits those. `build` is a vite bundle, so it
+			// leaves dist as bare JS. Without the declarations tsc falls back to
+			// type-checking a dependency's compiled JavaScript, which floods the
+			// run with implicit-any errors and — because a .js file exports
+			// values, not types — makes vitest type tests fail on names that are
+			// perfectly valid types in source. Runtime tests never noticed.
+			"dependsOn": ["@prosopo/config#build", "^build:tsc"]
 		},
 		"lint": { "dependsOn": ["^lint"] },
 		"clean": {

@@ -18,14 +18,16 @@ import { ProsopoEnvError } from "@prosopo/common";
 import {
 	ExtensionLoader,
 	buildUpdateState,
+	getDefaultEvents,
 	getProcaptchaRandomActiveProvider,
+	getSimdReadingsForSubmit,
 	pickIpMode,
 	providerRetry,
 } from "@prosopo/procaptcha-common";
-import { getDefaultEvents } from "@prosopo/procaptcha-common";
 import {
 	type Account,
 	ApiParams,
+	CaptchaType,
 	type FrictionlessState,
 	type GetPuzzleCaptchaResponse,
 	type ProcaptchaCallbacks,
@@ -191,11 +193,6 @@ export const Manager = (
 		x = 0,
 		y = 0,
 	): Promise<GetPuzzleCaptchaResponse | undefined> => {
-		// Persist click coords on every entry so retries inherit the
-		// trusted coordinates captured by the widget on initial click.
-		storedClickX = x;
-		storedClickY = y;
-
 		await providerRetry(
 			async () => {
 				if (state.loading) {
@@ -207,6 +204,13 @@ export const Manager = (
 
 				// reset the state to defaults - do not reset the frictionless state
 				resetState();
+
+				// Persist click coords on every entry so retries inherit the
+				// trusted coordinates captured by the widget on initial click.
+				// Set after the reset, which clears the closure state: setting
+				// them before it meant the salt never carried the coordinates.
+				storedClickX = x;
+				storedClickY = y;
 
 				// set the loading flag to true (allow UI to show some sort of loading / pending indicator while we get the captcha process going)
 				updateState({
@@ -302,7 +306,9 @@ export const Manager = (
 				});
 			},
 			async () => {
-				await start();
+				// Carry the original coords into the retry: re-entering with the
+				// defaults would replace the user's real click with (0, 0).
+				await start(x, y);
 			},
 			() => {
 				resetState();
@@ -403,9 +409,8 @@ export const Manager = (
 				salt = embedData(randomSalt, coords);
 			}
 
-			const simdReadings = frictionlessState?.getSimdReadings
-				? await frictionlessState.getSimdReadings()
-				: undefined;
+			// Wait 5 secs for ongoing SIMD, else submit without
+			const simdReadings = await getSimdReadingsForSubmit(frictionlessState);
 			const hpValue = getHoneypotValue?.();
 			const clientMetaData = hpValue ? { hp: hpValue } : undefined;
 			const verifiedSolution = await providerApi.submitPuzzleCaptchaSolution(
@@ -442,6 +447,7 @@ export const Manager = (
 									userTimestampSignature.signature.toString(),
 							},
 						},
+						[ApiParams.captchaType]: CaptchaType.puzzle,
 					}),
 				);
 				setValidChallengeTimeout();

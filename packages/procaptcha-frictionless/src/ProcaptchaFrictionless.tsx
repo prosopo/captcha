@@ -106,18 +106,18 @@ export const ProcaptchaFrictionless = ({
 	const sessionInvalidatedFiredRef = useRef(false);
 
 	useEffect(() => {
-		if (config.language) {
-			if (i18n) {
-				if (i18n.language !== config.language) {
-					i18n.changeLanguage(config.language).then((r) => r);
-				}
-			} else {
-				loadI18next(false).then((i18n) => {
-					if (i18n.language !== config.language)
-						i18n.changeLanguage(config.language).then((r) => r);
-				});
+		if (!config.language) return;
+		if (i18n) {
+			if (i18n.language !== config.language) {
+				void i18n.changeLanguage(config.language);
 			}
+			return;
 		}
+		// Direct-React consumers don't go through WidgetFactory, so pass the
+		// language into loadI18next — first init boots with the right language
+		// (skipping browser detection), and subsequent calls reconcile via
+		// changeLanguage inside loadI18next.
+		void loadI18next(false, config.language);
 	}, [i18n, config.language]);
 
 	const [componentToRender, setComponentToRender] = useState(
@@ -175,10 +175,12 @@ export const ProcaptchaFrictionless = ({
 		captchaType: string,
 		frictionlessState: FrictionlessState,
 		autoStart = false,
+		escalationCoords?: RetryCoords,
 	) => {
 		const onEscalate = (
 			next: CaptchaType.image | CaptchaType.puzzle,
 			newSessionId: string,
+			coords?: RetryCoords,
 		) => {
 			void renderForCaptchaType(
 				next,
@@ -187,6 +189,7 @@ export const ProcaptchaFrictionless = ({
 					sessionId: newSessionId,
 				},
 				true,
+				coords,
 			);
 		};
 
@@ -214,10 +217,13 @@ export const ProcaptchaFrictionless = ({
 		// Consume any pending retry coords now — the resumed widget owns them
 		// for exactly one auto-fired `manager.start(x, y)`. Cleared so a
 		// subsequent escalation/re-render doesn't accidentally re-inject.
-		const { autoStart: resumedAutoStart, startCoords } = consumeRetryMountProps(
-			pendingRetryCoordsRef,
-			autoStart,
-		);
+		// Escalation coords (from a PoW→image/puzzle handoff) take precedence
+		// over pending retry coords when both are present, because escalation
+		// is the current transition and the pending retry belongs to a prior
+		// widget instance that never got to consume them.
+		const { autoStart: resumedAutoStart, startCoords: retryStartCoords } =
+			consumeRetryMountProps(pendingRetryCoordsRef, autoStart);
+		const startCoords = escalationCoords ?? retryStartCoords;
 
 		if (captchaType === CaptchaType.image) {
 			const Procaptcha = await ProcaptchaLoader();

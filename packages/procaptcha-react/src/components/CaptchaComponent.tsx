@@ -45,15 +45,18 @@ const CaptchaComponent = ({
 	themeColor,
 }: CaptchaComponentProps) => {
 	const { t } = useTranslation();
-	const captcha = challenge.captchas ? at(challenge.captchas, index) : null;
-	const solution = solutions ? at(solutions, index) : [];
+	// `noWrap`, so an out-of-range round throws rather than wrapping round to a
+	// different one: the manager only renders a round it has both a captcha and
+	// a solution slot for, so anything else is a bug worth surfacing rather
+	// than silently showing the user the wrong images.
+	const captcha = at(challenge.captchas, index, { noWrap: true });
+	const solution = at(solutions, index, { noWrap: true });
 	const theme = useMemo(
 		() => (themeColor === "light" ? lightTheme : darkTheme),
 		[themeColor],
 	);
 	const doubleSpacing = `${theme.spacing.unit * 2}px`;
 	const fullSpacing = `${theme.spacing.unit}px`;
-	const halfSpacing = `${theme.spacing.half}px`;
 
 	return (
 		<Suspense fallback={<div>Loading...</div>}>
@@ -125,7 +128,7 @@ const CaptchaComponent = ({
 											color: theme.palette.titleAccent,
 											fontWeight: 700,
 										}}
-									>{`${at(challenge.captchas, index).target} `}</span>
+									>{`${captcha.target} `}</span>
 								</p>
 								<p
 									style={{
@@ -144,14 +147,12 @@ const CaptchaComponent = ({
 						{...addDataAttr({ dev: { cy: `captcha-${index}` } })}
 						style={{ overflow: "hidden" }}
 					>
-						{captcha && (
-							<CaptchaWidget
-								challenge={captcha}
-								solution={solution}
-								onClick={onClick}
-								themeColor={themeColor}
-							/>
-						)}
+						<CaptchaWidget
+							challenge={captcha}
+							solution={solution}
+							onClick={onClick}
+							themeColor={themeColor}
+						/>
 					</div>
 					<div
 						style={{

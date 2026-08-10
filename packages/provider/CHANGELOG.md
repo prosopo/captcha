@@ -1,5 +1,434 @@
 # @prosopo/provider
 
+## 5.0.3
+### Patch Changes
+
+- d6cb841: fix(provider): promote bundleId onto bypass-path sessions so SIMD / BDP attach can decrypt
+  
+  Sitekeys configured with a fixed `captchaType` (`pow` / `image` / `puzzle`) short-circuit
+  the frictionless bot-detection path via `runConfiguredCaptchaTypeShortCircuit` and build
+  their session via `buildBypassSessionParams`. Before this fix, that helper never wrote a
+  `bundleId` onto the session, so every subsequent `decryptAndAttachSimdReadingsIfAbsent`
+  call at `/captcha/{type}` and solution-submit resolved `bundle=undefined` and silently
+  dropped the ciphertext — SIMD readings and behavioural data never landed on the session
+  or the powcaptcha record for these sitekeys.
+  
+  The fix resolves the widget's `detectorSessionId` → `bundleId` via the existing Redis
+  binding and promotes it onto the bypass session so the attach path finds the correct
+  keypair. Empty-pool PoW fallback continues to no-op (no detector was assigned).
+- fa0d494: fix(provider): session captchaType takes precedence over restrict-policy captchaType at `/captcha/{type}` gate
+  
+  `isValidRequest` was rejecting `/captcha/{type}` calls whenever an active restrict-to-image rule pinned a different captchaType from the one the widget requested — even when a valid session existed that had been minted legitimately before the rule appeared. The check ran before the sessionId lookup, so any anomaly detector inserting a rule between the widget's `/frictionless` response and its `/captcha/pow` call surfaced as `INCORRECT_CAPTCHA_TYPE` (400).
+  
+  Observed impact: ~150/hr fleet-wide, concentrated on pimeyes / eyematch / …RsJ2zsy39, with the `IP_CLIENT_CROSSOVER` detector as the most common trigger (24h aggregation, restrict-to-image, global clientId).
+  
+  Fix: session record is authoritative for captchaType when a sessionId is present. The policy still fires at verify time via `decisionMachineRunner` + `checkForHardBlock`. Sessionless requests still enforce the policy captchaType (preserves the pre-fix behaviour for direct-entry callers).
+  
+  Regression guards added to `captchaManager.unit.test.ts`:
+  - session's captchaType wins when a restrict policy materialises mid-flight
+  - session with mismatched captchaType still rejects (not the policy-race case)
+  - sessionless request still rejected on policy captchaType mismatch
+  - sessionless request with matching policy captchaType passes
+- d6cb841: feat(provider,database,types): session chain — escalations reference origin, DM-input reads walk back for missing fields
+  
+  Adds `originSessionId` to the Session schema and populates it on escalation sessions in `submitPoWCaptchaSolution.buildEscalation`. Adds `CaptchaManager.getSessionRecordWithOriginFallback` — a session reader that, when the record is an escalation missing an inherently-origin-populated field (`simdReadings`, `dnsEvent`, `entropyMathRandom*`, `entropyCrypto*`, `entropyWallClockOffsetMs`), reads the origin session and fills the gap. Escalation-owned fields (`captchaType`, `sessionId`, `score`, `ipInfo`, `headers`, etc.) are never overridden.
+  
+  The three `serverVerify*CaptchaSolution` methods now use the walker instead of the raw `getSessionRecordBySessionId`, so decision-machine inputs on escalated puzzle / image sessions see the origin's SIMD readings and DNS event.
+  
+  Fixes the write-time race between (a) the origin's fire-and-forget SIMD attach via `scheduleMongoSimdReadingsUpdate` on pow-submit, and (b) `buildEscalation`'s immediate Mongo read — which left ~97% of escalation sessions with no `dnsEvent` and ~97% with no `simdReadings`, in turn tripping decide-machine deny rules (SIMD_ABSENT etc.) on legit escalation flows.
+  
+  Non-escalation sessions and older escalation records without `originSessionId` fall through as a no-op — no behavior change. Extra Mongo read only fires when the escalation is actually missing a fallback-eligible field.
+- Updated dependencies [d6cb841]
+  - @prosopo/database@4.0.3
+  - @prosopo/types-database@5.0.2
+  - @prosopo/types@5.0.2
+  - @prosopo/env@3.6.26
+  - @prosopo/types-env@2.10.22
+  - @prosopo/api@4.0.2
+  - @prosopo/api-express-router@3.1.57
+  - @prosopo/datasets@3.1.58
+  - @prosopo/ipinfo@0.3.3
+  - @prosopo/keyring@2.9.65
+  - @prosopo/load-balancer@2.10.19
+  - @prosopo/user-access-policy@3.12.13
+
+## 5.0.2
+### Patch Changes
+
+- Updated dependencies [1fba42e]
+  - @prosopo/database@4.0.2
+  - @prosopo/env@3.6.25
+  - @prosopo/api-express-router@3.1.56
+
+## 5.0.1
+### Patch Changes
+
+- ce2ac41: `startProviderApi` now resolves once the server is actually listening, and rejects if the bind fails. It previously returned the server straight from `.listen()`, which resolves before the socket is bound — a bind failure such as `EADDRINUSE` then surfaced as an `'error'` event with nothing waiting on it, i.e. an uncaught exception rather than a rejection the caller could handle.
+  
+  Integration suites reserve a port from the OS instead of guessing one. Six suites picked a port from `process.pid` plus a random offset with no availability check, while CI runs a real provider alongside the tests; a collision failed the whole run with an uncaught `EADDRINUSE` even though every test passed. The retry loops that tried to work around this are gone — they retried into another unchecked port and, because the failure was never a rejection, never ran at all.
+- 2aabe73: Remove the client-controlled `detectorUnavailable` frictionless bypass. A client could set the flag and be handed a PoW challenge without any detection running. The flag is gone from the wire format, the API client and the widget; the only remaining bypasses are provider-side (maintenance mode, empty detector bundle pool).
+  
+  The frictionless decision machine now gates on payload presence after the access-rule ladder: no token serves a 3-round image captcha, a token without its head hash serves a 2-round one.
+- bcef918: Adds a per-email submission-count rate limit on the verify pipeline. Site operators can now cap how many server-checked captcha submissions any one normalised email (Gmail dot / `+tag` tricks collapsed across providers) may back before further submissions from that address are rejected with `API.SPAM_EMAIL_COUNT_EXCEEDED`.
+  
+  - New `spamFilter.emailRules.maxEmailSubmissionCount` (int, min 1, optional) on `ClientSettingsSchema`.
+  - New `metadata.emailNormalised` field on all three captcha records (image / PoW / puzzle) — written alongside `metadata.email` whenever `storeMetadata` is on. Backed by a partial index (`spamEmailCount_partial`) on each collection.
+  - New DB method `countCommitmentsByNormalisedEmail(dappAccount, emailNormalised)` sums the three per-collection counts so limits span captcha types.
+  - Puzzle verify gains a `spamFilter` parameter to bring it to parity with img/pow for the count check.
+  - English + all 31 non-English locales gain the `API.SPAM_EMAIL_COUNT_EXCEEDED` translation.
+  - Fixes silent-drift bug: `UserSettingsSchema.spamFilter.emailRules` was missing `maxEmailSubmissionCount` on the mongoose side, which strict mode would have dropped on `$set`.
+- Updated dependencies [38396b4]
+- Updated dependencies [9fec7bd]
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/env@3.6.24
+  - @prosopo/common@3.1.49
+  - @prosopo/types@5.0.1
+  - @prosopo/api@4.0.1
+  - @prosopo/logger@2.0.5
+  - @prosopo/types-database@5.0.1
+  - @prosopo/database@4.0.1
+  - @prosopo/locale@3.2.9
+  - @prosopo/api-express-router@3.1.55
+  - @prosopo/api-route@2.6.54
+  - @prosopo/datasets@3.1.57
+  - @prosopo/ipinfo@0.3.2
+  - @prosopo/keyring@2.9.64
+  - @prosopo/load-balancer@2.10.18
+  - @prosopo/redis-client@1.0.31
+  - @prosopo/types-env@2.10.21
+  - @prosopo/user-access-policy@3.12.12
+
+## 5.0.0
+### Major Changes
+
+- 787017b: chore(detector): remove the legacy detector-key rotation machinery
+  
+  Nothing has read these keys since the detector moved to per-session provider
+  bundles — the decrypt paths resolve a bundle's own keypair instead. Rotating
+  them was already a no-op, so the whole surface is removed rather than left
+  looking live.
+  
+  **Breaking — the admin API loses two endpoints:**
+  
+  - `POST /v1/prosopo/provider/admin/detector/update` (`AdminApiPaths.UpdateDetectorKey`)
+  - `POST /v1/prosopo/provider/admin/detector/remove` (`AdminApiPaths.RemoveDetectorKey`)
+  
+  Also removed: `ProviderApi.updateDetectorKey` / `.removeDetectorKey`;
+  `ClientTaskManager.updateDetectorKey` / `.removeDetectorKey`;
+  `IProviderDatabase.storeDetectorKey` / `.getDetectorKeys` / `.removeDetectorKey`;
+  the `detector` Mongo collection and its `DetectorRecordSchema` / `DetectorSchema`
+  / `DetectorKey` types; the `UpdateDetectorKeyBody` / `RemoveDetectorKeyBodySpec`
+  / `UpdateDetectorKeyResponse` API types; and the rate-limit config for both
+  paths.
+  
+  The `detector` collection itself is left in place on existing deployments — no
+  migration drops it. It can be dropped manually once the pool rollout is
+  confirmed.
+
+### Minor Changes
+
+- 787017b: feat(detector): serve the detector only from per-session provider bundles; PoW fallback
+  
+  The detector now lives ONLY in the provider-served, precomputed pool bundles — there is no detector bundled into the widget and no legacy detector-key pool. Each session's bundle encrypts everything it produces (bot score, SIMD readings, behavioural data) with its own RSA keypair + inner ChaCha20-Poly1305 cipher; the provider decrypts each payload with that exact bundle, resolved per session.
+  
+  - `DetectorBundlePool`: loads precomputed `{id}.js`/`{id}.json` bundle pairs from disk, uniform-random per-session selection, hot-swap `replace()` for the admin push channel.
+  - The pool is ALWAYS initialised at boot (a missing/empty dir yields an empty pool), collapsing the old three states into two: bundles present ⇒ per-session serving; no bundles ⇒ always PoW.
+  - Redis short-TTL `detectorSessionId → bundleId` binding; the resolved `bundleId` is promoted onto the durable session record so later hops (SIMD attach, PoW/puzzle/image solution submit) decrypt with the same bundle.
+  - Client: removed the inlined `@prosopo/detector` runtime import (now type-only). When no provider bundle can be obtained/run, the client signals `detectorUnavailable` and the provider serves a PoW challenge.
+  - All server decrypt paths (score, SIMD readings, behavioural data) resolve the session's bundle and pass its inner cipher; the legacy key-pool brute force and its env fallback are removed from the detection paths. Decrypt failures fail closed (treated as bot ⇒ PoW).
+- 787017b: feat(detector-pool): persist pushed pools, stamp releases, fix the failed-decrypt path
+  
+  - `ReplaceDetectorPool` gets a dedicated 128 MB body limit (~86 MB for a
+    100-bundle pool); every other route keeps the 1 MB backstop.
+  - A pushed pool is now written to the pool directory (staged + renamed) so it
+    survives a restart instead of living only in process memory. The response
+    reports `persisted` so an unpersisted push can be alarmed on. The provider
+    containers gain a host-mounted volume for it — the pool is never baked into
+    the image, which is public on Docker Hub.
+  - Bundles carry the release they were built from; providers skip bundles from
+    another release (`PROSOPO_DETECTOR_POOL_RELEASE`). The widget carries no
+    detector of its own, so nothing else tied the two together.
+  - Failed decryption is now its own decision (`DECRYPTION_FAILED`, 3 image
+    rounds) evaluated before every other check. Previously the synthetic
+    `userAgent: undefined` / `baseBotScore: 1` / `timestamp: 0` that
+    `decryptPayload` substitutes made these sessions land in USER_AGENT_MISMATCH
+    (6 rounds), or a 401 on sitekeys with `autoBanScoreThreshold` set.
+    `timestampDecayFunction` loses its now-unreachable `decryptionFailed` arm.
+
+### Patch Changes
+
+- 787017b: perf(caddy): compress proxied provider responses with zstd/gzip
+  
+  `docker/provider.Caddyfile` had no `encode` directive, and Caddy does not
+  compress by default, so every proxied response went out uncompressed. The
+  detector-pool bundle makes that expensive: ~830 KB of obfuscated JS returned
+  inline from `/detector/assign` once per frictionless session.
+  
+  Obfuscated output still compresses well (the obfuscator's string-array encoding
+  is highly repetitive) — 2.6x with gzip, 3.1x with zstd. At 15k sessions/hour a
+  single provider drops from ~9.15 TB/month of egress to ~3 TB.
+  
+  zstd is preferred with gzip as the fallback. Responses below `minimum_length`
+  (512 bytes) are untouched, which covers every small JSON reply the API returns.
+- 787017b: fix(detector-pool): persist into the pool directory instead of replacing it
+  
+  The previous stage-and-rename persist was destructive against the provider's
+  bind-mounted pool directory: it deleted the mount's contents and then failed
+  with EBUSY renaming over the mount point, wiping the on-disk pool while still
+  reporting the push as successful. Now writes each bundle via a per-file temp +
+  rename within the directory and prunes removed bundles, never touching the
+  directory itself.
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [d107d65]
+- Updated dependencies [6f19cde]
+  - @prosopo/database@4.0.0
+  - @prosopo/types@5.0.0
+  - @prosopo/types-database@5.0.0
+  - @prosopo/api@4.0.0
+  - @prosopo/api-express-router@3.1.54
+  - @prosopo/datasets@3.1.56
+  - @prosopo/env@3.6.23
+  - @prosopo/ipinfo@0.3.1
+  - @prosopo/keyring@2.9.63
+  - @prosopo/load-balancer@2.10.17
+  - @prosopo/types-env@2.10.20
+  - @prosopo/user-access-policy@3.12.11
+
+## 4.15.17
+### Patch Changes
+
+- a66273a: Populate `userScope.headHash` from the frictionless session record in the three captcha-challenge endpoints (`getPoWCaptchaChallenge`, `getImageCaptchaChallenge`, `getPuzzleCaptchaChallenge`). Previously all three hardcoded `undefined` for the headHash slot, so access-policy rules keyed on `headHash` could only take effect at server-verify time — after the challenge was already issued at the client-configured type / difficulty. With `sessionId` in hand each endpoint now does one indexed `getSessionRecordBySessionId` lookup and forwards `sessionRecord?.decryptedHeadHash` into `getRequestUserScope`, so headHash rules can restrict or adjust the challenge at issuance. No change when the request omits `sessionId` (direct-pow etc.).
+- Updated dependencies [71a5952]
+  - @prosopo/keyring@2.9.62
+  - @prosopo/env@3.6.22
+  - @prosopo/types-env@2.10.19
+  - @prosopo/api-express-router@3.1.53
+
+## 4.15.16
+### Patch Changes
+
+- Updated dependencies [508fee8]
+- Updated dependencies [1e0cf14]
+- Updated dependencies [69f8dcd]
+  - @prosopo/api-express-router@3.1.52
+  - @prosopo/api@3.5.21
+  - @prosopo/database@3.15.21
+  - @prosopo/user-access-policy@3.12.10
+  - @prosopo/env@3.6.21
+  - @prosopo/types-database@4.11.18
+  - @prosopo/types-env@2.10.18
+
+## 4.15.15
+### Patch Changes
+
+- 103318c: feat(traffic-filter): add `datacenterNameDenylist` alongside the existing allowlist
+  
+  Operators can now name datacenter / provider / ASN organisations they want
+  force-included in the datacenter block, mirroring the shape of
+  `datacenterNameAllowlist`. Denylist entries take precedence over the
+  `providerType === "isp"` short-circuit and over the allowlist for the same
+  name, so operators can opt named providers back into the datacenter rule when
+  upstream classifies them as ISP.
+  
+  Same case-insensitive / whitespace-trimmed matching, same three name sources
+  (`datacenterName`, `providerName`, `asnOrganization`), same
+  `MAX_DATACENTER_ALLOWLIST_ENTRIES` / `MAX_DATACENTER_ALLOWLIST_ENTRY_LENGTH`
+  validators. Missing or empty denylist preserves existing behaviour.
+  
+  Wired through the mongoose `ClientSettings.trafficFilter` schema, the zod
+  `TrafficFilterSchema`, `checkTrafficFilter`, and `enrichDnsEvent.countDc` so
+  the denylist is honoured on both the primary rule and the DNS-asymmetry
+  scoring. Unit tests cover the ISP-bypass override, the allowlist-precedence
+  edge case, category-suppression interaction, and the extras path.
+- 8a400eb: fix(provider): return 400 not 500 for CAPTCHA.INVALID_SOLUTION
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [a58d007]
+- Updated dependencies [2c47bb7]
+- Updated dependencies [0e1171c]
+- Updated dependencies [103318c]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+  - @prosopo/api-route@2.6.53
+  - @prosopo/util@3.3.5
+  - @prosopo/locale@3.2.8
+  - @prosopo/types@4.10.0
+  - @prosopo/types-database@4.11.17
+  - @prosopo/ipinfo@0.3.0
+  - @prosopo/api@3.5.20
+  - @prosopo/common@3.1.48
+  - @prosopo/database@3.15.20
+  - @prosopo/datasets@3.1.55
+  - @prosopo/env@3.6.20
+  - @prosopo/keyring@2.9.61
+  - @prosopo/load-balancer@2.10.16
+  - @prosopo/redis-client@1.0.30
+  - @prosopo/types-env@2.10.17
+  - @prosopo/user-access-policy@3.12.9
+  - @prosopo/api-express-router@3.1.51
+  - @prosopo/logger@2.0.4
+
+## 4.15.14
+### Patch Changes
+
+- c61dfb5: fix(access-policy): reject Block+captchaType at schema level; add follow-up test coverage
+  
+  **Fix.** The `sanitizeAccessPolicy` helper silently strips `captchaType` and `solvedImagesCount` from Block policies at write time, which meant operators writing e.g. `--block --ip X --captchaType image` got a rule that actually blocked EVERY captcha type for that IP — not just image. Same root cause as the Block+deferToVerify request-time 400 bug (see #2885). Rejecting at input surfaces the mismatch loudly with a message that points the operator at Restrict:
+  
+  ```
+  Block policies cannot pin a captchaType — Block always applies to every
+  captcha type. Use a Restrict policy if you want to narrow the effect to
+  one captcha type.
+  ```
+  
+  `accessPolicyInput` now has a `superRefine` that rejects Block+captchaType and Block+solvedImagesCount. The read path still accepts the legacy shape (records written before the refinement landed can still be parsed by the reader). The `addUserAccessPolicy` script was updated to only emit those fields for Restrict, so its `--block` path no longer 400s.
+  
+  **Follow-up tests added** — closing the gaps flagged in the previous session:
+  
+  - **Coord threading lands on the puzzle record** (`puzzleTasks.unit.test.ts`) — extends the verify-puzzle-solution suite to encode a real salt with `(158, 42)`, submit, and assert `coords[0][0] === [158, 42]` on the persisted record. Guards against a regression that drops the salt decode or writes `[0, 0]` — the whole point of the puzzle DM threading PR (#2873).
+  - **DM deny reason lands on the pow commitment** (`powTasks.unit.test.ts`) — pow's existing "should deny when decision machine returns deny" test only asserted `verified:false`; now also asserts the DM's reason string is persisted on the commitment.
+  - **checkForHardBlock wins over DM deny at verify** (`puzzleTasks.unit.test.ts`) — stubs `checkForHardBlock` to match, stubs the DM to also deny with a distinguishable reason, asserts the commitment carries `ACCESS_POLICY_BLOCK` and that the DM was never consulted. Locks in the ordering that the audit trail depends on.
+  - **Rule expiry** (`redisRulesStorage.integration.test.ts`) — inserts a rule with a 2 s TTL, waits past expiry, asserts the Redis hash is gone and the RediSearch index no longer counts it. The existing "inserts time limited rule" test only verified the TTL was set, not that expired rules stop matching.
+- Updated dependencies [c61dfb5]
+  - @prosopo/user-access-policy@3.12.8
+  - @prosopo/database@3.15.19
+  - @prosopo/types-database@4.11.16
+  - @prosopo/env@3.6.19
+  - @prosopo/types-env@2.10.16
+  - @prosopo/api-express-router@3.1.50
+
+## 4.15.13
+### Patch Changes
+
+- ae7e7f0: fix(access-policy): stop request-time rejection of Block+deferToVerify rules; expand DM cypress coverage to all captcha types
+  
+  **The bug.** Block-type access policies with `deferToVerify: true` — the "solve normally, block silently at verify" pattern — were breaking every /captcha/* request instead. `sanitizeAccessPolicy` strips `captchaType` from every Block policy on write, and the captcha challenge handlers (`getImageCaptchaChallenge`, `getPoWCaptchaChallenge`, `getPuzzleCaptchaChallenge`) fetched the matching policy via `getPrioritisedAccessPolicies` (which does NOT filter out `deferToVerify: true` rules) and passed it to `captchaManager.isValidRequest` — where the `userAccessPolicy.captchaType !== requestedCaptchaType` check reduced to `undefined !== "image"` → 400 INCORRECT_CAPTCHA_TYPE. Same shape at the frictionless entry point in `handleAccessPolicy`, which would 401 instead of letting the flow complete.
+  
+  **The fix.** Filter `deferToVerify` policies out at every request-time load site (mirrors what `blockMiddleware` already does), plus a defensive relaxation of the captchaType check in `isValidRequest` so a policy without a pinned captchaType no longer trips the mismatch. Unit tests added for the request-time filter and the defensive check.
+  
+  **New cypress coverage.** Extended the previously-added routing / decision-machine / access-policy specs so every branch is exercised:
+  
+  - `accessPolicy.cy.ts` — request-time Block (403) AND defer-to-verify Block (200 at request time, block at verify). The second `it` is the regression guard for the bug above.
+  - `decisionMachineDenyPow.cy.ts` + `decisionMachineDenyPuzzle.cy.ts` — decide() DM deny at verify for pow and puzzle (image was already covered). Each captcha task calls decisionMachineRunner.decide() separately, so per-type specs guard against a single verify path dropping the deny hook.
+  - `routingFrictionless.cy.ts` — added the pow branch (baseline pass-through) so all three captcha types are covered end-to-end.
+
+## 4.15.12
+### Patch Changes
+
+- Updated dependencies [a0cb39e]
+  - @prosopo/types@4.9.12
+  - @prosopo/types-database@4.11.15
+  - @prosopo/api@3.5.19
+  - @prosopo/api-express-router@3.1.49
+  - @prosopo/database@3.15.18
+  - @prosopo/datasets@3.1.54
+  - @prosopo/env@3.6.18
+  - @prosopo/ipinfo@0.2.40
+  - @prosopo/keyring@2.9.60
+  - @prosopo/load-balancer@2.10.15
+  - @prosopo/types-env@2.10.15
+  - @prosopo/user-access-policy@3.12.7
+
+## 4.15.11
+### Patch Changes
+
+- b9ca0e7: feat(decision-machine): thread puzzle fields and forward checkbox coords on escalation
+  
+  - Add optional `coords` and `puzzleEvents` to `DecisionMachineInput` so decision machines can gate on entry-point telemetry and puzzle drag trails.
+  - Populate `coords` on the pow, puzzle and image `decide()` inputs. Puzzle also passes `puzzleEvents`. Image gains `behavioralDataPacked` / `deviceCapability` — previously always undefined, which silently disabled the global synthetic-mouse-timing check on the one captcha type it targets.
+  - Extend `ProcaptchaEscalationHandler` with an optional `coords` argument so the PoW widget can forward its trusted checkbox click through the PoW→image/puzzle escalation. The frictionless wrapper prefers escalation coords over pending retry coords. Puzzle and image widgets already accept `startCoords`, so the escalated widget now seeds the salt with the real (x, y) instead of (0, 0).
+- fde6896: fix(user-access-policy,common,provider): quiet two high-volume log spammers
+  
+  - `user-access-policy`: switch the split-query sub-probes from `FT.AGGREGATE + LOAD @__key` to `FT.SEARCH NOCONTENT`. The aggregate reply path in `@redis/client` 5.x can throw on a null result row and the sub-query then silently returns `[]`; the NOCONTENT reply shape doesn't have that failure mode. Removes ~2k error logs per hour without changing lookup semantics.
+  - `common`: `ProsopoBaseError` auto-logs now carry a `msg` field (mirroring the translation key). Previously every auto-logged error landed in the "undefined msg" bucket in log dashboards (~800/hour).
+  - `provider`: add the missing `msg` on the image-verify catch that emits the same pattern.
+- Updated dependencies [b9ca0e7]
+- Updated dependencies [fde6896]
+  - @prosopo/types@4.9.11
+  - @prosopo/user-access-policy@3.12.6
+  - @prosopo/common@3.1.47
+  - @prosopo/api@3.5.18
+  - @prosopo/api-express-router@3.1.48
+  - @prosopo/database@3.15.17
+  - @prosopo/datasets@3.1.53
+  - @prosopo/env@3.6.17
+  - @prosopo/ipinfo@0.2.39
+  - @prosopo/keyring@2.9.59
+  - @prosopo/load-balancer@2.10.14
+  - @prosopo/types-database@4.11.14
+  - @prosopo/types-env@2.10.14
+
+## 4.15.10
+### Patch Changes
+
+- Updated dependencies [a39c4ec]
+  - @prosopo/load-balancer@2.10.13
+
+## 4.15.9
+### Patch Changes
+
+- Updated dependencies [a41c1b5]
+  - @prosopo/database@3.15.16
+  - @prosopo/env@3.6.16
+  - @prosopo/api-express-router@3.1.47
+
+## 4.15.8
+### Patch Changes
+
+- Updated dependencies [0a4f902]
+  - @prosopo/types@4.9.10
+  - @prosopo/api@3.5.17
+  - @prosopo/api-express-router@3.1.46
+  - @prosopo/database@3.15.15
+  - @prosopo/datasets@3.1.52
+  - @prosopo/env@3.6.15
+  - @prosopo/ipinfo@0.2.38
+  - @prosopo/keyring@2.9.58
+  - @prosopo/load-balancer@2.10.12
+  - @prosopo/types-database@4.11.13
+  - @prosopo/types-env@2.10.13
+  - @prosopo/user-access-policy@3.12.5
+
+## 4.15.7
+### Patch Changes
+
+- 6b17995: fix(provider): skip city and distance IP validation rules for same trusted provider
+  
+  Dual-stack and CGNAT subscribers routinely egress via different POPs of the same operator (e.g. AT&T's BellSouth v4 pool + AT&T Internet v6 pool — distinct ASNs but identical `company.name` from ipapi). The city-change and distance-exceed rules previously fired on such traffic, producing PoW captcha rejections with `City changed from Laredo to Los Angeles; IP addresses are 1930km apart` even though the ISP-change rule correctly recognised the provider match.
+  
+  `evaluateIpValidationRules` now gates the city-change and distance-exceed rule blocks on a `sameTrustedProvider` precondition: both providers match (non-`"Unknown"`), same `countryCode`, and neither endpoint is a datacenter (guards against AWS/Cloudflare same-`company.name` false negatives where "same corporate owner" absolutely does not mean "same subscriber"). Country-change, ISP-change, VPN/proxy, and abuse-score rules are unchanged.
+- b394cc5: fix(provider): stop treating apex-TLS-handshake failure as spam-email evidence
+  
+  `checkSpamEmail` was auto-rejecting any email domain whose apex website failed a modern TLS handshake (`https://<domain>` → `EPROTO` / `unsupported protocol`). This is a property of the web server, not the email domain — small-business domains routinely host mail on modern providers (Zoho / Google / Fastmail) while the apex site runs legacy Apache with only TLSv1.0 and an expired self-signed cert, and modern Node/OpenSSL 3 refuses those handshakes.
+  
+  The `tlsError → return true` short-circuit is removed. The TLS observation is still logged (as `info`, for signal), and the check now falls through to the remaining DNS signals (redirect-target spam lookup, CNAME spam lookup, MX-target spam lookup) — those are the signals that actually reflect email reputation. Existing coverage on those paths is unchanged; two unit tests cover the new behaviour (apex TLS error alone is not spam; spam via MX is still caught when apex has a TLS error).
+- Updated dependencies [446f53b]
+  - @prosopo/database@3.15.14
+  - @prosopo/env@3.6.14
+  - @prosopo/api-express-router@3.1.45
+
+## 4.15.6
+### Patch Changes
+
+- Updated dependencies [2bba03a]
+- Updated dependencies [b500d56]
+  - @prosopo/database@3.15.13
+  - @prosopo/types-database@4.11.12
+  - @prosopo/locale@3.2.7
+  - @prosopo/env@3.6.13
+  - @prosopo/types-env@2.10.12
+  - @prosopo/api-express-router@3.1.44
+  - @prosopo/common@3.1.46
+  - @prosopo/types@4.9.9
+  - @prosopo/datasets@3.1.51
+  - @prosopo/keyring@2.9.57
+  - @prosopo/load-balancer@2.10.11
+  - @prosopo/user-access-policy@3.12.4
+  - @prosopo/api@3.5.16
+  - @prosopo/ipinfo@0.2.37
+
 ## 4.15.5
 ### Patch Changes
 

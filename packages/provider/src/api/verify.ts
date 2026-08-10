@@ -253,7 +253,11 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					);
 				res.json(verificationResponse);
 			} catch (err) {
-				req.logger.error(() => ({ err, data: { body: req.body } }));
+				req.logger.error(() => ({
+					err,
+					msg: "Error in verifyImageCaptchaSolution",
+					data: { body: req.body },
+				}));
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: { code: 500, siteKey: req.body.dapp, user: req.body.user },
@@ -541,6 +545,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						userAccessRulesStorage,
 						email,
 						clientRecord.settings.spamEmailDomainCheckEnabled,
+						clientRecord.settings.spamFilter,
 						clientRecord.settings.trafficFilter,
 						clientRecord.settings.storeMetadata,
 					);

@@ -36,7 +36,7 @@ defaults:
 
 jobs:
   regenerate:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(vars.GH_RUNNER || '"ubuntu-latest"') }}
     steps:
       - name: Set NX_PARALLEL environment variable
         run: echo "NX_PARALLEL=$(nproc)" >> $GITHUB_ENV
@@ -46,7 +46,7 @@ jobs:
           token: ${{ secrets.PROSOPONATOR_PAT }}
           submodules: "recursive"
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: 'npm'

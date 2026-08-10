@@ -40,7 +40,12 @@ import cors from "cors";
 import express from "express";
 import type { Request } from "express";
 import rateLimit, { type Options } from "express-rate-limit";
+import {
+	DEFAULT_DETECTOR_POOL_DIR,
+	initDetectorBundlePool,
+} from "../tasks/detection/bundlePool.js";
 import { createApiAdminRoutesProvider } from "./admin/createApiAdminRoutesProvider.js";
+import { getVerdictCache } from "./blacklistRequestInspector.js";
 import { blockMiddleware } from "./block.js";
 import { prosopoRouter } from "./captcha.js";
 import { domainMiddleware } from "./domainMiddleware.js";
@@ -53,6 +58,13 @@ import { metricsMiddleware } from "./metrics.js";
 import { publicRouter } from "./public.js";
 import { robotsMiddleware } from "./robotsMiddleware.js";
 import { prosopoVerifyRouter } from "./verify.js";
+
+/**
+ * Body-size ceiling for the detector-pool push. ~830 KB/bundle × 100 bundles
+ * ≈ 86 MB encoded; 128 MB leaves headroom without approaching the 512 MiB V8
+ * string limit that ultimately bounds a single-body push at ~620 bundles.
+ */
+const DETECTOR_POOL_BODY_LIMIT = "128mb";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const certPath = path.resolve(__dirname, "../../../../certs");
@@ -74,7 +86,15 @@ export const isTlsAvailable = (): boolean => {
 export const getClientApiPathsExpectingProsopoHeaders =
 	(): ClientApiPaths[] => {
 		const paths = Object.values(ClientApiPaths).filter(
-			(path) => path.indexOf("verify") === -1 && path.indexOf("spam") === -1,
+			(path) =>
+				path.indexOf("verify") === -1 &&
+				path.indexOf("spam") === -1 &&
+				// Detector-bundle assignment runs before the user account exists
+				// (it's needed to load the detector that mints it), so it can't
+				// carry the Prosopo-User header. It only hands out an obfuscated
+				// bundle keyed to an ephemeral session id; the site-key still
+				// rides in the body and it is rate-limited.
+				path.indexOf("detector/assign") === -1,
 		);
 		return paths as ClientApiPaths[];
 	};
@@ -110,6 +130,21 @@ export const getUserFromJWT = (req: Request): string | undefined => {
 };
 
 /**
+ * `.listen()` returns before the socket is bound, so a bind failure such as
+ * EADDRINUSE arrives later as an 'error' event — an uncaught exception unless
+ * something is waiting on it. Settle on whichever event comes first so the
+ * caller gets a rejection it can handle.
+ */
+const awaitListening = (server: Server): Promise<void> =>
+	new Promise((resolve, reject) => {
+		server.once("error", reject);
+		server.once("listening", () => {
+			server.removeListener("error", reject);
+			resolve();
+		});
+	});
+
+/**
  * Start the Prosopo Provider API server
  *
  * This function creates and configures an Express server with all necessary middleware
@@ -140,6 +175,32 @@ export async function startProviderApi(
 	port?: number,
 ): Promise<Server> {
 	env.logger.info(() => ({ msg: "Starting Prosopo API" }));
+
+	// Load the precomputed detector bundle pool into memory. The detector lives
+	// ONLY in these provider-served pool bundles — there is no bundled/legacy
+	// detector to fall back to. The pool is ALWAYS initialised (a missing or
+	// empty directory yields an empty pool, not an uninitialised one), leaving a
+	// single binary decision at request time:
+	//   - pool has bundles ⇒ serve a per-session detector + decrypt with its key.
+	//   - pool empty (missing dir, empty dir, or all bundles failed to load) ⇒
+	//     no detection is possible ⇒ the frictionless flow serves a real PoW
+	//     challenge (the empty-pool fallback).
+	//
+	// Bundles stamped with a different release than this provider are skipped at
+	// load: the widget carries no detector of its own and runs whatever we serve,
+	// so a pool built from another release is a runtime mismatch with no
+	// build-time signal. Leave PROSOPO_DETECTOR_POOL_RELEASE unset to disable the
+	// check (dev, and pools built before stamping existed).
+	const detectorPoolDir =
+		process.env.PROSOPO_DETECTOR_POOL_DIR ?? DEFAULT_DETECTOR_POOL_DIR;
+	initDetectorBundlePool(
+		detectorPoolDir,
+		{
+			info: (msg, data) => env.logger.info(() => ({ msg, data })),
+			warn: (msg, data) => env.logger.warn(() => ({ msg, data })),
+		},
+		process.env.PROSOPO_DETECTOR_POOL_RELEASE,
+	);
 
 	const apiApp = express();
 	const apiPort = port || env.config.server?.port;
@@ -206,6 +267,21 @@ export async function startProviderApi(
 			],
 			maxAge: 86400,
 		}),
+	);
+	// The detector-pool push carries the entire pool in a single body: one
+	// obfuscated bundle is ~830 KB, so a 100-bundle pool JSON-encodes to ~86 MB
+	// (the obfuscated output is near-ASCII, so JSON escaping only adds ~2%).
+	// Mount a dedicated parser on that one path, ahead of the coarse backstop
+	// below — express.json is a no-op once req.body is populated, so every other
+	// route keeps the 1 MB ceiling.
+	//
+	// Do NOT raise this much further without switching to a chunked push:
+	// express.json buffers the body into a single string before JSON.parse, and
+	// V8 caps strings at 512 MiB (~620 bundles), with the parse itself needing
+	// roughly the same again in heap on top of the raw body.
+	apiApp.use(
+		AdminApiPaths.ReplaceDetectorPool,
+		express.json({ limit: DETECTOR_POOL_BODY_LIMIT }),
 	);
 	// Coarse request body-size backstop. Generous enough for legitimate
 	// payloads (captcha solutions, behavioural/simd readings, DNS event
@@ -319,6 +395,26 @@ export async function startProviderApi(
 				authMiddleware(env.pair, env.authAccount),
 			);
 		}
+		// Rule mutations must invalidate the process-wide verdict cache —
+		// otherwise a fresh Block rule takes up to DEFAULT_VERDICT_CACHE_TTL_MS
+		// (10s) to fire, and — worse for correctness — a Block rule DELETED
+		// from Redis keeps blocking requests until its cached verdict
+		// expires. The cache clear runs on the response's `finish` event so
+		// the write has already landed by the time we flush. Registered on
+		// each rule route explicitly (rather than a shared path prefix) so
+		// we only touch requests that could plausibly mutate rules.
+		for (const userAccessRuleRoute in userAccessRuleRoutes) {
+			apiApp.use(userAccessRuleRoute, (req, res, next) => {
+				if (req.method === "POST") {
+					res.on("finish", () => {
+						if (res.statusCode >= 200 && res.statusCode < 300) {
+							getVerdictCache().clear();
+						}
+					});
+				}
+				next();
+			});
+		}
 		apiApp.use(
 			apiExpressRouterFactory.createRouter(
 				apiRuleRoutesProvider,
@@ -355,19 +451,22 @@ export async function startProviderApi(
 			key: fs.readFileSync(keyPath),
 			cert: fs.readFileSync(crtPath),
 		};
-		const httpsServer = https.createServer(httpsOptions, apiApp);
-		return httpsServer.listen(apiPort, () => {
-			env.logger.info(() => ({
-				data: { apiPort, protocol: "https" },
-				msg: "Prosopo app listening with HTTPS",
-			}));
-		});
+		const httpsServer = https
+			.createServer(httpsOptions, apiApp)
+			.listen(apiPort);
+		await awaitListening(httpsServer);
+		env.logger.info(() => ({
+			data: { apiPort, protocol: "https" },
+			msg: "Prosopo app listening with HTTPS",
+		}));
+		return httpsServer;
 	}
 
-	return apiApp.listen(apiPort, () => {
-		env.logger.info(() => ({
-			data: { apiPort },
-			msg: "Prosopo app listening",
-		}));
-	});
+	const server = apiApp.listen(apiPort);
+	await awaitListening(server);
+	env.logger.info(() => ({
+		data: { apiPort },
+		msg: "Prosopo app listening",
+	}));
+	return server;
 }

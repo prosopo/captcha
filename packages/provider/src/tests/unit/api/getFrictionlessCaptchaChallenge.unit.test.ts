@@ -12,10 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { CaptchaType, ContextType } from "@prosopo/types";
 import { AccessPolicyType } from "@prosopo/user-access-policy";
-import { type Mock, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	type Mock,
+	afterAll,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
 import getHandler from "../../../api/captcha/getFrictionlessCaptchaChallenge.js";
+import { initDetectorBundlePool } from "../../../tasks/detection/bundlePool.js";
 import { FrictionlessReason } from "../../../tasks/frictionless/frictionlessTasks.js";
 
 // Minimal typed mocks to avoid `any`
@@ -129,7 +142,9 @@ vi.mock("../../../utils/hashUserIp.js", () => ({
 
 // Mock getMaintenanceMode
 vi.mock("../../../api/admin/apiToggleMaintenanceModeEndpoint.js", () => ({
-	getMaintenanceMode: vi.fn(() => false),
+	getMaintenanceMode: vi.fn(function () {
+		return false;
+	}),
 }));
 
 // Mock getRequestUserScope
@@ -139,7 +154,9 @@ vi.mock("../../../api/blacklistRequestInspector.js", () => ({
 
 // Mock getCompositeIpAddress
 vi.mock("../../../compositeIpAddress.js", () => ({
-	getCompositeIpAddress: vi.fn((ip: string) => ip),
+	getCompositeIpAddress: vi.fn(function (ip: string) {
+		return ip;
+	}),
 }));
 
 vi.mock("../../../tasks/index.js", async () => {
@@ -212,6 +229,23 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 
 	let tasksInstance: MockTasks;
 
+	// A populated detector pool so the no-detector PoW fallback does NOT fire and
+	// the handler proceeds into the scored detection path (decryptPayload is
+	// mocked). Without a bundle in the pool every request would PoW-fallback.
+	let poolDir: string;
+	beforeAll(() => {
+		poolDir = mkdtempSync(join(tmpdir(), "fric-handler-pool-"));
+		writeFileSync(join(poolDir, "bundle-0.js"), "JS");
+		writeFileSync(
+			join(poolDir, "bundle-0.json"),
+			JSON.stringify({ privateKey: "PK", innerConfig: "C" }),
+		);
+		initDetectorBundlePool(poolDir);
+	});
+	afterAll(() => {
+		rmSync(poolDir, { recursive: true, force: true });
+	});
+
 	const makeMockTasks = (): MockTasks => ({
 		frictionlessManager: {
 			decryptPayload: vi.fn(),
@@ -236,10 +270,16 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 					scoreComponents: sc,
 				}),
 			),
-			scoreIncreaseWebView: vi.fn((bs: number, score: number, sc: unknown) => ({
-				score,
-				scoreComponents: sc,
-			})),
+			scoreIncreaseWebView: vi.fn(function (
+				bs: number,
+				score: number,
+				sc: unknown,
+			) {
+				return {
+					score,
+					scoreComponents: sc,
+				};
+			}),
 			scoreIncreaseTimestamp: vi.fn(
 				(t: number, bs: number, score: number, sc: unknown) => ({
 					score,
@@ -260,7 +300,9 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		tasksInstance = makeMockTasks();
-		(Tasks as unknown as Mock).mockImplementation(() => tasksInstance);
+		(Tasks as unknown as Mock).mockImplementation(function () {
+			return tasksInstance;
+		});
 	});
 
 	it("uses webview or default when both contexts exist", async () => {

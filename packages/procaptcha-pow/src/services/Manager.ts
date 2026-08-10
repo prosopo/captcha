@@ -23,11 +23,12 @@ import {
 import {
 	ExtensionLoader,
 	buildUpdateState,
+	getDefaultEvents,
 	getProcaptchaRandomActiveProvider,
+	getSimdReadingsForSubmit,
 	pickIpMode,
 	providerRetry,
 } from "@prosopo/procaptcha-common";
-import { getDefaultEvents } from "@prosopo/procaptcha-common";
 import {
 	type Account,
 	ApiParams,
@@ -163,7 +164,17 @@ export const Manager = (
 		updateState({ successfullChallengeTimeout });
 	};
 
+	// Checkbox click coords captured on the entry-point tick (or forwarded
+	// from a session-invalidated retry). Persisted in the closure so an
+	// eventual escalation can hand them to the escalated image/puzzle widget
+	// via `onEscalate` — otherwise the escalated widget seeds (0, 0) into
+	// its own salt and the entry-point telemetry is lost across the hop.
+	let checkboxClickX = 0;
+	let checkboxClickY = 0;
+
 	const start = async (x = 0, y = 0) => {
+		checkboxClickX = x;
+		checkboxClickY = y;
 		await providerRetry(
 			async () => {
 				if (state.loading) {
@@ -327,9 +338,9 @@ export const Manager = (
 						}
 					}
 
-					const simdReadings = frictionlessState?.getSimdReadings
-						? await frictionlessState.getSimdReadings()
-						: undefined;
+					// Wait 5 secs for ongoing SIMD, else submit without
+					const simdReadings =
+						await getSimdReadingsForSubmit(frictionlessState);
 					const hpValue = getHoneypotValue?.();
 					const clientMetaData = hpValue ? { hp: hpValue } : undefined;
 					// Best-effort proof of fingerprint; submission proceeds without it
@@ -378,10 +389,23 @@ export const Manager = (
 						// follow-up image/puzzle challenge. Hand off to the wrapper —
 						// don't fire onHuman or onFailed; the wrapper mounts the next
 						// widget and the standard success/failure path resumes there.
+						//
+						// Forward the trusted checkbox coords captured on this widget's
+						// tick so the escalated widget seeds its salt with the real
+						// (x, y) rather than defaulting to (0, 0). Mirrors the
+						// session-invalidated retry path in ProcaptchaFrictionless.
 						updateState({ loading: false });
+						// (0, 0) is the untrusted-event / autoStart default —
+						// treat it as "no coords" so the escalated widget doesn't
+						// re-encode a fake click into its salt. Matches the
+						// filter applied in handleSessionInvalidated.
+						const isRealClick = checkboxClickX !== 0 || checkboxClickY !== 0;
 						onEscalate?.(
 							escalation[ApiParams.captchaType],
 							escalation[ApiParams.sessionId],
+							isRealClick
+								? { x: checkboxClickX, y: checkboxClickY }
+								: undefined,
 						);
 					} else if (verifiedSolution[ApiParams.verified]) {
 						updateState({
@@ -404,6 +428,7 @@ export const Manager = (
 											userTimestampSignature.signature.toString(),
 									},
 								},
+								[ApiParams.captchaType]: CaptchaType.pow,
 							}),
 						);
 						setValidChallengeTimeout();
@@ -412,7 +437,10 @@ export const Manager = (
 					}
 				}
 			},
-			start,
+			// Retry with the same coordinates: a bare `start` restarts at the
+			// default (0, 0), which reads as "no real click" further down and
+			// costs the escalated widget the entry-point telemetry.
+			() => start(x, y),
 			() => {
 				resetState();
 			},
