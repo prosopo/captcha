@@ -35,6 +35,7 @@ import { validateAddress } from "@prosopo/util-crypto";
 import express, { type Router } from "express";
 import { Tasks } from "../tasks/tasks.js";
 import { getMaintenanceMode } from "./admin/apiToggleMaintenanceModeEndpoint.js";
+import { buildMaintenanceVerificationResponse } from "./captcha/maintenanceModeResponses.js";
 import { forwardVerifyIfNotIssuer } from "./forwardVerify.js";
 import { metricsEnabled, recordCaptchaVerify } from "./metrics.js";
 import {
@@ -138,10 +139,8 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				req.logger.info(() => ({
 					msg: "Maintenance mode active - returning verified for image captcha verification",
 				}));
-				const verificationResponse: ImageVerificationResponse = {
-					status: "ok",
-					verified: true,
-				};
+				const verificationResponse: ImageVerificationResponse =
+					buildMaintenanceVerificationResponse(req.i18n.t);
 				return res.json(verificationResponse);
 			}
 
@@ -286,10 +285,8 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				req.logger.info(() => ({
 					msg: "Maintenance mode active - returning verified for PoW captcha verification",
 				}));
-				const verificationResponse: VerificationResponse = {
-					status: "ok",
-					verified: true,
-				};
+				const verificationResponse: VerificationResponse =
+					buildMaintenanceVerificationResponse(req.i18n.t);
 				return res.json(verificationResponse);
 			}
 
@@ -440,10 +437,8 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				req.logger.info(() => ({
 					msg: "Maintenance mode active - returning verified for puzzle captcha verification",
 				}));
-				const verificationResponse: VerificationResponse = {
-					status: "ok",
-					verified: true,
-				};
+				const verificationResponse: VerificationResponse =
+					buildMaintenanceVerificationResponse(req.i18n.t);
 				return res.json(verificationResponse);
 			}
 

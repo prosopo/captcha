@@ -74,15 +74,14 @@ jobs:
 
           npm i --ignore-scripts --include=dev --no-audit --no-fund --prefer-offline
           
-          # Set the version of root and docker/images/provider to match @prosopo/cli
+          # Set the root package.json version to match @prosopo/cli. The provider
+          # image tag now comes from packages/cli's own version, so there is no
+          # wrapper package left to keep in step.
           root_version=$(npm -w @prosopo/cli pkg get version | jq -r '.["@prosopo/cli"]')
           echo "root_version=$root_version" >> $GITHUB_ENV
           echo "Setting versions to $root_version"
           
           npm pkg set version="$root_version"
-          cd docker/images/provider
-          npm pkg set version="$root_version"
-          cd -
           
           git add -u .
 
