@@ -31,6 +31,25 @@
 			"dependsOn": ["@prosopo/config#build"],
 			"outputs": ["dist/**", "*.tsbuildinfo"]
 		},
+		// Image builds copy dist/bundle out of the build context, so they wait on
+		// the bundle task. Not cached: the artefact is an image in the docker
+		// daemon's store rather than a file under the package, so turbo cannot
+		// restore it on a cache hit — and a false hit would silently skip a
+		// rebuild the registry never received.
+		"build:docker": {
+			"dependsOn": ["bundle"],
+			"cache": false
+		},
+		// The provider image is built from packages/cli, but its context is the
+		// repo root and it also copies packages/locale's compiled locales.
+		"@prosopo/cli#build:docker": {
+			"dependsOn": ["bundle", "@prosopo/locale#build"],
+			"cache": false
+		},
+		"publish:docker": {
+			"dependsOn": ["build:docker"],
+			"cache": false
+		},
 		"bundle:iife": {
 			"dependsOn": ["@prosopo/config#build"],
 			"outputs": ["dist/**", "*.tsbuildinfo"]
