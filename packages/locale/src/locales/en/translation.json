@@ -122,6 +122,7 @@
 		"PROVIDER_VERIFY_FAILED": "Provider verification failed",
 		"SPAM_EMAIL_DOMAIN": "Email domain not allowed",
 		"SPAM_EMAIL_RULE": "Email address blocked by spam filter rules",
+		"SPAM_EMAIL_COUNT_EXCEEDED": "Too many submissions from this email address",
 		"VPN_BLOCKED": "Requests from VPN connections are not allowed for this site",
 		"PROXY_BLOCKED": "Requests from proxy servers are not allowed for this site",
 		"TOR_BLOCKED": "Requests from Tor exit nodes are not allowed for this site",

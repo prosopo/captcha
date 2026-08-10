@@ -27,6 +27,7 @@ import {
 } from "@prosopo/user-access-policy";
 import { flatten, isProtectDeployment, sanitisePageUrl } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
+import { v4 as uuidv4 } from "uuid";
 import { getCompositeIpAddress } from "../../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../../express.js";
 import { Tasks } from "../../../tasks/index.js";
@@ -52,7 +53,7 @@ import { attachHoneypot } from "./honeypotResponse.js";
 import { resolveSessionDedup } from "./sessionDedup.js";
 import {
 	runConfiguredCaptchaTypeShortCircuit,
-	runNoDetectorPowFallback,
+	runEmptyDetectorPoolPowFallback,
 } from "./shortCircuit.js";
 
 export default (
@@ -84,7 +85,6 @@ export default (
 				mode,
 				simdReadings,
 				detectorSessionId,
-				detectorUnavailable,
 				currentUrl: reportedCurrentUrl,
 				iframeUrl: reportedIframeUrl,
 			} = GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
@@ -107,6 +107,11 @@ export default (
 			// without re-parsing hosts. Only persisted when true — see the
 			// sparse index on {isProtect, createdAt}.
 			const isProtect = isProtectDeployment(currentUrl, iframeUrl);
+
+			// Sessions need a unique, truthy token for dedup, so synthesise one
+			// when the client had no detector to produce it. The raw `token` is
+			// what the decision machine's missing-token gate reads.
+			const sessionToken = token || `notoken-${uuidv4()}`;
 
 			const normalizedIp = normalizeRequestIp(req.ip, req.logger);
 			const sessionMode =
@@ -417,7 +422,11 @@ export default (
 				userSitekeyIpHash,
 				requestId: req.requestId,
 				logger: req.logger,
-				detectorUnavailable: detectorUnavailable ?? false,
+				// Thread the client's detector session id through so the
+				// bypass paths (configured-captchaType + empty-pool pow
+				// fallback) can promote the resolved bundleId onto the
+				// session and enable later SIMD / BDP attach to decrypt.
+				...(detectorSessionId && { detectorSessionId }),
 				...(req.tcpToChelloUs !== undefined && {
 					tcpToChelloUs: req.tcpToChelloUs,
 				}),
@@ -432,15 +441,13 @@ export default (
 			);
 			if (shortCircuitResponse) return shortCircuitResponse;
 
-			// No detector available — empty/uninitialised pool, or the client
-			// reported it couldn't fetch/run a provider bundle. The detector lives
-			// only on providers, so there is nothing to score ⇒ serve a real PoW
-			// challenge instead of the (now removed) legacy key-pool path.
-			const noDetectorResponse = await runNoDetectorPowFallback(
+			// This provider has no bundles to assign, so no client could have run
+			// detection — serve a real PoW challenge.
+			const emptyPoolResponse = await runEmptyDetectorPoolPowFallback(
 				shortCircuitInput,
 				res,
 			);
-			if (noDetectorResponse) return noDetectorResponse;
+			if (emptyPoolResponse) return emptyPoolResponse;
 
 			const lScore = tasks.frictionlessManager.checkLangRules(
 				req.headers["accept-language"] || "",
@@ -566,7 +573,7 @@ export default (
 			};
 
 			tasks.frictionlessManager.setSessionParams({
-				token,
+				token: sessionToken,
 				score: botScore,
 				threshold: botThreshold,
 				scoreComponents,
@@ -684,6 +691,7 @@ export default (
 					botScore,
 					scoreComponents,
 					token,
+					headHash,
 					botThreshold,
 					currentUrl,
 					iframeUrl,

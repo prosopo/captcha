@@ -29,9 +29,8 @@ import { Tasks } from "../../tasks/index.js";
  *
  * When it cannot (no pool loaded, or Redis unavailable so the binding could not
  * be persisted) it returns `useProviderBundle: false`. There is NO bundled
- * detector and no legacy key pool to fall back to — the client then reports
- * `detectorUnavailable` on the frictionless hop and the provider serves a
- * challenge instead of attempting to score an absent payload.
+ * detector and no legacy key pool to fall back to — the client sends an empty
+ * token on the frictionless hop and the provider decides what to serve.
  */
 export default (env: ProviderEnvironment) =>
 	async (

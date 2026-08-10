@@ -21,7 +21,7 @@ Go to the **Actions** tab in GitHub and manually run the **"Create Release PR"**
 **What happens:**
 - The workflow reads all the changesets (`.changeset/*.md` files)
 - It uses `@changesets/cli` to bump package versions
-- It updates the root `package.json` and `docker/images/provider/package.json` to match the CLI version
+- It updates the root `package.json` to match the CLI version
 - It creates a branch called `release/vX.Y.Z`
 - It opens a pull request with all the version changes
 
@@ -74,5 +74,5 @@ When the tags are pushed, the **"Publish Release"** workflow runs automatically.
 - **No changesets found:** The "Create Release PR" workflow will exit early
 - **PR checks fail:** Fix the issues and push more commits to the release branch
 - **npm publishing fails:** The workflow stops immediately. Check Slack for error details.
-- **Docker publishing fails:** Check Slack for error details. Manually republish the Docker image from `docker/images/provider`.
+- **Docker publishing fails:** Check Slack for error details. Manually republish the Docker image with `npm run -w @prosopo/cli publish:docker`.
 - **Tag already exists:** The workflow will skip creating duplicate tags

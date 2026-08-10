@@ -44,6 +44,10 @@ export enum FrictionlessReason {
 	// falling through to the old-timestamp path, which used to catch it by
 	// accident via the synthetic `timestamp = 0`.
 	DECRYPTION_FAILED = "DECRYPTION_FAILED",
+	// The client sent no detector token, so nothing was measured about it.
+	MISSING_TOKEN = "MISSING_TOKEN",
+	// A token arrived without its accompanying head hash.
+	MISSING_HEAD_HASH = "MISSING_HEAD_HASH",
 }
 
 /**
@@ -70,6 +74,7 @@ export enum ResultReason {
 	SATELLITE_BLOCKED = "API.SATELLITE_BLOCKED",
 	SPAM_EMAIL_DOMAIN = "API.SPAM_EMAIL_DOMAIN",
 	SPAM_EMAIL_RULE = "API.SPAM_EMAIL_RULE",
+	SPAM_EMAIL_COUNT_EXCEEDED = "API.SPAM_EMAIL_COUNT_EXCEEDED",
 	TIMESTAMP_TOO_OLD = "API.TIMESTAMP_TOO_OLD",
 	TOR_BLOCKED = "API.TOR_BLOCKED",
 	VPN_BLOCKED = "API.VPN_BLOCKED",

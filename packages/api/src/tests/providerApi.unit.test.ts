@@ -557,7 +557,6 @@ describe("getFrictionlessCaptcha", () => {
 			ModeEnum.invisible,
 			"readings",
 			undefined, // detectorSessionId
-			undefined, // detectorUnavailable
 			"https://site.example/page",
 			"https://iframe.example",
 		);
