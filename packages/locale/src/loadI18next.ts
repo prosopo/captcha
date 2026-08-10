@@ -96,7 +96,8 @@ async function loadI18next(backend: boolean, lng?: string): Promise<i18n> {
 			import("./i18nBackend.js")
 				.then(({ default: initializeI18n }) => {
 					if (!i18nInstance) {
-						// pass the resolver into the i18n init fn which will resolve after i18n connected fires
+						// pass the resolver into the i18n init fn, which fires it on the first
+						// "loaded" event
 						i18nInstance = initializeI18n(done);
 					} else {
 						// we've already initialised i18n so just return it

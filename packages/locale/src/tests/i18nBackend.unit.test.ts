@@ -165,6 +165,20 @@ describe("i18nBackend on a server, not yet initialised", () => {
 		expect(callback).toHaveBeenCalledTimes(1);
 	});
 
+	test("fires the callback once, however often `loaded` is emitted", async () => {
+		// i18next emits `loaded` per namespace and again after changeLanguage,
+		// so an unguarded listener would repeat whatever side effect the caller
+		// attached to it.
+		const callback = vi.fn();
+		const { initializeI18n, harness } = await load({});
+
+		initializeI18n(callback);
+		harness.emit("loaded");
+		harness.emit("loaded");
+		harness.emit("loaded");
+		expect(callback).toHaveBeenCalledTimes(1);
+	});
+
 	test("hands the i18next instance to the callback", async () => {
 		const callback = vi.fn();
 		const { initializeI18n, harness } = await load({});

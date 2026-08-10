@@ -43,7 +43,16 @@ export function initializeI18n(
 					loadPath,
 				},
 			});
+		// "loaded" fires once per namespace, and again after changeLanguage(),
+		// so the raw event is not the one-shot signal the callback expects.
+		// Latch it here as well as in loadI18next: this callback is public and
+		// a caller could reasonably use it to run a side effect.
+		let notified = false;
 		i18n.on("loaded", () => {
+			if (notified) {
+				return;
+			}
+			notified = true;
 			i18nLoadedCallback?.(i18n);
 		});
 	} else {

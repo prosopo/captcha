@@ -254,6 +254,19 @@ describe("i18nFrontend callback", () => {
 		expect(callback).toHaveBeenCalledWith(harness.fake);
 	});
 
+	test("fires the callback once, however often `loaded` is emitted", async () => {
+		// i18next emits `loaded` per namespace and again after changeLanguage,
+		// so an unguarded listener would repeat whatever side effect the caller
+		// attached to it.
+		const callback = vi.fn();
+		const { initializeI18n, harness } = await load();
+
+		initializeI18n(callback);
+		harness.emit("loaded");
+		harness.emit("loaded");
+		expect(callback).toHaveBeenCalledTimes(1);
+	});
+
 	test("tolerates being called with no callback", async () => {
 		const { initializeI18n, harness } = await load();
 		initializeI18n();
