@@ -1,5 +1,13 @@
 # @prosopo/config
 
+## 3.3.7
+### Patch Changes
+
+- a6518a1: Add unit tests for the shared build config: dependency resolution, the vite bundle and library configs, the plugin set and the translations plugin. No behaviour changes.
+- 2aabe73: Remove the client-controlled `detectorUnavailable` frictionless bypass. A client could set the flag and be handed a PoW challenge without any detection running. The flag is gone from the wire format, the API client and the widget; the only remaining bypasses are provider-side (maintenance mode, empty detector bundle pool).
+  
+  The frictionless decision machine now gates on payload presence after the access-rule ladder: no token serves a 3-round image captcha, a token without its head hash serves a 2-round one.
+
 ## 3.3.6
 ### Patch Changes
 

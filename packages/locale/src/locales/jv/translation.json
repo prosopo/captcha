@@ -43,6 +43,7 @@
 		"INVALID_BODY": "Badan tidak valid",
 		"PARSE_ERROR": "Kesalahan parsing permintaan",
 		"SPAM_EMAIL_RULE": "Alamat email diblokir dening aturan filter spam",
+		"SPAM_EMAIL_COUNT_EXCEEDED": "Kakehen kiriman saka alamat email iki",
 		"VPN_BLOCKED": "Panjaluk saka sambungan VPN ora diidini kanggo situs iki",
 		"PROXY_BLOCKED": "Panjaluk saka server proxy ora diidini kanggo situs iki",
 		"TOR_BLOCKED": "Panjaluk saka simpul metu Tor ora diidini kanggo situs iki",

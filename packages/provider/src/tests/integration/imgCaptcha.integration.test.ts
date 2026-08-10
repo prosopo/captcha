@@ -40,15 +40,10 @@ import { randomAsHex } from "@prosopo/util-crypto";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { dummyUserAccount } from "./mocks/solvedTestCaptchas.js";
+import { reservePort } from "./testUtils.js";
 
 const solutions = datasetWithSolutionHashes;
 const userAccount = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty";
-
-// Function to get a random available port
-function getRandomPort(): number {
-	// Use a random port in the range 10000-60000 to avoid conflicts
-	return Math.floor(Math.random() * 50000) + 10000;
-}
 
 /**
  * Register a site key directly in the database using Tasks
@@ -85,9 +80,7 @@ describe("Image Captcha Integration Tests", () => {
 	let builtDataset: Awaited<ReturnType<typeof buildDataset>>;
 
 	beforeAll(async () => {
-		// Get a unique port for this test suite using a more unique identifier
-		// Use process.pid and timestamp to ensure uniqueness across parallel test runs
-		testPort = 40000 + (process.pid % 10000) + Math.floor(Math.random() * 5000);
+		testPort = await reservePort();
 		const protocol = isTlsAvailable() ? "https" : "http";
 		baseUrl = `${protocol}://localhost:${testPort}`;
 
@@ -194,80 +187,11 @@ describe("Image Captcha Integration Tests", () => {
 		await tasks.datasetManager.providerSetDataset(datasetWithSolutionHashes);
 		builtDataset = await buildDataset(datasetWithSolutionHashes);
 
-		// Start the provider API server with retry logic
-		// This mimics the CLI start functionality
+		// Start the provider API server. This mimics the CLI start functionality.
 		env.logger.info(() => ({
 			msg: `Starting provider API on port ${testPort}`,
 		}));
-
-		let retries = 0;
-		const maxRetries = 3;
-		while (retries < maxRetries) {
-			try {
-				server = await startProviderApi(env, true, testPort);
-
-				// Wait for server to be ready by checking if it's listening
-				await new Promise<void>((resolve, reject) => {
-					if (!server) {
-						reject(new Error("Server is not running."));
-						return;
-					}
-
-					const checkInterval = setInterval(() => {
-						if (server?.listening) {
-							clearInterval(checkInterval);
-							resolve();
-						}
-					}, 100);
-
-					// Timeout after 5 seconds
-					setTimeout(() => {
-						clearInterval(checkInterval);
-						if (!server?.listening) {
-							reject(
-								new Error("Server failed to start listening within timeout"),
-							);
-						}
-					}, 5000);
-				});
-
-				env.logger.info(() => ({
-					msg: `Provider API started successfully on port ${testPort}`,
-				}));
-				break;
-			} catch (error) {
-				retries++;
-				env.logger.warn(() => ({
-					msg: `Failed to start server (attempt ${retries}/${maxRetries})`,
-					err: error,
-				}));
-
-				// Close server if it was created but failed
-				if (server) {
-					await new Promise<void>((resolve) => {
-						server?.close(() => resolve());
-					});
-					server = undefined;
-				}
-
-				if (retries >= maxRetries) {
-					throw new Error(
-						`Failed to start server after ${maxRetries} attempts: ${error}`,
-					);
-				}
-
-				// Try a different port
-				testPort =
-					40000 + (process.pid % 10000) + Math.floor(Math.random() * 5000);
-				baseUrl = `${protocol}://localhost:${testPort}`;
-				env.logger.info(() => ({
-					msg: `Retrying with port ${testPort}`,
-				}));
-
-				// Wait before retrying
-				await new Promise((resolve) => setTimeout(resolve, 1000));
-			}
-		}
+		server = await startProviderApi(env, true, testPort);
 	}, 120_000);
 
 	beforeEach(async () => {

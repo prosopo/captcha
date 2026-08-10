@@ -85,8 +85,6 @@ export const getDotEnvPkgDir = () => `${getPackagesDir()}/dotenv`;
 
 export const getEnvPkgDir = () => `${getPackagesDir()}/env`;
 
-export const getFileServerPkgDir = () => `${getPackagesDir()}/file-server`;
-
 export const getProcaptchaPkgDir = () => `${getPackagesDir()}/procaptcha`;
 
 export const getProcaptchaBundlePkgDir = () =>
