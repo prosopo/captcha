@@ -120,8 +120,8 @@ describe("PuzzleCaptchaManager", () => {
 			getClientRecord: vi.fn(),
 			getSessionRecordBySessionId: vi.fn(),
 			updateSessionRecord: vi.fn(),
-			getDetectorKeys: vi.fn().mockResolvedValue([]),
 			getSpamEmailDomain: vi.fn(),
+			countCommitmentsByNormalisedEmail: vi.fn(),
 		} as unknown as IProviderDatabase;
 
 		pair = {
@@ -863,6 +863,172 @@ describe("PuzzleCaptchaManager", () => {
 			expect(input.webView).toBe(sessionRecord.webView);
 			expect(input.iFrame).toBe(sessionRecord.iFrame);
 			expect(typeof input.score).toBe("number");
+		});
+	});
+
+	describe("serverVerifyPuzzleCaptchaSolution with maxEmailSubmissionCount", () => {
+		// Positional invoke helper — the puzzle signature now takes a
+		// spamFilter between spamEmailDomainCheckingEnabled and
+		// trafficFilter. The count check block sits below the domain
+		// check and needs `storeMetadata` on.
+		const invoke = async ({
+			challenge,
+			dappAccount,
+			email,
+			maxEmailSubmissionCount,
+			storeMetadata,
+		}: {
+			challenge: string;
+			dappAccount: string;
+			email: string | undefined;
+			maxEmailSubmissionCount: number | undefined;
+			storeMetadata: boolean;
+		}) =>
+			puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+				dappAccount,
+				challenge,
+				60_000,
+				mockEnv,
+				undefined, // ip
+				undefined, // userAccessRulesStorage
+				email,
+				false, // spamEmailDomainCheckingEnabled
+				maxEmailSubmissionCount !== undefined
+					? {
+							enabled: true,
+							emailRules: {
+								enabled: true,
+								maxEmailSubmissionCount,
+								normaliseGmail: false,
+								useDefaultPatterns: false,
+								customRegexBlocklist: [],
+							},
+						}
+					: undefined,
+				undefined, // trafficFilter
+				storeMetadata,
+			);
+
+		const seedApprovedPuzzle = (challenge: string, dappAccount: string) => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getPuzzleCaptchaRecordByChallenge as any).mockResolvedValue(
+				asPuzzleRecord({
+					challenge: challenge as PoWChallengeId,
+					dappAccount,
+					userAccount: "user",
+					result: { status: CaptchaStatus.approved },
+					serverChecked: false,
+					headers: { a: "1" },
+				}),
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.updatePuzzleCaptchaRecord as any).mockResolvedValue(undefined);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(verifyRecency as any).mockImplementation(() => true);
+			mockDecisionMachine(
+				vi.fn().mockResolvedValue({
+					decision: "allow",
+					reason: undefined,
+					score: 1,
+				}),
+			);
+		};
+
+		it("rejects with SPAM_EMAIL_COUNT_EXCEEDED at the cap", async () => {
+			const dappAccount = "dappAccount";
+			const challenge = "1___u___dappAccount";
+			seedApprovedPuzzle(challenge, dappAccount);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.countCommitmentsByNormalisedEmail as any).mockResolvedValue(2);
+
+			const result = await invoke({
+				challenge,
+				dappAccount,
+				email: "alice+promo@gmail.com",
+				maxEmailSubmissionCount: 2,
+				storeMetadata: true,
+			});
+
+			expect(result.verified).toBe(false);
+			expect(db.countCommitmentsByNormalisedEmail).toHaveBeenCalledWith(
+				dappAccount,
+				"alice@gmail.com",
+			);
+			expect(db.updatePuzzleCaptchaRecord).toHaveBeenCalledWith(
+				challenge,
+				expect.objectContaining({
+					result: expect.objectContaining({
+						status: CaptchaStatus.disapproved,
+						reason: ResultReason.SPAM_EMAIL_COUNT_EXCEEDED,
+					}),
+				}),
+			);
+		});
+
+		it("allows below the cap and writes emailNormalised to metadata", async () => {
+			const dappAccount = "dappAccount";
+			const challenge = "2___u___dappAccount";
+			seedApprovedPuzzle(challenge, dappAccount);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.countCommitmentsByNormalisedEmail as any).mockResolvedValue(1);
+
+			const result = await invoke({
+				challenge,
+				dappAccount,
+				email: "alice+a@gmail.com",
+				maxEmailSubmissionCount: 3,
+				storeMetadata: true,
+			});
+
+			expect(result.verified).toBe(true);
+			// Puzzle writes metadata via a dedicated call; that call must
+			// carry both the raw and normalised email so subsequent counts
+			// can find this record.
+			expect(db.updatePuzzleCaptchaRecord).toHaveBeenCalledWith(
+				challenge,
+				expect.objectContaining({
+					metadata: expect.objectContaining({
+						email: "alice+a@gmail.com",
+						emailNormalised: "alice@gmail.com",
+					}),
+				}),
+			);
+		});
+
+		it("skips the count query when storeMetadata is off", async () => {
+			const dappAccount = "dappAccount";
+			const challenge = "3___u___dappAccount";
+			seedApprovedPuzzle(challenge, dappAccount);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.countCommitmentsByNormalisedEmail as any).mockResolvedValue(99);
+
+			const result = await invoke({
+				challenge,
+				dappAccount,
+				email: "alice@gmail.com",
+				maxEmailSubmissionCount: 3,
+				storeMetadata: false,
+			});
+
+			expect(result.verified).toBe(true);
+			expect(db.countCommitmentsByNormalisedEmail).not.toHaveBeenCalled();
+		});
+
+		it("skips the count query when maxEmailSubmissionCount is undefined", async () => {
+			const dappAccount = "dappAccount";
+			const challenge = "4___u___dappAccount";
+			seedApprovedPuzzle(challenge, dappAccount);
+
+			const result = await invoke({
+				challenge,
+				dappAccount,
+				email: "alice@gmail.com",
+				maxEmailSubmissionCount: undefined,
+				storeMetadata: true,
+			});
+
+			expect(result.verified).toBe(true);
+			expect(db.countCommitmentsByNormalisedEmail).not.toHaveBeenCalled();
 		});
 	});
 });

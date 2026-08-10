@@ -35,7 +35,12 @@ defaults:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    # GH_RUNNER unset -> GitHub-hosted. Set to a JSON array (the self-hosted
+    # fleet) -> this job's capacity requirement is appended to it: cores, RAM,
+    # disk. Runners advertise one label per step up to their own size, so a job
+    # only lands on a host big enough for it. Set to a JSON string -> used as
+    # given, which is how a repo opts back out to a hosted runner.
+    runs-on: ${{ vars.GH_RUNNER && startsWith(vars.GH_RUNNER, '[') && fromJSON(format('["{0}","4c","8g","40d"]', join(fromJSON(vars.GH_RUNNER), '","'))) || fromJSON(vars.GH_RUNNER || '"ubuntu-latest"') }}
     if: github.event.pull_request.draft == false
     steps:
       - name: Print contexts
@@ -114,6 +119,11 @@ jobs:
           npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:image" --success "first" --kill-others
 
       - name: Run the cypress tests on client-bundle-example explicit rendering with frictionless captcha
+        env:
+          # Committed test detector-pool fixture (throwaway keys) so the browser
+          # is served a real per-session bundle and frictionless runs genuine
+          # detection instead of the empty-pool PoW fallback.
+          PROSOPO_DETECTOR_POOL_DIR: ${{ github.workspace }}/packages/provider/fixtures/detector-pool
         run: |
           npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionless" --success "first" --kill-others
 
@@ -146,6 +156,13 @@ jobs:
           # its route() phase when the detector override lets frictionless
           # short-circuit fire without a real signed detector payload.
           PROSOPO_TEST_FRICTIONLESS_DETECTOR_OVERRIDE: "1"
+          # This spec asserts the frictionless-phase captchaType directly
+          # (escalation/postPowPuzzle assert the post-PoW one, so they can
+          # start from PoW). On an empty pool runNoDetectorPowFallback
+          # answers before setRoutingContext runs, so route() is never
+          # invoked and every case returns the PoW baseline. The committed
+          # fixture pool keeps that fallback declined.
+          PROSOPO_DETECTOR_POOL_DIR: ${{ github.workspace }}/packages/provider/fixtures/detector-pool
         run: |
           npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:routingFrictionless" --success "first" --kill-others
 
