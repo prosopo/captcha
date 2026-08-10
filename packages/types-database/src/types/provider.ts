@@ -741,6 +741,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	entropyCryptoFingerprint: { type: String, required: false },
 	entropyWallClockOffsetMs: { type: Number, required: false },
 	entropyMathRandomFirst: { type: Number, required: false },
+	g: { type: String, required: false },
 	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
 	// plugin (X-TLS-TCP-To-Chello-Us / X-TLS-Chello-To-Handshake-Us).
 	// See @prosopo/types Session.tcpToChelloUs for full semantics.

@@ -55,4 +55,5 @@ export type DetectorResult = {
 	entropyCryptoFingerprint?: string;
 	entropyWallClockOffsetMs?: number;
 	entropyMathRandomFirst?: number;
+	g?: string;
 };
