@@ -22,6 +22,7 @@ import {
 	type ProcaptchaState,
 	type ProcaptchaStateUpdateFn,
 } from "@prosopo/types";
+import { lightTheme } from "@prosopo/widget-skeleton";
 import { act } from "react";
 import {
 	afterEach,
@@ -34,7 +35,7 @@ import {
 } from "vitest";
 import ProcaptchaWidget from "../components/ProcaptchaWidget.js";
 import { challengeResponse, config, frictionless } from "./harness.js";
-import { type Mounted, fire, mount } from "./render.js";
+import { type Mounted, asRgb, fire, mount } from "./render.js";
 
 type ManagerApi = ReturnType<typeof ManagerType>;
 
@@ -533,7 +534,11 @@ describe("theming", () => {
 		const panel = document.querySelector<HTMLElement>(
 			".prosopo-modalInner > div",
 		);
-		expect(panel?.style.backgroundColor).toBe("rgb(255, 255, 255)");
+		// The challenge panel is the M3 dialog container, so it takes
+		// surfaceContainerHigh rather than the flat surface behind the widget.
+		expect(panel?.style.backgroundColor).toBe(
+			asRgb(lightTheme.palette.background.default),
+		);
 	});
 });
 
