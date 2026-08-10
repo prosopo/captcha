@@ -61,9 +61,8 @@ const indexOptions = (
 /** Validate a plain object against a schema without touching a database. */
 const validate = (
 	schema: Schema,
-	// biome-ignore lint/suspicious/noExplicitAny: mongoose models are generic over the document
 	doc: Record<string, unknown>,
-	// biome-ignore lint/suspicious/noExplicitAny: see above
+	// biome-ignore lint/suspicious/noExplicitAny: mongoose models are generic over the document
 ): any => {
 	// Model names must be unique per connection, so derive one per call.
 	const name = `T${modelCounter++}`;
