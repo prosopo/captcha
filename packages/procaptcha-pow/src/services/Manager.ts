@@ -43,8 +43,8 @@ import {
 	encodeProcaptchaOutput,
 } from "@prosopo/types";
 import { embedData, sleep } from "@prosopo/util";
-import { solvePoW } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
+import { solvePoWParallel } from "./multiThreadedSolver.js";
 
 export const Manager = (
 	configInput: ProcaptchaClientConfigInput,
@@ -269,7 +269,7 @@ export const Manager = (
 						},
 					});
 				} else {
-					const solution = await solvePoW(
+					const solution = await solvePoWParallel(
 						challenge.challenge,
 						challenge.difficulty,
 					);
