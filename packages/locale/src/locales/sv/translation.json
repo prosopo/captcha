@@ -43,6 +43,7 @@
 		"INVALID_BODY": "Ogiltig body",
 		"PARSE_ERROR": "Fel vid tolkning av förfrågan",
 		"SPAM_EMAIL_RULE": "E-postadressen blockerad av spamfilterregler",
+		"SPAM_EMAIL_COUNT_EXCEEDED": "För många inskickningar från denna e-postadress",
 		"VPN_BLOCKED": "Förfrågningar från VPN-anslutningar är inte tillåtna för denna webbplats",
 		"PROXY_BLOCKED": "Förfrågningar från proxyservrar är inte tillåtna för denna webbplats",
 		"TOR_BLOCKED": "Förfrågningar från Tor-utgångsnoder är inte tillåtna för denna webbplats",

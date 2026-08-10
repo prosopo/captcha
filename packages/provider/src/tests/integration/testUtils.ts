@@ -12,7 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { createServer } from "node:net";
 import { Agent } from "undici";
+
+/**
+ * Reserve a port the OS says is free, rather than guessing one.
+ *
+ * The suites need a port before the ProviderEnvironment is built (it goes into
+ * the config and the base URL), so they cannot bind :0 on the real server and
+ * read it back afterwards. Binding :0 on a throwaway socket gets the same
+ * guarantee up front — the kernel avoids ports currently in use, including the
+ * provider CI starts alongside the tests.
+ */
+export const reservePort = (): Promise<number> =>
+	new Promise((resolve, reject) => {
+		const probe = createServer();
+		probe.once("error", reject);
+		probe.listen(0, () => {
+			const address = probe.address();
+			if (typeof address !== "object" || address === null) {
+				probe.close();
+				reject(new Error("could not determine a free port"));
+				return;
+			}
+			probe.close(() => resolve(address.port));
+		});
+	});
 
 // Create an Agent that ignores certificate validation for integration tests
 // This is needed because integration tests connect to https://localhost with self-signed certificates

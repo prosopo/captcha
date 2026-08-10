@@ -48,13 +48,8 @@
 			log_key
 		}
 
-		# reverse proxy to the provider container
-		reverse_proxy {$CADDY_OO_CONTAINER_NAME:oo1}:{$CADDY_OO_PORT:5080} {$CADDY_OO_CONTAINER_NAME:oo2}:{$CADDY_OO_PORT2:5081} {
-            lb_policy first
-            lb_try_duration 3s
-            lb_try_interval 1s
-            fail_duration 20s
-		}
+		# reverse proxy to the openobserve container
+		reverse_proxy {$CADDY_OO_CONTAINER_NAME:oo1}:{$CADDY_OO_PORT:5080}
 	}
 
 	log {
