@@ -210,17 +210,28 @@ export const commands: Readonly<
 /**
  * The command of that name, if there is one.
  *
- * The name comes from a comment, so a plain property access would resolve
- * `constructor` and `toString` to functions inherited from Object.prototype —
- * dispatched with the bot's dependencies, and silently instead of the
- * "I do not understand" reaction the commenter should have got.
+ * The name comes from a comment. Indexing `commands` with it — even behind a
+ * hasOwnProperty guard — is a dynamic dispatch on attacker-controlled input, so
+ * the mapping is spelled out instead: there is no name a commenter can write
+ * that reaches anything but the five below. The test that walks `commands` and
+ * asserts every key resolves here keeps the two from drifting apart.
  */
 export const lookupCommand = (
 	name: string,
-): ((deps: BotDeps) => Promise<void>) | undefined =>
-	Object.prototype.hasOwnProperty.call(commands, name)
-		? commands[name]
-		: undefined;
+): ((deps: BotDeps) => Promise<void>) | undefined => {
+	switch (name) {
+		case "approve":
+		case "accept":
+			return approve;
+		case "disapprove":
+		case "reject":
+			return disapprove;
+		case "help":
+			return help;
+		default:
+			return undefined;
+	}
+};
 
 /** A comment the bot was addressed in, once it has been understood. */
 export interface ParsedCommand {
