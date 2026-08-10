@@ -34,11 +34,12 @@ import {
 	takePrefetchedDetector,
 } from "./detectorPrefetch.js";
 
-// Upper bound on the detector-bundle assignment + load probe. The detector
-// lives ONLY in the provider-served pool bundles, so if the provider is
-// slow/unreachable we abandon the probe and signal `detectorUnavailable`, and
-// the provider serves a PoW challenge instead of running detection.
-const ASSIGN_TIMEOUT_MS = 2000;
+// Upper bound on the assign POST, which serves the detector bundle inline
+// (~215 KB gzipped). The hop is always cold — /healthz pins a different
+// hostname, so it pays fresh DNS + TLS + a CORS preflight before the download
+// even starts, measured at 6.7s against staging. Anything tighter silently
+// drops the detector and sends an empty token.
+const ASSIGN_TIMEOUT_MS = 10_000;
 
 // The page(s) the widget is rendered on, reduced to origin + path.
 // Deliberately built from `origin` + `pathname` (never `href`) so the query
@@ -215,8 +216,7 @@ const customDetectBot: BotDetectionFunction = async (
 	// in the provider-served pool: when the provider has a populated pool it
 	// returns the obfuscated detector (each with its own keys + inner cipher)
 	// plus a detectorSessionId. When it cannot (no pool, network, decode, or
-	// timeout) we have NO detector to run — there is no bundled fallback — so we
-	// signal `detectorUnavailable` and the provider serves a PoW challenge.
+	// timeout) we have NO detector to run and there is no bundled fallback.
 	let detectorSessionId: string | undefined;
 	let providerDetect: DetectorType | undefined;
 	try {
@@ -229,27 +229,40 @@ const customDetectBot: BotDetectionFunction = async (
 				ASSIGN_TIMEOUT_MS,
 			));
 		if (assigned.useProviderBundle && assigned.detectorScript) {
+			// Deliberately untimed: this is a local parse + evaluate, so a timer
+			// cannot rescue a stalled main thread — it can only throw away a bundle
+			// we are already holding.
+			providerDetect = await DetectorLoaderFromScript(assigned.detectorScript);
 			detectorSessionId = assigned.detectorSessionId;
-			providerDetect = await withTimeout(
-				DetectorLoaderFromScript(assigned.detectorScript),
-				ASSIGN_TIMEOUT_MS,
-			);
 		}
-	} catch {
+	} catch (err) {
 		// No detector available — fall through to the PoW request below.
+		//
+		// Report it. Falling back is by design, but the reasons are not equal: a
+		// slow network is routine, whereas a bundle that throws on import means
+		// every session on this provider silently degrades to an image captcha
+		// with nothing in the client or provider logs to say why. That failure
+		// mode shipped undetected once already — an obfuscator seed emitted a
+		// bundle that died with "Class constructor X cannot be invoked without
+		// 'new'", and the only way to see it was to reproduce the import by hand.
+		// The catch stays broad; it just no longer hides what it caught.
+		console.error(
+			"Procaptcha: no detector bundle available, falling back to a server-chosen captcha:",
+			err,
+		);
 	}
 
 	const ExtClass = await extClassPromise;
 	const ext = new ExtClass();
 
-	// No provider detector ⇒ no detection is possible. Request a PoW challenge
-	// directly: send no token and the detectorUnavailable flag so the provider
-	// serves PoW rather than attempting to score an absent payload.
+	// No provider detector ⇒ no detection is possible, so there is nothing to
+	// send. The request goes out with an empty token and the provider decides
+	// what to serve; the client gets no say in that.
 	if (providerDetect === undefined) {
 		const userAccount = await ext.getAccount(config);
 		const { currentUrl: fallbackUrl, iframeUrl: fallbackIframeUrl } =
 			getCurrentPageUrls();
-		const powCaptcha = await withTimeout(
+		const captcha = await withTimeout(
 			providerApi.getFrictionlessCaptcha(
 				undefined,
 				undefined,
@@ -258,15 +271,14 @@ const customDetectBot: BotDetectionFunction = async (
 				config.mode,
 				undefined,
 				undefined,
-				true,
 				fallbackUrl,
 				fallbackIframeUrl,
 			),
 			10000,
 		);
-		if (powCaptcha.dns_url) {
+		if (captcha.dns_url) {
 			try {
-				void fetch(powCaptcha.dns_url, {
+				void fetch(captcha.dns_url, {
 					method: "GET",
 					mode: "no-cors",
 					credentials: "omit",
@@ -278,13 +290,13 @@ const customDetectBot: BotDetectionFunction = async (
 			}
 		}
 		return {
-			captchaType: powCaptcha.captchaType,
-			sessionId: powCaptcha.sessionId,
+			captchaType: captcha.captchaType,
+			sessionId: captcha.sessionId,
 			provider: provider,
-			status: powCaptcha.status,
+			status: captcha.status,
 			userAccount: userAccount,
-			error: powCaptcha.error,
-			hp: powCaptcha.hp,
+			error: captcha.error,
+			hp: captcha.hp,
 		};
 	}
 
@@ -311,7 +323,6 @@ const customDetectBot: BotDetectionFunction = async (
 		config.mode,
 		undefined,
 		detectorSessionId,
-		undefined,
 		currentUrl,
 		iframeUrl,
 	);

@@ -18,14 +18,13 @@ import { join } from "node:path";
 import type { Response } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { initDetectorBundlePool } from "../../../tasks/detection/bundlePool.js";
-import { runNoDetectorPowFallback } from "./shortCircuit.js";
+import { runEmptyDetectorPoolPowFallback } from "./shortCircuit.js";
 import type { ShortCircuitInput } from "./shortCircuit.js";
 
 vi.mock("./honeypotResponse.js", () => ({ attachHoneypot: vi.fn() }));
 
 const makeInput = (
 	sendPowCaptcha: (params: unknown) => Promise<unknown>,
-	detectorUnavailable = false,
 	token = "0xtoken",
 ): ShortCircuitInput => {
 	const input = {
@@ -41,7 +40,6 @@ const makeInput = (
 		userSitekeyIpHash: "hash",
 		requestId: "req-1",
 		logger: { warn: vi.fn(), info: vi.fn() },
-		detectorUnavailable,
 	};
 	return input as unknown as ShortCircuitInput;
 };
@@ -52,7 +50,7 @@ const makeRes = (): { res: Response; json: ReturnType<typeof vi.fn> } => {
 	return { res, json };
 };
 
-describe("runNoDetectorPowFallback", () => {
+describe("runEmptyDetectorPoolPowFallback", () => {
 	let dir: string;
 
 	beforeEach(() => {
@@ -77,7 +75,7 @@ describe("runNoDetectorPowFallback", () => {
 		const sendPowCaptcha = vi.fn(async () => ({ captchaType: "pow" }));
 		const { res, json } = makeRes();
 
-		const result = await runNoDetectorPowFallback(
+		const result = await runEmptyDetectorPoolPowFallback(
 			makeInput(sendPowCaptcha),
 			res,
 		);
@@ -87,7 +85,7 @@ describe("runNoDetectorPowFallback", () => {
 		expect(result).not.toBeNull();
 	});
 
-	it("synthesises a non-empty session token when the client sent an empty token (detectorUnavailable)", async () => {
+	it("synthesises a non-empty session token when the client sent an empty token", async () => {
 		initDetectorBundlePool(dir); // empty ⇒ pow fallback
 		let captured: { token?: string } | undefined;
 		const sendPowCaptcha = vi.fn(async (params: unknown) => {
@@ -96,44 +94,32 @@ describe("runNoDetectorPowFallback", () => {
 		});
 		const { res } = makeRes();
 
-		// Empty token (the client had no detector to run) must not reach
-		// sendPowCaptcha as a falsy value — its session-param validation rejects
-		// an empty token, which previously 400'd the no-detector PoW flow.
-		await runNoDetectorPowFallback(makeInput(sendPowCaptcha, true, ""), res);
+		// An empty token must not reach sendPowCaptcha as a falsy value — its
+		// session-param validation rejects it, which 400s the flow.
+		await runEmptyDetectorPoolPowFallback(makeInput(sendPowCaptcha, ""), res);
 
 		expect(sendPowCaptcha).toHaveBeenCalledTimes(1);
 		expect(captured?.token).toBeTruthy();
 		expect(captured?.token).toMatch(/^nodetector-/);
 	});
 
-	it("serves a PoW captcha when the client reports detectorUnavailable, even with a populated pool", async () => {
-		addBundle(dir);
-		initDetectorBundlePool(dir); // size 1
-		const sendPowCaptcha = vi.fn(async () => ({ captchaType: "pow" }));
-		const { res, json } = makeRes();
-
-		const result = await runNoDetectorPowFallback(
-			makeInput(sendPowCaptcha, true),
-			res,
-		);
-
-		expect(sendPowCaptcha).toHaveBeenCalledTimes(1);
-		expect(json).toHaveBeenCalledWith({ captchaType: "pow" });
-		expect(result).not.toBeNull();
-	});
-
-	it("returns null (proceed with detection) when the pool has bundles and the client ran one", async () => {
+	it("returns null when the pool has bundles, whatever the client sent", async () => {
 		addBundle(dir);
 		initDetectorBundlePool(dir); // size 1
 		const sendPowCaptcha = vi.fn(async () => ({ captchaType: "pow" }));
 		const { res } = makeRes();
 
-		const result = await runNoDetectorPowFallback(
-			makeInput(sendPowCaptcha),
-			res,
-		);
+		// An empty token is the shape a client with no detector sends. With a
+		// populated pool it must NOT bypass to PoW — the decision machine's
+		// missing-token gate handles it instead.
+		for (const token of ["0xtoken", ""]) {
+			const result = await runEmptyDetectorPoolPowFallback(
+				makeInput(sendPowCaptcha, token),
+				res,
+			);
+			expect(result).toBeNull();
+		}
 
-		expect(result).toBeNull();
 		expect(sendPowCaptcha).not.toHaveBeenCalled();
 	});
 });

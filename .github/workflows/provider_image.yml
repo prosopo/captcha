@@ -89,7 +89,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: ${{github.workspace}}
-          file: ${{github.workspace}}/docker/images/provider/src/Dockerfile
+          file: ${{github.workspace}}/packages/cli/Dockerfile
           platforms: linux/amd64
           push: false
           tags: prosopo/provider:dev

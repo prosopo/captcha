@@ -129,10 +129,8 @@ jobs:
       - name: Publish production image to Docker Hub
         run: |
           echo "Publishing production provider image to Docker Hub"
-          cd docker/images/provider
-          NODE_ENV="production" npm run build
-          NODE_ENV="production" npm run publish:docker
-          cd -
+          NODE_ENV="production" npm run -w @prosopo/cli build:docker
+          NODE_ENV="production" npm run -w @prosopo/cli publish:docker
 
       - name: Bundle the staging provider CLI
         run: |
@@ -142,10 +140,8 @@ jobs:
       - name: Publish production image to Docker Hub
         run: |
           echo "Publishing staging provider image to Docker Hub"
-          cd docker/images/provider
-          NODE_ENV="staging" npm run build
-          NODE_ENV="staging" npm run publish:docker
-          cd -
+          NODE_ENV="staging" npm run -w @prosopo/cli build:docker
+          NODE_ENV="staging" npm run -w @prosopo/cli publish:docker
 
       - name: Create GitHub Release
         env:

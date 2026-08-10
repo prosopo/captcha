@@ -43,10 +43,13 @@ export type ShortCircuitInput = {
 	userSitekeyIpHash: string;
 	requestId: string | undefined;
 	logger: Logger;
-	// Set when the client reported it had no provider detector bundle to run
-	// (no pool, assign failed, or blob load failed). The detector lives only on
-	// providers, so this means no detection happened ⇒ serve PoW.
-	detectorUnavailable: boolean;
+	// Client's detector-session id from the request body. When present, the
+	// bypass paths resolve the assigned bundleId via Redis and promote it
+	// onto the session so SIMD / BDP attach at later hops (challenge GET,
+	// solution submit) can find the right keypair. Without this, sessions on
+	// configured-captchaType sitekeys (pow / image / puzzle) had no bundleId
+	// and every attach silently dropped the payload.
+	detectorSessionId?: string;
 	tcpToChelloUs?: number;
 	chelloToHandshakeUs?: number;
 };
@@ -54,67 +57,73 @@ export type ShortCircuitInput = {
 // Builds the session params used by the bypass paths (configured captcha type
 // and empty-pool fallback). Score 0 — these paths do not run bot detection, so
 // the session is created as a plain challenge rather than a scored one.
-const buildBypassSessionParams = (input: ShortCircuitInput) => ({
-	// The bypass paths create a session without a decryption token. When the
-	// client had no detector to run (detectorUnavailable) it sends an empty
-	// token, but `sendCaptcha` requires a truthy token, and the session needs a
-	// unique value for dedup — so synthesise one when absent.
-	token: input.token || `nodetector-${uuidv4()}`,
-	score: 0,
-	threshold:
-		input.clientRecord.settings?.frictionlessThreshold ??
-		DEFAULT_FRICTIONLESS_THRESHOLD,
-	scoreComponents: { baseScore: 0 } as ScoreComponents,
-	ipAddress: input.ipAddress,
-	webView: false,
-	iFrame: false,
-	decryptedHeadHash: "",
-	siteKey: input.dapp,
-	ipInfo: input.ipInfo,
-	headers: input.flatHeaders,
-	mode: input.sessionMode,
-	userSitekeyIpHash: input.userSitekeyIpHash,
-	...(input.tcpToChelloUs !== undefined && {
-		tcpToChelloUs: input.tcpToChelloUs,
-	}),
-	...(input.chelloToHandshakeUs !== undefined && {
-		chelloToHandshakeUs: input.chelloToHandshakeUs,
-	}),
-});
+//
+// `bundleId` is resolved from the client's detectorSessionId (Redis binding
+// short-TTL) when the client actually ran a detector. Configured-captchaType
+// sitekeys still get a detector assigned by /detector/assign because the
+// widget doesn't know upstream that the sitekey is short-circuited — so the
+// binding is usually there. Empty-pool fallback has no binding to resolve,
+// so bundleId stays undefined and the attach path continues to no-op.
+const buildBypassSessionParams = async (input: ShortCircuitInput) => {
+	const bundleId = input.detectorSessionId
+		? (
+				await input.tasks.frictionlessManager.resolveBundleByDetectorSession(
+					input.detectorSessionId,
+				)
+			)?.bundleId
+		: undefined;
+	return {
+		// `sendCaptcha` requires a truthy token and dedup needs a unique value, so
+		// synthesise one when the client had no detector to produce it.
+		token: input.token || `nodetector-${uuidv4()}`,
+		score: 0,
+		threshold:
+			input.clientRecord.settings?.frictionlessThreshold ??
+			DEFAULT_FRICTIONLESS_THRESHOLD,
+		scoreComponents: { baseScore: 0 } as ScoreComponents,
+		ipAddress: input.ipAddress,
+		webView: false,
+		iFrame: false,
+		decryptedHeadHash: "",
+		siteKey: input.dapp,
+		ipInfo: input.ipInfo,
+		headers: input.flatHeaders,
+		mode: input.sessionMode,
+		userSitekeyIpHash: input.userSitekeyIpHash,
+		...(bundleId && { bundleId }),
+		...(input.tcpToChelloUs !== undefined && {
+			tcpToChelloUs: input.tcpToChelloUs,
+		}),
+		...(input.chelloToHandshakeUs !== undefined && {
+			chelloToHandshakeUs: input.chelloToHandshakeUs,
+		}),
+	};
+};
 
 /**
- * Universal "no detector ⇒ PoW" fallback. The detector lives only in the
- * provider-served pool bundles; when none is available for this request there
- * is no way to run (or decrypt) frictionless detection, so the provider serves
- * a real PoW challenge rather than the request failing or silently passing.
+ * Empty-pool PoW fallback. The detector lives only in the provider-served pool
+ * bundles; when this provider has none to assign (missing dir, empty dir, or
+ * all bundles failed to load) no client could have run detection, so it serves
+ * a real PoW challenge rather than failing the request.
  *
- * Fires when EITHER:
- *   - the pool is empty (missing dir, empty dir, or all bundles failed to
- *     load) — no provider has a bundle to assign; or
- *   - the client reported `detectorUnavailable` (it couldn't fetch/run a
- *     bundle this session) — even if the pool itself is populated.
- *
- * Returns null (proceed with normal scored detection) only when the pool has at
- * least one bundle AND the client ran one.
+ * This is a provider-side condition only. Nothing a client sends — an empty
+ * token included — can reach this path; a client that ran no detector is
+ * handled by the decision machine's missing-token gate.
  */
-export const runNoDetectorPowFallback = async (
+export const runEmptyDetectorPoolPowFallback = async (
 	input: ShortCircuitInput,
 	res: Response,
 ): Promise<Response | null> => {
 	const pool = getDetectorBundlePool();
-	const poolEmpty = !pool || pool.size() === 0;
-	if (!poolEmpty && !input.detectorUnavailable) {
+	if (pool && pool.size() > 0) {
 		return null;
 	}
 
-	const reason = poolEmpty
-		? "empty_detector_pool_pow_fallback"
-		: "client_detector_unavailable_pow_fallback";
 	input.logger.warn(() => ({
 		msg: "Frictionless decision",
 		data: {
 			requestId: input.requestId,
-			decision: reason,
+			decision: "empty_detector_pool_pow_fallback",
 			captchaType: CaptchaType.pow,
 		},
 	}));
@@ -122,7 +131,7 @@ export const runNoDetectorPowFallback = async (
 	attachHoneypot(res, input.clientRecord);
 	return res.json(
 		await input.tasks.frictionlessManager.sendPowCaptcha(
-			buildBypassSessionParams(input),
+			await buildBypassSessionParams(input),
 		),
 	);
 };
@@ -138,7 +147,7 @@ export const runConfiguredCaptchaTypeShortCircuit = async (
 		return null;
 	}
 
-	const sessionParams = buildBypassSessionParams(input);
+	const sessionParams = await buildBypassSessionParams(input);
 
 	input.logger.info(() => ({
 		msg: "Frictionless decision",
