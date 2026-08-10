@@ -11,14 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { getProcess } from "./process.js";
 import { LanguageSchema, Languages } from "./translations.js";
 
-// Guard the `process.env` read so the module is loadable in a plain browser
-// runtime where `process` is undefined. Without the guard, any side-effectful
+// Read through getProcess() so the module stays loadable in a plain browser
+// runtime where `process` is undefined. Without that guard, any side-effectful
 // runtime import of `@prosopo/types` (which transitively reaches here via
 // `LanguageSchema`) crashes the page in Vite's dev/preview mode.
-const logLevel =
-	typeof process !== "undefined" ? process.env?.PROSOPO_LOG_LEVEL : undefined;
+const logLevel = getProcess()?.env?.PROSOPO_LOG_LEVEL;
 
 export const i18nSharedOptions = {
 	debug: logLevel === "debug",
