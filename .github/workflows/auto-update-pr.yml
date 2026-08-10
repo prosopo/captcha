@@ -37,7 +37,7 @@ defaults:
 
 jobs:
   update-stale-pr:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(vars.GH_RUNNER || '"ubuntu-latest"') }}
     env:
       GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
       REPO: ${{ github.repository }}

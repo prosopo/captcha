@@ -37,7 +37,12 @@ import {
 	determineContextType,
 	getContextThreshold,
 } from "../contextAwareValidation.js";
-import { getRoundsFromSimScore } from "./constants.js";
+import {
+	DECRYPTION_FAILED_IMAGE_ROUNDS,
+	MISSING_HEAD_HASH_IMAGE_ROUNDS,
+	MISSING_TOKEN_IMAGE_ROUNDS,
+	getRoundsFromSimScore,
+} from "./constants.js";
 import { attachHoneypot } from "./honeypotResponse.js";
 
 export type DecisionMachineInput = {
@@ -59,6 +64,9 @@ export type DecisionMachineInput = {
 	botScore: number;
 	scoreComponents: ScoreComponents;
 	token: string;
+	// As received from the client, before decryption — the gates below read
+	// these to tell "sent nothing" apart from "sent something we can't open".
+	headHash: string;
 	botThreshold: number;
 	// Sanitised page URL the widget reported (origin + path, no query /
 	// fragment / credentials). Undefined when the client didn't report a
@@ -76,8 +84,9 @@ type ExpressHandle = {
 	next: NextFunction;
 };
 
-// Post-validation pipeline: UA → context → webview → timestamp → host →
-// score → default-pow. Always terminates the request.
+// Post-validation pipeline: payload presence → decrypt → UA → context →
+// webview → timestamp → host → score → default-pow. Runs after the access-rule
+// ladder in the handler. Always terminates the request.
 export const runDecisionMachine = async (
 	input: DecisionMachineInput,
 	handle: ExpressHandle,
@@ -93,6 +102,97 @@ export const runDecisionMachine = async (
 	} = input;
 	const { req, res } = handle;
 	let { botScore, scoreComponents } = input;
+
+	// An absent payload is never a pass. A client that ran no detector — for any
+	// reason, self-reported or not — has told us nothing about itself, so it
+	// solves an image captcha. Only the provider itself can skip detection
+	// (maintenance mode, empty bundle pool), and both do so before this point.
+	if (!input.token) {
+		req.logger.info(() => ({
+			msg: "Frictionless decision",
+			data: {
+				decision: "missing_token",
+				captchaType: CaptchaType.image,
+			},
+		}));
+		recordFrictionlessDecision("missing_token");
+		attachHoneypot(res, clientRecord);
+		return res.json(
+			await tasks.frictionlessManager.sendImageCaptcha({
+				solvedImagesCount: Math.min(
+					MISSING_TOKEN_IMAGE_ROUNDS,
+					clientRecord.settings.imageMaxRounds,
+				),
+				userSitekeyIpHash,
+				reason: FrictionlessReason.MISSING_TOKEN,
+				siteKey: dapp,
+				ipInfo,
+				headers: flatHeaders,
+			}),
+		);
+	}
+
+	if (!input.headHash) {
+		req.logger.info(() => ({
+			msg: "Frictionless decision",
+			data: {
+				decision: "missing_head_hash",
+				captchaType: CaptchaType.image,
+			},
+		}));
+		recordFrictionlessDecision("missing_head_hash");
+		attachHoneypot(res, clientRecord);
+		return res.json(
+			await tasks.frictionlessManager.sendImageCaptcha({
+				solvedImagesCount: Math.min(
+					MISSING_HEAD_HASH_IMAGE_ROUNDS,
+					clientRecord.settings.imageMaxRounds,
+				),
+				userSitekeyIpHash,
+				reason: FrictionlessReason.MISSING_HEAD_HASH,
+				siteKey: dapp,
+				ipInfo,
+				headers: flatHeaders,
+			}),
+		);
+	}
+
+	// A payload we couldn't decrypt tells us nothing about the client — it is
+	// not evidence of a bot, it is absence of evidence. Handle it explicitly and
+	// first, before any check that reads a decrypted field.
+	//
+	// This has to precede the user-agent check specifically. `decryptPayload`
+	// leaves `userAgent` and `userId` undefined on failure, so the comparison
+	// below is a real hash against `undefined` — it can never match, and every
+	// undecryptable session was being reported as USER_AGENT_MISMATCH and sized
+	// by `timestampDecayFunction`'s decryption-failed arm (6 rounds). Behind
+	// that sat two more accidents waiting on the synthetic `baseBotScore = 1` /
+	// `timestamp = 0`: a hard 401 on any sitekey with `autoBanScoreThreshold`
+	// set, and the old-timestamp branch. None of the three was meant for this.
+	if (input.decryptionFailed) {
+		req.logger.info(() => ({
+			msg: "Frictionless decision",
+			data: {
+				decision: "decryption_failed",
+				captchaType: CaptchaType.image,
+			},
+		}));
+		recordFrictionlessDecision("decryption_failed");
+		attachHoneypot(res, clientRecord);
+		return res.json(
+			await tasks.frictionlessManager.sendImageCaptcha({
+				solvedImagesCount: Math.min(
+					DECRYPTION_FAILED_IMAGE_ROUNDS,
+					clientRecord.settings.imageMaxRounds,
+				),
+				userSitekeyIpHash,
+				reason: FrictionlessReason.DECRYPTION_FAILED,
+				siteKey: dapp,
+				ipInfo,
+				headers: flatHeaders,
+			}),
+		);
+	}
 
 	const userAgentMismatchResponse = await runUserAgentMismatchCheck(
 		input,
@@ -194,7 +294,6 @@ export const runDecisionMachine = async (
 			await tasks.frictionlessManager.sendImageCaptcha({
 				solvedImagesCount: timestampDecayFunction(
 					input.timestamp,
-					input.decryptionFailed,
 					clientRecord.settings.imageMaxRounds,
 				),
 				userSitekeyIpHash,
@@ -328,7 +427,6 @@ const runUserAgentMismatchCheck = async (
 		await input.tasks.frictionlessManager.sendImageCaptcha({
 			solvedImagesCount: timestampDecayFunction(
 				input.timestamp,
-				input.decryptionFailed,
 				input.clientRecord.settings.imageMaxRounds,
 			),
 			userSitekeyIpHash: input.userSitekeyIpHash,

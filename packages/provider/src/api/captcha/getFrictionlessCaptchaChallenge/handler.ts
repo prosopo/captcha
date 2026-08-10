@@ -27,6 +27,7 @@ import {
 } from "@prosopo/user-access-policy";
 import { flatten, isProtectDeployment, sanitisePageUrl } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
+import { v4 as uuidv4 } from "uuid";
 import { getCompositeIpAddress } from "../../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../../express.js";
 import { Tasks } from "../../../tasks/index.js";
@@ -50,7 +51,10 @@ import { runDecisionMachine } from "./decisionMachine.js";
 import { decryptIncomingSimdReadings } from "./decryptSimdReadings.js";
 import { attachHoneypot } from "./honeypotResponse.js";
 import { resolveSessionDedup } from "./sessionDedup.js";
-import { runConfiguredCaptchaTypeShortCircuit } from "./shortCircuit.js";
+import {
+	runConfiguredCaptchaTypeShortCircuit,
+	runEmptyDetectorPoolPowFallback,
+} from "./shortCircuit.js";
 
 export default (
 	env: ProviderEnvironment,
@@ -80,6 +84,7 @@ export default (
 				user,
 				mode,
 				simdReadings,
+				detectorSessionId,
 				currentUrl: reportedCurrentUrl,
 				iframeUrl: reportedIframeUrl,
 			} = GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
@@ -102,6 +107,11 @@ export default (
 			// without re-parsing hosts. Only persisted when true — see the
 			// sparse index on {isProtect, createdAt}.
 			const isProtect = isProtectDeployment(currentUrl, iframeUrl);
+
+			// Sessions need a unique, truthy token for dedup, so synthesise one
+			// when the client had no detector to produce it. The raw `token` is
+			// what the decision machine's missing-token gate reads.
+			const sessionToken = token || `notoken-${uuidv4()}`;
 
 			const normalizedIp = normalizeRequestIp(req.ip, req.logger);
 			const sessionMode =
@@ -170,7 +180,11 @@ export default (
 			// handles.
 			const [decodedSimdReadings, { existingToken, dedup }, clientRecord] =
 				await Promise.all([
-					decryptIncomingSimdReadings(tasks.frictionlessManager, simdReadings),
+					decryptIncomingSimdReadings(
+						tasks.frictionlessManager,
+						simdReadings,
+						detectorSessionId,
+					),
 					resolveSessionDedup(tasks, token, userSitekeyIpHash, req.logger),
 					tasks.db.getClientRecord(dapp),
 				]);
@@ -395,29 +409,45 @@ export default (
 					? req.ipInfo.asnNumber
 					: undefined;
 
+			const shortCircuitInput = {
+				tasks,
+				env,
+				clientRecord,
+				token,
+				dapp,
+				ipAddress,
+				ipInfo: req.ipInfo,
+				flatHeaders,
+				sessionMode,
+				userSitekeyIpHash,
+				requestId: req.requestId,
+				logger: req.logger,
+				// Thread the client's detector session id through so the
+				// bypass paths (configured-captchaType + empty-pool pow
+				// fallback) can promote the resolved bundleId onto the
+				// session and enable later SIMD / BDP attach to decrypt.
+				...(detectorSessionId && { detectorSessionId }),
+				...(req.tcpToChelloUs !== undefined && {
+					tcpToChelloUs: req.tcpToChelloUs,
+				}),
+				...(req.chelloToHandshakeUs !== undefined && {
+					chelloToHandshakeUs: req.chelloToHandshakeUs,
+				}),
+			};
+
 			const shortCircuitResponse = await runConfiguredCaptchaTypeShortCircuit(
-				{
-					tasks,
-					env,
-					clientRecord,
-					token,
-					dapp,
-					ipAddress,
-					ipInfo: req.ipInfo,
-					flatHeaders,
-					sessionMode,
-					userSitekeyIpHash,
-					logger: req.logger,
-					...(req.tcpToChelloUs !== undefined && {
-						tcpToChelloUs: req.tcpToChelloUs,
-					}),
-					...(req.chelloToHandshakeUs !== undefined && {
-						chelloToHandshakeUs: req.chelloToHandshakeUs,
-					}),
-				},
+				shortCircuitInput,
 				res,
 			);
 			if (shortCircuitResponse) return shortCircuitResponse;
+
+			// This provider has no bundles to assign, so no client could have run
+			// detection — serve a real PoW challenge.
+			const emptyPoolResponse = await runEmptyDetectorPoolPowFallback(
+				shortCircuitInput,
+				res,
+			);
+			if (emptyPoolResponse) return emptyPoolResponse;
 
 			const lScore = tasks.frictionlessManager.checkLangRules(
 				req.headers["accept-language"] || "",
@@ -440,7 +470,11 @@ export default (
 			// them depends on the others' outputs — running them in
 			// series previously added up to ~50-80ms on the hot path.
 			const [decryptedPayload, validation, accessPolicies] = await Promise.all([
-				tasks.frictionlessManager.decryptPayload(token, headHash),
+				tasks.frictionlessManager.decryptPayload(
+					token,
+					headHash,
+					detectorSessionId,
+				),
 				tasks.frictionlessManager.isValidRequest(
 					clientRecord,
 					CaptchaType.frictionless,
@@ -468,6 +502,7 @@ export default (
 				entropyCryptoFingerprint,
 				entropyWallClockOffsetMs,
 				entropyMathRandomFirst,
+				bundleId,
 			} = decryptedPayload;
 
 			// Test-only override: cypress can't produce a server-decryptable
@@ -538,7 +573,7 @@ export default (
 			};
 
 			tasks.frictionlessManager.setSessionParams({
-				token,
+				token: sessionToken,
 				score: botScore,
 				threshold: botThreshold,
 				scoreComponents,
@@ -553,6 +588,10 @@ export default (
 				ipInfo: req.ipInfo,
 				headers: flatHeaders,
 				mode: sessionMode,
+				// Promote the resolved pool bundle onto the session so later hops
+				// (SIMD attach, PoW/puzzle/image solution submit) can resolve the
+				// same keypair + inner cipher to decrypt their payloads.
+				...(bundleId && { bundleId }),
 				...(decodedSimdReadings && { simdReadings: decodedSimdReadings }),
 				...(entropyMathRandomFingerprint !== undefined && {
 					entropyMathRandomFingerprint,
@@ -652,6 +691,7 @@ export default (
 					botScore,
 					scoreComponents,
 					token,
+					headHash,
 					botThreshold,
 					currentUrl,
 					iframeUrl,

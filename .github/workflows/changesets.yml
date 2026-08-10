@@ -29,7 +29,7 @@ defaults:
 jobs:
   check:
     name: check
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(vars.GH_RUNNER || '"ubuntu-latest"') }}
     # Skip if PR title starts with "Release v"
     if: ${{ !startsWith(github.event.pull_request.title, 'Release v') }}
     steps:

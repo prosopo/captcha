@@ -1,5 +1,90 @@
 # @prosopo/procaptcha-bundle
 
+## 4.1.48
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+  - @prosopo/types@5.0.2
+  - @prosopo/procaptcha-common@2.11.22
+  - @prosopo/procaptcha-frictionless@2.13.4
+
+## 4.1.47
+### Patch Changes
+
+- 3a77cea: Report why the detector was unavailable instead of swallowing it.
+  
+  `customDetectBot` wraps provider selection, the assign request and the blob-URL
+  import in one `try`, and the `catch` was empty. Falling back is correct — there
+  is no bundled detector, so a failure here means the frictionless POST goes out
+  with an empty token and the provider decides what to serve. But the reasons are
+  not equal: a slow network is routine, whereas a pool bundle that throws on
+  import degrades **every** session on that provider to an image captcha, with
+  nothing in the client console or the provider logs to say why.
+  
+  That is not hypothetical. A detector pool built at catcher 3.1.48 emitted
+  bundles that died on evaluation with `Class constructor D cannot be invoked
+  without 'new'` — an obfuscator seed collision that renamed a class over a live
+  binding. Every staging session silently fell back to an image captcha, and the
+  only way to find it was to reproduce the blob import by hand in a browser: the
+  provider logged a healthy `bundle pool loaded count=20` and served the bundles
+  happily, because from its side nothing had failed.
+  
+  The catch stays broad and the fallback is unchanged; it now `console.error`s
+  what it caught, matching how the sibling `procaptcha-common` modules report.
+- Updated dependencies [3a77cea]
+  - @prosopo/procaptcha-frictionless@2.13.3
+
+## 4.1.46
+### Patch Changes
+
+- 5d60541: Stop dropping detector bundles that arrive slowly, which made the frictionless POST go out with an empty token and no `detectorSessionId` — the provider then scored the session at 0 and served a challenge.
+  
+  `ASSIGN_TIMEOUT_MS` was 2000 ms and covered two legs. The assign POST serves the detector inline (~215 KB gzipped) over a connection that is always cold, because `/healthz` pins a different hostname than the assign target: fresh DNS, TLS and a CORS preflight all had to fit in the budget alongside the download, measured at 6.7s against staging. The cap is now 10 s and applies only to that request; the blob-URL import that parses and evaluates the bundle is untimed, since a timer cannot rescue a stalled main thread and only discards a bundle already in hand.
+  
+  `render()` and the invisible-button path now start the detector prefetch too. Only implicit render did, so pages using the explicit API — including any page that loads the bundle via dynamic import, where implicit render never runs — assigned a detector inline on the widget's critical path with no prefetch to fall back on.
+- Updated dependencies [5d60541]
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/procaptcha-frictionless@2.13.2
+  - @prosopo/types@5.0.1
+  - @prosopo/locale@3.2.9
+  - @prosopo/dotenv@3.0.51
+  - @prosopo/procaptcha-common@2.11.21
+
+## 4.1.45
+### Patch Changes
+
+- fa4fedb: Start the detector-bundle assignment at page load instead of after the widget mounts.
+  
+  Since the detector moved into the provider-served pool, the frictionless flow cannot begin until `/detector/assign` returns. That request was issued by `customDetectBot`, which only runs once React has mounted the widget — so it queued behind the bundle's dynamic-import chain. Measured on the staging demo, `assign` did not leave the browser until **1513 ms**, of which ~700 ms was purely waiting for chunks to arrive in sequence.
+  
+  Nothing in that request depends on React, i18n or the widget config: it needs the site key (a DOM attribute), the environment (a build-time constant) and the IP-mode flags (DOM attributes). The bundle entry now kicks it off as soon as it has read those, and `customDetectBot` claims the in-flight promise instead of starting its own.
+  
+  The prefetch is loaded by dynamic import so the provider selector and API client do not land in the entry chunk and delay first paint; the entry grows by ~400 bytes. It is fire-and-forget — a failed prefetch is indistinguishable from no prefetch, and the existing fallback path still resolves a provider itself.
+  
+  The cache is single-use and keyed on `(environment, ipMode, siteKey)`, so a retry — which is retrying precisely because the pinned pronode failed — re-resolves rather than reusing a stale pin, and a second widget with different flags cannot claim another's assignment.
+- Updated dependencies [fa4fedb]
+  - @prosopo/procaptcha-frictionless@2.13.1
+
+## 4.1.44
+### Patch Changes
+
+- 787017b: Keep util-crypto in the shared browser chunk. Split into its own chunk it
+  formed a Rolldown chunk cycle with the fingerprint chunk on the detector-pool
+  branch, where the detector is no longer bundled into the widget. Whichever
+  chunk evaluated first read the other's module-scope bindings before they were
+  assigned, so the widget threw on load ("init_dist is not a function", then
+  isHex reading `.test` of undefined) and never defined window.procaptcha.
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [6f19cde]
+- Updated dependencies [2bc8e73]
+  - @prosopo/types@5.0.0
+  - @prosopo/procaptcha-frictionless@2.13.0
+  - @prosopo/widget-skeleton@2.8.5
+  - @prosopo/procaptcha-common@2.11.20
+
 ## 4.1.43
 ### Patch Changes
 
