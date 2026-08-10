@@ -43,6 +43,7 @@
 		"INVALID_BODY": "无效的主体",
 		"PARSE_ERROR": "解析请求时出错",
 		"SPAM_EMAIL_RULE": "电子邮件地址被垃圾邮件过滤规则拦截",
+		"SPAM_EMAIL_COUNT_EXCEEDED": "该电子邮件地址提交次数过多",
 		"VPN_BLOCKED": "此网站不允许来自VPN连接的请求",
 		"PROXY_BLOCKED": "此网站不允许来自代理服务器的请求",
 		"TOR_BLOCKED": "此网站不允许来自Tor出口节点的请求",

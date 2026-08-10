@@ -43,6 +43,7 @@
 		"INVALID_BODY": "Yanlış bədən",
 		"PARSE_ERROR": "Tələbi pars edərkən səhv baş verdi",
 		"SPAM_EMAIL_RULE": "E-poçt ünvanı spam filtr qaydaları ilə bloklanıb",
+		"SPAM_EMAIL_COUNT_EXCEEDED": "Bu e-poçt ünvanından çox sayda göndəriş",
 		"VPN_BLOCKED": "Bu sayt üçün VPN bağlantılarından sorğulara icazə verilmir",
 		"PROXY_BLOCKED": "Bu sayt üçün proksi serverlərdən sorğulara icazə verilmir",
 		"TOR_BLOCKED": "Bu sayt üçün Tor çıxış qovşaqlarından sorğulara icazə verilmir",

@@ -130,6 +130,21 @@ export const getUserFromJWT = (req: Request): string | undefined => {
 };
 
 /**
+ * `.listen()` returns before the socket is bound, so a bind failure such as
+ * EADDRINUSE arrives later as an 'error' event — an uncaught exception unless
+ * something is waiting on it. Settle on whichever event comes first so the
+ * caller gets a rejection it can handle.
+ */
+const awaitListening = (server: Server): Promise<void> =>
+	new Promise((resolve, reject) => {
+		server.once("error", reject);
+		server.once("listening", () => {
+			server.removeListener("error", reject);
+			resolve();
+		});
+	});
+
+/**
  * Start the Prosopo Provider API server
  *
  * This function creates and configures an Express server with all necessary middleware
@@ -436,19 +451,22 @@ export async function startProviderApi(
 			key: fs.readFileSync(keyPath),
 			cert: fs.readFileSync(crtPath),
 		};
-		const httpsServer = https.createServer(httpsOptions, apiApp);
-		return httpsServer.listen(apiPort, () => {
-			env.logger.info(() => ({
-				data: { apiPort, protocol: "https" },
-				msg: "Prosopo app listening with HTTPS",
-			}));
-		});
+		const httpsServer = https
+			.createServer(httpsOptions, apiApp)
+			.listen(apiPort);
+		await awaitListening(httpsServer);
+		env.logger.info(() => ({
+			data: { apiPort, protocol: "https" },
+			msg: "Prosopo app listening with HTTPS",
+		}));
+		return httpsServer;
 	}
 
-	return apiApp.listen(apiPort, () => {
-		env.logger.info(() => ({
-			data: { apiPort },
-			msg: "Prosopo app listening",
-		}));
-	});
+	const server = apiApp.listen(apiPort);
+	await awaitListening(server);
+	env.logger.info(() => ({
+		data: { apiPort },
+		msg: "Prosopo app listening",
+	}));
+	return server;
 }
