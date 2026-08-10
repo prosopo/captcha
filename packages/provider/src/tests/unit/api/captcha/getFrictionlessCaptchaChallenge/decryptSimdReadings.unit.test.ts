@@ -16,12 +16,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { decryptIncomingSimdReadings } from "../../../../../api/captcha/getFrictionlessCaptchaChallenge/decryptSimdReadings.js";
 
 type FrictionlessManagerLike = {
-	getDetectorKeys: ReturnType<typeof vi.fn>;
+	resolveBundleByDetectorSession: ReturnType<typeof vi.fn>;
 	decryptSimdReadings: ReturnType<typeof vi.fn>;
 };
 
 const buildManager = (): FrictionlessManagerLike => ({
-	getDetectorKeys: vi.fn().mockResolvedValue(["k1"]),
+	resolveBundleByDetectorSession: vi
+		.fn()
+		.mockResolvedValue({ key: "pk", innerConfig: "c" }),
 	decryptSimdReadings: vi.fn(),
 });
 
@@ -33,14 +35,22 @@ describe("decryptIncomingSimdReadings", () => {
 	});
 
 	it("returns undefined when no ciphertext is provided", async () => {
-		const r = await decryptIncomingSimdReadings(manager as never, undefined);
+		const r = await decryptIncomingSimdReadings(
+			manager as never,
+			undefined,
+			"det-1",
+		);
 		expect(r).toBeUndefined();
 		expect(manager.decryptSimdReadings).not.toHaveBeenCalled();
 	});
 
 	it("returns undefined when decryption yields nothing", async () => {
 		manager.decryptSimdReadings.mockResolvedValueOnce(undefined);
-		const r = await decryptIncomingSimdReadings(manager as never, "blob");
+		const r = await decryptIncomingSimdReadings(
+			manager as never,
+			"blob",
+			"det-1",
+		);
 		expect(r).toBeUndefined();
 	});
 
@@ -50,7 +60,11 @@ describe("decryptIncomingSimdReadings", () => {
 			supported: true,
 			ops: [{ name: "x", duration: 1 }],
 		});
-		const r = await decryptIncomingSimdReadings(manager as never, "blob");
+		const r = await decryptIncomingSimdReadings(
+			manager as never,
+			"blob",
+			"det-1",
+		);
 		expect(r).toEqual({
 			supported: true,
 			ops: [{ name: "x", duration: 1 }],
@@ -58,14 +72,14 @@ describe("decryptIncomingSimdReadings", () => {
 		expect((r as Record<string, unknown>)?.timestamp).toBeUndefined();
 	});
 
-	it("passes the detector keys plus the env fallback to decrypt", async () => {
-		process.env.BOT_DECRYPTION_KEY = "envk";
+	it("resolves the session's bundle via detectorSessionId and decrypts with it", async () => {
+		const bundle = { key: "pk", innerConfig: "c" };
+		manager.resolveBundleByDetectorSession.mockResolvedValueOnce(bundle);
 		manager.decryptSimdReadings.mockResolvedValueOnce({ supported: true });
-		await decryptIncomingSimdReadings(manager as never, "blob");
-		expect(manager.decryptSimdReadings).toHaveBeenCalledWith("blob", [
-			"k1",
-			"envk",
-		]);
-		process.env.BOT_DECRYPTION_KEY = undefined;
+		await decryptIncomingSimdReadings(manager as never, "blob", "det-1");
+		expect(manager.resolveBundleByDetectorSession).toHaveBeenCalledWith(
+			"det-1",
+		);
+		expect(manager.decryptSimdReadings).toHaveBeenCalledWith("blob", bundle);
 	});
 });

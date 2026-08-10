@@ -1,5 +1,35 @@
 # @prosopo/procaptcha-common
 
+## 2.11.22
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+  - @prosopo/types@5.0.2
+  - @prosopo/account@2.8.68
+  - @prosopo/load-balancer@2.10.19
+
+## 2.11.21
+### Patch Changes
+
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/types@5.0.1
+  - @prosopo/account@2.8.67
+  - @prosopo/load-balancer@2.10.18
+
+## 2.11.20
+### Patch Changes
+
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [6f19cde]
+- Updated dependencies [2bc8e73]
+  - @prosopo/types@5.0.0
+  - @prosopo/widget-skeleton@2.8.5
+  - @prosopo/account@2.8.66
+  - @prosopo/load-balancer@2.10.17
+
 ## 2.11.19
 ### Patch Changes
 

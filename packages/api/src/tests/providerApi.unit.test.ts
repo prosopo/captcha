@@ -556,6 +556,7 @@ describe("getFrictionlessCaptcha", () => {
 			USER,
 			ModeEnum.invisible,
 			"readings",
+			undefined, // detectorSessionId
 			"https://site.example/page",
 			"https://iframe.example",
 		);
@@ -768,24 +769,6 @@ describe("the admin endpoints", () => {
 			),
 		).toThrow();
 		expect(fetchStub.requests).toHaveLength(0);
-	});
-
-	test("updates the detector key", async () => {
-		await api().updateDetectorKey("0xdetector", JWT);
-		expect(fetchStub.last().url).toBe(
-			`${BASE_URL}${AdminApiPaths.UpdateDetectorKey}`,
-		);
-		expect(body()).toEqual({ detectorKey: "0xdetector" });
-	});
-
-	test("removes a detector key, with an optional expiry", async () => {
-		await api().removeDetectorKey("0xdetector", JWT);
-		expect(fetchStub.last().url).toBe(
-			`${BASE_URL}${AdminApiPaths.RemoveDetectorKey}`,
-		);
-		expect(body()).toMatchObject({ detectorKey: "0xdetector" });
-		await api().removeDetectorKey("0xdetector", JWT, 60);
-		expect(body()).toMatchObject({ expirationInSeconds: 60 });
 	});
 
 	test("updates a decision machine with its full descriptor", async () => {

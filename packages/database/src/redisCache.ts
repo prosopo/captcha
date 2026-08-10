@@ -32,9 +32,19 @@ const bigIntReviver = (_key: string, value: unknown): unknown =>
 
 const SESSION_KEY_PATTERNS = [
 	"cache:session:*",
+	"cache:detector:*",
 	"writeq:session:*",
 	"writeq:session:pending",
 ] as const;
+
+/**
+ * Default TTL (seconds) for the ephemeral detector-session → bundle mapping.
+ * Deliberately short: it only needs to bridge bundle assignment → the first
+ * provider call (load + run detector + submit). The bundleId is promoted onto
+ * the session record for later (behavioural) hops. An expired mapping makes
+ * decryption fail closed (invalid payload).
+ */
+export const DETECTOR_BUNDLE_TTL_SECONDS = 60;
 
 /**
  * Redis-backed write queue and read cache for reducing MongoDB load.
@@ -274,6 +284,58 @@ export class RedisWriteQueue {
 				msg: "Failed to get cached session hash from Redis",
 				err: error,
 				userSitekeyIpHash,
+			}));
+			return null;
+		}
+	}
+
+	// ── Detector bundle assignment (short-TTL ephemeral mapping) ─────────
+
+	/**
+	 * Bind a detector session id to the precomputed bundle assigned to it. Short
+	 * TTL by design (see {@link DETECTOR_BUNDLE_TTL_SECONDS}). Returns false if
+	 * Redis is unavailable so the caller can fail closed.
+	 */
+	async cacheDetectorBundle(
+		detectorSessionId: string,
+		bundleId: string,
+		ttlSeconds: number = DETECTOR_BUNDLE_TTL_SECONDS,
+	): Promise<boolean> {
+		const client = await this.getClient();
+		if (!client) {
+			return false;
+		}
+		try {
+			await client.set(`cache:detector:${detectorSessionId}`, bundleId, {
+				EX: ttlSeconds,
+			});
+			return true;
+		} catch (error) {
+			this.logger.warn(() => ({
+				msg: "Failed to cache detector bundle assignment in Redis",
+				err: error,
+				detectorSessionId,
+			}));
+			return false;
+		}
+	}
+
+	/**
+	 * Resolve the bundle id assigned to a detector session id, or null if the
+	 * mapping is absent/expired (⇒ caller treats the payload as invalid).
+	 */
+	async getDetectorBundle(detectorSessionId: string): Promise<string | null> {
+		const client = await this.getClient();
+		if (!client) {
+			return null;
+		}
+		try {
+			return await client.get(`cache:detector:${detectorSessionId}`);
+		} catch (error) {
+			this.logger.warn(() => ({
+				msg: "Failed to get detector bundle assignment from Redis",
+				err: error,
+				detectorSessionId,
 			}));
 			return null;
 		}
