@@ -39,7 +39,6 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"devDependencies": {
-		"jsdom": "25.0.0",
 		"@prosopo/config": "3.3.7",
 		"@types/jsdom": "21.1.7",
 		"@types/node": "22.10.2",
