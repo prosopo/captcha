@@ -31,6 +31,24 @@ export const defaultServices: Service[] = [
 ];
 
 /**
+ * True for URLs pointing at this machine. An unparseable URL counts as remote so
+ * the safe branch is the fallback.
+ */
+export function isLoopback(url: string): boolean {
+	try {
+		const { hostname } = new URL(url);
+		return (
+			hostname === "localhost" ||
+			hostname === "127.0.0.1" ||
+			hostname === "[::1]" ||
+			hostname === "::1"
+		);
+	} catch {
+		return false;
+	}
+}
+
+/**
  * A single reachability probe. Never rejects: a connection error, a non-200
  * status and a timeout are all just "not ready yet", because the whole point is
  * to poll services that are still coming up.
@@ -40,7 +58,13 @@ export async function checkService(
 	timeoutMs = 2000,
 ): Promise<boolean> {
 	return new Promise((resolve) => {
-		const req = https.get(url, { rejectUnauthorized: false }, (res) => {
+		// The dev stack serves self-signed certs, so validation has to be off for
+		// the probe to connect at all - but only ever for loopback. Anything else
+		// keeps the default verification, so a mistyped or remote URL can never
+		// silently downgrade to an unauthenticated connection.
+		const rejectUnauthorized = !isLoopback(url);
+		// codeql[js/disabling-certificate-validation]
+		const req = https.get(url, { rejectUnauthorized }, (res) => {
 			resolve(res.statusCode === 200 || res.statusCode === 304);
 		});
 		req.on("error", () => resolve(false));
