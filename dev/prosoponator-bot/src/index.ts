@@ -11,8 +11,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-const main = async () => {
-	console.log("index.ts");
-};
 
-main();
+export * from "./bot.js";
+export * from "./isMain.js";
+
+import { main } from "./bot.js";
+import { isMain } from "./isMain.js";
+
+// The bot used to run on import: bot.ts called run() at module scope and
+// index.ts only logged its own name. Importing the package now has no effect.
+if (isMain(import.meta.url)) {
+	// Not awaited: a top-level await cannot be emitted in the cjs build, and
+	// main() reports its own failures through core.setFailed rather than
+	// rejecting.
+	void main();
+}
