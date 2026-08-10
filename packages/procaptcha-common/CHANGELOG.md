@@ -1,5 +1,213 @@
 # @prosopo/procaptcha-common
 
+## 2.11.22
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+  - @prosopo/types@5.0.2
+  - @prosopo/account@2.8.68
+  - @prosopo/load-balancer@2.10.19
+
+## 2.11.21
+### Patch Changes
+
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/types@5.0.1
+  - @prosopo/account@2.8.67
+  - @prosopo/load-balancer@2.10.18
+
+## 2.11.20
+### Patch Changes
+
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [6f19cde]
+- Updated dependencies [2bc8e73]
+  - @prosopo/types@5.0.0
+  - @prosopo/widget-skeleton@2.8.5
+  - @prosopo/account@2.8.66
+  - @prosopo/load-balancer@2.10.17
+
+## 2.11.19
+### Patch Changes
+
+  - @prosopo/account@2.8.65
+
+## 2.11.18
+### Patch Changes
+
+- ab3499c: feat(procaptcha): block on SIMD readings at solution submit
+  
+  Solution submit is the last hop the client controls, so it's the last chance to
+  attach the catcher's WASM SIMD readings for a session. The image, PoW and puzzle
+  managers now wait for the benchmark there via a shared
+  `getSimdReadingsForSubmit` helper, capped at 5s, instead of attaching only
+  whatever the prefetch happened to have resolved.
+  
+  The helper passes the budget down to the detector *and* races it locally — the
+  detector ships prebuilt, so a bundle that ignores `timeoutMs` (or a benchmark
+  wedged on a busy main thread) can't hang the submission. It never rejects: a
+  missing accessor, a rejection, a synchronous throw and a timeout all resolve to
+  `undefined` and the solution is submitted without readings, so a user is never
+  failed over telemetry.
+  
+  The earlier frictionless POST and challenge GET hops are unchanged and remain
+  non-blocking.
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [103318c]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+  - @prosopo/types@4.10.0
+  - @prosopo/account@2.8.64
+  - @prosopo/load-balancer@2.10.16
+
+## 2.11.17
+### Patch Changes
+
+- Updated dependencies [a0cb39e]
+  - @prosopo/types@4.9.12
+  - @prosopo/account@2.8.63
+  - @prosopo/load-balancer@2.10.15
+
+## 2.11.16
+### Patch Changes
+
+- Updated dependencies [b9ca0e7]
+  - @prosopo/types@4.9.11
+  - @prosopo/account@2.8.62
+  - @prosopo/load-balancer@2.10.14
+
+## 2.11.15
+### Patch Changes
+
+- Updated dependencies [a39c4ec]
+  - @prosopo/load-balancer@2.10.13
+
+## 2.11.14
+### Patch Changes
+
+- Updated dependencies [0a4f902]
+  - @prosopo/types@4.9.10
+  - @prosopo/account@2.8.61
+  - @prosopo/load-balancer@2.10.12
+
+## 2.11.13
+### Patch Changes
+
+  - @prosopo/types@4.9.9
+  - @prosopo/account@2.8.60
+  - @prosopo/load-balancer@2.10.11
+
+## 2.11.12
+### Patch Changes
+
+- Updated dependencies [b0d446f]
+  - @prosopo/account@2.8.59
+
+## 2.11.11
+### Patch Changes
+
+- Updated dependencies [ced80a4]
+  - @prosopo/account@2.8.58
+
+## 2.11.10
+### Patch Changes
+
+  - @prosopo/account@2.8.57
+  - @prosopo/load-balancer@2.10.10
+
+## 2.11.9
+### Patch Changes
+
+- Updated dependencies [85e8857]
+  - @prosopo/types@4.9.8
+  - @prosopo/account@2.8.56
+  - @prosopo/load-balancer@2.10.9
+
+## 2.11.8
+### Patch Changes
+
+- Updated dependencies [8bde5df]
+  - @prosopo/types@4.9.7
+  - @prosopo/account@2.8.55
+  - @prosopo/load-balancer@2.10.8
+
+## 2.11.7
+### Patch Changes
+
+- b3f351b: fix(procaptcha): random provider re-selection + backoff on error fallback
+  
+  When a provider errored, the widget retried the same DNS-routed endpoint immediately and in a tight loop. A fleet of widgets whose provider was unhealthy could therefore accidentally DDoS the provider fleet — retrying the same (possibly-down) endpoint as fast as the event loop allowed.
+  
+  The error-fallback path now:
+  
+  - **Re-selects a different provider on retry.** The first attempt still hits the DNS-routed endpoint (unchanged happy path, preserves session stickiness). On a retry the widget picks a random provider straight from the provider list (`getRandomProviderFromList`), weighted by provider capacity and excluding the URL that just failed. In development the list holds only the single local provider, so a retry simply re-targets that provider.
+  - **Backs off between retries.** `providerRetry` now waits an exponential-backoff-with-full-jitter delay (0.5s → 1s → 2s → 4s …, capped at 10s) before retrying, so a down provider is no longer hammered and a fleet of clients that all errored at once don't reconverge into a thundering herd.
+  
+  Applies to the image, PoW and puzzle managers and the frictionless detection flow. New shared `ProviderSelectRetryContext` type; `BotDetectionFunction` gains an optional retry-context argument.
+- Updated dependencies [b3f351b]
+- Updated dependencies [17bc76e]
+  - @prosopo/load-balancer@2.10.7
+  - @prosopo/types@4.9.6
+  - @prosopo/account@2.8.54
+
+## 2.11.6
+### Patch Changes
+
+- Updated dependencies [6cb3218]
+  - @prosopo/types@4.9.5
+  - @prosopo/account@2.8.53
+  - @prosopo/load-balancer@2.10.6
+
+## 2.11.5
+### Patch Changes
+
+- Updated dependencies [de12b31]
+- Updated dependencies [770954b]
+  - @prosopo/types@4.9.4
+  - @prosopo/account@2.8.52
+  - @prosopo/load-balancer@2.10.5
+
+## 2.11.4
+### Patch Changes
+
+- Updated dependencies [18d0287]
+  - @prosopo/types@4.9.3
+  - @prosopo/account@2.8.51
+  - @prosopo/load-balancer@2.10.4
+
+## 2.11.3
+### Patch Changes
+
+- Updated dependencies [7a434e0]
+  - @prosopo/types@4.9.2
+  - @prosopo/account@2.8.50
+  - @prosopo/load-balancer@2.10.3
+
+## 2.11.2
+### Patch Changes
+
+- Updated dependencies [8986976]
+- Updated dependencies [970bca2]
+  - @prosopo/types@4.9.1
+  - @prosopo/account@2.8.49
+  - @prosopo/load-balancer@2.10.2
+
+## 2.11.1
+### Patch Changes
+
+- Updated dependencies [6ecc576]
+- Updated dependencies [619dc9f]
+- Updated dependencies [b166037]
+- Updated dependencies [1111ff2]
+- Updated dependencies [6a7b122]
+  - @prosopo/widget-skeleton@2.8.4
+  - @prosopo/types@4.9.0
+  - @prosopo/load-balancer@2.10.1
+  - @prosopo/account@2.8.48
+
 ## 2.11.0
 ### Minor Changes
 

@@ -1,5 +1,266 @@
 # @prosopo/procaptcha-react
 
+## 2.9.102
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+  - @prosopo/types@5.0.2
+  - @prosopo/procaptcha@2.10.63
+  - @prosopo/procaptcha-common@2.11.22
+
+## 2.9.101
+### Patch Changes
+
+- Updated dependencies [9fec7bd]
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/common@3.1.49
+  - @prosopo/types@5.0.1
+  - @prosopo/locale@3.2.9
+  - @prosopo/procaptcha@2.10.62
+  - @prosopo/procaptcha-common@2.11.21
+
+## 2.9.100
+### Patch Changes
+
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [6f19cde]
+- Updated dependencies [2bc8e73]
+  - @prosopo/types@5.0.0
+  - @prosopo/widget-skeleton@2.8.5
+  - @prosopo/procaptcha@2.10.61
+  - @prosopo/procaptcha-common@2.11.20
+
+## 2.9.99
+### Patch Changes
+
+  - @prosopo/procaptcha-common@2.11.19
+  - @prosopo/procaptcha@2.10.60
+
+## 2.9.98
+### Patch Changes
+
+- 52a6d96: Add unit and type tests for the React image-captcha widget: the button, modal
+  portal, captcha grid and round component, the event collector, the lazy
+  boundary, and the widget itself (visible and invisible modes, honeypot,
+  autoStart, session invalidation, the procaptcha:execute event, language
+  handling and the checkbox flow). 174 tests, 98%+ statement, line and function
+  coverage.
+  
+  Changes found while writing them:
+  
+  - A failed `manager.start()` from a checkbox click left the loading spinner up
+    permanently, with no way back to the checkbox, and produced an unhandled
+    rejection.
+  - `CaptchaComponent` wrapped an out-of-range round index, silently rendering a
+    different round's images; it now rejects the index.
+  - Removed unreachable branches in `CaptchaWidget` and `ProcaptchaWidget` that
+    read touch coordinates off a React synthetic click, which never carries them.
+    This also removed the package's `any` and `@ts-ignore` uses: the image retry
+    counter now lives in a data attribute rather than an untyped property.
+- Updated dependencies [cc022be]
+  - @prosopo/procaptcha@2.10.59
+
+## 2.9.97
+### Patch Changes
+
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [2c47bb7]
+- Updated dependencies [ab3499c]
+- Updated dependencies [0e1171c]
+- Updated dependencies [103318c]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+  - @prosopo/util@3.3.5
+  - @prosopo/procaptcha-common@2.11.18
+  - @prosopo/procaptcha@2.10.58
+  - @prosopo/locale@3.2.8
+  - @prosopo/types@4.10.0
+  - @prosopo/common@3.1.48
+
+## 2.9.96
+### Patch Changes
+
+- Updated dependencies [a0cb39e]
+  - @prosopo/types@4.9.12
+  - @prosopo/procaptcha@2.10.57
+  - @prosopo/procaptcha-common@2.11.17
+
+## 2.9.95
+### Patch Changes
+
+- Updated dependencies [b9ca0e7]
+- Updated dependencies [fde6896]
+  - @prosopo/types@4.9.11
+  - @prosopo/common@3.1.47
+  - @prosopo/procaptcha@2.10.56
+  - @prosopo/procaptcha-common@2.11.16
+
+## 2.9.94
+### Patch Changes
+
+  - @prosopo/procaptcha-common@2.11.15
+  - @prosopo/procaptcha@2.10.55
+
+## 2.9.93
+### Patch Changes
+
+- Updated dependencies [0a4f902]
+  - @prosopo/types@4.9.10
+  - @prosopo/procaptcha@2.10.54
+  - @prosopo/procaptcha-common@2.11.14
+
+## 2.9.92
+### Patch Changes
+
+- b500d56: fix(widget): enforce single language across widget, kill browser/config race
+  
+  `WidgetFactory.getCaptchaRenderer()` booted the i18n singleton with the
+  browser-detected language before the site-owner `renderOptions.language` /
+  `data-language` had been resolved, and each widget then called
+  `i18n.changeLanguage(config.language)` from a post-mount effect. Any child
+  component that read `useTranslation()` between first render and the async
+  `changeLanguage` resolution rendered in the browser language, then re-rendered
+  in the site-owner language — the multi-language flash customers reported.
+  
+  Resolve the site-owner language in `WidgetFactory.createWidget()` before the
+  lazy renderer load and thread it into `loadI18next(false, lng)`, so the
+  singleton boots (or reconciles via `changeLanguage` + await) with the correct
+  language before React mounts. Site-owner language wins; falls back to browser
+  detection only when no `language` / `data-language` is set.
+- Updated dependencies [b500d56]
+  - @prosopo/locale@3.2.7
+  - @prosopo/common@3.1.46
+  - @prosopo/types@4.9.9
+  - @prosopo/procaptcha@2.10.53
+  - @prosopo/procaptcha-common@2.11.13
+
+## 2.9.91
+### Patch Changes
+
+  - @prosopo/procaptcha-common@2.11.12
+  - @prosopo/procaptcha@2.10.52
+
+## 2.9.90
+### Patch Changes
+
+  - @prosopo/procaptcha-common@2.11.11
+  - @prosopo/procaptcha@2.10.51
+
+## 2.9.89
+### Patch Changes
+
+  - @prosopo/common@3.1.45
+  - @prosopo/procaptcha@2.10.50
+  - @prosopo/procaptcha-common@2.11.10
+
+## 2.9.88
+### Patch Changes
+
+- Updated dependencies [85e8857]
+  - @prosopo/types@4.9.8
+  - @prosopo/util@3.3.4
+  - @prosopo/procaptcha@2.10.49
+  - @prosopo/common@3.1.44
+  - @prosopo/procaptcha-common@2.11.9
+
+## 2.9.87
+### Patch Changes
+
+- Updated dependencies [8bde5df]
+  - @prosopo/types@4.9.7
+  - @prosopo/procaptcha@2.10.48
+  - @prosopo/procaptcha-common@2.11.8
+
+## 2.9.86
+### Patch Changes
+
+- Updated dependencies [b3f351b]
+- Updated dependencies [17bc76e]
+  - @prosopo/procaptcha-common@2.11.7
+  - @prosopo/procaptcha@2.10.47
+  - @prosopo/types@4.9.6
+
+## 2.9.85
+### Patch Changes
+
+- Updated dependencies [6cb3218]
+  - @prosopo/types@4.9.5
+  - @prosopo/procaptcha@2.10.46
+  - @prosopo/procaptcha-common@2.11.6
+
+## 2.9.84
+### Patch Changes
+
+- Updated dependencies [de12b31]
+- Updated dependencies [770954b]
+  - @prosopo/types@4.9.4
+  - @prosopo/procaptcha@2.10.45
+  - @prosopo/procaptcha-common@2.11.5
+
+## 2.9.83
+### Patch Changes
+
+- 18d0287: fix(procaptcha-frictionless,procaptcha-pow,procaptcha-puzzle,procaptcha-react): auto-recover from `CAPTCHA.NO_SESSION_FOUND` on the inner widget without asking the user to click the checkbox a second time, and without dropping the click coordinates that would otherwise land in the solution salt as `(0, 0)`.
+  
+  Motivation. The in-flight dedupe added in the previous change only collapses `/captcha/{type}` POSTs that overlap in flight. A duplicate POST that fires ~1 s after the first has already settled (observed on iPhone WKWebView, incident 2026-07-01 21:23 UTC) still lands on a consumed session and returns `NO_SESSION_FOUND`. The pre-existing recovery for that case was a `setTimeout(restart, 100)` that tore the whole widget down and lost the checkbox click position.
+  
+  - `ProcaptchaProps` gains two optional props: `onSessionInvalidated(x?, y?)` and `startCoords: { x, y }`. Widgets not mounted under a recovery-aware parent still fall back to `frictionlessState.restart()`.
+  - `procaptcha-pow`, `procaptcha-puzzle`, and `procaptcha-react` widgets now track the last `manager.start(x, y)` coords in a ref (either from the checkbox click or from `startCoords`) and, on the first `CAPTCHA.NO_SESSION_FOUND`, invoke `onSessionInvalidated(x, y)` instead of calling `restart()`. A per-instance ref makes it strictly one-shot — a second failure falls back to the existing restart path so a persistently broken session doesn't loop.
+  - `ProcaptchaFrictionless` wires `onSessionInvalidated` through to each inner widget: it stashes the retry coords in a ref, re-runs its own `start()` (which re-invokes `/frictionless` and mints a fresh sessionId), then re-mounts the inner widget with `autoStart={true}` and `startCoords={x, y}`. The inner widget auto-fires `manager.start(x, y)` on mount so the eventual submit still embeds the real checkbox click position in the salt.
+  - The recovery decision (one-shot fire, coord validation — `(0, 0)` and partial pairs are discarded because they're what an `autoStart` mount or an untrusted pointer event emits rather than a real click, and the consume-and-clear pending-coords ref) is extracted into `sessionInvalidatedRecovery.ts` with dedicated unit tests.
+- Updated dependencies [18d0287]
+  - @prosopo/types@4.9.3
+  - @prosopo/procaptcha@2.10.44
+  - @prosopo/procaptcha-common@2.11.4
+
+## 2.9.82
+### Patch Changes
+
+  - @prosopo/procaptcha@2.10.43
+
+## 2.9.81
+### Patch Changes
+
+- Updated dependencies [f9e8c94]
+- Updated dependencies [7a434e0]
+  - @prosopo/locale@3.2.6
+  - @prosopo/types@4.9.2
+  - @prosopo/common@3.1.43
+  - @prosopo/procaptcha@2.10.42
+  - @prosopo/procaptcha-common@2.11.3
+
+## 2.9.80
+### Patch Changes
+
+- Updated dependencies [8986976]
+- Updated dependencies [970bca2]
+  - @prosopo/types@4.9.1
+  - @prosopo/util@3.3.3
+  - @prosopo/common@3.1.42
+  - @prosopo/procaptcha@2.10.41
+  - @prosopo/procaptcha-common@2.11.2
+
+## 2.9.79
+### Patch Changes
+
+- Updated dependencies [dfb0c53]
+- Updated dependencies [849af99]
+- Updated dependencies [6ecc576]
+- Updated dependencies [a5ba27b]
+- Updated dependencies [619dc9f]
+- Updated dependencies [11f1e8c]
+- Updated dependencies [b166037]
+- Updated dependencies [1111ff2]
+  - @prosopo/common@3.1.41
+  - @prosopo/util@3.3.2
+  - @prosopo/widget-skeleton@2.8.4
+  - @prosopo/types@4.9.0
+  - @prosopo/procaptcha@2.10.40
+  - @prosopo/procaptcha-common@2.11.1
+
 ## 2.9.78
 ### Patch Changes
 

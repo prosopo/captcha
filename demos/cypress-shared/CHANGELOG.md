@@ -1,5 +1,180 @@
 # @prosopo/cypress-shared
 
+## 2.8.113
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+  - @prosopo/types@5.0.2
+
+## 2.8.112
+### Patch Changes
+
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/types@5.0.1
+
+## 2.8.111
+### Patch Changes
+
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [6f19cde]
+  - @prosopo/types@5.0.0
+
+## 2.8.110
+### Patch Changes
+
+- Updated dependencies [2c47bb7]
+- Updated dependencies [0e1171c]
+- Updated dependencies [103318c]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+  - @prosopo/util@3.3.5
+  - @prosopo/types@4.10.0
+
+## 2.8.109
+### Patch Changes
+
+- 4651bcb: test(cypress): access policy verify-time, Restrict, and conflict resolution coverage
+  
+  Fills the three access-policy gaps left after the initial coverage pass:
+  
+  - **`accessPolicy.cy.ts`** — third `it` block that drives Block+deferToVerify all the way through: solve the captcha normally, submit signup, assert /signup returns 401 with verified:false. The prior spec only proved the request went through at request time; this one proves the block actually fires downstream at verify.
+  - **`accessPolicyRestrict.cy.ts`** (new) — three tests covering the Restrict policy shape: matching captchaType passes through (200); pinned mismatched captchaType returns 400 INCORRECT_CAPTCHA_TYPE at request time; the same mismatched pin with `deferToVerify: true` is skipped by the endpoint filter and returns 200 (locks in the current no-op observable so future changes surface deliberately).
+  - **`accessPolicyConflicts.cy.ts`** (new) — two rule-conflict specs: a narrow (clientId+ip) Restrict beats a broad deferToVerify Block once both reach the endpoint handler; a Block beats a Restrict at equal specificity via the harshness tiebreaker. Documents in the spec header that blockMiddleware's `blockOnly: true` filter means non-defer Block always wins at request time — specificity only decides between rules that actually reach `getPrioritisedAccessPolicies`.
+  
+  Combined coverage now spans every Block/Restrict × deferToVerify variant plus the two rule-ranking axes (specificity + harshness).
+
+## 2.8.108
+### Patch Changes
+
+- ae7e7f0: fix(access-policy): stop request-time rejection of Block+deferToVerify rules; expand DM cypress coverage to all captcha types
+  
+  **The bug.** Block-type access policies with `deferToVerify: true` — the "solve normally, block silently at verify" pattern — were breaking every /captcha/* request instead. `sanitizeAccessPolicy` strips `captchaType` from every Block policy on write, and the captcha challenge handlers (`getImageCaptchaChallenge`, `getPoWCaptchaChallenge`, `getPuzzleCaptchaChallenge`) fetched the matching policy via `getPrioritisedAccessPolicies` (which does NOT filter out `deferToVerify: true` rules) and passed it to `captchaManager.isValidRequest` — where the `userAccessPolicy.captchaType !== requestedCaptchaType` check reduced to `undefined !== "image"` → 400 INCORRECT_CAPTCHA_TYPE. Same shape at the frictionless entry point in `handleAccessPolicy`, which would 401 instead of letting the flow complete.
+  
+  **The fix.** Filter `deferToVerify` policies out at every request-time load site (mirrors what `blockMiddleware` already does), plus a defensive relaxation of the captchaType check in `isValidRequest` so a policy without a pinned captchaType no longer trips the mismatch. Unit tests added for the request-time filter and the defensive check.
+  
+  **New cypress coverage.** Extended the previously-added routing / decision-machine / access-policy specs so every branch is exercised:
+  
+  - `accessPolicy.cy.ts` — request-time Block (403) AND defer-to-verify Block (200 at request time, block at verify). The second `it` is the regression guard for the bug above.
+  - `decisionMachineDenyPow.cy.ts` + `decisionMachineDenyPuzzle.cy.ts` — decide() DM deny at verify for pow and puzzle (image was already covered). Each captcha task calls decisionMachineRunner.decide() separately, so per-type specs guard against a single verify path dropping the deny hook.
+  - `routingFrictionless.cy.ts` — added the pow branch (baseline pass-through) so all three captcha types are covered end-to-end.
+
+## 2.8.107
+### Patch Changes
+
+- 8bcb0d8: test(cypress): add coverage for routing / decision-machine / access-policy paths
+  
+  Adds four new end-to-end specs plus the two shared commands they need:
+  
+  - `installDecisionMachine` — publishes a `Kind.Decision` DM (verify-phase) scoped to a test sitekey. Sibling of the existing `installRoutingMachine`.
+  - `addAccessRules` / `deleteAllAccessRules` — wraps the user-access-policy admin HTTP endpoints. Previously there was no cypress hook for these at all.
+  - `routingFrictionless.cy.ts` — installs a test-only routing DM that reads a synthetic `X-Test-Route-To` header and returns image or puzzle; asserts the widget hits the right challenge endpoint (no PoW).
+  - `postPowPuzzle.cy.ts` — mirror of `escalation.cy.ts` but for the puzzle branch of the post-PoW escalation. Guards the pow→puzzle onEscalate coord forwarding.
+  - `decisionMachineDeny.cy.ts` — installs a decide() DM that always denies; asserts the widget mints a token client-side but `/signup` returns 401 with `verified:false`.
+  - `accessPolicy.cy.ts` — inserts a per-clientId Block rule with `deferToVerify:true`; same `/signup` 401 assertion. Fills the "zero cypress coverage for access policies" gap.
+  
+  Test-only DMs are inline JS strings in each spec, gated on synthetic headers or unconditional denies — deliberately generic so the source reads as a plumbing check, not a mirror of production rules.
+- Updated dependencies [a0cb39e]
+  - @prosopo/types@4.9.12
+
+## 2.8.106
+### Patch Changes
+
+- Updated dependencies [b9ca0e7]
+  - @prosopo/types@4.9.11
+
+## 2.8.105
+### Patch Changes
+
+- a41c1b5: fix(database): puzzle records now persist submittedAtTimestamp / verifiedAtTimestamp / failedAtTimestamp
+  
+  Puzzle server-verify was returning verified:false on every solved puzzle in production. Root cause: updatePuzzleCaptchaRecordResult wrote submittedAtTimestamp via a $ifNull aggregation expression inside a pipeline $set, and mongoose silently dropped it on the wire — 0 of the last 3002 submitted puzzle records had the field. Reading the record back in serverVerifyPuzzleCaptchaSolution then treated missing submittedAtTimestamp as Number.POSITIVE_INFINITY, tripping submitToVerifyMs > timeout → TIMESTAMP_TOO_OLD on every request.
+  
+  - Rewrite updatePuzzleCaptchaRecordResult and updatePuzzleCaptchaRecord to write the timestamp fields directly (no $ifNull). Safe because puzzle rejects re-submissions at puzzleTasks.ts:228-233 — each stamp is only ever written once. The change also lets both writes drop the pipeline form and use a plain $set.
+  - Add submittedAtTimestamp to the projection in getPuzzleCaptchaRecordByChallenge — the recency check couldn't see the field even after it was persisted, because the projection stripped it.
+  - Reinstate the puzzle end-to-end cypress spec that was reverted in PR #2855 (it was correctly surfacing this bug — the previous decision to remove it was wrong). The puzzle piece gets a data-cy selector gated on NODE_ENV !== "production" so esbuild strips it from production bundles — cypress builds with NODE_ENV=development to include the selector for the test, but real deploys don't ship a bot-friendly querySelector.
+
+## 2.8.104
+### Patch Changes
+
+- Updated dependencies [0a4f902]
+  - @prosopo/types@4.9.10
+
+## 2.8.103
+### Patch Changes
+
+  - @prosopo/types@4.9.9
+
+## 2.8.102
+### Patch Changes
+
+- Updated dependencies [85e8857]
+  - @prosopo/types@4.9.8
+  - @prosopo/util@3.3.4
+
+## 2.8.101
+### Patch Changes
+
+- Updated dependencies [8bde5df]
+  - @prosopo/types@4.9.7
+
+## 2.8.100
+### Patch Changes
+
+- Updated dependencies [b3f351b]
+- Updated dependencies [17bc76e]
+  - @prosopo/types@4.9.6
+
+## 2.8.99
+### Patch Changes
+
+- Updated dependencies [6cb3218]
+  - @prosopo/types@4.9.5
+
+## 2.8.98
+### Patch Changes
+
+- Updated dependencies [de12b31]
+- Updated dependencies [770954b]
+  - @prosopo/types@4.9.4
+
+## 2.8.97
+### Patch Changes
+
+- Updated dependencies [18d0287]
+  - @prosopo/types@4.9.3
+
+## 2.8.96
+### Patch Changes
+
+- Updated dependencies [7a434e0]
+  - @prosopo/types@4.9.2
+
+## 2.8.95
+### Patch Changes
+
+- 779b3a7: test(cypress): cover the post-PoW route() escalation end-to-end. New spec drives a real frictionless session through PoW, installs a routing-kind decision machine that forces image escalation, asserts the PoW-submit response carries an escalation envelope with `captchaType: image`, and waits for the image-captcha modal to mount. Adds `installRoutingMachine` + `removeAllDecisionMachines` chainables on the shared cypress harness, plus a CI matrix step.
+
+## 2.8.94
+### Patch Changes
+
+- Updated dependencies [8986976]
+- Updated dependencies [970bca2]
+  - @prosopo/types@4.9.1
+  - @prosopo/util@3.3.3
+
+## 2.8.93
+### Patch Changes
+
+- Updated dependencies [849af99]
+- Updated dependencies [a5ba27b]
+- Updated dependencies [b166037]
+- Updated dependencies [1111ff2]
+  - @prosopo/util@3.3.2
+  - @prosopo/types@4.9.0
+
 ## 2.8.92
 ### Patch Changes
 

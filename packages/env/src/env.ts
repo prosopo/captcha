@@ -136,13 +136,21 @@ export class Environment implements ProsopoEnvironment {
 
 			const maintenanceMode = isMaintenanceMode();
 
-			// In maintenance mode we skip the DB connect entirely so a slow
-			// Mongo socket can't gate boot. Handlers short-circuit before
-			// touching the DB while the flag is on.
+			// In maintenance mode the captcha request path is kept DB-free (the
+			// handlers short-circuit before touching the DB), but the admin
+			// endpoints — access rules, detector keys, site keys, decision
+			// machines — still need a DB. So we create the DB handle and connect
+			// in the BACKGROUND: env.getDb() returns a usable handle (admin
+			// routes register and keep working), while a slow or unavailable
+			// Mongo/Redis socket still can't gate boot because we never await
+			// the connection here.
 			if (maintenanceMode) {
 				this.logger.warn(() => ({
-					msg: "MAINTENANCE_MODE=true — skipping DB import on startup",
+					msg: "MAINTENANCE_MODE=true — connecting to DB in the background so admin endpoints stay available; captcha path short-circuits",
 				}));
+				if (!this.db) {
+					this.connectDatabaseInBackground();
+				}
 			} else if (!this.db) {
 				await this.importDatabase();
 			} else if (this.db && !this.db.connected) {
@@ -154,7 +162,9 @@ export class Environment implements ProsopoEnvironment {
 			}
 			// Resolve the default datasetId from the DB. Clients no longer
 			// send one — providers pick from this fallback for image challenges.
-			if (this.db && !this.datasetId) {
+			// Skip in maintenance mode: the connection is still settling in the
+			// background and this is a DB read we don't want to gate boot on.
+			if (!maintenanceMode && this.db && !this.datasetId) {
 				try {
 					this.datasetId = await this.db.getMostRecentDatasetId();
 					if (this.datasetId) {
@@ -185,25 +195,36 @@ export class Environment implements ProsopoEnvironment {
 		}
 	}
 
+	// Build the ProviderDatabase handle from config WITHOUT connecting. Returns
+	// undefined when no database is configured for the current environment.
+	buildDatabase(): ProviderDatabase | undefined {
+		if (!this.config.database) {
+			return undefined;
+		}
+		const dbConfig = this.config.database[this.defaultEnvironment];
+		if (!dbConfig) {
+			return undefined;
+		}
+		return new ProviderDatabase({
+			mongo: {
+				url: dbConfig.endpoint,
+				dbname: dbConfig.dbname,
+				authSource: dbConfig.authSource,
+			},
+			redis: {
+				url: this.config.redisConnection.url,
+				password: this.config.redisConnection.password,
+			},
+			logger: this.logger,
+		});
+	}
+
 	async importDatabase(): Promise<void> {
 		try {
-			if (this.config.database) {
-				const dbConfig = this.config.database[this.defaultEnvironment];
-				if (dbConfig) {
-					this.db = new ProviderDatabase({
-						mongo: {
-							url: dbConfig.endpoint,
-							dbname: dbConfig.dbname,
-							authSource: dbConfig.authSource,
-						},
-						redis: {
-							url: this.config.redisConnection.url,
-							password: this.config.redisConnection.password,
-						},
-						logger: this.logger,
-					});
-					await this.db.connect();
-				}
+			const db = this.buildDatabase();
+			if (db) {
+				this.db = db;
+				await this.db.connect();
 			}
 		} catch (error) {
 			throw new ProsopoEnvError("DATABASE.DATABASE_IMPORT_FAILED", {
@@ -216,6 +237,33 @@ export class Environment implements ProsopoEnvironment {
 						: undefined,
 				},
 			});
+		}
+	}
+
+	// Create the DB handle and kick off the connection WITHOUT awaiting it, so
+	// startup is never gated on the DB socket. Used in maintenance mode: the
+	// captcha request path never touches the DB (it short-circuits), but the
+	// admin endpoints do, so the handle must exist. A failed connection is
+	// logged rather than thrown — admin queries will surface the error (or
+	// succeed once the socket recovers) when they actually run.
+	connectDatabaseInBackground(): void {
+		try {
+			const db = this.buildDatabase();
+			if (!db) {
+				return;
+			}
+			this.db = db;
+			db.connect().catch((error: unknown) => {
+				this.logger.warn(() => ({
+					msg: "Background DB connection failed in maintenance mode; admin endpoints will retry on demand",
+					data: { error },
+				}));
+			});
+		} catch (error) {
+			this.logger.warn(() => ({
+				msg: "Failed to create DB handle in maintenance mode; admin endpoints will be unavailable until restart",
+				data: { error },
+			}));
 		}
 	}
 }

@@ -20,7 +20,7 @@ import {
 	type AccessRulesFilter,
 	FilterScopeMatch,
 } from "#policy/rulesStorage.js";
-import { accessPolicyInput, policyScopeInput } from "./policyInput.js";
+import { accessPolicyInputShape, policyScopeInput } from "./policyInput.js";
 import { type UserScopeInput, userScopeInput } from "./userScopeInput.js";
 
 type RuleGroupInput = {
@@ -49,13 +49,20 @@ const ruleGroupInput = z
 	});
 
 // Explicit `ZodType<…, ZodTypeDef, unknown>` annotation rather than the
-// strict-identity form because `accessPolicyInput.shape.deferToVerify`
+// strict-identity form because `accessPolicyInputShape.shape.deferToVerify`
 // uses `z.preprocess` which widens the input position to `unknown`. The
 // relaxed annotation is portable for declaration emit; the `transform`
 // pins the OUTPUT to AccessRule.
+//
+// Uses the unrefined `accessPolicyInputShape` (not `accessPolicyInput`)
+// because the API-write refinement rejecting Block+captchaType is a
+// write-time input guard — the READ path (Redis reader → accessRuleInput
+// parse) must still accept the legacy shapes for records written before
+// the refinement landed. Otherwise the reader would throw on every
+// pre-existing Block rule that carried a stripped captchaType field.
 export const accessRuleInput: ZodType<AccessRule, z.ZodTypeDef, unknown> = z
 	.object({
-		...accessPolicyInput.shape,
+		...accessPolicyInputShape.shape,
 		...policyScopeInput.shape,
 	})
 	.and(userScopeInput)
@@ -73,6 +80,12 @@ export type AccessRulesFilterInput = AccessRulesFilter & {
 	policyScopes?: PolicyScope[];
 };
 
+// `satisfies ZodType<AccessRulesFilterInput>` is intentionally omitted:
+// `policyScopeInput.clientId` uses `z.preprocess` to unwrap the Redis
+// `global` sentinel, which widens the input type to `unknown`. The
+// output type is still `AccessRulesFilterInput` (Zod's `_output`); the
+// downstream `DeleteRulesSchema` / `FindRulesSchema` use the relaxed
+// `ZodType<T, ZodTypeDef, unknown>` form for the same reason.
 export const accessRulesFilterInput = z.object({
 	policyScope: policyScopeInput.optional(),
 	policyScopes: z.array(policyScopeInput).optional(),
@@ -85,7 +98,7 @@ export const accessRulesFilterInput = z.object({
 		.default(FilterScopeMatch.Exact),
 	groupId: z.string().optional(),
 	blockOnly: z.boolean().optional(),
-} satisfies AllKeys<AccessRulesFilterInput>) satisfies ZodType<AccessRulesFilterInput>;
+} satisfies AllKeys<AccessRulesFilterInput>);
 
 export const getAccessRuleFiltersFromInput = (
 	filterInput: AccessRulesFilterInput,

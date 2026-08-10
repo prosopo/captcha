@@ -115,6 +115,7 @@ describe("transformRule", () => {
 		coords: "[[1,2]]",
 		countryCode: "US",
 		asn: 205016,
+		os: "macos",
 	} satisfies AccessRule;
 
 	it("should transform access rule record into rule", () => {

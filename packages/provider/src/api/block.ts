@@ -14,6 +14,7 @@
 
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
+import { getMaintenanceMode } from "./admin/apiToggleMaintenanceModeEndpoint.js";
 import { BlacklistRequestInspector } from "./blacklistRequestInspector.js";
 
 export const blockMiddleware = (providerEnvironment: ProviderEnvironment) => {
@@ -27,6 +28,15 @@ export const blockMiddleware = (providerEnvironment: ProviderEnvironment) => {
 		providerEnvironment.isReady.bind(providerEnvironment);
 
 	return (req: Request, res: Response, next: NextFunction) => {
+		// In maintenance mode the captcha path short-circuits to a pass and the
+		// access-rules store (Redis) may be unavailable — skip the blocklist
+		// check so a slow or down store can't gate requests. env.getDb() now
+		// returns a handle during maintenance (so the admin endpoints work), so
+		// this explicit guard — not a thrown getDb() — is what keeps the
+		// blocklist check off the hot path.
+		if (getMaintenanceMode()) {
+			return next();
+		}
 		if (!blacklistRequestInspector) {
 			try {
 				const db = providerEnvironment.getDb();

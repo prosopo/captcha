@@ -23,16 +23,23 @@ vi.mock("@prosopo/database", () => ({
 	ProviderDatabase: mockProviderDatabase,
 }));
 
+// env.ts does `new IpInfoService(...)` / `new Keyring(...)`. vitest 4 requires a
+// constructible implementation — an arrow has no [[Construct]] slot and the mock
+// throws ("did not use 'function' or 'class' in its implementation").
 vi.mock("@prosopo/ipinfo", () => ({
-	IpInfoService: vi.fn().mockImplementation(() => ({
-		initialize: mockIpInfoInit,
-	})),
+	IpInfoService: vi.fn().mockImplementation(function () {
+		return {
+			initialize: mockIpInfoInit,
+		};
+	}),
 }));
 
 vi.mock("@prosopo/keyring", () => ({
-	Keyring: vi.fn().mockImplementation(() => ({
-		addPair: vi.fn((p) => p),
-	})),
+	Keyring: vi.fn().mockImplementation(function () {
+		return {
+			addPair: vi.fn((p) => p),
+		};
+	}),
 	getPair: vi.fn(() => ({
 		address: "addr",
 		isLocked: false,
@@ -90,11 +97,13 @@ describe("Environment.isReady — maintenance mode startup tolerance", () => {
 	});
 
 	it("throws when DB connect fails and maintenance mode is off", async () => {
-		mockProviderDatabase.mockImplementation(() => ({
-			connect: vi.fn().mockRejectedValue(new Error("ECONNREFUSED")),
-			connected: false,
-			connection: { readyState: 0 },
-		}));
+		mockProviderDatabase.mockImplementation(function () {
+			return {
+				connect: vi.fn().mockRejectedValue(new Error("ECONNREFUSED")),
+				connected: false,
+				connection: { readyState: 0 },
+			};
+		});
 
 		const env = buildEnv();
 		await expect(env.isReady()).rejects.toMatchObject({
@@ -102,25 +111,63 @@ describe("Environment.isReady — maintenance mode startup tolerance", () => {
 		});
 	});
 
-	it("skips DB import entirely when maintenance mode is on", async () => {
+	it("creates the DB handle and connects in the background when maintenance mode is on", async () => {
 		process.env.MAINTENANCE_MODE = "true";
+		const connect = vi.fn().mockResolvedValue(undefined);
+		mockProviderDatabase.mockImplementation(function () {
+			return {
+				connect,
+				connected: false,
+				connection: { readyState: 0 },
+			};
+		});
 
 		const env = buildEnv();
 		await env.isReady();
+
 		expect(env.ready).toBe(true);
-		// Importantly: we never even construct ProviderDatabase, so a slow
-		// Mongo socket can't gate boot.
-		expect(mockProviderDatabase).not.toHaveBeenCalled();
+		// The handle IS created (and connecting) so admin endpoints — which need
+		// a DB even during maintenance — keep working. The captcha path stays
+		// DB-free via per-handler short-circuits, not by leaving env.db unset.
+		expect(mockProviderDatabase).toHaveBeenCalledTimes(1);
+		expect(connect).toHaveBeenCalledTimes(1);
+		expect(env.db).toBeDefined();
 		expect(mockIpInfoInit).toHaveBeenCalled();
+	});
+
+	it("does not gate boot when the background DB connect fails in maintenance mode", async () => {
+		process.env.MAINTENANCE_MODE = "true";
+		const connect = vi.fn().mockRejectedValue(new Error("ECONNREFUSED"));
+		mockProviderDatabase.mockImplementation(function () {
+			return {
+				connect,
+				connected: false,
+				connection: { readyState: 0 },
+			};
+		});
+
+		const env = buildEnv();
+		// Unlike the maintenance-off path, a failing connect must NOT reject
+		// isReady() — the connection is fire-and-forget in the background.
+		await expect(env.isReady()).resolves.toBeUndefined();
+		expect(env.ready).toBe(true);
+		expect(env.db).toBeDefined();
+		expect(connect).toHaveBeenCalledTimes(1);
+		// Flush the background rejection so its .catch handler runs within the
+		// test rather than surfacing as an unhandled rejection afterwards.
+		await Promise.resolve();
+		expect(env.logger.warn).toHaveBeenCalled();
 	});
 
 	it("still completes the normal connect path when Mongo is up", async () => {
 		const connect = vi.fn().mockResolvedValue(undefined);
-		mockProviderDatabase.mockImplementation(() => ({
-			connect,
-			connected: true,
-			connection: { readyState: 1 },
-		}));
+		mockProviderDatabase.mockImplementation(function () {
+			return {
+				connect,
+				connected: true,
+				connection: { readyState: 1 },
+			};
+		});
 
 		const env = buildEnv();
 		await env.isReady();

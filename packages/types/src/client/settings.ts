@@ -174,6 +174,12 @@ export const EmailSpamRulesSchema = object({
 		.max(MAX_CUSTOM_REGEX_PATTERNS)
 		.optional()
 		.default([]),
+	// Maximum number of previously server-checked captchas that may carry the
+	// same normalised email (dots collapsed for gmail, `+tag` stripped
+	// everywhere) before further submissions from that address are rejected.
+	// Requires `storeMetadata` to be on so the normalised email is persisted
+	// alongside each verified commitment. Undefined disables the check.
+	maxEmailSubmissionCount: number().int().min(1).optional(),
 });
 
 export const SpamFilterRulesSchema = object({
@@ -208,11 +214,27 @@ export const TrafficFilterSchema = object({
 	)
 		.max(MAX_DATACENTER_ALLOWLIST_ENTRIES)
 		.optional(),
-	// Opt-in: when the catcher confirmed `dnsEvent.pathValid === true`, skip
-	// the datacenter / VPN / proxy / Tor evaluation on the DNS peer +
-	// resolver IPs. Otherwise users on public DoH resolvers (whose resolver
-	// IPs are necessarily datacenter) trip the rule.
-	skipExtrasOnValidDnsPath: boolean().optional().default(false),
+	// Counterpart to `datacenterNameAllowlist`: any entry here forces the
+	// datacenter block for a matching name, overriding both the
+	// `providerType === "isp"` bypass and any allowlist entry for the same
+	// name. Useful for named providers that upstream classifies as ISP but
+	// operators want treated as datacenter (for example IP-leasing platforms
+	// whose ranges sit on carrier ASNs but exit as proxy pools). Same
+	// case-insensitive, whitespace-trimmed matching as the allowlist and the
+	// same three name sources (`datacenterName`, `providerName`,
+	// `asnOrganization`).
+	datacenterNameDenylist: array(
+		string().min(1).max(MAX_DATACENTER_ALLOWLIST_ENTRY_LENGTH),
+	)
+		.max(MAX_DATACENTER_ALLOWLIST_ENTRIES)
+		.optional(),
+	// When the catcher confirmed `dnsEvent.pathValid === true`, skip the
+	// datacenter / VPN / proxy / Tor evaluation on the DNS peer + resolver
+	// IPs. Default on: without this, users on public DoH resolvers or ISP
+	// shared anycast resolvers (whose resolver IPs are necessarily
+	// datacenter or high-abuser) trip the rule despite the visitor being
+	// a real user on a real network.
+	skipExtrasOnValidDnsPath: boolean().optional().default(true),
 	blockMobile: boolean().optional().default(false),
 	blockSatellite: boolean().optional().default(false),
 	blockCrawler: boolean().optional().default(false),
@@ -288,14 +310,24 @@ export const ClientSettingsSchema = object({
 	// Detector score at or above which the frictionless flow blocks the
 	// request outright instead of issuing a challenge. Undefined disables.
 	autoBanScoreThreshold: number().min(0).optional(),
+	// Tolerance in pixels between the release point and the puzzle target
+	// centre (Euclidean distance). Default 15 matches what real solvers
+	// actually hit. The ceiling is deliberately larger than the puzzle
+	// canvas diagonal (~360 px on a 300×200 canvas) so end-to-end tests
+	// can raise it high enough that a scripted release anywhere on the
+	// canvas passes. Real sites should never need more than a few tens.
 	puzzleTolerance: number()
 		.int()
 		.min(5)
-		.max(50)
+		.max(1000)
 		.optional()
 		.default(puzzleToleranceDefault),
 	ipValidationRules: IPValidationRulesSchema.optional(),
-	disallowWebView: boolean().optional().default(false).optional(),
+	// The trailing `.optional()` that used to sit after `.default(false)` made
+	// the default unreachable, so this parsed to `undefined` rather than
+	// `false`. Both are falsy, so no consumer changed behaviour, but the
+	// declared output type said `boolean` while the value was missing.
+	disallowWebView: boolean().optional().default(false),
 	contextAware: ContextAwareSchema.optional(),
 	spamEmailDomainCheckEnabled: boolean().optional(),
 	spamFilter: SpamFilterRulesSchema.optional(),
