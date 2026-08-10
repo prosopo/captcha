@@ -286,7 +286,9 @@ describe("the test handler", () => {
 	test("sends a body with the 500, so the client sees a reason", async () => {
 		mocks.getJA4.mockRejectedValue(new Error("no ClientHello"));
 		await createTestHandler(mocks.deps)(createRequest(), response.res);
-		expect(response.send).toHaveBeenCalledWith("Error parsing ClientHello.");
+		expect(response.send).toHaveBeenCalledWith(
+			"Failed to record the caller's JA4 fingerprint.",
+		);
 	});
 
 	test("resolves rather than rejecting when the database is down", async () => {

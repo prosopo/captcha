@@ -77,10 +77,20 @@ export const startApi = async (
 	apiApp.use(deps.router());
 	apiApp.use(handleErrors);
 
-	apiApp.listen(deps.port, () => {
-		deps.logger.info(() => ({
-			msg: `Prosopo app listening at http://localhost:${deps.port}`,
-		}));
+	// listen() reports a failed bind (EADDRINUSE and friends) on the server's
+	// error event, not by throwing, so returning straight after calling it left
+	// main()'s try/catch with nothing to catch. Settle on whichever event fires
+	// first instead.
+	const server = apiApp.listen(deps.port);
+	await new Promise<void>((resolvePromise, rejectPromise) => {
+		server.once("listening", () => {
+			server.removeListener("error", rejectPromise);
+			deps.logger.info(() => ({
+				msg: `Prosopo app listening at http://localhost:${deps.port}`,
+			}));
+			resolvePromise();
+		});
+		server.once("error", rejectPromise);
 	});
 
 	return apiApp;

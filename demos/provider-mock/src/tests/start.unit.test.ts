@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { EventEmitter } from "node:events";
+import type { Server } from "node:http";
 import { getLogger } from "@prosopo/logger";
 import type { Express, RequestHandler } from "express";
 import {
@@ -34,21 +36,35 @@ import {
 
 interface AppMock {
 	use: Mock<(handler: unknown) => Express>;
-	listen: Mock<(port: number, callback: () => void) => unknown>;
+	listen: Mock<(port: number) => Server>;
+	/** Make the next listen() report a failed bind instead of a live socket. */
+	failWith: (error: Error) => void;
 	app: Express;
 }
 
 const createAppMock = (): AppMock => {
 	const use = vi.fn<(handler: unknown) => Express>();
-	const listen = vi.fn<(port: number, callback: () => void) => unknown>(
-		(_port, callback) => {
-			callback();
-			return { close: (): void => undefined };
-		},
-	);
+	// startApi waits on the server's events, so the mock has to be a real
+	// emitter rather than a callback: a bind failure only ever arrives as an
+	// "error" event.
+	let failure: Error | undefined;
+	const listen = vi.fn<(port: number) => Server>(() => {
+		const server = new EventEmitter();
+		setImmediate(() => {
+			server.emit(failure ? "error" : "listening", failure);
+		});
+		return server as unknown as Server;
+	});
 	const app = { use, listen } as unknown as Express;
 	use.mockReturnValue(app);
-	return { use, listen, app };
+	return {
+		use,
+		listen,
+		failWith: (error: Error): void => {
+			failure = error;
+		},
+		app,
+	};
 };
 
 interface StartMocks {
@@ -157,7 +173,7 @@ describe("startApi", () => {
 	test("listens on the configured port", async () => {
 		mocks = createStartDeps({ port: 4321 });
 		await startApi(mocks.deps);
-		expect(mocks.app.listen).toHaveBeenCalledWith(4321, expect.any(Function));
+		expect(mocks.app.listen).toHaveBeenCalledWith(4321);
 	});
 
 	test("mounts cors, the body parser, i18n, the router and the error handler", async () => {
@@ -200,10 +216,26 @@ describe("startApi", () => {
 	});
 
 	test("a port already in use is propagated", async () => {
-		mocks.app.listen.mockImplementation(() => {
-			throw new Error("EADDRINUSE");
-		});
+		// The bind failure arrives on the server's error event well after listen()
+		// has returned, so startApi has to wait for it rather than resolve first.
+		mocks.app.failWith(new Error("EADDRINUSE"));
 		await expect(startApi(mocks.deps)).rejects.toThrow("EADDRINUSE");
+	});
+
+	test("does not resolve before the socket is listening", async () => {
+		// Resolving early would let a caller — or a container healthcheck — treat
+		// the mock as up while nothing is bound yet.
+		let listening = false;
+		mocks.app.listen.mockImplementation(() => {
+			const server = new EventEmitter();
+			setImmediate(() => {
+				listening = true;
+				server.emit("listening");
+			});
+			return server as unknown as Server;
+		});
+		await startApi(mocks.deps);
+		expect(listening).toBe(true);
 	});
 });
 

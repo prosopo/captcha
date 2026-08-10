@@ -106,7 +106,11 @@ describe("defaultRouterDeps", () => {
 });
 
 interface RouteLayer {
-	route?: { path: string; methods: Record<string, boolean> };
+	route?: {
+		path: string;
+		methods: Record<string, boolean>;
+		stack: { name: string }[];
+	};
 }
 
 const routesOf = (router: ReturnType<typeof prosopoRouter>): string[] => {
@@ -134,6 +138,21 @@ describe("prosopoRouter", () => {
 
 	test("builds its own dependencies when it is given none", () => {
 		expect(routesOf(prosopoRouter())).toHaveLength(2);
+	});
+
+	test("puts a rate limiter in front of every route", () => {
+		// Both routes reach the database unauthenticated, so neither may be
+		// mounted with the handler alone.
+		const layers: RouteLayer[] = prosopoRouter(createDeps().deps).stack.map(
+			(layer: unknown): RouteLayer => layer as RouteLayer,
+		);
+		const routes = layers
+			.map((layer) => layer.route)
+			.filter((route): route is NonNullable<RouteLayer["route"]> => !!route);
+		expect(routes).toHaveLength(2);
+		for (const route of routes) {
+			expect(route.stack.length).toBeGreaterThanOrEqual(2);
+		}
 	});
 
 	test("does not touch the database while being built", async () => {
@@ -200,6 +219,15 @@ describe("isMain", () => {
 	test("is true for the module node was asked to run", () => {
 		expect(
 			isMain(`file://${path.resolve("/tmp/start.js")}`, "/tmp/start.js"),
+		).toBe(true);
+	});
+
+	test("is true for a relative entrypoint, as `node ./dist/start.js` gives", () => {
+		// argv[1] is whatever was typed. Comparing it unresolved against the
+		// always-absolute module url meant the server never started when it was
+		// launched with a relative path.
+		expect(
+			isMain(`file://${path.resolve("dist/start.js")}`, "./dist/start.js"),
 		).toBe(true);
 	});
 

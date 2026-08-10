@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { resolve } from "node:path";
 import { argv } from "node:process";
 import { fileURLToPath } from "node:url";
 
@@ -28,5 +29,9 @@ export const isMain = (
 	if (entrypoint === undefined) {
 		return false;
 	}
-	return fileURLToPath(moduleUrl) === entrypoint;
+	// argv[1] is whatever was typed, so `node ./dist/start.js` gives a relative
+	// path while the module url is always absolute. Resolve before comparing or
+	// the guard is false for every relative entrypoint and the server never
+	// starts.
+	return fileURLToPath(moduleUrl) === resolve(entrypoint);
 };

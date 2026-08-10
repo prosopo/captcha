@@ -25,6 +25,7 @@ import {
 } from "@prosopo/types";
 import type { VerifySolutionBodyTypeOutput } from "@prosopo/types";
 import express, { type RequestHandler, type Router } from "express";
+import { rateLimit } from "express-rate-limit";
 import { JA4Database, type JA4Store } from "./db.js";
 import { verifyProcaptchaOutput } from "./verify.js";
 
@@ -138,13 +139,29 @@ export const createTestHandler =
 				ua: req.headers["user-agent"],
 			});
 		} catch (e) {
+			// The block above fingerprints and then writes to mongo, so naming
+			// ClientHello here reported a database outage as a parse failure.
 			deps.logger.error(() => ({
 				err: e instanceof Error ? e : new Error(String(e)),
-				msg: "Error parsing ClientHello",
+				msg: "Failed to record the caller's JA4 fingerprint",
 			}));
-			res.status(500).send("Error parsing ClientHello.");
+			res.status(500).send("Failed to record the caller's JA4 fingerprint.");
 		}
 	};
+
+/**
+ * Both routes do unauthenticated work on the caller's behalf — one verifies a
+ * token, the other writes a fingerprint to mongo — so an unthrottled client can
+ * drive the database as fast as it can send. The window is generous enough that
+ * the demos and cypress runs never see it.
+ */
+export const verifyRateLimit = (): RequestHandler =>
+	rateLimit({
+		windowMs: 60_000,
+		limit: 600,
+		standardHeaders: true,
+		legacyHeaders: false,
+	});
 
 /**
  * Adapt a handler written against the narrow request/response types above to
@@ -177,10 +194,15 @@ export function prosopoRouter(deps: RouterDeps = defaultRouterDeps()): Router {
 
 	router.post(
 		ClientApiPaths.VerifyImageCaptchaSolutionDapp,
+		verifyRateLimit(),
 		toRequestHandler(createVerifyHandler(deps)),
 	);
 
-	router.get("/test", toRequestHandler(createTestHandler(deps)));
+	router.get(
+		"/test",
+		verifyRateLimit(),
+		toRequestHandler(createTestHandler(deps)),
+	);
 
 	return router;
 }
