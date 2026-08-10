@@ -290,7 +290,7 @@ describe("a body the schema rejects", () => {
 });
 
 describe("an endpoint that fails", () => {
-	test("is answered with a 500 and a generic message", async () => {
+	test("is answered with the adapter's error status and the json envelope", async () => {
 		await harness.adapter.handleRequest(
 			endpoint(undefined, async () => {
 				throw new Error("database down");
@@ -301,9 +301,11 @@ describe("an endpoint that fails", () => {
 		);
 
 		expect(harness.status).toHaveBeenCalledWith(500);
-		expect(harness.send).toHaveBeenCalledWith(
-			"An internal server error occurred.",
-		);
+		// Every other route answers `{ error: ... }`; a plain-text body here meant
+		// a client parsing the envelope got a parse failure instead of the error.
+		expect(harness.json).toHaveBeenCalledWith({
+			error: expect.anything(),
+		});
 	});
 
 	test("does not leak the failure's message to the client", async () => {
@@ -315,7 +317,9 @@ describe("an endpoint that fails", () => {
 			harness.response,
 			harness.next.fn,
 		);
-		expect(String(harness.send.mock.calls[0]?.[0])).not.toContain("secret");
+		expect(JSON.stringify(harness.json.mock.calls[0]?.[0])).not.toContain(
+			"secret",
+		);
 	});
 
 	test("logs the failure against the request's logger", async () => {
@@ -346,10 +350,9 @@ describe("an endpoint that fails", () => {
 		expect(harness.next.calls).toHaveLength(0);
 	});
 
-	test("ignores the configured errorStatusCode and always answers 500", async () => {
-		// The constructor takes an errorStatusCode that the handler never reads.
-		// Pinned here so the behaviour is visible rather than assumed; the fix
-		// is in flight separately.
+	test("answers with the configured errorStatusCode", async () => {
+		// The admin router builds its adapter with 400, so a client error there
+		// used to surface as a 500 in plain text.
 		harness = build({}, 503);
 		await harness.adapter.handleRequest(
 			endpoint(undefined, async () => {
@@ -359,8 +362,24 @@ describe("an endpoint that fails", () => {
 			harness.response,
 			harness.next.fn,
 		);
-		expect(harness.status).toHaveBeenCalledWith(500);
-		expect(harness.status).not.toHaveBeenCalledWith(503);
+		expect(harness.status).toHaveBeenCalledWith(503);
+		expect(harness.status).not.toHaveBeenCalledWith(500);
+	});
+
+	test("an error carrying its own status code keeps that code", async () => {
+		// A ProsopoApiError already knows what it is; overwriting its code with
+		// the adapter's default turned a 400 into a 500.
+		await harness.adapter.handleRequest(
+			endpoint(undefined, async () => {
+				throw new ProsopoApiError("API.BAD_REQUEST", {
+					context: { code: 400 },
+				});
+			}),
+			harness.request,
+			harness.response,
+			harness.next.fn,
+		);
+		expect(harness.status).toHaveBeenCalledWith(400);
 	});
 
 	test("a rejection with a non-Error value is handled just the same", async () => {
