@@ -1,5 +1,85 @@
 # @prosopo/common
 
+## 3.1.49
+### Patch Changes
+
+- 9fec7bd: test(logger): cover level dispatch, format guard and browser output
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/logger@2.0.5
+  - @prosopo/locale@3.2.9
+
+## 3.1.48
+### Patch Changes
+
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [0e1171c]
+- Updated dependencies [e14fce6]
+  - @prosopo/locale@3.2.8
+  - @prosopo/logger@2.0.4
+
+## 3.1.47
+### Patch Changes
+
+- fde6896: fix(user-access-policy,common,provider): quiet two high-volume log spammers
+  
+  - `user-access-policy`: switch the split-query sub-probes from `FT.AGGREGATE + LOAD @__key` to `FT.SEARCH NOCONTENT`. The aggregate reply path in `@redis/client` 5.x can throw on a null result row and the sub-query then silently returns `[]`; the NOCONTENT reply shape doesn't have that failure mode. Removes ~2k error logs per hour without changing lookup semantics.
+  - `common`: `ProsopoBaseError` auto-logs now carry a `msg` field (mirroring the translation key). Previously every auto-logged error landed in the "undefined msg" bucket in log dashboards (~800/hour).
+  - `provider`: add the missing `msg` on the image-verify catch that emits the same pattern.
+
+## 3.1.46
+### Patch Changes
+
+- Updated dependencies [b500d56]
+  - @prosopo/locale@3.2.7
+
+## 3.1.45
+### Patch Changes
+
+- Updated dependencies [6abff15]
+  - @prosopo/logger@2.0.3
+
+## 3.1.44
+### Patch Changes
+
+  - @prosopo/logger@2.0.2
+
+## 3.1.43
+### Patch Changes
+
+- Updated dependencies [f9e8c94]
+  - @prosopo/locale@3.2.6
+
+## 3.1.42
+### Patch Changes
+
+  - @prosopo/logger@2.0.1
+
+## 3.1.41
+### Patch Changes
+
+- dfb0c53: fix: derive HTTP status message from actual status code
+  
+  `unwrapError` hardcoded `statusMessage = "Bad Request"` regardless of the resolved status code, so 401/403/500 responses (copied onto `response.statusMessage` by `errorHandler`) carried the wrong reason phrase. The reason phrase is now derived from the final status code via a local `STATUS_MESSAGES` map (a subset of `node:http`'s `STATUS_CODES`, kept local so this module stays browser-bundle compatible; unmapped codes fall back to a reason phrase by class — 5xx to "Internal Server Error", otherwise "Bad Request").
+- 11f1e8c: Replace vague logger scopes (empty strings, import.meta.url, generic "CLI") with structured colon-delimited names following the convention package:subsystem:action.
+- Updated dependencies [7ebb78f]
+- Updated dependencies [948d36b]
+- Updated dependencies [41e0e11]
+- Updated dependencies [3c80664]
+  - @prosopo/logger@2.0.0
+
+## 3.1.40
+### Patch Changes
+
+- Updated dependencies [edcd450]
+  - @prosopo/locale@3.2.5
+  - @prosopo/logger@1.0.4
+
+## 3.1.39
+### Patch Changes
+
+  - @prosopo/logger@1.0.3
+
 ## 3.1.38
 ### Patch Changes
 

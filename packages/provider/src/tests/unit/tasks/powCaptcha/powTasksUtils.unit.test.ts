@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { sha256 } from "@noble/hashes/sha256";
 import { ProsopoApiError } from "@prosopo/common";
 import { signatureVerify } from "@prosopo/util-crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -80,6 +81,55 @@ describe("validateSolution", () => {
 
 		const result = validateSolution(nonce, challenge, difficulty);
 		expect(result).toBe(false);
+	});
+
+	it("should accept fractional difficulty (bit-level granularity)", () => {
+		// Each 0.25 step in difficulty ≡ 1 bit of work. A solution that meets
+		// difficulty N must also meet any difficulty < N.
+		const nonce = 42;
+		const challenge = "fractional-test";
+
+		// boolean type for all fractional steps in [4, 5]
+		for (const d of [4, 4.25, 4.5, 4.75, 5]) {
+			expect(typeof validateSolution(nonce, challenge, d)).toBe("boolean");
+		}
+	});
+
+	it("should be monotonic — harder difficulty implies easier difficulty", () => {
+		// Search at d=3 (12 bits ≡ ~1/4k); over 200k iterations the probability
+		// of no match is e^-48, no flake risk. Searching at d=5 (~1/1M) in the
+		// same budget misses too often.
+		const challenge = "monotonic";
+		let solvingNonce = -1;
+		for (let n = 0; n < 200_000; n++) {
+			if (validateSolution(n, challenge, 3)) {
+				solvingNonce = n;
+				break;
+			}
+		}
+		expect(solvingNonce).toBeGreaterThanOrEqual(0);
+		for (const easier of [2.75, 2.5, 2.25, 2, 1]) {
+			expect(validateSolution(solvingNonce, challenge, easier)).toBe(true);
+		}
+	});
+
+	it("should treat integer difficulties identically to the legacy hex-prefix check", () => {
+		// Equivalence: old check was sha256(...).hex.startsWith('0'.repeat(d)).
+		// New check is hash < 2^(256 - 4*d). For integer d these are identical.
+		const challenge = "legacy-equivalence";
+		const legacy = (nonce: number, d: number): boolean => {
+			const hash = Array.from(
+				sha256(new TextEncoder().encode(nonce + challenge)),
+			)
+				.map((b: number) => b.toString(16).padStart(2, "0"))
+				.join("");
+			return hash.startsWith("0".repeat(d));
+		};
+		for (const d of [1, 2, 3, 4]) {
+			for (let n = 0; n < 500; n++) {
+				expect(validateSolution(n, challenge, d)).toBe(legacy(n, d));
+			}
+		}
 	});
 });
 

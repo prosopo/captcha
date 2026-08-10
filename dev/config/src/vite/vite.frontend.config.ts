@@ -21,11 +21,13 @@ import { default as viteReact } from "@vitejs/plugin-react";
 import type { Drop } from "esbuild";
 import type { ExternalOption } from "rollup";
 import css from "rollup-plugin-import-css";
+import { visualizer } from "rollup-plugin-visualizer";
 import type { UserConfig } from "vite";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { filterDependencies, getDependencies } from "../dependencies.js";
 import { VitePluginCloseAndCopy } from "./index.js";
 import type { ClosePluginOptions } from "./vite-plugin-close-and-copy.js";
+import VitePluginExternalizeObfuscatorDeadCode from "./vite-plugin-externalize-obfuscator-deadcode.js";
 
 export default async function (
 	packageName: string,
@@ -51,6 +53,11 @@ export default async function (
 
 	console.info(`Running at ${dir} in ${mode} mode`);
 	const isProduction = mode === "production";
+	// Rollup bundle stats (rollup-plugin-visualizer treemap). Off by default —
+	// set PROSOPO_BUNDLE_STATS=true to generate the stats page and open it in
+	// the browser once the bundle has been built.
+	const openBundleStats =
+		process.env.PROSOPO_BUNDLE_STATS?.trim().toLowerCase() === "true";
 	// NODE_ENV must be wrapped in quotes.
 	// If NODE_ENV ends up out of sync (one set to development and the other set to production), it causes
 	// issues like this: https://github.com/hashicorp/next-mdx-remote/pull/323
@@ -82,6 +89,10 @@ export default async function (
 		),
 		"process.env.PROSOPO_LOG_LEVEL": JSON.stringify(
 			process.env.PROSOPO_LOG_LEVEL,
+		),
+		// number of web workers used to solve PoW captchas in parallel
+		"process.env.PROSOPO_POW_WORKERS": JSON.stringify(
+			process.env.PROSOPO_POW_WORKERS,
 		),
 		// only needed if bundling with a site key
 		"process.env.PROSOPO_SITE_KEY": JSON.stringify(
@@ -182,14 +193,20 @@ export default async function (
 
 			rollupOptions: {
 				treeshake: {
-					annotations: false,
+					// Respect /*#__PURE__*/ annotations. Ignoring them retained
+					// dead library calls that every consumer then shipped;
+					// honouring them cuts ~17KB gzip off the widget bundle with
+					// a byte-identical detector.
+					annotations: true,
 					propertyReadSideEffects: false,
-					tryCatchDeoptimization: false,
-					moduleSideEffects: "no-external", //true,
-					preset: "smallest",
+					// Measured alternatives, both rejected:
+					//   moduleSideEffects: false        -> widget 8KB gzip LARGER
+					//   propertyWriteSideEffects: false -> detector dies on load
+					//                                     ("Maximum call stack
+					//                                     size exceeded")
+					moduleSideEffects: "no-external",
 					unknownGlobalSideEffects: false,
 				},
-				experimentalLogSideEffects: false,
 				external: rollupExternal,
 				watch: false,
 
@@ -199,9 +216,6 @@ export default async function (
 				},
 
 				plugins: [
-					nodePolyfills({
-						include: ["crypto"],
-					}),
 					// biome-ignore lint/suspicious/noExplicitAny: has to be any to represent object prototype
 					css() as any,
 					// biome-ignore lint/suspicious/noExplicitAny: has to be any to represent object prototype
@@ -235,12 +249,19 @@ export default async function (
 							}
 						},
 					},
-					// visualizer({
-					// 	open: true,
-					// 	template: "treemap", //'list',
-					// 	gzipSize: true,
-					// 	brotliSize: true,
-					// }),
+					// Bundle stats page — only wired in (and opened in the
+					// browser) when PROSOPO_BUNDLE_STATS=true. Defaults off so
+					// normal builds neither emit the report nor pop a window.
+					...(openBundleStats
+						? [
+								visualizer({
+									open: true,
+									template: "treemap",
+									gzipSize: true,
+									brotliSize: true,
+								}),
+							]
+						: []),
 					// I think we can use this plugin to build all packages instead of relying on the tsc step that's
 					// currently a precursor in package.json. However, it fails for the following reason:
 					// https://github.com/rollup/plugins/issues/243
@@ -254,6 +275,13 @@ export default async function (
 			},
 		},
 		plugins: [
+			VitePluginExternalizeObfuscatorDeadCode(),
+			// node polyfills must be a top-level Vite plugin (not inside
+			// build.rollupOptions.plugins) so its inject sub-plugin initialises
+			// before transform runs under Rolldown/Vite 8.
+			nodePolyfills({
+				include: ["crypto"],
+			}),
 			// Not sure if we need this plugin or not, it works without it
 			// @ts-ignore
 			viteReact(),

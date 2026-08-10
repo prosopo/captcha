@@ -1,5 +1,120 @@
 # @prosopo/react-procaptcha-wrapper
 
+## 1.1.101
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.103
+
+## 1.1.100
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.102
+
+## 1.1.99
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.101
+
+## 1.1.98
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.100
+
+## 1.1.97
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.99
+
+## 1.1.96
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.98
+
+## 1.1.95
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.97
+
+## 1.1.94
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.96
+
+## 1.1.93
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.95
+
+## 1.1.92
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.94
+
+## 1.1.91
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.93
+
+## 1.1.90
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.92
+
+## 1.1.89
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.91
+
+## 1.1.88
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.90
+
+## 1.1.87
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.89
+
+## 1.1.86
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.88
+
+## 1.1.85
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.87
+
+## 1.1.84
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.86
+
+## 1.1.83
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.85
+
+## 1.1.82
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.84
+
+## 1.1.81
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.83
+
+## 1.1.80
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.82
+
+## 1.1.79
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.81
+
 ## 1.1.78
 ### Patch Changes
 

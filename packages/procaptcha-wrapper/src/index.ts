@@ -24,8 +24,14 @@ export const renderProcaptcha: RendererFunction = createRenderer({
 	scriptId: import.meta.env.VITE_RENDER_SCRIPT_ID,
 });
 
+// `Languages` is a const object, so it carries no type meaning of its own:
+// re-exporting the name as a type gave consumers a binding they could not
+// actually use in a type position. Export the union of its values instead,
+// which is what ProcaptchaRenderOptions["language"] already accepts.
+type ProcaptchaLanguages = (typeof Languages)[keyof typeof Languages];
+
 export type {
 	ProcaptchaRenderOptions,
 	CaptchaType as ProcaptchaType,
-	Languages as ProcaptchaLanguages,
+	ProcaptchaLanguages,
 };

@@ -26,13 +26,11 @@ const ProcaptchaWidget: LazyExoticComponent<ProcaptchaWidgetComponent> = lazy(
 	async () => import("./ProcaptchaWidget.js"),
 );
 
+// Spread props rather than enumerating: matches the image (Procaptcha) and
+// PoW (ProcaptchaPow) sibling wrappers so any prop the inner widget consumes
+// can never be silently dropped by this Suspense wrapper.
 export const ProcaptchaPuzzle = (props: ProcaptchaProps) => (
 	<Suspense>
-		<ProcaptchaWidget
-			config={props.config}
-			callbacks={props.callbacks}
-			frictionlessState={props.frictionlessState}
-			i18n={props.i18n}
-		/>
+		<ProcaptchaWidget {...props} />
 	</Suspense>
 );

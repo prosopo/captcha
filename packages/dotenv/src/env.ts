@@ -22,7 +22,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const logger = getLogger(
 	parseLogLevel(process.env.PROSOPO_LOG_LEVEL, LogLevel.enum.info),
-	import.meta.url,
+	"dotenv",
 );
 
 export function getEnv() {
@@ -55,7 +55,8 @@ export function loadEnv(
 }
 
 /**
- * Get the path to the .env file. Search up directories until `.env.${env}` is found.
+ * Get the path to the .env file. Search up directories until `${filename}.${env}`
+ * is found — or, when `env` sanitises to the empty string, plain `filename`.
  * If not found, look in the root directory, if specified, or 2 directories up from this file.
  * @param rootDir
  * @param filename
@@ -69,7 +70,10 @@ export function getEnvFile(
 	nodeEnv?: string,
 ) {
 	const env = nodeEnv || getEnv();
-	const fileNameFull = `${filename}.${env}`;
+	// getEnv strips non-word characters, so a NODE_ENV of e.g. "!!!" sanitises
+	// to the empty string. Suffixing that would look for ".env." — a file nobody
+	// creates — so fall back to the unsuffixed filename instead.
+	const fileNameFull = env ? `${filename}.${env}` : filename;
 
 	let searchPath = path.resolve(rootDir || ".");
 

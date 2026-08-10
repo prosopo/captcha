@@ -12,77 +12,144 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	getProcaptchaRandomActiveProvider,
+	getRetryDelayMs,
+	pickIpMode,
 	providerRetry,
 } from "../providers.js";
 
-// Mock the load-balancer module
 vi.mock("@prosopo/load-balancer", () => ({
-	getRandomActiveProvider: vi.fn(),
+	getRandomActiveProvider: vi.fn(async (env: string) => ({
+		providerAccount: "dns-routed",
+		provider: {
+			url:
+				env === "production"
+					? "https://pronode.prosopo.io"
+					: "http://localhost:9229",
+		},
+	})),
+	getRandomProviderFromList: vi.fn(
+		async (_env: string, _ipMode?: string, excludeUrl?: string) => ({
+			providerAccount: "5FromList",
+			provider: {
+				url: excludeUrl
+					? "https://provider-from-list-b.io"
+					: "https://provider-from-list-a.io",
+			},
+		}),
+	),
 }));
 
 describe("providers", () => {
+	// The load-balancer mock functions are module-level, so their call history
+	// accumulates across tests — clear it between cases to keep call-count
+	// assertions independent.
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
 	describe("getProcaptchaRandomActiveProvider", () => {
-		// biome-ignore lint/suspicious/noExplicitAny: Store original crypto function
-		let originalGetRandomValues: any;
-
-		beforeEach(() => {
-			originalGetRandomValues = global.window.crypto.getRandomValues.bind(
-				global.window.crypto,
-			);
-		});
-
-		afterEach(() => {
-			global.window.crypto.getRandomValues = originalGetRandomValues;
-		});
-
-		it("should generate random values and call getRandomActiveProvider", async () => {
-			// Mock window.crypto.getRandomValues
-			const mockRandomValues = new Uint8Array([
-				10, 20, 30, 40, 50, 60, 70, 80, 90, 100,
-			]);
-			const mockGetRandomValues = vi.fn(() => mockRandomValues);
-			// biome-ignore lint/suspicious/noExplicitAny: Mock crypto API
-			global.window.crypto.getRandomValues = mockGetRandomValues as any;
-
-			// Mock the getRandomActiveProvider import
+		it("delegates to the load-balancer static-DNS resolver", async () => {
 			const { getRandomActiveProvider } = await import(
 				"@prosopo/load-balancer"
 			);
-			vi.mocked(getRandomActiveProvider).mockResolvedValue({
-				providerUrl: "https://test-provider.com",
-				// biome-ignore lint/suspicious/noExplicitAny: Mock return type
-			} as any);
 
-			const result = await getProcaptchaRandomActiveProvider("development");
+			const result = await getProcaptchaRandomActiveProvider("production");
 
-			expect(mockGetRandomValues).toHaveBeenCalledWith(expect.any(Uint8Array));
-			expect(getRandomActiveProvider).toHaveBeenCalledWith("development", 550); // sum of mockRandomValues
-			expect(result).toEqual({ providerUrl: "https://test-provider.com" });
+			expect(getRandomActiveProvider).toHaveBeenCalledWith(
+				"production",
+				undefined,
+			);
+			expect(result.provider.url).toBe("https://pronode.prosopo.io");
 		});
 
-		it("should use different random values on each call", async () => {
-			let callCount = 0;
-			const mockGetRandomValues = vi.fn((arr: Uint8Array) => {
-				callCount++;
-				arr.fill(callCount);
-				return arr;
-			});
-			// biome-ignore lint/suspicious/noExplicitAny: Mock crypto API
-			global.window.crypto.getRandomValues = mockGetRandomValues as any;
-
+		it("forwards the ipMode parameter to the load-balancer resolver", async () => {
 			const { getRandomActiveProvider } = await import(
 				"@prosopo/load-balancer"
 			);
-			// biome-ignore lint/suspicious/noExplicitAny: Mock return type
-			vi.mocked(getRandomActiveProvider).mockResolvedValue({} as any);
 
-			await getProcaptchaRandomActiveProvider("development");
-			await getProcaptchaRandomActiveProvider("development");
+			await getProcaptchaRandomActiveProvider("production", "ipv4");
 
-			expect(mockGetRandomValues).toHaveBeenCalledTimes(2);
+			expect(getRandomActiveProvider).toHaveBeenCalledWith(
+				"production",
+				"ipv4",
+			);
+		});
+
+		it("uses the DNS-routed resolver on the first attempt", async () => {
+			const { getRandomActiveProvider, getRandomProviderFromList } =
+				await import("@prosopo/load-balancer");
+
+			const result = await getProcaptchaRandomActiveProvider(
+				"production",
+				undefined,
+				{ attempt: 1 },
+			);
+
+			expect(getRandomActiveProvider).toHaveBeenCalled();
+			expect(getRandomProviderFromList).not.toHaveBeenCalled();
+			expect(result.provider.url).toBe("https://pronode.prosopo.io");
+		});
+
+		it("picks a random provider from the list on a retry", async () => {
+			const { getRandomProviderFromList } = await import(
+				"@prosopo/load-balancer"
+			);
+
+			const result = await getProcaptchaRandomActiveProvider(
+				"production",
+				"ipv4",
+				{ attempt: 2, excludeUrl: "https://pronode.prosopo.io" },
+			);
+
+			expect(getRandomProviderFromList).toHaveBeenCalledWith(
+				"production",
+				"ipv4",
+				"https://pronode.prosopo.io",
+			);
+			// The mock returns a different url when an excludeUrl is supplied.
+			expect(result.provider.url).toBe("https://provider-from-list-b.io");
+		});
+	});
+
+	describe("getRetryDelayMs", () => {
+		it("grows exponentially from the base delay, capped at the max", () => {
+			// random=1 → full jittered value == the (capped) exponential ceiling.
+			expect(getRetryDelayMs(0, () => 1)).toBe(500);
+			expect(getRetryDelayMs(1, () => 1)).toBe(1000);
+			expect(getRetryDelayMs(2, () => 1)).toBe(2000);
+			expect(getRetryDelayMs(3, () => 1)).toBe(4000);
+			// 500 * 2^6 = 32000 → capped at 10000.
+			expect(getRetryDelayMs(6, () => 1)).toBe(10000);
+			expect(getRetryDelayMs(20, () => 1)).toBe(10000);
+		});
+
+		it("applies full jitter — a fraction of the ceiling", () => {
+			// random=0 → no delay; random=0.5 → half the ceiling.
+			expect(getRetryDelayMs(2, () => 0)).toBe(0);
+			expect(getRetryDelayMs(2, () => 0.5)).toBe(1000);
+		});
+
+		it("clamps negative or fractional attempt counts", () => {
+			expect(getRetryDelayMs(-5, () => 1)).toBe(500);
+			expect(getRetryDelayMs(1.9, () => 1)).toBe(1000);
+		});
+	});
+
+	describe("pickIpMode", () => {
+		it("picks ipv4 when both flags are set", () => {
+			expect(pickIpMode({ ipv4: true, ipv6: true })).toBe("ipv4");
+		});
+
+		it("returns undefined when neither flag is set", () => {
+			expect(pickIpMode({})).toBeUndefined();
+			expect(pickIpMode(undefined)).toBeUndefined();
+		});
+
+		it("returns ipv6 when only ipv6 is set", () => {
+			expect(pickIpMode({ ipv6: true })).toBe("ipv6");
 		});
 	});
 
@@ -105,7 +172,8 @@ describe("providers", () => {
 			const retryFn = vi.fn().mockResolvedValue(undefined);
 			const stateReset = vi.fn();
 
-			await providerRetry(currentFn, retryFn, stateReset, 1, 3);
+			// backoffMs=0 keeps the test fast; timing is covered by getRetryDelayMs.
+			await providerRetry(currentFn, retryFn, stateReset, 1, 3, 0);
 
 			expect(currentFn).toHaveBeenCalledTimes(1);
 			expect(stateReset).toHaveBeenCalledTimes(1);
@@ -162,11 +230,37 @@ describe("providers", () => {
 				.mockImplementation(() => {});
 
 			await expect(
-				providerRetry(currentFn, retryFn, stateReset, 1, 3),
+				providerRetry(currentFn, retryFn, stateReset, 1, 3, 0),
 			).rejects.toThrow("Retry failed");
 
 			expect(currentFn).toHaveBeenCalledTimes(1);
 			expect(stateReset).toHaveBeenCalledTimes(1);
+			expect(retryFn).toHaveBeenCalledTimes(1);
+
+			consoleErrorSpy.mockRestore();
+		});
+
+		it("waits for the backoff delay before retrying", async () => {
+			const error = new Error("Provider failed");
+			const currentFn = vi.fn().mockRejectedValue(error);
+			const order: string[] = [];
+			const retryFn = vi.fn(async () => {
+				order.push("retry");
+			});
+			const stateReset = vi.fn(() => {
+				order.push("reset");
+			});
+			const consoleErrorSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
+
+			const start = Date.now();
+			await providerRetry(currentFn, retryFn, stateReset, 1, 3, 40);
+			const elapsed = Date.now() - start;
+
+			// State is reset before the wait, then the retry fires after the delay.
+			expect(order).toEqual(["reset", "retry"]);
+			expect(elapsed).toBeGreaterThanOrEqual(30);
 			expect(retryFn).toHaveBeenCalledTimes(1);
 
 			consoleErrorSpy.mockRestore();

@@ -43,6 +43,7 @@
 		"INVALID_BODY": "Hindi wastong body",
 		"PARSE_ERROR": "Error sa pagsasalin ng request",
 		"SPAM_EMAIL_RULE": "സ്പാം ഫിൽട്ടർ നിയമങ്ങളാൽ ഇമെയിൽ വിലാസം തടഞ്ഞു",
+		"SPAM_EMAIL_COUNT_EXCEEDED": "ഈ ഇമെയിൽ വിലാസത്തിൽ നിന്ന് വളരെയധികം സമർപ്പണങ്ങൾ",
 		"VPN_BLOCKED": "ഈ സൈറ്റിന് VPN കണക്ഷനുകളിൽ നിന്നുള്ള അഭ്യർത്ഥനകൾ അനുവദനീയമല്ല",
 		"PROXY_BLOCKED": "ഈ സൈറ്റിന് പ്രോക്സി സെർവറുകളിൽ നിന്നുള്ള അഭ്യർത്ഥനകൾ അനുവദനീയമല്ല",
 		"TOR_BLOCKED": "ഈ സൈറ്റിന് Tor എക്സിറ്റ് നോഡുകളിൽ നിന്നുള്ള അഭ്യർത്ഥനകൾ അനുവദനീയമല്ല",
@@ -436,6 +437,7 @@
 		"NO_CAPTCHA": "Walang natagpuang captcha",
 		"NO_SESSION_FOUND": "Walang natagpuang sesyon",
 		"IP_ADDRESS_MISMATCH": "IP വിലാസങ്ങൾ പൊരുത്തപ്പെടുന്നില്ല",
+		"INVALID_SALT": "അസാധുവായ സാൾട്ട്",
 		"INVALID_TOKEN": "Hindi wastong token",
 		"INVALID_SOLUTION": "Hindi wastong solusyon",
 		"DECRYPTION_ERROR": "Error sa pagdedecrypt"

@@ -43,6 +43,7 @@
 		"INVALID_BODY": "Geçersiz gövde",
 		"PARSE_ERROR": "İstek ayrıştırma hatası",
 		"SPAM_EMAIL_RULE": "E-posta adresi spam filtresi kuralları tarafından engellendi",
+		"SPAM_EMAIL_COUNT_EXCEEDED": "Bu e-posta adresinden çok fazla gönderi",
 		"VPN_BLOCKED": "Bu site için VPN bağlantılarından gelen isteklere izin verilmiyor",
 		"PROXY_BLOCKED": "Bu site için proxy sunucularından gelen isteklere izin verilmiyor",
 		"TOR_BLOCKED": "Bu site için Tor çıkış düğümlerinden gelen isteklere izin verilmiyor",
@@ -436,6 +437,7 @@
 		"NO_CAPTCHA": "Hiçbir captcha bulunamadı",
 		"NO_SESSION_FOUND": "Oturum bulunamadı",
 		"IP_ADDRESS_MISMATCH": "IP adresleri eşleşmiyor",
+		"INVALID_SALT": "Geçersiz salt",
 		"INVALID_TOKEN": "Geçersiz belirteç",
 		"INVALID_SOLUTION": "Geçersiz çözüm",
 		"DECRYPTION_ERROR": "Şifreleme hatası"

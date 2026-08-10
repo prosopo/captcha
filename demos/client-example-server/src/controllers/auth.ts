@@ -34,7 +34,7 @@ import type { Connection } from "mongoose";
 import { z } from "zod";
 import type { UserInterface } from "../models/user.js";
 
-const logger = getLogger("info", import.meta.url);
+const logger = getLogger("info", "client-example-server:auth");
 
 const SubscribeBodySpec = ProcaptchaResponse.merge(
 	z.object({
@@ -85,9 +85,6 @@ const getPairAndSecretForSiteKey = (
 	]) {
 		const newSecret = `${baseSecret}//${captchaType}`;
 		pair = getPair(newSecret);
-		console.log(
-			`[PAIR CHECK] Checking pair for ${captchaType}: ${pair?.address} (expected: ${siteKey})`,
-		);
 		logger.info(() => ({
 			msg: "Checking pair",
 			data: {
@@ -97,7 +94,6 @@ const getPairAndSecretForSiteKey = (
 			},
 		}));
 		if (pair.address === siteKey) {
-			console.log(`[PAIR CHECK] ✅ Match found for ${captchaType}!`);
 			secret = newSecret;
 			break;
 		}
@@ -236,29 +232,29 @@ const signup = async (
 			const salt = randomAsHex(32);
 			// !!!DUMMY CODE!!! - Do not use in production. Use bcrypt or similar for password hashing.
 			const passwordHash = hashPassword(`${req.body.password}${salt}`);
-			if (passwordHash) {
-				return User.create({
-					email: email,
-					name: req.body.name,
-					password: passwordHash,
-					salt: salt,
+			// No `if (passwordHash)` guard: the hash is always a non-empty hex
+			// string, and the guard's absent else-branch left the request hanging
+			// with no response at all.
+			return User.create({
+				email: email,
+				name: req.body.name,
+				password: passwordHash,
+				salt: salt,
+			})
+				.then(() => {
+					res.status(200).json({ message: "user created" });
 				})
-					.then(() => {
-						res.status(200).json({ message: "user created" });
-					})
-					.catch((err) => {
-						logger.error(() => ({
-							err,
-							msg: "Error creating user in database",
-						}));
-						res.status(502).json({ message: "error while creating the user" });
-					});
-			}
-		} else {
-			res
-				.status(401)
-				.json({ message: "user has not completed a captcha", verified });
+				.catch((err) => {
+					logger.error(() => ({
+						err,
+						msg: "Error creating user in database",
+					}));
+					res.status(502).json({ message: "error while creating the user" });
+				});
 		}
+		res
+			.status(401)
+			.json({ message: "user has not completed a captcha", verified });
 	} catch (err) {
 		console.error("error", err);
 		res
@@ -347,25 +343,38 @@ const login = async (
 
 const isAuth = (req: Request, res: Response) => {
 	const authHeader = req.get("Authorization") || "";
+	// Each branch returns: without the returns a missing header still fell
+	// through to `at(headerParts, 1)`, which throws on a one-element array, and
+	// a failed verify sent a 500 followed by a 401 on the same response.
 	if (!authHeader) {
-		res.status(401).json({ message: "not authenticated" });
+		return res.status(401).json({ message: "not authenticated" });
 	}
 
-	const token = at(authHeader.split(" "), 1);
+	const headerParts = authHeader.split(" ");
+	if (headerParts.length < 2) {
+		return res.status(401).json({ message: "not authenticated" });
+	}
+
+	const token = at(headerParts, 1);
+	// "Bearer " with nothing after it is a malformed credential, not a server
+	// fault: jwt.verify("") throws and would otherwise surface as a 500.
+	if (!token) {
+		return res.status(401).json({ message: "not authenticated" });
+	}
+
 	let decodedToken: string | JwtPayload = "";
 	try {
 		decodedToken = jwt.verify(token, "secret");
 	} catch (err) {
-		res.status(500).json({
+		return res.status(500).json({
 			message: (err as Error).message || "could not decode the token",
 		});
 	}
 
 	if (!decodedToken) {
-		res.status(401).json({ message: "unauthorized" });
-	} else {
-		res.status(200).json({ message: "here is your resource" });
+		return res.status(401).json({ message: "unauthorized" });
 	}
+	return res.status(200).json({ message: "here is your resource" });
 };
 
 export { signup, login, isAuth };

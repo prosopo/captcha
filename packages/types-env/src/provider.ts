@@ -16,4 +16,5 @@ import type { ProsopoEnvironment } from "./env.js";
 
 export interface ProviderEnvironment extends ProsopoEnvironment {
 	config: ProsopoConfigOutput;
+	datasetId?: string;
 }

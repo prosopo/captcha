@@ -342,6 +342,7 @@
 		"INVALID_BODY": "Ongeldige body",
 		"PARSE_ERROR": "Fout bij parsen van aanvraag",
 		"SPAM_EMAIL_RULE": "E-mailadres geblokkeerd door spamfilterregels",
+		"SPAM_EMAIL_COUNT_EXCEEDED": "Te veel inzendingen vanaf dit e-mailadres",
 		"VPN_BLOCKED": "Verzoeken via VPN-verbindingen zijn niet toegestaan voor deze site",
 		"PROXY_BLOCKED": "Verzoeken via proxyservers zijn niet toegestaan voor deze site",
 		"TOR_BLOCKED": "Verzoeken via Tor-exitnodes zijn niet toegestaan voor deze site",
@@ -436,6 +437,7 @@
 		"NO_CAPTCHA": "Geen captcha gevonden",
 		"NO_SESSION_FOUND": "Geen sessie gevonden",
 		"IP_ADDRESS_MISMATCH": "IP-adressen komen niet overeen",
+		"INVALID_SALT": "Ongeldig salt",
 		"INVALID_TOKEN": "Ongeldige token",
 		"INVALID_SOLUTION": "Ongeldige oplossing",
 		"DECRYPTION_ERROR": "Fout bij decoderen"

@@ -43,6 +43,7 @@
 		"INVALID_BODY": "Ugyldig kropp",
 		"PARSE_ERROR": "Feil ved å tolke forespørsel",
 		"SPAM_EMAIL_RULE": "E-postadresse blokkert av spamfilterregler",
+		"SPAM_EMAIL_COUNT_EXCEEDED": "For mange innsendinger fra denne e-postadressen",
 		"VPN_BLOCKED": "Forespørsler fra VPN-tilkoblinger er ikke tillatt for dette nettstedet",
 		"PROXY_BLOCKED": "Forespørsler fra proxyservere er ikke tillatt for dette nettstedet",
 		"TOR_BLOCKED": "Forespørsler fra Tor-utgangsnoder er ikke tillatt for dette nettstedet",
@@ -436,6 +437,7 @@
 		"NO_CAPTCHA": "Ingen captcha funnet",
 		"NO_SESSION_FOUND": "Ingen økt funnet",
 		"IP_ADDRESS_MISMATCH": "IP-adresser stemmer ikke overens",
+		"INVALID_SALT": "Ugyldig salt",
 		"INVALID_TOKEN": "Ugyldig token",
 		"INVALID_SOLUTION": "Ugyldig løsning",
 		"DECRYPTION_ERROR": "Feil ved dekryptering"

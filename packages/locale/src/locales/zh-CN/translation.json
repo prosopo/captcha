@@ -43,6 +43,7 @@
 		"INVALID_BODY": "无效的主体",
 		"PARSE_ERROR": "解析请求时出错",
 		"SPAM_EMAIL_RULE": "电子邮件地址被垃圾邮件过滤规则拦截",
+		"SPAM_EMAIL_COUNT_EXCEEDED": "该电子邮件地址提交次数过多",
 		"VPN_BLOCKED": "此网站不允许来自VPN连接的请求",
 		"PROXY_BLOCKED": "此网站不允许来自代理服务器的请求",
 		"TOR_BLOCKED": "此网站不允许来自Tor出口节点的请求",
@@ -436,6 +437,7 @@
 		"NO_CAPTCHA": "找不到验证码",
 		"NO_SESSION_FOUND": "找不到会话",
 		"IP_ADDRESS_MISMATCH": "检测到 IP 地址不匹配",
+		"INVALID_SALT": "盐值无效",
 		"INVALID_TOKEN": "无效的令牌",
 		"INVALID_SOLUTION": "无效的解决方案",
 		"DECRYPTION_ERROR": "解密错误"

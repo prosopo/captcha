@@ -342,6 +342,7 @@
 		"INVALID_BODY": "Invalid body",
 		"PARSE_ERROR": "Error parsing request",
 		"SPAM_EMAIL_RULE": "Alamat e-mel disekat oleh peraturan penapis spam",
+		"SPAM_EMAIL_COUNT_EXCEEDED": "Terlalu banyak penghantaran dari alamat e-mel ini",
 		"VPN_BLOCKED": "Permintaan daripada sambungan VPN tidak dibenarkan untuk laman ini",
 		"PROXY_BLOCKED": "Permintaan daripada pelayan proksi tidak dibenarkan untuk laman ini",
 		"TOR_BLOCKED": "Permintaan daripada nod keluar Tor tidak dibenarkan untuk laman ini",
@@ -436,6 +437,7 @@
 		"NO_CAPTCHA": "No captcha found",
 		"NO_SESSION_FOUND": "No session found",
 		"IP_ADDRESS_MISMATCH": "Alamat IP tidak sepadan",
+		"INVALID_SALT": "Garam tidak sah",
 		"INVALID_TOKEN": "Invalid token",
 		"INVALID_SOLUTION": "Invalid solution",
 		"DECRYPTION_ERROR": "Error decrypting"

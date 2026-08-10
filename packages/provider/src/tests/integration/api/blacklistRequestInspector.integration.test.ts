@@ -27,6 +27,7 @@ import { randomAsHex } from "@prosopo/util-crypto";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
 import {
 	afterAll,
+	afterEach,
 	beforeAll,
 	beforeEach,
 	describe,
@@ -34,7 +35,10 @@ import {
 	it,
 	vi,
 } from "vitest";
-import { getPrioritisedAccessRule } from "../../../api/blacklistRequestInspector.js";
+import {
+	getPrioritisedAccessRule,
+	getVerdictCache,
+} from "../../../api/blacklistRequestInspector.js";
 
 describe("blacklistRequestInspector Integration Tests", () => {
 	/**
@@ -57,7 +61,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 
 		beforeAll(async () => {
 			// Start MongoDB container
-			mongoContainer = await new GenericContainer("mongo:6.0.17")
+			mongoContainer = await new GenericContainer("mongo:6.0.28")
 				.withExposedPorts(27017)
 				.withEnvironment({
 					MONGO_INITDB_ROOT_USERNAME: "root",
@@ -126,13 +130,26 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			await db.getRedisAccessRulesConnection().getClient();
 
 			accessRulesStorage = env.getDb().getUserAccessRulesStorage();
-		});
+		}, 120_000);
 
 		beforeEach(async () => {
 			[siteKeyMnemonic, siteKey] = await generateMnemonic();
 
 			// Clear the access rules storage before each test
 			await accessRulesStorage.deleteAllRules();
+			// Process-wide verdict cache is not reset by deleteAllRules; a
+			// prior test's cached "no rule found" would otherwise mask the
+			// rules the current test just inserted for the TTL window.
+			getVerdictCache().clear();
+		});
+
+		// accessRulesStorage is built once in beforeAll, and each test spies on
+		// its findRules. vitest 4 hands back the *existing* spy (with its call
+		// history) when spyOn targets an already-spied method, where vitest 3
+		// gave a fresh one — so without restoring, the call counts accumulate
+		// across tests and the toHaveBeenCalledTimes(1) assertions see 2, 3, 4.
+		afterEach(() => {
+			vi.restoreAllMocks();
 		});
 
 		it("should return a rule when a JA4-UserAgent rule exists and the user matches the User Agent and the JA4", async () => {
@@ -158,8 +175,9 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				siteKey,
 			);
 
-			// One greedy query replaces the old per-subset loop. JS rank then
-			// filters + sorts client-side.
+			// One query, matchingFieldsOnly=true engages server-side
+			// specificity rank in FT.AGGREGATE — every returned rule
+			// already applies, so JS rank is a defensive pass.
 			expect(spy).toHaveBeenCalledTimes(1);
 			expect(spy).toHaveBeenCalledWith(
 				{
@@ -173,7 +191,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					}),
 					userScopeMatch: FilterScopeMatch.Greedy,
 				},
-				false,
+				true,
 				true,
 			);
 
@@ -203,8 +221,10 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				siteKey,
 			);
 
-			// One greedy query; rank rejects the rule because userAgent
-			// doesn't match even though ja4 does.
+			// matchingFieldsOnly=true: the strict AND-of-disjunctions
+			// filter already excludes this rule at the Redis side
+			// because @userAgentHash on the rule doesn't equal the
+			// request's userAgentHash.
 			expect(spy).toHaveBeenCalledTimes(1);
 			expect(spy).toHaveBeenCalledWith(
 				{
@@ -218,7 +238,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					}),
 					userScopeMatch: FilterScopeMatch.Greedy,
 				},
-				false,
+				true,
 				true,
 			);
 			expect(result).toHaveLength(0);

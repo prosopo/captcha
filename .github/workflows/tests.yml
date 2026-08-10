@@ -34,11 +34,16 @@ defaults:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    # GH_RUNNER unset -> GitHub-hosted. Set to a JSON array (the self-hosted
+    # fleet) -> this job's capacity requirement is appended to it: cores, RAM,
+    # disk. Runners advertise one label per step up to their own size, so a job
+    # only lands on a host big enough for it. Set to a JSON string -> used as
+    # given, which is how a repo opts back out to a hosted runner.
+    runs-on: ${{ vars.GH_RUNNER && startsWith(vars.GH_RUNNER, '[') && fromJSON(format('["{0}","4c","8g","40d"]', join(fromJSON(vars.GH_RUNNER), '","'))) || fromJSON(vars.GH_RUNNER || '"ubuntu-latest"') }}
     if: github.event.pull_request.draft == false
     steps:
       - name: Print contexts
-        uses: prosopo/captcha/.github/actions/print_contexts@gha
+        uses: prosopo/github_actions/.github/actions/print_contexts@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
         with:
           INPUTS_CONTEXT: ${{ toJson(inputs) }}
           NEEDS_CONTEXT: ${{ toJson(needs) }}
@@ -48,19 +53,19 @@ jobs:
       - name: Set NX_PARALLEL environment variable
         run: echo "NX_PARALLEL=$(nproc)" >> $GITHUB_ENV
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           token: ${{ secrets.PROSOPONATOR_PAT }}
           submodules: "recursive"
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: 'npm'
 
-      - uses: prosopo/captcha/.github/actions/npm@gha
+      - uses: prosopo/github_actions/.github/actions/npm@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
         with:
-          npm_ci_args: '--include=dev'
+          npm_ci_args: '--include=dev --no-audit --no-fund --prefer-offline'
 
       - name: env
         run: |
@@ -116,6 +121,11 @@ jobs:
         env:
           NX_PARALLEL: "1"
           SKIP_REDIS: "true"
+          # Committed test detector-pool fixture (throwaway keys). A non-empty
+          # pool makes the provider run scored detection instead of the
+          # empty-pool PoW fallback, so frictionless integration tests exercise
+          # the real decrypt path.
+          PROSOPO_DETECTOR_POOL_DIR: ${{ github.workspace }}/packages/provider/fixtures/detector-pool
         run: |
           npx concurrently \
             "NODE_ENV=test npm run start:provider" \

@@ -15,25 +15,39 @@
 import type { ProcaptchaRenderOptions } from "@prosopo/types";
 import { type RendererFunction, loadRenderFunction } from "./renderFunction.js";
 
-interface RendererSettings {
+export interface RendererSettings {
 	scriptUrl: string;
 	scriptId: string;
 }
 
+/** Loads the render function from a remote script. Injected so tests need no network. */
+export type LoadRenderFunction = (
+	scriptUrl: string,
+	scriptId: string,
+) => Promise<RendererFunction>;
+
 export const createRenderer = (
 	settings: RendererSettings,
+	load: LoadRenderFunction = loadRenderFunction,
 ): RendererFunction => {
-	let renderFunction: RendererFunction;
+	// The in-flight promise is cached, not just the resolved function: caching
+	// only the result lets two concurrent render() calls both see "not loaded"
+	// and each inject a script tag for the same id.
+	let pending: Promise<RendererFunction> | undefined;
 
 	const getRenderFunction = async (): Promise<RendererFunction> => {
-		if (!renderFunction) {
-			renderFunction = await loadRenderFunction(
-				settings.scriptUrl,
-				settings.scriptId,
+		if (!pending) {
+			// A failed load must not be cached, otherwise every later render()
+			// replays the same rejection and the widget can never recover.
+			pending = load(settings.scriptUrl, settings.scriptId).catch(
+				(error: unknown) => {
+					pending = undefined;
+					throw error;
+				},
 			);
 		}
 
-		return renderFunction;
+		return pending;
 	};
 
 	return async (

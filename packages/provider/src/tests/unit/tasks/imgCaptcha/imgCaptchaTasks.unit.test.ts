@@ -25,9 +25,12 @@ import {
 	type Captcha,
 	type CaptchaSolution,
 	CaptchaStatus,
+	CaptchaType,
+	FrictionlessReason,
 	IpAddressType,
 	type PendingImageCaptchaRequest,
 	type RequestHeaders,
+	type Session,
 	type UserCommitment,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
@@ -39,7 +42,7 @@ import { ImgCaptchaManager } from "../../../../tasks/imgCaptcha/imgCaptchaTasks.
 import { buildTreeAndGetCommitmentId } from "../../../../tasks/imgCaptcha/imgCaptchaTasksUtils.js";
 import { shuffleArray } from "../../../../util.js";
 
-const loggerOuter = getLogger("info", import.meta.url);
+const loggerOuter = getLogger("info", "test:img-captcha-tasks");
 
 // Mock dependencies
 vi.mock("@prosopo/datasets", () => ({
@@ -179,6 +182,7 @@ describe("ImgCaptchaManager", () => {
 			getClientRecord: vi.fn(),
 			getSolutionByCaptchaId: vi.fn(),
 			storeUserImageCaptchaSolution: vi.fn(),
+			countCommitmentsByNormalisedEmail: vi.fn(),
 		} as unknown as IProviderDatabase;
 
 		pair = {
@@ -194,6 +198,12 @@ describe("ImgCaptchaManager", () => {
 			trace: vi.fn().mockImplementation(loggerOuter.trace.bind(loggerOuter)),
 			fatal: vi.fn().mockImplementation(loggerOuter.fatal.bind(loggerOuter)),
 			warn: vi.fn().mockImplementation(loggerOuter.warn.bind(loggerOuter)),
+			// Child logger binds context but routes to the same spies so
+			// existing `.mock.calls` assertions keep working. Mirrors the
+			// real `Logger.with(obj)` signature.
+			with(_obj: object) {
+				return this;
+			},
 		} as unknown as Logger;
 		logger = mockLogger;
 
@@ -572,6 +582,7 @@ describe("ImgCaptchaManager", () => {
 			userSubmitted: true,
 			serverChecked: false,
 			requestedAtTimestamp: new Date(0),
+			submittedAtTimestamp: new Date(),
 			ipAddress: {
 				lower: getIPAddress("1.1.1.1").bigInt(),
 				upper: 0n,
@@ -622,6 +633,7 @@ describe("ImgCaptchaManager", () => {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(0),
+				submittedAtTimestamp: new Date(),
 				ipAddress: {
 					lower: getIPAddress("1.1.1.1").bigInt(),
 					upper: 0n,
@@ -681,6 +693,7 @@ describe("ImgCaptchaManager", () => {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
 				ipAddress: {
 					lower: ipAddress.bigInt(),
 					upper: 0n,
@@ -751,6 +764,7 @@ describe("ImgCaptchaManager", () => {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
 				ipAddress: {
 					lower: ipAddress.bigInt(),
 					upper: 0n,
@@ -808,6 +822,7 @@ describe("ImgCaptchaManager", () => {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
 				ipAddress: {
 					lower: ipAddress.bigInt(),
 					upper: 0n,
@@ -865,6 +880,116 @@ describe("ImgCaptchaManager", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(imgCaptchaManager as any).decisionMachineRunner.decide = originalDecide;
 		});
+
+		it("forwards every session-derived field into the decide() input", async () => {
+			const userAccount = "userAccount";
+			const dappAccount = "dappAccount";
+			const commitmentId = "commitmentId-fields";
+			const ipAddress = getIPAddress("1.1.1.1");
+			const headers: RequestHeaders = { a: "1" };
+			const sessionId = "session-fields";
+
+			const commitment: Partial<UserCommitment> = {
+				id: commitmentId,
+				userAccount,
+				dappAccount,
+				providerAccount: "providerAccount",
+				datasetId: "datasetId",
+				result: { status: CaptchaStatus.approved },
+				userSignature: "",
+				userSubmitted: true,
+				serverChecked: false,
+				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
+				ipAddress: {
+					lower: ipAddress.bigInt(),
+					upper: 0n,
+					type: IpAddressType.v4,
+				},
+				headers,
+				ja4: "ja4",
+				lastUpdatedTimestamp: new Date(),
+				sessionId,
+			};
+
+			const sessionRecord: Session = {
+				sessionId,
+				createdAt: new Date(),
+				token: "test-token",
+				score: 0.42,
+				threshold: 0.27,
+				scoreComponents: {
+					baseScore: 1,
+					unverifiedHost: 0.2,
+					dnsAsymmetry: 0.5,
+					triggeredDetectors: [27],
+					shadowDomPenalty: false,
+				},
+				ipAddress: {
+					lower: ipAddress.bigInt(),
+					upper: 0n,
+					type: IpAddressType.v4,
+				},
+				captchaType: CaptchaType.image,
+				webView: false,
+				iFrame: true,
+				decryptedHeadHash: "h".repeat(16),
+				userSitekeyIpHash: "ush",
+				reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
+				ruleType: ["ja4Hash"],
+				simdReadings: {
+					supported: true,
+					schema: 1,
+					timerResolutionMs: 0.1,
+					runsPerOp: 3,
+					durationMs: 200,
+					ops: [],
+				},
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getDappUserCommitmentById as any).mockResolvedValue(commitment);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getSessionRecordBySessionId as any) = vi
+				.fn()
+				.mockResolvedValue(sessionRecord);
+
+			const originalDecide =
+				// biome-ignore lint/suspicious/noExplicitAny: tests
+				(imgCaptchaManager as any).decisionMachineRunner.decide;
+			const decideSpy = vi
+				.fn()
+				.mockResolvedValue({ decision: "allow" } as const);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(imgCaptchaManager as any).decisionMachineRunner.decide = decideSpy;
+
+			try {
+				await imgCaptchaManager.verifyImageCaptchaSolution(
+					userAccount,
+					dappAccount,
+					commitmentId,
+					mockEnv,
+				);
+
+				expect(decideSpy).toHaveBeenCalledOnce();
+				const input = decideSpy.mock.calls[0]?.[0];
+				expect(input.captchaType).toBe(CaptchaType.image);
+				expect(input.threshold).toBe(sessionRecord.threshold);
+				expect(input.scoreComponents).toEqual(sessionRecord.scoreComponents);
+				expect(input.decryptedHeadHash).toBe(sessionRecord.decryptedHeadHash);
+				expect(input.userSitekeyIpHash).toBe(sessionRecord.userSitekeyIpHash);
+				expect(input.simdReadings).toEqual(sessionRecord.simdReadings);
+				expect(input.frictionlessReason).toBe(sessionRecord.reason);
+				expect(input.ruleType).toEqual(sessionRecord.ruleType);
+				expect(input.webView).toBe(sessionRecord.webView);
+				expect(input.iFrame).toBe(sessionRecord.iFrame);
+				expect(typeof input.score).toBe("number");
+			} finally {
+				// biome-ignore lint/suspicious/noExplicitAny: tests
+				(imgCaptchaManager as any).decisionMachineRunner.decide =
+					originalDecide;
+			}
+		});
 	});
 
 	describe("session result tracking for verifyImageCaptchaSolution", () => {
@@ -885,6 +1010,7 @@ describe("ImgCaptchaManager", () => {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
 				ipAddress: {
 					lower: ipAddress.bigInt(),
 					upper: 0n,
@@ -944,6 +1070,7 @@ describe("ImgCaptchaManager", () => {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
 				ipAddress: {
 					lower: ipAddress.bigInt(),
 					upper: 0n,
@@ -1011,6 +1138,7 @@ describe("ImgCaptchaManager", () => {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
 				ipAddress: {
 					lower: ipAddress.bigInt(),
 					upper: 0n,
@@ -1069,6 +1197,7 @@ describe("ImgCaptchaManager", () => {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
 				ipAddress: {
 					lower: ipAddress.bigInt(),
 					upper: 0n,
@@ -1133,6 +1262,7 @@ describe("ImgCaptchaManager", () => {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
 				ipAddress: {
 					lower: ipAddress.bigInt(),
 					upper: 0n,
@@ -1217,6 +1347,7 @@ describe("ImgCaptchaManager", () => {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
 				ipAddress: {
 					lower: ipAddress.bigInt(),
 					upper: 0n,
@@ -1291,6 +1422,7 @@ describe("ImgCaptchaManager", () => {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
 				ipAddress: {
 					lower: ipAddress.bigInt(),
 					upper: 0n,
@@ -1355,6 +1487,7 @@ describe("ImgCaptchaManager", () => {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
 				ipAddress: {
 					lower: ipAddress.bigInt(),
 					upper: 0n,
@@ -1415,6 +1548,7 @@ describe("ImgCaptchaManager", () => {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
 				ipAddress: {
 					lower: ipAddress.bigInt(),
 					upper: 0n,
@@ -1494,6 +1628,7 @@ describe("ImgCaptchaManager", () => {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
 				ipAddress: {
 					lower: ipAddress.bigInt(),
 					upper: 0n,
@@ -1558,6 +1693,7 @@ describe("ImgCaptchaManager", () => {
 			userSubmitted: true,
 			serverChecked: false,
 			requestedAtTimestamp: new Date(),
+			submittedAtTimestamp: new Date(),
 			ipAddress: {
 				lower: ipAddress.bigInt(),
 				upper: 0n,
@@ -1702,6 +1838,175 @@ describe("ImgCaptchaManager", () => {
 				(imgCaptchaManager as any).decisionMachineRunner.decide =
 					originalDecide;
 			}
+		});
+	});
+
+	describe("verifyImageCaptchaSolution with maxEmailSubmissionCount", () => {
+		// Full param positions for verifyImageCaptchaSolution — the count
+		// check runs after the pattern rules and needs storeMetadata=true.
+		// Local helper keeps each test focused on the count semantics rather
+		// than the 14-argument call site.
+		const invoke = async ({
+			email,
+			maxEmailSubmissionCount,
+			storeMetadata,
+			commitmentId,
+		}: {
+			email: string | undefined;
+			maxEmailSubmissionCount: number | undefined;
+			storeMetadata: boolean;
+			commitmentId: string;
+		}) =>
+			imgCaptchaManager.verifyImageCaptchaSolution(
+				"userAccount",
+				"dappAccount",
+				commitmentId,
+				mockEnv,
+				undefined, // maxVerifiedTime
+				undefined, // ip
+				undefined, // disallowWebView
+				undefined, // contextAwareEnabled
+				undefined, // userAccessRulesStorage
+				email,
+				false, // spamEmailDomainCheckingEnabled — off, isolates the count check
+				maxEmailSubmissionCount !== undefined
+					? {
+							enabled: true,
+							emailRules: {
+								enabled: true,
+								maxEmailSubmissionCount,
+								normaliseGmail: false,
+								useDefaultPatterns: false,
+								customRegexBlocklist: [],
+							},
+						}
+					: undefined,
+				undefined, // trafficFilter
+				storeMetadata,
+			);
+
+		// Seeds a solved-image commitment in-memory. The count-check block
+		// runs before the decisionMachine, so it fires regardless of
+		// whether the DM would approve, but a stubbed "allow" DM keeps
+		// the happy path assertions clean.
+		const seedApprovedCommitment = (commitmentId: string) => {
+			const ipAddress = getIPAddress("1.1.1.1");
+			const commitment: Partial<UserCommitment> = {
+				id: commitmentId,
+				userAccount: "userAccount",
+				dappAccount: "dappAccount",
+				providerAccount: "providerAccount",
+				datasetId: "datasetId",
+				result: { status: CaptchaStatus.approved },
+				userSignature: "",
+				userSubmitted: true,
+				serverChecked: false,
+				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
+				ipAddress: {
+					lower: ipAddress.bigInt(),
+					upper: 0n,
+					type: IpAddressType.v4,
+				},
+				headers: { a: "1", b: "2", c: "3" },
+				ja4: "ja4",
+				lastUpdatedTimestamp: new Date(),
+			};
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getDappUserCommitmentById as any).mockResolvedValue(commitment);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.markDappUserCommitmentsChecked as any).mockResolvedValue(undefined);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.approveDappUserCommitment as any).mockResolvedValue(undefined);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.updateDappUserCommitment as any).mockResolvedValue(undefined);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(imgCaptchaManager as any).decisionMachineRunner.decide = vi
+				.fn()
+				.mockResolvedValue({ decision: "allow" });
+		};
+
+		it("rejects with SPAM_EMAIL_COUNT_EXCEEDED when the prior count equals the cap", async () => {
+			seedApprovedCommitment("cmt-reject");
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.countCommitmentsByNormalisedEmail as any).mockResolvedValue(3);
+
+			const result = await invoke({
+				email: "alice+promo@gmail.com",
+				maxEmailSubmissionCount: 3,
+				storeMetadata: true,
+				commitmentId: "cmt-reject",
+			});
+
+			expect(result.verified).toBe(false);
+			expect(result.status).toBe("API.SPAM_EMAIL_COUNT_EXCEEDED");
+			// Count query must have run against the normalised form
+			// (dots collapsed + `+tag` stripped for gmail).
+			expect(db.countCommitmentsByNormalisedEmail).toHaveBeenCalledWith(
+				"dappAccount",
+				"alice@gmail.com",
+			);
+		});
+
+		it("allows when the prior count is below the cap", async () => {
+			seedApprovedCommitment("cmt-allow");
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.countCommitmentsByNormalisedEmail as any).mockResolvedValue(2);
+
+			const result = await invoke({
+				email: "alice+news@gmail.com",
+				maxEmailSubmissionCount: 3,
+				storeMetadata: true,
+				commitmentId: "cmt-allow",
+			});
+
+			expect(result.verified).toBe(true);
+			// The metadata write must include both the raw and normalised
+			// email so subsequent count checks can find this record.
+			expect(db.updateDappUserCommitment).toHaveBeenCalledWith(
+				"cmt-allow",
+				expect.objectContaining({
+					metadata: expect.objectContaining({
+						email: "alice+news@gmail.com",
+						emailNormalised: "alice@gmail.com",
+					}),
+				}),
+			);
+		});
+
+		it("skips the count query when storeMetadata is off", async () => {
+			// Guardrail: `metadata.emailNormalised` only gets written when
+			// storeMetadata is on, so querying it without that gate would
+			// always return 0 and give operators a false sense of
+			// protection. The task must not even run the query in that
+			// case — this test locks that in.
+			seedApprovedCommitment("cmt-no-store");
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.countCommitmentsByNormalisedEmail as any).mockResolvedValue(9);
+
+			const result = await invoke({
+				email: "alice@gmail.com",
+				maxEmailSubmissionCount: 3,
+				storeMetadata: false,
+				commitmentId: "cmt-no-store",
+			});
+
+			expect(result.verified).toBe(true);
+			expect(db.countCommitmentsByNormalisedEmail).not.toHaveBeenCalled();
+		});
+
+		it("skips the count query when maxEmailSubmissionCount is undefined", async () => {
+			seedApprovedCommitment("cmt-unset");
+
+			const result = await invoke({
+				email: "alice@gmail.com",
+				maxEmailSubmissionCount: undefined,
+				storeMetadata: true,
+				commitmentId: "cmt-unset",
+			});
+
+			expect(result.verified).toBe(true);
+			expect(db.countCommitmentsByNormalisedEmail).not.toHaveBeenCalled();
 		});
 	});
 });

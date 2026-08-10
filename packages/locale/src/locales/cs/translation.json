@@ -43,6 +43,7 @@
 		"INVALID_BODY": "Neplatné tělo",
 		"PARSE_ERROR": "Chyba při zpracování požadavku",
 		"SPAM_EMAIL_RULE": "E-mailová adresa blokována pravidly spamového filtru",
+		"SPAM_EMAIL_COUNT_EXCEEDED": "Příliš mnoho odeslání z této e-mailové adresy",
 		"VPN_BLOCKED": "Požadavky z VPN připojení nejsou pro tento web povoleny",
 		"PROXY_BLOCKED": "Požadavky z proxy serverů nejsou pro tento web povoleny",
 		"TOR_BLOCKED": "Požadavky z výstupních uzlů Tor nejsou pro tento web povoleny",
@@ -436,6 +437,7 @@
 		"NO_CAPTCHA": "CAPTCHA nenalezena",
 		"NO_SESSION_FOUND": "Žádná relace nenalezena",
 		"IP_ADDRESS_MISMATCH": "IP adresy se neshodují",
+		"INVALID_SALT": "Neplatný salt",
 		"INVALID_TOKEN": "Neplatný token",
 		"INVALID_SOLUTION": "Neplatné řešení",
 		"DECRYPTION_ERROR": "Chyba dešifrování"

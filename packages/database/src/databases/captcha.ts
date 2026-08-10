@@ -18,23 +18,38 @@ import {
 	type CaptchaProperties,
 	type ICaptchaDatabase,
 	type PoWCaptchaRecord,
+	type PuzzleCaptchaRecord,
 	StoredPoWCaptchaRecordSchema,
+	StoredPuzzleCaptchaRecordSchema,
 	type StoredSession,
 	StoredSessionRecordSchema,
 	StoredUserCommitmentRecordSchema,
 	type Tables,
 	type UserCommitmentRecord,
 } from "@prosopo/types-database";
+import { Decimal128, Long } from "bson";
+
+// Duck-typed check for BSON Long. Avoids `instanceof Long` because the
+// MongoDB driver uses its bundled `bson` copy when deserialising, and
+// hoisting differences across npm trees can put the `Long` class from
+// this file's import on a different identity than the one stamped on
+// the lean-doc values — which would silently skip the normalisation.
+const isBsonLong = (value: unknown): boolean =>
+	typeof value === "object" &&
+	value !== null &&
+	"_bsontype" in value &&
+	(value as { _bsontype: string })._bsontype === "Long";
 import type { RootFilterQuery } from "mongoose";
 import { MongoDatabase } from "../base/index.js";
 
-const logger = getLogger("info", import.meta.url);
+const logger = getLogger("info", "database:captcha");
 
 enum TableNames {
 	frictionlessToken = "frictionlessToken",
 	session = "session",
 	commitment = "commitment",
 	powcaptcha = "powcaptcha",
+	puzzlecaptcha = "puzzlecaptcha",
 }
 
 const CAPTCHA_TABLES = [
@@ -52,6 +67,11 @@ const CAPTCHA_TABLES = [
 		collectionName: TableNames.commitment,
 		modelName: "UserCommitment",
 		schema: StoredUserCommitmentRecordSchema,
+	},
+	{
+		collectionName: TableNames.puzzlecaptcha,
+		modelName: "PuzzleCaptcha",
+		schema: StoredPuzzleCaptchaRecordSchema,
 	},
 ];
 
@@ -124,26 +144,107 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		this.indexesEnsured = true;
 	}
 
+	/**
+	 * Convert a BSON `Long` (which Mongoose's Decimal128 caster rejects)
+	 * into a Decimal128 with the *unsigned* numeric value — so a Long
+	 * representing an IPv6 lower half with bit 63 set (signed Long shows
+	 * as a negative integer) converts to a positive Decimal128 that
+	 * matches what `bigint→string→Decimal128` would have produced if the
+	 * schema setter had run on the original write.
+	 *
+	 * Production background: pipeline-form updates (`updateOne(filter,
+	 * [{ $set: ... }])`) bypass Mongoose schema casting, so a `bigint`
+	 * passed for an IP half is serialised by the driver as BSON Int64
+	 * (Long) instead of going through the `Decimal128` setter. The
+	 * central-streaming sweep below reads those docs via `.lean()` and
+	 * tries to replay them with `bulkWrite`, but `bulkWrite` also skips
+	 * setters — so the cast fires raw and throws. Normalising the lean
+	 * doc here is the only place that's guaranteed to run before the
+	 * bulkWrite sees it.
+	 */
+	private static normaliseCompositeIp<
+		T extends { lower?: unknown; upper?: unknown } | undefined,
+	>(ip: T): T {
+		if (!ip) return ip;
+		const normaliseHalf = (v: unknown): unknown => {
+			if (isBsonLong(v)) {
+				const lng = v as { low: number; high: number };
+				return Decimal128.fromString(
+					Long.fromBits(lng.low, lng.high, true).toString(),
+				);
+			}
+			return v;
+		};
+		return {
+			...ip,
+			lower: normaliseHalf(ip.lower),
+			upper: normaliseHalf(ip.upper),
+		};
+	}
+
+	private static normaliseDocCompositeIps<
+		T extends {
+			ipAddress?: { lower?: unknown; upper?: unknown };
+			providedIp?: { lower?: unknown; upper?: unknown };
+		},
+	>(doc: T): T {
+		return {
+			...doc,
+			ipAddress: CaptchaDatabase.normaliseCompositeIp(doc.ipAddress),
+			providedIp: CaptchaDatabase.normaliseCompositeIp(doc.providedIp),
+		};
+	}
+
 	async saveCaptchas(
 		sessionEvents: StoredSession[],
 		imageCaptchaEvents: UserCommitmentRecord[],
 		powCaptchaEvents: PoWCaptchaRecord[],
+		puzzleCaptchaEvents: PuzzleCaptchaRecord[] = [],
 	) {
 		await this.connect();
 		if (sessionEvents.length) {
+			// Upsert by sessionId (same pattern as image/pow/puzzle below).
+			// Was intentionally swapped to `insertOne` in #1811 back when
+			// sessionIds were bare UUIDs: two pronodes could roll the same
+			// id, and an upsert-by-sessionId would let the second pronode's
+			// `$set` clobber the first pronode's session record. Insert-only
+			// preserved both docs at the cost of accepting duplicates.
+			//
+			// Now every sessionId is `pronode<N>-<uuidv4>` (see
+			// `getSessionIDPrefix` in frictionlessTasks.ts), so cross-pronode
+			// collision is impossible and within a single pronode the uuidv4
+			// collision probability is 2^-122 — the only doc this upsert
+			// can `$set` over is one the same pronode wrote earlier for the
+			// same session. Safe to restore.
+			//
+			// The bug this actually fixes: `saveCaptchas` is called from the
+			// sweep in `clientTasks.storeCommitmentsExternal`, which drains
+			// records marked "unstored" from local Mongo. The same central
+			// collection is also written fire-and-forget by
+			// `CentralDbStreamer.streamSessionRecord` from
+			// `ProviderDatabase.storeSessionRecord`. Every time the sweep
+			// picked up a record the streamer had already landed on central,
+			// the old `insertOne` wrote a duplicate. In a live 1h snapshot
+			// of `captchastorage.sessions` ~64% of sessionIds have 2+ docs
+			// and up to 7 have been observed on a single sessionId.
 			const result = await this.tables.session.bulkWrite(
 				sessionEvents.map((document) => {
 					const { _id, ...safeDoc } = document;
+					const normalised = CaptchaDatabase.normaliseDocCompositeIps(safeDoc);
 					return {
-						insertOne: {
-							document: safeDoc,
+						updateOne: {
+							filter: { sessionId: normalised.sessionId },
+							update: { $set: normalised },
+							upsert: true,
 						},
 					};
 				}),
 			);
 			logger.info(() => ({
 				data: {
-					insertedCount: result.insertedCount,
+					upsertedCount: result.upsertedCount,
+					matchedCount: result.matchedCount,
+					modifiedCount: result.modifiedCount,
 					totalProcessed: sessionEvents.length,
 				},
 				msg: "Mongo Saved Session Events",
@@ -155,10 +256,11 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 				imageCaptchaEvents.map((doc) => {
 					// remove the _id field to avoid problems when upserting
 					const { _id, ...safeDoc } = doc;
+					const normalised = CaptchaDatabase.normaliseDocCompositeIps(safeDoc);
 					return {
 						updateOne: {
-							filter: { id: safeDoc.id },
-							update: { $set: safeDoc },
+							filter: { id: normalised.id },
+							update: { $set: normalised },
 							upsert: true,
 						},
 					};
@@ -179,10 +281,11 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 				powCaptchaEvents.map((doc) => {
 					// remove the _id field to avoid problems when upserting
 					const { _id, ...safeDoc } = doc;
+					const normalised = CaptchaDatabase.normaliseDocCompositeIps(safeDoc);
 					return {
 						updateOne: {
-							filter: { challenge: safeDoc.challenge },
-							update: { $set: safeDoc },
+							filter: { challenge: normalised.challenge },
+							update: { $set: normalised },
 							upsert: true,
 						},
 					};
@@ -199,6 +302,31 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 			}));
 		}
 
+		if (puzzleCaptchaEvents.length) {
+			const result = await this.tables.puzzlecaptcha.bulkWrite(
+				puzzleCaptchaEvents.map((doc) => {
+					const { _id, ...safeDoc } = doc;
+					const normalised = CaptchaDatabase.normaliseDocCompositeIps(safeDoc);
+					return {
+						updateOne: {
+							filter: { challenge: normalised.challenge },
+							update: { $set: normalised },
+							upsert: true,
+						},
+					};
+				}),
+			);
+			logger.info(() => ({
+				data: {
+					upsertedCount: result.upsertedCount,
+					matchedCount: result.matchedCount,
+					modifiedCount: result.modifiedCount,
+					totalProcessed: puzzleCaptchaEvents.length,
+				},
+				msg: "Mongo Saved Puzzle Events",
+			}));
+		}
+
 		await this.close();
 	}
 
@@ -208,6 +336,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 	): Promise<{
 		userCommitmentRecords: UserCommitmentRecord[];
 		powCaptchaRecords: PoWCaptchaRecord[];
+		puzzleCaptchaRecords: PuzzleCaptchaRecord[];
 	}> {
 		await this.connect();
 
@@ -222,9 +351,15 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 				.limit(limit)
 				.lean<PoWCaptchaRecord[]>();
 
+			const puzzleCaptchaResults = await this.tables.puzzlecaptcha
+				.find(filter)
+				.limit(limit)
+				.lean<PuzzleCaptchaRecord[]>();
+
 			return {
 				userCommitmentRecords: commitmentResults,
 				powCaptchaRecords: powCaptchaResults,
+				puzzleCaptchaRecords: puzzleCaptchaResults,
 			};
 		} catch (error) {
 			throw new ProsopoDBError("DATABASE.QUERY_ERROR", {

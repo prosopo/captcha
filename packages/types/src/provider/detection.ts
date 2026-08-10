@@ -42,7 +42,6 @@ export type SimdReadings =
 export type DetectorResult = {
 	score: number;
 	timestamp: number;
-	providerSelectEntropy: number;
 	userId: string;
 	userAgent: string;
 	isWebView?: boolean;
@@ -52,4 +51,8 @@ export type DetectorResult = {
 	// True when the client-side shadow-DOM detector tripped and contributed a
 	// hard penalty to `score`. Undefined for clients that predate the field.
 	shadowDomPenalty?: boolean;
+	entropyMathRandomFingerprint?: string;
+	entropyCryptoFingerprint?: string;
+	entropyWallClockOffsetMs?: number;
+	entropyMathRandomFirst?: number;
 };

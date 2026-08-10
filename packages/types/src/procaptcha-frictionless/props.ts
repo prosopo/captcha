@@ -23,6 +23,7 @@ import type { Account } from "../procaptcha/manager.js";
 import type { ProcaptchaProps } from "../procaptcha/props.js";
 import type {
 	GetFrictionlessCaptchaResponse,
+	ProviderSelectRetryContext,
 	RandomProvider,
 } from "../provider/api.js";
 
@@ -58,6 +59,10 @@ export type BotDetectionFunction = (
 	config: ProcaptchaClientConfigOutput,
 	container: HTMLElement | undefined,
 	restartFn: () => void,
+	// Present when the frictionless flow is being retried after an error, so the
+	// detection can re-select a random provider instead of re-using the
+	// DNS-routed one that just failed. Absent on the initial attempt.
+	retryContext?: ProviderSelectRetryContext,
 ) => Promise<BotDetectionFunctionResult>;
 
 /**

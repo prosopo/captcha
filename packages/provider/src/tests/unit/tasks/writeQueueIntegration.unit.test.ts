@@ -70,7 +70,6 @@ describe("Write queue integration with captcha flows", () => {
 		it("should cache PoW session in Redis after creation", async () => {
 			const db: IProviderDatabase = {
 				storeSessionRecord: vi.fn(),
-				getDetectorKeys: vi.fn(() => Promise.resolve(["test-key"])),
 			} as unknown as IProviderDatabase;
 
 			const pair: KeyringPair = {
@@ -97,7 +96,6 @@ describe("Write queue integration with captcha flows", () => {
 				score: 0.3,
 				threshold: 0.5,
 				scoreComponents: { baseScore: 0.3 },
-				providerSelectEntropy: 13337,
 				ipAddress: getCompositeIpAddress("10.0.0.1"),
 				webView: false,
 				iFrame: false,
@@ -134,7 +132,6 @@ describe("Write queue integration with captcha flows", () => {
 		it("should cache image session in Redis after creation", async () => {
 			const db: IProviderDatabase = {
 				storeSessionRecord: vi.fn(),
-				getDetectorKeys: vi.fn(() => Promise.resolve(["test-key"])),
 			} as unknown as IProviderDatabase;
 
 			const pair: KeyringPair = {
@@ -161,7 +158,6 @@ describe("Write queue integration with captcha flows", () => {
 				score: 0.8,
 				threshold: 0.5,
 				scoreComponents: { baseScore: 0.8 },
-				providerSelectEntropy: 13337,
 				ipAddress: getCompositeIpAddress("10.0.0.2"),
 				webView: false,
 				iFrame: false,
@@ -253,7 +249,6 @@ describe("Write queue integration with captcha flows", () => {
 				score: 0.5,
 				threshold: 0.5,
 				scoreComponents: { baseScore: 0.5 },
-				providerSelectEntropy: 13337,
 				ipAddress: { lower: 16843009, type: "v4" },
 				captchaType: CaptchaType.pow,
 				webView: false,

@@ -1,5 +1,388 @@
 # @prosopo/user-access-policy
 
+## 3.12.13
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+  - @prosopo/types@5.0.2
+  - @prosopo/api@4.0.2
+
+## 3.12.12
+### Patch Changes
+
+- Updated dependencies [9fec7bd]
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/common@3.1.49
+  - @prosopo/types@5.0.1
+  - @prosopo/api@4.0.1
+  - @prosopo/logger@2.0.5
+  - @prosopo/api-route@2.6.54
+  - @prosopo/redis-client@1.0.31
+
+## 3.12.11
+### Patch Changes
+
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [6f19cde]
+  - @prosopo/types@5.0.0
+  - @prosopo/api@4.0.0
+
+## 3.12.10
+### Patch Changes
+
+- Updated dependencies [1e0cf14]
+  - @prosopo/api@3.5.21
+
+## 3.12.9
+### Patch Changes
+
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [a58d007]
+- Updated dependencies [2c47bb7]
+- Updated dependencies [0e1171c]
+- Updated dependencies [103318c]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+  - @prosopo/api-route@2.6.53
+  - @prosopo/util@3.3.5
+  - @prosopo/types@4.10.0
+  - @prosopo/api@3.5.20
+  - @prosopo/common@3.1.48
+  - @prosopo/redis-client@1.0.30
+  - @prosopo/logger@2.0.4
+
+## 3.12.8
+### Patch Changes
+
+- c61dfb5: fix(access-policy): reject Block+captchaType at schema level; add follow-up test coverage
+  
+  **Fix.** The `sanitizeAccessPolicy` helper silently strips `captchaType` and `solvedImagesCount` from Block policies at write time, which meant operators writing e.g. `--block --ip X --captchaType image` got a rule that actually blocked EVERY captcha type for that IP — not just image. Same root cause as the Block+deferToVerify request-time 400 bug (see #2885). Rejecting at input surfaces the mismatch loudly with a message that points the operator at Restrict:
+  
+  ```
+  Block policies cannot pin a captchaType — Block always applies to every
+  captcha type. Use a Restrict policy if you want to narrow the effect to
+  one captcha type.
+  ```
+  
+  `accessPolicyInput` now has a `superRefine` that rejects Block+captchaType and Block+solvedImagesCount. The read path still accepts the legacy shape (records written before the refinement landed can still be parsed by the reader). The `addUserAccessPolicy` script was updated to only emit those fields for Restrict, so its `--block` path no longer 400s.
+  
+  **Follow-up tests added** — closing the gaps flagged in the previous session:
+  
+  - **Coord threading lands on the puzzle record** (`puzzleTasks.unit.test.ts`) — extends the verify-puzzle-solution suite to encode a real salt with `(158, 42)`, submit, and assert `coords[0][0] === [158, 42]` on the persisted record. Guards against a regression that drops the salt decode or writes `[0, 0]` — the whole point of the puzzle DM threading PR (#2873).
+  - **DM deny reason lands on the pow commitment** (`powTasks.unit.test.ts`) — pow's existing "should deny when decision machine returns deny" test only asserted `verified:false`; now also asserts the DM's reason string is persisted on the commitment.
+  - **checkForHardBlock wins over DM deny at verify** (`puzzleTasks.unit.test.ts`) — stubs `checkForHardBlock` to match, stubs the DM to also deny with a distinguishable reason, asserts the commitment carries `ACCESS_POLICY_BLOCK` and that the DM was never consulted. Locks in the ordering that the audit trail depends on.
+  - **Rule expiry** (`redisRulesStorage.integration.test.ts`) — inserts a rule with a 2 s TTL, waits past expiry, asserts the Redis hash is gone and the RediSearch index no longer counts it. The existing "inserts time limited rule" test only verified the TTL was set, not that expired rules stop matching.
+
+## 3.12.7
+### Patch Changes
+
+- Updated dependencies [a0cb39e]
+  - @prosopo/types@4.9.12
+  - @prosopo/api@3.5.19
+
+## 3.12.6
+### Patch Changes
+
+- fde6896: fix(user-access-policy,common,provider): quiet two high-volume log spammers
+  
+  - `user-access-policy`: switch the split-query sub-probes from `FT.AGGREGATE + LOAD @__key` to `FT.SEARCH NOCONTENT`. The aggregate reply path in `@redis/client` 5.x can throw on a null result row and the sub-query then silently returns `[]`; the NOCONTENT reply shape doesn't have that failure mode. Removes ~2k error logs per hour without changing lookup semantics.
+  - `common`: `ProsopoBaseError` auto-logs now carry a `msg` field (mirroring the translation key). Previously every auto-logged error landed in the "undefined msg" bucket in log dashboards (~800/hour).
+  - `provider`: add the missing `msg` on the image-verify catch that emits the same pattern.
+- Updated dependencies [b9ca0e7]
+- Updated dependencies [fde6896]
+  - @prosopo/types@4.9.11
+  - @prosopo/common@3.1.47
+  - @prosopo/api@3.5.18
+
+## 3.12.5
+### Patch Changes
+
+- Updated dependencies [0a4f902]
+  - @prosopo/types@4.9.10
+  - @prosopo/api@3.5.17
+
+## 3.12.4
+### Patch Changes
+
+  - @prosopo/common@3.1.46
+  - @prosopo/types@4.9.9
+  - @prosopo/api@3.5.16
+
+## 3.12.3
+### Patch Changes
+
+- b07b448: fix(user-access-policy): route non-block strict-match rule lookups through the split-query path
+  
+  Live 2026-07-10 Twickets regression: a portal-authored Restrict/image rule scoped to `clientId + numericIp` was silently dropped from the frictionless access-policy lookup even though the rule was correctly stored in Redis and indexed. The DM then fell through to `default_pow` and served POW instead of the configured image challenge.
+  
+  Root cause: the `findRulesRanked` FT.AGGREGATE ranker used for non-block lookups capped candidates at `SERVER_SIDE_RANK_TOP_N = 20` after a server-side `SORTBY @_rank`. Under Greedy matching with `matchingFieldsOnly=true`, the query is a wide OR that matches every rule missing `headHash`, `coords`, or `headersHash` — for a Twickets-shaped tenant (~860 candidates) the top 20 slots were filled by higher-specificity SIMD_REPLAY and SUDDEN_VOLUME_INCREASE Block rules that didn't actually apply to the request. The specific-IP Restrict rule (specificity 2) was pushed out; Node saw only irrelevant candidates; `rankCandidateRules` filtered them all out via `ruleApplies`; the lookup returned `[]`.
+  
+  Fix: extend the existing `findBlockRulesSplit` path (previously the hot path for `blockOnly=true` callers) to cover every `matchingFieldsOnly` call. Each sub-query hits a discriminating posting list (exact numericIp, exact ja4Hash, etc.), so the ip:exact probe returns exactly the rules literally matching the request IP — the specific-IP rule can no longer be pushed off the end by irrelevant candidates from other probes. `blockOnly` is now a flag on the sub-query builder that narrows probes to `@type:{block}` when set. Split reader now sorts candidates by (specificity desc, block-first) so direct reader consumers see the same order the old FT.AGGREGATE ranker gave.
+  
+  Regression coverage added:
+  
+  - Unit: `buildScopedRulesSubQueries` emits/omits `@type:{block}` correctly per `blockOnly` flag and produces the same probe shape either way.
+  - Integration: specific-IP Restrict rule survives when 40 higher-specificity irrelevant Block rules co-exist on the same tenant (mirrors the live Twickets shape).
+  
+  Benchmarks unchanged: split hot path p50=1.4ms / p99=2.2ms across 19,300 seeded rules; 100×10 concurrent storm holds ~990 req/s.
+- Updated dependencies [6abff15]
+  - @prosopo/logger@2.0.3
+  - @prosopo/api-route@2.6.52
+  - @prosopo/common@3.1.45
+  - @prosopo/redis-client@1.0.29
+
+## 3.12.2
+### Patch Changes
+
+- Updated dependencies [85e8857]
+  - @prosopo/api@3.5.15
+  - @prosopo/types@4.9.8
+  - @prosopo/util@3.3.4
+  - @prosopo/common@3.1.44
+  - @prosopo/logger@2.0.2
+  - @prosopo/api-route@2.6.51
+  - @prosopo/redis-client@1.0.28
+
+## 3.12.1
+### Patch Changes
+
+- Updated dependencies [8bde5df]
+  - @prosopo/types@4.9.7
+  - @prosopo/api@3.5.14
+
+## 3.12.0
+### Minor Changes
+
+- 7d7e767: perf(access-rules): split-query hot path + verdict cache with LRU and singleflight
+  
+  Reworks the block-lookup Redis path so per-request latency is bounded by matching-rules-per-request rather than total rules in the tenant. Rule populations in the 10k+ range no longer degrade tail latency.
+  
+  Key changes:
+  
+  - **Split-query read path**: `redisRulesSplitQuery.ts` builds one FT sub-query per populated request field (numericIp exact + CIDR, ja4Hash, userId, headHash, coords, countryCode, asn), each hitting a discriminating posting-list index instead of a single wide FT.AGGREGATE that scaled linearly in total rule count.
+  - **`clientId="global"` sentinel**: writer stamps the sentinel on rules with no clientId so queries probe `@clientId:{X|global|ismissing}` instead of the expensive `ismissing()` set-difference walk. Transition-safe — legacy rules match via the ismissing branch until a rehash migrates them.
+  - **HardBlockVerdictCache**: bounded LRU + TTL (10 s / 50k entries) with real LRU move-to-tail on hit and **singleflight `getOrCompute`** dedupe of concurrent misses — the wave-1 stampede fix for the frontend retry-loop shape.
+  - **Request-scoped memo**: attached to `req` so blockMiddleware + downstream in-request checks share one Redis round-trip.
+  
+  Measured impact under 100-concurrent × 10-wave retry storm against a 19.3k-rule population: wave-1 p99 drops from 23 ms → 3 ms, throughput jumps from 28.5k → 61.5k req/s per process, 50 identical concurrent misses collapse to 1 storage call.
+
+### Patch Changes
+
+- Updated dependencies [b3f351b]
+- Updated dependencies [17bc76e]
+  - @prosopo/types@4.9.6
+  - @prosopo/api@3.5.13
+
+## 3.11.3
+### Patch Changes
+
+- Updated dependencies [6cb3218]
+  - @prosopo/types@4.9.5
+  - @prosopo/api@3.5.12
+
+## 3.11.2
+### Patch Changes
+
+- Updated dependencies [de12b31]
+- Updated dependencies [770954b]
+  - @prosopo/types@4.9.4
+  - @prosopo/api@3.5.11
+
+## 3.11.1
+### Patch Changes
+
+- Updated dependencies [18d0287]
+  - @prosopo/types@4.9.3
+  - @prosopo/api@3.5.10
+
+## 3.11.0
+### Minor Changes
+
+- ca78a0c: Add an `os` (operating system) match dimension to user access policies.
+  
+  The provider now classifies each request's operating system server-side from the User-Agent (`classifyOs`, returning one of `windows`/`macos`/`ios`/`android`/`linux`/`unknown`) and threads it into the user scope used to match access rules, so a `Block` or `Restrict` rule can target a specific OS. The OS is always populated (falling back to `unknown`) and derived from the full User-Agent rather than the easily-omitted `sec-ch-ua-platform` client hint, so it cannot be bypassed by dropping client hints. `os` is stored and indexed in Redis as a TAG (mirroring `countryCode`) and contributes one point to rule specificity ranking.
+
+### Patch Changes
+
+- Updated dependencies [8814425]
+  - @prosopo/api@3.5.9
+
+## 3.10.11
+### Patch Changes
+
+- Updated dependencies [7a434e0]
+  - @prosopo/types@4.9.2
+  - @prosopo/common@3.1.43
+  - @prosopo/api@3.5.8
+
+## 3.10.10
+### Patch Changes
+
+- Updated dependencies [8986976]
+- Updated dependencies [970bca2]
+  - @prosopo/types@4.9.1
+  - @prosopo/util@3.3.3
+  - @prosopo/api@3.5.7
+  - @prosopo/common@3.1.42
+  - @prosopo/logger@2.0.1
+  - @prosopo/api-route@2.6.50
+  - @prosopo/redis-client@1.0.27
+
+## 3.10.9
+### Patch Changes
+
+- 7daea2e: chore(deps-dev): bump vitest from 3.2.4 to 3.2.6 in /packages/user-access-policy
+- Updated dependencies [dfb0c53]
+- Updated dependencies [7ebb78f]
+- Updated dependencies [849af99]
+- Updated dependencies [a5ba27b]
+- Updated dependencies [948d36b]
+- Updated dependencies [41e0e11]
+- Updated dependencies [11f1e8c]
+- Updated dependencies [3c80664]
+- Updated dependencies [b166037]
+- Updated dependencies [1111ff2]
+- Updated dependencies [6a7b122]
+  - @prosopo/common@3.1.41
+  - @prosopo/logger@2.0.0
+  - @prosopo/util@3.3.2
+  - @prosopo/types@4.9.0
+  - @prosopo/api@3.5.6
+  - @prosopo/api-route@2.6.49
+  - @prosopo/redis-client@1.0.26
+
+## 3.10.8
+### Patch Changes
+
+- Updated dependencies [12cd0a6]
+- Updated dependencies [12cd0a6]
+  - @prosopo/api@3.5.5
+  - @prosopo/types@4.8.0
+
+## 3.10.7
+### Patch Changes
+
+- Updated dependencies [bb98af1]
+  - @prosopo/types@4.7.4
+  - @prosopo/api@3.5.4
+
+## 3.10.6
+### Patch Changes
+
+- Updated dependencies [89ab6fc]
+- Updated dependencies [0f3750b]
+  - @prosopo/types@4.7.3
+  - @prosopo/api@3.5.3
+
+## 3.10.5
+### Patch Changes
+
+- e89860e: Add an indexed `type` field on the access-rules Redis index and a `blockOnly` filter on `findRules`. The request-time block middleware and the verify-time hard-block check now pre-filter the candidate pool to Block rules at the Redis layer, so dense Restrict / routing-Block populations can no longer push hard-block rules past the server-side ranking cap. Schema rehash triggers automatic index recreate on next provider start.
+- Updated dependencies [edcd450]
+- Updated dependencies [5295c4b]
+  - @prosopo/util@3.3.1
+  - @prosopo/types@4.7.2
+  - @prosopo/logger@1.0.4
+  - @prosopo/api@3.5.2
+  - @prosopo/common@3.1.40
+  - @prosopo/api-route@2.6.48
+  - @prosopo/redis-client@1.0.25
+
+## 3.10.4
+### Patch Changes
+
+- Updated dependencies [46fedf4]
+  - @prosopo/types@4.7.1
+  - @prosopo/api@3.5.1
+
+## 3.10.3
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/types@4.7.0
+  - @prosopo/api@3.5.0
+
+## 3.10.2
+### Patch Changes
+
+- 6962179: fix(user-access-policy): make findRulesRanked robust to typeless candidates and IPv6 numericIp
+  
+  Two production-fatal bugs in `findRulesRanked`, both surfacing as `failed to execute ranked search query` with empty results — i.e. no rules match the request and a Block rule that should fire is silently skipped.
+  
+  1. **Typeless candidates abort the aggregate.** `SEVERITY_EXPR = '(@type == "block")'` dereferenced `@type` directly, so any candidate document missing `type` triggered `Could not find the value for a parameter name, consider using EXISTS if applicable for type`. Sources of typeless candidates in production: stale RediSearch index entries pointing at a hash whose `type` was `HDEL`'d or whose key was `DEL`'d (visible after mass cleanups), and partial-write races in the writer. Fix: `FILTER exists(@type)` step at the start of the pipeline drops malformed candidates before any APPLY runs.
+  
+  2. **`FT.AGGREGATE LOAD` returns NUMERIC fields as doubles.** RediSearch stores NUMERIC values in the index as 8-byte doubles, so any `numericIp` / `numericIpMaskMin` / `numericIpMaskMax` past `Number.MAX_SAFE_INTEGER` (every IPv6 rule) round-tripped as scientific notation (`5.59112965392e+37`) and `z.coerce.bigint()` threw `Cannot convert … to a BigInt`. The hash itself preserves the full 38-digit string. Fix: use the aggregate purely as a ranker (it returns top-N keys by spec/severity); read the field values via `HGETALL` over those keys, same pattern as `findRulesGreedy`. One extra round-trip over ≤20 keys.
+  
+  Adds three regression tests: two simulate the typeless candidate via `HDEL` (single rule + co-resident valid rule), one inserts an IPv6 `numericIp` past `2**53` and asserts the bigint comes back intact. All three fail without the respective fix.
+- Updated dependencies [4626340]
+  - @prosopo/types@4.6.1
+  - @prosopo/api@3.4.14
+
+## 3.10.1
+### Patch Changes
+
+- Updated dependencies [55b1388]
+  - @prosopo/util@3.3.0
+  - @prosopo/types@4.6.0
+  - @prosopo/logger@1.0.3
+  - @prosopo/api@3.4.13
+  - @prosopo/common@3.1.39
+  - @prosopo/api-route@2.6.47
+  - @prosopo/redis-client@1.0.24
+
+## 3.10.0
+### Minor Changes
+
+- c1c7998: Server-side specificity rank for the access-rule lookup. Strict-match callers (the `blockMiddleware` and the verify-time `checkForHardBlock`) now issue one `FT.AGGREGATE` with `APPLY exists()` for specificity, `APPLY @type == "block"` for the severity tiebreak, `SORTBY @_rank DESC`, and `LIMIT 0 20`. Node receives at most 20 fully-populated rules — no follow-up HGETALL per candidate, no JS-side rank, no silent truncation past the LIMIT (which only applies after Redis has scored every candidate the strict filter returned).
+  
+  Supersedes both the v3.6.38 regression (`b520cd94c` — FT.AGGREGATE WITHCURSOR materialising ~1190 hashes per request, pegged provider1 at ~125% CPU on pronode10) and the 3.6.38-hotfix1 shape that reverted to FT.SEARCH (re-opened the 1000-candidate silent-truncation bug). The greedy/admin path (`matchingFieldsOnly=false`) keeps the FT.AGGREGATE+CURSOR approach with a generous `GREEDY_MAX_CANDIDATES` cap since those callers do not run on the per-request hot path.
+  
+  `packages/provider/src/api/blacklistRequestInspector.ts` flips `getPrioritisedAccessRule` to `matchingFieldsOnly: true` to engage the new path. The defensive JS `rankCandidateRules` is kept so any drift between the Redis-side score and the JS semantics surfaces as ordering, not as letting traffic through. New benchmark integration test seeds 10k rules across a realistic specificity distribution and asserts p50 < 80ms / p99 < 250ms over 200 lookups; local measurement is steady at p50 ≈ 20ms, p99 ≈ 24ms.
+
+### Patch Changes
+
+- Updated dependencies [9b91e85]
+- Updated dependencies [c80a05b]
+  - @prosopo/types@4.5.0
+  - @prosopo/api@3.4.12
+
+## 3.9.1
+### Patch Changes
+
+- b520cd9: Paginate the greedy `findRules` RediSearch query via `FT.AGGREGATE WITHCURSOR` so the candidate set is no longer truncated at `REDIS_BATCH_SIZE` (1000). Under high-volume bot traffic, a single popular ja4 fingerprint can be carried by thousands of rules; the OR-style greedy query returned > 1000 candidates and `FT.SEARCH`'s LIMIT silently dropped the tail — block rules emitted by less-frequent detectors sat past offset 1000 and never reached the JS-side specificity sort, letting matching requests through. Aggregation cursors return the full result set, so ranking sees every candidate.
+
+## 3.9.0
+### Minor Changes
+
+- 4da8941: Add `deferToVerify` flag on `AccessPolicy` so a Block policy can skip the request-time `blockMiddleware` (no 401 at the captcha endpoint) and fire instead at the verify step. The behaviour mirrors the existing coords-rule deferral pattern: today the middleware blanks out coords from the userScope, so coords-only rules can only ever match in the verify path. `deferToVerify` is the explicit version of that for other signals (ja4Hash, headersHash, etc.) — useful when you want the attacker to pay the captcha-solving cost and the dApp to silently receive `{verified: false}` instead of the bot's frontend seeing a 401.
+  
+  Wiring:
+  
+  - `BlacklistRequestInspector.shouldAbortRequest` filters out matching policies that have `deferToVerify` before picking the top hit. Those policies never short-circuit the middleware.
+  - `CaptchaManager.findHardBlockPolicy` widens its matcher: a Block policy now counts as a hard block when it has either no `captchaType` (existing behaviour) **or** `deferToVerify === true`. The check is invoked from `imgCaptchaTasks.dappUserSolution`, `powTasks.serverVerifyPowCaptcha`, and `puzzleTasks.verifyPuzzleCaptchaSolution`, so the deferral applies to all three captcha types.
+  - Persistence: `deferToVerify` lands on the mongo `accessPolicySchema` (Boolean) and the zod `accessPolicyInput` (with a string→boolean preprocess so the Redis round-trip works).
+  
+  Motivating use case: a set of spoofed-JA4 hard-block rules pushed 2026-06-12. Marking those `deferToVerify: true` would still reject the attacker at verify but force them to complete N image captcha rounds and surface behavioural data on the commitment record before the rejection — useful for both telemetry and operator-side friction.
+
+### Patch Changes
+
+- 70ef67a: Add explicit `ZodType<T, ZodTypeDef, unknown>` annotations to `accessRuleInput`, `ruleEntryInput`, and `fetchRulesResponse`. The `z.preprocess` on `deferToVerify` widens the input position to `unknown`; without an explicit annotation TS emits an unnameable inferred type and parent repos that import these schemas fail typecheck with TS2742.
+- 4226c59: Support IPv6 in access rule input transforms.
+  
+  The portal-side ticket [prosopo/captcha-private#3379](https://github.com/prosopo/captcha-private/issues/3379) enables IPv6 rule creation. The CIDR parser in `userScopeInput` and the numeric→string reverse path in `transformRule` were both IPv4-only and would crash or produce wrong addresses when an IPv6 rule reached the provider.
+  
+  - `userScopeInput.ts`: dispatch CIDR parsing to `Address4` vs `Address6` via `Address4.isValid`; both expose `startAddress()/endAddress().bigInt()`.
+  - `transformRule.ts`: `getStringIpFromNumeric` now uses `Address6.fromBigInt(...).correctForm()` for numeric values above `2^32 - 1`, keeping `Address4.fromInteger(...)` for IPv4 range.
+  - Adds a round-trip unit test for `2001:db8::1` + `/32` mask, plus three IPv6 CIDR cases (`/32`, `/64`, `/10`) alongside the existing IPv4 set.
+- Updated dependencies [f69724f]
+- Updated dependencies [3973078]
+  - @prosopo/types@4.4.1
+  - @prosopo/api@3.4.11
+
 ## 3.8.1
 ### Patch Changes
 

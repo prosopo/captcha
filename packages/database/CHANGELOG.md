@@ -1,5 +1,555 @@
 # @prosopo/database
 
+## 4.0.3
+### Patch Changes
+
+- d6cb841: feat(provider,database,types): session chain — escalations reference origin, DM-input reads walk back for missing fields
+  
+  Adds `originSessionId` to the Session schema and populates it on escalation sessions in `submitPoWCaptchaSolution.buildEscalation`. Adds `CaptchaManager.getSessionRecordWithOriginFallback` — a session reader that, when the record is an escalation missing an inherently-origin-populated field (`simdReadings`, `dnsEvent`, `entropyMathRandom*`, `entropyCrypto*`, `entropyWallClockOffsetMs`), reads the origin session and fills the gap. Escalation-owned fields (`captchaType`, `sessionId`, `score`, `ipInfo`, `headers`, etc.) are never overridden.
+  
+  The three `serverVerify*CaptchaSolution` methods now use the walker instead of the raw `getSessionRecordBySessionId`, so decision-machine inputs on escalated puzzle / image sessions see the origin's SIMD readings and DNS event.
+  
+  Fixes the write-time race between (a) the origin's fire-and-forget SIMD attach via `scheduleMongoSimdReadingsUpdate` on pow-submit, and (b) `buildEscalation`'s immediate Mongo read — which left ~97% of escalation sessions with no `dnsEvent` and ~97% with no `simdReadings`, in turn tripping decide-machine deny rules (SIMD_ABSENT etc.) on legit escalation flows.
+  
+  Non-escalation sessions and older escalation records without `originSessionId` fall through as a no-op — no behavior change. Extra Mongo read only fires when the escalation is actually missing a fallback-eligible field.
+- Updated dependencies [d6cb841]
+  - @prosopo/types-database@5.0.2
+  - @prosopo/types@5.0.2
+  - @prosopo/user-access-policy@3.12.13
+
+## 4.0.2
+### Patch Changes
+
+- 1fba42e: Include `bundleId` in the `getSessionRecordBySessionId` projection.
+  
+  `bundleId` was added to `SessionRecordSchema` for the per-session detector pool but never added to the projection. `CaptchaManager.resolveBundleBySessionId` reads it via `getSessionRecordBySessionId` on every pow / puzzle / image submit whenever the Redis session cache misses, so the fallback returned `undefined` even though the record on disk carried a valid bundleId. Downstream `decryptBehavioralData` and `decryptSimdReadings` then dropped their payloads, so `pow.behavioralDataPacked`, `pow.deviceCapability`, and `session.simdReadings` were persisted at ~0% fleet-wide.
+  
+  Regression test extends `sessionRecordProjection.integration.test.ts` to seed and read back a `bundleId`.
+
+## 4.0.1
+### Patch Changes
+
+- bcef918: Adds a per-email submission-count rate limit on the verify pipeline. Site operators can now cap how many server-checked captcha submissions any one normalised email (Gmail dot / `+tag` tricks collapsed across providers) may back before further submissions from that address are rejected with `API.SPAM_EMAIL_COUNT_EXCEEDED`.
+  
+  - New `spamFilter.emailRules.maxEmailSubmissionCount` (int, min 1, optional) on `ClientSettingsSchema`.
+  - New `metadata.emailNormalised` field on all three captcha records (image / PoW / puzzle) — written alongside `metadata.email` whenever `storeMetadata` is on. Backed by a partial index (`spamEmailCount_partial`) on each collection.
+  - New DB method `countCommitmentsByNormalisedEmail(dappAccount, emailNormalised)` sums the three per-collection counts so limits span captcha types.
+  - Puzzle verify gains a `spamFilter` parameter to bring it to parity with img/pow for the count check.
+  - English + all 31 non-English locales gain the `API.SPAM_EMAIL_COUNT_EXCEEDED` translation.
+  - Fixes silent-drift bug: `UserSettingsSchema.spamFilter.emailRules` was missing `maxEmailSubmissionCount` on the mongoose side, which strict mode would have dropped on `$set`.
+- Updated dependencies [9fec7bd]
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/common@3.1.49
+  - @prosopo/types@5.0.1
+  - @prosopo/logger@2.0.5
+  - @prosopo/types-database@5.0.1
+  - @prosopo/redis-client@1.0.31
+  - @prosopo/user-access-policy@3.12.12
+
+## 4.0.0
+### Major Changes
+
+- 787017b: chore(detector): remove the legacy detector-key rotation machinery
+  
+  Nothing has read these keys since the detector moved to per-session provider
+  bundles — the decrypt paths resolve a bundle's own keypair instead. Rotating
+  them was already a no-op, so the whole surface is removed rather than left
+  looking live.
+  
+  **Breaking — the admin API loses two endpoints:**
+  
+  - `POST /v1/prosopo/provider/admin/detector/update` (`AdminApiPaths.UpdateDetectorKey`)
+  - `POST /v1/prosopo/provider/admin/detector/remove` (`AdminApiPaths.RemoveDetectorKey`)
+  
+  Also removed: `ProviderApi.updateDetectorKey` / `.removeDetectorKey`;
+  `ClientTaskManager.updateDetectorKey` / `.removeDetectorKey`;
+  `IProviderDatabase.storeDetectorKey` / `.getDetectorKeys` / `.removeDetectorKey`;
+  the `detector` Mongo collection and its `DetectorRecordSchema` / `DetectorSchema`
+  / `DetectorKey` types; the `UpdateDetectorKeyBody` / `RemoveDetectorKeyBodySpec`
+  / `UpdateDetectorKeyResponse` API types; and the rate-limit config for both
+  paths.
+  
+  The `detector` collection itself is left in place on existing deployments — no
+  migration drops it. It can be dropped manually once the pool rollout is
+  confirmed.
+
+### Minor Changes
+
+- 787017b: feat(detector): serve the detector only from per-session provider bundles; PoW fallback
+  
+  The detector now lives ONLY in the provider-served, precomputed pool bundles — there is no detector bundled into the widget and no legacy detector-key pool. Each session's bundle encrypts everything it produces (bot score, SIMD readings, behavioural data) with its own RSA keypair + inner ChaCha20-Poly1305 cipher; the provider decrypts each payload with that exact bundle, resolved per session.
+  
+  - `DetectorBundlePool`: loads precomputed `{id}.js`/`{id}.json` bundle pairs from disk, uniform-random per-session selection, hot-swap `replace()` for the admin push channel.
+  - The pool is ALWAYS initialised at boot (a missing/empty dir yields an empty pool), collapsing the old three states into two: bundles present ⇒ per-session serving; no bundles ⇒ always PoW.
+  - Redis short-TTL `detectorSessionId → bundleId` binding; the resolved `bundleId` is promoted onto the durable session record so later hops (SIMD attach, PoW/puzzle/image solution submit) decrypt with the same bundle.
+  - Client: removed the inlined `@prosopo/detector` runtime import (now type-only). When no provider bundle can be obtained/run, the client signals `detectorUnavailable` and the provider serves a PoW challenge.
+  - All server decrypt paths (score, SIMD readings, behavioural data) resolve the session's bundle and pass its inner cipher; the legacy key-pool brute force and its env fallback are removed from the detection paths. Decrypt failures fail closed (treated as bot ⇒ PoW).
+
+### Patch Changes
+
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [d107d65]
+- Updated dependencies [6f19cde]
+  - @prosopo/types@5.0.0
+  - @prosopo/types-database@5.0.0
+  - @prosopo/user-access-policy@3.12.11
+
+## 3.15.21
+### Patch Changes
+
+- 69f8dcd: Fix `CaptchaDatabase.saveCaptchas` to upsert session events by `sessionId` instead of `insertOne`, matching the pattern already used for image/pow/puzzle records in the same method. The blind insert stacked a duplicate on central every time the sweep in `clientTasks.storeCommitmentsExternal` re-drained a record that `CentralDbStreamer.streamSessionRecord` had already landed — a live snapshot showed ~64% of sessionIds in `captchastorage.sessions` had 2+ docs. Safe now that sessionIds are `pronode<N>-<uuidv4>` (cross-pronode collision impossible, same-pronode uuidv4 collision 2^-122), which wasn't the case when the original `updateOne + upsert` was swapped to `insertOne` in #1811. Added `saveCaptchasSessionUpsert.integration.test.ts` as a regression guard.
+  - @prosopo/user-access-policy@3.12.10
+  - @prosopo/types-database@4.11.18
+
+## 3.15.20
+### Patch Changes
+
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [2c47bb7]
+- Updated dependencies [0e1171c]
+- Updated dependencies [103318c]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+  - @prosopo/util@3.3.5
+  - @prosopo/types@4.10.0
+  - @prosopo/types-database@4.11.17
+  - @prosopo/common@3.1.48
+  - @prosopo/redis-client@1.0.30
+  - @prosopo/user-access-policy@3.12.9
+  - @prosopo/logger@2.0.4
+
+## 3.15.19
+### Patch Changes
+
+- Updated dependencies [c61dfb5]
+  - @prosopo/user-access-policy@3.12.8
+  - @prosopo/types-database@4.11.16
+
+## 3.15.18
+### Patch Changes
+
+- Updated dependencies [a0cb39e]
+  - @prosopo/types@4.9.12
+  - @prosopo/types-database@4.11.15
+  - @prosopo/user-access-policy@3.12.7
+
+## 3.15.17
+### Patch Changes
+
+- Updated dependencies [b9ca0e7]
+- Updated dependencies [fde6896]
+  - @prosopo/types@4.9.11
+  - @prosopo/user-access-policy@3.12.6
+  - @prosopo/common@3.1.47
+  - @prosopo/types-database@4.11.14
+
+## 3.15.16
+### Patch Changes
+
+- a41c1b5: fix(database): puzzle records now persist submittedAtTimestamp / verifiedAtTimestamp / failedAtTimestamp
+  
+  Puzzle server-verify was returning verified:false on every solved puzzle in production. Root cause: updatePuzzleCaptchaRecordResult wrote submittedAtTimestamp via a $ifNull aggregation expression inside a pipeline $set, and mongoose silently dropped it on the wire — 0 of the last 3002 submitted puzzle records had the field. Reading the record back in serverVerifyPuzzleCaptchaSolution then treated missing submittedAtTimestamp as Number.POSITIVE_INFINITY, tripping submitToVerifyMs > timeout → TIMESTAMP_TOO_OLD on every request.
+  
+  - Rewrite updatePuzzleCaptchaRecordResult and updatePuzzleCaptchaRecord to write the timestamp fields directly (no $ifNull). Safe because puzzle rejects re-submissions at puzzleTasks.ts:228-233 — each stamp is only ever written once. The change also lets both writes drop the pipeline form and use a plain $set.
+  - Add submittedAtTimestamp to the projection in getPuzzleCaptchaRecordByChallenge — the recency check couldn't see the field even after it was persisted, because the projection stripped it.
+  - Reinstate the puzzle end-to-end cypress spec that was reverted in PR #2855 (it was correctly surfacing this bug — the previous decision to remove it was wrong). The puzzle piece gets a data-cy selector gated on NODE_ENV !== "production" so esbuild strips it from production bundles — cypress builds with NODE_ENV=development to include the selector for the test, but real deploys don't ship a bot-friendly querySelector.
+
+## 3.15.15
+### Patch Changes
+
+- Updated dependencies [0a4f902]
+  - @prosopo/types@4.9.10
+  - @prosopo/types-database@4.11.13
+  - @prosopo/user-access-policy@3.12.5
+
+## 3.15.14
+### Patch Changes
+
+- 446f53b: test(database): prime CentralDbStreamer connection in beforeAll to remove startup race
+  
+  `CentralDbStreamer` calls `ensureConnected` lazily on the first fire-and-forget stream, so `db.tables.<collection>` is populated by an async mongoose model registration that the tests don't await. On a fast CI runner the test's synchronous `tables.<collection>.findOne(...)` can execute before that registration lands, throwing `TypeError: Cannot read properties of undefined (reading 'findOne')` — observed intermittently on `puzzleCentralStreaming.integration.test.ts > streamPuzzleUpdate fetches the full record and streams it` (the failing case has an extra promise hop through `getFullRecord()`, which widens the race).
+  
+  `beforeAll` in the two affected integration tests now awaits `db.connect()` directly (via the same cast style already used by `afterAll` for `db.close()`), guaranteeing `db.tables.*` is populated before any test reads from it. `MongoDatabase.connect()` is idempotent (base/mongo.ts:85) and mongoose's `connection.model(name, schema)` returns the existing model when re-registered with the same schema instance, so the streamer's later lazy `ensureConnected` call is safe.
+  
+  Purely a test-race fix — no production code changes.
+
+## 3.15.13
+### Patch Changes
+
+- 2bba03a: feat(database): stream puzzle captcha records to the central captchastorage DB in real-time
+  
+  Puzzle records were being written to each provider node's local mongo but never reached the central `captchastorage` DB on mongo1 — `CentralDbStreamer` only exposed `streamPow*` and `streamImage*` methods, and `provider.ts`'s `storePuzzleCaptchaRecord` / `updatePuzzleCaptchaRecordResult` / `updatePuzzleCaptchaRecord` had no streamer calls at all. As a result 35 puzzle records were successfully written to per-pronode mongos over 7d but zero landed in the central store, so portal aggregations and the audit search return no puzzle data regardless of live activity.
+  
+  Adds `streamPuzzleRecord` / `streamPuzzleUpdate` on `CentralDbStreamer` mirroring the PoW pattern (fire-and-forget, `challenge` upsert key, `pendingStage` guard callback so concurrent updates aren't dropped). Wires those calls into every puzzle write/update site in `provider.ts`. Adds `puzzlecaptcha` to `CaptchaDatabase`'s tables and extends `saveCaptchas`/`getCaptchas` with a puzzle branch for parity with the existing pow/image bulk-write paths. Adds `StoredPuzzleCaptchaRecordSchema` in `@prosopo/types-database` and threads `PuzzleCaptchaRecord` through the `ICaptchaDatabase` interface.
+  
+  Existing puzzle records on pronode local mongos are not backfilled — this change is forward-only.
+- Updated dependencies [2bba03a]
+  - @prosopo/types-database@4.11.12
+  - @prosopo/common@3.1.46
+  - @prosopo/types@4.9.9
+  - @prosopo/user-access-policy@3.12.4
+
+## 3.15.12
+### Patch Changes
+
+- 29b5c6a: Include `currentUrl` and `iframeUrl` in the `getSessionRecordBySessionId` projection so `buildEscalation` forwards them onto the escalated session. Without this, every post-PoW routed session was persisted with `currentUrl: undefined`, dropping URL attribution on the PoW → image/puzzle hop.
+- Updated dependencies [6abff15]
+- Updated dependencies [b07b448]
+  - @prosopo/logger@2.0.3
+  - @prosopo/user-access-policy@3.12.3
+  - @prosopo/common@3.1.45
+  - @prosopo/redis-client@1.0.29
+  - @prosopo/types-database@4.11.11
+
+## 3.15.11
+### Patch Changes
+
+- Updated dependencies [85e8857]
+  - @prosopo/types@4.9.8
+  - @prosopo/types-database@4.11.10
+  - @prosopo/util@3.3.4
+  - @prosopo/user-access-policy@3.12.2
+  - @prosopo/common@3.1.44
+  - @prosopo/logger@2.0.2
+  - @prosopo/redis-client@1.0.28
+
+## 3.15.10
+### Patch Changes
+
+- 494883f: Add a sparse compound index on `{ isEscalation: 1, createdAt: 1 }` to the Session collection. Sparse so ordinary frictionless sessions (which omit the field) don't add index entries.
+- 8bde5df: Persist `isEscalation: true` on Session records minted by the post-PoW routing machine.
+  
+  The escalation path in `submitPoWCaptchaSolution.buildEscalation` creates a follow-up session (image or puzzle) whenever the router decides the PoW-verified user still needs a stronger challenge. Analytics couldn't previously separate those escalated sessions from cold frictionless sessions since both shared the same shape — every downstream count that wanted to reason about "did we escalate this user?" had to reverse-engineer the origin/escalation link from the redis cache mapping.
+  
+  The field is optional on the schema and only written when true, so ordinary frictionless sessions stay slim and older records still parse.
+- Updated dependencies [494883f]
+- Updated dependencies [8bde5df]
+  - @prosopo/types-database@4.11.9
+  - @prosopo/types@4.9.7
+  - @prosopo/user-access-policy@3.12.1
+
+## 3.15.9
+### Patch Changes
+
+- Updated dependencies [7d7e767]
+- Updated dependencies [b3f351b]
+- Updated dependencies [17bc76e]
+  - @prosopo/user-access-policy@3.12.0
+  - @prosopo/types@4.9.6
+  - @prosopo/types-database@4.11.8
+
+## 3.15.8
+### Patch Changes
+
+- Updated dependencies [6cb3218]
+  - @prosopo/types@4.9.5
+  - @prosopo/types-database@4.11.7
+  - @prosopo/user-access-policy@3.11.3
+
+## 3.15.7
+### Patch Changes
+
+- Updated dependencies [de12b31]
+- Updated dependencies [770954b]
+  - @prosopo/types@4.9.4
+  - @prosopo/types-database@4.11.6
+  - @prosopo/user-access-policy@3.11.2
+
+## 3.15.6
+### Patch Changes
+
+- Updated dependencies [18d0287]
+  - @prosopo/types@4.9.3
+  - @prosopo/types-database@4.11.5
+  - @prosopo/user-access-policy@3.11.1
+
+## 3.15.5
+### Patch Changes
+
+- Updated dependencies [ca78a0c]
+  - @prosopo/user-access-policy@3.11.0
+  - @prosopo/types-database@4.11.4
+
+## 3.15.4
+### Patch Changes
+
+- Updated dependencies [7a434e0]
+  - @prosopo/types@4.9.2
+  - @prosopo/common@3.1.43
+  - @prosopo/types-database@4.11.3
+  - @prosopo/user-access-policy@3.10.11
+
+## 3.15.3
+### Patch Changes
+
+- 3e0ef08: fix(provider): peek (read-only) at the escalation session before consuming on the origin → escalation fallback
+  
+  Follow-on to the route() escalation NO_SESSION_FOUND fix (#2771). When the widget hit `/captcha/pow` with the origin sessionId after a PoW-submit escalation to image/puzzle, `isValidRequest` resolved the Redis `origin → escalation` mapping and then immediately consumed the escalation session via `checkAndRemoveSession`. Because the escalation session's `captchaType` did not match the requested type, the handler returned `INCORRECT_CAPTCHA_TYPE` — and worse, the escalation session was already gone, so a widget that *did* know to switch to `/captcha/image` with the escalation sessionId from the PoW-submit envelope had nothing left to consume. Production rate jumped from ~4/hour on 3.6.47 to 58/hour on the single 3.6.49 node.
+  
+  The fix peeks the escalation session read-only first (`getSessionRecordBySessionId`) and only calls `checkAndRemoveSession` when `peeked.captchaType === requestedCaptchaType`. On mismatch the session is left intact, the Redis pointer is still dropped (single-use), and `INCORRECT_CAPTCHA_TYPE` is surfaced. Also extends `getSessionRecordBySessionId`'s projection to include `captchaType` (previously dropped, which would have made every peek look like a mismatch).
+- Updated dependencies [8986976]
+- Updated dependencies [970bca2]
+  - @prosopo/types@4.9.1
+  - @prosopo/types-database@4.11.2
+  - @prosopo/util@3.3.3
+  - @prosopo/common@3.1.42
+  - @prosopo/user-access-policy@3.10.10
+  - @prosopo/logger@2.0.1
+  - @prosopo/redis-client@1.0.27
+
+## 3.15.2
+### Patch Changes
+
+- ec363e9: fix(provider): resolve origin sessionId to escalation when post-PoW route() escalates to image/puzzle
+  
+  When the decision machine's route() phase escalates the user from PoW to an image/puzzle captcha, `buildEscalation` mints a fresh session — but the originating session has already been consumed by the preceding /captcha/pow request. Widgets that didn't switch to the escalation sessionId on the next /captcha/* call (older bundled SDKs, hand-rolled wrappers, network-retry races, tab races) landed on NO_SESSION_FOUND. Production deploy of R1/R2 escalations at 18:39 UTC caused a 4.6× spike in CAPTCHA.NO_SESSION_FOUND (363/hr → 1,668/hr); rate dropped immediately once the routing artifact was deleted.
+  
+  Records an origin → escalation sessionId mapping in Redis at the moment `buildEscalation` creates the new session. On the next /captcha/* request, `isValidRequest` falls back to that mapping when `checkAndRemoveSession` returns null for the supplied sessionId, then invalidates the mapping (single-use). When Redis is unavailable the escalation still returns to the client unchanged — those deployments accept the widget must handle the new sessionId on its own.
+
+## 3.15.1
+### Patch Changes
+
+- 9fe3c06: make util fn for mongoose connection config, standardise mongoose connections
+- 11f1e8c: Replace vague logger scopes (empty strings, import.meta.url, generic "CLI") with structured colon-delimited names following the convention package:subsystem:action.
+- Updated dependencies [dfb0c53]
+- Updated dependencies [7ebb78f]
+- Updated dependencies [7daea2e]
+- Updated dependencies [849af99]
+- Updated dependencies [a5ba27b]
+- Updated dependencies [948d36b]
+- Updated dependencies [41e0e11]
+- Updated dependencies [11f1e8c]
+- Updated dependencies [3c80664]
+- Updated dependencies [b166037]
+- Updated dependencies [1111ff2]
+  - @prosopo/common@3.1.41
+  - @prosopo/logger@2.0.0
+  - @prosopo/user-access-policy@3.10.9
+  - @prosopo/util@3.3.2
+  - @prosopo/types@4.9.0
+  - @prosopo/redis-client@1.0.26
+  - @prosopo/types-database@4.11.1
+
+## 3.15.0
+### Minor Changes
+
+- 12cd0a6: Replace client-side weighted-random provider selection with static DNS endpoints.
+  
+  - Removed the `providerSelectEntropy` field from `DetectorResult`, `Session`, the
+    Mongoose `SessionRecordSchema` (including its standalone index), and every
+    call-site that threaded it through frictionless / image / pow / puzzle flows.
+  - Removed `FrictionlessManager.hostVerified` and its decision-machine call site
+    — there's nothing to verify when the DNS layer picks the host.
+  - `getRandomActiveProvider(env)` now returns the per-environment static DNS
+    endpoint (`pronode.prosopo.io` family) instead of fetching the provider list
+    and weighted-selecting. The entropy parameter is gone.
+  - `getProcaptchaRandomActiveProvider` is now a thin re-export so widget packages
+    keep importing from `procaptcha-common`.
+  - `FrontendProvider.datasetId` is dropped; `CaptchaRequestBody.datasetId` is
+    optional. The server falls back to its own most-recently-uploaded dataset
+    (`env.datasetId`, populated from `db.getMostRecentDatasetId()` at startup) —
+    clients can't pin a dataset under DNS routing because they don't know which
+    pronode they'll hit.
+  - Removed dead `setProviderLoader` / `prefetchProviders` / `selectWeightedProvider`
+    plumbing from `@prosopo/load-balancer`. The server's cacheFile-based loader
+    setup in `startProviderApi` goes with them.
+  - `getRandomActiveProvider` now hits `/healthz` on the global hostname once per
+    page load, reads the responding pronode's identity from the JSON body, and
+    pins subsequent captcha calls to that pronode (`https://pronodeN.prosopo.io`)
+    so session creation and submission land on the same backend. Falls back to
+    the dual-stack global hostname when `/healthz` is unreachable.
+  - `/healthz` now returns `{ ok: true, host: <pronode-identity> }` instead of
+    `"OK"` to support the above pinning.
+  - CORS preflight is now cached for 24h (`maxAge: 86400`) — previously the
+    browser refired an OPTIONS preflight before every captcha call because
+    the custom `Prosopo-Site-Key` / `Prosopo-User` headers make the request
+    non-simple and the default `maxAge` is 5s.
+
+### Patch Changes
+
+- Updated dependencies [12cd0a6]
+- Updated dependencies [12cd0a6]
+  - @prosopo/types@4.8.0
+  - @prosopo/types-database@4.11.0
+  - @prosopo/user-access-policy@3.10.8
+
+## 3.14.7
+### Patch Changes
+
+- bb98af1: Add `DecisionMachineKind` (`routing` | `decision`) to separate routing and decision artifacts on the same provider.
+  
+  - New `DecisionMachineKind` enum in `@prosopo/types`.
+  - `DecisionMachineArtifact` and the Mongoose `DecisionMachineArtifactRecordSchema` gain an optional `kind` field; the unique compound index becomes `(scope, dappAccount, kind)` so a routing machine and a decision machine can coexist for the same scope/dapp.
+  - `ProviderApi.updateDecisionMachine` accepts an optional `kind` 10th arg; the `apiUpdateDecisionMachineEndpoint` admin handler reads `decisionMachineKind` from the request body and forwards it.
+  - `ClientTaskManager.updateDecisionMachine` and the artifact-listing returns include `kind`.
+  - `ProviderDatabase.getDecisionMachineArtifact` filters by `kind` when supplied; `upsertDecisionMachineArtifact` defaults missing `kind` to `Routing` for backward compatibility on existing rows.
+  - `DecisionMachineRunner` keys its in-memory cache by `(scope, kind, dappAccount)` and selects the appropriate artifact for `runDecisionMachine` (kind=`decision`), `runRoutingMachine` (kind=`routing`) and `runCounterMachine` (kind=`routing`).
+  - `DecisionMachineArtifactRecordSchema.captchaType` enum now includes `CaptchaType.puzzle` alongside `pow`/`image`.
+- Updated dependencies [bb98af1]
+  - @prosopo/types@4.7.4
+  - @prosopo/types-database@4.10.7
+  - @prosopo/user-access-policy@3.10.7
+
+## 3.14.6
+### Patch Changes
+
+- Updated dependencies [89ab6fc]
+- Updated dependencies [0f3750b]
+  - @prosopo/types@4.7.3
+  - @prosopo/types-database@4.10.6
+  - @prosopo/user-access-policy@3.10.6
+
+## 3.14.5
+### Patch Changes
+
+- edcd450: Validate salt-encoded coords in PoW and puzzle verification and add a `CAPTCHA_INVALID_SALT` result reason. Invalid input now produces a disapproval rather than a partial write.
+- Updated dependencies [e89860e]
+- Updated dependencies [edcd450]
+- Updated dependencies [5295c4b]
+  - @prosopo/user-access-policy@3.10.5
+  - @prosopo/util@3.3.1
+  - @prosopo/types@4.7.2
+  - @prosopo/types-database@4.10.5
+  - @prosopo/logger@1.0.4
+  - @prosopo/common@3.1.40
+  - @prosopo/redis-client@1.0.25
+
+## 3.14.4
+### Patch Changes
+
+- Updated dependencies [46fedf4]
+  - @prosopo/types@4.7.1
+  - @prosopo/types-database@4.10.4
+  - @prosopo/user-access-policy@3.10.4
+
+## 3.14.3
+### Patch Changes
+
+- Updated dependencies [3a46191]
+- Updated dependencies [dde23e8]
+  - @prosopo/types@4.7.0
+  - @prosopo/types-database@4.10.3
+  - @prosopo/user-access-policy@3.10.3
+
+## 3.14.2
+### Patch Changes
+
+- 4626340: perf(provider): cut p95 on /captcha/frictionless and /captcha/image
+  
+  Replaces the `$match → $sample` random-captcha lookup with an indexed
+  range scan over a new `{datasetId, solved, randomKey}` compound index;
+  reorders the `sampleContextEntropy` aggregation so `$sample` runs
+  before `$lookup`; batches three pairs of independent awaits in the
+  frictionless handler via `Promise.all`. Adds an integration test
+  asserting via `.explain()` and wall-clock timing that the new paths
+  are quantifiably faster. The legacy aggregation remains as a fallback
+  in `getRandomCaptcha` so deployment can precede the
+  providerBackfillCaptchaRandomKey rollout.
+- 5f47c42: fix(database): widen `getSessionRecordBySessionId` projection so post-PoW routing escalations stop failing with `DATABASE.SESSION_STORE_FAILED`. The projection added in #2393 dropped `token`, `score`, `threshold`, `providerSelectEntropy`, `ipAddress`, etc., which `buildEscalation` forwards into a new session via `frictionlessManager.createSession`. With routing machines enabled for edge (2026-06-16) every escalation 500'd. Headers are now enumerated key-by-key so `headers.x-tls-clienthello` (multi-KB TLS ClientHello) stays out of the read.
+- Updated dependencies [4626340]
+- Updated dependencies [6962179]
+  - @prosopo/types@4.6.1
+  - @prosopo/types-database@4.10.2
+  - @prosopo/user-access-policy@3.10.2
+
+## 3.14.1
+### Patch Changes
+
+- 44eaebf: Fix `providedIp.lower` being persisted as BSON `Long` instead of `Decimal128` on `usercommitments`, which aborted the central-streaming sweep on a `CastError` and stopped *all* records from being streamed off the affected provider node.
+  
+  Three changes, each addressing one half of the regression introduced by #2681 ("lifecycle timestamps + submit→verify recency window"):
+  
+  - **provider.ts** — `updateDappUserCommitment` and `updatePuzzleCaptchaRecord` now branch between pipeline-form (`updateOne(filter, [{ $set: ... }])`) and ordinary `$set`. The pipeline form bypasses Mongoose schema casting, so a `bigint` IP half lands on disk as BSON Int64 (Long) rather than going through the `bigint → string → Decimal128` setter on `CompositeIpAddressRecordSchemaObj`. The pipeline form is only used when an `$ifNull` is genuinely required; the `imgCaptchaTasks` side-update call site only carries `providedIp`/`metadata`, so it now takes the ordinary path and the setter runs.
+  - **captcha.ts** — `CaptchaDatabase.saveCaptchas` normalises `ipAddress` / `providedIp` composite-IP halves on each lean doc before the `bulkWrite`. `Model.bulkWrite` skips setters, so a Long-typed `lower` (whose unsigned value exceeds `Number.MAX_SAFE_INTEGER` — every IPv6 lower with bit 63 set) hits the Decimal128 caster raw and the ordered bulkWrite aborts the entire batch. Normalisation converts the Long via `Long.fromBits(low, high, /*unsigned*/ true).toString() → Decimal128`, matching what the original schema setter would have produced.
+  - **types-database/provider.ts** — `CompositeIpAddressRecordSchemaObj.lower/upper` setters extracted into a shared `normaliseIpHalf` that also handles BSON `Long`. Defensive cover for the `updateOne`/`save`/`create` paths the streamer uses (those *do* run setters); does not run under `bulkWrite`, which is why the captcha.ts normalisation is also needed.
+  
+  Long-class checks use duck-typed `_bsontype === "Long"` rather than `instanceof Long` to stay robust against hoisting differences between the top-level `bson` import and the copy the MongoDB driver uses for deserialisation.
+  
+  Regression test under `packages/database/src/tests/integration/providedIpPipelineCast.integration.test.ts` pins both halves: ordinary `$set` writes Decimal128, `saveCaptchas` drains a Long-poisoned lean doc through to a clean Decimal128 at central, and a negative-control test keeps the underlying Mongoose pipeline-cast behaviour visible so a future regression on either side is unambiguous.
+- Updated dependencies [55b1388]
+- Updated dependencies [44eaebf]
+  - @prosopo/util@3.3.0
+  - @prosopo/types@4.6.0
+  - @prosopo/types-database@4.10.1
+  - @prosopo/logger@1.0.3
+  - @prosopo/user-access-policy@3.10.1
+  - @prosopo/common@3.1.39
+  - @prosopo/redis-client@1.0.24
+
+## 3.14.0
+### Minor Changes
+
+- 9b91e85: Log + persist access-policy block decisions. When `blockMiddleware` 401s a request, the inspector now emits a structured `"Access policy block"` log line carrying the matched rule's identity (`ruleHash`, `ruleType`, `ruleDescription`, `policyType`) and the request's user-scope (ja4 / ip / userAgent / userId / countryCode / asn), and writes a synthetic `Session` record with `blocked: true`, `deleted: true`, `reason: ACCESS_POLICY_BLOCK`, and the same rule fields surfaced on three new optional columns (`ruleHash`, `ruleType`, `ruleDescription`). Persistence is fire-and-forget and any Mongo failure is swallowed-and-logged so the 401 response is never delayed. The new fields are gated by `blocked: true` so legit sessions stay untouched, and two sparse indexes (`{siteKey, blocked, createdAt}`, `{ruleHash}`) keep the per-rule and per-client block aggregations the Traffic page will query off the existing sessions collection without bloating the index on normal traffic.
+
+### Patch Changes
+
+- Updated dependencies [9b91e85]
+- Updated dependencies [c1c7998]
+- Updated dependencies [c80a05b]
+  - @prosopo/types@4.5.0
+  - @prosopo/types-database@4.10.0
+  - @prosopo/user-access-policy@3.10.0
+
+## 3.13.12
+### Patch Changes
+
+- Updated dependencies [b520cd9]
+  - @prosopo/user-access-policy@3.9.1
+  - @prosopo/types-database@4.9.2
+
+## 3.13.11
+### Patch Changes
+
+- 3973078: Track every lifecycle timestamp on every captcha type, and switch the dapp-verify recency check from issuance→verify to **submit→verify** with the window sourced from per-client settings.
+  
+  ### Lifecycle timestamps
+  
+  `StoredCaptcha` (the base shared by PoW, Puzzle, and Image/UserCommitment) gains three new fields:
+  
+  - `submittedAtTimestamp` — set once on the first user-submission write, never overwritten.
+  - `verifiedAtTimestamp` — set once when the dapp first calls /verify, never overwritten.
+  - `failedAtTimestamp` — set once on the first non-approved terminal state, never overwritten.
+  
+  `lastUpdatedTimestamp` keeps its "last write of any kind" meaning. The new fields use `$ifNull` in aggregation-pipeline updates so the stamp lands only on the first transition — concurrent or repeat writes are no-ops on the lifecycle stamps.
+  
+  ### Submit→verify window
+  
+  The dapp-verify recency check used to be `now - challengeTimestamp <= timeout`. The window was issuance→verify, which gave bots room to stockpile pre-solved solutions and redeem them many seconds (sometimes minutes) later from the time they reached the provider.
+  
+  The check is now `now - challengeRecord.submittedAtTimestamp <= clientSettings.verifiedTimeout`. The window measures from the moment the user's solution actually arrived. Combined with the new lifecycle fields, this tightens the stockpile attack surface.
+  
+  ### Settings move
+  
+  `verifiedTimeout` moves to `ClientSettingsSchema` (per-client, operator-set via the portal). Default stays at 120000ms for back-compat; auto-submit dapps should set it to ~10000ms.
+  
+  Removed from request bodies entirely:
+  
+  - `ServerPowCaptchaVerifyRequestBody`
+  - `ServerPuzzleCaptchaVerifyRequestBody`
+  - `SubmitPowCaptchaSolutionBody`
+  - `SubmitPuzzleCaptchaSolutionBody`
+  
+  The client field was client-controlled and unsigned — any caller could raise the recency ceiling. It's now server-determined.
+  
+  `ProviderApiInterface.submitPow/PuzzleCaptchaSolution` lose their `timeout` parameter (no longer forwarded). The verify wrappers keep their `recencyLimit` parameter for caller back-compat but the value is no longer transmitted; server reads from the client settings instead.
+  
+  ### Migration
+  
+  Pre-PR records with `userSubmitted=true` but no `submittedAtTimestamp` will fail the new recency check. The submit window is short (120s default verifiedTimeout) so the migration cliff is naturally bounded — records in flight at deploy time expire within ~2 minutes.
+  
+  348 provider unit tests + 28 database tests pass.
+- Updated dependencies [70ef67a]
+- Updated dependencies [4da8941]
+- Updated dependencies [f69724f]
+- Updated dependencies [4226c59]
+- Updated dependencies [3973078]
+  - @prosopo/user-access-policy@3.9.0
+  - @prosopo/types@4.4.1
+  - @prosopo/types-database@4.9.1
+
 ## 3.13.10
 ### Patch Changes
 

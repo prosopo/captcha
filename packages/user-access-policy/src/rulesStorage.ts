@@ -33,6 +33,15 @@ export type AccessRulesFilter = {
 	 */
 	userScopeMatch?: FilterScopeMatch;
 	groupId?: string;
+	/**
+	 * Restrict the result to Block-type rules. Hot-path callers
+	 * (checkForHardBlock, blockMiddleware) set this so the Redis-side
+	 * candidate pool excludes Restrict and routing-Block rules before
+	 * the SERVER_SIDE_RANK_TOP_N cap is applied — without it, dense
+	 * Restrict populations can push the hard-block rules past the cap
+	 * and the lookup misses them.
+	 */
+	blockOnly?: boolean;
 };
 
 export type AccessRuleEntry = {

@@ -147,6 +147,209 @@ max_size = 268435488
 when_full = "drop_newest"
 
 # =============================================================================
+# JOB RUNNER LOGS PIPELINE
+# =============================================================================
+#
+# The runner and orchestrator containers already carry `vector.runner=true`
+# and `vector.orchestrator=true` labels, but before this pipeline existed
+# no vector source consumed them and every job-runner log was dropped on
+# the floor. That's why the initial POLL_EMAIL_BOUNCES cron looked green
+# in `jobstorage.jobs` but silently failed to flag any accounts — nothing
+# was queryable from OpenObserve to prove otherwise.
+#
+# Emitted streams (matching the provider pattern):
+#   staging_jobrunner_node       production_jobrunner_node
+#   staging_orchestrator_node    production_orchestrator_node
+
+[sources.runner]
+type = "docker_logs"
+include_labels = ["vector.runner=true"]
+
+[transforms.runner_format]
+type = "remap"
+inputs = ["runner"]
+source = '''
+output={}
+message_str = string(.message) ?? ""
+parsed = parse_json(message_str) ?? null
+if parsed != null {
+    output = parsed
+} else {
+    output.message = message_str
+}
+output.host=get_env_var!("OO_HOST")
+output.container_name=.container_name
+output.image=.image
+output.stream=.stream
+output.source_type=.source_type
+.=output
+'''
+
+[sinks.oo_runner]
+type = "http"
+inputs = ["runner_format"]
+uri = "https://oo.prosopo.io/api/dev_organization_29569_u24VnjrjN7XrP35/${NODE_ENV:?err}_jobrunner_node/_json"
+method = "post"
+compression = "gzip"
+
+[sinks.oo_runner.auth]
+strategy = "basic"
+user = "${OO_USERNAME:?err}"
+password = "${OO_PASSWORD:?err}"
+
+[sinks.oo_runner.encoding]
+codec = "json"
+timestamp_format = "rfc3339"
+
+[sinks.oo_runner.healthcheck]
+enabled = true
+
+[sinks.oo_runner.batch]
+timeout_secs = 15
+
+[sinks.oo_runner.request]
+rate_limit_duration_secs = 1
+rate_limit_num = 10
+retry_max_attempts = 5
+retry_initial_backoff_secs = 1
+retry_max_backoff_secs = 30
+
+[sinks.oo_runner.buffer]
+type = "disk"
+max_size = 268435488
+when_full = "drop_newest"
+
+[sinks.oo2_runner]
+type = "http"
+inputs = ["runner_format"]
+uri = "https://oo2.prosopo.io/api/default/${NODE_ENV:?err}_jobrunner_node/_json"
+method = "post"
+compression = "gzip"
+
+[sinks.oo2_runner.auth]
+strategy = "basic"
+user = "${OO2_USERNAME:?err}"
+password = "${OO2_PASSWORD:?err}"
+
+[sinks.oo2_runner.encoding]
+codec = "json"
+timestamp_format = "rfc3339"
+
+[sinks.oo2_runner.healthcheck]
+enabled = true
+
+[sinks.oo2_runner.batch]
+timeout_secs = 15
+
+[sinks.oo2_runner.request]
+rate_limit_duration_secs = 1
+rate_limit_num = 10
+retry_max_attempts = 5
+retry_initial_backoff_secs = 1
+retry_max_backoff_secs = 30
+
+[sinks.oo2_runner.buffer]
+type = "disk"
+max_size = 268435488
+when_full = "drop_newest"
+
+# =============================================================================
+# JOB ORCHESTRATOR LOGS PIPELINE
+# =============================================================================
+
+[sources.orchestrator]
+type = "docker_logs"
+include_labels = ["vector.orchestrator=true"]
+
+[transforms.orchestrator_format]
+type = "remap"
+inputs = ["orchestrator"]
+source = '''
+output={}
+message_str = string(.message) ?? ""
+parsed = parse_json(message_str) ?? null
+if parsed != null {
+    output = parsed
+} else {
+    output.message = message_str
+}
+output.host=get_env_var!("OO_HOST")
+output.container_name=.container_name
+output.image=.image
+output.stream=.stream
+output.source_type=.source_type
+.=output
+'''
+
+[sinks.oo_orchestrator]
+type = "http"
+inputs = ["orchestrator_format"]
+uri = "https://oo.prosopo.io/api/dev_organization_29569_u24VnjrjN7XrP35/${NODE_ENV:?err}_orchestrator_node/_json"
+method = "post"
+compression = "gzip"
+
+[sinks.oo_orchestrator.auth]
+strategy = "basic"
+user = "${OO_USERNAME:?err}"
+password = "${OO_PASSWORD:?err}"
+
+[sinks.oo_orchestrator.encoding]
+codec = "json"
+timestamp_format = "rfc3339"
+
+[sinks.oo_orchestrator.healthcheck]
+enabled = true
+
+[sinks.oo_orchestrator.batch]
+timeout_secs = 15
+
+[sinks.oo_orchestrator.request]
+rate_limit_duration_secs = 1
+rate_limit_num = 10
+retry_max_attempts = 5
+retry_initial_backoff_secs = 1
+retry_max_backoff_secs = 30
+
+[sinks.oo_orchestrator.buffer]
+type = "disk"
+max_size = 268435488
+when_full = "drop_newest"
+
+[sinks.oo2_orchestrator]
+type = "http"
+inputs = ["orchestrator_format"]
+uri = "https://oo2.prosopo.io/api/default/${NODE_ENV:?err}_orchestrator_node/_json"
+method = "post"
+compression = "gzip"
+
+[sinks.oo2_orchestrator.auth]
+strategy = "basic"
+user = "${OO2_USERNAME:?err}"
+password = "${OO2_PASSWORD:?err}"
+
+[sinks.oo2_orchestrator.encoding]
+codec = "json"
+timestamp_format = "rfc3339"
+
+[sinks.oo2_orchestrator.healthcheck]
+enabled = true
+
+[sinks.oo2_orchestrator.batch]
+timeout_secs = 15
+
+[sinks.oo2_orchestrator.request]
+rate_limit_duration_secs = 1
+rate_limit_num = 10
+retry_max_attempts = 5
+retry_initial_backoff_secs = 1
+retry_max_backoff_secs = 30
+
+[sinks.oo2_orchestrator.buffer]
+type = "disk"
+max_size = 268435488
+when_full = "drop_newest"
+
+# =============================================================================
 # MONGO LOGS PIPELINE
 # =============================================================================
 
@@ -702,26 +905,6 @@ scrape_interval_secs = 30
 [transforms.host_metrics_format]
 type = "remap"
 inputs = ["host_metrics"]
-source = '''
-.tags.host=get_env_var!("OO_HOST")
-.tags.env=get_env_var!("NODE_ENV")
-'''
-
-# =============================================================================
-# VECTOR INTERNAL METRICS
-# =============================================================================
-
-# Source: Collect Vector's own internal metrics
-# Includes performance metrics, error rates, and pipeline statistics
-[sources.vector_metrics]
-type = "internal_metrics"
-scrape_interval_secs = 30
-
-# Transform: Add host and environment tags to Vector metrics
-# Helps monitor Vector's health and performance across different environments
-[transforms.vector_metrics_format]
-type = "remap"
-inputs = ["vector_metrics"]
 source = '''
 .tags.host=get_env_var!("OO_HOST")
 .tags.env=get_env_var!("NODE_ENV")

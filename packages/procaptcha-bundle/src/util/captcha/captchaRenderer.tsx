@@ -52,6 +52,8 @@ class CaptchaRenderer {
 			isWeb2,
 			invisible,
 			renderOptions.userAccountAddress,
+			renderOptions.ipv4,
+			renderOptions.ipv6,
 		);
 		this.readAndValidateSettings(
 			sourceElement || container,

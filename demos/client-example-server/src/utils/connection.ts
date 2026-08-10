@@ -11,6 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { fileURLToPath } from "node:url";
+import { getMongoConnectionOptions } from "@prosopo/database";
 import {
 	AutoIncrementID,
 	type AutoIncrementIDOptions,
@@ -19,7 +21,15 @@ import mongoose, { type Connection } from "mongoose";
 import UserSchema from "../models/user.js";
 
 function connectionFactory(uri: string): Connection {
-	const conn = mongoose.createConnection(uri);
+	const appName = fileURLToPath(import.meta.url);
+
+	const conn = mongoose.createConnection(
+		uri,
+		getMongoConnectionOptions({
+			url: uri,
+			appName,
+		}),
+	);
 	if (!conn.models.user) {
 		UserSchema.plugin(AutoIncrementID, {
 			field: "id",

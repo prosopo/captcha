@@ -28,6 +28,26 @@ export enum FrictionlessReason {
 	BOT_SCORE_ABOVE_THRESHOLD = "BOT_SCORE_ABOVE_THRESHOLD",
 	WEBVIEW_DETECTED = "WEBVIEW_DETECTED",
 	AUTO_BAN_SCORE = "AUTO_BAN_SCORE",
+	FINGERPRINT_PROOF_INVALID = "FINGERPRINT_PROOF_INVALID",
+	MISSING_CURRENT_URL = "MISSING_CURRENT_URL",
+	// A verified PoW solve arrived without click coordinates encoded in its
+	// salt. Every current widget embeds the checkbox click position, so absent
+	// coords mean the solve didn't come through the official widget path; such
+	// solves are escalated to an image captcha rather than approved outright
+	// (see verifyPowCaptchaSolution in @prosopo/provider).
+	MISSING_COORDINATES = "MISSING_COORDINATES",
+	// The detector payload could not be decrypted: no bundle resolved for the
+	// session (expired/missing Redis binding, bundle no longer in the pool), or
+	// the ciphertext did not open with the bundle's keys. Distinct from a high
+	// bot score — we learned nothing about this client, rather than learning
+	// something bad — so it gets its own short image challenge instead of
+	// falling through to the old-timestamp path, which used to catch it by
+	// accident via the synthetic `timestamp = 0`.
+	DECRYPTION_FAILED = "DECRYPTION_FAILED",
+	// The client sent no detector token, so nothing was measured about it.
+	MISSING_TOKEN = "MISSING_TOKEN",
+	// A token arrived without its accompanying head hash.
+	MISSING_HEAD_HASH = "MISSING_HEAD_HASH",
 }
 
 /**
@@ -54,9 +74,11 @@ export enum ResultReason {
 	SATELLITE_BLOCKED = "API.SATELLITE_BLOCKED",
 	SPAM_EMAIL_DOMAIN = "API.SPAM_EMAIL_DOMAIN",
 	SPAM_EMAIL_RULE = "API.SPAM_EMAIL_RULE",
+	SPAM_EMAIL_COUNT_EXCEEDED = "API.SPAM_EMAIL_COUNT_EXCEEDED",
 	TIMESTAMP_TOO_OLD = "API.TIMESTAMP_TOO_OLD",
 	TOR_BLOCKED = "API.TOR_BLOCKED",
 	VPN_BLOCKED = "API.VPN_BLOCKED",
+	CAPTCHA_INVALID_SALT = "CAPTCHA.INVALID_SALT",
 	CAPTCHA_INVALID_SOLUTION = "CAPTCHA.INVALID_SOLUTION",
 	CAPTCHA_INVALID_TIMESTAMP = "CAPTCHA.INVALID_TIMESTAMP",
 	CAPTCHA_NO_SESSION_FOUND = "CAPTCHA.NO_SESSION_FOUND",

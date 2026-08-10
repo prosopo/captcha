@@ -40,6 +40,7 @@ export const userAttributesRedisSchema: RediSearchSchema = {
 	coords: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true, SEPARATOR: "|" },
 	countryCode: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 	asn: { type: SCHEMA_FIELD_TYPE.NUMERIC, INDEXMISSING: true },
+	os: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 } satisfies AllKeys<UserAttributes>;
 
 export const userScopeRedisSchema: RediSearchSchema = {
@@ -66,12 +67,24 @@ export const accessRuleRedisSchema: RediSearchSchema = {
 	...policyScopeRedisSchema,
 	...userScopeRedisSchema,
 	groupId: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
+	// Indexed so request-time callers that only care about Block policies
+	// (checkForHardBlock, blockMiddleware) can pre-filter via @type:{block}
+	// before the SERVER_SIDE_RANK_TOP_N cap kicks in. Without this, dense
+	// Restrict / routing-Block populations push the hard-block rules out
+	// of the top-N candidate set and the lookup silently misses them.
+	type: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 } satisfies Keys<AccessRule>;
 
 export const ACCESS_RULES_REDIS_INDEX_NAME = "index:user-access-rules";
 
 // names take space, so we use an acronym instead of the long-tailed one
 export const ACCESS_RULE_REDIS_KEY_PREFIX = "uar:";
+
+// Re-exported from #policy/rule.js — that module is types-only so both
+// the parse side (policyInput.ts) and the write/index side (this file
+// and redisRulesWriter.ts) can import the sentinel without pulling
+// transformRule into a cycle.
+export { GLOBAL_CLIENT_SCOPE_SENTINEL } from "#policy/rule.js";
 
 export const accessRulesRedisIndex: RedisIndex = {
 	name: ACCESS_RULES_REDIS_INDEX_NAME,

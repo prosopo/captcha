@@ -37,7 +37,9 @@ class ApiGetAllDecisionMachinesEndpoint
 		args: unknown,
 		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
-		logger = logger || getLogger("info", "");
+		logger = logger
+			? logger.with({}, "admin:decision-machines:get-all")
+			: getLogger("info", "provider:admin:decision-machines:get-all");
 		try {
 			logger.info(() => ({
 				msg: "Getting all decision machines",

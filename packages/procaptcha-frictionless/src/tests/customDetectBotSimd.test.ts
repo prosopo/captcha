@@ -18,20 +18,21 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // reference the same spies the tests assert against.
 const mocks = vi.hoisted(() => ({
 	getFrictionlessCaptcha: vi.fn(),
-	getRandomActiveProvider: vi.fn(),
-	prefetchProviders: vi.fn(async () => undefined),
+	getProcaptchaRandomActiveProvider: vi.fn(),
+	assignDetectorBundle: vi.fn(),
 	detect: vi.fn(),
 }));
 
 vi.mock("@prosopo/api", () => ({
-	ProviderApi: vi.fn(() => ({
-		getFrictionlessCaptcha: mocks.getFrictionlessCaptcha,
-	})),
-}));
-
-vi.mock("@prosopo/load-balancer", () => ({
-	getRandomActiveProvider: mocks.getRandomActiveProvider,
-	prefetchProviders: mocks.prefetchProviders,
+	// customDetectBot does `new ProviderApi(...)`, so the implementation has to
+	// be constructible. vitest 3 tolerated an arrow function here; under vitest 4
+	// it throws "is not a constructor" — arrows have no [[Construct]] slot.
+	ProviderApi: vi.fn(function () {
+		return {
+			getFrictionlessCaptcha: mocks.getFrictionlessCaptcha,
+			assignDetectorBundle: mocks.assignDetectorBundle,
+		};
+	}),
 }));
 
 vi.mock("@prosopo/procaptcha-common", () => ({
@@ -44,10 +45,12 @@ vi.mock("@prosopo/procaptcha-common", () => ({
 			}
 		};
 	}),
+	getProcaptchaRandomActiveProvider: mocks.getProcaptchaRandomActiveProvider,
+	pickIpMode: vi.fn(() => undefined),
 }));
 
 vi.mock("../detectorLoader.js", () => ({
-	DetectorLoader: vi.fn(async () => mocks.detect),
+	DetectorLoaderFromScript: vi.fn(async () => mocks.detect),
 }));
 
 import customDetectBot from "../customDetectBot.js";
@@ -65,10 +68,6 @@ const makeDetectionResult = (
 	token: "TOKEN",
 	encryptHeadHash: "HASH",
 	userAccount: { account: { address: "5FakeUserAccountAddress" } },
-	provider: {
-		provider: { url: "https://provider.test" },
-		providerAccount: "5Provider",
-	},
 	getSimdReadings,
 	mouseTracker: undefined,
 	touchTracker: undefined,
@@ -83,10 +82,20 @@ const captchaResponse = {
 
 beforeEach(() => {
 	mocks.getFrictionlessCaptcha.mockReset();
-	mocks.getRandomActiveProvider.mockReset();
-	mocks.prefetchProviders.mockReset();
+	mocks.getProcaptchaRandomActiveProvider.mockReset();
+	mocks.assignDetectorBundle.mockReset();
 	mocks.detect.mockReset();
-	mocks.prefetchProviders.mockResolvedValue(undefined);
+	mocks.getProcaptchaRandomActiveProvider.mockResolvedValue({
+		providerAccount: "dns-routed",
+		provider: { url: "https://provider.test" },
+	});
+	// Provider serves a per-session detector bundle (the only detector source).
+	mocks.assignDetectorBundle.mockResolvedValue({
+		useProviderBundle: true,
+		detectorSessionId: "det-1",
+		detectorScript: "SELF_CONTAINED_ESM",
+		status: "ok",
+	});
 	mocks.getFrictionlessCaptcha.mockResolvedValue(captchaResponse);
 });
 
@@ -99,7 +108,7 @@ describe("customDetectBot SIMD deferral", () => {
 
 		expect(mocks.getFrictionlessCaptcha).toHaveBeenCalledTimes(1);
 		const args = mocks.getFrictionlessCaptcha.mock.calls[0];
-		// args: token, headHash, dappAccount, userAccount, mode, simdReadings
+		// args: token, headHash, dappAccount, userAccount, mode, simdReadings, currentUrl, iframeUrl
 		expect(args?.[5]).toBeUndefined();
 	});
 

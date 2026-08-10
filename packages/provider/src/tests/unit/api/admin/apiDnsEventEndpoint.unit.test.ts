@@ -62,12 +62,17 @@ describe("ApiDnsEventEndpoint", () => {
 	let mockLogger: {
 		info: ReturnType<typeof vi.fn>;
 		warn: ReturnType<typeof vi.fn>;
+		with: ReturnType<typeof vi.fn>;
 	};
 
 	beforeEach(() => {
 		vi.clearAllMocks();
 		mergeSessionDnsEvent = vi.fn().mockResolvedValue(true);
-		mockLogger = { info: vi.fn(), warn: vi.fn() };
+		mockLogger = {
+			info: vi.fn(),
+			warn: vi.fn(),
+			with: vi.fn().mockReturnThis(),
+		};
 		endpoint = new ApiDnsEventEndpoint({
 			mergeSessionDnsEvent,
 		} as never);

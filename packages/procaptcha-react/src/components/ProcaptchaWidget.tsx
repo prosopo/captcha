@@ -40,41 +40,70 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 	const [state, updateState] = useProcaptcha(useState, useRef);
 	const [loading, setLoading] = useState(false);
 	const hpRef = useRef<HTMLInputElement>(null);
-	const manager = Manager(
-		config,
-		state,
-		updateState,
-		callbacks,
-		frictionlessState,
-		() => hpRef.current?.value || undefined,
+	// Held in a ref so the closure variables that capture the checkbox
+	// click coords (set on start) survive across re-renders and are
+	// still in scope when submit() runs. PoW and Puzzle widgets do the
+	// same — recreating Manager on every render loses the (x,y) by the
+	// time the user submits, which is why image captcha was persisting
+	// coords[0] = [[0,0]] for every session.
+	const manager = useRef(
+		Manager(
+			config,
+			state,
+			updateState,
+			callbacks,
+			frictionlessState,
+			() => hpRef.current?.value || undefined,
+		),
 	);
+	// See procaptcha-pow ProcaptchaWidget — same session-invalidation
+	// recovery contract with coords preservation across a re-mint.
+	const lastCoordsRef = useRef<{ x: number; y: number } | null>(null);
+	const sessionInvalidatedFiredRef = useRef(false);
 	const theme = "light" === props.config.theme ? lightTheme : darkTheme;
 
 	useEffect(() => {
-		if (config.language) {
-			if (i18n) {
-				if (i18n.language !== config.language) {
-					i18n.changeLanguage(config.language).then((r) => r);
-				}
-			} else {
-				loadI18next(false).then((i18n) => {
-					if (i18n.language !== config.language)
-						i18n.changeLanguage(config.language).then((r) => r);
-				});
+		if (!config.language) return;
+		if (i18n) {
+			if (i18n.language !== config.language) {
+				void i18n.changeLanguage(config.language);
 			}
+			return;
 		}
+		// Direct-React consumers don't go through WidgetFactory, so pass the
+		// language into loadI18next — first init boots with the right language
+		// (skipping browser detection), and subsequent calls reconcile via
+		// changeLanguage inside loadI18next.
+		void loadI18next(false, config.language);
 	}, [i18n, config.language]);
 
 	useEffect(() => {
-		if (state.error) {
-			setLoading(false);
-			if (state.error.key === "CAPTCHA.NO_SESSION_FOUND" && frictionlessState) {
-				setTimeout(() => {
-					frictionlessState.restart();
-				}, 100);
-			}
+		if (!props.autoStart) return;
+		setLoading(true);
+		const coords = props.startCoords;
+		lastCoordsRef.current = coords ?? null;
+		manager.current.start(coords?.x ?? 0, coords?.y ?? 0).then(
+			() => setLoading(false),
+			() => setLoading(false),
+		);
+	}, [props.autoStart, props.startCoords]);
+
+	useEffect(() => {
+		if (!state.error) return;
+		setLoading(false);
+		if (state.error.key !== "CAPTCHA.NO_SESSION_FOUND") return;
+		if (props.onSessionInvalidated && !sessionInvalidatedFiredRef.current) {
+			sessionInvalidatedFiredRef.current = true;
+			const coords = lastCoordsRef.current;
+			props.onSessionInvalidated(coords?.x, coords?.y);
+			return;
 		}
-	}, [state.error, frictionlessState]);
+		if (frictionlessState) {
+			setTimeout(() => {
+				frictionlessState.restart();
+			}, 100);
+		}
+	}, [state.error, frictionlessState, props.onSessionInvalidated]);
 
 	// Add event listener for the execute event
 	useEffect(() => {
@@ -86,10 +115,10 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 			});
 
 			// If we need to load a challenge or do other initialization
-			if (!state.challenge && manager.start) {
+			if (!state.challenge && manager.current.start) {
 				console.log("No challenge set, attempting to start verification");
 				try {
-					manager.start();
+					manager.current.start();
 				} catch (error) {
 					console.error("Error starting verification:", error);
 				}
@@ -105,7 +134,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 				handleExecuteEvent,
 			);
 		};
-	}, [manager, state.challenge, updateState]); // Add dependencies
+	}, [state.challenge, updateState]);
 
 	const honeypot = frictionlessState?.hp ? (
 		<Honeypot ref={hpRef} encodedQuestion={frictionlessState.hp} />
@@ -121,11 +150,11 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 							challenge={state.challenge}
 							index={state.index}
 							solutions={state.solutions}
-							onSubmit={manager.submit}
-							onCancel={manager.cancel}
-							onClick={manager.select}
-							onNext={manager.nextRound}
-							onReload={manager.reload}
+							onSubmit={manager.current.submit}
+							onCancel={manager.current.cancel}
+							onClick={manager.current.select}
+							onNext={manager.current.nextRound}
+							onReload={manager.current.reload}
 							themeColor={config.theme ?? "light"}
 						/>
 					) : null}
@@ -143,11 +172,11 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 						challenge={state.challenge}
 						index={state.index}
 						solutions={state.solutions}
-						onSubmit={manager.submit}
-						onCancel={manager.cancel}
-						onClick={manager.select}
-						onNext={manager.nextRound}
-						onReload={manager.reload}
+						onSubmit={manager.current.submit}
+						onCancel={manager.current.cancel}
+						onClick={manager.current.select}
+						onNext={manager.current.nextRound}
+						onReload={manager.current.reload}
 						themeColor={config.theme ?? "light"}
 					/>
 				) : (
@@ -169,21 +198,29 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 
 					let x = 0;
 					let y = 0;
+					// Checkbox only calls this from a click or from Enter, so the
+					// native event is a MouseEvent or a KeyboardEvent — a tap
+					// arrives as a click and carries clientX/clientY like any
+					// other. Only the keyboard path has no coordinates.
 					const nativeEvent = event.nativeEvent;
-					if (
-						"touches" in nativeEvent &&
-						nativeEvent.touches.length > 0 &&
-						nativeEvent.touches[0]
-					) {
-						x = nativeEvent.touches[0].clientX;
-						y = nativeEvent.touches[0].clientY;
-					} else if ("clientX" in nativeEvent && "clientY" in nativeEvent) {
+					if ("clientX" in nativeEvent && "clientY" in nativeEvent) {
 						x = nativeEvent.clientX;
 						y = nativeEvent.clientY;
 					}
 
-					await manager.start(x, y);
-					setLoading(false);
+					lastCoordsRef.current = { x, y };
+					try {
+						await manager.current.start(x, y);
+					} catch (error) {
+						// The manager reports failures to the user through
+						// state.error; rethrowing here only produces an unhandled
+						// rejection, since nothing awaits this handler.
+						console.error("Error starting verification:", error);
+					} finally {
+						// A rejected start would otherwise leave the spinner up for
+						// good, with no way back to the checkbox for the user.
+						setLoading(false);
+					}
 				}}
 				checked={state.isHuman}
 				labelText={isTranslationReady ? t("WIDGET.I_AM_HUMAN") : ""}

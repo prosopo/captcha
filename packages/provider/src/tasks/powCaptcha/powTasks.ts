@@ -29,6 +29,7 @@ import {
 	CaptchaStatus,
 	type ClientMetaData,
 	type DecisionMachineBehavioralDataPacked,
+	FrictionlessReason,
 	type IPAddress,
 	type ISpamFilterRules,
 	type ITrafficFilter,
@@ -49,7 +50,12 @@ import type {
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
-import { at, extractData, verifyRecency } from "@prosopo/util";
+import {
+	assertCoordsSafe,
+	at,
+	extractData,
+	verifyRecency,
+} from "@prosopo/util";
 import {
 	getCompositeIpAddress,
 	getIpAddressFromComposite,
@@ -71,7 +77,10 @@ import {
 	type RoutingContext,
 	applyRouter,
 } from "../frictionless/routingMachine.js";
-import { evaluateEmailSpamRules } from "../spam/evaluateEmailSpamRules.js";
+import {
+	evaluateEmailSpamRules,
+	normaliseEmailForMatching,
+} from "../spam/evaluateEmailSpamRules.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
 
 /**
@@ -212,22 +221,55 @@ export class PowCaptchaManager extends CaptchaManager {
 
 		const difficulty = challengeRecord.difficulty;
 
-		// Extract coordinates from salt if provided
+		// Extract coordinates from salt if provided. Invalid salt input
+		// disapproves the request rather than persisting partial data.
 		let coords: [number, number][][] | undefined;
+		let saltDecodeError: unknown;
 		if (salt) {
 			try {
 				const extractedData = extractData(salt);
-				// Convert extracted data to coordinate pairs
 				if (extractedData.length >= 2) {
-					coords = [[[extractedData[0], extractedData[1]] as [number, number]]];
+					const built: [number, number][][] = [
+						[[extractedData[0], extractedData[1]] as [number, number]],
+					];
+					assertCoordsSafe(built, "coords");
+					coords = built;
 				}
 			} catch (error) {
+				saltDecodeError = error;
 				this.logger.warn(() => ({
 					msg: "Failed to extract coordinates from salt",
 					error,
 					salt,
 				}));
 			}
+		}
+
+		if (saltDecodeError) {
+			const badSaltResult = {
+				status: CaptchaStatus.disapproved,
+				reason: ResultReason.CAPTCHA_INVALID_SALT,
+			};
+			const writePromises: Promise<void>[] = [
+				this.db.updatePowCaptchaRecordResult(
+					challenge,
+					badSaltResult,
+					false, // serverChecked
+					true, // userSubmitted
+					userTimestampSignature,
+					undefined, // never persist the bad coords
+				),
+			];
+			if (challengeRecord.sessionId) {
+				writePromises.push(
+					this.updateSessionRecordWithCache(challengeRecord.sessionId, {
+						userSubmitted: true,
+						result: badSaltResult,
+					}),
+				);
+			}
+			await Promise.all(writePromises);
+			return { verified: false };
 		}
 
 		if (!verifyRecency(challenge, timeout)) {
@@ -297,17 +339,18 @@ export class PowCaptchaManager extends CaptchaManager {
 			| undefined;
 		if (behavioralData) {
 			try {
-				// Get decryption keys: detector keys from DB first, then env var as fallback
-				const decryptKeys = [
-					// Process DB keys first, then env var key last as env key will likely be invalid
-					...(await this.getDetectorKeys()),
-					process.env.BOT_DECRYPTION_KEY,
-				];
+				// The behavioural payload was encrypted by this session's detector
+				// pool bundle; resolve it from the bundleId promoted onto the
+				// session record (no key pool — the detector lives only on
+				// providers).
+				const bundle = await this.resolveBundleBySessionId(
+					challengeRecord.sessionId,
+				);
 
 				// Decrypt the behavioral data (returns unpacked format)
 				const decryptedData = await this.decryptBehavioralData(
 					behavioralData,
-					decryptKeys,
+					bundle,
 				);
 
 				if (decryptedData) {
@@ -394,19 +437,47 @@ export class PowCaptchaManager extends CaptchaManager {
 
 		await Promise.all(writePromises);
 
+		if (!correct) {
+			return { verified: correct };
+		}
+
+		// A verified solve that arrived without click coordinates didn't come
+		// through the official widget's checkbox/salt path — every current
+		// widget embeds the click position in the salt (see procaptcha-pow
+		// Manager). Treat absent coords as a weak bot signal and escalate to an
+		// image captcha rather than approving outright. Escalation carries the
+		// originating session's risk profile forward, so it only applies when a
+		// session is linked; without one buildEscalation can't mint a follow-up
+		// and the solve falls through to a normal pass.
+		const escalateForMissingCoords =
+			!coords && Boolean(challengeRecord.sessionId);
+
 		// Post-pow routing: only meaningful on a verified solution. The routing
 		// machine re-examines the (now richer) signals — score from the original
 		// session, decrypted behavioural data, counters — and may escalate the
 		// user to an image/puzzle captcha. Returning baseline (pow) means "done".
-		if (!correct || !this.postPowContext) {
-			return { verified: correct };
+		let routingOutput = this.postPowContext
+			? await this.runPostPowRouting({
+					challengeRecord,
+					challengeSplit,
+					behavioralDataPacked: decryptedBehavioralDataPacked,
+				})
+			: undefined;
+
+		// Missing coords forces at least an image escalation, unless the routing
+		// machine already escalated to a visual challenge (image/puzzle) that we
+		// would keep anyway.
+		if (
+			escalateForMissingCoords &&
+			routingOutput?.captchaType !== CaptchaType.image &&
+			routingOutput?.captchaType !== CaptchaType.puzzle
+		) {
+			routingOutput = {
+				captchaType: CaptchaType.image,
+				reason: FrictionlessReason.MISSING_COORDINATES,
+			};
 		}
 
-		const routingOutput = await this.runPostPowRouting({
-			challengeRecord,
-			challengeSplit,
-			behavioralDataPacked: decryptedBehavioralDataPacked,
-		});
 		return { verified: correct, routingOutput };
 	}
 
@@ -465,6 +536,22 @@ export class PowCaptchaManager extends CaptchaManager {
 			raw: {
 				...this.postPowContext.raw,
 				...(behavioralDataPacked && { behavioralDataPacked }),
+				// SIMD readings are decrypted and attached to the session above
+				// (decryptAndAttachSimdReadingsIfAbsent) before this re-fetch, so
+				// they are available here in decoded form for the routing machine.
+				...(sessionRecord.simdReadings && { simd: sessionRecord.simdReadings }),
+				// currentUrl / iframeUrl were captured at frictionless time
+				// from the widget's payload — the submit request has no
+				// equivalent signal (its Referer is the captcha iframe, not
+				// the host page) so we surface them from the persisted
+				// session. iframeUrl is only present when the widget was
+				// embedded at frictionless time.
+				...(sessionRecord.currentUrl && {
+					currentUrl: sessionRecord.currentUrl,
+				}),
+				...(sessionRecord.iframeUrl && {
+					iframeUrl: sessionRecord.iframeUrl,
+				}),
 			},
 		};
 
@@ -521,11 +608,15 @@ export class PowCaptchaManager extends CaptchaManager {
 			reason,
 		});
 
+		// Bind the challenge/dappAccount context once so every log line in this
+		// method carries it without repeating the fields in each `data` block.
+		const logger = this.logger.with({ challenge, dappAccount });
+
 		const challengeRecord =
 			await this.db.getPowCaptchaRecordByChallenge(challenge);
 
 		if (!challengeRecord) {
-			this.logger.debug(() => ({
+			logger.debug(() => ({
 				msg: `No record of this challenge: ${challenge}`,
 			}));
 
@@ -535,6 +626,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		if (challengeRecord.result.status !== CaptchaStatus.approved) {
 			throw new ProsopoApiError("CAPTCHA.INVALID_SOLUTION", {
 				context: {
+					code: 400,
 					failedFuncName: this.serverVerifyPowCaptchaSolution.name,
 					challenge,
 				},
@@ -573,8 +665,12 @@ export class PowCaptchaManager extends CaptchaManager {
 		let failResult: CaptchaResult | undefined;
 		let failReason: string | undefined;
 
-		const recent = verifyRecency(challenge, timeout);
-		if (!recent) {
+		const submittedAt = challengeRecord.submittedAtTimestamp;
+		const submitToVerifyMs =
+			submittedAt instanceof Date
+				? Date.now() - submittedAt.getTime()
+				: Number.POSITIVE_INFINITY;
+		if (submitToVerifyMs > timeout) {
 			failResult = {
 				status: CaptchaStatus.disapproved,
 				reason: ResultReason.TIMESTAMP_TOO_OLD,
@@ -600,12 +696,10 @@ export class PowCaptchaManager extends CaptchaManager {
 				);
 
 				if (blockPolicy) {
-					this.logger.info(() => ({
+					logger.info(() => ({
 						msg: "User blocked by access policy in server PoW verification",
 						data: {
-							challenge,
 							userAccount: challengeRecord.userAccount,
-							dappAccount,
 							policy: blockPolicy,
 						},
 					}));
@@ -616,7 +710,7 @@ export class PowCaptchaManager extends CaptchaManager {
 					failReason = "API.ACCESS_POLICY_BLOCK";
 				}
 			} catch (error) {
-				this.logger.warn(() => ({
+				logger.warn(() => ({
 					msg: "Failed to check user access policies in server PoW verification",
 					error,
 				}));
@@ -629,9 +723,9 @@ export class PowCaptchaManager extends CaptchaManager {
 				const isSpam = await this.checkSpamEmail(email);
 				if (isSpam) {
 					const emailDomain = email.split("@")[1] || "unknown";
-					this.logger.info(() => ({
+					logger.info(() => ({
 						msg: "Spam email domain detected in server PoW verification",
-						data: { challenge, dappAccount, emailDomain },
+						data: { emailDomain },
 					}));
 					failResult = {
 						status: CaptchaStatus.disapproved,
@@ -640,7 +734,7 @@ export class PowCaptchaManager extends CaptchaManager {
 					failReason = "API.SPAM_EMAIL_DOMAIN";
 				}
 			} catch (error) {
-				this.logger.warn(() => ({
+				logger.warn(() => ({
 					msg: "Failed to check spam email domain in server PoW verification",
 					error,
 				}));
@@ -656,9 +750,9 @@ export class PowCaptchaManager extends CaptchaManager {
 		) {
 			const result = evaluateEmailSpamRules(email, spamFilter.emailRules);
 			if (result.isSpam) {
-				this.logger.info(() => ({
+				logger.info(() => ({
 					msg: "Spam filter rejected email in PoW verification",
-					data: { challenge, dappAccount, reason: result.reason },
+					data: { reason: result.reason },
 				}));
 				failResult = {
 					status: CaptchaStatus.disapproved,
@@ -668,8 +762,55 @@ export class PowCaptchaManager extends CaptchaManager {
 			}
 		}
 
+		// Per-email submission-count check — see `imgCaptchaTasks` for the
+		// full rationale. Gated by `storeMetadata` because we can only
+		// count records that carry `metadata.emailNormalised`, and that
+		// field is only ever written when `storeMetadata` is on.
+		const maxEmailSubmissionCount =
+			spamFilter?.enabled && spamFilter.emailRules?.enabled
+				? spamFilter.emailRules.maxEmailSubmissionCount
+				: undefined;
+		let emailNormalised: string | undefined;
+		if (
+			!failResult &&
+			maxEmailSubmissionCount !== undefined &&
+			email &&
+			storeMetadata
+		) {
+			emailNormalised = normaliseEmailForMatching(email);
+			if (emailNormalised) {
+				try {
+					const priorCount = await this.db.countCommitmentsByNormalisedEmail(
+						dappAccount,
+						emailNormalised,
+					);
+					if (priorCount >= maxEmailSubmissionCount) {
+						logger.info(() => ({
+							msg: "Email submission count exceeded in PoW verification",
+							data: { priorCount, maxEmailSubmissionCount },
+						}));
+						failResult = {
+							status: CaptchaStatus.disapproved,
+							reason: ResultReason.SPAM_EMAIL_COUNT_EXCEEDED,
+						};
+						failReason = "API.SPAM_EMAIL_COUNT_EXCEEDED";
+					}
+				} catch (error) {
+					logger.warn(() => ({
+						msg: "Failed to check email submission count in PoW verification",
+						error,
+					}));
+				}
+			}
+		}
+
+		// Walk to the origin session when this is an escalation record —
+		// simdReadings / dnsEvent / entropy fields are populated on the
+		// origin and don't automatically end up on the escalation. Non-
+		// escalations pass through unchanged (walker no-ops when there's
+		// no originSessionId).
 		const sessionRecord = challengeRecord.sessionId
-			? await this.db.getSessionRecordBySessionId(challengeRecord.sessionId)
+			? await this.getSessionRecordWithOriginFallback(challengeRecord.sessionId)
 			: undefined;
 
 		const enrichedDnsEvent = await enrichDnsEvent(
@@ -687,11 +828,9 @@ export class PowCaptchaManager extends CaptchaManager {
 				enrichedDnsEvent,
 			);
 			if (check.isBlocked) {
-				this.logger.info(() => ({
+				logger.info(() => ({
 					msg: "Traffic filter rejected request in PoW verification",
 					data: {
-						challenge,
-						dappAccount,
 						ip,
 						reason: check.reason,
 						dnsPeerIp: enrichedDnsEvent?.peerIp,
@@ -710,10 +849,14 @@ export class PowCaptchaManager extends CaptchaManager {
 		}
 
 		// Persist dapp-server-provided metadata when the site opts in.
-		// Gated purely by `storeMetadata` — independent of the spam-email
-		// checks above, which inspect the email but never write it.
+		// Gated purely by `storeMetadata`; `emailNormalised` piggybacks
+		// on the same write so the per-email submission-count check has
+		// an indexed field to query against.
 		if (storeMetadata && email) {
-			powRecordUpdates.metadata = { email };
+			powRecordUpdates.metadata = {
+				email,
+				emailNormalised: emailNormalised ?? normaliseEmailForMatching(email),
+			};
 		}
 
 		// IP validation: store provided IP and validate if rules enabled
@@ -733,14 +876,14 @@ export class PowCaptchaManager extends CaptchaManager {
 				const ipValidation = await deepValidateIpAddress(
 					ip,
 					challengeIpAddress,
-					this.logger,
+					logger,
 					env.ipInfoService,
 					ipValidationRules,
 					enrichedDnsEvent?.peerIp,
 				);
 
 				if (!ipValidation.isValid) {
-					this.logger.error(() => ({
+					logger.error(() => ({
 						msg: "IP validation failed for PoW captcha",
 						data: {
 							ip,
@@ -763,6 +906,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			const dnsAsymmetry = computeDnsAsymmetry(
 				enrichedDnsEvent,
 				challengeRecord.ipInfo,
+				trafficFilter,
 			);
 			if (dnsAsymmetry > 0) {
 				sessionRecord.scoreComponents = {
@@ -771,7 +915,7 @@ export class PowCaptchaManager extends CaptchaManager {
 				};
 			}
 			score = computeFrictionlessScore(sessionRecord?.scoreComponents);
-			this.logger.info(() => ({
+			logger.info(() => ({
 				data: {
 					scoreComponents: { ...(sessionRecord?.scoreComponents || {}) },
 					score,
@@ -795,21 +939,31 @@ export class PowCaptchaManager extends CaptchaManager {
 					countryCode: challengeRecord.ipInfo?.isValid
 						? challengeRecord.ipInfo.countryCode
 						: undefined,
+					ipInfo: challengeRecord.ipInfo,
 					dnsEvent: enrichedDnsEvent,
+					score,
+					threshold: sessionRecord?.threshold,
+					scoreComponents: sessionRecord?.scoreComponents,
+					decryptedHeadHash: sessionRecord?.decryptedHeadHash,
+					userSitekeyIpHash: sessionRecord?.userSitekeyIpHash,
+					simdReadings: sessionRecord?.simdReadings,
+					frictionlessReason: sessionRecord?.reason,
+					ruleType: sessionRecord?.ruleType,
+					webView: sessionRecord?.webView,
+					iFrame: sessionRecord?.iFrame,
+					coords: challengeRecord.coords,
 				};
 
 				const decision = await this.decisionMachineRunner.decide(
 					decisionInput,
-					this.logger,
+					logger,
 				);
 
 				if (decision.decision === DecisionMachineDecision.Deny) {
-					this.logger.info(() => ({
+					logger.info(() => ({
 						msg: "Decision machine denied PoW captcha in server verification",
 						data: {
-							challenge,
 							userAccount: challengeRecord.userAccount,
-							dappAccount,
 							reason: decision.reason,
 							score: decision.score,
 							tags: decision.tags,
@@ -828,10 +982,9 @@ export class PowCaptchaManager extends CaptchaManager {
 					};
 					failReason = dmReason;
 				} else {
-					this.logger.debug(() => ({
+					logger.debug(() => ({
 						msg: "Decision machine allowed PoW captcha",
 						data: {
-							challenge,
 							reason: decision.reason,
 							score: decision.score,
 							tags: decision.tags,
@@ -839,7 +992,7 @@ export class PowCaptchaManager extends CaptchaManager {
 					}));
 				}
 			} catch (error) {
-				this.logger?.error(() => ({
+				logger.error(() => ({
 					msg: "Failed to run decision machine in server PoW verification",
 					err: error,
 				}));

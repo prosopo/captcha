@@ -29,29 +29,34 @@ env:
 jobs:
   publish:
     name: Publish Release
-    runs-on: ubuntu-latest
+    # GH_RUNNER unset -> GitHub-hosted. Set to a JSON array (the self-hosted
+    # fleet) -> this job's capacity requirement is appended to it: cores, RAM,
+    # disk. Runners advertise one label per step up to their own size, so a job
+    # only lands on a host big enough for it. Set to a JSON string -> used as
+    # given, which is how a repo opts back out to a hosted runner.
+    runs-on: ${{ vars.GH_RUNNER && startsWith(vars.GH_RUNNER, '[') && fromJSON(format('["{0}","2c","4g","20d"]', join(fromJSON(vars.GH_RUNNER), '","'))) || fromJSON(vars.GH_RUNNER || '"ubuntu-latest"') }}
     steps:
       - name: Get token for gh app
         id: app_token
-        uses: peter-murray/workflow-application-token-action@v3
+        uses: peter-murray/workflow-application-token-action@v5
         with:
           application_id: ${{ vars.PROSOPONATOR_APP_ID }}
           application_private_key: ${{ secrets.PROSOPONATOR_APP_PRIVATE_KEY }}
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: 'recursive'
           token: ${{ steps.app_token.outputs.token }}
           fetch-depth: 0
           ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/v{0}', inputs.version) || github.ref }}
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: 'npm'
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -67,7 +72,7 @@ jobs:
           echo "version=$version" >> $GITHUB_OUTPUT
           echo "Version: $version"
 
-      - run: npm ci --ignore-scripts --include=dev
+      - run: npm ci --ignore-scripts --include=dev --no-audit --no-fund --prefer-offline
 
       - name: Build packages
         run: |
@@ -124,10 +129,8 @@ jobs:
       - name: Publish production image to Docker Hub
         run: |
           echo "Publishing production provider image to Docker Hub"
-          cd docker/images/provider
-          NODE_ENV="production" npm run build
-          NODE_ENV="production" npm run publish:docker
-          cd -
+          NODE_ENV="production" npm run -w @prosopo/cli build:docker
+          NODE_ENV="production" npm run -w @prosopo/cli publish:docker
 
       - name: Bundle the staging provider CLI
         run: |
@@ -137,10 +140,8 @@ jobs:
       - name: Publish production image to Docker Hub
         run: |
           echo "Publishing staging provider image to Docker Hub"
-          cd docker/images/provider
-          NODE_ENV="staging" npm run build
-          NODE_ENV="staging" npm run publish:docker
-          cd -
+          NODE_ENV="staging" npm run -w @prosopo/cli build:docker
+          NODE_ENV="staging" npm run -w @prosopo/cli publish:docker
 
       - name: Create GitHub Release
         env:

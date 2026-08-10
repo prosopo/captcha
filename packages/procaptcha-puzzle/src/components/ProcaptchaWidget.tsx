@@ -57,21 +57,43 @@ const Procaptcha = (props: ProcaptchaProps) => {
 			() => hpRef.current?.value || undefined,
 		),
 	);
+	// See ProcaptchaWidget (procaptcha-pow) — same session-invalidation
+	// recovery contract with coords preservation across a re-mint.
+	const lastCoordsRef = useRef<{ x: number; y: number } | null>(null);
+	const sessionInvalidatedFiredRef = useRef(false);
 
 	useEffect(() => {
-		if (config.language) {
-			if (i18n) {
-				if (i18n.language !== config.language) {
-					i18n.changeLanguage(config.language).then((r) => r);
-				}
-			} else {
-				loadI18next(false).then((i18n) => {
-					if (i18n.language !== config.language)
-						i18n.changeLanguage(config.language).then((r) => r);
-				});
+		if (!config.language) return;
+		if (i18n) {
+			if (i18n.language !== config.language) {
+				void i18n.changeLanguage(config.language);
 			}
+			return;
 		}
+		// Direct-React consumers don't go through WidgetFactory, so pass the
+		// language into loadI18next — first init boots with the right language
+		// (skipping browser detection), and subsequent calls reconcile via
+		// changeLanguage inside loadI18next.
+		void loadI18next(false, config.language);
 	}, [i18n, config.language]);
+
+	useEffect(() => {
+		if (!props.autoStart) return;
+		setLoading(true);
+		setShowRetry(false);
+		const coords = props.startCoords;
+		lastCoordsRef.current = coords ?? null;
+		manager.current.start(coords?.x ?? 0, coords?.y ?? 0).then(
+			(challenge) => {
+				if (challenge) {
+					setChallengeData(challenge);
+					setPuzzlePhase("dragging");
+				}
+				setLoading(false);
+			},
+			() => setLoading(false),
+		);
+	}, [props.autoStart, props.startCoords]);
 
 	useEffect(() => {
 		if (!state.error) return undefined;
@@ -79,14 +101,21 @@ const Procaptcha = (props: ProcaptchaProps) => {
 		setPuzzlePhase("checkbox");
 		setChallengeData(null);
 		setShowRetry(false);
-		if (state.error.key === "CAPTCHA.NO_SESSION_FOUND" && frictionlessState) {
+		if (state.error.key !== "CAPTCHA.NO_SESSION_FOUND") return undefined;
+		if (props.onSessionInvalidated && !sessionInvalidatedFiredRef.current) {
+			sessionInvalidatedFiredRef.current = true;
+			const coords = lastCoordsRef.current;
+			props.onSessionInvalidated(coords?.x, coords?.y);
+			return undefined;
+		}
+		if (frictionlessState) {
 			const timer = setTimeout(() => {
 				frictionlessState.restart();
 			}, 100);
 			return () => clearTimeout(timer);
 		}
 		return undefined;
-	}, [state.error, frictionlessState]);
+	}, [state.error, frictionlessState, props.onSessionInvalidated]);
 
 	// Add event listener for the execute event (works for invisible mode)
 	useEffect(() => {
@@ -239,14 +268,26 @@ const Procaptcha = (props: ProcaptchaProps) => {
 							y = mouseOrTouchEvent.clientY;
 						}
 
-						const challenge = await manager.current.start(x, y);
+						lastCoordsRef.current = { x, y };
+						try {
+							const challenge = await manager.current.start(x, y);
 
-						if (challenge) {
-							setChallengeData(challenge);
-							setPuzzlePhase("dragging");
+							if (challenge) {
+								setChallengeData(challenge);
+								setPuzzlePhase("dragging");
+							}
+						} catch (error) {
+							// The manager reports failures through state.error;
+							// rethrowing here only produces an unhandled rejection,
+							// since nothing awaits this handler.
+							callbacks.onError?.(
+								error instanceof Error ? error : new Error(String(error)),
+							);
+						} finally {
+							// A rejected start would otherwise leave the spinner up for
+							// good, with no way back to the checkbox for the user.
+							setLoading(false);
 						}
-
-						setLoading(false);
 					}}
 					labelText={isTranslationReady ? t("WIDGET.I_AM_HUMAN") : ""}
 					error={state.error?.message}
