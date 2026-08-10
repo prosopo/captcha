@@ -21,7 +21,12 @@ import express, { type Router } from "express";
 export function authHealthRouter(env: ProviderEnvironment): Router {
 	const router = express.Router();
 
-	router.get(HealthApiPaths.AuthHealth, (req, res) => {
+	// Declared as the bare "/health": startProviderApi mounts this router under
+	// "/auth", immediately after the auth middleware for that prefix, so the
+	// effective path is still HealthApiPaths.AuthHealth. Spelling the prefix out
+	// here as well would let a later route be added to this router that resolves
+	// outside "/auth" and so outside the middleware.
+	router.get(HealthApiPaths.Health, (req, res) => {
 		const response: AuthHealthResponse = {
 			alive: true,
 			timestamp: new Date().toISOString(),
