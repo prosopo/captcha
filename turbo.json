@@ -46,6 +46,23 @@
 			"dependsOn": ["bundle", "@prosopo/locale#build"],
 			"cache": false
 		},
+		// Every image in one bake invocation, run through turbo so the bundles
+		// each image copies are built first. It is a root task rather than a
+		// package one because bake drives the whole repo at once; the per-package
+		// build:docker tasks above stay the way to build a single image.
+		//
+		// Deliberately not named build:docker: `turbo run build:docker` would
+		// then match both this and every package task, and every image would be
+		// built twice.
+		"//#build:docker:all": {
+			"dependsOn": [
+				"@prosopo/cli#bundle",
+				"@prosopo/client-example-server#bundle",
+				"@prosopo/provider-mock#bundle",
+				"@prosopo/locale#build"
+			],
+			"cache": false
+		},
 		"publish:docker": {
 			"dependsOn": ["build:docker"],
 			"cache": false
