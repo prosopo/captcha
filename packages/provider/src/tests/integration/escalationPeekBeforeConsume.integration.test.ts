@@ -30,7 +30,7 @@ import {
 import { randomAsHex } from "@prosopo/util-crypto";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { testFetch } from "./testUtils.js";
+import { reservePort, testFetch } from "./testUtils.js";
 
 // Reproduces the production NO_SESSION_FOUND → INCORRECT_CAPTCHA_TYPE
 // follow-on bug. The /captcha/pow handler calls `isValidRequest`, which
@@ -50,7 +50,7 @@ describe("Escalation peek-before-consume integration test", () => {
 	let baseUrl: string;
 
 	beforeAll(async () => {
-		testPort = 30000 + (process.pid % 10000) + Math.floor(Math.random() * 5000);
+		testPort = await reservePort();
 		const protocol = isTlsAvailable() ? "https" : "http";
 		baseUrl = `${protocol}://localhost:${testPort}`;
 
