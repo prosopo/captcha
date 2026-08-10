@@ -7,19 +7,10 @@
 	},
 	"type": "module",
 	"scripts": {
-		"docker-tag": "echo $(node -p \"require('./package.json').name.replace('@','').replace('-docker','')\"):$(node -p \"require('./package.json').version\")",
-		"build": "npm run clean && cp -r src dist && docker build --progress=plain --tag $(npm run --silent docker-tag) dist",
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
+		"docker-tag": "node ../../docker-tag.mjs",
+		"build:docker": "npm run clean && cp -r src dist && docker buildx build --progress=plain --tag $(npm run --silent docker-tag) --platform linux/amd64 -f ./dist/Dockerfile ./dist",
 		"publish:docker": "docker push $(npm run --silent docker-tag)"
-	},
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
-	"exports": {
-		".": {
-			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.cjs",
-			"types": "./dist/index.d.ts"
-		}
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.1.20"
@@ -28,5 +19,6 @@
 		"type": "git",
 		"url": "git+https://github.com/prosopo/captcha.git",
 		"directory": "docker/images/caddy"
-	}
+	},
+	"private": true
 }
