@@ -69,6 +69,35 @@ export const normaliseGmailAddress = (email: string): string => {
 	return `${stripped}@gmail.com`;
 };
 
+/**
+ * Normalises an email for equality-based rate-limit matching:
+ *   - lowercases and trims
+ *   - strips `+tag` from the local part for every domain (RFC 5233
+ *     subaddressing is widely honoured — Gmail, Fastmail, iCloud, Outlook,
+ *     ProtonMail — and rotating `+tag` suffixes is the cheapest evasion
+ *     against per-address rate limits)
+ *   - additionally removes dots from the local part for gmail /
+ *     googlemail (Gmail is the only major provider that treats dots as
+ *     insignificant)
+ *
+ * Returns the input trimmed/lowercased if it cannot be split into
+ * local@domain. Never returns an empty string for a non-empty input.
+ */
+export const normaliseEmailForMatching = (email: string): string => {
+	const parts = splitEmail(email);
+	if (!parts) return email.trim().toLowerCase();
+	// If the local part starts with `+` (degenerate) the split yields "";
+	// fall back to the raw local so we don't collide every such address
+	// under a single `""@domain` bucket.
+	const beforePlus = parts.local.split("+")[0];
+	const withoutPlusTag = beforePlus ? beforePlus : parts.local;
+	if (GMAIL_DOMAINS.has(parts.domain)) {
+		const withoutDots = withoutPlusTag.replace(/\./g, "");
+		return `${withoutDots || withoutPlusTag}@gmail.com`;
+	}
+	return `${withoutPlusTag}@${parts.domain}`;
+};
+
 const countDots = (s: string): number => {
 	let n = 0;
 	for (const c of s) if (c === ".") n += 1;
