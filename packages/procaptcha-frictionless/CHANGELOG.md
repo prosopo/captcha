@@ -1,5 +1,104 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.13.4
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+  - @prosopo/types@5.0.2
+  - @prosopo/api@4.0.2
+  - @prosopo/procaptcha-common@2.11.22
+  - @prosopo/procaptcha-pow@2.10.29
+  - @prosopo/procaptcha-puzzle@2.10.45
+  - @prosopo/procaptcha-react@2.9.102
+
+## 2.13.3
+### Patch Changes
+
+- 3a77cea: Report why the detector was unavailable instead of swallowing it.
+  
+  `customDetectBot` wraps provider selection, the assign request and the blob-URL
+  import in one `try`, and the `catch` was empty. Falling back is correct — there
+  is no bundled detector, so a failure here means the frictionless POST goes out
+  with an empty token and the provider decides what to serve. But the reasons are
+  not equal: a slow network is routine, whereas a pool bundle that throws on
+  import degrades **every** session on that provider to an image captcha, with
+  nothing in the client console or the provider logs to say why.
+  
+  That is not hypothetical. A detector pool built at catcher 3.1.48 emitted
+  bundles that died on evaluation with `Class constructor D cannot be invoked
+  without 'new'` — an obfuscator seed collision that renamed a class over a live
+  binding. Every staging session silently fell back to an image captcha, and the
+  only way to find it was to reproduce the blob import by hand in a browser: the
+  provider logged a healthy `bundle pool loaded count=20` and served the bundles
+  happily, because from its side nothing had failed.
+  
+  The catch stays broad and the fallback is unchanged; it now `console.error`s
+  what it caught, matching how the sibling `procaptcha-common` modules report.
+
+## 2.13.2
+### Patch Changes
+
+- 5d60541: Stop dropping detector bundles that arrive slowly, which made the frictionless POST go out with an empty token and no `detectorSessionId` — the provider then scored the session at 0 and served a challenge.
+  
+  `ASSIGN_TIMEOUT_MS` was 2000 ms and covered two legs. The assign POST serves the detector inline (~215 KB gzipped) over a connection that is always cold, because `/healthz` pins a different hostname than the assign target: fresh DNS, TLS and a CORS preflight all had to fit in the budget alongside the download, measured at 6.7s against staging. The cap is now 10 s and applies only to that request; the blob-URL import that parses and evaluates the bundle is untimed, since a timer cannot rescue a stalled main thread and only discards a bundle already in hand.
+  
+  `render()` and the invisible-button path now start the detector prefetch too. Only implicit render did, so pages using the explicit API — including any page that loads the bundle via dynamic import, where implicit render never runs — assigned a detector inline on the widget's critical path with no prefetch to fall back on.
+- 2aabe73: Remove the client-controlled `detectorUnavailable` frictionless bypass. A client could set the flag and be handed a PoW challenge without any detection running. The flag is gone from the wire format, the API client and the widget; the only remaining bypasses are provider-side (maintenance mode, empty detector bundle pool).
+  
+  The frictionless decision machine now gates on payload presence after the access-rule ladder: no token serves a 3-round image captcha, a token without its head hash serves a 2-round one.
+- Updated dependencies [9fec7bd]
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/common@3.1.49
+  - @prosopo/types@5.0.1
+  - @prosopo/api@4.0.1
+  - @prosopo/locale@3.2.9
+  - @prosopo/procaptcha-common@2.11.21
+  - @prosopo/procaptcha-pow@2.10.28
+  - @prosopo/procaptcha-puzzle@2.10.44
+  - @prosopo/procaptcha-react@2.9.101
+
+## 2.13.1
+### Patch Changes
+
+- fa4fedb: Start the detector-bundle assignment at page load instead of after the widget mounts.
+  
+  Since the detector moved into the provider-served pool, the frictionless flow cannot begin until `/detector/assign` returns. That request was issued by `customDetectBot`, which only runs once React has mounted the widget — so it queued behind the bundle's dynamic-import chain. Measured on the staging demo, `assign` did not leave the browser until **1513 ms**, of which ~700 ms was purely waiting for chunks to arrive in sequence.
+  
+  Nothing in that request depends on React, i18n or the widget config: it needs the site key (a DOM attribute), the environment (a build-time constant) and the IP-mode flags (DOM attributes). The bundle entry now kicks it off as soon as it has read those, and `customDetectBot` claims the in-flight promise instead of starting its own.
+  
+  The prefetch is loaded by dynamic import so the provider selector and API client do not land in the entry chunk and delay first paint; the entry grows by ~400 bytes. It is fire-and-forget — a failed prefetch is indistinguishable from no prefetch, and the existing fallback path still resolves a provider itself.
+  
+  The cache is single-use and keyed on `(environment, ipMode, siteKey)`, so a retry — which is retrying precisely because the pinned pronode failed — re-resolves rather than reusing a stale pin, and a second widget with different flags cannot claim another's assignment.
+
+## 2.13.0
+### Minor Changes
+
+- 787017b: feat(detector): serve the detector only from per-session provider bundles; PoW fallback
+  
+  The detector now lives ONLY in the provider-served, precomputed pool bundles — there is no detector bundled into the widget and no legacy detector-key pool. Each session's bundle encrypts everything it produces (bot score, SIMD readings, behavioural data) with its own RSA keypair + inner ChaCha20-Poly1305 cipher; the provider decrypts each payload with that exact bundle, resolved per session.
+  
+  - `DetectorBundlePool`: loads precomputed `{id}.js`/`{id}.json` bundle pairs from disk, uniform-random per-session selection, hot-swap `replace()` for the admin push channel.
+  - The pool is ALWAYS initialised at boot (a missing/empty dir yields an empty pool), collapsing the old three states into two: bundles present ⇒ per-session serving; no bundles ⇒ always PoW.
+  - Redis short-TTL `detectorSessionId → bundleId` binding; the resolved `bundleId` is promoted onto the durable session record so later hops (SIMD attach, PoW/puzzle/image solution submit) decrypt with the same bundle.
+  - Client: removed the inlined `@prosopo/detector` runtime import (now type-only). When no provider bundle can be obtained/run, the client signals `detectorUnavailable` and the provider serves a PoW challenge.
+  - All server decrypt paths (score, SIMD readings, behavioural data) resolve the session's bundle and pass its inner cipher; the legacy key-pool brute force and its env fallback are removed from the detection paths. Decrypt failures fail closed (treated as bot ⇒ PoW).
+
+### Patch Changes
+
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [6f19cde]
+- Updated dependencies [2bc8e73]
+  - @prosopo/types@5.0.0
+  - @prosopo/api@4.0.0
+  - @prosopo/widget-skeleton@2.8.5
+  - @prosopo/procaptcha-common@2.11.20
+  - @prosopo/procaptcha-pow@2.10.27
+  - @prosopo/procaptcha-puzzle@2.10.43
+  - @prosopo/procaptcha-react@2.9.100
+
 ## 2.12.24
 ### Patch Changes
 

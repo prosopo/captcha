@@ -43,6 +43,7 @@
 		"INVALID_BODY": "Ungültiger Körper",
 		"PARSE_ERROR": "Fehler beim Parsen der Anfrage",
 		"SPAM_EMAIL_RULE": "E-Mail-Adresse durch Spamfilter-Regeln blockiert",
+		"SPAM_EMAIL_COUNT_EXCEEDED": "Zu viele Einsendungen von dieser E-Mail-Adresse",
 		"VPN_BLOCKED": "Anfragen über VPN-Verbindungen sind für diese Website nicht erlaubt",
 		"PROXY_BLOCKED": "Anfragen über Proxy-Server sind für diese Website nicht erlaubt",
 		"TOR_BLOCKED": "Anfragen über Tor-Exit-Knoten sind für diese Website nicht erlaubt",

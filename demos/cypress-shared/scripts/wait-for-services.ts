@@ -12,70 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import https from "node:https";
+import { waitForServices } from "./waitForServices.js";
 
-interface Service {
-	name: string;
-	url: string;
-}
-
-const services: Service[] = [
-	{ name: "Admin API", url: "https://localhost:9229/healthz" },
-	{ name: "Bundle Server", url: "https://localhost:9269/procaptcha.bundle.js" },
-	{ name: "Client Bundle", url: "https://localhost:9232" },
-	{ name: "Example Server", url: "https://localhost:9228/health" },
-];
-
-async function checkService(url: string): Promise<boolean> {
-	return new Promise((resolve) => {
-		const req = https.get(url, { rejectUnauthorized: false }, (res) => {
-			resolve(res.statusCode === 200 || res.statusCode === 304);
-		});
-		req.on("error", () => resolve(false));
-		req.setTimeout(2000, () => {
-			req.destroy();
-			resolve(false);
-		});
+waitForServices({
+	log: (message: string): void => {
+		// the entry point redraws in place; the library itself just appends
+		if (message.startsWith("🔍 Service Status")) {
+			process.stdout.write("\x1Bc");
+		}
+		console.log(message);
+	},
+})
+	.then(() => undefined)
+	.catch((error: unknown) => {
+		console.error(error);
+		process.exit(1);
 	});
-}
-
-async function waitForServices(maxWait = 120000): Promise<void> {
-	const startTime = Date.now();
-	console.log("🔍 Waiting for services to be ready...\n");
-
-	while (Date.now() - startTime < maxWait) {
-		const results = await Promise.all(
-			services.map(async (service) => ({
-				...service,
-				ready: await checkService(service.url),
-			})),
-		);
-
-		const allReady = results.every((r) => r.ready);
-
-		// Clear console and show status
-		process.stdout.write("\x1Bc");
-		console.log("🔍 Service Status:\n");
-		for (const result of results) {
-			const icon = result.ready ? "✅" : "⏳";
-			console.log(`${icon} ${result.name} - ${result.url}`);
-		}
-
-		if (allReady) {
-			console.log("\n✅ All services are ready!");
-			return;
-		}
-
-		const elapsed = Math.floor((Date.now() - startTime) / 1000);
-		console.log(`\n⏱️  Elapsed: ${elapsed}s / ${maxWait / 1000}s`);
-
-		await new Promise((resolve) => setTimeout(resolve, 2000));
-	}
-
-	throw new Error("❌ Services did not become ready in time");
-}
-
-waitForServices().catch((error) => {
-	console.error(error);
-	process.exit(1);
-});

@@ -25,7 +25,21 @@ import type {
 	ProviderSelectRetryContext,
 } from "@prosopo/types";
 import type { BotDetectionFunctionResult } from "@prosopo/types";
-import { DetectorLoader } from "./detectorLoader.js";
+import {
+	DetectorLoaderFromScript,
+	type DetectorType,
+} from "./detectorLoader.js";
+import {
+	type PrefetchedDetector,
+	takePrefetchedDetector,
+} from "./detectorPrefetch.js";
+
+// Upper bound on the assign POST, which serves the detector bundle inline
+// (~215 KB gzipped). The hop is always cold — /healthz pins a different
+// hostname, so it pays fresh DNS + TLS + a CORS preflight before the download
+// even starts, measured at 6.7s against staging. Anything tighter silently
+// drops the detector and sends an empty token.
+const ASSIGN_TIMEOUT_MS = 10_000;
 
 // The page(s) the widget is rendered on, reduced to origin + path.
 // Deliberately built from `origin` + `pathname` (never `href`) so the query
@@ -129,58 +143,27 @@ const customDetectBot: BotDetectionFunction = async (
 	restartFn: () => void,
 	retryContext?: ProviderSelectRetryContext,
 ): Promise<BotDetectionFunctionResult> => {
-	// Kick off the provider-pin resolution (which hits `/healthz` on the
-	// load-balancer DNS endpoint) in parallel with the module loaders and
-	// the whole `detect()` flow. `getProcaptchaRandomActiveProvider` is
-	// memoised via `pinPromiseCache` keyed on `(env, ipMode)`, so the
-	// in-flight promise is reused when catcher's internal provider selector
-	// and the awaited `getProcaptchaRandomActiveProvider(...)` below reach
-	// for it — no duplicate healthz request. Before this ordering change
-	// the healthz round-trip was fully serial with `detect()`, adding
-	// ~100–200ms to the frictionless critical path on cold DNS/TLS.
-	//
-	// We warm both cache keys because the catcher-internal selector call
-	// (line ~145 below) passes no ipMode, while the awaited call further
-	// down passes `pickIpMode(config)`. Same key when the dapp opts into
-	// neither ipv4 nor ipv6 (dual stack — the common case); different
-	// keys when the dapp is pinned to a single stack. Fire-and-forget on
-	// both — the real synchronisation happens at the awaits below.
-	const ipMode = pickIpMode(config);
-	void getProcaptchaRandomActiveProvider(config.defaultEnvironment).catch(
-		() => undefined,
-	);
-	if (ipMode !== undefined) {
-		void getProcaptchaRandomActiveProvider(
-			config.defaultEnvironment,
-			ipMode,
-			retryContext,
-		).catch(() => undefined);
-	}
-
-	const [ExtClass, detect] = await Promise.all([
-		ExtensionLoader(config.web2),
-		DetectorLoader(),
-	]);
-	const ext = new ExtClass();
-
-	// The detector bundle still expects the legacy 5-arg signature
-	// `(env, randomProviderSelectorFn, container, restart, accountGenerator)`.
-	// Until the bundle is rebuilt without the provider selector, hand it a
-	// noop selector that resolves to the static DNS endpoint — the detector
-	// no longer uses the returned RandomProvider for routing.
-	const detectionResult = await detect(
-		config.defaultEnvironment,
-		async () => getProcaptchaRandomActiveProvider(config.defaultEnvironment),
-		container,
-		restartFn,
-		() => ext.getAccount(config),
-	);
-
-	const userAccount = detectionResult.userAccount;
-
 	if (!config.account.address) {
 		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
 	}
+
+	const ipMode = pickIpMode(config);
+
+	// Start the extension/account module load now rather than after the bundle
+	// assignment. It depends on nothing above, so it overlaps the provider-pin
+	// `/healthz` round-trip and the assign request for free; it is awaited below
+	// at the point `ExtClass` is first needed.
+	//
+	// This is what survives of main's parallel-pin optimisation. That change
+	// warmed BOTH `pinPromiseCache` keys — with and without ipMode — because the
+	// catcher-internal provider selector called with no ipMode while the awaited
+	// call passed one. The 3-arg detector has no provider selector at all, so
+	// only the `(env, ipMode)` key is ever used now and warming the bare-env key
+	// would just issue a healthz request nothing consumes. Nor can the pin be
+	// moved off the critical path the way it was before: the detector now comes
+	// FROM the provider, so resolving the provider is a hard prerequisite of
+	// having anything to run, not something that can proceed alongside it.
+	const extClassPromise = ExtensionLoader(config.web2);
 
 	// On the first attempt this resolves the static DNS endpoint for this env —
 	// the DNS layer load-balances across the pronode fleet. On a retry
@@ -188,20 +171,142 @@ const customDetectBot: BotDetectionFunction = async (
 	// pick a random provider straight from the list instead of re-pinning the
 	// same one. `pickIpMode(config)` honours the dapp's data-ipv4 / data-ipv6
 	// preference so frictionless and the subsequent captcha hops stay on the
-	// same stack.
-	//
-	// This await usually hits the in-flight/resolved promise warmed at the
-	// top of this function — see the prefetch call there.
-	const provider = await getProcaptchaRandomActiveProvider(
-		config.defaultEnvironment,
-		ipMode,
-		retryContext,
-	);
+	// same stack. Resolved up front — before detection rather than alongside it —
+	// because the detector bundle is served BY this provider.
+	// The bundle entry starts provider resolution + assign as soon as it has read
+	// the site key off the DOM, which is well before React has mounted this
+	// widget. Claim that in-flight work if it exists rather than repeating it.
+	// Only valid on a first attempt: a retry is retrying *because* the pinned
+	// pronode failed, so it must re-resolve.
+	const isFirstAttempt = !retryContext || retryContext.attempt <= 1;
+	const prefetched = isFirstAttempt
+		? takePrefetchedDetector(
+				config.defaultEnvironment,
+				ipMode,
+				config.account.address,
+			)
+		: undefined;
+
+	// A prefetch that failed must not fail the flow — it is an optimisation, and
+	// the normal path below handles provider selection and assign failure
+	// already. So swallow it and re-resolve.
+	let prefetchedResult: PrefetchedDetector | undefined;
+	if (prefetched) {
+		try {
+			prefetchedResult = await prefetched;
+		} catch {
+			prefetchedResult = undefined;
+		}
+	}
+
+	const provider =
+		prefetchedResult?.provider ??
+		(await getProcaptchaRandomActiveProvider(
+			config.defaultEnvironment,
+			ipMode,
+			retryContext,
+		));
 
 	const providerApi = new ProviderApi(
 		provider.provider.url,
 		config.account.address,
 	);
+
+	// Ask the provider for a per-session detector bundle. The detector lives ONLY
+	// in the provider-served pool: when the provider has a populated pool it
+	// returns the obfuscated detector (each with its own keys + inner cipher)
+	// plus a detectorSessionId. When it cannot (no pool, network, decode, or
+	// timeout) we have NO detector to run and there is no bundled fallback.
+	let detectorSessionId: string | undefined;
+	let providerDetect: DetectorType | undefined;
+	try {
+		// Reuse the prefetched assignment when the entry already fetched one for
+		// this provider; otherwise issue it now.
+		const assigned =
+			prefetchedResult?.assigned ??
+			(await withTimeout(
+				providerApi.assignDetectorBundle(config.account.address),
+				ASSIGN_TIMEOUT_MS,
+			));
+		if (assigned.useProviderBundle && assigned.detectorScript) {
+			// Deliberately untimed: this is a local parse + evaluate, so a timer
+			// cannot rescue a stalled main thread — it can only throw away a bundle
+			// we are already holding.
+			providerDetect = await DetectorLoaderFromScript(assigned.detectorScript);
+			detectorSessionId = assigned.detectorSessionId;
+		}
+	} catch (err) {
+		// No detector available — fall through to the PoW request below.
+		//
+		// Report it. Falling back is by design, but the reasons are not equal: a
+		// slow network is routine, whereas a bundle that throws on import means
+		// every session on this provider silently degrades to an image captcha
+		// with nothing in the client or provider logs to say why. That failure
+		// mode shipped undetected once already — an obfuscator seed emitted a
+		// bundle that died with "Class constructor X cannot be invoked without
+		// 'new'", and the only way to see it was to reproduce the import by hand.
+		// The catch stays broad; it just no longer hides what it caught.
+		console.error(
+			"Procaptcha: no detector bundle available, falling back to a server-chosen captcha:",
+			err,
+		);
+	}
+
+	const ExtClass = await extClassPromise;
+	const ext = new ExtClass();
+
+	// No provider detector ⇒ no detection is possible, so there is nothing to
+	// send. The request goes out with an empty token and the provider decides
+	// what to serve; the client gets no say in that.
+	if (providerDetect === undefined) {
+		const userAccount = await ext.getAccount(config);
+		const { currentUrl: fallbackUrl, iframeUrl: fallbackIframeUrl } =
+			getCurrentPageUrls();
+		const captcha = await withTimeout(
+			providerApi.getFrictionlessCaptcha(
+				undefined,
+				undefined,
+				config.account.address,
+				userAccount.account.address,
+				config.mode,
+				undefined,
+				undefined,
+				fallbackUrl,
+				fallbackIframeUrl,
+			),
+			10000,
+		);
+		if (captcha.dns_url) {
+			try {
+				void fetch(captcha.dns_url, {
+					method: "GET",
+					mode: "no-cors",
+					credentials: "omit",
+					keepalive: true,
+					cache: "no-store",
+				}).catch(() => undefined);
+			} catch {
+				/* swallow */
+			}
+		}
+		return {
+			captchaType: captcha.captchaType,
+			sessionId: captcha.sessionId,
+			provider: provider,
+			status: captcha.status,
+			userAccount: userAccount,
+			error: captcha.error,
+			hp: captcha.hp,
+		};
+	}
+
+	const detect: DetectorType = providerDetect;
+
+	const detectionResult = await detect(container, restartFn, () =>
+		ext.getAccount(config),
+	);
+
+	const userAccount = detectionResult.userAccount;
 
 	// SIMD readings deliberately omitted from the frictionless hop. The WASM
 	// benchmark is a CPU-bound loop that contends with BotScoreWorker if it
@@ -217,6 +322,7 @@ const customDetectBot: BotDetectionFunction = async (
 		userAccount.account.address,
 		config.mode,
 		undefined,
+		detectorSessionId,
 		currentUrl,
 		iframeUrl,
 	);

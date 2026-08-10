@@ -43,6 +43,7 @@
 		"INVALID_BODY": "Corpo inválido",
 		"PARSE_ERROR": "Erro ao analisar a resposta",
 		"SPAM_EMAIL_RULE": "Endereço de e-mail bloqueado pelas regras do filtro de spam",
+		"SPAM_EMAIL_COUNT_EXCEEDED": "Demasiados envios deste endereço de e-mail",
 		"VPN_BLOCKED": "Pedidos a partir de ligações VPN não são permitidos para este site",
 		"PROXY_BLOCKED": "Pedidos a partir de servidores proxy não são permitidos para este site",
 		"TOR_BLOCKED": "Pedidos a partir de nós de saída Tor não são permitidos para este site",

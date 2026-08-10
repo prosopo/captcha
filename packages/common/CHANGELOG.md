@@ -1,5 +1,14 @@
 # @prosopo/common
 
+## 3.1.49
+### Patch Changes
+
+- 9fec7bd: test(logger): cover level dispatch, format guard and browser output
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/logger@2.0.5
+  - @prosopo/locale@3.2.9
+
 ## 3.1.48
 ### Patch Changes
 
