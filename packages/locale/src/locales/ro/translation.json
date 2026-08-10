@@ -43,6 +43,7 @@
 		"INVALID_BODY": "Corp invalid",
 		"PARSE_ERROR": "Eroare la parsare",
 		"SPAM_EMAIL_RULE": "Adresa de e-mail blocată de regulile filtrului de spam",
+		"SPAM_EMAIL_COUNT_EXCEEDED": "Prea multe trimiteri de la această adresă de e-mail",
 		"VPN_BLOCKED": "Solicitările de la conexiuni VPN nu sunt permise pentru acest site",
 		"PROXY_BLOCKED": "Solicitările de la servere proxy nu sunt permise pentru acest site",
 		"TOR_BLOCKED": "Solicitările de la noduri de ieșire Tor nu sunt permise pentru acest site",

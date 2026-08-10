@@ -32,6 +32,7 @@ import {
 	CaptchaType,
 	ContextType,
 	DatabaseTypes,
+	EncodingType,
 	IPValidationAction,
 	type IUserSettings,
 	ProsopoConfigSchema,
@@ -108,6 +109,7 @@ const FULLY_POPULATED_SETTINGS = {
 			normaliseGmail: true,
 			useDefaultPatterns: true,
 			customRegexBlocklist: ["^test\\+spam@", "^throwaway-"],
+			maxEmailSubmissionCount: 5,
 		},
 	},
 	trafficFilter: {
@@ -118,12 +120,18 @@ const FULLY_POPULATED_SETTINGS = {
 		abuserScoreThreshold: 0.33,
 		blockDatacenter: true,
 		datacenterNameAllowlist: ["iCloud Private Relay"],
+		datacenterNameDenylist: ["ScrapyIPLeaser"],
 		skipExtrasOnValidDnsPath: true,
 		blockMobile: false,
 		blockSatellite: true,
 		blockCrawler: true,
 	},
 	storeMetadata: true,
+	honeypot: {
+		enabled: true,
+		question: "What is 2 + 2?",
+		encodingType: EncodingType.semaphore,
+	},
 } satisfies IUserSettings;
 
 describe("Client settings Mongo persistence", () => {
@@ -243,6 +251,25 @@ describe("Client settings Mongo persistence", () => {
 		expect(stored.spamFilter).toMatchObject(
 			FULLY_POPULATED_SETTINGS.spamFilter,
 		);
+		// Per-field spam-filter asserts. Every new emailRules field must be
+		// declared on the mongoose UserSettingsSchema or strict mode silently
+		// drops it on the `$set`. Named individually so the drop names the
+		// specific field in the failure.
+		expect(stored.spamFilter?.emailRules?.maxLocalPartDots).toBe(
+			FULLY_POPULATED_SETTINGS.spamFilter.emailRules.maxLocalPartDots,
+		);
+		expect(stored.spamFilter?.emailRules?.normaliseGmail).toBe(
+			FULLY_POPULATED_SETTINGS.spamFilter.emailRules.normaliseGmail,
+		);
+		expect(stored.spamFilter?.emailRules?.useDefaultPatterns).toBe(
+			FULLY_POPULATED_SETTINGS.spamFilter.emailRules.useDefaultPatterns,
+		);
+		expect(stored.spamFilter?.emailRules?.customRegexBlocklist).toEqual(
+			FULLY_POPULATED_SETTINGS.spamFilter.emailRules.customRegexBlocklist,
+		);
+		expect(stored.spamFilter?.emailRules?.maxEmailSubmissionCount).toBe(
+			FULLY_POPULATED_SETTINGS.spamFilter.emailRules.maxEmailSubmissionCount,
+		);
 
 		// trafficFilter — per-field rather than wholesale, since this is the
 		// schema most frequently extended (each new opt-in / allowlist /
@@ -272,6 +299,9 @@ describe("Client settings Mongo persistence", () => {
 		expect(trafficFilter.datacenterNameAllowlist).toEqual(
 			FULLY_POPULATED_SETTINGS.trafficFilter.datacenterNameAllowlist,
 		);
+		expect(trafficFilter.datacenterNameDenylist).toEqual(
+			FULLY_POPULATED_SETTINGS.trafficFilter.datacenterNameDenylist,
+		);
 		expect(trafficFilter.skipExtrasOnValidDnsPath).toBe(
 			FULLY_POPULATED_SETTINGS.trafficFilter.skipExtrasOnValidDnsPath,
 		);
@@ -283,6 +313,26 @@ describe("Client settings Mongo persistence", () => {
 		);
 		expect(trafficFilter.blockCrawler).toBe(
 			FULLY_POPULATED_SETTINGS.trafficFilter.blockCrawler,
+		);
+
+		// Honeypot — per-field, same rationale as trafficFilter.
+		const honeypot = stored.honeypot;
+		expect(honeypot).toBeDefined();
+		if (!honeypot) return;
+		expect(honeypot.enabled).toBe(FULLY_POPULATED_SETTINGS.honeypot.enabled);
+		expect(honeypot.question).toBe(FULLY_POPULATED_SETTINGS.honeypot.question);
+		expect(honeypot.encodingType).toBe(
+			FULLY_POPULATED_SETTINGS.honeypot.encodingType,
+		);
+
+		// verifiedTimeout / solutionTimeout — asserted directly. Not covered
+		// by any nested `toMatchObject` above, so an accidental drop from
+		// the mongoose schema would otherwise be invisible here.
+		expect(stored.verifiedTimeout).toBe(
+			FULLY_POPULATED_SETTINGS.verifiedTimeout,
+		);
+		expect(stored.solutionTimeout).toBe(
+			FULLY_POPULATED_SETTINGS.solutionTimeout,
 		);
 	}, 60_000);
 });
