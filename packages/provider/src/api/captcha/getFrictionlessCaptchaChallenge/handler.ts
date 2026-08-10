@@ -422,6 +422,11 @@ export default (
 				userSitekeyIpHash,
 				requestId: req.requestId,
 				logger: req.logger,
+				// Thread the client's detector session id through so the
+				// bypass paths (configured-captchaType + empty-pool pow
+				// fallback) can promote the resolved bundleId onto the
+				// session and enable later SIMD / BDP attach to decrypt.
+				...(detectorSessionId && { detectorSessionId }),
 				...(req.tcpToChelloUs !== undefined && {
 					tcpToChelloUs: req.tcpToChelloUs,
 				}),
