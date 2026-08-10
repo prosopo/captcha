@@ -14,3 +14,4 @@
 export * from "./api.js";
 export * from "./params.js";
 export * from "./ipapi.js";
+export * from "./sanitise.js";

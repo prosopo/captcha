@@ -322,7 +322,11 @@ describe("checkSpamEmail", () => {
 	});
 
 	describe("DNS checks", () => {
-		it("should detect spam when domain has TLS error", async () => {
+		it("should NOT flag as spam when apex has TLS error but other DNS signals are clean", async () => {
+			// A TLS handshake failure on the apex website is a property of the
+			// web-server, not of the email domain — legitimate small-business
+			// domains routinely have modern MX (Zoho/Google/Fastmail) alongside
+			// a legacy apex site. The check must fall through to CNAME / MX.
 			(db.getSpamEmailDomain as ReturnType<typeof vi.fn>).mockResolvedValue(
 				null,
 			);
@@ -338,7 +342,30 @@ describe("checkSpamEmail", () => {
 				config,
 				logger,
 			);
+			expect(result).toBe(false);
+		});
+
+		it("should still catch spam via MX when apex has TLS error", async () => {
+			// TLS error must not short-circuit — the MX-target spam check has
+			// to keep running so genuinely-spammy domains are still caught.
+			(db.getSpamEmailDomain as ReturnType<typeof vi.fn>)
+				.mockResolvedValueOnce(null) // apex domain not listed
+				.mockResolvedValueOnce({ domain: "spam-mx.com" }); // MX target listed
+
+			mockRunDnsChecks.mockResolvedValue({
+				cnameResult: null,
+				mxRecordResult: [{ priority: 10, exchange: "mx.spam-mx.com." }],
+				redirectResult: { tlsError: true },
+			});
+
+			const result = await checkSpamEmail(
+				"user@suspicious.com",
+				db,
+				config,
+				logger,
+			);
 			expect(result).toBe(true);
+			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("mx.spam-mx.com");
 		});
 
 		it("should check redirect domain when redirect is found", async () => {

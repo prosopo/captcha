@@ -43,6 +43,7 @@
 		"INVALID_BODY": "Érvénytelen test",
 		"PARSE_ERROR": "Hiba az adatkérések elemzése közben",
 		"SPAM_EMAIL_RULE": "Az e-mail cím a spamszűrő szabályai alapján blokkolva",
+		"SPAM_EMAIL_COUNT_EXCEEDED": "Túl sok beküldés erről az e-mail címről",
 		"VPN_BLOCKED": "VPN-kapcsolatokról érkező kérések nem engedélyezettek ezen az oldalon",
 		"PROXY_BLOCKED": "Proxy szerverekről érkező kérések nem engedélyezettek ezen az oldalon",
 		"TOR_BLOCKED": "Tor kilépési csomópontokról érkező kérések nem engedélyezettek ezen az oldalon",

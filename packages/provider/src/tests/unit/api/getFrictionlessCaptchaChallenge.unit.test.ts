@@ -12,9 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { CaptchaType, ContextType } from "@prosopo/types";
-import { type Mock, beforeEach, describe, expect, it, vi } from "vitest";
+import { AccessPolicyType } from "@prosopo/user-access-policy";
+import {
+	type Mock,
+	afterAll,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
 import getHandler from "../../../api/captcha/getFrictionlessCaptchaChallenge.js";
+import { initDetectorBundlePool } from "../../../tasks/detection/bundlePool.js";
 import { FrictionlessReason } from "../../../tasks/frictionless/frictionlessTasks.js";
 
 // Minimal typed mocks to avoid `any`
@@ -26,6 +40,7 @@ type MockTasks = {
 		checkLangRules: MockFn;
 		setSessionParams: MockFn;
 		setRoutingContext: MockFn;
+		applyRoutingMachine: MockFn;
 		getClientContextEntropy: MockFn;
 		sendImageCaptcha: MockFn;
 		sendPowCaptcha: MockFn;
@@ -42,6 +57,7 @@ type MockTasks = {
 		getSessionRecordByToken: MockFn;
 		getSessionByuserSitekeyIpHash: MockFn;
 		getClientRecord: MockFn;
+		checkAndRemoveSession: MockFn;
 	};
 	logger: Record<string, unknown>;
 };
@@ -74,8 +90,19 @@ type MockRes = {
 
 // Helper to build req/res/next
 const buildReqRes = (body: unknown, ip = "127.0.0.1") => {
+	// The decision machine forces an image captcha when no page URL is
+	// reported, so default one in for any body that doesn't set it. Tests
+	// exercising the missing-URL path pass `currentUrl` explicitly (e.g.
+	// undefined) to opt out of this default.
+	const reqBody: unknown =
+		body && typeof body === "object" && !("currentUrl" in body)
+			? {
+					...(body as Record<string, unknown>),
+					currentUrl: "https://example.com/page",
+				}
+			: body;
 	const req: MockReq = {
-		body,
+		body: reqBody,
 		headers: { "prosopo-user": "u", "user-agent": "ua" },
 		ip,
 		ja4: {},
@@ -115,7 +142,9 @@ vi.mock("../../../utils/hashUserIp.js", () => ({
 
 // Mock getMaintenanceMode
 vi.mock("../../../api/admin/apiToggleMaintenanceModeEndpoint.js", () => ({
-	getMaintenanceMode: vi.fn(() => false),
+	getMaintenanceMode: vi.fn(function () {
+		return false;
+	}),
 }));
 
 // Mock getRequestUserScope
@@ -125,7 +154,9 @@ vi.mock("../../../api/blacklistRequestInspector.js", () => ({
 
 // Mock getCompositeIpAddress
 vi.mock("../../../compositeIpAddress.js", () => ({
-	getCompositeIpAddress: vi.fn((ip: string) => ip),
+	getCompositeIpAddress: vi.fn(function (ip: string) {
+		return ip;
+	}),
 }));
 
 vi.mock("../../../tasks/index.js", async () => {
@@ -139,6 +170,11 @@ vi.mock("../../../tasks/index.js", async () => {
 					checkLangRules: vi.fn().mockReturnValue(0),
 					setSessionParams: vi.fn(),
 					setRoutingContext: vi.fn(),
+					applyRoutingMachine: vi.fn(
+						async (baseline: { captchaType: CaptchaType }) => ({
+							captchaType: baseline.captchaType,
+						}),
+					),
 					getClientContextEntropy: vi.fn(),
 					sendImageCaptcha: vi.fn().mockResolvedValue({ type: "image" }),
 					sendPowCaptcha: vi.fn().mockResolvedValue({ type: "pow" }),
@@ -170,6 +206,7 @@ vi.mock("../../../tasks/index.js", async () => {
 					getSessionRecordByToken: vi.fn().mockResolvedValue(null),
 					getSessionByuserSitekeyIpHash: vi.fn().mockResolvedValue(null),
 					getClientRecord: vi.fn(),
+					checkAndRemoveSession: vi.fn().mockResolvedValue(undefined),
 				},
 				logger: mockLogger as unknown as Record<string, unknown>,
 			}),
@@ -192,12 +229,34 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 
 	let tasksInstance: MockTasks;
 
+	// A populated detector pool so the no-detector PoW fallback does NOT fire and
+	// the handler proceeds into the scored detection path (decryptPayload is
+	// mocked). Without a bundle in the pool every request would PoW-fallback.
+	let poolDir: string;
+	beforeAll(() => {
+		poolDir = mkdtempSync(join(tmpdir(), "fric-handler-pool-"));
+		writeFileSync(join(poolDir, "bundle-0.js"), "JS");
+		writeFileSync(
+			join(poolDir, "bundle-0.json"),
+			JSON.stringify({ privateKey: "PK", innerConfig: "C" }),
+		);
+		initDetectorBundlePool(poolDir);
+	});
+	afterAll(() => {
+		rmSync(poolDir, { recursive: true, force: true });
+	});
+
 	const makeMockTasks = (): MockTasks => ({
 		frictionlessManager: {
 			decryptPayload: vi.fn(),
 			checkLangRules: vi.fn().mockReturnValue(0),
 			setSessionParams: vi.fn(),
 			setRoutingContext: vi.fn(),
+			applyRoutingMachine: vi.fn(
+				async (baseline: { captchaType: CaptchaType }) => ({
+					captchaType: baseline.captchaType,
+				}),
+			),
 			getClientContextEntropy: vi.fn(),
 			sendImageCaptcha: vi.fn().mockResolvedValue({ type: "image" }),
 			sendPowCaptcha: vi.fn().mockResolvedValue({ type: "pow" }),
@@ -211,10 +270,16 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 					scoreComponents: sc,
 				}),
 			),
-			scoreIncreaseWebView: vi.fn((bs: number, score: number, sc: unknown) => ({
-				score,
-				scoreComponents: sc,
-			})),
+			scoreIncreaseWebView: vi.fn(function (
+				bs: number,
+				score: number,
+				sc: unknown,
+			) {
+				return {
+					score,
+					scoreComponents: sc,
+				};
+			}),
 			scoreIncreaseTimestamp: vi.fn(
 				(t: number, bs: number, score: number, sc: unknown) => ({
 					score,
@@ -227,6 +292,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			getSessionRecordByToken: vi.fn().mockResolvedValue(null),
 			getSessionByuserSitekeyIpHash: vi.fn().mockResolvedValue(null),
 			getClientRecord: vi.fn(),
+			checkAndRemoveSession: vi.fn().mockResolvedValue(undefined),
 		},
 		logger: mockLogger as unknown as Record<string, unknown>,
 	});
@@ -234,7 +300,9 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		tasksInstance = makeMockTasks();
-		(Tasks as unknown as Mock).mockImplementation(() => tasksInstance);
+		(Tasks as unknown as Mock).mockImplementation(function () {
+			return tasksInstance;
+		});
 	});
 
 	it("uses webview or default when both contexts exist", async () => {
@@ -462,6 +530,212 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			expect.objectContaining({
 				siteKey: "siteBlocked",
 				reason: FrictionlessReason.ACCESS_POLICY_BLOCK,
+			}),
+		);
+	});
+
+	it("evicts the reused session and re-routes when an access policy forces a different captchaType", async () => {
+		const clientRecord = {
+			account: "siteDedupConflict",
+			settings: {
+				captchaType: CaptchaType.frictionless,
+				frictionlessThreshold: 0.5,
+				imageMaxRounds: 2,
+				disallowWebView: false,
+			},
+		};
+		tasksInstance.db.getClientRecord.mockResolvedValue(clientRecord);
+
+		// A previously-cached pow session for this user+IP+sitekey.
+		tasksInstance.db.getSessionByuserSitekeyIpHash.mockResolvedValue({
+			sessionId: "stale-pow-session",
+			captchaType: CaptchaType.pow,
+			score: 0,
+			webView: false,
+		});
+
+		// An access rule (e.g. IP rate-limit) now forces image for this scope.
+		tasksInstance.frictionlessManager.getPrioritisedAccessPolicies.mockResolvedValue(
+			[{ type: AccessPolicyType.Restrict, captchaType: CaptchaType.image }],
+		);
+
+		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue({
+			baseBotScore: 0,
+			timestamp: Date.now(),
+			userId: "u",
+			userAgent: "844bc172f032bdd2d0baae3536c1d66c",
+			webView: false,
+			iFrame: false,
+			decryptedHeadHash: "abc",
+			decryptionFailed: false,
+		});
+
+		const body = {
+			token: "tConflict",
+			headHash: "hhConflict",
+			dapp: "siteDedupConflict",
+			user: "u",
+		};
+		const { req, res, next } = buildReqRes(body);
+
+		// biome-ignore lint/suspicious/noExplicitAny: mock request
+		await handler(req as any, res as any, next);
+
+		expect(next).not.toHaveBeenCalled();
+		// The stale pow session is evicted rather than reused...
+		expect(tasksInstance.db.checkAndRemoveSession).toHaveBeenCalledWith(
+			"stale-pow-session",
+		);
+		// ...and the request falls through to the access policy, which serves image.
+		expect(
+			tasksInstance.frictionlessManager.sendImageCaptcha,
+		).toHaveBeenCalled();
+	});
+
+	it("reuses the cached session when no access policy conflicts with its captchaType", async () => {
+		const clientRecord = {
+			account: "siteDedupOk",
+			settings: {
+				captchaType: CaptchaType.frictionless,
+				frictionlessThreshold: 0.5,
+				disallowWebView: false,
+			},
+		};
+		tasksInstance.db.getClientRecord.mockResolvedValue(clientRecord);
+
+		tasksInstance.db.getSessionByuserSitekeyIpHash.mockResolvedValue({
+			sessionId: "live-pow-session",
+			captchaType: CaptchaType.pow,
+			score: 0,
+			webView: false,
+		});
+		// No matching access policy (default mock returns []) → reuse as-is.
+
+		const body = {
+			token: "tOk",
+			headHash: "hhOk",
+			dapp: "siteDedupOk",
+			user: "u",
+		};
+		const { req, res, next } = buildReqRes(body);
+
+		// biome-ignore lint/suspicious/noExplicitAny: mock request
+		await handler(req as any, res as any, next);
+
+		expect(next).not.toHaveBeenCalled();
+		expect(tasksInstance.db.checkAndRemoveSession).not.toHaveBeenCalled();
+		expect(
+			tasksInstance.frictionlessManager.sendImageCaptcha,
+		).not.toHaveBeenCalled();
+		expect(res.json).toHaveBeenCalledWith(
+			expect.objectContaining({ sessionId: "live-pow-session" }),
+		);
+	});
+
+	it("evicts the reused session and re-routes when the routing machine returns a different captchaType", async () => {
+		const clientRecord = {
+			account: "siteDedupRoutingConflict",
+			settings: {
+				captchaType: CaptchaType.frictionless,
+				frictionlessThreshold: 0.5,
+				imageMaxRounds: 2,
+				disallowWebView: false,
+			},
+		};
+		tasksInstance.db.getClientRecord.mockResolvedValue(clientRecord);
+
+		// A previously-cached pow session for this user+IP+sitekey, minted
+		// before the routing machine below was published.
+		tasksInstance.db.getSessionByuserSitekeyIpHash.mockResolvedValue({
+			sessionId: "stale-pow-session-routing",
+			captchaType: CaptchaType.pow,
+			score: 0,
+			webView: false,
+		});
+
+		// No access policy in play.
+		tasksInstance.frictionlessManager.getPrioritisedAccessPolicies.mockResolvedValue(
+			[],
+		);
+
+		// Routing machine now wants puzzle for everyone.
+		tasksInstance.frictionlessManager.applyRoutingMachine.mockResolvedValue({
+			captchaType: CaptchaType.puzzle,
+		});
+
+		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue({
+			baseBotScore: 0,
+			timestamp: Date.now(),
+			userId: "u",
+			userAgent: "844bc172f032bdd2d0baae3536c1d66c",
+			webView: false,
+			iFrame: false,
+			decryptedHeadHash: "abc",
+			decryptionFailed: false,
+		});
+
+		const body = {
+			token: "tRoutingConflict",
+			headHash: "hhRoutingConflict",
+			dapp: "siteDedupRoutingConflict",
+			user: "u",
+		};
+		const { req, res, next } = buildReqRes(body);
+
+		// biome-ignore lint/suspicious/noExplicitAny: mock request
+		await handler(req as any, res as any, next);
+
+		expect(next).not.toHaveBeenCalled();
+		// The stale pow session is evicted before the reuse_session path
+		// can return it.
+		expect(tasksInstance.db.checkAndRemoveSession).toHaveBeenCalledWith(
+			"stale-pow-session-routing",
+		);
+		// Reuse-session response shape is NOT used.
+		expect(res.json).not.toHaveBeenCalledWith(
+			expect.objectContaining({ sessionId: "stale-pow-session-routing" }),
+		);
+	});
+
+	it("reuses the cached session when the routing machine returns the same captchaType", async () => {
+		const clientRecord = {
+			account: "siteDedupRoutingAgrees",
+			settings: {
+				captchaType: CaptchaType.frictionless,
+				frictionlessThreshold: 0.5,
+				disallowWebView: false,
+			},
+		};
+		tasksInstance.db.getClientRecord.mockResolvedValue(clientRecord);
+
+		tasksInstance.db.getSessionByuserSitekeyIpHash.mockResolvedValue({
+			sessionId: "live-pow-session-routing-agrees",
+			captchaType: CaptchaType.pow,
+			score: 0,
+			webView: false,
+		});
+
+		// Routing machine agrees with the cached captchaType — no eviction.
+		tasksInstance.frictionlessManager.applyRoutingMachine.mockResolvedValue({
+			captchaType: CaptchaType.pow,
+		});
+
+		const body = {
+			token: "tRoutingAgrees",
+			headHash: "hhRoutingAgrees",
+			dapp: "siteDedupRoutingAgrees",
+			user: "u",
+		};
+		const { req, res, next } = buildReqRes(body);
+
+		// biome-ignore lint/suspicious/noExplicitAny: mock request
+		await handler(req as any, res as any, next);
+
+		expect(next).not.toHaveBeenCalled();
+		expect(tasksInstance.db.checkAndRemoveSession).not.toHaveBeenCalled();
+		expect(res.json).toHaveBeenCalledWith(
+			expect.objectContaining({
+				sessionId: "live-pow-session-routing-agrees",
 			}),
 		);
 	});

@@ -14,6 +14,7 @@
 
 import {
 	AccessPolicyType,
+	GLOBAL_CLIENT_SCOPE_SENTINEL,
 	type PolicyScope,
 	type UserIp,
 	type UserScope,
@@ -172,6 +173,13 @@ const getUserScopeFieldQuery = (
 	return `@${fieldName}:{${queryValue}}`;
 };
 
+// Global rules are stamped with `@clientId:{global}` at write time so the
+// scope query can hit the clientId posting list instead of walking the
+// index for ismissing(). The `| ismissing(@clientId)` branch is a
+// transition safety net for rules written before the sentinel shipped —
+// rehash-all migrates them, but we don't gate on that ordering.
+const GLOBAL_MATCH_CLAUSE_INNER = `@clientId:{${GLOBAL_CLIENT_SCOPE_SENTINEL}} | ismissing(@clientId)`;
+
 const getPolicyScopeQuery = (
 	policyScope: PolicyScope | undefined,
 	scopeMatch: FilterScopeMatch | undefined,
@@ -181,10 +189,12 @@ const getPolicyScopeQuery = (
 	if ("string" === typeof clientId) {
 		return FilterScopeMatch.Exact === scopeMatch
 			? `@clientId:{${clientId}}`
-			: `( @clientId:{${clientId}} | ismissing(@clientId) )`;
+			: `( @clientId:{${clientId}} | ${GLOBAL_MATCH_CLAUSE_INNER} )`;
 	}
 
-	return FilterScopeMatch.Exact === scopeMatch ? "ismissing(@clientId)" : "";
+	return FilterScopeMatch.Exact === scopeMatch
+		? `( ${GLOBAL_MATCH_CLAUSE_INNER} )`
+		: "";
 };
 
 /*

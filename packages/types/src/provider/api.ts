@@ -26,12 +26,19 @@ import {
 	number,
 	object,
 	type output,
+	record,
 	string,
 	union,
 	type z,
 	type infer as zInfer,
 } from "zod";
 import { ApiParams } from "../api/params.js";
+import {
+	INPUT_LIMITS,
+	boundedString,
+	safeLine,
+	safeText,
+} from "../api/sanitise.js";
 import {
 	type CaptchaType,
 	DecisionMachineCaptchaTypeSchema,
@@ -41,7 +48,6 @@ import { ModeEnum } from "../config/mode.js";
 import { DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED } from "../config/timeouts.js";
 import {
 	type Captcha,
-	CaptchaSolutionSchema,
 	type DappAccount,
 	type DatasetID,
 	type PoWChallengeId,
@@ -54,12 +60,9 @@ import {
 	DecisionMachineRuntime,
 	DecisionMachineScope,
 } from "../decisionMachine/index.js";
-import {
-	type ChallengeSignature,
-	ProcaptchaTokenSpec,
-	type RequestHashSignature,
-	RequestHashSignatureSchema,
-	TimestampSignatureSchema,
+import type {
+	ChallengeSignature,
+	RequestHashSignature,
 } from "../procaptcha/index.js";
 
 export type ApiJsonError = {
@@ -90,11 +93,15 @@ export enum ClientApiPaths {
 	GetProviderStatus = "/v1/prosopo/provider/client/status",
 	SubmitUserEvents = "/v1/prosopo/provider/client/events",
 	CheckSpamEmail = "/v1/prosopo/provider/client/spam/email",
+	// Assigns a precomputed detector bundle for this session and returns its
+	// obfuscated script inline (or signals the bundled fallback when no pool).
+	AssignDetectorBundle = "/v1/prosopo/provider/client/detector/assign",
 }
 
 export enum PublicApiPaths {
 	Healthz = "/healthz",
 	GetProviderDetails = "/v1/prosopo/provider/public/details",
+	Metrics = "/metrics",
 }
 
 export const providerDetailsSchema = object({
@@ -130,8 +137,6 @@ export type TSubmitPuzzleCaptchaSolutionURL =
 export enum AdminApiPaths {
 	SiteKeyRegister = "/v1/prosopo/provider/admin/sitekey/register",
 	SiteKeysRegister = "/v1/prosopo/provider/admin/sitekeys/register",
-	UpdateDetectorKey = "/v1/prosopo/provider/admin/detector/update",
-	RemoveDetectorKey = "/v1/prosopo/provider/admin/detector/remove",
 	ToggleMaintenanceMode = "/v1/prosopo/provider/admin/maintenance/toggle",
 	UpdateDecisionMachine = "/v1/prosopo/provider/admin/decision-machine/update",
 	GetAllDecisionMachines = "/v1/prosopo/provider/admin/decision-machine/get-all",
@@ -143,38 +148,46 @@ export enum AdminApiPaths {
 	SiteKeysRemove = "/v1/prosopo/provider/admin/sitekeys/remove",
 	// Receives batched DNS observation events from the dns sidecar.
 	DnsEvent = "/v1/prosopo/provider/admin/dns/event",
+	// Hot-swaps the in-memory detector bundle pool (emergency push channel,
+	// avoids a redeploy to rotate the pool).
+	ReplaceDetectorPool = "/v1/prosopo/provider/admin/detector/pool/replace",
 }
 
 export type CombinedApiPaths = ClientApiPaths | AdminApiPaths;
 
 export const ProviderDefaultRateLimits = {
-	[ClientApiPaths.GetImageCaptchaChallenge]: { windowMs: 60000, limit: 30 },
-	[ClientApiPaths.GetPowCaptchaChallenge]: { windowMs: 60000, limit: 60 },
-	[ClientApiPaths.SubmitImageCaptchaSolution]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.GetImageCaptchaChallenge]: { windowMs: 60000, limit: 150 },
+	[ClientApiPaths.GetPowCaptchaChallenge]: { windowMs: 60000, limit: 300 },
+	[ClientApiPaths.SubmitImageCaptchaSolution]: {
+		windowMs: 60000,
+		limit: 300,
+	},
 	[ClientApiPaths.GetFrictionlessCaptchaChallenge]: {
 		windowMs: 60000,
-		limit: 60,
+		limit: 300,
 	},
-	[ClientApiPaths.SubmitPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
-	[ClientApiPaths.VerifyPowCaptchaSolution]: { windowMs: 60000, limit: 3000 },
-	[ClientApiPaths.GetPuzzleCaptchaChallenge]: { windowMs: 60000, limit: 60 },
-	[ClientApiPaths.SubmitPuzzleCaptchaSolution]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.SubmitPowCaptchaSolution]: { windowMs: 60000, limit: 300 },
+	[ClientApiPaths.VerifyPowCaptchaSolution]: { windowMs: 60000, limit: 15000 },
+	[ClientApiPaths.GetPuzzleCaptchaChallenge]: { windowMs: 60000, limit: 300 },
+	[ClientApiPaths.SubmitPuzzleCaptchaSolution]: {
+		windowMs: 60000,
+		limit: 300,
+	},
 	[ClientApiPaths.VerifyPuzzleCaptchaSolution]: {
 		windowMs: 60000,
-		limit: 3000,
+		limit: 15000,
 	},
 	[ClientApiPaths.VerifyImageCaptchaSolutionDapp]: {
 		windowMs: 60000,
-		limit: 3000,
+		limit: 15000,
 	},
 	[ClientApiPaths.GetProviderStatus]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.CheckSpamEmail]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.AssignDetectorBundle]: { windowMs: 60000, limit: 60 },
 	[PublicApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
 	[AdminApiPaths.SiteKeyRegister]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.SiteKeysRegister]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.UpdateDetectorKey]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.RemoveDetectorKey]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.ToggleMaintenanceMode]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.UpdateDecisionMachine]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.GetAllDecisionMachines]: { windowMs: 60000, limit: 60 },
@@ -188,6 +201,7 @@ export const ProviderDefaultRateLimits = {
 	// (1s default), so a high per-minute ceiling is fine. Single ingest
 	// path per pronode → no cross-tenant fairness concerns.
 	[AdminApiPaths.DnsEvent]: { windowMs: 60000, limit: 600 },
+	[AdminApiPaths.ReplaceDetectorPool]: { windowMs: 60000, limit: 5 },
 };
 
 type RateLimit = {
@@ -213,6 +227,17 @@ export type FrontendProvider = {
 export type RandomProvider = {
 	providerAccount: string;
 	provider: FrontendProvider;
+};
+
+// Context handed to provider selection when the widget re-selects a provider
+// after an error. `attempt` is the 1-indexed try count (1 = first, healthy
+// try; >1 = a fallback retry). On a retry the widget picks a random provider
+// straight from the provider list instead of the DNS-routed endpoint so a
+// single down provider isn't hammered; `excludeUrl` drops the provider that
+// just failed from the candidate pool when it is known.
+export type ProviderSelectRetryContext = {
+	attempt: number;
+	excludeUrl?: string;
 };
 
 type RateLimitSchemaType = ZodObject<{
@@ -259,11 +284,14 @@ export interface CaptchaIdAndProof {
 }
 
 export const CaptchaRequestBody = object({
-	[ApiParams.user]: string(),
-	[ApiParams.dapp]: string(),
-	[ApiParams.datasetId]: union([string(), array(number())]).optional(),
-	[ApiParams.sessionId]: string().optional(),
-	[ApiParams.simdReadings]: string().optional(),
+	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.datasetId]: union([
+		boundedString(INPUT_LIMITS.ID),
+		array(number()),
+	]).optional(),
+	[ApiParams.sessionId]: boundedString(INPUT_LIMITS.ID).optional(),
+	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
 });
 
 export type CaptchaRequestBodyType = zInfer<typeof CaptchaRequestBody>;
@@ -284,37 +312,56 @@ export interface CaptchaResponseBody extends ApiResponse {
 // record, no automatic verdict. The TS shape (`ClientMetaData`) lives in
 // ./database.ts — this schema is the wire-level zod for request bodies.
 export const ClientMetaDataSchema = object({
-	[ApiParams.hp]: string().optional(),
+	[ApiParams.hp]: safeText(INPUT_LIMITS.TEXT).optional(),
+});
+
+// Request-body-level bounded variants of shared schemas. The shared schemas
+// (`ProcaptchaTokenSpec`, `CaptchaSolutionSchema`, `*SignatureSchema`) are also
+// used for response/DB shapes, so rather than bound them at source we cap them
+// here, where they flow in as untrusted request input.
+const BoundedProcaptchaTokenSpec = boundedString(INPUT_LIMITS.TOKEN).startsWith(
+	"0x",
+);
+
+const BoundedCaptchaSolutionSchema = object({
+	captchaId: boundedString(INPUT_LIMITS.ID),
+	captchaContentId: boundedString(INPUT_LIMITS.ID),
+	solution: boundedString(INPUT_LIMITS.ID).array(),
+	salt: boundedString(INPUT_LIMITS.ID),
 });
 
 export const CaptchaSolutionBody = object({
-	[ApiParams.user]: string(),
-	[ApiParams.dapp]: string(),
-	[ApiParams.captchas]: array(CaptchaSolutionSchema),
-	[ApiParams.requestHash]: string(),
-	[ApiParams.timestamp]: string(),
+	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.captchas]: array(BoundedCaptchaSolutionSchema),
+	[ApiParams.requestHash]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.timestamp]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.signature]: object({
-		[ApiParams.user]: TimestampSignatureSchema,
-		[ApiParams.provider]: RequestHashSignatureSchema,
+		[ApiParams.user]: object({
+			[ApiParams.timestamp]: boundedString(INPUT_LIMITS.TOKEN),
+		}),
+		[ApiParams.provider]: object({
+			[ApiParams.requestHash]: boundedString(INPUT_LIMITS.TOKEN),
+		}),
 	}),
-	[ApiParams.behavioralData]: string().optional(),
+	[ApiParams.behavioralData]: boundedString(INPUT_LIMITS.TOKEN).optional(),
 	// Compact encoded SimdReadings produced by @prosopo/catcher's
 	// simdReadingsCodec — opaque at this layer; the provider decodes and
 	// persists on the captcha record. Collection-only, no scoring.
-	[ApiParams.simdReadings]: string().optional(),
+	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
 	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
 });
 
 export type CaptchaSolutionBodyType = zInfer<typeof CaptchaSolutionBody>;
 
 export const VerifySolutionBody = object({
-	[ApiParams.token]: ProcaptchaTokenSpec,
-	[ApiParams.dappSignature]: string(),
+	[ApiParams.token]: BoundedProcaptchaTokenSpec,
+	[ApiParams.dappSignature]: boundedString(INPUT_LIMITS.TOKEN),
 	[ApiParams.maxVerifiedTime]: number()
 		.optional()
 		.default(DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED),
-	[ApiParams.ip]: string().optional(),
-	[ApiParams.email]: string().optional(),
+	[ApiParams.ip]: boundedString(INPUT_LIMITS.ID).optional(),
+	[ApiParams.email]: boundedString(INPUT_LIMITS.EMAIL).optional(),
 });
 
 export type VerifySolutionBodyTypeInput = input<typeof VerifySolutionBody>;
@@ -337,12 +384,6 @@ export interface VerificationResponse extends ApiResponse {
 	[ApiParams.verified]: boolean;
 	[ApiParams.score]?: number;
 	[ApiParams.reason]?: string;
-}
-
-export interface UpdateDetectorKeyResponse extends ApiResponse {
-	data: {
-		activeDetectorKeys: string[];
-	};
 }
 
 export interface UpdateDecisionMachineResponse extends ApiResponse {
@@ -415,10 +456,10 @@ export interface PowCaptchaSolutionResponse extends ApiResponse {
  * Request body for the server to verify a PoW captcha solution.
  */
 export const ServerPowCaptchaVerifyRequestBody = object({
-	[ApiParams.token]: ProcaptchaTokenSpec,
-	[ApiParams.dappSignature]: string(),
-	[ApiParams.ip]: string().optional(),
-	[ApiParams.email]: string().email().optional(),
+	[ApiParams.token]: BoundedProcaptchaTokenSpec,
+	[ApiParams.dappSignature]: boundedString(INPUT_LIMITS.TOKEN),
+	[ApiParams.ip]: boundedString(INPUT_LIMITS.ID).optional(),
+	[ApiParams.email]: boundedString(INPUT_LIMITS.EMAIL).email().optional(),
 });
 
 export type ServerPowCaptchaVerifyRequestBodyOutput = output<
@@ -434,19 +475,19 @@ export type DnsEventKind = "dns" | "http";
 
 export const DnsEventSchema = object({
 	kind: DnsEventKindSchema,
-	ts: string(), // ISO-8601 UTC (serde default for chrono DateTime<Utc>)
-	src_ip: string(),
+	ts: boundedString(INPUT_LIMITS.ID), // ISO-8601 UTC (serde default for chrono DateTime<Utc>)
+	src_ip: boundedString(INPUT_LIMITS.ID),
 	// Per-session ID carried in the URL subdomain — captures the procaptcha
 	// sessionId. Named `jti` on the wire for cross-product compatibility
 	// with Protect's session identifier.
-	jti: string().optional(),
-	site_key: string().optional(),
-	subzone: string().optional(),
-	qname: string().optional(),
-	qtype: string().optional(),
-	sni: string().optional(),
-	path: string().optional(),
-	user_agent: string().optional(),
+	jti: boundedString(INPUT_LIMITS.ID).optional(),
+	site_key: boundedString(INPUT_LIMITS.ID).optional(),
+	subzone: boundedString(INPUT_LIMITS.ID).optional(),
+	qname: boundedString(INPUT_LIMITS.ID).optional(),
+	qtype: boundedString(INPUT_LIMITS.ID).optional(),
+	sni: boundedString(INPUT_LIMITS.ID).optional(),
+	path: boundedString(INPUT_LIMITS.URL).optional(),
+	user_agent: safeLine(INPUT_LIMITS.TEXT).optional(),
 	path_valid: boolean().optional(),
 });
 export type DnsEvent = output<typeof DnsEventSchema>;
@@ -462,10 +503,10 @@ export interface DnsEventResponseBody extends ApiResponse {
 }
 
 export const GetPowCaptchaChallengeRequestBody = object({
-	[ApiParams.user]: string(),
-	[ApiParams.dapp]: string(),
-	[ApiParams.sessionId]: string().optional(),
-	[ApiParams.simdReadings]: string().optional(),
+	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.sessionId]: boundedString(INPUT_LIMITS.ID).optional(),
+	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
 });
 
 export type GetPowCaptchaChallengeRequestBodyType = zInfer<
@@ -485,20 +526,20 @@ export const SubmitPowCaptchaSolutionBody = object({
 	[ApiParams.difficulty]: number(),
 	[ApiParams.signature]: object({
 		[ApiParams.user]: object({
-			[ApiParams.timestamp]: string(),
+			[ApiParams.timestamp]: boundedString(INPUT_LIMITS.ID),
 		}),
 		[ApiParams.provider]: object({
-			[ApiParams.challenge]: string(),
+			[ApiParams.challenge]: boundedString(INPUT_LIMITS.TOKEN),
 		}),
 	}),
-	[ApiParams.user]: string(),
-	[ApiParams.dapp]: string(),
+	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.nonce]: number(),
-	[ApiParams.behavioralData]: string().optional(),
-	[ApiParams.salt]: string().optional(),
-	[ApiParams.simdReadings]: string().optional(),
+	[ApiParams.behavioralData]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	[ApiParams.salt]: boundedString(INPUT_LIMITS.ID).optional(),
+	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
 	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
-	[ApiParams.fingerprintProof]: string().optional(),
+	[ApiParams.fingerprintProof]: boundedString(INPUT_LIMITS.TOKEN).optional(),
 });
 
 export type SubmitPowCaptchaSolutionBodyType = input<
@@ -506,17 +547,85 @@ export type SubmitPowCaptchaSolutionBodyType = input<
 >;
 
 export const GetFrictionlessCaptchaChallengeRequestBody = object({
-	[ApiParams.dapp]: string(),
-	[ApiParams.token]: string(),
-	[ApiParams.user]: string(),
-	[ApiParams.headHash]: string(),
+	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
+	// Empty when the client had no detector to run — never a bypass; the
+	// decision machine serves an image captcha for an absent token.
+	[ApiParams.token]: boundedString(INPUT_LIMITS.TOKEN),
+	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.headHash]: boundedString(INPUT_LIMITS.TOKEN),
 	[ApiParams.mode]: nativeEnum(ModeEnum).optional(),
-	[ApiParams.simdReadings]: string().optional(),
+	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	// Identifies the provider-assigned pool bundle the detector ran from; the
+	// provider resolves the exact keypair/inner-config for decryption from it.
+	[ApiParams.detectorSessionId]: boundedString(INPUT_LIMITS.ID).optional(),
+	// Full page URL the widget was rendered on (origin + path, no query
+	// string / fragment / credentials). Sent by the client so the provider
+	// can record which page a session originated from; re-sanitised
+	// server-side and gated in the decision machine (a missing value forces
+	// an image captcha). Optional on the wire so the schema still parses for
+	// older clients — the decision machine handles absence.
+	//
+	// When the widget is embedded in an iframe, `currentUrl` is resolved to
+	// the top-frame URL (same-origin: read directly; cross-origin: via
+	// `document.referrer`). `iframeUrl` carries the widget's own frame URL
+	// alongside so analytics can distinguish "Protect's site-wide iframe
+	// endpoint" from "the page the user was actually on". Undefined when the
+	// widget IS the top frame — nothing to distinguish. Re-sanitised
+	// server-side; not gated in the decision machine.
+	[ApiParams.currentUrl]: boundedString(INPUT_LIMITS.URL).optional(),
+	[ApiParams.iframeUrl]: boundedString(INPUT_LIMITS.URL).optional(),
 });
 
 export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<
 	typeof GetFrictionlessCaptchaChallengeRequestBody
 >;
+
+// ── Detector bundle pool ────────────────────────────────────────────────
+
+export const AssignDetectorBundleRequestBody = object({
+	[ApiParams.dapp]: string(),
+});
+
+export type AssignDetectorBundleRequestBodyOutput = output<
+	typeof AssignDetectorBundleRequestBody
+>;
+
+export interface AssignDetectorBundleResponse extends ApiResponse {
+	// When false, no pool is available (dev / empty pool) — the client falls
+	// back to the bundled detector and sends no detectorSessionId.
+	[ApiParams.useProviderBundle]: boolean;
+	[ApiParams.detectorSessionId]?: string;
+	// The obfuscated, self-contained detector ESM, served inline.
+	[ApiParams.detectorScript]?: string;
+}
+
+export const ReplaceDetectorPoolBody = object({
+	// Map of bundleId -> { js, privateKey, innerConfig, release }.
+	bundles: record(
+		string(),
+		object({
+			js: string(),
+			privateKey: string(),
+			innerConfig: string(),
+			// Release the bundle was built from, e.g. "3.6.64". The widget runs
+			// whatever the provider serves, so this is the only guard against a
+			// pool built from a different release. Optional for pools predating
+			// the stamp.
+			release: string().optional(),
+		}),
+	),
+});
+
+export type ReplaceDetectorPoolBodyType = output<
+	typeof ReplaceDetectorPoolBody
+>;
+
+export interface ReplaceDetectorPoolResponse extends ApiResponse {
+	count: number;
+	// False when the pool went live in memory but could not be written to the
+	// pool directory — it will not survive a provider restart.
+	persisted?: boolean;
+}
 
 export type SubmitPowCaptchaSolutionBodyTypeOutput = output<
 	typeof SubmitPowCaptchaSolutionBody
@@ -525,10 +634,10 @@ export type SubmitPowCaptchaSolutionBodyTypeOutput = output<
 // Puzzle captcha schemas
 
 export const GetPuzzleCaptchaChallengeRequestBody = object({
-	[ApiParams.user]: string(),
-	[ApiParams.dapp]: string(),
-	[ApiParams.sessionId]: string().optional(),
-	[ApiParams.simdReadings]: string().optional(),
+	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.sessionId]: boundedString(INPUT_LIMITS.ID).optional(),
+	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
 });
 
 export type GetPuzzleCaptchaChallengeRequestBodyType = zInfer<
@@ -557,17 +666,17 @@ export const SubmitPuzzleCaptchaSolutionBody = object({
 	[ApiParams.puzzleEvents]: array(PuzzleEventSchema),
 	[ApiParams.signature]: object({
 		[ApiParams.user]: object({
-			[ApiParams.timestamp]: string(),
+			[ApiParams.timestamp]: boundedString(INPUT_LIMITS.ID),
 		}),
 		[ApiParams.provider]: object({
-			[ApiParams.challenge]: string(),
+			[ApiParams.challenge]: boundedString(INPUT_LIMITS.TOKEN),
 		}),
 	}),
-	[ApiParams.user]: string(),
-	[ApiParams.dapp]: string(),
-	[ApiParams.behavioralData]: string().optional(),
-	[ApiParams.salt]: string().optional(),
-	[ApiParams.simdReadings]: string().optional(),
+	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.behavioralData]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	[ApiParams.salt]: boundedString(INPUT_LIMITS.ID).optional(),
+	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
 	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
 });
 
@@ -580,10 +689,10 @@ export type SubmitPuzzleCaptchaSolutionBodyTypeOutput = output<
 >;
 
 export const ServerPuzzleCaptchaVerifyRequestBody = object({
-	[ApiParams.token]: ProcaptchaTokenSpec,
-	[ApiParams.dappSignature]: string(),
-	[ApiParams.ip]: string().optional(),
-	[ApiParams.email]: string().email().optional(),
+	[ApiParams.token]: BoundedProcaptchaTokenSpec,
+	[ApiParams.dappSignature]: boundedString(INPUT_LIMITS.TOKEN),
+	[ApiParams.ip]: boundedString(INPUT_LIMITS.ID).optional(),
+	[ApiParams.email]: boundedString(INPUT_LIMITS.EMAIL).email().optional(),
 });
 
 export type ServerPuzzleCaptchaVerifyRequestBodyType = zInfer<
@@ -595,66 +704,62 @@ export type ServerPuzzleCaptchaVerifyRequestBodyOutput = output<
 >;
 
 export const VerifyPowCaptchaSolutionBody = object({
-	[ApiParams.siteKey]: string(),
+	[ApiParams.siteKey]: boundedString(INPUT_LIMITS.ID),
 });
 
 export const RegisterSitekeyBody = object({
-	[ApiParams.siteKey]: string(),
+	[ApiParams.siteKey]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.tier]: nativeEnum(Tier),
 	[ApiParams.settings]: ClientSettingsSchema.optional(),
 });
 
 export const RegisterSitekeysBody = array(
 	object({
-		[ApiParams.siteKey]: string(),
+		[ApiParams.siteKey]: boundedString(INPUT_LIMITS.ID),
 		[ApiParams.tier]: nativeEnum(Tier),
 		[ApiParams.settings]: ClientSettingsSchema.optional(),
 	}),
 );
 
 export const RemoveSitekeyBody = object({
-	[ApiParams.siteKey]: string(),
+	[ApiParams.siteKey]: boundedString(INPUT_LIMITS.ID),
 });
 
 export const RemoveSitekeysBody = array(
 	object({
-		[ApiParams.siteKey]: string(),
+		[ApiParams.siteKey]: boundedString(INPUT_LIMITS.ID),
 	}),
 );
-
-export const UpdateDetectorKeyBody = object({
-	[ApiParams.detectorKey]: string(),
-});
 
 export const UpdateDecisionMachineBody = object({
 	[ApiParams.decisionMachineScope]: nativeEnum(DecisionMachineScope),
 	[ApiParams.decisionMachineRuntime]: nativeEnum(DecisionMachineRuntime),
-	[ApiParams.decisionMachineSource]: string(),
+	[ApiParams.decisionMachineSource]: safeText(INPUT_LIMITS.LONG_TEXT),
 	[ApiParams.decisionMachineLanguage]: nativeEnum(
 		DecisionMachineLanguage,
 	).optional(),
-	[ApiParams.decisionMachineName]: string().optional(),
-	[ApiParams.decisionMachineVersion]: string().optional(),
+	[ApiParams.decisionMachineName]: safeLine(INPUT_LIMITS.NAME).optional(),
+	[ApiParams.decisionMachineVersion]: boundedString(INPUT_LIMITS.ID).optional(),
 	[ApiParams.decisionMachineCaptchaType]:
 		DecisionMachineCaptchaTypeSchema.optional(),
 	[ApiParams.decisionMachineKind]: nativeEnum(DecisionMachineKind).optional(),
-	[ApiParams.dapp]: string().optional(),
+	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID).optional(),
 });
 
 export const GetDecisionMachineBody = object({
-	id: string(),
+	id: boundedString(INPUT_LIMITS.ID),
 });
 
 export const GetAllDecisionMachinesBody = object({});
 
 export const RemoveDecisionMachineBody = object({
-	id: string(),
+	id: boundedString(INPUT_LIMITS.ID),
 });
 
 export const RemoveAllDecisionMachinesBody = object({});
 
 export const ClearAllCountersBody = object({
-	[ApiParams.dapp]: string().optional(),
+	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID).optional(),
 });
 
 export type ClearAllCountersBodyType = z.infer<typeof ClearAllCountersBody>;
@@ -687,8 +792,13 @@ export type DecisionMachineSummary = z.infer<
 	typeof DecisionMachineSummarySchema
 >;
 
+// Includes the full compiled `source` for every artifact so operators can
+// audit exactly which code is live on a provider in a single call, without
+// a follow-up get-by-id per machine.
 export const GetAllDecisionMachinesResponse = array(
-	DecisionMachineSummarySchema,
+	DecisionMachineSummarySchema.extend({
+		source: string(),
+	}),
 );
 
 export type GetAllDecisionMachinesResponseType = z.infer<
@@ -719,18 +829,6 @@ export const RemoveAllDecisionMachinesResponse = object({
 
 export type RemoveAllDecisionMachinesResponseType = z.infer<
 	typeof RemoveAllDecisionMachinesResponse
->;
-
-export const RemoveDetectorKeyBodySpec = object({
-	[ApiParams.detectorKey]: string(),
-	[ApiParams.expirationInSeconds]: number().positive().optional(),
-});
-
-export type RemoveDetectorKeyBodyInput = input<
-	typeof RemoveDetectorKeyBodySpec
->;
-export type RemoveDetectorKeyBodyOutput = output<
-	typeof RemoveDetectorKeyBodySpec
 >;
 
 export const ToggleMaintenanceModeBody = object({

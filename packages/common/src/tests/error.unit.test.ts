@@ -191,6 +191,56 @@ describe("ProsopoBaseError.logError", () => {
 		const data = logs[0]?.record.data as LogObject & { stack?: string };
 		expect(typeof data?.stack).toBe("string");
 	});
+
+	// Regression: auto-logged ProsopoApiErrors used to land with no `msg`
+	// field. Every ProsopoBaseError constructor auto-logs (unless `silent`),
+	// which produced ~800 "undefined msg" error entries per hour in prod —
+	// the whole category collapsed into a single unqueryable bucket in the
+	// log UI. Emit a non-empty `msg` (mirroring the translation key so
+	// dashboards can group by it just like `err`).
+	it("emits a non-empty msg field mirroring the translation key", () => {
+		const { logger, logs } = makeCapturingLogger();
+
+		new ProsopoApiError("API.INCORRECT_CAPTCHA_TYPE", {
+			context: { code: 400 },
+			i18n: englishI18n,
+			logger,
+		});
+
+		expect(logs).toHaveLength(1);
+		expect(logs[0]?.record.msg).toBe("API.INCORRECT_CAPTCHA_TYPE");
+		// msg and err carry the same identifier so filters on either field
+		// return the same set — no divergence for existing dashboards.
+		expect(logs[0]?.record.msg).toBe(logs[0]?.record.err);
+	});
+
+	it("emits msg on the debug-level branch too", () => {
+		const { logger, logs } = makeCapturingLogger();
+
+		new ProsopoApiError("API.INVALID_SITE_KEY", {
+			context: { code: 400 },
+			i18n: englishI18n,
+			logger,
+			logLevel: "debug",
+		});
+
+		expect(logs[0]?.level).toBe("debug");
+		expect(logs[0]?.record.msg).toBe("API.INVALID_SITE_KEY");
+	});
+
+	it("falls back to the raw message in msg when no translation key is set", () => {
+		const { logger, logs } = makeCapturingLogger();
+
+		new ProsopoEnvError(new Error("raw failure"), {
+			i18n: englishI18n,
+			logger,
+		});
+
+		// Same fallback that `err` uses — msg tracks err whichever branch
+		// the identifier resolution takes.
+		expect(logs[0]?.record.msg).toBe("raw failure");
+		expect(logs[0]?.record.msg).toBe(logs[0]?.record.err);
+	});
 });
 
 describe("Logger.unpackError prefers translationKey over translated message", () => {
@@ -273,5 +323,30 @@ describe("unwrapError still produces a translated HTTP response", () => {
 		expect(unwrapError(frErr, frenchI18n).jsonError.key).toBe(
 			"CAPTCHA.NO_SESSION_FOUND",
 		);
+	});
+
+	it("derives statusMessage from the resolved status code, not a hardcoded 'Bad Request'", () => {
+		const err = new ProsopoApiError("CAPTCHA.NO_SESSION_FOUND", {
+			context: { code: 401 },
+			i18n: englishI18n,
+			silent: true,
+		});
+
+		const { code, statusMessage } = unwrapError(err, englishI18n);
+		expect(code).toBe(401);
+		expect(statusMessage).toBe("Unauthorized");
+	});
+
+	it("falls back to a 5xx reason phrase for an unmapped server-error code", () => {
+		// 599 is unassigned, so it exercises the fallback rather than a real phrase.
+		const err = new ProsopoApiError("CAPTCHA.NO_SESSION_FOUND", {
+			context: { code: 599 },
+			i18n: englishI18n,
+			silent: true,
+		});
+
+		const { code, statusMessage } = unwrapError(err, englishI18n);
+		expect(code).toBe(599);
+		expect(statusMessage).toBe("Internal Server Error");
 	});
 });

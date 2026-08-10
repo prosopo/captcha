@@ -40,10 +40,13 @@ export const headerCheckMiddleware = (env: ProviderEnvironment) => {
 			req.siteKey = siteKey;
 
 			// Attach site key and user to the request logger
-			req.logger = req.logger.with({
-				user,
-				siteKey,
-			});
+			req.logger = req.logger.with(
+				{
+					user,
+					siteKey,
+				},
+				"header-check",
+			);
 
 			next();
 		} catch (err) {

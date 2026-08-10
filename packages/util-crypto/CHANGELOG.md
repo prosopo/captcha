@@ -1,5 +1,14 @@
 # @prosopo/util-crypto
 
+## 13.5.30
+### Patch Changes
+
+- b9f5eca: chore(deps-dev): bump vitest from 3.2.4 to 3.2.6 in /packages/util-crypto
+- d1fbde3: chore(deps-dev): bump vite from 6.4.1 to 6.4.3 in /packages/util-crypto
+- a26e9d0: ci: add pinned-versions supply-chain workflow and pin existing dependency ranges to their already-resolved exact versions.
+  
+  The installed tree is unchanged (package-lock.json already resolved to these versions), but pinning a published package's runtime dependency narrows the range its consumers resolve. `@prosopo/util-crypto` is the only published library whose `dependencies` changed (`@scure/base` -> exact), so it gets a patch bump. Other pins are dev-only or in demo apps that nothing depends on, so they need no release.
+
 ## 13.5.29
 ### Patch Changes
 

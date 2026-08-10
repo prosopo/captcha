@@ -90,13 +90,17 @@ export async function checkSpamEmail(
 		}));
 		return false; // Allow if DNS check fails
 	}
-	// If TLS error detected, reject
+	// TLS error on the apex website is NOT evidence that the email domain
+	// is spam. Small-business domains legitimately host email on modern
+	// providers (Zoho / Google / Fastmail) while their apex site sits on a
+	// legacy Apache/nginx that no longer negotiates a modern TLS version.
+	// Log the observation but keep evaluating the remaining signals (redirect
+	// target, CNAME, MX) — those are the ones tied to actual email reputation.
 	if (dnsCheckResult.redirectResult.tlsError) {
-		logger.warn(() => ({
-			msg: "Email domain has TLS error",
+		logger.info(() => ({
+			msg: "Email domain apex has TLS error — observed, not treated as spam",
 			domain: normalizedDomain,
 		}));
-		return true;
 	}
 	// If redirect domain found, check it in spam list
 	if (dnsCheckResult.redirectResult.redirectUrl) {

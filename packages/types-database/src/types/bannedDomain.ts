@@ -22,7 +22,8 @@ export type BannedDomain = {
 export type BannedDomainRecord = mongoose.Document & BannedDomain;
 
 export const BannedDomainRecordSchema = new Schema<BannedDomainRecord>({
+	// `unique` already creates the ascending index on `domain`; declaring it
+	// again with `.index()` made mongoose warn about a duplicate on every
+	// process start.
 	domain: { type: String, required: true, unique: true },
 });
-
-BannedDomainRecordSchema.index({ domain: 1 });

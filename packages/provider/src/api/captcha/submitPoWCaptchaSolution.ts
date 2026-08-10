@@ -140,6 +140,12 @@ export default (env: ProviderEnvironment) =>
 					userAgent,
 					...(req.ja4 && { ja4: req.ja4 }),
 					...(fingerprintProof && { fingerprintProof }),
+					...(req.tcpToChelloUs !== undefined && {
+						tcpToChelloUs: req.tcpToChelloUs,
+					}),
+					...(req.chelloToHandshakeUs !== undefined && {
+						chelloToHandshakeUs: req.chelloToHandshakeUs,
+					}),
 				},
 			});
 
@@ -181,7 +187,10 @@ export default (env: ProviderEnvironment) =>
 				}));
 			}
 
-			const escalation = await buildEscalation(tasks, result, challenge);
+			const escalation = await buildEscalation(tasks, result, challenge, {
+				tcpToChelloUs: req.tcpToChelloUs,
+				chelloToHandshakeUs: req.chelloToHandshakeUs,
+			});
 			const response: PowCaptchaSolutionResponse = {
 				status: "ok",
 				// On escalation the user is not done — they still need to clear
@@ -215,11 +224,22 @@ export default (env: ProviderEnvironment) =>
  * session of the chosen captcha type, carrying forward the originating
  * session's risk profile (score, headers, IP, etc.). Returns undefined when
  * the router decided to keep the user on PoW (i.e. no escalation needed).
+ *
+ * Exported for unit testing only — the handler above is the production entry
+ * point.
  */
-const buildEscalation = async (
+export const buildEscalation = async (
 	tasks: Tasks,
 	result: { verified: boolean; routingOutput?: { captchaType: CaptchaType } },
 	challenge: string,
+	// TLS handshake timings are per-connection: they must come from the
+	// current PoW-submit request, not from `originSession` (whose values
+	// belong to a different TCP connection made during the earlier
+	// frictionless request).
+	handshakeTiming?: {
+		tcpToChelloUs?: number;
+		chelloToHandshakeUs?: number;
+	},
 ): Promise<PowCaptchaSolutionEscalation | undefined> => {
 	if (!result.verified || !result.routingOutput) return undefined;
 	const routedType = result.routingOutput.captchaType;
@@ -271,7 +291,40 @@ const buildEscalation = async (
 		originSession.headers,
 		originSession.mode,
 		originSession.simdReadings,
+		originSession.entropyMathRandomFingerprint,
+		originSession.entropyCryptoFingerprint,
+		originSession.entropyWallClockOffsetMs,
+		originSession.entropyMathRandomFirst,
+		// Carry the detector pool bundle forward so the escalated image/puzzle
+		// solve can decrypt the (same-origin) behavioural payload.
+		originSession.bundleId,
+		originSession.currentUrl,
+		handshakeTiming?.tcpToChelloUs,
+		handshakeTiming?.chelloToHandshakeUs,
+		true,
+		originSession.iframeUrl,
+		originSession.isProtect,
+		// Record the origin sessionId on the escalation record. The
+		// DM-input read path (captchaManager.getSessionRecordWithOriginFallback)
+		// uses this to fall back to the origin session for fields that the
+		// escalation doesn't carry itself — simdReadings (attached by pow-
+		// submit fire-and-forget, races the escalation read), dnsEvent
+		// (set by the DNS sidecar on the origin's TLS connection only).
+		originSession.sessionId,
 	);
+
+	// Record the origin → escalation sessionId mapping so a /captcha/*
+	// request that arrives carrying the originating sessionId (because the
+	// widget didn't switch to the escalation id, or a network retry fired
+	// on the old state) resolves forward to `newSession` instead of
+	// landing on NO_SESSION_FOUND. See `cacheSessionEscalation` in
+	// `packages/database/src/redisCache.ts` for the full rationale.
+	if (tasks.writeQueue) {
+		await tasks.writeQueue.cacheSessionEscalation(
+			powRecord.sessionId,
+			newSession.sessionId,
+		);
+	}
 
 	return {
 		captchaType: routed.captchaType,

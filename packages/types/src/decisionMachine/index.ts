@@ -18,7 +18,7 @@ import {
 	CaptchaType,
 	DecisionMachineCaptchaTypeSchema,
 } from "../client/captchaType/captchaType.js";
-import type { RequestHeaders } from "../provider/api.js";
+import type { PuzzleEvent, RequestHeaders } from "../provider/api.js";
 import type { ScoreComponents } from "../provider/database.js";
 import type { SimdReadings } from "../provider/detection.js";
 import type { FrictionlessReason } from "../provider/reasons.js";
@@ -103,6 +103,17 @@ export type DecisionMachineInput = {
 	ruleType?: string[];
 	webView?: boolean;
 	iFrame?: boolean;
+	// Checkbox click + shape clicks embedded in the solution salt. For pow
+	// and puzzle this is `[[[checkboxX, checkboxY]]]` (single click); for
+	// image the outer array has one entry per tile with the first tile's
+	// inner array prefixed by the checkbox click. Missing when the client
+	// omitted the salt, produced an invalid one, or the record pre-dates
+	// coord capture.
+	coords?: [number, number][][];
+	// Puzzle-only: per-event trail of the drag from origin to target,
+	// captured client-side and persisted on the puzzle captcha record.
+	// Always undefined on pow / image inputs.
+	puzzleEvents?: PuzzleEvent[];
 };
 
 export type DecisionMachineOutput = {
@@ -227,6 +238,26 @@ export interface RoutingMachineRawSignals {
 	// surfaced here for the post-pow routing machine). Undefined when absent or
 	// unsupported on the client.
 	simd?: SimdReadings;
+	// Server-observed TLS handshake timing deltas forwarded by the chaddy
+	// Caddy plugin (X-TLS-TCP-To-Chello-Us / X-TLS-Chello-To-Handshake-Us).
+	// Elevated values indicate the client's ClientHello traversed a proxy
+	// chain before reaching Caddy. Undefined when the request did not
+	// traverse a chaddy-enabled ingress (e.g. dev requests, HTTP/3).
+	tcpToChelloUs?: number;
+	chelloToHandshakeUs?: number;
+	// Full page URL the widget was rendered on (origin + path only; query
+	// string, fragment and any embedded credentials are stripped client- and
+	// server-side). Available on the `route` phase from the freshly decrypted
+	// frictionless payload, and on the `postPow` phase from the persisted
+	// Session record. Undefined when the client omitted it or the session
+	// pre-dates the field.
+	//
+	// When the widget is embedded, `currentUrl` is the top-frame URL and
+	// `iframeUrl` is the widget's own frame URL. `iframeUrl` is undefined
+	// when the widget IS the top frame (nothing to distinguish) or when the
+	// client / persisted session pre-dates the field.
+	currentUrl?: string;
+	iframeUrl?: string;
 }
 
 export type RoutingMachinePhase = "route" | "postPow";

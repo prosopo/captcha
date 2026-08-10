@@ -15,6 +15,7 @@
 import type { Logger } from "@prosopo/logger";
 import type {
 	PoWCaptchaRecord,
+	PuzzleCaptchaRecord,
 	StoredSession,
 	UserCommitmentRecord,
 } from "@prosopo/types-database";
@@ -50,6 +51,7 @@ describe("CentralDbStreamer", () => {
 	let mockPowUpdateOne: MockInstance;
 	let mockCommitmentUpdateOne: MockInstance;
 	let mockSessionUpdateOne: MockInstance;
+	let mockPuzzleUpdateOne: MockInstance;
 
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -59,6 +61,7 @@ describe("CentralDbStreamer", () => {
 		mockPowUpdateOne = vi.fn().mockResolvedValue({ upsertedCount: 1 });
 		mockCommitmentUpdateOne = vi.fn().mockResolvedValue({ upsertedCount: 1 });
 		mockSessionUpdateOne = vi.fn().mockResolvedValue({ upsertedCount: 1 });
+		mockPuzzleUpdateOne = vi.fn().mockResolvedValue({ upsertedCount: 1 });
 
 		streamer = new CentralDbStreamer(
 			"mongodb://localhost:27017/test",
@@ -76,6 +79,7 @@ describe("CentralDbStreamer", () => {
 			powcaptcha: { updateOne: mockPowUpdateOne },
 			commitment: { updateOne: mockCommitmentUpdateOne },
 			session: { updateOne: mockSessionUpdateOne },
+			puzzlecaptcha: { updateOne: mockPuzzleUpdateOne },
 		};
 	});
 
@@ -253,6 +257,129 @@ describe("CentralDbStreamer", () => {
 				{ upsert: true },
 			);
 			expect(markStored).toHaveBeenCalledWith(record.lastUpdatedTimestamp);
+		});
+	});
+
+	describe("streamPuzzleRecord", () => {
+		const makePuzzleRecord = (
+			overrides?: Partial<PuzzleCaptchaRecord>,
+		): PuzzleCaptchaRecord =>
+			({
+				challenge: "puzzle-challenge-1",
+				userAccount: "user1",
+				dappAccount: "dapp1",
+				targetX: 100,
+				targetY: 200,
+				originX: 50,
+				originY: 150,
+				tolerance: 10,
+				requestedAtTimestamp: new Date("2026-01-01T00:00:00Z"),
+				lastUpdatedTimestamp: new Date("2026-01-01T01:00:00Z"),
+				result: { status: "pending" },
+				...overrides,
+			}) as unknown as PuzzleCaptchaRecord;
+
+		it("upserts the record to central DB keyed by challenge and calls markStored with the record timestamp", async () => {
+			const record = makePuzzleRecord();
+			const markStored = vi
+				.fn<MarkStoredCallback>()
+				.mockResolvedValue(undefined);
+
+			streamer.streamPuzzleRecord(record, markStored);
+			await flush();
+
+			expect(mockPuzzleUpdateOne).toHaveBeenCalledWith(
+				{ challenge: record.challenge },
+				{
+					$set: expect.objectContaining({ challenge: record.challenge }),
+				},
+				{ upsert: true },
+			);
+			expect(markStored).toHaveBeenCalledWith(record.lastUpdatedTimestamp);
+		});
+
+		it("strips _id from the record before upserting", async () => {
+			const record = makePuzzleRecord();
+			(record as unknown as Record<string, unknown>)._id = "should-be-removed";
+
+			streamer.streamPuzzleRecord(record);
+			await flush();
+
+			const call = mockPuzzleUpdateOne.mock.calls[0] as unknown[];
+			const setArg = (call[1] as { $set: Record<string, unknown> }).$set;
+			expect(setArg._id).toBeUndefined();
+		});
+
+		it("does not throw when the central write fails", async () => {
+			mockPuzzleUpdateOne.mockRejectedValueOnce(new Error("write failed"));
+			const markStored = vi.fn<MarkStoredCallback>();
+
+			streamer.streamPuzzleRecord(makePuzzleRecord(), markStored);
+			await flush();
+
+			expect(markStored).not.toHaveBeenCalled();
+			expect(errorSpy).toHaveBeenCalled();
+		});
+
+		it("falls back to requestedAtTimestamp when lastUpdatedTimestamp is missing", async () => {
+			const ts = new Date("2026-02-01T00:00:00Z");
+			const record = makePuzzleRecord({
+				lastUpdatedTimestamp: undefined,
+				requestedAtTimestamp: ts,
+			});
+			const markStored = vi
+				.fn<MarkStoredCallback>()
+				.mockResolvedValue(undefined);
+
+			streamer.streamPuzzleRecord(record, markStored);
+			await flush();
+
+			expect(markStored).toHaveBeenCalledWith(ts);
+		});
+	});
+
+	describe("streamPuzzleUpdate", () => {
+		it("fetches the full record then streams it", async () => {
+			const record = {
+				challenge: "puzzle-challenge-2",
+				lastUpdatedTimestamp: new Date("2026-03-01T00:00:00Z"),
+			} as unknown as PuzzleCaptchaRecord;
+			const getFullRecord = vi.fn().mockResolvedValue(record);
+			const markStored = vi
+				.fn<MarkStoredCallback>()
+				.mockResolvedValue(undefined);
+
+			streamer.streamPuzzleUpdate(getFullRecord, markStored);
+			await flush();
+
+			expect(getFullRecord).toHaveBeenCalled();
+			expect(mockPuzzleUpdateOne).toHaveBeenCalledWith(
+				{ challenge: "puzzle-challenge-2" },
+				expect.objectContaining({}),
+				{ upsert: true },
+			);
+			expect(markStored).toHaveBeenCalledWith(record.lastUpdatedTimestamp);
+		});
+
+		it("does not stream when the record is not found", async () => {
+			const getFullRecord = vi.fn().mockResolvedValue(null);
+
+			streamer.streamPuzzleUpdate(getFullRecord);
+			await flush();
+
+			expect(mockPuzzleUpdateOne).not.toHaveBeenCalled();
+		});
+
+		it("logs error when fetch fails", async () => {
+			const getFullRecord = vi
+				.fn()
+				.mockRejectedValue(new Error("fetch failed"));
+
+			streamer.streamPuzzleUpdate(getFullRecord);
+			await flush();
+
+			expect(errorSpy).toHaveBeenCalled();
+			expect(mockPuzzleUpdateOne).not.toHaveBeenCalled();
 		});
 	});
 

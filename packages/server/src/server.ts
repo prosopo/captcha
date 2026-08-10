@@ -20,6 +20,7 @@ import { type LogLevel, type Logger, getLogger } from "@prosopo/logger";
 import type { KeyringPair } from "@prosopo/types";
 import {
 	type CaptchaTimeoutOutput,
+	CaptchaType,
 	ProcaptchaOutputSchema,
 	type ProcaptchaToken,
 	type ProsopoServerConfigOutput,
@@ -56,8 +57,15 @@ export class ProsopoServer {
 	}
 
 	/**
-	 * Verify the user with the provider URL passed in. If a challenge is provided, we use the challenge to verify the
-	 * user. If not, we use the user, dapp, and optionally the commitmentID, to verify the user.
+	 * Verify a token with the issuing provider. Dispatches to the correct
+	 * verify endpoint by inspecting the token's declared captchaType:
+	 *  - puzzle  → submitPuzzleCaptchaVerify
+	 *  - pow     → submitPowCaptchaVerify
+	 *  - image   → verifyDappUser
+	 * When captchaType is absent (a legacy token minted before the field was
+	 * added), fall back to the historical heuristic: presence of `challenge`
+	 * routes to PoW, absence routes to image. Legacy puzzle tokens follow the
+	 * PoW branch — same behaviour as before this dispatch was introduced.
 	 * @param token
 	 * @param timeouts
 	 * @param providerUrl
@@ -66,6 +74,7 @@ export class ProsopoServer {
 	 * @param challenge
 	 * @param ip
 	 * @param email
+	 * @param captchaType
 	 */
 	public async verifyProvider(
 		token: string,
@@ -76,9 +85,10 @@ export class ProsopoServer {
 		challenge?: string,
 		ip?: string,
 		email?: string,
+		captchaType?: CaptchaType,
 	): Promise<VerificationResponse> {
 		this.logger.info(() => ({
-			data: { providerUrl },
+			data: { providerUrl, captchaType: captchaType ?? "legacy" },
 			msg: "Verifying with provider",
 		}));
 		const dappUserSignature = this.pair?.sign(timestamp.toString());
@@ -88,20 +98,66 @@ export class ProsopoServer {
 			});
 		}
 		const signatureHex = u8aToHex(dappUserSignature);
-
 		const providerApi = this.getProviderApi(providerUrl);
+
+		if (captchaType === CaptchaType.puzzle) {
+			const puzzleTimeout = this.config.timeouts.puzzle.cachedTimeout;
+			if (!this.isRecent(timestamp, puzzleTimeout, "Puzzle")) {
+				return this.notRecentResponse();
+			}
+			return await providerApi.submitPuzzleCaptchaVerify(
+				token,
+				signatureHex,
+				user,
+				ip,
+				email,
+			);
+		}
+
+		if (captchaType === CaptchaType.pow) {
+			const powTimeout = this.config.timeouts.pow.cachedTimeout;
+			if (!this.isRecent(timestamp, powTimeout, "PoW")) {
+				return this.notRecentResponse();
+			}
+			return await providerApi.submitPowCaptchaVerify(
+				token,
+				signatureHex,
+				user,
+				ip,
+				email,
+			);
+		}
+
+		if (captchaType === CaptchaType.image) {
+			const imageTimeout = this.config.timeouts.image.cachedTimeout;
+			if (!this.isRecent(timestamp, imageTimeout, "Image")) {
+				return this.notRecentResponse();
+			}
+			return await providerApi.verifyDappUser(
+				token,
+				signatureHex,
+				user,
+				timeouts.image.cachedTimeout,
+				ip,
+				email,
+			);
+		}
+
+		// Legacy path: no captchaType on the token. Preserve the historical
+		// challenge/no-challenge heuristic so PoW and image tokens minted by
+		// older client bundles still verify. Legacy puzzle tokens fall through
+		// the PoW branch and 404 on the record lookup, which is the same
+		// behaviour they had before this dispatch was introduced — the fix
+		// requires the client bundle to be upgraded so the token itself
+		// declares captchaType: puzzle.
+		this.logger.warn(() => ({
+			data: { challenge: Boolean(challenge) },
+			msg: "Verifying legacy token without captchaType field; using challenge heuristic",
+		}));
 		if (challenge) {
 			const powTimeout = this.config.timeouts.pow.cachedTimeout;
-			const recent = timestamp ? Date.now() - timestamp < powTimeout : false;
-			if (!recent) {
-				this.logger.error(() => ({
-					data: { timestamp },
-					msg: "PoW captcha is not recent",
-				}));
-				return {
-					verified: false,
-					status: i18n.t("API.USER_NOT_VERIFIED_TIME_EXPIRED"),
-				};
+			if (!this.isRecent(timestamp, powTimeout, "PoW")) {
+				return this.notRecentResponse();
 			}
 			return await providerApi.submitPowCaptchaVerify(
 				token,
@@ -112,16 +168,8 @@ export class ProsopoServer {
 			);
 		}
 		const imageTimeout = this.config.timeouts.image.cachedTimeout;
-		const recent = timestamp ? Date.now() - timestamp < imageTimeout : false;
-		if (!recent) {
-			this.logger.error(() => ({
-				data: { timestamp },
-				msg: "Image captcha is not recent",
-			}));
-			return {
-				verified: false,
-				status: i18n.t("API.USER_NOT_VERIFIED_TIME_EXPIRED"),
-			};
+		if (!this.isRecent(timestamp, imageTimeout, "Image")) {
+			return this.notRecentResponse();
 		}
 		return await providerApi.verifyDappUser(
 			token,
@@ -131,6 +179,29 @@ export class ProsopoServer {
 			ip,
 			email,
 		);
+	}
+
+	private isRecent(
+		timestamp: number,
+		timeoutMs: number,
+		label: string,
+	): boolean {
+		if (!timestamp) return false;
+		const recent = Date.now() - timestamp < timeoutMs;
+		if (!recent) {
+			this.logger.error(() => ({
+				data: { timestamp, timeoutMs },
+				msg: `${label} captcha is not recent`,
+			}));
+		}
+		return recent;
+	}
+
+	private notRecentResponse(): VerificationResponse {
+		return {
+			verified: false,
+			status: i18n.t("API.USER_NOT_VERIFIED_TIME_EXPIRED"),
+		};
 	}
 
 	/**
@@ -146,7 +217,7 @@ export class ProsopoServer {
 		try {
 			const payload = decodeProcaptchaOutput(token);
 
-			const { providerUrl, challenge, timestamp, user } =
+			const { providerUrl, challenge, timestamp, user, captchaType } =
 				ProcaptchaOutputSchema.parse(payload);
 
 			// check provides URL is valid
@@ -175,6 +246,7 @@ export class ProsopoServer {
 				challenge,
 				ip,
 				email,
+				captchaType,
 			);
 
 			this.logger.info(() => ({
@@ -183,6 +255,7 @@ export class ProsopoServer {
 					providerUrl,
 					user,
 					challenge,
+					captchaType: captchaType ?? "legacy",
 					siteKey: this.pair?.address,
 				},
 			}));

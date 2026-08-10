@@ -1,5 +1,281 @@
 # @prosopo/env
 
+## 3.6.26
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+  - @prosopo/database@4.0.3
+  - @prosopo/types@5.0.2
+  - @prosopo/types-env@2.10.22
+  - @prosopo/ipinfo@0.3.3
+  - @prosopo/keyring@2.9.65
+
+## 3.6.25
+### Patch Changes
+
+- Updated dependencies [1fba42e]
+  - @prosopo/database@4.0.2
+
+## 3.6.24
+### Patch Changes
+
+- 38396b4: test(env): cover environment accessors, readiness paths and provider cleanup
+- Updated dependencies [9fec7bd]
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/common@3.1.49
+  - @prosopo/types@5.0.1
+  - @prosopo/logger@2.0.5
+  - @prosopo/database@4.0.1
+  - @prosopo/ipinfo@0.3.2
+  - @prosopo/keyring@2.9.64
+  - @prosopo/types-env@2.10.21
+
+## 3.6.23
+### Patch Changes
+
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [6f19cde]
+  - @prosopo/database@4.0.0
+  - @prosopo/types@5.0.0
+  - @prosopo/ipinfo@0.3.1
+  - @prosopo/keyring@2.9.63
+  - @prosopo/types-env@2.10.20
+
+## 3.6.22
+### Patch Changes
+
+- Updated dependencies [71a5952]
+  - @prosopo/keyring@2.9.62
+  - @prosopo/types-env@2.10.19
+
+## 3.6.21
+### Patch Changes
+
+- Updated dependencies [69f8dcd]
+  - @prosopo/database@3.15.21
+  - @prosopo/types-env@2.10.18
+
+## 3.6.20
+### Patch Changes
+
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [103318c]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+  - @prosopo/types@4.10.0
+  - @prosopo/ipinfo@0.3.0
+  - @prosopo/common@3.1.48
+  - @prosopo/database@3.15.20
+  - @prosopo/keyring@2.9.61
+  - @prosopo/types-env@2.10.17
+  - @prosopo/logger@2.0.4
+
+## 3.6.19
+### Patch Changes
+
+  - @prosopo/database@3.15.19
+  - @prosopo/types-env@2.10.16
+
+## 3.6.18
+### Patch Changes
+
+- Updated dependencies [a0cb39e]
+  - @prosopo/types@4.9.12
+  - @prosopo/database@3.15.18
+  - @prosopo/ipinfo@0.2.40
+  - @prosopo/keyring@2.9.60
+  - @prosopo/types-env@2.10.15
+
+## 3.6.17
+### Patch Changes
+
+- Updated dependencies [b9ca0e7]
+- Updated dependencies [fde6896]
+  - @prosopo/types@4.9.11
+  - @prosopo/common@3.1.47
+  - @prosopo/database@3.15.17
+  - @prosopo/ipinfo@0.2.39
+  - @prosopo/keyring@2.9.59
+  - @prosopo/types-env@2.10.14
+
+## 3.6.16
+### Patch Changes
+
+- Updated dependencies [a41c1b5]
+  - @prosopo/database@3.15.16
+
+## 3.6.15
+### Patch Changes
+
+- Updated dependencies [0a4f902]
+  - @prosopo/types@4.9.10
+  - @prosopo/database@3.15.15
+  - @prosopo/ipinfo@0.2.38
+  - @prosopo/keyring@2.9.58
+  - @prosopo/types-env@2.10.13
+
+## 3.6.14
+### Patch Changes
+
+- Updated dependencies [446f53b]
+  - @prosopo/database@3.15.14
+
+## 3.6.13
+### Patch Changes
+
+- Updated dependencies [2bba03a]
+  - @prosopo/database@3.15.13
+  - @prosopo/types-env@2.10.12
+  - @prosopo/common@3.1.46
+  - @prosopo/types@4.9.9
+  - @prosopo/keyring@2.9.57
+  - @prosopo/ipinfo@0.2.37
+
+## 3.6.12
+### Patch Changes
+
+- Updated dependencies [6abff15]
+- Updated dependencies [29b5c6a]
+  - @prosopo/logger@2.0.3
+  - @prosopo/database@3.15.12
+  - @prosopo/common@3.1.45
+  - @prosopo/ipinfo@0.2.36
+  - @prosopo/types-env@2.10.11
+  - @prosopo/keyring@2.9.56
+
+## 3.6.11
+### Patch Changes
+
+- 550d20a: Keep the provider admin endpoints working while `MAINTENANCE_MODE` is on. Previously the admin/access-rule router was skipped entirely at boot in maintenance mode — `Environment.isReady()` never connected the DB, so `env.getDb()` threw and the DB-backed `Tasks` couldn't be constructed — which meant adding/removing site keys (access rules), detector keys and decision machines all 404'd on a node in maintenance mode.
+  
+  Now, in maintenance mode `Environment.isReady()` creates the `ProviderDatabase` handle and connects in the **background** (without awaiting), so a slow or unavailable Mongo/Redis socket still can't gate boot, but `env.getDb()` returns a usable handle and the admin endpoints register and function. The captcha request path is unchanged — it still short-circuits to a maintenance "pass" before touching the DB. `blockMiddleware` now has an explicit maintenance-mode skip (it previously relied on `env.getDb()` throwing to no-op) so the blocklist/Redis lookup stays off the captcha hot path.
+- Updated dependencies [85e8857]
+  - @prosopo/types@4.9.8
+  - @prosopo/common@3.1.44
+  - @prosopo/database@3.15.11
+  - @prosopo/ipinfo@0.2.35
+  - @prosopo/keyring@2.9.55
+  - @prosopo/types-env@2.10.10
+  - @prosopo/logger@2.0.2
+
+## 3.6.10
+### Patch Changes
+
+- Updated dependencies [494883f]
+- Updated dependencies [8bde5df]
+  - @prosopo/database@3.15.10
+  - @prosopo/types@4.9.7
+  - @prosopo/types-env@2.10.9
+  - @prosopo/ipinfo@0.2.34
+  - @prosopo/keyring@2.9.54
+
+## 3.6.9
+### Patch Changes
+
+- Updated dependencies [b3f351b]
+- Updated dependencies [17bc76e]
+  - @prosopo/types@4.9.6
+  - @prosopo/database@3.15.9
+  - @prosopo/ipinfo@0.2.33
+  - @prosopo/keyring@2.9.53
+  - @prosopo/types-env@2.10.8
+
+## 3.6.8
+### Patch Changes
+
+- Updated dependencies [6cb3218]
+  - @prosopo/types@4.9.5
+  - @prosopo/database@3.15.8
+  - @prosopo/ipinfo@0.2.32
+  - @prosopo/keyring@2.9.52
+  - @prosopo/types-env@2.10.7
+
+## 3.6.7
+### Patch Changes
+
+- Updated dependencies [de12b31]
+- Updated dependencies [770954b]
+  - @prosopo/types@4.9.4
+  - @prosopo/database@3.15.7
+  - @prosopo/ipinfo@0.2.31
+  - @prosopo/keyring@2.9.51
+  - @prosopo/types-env@2.10.6
+
+## 3.6.6
+### Patch Changes
+
+- Updated dependencies [18d0287]
+  - @prosopo/types@4.9.3
+  - @prosopo/database@3.15.6
+  - @prosopo/ipinfo@0.2.30
+  - @prosopo/keyring@2.9.50
+  - @prosopo/types-env@2.10.5
+
+## 3.6.5
+### Patch Changes
+
+  - @prosopo/database@3.15.5
+  - @prosopo/types-env@2.10.4
+
+## 3.6.4
+### Patch Changes
+
+- Updated dependencies [7a434e0]
+  - @prosopo/types@4.9.2
+  - @prosopo/common@3.1.43
+  - @prosopo/database@3.15.4
+  - @prosopo/ipinfo@0.2.29
+  - @prosopo/keyring@2.9.49
+  - @prosopo/types-env@2.10.3
+
+## 3.6.3
+### Patch Changes
+
+- Updated dependencies [3e0ef08]
+- Updated dependencies [8986976]
+- Updated dependencies [970bca2]
+  - @prosopo/database@3.15.3
+  - @prosopo/types@4.9.1
+  - @prosopo/common@3.1.42
+  - @prosopo/ipinfo@0.2.28
+  - @prosopo/keyring@2.9.48
+  - @prosopo/types-env@2.10.2
+  - @prosopo/logger@2.0.1
+
+## 3.6.2
+### Patch Changes
+
+- Updated dependencies [ec363e9]
+  - @prosopo/database@3.15.2
+
+## 3.6.1
+### Patch Changes
+
+- Updated dependencies [dfb0c53]
+- Updated dependencies [7ebb78f]
+- Updated dependencies [b9f5eca]
+- Updated dependencies [48612cd]
+- Updated dependencies [d1fbde3]
+- Updated dependencies [9fe3c06]
+- Updated dependencies [948d36b]
+- Updated dependencies [41e0e11]
+- Updated dependencies [11f1e8c]
+- Updated dependencies [3c80664]
+- Updated dependencies [a26e9d0]
+- Updated dependencies [b166037]
+- Updated dependencies [1111ff2]
+  - @prosopo/common@3.1.41
+  - @prosopo/logger@2.0.0
+  - @prosopo/util-crypto@13.5.30
+  - @prosopo/types-env@2.10.1
+  - @prosopo/database@3.15.1
+  - @prosopo/types@4.9.0
+  - @prosopo/ipinfo@0.2.27
+  - @prosopo/keyring@2.9.47
+
 ## 3.6.0
 ### Minor Changes
 

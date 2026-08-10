@@ -14,7 +14,18 @@
 
 import type { i18n } from "i18next";
 let i18nInstance: i18n;
-async function loadI18next(backend: boolean): Promise<i18n> {
+
+const reconcileLanguage = async (
+	instance: i18n,
+	lng: string | undefined,
+): Promise<i18n> => {
+	if (lng && instance.language !== lng) {
+		await instance.changeLanguage(lng);
+	}
+	return instance;
+};
+
+async function loadI18next(backend: boolean, lng?: string): Promise<i18n> {
 	return new Promise((resolve, reject) => {
 		try {
 			if (backend) {
@@ -30,11 +41,20 @@ async function loadI18next(backend: boolean): Promise<i18n> {
 			} else {
 				import("./i18nFrontend.js").then(({ default: initializeI18n }) => {
 					if (!i18nInstance) {
-						// pass the resolver into the i18 init fn which will resolve after i18 connected fires
-						i18nInstance = initializeI18n(resolve);
+						// Pass `lng` in on first init so browser detection is skipped
+						// entirely when the site owner has supplied a language. The
+						// resolver only fires on the `loaded` event, so at resolve
+						// time the target-language resources are guaranteed present.
+						i18nInstance = initializeI18n((instance) => {
+							void reconcileLanguage(instance, lng).then(resolve);
+						}, lng);
 					} else {
-						// we've already initialised i18n so just return it
-						resolve(i18nInstance);
+						// Singleton already exists (e.g. a prior widget mounted with a
+						// different language, or a React consumer initialised earlier).
+						// Reconcile before resolving so callers can render synchronously
+						// against the requested language instead of seeing a flash of
+						// the previous one.
+						void reconcileLanguage(i18nInstance, lng).then(resolve);
 					}
 				});
 			}

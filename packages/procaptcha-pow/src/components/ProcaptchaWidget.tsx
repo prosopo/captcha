@@ -46,32 +46,71 @@ const Procaptcha = (props: ProcaptchaProps) => {
 			() => hpRef.current?.value || undefined,
 		),
 	);
+	// Coordinates of the last `manager.start(x, y)` invocation from this widget
+	// instance — either the checkbox click, or a `startCoords` handoff from a
+	// prior `onSessionInvalidated` cycle. Held in a ref so the current values
+	// survive re-renders and are readable from the `state.error` effect.
+	const lastCoordsRef = useRef<{ x: number; y: number } | null>(null);
+	// One-shot guard: a widget instance only escalates a single NO_SESSION_FOUND
+	// to `onSessionInvalidated`. If the retry also fails, we fall through to
+	// the pre-existing `frictionlessState.restart()` path instead of looping.
+	const sessionInvalidatedFiredRef = useRef(false);
 
 	useEffect(() => {
-		if (config.language) {
-			if (i18n) {
-				if (i18n.language !== config.language) {
-					i18n.changeLanguage(config.language).then((r) => r);
-				}
-			} else {
-				loadI18next(false).then((i18n) => {
-					if (i18n.language !== config.language)
-						i18n.changeLanguage(config.language).then((r) => r);
-				});
+		if (!config.language) return;
+		if (i18n) {
+			if (i18n.language !== config.language) {
+				void i18n.changeLanguage(config.language);
 			}
+			return;
 		}
+		// Direct-React consumers don't go through WidgetFactory, so pass the
+		// language into loadI18next — first init boots with the right language
+		// (skipping browser detection), and subsequent calls reconcile via
+		// changeLanguage inside loadI18next.
+		void loadI18next(false, config.language);
 	}, [i18n, config.language]);
 
 	useEffect(() => {
-		if (state.error) {
-			setLoading(false);
-			if (state.error.key === "CAPTCHA.NO_SESSION_FOUND" && frictionlessState) {
-				setTimeout(() => {
-					frictionlessState.restart();
-				}, 100);
-			}
+		if (!props.autoStart) return;
+		setLoading(true);
+		const coords = props.startCoords;
+		lastCoordsRef.current = coords ?? null;
+		manager.current
+			.start(coords?.x ?? 0, coords?.y ?? 0)
+			// The manager handles its own failures, but anything it doesn't (a
+			// reset that throws, say) would otherwise escape as an unhandled
+			// rejection and leave the widget stuck showing a spinner.
+			.catch((error: unknown) => {
+				console.error("Error starting PoW verification:", error);
+			})
+			.finally(() => {
+				setLoading(false);
+			});
+	}, [props.autoStart, props.startCoords]);
+
+	useEffect(() => {
+		if (!state.error) return;
+		setLoading(false);
+		if (state.error.key !== "CAPTCHA.NO_SESSION_FOUND") return;
+		if (props.onSessionInvalidated && !sessionInvalidatedFiredRef.current) {
+			// Preserve the checkbox coords across the retry so the resumed
+			// submit still carries the real entry-point telemetry. The
+			// frictionless wrapper mints a fresh session and re-mounts this
+			// widget with matching `autoStart` + `startCoords`.
+			sessionInvalidatedFiredRef.current = true;
+			const coords = lastCoordsRef.current;
+			props.onSessionInvalidated(coords?.x, coords?.y);
+			return;
 		}
-	}, [state.error, frictionlessState]);
+		if (frictionlessState) {
+			// Fallback for widgets not mounted under a recovery-aware parent,
+			// or a second NO_SESSION_FOUND after we've already retried once.
+			setTimeout(() => {
+				frictionlessState.restart();
+			}, 100);
+		}
+	}, [state.error, frictionlessState, props.onSessionInvalidated]);
 
 	// Add event listener for the execute event (works for invisible mode)
 	useEffect(() => {
@@ -82,7 +121,9 @@ const Procaptcha = (props: ProcaptchaProps) => {
 				// Directly start the verification process without showing any UI
 				try {
 					// Start the PoW verification process
-					manager.current.start();
+					void manager.current.start().catch((error: unknown) => {
+						console.error("Error starting PoW verification:", error);
+					});
 				} catch (error) {
 					console.error("Error starting PoW verification:", error);
 				}
@@ -149,7 +190,15 @@ const Procaptcha = (props: ProcaptchaProps) => {
 						y = mouseOrTouchEvent.clientY;
 					}
 
-					await manager.current.start(x, y);
+					lastCoordsRef.current = { x, y };
+					try {
+						await manager.current.start(x, y);
+					} catch (error) {
+						// React ignores the promise this handler returns, so a
+						// rejection here would surface as an unhandled rejection and
+						// the spinner would never clear.
+						console.error("Error starting PoW verification:", error);
+					}
 					setLoading(false);
 				}}
 				labelText={isTranslationReady ? t("WIDGET.I_AM_HUMAN") : ""}
