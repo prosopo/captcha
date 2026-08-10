@@ -1,5 +1,45 @@
 # @prosopo/util
 
+## 3.3.5
+### Patch Changes
+
+- 2c47bb7: feat(util): add arrayBufferToBase64
+  
+  Protect's telemetry bundle imports this helper from `@prosopo/util` when built
+  in encrypted mode. It only ever existed in the published `3.3.3` tarball, never
+  on `main`, so building the bundle against the workspace copy failed with
+  `"arrayBufferToBase64" is not exported`.
+- 0e1171c: chore(deps): combined dependabot bumps (lodash, webpack-dev-server, sharp, i18next-http-middleware, actions/setup-node and transitive security updates)
+
+## 3.3.4
+### Patch Changes
+
+- 85e8857: Record both the top-frame URL and the widget's own iframe URL on frictionless sessions.
+  
+  Previously the client only sent one field (`currentUrl`), which for embedded widgets resolved to the top-frame URL — so we lost visibility into which iframe endpoint the session was actually loaded through. Now the client sends both:
+  
+  - `currentUrl`: the top-frame URL (same resolution rules as before — same-origin iframes read `window.top.location.href` directly; cross-origin iframes fall back to `document.referrer`).
+  - `iframeUrl`: the widget's own frame URL when embedded. Undefined when the widget IS the top frame (nothing to distinguish).
+  
+  Both fields are sanitised client- and server-side (origin + path only; query string, fragment and any embedded credentials stripped). The provider persists both on the `Session` record and re-uses them on post-PoW escalation sessions. Only `currentUrl` is gated in the frictionless decision machine (unchanged — missing `currentUrl` still forces an image captcha); `iframeUrl` is recorded for analytics.
+  
+  Both fields are also surfaced to the decision machines as raw signals: `RoutingMachineRawSignals` gains an optional `iframeUrl` populated from the freshly decrypted frictionless payload on the `route` phase, from the persisted Session record on the `postPow` phase, and from the cached Session in the dedup replay path — matching how `currentUrl` is already threaded through.
+  
+  Additionally, sessions carry a new computed boolean `isProtect`, set at session-creation time when the widget iframe was served from `protect.<tenant>` and embedded in a page on the same tenant (subdomain-of matching, dot-boundary safe — see `isProtectDeployment` in `@prosopo/util`). Persisted only when true (same pattern as `isEscalation`) and backed by a sparse `{isProtect, createdAt}` index so analytics can cheaply retrieve Protect sessions without re-parsing URLs. Post-PoW escalation sessions inherit the flag from the origin session.
+
+## 3.3.3
+### Patch Changes
+
+- 970bca2: feat(provider): record the page URL a frictionless session originated from and require it
+  
+  The frictionless client now reports the page it was rendered on (built from `window.location.origin + pathname`) in the challenge request, and the provider stores it on the session as `currentUrl`. The value is reduced to scheme + host + path on both the client and the provider (`sanitisePageUrl`): the query string, fragment and any embedded `user:pass@` credentials are stripped so URL-borne secrets (tokens, reset codes, session ids) are never persisted. A session whose request carries no usable page URL is treated as a bot signal and forced down the image-captcha path (`FrictionlessReason.MISSING_CURRENT_URL`).
+
+## 3.3.2
+### Patch Changes
+
+- 849af99: chore(deps-dev): bump vitest from 3.2.4 to 3.2.6 in /packages/util
+- a5ba27b: chore(deps-dev): bump vite from 6.4.1 to 6.4.3 in /packages/util
+
 ## 3.3.1
 ### Patch Changes
 

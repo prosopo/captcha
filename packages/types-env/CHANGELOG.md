@@ -1,5 +1,193 @@
 # @prosopo/types-env
 
+## 2.10.22
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+  - @prosopo/types-database@5.0.2
+  - @prosopo/types@5.0.2
+  - @prosopo/keyring@2.9.65
+
+## 2.10.21
+### Patch Changes
+
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/types@5.0.1
+  - @prosopo/logger@2.0.5
+  - @prosopo/types-database@5.0.1
+  - @prosopo/keyring@2.9.64
+
+## 2.10.20
+### Patch Changes
+
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [d107d65]
+- Updated dependencies [6f19cde]
+  - @prosopo/types@5.0.0
+  - @prosopo/types-database@5.0.0
+  - @prosopo/keyring@2.9.63
+
+## 2.10.19
+### Patch Changes
+
+- Updated dependencies [71a5952]
+  - @prosopo/keyring@2.9.62
+
+## 2.10.18
+### Patch Changes
+
+  - @prosopo/types-database@4.11.18
+
+## 2.10.17
+### Patch Changes
+
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [103318c]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+  - @prosopo/types@4.10.0
+  - @prosopo/types-database@4.11.17
+  - @prosopo/keyring@2.9.61
+  - @prosopo/logger@2.0.4
+
+## 2.10.16
+### Patch Changes
+
+  - @prosopo/types-database@4.11.16
+
+## 2.10.15
+### Patch Changes
+
+- Updated dependencies [a0cb39e]
+  - @prosopo/types@4.9.12
+  - @prosopo/types-database@4.11.15
+  - @prosopo/keyring@2.9.60
+
+## 2.10.14
+### Patch Changes
+
+- Updated dependencies [b9ca0e7]
+  - @prosopo/types@4.9.11
+  - @prosopo/keyring@2.9.59
+  - @prosopo/types-database@4.11.14
+
+## 2.10.13
+### Patch Changes
+
+- Updated dependencies [0a4f902]
+  - @prosopo/types@4.9.10
+  - @prosopo/keyring@2.9.58
+  - @prosopo/types-database@4.11.13
+
+## 2.10.12
+### Patch Changes
+
+- Updated dependencies [2bba03a]
+  - @prosopo/types-database@4.11.12
+  - @prosopo/types@4.9.9
+  - @prosopo/keyring@2.9.57
+
+## 2.10.11
+### Patch Changes
+
+- Updated dependencies [6abff15]
+  - @prosopo/logger@2.0.3
+  - @prosopo/types-database@4.11.11
+  - @prosopo/keyring@2.9.56
+
+## 2.10.10
+### Patch Changes
+
+- Updated dependencies [85e8857]
+  - @prosopo/types@4.9.8
+  - @prosopo/types-database@4.11.10
+  - @prosopo/keyring@2.9.55
+  - @prosopo/logger@2.0.2
+
+## 2.10.9
+### Patch Changes
+
+- Updated dependencies [494883f]
+- Updated dependencies [8bde5df]
+  - @prosopo/types-database@4.11.9
+  - @prosopo/types@4.9.7
+  - @prosopo/keyring@2.9.54
+
+## 2.10.8
+### Patch Changes
+
+- Updated dependencies [b3f351b]
+- Updated dependencies [17bc76e]
+  - @prosopo/types@4.9.6
+  - @prosopo/types-database@4.11.8
+  - @prosopo/keyring@2.9.53
+
+## 2.10.7
+### Patch Changes
+
+- Updated dependencies [6cb3218]
+  - @prosopo/types@4.9.5
+  - @prosopo/keyring@2.9.52
+  - @prosopo/types-database@4.11.7
+
+## 2.10.6
+### Patch Changes
+
+- Updated dependencies [de12b31]
+- Updated dependencies [770954b]
+  - @prosopo/types@4.9.4
+  - @prosopo/types-database@4.11.6
+  - @prosopo/keyring@2.9.51
+
+## 2.10.5
+### Patch Changes
+
+- Updated dependencies [18d0287]
+  - @prosopo/types@4.9.3
+  - @prosopo/keyring@2.9.50
+  - @prosopo/types-database@4.11.5
+
+## 2.10.4
+### Patch Changes
+
+  - @prosopo/types-database@4.11.4
+
+## 2.10.3
+### Patch Changes
+
+- Updated dependencies [7a434e0]
+  - @prosopo/types@4.9.2
+  - @prosopo/types-database@4.11.3
+  - @prosopo/keyring@2.9.49
+
+## 2.10.2
+### Patch Changes
+
+- Updated dependencies [8986976]
+- Updated dependencies [970bca2]
+  - @prosopo/types@4.9.1
+  - @prosopo/types-database@4.11.2
+  - @prosopo/keyring@2.9.48
+  - @prosopo/logger@2.0.1
+
+## 2.10.1
+### Patch Changes
+
+- 48612cd: chore(deps-dev): bump vitest from 3.2.4 to 3.2.6 in /packages/types-env
+- Updated dependencies [7ebb78f]
+- Updated dependencies [948d36b]
+- Updated dependencies [41e0e11]
+- Updated dependencies [3c80664]
+- Updated dependencies [b166037]
+- Updated dependencies [1111ff2]
+  - @prosopo/logger@2.0.0
+  - @prosopo/types@4.9.0
+  - @prosopo/keyring@2.9.47
+  - @prosopo/types-database@4.11.1
+
 ## 2.10.0
 ### Minor Changes
 

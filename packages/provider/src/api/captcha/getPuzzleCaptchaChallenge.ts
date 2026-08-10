@@ -30,6 +30,7 @@ import { Tasks } from "../../tasks/index.js";
 import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 import { getRequestUserScope } from "../blacklistRequestInspector.js";
+import { recordCaptchaIssueError, recordCaptchaIssued } from "../metrics.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 import { buildPuzzleMaintenanceResponse } from "./maintenanceModeResponses.js";
 
@@ -73,7 +74,6 @@ export default (
 		}
 
 		const tasks = new Tasks(env, req.logger);
-		tasks.setLogger(req.logger);
 
 		try {
 			const clientSettings = await tasks.db.getClientRecord(dapp);
@@ -105,23 +105,31 @@ export default (
 					? req.ipInfo.asnNumber
 					: undefined;
 
+			// Pull decryptedHeadHash off the frictionless session so
+			// headHash-scoped access rules can match at challenge time.
+			const sessionRecord = sessionId
+				? await tasks.db.getSessionRecordBySessionId(sessionId)
+				: undefined;
+
 			const userScope = getRequestUserScope(
 				flatten(req.headers),
 				req.ja4,
 				normalizedIp,
 				user,
-				undefined, // headHash
+				sessionRecord?.decryptedHeadHash,
 				undefined, // coords
 				countryCode,
 				asn,
 			);
+			// Skip deferToVerify policies at request time — see
+			// getImageCaptchaChallenge for the full rationale.
 			const userAccessPolicy = (
 				await tasks.puzzleCaptchaManager.getPrioritisedAccessPolicies(
 					userAccessRulesStorage,
 					dapp,
 					userScope,
 				)
-			)[0];
+			).find((p) => !p.deferToVerify);
 
 			const {
 				valid,
@@ -241,8 +249,10 @@ export default (
 					session: sessionId,
 				},
 			}));
+			recordCaptchaIssued(CaptchaType.puzzle);
 			return res.json(getPuzzleCaptchaResponse);
 		} catch (err) {
+			recordCaptchaIssueError(CaptchaType.puzzle);
 			req.logger.error(() => ({
 				err,
 				body: req.body,

@@ -31,7 +31,6 @@ import type { IIpInfoService } from "@prosopo/types-env";
 import { at } from "@prosopo/util";
 import { decodeAddress, encodeAddress } from "@prosopo/util-crypto";
 import { Address4, Address6 } from "ip-address";
-import type { ObjectId } from "mongoose";
 import { compareIPs } from "./services/ipComparison.js";
 
 export function encodeStringAddress(address: string) {
@@ -75,7 +74,7 @@ export async function checkIfTaskIsRunning(
 	// TODO: This is a temporary fix to prevent failed tasks from blocking the next task
 	if (runningTask && runningTask.datetime.getTime() > twoMinutesAgo) {
 		const completedTask = await db.getScheduledTaskStatus(
-			runningTask._id as ObjectId,
+			runningTask._id,
 			ScheduledTaskStatus.Completed,
 		);
 		return !completedTask;
@@ -227,10 +226,39 @@ export const evaluateIpValidationRules = (
 		});
 	}
 
+	// Same-subscriber precondition for the geo-drift rules.
+	// Why: ipapi normalises `company.name` to the corporate parent, so a
+	// dual-stack or CGNAT customer whose v4 and v6 legs egress through
+	// different POPs of the same operator (e.g. AT&T BellSouth v4 pool +
+	// AT&T Internet v6 pool) resolves to the same provider string even
+	// when the underlying ASNs differ. In that case, city drift and
+	// large geographic distance between the two addresses are expected.
+	const ip1Provider = comparison.comparison.ip1Details?.provider;
+	const ip2Provider = comparison.comparison.ip2Details?.provider;
+	const ip1ConnectionType = comparison.comparison.ip1Details?.connectionType;
+	const ip2ConnectionType = comparison.comparison.ip2Details?.connectionType;
+	const sameTrustedProvider =
+		!comparison.comparison.differentProviders &&
+		!!ip1Provider &&
+		ip1Provider !== "Unknown" &&
+		ip1CountryCode === ip2CountryCode &&
+		ip1ConnectionType !== "datacenter" &&
+		ip2ConnectionType !== "datacenter";
+
+	if (sameTrustedProvider) {
+		logger.info(() => ({
+			msg: "Skipping city and distance IP validation rules for same trusted provider",
+			data: {
+				provider: ip1Provider,
+				countryCode: ip1CountryCode,
+			},
+		}));
+	}
+
 	// Check for city change
 	const ip1City = comparison.comparison.ip1Details?.city;
 	const ip2City = comparison.comparison.ip2Details?.city;
-	if (ip1City !== ip2City) {
+	if (!sameTrustedProvider && ip1City !== ip2City) {
 		conditions.push({
 			met: true,
 			action: effectiveRules.actions.cityChangeAction,
@@ -240,8 +268,6 @@ export const evaluateIpValidationRules = (
 
 	// Check for ISP change
 	if (comparison.comparison.differentProviders) {
-		const ip1Provider = comparison.comparison.ip1Details?.provider;
-		const ip2Provider = comparison.comparison.ip2Details?.provider;
 		conditions.push({
 			met: true,
 			action: effectiveRules.actions.ispChangeAction,
@@ -252,6 +278,7 @@ export const evaluateIpValidationRules = (
 	// Check for distance exceed condition
 	const distanceKm = comparison.comparison.distanceKm;
 	if (
+		!sameTrustedProvider &&
 		distanceKm !== undefined &&
 		distanceKm > effectiveRules.distanceThresholdKm
 	) {
@@ -374,6 +401,10 @@ export const deepValidateIpAddress = async (
 	distanceKm?: number;
 	shouldFlag?: boolean;
 }> => {
+	const log = logger.with({
+		challengeIp: challengeIpAddress.address,
+		providedIp: ip,
+	});
 	if (
 		ipValidationRules?.forceConsistentIp === true &&
 		dnsPeerIp &&
@@ -398,12 +429,8 @@ export const deepValidateIpAddress = async (
 		}
 		// IP mismatch - continue to distance checking if not forcing consistent IPs
 		if (ipValidationRules?.forceConsistentIp === true) {
-			logger.info(() => ({
+			log.info(() => ({
 				msg: "IP validation failed - forceConsistentIp is true",
-				data: {
-					challengeIp: challengeIpAddress.address,
-					providedIp: ip,
-				},
 			}));
 			return {
 				isValid: false,
@@ -421,12 +448,10 @@ export const deepValidateIpAddress = async (
 		const comparison = await compareIPs(challengeIpString, ip, ipInfoService);
 
 		if ("error" in comparison) {
-			logger.error(() => ({
+			log.error(() => ({
 				msg: "Failed to get IP distance comparison",
 				data: {
 					error: comparison.error,
-					challengeIp: challengeIpString,
-					providedIp: ip,
 				},
 			}));
 			// If we can't do distance comparison and IPs don't match exactly, be strict
@@ -444,22 +469,18 @@ export const deepValidateIpAddress = async (
 
 		// If no validation rules provided, use legacy logic (1000km threshold)
 		if (!ipValidationRules) {
-			logger.info(() => ({
+			log.info(() => ({
 				msg: "No IP validation rules provided, using legacy logic",
 				data: {
-					challengeIp: challengeIpString,
-					providedIp: ip,
 					distanceKm: distanceKm,
 				},
 			}));
 			// Legacy distance > 1000km -> fail and log
 			if (distanceKm !== undefined && distanceKm > 1000) {
 				const errorMessage = `IP addresses are too far apart: ${distanceKm.toFixed(2)}km (>1000km limit)`;
-				logger.info(() => ({
+				log.info(() => ({
 					msg: "IP validation failed - distance too great",
 					data: {
-						challengeIp: challengeIpString,
-						providedIp: ip,
 						distanceKm: distanceKm,
 						comparison: comparison.comparison,
 					},
@@ -472,11 +493,9 @@ export const deepValidateIpAddress = async (
 			}
 
 			// Legacy distance <= 1000km -> allow flag
-			logger.info(() => ({
+			log.info(() => ({
 				msg: "IP addresses differ but within acceptable distance",
 				data: {
-					challengeIp: challengeIpString,
-					providedIp: ip,
 					distanceKm: distanceKm,
 					comparison: comparison.comparison,
 				},
@@ -517,10 +536,9 @@ export const deepValidateIpAddress = async (
 				};
 		}
 	} catch (error) {
-		logger.error(() => ({
+		log.error(() => ({
 			msg: "Error during IP distance validation",
 			err: error,
-			data: { challengeIp: challengeIpAddress.address, providedIp: ip },
 		}));
 		// Something weird going on -> allow but flag
 		return {

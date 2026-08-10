@@ -1,5 +1,319 @@
 # @prosopo/procaptcha-bundle
 
+## 4.1.48
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+  - @prosopo/types@5.0.2
+  - @prosopo/procaptcha-common@2.11.22
+  - @prosopo/procaptcha-frictionless@2.13.4
+
+## 4.1.47
+### Patch Changes
+
+- 3a77cea: Report why the detector was unavailable instead of swallowing it.
+  
+  `customDetectBot` wraps provider selection, the assign request and the blob-URL
+  import in one `try`, and the `catch` was empty. Falling back is correct — there
+  is no bundled detector, so a failure here means the frictionless POST goes out
+  with an empty token and the provider decides what to serve. But the reasons are
+  not equal: a slow network is routine, whereas a pool bundle that throws on
+  import degrades **every** session on that provider to an image captcha, with
+  nothing in the client console or the provider logs to say why.
+  
+  That is not hypothetical. A detector pool built at catcher 3.1.48 emitted
+  bundles that died on evaluation with `Class constructor D cannot be invoked
+  without 'new'` — an obfuscator seed collision that renamed a class over a live
+  binding. Every staging session silently fell back to an image captcha, and the
+  only way to find it was to reproduce the blob import by hand in a browser: the
+  provider logged a healthy `bundle pool loaded count=20` and served the bundles
+  happily, because from its side nothing had failed.
+  
+  The catch stays broad and the fallback is unchanged; it now `console.error`s
+  what it caught, matching how the sibling `procaptcha-common` modules report.
+- Updated dependencies [3a77cea]
+  - @prosopo/procaptcha-frictionless@2.13.3
+
+## 4.1.46
+### Patch Changes
+
+- 5d60541: Stop dropping detector bundles that arrive slowly, which made the frictionless POST go out with an empty token and no `detectorSessionId` — the provider then scored the session at 0 and served a challenge.
+  
+  `ASSIGN_TIMEOUT_MS` was 2000 ms and covered two legs. The assign POST serves the detector inline (~215 KB gzipped) over a connection that is always cold, because `/healthz` pins a different hostname than the assign target: fresh DNS, TLS and a CORS preflight all had to fit in the budget alongside the download, measured at 6.7s against staging. The cap is now 10 s and applies only to that request; the blob-URL import that parses and evaluates the bundle is untimed, since a timer cannot rescue a stalled main thread and only discards a bundle already in hand.
+  
+  `render()` and the invisible-button path now start the detector prefetch too. Only implicit render did, so pages using the explicit API — including any page that loads the bundle via dynamic import, where implicit render never runs — assigned a detector inline on the widget's critical path with no prefetch to fall back on.
+- Updated dependencies [5d60541]
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/procaptcha-frictionless@2.13.2
+  - @prosopo/types@5.0.1
+  - @prosopo/locale@3.2.9
+  - @prosopo/dotenv@3.0.51
+  - @prosopo/procaptcha-common@2.11.21
+
+## 4.1.45
+### Patch Changes
+
+- fa4fedb: Start the detector-bundle assignment at page load instead of after the widget mounts.
+  
+  Since the detector moved into the provider-served pool, the frictionless flow cannot begin until `/detector/assign` returns. That request was issued by `customDetectBot`, which only runs once React has mounted the widget — so it queued behind the bundle's dynamic-import chain. Measured on the staging demo, `assign` did not leave the browser until **1513 ms**, of which ~700 ms was purely waiting for chunks to arrive in sequence.
+  
+  Nothing in that request depends on React, i18n or the widget config: it needs the site key (a DOM attribute), the environment (a build-time constant) and the IP-mode flags (DOM attributes). The bundle entry now kicks it off as soon as it has read those, and `customDetectBot` claims the in-flight promise instead of starting its own.
+  
+  The prefetch is loaded by dynamic import so the provider selector and API client do not land in the entry chunk and delay first paint; the entry grows by ~400 bytes. It is fire-and-forget — a failed prefetch is indistinguishable from no prefetch, and the existing fallback path still resolves a provider itself.
+  
+  The cache is single-use and keyed on `(environment, ipMode, siteKey)`, so a retry — which is retrying precisely because the pinned pronode failed — re-resolves rather than reusing a stale pin, and a second widget with different flags cannot claim another's assignment.
+- Updated dependencies [fa4fedb]
+  - @prosopo/procaptcha-frictionless@2.13.1
+
+## 4.1.44
+### Patch Changes
+
+- 787017b: Keep util-crypto in the shared browser chunk. Split into its own chunk it
+  formed a Rolldown chunk cycle with the fingerprint chunk on the detector-pool
+  branch, where the detector is no longer bundled into the widget. Whichever
+  chunk evaluated first read the other's module-scope bindings before they were
+  assigned, so the widget threw on load ("init_dist is not a function", then
+  isHex reading `.test` of undefined) and never defined window.procaptcha.
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [6f19cde]
+- Updated dependencies [2bc8e73]
+  - @prosopo/types@5.0.0
+  - @prosopo/procaptcha-frictionless@2.13.0
+  - @prosopo/widget-skeleton@2.8.5
+  - @prosopo/procaptcha-common@2.11.20
+
+## 4.1.43
+### Patch Changes
+
+  - @prosopo/procaptcha-common@2.11.19
+  - @prosopo/procaptcha-frictionless@2.12.24
+
+## 4.1.42
+### Patch Changes
+
+  - @prosopo/procaptcha-frictionless@2.12.23
+
+## 4.1.41
+### Patch Changes
+
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [2c47bb7]
+- Updated dependencies [ab3499c]
+- Updated dependencies [0e1171c]
+- Updated dependencies [103318c]
+- Updated dependencies [4cd9035]
+- Updated dependencies [8fba211]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+  - @prosopo/util@3.3.5
+  - @prosopo/procaptcha-common@2.11.18
+  - @prosopo/locale@3.2.8
+  - @prosopo/types@4.10.0
+  - @prosopo/dotenv@3.0.50
+  - @prosopo/procaptcha-frictionless@2.12.22
+
+## 4.1.40
+### Patch Changes
+
+- Updated dependencies [a0cb39e]
+  - @prosopo/types@4.9.12
+  - @prosopo/procaptcha-common@2.11.17
+  - @prosopo/procaptcha-frictionless@2.12.21
+
+## 4.1.39
+### Patch Changes
+
+- Updated dependencies [b9ca0e7]
+  - @prosopo/types@4.9.11
+  - @prosopo/procaptcha-frictionless@2.12.20
+  - @prosopo/procaptcha-common@2.11.16
+
+## 4.1.38
+### Patch Changes
+
+  - @prosopo/procaptcha-common@2.11.15
+  - @prosopo/procaptcha-frictionless@2.12.19
+
+## 4.1.37
+### Patch Changes
+
+  - @prosopo/procaptcha-frictionless@2.12.18
+
+## 4.1.36
+### Patch Changes
+
+- Updated dependencies [0a4f902]
+  - @prosopo/types@4.9.10
+  - @prosopo/procaptcha-common@2.11.14
+  - @prosopo/procaptcha-frictionless@2.12.17
+
+## 4.1.35
+### Patch Changes
+
+- 7272dee: perf(procaptcha-bundle): force `@prosopo/fingerprint` + `@prosopo/fingerprintjs` into a single shared chunk (~220ms main-thread win)
+  
+  Chrome timeline traces on a heavy page (pimeyes.com) showed **two nearly-identical ~220ms main-thread tasks** dominated by `getContext` / `getParameter` / `getImageData` — Canvas + WebGL fingerprint sources running twice per widget session. Different obfuscated function graphs in each task (`vr → jl → mr` vs `ge → kn → U`) and different chunk URLs (`index-Bty406ZI.js` vs `index-Cewgc2Jv.js`), while `@prosopo/fingerprint/index.ts` deliberately memoises via a module-local `componentsCache` — proof that Vite was inlining `@prosopo/fingerprint` into multiple downstream chunks (the widget bundle for `account.createAccount` → `getFingerprint`, and `procaptcha-pow` for `Manager` → `getFingerprintProof`), giving each chunk its own module instance and its own private cache.
+  
+  `manualChunks` now routes `packages/fingerprint/dist` + `packages/fingerprintjs/dist` into one shared chunk (per-build opaque name, same pattern as `honeypotChunkName` — no `fingerprint` in the emitted URL). One physical chunk = one module instance = one populated `componentsCache` = one execution of the expensive Canvas + WebGL sources per widget session. Both `getFingerprint` and `getFingerprintProof` now hit the cache on the second call within a session, which was the original design intent.
+  
+  Measured on staging widget injected into pimeyes.com:
+  
+  - Before: 2 × ~220ms main-thread long tasks, ~2000 `getContext` self-samples on main
+  - After: 0 `getContext` self-samples on main, fingerprint dropped out of the main-thread long-task list entirely
+  
+  No API change. Opaque chunk name means the emitted URL doesn't leak what's inside (won't help static URL-blocklist scrapers).
+- b500d56: fix(widget): enforce single language across widget, kill browser/config race
+  
+  `WidgetFactory.getCaptchaRenderer()` booted the i18n singleton with the
+  browser-detected language before the site-owner `renderOptions.language` /
+  `data-language` had been resolved, and each widget then called
+  `i18n.changeLanguage(config.language)` from a post-mount effect. Any child
+  component that read `useTranslation()` between first render and the async
+  `changeLanguage` resolution rendered in the browser language, then re-rendered
+  in the site-owner language — the multi-language flash customers reported.
+  
+  Resolve the site-owner language in `WidgetFactory.createWidget()` before the
+  lazy renderer load and thread it into `loadI18next(false, lng)`, so the
+  singleton boots (or reconciles via `changeLanguage` + await) with the correct
+  language before React mounts. Site-owner language wins; falls back to browser
+  detection only when no `language` / `data-language` is set.
+- Updated dependencies [b500d56]
+  - @prosopo/locale@3.2.7
+  - @prosopo/procaptcha-frictionless@2.12.16
+  - @prosopo/types@4.9.9
+  - @prosopo/procaptcha-common@2.11.13
+
+## 4.1.34
+### Patch Changes
+
+- Updated dependencies [d0f3a52]
+  - @prosopo/procaptcha-frictionless@2.12.15
+
+## 4.1.33
+### Patch Changes
+
+  - @prosopo/procaptcha-common@2.11.12
+  - @prosopo/procaptcha-frictionless@2.12.14
+
+## 4.1.32
+### Patch Changes
+
+- Updated dependencies [ced80a4]
+  - @prosopo/procaptcha-frictionless@2.12.13
+  - @prosopo/procaptcha-common@2.11.11
+
+## 4.1.31
+### Patch Changes
+
+  - @prosopo/dotenv@3.0.49
+  - @prosopo/procaptcha-frictionless@2.12.12
+  - @prosopo/procaptcha-common@2.11.10
+
+## 4.1.30
+### Patch Changes
+
+- Updated dependencies [85e8857]
+  - @prosopo/procaptcha-frictionless@2.12.11
+  - @prosopo/types@4.9.8
+  - @prosopo/util@3.3.4
+  - @prosopo/procaptcha-common@2.11.9
+  - @prosopo/dotenv@3.0.48
+
+## 4.1.29
+### Patch Changes
+
+- Updated dependencies [8bde5df]
+  - @prosopo/types@4.9.7
+  - @prosopo/procaptcha-common@2.11.8
+  - @prosopo/procaptcha-frictionless@2.12.10
+
+## 4.1.28
+### Patch Changes
+
+- Updated dependencies [35d2784]
+  - @prosopo/procaptcha-frictionless@2.12.9
+
+## 4.1.27
+### Patch Changes
+
+- Updated dependencies [b3f351b]
+- Updated dependencies [17bc76e]
+  - @prosopo/procaptcha-frictionless@2.12.8
+  - @prosopo/procaptcha-common@2.11.7
+  - @prosopo/types@4.9.6
+
+## 4.1.26
+### Patch Changes
+
+- Updated dependencies [6cb3218]
+  - @prosopo/types@4.9.5
+  - @prosopo/procaptcha-common@2.11.6
+  - @prosopo/procaptcha-frictionless@2.12.7
+
+## 4.1.25
+### Patch Changes
+
+- Updated dependencies [de12b31]
+- Updated dependencies [770954b]
+  - @prosopo/types@4.9.4
+  - @prosopo/procaptcha-common@2.11.5
+  - @prosopo/procaptcha-frictionless@2.12.6
+
+## 4.1.24
+### Patch Changes
+
+- Updated dependencies [18d0287]
+  - @prosopo/types@4.9.3
+  - @prosopo/procaptcha-frictionless@2.12.5
+  - @prosopo/procaptcha-common@2.11.4
+
+## 4.1.23
+### Patch Changes
+
+- Updated dependencies [8814425]
+  - @prosopo/procaptcha-frictionless@2.12.4
+
+## 4.1.22
+### Patch Changes
+
+- Updated dependencies [f9e8c94]
+- Updated dependencies [7a434e0]
+  - @prosopo/locale@3.2.6
+  - @prosopo/types@4.9.2
+  - @prosopo/procaptcha-frictionless@2.12.3
+  - @prosopo/procaptcha-common@2.11.3
+
+## 4.1.21
+### Patch Changes
+
+- Updated dependencies [8986976]
+- Updated dependencies [970bca2]
+  - @prosopo/types@4.9.1
+  - @prosopo/util@3.3.3
+  - @prosopo/procaptcha-frictionless@2.12.2
+  - @prosopo/procaptcha-common@2.11.2
+  - @prosopo/dotenv@3.0.47
+
+## 4.1.20
+### Patch Changes
+
+- Updated dependencies [849af99]
+- Updated dependencies [6ecc576]
+- Updated dependencies [a5ba27b]
+- Updated dependencies [619dc9f]
+- Updated dependencies [11f1e8c]
+- Updated dependencies [b166037]
+- Updated dependencies [1111ff2]
+  - @prosopo/util@3.3.2
+  - @prosopo/widget-skeleton@2.8.4
+  - @prosopo/dotenv@3.0.46
+  - @prosopo/types@4.9.0
+  - @prosopo/procaptcha-common@2.11.1
+  - @prosopo/procaptcha-frictionless@2.12.1
+
 ## 4.1.19
 ### Patch Changes
 

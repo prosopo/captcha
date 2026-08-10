@@ -80,6 +80,7 @@ describe("ApiToggleMaintenanceModeEndpoint", () => {
 	let endpoint: ApiToggleMaintenanceModeEndpoint;
 	let mockLogger: {
 		info: ReturnType<typeof vi.fn>;
+		with: ReturnType<typeof vi.fn>;
 	};
 
 	beforeEach(() => {
@@ -87,6 +88,7 @@ describe("ApiToggleMaintenanceModeEndpoint", () => {
 		process.env.MAINTENANCE_MODE = undefined;
 		mockLogger = {
 			info: vi.fn(),
+			with: vi.fn().mockReturnThis(),
 		};
 		endpoint = new ApiToggleMaintenanceModeEndpoint();
 	});

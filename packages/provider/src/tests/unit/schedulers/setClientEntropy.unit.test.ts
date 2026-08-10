@@ -24,7 +24,7 @@ import { checkIfTaskIsRunning } from "../../../util.js";
 
 vi.mock("@prosopo/env", async () => {
 	const { getLogger } = await import("@prosopo/logger");
-	const loggerOuter = getLogger("info", import.meta.url);
+	const loggerOuter = getLogger("info", "test:set-client-entropy");
 	const mockLogger = {
 		debug: vi.fn().mockImplementation(loggerOuter.debug.bind(loggerOuter)),
 		log: vi.fn().mockImplementation(loggerOuter.log.bind(loggerOuter)),
@@ -35,13 +35,15 @@ vi.mock("@prosopo/env", async () => {
 		warn: vi.fn().mockImplementation(loggerOuter.warn.bind(loggerOuter)),
 	} as unknown as Logger;
 	return {
-		ProviderEnvironment: vi.fn().mockImplementation(() => ({
-			isReady: vi.fn().mockResolvedValue(true),
-			logger: mockLogger,
-			getDb: vi.fn().mockReturnValue({
-				getLastScheduledTaskStatus: vi.fn().mockResolvedValue(undefined),
-			}),
-		})),
+		ProviderEnvironment: vi.fn().mockImplementation(function () {
+			return {
+				isReady: vi.fn().mockResolvedValue(true),
+				logger: mockLogger,
+				getDb: vi.fn().mockReturnValue({
+					getLastScheduledTaskStatus: vi.fn().mockResolvedValue(undefined),
+				}),
+			};
+		}),
 	};
 });
 
@@ -82,16 +84,17 @@ describe("setClientEntropy", () => {
 			start: vi.fn(),
 		};
 
-		vi.mocked(Tasks).mockImplementation(() => mockTasks as unknown as Tasks);
+		vi.mocked(Tasks).mockImplementation(function () {
+			return mockTasks as unknown as Tasks;
+		});
 		vi.mocked(checkIfTaskIsRunning).mockResolvedValue(false);
-		vi.mocked(CronJob).mockImplementation(
-			(cronSchedule, onTick) =>
-				({
-					start: mockCronJob.start,
-					cronSchedule,
-					onTick,
-				}) as unknown as CronJob,
-		);
+		vi.mocked(CronJob).mockImplementation(function (cronSchedule, onTick) {
+			return {
+				start: mockCronJob.start,
+				cronSchedule,
+				onTick,
+			} as unknown as CronJob;
+		});
 	});
 
 	it("creates ProviderEnvironment and waits for readiness", async () => {

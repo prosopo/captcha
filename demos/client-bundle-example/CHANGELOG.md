@@ -1,5 +1,15 @@
 # @prosopo/client-bundle-example
 
+## 2.10.20
+### Patch Changes
+
+- acb1671: test(client-bundle-example): add vitest setup and cover the demo vite plugins
+
+## 2.10.19
+### Patch Changes
+
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+
 ## 2.10.18
 ### Patch Changes
 

@@ -20,9 +20,20 @@ interface CryptoWorkerMessage {
 	data: Record<string, string | Uint8Array>;
 }
 
+export interface KeypairBytes {
+	publicKey: Uint8Array;
+	secretKey: Uint8Array;
+}
+
+export interface EntropyToKeypairResult extends KeypairBytes {
+	mnemonic: string;
+}
+
+type CryptoWorkerResult = string | KeypairBytes | EntropyToKeypairResult;
+
 interface CryptoWorkerResponse {
 	taskId: string;
-	result?: Record<string, string>;
+	result?: CryptoWorkerResult;
 	error?: string;
 }
 
@@ -34,9 +45,15 @@ export class CryptoWorkerManager {
 	private isInitializing = false;
 
 	/**
-	 * Initialize the worker
+	 * Initialize the worker. No test round-trip — construction failure throws
+	 * synchronously (caught below); post-construction failures surface via
+	 * `worker.onerror` (cleans up so the next call retries); anything that
+	 * gets past both surfaces via `runTask`'s timeout + reject path, which
+	 * already falls back to main-thread crypto. The prior `testWorker()` ping
+	 * was a Blob-URL-era defensive check that no longer earns its ~30–80ms
+	 * critical-path cost under Vite's `?worker&inline` constructor.
 	 */
-	private async initWorker(): Promise<void> {
+	private initWorker(): void {
 		if (this.worker || this.isInitializing) {
 			return;
 		}
@@ -46,88 +63,24 @@ export class CryptoWorkerManager {
 		try {
 			this.worker = new CryptoWorkerConstructor({ type: "module" });
 
-			// Add an IMMEDIATE global error handler for initialization failures (e.g., failed parsing)
-			this.worker.onerror = (errorEvent: ErrorEvent) => {
-				// Terminate the failed worker and mark for re-initialization
+			this.worker.onerror = () => {
+				// Terminate the failed worker; the next runTask will re-init.
 				this.cleanup();
-				// The specific runTask/testWorker promise will reject via their local handleError
 			};
-
-			// Test if worker is working
-			await this.testWorker();
-		} catch (error) {
-			this.cleanup(); // Clean up if instantiation itself fails
-			throw error; // Re-throw to propagate failure
+		} catch {
+			this.cleanup();
 		} finally {
-			// We don't want to set isInitializing to false here if the worker started,
-			// but we can if the test fails or construction fails.
-			if (!this.worker) {
-				this.isInitializing = false;
-			}
+			this.isInitializing = false;
 		}
-	}
-
-	/**
-	 * Test if the worker is functioning properly
-	 */
-	private async testWorker(): Promise<void> {
-		if (!this.worker) {
-			throw new Error("Worker not initialized");
-		}
-
-		const worker = this.worker;
-
-		return new Promise((resolve, reject) => {
-			const testTimeout = setTimeout(() => {
-				// Clean up event listeners on timeout
-				worker.removeEventListener("message", handleMessage);
-				worker.removeEventListener("error", handleError);
-				reject(new Error("Worker test timeout"));
-			}, 5000);
-
-			const handleMessage = (event: MessageEvent) => {
-				const { taskId, error, result } = event.data;
-				if (taskId === "test") {
-					clearTimeout(testTimeout);
-					worker.removeEventListener("message", handleMessage);
-					worker.removeEventListener("error", handleError); // Also remove error listener
-
-					if (error || result !== "ready") {
-						reject(
-							new Error(
-								`Worker test failed: ${error || 'Did not return "ready"'}`,
-							),
-						);
-					} else {
-						resolve();
-					}
-				}
-			};
-
-			const handleError = (error: ErrorEvent) => {
-				clearTimeout(testTimeout);
-				worker.removeEventListener("message", handleMessage);
-				worker.removeEventListener("error", handleError);
-				reject(
-					new Error(`Worker test failed with error event: ${error.message}`),
-				);
-			};
-
-			worker.addEventListener("message", handleMessage);
-			worker.addEventListener("error", handleError); // Catch errors during test
-
-			// Send a test message
-			worker.postMessage({ taskId: "test", task: "test", data: {} });
-		});
 	}
 
 	/**
 	 * Eagerly spawn the worker so the first runTask() doesn't pay the
-	 * worker-spawn + module-parse cost. Failures are swallowed because
-	 * runTask() will reattempt initWorker() on demand.
+	 * worker-spawn + module-parse cost. Synchronous now — construction is
+	 * fire-and-forget with cleanup via `worker.onerror`.
 	 */
 	prewarm(): void {
-		this.initWorker().catch(() => {});
+		this.initWorker();
 	}
 
 	/**
@@ -137,7 +90,7 @@ export class CryptoWorkerManager {
 		task: string,
 		data: Record<string, string | Uint8Array>,
 	): Promise<T> {
-		await this.initWorker();
+		this.initWorker();
 
 		if (!this.worker) {
 			throw new Error("Failed to initialize worker");
@@ -190,6 +143,20 @@ export class CryptoWorkerManager {
 	 */
 	async entropyToMnemonic(entropy: Uint8Array): Promise<string> {
 		return this.runTask<string>("entropyToMnemonic", { entropy });
+	}
+
+	/**
+	 * Fused: entropy → mnemonic → sr25519 keypair in a single worker
+	 * round-trip. Callers that don't need the mnemonic separately should
+	 * prefer this over two `entropyToMnemonic + keypairFromMnemonic` hops —
+	 * saves one postMessage transit (~30–80ms on constrained hardware / under
+	 * throttle) on the frictionless critical path. sr25519 derivation is a
+	 * ~500ms main-thread cost otherwise.
+	 */
+	async entropyToKeypair(entropy: Uint8Array): Promise<EntropyToKeypairResult> {
+		return this.runTask<EntropyToKeypairResult>("entropyToKeypair", {
+			entropy,
+		});
 	}
 
 	/**

@@ -118,6 +118,30 @@ describe("checkTrafficFilter", () => {
 		expect(result).toEqual({ isBlocked: false });
 	});
 
+	it("does not block proxy-on-datacenter IPs when blockDatacenter is on but blockProxy is off", () => {
+		const result = checkTrafficFilter(
+			baseInfo({ isDatacenter: true, isProxy: true }),
+			{ ...allBlocked, blockProxy: false },
+		);
+		expect(result).toEqual({ isBlocked: false });
+	});
+
+	it("does not block Tor-on-datacenter IPs when blockDatacenter is on but blockTor is off", () => {
+		const result = checkTrafficFilter(
+			baseInfo({ isDatacenter: true, isTor: true }),
+			{ ...allBlocked, blockTor: false },
+		);
+		expect(result).toEqual({ isBlocked: false });
+	});
+
+	it("does not block crawler-on-datacenter IPs when blockDatacenter is on but blockCrawler is off", () => {
+		const result = checkTrafficFilter(
+			baseInfo({ isDatacenter: true, isCrawler: true }),
+			{ ...allBlocked, blockCrawler: false },
+		);
+		expect(result).toEqual({ isBlocked: false });
+	});
+
 	it("still blocks raw datacenter (non-VPN) IPs when blockDatacenter is on and blockVpn is off", () => {
 		const result = checkTrafficFilter(
 			baseInfo({ isDatacenter: true, isVPN: false }),
@@ -229,12 +253,24 @@ describe("checkTrafficFilter", () => {
 			});
 		});
 
-		it("does NOT apply VPN-datacenter suppression to extra IPs", () => {
+		it("applies VPN-datacenter suppression to extra IPs when blockVpn is off", () => {
 			const noVpnBlock: ITrafficFilter = { ...allBlocked, blockVpn: false };
 			const result = checkTrafficFilter(cleanPrimary, noVpnBlock, [
 				baseInfo({
 					ip: "198.51.100.10",
 					isVPN: true,
+					isDatacenter: true,
+				}),
+			]);
+			expect(result).toEqual({ isBlocked: false });
+		});
+
+		it("still blocks a datacenter extra that is not a VPN when blockVpn is off", () => {
+			const noVpnBlock: ITrafficFilter = { ...allBlocked, blockVpn: false };
+			const result = checkTrafficFilter(cleanPrimary, noVpnBlock, [
+				baseInfo({
+					ip: "198.51.100.10",
+					isVPN: false,
 					isDatacenter: true,
 				}),
 			]);
@@ -278,6 +314,64 @@ describe("checkTrafficFilter", () => {
 				baseInfo({ ip: "198.51.100.10", isDatacenter: true }),
 			]);
 			expect(result).toEqual({ isBlocked: true, reason: "API.TOR_BLOCKED" });
+		});
+
+		it("does not check the crawler flag on extra IPs even when blockCrawler is on", () => {
+			const result = checkTrafficFilter(cleanPrimary, allBlocked, [
+				baseInfo({ ip: "8.8.8.8", isCrawler: true }),
+			]);
+			expect(result).toEqual({ isBlocked: false });
+		});
+
+		it("still blocks the crawler flag on the primary IP when an extra is present", () => {
+			const result = checkTrafficFilter(
+				baseInfo({ isCrawler: true }),
+				allBlocked,
+				[baseInfo({ ip: "8.8.8.8" })],
+			);
+			expect(result).toEqual({
+				isBlocked: true,
+				reason: "API.CRAWLER_BLOCKED",
+			});
+		});
+
+		it("applies proxy-datacenter suppression to extra IPs when blockProxy is off", () => {
+			const noProxyBlock: ITrafficFilter = { ...allBlocked, blockProxy: false };
+			const result = checkTrafficFilter(cleanPrimary, noProxyBlock, [
+				baseInfo({
+					ip: "198.51.100.10",
+					isProxy: true,
+					isDatacenter: true,
+				}),
+			]);
+			expect(result).toEqual({ isBlocked: false });
+		});
+
+		it("applies Tor-datacenter suppression to extra IPs when blockTor is off", () => {
+			const noTorBlock: ITrafficFilter = { ...allBlocked, blockTor: false };
+			const result = checkTrafficFilter(cleanPrimary, noTorBlock, [
+				baseInfo({
+					ip: "198.51.100.10",
+					isTor: true,
+					isDatacenter: true,
+				}),
+			]);
+			expect(result).toEqual({ isBlocked: false });
+		});
+
+		it("applies crawler-datacenter suppression to extra IPs when blockCrawler is off", () => {
+			const noCrawlerBlock: ITrafficFilter = {
+				...allBlocked,
+				blockCrawler: false,
+			};
+			const result = checkTrafficFilter(cleanPrimary, noCrawlerBlock, [
+				baseInfo({
+					ip: "198.51.100.10",
+					isCrawler: true,
+					isDatacenter: true,
+				}),
+			]);
+			expect(result).toEqual({ isBlocked: false });
 		});
 	});
 
@@ -437,6 +531,293 @@ describe("checkTrafficFilter", () => {
 				...allBlocked,
 				datacenterNameAllowlist: ["iCloud Private Relay"],
 			});
+			expect(result).toEqual({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+	});
+
+	describe("providerType ISP suppression", () => {
+		it("does not block datacenter IPs whose providerType is 'isp'", () => {
+			// Consumer ISPs (e.g. Afrihost, Comcast) are sometimes flagged
+			// is_datacenter=true by upstream but their eyeball ranges carry
+			// real end-users.
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					providerType: "isp",
+					providerName: "afrihost.co.za",
+					asnOrganization: "AFRIHOST SP (PTY) LTD",
+				}),
+				allBlocked,
+			);
+			expect(result).toEqual({ isBlocked: false });
+		});
+
+		it("still blocks datacenter IPs when providerType is 'hosting'", () => {
+			const result = checkTrafficFilter(
+				baseInfo({ isDatacenter: true, providerType: "hosting" }),
+				allBlocked,
+			);
+			expect(result).toEqual({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+
+		it("still blocks datacenter IPs when providerType is missing", () => {
+			// Preserves the pre-fix behavior for upstream responses that
+			// don't carry providerType at all.
+			const result = checkTrafficFilter(
+				baseInfo({ isDatacenter: true }),
+				allBlocked,
+			);
+			expect(result).toEqual({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+
+		it("does not let ISP classification bypass earlier rules", () => {
+			// The ISP suppression only affects the datacenter rule. A Tor
+			// exit or VPN that also reports providerType='isp' must still
+			// trip whichever earlier rule fires first.
+			const torResult = checkTrafficFilter(
+				baseInfo({
+					isTor: true,
+					isDatacenter: true,
+					providerType: "isp",
+				}),
+				allBlocked,
+			);
+			expect(torResult).toEqual({
+				isBlocked: true,
+				reason: "API.TOR_BLOCKED",
+			});
+
+			const vpnResult = checkTrafficFilter(
+				baseInfo({
+					isVPN: true,
+					isDatacenter: true,
+					providerType: "isp",
+				}),
+				allBlocked,
+			);
+			expect(vpnResult).toEqual({
+				isBlocked: true,
+				reason: "API.VPN_BLOCKED",
+			});
+		});
+
+		it("applies ISP suppression to extra IPs as well", () => {
+			const result = checkTrafficFilter(
+				baseInfo({ ip: "192.0.2.1" }),
+				allBlocked,
+				[
+					baseInfo({
+						ip: "198.51.100.10",
+						isDatacenter: true,
+						providerType: "isp",
+					}),
+				],
+			);
+			expect(result).toEqual({ isBlocked: false });
+		});
+	});
+
+	describe("datacenterNameDenylist", () => {
+		it("blocks datacenter IPs whose name matches the denylist even when providerType is 'isp'", () => {
+			// IP-leasing platforms lease ranges from carrier ASNs; upstream
+			// reports providerType='isp' (accurate for the ASN) but the
+			// exiting traffic is proxy-pool. Operators opt these back into
+			// the datacenter block by name.
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					providerType: "isp",
+					datacenterName: "proxy-lease-provider",
+				}),
+				{
+					...allBlocked,
+					datacenterNameDenylist: ["proxy-lease-provider"],
+				},
+			);
+			expect(result).toEqual({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+
+		it("matches the denylist case-insensitively and ignores whitespace", () => {
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					providerType: "isp",
+					datacenterName: "  Proxy-Lease-Provider  ",
+				}),
+				{
+					...allBlocked,
+					datacenterNameDenylist: ["proxy-lease-provider"],
+				},
+			);
+			expect(result).toEqual({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+
+		it("matches the denylist against providerName when datacenterName is absent", () => {
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					providerType: "isp",
+					providerName: "proxy-lease-provider",
+				}),
+				{
+					...allBlocked,
+					datacenterNameDenylist: ["proxy-lease-provider"],
+				},
+			);
+			expect(result).toEqual({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+
+		it("matches the denylist against asnOrganization when neither datacenterName nor providerName carries the operator", () => {
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					providerType: "isp",
+					asnOrganization: "Proxy Lease Ltd",
+				}),
+				{
+					...allBlocked,
+					datacenterNameDenylist: ["Proxy Lease Ltd"],
+				},
+			);
+			expect(result).toEqual({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+
+		it("denylist takes precedence over the allowlist when both list the same name", () => {
+			// Contradictory config: explicit denylist wins so operators can
+			// tighten a shared allowlist entry for one specific provider.
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					datacenterName: "shared-name",
+				}),
+				{
+					...allBlocked,
+					datacenterNameAllowlist: ["shared-name"],
+					datacenterNameDenylist: ["shared-name"],
+				},
+			);
+			expect(result).toEqual({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+
+		it("does not block a non-datacenter IP even when its name matches the denylist", () => {
+			// Denylist only takes effect within the datacenter rule scope;
+			// it does not turn every mention into a block.
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: false,
+					datacenterName: "proxy-lease-provider",
+				}),
+				{
+					...allBlocked,
+					datacenterNameDenylist: ["proxy-lease-provider"],
+				},
+			);
+			expect(result).toEqual({ isBlocked: false });
+		});
+
+		it("does not fire when blockDatacenter is off", () => {
+			// Operators who don't want any datacenter block get none, even
+			// with a denylist populated. Populated but inert.
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					providerType: "isp",
+					datacenterName: "proxy-lease-provider",
+				}),
+				{
+					...allBlocked,
+					blockDatacenter: false,
+					datacenterNameDenylist: ["proxy-lease-provider"],
+				},
+			);
+			expect(result).toEqual({ isBlocked: false });
+		});
+
+		it("preserves legacy behaviour when denylist is missing or empty", () => {
+			// ISP suppression continues to fire; a missing / empty denylist
+			// must not change the existing datacenter-rule outcome.
+			const missing = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					providerType: "isp",
+					datacenterName: "some-isp",
+				}),
+				allBlocked,
+			);
+			expect(missing).toEqual({ isBlocked: false });
+
+			const empty = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					providerType: "isp",
+					datacenterName: "some-isp",
+				}),
+				{ ...allBlocked, datacenterNameDenylist: [] },
+			);
+			expect(empty).toEqual({ isBlocked: false });
+		});
+
+		it("still lets earlier category rules fire before the datacenter check", () => {
+			// A Tor exit whose name is on the denylist still trips TOR_BLOCKED
+			// first — denylist scope is the datacenter rule only.
+			const result = checkTrafficFilter(
+				baseInfo({
+					isTor: true,
+					isDatacenter: true,
+					providerType: "isp",
+					datacenterName: "proxy-lease-provider",
+				}),
+				{
+					...allBlocked,
+					datacenterNameDenylist: ["proxy-lease-provider"],
+				},
+			);
+			expect(result).toEqual({
+				isBlocked: true,
+				reason: "API.TOR_BLOCKED",
+			});
+		});
+
+		it("applies the denylist to extra IPs as well", () => {
+			const result = checkTrafficFilter(
+				baseInfo({ ip: "192.0.2.1" }),
+				{
+					...allBlocked,
+					datacenterNameDenylist: ["proxy-lease-provider"],
+				},
+				[
+					baseInfo({
+						ip: "198.51.100.10",
+						isDatacenter: true,
+						providerType: "isp",
+						datacenterName: "proxy-lease-provider",
+					}),
+				],
+			);
 			expect(result).toEqual({
 				isBlocked: true,
 				reason: "API.DATACENTER_BLOCKED",

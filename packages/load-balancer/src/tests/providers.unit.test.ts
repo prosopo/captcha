@@ -13,7 +13,24 @@
 // limitations under the License.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { _resetPinCache, getRandomActiveProvider } from "../providers.js";
+import type { HardcodedProvider } from "../balancer.js";
+import {
+	_resetHealthzRetryPolicy,
+	_resetPinCache,
+	_resetProviderListCache,
+	_setHealthzRetryPolicy,
+	getProviders,
+	getRandomActiveProvider,
+	getRandomProviderFromList,
+} from "../providers.js";
+
+// Mock the underlying load balancer so getProviders' caching/failure semantics
+// can be exercised without real network calls. getRandomActiveProvider tests
+// don't use loadBalancer, so this mock leaves them unaffected.
+const loadBalancer = vi.fn();
+vi.mock("../balancer.js", () => ({
+	loadBalancer: (...args: unknown[]) => loadBalancer(...args),
+}));
 
 const originalFetch = globalThis.fetch;
 
@@ -30,10 +47,14 @@ const mockHealthzFetch = (host: string, ok = true, status = 200) => {
 
 beforeEach(() => {
 	_resetPinCache();
+	// Keep the retry policy but drop backoff to zero so failure-path tests
+	// don't sit waiting on real timers.
+	_setHealthzRetryPolicy({ baseDelayMs: 0, maxDelayMs: 0 });
 });
 
 afterEach(() => {
 	globalThis.fetch = originalFetch;
+	_resetHealthzRetryPolicy();
 });
 
 describe("getRandomActiveProvider (dual stack)", () => {
@@ -64,13 +85,16 @@ describe("getRandomActiveProvider (dual stack)", () => {
 		expect(mocked).toHaveBeenCalledTimes(1);
 	});
 
-	it("falls back to the dual-stack base URL when /healthz responds non-OK", async () => {
-		mockHealthzFetch("ignored", false, 503);
-		const result = await getRandomActiveProvider("production");
-		expect(result.provider.url).toBe("https://pronode.prosopo.io");
+	it("throws after all healthz retries are exhausted (does not fall back to LB hostname)", async () => {
+		const mocked = mockHealthzFetch("ignored", false, 503);
+		await expect(getRandomActiveProvider("production")).rejects.toThrow(
+			/healthz responded with 503/,
+		);
+		// 3 attempts total = initial + 2 retries.
+		expect(mocked).toHaveBeenCalledTimes(3);
 	});
 
-	it("falls back to the dual-stack base URL when /healthz body is malformed", async () => {
+	it("throws when the healthz body is malformed after retries", async () => {
 		const mocked = vi.fn(async () => ({
 			ok: true,
 			status: 200,
@@ -78,8 +102,53 @@ describe("getRandomActiveProvider (dual stack)", () => {
 		}));
 		// biome-ignore lint/suspicious/noExplicitAny: minimal Response stub for the unit test
 		globalThis.fetch = mocked as any;
+		await expect(getRandomActiveProvider("production")).rejects.toThrow(
+			/missing host field/,
+		);
+		expect(mocked).toHaveBeenCalledTimes(3);
+	});
+
+	it("retries a transient healthz failure and pins on the eventual success", async () => {
+		let call = 0;
+		const mocked = vi.fn(async () => {
+			call++;
+			if (call === 1) {
+				return { ok: false, status: 503, json: async () => ({}) };
+			}
+			return {
+				ok: true,
+				status: 200,
+				json: async () => ({ ok: true, host: "pronode8.prosopo.io" }),
+			};
+		});
+		// biome-ignore lint/suspicious/noExplicitAny: minimal Response stub for the unit test
+		globalThis.fetch = mocked as any;
 		const result = await getRandomActiveProvider("production");
-		expect(result.provider.url).toBe("https://pronode.prosopo.io");
+		expect(result.provider.url).toBe("https://pronode8.prosopo.io");
+		expect(mocked).toHaveBeenCalledTimes(2);
+	});
+
+	it("evicts a failed pin so the next captcha attempt retries healthz fresh", async () => {
+		let call = 0;
+		const mocked = vi.fn(async () => {
+			call++;
+			if (call <= 3) {
+				return { ok: false, status: 502, json: async () => ({}) };
+			}
+			return {
+				ok: true,
+				status: 200,
+				json: async () => ({ ok: true, host: "pronode9.prosopo.io" }),
+			};
+		});
+		// biome-ignore lint/suspicious/noExplicitAny: minimal Response stub for the unit test
+		globalThis.fetch = mocked as any;
+		await expect(getRandomActiveProvider("production")).rejects.toThrow();
+		// First call failed 3 times; a fresh call must be able to retry — not
+		// return the poisoned cached rejection.
+		const result = await getRandomActiveProvider("production");
+		expect(result.provider.url).toBe("https://pronode9.prosopo.io");
+		expect(mocked).toHaveBeenCalledTimes(4);
 	});
 });
 
@@ -106,10 +175,11 @@ describe("getRandomActiveProvider (single stack ipMode)", () => {
 		);
 	});
 
-	it("falls back to the ipv4-labelled global URL when ipv4 /healthz fails", async () => {
+	it("throws for ipv4 mode when /healthz fails (no fallback to ipv4.pronode.prosopo.io)", async () => {
 		mockHealthzFetch("ignored", false, 500);
-		const result = await getRandomActiveProvider("production", "ipv4");
-		expect(result.provider.url).toBe("https://ipv4.pronode.prosopo.io");
+		await expect(getRandomActiveProvider("production", "ipv4")).rejects.toThrow(
+			/healthz responded with 500/,
+		);
 	});
 
 	it("keeps the dual-stack cache and the ipv4 cache separate", async () => {
@@ -120,5 +190,184 @@ describe("getRandomActiveProvider (single stack ipMode)", () => {
 		await getRandomActiveProvider("production", "ipv4");
 		// One healthz per (env, ipMode) combination.
 		expect(mocked).toHaveBeenCalledTimes(2);
+	});
+});
+
+describe("getProviders", () => {
+	beforeEach(() => {
+		_resetProviderListCache();
+		loadBalancer.mockReset();
+	});
+
+	it("loads the provider list once and serves repeat callers from cache", async () => {
+		const providers = [
+			{ address: "5xyz", url: "https://p1", datasetId: "0x0" },
+		];
+		loadBalancer.mockResolvedValue(providers);
+
+		const first = await getProviders("production");
+		const second = await getProviders("production");
+
+		expect(first).toBe(providers);
+		expect(second).toBe(providers);
+		expect(loadBalancer).toHaveBeenCalledTimes(1);
+	});
+
+	it("dedupes concurrent in-flight loads into a single call", async () => {
+		const providers = [
+			{ address: "5xyz", url: "https://p1", datasetId: "0x0" },
+		];
+		loadBalancer.mockResolvedValue(providers);
+
+		const [a, b] = await Promise.all([
+			getProviders("production"),
+			getProviders("production"),
+		]);
+
+		expect(a).toBe(providers);
+		expect(b).toBe(providers);
+		expect(loadBalancer).toHaveBeenCalledTimes(1);
+	});
+
+	it("does not cache failures — a rejected load is retried on the next call", async () => {
+		const providers = [
+			{ address: "5xyz", url: "https://p1", datasetId: "0x0" },
+		];
+		loadBalancer
+			.mockRejectedValueOnce(new Error("transient"))
+			.mockResolvedValueOnce(providers);
+
+		await expect(getProviders("production")).rejects.toThrow("transient");
+		// The failure must have cleared the cache, so the next call retries.
+		const retry = await getProviders("production");
+		expect(retry).toBe(providers);
+		expect(loadBalancer).toHaveBeenCalledTimes(2);
+	});
+});
+
+describe("getRandomProviderFromList", () => {
+	const providerList: HardcodedProvider[] = [
+		{
+			address: "5A",
+			url: "https://provider-a.io",
+			datasetId: "0x0",
+			weight: 1,
+		},
+		{
+			address: "5B",
+			url: "https://provider-b.io",
+			datasetId: "0x0",
+			weight: 1,
+		},
+		{
+			address: "5C",
+			url: "https://provider-c.io",
+			datasetId: "0x0",
+			weight: 1,
+		},
+	];
+
+	beforeEach(() => {
+		_resetProviderListCache();
+		_resetPinCache();
+		loadBalancer.mockReset();
+	});
+
+	it("picks a provider from the list (not the DNS-routed endpoint)", async () => {
+		loadBalancer.mockResolvedValue(providerList);
+		// random just above 1/3 lands in the second bucket (uniform weights).
+		const result = await getRandomProviderFromList(
+			"production",
+			undefined,
+			undefined,
+			() => 0.4,
+		);
+		expect(result.provider.url).toBe("https://provider-b.io");
+		expect(result.providerAccount).toBe("5B");
+	});
+
+	it("excludes the provider that just failed when others remain", async () => {
+		loadBalancer.mockResolvedValue(providerList);
+		// random=0 would normally pick the first entry; excluding provider-a
+		// shifts the pool so index 0 is provider-b.
+		const result = await getRandomProviderFromList(
+			"production",
+			undefined,
+			"https://provider-a.io",
+			() => 0,
+		);
+		expect(result.provider.url).not.toBe("https://provider-a.io");
+		expect(result.provider.url).toBe("https://provider-b.io");
+	});
+
+	it("ignores a trailing slash when matching the excluded url", async () => {
+		loadBalancer.mockResolvedValue(providerList);
+		const result = await getRandomProviderFromList(
+			"production",
+			undefined,
+			"https://provider-a.io/",
+			() => 0,
+		);
+		expect(result.provider.url).toBe("https://provider-b.io");
+	});
+
+	it("still returns the only provider in development even if it is excluded", async () => {
+		const single: HardcodedProvider[] = [
+			{
+				address: "5Local",
+				url: "https://localhost:9229",
+				datasetId: "0x0",
+				weight: 1,
+			},
+		];
+		loadBalancer.mockResolvedValue(single);
+		const result = await getRandomProviderFromList(
+			"development",
+			undefined,
+			"https://localhost:9229",
+			() => 0,
+		);
+		expect(result.provider.url).toBe("https://localhost:9229");
+	});
+
+	it("applies the ipv4 label to the chosen provider url", async () => {
+		loadBalancer.mockResolvedValue(providerList);
+		const result = await getRandomProviderFromList(
+			"production",
+			"ipv4",
+			undefined,
+			() => 0,
+		);
+		expect(result.provider.url).toBe("https://ipv4.provider-a.io");
+	});
+
+	it("weights the pick by provider weight", async () => {
+		const weighted: HardcodedProvider[] = [
+			{ address: "5A", url: "https://a.io", datasetId: "0x0", weight: 1 },
+			{ address: "5B", url: "https://b.io", datasetId: "0x0", weight: 99 },
+		];
+		loadBalancer.mockResolvedValue(weighted);
+		// threshold = 0.5 * 100 = 50 → after subtracting weight 1 (still 49),
+		// lands on the heavy second provider.
+		const result = await getRandomProviderFromList(
+			"production",
+			undefined,
+			undefined,
+			() => 0.5,
+		);
+		expect(result.provider.url).toBe("https://b.io");
+	});
+
+	it("falls back to the DNS-routed endpoint when the list is empty", async () => {
+		loadBalancer.mockResolvedValue([]);
+		const result = await getRandomProviderFromList(
+			"development",
+			undefined,
+			undefined,
+			() => 0,
+		);
+		// Development resolves the local URL without a healthz round-trip.
+		expect(result.provider.url).toBe("https://localhost:9229");
+		expect(result.providerAccount).toBe("dns-routed");
 	});
 });

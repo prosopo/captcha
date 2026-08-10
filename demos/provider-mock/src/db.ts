@@ -19,11 +19,11 @@ import type { Tables } from "@prosopo/types-database";
 import type mongoose from "mongoose";
 import { Schema } from "mongoose";
 
-enum TableNames {
+export enum TableNames {
 	ja4 = "ja4",
 }
 
-type JA4Data = {
+export type JA4Data = {
 	application?: string;
 	library?: string;
 	device?: string;
@@ -43,7 +43,19 @@ type JA4Data = {
 	ja4tscan_fingerprint?: string;
 };
 
-type JA4Record = JA4Data & mongoose.Document;
+export type JA4Record = JA4Data & mongoose.Document;
+
+/**
+ * The slice of the database the API depends on.
+ *
+ * Narrower than JA4Database so a caller — a test, or a different storage
+ * backend — can supply one without a mongo connection.
+ */
+export interface JA4Store {
+	connect: () => Promise<void>;
+	close: () => Promise<void>;
+	addOrUpdateJA4Record: (record: JA4Data) => Promise<JA4Record | null>;
+}
 
 const JA4Schema = new Schema({
 	application: String,
@@ -90,15 +102,30 @@ export class JA4Database extends MongoDatabase {
 
 	override async connect(): Promise<void> {
 		await super.connect();
-		DATA_TABLES.map(({ collectionName, modelName, schema }) => {
-			if (this.connection) {
-				this.tables[collectionName] = this.connection.model(modelName, schema);
-			}
-		});
+		const connection = this.connection;
+		if (connection === undefined) {
+			// super.connect() resolves only once the connection is open, so this
+			// cannot normally happen — but the models below would be read off
+			// undefined if it ever did, which is a worse error to debug.
+			throw new ProsopoDBError("DATABASE.CONNECTION_UNDEFINED", {
+				context: { failedFuncName: this.connect.name },
+				logger: this.logger,
+			});
+		}
+		for (const { collectionName, modelName, schema } of DATA_TABLES) {
+			this.tables[collectionName] = connection.model(modelName, schema);
+		}
 	}
 
+	/**
+	 * The registered models.
+	 *
+	 * The check used to be `!this.tables`, which the constructor makes
+	 * impossible, so querying before connect() failed with a TypeError on
+	 * undefined rather than the database error it is.
+	 */
 	getTables(): Tables<TableNames> {
-		if (!this.tables) {
+		if (this.tables[TableNames.ja4] === undefined) {
 			throw new ProsopoDBError("DATABASE.TABLES_UNDEFINED", {
 				context: { failedFuncName: this.getTables.name },
 				logger: this.logger,
@@ -108,14 +135,14 @@ export class JA4Database extends MongoDatabase {
 	}
 
 	async getJA4Records(): Promise<JA4Record[]> {
-		return this.tables.ja4.find<JA4Record>({});
+		return this.getTables().ja4.find<JA4Record>({});
 	}
 
 	async getJA4RecordByFingerprintAndUserAgent(
 		ja4Fingerprint: string,
 		userAgentString: string,
 	): Promise<JA4Record | null> {
-		return this.tables.ja4.findOne<JA4Record>({
+		return this.getTables().ja4.findOne<JA4Record>({
 			ja4_fingerprint: ja4Fingerprint,
 			user_agent_string: userAgentString,
 		});
@@ -134,7 +161,7 @@ export class JA4Database extends MongoDatabase {
 			await existingRecord.save();
 			return existingRecord;
 		}
-		const newRecord = new this.tables.ja4(ja4Record);
+		const newRecord = new (this.getTables().ja4)(ja4Record);
 		await newRecord.save();
 		return newRecord;
 	}

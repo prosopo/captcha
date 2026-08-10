@@ -18,7 +18,9 @@ import {
 	type CaptchaProperties,
 	type ICaptchaDatabase,
 	type PoWCaptchaRecord,
+	type PuzzleCaptchaRecord,
 	StoredPoWCaptchaRecordSchema,
+	StoredPuzzleCaptchaRecordSchema,
 	type StoredSession,
 	StoredSessionRecordSchema,
 	StoredUserCommitmentRecordSchema,
@@ -40,13 +42,14 @@ const isBsonLong = (value: unknown): boolean =>
 import type { RootFilterQuery } from "mongoose";
 import { MongoDatabase } from "../base/index.js";
 
-const logger = getLogger("info", import.meta.url);
+const logger = getLogger("info", "database:captcha");
 
 enum TableNames {
 	frictionlessToken = "frictionlessToken",
 	session = "session",
 	commitment = "commitment",
 	powcaptcha = "powcaptcha",
+	puzzlecaptcha = "puzzlecaptcha",
 }
 
 const CAPTCHA_TABLES = [
@@ -64,6 +67,11 @@ const CAPTCHA_TABLES = [
 		collectionName: TableNames.commitment,
 		modelName: "UserCommitment",
 		schema: StoredUserCommitmentRecordSchema,
+	},
+	{
+		collectionName: TableNames.puzzlecaptcha,
+		modelName: "PuzzleCaptcha",
+		schema: StoredPuzzleCaptchaRecordSchema,
 	},
 ];
 
@@ -191,22 +199,52 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		sessionEvents: StoredSession[],
 		imageCaptchaEvents: UserCommitmentRecord[],
 		powCaptchaEvents: PoWCaptchaRecord[],
+		puzzleCaptchaEvents: PuzzleCaptchaRecord[] = [],
 	) {
 		await this.connect();
 		if (sessionEvents.length) {
+			// Upsert by sessionId (same pattern as image/pow/puzzle below).
+			// Was intentionally swapped to `insertOne` in #1811 back when
+			// sessionIds were bare UUIDs: two pronodes could roll the same
+			// id, and an upsert-by-sessionId would let the second pronode's
+			// `$set` clobber the first pronode's session record. Insert-only
+			// preserved both docs at the cost of accepting duplicates.
+			//
+			// Now every sessionId is `pronode<N>-<uuidv4>` (see
+			// `getSessionIDPrefix` in frictionlessTasks.ts), so cross-pronode
+			// collision is impossible and within a single pronode the uuidv4
+			// collision probability is 2^-122 — the only doc this upsert
+			// can `$set` over is one the same pronode wrote earlier for the
+			// same session. Safe to restore.
+			//
+			// The bug this actually fixes: `saveCaptchas` is called from the
+			// sweep in `clientTasks.storeCommitmentsExternal`, which drains
+			// records marked "unstored" from local Mongo. The same central
+			// collection is also written fire-and-forget by
+			// `CentralDbStreamer.streamSessionRecord` from
+			// `ProviderDatabase.storeSessionRecord`. Every time the sweep
+			// picked up a record the streamer had already landed on central,
+			// the old `insertOne` wrote a duplicate. In a live 1h snapshot
+			// of `captchastorage.sessions` ~64% of sessionIds have 2+ docs
+			// and up to 7 have been observed on a single sessionId.
 			const result = await this.tables.session.bulkWrite(
 				sessionEvents.map((document) => {
 					const { _id, ...safeDoc } = document;
+					const normalised = CaptchaDatabase.normaliseDocCompositeIps(safeDoc);
 					return {
-						insertOne: {
-							document: CaptchaDatabase.normaliseDocCompositeIps(safeDoc),
+						updateOne: {
+							filter: { sessionId: normalised.sessionId },
+							update: { $set: normalised },
+							upsert: true,
 						},
 					};
 				}),
 			);
 			logger.info(() => ({
 				data: {
-					insertedCount: result.insertedCount,
+					upsertedCount: result.upsertedCount,
+					matchedCount: result.matchedCount,
+					modifiedCount: result.modifiedCount,
 					totalProcessed: sessionEvents.length,
 				},
 				msg: "Mongo Saved Session Events",
@@ -264,6 +302,31 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 			}));
 		}
 
+		if (puzzleCaptchaEvents.length) {
+			const result = await this.tables.puzzlecaptcha.bulkWrite(
+				puzzleCaptchaEvents.map((doc) => {
+					const { _id, ...safeDoc } = doc;
+					const normalised = CaptchaDatabase.normaliseDocCompositeIps(safeDoc);
+					return {
+						updateOne: {
+							filter: { challenge: normalised.challenge },
+							update: { $set: normalised },
+							upsert: true,
+						},
+					};
+				}),
+			);
+			logger.info(() => ({
+				data: {
+					upsertedCount: result.upsertedCount,
+					matchedCount: result.matchedCount,
+					modifiedCount: result.modifiedCount,
+					totalProcessed: puzzleCaptchaEvents.length,
+				},
+				msg: "Mongo Saved Puzzle Events",
+			}));
+		}
+
 		await this.close();
 	}
 
@@ -273,6 +336,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 	): Promise<{
 		userCommitmentRecords: UserCommitmentRecord[];
 		powCaptchaRecords: PoWCaptchaRecord[];
+		puzzleCaptchaRecords: PuzzleCaptchaRecord[];
 	}> {
 		await this.connect();
 
@@ -287,9 +351,15 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 				.limit(limit)
 				.lean<PoWCaptchaRecord[]>();
 
+			const puzzleCaptchaResults = await this.tables.puzzlecaptcha
+				.find(filter)
+				.limit(limit)
+				.lean<PuzzleCaptchaRecord[]>();
+
 			return {
 				userCommitmentRecords: commitmentResults,
 				powCaptchaRecords: powCaptchaResults,
+				puzzleCaptchaRecords: puzzleCaptchaResults,
 			};
 		} catch (error) {
 			throw new ProsopoDBError("DATABASE.QUERY_ERROR", {

@@ -40,6 +40,7 @@ describe("Admin Routes Provider", () => {
 			error: vi.fn(),
 			warn: vi.fn(),
 			debug: vi.fn(),
+			with: vi.fn().mockReturnThis(),
 		};
 	});
 
@@ -85,22 +86,6 @@ describe("Admin Routes Provider", () => {
 
 			expect(routes).toHaveProperty(AdminApiPaths.ToggleMaintenanceMode);
 			expect(routes[AdminApiPaths.ToggleMaintenanceMode]).toBeDefined();
-		});
-
-		it("should register POST /admin/update-detector-key endpoint", () => {
-			const adminRoutes = createApiAdminRoutesProvider(mockEnv);
-			const routes = adminRoutes.getRoutes();
-
-			expect(routes).toHaveProperty(AdminApiPaths.UpdateDetectorKey);
-			expect(routes[AdminApiPaths.UpdateDetectorKey]).toBeDefined();
-		});
-
-		it("should register POST /admin/remove-detector-key endpoint", () => {
-			const adminRoutes = createApiAdminRoutesProvider(mockEnv);
-			const routes = adminRoutes.getRoutes();
-
-			expect(routes).toHaveProperty(AdminApiPaths.RemoveDetectorKey);
-			expect(routes[AdminApiPaths.RemoveDetectorKey]).toBeDefined();
 		});
 	});
 
@@ -150,45 +135,6 @@ describe("Admin Routes Provider", () => {
 		});
 	});
 
-	describe("Detector Key Management Endpoints", () => {
-		it("should handle POST /admin/update-detector-key endpoint", async () => {
-			const adminRoutes = createApiAdminRoutesProvider(mockEnv);
-			const routes = adminRoutes.getRoutes();
-
-			const endpoint = routes[AdminApiPaths.UpdateDetectorKey];
-			expect(endpoint).toBeDefined();
-
-			// Test that the endpoint can be called (validation happens internally)
-			const result = await endpoint?.processRequest(
-				{
-					detectorKey: "some-detector-key",
-					action: "add",
-				},
-				mockLogger,
-			);
-
-			expect(result).toBeDefined();
-		});
-
-		it("should handle POST /admin/remove-detector-key endpoint", async () => {
-			const adminRoutes = createApiAdminRoutesProvider(mockEnv);
-			const routes = adminRoutes.getRoutes();
-
-			const endpoint = routes[AdminApiPaths.RemoveDetectorKey];
-			expect(endpoint).toBeDefined();
-
-			// Test that the endpoint can be called (validation happens internally)
-			const result = await endpoint?.processRequest(
-				{
-					detectorKey: "some-detector-key",
-				},
-				mockLogger,
-			);
-
-			expect(result).toBeDefined();
-		});
-	});
-
 	describe("Error Handling", () => {
 		it("should handle database connection errors", async () => {
 			// Mock database disconnection
@@ -200,6 +146,29 @@ describe("Admin Routes Provider", () => {
 
 			// @ts-ignore
 			expect(mockEnv.db.isConnected()).toBe(false);
+		});
+	});
+
+	describe("Maintenance mode", () => {
+		afterEach(() => {
+			process.env.MAINTENANCE_MODE = undefined;
+		});
+
+		// The admin router must stay registered and functional while
+		// MAINTENANCE_MODE is on — that's how operators add/remove access
+		// rules, detector keys, site keys and decision machines during an
+		// outage. env.getDb() returns a background-connecting handle in
+		// maintenance mode, so building the provider must not throw.
+		it("registers all admin routes when maintenance mode is on", () => {
+			process.env.MAINTENANCE_MODE = "true";
+
+			const adminRoutes = createApiAdminRoutesProvider(mockEnv);
+			const routes = adminRoutes.getRoutes();
+
+			expect(routes[AdminApiPaths.SiteKeyRegister]).toBeDefined();
+			expect(routes[AdminApiPaths.SiteKeyRemove]).toBeDefined();
+			expect(routes[AdminApiPaths.UpdateDecisionMachine]).toBeDefined();
+			expect(routes[AdminApiPaths.ToggleMaintenanceMode]).toBeDefined();
 		});
 	});
 });

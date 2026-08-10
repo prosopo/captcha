@@ -19,4 +19,5 @@ export type SimdReadingsResult = SimdReadings & { timestamp: number };
 export default function decryptSimdReadings(
 	encryptedData: string,
 	privateKeyString?: string,
+	innerConfigEncoded?: string,
 ): Promise<SimdReadingsResult>;
