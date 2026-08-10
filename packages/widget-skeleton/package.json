@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/widget-skeleton",
-	"version": "2.8.4",
+	"version": "2.8.5",
 	"description": "Non business logic utilities for web applications",
 	"type": "module",
 	"engines": {
@@ -22,7 +22,8 @@
 		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --project tsconfig.types.json"
+		"typecheck": "tsc --project tsconfig.types.json",
+		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
 	},
 	"repository": {
 		"type": "git",
@@ -36,7 +37,8 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"devDependencies": {
-		"@prosopo/config": "3.3.5",
+		"jsdom": "25.0.0",
+		"@prosopo/config": "3.3.7",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "4.1.10",
 		"concurrently": "9.0.1",

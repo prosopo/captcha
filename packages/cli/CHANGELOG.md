@@ -1,5 +1,121 @@
 # @prosopo/cli
 
+## 3.7.5
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+- Updated dependencies [fa0d494]
+- Updated dependencies [d6cb841]
+  - @prosopo/provider@5.0.3
+  - @prosopo/types@5.0.2
+  - @prosopo/env@3.6.26
+  - @prosopo/api@4.0.2
+  - @prosopo/keyring@2.9.65
+
+## 3.7.4
+### Patch Changes
+
+  - @prosopo/env@3.6.25
+  - @prosopo/provider@5.0.2
+
+## 3.7.3
+### Patch Changes
+
+- b3f3807: Bump `@prosopo/cli` so the frictionless detector-logging fix can ship as a release.
+  
+  There is no cli change here. This exists purely to move the release number, and
+  the reason is structural rather than incidental.
+  
+  `create_release_pr` sets the root and `docker/images/provider` versions to
+  whatever `@prosopo/cli` is after `changeset version`. The only pending changeset
+  bumps `@prosopo/procaptcha-frictionless` (2.13.2 → 2.13.3) and
+  `@prosopo/procaptcha-bundle` (4.1.46 → 4.1.47). Neither is in cli's dependency
+  tree — cli depends on `@prosopo/provider`, `api`, `types` and friends, which is
+  why ordinary releases bump it by cascade and this one does not. So
+  `changeset version` leaves cli, and therefore the root, at 3.7.2, the release PR
+  comes out titled "Release v3.7.2" again, and no new tag is cut.
+  
+  That matters beyond a cosmetic version number, because captcha-private's own
+  `create_release_pr` derives its version from this repo's latest `v*.*.*` tag and
+  then **checks the submodule out at it**. Without a new tag it would pin the
+  submodule back to v3.7.2 — reverting the very fix this release is meant to carry.
+  
+  The provider image published for this release is therefore functionally
+  identical to 3.7.2; the payload is the widget bundle.
+
+## 3.7.2
+### Patch Changes
+
+- Updated dependencies [38396b4]
+- Updated dependencies [9fec7bd]
+- Updated dependencies [ce2ac41]
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/env@3.6.24
+  - @prosopo/common@3.1.49
+  - @prosopo/provider@5.0.1
+  - @prosopo/types@5.0.1
+  - @prosopo/api@4.0.1
+  - @prosopo/logger@2.0.5
+  - @prosopo/locale@3.2.9
+  - @prosopo/dotenv@3.0.51
+  - @prosopo/keyring@2.9.64
+
+## 3.7.1
+### Patch Changes
+
+- b68c3a1: Bump `@prosopo/cli` so the next release cuts 3.7.1.
+  
+  `create_release_pr` derives the repo version from this package:
+  
+  ```bash
+  root_version=$(npm -w @prosopo/cli pkg get version | jq -r '.["@prosopo/cli"]')
+  npm pkg set version="$root_version"
+  ```
+  
+  The changesets pending after v3.7.0 target `@prosopo/procaptcha-bundle`, `@prosopo/procaptcha-frictionless` and `@prosopo/client-bundle-example`. `@prosopo/cli` depends on none of them, so `changeset version` left it at 3.7.0 and the release re-cut 3.7.0 rather than 3.7.1.
+
+## 3.7.0
+### Minor Changes
+
+- 787017b: chore(detector): remove the legacy detector-key rotation machinery
+  
+  Nothing has read these keys since the detector moved to per-session provider
+  bundles — the decrypt paths resolve a bundle's own keypair instead. Rotating
+  them was already a no-op, so the whole surface is removed rather than left
+  looking live.
+  
+  **Breaking — the admin API loses two endpoints:**
+  
+  - `POST /v1/prosopo/provider/admin/detector/update` (`AdminApiPaths.UpdateDetectorKey`)
+  - `POST /v1/prosopo/provider/admin/detector/remove` (`AdminApiPaths.RemoveDetectorKey`)
+  
+  Also removed: `ProviderApi.updateDetectorKey` / `.removeDetectorKey`;
+  `ClientTaskManager.updateDetectorKey` / `.removeDetectorKey`;
+  `IProviderDatabase.storeDetectorKey` / `.getDetectorKeys` / `.removeDetectorKey`;
+  the `detector` Mongo collection and its `DetectorRecordSchema` / `DetectorSchema`
+  / `DetectorKey` types; the `UpdateDetectorKeyBody` / `RemoveDetectorKeyBodySpec`
+  / `UpdateDetectorKeyResponse` API types; and the rate-limit config for both
+  paths.
+  
+  The `detector` collection itself is left in place on existing deployments — no
+  migration drops it. It can be dropped manually once the pool rollout is
+  confirmed.
+
+### Patch Changes
+
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [6f19cde]
+  - @prosopo/provider@5.0.0
+  - @prosopo/types@5.0.0
+  - @prosopo/api@4.0.0
+  - @prosopo/env@3.6.23
+  - @prosopo/keyring@2.9.63
+
 ## 3.6.77
 ### Patch Changes
 
