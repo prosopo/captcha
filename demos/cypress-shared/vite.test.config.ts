@@ -11,20 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { defineConfig } from "vitest/config";
 
-import { waitForServices } from "./waitForServices.js";
-
-waitForServices({
-	log: (message: string): void => {
-		// the entry point redraws in place; the library itself just appends
-		if (message.startsWith("🔍 Service Status")) {
-			process.stdout.write("\x1Bc");
-		}
-		console.log(message);
+export default defineConfig({
+	test: {
+		environment: "node",
+		// the cypress specs and support files run under cypress, not vitest
+		include: ["scripts/**/*.test.ts"],
 	},
-})
-	.then(() => undefined)
-	.catch((error: unknown) => {
-		console.error(error);
-		process.exit(1);
-	});
+});
