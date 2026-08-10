@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/gh-actions",
-	"version": "2.6.29",
+	"version": "2.6.30",
 	"description": "",
 	"private": true,
 	"type": "module",
@@ -19,7 +19,7 @@
 		"@octokit/graphql": "8.1.1"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.6",
+		"@prosopo/config": "3.3.7",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "4.1.10",
 		"concurrently": "9.0.1",
