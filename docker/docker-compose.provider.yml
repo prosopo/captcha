@@ -180,10 +180,14 @@ services:
     environment:
       # The exporter connects to redis over the internal network. Without an
       # explicit REDIS_ADDR it defaults to its own localhost:6379 and scrapes
-      # nothing. REDIS_PASSWORD is filled from the deploy-exported provider env
-      # (same value as REDIS_CONNECTION_PASSWORD); empty means no-auth redis.
+      # nothing.
       - REDIS_ADDR=redis://redis-stack:6379
-      - REDIS_PASSWORD=${REDIS_CONNECTION_PASSWORD:-}
+    # REDIS_PASSWORD comes from the env file, not from an interpolated
+    # ${REDIS_CONNECTION_PASSWORD}: compose resolves `environment:` against the
+    # deploy shell and a top-level .env, neither of which carries the provider
+    # secrets, so the interpolated form silently authenticates with an empty
+    # password. The env file is named under the exporter's own variable so no
+    # translation is needed.
     env_file:
       - ../.env.1.${NODE_ENV}
     depends_on:
@@ -252,13 +256,11 @@ services:
     image: percona/mongodb_exporter:${MONGODB_EXPORTER_IMAGE:-0.43.1}
     labels:
       - "vector.docker=true" # log docker events
-    # MONGODB_URI is resolved by compose interpolation from the deploy-exported
-    # provider env (same MONGO_INITDB_ROOT_* values the database/vector services
-    # use). Passed via env rather than --mongodb.uri so the password isn't
-    # visible in the container's process args. --collect-all enables all
-    # collectors; --compatible-mode keeps metric names stable for dashboards.
-    environment:
-      - MONGODB_URI=mongodb://${MONGO_INITDB_ROOT_USERNAME:-root}:${MONGO_INITDB_ROOT_PASSWORD:-root}@database:27017
+    # MONGODB_URI comes from the env file for the same reason REDIS_PASSWORD
+    # does - compose interpolation cannot see the provider secrets. Passed via
+    # env rather than --mongodb.uri so the password isn't visible in the
+    # container's process args. --collect-all enables all collectors;
+    # --compatible-mode keeps metric names stable for dashboards.
     command:
       - '--collect-all'
       - '--compatible-mode'
