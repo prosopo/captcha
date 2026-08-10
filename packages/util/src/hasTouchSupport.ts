@@ -12,17 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export * from "./bot.js";
-export * from "./isMain.js";
-
-import { main } from "./bot.js";
-import { isMain } from "./isMain.js";
-
-// The bot used to run on import: bot.ts called run() at module scope and
-// index.ts only logged its own name. Importing the package now has no effect.
-if (isMain(import.meta.url)) {
-	// Not awaited: a top-level await cannot be emitted in the cjs build, and
-	// main() reports its own failures through core.setFailed rather than
-	// rejecting.
-	void main();
-}
+/**
+ * Classifies the current device as "mobile" or "desktop" based on touch support.
+ * Browser-only: relies on `window`/`navigator`.
+ */
+export const hasTouchSupport = (): "mobile" | "desktop" => {
+	return "ontouchstart" in window || navigator.maxTouchPoints > 0
+		? "mobile"
+		: "desktop";
+};
