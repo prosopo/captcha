@@ -12,10 +12,15 @@ shipped in the browser artifact along with its YAML, JSON5 and JSONC parsers.
 `i18next-http-middleware` — Express request handling — was never on the list at
 all.
 
-Two changes: `external` now matches subpaths as well as bare names, and
-`i18next-http-middleware` joins the exclusion list. Across the whole
-procaptcha-bundle graph, `i18next-fs-backend/cjs` is the only specifier the
-subpath match newly excludes.
+The subpath is now listed literally, and `i18next-http-middleware` joins the
+exclusion list.
+
+Both are listed one by one rather than by matching `pkg/*` against the whole
+exclusion list. That broader rule looks tidier but is wrong: the `vite` filter
+is a substring match, so it also selects `vite-plugin-node-polyfills`, and
+`vite-plugin-node-polyfills/shims/process` is injected into the served and IIFE
+bundles as a bare import. Externalising it leaves the browser unable to resolve
+the specifier and the widget dies on load.
 
 Measured on `@prosopo/procaptcha-bundle`, production mode:
 
@@ -23,7 +28,7 @@ Measured on `@prosopo/procaptcha-bundle`, production mode:
 | --- | --- | --- |
 | `i18nBackend` chunk, raw | 153,593 | 788 |
 | all chunks, raw | 1,247,449 | 1,094,644 (−12.2%) |
-| all chunks, gzip | 474,695 | 434,415 (−8.5%) |
+| all chunks, gzip | 474,695 | 434,408 (−8.5%) |
 
 This is not a first-paint change — the critical path is unchanged, because the
 chunk is only reachable through `loadI18next(true)` and the widget always calls

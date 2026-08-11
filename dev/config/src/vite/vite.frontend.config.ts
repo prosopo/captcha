@@ -121,12 +121,29 @@ export default async function (
 		"i18next-http-middleware",
 	]);
 
+	// `external` only ever matches a specifier exactly, so listing a package by
+	// name does nothing for a subpath import of it. `i18next-fs-backend` has
+	// been on the exclusion list above for a long time, but `i18nBackend.ts`
+	// imports `i18next-fs-backend/cjs` (see i18next/i18next-fs-backend#57) —
+	// a different string — so it was bundled anyway, dragging its YAML, JSON5
+	// and JSONC parsers into the browser artifact.
+	//
+	// Listed literally rather than by matching `pkg/*` against the whole
+	// exclusion list: that broader rule also catches
+	// `vite-plugin-node-polyfills/shims/process` (the `vite` filter is a
+	// substring match, so it selects the plugin package too). That specifier is
+	// injected into the served and IIFE bundles as a bare import, and
+	// externalising it leaves the browser unable to resolve it — the widget dies
+	// on load with "Failed to resolve module specifier".
+	const serverOnlySubpaths = ["i18next-fs-backend/cjs"];
+
 	// Add the node builtins (path, fs, os, etc.) to the external list
 	const allExternal = [
 		...builtinModules,
 		...builtinModules.map((m) => `node:${m}`),
 		...external,
 		...optionalPeerDependencies,
+		...serverOnlySubpaths,
 	];
 	console.debug(
 		`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`,
@@ -145,19 +162,7 @@ export default async function (
 		pure = ["console.log", "console.warn", "console.info", "console.debug"];
 	}
 
-	// An `external` array only ever matches a specifier exactly, so a subpath
-	// import walks straight past it. `i18next-fs-backend` has been on the
-	// exclusion list above for a long time, but `i18nBackend.ts` imports
-	// `i18next-fs-backend/cjs` (see i18next/i18next-fs-backend#57), which is a
-	// different string — so it was bundled anyway, dragging its YAML, JSON5 and
-	// JSONC parsers into the browser artifact.
-	//
-	// Matching subpaths as well as the bare name is narrowly scoped in practice:
-	// across the whole procaptcha-bundle graph, `i18next-fs-backend/cjs` is the
-	// only specifier this newly excludes.
-	const externalSet = new Set(allExternal);
-	const rollupExternal: ExternalOption = (id: string): boolean =>
-		externalSet.has(id) || allExternal.some((pkg) => id.startsWith(`${pkg}/`));
+	const rollupExternal: ExternalOption = allExternal;
 
 	console.info({ bundleName }, "Bundle name");
 	return {
