@@ -56,6 +56,11 @@ jobs:
     # only lands on a host big enough for it. Set to a JSON string -> used as
     # given, which is how a repo opts back out to a hosted runner.
     runs-on: ${{ vars.GH_RUNNER && startsWith(vars.GH_RUNNER, '[') && fromJSON(format('["{0}","4c","8g","40d"]', join(fromJSON(vars.GH_RUNNER), '","'))) || fromJSON(vars.GH_RUNNER || '"ubuntu-latest"') }}
+    # `concurrently --kill-others` does not reliably reap the service processes
+    # when the cypress command exits non-zero, so a failing suite leaves the job
+    # sitting there until the 6h default. Chrome never trips this because it
+    # passes; firefox is new, so bound it.
+    timeout-minutes: 45
     if: >-
       github.event.pull_request.draft == false &&
       (contains(github.event.pull_request.title, 'release') ||
