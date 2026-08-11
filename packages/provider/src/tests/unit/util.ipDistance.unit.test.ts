@@ -25,18 +25,12 @@ describe("deepValidateIpAddress", () => {
 	const compareIPsSpy = vi.spyOn(ipComparisonModule, "compareIPs");
 
 	beforeEach(() => {
-		// `with` returns a child logger; deepValidateIpAddress binds its context
-		// through it before logging, so the mock has to hand back something
-		// loggable. Returning the mock itself keeps the child's calls visible on
-		// the same spies.
-		const withMock: Logger["with"] = vi.fn((_obj, _subscope?) => mockLogger);
 		mockLogger = {
 			info: vi.fn(),
 			debug: vi.fn(),
 			error: vi.fn(),
 			log: vi.fn(),
 			warn: vi.fn(),
-			with: withMock,
 		} as unknown as Logger;
 		mockIpInfoService = {
 			initialize: vi.fn(),
