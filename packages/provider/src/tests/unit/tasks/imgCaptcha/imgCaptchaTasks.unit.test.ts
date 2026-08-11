@@ -1113,6 +1113,7 @@ describe("ImgCaptchaManager", () => {
 				sessionId,
 				{
 					serverChecked: true,
+					blocked: true,
 					result: {
 						status: CaptchaStatus.disapproved,
 						reason: "Suspicious",
@@ -1744,6 +1745,7 @@ describe("ImgCaptchaManager", () => {
 				sessionId,
 				{
 					serverChecked: true,
+					blocked: true,
 					result: {
 						status: CaptchaStatus.disapproved,
 						reason: "API.DISALLOWED_WEBVIEW",

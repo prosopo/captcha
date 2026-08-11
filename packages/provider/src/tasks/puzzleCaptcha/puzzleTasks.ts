@@ -856,10 +856,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 					reason: (decision.reason ||
 						ResultReason.CAPTCHA_DECISION_MACHINE_DENIED) as ResultReason,
 				};
-				const isBlocked = isBlockingCaptchaResult(
-					CaptchaType.puzzle,
-					dmResult,
-				);
+				const isBlocked = isBlockingCaptchaResult(CaptchaType.puzzle, dmResult);
 				await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
 					result: dmResult,
 					...(isBlocked && { blocked: true }),
