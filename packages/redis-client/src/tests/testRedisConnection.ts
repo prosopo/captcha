@@ -15,10 +15,14 @@
 import type { Logger } from "@prosopo/logger";
 import { type RedisConnection, connectToRedis } from "../redisClient.js";
 
+// Every member is a no-op sink, except `with`, which has to return a child
+// logger — connectToRedis calls `options.logger.with({ url })` and then logs
+// through the result. Returning the proxy itself keeps the child a sink too.
 const mockLogger = new Proxy(
 	{},
 	{
-		get: () => () => {},
+		get: (_target, property) =>
+			property === "with" ? () => mockLogger : () => {},
 	},
 ) as unknown as Logger;
 

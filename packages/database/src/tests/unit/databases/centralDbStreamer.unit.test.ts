@@ -33,8 +33,11 @@ import { CentralDbStreamer } from "../../../databases/centralDbStreamer.js";
 
 const flush = () => new Promise<void>((resolve) => setTimeout(resolve, 50));
 
-const createMockLogger = (): Logger =>
-	({
+const createMockLogger = (): Logger => {
+	// `with` returns a child logger and MongoDatabase's constructor logs
+	// through the result, so the stub has to hand back something loggable.
+	// Returning the same object keeps the child's calls on the same spies.
+	const logger = {
 		debug: vi.fn(),
 		info: vi.fn(),
 		warn: vi.fn(),
@@ -42,7 +45,10 @@ const createMockLogger = (): Logger =>
 		trace: vi.fn(),
 		fatal: vi.fn(),
 		log: vi.fn(),
-	}) as unknown as Logger;
+		with: vi.fn(() => logger),
+	};
+	return logger as unknown as Logger;
+};
 
 describe("CentralDbStreamer", () => {
 	let streamer: CentralDbStreamer;

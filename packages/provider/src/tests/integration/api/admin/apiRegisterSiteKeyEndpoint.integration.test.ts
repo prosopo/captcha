@@ -29,10 +29,14 @@ import { ClientTaskManager } from "../../../../tasks/client/clientTasks.js";
 describe("apiRegisterSiteKeyEndpoint", () => {
 	const mockConfig = {} as unknown as ProsopoConfigOutput;
 
+	// Every member is a no-op sink, except `with`, which has to return a child
+	// logger — the code under test calls `logger.with({...})` and logs through
+	// the result. Returning the proxy itself keeps the child a sink too.
 	const mockLogger = new Proxy(
 		{},
 		{
-			get: () => () => {},
+			get: (_target, property) =>
+				property === "with" ? () => mockLogger : () => {},
 		},
 	) as Logger;
 

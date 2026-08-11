@@ -36,12 +36,19 @@ import {
 const REDIS_URL = process.env.REDIS_CONNECTION_URL ?? "redis://localhost:6379";
 const REDIS_PASSWORD = process.env.REDIS_CONNECTION_PASSWORD ?? "root";
 
-const mockLogger: Logger = {
-	debug: vi.fn(),
-	info: vi.fn(),
-	warn: vi.fn(),
-	error: vi.fn(),
-} as unknown as Logger;
+// `with` returns a child logger and connectToRedis logs through the result,
+// so the stub has to hand back something loggable. Returning the same object
+// keeps the child's calls on the same spies.
+const mockLogger: Logger = (() => {
+	const logger = {
+		debug: vi.fn(),
+		info: vi.fn(),
+		warn: vi.fn(),
+		error: vi.fn(),
+		with: vi.fn(() => logger),
+	};
+	return logger as unknown as Logger;
+})();
 
 const DAPP = `test-${process.pid}-${Date.now()}`;
 const IP = "1.2.3.4";
