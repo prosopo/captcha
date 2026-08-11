@@ -14,8 +14,12 @@
 
 import type { DetectorResult } from "@prosopo/types";
 
-export default function decryptBotScorePayload(
-	token: string,
+// Hand-written to match decodeBehavior.d.ts and decodeSimd.d.ts, the other two
+// obfuscated .js modules in this directory. Without it tsc emits a declaration
+// for decodePayload.js into the source tree, and lint:license then trips on the
+// generated file because it carries no licence header.
+export default function getBotScoreFromPayload(
+	payload: string,
 	headHash: string,
 	privateKeyString?: string,
 	innerConfigEncoded?: string,
