@@ -102,7 +102,15 @@ export default async function (
 	const { dependencies: deps, optionalPeerDependencies } =
 		await getDependencies(packageName, isProduction);
 
-	// Get rid of any dependencies we don't want to bundle
+	// Get rid of any dependencies we don't want to bundle.
+	// The two i18next entries are server-only: the fs backend reads locale JSON
+	// off disk and the middleware is Express request handling. Neither can run
+	// in a browser — `i18nBackend.ts` also imports `node:path`, which is already
+	// external — so they are pure weight in a frontend bundle. The other
+	// i18next-* packages (http-backend, browser-languagedetector,
+	// chained-backend, resources-to-backend) ARE used in the browser and must
+	// stay bundled; these filters are substring matches, so they catch only
+	// themselves.
 	const { external, internal } = filterDependencies(deps, [
 		"pm2",
 		"nodejs-polars",
@@ -110,6 +118,7 @@ export default async function (
 		"webpack",
 		"vite",
 		"i18next-fs-backend",
+		"i18next-http-middleware",
 	]);
 
 	// Add the node builtins (path, fs, os, etc.) to the external list
@@ -136,7 +145,19 @@ export default async function (
 		pure = ["console.log", "console.warn", "console.info", "console.debug"];
 	}
 
-	const rollupExternal: ExternalOption = allExternal;
+	// An `external` array only ever matches a specifier exactly, so a subpath
+	// import walks straight past it. `i18next-fs-backend` has been on the
+	// exclusion list above for a long time, but `i18nBackend.ts` imports
+	// `i18next-fs-backend/cjs` (see i18next/i18next-fs-backend#57), which is a
+	// different string — so it was bundled anyway, dragging its YAML, JSON5 and
+	// JSONC parsers into the browser artifact.
+	//
+	// Matching subpaths as well as the bare name is narrowly scoped in practice:
+	// across the whole procaptcha-bundle graph, `i18next-fs-backend/cjs` is the
+	// only specifier this newly excludes.
+	const externalSet = new Set(allExternal);
+	const rollupExternal: ExternalOption = (id: string): boolean =>
+		externalSet.has(id) || allExternal.some((pkg) => id.startsWith(`${pkg}/`));
 
 	console.info({ bundleName }, "Bundle name");
 	return {
