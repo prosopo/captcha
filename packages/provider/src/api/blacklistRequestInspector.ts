@@ -647,8 +647,11 @@ export class BlacklistRequestInspector {
 			sessionId: `blocked-${randomUUID()}`,
 			createdAt: new Date(),
 			// Sentinel values for schema-required fields the blocked request
-			// never reached the point of populating.
-			token: "",
+			// never reached the point of populating. `token` must be non-empty:
+			// mongoose treats "" as missing on required String, and the
+			// resulting "Validation failed: token: Path `token` is required"
+			// spam floods the error stream and shows as API.PARSE_ERROR volume.
+			token: "blocked",
 			score: 1,
 			threshold: 0,
 			scoreComponents: { baseScore: 1 },
