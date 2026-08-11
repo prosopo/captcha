@@ -12,6 +12,7 @@ on:
       - synchronize # when a PR is pushed to
       - reopened # when a PR is reopened
       - ready_for_review # when a PR is marked as ready for review (e.g. taken off draft mode)
+      - converted_to_draft # so the concurrency group cancels the in-flight run
   workflow_dispatch:
 
 permissions:
@@ -36,7 +37,7 @@ jobs:
     # given, which is how a repo opts back out to a hosted runner.
     runs-on: ${{ vars.GH_RUNNER && startsWith(vars.GH_RUNNER, '[') && fromJSON(format('["{0}","2c","4g","20d"]', join(fromJSON(vars.GH_RUNNER), '","'))) || fromJSON(vars.GH_RUNNER || '"ubuntu-latest"') }}
     # Skip if PR title starts with "Release v"
-    if: ${{ !startsWith(github.event.pull_request.title, 'Release v') }}
+    if: ${{ !startsWith(github.event.pull_request.title, 'Release v') && github.event.action != 'converted_to_draft' }}
     steps:
       - name: Print contexts
         uses: prosopo/github_actions/.github/actions/print_contexts@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
