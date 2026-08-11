@@ -41,15 +41,34 @@ export function createWidgetSkeletonElement(theme: Theme): HTMLElement {
 	widgetElement.innerHTML =
 		getWidgetStyles(theme) + getWidgetMarkup(isDevMode());
 
-	widgetElement
-		.querySelector(".prosopo-widget__checkbox")
-		?.replaceWith(checkboxElement);
-
-	widgetElement
-		.querySelector(".prosopo-widget__logo")
-		?.replaceWith(logoElement);
+	replacePlaceholder(
+		widgetElement,
+		".prosopo-widget__checkbox",
+		checkboxElement,
+	);
+	replacePlaceholder(widgetElement, ".prosopo-widget__logo", logoElement);
 
 	return widgetElement;
+}
+
+/**
+ * Swaps a placeholder in the rendered markup for a real element.
+ *
+ * Throws when the placeholder is absent. It used to be an optional chain, so
+ * editing a class name in `getWidgetMarkup` without editing the selector here
+ * produced a widget missing its checkbox or its logo — with no error, and
+ * `createWidgetSkeleton` reporting only the missing interactive area.
+ */
+export function replacePlaceholder(
+	root: HTMLElement,
+	selector: string,
+	replacement: HTMLElement,
+): void {
+	const placeholder = root.querySelector(selector);
+	if (placeholder === null) {
+		throw new Error(`widget skeleton has no ${selector} placeholder`);
+	}
+	placeholder.replaceWith(replacement);
 }
 
 /**
@@ -167,13 +186,54 @@ function getWidgetStyles(theme: Theme): string {
 `;
 }
 
-function getCurrentEnvironmentMode(): string | undefined {
-	if (typeof process !== "undefined") {
-		return process.env.NODE_ENV;
-	}
-
-	const importMeta = import.meta as { env?: { MODE?: string } };
-	return importMeta.env?.MODE;
+/**
+ * Where the build mode can be read from.
+ *
+ * `process` is absent in a browser bundle that was not shimmed, and
+ * `import.meta.env` is absent under plain node, so both are optional and both
+ * have to be tried.
+ */
+export interface EnvironmentSources {
+	nodeEnv: string | undefined;
+	bundlerMode: string | undefined;
 }
 
-const isDevMode = () => getCurrentEnvironmentMode() !== "production";
+/**
+ * Read both sources without assuming either exists.
+ *
+ * `import.meta.env` is rewritten to a literal by the bundler, so it is read
+ * through a guard rather than a bare access: under a runtime that leaves the
+ * expression in place it is simply undefined.
+ */
+export const readEnvironmentSources = (): EnvironmentSources => {
+	return {
+		nodeEnv: typeof process === "undefined" ? undefined : process.env.NODE_ENV,
+		bundlerMode: readBundlerMode(),
+	};
+};
+
+const readBundlerMode = (): string | undefined => {
+	try {
+		const importMeta: ImportMeta & { env?: { MODE?: string } } = import.meta;
+		return importMeta.env?.MODE;
+	} catch {
+		// Bundlers substitute `import.meta.env` for an expression of their own,
+		// and some of those read a `process` that a browser build does not have.
+		// The mode is a nicety; failing to read it must not stop the widget
+		// rendering.
+		return undefined;
+	}
+};
+
+/** The build mode, preferring node's environment over the bundler's. */
+export function getCurrentEnvironmentMode(
+	sources: EnvironmentSources = readEnvironmentSources(),
+): string | undefined {
+	return sources.nodeEnv ?? sources.bundlerMode;
+}
+
+// Anything other than an explicit "production" counts as development, so an
+// unset mode leaves the test hooks in the markup rather than dropping them.
+export const isDevMode = (
+	sources: EnvironmentSources = readEnvironmentSources(),
+): boolean => getCurrentEnvironmentMode(sources) !== "production";

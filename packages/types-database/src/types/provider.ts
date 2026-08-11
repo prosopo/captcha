@@ -252,6 +252,8 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	// StoreCommitmentsExternal sweep scans only pending rows instead of
 	// the whole collection.
 	pendingStage: { type: Boolean, required: false },
+	// Mirrors `Session.blocked`. See `StoredCaptcha.blocked`.
+	blocked: { type: Boolean, required: false },
 	// Full ipinfo payload. Replaces the flat `vpn`, `countryCode`,
 	// `geolocation` and other per-flag fields — consumers narrow on
 	// `ipInfo.isValid` and read whichever sub-field they need.
@@ -326,6 +328,16 @@ PoWCaptchaRecordSchema.index(
 		partialFilterExpression: { pendingStage: true },
 	},
 );
+// Sparse partial index for "give me the blocked PoW records" queries —
+// only carries the (typically small) rejected subset, so scans stay cheap.
+PoWCaptchaRecordSchema.index(
+	{ blocked: 1 },
+	{
+		name: "blocked_partial",
+		partialFilterExpression: { blocked: true },
+		sparse: true,
+	},
+);
 
 export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 	challenge: { type: String, required: true },
@@ -390,6 +402,8 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
 	// See `StoredCaptcha.pendingStage`.
 	pendingStage: { type: Boolean, required: false },
+	// Mirrors `Session.blocked`. See `StoredCaptcha.blocked`.
+	blocked: { type: Boolean, required: false },
 	// Full ipinfo payload. Replaces the flat `vpn`, `countryCode`,
 	// `geolocation` and other per-flag fields — consumers narrow on
 	// `ipInfo.isValid` and read whichever sub-field they need.
@@ -444,6 +458,15 @@ PuzzleCaptchaRecordSchema.index(
 		},
 	},
 );
+// See `PoWCaptchaRecordSchema.blocked_partial`.
+PuzzleCaptchaRecordSchema.index(
+	{ blocked: 1 },
+	{
+		name: "blocked_partial",
+		partialFilterExpression: { blocked: true },
+		sparse: true,
+	},
+);
 
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	userAccount: { type: String, required: true },
@@ -492,6 +515,8 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	lastUpdatedTimestamp: { type: Date, required: false },
 	// See `StoredCaptcha.pendingStage`.
 	pendingStage: { type: Boolean, required: false },
+	// Mirrors `Session.blocked`. See `StoredCaptcha.blocked`.
+	blocked: { type: Boolean, required: false },
 	// Full ipinfo payload. Replaces the flat `vpn`, `countryCode`,
 	// `geolocation` and other per-flag fields — consumers narrow on
 	// `ipInfo.isValid` and read whichever sub-field they need.
@@ -559,6 +584,15 @@ UserCommitmentRecordSchema.index(
 			"metadata.emailNormalised": { $exists: true },
 			serverChecked: true,
 		},
+	},
+);
+// See `PoWCaptchaRecordSchema.blocked_partial`.
+UserCommitmentRecordSchema.index(
+	{ blocked: 1 },
+	{
+		name: "blocked_partial",
+		partialFilterExpression: { blocked: true },
+		sparse: true,
 	},
 );
 
