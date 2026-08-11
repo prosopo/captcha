@@ -14,7 +14,7 @@
 
 import { loadI18next, useTranslation } from "@prosopo/locale";
 import { buildUpdateState, useProcaptcha } from "@prosopo/procaptcha-common";
-import { Checkbox, Honeypot } from "@prosopo/procaptcha-common";
+import { Checkbox, Honeypot, isEventTrusted } from "@prosopo/procaptcha-common";
 import { ModeEnum, type ProcaptchaProps } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { useEffect, useRef, useState } from "react";
@@ -173,7 +173,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 					// Try to get coordinates from the change event's underlying mouse event
 					// The original mouse event might be available in the event chain
 					const mouseOrTouchEvent = event.nativeEvent;
-					if (!mouseOrTouchEvent.isTrusted) {
+					if (!isEventTrusted(mouseOrTouchEvent)) {
 						// Don't capture coordinates for non-trusted events
 					} else if (
 						"touches" in mouseOrTouchEvent &&

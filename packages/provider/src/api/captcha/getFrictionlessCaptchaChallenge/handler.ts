@@ -502,6 +502,7 @@ export default (
 				entropyCryptoFingerprint,
 				entropyWallClockOffsetMs,
 				entropyMathRandomFirst,
+				g,
 				bundleId,
 			} = decryptedPayload;
 
@@ -605,6 +606,7 @@ export default (
 				...(entropyMathRandomFirst !== undefined && {
 					entropyMathRandomFirst,
 				}),
+				...(g !== undefined && { g }),
 				...(req.tcpToChelloUs !== undefined && {
 					tcpToChelloUs: req.tcpToChelloUs,
 				}),

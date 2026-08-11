@@ -311,6 +311,7 @@ export const buildEscalation = async (
 		// submit fire-and-forget, races the escalation read), dnsEvent
 		// (set by the DNS sidecar on the origin's TLS connection only).
 		originSession.sessionId,
+		originSession.g,
 	);
 
 	// Record the origin → escalation sessionId mapping so a /captcha/*

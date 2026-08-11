@@ -167,6 +167,7 @@ describe("CaptchaManager", () => {
 				entropyCryptoFingerprint: "b",
 				entropyWallClockOffsetMs: 0,
 				entropyMathRandomFirst: 0.1,
+				g: "c",
 			} as unknown as Session;
 			dbGet().mockResolvedValue(session);
 
@@ -207,6 +208,48 @@ describe("CaptchaManager", () => {
 			// don't overwrite escalation-owned fields.
 			expect(got?.sessionId).toBe("esc");
 			expect(got?.captchaType).toBe(CaptchaType.puzzle);
+		});
+
+		it("fills g from origin when the escalation is missing it", async () => {
+			const origin = {
+				sessionId: "origin",
+				captchaType: CaptchaType.pow,
+				g: "Google Inc. (NVIDIA)~ANGLE (NVIDIA, NVIDIA GeForce RTX 3080)",
+			} as unknown as Session;
+			const escalation = {
+				sessionId: "esc",
+				originSessionId: "origin",
+				captchaType: CaptchaType.puzzle,
+			} as unknown as Session;
+			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			expect(got?.g).toBe(
+				"Google Inc. (NVIDIA)~ANGLE (NVIDIA, NVIDIA GeForce RTX 3080)",
+			);
+			expect(got?.sessionId).toBe("esc");
+		});
+
+		it("keeps the escalation's own g rather than the origin's", async () => {
+			const origin = {
+				sessionId: "origin",
+				captchaType: CaptchaType.pow,
+				g: "origin-value",
+			} as unknown as Session;
+			const escalation = {
+				sessionId: "esc",
+				originSessionId: "origin",
+				captchaType: CaptchaType.puzzle,
+				g: "escalation-value",
+			} as unknown as Session;
+			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			expect(got?.g).toBe("escalation-value");
 		});
 
 		it("does not fill anything when origin also lacks the fields", async () => {
