@@ -10,6 +10,7 @@ on:
       - synchronize # when a PR is pushed to
       - reopened # when a PR is reopened
       - ready_for_review # when a PR is marked as ready for review (e.g. taken off draft mode)
+      - converted_to_draft # so the concurrency group cancels the in-flight run
   workflow_dispatch:
 
 permissions:

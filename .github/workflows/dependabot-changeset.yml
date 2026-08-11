@@ -24,6 +24,7 @@ on:
       - opened
       - synchronize
       - reopened
+      - converted_to_draft # so the concurrency group cancels the in-flight run
 
 permissions:
   contents: read
@@ -46,7 +47,7 @@ jobs:
     # only lands on a host big enough for it. Set to a JSON string -> used as
     # given, which is how a repo opts back out to a hosted runner.
     runs-on: ${{ vars.GH_RUNNER && startsWith(vars.GH_RUNNER, '[') && fromJSON(format('["{0}","2c","4g","20d"]', join(fromJSON(vars.GH_RUNNER), '","'))) || fromJSON(vars.GH_RUNNER || '"ubuntu-latest"') }}
-    if: ${{ github.actor == 'dependabot[bot]' }}
+    if: ${{ github.actor == 'dependabot[bot]' && github.event.action != 'converted_to_draft' }}
     env:
       BASE_REF: ${{ github.event.pull_request.base.ref }}
       HEAD_REF: ${{ github.event.pull_request.head.ref }}
