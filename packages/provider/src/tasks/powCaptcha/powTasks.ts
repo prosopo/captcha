@@ -38,6 +38,7 @@ import {
 	type PoWChallengeId,
 	type RequestHeaders,
 	ResultReason,
+	isBlockingCaptchaResult,
 	type RoutingMachineBaseline,
 	type RoutingMachineOutput,
 	type RoutingMachinePlatform,
@@ -265,6 +266,13 @@ export class PowCaptchaManager extends CaptchaManager {
 					this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 						userSubmitted: true,
 						result: badSaltResult,
+						// Stamp `blocked=true` so downstream aggregations (portal
+						// Overview, audit search, etc.) can key off a single
+						// field without re-deriving from result.status /
+						// result.reason. See `isBlockingCaptchaResult`.
+						...(isBlockingCaptchaResult(CaptchaType.pow, badSaltResult) && {
+							blocked: true,
+						}),
 					}),
 				);
 			}
@@ -293,6 +301,9 @@ export class PowCaptchaManager extends CaptchaManager {
 					this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 						userSubmitted: true,
 						result: timeoutResult,
+						...(isBlockingCaptchaResult(CaptchaType.pow, timeoutResult) && {
+							blocked: true,
+						}),
 					}),
 				);
 			}
@@ -422,6 +433,9 @@ export class PowCaptchaManager extends CaptchaManager {
 				this.updateSessionRecordWithCache(linkedSessionId, {
 					userSubmitted: true,
 					result,
+					...(isBlockingCaptchaResult(CaptchaType.pow, result) && {
+						blocked: true,
+					}),
 				}),
 			);
 			if (simdReadings) {
@@ -1006,6 +1020,13 @@ export class PowCaptchaManager extends CaptchaManager {
 		};
 		if (failResult) {
 			powRecordUpdates.result = failResult;
+			// This write goes through `updatePowCaptchaRecord` (generic
+			// partial), not `updatePowCaptchaRecordResult`, so the DB-layer
+			// blocked-stamping doesn't fire — do it here at the call site.
+			powRecordUpdates.blocked = isBlockingCaptchaResult(
+				CaptchaType.pow,
+				failResult,
+			);
 		}
 
 		// Write pow record updates and session update in parallel
@@ -1027,6 +1048,9 @@ export class PowCaptchaManager extends CaptchaManager {
 					{
 						serverChecked: true,
 						result: finalResult,
+						...(isBlockingCaptchaResult(CaptchaType.pow, finalResult) && {
+							blocked: true,
+						}),
 					},
 					true,
 				),

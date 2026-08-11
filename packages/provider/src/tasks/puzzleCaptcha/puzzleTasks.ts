@@ -36,6 +36,7 @@ import {
 	type RequestHeaders,
 	ResultReason,
 	SimdReadingsStage,
+	isBlockingCaptchaResult,
 	puzzleToleranceDefault,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
@@ -251,6 +252,12 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 					userSubmitted: true,
 					result: badSaltResult,
+					// Stamp `blocked=true` so downstream aggregations (portal
+					// Overview, audit search, etc.) can key off a single
+					// field. See `isBlockingCaptchaResult`.
+					...(isBlockingCaptchaResult(CaptchaType.puzzle, badSaltResult) && {
+						blocked: true,
+					}),
 				});
 			}
 			return false;
@@ -273,6 +280,9 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 					userSubmitted: true,
 					result: timeoutResult,
+					...(isBlockingCaptchaResult(CaptchaType.puzzle, timeoutResult) && {
+						blocked: true,
+					}),
 				});
 			}
 			return false;
@@ -393,6 +403,9 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 			await this.updateSessionRecordWithCache(linkedSessionId, {
 				userSubmitted: true,
 				result,
+				...(isBlockingCaptchaResult(CaptchaType.puzzle, result) && {
+					blocked: true,
+				}),
 			});
 			if (simdReadings) {
 				await this.decryptAndAttachSimdReadingsIfAbsent(
@@ -497,13 +510,19 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				status: CaptchaStatus.disapproved,
 				reason: ResultReason.TIMESTAMP_TOO_OLD,
 			};
+			const isBlocked = isBlockingCaptchaResult(
+				CaptchaType.puzzle,
+				disapprovedResult,
+			);
 			await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
 				result: disapprovedResult,
+				...(isBlocked && { blocked: true }),
 			});
 			if (challengeRecord.sessionId) {
 				await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 					serverChecked: true,
 					result: disapprovedResult,
+					...(isBlocked && { blocked: true }),
 				});
 			}
 			return notVerifiedResponse;
@@ -538,13 +557,19 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 						status: CaptchaStatus.disapproved,
 						reason: ResultReason.ACCESS_POLICY_BLOCK,
 					};
+					const isBlocked = isBlockingCaptchaResult(
+						CaptchaType.puzzle,
+						blockedResult,
+					);
 					await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
 						result: blockedResult,
+						...(isBlocked && { blocked: true }),
 					});
 					if (challengeRecord.sessionId) {
 						await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 							serverChecked: true,
 							result: blockedResult,
+							...(isBlocked && { blocked: true }),
 						});
 					}
 					return notVerifiedResponse;
@@ -567,11 +592,15 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 						msg: "Spam email domain detected in server puzzle verification",
 						data: { emailDomain },
 					}));
+					const spamResult = {
+						status: CaptchaStatus.disapproved,
+						reason: ResultReason.SPAM_EMAIL_DOMAIN,
+					};
 					await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
-						result: {
-							status: CaptchaStatus.disapproved,
-							reason: ResultReason.SPAM_EMAIL_DOMAIN,
-						},
+						result: spamResult,
+						...(isBlockingCaptchaResult(CaptchaType.puzzle, spamResult) && {
+							blocked: true,
+						}),
 					});
 					return notVerifiedResponse;
 				}
@@ -604,11 +633,16 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 							msg: "Email submission count exceeded in server puzzle verification",
 							data: { priorCount, maxEmailSubmissionCount },
 						}));
+						const spamCountResult = {
+							status: CaptchaStatus.disapproved,
+							reason: ResultReason.SPAM_EMAIL_COUNT_EXCEEDED,
+						};
 						await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
-							result: {
-								status: CaptchaStatus.disapproved,
-								reason: ResultReason.SPAM_EMAIL_COUNT_EXCEEDED,
-							},
+							result: spamCountResult,
+							...(isBlockingCaptchaResult(
+								CaptchaType.puzzle,
+								spamCountResult,
+							) && { blocked: true }),
 						});
 						return notVerifiedResponse;
 					}
@@ -656,13 +690,19 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 					status: CaptchaStatus.disapproved,
 					reason: check.reason,
 				};
+				const isBlocked = isBlockingCaptchaResult(
+					CaptchaType.puzzle,
+					blockedResult,
+				);
 				await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
 					result: blockedResult,
+					...(isBlocked && { blocked: true }),
 				});
 				if (challengeRecord.sessionId) {
 					await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 						serverChecked: true,
 						result: blockedResult,
+						...(isBlocked && { blocked: true }),
 					});
 				}
 				return notVerifiedResponse;
@@ -719,13 +759,19 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 						status: CaptchaStatus.disapproved,
 						reason: ResultReason.FAILED_IP_VALIDATION,
 					};
+					const isBlocked = isBlockingCaptchaResult(
+						CaptchaType.puzzle,
+						ipFailResult,
+					);
 					await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
 						result: ipFailResult,
+						...(isBlocked && { blocked: true }),
 					});
 					if (challengeRecord.sessionId) {
 						await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 							serverChecked: true,
 							result: ipFailResult,
+							...(isBlocked && { blocked: true }),
 						});
 					}
 					return notVerifiedResponse;
@@ -810,13 +856,19 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 					reason: (decision.reason ||
 						ResultReason.CAPTCHA_DECISION_MACHINE_DENIED) as ResultReason,
 				};
+				const isBlocked = isBlockingCaptchaResult(
+					CaptchaType.puzzle,
+					dmResult,
+				);
 				await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
 					result: dmResult,
+					...(isBlocked && { blocked: true }),
 				});
 				if (challengeRecord.sessionId) {
 					await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 						serverChecked: true,
 						result: dmResult,
+						...(isBlocked && { blocked: true }),
 					});
 				}
 				return notVerifiedResponse;

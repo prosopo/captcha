@@ -26,6 +26,7 @@ import {
 	type CaptchaSolution,
 	CaptchaStates,
 	CaptchaStatus,
+	CaptchaType,
 	type CompositeIpAddress,
 	ContextType,
 	type Dataset,
@@ -38,6 +39,7 @@ import {
 	type DecisionMachineScope,
 	type Hash,
 	type IPInfoResponse,
+	isBlockingCaptchaResult,
 	type PendingImageCaptchaRequest,
 	type PoWCaptchaStored,
 	type PoWChallengeComponents,
@@ -973,6 +975,11 @@ export class ProviderDatabase
 			userSignature,
 			lastUpdatedTimestamp: timestamp,
 			pendingStage: true,
+			// Mirror the result classification onto a dedicated field so
+			// downstream consumers (portal Overview, audit search, exports)
+			// can filter blocked PoW records without decoding result.reason.
+			// See `isBlockingCaptchaResult` — any Disapproved PoW is a block.
+			blocked: isBlockingCaptchaResult(CaptchaType.pow, result),
 			...(coords && { coords }),
 		};
 		if (userSubmitted) {
@@ -1264,6 +1271,10 @@ export class ProviderDatabase
 			userSignature,
 			lastUpdatedTimestamp: timestamp,
 			pendingStage: true,
+			// See the matching comment on `updatePowCaptchaRecordResult` —
+			// mirrors the block classification onto the puzzle record so
+			// either collection can be queried the same way.
+			blocked: isBlockingCaptchaResult(CaptchaType.puzzle, result),
 			...(coords && { coords }),
 			...(userSubmitted && { submittedAtTimestamp: timestamp }),
 			...(isDisapproved && { failedAtTimestamp: timestamp }),
@@ -2353,11 +2364,18 @@ export class ProviderDatabase
 			const result: CaptchaResult = { status: CaptchaStatus.approved };
 			const updateDoc: Pick<
 				StoredCaptcha,
-				"result" | "lastUpdatedTimestamp" | "coords" | "pendingStage"
+				| "result"
+				| "lastUpdatedTimestamp"
+				| "coords"
+				| "pendingStage"
+				| "blocked"
 			> = {
 				result,
 				lastUpdatedTimestamp: new Date(),
 				pendingStage: true,
+				// Approve always clears blocked to false — see the matching
+				// comment on `updatePowCaptchaRecordResult`.
+				blocked: isBlockingCaptchaResult(CaptchaType.image, result),
 				...(coords ? { coords } : {}),
 			};
 			const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
@@ -2399,13 +2417,26 @@ export class ProviderDatabase
 		coords?: [number, number][][],
 	): Promise<void> {
 		try {
+			const result: CaptchaResult = {
+				status: CaptchaStatus.disapproved,
+				reason,
+			};
 			const updateDoc: Pick<
 				StoredCaptcha,
-				"result" | "lastUpdatedTimestamp" | "coords" | "pendingStage"
+				| "result"
+				| "lastUpdatedTimestamp"
+				| "coords"
+				| "pendingStage"
+				| "blocked"
 			> = {
-				result: { status: CaptchaStatus.disapproved, reason },
+				result,
 				lastUpdatedTimestamp: new Date(),
 				pendingStage: true,
+				// See the matching comment on `updatePowCaptchaRecordResult`.
+				// Image disapprovals for user solution failures
+				// (CAPTCHA_INVALID_SOLUTION) are NOT blocks — see
+				// `isBlockingCaptchaResult`.
+				blocked: isBlockingCaptchaResult(CaptchaType.image, result),
 				...(coords ? { coords } : {}),
 			};
 
