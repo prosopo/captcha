@@ -149,6 +149,7 @@ export class FrictionlessManager extends CaptchaManager {
 			entropyCryptoFingerprint: params.entropyCryptoFingerprint,
 			entropyWallClockOffsetMs: params.entropyWallClockOffsetMs,
 			entropyMathRandomFirst: params.entropyMathRandomFirst,
+			g: params.g,
 			tcpToChelloUs: params.tcpToChelloUs,
 			chelloToHandshakeUs: params.chelloToHandshakeUs,
 		};
@@ -198,6 +199,7 @@ export class FrictionlessManager extends CaptchaManager {
 		iframeUrl?: Session["iframeUrl"],
 		isProtect?: Session["isProtect"],
 		originSessionId?: Session["originSessionId"],
+		g?: Session["g"],
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
@@ -247,6 +249,7 @@ export class FrictionlessManager extends CaptchaManager {
 			entropyCryptoFingerprint,
 			entropyWallClockOffsetMs,
 			entropyMathRandomFirst,
+			g,
 			tcpToChelloUs,
 			chelloToHandshakeUs,
 		};
@@ -393,6 +396,8 @@ export class FrictionlessManager extends CaptchaManager {
 			undefined,
 			effectiveParams.iframeUrl,
 			effectiveParams.isProtect,
+			undefined,
+			effectiveParams.g,
 		);
 
 		// Fire-and-forget served-counter writes. Skipped when there's no
@@ -468,6 +473,8 @@ export class FrictionlessManager extends CaptchaManager {
 			undefined,
 			effectiveParams.iframeUrl,
 			effectiveParams.isProtect,
+			undefined,
+			effectiveParams.g,
 		);
 	}
 
@@ -610,6 +617,7 @@ export class FrictionlessManager extends CaptchaManager {
 		let entropyCryptoFingerprint: string | undefined;
 		let entropyWallClockOffsetMs: number | undefined;
 		let entropyMathRandomFirst: number | undefined;
+		let g: string | undefined;
 		for (const [keyIndex, attempt] of decryptKeys.entries()) {
 			try {
 				this.logger.info(() => ({
@@ -637,6 +645,7 @@ export class FrictionlessManager extends CaptchaManager {
 				const ec = decrypted.entropyCryptoFingerprint;
 				const eo = decrypted.entropyWallClockOffsetMs;
 				const em = decrypted.entropyMathRandomFirst;
+				const gv = decrypted.g;
 				this.logger.debug(() => ({
 					msg: "Successfully decrypted score",
 					data: {
@@ -667,6 +676,7 @@ export class FrictionlessManager extends CaptchaManager {
 				entropyCryptoFingerprint = ec;
 				entropyWallClockOffsetMs = eo;
 				entropyMathRandomFirst = em;
+				g = gv;
 				break;
 			} catch (err) {
 				// check if the next index exists, if not, log an error
@@ -728,6 +738,7 @@ export class FrictionlessManager extends CaptchaManager {
 			entropyCryptoFingerprint,
 			entropyWallClockOffsetMs,
 			entropyMathRandomFirst,
+			g,
 			// The pool bundle used (if any) — promoted onto the session so the
 			// later behavioural-data hop can resolve the same keypair/inner cfg.
 			bundleId,

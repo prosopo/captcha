@@ -95,6 +95,35 @@ describe("getBotScore", () => {
 		});
 	});
 
+	it("passes g through", async () => {
+		const mockResult: DetectorResult = {
+			score: 0.5,
+			timestamp: 1234567890,
+			g: "Google Inc. (NVIDIA)~ANGLE (NVIDIA, NVIDIA GeForce RTX 3080)",
+		} as unknown as DetectorResult;
+
+		vi.mocked(decodePayloadModule.default).mockResolvedValue(mockResult);
+
+		const result = await getBotScore("payload", "headHash");
+
+		expect(result.g).toBe(
+			"Google Inc. (NVIDIA)~ANGLE (NVIDIA, NVIDIA GeForce RTX 3080)",
+		);
+	});
+
+	it("leaves g undefined when the client predates the field", async () => {
+		const mockResult: DetectorResult = {
+			score: 0.5,
+			timestamp: 1234567890,
+		} as unknown as DetectorResult;
+
+		vi.mocked(decodePayloadModule.default).mockResolvedValue(mockResult);
+
+		const result = await getBotScore("payload", "headHash");
+
+		expect(result.g).toBeUndefined();
+	});
+
 	it("handles isWebView as undefined", async () => {
 		const mockResult: DetectorResult = {
 			score: 0.5,
