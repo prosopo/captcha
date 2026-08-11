@@ -58,6 +58,14 @@ const translationKeys = Object.keys(
 );
 
 export default defineConfig(async ({ command, mode }) => {
+	// Test-only escape hatch for the firefox cypress leg: cypress can only
+	// dispatch trusted input over the chrome devtools protocol (chromium
+	// only), so on firefox the specs click synthetically and the widget's
+	// isEventTrusted() gate would drop every one. Anything other than an
+	// explicit "1" on a non-production build compiles the allowance out.
+	const allowUntrustedEvents =
+		mode !== "production" && process.env.PROSOPO_ALLOW_UNTRUSTED_EVENTS === "1";
+
 	const frontendConfig = await ViteFrontendConfig(
 		packageName,
 		bundleName,
@@ -72,6 +80,10 @@ export default defineConfig(async ({ command, mode }) => {
 
 	return {
 		...frontendConfig,
+		define: {
+			...frontendConfig.define,
+			__PROSOPO_ALLOW_UNTRUSTED_EVENTS__: JSON.stringify(allowUntrustedEvents),
+		},
 		worker: {
 			format: "es",
 		},

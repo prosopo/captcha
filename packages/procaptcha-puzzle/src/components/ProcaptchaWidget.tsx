@@ -14,7 +14,7 @@
 
 import { loadI18next, useTranslation } from "@prosopo/locale";
 import { buildUpdateState, useProcaptcha } from "@prosopo/procaptcha-common";
-import { Checkbox, Honeypot } from "@prosopo/procaptcha-common";
+import { Checkbox, Honeypot, isEventTrusted } from "@prosopo/procaptcha-common";
 import {
 	type GetPuzzleCaptchaResponse,
 	ModeEnum,
@@ -252,7 +252,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 						let x = 0;
 						let y = 0;
 						const mouseOrTouchEvent = event.nativeEvent;
-						if (!mouseOrTouchEvent.isTrusted) {
+						if (!isEventTrusted(mouseOrTouchEvent)) {
 							// Don't capture coordinates for non-trusted events
 						} else if (
 							"touches" in mouseOrTouchEvent &&
