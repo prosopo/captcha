@@ -328,14 +328,15 @@ PoWCaptchaRecordSchema.index(
 		partialFilterExpression: { pendingStage: true },
 	},
 );
-// Sparse partial index for "give me the blocked PoW records" queries —
-// only carries the (typically small) rejected subset, so scans stay cheap.
+// Partial index for "give me the blocked PoW records" queries — only carries
+// the (typically small) rejected subset, so scans stay cheap. No `sparse`
+// here: Mongo rejects an index that sets both, and a partialFilterExpression
+// already excludes every document that doesn't match.
 PoWCaptchaRecordSchema.index(
 	{ blocked: 1 },
 	{
 		name: "blocked_partial",
 		partialFilterExpression: { blocked: true },
-		sparse: true,
 	},
 );
 
@@ -464,7 +465,6 @@ PuzzleCaptchaRecordSchema.index(
 	{
 		name: "blocked_partial",
 		partialFilterExpression: { blocked: true },
-		sparse: true,
 	},
 );
 
@@ -592,7 +592,6 @@ UserCommitmentRecordSchema.index(
 	{
 		name: "blocked_partial",
 		partialFilterExpression: { blocked: true },
-		sparse: true,
 	},
 );
 

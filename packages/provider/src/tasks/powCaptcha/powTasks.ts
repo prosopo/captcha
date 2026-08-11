@@ -38,12 +38,12 @@ import {
 	type PoWChallengeId,
 	type RequestHeaders,
 	ResultReason,
-	isBlockingCaptchaResult,
 	type RoutingMachineBaseline,
 	type RoutingMachineOutput,
 	type RoutingMachinePlatform,
 	type RoutingMachineRawSignals,
 	SimdReadingsStage,
+	isBlockingCaptchaResult,
 } from "@prosopo/types";
 import type {
 	IProviderDatabase,
