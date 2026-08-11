@@ -487,6 +487,7 @@ export const SessionSchema = object({
 	entropyCryptoFingerprint: string().optional(),
 	entropyWallClockOffsetMs: number().optional(),
 	entropyMathRandomFirst: number().optional(),
+	g: string().optional(),
 	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
 	// plugin (X-TLS-TCP-To-Chello-Us / X-TLS-Chello-To-Handshake-Us).
 	// Server-observed microsecond deltas across the TLS handshake
@@ -583,6 +584,7 @@ export type Session = {
 	entropyCryptoFingerprint?: string;
 	entropyWallClockOffsetMs?: number;
 	entropyMathRandomFirst?: number;
+	g?: string;
 	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
 	// plugin. See the SessionSchema block above for full semantics —
 	// elevated values indicate the client's ClientHello traversed a
