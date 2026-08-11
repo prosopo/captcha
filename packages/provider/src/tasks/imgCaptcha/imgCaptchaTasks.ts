@@ -47,6 +47,7 @@ import {
 	ResultReason,
 	SimdReadingsStage,
 	type UserCommitment,
+	isBlockingCaptchaResult,
 } from "@prosopo/types";
 import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -1139,6 +1140,16 @@ export class ImgCaptchaManager extends CaptchaManager {
 					{
 						serverChecked: true,
 						result: finalResult,
+						// Server-verify Disapprovals (traffic filter, IP validation,
+						// spam rules, decision-machine veto, etc.) are blocks —
+						// mark the session so the Overview chart and other
+						// aggregations pick them up without inspecting
+						// result.reason. User solution failures
+						// (CAPTCHA_INVALID_SOLUTION) are excluded — see
+						// `isBlockingCaptchaResult`.
+						...(isBlockingCaptchaResult(CaptchaType.image, finalResult) && {
+							blocked: true,
+						}),
 					},
 					true,
 				),

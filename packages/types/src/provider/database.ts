@@ -208,6 +208,14 @@ export interface StoredCaptcha {
 	// index instead of $or'ing `{storedAtTimestamp:{$exists:false}}` with an
 	// unindexable $expr branch.
 	pendingStage?: boolean;
+	// True when this record represents a blocked request rather than a
+	// legitimate user failure of the challenge. Mirrors `Session.blocked`
+	// so either collection can be queried with the same filter — see
+	// `isBlockingCaptchaResult` for the classification rule (PoW: any
+	// Disapproved is a block; image/puzzle: server-side rejection only,
+	// not CAPTCHA_INVALID_SOLUTION). Written by the canonical result
+	// writers in the DB layer alongside `result`.
+	blocked?: boolean;
 	sessionId?: string;
 	coords?: [number, number][][];
 	// Legacy fields - kept for backward compatibility with existing data
