@@ -84,6 +84,14 @@ const translationKeys = Object.keys(
 
 // Merge with generic frontend config
 export default defineConfig(async ({ command, mode }) => {
+	// Test-only escape hatch for the firefox cypress leg: cypress can only
+	// dispatch trusted input over the chrome devtools protocol (chromium
+	// only), so on firefox the specs click synthetically and the widget's
+	// isEventTrusted() gate would drop every one. Anything other than an
+	// explicit "1" on a non-production build compiles the allowance out.
+	const allowUntrustedEvents =
+		mode !== "production" && process.env.PROSOPO_ALLOW_UNTRUSTED_EVENTS === "1";
+
 	const frontendConfig = await ViteFrontendConfig(
 		packageName,
 		bundleName,
@@ -98,6 +106,10 @@ export default defineConfig(async ({ command, mode }) => {
 
 	return {
 		...frontendConfig,
+		define: {
+			...frontendConfig.define,
+			__PROSOPO_ALLOW_UNTRUSTED_EVENTS__: JSON.stringify(allowUntrustedEvents),
+		},
 		worker: {
 			format: "es",
 		},
@@ -155,8 +167,19 @@ export default defineConfig(async ({ command, mode }) => {
 						if (id.includes("@polkadot/keyring")) {
 							return "web3Chunk";
 						}
+						// util-crypto rides in the shared browser chunk rather than
+						// its own. Split apart, Rolldown emits a cycle between the two
+						// (fingerprint <-> utilCryptoChunk) on this branch, where the
+						// detector is no longer bundled into the widget and the module
+						// graph is shaped differently. Whichever chunk evaluated first
+						// then read the other's module-scope bindings before they were
+						// assigned, so the widget died on load — first with
+						// "init_dist is not a function", then with isHex reading
+						// `.test` of undefined. Same chunk = one evaluation order = no
+						// cycle, and it preserves the single-instance property the
+						// shared chunk exists for.
 						if (id.includes("packages/util-crypto/dist")) {
-							return "utilCryptoChunk";
+							return sharedBrowserChunkName;
 						}
 						if (id.includes("@noble/hash") || id.includes("@noble/curves")) {
 							return "nobleChunk";

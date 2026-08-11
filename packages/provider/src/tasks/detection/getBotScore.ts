@@ -19,11 +19,13 @@ export const getBotScore = async (
 	payload: string,
 	headHash: string,
 	privateKeyString?: string,
+	innerConfigEncoded?: string,
 ) => {
 	const result = (await getBotScoreFromPayload(
 		payload,
 		headHash,
 		privateKeyString,
+		innerConfigEncoded,
 	)) as DetectorResult;
 	const baseBotScore: number = result.score;
 	const timestamp: number = result.timestamp;
@@ -42,6 +44,7 @@ export const getBotScore = async (
 		result.entropyWallClockOffsetMs;
 	const entropyMathRandomFirst: number | undefined =
 		result.entropyMathRandomFirst;
+	const g: string | undefined = result.g;
 
 	if (baseBotScore === undefined || Number.isNaN(baseBotScore)) {
 		return {
@@ -64,5 +67,6 @@ export const getBotScore = async (
 		entropyCryptoFingerprint,
 		entropyWallClockOffsetMs,
 		entropyMathRandomFirst,
+		g,
 	};
 };

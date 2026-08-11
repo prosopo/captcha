@@ -22,6 +22,7 @@ import {
 	type GetPuzzleCaptchaResponse,
 	POW_SEPARATOR,
 	type PoWChallengeId,
+	type VerificationResponse,
 } from "@prosopo/types";
 
 // Maintenance mode dummies. The matching submit/verify endpoints already
@@ -37,6 +38,34 @@ const sessionPrefix = (host: string | undefined): string =>
 // The cast lines maintenance mode up with the actual runtime shape.
 const buildChallenge = (user: string, dapp: string): PoWChallengeId =>
 	`${Date.now()}${POW_SEPARATOR}${user}${POW_SEPARATOR}${dapp}${POW_SEPARATOR}0` as PoWChallengeId;
+
+// The score a maintenance-mode verify reports. 0 is the most-human end of the
+// scale, so a caller thresholding on it passes — and it matches what the AWS
+// verify handler already synthesises when the provider call times out.
+export const MAINTENANCE_VERIFY_SCORE = 0;
+
+// Verify-side maintenance dummy, shared by the image / PoW / puzzle verify
+// routes. Mirrors what `getVerificationResponse` returns in normal operation
+// as closely as is possible without a DB:
+//
+//   - `status` is the localised "User verified" string, not a bare "ok". A real
+//     verify never returns "ok" here, and integrations do match on this field.
+//   - `score` is sent unconditionally. Normally it is tier-gated on the client
+//     record (`canClientSeeScore`), which lives in Mongo — the thing
+//     maintenance mode exists to work without. So Free-tier callers get a field
+//     they wouldn't normally see; the alternative is paid-tier integrations
+//     that read `score` receiving `undefined` where they expect a number, which
+//     inverts any `score < threshold` test into a rejection.
+//
+// `reason` is failure-only and maintenance always passes, so it never applies.
+// `commitmentId` (image) is deliberately absent — no commitment exists to name.
+export const buildMaintenanceVerificationResponse = (
+	translate: (key: string) => string,
+): VerificationResponse => ({
+	[ApiParams.status]: translate("API.USER_VERIFIED"),
+	[ApiParams.verified]: true,
+	[ApiParams.score]: MAINTENANCE_VERIFY_SCORE,
+});
 
 export const buildFrictionlessMaintenanceResponse = (
 	captchaType: ChallengeCaptchaType,

@@ -26,6 +26,7 @@ import {
 	number,
 	object,
 	type output,
+	record,
 	string,
 	union,
 	type z,
@@ -93,6 +94,9 @@ export enum ClientApiPaths {
 	GetProviderStatus = "/v1/prosopo/provider/client/status",
 	SubmitUserEvents = "/v1/prosopo/provider/client/events",
 	CheckSpamEmail = "/v1/prosopo/provider/client/spam/email",
+	// Assigns a precomputed detector bundle for this session and returns its
+	// obfuscated script inline (or signals the bundled fallback when no pool).
+	AssignDetectorBundle = "/v1/prosopo/provider/client/detector/assign",
 }
 
 export enum PublicApiPaths {
@@ -134,8 +138,6 @@ export type TSubmitPuzzleCaptchaSolutionURL =
 export enum AdminApiPaths {
 	SiteKeyRegister = "/v1/prosopo/provider/admin/sitekey/register",
 	SiteKeysRegister = "/v1/prosopo/provider/admin/sitekeys/register",
-	UpdateDetectorKey = "/v1/prosopo/provider/admin/detector/update",
-	RemoveDetectorKey = "/v1/prosopo/provider/admin/detector/remove",
 	ToggleMaintenanceMode = "/v1/prosopo/provider/admin/maintenance/toggle",
 	UpdateDecisionMachine = "/v1/prosopo/provider/admin/decision-machine/update",
 	GetAllDecisionMachines = "/v1/prosopo/provider/admin/decision-machine/get-all",
@@ -147,6 +149,9 @@ export enum AdminApiPaths {
 	SiteKeysRemove = "/v1/prosopo/provider/admin/sitekeys/remove",
 	// Receives batched DNS observation events from the dns sidecar.
 	DnsEvent = "/v1/prosopo/provider/admin/dns/event",
+	// Hot-swaps the in-memory detector bundle pool (emergency push channel,
+	// avoids a redeploy to rotate the pool).
+	ReplaceDetectorPool = "/v1/prosopo/provider/admin/detector/pool/replace",
 }
 
 export type CombinedApiPaths = ClientApiPaths | AdminApiPaths;
@@ -179,12 +184,11 @@ export const ProviderDefaultRateLimits = {
 	},
 	[ClientApiPaths.GetProviderStatus]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.CheckSpamEmail]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.AssignDetectorBundle]: { windowMs: 60000, limit: 60 },
 	[PublicApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
 	[AdminApiPaths.SiteKeyRegister]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.SiteKeysRegister]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.UpdateDetectorKey]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.RemoveDetectorKey]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.ToggleMaintenanceMode]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.UpdateDecisionMachine]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.GetAllDecisionMachines]: { windowMs: 60000, limit: 60 },
@@ -198,6 +202,7 @@ export const ProviderDefaultRateLimits = {
 	// (1s default), so a high per-minute ceiling is fine. Single ingest
 	// path per pronode → no cross-tenant fairness concerns.
 	[AdminApiPaths.DnsEvent]: { windowMs: 60000, limit: 600 },
+	[AdminApiPaths.ReplaceDetectorPool]: { windowMs: 60000, limit: 5 },
 };
 
 type RateLimit = {
@@ -382,12 +387,6 @@ export interface VerificationResponse extends ApiResponse {
 	[ApiParams.reason]?: string;
 }
 
-export interface UpdateDetectorKeyResponse extends ApiResponse {
-	data: {
-		activeDetectorKeys: string[];
-	};
-}
-
 export interface UpdateDecisionMachineResponse extends ApiResponse {
 	data: {
 		scope: DecisionMachineScope;
@@ -547,11 +546,16 @@ export type SubmitPowCaptchaSolutionBodyType = input<
 
 export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
+	// Empty when the client had no detector to run — never a bypass; the
+	// decision machine serves an image captcha for an absent token.
 	[ApiParams.token]: boundedString(INPUT_LIMITS.TOKEN),
 	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.headHash]: boundedString(INPUT_LIMITS.TOKEN),
 	[ApiParams.mode]: nativeEnum(ModeEnum).optional(),
 	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	// Identifies the provider-assigned pool bundle the detector ran from; the
+	// provider resolves the exact keypair/inner-config for decryption from it.
+	[ApiParams.detectorSessionId]: boundedString(INPUT_LIMITS.ID).optional(),
 	// Full page URL the widget was rendered on (origin + path, no query
 	// string / fragment / credentials). Sent by the client so the provider
 	// can record which page a session originated from; re-sanitised
@@ -573,6 +577,53 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<
 	typeof GetFrictionlessCaptchaChallengeRequestBody
 >;
+
+// ── Detector bundle pool ────────────────────────────────────────────────
+
+export const AssignDetectorBundleRequestBody = object({
+	[ApiParams.dapp]: string(),
+});
+
+export type AssignDetectorBundleRequestBodyOutput = output<
+	typeof AssignDetectorBundleRequestBody
+>;
+
+export interface AssignDetectorBundleResponse extends ApiResponse {
+	// When false, no pool is available (dev / empty pool) — the client falls
+	// back to the bundled detector and sends no detectorSessionId.
+	[ApiParams.useProviderBundle]: boolean;
+	[ApiParams.detectorSessionId]?: string;
+	// The obfuscated, self-contained detector ESM, served inline.
+	[ApiParams.detectorScript]?: string;
+}
+
+export const ReplaceDetectorPoolBody = object({
+	// Map of bundleId -> { js, privateKey, innerConfig, release }.
+	bundles: record(
+		string(),
+		object({
+			js: string(),
+			privateKey: string(),
+			innerConfig: string(),
+			// Release the bundle was built from, e.g. "3.6.64". The widget runs
+			// whatever the provider serves, so this is the only guard against a
+			// pool built from a different release. Optional for pools predating
+			// the stamp.
+			release: string().optional(),
+		}),
+	),
+});
+
+export type ReplaceDetectorPoolBodyType = output<
+	typeof ReplaceDetectorPoolBody
+>;
+
+export interface ReplaceDetectorPoolResponse extends ApiResponse {
+	count: number;
+	// False when the pool went live in memory but could not be written to the
+	// pool directory — it will not survive a provider restart.
+	persisted?: boolean;
+}
 
 export type SubmitPowCaptchaSolutionBodyTypeOutput = output<
 	typeof SubmitPowCaptchaSolutionBody
@@ -678,10 +729,6 @@ export const RemoveSitekeysBody = array(
 	}),
 );
 
-export const UpdateDetectorKeyBody = object({
-	[ApiParams.detectorKey]: boundedString(INPUT_LIMITS.TOKEN),
-});
-
 export const UpdateDecisionMachineBody = object({
 	[ApiParams.decisionMachineScope]: nativeEnum(DecisionMachineScope),
 	[ApiParams.decisionMachineRuntime]: nativeEnum(DecisionMachineRuntime),
@@ -779,18 +826,6 @@ export const RemoveAllDecisionMachinesResponse = object({
 
 export type RemoveAllDecisionMachinesResponseType = z.infer<
 	typeof RemoveAllDecisionMachinesResponse
->;
-
-export const RemoveDetectorKeyBodySpec = object({
-	[ApiParams.detectorKey]: boundedString(INPUT_LIMITS.TOKEN),
-	[ApiParams.expirationInSeconds]: number().positive().optional(),
-});
-
-export type RemoveDetectorKeyBodyInput = input<
-	typeof RemoveDetectorKeyBodySpec
->;
-export type RemoveDetectorKeyBodyOutput = output<
-	typeof RemoveDetectorKeyBodySpec
 >;
 
 export const ToggleMaintenanceModeBody = object({

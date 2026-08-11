@@ -18,7 +18,12 @@ env:
 jobs:
   create-pr:
     name: Create Release PR
-    runs-on: ubuntu-latest
+    # GH_RUNNER unset -> GitHub-hosted. Set to a JSON array (the self-hosted
+    # fleet) -> this job's capacity requirement is appended to it: cores, RAM,
+    # disk. Runners advertise one label per step up to their own size, so a job
+    # only lands on a host big enough for it. Set to a JSON string -> used as
+    # given, which is how a repo opts back out to a hosted runner.
+    runs-on: ${{ vars.GH_RUNNER && startsWith(vars.GH_RUNNER, '[') && fromJSON(format('["{0}","2c","4g","20d"]', join(fromJSON(vars.GH_RUNNER), '","'))) || fromJSON(vars.GH_RUNNER || '"ubuntu-latest"') }}
     steps:
       - name: Get token for gh app
         id: app_token
@@ -74,15 +79,14 @@ jobs:
 
           npm i --ignore-scripts --include=dev --no-audit --no-fund --prefer-offline
           
-          # Set the version of root and docker/images/provider to match @prosopo/cli
+          # Set the root package.json version to match @prosopo/cli. The provider
+          # image tag now comes from packages/cli's own version, so there is no
+          # wrapper package left to keep in step.
           root_version=$(npm -w @prosopo/cli pkg get version | jq -r '.["@prosopo/cli"]')
           echo "root_version=$root_version" >> $GITHUB_ENV
           echo "Setting versions to $root_version"
           
           npm pkg set version="$root_version"
-          cd docker/images/provider
-          npm pkg set version="$root_version"
-          cd -
           
           git add -u .
 

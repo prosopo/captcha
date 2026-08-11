@@ -125,6 +125,195 @@ describe("CaptchaManager", () => {
 		vi.clearAllMocks();
 	});
 
+	// Session-chain walker. Escalation sessions (isEscalation=true) inherit
+	// their originSessionId from the pow-solve that spawned them. DM-input
+	// reads go through the walker so simdReadings / dnsEvent / entropy
+	// fields that live on the origin are surfaced on the escalation record
+	// without duplicating them at write time.
+	describe("getSessionRecordWithOriginFallback", () => {
+		const dbGet = () =>
+			db.getSessionRecordBySessionId as unknown as ReturnType<typeof vi.fn>;
+
+		it("returns the session as-is when there's no originSessionId (non-escalation)", async () => {
+			const session = {
+				sessionId: "sess",
+				captchaType: CaptchaType.pow,
+				simdReadings: undefined,
+			} as unknown as Session;
+			dbGet().mockResolvedValue(session);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("sess");
+
+			expect(got).toBe(session);
+			expect(dbGet()).toHaveBeenCalledTimes(1);
+		});
+
+		it("returns undefined when the session isn't found", async () => {
+			dbGet().mockResolvedValue(null);
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("sess");
+			expect(got).toBeUndefined();
+		});
+
+		it("skips the origin walk when the escalation already carries every fallback-eligible field", async () => {
+			const session = {
+				sessionId: "esc",
+				originSessionId: "origin",
+				captchaType: CaptchaType.puzzle,
+				simdReadings: { supported: true, results: [] },
+				dnsEvent: { receivedAt: new Date() },
+				entropyMathRandomFingerprint: "a",
+				entropyCryptoFingerprint: "b",
+				entropyWallClockOffsetMs: 0,
+				entropyMathRandomFirst: 0.1,
+				g: "c",
+			} as unknown as Session;
+			dbGet().mockResolvedValue(session);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			expect(got).toBe(session);
+			// Only one DB call — origin was never fetched.
+			expect(dbGet()).toHaveBeenCalledTimes(1);
+		});
+
+		it("fills simdReadings from origin when the escalation is missing it", async () => {
+			const origin = {
+				sessionId: "origin",
+				captchaType: CaptchaType.pow,
+				simdReadings: { supported: true, results: [1, 2, 3] },
+				dnsEvent: { receivedAt: new Date() },
+			} as unknown as Session;
+			const escalation = {
+				sessionId: "esc",
+				originSessionId: "origin",
+				captchaType: CaptchaType.puzzle,
+				// simdReadings and dnsEvent are undefined on the escalation
+				// (the exact production bug — origin's fire-and-forget writes
+				// raced buildEscalation's Mongo read).
+			} as unknown as Session;
+			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			expect(got?.simdReadings).toEqual({
+				supported: true,
+				results: [1, 2, 3],
+			});
+			expect(got?.dnsEvent).toBeDefined();
+			// The escalation's own identity is preserved — origin fields
+			// don't overwrite escalation-owned fields.
+			expect(got?.sessionId).toBe("esc");
+			expect(got?.captchaType).toBe(CaptchaType.puzzle);
+		});
+
+		it("fills g from origin when the escalation is missing it", async () => {
+			const origin = {
+				sessionId: "origin",
+				captchaType: CaptchaType.pow,
+				g: "Google Inc. (NVIDIA)~ANGLE (NVIDIA, NVIDIA GeForce RTX 3080)",
+			} as unknown as Session;
+			const escalation = {
+				sessionId: "esc",
+				originSessionId: "origin",
+				captchaType: CaptchaType.puzzle,
+			} as unknown as Session;
+			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			expect(got?.g).toBe(
+				"Google Inc. (NVIDIA)~ANGLE (NVIDIA, NVIDIA GeForce RTX 3080)",
+			);
+			expect(got?.sessionId).toBe("esc");
+		});
+
+		it("keeps the escalation's own g rather than the origin's", async () => {
+			const origin = {
+				sessionId: "origin",
+				captchaType: CaptchaType.pow,
+				g: "origin-value",
+			} as unknown as Session;
+			const escalation = {
+				sessionId: "esc",
+				originSessionId: "origin",
+				captchaType: CaptchaType.puzzle,
+				g: "escalation-value",
+			} as unknown as Session;
+			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			expect(got?.g).toBe("escalation-value");
+		});
+
+		it("does not fill anything when origin also lacks the fields", async () => {
+			const origin = {
+				sessionId: "origin",
+				captchaType: CaptchaType.pow,
+				simdReadings: undefined,
+				dnsEvent: undefined,
+			} as unknown as Session;
+			const escalation = {
+				sessionId: "esc",
+				originSessionId: "origin",
+				captchaType: CaptchaType.puzzle,
+			} as unknown as Session;
+			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			expect(got?.simdReadings).toBeUndefined();
+			expect(got?.dnsEvent).toBeUndefined();
+		});
+
+		it("returns the escalation unchanged when the origin session has been deleted", async () => {
+			const escalation = {
+				sessionId: "esc",
+				originSessionId: "origin-gone",
+				captchaType: CaptchaType.puzzle,
+			} as unknown as Session;
+			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(null);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			expect(got).toBe(escalation);
+		});
+
+		it("preserves escalation-owned fields — origin captchaType / sessionId / score never leak through", async () => {
+			const origin = {
+				sessionId: "origin",
+				captchaType: CaptchaType.pow,
+				score: 0.1,
+				simdReadings: { supported: true },
+			} as unknown as Session;
+			const escalation = {
+				sessionId: "esc",
+				originSessionId: "origin",
+				captchaType: CaptchaType.puzzle,
+				score: 0.5,
+			} as unknown as Session;
+			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			// simd was filled from origin
+			expect(got?.simdReadings).toEqual({ supported: true });
+			// escalation-owned fields untouched
+			expect(got?.sessionId).toBe("esc");
+			expect(got?.captchaType).toBe(CaptchaType.puzzle);
+			expect(got?.score).toBe(0.5);
+		});
+	});
+
 	describe("isValidRequest", () => {
 		it("should validate a request for an image captcha when the client settings are set to image and no session ID is passed", async () => {
 			const result = await captchaManager.isValidRequest(
@@ -1056,6 +1245,147 @@ describe("CaptchaManager", () => {
 				sessionId: "sessionId",
 			});
 		});
+
+		// Regression guard for the class of INCORRECT_CAPTCHA_TYPE errors
+		// observed on prod at ~150/hr, concentrated on pimeyes / eyematch /
+		// 5G1hy. An anomaly detector inserts an IP restrict-to-image rule
+		// (e.g. IP_CLIENT_CROSSOVER) between the user's /frictionless response
+		// and their subsequent /captcha/pow call, so the widget's in-flight
+		// pow-typed session gets 400'd at the /captcha/pow entry gate even
+		// though the session was minted legitimately before the rule appeared.
+		//
+		// The fix: when a valid sessionId is present, the session record is
+		// authoritative for captchaType. The policy still fires at verify
+		// time via the decisionMachineRunner + checkForHardBlock, so the
+		// abuse signal is not lost.
+		describe("user access policy precedence over session", () => {
+			it("honours the session's captchaType when a restrict-to-image policy materialises between /frictionless and /captcha/{type}", async () => {
+				// Session was minted with pow (before the rule existed).
+				(
+					db.checkAndRemoveSession as unknown as ReturnType<typeof vi.fn>
+				).mockResolvedValue({
+					sessionId: "sessionId",
+					captchaType: CaptchaType.pow,
+				} as Pick<Session, "sessionId" | "captchaType">);
+
+				// Rule fires AFTER: restrict-to-image now active on this IP.
+				const restrictImagePolicy: AccessPolicy = {
+					type: AccessPolicyType.Restrict,
+					captchaType: CaptchaType.image,
+				} as AccessPolicy;
+
+				const result = await captchaManager.isValidRequest(
+					{
+						account: "account",
+						tier: Tier.Free,
+						settings: {
+							...defaultUserSettings,
+							captchaType: CaptchaType.frictionless,
+						},
+					},
+					CaptchaType.pow, // widget hits /captcha/pow with the in-flight session
+					mockEnv,
+					"sessionId",
+					restrictImagePolicy,
+					"127.0.0.1",
+				);
+
+				// Before the fix this returned INCORRECT_CAPTCHA_TYPE; after,
+				// the session's own captchaType wins because it's the
+				// authoritative record and the policy will still fire at
+				// verify time via other paths.
+				expect(result).toEqual({
+					valid: true,
+					type: CaptchaType.pow,
+					sessionId: "sessionId",
+				});
+			});
+
+			it("still rejects a session whose own captchaType does not match the requested type", async () => {
+				// Session's captchaType is image, widget hits /captcha/pow —
+				// this is a genuine mismatch (not a policy race) and must
+				// still return INCORRECT_CAPTCHA_TYPE.
+				(
+					db.checkAndRemoveSession as unknown as ReturnType<typeof vi.fn>
+				).mockResolvedValue({
+					sessionId: "sessionId",
+					captchaType: CaptchaType.image,
+				} as Pick<Session, "sessionId" | "captchaType">);
+
+				const result = await captchaManager.isValidRequest(
+					{
+						account: "account",
+						tier: Tier.Free,
+						settings: {
+							...defaultUserSettings,
+							captchaType: CaptchaType.frictionless,
+						},
+					},
+					CaptchaType.pow,
+					mockEnv,
+					"sessionId",
+					undefined,
+					"127.0.0.1",
+				);
+
+				expect(result.valid).toBe(false);
+				expect(result.reason).toBe(ResultReason.INCORRECT_CAPTCHA_TYPE);
+			});
+
+			it("enforces policy captchaType on sessionless requests (direct /captcha/{type} with no /frictionless minted session)", async () => {
+				// No sessionId, policy pins image, widget asks for pow.
+				// Sessionless callers have no minted-in-context session to
+				// trust, so policy still wins here — preserves the pre-fix
+				// behaviour for the direct-entry case.
+				const restrictImagePolicy: AccessPolicy = {
+					type: AccessPolicyType.Restrict,
+					captchaType: CaptchaType.image,
+				} as AccessPolicy;
+
+				const result = await captchaManager.isValidRequest(
+					{
+						account: "account",
+						tier: Tier.Free,
+						settings: {
+							...defaultUserSettings,
+							captchaType: CaptchaType.pow,
+						},
+					},
+					CaptchaType.pow,
+					mockEnv,
+					undefined, // no sessionId
+					restrictImagePolicy,
+				);
+
+				expect(result.valid).toBe(false);
+				expect(result.reason).toBe(ResultReason.INCORRECT_CAPTCHA_TYPE);
+			});
+
+			it("allows sessionless requests when the policy captchaType matches", async () => {
+				const restrictImagePolicy: AccessPolicy = {
+					type: AccessPolicyType.Restrict,
+					captchaType: CaptchaType.image,
+				} as AccessPolicy;
+
+				const result = await captchaManager.isValidRequest(
+					{
+						account: "account",
+						tier: Tier.Free,
+						settings: {
+							...defaultUserSettings,
+							captchaType: CaptchaType.image,
+						},
+					},
+					CaptchaType.image,
+					mockEnv,
+					undefined,
+					restrictImagePolicy,
+				);
+
+				expect(result.valid).toBe(true);
+				expect(result.type).toBe(CaptchaType.image);
+			});
+		});
 	});
 	describe("getVerificationResponse", () => {
 		it("should return a verification response with a score if the tier is not free", async () => {
@@ -1169,25 +1499,16 @@ describe("CaptchaManager", () => {
 			vi.mocked(decryptFn).mockReset();
 		});
 
-		it("should return null when no decryption keys are provided", async () => {
+		it("should return null when no bundle is provided", async () => {
 			const result = await captchaManager.decryptBehavioralData(
 				"encryptedData",
-				[],
+				undefined,
 			);
 			expect(result).toBeNull();
 			expect(decryptFn).not.toHaveBeenCalled();
 		});
 
-		it("should return null when all provided keys are undefined", async () => {
-			const result = await captchaManager.decryptBehavioralData(
-				"encryptedData",
-				[undefined, undefined],
-			);
-			expect(result).toBeNull();
-			expect(decryptFn).not.toHaveBeenCalled();
-		});
-
-		it("should return the result when the first valid key succeeds", async () => {
+		it("should decrypt with the bundle's key + inner config", async () => {
 			const mockResult: BehavioralDataResult = {
 				collector1: [{ event: "click" }],
 				collector2: [],
@@ -1199,44 +1520,28 @@ describe("CaptchaManager", () => {
 
 			const result = await captchaManager.decryptBehavioralData(
 				"encryptedData",
-				["key1", "key2"],
+				{
+					key: "pk",
+					innerConfig: "cfg",
+				},
 			);
 			expect(result).toEqual(mockResult);
 			expect(decryptFn).toHaveBeenCalledTimes(1);
-			expect(decryptFn).toHaveBeenCalledWith("encryptedData", "key1");
+			expect(decryptFn).toHaveBeenCalledWith("encryptedData", "pk", "cfg");
 		});
 
-		it("should try the next key when the first key fails", async () => {
-			const mockResult: BehavioralDataResult = {
-				collector1: [],
-				collector2: [],
-				collector3: [],
-				deviceCapability: "mobile",
-				timestamp: 2000,
-			};
-			vi.mocked(decryptFn)
-				.mockRejectedValueOnce(new Error("bad key"))
-				.mockResolvedValueOnce(mockResult);
-
-			const result = await captchaManager.decryptBehavioralData(
-				"encryptedData",
-				["badKey", "goodKey"],
-			);
-			expect(result).toEqual(mockResult);
-			expect(decryptFn).toHaveBeenCalledTimes(2);
-			expect(decryptFn).toHaveBeenNthCalledWith(1, "encryptedData", "badKey");
-			expect(decryptFn).toHaveBeenNthCalledWith(2, "encryptedData", "goodKey");
-		});
-
-		it("should return null when all valid keys fail", async () => {
+		it("should return null when the bundle fails to decrypt", async () => {
 			vi.mocked(decryptFn).mockRejectedValue(new Error("decrypt failed"));
 
 			const result = await captchaManager.decryptBehavioralData(
 				"encryptedData",
-				["key1", "key2"],
+				{
+					key: "pk",
+					innerConfig: "cfg",
+				},
 			);
 			expect(result).toBeNull();
-			expect(decryptFn).toHaveBeenCalledTimes(2);
+			expect(decryptFn).toHaveBeenCalledTimes(1);
 		});
 	});
 

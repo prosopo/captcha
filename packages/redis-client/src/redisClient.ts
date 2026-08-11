@@ -54,21 +54,19 @@ export const connectToRedis = (options: RedisOptions): RedisConnection => {
 		}
 	});
 
-	options.logger.info(() => ({
+	const log = options.logger.with({ url: options.url });
+
+	log.info(() => ({
 		msg: "Connecting to Redis",
-		data: {
-			url: options.url,
-		},
 	}));
 
 	const clientPromise = masterClient.connect().then(async (connectedClient) => {
 		isReady = true;
 		timestamps.connectedAt = Date.now();
 
-		options.logger.info(() => ({
+		log.info(() => ({
 			msg: "Redis connected",
 			data: {
-				url: options.url,
 				awaitingTimeMs: timestamps.connectedAt - timestamps.initializedAt,
 			},
 		}));
@@ -98,14 +96,13 @@ export const setupRedisIndex = (
 
 	let isReady = false;
 
+	const log = logger.with({ name: index.name });
+
 	const clientPromise = connection.getClient().then(async (client) => {
 		timestamps.initializedAt = Date.now();
 
-		logger.info(() => ({
+		log.info(() => ({
 			msg: "Setting up Redis index",
-			data: {
-				name: index.name,
-			},
 		}));
 
 		await createRedisIndex(client, index);
@@ -113,10 +110,9 @@ export const setupRedisIndex = (
 		isReady = true;
 		timestamps.setupAt = Date.now();
 
-		logger.info(() => ({
+		log.info(() => ({
 			msg: "Index setup",
 			data: {
-				name: index.name,
 				awaitingTimeMs: timestamps.setupAt - timestamps.initializedAt,
 			},
 		}));

@@ -50,6 +50,7 @@ import {
 	getRequestUserScope,
 } from "../api/blacklistRequestInspector.js";
 import { getIpAddressFromComposite } from "../compositeIpAddress.js";
+import { getDetectorBundlePool } from "./detection/bundlePool.js";
 import type { BehavioralDataResult } from "./detection/decodeBehavior.js";
 import type { SimdReadingsResult } from "./detection/decodeSimd.js";
 import { extraIpInfosFromEnrichedDnsEvent } from "./dnsEvent/enrichDnsEvent.js";
@@ -58,6 +59,18 @@ import {
 	type TrafficCheckResult,
 	checkTrafficFilter,
 } from "./spam/checkTrafficFilter.js";
+
+/**
+ * The per-session decryption material for a detector pool bundle: the bundle's
+ * own RSA private key (outer transport) plus its inner ChaCha20-Poly1305 config
+ * (the anti-`window.crypto` symmetric layer). Every payload a session's detector
+ * produces — score, SIMD readings, behavioural data — is encrypted with these,
+ * so decryption is a single deterministic attempt, never a key-pool brute force.
+ */
+export interface PoolBundleDecrypt {
+	key: string;
+	innerConfig: string;
+}
 
 /**
  * Finds a hard block policy from access policies.
@@ -142,33 +155,118 @@ export class CaptchaManager {
 	}
 
 	/**
-	 * Decrypt with the active detector keys and strip the throwaway
-	 * `timestamp` field. Returns `undefined` when no key decrypts.
+	 * Decrypt with the session's detector pool bundle and strip the throwaway
+	 * `timestamp` field. Returns `undefined` when no bundle is resolved or
+	 * decryption fails.
 	 */
 	public async decryptSimdReadingsForAttach(
 		simdReadingsCiphertext: string,
+		bundle: PoolBundleDecrypt | undefined,
 	): Promise<NonNullable<Session["simdReadings"]> | undefined> {
-		const decryptKeys = [
-			...(await this.getDetectorKeys()),
-			process.env.BOT_DECRYPTION_KEY,
-		];
 		const decrypted = await this.decryptSimdReadings(
 			simdReadingsCiphertext,
-			decryptKeys,
+			bundle,
 		);
 		if (!decrypted) return undefined;
 		const { timestamp: _ignored, ...readings } = decrypted;
 		return readings;
 	}
 
-	/** Decrypt + first-hop-wins attach. No-op on decrypt failure. */
+	/**
+	 * Read a session and, if it's an escalation missing one of the
+	 * inherently-origin-populated fields, walk to `originSessionId` and fill
+	 * the gap. Intended for the decision-machine input read path only —
+	 * `simdReadings`, `dnsEvent`, `entropyMathRandomFingerprint` etc. are
+	 * populated on the origin session (SIMD via pow-submit's fire-and-forget
+	 * attach; DNS via the sidecar's origin-TLS-scoped patch) and don't
+	 * automatically end up on the escalation record because
+	 * `buildEscalation` reads the origin from Mongo before the async writes
+	 * settle. Rather than duplicating the origin's state onto every
+	 * escalation at write time, keep the origin as the source of truth and
+	 * fall back to it at read time.
+	 *
+	 * Fields intentionally NOT walked:
+	 *   - captchaType / sessionId / score / threshold / scoreComponents /
+	 *     ipAddress / ipInfo / headers — these describe the escalation
+	 *     itself and must never be overridden by the origin.
+	 *   - Anything already present on the escalation — first-write wins.
+	 *
+	 * Non-escalation sessions and escalations without `originSessionId`
+	 * (older records) fall through as no-op.
+	 */
+	public async getSessionRecordWithOriginFallback(
+		sessionId: string,
+	): Promise<Session | undefined> {
+		const session = await this.db.getSessionRecordBySessionId(sessionId);
+		if (!session) return undefined;
+		if (!session.originSessionId) return session;
+
+		const needsSimd =
+			session.simdReadings === undefined || session.simdReadings === null;
+		const needsDns =
+			session.dnsEvent === undefined || session.dnsEvent === null;
+		const needsEntropyMath = session.entropyMathRandomFingerprint === undefined;
+		const needsEntropyCrypto = session.entropyCryptoFingerprint === undefined;
+		const needsEntropyWall = session.entropyWallClockOffsetMs === undefined;
+		const needsEntropyFirst = session.entropyMathRandomFirst === undefined;
+		const needsG = session.g === undefined;
+
+		if (
+			!needsSimd &&
+			!needsDns &&
+			!needsEntropyMath &&
+			!needsEntropyCrypto &&
+			!needsEntropyWall &&
+			!needsEntropyFirst &&
+			!needsG
+		) {
+			return session;
+		}
+
+		const origin = await this.db.getSessionRecordBySessionId(
+			session.originSessionId,
+		);
+		if (!origin) return session;
+
+		return {
+			...session,
+			...(needsSimd &&
+				origin.simdReadings && { simdReadings: origin.simdReadings }),
+			...(needsDns && origin.dnsEvent && { dnsEvent: origin.dnsEvent }),
+			...(needsEntropyMath &&
+				origin.entropyMathRandomFingerprint !== undefined && {
+					entropyMathRandomFingerprint: origin.entropyMathRandomFingerprint,
+				}),
+			...(needsEntropyCrypto &&
+				origin.entropyCryptoFingerprint !== undefined && {
+					entropyCryptoFingerprint: origin.entropyCryptoFingerprint,
+				}),
+			...(needsEntropyWall &&
+				origin.entropyWallClockOffsetMs !== undefined && {
+					entropyWallClockOffsetMs: origin.entropyWallClockOffsetMs,
+				}),
+			...(needsEntropyFirst &&
+				origin.entropyMathRandomFirst !== undefined && {
+					entropyMathRandomFirst: origin.entropyMathRandomFirst,
+				}),
+			...(needsG && origin.g !== undefined && { g: origin.g }),
+		};
+	}
+
+	/**
+	 * Decrypt + first-hop-wins attach. Resolves the session's detector pool
+	 * bundle (promoted onto the session record at frictionless time) to decrypt.
+	 * No-op on decrypt failure / no bundle.
+	 */
 	public async decryptAndAttachSimdReadingsIfAbsent(
 		sessionId: string,
 		simdReadingsCiphertext: string,
 		stage: SimdReadingsStage,
 	): Promise<void> {
+		const bundle = await this.resolveBundleBySessionId(sessionId);
 		const readings = await this.decryptSimdReadingsForAttach(
 			simdReadingsCiphertext,
+			bundle,
 		);
 		if (!readings) return;
 		await this.recordSessionSimdReadingsIfAbsentWithCache(
@@ -280,32 +378,28 @@ export class CaptchaManager {
 			},
 		}));
 
-		// User Access Policies override default behaviour. Only enforce the
-		// captchaType check when the policy actually pins a captchaType —
-		// Block policies have their captchaType stripped by
-		// sanitizeAccessPolicy on write, and a policy without a pinned
-		// captchaType should apply to all captcha types (not reject all of
-		// them). Callers should filter out `deferToVerify` policies before
-		// passing them here — see getImageCaptchaChallenge et al. — but
-		// this defensive guard also stops a mis-filtered deferToVerify
-		// Block from breaking every /captcha/* request.
-		if (
-			userAccessPolicy?.captchaType !== undefined &&
-			userAccessPolicy.captchaType !== requestedCaptchaType
-		) {
-			this.logger.warn(() => ({
-				msg: "Invalid captcha type for user access policy",
-				data: {
-					account: clientSettings.account,
-					captchaType: userAccessPolicy.captchaType,
-				},
-			}));
-			return {
-				valid: false,
-				reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
-				type: requestedCaptchaType,
-			};
-		}
+		// User Access Policies override default behaviour, but only for
+		// sessionless requests. When a sessionId is present the session record
+		// is authoritative for captchaType: it was minted by frictionless /
+		// handleAccessPolicy considering the policy state at that time, so a
+		// policy that materialises AFTER a valid session was issued must not
+		// invalidate the widget's in-flight solve. The policy still fires at
+		// verify time (decisionMachineRunner + checkForHardBlock), so the
+		// abuse signal is not lost — only the false-positive
+		// INCORRECT_CAPTCHA_TYPE on the widget's second call is avoided.
+		//
+		// Historical shape (removed 2026-08-06): the check ran up here BEFORE
+		// the sessionId lookup, so any restrict-to-image rule inserted by an
+		// anomaly detector between /frictionless and /captcha/pow surfaced
+		// as a sustained baseline of INCORRECT_CAPTCHA_TYPE 400s. The
+		// specific race is captured in captchaManager.unit.test.ts under
+		// "user access policy precedence over session".
+		//
+		// Block policies have their captchaType stripped by sanitizeAccessPolicy
+		// on write, and a policy without a pinned captchaType applies to all
+		// captcha types (not rejects all of them). deferToVerify policies are
+		// filtered by callers — see getImageCaptchaChallenge et al.
+		//
 		// Session ID
 		// All client flows now go through the unified /frictionless entry point,
 		// so a sessionId may accompany any configured captchaType (frictionless
@@ -518,6 +612,31 @@ export class CaptchaManager {
 
 		// No Session ID
 
+		// Sessionless request: policy captchaType (if pinned by an active
+		// restrict rule) still takes precedence over the client's configured
+		// captchaType, because there's no minted-in-context session to trust.
+		// This preserves the pre-2026-08-06 behaviour for the direct-entry
+		// case (widget hitting /captcha/{type} without going through
+		// /frictionless first).
+		if (
+			userAccessPolicy?.captchaType !== undefined &&
+			userAccessPolicy.captchaType !== requestedCaptchaType
+		) {
+			this.logger.warn(() => ({
+				msg: "Invalid captcha type for user access policy (sessionless)",
+				data: {
+					account: clientSettings.account,
+					captchaType: userAccessPolicy.captchaType,
+					requestedCaptchaType,
+				},
+			}));
+			return {
+				valid: false,
+				reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+				type: requestedCaptchaType,
+			};
+		}
+
 		// To pass here a user must be requesting the captchaType that is stored on the client's settings.
 		// - If `captchaType` is `image` and there is no `sessionId` then `clientSettings?.settings?.captchaType,` must be set to `image`
 		// - If `captchaType` is `pow` and there is no `sessionId` then `clientSettings?.settings?.captchaType,` must be set to `pow`
@@ -585,120 +704,128 @@ export class CaptchaManager {
 		);
 	}
 
-	async getDetectorKeys(): Promise<string[]> {
-		return await this.db.getDetectorKeys();
+	/**
+	 * Resolve a detector pool bundle's decryption material from a `bundleId`
+	 * (in-memory pool lookup). Returns undefined when the id is absent or the
+	 * bundle is no longer in the pool.
+	 */
+	resolveBundleById(bundleId?: string | null): PoolBundleDecrypt | undefined {
+		const bundle = bundleId
+			? getDetectorBundlePool()?.get(bundleId)
+			: undefined;
+		return bundle
+			? { key: bundle.privateKey, innerConfig: bundle.innerConfig }
+			: undefined;
+	}
+
+	/**
+	 * Resolve the detector pool bundle for a session via its short-lived
+	 * `detectorSessionId → bundleId` Redis binding (used at the frictionless hop,
+	 * before the binding is promoted onto the durable session record). Returns
+	 * the bundleId too so the caller can promote it onto the session.
+	 */
+	async resolveBundleByDetectorSession(
+		detectorSessionId?: string,
+	): Promise<(PoolBundleDecrypt & { bundleId: string }) | undefined> {
+		if (!detectorSessionId || !this.writeQueue) return undefined;
+		const bundleId = await this.writeQueue.getDetectorBundle(detectorSessionId);
+		const decrypt = this.resolveBundleById(bundleId);
+		return bundleId && decrypt ? { ...decrypt, bundleId } : undefined;
+	}
+
+	/**
+	 * Resolve the detector pool bundle for a session via the `bundleId` promoted
+	 * onto its durable session record (used at later hops — SIMD attach,
+	 * PoW/puzzle/image solution submit — after the Redis binding has expired).
+	 * Cache-first (Redis), Mongo fallback.
+	 */
+	async resolveBundleBySessionId(
+		sessionId?: string,
+	): Promise<PoolBundleDecrypt | undefined> {
+		if (!sessionId) return undefined;
+		const cached = this.writeQueue
+			? await this.writeQueue.getCachedSession(sessionId)
+			: undefined;
+		const cachedBundleId =
+			typeof cached?.bundleId === "string" ? cached.bundleId : undefined;
+		const bundleId =
+			cachedBundleId ??
+			(await this.db.getSessionRecordBySessionId(sessionId))?.bundleId;
+		return this.resolveBundleById(bundleId);
 	}
 
 	/**
 	 * Decrypt the catcher's WASM SIMD CPU fingerprint readings via the
 	 * obfuscated `decodeSimd.js` bundle (source lives in the private
-	 * @prosopo/catcher repo). Mirrors `decryptBehavioralData`: tries each
-	 * detector key in turn (loaded by the caller, with the env-var key as
-	 * fallback). Returns null when no key works so the caller can drop
-	 * the field rather than fail the whole request.
+	 * @prosopo/catcher repo). The detector lives only in provider-served pool
+	 * bundles, so decryption uses that session's single bundle (RSA key + inner
+	 * cipher) — there is no key pool. Returns null when no bundle is resolved or
+	 * decryption fails, so the caller can drop the field rather than fail the
+	 * whole request.
 	 */
 	async decryptSimdReadings(
 		encryptedData: string,
-		decryptKeys: (string | undefined)[],
+		bundle: PoolBundleDecrypt | undefined,
 	): Promise<SimdReadingsResult | null> {
-		const decryptSimdReadings = (await import("./detection/decodeSimd.js"))
-			.default;
-
-		const validKeys = decryptKeys.filter((k) => k);
-		if (validKeys.length === 0) {
-			this.logger?.error(() => ({
-				msg: "No decryption keys provided for SIMD readings",
+		if (!bundle) {
+			this.logger?.warn(() => ({
+				msg: "No detector bundle resolved for SIMD readings — dropping field",
 			}));
 			return null;
 		}
-
-		for (const [keyIndex, key] of validKeys.entries()) {
-			try {
-				return await decryptSimdReadings(encryptedData, key);
-			} catch (err) {
-				this.logger?.debug(() => ({
-					msg: "Failed to decrypt SIMD readings with key, trying next",
-					data: {
-						keyIndex: keyIndex + 1,
-						totalKeys: validKeys.length,
-						err,
-					},
-				}));
-			}
+		const decryptSimdReadings = (await import("./detection/decodeSimd.js"))
+			.default;
+		try {
+			return await decryptSimdReadings(
+				encryptedData,
+				bundle.key,
+				bundle.innerConfig,
+			);
+		} catch (err) {
+			this.logger?.warn(() => ({
+				msg: "Failed to decrypt SIMD readings with the session's bundle",
+				data: { err },
+			}));
+			return null;
 		}
-
-		this.logger?.warn(() => ({
-			msg: "Failed to decrypt SIMD readings with all available keys",
-			data: { totalKeysAttempted: validKeys.length },
-		}));
-		return null;
 	}
 
 	async decryptBehavioralData(
 		encryptedData: string,
-		decryptKeys: (string | undefined)[],
+		bundle: PoolBundleDecrypt | undefined,
 	): Promise<BehavioralDataResult | null> {
-		const decryptBehavioralData = (
-			await import("./detection/decodeBehavior.js")
-		).default;
-
-		const validKeys = decryptKeys.filter((k) => k);
-
-		if (validKeys.length === 0) {
-			this.logger?.error(() => ({
-				msg: "No decryption keys provided for behavioral data",
+		if (!bundle) {
+			this.logger?.warn(() => ({
+				msg: "No detector bundle resolved for behavioral data — dropping field",
 			}));
 			return null;
 		}
-
-		// Try each key until one succeeds
-		for (const [keyIndex, key] of validKeys.entries()) {
-			try {
-				this.logger?.debug(() => ({
-					msg: "Attempting to decrypt behavioral data",
-					data: {
-						keyIndex: keyIndex + 1,
-						totalKeys: validKeys.length,
-					},
-				}));
-
-				// Decrypt behavioral data - returns unpacked format: {collector1, collector2, collector3, deviceCapability, timestamp}
-				const result = await decryptBehavioralData(encryptedData, key);
-
-				this.logger?.info(() => ({
-					msg: "Behavioral data decrypted successfully",
-					data: {
-						keyIndex: keyIndex + 1,
-						c1Length: result.collector1?.length || 0,
-						c2Length: result.collector2?.length || 0,
-						c3Length: result.collector3?.length || 0,
-						deviceCapability: result.deviceCapability,
-					},
-				}));
-
-				return result;
-			} catch (error) {
-				this.logger?.debug(() => ({
-					msg: "Failed to decrypt with key, trying next",
-					data: {
-						keyIndex: keyIndex + 1,
-						totalKeys: validKeys.length,
-						err: error,
-					},
-				}));
-				// Continue to next key
-			}
+		const decryptBehavioralData = (
+			await import("./detection/decodeBehavior.js")
+		).default;
+		try {
+			const result = await decryptBehavioralData(
+				encryptedData,
+				bundle.key,
+				bundle.innerConfig,
+			);
+			this.logger?.info(() => ({
+				msg: "Behavioral data decrypted successfully",
+				data: {
+					c1Length: result.collector1?.length || 0,
+					c2Length: result.collector2?.length || 0,
+					c3Length: result.collector3?.length || 0,
+					deviceCapability: result.deviceCapability,
+				},
+			}));
+			return result;
+		} catch (error) {
+			this.logger?.warn(() => ({
+				msg: "Failed to decrypt behavioral data with the session's bundle",
+				data: { err: error },
+			}));
+			return null;
 		}
-
-		// All keys failed
-		this.logger?.error(() => ({
-			msg: "Failed to decrypt behavioral data with all available keys",
-			data: {
-				totalKeysAttempted: validKeys.length,
-			},
-		}));
-
-		return null;
 	}
 
 	/**

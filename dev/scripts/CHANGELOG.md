@@ -1,5 +1,76 @@
 # @prosopo/scripts
 
+## 3.1.147
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+- Updated dependencies [fa0d494]
+- Updated dependencies [d6cb841]
+  - @prosopo/provider@5.0.3
+  - @prosopo/types@5.0.2
+  - @prosopo/cli@3.7.5
+  - @prosopo/env@3.6.26
+  - @prosopo/types-env@2.10.22
+  - @prosopo/datasets@3.1.58
+  - @prosopo/keyring@2.9.65
+
+## 3.1.146
+### Patch Changes
+
+  - @prosopo/env@3.6.25
+  - @prosopo/provider@5.0.2
+  - @prosopo/cli@3.7.4
+
+## 3.1.145
+### Patch Changes
+
+- Updated dependencies [b3f3807]
+  - @prosopo/cli@3.7.3
+
+## 3.1.144
+### Patch Changes
+
+- Updated dependencies [38396b4]
+- Updated dependencies [9fec7bd]
+- Updated dependencies [ce2ac41]
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/env@3.6.24
+  - @prosopo/common@3.1.49
+  - @prosopo/provider@5.0.1
+  - @prosopo/types@5.0.1
+  - @prosopo/logger@2.0.5
+  - @prosopo/locale@3.2.9
+  - @prosopo/cli@3.7.2
+  - @prosopo/datasets@3.1.57
+  - @prosopo/dotenv@3.0.51
+  - @prosopo/keyring@2.9.64
+  - @prosopo/types-env@2.10.21
+
+## 3.1.143
+### Patch Changes
+
+- Updated dependencies [b68c3a1]
+  - @prosopo/cli@3.7.1
+
+## 3.1.142
+### Patch Changes
+
+- 0af1fa9: Add unit and type tests for the dev scripts: version setting, environment file updates, the setup and site helpers, and the exec wrapper.
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [6f19cde]
+  - @prosopo/provider@5.0.0
+  - @prosopo/types@5.0.0
+  - @prosopo/cli@3.7.0
+  - @prosopo/datasets@3.1.56
+  - @prosopo/env@3.6.23
+  - @prosopo/keyring@2.9.63
+  - @prosopo/types-env@2.10.20
+
 ## 3.1.141
 ### Patch Changes
 

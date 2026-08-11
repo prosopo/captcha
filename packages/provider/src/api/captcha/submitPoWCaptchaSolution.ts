@@ -297,12 +297,23 @@ export const buildEscalation = async (
 		originSession.entropyCryptoFingerprint,
 		originSession.entropyWallClockOffsetMs,
 		originSession.entropyMathRandomFirst,
+		// Carry the detector pool bundle forward so the escalated image/puzzle
+		// solve can decrypt the (same-origin) behavioural payload.
+		originSession.bundleId,
 		originSession.currentUrl,
 		handshakeTiming?.tcpToChelloUs,
 		handshakeTiming?.chelloToHandshakeUs,
 		true,
 		originSession.iframeUrl,
 		originSession.isProtect,
+		// Record the origin sessionId on the escalation record. The
+		// DM-input read path (captchaManager.getSessionRecordWithOriginFallback)
+		// uses this to fall back to the origin session for fields that the
+		// escalation doesn't carry itself — simdReadings (attached by pow-
+		// submit fire-and-forget, races the escalation read), dnsEvent
+		// (set by the DNS sidecar on the origin's TLS connection only).
+		originSession.sessionId,
+		originSession.g,
 	);
 
 	// Record the origin → escalation sessionId mapping so a /captcha/*

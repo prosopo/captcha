@@ -174,6 +174,12 @@ export const EmailSpamRulesSchema = object({
 		.max(MAX_CUSTOM_REGEX_PATTERNS)
 		.optional()
 		.default([]),
+	// Maximum number of previously server-checked captchas that may carry the
+	// same normalised email (dots collapsed for gmail, `+tag` stripped
+	// everywhere) before further submissions from that address are rejected.
+	// Requires `storeMetadata` to be on so the normalised email is persisted
+	// alongside each verified commitment. Undefined disables the check.
+	maxEmailSubmissionCount: number().int().min(1).optional(),
 });
 
 export const SpamFilterRulesSchema = object({

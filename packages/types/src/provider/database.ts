@@ -148,6 +148,11 @@ export interface BehavioralDataPacked {
 // backwards compatibility (existing data and indexes already use it).
 export interface StoredCaptchaMetadata {
 	email?: string;
+	// Normalised form of `email` used by the per-email submission-count check.
+	// Kept as a separate persisted field so the count query can hit a single
+	// indexed value instead of computing a normalisation server-side. Written
+	// alongside `email` whenever `storeMetadata` is on.
+	emailNormalised?: string;
 }
 
 // Widget-controlled metadata captured during the captcha solution submission.
@@ -208,6 +213,14 @@ export interface StoredCaptcha {
 	// index instead of $or'ing `{storedAtTimestamp:{$exists:false}}` with an
 	// unindexable $expr branch.
 	pendingStage?: boolean;
+	// True when this record represents a blocked request rather than a
+	// legitimate user failure of the challenge. Mirrors `Session.blocked`
+	// so either collection can be queried with the same filter — see
+	// `isBlockingCaptchaResult` for the classification rule (PoW: any
+	// Disapproved is a block; image/puzzle: server-side rejection only,
+	// not CAPTCHA_INVALID_SOLUTION). Written by the canonical result
+	// writers in the DB layer alongside `result`.
+	blocked?: boolean;
 	sessionId?: string;
 	coords?: [number, number][][];
 	// Legacy fields - kept for backward compatibility with existing data
@@ -264,6 +277,7 @@ const BehavioralDataPackedSchema = object({
 
 export const StoredCaptchaMetadataSchema = object({
 	email: string().optional(),
+	emailNormalised: string().optional(),
 }) satisfies ZodType<StoredCaptchaMetadata, ZodTypeDef, unknown>;
 
 export const ClientMetaDataDbSchema = object({
@@ -416,6 +430,11 @@ export const SessionSchema = object({
 	// "user hit the widget cold" from "user got escalated into a
 	// stronger captcha after a low-confidence PoW".
 	isEscalation: boolean().optional(),
+	// SessionId of the session this one escalated from. Populated when
+	// isEscalation is true; used by the DM-input read path to fall back
+	// to the origin for fields the escalation doesn't carry itself
+	// (simdReadings, dnsEvent, etc.). Absent on non-escalation sessions.
+	originSessionId: string().optional(),
 	decryptedHeadHash: string(),
 	siteKey: string().optional(),
 	// Full page URL the widget was rendered on (origin + path only — query
@@ -476,6 +495,7 @@ export const SessionSchema = object({
 	entropyCryptoFingerprint: string().optional(),
 	entropyWallClockOffsetMs: number().optional(),
 	entropyMathRandomFirst: number().optional(),
+	g: string().optional(),
 	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
 	// plugin (X-TLS-TCP-To-Chello-Us / X-TLS-Chello-To-Handshake-Us).
 	// Server-observed microsecond deltas across the TLS handshake
@@ -521,7 +541,17 @@ export type Session = {
 	// True when this session was minted by the post-PoW routing machine
 	// as an escalation. Undefined / false on ordinary frictionless sessions.
 	isEscalation?: boolean;
+	// SessionId of the origin session this one escalated from. Populated
+	// alongside isEscalation; consumed by the DM-input read path.
+	originSessionId?: string;
 	decryptedHeadHash: string;
+	// The provider-assigned detector pool bundle this session's detector ran
+	// from, promoted off the short-lived detectorSessionId→bundleId Redis
+	// binding at frictionless-decrypt time. Later hops (PoW/puzzle solution
+	// submit, SIMD attach) resolve the same bundle's keypair + inner cipher
+	// from this durable field to decrypt the behavioural/SIMD payloads — the
+	// detector lives only on providers, so there is no key pool to fall back to.
+	bundleId?: string;
 	siteKey?: string;
 	// Full page URL the widget was rendered on (origin + path only — query
 	// string, fragment and any embedded credentials are stripped client- and
@@ -566,6 +596,7 @@ export type Session = {
 	entropyCryptoFingerprint?: string;
 	entropyWallClockOffsetMs?: number;
 	entropyMathRandomFirst?: number;
+	g?: string;
 	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
 	// plugin. See the SessionSchema block above for full semantics —
 	// elevated values indicate the client's ClientHello traversed a
@@ -694,12 +725,6 @@ export const UserCommitmentWithSolutionsSchema = UserCommitmentSchema.extend({
 export type UserCommitmentWithSolutions = zInfer<
 	typeof UserCommitmentWithSolutionsSchema
 >;
-
-export type DetectorKey = {
-	detectorKey: string;
-	createdAt: Date;
-	expiresAt?: Date;
-};
 
 /**
  * Decision machine artifact stored in the database.

@@ -138,6 +138,7 @@ export class FrictionlessManager extends CaptchaManager {
 			webView: params.webView ?? false,
 			iFrame: params.iFrame ?? false,
 			decryptedHeadHash: params.decryptedHeadHash,
+			bundleId: params.bundleId,
 			siteKey: params.siteKey,
 			currentUrl: params.currentUrl,
 			iframeUrl: params.iframeUrl,
@@ -150,6 +151,7 @@ export class FrictionlessManager extends CaptchaManager {
 			entropyCryptoFingerprint: params.entropyCryptoFingerprint,
 			entropyWallClockOffsetMs: params.entropyWallClockOffsetMs,
 			entropyMathRandomFirst: params.entropyMathRandomFirst,
+			g: params.g,
 			tcpToChelloUs: params.tcpToChelloUs,
 			chelloToHandshakeUs: params.chelloToHandshakeUs,
 		};
@@ -191,12 +193,15 @@ export class FrictionlessManager extends CaptchaManager {
 		entropyCryptoFingerprint?: Session["entropyCryptoFingerprint"],
 		entropyWallClockOffsetMs?: Session["entropyWallClockOffsetMs"],
 		entropyMathRandomFirst?: Session["entropyMathRandomFirst"],
+		bundleId?: Session["bundleId"],
 		currentUrl?: Session["currentUrl"],
 		tcpToChelloUs?: Session["tcpToChelloUs"],
 		chelloToHandshakeUs?: Session["chelloToHandshakeUs"],
 		isEscalation?: Session["isEscalation"],
 		iframeUrl?: Session["iframeUrl"],
 		isProtect?: Session["isProtect"],
+		originSessionId?: Session["originSessionId"],
+		g?: Session["g"],
 	): Promise<Session> {
 		// Dual-write: the flat `solvedImagesCount` / `powDifficulty` / `blocked`
 		// fields stay the source of truth for existing readers, while
@@ -229,7 +234,12 @@ export class FrictionlessManager extends CaptchaManager {
 			// avoids polluting analytics with `false` on every plain
 			// frictionless session.
 			...(isEscalation && { isEscalation: true }),
+			// Origin sessionId is only meaningful for escalations. Persist
+			// alongside isEscalation so the DM-input read path can walk
+			// back for fallback fields (simdReadings, dnsEvent, etc.).
+			...(originSessionId && { originSessionId }),
 			decryptedHeadHash,
+			bundleId,
 			reason,
 			siteKey,
 			currentUrl,
@@ -253,6 +263,7 @@ export class FrictionlessManager extends CaptchaManager {
 			entropyCryptoFingerprint,
 			entropyWallClockOffsetMs,
 			entropyMathRandomFirst,
+			g,
 			tcpToChelloUs,
 			chelloToHandshakeUs,
 		};
@@ -392,12 +403,15 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.entropyCryptoFingerprint,
 			effectiveParams.entropyWallClockOffsetMs,
 			effectiveParams.entropyMathRandomFirst,
+			effectiveParams.bundleId,
 			effectiveParams.currentUrl,
 			effectiveParams.tcpToChelloUs,
 			effectiveParams.chelloToHandshakeUs,
 			undefined,
 			effectiveParams.iframeUrl,
 			effectiveParams.isProtect,
+			undefined,
+			effectiveParams.g,
 		);
 
 		// Fire-and-forget served-counter writes. Skipped when there's no
@@ -477,12 +491,15 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.entropyCryptoFingerprint,
 			effectiveParams.entropyWallClockOffsetMs,
 			effectiveParams.entropyMathRandomFirst,
+			effectiveParams.bundleId,
 			effectiveParams.currentUrl,
 			effectiveParams.tcpToChelloUs,
 			effectiveParams.chelloToHandshakeUs,
 			undefined,
 			effectiveParams.iframeUrl,
 			effectiveParams.isProtect,
+			undefined,
+			effectiveParams.g,
 		);
 	}
 
@@ -567,23 +584,44 @@ export class FrictionlessManager extends CaptchaManager {
 		return `${start}...${middle}...${end}`;
 	}
 
-	async decryptPayload(token: string, headHash: string) {
-		const decryptKeys = [
-			// Process DB keys first, then env var key last as env key will likely be invalid
-			...(await this.getDetectorKeys()),
-			process.env.BOT_DECRYPTION_KEY,
-		].filter((k) => k);
+	/**
+	 * Resolve the decrypt attempt for a payload. The detector lives only in the
+	 * provider-served pool bundles, so this is a SINGLE deterministic decrypt
+	 * with the session's own RSA keypair + inner cipher config, resolved from the
+	 * `detectorSessionId → bundleId` Redis binding. There is no legacy key pool:
+	 * if the binding can't be resolved (expired/missing) the caller fails closed
+	 * (score treated as bot ⇒ PoW). Also returns the resolved bundleId so the
+	 * caller can promote it onto the session for the later behavioural/SIMD hops.
+	 */
+	async resolveDecryptAttempts(detectorSessionId?: string): Promise<{
+		attempts: { key: string; innerConfig?: string }[];
+		bundleId?: string;
+	}> {
+		const bundle = await this.resolveBundleByDetectorSession(detectorSessionId);
+		if (bundle) {
+			return {
+				attempts: [{ key: bundle.key, innerConfig: bundle.innerConfig }],
+				bundleId: bundle.bundleId,
+			};
+		}
+		return { attempts: [] };
+	}
+
+	async decryptPayload(
+		token: string,
+		headHash: string,
+		detectorSessionId?: string,
+	) {
+		const { attempts: decryptKeys, bundleId } =
+			await this.resolveDecryptAttempts(detectorSessionId);
 
 		this.logger.debug(() => {
-			const loggedKeys = decryptKeys.map((key) =>
-				this.redactKeyForLogging(key),
-			);
-
 			return {
 				msg: "Decrypting score",
 				data: {
 					keysLength: decryptKeys.length,
-					keys: loggedKeys,
+					bundleId,
+					usingBundle: bundleId !== undefined,
 				},
 			};
 		});
@@ -604,15 +642,21 @@ export class FrictionlessManager extends CaptchaManager {
 		let entropyCryptoFingerprint: string | undefined;
 		let entropyWallClockOffsetMs: number | undefined;
 		let entropyMathRandomFirst: number | undefined;
-		for (const [keyIndex, key] of decryptKeys.entries()) {
+		let g: string | undefined;
+		for (const [keyIndex, attempt] of decryptKeys.entries()) {
 			try {
 				this.logger.info(() => ({
 					msg: "Attempting to decrypt score",
 					data: {
-						key: this.redactKeyForLogging(key),
+						key: this.redactKeyForLogging(attempt.key),
 					},
 				}));
-				const decrypted = await getBotScore(token, headHash, key as string);
+				const decrypted = await getBotScore(
+					token,
+					headHash,
+					attempt.key,
+					attempt.innerConfig,
+				);
 				decryptedHeadHash = decrypted.decryptedHeadHash || "";
 				const s = decrypted.baseBotScore;
 				const t = decrypted.timestamp;
@@ -626,10 +670,11 @@ export class FrictionlessManager extends CaptchaManager {
 				const ec = decrypted.entropyCryptoFingerprint;
 				const eo = decrypted.entropyWallClockOffsetMs;
 				const em = decrypted.entropyMathRandomFirst;
+				const gv = decrypted.g;
 				this.logger.debug(() => ({
 					msg: "Successfully decrypted score",
 					data: {
-						key: this.redactKeyForLogging(key),
+						key: this.redactKeyForLogging(attempt.key),
 						baseBotScore: s,
 						timestamp: t,
 						userId: a,
@@ -656,6 +701,7 @@ export class FrictionlessManager extends CaptchaManager {
 				entropyCryptoFingerprint = ec;
 				entropyWallClockOffsetMs = eo;
 				entropyMathRandomFirst = em;
+				g = gv;
 				break;
 			} catch (err) {
 				// check if the next index exists, if not, log an error
@@ -717,6 +763,10 @@ export class FrictionlessManager extends CaptchaManager {
 			entropyCryptoFingerprint,
 			entropyWallClockOffsetMs,
 			entropyMathRandomFirst,
+			g,
+			// The pool bundle used (if any) — promoted onto the session so the
+			// later behavioural-data hop can resolve the same keypair/inner cfg.
+			bundleId,
 		};
 	}
 

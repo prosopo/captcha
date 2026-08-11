@@ -1,7 +1,7 @@
 {
 	"name": "@prosopo/captcha",
 	"packageManager": "npm@11.0.0",
-	"version": "3.6.77",
+	"version": "3.7.5",
 	"author": "Prosopo",
 	"type": "module",
 	"repository": {
@@ -13,6 +13,8 @@
 		"build:all": "turbo run build",
 		"build:all:tsc": "turbo run build:tsc",
 		"build:all:cjs": "turbo run build:cjs",
+		"build:docker:all": "node ./docker/bake.mjs",
+		"bake": "turbo run build:docker:all",
 		"bundle:all": "turbo run bundle",
 		"bundle:iife:all": "turbo run bundle:iife",
 		"clean:nx": "nx reset",
@@ -49,7 +51,7 @@
 		"lint-changed:js": "npm run --silent lint:js -- --changed",
 		"lint-changed-fix:js": "npm run --silent lint-fix:js -- --changed",
 		"lint:engines": "npm run -w @prosopo/lint start -- engines --pkg $(pwd)/package.json",
-		"lint:refs": "npm run -w @prosopo/lint start -- refs --pkg $(pwd)/package.json --ignore @redis/client @angular/common @prosopo/fingerprintjs @prosopo/fingerprint",
+		"lint:refs": "npm run -w @prosopo/lint start -- refs --pkg $(pwd)/package.json --ignore @redis/client @angular/common @prosopo/fingerprintjs @prosopo/fingerprint undici",
 		"lint:testCheck": "npm run -w @prosopo/lint start -- testCheck --pkg $(pwd)/package.json",
 		"lint:workflowNames": "npm run -w @prosopo/lint start -- workflowNames --root $(pwd)",
 		"lint:tsconfigIncludes": "npm run -w @prosopo/lint start -- tsconfigIncludes --pkg $(pwd)/package.json",

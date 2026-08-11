@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/config",
-	"version": "3.3.5",
+	"version": "3.3.7",
 	"description": "Prosopo config library",
 	"type": "module",
 	"scripts": {
@@ -9,7 +9,8 @@
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"typecheck": "tsc --project tsconfig.types.json"
+		"typecheck": "tsc --project tsconfig.types.json",
+		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts --mode $NODE_ENV"
 	},
 	"engines": {
 		"node": "^24",
@@ -68,7 +69,7 @@
 		"vitest": "4.1.10",
 		"webpack": "5.102.1",
 		"webpack-cli": "5.1.4",
-		"webpack-dev-server": "5.2.6"
+		"webpack-dev-server": "6.0.0"
 	},
 	"repository": {
 		"type": "git",

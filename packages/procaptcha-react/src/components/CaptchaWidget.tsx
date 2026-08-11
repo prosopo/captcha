@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ProsopoDatasetError } from "@prosopo/common";
+import { isEventTrusted } from "@prosopo/procaptcha-common";
 import type { Captcha, HashedItem } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import type { Properties } from "csstype";
@@ -92,7 +93,7 @@ export const CaptchaWidget = ({
 							// carries only clientX/clientY — never `touches` — so
 							// there is one set of coordinates to read, not three.
 							onClick={(e: React.MouseEvent) => {
-								if (!e.isTrusted) {
+								if (!isEventTrusted(e)) {
 									return;
 								}
 								onClick(hash, e.clientX, e.clientY);
