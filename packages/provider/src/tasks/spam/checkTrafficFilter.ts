@@ -34,21 +34,17 @@ export type TrafficCheckResult =
 	| { isBlocked: false }
 	| { isBlocked: true; reason: TrafficBlockReason };
 
-type EvaluateOptions = {
-	suppressVpnDatacenterInteraction: boolean;
-};
-
-// Match the allowlist against `datacenterName`, `providerName`
+// Match the allowlist / denylist against `datacenterName`, `providerName`
 // (`company.name`), and `asnOrganization` — case-insensitive, whitespace
 // trimmed. The upstream ipapi only populates `datacenter.datacenter` for
 // curated named ranges, so falling back to providerName and asnOrganization
-// lets the allowlist also catch generic CDN / cloud-provider IPs that come
+// lets the lists also catch generic CDN / cloud-provider IPs that come
 // back with `is_datacenter: true` but no datacenter name.
-const isDatacenterAllowlisted = (
+const matchesDatacenterNameList = (
 	ipInfo: IPInfoResult,
-	allowlist: ReadonlyArray<string> | undefined,
+	list: ReadonlyArray<string> | undefined,
 ): boolean => {
-	if (!allowlist || allowlist.length === 0) {
+	if (!list || list.length === 0) {
 		return false;
 	}
 	const candidates: string[] = [];
@@ -64,16 +60,30 @@ const isDatacenterAllowlisted = (
 	if (candidates.length === 0) {
 		return false;
 	}
-	const normalisedAllowlist = allowlist.map((entry) =>
-		entry.trim().toLowerCase(),
-	);
-	return candidates.some((c) => normalisedAllowlist.includes(c));
+	const normalisedList = list.map((entry) => entry.trim().toLowerCase());
+	return candidates.some((c) => normalisedList.includes(c));
 };
+
+export const isDatacenterAllowlisted = (
+	ipInfo: IPInfoResult,
+	allowlist: ReadonlyArray<string> | undefined,
+): boolean => matchesDatacenterNameList(ipInfo, allowlist);
+
+// Counterpart to `isDatacenterAllowlisted`. When the datacenter rule is
+// active and the IP's name matches an entry in `datacenterNameDenylist`,
+// the block fires regardless of the `providerType === "isp"` suppression
+// and regardless of any allowlist entry for the same name. Denylist wins
+// so operators can opt named providers back into the block that would
+// otherwise be exempted by the ISP heuristic.
+export const isDatacenterDenylisted = (
+	ipInfo: IPInfoResult,
+	denylist: ReadonlyArray<string> | undefined,
+): boolean => matchesDatacenterNameList(ipInfo, denylist);
 
 const evaluateIpInfo = (
 	ipInfo: IPInfoResponse | undefined,
 	trafficFilter: Partial<ITrafficFilter>,
-	options: EvaluateOptions,
+	isDnsExtra = false,
 ): TrafficCheckResult => {
 	if (!ipInfo || !ipInfo.isValid) {
 		return { isBlocked: false };
@@ -104,17 +114,23 @@ const evaluateIpInfo = (
 		}
 	}
 
-	if (
-		trafficFilter.blockDatacenter &&
-		ipInfo.isDatacenter &&
-		!(
-			options.suppressVpnDatacenterInteraction &&
-			ipInfo.isVPN &&
-			!trafficFilter.blockVpn
-		) &&
-		!isDatacenterAllowlisted(ipInfo, trafficFilter.datacenterNameAllowlist)
-	) {
-		return { isBlocked: true, reason: ResultReason.DATACENTER_BLOCKED };
+	const datacenterSuppressedByCategory =
+		(ipInfo.isVPN && !trafficFilter.blockVpn) ||
+		(ipInfo.isProxy && !trafficFilter.blockProxy) ||
+		(ipInfo.isTor && !trafficFilter.blockTor) ||
+		(ipInfo.isCrawler && !trafficFilter.blockCrawler);
+
+	if (trafficFilter.blockDatacenter && ipInfo.isDatacenter) {
+		if (isDatacenterDenylisted(ipInfo, trafficFilter.datacenterNameDenylist)) {
+			return { isBlocked: true, reason: ResultReason.DATACENTER_BLOCKED };
+		}
+		if (
+			ipInfo.providerType !== "isp" &&
+			!datacenterSuppressedByCategory &&
+			!isDatacenterAllowlisted(ipInfo, trafficFilter.datacenterNameAllowlist)
+		) {
+			return { isBlocked: true, reason: ResultReason.DATACENTER_BLOCKED };
+		}
 	}
 
 	if (trafficFilter.blockMobile && ipInfo.isMobile) {
@@ -125,7 +141,8 @@ const evaluateIpInfo = (
 		return { isBlocked: true, reason: ResultReason.SATELLITE_BLOCKED };
 	}
 
-	if (trafficFilter.blockCrawler && ipInfo.isCrawler) {
+	// Public DNS resolvers share IP space with search crawlers.
+	if (!isDnsExtra && trafficFilter.blockCrawler && ipInfo.isCrawler) {
 		return { isBlocked: true, reason: ResultReason.CRAWLER_BLOCKED };
 	}
 
@@ -140,20 +157,35 @@ const evaluateIpInfo = (
  * `ipInfo` falls back to "not blocked" so an outage in the upstream
  * service can't block all traffic.
  *
- * One cross-filter rule: when an operator enables `blockDatacenter` but
- * leaves `blockVpn` off, commercial VPNs that exit from datacenter IPs
- * (which is most of them — Mullvad, NordVPN, ProtonVPN, etc. all run on
- * AWS/OVH/Hetzner) would otherwise be caught by the datacenter rule.
- * Operators almost never intend that: "block data centers" is about
- * scraping/automation traffic, not VPN end-users. So the datacenter
- * rule is suppressed for IPs also flagged as VPN unless the operator
- * has opted in to blocking VPN traffic explicitly.
+ * Cross-filter rule: the datacenter rule is suppressed when the IP
+ * carries a more specific category the operator has left unblocked —
+ * VPN, proxy, Tor, or crawler. All four legitimately sit on datacenter
+ * infrastructure, so "block datacenters" (a scraping rule) shouldn't
+ * catch them out the back door. Applies to primary and DNS extras.
+ *
+ * Extras-only rule: the crawler check is skipped on DNS extras. Public
+ * DNS resolvers share IP space with search crawlers.
  *
  * The datacenter rule also honours `datacenterNameAllowlist`: consumer
  * relays route through datacenter ranges and are reported as
  * `is_datacenter=true` by upstream but the exiting users are real humans.
  * Operators can list the datacenter, provider, or ASN organisation names
  * they want to allow through — see `isDatacenterAllowlisted`.
+ *
+ * The datacenter rule also short-circuits when upstream classifies the
+ * provider as an ISP (`providerType === "isp"`). Consumer ISPs like
+ * Afrihost, Comcast, or BT are sometimes flagged `is_datacenter=true` by
+ * upstream heuristics — usually because part of the ASN hosts B2B or
+ * hosting services — but the eyeball ranges behind those ASNs carry
+ * ordinary end-users. The ISP categorisation is stronger evidence of
+ * consumer traffic than the datacenter boolean.
+ *
+ * The ISP short-circuit and the allowlist are both overridden by
+ * `datacenterNameDenylist`: if the IP's `datacenterName`, `providerName`,
+ * or `asnOrganization` matches a denylist entry, the block fires. This
+ * lets operators opt named providers (for example IP-leasing platforms
+ * whose ranges are announced from carrier ASNs but exit as proxy pools)
+ * back into the datacenter rule.
  *
  * When `trafficFilter.skipExtrasOnValidDnsPath` is on and the catcher
  * confirmed the DNS path matched the connection path (`pathValid: true`),
@@ -166,9 +198,7 @@ export const checkTrafficFilter = (
 	extraIpInfos?: ReadonlyArray<IPInfoResponse | undefined>,
 	dnsPathValid?: boolean,
 ): TrafficCheckResult => {
-	const primary = evaluateIpInfo(ipInfo, trafficFilter, {
-		suppressVpnDatacenterInteraction: true,
-	});
+	const primary = evaluateIpInfo(ipInfo, trafficFilter);
 	if (primary.isBlocked) {
 		return primary;
 	}
@@ -178,9 +208,7 @@ export const checkTrafficFilter = (
 	}
 
 	for (const extra of extraIpInfos ?? []) {
-		const result = evaluateIpInfo(extra, trafficFilter, {
-			suppressVpnDatacenterInteraction: false,
-		});
+		const result = evaluateIpInfo(extra, trafficFilter, true);
 		if (result.isBlocked) {
 			return result;
 		}

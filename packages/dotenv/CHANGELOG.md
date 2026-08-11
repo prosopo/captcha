@@ -1,5 +1,45 @@
 # @prosopo/dotenv
 
+## 3.0.51
+### Patch Changes
+
+- Updated dependencies [2aabe73]
+  - @prosopo/logger@2.0.5
+
+## 3.0.50
+### Patch Changes
+
+- 4cd9035: test(dotenv): add vitest type tests for the env API
+  
+  Runtime tests cannot catch a published signature that silently widens. These
+  pin the parts consumers depend on: `getEnv` and `getEnvFile` returning a plain
+  `string` rather than `string | undefined` (both already default the absent
+  case away, so a nullable return would push work back onto every caller),
+  `loadEnv` returning the resolved path rather than void, and the optional
+  positional arguments of `loadEnv`/`getEnvFile` in order.
+- 8fba211: test(dotenv): add unit test suite covering env discovery and loading
+  
+  Adds 47 unit tests for `getEnv`, `getEnvFile` and `loadEnv`, reaching 100%
+  statement, branch, function and line coverage, and wires the package into
+  `turbo run test` so it runs in CI.
+  
+  Also fixes `getEnvFile` so that a `NODE_ENV` sanitising to the empty string
+  (e.g. `"!!!"`) falls back to the unsuffixed `.env` rather than searching for
+  the never-created `.env.` filename.
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+  - @prosopo/logger@2.0.4
+
+## 3.0.49
+### Patch Changes
+
+- Updated dependencies [6abff15]
+  - @prosopo/logger@2.0.3
+
+## 3.0.48
+### Patch Changes
+
+  - @prosopo/logger@2.0.2
+
 ## 3.0.47
 ### Patch Changes
 

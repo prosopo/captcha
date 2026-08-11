@@ -28,7 +28,12 @@ env:
 jobs:
   release:
     name: release
-    runs-on: ubuntu-latest
+    # GH_RUNNER unset -> GitHub-hosted. Set to a JSON array (the self-hosted
+    # fleet) -> this job's capacity requirement is appended to it: cores, RAM,
+    # disk. Runners advertise one label per step up to their own size, so a job
+    # only lands on a host big enough for it. Set to a JSON string -> used as
+    # given, which is how a repo opts back out to a hosted runner.
+    runs-on: ${{ vars.GH_RUNNER && startsWith(vars.GH_RUNNER, '[') && fromJSON(format('["{0}","2c","4g","20d"]', join(fromJSON(vars.GH_RUNNER), '","'))) || fromJSON(vars.GH_RUNNER || '"ubuntu-latest"') }}
     steps:
       - name: Print contexts
         uses: prosopo/github_actions/.github/actions/print_contexts@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
@@ -54,7 +59,7 @@ jobs:
           token: ${{ steps.app_token.outputs.token }}
           fetch-depth: 0 # fetch all history
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: 'npm'
@@ -137,15 +142,13 @@ jobs:
           git status
 
           npm i --ignore-scripts --include=dev --no-audit --no-fund --prefer-offline
-          # Set the version of the root package.json and the docker/images/provider/package.json to the same as @prosopo/cli
+          # Set the root package.json version to match @prosopo/cli. The provider
+          # image no longer needs syncing here: its Dockerfile lives in
+          # packages/cli and its tag is derived from that package's own version.
           root_version=$(npm -w @prosopo/cli pkg get version | jq -r '.["@prosopo/cli"]')
           echo "root_version=$root_version" >> $GITHUB_ENV
           echo "Setting root package.json version to $root_version"
           npm pkg set version="$root_version"
-          cd docker/images/provider
-          # Set the version of the docker/images/provider/package.json to the same as the root package.json
-          npm pkg set version="$root_version"
-          cd -
           git add -u .
           git commit -m "chore: version bump"
           git status
@@ -173,9 +176,6 @@ jobs:
               echo "No package.json files changed, no affected packages"
           fi
           echo "affected: $affected"
-          
-          # Remove any docker packages
-          affected=$(echo "$affected" | jq -c 'map(select(.name != "docker/images/provider"))')
           
           echo "affected=$affected" >> $GITHUB_ENV
 

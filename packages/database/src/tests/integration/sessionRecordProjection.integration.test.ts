@@ -115,6 +115,8 @@ describe("getSessionRecordBySessionId projection", () => {
 			decryptedHeadHash: "head-hash-xyz",
 			siteKey: "site-key-1",
 			reason: "user-passed",
+			currentUrl: "https://example.com/checkout",
+			iframeUrl: "https://widget.example.com/embed",
 			headers: {
 				"user-agent": "Mozilla/5.0",
 				"accept-language": "en-GB",
@@ -151,6 +153,13 @@ describe("getSessionRecordBySessionId projection", () => {
 		expect(got.iFrame).toBe(false);
 		expect(got.decryptedHeadHash).toBe("head-hash-xyz");
 		expect(got.reason).toBe("user-passed");
+		// currentUrl / iframeUrl are forwarded onto the escalation session so
+		// downstream analytics (attack attribution, per-URL routing) survive
+		// the PoW → image/puzzle hop. Missed on the original projection
+		// (2026-07-09): 100% of escalation sessions were storing
+		// `currentUrl: undefined` in prod.
+		expect(got.currentUrl).toBe("https://example.com/checkout");
+		expect(got.iframeUrl).toBe("https://widget.example.com/embed");
 
 		// Headers come back so `buildEscalation` can forward them onto the
 		// escalation session, but the multi-KB `x-tls-clienthello` is
@@ -208,6 +217,76 @@ describe("getSessionRecordBySessionId projection", () => {
 				siteKey: origin.siteKey,
 			}),
 		).resolves.toBeDefined();
+	});
+
+	// Regression for the 2026-08-06 deploy: `bundleId` was added to
+	// SessionRecordSchema for the per-session detector pool but not to the
+	// projection here. `resolveBundleBySessionId` reads it on the pow /
+	// puzzle / image submit path to resolve the decrypt bundle; on a Redis
+	// cache miss the DB fallback returned `undefined` even though the
+	// session record on disk carried a valid bundleId, so every subsequent
+	// `decryptBehavioralData` / `decryptSimdReadings` failed at the bundle
+	// resolve step and both fields were dropped fleet-wide.
+	it("returns bundleId so resolveBundleBySessionId can decrypt behavioural data", async () => {
+		const sessionId = "session-bundleid-roundtrip";
+		await db.tables.session.create({
+			sessionId,
+			createdAt: new Date(),
+			token: "tok-bundleid",
+			score: 0.1,
+			threshold: 0.5,
+			scoreComponents: { baseScore: 0.1 },
+			ipAddress: ipv4Composite(16843009n),
+			captchaType: CaptchaType.pow,
+			webView: false,
+			iFrame: false,
+			bundleId: "bundle-42",
+		});
+
+		const got = await db.getSessionRecordBySessionId(sessionId);
+		expect(got?.bundleId).toBe("bundle-42");
+	});
+
+	// Regression guard for the session-chain walker
+	// (CaptchaManager.getSessionRecordWithOriginFallback). The walker needs
+	// `originSessionId` on the escalation session to know where to walk
+	// back to for missing simdReadings / dnsEvent / entropy fields. If the
+	// projection drops it, escalations look like non-escalations and the
+	// walker no-ops — puzzle / image escalations then hit the DM with
+	// undefined simdReadings and trip SIMD_ABSENT-style deny rules.
+	it("returns originSessionId so the escalation-fallback walker knows where to walk", async () => {
+		const originSessionId = "session-origin-for-chain";
+		const escalationSessionId = "session-escalation-with-origin";
+		await db.tables.session.create({
+			sessionId: originSessionId,
+			createdAt: new Date(),
+			token: "tok-origin",
+			score: 0.4,
+			threshold: 0.5,
+			scoreComponents: { baseScore: 0.4 },
+			ipAddress: ipv4Composite(16843009n),
+			captchaType: CaptchaType.pow,
+			webView: false,
+			iFrame: false,
+		});
+		await db.tables.session.create({
+			sessionId: escalationSessionId,
+			createdAt: new Date(),
+			token: "tok-escalation",
+			score: 0.4,
+			threshold: 0.5,
+			scoreComponents: { baseScore: 0.4 },
+			ipAddress: ipv4Composite(16843009n),
+			captchaType: CaptchaType.puzzle,
+			webView: false,
+			iFrame: false,
+			isEscalation: true,
+			originSessionId,
+		});
+
+		const got = await db.getSessionRecordBySessionId(escalationSessionId);
+		expect(got?.originSessionId).toBe(originSessionId);
+		expect(got?.isEscalation).toBe(true);
 	});
 
 	// Schema-contract guard: any field marked `required: true` on

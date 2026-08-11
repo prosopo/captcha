@@ -21,7 +21,7 @@ import type { IIpInfoService, IpInfoServiceConfig } from "./types.js";
  * Returns true for loopback, link-local, and private-range IPs that will
  * never yield useful geolocation or threat data from any backend.
  */
-function isNonRoutable(ip: string): boolean {
+export function isNonRoutable(ip: string): boolean {
 	// Strip IPv4-mapped IPv6 prefix (::ffff:127.0.0.1 -> 127.0.0.1)
 	const normalized = ip.replace(/^::ffff:/i, "");
 
@@ -54,13 +54,30 @@ function isNonRoutable(ip: string): boolean {
 	return false;
 }
 
+/**
+ * The two backends, injected so the routing and fallback logic above can be
+ * tested without a MaxMind database on disk or a network call. Both are
+ * optional: absent means "not configured", which is distinct from "configured
+ * but unavailable".
+ */
+export interface IpInfoBackends {
+	maxmind?: MaxMindBackend | null;
+	ipapi?: IpapiBackend | null;
+}
+
 export class IpInfoService implements IIpInfoService {
 	private maxmindBackend: MaxMindBackend | null = null;
 	private ipapiBackend: IpapiBackend | null = null;
 	private config: IpInfoServiceConfig;
 
-	constructor(config: IpInfoServiceConfig) {
+	constructor(config: IpInfoServiceConfig, backends?: IpInfoBackends) {
 		this.config = config;
+
+		if (backends) {
+			this.maxmindBackend = backends.maxmind ?? null;
+			this.ipapiBackend = backends.ipapi ?? null;
+			return;
+		}
 
 		if (config.maxmindCityDbPath || config.maxmindAsnDbPath) {
 			this.maxmindBackend = new MaxMindBackend({

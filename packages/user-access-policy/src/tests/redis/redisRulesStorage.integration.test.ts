@@ -113,176 +113,219 @@ describe("redisAccessRulesStorage", () => {
 		redisClient = await result.getClient();
 	});
 
-	describe(
-		"writer",
-		() => {
-			let accessRulesWriter: AccessRulesWriter;
+	describe("writer", () => {
+		let accessRulesWriter: AccessRulesWriter;
 
-			beforeAll(() => {
-				accessRulesWriter = new RedisRulesWriter(redisClient, mockLogger);
-			});
+		beforeAll(() => {
+			accessRulesWriter = new RedisRulesWriter(redisClient, mockLogger);
+		});
 
-			test("inserts rule", async () => {
-				const testIndexName = indexName;
-				// given
-				const accessRule: AccessRule = {
-					type: AccessPolicyType.Block,
-					clientId: "clientId",
-				};
-				const accessRuleKey = getAccessRuleRedisKey(accessRule);
+		test("inserts rule", async () => {
+			const testIndexName = indexName;
+			// given
+			const accessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: "clientId",
+			};
+			const accessRuleKey = getAccessRuleRedisKey(accessRule);
 
-				// when
-				await accessRulesWriter.insertRules([
-					{
-						rule: accessRule,
-					},
-				]);
+			// when
+			await accessRulesWriter.insertRules([
+				{
+					rule: accessRule,
+				},
+			]);
 
-				// then
-				const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
-				const indexRecordsCount = await getIndexRecordsCount(testIndexName);
+			// then
+			const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
+			const indexRecordsCount = await getIndexRecordsCount(testIndexName);
 
-				expect(insertedAccessRule).toEqual(accessRule);
-				expect(indexRecordsCount).toEqual(1);
-			});
+			expect(insertedAccessRule).toEqual(accessRule);
+			expect(indexRecordsCount).toEqual(1);
+		});
 
-			test("inserts time limited rule", async () => {
-				// given
-				const accessRule: AccessRule = {
-					type: AccessPolicyType.Block,
-					clientId: "clientId",
-				};
-				const accessRuleKey = getAccessRuleRedisKey(accessRule);
-				// 1 hour from now.
-				const expireIn = 60 * 60; // seconds
-				const expirationTimestamp = new Date(
-					Date.now() + expireIn * 1000,
-				).getTime();
-				const expirationTimestampInSeconds = Math.floor(
-					expirationTimestamp / 1000,
+		test("inserts time limited rule", async () => {
+			// given
+			const accessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: "clientId",
+			};
+			const accessRuleKey = getAccessRuleRedisKey(accessRule);
+			// 1 hour from now.
+			const expireIn = 60 * 60; // seconds
+			const expirationTimestamp = new Date(
+				Date.now() + expireIn * 1000,
+			).getTime();
+			const expirationTimestampInSeconds = Math.floor(
+				expirationTimestamp / 1000,
+			);
+
+			// when
+			await accessRulesWriter.insertRules([
+				{
+					rule: accessRule,
+					expiresUnixTimestamp: expirationTimestampInSeconds,
+				},
+			]);
+			const ruleKey = getAccessRuleRedisKey(accessRule);
+			// then
+			const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
+			const insertedExpirationResult = await redisClient.expireAt(
+				ruleKey,
+				expirationTimestampInSeconds,
+			);
+			const indexRecordsCount = await getIndexRecordsCount(indexName);
+
+			const recordExpirySeconds = await redisClient.ttl(ruleKey);
+
+			expect(insertedAccessRule).toEqual(accessRule);
+			expect(insertedExpirationResult).toBe(1);
+			expect(recordExpirySeconds).toBeLessThanOrEqual(
+				expirationTimestampInSeconds,
+			);
+
+			expect(indexRecordsCount).toBe(1);
+		});
+
+		// The existing "inserts time limited rule" test above only
+		// checks that the TTL is *set* on the Redis key. Neither
+		// side actually verifies the rule stops matching once its
+		// TTL fires — which is the property operators care about
+		// (temporary bans should self-clear). Guard against a
+		// regression that persists rules past their expiry (e.g. a
+		// future writer that swaps `expireAt` for `persist` by
+		// accident, or an index rebuild that resurrects expired
+		// records).
+		test("expired rule is no longer returned by the reader after its TTL fires", async () => {
+			const accessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: `expiring-${getUniqueString()}`,
+			};
+			const ruleKey = getAccessRuleRedisKey(accessRule);
+			// 2 s expiry — long enough that the "before expiry" check
+			// races the write cleanly, short enough that the test
+			// completes in a reasonable timeout. Redis TTL granularity
+			// is 1 s so anything shorter is under-resolution.
+			const expirationTimestampInSeconds = Math.floor(Date.now() / 1000) + 2;
+
+			await accessRulesWriter.insertRules([
+				{
+					rule: accessRule,
+					expiresUnixTimestamp: expirationTimestampInSeconds,
+				},
+			]);
+
+			// Sanity: the rule exists immediately after write.
+			const initialRecord = await redisClient.hGetAll(ruleKey);
+			expect(initialRecord).toEqual(accessRule);
+
+			// Wait past the TTL. Add ~1s slack for Redis's per-key
+			// expiry sweep — the docs guarantee expired keys stop
+			// answering reads but the actual key deletion is lazy.
+			await new Promise((resolve) => setTimeout(resolve, 3500));
+
+			// After expiry: hGetAll returns {} (Redis treats an
+			// expired key as non-existent for reads).
+			const expiredRecord = await redisClient.hGetAll(ruleKey);
+			expect(expiredRecord).toEqual({});
+
+			// And the RediSearch index no longer counts it.
+			const indexRecordsCount = await getIndexRecordsCount(indexName);
+			expect(indexRecordsCount).toBe(0);
+		}, 10_000);
+
+		test("deletes rules", async () => {
+			// given
+			const johnAccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: getUniqueString(),
+			};
+			const johnAccessRuleKey = getAccessRuleRedisKey(johnAccessRule);
+
+			const doeAccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: getUniqueString(),
+			};
+			const doeAccessRuleKey = getAccessRuleRedisKey(doeAccessRule);
+
+			await insertRules([johnAccessRule, doeAccessRule]);
+
+			// when
+			await accessRulesWriter.deleteRules([
+				johnAccessRuleKey.slice(ACCESS_RULE_REDIS_KEY_PREFIX.length),
+			]);
+
+			// then
+			const presentAccessRule = await redisClient.hGetAll(doeAccessRuleKey);
+			const indexRecordsCount = await getIndexRecordsCount(indexName);
+
+			expect(presentAccessRule).toEqual(doeAccessRule);
+			expect(indexRecordsCount).toBe(1);
+		});
+
+		test("deletes all rules", async () => {
+			// given
+			const johnAccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: getUniqueString(),
+			};
+			const doeAccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: getUniqueString(),
+			};
+
+			await insertRules([johnAccessRule, doeAccessRule]);
+
+			// when
+			await accessRulesWriter.deleteAllRules();
+
+			// then
+			const indexRecordsCount = await getIndexRecordsCount(indexName);
+
+			expect(indexRecordsCount).toBe(0);
+		});
+
+		test("deletes all rules when there are 1 million rules", async () => {
+			// given
+			const rulesCount = 1_000_000;
+			const batchSize = 10_000;
+			const numBatches = Math.ceil(rulesCount / batchSize);
+
+			// Insert rules in batches to avoid memory exhaustion
+			// Don't create 1M objects in memory at once!
+			for (let i = 0; i < numBatches; i++) {
+				const currentBatchSize = Math.min(
+					batchSize,
+					rulesCount - i * batchSize,
+				);
+				const batchRules: AccessRule[] = Array.from(
+					{ length: currentBatchSize },
+					() => ({
+						type: AccessPolicyType.Block,
+						clientId: getUniqueString(),
+					}),
 				);
 
-				// when
-				await accessRulesWriter.insertRules([
-					{
-						rule: accessRule,
-						expiresUnixTimestamp: expirationTimestampInSeconds,
-					},
-				]);
-				const ruleKey = getAccessRuleRedisKey(accessRule);
-				// then
-				const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
-				const insertedExpirationResult = await redisClient.expireAt(
-					ruleKey,
-					expirationTimestampInSeconds,
-				);
-				const indexRecordsCount = await getIndexRecordsCount(indexName);
+				await insertRules(batchRules);
+			}
 
-				const recordExpirySeconds = await redisClient.ttl(ruleKey);
+			// verify that there are 1 million rules in the database
+			const beforeDeleteIndexRecordsCount =
+				await getIndexRecordsCount(indexName);
+			expect(beforeDeleteIndexRecordsCount).toBe(rulesCount);
 
-				expect(insertedAccessRule).toEqual(accessRule);
-				expect(insertedExpirationResult).toBe(1);
-				expect(recordExpirySeconds).toBeLessThanOrEqual(
-					expirationTimestampInSeconds,
-				);
+			// when
+			await accessRulesWriter.deleteAllRules();
 
-				expect(indexRecordsCount).toBe(1);
-			});
+			// then
+			const afterDeleteIndexRecordsCount =
+				await getIndexRecordsCount(indexName);
 
-			test("deletes rules", async () => {
-				// given
-				const johnAccessRule: AccessRule = {
-					type: AccessPolicyType.Block,
-					clientId: getUniqueString(),
-				};
-				const johnAccessRuleKey = getAccessRuleRedisKey(johnAccessRule);
-
-				const doeAccessRule: AccessRule = {
-					type: AccessPolicyType.Block,
-					clientId: getUniqueString(),
-				};
-				const doeAccessRuleKey = getAccessRuleRedisKey(doeAccessRule);
-
-				await insertRules([johnAccessRule, doeAccessRule]);
-
-				// when
-				await accessRulesWriter.deleteRules([
-					johnAccessRuleKey.slice(ACCESS_RULE_REDIS_KEY_PREFIX.length),
-				]);
-
-				// then
-				const presentAccessRule = await redisClient.hGetAll(doeAccessRuleKey);
-				const indexRecordsCount = await getIndexRecordsCount(indexName);
-
-				expect(presentAccessRule).toEqual(doeAccessRule);
-				expect(indexRecordsCount).toBe(1);
-			});
-
-			test("deletes all rules", async () => {
-				// given
-				const johnAccessRule: AccessRule = {
-					type: AccessPolicyType.Block,
-					clientId: getUniqueString(),
-				};
-				const doeAccessRule: AccessRule = {
-					type: AccessPolicyType.Block,
-					clientId: getUniqueString(),
-				};
-
-				await insertRules([johnAccessRule, doeAccessRule]);
-
-				// when
-				await accessRulesWriter.deleteAllRules();
-
-				// then
-				const indexRecordsCount = await getIndexRecordsCount(indexName);
-
-				expect(indexRecordsCount).toBe(0);
-			});
-
-			test("deletes all rules when there are 1 million rules", async () => {
-				// given
-				const rulesCount = 1_000_000;
-				const batchSize = 10_000;
-				const numBatches = Math.ceil(rulesCount / batchSize);
-
-				// Insert rules in batches to avoid memory exhaustion
-				// Don't create 1M objects in memory at once!
-				for (let i = 0; i < numBatches; i++) {
-					const currentBatchSize = Math.min(
-						batchSize,
-						rulesCount - i * batchSize,
-					);
-					const batchRules: AccessRule[] = Array.from(
-						{ length: currentBatchSize },
-						() => ({
-							type: AccessPolicyType.Block,
-							clientId: getUniqueString(),
-						}),
-					);
-
-					await insertRules(batchRules);
-				}
-
-				// verify that there are 1 million rules in the database
-				const beforeDeleteIndexRecordsCount =
-					await getIndexRecordsCount(indexName);
-				expect(beforeDeleteIndexRecordsCount).toBe(rulesCount);
-
-				// when
-				await accessRulesWriter.deleteAllRules();
-
-				// then
-				const afterDeleteIndexRecordsCount =
-					await getIndexRecordsCount(indexName);
-
-				expect(afterDeleteIndexRecordsCount).toBe(0);
-			});
-		},
-		{
-			timeout: 240_000,
-		},
-	);
+			expect(afterDeleteIndexRecordsCount).toBe(0);
+		});
+		// The trailing 240_000 is the suite timeout. vitest 4 dropped the
+		// options-object overload for describe, so it has to be a plain number.
+	}, 240_000);
 
 	describe("reader", () => {
 		let accessRulesReader: AccessRulesReader;
@@ -1628,6 +1671,106 @@ describe("redisAccessRulesStorage", () => {
 					(r) => r.type === AccessPolicyType.Block && r.ja4Hash === ja4Hash,
 				),
 			).toBe(true);
+		});
+
+		test("specific-IP Restrict rule survives when many higher-specificity irrelevant rules co-exist (2026-07-10 Twickets regression)", async () => {
+			// Regression guard for the 2026-07-10 Twickets incident: a
+			// portal-authored Restrict rule with scope
+			// `clientId + numericIp` (specificity 2, severity 0) was
+			// silently dropped from the frictionless access-policy lookup
+			// when the tenant had many higher-specificity irrelevant
+			// rules on the same clientId. The old FT.AGGREGATE ranker
+			// used for non-block lookups capped candidates at top-20 by
+			// populated-field count; those 20 slots got filled by rules
+			// with clientId + numericIp + numericIpMaskMin (SIMD_REPLAY
+			// v6 shape, specificity 3, severity 1) or
+			// clientId + ja4Hash + coords (SUDDEN_VOLUME_INCREASE shape,
+			// specificity 3, severity 1) that all matched the greedy
+			// `ismissing(@headHash) | ismissing(@coords) | ismissing(@headersHash)`
+			// disjunction. None of them applied to the request under
+			// `ruleApplies` — they were emitted from other users'
+			// activity — so the JS-side ranker returned [] and the
+			// frictionless decision fell through to `default_pow`.
+			//
+			// The split-query path can't hit that failure: each probe
+			// hits a discriminating posting list, so the ip:exact probe
+			// returns exactly the rules that literally match this IP.
+			const clientId = getUniqueString();
+
+			// The rule that must survive: a portal "Too Many Requests"
+			// Restrict/image rule scoped only to (clientId, numericIp).
+			const targetIp = 1376899398n; // 82.17.209.70 — Twickets rule
+			const targetRule: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				clientId,
+				numericIp: targetIp,
+				description: "Too Many Requests",
+			};
+
+			// 40 irrelevant Block rules with higher specificity than
+			// the target rule. Two shapes drawn from the live Twickets
+			// tenant that dominated the top-20:
+			//
+			//   (a) SIMD_REPLAY v6-style — clientId + numericIp +
+			//       numericIpMaskMin. These have a *different* numericIp
+			//       from the request, so the exact-IP probe skips them.
+			//   (b) SUDDEN_VOLUME_INCREASE-style — clientId + ja4Hash +
+			//       coords. Different ja4Hash from the request so those
+			//       probes miss them too.
+			//
+			// Under the old ranker every one of these would fill the top
+			// slots and push the target rule off the end.
+			const irrelevantRules: AccessRule[] = [];
+			for (let i = 0; i < 20; i++) {
+				irrelevantRules.push({
+					type: AccessPolicyType.Block,
+					clientId,
+					numericIp: BigInt(2000000000 + i),
+					numericIpMaskMin: BigInt(2000000000 + i),
+					numericIpMaskMax: BigInt(2000000000 + i),
+					description: "SIMD_REPLAY",
+				});
+			}
+			for (let i = 0; i < 20; i++) {
+				irrelevantRules.push({
+					type: AccessPolicyType.Block,
+					clientId,
+					ja4Hash: `t13d_other_${i}`,
+					coords: `[[[${100 + i},${200 + i}]]]`,
+					description: "SUDDEN_VOLUME_INCREASE",
+				});
+			}
+
+			await insertRules([targetRule, ...irrelevantRules]);
+
+			// Frictionless access-policy lookup shape — greedy match,
+			// matchingFieldsOnly=true, no blockOnly.
+			const found = await accessRulesReader.findRules(
+				{
+					policyScope: { clientId },
+					policyScopeMatch: FilterScopeMatch.Greedy,
+					userScope: {
+						numericIp: targetIp,
+						ja4Hash: "t13d1516h2_request_ja4",
+						userAgentHash: "sha256:request_ua",
+						userId: getUniqueString(),
+					},
+					userScopeMatch: FilterScopeMatch.Greedy,
+				},
+				true, // matchingFieldsOnly — production hot path
+			);
+
+			// The target rule MUST come back. Under the old ranker it
+			// was truncated; under the split path the ip:exact probe
+			// returns exactly this one rule, so it can't be crowded
+			// out by irrelevant candidates from other probes.
+			const targetFound = found.find(
+				(r) =>
+					r.type === AccessPolicyType.Restrict &&
+					r.numericIp === targetIp &&
+					r.description === "Too Many Requests",
+			);
+			expect(targetFound).toBeDefined();
 		});
 	});
 

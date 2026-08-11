@@ -1,5 +1,10 @@
 # @prosopo/procaptcha-integration-build-config
 
+## 1.1.29
+### Patch Changes
+
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+
 ## 1.1.28
 ### Patch Changes
 

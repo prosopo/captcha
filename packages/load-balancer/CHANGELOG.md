@@ -1,5 +1,126 @@
 # @prosopo/load-balancer
 
+## 2.10.19
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+  - @prosopo/types@5.0.2
+
+## 2.10.18
+### Patch Changes
+
+- Updated dependencies [9fec7bd]
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/common@3.1.49
+  - @prosopo/types@5.0.1
+
+## 2.10.17
+### Patch Changes
+
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [6f19cde]
+  - @prosopo/types@5.0.0
+
+## 2.10.16
+### Patch Changes
+
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [103318c]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+  - @prosopo/types@4.10.0
+  - @prosopo/common@3.1.48
+
+## 2.10.15
+### Patch Changes
+
+- Updated dependencies [a0cb39e]
+  - @prosopo/types@4.9.12
+
+## 2.10.14
+### Patch Changes
+
+- Updated dependencies [b9ca0e7]
+- Updated dependencies [fde6896]
+  - @prosopo/types@4.9.11
+  - @prosopo/common@3.1.47
+
+## 2.10.13
+### Patch Changes
+
+- a39c4ec: fix(load-balancer): retry healthz with exponential backoff and stop falling back to the load-balanced hostname
+  
+  `resolvePinnedUrl` previously swallowed any healthz failure (network error, non-2xx, malformed body) and returned the load-balanced hostname (`pronode.prosopo.io`). That hostname isn't a registered on-chain provider, so the verify path rejected every token minted through this fallback with `Provider not found`. The tab-scoped promise cache made it worse: one healthz blip at page load poisoned every subsequent captcha attempt in that tab.
+  
+  Now:
+  
+  - Healthz is retried with full-jitter exponential backoff (3 attempts total, 250ms/500ms base, 2s cap) before surfacing the error.
+  - On terminal failure the pin cache entry is evicted and the error is thrown, so `providerRetry` in `@prosopo/procaptcha-common` can fall through to `getRandomProviderFromList` (which picks a specific on-chain provider and bypasses healthz entirely).
+  - Extracted a small `retryWithBackoff` helper in the same package for the backoff maths.
+
+## 2.10.12
+### Patch Changes
+
+- Updated dependencies [0a4f902]
+  - @prosopo/types@4.9.10
+
+## 2.10.11
+### Patch Changes
+
+  - @prosopo/common@3.1.46
+  - @prosopo/types@4.9.9
+
+## 2.10.10
+### Patch Changes
+
+  - @prosopo/common@3.1.45
+
+## 2.10.9
+### Patch Changes
+
+- Updated dependencies [85e8857]
+  - @prosopo/types@4.9.8
+  - @prosopo/common@3.1.44
+
+## 2.10.8
+### Patch Changes
+
+- Updated dependencies [8bde5df]
+  - @prosopo/types@4.9.7
+
+## 2.10.7
+### Patch Changes
+
+- b3f351b: fix(procaptcha): random provider re-selection + backoff on error fallback
+  
+  When a provider errored, the widget retried the same DNS-routed endpoint immediately and in a tight loop. A fleet of widgets whose provider was unhealthy could therefore accidentally DDoS the provider fleet — retrying the same (possibly-down) endpoint as fast as the event loop allowed.
+  
+  The error-fallback path now:
+  
+  - **Re-selects a different provider on retry.** The first attempt still hits the DNS-routed endpoint (unchanged happy path, preserves session stickiness). On a retry the widget picks a random provider straight from the provider list (`getRandomProviderFromList`), weighted by provider capacity and excluding the URL that just failed. In development the list holds only the single local provider, so a retry simply re-targets that provider.
+  - **Backs off between retries.** `providerRetry` now waits an exponential-backoff-with-full-jitter delay (0.5s → 1s → 2s → 4s …, capped at 10s) before retrying, so a down provider is no longer hammered and a fleet of clients that all errored at once don't reconverge into a thundering herd.
+  
+  Applies to the image, PoW and puzzle managers and the frictionless detection flow. New shared `ProviderSelectRetryContext` type; `BotDetectionFunction` gains an optional retry-context argument.
+- Updated dependencies [b3f351b]
+- Updated dependencies [17bc76e]
+  - @prosopo/types@4.9.6
+
+## 2.10.6
+### Patch Changes
+
+- Updated dependencies [6cb3218]
+  - @prosopo/types@4.9.5
+
+## 2.10.5
+### Patch Changes
+
+- Updated dependencies [de12b31]
+- Updated dependencies [770954b]
+  - @prosopo/types@4.9.4
+
 ## 2.10.4
 ### Patch Changes
 

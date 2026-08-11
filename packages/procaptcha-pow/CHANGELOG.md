@@ -1,5 +1,243 @@
 # @prosopo/procaptcha-pow
 
+## 2.10.29
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+  - @prosopo/types@5.0.2
+  - @prosopo/api@4.0.2
+  - @prosopo/fingerprint@2.7.22
+  - @prosopo/procaptcha-common@2.11.22
+
+## 2.10.28
+### Patch Changes
+
+- Updated dependencies [9fec7bd]
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/common@3.1.49
+  - @prosopo/types@5.0.1
+  - @prosopo/api@4.0.1
+  - @prosopo/locale@3.2.9
+  - @prosopo/fingerprint@2.7.21
+  - @prosopo/procaptcha-common@2.11.21
+
+## 2.10.27
+### Patch Changes
+
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [6f19cde]
+- Updated dependencies [2bc8e73]
+  - @prosopo/types@5.0.0
+  - @prosopo/api@4.0.0
+  - @prosopo/widget-skeleton@2.8.5
+  - @prosopo/fingerprint@2.7.20
+  - @prosopo/procaptcha-common@2.11.20
+
+## 2.10.26
+### Patch Changes
+
+  - @prosopo/procaptcha-common@2.11.19
+
+## 2.10.25
+### Patch Changes
+
+- 34f902a: Remove the undeclared `@prosopo/load-balancer` import from the manager unit test, deriving `IpMode` from `procaptcha-common`'s `pickIpMode` instead so `lint:refs` passes.
+- 9c55bcb: Add unit and type tests for the PoW widget and Manager, and fix the defects they exposed:
+  
+  - a retried solve restarted at coordinates (0, 0), losing the real click telemetry an escalated widget depends on
+  - three paths in `ProcaptchaWidget` (checkbox change, autoStart effect, `procaptcha:execute` handler) let a rejected `manager.start()` escape as an unhandled rejection, leaving the spinner running
+- Updated dependencies [1e0cf14]
+  - @prosopo/api@3.5.21
+
+## 2.10.24
+### Patch Changes
+
+- ab3499c: feat(procaptcha): block on SIMD readings at solution submit
+  
+  Solution submit is the last hop the client controls, so it's the last chance to
+  attach the catcher's WASM SIMD readings for a session. The image, PoW and puzzle
+  managers now wait for the benchmark there via a shared
+  `getSimdReadingsForSubmit` helper, capped at 5s, instead of attaching only
+  whatever the prefetch happened to have resolved.
+  
+  The helper passes the budget down to the detector *and* races it locally — the
+  detector ships prebuilt, so a bundle that ignores `timeoutMs` (or a benchmark
+  wedged on a busy main thread) can't hang the submission. It never rejects: a
+  missing accessor, a rejection, a synchronous throw and a timeout all resolve to
+  `undefined` and the solution is submitted without readings, so a user is never
+  failed over telemetry.
+  
+  The earlier frictionless POST and challenge GET hops are unchanged and remain
+  non-blocking.
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [2c47bb7]
+- Updated dependencies [ab3499c]
+- Updated dependencies [0e1171c]
+- Updated dependencies [103318c]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+  - @prosopo/util@3.3.5
+  - @prosopo/procaptcha-common@2.11.18
+  - @prosopo/locale@3.2.8
+  - @prosopo/types@4.10.0
+  - @prosopo/api@3.5.20
+  - @prosopo/common@3.1.48
+  - @prosopo/fingerprint@2.7.19
+
+## 2.10.23
+### Patch Changes
+
+- Updated dependencies [a0cb39e]
+  - @prosopo/types@4.9.12
+  - @prosopo/api@3.5.19
+  - @prosopo/fingerprint@2.7.18
+  - @prosopo/procaptcha-common@2.11.17
+
+## 2.10.22
+### Patch Changes
+
+- b9ca0e7: feat(decision-machine): thread puzzle fields and forward checkbox coords on escalation
+  
+  - Add optional `coords` and `puzzleEvents` to `DecisionMachineInput` so decision machines can gate on entry-point telemetry and puzzle drag trails.
+  - Populate `coords` on the pow, puzzle and image `decide()` inputs. Puzzle also passes `puzzleEvents`. Image gains `behavioralDataPacked` / `deviceCapability` — previously always undefined, which silently disabled the global synthetic-mouse-timing check on the one captcha type it targets.
+  - Extend `ProcaptchaEscalationHandler` with an optional `coords` argument so the PoW widget can forward its trusted checkbox click through the PoW→image/puzzle escalation. The frictionless wrapper prefers escalation coords over pending retry coords. Puzzle and image widgets already accept `startCoords`, so the escalated widget now seeds the salt with the real (x, y) instead of (0, 0).
+- Updated dependencies [b9ca0e7]
+- Updated dependencies [fde6896]
+  - @prosopo/types@4.9.11
+  - @prosopo/common@3.1.47
+  - @prosopo/api@3.5.18
+  - @prosopo/fingerprint@2.7.17
+  - @prosopo/procaptcha-common@2.11.16
+
+## 2.10.21
+### Patch Changes
+
+  - @prosopo/procaptcha-common@2.11.15
+
+## 2.10.20
+### Patch Changes
+
+- 0a4f902: fix(server): dispatch verify by captchaType so puzzle tokens hit the puzzle endpoint
+  
+  Puzzle tokens were silently failing server-side verification. `ProsopoServer.verifyProvider` only had two branches — `challenge` present → PoW verify, absent → image verify — but puzzle tokens carry a challenge too, so they were routed to `/VerifyPowCaptchaSolution` and 404'd on the pow record lookup (`captchastorage.puzzlecaptchas.serverChecked` stayed 0/N in prod). Customers using the puzzle flow got `verified: false` on legitimate solvers.
+  
+  Fix in two parts:
+  
+  - `@prosopo/types`: adds `captchaType?: CaptchaType` to `ProcaptchaOutputSchema` and appends `Option(str)` to `ProcaptchaTokenCodec`. The pre-existing binary layout is preserved in a frozen `ProcaptchaTokenCodecV1`, and `decodeProcaptchaOutput` falls back to it for tokens minted by client bundles that predate this field.
+  - `@prosopo/server`: `verifyProvider` now dispatches on `captchaType` (puzzle → `submitPuzzleCaptchaVerify`, pow → `submitPowCaptchaVerify`, image → `verifyDappUser`) with per-type `cachedTimeout` recency checks. The legacy challenge heuristic is kept as a fallback for old tokens with a `warn`-level log so ops can see the tail-off.
+  - `@prosopo/procaptcha-pow` / `procaptcha-puzzle` / `procaptcha`: each Manager now sets the correct `captchaType` on the object passed to `encodeProcaptchaOutput`.
+  
+  Backwards compatibility: pow and image tokens minted by any prior client bundle continue to verify. Puzzle tokens minted by old bundles still fall through to the pow branch and 404 — same behaviour as before — until the customer upgrades both the client bundle and `@prosopo/server` together.
+- Updated dependencies [0a4f902]
+  - @prosopo/types@4.9.10
+  - @prosopo/api@3.5.17
+  - @prosopo/fingerprint@2.7.16
+  - @prosopo/procaptcha-common@2.11.14
+
+## 2.10.19
+### Patch Changes
+
+- b500d56: fix(widget): enforce single language across widget, kill browser/config race
+  
+  `WidgetFactory.getCaptchaRenderer()` booted the i18n singleton with the
+  browser-detected language before the site-owner `renderOptions.language` /
+  `data-language` had been resolved, and each widget then called
+  `i18n.changeLanguage(config.language)` from a post-mount effect. Any child
+  component that read `useTranslation()` between first render and the async
+  `changeLanguage` resolution rendered in the browser language, then re-rendered
+  in the site-owner language — the multi-language flash customers reported.
+  
+  Resolve the site-owner language in `WidgetFactory.createWidget()` before the
+  lazy renderer load and thread it into `loadI18next(false, lng)`, so the
+  singleton boots (or reconciles via `changeLanguage` + await) with the correct
+  language before React mounts. Site-owner language wins; falls back to browser
+  detection only when no `language` / `data-language` is set.
+- Updated dependencies [b500d56]
+  - @prosopo/locale@3.2.7
+  - @prosopo/common@3.1.46
+  - @prosopo/types@4.9.9
+  - @prosopo/api@3.5.16
+  - @prosopo/fingerprint@2.7.15
+  - @prosopo/procaptcha-common@2.11.13
+
+## 2.10.18
+### Patch Changes
+
+  - @prosopo/procaptcha-common@2.11.12
+
+## 2.10.17
+### Patch Changes
+
+  - @prosopo/procaptcha-common@2.11.11
+
+## 2.10.16
+### Patch Changes
+
+  - @prosopo/common@3.1.45
+  - @prosopo/procaptcha-common@2.11.10
+
+## 2.10.15
+### Patch Changes
+
+- Updated dependencies [85e8857]
+  - @prosopo/api@3.5.15
+  - @prosopo/types@4.9.8
+  - @prosopo/util@3.3.4
+  - @prosopo/common@3.1.44
+  - @prosopo/fingerprint@2.7.14
+  - @prosopo/procaptcha-common@2.11.9
+
+## 2.10.14
+### Patch Changes
+
+- Updated dependencies [8bde5df]
+  - @prosopo/types@4.9.7
+  - @prosopo/api@3.5.14
+  - @prosopo/fingerprint@2.7.13
+  - @prosopo/procaptcha-common@2.11.8
+
+## 2.10.13
+### Patch Changes
+
+- b3f351b: fix(procaptcha): random provider re-selection + backoff on error fallback
+  
+  When a provider errored, the widget retried the same DNS-routed endpoint immediately and in a tight loop. A fleet of widgets whose provider was unhealthy could therefore accidentally DDoS the provider fleet — retrying the same (possibly-down) endpoint as fast as the event loop allowed.
+  
+  The error-fallback path now:
+  
+  - **Re-selects a different provider on retry.** The first attempt still hits the DNS-routed endpoint (unchanged happy path, preserves session stickiness). On a retry the widget picks a random provider straight from the provider list (`getRandomProviderFromList`), weighted by provider capacity and excluding the URL that just failed. In development the list holds only the single local provider, so a retry simply re-targets that provider.
+  - **Backs off between retries.** `providerRetry` now waits an exponential-backoff-with-full-jitter delay (0.5s → 1s → 2s → 4s …, capped at 10s) before retrying, so a down provider is no longer hammered and a fleet of clients that all errored at once don't reconverge into a thundering herd.
+  
+  Applies to the image, PoW and puzzle managers and the frictionless detection flow. New shared `ProviderSelectRetryContext` type; `BotDetectionFunction` gains an optional retry-context argument.
+- Updated dependencies [b3f351b]
+- Updated dependencies [17bc76e]
+  - @prosopo/procaptcha-common@2.11.7
+  - @prosopo/types@4.9.6
+  - @prosopo/api@3.5.13
+  - @prosopo/fingerprint@2.7.12
+
+## 2.10.12
+### Patch Changes
+
+- Updated dependencies [6cb3218]
+  - @prosopo/types@4.9.5
+  - @prosopo/api@3.5.12
+  - @prosopo/fingerprint@2.7.11
+  - @prosopo/procaptcha-common@2.11.6
+
+## 2.10.11
+### Patch Changes
+
+- Updated dependencies [de12b31]
+- Updated dependencies [770954b]
+  - @prosopo/types@4.9.4
+  - @prosopo/api@3.5.11
+  - @prosopo/fingerprint@2.7.10
+  - @prosopo/procaptcha-common@2.11.5
+
 ## 2.10.10
 ### Patch Changes
 

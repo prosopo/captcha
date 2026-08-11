@@ -27,6 +27,7 @@ import { randomAsHex } from "@prosopo/util-crypto";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
 import {
 	afterAll,
+	afterEach,
 	beforeAll,
 	beforeEach,
 	describe,
@@ -34,7 +35,10 @@ import {
 	it,
 	vi,
 } from "vitest";
-import { getPrioritisedAccessRule } from "../../../api/blacklistRequestInspector.js";
+import {
+	getPrioritisedAccessRule,
+	getVerdictCache,
+} from "../../../api/blacklistRequestInspector.js";
 
 describe("blacklistRequestInspector Integration Tests", () => {
 	/**
@@ -133,6 +137,19 @@ describe("blacklistRequestInspector Integration Tests", () => {
 
 			// Clear the access rules storage before each test
 			await accessRulesStorage.deleteAllRules();
+			// Process-wide verdict cache is not reset by deleteAllRules; a
+			// prior test's cached "no rule found" would otherwise mask the
+			// rules the current test just inserted for the TTL window.
+			getVerdictCache().clear();
+		});
+
+		// accessRulesStorage is built once in beforeAll, and each test spies on
+		// its findRules. vitest 4 hands back the *existing* spy (with its call
+		// history) when spyOn targets an already-spied method, where vitest 3
+		// gave a fresh one — so without restoring, the call counts accumulate
+		// across tests and the toHaveBeenCalledTimes(1) assertions see 2, 3, 4.
+		afterEach(() => {
+			vi.restoreAllMocks();
 		});
 
 		it("should return a rule when a JA4-UserAgent rule exists and the user matches the User Agent and the JA4", async () => {

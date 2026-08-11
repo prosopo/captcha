@@ -1,5 +1,183 @@
 # @prosopo/server
 
+## 2.10.46
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+  - @prosopo/types@5.0.2
+  - @prosopo/api@4.0.2
+  - @prosopo/keyring@2.9.65
+  - @prosopo/load-balancer@2.10.19
+
+## 2.10.45
+### Patch Changes
+
+- 858dbaa: test(server): cover config env resolution and server edge paths
+- Updated dependencies [9fec7bd]
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/common@3.1.49
+  - @prosopo/types@5.0.1
+  - @prosopo/api@4.0.1
+  - @prosopo/logger@2.0.5
+  - @prosopo/keyring@2.9.64
+  - @prosopo/load-balancer@2.10.18
+
+## 2.10.44
+### Patch Changes
+
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [787017b]
+- Updated dependencies [6f19cde]
+  - @prosopo/types@5.0.0
+  - @prosopo/api@4.0.0
+  - @prosopo/keyring@2.9.63
+  - @prosopo/load-balancer@2.10.17
+
+## 2.10.43
+### Patch Changes
+
+- Updated dependencies [71a5952]
+  - @prosopo/keyring@2.9.62
+
+## 2.10.42
+### Patch Changes
+
+- Updated dependencies [1e0cf14]
+  - @prosopo/api@3.5.21
+
+## 2.10.41
+### Patch Changes
+
+- e14fce6: chore(deps): bump vite to 6.4.3 and mongoose to 8.24.1, and adjust types for the mongoose 8.24 Document/ObjectId changes
+- Updated dependencies [2c47bb7]
+- Updated dependencies [0e1171c]
+- Updated dependencies [103318c]
+- Updated dependencies [270a8d8]
+- Updated dependencies [e14fce6]
+  - @prosopo/util@3.3.5
+  - @prosopo/types@4.10.0
+  - @prosopo/api@3.5.20
+  - @prosopo/common@3.1.48
+  - @prosopo/keyring@2.9.61
+  - @prosopo/load-balancer@2.10.16
+  - @prosopo/logger@2.0.4
+
+## 2.10.40
+### Patch Changes
+
+- Updated dependencies [a0cb39e]
+  - @prosopo/types@4.9.12
+  - @prosopo/api@3.5.19
+  - @prosopo/keyring@2.9.60
+  - @prosopo/load-balancer@2.10.15
+
+## 2.10.39
+### Patch Changes
+
+- Updated dependencies [b9ca0e7]
+- Updated dependencies [fde6896]
+  - @prosopo/types@4.9.11
+  - @prosopo/common@3.1.47
+  - @prosopo/api@3.5.18
+  - @prosopo/keyring@2.9.59
+  - @prosopo/load-balancer@2.10.14
+
+## 2.10.38
+### Patch Changes
+
+- Updated dependencies [a39c4ec]
+  - @prosopo/load-balancer@2.10.13
+
+## 2.10.37
+### Patch Changes
+
+- 0a4f902: fix(server): dispatch verify by captchaType so puzzle tokens hit the puzzle endpoint
+  
+  Puzzle tokens were silently failing server-side verification. `ProsopoServer.verifyProvider` only had two branches — `challenge` present → PoW verify, absent → image verify — but puzzle tokens carry a challenge too, so they were routed to `/VerifyPowCaptchaSolution` and 404'd on the pow record lookup (`captchastorage.puzzlecaptchas.serverChecked` stayed 0/N in prod). Customers using the puzzle flow got `verified: false` on legitimate solvers.
+  
+  Fix in two parts:
+  
+  - `@prosopo/types`: adds `captchaType?: CaptchaType` to `ProcaptchaOutputSchema` and appends `Option(str)` to `ProcaptchaTokenCodec`. The pre-existing binary layout is preserved in a frozen `ProcaptchaTokenCodecV1`, and `decodeProcaptchaOutput` falls back to it for tokens minted by client bundles that predate this field.
+  - `@prosopo/server`: `verifyProvider` now dispatches on `captchaType` (puzzle → `submitPuzzleCaptchaVerify`, pow → `submitPowCaptchaVerify`, image → `verifyDappUser`) with per-type `cachedTimeout` recency checks. The legacy challenge heuristic is kept as a fallback for old tokens with a `warn`-level log so ops can see the tail-off.
+  - `@prosopo/procaptcha-pow` / `procaptcha-puzzle` / `procaptcha`: each Manager now sets the correct `captchaType` on the object passed to `encodeProcaptchaOutput`.
+  
+  Backwards compatibility: pow and image tokens minted by any prior client bundle continue to verify. Puzzle tokens minted by old bundles still fall through to the pow branch and 404 — same behaviour as before — until the customer upgrades both the client bundle and `@prosopo/server` together.
+- Updated dependencies [0a4f902]
+  - @prosopo/types@4.9.10
+  - @prosopo/api@3.5.17
+  - @prosopo/keyring@2.9.58
+  - @prosopo/load-balancer@2.10.12
+
+## 2.10.36
+### Patch Changes
+
+  - @prosopo/common@3.1.46
+  - @prosopo/types@4.9.9
+  - @prosopo/keyring@2.9.57
+  - @prosopo/load-balancer@2.10.11
+  - @prosopo/api@3.5.16
+
+## 2.10.35
+### Patch Changes
+
+- Updated dependencies [6abff15]
+  - @prosopo/logger@2.0.3
+  - @prosopo/common@3.1.45
+  - @prosopo/keyring@2.9.56
+  - @prosopo/load-balancer@2.10.10
+
+## 2.10.34
+### Patch Changes
+
+- Updated dependencies [85e8857]
+  - @prosopo/api@3.5.15
+  - @prosopo/types@4.9.8
+  - @prosopo/util@3.3.4
+  - @prosopo/common@3.1.44
+  - @prosopo/keyring@2.9.55
+  - @prosopo/load-balancer@2.10.9
+  - @prosopo/logger@2.0.2
+
+## 2.10.33
+### Patch Changes
+
+- Updated dependencies [8bde5df]
+  - @prosopo/types@4.9.7
+  - @prosopo/api@3.5.14
+  - @prosopo/keyring@2.9.54
+  - @prosopo/load-balancer@2.10.8
+
+## 2.10.32
+### Patch Changes
+
+- Updated dependencies [b3f351b]
+- Updated dependencies [17bc76e]
+  - @prosopo/load-balancer@2.10.7
+  - @prosopo/types@4.9.6
+  - @prosopo/api@3.5.13
+  - @prosopo/keyring@2.9.53
+
+## 2.10.31
+### Patch Changes
+
+- Updated dependencies [6cb3218]
+  - @prosopo/types@4.9.5
+  - @prosopo/api@3.5.12
+  - @prosopo/keyring@2.9.52
+  - @prosopo/load-balancer@2.10.6
+
+## 2.10.30
+### Patch Changes
+
+- Updated dependencies [de12b31]
+- Updated dependencies [770954b]
+  - @prosopo/types@4.9.4
+  - @prosopo/api@3.5.11
+  - @prosopo/keyring@2.9.51
+  - @prosopo/load-balancer@2.10.5
+
 ## 2.10.29
 ### Patch Changes
 

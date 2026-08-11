@@ -37,7 +37,9 @@ vi.mock("@prosopo/load-balancer", () => ({
 // Mock the forwarding HTTP client.
 const forwardVerify = vi.fn();
 vi.mock("@prosopo/api", () => ({
-	ProviderApi: vi.fn().mockImplementation(() => ({ forwardVerify })),
+	ProviderApi: vi.fn().mockImplementation(function () {
+		return { forwardVerify };
+	}),
 }));
 
 const mockEnv = (): ProviderEnvironment =>

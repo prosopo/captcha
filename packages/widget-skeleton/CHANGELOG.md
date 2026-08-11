@@ -1,5 +1,10 @@
 # @prosopo/widget-skeleton
 
+## 2.8.5
+### Patch Changes
+
+- 2bc8e73: test(widget-skeleton): unit and type tests for the widget shell
+
 ## 2.8.4
 ### Patch Changes
 

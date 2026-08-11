@@ -63,18 +63,18 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 	const theme = "light" === props.config.theme ? lightTheme : darkTheme;
 
 	useEffect(() => {
-		if (config.language) {
-			if (i18n) {
-				if (i18n.language !== config.language) {
-					i18n.changeLanguage(config.language).then((r) => r);
-				}
-			} else {
-				loadI18next(false).then((i18n) => {
-					if (i18n.language !== config.language)
-						i18n.changeLanguage(config.language).then((r) => r);
-				});
+		if (!config.language) return;
+		if (i18n) {
+			if (i18n.language !== config.language) {
+				void i18n.changeLanguage(config.language);
 			}
+			return;
 		}
+		// Direct-React consumers don't go through WidgetFactory, so pass the
+		// language into loadI18next — first init boots with the right language
+		// (skipping browser detection), and subsequent calls reconcile via
+		// changeLanguage inside loadI18next.
+		void loadI18next(false, config.language);
 	}, [i18n, config.language]);
 
 	useEffect(() => {
@@ -198,22 +198,29 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 
 					let x = 0;
 					let y = 0;
+					// Checkbox only calls this from a click or from Enter, so the
+					// native event is a MouseEvent or a KeyboardEvent — a tap
+					// arrives as a click and carries clientX/clientY like any
+					// other. Only the keyboard path has no coordinates.
 					const nativeEvent = event.nativeEvent;
-					if (
-						"touches" in nativeEvent &&
-						nativeEvent.touches.length > 0 &&
-						nativeEvent.touches[0]
-					) {
-						x = nativeEvent.touches[0].clientX;
-						y = nativeEvent.touches[0].clientY;
-					} else if ("clientX" in nativeEvent && "clientY" in nativeEvent) {
+					if ("clientX" in nativeEvent && "clientY" in nativeEvent) {
 						x = nativeEvent.clientX;
 						y = nativeEvent.clientY;
 					}
 
 					lastCoordsRef.current = { x, y };
-					await manager.current.start(x, y);
-					setLoading(false);
+					try {
+						await manager.current.start(x, y);
+					} catch (error) {
+						// The manager reports failures to the user through
+						// state.error; rethrowing here only produces an unhandled
+						// rejection, since nothing awaits this handler.
+						console.error("Error starting verification:", error);
+					} finally {
+						// A rejected start would otherwise leave the spinner up for
+						// good, with no way back to the checkbox for the user.
+						setLoading(false);
+					}
 				}}
 				checked={state.isHuman}
 				labelText={isTranslationReady ? t("WIDGET.I_AM_HUMAN") : ""}

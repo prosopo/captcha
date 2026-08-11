@@ -80,7 +80,14 @@ export default (mode: string) => {
 								"@babel/plugin-transform-runtime",
 								"@babel/transform-class-properties",
 								"@babel/transform-object-rest-spread",
-								"@babel/plugin-transform-react-jsx",
+								// runtime must be "automatic": rolldown keeps the
+								// `@jsxImportSource @emotion/react` pragma in the emitted
+								// dist files (rollup dropped it), and babel rejects that
+								// pragma under the default "classic" runtime with
+								// "importSource cannot be set when runtime is classic".
+								// The JSX in those files is already transformed, so this
+								// only affects how the leftover pragma is interpreted.
+								["@babel/plugin-transform-react-jsx", { runtime: "automatic" }],
 								[
 									"@babel/plugin-syntax-import-attributes",
 									{ deprecatedAssertSyntax: true },

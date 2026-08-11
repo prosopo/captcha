@@ -101,15 +101,25 @@ export abstract class ProsopoBaseError<
 		// log aggregators — prefer the translation key over the translated
 		// message so dashboards can filter on a constant.
 		const err = this.translationKey || this.message;
+		// `msg` mirrors `err` so log dashboards that group by msg (the default
+		// grouping in most log UIs) surface a stable, non-empty label rather
+		// than the "undefined" bucket ~800 auto-logged errors per hour used to
+		// land in on prod. Duplicating into two fields keeps queries against
+		// either field working without a schema change.
+		const msg = err;
 		const data = {
 			errorType: errorName || this.name,
 			...(this.context ? { context: this.context } : {}),
 		};
 		if (logLevel === "debug") {
-			logger.debug(() => ({ err, data: { ...data, stack: this.stack } }));
+			logger.debug(() => ({
+				err,
+				msg,
+				data: { ...data, stack: this.stack },
+			}));
 			return;
 		}
-		logger.error(() => ({ err, data }));
+		logger.error(() => ({ err, msg, data }));
 	}
 }
 

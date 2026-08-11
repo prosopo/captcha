@@ -26,6 +26,7 @@ import {
 } from "@prosopo/widget-skeleton";
 import type { Root } from "react-dom/client";
 import type { CaptchaRenderer } from "./captcha/captchaRenderer.js";
+import { resolveLanguage } from "./language.js";
 import type { WidgetThemeResolver } from "./widgetThemeResolver.js";
 
 class WidgetFactory {
@@ -99,9 +100,16 @@ class WidgetFactory {
 			widgetContainer = widgetResult.webComponent;
 		}
 
+		// Resolve the site-owner language BEFORE lazy-loading the renderer so
+		// i18n can boot (or reconcile) with the correct language on first init,
+		// rather than starting in the browser-detected language and swapping to
+		// the site-owner language via a post-mount effect (which caused mixed-
+		// language flashes visible to end users).
+		const language = resolveLanguage(renderOptions, container);
+
 		// all the captcha-rendering logic is lazy-loaded, to avoid react & zod delay the initial widget creation.
 
-		const captchaRenderer = await this.getCaptchaRenderer();
+		const captchaRenderer = await this.getCaptchaRenderer(language);
 
 		const captchaRoot = captchaRenderer.renderCaptcha(
 			{
@@ -122,9 +130,16 @@ class WidgetFactory {
 		return captchaRoot;
 	}
 
-	protected async getCaptchaRenderer(): Promise<CaptchaRenderer> {
+	protected async getCaptchaRenderer(
+		language?: string,
+	): Promise<CaptchaRenderer> {
 		if (this._i18n === null) {
-			this._i18n = await loadI18next(false);
+			this._i18n = await loadI18next(false, language);
+		} else if (language && this._i18n.language !== language) {
+			// A subsequent widget on the same page requested a different
+			// language than the cached singleton — reconcile before rendering
+			// so all widgets on the page share one consistent language state.
+			await this._i18n.changeLanguage(language);
 		}
 
 		if (this.captchaRenderer === null) {

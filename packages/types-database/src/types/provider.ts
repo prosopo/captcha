@@ -25,7 +25,6 @@ import {
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
-	type DetectorKey,
 	IpAddressType,
 	ModeEnum,
 	type PendingImageCaptchaRequest,
@@ -61,7 +60,9 @@ import {
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import { Long } from "bson";
 import type mongoose from "mongoose";
-import { type Document, type Model, type ObjectId, Schema } from "mongoose";
+// Types.ObjectId (not the bare ObjectId export, which is the schema type) is what
+// Document._id carries; the two stopped matching structurally in mongoose 8.24.
+import { type Document, type Model, Schema, type Types } from "mongoose";
 import { any, date, nativeEnum, object, type infer as zInfer } from "zod";
 import { UserSettingsSchema } from "./client.js";
 import type { IDatabase } from "./mongo.js";
@@ -228,7 +229,10 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	},
 	metadata: {
 		type: new Schema(
-			{ email: { type: String, required: false } },
+			{
+				email: { type: String, required: false },
+				emailNormalised: { type: String, required: false },
+			},
 			{ _id: false },
 		),
 		required: false,
@@ -248,6 +252,8 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	// StoreCommitmentsExternal sweep scans only pending rows instead of
 	// the whole collection.
 	pendingStage: { type: Boolean, required: false },
+	// Mirrors `Session.blocked`. See `StoredCaptcha.blocked`.
+	blocked: { type: Boolean, required: false },
 	// Full ipinfo payload. Replaces the flat `vpn`, `countryCode`,
 	// `geolocation` and other per-flag fields — consumers narrow on
 	// `ipInfo.isValid` and read whichever sub-field they need.
@@ -296,6 +302,21 @@ PoWCaptchaRecordSchema.index({ "ipInfo.isVPN": 1 });
 // `$not` isn't allowed inside `partialFilterExpression`.
 PoWCaptchaRecordSchema.index({ ipInfo: 1 });
 PoWCaptchaRecordSchema.index({ parsedUserAgentInfo: 1 });
+// Supports the per-email submission-count check
+// (`spamFilter.emailRules.maxEmailSubmissionCount`). The `serverChecked: 1`
+// suffix keeps the count query index-only when the filter narrows on it,
+// and the partial filter keeps the index tiny — only rows that both carry
+// a normalised email AND have been server-checked are indexed.
+PoWCaptchaRecordSchema.index(
+	{ dappAccount: 1, "metadata.emailNormalised": 1, serverChecked: 1 },
+	{
+		name: "spamEmailCount_partial",
+		partialFilterExpression: {
+			"metadata.emailNormalised": { $exists: true },
+			serverChecked: true,
+		},
+	},
+);
 // Tiny partial index serving the StoreCommitmentsExternal sweep. Only
 // records with `pendingStage: true` are indexed — typically a small
 // rolling set — so the query examines only the pending rows instead of
@@ -305,6 +326,16 @@ PoWCaptchaRecordSchema.index(
 	{
 		name: "pendingStage_partial",
 		partialFilterExpression: { pendingStage: true },
+	},
+);
+// Sparse partial index for "give me the blocked PoW records" queries —
+// only carries the (typically small) rejected subset, so scans stay cheap.
+PoWCaptchaRecordSchema.index(
+	{ blocked: 1 },
+	{
+		name: "blocked_partial",
+		partialFilterExpression: { blocked: true },
+		sparse: true,
 	},
 );
 
@@ -351,7 +382,10 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 	},
 	metadata: {
 		type: new Schema(
-			{ email: { type: String, required: false } },
+			{
+				email: { type: String, required: false },
+				emailNormalised: { type: String, required: false },
+			},
 			{ _id: false },
 		),
 		required: false,
@@ -368,6 +402,8 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
 	// See `StoredCaptcha.pendingStage`.
 	pendingStage: { type: Boolean, required: false },
+	// Mirrors `Session.blocked`. See `StoredCaptcha.blocked`.
+	blocked: { type: Boolean, required: false },
 	// Full ipinfo payload. Replaces the flat `vpn`, `countryCode`,
 	// `geolocation` and other per-flag fields — consumers narrow on
 	// `ipInfo.isValid` and read whichever sub-field they need.
@@ -410,6 +446,27 @@ PuzzleCaptchaRecordSchema.index(
 		partialFilterExpression: { pendingStage: true },
 	},
 );
+// See `PoWCaptchaRecordSchema.spamEmailCount_partial` — same purpose here
+// for puzzle captchas.
+PuzzleCaptchaRecordSchema.index(
+	{ dappAccount: 1, "metadata.emailNormalised": 1, serverChecked: 1 },
+	{
+		name: "spamEmailCount_partial",
+		partialFilterExpression: {
+			"metadata.emailNormalised": { $exists: true },
+			serverChecked: true,
+		},
+	},
+);
+// See `PoWCaptchaRecordSchema.blocked_partial`.
+PuzzleCaptchaRecordSchema.index(
+	{ blocked: 1 },
+	{
+		name: "blocked_partial",
+		partialFilterExpression: { blocked: true },
+		sparse: true,
+	},
+);
 
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	userAccount: { type: String, required: true },
@@ -433,7 +490,10 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	},
 	metadata: {
 		type: new Schema(
-			{ email: { type: String, required: false } },
+			{
+				email: { type: String, required: false },
+				emailNormalised: { type: String, required: false },
+			},
 			{ _id: false },
 		),
 		required: false,
@@ -455,6 +515,8 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	lastUpdatedTimestamp: { type: Date, required: false },
 	// See `StoredCaptcha.pendingStage`.
 	pendingStage: { type: Boolean, required: false },
+	// Mirrors `Session.blocked`. See `StoredCaptcha.blocked`.
+	blocked: { type: Boolean, required: false },
 	// Full ipinfo payload. Replaces the flat `vpn`, `countryCode`,
 	// `geolocation` and other per-flag fields — consumers narrow on
 	// `ipInfo.isValid` and read whichever sub-field they need.
@@ -510,6 +572,27 @@ UserCommitmentRecordSchema.index(
 	{
 		name: "pendingStage_partial",
 		partialFilterExpression: { pendingStage: true },
+	},
+);
+// See `PoWCaptchaRecordSchema.spamEmailCount_partial` — same purpose here
+// for image captchas.
+UserCommitmentRecordSchema.index(
+	{ dappAccount: 1, "metadata.emailNormalised": 1, serverChecked: 1 },
+	{
+		name: "spamEmailCount_partial",
+		partialFilterExpression: {
+			"metadata.emailNormalised": { $exists: true },
+			serverChecked: true,
+		},
+	},
+);
+// See `PoWCaptchaRecordSchema.blocked_partial`.
+UserCommitmentRecordSchema.index(
+	{ blocked: 1 },
+	{
+		name: "blocked_partial",
+		partialFilterExpression: { blocked: true },
+		sparse: true,
 	},
 );
 
@@ -623,11 +706,32 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	userSitekeyIpHash: { type: String, required: false },
 	webView: { type: Boolean, required: true, default: false },
 	iFrame: { type: Boolean, required: true, default: false },
+	// True when this session was created by the post-PoW routing machine as
+	// an escalation of an earlier session. Optional so ordinary
+	// frictionless-created sessions can omit it and stay slim.
+	isEscalation: { type: Boolean, required: false },
+	// SessionId of the session this one escalated from, when isEscalation is
+	// true. Read-time fallback source for fields that are inherently populated
+	// on the origin (simdReadings, dnsEvent, etc.) but not on the escalation
+	// itself — avoids the write-time race between the origin's fire-and-forget
+	// SIMD-attach / DNS-event patches and buildEscalation's Mongo read. The
+	// walker in captchaManager.getSessionRecordWithOriginFallback fills the
+	// gap only for fields that are inherently origin-populated; escalation-
+	// owned fields (captchaType, sessionId, score, etc.) are never overridden.
+	originSessionId: { type: String, required: false },
 	decryptedHeadHash: { type: String, required: false, default: "" },
+	bundleId: { type: String, required: false },
 	siteKey: { type: String, required: false },
 	// Full page URL the widget was rendered on (origin + path only; query
-	// string, fragment and credentials stripped). See Session.currentUrl.
+	// string, fragment and credentials stripped). See Session.currentUrl —
+	// `currentUrl` is the top-frame URL, `iframeUrl` is the widget's own
+	// frame URL when embedded (undefined when the widget IS the top frame).
 	currentUrl: { type: String, required: false },
+	iframeUrl: { type: String, required: false },
+	// Computed at session-creation time from (currentUrl, iframeUrl) via
+	// isProtectDeployment. Persisted only when true so ordinary sessions
+	// stay slim and the sparse index below only carries Protect records.
+	isProtect: { type: Boolean, required: false },
 	reason: { type: String, required: false },
 	blocked: { type: Boolean, required: false },
 	// On synthetic blocked-session records (blocked=true, deleted=true)
@@ -671,6 +775,11 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	entropyCryptoFingerprint: { type: String, required: false },
 	entropyWallClockOffsetMs: { type: Number, required: false },
 	entropyMathRandomFirst: { type: Number, required: false },
+	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
+	// plugin (X-TLS-TCP-To-Chello-Us / X-TLS-Chello-To-Handshake-Us).
+	// See @prosopo/types Session.tcpToChelloUs for full semantics.
+	tcpToChelloUs: { type: Number, required: false },
+	chelloToHandshakeUs: { type: Number, required: false },
 	// DNS observation merge target. Populated by
 	// POST /v1/prosopo/provider/admin/dns/event from the dns-event
 	// sidecar (see types/provider/database.ts → Session.dnsEvent).
@@ -706,6 +815,21 @@ SessionRecordSchema.index(
 	{ background: true, sparse: true },
 );
 SessionRecordSchema.index({ ruleHash: 1 }, { background: true, sparse: true });
+// Escalation analytics — sparse because ordinary frictionless sessions
+// omit the field, so the index only carries the small subset of records
+// minted by the post-PoW router.
+SessionRecordSchema.index(
+	{ isEscalation: 1, createdAt: 1 },
+	{ background: true, sparse: true },
+);
+// Protect analytics — same rationale as isEscalation. Only sessions minted
+// through a `protect.<tenant>` iframe carry the field, so the sparse index
+// stays small and lets us cheaply filter "give me Protect sessions in the
+// last N days" without a full collection scan.
+SessionRecordSchema.index(
+	{ isProtect: 1, createdAt: 1 },
+	{ background: true, sparse: true },
+);
 // Compound indexes for session aggregation queries
 SessionRecordSchema.index({
 	createdAt: 1,
@@ -727,16 +851,6 @@ SessionRecordSchema.index(
 		partialFilterExpression: { pendingStage: true },
 	},
 );
-
-export type DetectorSchema = mongoose.Document & DetectorKey;
-export const DetectorRecordSchema = new Schema<DetectorSchema>({
-	createdAt: { type: Date, required: true },
-	detectorKey: { type: String, required: true },
-	expiresAt: { type: Date, required: false },
-});
-DetectorRecordSchema.index({ createdAt: 1 }, { unique: true });
-// TTL index for automatic cleanup of expired keys
-DetectorRecordSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 export type DecisionMachineArtifactRecord = mongoose.Document &
 	DecisionMachineArtifact;
@@ -915,6 +1029,17 @@ export interface IProviderDatabase extends IDatabase {
 		updates: Partial<UserCommitment>,
 	): Promise<void>;
 
+	/**
+	 * Counts server-checked captcha records (across image, PoW and puzzle
+	 * collections) for a dapp whose `metadata.emailNormalised` equals the
+	 * given value. Backs the per-email submission-count rejection in the
+	 * verify tasks. Returns 0 when the normalised email is empty.
+	 */
+	countCommitmentsByNormalisedEmail(
+		dappAccount: string,
+		emailNormalised: string,
+	): Promise<number>;
+
 	getUnstoredDappUserPoWCommitments(
 		limit?: number,
 		skip?: number,
@@ -937,17 +1062,17 @@ export interface IProviderDatabase extends IDatabase {
 	): Promise<ScheduledTaskRecord | undefined>;
 
 	getScheduledTaskStatus(
-		taskId: ObjectId,
+		taskId: Types.ObjectId,
 		status: ScheduledTaskStatus,
 	): Promise<ScheduledTaskRecord | undefined>;
 
 	createScheduledTaskStatus(
 		task: ScheduledTaskNames,
 		status: ScheduledTaskStatus,
-	): Promise<ObjectId>;
+	): Promise<Types.ObjectId>;
 
 	updateScheduledTaskStatus(
-		taskId: ObjectId,
+		taskId: Types.ObjectId,
 		status: ScheduledTaskStatus,
 		result?: ScheduledTaskResult,
 	): Promise<void>;
@@ -1092,15 +1217,6 @@ export interface IProviderDatabase extends IDatabase {
 	): Promise<void>;
 
 	getUserAccessRulesStorage(): AccessRulesStorage;
-
-	storeDetectorKey(detectorKey: string): Promise<void>;
-
-	getDetectorKeys(): Promise<string[]>;
-
-	removeDetectorKey(
-		detectorKey: string,
-		expirationInSeconds?: number,
-	): Promise<void>;
 
 	upsertDecisionMachineArtifact(
 		artifact: DecisionMachineArtifact,

@@ -397,4 +397,45 @@ describe("Logger.with subscope", () => {
 			setGlobalDirectives(process.env.PROSOPO_LOG_LEVEL ?? "");
 		}
 	});
+
+	it("promotes requestId from default data to a top-level req_id field", () => {
+		setGlobalDirectives("trace");
+		const logger = getLogger("info", "test").with({ requestId: "abc-123" });
+		const infoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
+		try {
+			logger.info(() => ({ msg: "hello" }));
+			expect(infoSpy).toHaveBeenCalledTimes(1);
+			const output = infoSpy.mock.calls[0]?.[0];
+			const record: {
+				req_id?: string;
+				data?: { requestId?: string };
+			} = JSON.parse(output as string);
+			expect(record.req_id).toBe("abc-123");
+			// Backwards compat: still available inside `data` for existing dashboards.
+			expect(record.data?.requestId).toBe("abc-123");
+		} finally {
+			infoSpy.mockRestore();
+			setGlobalDirectives(process.env.PROSOPO_LOG_LEVEL ?? "");
+		}
+	});
+
+	it("omits req_id when the log record has no requestId in scope", () => {
+		setGlobalDirectives("trace");
+		const logger = getLogger("info", "test");
+		const infoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
+		try {
+			logger.info(() => ({ msg: "hello", data: { foo: "bar" } }));
+			expect(infoSpy).toHaveBeenCalledTimes(1);
+			const output = infoSpy.mock.calls[0]?.[0];
+			const record: {
+				req_id?: string;
+				data?: Record<string, unknown>;
+			} = JSON.parse(output as string);
+			expect(record.req_id).toBeUndefined();
+			expect(record.data).toEqual({ foo: "bar" });
+		} finally {
+			infoSpy.mockRestore();
+			setGlobalDirectives(process.env.PROSOPO_LOG_LEVEL ?? "");
+		}
+	});
 });

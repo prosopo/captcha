@@ -15,5 +15,9 @@
 export type {
 	ApiRoutes,
 	ApiRoutesProvider,
+	// ApiRouteLimit is the value type of an ApiRouteLimits record: without it,
+	// a consumer building one entry at a time has no way to name what it is
+	// building, and has to redeclare the shape.
+	ApiRouteLimit,
 	ApiRouteLimits,
 } from "./apiRoutes.js";

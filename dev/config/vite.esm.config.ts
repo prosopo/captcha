@@ -14,6 +14,14 @@ import path from "node:path";
 // limitations under the License.
 import ViteESMConfig from "./src/vite/vite.esm.config.js";
 
+// webpack.config is a public entry point in package.json ("./webpack/webpack.config"),
+// but the only in-graph importer is src/webpack/index.ts via `export *`, which does
+// not carry a default export. Rollup emitted the default anyway; rolldown prunes it,
+// leaving a module with no exports and `getWebpackConfig is not a function` at the
+// consumer. Listing it as a real entry keeps its exports live.
 export default function () {
-	return ViteESMConfig(path.basename("."), path.resolve("./tsconfig.json"));
+	return ViteESMConfig(path.basename("."), path.resolve("./tsconfig.json"), [
+		"src/index.ts",
+		"src/webpack/webpack.config.ts",
+	]);
 }
