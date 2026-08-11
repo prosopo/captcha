@@ -1621,6 +1621,7 @@ module.exports = (input) => {
 				// 2. No behavioral data is present (behavioralDataPacked is undefined)
 				expect(result.verified).toBe(false);
 				expect(db.updatePowCaptchaRecord).toHaveBeenCalledWith(challenge, {
+					blocked: true,
 					result: {
 						status: CaptchaStatus.disapproved,
 						reason: "no-cache request with no behavioral data",
@@ -1916,6 +1917,7 @@ module.exports = (input) => {
 			expect(db.updatePowCaptchaRecord).toHaveBeenCalledWith(
 				challengeRecord.challenge,
 				{
+					blocked: true,
 					result: {
 						status: CaptchaStatus.disapproved,
 						reason: "API.SPAM_EMAIL_DOMAIN",
@@ -2118,6 +2120,7 @@ module.exports = (input) => {
 			expect(db.updatePowCaptchaRecord).toHaveBeenCalledWith(
 				challengeRecord.challenge,
 				{
+					blocked: true,
 					result: {
 						status: CaptchaStatus.disapproved,
 						reason: "API.SPAM_EMAIL_DOMAIN",
@@ -2361,6 +2364,7 @@ module.exports = (input) => {
 
 			expect(db.updateSessionRecord).toHaveBeenCalledWith(sessionId, {
 				userSubmitted: true,
+				blocked: true,
 				result: {
 					status: CaptchaStatus.disapproved,
 					reason: "CAPTCHA.INVALID_SOLUTION",
@@ -2415,6 +2419,7 @@ module.exports = (input) => {
 
 			expect(db.updateSessionRecord).toHaveBeenCalledWith(sessionId, {
 				userSubmitted: true,
+				blocked: true,
 				result: {
 					status: CaptchaStatus.disapproved,
 					reason: "CAPTCHA.INVALID_TIMESTAMP",
@@ -2555,6 +2560,7 @@ module.exports = (input) => {
 				sessionId,
 				{
 					serverChecked: true,
+					blocked: true,
 					result: {
 						status: CaptchaStatus.disapproved,
 						reason: "API.TIMESTAMP_TOO_OLD",
@@ -2677,6 +2683,7 @@ module.exports = (input) => {
 				expect(db.updatePowCaptchaRecordResult).toHaveBeenCalledOnce();
 				expect(db.updateSessionRecord).toHaveBeenCalledWith(sessionId, {
 					userSubmitted: true,
+					blocked: true,
 					result: {
 						status: CaptchaStatus.disapproved,
 						reason: "CAPTCHA.INVALID_TIMESTAMP",
@@ -2913,6 +2920,7 @@ module.exports = (input) => {
 				// Should batch the failure result into a single write
 				expect(db.updatePowCaptchaRecord).toHaveBeenCalledOnce();
 				expect(db.updatePowCaptchaRecord).toHaveBeenCalledWith(challenge, {
+					blocked: true,
 					result: {
 						status: CaptchaStatus.disapproved,
 						reason: "API.TIMESTAMP_TOO_OLD",
