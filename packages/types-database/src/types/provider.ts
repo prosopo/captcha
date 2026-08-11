@@ -328,14 +328,15 @@ PoWCaptchaRecordSchema.index(
 		partialFilterExpression: { pendingStage: true },
 	},
 );
-// Sparse partial index for "give me the blocked PoW records" queries —
-// only carries the (typically small) rejected subset, so scans stay cheap.
+// Partial index for "give me the blocked PoW records" queries — only carries
+// the (typically small) rejected subset, so scans stay cheap. No `sparse`
+// here: Mongo rejects an index that sets both, and a partialFilterExpression
+// already excludes every document that doesn't match.
 PoWCaptchaRecordSchema.index(
 	{ blocked: 1 },
 	{
 		name: "blocked_partial",
 		partialFilterExpression: { blocked: true },
-		sparse: true,
 	},
 );
 
@@ -464,7 +465,6 @@ PuzzleCaptchaRecordSchema.index(
 	{
 		name: "blocked_partial",
 		partialFilterExpression: { blocked: true },
-		sparse: true,
 	},
 );
 
@@ -592,7 +592,6 @@ UserCommitmentRecordSchema.index(
 	{
 		name: "blocked_partial",
 		partialFilterExpression: { blocked: true },
-		sparse: true,
 	},
 );
 
@@ -775,6 +774,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	entropyCryptoFingerprint: { type: String, required: false },
 	entropyWallClockOffsetMs: { type: Number, required: false },
 	entropyMathRandomFirst: { type: Number, required: false },
+	g: { type: String, required: false },
 	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
 	// plugin (X-TLS-TCP-To-Chello-Us / X-TLS-Chello-To-Handshake-Us).
 	// See @prosopo/types Session.tcpToChelloUs for full semantics.

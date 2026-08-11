@@ -39,7 +39,6 @@ import {
 	type DecisionMachineScope,
 	type Hash,
 	type IPInfoResponse,
-	isBlockingCaptchaResult,
 	type PendingImageCaptchaRequest,
 	type PoWCaptchaStored,
 	type PoWChallengeComponents,
@@ -57,6 +56,7 @@ import {
 	StoredStatusNames,
 	type UserCommitment,
 	UserCommitmentSchema,
+	isBlockingCaptchaResult,
 } from "@prosopo/types";
 import type { SessionRecord, StoredSession } from "@prosopo/types-database";
 import {
