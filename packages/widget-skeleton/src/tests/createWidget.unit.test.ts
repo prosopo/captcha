@@ -97,8 +97,10 @@ describe("createWidgetSkeleton", () => {
 			theme,
 			TAG,
 		);
+		// The on-page widget sits on `surface`. `background.default` is the dialog
+		// container's role (surfaceContainerHigh) under the M3 palette.
 		expect(webComponent.querySelector("style")?.textContent).toContain(
-			theme.palette.background.default,
+			theme.palette.surface,
 		);
 	});
 

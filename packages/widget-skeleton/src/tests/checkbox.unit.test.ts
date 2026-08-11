@@ -56,12 +56,14 @@ describe("createCheckboxElement", () => {
 		["light", lightTheme],
 		["dark", darkTheme],
 	])(
-		"%s colours the spinner with its background contrast",
+		"%s draws the spinner as an M3 track with a primary active arc",
 		(_n: string, theme: Theme) => {
-			// The spinner is drawn on the widget background, so it takes the
-			// contrasting colour rather than the primary.
+			// M3 circular progress is a neutral track with one coloured arc, so the
+			// ring takes the border token and the leading edge takes the primary.
+			// It previously drew the whole ring in the background contrast colour.
 			const styles: string = shadowOf(createCheckboxElement(theme)).innerHTML;
-			expect(styles).toContain(theme.palette.background.contrastText);
+			expect(styles).toContain(theme.palette.border);
+			expect(styles).toContain(theme.palette.primary.main);
 		},
 	);
 
