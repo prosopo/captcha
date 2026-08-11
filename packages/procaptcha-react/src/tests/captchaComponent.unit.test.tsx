@@ -203,9 +203,11 @@ describe("theming", () => {
 	});
 
 	test("passes the theme down to the buttons", () => {
+		// The cancel button is an M3 text button, so the theme shows up in its
+		// label colour rather than in a border.
 		render({ themeColor: "dark" });
-		expect(buttonLabelled("WIDGET.CANCEL").style.borderColor).toBe(
-			asRgb(darkTheme.palette.grey[500]),
+		expect(buttonLabelled("WIDGET.CANCEL").style.color).toBe(
+			asRgb(darkTheme.palette.primary.main),
 		);
 	});
 });

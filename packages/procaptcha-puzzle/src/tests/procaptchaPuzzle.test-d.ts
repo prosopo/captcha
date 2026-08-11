@@ -23,6 +23,7 @@ import type {
 	ProcaptchaStateUpdateFn,
 	PuzzleEvent,
 } from "@prosopo/types";
+import { lightTheme } from "@prosopo/widget-skeleton";
 import type { ReactElement } from "react";
 import { assertType, describe, expectTypeOf, test } from "vitest";
 import { PuzzleCanvas } from "../components/PuzzleCanvas.js";
@@ -156,6 +157,7 @@ describe("PuzzleCanvas' types", () => {
 			targetY: 1,
 			onComplete,
 			showRetry: false,
+			theme: lightTheme,
 		});
 	});
 
@@ -169,6 +171,7 @@ describe("PuzzleCanvas' types", () => {
 				onComplete,
 				showRetry: false,
 				submitting: false,
+				theme: lightTheme,
 			}),
 		).toExtend<ReactElement>();
 	});

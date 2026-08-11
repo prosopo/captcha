@@ -56,8 +56,12 @@ describe("the checkbox element", () => {
 	test("colours the spinner from the theme", () => {
 		const light = shadowOf(createCheckboxElement(lightTheme)).innerHTML;
 		const dark = shadowOf(createCheckboxElement(darkTheme)).innerHTML;
-		expect(light).toContain(lightTheme.palette.background.contrastText);
-		expect(dark).toContain(darkTheme.palette.background.contrastText);
+		// The spinner is an outline-toned ring with a primary-coloured leading
+		// edge, so both roles have to come through from the theme.
+		expect(light).toContain(lightTheme.palette.border);
+		expect(light).toContain(lightTheme.palette.primary.main);
+		expect(dark).toContain(darkTheme.palette.border);
+		expect(dark).toContain(darkTheme.palette.primary.main);
 		expect(light).not.toBe(dark);
 	});
 
@@ -193,11 +197,13 @@ describe("the widget skeleton", () => {
 	});
 
 	test("takes its surface colours from the theme", () => {
+		// The on-page widget rests on the flat `surface` role — the dialog is the
+		// one that sits on surfaceContainerHigh.
 		expect(createWidgetSkeletonElement(darkTheme).innerHTML).toContain(
-			darkTheme.palette.background.default,
+			darkTheme.palette.surface,
 		);
 		expect(createWidgetSkeletonElement(lightTheme).innerHTML).toContain(
-			lightTheme.palette.background.default,
+			lightTheme.palette.surface,
 		);
 	});
 

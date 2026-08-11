@@ -127,17 +127,17 @@ describe("what the grid renders", () => {
 });
 
 describe("theming", () => {
-	test("borders the images with the light theme grey", () => {
+	test("borders the images with the light theme tile outline", () => {
 		render({ themeColor: "light" });
 		expect(tiles()[0]?.style.borderColor).toBe(
-			asRgb(lightTheme.palette.grey[300]),
+			asRgb(lightTheme.palette.tile.border),
 		);
 	});
 
-	test("borders the images with the dark theme grey", () => {
+	test("borders the images with the dark theme tile outline", () => {
 		render({ themeColor: "dark" });
 		expect(tiles()[0]?.style.borderColor).toBe(
-			asRgb(darkTheme.palette.grey[300]),
+			asRgb(darkTheme.palette.tile.border),
 		);
 	});
 });
