@@ -7,7 +7,7 @@
 ---
 
 Run the cypress suite in firefox as well as chrome whenever the PR is a release
-PR.
+PR, via a new cypress-firefox workflow. cypress.yml is untouched.
 
 The trusted-event checks scattered across the widget components now go through a
 single `isEventTrusted()` helper in `@prosopo/procaptcha-common`. Behaviour is

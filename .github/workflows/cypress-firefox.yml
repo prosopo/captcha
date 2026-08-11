@@ -1,6 +1,21 @@
-# Run cypress tests
+# Run the cypress suite in firefox.
+#
+# Split out from cypress.yml rather than added to it as a second job so that
+# cypress.yml stays byte-identical to main. The main ruleset requires a status
+# check named `check`, which is why every workflow here has exactly one job by
+# that name — this one included.
+#
+# Firefox is the slower, narrower run, so it is reserved for release PRs —
+# create_release_pr.yml opens those as "Release vX.Y.Z" off a release/X.Y.Z
+# branch. The job `if` matches either, and github's string comparisons are
+# case-insensitive, so "release" in any casing counts.
+#
+# Heads up: a workflow file that differs from the copy on the default branch
+# schedules no jobs on this repo — the run completes straight away with
+# conclusion `action_required` and needs approving in the Actions UI. That
+# applies to this file until it lands on main.
 
-name: cypress
+name: cypress-firefox
 
 on:
   pull_request:
@@ -41,7 +56,20 @@ jobs:
     # only lands on a host big enough for it. Set to a JSON string -> used as
     # given, which is how a repo opts back out to a hosted runner.
     runs-on: ${{ vars.GH_RUNNER && startsWith(vars.GH_RUNNER, '[') && fromJSON(format('["{0}","4c","8g","40d"]', join(fromJSON(vars.GH_RUNNER), '","'))) || fromJSON(vars.GH_RUNNER || '"ubuntu-latest"') }}
-    if: github.event.pull_request.draft == false
+    if: >-
+      github.event.pull_request.draft == false &&
+      (contains(github.event.pull_request.title, 'release') ||
+       contains(github.head_ref || github.ref_name, 'release'))
+    env:
+      # Read by the cypress:run:* scripts in @prosopo/cypress-shared. Not
+      # CYPRESS_-prefixed on purpose: cypress would read it as a config key.
+      PROSOPO_CYPRESS_BROWSER: firefox
+      # cypress-real-events drives input over the chrome devtools protocol, so
+      # under firefox the specs fall back to cypress' synthetic clicks, which
+      # the widget's isEventTrusted() gate drops. Build the bundle with the
+      # gate open — the define is pinned false on production builds, so it
+      # can't follow the bundle out of CI.
+      PROSOPO_ALLOW_UNTRUSTED_EVENTS: "1"
     steps:
       - name: Print contexts
         uses: prosopo/github_actions/.github/actions/print_contexts@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
@@ -68,11 +96,42 @@ jobs:
         with:
           npm_ci_args: '--include=dev --no-audit --no-fund --prefer-offline'
 
+      - name: Install firefox
+        run: |
+          set -euo pipefail
+          if command -v firefox >/dev/null 2>&1; then
+            firefox --version
+            exit 0
+          fi
+          # Ubuntu's own `firefox` package is a snap shim that cypress can't
+          # drive, so take the real deb from Mozilla's apt repo instead.
+          sudo install -d -m 0755 /etc/apt/keyrings
+          curl -fsSL https://packages.mozilla.org/apt/repo-signing-key.gpg \
+            | sudo tee /etc/apt/keyrings/packages.mozilla.org.asc > /dev/null
+          echo "deb [signed-by=/etc/apt/keyrings/packages.mozilla.org.asc] https://packages.mozilla.org/apt mozilla main" \
+            | sudo tee /etc/apt/sources.list.d/mozilla.list > /dev/null
+          printf 'Package: *\nPin: origin packages.mozilla.org\nPin-Priority: 1000\n' \
+            | sudo tee /etc/apt/preferences.d/mozilla > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends firefox
+          firefox --version
+
       # setup certs
       - name: Setup certs
         run: |
           ./setup_certs.sh
           ./install_cert.sh
+
+      - name: Trust the dev cert in firefox
+        run: |
+          set -euo pipefail
+          # install_cert.sh only reaches the system store and chrome's NSS db.
+          # Firefox keeps its own trust store, so hand it the cert through an
+          # enterprise policy instead.
+          sudo install -d -m 0755 /etc/firefox/policies
+          printf '{"policies":{"Certificates":{"ImportEnterpriseRoots":true,"Install":["%s/certs/server.crt"]}}}\n' \
+            "$GITHUB_WORKSPACE" | sudo tee /etc/firefox/policies/policies.json > /dev/null
+          cat /etc/firefox/policies/policies.json
 
       - name: Setup env
         run: |
@@ -201,7 +260,7 @@ jobs:
         # store screenshots only on failures
         if: failure()
         with:
-          name: cypress-screenshots
+          name: cypress-screenshots-firefox
           path: ./demos/cypress-shared/cypress/screenshots
           if-no-files-found: ignore  # 'warn' or 'error' are also available, defaults to `warn`
 
@@ -210,7 +269,7 @@ jobs:
         # store videos only on failures
         if: failure()
         with:
-          name: cypress-videos
+          name: cypress-videos-firefox
           path: ./demos/cypress-shared/cypress/videos
           if-no-files-found: ignore   # 'warn' or 'error' are also available, defaults to `warn`
 
@@ -218,7 +277,7 @@ jobs:
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
-          name: cypress-snapshot-diffs
+          name: cypress-snapshot-diffs-firefox
           path: |
             ./demos/cypress-shared/cypress/snapshots/diff
             ./demos/cypress-shared/cypress/snapshots/actual
