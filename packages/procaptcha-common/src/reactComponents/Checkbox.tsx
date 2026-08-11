@@ -25,6 +25,7 @@ import {
 	useMemo,
 	useState,
 } from "react";
+import { isEventTrusted } from "../events/trust.js";
 
 interface CheckboxProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 	theme: Theme;
@@ -157,7 +158,7 @@ export const Checkbox: FC<CheckboxProps> = ({
 					aria-live={"assertive"}
 					aria-label={labelText}
 					onKeyDown={(e) => {
-						if (!e.isTrusted) {
+						if (!isEventTrusted(e)) {
 							return;
 						}
 						if (e.key === "Enter") {
@@ -168,7 +169,7 @@ export const Checkbox: FC<CheckboxProps> = ({
 						}
 					}}
 					onChange={(e) => {
-						if (!e.isTrusted) {
+						if (!isEventTrusted(e)) {
 							return;
 						}
 						e.preventDefault();

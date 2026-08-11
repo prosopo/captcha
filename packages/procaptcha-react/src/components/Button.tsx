@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { isEventTrusted } from "@prosopo/procaptcha-common";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import type React from "react";
 import {
@@ -97,7 +98,7 @@ const Button: React.FC<ButtonProps> = ({
 			onMouseLeave={() => setHover(false)}
 			style={buttonStyle}
 			onClick={(e) => {
-				if (!e.isTrusted) {
+				if (!isEventTrusted(e)) {
 					return;
 				}
 				e.preventDefault();

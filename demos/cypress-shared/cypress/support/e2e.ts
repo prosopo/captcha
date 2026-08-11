@@ -12,5 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import "./commands";
+// after ./commands so cypress-real-events has registered realClick by the time
+// the non-chromium fallback overwrites it
+import "./realEvents";
 import "./visual";
 import "@cypress/xpath";

@@ -34,7 +34,52 @@ defaults:
     shell: bash
 
 jobs:
+  browsers:
+    # Decide which browsers this run covers. Release PRs are the last gate
+    # before a version ships, so they get the slower cross-browser run;
+    # everything else stays Chrome-only to keep PR feedback quick.
+    # GH_RUNNER unset -> GitHub-hosted. Set to a JSON array (the self-hosted
+    # fleet) -> this job's capacity requirement is appended to it: cores, RAM,
+    # disk. Runners advertise one label per step up to their own size, so a job
+    # only lands on a host big enough for it. Set to a JSON string -> used as
+    # given, which is how a repo opts back out to a hosted runner.
+    runs-on: ${{ vars.GH_RUNNER && startsWith(vars.GH_RUNNER, '[') && fromJSON(format('["{0}","2c","4g","20d"]', join(fromJSON(vars.GH_RUNNER), '","'))) || fromJSON(vars.GH_RUNNER || '"ubuntu-latest"') }}
+    if: github.event.pull_request.draft == false
+    outputs:
+      matrix: ${{ steps.pick.outputs.matrix }}
+    steps:
+      - name: Pick browsers
+        id: pick
+        env:
+          # create_release_pr.yml opens release PRs as "Release vX.Y.Z" from a
+          # release/X.Y.Z branch. Match on either, case-insensitively, so a
+          # hand-rolled release PR is covered too. workflow_dispatch has no PR
+          # title, hence the ref fallback.
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          REF_NAME: ${{ github.head_ref || github.ref_name }}
+        run: |
+          set -euo pipefail
+          subject="${PR_TITLE:-} ${REF_NAME:-}"
+          if [[ "${subject,,}" == *release* ]]; then
+            matrix='["chrome","firefox"]'
+          else
+            matrix='["chrome"]'
+          fi
+          echo "Matched subject: $subject"
+          echo "Running cypress on: $matrix"
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
   check:
+    needs: browsers
+    # The Chrome leg keeps the bare "check" name it has always had, so branch
+    # protection's required status check keeps matching it. Extra browsers get
+    # a suffixed name of their own.
+    name: ${{ matrix.browser == 'chrome' && 'check' || format('check ({0})', matrix.browser) }}
+    strategy:
+      # One browser failing shouldn't hide the other's result.
+      fail-fast: false
+      matrix:
+        browser: ${{ fromJSON(needs.browsers.outputs.matrix) }}
     # GH_RUNNER unset -> GitHub-hosted. Set to a JSON array (the self-hosted
     # fleet) -> this job's capacity requirement is appended to it: cores, RAM,
     # disk. Runners advertise one label per step up to their own size, so a job
@@ -42,6 +87,17 @@ jobs:
     # given, which is how a repo opts back out to a hosted runner.
     runs-on: ${{ vars.GH_RUNNER && startsWith(vars.GH_RUNNER, '[') && fromJSON(format('["{0}","4c","8g","40d"]', join(fromJSON(vars.GH_RUNNER), '","'))) || fromJSON(vars.GH_RUNNER || '"ubuntu-latest"') }}
     if: github.event.pull_request.draft == false
+    env:
+      # Consumed by the cypress:run:* scripts in @prosopo/cypress-shared. Not
+      # CYPRESS_-prefixed on purpose: cypress would try to read it as a config
+      # key.
+      PROSOPO_CYPRESS_BROWSER: ${{ matrix.browser }}
+      # cypress-real-events drives input over the chrome devtools protocol, so
+      # on firefox the specs fall back to cypress' synthetic clicks, which the
+      # widget's isEventTrusted() gate drops. Build the bundle with the gate
+      # open for this leg only — the define is pinned false on production
+      # builds, so it can't follow the bundle out of CI.
+      PROSOPO_ALLOW_UNTRUSTED_EVENTS: ${{ matrix.browser == 'firefox' && '1' || '0' }}
     steps:
       - name: Print contexts
         uses: prosopo/github_actions/.github/actions/print_contexts@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
@@ -68,11 +124,44 @@ jobs:
         with:
           npm_ci_args: '--include=dev --no-audit --no-fund --prefer-offline'
 
+      - name: Install Firefox
+        if: matrix.browser == 'firefox'
+        run: |
+          set -euo pipefail
+          if command -v firefox >/dev/null 2>&1; then
+            firefox --version
+            exit 0
+          fi
+          # Ubuntu's own `firefox` package is a snap shim that cypress can't
+          # drive, so take the real deb from Mozilla's apt repo instead.
+          sudo install -d -m 0755 /etc/apt/keyrings
+          curl -fsSL https://packages.mozilla.org/apt/repo-signing-key.gpg \
+            | sudo tee /etc/apt/keyrings/packages.mozilla.org.asc > /dev/null
+          echo "deb [signed-by=/etc/apt/keyrings/packages.mozilla.org.asc] https://packages.mozilla.org/apt mozilla main" \
+            | sudo tee /etc/apt/sources.list.d/mozilla.list > /dev/null
+          printf 'Package: *\nPin: origin packages.mozilla.org\nPin-Priority: 1000\n' \
+            | sudo tee /etc/apt/preferences.d/mozilla > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends firefox
+          firefox --version
+
       # setup certs
       - name: Setup certs
         run: |
           ./setup_certs.sh
           ./install_cert.sh
+
+      - name: Trust the dev cert in Firefox
+        if: matrix.browser == 'firefox'
+        run: |
+          set -euo pipefail
+          # install_cert.sh only reaches the system store and chrome's NSS db.
+          # Firefox keeps its own trust store, so hand it the cert through an
+          # enterprise policy instead.
+          sudo install -d -m 0755 /etc/firefox/policies
+          printf '{"policies":{"Certificates":{"ImportEnterpriseRoots":true,"Install":["%s/certs/server.crt"]}}}\n' \
+            "$GITHUB_WORKSPACE" | sudo tee /etc/firefox/policies/policies.json > /dev/null
+          cat /etc/firefox/policies/policies.json
 
       - name: Setup env
         run: |
@@ -201,7 +290,7 @@ jobs:
         # store screenshots only on failures
         if: failure()
         with:
-          name: cypress-screenshots
+          name: cypress-screenshots-${{ matrix.browser }}
           path: ./demos/cypress-shared/cypress/screenshots
           if-no-files-found: ignore  # 'warn' or 'error' are also available, defaults to `warn`
 
@@ -210,7 +299,7 @@ jobs:
         # store videos only on failures
         if: failure()
         with:
-          name: cypress-videos
+          name: cypress-videos-${{ matrix.browser }}
           path: ./demos/cypress-shared/cypress/videos
           if-no-files-found: ignore   # 'warn' or 'error' are also available, defaults to `warn`
 
@@ -218,7 +307,7 @@ jobs:
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
-          name: cypress-snapshot-diffs
+          name: cypress-snapshot-diffs-${{ matrix.browser }}
           path: |
             ./demos/cypress-shared/cypress/snapshots/diff
             ./demos/cypress-shared/cypress/snapshots/actual
