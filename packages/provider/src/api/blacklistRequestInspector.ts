@@ -457,8 +457,17 @@ export class BlacklistRequestInspector {
 			// (blocked IP / JA4 / user / country / ASN), a request with no IP, or
 			// a fail-closed middleware error - is a 403 Forbidden, not a 401
 			// Unauthorized: the client isn't lacking credentials, it is denied
-			// access.
-			res.status(403).json({ error: "Forbidden" });
+			// access. Body must be a structured `{ message, code }` object
+			// (not a plain string) so the widget's `result.error?.message`
+			// extractor picks it up — a plain string falls through to the
+			// generic "Cannot load CAPTCHA" fallback. Surfacing the
+			// requestId lets support quote it back on tickets.
+			res.status(403).json({
+				error: {
+					message: `Forbidden: ${request.requestId ?? "unknown"}`,
+					code: 403,
+				},
+			});
 			return;
 		}
 
