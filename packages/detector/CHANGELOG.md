@@ -1,5 +1,15 @@
 # @prosopo/detector
 
+## 3.5.18
+### Patch Changes
+
+- 1f55e02: Add contract tests pinning the shipped bundle's export surface and encryptData's
+  failure behaviour when web crypto is unavailable, and wire up the test script.
+- 063e69d: Add optional `g` field on `Session`.
+- Updated dependencies [16dbab0]
+- Updated dependencies [063e69d]
+  - @prosopo/types@5.0.3
+
 ## 3.5.17
 ### Patch Changes
 
