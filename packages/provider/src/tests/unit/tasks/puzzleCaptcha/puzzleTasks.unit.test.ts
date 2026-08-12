@@ -407,6 +407,128 @@ describe("PuzzleCaptchaManager", () => {
 			);
 		});
 
+		// Regression: puzzleEvents must persist even when a behavioural payload
+		// was sent but decryption returns null (e.g. resolveBundleBySessionId
+		// can't find the bundleId promoted onto the session record). The old
+		// code path gated the puzzleEvents write on the successful-decrypt
+		// branch, so a bundle-lookup miss dropped the raw event trail AND left
+		// the DM to fire "no-cache request with no behavioural data" on an
+		// otherwise legitimate submission.
+		it("persists puzzleEvents even when behavioural decryption returns null", async () => {
+			const a = buildArgs();
+			const challengeRecord: Partial<PuzzleCaptchaStored> = {
+				challenge: a.challenge,
+				dappAccount: a.dappAccount,
+				userAccount: a.userAccount,
+				targetX: 100,
+				targetY: 100,
+				tolerance: 15,
+				ipAddress: getCompositeIpAddress(a.ipAddress),
+				result: { status: CaptchaStatus.pending },
+				sessionId: "session-1",
+			};
+
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord(challengeRecord),
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+			vi.mocked(validatePuzzleSolution).mockReturnValue(true);
+
+			// Stub the inherited bundle lookup + decrypt so the failure branch
+			// is deterministic without needing a real detector bundle wired up.
+			vi.spyOn(
+				puzzleCaptchaManager,
+				"resolveBundleBySessionId",
+			).mockResolvedValue(undefined);
+			vi.spyOn(
+				puzzleCaptchaManager,
+				"decryptBehavioralData",
+			).mockResolvedValue(null);
+
+			const trail = [
+				{ x: 1, y: 1, t: 1 },
+				{ x: 2, y: 1, t: 2 },
+			];
+
+			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
+				a.challenge,
+				a.providerSignature,
+				102,
+				101,
+				trail,
+				1000,
+				a.userSignature,
+				a.ipAddress,
+				a.headers,
+				"encrypted-blob",
+			);
+
+			expect(result).toBe(true);
+			expect(db.updatePuzzleCaptchaRecord).toHaveBeenCalledWith(
+				a.challenge,
+				expect.objectContaining({ puzzleEvents: trail }),
+			);
+			// And no behavioralDataPacked write happened — decryption failed,
+			// so there was nothing to persist there.
+			const calls = vi.mocked(db.updatePuzzleCaptchaRecord).mock.calls;
+			expect(
+				calls.some(([, patch]) => "behavioralDataPacked" in patch),
+			).toBe(false);
+		});
+
+		// Regression: same guarantee when decryptBehavioralData throws (bad
+		// ciphertext, key mismatch, etc.) rather than returning null.
+		it("persists puzzleEvents even when behavioural decryption throws", async () => {
+			const a = buildArgs();
+			const challengeRecord: Partial<PuzzleCaptchaStored> = {
+				challenge: a.challenge,
+				dappAccount: a.dappAccount,
+				userAccount: a.userAccount,
+				targetX: 100,
+				targetY: 100,
+				tolerance: 15,
+				ipAddress: getCompositeIpAddress(a.ipAddress),
+				result: { status: CaptchaStatus.pending },
+				sessionId: "session-1",
+			};
+
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord(challengeRecord),
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+			vi.mocked(validatePuzzleSolution).mockReturnValue(true);
+
+			vi.spyOn(
+				puzzleCaptchaManager,
+				"resolveBundleBySessionId",
+			).mockResolvedValue(undefined);
+			vi.spyOn(
+				puzzleCaptchaManager,
+				"decryptBehavioralData",
+			).mockRejectedValue(new Error("bad ciphertext"));
+
+			const trail = [{ x: 3, y: 3, t: 3 }];
+
+			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
+				a.challenge,
+				a.providerSignature,
+				102,
+				101,
+				trail,
+				1000,
+				a.userSignature,
+				a.ipAddress,
+				a.headers,
+				"encrypted-blob",
+			);
+
+			expect(result).toBe(true);
+			expect(db.updatePuzzleCaptchaRecord).toHaveBeenCalledWith(
+				a.challenge,
+				expect.objectContaining({ puzzleEvents: trail }),
+			);
+		});
+
 		// Locks in the contract added by the puzzle DM threading PR (#2873):
 		// the widget encodes the trusted checkbox click into the salt as
 		// [x, y]; the provider decodes and persists them as coords[0][0].
