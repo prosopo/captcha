@@ -1,5 +1,18 @@
 # @prosopo/types-env
 
+## 2.10.23
+### Patch Changes
+
+- 4c8114d: Add type tests for the environment interfaces, and a unit test asserting the
+  package stays free of runtime exports. No behaviour changes: the package declares
+  types only.
+- Updated dependencies [16dbab0]
+- Updated dependencies [063e69d]
+  - @prosopo/types@5.0.3
+  - @prosopo/types-database@5.0.3
+  - @prosopo/keyring@2.9.66
+  - @prosopo/logger@2.0.6
+
 ## 2.10.22
 ### Patch Changes
 

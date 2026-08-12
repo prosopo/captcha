@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/locale",
-	"version": "3.2.9",
+	"version": "3.3.0",
 	"description": "Prosopo locale library",
 	"type": "module",
 	"engines": {

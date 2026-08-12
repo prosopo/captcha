@@ -1,5 +1,22 @@
 # @prosopo/env
 
+## 3.6.27
+### Patch Changes
+
+- 9ec6cc4: Bind repeated log context once with `Logger.with` instead of re-attaching the same data on every log call (mongo `mongoUrl`, redis `url`/`name`, provider startup-cleanup `failedFuncName`, and IP validation `challengeIp`/`providedIp`).
+- Updated dependencies [16dbab0]
+- Updated dependencies [69c6982]
+- Updated dependencies [9ec6cc4]
+- Updated dependencies [063e69d]
+- Updated dependencies [4c8114d]
+  - @prosopo/types@5.0.3
+  - @prosopo/database@4.0.4
+  - @prosopo/types-env@2.10.23
+  - @prosopo/common@3.1.50
+  - @prosopo/ipinfo@0.3.4
+  - @prosopo/keyring@2.9.66
+  - @prosopo/logger@2.0.6
+
 ## 3.6.26
 ### Patch Changes
 
