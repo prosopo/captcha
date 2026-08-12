@@ -114,16 +114,13 @@ describe("applyTrafficFilterAtRequestTime", () => {
 
 	it("block wins over challenge when both categories match the ipInfo", () => {
 		expect(
-			applyTrafficFilterAtRequestTime(
-				ipInfo({ isVPN: true, isProxy: true }),
-				{
-					vpn: {
-						action: TrafficFilterAction.Challenge,
-						captchaType: CaptchaType.pow,
-					},
-					proxy: { action: TrafficFilterAction.Block },
+			applyTrafficFilterAtRequestTime(ipInfo({ isVPN: true, isProxy: true }), {
+				vpn: {
+					action: TrafficFilterAction.Challenge,
+					captchaType: CaptchaType.pow,
 				},
-			),
+				proxy: { action: TrafficFilterAction.Block },
+			}),
 		).toMatchObject({ kind: "block", reason: ResultReason.PROXY_BLOCKED });
 	});
 

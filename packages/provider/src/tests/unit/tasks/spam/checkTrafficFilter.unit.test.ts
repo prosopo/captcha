@@ -20,9 +20,9 @@ import {
 } from "@prosopo/types";
 import { describe, expect, it } from "vitest";
 import {
+	type TrafficFilterMatch,
 	checkTrafficFilter,
 	resolveChallengePolicy,
-	type TrafficFilterMatch,
 } from "../../../../tasks/spam/checkTrafficFilter.js";
 
 const baseInfo = (overrides: Partial<IPInfoResult> = {}): IPInfoResult => ({
