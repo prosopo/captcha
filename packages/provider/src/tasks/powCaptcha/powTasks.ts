@@ -42,6 +42,7 @@ import {
 	type RoutingMachineOutput,
 	type RoutingMachinePlatform,
 	type RoutingMachineRawSignals,
+	type Session,
 	SimdReadingsStage,
 	isBlockingCaptchaResult,
 } from "@prosopo/types";
@@ -50,7 +51,10 @@ import type {
 	PoWCaptchaRecord,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import type { AccessRulesStorage } from "@prosopo/user-access-policy";
+import {
+	type AccessRulesStorage,
+	describeMatchedRule,
+} from "@prosopo/user-access-policy";
 import {
 	assertCoordsSafe,
 	at,
@@ -678,6 +682,11 @@ export class PowCaptchaManager extends CaptchaManager {
 		const powRecordUpdates: Partial<PoWCaptchaRecord> = {};
 		let failResult: CaptchaResult | undefined;
 		let failReason: string | undefined;
+		// Set only by the access-policy branch below, and stamped onto the
+		// session at the end so the audit page can name the rule behind an
+		// ACCESS_POLICY_BLOCK. This path is where `deferToVerify` rules land,
+		// which is precisely where "why was I rejected?" is least obvious.
+		let matchedRule: Session["matchedRule"];
 
 		const submittedAt = challengeRecord.submittedAtTimestamp;
 		const submitToVerifyMs =
@@ -722,6 +731,7 @@ export class PowCaptchaManager extends CaptchaManager {
 						reason: ResultReason.ACCESS_POLICY_BLOCK,
 					};
 					failReason = "API.ACCESS_POLICY_BLOCK";
+					matchedRule = describeMatchedRule(blockPolicy);
 				}
 			} catch (error) {
 				logger.warn(() => ({
@@ -1051,6 +1061,7 @@ export class PowCaptchaManager extends CaptchaManager {
 						...(isBlockingCaptchaResult(CaptchaType.pow, finalResult) && {
 							blocked: true,
 						}),
+						...(matchedRule && { matchedRule }),
 					},
 					true,
 				),

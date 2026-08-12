@@ -27,6 +27,7 @@ const buildInput = () => {
 				}),
 			),
 			updateScore: vi.fn(),
+			setMatchedRule: vi.fn(),
 			registerBlockedSession: vi.fn(),
 			sendImageCaptcha: vi.fn().mockResolvedValue({ kind: "image" }),
 			sendPowCaptcha: vi.fn().mockResolvedValue({ kind: "pow" }),
@@ -138,6 +139,79 @@ describe("handleAccessPolicy", () => {
 		const r = await handleAccessPolicy(input as never, res as never);
 		expect(r.handled).toBe(true);
 		expect(tasks.frictionlessManager.sendPuzzleCaptcha).toHaveBeenCalled();
+	});
+
+	// Every outcome below writes a session somewhere downstream, and each one
+	// used to land in the audit page as a bare "ACCESS_POLICY_BLOCK" /
+	// "USER_ACCESS_POLICY" with no way to tell which of a site's rules did it.
+	// The snapshot goes onto the session bag once, so it reaches all of them —
+	// including the score-only Restrict whose session runDecisionMachine
+	// writes after this function returns handled=false.
+	describe("matched-rule snapshot", () => {
+		it("records the rule and its conditions before blocking", async () => {
+			const { tasks, input } = buildInput();
+			input.userAccessPolicy = {
+				type: AccessPolicyType.Block,
+				ja4Hash: "t13d1516h2_8daaf6152771_b186095e22b6",
+				description: "known solver",
+			};
+			const res = buildRes();
+			await handleAccessPolicy(input as never, res as never);
+			expect(tasks.frictionlessManager.setMatchedRule).toHaveBeenCalledWith(
+				expect.objectContaining({
+					policyType: AccessPolicyType.Block,
+					description: "known solver",
+					conditions: [
+						{
+							field: "ja4Hash",
+							value: "t13d1516h2_8daaf6152771_b186095e22b6",
+						},
+					],
+				}),
+			);
+		});
+
+		it("records the rule that forced a captcha type", async () => {
+			const { tasks, input } = buildInput();
+			input.userAccessPolicy = {
+				type: AccessPolicyType.Restrict,
+				captchaType: CaptchaType.image,
+				countryCode: "CN",
+			};
+			const res = buildRes();
+			await handleAccessPolicy(input as never, res as never);
+			expect(tasks.frictionlessManager.setMatchedRule).toHaveBeenCalledWith(
+				expect.objectContaining({
+					policyType: AccessPolicyType.Restrict,
+					captchaType: CaptchaType.image,
+					conditions: [{ field: "countryCode", value: "CN" }],
+				}),
+			);
+		});
+
+		it("records a score-only restrict rule, which writes no session of its own", async () => {
+			const { tasks, input } = buildInput();
+			input.userAccessPolicy = {
+				type: AccessPolicyType.Restrict,
+				frictionlessScore: 0.2,
+				asn: 205016,
+			};
+			const res = buildRes();
+			const r = await handleAccessPolicy(input as never, res as never);
+			expect(r.handled).toBe(false);
+			expect(tasks.frictionlessManager.setMatchedRule).toHaveBeenCalledWith(
+				expect.objectContaining({
+					conditions: [{ field: "asn", value: "205016" }],
+				}),
+			);
+		});
+
+		it("does not record anything when no policy matched", async () => {
+			const { tasks, input } = buildInput();
+			const res = buildRes();
+			await handleAccessPolicy(input as never, res as never);
+			expect(tasks.frictionlessManager.setMatchedRule).not.toHaveBeenCalled();
+		});
 	});
 
 	describe("auto-ban threshold (post-policy bump)", () => {

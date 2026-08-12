@@ -41,6 +41,7 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import {
 	type AccessPolicy,
 	AccessPolicyType,
+	type AccessRule,
 	type AccessRulesStorage,
 	type UserScope,
 	type UserScopeRecord,
@@ -94,8 +95,8 @@ export interface PoolBundleDecrypt {
  * rules — they pick which challenge type to serve, not whether to reject.
  */
 const findHardBlockPolicy = (
-	accessPolicies: AccessPolicy[],
-): AccessPolicy | undefined => {
+	accessPolicies: AccessRule[],
+): AccessRule | undefined => {
 	return accessPolicies.find((policy) => {
 		if (policy.deferToVerify === true) {
 			return true;
@@ -842,7 +843,10 @@ export class CaptchaManager {
 		coords?: [number, number][][],
 		countryCode?: string,
 		asn?: number,
-	): Promise<AccessPolicy | undefined> {
+		// Returns the whole rule, not just its policy half: callers persist
+		// the matched rule (scope fields included) onto the record they
+		// disapprove, so the audit page can name the exact policy.
+	): Promise<AccessRule | undefined> {
 		// Get headHash from session record if available
 		let headHash: string | undefined;
 		if (challengeRecord.sessionId) {

@@ -740,6 +740,14 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	ruleHash: { type: String, required: false },
 	ruleType: { type: [String], required: false },
 	ruleDescription: { type: String, required: false },
+	// The matched rule itself, denormalised at enforcement time. Written by
+	// every access-policy path (block middleware, frictionless entry, and the
+	// verify-time hard-block check) — not just the middleware — so the audit
+	// page can name the exact policy that acted on a request after the rule
+	// itself has expired. Mixed rather than a sub-schema: the shape is owned
+	// by MatchedAccessRuleSchema in @prosopo/types, which validates on the
+	// way in, and a second mongoose-side definition would only drift from it.
+	matchedRule: { type: Schema.Types.Mixed, required: false },
 	// Full ipinfo payload — replaces flat `countryCode` / `geolocation`
 	// fields. Mirrors the captcha record schemas (PoW / Puzzle /
 	// UserCommitment).
