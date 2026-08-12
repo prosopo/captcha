@@ -1,5 +1,18 @@
 # @prosopo/procaptcha-common
 
+## 2.11.24
+### Patch Changes
+
+- cc3ffe3: Checkbox: allow selecting the error-label text (and its inner link) so users
+  can copy the `Forbidden: <requestId>` reference for support tickets. The
+  label's `user-select: none` is a click-to-toggle hint that only makes sense
+  when the checkbox is enabled; on the error branch the checkbox is disabled,
+  so overriding to `user-select: text` (with a text cursor) is safe.
+- Updated dependencies [216f8cd]
+  - @prosopo/types@5.0.4
+  - @prosopo/account@2.8.70
+  - @prosopo/load-balancer@2.10.21
+
 ## 2.11.23
 ### Patch Changes
 
