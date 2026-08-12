@@ -5,15 +5,19 @@ name: stale-pr-to-draft
 # The point is not tidiness, it is runner capacity. A non-draft PR keeps
 # reporting checks and, whenever its branch moves, launches a full CI run on a
 # fleet that is the scarce resource here. Re-drafting a PR nobody has touched
-# for a week stops that, and the `converted_to_draft` trigger added to the other
+# for a day stops that, and the `converted_to_draft` trigger added to the other
 # workflows makes the transition cancel whatever that PR still has in flight.
 # Marking it ready again with `gh pr ready` restores everything.
 
 on:
   schedule:
-    # 07:00 UTC daily. Nothing depends on the exact time; daily is well inside
-    # the staleness threshold, so a missed run costs at most a day of drift.
-    - cron: "0 7 * * *"
+    # Every 6 hours. The cadence has to be well inside the staleness threshold
+    # or the threshold does not mean what it says: on a daily run a PR touched
+    # at 07:01 is not looked at until 07:00 the next day, is then 23h59m old,
+    # survives, and only gets drafted the day after -- an effective threshold of
+    # up to ~48h against a stated 24h. At 6-hourly the worst-case overshoot is
+    # 6h. Nothing depends on the exact times.
+    - cron: "0 */6 * * *"
   workflow_dispatch:
     inputs:
       dry-run:
@@ -23,7 +27,7 @@ on:
       stale-days:
         description: "Days without an update before a PR counts as stale"
         type: string
-        default: "7"
+        default: "1"
 
 permissions:
   contents: read
@@ -47,7 +51,10 @@ jobs:
           # empty. Scheduled runs are never dry — the manual path is the one for
           # looking before leaping.
           DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run || 'false' }}
-          STALE_DAYS: ${{ inputs.stale-days || '7' }}
+          # Both defaults have to agree: a scheduled run supplies no inputs and
+          # takes this fallback, so changing only the workflow_dispatch default
+          # above would leave every real run on the old threshold.
+          STALE_DAYS: ${{ inputs.stale-days || '1' }}
         run: |
           set -euo pipefail
 
