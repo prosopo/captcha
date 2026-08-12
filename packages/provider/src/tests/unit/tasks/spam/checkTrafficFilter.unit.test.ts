@@ -13,12 +13,17 @@
 // limitations under the License.
 
 import {
+	CaptchaType,
 	type IPInfoResult,
 	type ITrafficFilter,
 	TrafficFilterAction,
 } from "@prosopo/types";
 import { describe, expect, it } from "vitest";
-import { checkTrafficFilter } from "../../../../tasks/spam/checkTrafficFilter.js";
+import {
+	checkTrafficFilter,
+	resolveChallengePolicy,
+	type TrafficFilterMatch,
+} from "../../../../tasks/spam/checkTrafficFilter.js";
 
 const baseInfo = (overrides: Partial<IPInfoResult> = {}): IPInfoResult => ({
 	ip: "1.2.3.4",
@@ -950,5 +955,164 @@ describe("checkTrafficFilter", () => {
 				reason: "API.DATACENTER_BLOCKED",
 			});
 		});
+	});
+});
+
+describe("resolveChallengePolicy", () => {
+	const challenge = (
+		category: TrafficFilterMatch["category"],
+		policy: TrafficFilterMatch["policy"],
+	): TrafficFilterMatch => ({ category, policy });
+
+	it("returns undefined when there are no challenge matches", () => {
+		expect(resolveChallengePolicy([])).toBeUndefined();
+		expect(
+			resolveChallengePolicy([
+				challenge("vpn", { action: TrafficFilterAction.Block }),
+			]),
+		).toBeUndefined();
+	});
+
+	it("returns the sole challenge policy verbatim when only one matches", () => {
+		const resolved = resolveChallengePolicy([
+			challenge("vpn", {
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.pow,
+				powDifficulty: 7,
+			}),
+		]);
+		expect(resolved).toEqual({
+			captchaType: CaptchaType.pow,
+			powDifficulty: 7,
+			solvedImagesCount: undefined,
+			puzzleTolerance: undefined,
+			sourceCategories: ["vpn"],
+		});
+	});
+
+	it("picks image over puzzle over pow when multiple categories name a captchaType", () => {
+		const resolved = resolveChallengePolicy([
+			challenge("vpn", {
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.pow,
+			}),
+			challenge("proxy", {
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.puzzle,
+			}),
+			challenge("datacenter", {
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.image,
+			}),
+		]);
+		expect(resolved?.captchaType).toBe(CaptchaType.image);
+	});
+
+	it("picks puzzle over pow when no image challenge is present", () => {
+		const resolved = resolveChallengePolicy([
+			challenge("vpn", {
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.pow,
+			}),
+			challenge("proxy", {
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.puzzle,
+			}),
+		]);
+		expect(resolved?.captchaType).toBe(CaptchaType.puzzle);
+	});
+
+	it("takes the highest pow difficulty across challenge matches", () => {
+		const resolved = resolveChallengePolicy([
+			challenge("vpn", {
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.pow,
+				powDifficulty: 4,
+			}),
+			challenge("proxy", {
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.pow,
+				powDifficulty: 9,
+			}),
+			challenge("datacenter", {
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.pow,
+				powDifficulty: 6,
+			}),
+		]);
+		expect(resolved?.powDifficulty).toBe(9);
+	});
+
+	it("takes the highest image count across challenge matches", () => {
+		const resolved = resolveChallengePolicy([
+			challenge("vpn", {
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.image,
+				solvedImagesCount: 3,
+			}),
+			challenge("datacenter", {
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.image,
+				solvedImagesCount: 8,
+			}),
+		]);
+		expect(resolved?.solvedImagesCount).toBe(8);
+	});
+
+	it("takes the lowest puzzle tolerance across challenge matches (stricter accuracy)", () => {
+		const resolved = resolveChallengePolicy([
+			challenge("vpn", {
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.puzzle,
+				puzzleTolerance: 40,
+			}),
+			challenge("datacenter", {
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.puzzle,
+				puzzleTolerance: 15,
+			}),
+		]);
+		expect(resolved?.puzzleTolerance).toBe(15);
+	});
+
+	it("ignores block matches when combining challenge params", () => {
+		const resolved = resolveChallengePolicy([
+			challenge("vpn", { action: TrafficFilterAction.Block }),
+			challenge("proxy", {
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.pow,
+				powDifficulty: 5,
+			}),
+		]);
+		// Block category is not counted in sourceCategories or the combine.
+		expect(resolved?.sourceCategories).toEqual(["proxy"]);
+		expect(resolved?.powDifficulty).toBe(5);
+	});
+
+	it("leaves fields undefined when no matched policy sets them", () => {
+		const resolved = resolveChallengePolicy([
+			challenge("vpn", {
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.image,
+			}),
+		]);
+		expect(resolved).toEqual({
+			captchaType: CaptchaType.image,
+			powDifficulty: undefined,
+			solvedImagesCount: undefined,
+			puzzleTolerance: undefined,
+			sourceCategories: ["vpn"],
+		});
+	});
+
+	it("keeps captchaType undefined when no matched policy specifies one (falls through to site default)", () => {
+		const resolved = resolveChallengePolicy([
+			challenge("vpn", {
+				action: TrafficFilterAction.Challenge,
+				powDifficulty: 7,
+			}),
+		]);
+		expect(resolved?.captchaType).toBeUndefined();
+		expect(resolved?.powDifficulty).toBe(7);
 	});
 });
