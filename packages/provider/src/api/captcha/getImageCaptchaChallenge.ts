@@ -36,6 +36,7 @@ import { getRequestUserScope } from "../blacklistRequestInspector.js";
 import { recordCaptchaIssueError, recordCaptchaIssued } from "../metrics.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 import { buildImageMaintenanceResponse } from "./maintenanceModeResponses.js";
+import { applyTrafficFilterAtRequestTime } from "./trafficFilterRequestTime.js";
 
 export default (
 	env: ProviderEnvironment,
@@ -203,10 +204,33 @@ export default (
 				);
 			}
 
+			// Evaluate the site's trafficFilter against the connecting IP.
+			// A matched `block` policy short-circuits with 401; a matched
+			// `challenge` policy contributes solvedImagesCount overrides.
+			const trafficVerdict = applyTrafficFilterAtRequestTime(
+				req.ipInfo,
+				clientRecord.settings?.trafficFilter,
+				req.logger,
+			);
+			if (trafficVerdict.kind === "block") {
+				return next(
+					new ProsopoApiError(trafficVerdict.reason, {
+						context: { code: 401, siteKey: dapp, user },
+						i18n: req.i18n,
+						logger: req.logger,
+					}),
+				);
+			}
+			const trafficSolvedImagesCount =
+				trafficVerdict.kind === "challenge"
+					? trafficVerdict.solvedImagesCount
+					: undefined;
+
 			const captchaConfig: ProsopoCaptchaCountConfigSchemaOutput = {
 				solved: {
 					count: Math.min(
-						solvedImagesCount ||
+						trafficSolvedImagesCount ||
+							solvedImagesCount ||
 							userAccessPolicy?.solvedImagesCount ||
 							env.config.captchas.solved.count,
 						clientRecord.settings.imageMaxRounds ?? imageMaxRoundsDefault,

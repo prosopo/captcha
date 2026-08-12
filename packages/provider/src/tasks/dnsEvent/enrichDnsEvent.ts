@@ -87,15 +87,17 @@ export const extraIpInfosFromEnrichedDnsEvent = (
  *   - client IP is a consumer ISP but resolver is datacenter (compound)
  *
  * When `trafficFilter` is supplied, the datacenter and abuser contributions
- * are gated on the same rules `checkTrafficFilter` uses for the client IP:
+ * are gated on the same rules `checkTrafficFilter` uses for the client IP.
+ * A category counts here whenever the operator has configured any policy
+ * for it (block or challenge) — either intent signals suspicion.
  *
- *   - `blockDatacenter` must be opted in (default off); IPs whose
+ *   - datacenter category must be configured; IPs whose
  *     `providerType === "isp"` short-circuit; named allowlist skips
- *   - `blockAbuser` opt-in (default on) with the abuser-score threshold
+ *   - abuser category defaults to configured, with the score threshold
  *   - cross-category suppression: VPN / proxy / Tor / crawler IPs that also
  *     carry `isDatacenter=true` are NOT counted as datacenter when the
- *     operator hasn't opted into blocking that more specific category —
- *     mirrors the `datacenterSuppressedByCategory` rule in evaluateIpInfo.
+ *     operator hasn't configured that more specific category — mirrors
+ *     the `datacenterSuppressedByCategory` rule in evaluateIpInfo.
  *
  * `pathValid` is a protocol signal, not a category — it always contributes
  * regardless of trafficFilter. When `trafficFilter` is omitted, all
@@ -114,7 +116,7 @@ export const computeDnsAsymmetry = (
 	const countDc = (ip: IPInfoResponse | undefined): boolean => {
 		if (!ip?.isValid || !ip.isDatacenter) return false;
 		if (!trafficFilter) return true;
-		if (trafficFilter.blockDatacenter !== true) return false;
+		if (trafficFilter.datacenter === undefined) return false;
 		// Denylist wins: an explicitly listed provider counts as datacenter
 		// even when the ISP short-circuit or category suppression would
 		// otherwise exempt it.
@@ -122,12 +124,12 @@ export const computeDnsAsymmetry = (
 			return true;
 		}
 		// Cross-category suppression: don't penalise datacenter classification
-		// when the operator has left the more specific category unblocked.
+		// when the operator has not configured the more specific category.
 		if (
-			(ip.isVPN && trafficFilter.blockVpn !== true) ||
-			(ip.isProxy && trafficFilter.blockProxy !== true) ||
-			(ip.isTor && trafficFilter.blockTor !== true) ||
-			(ip.isCrawler && trafficFilter.blockCrawler !== true)
+			(ip.isVPN && trafficFilter.vpn === undefined) ||
+			(ip.isProxy && trafficFilter.proxy === undefined) ||
+			(ip.isTor && trafficFilter.tor === undefined) ||
+			(ip.isCrawler && trafficFilter.crawler === undefined)
 		) {
 			return false;
 		}
@@ -138,7 +140,7 @@ export const computeDnsAsymmetry = (
 	const countAbuser = (ip: IPInfoResponse | undefined): boolean => {
 		if (!ip?.isValid || !ip.isAbuser) return false;
 		if (!trafficFilter) return true;
-		if (trafficFilter.blockAbuser === false) return false;
+		if (trafficFilter.abuser === undefined) return false;
 		const threshold =
 			trafficFilter.abuserScoreThreshold ??
 			trafficFilterAbuserScoreThresholdDefault;
