@@ -407,6 +407,109 @@ describe("PuzzleCaptchaManager", () => {
 			);
 		});
 
+		// Happy path with a valid decrypt: both puzzleEvents AND
+		// behavioralDataPacked (+ deviceCapability) must land on the record.
+		// The current implementation writes these in two separate
+		// updatePuzzleCaptchaRecord calls (puzzleEvents up front, then the
+		// packed payload after decrypt succeeds); this test asserts on the
+		// combined mock-call history so a regression that drops either write
+		// — or accidentally re-gates puzzleEvents behind the decrypt branch —
+		// surfaces immediately.
+		it("persists both puzzleEvents and behavioralDataPacked on a successful decrypt", async () => {
+			const a = buildArgs();
+			const challengeRecord: Partial<PuzzleCaptchaStored> = {
+				challenge: a.challenge,
+				dappAccount: a.dappAccount,
+				userAccount: a.userAccount,
+				targetX: 100,
+				targetY: 100,
+				tolerance: 15,
+				ipAddress: getCompositeIpAddress(a.ipAddress),
+				result: { status: CaptchaStatus.pending },
+				sessionId: "session-1",
+			};
+
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord(challengeRecord),
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+			vi.mocked(validatePuzzleSolution).mockReturnValue(true);
+
+			// Bundle resolves and decrypt returns unpacked collectors.
+			// The exact PoolBundleDecrypt shape isn't relevant to the assertion;
+			// only that resolve returns *something* truthy so decryptBehavioralData
+			// isn't short-circuited on the missing-bundle branch.
+			vi.spyOn(
+				puzzleCaptchaManager,
+				"resolveBundleBySessionId",
+			).mockResolvedValue({
+				key: "test-key",
+				innerConfig: {},
+			} as unknown as Awaited<
+				ReturnType<typeof puzzleCaptchaManager.resolveBundleBySessionId>
+			>);
+			vi.spyOn(puzzleCaptchaManager, "decryptBehavioralData").mockResolvedValue(
+				{
+					collector1: [{ x: 10, y: 20, timestamp: 100 }],
+					collector2: [],
+					collector3: [{ x: 15, y: 25, timestamp: 200 }],
+					deviceCapability: "desktop",
+				} as unknown as Awaited<
+					ReturnType<typeof puzzleCaptchaManager.decryptBehavioralData>
+				>,
+			);
+
+			const trail = [
+				{ x: 5, y: 5, t: 5 },
+				{ x: 6, y: 5, t: 6 },
+			];
+
+			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
+				a.challenge,
+				a.providerSignature,
+				102,
+				101,
+				trail,
+				1000,
+				a.userSignature,
+				a.ipAddress,
+				a.headers,
+				"encrypted-blob",
+			);
+
+			expect(result).toBe(true);
+
+			const calls = vi.mocked(db.updatePuzzleCaptchaRecord).mock.calls;
+
+			// puzzleEvents landed on some call. Guards against a regression that
+			// re-gates the raw-trail write behind the decrypt-success branch.
+			expect(
+				calls.some(
+					([challenge, patch]) =>
+						challenge === a.challenge &&
+						Array.isArray(patch.puzzleEvents) &&
+						patch.puzzleEvents.length === trail.length,
+				),
+				"puzzleEvents must be written on a successful decrypt",
+			).toBe(true);
+
+			// behavioralDataPacked (+ deviceCapability) landed on some call.
+			// Also verifies the c1/c2/c3 shape survived the pack transform.
+			expect(
+				calls.some(
+					([challenge, patch]) =>
+						challenge === a.challenge &&
+						patch.behavioralDataPacked !== undefined &&
+						patch.behavioralDataPacked.c1.length === 1 &&
+						patch.behavioralDataPacked.c2.length === 0 &&
+						patch.behavioralDataPacked.c3.length === 1 &&
+						patch.behavioralDataPacked.d === "desktop" &&
+						patch.deviceCapability === "desktop",
+				),
+				"behavioralDataPacked must be written on a successful decrypt",
+			).toBe(true);
+		});
+
 		// Regression: puzzleEvents must persist even when a behavioural payload
 		// was sent but decryption returns null (e.g. resolveBundleBySessionId
 		// can't find the bundleId promoted onto the session record). The old
@@ -440,10 +543,9 @@ describe("PuzzleCaptchaManager", () => {
 				puzzleCaptchaManager,
 				"resolveBundleBySessionId",
 			).mockResolvedValue(undefined);
-			vi.spyOn(
-				puzzleCaptchaManager,
-				"decryptBehavioralData",
-			).mockResolvedValue(null);
+			vi.spyOn(puzzleCaptchaManager, "decryptBehavioralData").mockResolvedValue(
+				null,
+			);
 
 			const trail = [
 				{ x: 1, y: 1, t: 1 },
@@ -471,9 +573,9 @@ describe("PuzzleCaptchaManager", () => {
 			// And no behavioralDataPacked write happened — decryption failed,
 			// so there was nothing to persist there.
 			const calls = vi.mocked(db.updatePuzzleCaptchaRecord).mock.calls;
-			expect(
-				calls.some(([, patch]) => "behavioralDataPacked" in patch),
-			).toBe(false);
+			expect(calls.some(([, patch]) => "behavioralDataPacked" in patch)).toBe(
+				false,
+			);
 		});
 
 		// Regression: same guarantee when decryptBehavioralData throws (bad
@@ -502,10 +604,9 @@ describe("PuzzleCaptchaManager", () => {
 				puzzleCaptchaManager,
 				"resolveBundleBySessionId",
 			).mockResolvedValue(undefined);
-			vi.spyOn(
-				puzzleCaptchaManager,
-				"decryptBehavioralData",
-			).mockRejectedValue(new Error("bad ciphertext"));
+			vi.spyOn(puzzleCaptchaManager, "decryptBehavioralData").mockRejectedValue(
+				new Error("bad ciphertext"),
+			);
 
 			const trail = [{ x: 3, y: 3, t: 3 }];
 
