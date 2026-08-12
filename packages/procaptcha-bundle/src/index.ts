@@ -21,7 +21,49 @@ import { WidgetFactory } from "./util/widgetFactory.js";
 import { WidgetThemeResolver } from "./util/widgetThemeResolver.js";
 
 const BUNDLE_NAMES = ["procaptcha.bundle.iife.js", "procaptcha.bundle.js"];
-let procaptchaRoots: Root[] = [];
+
+/**
+ * Everything needed to rebuild a widget in place.
+ *
+ * Previously only the React `Root` was retained, which made `reset()` a
+ * one-way operation: unmounting tore out the React tree but the widget
+ * skeleton (created imperatively by `createWidgetSkeleton`, not by React)
+ * stayed in the DOM, leaving a container with a logo and no checkbox. There
+ * was no record of which element or render options produced it, so nothing
+ * could put it back. Keeping the descriptor alongside the root is what lets
+ * `reset()` remount rather than just destroy.
+ */
+interface WidgetEntry {
+	root: Root;
+	element: Element;
+	renderOptions: ProcaptchaRenderOptions;
+	isWeb2: boolean;
+	invisible: boolean;
+}
+
+const procaptchaWidgets = new Map<string, WidgetEntry>();
+
+let widgetIdCounter = 0;
+const nextWidgetId = (): string => `procaptcha-widget-${widgetIdCounter++}`;
+
+const registerWidgets = (
+	roots: Root[],
+	elements: Element[],
+	renderOptions: ProcaptchaRenderOptions,
+	isWeb2: boolean,
+	invisible: boolean,
+): string[] =>
+	roots.map((root, index) => {
+		const id = nextWidgetId();
+		procaptchaWidgets.set(id, {
+			root,
+			element: at(elements, index),
+			renderOptions,
+			isWeb2,
+			invisible,
+		});
+		return id;
+	});
 
 const widgetFactory = new WidgetFactory(new WidgetThemeResolver());
 
@@ -87,17 +129,25 @@ const implicitRender = async () => {
 		// `customDetectBot` claims the in-flight promise when it eventually runs.
 		startDetectorPrefetch(siteKey, { ipv4, ipv6 });
 
+		const implicitRenderOptions: ProcaptchaRenderOptions = {
+			siteKey: siteKey,
+			ipv4,
+			ipv6,
+		};
+
 		const root = await widgetFactory.createWidgets(
 			elements,
-			{
-				siteKey: siteKey,
-				ipv4,
-				ipv6,
-			},
+			implicitRenderOptions,
 			!(web3 === "true"),
 		);
 
-		procaptchaRoots.push(...root);
+		registerWidgets(
+			root,
+			elements,
+			implicitRenderOptions,
+			!(web3 === "true"),
+			false,
+		);
 	}
 
 	// Check for invisible mode indicators (procaptcha class on buttons)
@@ -114,19 +164,21 @@ const implicitRender = async () => {
 
 			startDetectorPrefetch(siteKey, { ipv4, ipv6 });
 
+			const buttonRenderOptions: ProcaptchaRenderOptions = {
+				siteKey: siteKey,
+				callback: callback,
+				ipv4,
+				ipv6,
+			};
+
 			const root = await widgetFactory.createWidgets(
 				[button],
-				{
-					siteKey: siteKey,
-					callback: callback,
-					ipv4,
-					ipv6,
-				},
+				buttonRenderOptions,
 				true,
 				true,
 			);
 
-			procaptchaRoots.push(...root);
+			registerWidgets(root, [button], buttonRenderOptions, true, true);
 
 			// Add click event listener to the button
 			button.addEventListener("click", async (event) => {
@@ -138,10 +190,19 @@ const implicitRender = async () => {
 };
 
 // Explicit render for targeting specific elements
+/**
+ * Renders a widget into `element` and returns its id, which `reset()` and
+ * `remove()` accept to target this widget alone. Previously this returned
+ * nothing, so callers had no handle on an individual widget and the only
+ * available reset was all-or-nothing.
+ *
+ * Returns undefined when no widget was created, rather than throwing — the
+ * factory legitimately yields nothing for an element it cannot mount into.
+ */
 export const render = async (
 	element: Element,
 	renderOptions: ProcaptchaRenderOptions,
-) => {
+): Promise<string | undefined> => {
 	startDetectorPrefetch(renderOptions.siteKey, renderOptions);
 
 	const hasInvisibleSize =
@@ -149,26 +210,27 @@ export const render = async (
 		renderOptions.size === "invisible";
 
 	const isWeb2 = !renderOptions.web3;
-
-	if (hasInvisibleSize || element.tagName.toLowerCase() === "button") {
-		const roots = await widgetFactory.createWidgets(
-			[element],
-			renderOptions,
-			isWeb2,
-			true,
-		);
-		procaptchaRoots.push(...roots);
-		return;
-	}
+	const invisible =
+		hasInvisibleSize || element.tagName.toLowerCase() === "button";
 
 	const roots = await widgetFactory.createWidgets(
 		[element],
 		renderOptions,
 		isWeb2,
-		false,
+		invisible,
 	);
 
-	procaptchaRoots.push(...roots);
+	const ids = registerWidgets(
+		roots,
+		[element],
+		renderOptions,
+		isWeb2,
+		invisible,
+	);
+
+	// Deliberately not `at()`: it throws on an empty array before it consults
+	// `optional`, and zero roots is a legitimate outcome here.
+	return ids[0];
 };
 
 export default function ready(fn: () => void) {
@@ -246,6 +308,7 @@ declare global {
 			ready: typeof ready;
 			render: typeof render;
 			reset: typeof reset;
+			remove: typeof remove;
 			execute: typeof execute;
 		};
 	}
@@ -284,17 +347,69 @@ const start = () => {
 	}
 };
 
-export const reset = () => {
-	for (const root of procaptchaRoots) {
-		root.unmount();
-	}
-	procaptchaRoots = [];
+/**
+ * Returns a widget to its unsolved state, ready to be solved again. Pass a
+ * widget id to reset one widget, or omit it to reset every widget on the page.
+ *
+ * This remounts rather than merely unmounting. The previous implementation
+ * unmounted every root and then called `start()`, which only re-renders when
+ * the page uses implicit rendering — and even then only via the
+ * `document.readyState` fallback, because the script's `load` event has long
+ * since fired. On an explicitly-rendered page nothing came back at all: the
+ * skeleton stayed in the DOM with no checkbox inside it, and no fresh captcha
+ * request was ever made. Rebuilding from the stored descriptor makes reset
+ * behave the same way on both paths.
+ *
+ * `start()` is deliberately not called here any more. It re-renders implicit
+ * widgets, which would double up with the remount below, and it attaches
+ * another `load` listener to the script tag on every call.
+ */
+export const reset = async (widgetId?: string): Promise<void> => {
+	const ids: string[] =
+		undefined === widgetId ? Array.from(procaptchaWidgets.keys()) : [widgetId];
 
-	start();
+	for (const id of ids) {
+		const current = procaptchaWidgets.get(id);
+		if (!current) continue;
+
+		current.root.unmount();
+
+		const [root] = await widgetFactory.createWidgets(
+			[current.element],
+			current.renderOptions,
+			current.isWeb2,
+			current.invisible,
+		);
+
+		if (root) {
+			procaptchaWidgets.set(id, { ...current, root });
+		} else {
+			procaptchaWidgets.delete(id);
+		}
+	}
+};
+
+/**
+ * Tears a widget down without putting it back — the behaviour `reset()` used
+ * to have by accident on explicitly-rendered pages, kept as an explicit
+ * operation for callers that genuinely want the widget gone (a closing modal,
+ * an SPA route change).
+ */
+export const remove = (widgetId?: string): void => {
+	const ids =
+		undefined === widgetId ? Array.from(procaptchaWidgets.keys()) : [widgetId];
+
+	for (const id of ids) {
+		const entry = procaptchaWidgets.get(id);
+		if (!entry) continue;
+		entry.root.unmount();
+		entry.element.innerHTML = "";
+		procaptchaWidgets.delete(id);
+	}
 };
 
 // set the procaptcha attribute on the window
-window.procaptcha = { ready, render, reset, execute };
+window.procaptcha = { ready, render, reset, remove, execute };
 
 // Dispatch a custom event to notify that window.procaptcha is ready
 const procaptchaReadyEvent = new CustomEvent(PROCAPTCHA_READY_EVENT, {
