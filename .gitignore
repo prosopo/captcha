@@ -172,3 +172,7 @@ issue-long-jwt.mjs
 # `docker compose up dns`. Pronodes come and go; the file is host
 # state, not source state.
 docker/dns-tenants.json
+
+# Android SDK location -- machine-specific, and if committed it overrides
+# ANDROID_HOME and breaks the build everywhere else, CI included.
+local.properties
