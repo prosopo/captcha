@@ -33,6 +33,7 @@ import {
 	type UserScope,
 	type UserScopeRecord,
 	classifyOs,
+	describeMatchedRule,
 	makeAccessRuleHash,
 	userScopeInput,
 } from "@prosopo/user-access-policy";
@@ -678,10 +679,14 @@ export class BlacklistRequestInspector {
 				status: CaptchaStatus.disapproved,
 				reason: ResultReason.ACCESS_POLICY_BLOCK,
 			},
-			// Rule identity — the whole point of writing this record.
+			// Rule identity — the whole point of writing this record. The three
+			// flat fields drive the Traffic page's rule-type grouping;
+			// `matchedRule` carries the rule itself so the audit page can name
+			// the exact policy (and its conditions) long after the rule expires.
 			ruleHash,
 			ruleType,
 			ruleDescription,
+			matchedRule: describeMatchedRule(accessPolicy),
 			// blocked + deleted are stamped inside storeBlockedSession so
 			// the synthetic record is unmistakably a block-middleware
 			// artefact and can never be picked up by the captcha flow.

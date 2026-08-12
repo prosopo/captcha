@@ -52,6 +52,7 @@ type MockTasks = {
 		scoreIncreaseWebView: MockFn;
 		scoreIncreaseTimestamp: MockFn;
 		updateScore: MockFn;
+		setMatchedRule: MockFn;
 	};
 	db: {
 		getSessionRecordByToken: MockFn;
@@ -201,6 +202,7 @@ vi.mock("../../../tasks/index.js", async () => {
 						}),
 					),
 					updateScore: vi.fn(),
+					setMatchedRule: vi.fn(),
 				},
 				db: {
 					getSessionRecordByToken: vi.fn().mockResolvedValue(null),
@@ -287,6 +289,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 				}),
 			),
 			updateScore: vi.fn(),
+			setMatchedRule: vi.fn(),
 		},
 		db: {
 			getSessionRecordByToken: vi.fn().mockResolvedValue(null),
