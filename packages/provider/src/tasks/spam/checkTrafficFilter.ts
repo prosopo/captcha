@@ -317,7 +317,10 @@ export const resolveChallengePolicy = (
 
 	let winningCaptchaType: CaptchaType | undefined;
 	for (const m of challenges) {
-		if (rankCaptchaType(m.policy.captchaType) > rankCaptchaType(winningCaptchaType)) {
+		if (
+			rankCaptchaType(m.policy.captchaType) >
+			rankCaptchaType(winningCaptchaType)
+		) {
 			winningCaptchaType = m.policy.captchaType;
 		}
 	}

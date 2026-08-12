@@ -52,22 +52,34 @@ const allBlocked: ITrafficFilter = {
 describe("checkTrafficFilter", () => {
 	it("blocks VPN when blockVpn is true", () => {
 		const result = checkTrafficFilter(baseInfo({ isVPN: true }), allBlocked);
-		expect(result).toMatchObject({ isBlocked: true, reason: "API.VPN_BLOCKED" });
+		expect(result).toMatchObject({
+			isBlocked: true,
+			reason: "API.VPN_BLOCKED",
+		});
 	});
 
 	it("blocks proxy when blockProxy is true", () => {
 		const result = checkTrafficFilter(baseInfo({ isProxy: true }), allBlocked);
-		expect(result).toMatchObject({ isBlocked: true, reason: "API.PROXY_BLOCKED" });
+		expect(result).toMatchObject({
+			isBlocked: true,
+			reason: "API.PROXY_BLOCKED",
+		});
 	});
 
 	it("blocks Tor when blockTor is true", () => {
 		const result = checkTrafficFilter(baseInfo({ isTor: true }), allBlocked);
-		expect(result).toMatchObject({ isBlocked: true, reason: "API.TOR_BLOCKED" });
+		expect(result).toMatchObject({
+			isBlocked: true,
+			reason: "API.TOR_BLOCKED",
+		});
 	});
 
 	it("blocks abusive ASN when blockAbuser is true", () => {
 		const result = checkTrafficFilter(baseInfo({ isAbuser: true }), allBlocked);
-		expect(result).toMatchObject({ isBlocked: true, reason: "API.ABUSER_BLOCKED" });
+		expect(result).toMatchObject({
+			isBlocked: true,
+			reason: "API.ABUSER_BLOCKED",
+		});
 	});
 
 	it("blocks abuser when score meets threshold", () => {
@@ -75,7 +87,10 @@ describe("checkTrafficFilter", () => {
 			baseInfo({ isAbuser: true, abuserScore: 0.06, companyAbuserScore: 0.03 }),
 			{ ...allBlocked, abuserScoreThreshold: 0.05 },
 		);
-		expect(result).toMatchObject({ isBlocked: true, reason: "API.ABUSER_BLOCKED" });
+		expect(result).toMatchObject({
+			isBlocked: true,
+			reason: "API.ABUSER_BLOCKED",
+		});
 	});
 
 	it("allows abuser when score is below threshold", () => {
@@ -99,7 +114,10 @@ describe("checkTrafficFilter", () => {
 			}),
 			{ ...allBlocked, abuserScoreThreshold: 0.05 },
 		);
-		expect(result).toMatchObject({ isBlocked: true, reason: "API.ABUSER_BLOCKED" });
+		expect(result).toMatchObject({
+			isBlocked: true,
+			reason: "API.ABUSER_BLOCKED",
+		});
 	});
 
 	it("blocks datacenter when blockDatacenter is true", () => {
@@ -166,12 +184,18 @@ describe("checkTrafficFilter", () => {
 			baseInfo({ isDatacenter: true, isVPN: true }),
 			allBlocked,
 		);
-		expect(result).toMatchObject({ isBlocked: true, reason: "API.VPN_BLOCKED" });
+		expect(result).toMatchObject({
+			isBlocked: true,
+			reason: "API.VPN_BLOCKED",
+		});
 	});
 
 	it("blocks mobile when blockMobile is true", () => {
 		const result = checkTrafficFilter(baseInfo({ isMobile: true }), allBlocked);
-		expect(result).toMatchObject({ isBlocked: true, reason: "API.MOBILE_BLOCKED" });
+		expect(result).toMatchObject({
+			isBlocked: true,
+			reason: "API.MOBILE_BLOCKED",
+		});
 	});
 
 	it("blocks satellite when blockSatellite is true", () => {
@@ -190,7 +214,10 @@ describe("checkTrafficFilter", () => {
 			baseInfo({ isCrawler: true }),
 			allBlocked,
 		);
-		expect(result).toMatchObject({ isBlocked: true, reason: "API.CRAWLER_BLOCKED" });
+		expect(result).toMatchObject({
+			isBlocked: true,
+			reason: "API.CRAWLER_BLOCKED",
+		});
 	});
 
 	it("allows traffic when all filters are disabled", () => {
@@ -319,7 +346,10 @@ describe("checkTrafficFilter", () => {
 			const result = checkTrafficFilter(baseInfo({ isTor: true }), allBlocked, [
 				baseInfo({ ip: "198.51.100.10", isDatacenter: true }),
 			]);
-			expect(result).toMatchObject({ isBlocked: true, reason: "API.TOR_BLOCKED" });
+			expect(result).toMatchObject({
+				isBlocked: true,
+				reason: "API.TOR_BLOCKED",
+			});
 		});
 
 		it("does not check the crawler flag on extra IPs even when blockCrawler is on", () => {

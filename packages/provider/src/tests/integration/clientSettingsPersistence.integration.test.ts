@@ -286,11 +286,15 @@ describe("Client settings Mongo persistence", () => {
 		const trafficFilter = stored.trafficFilter;
 		expect(trafficFilter).toBeDefined();
 		if (!trafficFilter) return;
-		expect(trafficFilter.vpn).toEqual(FULLY_POPULATED_SETTINGS.trafficFilter.vpn);
+		expect(trafficFilter.vpn).toEqual(
+			FULLY_POPULATED_SETTINGS.trafficFilter.vpn,
+		);
 		expect(trafficFilter.proxy).toEqual(
 			FULLY_POPULATED_SETTINGS.trafficFilter.proxy,
 		);
-		expect(trafficFilter.tor).toEqual(FULLY_POPULATED_SETTINGS.trafficFilter.tor);
+		expect(trafficFilter.tor).toEqual(
+			FULLY_POPULATED_SETTINGS.trafficFilter.tor,
+		);
 		expect(trafficFilter.abuser).toEqual(
 			FULLY_POPULATED_SETTINGS.trafficFilter.abuser,
 		);
