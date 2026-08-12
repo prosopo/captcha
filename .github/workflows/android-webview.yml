@@ -14,6 +14,14 @@ on:
       - "demos/android-webview/**"
       - ".github/workflows/android-webview.yml"
 
+# Least privilege: both jobs only check out the repo and build it, so read
+# access to contents is the whole requirement. Without this the workflow
+# inherits the repository default, which is write on several scopes -- and this
+# repository is public, so a workflow that builds a fork's code is exactly
+# where a broad token should not be handed out.
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
