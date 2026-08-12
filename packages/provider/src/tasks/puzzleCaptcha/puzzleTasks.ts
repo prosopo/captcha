@@ -41,7 +41,10 @@ import {
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import type { AccessRulesStorage } from "@prosopo/user-access-policy";
+import {
+	type AccessRulesStorage,
+	describeMatchedRule,
+} from "@prosopo/user-access-policy";
 import {
 	assertCoordsSafe,
 	at,
@@ -570,6 +573,11 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 							serverChecked: true,
 							result: blockedResult,
 							...(isBlocked && { blocked: true }),
+							// Name the rule behind the ACCESS_POLICY_BLOCK on the
+							// audit row. This path is where `deferToVerify` rules
+							// land, which is precisely where "why was I rejected?"
+							// is least obvious.
+							matchedRule: describeMatchedRule(blockPolicy),
 						});
 					}
 					return notVerifiedResponse;

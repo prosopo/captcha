@@ -788,6 +788,57 @@ describe("PuzzleCaptchaManager", () => {
 			}
 		});
 
+		it("stamps the matched rule onto the session so the audit row can name it", async () => {
+			const sessionId = "puzzle-blocked-session-id";
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord({
+					challenge,
+					dappAccount,
+					userAccount: "user",
+					result: { status: CaptchaStatus.approved },
+					serverChecked: false,
+					headers: { a: "1" },
+					sessionId,
+				}),
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+
+			const originalCheckForHardBlock = puzzleCaptchaManager.checkForHardBlock;
+			puzzleCaptchaManager.checkForHardBlock = vi.fn().mockResolvedValue({
+				type: "block",
+				description: "deferred solver block",
+				deferToVerify: true,
+				countryCode: "CN",
+			});
+
+			try {
+				await puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+					dappAccount,
+					challenge,
+					1000,
+					mockEnv,
+					undefined, // ip
+					// biome-ignore lint/suspicious/noExplicitAny: test stub
+					{} as any,
+				);
+
+				expect(db.updateSessionRecord).toHaveBeenCalledWith(
+					sessionId,
+					expect.objectContaining({
+						blocked: true,
+						matchedRule: expect.objectContaining({
+							policyType: "block",
+							description: "deferred solver block",
+							deferToVerify: true,
+							conditions: [{ field: "countryCode", value: "CN" }],
+						}),
+					}),
+				);
+			} finally {
+				puzzleCaptchaManager.checkForHardBlock = originalCheckForHardBlock;
+			}
+		});
+
 		it("forwards every session-derived field into the decide() input", async () => {
 			const sessionId = "puzzle-session-id";
 			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
