@@ -1,0 +1,46 @@
+name: android-webview
+
+on:
+  pull_request:
+    branches: [main]
+    types:
+      - opened
+      - synchronize
+      - reopened
+      # Not a type this workflow wants to run for -- the job below skips it. It
+      # exists so the run is created and cancels the in-flight one.
+      - converted_to_draft
+    paths:
+      - "demos/android-webview/**"
+      - ".github/workflows/android-webview.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: ${{ github.event.action != 'converted_to_draft' }}
+    # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
+    # other repos: this repository is public, so a fork PR running on the
+    # self-hosted fleet would execute arbitrary code on it.
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: demos/android-webview
+    steps:
+      - uses: actions/checkout@v4
+
+      # 17, not the app's own jvmTarget: that is the bytecode level the app
+      # compiles *to*, while the Android Gradle Plugin itself needs a JDK 17.
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Gradle build + unit tests
+        run: ./gradlew --no-daemon --stacktrace testReleaseUnitTest assembleRelease
