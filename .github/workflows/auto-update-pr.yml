@@ -10,6 +10,15 @@
 #
 # Uses PROSOPONATOR_PAT (not the default GITHUB_TOKEN) so the branch update is
 # attributed to a real user and therefore retriggers the PR's CI workflows.
+#
+# It also stands down entirely whenever an auto-merge PR already has CI in
+# flight -- see the gate step for why, and for the two ways that gate is stopped
+# from wedging.
+#
+# INTERIM. This is a hand-rolled merge queue. GitHub's own merge queue provides
+# the same benefit as "require branches to be up to date" without making anyone
+# press "Update branch", so once the queue is switched on for a repo this
+# workflow should be deleted there rather than left running alongside it.
 
 name: auto-update-pr
 
@@ -50,8 +59,99 @@ jobs:
       # how long to wait for GitHub to finish computing mergeability per PR
       POLL_ATTEMPTS: "6"
       POLL_SLEEP_SECONDS: "10"
+      # A check QUEUED or IN_PROGRESS for longer than this is treated as hung
+      # rather than busy, so it cannot gate the flywheel forever. Longer than the
+      # slowest browser-matrix job, shorter than a working day.
+      IN_FLIGHT_MAX_AGE_MINUTES: "90"
+      # After pressing "Update branch", wait for the new checks to show up before
+      # exiting, so the next run sees them and stands down instead of updating a
+      # second PR. Floor applies even if the rollup never reports.
+      SETTLE_ATTEMPTS: "9"
+      SETTLE_SLEEP_SECONDS: "10"
     steps:
+      # Stand down whenever an auto-merge PR already has CI in flight: that PR is
+      # effectively next in the merge queue, so spending fleet capacity updating a
+      # different branch only creates contention with it.
+      #
+      # The two things this gate must never do (and the reason it is written the
+      # long way):
+      #
+      #  (a) It must not let one bad PR wedge the flywheel. A PR whose workflows
+      #      never triggered has ZERO rollup entries -- that is stalled, not busy,
+      #      and must not gate. A check stuck QUEUED/IN_PROGRESS past
+      #      IN_FLIGHT_MAX_AGE_MINUTES is hung, likewise not busy; it is logged
+      #      loudly so a genuinely hung job is visible rather than silently
+      #      ignored. Between them, the gate can only hold while real work is
+      #      really running.
+      #
+      #  (b) It must not let several PRs churn at once. Once this run updates a
+      #      PR, that PR has checks running and the next run sees them and stands
+      #      down -- provided the checks have actually been reported, which is
+      #      what the settle loop at the end of the next step waits for.
+      #
+      # Age is computed from startedAt (check runs) / createdAt (status contexts),
+      # both of which GitHub returns for pending work.
+      - name: Stand down if an auto-merge PR already has CI in flight
+        id: gate
+        run: |
+          set -euo pipefail
+
+          in_flight=$(
+            gh pr list --repo "$REPO" --state open --base "$BASE" --limit 100 \
+              --json number,isDraft,autoMergeRequest,statusCheckRollup \
+            | jq -r --argjson maxage "$IN_FLIGHT_MAX_AGE_MINUTES" '
+                [ .[]
+                  | select(.isDraft == false)
+                  | select(.autoMergeRequest != null)
+                  # zero rollup entries => nothing is running => not in flight
+                  | select((.statusCheckRollup // []) | length > 0)
+                  | { number,
+                      running: [ .statusCheckRollup[]
+                                 | select(.status == "QUEUED" or .status == "IN_PROGRESS"
+                                          or .state == "PENDING")
+                                 | (.startedAt // .createdAt // empty)
+                                 | (now - fromdateiso8601) / 60 ] }
+                  | select(.running | length > 0)
+                  # youngest pending check decides: if anything started recently,
+                  # this PR is genuinely busy
+                  | { number, age: (.running | min) }
+                  | select(.age <= $maxage)
+                  | "\(.number) \(.age | floor)m" ]
+                | .[]'
+          )
+
+          if [ -n "$in_flight" ]; then
+            echo "Auto-merge PRs with CI in flight:"
+            echo "$in_flight"
+            echo "Standing down. The */30 cron retries once this drains."
+            echo "gated=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Anything pending but older than the cap is hung, not busy. Surface it
+          # -- proceeding past a hung check is deliberate, not an oversight.
+          gh pr list --repo "$REPO" --state open --base "$BASE" --limit 100 \
+            --json number,isDraft,autoMergeRequest,statusCheckRollup \
+          | jq -r --argjson maxage "$IN_FLIGHT_MAX_AGE_MINUTES" '
+              [ .[]
+                | select(.isDraft == false)
+                | select(.autoMergeRequest != null)
+                | { number,
+                    running: [ .statusCheckRollup[]?
+                               | select(.status == "QUEUED" or .status == "IN_PROGRESS"
+                                        or .state == "PENDING")
+                               | (.startedAt // .createdAt // empty)
+                               | (now - fromdateiso8601) / 60 ] }
+                | select(.running | length > 0)
+                | select((.running | min) > $maxage)
+                | "::warning::PR #\(.number) has a check pending for \((.running | min) | floor) minutes; treating it as hung, not in flight." ]
+              | .[]' || true
+
+          echo "No auto-merge PR has CI in flight."
+          echo "gated=false" >> "$GITHUB_OUTPUT"
+
       - name: Update one stale-but-passing PR
+        if: steps.gate.outputs.gated == 'false'
         run: |
           set -euo pipefail
 
@@ -167,6 +267,30 @@ jobs:
               echo "Failed to update PR #$n; skipping."
               echo "::endgroup::"
               continue
+            fi
+
+            # Do not exit until the update has actually produced queued/running
+            # checks. Between pressing "Update branch" and GitHub reporting the
+            # new run there is a window in which the next invocation would see an
+            # idle repo and update a SECOND PR -- which is exactly the concurrent
+            # churn the gate exists to prevent. Waiting here closes it.
+            settled=false
+            for attempt in $(seq 1 "$SETTLE_ATTEMPTS"); do
+              sleep "$SETTLE_SLEEP_SECONDS"
+              running=$(
+                gh pr view "$n" --repo "$REPO" --json statusCheckRollup \
+                  --jq '[ .statusCheckRollup[]?
+                          | select(.status == "QUEUED" or .status == "IN_PROGRESS"
+                                   or .state == "PENDING") ] | length'
+              ) || running=0
+              echo "settle attempt $attempt: $running check(s) queued/running on PR #$n"
+              if [ "$running" -gt 0 ]; then
+                settled=true
+                break
+              fi
+            done
+            if [ "$settled" != true ]; then
+              echo "::warning::PR #$n reported no queued checks after the settle window; the next run may pick up another PR."
             fi
 
             echo "Updated PR #$n. Done (one per run)."
