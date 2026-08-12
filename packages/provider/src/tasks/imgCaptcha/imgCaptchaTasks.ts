@@ -45,13 +45,17 @@ import {
 	type ProsopoConfigOutput,
 	type RequestHeaders,
 	ResultReason,
+	type Session,
 	SimdReadingsStage,
 	type UserCommitment,
 	isBlockingCaptchaResult,
 } from "@prosopo/types";
 import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import type { AccessRulesStorage } from "@prosopo/user-access-policy";
+import {
+	type AccessRulesStorage,
+	describeMatchedRule,
+} from "@prosopo/user-access-policy";
 import { at, extractData } from "@prosopo/util";
 import { randomAsHex, signatureVerify } from "@prosopo/util-crypto";
 import {
@@ -738,6 +742,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 		// perform a single batch write at the end.
 		const commitmentUpdates: Partial<UserCommitment> = {};
 		let failStatus: ResultReason | undefined;
+		// Set only by the access-policy branch below, and stamped onto the
+		// session at the end so the audit page can name the rule behind an
+		// ACCESS_POLICY_BLOCK.
+		let matchedRule: Session["matchedRule"];
 
 		// Check user access policies for hard blocks
 		if (userAccessRulesStorage) {
@@ -766,6 +774,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 						reason: ResultReason.ACCESS_POLICY_BLOCK,
 					};
 					failStatus = ResultReason.ACCESS_POLICY_BLOCK;
+					matchedRule = describeMatchedRule(blockPolicy);
 				}
 			} catch (error) {
 				logger.warn(() => ({
@@ -1150,6 +1159,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 						...(isBlockingCaptchaResult(CaptchaType.image, finalResult) && {
 							blocked: true,
 						}),
+						...(matchedRule && { matchedRule }),
 					},
 					true,
 				),

@@ -1176,6 +1176,82 @@ describe("ImgCaptchaManager", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(imgCaptchaManager as any).decisionMachineRunner.decide = originalDecide;
 		});
+
+		it("stamps the matched rule onto the session so the audit row can name it", async () => {
+			const userAccount = "userAccount";
+			const dappAccount = "dappAccount";
+			const commitmentId = "commitmentId";
+
+			const commitment: Partial<UserCommitment> = {
+				id: commitmentId,
+				userAccount,
+				dappAccount,
+				result: { status: CaptchaStatus.approved },
+				userSubmitted: true,
+				serverChecked: false,
+				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
+				ipAddress: {
+					lower: ipAddress.bigInt(),
+					upper: 0n,
+					type: IpAddressType.v4,
+				},
+				headers,
+				ja4: "ja4",
+				lastUpdatedTimestamp: new Date(),
+				sessionId,
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getDappUserCommitmentById as any).mockResolvedValue(commitment);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getSessionRecordBySessionId as any).mockResolvedValue(undefined);
+
+			// Stub the hard-block lookup rather than rebuilding the Redis
+			// fixture behind it — the assertion here is about what gets
+			// persisted, not about how the rule was found.
+			const originalCheckForHardBlock = imgCaptchaManager.checkForHardBlock;
+			imgCaptchaManager.checkForHardBlock = vi.fn().mockResolvedValue({
+				type: "block",
+				description: "deferred solver block",
+				deferToVerify: true,
+				asn: 205016,
+			});
+
+			try {
+				const result = await imgCaptchaManager.verifyImageCaptchaSolution(
+					userAccount,
+					dappAccount,
+					commitmentId,
+					mockEnv,
+					undefined, // maxVerifiedTime
+					undefined, // ip
+					undefined, // disallowWebView
+					false, // contextAwareEnabled
+					// Truthy storage triggers the checkForHardBlock branch;
+					// the stub above ignores whatever's passed here.
+					// biome-ignore lint/suspicious/noExplicitAny: test stub
+					{} as any,
+				);
+
+				expect(result.verified).toBe(false);
+				expect(db.updateSessionRecord).toHaveBeenCalledWith(
+					sessionId,
+					expect.objectContaining({
+						blocked: true,
+						matchedRule: expect.objectContaining({
+							policyType: "block",
+							description: "deferred solver block",
+							deferToVerify: true,
+							conditions: [{ field: "asn", value: "205016" }],
+						}),
+					}),
+					true,
+				);
+			} finally {
+				imgCaptchaManager.checkForHardBlock = originalCheckForHardBlock;
+			}
+		});
 	});
 
 	describe("verifyImageCaptchaSolution with spam email domain checking", () => {
