@@ -33,6 +33,7 @@ import { getRequestUserScope } from "../blacklistRequestInspector.js";
 import { recordCaptchaIssueError, recordCaptchaIssued } from "../metrics.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 import { buildPuzzleMaintenanceResponse } from "./maintenanceModeResponses.js";
+import { applyTrafficFilterAtRequestTime } from "./trafficFilterRequestTime.js";
 
 export default (
 	env: ProviderEnvironment,
@@ -175,7 +176,31 @@ export default (
 				);
 			}
 
-			const tolerance = clientSettings?.settings?.puzzleTolerance;
+			// Evaluate the site's trafficFilter against the connecting IP.
+			// A matched `block` policy short-circuits with 401; a matched
+			// `challenge` policy contributes puzzleTolerance overrides
+			// (lower tolerance = stricter accuracy).
+			const trafficVerdict = applyTrafficFilterAtRequestTime(
+				req.ipInfo,
+				clientSettings.settings?.trafficFilter,
+				req.logger,
+			);
+			if (trafficVerdict.kind === "block") {
+				return next(
+					new ProsopoApiError(trafficVerdict.reason, {
+						context: { code: 401, siteKey: dapp, user },
+						i18n: req.i18n,
+						logger: req.logger,
+					}),
+				);
+			}
+			const trafficPuzzleTolerance =
+				trafficVerdict.kind === "challenge"
+					? trafficVerdict.puzzleTolerance
+					: undefined;
+
+			const tolerance =
+				trafficPuzzleTolerance ?? clientSettings?.settings?.puzzleTolerance;
 			const challenge =
 				await tasks.puzzleCaptchaManager.getPuzzleCaptchaChallenge(
 					user,
