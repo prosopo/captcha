@@ -1,5 +1,92 @@
 # @prosopo/provider
 
+## 5.0.4
+### Patch Changes
+
+- 132e9e3: blacklistRequestInspector: return structured `{ error: { message, code } }` on
+  403 blocks with the requestId embedded (`Forbidden: <requestId>`), replacing
+  the plain-string `{ error: "Forbidden" }`. The deployed widget's error
+  extractor reads `result.error?.message` verbatim, so the FAQ-link banner now
+  shows `Forbidden: <request-uuid>` instead of falling through to the generic
+  "Cannot load CAPTCHA" — support can look up the blocking rule from the
+  requestId a user quotes. Purely a backend response shape change; the widget
+  already handles the structured object shape from the frictionless path.
+- a308b9b: blacklistRequestInspector: write `token: "blocked"` instead of `""` on blocked
+  sessions so the mongoose `required: true` validator on `Session.token` stops
+  rejecting the write. The empty-string sentinel was surfacing as
+  "Validation failed: token: Path `token` is required" spam on every access-policy
+  block and inflating API.PARSE_ERROR volume by ~3× on days with elevated block
+  rules.
+- 8386644: chore(deps-dev): bump undici from 6.27.0 to 6.28.0
+- 16dbab0: chore(deps): bump ip-address from 10.0.1 to 10.5.0
+  
+  The @angular/core and @angular/common bumps in the angular integration demo are
+  not listed here: that demo sits below the root `integration/*` workspace glob, so
+  changesets does not know it and errors on a changeset naming it.
+- 69c6982: Fix two failures on main.
+  
+  `biome check` was failing on three files from #3025 — two import orderings and one
+  line that fits on a single line. Formatting only, no behaviour change.
+  
+  `@prosopo/prosoponator-bot`'s test suite was failing to load with
+  `Cannot find module 'undici'`. `@actions/github@6.0.0` calls `require("undici")`
+  in `lib/internal/utils.js` but does not declare it as a dependency, relying on it
+  being hoisted. The lockfile only carried undici nested under
+  `@actions/http-client`, so nothing at the root of `node_modules` could resolve
+  it. Declaring `undici` on the bot hoists the same 5.29.0 to the root.
+  
+  This only reproduces in CI. Locally the captcha repo sits inside captcha-private,
+  whose root `node_modules` has an undici that Node finds by walking up out of the
+  submodule — so the resolution succeeds on a dev machine and fails on a standalone
+  checkout.
+- 9ec6cc4: Bind repeated log context once with `Logger.with` instead of re-attaching the same data on every log call (mongo `mongoUrl`, redis `url`/`name`, provider startup-cleanup `failedFuncName`, and IP validation `challengeIp`/`providedIp`).
+- 6d4bb65: Make the maintenance-mode verify response match the shape of a real one.
+  
+  The three `/verify/{image,pow,puzzle}` maintenance short-circuits returned only
+  `{ status: "ok", verified: true }`, dropping two fields a normal verify sends:
+  
+  - `status` is now the localised `API.USER_VERIFIED` string ("User verified")
+    rather than a bare `"ok"`. A real verify never returns `"ok"` on this field,
+    and integrations do match on it.
+  - `score` is now always sent, as `0`. It is normally tier-gated on the client
+    record (`canClientSeeScore`), which lives in Mongo — the thing maintenance
+    mode exists to work without — so it cannot be gated here. Paid-tier callers
+    that read the documented `score` field were receiving `undefined`, which
+    inverts a `score < threshold` test into a rejection of a user the provider had
+    just passed. `0` is the most-human end of the scale and matches what the AWS
+    verify handler already synthesises when a provider call times out.
+  
+  `reason` is failure-only and maintenance mode always passes, so it never
+  applied. `commitmentId` stays absent on image verifies — no commitment exists to
+  reference.
+- 063e69d: Add optional `g` field on `Session`.
+- Updated dependencies [16dbab0]
+- Updated dependencies [69c6982]
+- Updated dependencies [9091a78]
+- Updated dependencies [9ec6cc4]
+- Updated dependencies [d5e104b]
+- Updated dependencies [d7b93f1]
+- Updated dependencies [063e69d]
+- Updated dependencies [4c8114d]
+  - @prosopo/types@5.0.3
+  - @prosopo/user-access-policy@3.12.14
+  - @prosopo/util@3.3.6
+  - @prosopo/database@4.0.4
+  - @prosopo/locale@3.3.0
+  - @prosopo/env@3.6.27
+  - @prosopo/redis-client@1.0.32
+  - @prosopo/api-express-router@3.1.58
+  - @prosopo/types-database@5.0.3
+  - @prosopo/types-env@2.10.23
+  - @prosopo/api@4.0.3
+  - @prosopo/common@3.1.50
+  - @prosopo/datasets@3.1.59
+  - @prosopo/ipinfo@0.3.4
+  - @prosopo/keyring@2.9.66
+  - @prosopo/load-balancer@2.10.20
+  - @prosopo/logger@2.0.6
+  - @prosopo/api-route@2.6.55
+
 ## 5.0.3
 ### Patch Changes
 

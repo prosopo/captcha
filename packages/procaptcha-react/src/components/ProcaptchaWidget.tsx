@@ -20,6 +20,7 @@ import {
 	Checkbox,
 	Honeypot,
 	TestModeBanner,
+	isEventTrusted,
 	useProcaptcha,
 } from "@prosopo/procaptcha-common";
 import { ProcaptchaConfigSchema, type ProcaptchaProps } from "@prosopo/types";
@@ -187,7 +188,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 			<Checkbox
 				theme={theme}
 				onChange={async (event: React.MouseEvent | React.TouchEvent) => {
-					if (!event.isTrusted) {
+					if (!isEventTrusted(event)) {
 						return;
 					}
 

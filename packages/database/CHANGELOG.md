@@ -1,5 +1,37 @@
 # @prosopo/database
 
+## 4.0.4
+### Patch Changes
+
+- 69c6982: Fix two failures on main.
+  
+  `biome check` was failing on three files from #3025 — two import orderings and one
+  line that fits on a single line. Formatting only, no behaviour change.
+  
+  `@prosopo/prosoponator-bot`'s test suite was failing to load with
+  `Cannot find module 'undici'`. `@actions/github@6.0.0` calls `require("undici")`
+  in `lib/internal/utils.js` but does not declare it as a dependency, relying on it
+  being hoisted. The lockfile only carried undici nested under
+  `@actions/http-client`, so nothing at the root of `node_modules` could resolve
+  it. Declaring `undici` on the bot hoists the same 5.29.0 to the root.
+  
+  This only reproduces in CI. Locally the captcha repo sits inside captcha-private,
+  whose root `node_modules` has an undici that Node finds by walking up out of the
+  submodule — so the resolution succeeds on a dev machine and fails on a standalone
+  checkout.
+- 9ec6cc4: Bind repeated log context once with `Logger.with` instead of re-attaching the same data on every log call (mongo `mongoUrl`, redis `url`/`name`, provider startup-cleanup `failedFuncName`, and IP validation `challengeIp`/`providedIp`).
+- Updated dependencies [16dbab0]
+- Updated dependencies [9ec6cc4]
+- Updated dependencies [d5e104b]
+- Updated dependencies [063e69d]
+  - @prosopo/types@5.0.3
+  - @prosopo/user-access-policy@3.12.14
+  - @prosopo/util@3.3.6
+  - @prosopo/redis-client@1.0.32
+  - @prosopo/types-database@5.0.3
+  - @prosopo/common@3.1.50
+  - @prosopo/logger@2.0.6
+
 ## 4.0.3
 ### Patch Changes
 

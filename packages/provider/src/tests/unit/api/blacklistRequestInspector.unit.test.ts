@@ -817,6 +817,7 @@ describe("BlacklistRequestInspector.abortRequestForBlockedUsers", () => {
 			headers: {},
 			body: {},
 			logger: mockLogger,
+			requestId: "test-request-id",
 			...overrides,
 		}) as unknown as Request;
 
@@ -839,7 +840,13 @@ describe("BlacklistRequestInspector.abortRequestForBlockedUsers", () => {
 		);
 
 		expect(status).toHaveBeenCalledWith(403);
-		expect(json).toHaveBeenCalledWith({ error: "Forbidden" });
+		// Structured object so the widget's `result.error?.message` extractor
+		// renders `Forbidden: <requestId>` instead of falling through to
+		// "Cannot load CAPTCHA". requestId gives support a handle to trace
+		// the blocked session back to the matching rule.
+		expect(json).toHaveBeenCalledWith({
+			error: { message: "Forbidden: test-request-id", code: 403 },
+		});
 		expect(next).not.toHaveBeenCalled();
 	});
 

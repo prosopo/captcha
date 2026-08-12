@@ -44,6 +44,7 @@ export const getBotScore = async (
 		result.entropyWallClockOffsetMs;
 	const entropyMathRandomFirst: number | undefined =
 		result.entropyMathRandomFirst;
+	const g: string | undefined = result.g;
 
 	if (baseBotScore === undefined || Number.isNaN(baseBotScore)) {
 		return {
@@ -66,5 +67,6 @@ export const getBotScore = async (
 		entropyCryptoFingerprint,
 		entropyWallClockOffsetMs,
 		entropyMathRandomFirst,
+		g,
 	};
 };

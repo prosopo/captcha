@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import type { PuzzleEvent } from "@prosopo/types";
+import { type Theme, lightTheme } from "@prosopo/widget-skeleton";
 import { type ReactElement, act, createElement } from "react";
 import { type Root, createRoot } from "react-dom/client";
 import {
@@ -47,6 +48,7 @@ interface CanvasProps {
 	>;
 	showRetry: boolean;
 	submitting: boolean;
+	theme: Theme;
 }
 
 let container: HTMLDivElement;
@@ -63,6 +65,7 @@ const props = (overrides: Partial<CanvasProps> = {}): CanvasProps => ({
 	onComplete,
 	showRetry: false,
 	submitting: false,
+	theme: lightTheme,
 	...overrides,
 });
 

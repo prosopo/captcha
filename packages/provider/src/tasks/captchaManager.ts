@@ -210,6 +210,7 @@ export class CaptchaManager {
 		const needsEntropyCrypto = session.entropyCryptoFingerprint === undefined;
 		const needsEntropyWall = session.entropyWallClockOffsetMs === undefined;
 		const needsEntropyFirst = session.entropyMathRandomFirst === undefined;
+		const needsG = session.g === undefined;
 
 		if (
 			!needsSimd &&
@@ -217,7 +218,8 @@ export class CaptchaManager {
 			!needsEntropyMath &&
 			!needsEntropyCrypto &&
 			!needsEntropyWall &&
-			!needsEntropyFirst
+			!needsEntropyFirst &&
+			!needsG
 		) {
 			return session;
 		}
@@ -248,6 +250,7 @@ export class CaptchaManager {
 				origin.entropyMathRandomFirst !== undefined && {
 					entropyMathRandomFirst: origin.entropyMathRandomFirst,
 				}),
+			...(needsG && origin.g !== undefined && { g: origin.g }),
 		};
 	}
 

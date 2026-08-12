@@ -69,9 +69,9 @@ const CaptchaComponent = ({
 					maxHeight: "100%",
 					display: "flex",
 					flexDirection: "column",
-					border: "1px solid #dddddd",
-					boxShadow: "rgba(255, 255, 255, 0.2) 0px 0px 4px",
-					borderRadius: "4px",
+					border: `1px solid ${theme.palette.border}`,
+					boxShadow: theme.elevation.card,
+					borderRadius: theme.shape.card,
 					backgroundColor: theme.palette.background.default,
 					userSelect: "none",
 					touchAction: "none",
@@ -98,35 +98,44 @@ const CaptchaComponent = ({
 					>
 						<div
 							style={{
-								backgroundColor: theme.palette.primary.main,
+								backgroundColor: theme.palette.primaryContainer.main,
+								borderRadius: theme.shape.header,
 								width: "100%",
 								marginTop: fullSpacing,
 							}}
 						>
 							<div
 								style={{
-									padding: `${theme.spacing.half}px`,
+									padding: "12px 14px",
 									fontFamily: theme.font.fontFamily,
 								}}
 							>
+								{/* M3 "title medium" for the instruction, "body medium" for the
+								    supporting line — the type scale carries the hierarchy rather
+								    than ad-hoc weights. */}
 								<p
 									style={{
-										color: "#ffffff",
-										fontWeight: 700,
-										lineHeight: 1.5,
+										...theme.typography.titleMedium,
+										color: theme.palette.primaryContainer.contrastText,
+										margin: 0,
 									}}
 								>
 									{t("WIDGET.SELECT_ALL")}
 									{":"}
 									&nbsp;
-									<span>{`${captcha.target} `}</span>
+									<span
+										style={{
+											color: theme.palette.titleAccent,
+											fontWeight: 700,
+										}}
+									>{`${captcha.target} `}</span>
 								</p>
 								<p
 									style={{
-										color: "#ffffff",
-										fontWeight: 500,
-										lineHeight: 0.8,
-										fontSize: "0.8rem",
+										...theme.typography.bodyMedium,
+										// De-emphasis via the onSurfaceVariant role, not opacity.
+										color: theme.palette.onSurfaceVariant,
+										margin: "4px 0 0 0",
 									}}
 								>
 									{t("WIDGET.IF_NONE_CLICK_NEXT")}

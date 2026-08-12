@@ -1,5 +1,20 @@
 # @prosopo/types
 
+## 5.0.3
+### Patch Changes
+
+- 16dbab0: chore(deps): bump ip-address from 10.0.1 to 10.5.0
+  
+  The @angular/core and @angular/common bumps in the angular integration demo are
+  not listed here: that demo sits below the root `integration/*` workspace glob, so
+  changesets does not know it and errors on a changeset naming it.
+- 063e69d: Add optional `g` field on `Session`.
+- Updated dependencies [16dbab0]
+- Updated dependencies [9091a78]
+- Updated dependencies [d5e104b]
+  - @prosopo/util@3.3.6
+  - @prosopo/locale@3.3.0
+
 ## 5.0.2
 ### Patch Changes
 
