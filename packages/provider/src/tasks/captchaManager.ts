@@ -28,6 +28,7 @@ import {
 	type Session,
 	type SimdReadingsStage,
 	Tier,
+	TrafficFilterAction,
 	type UserCommitment,
 } from "@prosopo/types";
 import type {
@@ -898,7 +899,10 @@ export class CaptchaManager {
 	}
 
 	/**
-	 * Resolves the IP info to feed to `checkTrafficFilter` and runs the check.
+	 * Resolves the IP info to feed to `checkTrafficFilter` and runs the check
+	 * at submit time. Only `action: "block"` matches produce `isBlocked:true`;
+	 * `action: "challenge"` matches were already applied at request time and
+	 * are ignored here.
 	 *
 	 * - The captcha record already carries the IPInfoResponse from request
 	 *   time (ipInfoMiddleware → storeXxxRecord), so by default we reuse it
@@ -908,9 +912,10 @@ export class CaptchaManager {
 	 *   and may differ from the IP that originally requested the captcha.
 	 * - When the session carries a `dnsEvent`, its `peerIp` and `resolverIp`
 	 *   are enriched and passed alongside the primary IP.
-	 * - `blockAbuser` defaults to true so abusive networks are always
-	 *   blocked even when the site hasn't configured a trafficFilter.
-	 * - Returns `{ isBlocked: false }` if every filter flag is off, without
+	 * - The abuser category defaults to `{action:"block"}` so abusive
+	 *   networks are always blocked even when the site hasn't configured a
+	 *   trafficFilter.
+	 * - Returns `{ isBlocked: false }` if no category is active, without
 	 *   consulting the payload at all.
 	 *
 	 * Callers handle the "blocked" branch themselves (each verify path
@@ -924,10 +929,21 @@ export class CaptchaManager {
 		currentIp?: string,
 		enrichedDnsEvent?: EnrichedDnsEvent,
 	): Promise<TrafficCheckResult> {
-		const effective = { blockAbuser: true, ...trafficFilter };
-		const hasAny = Object.values(effective).some((v) => v);
+		const effective: Partial<ITrafficFilter> = {
+			abuser: { action: TrafficFilterAction.Block },
+			...trafficFilter,
+		};
+		const hasAny =
+			effective.vpn !== undefined ||
+			effective.proxy !== undefined ||
+			effective.tor !== undefined ||
+			effective.abuser !== undefined ||
+			effective.datacenter !== undefined ||
+			effective.mobile !== undefined ||
+			effective.satellite !== undefined ||
+			effective.crawler !== undefined;
 		if (!hasAny) {
-			return { isBlocked: false };
+			return { isBlocked: false, matches: [] };
 		}
 
 		const ipInfo = currentIp
