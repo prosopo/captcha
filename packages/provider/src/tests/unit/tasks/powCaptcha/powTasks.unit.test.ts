@@ -672,6 +672,21 @@ describe("PowCaptchaManager", () => {
 			);
 
 			expect(result.verified).toBe(false);
+			// The rule that did it is stamped onto the session, so the audit
+			// row for this verify-time block can name the policy rather than
+			// just showing ACCESS_POLICY_BLOCK. This is the `deferToVerify`
+			// landing site, where "why was I rejected?" is least obvious.
+			expect(db.updateSessionRecord).toHaveBeenCalledWith(
+				sessionId,
+				expect.objectContaining({
+					blocked: true,
+					matchedRule: expect.objectContaining({
+						policyType: AccessPolicyType.Block,
+						conditions: [{ field: "headHash", value: decryptedHeadHash }],
+					}),
+				}),
+				true,
+			);
 		});
 
 		it("should not block when access policy has captchaType (not a hard block)", async () => {
