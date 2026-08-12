@@ -1,5 +1,37 @@
 # @prosopo/procaptcha-pow
 
+## 2.10.30
+### Patch Changes
+
+- 729349e: Run the cypress suite in firefox as well as chrome whenever the PR is a release
+  PR, via a new cypress-firefox workflow. cypress.yml is untouched.
+  
+  The trusted-event checks scattered across the widget components now go through a
+  single `isEventTrusted()` helper in `@prosopo/procaptcha-common`. Behaviour is
+  unchanged: it still returns early for synthetic input, unless the bundle was
+  built with `PROSOPO_ALLOW_UNTRUSTED_EVENTS=1`, which only the firefox CI leg
+  sets. Production builds pin the define to `false`, so the branch is folded away
+  at build time and the allowance cannot reach a shipped bundle.
+  
+  The allowance exists because cypress-real-events dispatches input over the chrome
+  devtools protocol, which cypress exposes for chromium browsers only — on firefox
+  the specs fall back to cypress' own synthetic clicks.
+- Updated dependencies [729349e]
+- Updated dependencies [16dbab0]
+- Updated dependencies [b525956]
+- Updated dependencies [9091a78]
+- Updated dependencies [d5e104b]
+- Updated dependencies [063e69d]
+- Updated dependencies [8a4d6ad]
+  - @prosopo/procaptcha-common@2.11.23
+  - @prosopo/types@5.0.3
+  - @prosopo/util@3.3.6
+  - @prosopo/widget-skeleton@2.8.6
+  - @prosopo/locale@3.3.0
+  - @prosopo/api@4.0.3
+  - @prosopo/common@3.1.50
+  - @prosopo/fingerprint@2.7.23
+
 ## 2.10.29
 ### Patch Changes
 

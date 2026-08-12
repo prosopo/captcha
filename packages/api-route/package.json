@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/api-route",
-	"version": "2.6.54",
+	"version": "2.6.55",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"type": "module",
@@ -26,7 +26,7 @@
 		"test:watch": "NODE_ENV=${NODE_ENV:-test}; npx vitest watch --config ./vite.test.config.ts"
 	},
 	"dependencies": {
-		"@prosopo/logger": "2.0.5",
+		"@prosopo/logger": "2.0.6",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {

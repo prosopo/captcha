@@ -29,9 +29,9 @@
 	"devDependencies": {
 		"@emotion/cache": "11.11.0",
 		"@prosopo/config": "3.3.7",
-		"@prosopo/dotenv": "3.0.51",
-		"@prosopo/locale": "3.2.9",
-		"@prosopo/types": "5.0.2",
+		"@prosopo/dotenv": "3.0.52",
+		"@prosopo/locale": "3.3.0",
+		"@prosopo/types": "5.0.3",
 		"@types/node": "22.5.5",
 		"@vitest/coverage-v8": "4.1.10",
 		"concurrently": "9.0.1",

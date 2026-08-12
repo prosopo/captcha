@@ -1,5 +1,18 @@
 # @prosopo/types-database
 
+## 5.0.3
+### Patch Changes
+
+- 063e69d: Add optional `g` field on `Session`.
+- Updated dependencies [16dbab0]
+- Updated dependencies [9091a78]
+- Updated dependencies [063e69d]
+  - @prosopo/types@5.0.3
+  - @prosopo/user-access-policy@3.12.14
+  - @prosopo/locale@3.3.0
+  - @prosopo/common@3.1.50
+  - @prosopo/logger@2.0.6
+
 ## 5.0.2
 ### Patch Changes
 
