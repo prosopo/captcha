@@ -209,19 +209,10 @@ export default async function (
 				output: {
 					dir: path.resolve(dir, "dist/bundle"),
 					entryFileNames: `${bundleName}.bundle.js`,
-					// `build.minify: true` is NOT full minification here. Vite maps
-					// it to oxc, and for a library build in ESM format it passes
-					// rolldown `{ compress: true, mangle: true, codegen: false }`
-					// (vite/src/node/build.ts, buildOutputOptions). `codegen: false`
-					// keeps the pretty-printer on, so the shipped bundle came out
-					// compressed and mangled but still fully indented — the widget's
-					// critical path was 20% larger raw than it needed to be.
-					//
-					// Every frontend bundle here is a `lib` + `formats: ["es"]`
-					// build, so all of them hit that branch. Setting `output.minify`
-					// explicitly overrides it (the resolved output spreads `...output`
-					// last). Only turn it on for production so dev builds stay
-					// debuggable.
+					// For a lib + es build, Vite downgrades `build.minify: true` to
+					// `{ compress, mangle, codegen: false }`, which leaves the output
+					// pretty-printed. Set it here to get whitespace removal too;
+					// output options win over the build-level default.
 					...(isProduction
 						? {
 								minify: {
