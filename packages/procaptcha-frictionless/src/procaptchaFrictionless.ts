@@ -136,7 +136,9 @@ export const mountProcaptchaFrictionless = (
 
 		placeholder = mountCheckbox(slot, {
 			theme: "light" === config.theme ? lightTheme : darkTheme,
-			onChange: async () => {},
+			// Inert: this checkbox stands in until detection picks a solver, and
+			// clicking it must not start anything of its own.
+			onChange: () => undefined,
 			checked: false,
 			labelText: i18n.isInitialized ? i18n.t("WIDGET.I_AM_HUMAN") : "",
 			error: errorMessage,

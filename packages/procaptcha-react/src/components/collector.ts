@@ -90,6 +90,11 @@ export const mountCollector = (
 			emit();
 		},
 		destroy: () => {
+			// `startCollector` attaches its listeners to the dapp's enclosing form
+			// with anonymous handlers and returns nothing, so there is no way to
+			// detach them from here — the React version leaked them on unmount for
+			// the same reason. Removing the root is all this component can undo;
+			// giving `startCollector` a disposer is a change to @prosopo/procaptcha.
 			root.parentNode?.removeChild(root);
 		},
 	};
