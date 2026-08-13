@@ -1,5 +1,60 @@
 # @prosopo/server
 
+## 2.10.49
+### Patch Changes
+
+- Updated dependencies [0def557]
+  - @prosopo/types@5.1.0
+  - @prosopo/api@4.0.5
+  - @prosopo/keyring@2.9.68
+  - @prosopo/load-balancer@2.10.22
+
+## 2.10.48
+### Patch Changes
+
+- Updated dependencies [216f8cd]
+  - @prosopo/types@5.0.4
+  - @prosopo/api@4.0.4
+  - @prosopo/keyring@2.9.67
+  - @prosopo/load-balancer@2.10.21
+
+## 2.10.47
+### Patch Changes
+
+- Updated dependencies [16dbab0]
+- Updated dependencies [d5e104b]
+- Updated dependencies [063e69d]
+  - @prosopo/types@5.0.3
+  - @prosopo/util@3.3.6
+  - @prosopo/api@4.0.3
+  - @prosopo/common@3.1.50
+  - @prosopo/keyring@2.9.66
+  - @prosopo/load-balancer@2.10.20
+  - @prosopo/logger@2.0.6
+
+## 2.10.46
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+  - @prosopo/types@5.0.2
+  - @prosopo/api@4.0.2
+  - @prosopo/keyring@2.9.65
+  - @prosopo/load-balancer@2.10.19
+
+## 2.10.45
+### Patch Changes
+
+- 858dbaa: test(server): cover config env resolution and server edge paths
+- Updated dependencies [9fec7bd]
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/common@3.1.49
+  - @prosopo/types@5.0.1
+  - @prosopo/api@4.0.1
+  - @prosopo/logger@2.0.5
+  - @prosopo/keyring@2.9.64
+  - @prosopo/load-balancer@2.10.18
+
 ## 2.10.44
 ### Patch Changes
 

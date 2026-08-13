@@ -28,6 +28,7 @@ import {
 	CaptchaStatus,
 	type ClientMetaData,
 	type IPAddress,
+	type ISpamFilterRules,
 	type ITrafficFilter,
 	POW_SEPARATOR,
 	type PoWChallengeId,
@@ -35,11 +36,15 @@ import {
 	type RequestHeaders,
 	ResultReason,
 	SimdReadingsStage,
+	isBlockingCaptchaResult,
 	puzzleToleranceDefault,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import type { AccessRulesStorage } from "@prosopo/user-access-policy";
+import {
+	type AccessRulesStorage,
+	describeMatchedRule,
+} from "@prosopo/user-access-policy";
 import {
 	assertCoordsSafe,
 	at,
@@ -64,6 +69,7 @@ import {
 } from "../dnsEvent/enrichDnsEvent.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature } from "../powCaptcha/powTasksUtils.js";
+import { normaliseEmailForMatching } from "../spam/evaluateEmailSpamRules.js";
 import { validatePuzzleSolution } from "./puzzleTasksUtils.js";
 
 interface PuzzleCaptchaChallenge {
@@ -249,6 +255,12 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 					userSubmitted: true,
 					result: badSaltResult,
+					// Stamp `blocked=true` so downstream aggregations (portal
+					// Overview, audit search, etc.) can key off a single
+					// field. See `isBlockingCaptchaResult`.
+					...(isBlockingCaptchaResult(CaptchaType.puzzle, badSaltResult) && {
+						blocked: true,
+					}),
 				});
 			}
 			return false;
@@ -271,6 +283,9 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 					userSubmitted: true,
 					result: timeoutResult,
+					...(isBlockingCaptchaResult(CaptchaType.puzzle, timeoutResult) && {
+						blocked: true,
+					}),
 				});
 			}
 			return false;
@@ -306,6 +321,16 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				),
 			);
 		}
+
+		// Persist puzzleEvents unconditionally so the raw event trail survives
+		// even when the behavioural payload is absent or its decryption fails
+		// (missing bundle, ciphertext / key mismatch, etc.). Previously the
+		// puzzleEvents write was gated on decryption succeeding, so legitimate
+		// solves whose bundle couldn't be resolved lost the event trail AND
+		// tripped the "no-cache request with no behavioural data" DM rule.
+		await this.db.updatePuzzleCaptchaRecord(challenge, {
+			puzzleEvents,
+		});
 
 		// Process behavioral data if provided
 		if (behavioralData) {
@@ -349,11 +374,9 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 						d: decryptedData.deviceCapability,
 					};
 
-					// Store the packed data to database
 					await this.db.updatePuzzleCaptchaRecord(challenge, {
 						behavioralDataPacked: packedData,
 						deviceCapability: decryptedData.deviceCapability,
-						puzzleEvents,
 					});
 				}
 			} catch (error) {
@@ -363,11 +386,6 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				}));
 				// Don't fail the captcha if behavioral analysis fails
 			}
-		} else {
-			// Store puzzle events even without behavioral data
-			await this.db.updatePuzzleCaptchaRecord(challenge, {
-				puzzleEvents,
-			});
 		}
 
 		if (clientMetaData?.hp) {
@@ -391,6 +409,9 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 			await this.updateSessionRecordWithCache(linkedSessionId, {
 				userSubmitted: true,
 				result,
+				...(isBlockingCaptchaResult(CaptchaType.puzzle, result) && {
+					blocked: true,
+				}),
 			});
 			if (simdReadings) {
 				await this.decryptAndAttachSimdReadingsIfAbsent(
@@ -416,6 +437,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 	 * @param userAccessRulesStorage - storage for querying user access policies
 	 * @param email
 	 * @param spamEmailDomainCheckingEnabled
+	 * @param spamFilter
 	 * @param trafficFilter
 	 * @param storeMetadata - when true, persists the dapp-server-provided
 	 *   `email` on the captcha record for spam-rate analysis.
@@ -429,6 +451,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		userAccessRulesStorage?: AccessRulesStorage,
 		email?: string,
 		spamEmailDomainCheckingEnabled = false,
+		spamFilter?: ISpamFilterRules,
 		trafficFilter?: ITrafficFilter,
 		storeMetadata = false,
 	): Promise<{ verified: boolean; score?: number }> {
@@ -493,13 +516,19 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				status: CaptchaStatus.disapproved,
 				reason: ResultReason.TIMESTAMP_TOO_OLD,
 			};
+			const isBlocked = isBlockingCaptchaResult(
+				CaptchaType.puzzle,
+				disapprovedResult,
+			);
 			await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
 				result: disapprovedResult,
+				...(isBlocked && { blocked: true }),
 			});
 			if (challengeRecord.sessionId) {
 				await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 					serverChecked: true,
 					result: disapprovedResult,
+					...(isBlocked && { blocked: true }),
 				});
 			}
 			return notVerifiedResponse;
@@ -534,13 +563,24 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 						status: CaptchaStatus.disapproved,
 						reason: ResultReason.ACCESS_POLICY_BLOCK,
 					};
+					const isBlocked = isBlockingCaptchaResult(
+						CaptchaType.puzzle,
+						blockedResult,
+					);
 					await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
 						result: blockedResult,
+						...(isBlocked && { blocked: true }),
 					});
 					if (challengeRecord.sessionId) {
 						await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 							serverChecked: true,
 							result: blockedResult,
+							...(isBlocked && { blocked: true }),
+							// Name the rule behind the ACCESS_POLICY_BLOCK on the
+							// audit row. This path is where `deferToVerify` rules
+							// land, which is precisely where "why was I rejected?"
+							// is least obvious.
+							matchedRule: describeMatchedRule(blockPolicy),
 						});
 					}
 					return notVerifiedResponse;
@@ -563,11 +603,15 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 						msg: "Spam email domain detected in server puzzle verification",
 						data: { emailDomain },
 					}));
+					const spamResult = {
+						status: CaptchaStatus.disapproved,
+						reason: ResultReason.SPAM_EMAIL_DOMAIN,
+					};
 					await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
-						result: {
-							status: CaptchaStatus.disapproved,
-							reason: ResultReason.SPAM_EMAIL_DOMAIN,
-						},
+						result: spamResult,
+						...(isBlockingCaptchaResult(CaptchaType.puzzle, spamResult) && {
+							blocked: true,
+						}),
 					});
 					return notVerifiedResponse;
 				}
@@ -579,8 +623,51 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 			}
 		}
 
+		// Per-email submission-count check — see `imgCaptchaTasks` for the
+		// full rationale. Runs before the metadata write below so the
+		// count reflects PRIOR verified submissions only.
+		const maxEmailSubmissionCount =
+			spamFilter?.enabled && spamFilter.emailRules?.enabled
+				? spamFilter.emailRules.maxEmailSubmissionCount
+				: undefined;
+		let emailNormalised: string | undefined;
+		if (maxEmailSubmissionCount !== undefined && email && storeMetadata) {
+			emailNormalised = normaliseEmailForMatching(email);
+			if (emailNormalised) {
+				try {
+					const priorCount = await this.db.countCommitmentsByNormalisedEmail(
+						dappAccount,
+						emailNormalised,
+					);
+					if (priorCount >= maxEmailSubmissionCount) {
+						logger.info(() => ({
+							msg: "Email submission count exceeded in server puzzle verification",
+							data: { priorCount, maxEmailSubmissionCount },
+						}));
+						const spamCountResult = {
+							status: CaptchaStatus.disapproved,
+							reason: ResultReason.SPAM_EMAIL_COUNT_EXCEEDED,
+						};
+						await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
+							result: spamCountResult,
+							...(isBlockingCaptchaResult(
+								CaptchaType.puzzle,
+								spamCountResult,
+							) && { blocked: true }),
+						});
+						return notVerifiedResponse;
+					}
+				} catch (error) {
+					logger.warn(() => ({
+						msg: "Failed to check email submission count in server puzzle verification",
+						error,
+					}));
+				}
+			}
+		}
+
 		const sessionRecord = challengeRecord.sessionId
-			? await this.db.getSessionRecordBySessionId(challengeRecord.sessionId)
+			? await this.getSessionRecordWithOriginFallback(challengeRecord.sessionId)
 			: undefined;
 
 		const enrichedDnsEvent = await enrichDnsEvent(
@@ -614,13 +701,19 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 					status: CaptchaStatus.disapproved,
 					reason: check.reason,
 				};
+				const isBlocked = isBlockingCaptchaResult(
+					CaptchaType.puzzle,
+					blockedResult,
+				);
 				await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
 					result: blockedResult,
+					...(isBlocked && { blocked: true }),
 				});
 				if (challengeRecord.sessionId) {
 					await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 						serverChecked: true,
 						result: blockedResult,
+						...(isBlocked && { blocked: true }),
 					});
 				}
 				return notVerifiedResponse;
@@ -628,11 +721,15 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		}
 
 		// Persist dapp-server-provided metadata when the site opts in.
-		// Gated purely by `storeMetadata` — independent of the spam-email
-		// check above, which inspects the email but never writes it.
+		// Gated purely by `storeMetadata`; `emailNormalised` piggybacks on
+		// the same write so the per-email submission-count check has an
+		// indexed field to query against.
 		if (storeMetadata && email) {
 			await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
-				metadata: { email },
+				metadata: {
+					email,
+					emailNormalised: emailNormalised ?? normaliseEmailForMatching(email),
+				},
 			});
 		}
 
@@ -673,13 +770,19 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 						status: CaptchaStatus.disapproved,
 						reason: ResultReason.FAILED_IP_VALIDATION,
 					};
+					const isBlocked = isBlockingCaptchaResult(
+						CaptchaType.puzzle,
+						ipFailResult,
+					);
 					await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
 						result: ipFailResult,
+						...(isBlocked && { blocked: true }),
 					});
 					if (challengeRecord.sessionId) {
 						await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 							serverChecked: true,
 							result: ipFailResult,
+							...(isBlocked && { blocked: true }),
 						});
 					}
 					return notVerifiedResponse;
@@ -764,13 +867,16 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 					reason: (decision.reason ||
 						ResultReason.CAPTCHA_DECISION_MACHINE_DENIED) as ResultReason,
 				};
+				const isBlocked = isBlockingCaptchaResult(CaptchaType.puzzle, dmResult);
 				await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
 					result: dmResult,
+					...(isBlocked && { blocked: true }),
 				});
 				if (challengeRecord.sessionId) {
 					await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 						serverChecked: true,
 						result: dmResult,
+						...(isBlocked && { blocked: true }),
 					});
 				}
 				return notVerifiedResponse;

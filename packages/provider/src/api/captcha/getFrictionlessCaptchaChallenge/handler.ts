@@ -45,6 +45,10 @@ import {
 } from "../../metrics.js";
 import { isReservedTestSiteKey } from "../../testSiteKey.js";
 import { buildFrictionlessMaintenanceResponse } from "../maintenanceModeResponses.js";
+import {
+	applyTrafficFilterAtRequestTime,
+	handleFrictionlessTrafficFilter,
+} from "../trafficFilterRequestTime.js";
 import { handleAccessPolicy } from "./accessPolicy.js";
 import { DEFAULT_FRICTIONLESS_THRESHOLD } from "./constants.js";
 import { runDecisionMachine } from "./decisionMachine.js";
@@ -422,6 +426,11 @@ export default (
 				userSitekeyIpHash,
 				requestId: req.requestId,
 				logger: req.logger,
+				// Thread the client's detector session id through so the
+				// bypass paths (configured-captchaType + empty-pool pow
+				// fallback) can promote the resolved bundleId onto the
+				// session and enable later SIMD / BDP attach to decrypt.
+				...(detectorSessionId && { detectorSessionId }),
 				...(req.tcpToChelloUs !== undefined && {
 					tcpToChelloUs: req.tcpToChelloUs,
 				}),
@@ -497,6 +506,7 @@ export default (
 				entropyCryptoFingerprint,
 				entropyWallClockOffsetMs,
 				entropyMathRandomFirst,
+				g,
 				bundleId,
 			} = decryptedPayload;
 
@@ -600,6 +610,7 @@ export default (
 				...(entropyMathRandomFirst !== undefined && {
 					entropyMathRandomFirst,
 				}),
+				...(g !== undefined && { g }),
 				...(req.tcpToChelloUs !== undefined && {
 					tcpToChelloUs: req.tcpToChelloUs,
 				}),
@@ -665,6 +676,29 @@ export default (
 			if (accessPolicyOutcome.handled) return accessPolicyOutcome.response;
 			botScore = accessPolicyOutcome.botScore;
 			scoreComponents = accessPolicyOutcome.scoreComponents;
+
+			// Access policies are more targeted than trafficFilter, so any
+			// matched access policy has already dispatched above. Only fall
+			// through here when access policies didn't fire.
+			const trafficFilterVerdict = applyTrafficFilterAtRequestTime(
+				req.ipInfo,
+				clientRecord.settings?.trafficFilter,
+				req.logger,
+			);
+			const trafficFilterOutcome = await handleFrictionlessTrafficFilter(
+				{
+					verdict: trafficFilterVerdict,
+					frictionlessManager: tasks.frictionlessManager,
+					clientRecord,
+					userSitekeyIpHash,
+					dapp,
+					ipInfo: req.ipInfo,
+					flatHeaders,
+					logger: req.logger,
+				},
+				res,
+			);
+			if (trafficFilterOutcome.handled) return trafficFilterOutcome.response;
 
 			return await runDecisionMachine(
 				{

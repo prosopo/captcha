@@ -1,5 +1,79 @@
 # @prosopo/user-access-policy
 
+## 3.12.16
+### Patch Changes
+
+- Updated dependencies [0def557]
+  - @prosopo/types@5.1.0
+  - @prosopo/api@4.0.5
+
+## 3.12.15
+### Patch Changes
+
+- 216f8cd: Record the access rule that actually fired on the record it acted on, so the
+  audit page can name the exact policy behind a block rather than echoing its
+  optional free-text description.
+  
+  Access rules are ephemeral — client rules carry a TTL and are reaped by
+  Mongo's `expiry` index — so an audit row can't answer "which policy blocked
+  me?" by joining to the live rules collection: by the time anyone looks, the
+  rule is usually gone. `describeMatchedRule` snapshots the matched rule (policy
+  type, captcha type, `deferToVerify`, description, rule group, and its scope
+  conditions in record form) onto `Session.matchedRule` at enforcement time.
+  
+  Previously only the request-time block middleware recorded any rule identity,
+  and only as a hash, a field-name list and a description. It is now written by
+  every access-policy path: the block middleware, the frictionless entry (block,
+  auto-ban, forced captcha type, and score-only restrict alike), and the
+  verify-time hard-block check in the PoW / image / puzzle flows — which is where
+  `deferToVerify` rules land, and where "why was I rejected?" was least obvious.
+  
+  `checkForHardBlock` now returns the whole `AccessRule` rather than just its
+  policy half; the runtime value was always the full rule.
+- Updated dependencies [216f8cd]
+  - @prosopo/types@5.0.4
+  - @prosopo/api@4.0.4
+
+## 3.12.14
+### Patch Changes
+
+- 16dbab0: chore(deps): bump ip-address from 10.0.1 to 10.5.0
+  
+  The @angular/core and @angular/common bumps in the angular integration demo are
+  not listed here: that demo sits below the root `integration/*` workspace glob, so
+  changesets does not know it and errors on a changeset naming it.
+- Updated dependencies [16dbab0]
+- Updated dependencies [9ec6cc4]
+- Updated dependencies [d5e104b]
+- Updated dependencies [063e69d]
+  - @prosopo/types@5.0.3
+  - @prosopo/util@3.3.6
+  - @prosopo/redis-client@1.0.32
+  - @prosopo/api@4.0.3
+  - @prosopo/common@3.1.50
+  - @prosopo/logger@2.0.6
+  - @prosopo/api-route@2.6.55
+
+## 3.12.13
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+  - @prosopo/types@5.0.2
+  - @prosopo/api@4.0.2
+
+## 3.12.12
+### Patch Changes
+
+- Updated dependencies [9fec7bd]
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/common@3.1.49
+  - @prosopo/types@5.0.1
+  - @prosopo/api@4.0.1
+  - @prosopo/logger@2.0.5
+  - @prosopo/api-route@2.6.54
+  - @prosopo/redis-client@1.0.31
+
 ## 3.12.11
 ### Patch Changes
 

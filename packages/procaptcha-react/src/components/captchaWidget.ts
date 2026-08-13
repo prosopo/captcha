@@ -20,9 +20,10 @@ import {
 	clearElement,
 	createElement,
 	createSvgElement,
+	isEventTrusted,
 } from "@prosopo/procaptcha-common";
 import type { Captcha, HashedItem } from "@prosopo/types";
-import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
+import { type Theme, darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 
 export interface CaptchaWidgetProps {
 	challenge: Captcha;
@@ -54,8 +55,16 @@ const imageStyle: StyleMap = {
 
 const CHECK_ICON_PATH = "M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z";
 
+// A selected tile shrinks slightly and rounds up a step, so the overlay and
+// its badge read as a deliberate state rather than a flat wash.
+const selectionStyle = (theme: Theme, selected: boolean): StyleMap => ({
+	borderRadius: selected ? theme.shape.tileSelected : theme.shape.tile,
+	transform: selected ? "scale(0.9)" : "none",
+});
+
 interface Tile {
 	readonly hash: string;
+	readonly image: HTMLImageElement;
 	readonly overlay: HTMLElement;
 }
 
@@ -105,7 +114,9 @@ export const mountCaptchaWidget = (
 				overflow: "hidden",
 				borderStyle: "solid",
 				borderWidth: "1px",
-				borderColor: theme.palette.grey[300],
+				borderColor: theme.palette.tile.border,
+				transition:
+					"transform 200ms cubic-bezier(0.2, 0, 0, 1), border-radius 200ms",
 			},
 			attributes: {
 				src: item.data,
@@ -126,15 +137,19 @@ export const mountCaptchaWidget = (
 
 		const icon = createSvgElement("svg", {
 			style: {
-				backgroundColor: "transparent",
+				// rounded "secondary container" badge holding the tick
+				backgroundColor: theme.palette.checkbox.fill,
 				// img must be displayed as block otherwise gets a bottom whitespace border
 				display: "block",
-				// how big the overlay icon is
-				width: "35%",
-				height: "35%",
+				// how big the overlay badge is
+				width: "34px",
+				height: "34px",
+				padding: "7px",
+				borderRadius: "50%",
+				boxSizing: "border-box",
 				transition: "fill 200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
 				userSelect: "none",
-				fill: "currentcolor",
+				fill: theme.palette.checkbox.tick,
 			},
 			attributes: {
 				focusable: "false",
@@ -163,7 +178,8 @@ export const mountCaptchaWidget = (
 				alignItems: "center",
 				justifyContent: "center",
 				// make bg half opacity, i.e. shadowing the item's img
-				backgroundColor: "rgba(0,0,0,0.5)",
+				backgroundColor: theme.palette.overlay,
+				borderRadius: theme.shape.tileSelected,
 				visibility: "hidden",
 			},
 			children: [icon],
@@ -185,7 +201,7 @@ export const mountCaptchaWidget = (
 		// clientX/clientY — never `touches` — so there is one set of coordinates
 		// to read, not three.
 		teardown.addEventListener(clickable, "click", (event: Event) => {
-			if (!event.isTrusted) {
+			if (!isEventTrusted(event)) {
 				return;
 			}
 			const mouseEvent = event as MouseEvent;
@@ -198,7 +214,7 @@ export const mountCaptchaWidget = (
 		});
 		grid.appendChild(cell);
 
-		return { hash, overlay };
+		return { hash, image, overlay };
 	};
 
 	const rebuild = () => {
@@ -210,13 +226,14 @@ export const mountCaptchaWidget = (
 	};
 
 	const applySelection = () => {
+		const theme = "light" === props.themeColor ? lightTheme : darkTheme;
 		for (const tile of tiles) {
+			const selected = props.solution.some(
+				(entry: [string, number, number]) => entry[0] === tile.hash,
+			);
+			applyStyles(tile.image, selectionStyle(theme, selected));
 			applyStyles(tile.overlay, {
-				visibility: props.solution.some(
-					(selected: [string, number, number]) => selected[0] === tile.hash,
-				)
-					? "visible"
-					: "hidden",
+				visibility: selected ? "visible" : "hidden",
 			});
 		}
 	};

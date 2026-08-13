@@ -43,6 +43,7 @@
 		"INVALID_BODY": "유효하지 않은 본문",
 		"PARSE_ERROR": "요청 구문 분석 오류",
 		"SPAM_EMAIL_RULE": "스팸 필터 규칙에 의해 이메일 주소가 차단되었습니다",
+		"SPAM_EMAIL_COUNT_EXCEEDED": "이 이메일 주소에서 너무 많은 제출이 있었습니다",
 		"VPN_BLOCKED": "이 사이트에서는 VPN 연결의 요청이 허용되지 않습니다",
 		"PROXY_BLOCKED": "이 사이트에서는 프록시 서버의 요청이 허용되지 않습니다",
 		"TOR_BLOCKED": "이 사이트에서는 Tor 출구 노드의 요청이 허용되지 않습니다",

@@ -33,6 +33,7 @@ import {
 	type UserScope,
 	type UserScopeRecord,
 	classifyOs,
+	describeMatchedRule,
 	makeAccessRuleHash,
 	userScopeInput,
 } from "@prosopo/user-access-policy";
@@ -457,8 +458,17 @@ export class BlacklistRequestInspector {
 			// (blocked IP / JA4 / user / country / ASN), a request with no IP, or
 			// a fail-closed middleware error - is a 403 Forbidden, not a 401
 			// Unauthorized: the client isn't lacking credentials, it is denied
-			// access.
-			res.status(403).json({ error: "Forbidden" });
+			// access. Body must be a structured `{ message, code }` object
+			// (not a plain string) so the widget's `result.error?.message`
+			// extractor picks it up — a plain string falls through to the
+			// generic "Cannot load CAPTCHA" fallback. Surfacing the
+			// requestId lets support quote it back on tickets.
+			res.status(403).json({
+				error: {
+					message: `Forbidden: ${request.requestId ?? "unknown"}`,
+					code: 403,
+				},
+			});
 			return;
 		}
 
@@ -647,8 +657,11 @@ export class BlacklistRequestInspector {
 			sessionId: `blocked-${randomUUID()}`,
 			createdAt: new Date(),
 			// Sentinel values for schema-required fields the blocked request
-			// never reached the point of populating.
-			token: "",
+			// never reached the point of populating. `token` must be non-empty:
+			// mongoose treats "" as missing on required String, and the
+			// resulting "Validation failed: token: Path `token` is required"
+			// spam floods the error stream and shows as API.PARSE_ERROR volume.
+			token: "blocked",
 			score: 1,
 			threshold: 0,
 			scoreComponents: { baseScore: 1 },
@@ -666,10 +679,14 @@ export class BlacklistRequestInspector {
 				status: CaptchaStatus.disapproved,
 				reason: ResultReason.ACCESS_POLICY_BLOCK,
 			},
-			// Rule identity — the whole point of writing this record.
+			// Rule identity — the whole point of writing this record. The three
+			// flat fields drive the Traffic page's rule-type grouping;
+			// `matchedRule` carries the rule itself so the audit page can name
+			// the exact policy (and its conditions) long after the rule expires.
 			ruleHash,
 			ruleType,
 			ruleDescription,
+			matchedRule: describeMatchedRule(accessPolicy),
 			// blocked + deleted are stamped inside storeBlockedSession so
 			// the synthetic record is unmistakably a block-middleware
 			// artefact and can never be picked up by the captcha flow.

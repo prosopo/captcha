@@ -28,6 +28,15 @@ export const imageMaxRoundsDefault = 32;
 export const contextAwareThresholdDefault = 0.7;
 export const puzzleToleranceDefault = 15;
 
+// Field-level schemas hoisted so `TrafficFilterSchema` per-category
+// challenge policies validate captcha parameters with the same bounds as
+// the site-wide defaults on `ClientSettingsSchema`. Do not redefine these
+// bounds elsewhere — reuse the hoisted schemas.
+export const powDifficultyFieldSchema = number().positive().min(1).max(10);
+export const imageThresholdFieldSchema = number().min(0).max(1);
+export const imageMaxRoundsFieldSchema = number().int().min(2);
+export const puzzleToleranceFieldSchema = number().int().min(5).max(1000);
+
 // IP Validation Rules
 export enum IPValidationAction {
 	Allow = "allow",
@@ -174,6 +183,12 @@ export const EmailSpamRulesSchema = object({
 		.max(MAX_CUSTOM_REGEX_PATTERNS)
 		.optional()
 		.default([]),
+	// Maximum number of previously server-checked captchas that may carry the
+	// same normalised email (dots collapsed for gmail, `+tag` stripped
+	// everywhere) before further submissions from that address are rejected.
+	// Requires `storeMetadata` to be on so the normalised email is persisted
+	// alongside each verified commitment. Undefined disables the check.
+	maxEmailSubmissionCount: number().int().min(1).optional(),
 });
 
 export const SpamFilterRulesSchema = object({
@@ -183,33 +198,55 @@ export const SpamFilterRulesSchema = object({
 
 export const trafficFilterAbuserScoreThresholdDefault = 0.5;
 
-// Operators almost always want `blockDatacenter` to catch scraping/automation
-// traffic but not legitimate consumer relays that exit from datacenter IPs.
-// Entries match case-insensitively against `datacenterName`, `providerName`,
-// or `asnOrganization` — upstream populates `datacenter.datacenter` only for
-// curated named ranges, so the providerName / asnOrganization fallback is
-// needed to reach generic CDN and cloud-provider IPs.
+// Operators almost always want the datacenter category to catch
+// scraping/automation traffic but not legitimate consumer relays that exit
+// from datacenter IPs. Entries match case-insensitively against
+// `datacenterName`, `providerName`, or `asnOrganization` — upstream
+// populates `datacenter.datacenter` only for curated named ranges, so the
+// providerName / asnOrganization fallback is needed to reach generic CDN
+// and cloud-provider IPs.
 const MAX_DATACENTER_ALLOWLIST_ENTRIES = 50;
 const MAX_DATACENTER_ALLOWLIST_ENTRY_LENGTH = 128;
 
+export enum TrafficFilterAction {
+	Block = "block",
+	Challenge = "challenge",
+}
+
+export const TrafficFilterActionSchema = z.nativeEnum(TrafficFilterAction);
+
+// Per-category policy. When `action === "challenge"`, the optional captcha
+// fields override the site-wide `ClientSettingsSchema` defaults for that
+// request (same override semantics as `AccessPolicy`). Field validators
+// are reused verbatim from the site-wide settings so bounds stay in sync.
+export const TrafficCategoryPolicySchema = object({
+	action: TrafficFilterActionSchema,
+	captchaType: CaptchaTypeSpec.optional(),
+	powDifficulty: powDifficultyFieldSchema.optional(),
+	solvedImagesCount: imageMaxRoundsFieldSchema.optional(),
+	puzzleTolerance: puzzleToleranceFieldSchema.optional(),
+});
+
+export type ITrafficCategoryPolicy = output<typeof TrafficCategoryPolicySchema>;
+
 export const TrafficFilterSchema = object({
-	blockVpn: boolean().optional().default(false),
-	blockProxy: boolean().optional().default(false),
-	blockTor: boolean().optional().default(false),
-	blockAbuser: boolean().optional().default(true),
+	vpn: TrafficCategoryPolicySchema.optional(),
+	proxy: TrafficCategoryPolicySchema.optional(),
+	tor: TrafficCategoryPolicySchema.optional(),
+	abuser: TrafficCategoryPolicySchema.optional(),
 	abuserScoreThreshold: number()
 		.min(0)
 		.max(1)
 		.optional()
 		.default(trafficFilterAbuserScoreThresholdDefault),
-	blockDatacenter: boolean().optional().default(false),
+	datacenter: TrafficCategoryPolicySchema.optional(),
 	datacenterNameAllowlist: array(
 		string().min(1).max(MAX_DATACENTER_ALLOWLIST_ENTRY_LENGTH),
 	)
 		.max(MAX_DATACENTER_ALLOWLIST_ENTRIES)
 		.optional(),
 	// Counterpart to `datacenterNameAllowlist`: any entry here forces the
-	// datacenter block for a matching name, overriding both the
+	// datacenter rule for a matching name, overriding both the
 	// `providerType === "isp"` bypass and any allowlist entry for the same
 	// name. Useful for named providers that upstream classifies as ISP but
 	// operators want treated as datacenter (for example IP-leasing platforms
@@ -229,9 +266,9 @@ export const TrafficFilterSchema = object({
 	// datacenter or high-abuser) trip the rule despite the visitor being
 	// a real user on a real network.
 	skipExtrasOnValidDnsPath: boolean().optional().default(true),
-	blockMobile: boolean().optional().default(false),
-	blockSatellite: boolean().optional().default(false),
-	blockCrawler: boolean().optional().default(false),
+	mobile: TrafficCategoryPolicySchema.optional(),
+	satellite: TrafficCategoryPolicySchema.optional(),
+	crawler: TrafficCategoryPolicySchema.optional(),
 });
 
 export type IEmailSpamRules = output<typeof EmailSpamRulesSchema>;
@@ -285,20 +322,13 @@ export const ClientSettingsSchema = object({
 		.max(1)
 		.optional()
 		.default(frictionlessThresholdDefault),
-	powDifficulty: number()
-		.positive()
-		.min(1)
-		.max(10)
+	powDifficulty: powDifficultyFieldSchema
 		.optional()
 		.default(powDifficultyDefault),
-	imageThreshold: number()
-		.min(0)
-		.max(1)
+	imageThreshold: imageThresholdFieldSchema
 		.optional()
 		.default(imageThresholdDefault),
-	imageMaxRounds: number()
-		.int()
-		.min(2)
+	imageMaxRounds: imageMaxRoundsFieldSchema
 		.optional()
 		.default(imageMaxRoundsDefault),
 	// Detector score at or above which the frictionless flow blocks the
@@ -310,10 +340,7 @@ export const ClientSettingsSchema = object({
 	// canvas diagonal (~360 px on a 300×200 canvas) so end-to-end tests
 	// can raise it high enough that a scripted release anywhere on the
 	// canvas passes. Real sites should never need more than a few tens.
-	puzzleTolerance: number()
-		.int()
-		.min(5)
-		.max(1000)
+	puzzleTolerance: puzzleToleranceFieldSchema
 		.optional()
 		.default(puzzleToleranceDefault),
 	ipValidationRules: IPValidationRulesSchema.optional(),

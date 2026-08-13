@@ -20,6 +20,7 @@ import {
 	createElement,
 } from "@prosopo/procaptcha-common";
 import type { PuzzleEvent } from "@prosopo/types";
+import type { Theme } from "@prosopo/widget-skeleton";
 
 export interface PuzzleCanvasProps {
 	originX: number;
@@ -33,6 +34,7 @@ export interface PuzzleCanvasProps {
 	) => void;
 	showRetry: boolean;
 	submitting: boolean;
+	theme: Theme;
 }
 
 const CONTAINER_WIDTH = 300;
@@ -75,8 +77,6 @@ export const mountPuzzleCanvas = (
 			width: `${TARGET_SIZE}px`,
 			height: `${TARGET_SIZE}px`,
 			borderRadius: "50%",
-			border: "2px dashed rgba(74, 144, 217, 0.6)",
-			backgroundColor: "rgba(74, 144, 217, 0.08)",
 			boxSizing: "border-box",
 		},
 	});
@@ -87,7 +87,6 @@ export const mountPuzzleCanvas = (
 			width: `${PIECE_SIZE}px`,
 			height: `${PIECE_SIZE}px`,
 			borderRadius: "50%",
-			background: "radial-gradient(circle at 40% 40%, #6ab0ff, #4a90d9)",
 		},
 	});
 
@@ -107,13 +106,9 @@ export const mountPuzzleCanvas = (
 			position: "relative",
 			width: `${CONTAINER_WIDTH}px`,
 			height: `${CONTAINER_HEIGHT}px`,
-			background:
-				"linear-gradient(135deg, #e8eaf6 0%, #c5cae9 50%, #e8eaf6 100%)",
-			borderRadius: "0 0 8px 8px",
+			borderRadius: "0 0 20px 20px",
 			overflow: "hidden",
 			userSelect: "none",
-			boxShadow:
-				"0px 11px 15px -7px rgba(0,0,0,0.2), 0px 24px 38px 3px rgba(0,0,0,0.14), 0px 9px 46px 8px rgba(0,0,0,0.12)",
 			transition: "opacity 0.2s ease",
 		},
 		children: [target, piece],
@@ -121,18 +116,13 @@ export const mountPuzzleCanvas = (
 
 	const instruction = createElement("div", {
 		style: {
-			backgroundColor: "#fff",
-			borderRadius: "8px 8px 0 0",
+			borderRadius: "20px 20px 0 0",
 			padding: "12px 20px",
 			width: `${CONTAINER_WIDTH}px`,
 			boxSizing: "border-box",
 			textAlign: "center",
-			fontFamily:
-				'-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
 			fontSize: "14px",
 			fontWeight: 500,
-			boxShadow:
-				"0px 11px 15px -7px rgba(0,0,0,0.2), 0px 24px 38px 3px rgba(0,0,0,0.14), 0px 9px 46px 8px rgba(0,0,0,0.12)",
 			transition: "color 0.3s ease, border-color 0.3s ease",
 		},
 	});
@@ -174,17 +164,23 @@ export const mountPuzzleCanvas = (
 
 	const applyPieceChrome = () => {
 		applyStyles(piece, {
+			background: props.theme.palette.puzzle.pieceGradient,
 			cursor: props.submitting ? "default" : dragging ? "grabbing" : "grab",
-			boxShadow: dragging
-				? "0 4px 12px rgba(74, 144, 217, 0.5)"
-				: "0 2px 6px rgba(74, 144, 217, 0.3)",
+			// Shadowless drag feedback: an outline ring in place of a lifted drop
+			// shadow.
+			outline: dragging
+				? `3px solid ${props.theme.palette.puzzle.targetBorder}`
+				: "none",
+			outlineOffset: "2px",
 			transition: dragging
 				? "none"
-				: "box-shadow 0.2s ease, left 0.3s ease, top 0.3s ease",
+				: "outline 0.2s ease, left 0.3s ease, top 0.3s ease",
 		});
 	};
 
 	const render = () => {
+		const { theme } = props;
+		const { puzzle } = theme.palette;
 		applyStyles(root, {
 			backgroundColor: visible ? "rgba(0, 0, 0, 0.4)" : "rgba(0, 0, 0, 0)",
 		});
@@ -197,16 +193,25 @@ export const mountPuzzleCanvas = (
 			? "Not quite — try again"
 			: "Drag the piece to the target";
 		applyStyles(instruction, {
-			color: props.showRetry ? "#dc3545" : "#333",
+			backgroundColor: theme.palette.surface,
+			fontFamily: theme.font.fontFamily,
+			color: props.showRetry
+				? theme.palette.error.main
+				: theme.palette.onSurface,
 			borderBottom: `2px solid ${
-				props.showRetry ? "rgba(220, 53, 69, 0.4)" : "transparent"
+				props.showRetry ? theme.palette.error.main : "transparent"
 			}`,
 		});
 		applyStyles(area, {
+			// Material 3 purple tonal puzzle surface + affordances (mode-specific
+			// values come from the theme's puzzle tokens).
+			background: `linear-gradient(135deg, ${theme.palette.surface} 0%, ${theme.palette.primaryContainer.main} 50%, ${theme.palette.surface} 100%)`,
 			opacity: props.submitting ? 0.6 : 1,
 			pointerEvents: props.submitting ? "none" : "auto",
 		});
 		applyStyles(target, {
+			border: `2px dashed ${puzzle.targetBorder}`,
+			backgroundColor: puzzle.targetFill,
 			left: `${props.targetX - TARGET_SIZE / 2}px`,
 			top: `${props.targetY - TARGET_SIZE / 2}px`,
 		});

@@ -93,12 +93,17 @@ const buildEnv = (db?: MockDb): ProviderEnvironment => {
 			unlock: vi.fn(),
 		} as never,
 	);
-	env.logger = {
+	// `with` returns a child logger and cleanup() logs through the result, so
+	// the stub has to hand back something loggable. Returning the same object
+	// keeps the child's calls on the same spies.
+	const logger = {
 		debug: vi.fn(),
 		info: vi.fn(),
 		warn: vi.fn(),
 		error: vi.fn(),
-	} as never;
+		with: vi.fn(() => logger),
+	};
+	env.logger = logger as never;
 	if (db) {
 		env.db = db as never;
 	}

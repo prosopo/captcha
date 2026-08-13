@@ -1,5 +1,73 @@
 # @prosopo/env
 
+## 3.6.29
+### Patch Changes
+
+- Updated dependencies [0def557]
+  - @prosopo/types@5.1.0
+  - @prosopo/database@4.0.6
+  - @prosopo/ipinfo@0.3.6
+  - @prosopo/keyring@2.9.68
+  - @prosopo/types-env@2.10.25
+
+## 3.6.28
+### Patch Changes
+
+- Updated dependencies [216f8cd]
+  - @prosopo/types@5.0.4
+  - @prosopo/database@4.0.5
+  - @prosopo/types-env@2.10.24
+  - @prosopo/ipinfo@0.3.5
+  - @prosopo/keyring@2.9.67
+
+## 3.6.27
+### Patch Changes
+
+- 9ec6cc4: Bind repeated log context once with `Logger.with` instead of re-attaching the same data on every log call (mongo `mongoUrl`, redis `url`/`name`, provider startup-cleanup `failedFuncName`, and IP validation `challengeIp`/`providedIp`).
+- Updated dependencies [16dbab0]
+- Updated dependencies [69c6982]
+- Updated dependencies [9ec6cc4]
+- Updated dependencies [063e69d]
+- Updated dependencies [4c8114d]
+  - @prosopo/types@5.0.3
+  - @prosopo/database@4.0.4
+  - @prosopo/types-env@2.10.23
+  - @prosopo/common@3.1.50
+  - @prosopo/ipinfo@0.3.4
+  - @prosopo/keyring@2.9.66
+  - @prosopo/logger@2.0.6
+
+## 3.6.26
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+  - @prosopo/database@4.0.3
+  - @prosopo/types@5.0.2
+  - @prosopo/types-env@2.10.22
+  - @prosopo/ipinfo@0.3.3
+  - @prosopo/keyring@2.9.65
+
+## 3.6.25
+### Patch Changes
+
+- Updated dependencies [1fba42e]
+  - @prosopo/database@4.0.2
+
+## 3.6.24
+### Patch Changes
+
+- 38396b4: test(env): cover environment accessors, readiness paths and provider cleanup
+- Updated dependencies [9fec7bd]
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/common@3.1.49
+  - @prosopo/types@5.0.1
+  - @prosopo/logger@2.0.5
+  - @prosopo/database@4.0.1
+  - @prosopo/ipinfo@0.3.2
+  - @prosopo/keyring@2.9.64
+  - @prosopo/types-env@2.10.21
+
 ## 3.6.23
 ### Patch Changes
 

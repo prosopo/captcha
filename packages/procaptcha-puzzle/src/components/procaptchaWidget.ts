@@ -23,6 +23,7 @@ import {
 	createElement,
 	createProcaptchaState,
 	createRenderScheduler,
+	isEventTrusted,
 	mountCheckbox,
 	mountHoneypot,
 } from "@prosopo/procaptcha-common";
@@ -154,6 +155,7 @@ export const mountProcaptchaPuzzleWidget = (
 		},
 		showRetry,
 		submitting: "submitting" === puzzlePhase,
+		theme: "light" === config.theme ? lightTheme : darkTheme,
 	});
 
 	const runErrorEffect = () => {
@@ -230,7 +232,7 @@ export const mountProcaptchaPuzzleWidget = (
 			// solution salt records the entry-point telemetry.
 			let x = 0;
 			let y = 0;
-			if (!event.isTrusted) {
+			if (!isEventTrusted(event)) {
 				// Don't capture coordinates for non-trusted events
 			} else if ("touches" in event && event.touches.length > 0) {
 				const touch = event.touches[0];

@@ -23,6 +23,7 @@ import {
 	createElement,
 	createProcaptchaState,
 	createRenderScheduler,
+	isEventTrusted,
 	mountCheckbox,
 	mountHoneypot,
 	mountTestModeBanner,
@@ -180,7 +181,7 @@ export const mountProcaptchaImageWidget = (
 		onChange: async (
 			event: MouseEvent | KeyboardEvent | TouchEvent,
 		): Promise<void> => {
-			if (!event.isTrusted) {
+			if (!isEventTrusted(event)) {
 				return;
 			}
 			if (loading) {

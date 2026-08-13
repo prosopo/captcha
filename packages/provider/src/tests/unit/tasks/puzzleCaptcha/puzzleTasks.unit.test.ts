@@ -121,6 +121,7 @@ describe("PuzzleCaptchaManager", () => {
 			getSessionRecordBySessionId: vi.fn(),
 			updateSessionRecord: vi.fn(),
 			getSpamEmailDomain: vi.fn(),
+			countCommitmentsByNormalisedEmail: vi.fn(),
 		} as unknown as IProviderDatabase;
 
 		pair = {
@@ -403,6 +404,229 @@ describe("PuzzleCaptchaManager", () => {
 			expect(db.updatePuzzleCaptchaRecord).toHaveBeenCalledWith(
 				a.challenge,
 				expect.objectContaining({ puzzleEvents: [{ x: 1, y: 1, t: 1 }] }),
+			);
+		});
+
+		// Happy path with a valid decrypt: both puzzleEvents AND
+		// behavioralDataPacked (+ deviceCapability) must land on the record.
+		// The current implementation writes these in two separate
+		// updatePuzzleCaptchaRecord calls (puzzleEvents up front, then the
+		// packed payload after decrypt succeeds); this test asserts on the
+		// combined mock-call history so a regression that drops either write
+		// — or accidentally re-gates puzzleEvents behind the decrypt branch —
+		// surfaces immediately.
+		it("persists both puzzleEvents and behavioralDataPacked on a successful decrypt", async () => {
+			const a = buildArgs();
+			const challengeRecord: Partial<PuzzleCaptchaStored> = {
+				challenge: a.challenge,
+				dappAccount: a.dappAccount,
+				userAccount: a.userAccount,
+				targetX: 100,
+				targetY: 100,
+				tolerance: 15,
+				ipAddress: getCompositeIpAddress(a.ipAddress),
+				result: { status: CaptchaStatus.pending },
+				sessionId: "session-1",
+			};
+
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord(challengeRecord),
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+			vi.mocked(validatePuzzleSolution).mockReturnValue(true);
+
+			// Bundle resolves and decrypt returns unpacked collectors.
+			// The exact PoolBundleDecrypt shape isn't relevant to the assertion;
+			// only that resolve returns *something* truthy so decryptBehavioralData
+			// isn't short-circuited on the missing-bundle branch.
+			vi.spyOn(
+				puzzleCaptchaManager,
+				"resolveBundleBySessionId",
+			).mockResolvedValue({
+				key: "test-key",
+				innerConfig: {},
+			} as unknown as Awaited<
+				ReturnType<typeof puzzleCaptchaManager.resolveBundleBySessionId>
+			>);
+			vi.spyOn(puzzleCaptchaManager, "decryptBehavioralData").mockResolvedValue(
+				{
+					collector1: [{ x: 10, y: 20, timestamp: 100 }],
+					collector2: [],
+					collector3: [{ x: 15, y: 25, timestamp: 200 }],
+					deviceCapability: "desktop",
+				} as unknown as Awaited<
+					ReturnType<typeof puzzleCaptchaManager.decryptBehavioralData>
+				>,
+			);
+
+			const trail = [
+				{ x: 5, y: 5, t: 5 },
+				{ x: 6, y: 5, t: 6 },
+			];
+
+			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
+				a.challenge,
+				a.providerSignature,
+				102,
+				101,
+				trail,
+				1000,
+				a.userSignature,
+				a.ipAddress,
+				a.headers,
+				"encrypted-blob",
+			);
+
+			expect(result).toBe(true);
+
+			const calls = vi.mocked(db.updatePuzzleCaptchaRecord).mock.calls;
+
+			// puzzleEvents landed on some call. Guards against a regression that
+			// re-gates the raw-trail write behind the decrypt-success branch.
+			expect(
+				calls.some(
+					([challenge, patch]) =>
+						challenge === a.challenge &&
+						Array.isArray(patch.puzzleEvents) &&
+						patch.puzzleEvents.length === trail.length,
+				),
+				"puzzleEvents must be written on a successful decrypt",
+			).toBe(true);
+
+			// behavioralDataPacked (+ deviceCapability) landed on some call.
+			// Also verifies the c1/c2/c3 shape survived the pack transform.
+			expect(
+				calls.some(
+					([challenge, patch]) =>
+						challenge === a.challenge &&
+						patch.behavioralDataPacked !== undefined &&
+						patch.behavioralDataPacked.c1.length === 1 &&
+						patch.behavioralDataPacked.c2.length === 0 &&
+						patch.behavioralDataPacked.c3.length === 1 &&
+						patch.behavioralDataPacked.d === "desktop" &&
+						patch.deviceCapability === "desktop",
+				),
+				"behavioralDataPacked must be written on a successful decrypt",
+			).toBe(true);
+		});
+
+		// Regression: puzzleEvents must persist even when a behavioural payload
+		// was sent but decryption returns null (e.g. resolveBundleBySessionId
+		// can't find the bundleId promoted onto the session record). The old
+		// code path gated the puzzleEvents write on the successful-decrypt
+		// branch, so a bundle-lookup miss dropped the raw event trail AND left
+		// the DM to fire "no-cache request with no behavioural data" on an
+		// otherwise legitimate submission.
+		it("persists puzzleEvents even when behavioural decryption returns null", async () => {
+			const a = buildArgs();
+			const challengeRecord: Partial<PuzzleCaptchaStored> = {
+				challenge: a.challenge,
+				dappAccount: a.dappAccount,
+				userAccount: a.userAccount,
+				targetX: 100,
+				targetY: 100,
+				tolerance: 15,
+				ipAddress: getCompositeIpAddress(a.ipAddress),
+				result: { status: CaptchaStatus.pending },
+				sessionId: "session-1",
+			};
+
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord(challengeRecord),
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+			vi.mocked(validatePuzzleSolution).mockReturnValue(true);
+
+			// Stub the inherited bundle lookup + decrypt so the failure branch
+			// is deterministic without needing a real detector bundle wired up.
+			vi.spyOn(
+				puzzleCaptchaManager,
+				"resolveBundleBySessionId",
+			).mockResolvedValue(undefined);
+			vi.spyOn(puzzleCaptchaManager, "decryptBehavioralData").mockResolvedValue(
+				null,
+			);
+
+			const trail = [
+				{ x: 1, y: 1, t: 1 },
+				{ x: 2, y: 1, t: 2 },
+			];
+
+			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
+				a.challenge,
+				a.providerSignature,
+				102,
+				101,
+				trail,
+				1000,
+				a.userSignature,
+				a.ipAddress,
+				a.headers,
+				"encrypted-blob",
+			);
+
+			expect(result).toBe(true);
+			expect(db.updatePuzzleCaptchaRecord).toHaveBeenCalledWith(
+				a.challenge,
+				expect.objectContaining({ puzzleEvents: trail }),
+			);
+			// And no behavioralDataPacked write happened — decryption failed,
+			// so there was nothing to persist there.
+			const calls = vi.mocked(db.updatePuzzleCaptchaRecord).mock.calls;
+			expect(calls.some(([, patch]) => "behavioralDataPacked" in patch)).toBe(
+				false,
+			);
+		});
+
+		// Regression: same guarantee when decryptBehavioralData throws (bad
+		// ciphertext, key mismatch, etc.) rather than returning null.
+		it("persists puzzleEvents even when behavioural decryption throws", async () => {
+			const a = buildArgs();
+			const challengeRecord: Partial<PuzzleCaptchaStored> = {
+				challenge: a.challenge,
+				dappAccount: a.dappAccount,
+				userAccount: a.userAccount,
+				targetX: 100,
+				targetY: 100,
+				tolerance: 15,
+				ipAddress: getCompositeIpAddress(a.ipAddress),
+				result: { status: CaptchaStatus.pending },
+				sessionId: "session-1",
+			};
+
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord(challengeRecord),
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+			vi.mocked(validatePuzzleSolution).mockReturnValue(true);
+
+			vi.spyOn(
+				puzzleCaptchaManager,
+				"resolveBundleBySessionId",
+			).mockResolvedValue(undefined);
+			vi.spyOn(puzzleCaptchaManager, "decryptBehavioralData").mockRejectedValue(
+				new Error("bad ciphertext"),
+			);
+
+			const trail = [{ x: 3, y: 3, t: 3 }];
+
+			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
+				a.challenge,
+				a.providerSignature,
+				102,
+				101,
+				trail,
+				1000,
+				a.userSignature,
+				a.ipAddress,
+				a.headers,
+				"encrypted-blob",
+			);
+
+			expect(result).toBe(true);
+			expect(db.updatePuzzleCaptchaRecord).toHaveBeenCalledWith(
+				a.challenge,
+				expect.objectContaining({ puzzleEvents: trail }),
 			);
 		});
 
@@ -787,6 +1011,57 @@ describe("PuzzleCaptchaManager", () => {
 			}
 		});
 
+		it("stamps the matched rule onto the session so the audit row can name it", async () => {
+			const sessionId = "puzzle-blocked-session-id";
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord({
+					challenge,
+					dappAccount,
+					userAccount: "user",
+					result: { status: CaptchaStatus.approved },
+					serverChecked: false,
+					headers: { a: "1" },
+					sessionId,
+				}),
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+
+			const originalCheckForHardBlock = puzzleCaptchaManager.checkForHardBlock;
+			puzzleCaptchaManager.checkForHardBlock = vi.fn().mockResolvedValue({
+				type: "block",
+				description: "deferred solver block",
+				deferToVerify: true,
+				countryCode: "CN",
+			});
+
+			try {
+				await puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+					dappAccount,
+					challenge,
+					1000,
+					mockEnv,
+					undefined, // ip
+					// biome-ignore lint/suspicious/noExplicitAny: test stub
+					{} as any,
+				);
+
+				expect(db.updateSessionRecord).toHaveBeenCalledWith(
+					sessionId,
+					expect.objectContaining({
+						blocked: true,
+						matchedRule: expect.objectContaining({
+							policyType: "block",
+							description: "deferred solver block",
+							deferToVerify: true,
+							conditions: [{ field: "countryCode", value: "CN" }],
+						}),
+					}),
+				);
+			} finally {
+				puzzleCaptchaManager.checkForHardBlock = originalCheckForHardBlock;
+			}
+		});
+
 		it("forwards every session-derived field into the decide() input", async () => {
 			const sessionId = "puzzle-session-id";
 			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
@@ -862,6 +1137,172 @@ describe("PuzzleCaptchaManager", () => {
 			expect(input.webView).toBe(sessionRecord.webView);
 			expect(input.iFrame).toBe(sessionRecord.iFrame);
 			expect(typeof input.score).toBe("number");
+		});
+	});
+
+	describe("serverVerifyPuzzleCaptchaSolution with maxEmailSubmissionCount", () => {
+		// Positional invoke helper — the puzzle signature now takes a
+		// spamFilter between spamEmailDomainCheckingEnabled and
+		// trafficFilter. The count check block sits below the domain
+		// check and needs `storeMetadata` on.
+		const invoke = async ({
+			challenge,
+			dappAccount,
+			email,
+			maxEmailSubmissionCount,
+			storeMetadata,
+		}: {
+			challenge: string;
+			dappAccount: string;
+			email: string | undefined;
+			maxEmailSubmissionCount: number | undefined;
+			storeMetadata: boolean;
+		}) =>
+			puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+				dappAccount,
+				challenge,
+				60_000,
+				mockEnv,
+				undefined, // ip
+				undefined, // userAccessRulesStorage
+				email,
+				false, // spamEmailDomainCheckingEnabled
+				maxEmailSubmissionCount !== undefined
+					? {
+							enabled: true,
+							emailRules: {
+								enabled: true,
+								maxEmailSubmissionCount,
+								normaliseGmail: false,
+								useDefaultPatterns: false,
+								customRegexBlocklist: [],
+							},
+						}
+					: undefined,
+				undefined, // trafficFilter
+				storeMetadata,
+			);
+
+		const seedApprovedPuzzle = (challenge: string, dappAccount: string) => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getPuzzleCaptchaRecordByChallenge as any).mockResolvedValue(
+				asPuzzleRecord({
+					challenge: challenge as PoWChallengeId,
+					dappAccount,
+					userAccount: "user",
+					result: { status: CaptchaStatus.approved },
+					serverChecked: false,
+					headers: { a: "1" },
+				}),
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.updatePuzzleCaptchaRecord as any).mockResolvedValue(undefined);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(verifyRecency as any).mockImplementation(() => true);
+			mockDecisionMachine(
+				vi.fn().mockResolvedValue({
+					decision: "allow",
+					reason: undefined,
+					score: 1,
+				}),
+			);
+		};
+
+		it("rejects with SPAM_EMAIL_COUNT_EXCEEDED at the cap", async () => {
+			const dappAccount = "dappAccount";
+			const challenge = "1___u___dappAccount";
+			seedApprovedPuzzle(challenge, dappAccount);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.countCommitmentsByNormalisedEmail as any).mockResolvedValue(2);
+
+			const result = await invoke({
+				challenge,
+				dappAccount,
+				email: "alice+promo@gmail.com",
+				maxEmailSubmissionCount: 2,
+				storeMetadata: true,
+			});
+
+			expect(result.verified).toBe(false);
+			expect(db.countCommitmentsByNormalisedEmail).toHaveBeenCalledWith(
+				dappAccount,
+				"alice@gmail.com",
+			);
+			expect(db.updatePuzzleCaptchaRecord).toHaveBeenCalledWith(
+				challenge,
+				expect.objectContaining({
+					result: expect.objectContaining({
+						status: CaptchaStatus.disapproved,
+						reason: ResultReason.SPAM_EMAIL_COUNT_EXCEEDED,
+					}),
+				}),
+			);
+		});
+
+		it("allows below the cap and writes emailNormalised to metadata", async () => {
+			const dappAccount = "dappAccount";
+			const challenge = "2___u___dappAccount";
+			seedApprovedPuzzle(challenge, dappAccount);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.countCommitmentsByNormalisedEmail as any).mockResolvedValue(1);
+
+			const result = await invoke({
+				challenge,
+				dappAccount,
+				email: "alice+a@gmail.com",
+				maxEmailSubmissionCount: 3,
+				storeMetadata: true,
+			});
+
+			expect(result.verified).toBe(true);
+			// Puzzle writes metadata via a dedicated call; that call must
+			// carry both the raw and normalised email so subsequent counts
+			// can find this record.
+			expect(db.updatePuzzleCaptchaRecord).toHaveBeenCalledWith(
+				challenge,
+				expect.objectContaining({
+					metadata: expect.objectContaining({
+						email: "alice+a@gmail.com",
+						emailNormalised: "alice@gmail.com",
+					}),
+				}),
+			);
+		});
+
+		it("skips the count query when storeMetadata is off", async () => {
+			const dappAccount = "dappAccount";
+			const challenge = "3___u___dappAccount";
+			seedApprovedPuzzle(challenge, dappAccount);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.countCommitmentsByNormalisedEmail as any).mockResolvedValue(99);
+
+			const result = await invoke({
+				challenge,
+				dappAccount,
+				email: "alice@gmail.com",
+				maxEmailSubmissionCount: 3,
+				storeMetadata: false,
+			});
+
+			expect(result.verified).toBe(true);
+			expect(db.countCommitmentsByNormalisedEmail).not.toHaveBeenCalled();
+		});
+
+		it("skips the count query when maxEmailSubmissionCount is undefined", async () => {
+			const dappAccount = "dappAccount";
+			const challenge = "4___u___dappAccount";
+			seedApprovedPuzzle(challenge, dappAccount);
+
+			const result = await invoke({
+				challenge,
+				dappAccount,
+				email: "alice@gmail.com",
+				maxEmailSubmissionCount: undefined,
+				storeMetadata: true,
+			});
+
+			expect(result.verified).toBe(true);
+			expect(db.countCommitmentsByNormalisedEmail).not.toHaveBeenCalled();
 		});
 	});
 });

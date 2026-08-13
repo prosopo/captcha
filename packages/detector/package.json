@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/detector",
-	"version": "3.5.15",
+	"version": "3.5.20",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"engines": {
@@ -20,15 +20,16 @@
 		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
 		"typecheck": "tsc --project tsconfig.types.json"
 	},
 	"type": "module",
 	"dependencies": {
-		"@prosopo/types": "5.0.0",
+		"@prosopo/types": "5.1.0",
 		"dotenv": "16.4.5"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.6",
+		"@prosopo/config": "3.3.8",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "4.1.10",
 		"concurrently": "9.0.1",

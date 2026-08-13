@@ -26,6 +26,7 @@ import {
 	type CaptchaSolution,
 	CaptchaStates,
 	CaptchaStatus,
+	CaptchaType,
 	type CompositeIpAddress,
 	ContextType,
 	type Dataset,
@@ -55,6 +56,7 @@ import {
 	StoredStatusNames,
 	type UserCommitment,
 	UserCommitmentSchema,
+	isBlockingCaptchaResult,
 } from "@prosopo/types";
 import type { SessionRecord, StoredSession } from "@prosopo/types-database";
 import {
@@ -973,6 +975,11 @@ export class ProviderDatabase
 			userSignature,
 			lastUpdatedTimestamp: timestamp,
 			pendingStage: true,
+			// Mirror the result classification onto a dedicated field so
+			// downstream consumers (portal Overview, audit search, exports)
+			// can filter blocked PoW records without decoding result.reason.
+			// See `isBlockingCaptchaResult` — any Disapproved PoW is a block.
+			blocked: isBlockingCaptchaResult(CaptchaType.pow, result),
 			...(coords && { coords }),
 		};
 		if (userSubmitted) {
@@ -1264,6 +1271,10 @@ export class ProviderDatabase
 			userSignature,
 			lastUpdatedTimestamp: timestamp,
 			pendingStage: true,
+			// See the matching comment on `updatePowCaptchaRecordResult` —
+			// mirrors the block classification onto the puzzle record so
+			// either collection can be queried the same way.
+			blocked: isBlockingCaptchaResult(CaptchaType.puzzle, result),
 			...(coords && { coords }),
 			...(userSubmitted && { submittedAtTimestamp: timestamp }),
 			...(isDisapproved && { failedAtTimestamp: timestamp }),
@@ -1488,6 +1499,34 @@ export class ProviderDatabase
 	}
 
 	/**
+	 * Counts server-checked captcha records across image (`commitment`),
+	 * PoW and puzzle collections whose `metadata.emailNormalised` matches.
+	 * Each collection carries the same partial index
+	 * (`spamEmailCount_partial`) so all three counts hit index-only scans.
+	 * The three counts are summed — one dapp can mix captcha types over
+	 * time, and per-email rate limits should apply across the whole
+	 * verified surface, not per-type.
+	 */
+	async countCommitmentsByNormalisedEmail(
+		dappAccount: string,
+		emailNormalised: string,
+	): Promise<number> {
+		if (!emailNormalised) return 0;
+		const tables = this.getTables();
+		const filter = {
+			dappAccount,
+			serverChecked: true,
+			"metadata.emailNormalised": emailNormalised,
+		};
+		const [imgCount, powCount, puzzleCount] = await Promise.all([
+			tables.commitment.countDocuments(filter),
+			tables.powcaptcha.countDocuments(filter),
+			tables.puzzlecaptcha.countDocuments(filter),
+		]);
+		return imgCount + powCount + puzzleCount;
+	}
+
+	/**
 	 * @description Get Dapp User PoW captcha commitments that have not been counted towards the client's total
 	 * @param {number} limit Maximum number of records to return
 	 * @param {number} skip Number of records to skip (for pagination)
@@ -1688,7 +1727,9 @@ export class ProviderDatabase
 				solvedImagesCount: 1,
 				userSitekeyIpHash: 1,
 				simdReadings: 1,
+				bundleId: 1,
 				dnsEvent: 1,
+				originSessionId: 1,
 				currentUrl: 1,
 				iframeUrl: 1,
 				// captchaType is required by the peek-before-consume path
@@ -2323,11 +2364,18 @@ export class ProviderDatabase
 			const result: CaptchaResult = { status: CaptchaStatus.approved };
 			const updateDoc: Pick<
 				StoredCaptcha,
-				"result" | "lastUpdatedTimestamp" | "coords" | "pendingStage"
+				| "result"
+				| "lastUpdatedTimestamp"
+				| "coords"
+				| "pendingStage"
+				| "blocked"
 			> = {
 				result,
 				lastUpdatedTimestamp: new Date(),
 				pendingStage: true,
+				// Approve always clears blocked to false — see the matching
+				// comment on `updatePowCaptchaRecordResult`.
+				blocked: isBlockingCaptchaResult(CaptchaType.image, result),
 				...(coords ? { coords } : {}),
 			};
 			const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
@@ -2369,13 +2417,26 @@ export class ProviderDatabase
 		coords?: [number, number][][],
 	): Promise<void> {
 		try {
+			const result: CaptchaResult = {
+				status: CaptchaStatus.disapproved,
+				reason,
+			};
 			const updateDoc: Pick<
 				StoredCaptcha,
-				"result" | "lastUpdatedTimestamp" | "coords" | "pendingStage"
+				| "result"
+				| "lastUpdatedTimestamp"
+				| "coords"
+				| "pendingStage"
+				| "blocked"
 			> = {
-				result: { status: CaptchaStatus.disapproved, reason },
+				result,
 				lastUpdatedTimestamp: new Date(),
 				pendingStage: true,
+				// See the matching comment on `updatePowCaptchaRecordResult`.
+				// Image disapprovals for user solution failures
+				// (CAPTCHA_INVALID_SOLUTION) are NOT blocks — see
+				// `isBlockingCaptchaResult`.
+				blocked: isBlockingCaptchaResult(CaptchaType.image, result),
 				...(coords ? { coords } : {}),
 			};
 

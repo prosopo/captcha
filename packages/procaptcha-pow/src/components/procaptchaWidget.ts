@@ -23,6 +23,7 @@ import {
 	createElement,
 	createProcaptchaState,
 	createRenderScheduler,
+	isEventTrusted,
 	mountCheckbox,
 	mountHoneypot,
 } from "@prosopo/procaptcha-common";
@@ -147,7 +148,7 @@ export const mountProcaptchaPowWidget = (
 			// synthesised click can't seed the solution salt.
 			let x = 0;
 			let y = 0;
-			if (!event.isTrusted) {
+			if (!isEventTrusted(event)) {
 				// Don't capture coordinates for non-trusted events
 			} else if ("touches" in event && event.touches.length > 0) {
 				const touch = event.touches[0];

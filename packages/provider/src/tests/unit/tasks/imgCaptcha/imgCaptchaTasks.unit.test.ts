@@ -182,6 +182,7 @@ describe("ImgCaptchaManager", () => {
 			getClientRecord: vi.fn(),
 			getSolutionByCaptchaId: vi.fn(),
 			storeUserImageCaptchaSolution: vi.fn(),
+			countCommitmentsByNormalisedEmail: vi.fn(),
 		} as unknown as IProviderDatabase;
 
 		pair = {
@@ -1112,6 +1113,7 @@ describe("ImgCaptchaManager", () => {
 				sessionId,
 				{
 					serverChecked: true,
+					blocked: true,
 					result: {
 						status: CaptchaStatus.disapproved,
 						reason: "Suspicious",
@@ -1173,6 +1175,82 @@ describe("ImgCaptchaManager", () => {
 
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(imgCaptchaManager as any).decisionMachineRunner.decide = originalDecide;
+		});
+
+		it("stamps the matched rule onto the session so the audit row can name it", async () => {
+			const userAccount = "userAccount";
+			const dappAccount = "dappAccount";
+			const commitmentId = "commitmentId";
+
+			const commitment: Partial<UserCommitment> = {
+				id: commitmentId,
+				userAccount,
+				dappAccount,
+				result: { status: CaptchaStatus.approved },
+				userSubmitted: true,
+				serverChecked: false,
+				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
+				ipAddress: {
+					lower: ipAddress.bigInt(),
+					upper: 0n,
+					type: IpAddressType.v4,
+				},
+				headers,
+				ja4: "ja4",
+				lastUpdatedTimestamp: new Date(),
+				sessionId,
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getDappUserCommitmentById as any).mockResolvedValue(commitment);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getSessionRecordBySessionId as any).mockResolvedValue(undefined);
+
+			// Stub the hard-block lookup rather than rebuilding the Redis
+			// fixture behind it — the assertion here is about what gets
+			// persisted, not about how the rule was found.
+			const originalCheckForHardBlock = imgCaptchaManager.checkForHardBlock;
+			imgCaptchaManager.checkForHardBlock = vi.fn().mockResolvedValue({
+				type: "block",
+				description: "deferred solver block",
+				deferToVerify: true,
+				asn: 205016,
+			});
+
+			try {
+				const result = await imgCaptchaManager.verifyImageCaptchaSolution(
+					userAccount,
+					dappAccount,
+					commitmentId,
+					mockEnv,
+					undefined, // maxVerifiedTime
+					undefined, // ip
+					undefined, // disallowWebView
+					false, // contextAwareEnabled
+					// Truthy storage triggers the checkForHardBlock branch;
+					// the stub above ignores whatever's passed here.
+					// biome-ignore lint/suspicious/noExplicitAny: test stub
+					{} as any,
+				);
+
+				expect(result.verified).toBe(false);
+				expect(db.updateSessionRecord).toHaveBeenCalledWith(
+					sessionId,
+					expect.objectContaining({
+						blocked: true,
+						matchedRule: expect.objectContaining({
+							policyType: "block",
+							description: "deferred solver block",
+							deferToVerify: true,
+							conditions: [{ field: "asn", value: "205016" }],
+						}),
+					}),
+					true,
+				);
+			} finally {
+				imgCaptchaManager.checkForHardBlock = originalCheckForHardBlock;
+			}
 		});
 	});
 
@@ -1743,6 +1821,7 @@ describe("ImgCaptchaManager", () => {
 				sessionId,
 				{
 					serverChecked: true,
+					blocked: true,
 					result: {
 						status: CaptchaStatus.disapproved,
 						reason: "API.DISALLOWED_WEBVIEW",
@@ -1837,6 +1916,175 @@ describe("ImgCaptchaManager", () => {
 				(imgCaptchaManager as any).decisionMachineRunner.decide =
 					originalDecide;
 			}
+		});
+	});
+
+	describe("verifyImageCaptchaSolution with maxEmailSubmissionCount", () => {
+		// Full param positions for verifyImageCaptchaSolution — the count
+		// check runs after the pattern rules and needs storeMetadata=true.
+		// Local helper keeps each test focused on the count semantics rather
+		// than the 14-argument call site.
+		const invoke = async ({
+			email,
+			maxEmailSubmissionCount,
+			storeMetadata,
+			commitmentId,
+		}: {
+			email: string | undefined;
+			maxEmailSubmissionCount: number | undefined;
+			storeMetadata: boolean;
+			commitmentId: string;
+		}) =>
+			imgCaptchaManager.verifyImageCaptchaSolution(
+				"userAccount",
+				"dappAccount",
+				commitmentId,
+				mockEnv,
+				undefined, // maxVerifiedTime
+				undefined, // ip
+				undefined, // disallowWebView
+				undefined, // contextAwareEnabled
+				undefined, // userAccessRulesStorage
+				email,
+				false, // spamEmailDomainCheckingEnabled — off, isolates the count check
+				maxEmailSubmissionCount !== undefined
+					? {
+							enabled: true,
+							emailRules: {
+								enabled: true,
+								maxEmailSubmissionCount,
+								normaliseGmail: false,
+								useDefaultPatterns: false,
+								customRegexBlocklist: [],
+							},
+						}
+					: undefined,
+				undefined, // trafficFilter
+				storeMetadata,
+			);
+
+		// Seeds a solved-image commitment in-memory. The count-check block
+		// runs before the decisionMachine, so it fires regardless of
+		// whether the DM would approve, but a stubbed "allow" DM keeps
+		// the happy path assertions clean.
+		const seedApprovedCommitment = (commitmentId: string) => {
+			const ipAddress = getIPAddress("1.1.1.1");
+			const commitment: Partial<UserCommitment> = {
+				id: commitmentId,
+				userAccount: "userAccount",
+				dappAccount: "dappAccount",
+				providerAccount: "providerAccount",
+				datasetId: "datasetId",
+				result: { status: CaptchaStatus.approved },
+				userSignature: "",
+				userSubmitted: true,
+				serverChecked: false,
+				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
+				ipAddress: {
+					lower: ipAddress.bigInt(),
+					upper: 0n,
+					type: IpAddressType.v4,
+				},
+				headers: { a: "1", b: "2", c: "3" },
+				ja4: "ja4",
+				lastUpdatedTimestamp: new Date(),
+			};
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getDappUserCommitmentById as any).mockResolvedValue(commitment);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.markDappUserCommitmentsChecked as any).mockResolvedValue(undefined);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.approveDappUserCommitment as any).mockResolvedValue(undefined);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.updateDappUserCommitment as any).mockResolvedValue(undefined);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(imgCaptchaManager as any).decisionMachineRunner.decide = vi
+				.fn()
+				.mockResolvedValue({ decision: "allow" });
+		};
+
+		it("rejects with SPAM_EMAIL_COUNT_EXCEEDED when the prior count equals the cap", async () => {
+			seedApprovedCommitment("cmt-reject");
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.countCommitmentsByNormalisedEmail as any).mockResolvedValue(3);
+
+			const result = await invoke({
+				email: "alice+promo@gmail.com",
+				maxEmailSubmissionCount: 3,
+				storeMetadata: true,
+				commitmentId: "cmt-reject",
+			});
+
+			expect(result.verified).toBe(false);
+			expect(result.status).toBe("API.SPAM_EMAIL_COUNT_EXCEEDED");
+			// Count query must have run against the normalised form
+			// (dots collapsed + `+tag` stripped for gmail).
+			expect(db.countCommitmentsByNormalisedEmail).toHaveBeenCalledWith(
+				"dappAccount",
+				"alice@gmail.com",
+			);
+		});
+
+		it("allows when the prior count is below the cap", async () => {
+			seedApprovedCommitment("cmt-allow");
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.countCommitmentsByNormalisedEmail as any).mockResolvedValue(2);
+
+			const result = await invoke({
+				email: "alice+news@gmail.com",
+				maxEmailSubmissionCount: 3,
+				storeMetadata: true,
+				commitmentId: "cmt-allow",
+			});
+
+			expect(result.verified).toBe(true);
+			// The metadata write must include both the raw and normalised
+			// email so subsequent count checks can find this record.
+			expect(db.updateDappUserCommitment).toHaveBeenCalledWith(
+				"cmt-allow",
+				expect.objectContaining({
+					metadata: expect.objectContaining({
+						email: "alice+news@gmail.com",
+						emailNormalised: "alice@gmail.com",
+					}),
+				}),
+			);
+		});
+
+		it("skips the count query when storeMetadata is off", async () => {
+			// Guardrail: `metadata.emailNormalised` only gets written when
+			// storeMetadata is on, so querying it without that gate would
+			// always return 0 and give operators a false sense of
+			// protection. The task must not even run the query in that
+			// case — this test locks that in.
+			seedApprovedCommitment("cmt-no-store");
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.countCommitmentsByNormalisedEmail as any).mockResolvedValue(9);
+
+			const result = await invoke({
+				email: "alice@gmail.com",
+				maxEmailSubmissionCount: 3,
+				storeMetadata: false,
+				commitmentId: "cmt-no-store",
+			});
+
+			expect(result.verified).toBe(true);
+			expect(db.countCommitmentsByNormalisedEmail).not.toHaveBeenCalled();
+		});
+
+		it("skips the count query when maxEmailSubmissionCount is undefined", async () => {
+			seedApprovedCommitment("cmt-unset");
+
+			const result = await invoke({
+				email: "alice@gmail.com",
+				maxEmailSubmissionCount: undefined,
+				storeMetadata: true,
+				commitmentId: "cmt-unset",
+			});
+
+			expect(result.verified).toBe(true);
+			expect(db.countCommitmentsByNormalisedEmail).not.toHaveBeenCalled();
 		});
 	});
 });

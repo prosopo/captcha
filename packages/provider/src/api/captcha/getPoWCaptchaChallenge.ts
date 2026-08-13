@@ -33,6 +33,7 @@ import { getRequestUserScope } from "../blacklistRequestInspector.js";
 import { recordCaptchaIssueError, recordCaptchaIssued } from "../metrics.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 import { buildPowMaintenanceResponse } from "./maintenanceModeResponses.js";
+import { applyTrafficFilterAtRequestTime } from "./trafficFilterRequestTime.js";
 
 export default (
 	env: ProviderEnvironment,
@@ -181,7 +182,30 @@ export default (
 				);
 			}
 
+			// Evaluate the site's trafficFilter against the connecting IP.
+			// A matched `block` policy short-circuits here; a matched
+			// `challenge` policy contributes powDifficulty overrides.
+			const trafficVerdict = applyTrafficFilterAtRequestTime(
+				req.ipInfo,
+				clientSettings.settings?.trafficFilter,
+				req.logger,
+			);
+			if (trafficVerdict.kind === "block") {
+				return next(
+					new ProsopoApiError(trafficVerdict.reason, {
+						context: { code: 401, siteKey: dapp, user },
+						i18n: req.i18n,
+						logger: req.logger,
+					}),
+				);
+			}
+			const trafficPowDifficulty =
+				trafficVerdict.kind === "challenge"
+					? trafficVerdict.powDifficulty
+					: undefined;
+
 			const difficulty =
+				trafficPowDifficulty ||
 				powDifficulty ||
 				userAccessPolicy?.powDifficulty ||
 				clientSettings?.settings?.powDifficulty;

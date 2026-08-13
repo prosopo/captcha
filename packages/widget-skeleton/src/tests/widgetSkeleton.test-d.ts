@@ -36,8 +36,11 @@ describe("the Theme contract", () => {
 		assertType<Theme>({ spacing: { unit: 10, half: 5 } });
 	});
 
-	test("names its greys by number, not by string", () => {
-		expectTypeOf(lightTheme.palette.grey[300]).toEqualTypeOf<string>();
+	test("exposes its M3 surface roles as plain colour strings", () => {
+		expectTypeOf(
+			lightTheme.palette.surfaceContainerHigh,
+		).toEqualTypeOf<string>();
+		expectTypeOf(lightTheme.palette.onSurfaceVariant).toEqualTypeOf<string>();
 	});
 
 	test("reports spacing in numbers so consumers can do arithmetic", () => {

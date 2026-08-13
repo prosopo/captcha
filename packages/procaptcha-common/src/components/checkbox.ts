@@ -15,6 +15,7 @@
 import {
 	type Theme,
 	WIDGET_CHECKBOX_SPINNER_CSS_CLASS,
+	withAlpha,
 } from "@prosopo/widget-skeleton";
 import type { Component } from "../dom/component.js";
 import { Teardown } from "../dom/component.js";
@@ -25,6 +26,7 @@ import {
 	createElement,
 } from "../dom/element.js";
 import { injectStyle } from "../dom/styleSheet.js";
+import { isEventTrusted } from "../events/trust.js";
 
 /**
  * The checkbox is activated by a real pointer click or by Enter, so the handler
@@ -61,25 +63,25 @@ const generateRandomId = (): string =>
 		() => ID_LETTERS[Math.floor(Math.random() * ID_LETTERS.length)],
 	).join("");
 
+// 28px container with a 2dp stroke, centred in a 58px touch target. Larger
+// than the 18dp M3 checkbox spec — kept at the original size deliberately, as
+// the widget needs a more prominent target than a form checkbox.
+const CHECKBOX_SIZE = "28px";
+
 const baseStyle: StyleMap = {
-	width: "28px",
-	height: "28px",
-	minWidth: "14px",
-	minHeight: "14px",
+	width: CHECKBOX_SIZE,
+	height: CHECKBOX_SIZE,
+	minWidth: CHECKBOX_SIZE,
+	minHeight: CHECKBOX_SIZE,
 	top: "auto",
 	left: "auto",
 	opacity: "1",
-	borderRadius: "12.5%",
 	appearance: "none",
 	cursor: "pointer",
-	margin: "0",
+	// 15px each side around a 28px box gives a 58px touch target.
+	margin: "15px",
 	borderStyle: "solid",
-	borderWidth: "1px",
-	flex: 1,
-	marginTop: "15px",
-	marginRight: "15px",
-	marginBottom: "15px",
-	marginLeft: "15px",
+	borderWidth: "2px",
 };
 
 // The label sizes itself against the `prosopo-widget` container declared on
@@ -94,8 +96,27 @@ const baseStyle: StyleMap = {
 // pair of quote marks inside the box, so it is gone rather than reproduced: an
 // absolutely positioned, empty pseudo-element on the checkbox did nothing.
 const checkboxCss = (theme: Theme): string => `
+/* In forced-colors mode (Windows High Contrast) backgrounds are overridden, so
+   the custom-painted tick can disappear — fall back to the native control,
+   which the OS draws in system colors. !important beats the inline styles. */
+@media (forced-colors: active) {
+	.${BOX_CLASS} {
+		appearance: auto !important;
+		background-image: none !important;
+	}
+}
+
+/* M3 focus indicator: a 3dp outline offset by 2dp, drawn only for keyboard
+   focus. The control previously had no focus affordance at all. */
+.${BOX_CLASS}:focus-visible {
+	outline: 3px solid ${theme.palette.primary.main};
+	outline-offset: 2px;
+}
+
 .${LABEL_CLASS} {
-	color: ${theme.palette.background.contrastText};
+	/* The label sits on the widget surface, so it takes onSurface — not the
+	   dialog container's on-colour. */
+	color: ${theme.palette.onSurface};
 	position: relative;
 	display: flex !important;
 	cursor: pointer;
@@ -172,15 +193,35 @@ export const mountCheckbox = (
 	const label = createElement("label", { className: LABEL_CLASS });
 
 	const applyBoxStyle = () => {
+		const { theme, checked } = props;
+		// White (token) tick painted directly onto the box so the checked state is
+		// identical in light and dark mode — the native control can't be themed.
+		const tickColor = encodeURIComponent(theme.palette.checkbox.tick);
+		const checkImage = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='${tickColor}' d='M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E")`;
+		// M3 hover feedback is a state layer — the on-colour at 8% expressed as a
+		// spread ring around the container — not a change of stroke colour.
+		const stateLayerColor = checked
+			? theme.palette.checkbox.fill
+			: theme.palette.onSurface;
 		applyStyles(input, {
 			...baseStyle,
-			border: `1px solid ${props.theme.palette.background.contrastText}`,
-			borderColor: hover
-				? props.theme.palette.background.contrastText
-				: props.theme.palette.border,
-			appearance: props.checked ? "auto" : "none",
-			minWidth: "28px",
-			minHeight: "28px",
+			borderRadius: theme.shape.checkbox,
+			borderColor: checked
+				? theme.palette.checkbox.fill
+				: theme.palette.checkbox.border,
+			backgroundColor: checked
+				? theme.palette.checkbox.fill
+				: theme.palette.surface,
+			backgroundImage: checked ? checkImage : "none",
+			backgroundRepeat: "no-repeat",
+			backgroundPosition: "center",
+			// Tick inset within the 28px container.
+			backgroundSize: "20px 20px",
+			boxShadow: hover
+				? `0 0 0 10px ${withAlpha(stateLayerColor, theme.stateLayer.hover)}`
+				: "none",
+			transition:
+				"background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
 		});
 	};
 
@@ -194,7 +235,7 @@ export const mountCheckbox = (
 	});
 
 	const activate = (event: MouseEvent | KeyboardEvent) => {
-		if (!event.isTrusted) {
+		if (!isEventTrusted(event)) {
 			return;
 		}
 		event.preventDefault();
@@ -222,14 +263,21 @@ export const mountCheckbox = (
 	const renderLabel = () => {
 		clearElement(label);
 		if (undefined !== props.error) {
+			// The error text carries a support code, so it has to be selectable —
+			// the label's `user-select: none` is overridden for this state only.
+			applyStyles(label, { userSelect: "text", cursor: "text" });
 			const link = createElement("a", {
 				attributes: { href: FAQ_LINK },
 				text: props.error,
 			});
-			applyStyles(link, { color: props.theme.palette.error.main });
+			applyStyles(link, {
+				color: props.theme.palette.error.main,
+				userSelect: "text",
+			});
 			label.appendChild(link);
 			return;
 		}
+		applyStyles(label, { userSelect: undefined, cursor: undefined });
 		label.textContent = props.labelText;
 	};
 

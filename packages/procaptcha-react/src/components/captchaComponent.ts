@@ -22,7 +22,7 @@ import {
 } from "@prosopo/procaptcha-common";
 import type { CaptchaResponseBody } from "@prosopo/types";
 import { at } from "@prosopo/util";
-import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
+import { type Theme, darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import addDataAttr from "../util/index.js";
 import { mountButton } from "./button.js";
 import { mountCaptchaWidget } from "./captchaWidget.js";
@@ -40,7 +40,7 @@ export interface CaptchaComponentProps {
 	translator: Translator;
 }
 
-const outerStyle = (backgroundColor: string): StyleMap => ({
+const outerStyle = (theme: Theme): StyleMap => ({
 	// introduce scroll bars when screen < minWidth of children
 	overflowX: "auto",
 	overflowY: "auto",
@@ -48,13 +48,33 @@ const outerStyle = (backgroundColor: string): StyleMap => ({
 	maxHeight: "100%",
 	display: "flex",
 	flexDirection: "column",
-	border: "1px solid #dddddd",
-	boxShadow: "rgba(255, 255, 255, 0.2) 0px 0px 4px",
-	borderRadius: "4px",
-	backgroundColor,
+	border: `1px solid ${theme.palette.border}`,
+	boxShadow: theme.elevation.card,
+	borderRadius: theme.shape.card,
+	backgroundColor: theme.palette.background.default,
 	userSelect: "none",
 	touchAction: "none",
 	overscrollBehavior: "none",
+});
+
+// M3 "title medium" for the instruction, "body medium" for the supporting line
+// — the type scale carries the hierarchy rather than ad-hoc weights.
+const promptStyle = (theme: Theme): StyleMap => ({
+	...theme.typography.titleMedium,
+	color: theme.palette.primaryContainer.contrastText,
+	margin: 0,
+});
+
+const hintStyle = (theme: Theme): StyleMap => ({
+	...theme.typography.bodyMedium,
+	// De-emphasis via the onSurfaceVariant role, not opacity.
+	color: theme.palette.onSurfaceVariant,
+	margin: "4px 0 0 0",
+});
+
+const targetStyle = (theme: Theme): StyleMap => ({
+	color: theme.palette.titleAccent,
+	fontWeight: 700,
 });
 
 const columnStyle: StyleMap = {
@@ -88,24 +108,15 @@ export const mountCaptchaComponent = (
 	const doubleSpacing = `${theme.spacing.unit * 2}px`;
 	const fullSpacing = `${theme.spacing.unit}px`;
 
-	const targetLabel = createElement("span");
+	const targetLabel = createElement("span", { style: targetStyle(theme) });
 
-	const promptText = createElement("p", {
-		style: { color: "#ffffff", fontWeight: 700, lineHeight: 1.5 },
-	});
+	const promptText = createElement("p", { style: promptStyle(theme) });
 
-	const hintText = createElement("p", {
-		style: {
-			color: "#ffffff",
-			fontWeight: 500,
-			lineHeight: 0.8,
-			fontSize: "0.8rem",
-		},
-	});
+	const hintText = createElement("p", { style: hintStyle(theme) });
 
 	const header = createElement("div", {
 		style: {
-			padding: `${theme.spacing.half}px`,
+			padding: "12px 14px",
 			fontFamily: theme.font.fontFamily,
 		},
 		children: [promptText, hintText],
@@ -113,7 +124,8 @@ export const mountCaptchaComponent = (
 
 	const headerBar = createElement("div", {
 		style: {
-			backgroundColor: theme.palette.primary.main,
+			backgroundColor: theme.palette.primaryContainer.main,
+			borderRadius: theme.shape.header,
 			width: "100%",
 			marginTop: fullSpacing,
 		},
@@ -173,7 +185,7 @@ export const mountCaptchaComponent = (
 	});
 
 	const root = createElement("div", {
-		style: outerStyle(theme.palette.background.default),
+		style: outerStyle(theme),
 		children: [inner],
 	});
 
@@ -205,14 +217,18 @@ export const mountCaptchaComponent = (
 
 	const render = () => {
 		const activeTheme = themeOf(props.themeColor);
-		applyStyles(root, outerStyle(activeTheme.palette.background.default));
+		applyStyles(root, outerStyle(activeTheme));
 		applyStyles(inner, {
 			backgroundColor: activeTheme.palette.background.default,
 		});
 		applyStyles(headerBar, {
-			backgroundColor: activeTheme.palette.primary.main,
+			backgroundColor: activeTheme.palette.primaryContainer.main,
+			borderRadius: activeTheme.shape.header,
 		});
 		applyStyles(header, { fontFamily: activeTheme.font.fontFamily });
+		applyStyles(promptText, promptStyle(activeTheme));
+		applyStyles(hintText, hintStyle(activeTheme));
+		applyStyles(targetLabel, targetStyle(activeTheme));
 
 		const t = props.translator.t;
 		targetLabel.textContent = `${currentCaptcha().target} `;

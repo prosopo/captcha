@@ -74,9 +74,25 @@ export function initializeI18n(
 				},
 				...detectionOptions,
 			} as InitOptions);
+		// "loaded" fires once per namespace, and again after changeLanguage(),
+		// so the raw event is not the one-shot signal the callback expects.
+		// Latch it here as well as in loadI18next: this callback is public and
+		// a caller could reasonably use it to run a side effect.
+		let notified = false;
 		i18n.on("loaded", () => {
+			if (notified) {
+				return;
+			}
+			notified = true;
 			i18nLoadedCallback?.(i18n);
 		});
+	} else {
+		// Already initialised (e.g. createTranslator() ran first, or a second
+		// widget mounted). The `loaded` handler is only registered in the init
+		// branch, so the callback has to fire here or loadI18next() never
+		// settles. Resources are already present, so resolving immediately is
+		// correct; the caller reconciles the language afterwards.
+		i18nLoadedCallback?.(i18n);
 	}
 	return i18n;
 }

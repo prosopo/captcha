@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { Component } from "@prosopo/procaptcha-common";
-import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
+import { darkTheme, lightTheme, withAlpha } from "@prosopo/widget-skeleton";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { type ButtonProps, mountButton } from "../components/button.js";
 import {
@@ -94,14 +94,15 @@ describe("what the button renders", () => {
 });
 
 describe("theming", () => {
-	test("a light button takes its border from the light theme", () => {
-		const element = render({ themeColor: "light" });
-		expect(element.style.borderColor).toBe(asRgb(lightTheme.palette.grey[500]));
-	});
-
-	test("a dark button takes its border from the dark theme", () => {
-		const element = render({ themeColor: "dark" });
-		expect(element.style.borderColor).toBe(asRgb(darkTheme.palette.grey[500]));
+	test("is a borderless pill, not an outlined box", () => {
+		// M3 action-row buttons carry no outline: "text" and "filled" both express
+		// themselves through fill and state layer alone. jsdom drops the shorthand
+		// `border: none` on the floor, so the observable fact is that no border
+		// colour or width is ever painted.
+		const element = render();
+		expect(element.style.borderRadius).toBe(lightTheme.shape.button);
+		expect(element.style.borderColor).toBe("");
+		expect(element.style.borderWidth).toBe("");
 	});
 
 	test("a cancel button is transparent until it is hovered", () => {
@@ -109,42 +110,62 @@ describe("theming", () => {
 		expect(element.style.backgroundColor).toBe("transparent");
 	});
 
-	test("a next button is filled with the background colour", () => {
+	test("a next button is filled with the brand primary", () => {
 		const element = render({ buttonType: "next" });
-		expect(element.style.backgroundColor).toBe(
-			asRgb(lightTheme.palette.background.default),
-		);
-	});
-
-	test("hovering a cancel button reveals the grey fill", () => {
-		const element = render({ buttonType: "cancel" });
-		fire(element, "mouseenter");
-		expect(element.style.backgroundColor).toBe(
-			asRgb(lightTheme.palette.grey[600]),
-		);
-	});
-
-	test("hovering a next button reveals the primary fill", () => {
-		const element = render({ buttonType: "next" });
-		fire(element, "mouseenter");
 		expect(element.style.backgroundColor).toBe(
 			asRgb(lightTheme.palette.primary.main),
 		);
 	});
 
-	test("leaving the button puts the resting fill back", () => {
+	test("a dark next button takes its fill from the dark theme", () => {
+		const element = render({ buttonType: "next", themeColor: "dark" });
+		expect(element.style.backgroundColor).toBe(
+			asRgb(darkTheme.palette.primary.main),
+		);
+	});
+
+	test("hovering a cancel button reveals the primary state layer", () => {
+		// M3 "text" button hover is the primary colour at the hover state-layer
+		// opacity, not an opaque grey fill.
+		const element = render({ buttonType: "cancel" });
+		fire(element, "mouseenter");
+		expect(element.style.backgroundColor).toBe(
+			withAlpha(lightTheme.palette.primary.main, lightTheme.stateLayer.hover),
+		);
+	});
+
+	test("hovering a next button composites a state layer over its fill", () => {
+		// The fill itself does not change — M3 lays the on-primary colour over it
+		// at the hover opacity, which this component paints as an inset shadow.
+		const element = render({ buttonType: "next" });
+		fire(element, "mouseenter");
+		expect(element.style.backgroundColor).toBe(
+			asRgb(lightTheme.palette.primary.main),
+		);
+		expect(element.style.boxShadow).toContain(
+			withAlpha(
+				lightTheme.palette.primary.contrastText,
+				lightTheme.stateLayer.hover,
+			),
+		);
+	});
+
+	test("leaving the button drops the state layer again", () => {
 		const element = render({ buttonType: "next" });
 		fire(element, "mouseenter");
 		fire(element, "mouseleave");
 		expect(element.style.backgroundColor).toBe(
-			asRgb(lightTheme.palette.background.default),
+			asRgb(lightTheme.palette.primary.main),
 		);
+		expect(element.style.boxShadow).not.toContain("inset");
 	});
 
-	test("hover switches the text to the contrast colour", () => {
+	test("a filled button keeps its on-primary text throughout", () => {
+		// The label colour is fixed by the fill it sits on, so hovering must not
+		// move it — only the state layer above the fill changes.
 		const element = render();
 		expect(element.style.color).toBe(
-			asRgb(lightTheme.palette.background.contrastText),
+			asRgb(lightTheme.palette.primary.contrastText),
 		);
 		fire(element, "mouseenter");
 		expect(element.style.color).toBe(

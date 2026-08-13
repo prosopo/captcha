@@ -1,5 +1,17 @@
 # @prosopo/redis-client
 
+## 1.0.32
+### Patch Changes
+
+- 9ec6cc4: Bind repeated log context once with `Logger.with` instead of re-attaching the same data on every log call (mongo `mongoUrl`, redis `url`/`name`, provider startup-cleanup `failedFuncName`, and IP validation `challengeIp`/`providedIp`).
+  - @prosopo/logger@2.0.6
+
+## 1.0.31
+### Patch Changes
+
+- Updated dependencies [2aabe73]
+  - @prosopo/logger@2.0.5
+
 ## 1.0.30
 ### Patch Changes
 

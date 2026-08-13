@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/locale",
-	"version": "3.2.8",
+	"version": "3.3.0",
 	"description": "Prosopo locale library",
 	"type": "module",
 	"engines": {
@@ -42,7 +42,7 @@
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.6",
+		"@prosopo/config": "3.3.8",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "4.1.10",
 		"concurrently": "9.0.1",

@@ -18,8 +18,9 @@ import {
 	applyAttributes,
 	applyStyles,
 	createElement,
+	isEventTrusted,
 } from "@prosopo/procaptcha-common";
-import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
+import { darkTheme, lightTheme, withAlpha } from "@prosopo/widget-skeleton";
 import addDataAttr from "../util/index.js";
 
 export interface ButtonProps {
@@ -41,17 +42,19 @@ const buttonStyleBase: StyleMap = {
 	userSelect: "none",
 	verticalAlign: "middle",
 	textDecoration: "none",
-	fontWeight: "500",
-	fontSize: "0.875rem",
-	lineHeight: "1.75",
-	letterSpacing: "0.02857em",
-	textTransform: "uppercase",
+	// Material 3 buttons use sentence case, not all-caps.
+	textTransform: "none",
 	minWidth: "64px",
-	padding: "6px 16px",
-	borderRadius: "4px",
+	// min, not fixed: long localized labels wrap to two lines in narrow widgets
+	// and the button must grow to keep the text inside its rounded fill.
+	// 40dp is the M3 button height.
+	minHeight: "40px",
+	// Full pill — the Material 3 shape for the action row.
+	borderRadius: "100px",
+	border: "none",
 	transition:
-		"background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, border-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
-	backgroundColor: "#ffffff",
+		"background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, filter 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
+	backgroundColor: "transparent",
 };
 
 export const mountButton = (
@@ -61,31 +64,57 @@ export const mountButton = (
 	const teardown = new Teardown();
 	let props = initialProps;
 	let hover = false;
+	// M3 requires a visible focus indicator. :focus-visible is matched
+	// imperatively so the ring appears for keyboard focus but not mouse clicks.
+	let focusVisible = false;
 
 	const button = createElement("button");
 
-	const render = () => {
+	const buttonStyle = (): StyleMap => {
 		const theme = "light" === props.themeColor ? lightTheme : darkTheme;
-		const backgroundColor =
-			"cancel" === props.buttonType
-				? hover
-					? theme.palette.grey[600]
-					: "transparent"
-				: hover
-					? theme.palette.primary.main
-					: theme.palette.background.default;
-
-		applyStyles(button, {
+		const baseStyle: StyleMap = {
 			...buttonStyleBase,
-			border: `1px solid ${theme.palette.grey[500]}`,
-			boxShadow: `0px 1px 3px 0px ${theme.palette.grey[500]}`,
+			...theme.typography.labelLarge,
+			borderRadius: theme.shape.button,
 			fontFamily: theme.font.fontFamily,
 			width: "100%",
-			color: hover
-				? theme.palette.primary.contrastText
-				: theme.palette.background.contrastText,
-			backgroundColor,
-		});
+			// M3 focus indicator: 3dp outline, 2dp offset.
+			outline: focusVisible ? `3px solid ${theme.palette.primary.main}` : "0px",
+			outlineOffset: focusVisible ? "2px" : undefined,
+		};
+		if ("cancel" === props.buttonType) {
+			// Material 3 "text" button — no fill at rest, an 8% primary state layer
+			// on hover. M3 text buttons use 12dp horizontal padding.
+			return {
+				...baseStyle,
+				padding: "8px 12px",
+				backgroundColor: hover
+					? withAlpha(theme.palette.primary.main, theme.stateLayer.hover)
+					: "transparent",
+				color: theme.palette.primary.main,
+				boxShadow: undefined,
+			};
+		}
+		// Material 3 "filled" button — the primary action. No resting elevation;
+		// hover is an 8% on-primary state layer composited over the fill, which is
+		// how M3 defines it (a brightness filter is not a state layer and behaves
+		// inconsistently across themes). 24dp horizontal padding.
+		return {
+			...baseStyle,
+			padding: "8px 24px",
+			backgroundColor: theme.palette.primary.main,
+			color: theme.palette.primary.contrastText,
+			boxShadow: hover
+				? `inset 0 0 0 100px ${withAlpha(
+						theme.palette.primary.contrastText,
+						theme.stateLayer.hover,
+					)}`
+				: theme.elevation.buttonPrimary,
+		};
+	};
+
+	const render = () => {
+		applyStyles(button, buttonStyle());
 
 		applyAttributes(button, {
 			...addDataAttr({ dev: { cy: `button-${props.buttonType}` } }),
@@ -102,8 +131,16 @@ export const mountButton = (
 		hover = false;
 		render();
 	});
+	teardown.addEventListener(button, "focus", () => {
+		focusVisible = button.matches(":focus-visible");
+		render();
+	});
+	teardown.addEventListener(button, "blur", () => {
+		focusVisible = false;
+		render();
+	});
 	teardown.addEventListener(button, "click", (event: Event) => {
-		if (!event.isTrusted) {
+		if (!isEventTrusted(event)) {
 			return;
 		}
 		event.preventDefault();

@@ -45,12 +45,17 @@ import {
 	type ProsopoConfigOutput,
 	type RequestHeaders,
 	ResultReason,
+	type Session,
 	SimdReadingsStage,
 	type UserCommitment,
+	isBlockingCaptchaResult,
 } from "@prosopo/types";
 import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import type { AccessRulesStorage } from "@prosopo/user-access-policy";
+import {
+	type AccessRulesStorage,
+	describeMatchedRule,
+} from "@prosopo/user-access-policy";
 import { at, extractData } from "@prosopo/util";
 import { randomAsHex, signatureVerify } from "@prosopo/util-crypto";
 import {
@@ -77,7 +82,10 @@ import {
 } from "../dnsEvent/enrichDnsEvent.js";
 import { FrictionlessReason } from "../frictionless/frictionlessTasks.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
-import { evaluateEmailSpamRules } from "../spam/evaluateEmailSpamRules.js";
+import {
+	evaluateEmailSpamRules,
+	normaliseEmailForMatching,
+} from "../spam/evaluateEmailSpamRules.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
 
 export class ImgCaptchaManager extends CaptchaManager {
@@ -734,6 +742,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 		// perform a single batch write at the end.
 		const commitmentUpdates: Partial<UserCommitment> = {};
 		let failStatus: ResultReason | undefined;
+		// Set only by the access-policy branch below, and stamped onto the
+		// session at the end so the audit page can name the rule behind an
+		// ACCESS_POLICY_BLOCK.
+		let matchedRule: Session["matchedRule"];
 
 		// Check user access policies for hard blocks
 		if (userAccessRulesStorage) {
@@ -762,6 +774,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 						reason: ResultReason.ACCESS_POLICY_BLOCK,
 					};
 					failStatus = ResultReason.ACCESS_POLICY_BLOCK;
+					matchedRule = describeMatchedRule(blockPolicy);
 				}
 			} catch (error) {
 				logger.warn(() => ({
@@ -816,8 +829,53 @@ export class ImgCaptchaManager extends CaptchaManager {
 			}
 		}
 
+		// Per-email submission-count check. Runs before we persist
+		// `metadata.emailNormalised` for the current commitment so the
+		// count reflects PRIOR verified submissions only. Silently no-op
+		// when `storeMetadata` is off — nothing gets written under that
+		// mode, so no historical rows would exist to count against.
+		const maxEmailSubmissionCount =
+			spamFilter?.enabled && spamFilter.emailRules?.enabled
+				? spamFilter.emailRules.maxEmailSubmissionCount
+				: undefined;
+		let emailNormalised: string | undefined;
+		if (
+			!failStatus &&
+			maxEmailSubmissionCount !== undefined &&
+			email &&
+			storeMetadata
+		) {
+			emailNormalised = normaliseEmailForMatching(email);
+			if (emailNormalised) {
+				try {
+					const priorCount = await this.db.countCommitmentsByNormalisedEmail(
+						dapp,
+						emailNormalised,
+					);
+					if (priorCount >= maxEmailSubmissionCount) {
+						logger.info(() => ({
+							msg: "Email submission count exceeded in image verification",
+							data: { priorCount, maxEmailSubmissionCount },
+						}));
+						commitmentUpdates.result = {
+							status: CaptchaStatus.disapproved,
+							reason: ResultReason.SPAM_EMAIL_COUNT_EXCEEDED,
+						};
+						failStatus = ResultReason.SPAM_EMAIL_COUNT_EXCEEDED;
+					}
+				} catch (error) {
+					logger.warn(() => ({
+						msg: "Failed to check email submission count in image verification",
+						error,
+					}));
+				}
+			}
+		}
+
+		// Walker fills simdReadings / dnsEvent / entropy fields from the origin
+		// when this is an escalation record. See CaptchaManager.getSessionRecordWithOriginFallback.
 		const sessionRecord = solution.sessionId
-			? await this.db.getSessionRecordBySessionId(solution.sessionId)
+			? await this.getSessionRecordWithOriginFallback(solution.sessionId)
 			: undefined;
 
 		const enrichedDnsEvent = await enrichDnsEvent(
@@ -858,8 +916,16 @@ export class ImgCaptchaManager extends CaptchaManager {
 		// Persist dapp-server-provided metadata when the site opts in.
 		// Gated purely by `storeMetadata` — independent of the spam-email
 		// checks above, which inspect the email but never write it.
+		// `emailNormalised` is written alongside `email` so the per-email
+		// submission-count check has an indexed field to query against
+		// (see `countCommitmentsByNormalisedEmail`); its shape is a
+		// subset of the raw value (dots collapsed for gmail, `+tag`
+		// stripped) so it never leaks anything the raw field doesn't.
 		if (storeMetadata && email) {
-			commitmentUpdates.metadata = { email };
+			commitmentUpdates.metadata = {
+				email,
+				emailNormalised: emailNormalised ?? normaliseEmailForMatching(email),
+			};
 		}
 
 		// IP validation: accumulate providedIp update
@@ -1083,6 +1149,17 @@ export class ImgCaptchaManager extends CaptchaManager {
 					{
 						serverChecked: true,
 						result: finalResult,
+						// Server-verify Disapprovals (traffic filter, IP validation,
+						// spam rules, decision-machine veto, etc.) are blocks —
+						// mark the session so the Overview chart and other
+						// aggregations pick them up without inspecting
+						// result.reason. User solution failures
+						// (CAPTCHA_INVALID_SOLUTION) are excluded — see
+						// `isBlockingCaptchaResult`.
+						...(isBlockingCaptchaResult(CaptchaType.image, finalResult) && {
+							blocked: true,
+						}),
+						...(matchedRule && { matchedRule }),
 					},
 					true,
 				),

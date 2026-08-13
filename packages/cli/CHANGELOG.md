@@ -1,5 +1,111 @@
 # @prosopo/cli
 
+## 3.7.8
+### Patch Changes
+
+- Updated dependencies [cf8633b]
+- Updated dependencies [0def557]
+  - @prosopo/provider@5.1.0
+  - @prosopo/types@5.1.0
+  - @prosopo/api@4.0.5
+  - @prosopo/env@3.6.29
+  - @prosopo/keyring@2.9.68
+
+## 3.7.7
+### Patch Changes
+
+- Updated dependencies [216f8cd]
+  - @prosopo/provider@5.0.5
+  - @prosopo/types@5.0.4
+  - @prosopo/api@4.0.4
+  - @prosopo/env@3.6.28
+  - @prosopo/keyring@2.9.67
+
+## 3.7.6
+### Patch Changes
+
+- Updated dependencies [132e9e3]
+- Updated dependencies [a308b9b]
+- Updated dependencies [8386644]
+- Updated dependencies [16dbab0]
+- Updated dependencies [69c6982]
+- Updated dependencies [9091a78]
+- Updated dependencies [9ec6cc4]
+- Updated dependencies [6d4bb65]
+- Updated dependencies [d5e104b]
+- Updated dependencies [063e69d]
+  - @prosopo/provider@5.0.4
+  - @prosopo/types@5.0.3
+  - @prosopo/util@3.3.6
+  - @prosopo/locale@3.3.0
+  - @prosopo/env@3.6.27
+  - @prosopo/api@4.0.3
+  - @prosopo/common@3.1.50
+  - @prosopo/keyring@2.9.66
+  - @prosopo/logger@2.0.6
+  - @prosopo/dotenv@3.0.52
+
+## 3.7.5
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+- Updated dependencies [fa0d494]
+- Updated dependencies [d6cb841]
+  - @prosopo/provider@5.0.3
+  - @prosopo/types@5.0.2
+  - @prosopo/env@3.6.26
+  - @prosopo/api@4.0.2
+  - @prosopo/keyring@2.9.65
+
+## 3.7.4
+### Patch Changes
+
+  - @prosopo/env@3.6.25
+  - @prosopo/provider@5.0.2
+
+## 3.7.3
+### Patch Changes
+
+- b3f3807: Bump `@prosopo/cli` so the frictionless detector-logging fix can ship as a release.
+  
+  There is no cli change here. This exists purely to move the release number, and
+  the reason is structural rather than incidental.
+  
+  `create_release_pr` sets the root and `docker/images/provider` versions to
+  whatever `@prosopo/cli` is after `changeset version`. The only pending changeset
+  bumps `@prosopo/procaptcha-frictionless` (2.13.2 → 2.13.3) and
+  `@prosopo/procaptcha-bundle` (4.1.46 → 4.1.47). Neither is in cli's dependency
+  tree — cli depends on `@prosopo/provider`, `api`, `types` and friends, which is
+  why ordinary releases bump it by cascade and this one does not. So
+  `changeset version` leaves cli, and therefore the root, at 3.7.2, the release PR
+  comes out titled "Release v3.7.2" again, and no new tag is cut.
+  
+  That matters beyond a cosmetic version number, because captcha-private's own
+  `create_release_pr` derives its version from this repo's latest `v*.*.*` tag and
+  then **checks the submodule out at it**. Without a new tag it would pin the
+  submodule back to v3.7.2 — reverting the very fix this release is meant to carry.
+  
+  The provider image published for this release is therefore functionally
+  identical to 3.7.2; the payload is the widget bundle.
+
+## 3.7.2
+### Patch Changes
+
+- Updated dependencies [38396b4]
+- Updated dependencies [9fec7bd]
+- Updated dependencies [ce2ac41]
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/env@3.6.24
+  - @prosopo/common@3.1.49
+  - @prosopo/provider@5.0.1
+  - @prosopo/types@5.0.1
+  - @prosopo/api@4.0.1
+  - @prosopo/logger@2.0.5
+  - @prosopo/locale@3.2.9
+  - @prosopo/dotenv@3.0.51
+  - @prosopo/keyring@2.9.64
+
 ## 3.7.1
 ### Patch Changes
 

@@ -1,5 +1,104 @@
 # @prosopo/scripts
 
+## 3.1.150
+### Patch Changes
+
+- Updated dependencies [cf8633b]
+- Updated dependencies [0def557]
+  - @prosopo/provider@5.1.0
+  - @prosopo/types@5.1.0
+  - @prosopo/cli@3.7.8
+  - @prosopo/datasets@3.1.61
+  - @prosopo/env@3.6.29
+  - @prosopo/keyring@2.9.68
+  - @prosopo/types-env@2.10.25
+
+## 3.1.149
+### Patch Changes
+
+- Updated dependencies [216f8cd]
+  - @prosopo/provider@5.0.5
+  - @prosopo/types@5.0.4
+  - @prosopo/types-env@2.10.24
+  - @prosopo/cli@3.7.7
+  - @prosopo/datasets@3.1.60
+  - @prosopo/env@3.6.28
+  - @prosopo/keyring@2.9.67
+
+## 3.1.148
+### Patch Changes
+
+- Updated dependencies [132e9e3]
+- Updated dependencies [a308b9b]
+- Updated dependencies [8386644]
+- Updated dependencies [16dbab0]
+- Updated dependencies [69c6982]
+- Updated dependencies [9091a78]
+- Updated dependencies [9ec6cc4]
+- Updated dependencies [6d4bb65]
+- Updated dependencies [d5e104b]
+- Updated dependencies [063e69d]
+- Updated dependencies [4c8114d]
+  - @prosopo/provider@5.0.4
+  - @prosopo/types@5.0.3
+  - @prosopo/util@3.3.6
+  - @prosopo/locale@3.3.0
+  - @prosopo/env@3.6.27
+  - @prosopo/types-env@2.10.23
+  - @prosopo/cli@3.7.6
+  - @prosopo/common@3.1.50
+  - @prosopo/datasets@3.1.59
+  - @prosopo/keyring@2.9.66
+  - @prosopo/logger@2.0.6
+  - @prosopo/dotenv@3.0.52
+
+## 3.1.147
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+- Updated dependencies [fa0d494]
+- Updated dependencies [d6cb841]
+  - @prosopo/provider@5.0.3
+  - @prosopo/types@5.0.2
+  - @prosopo/cli@3.7.5
+  - @prosopo/env@3.6.26
+  - @prosopo/types-env@2.10.22
+  - @prosopo/datasets@3.1.58
+  - @prosopo/keyring@2.9.65
+
+## 3.1.146
+### Patch Changes
+
+  - @prosopo/env@3.6.25
+  - @prosopo/provider@5.0.2
+  - @prosopo/cli@3.7.4
+
+## 3.1.145
+### Patch Changes
+
+- Updated dependencies [b3f3807]
+  - @prosopo/cli@3.7.3
+
+## 3.1.144
+### Patch Changes
+
+- Updated dependencies [38396b4]
+- Updated dependencies [9fec7bd]
+- Updated dependencies [ce2ac41]
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/env@3.6.24
+  - @prosopo/common@3.1.49
+  - @prosopo/provider@5.0.1
+  - @prosopo/types@5.0.1
+  - @prosopo/logger@2.0.5
+  - @prosopo/locale@3.2.9
+  - @prosopo/cli@3.7.2
+  - @prosopo/datasets@3.1.57
+  - @prosopo/dotenv@3.0.51
+  - @prosopo/keyring@2.9.64
+  - @prosopo/types-env@2.10.21
+
 ## 3.1.143
 ### Patch Changes
 

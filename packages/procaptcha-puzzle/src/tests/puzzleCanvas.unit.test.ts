@@ -14,6 +14,7 @@
 
 import type { Component } from "@prosopo/procaptcha-common";
 import type { PuzzleEvent } from "@prosopo/types";
+import { lightTheme } from "@prosopo/widget-skeleton";
 import {
 	type Mock,
 	afterEach,
@@ -56,6 +57,7 @@ const props = (
 	onComplete,
 	showRetry: false,
 	submitting: false,
+	theme: lightTheme,
 	...overrides,
 });
 

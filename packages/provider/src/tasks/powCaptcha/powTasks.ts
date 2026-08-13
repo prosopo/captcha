@@ -42,14 +42,19 @@ import {
 	type RoutingMachineOutput,
 	type RoutingMachinePlatform,
 	type RoutingMachineRawSignals,
+	type Session,
 	SimdReadingsStage,
+	isBlockingCaptchaResult,
 } from "@prosopo/types";
 import type {
 	IProviderDatabase,
 	PoWCaptchaRecord,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import type { AccessRulesStorage } from "@prosopo/user-access-policy";
+import {
+	type AccessRulesStorage,
+	describeMatchedRule,
+} from "@prosopo/user-access-policy";
 import {
 	assertCoordsSafe,
 	at,
@@ -77,7 +82,10 @@ import {
 	type RoutingContext,
 	applyRouter,
 } from "../frictionless/routingMachine.js";
-import { evaluateEmailSpamRules } from "../spam/evaluateEmailSpamRules.js";
+import {
+	evaluateEmailSpamRules,
+	normaliseEmailForMatching,
+} from "../spam/evaluateEmailSpamRules.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
 
 /**
@@ -262,6 +270,13 @@ export class PowCaptchaManager extends CaptchaManager {
 					this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 						userSubmitted: true,
 						result: badSaltResult,
+						// Stamp `blocked=true` so downstream aggregations (portal
+						// Overview, audit search, etc.) can key off a single
+						// field without re-deriving from result.status /
+						// result.reason. See `isBlockingCaptchaResult`.
+						...(isBlockingCaptchaResult(CaptchaType.pow, badSaltResult) && {
+							blocked: true,
+						}),
 					}),
 				);
 			}
@@ -290,6 +305,9 @@ export class PowCaptchaManager extends CaptchaManager {
 					this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 						userSubmitted: true,
 						result: timeoutResult,
+						...(isBlockingCaptchaResult(CaptchaType.pow, timeoutResult) && {
+							blocked: true,
+						}),
 					}),
 				);
 			}
@@ -419,6 +437,9 @@ export class PowCaptchaManager extends CaptchaManager {
 				this.updateSessionRecordWithCache(linkedSessionId, {
 					userSubmitted: true,
 					result,
+					...(isBlockingCaptchaResult(CaptchaType.pow, result) && {
+						blocked: true,
+					}),
 				}),
 			);
 			if (simdReadings) {
@@ -661,6 +682,11 @@ export class PowCaptchaManager extends CaptchaManager {
 		const powRecordUpdates: Partial<PoWCaptchaRecord> = {};
 		let failResult: CaptchaResult | undefined;
 		let failReason: string | undefined;
+		// Set only by the access-policy branch below, and stamped onto the
+		// session at the end so the audit page can name the rule behind an
+		// ACCESS_POLICY_BLOCK. This path is where `deferToVerify` rules land,
+		// which is precisely where "why was I rejected?" is least obvious.
+		let matchedRule: Session["matchedRule"];
 
 		const submittedAt = challengeRecord.submittedAtTimestamp;
 		const submitToVerifyMs =
@@ -705,6 +731,7 @@ export class PowCaptchaManager extends CaptchaManager {
 						reason: ResultReason.ACCESS_POLICY_BLOCK,
 					};
 					failReason = "API.ACCESS_POLICY_BLOCK";
+					matchedRule = describeMatchedRule(blockPolicy);
 				}
 			} catch (error) {
 				logger.warn(() => ({
@@ -759,8 +786,55 @@ export class PowCaptchaManager extends CaptchaManager {
 			}
 		}
 
+		// Per-email submission-count check — see `imgCaptchaTasks` for the
+		// full rationale. Gated by `storeMetadata` because we can only
+		// count records that carry `metadata.emailNormalised`, and that
+		// field is only ever written when `storeMetadata` is on.
+		const maxEmailSubmissionCount =
+			spamFilter?.enabled && spamFilter.emailRules?.enabled
+				? spamFilter.emailRules.maxEmailSubmissionCount
+				: undefined;
+		let emailNormalised: string | undefined;
+		if (
+			!failResult &&
+			maxEmailSubmissionCount !== undefined &&
+			email &&
+			storeMetadata
+		) {
+			emailNormalised = normaliseEmailForMatching(email);
+			if (emailNormalised) {
+				try {
+					const priorCount = await this.db.countCommitmentsByNormalisedEmail(
+						dappAccount,
+						emailNormalised,
+					);
+					if (priorCount >= maxEmailSubmissionCount) {
+						logger.info(() => ({
+							msg: "Email submission count exceeded in PoW verification",
+							data: { priorCount, maxEmailSubmissionCount },
+						}));
+						failResult = {
+							status: CaptchaStatus.disapproved,
+							reason: ResultReason.SPAM_EMAIL_COUNT_EXCEEDED,
+						};
+						failReason = "API.SPAM_EMAIL_COUNT_EXCEEDED";
+					}
+				} catch (error) {
+					logger.warn(() => ({
+						msg: "Failed to check email submission count in PoW verification",
+						error,
+					}));
+				}
+			}
+		}
+
+		// Walk to the origin session when this is an escalation record —
+		// simdReadings / dnsEvent / entropy fields are populated on the
+		// origin and don't automatically end up on the escalation. Non-
+		// escalations pass through unchanged (walker no-ops when there's
+		// no originSessionId).
 		const sessionRecord = challengeRecord.sessionId
-			? await this.db.getSessionRecordBySessionId(challengeRecord.sessionId)
+			? await this.getSessionRecordWithOriginFallback(challengeRecord.sessionId)
 			: undefined;
 
 		const enrichedDnsEvent = await enrichDnsEvent(
@@ -799,10 +873,14 @@ export class PowCaptchaManager extends CaptchaManager {
 		}
 
 		// Persist dapp-server-provided metadata when the site opts in.
-		// Gated purely by `storeMetadata` — independent of the spam-email
-		// checks above, which inspect the email but never write it.
+		// Gated purely by `storeMetadata`; `emailNormalised` piggybacks
+		// on the same write so the per-email submission-count check has
+		// an indexed field to query against.
 		if (storeMetadata && email) {
-			powRecordUpdates.metadata = { email };
+			powRecordUpdates.metadata = {
+				email,
+				emailNormalised: emailNormalised ?? normaliseEmailForMatching(email),
+			};
 		}
 
 		// IP validation: store provided IP and validate if rules enabled
@@ -952,6 +1030,13 @@ export class PowCaptchaManager extends CaptchaManager {
 		};
 		if (failResult) {
 			powRecordUpdates.result = failResult;
+			// This write goes through `updatePowCaptchaRecord` (generic
+			// partial), not `updatePowCaptchaRecordResult`, so the DB-layer
+			// blocked-stamping doesn't fire — do it here at the call site.
+			powRecordUpdates.blocked = isBlockingCaptchaResult(
+				CaptchaType.pow,
+				failResult,
+			);
 		}
 
 		// Write pow record updates and session update in parallel
@@ -973,6 +1058,10 @@ export class PowCaptchaManager extends CaptchaManager {
 					{
 						serverChecked: true,
 						result: finalResult,
+						...(isBlockingCaptchaResult(CaptchaType.pow, finalResult) && {
+							blocked: true,
+						}),
+						...(matchedRule && { matchedRule }),
 					},
 					true,
 				),

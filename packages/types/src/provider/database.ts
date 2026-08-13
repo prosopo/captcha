@@ -50,6 +50,10 @@ import type {
 } from "../decisionMachine/index.js";
 import type { PuzzleEvent, RequestHeaders } from "./api.js";
 import type { SimdReadings } from "./detection.js";
+import {
+	type MatchedAccessRule,
+	MatchedAccessRuleSchema,
+} from "./matchedAccessRule.js";
 import type { FrictionlessReason, ResultReason } from "./reasons.js";
 
 export interface BrowserInfo {
@@ -143,6 +147,11 @@ export interface BehavioralDataPacked {
 // backwards compatibility (existing data and indexes already use it).
 export interface StoredCaptchaMetadata {
 	email?: string;
+	// Normalised form of `email` used by the per-email submission-count check.
+	// Kept as a separate persisted field so the count query can hit a single
+	// indexed value instead of computing a normalisation server-side. Written
+	// alongside `email` whenever `storeMetadata` is on.
+	emailNormalised?: string;
 }
 
 // Widget-controlled metadata captured during the captcha solution submission.
@@ -203,6 +212,14 @@ export interface StoredCaptcha {
 	// index instead of $or'ing `{storedAtTimestamp:{$exists:false}}` with an
 	// unindexable $expr branch.
 	pendingStage?: boolean;
+	// True when this record represents a blocked request rather than a
+	// legitimate user failure of the challenge. Mirrors `Session.blocked`
+	// so either collection can be queried with the same filter — see
+	// `isBlockingCaptchaResult` for the classification rule (PoW: any
+	// Disapproved is a block; image/puzzle: server-side rejection only,
+	// not CAPTCHA_INVALID_SOLUTION). Written by the canonical result
+	// writers in the DB layer alongside `result`.
+	blocked?: boolean;
 	sessionId?: string;
 	coords?: [number, number][][];
 	// Legacy fields - kept for backward compatibility with existing data
@@ -259,6 +276,7 @@ const BehavioralDataPackedSchema = object({
 
 export const StoredCaptchaMetadataSchema = object({
 	email: string().optional(),
+	emailNormalised: string().optional(),
 }) satisfies ZodType<StoredCaptchaMetadata, ZodTypeDef, unknown>;
 
 export const ClientMetaDataDbSchema = object({
@@ -408,6 +426,11 @@ export const SessionSchema = object({
 	// "user hit the widget cold" from "user got escalated into a
 	// stronger captcha after a low-confidence PoW".
 	isEscalation: boolean().optional(),
+	// SessionId of the session this one escalated from. Populated when
+	// isEscalation is true; used by the DM-input read path to fall back
+	// to the origin for fields the escalation doesn't carry itself
+	// (simdReadings, dnsEvent, etc.). Absent on non-escalation sessions.
+	originSessionId: string().optional(),
 	decryptedHeadHash: string(),
 	siteKey: string().optional(),
 	// Full page URL the widget was rendered on (origin + path only — query
@@ -439,6 +462,8 @@ export const SessionSchema = object({
 	ruleHash: string().optional(),
 	ruleType: string().array().optional(),
 	ruleDescription: string().optional(),
+	// See Session.matchedRule.
+	matchedRule: MatchedAccessRuleSchema.optional(),
 	// Full ipinfo payload from ipInfoMiddleware at session-creation
 	// time. Replaces the flat `countryCode` / `geolocation` fields —
 	// consumers narrow on `ipInfo.isValid` and read whichever sub-field
@@ -468,6 +493,8 @@ export const SessionSchema = object({
 	entropyCryptoFingerprint: string().optional(),
 	entropyWallClockOffsetMs: number().optional(),
 	entropyMathRandomFirst: number().optional(),
+	g: string().optional(),
+	i: boolean().optional(),
 	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
 	// plugin (X-TLS-TCP-To-Chello-Us / X-TLS-Chello-To-Handshake-Us).
 	// Server-observed microsecond deltas across the TLS handshake
@@ -509,6 +536,9 @@ export type Session = {
 	// True when this session was minted by the post-PoW routing machine
 	// as an escalation. Undefined / false on ordinary frictionless sessions.
 	isEscalation?: boolean;
+	// SessionId of the origin session this one escalated from. Populated
+	// alongside isEscalation; consumed by the DM-input read path.
+	originSessionId?: string;
 	decryptedHeadHash: string;
 	// The provider-assigned detector pool bundle this session's detector ran
 	// from, promoted off the short-lived detectorSessionId→bundleId Redis
@@ -542,6 +572,13 @@ export type Session = {
 	ruleHash?: string; // == the redis-key suffix of the matched rule
 	ruleType?: string[]; // populated scope fields, e.g. ['ja4Hash'], ['ja4Hash','coords']
 	ruleDescription?: string; // operator-set description copied from the rule's AccessPolicy
+	// The full matched rule, denormalised at enforcement time. Unlike the three
+	// fields above it is written by EVERY access-policy path — the request-time
+	// block middleware, the frictionless entry (block and restrict alike), and
+	// the verify-time hard-block check — so the audit page can name the exact
+	// policy that acted on a request rather than just echoing its description.
+	// See MatchedAccessRule for why the rule is copied rather than joined.
+	matchedRule?: MatchedAccessRule;
 	// Full ipinfo payload from ipInfoMiddleware at session-creation
 	// time. Replaces the flat `countryCode` / `geolocation` fields.
 	ipInfo?: IPInfoResponse;
@@ -561,6 +598,8 @@ export type Session = {
 	entropyCryptoFingerprint?: string;
 	entropyWallClockOffsetMs?: number;
 	entropyMathRandomFirst?: number;
+	g?: string;
+	i?: boolean;
 	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
 	// plugin. See the SessionSchema block above for full semantics —
 	// elevated values indicate the client's ClientHello traversed a

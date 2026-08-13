@@ -20,6 +20,7 @@ import {
 	type IUserData,
 	type IUserSettings,
 	type Timestamp,
+	TrafficFilterAction,
 	abuseScoreThresholdDefault,
 	abuseScoreThresholdExceedActionDefault,
 	captchaTypeDefault,
@@ -112,6 +113,27 @@ export const IPValidationRulesSchema = new Schema({
 	},
 });
 
+// Sub-schema for one trafficFilter category's policy. `_id: false` prevents
+// Mongoose from stamping an implicit ObjectId onto each subdoc.
+export const TrafficCategoryPolicySchema = new Schema(
+	{
+		action: {
+			type: String,
+			enum: TrafficFilterAction,
+			required: true,
+		},
+		captchaType: {
+			type: String,
+			enum: CaptchaType,
+			required: false,
+		},
+		powDifficulty: { type: Number, required: false },
+		solvedImagesCount: { type: Number, required: false },
+		puzzleTolerance: { type: Number, required: false },
+	},
+	{ _id: false },
+);
+
 export const UserSettingsSchema = new Schema({
 	captchaType: {
 		type: String,
@@ -187,21 +209,22 @@ export const UserSettingsSchema = new Schema({
 			normaliseGmail: { type: Boolean, default: false },
 			useDefaultPatterns: { type: Boolean, default: false },
 			customRegexBlocklist: { type: [String], default: [] },
+			maxEmailSubmissionCount: { type: Number, min: 1, required: false },
 		},
 	},
 	trafficFilter: {
-		blockVpn: { type: Boolean, default: false },
-		blockProxy: { type: Boolean, default: false },
-		blockTor: { type: Boolean, default: false },
-		blockAbuser: { type: Boolean, default: true },
+		vpn: { type: TrafficCategoryPolicySchema, required: false },
+		proxy: { type: TrafficCategoryPolicySchema, required: false },
+		tor: { type: TrafficCategoryPolicySchema, required: false },
+		abuser: { type: TrafficCategoryPolicySchema, required: false },
 		abuserScoreThreshold: { type: Number, min: 0, max: 1, default: 0 },
-		blockDatacenter: { type: Boolean, default: false },
+		datacenter: { type: TrafficCategoryPolicySchema, required: false },
 		datacenterNameAllowlist: { type: [String], required: false },
 		datacenterNameDenylist: { type: [String], required: false },
 		skipExtrasOnValidDnsPath: { type: Boolean, default: true },
-		blockMobile: { type: Boolean, default: false },
-		blockSatellite: { type: Boolean, default: false },
-		blockCrawler: { type: Boolean, default: false },
+		mobile: { type: TrafficCategoryPolicySchema, required: false },
+		satellite: { type: TrafficCategoryPolicySchema, required: false },
+		crawler: { type: TrafficCategoryPolicySchema, required: false },
 	},
 	storeMetadata: {
 		type: Boolean,

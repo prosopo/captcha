@@ -1,5 +1,100 @@
 # @prosopo/database
 
+## 4.0.6
+### Patch Changes
+
+- Updated dependencies [0def557]
+  - @prosopo/types@5.1.0
+  - @prosopo/types-database@5.1.0
+  - @prosopo/user-access-policy@3.12.16
+
+## 4.0.5
+### Patch Changes
+
+- Updated dependencies [216f8cd]
+  - @prosopo/user-access-policy@3.12.15
+  - @prosopo/types-database@5.0.4
+  - @prosopo/types@5.0.4
+
+## 4.0.4
+### Patch Changes
+
+- 69c6982: Fix two failures on main.
+  
+  `biome check` was failing on three files from #3025 — two import orderings and one
+  line that fits on a single line. Formatting only, no behaviour change.
+  
+  `@prosopo/prosoponator-bot`'s test suite was failing to load with
+  `Cannot find module 'undici'`. `@actions/github@6.0.0` calls `require("undici")`
+  in `lib/internal/utils.js` but does not declare it as a dependency, relying on it
+  being hoisted. The lockfile only carried undici nested under
+  `@actions/http-client`, so nothing at the root of `node_modules` could resolve
+  it. Declaring `undici` on the bot hoists the same 5.29.0 to the root.
+  
+  This only reproduces in CI. Locally the captcha repo sits inside captcha-private,
+  whose root `node_modules` has an undici that Node finds by walking up out of the
+  submodule — so the resolution succeeds on a dev machine and fails on a standalone
+  checkout.
+- 9ec6cc4: Bind repeated log context once with `Logger.with` instead of re-attaching the same data on every log call (mongo `mongoUrl`, redis `url`/`name`, provider startup-cleanup `failedFuncName`, and IP validation `challengeIp`/`providedIp`).
+- Updated dependencies [16dbab0]
+- Updated dependencies [9ec6cc4]
+- Updated dependencies [d5e104b]
+- Updated dependencies [063e69d]
+  - @prosopo/types@5.0.3
+  - @prosopo/user-access-policy@3.12.14
+  - @prosopo/util@3.3.6
+  - @prosopo/redis-client@1.0.32
+  - @prosopo/types-database@5.0.3
+  - @prosopo/common@3.1.50
+  - @prosopo/logger@2.0.6
+
+## 4.0.3
+### Patch Changes
+
+- d6cb841: feat(provider,database,types): session chain — escalations reference origin, DM-input reads walk back for missing fields
+  
+  Adds `originSessionId` to the Session schema and populates it on escalation sessions in `submitPoWCaptchaSolution.buildEscalation`. Adds `CaptchaManager.getSessionRecordWithOriginFallback` — a session reader that, when the record is an escalation missing an inherently-origin-populated field (`simdReadings`, `dnsEvent`, `entropyMathRandom*`, `entropyCrypto*`, `entropyWallClockOffsetMs`), reads the origin session and fills the gap. Escalation-owned fields (`captchaType`, `sessionId`, `score`, `ipInfo`, `headers`, etc.) are never overridden.
+  
+  The three `serverVerify*CaptchaSolution` methods now use the walker instead of the raw `getSessionRecordBySessionId`, so decision-machine inputs on escalated puzzle / image sessions see the origin's SIMD readings and DNS event.
+  
+  Fixes the write-time race between (a) the origin's fire-and-forget SIMD attach via `scheduleMongoSimdReadingsUpdate` on pow-submit, and (b) `buildEscalation`'s immediate Mongo read — which left ~97% of escalation sessions with no `dnsEvent` and ~97% with no `simdReadings`, in turn tripping decide-machine deny rules (SIMD_ABSENT etc.) on legit escalation flows.
+  
+  Non-escalation sessions and older escalation records without `originSessionId` fall through as a no-op — no behavior change. Extra Mongo read only fires when the escalation is actually missing a fallback-eligible field.
+- Updated dependencies [d6cb841]
+  - @prosopo/types-database@5.0.2
+  - @prosopo/types@5.0.2
+  - @prosopo/user-access-policy@3.12.13
+
+## 4.0.2
+### Patch Changes
+
+- 1fba42e: Include `bundleId` in the `getSessionRecordBySessionId` projection.
+  
+  `bundleId` was added to `SessionRecordSchema` for the per-session detector pool but never added to the projection. `CaptchaManager.resolveBundleBySessionId` reads it via `getSessionRecordBySessionId` on every pow / puzzle / image submit whenever the Redis session cache misses, so the fallback returned `undefined` even though the record on disk carried a valid bundleId. Downstream `decryptBehavioralData` and `decryptSimdReadings` then dropped their payloads, so `pow.behavioralDataPacked`, `pow.deviceCapability`, and `session.simdReadings` were persisted at ~0% fleet-wide.
+  
+  Regression test extends `sessionRecordProjection.integration.test.ts` to seed and read back a `bundleId`.
+
+## 4.0.1
+### Patch Changes
+
+- bcef918: Adds a per-email submission-count rate limit on the verify pipeline. Site operators can now cap how many server-checked captcha submissions any one normalised email (Gmail dot / `+tag` tricks collapsed across providers) may back before further submissions from that address are rejected with `API.SPAM_EMAIL_COUNT_EXCEEDED`.
+  
+  - New `spamFilter.emailRules.maxEmailSubmissionCount` (int, min 1, optional) on `ClientSettingsSchema`.
+  - New `metadata.emailNormalised` field on all three captcha records (image / PoW / puzzle) — written alongside `metadata.email` whenever `storeMetadata` is on. Backed by a partial index (`spamEmailCount_partial`) on each collection.
+  - New DB method `countCommitmentsByNormalisedEmail(dappAccount, emailNormalised)` sums the three per-collection counts so limits span captcha types.
+  - Puzzle verify gains a `spamFilter` parameter to bring it to parity with img/pow for the count check.
+  - English + all 31 non-English locales gain the `API.SPAM_EMAIL_COUNT_EXCEEDED` translation.
+  - Fixes silent-drift bug: `UserSettingsSchema.spamFilter.emailRules` was missing `maxEmailSubmissionCount` on the mongoose side, which strict mode would have dropped on `$set`.
+- Updated dependencies [9fec7bd]
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/common@3.1.49
+  - @prosopo/types@5.0.1
+  - @prosopo/logger@2.0.5
+  - @prosopo/types-database@5.0.1
+  - @prosopo/redis-client@1.0.31
+  - @prosopo/user-access-policy@3.12.12
+
 ## 4.0.0
 ### Major Changes
 

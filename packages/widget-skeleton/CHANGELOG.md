@@ -1,5 +1,28 @@
 # @prosopo/widget-skeleton
 
+## 2.8.6
+### Patch Changes
+
+- b525956: Refresh the captcha widget appearance with a Material 3 theme across the widget-skeleton, procaptcha-common, procaptcha-react and procaptcha-puzzle packages.
+  
+  - Split the single tinted surface into M3 surface roles: the widget now sits on a white `surface` (surfaceContainerLowest) and the challenge dialog on `surfaceContainerHigh`.
+  - Removed all drop shadows. Separation comes from surface roles and outlines; hover and drag feedback use M3 state layers and outline rings instead.
+  - Added shared `typography` (label large / title medium / body medium) and `stateLayer` (8%/10%/10%) tokens, and aligned the shape scale to M3 steps.
+  - Buttons: M3 label-large type, 40dp height, spec padding, state-layer hover in place of a brightness filter, and no resting elevation on the filled variant.
+  - Added the missing focus indicators (3dp outline, 2dp offset, keyboard-only) to the checkbox, buttons and reload control.
+  - Secondary dialog text now uses the `onSurfaceVariant` role rather than reduced opacity.
+- 8a4d6ad: Add unit and type tests for the widget skeleton, and harden the two places a
+  silent failure was possible:
+  
+  - The checkbox and logo placeholders were swapped in with an optional chain, so
+    renaming a class in the markup produced a widget missing one of them with no
+    error at all. `replacePlaceholder` now throws.
+  - The build mode was read straight from `process.env` / `import.meta.env`.
+    Neither exists everywhere the widget runs, so reading it is now isolated
+    behind `readEnvironmentSources`, an unset `NODE_ENV` falls back to the
+    bundler's mode rather than defaulting to development, and a bundler shim that
+    fails to resolve no longer stops the widget rendering.
+
 ## 2.8.5
 ### Patch Changes
 

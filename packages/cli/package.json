@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/cli",
-	"version": "3.7.1",
+	"version": "3.7.8",
 	"description": "CLI for Prosopo Provider",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -22,6 +22,9 @@
 		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"docker-tag": "node ../../docker/docker-tag.mjs",
+		"build:docker": "docker buildx build --progress=plain --tag $(npm run --silent docker-tag) --platform linux/amd64 -f ./Dockerfile ../..",
+		"publish:docker": "docker push $(npm run --silent docker-tag)",
 		"typecheck": "tsc --project tsconfig.types.json",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
 		"bundle": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.config.ts --mode $NODE_ENV",
@@ -32,16 +35,16 @@
 	},
 	"dependencies": {
 		"@polkadot/types-codec": "16.4.9",
-		"@prosopo/api": "4.0.0",
-		"@prosopo/common": "3.1.48",
-		"@prosopo/logger": "2.0.4",
-		"@prosopo/dotenv": "3.0.50",
-		"@prosopo/env": "3.6.23",
-		"@prosopo/keyring": "2.9.63",
-		"@prosopo/locale": "3.2.8",
-		"@prosopo/provider": "5.0.0",
-		"@prosopo/types": "5.0.0",
-		"@prosopo/util": "3.3.5",
+		"@prosopo/api": "4.0.5",
+		"@prosopo/common": "3.1.50",
+		"@prosopo/logger": "2.0.6",
+		"@prosopo/dotenv": "3.0.52",
+		"@prosopo/env": "3.6.29",
+		"@prosopo/keyring": "2.9.68",
+		"@prosopo/locale": "3.3.0",
+		"@prosopo/provider": "5.1.0",
+		"@prosopo/types": "5.1.0",
+		"@prosopo/util": "3.3.6",
 		"@prosopo/workspace": "3.2.0",
 		"cron-parser": "4.9.0",
 		"dotenv": "16.4.5",
@@ -49,7 +52,7 @@
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.6",
+		"@prosopo/config": "3.3.8",
 		"@polkadot-api/substrate-client": "0.1.4",
 		"@types/cors": "2.8.17",
 		"@types/node": "22.10.2",
@@ -73,5 +76,8 @@
 		"type": "git",
 		"url": "git+https://github.com/prosopo/captcha.git",
 		"directory": "packages/cli"
+	},
+	"prosopo": {
+		"dockerImage": "prosopo/provider"
 	}
 }

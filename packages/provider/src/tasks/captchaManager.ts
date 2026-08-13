@@ -28,6 +28,7 @@ import {
 	type Session,
 	type SimdReadingsStage,
 	Tier,
+	TrafficFilterAction,
 	type UserCommitment,
 } from "@prosopo/types";
 import type {
@@ -41,6 +42,7 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import {
 	type AccessPolicy,
 	AccessPolicyType,
+	type AccessRule,
 	type AccessRulesStorage,
 	type UserScope,
 	type UserScopeRecord,
@@ -94,8 +96,8 @@ export interface PoolBundleDecrypt {
  * rules — they pick which challenge type to serve, not whether to reject.
  */
 const findHardBlockPolicy = (
-	accessPolicies: AccessPolicy[],
-): AccessPolicy | undefined => {
+	accessPolicies: AccessRule[],
+): AccessRule | undefined => {
 	return accessPolicies.find((policy) => {
 		if (policy.deferToVerify === true) {
 			return true;
@@ -170,6 +172,90 @@ export class CaptchaManager {
 		if (!decrypted) return undefined;
 		const { timestamp: _ignored, ...readings } = decrypted;
 		return readings;
+	}
+
+	/**
+	 * Read a session and, if it's an escalation missing one of the
+	 * inherently-origin-populated fields, walk to `originSessionId` and fill
+	 * the gap. Intended for the decision-machine input read path only —
+	 * `simdReadings`, `dnsEvent`, `entropyMathRandomFingerprint` etc. are
+	 * populated on the origin session (SIMD via pow-submit's fire-and-forget
+	 * attach; DNS via the sidecar's origin-TLS-scoped patch) and don't
+	 * automatically end up on the escalation record because
+	 * `buildEscalation` reads the origin from Mongo before the async writes
+	 * settle. Rather than duplicating the origin's state onto every
+	 * escalation at write time, keep the origin as the source of truth and
+	 * fall back to it at read time.
+	 *
+	 * Fields intentionally NOT walked:
+	 *   - captchaType / sessionId / score / threshold / scoreComponents /
+	 *     ipAddress / ipInfo / headers — these describe the escalation
+	 *     itself and must never be overridden by the origin.
+	 *   - Anything already present on the escalation — first-write wins.
+	 *
+	 * Non-escalation sessions and escalations without `originSessionId`
+	 * (older records) fall through as no-op.
+	 */
+	public async getSessionRecordWithOriginFallback(
+		sessionId: string,
+	): Promise<Session | undefined> {
+		const session = await this.db.getSessionRecordBySessionId(sessionId);
+		if (!session) return undefined;
+		if (!session.originSessionId) return session;
+
+		const needsSimd =
+			session.simdReadings === undefined || session.simdReadings === null;
+		const needsDns =
+			session.dnsEvent === undefined || session.dnsEvent === null;
+		const needsEntropyMath = session.entropyMathRandomFingerprint === undefined;
+		const needsEntropyCrypto = session.entropyCryptoFingerprint === undefined;
+		const needsEntropyWall = session.entropyWallClockOffsetMs === undefined;
+		const needsEntropyFirst = session.entropyMathRandomFirst === undefined;
+		const needsG = session.g === undefined;
+		const needsI = session.i === undefined;
+
+		if (
+			!needsSimd &&
+			!needsDns &&
+			!needsEntropyMath &&
+			!needsEntropyCrypto &&
+			!needsEntropyWall &&
+			!needsEntropyFirst &&
+			!needsG &&
+			!needsI
+		) {
+			return session;
+		}
+
+		const origin = await this.db.getSessionRecordBySessionId(
+			session.originSessionId,
+		);
+		if (!origin) return session;
+
+		return {
+			...session,
+			...(needsSimd &&
+				origin.simdReadings && { simdReadings: origin.simdReadings }),
+			...(needsDns && origin.dnsEvent && { dnsEvent: origin.dnsEvent }),
+			...(needsEntropyMath &&
+				origin.entropyMathRandomFingerprint !== undefined && {
+					entropyMathRandomFingerprint: origin.entropyMathRandomFingerprint,
+				}),
+			...(needsEntropyCrypto &&
+				origin.entropyCryptoFingerprint !== undefined && {
+					entropyCryptoFingerprint: origin.entropyCryptoFingerprint,
+				}),
+			...(needsEntropyWall &&
+				origin.entropyWallClockOffsetMs !== undefined && {
+					entropyWallClockOffsetMs: origin.entropyWallClockOffsetMs,
+				}),
+			...(needsEntropyFirst &&
+				origin.entropyMathRandomFirst !== undefined && {
+					entropyMathRandomFirst: origin.entropyMathRandomFirst,
+				}),
+			...(needsG && origin.g !== undefined && { g: origin.g }),
+			...(needsI && origin.i !== undefined && { i: origin.i }),
+		};
 	}
 
 	/**
@@ -297,32 +383,28 @@ export class CaptchaManager {
 			},
 		}));
 
-		// User Access Policies override default behaviour. Only enforce the
-		// captchaType check when the policy actually pins a captchaType —
-		// Block policies have their captchaType stripped by
-		// sanitizeAccessPolicy on write, and a policy without a pinned
-		// captchaType should apply to all captcha types (not reject all of
-		// them). Callers should filter out `deferToVerify` policies before
-		// passing them here — see getImageCaptchaChallenge et al. — but
-		// this defensive guard also stops a mis-filtered deferToVerify
-		// Block from breaking every /captcha/* request.
-		if (
-			userAccessPolicy?.captchaType !== undefined &&
-			userAccessPolicy.captchaType !== requestedCaptchaType
-		) {
-			this.logger.warn(() => ({
-				msg: "Invalid captcha type for user access policy",
-				data: {
-					account: clientSettings.account,
-					captchaType: userAccessPolicy.captchaType,
-				},
-			}));
-			return {
-				valid: false,
-				reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
-				type: requestedCaptchaType,
-			};
-		}
+		// User Access Policies override default behaviour, but only for
+		// sessionless requests. When a sessionId is present the session record
+		// is authoritative for captchaType: it was minted by frictionless /
+		// handleAccessPolicy considering the policy state at that time, so a
+		// policy that materialises AFTER a valid session was issued must not
+		// invalidate the widget's in-flight solve. The policy still fires at
+		// verify time (decisionMachineRunner + checkForHardBlock), so the
+		// abuse signal is not lost — only the false-positive
+		// INCORRECT_CAPTCHA_TYPE on the widget's second call is avoided.
+		//
+		// Historical shape (removed 2026-08-06): the check ran up here BEFORE
+		// the sessionId lookup, so any restrict-to-image rule inserted by an
+		// anomaly detector between /frictionless and /captcha/pow surfaced
+		// as a sustained baseline of INCORRECT_CAPTCHA_TYPE 400s. The
+		// specific race is captured in captchaManager.unit.test.ts under
+		// "user access policy precedence over session".
+		//
+		// Block policies have their captchaType stripped by sanitizeAccessPolicy
+		// on write, and a policy without a pinned captchaType applies to all
+		// captcha types (not rejects all of them). deferToVerify policies are
+		// filtered by callers — see getImageCaptchaChallenge et al.
+		//
 		// Session ID
 		// All client flows now go through the unified /frictionless entry point,
 		// so a sessionId may accompany any configured captchaType (frictionless
@@ -535,6 +617,31 @@ export class CaptchaManager {
 
 		// No Session ID
 
+		// Sessionless request: policy captchaType (if pinned by an active
+		// restrict rule) still takes precedence over the client's configured
+		// captchaType, because there's no minted-in-context session to trust.
+		// This preserves the pre-2026-08-06 behaviour for the direct-entry
+		// case (widget hitting /captcha/{type} without going through
+		// /frictionless first).
+		if (
+			userAccessPolicy?.captchaType !== undefined &&
+			userAccessPolicy.captchaType !== requestedCaptchaType
+		) {
+			this.logger.warn(() => ({
+				msg: "Invalid captcha type for user access policy (sessionless)",
+				data: {
+					account: clientSettings.account,
+					captchaType: userAccessPolicy.captchaType,
+					requestedCaptchaType,
+				},
+			}));
+			return {
+				valid: false,
+				reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+				type: requestedCaptchaType,
+			};
+		}
+
 		// To pass here a user must be requesting the captchaType that is stored on the client's settings.
 		// - If `captchaType` is `image` and there is no `sessionId` then `clientSettings?.settings?.captchaType,` must be set to `image`
 		// - If `captchaType` is `pow` and there is no `sessionId` then `clientSettings?.settings?.captchaType,` must be set to `pow`
@@ -740,7 +847,10 @@ export class CaptchaManager {
 		coords?: [number, number][][],
 		countryCode?: string,
 		asn?: number,
-	): Promise<AccessPolicy | undefined> {
+		// Returns the whole rule, not just its policy half: callers persist
+		// the matched rule (scope fields included) onto the record they
+		// disapprove, so the audit page can name the exact policy.
+	): Promise<AccessRule | undefined> {
 		// Get headHash from session record if available
 		let headHash: string | undefined;
 		if (challengeRecord.sessionId) {
@@ -792,7 +902,10 @@ export class CaptchaManager {
 	}
 
 	/**
-	 * Resolves the IP info to feed to `checkTrafficFilter` and runs the check.
+	 * Resolves the IP info to feed to `checkTrafficFilter` and runs the check
+	 * at submit time. Only `action: "block"` matches produce `isBlocked:true`;
+	 * `action: "challenge"` matches were already applied at request time and
+	 * are ignored here.
 	 *
 	 * - The captcha record already carries the IPInfoResponse from request
 	 *   time (ipInfoMiddleware → storeXxxRecord), so by default we reuse it
@@ -802,9 +915,10 @@ export class CaptchaManager {
 	 *   and may differ from the IP that originally requested the captcha.
 	 * - When the session carries a `dnsEvent`, its `peerIp` and `resolverIp`
 	 *   are enriched and passed alongside the primary IP.
-	 * - `blockAbuser` defaults to true so abusive networks are always
-	 *   blocked even when the site hasn't configured a trafficFilter.
-	 * - Returns `{ isBlocked: false }` if every filter flag is off, without
+	 * - The abuser category defaults to `{action:"block"}` so abusive
+	 *   networks are always blocked even when the site hasn't configured a
+	 *   trafficFilter.
+	 * - Returns `{ isBlocked: false }` if no category is active, without
 	 *   consulting the payload at all.
 	 *
 	 * Callers handle the "blocked" branch themselves (each verify path
@@ -818,10 +932,21 @@ export class CaptchaManager {
 		currentIp?: string,
 		enrichedDnsEvent?: EnrichedDnsEvent,
 	): Promise<TrafficCheckResult> {
-		const effective = { blockAbuser: true, ...trafficFilter };
-		const hasAny = Object.values(effective).some((v) => v);
+		const effective: Partial<ITrafficFilter> = {
+			abuser: { action: TrafficFilterAction.Block },
+			...trafficFilter,
+		};
+		const hasAny =
+			effective.vpn !== undefined ||
+			effective.proxy !== undefined ||
+			effective.tor !== undefined ||
+			effective.abuser !== undefined ||
+			effective.datacenter !== undefined ||
+			effective.mobile !== undefined ||
+			effective.satellite !== undefined ||
+			effective.crawler !== undefined;
 		if (!hasAny) {
-			return { isBlocked: false };
+			return { isBlocked: false, matches: [] };
 		}
 
 		const ipInfo = currentIp

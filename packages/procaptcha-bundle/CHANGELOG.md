@@ -1,5 +1,120 @@
 # @prosopo/procaptcha-bundle
 
+## 4.1.51
+### Patch Changes
+
+- Updated dependencies [0def557]
+  - @prosopo/types@5.1.0
+  - @prosopo/procaptcha-common@2.11.25
+  - @prosopo/procaptcha-frictionless@2.13.7
+
+## 4.1.50
+### Patch Changes
+
+- 9f73b93: Make `reset()` remount the widget instead of only tearing it down.
+  
+  `reset()` unmounted every React root and then called `start()`, which
+  re-renders only when the page uses implicit rendering. On an explicitly
+  rendered page nothing came back: the widget skeleton is plain DOM created
+  outside React, so it stayed on screen with no checkbox inside it, and no fresh
+  captcha request was ever made. Callers had to follow every `reset()` with their
+  own `render()` to recover.
+  
+  Widgets are now tracked with the element and render options that produced them,
+  so `reset()` can rebuild in place. `render()` returns a widget id, and both
+  `reset(widgetId)` and the new `remove(widgetId)` accept one to target a single
+  widget; omitting it applies to every widget on the page. `remove()` preserves
+  the old teardown-without-remount behaviour for callers that want the widget
+  gone. `reset()` no longer calls `start()`, which would have double-rendered
+  implicit widgets and attached another `load` listener on every call.
+- Updated dependencies [216f8cd]
+- Updated dependencies [cc3ffe3]
+  - @prosopo/types@5.0.4
+  - @prosopo/procaptcha-common@2.11.24
+  - @prosopo/procaptcha-frictionless@2.13.6
+
+## 4.1.49
+### Patch Changes
+
+- 729349e: Run the cypress suite in firefox as well as chrome whenever the PR is a release
+  PR, via a new cypress-firefox workflow. cypress.yml is untouched.
+  
+  The trusted-event checks scattered across the widget components now go through a
+  single `isEventTrusted()` helper in `@prosopo/procaptcha-common`. Behaviour is
+  unchanged: it still returns early for synthetic input, unless the bundle was
+  built with `PROSOPO_ALLOW_UNTRUSTED_EVENTS=1`, which only the firefox CI leg
+  sets. Production builds pin the define to `false`, so the branch is folded away
+  at build time and the allowance cannot reach a shipped bundle.
+  
+  The allowance exists because cypress-real-events dispatches input over the chrome
+  devtools protocol, which cypress exposes for chromium browsers only — on firefox
+  the specs fall back to cypress' own synthetic clicks.
+- Updated dependencies [729349e]
+- Updated dependencies [16dbab0]
+- Updated dependencies [b525956]
+- Updated dependencies [9091a78]
+- Updated dependencies [d5e104b]
+- Updated dependencies [063e69d]
+- Updated dependencies [8a4d6ad]
+  - @prosopo/procaptcha-common@2.11.23
+  - @prosopo/types@5.0.3
+  - @prosopo/util@3.3.6
+  - @prosopo/widget-skeleton@2.8.6
+  - @prosopo/locale@3.3.0
+  - @prosopo/procaptcha-frictionless@2.13.5
+  - @prosopo/dotenv@3.0.52
+
+## 4.1.48
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+  - @prosopo/types@5.0.2
+  - @prosopo/procaptcha-common@2.11.22
+  - @prosopo/procaptcha-frictionless@2.13.4
+
+## 4.1.47
+### Patch Changes
+
+- 3a77cea: Report why the detector was unavailable instead of swallowing it.
+  
+  `customDetectBot` wraps provider selection, the assign request and the blob-URL
+  import in one `try`, and the `catch` was empty. Falling back is correct — there
+  is no bundled detector, so a failure here means the frictionless POST goes out
+  with an empty token and the provider decides what to serve. But the reasons are
+  not equal: a slow network is routine, whereas a pool bundle that throws on
+  import degrades **every** session on that provider to an image captcha, with
+  nothing in the client console or the provider logs to say why.
+  
+  That is not hypothetical. A detector pool built at catcher 3.1.48 emitted
+  bundles that died on evaluation with `Class constructor D cannot be invoked
+  without 'new'` — an obfuscator seed collision that renamed a class over a live
+  binding. Every staging session silently fell back to an image captcha, and the
+  only way to find it was to reproduce the blob import by hand in a browser: the
+  provider logged a healthy `bundle pool loaded count=20` and served the bundles
+  happily, because from its side nothing had failed.
+  
+  The catch stays broad and the fallback is unchanged; it now `console.error`s
+  what it caught, matching how the sibling `procaptcha-common` modules report.
+- Updated dependencies [3a77cea]
+  - @prosopo/procaptcha-frictionless@2.13.3
+
+## 4.1.46
+### Patch Changes
+
+- 5d60541: Stop dropping detector bundles that arrive slowly, which made the frictionless POST go out with an empty token and no `detectorSessionId` — the provider then scored the session at 0 and served a challenge.
+  
+  `ASSIGN_TIMEOUT_MS` was 2000 ms and covered two legs. The assign POST serves the detector inline (~215 KB gzipped) over a connection that is always cold, because `/healthz` pins a different hostname than the assign target: fresh DNS, TLS and a CORS preflight all had to fit in the budget alongside the download, measured at 6.7s against staging. The cap is now 10 s and applies only to that request; the blob-URL import that parses and evaluates the bundle is untimed, since a timer cannot rescue a stalled main thread and only discards a bundle already in hand.
+  
+  `render()` and the invisible-button path now start the detector prefetch too. Only implicit render did, so pages using the explicit API — including any page that loads the bundle via dynamic import, where implicit render never runs — assigned a detector inline on the widget's critical path with no prefetch to fall back on.
+- Updated dependencies [5d60541]
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/procaptcha-frictionless@2.13.2
+  - @prosopo/types@5.0.1
+  - @prosopo/locale@3.2.9
+  - @prosopo/dotenv@3.0.51
+  - @prosopo/procaptcha-common@2.11.21
+
 ## 4.1.45
 ### Patch Changes
 

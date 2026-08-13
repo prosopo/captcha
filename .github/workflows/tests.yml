@@ -5,6 +5,20 @@ name: tests
 on:
   pull_request:
     branches: [main, dev, staging, release/*]
+    # Ignore-based, never inclusion-based: an allowlist silently stops testing
+    # any newly added directory, whereas anything unrecognised here still runs
+    # CI. Only paths that cannot possibly affect this workflow belong below.
+    #
+    # Safe against the "required check never reports" trap: the one required
+    # context on main is `check`, and changesets.yml publishes a job named
+    # `check` with no path filter at all, so a PR touching only ignored paths
+    # still gets a `check` and does not sit pending forever.
+    paths-ignore:
+      - '.changeset/**' # release metadata; nothing here reads it
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/PULL_REQUEST_TEMPLATE*'
+      - 'docs/**'
+      - '**.md'
     types:
       - opened # when a PR is opened
       - synchronize # when a PR is pushed to
@@ -34,7 +48,12 @@ defaults:
 
 jobs:
   check:
-    runs-on: ${{ fromJSON(vars.GH_RUNNER || '"ubuntu-latest"') }}
+    # GH_RUNNER unset -> GitHub-hosted. Set to a JSON array (the self-hosted
+    # fleet) -> this job's capacity requirement is appended to it: cores, RAM,
+    # disk. Runners advertise one label per step up to their own size, so a job
+    # only lands on a host big enough for it. Set to a JSON string -> used as
+    # given, which is how a repo opts back out to a hosted runner.
+    runs-on: ${{ vars.GH_RUNNER && startsWith(vars.GH_RUNNER, '[') && fromJSON(format('["{0}","4c","8g","40d"]', join(fromJSON(vars.GH_RUNNER), '","'))) || fromJSON(vars.GH_RUNNER || '"ubuntu-latest"') }}
     if: github.event.pull_request.draft == false
     steps:
       - name: Print contexts

@@ -1,5 +1,52 @@
 # @prosopo/types-env
 
+## 2.10.25
+### Patch Changes
+
+- Updated dependencies [0def557]
+  - @prosopo/types@5.1.0
+  - @prosopo/types-database@5.1.0
+  - @prosopo/keyring@2.9.68
+
+## 2.10.24
+### Patch Changes
+
+- Updated dependencies [216f8cd]
+  - @prosopo/types-database@5.0.4
+  - @prosopo/types@5.0.4
+  - @prosopo/keyring@2.9.67
+
+## 2.10.23
+### Patch Changes
+
+- 4c8114d: Add type tests for the environment interfaces, and a unit test asserting the
+  package stays free of runtime exports. No behaviour changes: the package declares
+  types only.
+- Updated dependencies [16dbab0]
+- Updated dependencies [063e69d]
+  - @prosopo/types@5.0.3
+  - @prosopo/types-database@5.0.3
+  - @prosopo/keyring@2.9.66
+  - @prosopo/logger@2.0.6
+
+## 2.10.22
+### Patch Changes
+
+- Updated dependencies [d6cb841]
+  - @prosopo/types-database@5.0.2
+  - @prosopo/types@5.0.2
+  - @prosopo/keyring@2.9.65
+
+## 2.10.21
+### Patch Changes
+
+- Updated dependencies [2aabe73]
+- Updated dependencies [bcef918]
+  - @prosopo/types@5.0.1
+  - @prosopo/logger@2.0.5
+  - @prosopo/types-database@5.0.1
+  - @prosopo/keyring@2.9.64
+
 ## 2.10.20
 ### Patch Changes
 

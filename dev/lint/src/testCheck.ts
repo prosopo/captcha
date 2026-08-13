@@ -60,13 +60,20 @@ const testCheck = (args: {
 		console.log("Checking", pkgJsonPath);
 		const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, "utf8"));
 		const hasTestScript = pkgJson.scripts?.test !== undefined;
-		// glob for test files in the source dir (.test.ts or .spec.ts)
-		const testFiles = fg.globSync([
-			`${path.dirname(pkgJsonPath)}/src/**/*.test.ts`,
-			`${path.dirname(pkgJsonPath)}/src/**/*.spec.ts`,
-			`${path.dirname(pkgJsonPath)}/src/**/*.test.tsx`,
-			`${path.dirname(pkgJsonPath)}/src/**/*.spec.tsx`,
-		]);
+		// Glob for test files (.test.ts / .spec.ts) anywhere in the package, not
+		// just under src/ — demos/cypress-shared keeps its only vitest test
+		// beside the script it covers, in scripts/, and a src-only glob reported
+		// it as "test script but no test files". Build output and dependencies
+		// are excluded so a compiled copy never counts as a source test.
+		const testFiles = fg.globSync(
+			[
+				`${path.dirname(pkgJsonPath)}/**/*.test.ts`,
+				`${path.dirname(pkgJsonPath)}/**/*.spec.ts`,
+				`${path.dirname(pkgJsonPath)}/**/*.test.tsx`,
+				`${path.dirname(pkgJsonPath)}/**/*.spec.tsx`,
+			],
+			{ ignore: ["**/node_modules/**", "**/dist/**"] },
+		);
 		if (hasTestScript) {
 			// package has a test script
 			if (testFiles.length === 0) {
