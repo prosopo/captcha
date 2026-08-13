@@ -1,5 +1,40 @@
 # @prosopo/provider
 
+## 5.1.1
+### Patch Changes
+
+- ec5fca9: Evict the dedup'd session when the incoming request's
+  `detectorSessionId` resolves to a different pool bundleId than the
+  cached session's stored bundleId.
+  
+  `DetectorBundlePool.pickRandom` returns a uniform-random pick per
+  `/detector/assign`, and the widget always fetches a fresh detector per
+  page-load. If we hand back a dedup'd session whose bundleId doesn't
+  match the fresh one, every later `/captcha/{type}` + solution hop
+  encrypts with the new detector's public key while the provider tries
+  to decrypt with the cached bundle's private key — yielding
+  `ERR_OSSL_RSA_OAEP_DECODING_ERROR` on SIMD + behavioural, an empty BDP
+  from the DM's point of view, and an R1-rule escalation to image on
+  every submit. Extends the existing "evict on policy/routing conflict"
+  branch to cover this case. Falls through to reuse when the incoming
+  detectorSessionId binding cannot be resolved (Redis TTL expired), so
+  we don't churn every returning user whose page has been open longer
+  than the binding.
+- cec44bb: Add optional `i` field on `Session`.
+- Updated dependencies [cec44bb]
+  - @prosopo/types@5.1.1
+  - @prosopo/types-database@5.1.1
+  - @prosopo/api@4.0.6
+  - @prosopo/api-express-router@3.1.61
+  - @prosopo/database@4.0.7
+  - @prosopo/datasets@3.1.62
+  - @prosopo/env@3.6.30
+  - @prosopo/ipinfo@0.3.7
+  - @prosopo/keyring@2.9.69
+  - @prosopo/load-balancer@2.10.23
+  - @prosopo/types-env@2.10.26
+  - @prosopo/user-access-policy@3.12.17
+
 ## 5.1.0
 ### Minor Changes
 

@@ -1,5 +1,11 @@
 # @prosopo/fingerprint
 
+## 2.7.26
+### Patch Changes
+
+- Updated dependencies [cec44bb]
+  - @prosopo/types@5.1.1
+
 ## 2.7.25
 ### Patch Changes
 

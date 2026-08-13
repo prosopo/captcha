@@ -1,5 +1,11 @@
 # @prosopo/load-balancer
 
+## 2.10.23
+### Patch Changes
+
+- Updated dependencies [cec44bb]
+  - @prosopo/types@5.1.1
+
 ## 2.10.22
 ### Patch Changes
 

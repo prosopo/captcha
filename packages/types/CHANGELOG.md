@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 5.1.1
+### Patch Changes
+
+- cec44bb: Add optional `i` field on `Session`.
+
 ## 5.1.0
 ### Minor Changes
 
