@@ -818,12 +818,19 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		expect(tasksInstance.db.checkAndRemoveSession).toHaveBeenCalledWith(
 			"stale-pow-session-bundle-conflict",
 		);
-		// And the reuse response is not served.
+		// The reuse response is not served ...
 		expect(res.json).not.toHaveBeenCalledWith(
 			expect.objectContaining({
 				sessionId: "stale-pow-session-bundle-conflict",
 			}),
 		);
+		// ... and the request falls through to the fresh-session path,
+		// which mints a new challenge (no policy or DM output forces
+		// image/puzzle in this test, so pow is picked). The important
+		// contract is "the client gets a new session", not an error.
+		expect(
+			tasksInstance.frictionlessManager.sendPowCaptcha,
+		).toHaveBeenCalled();
 	});
 
 	it("reuses the cached session when the incoming detectorSessionId bundle matches the cached session's bundleId", async () => {
