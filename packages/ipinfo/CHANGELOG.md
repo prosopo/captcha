@@ -1,5 +1,11 @@
 # @prosopo/ipinfo
 
+## 0.3.7
+### Patch Changes
+
+- Updated dependencies [cec44bb]
+  - @prosopo/types@5.1.1
+
 ## 0.3.6
 ### Patch Changes
 

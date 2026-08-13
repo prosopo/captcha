@@ -1,5 +1,12 @@
 # @prosopo/user-access-policy
 
+## 3.12.17
+### Patch Changes
+
+- Updated dependencies [cec44bb]
+  - @prosopo/types@5.1.1
+  - @prosopo/api@4.0.6
+
 ## 3.12.16
 ### Patch Changes
 

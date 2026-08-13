@@ -30,7 +30,7 @@
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.8",
+		"@prosopo/config": "3.3.9",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "4.1.10",
 		"del-cli": "6.0.0",
