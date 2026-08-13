@@ -828,9 +828,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		// which mints a new challenge (no policy or DM output forces
 		// image/puzzle in this test, so pow is picked). The important
 		// contract is "the client gets a new session", not an error.
-		expect(
-			tasksInstance.frictionlessManager.sendPowCaptcha,
-		).toHaveBeenCalled();
+		expect(tasksInstance.frictionlessManager.sendPowCaptcha).toHaveBeenCalled();
 	});
 
 	it("reuses the cached session when the incoming detectorSessionId bundle matches the cached session's bundleId", async () => {
