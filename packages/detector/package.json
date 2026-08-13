@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/detector",
-	"version": "3.5.17",
+	"version": "3.5.20",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"engines": {
@@ -25,11 +25,11 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@prosopo/types": "5.0.2",
+		"@prosopo/types": "5.1.0",
 		"dotenv": "16.4.5"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.7",
+		"@prosopo/config": "3.3.8",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "4.1.10",
 		"concurrently": "9.0.1",

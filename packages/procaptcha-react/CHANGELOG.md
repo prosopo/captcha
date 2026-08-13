@@ -1,5 +1,61 @@
 # @prosopo/procaptcha-react
 
+## 2.9.105
+### Patch Changes
+
+- Updated dependencies [0def557]
+  - @prosopo/types@5.1.0
+  - @prosopo/procaptcha@2.10.66
+  - @prosopo/procaptcha-common@2.11.25
+
+## 2.9.104
+### Patch Changes
+
+- Updated dependencies [216f8cd]
+- Updated dependencies [cc3ffe3]
+  - @prosopo/types@5.0.4
+  - @prosopo/procaptcha-common@2.11.24
+  - @prosopo/procaptcha@2.10.65
+
+## 2.9.103
+### Patch Changes
+
+- 729349e: Run the cypress suite in firefox as well as chrome whenever the PR is a release
+  PR, via a new cypress-firefox workflow. cypress.yml is untouched.
+  
+  The trusted-event checks scattered across the widget components now go through a
+  single `isEventTrusted()` helper in `@prosopo/procaptcha-common`. Behaviour is
+  unchanged: it still returns early for synthetic input, unless the bundle was
+  built with `PROSOPO_ALLOW_UNTRUSTED_EVENTS=1`, which only the firefox CI leg
+  sets. Production builds pin the define to `false`, so the branch is folded away
+  at build time and the allowance cannot reach a shipped bundle.
+  
+  The allowance exists because cypress-real-events dispatches input over the chrome
+  devtools protocol, which cypress exposes for chromium browsers only — on firefox
+  the specs fall back to cypress' own synthetic clicks.
+- b525956: Refresh the captcha widget appearance with a Material 3 theme across the widget-skeleton, procaptcha-common, procaptcha-react and procaptcha-puzzle packages.
+  
+  - Split the single tinted surface into M3 surface roles: the widget now sits on a white `surface` (surfaceContainerLowest) and the challenge dialog on `surfaceContainerHigh`.
+  - Removed all drop shadows. Separation comes from surface roles and outlines; hover and drag feedback use M3 state layers and outline rings instead.
+  - Added shared `typography` (label large / title medium / body medium) and `stateLayer` (8%/10%/10%) tokens, and aligned the shape scale to M3 steps.
+  - Buttons: M3 label-large type, 40dp height, spec padding, state-layer hover in place of a brightness filter, and no resting elevation on the filled variant.
+  - Added the missing focus indicators (3dp outline, 2dp offset, keyboard-only) to the checkbox, buttons and reload control.
+  - Secondary dialog text now uses the `onSurfaceVariant` role rather than reduced opacity.
+- Updated dependencies [729349e]
+- Updated dependencies [16dbab0]
+- Updated dependencies [b525956]
+- Updated dependencies [9091a78]
+- Updated dependencies [d5e104b]
+- Updated dependencies [063e69d]
+- Updated dependencies [8a4d6ad]
+  - @prosopo/procaptcha-common@2.11.23
+  - @prosopo/types@5.0.3
+  - @prosopo/util@3.3.6
+  - @prosopo/widget-skeleton@2.8.6
+  - @prosopo/locale@3.3.0
+  - @prosopo/procaptcha@2.10.64
+  - @prosopo/common@3.1.50
+
 ## 2.9.102
 ### Patch Changes
 

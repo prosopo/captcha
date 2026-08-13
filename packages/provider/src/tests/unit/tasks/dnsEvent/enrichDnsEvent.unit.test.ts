@@ -13,11 +13,12 @@
 // limitations under the License.
 
 import type { IIpInfoService } from "@prosopo/ipinfo";
-import type {
-	EnrichedDnsEvent,
-	IPInfoResponse,
-	ITrafficFilter,
-	Session,
+import {
+	type EnrichedDnsEvent,
+	type IPInfoResponse,
+	type ITrafficFilter,
+	type Session,
+	TrafficFilterAction,
 } from "@prosopo/types";
 import { describe, expect, it, vi } from "vitest";
 import {
@@ -146,12 +147,8 @@ describe("computeDnsAsymmetry", () => {
 		baseInfo({ isDatacenter: true, isVPN: true, ...overrides });
 
 	const filterAllowingVpn: Partial<ITrafficFilter> = {
-		blockVpn: false,
-		blockProxy: false,
-		blockTor: false,
-		blockCrawler: false,
-		blockDatacenter: true,
-		blockAbuser: true,
+		datacenter: { action: TrafficFilterAction.Block },
+		abuser: { action: TrafficFilterAction.Block },
 	};
 
 	it("returns 0 when the enriched event is undefined", () => {
@@ -227,7 +224,7 @@ describe("computeDnsAsymmetry", () => {
 			const score = computeDnsAsymmetry(
 				enrichedWith({ resolverIpInfo: dcVpn(), peerIpInfo: dcVpn() }),
 				undefined,
-				{ ...filterAllowingVpn, blockVpn: true },
+				{ ...filterAllowingVpn, vpn: { action: TrafficFilterAction.Block } },
 			);
 			expect(score).toBeCloseTo(0.5);
 		});
@@ -284,7 +281,7 @@ describe("computeDnsAsymmetry", () => {
 					peerIpInfo: baseInfo({ isDatacenter: true }),
 				}),
 				undefined,
-				{ ...filterAllowingVpn, blockDatacenter: false },
+				{ ...filterAllowingVpn, datacenter: undefined },
 			);
 			expect(score).toBe(0);
 		});
@@ -337,7 +334,7 @@ describe("computeDnsAsymmetry", () => {
 					peerIpInfo: baseInfo({ isAbuser: true, abuserScore: 1 }),
 				}),
 				undefined,
-				{ ...filterAllowingVpn, blockAbuser: false },
+				{ ...filterAllowingVpn, abuser: undefined },
 			);
 			expect(score).toBe(0);
 		});

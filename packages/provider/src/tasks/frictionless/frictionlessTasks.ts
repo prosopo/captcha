@@ -150,9 +150,27 @@ export class FrictionlessManager extends CaptchaManager {
 			entropyWallClockOffsetMs: params.entropyWallClockOffsetMs,
 			entropyMathRandomFirst: params.entropyMathRandomFirst,
 			g: params.g,
+			i: params.i,
 			tcpToChelloUs: params.tcpToChelloUs,
 			chelloToHandshakeUs: params.chelloToHandshakeUs,
 		};
+	}
+
+	/**
+	 * Record the access rule that matched this request, so every session this
+	 * request goes on to write carries it.
+	 *
+	 * Set separately from `setSessionParams` (which runs before rules are
+	 * evaluated) and applied at `createSession` time, so it reaches all the
+	 * outcomes a matched rule can lead to: the 401'd block, the auto-ban a
+	 * score bump triggered, the captcha type a Restrict rule forced, and the
+	 * ordinary decision-machine session a score-only Restrict leaves behind.
+	 * Mirrors `updateScore`'s after-the-fact mutation of the same bag.
+	 */
+	setMatchedRule(matchedRule: Session["matchedRule"]): void {
+		if (this.sessionParams) {
+			this.sessionParams.matchedRule = matchedRule;
+		}
 	}
 
 	updateScore(score: number, scoreComponents: ScoreComponents): void {
@@ -200,6 +218,8 @@ export class FrictionlessManager extends CaptchaManager {
 		isProtect?: Session["isProtect"],
 		originSessionId?: Session["originSessionId"],
 		g?: Session["g"],
+		matchedRule?: Session["matchedRule"],
+		i?: Session["i"],
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
@@ -250,8 +270,12 @@ export class FrictionlessManager extends CaptchaManager {
 			entropyWallClockOffsetMs,
 			entropyMathRandomFirst,
 			g,
+			i,
 			tcpToChelloUs,
 			chelloToHandshakeUs,
+			// Only present when an access policy actually matched this
+			// request, so ordinary sessions stay slim.
+			...(matchedRule && { matchedRule }),
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);
@@ -398,6 +422,8 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.isProtect,
 			undefined,
 			effectiveParams.g,
+			effectiveParams.matchedRule,
+			effectiveParams.i,
 		);
 
 		// Fire-and-forget served-counter writes. Skipped when there's no
@@ -475,6 +501,8 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.isProtect,
 			undefined,
 			effectiveParams.g,
+			effectiveParams.matchedRule,
+			effectiveParams.i,
 		);
 	}
 
@@ -618,6 +646,7 @@ export class FrictionlessManager extends CaptchaManager {
 		let entropyWallClockOffsetMs: number | undefined;
 		let entropyMathRandomFirst: number | undefined;
 		let g: string | undefined;
+		let ii: boolean | undefined;
 		for (const [keyIndex, attempt] of decryptKeys.entries()) {
 			try {
 				this.logger.info(() => ({
@@ -646,6 +675,7 @@ export class FrictionlessManager extends CaptchaManager {
 				const eo = decrypted.entropyWallClockOffsetMs;
 				const em = decrypted.entropyMathRandomFirst;
 				const gv = decrypted.g;
+				const iv = decrypted.i;
 				this.logger.debug(() => ({
 					msg: "Successfully decrypted score",
 					data: {
@@ -677,6 +707,7 @@ export class FrictionlessManager extends CaptchaManager {
 				entropyWallClockOffsetMs = eo;
 				entropyMathRandomFirst = em;
 				g = gv;
+				ii = iv;
 				break;
 			} catch (err) {
 				// check if the next index exists, if not, log an error
@@ -739,6 +770,7 @@ export class FrictionlessManager extends CaptchaManager {
 			entropyWallClockOffsetMs,
 			entropyMathRandomFirst,
 			g,
+			i: ii,
 			// The pool bundle used (if any) — promoted onto the session so the
 			// later behavioural-data hop can resolve the same keypair/inner cfg.
 			bundleId,

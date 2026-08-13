@@ -5,4 +5,4 @@
 "@prosopo/detector": patch
 ---
 
-Add optional `g` field on `Session`.
+Add optional `i` field on `Session`.

@@ -1,0 +1,64 @@
+name: ios-webview
+
+on:
+  pull_request:
+    branches: [main]
+    types:
+      - opened
+      - synchronize
+      - reopened
+      # Not a type this workflow wants to run for -- the job below skips it. It
+      # exists so the run is created and cancels the in-flight one.
+      - converted_to_draft
+    paths:
+      - "demos/ios-webview/**"
+      - ".github/workflows/ios-webview.yml"
+
+# Least privilege: both jobs only check out the repo and build it, so read
+# access to contents is the whole requirement. Without this the workflow
+# inherits the repository default, which is write on several scopes -- and this
+# repository is public, so a workflow that builds a fork's code is exactly
+# where a broad token should not be handed out.
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: ${{ github.event.action != 'converted_to_draft' }}
+    # Hosted, deliberately: this repository is public, so a fork PR running on
+    # the self-hosted macOS runner would execute arbitrary code on it.
+    # macos-15 (Xcode 16) is enough here -- the app targets iOS 16.4.
+    runs-on: macos-15
+    defaults:
+      run:
+        working-directory: demos/ios-webview
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain versions
+        run: xcodebuild -version
+
+      # `-target`, not `-scheme`: the project ships no shared scheme
+      # (xcshareddata/xcschemes is absent) and Xcode only autocreates schemes
+      # when a human opens the project, so `-scheme procaptcha` fails on a
+      # clean machine.
+      #
+      # CODE_SIGNING_ALLOWED=NO and the simulator SDK: this is an app target,
+      # so it would otherwise fail looking for a signing identity and a
+      # provisioning profile that CI has no business holding.
+      - name: Build (iOS Simulator)
+        run: |
+          xcodebuild build \
+            -project procaptcha.xcodeproj \
+            -target procaptcha \
+            -configuration Release \
+            -sdk iphonesimulator \
+            CODE_SIGNING_ALLOWED=NO
+
+      # No test step: the project declares no test target, so there is nothing
+      # to run. Build-only is the honest answer -- it still catches the next
+      # change that breaks the native integration, which is the point.

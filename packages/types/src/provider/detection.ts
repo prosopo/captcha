@@ -56,4 +56,5 @@ export type DetectorResult = {
 	entropyWallClockOffsetMs?: number;
 	entropyMathRandomFirst?: number;
 	g?: string;
+	i?: boolean;
 };
