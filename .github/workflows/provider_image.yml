@@ -24,6 +24,8 @@ env:
   GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
   GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
   CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: "0"
+  CARGO_PROFILE_DEV_DEBUG: line-tables-only
   NODE_OPTIONS: "--max-old-space-size=4096"
   NODE_ENV: "test"
 
