@@ -1,5 +1,16 @@
 # @prosopo/types-database
 
+## 5.1.0
+### Minor Changes
+
+- 0def557: feat(traffic-filter): per-category policy with `block` or `challenge` action; challenge overrides captcha type + params at request time.
+
+### Patch Changes
+
+- Updated dependencies [0def557]
+  - @prosopo/types@5.1.0
+  - @prosopo/user-access-policy@3.12.16
+
 ## 5.0.4
 ### Patch Changes
 
