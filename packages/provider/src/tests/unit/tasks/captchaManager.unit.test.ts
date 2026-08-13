@@ -168,6 +168,7 @@ describe("CaptchaManager", () => {
 				entropyWallClockOffsetMs: 0,
 				entropyMathRandomFirst: 0.1,
 				g: "c",
+				i: false,
 			} as unknown as Session;
 			dbGet().mockResolvedValue(session);
 
@@ -250,6 +251,65 @@ describe("CaptchaManager", () => {
 				await captchaManager.getSessionRecordWithOriginFallback("esc");
 
 			expect(got?.g).toBe("escalation-value");
+		});
+
+		it("fills i from origin when the escalation is missing it", async () => {
+			const origin = {
+				sessionId: "origin",
+				captchaType: CaptchaType.pow,
+				i: true,
+			} as unknown as Session;
+			const escalation = {
+				sessionId: "esc",
+				originSessionId: "origin",
+				captchaType: CaptchaType.puzzle,
+			} as unknown as Session;
+			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			expect(got?.i).toBe(true);
+			expect(got?.sessionId).toBe("esc");
+		});
+
+		it("carries a false i forward rather than treating it as absent", async () => {
+			const origin = {
+				sessionId: "origin",
+				captchaType: CaptchaType.pow,
+				i: false,
+			} as unknown as Session;
+			const escalation = {
+				sessionId: "esc",
+				originSessionId: "origin",
+				captchaType: CaptchaType.puzzle,
+			} as unknown as Session;
+			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			expect(got?.i).toBe(false);
+		});
+
+		it("keeps the escalation's own i rather than the origin's", async () => {
+			const origin = {
+				sessionId: "origin",
+				captchaType: CaptchaType.pow,
+				i: false,
+			} as unknown as Session;
+			const escalation = {
+				sessionId: "esc",
+				originSessionId: "origin",
+				captchaType: CaptchaType.puzzle,
+				i: true,
+			} as unknown as Session;
+			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			expect(got?.i).toBe(true);
 		});
 
 		it("does not fill anything when origin also lacks the fields", async () => {

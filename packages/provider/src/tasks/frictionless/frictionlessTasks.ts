@@ -150,6 +150,7 @@ export class FrictionlessManager extends CaptchaManager {
 			entropyWallClockOffsetMs: params.entropyWallClockOffsetMs,
 			entropyMathRandomFirst: params.entropyMathRandomFirst,
 			g: params.g,
+			i: params.i,
 			tcpToChelloUs: params.tcpToChelloUs,
 			chelloToHandshakeUs: params.chelloToHandshakeUs,
 		};
@@ -218,6 +219,7 @@ export class FrictionlessManager extends CaptchaManager {
 		originSessionId?: Session["originSessionId"],
 		g?: Session["g"],
 		matchedRule?: Session["matchedRule"],
+		i?: Session["i"],
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
@@ -268,6 +270,7 @@ export class FrictionlessManager extends CaptchaManager {
 			entropyWallClockOffsetMs,
 			entropyMathRandomFirst,
 			g,
+			i,
 			tcpToChelloUs,
 			chelloToHandshakeUs,
 			// Only present when an access policy actually matched this
@@ -420,6 +423,7 @@ export class FrictionlessManager extends CaptchaManager {
 			undefined,
 			effectiveParams.g,
 			effectiveParams.matchedRule,
+			effectiveParams.i,
 		);
 
 		// Fire-and-forget served-counter writes. Skipped when there's no
@@ -498,6 +502,7 @@ export class FrictionlessManager extends CaptchaManager {
 			undefined,
 			effectiveParams.g,
 			effectiveParams.matchedRule,
+			effectiveParams.i,
 		);
 	}
 
@@ -641,6 +646,7 @@ export class FrictionlessManager extends CaptchaManager {
 		let entropyWallClockOffsetMs: number | undefined;
 		let entropyMathRandomFirst: number | undefined;
 		let g: string | undefined;
+		let ii: boolean | undefined;
 		for (const [keyIndex, attempt] of decryptKeys.entries()) {
 			try {
 				this.logger.info(() => ({
@@ -669,6 +675,7 @@ export class FrictionlessManager extends CaptchaManager {
 				const eo = decrypted.entropyWallClockOffsetMs;
 				const em = decrypted.entropyMathRandomFirst;
 				const gv = decrypted.g;
+				const iv = decrypted.i;
 				this.logger.debug(() => ({
 					msg: "Successfully decrypted score",
 					data: {
@@ -700,6 +707,7 @@ export class FrictionlessManager extends CaptchaManager {
 				entropyWallClockOffsetMs = eo;
 				entropyMathRandomFirst = em;
 				g = gv;
+				ii = iv;
 				break;
 			} catch (err) {
 				// check if the next index exists, if not, log an error
@@ -762,6 +770,7 @@ export class FrictionlessManager extends CaptchaManager {
 			entropyWallClockOffsetMs,
 			entropyMathRandomFirst,
 			g,
+			i: ii,
 			// The pool bundle used (if any) — promoted onto the session so the
 			// later behavioural-data hop can resolve the same keypair/inner cfg.
 			bundleId,
