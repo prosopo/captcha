@@ -255,7 +255,8 @@ export const execute = () => {
 		return;
 	}
 
-	// Dispatch a custom event to notify React components to show the modal or perform silent verification
+	// Dispatch a custom event to tell the mounted widgets to show the modal or
+	// perform silent verification
 	const executeEvent = new CustomEvent(PROCAPTCHA_EXECUTE_EVENT, {
 		detail: {
 			containerId: containers[0]?.id || "procaptcha-container",
