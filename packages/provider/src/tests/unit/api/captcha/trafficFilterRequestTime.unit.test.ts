@@ -112,7 +112,10 @@ describe("applyTrafficFilterAtRequestTime", () => {
 		});
 	});
 
-	it("block wins over challenge when both categories match the ipInfo", () => {
+	it("higher-precedence category wins over a lower-precedence block", () => {
+		// Per-IP precedence: VPN outranks proxy. Even if proxy is configured
+		// to block and VPN only to challenge, the IP is treated as VPN — the
+		// proxy policy is not consulted.
 		expect(
 			applyTrafficFilterAtRequestTime(ipInfo({ isVPN: true, isProxy: true }), {
 				vpn: {
@@ -121,10 +124,16 @@ describe("applyTrafficFilterAtRequestTime", () => {
 				},
 				proxy: { action: TrafficFilterAction.Block },
 			}),
-		).toMatchObject({ kind: "block", reason: ResultReason.PROXY_BLOCKED });
+		).toMatchObject({
+			kind: "challenge",
+			captchaType: CaptchaType.pow,
+			sourceCategories: ["vpn"],
+		});
 	});
 
-	it("collapses multiple challenge matches to the strictest captchaType (image > puzzle > pow)", () => {
+	it("uses the top-precedence category's captchaType when several flags are set", () => {
+		// Precedence order (highest first): tor > vpn > proxy. An IP flagged
+		// as all three is owned by tor; only the tor policy is consulted.
 		const verdict = applyTrafficFilterAtRequestTime(
 			ipInfo({ isVPN: true, isProxy: true, isTor: true }),
 			{
@@ -149,6 +158,7 @@ describe("applyTrafficFilterAtRequestTime", () => {
 			kind: "challenge",
 			captchaType: CaptchaType.image,
 			solvedImagesCount: 6,
+			sourceCategories: ["tor"],
 		});
 	});
 });

@@ -220,13 +220,16 @@ describe("computeDnsAsymmetry", () => {
 			expect(score).toBe(0);
 		});
 
-		it("keeps the datacenter penalty when isVPN but blockVpn is on", () => {
+		it("does not double-count VPN+DC even when both policies are configured", () => {
+			// Under per-IP precedence, VPN owns a VPN+DC IP regardless of the
+			// datacenter policy state. The DC flag is downstream categorisation
+			// and doesn't contribute a separate asymmetry signal.
 			const score = computeDnsAsymmetry(
 				enrichedWith({ resolverIpInfo: dcVpn(), peerIpInfo: dcVpn() }),
 				undefined,
 				{ ...filterAllowingVpn, vpn: { action: TrafficFilterAction.Block } },
 			);
-			expect(score).toBeCloseTo(0.5);
+			expect(score).toBe(0);
 		});
 
 		it("suppresses when isProxy and blockProxy off", () => {
@@ -251,7 +254,10 @@ describe("computeDnsAsymmetry", () => {
 			expect(score).toBe(0);
 		});
 
-		it("suppresses when isCrawler and blockCrawler off", () => {
+		it("counts DC on a crawler+DC IP even when crawler policy is off", () => {
+			// Precedence puts datacenter above crawler, so a crawler+DC IP is
+			// owned by datacenter for signal purposes. The DC penalty fires
+			// regardless of crawler policy state.
 			const score = computeDnsAsymmetry(
 				enrichedWith({
 					resolverIpInfo: baseInfo({ isDatacenter: true, isCrawler: true }),
@@ -259,7 +265,7 @@ describe("computeDnsAsymmetry", () => {
 				undefined,
 				filterAllowingVpn,
 			);
-			expect(score).toBe(0);
+			expect(score).toBeCloseTo(0.3);
 		});
 
 		it("does not affect the client-ISP compound when resolver DC is suppressed", () => {

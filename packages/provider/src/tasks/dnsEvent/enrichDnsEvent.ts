@@ -20,10 +20,7 @@ import type {
 	Session,
 } from "@prosopo/types";
 import { trafficFilterAbuserScoreThresholdDefault } from "@prosopo/types";
-import {
-	isDatacenterAllowlisted,
-	isDatacenterDenylisted,
-} from "../spam/checkTrafficFilter.js";
+import { isEffectivelyDatacenter } from "../spam/checkTrafficFilter.js";
 
 export type { EnrichedDnsEvent };
 
@@ -87,17 +84,19 @@ export const extraIpInfosFromEnrichedDnsEvent = (
  *   - client IP is a consumer ISP but resolver is datacenter (compound)
  *
  * When `trafficFilter` is supplied, the datacenter and abuser contributions
- * are gated on the same rules `checkTrafficFilter` uses for the client IP.
- * A category counts here whenever the operator has configured any policy
- * for it (block or challenge) — either intent signals suspicion.
+ * are gated on the same per-IP precedence chain `checkTrafficFilter` uses
+ * for the client IP: Tor > VPN > proxy > datacenter > abuser > crawler >
+ * satellite > mobile. A category only counts when it's the top-precedence
+ * flag on the IP — a Tor / VPN / proxy exit that also carries
+ * `isDatacenter=true` is owned by the higher category and does not count
+ * as datacenter here. Same for abuser: Tor / VPN / proxy / (effective)
+ * datacenter all outrank it.
  *
- *   - datacenter category must be configured; IPs whose
- *     `providerType === "isp"` short-circuit; named allowlist skips
- *   - abuser category defaults to configured, with the score threshold
- *   - cross-category suppression: VPN / proxy / Tor / crawler IPs that also
- *     carry `isDatacenter=true` are NOT counted as datacenter when the
- *     operator hasn't configured that more specific category — mirrors
- *     the `datacenterSuppressedByCategory` rule in evaluateIpInfo.
+ * Within each category:
+ *
+ *   - datacenter category must be configured; `isEffectivelyDatacenter`
+ *     applies the ISP short-circuit, allowlist, and denylist
+ *   - abuser category must be configured, with the score threshold
  *
  * `pathValid` is a protocol signal, not a category — it always contributes
  * regardless of trafficFilter. When `trafficFilter` is omitted, all
@@ -117,30 +116,21 @@ export const computeDnsAsymmetry = (
 		if (!ip?.isValid || !ip.isDatacenter) return false;
 		if (!trafficFilter) return true;
 		if (trafficFilter.datacenter === undefined) return false;
-		// Denylist wins: an explicitly listed provider counts as datacenter
-		// even when the ISP short-circuit or category suppression would
-		// otherwise exempt it.
-		if (isDatacenterDenylisted(ip, trafficFilter.datacenterNameDenylist)) {
-			return true;
-		}
-		// Cross-category suppression: don't penalise datacenter classification
-		// when the operator has not configured the more specific category.
-		if (
-			(ip.isVPN && trafficFilter.vpn === undefined) ||
-			(ip.isProxy && trafficFilter.proxy === undefined) ||
-			(ip.isTor && trafficFilter.tor === undefined) ||
-			(ip.isCrawler && trafficFilter.crawler === undefined)
-		) {
-			return false;
-		}
-		if (ip.providerType === "isp") return false;
-		return !isDatacenterAllowlisted(ip, trafficFilter.datacenterNameAllowlist);
+		// Precedence: Tor / VPN / proxy outrank datacenter, so those flags
+		// own the IP and datacenter doesn't count as an asymmetry signal.
+		if (ip.isTor || ip.isVPN || ip.isProxy) return false;
+		return isEffectivelyDatacenter(ip, trafficFilter);
 	};
 
 	const countAbuser = (ip: IPInfoResponse | undefined): boolean => {
 		if (!ip?.isValid || !ip.isAbuser) return false;
 		if (!trafficFilter) return true;
 		if (trafficFilter.abuser === undefined) return false;
+		// Precedence: Tor / VPN / proxy / (effective) datacenter all outrank
+		// abuser — higher-precedence flags own the IP, so abuser doesn't
+		// count as a separate asymmetry signal.
+		if (ip.isTor || ip.isVPN || ip.isProxy) return false;
+		if (isEffectivelyDatacenter(ip, trafficFilter)) return false;
 		const threshold =
 			trafficFilter.abuserScoreThreshold ??
 			trafficFilterAbuserScoreThresholdDefault;
