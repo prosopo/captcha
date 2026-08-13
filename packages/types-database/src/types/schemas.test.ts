@@ -453,11 +453,11 @@ describe("UserSettingsSchema", () => {
 		).toBeUndefined();
 	});
 
-	it("defaults the traffic filter to blocking abusers only", () => {
+	it("leaves every traffic-filter category unconfigured by default (submit-time abuser default is applied by resolveTrafficFilterCheck)", () => {
 		const doc = settings();
-		expect(doc.trafficFilter.blockAbuser).toBe(true);
-		expect(doc.trafficFilter.blockVpn).toBe(false);
-		expect(doc.trafficFilter.blockTor).toBe(false);
+		expect(doc.trafficFilter.vpn).toBeUndefined();
+		expect(doc.trafficFilter.tor).toBeUndefined();
+		expect(doc.trafficFilter.abuser).toBeUndefined();
 		expect(doc.trafficFilter.skipExtrasOnValidDnsPath).toBe(true);
 	});
 
