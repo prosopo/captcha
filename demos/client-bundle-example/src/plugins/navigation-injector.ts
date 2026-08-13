@@ -530,7 +530,9 @@ export default function navigationInjector(): Plugin {
 
 				// Inject navigation after <body> tag and script before </body>
 				if (html.includes("<body>") && html.includes("</body>")) {
+					const viewportMeta = `<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">`;
 					return html
+						.replace("<head>", `<head>\n    ${viewportMeta}`)
 						.replace("</head>", `${navStyle}</head>`)
 						.replace("<body>", `<body>\n${navHtml}`)
 						.replace("</body>", `${navScript}\n</body>`);
