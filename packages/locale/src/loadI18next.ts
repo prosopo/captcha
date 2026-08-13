@@ -118,7 +118,7 @@ async function loadI18next(backend: boolean, lng?: string): Promise<i18n> {
 						}, lng);
 					} else {
 						// Singleton already exists (e.g. a prior widget mounted with a
-						// different language, or a React consumer initialised earlier).
+						// different language, or a direct consumer initialised earlier).
 						// Reconcile before resolving so callers can render synchronously
 						// against the requested language instead of seeing a flash of
 						// the previous one.

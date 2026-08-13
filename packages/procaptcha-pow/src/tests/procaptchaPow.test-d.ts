@@ -22,10 +22,9 @@ import type {
 	ProcaptchaState,
 	ProcaptchaStateUpdateFn,
 } from "@prosopo/types";
-import type { ReactElement } from "react";
 import { assertType, describe, expectTypeOf, test } from "vitest";
 import type * as entrypoint from "../index.js";
-import { ProcaptchaPow } from "../index.js";
+import { mountProcaptchaPow } from "../index.js";
 import { Manager } from "../services/Manager.js";
 import { config, frictionless, state } from "./managerHarness.js";
 
@@ -33,15 +32,22 @@ import { config, frictionless, state } from "./managerHarness.js";
 const i18n = (): Ti18n => undefined as unknown as Ti18n;
 
 describe("the package entrypoint's types", () => {
-	test("ProcaptchaPow takes the shared widget props and renders an element", () => {
-		expectTypeOf(ProcaptchaPow).parameters.toEqualTypeOf<[ProcaptchaProps]>();
-		expectTypeOf(ProcaptchaPow).returns.toExtend<ReactElement>();
+	test("mountProcaptchaPow takes a host element and the shared widget props", () => {
+		expectTypeOf(mountProcaptchaPow).parameters.toEqualTypeOf<
+			[HTMLElement, ProcaptchaProps]
+		>();
+		expectTypeOf(mountProcaptchaPow).returns.toExtend<{
+			destroy: () => void;
+		}>();
 	});
 
-	test("the inner widget's default export is not re-exported", () => {
-		// `export *` skips default exports, so consumers can only reach the lazy
-		// wrapper — the one that works without a code-splitting bundler.
-		expectTypeOf<keyof typeof entrypoint>().toEqualTypeOf<"ProcaptchaPow">();
+	test("the entrypoint exposes the lazy wrapper and the widget itself", () => {
+		// The lazy wrapper is what works without a code-splitting bundler; the
+		// direct mount is what ProcaptchaFrictionless imports once it has already
+		// paid for the dynamic import of this package.
+		expectTypeOf<keyof typeof entrypoint>().toEqualTypeOf<
+			"mountProcaptchaPow" | "loadProcaptchaPow" | "mountProcaptchaPowWidget"
+		>();
 	});
 
 	test("config, callbacks and i18n are all required", () => {

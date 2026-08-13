@@ -122,9 +122,7 @@ export default defineConfig(async ({ command, mode }) => {
 					...frontendConfig.build?.rollupOptions?.output,
 					manualChunks(id: string) {
 						if (
-							id.includes(
-								"packages/procaptcha-common/dist/reactComponents/Honeypot",
-							)
+							id.includes("packages/procaptcha-common/dist/components/honeypot")
 						) {
 							return honeypotChunkName;
 						}

@@ -15,7 +15,7 @@
 import { getWindowCallback } from "@prosopo/procaptcha-common";
 import type { EnvironmentTypes, ProcaptchaRenderOptions } from "@prosopo/types";
 import { at } from "@prosopo/util";
-import type { Root } from "react-dom/client";
+import type { BundleCaptchaHandle } from "./util/captcha/components/bundleCaptcha.js";
 import { extractParams, getProcaptchaScript } from "./util/config.js";
 import { WidgetFactory } from "./util/widgetFactory.js";
 import { WidgetThemeResolver } from "./util/widgetThemeResolver.js";
@@ -25,16 +25,16 @@ const BUNDLE_NAMES = ["procaptcha.bundle.iife.js", "procaptcha.bundle.js"];
 /**
  * Everything needed to rebuild a widget in place.
  *
- * Previously only the React `Root` was retained, which made `reset()` a
- * one-way operation: unmounting tore out the React tree but the widget
- * skeleton (created imperatively by `createWidgetSkeleton`, not by React)
- * stayed in the DOM, leaving a container with a logo and no checkbox. There
- * was no record of which element or render options produced it, so nothing
- * could put it back. Keeping the descriptor alongside the root is what lets
- * `reset()` remount rather than just destroy.
+ * Previously only the widget handle was retained, which made `reset()` a
+ * one-way operation: destroying tore out the captcha but the widget skeleton
+ * (created imperatively by `createWidgetSkeleton`) stayed in the DOM, leaving
+ * a container with a logo and no checkbox. There was no record of which
+ * element or render options produced it, so nothing could put it back. Keeping
+ * the descriptor alongside the handle is what lets `reset()` remount rather
+ * than just destroy.
  */
 interface WidgetEntry {
-	root: Root;
+	handle: BundleCaptchaHandle;
 	element: Element;
 	renderOptions: ProcaptchaRenderOptions;
 	isWeb2: boolean;
@@ -47,16 +47,16 @@ let widgetIdCounter = 0;
 const nextWidgetId = (): string => `procaptcha-widget-${widgetIdCounter++}`;
 
 const registerWidgets = (
-	roots: Root[],
+	handles: BundleCaptchaHandle[],
 	elements: Element[],
 	renderOptions: ProcaptchaRenderOptions,
 	isWeb2: boolean,
 	invisible: boolean,
 ): string[] =>
-	roots.map((root, index) => {
+	handles.map((handle, index) => {
 		const id = nextWidgetId();
 		procaptchaWidgets.set(id, {
-			root,
+			handle,
 			element: at(elements, index),
 			renderOptions,
 			isWeb2,
@@ -135,14 +135,14 @@ const implicitRender = async () => {
 			ipv6,
 		};
 
-		const root = await widgetFactory.createWidgets(
+		const handles = await widgetFactory.createWidgets(
 			elements,
 			implicitRenderOptions,
 			!(web3 === "true"),
 		);
 
 		registerWidgets(
-			root,
+			handles,
 			elements,
 			implicitRenderOptions,
 			!(web3 === "true"),
@@ -171,14 +171,14 @@ const implicitRender = async () => {
 				ipv6,
 			};
 
-			const root = await widgetFactory.createWidgets(
+			const handles = await widgetFactory.createWidgets(
 				[button],
 				buttonRenderOptions,
 				true,
 				true,
 			);
 
-			registerWidgets(root, [button], buttonRenderOptions, true, true);
+			registerWidgets(handles, [button], buttonRenderOptions, true, true);
 
 			// Add click event listener to the button
 			button.addEventListener("click", async (event) => {
@@ -213,7 +213,7 @@ export const render = async (
 	const invisible =
 		hasInvisibleSize || element.tagName.toLowerCase() === "button";
 
-	const roots = await widgetFactory.createWidgets(
+	const handles = await widgetFactory.createWidgets(
 		[element],
 		renderOptions,
 		isWeb2,
@@ -221,7 +221,7 @@ export const render = async (
 	);
 
 	const ids = registerWidgets(
-		roots,
+		handles,
 		[element],
 		renderOptions,
 		isWeb2,
@@ -229,7 +229,7 @@ export const render = async (
 	);
 
 	// Deliberately not `at()`: it throws on an empty array before it consults
-	// `optional`, and zero roots is a legitimate outcome here.
+	// `optional`, and zero handles is a legitimate outcome here.
 	return ids[0];
 };
 
@@ -255,7 +255,8 @@ export const execute = () => {
 		return;
 	}
 
-	// Dispatch a custom event to notify React components to show the modal or perform silent verification
+	// Dispatch a custom event to tell the mounted widgets to show the modal or
+	// perform silent verification
 	const executeEvent = new CustomEvent(PROCAPTCHA_EXECUTE_EVENT, {
 		detail: {
 			containerId: containers[0]?.id || "procaptcha-container",
@@ -351,12 +352,12 @@ const start = () => {
  * Returns a widget to its unsolved state, ready to be solved again. Pass a
  * widget id to reset one widget, or omit it to reset every widget on the page.
  *
- * This remounts rather than merely unmounting. The previous implementation
- * unmounted every root and then called `start()`, which only re-renders when
+ * This remounts rather than merely destroying. The previous implementation
+ * tore every widget down and then called `start()`, which only re-renders when
  * the page uses implicit rendering — and even then only via the
  * `document.readyState` fallback, because the script's `load` event has long
  * since fired. On an explicitly-rendered page nothing came back at all: the
- * skeleton stayed in the DOM with no checkbox inside it, and no fresh captcha
+ * skeleton stayed in the DOM with no checkbox inside it and no fresh captcha
  * request was ever made. Rebuilding from the stored descriptor makes reset
  * behave the same way on both paths.
  *
@@ -372,17 +373,17 @@ export const reset = async (widgetId?: string): Promise<void> => {
 		const current = procaptchaWidgets.get(id);
 		if (!current) continue;
 
-		current.root.unmount();
+		current.handle.destroy();
 
-		const [root] = await widgetFactory.createWidgets(
+		const [handle] = await widgetFactory.createWidgets(
 			[current.element],
 			current.renderOptions,
 			current.isWeb2,
 			current.invisible,
 		);
 
-		if (root) {
-			procaptchaWidgets.set(id, { ...current, root });
+		if (handle) {
+			procaptchaWidgets.set(id, { ...current, handle });
 		} else {
 			procaptchaWidgets.delete(id);
 		}
@@ -402,7 +403,9 @@ export const remove = (widgetId?: string): void => {
 	for (const id of ids) {
 		const entry = procaptchaWidgets.get(id);
 		if (!entry) continue;
-		entry.root.unmount();
+		entry.handle.destroy();
+		// The skeleton is plain DOM the handle doesn't own, so tearing the widget
+		// down alone would leave it behind.
 		entry.element.innerHTML = "";
 		procaptchaWidgets.delete(id);
 	}

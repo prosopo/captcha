@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { Component } from "@prosopo/procaptcha-common";
 import type { PuzzleEvent } from "@prosopo/types";
-import { type Theme, lightTheme } from "@prosopo/widget-skeleton";
-import { type ReactElement, act, createElement } from "react";
-import { type Root, createRoot } from "react-dom/client";
+import { lightTheme } from "@prosopo/widget-skeleton";
 import {
 	type Mock,
 	afterEach,
@@ -25,7 +24,11 @@ import {
 	test,
 	vi,
 } from "vitest";
-import { PuzzleCanvas } from "../components/PuzzleCanvas.js";
+import {
+	type PuzzleCanvasProps,
+	mountPuzzleCanvas,
+} from "../components/puzzleCanvas.js";
+import { type Mounted, mount } from "./domHarness.js";
 
 /**
  * The canvas is the only piece of the puzzle flow the user actually touches:
@@ -38,26 +41,15 @@ const CONTAINER_WIDTH = 300;
 const CONTAINER_HEIGHT = 200;
 const PIECE_SIZE = 24;
 
-interface CanvasProps {
-	originX: number;
-	originY: number;
-	targetX: number;
-	targetY: number;
-	onComplete: Mock<
-		(finalX: number, finalY: number, puzzleEvents: PuzzleEvent[]) => void
-	>;
-	showRetry: boolean;
-	submitting: boolean;
-	theme: Theme;
-}
-
-let container: HTMLDivElement;
-let root: Root;
+let mounted: Mounted;
+let canvas: Component<PuzzleCanvasProps> | undefined;
 let onComplete: Mock<
 	(finalX: number, finalY: number, puzzleEvents: PuzzleEvent[]) => void
 >;
 
-const props = (overrides: Partial<CanvasProps> = {}): CanvasProps => ({
+const props = (
+	overrides: Partial<PuzzleCanvasProps> = {},
+): PuzzleCanvasProps => ({
 	originX: 20,
 	originY: 100,
 	targetX: 200,
@@ -69,14 +61,21 @@ const props = (overrides: Partial<CanvasProps> = {}): CanvasProps => ({
 	...overrides,
 });
 
-const render = (canvasProps: CanvasProps): void => {
-	act(() => {
-		root.render(createElement(PuzzleCanvas, canvasProps) as ReactElement);
-	});
+const render = (canvasProps: PuzzleCanvasProps): void => {
+	if (canvas) {
+		canvas.update(canvasProps);
+	} else {
+		canvas = mountPuzzleCanvas(mounted.container, canvasProps);
+	}
+};
+
+const destroy = (): void => {
+	canvas?.destroy();
+	canvas = undefined;
 };
 
 const piece = (): HTMLElement => {
-	const element = container.querySelector<HTMLElement>(
+	const element = mounted.container.querySelector<HTMLElement>(
 		'[data-cy="prosopo-puzzle-piece"]',
 	);
 	if (!element) throw new Error("expected the puzzle piece to be rendered");
@@ -90,25 +89,19 @@ const piecePosition = (): { x: number; y: number } => ({
 });
 
 const mouseDown = (clientX: number, clientY: number): void => {
-	act(() => {
-		piece().dispatchEvent(
-			new MouseEvent("mousedown", { bubbles: true, clientX, clientY }),
-		);
-	});
+	piece().dispatchEvent(
+		new MouseEvent("mousedown", { bubbles: true, clientX, clientY }),
+	);
 };
 
 const mouseMove = (clientX: number, clientY: number): void => {
-	act(() => {
-		document.dispatchEvent(
-			new MouseEvent("mousemove", { bubbles: true, clientX, clientY }),
-		);
-	});
+	document.dispatchEvent(
+		new MouseEvent("mousemove", { bubbles: true, clientX, clientY }),
+	);
 };
 
 const mouseUp = (): void => {
-	act(() => {
-		document.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
-	});
+	document.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
 };
 
 /**
@@ -125,21 +118,15 @@ const touchEvent = (
 };
 
 const touchStart = (touches: { clientX: number; clientY: number }[]): void => {
-	act(() => {
-		piece().dispatchEvent(touchEvent("touchstart", touches));
-	});
+	piece().dispatchEvent(touchEvent("touchstart", touches));
 };
 
 const touchMove = (touches: { clientX: number; clientY: number }[]): void => {
-	act(() => {
-		document.dispatchEvent(touchEvent("touchmove", touches));
-	});
+	document.dispatchEvent(touchEvent("touchmove", touches));
 };
 
 const touchEnd = (): void => {
-	act(() => {
-		document.dispatchEvent(touchEvent("touchend", []));
-	});
+	document.dispatchEvent(touchEvent("touchend", []));
 };
 
 beforeEach(() => {
@@ -147,18 +134,13 @@ beforeEach(() => {
 		vi.fn<
 			(finalX: number, finalY: number, puzzleEvents: PuzzleEvent[]) => void
 		>();
-	container = document.createElement("div");
-	document.body.appendChild(container);
-	act(() => {
-		root = createRoot(container);
-	});
+	mounted = mount();
+	canvas = undefined;
 });
 
 afterEach(() => {
-	act(() => {
-		root.unmount();
-	});
-	container.remove();
+	destroy();
+	mounted.unmount();
 	vi.useRealTimers();
 	vi.restoreAllMocks();
 });
@@ -187,12 +169,14 @@ describe("what it puts on screen", () => {
 
 	test("the first go asks the user to drag the piece", () => {
 		render(props());
-		expect(container.textContent).toContain("Drag the piece to the target");
+		expect(mounted.container.textContent).toContain(
+			"Drag the piece to the target",
+		);
 	});
 
 	test("a retry says so instead", () => {
 		render(props({ showRetry: true }));
-		expect(container.textContent).toContain("Not quite");
+		expect(mounted.container.textContent).toContain("Not quite");
 	});
 
 	test("the piece cannot be grabbed while a solution is in flight", () => {
@@ -215,9 +199,7 @@ describe("what it puts on screen", () => {
 	test("the shake on a retry stops on its own", () => {
 		vi.useFakeTimers();
 		render(props({ showRetry: true }));
-		act(() => {
-			vi.advanceTimersByTime(600);
-		});
+		vi.advanceTimersByTime(600);
 		// Nothing to assert beyond survival: the timer fires into a live
 		// component rather than leaking past the shake.
 		expect(piecePosition()).toEqual({ x: 20, y: 100 });
@@ -226,17 +208,10 @@ describe("what it puts on screen", () => {
 	test("unmounting mid-shake cancels the timer", () => {
 		vi.useFakeTimers();
 		render(props({ showRetry: true }));
-		act(() => {
-			root.unmount();
-		});
-		act(() => {
-			vi.advanceTimersByTime(600);
-		});
-		act(() => {
-			root = createRoot(container);
-		});
+		destroy();
+		vi.advanceTimersByTime(600);
 		expect(
-			container.querySelector('[data-cy="prosopo-puzzle-piece"]'),
+			mounted.container.querySelector('[data-cy="prosopo-puzzle-piece"]'),
 		).toBeNull();
 	});
 });
@@ -290,7 +265,7 @@ describe("dragging with a mouse", () => {
 		const [finalX, finalY, events] = onComplete.mock.calls[0] ?? [];
 		expect(finalX).toBe(200);
 		expect(finalY).toBe(80);
-		expect(events?.map((event) => [event.x, event.y])).toEqual([
+		expect(events?.map((event: PuzzleEvent) => [event.x, event.y])).toEqual([
 			[100, 95],
 			[200, 80],
 		]);
@@ -336,7 +311,9 @@ describe("dragging with a mouse", () => {
 		mouseMove(200, 80);
 		mouseUp();
 		const events = onComplete.mock.calls[1]?.[2];
-		expect(events?.map((event) => [event.x, event.y])).toEqual([[200, 80]]);
+		expect(events?.map((event: PuzzleEvent) => [event.x, event.y])).toEqual([
+			[200, 80],
+		]);
 	});
 
 	test("the trail is timestamped in order", () => {
@@ -408,14 +385,9 @@ describe("after it goes away", () => {
 	test("its document listeners go with it", () => {
 		render(props());
 		mouseDown(20, 100);
-		act(() => {
-			root.unmount();
-		});
+		destroy();
 		mouseMove(150, 90);
 		mouseUp();
 		expect(onComplete).not.toHaveBeenCalled();
-		act(() => {
-			root = createRoot(container);
-		});
 	});
 });

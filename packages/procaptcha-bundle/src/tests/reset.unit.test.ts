@@ -13,15 +13,15 @@
 // limitations under the License.
 
 /**
- * `reset()` used to unmount every React root and then call `start()`, which
+ * `reset()` used to tear every widget down and then call `start()`, which
  * re-renders only on implicitly-rendered pages. An explicitly-rendered widget
  * was therefore destroyed and never rebuilt: the skeleton stayed in the DOM
  * with no checkbox inside it and no fresh captcha request was made. These
  * tests pin the remount so that regression cannot return.
  */
 
-import type { Root } from "react-dom/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { BundleCaptchaHandle } from "../util/captcha/components/bundleCaptcha.js";
 
 const mocks = vi.hoisted(() => ({
 	prefetchDetector: vi.fn(),
@@ -47,13 +47,12 @@ const { render, reset, remove } = await import("../index.js");
 
 const SITE_KEY = "5CcNvLUdiXFpzKDMjThGLSK9rhWHA1H4EF3zrgkpkjAdqmuP";
 
-const makeRoot = (): Root =>
-	({ unmount: vi.fn(), render: vi.fn() }) as unknown as Root;
+const makeHandle = (): BundleCaptchaHandle => ({ destroy: vi.fn() });
 
-/** Each createWidgets call yields a distinct root, as the real factory does. */
-const queueRoots = (...roots: Root[]): void => {
-	for (const root of roots) {
-		mocks.createWidgets.mockResolvedValueOnce([root]);
+/** Each createWidgets call yields a distinct handle, as the real factory does. */
+const queueHandles = (...handles: BundleCaptchaHandle[]): void => {
+	for (const handle of handles) {
+		mocks.createWidgets.mockResolvedValueOnce([handle]);
 	}
 };
 
@@ -62,12 +61,12 @@ beforeEach(async () => {
 	// Drop any widgets registered by a previous test — module state persists
 	// across tests in the same file.
 	await remove();
-	mocks.createWidgets.mockResolvedValue([makeRoot()]);
+	mocks.createWidgets.mockResolvedValue([makeHandle()]);
 });
 
 describe("render", () => {
 	it("returns a widget id", async () => {
-		queueRoots(makeRoot());
+		queueHandles(makeHandle());
 
 		const widgetId = await render(document.createElement("div"), {
 			siteKey: SITE_KEY,
@@ -78,7 +77,7 @@ describe("render", () => {
 	});
 
 	it("returns undefined when the factory creates no widget", async () => {
-		mocks.createWidgets.mockResolvedValueOnce([] as Root[]);
+		mocks.createWidgets.mockResolvedValueOnce([] as BundleCaptchaHandle[]);
 
 		const widgetId = await render(document.createElement("div"), {
 			siteKey: SITE_KEY,
@@ -89,10 +88,10 @@ describe("render", () => {
 });
 
 describe("reset", () => {
-	it("unmounts the old root and mounts a replacement", async () => {
-		const first = makeRoot();
-		const second = makeRoot();
-		queueRoots(first, second);
+	it("destroys the old widget and mounts a replacement", async () => {
+		const first = makeHandle();
+		const second = makeHandle();
+		queueHandles(first, second);
 
 		const element = document.createElement("div");
 		await render(element, { siteKey: SITE_KEY });
@@ -100,7 +99,7 @@ describe("reset", () => {
 
 		await reset();
 
-		expect(first.unmount).toHaveBeenCalledTimes(1);
+		expect(first.destroy).toHaveBeenCalledTimes(1);
 		expect(mocks.createWidgets).toHaveBeenCalledTimes(2);
 		// Rebuilt into the same element, with the options it was rendered with.
 		expect(mocks.createWidgets).toHaveBeenLastCalledWith(
@@ -109,14 +108,14 @@ describe("reset", () => {
 			true,
 			false,
 		);
-		expect(second.unmount).not.toHaveBeenCalled();
+		expect(second.destroy).not.toHaveBeenCalled();
 	});
 
 	it("resets only the widget whose id is given", async () => {
-		const firstA = makeRoot();
-		const firstB = makeRoot();
-		const replacementA = makeRoot();
-		queueRoots(firstA, firstB, replacementA);
+		const firstA = makeHandle();
+		const firstB = makeHandle();
+		const replacementA = makeHandle();
+		queueHandles(firstA, firstB, replacementA);
 
 		const elementA = document.createElement("div");
 		const elementB = document.createElement("div");
@@ -125,8 +124,8 @@ describe("reset", () => {
 
 		await reset(idA);
 
-		expect(firstA.unmount).toHaveBeenCalledTimes(1);
-		expect(firstB.unmount).not.toHaveBeenCalled();
+		expect(firstA.destroy).toHaveBeenCalledTimes(1);
+		expect(firstB.destroy).not.toHaveBeenCalled();
 		expect(mocks.createWidgets).toHaveBeenLastCalledWith(
 			[elementA],
 			expect.anything(),
@@ -136,20 +135,20 @@ describe("reset", () => {
 	});
 
 	it("keeps the widget resettable more than once", async () => {
-		const roots = [makeRoot(), makeRoot(), makeRoot()];
-		queueRoots(...roots);
+		const handles = [makeHandle(), makeHandle(), makeHandle()];
+		queueHandles(...handles);
 
 		await render(document.createElement("div"), { siteKey: SITE_KEY });
 		await reset();
 		await reset();
 
-		expect(roots[0]?.unmount).toHaveBeenCalledTimes(1);
-		expect(roots[1]?.unmount).toHaveBeenCalledTimes(1);
+		expect(handles[0]?.destroy).toHaveBeenCalledTimes(1);
+		expect(handles[1]?.destroy).toHaveBeenCalledTimes(1);
 		expect(mocks.createWidgets).toHaveBeenCalledTimes(3);
 	});
 
 	it("preserves the invisible flag when rebuilding", async () => {
-		queueRoots(makeRoot(), makeRoot());
+		queueHandles(makeHandle(), makeHandle());
 
 		const button = document.createElement("button");
 		await render(button, { siteKey: SITE_KEY });
@@ -165,7 +164,7 @@ describe("reset", () => {
 	});
 
 	it("does nothing for an unknown widget id", async () => {
-		queueRoots(makeRoot());
+		queueHandles(makeHandle());
 		await render(document.createElement("div"), { siteKey: SITE_KEY });
 
 		await reset("procaptcha-widget-does-not-exist");
@@ -175,9 +174,9 @@ describe("reset", () => {
 });
 
 describe("remove", () => {
-	it("unmounts without mounting a replacement", async () => {
-		const root = makeRoot();
-		queueRoots(root);
+	it("destroys without mounting a replacement", async () => {
+		const handle = makeHandle();
+		queueHandles(handle);
 
 		const element = document.createElement("div");
 		element.innerHTML = "<span>skeleton</span>";
@@ -185,15 +184,15 @@ describe("remove", () => {
 
 		await remove();
 
-		expect(root.unmount).toHaveBeenCalledTimes(1);
+		expect(handle.destroy).toHaveBeenCalledTimes(1);
 		expect(mocks.createWidgets).toHaveBeenCalledTimes(1);
-		// The skeleton is plain DOM, so unmounting React alone would leave it
-		// behind — remove() is responsible for clearing the container too.
+		// The skeleton is plain DOM the handle doesn't own, so destroying the
+		// widget alone would leave it behind — remove() clears the container too.
 		expect(element.innerHTML).toBe("");
 	});
 
 	it("makes a subsequent reset a no-op", async () => {
-		queueRoots(makeRoot());
+		queueHandles(makeHandle());
 		await render(document.createElement("div"), { siteKey: SITE_KEY });
 
 		await remove();

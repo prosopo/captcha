@@ -23,10 +23,10 @@ import {
 	type Ti18n,
 	type TranslationKey,
 	TranslationKeysSchema,
+	createTranslator,
 	i18nMiddleware,
 	isClientSide,
 	loadI18next,
-	useTranslation,
 } from "../index.js";
 
 describe("Languages", () => {
@@ -140,17 +140,20 @@ describe("i18nMiddleware", () => {
 	});
 });
 
-describe("useTranslation", () => {
-	it("is callable with no options", () => {
-		expectTypeOf(useTranslation).toBeCallableWith();
+describe("createTranslator", () => {
+	it("is callable with no instance, so a standalone widget can boot one", () => {
+		expectTypeOf(createTranslator).toBeCallableWith();
 	});
 
-	it("returns a t function", () => {
-		expectTypeOf(useTranslation).returns.toHaveProperty("t");
+	it("returns the translator surface the widgets render against", () => {
+		expectTypeOf(createTranslator).returns.toHaveProperty("t");
+		expectTypeOf(createTranslator).returns.toHaveProperty("isReady");
+		expectTypeOf(createTranslator).returns.toHaveProperty("subscribe");
+		expectTypeOf(createTranslator).returns.toHaveProperty("i18n");
 	});
 
-	it("rejects an unknown option", () => {
-		// @ts-expect-error notAnOption is not a UseTranslationOptions field
-		useTranslation({ notAnOption: 1 });
+	it("rejects anything that is not an i18next instance", () => {
+		// @ts-expect-error the only parameter is an existing i18next instance
+		createTranslator({ notAnInstance: 1 });
 	});
 });

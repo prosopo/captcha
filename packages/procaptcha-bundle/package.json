@@ -48,11 +48,7 @@
 		"@prosopo/widget-skeleton": "2.8.6",
 		"dotenv": "16.4.5",
 		"fast-glob": "3.3.2",
-		"jsdom": "25.0.0",
-		"react": "18.3.1",
-		"@emotion/cache": "11.11.0",
-		"@emotion/react": "11.11.1",
-		"react-dom": "18.3.1"
+		"jsdom": "25.0.0"
 	},
 	"repository": {
 		"type": "git",
@@ -71,8 +67,6 @@
 		"@prosopo/config": "3.3.8",
 		"@types/jsdom": "21.1.7",
 		"@types/node": "22.10.2",
-		"@types/react": "18.3.1",
-		"@types/react-dom": "18.3.1",
 		"@vitest/coverage-v8": "4.1.10",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",

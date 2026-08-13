@@ -174,8 +174,8 @@ const customDetectBot: BotDetectionFunction = async (
 	// same stack. Resolved up front — before detection rather than alongside it —
 	// because the detector bundle is served BY this provider.
 	// The bundle entry starts provider resolution + assign as soon as it has read
-	// the site key off the DOM, which is well before React has mounted this
-	// widget. Claim that in-flight work if it exists rather than repeating it.
+	// the site key off the DOM, which is well before this widget has mounted.
+	// Claim that in-flight work if it exists rather than repeating it.
 	// Only valid on a first attempt: a retry is retrying *because* the pinned
 	// pronode failed, so it must re-resolve.
 	const isFirstAttempt = !retryContext || retryContext.attempt <= 1;

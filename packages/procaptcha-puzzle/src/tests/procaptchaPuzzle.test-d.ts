@@ -24,11 +24,13 @@ import type {
 	PuzzleEvent,
 } from "@prosopo/types";
 import { lightTheme } from "@prosopo/widget-skeleton";
-import type { ReactElement } from "react";
 import { assertType, describe, expectTypeOf, test } from "vitest";
-import { PuzzleCanvas } from "../components/PuzzleCanvas.js";
+import {
+	type PuzzleCanvasProps,
+	mountPuzzleCanvas,
+} from "../components/puzzleCanvas.js";
 import type * as entrypoint from "../index.js";
-import { ProcaptchaPuzzle } from "../index.js";
+import { mountProcaptchaPuzzle } from "../index.js";
 import { Manager } from "../services/Manager.js";
 import {
 	challengeResponse,
@@ -42,17 +44,25 @@ import {
 const i18n = (): Ti18n => undefined as unknown as Ti18n;
 
 describe("the package entrypoint's types", () => {
-	test("ProcaptchaPuzzle takes the shared widget props and renders an element", () => {
-		expectTypeOf(ProcaptchaPuzzle).parameters.toEqualTypeOf<
-			[ProcaptchaProps]
+	test("mountProcaptchaPuzzle takes a host element and the shared widget props", () => {
+		expectTypeOf(mountProcaptchaPuzzle).parameters.toEqualTypeOf<
+			[HTMLElement, ProcaptchaProps]
 		>();
-		expectTypeOf(ProcaptchaPuzzle).returns.toExtend<ReactElement>();
+		expectTypeOf(mountProcaptchaPuzzle).returns.toExtend<{
+			destroy: () => void;
+		}>();
 	});
 
-	test("the inner widget's default export is not re-exported", () => {
-		// `export *` skips default exports, so consumers can only reach the lazy
-		// wrapper — the one that works without a code-splitting bundler.
-		expectTypeOf<keyof typeof entrypoint>().toEqualTypeOf<"ProcaptchaPuzzle">();
+	test("the entrypoint exposes the lazy wrapper and the widget itself", () => {
+		// The lazy wrapper is what works without a code-splitting bundler; the
+		// direct mount is what ProcaptchaFrictionless imports once it has already
+		// paid for the dynamic import of this package.
+		expectTypeOf<keyof typeof entrypoint>().toEqualTypeOf<
+			| "mountProcaptchaPuzzle"
+			| "loadProcaptchaPuzzle"
+			| "mountProcaptchaPuzzleWidget"
+			| "mountPuzzleCanvas"
+		>();
 	});
 
 	test("config, callbacks and i18n are all required", () => {
@@ -140,6 +150,7 @@ describe("Manager's types", () => {
 });
 
 describe("PuzzleCanvas' types", () => {
+	const host = (): HTMLElement => undefined as unknown as HTMLElement;
 	const onComplete = (
 		_finalX: number,
 		_finalY: number,
@@ -148,9 +159,9 @@ describe("PuzzleCanvas' types", () => {
 
 	test("every prop is required, since none has a sensible default", () => {
 		// @ts-expect-error - a board with no target cannot be solved.
-		PuzzleCanvas({ originX: 0, originY: 0 });
+		mountPuzzleCanvas(host(), { originX: 0, originY: 0 });
 		// @ts-expect-error - `submitting` gates the drag; omitting it unlocks it.
-		PuzzleCanvas({
+		mountPuzzleCanvas(host(), {
 			originX: 0,
 			originY: 0,
 			targetX: 1,
@@ -161,9 +172,9 @@ describe("PuzzleCanvas' types", () => {
 		});
 	});
 
-	test("the full prop set renders an element", () => {
+	test("the full prop set mounts a component that can be updated and torn down", () => {
 		expectTypeOf(
-			PuzzleCanvas({
+			mountPuzzleCanvas(host(), {
 				originX: 0,
 				originY: 0,
 				targetX: 1,
@@ -173,7 +184,10 @@ describe("PuzzleCanvas' types", () => {
 				submitting: false,
 				theme: lightTheme,
 			}),
-		).toExtend<ReactElement>();
+		).toExtend<{
+			update: (props: PuzzleCanvasProps) => void;
+			destroy: () => void;
+		}>();
 	});
 
 	test("the drop is reported synchronously, not as a promise", () => {
