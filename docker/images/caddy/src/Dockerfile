@@ -9,7 +9,9 @@ FROM caddy:2
 RUN apk update && apk add libpcap
 RUN apk add --no-cache curl
 # Create a static directory for Caddy and write robots.txt inside the image
+# printf, not `echo -e`: the base image's /bin/sh is busybox ash, where echo's
+# flags are undefined behaviour, so `-e` can end up in the file itself.
 RUN mkdir -p /srv/static && \
-    echo -e "User-agent: *\nDisallow: /" > /srv/static/robots.txt
+    printf 'User-agent: *\nDisallow: /\n' > /srv/static/robots.txt
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy
 

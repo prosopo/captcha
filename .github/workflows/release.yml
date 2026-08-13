@@ -291,7 +291,10 @@ jobs:
 #                done
 
       - name: publish to npm
-        if: ${{ env.affected != '[]' }} && ${{ env.prerelease == 'false' }}
+        # One expression, not two joined by a bare `&&`. Anything outside the
+        # `${{ }}` is literal text, so the original was a non-empty string and
+        # therefore always true -- this step ran on prereleases too.
+        if: ${{ env.affected != '[]' && env.prerelease == 'false' }}
         run: |
           # for each affected package
           for pkg in $(echo '${{ env.affected }}' | jq -r '.[] | .name'); do
@@ -369,7 +372,7 @@ jobs:
             result=0
             # if the package has a publish:docker script, run it
             # else it isn't a docker package
-            if cat $(npx -w "$pkg" node -p "process.cwd()+'/package.json'") | jq -r '.scripts["publish:docker"] or error("missing script")'; then
+            if cat "$(npx -w "$pkg" node -p "process.cwd()+'/package.json'")" | jq -r '.scripts["publish:docker"] or error("missing script")'; then
               echo "Package $pkg has a publish:docker script, publishing to Docker Hub"
             else
               echo "Package $pkg does not have a publish:docker script, skipping"

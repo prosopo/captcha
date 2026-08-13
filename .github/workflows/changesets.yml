@@ -70,7 +70,13 @@ jobs:
         run: git fetch origin ${{ github.base_ref }} && git checkout ${{ github.base_ref }}
 
       - name: Checkout head ref
-        run: git fetch origin ${{ github.head_ref }} && git checkout ${{ github.head_ref }}
+        # Through env, not interpolated into the script. A branch name is
+        # attacker-controlled on a fork PR, and `${{ }}` is substituted into the
+        # shell source before the shell ever sees it, so a branch named with a
+        # `;` runs whatever follows.
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: git fetch origin "$HEAD_REF" && git checkout "$HEAD_REF"
 
       # if this fails, you need to run `npm run changesets:add` (preferred!) or `npm run changesets:empty` for an empty changeset (avoid if possible)
       - name: check changesets

@@ -15,6 +15,11 @@
 # refuse to start.
 FROM timberio/vector:0.55.0-debian
 
+# The apt setup below pipes curl into a file and into apt-key-style steps;
+# without pipefail a failed download is masked by the success of the last
+# command in the pipe and the image builds with a broken repo list.
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # Add Docker's official GPG key:
 RUN apt-get update \
     && apt-get install -y ca-certificates curl \

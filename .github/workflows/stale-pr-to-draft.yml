@@ -97,7 +97,9 @@ jobs:
             exit 0
           fi
 
-          while IFS=$'\t' read -r number updated author title; do
+          # `_` soaks up the remaining author/title columns: naming them would
+          # be two variables nothing reads.
+          while IFS=$'\t' read -r number updated _; do
             [ -n "$number" ] || continue
             echo "Drafting #$number (last updated $updated)"
             # Comment first. A PR that goes draft with no explanation reads as a

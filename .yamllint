@@ -1,9 +1,37 @@
+# yamllint's defaults are a house style, and most of what they flag here is
+# cosmetic. The rules kept below are the ones where a finding means the file is
+# wrong rather than merely unlike someone else's formatting: a duplicate key
+# silently discards a value, and a tab is a hard YAML syntax error.
+#
+# Everything switched off is presentational. Turning it on would mean reflowing
+# a few hundred lines across the ansible playbooks and the workflows for no
+# behavioural gain, and the churn would bury the findings that do matter.
+
 extends: default
 
 ignore-from-file: .gitignore
 
 rules:
+  # Workflows and ansible both run well past 80 columns, and a hard wrap in a
+  # `run:` block changes what the shell sees.
+  line-length: disable
+  # `---` is optional in YAML 1.2 and its absence never changes parsing.
   document-start: disable
-  line-length: disable  
+  # `[ main ]` vs `[main]`: pure style.
+  brackets: disable
+  braces: disable
+  indentation: disable
+  empty-lines: disable
   trailing-spaces: disable
+  comments-indentation: disable
+  comments:
+    require-starting-space: true
+    # The two-space-before rule is style; the starting space is not, since
+    # `#comment` directly after content is easy to misread.
+    min-spaces-from-content: 1
+  # Off, and it cannot usefully be on here. The two things it would flag are
+  # both required idiom: ansible's `yes`/`no` (used ~90 times across the
+  # playbooks, and the form ansible's own docs use), and GitHub Actions' `on:`
+  # key, which yamllint reads as the boolean `true`. With both excepted the
+  # rule has nothing left to catch in this repo.
   truthy: disable

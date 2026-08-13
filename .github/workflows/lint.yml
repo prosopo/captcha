@@ -81,3 +81,181 @@ jobs:
 
       - run: npm run lint
 
+
+  # Every language and file type this repo could plausibly contain, not just the
+  # ones it contains today: a linter that runs and finds nothing because there is
+  # no such code is the point -- it is what stops new code of that kind arriving
+  # unlinted later. Each step therefore no-ops explicitly on an empty match set
+  # rather than being omitted.
+  #
+  # Deliberately the same linter set and invocation style as Protect and
+  # captcha-private, so a fix in one is a fix in all.
+  #
+  # No `paths:` filter on this job on purpose. A `paths:` list is an allowlist, so
+  # a newly added file type silently falls outside it; and a workflow that does
+  # not trigger reports no status at all, which deadlocks a required context.
+  # A job skipped by `if:` reports `skipped`, which branch protection accepts.
+  polyglot:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
+    # 2c/4g/20d: no compilation happens here, so this is sized for the tool
+    # downloads, not for a build. See `check` above for what the expression does.
+    runs-on: ${{ vars.GH_RUNNER && startsWith(vars.GH_RUNNER, '[') && fromJSON(format('["{0}","2c","4g","20d"]', join(fromJSON(vars.GH_RUNNER), '","'))) || fromJSON(vars.GH_RUNNER || '"ubuntu-latest"') }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          token: ${{ secrets.PROSOPONATOR_PAT }}
+          # No submodules: each one is linted by its own repo's lint workflow,
+          # and linting them here would report the same findings twice against a
+          # PR that cannot fix them.
+          submodules: false
+
+      # pipx is preinstalled on the hosted images but not in the self-hosted
+      # golden image, and its absence would fail every python-based linter below
+      # with a bare "command not found".
+      - name: python tooling
+        run: |
+          if ! command -v pipx >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq pipx
+          fi
+          pipx ensurepath
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      # Roughly one connection in ten from the self-hosted fleet to github.com
+      # dies mid-transfer with `curl: (56) Connection died`. curl's own --retry
+      # does not help because the connection dies during a transfer it already
+      # started; `retry` re-runs the whole pipeline.
+      - name: retry helper
+        run: |
+          sudo tee /usr/local/bin/retry >/dev/null <<'EOF'
+          #!/bin/sh
+          for i in 1 2 3; do
+            "$@" && exit 0
+            [ "$i" = 3 ] && exit 1
+            sleep 15
+          done
+          EOF
+          sudo chmod +x /usr/local/bin/retry
+
+      - name: actionlint
+        run: |
+          # A pinned release tarball, not upstream's download-actionlint.bash:
+          # that script resolves "latest" through the unauthenticated GitHub API,
+          # which the self-hosted runners share an IP for, so it returns a
+          # rate-limit JSON body and dies in `gunzip` naming neither.
+          retry sh -c 'curl -fsSL https://github.com/rhysd/actionlint/releases/download/v1.7.7/actionlint_1.7.7_linux_amd64.tar.gz | tar xz actionlint'
+          # actionlint pipes every `run:` block through shellcheck, which is the
+          # only linting those blocks ever get. The suppressed codes are the ones
+          # that cannot mean a defect here:
+          #   SC2086  word splitting of `>> $GITHUB_ENV` and friends, a path
+          #           GitHub itself controls.
+          #   SC2209  false positive by construction: shellcheck reads the
+          #           `NODE_ENV=test npm run test` prefix as assigning the output
+          #           of the `test` builtin.
+          #   SC2129/SC2002/SC2012/SC2016  style and info only.
+          # Everything else, including the injection checks, still blocks.
+          ./actionlint -color -ignore 'SC(2086|2129|2002|2012|2016|2209)'
+
+      # Config in .yamllint, which already exists here and is unchanged by this
+      # job: the presentational rules are off, the ones where a finding means the
+      # file is wrong (duplicate keys, tabs) are on.
+      - name: yamllint
+        run: |
+          pipx install yamllint
+          yamllint --strict .
+
+      - name: taplo (toml)
+        run: |
+          # Pinned, and not the "-full" asset -- that variant is no longer
+          # published, so a `latest/download/taplo-full-...` URL 404s.
+          retry sh -c 'curl -fsSL https://github.com/tamasfe/taplo/releases/download/0.10.0/taplo-linux-x86_64.gz | gunzip | sudo tee /usr/local/bin/taplo >/dev/null'
+          sudo chmod +x /usr/local/bin/taplo
+          # `lint` only, no `fmt --check`: a misformatted toml is not a bug, a
+          # malformed one is. toml is not incidental here -- rust-toolchain.toml,
+          # Cargo.toml and pyproject.toml all drive builds, so a broken one fails
+          # late and confusingly.
+          taplo lint
+
+      - name: shellcheck
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq shellcheck
+          files=$(git ls-files '*.sh')
+          if [ -z "$files" ]; then echo 'no shell scripts'; exit 0; fi
+          echo "$files" | xargs shellcheck -S warning
+
+      - name: ruff (python)
+        run: |
+          pipx install ruff
+          if [ -z "$(git ls-files '*.py')" ]; then echo 'no python'; exit 0; fi
+          ruff check .
+          ruff format --check .
+
+      - name: hadolint (dockerfiles)
+        run: |
+          retry curl -fsSL -o /tmp/hadolint https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Linux-x86_64
+          sudo install -m 0755 /tmp/hadolint /usr/local/bin/hadolint
+          files=$(git ls-files '*Dockerfile' '*.dockerfile' '*.Dockerfile' 'Dockerfile*')
+          if [ -z "$files" ]; then echo 'no dockerfiles'; exit 0; fi
+          # DL3008/DL3018 (pin apt/apk versions) are off: these images are
+          # rebuilt from scratch on every release, so a pinned distro package is
+          # a stale package rather than a reproducible one. DL3006 (tag the base
+          # image) is off because the distroless bases publish no versioned tags
+          # at all. --failure-threshold warning: info findings still print, but a
+          # blocking check that fails on style gets disabled rather than fixed.
+          echo "$files" | xargs hadolint --failure-threshold warning \
+            --ignore DL3008 --ignore DL3018 --ignore DL3006
+
+      - name: ansible-lint
+        run: |
+          if [ -z "$(git ls-files '*ansible*')" ]; then echo 'no ansible'; exit 0; fi
+          pipx install ansible-lint
+          ansible-lint --profile basic
+
+      - name: ktlint (kotlin)
+        run: |
+          if [ -z "$(git ls-files '*.kt' '*.kts')" ]; then echo 'no kotlin'; exit 0; fi
+          retry curl -fsSL -o /tmp/ktlint https://github.com/pinterest/ktlint/releases/download/1.5.0/ktlint
+          sudo install -m 0755 /tmp/ktlint /usr/local/bin/ktlint
+          ktlint --relative '**/*.kt' '**/*.kts'
+
+      - name: swiftlint
+        run: |
+          if [ -z "$(git ls-files '*.swift')" ]; then echo 'no swift'; exit 0; fi
+          # Through the official container rather than a native install:
+          # SwiftLint on Linux needs a full Swift toolchain, and the alternative
+          # -- running this step on a macOS runner -- would put a lint check in
+          # front of the single macOS guest the whole org shares.
+          docker run --rm -v "$PWD:/work" -w /work ghcr.io/realm/swiftlint:0.57.0 \
+            swiftlint lint --quiet
+
+      - name: sqlfluff
+        run: |
+          if [ -z "$(git ls-files '*.sql')" ]; then echo 'no sql'; exit 0; fi
+          pipx install sqlfluff
+          # Dialect is not optional and there is no sensible default. Rules are
+          # selected by group; the layout groups are deliberately absent because
+          # they only ever report indentation. NB the old L001-style codes
+          # silently select nothing in sqlfluff 2+ -- it warns and then lints
+          # with the full default set instead.
+          git ls-files -z '*.sql' | xargs -0 \
+            sqlfluff lint --dialect postgres \
+              --rules references,ambiguous,structure,convention
+
+      - name: htmlhint
+        run: |
+          if [ -z "$(git ls-files '*.html')" ]; then echo 'no html'; exit 0; fi
+          # --config is required: the repo's config is htmlhint.json, not the
+          # .htmlhintrc name htmlhint picks up on its own, so without this the
+          # svg plugin config is silently ignored and the defaults run instead.
+          git ls-files -z '*.html' | xargs -0 npx --yes htmlhint@1.1.4 --config htmlhint.json
+
+      - name: xmllint
+        run: |
+          if [ -z "$(git ls-files '*.xml')" ]; then echo 'no xml'; exit 0; fi
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libxml2-utils
+          # Well-formedness only. Validating against a schema would need each
+          # file's DTD/XSD fetched at lint time, which makes the check depend on
+          # a third party being up.
+          git ls-files '*.xml' | xargs xmllint --noout

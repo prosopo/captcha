@@ -5,7 +5,6 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.os.Message
-import android.util.Base64
 import android.util.Log
 import android.webkit.ConsoleMessage
 import android.webkit.CookieManager
@@ -18,16 +17,23 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.appcompat.app.AppCompatActivity
 
-const val namespace = "procaptcha";
+const val NAMESPACE = "procaptcha"
 
 class MainActivity : AppCompatActivity() {
-
     private class ProcaptchaWebViewClient : WebViewClient() {
-        override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {
+        override fun doUpdateVisitedHistory(
+            view: WebView?,
+            url: String?,
+            isReload: Boolean,
+        ) {
             // do nothing, don't worry about visited links
         }
 
-        override fun onFormResubmission(view: WebView, dontResend: Message, resend: Message) {
+        override fun onFormResubmission(
+            view: WebView,
+            dontResend: Message,
+            resend: Message,
+        ) {
             // just resend the message, don't bother the user
             resend.sendToTarget()
         }
@@ -35,7 +41,7 @@ class MainActivity : AppCompatActivity() {
         override fun onReceivedError(
             view: WebView?,
             request: WebResourceRequest?,
-            error: WebResourceError?
+            error: WebResourceError?,
         ) {
             // TODO this is triggered whenever a resource can't load, bundle/img/whatever etc. Handle the type and display corresponding error
             // handle http + ssl errors here to maintain compatibility with old android versions
@@ -44,19 +50,17 @@ class MainActivity : AppCompatActivity() {
 
         override fun shouldOverrideUrlLoading(
             view: WebView,
-            request: WebResourceRequest
+            request: WebResourceRequest,
         ): Boolean {
-            Log.i(namespace, "opening external url: ${request.url}")
+            Log.i(NAMESPACE, "opening external url: ${request.url}")
             // Open URLs in external browser
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(request.url.toString()))
             view.context.startActivity(intent)
             return true
         }
-
     }
 
     private class ProcaptchaWebChromeClient : WebChromeClient() {
-
         override fun getVisitedHistory(callback: ValueCallback<Array<String>>) {
             // call the callback with empty history, making all links appear unvisited
             callback.onReceiveValue(emptyArray())
@@ -69,19 +73,22 @@ class MainActivity : AppCompatActivity() {
         override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {
             val message = "File: ${consoleMessage.sourceId()}\nLine: ${consoleMessage.lineNumber()}\nMessage: ${consoleMessage.message()}"
             when (consoleMessage.messageLevel()) {
-                ConsoleMessage.MessageLevel.ERROR -> Log.e(
-                    namespace,
-                    message
-                )
-                ConsoleMessage.MessageLevel.WARNING -> Log.w(
-                    namespace,
-                    message
+                ConsoleMessage.MessageLevel.ERROR ->
+                    Log.e(
+                        NAMESPACE,
+                        message,
                     )
-                ConsoleMessage.MessageLevel.DEBUG -> Log.d(
-                    namespace,
-                    message
-                )
-                else -> Log.i(namespace, message)
+                ConsoleMessage.MessageLevel.WARNING ->
+                    Log.w(
+                        NAMESPACE,
+                        message,
+                    )
+                ConsoleMessage.MessageLevel.DEBUG ->
+                    Log.d(
+                        NAMESPACE,
+                        message,
+                    )
+                else -> Log.i(NAMESPACE, message)
             }
             return true; // suppress default logging
         }
@@ -90,11 +97,11 @@ class MainActivity : AppCompatActivity() {
             view: WebView?,
             isDialog: Boolean,
             isUserGesture: Boolean,
-            resultMsg: Message?
+            resultMsg: Message?,
         ): Boolean {
             val result = super.onCreateWindow(view, isDialog, isUserGesture, resultMsg)
-            if(!result) {
-                Log.e(namespace, "webview creation failed")
+            if (!result) {
+                Log.e(NAMESPACE, "webview creation failed")
             }
             return result
         }
@@ -125,6 +132,5 @@ class MainActivity : AppCompatActivity() {
         val cookieManager: CookieManager = CookieManager.getInstance()
         cookieManager.setAcceptCookie(true)
         webView.loadUrl("file:///android_asset/procaptcha.html")
-
     }
 }

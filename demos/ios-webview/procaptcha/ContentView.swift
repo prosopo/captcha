@@ -3,11 +3,11 @@ import WebKit
 
 struct WebView: UIViewRepresentable {
     let filePath: String
-    
+
     func makeCoordinator() -> Coordinator {
         return Coordinator(self)
     }
-    
+
     func makeUIView(context: Context) -> WKWebView {
         let webViewConfiguration = WKWebViewConfiguration()
         webViewConfiguration.preferences.javaScriptEnabled = true
@@ -37,47 +37,54 @@ struct WebView: UIViewRepresentable {
             console.debug = function() { sendMessage('DEBUG', arguments); oldDebug.apply(console, arguments); };
         })();
         """
-        
+
         let script = WKUserScript(source: scriptSource, injectionTime: .atDocumentStart, forMainFrameOnly: false)
         userContentController.addUserScript(script)
-        
+
         // Add the user content controller to the configuration
         webViewConfiguration.userContentController = userContentController
-        
+
         let webView = WKWebView(frame: .zero, configuration: webViewConfiguration)
         webView.navigationDelegate = context.coordinator
         webView.isInspectable = true
-        
-        //DispatchQueue.main.asyncAfter(deadline: .now() + 30) {
+
+        // DispatchQueue.main.asyncAfter(deadline: .now() + 30) {
         guard let fileUrl = Bundle.main.url(forResource: filePath, withExtension: nil) else {
             fatalError("html file \(filePath) not found")
         }
         webView.loadFileURL(fileUrl, allowingReadAccessTo: fileUrl.deletingLastPathComponent())
-        //}
-        
+        // }
+
         return webView
     }
-    
+
     func updateUIView(_ uiView: WKWebView, context: Context) {
         // Handle any updates if necessary
     }
-    
+
     class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         var parent: WebView
-        
+
         init(_ parent: WebView) {
             self.parent = parent
         }
-        
+
         // This is where JavaScript messages are received
-        func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        func userContentController(
+            _ userContentController: WKUserContentController,
+            didReceive message: WKScriptMessage
+        ) {
             if message.name == "consoleLog", let messageBody = message.body as? String {
                 print("JavaScript Console: \(messageBody)") // Log to Xcode console
             }
         }
-        
+
         // Handle navigation actions
-        func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        func webView(
+            _ webView: WKWebView,
+            decidePolicyFor navigationAction: WKNavigationAction,
+            decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
+        ) {
             if navigationAction.navigationType == .linkActivated {
                 decisionHandler(.cancel)
             } else {

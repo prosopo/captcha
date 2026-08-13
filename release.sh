@@ -1,3 +1,6 @@
+#!/bin/bash
+set -e
+
           npm i -g @changesets/cli
           npx @changesets/cli version --verbose
           git status
