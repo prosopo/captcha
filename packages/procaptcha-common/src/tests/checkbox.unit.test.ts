@@ -134,8 +134,28 @@ describe("what the checkbox renders", () => {
 		// dapp around it.
 		render();
 		expect(
-			mounted.container.querySelector('style[data-prosopo-style="checkbox"]'),
+			mounted.container.querySelector(
+				'style[data-prosopo-style="checkbox-light"]',
+			),
 		).not.toBeNull();
+	});
+
+	test("swaps the stylesheet when the theme changes", () => {
+		// The sheet carries the label colour, font and focus ring, so a theme
+		// that only re-applied the inline box styles would leave those stale.
+		render();
+		render({ theme: darkTheme });
+
+		expect(
+			mounted.container.querySelector(
+				'style[data-prosopo-style="checkbox-light"]',
+			),
+		).toBeNull();
+		const dark = mounted.container.querySelector(
+			'style[data-prosopo-style="checkbox-dark"]',
+		);
+		expect(dark).not.toBeNull();
+		expect(dark?.textContent).toContain(darkTheme.palette.onSurface);
 	});
 });
 

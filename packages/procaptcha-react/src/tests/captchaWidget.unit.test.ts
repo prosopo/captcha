@@ -153,6 +153,24 @@ describe("theming", () => {
 			asRgb(darkTheme.palette.tile.border),
 		);
 	});
+
+	test("pads the grid away from the header and the button row", () => {
+		// Neither the instruction header above nor the controls below pad against
+		// the grid, so this is the only thing separating them from the images.
+		render();
+		const grid = mounted.container.firstElementChild as HTMLElement;
+		expect(grid.style.paddingTop).toBe(`${lightTheme.spacing.unit}px`);
+		expect(grid.style.paddingBottom).toBe(`${lightTheme.spacing.unit}px`);
+	});
+
+	test("keeps the padding after a rebuild", () => {
+		// The grid styles are re-applied on rebuild, which is what a theme change
+		// triggers — dropping them there would lose the spacing on the second round.
+		render();
+		render({ themeColor: "dark" });
+		const grid = mounted.container.firstElementChild as HTMLElement;
+		expect(grid.style.paddingTop).toBe(`${darkTheme.spacing.unit}px`);
+	});
 });
 
 describe("selection", () => {

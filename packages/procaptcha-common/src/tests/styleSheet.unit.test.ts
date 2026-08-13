@@ -104,6 +104,41 @@ describe("injectStyle", () => {
 		expect(styleTags(host)).toHaveLength(1);
 	});
 
+	test("the first disposer leaves the tag for the second holder", () => {
+		// The mirror of the case above, and the one that actually bites: teardown
+		// order is not mount order, so the first widget to be destroyed must not
+		// strip the rules out from under a sibling that is still mounted.
+		const host = container();
+		const disposeFirst = injectStyle(host, "checkbox", ".a {}");
+		injectStyle(host, "checkbox", ".a {}");
+
+		disposeFirst();
+
+		expect(styleTags(host)).toHaveLength(1);
+	});
+
+	test("removes the tag once every holder has disposed", () => {
+		const host = container();
+		const disposeFirst = injectStyle(host, "checkbox", ".a {}");
+		const disposeSecond = injectStyle(host, "checkbox", ".a {}");
+
+		disposeFirst();
+		disposeSecond();
+
+		expect(styleTags(host)).toHaveLength(0);
+	});
+
+	test("a double dispose cannot release another holder's claim", () => {
+		const host = container();
+		const disposeFirst = injectStyle(host, "checkbox", ".a {}");
+		injectStyle(host, "checkbox", ".a {}");
+
+		disposeFirst();
+		disposeFirst();
+
+		expect(styleTags(host)).toHaveLength(1);
+	});
+
 	test("re-injects after the disposer ran", () => {
 		// The frictionless restart path destroys and remounts into the same
 		// container, and the remounted widget needs its rules back.

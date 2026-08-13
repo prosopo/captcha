@@ -27,13 +27,8 @@ import {
 	mountBundleCaptcha,
 } from "./components/bundleCaptcha.js";
 
-interface RenderSettings {
-	webComponentTag: string;
-}
-
 class CaptchaRenderer {
 	public renderCaptcha(
-		settings: RenderSettings,
 		container: HTMLElement,
 		renderOptions: ProcaptchaRenderOptions,
 		callbacks: Callbacks,
@@ -84,4 +79,3 @@ class CaptchaRenderer {
 }
 
 export { CaptchaRenderer };
-export type { RenderSettings };

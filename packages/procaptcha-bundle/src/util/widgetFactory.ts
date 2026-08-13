@@ -113,9 +113,6 @@ class WidgetFactory {
 		const captchaRenderer = await this.getCaptchaRenderer(language);
 
 		const captchaRoot = captchaRenderer.renderCaptcha(
-			{
-				webComponentTag: "prosopo-procaptcha",
-			},
 			widgetInteractiveArea,
 			renderOptions,
 			callbacks,

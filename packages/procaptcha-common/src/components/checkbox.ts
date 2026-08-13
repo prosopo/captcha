@@ -164,9 +164,19 @@ export const mountCheckbox = (
 	let props = initialProps;
 	let hover = false;
 
-	teardown.add(
-		injectStyle(container, CHECKBOX_STYLE_ID, checkboxCss(props.theme)),
+	// The sheet bakes in theme tokens, so light and dark are separate documents
+	// rather than one that gets rewritten — that keeps the id stable per theme
+	// and lets two differently-themed checkboxes share a container safely.
+	const styleIdFor = (theme: Theme): string =>
+		`${CHECKBOX_STYLE_ID}-${theme.palette.mode}`;
+
+	let styleMode = props.theme.palette.mode;
+	let disposeStyle = injectStyle(
+		container,
+		styleIdFor(props.theme),
+		checkboxCss(props.theme),
 	);
+	teardown.add(() => disposeStyle());
 
 	const root = createElement("span", {
 		style: {
@@ -310,6 +320,18 @@ export const mountCheckbox = (
 	return {
 		update: (nextProps: CheckboxProps) => {
 			props = nextProps;
+			// `render` re-applies the inline box styles from the new theme, but the
+			// stylesheet holds the label colour, font and focus ring — it has to be
+			// swapped explicitly, where Emotion used to regenerate it per render.
+			if (props.theme.palette.mode !== styleMode) {
+				disposeStyle();
+				styleMode = props.theme.palette.mode;
+				disposeStyle = injectStyle(
+					container,
+					styleIdFor(props.theme),
+					checkboxCss(props.theme),
+				);
+			}
 			render();
 		},
 		destroy: () => {

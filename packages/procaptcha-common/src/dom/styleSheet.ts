@@ -13,6 +13,7 @@
 // limitations under the License.
 
 const STYLE_MARKER = "data-prosopo-style";
+const REF_COUNT_MARKER = "data-prosopo-style-refs";
 
 /**
  * Insert a stylesheet into the element the component renders into.
@@ -23,27 +24,44 @@ const STYLE_MARKER = "data-prosopo-style";
  * point keeps the widget's CSS out of the dapp's document and keeps container
  * queries resolving against `.prosopo-widget__wrapper` in the light DOM.
  *
- * Repeat calls with the same id are no-ops, so several widgets on one page
- * share a single copy. The returned disposer only removes the tag it inserted.
+ * Components sharing a container share a single copy of the tag, so the tag is
+ * reference-counted: it is removed only once every caller that asked for it has
+ * disposed. Without the count, the first component to be destroyed would strip
+ * the CSS out from under its still-mounted siblings. Each disposer is
+ * idempotent, so a double `destroy` cannot decrement someone else's claim.
  */
 export const injectStyle = (
 	container: HTMLElement,
 	id: string,
 	css: string,
 ): (() => void) => {
+	const readRefCount = (element: Element): number =>
+		Number(element.getAttribute(REF_COUNT_MARKER) ?? "0");
+
 	const existing = container.querySelector(`style[${STYLE_MARKER}="${id}"]`);
-	if (null !== existing) {
-		return () => undefined;
+	const style = null !== existing ? existing : document.createElement("style");
+
+	if (null === existing) {
+		style.setAttribute(STYLE_MARKER, id);
+		style.textContent = css;
+		// Prepend so component rules lose to anything the skeleton set later,
+		// which is the ordering Emotion's `prepend: true` gave us.
+		container.insertBefore(style, container.firstChild);
 	}
 
-	const style = document.createElement("style");
-	style.setAttribute(STYLE_MARKER, id);
-	style.textContent = css;
-	// Prepend so component rules lose to anything the skeleton set later, which
-	// is the ordering Emotion's `prepend: true` gave us.
-	container.insertBefore(style, container.firstChild);
+	style.setAttribute(REF_COUNT_MARKER, String(readRefCount(style) + 1));
 
+	let disposed = false;
 	return () => {
+		if (disposed) {
+			return;
+		}
+		disposed = true;
+		const remaining = readRefCount(style) - 1;
+		if (remaining > 0) {
+			style.setAttribute(REF_COUNT_MARKER, String(remaining));
+			return;
+		}
 		style.parentNode?.removeChild(style);
 	};
 };

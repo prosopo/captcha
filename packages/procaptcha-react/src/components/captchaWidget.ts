@@ -55,6 +55,25 @@ const imageStyle: StyleMap = {
 
 const CHECK_ICON_PATH = "M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z";
 
+const themeOf = (themeColor: "light" | "dark"): Theme =>
+	"light" === themeColor ? lightTheme : darkTheme;
+
+const gridStyle = (theme: Theme): StyleMap => ({
+	// expand to full height / width of parent
+	width: "100%",
+	height: "100%",
+	// display children in flex, spreading them evenly and wrapping when row length exceeded
+	display: "flex",
+	flexDirection: "row",
+	flexWrap: "wrap",
+	justifyContent: "space-between",
+	// separates the grid from the instruction header above and the button row
+	// below, neither of which pads against it
+	paddingTop: `${theme.spacing.unit}px`,
+	paddingBottom: `${theme.spacing.unit}px`,
+	gap: "10px",
+});
+
 // A selected tile shrinks slightly and rounds up a step, so the overlay and
 // its badge read as a deliberate state rather than a flat wash.
 const selectionStyle = (theme: Theme, selected: boolean): StyleMap => ({
@@ -87,22 +106,12 @@ export const mountCaptchaWidget = (
 	let tiles: Tile[] = [];
 
 	const grid = createElement("div", {
-		style: {
-			// expand to full height / width of parent
-			width: "100%",
-			height: "100%",
-			// display children in flex, spreading them evenly and wrapping when row length exceeded
-			display: "flex",
-			flexDirection: "row",
-			flexWrap: "wrap",
-			justifyContent: "space-between",
-			gap: "10px",
-		},
+		style: gridStyle(themeOf(initialProps.themeColor)),
 	});
 
 	const buildTile = (item: HashedItem, index: number): Tile => {
 		const hash = getHash(item);
-		const theme = "light" === props.themeColor ? lightTheme : darkTheme;
+		const theme = themeOf(props.themeColor);
 
 		const image = createElement("img", {
 			style: {
@@ -221,12 +230,15 @@ export const mountCaptchaWidget = (
 		teardown.run();
 		teardown = new Teardown();
 		clearElement(grid);
+		// Re-applied here rather than only at mount: `update` rebuilds on a theme
+		// change, and the padding is a theme token.
+		applyStyles(grid, gridStyle(themeOf(props.themeColor)));
 		tiles = props.challenge.items.map(buildTile);
 		renderedChallenge = props.challenge;
 	};
 
 	const applySelection = () => {
-		const theme = "light" === props.themeColor ? lightTheme : darkTheme;
+		const theme = themeOf(props.themeColor);
 		for (const tile of tiles) {
 			const selected = props.solution.some(
 				(entry: [string, number, number]) => entry[0] === tile.hash,
