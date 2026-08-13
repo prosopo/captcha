@@ -53,6 +53,7 @@ type MockTasks = {
 		scoreIncreaseTimestamp: MockFn;
 		updateScore: MockFn;
 		setMatchedRule: MockFn;
+		resolveBundleByDetectorSession: MockFn;
 	};
 	db: {
 		getSessionRecordByToken: MockFn;
@@ -203,6 +204,7 @@ vi.mock("../../../tasks/index.js", async () => {
 					),
 					updateScore: vi.fn(),
 					setMatchedRule: vi.fn(),
+					resolveBundleByDetectorSession: vi.fn().mockResolvedValue(undefined),
 				},
 				db: {
 					getSessionRecordByToken: vi.fn().mockResolvedValue(null),
@@ -290,6 +292,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			),
 			updateScore: vi.fn(),
 			setMatchedRule: vi.fn(),
+			resolveBundleByDetectorSession: vi.fn().mockResolvedValue(undefined),
 		},
 		db: {
 			getSessionRecordByToken: vi.fn().mockResolvedValue(null),
@@ -739,6 +742,189 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		expect(res.json).toHaveBeenCalledWith(
 			expect.objectContaining({
 				sessionId: "live-pow-session-routing-agrees",
+			}),
+		);
+	});
+
+	// Regression: dedup returned a session bound to pool bundle A, but the
+	// client on this request just did a fresh /detector/assign that returned
+	// bundle B (uniform-random pick across the pool). Handing back the cached
+	// sessionId would leave every later SIMD / behavioural hop encrypted with
+	// bundle B's public key while the provider tries bundle A's private key —
+	// the OAEP-decode-error → empty-BDP → image-escalation cascade seen in
+	// prod after the 15:47 UTC 2026-08-13 restart wave. Evict on mismatch so
+	// the fresh-session path re-binds bundleId from the current
+	// detectorSessionId.
+	it("evicts the reused session when the incoming detectorSessionId bundle differs from the cached session's bundleId", async () => {
+		const clientRecord = {
+			account: "siteDedupBundleConflict",
+			settings: {
+				captchaType: CaptchaType.frictionless,
+				frictionlessThreshold: 0.5,
+				imageMaxRounds: 2,
+				disallowWebView: false,
+			},
+		};
+		tasksInstance.db.getClientRecord.mockResolvedValue(clientRecord);
+
+		// Cached session was minted with bundle-A.
+		tasksInstance.db.getSessionByuserSitekeyIpHash.mockResolvedValue({
+			sessionId: "stale-pow-session-bundle-conflict",
+			captchaType: CaptchaType.pow,
+			score: 0,
+			webView: false,
+			bundleId: "bundle-A",
+		});
+
+		// No policy conflict; routing agrees on captchaType.
+		tasksInstance.frictionlessManager.getPrioritisedAccessPolicies.mockResolvedValue(
+			[],
+		);
+		tasksInstance.frictionlessManager.applyRoutingMachine.mockResolvedValue({
+			captchaType: CaptchaType.pow,
+		});
+
+		// The fresh /detector/assign on this request resolved to bundle-B.
+		tasksInstance.frictionlessManager.resolveBundleByDetectorSession.mockResolvedValue(
+			{ bundleId: "bundle-B", key: "k", innerConfig: "c" },
+		);
+
+		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue({
+			baseBotScore: 0,
+			timestamp: Date.now(),
+			userId: "u",
+			userAgent: "844bc172f032bdd2d0baae3536c1d66c",
+			webView: false,
+			iFrame: false,
+			decryptedHeadHash: "abc",
+			decryptionFailed: false,
+		});
+
+		const body = {
+			token: "tBundleConflict",
+			headHash: "hhBundleConflict",
+			dapp: "siteDedupBundleConflict",
+			user: "u",
+			detectorSessionId: "det-fresh",
+		};
+		const { req, res, next } = buildReqRes(body);
+
+		// biome-ignore lint/suspicious/noExplicitAny: mock request
+		await handler(req as any, res as any, next);
+
+		expect(next).not.toHaveBeenCalled();
+		// Stale session is evicted so its bundleId can't cause OAEP failures
+		// on the client's subsequent /captcha/{type} + solution hops.
+		expect(tasksInstance.db.checkAndRemoveSession).toHaveBeenCalledWith(
+			"stale-pow-session-bundle-conflict",
+		);
+		// And the reuse response is not served.
+		expect(res.json).not.toHaveBeenCalledWith(
+			expect.objectContaining({
+				sessionId: "stale-pow-session-bundle-conflict",
+			}),
+		);
+	});
+
+	it("reuses the cached session when the incoming detectorSessionId bundle matches the cached session's bundleId", async () => {
+		const clientRecord = {
+			account: "siteDedupBundleAgrees",
+			settings: {
+				captchaType: CaptchaType.frictionless,
+				frictionlessThreshold: 0.5,
+				disallowWebView: false,
+			},
+		};
+		tasksInstance.db.getClientRecord.mockResolvedValue(clientRecord);
+
+		tasksInstance.db.getSessionByuserSitekeyIpHash.mockResolvedValue({
+			sessionId: "live-pow-session-bundle-agrees",
+			captchaType: CaptchaType.pow,
+			score: 0,
+			webView: false,
+			bundleId: "bundle-A",
+		});
+
+		tasksInstance.frictionlessManager.applyRoutingMachine.mockResolvedValue({
+			captchaType: CaptchaType.pow,
+		});
+
+		tasksInstance.frictionlessManager.resolveBundleByDetectorSession.mockResolvedValue(
+			{ bundleId: "bundle-A", key: "k", innerConfig: "c" },
+		);
+
+		const body = {
+			token: "tBundleAgrees",
+			headHash: "hhBundleAgrees",
+			dapp: "siteDedupBundleAgrees",
+			user: "u",
+			detectorSessionId: "det-fresh-agrees",
+		};
+		const { req, res, next } = buildReqRes(body);
+
+		// biome-ignore lint/suspicious/noExplicitAny: mock request
+		await handler(req as any, res as any, next);
+
+		expect(next).not.toHaveBeenCalled();
+		expect(tasksInstance.db.checkAndRemoveSession).not.toHaveBeenCalled();
+		expect(res.json).toHaveBeenCalledWith(
+			expect.objectContaining({
+				sessionId: "live-pow-session-bundle-agrees",
+			}),
+		);
+	});
+
+	// The fallback branch matters just as much as the conflict branch: when
+	// the incoming detectorSessionId's Redis binding has expired we cannot
+	// see the fresh bundleId, and evicting on that basis would churn every
+	// returning user whose page has been open longer than the binding TTL.
+	// So we must NOT evict — reuse and let the client's next retry
+	// re-bootstrap if the OAEP failure recurs.
+	it("reuses the cached session when the incoming detectorSessionId binding cannot be resolved", async () => {
+		const clientRecord = {
+			account: "siteDedupBundleUnresolved",
+			settings: {
+				captchaType: CaptchaType.frictionless,
+				frictionlessThreshold: 0.5,
+				disallowWebView: false,
+			},
+		};
+		tasksInstance.db.getClientRecord.mockResolvedValue(clientRecord);
+
+		tasksInstance.db.getSessionByuserSitekeyIpHash.mockResolvedValue({
+			sessionId: "live-pow-session-bundle-unresolved",
+			captchaType: CaptchaType.pow,
+			score: 0,
+			webView: false,
+			bundleId: "bundle-A",
+		});
+
+		tasksInstance.frictionlessManager.applyRoutingMachine.mockResolvedValue({
+			captchaType: CaptchaType.pow,
+		});
+
+		// Binding expired / never existed — resolve returns undefined.
+		tasksInstance.frictionlessManager.resolveBundleByDetectorSession.mockResolvedValue(
+			undefined,
+		);
+
+		const body = {
+			token: "tBundleUnresolved",
+			headHash: "hhBundleUnresolved",
+			dapp: "siteDedupBundleUnresolved",
+			user: "u",
+			detectorSessionId: "det-expired",
+		};
+		const { req, res, next } = buildReqRes(body);
+
+		// biome-ignore lint/suspicious/noExplicitAny: mock request
+		await handler(req as any, res as any, next);
+
+		expect(next).not.toHaveBeenCalled();
+		expect(tasksInstance.db.checkAndRemoveSession).not.toHaveBeenCalled();
+		expect(res.json).toHaveBeenCalledWith(
+			expect.objectContaining({
+				sessionId: "live-pow-session-bundle-unresolved",
 			}),
 		);
 	});

@@ -344,7 +344,46 @@ export default (
 				const dedupConflictsWithRouting =
 					dedupRouted.captchaType !== cachedCaptchaType;
 
-				if (dedupConflictsWithPolicy || dedupConflictsWithRouting) {
+				// The reused session's `bundleId` is what the provider will
+				// use to decrypt every later behavioural / SIMD payload for
+				// this session (via resolveBundleBySessionId). But the client
+				// on this request just did a fresh /detector/assign that
+				// bound `detectorSessionId` to whichever bundle
+				// DetectorBundlePool.pickRandom returned — almost never the
+				// same one the cached session stored, because the pick is
+				// uniform-random across the pool. If we hand the client the
+				// cached sessionId, every later hop encrypts with the fresh
+				// detector's public key and the provider tries to decrypt
+				// with the cached bundle's private key, yielding
+				// ERR_OSSL_RSA_OAEP_DECODING_ERROR and an escalation via the
+				// DM's empty-BDP rule. Evict on mismatch so the fresh-session
+				// path below re-binds `bundleId` from the current
+				// detectorSessionId. When the incoming detectorSessionId
+				// binding has expired (Redis TTL) we cannot see the fresh
+				// bundleId; fall through to reuse rather than evict
+				// unconditionally — the widget will still be re-bootstrapped
+				// on the next retry.
+				let dedupConflictsWithBundle = false;
+				let dedupIncomingBundleId: string | undefined;
+				if (detectorSessionId && dedup.session.bundleId) {
+					const incoming =
+						await tasks.frictionlessManager.resolveBundleByDetectorSession(
+							detectorSessionId,
+						);
+					dedupIncomingBundleId = incoming?.bundleId;
+					if (
+						dedupIncomingBundleId !== undefined &&
+						dedupIncomingBundleId !== dedup.session.bundleId
+					) {
+						dedupConflictsWithBundle = true;
+					}
+				}
+
+				if (
+					dedupConflictsWithPolicy ||
+					dedupConflictsWithRouting ||
+					dedupConflictsWithBundle
+				) {
 					req.logger.info(() => ({
 						msg: "Evicting reused session: cached captchaType conflicts with access policy or routing machine",
 						data: {
@@ -357,6 +396,10 @@ export default (
 							}),
 							...(dedupConflictsWithRouting && {
 								routedCaptchaType: dedupRouted.captchaType,
+							}),
+							...(dedupConflictsWithBundle && {
+								cachedBundleId: dedup.session.bundleId,
+								incomingBundleId: dedupIncomingBundleId,
 							}),
 						},
 					}));
