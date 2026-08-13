@@ -1,5 +1,42 @@
 # @prosopo/provider
 
+## 5.1.0
+### Minor Changes
+
+- 0def557: feat(traffic-filter): per-category policy with `block` or `challenge` action; challenge overrides captcha type + params at request time.
+
+### Patch Changes
+
+- cf8633b: Fix a data-loss bug where puzzle captcha submissions could drop their raw
+  mouse-trail (`puzzleEvents`) and get wrongly denied for it. When a solve
+  carried an encrypted behavioural payload but the provider couldn't decrypt
+  it — most commonly because the session's detector-pool bundle wasn't
+  resolvable (Redis binding expired, `bundleId` never promoted onto the session
+  record, or the bundle rotated out of the process) — the entire persistence
+  block was skipped. The record kept its default empty `puzzleEvents` array and
+  no `behavioralDataPacked`, and the global `checkNoCacheNoBehavioural` rule
+  then denied the submission with "no-cache request with no behavioural data"
+  against otherwise legitimate desktop browsers that send `cache-control:
+  no-cache` on hard reloads or with devtools cache disabled.
+  
+  `puzzleEvents` are now persisted unconditionally up front, so the raw event
+  trail survives independently of whether the behavioural blob can be decrypted.
+  The decrypt attempt still runs and its output is still written when it
+  succeeds; its failure no longer takes the event trail with it.
+- Updated dependencies [0def557]
+  - @prosopo/types@5.1.0
+  - @prosopo/types-database@5.1.0
+  - @prosopo/api@4.0.5
+  - @prosopo/api-express-router@3.1.60
+  - @prosopo/database@4.0.6
+  - @prosopo/datasets@3.1.61
+  - @prosopo/env@3.6.29
+  - @prosopo/ipinfo@0.3.6
+  - @prosopo/keyring@2.9.68
+  - @prosopo/load-balancer@2.10.22
+  - @prosopo/types-env@2.10.25
+  - @prosopo/user-access-policy@3.12.16
+
 ## 5.0.5
 ### Patch Changes
 
