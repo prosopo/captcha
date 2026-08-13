@@ -220,16 +220,16 @@ describe("computeDnsAsymmetry", () => {
 			expect(score).toBe(0);
 		});
 
-		it("does not double-count VPN+DC even when both policies are configured", () => {
-			// Under per-IP precedence, VPN owns a VPN+DC IP regardless of the
-			// datacenter policy state. The DC flag is downstream categorisation
-			// and doesn't contribute a separate asymmetry signal.
+		it("keeps the datacenter penalty when isVPN but blockVpn is on", () => {
+			// Policy-aware shielding: VPN only shields DC when the operator
+			// has left VPN unconfigured. When the operator is blocking VPNs,
+			// VPN doesn't shield — the DC signal still counts.
 			const score = computeDnsAsymmetry(
 				enrichedWith({ resolverIpInfo: dcVpn(), peerIpInfo: dcVpn() }),
 				undefined,
 				{ ...filterAllowingVpn, vpn: { action: TrafficFilterAction.Block } },
 			);
-			expect(score).toBe(0);
+			expect(score).toBeCloseTo(0.5);
 		});
 
 		it("suppresses when isProxy and blockProxy off", () => {
@@ -254,10 +254,11 @@ describe("computeDnsAsymmetry", () => {
 			expect(score).toBe(0);
 		});
 
-		it("counts DC on a crawler+DC IP even when crawler policy is off", () => {
-			// Precedence puts datacenter above crawler, so a crawler+DC IP is
-			// owned by datacenter for signal purposes. The DC penalty fires
-			// regardless of crawler policy state.
+		it("suppresses when isCrawler and blockCrawler off", () => {
+			// Crawler+DC on a resolver is often Googlebot / a legit crawler's
+			// DNS resolver. When the operator hasn't configured crawler
+			// blocking, the crawler flag shields the DC signal — the DC-ness
+			// is explained by the crawler status.
 			const score = computeDnsAsymmetry(
 				enrichedWith({
 					resolverIpInfo: baseInfo({ isDatacenter: true, isCrawler: true }),
@@ -265,7 +266,7 @@ describe("computeDnsAsymmetry", () => {
 				undefined,
 				filterAllowingVpn,
 			);
-			expect(score).toBeCloseTo(0.3);
+			expect(score).toBe(0);
 		});
 
 		it("does not affect the client-ISP compound when resolver DC is suppressed", () => {
