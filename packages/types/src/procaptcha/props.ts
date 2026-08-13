@@ -118,4 +118,15 @@ export interface ProcaptchaProps {
 	// `onSessionInvalidated` fires without asking the user to click the
 	// checkbox a second time.
 	startCoords?: { x: number; y: number };
+	// Called by the inner widget when the user's answer was wrong. The
+	// provider consumes the session when it issues a challenge, so a second
+	// attempt cannot reuse it — the frictionless wrapper mints a fresh
+	// session and re-mounts the widget, which is what actually puts a new
+	// challenge on screen. Coords are the original checkbox click, preserved
+	// for the same reason as `onSessionInvalidated`.
+	onChallengeFailed?: (x?: number, y?: number) => void;
+	// Set by ProcaptchaFrictionless on the widget it mounts after
+	// `onChallengeFailed`, so the fresh challenge arrives with the "incorrect,
+	// try again" prompt already visible rather than appearing unexplained.
+	showRetryPrompt?: boolean;
 }

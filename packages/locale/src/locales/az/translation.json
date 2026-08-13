@@ -376,7 +376,8 @@
 		"NO_ACCOUNTS_FOUND": "Hesab tapılmadı",
 		"ACCOUNT_NOT_FOUND": "Hesab tapılmadı",
 		"NO_EXTENSION_FOUND": "Tətbiq tapılmadı",
-		"INSECURE_CONTEXT": "Procaptcha təhlükəsiz (HTTPS) bağlantı tələb edir"
+		"INSECURE_CONTEXT": "Procaptcha təhlükəsiz (HTTPS) bağlantı tələb edir",
+		"INCORRECT_TRY_AGAIN": "Yanlışdır, zəhmət olmasa yenidən cəhd edin"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Geçərsiz ünvan kodlanmadı",

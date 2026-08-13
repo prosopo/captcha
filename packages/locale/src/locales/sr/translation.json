@@ -376,7 +376,8 @@
 		"NO_ACCOUNTS_FOUND": "Нису пронађени налози",
 		"ACCOUNT_NOT_FOUND": "Н��лог није пронађен",
 		"NO_EXTENSION_FOUND": "Нису пронађене екстензије",
-		"INSECURE_CONTEXT": "Procaptcha захтева безбедну (HTTPS) везу"
+		"INSECURE_CONTEXT": "Procaptcha захтева безбедну (HTTPS) везу",
+		"INCORRECT_TRY_AGAIN": "Нетачно, покушајте поново"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Немогуће кодирање неважеће адресе",

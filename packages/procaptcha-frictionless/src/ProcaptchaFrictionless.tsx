@@ -33,6 +33,8 @@ import customDetectBot from "./customDetectBot.js";
 import {
 	type RetryCoords,
 	consumeRetryMountProps,
+	consumeRetryPrompt,
+	handleChallengeFailed,
 	handleSessionInvalidated,
 } from "./sessionInvalidatedRecovery.js";
 
@@ -104,6 +106,9 @@ export const ProcaptchaFrictionless = ({
 	// After we've retried once, a second NO_SESSION_FOUND falls back to the
 	// inner widget's own `frictionlessState.restart()` path.
 	const sessionInvalidatedFiredRef = useRef(false);
+	// Raised when the inner widget reports a wrong answer, and consumed by the
+	// widget mounted immediately afterwards so it opens with the retry prompt.
+	const pendingRetryPromptRef = useRef(false);
 
 	useEffect(() => {
 		if (!config.language) return;
@@ -214,6 +219,16 @@ export const ProcaptchaFrictionless = ({
 			void start();
 		};
 
+		// The user answered, and got it wrong. Re-run the frictionless flow so
+		// the provider mints a session for a fresh challenge, and flag the next
+		// mount to open with the retry prompt. Unlike the session-invalidated
+		// path this is not one-shot — every wrong answer earns another go.
+		const onChallengeFailed = (x?: number, y?: number) => {
+			handleChallengeFailed(x, y, pendingRetryCoordsRef, pendingRetryPromptRef);
+			resetState(0);
+			void start();
+		};
+
 		// Consume any pending retry coords now — the resumed widget owns them
 		// for exactly one auto-fired `manager.start(x, y)`. Cleared so a
 		// subsequent escalation/re-render doesn't accidentally re-inject.
@@ -224,6 +239,9 @@ export const ProcaptchaFrictionless = ({
 		const { autoStart: resumedAutoStart, startCoords: retryStartCoords } =
 			consumeRetryMountProps(pendingRetryCoordsRef, autoStart);
 		const startCoords = escalationCoords ?? retryStartCoords;
+		// Consumed here for the same reason as the coords: this mount owns the
+		// prompt, and a later escalation must not inherit it.
+		const showRetryPrompt = consumeRetryPrompt(pendingRetryPromptRef);
 
 		if (captchaType === CaptchaType.image) {
 			const Procaptcha = await ProcaptchaLoader();
@@ -236,6 +254,8 @@ export const ProcaptchaFrictionless = ({
 					autoStart={resumedAutoStart}
 					startCoords={startCoords}
 					onSessionInvalidated={onSessionInvalidated}
+					onChallengeFailed={onChallengeFailed}
+					showRetryPrompt={showRetryPrompt}
 				/>,
 			);
 		} else if (captchaType === CaptchaType.puzzle) {
@@ -249,6 +269,8 @@ export const ProcaptchaFrictionless = ({
 					autoStart={resumedAutoStart}
 					startCoords={startCoords}
 					onSessionInvalidated={onSessionInvalidated}
+					onChallengeFailed={onChallengeFailed}
+					showRetryPrompt={showRetryPrompt}
 				/>,
 			);
 		} else {

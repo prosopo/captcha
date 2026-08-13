@@ -376,7 +376,8 @@
 		"NO_ACCOUNTS_FOUND": "Walay makitang mga account",
 		"ACCOUNT_NOT_FOUND": "Account dili makita",
 		"NO_EXTENSION_FOUND": "Walay nakitang extension",
-		"INSECURE_CONTEXT": "Procaptcha-യ്ക്ക് സുരക്ഷിതമായ (HTTPS) കണക്ഷൻ ആവശ്യമാണ്"
+		"INSECURE_CONTEXT": "Procaptcha-യ്ക്ക് സുരക്ഷിതമായ (HTTPS) കണക്ഷൻ ആവശ്യമാണ്",
+		"INCORRECT_TRY_AGAIN": "തെറ്റാണ്, ദയവായി വീണ്ടും ശ്രമിക്കുക"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Nahimong pakyas ang pag-encode sa dili balido nga address",

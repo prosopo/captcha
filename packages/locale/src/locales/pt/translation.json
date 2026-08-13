@@ -77,7 +77,8 @@
 		"NO_ACCOUNTS_FOUND": "Nenhuma conta encontrada",
 		"ACCOUNT_NOT_FOUND": "Conta não encontrada",
 		"NO_EXTENSION_FOUND": "Nenhuma extensão encontrada",
-		"INSECURE_CONTEXT": "O Procaptcha requer uma ligação segura (HTTPS)"
+		"INSECURE_CONTEXT": "O Procaptcha requer uma ligação segura (HTTPS)",
+		"INCORRECT_TRY_AGAIN": "Incorreto, tente novamente"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Falha ao codificar endereço inválido",

@@ -60,6 +60,9 @@ const defaultState = (): Partial<ProcaptchaState> => {
 		isHuman: false,
 		captchaApi: undefined,
 		account: undefined,
+		// Any reset clears the retry prompt; the failure path re-raises it
+		// explicitly on the state it resets to.
+		retryPrompt: false,
 		// don't handle timeout here, this should be handled by the state management
 	};
 };
@@ -76,6 +79,10 @@ export function Manager(
 	// Reads the live honeypot input value at submit time. Returns undefined
 	// when the honeypot is disabled or the input hasn't been filled.
 	getHoneypotValue?: () => string | undefined,
+	// Set by the widget when a frictionless wrapper is present. A wrong answer
+	// needs a session the provider hasn't already consumed, which only the
+	// wrapper can mint, so the retry is delegated rather than run in place.
+	onChallengeFailed?: () => void,
 ) {
 	const events = getDefaultEvents(callbacks);
 
@@ -393,7 +400,24 @@ export function Manager(
 					setValidChallengeTimeout();
 				} else {
 					events.onFailed();
-					resetState(frictionlessState?.restart);
+					// A wrong answer used to drop the user back to the checkbox
+					// with nothing but the default callback's alert() to explain
+					// it. Instead, put a fresh challenge up with the prompt
+					// attached, so the retry is the visible next step.
+					if (onChallengeFailed) {
+						// Frictionless wrapper present: it owns the re-mint, and
+						// re-mounts this widget with `showRetryPrompt` set. Skip
+						// the local reset so the modal doesn't flash shut first.
+						clearTimeout();
+						onChallengeFailed();
+						return;
+					}
+					// Standalone image widget: it owns its own session, so a new
+					// challenge can be fetched in place.
+					clearTimeout();
+					updateState({ ...defaultState(), retryPrompt: true });
+					events.onReset();
+					await start();
 				}
 			},
 			start,

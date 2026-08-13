@@ -36,6 +36,7 @@ describe("state/builder", () => {
 				attemptCount: 0,
 				error: undefined,
 				sessionId: undefined,
+				retryPrompt: false,
 			};
 
 			const onStateUpdate = vi.fn();
@@ -67,6 +68,7 @@ describe("state/builder", () => {
 				attemptCount: 0,
 				error: undefined,
 				sessionId: undefined,
+				retryPrompt: false,
 			};
 
 			const onStateUpdate = vi.fn();
@@ -97,6 +99,7 @@ describe("state/builder", () => {
 				attemptCount: 0,
 				error: undefined,
 				sessionId: undefined,
+				retryPrompt: false,
 			};
 
 			const onStateUpdate = vi.fn();
