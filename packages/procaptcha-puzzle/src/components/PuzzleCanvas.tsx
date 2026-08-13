@@ -331,6 +331,11 @@ export const PuzzleCanvas = ({
 							height: `${PIECE_SIZE}px`,
 							borderRadius: "50%",
 							background: puzzle.pieceGradient,
+							// Without this, a touch on a zoomed-in mobile viewport is
+							// claimed by the browser as a pan gesture before our
+							// touchmove handler ever runs, so the page scrolls instead
+							// of the piece moving.
+							touchAction: "none",
 							cursor: submitting
 								? "default"
 								: isDragging.current
