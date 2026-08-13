@@ -5,6 +5,20 @@ name: typecheck
 on:
   pull_request:
     branches: [main, dev, staging, release/*]
+    # Ignore-based, never inclusion-based: an allowlist silently stops testing
+    # any newly added directory, whereas anything unrecognised here still runs
+    # CI. Only paths that cannot possibly affect this workflow belong below.
+    #
+    # Safe against the "required check never reports" trap: the one required
+    # context on main is `check`, and changesets.yml publishes a job named
+    # `check` with no path filter at all, so a PR touching only ignored paths
+    # still gets a `check` and does not sit pending forever.
+    paths-ignore:
+      - '.changeset/**' # release metadata; nothing here reads it
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/PULL_REQUEST_TEMPLATE*'
+      - 'docs/**'
+      - '**.md'
     types:
       - opened # when a PR is opened
       - synchronize # when a PR is pushed to

@@ -312,6 +312,7 @@ export const buildEscalation = async (
 		// (set by the DNS sidecar on the origin's TLS connection only).
 		originSession.sessionId,
 		originSession.g,
+		undefined,
 		originSession.i,
 	);
 

@@ -50,6 +50,10 @@ import type {
 } from "../decisionMachine/index.js";
 import type { PuzzleEvent, RequestHeaders } from "./api.js";
 import type { SimdReadings } from "./detection.js";
+import {
+	type MatchedAccessRule,
+	MatchedAccessRuleSchema,
+} from "./matchedAccessRule.js";
 import type { FrictionlessReason, ResultReason } from "./reasons.js";
 
 export interface BrowserInfo {
@@ -458,6 +462,8 @@ export const SessionSchema = object({
 	ruleHash: string().optional(),
 	ruleType: string().array().optional(),
 	ruleDescription: string().optional(),
+	// See Session.matchedRule.
+	matchedRule: MatchedAccessRuleSchema.optional(),
 	// Full ipinfo payload from ipInfoMiddleware at session-creation
 	// time. Replaces the flat `countryCode` / `geolocation` fields —
 	// consumers narrow on `ipInfo.isValid` and read whichever sub-field
@@ -566,6 +572,13 @@ export type Session = {
 	ruleHash?: string; // == the redis-key suffix of the matched rule
 	ruleType?: string[]; // populated scope fields, e.g. ['ja4Hash'], ['ja4Hash','coords']
 	ruleDescription?: string; // operator-set description copied from the rule's AccessPolicy
+	// The full matched rule, denormalised at enforcement time. Unlike the three
+	// fields above it is written by EVERY access-policy path — the request-time
+	// block middleware, the frictionless entry (block and restrict alike), and
+	// the verify-time hard-block check — so the audit page can name the exact
+	// policy that acted on a request rather than just echoing its description.
+	// See MatchedAccessRule for why the rule is copied rather than joined.
+	matchedRule?: MatchedAccessRule;
 	// Full ipinfo payload from ipInfoMiddleware at session-creation
 	// time. Replaces the flat `countryCode` / `geolocation` fields.
 	ipInfo?: IPInfoResponse;

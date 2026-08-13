@@ -209,6 +209,19 @@ export default async function (
 				output: {
 					dir: path.resolve(dir, "dist/bundle"),
 					entryFileNames: `${bundleName}.bundle.js`,
+					// For a lib + es build, Vite downgrades `build.minify: true` to
+					// `{ compress, mangle, codegen: false }`, which leaves the output
+					// pretty-printed. Set it here to get whitespace removal too;
+					// output options win over the build-level default.
+					...(isProduction
+						? {
+								minify: {
+									compress: true,
+									mangle: true,
+									codegen: true,
+								},
+							}
+						: {}),
 				},
 
 				plugins: [

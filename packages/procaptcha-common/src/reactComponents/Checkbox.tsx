@@ -229,10 +229,14 @@ export const Checkbox: FC<CheckboxProps> = ({
 				/>
 			)}
 			{error ? (
-				<ResponsiveLabel htmFor={id}>
+				<ResponsiveLabel
+					htmFor={id}
+					style={{ userSelect: "text", cursor: "text" }}
+				>
 					<a
 						css={{
 							color: theme.palette.error.main,
+							userSelect: "text",
 						}}
 						href={FAQ_LINK}
 					>

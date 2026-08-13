@@ -1,5 +1,68 @@
 # @prosopo/provider-mock
 
+## 2.8.146
+### Patch Changes
+
+- Updated dependencies [cf8633b]
+- Updated dependencies [0def557]
+  - @prosopo/provider@5.1.0
+  - @prosopo/types@5.1.0
+  - @prosopo/types-database@5.1.0
+  - @prosopo/api-express-router@3.1.60
+  - @prosopo/database@4.0.6
+
+## 2.8.145
+### Patch Changes
+
+- Updated dependencies [216f8cd]
+  - @prosopo/types-database@5.0.4
+  - @prosopo/provider@5.0.5
+  - @prosopo/types@5.0.4
+  - @prosopo/database@4.0.5
+  - @prosopo/api-express-router@3.1.59
+
+## 2.8.144
+### Patch Changes
+
+- 1b2cca9: Add unit and type tests for the provider mock, and fix the defects they found:
+  
+  - `/test` opened a mongo connection and only closed it after a successful write, so
+    every failing request leaked a connection for the life of the process. The close
+    now happens in a `finally`.
+  - `JA4Database.connect()` read models off `this.connection` without checking the base
+    class had set one, turning a failed connect into "cannot read properties of
+    undefined" much later; it now throws `DATABASE.CONNECTION_UNDEFINED`.
+  - Queries issued before `connect()` hit an unreachable `!this.tables` guard and threw a
+    `TypeError`; they now report a `ProsopoDBError`.
+  - The api port was the hardcoded string `"9229"`. It is now read from
+    `PROVIDER_MOCK_PORT`, validated as a port number, and defaulted when unusable.
+  - `start.ts` called `startApi()` at module scope, so importing anything from the
+    package started a server. Startup is now behind an `isMain` guard.
+  - Startup failures resolved quietly, leaving a container with nothing listening in it;
+    `main` now exits non-zero.
+  - Route handlers are adapted through `toRequestHandler`, which forwards a rejected
+    handler to the error middleware instead of leaving an unhandled rejection and a
+    hanging request.
+- Updated dependencies [132e9e3]
+- Updated dependencies [a308b9b]
+- Updated dependencies [8386644]
+- Updated dependencies [16dbab0]
+- Updated dependencies [69c6982]
+- Updated dependencies [9091a78]
+- Updated dependencies [9ec6cc4]
+- Updated dependencies [6d4bb65]
+- Updated dependencies [d7b93f1]
+- Updated dependencies [063e69d]
+  - @prosopo/provider@5.0.4
+  - @prosopo/types@5.0.3
+  - @prosopo/database@4.0.4
+  - @prosopo/locale@3.3.0
+  - @prosopo/api-express-router@3.1.58
+  - @prosopo/types-database@5.0.3
+  - @prosopo/common@3.1.50
+  - @prosopo/logger@2.0.6
+  - @prosopo/dotenv@3.0.52
+
 ## 2.8.143
 ### Patch Changes
 

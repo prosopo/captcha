@@ -1,5 +1,59 @@
 # @prosopo/procaptcha-common
 
+## 2.11.25
+### Patch Changes
+
+- Updated dependencies [0def557]
+  - @prosopo/types@5.1.0
+  - @prosopo/account@2.8.71
+  - @prosopo/load-balancer@2.10.22
+
+## 2.11.24
+### Patch Changes
+
+- cc3ffe3: Checkbox: allow selecting the error-label text (and its inner link) so users
+  can copy the `Forbidden: <requestId>` reference for support tickets. The
+  label's `user-select: none` is a click-to-toggle hint that only makes sense
+  when the checkbox is enabled; on the error branch the checkbox is disabled,
+  so overriding to `user-select: text` (with a text cursor) is safe.
+- Updated dependencies [216f8cd]
+  - @prosopo/types@5.0.4
+  - @prosopo/account@2.8.70
+  - @prosopo/load-balancer@2.10.21
+
+## 2.11.23
+### Patch Changes
+
+- 729349e: Run the cypress suite in firefox as well as chrome whenever the PR is a release
+  PR, via a new cypress-firefox workflow. cypress.yml is untouched.
+  
+  The trusted-event checks scattered across the widget components now go through a
+  single `isEventTrusted()` helper in `@prosopo/procaptcha-common`. Behaviour is
+  unchanged: it still returns early for synthetic input, unless the bundle was
+  built with `PROSOPO_ALLOW_UNTRUSTED_EVENTS=1`, which only the firefox CI leg
+  sets. Production builds pin the define to `false`, so the branch is folded away
+  at build time and the allowance cannot reach a shipped bundle.
+  
+  The allowance exists because cypress-real-events dispatches input over the chrome
+  devtools protocol, which cypress exposes for chromium browsers only — on firefox
+  the specs fall back to cypress' own synthetic clicks.
+- b525956: Refresh the captcha widget appearance with a Material 3 theme across the widget-skeleton, procaptcha-common, procaptcha-react and procaptcha-puzzle packages.
+  
+  - Split the single tinted surface into M3 surface roles: the widget now sits on a white `surface` (surfaceContainerLowest) and the challenge dialog on `surfaceContainerHigh`.
+  - Removed all drop shadows. Separation comes from surface roles and outlines; hover and drag feedback use M3 state layers and outline rings instead.
+  - Added shared `typography` (label large / title medium / body medium) and `stateLayer` (8%/10%/10%) tokens, and aligned the shape scale to M3 steps.
+  - Buttons: M3 label-large type, 40dp height, spec padding, state-layer hover in place of a brightness filter, and no resting elevation on the filled variant.
+  - Added the missing focus indicators (3dp outline, 2dp offset, keyboard-only) to the checkbox, buttons and reload control.
+  - Secondary dialog text now uses the `onSurfaceVariant` role rather than reduced opacity.
+- Updated dependencies [16dbab0]
+- Updated dependencies [b525956]
+- Updated dependencies [063e69d]
+- Updated dependencies [8a4d6ad]
+  - @prosopo/types@5.0.3
+  - @prosopo/widget-skeleton@2.8.6
+  - @prosopo/account@2.8.69
+  - @prosopo/load-balancer@2.10.20
+
 ## 2.11.22
 ### Patch Changes
 

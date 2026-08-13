@@ -1,5 +1,15 @@
 # @prosopo/util
 
+## 3.3.6
+### Patch Changes
+
+- 16dbab0: chore(deps): bump ip-address from 10.0.1 to 10.5.0
+  
+  The @angular/core and @angular/common bumps in the angular integration demo are
+  not listed here: that demo sits below the root `integration/*` workspace glob, so
+  changesets does not know it and errors on a changeset naming it.
+- d5e104b: Optimise the `solvePoW` hot loop by removing per-iteration allocations: reuse a single message buffer and rewrite only the nonce digits in place, and replace the per-candidate 256-bit comparison with an early-exit byte check.
+
 ## 3.3.5
 ### Patch Changes
 

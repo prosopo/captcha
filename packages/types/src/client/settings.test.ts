@@ -406,16 +406,16 @@ describe("SpamFilterRulesSchema", () => {
 });
 
 describe("TrafficFilterSchema", () => {
-	it("blocks abusers by default and nothing else", () => {
+	it("leaves every category unconfigured by default (submit-time abuser default is applied by resolveTrafficFilterCheck)", () => {
 		const filter = TrafficFilterSchema.parse({});
-		expect(filter.blockAbuser).toBe(true);
-		expect(filter.blockVpn).toBe(false);
-		expect(filter.blockProxy).toBe(false);
-		expect(filter.blockTor).toBe(false);
-		expect(filter.blockDatacenter).toBe(false);
-		expect(filter.blockMobile).toBe(false);
-		expect(filter.blockSatellite).toBe(false);
-		expect(filter.blockCrawler).toBe(false);
+		expect(filter.vpn).toBeUndefined();
+		expect(filter.proxy).toBeUndefined();
+		expect(filter.tor).toBeUndefined();
+		expect(filter.abuser).toBeUndefined();
+		expect(filter.datacenter).toBeUndefined();
+		expect(filter.mobile).toBeUndefined();
+		expect(filter.satellite).toBeUndefined();
+		expect(filter.crawler).toBeUndefined();
 	});
 
 	it("skips the extras check on a validated dns path by default", () => {

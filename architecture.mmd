@@ -64,8 +64,10 @@ graph TB
             PowTasks["PoW Captcha Manager"]
             FrictionlessTasks["Frictionless Manager"]
             SolutionVerifier["Solution Verifier<br/>Merkle tree + salt embedding"]
-            DecisionMachine["Decision Machine<br/>pluggable scoring"]
-            AccessRules["Access Rules Engine<br/>spam / traffic / geo filters"]
+            DecisionMachine["Decision Machine<br/>pluggable scoring +<br/>post-pow escalation"]
+            AccessPolicies["Access Policies<br/>(UAP: per-IP/ja4/headHash<br/>rules; can set captchaType +<br/>params; deferToVerify)"]
+            TrafficFilter["Traffic Filter<br/>(site-wide: per-category<br/>vpn / proxy / tor / abuser /<br/>datacenter / mobile /<br/>satellite / crawler)<br/>action = block | challenge"]
+            SpamFilter["Spam Filter<br/>(email rules)"]
         end
 
         subgraph Storage["Storage"]
@@ -114,6 +116,9 @@ graph TB
 
     FrictionlessEP --> FrictionlessTasks
     FrictionlessTasks --> Redis
+    FrictionlessTasks -->|"1. handleAccessPolicy<br/>(captchaType override)"| AccessPolicies
+    FrictionlessTasks -->|"2. handleFrictionlessTrafficFilter<br/>(block → 401, challenge →<br/>dispatch send{Image,Pow,Puzzle})"| TrafficFilter
+    FrictionlessTasks -->|"3. runDecisionMachine<br/>(score-based routing)"| DecisionMachine
     FrictionlessTasks -->|human detected| Manager
     FrictionlessTasks -->|bot suspected| ImageCaptcha
     FrictionlessTasks -->|bot suspected| PoW
@@ -121,25 +126,32 @@ graph TB
     %% ===== IMAGE CAPTCHA FLOW =====
     Manager -->|fallback: image| ImageCaptcha
     ImageCaptcha -->|get challenge| ImageChallengeEP
+    ImageChallengeEP -->|"1. AccessPolicy lookup<br/>(deferToVerify filtered)"| AccessPolicies
+    ImageChallengeEP -->|"2. applyTrafficFilterAtRequestTime<br/>(block → 401,<br/>challenge → solvedImagesCount override)"| TrafficFilter
     ImageChallengeEP --> ImgTasks
-    ImgTasks -->|random captchas + salt| Dataset
+    ImgTasks -->|"random captchas + salt<br/>solvedImagesCount cascade:<br/>trafficFilter → session →<br/>AccessPolicy → siteSettings"| Dataset
     ImgTasks -->|signed challenge| ImageCaptcha
     ImageCaptcha -->|user selects images| ImageSolutionEP
     ImageSolutionEP --> SolutionVerifier
     SolutionVerifier -->|compare solutions| Dataset
     SolutionVerifier -->|build commitment| MongoDB
     SolutionVerifier -->|optional scoring| DecisionMachine
-    SolutionVerifier -->|check rules| AccessRules
+    SolutionVerifier -->|"resolveTrafficFilterCheck<br/>(block matches → disapprove)"| TrafficFilter
+    SolutionVerifier -->|"checkForHardBlock +<br/>deferToVerify block →<br/>ACCESS_POLICY_BLOCK"| AccessPolicies
     SolutionVerifier -->|signed token| Manager
 
     %% ===== POW FLOW =====
     Manager -->|fallback: pow| PoW
     PoW -->|get challenge| PowChallengeEP
+    PowChallengeEP -->|"1. AccessPolicy lookup"| AccessPolicies
+    PowChallengeEP -->|"2. applyTrafficFilterAtRequestTime<br/>(block → 401,<br/>challenge → powDifficulty override)"| TrafficFilter
     PowChallengeEP --> PowTasks
-    PowTasks -->|challenge + difficulty| PoW
+    PowTasks -->|"challenge + difficulty<br/>(cascade: trafficFilter → session →<br/>AccessPolicy → siteSettings)"| PoW
     PoW -->|"computed proof<br/>+ behavioural data"| PowSolutionEP
     PowSolutionEP --> PowTasks
     PowTasks -->|verify proof| MongoDB
+    PowTasks -->|"resolveTrafficFilterCheck<br/>(block matches → disapprove)"| TrafficFilter
+    PowTasks -->|"checkForHardBlock +<br/>deferToVerify block"| AccessPolicies
     PowTasks -->|"post-pow routing<br/>(re-evaluate with<br/>behavioural data)"| DecisionMachine
     PowTasks -->|signed token| Manager
     PowTasks -->|escalate: image/puzzle<br/>+ new sessionId| PoW
@@ -167,7 +179,9 @@ graph TB
     ImgTasks --> MongoDB
     PowTasks --> MongoDB
     FrictionlessTasks --> MongoDB
-    AccessRules --> MongoDB
+    AccessPolicies --> Redis
+    TrafficFilter -.->|"loaded from<br/>clientRecord.settings"| MongoDB
+    SpamFilter -.->|"loaded from<br/>clientRecord.settings"| MongoDB
     DecisionMachine --> MongoDB
     ImgTasks --> Redis
     PowTasks --> Redis
@@ -183,7 +197,7 @@ graph TB
     class Developer,EndUser actor
     class Widget,Manager,LB,Detector,Fingerprint,Behavioral,Frictionless,ImageCaptcha,PoW browser
     class Healthz,Details,FrictionlessEP,ImageChallengeEP,ImageSolutionEP,PowChallengeEP,PowSolutionEP,ImageVerifyEP,PowVerifyEP,SpamEmailEP,SiteKeyMgmt,DetectorMgmt,DecisionMachineMgmt,MaintenanceToggle,RulesCRUD provider
-    class ImgTasks,PowTasks,FrictionlessTasks,SolutionVerifier,DecisionMachine,AccessRules provider
+    class ImgTasks,PowTasks,FrictionlessTasks,SolutionVerifier,DecisionMachine,AccessPolicies,TrafficFilter,SpamFilter provider
     class MongoDB,Redis,Dataset storage
     class ServerPkg,DappBackend backend
     class ProviderList external

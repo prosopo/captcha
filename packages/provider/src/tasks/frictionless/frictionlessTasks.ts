@@ -156,6 +156,23 @@ export class FrictionlessManager extends CaptchaManager {
 		};
 	}
 
+	/**
+	 * Record the access rule that matched this request, so every session this
+	 * request goes on to write carries it.
+	 *
+	 * Set separately from `setSessionParams` (which runs before rules are
+	 * evaluated) and applied at `createSession` time, so it reaches all the
+	 * outcomes a matched rule can lead to: the 401'd block, the auto-ban a
+	 * score bump triggered, the captcha type a Restrict rule forced, and the
+	 * ordinary decision-machine session a score-only Restrict leaves behind.
+	 * Mirrors `updateScore`'s after-the-fact mutation of the same bag.
+	 */
+	setMatchedRule(matchedRule: Session["matchedRule"]): void {
+		if (this.sessionParams) {
+			this.sessionParams.matchedRule = matchedRule;
+		}
+	}
+
 	updateScore(score: number, scoreComponents: ScoreComponents): void {
 		if (this.sessionParams) {
 			this.sessionParams.score = score;
@@ -201,6 +218,7 @@ export class FrictionlessManager extends CaptchaManager {
 		isProtect?: Session["isProtect"],
 		originSessionId?: Session["originSessionId"],
 		g?: Session["g"],
+		matchedRule?: Session["matchedRule"],
 		i?: Session["i"],
 	): Promise<Session> {
 		const sessionRecord: Session = {
@@ -255,6 +273,9 @@ export class FrictionlessManager extends CaptchaManager {
 			i,
 			tcpToChelloUs,
 			chelloToHandshakeUs,
+			// Only present when an access policy actually matched this
+			// request, so ordinary sessions stay slim.
+			...(matchedRule && { matchedRule }),
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);
@@ -401,6 +422,7 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.isProtect,
 			undefined,
 			effectiveParams.g,
+			effectiveParams.matchedRule,
 			effectiveParams.i,
 		);
 
@@ -479,6 +501,7 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.isProtect,
 			undefined,
 			effectiveParams.g,
+			effectiveParams.matchedRule,
 			effectiveParams.i,
 		);
 	}

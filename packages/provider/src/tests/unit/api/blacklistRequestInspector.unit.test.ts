@@ -548,6 +548,14 @@ describe("BlacklistRequestInspector blocked-session persistence", () => {
 		expect(written.ruleHash).toEqual(expect.any(String));
 		expect(written.ruleType).toEqual(["ja4Hash"]);
 		expect(written.ruleDescription).toBe("ja4 block — Solver");
+		// The rule itself, denormalised: the audit page names the exact
+		// policy from this, so it has to survive the rule's own expiry.
+		expect(written.matchedRule).toEqual({
+			ruleHash: written.ruleHash,
+			policyType: AccessPolicyType.Block,
+			description: "ja4 block — Solver",
+			conditions: [{ field: "ja4Hash", value: BOT_JA4 }],
+		});
 		const headers = written.headers as Record<string, unknown>;
 		expect(headers["user-agent"]).toBe(BOT_UA);
 		// Sentinel required-field values that the request never reached
@@ -813,6 +821,7 @@ describe("BlacklistRequestInspector.abortRequestForBlockedUsers", () => {
 			headers: {},
 			body: {},
 			logger: mockLogger,
+			requestId: "test-request-id",
 			...overrides,
 		}) as unknown as Request;
 
@@ -835,7 +844,13 @@ describe("BlacklistRequestInspector.abortRequestForBlockedUsers", () => {
 		);
 
 		expect(status).toHaveBeenCalledWith(403);
-		expect(json).toHaveBeenCalledWith({ error: "Forbidden" });
+		// Structured object so the widget's `result.error?.message` extractor
+		// renders `Forbidden: <requestId>` instead of falling through to
+		// "Cannot load CAPTCHA". requestId gives support a handle to trace
+		// the blocked session back to the matching rule.
+		expect(json).toHaveBeenCalledWith({
+			error: { message: "Forbidden: test-request-id", code: 403 },
+		});
 		expect(next).not.toHaveBeenCalled();
 	});
 

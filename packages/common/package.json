@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/common",
-	"version": "3.1.49",
+	"version": "3.1.50",
 	"description": "Prosopo common library",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -33,15 +33,15 @@
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
 	"dependencies": {
-		"@prosopo/locale": "3.2.9",
-		"@prosopo/logger": "2.0.5",
+		"@prosopo/locale": "3.3.0",
+		"@prosopo/logger": "2.0.6",
 		"i18next": "24.1.0",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.7",
+		"@prosopo/config": "3.3.8",
 		"@types/node": "22.10.2",
-		"@prosopo/types": "5.0.2",
+		"@prosopo/types": "5.1.0",
 		"@vitest/coverage-v8": "4.1.10",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",

@@ -1,5 +1,36 @@
 # @prosopo/api-express-router
 
+## 3.1.60
+### Patch Changes
+
+- Updated dependencies [0def557]
+  - @prosopo/types@5.1.0
+  - @prosopo/env@3.6.29
+
+## 3.1.59
+### Patch Changes
+
+- Updated dependencies [216f8cd]
+  - @prosopo/types@5.0.4
+  - @prosopo/env@3.6.28
+
+## 3.1.58
+### Patch Changes
+
+- d7b93f1: Honour the adapter's `errorStatusCode` and the `{ error: ... }` JSON envelope in the default endpoint adapter's catch block. `ProsopoBaseError`s now surface their own status code via `unwrapError`; unexpected errors fall back to the configured `errorStatusCode` as JSON, instead of a hardcoded 500 plain-text response.
+- Updated dependencies [16dbab0]
+- Updated dependencies [9091a78]
+- Updated dependencies [9ec6cc4]
+- Updated dependencies [d5e104b]
+- Updated dependencies [063e69d]
+  - @prosopo/types@5.0.3
+  - @prosopo/util@3.3.6
+  - @prosopo/locale@3.3.0
+  - @prosopo/env@3.6.27
+  - @prosopo/common@3.1.50
+  - @prosopo/logger@2.0.6
+  - @prosopo/api-route@2.6.55
+
 ## 3.1.57
 ### Patch Changes
 
