@@ -1,5 +1,56 @@
 # @prosopo/types-database
 
+## 5.1.0
+### Minor Changes
+
+- 0def557: feat(traffic-filter): per-category policy with `block` or `challenge` action; challenge overrides captcha type + params at request time.
+
+### Patch Changes
+
+- Updated dependencies [0def557]
+  - @prosopo/types@5.1.0
+  - @prosopo/user-access-policy@3.12.16
+
+## 5.0.4
+### Patch Changes
+
+- 216f8cd: Record the access rule that actually fired on the record it acted on, so the
+  audit page can name the exact policy behind a block rather than echoing its
+  optional free-text description.
+  
+  Access rules are ephemeral — client rules carry a TTL and are reaped by
+  Mongo's `expiry` index — so an audit row can't answer "which policy blocked
+  me?" by joining to the live rules collection: by the time anyone looks, the
+  rule is usually gone. `describeMatchedRule` snapshots the matched rule (policy
+  type, captcha type, `deferToVerify`, description, rule group, and its scope
+  conditions in record form) onto `Session.matchedRule` at enforcement time.
+  
+  Previously only the request-time block middleware recorded any rule identity,
+  and only as a hash, a field-name list and a description. It is now written by
+  every access-policy path: the block middleware, the frictionless entry (block,
+  auto-ban, forced captcha type, and score-only restrict alike), and the
+  verify-time hard-block check in the PoW / image / puzzle flows — which is where
+  `deferToVerify` rules land, and where "why was I rejected?" was least obvious.
+  
+  `checkForHardBlock` now returns the whole `AccessRule` rather than just its
+  policy half; the runtime value was always the full rule.
+- Updated dependencies [216f8cd]
+  - @prosopo/user-access-policy@3.12.15
+  - @prosopo/types@5.0.4
+
+## 5.0.3
+### Patch Changes
+
+- 063e69d: Add optional `g` field on `Session`.
+- Updated dependencies [16dbab0]
+- Updated dependencies [9091a78]
+- Updated dependencies [063e69d]
+  - @prosopo/types@5.0.3
+  - @prosopo/user-access-policy@3.12.14
+  - @prosopo/locale@3.3.0
+  - @prosopo/common@3.1.50
+  - @prosopo/logger@2.0.6
+
 ## 5.0.2
 ### Patch Changes
 

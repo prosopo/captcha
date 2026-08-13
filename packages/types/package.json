@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/types",
-	"version": "5.0.2",
+	"version": "5.1.0",
 	"description": "Types for prosopo TypeScript packages",
 	"type": "module",
 	"main": "dist/index.js",
@@ -40,15 +40,15 @@
 		"@polkadot/extension-inject": "0.62.3",
 		"@polkadot/types": "16.4.9",
 		"@polkadot/util": "13.5.7",
-		"@prosopo/locale": "3.2.9",
-		"@prosopo/util": "3.3.5",
+		"@prosopo/locale": "3.3.0",
+		"@prosopo/util": "3.3.6",
 		"@prosopo/util-crypto": "13.5.30",
 		"ip-address": "10.5.0",
 		"scale-ts": "1.6.1",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.7",
+		"@prosopo/config": "3.3.8",
 		"@types/node": "22.5.5",
 		"@vitest/coverage-v8": "4.1.10",
 		"concurrently": "9.0.1",

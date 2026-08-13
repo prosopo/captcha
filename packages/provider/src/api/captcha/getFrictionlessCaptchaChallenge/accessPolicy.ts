@@ -20,7 +20,11 @@ import {
 	type ScoreComponents,
 } from "@prosopo/types";
 import type { ClientRecord } from "@prosopo/types-database";
-import type { AccessPolicy, UserScope } from "@prosopo/user-access-policy";
+import {
+	type AccessRule,
+	type UserScope,
+	describeMatchedRule,
+} from "@prosopo/user-access-policy";
 import type { Response } from "express";
 import { FrictionlessReason } from "../../../tasks/frictionless/frictionlessTasks.js";
 import type { Tasks } from "../../../tasks/index.js";
@@ -29,7 +33,10 @@ import { attachHoneypot } from "./honeypotResponse.js";
 export type AccessPolicyInput = {
 	tasks: Tasks;
 	clientRecord: ClientRecord;
-	userAccessPolicy: AccessPolicy | undefined;
+	// The full matched rule, not just its policy half: the user-scope fields
+	// are what `describeMatchedRule` turns into the audit page's "this is the
+	// condition that matched you" breakdown.
+	userAccessPolicy: AccessRule | undefined;
 	baseBotScore: number;
 	botScore: number;
 	scoreComponents: ScoreComponents;
@@ -64,6 +71,16 @@ export const handleAccessPolicy = async (
 	}
 
 	const { tasks, clientRecord, userAccessPolicy, logger } = input;
+
+	// Snapshot the rule onto the session bag so it lands on whichever record
+	// this request goes on to write — the 401'd block below, the auto-ban a
+	// score bump triggers, the captcha type a Restrict rule forces, or the
+	// plain decision-machine session left behind by a score-only Restrict.
+	// Without it those rows say only "ACCESS_POLICY_BLOCK" /
+	// "USER_ACCESS_POLICY", with no way to tell which of a site's rules did it.
+	tasks.frictionlessManager.setMatchedRule(
+		describeMatchedRule(userAccessPolicy),
+	);
 
 	logger.info(() => ({
 		msg: "User access policy matched",

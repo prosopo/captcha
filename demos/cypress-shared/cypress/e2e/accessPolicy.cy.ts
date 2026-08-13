@@ -148,10 +148,19 @@ describe("User access policy Block rules", () => {
 					response?.statusCode,
 					"Access-policy block should return 403 at the middleware",
 				).to.equal(403);
+				// Structured `{ message, code }` so the widget's
+				// `result.error?.message` extractor renders
+				// `Forbidden: <requestId>` in the FAQ-link banner instead of
+				// falling through to "Cannot load CAPTCHA". requestId is
+				// generated per-request by requestLoggerMiddleware.
 				expect(
-					response?.body,
-					"403 body should carry the { error: 'Forbidden' } shape from blockMiddleware",
-				).to.deep.equal({ error: "Forbidden" });
+					response?.body?.error?.code,
+					"403 body error.code should be 403",
+				).to.equal(403);
+				expect(
+					response?.body?.error?.message,
+					"403 body error.message should be `Forbidden: <requestId>`",
+				).to.match(/^Forbidden: .+/);
 			});
 	});
 

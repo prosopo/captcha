@@ -41,7 +41,10 @@ import {
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import type { AccessRulesStorage } from "@prosopo/user-access-policy";
+import {
+	type AccessRulesStorage,
+	describeMatchedRule,
+} from "@prosopo/user-access-policy";
 import {
 	assertCoordsSafe,
 	at,
@@ -319,6 +322,16 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 			);
 		}
 
+		// Persist puzzleEvents unconditionally so the raw event trail survives
+		// even when the behavioural payload is absent or its decryption fails
+		// (missing bundle, ciphertext / key mismatch, etc.). Previously the
+		// puzzleEvents write was gated on decryption succeeding, so legitimate
+		// solves whose bundle couldn't be resolved lost the event trail AND
+		// tripped the "no-cache request with no behavioural data" DM rule.
+		await this.db.updatePuzzleCaptchaRecord(challenge, {
+			puzzleEvents,
+		});
+
 		// Process behavioral data if provided
 		if (behavioralData) {
 			try {
@@ -361,11 +374,9 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 						d: decryptedData.deviceCapability,
 					};
 
-					// Store the packed data to database
 					await this.db.updatePuzzleCaptchaRecord(challenge, {
 						behavioralDataPacked: packedData,
 						deviceCapability: decryptedData.deviceCapability,
-						puzzleEvents,
 					});
 				}
 			} catch (error) {
@@ -375,11 +386,6 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				}));
 				// Don't fail the captcha if behavioral analysis fails
 			}
-		} else {
-			// Store puzzle events even without behavioral data
-			await this.db.updatePuzzleCaptchaRecord(challenge, {
-				puzzleEvents,
-			});
 		}
 
 		if (clientMetaData?.hp) {
@@ -570,6 +576,11 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 							serverChecked: true,
 							result: blockedResult,
 							...(isBlocked && { blocked: true }),
+							// Name the rule behind the ACCESS_POLICY_BLOCK on the
+							// audit row. This path is where `deferToVerify` rules
+							// land, which is precisely where "why was I rejected?"
+							// is least obvious.
+							matchedRule: describeMatchedRule(blockPolicy),
 						});
 					}
 					return notVerifiedResponse;

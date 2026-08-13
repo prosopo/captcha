@@ -1,5 +1,69 @@
 # @prosopo/procaptcha-bundle
 
+## 4.1.51
+### Patch Changes
+
+- Updated dependencies [0def557]
+  - @prosopo/types@5.1.0
+  - @prosopo/procaptcha-common@2.11.25
+  - @prosopo/procaptcha-frictionless@2.13.7
+
+## 4.1.50
+### Patch Changes
+
+- 9f73b93: Make `reset()` remount the widget instead of only tearing it down.
+  
+  `reset()` unmounted every React root and then called `start()`, which
+  re-renders only when the page uses implicit rendering. On an explicitly
+  rendered page nothing came back: the widget skeleton is plain DOM created
+  outside React, so it stayed on screen with no checkbox inside it, and no fresh
+  captcha request was ever made. Callers had to follow every `reset()` with their
+  own `render()` to recover.
+  
+  Widgets are now tracked with the element and render options that produced them,
+  so `reset()` can rebuild in place. `render()` returns a widget id, and both
+  `reset(widgetId)` and the new `remove(widgetId)` accept one to target a single
+  widget; omitting it applies to every widget on the page. `remove()` preserves
+  the old teardown-without-remount behaviour for callers that want the widget
+  gone. `reset()` no longer calls `start()`, which would have double-rendered
+  implicit widgets and attached another `load` listener on every call.
+- Updated dependencies [216f8cd]
+- Updated dependencies [cc3ffe3]
+  - @prosopo/types@5.0.4
+  - @prosopo/procaptcha-common@2.11.24
+  - @prosopo/procaptcha-frictionless@2.13.6
+
+## 4.1.49
+### Patch Changes
+
+- 729349e: Run the cypress suite in firefox as well as chrome whenever the PR is a release
+  PR, via a new cypress-firefox workflow. cypress.yml is untouched.
+  
+  The trusted-event checks scattered across the widget components now go through a
+  single `isEventTrusted()` helper in `@prosopo/procaptcha-common`. Behaviour is
+  unchanged: it still returns early for synthetic input, unless the bundle was
+  built with `PROSOPO_ALLOW_UNTRUSTED_EVENTS=1`, which only the firefox CI leg
+  sets. Production builds pin the define to `false`, so the branch is folded away
+  at build time and the allowance cannot reach a shipped bundle.
+  
+  The allowance exists because cypress-real-events dispatches input over the chrome
+  devtools protocol, which cypress exposes for chromium browsers only — on firefox
+  the specs fall back to cypress' own synthetic clicks.
+- Updated dependencies [729349e]
+- Updated dependencies [16dbab0]
+- Updated dependencies [b525956]
+- Updated dependencies [9091a78]
+- Updated dependencies [d5e104b]
+- Updated dependencies [063e69d]
+- Updated dependencies [8a4d6ad]
+  - @prosopo/procaptcha-common@2.11.23
+  - @prosopo/types@5.0.3
+  - @prosopo/util@3.3.6
+  - @prosopo/widget-skeleton@2.8.6
+  - @prosopo/locale@3.3.0
+  - @prosopo/procaptcha-frictionless@2.13.5
+  - @prosopo/dotenv@3.0.52
+
 ## 4.1.48
 ### Patch Changes
 
