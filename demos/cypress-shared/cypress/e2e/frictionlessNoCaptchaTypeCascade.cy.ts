@@ -66,14 +66,10 @@ describe("Frictionless response missing captchaType does not cascade to a pow ca
 		// exact body seen in prod on affected frictionless sitekeys.
 		// The widget must handle this without cascading into a pow
 		// challenge.
-		cy.intercept(
-			"POST",
-			"**/prosopo/provider/client/captcha/frictionless",
-			{
-				statusCode: 401,
-				body: { error: "Unauthorized" },
-			},
-		).as("frictionless");
+		cy.intercept("POST", "**/prosopo/provider/client/captcha/frictionless", {
+			statusCode: 401,
+			body: { error: "Unauthorized" },
+		}).as("frictionless");
 
 		// Track all follow-up captcha requests. In the broken widget path
 		// /captcha/pow would fire within a few ms of the 401.

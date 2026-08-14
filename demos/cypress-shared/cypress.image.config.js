@@ -98,6 +98,13 @@ export default defineConfig({
 			"cypress/e2e/**/accessPolicy.cy.ts",
 			"cypress/e2e/**/accessPolicyRestrict.cy.ts",
 			"cypress/e2e/**/accessPolicyConflicts.cy.ts",
+			// Frictionless-scoped specs — mount under
+			// PROSOPO_SITE_KEY_FRICTIONLESS with bespoke cy.intercept
+			// choreography. They fail under the image config's
+			// catch-all because the default demo page here doesn't fire
+			// /frictionless at all.
+			"cypress/e2e/**/sessionCaptchaTypeConsistency.cy.ts",
+			"cypress/e2e/**/frictionlessNoCaptchaTypeCascade.cy.ts",
 		],
 	},
 	component: {

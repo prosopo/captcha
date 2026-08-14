@@ -72,9 +72,7 @@ export default defineConfig({
 				},
 			});
 		},
-		specPattern: [
-			"cypress/e2e/**/frictionlessNoCaptchaTypeCascade.cy.ts",
-		],
+		specPattern: ["cypress/e2e/**/frictionlessNoCaptchaTypeCascade.cy.ts"],
 	},
 	component: {
 		devServer: {
