@@ -71,7 +71,10 @@ export default defineConfig({
 				},
 			});
 		},
-		specPattern: ["cypress/e2e/**/escalation.cy.ts"],
+		specPattern: [
+			"cypress/e2e/**/escalation.cy.ts",
+			"cypress/e2e/**/escalationPuzzle.cy.ts",
+		],
 	},
 	component: {
 		devServer: {

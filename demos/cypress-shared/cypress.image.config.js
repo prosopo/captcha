@@ -98,13 +98,20 @@ export default defineConfig({
 			"cypress/e2e/**/accessPolicy.cy.ts",
 			"cypress/e2e/**/accessPolicyRestrict.cy.ts",
 			"cypress/e2e/**/accessPolicyConflicts.cy.ts",
-			// Frictionless-scoped specs — mount under
-			// PROSOPO_SITE_KEY_FRICTIONLESS with bespoke cy.intercept
-			// choreography. They fail under the image config's
-			// catch-all because the default demo page here doesn't fire
-			// /frictionless at all.
+			// Frictionless-scoped specs — every widget mount fires
+			// /frictionless (bundleCaptcha unconditionally mounts
+			// ProcaptchaFrictionless), but these specs assert on a
+			// specific /frictionless response (captchaType=pow from
+			// a routing machine) that only fires when the demo page
+			// embeds `PROSOPO_SITE_KEY_FRICTIONLESS`. Under the image
+			// config's `default_page: "/"` the sitekey is
+			// `PROSOPO_SITE_KEY_IMAGE`, /frictionless returns
+			// captchaType=image, and the subsequent pow-flow
+			// assertions never see the requests they wait on. Each
+			// spec has its own config with the right default_page.
 			"cypress/e2e/**/sessionCaptchaTypeConsistency.cy.ts",
 			"cypress/e2e/**/frictionlessNoCaptchaTypeCascade.cy.ts",
+			"cypress/e2e/**/escalationPuzzle.cy.ts",
 		],
 	},
 	component: {
