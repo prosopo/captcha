@@ -1,5 +1,11 @@
 # @prosopo/datasets
 
+## 3.1.63
+### Patch Changes
+
+- Updated dependencies [ee5d250]
+  - @prosopo/types@5.1.2
+
 ## 3.1.62
 ### Patch Changes
 
