@@ -250,7 +250,8 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 		);
 
 		expect(env.spies.createSession).toHaveBeenCalledTimes(1);
-		const args = env.spies.createSession.mock.calls[0]!;
+		const args = env.spies.createSession.mock.calls[0];
+		if (!args) throw new Error("expected createSession to be called");
 		expect(args[CAPTCHA_TYPE_IDX]).toBe(CaptchaType.image);
 		expect(args[ORIGIN_SESSION_ID_IDX]).toBe("origin-id");
 		// siteKey resolves from the origin session, not from the pow record's
@@ -274,7 +275,8 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 		);
 
 		expect(env.spies.createSession).toHaveBeenCalledTimes(1);
-		const args = env.spies.createSession.mock.calls[0]!;
+		const args = env.spies.createSession.mock.calls[0];
+		if (!args) throw new Error("expected createSession to be called");
 		expect(args[CAPTCHA_TYPE_IDX]).toBe(CaptchaType.puzzle);
 		expect(args[ORIGIN_SESSION_ID_IDX]).toBe("origin-id");
 	});
@@ -286,7 +288,16 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 			timerResolutionMs: 0.005,
 			runsPerOp: 500,
 			durationMs: 42,
-			ops: [{ name: "f32x4_add", category: "arith", bestNs: 1.1, medianNs: 1.2, iters: 100, resultLane: 0 }],
+			ops: [
+				{
+					name: "f32x4_add",
+					category: "arith",
+					bestNs: 1.1,
+					medianNs: 1.2,
+					iters: 100,
+					resultLane: 0,
+				},
+			],
 		};
 		const origin = {
 			...makeOriginSession(),
@@ -304,7 +315,8 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 			"challenge",
 		);
 
-		const args = env.spies.createSession.mock.calls[0]!;
+		const args = env.spies.createSession.mock.calls[0];
+		if (!args) throw new Error("expected createSession to be called");
 		expect(args[SIMD_READINGS_IDX]).toBe(originSimd);
 	});
 
@@ -315,7 +327,16 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 			timerResolutionMs: 0.005,
 			runsPerOp: 500,
 			durationMs: 42,
-			ops: [{ name: "i32x4_add", category: "arith", bestNs: 0.9, medianNs: 1.0, iters: 100, resultLane: 0 }],
+			ops: [
+				{
+					name: "i32x4_add",
+					category: "arith",
+					bestNs: 0.9,
+					medianNs: 1.0,
+					iters: 100,
+					resultLane: 0,
+				},
+			],
 		};
 		const origin = {
 			...makeOriginSession(),
@@ -333,7 +354,8 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 			"challenge",
 		);
 
-		const args = env.spies.createSession.mock.calls[0]!;
+		const args = env.spies.createSession.mock.calls[0];
+		if (!args) throw new Error("expected createSession to be called");
 		expect(args[SIMD_READINGS_IDX]).toBe(originSimd);
 	});
 
@@ -354,7 +376,8 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 			"challenge",
 		);
 
-		const args = env.spies.createSession.mock.calls[0]!;
+		const args = env.spies.createSession.mock.calls[0];
+		if (!args) throw new Error("expected createSession to be called");
 		expect(args[BUNDLE_ID_IDX]).toBe("bundle-42");
 	});
 
@@ -375,7 +398,8 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 			"challenge",
 		);
 
-		const args = env.spies.createSession.mock.calls[0]!;
+		const args = env.spies.createSession.mock.calls[0];
+		if (!args) throw new Error("expected createSession to be called");
 		expect(args[BUNDLE_ID_IDX]).toBe("bundle-17");
 	});
 
@@ -407,7 +431,8 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 			"challenge",
 		);
 
-		const args = env.spies.createSession.mock.calls[0]!;
+		const args = env.spies.createSession.mock.calls[0];
+		if (!args) throw new Error("expected createSession to be called");
 		// No positional arg equals the origin's BDP — nothing was copied.
 		expect(
 			args.some(
