@@ -250,7 +250,7 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 		);
 
 		expect(env.spies.createSession).toHaveBeenCalledTimes(1);
-		const args = env.spies.createSession.mock.calls[0];
+		const args = env.spies.createSession.mock.calls[0]!;
 		expect(args[CAPTCHA_TYPE_IDX]).toBe(CaptchaType.image);
 		expect(args[ORIGIN_SESSION_ID_IDX]).toBe("origin-id");
 		// siteKey resolves from the origin session, not from the pow record's
@@ -274,7 +274,7 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 		);
 
 		expect(env.spies.createSession).toHaveBeenCalledTimes(1);
-		const args = env.spies.createSession.mock.calls[0];
+		const args = env.spies.createSession.mock.calls[0]!;
 		expect(args[CAPTCHA_TYPE_IDX]).toBe(CaptchaType.puzzle);
 		expect(args[ORIGIN_SESSION_ID_IDX]).toBe("origin-id");
 	});
@@ -304,7 +304,7 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 			"challenge",
 		);
 
-		const args = env.spies.createSession.mock.calls[0];
+		const args = env.spies.createSession.mock.calls[0]!;
 		expect(args[SIMD_READINGS_IDX]).toBe(originSimd);
 	});
 
@@ -333,7 +333,7 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 			"challenge",
 		);
 
-		const args = env.spies.createSession.mock.calls[0];
+		const args = env.spies.createSession.mock.calls[0]!;
 		expect(args[SIMD_READINGS_IDX]).toBe(originSimd);
 	});
 
@@ -354,7 +354,7 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 			"challenge",
 		);
 
-		const args = env.spies.createSession.mock.calls[0];
+		const args = env.spies.createSession.mock.calls[0]!;
 		expect(args[BUNDLE_ID_IDX]).toBe("bundle-42");
 	});
 
@@ -375,7 +375,7 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 			"challenge",
 		);
 
-		const args = env.spies.createSession.mock.calls[0];
+		const args = env.spies.createSession.mock.calls[0]!;
 		expect(args[BUNDLE_ID_IDX]).toBe("bundle-17");
 	});
 
@@ -407,7 +407,7 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 			"challenge",
 		);
 
-		const args = env.spies.createSession.mock.calls[0];
+		const args = env.spies.createSession.mock.calls[0]!;
 		// No positional arg equals the origin's BDP — nothing was copied.
 		expect(
 			args.some(
