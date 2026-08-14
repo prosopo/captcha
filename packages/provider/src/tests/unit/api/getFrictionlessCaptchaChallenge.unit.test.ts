@@ -754,8 +754,8 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 	// bundle B (uniform-random pick across the pool). If we evict the cached
 	// session and mint a fresh one, any concurrent /captcha/{type} or
 	// solution call the client already has in flight for the cached sessionId
-	// hits `No session found` → `INCORRECT_CAPTCHA_TYPE` → 400 (observed in
-	// prod at ~21% of pimeyes /captcha/pow post-hotfix, up from 0.3%
+	// hits `No session found` → `INCORRECT_CAPTCHA_TYPE` → 400 (rate reached
+	// ~21% of the heaviest sitekey's /captcha/pow post-hotfix, up from 0.3%
 	// baseline). Instead, rebind the cached session's `bundleId` in-place
 	// with cache-first write-behind semantics — future decrypts for this
 	// sessionId use the fresh key, and the in-flight calls with the same
@@ -942,6 +942,78 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		expect(res.json).toHaveBeenCalledWith(
 			expect.objectContaining({
 				sessionId: "live-pow-session-bundle-unresolved",
+			}),
+		);
+	});
+
+	// Frontend error-path coverage — sitting alongside the dedup + rebind
+	// tests because the same handler is where these client-side mistakes
+	// surface. `frontend sends an incorrect bundleId` = detectorSessionId
+	// present but its Redis binding no longer exists in the current in-
+	// memory pool (rotation, restart, or the client memoised a stale
+	// bundleId from before a pool rotation). Server sees "no bundle
+	// resolved" and MUST fall through cleanly — not evict, not error, not
+	// promote the stale bundleId. Distinct from the deleted-session and
+	// wrong-captchaType handlers which live on the per-type
+	// /captcha/{type} routes and are covered by the isValidRequest
+	// describe in captchaManager.unit.test.ts (NO_SESSION_FOUND at
+	// ~line 887, INCORRECT_CAPTCHA_TYPE at ~line 900).
+	it("gracefully handles a frontend-supplied detectorSessionId whose bundleId is no longer in the pool", async () => {
+		const clientRecord = {
+			account: "siteBundleGone",
+			settings: {
+				captchaType: CaptchaType.frictionless,
+				frictionlessThreshold: 0.5,
+				disallowWebView: false,
+			},
+		};
+		tasksInstance.db.getClientRecord.mockResolvedValue(clientRecord);
+		tasksInstance.db.getSessionByuserSitekeyIpHash.mockResolvedValue({
+			sessionId: "live-pow-session-bundle-gone",
+			captchaType: CaptchaType.pow,
+			score: 0,
+			webView: false,
+			bundleId: "bundle-A",
+		});
+		tasksInstance.frictionlessManager.applyRoutingMachine.mockResolvedValue({
+			captchaType: CaptchaType.pow,
+		});
+		// The client sent a detectorSessionId, but by the time we look it
+		// up in Redis the binding is gone (pool rotated OR TTL expired OR
+		// the client's cached detectorSessionId was never issued). Resolve
+		// returns undefined — no fresh bundleId to compare against.
+		tasksInstance.frictionlessManager.resolveBundleByDetectorSession.mockResolvedValue(
+			undefined,
+		);
+
+		const body = {
+			token: "tBundleGone",
+			headHash: "hhBundleGone",
+			dapp: "siteBundleGone",
+			user: "u",
+			// The stale/unknown identifier from the frontend.
+			detectorSessionId: "det-stale-from-pre-rotation",
+		};
+		const { req, res, next } = buildReqRes(body);
+
+		// biome-ignore lint/suspicious/noExplicitAny: mock request
+		await handler(req as any, res as any, next);
+
+		expect(next).not.toHaveBeenCalled();
+		// Must NOT evict — churning every returning user whose page has
+		// been open longer than the binding TTL would break the widget.
+		expect(tasksInstance.db.checkAndRemoveSession).not.toHaveBeenCalled();
+		// Must NOT rebind — we cannot rebind to an unknown bundle.
+		expect(
+			tasksInstance.frictionlessManager.updateSessionRecordWithCache,
+		).not.toHaveBeenCalled();
+		// Reuse response served with the cached sessionId unchanged. Any
+		// OAEP failure on subsequent hops will surface via the DM's empty-
+		// BDP path, not as an INCORRECT_CAPTCHA_TYPE 400.
+		expect(res.json).toHaveBeenCalledWith(
+			expect.objectContaining({
+				sessionId: "live-pow-session-bundle-gone",
+				captchaType: CaptchaType.pow,
 			}),
 		);
 	});
