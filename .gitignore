@@ -154,9 +154,6 @@ captcha.json
 
 *.angular
 
-.nx/cache
-.nx/workspace-data
-
 .github/instructions/
 
 .angular

@@ -43,9 +43,6 @@ jobs:
     # given, which is how a repo opts back out to a hosted runner.
     runs-on: ${{ vars.GH_RUNNER && startsWith(vars.GH_RUNNER, '[') && fromJSON(format('["{0}","4c","8g","40d"]', join(fromJSON(vars.GH_RUNNER), '","'))) || fromJSON(vars.GH_RUNNER || '"ubuntu-latest"') }}
     steps:
-      - name: Set NX_PARALLEL environment variable
-        run: echo "NX_PARALLEL=$(nproc)" >> $GITHUB_ENV
-
       - uses: actions/checkout@v7
         with:
           token: ${{ secrets.PROSOPONATOR_PAT }}
