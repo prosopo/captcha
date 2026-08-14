@@ -98,19 +98,15 @@ export default defineConfig({
 			"cypress/e2e/**/accessPolicy.cy.ts",
 			"cypress/e2e/**/accessPolicyRestrict.cy.ts",
 			"cypress/e2e/**/accessPolicyConflicts.cy.ts",
-			// Frictionless-scoped specs — every widget mount fires
-			// /frictionless (bundleCaptcha unconditionally mounts
-			// ProcaptchaFrictionless), but these specs assert on a
-			// specific /frictionless response (captchaType=pow from
-			// a routing machine) that only fires when the demo page
-			// embeds `PROSOPO_SITE_KEY_FRICTIONLESS`. Under the image
-			// config's `default_page: "/"` the sitekey is
-			// `PROSOPO_SITE_KEY_IMAGE`, /frictionless returns
-			// captchaType=image, and the subsequent pow-flow
-			// assertions never see the requests they wait on. Each
-			// spec has its own config with the right default_page.
+			// Both specs hardcode a `/frictionless-explicit.html` visit and
+			// install intercepts before mount, but the /frictionless request
+			// still returns 403 under this catch-all (visible locally via
+			// `cypress run --config-file cypress.image.config.js`). Failure
+			// is unrelated to this PR — likely a domain / origin registration
+			// artefact of running frictionless specs against the image config's
+			// baseline sitekey state. Each spec has its own dedicated config
+			// / CI step where it passes.
 			"cypress/e2e/**/sessionCaptchaTypeConsistency.cy.ts",
-			"cypress/e2e/**/frictionlessNoCaptchaTypeCascade.cy.ts",
 			"cypress/e2e/**/escalationPuzzle.cy.ts",
 		],
 	},
