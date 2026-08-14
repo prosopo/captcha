@@ -412,14 +412,14 @@ export default (
 					// races concurrent /captcha/{type} + solution calls the widget
 					// already has in flight for `dedup.sessionId` — those calls
 					// look the session up mid-request and get `No session found`
-					// → `INCORRECT_CAPTCHA_TYPE` → 400. Observed in prod at ~21%
-					// of pimeyes /captcha/pow post-hotfix (baseline 0.3%) until
-					// this branch was added. captchaType, score, threshold etc.
-					// are untouched — only the bundleId flips to the fresh
-					// detector's key so future SIMD / behavioural decrypts on
-					// this session work. Cache-first write-behind so the reuse
-					// response below already reflects the update for any
-					// same-request read.
+					// → `INCORRECT_CAPTCHA_TYPE` → 400. The rate reached ~21%
+					// of the heaviest sitekey's /captcha/pow post-hotfix
+					// (baseline 0.3%) until this branch was added. captchaType,
+					// score, threshold etc. are untouched — only the bundleId
+					// flips to the fresh detector's key so future SIMD /
+					// behavioural decrypts on this session work. Cache-first
+					// write-behind so the reuse response below already reflects
+					// the update for any same-request read.
 					if (dedupConflictsWithBundle && dedupIncomingBundleId) {
 						req.logger.info(() => ({
 							msg: "Rebinding reused session bundleId to match incoming detector",

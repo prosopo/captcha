@@ -754,8 +754,8 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 	// bundle B (uniform-random pick across the pool). If we evict the cached
 	// session and mint a fresh one, any concurrent /captcha/{type} or
 	// solution call the client already has in flight for the cached sessionId
-	// hits `No session found` → `INCORRECT_CAPTCHA_TYPE` → 400 (observed in
-	// prod at ~21% of pimeyes /captcha/pow post-hotfix, up from 0.3%
+	// hits `No session found` → `INCORRECT_CAPTCHA_TYPE` → 400 (rate reached
+	// ~21% of the heaviest sitekey's /captcha/pow post-hotfix, up from 0.3%
 	// baseline). Instead, rebind the cached session's `bundleId` in-place
 	// with cache-first write-behind semantics — future decrypts for this
 	// sessionId use the fresh key, and the in-flight calls with the same
