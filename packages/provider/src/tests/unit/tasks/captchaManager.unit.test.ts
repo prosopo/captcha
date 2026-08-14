@@ -372,6 +372,185 @@ describe("CaptchaManager", () => {
 			expect(got?.captchaType).toBe(CaptchaType.puzzle);
 			expect(got?.score).toBe(0.5);
 		});
+
+		// Chain fallback surface. The DM's post-pow / verify-time input
+		// read path relies on each of these fields being visible on the
+		// escalation session; if any of them isn't in the fallback allowlist
+		// the DM sees an incomplete view of the origin's signal at verify
+		// time and its decision can diverge from what it would have made
+		// pre-escalation. One test per field so a future refactor that drops
+		// one from the allowlist has to explicitly delete or flip its test.
+		it("fills dnsEvent from origin when the escalation is missing it", async () => {
+			const receivedAt = new Date();
+			const origin = {
+				sessionId: "origin",
+				captchaType: CaptchaType.pow,
+				dnsEvent: { receivedAt, ja4: "ja4x" },
+			} as unknown as Session;
+			const escalation = {
+				sessionId: "esc",
+				originSessionId: "origin",
+				captchaType: CaptchaType.image,
+			} as unknown as Session;
+			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			expect(got?.dnsEvent).toEqual({ receivedAt, ja4: "ja4x" });
+			expect(got?.sessionId).toBe("esc");
+			expect(got?.captchaType).toBe(CaptchaType.image);
+		});
+
+		it("fills dnsEvent from origin for puzzle escalations too", async () => {
+			const receivedAt = new Date();
+			const origin = {
+				sessionId: "origin",
+				captchaType: CaptchaType.pow,
+				dnsEvent: { receivedAt, ja4: "ja4y" },
+			} as unknown as Session;
+			const escalation = {
+				sessionId: "esc",
+				originSessionId: "origin",
+				captchaType: CaptchaType.puzzle,
+			} as unknown as Session;
+			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			expect(got?.dnsEvent).toEqual({ receivedAt, ja4: "ja4y" });
+			expect(got?.captchaType).toBe(CaptchaType.puzzle);
+		});
+
+		it("fills entropyMathRandomFingerprint from origin when the escalation is missing it", async () => {
+			const origin = {
+				sessionId: "origin",
+				captchaType: CaptchaType.pow,
+				entropyMathRandomFingerprint: "0x1234abcd",
+			} as unknown as Session;
+			const escalation = {
+				sessionId: "esc",
+				originSessionId: "origin",
+				captchaType: CaptchaType.image,
+			} as unknown as Session;
+			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			expect(got?.entropyMathRandomFingerprint).toBe("0x1234abcd");
+		});
+
+		it("fills entropyCryptoFingerprint from origin when the escalation is missing it", async () => {
+			const origin = {
+				sessionId: "origin",
+				captchaType: CaptchaType.pow,
+				entropyCryptoFingerprint: "0xdeadbeef",
+			} as unknown as Session;
+			const escalation = {
+				sessionId: "esc",
+				originSessionId: "origin",
+				captchaType: CaptchaType.puzzle,
+			} as unknown as Session;
+			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			expect(got?.entropyCryptoFingerprint).toBe("0xdeadbeef");
+		});
+
+		it("fills entropyWallClockOffsetMs from origin including exact-zero (must not be treated as absent)", async () => {
+			const origin = {
+				sessionId: "origin",
+				captchaType: CaptchaType.pow,
+				entropyWallClockOffsetMs: 0,
+			} as unknown as Session;
+			const escalation = {
+				sessionId: "esc",
+				originSessionId: "origin",
+				captchaType: CaptchaType.image,
+			} as unknown as Session;
+			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			expect(got?.entropyWallClockOffsetMs).toBe(0);
+		});
+
+		it("fills entropyMathRandomFirst from origin when the escalation is missing it", async () => {
+			const origin = {
+				sessionId: "origin",
+				captchaType: CaptchaType.pow,
+				entropyMathRandomFirst: 0.123456,
+			} as unknown as Session;
+			const escalation = {
+				sessionId: "esc",
+				originSessionId: "origin",
+				captchaType: CaptchaType.image,
+			} as unknown as Session;
+			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			expect(got?.entropyMathRandomFirst).toBe(0.123456);
+		});
+
+		// Explicit non-inheritance surface. These fields are NOT in the
+		// fallback allowlist; the tests document that so a future change
+		// that decides to persist them has to explicitly flip the assertion.
+		it("does NOT chain decryptedHeadHash from origin — escalation records carry their own via buildEscalation's copy at creation time; if that copy raced Mongo the DM sees `undefined` at verify", async () => {
+			const origin = {
+				sessionId: "origin",
+				captchaType: CaptchaType.pow,
+				decryptedHeadHash: "origin-head-hash-xyz",
+			} as unknown as Session;
+			const escalation = {
+				sessionId: "esc",
+				originSessionId: "origin",
+				captchaType: CaptchaType.image,
+				// decryptedHeadHash intentionally absent on the escalation.
+			} as unknown as Session;
+			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			expect(got?.decryptedHeadHash).toBeUndefined();
+		});
+
+		it("does NOT chain behavioural data from origin — BDP lives only in the pow-solve payload, decrypted per-request and never persisted; verify-time DM sees `undefined`", async () => {
+			// Uses an off-schema field name to represent behavioural data
+			// on the origin (the type doesn't declare it — that's the
+			// whole point of this documentation test).
+			const origin = {
+				sessionId: "origin",
+				captchaType: CaptchaType.pow,
+				behavioralDataPacked: {
+					c1: [{ t: 1, x: 2, y: 3 }],
+					c2: [],
+					c3: [],
+				},
+			} as unknown as Session;
+			const escalation = {
+				sessionId: "esc",
+				originSessionId: "origin",
+				captchaType: CaptchaType.image,
+				simdReadings: undefined,
+			} as unknown as Session;
+			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			expect(
+				(got as unknown as { behavioralDataPacked?: unknown })
+					.behavioralDataPacked,
+			).toBeUndefined();
+		});
 	});
 
 	describe("isValidRequest", () => {
