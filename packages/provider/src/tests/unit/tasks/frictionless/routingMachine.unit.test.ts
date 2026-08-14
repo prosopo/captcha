@@ -144,7 +144,8 @@ describe("applyRouter", () => {
 		// version — this is what per-DM artifacts rely on.
 		// The routing runner receives the full userAgent verbatim in the
 		// input's `raw` — per-DM artifacts rely on that.
-		const call = runner.route.mock.calls[0]!;
+		const call = runner.route.mock.calls[0];
+		if (!call) throw new Error("expected runner.route to be called");
 		expect(call[0]).toEqual(
 			expect.objectContaining({
 				raw: expect.objectContaining({ userAgent: headlessUa }),
@@ -174,7 +175,8 @@ describe("applyRouter", () => {
 		const result = await run(ctx);
 
 		expect(result).toEqual({ captchaType: CaptchaType.puzzle });
-		const call = runner.route.mock.calls[0]!;
+		const call = runner.route.mock.calls[0];
+		if (!call) throw new Error("expected runner.route to be called");
 		expect(call[0]).toEqual(
 			expect.objectContaining({
 				raw: expect.objectContaining({ userAgent: webviewUa }),
