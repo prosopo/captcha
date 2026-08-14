@@ -92,8 +92,37 @@ describe("Post-PoW route() escalation surfaces the puzzle captcha", () => {
 			);
 		}
 		cy.intercept("/dummy").as("dummy");
+		// Intercepts must be installed BEFORE `cy.visit` — the widget
+		// (`bundleCaptcha` unconditionally mounts `ProcaptchaFrictionless`)
+		// fires `/frictionless` from a mount-effect the moment the page
+		// loads, and the later `.realClick()` doesn't re-fire it. If we
+		// set them up in the `it` block after `beforeEach`'s visit the
+		// aliases catch nothing and every wait times out.
+		cy.intercept("POST", "**/prosopo/provider/client/captcha/frictionless").as(
+			"frictionless",
+		);
+		cy.intercept("POST", "**/prosopo/provider/client/captcha/pow").as(
+			"powChallenge",
+		);
+		cy.intercept("POST", "**/prosopo/provider/client/pow/solution").as(
+			"powSubmit",
+		);
+		// `puzzleChallenge` only fires if the frictionless wrapper's
+		// onEscalate handler was actually invoked AND the freshly-loaded
+		// ProcaptchaPuzzle widget mounted and ran its autoStart effect.
+		cy.intercept("POST", "**/prosopo/provider/client/captcha/puzzle").as(
+			"puzzleChallenge",
+		);
 
-		return cy.visit(Cypress.env("default_page")).then(() => {
+		// Hardcode the frictionless-explicit demo page — it embeds
+		// `PROSOPO_SITE_KEY_FRICTIONLESS`, the sitekey the routing
+		// machine above is scoped to. Under any config whose
+		// `default_page` env is set to a different demo page (e.g.
+		// the image config's `/`, which embeds
+		// `PROSOPO_SITE_KEY_IMAGE`) the routing machine would never
+		// apply and the escalation flow this suite drives would never
+		// happen.
+		return cy.visit("/frictionless-explicit.html").then(() => {
 			cy.waitForProcaptchaScript();
 			getWidgetElement(checkboxClass).should("be.visible");
 			cy.wrap(solutions).as("solutions");
@@ -117,30 +146,8 @@ describe("Post-PoW route() escalation surfaces the puzzle captcha", () => {
 	});
 
 	it("displays the puzzle captcha after PoW is solved and route() escalates", () => {
-		cy.visit(Cypress.env("default_page"));
-		cy.waitForProcaptchaScript();
-
-		// Watch every leg of the flow so the test fails on a specific edge
-		// rather than a "modal didn't appear" timeout.
-		cy.intercept("POST", "**/prosopo/provider/client/captcha/frictionless").as(
-			"frictionless",
-		);
-		cy.intercept("POST", "**/prosopo/provider/client/captcha/pow").as(
-			"powChallenge",
-		);
-		cy.intercept("POST", "**/prosopo/provider/client/pow/solution").as(
-			"powSubmit",
-		);
-		// `imageChallenge` is the UI contract: it only fires if the frictionless
-		// wrapper's onEscalate handler was actually invoked AND the freshly
-		// loaded Procaptcha image widget mounted and ran its autoStart effect.
-		// A regression in any link of that chain (e.g. the ProcaptchaPow
-		// Suspense wrapper dropping `onEscalate` from its forwarded props)
-		// will block this request from ever leaving the page.
-		cy.intercept("POST", "**/prosopo/provider/client/captcha/puzzle").as(
-			"puzzleChallenge",
-		);
-
+		// Intercepts + visit are set up in `beforeEach` above so the
+		// widget's mount-effect /frictionless call is caught.
 		// Kick the flow off.
 		getWidgetElement(checkboxClass, { timeout: 12000 }).first().realClick();
 

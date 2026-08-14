@@ -95,7 +95,31 @@ describe("Session captchaType agrees between Mongo and Redis at each stage", () 
 			},
 		);
 
-		return cy.visit(Cypress.env("default_page")).then(() => {
+		// Intercepts must be installed BEFORE `cy.visit` — the widget
+		// (`bundleCaptcha` unconditionally mounts `ProcaptchaFrictionless`)
+		// fires `/frictionless` from a mount-effect the moment the page
+		// loads, and there's no second call on the later `.realClick()`.
+		// If we set them up in the `it` block after `beforeEach`'s visit
+		// the aliases catch nothing and every wait times out.
+		cy.intercept("POST", "**/prosopo/provider/client/captcha/frictionless").as(
+			"frictionless",
+		);
+		cy.intercept("POST", "**/prosopo/provider/client/captcha/pow").as(
+			"powChallenge",
+		);
+		cy.intercept("POST", "**/prosopo/provider/client/pow/solution").as(
+			"powSolution",
+		);
+
+		// Hardcode the frictionless-explicit demo page — it embeds
+		// `PROSOPO_SITE_KEY_FRICTIONLESS`, the sitekey the routing
+		// machine above is scoped to. Under any config whose
+		// `default_page` env is set to a different demo page (e.g.
+		// the image config's `/`, which embeds
+		// `PROSOPO_SITE_KEY_IMAGE`) the routing machine would never
+		// apply and `/frictionless` would return `captchaType=image`
+		// instead of the `captchaType=pow` this suite asserts on.
+		return cy.visit("/frictionless-explicit.html").then(() => {
 			cy.waitForProcaptchaScript();
 			getWidgetElement(checkboxClass).should("be.visible");
 		});
@@ -114,16 +138,6 @@ describe("Session captchaType agrees between Mongo and Redis at each stage", () 
 	});
 
 	it("keeps captchaType=pow consistent in Mongo + Redis from frictionless through pow-submit", () => {
-		cy.intercept("POST", "**/prosopo/provider/client/captcha/frictionless").as(
-			"frictionless",
-		);
-		cy.intercept("POST", "**/prosopo/provider/client/captcha/pow").as(
-			"powChallenge",
-		);
-		cy.intercept("POST", "**/prosopo/provider/client/pow/solution").as(
-			"powSolution",
-		);
-
 		getWidgetElement(checkboxClass, { timeout: 12000 }).first().realClick();
 
 		cy.wait("@frictionless", { timeout: 12000 }).then((interception) => {

@@ -30,6 +30,7 @@ import {
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { useEffect, useRef, useState } from "react";
 import customDetectBot from "./customDetectBot.js";
+import { evaluateFrictionlessResult } from "./frictionlessResultGuard.js";
 import {
 	type RetryCoords,
 	consumeRetryMountProps,
@@ -293,14 +294,15 @@ export const ProcaptchaFrictionless = ({
 					attempt: stateRef.current.attemptCount,
 				});
 
-				if (result.error?.message) {
+				const guard = evaluateFrictionlessResult(result);
+				if (guard.kind === "error") {
 					stateRef.current = {
 						...stateRef.current,
 						loading: false,
-						errorMessage: result.error?.message,
+						errorMessage: guard.message,
 					};
-					events.onError(new Error(result.error?.message));
-					fallOverWithStyle(result.error?.message, result.error?.key);
+					events.onError(new Error(guard.message));
+					fallOverWithStyle(guard.message, guard.key);
 					return;
 				}
 

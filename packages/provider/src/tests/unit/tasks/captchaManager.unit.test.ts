@@ -26,6 +26,7 @@ import {
 	type IUserSettings,
 	ResultReason,
 	Tier,
+	TrafficFilterAction,
 } from "@prosopo/types";
 import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -1972,6 +1973,125 @@ describe("CaptchaManager", () => {
 				mockHeaders,
 			);
 			expect(result).toBeUndefined();
+		});
+	});
+
+	// Verify-time traffic-filter enforcement. Callers (powTasks /
+	// imgCaptchaTasks / puzzleTasks) branch on `isBlocked` to mark the
+	// submission verified:false and stamp the reason on the record —
+	// blocked interactions still bill because the widget produced them.
+	// Request-time no longer blocks on any category (see
+	// `applyTrafficFilterAtRequestTime` and its unit tests), so verify-time
+	// is the sole enforcement point for `action: block` categories.
+	describe("resolveTrafficFilterCheck (verify-time enforcement)", () => {
+		const ipInfoResponse = (
+			overrides: Partial<{
+				isVPN: boolean;
+				isDatacenter: boolean;
+				isAbuser: boolean;
+				abuserScore: number;
+				companyAbuserScore: number;
+				providerType: "isp" | "hosting" | undefined;
+				datacenterName: string | undefined;
+				providerName: string | undefined;
+				asnOrganization: string | undefined;
+			}> = {},
+		) => ({
+			ip: "1.2.3.4",
+			isValid: true as const,
+			isVPN: false,
+			isProxy: false,
+			isTor: false,
+			isDatacenter: false,
+			isAbuser: false,
+			isMobile: false,
+			isSatellite: false,
+			isCrawler: false,
+			...overrides,
+		});
+
+		const mkEnvWithIpLookup = (
+			// biome-ignore lint/suspicious/noExplicitAny: only ipInfoService.lookup is read
+			ipLookup: () => Promise<any>,
+		): ProviderEnvironment =>
+			({
+				config: {},
+				ipInfoService: { lookup: ipLookup },
+			}) as unknown as ProviderEnvironment;
+
+		it("blocks a datacenter IP at verify time when the site configures datacenter:{action:block}", async () => {
+			const check = await captchaManager.resolveTrafficFilterCheck(
+				mkEnvWithIpLookup(() =>
+					Promise.resolve(
+						ipInfoResponse({ isDatacenter: true, providerType: "hosting" }),
+					),
+				),
+				undefined,
+				{ datacenter: { action: TrafficFilterAction.Block } },
+				"1.2.3.4",
+			);
+			expect(check.isBlocked).toBe(true);
+			if (check.isBlocked) {
+				expect(check.reason).toBe(ResultReason.DATACENTER_BLOCKED);
+			}
+		});
+
+		it("does NOT block at verify time when the operator configured datacenter:{action:challenge} — challenge is a request-time concern", async () => {
+			// This is the mirror of the request-time behaviour: challenge
+			// overrides only affect the captcha-type / difficulty at
+			// request-time; at verify-time they don't produce a block, so
+			// the interaction succeeds and is billed as normal.
+			const check = await captchaManager.resolveTrafficFilterCheck(
+				mkEnvWithIpLookup(() =>
+					Promise.resolve(
+						ipInfoResponse({ isDatacenter: true, providerType: "hosting" }),
+					),
+				),
+				undefined,
+				{
+					datacenter: {
+						action: TrafficFilterAction.Challenge,
+						captchaType: CaptchaType.image,
+					},
+				},
+				"1.2.3.4",
+			);
+			expect(check.isBlocked).toBe(false);
+		});
+
+		it("applies the abuser default at verify time even when the operator did not configure it (protects unconfigured sites)", async () => {
+			// Mirror of the "does NOT apply abuser default at request time"
+			// invariant in trafficFilterRequestTime.unit.test.ts — the
+			// asymmetry is deliberate. At verify-time we default the
+			// abuser block; at request-time we defer to the operator.
+			const check = await captchaManager.resolveTrafficFilterCheck(
+				mkEnvWithIpLookup(() =>
+					Promise.resolve(
+						ipInfoResponse({
+							isAbuser: true,
+							abuserScore: 0.9,
+							companyAbuserScore: 0.9,
+						}),
+					),
+				),
+				undefined,
+				{},
+				"1.2.3.4",
+			);
+			expect(check.isBlocked).toBe(true);
+			if (check.isBlocked) {
+				expect(check.reason).toBe(ResultReason.ABUSER_BLOCKED);
+			}
+		});
+
+		it("passes when no category is active and the abuser default doesn't match (clean IP)", async () => {
+			const check = await captchaManager.resolveTrafficFilterCheck(
+				mkEnvWithIpLookup(() => Promise.resolve(ipInfoResponse())),
+				undefined,
+				{},
+				"1.2.3.4",
+			);
+			expect(check.isBlocked).toBe(false);
 		});
 	});
 });
