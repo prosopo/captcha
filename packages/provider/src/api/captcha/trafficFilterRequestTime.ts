@@ -18,21 +18,18 @@ import {
 	type GetFrictionlessCaptchaResponse,
 	type IPInfoResponse,
 	type ITrafficFilter,
-	TrafficFilterAction,
 } from "@prosopo/types";
 import type { ClientRecord } from "@prosopo/types-database";
 import type { Response } from "express";
 import type { FrictionlessManager } from "../../tasks/frictionless/frictionlessTasks.js";
 import {
 	type ResolvedChallengePolicy,
-	type TrafficBlockReason,
 	checkTrafficFilter,
 	resolveChallengePolicy,
 } from "../../tasks/spam/checkTrafficFilter.js";
 
 export type RequestTimeTrafficVerdict =
 	| { kind: "pass" }
-	| { kind: "block"; reason: TrafficBlockReason }
 	| {
 			kind: "challenge";
 			// The strictest captcha type across matched challenge policies, or
@@ -46,16 +43,16 @@ export type RequestTimeTrafficVerdict =
 
 /**
  * Evaluate the site's `trafficFilter` against the current request's IP info
- * at challenge-request time. Runs before captcha issuance so that a matched
- * `block` policy short-circuits with 401 (no captcha issued, mirroring the
- * `blockMiddleware` semantics) and a matched `challenge` policy hands back
- * an override bundle for the caller to fold into its captcha-type +
- * parameter selection.
- *
- * The verdict is authoritative for the request-time gate. Callers still run
- * `resolveTrafficFilterCheck` at submit time to catch `block` policies that
- * apply to the current (verify-time) IP even when the challenge-time IP
- * passed.
+ * at challenge-request time. Only `challenge` matches contribute at this
+ * point — a matched `challenge` policy hands back an override bundle for
+ * the caller to fold into its captcha-type + parameter selection. `block`
+ * matches are deliberately ignored here; the enforcement of block policies
+ * is deferred to submit / verify time (via `resolveTrafficFilterCheck` in
+ * PoW / image / puzzle task classes) so that blocked users still receive a
+ * captcha and produce a billable interaction. Removing this deferral
+ * previously turned every blocked request into a request-time 401, which
+ * the widget mis-handled into an INCORRECT_CAPTCHA_TYPE cascade — see
+ * `evaluateFrictionlessResult` in `@prosopo/procaptcha-frictionless`.
  */
 export const applyTrafficFilterAtRequestTime = (
 	ipInfo: IPInfoResponse | undefined,
@@ -64,20 +61,12 @@ export const applyTrafficFilterAtRequestTime = (
 ): RequestTimeTrafficVerdict => {
 	if (!trafficFilter) return { kind: "pass" };
 
-	// Same abuser default the submit-time path applies.
-	const effective: Partial<ITrafficFilter> = {
-		abuser: { action: TrafficFilterAction.Block },
-		...trafficFilter,
-	};
-
-	const result = checkTrafficFilter(ipInfo, effective);
-	if (result.isBlocked) {
-		logger?.info(() => ({
-			msg: "Traffic filter rejected challenge request",
-			data: { reason: result.reason },
-		}));
-		return { kind: "block", reason: result.reason };
-	}
+	// No abuser default here — the default only makes sense at submit-time
+	// where an unconfigured site should still block abusive IPs. At
+	// request-time we consult only what the operator explicitly configured
+	// as `challenge`, and let submit-time enforce every `block` (defaulted
+	// or otherwise).
+	const result = checkTrafficFilter(ipInfo, trafficFilter);
 
 	const resolved = resolveChallengePolicy(result.matches);
 	if (!resolved) return { kind: "pass" };
@@ -120,11 +109,12 @@ export type FrictionlessTrafficFilterInput = {
 
 /**
  * Frictionless-flow companion to `applyTrafficFilterAtRequestTime`. When the
- * verdict is `block`, respond 401 and short-circuit. When the verdict is
- * `challenge` and names a concrete captchaType, dispatch to the matching
- * `send{Image,Pow,Puzzle}Captcha` helper with the resolved parameter
- * overrides. Otherwise returns `{ handled: false }` so the caller falls
- * through to the normal decision machine.
+ * verdict is `challenge` and names a concrete captchaType, dispatch to the
+ * matching `send{Image,Pow,Puzzle}Captcha` helper with the resolved
+ * parameter overrides. Otherwise returns `{ handled: false }` so the
+ * caller falls through to the normal decision machine. Block matches are
+ * not represented in the verdict at all — they're enforced at submit /
+ * verify time (see the comment on `applyTrafficFilterAtRequestTime`).
  */
 export const handleFrictionlessTrafficFilter = async (
 	input: FrictionlessTrafficFilterInput,
@@ -132,13 +122,6 @@ export const handleFrictionlessTrafficFilter = async (
 ): Promise<FrictionlessTrafficFilterOutcome> => {
 	const { verdict } = input;
 	if (verdict.kind === "pass") return { handled: false };
-
-	if (verdict.kind === "block") {
-		return {
-			handled: true,
-			response: res.status(401).json({ error: "Unauthorized" }),
-		};
-	}
 
 	const baseParams = {
 		userSitekeyIpHash: input.userSitekeyIpHash,
