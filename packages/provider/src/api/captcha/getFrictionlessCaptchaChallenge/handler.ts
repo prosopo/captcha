@@ -379,11 +379,7 @@ export default (
 					}
 				}
 
-				if (
-					dedupConflictsWithPolicy ||
-					dedupConflictsWithRouting ||
-					dedupConflictsWithBundle
-				) {
+				if (dedupConflictsWithPolicy || dedupConflictsWithRouting) {
 					req.logger.info(() => ({
 						msg: "Evicting reused session: cached captchaType conflicts with access policy or routing machine",
 						data: {
@@ -396,10 +392,6 @@ export default (
 							}),
 							...(dedupConflictsWithRouting && {
 								routedCaptchaType: dedupRouted.captchaType,
-							}),
-							...(dedupConflictsWithBundle && {
-								cachedBundleId: dedup.session.bundleId,
-								incomingBundleId: dedupIncomingBundleId,
 							}),
 						},
 					}));
@@ -415,6 +407,34 @@ export default (
 						) ?? Promise.resolve(),
 					]);
 				} else {
+					// Bundle-only mismatch: rebind the cached session's `bundleId`
+					// in-place rather than evicting and minting fresh. Evicting
+					// races concurrent /captcha/{type} + solution calls the widget
+					// already has in flight for `dedup.sessionId` — those calls
+					// look the session up mid-request and get `No session found`
+					// → `INCORRECT_CAPTCHA_TYPE` → 400. Observed in prod at ~21%
+					// of pimeyes /captcha/pow post-hotfix (baseline 0.3%) until
+					// this branch was added. captchaType, score, threshold etc.
+					// are untouched — only the bundleId flips to the fresh
+					// detector's key so future SIMD / behavioural decrypts on
+					// this session work. Cache-first write-behind so the reuse
+					// response below already reflects the update for any
+					// same-request read.
+					if (dedupConflictsWithBundle && dedupIncomingBundleId) {
+						req.logger.info(() => ({
+							msg: "Rebinding reused session bundleId to match incoming detector",
+							data: {
+								userSitekeyIpHash,
+								sessionId: dedup.sessionId,
+								cachedBundleId: dedup.session.bundleId,
+								incomingBundleId: dedupIncomingBundleId,
+							},
+						}));
+						await tasks.frictionlessManager.updateSessionRecordWithCache(
+							dedup.sessionId,
+							{ bundleId: dedupIncomingBundleId },
+						);
+					}
 					req.logger.info(() => ({
 						msg: "Reusing existing session for user-IP-sitekey combination",
 						data: {

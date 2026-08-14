@@ -54,6 +54,7 @@ type MockTasks = {
 		updateScore: MockFn;
 		setMatchedRule: MockFn;
 		resolveBundleByDetectorSession: MockFn;
+		updateSessionRecordWithCache: MockFn;
 	};
 	db: {
 		getSessionRecordByToken: MockFn;
@@ -205,6 +206,7 @@ vi.mock("../../../tasks/index.js", async () => {
 					updateScore: vi.fn(),
 					setMatchedRule: vi.fn(),
 					resolveBundleByDetectorSession: vi.fn().mockResolvedValue(undefined),
+					updateSessionRecordWithCache: vi.fn().mockResolvedValue(undefined),
 				},
 				db: {
 					getSessionRecordByToken: vi.fn().mockResolvedValue(null),
@@ -293,6 +295,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			updateScore: vi.fn(),
 			setMatchedRule: vi.fn(),
 			resolveBundleByDetectorSession: vi.fn().mockResolvedValue(undefined),
+			updateSessionRecordWithCache: vi.fn().mockResolvedValue(undefined),
 		},
 		db: {
 			getSessionRecordByToken: vi.fn().mockResolvedValue(null),
@@ -748,14 +751,17 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 
 	// Regression: dedup returned a session bound to pool bundle A, but the
 	// client on this request just did a fresh /detector/assign that returned
-	// bundle B (uniform-random pick across the pool). Handing back the cached
-	// sessionId would leave every later SIMD / behavioural hop encrypted with
-	// bundle B's public key while the provider tries bundle A's private key —
-	// the OAEP-decode-error → empty-BDP → image-escalation cascade seen in
-	// prod after the 15:47 UTC 2026-08-13 restart wave. Evict on mismatch so
-	// the fresh-session path re-binds bundleId from the current
-	// detectorSessionId.
-	it("evicts the reused session when the incoming detectorSessionId bundle differs from the cached session's bundleId", async () => {
+	// bundle B (uniform-random pick across the pool). If we evict the cached
+	// session and mint a fresh one, any concurrent /captcha/{type} or
+	// solution call the client already has in flight for the cached sessionId
+	// hits `No session found` → `INCORRECT_CAPTCHA_TYPE` → 400 (observed in
+	// prod at ~21% of pimeyes /captcha/pow post-hotfix, up from 0.3%
+	// baseline). Instead, rebind the cached session's `bundleId` in-place
+	// with cache-first write-behind semantics — future decrypts for this
+	// sessionId use the fresh key, and the in-flight calls with the same
+	// sessionId keep working. Only the bundleId changes; captchaType,
+	// score, threshold etc. stay put.
+	it("rebinds the reused session's bundleId in-place when the incoming detectorSessionId bundle differs from the cached one (does NOT evict)", async () => {
 		const clientRecord = {
 			account: "siteDedupBundleConflict",
 			settings: {
@@ -769,7 +775,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 
 		// Cached session was minted with bundle-A.
 		tasksInstance.db.getSessionByuserSitekeyIpHash.mockResolvedValue({
-			sessionId: "stale-pow-session-bundle-conflict",
+			sessionId: "live-pow-session-bundle-conflict",
 			captchaType: CaptchaType.pow,
 			score: 0,
 			webView: false,
@@ -813,22 +819,28 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		await handler(req as any, res as any, next);
 
 		expect(next).not.toHaveBeenCalled();
-		// Stale session is evicted so its bundleId can't cause OAEP failures
-		// on the client's subsequent /captcha/{type} + solution hops.
-		expect(tasksInstance.db.checkAndRemoveSession).toHaveBeenCalledWith(
-			"stale-pow-session-bundle-conflict",
+		// The session is NOT evicted — that was the pre-fix behaviour that
+		// caused NO_SESSION_FOUND on concurrent /captcha/{type} calls.
+		expect(tasksInstance.db.checkAndRemoveSession).not.toHaveBeenCalled();
+		// The bundleId is rebound in-place via the cache-first write-behind
+		// path so the same sessionId keeps working with the new key.
+		expect(
+			tasksInstance.frictionlessManager.updateSessionRecordWithCache,
+		).toHaveBeenCalledWith(
+			"live-pow-session-bundle-conflict",
+			expect.objectContaining({ bundleId: "bundle-B" }),
 		);
-		// The reuse response is not served ...
-		expect(res.json).not.toHaveBeenCalledWith(
+		// And the client gets the SAME sessionId back — no fresh mint, no
+		// in-flight-call disruption.
+		expect(res.json).toHaveBeenCalledWith(
 			expect.objectContaining({
-				sessionId: "stale-pow-session-bundle-conflict",
+				sessionId: "live-pow-session-bundle-conflict",
+				captchaType: CaptchaType.pow,
 			}),
 		);
-		// ... and the request falls through to the fresh-session path,
-		// which mints a new challenge (no policy or DM output forces
-		// image/puzzle in this test, so pow is picked). The important
-		// contract is "the client gets a new session", not an error.
-		expect(tasksInstance.frictionlessManager.sendPowCaptcha).toHaveBeenCalled();
+		expect(
+			tasksInstance.frictionlessManager.sendPowCaptcha,
+		).not.toHaveBeenCalled();
 	});
 
 	it("reuses the cached session when the incoming detectorSessionId bundle matches the cached session's bundleId", async () => {
