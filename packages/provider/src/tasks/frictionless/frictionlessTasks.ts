@@ -647,6 +647,10 @@ export class FrictionlessManager extends CaptchaManager {
 		let entropyMathRandomFirst: number | undefined;
 		let g: string | undefined;
 		let ii: boolean | undefined;
+		let sw: boolean | undefined;
+		let md: boolean | undefined;
+		let bn: boolean | undefined;
+		let fs: boolean | undefined;
 		for (const [keyIndex, attempt] of decryptKeys.entries()) {
 			try {
 				this.logger.info(() => ({
@@ -676,6 +680,10 @@ export class FrictionlessManager extends CaptchaManager {
 				const em = decrypted.entropyMathRandomFirst;
 				const gv = decrypted.g;
 				const iv = decrypted.i;
+				const swv = decrypted.sw;
+				const mdv = decrypted.md;
+				const bnv = decrypted.bn;
+				const fsv = decrypted.fs;
 				this.logger.debug(() => ({
 					msg: "Successfully decrypted score",
 					data: {
@@ -692,6 +700,10 @@ export class FrictionlessManager extends CaptchaManager {
 						entropyCryptoFingerprint: ec,
 						entropyWallClockOffsetMs: eo,
 						entropyMathRandomFirst: em,
+						sw: swv,
+						md: mdv,
+						bn: bnv,
+						fs: fsv,
 					},
 				}));
 				baseBotScore = s;
@@ -708,6 +720,10 @@ export class FrictionlessManager extends CaptchaManager {
 				entropyMathRandomFirst = em;
 				g = gv;
 				ii = iv;
+				sw = swv;
+				md = mdv;
+				bn = bnv;
+				fs = fsv;
 				break;
 			} catch (err) {
 				// check if the next index exists, if not, log an error
@@ -750,6 +766,10 @@ export class FrictionlessManager extends CaptchaManager {
 				decryptedHeadHash,
 				decryptionFailed,
 				shadowDomPenalty,
+				sw,
+				md,
+				bn,
+				fs,
 			},
 		}));
 
@@ -771,6 +791,10 @@ export class FrictionlessManager extends CaptchaManager {
 			entropyMathRandomFirst,
 			g,
 			i: ii,
+			sw,
+			md,
+			bn,
+			fs,
 			// The pool bundle used (if any) — promoted onto the session so the
 			// later behavioural-data hop can resolve the same keypair/inner cfg.
 			bundleId,
