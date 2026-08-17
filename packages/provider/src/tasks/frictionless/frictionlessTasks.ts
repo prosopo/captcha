@@ -154,6 +154,7 @@ export class FrictionlessManager extends CaptchaManager {
 			fs: params.fs,
 			entropyMathRandomFirst: params.entropyMathRandomFirst,
 			g: params.g,
+			s: params.s,
 			i: params.i,
 			tcpToChelloUs: params.tcpToChelloUs,
 			chelloToHandshakeUs: params.chelloToHandshakeUs,
@@ -228,6 +229,7 @@ export class FrictionlessManager extends CaptchaManager {
 		md?: Session["md"],
 		bn?: Session["bn"],
 		fs?: Session["fs"],
+		s?: Session["s"],
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
@@ -278,6 +280,7 @@ export class FrictionlessManager extends CaptchaManager {
 			entropyWallClockOffsetMs,
 			entropyMathRandomFirst,
 			g,
+			s,
 			i,
 			sw,
 			md,
@@ -440,6 +443,7 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.md,
 			effectiveParams.bn,
 			effectiveParams.fs,
+			effectiveParams.s,
 		);
 
 		// Fire-and-forget served-counter writes. Skipped when there's no
@@ -523,6 +527,7 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.md,
 			effectiveParams.bn,
 			effectiveParams.fs,
+			effectiveParams.s,
 		);
 	}
 
@@ -671,6 +676,7 @@ export class FrictionlessManager extends CaptchaManager {
 		let md: boolean | undefined;
 		let bn: boolean | undefined;
 		let fs: boolean | undefined;
+		let ss: string | undefined;
 		for (const [keyIndex, attempt] of decryptKeys.entries()) {
 			try {
 				this.logger.info(() => ({
@@ -704,6 +710,7 @@ export class FrictionlessManager extends CaptchaManager {
 				const mdv = decrypted.md;
 				const bnv = decrypted.bn;
 				const fsv = decrypted.fs;
+				const sv = decrypted.s;
 				this.logger.debug(() => ({
 					msg: "Successfully decrypted score",
 					data: {
@@ -724,6 +731,7 @@ export class FrictionlessManager extends CaptchaManager {
 						md: mdv,
 						bn: bnv,
 						fs: fsv,
+						s: sv,
 					},
 				}));
 				baseBotScore = s;
@@ -744,6 +752,7 @@ export class FrictionlessManager extends CaptchaManager {
 				md = mdv;
 				bn = bnv;
 				fs = fsv;
+				ss = sv;
 				break;
 			} catch (err) {
 				// check if the next index exists, if not, log an error
@@ -790,6 +799,7 @@ export class FrictionlessManager extends CaptchaManager {
 				md,
 				bn,
 				fs,
+				s: ss,
 			},
 		}));
 
@@ -815,6 +825,7 @@ export class FrictionlessManager extends CaptchaManager {
 			md,
 			bn,
 			fs,
+			s: ss,
 			// The pool bundle used (if any) — promoted onto the session so the
 			// later behavioural-data hop can resolve the same keypair/inner cfg.
 			bundleId,
