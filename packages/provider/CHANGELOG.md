@@ -1,5 +1,32 @@
 # @prosopo/provider
 
+## 5.2.0
+### Minor Changes
+
+- 234c737: Ship raw iOS WKWebView DOM signals (`sw`, `md`, `bn`, `fs`) alongside the classifier verdict `isWebView`.
+  
+  The four booleans that `classifyIosWebViewFromSignals` folds into `isWebView` are now decrypted off the client payload (positions 14-17) and surfaced individually on `DetectorResult` and in the "decryptPayload result" info log. Short-acronym keys match the existing `g`/`i` wire convention. Backwards-compatible: `isWebView` at position 4 is untouched; older catcher clients that don't emit positions 14-17 log the fields as `undefined`.
+  
+  Motivation: real iOS 17.7.x devices appear to expose one or more of these APIs even on stock WKWebView (unlike the iOS 18 Simulator the classifier was audited against), collapsing iOS Twickets `webView:true` from 97.6% to 0.2% post-v3.7.8. Shipping the raw signals lets server-side rules retune the aggregation from live traffic in OpenObserve without a catcher release.
+  
+  Note: `decodePayload.js` (obfuscated production build) still needs to be rebuilt to parse positions 14-17 out of the delimited payload and expose them as `result.sw`/`result.md`/`result.bn`/`result.fs`. Until that ships, the fields log as `undefined`.
+
+### Patch Changes
+
+- Updated dependencies [234c737]
+  - @prosopo/types@5.2.0
+  - @prosopo/api@4.0.8
+  - @prosopo/api-express-router@3.1.63
+  - @prosopo/database@4.0.9
+  - @prosopo/datasets@3.1.64
+  - @prosopo/env@3.6.32
+  - @prosopo/ipinfo@0.3.9
+  - @prosopo/keyring@2.9.71
+  - @prosopo/load-balancer@2.10.25
+  - @prosopo/types-database@5.1.3
+  - @prosopo/types-env@2.10.28
+  - @prosopo/user-access-policy@3.12.19
+
 ## 5.1.3
 ### Patch Changes
 

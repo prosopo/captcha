@@ -1,5 +1,12 @@
 # @prosopo/types-database
 
+## 5.1.3
+### Patch Changes
+
+- Updated dependencies [234c737]
+  - @prosopo/types@5.2.0
+  - @prosopo/user-access-policy@3.12.19
+
 ## 5.1.2
 ### Patch Changes
 
