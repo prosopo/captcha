@@ -148,6 +148,10 @@ export class FrictionlessManager extends CaptchaManager {
 			entropyMathRandomFingerprint: params.entropyMathRandomFingerprint,
 			entropyCryptoFingerprint: params.entropyCryptoFingerprint,
 			entropyWallClockOffsetMs: params.entropyWallClockOffsetMs,
+			sw: params.sw,
+			md: params.md,
+			bn: params.bn,
+			fs: params.fs,
 			entropyMathRandomFirst: params.entropyMathRandomFirst,
 			g: params.g,
 			i: params.i,
@@ -220,6 +224,10 @@ export class FrictionlessManager extends CaptchaManager {
 		g?: Session["g"],
 		matchedRule?: Session["matchedRule"],
 		i?: Session["i"],
+		sw?: Session["sw"],
+		md?: Session["md"],
+		bn?: Session["bn"],
+		fs?: Session["fs"],
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
@@ -271,6 +279,10 @@ export class FrictionlessManager extends CaptchaManager {
 			entropyMathRandomFirst,
 			g,
 			i,
+			sw,
+			md,
+			bn,
+			fs,
 			tcpToChelloUs,
 			chelloToHandshakeUs,
 			// Only present when an access policy actually matched this
@@ -424,6 +436,10 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.g,
 			effectiveParams.matchedRule,
 			effectiveParams.i,
+			effectiveParams.sw,
+			effectiveParams.md,
+			effectiveParams.bn,
+			effectiveParams.fs,
 		);
 
 		// Fire-and-forget served-counter writes. Skipped when there's no
@@ -503,6 +519,10 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.g,
 			effectiveParams.matchedRule,
 			effectiveParams.i,
+			effectiveParams.sw,
+			effectiveParams.md,
+			effectiveParams.bn,
+			effectiveParams.fs,
 		);
 	}
 

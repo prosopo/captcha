@@ -213,6 +213,10 @@ export class CaptchaManager {
 		const needsEntropyFirst = session.entropyMathRandomFirst === undefined;
 		const needsG = session.g === undefined;
 		const needsI = session.i === undefined;
+		const needsSw = session.sw === undefined;
+		const needsMd = session.md === undefined;
+		const needsBn = session.bn === undefined;
+		const needsFs = session.fs === undefined;
 
 		if (
 			!needsSimd &&
@@ -222,7 +226,11 @@ export class CaptchaManager {
 			!needsEntropyWall &&
 			!needsEntropyFirst &&
 			!needsG &&
-			!needsI
+			!needsI &&
+			!needsSw &&
+			!needsMd &&
+			!needsBn &&
+			!needsFs
 		) {
 			return session;
 		}
@@ -255,6 +263,10 @@ export class CaptchaManager {
 				}),
 			...(needsG && origin.g !== undefined && { g: origin.g }),
 			...(needsI && origin.i !== undefined && { i: origin.i }),
+			...(needsSw && origin.sw !== undefined && { sw: origin.sw }),
+			...(needsMd && origin.md !== undefined && { md: origin.md }),
+			...(needsBn && origin.bn !== undefined && { bn: origin.bn }),
+			...(needsFs && origin.fs !== undefined && { fs: origin.fs }),
 		};
 	}
 
