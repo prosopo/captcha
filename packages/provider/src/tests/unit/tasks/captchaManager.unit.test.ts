@@ -170,6 +170,10 @@ describe("CaptchaManager", () => {
 				entropyMathRandomFirst: 0.1,
 				g: "c",
 				i: false,
+				sw: true,
+				md: true,
+				bn: false,
+				fs: true,
 			} as unknown as Session;
 			dbGet().mockResolvedValue(session);
 

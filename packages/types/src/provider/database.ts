@@ -495,6 +495,19 @@ export const SessionSchema = object({
 	entropyMathRandomFirst: number().optional(),
 	g: string().optional(),
 	i: boolean().optional(),
+	// Raw iOS WKWebView-vs-Safari DOM signals that the client-side
+	// classifier folds into `webView`. Persisted per session so
+	// decision-machine rules can key off the individual signals
+	// without a catcher release. Undefined on non-iOS / non-WebKit
+	// clients and on catcher versions predating the fields.
+	//   sw = navigator.serviceWorker present
+	//   md = navigator.mediaDevices present
+	//   bn = window.browser namespace present (WebExtensions)
+	//   fs = document.fullscreenEnabled present
+	sw: boolean().optional(),
+	md: boolean().optional(),
+	bn: boolean().optional(),
+	fs: boolean().optional(),
 	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
 	// plugin (X-TLS-TCP-To-Chello-Us / X-TLS-Chello-To-Handshake-Us).
 	// Server-observed microsecond deltas across the TLS handshake
@@ -600,6 +613,11 @@ export type Session = {
 	entropyMathRandomFirst?: number;
 	g?: string;
 	i?: boolean;
+	// Raw iOS WKWebView-vs-Safari DOM signals — see SessionSchema above.
+	sw?: boolean;
+	md?: boolean;
+	bn?: boolean;
+	fs?: boolean;
 	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
 	// plugin. See the SessionSchema block above for full semantics —
 	// elevated values indicate the client's ClientHello traversed a
