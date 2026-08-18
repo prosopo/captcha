@@ -21,6 +21,7 @@
 #![allow(clippy::enum_variant_names)]
 #![allow(clippy::struct_field_names)]
 #![allow(clippy::vec_init_then_push)]
+#![allow(clippy::useless_vec)]
 
 use sha2::{Digest, Sha256};
 
