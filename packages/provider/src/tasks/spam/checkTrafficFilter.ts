@@ -82,12 +82,6 @@ export const categoryToReason = (
 	category: TrafficCategory,
 ): TrafficBlockReason => CATEGORY_TO_REASON[category];
 
-// A category is "active" (participates in evaluation) when the operator has
-// configured any policy for it — block or challenge. Both intents signal
-// that the operator treats the category as suspicious.
-const isActive = (policy: ITrafficCategoryPolicy | undefined): boolean =>
-	policy !== undefined;
-
 // Match the allowlist / denylist against `datacenterName`, `providerName`
 // (`company.name`), and `asnOrganization` — case-insensitive, whitespace
 // trimmed. The upstream ipapi only populates `datacenter.datacenter` for
@@ -134,6 +128,26 @@ export const isDatacenterDenylisted = (
 	denylist: ReadonlyArray<string> | undefined,
 ): boolean => matchesDatacenterNameList(ipInfo, denylist);
 
+// True when the IP's datacenter flag survives its qualifiers:
+// `datacenterNameDenylist` forces a match; otherwise the IP must not be
+// classified `providerType === "isp"` and must not be on
+// `datacenterNameAllowlist`. Used by the datacenter step of the per-IP
+// precedence chain in `evaluateIpInfo`, and mirrored by
+// `computeDnsAsymmetry` to gate its datacenter signal on the same rules.
+export const isEffectivelyDatacenter = (
+	ipInfo: IPInfoResult,
+	trafficFilter: Partial<ITrafficFilter>,
+): boolean => {
+	if (!ipInfo.isDatacenter) return false;
+	if (isDatacenterDenylisted(ipInfo, trafficFilter.datacenterNameDenylist)) {
+		return true;
+	}
+	return (
+		ipInfo.providerType !== "isp" &&
+		!isDatacenterAllowlisted(ipInfo, trafficFilter.datacenterNameAllowlist)
+	);
+};
+
 const push = (
 	matches: TrafficFilterMatch[],
 	category: TrafficCategory,
@@ -142,6 +156,18 @@ const push = (
 	if (policy) matches.push({ category, policy });
 };
 
+// Highest-precedence flag set on the IP wins. Only that category's policy
+// is consulted; lower-precedence flags on the same IP are ignored, even
+// when active. An IP that's fundamentally a Tor exit or a VPN is that
+// category first — upstream flagging it as datacenter/abuser/etc. is
+// downstream categorisation the top flag already captures. So if the
+// operator hasn't configured a policy for the top flag, the IP passes.
+//
+// A few flags carry qualifying conditions that reject the flag itself:
+// abuser with score below threshold, datacenter with providerType='isp'
+// (and no denylist match, no allowlist bypass), crawler on DNS extras.
+// When those conditions disqualify the flag, evaluation falls through to
+// the next flag — the IP is not really that category.
 const evaluateIpInfo = (
 	ipInfo: IPInfoResponse | undefined,
 	trafficFilter: Partial<ITrafficFilter>,
@@ -150,19 +176,27 @@ const evaluateIpInfo = (
 	const matches: TrafficFilterMatch[] = [];
 	if (!ipInfo || !ipInfo.isValid) return matches;
 
-	if (isActive(trafficFilter.vpn) && ipInfo.isVPN) {
-		push(matches, "vpn", trafficFilter.vpn);
-	}
-
-	if (isActive(trafficFilter.proxy) && ipInfo.isProxy) {
-		push(matches, "proxy", trafficFilter.proxy);
-	}
-
-	if (isActive(trafficFilter.tor) && ipInfo.isTor) {
+	if (ipInfo.isTor) {
 		push(matches, "tor", trafficFilter.tor);
+		return matches;
 	}
 
-	if (isActive(trafficFilter.abuser) && ipInfo.isAbuser) {
+	if (ipInfo.isVPN) {
+		push(matches, "vpn", trafficFilter.vpn);
+		return matches;
+	}
+
+	if (ipInfo.isProxy) {
+		push(matches, "proxy", trafficFilter.proxy);
+		return matches;
+	}
+
+	if (isEffectivelyDatacenter(ipInfo, trafficFilter)) {
+		push(matches, "datacenter", trafficFilter.datacenter);
+		return matches;
+	}
+
+	if (ipInfo.isAbuser) {
 		const threshold =
 			trafficFilter.abuserScoreThreshold ??
 			trafficFilterAbuserScoreThresholdDefault;
@@ -172,38 +206,24 @@ const evaluateIpInfo = (
 		);
 		if (maxScore >= threshold) {
 			push(matches, "abuser", trafficFilter.abuser);
+			return matches;
 		}
-	}
-
-	const datacenterSuppressedByCategory =
-		(ipInfo.isVPN && !isActive(trafficFilter.vpn)) ||
-		(ipInfo.isProxy && !isActive(trafficFilter.proxy)) ||
-		(ipInfo.isTor && !isActive(trafficFilter.tor)) ||
-		(ipInfo.isCrawler && !isActive(trafficFilter.crawler));
-
-	if (isActive(trafficFilter.datacenter) && ipInfo.isDatacenter) {
-		if (isDatacenterDenylisted(ipInfo, trafficFilter.datacenterNameDenylist)) {
-			push(matches, "datacenter", trafficFilter.datacenter);
-		} else if (
-			ipInfo.providerType !== "isp" &&
-			!datacenterSuppressedByCategory &&
-			!isDatacenterAllowlisted(ipInfo, trafficFilter.datacenterNameAllowlist)
-		) {
-			push(matches, "datacenter", trafficFilter.datacenter);
-		}
-	}
-
-	if (isActive(trafficFilter.mobile) && ipInfo.isMobile) {
-		push(matches, "mobile", trafficFilter.mobile);
-	}
-
-	if (isActive(trafficFilter.satellite) && ipInfo.isSatellite) {
-		push(matches, "satellite", trafficFilter.satellite);
 	}
 
 	// Public DNS resolvers share IP space with search crawlers.
-	if (!isDnsExtra && isActive(trafficFilter.crawler) && ipInfo.isCrawler) {
+	if (ipInfo.isCrawler && !isDnsExtra) {
 		push(matches, "crawler", trafficFilter.crawler);
+		return matches;
+	}
+
+	if (ipInfo.isSatellite) {
+		push(matches, "satellite", trafficFilter.satellite);
+		return matches;
+	}
+
+	if (ipInfo.isMobile) {
+		push(matches, "mobile", trafficFilter.mobile);
+		return matches;
 	}
 
 	return matches;
@@ -215,26 +235,26 @@ const evaluateIpInfo = (
  * carries the policy `action` — `block` fires at submit time; `challenge`
  * fires at request time to override captcha type + params.
  *
- * Cross-category rule: the datacenter category is suppressed when the IP
- * carries a more specific category the operator has not configured — VPN,
- * proxy, Tor, or crawler. All four legitimately sit on datacenter
- * infrastructure, so "datacenter" (a scraping rule) shouldn't catch them
- * out the back door.
+ * Per-IP precedence: within a single IP, the highest-precedence flag set on
+ * that IP wins and is the only category that emits a match. Order (highest
+ * first): Tor, VPN, proxy, datacenter, abuser, crawler, satellite, mobile.
+ * If the operator hasn't configured a policy for that top flag, the IP
+ * passes cleanly — lower flags are not consulted. So an IP that's flagged
+ * as both VPN and proxy is only acted on if the operator has a VPN policy.
  *
- * Extras-only rule: the crawler check is skipped on DNS extras. Public
- * DNS resolvers share IP space with search crawlers.
+ * Qualifying conditions: a flag that fails its qualifier does not "own"
+ * the IP and evaluation falls through to the next flag. The abuser flag
+ * needs `abuserScore` (or `companyAbuserScore`) at or above
+ * `abuserScoreThreshold`; the datacenter flag needs the IP to not be an
+ * ISP (`providerType !== "isp"`) or to be on `datacenterNameDenylist`,
+ * and to not be on `datacenterNameAllowlist`; the crawler flag is skipped
+ * on DNS extras because public DNS resolvers share IP space with search
+ * crawlers.
  *
- * The datacenter rule also honours `datacenterNameAllowlist`: consumer
- * relays route through datacenter ranges and are reported as
- * `is_datacenter=true` by upstream but the exiting users are real humans.
- *
- * The datacenter rule also short-circuits when upstream classifies the
- * provider as an ISP (`providerType === "isp"`). Consumer ISPs are
- * sometimes flagged `is_datacenter=true` upstream, but the ranges behind
- * those ASNs carry ordinary end-users.
- *
- * The ISP short-circuit and the allowlist are both overridden by
- * `datacenterNameDenylist`.
+ * Datacenter name lists: `datacenterNameAllowlist` lets operators opt named
+ * consumer relays (e.g. iCloud Private Relay) out of the datacenter rule;
+ * `datacenterNameDenylist` opts named providers back in even when the ISP
+ * heuristic would exempt them.
  *
  * When `trafficFilter.skipExtrasOnValidDnsPath` is on and the catcher
  * confirmed the DNS path matched the connection path (`pathValid: true`),
