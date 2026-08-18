@@ -1,5 +1,53 @@
 # @prosopo/provider
 
+## 5.3.0
+### Minor Changes
+
+- 9e53a48: Rework the traffic-filter evaluation so that on a single IP the
+  highest-precedence set flag decides the outcome — only that category's
+  policy is consulted, and lower-precedence flags on the same IP are
+  ignored. Precedence (highest first): tor > vpn > proxy > datacenter >
+  abuser > crawler > satellite > mobile.
+  
+  Example: an IP flagged as VPN and proxy is treated as VPN. If the
+  operator has left the VPN policy unconfigured (allowing VPNs), the IP
+  passes even when the proxy policy is set to block — the "specific"
+  category owns the IP and its policy is the only one that fires.
+  
+  Behaviour change to flag: because datacenter now outranks crawler, a
+  crawler+datacenter IP is acted on by the datacenter policy regardless
+  of the crawler policy state. Operators who want to allow named crawlers
+  through can still use `datacenterNameAllowlist`.
+  
+  `computeDnsAsymmetry` (DNS resolver / peer IP scoring) keeps its
+  existing operator-policy-aware shielding rather than mirroring
+  precedence, because DNS resolvers are legitimately often on datacenter
+  ranges (Google/Cloudflare/consumer-VPN DNS) — the DC signal there only
+  counts when the operator would have acted on the underlying category
+  too.
+
+### Patch Changes
+
+- 35f640f: Render puzzle captcha imagery on the provider instead of sending the answer to the client.
+  
+  The challenge used to carry `targetX`/`targetY` and the widget drew the target box straight from them, so any HTTP client could echo the coordinates back as its solution and pass without a browser. The provider now synthesises a background procedurally, cuts the notch into the pixels, and returns the background and piece as data URIs; the target and the tolerance never leave the server.
+  
+  Backgrounds come from the new `@prosopo/puzzle-assets` package and are single-use — reusing one across two challenges would let an attacker diff the composites and recover both notch positions.
+- Updated dependencies [35f640f]
+  - @prosopo/puzzle-assets@0.1.1
+  - @prosopo/types@5.2.1
+  - @prosopo/api@4.0.9
+  - @prosopo/api-express-router@3.1.64
+  - @prosopo/database@4.0.10
+  - @prosopo/datasets@3.1.65
+  - @prosopo/env@3.6.33
+  - @prosopo/ipinfo@0.3.10
+  - @prosopo/keyring@2.9.72
+  - @prosopo/load-balancer@2.10.26
+  - @prosopo/types-database@5.1.4
+  - @prosopo/types-env@2.10.29
+  - @prosopo/user-access-policy@3.12.20
+
 ## 5.2.1
 ### Patch Changes
 
