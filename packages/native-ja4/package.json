@@ -28,6 +28,6 @@
 		"clean": "cargo clean && rm -f *.node index.js index.d.ts"
 	},
 	"devDependencies": {
-		"@napi-rs/cli": "^2.18.4"
+		"@napi-rs/cli": "2.18.4"
 	}
 }
