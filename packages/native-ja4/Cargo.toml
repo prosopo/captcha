@@ -1,0 +1,23 @@
+[package]
+name = "prosopo-native-ja4"
+version = "0.0.1"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+napi = { version = "2.16", default-features = false, features = ["napi9"] }
+napi-derive = "2.16"
+sha2 = "0.10"
+hex = "0.4"
+
+[build-dependencies]
+napi-build = "2.1"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = "symbols"
