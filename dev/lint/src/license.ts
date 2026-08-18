@@ -117,6 +117,11 @@ const license = async (args: {
 				"**/packages/types/src/keyring/keyring/**",
 				"**/packages/types/src/keyring/pair/**",
 				"**/packages/fingerprintjs/**",
+				// napi-rs regenerates these on every `napi build`, so any header
+				// we add would be blown away. The Rust source under src/ is
+				// checked normally.
+				"**/packages/native-*/index.js",
+				"**/packages/native-*/index.d.ts",
 			],
 		})
 		.filter((file) => fs.lstatSync(file).isFile());
