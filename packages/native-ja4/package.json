@@ -19,7 +19,6 @@
 		"build": "napi build --platform --release",
 		"build:debug": "napi build --platform",
 		"test:cargo": "cargo test --release",
-		"test": "npm run test:cargo",
 		"clean": "cargo clean && rm -f *.node index.js index.d.ts"
 	},
 	"devDependencies": {
