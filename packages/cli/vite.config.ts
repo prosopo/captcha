@@ -14,8 +14,8 @@
 import { createRequire } from "node:module";
 import * as path from "node:path";
 import {
-	nodejsPolarsNativeFilePlugin,
 	ViteBackendConfig,
+	nodejsPolarsNativeFilePlugin,
 } from "@prosopo/config";
 import { loadEnv } from "@prosopo/dotenv";
 import { defineConfig } from "vite";

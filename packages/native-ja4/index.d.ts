@@ -10,4 +10,4 @@
  * reference implementation is checked by the vitest suite in
  * packages/provider/src/tests/unit/api/ja4.unit.test.ts.
  */
-export declare function calculateJa4(data: Buffer): string
+export declare function calculateJa4(data: Buffer): string;

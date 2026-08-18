@@ -49,8 +49,6 @@ export function calculateJa4(data: Buffer): string {
 	try {
 		return nativeCalculateJa4(data);
 	} catch (err) {
-		throw new Ja4ParseError(
-			err instanceof Error ? err.message : String(err),
-		);
+		throw new Ja4ParseError(err instanceof Error ? err.message : String(err));
 	}
 }

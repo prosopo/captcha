@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { createHash } from "node:crypto";
 // Micro-benchmark: native (Rust) vs JS calculateJa4.
 // Run: node packages/native-ja4/bench.mjs
 import { createRequire } from "node:module";
 import { performance } from "node:perf_hooks";
-import { createHash } from "node:crypto";
 
 const require = createRequire(import.meta.url);
 const native = require("./index.js");
@@ -42,7 +42,7 @@ function alpnChar(b) {
 	return b.toString(16).padStart(2, "0");
 }
 function tlsVersionStr(v) {
-	return { 0x0301: "10", 0x0302: "11", 0x0303: "12", 0x0304: "13" }[v] ?? "00";
+	return { 769: "10", 770: "11", 771: "12", 772: "13" }[v] ?? "00";
 }
 
 function calculateJa4Js(data) {
@@ -120,18 +120,20 @@ function calculateJa4Js(data) {
 	const versionStr = tlsVersionStr(clientVersion);
 	const sni = extIds.includes(EXT_SERVER_NAME) ? "d" : "i";
 	const firstAlpn = alpnProtocols[0];
-	const alpnFirst = firstAlpn && firstAlpn.length > 0
-		? alpnChar(firstAlpn.readUInt8(0))
-		: "0";
-	const alpnLast = firstAlpn && firstAlpn.length > 1
-		? alpnChar(firstAlpn.readUInt8(firstAlpn.length - 1))
-		: "0";
+	const alpnFirst =
+		firstAlpn && firstAlpn.length > 0 ? alpnChar(firstAlpn.readUInt8(0)) : "0";
+	const alpnLast =
+		firstAlpn && firstAlpn.length > 1
+			? alpnChar(firstAlpn.readUInt8(firstAlpn.length - 1))
+			: "0";
 	const nonGreaseCiphers = cipherSuites.filter((c) => !isGrease(c));
 	const nonGreaseExts = extIds.filter((e) => !isGrease(e));
 	const cipherCount = Math.min(99, nonGreaseCiphers.length)
 		.toString()
 		.padStart(2, "0");
-	const extCount = Math.min(99, nonGreaseExts.length).toString().padStart(2, "0");
+	const extCount = Math.min(99, nonGreaseExts.length)
+		.toString()
+		.padStart(2, "0");
 	const first = `t${versionStr}${sni}${cipherCount}${extCount}${alpnFirst}${alpnLast}`;
 	const sortedCiphers = [...nonGreaseCiphers].sort((a, b) => a - b);
 	const cipherHash = hash12(formatIdList(sortedCiphers));
@@ -148,8 +150,8 @@ function calculateJa4Js(data) {
 // Build a realistic Chrome-like TLS 1.3 ClientHello (many ciphers + extensions).
 function chromeLikeHello() {
 	const ciphers = [
-		0x0a0a, 0x1301, 0x1302, 0x1303, 0xc02b, 0xc02f, 0xc02c, 0xc030,
-		0xcca9, 0xcca8, 0xc013, 0xc014, 0x009c, 0x009d, 0x002f, 0x0035,
+		0x0a0a, 0x1301, 0x1302, 0x1303, 0xc02b, 0xc02f, 0xc02c, 0xc030, 0xcca9,
+		0xcca8, 0xc013, 0xc014, 0x009c, 0x009d, 0x002f, 0x0035,
 	];
 	const sni = Buffer.concat([
 		Buffer.from([0x00, 0x0e, 0x00, 0x00, 0x0b]),
@@ -162,7 +164,9 @@ function chromeLikeHello() {
 		Buffer.from([0x08]),
 		Buffer.from("http/1.1"),
 	]);
-	const sv = Buffer.from([0x08, 0x0a, 0x0a, 0x03, 0x04, 0x03, 0x03, 0x03, 0x02]);
+	const sv = Buffer.from([
+		0x08, 0x0a, 0x0a, 0x03, 0x04, 0x03, 0x03, 0x03, 0x02,
+	]);
 	const sigAlgs = Buffer.from([
 		0x00, 0x0e, 0x04, 0x03, 0x08, 0x04, 0x04, 0x01, 0x05, 0x03, 0x08, 0x05,
 		0x05, 0x01, 0x08, 0x06,
@@ -171,13 +175,25 @@ function chromeLikeHello() {
 		{ id: 0x0000, data: sni },
 		{ id: 0x0017, data: Buffer.alloc(0) },
 		{ id: 0xff01, data: Buffer.from([0x00]) },
-		{ id: 0x000a, data: Buffer.from([0x00, 0x08, 0x0a, 0x0a, 0x00, 0x1d, 0x00, 0x17, 0x00, 0x18]) },
+		{
+			id: 0x000a,
+			data: Buffer.from([
+				0x00, 0x08, 0x0a, 0x0a, 0x00, 0x1d, 0x00, 0x17, 0x00, 0x18,
+			]),
+		},
 		{ id: 0x000b, data: Buffer.from([0x01, 0x00]) },
 		{ id: 0x0010, data: alpn },
 		{ id: 0x0005, data: Buffer.from([0x01, 0x00, 0x00, 0x00, 0x00]) },
 		{ id: 0x000d, data: sigAlgs },
 		{ id: 0x0012, data: Buffer.alloc(0) },
-		{ id: 0x0033, data: Buffer.from([0x00, 0x26, 0x00, 0x24, 0x00, 0x1d, 0x00, 0x20].concat(new Array(32).fill(0xab))) },
+		{
+			id: 0x0033,
+			data: Buffer.from(
+				[0x00, 0x26, 0x00, 0x24, 0x00, 0x1d, 0x00, 0x20].concat(
+					new Array(32).fill(0xab),
+				),
+			),
+		},
 		{ id: 0x002d, data: Buffer.from([0x02, 0x01, 0x01]) },
 		{ id: 0x002b, data: sv },
 		{ id: 0x001b, data: Buffer.from([0x02, 0x00, 0x02]) },

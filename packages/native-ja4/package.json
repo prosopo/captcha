@@ -6,19 +6,13 @@
 	"private": true,
 	"main": "index.js",
 	"types": "index.d.ts",
-	"files": [
-		"index.js",
-		"index.d.ts",
-		"*.node"
-	],
+	"files": ["index.js", "index.d.ts", "*.node"],
 	"engines": {
 		"node": "^24"
 	},
 	"napi": {
 		"binaryName": "prosopo-native-ja4",
-		"targets": [
-			"x86_64-unknown-linux-gnu"
-		]
+		"targets": ["x86_64-unknown-linux-gnu"]
 	},
 	"scripts": {
 		"build": "napi build --platform --release",
