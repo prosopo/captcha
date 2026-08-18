@@ -11,13 +11,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+// This module vendors a JA4 parser wider than what the current napi wrapper
+// exposes (extra enums, parsers, and helpers reserved for future JA4 features).
+// Suppress the dead-code lints so the vendored surface can stay identical to
+// the upstream reference implementation without divergence noise.
+#![allow(dead_code)]
 #![allow(missing_docs)]
 #![allow(clippy::extra_unused_lifetimes)]
 #![allow(clippy::enum_variant_names)]
 #![allow(clippy::struct_field_names)]
 #![allow(clippy::vec_init_then_push)]
 
-use hex;
 use sha2::{Digest, Sha256};
 
 pub enum Protocol {
@@ -123,9 +127,8 @@ const HANDSHAKE_HEADER_LENGTH: usize = 4;
 const HANDSHAKE_RECORD_TYPE: u8 = 0x16;
 const HANDSHAKE_MESSAGE_TYPE: u8 = 0x01;
 
-impl Ja4 {
-    #[must_use]
-    pub fn default() -> Self {
+impl Default for Ja4 {
+    fn default() -> Self {
         Self {
             ja4: String::new(),
             record_type: 0,
@@ -142,7 +145,9 @@ impl Ja4 {
             protocol: Protocol::Tls,
         }
     }
+}
 
+impl Ja4 {
     pub fn from_client_hello(mut data: &[u8]) -> Result<Self, Error> {
         // TODO: add support for QUIC and DTLS
         let protocol = Protocol::Tls; // only TLS for now
@@ -214,7 +219,7 @@ impl Ja4 {
         }
         // Reject odd cipher_suites_len: cipher suites are 2 bytes each, and an
         // odd length silently misaligns the rest of the ClientHello parse.
-        if cipher_suites_len % 2 != 0 {
+        if !cipher_suites_len.is_multiple_of(2) {
             return Err(Error::InvalidClientHelloLength);
         }
 
