@@ -64,9 +64,6 @@ jobs:
           VARS_CONTEXT: ${{ toJson(vars) }}
           SECRETS_CONTEXT: ${{ toJson(secrets) }}
 
-      - name: Set NX_PARALLEL environment variable
-        run: echo "NX_PARALLEL=$(nproc)" >> $GITHUB_ENV
-
       - uses: actions/checkout@v7
         with:
           token: ${{ secrets.PROSOPONATOR_PAT }}
@@ -133,7 +130,6 @@ jobs:
 
       - name: Start services and run tests
         env:
-          NX_PARALLEL: "1"
           SKIP_REDIS: "true"
           # Committed test detector-pool fixture (throwaway keys). A non-empty
           # pool makes the provider run scored detection instead of the

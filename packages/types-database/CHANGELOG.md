@@ -1,5 +1,27 @@
 # @prosopo/types-database
 
+## 5.1.3
+### Patch Changes
+
+- Updated dependencies [234c737]
+  - @prosopo/types@5.2.0
+  - @prosopo/user-access-policy@3.12.19
+
+## 5.1.2
+### Patch Changes
+
+- Updated dependencies [ee5d250]
+  - @prosopo/types@5.1.2
+  - @prosopo/user-access-policy@3.12.18
+
+## 5.1.1
+### Patch Changes
+
+- cec44bb: Add optional `i` field on `Session`.
+- Updated dependencies [cec44bb]
+  - @prosopo/types@5.1.1
+  - @prosopo/user-access-policy@3.12.17
+
 ## 5.1.0
 ### Minor Changes
 

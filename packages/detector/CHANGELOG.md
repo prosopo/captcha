@@ -1,5 +1,24 @@
 # @prosopo/detector
 
+## 3.5.23
+### Patch Changes
+
+- Updated dependencies [234c737]
+  - @prosopo/types@5.2.0
+
+## 3.5.22
+### Patch Changes
+
+- Updated dependencies [ee5d250]
+  - @prosopo/types@5.1.2
+
+## 3.5.21
+### Patch Changes
+
+- cec44bb: Add optional `i` field on `Session`.
+- Updated dependencies [cec44bb]
+  - @prosopo/types@5.1.1
+
 ## 3.5.20
 ### Patch Changes
 

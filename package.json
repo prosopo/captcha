@@ -1,7 +1,7 @@
 {
 	"name": "@prosopo/captcha",
 	"packageManager": "npm@11.0.0",
-	"version": "3.7.8",
+	"version": "3.7.13",
 	"author": "Prosopo",
 	"type": "module",
 	"repository": {
@@ -17,7 +17,6 @@
 		"bake": "turbo run build:docker:all",
 		"bundle:all": "turbo run bundle",
 		"bundle:iife:all": "turbo run bundle:iife",
-		"clean:nx": "nx reset",
 		"clean:turbo": "rm -rf .turbo",
 		"clean:all": "turbo run clean",
 		"clean-npm:node-modules": "del-cli --verbose '**/node_modules'",
@@ -85,7 +84,6 @@
 		"depcheck": "1.4.7",
 		"husky": "9.1.7",
 		"npm-run-all": "4.1.5",
-		"nx": "22.7.2",
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
 		"turbo": "2.9.14",

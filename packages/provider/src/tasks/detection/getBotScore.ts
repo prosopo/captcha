@@ -46,6 +46,10 @@ export const getBotScore = async (
 		result.entropyMathRandomFirst;
 	const g: string | undefined = result.g;
 	const i: boolean | undefined = result.i;
+	const sw: boolean | undefined = result.sw;
+	const md: boolean | undefined = result.md;
+	const bn: boolean | undefined = result.bn;
+	const fs: boolean | undefined = result.fs;
 
 	if (baseBotScore === undefined || Number.isNaN(baseBotScore)) {
 		return {
@@ -70,5 +74,9 @@ export const getBotScore = async (
 		entropyMathRandomFirst,
 		g,
 		i,
+		sw,
+		md,
+		bn,
+		fs,
 	};
 };

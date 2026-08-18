@@ -1,5 +1,38 @@
 # @prosopo/procaptcha-puzzle
 
+## 2.10.51
+### Patch Changes
+
+- Updated dependencies [234c737]
+  - @prosopo/types@5.2.0
+  - @prosopo/api@4.0.8
+  - @prosopo/procaptcha-common@2.11.28
+
+## 2.10.50
+### Patch Changes
+
+- Updated dependencies [ee5d250]
+  - @prosopo/types@5.1.2
+  - @prosopo/api@4.0.7
+  - @prosopo/procaptcha-common@2.11.27
+
+## 2.10.49
+### Patch Changes
+
+- 2a07421: Make the puzzle CAPTCHA usable on mobile.
+  
+  - `procaptcha-puzzle`: add `touch-action: none` to the puzzle piece. Without
+    it, on a zoomed-in mobile viewport the browser claims the touch as a pan
+    gesture before the `touchmove` handler runs, so the page scrolls instead
+    of the piece moving.
+  - `client-bundle-example`: inject a viewport meta tag on every demo page and
+    fix the collapsible page-picker nav on ≤480px screens (a media-query max
+    height was clamping the bar even when expanded).
+- Updated dependencies [cec44bb]
+  - @prosopo/types@5.1.1
+  - @prosopo/api@4.0.6
+  - @prosopo/procaptcha-common@2.11.26
+
 ## 2.10.48
 ### Patch Changes
 

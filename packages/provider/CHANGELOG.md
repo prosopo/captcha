@@ -1,5 +1,171 @@
 # @prosopo/provider
 
+## 5.2.1
+### Patch Changes
+
+- c2bfcb8: Rebuild `decodePayload.js` to actually parse payload positions 14-17 as `sw`/`md`/`bn`/`fs`.
+  
+  The commit that added these signals (#3069) shipped client emission, provider glue (`frictionlessTasks` reading `decrypted.sw` etc.), and the mongoose schema — but this obfuscated bundle (built from `@prosopo/catcher`'s `bundle:provider`) was never rebuilt, so `decrypted.sw` has always been undefined on the server and mongoose omitted the fields. Evidence on prod 2026-08-17: 2347 iPhone WKWebView sessions between the earlier rollout and this fix — every one has `g` (in the current bundle) and zero have any of `sw/md/bn/fs`.
+  
+  Sibling source-side fix in the private repo: `packages/catcher/src/integrity/node/getBotScore.ts` now extracts positions 14-17 with the same tri-state semantics as `g`/`chromeVerticalPx` (undefined = client predates the field, `""` = collector returned no value, `"0"`/`"1"` = actual value).
+
+## 5.2.0
+### Minor Changes
+
+- 234c737: Ship raw iOS WKWebView DOM signals (`sw`, `md`, `bn`, `fs`) alongside the classifier verdict `isWebView`.
+  
+  The four booleans that `classifyIosWebViewFromSignals` folds into `isWebView` are now decrypted off the client payload (positions 14-17) and surfaced individually on `DetectorResult` and in the "decryptPayload result" info log. Short-acronym keys match the existing `g`/`i` wire convention. Backwards-compatible: `isWebView` at position 4 is untouched; older catcher clients that don't emit positions 14-17 log the fields as `undefined`.
+  
+  Motivation: real iOS 17.7.x devices appear to expose one or more of these APIs even on stock WKWebView (unlike the iOS 18 Simulator the classifier was audited against), collapsing iOS Twickets `webView:true` from 97.6% to 0.2% post-v3.7.8. Shipping the raw signals lets server-side rules retune the aggregation from live traffic in OpenObserve without a catcher release.
+  
+  Note: `decodePayload.js` (obfuscated production build) still needs to be rebuilt to parse positions 14-17 out of the delimited payload and expose them as `result.sw`/`result.md`/`result.bn`/`result.fs`. Until that ships, the fields log as `undefined`.
+
+### Patch Changes
+
+- Updated dependencies [234c737]
+  - @prosopo/types@5.2.0
+  - @prosopo/api@4.0.8
+  - @prosopo/api-express-router@3.1.63
+  - @prosopo/database@4.0.9
+  - @prosopo/datasets@3.1.64
+  - @prosopo/env@3.6.32
+  - @prosopo/ipinfo@0.3.9
+  - @prosopo/keyring@2.9.71
+  - @prosopo/load-balancer@2.10.25
+  - @prosopo/types-database@5.1.3
+  - @prosopo/types-env@2.10.28
+  - @prosopo/user-access-policy@3.12.19
+
+## 5.1.3
+### Patch Changes
+
+- ee5d250: Add a diagnostic admin endpoint `AdminApiPaths.GetSession` that returns
+  a session's current Mongo + Redis views verbatim, plus a cypress
+  consistency suite that walks a session through frictionless → pow →
+  pow-submit and asserts the two stores agree on `captchaType`,
+  `bundleId`, and `deleted` at each stage. Backs a class of prod bugs
+  where the two stores drifted (dedup evicting mid-flow, escalations not
+  propagating to Redis, etc.) surfacing as `INCORRECT_CAPTCHA_TYPE` 400s
+  on the client rather than as store-consistency errors.
+  
+  Also adds a frontend-error-path unit test covering the case where the
+  client sends a `detectorSessionId` whose bundleId is no longer in the
+  in-memory pool (rotation / TTL). Asserts the handler does NOT evict
+  and does NOT rebind — reuse response served with the cached sessionId
+  unchanged; any downstream OAEP failure surfaces cleanly via the DM's
+  empty-BDP path.
+- 1214dd3: Two related fixes for the residual `INCORRECT_CAPTCHA_TYPE` class of
+  400s on frictionless-configured sitekeys.
+  
+  **Server — request-time trafficFilter no longer blocks.** Move `block`
+  enforcement back to submit / verify time (via
+  `resolveTrafficFilterCheck` in the PoW / image / puzzle task classes).
+  `applyTrafficFilterAtRequestTime` now returns only `pass` or
+  `challenge` — a `challenge` match still overrides captchaType /
+  powDifficulty / solvedImagesCount / puzzleTolerance at request time,
+  but a `block` match never short-circuits with 401. This restores the
+  pre-#3045 behaviour that blocked interactions still complete a solve
+  so they bill. Without this the operator's own trafficFilter policies
+  became widget-mount failures that cascaded into
+  `INCORRECT_CAPTCHA_TYPE` (~865/hr fleet-wide, concentrated on a
+  handful of sitekeys whose trafficFilter blocks datacenter / proxy).
+  
+  **Widget — defensive guard for malformed `/frictionless` responses.**
+  Extract `evaluateFrictionlessResult` in `procaptcha-frictionless` and
+  halt when the response carries no `captchaType`. The previous flow
+  fell through into a default `ProcaptchaPow` mount with an undefined
+  `sessionId` on any bare-string 401 body (`{ "error": "Unauthorized" }`)
+  — the shape emitted by access-policy hard-block, decision-machine
+  autoBan, and domain / header middleware. `HttpClientBase` does not
+  throw on 4xx JSON so the widget receives these as valid-looking
+  `GetFrictionlessCaptchaResponse` and its `error.message` check misses.
+  The provider then rejects the fall-through `/captcha/pow` call as
+  `INCORRECT_CAPTCHA_TYPE` because the sitekey is
+  frictionless-configured.
+  
+  **Rate-limits config fix.** Adds the missing `AdminApiPaths.GetSession`
+  entry to `getRateLimitConfig()` in `@prosopo/cli` — introduced
+  alongside the `/admin/session/get` diagnostic endpoint but never wired
+  into the CLI's rate-limit table, which broke `npm run setup` under
+  `ProsopoConfigSchema.parse`.
+  
+  Unit and integration coverage: request-time `block` matches now
+  assert `pass` in `trafficFilterHierarchy.integration.test.ts` and
+  `trafficFilterRequestTime.unit.test.ts`; new unit coverage on
+  `captchaManager.resolveTrafficFilterCheck` locks in that datacenter
+  `block` still fires at verify (billing intact), datacenter `challenge`
+  doesn't (it's a request-time concern only), and the abuser default
+  still applies at verify for unconfigured sites. New
+  `evaluateFrictionlessResult` unit tests exercise the widget guard, and
+  a `frictionlessNoCaptchaTypeCascade.cy.ts` cypress spec forces the
+  bare-string 401 via `cy.intercept` and asserts no `/captcha/pow`
+  follows.
+- Updated dependencies [ee5d250]
+  - @prosopo/types@5.1.2
+  - @prosopo/api@4.0.7
+  - @prosopo/api-express-router@3.1.62
+  - @prosopo/database@4.0.8
+  - @prosopo/datasets@3.1.63
+  - @prosopo/env@3.6.31
+  - @prosopo/ipinfo@0.3.8
+  - @prosopo/keyring@2.9.70
+  - @prosopo/load-balancer@2.10.24
+  - @prosopo/types-database@5.1.2
+  - @prosopo/types-env@2.10.27
+  - @prosopo/user-access-policy@3.12.18
+
+## 5.1.2
+### Patch Changes
+
+- 6e21eb5: Fix regression from previous release where a bundleId mismatch on a
+  deduped session was resolved by evicting the session. If the widget
+  already had a `/captcha/{type}` or solution call in flight for that
+  sessionId, the session lookup mid-request returned `No session found`,
+  the handler returned `INCORRECT_CAPTCHA_TYPE` (400), and the client
+  saw a broken challenge. Observed at ~21% of pimeyes `/captcha/pow`
+  post-hotfix (baseline 0.3%).
+  
+  Rebind the reused session's `bundleId` in place with cache-first
+  write-behind semantics instead. Only the `bundleId` field is updated
+  — `captchaType`, score, threshold and every other field stay put, so
+  in-flight `/captcha/{type}` calls keep working with the same sessionId
+  and future SIMD / behavioural decrypts use the fresh key.
+
+## 5.1.1
+### Patch Changes
+
+- ec5fca9: Evict the dedup'd session when the incoming request's
+  `detectorSessionId` resolves to a different pool bundleId than the
+  cached session's stored bundleId.
+  
+  `DetectorBundlePool.pickRandom` returns a uniform-random pick per
+  `/detector/assign`, and the widget always fetches a fresh detector per
+  page-load. If we hand back a dedup'd session whose bundleId doesn't
+  match the fresh one, every later `/captcha/{type}` + solution hop
+  encrypts with the new detector's public key while the provider tries
+  to decrypt with the cached bundle's private key — yielding
+  `ERR_OSSL_RSA_OAEP_DECODING_ERROR` on SIMD + behavioural, an empty BDP
+  from the DM's point of view, and an R1-rule escalation to image on
+  every submit. Extends the existing "evict on policy/routing conflict"
+  branch to cover this case. Falls through to reuse when the incoming
+  detectorSessionId binding cannot be resolved (Redis TTL expired), so
+  we don't churn every returning user whose page has been open longer
+  than the binding.
+- cec44bb: Add optional `i` field on `Session`.
+- Updated dependencies [cec44bb]
+  - @prosopo/types@5.1.1
+  - @prosopo/types-database@5.1.1
+  - @prosopo/api@4.0.6
+  - @prosopo/api-express-router@3.1.61
+  - @prosopo/database@4.0.7
+  - @prosopo/datasets@3.1.62
+  - @prosopo/env@3.6.30
+  - @prosopo/ipinfo@0.3.7
+  - @prosopo/keyring@2.9.69
+  - @prosopo/load-balancer@2.10.23
+  - @prosopo/types-env@2.10.26
+  - @prosopo/user-access-policy@3.12.17
+
 ## 5.1.0
 ### Minor Changes
 
