@@ -44,12 +44,19 @@ export default async function (
 		? path.resolve(outputDir)
 		: path.resolve(packageDir, "dist/bundle");
 
-	// Get rid of any dependencies we don't want to bundle
+	// Get rid of any dependencies we don't want to bundle. `sharp` is a
+	// native module — bundling its JS shim but not the platform-specific
+	// binary in `@img/sharp-linux-x64/lib/sharp-linux-x64.node` produces a
+	// runtime "Could not load the sharp module" in the provider Docker
+	// image, so it stays external and is installed at container-build time
+	// via the generated package.json in docker/images/provider/dist/.
 	const { external, internal } = filterDependencies(deps, [
 		"aws",
 		"webpack",
 		"vite",
 		"biome",
+		"sharp",
+		"@img/",
 	]);
 
 	// `punycode` is a deprecated Node builtin that the userland npm package
