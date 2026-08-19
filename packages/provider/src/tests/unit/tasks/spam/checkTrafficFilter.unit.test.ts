@@ -163,12 +163,18 @@ describe("checkTrafficFilter", () => {
 		expect(result).toMatchObject({ isBlocked: false });
 	});
 
-	it("does not block crawler-on-datacenter IPs when blockDatacenter is on but blockCrawler is off", () => {
+	it("blocks crawler-on-datacenter IPs as datacenter even when crawler policy is off", () => {
+		// Under per-IP precedence, datacenter outranks crawler. An IP flagged
+		// as both is acted on by the datacenter policy; the operator's
+		// crawler policy is not consulted.
 		const result = checkTrafficFilter(
 			baseInfo({ isDatacenter: true, isCrawler: true }),
 			{ ...allBlocked, crawler: undefined },
 		);
-		expect(result).toMatchObject({ isBlocked: false });
+		expect(result).toMatchObject({
+			isBlocked: true,
+			reason: "API.DATACENTER_BLOCKED",
+		});
 	});
 
 	it("still blocks raw datacenter (non-VPN) IPs when blockDatacenter is on and blockVpn is off", () => {
@@ -183,8 +189,8 @@ describe("checkTrafficFilter", () => {
 	});
 
 	it("blocks VPN-on-datacenter IPs as VPN when both filters are enabled", () => {
-		// The VPN check runs first and short-circuits before the
-		// datacenter rule, so the reason should be VPN_BLOCKED.
+		// VPN outranks datacenter in the per-IP precedence chain, so an IP
+		// carrying both flags is acted on as VPN and the reason is VPN_BLOCKED.
 		const result = checkTrafficFilter(
 			baseInfo({ isDatacenter: true, isVPN: true }),
 			allBlocked,
@@ -400,7 +406,9 @@ describe("checkTrafficFilter", () => {
 			expect(result).toMatchObject({ isBlocked: false });
 		});
 
-		it("applies crawler-datacenter suppression to extra IPs when blockCrawler is off", () => {
+		it("blocks crawler-on-datacenter extras as datacenter even when crawler policy is off", () => {
+			// Same precedence rule for extras: datacenter outranks crawler,
+			// so the datacenter policy fires regardless of crawler policy.
 			const noCrawlerBlock: ITrafficFilter = {
 				...allBlocked,
 				crawler: undefined,
@@ -412,7 +420,10 @@ describe("checkTrafficFilter", () => {
 					isDatacenter: true,
 				}),
 			]);
-			expect(result).toMatchObject({ isBlocked: false });
+			expect(result).toMatchObject({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
 		});
 	});
 
@@ -862,6 +873,91 @@ describe("checkTrafficFilter", () => {
 			expect(result).toMatchObject({
 				isBlocked: true,
 				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+	});
+
+	describe("per-IP precedence", () => {
+		it("picks Tor over every other flag when all are set", () => {
+			// Precedence order: tor > vpn > proxy > datacenter > abuser > crawler
+			// > satellite > mobile. An IP carrying every flag is acted on as Tor.
+			const result = checkTrafficFilter(
+				baseInfo({
+					isTor: true,
+					isVPN: true,
+					isProxy: true,
+					isDatacenter: true,
+					isAbuser: true,
+					isCrawler: true,
+					isSatellite: true,
+					isMobile: true,
+				}),
+				allBlocked,
+			);
+			expect(result).toMatchObject({
+				isBlocked: true,
+				reason: "API.TOR_BLOCKED",
+			});
+		});
+
+		it("does not block a VPN+proxy IP when only the proxy policy is set", () => {
+			// VPN outranks proxy: if the operator hasn't configured a VPN
+			// policy, the IP passes even when proxy blocking is on.
+			const result = checkTrafficFilter(
+				baseInfo({ isVPN: true, isProxy: true }),
+				{ ...allBlocked, vpn: undefined },
+			);
+			expect(result).toMatchObject({ isBlocked: false });
+		});
+
+		it("blocks a datacenter+abuser IP as datacenter (datacenter outranks abuser)", () => {
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					isAbuser: true,
+					abuserScore: 1,
+				}),
+				allBlocked,
+			);
+			expect(result).toMatchObject({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+
+		it("falls through when the top flag disqualifies itself (abuser score below threshold)", () => {
+			// isAbuser is set but score is below threshold, so the abuser flag
+			// does not own the IP. Evaluation falls through to the next flag —
+			// here isMobile — and picks that up instead.
+			const result = checkTrafficFilter(
+				baseInfo({
+					isAbuser: true,
+					abuserScore: 0.01,
+					companyAbuserScore: 0.01,
+					isMobile: true,
+				}),
+				{ ...allBlocked, abuserScoreThreshold: 0.5 },
+			);
+			expect(result).toMatchObject({
+				isBlocked: true,
+				reason: "API.MOBILE_BLOCKED",
+			});
+		});
+
+		it("falls through when the top flag disqualifies itself (datacenter suppressed by ISP heuristic)", () => {
+			// providerType='isp' rejects the datacenter flag ownership, so
+			// evaluation falls through to isMobile.
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					providerType: "isp",
+					isMobile: true,
+				}),
+				allBlocked,
+			);
+			expect(result).toMatchObject({
+				isBlocked: true,
+				reason: "API.MOBILE_BLOCKED",
 			});
 		});
 	});

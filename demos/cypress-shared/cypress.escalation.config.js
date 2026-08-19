@@ -71,6 +71,12 @@ export default defineConfig({
 				},
 			});
 		},
+		// escalationPuzzle.cy.ts is deliberately NOT included here — the
+		// puzzle modal it waits on (`.prosopo-modalInner p`) is the
+		// image widget's selector, not the puzzle widget's. It needs a
+		// follow-up fix (either target the puzzle-widget DOM or reuse
+		// puzzle.cy.ts's assertions). Excluded from image.config.js's
+		// catch-all too, so it never runs in CI until fixed.
 		specPattern: ["cypress/e2e/**/escalation.cy.ts"],
 	},
 	component: {

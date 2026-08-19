@@ -48,9 +48,6 @@ jobs:
     # https://docs.github.com/en/billing/reference/actions-runner-pricing
     runs-on: ubuntu-latest
     steps:
-      - name: Set NX_PARALLEL environment variable
-        run: echo "NX_PARALLEL=$(nproc)" >> $GITHUB_ENV
-
       - uses: actions/checkout@v7
         with:
           token: ${{ secrets.PROSOPONATOR_PAT }}

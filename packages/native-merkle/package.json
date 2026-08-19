@@ -1,0 +1,27 @@
+{
+	"name": "@prosopo/native-merkle",
+	"version": "0.0.2",
+	"description": "Rust merkle tree + blake2b hashing helpers for the Prosopo captcha provider (napi-rs).",
+	"license": "Apache-2.0",
+	"private": true,
+	"main": "index.js",
+	"types": "index.d.ts",
+	"files": ["index.js", "index.d.ts", "*.node"],
+	"engines": {
+		"node": "^24",
+		"npm": "^11"
+	},
+	"napi": {
+		"binaryName": "prosopo-native-merkle",
+		"targets": ["x86_64-unknown-linux-gnu"]
+	},
+	"scripts": {
+		"build": "napi build --platform --release",
+		"build:debug": "napi build --platform",
+		"test:cargo": "cargo test --release",
+		"clean": "cargo clean && rm -f *.node index.js index.d.ts"
+	},
+	"devDependencies": {
+		"@napi-rs/cli": "2.18.4"
+	}
+}

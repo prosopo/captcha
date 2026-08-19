@@ -251,13 +251,20 @@ describe("Captcha type + params selection hierarchy (integration)", () => {
 			expect((body as { difficulty: number }).difficulty).toBe(8);
 		});
 
-		it("returns 401 when the request IP matches a block category", async () => {
+		it("passes at request time when the IP matches a block category (block deferred to verify for billing)", async () => {
+			// Pre-2026-08-14 the request-time gate rejected with 401 here.
+			// That surface turned every operator-configured block into a
+			// widget-mount failure that the frontend mis-handled into an
+			// INCORRECT_CAPTCHA_TYPE cascade. Enforcement moved to submit
+			// time so the widget still mounts and the interaction is
+			// billable; `resolveTrafficFilterCheck` in
+			// PoW / image / puzzle task classes catches the block at verify.
 			currentIpInfo = vpn();
 			const siteKey = await registerSite({
 				vpn: { action: TrafficFilterAction.Block },
 			});
 			const { status } = await getPow(siteKey);
-			expect(status).toBe(401);
+			expect(status).toBe(200);
 		});
 
 		it("falls through to site default when the request IP does not match the trafficFilter category", async () => {
@@ -277,7 +284,14 @@ describe("Captcha type + params selection hierarchy (integration)", () => {
 			expect((body as { difficulty: number }).difficulty).toBe(3);
 		});
 
-		it("applies the abuser default (implicit block) even without an explicit trafficFilter entry", async () => {
+		it("does NOT apply the abuser default at request time (abuser default only fires at submit time)", async () => {
+			// The submit-time path still defaults `abuser: { action: Block }`
+			// (see CaptchaManager.resolveTrafficFilterCheck), so an
+			// abusive IP still gets blocked at verify. But at request time
+			// we no longer default it — otherwise every abusive IP would
+			// see a 401 before receiving a captcha, which prevents the
+			// widget from producing a billable interaction and cascades
+			// into INCORRECT_CAPTCHA_TYPE on frictionless sitekeys.
 			const abuser: IPInfoResult = {
 				...clean(),
 				isAbuser: true,
@@ -285,11 +299,9 @@ describe("Captcha type + params selection hierarchy (integration)", () => {
 				companyAbuserScore: 0.9,
 			};
 			currentIpInfo = abuser;
-			// Site has an empty trafficFilter — abuser default fires from
-			// resolveTrafficFilterCheck at the request-time helper.
 			const siteKey = await registerSite({});
 			const { status } = await getPow(siteKey);
-			expect(status).toBe(401);
+			expect(status).toBe(200);
 		});
 	});
 });

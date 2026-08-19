@@ -783,7 +783,16 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	entropyWallClockOffsetMs: { type: Number, required: false },
 	entropyMathRandomFirst: { type: Number, required: false },
 	g: { type: String, required: false },
+	s: { type: String, required: false },
 	i: { type: Boolean, required: false },
+	// Raw iOS WKWebView-vs-Safari DOM signals that the client-side
+	// classifier folds into `webView` (see @prosopo/types Session for
+	// per-key semantics). Persisted so server-side rules can retune
+	// the aggregation from live traffic without a catcher release.
+	sw: { type: Boolean, required: false },
+	md: { type: Boolean, required: false },
+	bn: { type: Boolean, required: false },
+	fs: { type: Boolean, required: false },
 	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
 	// plugin (X-TLS-TCP-To-Chello-Us / X-TLS-Chello-To-Handshake-Us).
 	// See @prosopo/types Session.tcpToChelloUs for full semantics.

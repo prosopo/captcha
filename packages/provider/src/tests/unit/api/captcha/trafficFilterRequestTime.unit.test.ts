@@ -18,7 +18,6 @@ import {
 	type GetFrictionlessCaptchaResponse,
 	type IPInfoResult,
 	type ITrafficFilter,
-	ResultReason,
 	TrafficFilterAction,
 } from "@prosopo/types";
 import type { ClientRecord } from "@prosopo/types-database";
@@ -62,22 +61,30 @@ describe("applyTrafficFilterAtRequestTime", () => {
 		).toEqual({ kind: "pass" });
 	});
 
-	it("applies the abuser default even when trafficFilter omits abuser", () => {
-		// Site set an empty-ish trafficFilter; abuser default fires at request time.
+	it("does NOT apply the abuser default at request time (block enforcement is deferred to submit-time)", () => {
+		// The submit-time path (`resolveTrafficFilterCheck` on
+		// CaptchaManager) still defaults `abuser: { action: Block }`, so an
+		// unconfigured site still blocks abusive IPs at verify. Request-time
+		// deliberately does not default abuser so the widget can still mount
+		// and produce a billable interaction.
 		expect(
 			applyTrafficFilterAtRequestTime(
 				ipInfo({ isAbuser: true, abuserScore: 0.9 }),
 				{ vpn: { action: TrafficFilterAction.Block } },
 			),
-		).toMatchObject({ kind: "block", reason: ResultReason.ABUSER_BLOCKED });
+		).toEqual({ kind: "pass" });
 	});
 
-	it("returns block when a matched category has action:block", () => {
+	it("passes at request time when a matched category has action:block (block only fires at verify time)", () => {
+		// Deferring block enforcement is a deliberate design choice —
+		// billing counts submit-time interactions, so we always let the
+		// widget mount a captcha and rely on `resolveTrafficFilterCheck` in
+		// PoW / image / puzzle task classes to reject at verify.
 		expect(
 			applyTrafficFilterAtRequestTime(ipInfo({ isVPN: true }), {
 				vpn: { action: TrafficFilterAction.Block },
 			}),
-		).toEqual({ kind: "block", reason: ResultReason.VPN_BLOCKED });
+		).toEqual({ kind: "pass" });
 	});
 
 	it("returns challenge with the matched captchaType override", () => {
@@ -112,7 +119,12 @@ describe("applyTrafficFilterAtRequestTime", () => {
 		});
 	});
 
-	it("block wins over challenge when both categories match the ipInfo", () => {
+	it("challenge match still fires at request time even when a sibling category has action:block (block is deferred to verify)", () => {
+		// Per-IP precedence puts VPN above proxy, so a VPN+proxy IP is owned
+		// by VPN and the challenge policy on VPN is what fires. Even setting
+		// that aside, `block` enforcement was moved to submit-time in
+		// 2026-08-14: the widget receives the challenge verdict and mounts
+		// the challenge captcha; the `block` on proxy re-fires at verify.
 		expect(
 			applyTrafficFilterAtRequestTime(ipInfo({ isVPN: true, isProxy: true }), {
 				vpn: {
@@ -121,10 +133,16 @@ describe("applyTrafficFilterAtRequestTime", () => {
 				},
 				proxy: { action: TrafficFilterAction.Block },
 			}),
-		).toMatchObject({ kind: "block", reason: ResultReason.PROXY_BLOCKED });
+		).toMatchObject({
+			kind: "challenge",
+			captchaType: CaptchaType.pow,
+			sourceCategories: ["vpn"],
+		});
 	});
 
-	it("collapses multiple challenge matches to the strictest captchaType (image > puzzle > pow)", () => {
+	it("uses the top-precedence category's captchaType when several flags are set", () => {
+		// Precedence order (highest first): tor > vpn > proxy. An IP flagged
+		// as all three is owned by tor; only the tor policy is consulted.
 		const verdict = applyTrafficFilterAtRequestTime(
 			ipInfo({ isVPN: true, isProxy: true, isTor: true }),
 			{
@@ -149,6 +167,7 @@ describe("applyTrafficFilterAtRequestTime", () => {
 			kind: "challenge",
 			captchaType: CaptchaType.image,
 			solvedImagesCount: 6,
+			sourceCategories: ["tor"],
 		});
 	});
 });
@@ -217,26 +236,15 @@ describe("handleFrictionlessTrafficFilter", () => {
 		expect(fm.sendPuzzleCaptcha).not.toHaveBeenCalled();
 	});
 
-	it("responds 401 when verdict is kind:block", async () => {
-		const fm = makeFrictionlessManagerMock();
-		const { res, statusMock, jsonMock } = makeResMock();
-		const outcome = await handleFrictionlessTrafficFilter(
-			{
-				verdict: { kind: "block", reason: ResultReason.VPN_BLOCKED },
-				frictionlessManager: fm,
-				clientRecord: clientRecord(),
-				userSitekeyIpHash,
-				dapp,
-				ipInfo: ipInfo({ isVPN: true }),
-				flatHeaders,
-				logger,
-			},
-			res,
-		);
-		expect(outcome.handled).toBe(true);
-		expect(statusMock).toHaveBeenCalledWith(401);
-		expect(jsonMock).toHaveBeenCalledWith({ error: "Unauthorized" });
-		expect(fm.sendImageCaptcha).not.toHaveBeenCalled();
+	it("does NOT surface a `kind:block` verdict any more — blocked traffic still gets a challenge at request time (block enforcement deferred to verify)", () => {
+		// Type-level assertion: the verdict shape no longer includes a
+		// `block` variant. If this test starts failing to compile, someone
+		// re-introduced request-time blocking without addressing the widget
+		// cascade that fell out of it last time.
+		const passThroughVerdict: Parameters<
+			typeof handleFrictionlessTrafficFilter
+		>[0]["verdict"] = { kind: "pass" };
+		expect(passThroughVerdict.kind).not.toBe("block");
 	});
 
 	it("dispatches to sendImageCaptcha when verdict names image, capping solvedImagesCount by imageMaxRounds", async () => {

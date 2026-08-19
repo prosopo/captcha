@@ -205,22 +205,15 @@ export default (
 			}
 
 			// Evaluate the site's trafficFilter against the connecting IP.
-			// A matched `block` policy short-circuits with 401; a matched
-			// `challenge` policy contributes solvedImagesCount overrides.
+			// Only `challenge` policies affect the request-time gate — they
+			// contribute solvedImagesCount overrides. `block` policies are
+			// enforced at submit / verify time so the user still receives a
+			// captcha and produces a billable interaction.
 			const trafficVerdict = applyTrafficFilterAtRequestTime(
 				req.ipInfo,
 				clientRecord.settings?.trafficFilter,
 				req.logger,
 			);
-			if (trafficVerdict.kind === "block") {
-				return next(
-					new ProsopoApiError(trafficVerdict.reason, {
-						context: { code: 401, siteKey: dapp, user },
-						i18n: req.i18n,
-						logger: req.logger,
-					}),
-				);
-			}
 			const trafficSolvedImagesCount =
 				trafficVerdict.kind === "challenge"
 					? trafficVerdict.solvedImagesCount

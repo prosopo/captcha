@@ -56,5 +56,20 @@ export type DetectorResult = {
 	entropyWallClockOffsetMs?: number;
 	entropyMathRandomFirst?: number;
 	g?: string;
+	s?: string;
 	i?: boolean;
+	// Raw iOS WKWebView-vs-Safari DOM signals (positions 14-17 in the client
+	// payload). Undefined for clients that predate the fields, or on non-iOS
+	// / non-WebKit engines where the classifier gate returns early. Shipped
+	// unconditionally alongside `isWebView` so server-side rules can retune
+	// without a catcher release. Short names match the acronym convention
+	// established by `g` (gpu signature) and `i`.
+	//   sw = navigator.serviceWorker present
+	//   md = navigator.mediaDevices present
+	//   bn = window.browser namespace present (WebExtensions)
+	//   fs = document.fullscreenEnabled present
+	sw?: boolean;
+	md?: boolean;
+	bn?: boolean;
+	fs?: boolean;
 };

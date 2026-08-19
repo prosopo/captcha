@@ -48,6 +48,9 @@
 			"path": "../load-balancer"
 		},
 		{
+			"path": "../puzzle-assets"
+		},
+		{
 			"path": "../keyring"
 		},
 		{

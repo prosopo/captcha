@@ -47,9 +47,6 @@ jobs:
           VARS_CONTEXT: ${{ toJson(vars) }}
           SECRETS_CONTEXT: ${{ toJson(secrets) }}
 
-      - name: Set NX_PARALLEL environment variable
-        run: echo "NX_PARALLEL=$(nproc)" >> $GITHUB_ENV
-
       - uses: actions/checkout@v7
         with:
           token: ${{ secrets.PROSOPONATOR_PAT }}
@@ -67,8 +64,6 @@ jobs:
         with:
           npm_ci_args: '--include=dev --no-audit --no-fund --prefer-offline'
 
-      # clean the nx cache
-      - run: npx nx reset
       - run: npm run clean:turbo
 
       # install cypress so we don't have to do that every time
