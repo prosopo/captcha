@@ -494,7 +494,6 @@ export const SessionSchema = object({
 	entropyWallClockOffsetMs: number().optional(),
 	entropyMathRandomFirst: number().optional(),
 	g: string().optional(),
-	s: string().optional(),
 	i: boolean().optional(),
 	// Raw iOS WKWebView-vs-Safari DOM signals that the client-side
 	// classifier folds into `webView`. Persisted per session so
@@ -631,7 +630,6 @@ export type Session = {
 	entropyWallClockOffsetMs?: number;
 	entropyMathRandomFirst?: number;
 	g?: string;
-	s?: string;
 	i?: boolean;
 	// Raw iOS WKWebView-vs-Safari DOM signals — see SessionSchema above.
 	sw?: boolean;

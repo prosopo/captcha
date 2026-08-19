@@ -45,7 +45,6 @@ export const getBotScore = async (
 	const entropyMathRandomFirst: number | undefined =
 		result.entropyMathRandomFirst;
 	const g: string | undefined = result.g;
-	const s: string | undefined = result.s;
 	const i: boolean | undefined = result.i;
 	const sw: boolean | undefined = result.sw;
 	const md: boolean | undefined = result.md;
@@ -74,7 +73,6 @@ export const getBotScore = async (
 		entropyWallClockOffsetMs,
 		entropyMathRandomFirst,
 		g,
-		s,
 		i,
 		sw,
 		md,
