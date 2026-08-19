@@ -24,6 +24,10 @@ defaults:
     shell: bash
 
 env:
+  # Dependency debuginfo dominates a dev build and nothing here steps through
+  # third-party code; incremental state is worthless on a cold CI runner.
+  CARGO_INCREMENTAL: "0"
+  CARGO_PROFILE_DEV_DEBUG: line-tables-only
   NODE_ENV: "production"
 
 jobs:
