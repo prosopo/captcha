@@ -1,5 +1,26 @@
 # @prosopo/provider
 
+## 5.3.2
+### Patch Changes
+
+- 6db5d8b: Move image-captcha merkle tree computation and per-solution leaf hashing to a Rust napi module (@prosopo/native-merkle). ~4× faster on realistic 9-solution commits. Extends the cli bundle plugin so multiple native-* .node files can coexist without basename collision.
+- ae475a5: Add optional `s` field on `Session`.
+- Updated dependencies [6db5d8b]
+- Updated dependencies [ae475a5]
+  - @prosopo/native-merkle@0.0.2
+  - @prosopo/datasets@3.1.66
+  - @prosopo/types@5.2.2
+  - @prosopo/types-database@5.1.5
+  - @prosopo/api@4.0.10
+  - @prosopo/api-express-router@3.1.65
+  - @prosopo/database@4.0.11
+  - @prosopo/env@3.6.34
+  - @prosopo/ipinfo@0.3.11
+  - @prosopo/keyring@2.9.73
+  - @prosopo/load-balancer@2.10.27
+  - @prosopo/types-env@2.10.30
+  - @prosopo/user-access-policy@3.12.21
+
 ## 5.3.1
 ### Patch Changes
 

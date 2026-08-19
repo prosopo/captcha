@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 5.2.2
+### Patch Changes
+
+- ae475a5: Add optional `s` field on `Session`.
+
 ## 5.2.1
 ### Patch Changes
 

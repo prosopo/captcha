@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/native-merkle",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "Rust merkle tree + blake2b hashing helpers for the Prosopo captcha provider (napi-rs).",
 	"license": "Apache-2.0",
 	"private": true,
