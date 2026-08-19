@@ -11,8 +11,9 @@ crate-type = ["cdylib"]
 [dependencies]
 napi = { version = "2.16", default-features = false, features = ["napi9"] }
 napi-derive = "2.16"
-sha2 = "0.10"
-hex = "0.4"
+# JA4 parser lives in a standalone crate maintained by Prosopo so this napi
+# module and the protect edge stack (bumblebee) share one implementation.
+prosopo-ja4 = "0.1"
 
 [build-dependencies]
 napi-build = "2.1"

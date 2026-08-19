@@ -6,8 +6,8 @@
 /**
  * Compute a JA4 TLS fingerprint from raw ClientHello bytes.
  *
- * Uses the vendored JA4 parser in `src/ja4.rs`. Parity with any external
- * reference implementation is checked by the vitest suite in
- * packages/provider/src/tests/unit/api/ja4.unit.test.ts.
+ * Delegates to the `prosopo-ja4` crate on crates.io — the same
+ * implementation the protect edge stack (bumblebee) uses, so both produce
+ * byte-identical fingerprints for the same input.
  */
-export declare function calculateJa4(data: Buffer): string;
+export declare function calculateJa4(data: Buffer): string

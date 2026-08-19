@@ -191,14 +191,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "prosopo-ja4"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a69160acbdc11ebb1819724f4c3f7e85f76a4bbaf7d71d0f3dbd0369de438e9c"
+dependencies = [
+ "hex",
+ "sha2",
+]
+
+[[package]]
 name = "prosopo-native-ja4"
 version = "0.0.1"
 dependencies = [
- "hex",
  "napi",
  "napi-build",
  "napi-derive",
- "sha2",
+ "prosopo-ja4",
 ]
 
 [[package]]
