@@ -808,9 +808,9 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	tcpToChelloUs: { type: Number, required: false },
 	chelloToHandshakeUs: { type: Number, required: false },
 	// Raw per-connection TCP-handshake signals forwarded by chaddy from
-	// its co-located ja4l-probe eBPF sidecar. Wire-observed primitives
+	// its co-located tcp-probe eBPF sidecar. Wire-observed primitives
 	// (RFC-793 / RFC-9293) — see @prosopo/types Session for full schema.
-	// Undefined on sessions that came in without the ja4l-probe pipeline.
+	// Undefined on sessions that came in without the tcp-probe pipeline.
 	synNs: { type: Number, required: false },
 	synackNs: { type: Number, required: false },
 	ackNs: { type: Number, required: false },

@@ -34,9 +34,9 @@ export interface AugmentedRequest {
 	tcpToChelloUs?: number;
 	chelloToHandshakeUs?: number;
 	// Raw per-connection TCP handshake signals forwarded by chaddy from
-	// the co-located ja4l-probe eBPF sidecar. See rawTlsSignalsMiddleware
+	// the co-located tcp-probe eBPF sidecar. See rawTlsSignalsMiddleware
 	// for the wire-format contract. All optional — a request that came
-	// in without a running ja4l-probe / chaddy pipeline has all fields
+	// in without a running tcp-probe / chaddy pipeline has all fields
 	// undefined and the session write skips these columns entirely.
 	synNs?: number;
 	synackNs?: number;
