@@ -15,6 +15,9 @@ napi-derive = "2.16"
 # off by default; the plain implementation is enough for the per-request
 # hash counts we're doing.
 blake2 = "0.10"
+# Lookup-table hex encoding — the per-byte `format!("{:02x}", …)` in the
+# inner loop of hex_hash was measurably eating into the merkle speedup.
+hex = "0.4"
 
 [build-dependencies]
 napi-build = "2.1"

@@ -30,12 +30,12 @@ type Blake2b256 = Blake2b<U32>;
 /// Equivalent to `blake2AsHex(input)` from @prosopo/util-crypto.
 pub fn hex_hash(input: &str) -> String {
     let digest = Blake2b256::digest(input.as_bytes());
+    // hex::encode uses a lookup table and is ~5-8× faster than per-byte
+    // format!("{:02x}", …), which dominated the inner loop of the merkle
+    // build. Output is lowercase, always 2 chars per byte — matches u8aToHex.
     let mut out = String::with_capacity(66);
     out.push_str("0x");
-    for byte in &digest {
-        // Lowercase, always 2 chars per byte (matches u8aToHex).
-        out.push_str(&format!("{:02x}", byte));
-    }
+    out.push_str(&hex::encode(digest));
     out
 }
 
