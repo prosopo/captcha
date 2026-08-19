@@ -35,6 +35,7 @@ import type { IProviderDatabase } from "@prosopo/types-database";
 import type { AccessPolicy } from "@prosopo/user-access-policy";
 import { v4 as uuidv4 } from "uuid";
 import { buildDnsEventUrl } from "../../api/dnsEventUrl.js";
+import type { RawTlsSignals } from "../../api/rawTlsSignalsMiddleware.js";
 import { checkLangRules } from "../../rules/lang.js";
 import {
 	type UsageCounters,
@@ -159,6 +160,19 @@ export class FrictionlessManager extends CaptchaManager {
 			i: params.i,
 			tcpToChelloUs: params.tcpToChelloUs,
 			chelloToHandshakeUs: params.chelloToHandshakeUs,
+			// Raw per-connection TCP-handshake signals forwarded by chaddy
+			// from its co-located ja4l-probe eBPF sidecar. Passed through as
+			// a bag on createSession() below rather than expanded into 9
+			// positional args.
+			synNs: params.synNs,
+			synackNs: params.synackNs,
+			ackNs: params.ackNs,
+			observedTtl: params.observedTtl,
+			tcpMss: params.tcpMss,
+			tcpWscale: params.tcpWscale,
+			tcpOptsFlags: params.tcpOptsFlags,
+			tcpOptsOrder: params.tcpOptsOrder,
+			tcpWindow: params.tcpWindow,
 		};
 	}
 
@@ -231,6 +245,10 @@ export class FrictionlessManager extends CaptchaManager {
 		bn?: Session["bn"],
 		fs?: Session["fs"],
 		s?: Session["s"],
+		// Bag of raw per-connection TCP-handshake signals (chaddy → ja4l-probe
+		// → provider). Kept as a bag rather than expanded into 9 positional
+		// params to avoid pushing createSession's arity past 40.
+		rawTlsSignals?: Partial<RawTlsSignals>,
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
@@ -289,6 +307,7 @@ export class FrictionlessManager extends CaptchaManager {
 			fs,
 			tcpToChelloUs,
 			chelloToHandshakeUs,
+			...(rawTlsSignals ?? {}),
 			// Only present when an access policy actually matched this
 			// request, so ordinary sessions stay slim.
 			...(matchedRule && { matchedRule }),
@@ -453,6 +472,17 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.bn,
 			effectiveParams.fs,
 			effectiveParams.s,
+			{
+				synNs: effectiveParams.synNs,
+				synackNs: effectiveParams.synackNs,
+				ackNs: effectiveParams.ackNs,
+				observedTtl: effectiveParams.observedTtl,
+				tcpMss: effectiveParams.tcpMss,
+				tcpWscale: effectiveParams.tcpWscale,
+				tcpOptsFlags: effectiveParams.tcpOptsFlags,
+				tcpOptsOrder: effectiveParams.tcpOptsOrder,
+				tcpWindow: effectiveParams.tcpWindow,
+			},
 		);
 
 		// Fire-and-forget served-counter writes. Skipped when there's no
@@ -537,6 +567,17 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.bn,
 			effectiveParams.fs,
 			effectiveParams.s,
+			{
+				synNs: effectiveParams.synNs,
+				synackNs: effectiveParams.synackNs,
+				ackNs: effectiveParams.ackNs,
+				observedTtl: effectiveParams.observedTtl,
+				tcpMss: effectiveParams.tcpMss,
+				tcpWscale: effectiveParams.tcpWscale,
+				tcpOptsFlags: effectiveParams.tcpOptsFlags,
+				tcpOptsOrder: effectiveParams.tcpOptsOrder,
+				tcpWindow: effectiveParams.tcpWindow,
+			},
 		);
 	}
 

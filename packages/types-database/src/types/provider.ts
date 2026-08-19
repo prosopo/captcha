@@ -807,6 +807,19 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	// See @prosopo/types Session.tcpToChelloUs for full semantics.
 	tcpToChelloUs: { type: Number, required: false },
 	chelloToHandshakeUs: { type: Number, required: false },
+	// Raw per-connection TCP-handshake signals forwarded by chaddy from
+	// its co-located ja4l-probe eBPF sidecar. Wire-observed primitives
+	// (RFC-793 / RFC-9293) — see @prosopo/types Session for full schema.
+	// Undefined on sessions that came in without the ja4l-probe pipeline.
+	synNs: { type: Number, required: false },
+	synackNs: { type: Number, required: false },
+	ackNs: { type: Number, required: false },
+	observedTtl: { type: Number, required: false },
+	tcpMss: { type: Number, required: false },
+	tcpWscale: { type: Number, required: false },
+	tcpOptsFlags: { type: Number, required: false },
+	tcpOptsOrder: { type: Number, required: false },
+	tcpWindow: { type: Number, required: false },
 	// DNS observation merge target. Populated by
 	// POST /v1/prosopo/provider/admin/dns/event from the dns-event
 	// sidecar (see types/provider/database.ts → Session.dnsEvent).

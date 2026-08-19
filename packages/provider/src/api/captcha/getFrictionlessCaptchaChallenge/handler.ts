@@ -43,6 +43,7 @@ import {
 	recordDetectorTriggered,
 	recordFrictionlessDecision,
 } from "../../metrics.js";
+import { rawTlsSignalsForSession } from "../../rawTlsSignalsMiddleware.js";
 import { isReservedTestSiteKey } from "../../testSiteKey.js";
 import { buildFrictionlessMaintenanceResponse } from "../maintenanceModeResponses.js";
 import {
@@ -335,6 +336,7 @@ export default (
 									...(req.chelloToHandshakeUs !== undefined && {
 										chelloToHandshakeUs: req.chelloToHandshakeUs,
 									}),
+									...rawTlsSignalsForSession(req),
 									// currentUrl / iframeUrl use the cached session's
 									// values to match the rest of the dedup routing input
 									// (score, webView, captchaType are all pulled from
@@ -508,6 +510,7 @@ export default (
 				...(req.chelloToHandshakeUs !== undefined && {
 					chelloToHandshakeUs: req.chelloToHandshakeUs,
 				}),
+				...rawTlsSignalsForSession(req),
 			};
 
 			const shortCircuitResponse = await runConfiguredCaptchaTypeShortCircuit(
@@ -698,6 +701,7 @@ export default (
 				...(req.chelloToHandshakeUs !== undefined && {
 					chelloToHandshakeUs: req.chelloToHandshakeUs,
 				}),
+				...rawTlsSignalsForSession(req),
 			});
 
 			const ipInfoMobile =
@@ -724,6 +728,7 @@ export default (
 					...(req.chelloToHandshakeUs !== undefined && {
 						chelloToHandshakeUs: req.chelloToHandshakeUs,
 					}),
+					...rawTlsSignalsForSession(req),
 					...(currentUrl && { currentUrl }),
 					...(iframeUrl && { iframeUrl }),
 				},
