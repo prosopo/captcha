@@ -165,6 +165,33 @@ describe("getBotScore", () => {
 		expect(result.i).toBeUndefined();
 	});
 
+	it("passes s through", async () => {
+		const mockResult: DetectorResult = {
+			score: 0.5,
+			timestamp: 1234567890,
+			s: "A1B2C3D4",
+		} as unknown as DetectorResult;
+
+		vi.mocked(decodePayloadModule.default).mockResolvedValue(mockResult);
+
+		const result = await getBotScore("payload", "headHash");
+
+		expect(result.s).toBe("A1B2C3D4");
+	});
+
+	it("leaves s undefined when the client predates the field", async () => {
+		const mockResult: DetectorResult = {
+			score: 0.5,
+			timestamp: 1234567890,
+		} as unknown as DetectorResult;
+
+		vi.mocked(decodePayloadModule.default).mockResolvedValue(mockResult);
+
+		const result = await getBotScore("payload", "headHash");
+
+		expect(result.s).toBeUndefined();
+	});
+
 	it("handles isWebView as undefined", async () => {
 		const mockResult: DetectorResult = {
 			score: 0.5,
