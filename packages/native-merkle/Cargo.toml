@@ -1,0 +1,28 @@
+[package]
+name = "prosopo-native-merkle"
+version = "0.0.1"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+napi = { version = "2.16", default-features = false, features = ["napi9"] }
+napi-derive = "2.16"
+# Same blake2b-256 used by @prosopo/util-crypto's hexHashArray. `simd` is
+# off by default; the plain implementation is enough for the per-request
+# hash counts we're doing.
+blake2 = "0.10"
+# Lookup-table hex encoding — the per-byte `format!("{:02x}", …)` in the
+# inner loop of hex_hash was measurably eating into the merkle speedup.
+hex = "0.4"
+
+[build-dependencies]
+napi-build = "2.1"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = "symbols"

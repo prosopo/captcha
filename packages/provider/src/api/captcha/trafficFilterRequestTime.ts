@@ -17,6 +17,7 @@ import {
 	CaptchaType,
 	type GetFrictionlessCaptchaResponse,
 	type IPInfoResponse,
+	type IPuzzleSettings,
 	type ITrafficFilter,
 } from "@prosopo/types";
 import type { ClientRecord } from "@prosopo/types-database";
@@ -38,6 +39,11 @@ export type RequestTimeTrafficVerdict =
 			powDifficulty?: number;
 			solvedImagesCount?: number;
 			puzzleTolerance?: number;
+			// Merged puzzle render overrides across matched challenge
+			// categories; the getPuzzleCaptchaChallenge resolver treats this
+			// as the top of the override chain (asset default → client
+			// setting → this).
+			puzzleSettings?: IPuzzleSettings;
 			sourceCategories: ResolvedChallengePolicy["sourceCategories"];
 	  };
 
@@ -88,6 +94,7 @@ export const applyTrafficFilterAtRequestTime = (
 		powDifficulty: resolved.powDifficulty,
 		solvedImagesCount: resolved.solvedImagesCount,
 		puzzleTolerance: resolved.puzzleTolerance,
+		puzzleSettings: resolved.puzzleSettings,
 		sourceCategories: resolved.sourceCategories,
 	};
 };

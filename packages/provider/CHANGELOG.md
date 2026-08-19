@@ -1,5 +1,117 @@
 # @prosopo/provider
 
+## 5.3.2
+### Patch Changes
+
+- 6db5d8b: Move image-captcha merkle tree computation and per-solution leaf hashing to a Rust napi module (@prosopo/native-merkle). ~4× faster on realistic 9-solution commits. Extends the cli bundle plugin so multiple native-* .node files can coexist without basename collision.
+- ae475a5: Add optional `s` field on `Session`.
+- Updated dependencies [6db5d8b]
+- Updated dependencies [ae475a5]
+  - @prosopo/native-merkle@0.0.2
+  - @prosopo/datasets@3.1.66
+  - @prosopo/types@5.2.2
+  - @prosopo/types-database@5.1.5
+  - @prosopo/api@4.0.10
+  - @prosopo/api-express-router@3.1.65
+  - @prosopo/database@4.0.11
+  - @prosopo/env@3.6.34
+  - @prosopo/ipinfo@0.3.11
+  - @prosopo/keyring@2.9.73
+  - @prosopo/load-balancer@2.10.27
+  - @prosopo/types-env@2.10.30
+  - @prosopo/user-access-policy@3.12.21
+
+## 5.3.1
+### Patch Changes
+
+- 721c5ba: Move JA4 TLS fingerprint computation to a Rust napi module (@prosopo/native-ja4). Provider-side JA4 middleware is ~2.7× faster on realistic ClientHellos. The cli bundle plugin now copies the .node binary next to the bundle so it works in the container.
+- Updated dependencies [721c5ba]
+  - @prosopo/native-ja4@0.0.2
+
+## 5.3.0
+### Minor Changes
+
+- 9e53a48: Rework the traffic-filter evaluation so that on a single IP the
+  highest-precedence set flag decides the outcome — only that category's
+  policy is consulted, and lower-precedence flags on the same IP are
+  ignored. Precedence (highest first): tor > vpn > proxy > datacenter >
+  abuser > crawler > satellite > mobile.
+  
+  Example: an IP flagged as VPN and proxy is treated as VPN. If the
+  operator has left the VPN policy unconfigured (allowing VPNs), the IP
+  passes even when the proxy policy is set to block — the "specific"
+  category owns the IP and its policy is the only one that fires.
+  
+  Behaviour change to flag: because datacenter now outranks crawler, a
+  crawler+datacenter IP is acted on by the datacenter policy regardless
+  of the crawler policy state. Operators who want to allow named crawlers
+  through can still use `datacenterNameAllowlist`.
+  
+  `computeDnsAsymmetry` (DNS resolver / peer IP scoring) keeps its
+  existing operator-policy-aware shielding rather than mirroring
+  precedence, because DNS resolvers are legitimately often on datacenter
+  ranges (Google/Cloudflare/consumer-VPN DNS) — the DC signal there only
+  counts when the operator would have acted on the underlying category
+  too.
+
+### Patch Changes
+
+- 35f640f: Render puzzle captcha imagery on the provider instead of sending the answer to the client.
+  
+  The challenge used to carry `targetX`/`targetY` and the widget drew the target box straight from them, so any HTTP client could echo the coordinates back as its solution and pass without a browser. The provider now synthesises a background procedurally, cuts the notch into the pixels, and returns the background and piece as data URIs; the target and the tolerance never leave the server.
+  
+  Backgrounds come from the new `@prosopo/puzzle-assets` package and are single-use — reusing one across two challenges would let an attacker diff the composites and recover both notch positions.
+- Updated dependencies [35f640f]
+  - @prosopo/puzzle-assets@0.1.1
+  - @prosopo/types@5.2.1
+  - @prosopo/api@4.0.9
+  - @prosopo/api-express-router@3.1.64
+  - @prosopo/database@4.0.10
+  - @prosopo/datasets@3.1.65
+  - @prosopo/env@3.6.33
+  - @prosopo/ipinfo@0.3.10
+  - @prosopo/keyring@2.9.72
+  - @prosopo/load-balancer@2.10.26
+  - @prosopo/types-database@5.1.4
+  - @prosopo/types-env@2.10.29
+  - @prosopo/user-access-policy@3.12.20
+
+## 5.2.1
+### Patch Changes
+
+- c2bfcb8: Rebuild `decodePayload.js` to actually parse payload positions 14-17 as `sw`/`md`/`bn`/`fs`.
+  
+  The commit that added these signals (#3069) shipped client emission, provider glue (`frictionlessTasks` reading `decrypted.sw` etc.), and the mongoose schema — but this obfuscated bundle (built from `@prosopo/catcher`'s `bundle:provider`) was never rebuilt, so `decrypted.sw` has always been undefined on the server and mongoose omitted the fields. Evidence on prod 2026-08-17: 2347 iPhone WKWebView sessions between the earlier rollout and this fix — every one has `g` (in the current bundle) and zero have any of `sw/md/bn/fs`.
+  
+  Sibling source-side fix in the private repo: `packages/catcher/src/integrity/node/getBotScore.ts` now extracts positions 14-17 with the same tri-state semantics as `g`/`chromeVerticalPx` (undefined = client predates the field, `""` = collector returned no value, `"0"`/`"1"` = actual value).
+
+## 5.2.0
+### Minor Changes
+
+- 234c737: Ship raw iOS WKWebView DOM signals (`sw`, `md`, `bn`, `fs`) alongside the classifier verdict `isWebView`.
+  
+  The four booleans that `classifyIosWebViewFromSignals` folds into `isWebView` are now decrypted off the client payload (positions 14-17) and surfaced individually on `DetectorResult` and in the "decryptPayload result" info log. Short-acronym keys match the existing `g`/`i` wire convention. Backwards-compatible: `isWebView` at position 4 is untouched; older catcher clients that don't emit positions 14-17 log the fields as `undefined`.
+  
+  Motivation: real iOS 17.7.x devices appear to expose one or more of these APIs even on stock WKWebView (unlike the iOS 18 Simulator the classifier was audited against), collapsing iOS Twickets `webView:true` from 97.6% to 0.2% post-v3.7.8. Shipping the raw signals lets server-side rules retune the aggregation from live traffic in OpenObserve without a catcher release.
+  
+  Note: `decodePayload.js` (obfuscated production build) still needs to be rebuilt to parse positions 14-17 out of the delimited payload and expose them as `result.sw`/`result.md`/`result.bn`/`result.fs`. Until that ships, the fields log as `undefined`.
+
+### Patch Changes
+
+- Updated dependencies [234c737]
+  - @prosopo/types@5.2.0
+  - @prosopo/api@4.0.8
+  - @prosopo/api-express-router@3.1.63
+  - @prosopo/database@4.0.9
+  - @prosopo/datasets@3.1.64
+  - @prosopo/env@3.6.32
+  - @prosopo/ipinfo@0.3.9
+  - @prosopo/keyring@2.9.71
+  - @prosopo/load-balancer@2.10.25
+  - @prosopo/types-database@5.1.3
+  - @prosopo/types-env@2.10.28
+  - @prosopo/user-access-policy@3.12.19
+
 ## 5.1.3
 ### Patch Changes
 

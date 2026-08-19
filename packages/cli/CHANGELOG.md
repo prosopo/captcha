@@ -1,5 +1,51 @@
 # @prosopo/cli
 
+## 3.7.16
+### Patch Changes
+
+- 6db5d8b: Move image-captcha merkle tree computation and per-solution leaf hashing to a Rust napi module (@prosopo/native-merkle). ~4× faster on realistic 9-solution commits. Extends the cli bundle plugin so multiple native-* .node files can coexist without basename collision.
+- Updated dependencies [6db5d8b]
+- Updated dependencies [ae475a5]
+  - @prosopo/provider@5.3.2
+  - @prosopo/types@5.2.2
+  - @prosopo/api@4.0.10
+  - @prosopo/env@3.6.34
+  - @prosopo/keyring@2.9.73
+
+## 3.7.15
+### Patch Changes
+
+- 721c5ba: Move JA4 TLS fingerprint computation to a Rust napi module (@prosopo/native-ja4). Provider-side JA4 middleware is ~2.7× faster on realistic ClientHellos. The cli bundle plugin now copies the .node binary next to the bundle so it works in the container.
+- Updated dependencies [721c5ba]
+  - @prosopo/provider@5.3.1
+
+## 3.7.14
+### Patch Changes
+
+- Updated dependencies [35f640f]
+- Updated dependencies [9e53a48]
+  - @prosopo/provider@5.3.0
+  - @prosopo/types@5.2.1
+  - @prosopo/api@4.0.9
+  - @prosopo/env@3.6.33
+  - @prosopo/keyring@2.9.72
+
+## 3.7.13
+### Patch Changes
+
+- Updated dependencies [c2bfcb8]
+  - @prosopo/provider@5.2.1
+
+## 3.7.12
+### Patch Changes
+
+- Updated dependencies [234c737]
+  - @prosopo/types@5.2.0
+  - @prosopo/provider@5.2.0
+  - @prosopo/api@4.0.8
+  - @prosopo/env@3.6.32
+  - @prosopo/keyring@2.9.71
+
 ## 3.7.11
 ### Patch Changes
 

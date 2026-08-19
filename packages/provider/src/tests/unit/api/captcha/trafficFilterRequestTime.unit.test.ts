@@ -120,10 +120,11 @@ describe("applyTrafficFilterAtRequestTime", () => {
 	});
 
 	it("challenge match still fires at request time even when a sibling category has action:block (block is deferred to verify)", () => {
-		// Pre-2026-08-14 request-time enforcement, `block` short-circuited
-		// with 401 here. With enforcement deferred to submit-time, the
-		// widget still receives the `challenge` verdict and mounts the
-		// challenge captcha; the `block` on proxy will re-fire at verify.
+		// Per-IP precedence puts VPN above proxy, so a VPN+proxy IP is owned
+		// by VPN and the challenge policy on VPN is what fires. Even setting
+		// that aside, `block` enforcement was moved to submit-time in
+		// 2026-08-14: the widget receives the challenge verdict and mounts
+		// the challenge captcha; the `block` on proxy re-fires at verify.
 		expect(
 			applyTrafficFilterAtRequestTime(ipInfo({ isVPN: true, isProxy: true }), {
 				vpn: {
@@ -139,7 +140,9 @@ describe("applyTrafficFilterAtRequestTime", () => {
 		});
 	});
 
-	it("collapses multiple challenge matches to the strictest captchaType (image > puzzle > pow)", () => {
+	it("uses the top-precedence category's captchaType when several flags are set", () => {
+		// Precedence order (highest first): tor > vpn > proxy. An IP flagged
+		// as all three is owned by tor; only the tor policy is consulted.
 		const verdict = applyTrafficFilterAtRequestTime(
 			ipInfo({ isVPN: true, isProxy: true, isTor: true }),
 			{
@@ -164,6 +167,7 @@ describe("applyTrafficFilterAtRequestTime", () => {
 			kind: "challenge",
 			captchaType: CaptchaType.image,
 			solvedImagesCount: 6,
+			sourceCategories: ["tor"],
 		});
 	});
 });

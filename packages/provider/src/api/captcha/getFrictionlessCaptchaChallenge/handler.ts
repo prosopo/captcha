@@ -118,8 +118,16 @@ export default (
 			const sessionToken = token || `notoken-${uuidv4()}`;
 
 			const normalizedIp = normalizeRequestIp(req.ip, req.logger);
-			const sessionMode =
-				mode === ModeEnum.invisible ? ModeEnum.invisible : undefined;
+			// Always persist a concrete mode on the session — the client only
+			// sends `mode` when it wants to opt into invisible; visible is the
+			// implicit default. Previously the visible path collapsed to
+			// `undefined` and never reached the record, so the DB had zero
+			// sessions with `mode` set, making it impossible to distinguish
+			// visible from invisible traffic in analytics or to correlate
+			// widget-bypass symptoms (empty checkbox coords, missing
+			// behaviouralData) with invisible-mode deployments.
+			const sessionMode: ModeEnum =
+				mode === ModeEnum.invisible ? ModeEnum.invisible : ModeEnum.visible;
 
 			req.logger.info(() => ({
 				msg: "Frictionless handler entry",
@@ -131,7 +139,7 @@ export default (
 					ja4: req.ja4,
 					path: req.path,
 					method: req.method,
-					...(sessionMode && { mode: sessionMode }),
+					mode: sessionMode,
 				},
 			}));
 
@@ -570,6 +578,11 @@ export default (
 				entropyWallClockOffsetMs,
 				entropyMathRandomFirst,
 				g,
+				sw,
+				md,
+				bn,
+				fs,
+				s,
 				bundleId,
 			} = decryptedPayload;
 
@@ -674,6 +687,11 @@ export default (
 					entropyMathRandomFirst,
 				}),
 				...(g !== undefined && { g }),
+				...(sw !== undefined && { sw }),
+				...(md !== undefined && { md }),
+				...(bn !== undefined && { bn }),
+				...(fs !== undefined && { fs }),
+				...(s !== undefined && { s }),
 				...(req.tcpToChelloUs !== undefined && {
 					tcpToChelloUs: req.tcpToChelloUs,
 				}),

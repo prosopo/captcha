@@ -19,8 +19,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 interface PuzzleCanvasProps {
 	originX: number;
 	originY: number;
-	targetX: number;
-	targetY: number;
+	/** Background with the notch already cut into it, as a data URI. */
+	background: string;
+	/** The draggable piece on transparency, as a data URI. */
+	piece: string;
+	/** Piece bounding-box size in px, as rendered by the provider. */
+	pieceSize: number;
 	onComplete: (
 		finalX: number,
 		finalY: number,
@@ -33,8 +37,6 @@ interface PuzzleCanvasProps {
 
 const CONTAINER_WIDTH = 300;
 const CONTAINER_HEIGHT = 200;
-const TARGET_SIZE = 30;
-const PIECE_SIZE = 24;
 
 const SHAKE_KEYFRAMES = `
 @keyframes prosopo-puzzle-shake {
@@ -47,8 +49,9 @@ const SHAKE_KEYFRAMES = `
 export const PuzzleCanvas = ({
 	originX,
 	originY,
-	targetX,
-	targetY,
+	background,
+	piece,
+	pieceSize,
 	onComplete,
 	showRetry,
 	submitting,
@@ -57,6 +60,11 @@ export const PuzzleCanvas = ({
 	const [posX, setPosX] = useState<number>(originX);
 	const [posY, setPosY] = useState<number>(originY);
 	const isDragging = useRef<boolean>(false);
+	// Mirror of isDragging in state so the render layer can key drag-time
+	// effects (parallax, filter) off it — a ref does not trigger re-renders
+	// when it flips, so styles wouldn't switch to the drag branch at grab or
+	// snap back on release.
+	const [dragging, setDragging] = useState(false);
 	const puzzleEvents = useRef<PuzzleEvent[]>([]);
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const offsetRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -132,6 +140,7 @@ export const PuzzleCanvas = ({
 		}
 
 		isDragging.current = false;
+		setDragging(false);
 
 		const currentEvents = [...puzzleEvents.current];
 		const lastEvent = currentEvents[currentEvents.length - 1];
@@ -184,6 +193,7 @@ export const PuzzleCanvas = ({
 		(event: React.MouseEvent<HTMLDivElement>) => {
 			if (submitting) return;
 			isDragging.current = true;
+			setDragging(true);
 			puzzleEvents.current = [];
 			const containerOffset = getContainerOffset();
 			offsetRef.current = {
@@ -200,6 +210,7 @@ export const PuzzleCanvas = ({
 			const touch = event.touches[0];
 			if (touch) {
 				isDragging.current = true;
+				setDragging(true);
 				puzzleEvents.current = [];
 				const containerOffset = getContainerOffset();
 				offsetRef.current = {
@@ -223,10 +234,30 @@ export const PuzzleCanvas = ({
 		? theme.palette.error.main
 		: theme.palette.onSurface;
 
-	// Material 3 purple tonal puzzle surface + affordances (mode-specific values
-	// come from the theme's puzzle tokens).
+	// Material 3 purple tonal fallback shown before the server-rendered
+	// background image loads.
 	const puzzleAreaBg = `linear-gradient(135deg, ${theme.palette.surface} 0%, ${theme.palette.primaryContainer.main} 50%, ${theme.palette.surface} 100%)`;
-	const puzzle = theme.palette.puzzle;
+
+	// Client-side reaction to drag motion. Purely visual — computed from the
+	// piece's displacement from its starting position, never from anything
+	// that could hint at the target (the widget does not know the target).
+	// The background translates a few pixels *opposite* the piece for a
+	// parallax feel, and shifts hue/saturation with drag distance for a
+	// subtle live-canvas effect. On release everything eases back via CSS
+	// transition on the img element.
+	const deltaX = posX - originX;
+	const deltaY = posY - originY;
+	const dragDistance = Math.hypot(deltaX, deltaY);
+	const PARALLAX_FACTOR = 0.08;
+	const bgTranslateX = dragging ? -deltaX * PARALLAX_FACTOR : 0;
+	const bgTranslateY = dragging ? -deltaY * PARALLAX_FACTOR : 0;
+	const bgScale = dragging ? 1.03 : 1;
+	// Cap the filter influence so a long drag doesn't kaleidoscope the frame.
+	const hueShift = dragging ? Math.max(-18, Math.min(18, deltaX * 0.12)) : 0;
+	const satBoost = dragging ? 1 + Math.min(0.25, dragDistance * 0.0035) : 1;
+	const brightness = dragging ? 1 - Math.min(0.06, dragDistance * 0.0008) : 1;
+	const bgFilter = `hue-rotate(${hueShift.toFixed(2)}deg) saturate(${satBoost.toFixed(3)}) brightness(${brightness.toFixed(3)})`;
+	const bgTransform = `translate(${bgTranslateX.toFixed(2)}px, ${bgTranslateY.toFixed(2)}px) scale(${bgScale.toFixed(3)})`;
 
 	return (
 		<div
@@ -293,20 +324,68 @@ export const PuzzleCanvas = ({
 						transition: "opacity 0.2s ease",
 					}}
 				>
-					{/* Target zone */}
+					{/* Background. The notch is cut into these pixels by the
+					    provider; the widget is never told where it is. The
+					    transform/filter below react only to piece displacement,
+					    so no target information leaks through them.
+
+					    The background is tiled as a 3×3 mirrored kaleidoscope so
+					    the parallax translate never reveals a blank margin — the
+					    surrounding 8 tiles are the same image mirrored on each
+					    axis, giving a seamless continuation in every direction. */}
 					<div
 						style={{
 							position: "absolute",
-							left: `${targetX - TARGET_SIZE / 2}px`,
-							top: `${targetY - TARGET_SIZE / 2}px`,
-							width: `${TARGET_SIZE}px`,
-							height: `${TARGET_SIZE}px`,
-							borderRadius: "50%",
-							border: `2px dashed ${puzzle.targetBorder}`,
-							backgroundColor: puzzle.targetFill,
-							boxSizing: "border-box",
+							// Position the wrapper so the centre tile lands at (0, 0),
+							// i.e. exactly where the untranslated background would sit.
+							left: `-${CONTAINER_WIDTH}px`,
+							top: `-${CONTAINER_HEIGHT}px`,
+							width: `${CONTAINER_WIDTH * 3}px`,
+							height: `${CONTAINER_HEIGHT * 3}px`,
+							pointerEvents: "none",
+							userSelect: "none",
+							transform: bgTransform,
+							transformOrigin: "center center",
+							filter: bgFilter,
+							transition: dragging
+								? "none"
+								: "transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), filter 0.35s ease",
+							willChange: "transform, filter",
 						}}
-					/>
+					>
+						{[
+							// [col, row, scaleX, scaleY]
+							[0, 0, -1, -1],
+							[1, 0, 1, -1],
+							[2, 0, -1, -1],
+							[0, 1, -1, 1],
+							[1, 1, 1, 1],
+							[2, 1, -1, 1],
+							[0, 2, -1, -1],
+							[1, 2, 1, -1],
+							[2, 2, -1, -1],
+						].map(([col, row, sx, sy]) => {
+							const key = `${col}-${row}`;
+							return (
+								<img
+									key={key}
+									src={background}
+									alt=""
+									draggable={false}
+									style={{
+										position: "absolute",
+										left: `${(col ?? 0) * CONTAINER_WIDTH}px`,
+										top: `${(row ?? 0) * CONTAINER_HEIGHT}px`,
+										width: `${CONTAINER_WIDTH}px`,
+										height: `${CONTAINER_HEIGHT}px`,
+										transform: `scale(${sx}, ${sy})`,
+										pointerEvents: "none",
+										userSelect: "none",
+									}}
+								/>
+							);
+						})}
+					</div>
 					{/* Puzzle piece */}
 					<div
 						// Test-only selector: gated on NODE_ENV !== "production"
@@ -325,12 +404,12 @@ export const PuzzleCanvas = ({
 						onTouchStart={handlePieceTouchStart}
 						style={{
 							position: "absolute",
-							left: `${posX - PIECE_SIZE / 2}px`,
-							top: `${posY - PIECE_SIZE / 2}px`,
-							width: `${PIECE_SIZE}px`,
-							height: `${PIECE_SIZE}px`,
-							borderRadius: "50%",
-							background: puzzle.pieceGradient,
+							left: `${posX - pieceSize / 2}px`,
+							top: `${posY - pieceSize / 2}px`,
+							width: `${pieceSize}px`,
+							height: `${pieceSize}px`,
+							backgroundImage: `url(${piece})`,
+							backgroundSize: "100% 100%",
 							// Without this, a touch on a zoomed-in mobile viewport is
 							// claimed by the browser as a pan gesture before our
 							// touchmove handler ever runs, so the page scrolls instead
@@ -341,15 +420,12 @@ export const PuzzleCanvas = ({
 								: isDragging.current
 									? "grabbing"
 									: "grab",
-							// Shadowless drag feedback: an outline ring in place of a
-							// lifted drop shadow.
-							outline: isDragging.current
-								? `3px solid ${puzzle.targetBorder}`
-								: "none",
-							outlineOffset: "2px",
+							filter: isDragging.current
+								? "drop-shadow(0 4px 10px rgba(0, 0, 0, 0.45))"
+								: "drop-shadow(0 2px 5px rgba(0, 0, 0, 0.35))",
 							transition: isDragging.current
 								? "none"
-								: "outline 0.2s ease, left 0.3s ease, top 0.3s ease",
+								: "filter 0.2s ease, left 0.3s ease, top 0.3s ease",
 						}}
 					/>
 				</div>

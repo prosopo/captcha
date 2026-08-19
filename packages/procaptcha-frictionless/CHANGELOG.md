@@ -1,5 +1,38 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.13.12
+### Patch Changes
+
+- Updated dependencies [ae475a5]
+  - @prosopo/types@5.2.2
+  - @prosopo/api@4.0.10
+  - @prosopo/procaptcha-common@2.11.30
+  - @prosopo/procaptcha-pow@2.10.37
+  - @prosopo/procaptcha-puzzle@2.10.53
+  - @prosopo/procaptcha-react@2.9.110
+
+## 2.13.11
+### Patch Changes
+
+- Updated dependencies [35f640f]
+  - @prosopo/procaptcha-puzzle@2.10.52
+  - @prosopo/types@5.2.1
+  - @prosopo/api@4.0.9
+  - @prosopo/procaptcha-common@2.11.29
+  - @prosopo/procaptcha-pow@2.10.36
+  - @prosopo/procaptcha-react@2.9.109
+
+## 2.13.10
+### Patch Changes
+
+- Updated dependencies [234c737]
+  - @prosopo/types@5.2.0
+  - @prosopo/api@4.0.8
+  - @prosopo/procaptcha-common@2.11.28
+  - @prosopo/procaptcha-pow@2.10.35
+  - @prosopo/procaptcha-puzzle@2.10.51
+  - @prosopo/procaptcha-react@2.9.108
+
 ## 2.13.9
 ### Patch Changes
 

@@ -1,5 +1,32 @@
 # @prosopo/server
 
+## 2.10.54
+### Patch Changes
+
+- Updated dependencies [ae475a5]
+  - @prosopo/types@5.2.2
+  - @prosopo/api@4.0.10
+  - @prosopo/keyring@2.9.73
+  - @prosopo/load-balancer@2.10.27
+
+## 2.10.53
+### Patch Changes
+
+- Updated dependencies [35f640f]
+  - @prosopo/types@5.2.1
+  - @prosopo/api@4.0.9
+  - @prosopo/keyring@2.9.72
+  - @prosopo/load-balancer@2.10.26
+
+## 2.10.52
+### Patch Changes
+
+- Updated dependencies [234c737]
+  - @prosopo/types@5.2.0
+  - @prosopo/api@4.0.8
+  - @prosopo/keyring@2.9.71
+  - @prosopo/load-balancer@2.10.25
+
 ## 2.10.51
 ### Patch Changes
 

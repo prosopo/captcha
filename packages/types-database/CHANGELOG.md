@@ -1,5 +1,27 @@
 # @prosopo/types-database
 
+## 5.1.5
+### Patch Changes
+
+- ae475a5: Add optional `s` field on `Session`.
+- Updated dependencies [ae475a5]
+  - @prosopo/types@5.2.2
+  - @prosopo/user-access-policy@3.12.21
+
+## 5.1.4
+### Patch Changes
+
+- Updated dependencies [35f640f]
+  - @prosopo/types@5.2.1
+  - @prosopo/user-access-policy@3.12.20
+
+## 5.1.3
+### Patch Changes
+
+- Updated dependencies [234c737]
+  - @prosopo/types@5.2.0
+  - @prosopo/user-access-policy@3.12.19
+
 ## 5.1.2
 ### Patch Changes
 
