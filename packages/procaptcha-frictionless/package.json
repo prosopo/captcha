@@ -28,7 +28,9 @@
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --project tsconfig.types.json"
 	},
-	"browserslist": ["> 0.5%, last 2 versions, not dead"],
+	"browserslist": [
+		"> 0.5%, last 2 versions, not dead"
+	],
 	"dependencies": {
 		"@prosopo/api": "4.0.9",
 		"@prosopo/common": "3.1.50",
@@ -43,7 +45,7 @@
 		"react": "18.3.1"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.9",
+		"@prosopo/config": "3.3.10",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "4.1.10",
 		"concurrently": "9.0.1",

@@ -58,7 +58,7 @@
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.9",
+		"@prosopo/config": "3.3.10",
 		"@prosopo/util-crypto": "13.5.30",
 		"@types/node": "22.10.2",
 		"fast-glob": "3.3.2",

@@ -49,7 +49,7 @@
 	},
 	"devDependencies": {
 		"@polkadot/util": "13.5.7",
-		"@prosopo/config": "3.3.9",
+		"@prosopo/config": "3.3.10",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "4.1.10",
 		"concurrently": "9.0.1",
