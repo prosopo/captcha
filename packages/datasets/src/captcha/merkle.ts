@@ -58,6 +58,30 @@ export class CaptchaMerkleTree {
 		return this.root;
 	}
 
+	/**
+	 * Populate leaves + layers + root from a precomputed layer stack (layer 0
+	 * = raw leaf hashes, last layer = single root). The caller is trusted to
+	 * have produced the layers with the same hashing scheme this class uses;
+	 * we do no re-hashing here. Used to graft results from the native
+	 * @prosopo/native-merkle module into a JS tree so `.proof()` still works.
+	 */
+	hydrateFromLayers(layers: MerkleLayer[]): void {
+		if (layers.length === 0) {
+			throw new ProsopoError("DATASET.MERKLE_ERROR", {
+				context: {
+					error: "cannot hydrate from empty layers",
+					failedFuncName: this.hydrateFromLayers.name,
+				},
+			});
+		}
+		const leafLayer = at(layers, 0);
+		this.leaves = leafLayer.map((h) => new MerkleNode(h));
+		this.layers = layers.map((l) => [...l]);
+		const rootLayer = at(layers, layers.length - 1);
+		const rootHash = at(rootLayer, 0);
+		this.root = new MerkleNode(rootHash);
+	}
+
 	build(leaves: string[]) {
 		// allow rebuild
 		if (this.layers.length) {

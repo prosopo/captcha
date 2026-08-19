@@ -37,10 +37,20 @@ process.env.TS_NODE_PROJECT = path.resolve("./tsconfig.json");
 // for the linux-x64 target (the only platform the provider runs on). Resolve
 // their absolute paths so nodejsPolarsNativeFilePlugin can copy them into
 // dist/bundle at bundle time.
+const nativeRequire = createRequire(import.meta.url);
+// napi-rs writes every package's binary as `index.<triple>.node`, so we
+// have to rename on copy or the second overwrites the first in dist/bundle.
 const nativeBinaryPaths = [
-	createRequire(import.meta.url).resolve(
-		"@prosopo/native-ja4/index.linux-x64-gnu.node",
-	),
+	{
+		src: nativeRequire.resolve("@prosopo/native-ja4/index.linux-x64-gnu.node"),
+		dest: "prosopo-native-ja4.node",
+	},
+	{
+		src: nativeRequire.resolve(
+			"@prosopo/native-merkle/index.linux-x64-gnu.node",
+		),
+		dest: "prosopo-native-merkle.node",
+	},
 ];
 const bundleOutDir = path.resolve(dir, "dist/bundle");
 
