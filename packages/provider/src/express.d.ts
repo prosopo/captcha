@@ -33,6 +33,20 @@ export interface AugmentedRequest {
 	// the plugin failed to capture timing for that connection.
 	tcpToChelloUs?: number;
 	chelloToHandshakeUs?: number;
+	// Raw per-connection TCP handshake signals forwarded by chaddy from
+	// the co-located ja4l-probe eBPF sidecar. See rawTlsSignalsMiddleware
+	// for the wire-format contract. All optional — a request that came
+	// in without a running ja4l-probe / chaddy pipeline has all fields
+	// undefined and the session write skips these columns entirely.
+	synNs?: number;
+	synackNs?: number;
+	ackNs?: number;
+	observedTtl?: number;
+	tcpMss?: number;
+	tcpWscale?: number;
+	tcpOptsFlags?: number;
+	tcpOptsOrder?: number;
+	tcpWindow?: number;
 }
 
 declare global {
@@ -50,6 +64,15 @@ declare global {
 			ipInfo?: IPInfoResponse;
 			tcpToChelloUs?: number;
 			chelloToHandshakeUs?: number;
+			synNs?: number;
+			synackNs?: number;
+			ackNs?: number;
+			observedTtl?: number;
+			tcpMss?: number;
+			tcpWscale?: number;
+			tcpOptsFlags?: number;
+			tcpOptsOrder?: number;
+			tcpWindow?: number;
 		}
 	}
 }
