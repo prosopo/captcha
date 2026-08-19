@@ -160,7 +160,7 @@ export class FrictionlessManager extends CaptchaManager {
 			tcpToChelloUs: params.tcpToChelloUs,
 			chelloToHandshakeUs: params.chelloToHandshakeUs,
 			// Raw per-connection TCP-handshake signals forwarded by chaddy
-			// from its co-located ja4l-probe eBPF sidecar. Passed through as
+			// from its co-located tcp-probe eBPF sidecar. Passed through as
 			// a bag on createSession() below rather than expanded into 9
 			// positional args.
 			synNs: params.synNs,
@@ -243,7 +243,7 @@ export class FrictionlessManager extends CaptchaManager {
 		md?: Session["md"],
 		bn?: Session["bn"],
 		fs?: Session["fs"],
-		// Bag of raw per-connection TCP-handshake signals (chaddy → ja4l-probe
+		// Bag of raw per-connection TCP-handshake signals (chaddy → tcp-probe
 		// → provider). Kept as a bag rather than expanded into 9 positional
 		// params to avoid pushing createSession's arity past 40.
 		rawTlsSignals?: Partial<RawTlsSignals>,

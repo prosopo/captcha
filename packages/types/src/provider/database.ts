@@ -518,12 +518,12 @@ export const SessionSchema = object({
 	tcpToChelloUs: number().optional(),
 	chelloToHandshakeUs: number().optional(),
 	// Raw per-connection TCP-handshake signals forwarded by chaddy from
-	// its co-located ja4l-probe eBPF sidecar. Wire-observed primitives
+	// its co-located tcp-probe eBPF sidecar. Wire-observed primitives
 	// (RFC-793 / RFC-9293) — kernel nanosecond timestamps of SYN /
 	// SYN-ACK / ACK, the SYN's TTL byte, and its TCP options. Deliberately
 	// stored raw with no derived latency / hop-count / stack-hash fields
 	// so consumers are free to compute any equivalent metric at query
-	// time. Undefined on sessions that came in without the ja4l-probe
+	// time. Undefined on sessions that came in without the tcp-probe
 	// pipeline (pre-rollout traffic, dev, or requests through a
 	// non-chaddy front).
 	synNs: number().optional(),
@@ -643,7 +643,7 @@ export type Session = {
 	tcpToChelloUs?: number;
 	chelloToHandshakeUs?: number;
 	// Raw per-connection TCP-handshake signals — see SessionSchema block
-	// above. Wire primitives from the ja4l-probe eBPF sidecar; consumers
+	// above. Wire primitives from the tcp-probe eBPF sidecar; consumers
 	// derive whatever timing / hop / stack fingerprints they want at
 	// query time from these fields.
 	synNs?: number;

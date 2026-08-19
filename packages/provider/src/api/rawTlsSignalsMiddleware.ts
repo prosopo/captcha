@@ -19,7 +19,7 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 
 // Raw TCP-handshake signals forwarded by the chaddy Caddy plugin. The plugin
-// looks each field up from the ja4l-probe eBPF sidecar's Unix socket keyed
+// looks each field up from the tcp-probe eBPF sidecar's Unix socket keyed
 // by (client_ip, client_port) and injects them as separate headers.
 //
 // All values are wire-observed facts about the client's SYN (RFC-793 /
@@ -164,7 +164,7 @@ export const getRawTlsSignals = (
 // their session record (or into a routing `raw` bag) alongside the existing
 // tcpToChelloUs / chelloToHandshakeUs conditional spreads. Undefined fields
 // are omitted so the resulting Mongo document stays slim on requests that
-// came in without a ja4l-probe pipeline.
+// came in without a tcp-probe pipeline.
 export const rawTlsSignalsForSession = (
 	req: Pick<Request, keyof RawTlsSignals>,
 ): Partial<RawTlsSignals> => {
