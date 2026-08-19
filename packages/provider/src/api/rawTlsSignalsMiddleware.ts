@@ -97,11 +97,16 @@ const parseIntHeader = (
 };
 
 // Kernel monotonic ns bumps into Number.MAX_SAFE_INTEGER (2^53) territory
-// after ~104 days of uptime. In practice servers rarely exceed that in a
-// single boot window and JS Number handles it cleanly up to that ceiling.
-// Cap at MAX_SAFE_INTEGER so any bogus value is rejected instead of being
-// silently truncated.
-const MAX_NS = Number.MAX_SAFE_INTEGER;
+// after ~104 days of uptime and hosts stay up longer than that (staging
+// caught the bug immediately — first pronode had ~119-day uptime and
+// every syn_ns / synack_ns / ack_ns was rejected as malformed, wiping
+// the raw timings from every Session record). Cap at 2^63 so bogus
+// values (negatives, non-numeric text) are still rejected but real
+// long-uptime timestamps land. Values above 2^53 lose ~ns precision on
+// storage (Mongo Double follows IEEE-754 like Number), which is fine
+// since every consumer subtracts them before use — a delta of two
+// low-nanosecond noise floors carries no useful information anyway.
+const MAX_NS = 2 ** 63;
 const MAX_U8 = 255;
 const MAX_U16 = 65535;
 const MAX_U32 = 4_294_967_295;
