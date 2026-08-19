@@ -41,6 +41,14 @@ export const userAttributesRedisSchema: RediSearchSchema = {
 	countryCode: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 	asn: { type: SCHEMA_FIELD_TYPE.NUMERIC, INDEXMISSING: true },
 	os: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
+	// Header-restriction fields. Only `headerMatch` (the sentinel) is used in
+	// the matching query; name/value/operator are indexed only to satisfy the
+	// schema exhaustiveness check — they are evaluated in code, so these index
+	// entries are never queried.
+	headerMatch: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
+	headerName: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
+	headerValue: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
+	headerOperator: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 } satisfies AllKeys<UserAttributes>;
 
 export const userScopeRedisSchema: RediSearchSchema = {

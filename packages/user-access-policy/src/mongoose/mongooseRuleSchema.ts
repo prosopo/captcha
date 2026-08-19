@@ -32,6 +32,10 @@ const userAttributesSchema: SchemaDefinition<UserAttributesRecord> = {
 	countryCode: { type: String, required: false },
 	asn: { type: Number, required: false },
 	os: { type: String, required: false },
+	headerMatch: { type: String, required: false },
+	headerName: { type: String, required: false },
+	headerValue: { type: String, required: false },
+	headerOperator: { type: String, required: false },
 } satisfies AllKeys<UserAttributesRecord>;
 
 const userIpSchema: SchemaDefinition<UserIpRecord> = {
