@@ -39,7 +39,7 @@ export type ShortCircuitInput = {
 	ipAddress: ReturnType<typeof getCompositeIpAddress>;
 	ipInfo: IPInfoResponse | undefined;
 	flatHeaders: RequestHeaders;
-	sessionMode: ModeEnum | undefined;
+	sessionMode: ModeEnum;
 	userSitekeyIpHash: string;
 	requestId: string | undefined;
 	logger: Logger;
