@@ -783,6 +783,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	entropyWallClockOffsetMs: { type: Number, required: false },
 	entropyMathRandomFirst: { type: Number, required: false },
 	g: { type: String, required: false },
+	s: { type: String, required: false },
 	i: { type: Boolean, required: false },
 	// Raw iOS WKWebView-vs-Safari DOM signals that the client-side
 	// classifier folds into `webView` (see @prosopo/types Session for

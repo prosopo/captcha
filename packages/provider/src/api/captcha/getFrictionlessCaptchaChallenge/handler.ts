@@ -574,6 +574,7 @@ export default (
 				md,
 				bn,
 				fs,
+				s,
 				bundleId,
 			} = decryptedPayload;
 
@@ -682,6 +683,7 @@ export default (
 				...(md !== undefined && { md }),
 				...(bn !== undefined && { bn }),
 				...(fs !== undefined && { fs }),
+				...(s !== undefined && { s }),
 				...(req.tcpToChelloUs !== undefined && {
 					tcpToChelloUs: req.tcpToChelloUs,
 				}),

@@ -324,6 +324,7 @@ export const buildEscalation = async (
 		originSession.md,
 		originSession.bn,
 		originSession.fs,
+		originSession.s,
 	);
 
 	// Record the origin → escalation sessionId mapping so a /captcha/*
