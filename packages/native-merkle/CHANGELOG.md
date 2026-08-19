@@ -1,5 +1,10 @@
 # @prosopo/native-merkle
 
+## 0.0.3
+### Patch Changes
+
+- 7faca4d: Add TLS timings into session doc
+
 ## 0.0.2
 ### Patch Changes
 

@@ -1,5 +1,58 @@
 # @prosopo/provider
 
+## 5.3.3
+### Patch Changes
+
+- 7faca4d: Add TLS timings into session doc
+- c971ef7: fix(provider,types,types-database): drop the `s` field from `Session`,
+  `DetectorResult`, and the mongoose `SessionRecordSchema`. The client
+  no longer emits it, so the server-side wiring is redundant.
+  
+  Stop reading position 18 out of the decrypted client payload in
+  `getBotScore`. Prune every `s`/`ss`/`sv` local, log field, and
+  `createSession` argument in `frictionlessTasks.ts`, the origin-fallback
+  merger in `captchaManager.ts`, the frictionless handler, and
+  `submitPoWCaptchaSolution.ts`. Two `s`-focused unit tests removed.
+  
+  Backward-compatible: older clients still send position 18, the new
+  server just ignores it. Existing Mongo docs keep their `s` values;
+  mongoose stops projecting or writing the field. No migration needed.
+- c88c6a5: fix(provider): always persist `mode` on the frictionless session
+  
+  `getFrictionlessCaptchaChallenge` was collapsing anything that wasn't
+  `ModeEnum.invisible` to `undefined` before it reached the session
+  record. Mongoose then dropped the field on write, so today's DB carries
+  zero sessions with any `mode` value set — invisible or visible.
+  
+  That makes it impossible to distinguish invisible from visible traffic
+  in analytics, and it blocks the follow-up on empty-`coords` records
+  (the checkbox-click coord is empty by design in invisible mode; we
+  need `Session.mode` to tell whether an empty-coords record came from a
+  legit invisible integration or from a widget-bypass bot).
+  
+  Change: default `sessionMode` to `ModeEnum.visible` when the client
+  doesn't opt into invisible. Every session now carries an explicit
+  `mode` value. The `ShortCircuitInput.sessionMode` type tightens from
+  `ModeEnum | undefined` to `ModeEnum` to reflect that; two unit tests
+  updated to pass `ModeEnum.visible` instead of `undefined`.
+- Updated dependencies [7faca4d]
+- Updated dependencies [c971ef7]
+- Updated dependencies [3c88239]
+  - @prosopo/types-database@5.1.6
+  - @prosopo/native-merkle@0.0.3
+  - @prosopo/native-ja4@0.0.3
+  - @prosopo/types@5.2.3
+  - @prosopo/database@4.0.12
+  - @prosopo/types-env@2.10.31
+  - @prosopo/api@4.0.11
+  - @prosopo/api-express-router@3.1.66
+  - @prosopo/datasets@3.1.67
+  - @prosopo/env@3.6.35
+  - @prosopo/ipinfo@0.3.12
+  - @prosopo/keyring@2.9.74
+  - @prosopo/load-balancer@2.10.28
+  - @prosopo/user-access-policy@3.12.22
+
 ## 5.3.2
 ### Patch Changes
 
