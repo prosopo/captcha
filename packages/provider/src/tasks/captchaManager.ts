@@ -217,7 +217,6 @@ export class CaptchaManager {
 		const needsMd = session.md === undefined;
 		const needsBn = session.bn === undefined;
 		const needsFs = session.fs === undefined;
-		const needsS = session.s === undefined;
 
 		if (
 			!needsSimd &&
@@ -231,8 +230,7 @@ export class CaptchaManager {
 			!needsSw &&
 			!needsMd &&
 			!needsBn &&
-			!needsFs &&
-			!needsS
+			!needsFs
 		) {
 			return session;
 		}
@@ -269,7 +267,6 @@ export class CaptchaManager {
 			...(needsMd && origin.md !== undefined && { md: origin.md }),
 			...(needsBn && origin.bn !== undefined && { bn: origin.bn }),
 			...(needsFs && origin.fs !== undefined && { fs: origin.fs }),
-			...(needsS && origin.s !== undefined && { s: origin.s }),
 		};
 	}
 

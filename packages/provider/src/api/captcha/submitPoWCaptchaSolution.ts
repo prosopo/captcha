@@ -336,7 +336,6 @@ export const buildEscalation = async (
 		originSession.md,
 		originSession.bn,
 		originSession.fs,
-		originSession.s,
 		// Raw signals for the current PoW-submit TCP connection — not the
 		// origin's. Escalation session belongs on this hop's fingerprint.
 		perConnectionSignals && {
