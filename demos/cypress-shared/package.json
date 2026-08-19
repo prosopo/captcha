@@ -24,7 +24,7 @@
 		"@cypress/xpath": "2.0.3",
 		"@polkadot/util": "13.5.7",
 		"@prosopo/common": "3.1.50",
-		"@prosopo/config": "3.3.9",
+		"@prosopo/config": "3.3.10",
 		"@prosopo/datasets": "3.1.65",
 		"@prosopo/dotenv": "3.0.52",
 		"@prosopo/keyring": "2.9.72",
