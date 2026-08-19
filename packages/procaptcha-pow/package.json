@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-pow",
-	"version": "2.10.37",
+	"version": "2.10.38",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "dist/index.js",
@@ -30,15 +30,17 @@
 		"test:watch": "NODE_ENV=${NODE_ENV:-test}; npx vitest --config ./vite.test.config.ts",
 		"test:coverage": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --coverage --config ./vite.test.config.ts"
 	},
-	"browserslist": ["> 0.5%, last 2 versions, not dead"],
+	"browserslist": [
+		"> 0.5%, last 2 versions, not dead"
+	],
 	"dependencies": {
 		"@polkadot/util": "13.5.7",
-		"@prosopo/api": "4.0.10",
+		"@prosopo/api": "4.0.11",
 		"@prosopo/common": "3.1.50",
-		"@prosopo/fingerprint": "2.7.30",
+		"@prosopo/fingerprint": "2.7.31",
 		"@prosopo/locale": "3.3.0",
-		"@prosopo/procaptcha-common": "2.11.30",
-		"@prosopo/types": "5.2.2",
+		"@prosopo/procaptcha-common": "2.11.31",
+		"@prosopo/types": "5.2.3",
 		"@prosopo/util": "3.3.6",
 		"@prosopo/util-crypto": "13.5.30",
 		"@prosopo/widget-skeleton": "2.8.6",
