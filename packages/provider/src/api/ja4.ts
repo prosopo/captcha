@@ -27,7 +27,10 @@ const nativeJa4Module: NativeJa4Module = (() => {
 	try {
 		return req("@prosopo/native-ja4") as NativeJa4Module;
 	} catch {
-		return req("./index.linux-x64-gnu.node") as NativeJa4Module;
+		// Bundle path: cli's vite plugin renames the .node on copy so it
+		// doesn't collide with sibling native-* binaries (all named
+		// `index.<triple>.node` by napi-rs).
+		return req("./prosopo-native-ja4.node") as NativeJa4Module;
 	}
 })();
 const nativeCalculateJa4 = nativeJa4Module.calculateJa4;
