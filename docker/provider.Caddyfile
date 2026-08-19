@@ -62,6 +62,23 @@
 		max_client_hello_size 16384
 	}
 
+	# Per-request lookup against the tcp-probe eBPF sidecar's Unix socket.
+	# When the socket is present chaddy dials it at accept() time keyed on
+	# the client-side 4-tuple and forwards the raw handshake fields
+	# (`X-TLS-Syn-Ns` / `X-TLS-Synack-Ns` / `X-TLS-Ack-Ns` /
+	# `X-TLS-Observed-Ttl` / `X-TLS-Tcp-{Mss,Wscale,Opts-Flags,Opts-Order,
+	# Window}`) on the reverse-proxied request. The provider persists them
+	# onto Session records; downstream detection derives whatever timing /
+	# stack fingerprints it wants from these primitives at query time.
+	#
+	# The path is bind-mounted onto the caddy container from the host at
+	# the same location (see docker-compose.provider.yml). When the
+	# sidecar isn't running the file is simply absent; chaddy debug-logs
+	# the dial error per-request and drops the extra headers — Caddy
+	# startup is unaffected, so this directive is safe to leave in
+	# unconditionally on hosts without the sidecar.
+	tcp_probe_socket /var/run/tcp-probe/lookup.sock
+
 	servers {
 		protocols h1 h2
 		# Order matters: proxy_protocol must run before tls so the
