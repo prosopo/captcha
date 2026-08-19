@@ -558,6 +558,15 @@ UserCommitmentRecordSchema.index({
 	lastUpdatedTimestamp: 1,
 });
 UserCommitmentRecordSchema.index({ userAccount: 1, dappAccount: 1 });
+// Compound for the anomaly-detector top-level match
+// (`{dappAccount: {$in: [...]}, requestedAtTimestamp: {$gte, $lt}}` followed
+// by `{$sort: {requestedAtTimestamp: -1}}`). Mirrors the equivalent index on
+// `PoWCaptchaRecordSchema` / `PuzzleCaptchaRecordSchema`; without it, the
+// query planner falls back to a range scan on `{requestedAtTimestamp}` and
+// FETCH-filters every doc by `dappAccount` — measured 2.7× wasted docs on a
+// 1h window for a single high-share tenant, degrades linearly with window
+// length and inversely with tenant share.
+UserCommitmentRecordSchema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
 UserCommitmentRecordSchema.index({ "ipAddress.lower": 1 });
 UserCommitmentRecordSchema.index({ "ipAddress.upper": 1 });
 UserCommitmentRecordSchema.index({ "result.reason": 1 });
