@@ -174,7 +174,6 @@ describe("CaptchaManager", () => {
 				md: true,
 				bn: false,
 				fs: true,
-				s: "d",
 			} as unknown as Session;
 			dbGet().mockResolvedValue(session);
 
@@ -316,46 +315,6 @@ describe("CaptchaManager", () => {
 				await captchaManager.getSessionRecordWithOriginFallback("esc");
 
 			expect(got?.i).toBe(true);
-		});
-
-		it("fills s from origin when the escalation is missing it", async () => {
-			const origin = {
-				sessionId: "origin",
-				captchaType: CaptchaType.pow,
-				s: "A1B2C3D4",
-			} as unknown as Session;
-			const escalation = {
-				sessionId: "esc",
-				originSessionId: "origin",
-				captchaType: CaptchaType.puzzle,
-			} as unknown as Session;
-			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
-
-			const got =
-				await captchaManager.getSessionRecordWithOriginFallback("esc");
-
-			expect(got?.s).toBe("A1B2C3D4");
-			expect(got?.sessionId).toBe("esc");
-		});
-
-		it("keeps the escalation's own s rather than the origin's", async () => {
-			const origin = {
-				sessionId: "origin",
-				captchaType: CaptchaType.pow,
-				s: "origin-s",
-			} as unknown as Session;
-			const escalation = {
-				sessionId: "esc",
-				originSessionId: "origin",
-				captchaType: CaptchaType.puzzle,
-				s: "escalation-s",
-			} as unknown as Session;
-			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
-
-			const got =
-				await captchaManager.getSessionRecordWithOriginFallback("esc");
-
-			expect(got?.s).toBe("escalation-s");
 		});
 
 		it("does not fill anything when origin also lacks the fields", async () => {
