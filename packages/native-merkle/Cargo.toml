@@ -1,0 +1,6 @@
+
+# Debug symbols for our own crate only. Dependency debuginfo is the bulk of a
+# dev build and nobody steps through third-party code here; CI narrows our own
+# to line tables via CARGO_PROFILE_DEV_DEBUG.
+[profile.dev.package."*"]
+debug = false
