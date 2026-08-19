@@ -1,5 +1,26 @@
 # @prosopo/procaptcha-puzzle
 
+## 2.10.52
+### Patch Changes
+
+- 35f640f: Render puzzle captcha imagery on the provider instead of sending the answer to the client.
+  
+  The challenge used to carry `targetX`/`targetY` and the widget drew the target box straight from them, so any HTTP client could echo the coordinates back as its solution and pass without a browser. The provider now synthesises a background procedurally, cuts the notch into the pixels, and returns the background and piece as data URIs; the target and the tolerance never leave the server.
+  
+  Backgrounds come from the new `@prosopo/puzzle-assets` package and are single-use — reusing one across two challenges would let an attacker diff the composites and recover both notch positions.
+- Updated dependencies [35f640f]
+  - @prosopo/types@5.2.1
+  - @prosopo/api@4.0.9
+  - @prosopo/procaptcha-common@2.11.29
+
+## 2.10.51
+### Patch Changes
+
+- Updated dependencies [234c737]
+  - @prosopo/types@5.2.0
+  - @prosopo/api@4.0.8
+  - @prosopo/procaptcha-common@2.11.28
+
 ## 2.10.50
 ### Patch Changes
 

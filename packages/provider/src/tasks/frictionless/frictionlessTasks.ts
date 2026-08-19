@@ -43,6 +43,7 @@ import {
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { getBotScore } from "../detection/getBotScore.js";
+import { downgradePuzzleIfUnavailable } from "../puzzle/puzzleRenderer.js";
 import { type RoutingContext, applyRouter } from "./routingMachine.js";
 
 const DEFAULT_MAX_TIMESTAMP_AGE = 60 * 10 * 1000; // 10 minutes
@@ -389,7 +390,15 @@ export class FrictionlessManager extends CaptchaManager {
 				)
 			: baseline;
 
-		const finalCaptchaType = routed.captchaType;
+		// A puzzle session this provider cannot render would strand the user:
+		// /captcha/puzzle answers with GetPuzzleCaptchaResponse and nothing
+		// else, so it cannot substitute another type at serve time, and the
+		// puzzle widget cannot render one either. Downgrade here, before the
+		// session is written, so every later hop sees a consistent type.
+		const finalCaptchaType = downgradePuzzleIfUnavailable(
+			routed.captchaType,
+			this.logger,
+		);
 		const finalSolvedImagesCount =
 			finalCaptchaType === CaptchaType.image
 				? (routed.solvedImagesCount ?? effectiveParams.solvedImagesCount)

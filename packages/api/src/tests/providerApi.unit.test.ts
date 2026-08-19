@@ -70,11 +70,11 @@ const powChallenge: GetPowCaptchaResponse = {
 const puzzleChallenge: GetPuzzleCaptchaResponse = {
 	status: "ok",
 	[ApiParams.challenge]: CHALLENGE,
-	[ApiParams.targetX]: 10,
-	[ApiParams.targetY]: 20,
+	[ApiParams.background]: "data:image/webp;base64,UklGRg==",
+	[ApiParams.piece]: "data:image/webp;base64,UklGRg==",
+	[ApiParams.pieceSize]: 44,
 	[ApiParams.originX]: 1,
 	[ApiParams.originY]: 2,
-	[ApiParams.tolerance]: 5,
 	[ApiParams.timestamp]: "1753900000000",
 	[ApiParams.signature]: {
 		[ApiParams.provider]: { [ApiParams.challenge]: "0xproviderchallengesig" },

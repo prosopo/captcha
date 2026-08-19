@@ -42,6 +42,9 @@
 			"path": "../load-balancer/tsconfig.cjs.json"
 		},
 		{
+			"path": "../puzzle-assets/tsconfig.cjs.json"
+		},
+		{
 			"path": "../keyring/tsconfig.cjs.json"
 		},
 		{

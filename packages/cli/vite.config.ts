@@ -11,8 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { createRequire } from "node:module";
 import * as path from "node:path";
-import { ViteBackendConfig } from "@prosopo/config";
+import {
+	ViteBackendConfig,
+	nodejsPolarsNativeFilePlugin,
+} from "@prosopo/config";
 import { loadEnv } from "@prosopo/dotenv";
 import { defineConfig } from "vite";
 import { version } from "./package.json";
@@ -29,6 +33,17 @@ const packageVersion = version;
 
 process.env.TS_NODE_PROJECT = path.resolve("./tsconfig.json");
 
+// Rust napi modules under packages/native-* each ship a single .node binary
+// for the linux-x64 target (the only platform the provider runs on). Resolve
+// their absolute paths so nodejsPolarsNativeFilePlugin can copy them into
+// dist/bundle at bundle time.
+const nativeBinaryPaths = [
+	createRequire(import.meta.url).resolve(
+		"@prosopo/native-ja4/index.linux-x64-gnu.node",
+	),
+];
+const bundleOutDir = path.resolve(dir, "dist/bundle");
+
 // Merge with generic backend config
 export default defineConfig(async ({ command, mode }) => {
 	const backendConfig = await ViteBackendConfig(
@@ -40,6 +55,10 @@ export default defineConfig(async ({ command, mode }) => {
 		command,
 		mode,
 	);
+	backendConfig.plugins = [
+		...(backendConfig.plugins ?? []),
+		nodejsPolarsNativeFilePlugin(nativeBinaryPaths, bundleOutDir),
+	];
 	return defineConfig({
 		ssr: {
 			external: [

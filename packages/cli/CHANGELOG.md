@@ -1,5 +1,39 @@
 # @prosopo/cli
 
+## 3.7.15
+### Patch Changes
+
+- 721c5ba: Move JA4 TLS fingerprint computation to a Rust napi module (@prosopo/native-ja4). Provider-side JA4 middleware is ~2.7× faster on realistic ClientHellos. The cli bundle plugin now copies the .node binary next to the bundle so it works in the container.
+- Updated dependencies [721c5ba]
+  - @prosopo/provider@5.3.1
+
+## 3.7.14
+### Patch Changes
+
+- Updated dependencies [35f640f]
+- Updated dependencies [9e53a48]
+  - @prosopo/provider@5.3.0
+  - @prosopo/types@5.2.1
+  - @prosopo/api@4.0.9
+  - @prosopo/env@3.6.33
+  - @prosopo/keyring@2.9.72
+
+## 3.7.13
+### Patch Changes
+
+- Updated dependencies [c2bfcb8]
+  - @prosopo/provider@5.2.1
+
+## 3.7.12
+### Patch Changes
+
+- Updated dependencies [234c737]
+  - @prosopo/types@5.2.0
+  - @prosopo/provider@5.2.0
+  - @prosopo/api@4.0.8
+  - @prosopo/env@3.6.32
+  - @prosopo/keyring@2.9.71
+
 ## 3.7.11
 ### Patch Changes
 

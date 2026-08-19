@@ -1,5 +1,25 @@
 # @prosopo/types
 
+## 5.2.1
+### Patch Changes
+
+- 35f640f: Render puzzle captcha imagery on the provider instead of sending the answer to the client.
+  
+  The challenge used to carry `targetX`/`targetY` and the widget drew the target box straight from them, so any HTTP client could echo the coordinates back as its solution and pass without a browser. The provider now synthesises a background procedurally, cuts the notch into the pixels, and returns the background and piece as data URIs; the target and the tolerance never leave the server.
+  
+  Backgrounds come from the new `@prosopo/puzzle-assets` package and are single-use — reusing one across two challenges would let an attacker diff the composites and recover both notch positions.
+
+## 5.2.0
+### Minor Changes
+
+- 234c737: Ship raw iOS WKWebView DOM signals (`sw`, `md`, `bn`, `fs`) alongside the classifier verdict `isWebView`.
+  
+  The four booleans that `classifyIosWebViewFromSignals` folds into `isWebView` are now decrypted off the client payload (positions 14-17) and surfaced individually on `DetectorResult` and in the "decryptPayload result" info log. Short-acronym keys match the existing `g`/`i` wire convention. Backwards-compatible: `isWebView` at position 4 is untouched; older catcher clients that don't emit positions 14-17 log the fields as `undefined`.
+  
+  Motivation: real iOS 17.7.x devices appear to expose one or more of these APIs even on stock WKWebView (unlike the iOS 18 Simulator the classifier was audited against), collapsing iOS Twickets `webView:true` from 97.6% to 0.2% post-v3.7.8. Shipping the raw signals lets server-side rules retune the aggregation from live traffic in OpenObserve without a catcher release.
+  
+  Note: `decodePayload.js` (obfuscated production build) still needs to be rebuilt to parse positions 14-17 out of the delimited payload and expose them as `result.sw`/`result.md`/`result.bn`/`result.fs`. Until that ships, the fields log as `undefined`.
+
 ## 5.1.2
 ### Patch Changes
 
