@@ -37,13 +37,13 @@ import { hashUserIp } from "../../../utils/hashUserIp.js";
 import { normalizeRequestIp } from "../../../utils/normalizeRequestIp.js";
 import { getMaintenanceMode } from "../../admin/apiToggleMaintenanceModeEndpoint.js";
 import { getRequestUserScope } from "../../blacklistRequestInspector.js";
-import { rawTlsSignalsForSession } from "../../rawTlsSignalsMiddleware.js";
 import { buildDnsEventUrl } from "../../dnsEventUrl.js";
 import {
 	recordBotScore,
 	recordDetectorTriggered,
 	recordFrictionlessDecision,
 } from "../../metrics.js";
+import { rawTlsSignalsForSession } from "../../rawTlsSignalsMiddleware.js";
 import { isReservedTestSiteKey } from "../../testSiteKey.js";
 import { buildFrictionlessMaintenanceResponse } from "../maintenanceModeResponses.js";
 import {

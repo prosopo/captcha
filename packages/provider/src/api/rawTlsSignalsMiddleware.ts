@@ -126,7 +126,12 @@ export const getRawTlsSignals = (
 			HEADER_OBSERVED_TTL,
 			MAX_U8,
 		),
-		tcpMss: parseIntHeader(headers[HEADER_TCP_MSS], log, HEADER_TCP_MSS, MAX_U16),
+		tcpMss: parseIntHeader(
+			headers[HEADER_TCP_MSS],
+			log,
+			HEADER_TCP_MSS,
+			MAX_U16,
+		),
 		tcpWscale: parseIntHeader(
 			headers[HEADER_TCP_WSCALE],
 			log,

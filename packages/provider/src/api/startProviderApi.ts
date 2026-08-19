@@ -54,9 +54,9 @@ import { headerCheckMiddleware } from "./headerCheckMiddleware.js";
 import { ignoreMiddleware } from "./ignoreMiddleware.js";
 import { ipInfoMiddleware } from "./ipInfoMiddleware.js";
 import { ja4Middleware } from "./ja4Middleware.js";
-import { rawTlsSignalsMiddleware } from "./rawTlsSignalsMiddleware.js";
 import { metricsMiddleware } from "./metrics.js";
 import { publicRouter } from "./public.js";
+import { rawTlsSignalsMiddleware } from "./rawTlsSignalsMiddleware.js";
 import { robotsMiddleware } from "./robotsMiddleware.js";
 import { prosopoVerifyRouter } from "./verify.js";
 
