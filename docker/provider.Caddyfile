@@ -60,24 +60,32 @@
 	client_hello {
 		# Configure the maximum allowed ClientHello packet size in bytes (1-16384)
 		max_client_hello_size 16384
+		# Per-request lookup against the tcp-probe eBPF sidecar's Unix
+		# socket. When the socket is present chaddy dials it at accept()
+		# time keyed on the client-side 4-tuple and forwards the raw
+		# handshake fields (`X-TLS-Syn-Ns` / `X-TLS-Synack-Ns` /
+		# `X-TLS-Ack-Ns` / `X-TLS-Observed-Ttl` /
+		# `X-TLS-Tcp-{Mss,Wscale,Opts-Flags,Opts-Order,Window}`) on the
+		# reverse-proxied request. The provider persists them onto Session
+		# records; downstream detection derives whatever timing / stack
+		# fingerprints it wants from these primitives at query time.
+		#
+		# Chaddy registers `client_hello` as the caddyfile global option
+		# (`httpcaddyfile.RegisterGlobalOption("client_hello", ...)`),
+		# and `tcp_probe_socket` is parsed as a sub-key of that block —
+		# NOT as its own top-level global. Putting it at global scope
+		# fails config-adapt with `unrecognized global option:
+		# tcp_probe_socket` and caddy crash-loops. Confirmed the hard way
+		# on staging after v3.7.17 — do not move it back out.
+		#
+		# The path is bind-mounted onto the caddy container from the host
+		# (see docker-compose.provider.yml). When the sidecar isn't
+		# running the file is simply absent; chaddy debug-logs the dial
+		# error per-request and drops the extra headers — Caddy startup
+		# is unaffected, so this directive is safe to leave in
+		# unconditionally on hosts without the sidecar.
+		tcp_probe_socket /var/run/tcp-probe/lookup.sock
 	}
-
-	# Per-request lookup against the tcp-probe eBPF sidecar's Unix socket.
-	# When the socket is present chaddy dials it at accept() time keyed on
-	# the client-side 4-tuple and forwards the raw handshake fields
-	# (`X-TLS-Syn-Ns` / `X-TLS-Synack-Ns` / `X-TLS-Ack-Ns` /
-	# `X-TLS-Observed-Ttl` / `X-TLS-Tcp-{Mss,Wscale,Opts-Flags,Opts-Order,
-	# Window}`) on the reverse-proxied request. The provider persists them
-	# onto Session records; downstream detection derives whatever timing /
-	# stack fingerprints it wants from these primitives at query time.
-	#
-	# The path is bind-mounted onto the caddy container from the host at
-	# the same location (see docker-compose.provider.yml). When the
-	# sidecar isn't running the file is simply absent; chaddy debug-logs
-	# the dial error per-request and drops the extra headers — Caddy
-	# startup is unaffected, so this directive is safe to leave in
-	# unconditionally on hosts without the sidecar.
-	tcp_probe_socket /var/run/tcp-probe/lookup.sock
 
 	servers {
 		protocols h1 h2
