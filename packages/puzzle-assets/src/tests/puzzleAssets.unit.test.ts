@@ -15,7 +15,7 @@
 import { describe, expect, it } from "vitest";
 import { generateBackground } from "../background.js";
 import { cutNotch } from "../compose.js";
-import { paintDecoys } from "../decoys.js";
+import { paintDecoyPiece, paintDecoys } from "../decoys.js";
 import {
 	DEFAULT_GEOMETRY,
 	DEFAULT_RENDER_SETTINGS,
@@ -182,6 +182,45 @@ describe("cutNotch", () => {
 		expect(piece.data[3] ?? 255).toBeLessThan(128);
 	});
 
+	it("clips the piece to transparent where the placement overhangs the frame", () => {
+		// Place the notch centred on the top-right corner: roughly a
+		// quarter of the bounding box sits inside the frame; the rest
+		// hangs off. Every piece pixel outside the frame must be
+		// transparent — the sampler no longer clamps to the edge.
+		const prng = createPrng(SEED_A);
+		const bg = createBackground(geometry);
+		const shape = createNotchShape(prng, geometry.notchSize);
+		const overhangPlacement = {
+			targetX: geometry.width,
+			targetY: 0,
+		};
+		const { piece } = cutNotch(
+			prng,
+			bg,
+			shape,
+			geometry.notchSize,
+			overhangPlacement,
+			DEFAULT_RENDER_SETTINGS.holeDarken,
+		);
+
+		const half = geometry.notchSize / 2;
+		const left = Math.round(overhangPlacement.targetX - half);
+		const top = Math.round(overhangPlacement.targetY - half);
+		let outOfFrameOpaque = 0;
+		for (let ly = 0; ly < geometry.notchSize; ly++) {
+			for (let lx = 0; lx < geometry.notchSize; lx++) {
+				const bx = left + lx;
+				const by = top + ly;
+				const inFrame =
+					bx >= 0 && by >= 0 && bx < geometry.width && by < geometry.height;
+				if (inFrame) continue;
+				const alpha = piece.data[(ly * geometry.notchSize + lx) * 4 + 3] ?? 0;
+				if (alpha !== 0) outOfFrameOpaque++;
+			}
+		}
+		expect(outOfFrameOpaque).toBe(0);
+	});
+
 	it("does not reproduce the background pixel-exactly in the piece", () => {
 		// The anti-correlation defence: an exact copy would let an attacker
 		// locate the target by sliding the piece over the background.
@@ -238,6 +277,16 @@ describe("renderPuzzle", () => {
 		expect(rendered.pieceSize).toBe(DEFAULT_GEOMETRY.notchSize);
 	});
 
+	it("honors a `pieceSize` override independently of `notchSize`", async () => {
+		const overrideSize = 180;
+		const rendered = await renderPuzzle(
+			createBackground(),
+			{ targetX: 150, targetY: 100 },
+			{ ...DEFAULT_GEOMETRY, pieceSize: overrideSize },
+		);
+		expect(rendered.pieceSize).toBe(overrideSize);
+	});
+
 	it("stays small enough to inline as a data uri", async () => {
 		const rendered = await renderPuzzle(createBackground(), {
 			targetX: 200,
@@ -272,7 +321,8 @@ describe("background brightness", () => {
 
 describe("paintDecoys", () => {
 	const notch = { targetX: 220, targetY: 140 };
-	const { decoyEdgeDarkness, decoyBodyBrightness } = DEFAULT_RENDER_SETTINGS;
+	const { decoyEdgeDarkness, decoyBodyBrightness, decoyHoleDarken } =
+		DEFAULT_RENDER_SETTINGS;
 
 	it("is a no-op for count <= 0", () => {
 		const bg = generateBackground(createPrng(SEED_A), 300, 200);
@@ -285,6 +335,7 @@ describe("paintDecoys", () => {
 			notch,
 			decoyEdgeDarkness,
 			decoyBodyBrightness,
+			decoyHoleDarken,
 		);
 		expect(bg.data.equals(before)).toBe(true);
 	});
@@ -300,6 +351,7 @@ describe("paintDecoys", () => {
 			notch,
 			decoyEdgeDarkness,
 			decoyBodyBrightness,
+			decoyHoleDarken,
 		);
 		expect(bg.data.equals(before)).toBe(false);
 	});
@@ -315,6 +367,7 @@ describe("paintDecoys", () => {
 			notch,
 			decoyEdgeDarkness,
 			decoyBodyBrightness,
+			decoyHoleDarken,
 		);
 		paintDecoys(
 			bg2,
@@ -324,23 +377,37 @@ describe("paintDecoys", () => {
 			notch,
 			decoyEdgeDarkness,
 			decoyBodyBrightness,
+			decoyHoleDarken,
 		);
 		expect(bg1.data.equals(bg2.data)).toBe(true);
 	});
 
-	it("respects edgeDarkness — zero leaves the background unchanged if body is zero too", () => {
+	// holeDarken == 0 collapses every decoy body to full black in the
+	// interior. Guards the multiplicative path — a regression that reverts
+	// decoys to the pre-hole-darken additive shift only would still tint the
+	// pixels but never reach zero. Uses `paintDecoyPiece` directly so the
+	// centre pixel is deterministic (`paintDecoys` scatters randomly).
+	it("blackens the decoy interior when holeDarken is zero", () => {
 		const bg = generateBackground(createPrng(SEED_A), 300, 200);
-		const before = Buffer.from(bg.data);
-		paintDecoys(
+		const cx = 150;
+		const cy = 100;
+		// Additive rim/body knobs at 0 too so only the multiplicative path
+		// contributes; otherwise `bodyBrightness` adds back a few units and
+		// the pixels never reach exactly zero.
+		paintDecoyPiece(
 			bg,
 			createPrng(SEED_B),
-			5,
 			DEFAULT_GEOMETRY.notchSize,
-			notch,
+			cx,
+			cy,
+			0,
 			0,
 			0,
 		);
-		expect(bg.data.equals(before)).toBe(true);
+		const i = (cy * bg.width + cx) * 4;
+		expect(bg.data[i]).toBe(0);
+		expect(bg.data[i + 1]).toBe(0);
+		expect(bg.data[i + 2]).toBe(0);
 	});
 });
 

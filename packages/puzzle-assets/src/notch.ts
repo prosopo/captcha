@@ -60,7 +60,7 @@ const roundedBoxDistance = (
 	return outside + inside - radius;
 };
 
-export const createNotchShape = (prng: Prng, size: number): NotchShape => {
+const createJigsawShape = (prng: Prng, size: number): NotchShape => {
 	// The body is inset so the knob can protrude without leaving the bounding
 	// box — the caller places the box, not the body.
 	const knobRadius = size * prng.range(0.15, 0.19);
@@ -96,6 +96,118 @@ export const createNotchShape = (prng: Prng, size: number): NotchShape => {
 			return d;
 		},
 	};
+};
+
+const createCircleShape = (prng: Prng, size: number): NotchShape => {
+	const radius = (size / 2) * prng.range(0.85, 0.98);
+	const cx = size / 2;
+	const cy = size / 2;
+	return {
+		distance(lx: number, ly: number): number {
+			return Math.hypot(lx - cx, ly - cy) - radius;
+		},
+	};
+};
+
+const createRoundedRectShape = (prng: Prng, size: number): NotchShape => {
+	// One axis fills the box; the other is squashed by a random aspect ratio.
+	// Randomising which axis gets squashed avoids a landscape-only bias.
+	const aspect = prng.range(0.5, 1.0);
+	const halfMax = (size / 2) * prng.range(0.82, 0.98);
+	const [halfW, halfH] =
+		prng.next() < 0.5
+			? [halfMax, halfMax * aspect]
+			: [halfMax * aspect, halfMax];
+	const cornerRadius = Math.min(halfW, halfH) * prng.range(0.08, 0.5);
+	const cx = size / 2;
+	const cy = size / 2;
+	return {
+		distance(lx: number, ly: number): number {
+			const px = lx - cx;
+			const py = ly - cy;
+			const qx = Math.abs(px) - halfW + cornerRadius;
+			const qy = Math.abs(py) - halfH + cornerRadius;
+			const outside = Math.hypot(Math.max(qx, 0), Math.max(qy, 0));
+			const inside = Math.min(Math.max(qx, qy), 0);
+			return outside + inside - cornerRadius;
+		},
+	};
+};
+
+const createPolygonShape = (prng: Prng, size: number): NotchShape => {
+	// Random regular polygon (triangle through octagon), rotated arbitrarily.
+	// SDF is max-of-halfplanes: exact at the boundary and inside, slightly
+	// approximate for far-outside points — fine for the 1-pixel anti-aliased
+	// coverage band. Edge normals are precomputed so the per-pixel loop is a
+	// tight sum-and-max over a handful of values.
+	const n = prng.int(3, 8);
+	const radius = (size / 2) * prng.range(0.85, 0.98);
+	const inradius = radius * Math.cos(Math.PI / n);
+	const rotation = prng.next() * Math.PI * 2;
+	const normals: [number, number][] = [];
+	for (let i = 0; i < n; i++) {
+		// Start at the top and go around; edge i's outward normal points at
+		// angle (2πi/n − π/2) from the +x axis, rotated by `rotation`.
+		const angle = (2 * Math.PI * i) / n - Math.PI / 2 + rotation;
+		normals.push([Math.cos(angle), Math.sin(angle)]);
+	}
+	const cx = size / 2;
+	const cy = size / 2;
+	return {
+		distance(lx: number, ly: number): number {
+			const px = lx - cx;
+			const py = ly - cy;
+			let maxD = Number.NEGATIVE_INFINITY;
+			for (const [nx, ny] of normals) {
+				const d = px * nx + py * ny - inradius;
+				if (d > maxD) maxD = d;
+			}
+			return maxD;
+		},
+	};
+};
+
+const createFlowerShape = (prng: Prng, size: number): NotchShape => {
+	// Sinusoidal boundary: r(θ) = rAvg + rAmp·cos(nθ + φ). Reads as a soft
+	// flower / gear silhouette. Kept smooth (no sharp inner points) so the
+	// coverage sampler doesn't misread narrow petals.
+	const petals = prng.int(4, 8);
+	const rAvg = (size / 2) * prng.range(0.72, 0.88);
+	const rAmp = rAvg * prng.range(0.1, 0.22);
+	const phase = prng.next() * Math.PI * 2;
+	const cx = size / 2;
+	const cy = size / 2;
+	return {
+		distance(lx: number, ly: number): number {
+			const px = lx - cx;
+			const py = ly - cy;
+			const len = Math.hypot(px, py);
+			const angle = Math.atan2(py, px);
+			const r = rAvg + rAmp * Math.cos(petals * angle + phase);
+			return len - r;
+		},
+	};
+};
+
+/**
+ * Pick a random shape family per call. The real piece and its hole are cut
+ * from the same call so they match; decoys each call independently so they
+ * form a mixed field of silhouettes on the frame.
+ */
+export const createNotchShape = (prng: Prng, size: number): NotchShape => {
+	const family = prng.int(0, 4);
+	switch (family) {
+		case 0:
+			return createJigsawShape(prng, size);
+		case 1:
+			return createCircleShape(prng, size);
+		case 2:
+			return createRoundedRectShape(prng, size);
+		case 3:
+			return createPolygonShape(prng, size);
+		default:
+			return createFlowerShape(prng, size);
+	}
 };
 
 /**

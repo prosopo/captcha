@@ -29,6 +29,7 @@ import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
 import {
 	renderPuzzleImages,
+	resolvePuzzlePieceSize,
 	resolvePuzzleRenderSettings,
 } from "../../tasks/puzzle/puzzleRenderer.js";
 import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
@@ -211,6 +212,14 @@ export default (
 				clientSettings?.settings?.puzzle,
 				trafficPuzzleSettings,
 			);
+			// Piece size is drawn per-challenge from the effective scale
+			// range so a solver can't hard-code the expected silhouette
+			// scale. Uses the same layered client / traffic-filter override
+			// order as the render settings above.
+			const effectivePieceSize = resolvePuzzlePieceSize(
+				clientSettings?.settings?.puzzle,
+				trafficPuzzleSettings,
+			);
 			const challenge =
 				await tasks.puzzleCaptchaManager.getPuzzleCaptchaChallenge(
 					user,
@@ -267,6 +276,7 @@ export default (
 					targetY: challenge.targetY,
 				},
 				effectivePuzzleSettings,
+				effectivePieceSize,
 			);
 
 			const getPuzzleCaptchaResponse: GetPuzzleCaptchaResponse = {

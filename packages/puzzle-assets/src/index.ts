@@ -65,6 +65,7 @@ export const DEFAULT_RENDER_SETTINGS: PuzzleRenderSettings = {
 	decoyEdgeDarkness: 20,
 	decoyBodyBrightness: 4,
 	holeDarken: 0.55,
+	decoyHoleDarken: 0.7,
 };
 
 /**
@@ -90,23 +91,27 @@ export const renderPuzzle = async (
 	settings: PuzzleRenderSettings = DEFAULT_RENDER_SETTINGS,
 ): Promise<RenderedPuzzle> => {
 	const prng = createPrng(createSeed());
+	const pieceSize = geometry.pieceSize ?? geometry.notchSize;
 	// Decoys go on first so the real cut sits on top of any overlap and
-	// always reads as the deepest, darkest region on the board.
+	// always reads as the deepest, darkest region on the board. Decoys use
+	// the same size as the real piece so a solver can't key on scale to
+	// disambiguate the target.
 	paintDecoys(
 		background,
 		prng,
 		settings.decoyCount,
-		geometry.notchSize,
+		pieceSize,
 		placement,
 		settings.decoyEdgeDarkness,
 		settings.decoyBodyBrightness,
+		settings.decoyHoleDarken,
 	);
-	const shape = createNotchShape(prng, geometry.notchSize);
+	const shape = createNotchShape(prng, pieceSize);
 	const { background: cut, piece } = cutNotch(
 		prng,
 		background,
 		shape,
-		geometry.notchSize,
+		pieceSize,
 		placement,
 		settings.holeDarken,
 	);
@@ -119,7 +124,7 @@ export const renderPuzzle = async (
 	return {
 		background: backgroundWebp,
 		piece: pieceWebp,
-		pieceSize: geometry.notchSize,
+		pieceSize,
 	};
 };
 

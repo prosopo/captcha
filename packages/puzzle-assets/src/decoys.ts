@@ -52,6 +52,12 @@ const distanceSquared = (
 };
 
 /**
+ * Depth cue on decoys, mirroring `HOLE_INNER_SHADOW` in `compose.ts`.
+ * Smaller so decoys read as shallower cuts than the real hole.
+ */
+const DECOY_INNER_SHADOW = 0.35;
+
+/**
  * Composite a jigsaw-shaped decoration onto `background`, centred on
  * `(cx, cy)`. Mutates `background`. Runs the same signed-distance sampling
  * as the real cut, so the silhouette reads as the same family of shapes.
@@ -64,6 +70,7 @@ export const paintDecoyPiece = (
 	cy: number,
 	edgeDarkness: number,
 	bodyBrightness: number,
+	holeDarken: number,
 ): void => {
 	const shape = createNotchShape(prng, size);
 	const half = size / 2;
@@ -88,16 +95,29 @@ export const paintDecoyPiece = (
 			const g = background.data[bi + 1] ?? 0;
 			const b = background.data[bi + 2] ?? 0;
 
-			// Dark rim just inside the silhouette, matching the direction of
-			// the real cutout's inner shadow so decoys can't be visually
-			// dismissed as "obviously raised". Ramps from zero at 3px inside
-			// up to full amplitude at the edge.
+			// Multiplicative darken with an inner shadow, matching the real
+			// cut's structure. Without this, decoys were just faint edge
+			// tints and the real hole stood out as the only deep region on
+			// the frame — trivially findable by eye or by luminance.
+			const edge = d > -3 ? DECOY_INNER_SHADOW * (1 + d / 3) : 0;
+			const factor = holeDarken * (1 - edge);
+			const dr = r * factor;
+			const dg = g * factor;
+			const db = b * factor;
+
+			// Existing additive tweak stays on top, so operators keep the
+			// same rim / body knobs — they now fine-tune the multiplicative
+			// base rather than being the sole depth cue.
 			const edgeDark = d > -3 ? edgeDarkness * (1 + d / 3) : 0;
 			const delta = bodyBrightness - edgeDark;
 
-			background.data[bi] = clamp255(Math.round(r + delta * coverage));
-			background.data[bi + 1] = clamp255(Math.round(g + delta * coverage));
-			background.data[bi + 2] = clamp255(Math.round(b + delta * coverage));
+			const mixR = r * (1 - coverage) + dr * coverage;
+			const mixG = g * (1 - coverage) + dg * coverage;
+			const mixB = b * (1 - coverage) + db * coverage;
+
+			background.data[bi] = clamp255(Math.round(mixR + delta * coverage));
+			background.data[bi + 1] = clamp255(Math.round(mixG + delta * coverage));
+			background.data[bi + 2] = clamp255(Math.round(mixB + delta * coverage));
 		}
 	}
 };
@@ -126,6 +146,7 @@ export const paintDecoys = (
 	notch: NotchPlacement,
 	edgeDarkness: number,
 	bodyBrightness: number,
+	holeDarken: number,
 ): void => {
 	if (targetCount <= 0) return;
 
@@ -135,13 +156,14 @@ export const paintDecoys = (
 	if (count === 0) return;
 
 	const notchClearanceSq = (notchSize * NOTCH_CLEARANCE) ** 2;
-	const half = notchSize / 2;
-	// Keep the whole bounding box inside the frame so decoys never clip.
-	const minX = half;
-	const maxX = background.width - half;
-	const minY = half;
-	const maxY = background.height - half;
-	if (maxX <= minX || maxY <= minY) return;
+	// Centre may sit anywhere on the frame; a decoy that overhangs the edge
+	// is clipped by `paintDecoyPiece`, matching the real piece's overhang
+	// behaviour. Without this, large pieces would render zero decoys because
+	// `notchSize/2` exceeds the frame dimensions.
+	const minX = 0;
+	const maxX = background.width;
+	const minY = 0;
+	const maxY = background.height;
 
 	for (let i = 0; i < count; i++) {
 		for (let attempt = 0; attempt < PLACEMENT_ATTEMPTS; attempt++) {
@@ -161,6 +183,7 @@ export const paintDecoys = (
 				cy,
 				edgeDarkness,
 				bodyBrightness,
+				holeDarken,
 			);
 			break;
 		}

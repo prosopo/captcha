@@ -21,7 +21,12 @@ import {
 	renderPuzzle,
 	toDataUri,
 } from "@prosopo/puzzle-assets";
-import { CaptchaType, type IPuzzleSettings } from "@prosopo/types";
+import {
+	CaptchaType,
+	type IPuzzleSettings,
+	puzzlePieceScaleMaxDefault,
+	puzzlePieceScaleMinDefault,
+} from "@prosopo/types";
 import {
 	getPuzzleBackgroundBuffer,
 	initPuzzleBackgroundBuffer,
@@ -60,8 +65,91 @@ export const resolvePuzzleRenderSettings = (
 		if (override.holeDarken !== undefined) {
 			resolved = { ...resolved, holeDarken: override.holeDarken };
 		}
+		if (override.decoyHoleDarken !== undefined) {
+			resolved = { ...resolved, decoyHoleDarken: override.decoyHoleDarken };
+		}
 	}
 	return resolved;
+};
+
+/**
+ * Number of size buckets used for stratified sampling. The scale range is
+ * split into this many equal windows; every window is visited once per
+ * cycle before the sequence repeats, so a short run of challenges is
+ * guaranteed to span the full range rather than clustering by chance.
+ */
+const PIECE_SIZE_BUCKETS = 8;
+
+// In-process interleaved order the buckets are visited in. Rebuilt at each
+// cycle so consecutive requests strictly alternate between the small half
+// (buckets 0..N/2−1) and the large half (buckets N/2..N−1). Pure shuffle
+// still permits runs of adjacent buckets ("three large in a row" by
+// chance); interleaving forbids that by construction.
+let pieceSizeBucketOrder: number[] = [];
+let pieceSizeBucketCursor = 0;
+
+const shuffleArray = <T>(input: T[]): T[] => {
+	const out = [...input];
+	for (let i = out.length - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1));
+		const tmp = out[i] as T;
+		out[i] = out[j] as T;
+		out[j] = tmp;
+	}
+	return out;
+};
+
+const buildBucketOrder = (): number[] => {
+	const half = PIECE_SIZE_BUCKETS >> 1;
+	const smallHalf = shuffleArray(Array.from({ length: half }, (_, i) => i));
+	const largeHalf = shuffleArray(
+		Array.from({ length: half }, (_, i) => i + half),
+	);
+	// Randomise which half opens the cycle so the pattern is not always
+	// small-then-large across cycle boundaries.
+	const [first, second] =
+		Math.random() < 0.5 ? [smallHalf, largeHalf] : [largeHalf, smallHalf];
+	const order: number[] = [];
+	for (let i = 0; i < half; i++) {
+		order.push(first[i] as number);
+		order.push(second[i] as number);
+	}
+	return order;
+};
+
+/**
+ * Resolve the effective piece scale range from the same layered
+ * client-settings / traffic-filter overrides used for render settings, and
+ * draw a per-challenge piece size in pixels. Stratified over
+ * `PIECE_SIZE_BUCKETS` windows so the distribution is evenly spread across
+ * the range even for short bursts of requests. Rounded to an integer
+ * because the pixel buffer is allocated as `size * size * 4`.
+ */
+export const resolvePuzzlePieceSize = (
+	...overrides: (IPuzzleSettings | undefined)[]
+): number => {
+	let min = puzzlePieceScaleMinDefault;
+	let max = puzzlePieceScaleMaxDefault;
+	for (const override of overrides) {
+		if (!override?.pieceScale) continue;
+		if (override.pieceScale.min !== undefined) min = override.pieceScale.min;
+		if (override.pieceScale.max !== undefined) max = override.pieceScale.max;
+	}
+	// Defend against a partial override that inverts the range (e.g. only
+	// `min` set, above the default `max`).
+	if (min > max) min = max;
+	if (pieceSizeBucketCursor >= pieceSizeBucketOrder.length) {
+		pieceSizeBucketOrder = buildBucketOrder();
+		pieceSizeBucketCursor = 0;
+	}
+	const bucket = pieceSizeBucketOrder[pieceSizeBucketCursor] as number;
+	pieceSizeBucketCursor++;
+	// Uniform sample within the bucket → uniform overall across the range,
+	// with a guaranteed spread across any N consecutive samples where
+	// N ≥ PIECE_SIZE_BUCKETS and no monotonic runs of large or small sizes.
+	const u = (bucket + Math.random()) / PIECE_SIZE_BUCKETS;
+	const scale = min + u * (max - min);
+	return Math.max(1, Math.round(DEFAULT_GEOMETRY.width * scale));
 };
 
 /**
@@ -105,6 +193,7 @@ export const downgradePuzzleIfUnavailable = <T extends CaptchaType>(
 export const renderPuzzleImages = async (
 	placement: NotchPlacement,
 	settings: PuzzleRenderSettings = DEFAULT_RENDER_SETTINGS,
+	pieceSize?: number,
 ): Promise<RenderedPuzzleImages> => {
 	const buffer = getPuzzleBackgroundBuffer() ?? initPuzzleBackgroundBuffer();
 	const background = buffer.take();
@@ -115,7 +204,9 @@ export const renderPuzzleImages = async (
 	const rendered = await renderPuzzle(
 		background,
 		placement,
-		DEFAULT_GEOMETRY,
+		pieceSize !== undefined
+			? { ...DEFAULT_GEOMETRY, pieceSize }
+			: DEFAULT_GEOMETRY,
 		settings,
 	);
 
