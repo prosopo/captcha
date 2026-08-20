@@ -317,12 +317,17 @@ PoWCaptchaRecordSchema.index(
 		},
 	},
 );
-// Tiny partial index serving the StoreCommitmentsExternal sweep. Only
-// records with `pendingStage: true` are indexed — typically a small
-// rolling set — so the query examines only the pending rows instead of
-// scanning the whole powcaptchas collection.
+// Compound partial index serving the StoreCommitmentsExternal sweep. Only
+// records with `pendingStage: true` are indexed and the `_id` component
+// preserves sort ordering, so the paginated sweep can use ONE index for
+// both the filter AND the `sort({_id:1})` without falling back to the
+// `_id` index (which would then filter `pendingStage:true` in memory,
+// touching the whole collection). The keyset sweep in
+// `getUnstoredDappUserPoWCommitments` compares `_id > afterId` on this
+// index directly. Old callers passing `skip(N)` still work but are O(N)
+// on the pending set only — much smaller than the collection scan.
 PoWCaptchaRecordSchema.index(
-	{ pendingStage: 1 },
+	{ pendingStage: 1, _id: 1 },
 	{
 		name: "pendingStage_partial",
 		partialFilterExpression: { pendingStage: true },
@@ -440,8 +445,10 @@ PuzzleCaptchaRecordSchema.index({ "ipInfo.countryCode": 1 });
 PuzzleCaptchaRecordSchema.index({ "ipInfo.isVPN": 1 });
 PuzzleCaptchaRecordSchema.index({ ipInfo: 1 });
 PuzzleCaptchaRecordSchema.index({ parsedUserAgentInfo: 1 });
+// Compound `{pendingStage:1, _id:1}` partial — see PoWCaptchaRecordSchema's
+// pendingStage_partial for rationale.
 PuzzleCaptchaRecordSchema.index(
-	{ pendingStage: 1 },
+	{ pendingStage: 1, _id: 1 },
 	{
 		name: "pendingStage_partial",
 		partialFilterExpression: { pendingStage: true },
@@ -576,8 +583,12 @@ UserCommitmentRecordSchema.index({ requestHash: -1 });
 UserCommitmentRecordSchema.index({ pending: 1 });
 UserCommitmentRecordSchema.index({ ipInfo: 1 });
 UserCommitmentRecordSchema.index({ parsedUserAgentInfo: 1 });
+// Compound `{pendingStage:1, _id:1}` partial — see PoWCaptchaRecordSchema's
+// pendingStage_partial for rationale. Fixes the runaway
+// `getUnstoredDappUserCommitments` sweep that was choosing the plain `_id: 1`
+// index and scanning ~1M docs per page under a large pending backlog.
 UserCommitmentRecordSchema.index(
-	{ pendingStage: 1 },
+	{ pendingStage: 1, _id: 1 },
 	{
 		name: "pendingStage_partial",
 		partialFilterExpression: { pendingStage: true },
@@ -881,10 +892,10 @@ SessionRecordSchema.index(
 	{ "result.status": 1 },
 	{ background: true, sparse: true },
 );
-// See PoWCaptchaRecordSchema's pendingStage_partial — same purpose for
-// the unstored-session sweep.
+// Compound `{pendingStage:1, _id:1}` partial — see PoWCaptchaRecordSchema's
+// pendingStage_partial for rationale.
 SessionRecordSchema.index(
-	{ pendingStage: 1 },
+	{ pendingStage: 1, _id: 1 },
 	{
 		name: "pendingStage_partial",
 		partialFilterExpression: { pendingStage: true },
@@ -1051,9 +1062,16 @@ export interface IProviderDatabase extends IDatabase {
 
 	getCheckedDappUserCommitments(): Promise<UserCommitmentRecord[]>;
 
+	/**
+	 * Keyset-paginated sweep of pending user commitments. Callers pass the
+	 * `_id` of the last row from the previous page (or omit for the first
+	 * page); the query resumes from `_id > afterId` sorted ascending. Backed
+	 * by the compound `pendingStage_partial` index — cost scales with page
+	 * size, not with total collection size.
+	 */
 	getUnstoredDappUserCommitments(
 		limit?: number,
-		skip?: number,
+		afterId?: unknown,
 	): Promise<UserCommitmentRecord[]>;
 
 	markDappUserCommitmentsStored(
@@ -1079,9 +1097,13 @@ export interface IProviderDatabase extends IDatabase {
 		emailNormalised: string,
 	): Promise<number>;
 
+	/**
+	 * Keyset-paginated sweep of pending PoW captchas. See
+	 * {@link getUnstoredDappUserCommitments} for the resumption contract.
+	 */
 	getUnstoredDappUserPoWCommitments(
 		limit?: number,
-		skip?: number,
+		afterId?: unknown,
 	): Promise<PoWCaptchaRecord[]>;
 
 	markDappUserPoWCommitmentsChecked(challengeIds: string[]): Promise<void>;
@@ -1245,9 +1267,13 @@ export interface IProviderDatabase extends IDatabase {
 		userSitekeyIpHash: string,
 	): Promise<SessionRecord | undefined>;
 
+	/**
+	 * Keyset-paginated sweep of pending session records. See
+	 * {@link getUnstoredDappUserCommitments} for the resumption contract.
+	 */
 	getUnstoredSessionRecords(
 		limit: number,
-		skip: number,
+		afterId?: unknown,
 	): Promise<SessionRecord[]>;
 
 	markSessionRecordsStored(
