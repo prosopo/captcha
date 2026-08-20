@@ -1,5 +1,13 @@
 # @prosopo/provider
 
+## 5.3.8
+### Patch Changes
+
+- Updated dependencies [127985f]
+  - @prosopo/database@4.0.16
+  - @prosopo/env@3.6.39
+  - @prosopo/api-express-router@3.1.70
+
 ## 5.3.7
 ### Patch Changes
 
