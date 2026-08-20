@@ -976,6 +976,19 @@ export class PowCaptchaManager extends CaptchaManager {
 					webView: sessionRecord?.webView,
 					iFrame: sessionRecord?.iFrame,
 					coords: challengeRecord.coords,
+					// tcp-probe fields — persisted on the Session at frictionless
+					// entry (see rawTlsSignalsMiddleware); surfaced here so decide
+					// rules can gate on the raw TCP handshake fingerprint at
+					// verify time.
+					synNs: sessionRecord?.synNs,
+					synackNs: sessionRecord?.synackNs,
+					ackNs: sessionRecord?.ackNs,
+					observedTtl: sessionRecord?.observedTtl,
+					tcpMss: sessionRecord?.tcpMss,
+					tcpWscale: sessionRecord?.tcpWscale,
+					tcpOptsFlags: sessionRecord?.tcpOptsFlags,
+					tcpOptsOrder: sessionRecord?.tcpOptsOrder,
+					tcpWindow: sessionRecord?.tcpWindow,
 				};
 
 				const decision = await this.decisionMachineRunner.decide(

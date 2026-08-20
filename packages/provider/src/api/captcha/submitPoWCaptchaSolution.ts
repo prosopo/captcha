@@ -149,6 +149,13 @@ export default (env: ProviderEnvironment) =>
 						chelloToHandshakeUs: req.chelloToHandshakeUs,
 					}),
 					...rawTlsSignalsForSession(req),
+					// PoW-submit's ipInfo is looked up fresh on this request
+					// (per-connection, so it's the PoW submit hop's IP not
+					// the frictionless entry hop's). Only surface on the
+					// isValid:true branch of the discriminated union.
+					...(req.ipInfo &&
+						"isValid" in req.ipInfo &&
+						req.ipInfo.isValid && { ipInfo: req.ipInfo }),
 				},
 			});
 

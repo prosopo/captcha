@@ -1067,6 +1067,17 @@ export class ImgCaptchaManager extends CaptchaManager {
 				webView: sessionRecord?.webView,
 				iFrame: sessionRecord?.iFrame,
 				coords: solution.coords,
+				// tcp-probe fields from the frictionless Session — see
+				// powTasks.ts for the reasoning.
+				synNs: sessionRecord?.synNs,
+				synackNs: sessionRecord?.synackNs,
+				ackNs: sessionRecord?.ackNs,
+				observedTtl: sessionRecord?.observedTtl,
+				tcpMss: sessionRecord?.tcpMss,
+				tcpWscale: sessionRecord?.tcpWscale,
+				tcpOptsFlags: sessionRecord?.tcpOptsFlags,
+				tcpOptsOrder: sessionRecord?.tcpOptsOrder,
+				tcpWindow: sessionRecord?.tcpWindow,
 			};
 
 			try {
