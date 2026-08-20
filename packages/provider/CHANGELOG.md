@@ -1,5 +1,19 @@
 # @prosopo/provider
 
+## 5.3.7
+### Patch Changes
+
+- 1afe466: Cache compiled decision-machine sandboxes; keyset-paginate the pending-stage sweep.
+  
+  - `DecisionMachineRunner` now hits `vm.createContext` + `new vm.Script` at most once per source blob (keyed by SHA-256). Exports `invalidateDecisionMachineScriptCache` and `invalidateAllDecisionMachineArtifactCaches`, both called from `updateDecisionMachine` after any artifact upload.
+  - `getUnstoredDappUserCommitments` / `getUnstoredDappUserPoWCommitments` / `getUnstoredSessionRecords` switch from `skip(N)` pagination to keyset (`_id > afterId`). Compound partial index `{pendingStage:1, _id:1}` on all four collections so filter + sort ride one index. Fixes the sweep that was scanning 470k–1.2M docs per page under a large pending backlog.
+- Updated dependencies [1afe466]
+  - @prosopo/database@4.0.15
+  - @prosopo/types-database@5.1.9
+  - @prosopo/env@3.6.38
+  - @prosopo/types-env@2.10.34
+  - @prosopo/api-express-router@3.1.69
+
 ## 5.3.6
 ### Patch Changes
 
