@@ -1,5 +1,23 @@
 # @prosopo/provider
 
+## 5.3.5
+### Patch Changes
+
+- c629c01: Randomise puzzle piece size, silhouette family, and decoy depth. New per-client `puzzle.pieceScale.{min,max}` and `puzzle.decoyHoleDarken` settings on `ClientSettingsSchema`; defaults preserve behaviour where possible.
+- Updated dependencies [c629c01]
+  - @prosopo/types@5.2.4
+  - @prosopo/api@4.0.12
+  - @prosopo/api-express-router@3.1.67
+  - @prosopo/database@4.0.13
+  - @prosopo/datasets@3.1.68
+  - @prosopo/env@3.6.36
+  - @prosopo/ipinfo@0.3.13
+  - @prosopo/keyring@2.9.75
+  - @prosopo/load-balancer@2.10.29
+  - @prosopo/types-database@5.1.7
+  - @prosopo/types-env@2.10.32
+  - @prosopo/user-access-policy@3.12.23
+
 ## 5.3.4
 ### Patch Changes
 
