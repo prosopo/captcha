@@ -114,6 +114,21 @@ export type DecisionMachineInput = {
 	// captured client-side and persisted on the puzzle captcha record.
 	// Always undefined on pow / image inputs.
 	puzzleEvents?: PuzzleEvent[];
+	// Raw per-connection TCP-handshake signals persisted on the Session
+	// at frictionless entry (see rawTlsSignalsMiddleware). Surfaced here
+	// so verify-time decide rules can gate on the raw TCP fingerprint
+	// alongside the existing ipInfo field. Undefined on sessions
+	// captured before tcp-probe deploy or served through an ingress
+	// without the sidecar.
+	synNs?: number;
+	synackNs?: number;
+	ackNs?: number;
+	observedTtl?: number;
+	tcpMss?: number;
+	tcpWscale?: number;
+	tcpOptsFlags?: number;
+	tcpOptsOrder?: number;
+	tcpWindow?: number;
 };
 
 export type DecisionMachineOutput = {
