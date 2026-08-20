@@ -36,6 +36,18 @@ export const puzzleDecoyCountDefault = 5;
 export const puzzleDecoyEdgeDarknessDefault = 20;
 export const puzzleDecoyBodyBrightnessDefault = 4;
 export const puzzleHoleDarkenDefault = 0.55;
+// Multiplier on decoy pixels, mirroring `holeDarken` for the real cut.
+// Lower = darker decoys. Kept looser than `holeDarken` so the real hole is
+// still the deepest region on the frame; too close and humans can't tell,
+// too far and a solver keys on brightness alone.
+export const puzzleDecoyHoleDarkenDefault = 0.7;
+// Piece size as a fraction of the background width. The provider draws a
+// fresh value from [min, max] per challenge so a solver can't hard-code
+// the expected silhouette scale. Defaults preserve the historical 44px
+// minimum (44/300 ≈ 0.147) and open the top end to 90% of the frame; a
+// piece is allowed to overhang the background — the cut is clipped.
+export const puzzlePieceScaleMinDefault = 0.15;
+export const puzzlePieceScaleMaxDefault = 0.45;
 
 // Field-level schemas hoisted so `TrafficFilterSchema` per-category
 // challenge policies validate captcha parameters with the same bounds as
@@ -52,6 +64,21 @@ export const puzzleDecoyBodyBrightnessFieldSchema = number()
 	.min(-20)
 	.max(20);
 export const puzzleHoleDarkenFieldSchema = number().min(0).max(1);
+export const puzzleDecoyHoleDarkenFieldSchema = number().min(0).max(1);
+// Bounds are wider than the defaults so operators can pin the piece to a
+// fixed size (min == max) or explore the full frame. Cross-field
+// `min <= max` is enforced on the containing object schema.
+export const puzzlePieceScaleFieldSchema = number().min(0.05).max(0.95);
+export const PuzzlePieceScaleSchema = object({
+	min: puzzlePieceScaleFieldSchema
+		.optional()
+		.default(puzzlePieceScaleMinDefault),
+	max: puzzlePieceScaleFieldSchema
+		.optional()
+		.default(puzzlePieceScaleMaxDefault),
+}).refine((v) => v.min <= v.max, {
+	message: "puzzle piece scale min must be <= max",
+});
 
 /**
  * Per-render tunables for the puzzle captcha. Every field is optional so
@@ -63,7 +90,9 @@ export const PuzzleSettingsSchema = object({
 	decoyCount: puzzleDecoyCountFieldSchema.optional(),
 	decoyEdgeDarkness: puzzleDecoyEdgeDarknessFieldSchema.optional(),
 	decoyBodyBrightness: puzzleDecoyBodyBrightnessFieldSchema.optional(),
+	decoyHoleDarken: puzzleDecoyHoleDarkenFieldSchema.optional(),
 	holeDarken: puzzleHoleDarkenFieldSchema.optional(),
+	pieceScale: PuzzlePieceScaleSchema.optional(),
 });
 
 export type IPuzzleSettings = output<typeof PuzzleSettingsSchema>;

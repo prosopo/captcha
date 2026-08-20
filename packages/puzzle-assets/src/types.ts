@@ -37,8 +37,19 @@ export interface RenderedPuzzle {
 export interface PuzzleGeometry {
 	width: number;
 	height: number;
-	/** Bounding box of the notch/piece, in px. */
+	/**
+	 * Bounding box of the decoy notches, in px. Kept fixed so decoys read as
+	 * a consistent field of small distractions even when the real piece is
+	 * randomised to a large size.
+	 */
 	notchSize: number;
+	/**
+	 * Bounding box of the real piece, in px. Defaults to `notchSize` when
+	 * unset; the provider randomises this per challenge within a scale
+	 * range configured on the client's puzzle settings. May exceed the
+	 * background dimensions — the cut is clipped at the edge.
+	 */
+	pieceSize?: number;
 }
 
 /**
@@ -72,4 +83,11 @@ export interface PuzzleRenderSettings {
 	 * blend closer to the decoys. Bounded 0..1 by the schema.
 	 */
 	holeDarken: number;
+	/**
+	 * Multiplier applied to decoy pixels, mirroring `holeDarken`. Kept
+	 * looser than `holeDarken` so the real hole is still the deepest
+	 * region on the frame — otherwise humans can't tell target from decoy.
+	 * Bounded 0..1 by the schema.
+	 */
+	decoyHoleDarken: number;
 }

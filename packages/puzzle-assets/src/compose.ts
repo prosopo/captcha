@@ -61,14 +61,21 @@ const PIECE_EDGE_LIGHT = 8;
 
 const clamp255 = (v: number): number => (v < 0 ? 0 : v > 255 ? 255 : v);
 
-const sampleClamped = (
+/**
+ * Sample the background at `(x, y)`. Returns `null` when the coordinate
+ * sits outside the frame — the piece is clipped at the boundary rather
+ * than filled from a clamped edge pixel, so a piece whose placement
+ * overhangs the frame simply loses those pixels.
+ */
+const sampleBackground = (
 	image: RgbaImage,
 	x: number,
 	y: number,
-): [number, number, number] => {
-	const cx = x < 0 ? 0 : x >= image.width ? image.width - 1 : x;
-	const cy = y < 0 ? 0 : y >= image.height ? image.height - 1 : y;
-	const i = (cy * image.width + cx) * 4;
+): [number, number, number] | null => {
+	if (x < 0 || y < 0 || x >= image.width || y >= image.height) {
+		return null;
+	}
+	const i = (y * image.width + x) * 4;
 	return [image.data[i] ?? 0, image.data[i + 1] ?? 0, image.data[i + 2] ?? 0];
 };
 
@@ -115,7 +122,14 @@ export const cutNotch = (
 				continue;
 			}
 
-			const [r, g, b] = sampleClamped(background, left + lx, top + ly);
+			const sample = sampleBackground(background, left + lx, top + ly);
+			if (sample === null) {
+				// Piece extends past the frame — leave this pixel transparent
+				// so the overhang doesn't smear the edge colour outward.
+				pieceData[pi + 3] = 0;
+				continue;
+			}
+			const [r, g, b] = sample;
 
 			// A bright rim just inside the edge makes the piece read as a
 			// raised object rather than a flat sticker.
