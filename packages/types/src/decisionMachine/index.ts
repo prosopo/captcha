@@ -245,6 +245,40 @@ export interface RoutingMachineRawSignals {
 	// traverse a chaddy-enabled ingress (e.g. dev requests, HTTP/3).
 	tcpToChelloUs?: number;
 	chelloToHandshakeUs?: number;
+	// Raw per-connection TCP-handshake signals forwarded by chaddy from
+	// its co-located tcp-probe eBPF sidecar. Wire-observed primitives
+	// (RFC-793 / RFC-9293) captured off the WAN NIC before caddy sees the
+	// TLS bytes. All optional — a request that came in through an ingress
+	// without a running tcp-probe pipeline has all fields undefined.
+	//
+	// Fields decoded from the sidecar's `X-TLS-*` headers by
+	// `rawTlsSignalsMiddleware`. See @prosopo/types Session for full
+	// per-field semantics (kernel monotonic ns for the syn/synack/ack
+	// timestamps, TTL byte for observedTtl, MSS / window-scale / options
+	// bitfield / packed options order / window from the client's SYN).
+	synNs?: number;
+	synackNs?: number;
+	ackNs?: number;
+	observedTtl?: number;
+	tcpMss?: number;
+	tcpWscale?: number;
+	tcpOptsFlags?: number;
+	tcpOptsOrder?: number;
+	tcpWindow?: number;
+	// IP metadata as looked up by `ipInfoMiddleware` from the provider's
+	// ipapi/isp mirror at request time. Undefined when the lookup failed
+	// or the middleware wasn't reached (dev requests bypassing the
+	// standard chain). Undefined-check any field before use — an IPInfo
+	// with `isValid:false` means the lookup errored and no threat
+	// indicators are populated.
+	//
+	// Route-time surfacing of `ipInfo` complements the existing
+	// decide-kind `input.ipInfo`: decide loads the persisted ipapi
+	// payload from the Session record at verify time, route now carries
+	// the live per-request lookup so a routing machine can reason on
+	// asn / isProxy / isMobile / isDatacenter at the frictionless entry
+	// (e.g. escalate iPhone-UA + isProxy:true to puzzle).
+	ipInfo?: IPInfoResponse;
 	// Full page URL the widget was rendered on (origin + path only; query
 	// string, fragment and any embedded credentials are stripped client- and
 	// server-side). Available on the `route` phase from the freshly decrypted
