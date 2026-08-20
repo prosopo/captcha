@@ -1391,22 +1391,34 @@ export class ProviderDatabase
 	/** @description Get Dapp User captcha commitments from the commitments table that have not been counted towards the
 	 * client's total.
 	 *
-	 * Served by the `pendingStage_partial` index. Records have
-	 * `pendingStage: true` set on insert and on every mutation (see
+	 * Served by the compound `pendingStage_partial` index
+	 * (`{pendingStage:1, _id:1}` partial where pendingStage:true). Records
+	 * have `pendingStage: true` set on insert and on every mutation (see
 	 * `updateDappUserCommitment`, `markDappUserCommitmentsChecked`,
 	 * `approveDappUserCommitment`, `disapproveDappUserCommitment`,
 	 * `storePendingImageCommitment`). `markDappUserCommitmentsStored` clears
 	 * the flag after a successful stage, guarded by `lastUpdatedTimestamp`
 	 * so an in-flight update isn't lost.
+	 *
+	 * Keyset pagination: pass the `_id` of the last row from the previous
+	 * page as `afterId` to resume. The old `skip(N)` shape walked N docs
+	 * per page even with the right index; under a 1M-row pending backlog
+	 * that hit multi-second query durations and thrashed the WT cache,
+	 * dragging every co-tenant query with it.
 	 */
 	async getUnstoredDappUserCommitments(
 		limit = 1000,
-		skip = 0,
+		afterId?: unknown,
 	): Promise<UserCommitmentRecord[]> {
+		const filter: { pendingStage: true; _id?: { $gt: unknown } } = {
+			pendingStage: true,
+		};
+		if (afterId !== undefined) {
+			filter._id = { $gt: afterId };
+		}
 		const docs = await this.tables?.commitment
-			.find({ pendingStage: true })
+			.find(filter)
 			.sort({ _id: 1 })
-			.skip(skip)
 			.limit(limit)
 			.lean<UserCommitmentRecord[]>();
 		return docs || [];
@@ -1534,14 +1546,20 @@ export class ProviderDatabase
 	 */
 	async getUnstoredDappUserPoWCommitments(
 		limit = 1000,
-		skip = 0,
+		afterId?: unknown,
 	): Promise<PoWCaptchaRecord[]> {
-		// Served by the `pendingStage_partial` index — see
-		// `getUnstoredDappUserCommitments` for the lifecycle of the flag.
+		// Served by the compound `pendingStage_partial` index — see
+		// `getUnstoredDappUserCommitments` for the lifecycle of the flag
+		// and the keyset-pagination contract.
+		const filter: { pendingStage: true; _id?: { $gt: unknown } } = {
+			pendingStage: true,
+		};
+		if (afterId !== undefined) {
+			filter._id = { $gt: afterId };
+		}
 		const docs = await this.tables?.powcaptcha
-			.find({ pendingStage: true })
+			.find(filter)
 			.sort({ _id: 1 })
-			.skip(skip)
 			.limit(limit)
 			.lean<PoWCaptchaRecord[]>();
 		return docs || [];
@@ -1976,22 +1994,25 @@ export class ProviderDatabase
 	/** Get unstored session records
 	 * @description Get session records that have not been stored yet.
 	 *
-	 * Served by the `pendingStage_partial` index — see
-	 * `getUnstoredDappUserCommitments` for the lifecycle of the flag.
-	 * `checkAndRemoveSession` also flips the flag so consumed sessions
-	 * propagate to the central DB via the next sweep.
-	 * @param limit
-	 * @param skip
+	 * Served by the compound `pendingStage_partial` index — see
+	 * `getUnstoredDappUserCommitments` for the lifecycle of the flag and
+	 * the keyset-pagination contract. `checkAndRemoveSession` also flips
+	 * the flag so consumed sessions propagate to the central DB via the
+	 * next sweep.
 	 */
-	getUnstoredSessionRecords(limit = 1000, skip = 0): Promise<SessionRecord[]> {
+	getUnstoredSessionRecords(
+		limit = 1000,
+		afterId?: unknown,
+	): Promise<SessionRecord[]> {
+		const filter: { pendingStage: true; _id?: { $gt: unknown } } = {
+			pendingStage: true,
+		};
+		if (afterId !== undefined) {
+			filter._id = { $gt: afterId };
+		}
 		return Promise.resolve(this.tables?.session)
 			.then((tbl) =>
-				tbl
-					?.find({ pendingStage: true })
-					.sort({ _id: 1 })
-					.skip(skip)
-					.limit(limit)
-					.lean<SessionRecord[]>(),
+				tbl?.find(filter).sort({ _id: 1 }).limit(limit).lean<SessionRecord[]>(),
 			)
 			.then((docs) => docs || []);
 	}

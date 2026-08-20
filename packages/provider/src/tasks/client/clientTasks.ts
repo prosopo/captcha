@@ -38,6 +38,10 @@ import type {
 } from "@prosopo/types-database";
 import { majorityAverage, parseUrl } from "@prosopo/util";
 import { validateSiteKey } from "../../api/validateAddress.js";
+import {
+	invalidateAllDecisionMachineArtifactCaches,
+	invalidateDecisionMachineScriptCache,
+} from "../decisionMachine/decisionMachineRunner.js";
 
 const SAMPLE_SIZE = 75;
 const isValidPrivateKey = (privateKeyString: string) => {
@@ -120,10 +124,10 @@ export class ClientTaskManager {
 			let processedCommitments = 0;
 
 			await this.processBatchesWithCursor(
-				async (skip: number) =>
+				async (afterId?: unknown) =>
 					await this.providerDB.getUnstoredDappUserCommitments(
 						BATCH_SIZE,
-						skip,
+						afterId,
 					),
 				async (batch) => {
 					const filteredBatch = (
@@ -149,15 +153,16 @@ export class ClientTaskManager {
 					}
 					processedCommitments += filteredBatch.length;
 				},
+				(row) => (row as { _id?: unknown })._id,
 			);
 
 			// Process PoW records with cursor
 			let processedPowRecords = 0;
 			await this.processBatchesWithCursor(
-				async (skip: number) =>
+				async (afterId?: unknown) =>
 					await this.providerDB.getUnstoredDappUserPoWCommitments(
 						BATCH_SIZE,
-						skip,
+						afterId,
 					),
 				async (batch) => {
 					const filteredBatch = lastTask?.updated
@@ -173,13 +178,14 @@ export class ClientTaskManager {
 					}
 					processedPowRecords += filteredBatch.length;
 				},
+				(row) => (row as { _id?: unknown })._id,
 			);
 
 			// process session records with cursor
 			let processedSessionRecords = 0;
 			await this.processBatchesWithCursor(
-				async (skip: number) =>
-					await this.providerDB.getUnstoredSessionRecords(BATCH_SIZE, skip),
+				async (afterId?: unknown) =>
+					await this.providerDB.getUnstoredSessionRecords(BATCH_SIZE, afterId),
 				async (batch) => {
 					const filteredBatch = lastTask?.updated
 						? batch.filter((record) => this.isRecordUpdated(record))
@@ -194,6 +200,7 @@ export class ClientTaskManager {
 					}
 					processedSessionRecords += filteredBatch.length;
 				},
+				(row) => (row as { _id?: unknown })._id,
 			);
 
 			await this.providerDB.updateScheduledTaskStatus(
@@ -466,6 +473,15 @@ export class ClientTaskManager {
 			updatedAt: now,
 		});
 
+		// Flush both DM caches so the new artifact + source take effect on the
+		// next request instead of waiting for TTL. Script cache is content-
+		// addressed (a new source gets a new key) so `clear()` is defensive
+		// against a source that reuses a prior SHA; the artifact cache is
+		// keyed by (scope, kind, dappAccount) so a same-key overwrite would
+		// otherwise return stale for up to 5 minutes.
+		invalidateAllDecisionMachineArtifactCaches();
+		invalidateDecisionMachineScriptCache();
+
 		return {
 			scope,
 			dappAccount,
@@ -634,17 +650,31 @@ export class ClientTaskManager {
 		);
 	}
 
+	/**
+	 * Drive a keyset-paginated sweep. Each iteration passes the `_id` of the
+	 * previous batch's last row to `fetchBatch` so the query resumes from
+	 * `_id > afterId` — see `getUnstoredDappUserCommitments` for why we
+	 * moved off `skip(N)`. `getLastId` extracts the resumption cursor from
+	 * a batch row; both `PoWCaptchaRecord` and `UserCommitmentRecord` are
+	 * `mongoose.Document` subtypes so `_id` is always present at runtime
+	 * even though our stored types don't spell it out.
+	 */
 	private async processBatchesWithCursor<T>(
-		fetchBatch: (skip: number) => Promise<T[]>,
+		fetchBatch: (afterId?: unknown) => Promise<T[]>,
 		processBatch: (batch: T[]) => Promise<void>,
+		getLastId: (row: T) => unknown,
 	): Promise<void> {
-		let skip = 0;
+		let afterId: unknown | undefined;
 		while (true) {
-			const batch = await fetchBatch(skip);
+			const batch = await fetchBatch(afterId);
 			if (!batch.length) break;
 
 			await processBatch(batch);
-			skip += batch.length;
+			const last = batch[batch.length - 1];
+			if (last === undefined) break;
+			const nextId = getLastId(last);
+			if (nextId === undefined) break;
+			afterId = nextId;
 		}
 	}
 }
