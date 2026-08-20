@@ -337,6 +337,16 @@ export default (
 										chelloToHandshakeUs: req.chelloToHandshakeUs,
 									}),
 									...rawTlsSignalsForSession(req),
+									// req.ipInfo is the per-request ipapi lookup. Only
+									// surface it into `raw` when the lookup succeeded —
+									// an `isValid:false` payload just means the middleware
+									// errored and none of the threat flags are populated,
+									// so pushing it in would give the routing machine
+									// nothing to reason on and waste bytes across the
+									// wire.
+									...(req.ipInfo &&
+										"isValid" in req.ipInfo &&
+										req.ipInfo.isValid && { ipInfo: req.ipInfo }),
 									// currentUrl / iframeUrl use the cached session's
 									// values to match the rest of the dedup routing input
 									// (score, webView, captchaType are all pulled from
@@ -727,6 +737,12 @@ export default (
 						chelloToHandshakeUs: req.chelloToHandshakeUs,
 					}),
 					...rawTlsSignalsForSession(req),
+					// req.ipInfo is the per-request ipapi lookup; only surface
+					// on the successful branch of the discriminated union.
+					// See the dedup replay path above for the full comment.
+					...(req.ipInfo &&
+						"isValid" in req.ipInfo &&
+						req.ipInfo.isValid && { ipInfo: req.ipInfo }),
 					...(currentUrl && { currentUrl }),
 					...(iframeUrl && { iframeUrl }),
 				},
