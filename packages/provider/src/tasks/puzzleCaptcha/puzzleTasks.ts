@@ -841,6 +841,16 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				iFrame: sessionRecord?.iFrame,
 				coords: challengeRecord.coords,
 				puzzleEvents: challengeRecord.puzzleEvents,
+				// tcp-probe fields — see powTasks.ts for the reasoning.
+				synNs: sessionRecord?.synNs,
+				synackNs: sessionRecord?.synackNs,
+				ackNs: sessionRecord?.ackNs,
+				observedTtl: sessionRecord?.observedTtl,
+				tcpMss: sessionRecord?.tcpMss,
+				tcpWscale: sessionRecord?.tcpWscale,
+				tcpOptsFlags: sessionRecord?.tcpOptsFlags,
+				tcpOptsOrder: sessionRecord?.tcpOptsOrder,
+				tcpWindow: sessionRecord?.tcpWindow,
 			};
 
 			const decision = await this.decisionMachineRunner.decide(
