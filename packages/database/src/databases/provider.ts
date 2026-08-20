@@ -1757,6 +1757,25 @@ export class ProviderDatabase
 				// path too. Keep this projection in sync with whatever
 				// fields the read-only callers need.
 				captchaType: 1,
+				// Raw per-connection TCP-handshake signals populated by the
+				// tcp-probe eBPF sidecar (see @prosopo/types Session for the
+				// wire semantics). The verify-time DM input surface exposes
+				// these to decide rules (e.g. `tcp-stack-dc-linux-ts-off`,
+				// `tcp-ttl-windows-ua-linux-stack`); every one of the img /
+				// pow / puzzle verify paths forwards `sessionRecord?.tcpX`
+				// into the DecisionMachineInput. Missed on the original
+				// projection: the rules got `undefined` for every field and
+				// silently never fired against real traffic even though
+				// matching sessions were sitting in the DB.
+				synNs: 1,
+				synackNs: 1,
+				ackNs: 1,
+				observedTtl: 1,
+				tcpMss: 1,
+				tcpWscale: 1,
+				tcpOptsFlags: 1,
+				tcpOptsOrder: 1,
+				tcpWindow: 1,
 				"headers.user-agent": 1,
 				"headers.accept": 1,
 				"headers.accept-language": 1,
