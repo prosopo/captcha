@@ -1,5 +1,39 @@
 # @prosopo/provider
 
+## 5.3.6
+### Patch Changes
+
+- 6411f64: feat(provider,types): surface tcp-probe + ipInfo on routing raw
+  
+  `RoutingMachineRawSignals` gains the 9 raw TCP-handshake fields
+  (`synNs / synackNs / ackNs / observedTtl / tcpMss / tcpWscale /
+  tcpOptsFlags / tcpOptsOrder / tcpWindow`) and the per-request
+  `ipInfo` payload. Callsites that build a routing raw — the
+  frictionless entry, its dedup replay branch, and the PoW submit
+  post-pow hop — spread `req.ipInfo` alongside the existing
+  `rawTlsSignalsForSession(req)`, gated on the discriminated-union
+  success branch so the routing machine never sees an
+  `isValid:false` error payload.
+  
+  Route-time `ipInfo` is separate from the existing decide-kind
+  `input.ipInfo` (persisted on the Session record at verify time).
+  The DM helper is being updated in the captcha-private
+  decision-machines package to resolve both channels through one
+  matcher surface.
+- Updated dependencies [6411f64]
+  - @prosopo/types@5.2.5
+  - @prosopo/api@4.0.13
+  - @prosopo/api-express-router@3.1.68
+  - @prosopo/database@4.0.14
+  - @prosopo/datasets@3.1.69
+  - @prosopo/env@3.6.37
+  - @prosopo/ipinfo@0.3.14
+  - @prosopo/keyring@2.9.76
+  - @prosopo/load-balancer@2.10.30
+  - @prosopo/types-database@5.1.8
+  - @prosopo/types-env@2.10.33
+  - @prosopo/user-access-policy@3.12.24
+
 ## 5.3.5
 ### Patch Changes
 

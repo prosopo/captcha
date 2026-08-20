@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/types",
-	"version": "5.2.4",
+	"version": "5.2.5",
 	"description": "Types for prosopo TypeScript packages",
 	"type": "module",
 	"main": "dist/index.js",
