@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/provider",
-	"version": "5.3.3",
+	"version": "5.3.4",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"type": "module",
@@ -34,7 +34,7 @@
 		"@prosopo/ipinfo": "0.3.12",
 		"@prosopo/keyring": "2.9.74",
 		"@prosopo/load-balancer": "2.10.28",
-		"@prosopo/puzzle-assets": "0.1.1",
+		"@prosopo/puzzle-assets": "0.1.2",
 		"@prosopo/redis-client": "1.0.32",
 		"@prosopo/locale": "3.3.0",
 		"@prosopo/native-ja4": "0.0.3",
