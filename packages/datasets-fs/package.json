@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/datasets-fs",
-	"version": "3.0.116",
+	"version": "3.0.117",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
@@ -32,7 +32,7 @@
 		"@noble/hashes": "1.8.0",
 		"@prosopo/common": "3.1.50",
 		"@prosopo/logger": "2.0.6",
-		"@prosopo/types": "5.2.3",
+		"@prosopo/types": "5.2.4",
 		"@prosopo/util": "3.3.6",
 		"@prosopo/util-crypto": "13.5.30",
 		"@prosopo/workspace": "3.2.0",
