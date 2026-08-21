@@ -61,7 +61,7 @@
 		"@prosopo/config": "3.3.11",
 		"@prosopo/util-crypto": "13.5.30",
 		"@types/node": "22.10.2",
-		"fast-glob": "3.3.2",
+		"fast-glob": "3.3.3",
 		"mongoose": "8.24.1",
 		"vite": "8.1.5",
 		"vitest": "4.1.10",

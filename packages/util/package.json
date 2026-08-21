@@ -48,7 +48,7 @@
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.3.11",
-		"@types/lodash": "4.17.7",
+		"@types/lodash": "4.17.25",
 		"@types/node": "22.10.2",
 		"@types/seedrandom": "3.0.8",
 		"@vitest/coverage-v8": "4.1.10",

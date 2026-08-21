@@ -27,7 +27,7 @@
 	},
 	"version": "2.10.21",
 	"devDependencies": {
-		"@emotion/cache": "11.11.0",
+		"@emotion/cache": "11.14.0",
 		"@prosopo/config": "3.3.11",
 		"@prosopo/dotenv": "3.0.52",
 		"@prosopo/locale": "3.3.0",
