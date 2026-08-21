@@ -536,6 +536,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		expect(
 			tasksInstance.frictionlessManager.registerBlockedSession,
 		).toHaveBeenCalledWith(
+			CaptchaType.image,
 			expect.objectContaining({
 				siteKey: "siteBlocked",
 				reason: FrictionlessReason.ACCESS_POLICY_BLOCK,

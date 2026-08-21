@@ -16,6 +16,7 @@ import { ProsopoApiError } from "@prosopo/common";
 import {
 	ApiParams,
 	CaptchaType,
+	type ChallengeCaptchaType,
 	GetFrictionlessCaptchaChallengeRequestBody,
 	ModeEnum,
 	type ScoreComponents,
@@ -293,10 +294,7 @@ export default (
 				// behave identically. One that mixes per-request signals with
 				// session-derived ones gets the request-time view of every
 				// input that's available without re-decrypting the payload.
-				const cachedCaptchaType = dedup.captchaType as
-					| CaptchaType.image
-					| CaptchaType.pow
-					| CaptchaType.puzzle;
+				const cachedCaptchaType = dedup.captchaType as ChallengeCaptchaType;
 				const dedupRouted = normalizedIp
 					? await tasks.frictionlessManager.applyRoutingMachine(
 							{
@@ -474,10 +472,7 @@ export default (
 					recordFrictionlessDecision("reuse_session");
 					attachHoneypot(res, clientRecord);
 					return res.json({
-						[ApiParams.captchaType]: dedup.captchaType as
-							| CaptchaType.image
-							| CaptchaType.pow
-							| CaptchaType.puzzle,
+						[ApiParams.captchaType]: dedup.captchaType as ChallengeCaptchaType,
 						[ApiParams.sessionId]: dedup.sessionId,
 						[ApiParams.status]: "ok",
 						dns_url: buildDnsEventUrl(dedup.sessionId),

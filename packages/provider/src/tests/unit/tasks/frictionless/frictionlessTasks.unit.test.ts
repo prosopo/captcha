@@ -234,7 +234,10 @@ describe("Frictionless Task Manager", () => {
 				ipInfo: stubIpInfo,
 			});
 
-			await frictionlessTaskManager.registerBlockedSession({});
+			await frictionlessTaskManager.registerBlockedSession(
+				CaptchaType.image,
+				{},
+			);
 
 			expect(db.storeSessionRecord).toHaveBeenCalledWith(
 				expect.objectContaining({

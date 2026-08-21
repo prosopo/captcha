@@ -23,6 +23,7 @@ import {
 import {
 	CaptchaType,
 	type FrictionlessState,
+	type InteractiveCaptchaType,
 	type ModeType,
 	ProcaptchaConfigSchema,
 	type ProcaptchaFrictionlessProps,
@@ -179,7 +180,7 @@ export const ProcaptchaFrictionless = ({
 		escalationCoords?: RetryCoords,
 	) => {
 		const onEscalate = (
-			next: CaptchaType.image | CaptchaType.puzzle,
+			next: InteractiveCaptchaType,
 			newSessionId: string,
 			coords?: RetryCoords,
 		) => {

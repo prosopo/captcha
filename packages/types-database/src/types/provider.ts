@@ -15,6 +15,7 @@
 import type { AllKeys } from "@prosopo/common";
 import { type TranslationKey, TranslationKeysSchema } from "@prosopo/locale";
 import {
+	CHALLENGE_CAPTCHA_TYPES,
 	CaptchaLabel,
 	CaptchaType,
 	type ClientContextEntropy,
@@ -717,6 +718,11 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	mode: { type: String, enum: ModeEnum, required: false },
 	solvedImagesCount: { type: Number, required: false },
 	powDifficulty: { type: Number, required: false },
+	// Discriminated per-challenge params. Declared as a loose subdocument
+	// because the shape varies by `challengeParams.type`; the zod
+	// `ChallengeParamsSchema` on `@prosopo/types` is the validating contract.
+	// Dual-written with the two flat fields above during the migration.
+	challengeParams: { type: Schema.Types.Mixed, required: false },
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_DAY },
 	lastUpdatedTimestamp: { type: Date, required: false },
 	// See `StoredCaptcha.pendingStage` — same semantics on Session records.
@@ -932,7 +938,7 @@ export const DecisionMachineArtifactRecordSchema =
 		version: { type: String, required: false },
 		captchaType: {
 			type: String,
-			enum: [CaptchaType.pow, CaptchaType.image, CaptchaType.puzzle],
+			enum: CHALLENGE_CAPTCHA_TYPES,
 			required: false,
 		},
 		createdAt: { type: Date, required: true },

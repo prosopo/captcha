@@ -15,8 +15,8 @@
 import { z } from "zod";
 import type { IPInfoResponse } from "../api/ipapi.js";
 import {
-	CaptchaType,
-	DecisionMachineCaptchaTypeSchema,
+	type ChallengeCaptchaType,
+	ChallengeCaptchaTypeSchema,
 } from "../client/captchaType/captchaType.js";
 import type { PuzzleEvent, RequestHeaders } from "../provider/api.js";
 import type { ScoreComponents } from "../provider/database.js";
@@ -80,7 +80,7 @@ export type DecisionMachineInput = {
 	dappAccount: string;
 	captchaResult: "passed" | "failed";
 	headers: Record<string, string | string[] | undefined>;
-	captchaType?: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle;
+	captchaType?: ChallengeCaptchaType;
 	behavioralDataPacked?: DecisionMachineBehavioralDataPacked;
 	deviceCapability?: string;
 	countryCode?: string;
@@ -138,10 +138,12 @@ export type DecisionMachineOutput = {
 	tags?: string[];
 };
 
-export type DecisionMachineCaptchaType =
-	| CaptchaType.pow
-	| CaptchaType.image
-	| CaptchaType.puzzle;
+/**
+ * @deprecated Use `ChallengeCaptchaType` from `@prosopo/types`. Kept as an
+ * alias because stored decision-machine artefacts and operator docs use the
+ * old name.
+ */
+export type DecisionMachineCaptchaType = ChallengeCaptchaType;
 
 // This is the API configuration type (used for uploads/API calls)
 // The database storage type is DecisionMachineArtifact in provider/database.ts
@@ -169,7 +171,7 @@ export const DecisionMachineConfigSchema = z.object({
 	name: z.string().optional(),
 	version: z.string().optional(),
 	createdAt: z.string(),
-	captchaType: DecisionMachineCaptchaTypeSchema.optional(),
+	captchaType: ChallengeCaptchaTypeSchema.optional(),
 });
 
 /**
@@ -199,9 +201,7 @@ export type CounterDimension = (typeof COUNTER_DIMENSIONS)[number];
 
 export const COUNTER_CAPTCHA_ANY = "any" as const;
 export type CounterCaptchaType =
-	| CaptchaType.pow
-	| CaptchaType.image
-	| CaptchaType.puzzle
+	| ChallengeCaptchaType
 	| typeof COUNTER_CAPTCHA_ANY;
 
 export interface CounterSpec {
@@ -214,9 +214,7 @@ export interface CounterSpec {
 export const CounterSpecSchema = z.object({
 	kind: z.enum(COUNTER_KINDS),
 	captchaType: z.union([
-		z.literal(CaptchaType.pow),
-		z.literal(CaptchaType.image),
-		z.literal(CaptchaType.puzzle),
+		ChallengeCaptchaTypeSchema,
 		z.literal(COUNTER_CAPTCHA_ANY),
 	]),
 	dimension: z.enum(COUNTER_DIMENSIONS),
@@ -231,7 +229,7 @@ export const encodeCounterKey = (
 	`cnt:${dappAccount}:${spec.kind}:${spec.captchaType}:${spec.dimension}:${value}:${spec.window}`;
 
 export interface RoutingMachineBaseline {
-	captchaType: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle;
+	captchaType: ChallengeCaptchaType;
 	solvedImagesCount?: number;
 	powDifficulty?: number;
 }
@@ -328,7 +326,7 @@ export interface RoutingMachineInput extends RoutingMachineInputBase {
 }
 
 export interface RoutingMachineOutput {
-	captchaType: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle;
+	captchaType: ChallengeCaptchaType;
 	solvedImagesCount?: number;
 	powDifficulty?: number;
 	// Optional selection reason the machine can attach to explain an escalation
@@ -338,11 +336,7 @@ export interface RoutingMachineOutput {
 }
 
 export const RoutingMachineOutputSchema = z.object({
-	captchaType: z.union([
-		z.literal(CaptchaType.pow),
-		z.literal(CaptchaType.image),
-		z.literal(CaptchaType.puzzle),
-	]),
+	captchaType: ChallengeCaptchaTypeSchema,
 	solvedImagesCount: z.number().int().positive().optional(),
 	powDifficulty: z.number().positive().optional(),
 	reason: z.string().optional(),

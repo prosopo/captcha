@@ -361,7 +361,36 @@ export const HoneypotSettingsSchema = object({
 
 export type IHoneypotSettings = output<typeof HoneypotSettingsSchema>;
 
-export const ClientSettingsSchema = object({
+/**
+ * Per-challenge settings, grouped under the challenge they configure.
+ *
+ * These are derived, not stored-and-edited: the flat `imageThreshold`,
+ * `imageMaxRounds`, `powDifficulty` and `puzzleTolerance` keys remain the
+ * source of truth (that is what the portal writes and what every current
+ * reader consumes), and the transform on `ClientSettingsSchema` recomputes
+ * these groups from them on every parse. Consumers that want "the image knobs"
+ * as one object can read `settings.image` instead of picking flat keys out of
+ * a shared namespace; a later phase can flip the direction once the portal and
+ * the stored records have moved over.
+ */
+const ImageSettingsSchema = object({
+	threshold: number().min(0).max(1),
+	maxRounds: number().int().min(2),
+});
+
+const PowSettingsSchema = object({
+	difficulty: number().positive().min(1).max(10),
+});
+
+const PuzzleSettingsSchema = object({
+	tolerance: number().int().min(5).max(1000),
+});
+
+export type IImageSettings = output<typeof ImageSettingsSchema>;
+export type IPowSettings = output<typeof PowSettingsSchema>;
+export type IPuzzleSettings = output<typeof PuzzleSettingsSchema>;
+
+const ClientSettingsBaseSchema = object({
 	captchaType: CaptchaTypeSpec.optional().default(captchaTypeDefault),
 	domains: array(string()).min(1),
 	// Maximum ms between user submission and the dapp's /verify call.
@@ -428,6 +457,33 @@ export const ClientSettingsSchema = object({
 	storeMetadata: boolean().optional(),
 	honeypot: HoneypotSettingsSchema.optional(),
 });
+
+/**
+ * The grouped view is declared optional even though `parse` always populates
+ * it. Plenty of call sites (tests, demos, seed scripts) hand-build an
+ * `IUserSettings` literal from the flat keys; making the groups required would
+ * force every one of them to restate derived data. Readers that want a group
+ * should either parse through this schema or fall back to the flat key.
+ */
+type ClientSettingsGroups = {
+	image?: IImageSettings;
+	pow?: IPowSettings;
+	puzzle?: IPuzzleSettings;
+};
+
+export const ClientSettingsSchema = ClientSettingsBaseSchema.transform(
+	(
+		settings,
+	): output<typeof ClientSettingsBaseSchema> & ClientSettingsGroups => ({
+		...settings,
+		image: {
+			threshold: settings.imageThreshold,
+			maxRounds: settings.imageMaxRounds,
+		},
+		pow: { difficulty: settings.powDifficulty },
+		puzzle: { tolerance: settings.puzzleTolerance },
+	}),
+);
 
 export type IUserSettings = output<typeof ClientSettingsSchema>;
 export type IIPValidationRules = output<typeof IPValidationRulesSchema>;
