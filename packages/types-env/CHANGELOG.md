@@ -1,5 +1,11 @@
 # @prosopo/types-env
 
+## 2.10.35
+### Patch Changes
+
+- Updated dependencies [dfc1fa6]
+  - @prosopo/types-database@5.1.10
+
 ## 2.10.34
 ### Patch Changes
 

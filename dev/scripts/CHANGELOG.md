@@ -1,5 +1,14 @@
 # @prosopo/scripts
 
+## 3.1.165
+### Patch Changes
+
+- Updated dependencies [dfc1fa6]
+  - @prosopo/provider@5.3.9
+  - @prosopo/cli@3.7.23
+  - @prosopo/env@3.6.40
+  - @prosopo/types-env@2.10.35
+
 ## 3.1.164
 ### Patch Changes
 

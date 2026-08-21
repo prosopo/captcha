@@ -1,5 +1,12 @@
 # @prosopo/env
 
+## 3.6.40
+### Patch Changes
+
+- Updated dependencies [dfc1fa6]
+  - @prosopo/database@4.0.17
+  - @prosopo/types-env@2.10.35
+
 ## 3.6.39
 ### Patch Changes
 
