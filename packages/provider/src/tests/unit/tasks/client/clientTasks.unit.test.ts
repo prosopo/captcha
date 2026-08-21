@@ -218,10 +218,6 @@ describe("ClientTaskManager", () => {
 					},
 				},
 			]),
-			sampleContextEntropy: vi.fn().mockResolvedValue(
-				Array(100).fill("11111111"), // Return 100 samples to meet SAMPLE_SIZE requirement
-			),
-			setClientContextEntropy: vi.fn(),
 			upsertDecisionMachineArtifact: vi.fn(),
 		} as unknown as IProviderDatabase;
 
@@ -747,26 +743,6 @@ describe("ClientTaskManager", () => {
 			);
 		});
 	});
-	describe("Context awareness", () => {
-		it("Should calculate the client context and save to the database", async () => {
-			await clientTaskManager.calculateClientEntropy();
-
-			expect(providerDB.getAllClientRecords).toHaveBeenCalled();
-			expect(providerDB.sampleContextEntropy).toHaveBeenCalled();
-			// Should be called for both Default and Webview contexts for each client
-			expect(providerDB.setClientContextEntropy).toHaveBeenCalledWith(
-				"mockClientRecord1",
-				ContextType.Default,
-				"11111111",
-			);
-			expect(providerDB.setClientContextEntropy).toHaveBeenCalledWith(
-				"mockClientRecord2",
-				ContextType.Webview,
-				"11111111",
-			);
-		});
-	});
-
 	describe("Decision machine updates", () => {
 		it("should store decision machine artifacts with global scope", async () => {
 			const result = await clientTaskManager.updateDecisionMachine(

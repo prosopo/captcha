@@ -25,7 +25,6 @@ export * from "./api/domainMiddleware.js";
 export * from "./api/startProviderApi.js";
 export * from "./schedulers/captchaScheduler.js";
 export * from "./schedulers/getClientList.js";
-export * from "./schedulers/setClientEntropy.js";
 export * from "./schedulers/updateSpamEmailDomains.js";
 export * from "./api/headerCheckMiddleware.js";
 export * from "./api/admin/createApiAdminRoutesProvider.js";

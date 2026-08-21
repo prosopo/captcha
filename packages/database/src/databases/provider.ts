@@ -28,7 +28,7 @@ import {
 	CaptchaStatus,
 	CaptchaType,
 	type CompositeIpAddress,
-	ContextType,
+	type ContextType,
 	type Dataset,
 	type DatasetBase,
 	type DatasetWithIds,
@@ -1405,6 +1405,15 @@ export class ProviderDatabase
 	 * per page even with the right index; under a 1M-row pending backlog
 	 * that hit multi-second query durations and thrashed the WT cache,
 	 * dragging every co-tenant query with it.
+	 *
+	 * `.hint("pendingStage_partial")` pins the compound index against a
+	 * planner regression seen in prod on 2026-08-21: on collections with
+	 * both a plain `_id` index and the compound `{pendingStage:1, _id:1}`
+	 * partial, the planner sometimes picks `_id` alone for
+	 * `find({pendingStage:true}).sort({_id:1})` and scans the entire
+	 * collection filtering in memory. Clearing the plan cache re-plans
+	 * once but doesn't prevent the regression re-appearing after future
+	 * catalog changes — the hint makes the choice explicit.
 	 */
 	async getUnstoredDappUserCommitments(
 		limit = 1000,
@@ -1418,6 +1427,7 @@ export class ProviderDatabase
 		}
 		const docs = await this.tables?.commitment
 			.find(filter)
+			.hint("pendingStage_partial")
 			.sort({ _id: 1 })
 			.limit(limit)
 			.lean<UserCommitmentRecord[]>();
@@ -1559,6 +1569,7 @@ export class ProviderDatabase
 		}
 		const docs = await this.tables?.powcaptcha
 			.find(filter)
+			.hint("pendingStage_partial")
 			.sort({ _id: 1 })
 			.limit(limit)
 			.lean<PoWCaptchaRecord[]>();
@@ -2031,7 +2042,12 @@ export class ProviderDatabase
 		}
 		return Promise.resolve(this.tables?.session)
 			.then((tbl) =>
-				tbl?.find(filter).sort({ _id: 1 }).limit(limit).lean<SessionRecord[]>(),
+				tbl
+					?.find(filter)
+					.hint("pendingStage_partial")
+					.sort({ _id: 1 })
+					.limit(limit)
+					.lean<SessionRecord[]>(),
 			)
 			.then((docs) => docs || []);
 	}
@@ -2829,24 +2845,14 @@ export class ProviderDatabase
 	}
 
 	/**
-	 * @description set client context-specific entropy
-	 */
-	async setClientContextEntropy(
-		account: string,
-		contextType: ContextType,
-		entropy: string,
-	): Promise<void> {
-		const filter: Pick<ClientContextEntropyRecord, "account" | "contextType"> =
-			{ account, contextType };
-		await this.tables?.clientContextEntropy.updateOne(
-			filter,
-			{ $set: { account, contextType, entropy } },
-			{ upsert: true },
-		);
-	}
-
-	/**
 	 * @description get client context-specific entropy
+	 *
+	 * Read-only. The `clientcontextentropies` collection is populated
+	 * externally by the job-runner sweep — the provider used to compute
+	 * entropy locally via `sampleContextEntropy` + `setClientContextEntropy`
+	 * on a scheduled task, but that path was pulled 2026-08-21 (the sweep
+	 * aggregation was ~36 minutes of DB time per 6h, and the same
+	 * computation now runs off-provider across the full record set).
 	 */
 	async getClientContextEntropy(
 		account: string,
@@ -2858,106 +2864,6 @@ export class ProviderDatabase
 			.findOne(filter)
 			.lean<ClientContextEntropyRecord>();
 		return doc ? doc.entropy : undefined;
-	}
-
-	/** Sample captcha records from the database for a specific context */
-	async sampleContextEntropy(
-		sampleSize: number,
-		siteKey: string,
-		contextType: ContextType,
-	): Promise<string[]> {
-		const size = sampleSize ? Math.abs(Math.trunc(sampleSize)) : 1;
-		const max = 10000;
-		if (size > max) {
-			throw new ProsopoDBError("DATABASE.CAPTCHA_SAMPLE_SIZE_EXCEEDED", {
-				context: {
-					failedFuncName: this.sampleContextEntropy.name,
-					sampleSize,
-				},
-			});
-		}
-
-		// Use aggregation to join with session records and filter by
-		// context. `$sample` runs *before* `$lookup` so the join only
-		// processes the bounded random pool (`max`) instead of every
-		// matched powcaptcha. The previous ordering let `$lookup` chew
-		// through the full match (>30K docs for the busiest dapp,
-		// ~4.7s per call) before the trailing `$limit` had any effect.
-		// A second `$sample` after the post-join filter trims down to
-		// the requested `size`.
-		// biome-ignore lint/suspicious/noExplicitAny: Dynamic pipeline construction requires flexible typing
-		const pipeline: any[] = [
-			{
-				$match: {
-					dappAccount: siteKey,
-					requestedAtTimestamp: {
-						$gt: new Date(new Date().getTime() - TWENTY_FOUR_HOURS_IN_MS),
-					},
-				},
-			},
-			{ $sample: { size: max } },
-			{
-				$lookup: {
-					from: "sessions",
-					localField: "sessionId",
-					foreignField: "sessionId",
-					as: "sessionData",
-				},
-			},
-			{
-				$unwind: {
-					path: "$sessionData",
-					preserveNullAndEmptyArrays: false,
-				},
-			},
-		];
-
-		// Add context-specific filter
-		if (contextType === ContextType.Webview) {
-			pipeline.push({
-				$match: {
-					"sessionData.webView": true,
-				},
-			});
-		} else if (contextType === ContextType.Default) {
-			pipeline.push({
-				$match: {
-					"sessionData.webView": false,
-				},
-			});
-		}
-
-		pipeline.push(
-			{ $sample: { size } },
-			{
-				$project: {
-					_id: 0,
-					sessionId: 1,
-				},
-			},
-		);
-
-		const cursor = this.tables?.powcaptcha.aggregate(pipeline);
-		const docs = await cursor;
-
-		if (docs?.length === 0) {
-			return [];
-		}
-
-		// Get the associated entropies from sessions
-		return (
-			await Promise.all(
-				docs.map(async (doc) => {
-					if (doc.sessionId) {
-						const tokenRecord = await this.getSessionRecordBySessionId(
-							doc.sessionId,
-						);
-						return tokenRecord?.decryptedHeadHash;
-					}
-					return undefined;
-				}),
-			)
-		).filter((headHash): headHash is string => headHash !== undefined);
 	}
 
 	async getSpamEmailDomain(
