@@ -27,7 +27,7 @@
 		"test:watch": "NODE_ENV=${NODE_ENV:-test}; npx vitest watch --config ./vite.test.config.ts"
 	},
 	"dependencies": {
-		"@maxmind/geoip2-node": "5.0.0",
+		"@maxmind/geoip2-node": "7.1.0",
 		"@prosopo/logger": "2.0.6",
 		"@prosopo/types": "5.2.5"
 	},
