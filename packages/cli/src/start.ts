@@ -16,7 +16,6 @@ import { ProviderEnvironment } from "@prosopo/env";
 import { getPair } from "@prosopo/keyring";
 import {
 	getClientList,
-	setClientEntropy,
 	startProviderApi,
 	storeCaptchasExternally,
 	updateSpamEmailDomainsScheduler,
@@ -88,20 +87,6 @@ export async function start(
 					context: { failedFuncName: getClientList.name },
 				}));
 			});
-		}
-
-		const cronClientEntropySetter =
-			env.config.scheduledTasks?.clientEntropyScheduler?.schedule;
-		if (cronClientEntropySetter) {
-			setClientEntropy(env.pair, cronClientEntropySetter, env.config).catch(
-				(err) => {
-					env.logger.error(() => ({
-						msg: "Failed to start client entropy scheduler",
-						err,
-						context: { failedFuncName: setClientEntropy.name },
-					}));
-				},
-			);
 		}
 
 		const cronSpamEmailDomains =

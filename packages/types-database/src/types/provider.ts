@@ -1305,22 +1305,10 @@ export interface IProviderDatabase extends IDatabase {
 
 	removeAllDecisionMachineArtifacts(): Promise<number>;
 
-	setClientContextEntropy(
-		account: string,
-		contextType: ContextType,
-		entropy: string,
-	): Promise<void>;
-
 	getClientContextEntropy(
 		account: string,
 		contextType: ContextType,
 	): Promise<string | undefined>;
-
-	sampleContextEntropy(
-		sampleSize: number,
-		siteKey: string,
-		contextType: ContextType,
-	): Promise<string[]>;
 
 	getSpamEmailDomain(domain: string): Promise<SpamEmailDomainRecord | null>;
 

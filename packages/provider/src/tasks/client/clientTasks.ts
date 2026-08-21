@@ -17,7 +17,6 @@ import { ProsopoApiError } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import type { Logger } from "@prosopo/logger";
 import {
-	type ContextType,
 	type DecisionMachineCaptchaType,
 	type DecisionMachineKind,
 	type DecisionMachineLanguage,
@@ -36,14 +35,13 @@ import type {
 	IProviderDatabase,
 	SessionRecord,
 } from "@prosopo/types-database";
-import { majorityAverage, parseUrl } from "@prosopo/util";
+import { parseUrl } from "@prosopo/util";
 import { validateSiteKey } from "../../api/validateAddress.js";
 import {
 	invalidateAllDecisionMachineArtifactCaches,
 	invalidateDecisionMachineScriptCache,
 } from "../decisionMachine/decisionMachineRunner.js";
 
-const SAMPLE_SIZE = 75;
 const isValidPrivateKey = (privateKeyString: string) => {
 	const privateKey = Buffer.from(privateKeyString, "base64").toString("ascii");
 	try {
@@ -298,90 +296,6 @@ export class ClientTaskManager {
 			this.logger.error(() => ({
 				err: getClientListError,
 				msg: "Error getting client list",
-			}));
-			await this.providerDB.updateScheduledTaskStatus(
-				taskID,
-				ScheduledTaskStatus.Failed,
-				{ error: String(e) },
-			);
-		}
-	}
-
-	/**
-	 * @description Calculate client entropy scores and update in db
-	 * @returns Promise<void>
-	 */
-	async calculateClientEntropy(): Promise<void> {
-		const taskID = await this.providerDB.createScheduledTaskStatus(
-			ScheduledTaskNames.SetClientEntropy,
-			ScheduledTaskStatus.Running,
-		);
-
-		try {
-			let clients = await this.providerDB.getAllClientRecords();
-
-			clients = clients.filter((client) => client.tier !== Tier.Free);
-
-			this.logger.info(() => ({
-				msg: `Calculating entropies for ${clients.length} clients`,
-			}));
-
-			for (const client of clients) {
-				// Calculate context-specific entropy if client has context awareness enabled
-				if (client.settings?.contextAware?.enabled) {
-					// Get context types from client settings
-					const contextTypes = Object.keys(
-						client.settings.contextAware.contexts ?? {},
-					) as ContextType[];
-
-					for (const contextType of contextTypes) {
-						const contextSamples = await this.providerDB.sampleContextEntropy(
-							SAMPLE_SIZE,
-							client.account,
-							contextType,
-						);
-
-						if (contextSamples.length < SAMPLE_SIZE) {
-							this.logger.info(() => ({
-								msg: `Skipping ${contextType} entropy calculation for client ${client.account} due to insufficient samples (${contextSamples.length}/${SAMPLE_SIZE})`,
-							}));
-							continue;
-						}
-
-						const contextAvgEntropy = majorityAverage(contextSamples);
-
-						this.logger.info(() => ({
-							msg: `Calculated ${contextType} entropy for client ${client.account}: ${contextAvgEntropy}`,
-						}));
-
-						await this.providerDB.setClientContextEntropy(
-							client.account,
-							contextType,
-							contextAvgEntropy,
-						);
-					}
-				}
-			}
-			await this.providerDB.updateScheduledTaskStatus(
-				taskID,
-				ScheduledTaskStatus.Completed,
-				{
-					data: {
-						clientRecords: clients.length,
-					},
-				},
-			);
-		} catch (e: unknown) {
-			const calculateClientEntropiesError = new ProsopoApiError(
-				"DATABASE.UNKNOWN",
-				{
-					context: { error: e },
-					logger: this.logger,
-				},
-			);
-			this.logger.error(() => ({
-				err: calculateClientEntropiesError,
-				msg: "Error calculating client entropy",
 			}));
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
