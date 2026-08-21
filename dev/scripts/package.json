@@ -47,8 +47,8 @@
 		"@prosopo/util-crypto": "13.5.30",
 		"@prosopo/workspace": "3.2.0",
 		"dotenv": "16.4.5",
-		"fast-glob": "3.3.2",
-		"fs-extra": "11.2.0",
+		"fast-glob": "3.3.3",
+		"fs-extra": "11.4.0",
 		"yargs": "17.7.2"
 	},
 	"devDependencies": {

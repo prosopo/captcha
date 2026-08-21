@@ -32,8 +32,8 @@
 	},
 	"browserslist": ["> 0.5%, last 2 versions, not dead"],
 	"dependencies": {
-		"@emotion/react": "11.11.1",
-		"@emotion/styled": "11.11.0",
+		"@emotion/react": "11.14.0",
+		"@emotion/styled": "11.14.1",
 		"@prosopo/account": "2.8.79",
 		"@prosopo/load-balancer": "2.10.30",
 		"@prosopo/types": "5.2.5",
