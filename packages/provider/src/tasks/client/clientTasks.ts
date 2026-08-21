@@ -27,7 +27,7 @@ import {
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
 	ScheduledTaskStatus,
-	Tier,
+	type Tier,
 	type UserCommitment,
 } from "@prosopo/types";
 import type {

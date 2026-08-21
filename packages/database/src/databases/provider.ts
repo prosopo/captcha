@@ -28,7 +28,7 @@ import {
 	CaptchaStatus,
 	CaptchaType,
 	type CompositeIpAddress,
-	ContextType,
+	type ContextType,
 	type Dataset,
 	type DatasetBase,
 	type DatasetWithIds,
