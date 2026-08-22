@@ -12,7 +12,8 @@
 		"NO_ACCOUNTS_FOUND": "No accounts found",
 		"ACCOUNT_NOT_FOUND": "Account not found",
 		"NO_EXTENSION_FOUND": "No extension found",
-		"INSECURE_CONTEXT": "Procaptcha requires a secure (HTTPS) connection"
+		"INSECURE_CONTEXT": "Procaptcha requires a secure (HTTPS) connection",
+		"INCORRECT_TRY_AGAIN": "Incorrect, please try again"
 	},
 	"GENERAL": {
 		"JSON_LOAD_FAILED": "Failed to load JSON file",

@@ -17,6 +17,8 @@ import {
 	type MutableRef,
 	type RetryCoords,
 	consumeRetryMountProps,
+	consumeRetryPrompt,
+	handleChallengeFailed,
 	handleSessionInvalidated,
 } from "../sessionInvalidatedRecovery.js";
 
@@ -125,5 +127,71 @@ describe("consumeRetryMountProps", () => {
 		const mount = consumeRetryMountProps(coordsRef, false);
 
 		expect(mount).toEqual({ autoStart: false, startCoords: undefined });
+	});
+});
+
+describe("handleChallengeFailed", () => {
+	it("raises the prompt, keeps the click coords and asks for a restart", () => {
+		const coordsRef = ref<RetryCoords | null>(null);
+		const promptRef = ref(false);
+
+		const result = handleChallengeFailed(120, 340, coordsRef, promptRef);
+
+		expect(result).toEqual({ shouldRestart: true });
+		expect(coordsRef.current).toEqual({ x: 120, y: 340 });
+		expect(promptRef.current).toBe(true);
+	});
+
+	// The one-shot guard on handleSessionInvalidated exists to stop a broken
+	// session looping. A wrong answer is a completed human attempt, so there is
+	// no loop to guard against — and capping it would strand the user on a
+	// challenge they had already failed.
+	it("fires again on every wrong answer, unlike the session-invalidated path", () => {
+		const coordsRef = ref<RetryCoords | null>(null);
+		const promptRef = ref(false);
+
+		expect(
+			handleChallengeFailed(1, 2, coordsRef, promptRef).shouldRestart,
+		).toBe(true);
+		promptRef.current = false;
+		expect(
+			handleChallengeFailed(3, 4, coordsRef, promptRef).shouldRestart,
+		).toBe(true);
+		expect(promptRef.current).toBe(true);
+		expect(coordsRef.current).toEqual({ x: 3, y: 4 });
+	});
+
+	it("treats (0, 0) as 'no coords', matching the session-invalidated path", () => {
+		const coordsRef = ref<RetryCoords | null>(null);
+		const promptRef = ref(false);
+
+		handleChallengeFailed(0, 0, coordsRef, promptRef);
+
+		expect(coordsRef.current).toBeNull();
+		expect(promptRef.current).toBe(true);
+	});
+
+	it("treats a half-supplied coord pair as 'no coords' so NaN never reaches the salt", () => {
+		const coordsRef = ref<RetryCoords | null>(null);
+		const promptRef = ref(false);
+
+		handleChallengeFailed(120, undefined, coordsRef, promptRef);
+
+		expect(coordsRef.current).toBeNull();
+	});
+});
+
+describe("consumeRetryPrompt", () => {
+	it("returns the pending flag and clears it, so exactly one mount shows the prompt", () => {
+		const promptRef = ref(true);
+
+		expect(consumeRetryPrompt(promptRef)).toBe(true);
+		expect(promptRef.current).toBe(false);
+		// A later escalation must not inherit a prompt from a prior failure.
+		expect(consumeRetryPrompt(promptRef)).toBe(false);
+	});
+
+	it("returns false when nothing is pending", () => {
+		expect(consumeRetryPrompt(ref(false))).toBe(false);
 	});
 });

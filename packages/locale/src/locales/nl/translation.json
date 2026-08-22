@@ -376,7 +376,8 @@
 		"NO_ACCOUNTS_FOUND": "Geen accounts gevonden",
 		"ACCOUNT_NOT_FOUND": "Account niet gevonden",
 		"NO_EXTENSION_FOUND": "Geen extensie gevonden",
-		"INSECURE_CONTEXT": "Procaptcha vereist een beveiligde (HTTPS-)verbinding"
+		"INSECURE_CONTEXT": "Procaptcha vereist een beveiligde (HTTPS-)verbinding",
+		"INCORRECT_TRY_AGAIN": "Onjuist, probeer het opnieuw"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Mislukt om ongeldig adres te coderen",

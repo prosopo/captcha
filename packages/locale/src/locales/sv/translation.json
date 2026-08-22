@@ -376,7 +376,8 @@
 		"NO_ACCOUNTS_FOUND": "Inga konton hittades",
 		"ACCOUNT_NOT_FOUND": "Konto hittades inte",
 		"NO_EXTENSION_FOUND": "Ingen förlängning hittades",
-		"INSECURE_CONTEXT": "Procaptcha kräver en säker (HTTPS) anslutning"
+		"INSECURE_CONTEXT": "Procaptcha kräver en säker (HTTPS) anslutning",
+		"INCORRECT_TRY_AGAIN": "Fel, försök igen"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Misslyckades att koda ogiltig adress",

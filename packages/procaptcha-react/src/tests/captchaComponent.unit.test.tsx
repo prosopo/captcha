@@ -46,6 +46,7 @@ const render = (
 		index?: number;
 		solutions?: [string, number, number][][];
 		themeColor?: "light" | "dark";
+		showRetryPrompt?: boolean;
 	} = {},
 ): void => {
 	mounted.render(
@@ -59,6 +60,7 @@ const render = (
 			onNext={onNext}
 			onReload={onReload}
 			themeColor={props.themeColor ?? "light"}
+			showRetryPrompt={props.showRetryPrompt ?? false}
 		/>,
 	);
 };
@@ -97,6 +99,38 @@ describe("the prompt", () => {
 	test("shows the target of the round being displayed, not the first", () => {
 		render({ challenge: twoRoundChallenge(), index: 1, solutions: [[], []] });
 		expect(text()).toContain("train");
+	});
+});
+
+describe("the retry prompt", () => {
+	// These are already the replacement images — the manager fetched them
+	// before re-rendering — so the prompt explains why they changed rather
+	// than offering a button to press.
+	test("says the last attempt was wrong when the manager raises it", () => {
+		render({ showRetryPrompt: true });
+		expect(text()).toContain("WIDGET.INCORRECT_TRY_AGAIN");
+	});
+
+	test("stays out of the way on a first attempt", () => {
+		render();
+		expect(text()).not.toContain("WIDGET.INCORRECT_TRY_AGAIN");
+		expect(
+			mounted.container.querySelector('[data-cy="retry-banner"]'),
+		).toBeNull();
+	});
+
+	test("is announced to assistive tech without stealing focus", () => {
+		render({ showRetryPrompt: true });
+		const banner = mounted.container.querySelector('[data-cy="retry-banner"]');
+		expect(banner?.getAttribute("role")).toBe("alert");
+		expect(banner?.getAttribute("aria-live")).toBe("polite");
+	});
+
+	// The prompt is additive: the user still needs to know what to select.
+	test("does not displace the instruction for the new round", () => {
+		render({ showRetryPrompt: true });
+		expect(text()).toContain("WIDGET.SELECT_ALL");
+		expect(text()).toContain("bus");
 	});
 });
 

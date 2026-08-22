@@ -76,3 +76,42 @@ export const consumeRetryMountProps = (
 		startCoords,
 	};
 };
+
+/**
+ * A wrong answer, as opposed to a broken session. The provider consumes the
+ * session when it issues a challenge, so the inner widget cannot fetch a
+ * second challenge itself — the frictionless flow has to re-run to mint a new
+ * one. Records the coords to resume with and raises the flag that makes the
+ * re-mounted widget open with the retry prompt showing.
+ *
+ * Deliberately *not* one-shot, unlike `handleSessionInvalidated`: a user is
+ * entitled to get a wrong answer as many times as they like, and each one
+ * should produce a fresh challenge. The looping risk that motivates the
+ * one-shot guard there doesn't apply, because this path only runs in response
+ * to a completed human attempt.
+ */
+export const handleChallengeFailed = (
+	x: number | undefined,
+	y: number | undefined,
+	pendingCoordsRef: MutableRef<RetryCoords | null>,
+	pendingRetryPromptRef: MutableRef<boolean>,
+): { shouldRestart: boolean } => {
+	const bothNumeric = typeof x === "number" && typeof y === "number";
+	const isRealClick = bothNumeric && (x !== 0 || y !== 0);
+	pendingCoordsRef.current = isRealClick ? { x, y } : null;
+	pendingRetryPromptRef.current = true;
+	return { shouldRestart: true };
+};
+
+/**
+ * Read and clear the pending retry-prompt flag. Consumed exactly once, by the
+ * widget mounted directly after the failure, so the prompt doesn't persist
+ * into an unrelated later challenge.
+ */
+export const consumeRetryPrompt = (
+	pendingRetryPromptRef: MutableRef<boolean>,
+): boolean => {
+	const showRetryPrompt = pendingRetryPromptRef.current;
+	pendingRetryPromptRef.current = false;
+	return showRetryPrompt;
+};

@@ -376,7 +376,8 @@
 		"NO_ACCOUNTS_FOUND": "لم يتم العثور على حسابات",
 		"ACCOUNT_NOT_FOUND": "حساب غير موجود",
 		"NO_EXTENSION_FOUND": "لم يتم العثور على امتداد",
-		"INSECURE_CONTEXT": "يتطلب Procaptcha اتصالاً آمنًا (HTTPS)"
+		"INSECURE_CONTEXT": "يتطلب Procaptcha اتصالاً آمنًا (HTTPS)",
+		"INCORRECT_TRY_AGAIN": "غير صحيح، يرجى المحاولة مرة أخرى"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "فشل في ترميز عنوان غير صالح",
