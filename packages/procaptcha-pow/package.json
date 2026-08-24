@@ -42,7 +42,7 @@
 		"@prosopo/util": "3.3.6",
 		"@prosopo/util-crypto": "13.5.30",
 		"@prosopo/widget-skeleton": "2.8.6",
-		"react": "18.3.1"
+		"react": "19.2.8"
 	},
 	"devDependencies": {
 		"@emotion/react": "11.14.0",
