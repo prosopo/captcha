@@ -2351,17 +2351,13 @@ export class ProviderDatabase
 
 	// Shared projection for both commitment fetchers below. Every field a
 	// caller of `verifyImageCaptchaSolution` reads off the returned record
-	// must be listed here — the decision-machine input builder in
-	// `imgCaptchaTasks.verifyImageCaptchaSolution` forwards these onto
-	// `DecisionMachineInput`, so a missing projection field lands as
-	// `undefined` at the DM and silently no-ops (or trips) whichever
-	// decide rule reads it. Historical failure: `behavioralDataPacked`
-	// was omitted for months; every no-cache POST tripped
-	// `noCacheNoBdpRule` in the Twickets DM even though the record on
-	// disk had ~50 c1/c3 events. Same failure mode as the tcp-probe
-	// projection bug fixed in #3107 — extend both projections together
-	// whenever a new field is added to `DecisionMachineInput` on the
-	// solution side.
+	// must be listed here — the decision-machine input builder forwards
+	// these onto `DecisionMachineInput`, so a missing projection field
+	// lands as `undefined` at the DM and silently no-ops (or trips) any
+	// decide rule that reads it. Same failure mode as the tcp-probe
+	// projection bug fixed in #3107 — extend this projection together
+	// with any new `DecisionMachineInput` field sourced from the
+	// solution.
 	private static readonly DAPP_USER_COMMITMENT_PROJECTION = {
 		id: 1,
 		result: 1,
@@ -2376,17 +2372,14 @@ export class ProviderDatabase
 		dappAccount: 1,
 		headers: 1,
 		ipInfo: 1,
-		// Decision-machine input: `noCacheNoBdpRule`,
-		// `syntheticMouseTimingRule`, `clickBeforeMoveRule`, and the
-		// Twickets suspect-BDP-shape rules all read
-		// `input.behavioralDataPacked`. Missing here → DM sees
-		// `undefined` → guarded rules silently return null AND
-		// `noCacheNoBdpRule` denies every no-cache POST regardless of
-		// real BDP presence on the record.
+		// Behavioural payload and device capability feed BDP-reading
+		// decide rules. Missing here → DM sees `undefined` → guarded
+		// rules silently return null and any no-cache-gated guard
+		// denies regardless of real BDP presence on the record.
 		behavioralDataPacked: 1,
 		deviceCapability: 1,
-		// Decision-machine input: coords are forwarded so post-solve
-		// escalation / audit rules can inspect where the user clicked.
+		// Coords forwarded so post-solve escalation / audit rules can
+		// inspect where the user clicked.
 		coords: 1,
 	} as { [key in keyof Partial<UserCommitmentRecord>]: 1 };
 

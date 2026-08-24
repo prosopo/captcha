@@ -22,44 +22,30 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { ProviderDatabase } from "../../databases/provider.js";
 
-// Regression guard for the production bug observed on Twickets pre-go-live on
-// 2026-08-24. Same failure mode as the tcp-probe projection bug fixed in
-// #3107 for `getSessionRecordBySessionId`, this time on the two commitment
-// fetchers used by `verifyImageCaptchaSolution`.
+// Regression guard for the same class of bug as #3107
+// (`getSessionRecordBySessionId` missing tcp-probe fields), this time on
+// the two commitment fetchers used by `verifyImageCaptchaSolution`:
 //
-// Symptom: every no-cache POST captcha submission from a legit user with
-// DevTools "Disable cache" enabled was disapproved with
-// `no-cache request with no behavioural data`, even though the record on
-// disk carried ~50 real c1 + c3 events.
+//   - `getDappUserCommitmentById` projected 13 fields and omitted
+//     `behavioralDataPacked`, `deviceCapability`, and `coords`.
+//   - `getDappUserCommitmentByAccount` (fallback path when the caller
+//     does not have a commitmentId) projected only
+//     `{_id: 0, result: 1}` — so every field the verify code reads off
+//     the returned `solution` beyond `result` landed as `undefined` at
+//     the decision machine.
 //
-// Root cause: `ProviderDatabase.getDappUserCommitmentById` projected 13
-// fields but omitted `behavioralDataPacked`, `deviceCapability`, and
-// `coords`. The sibling `getDappUserCommitmentByAccount` projected only
-// `{_id: 0, result: 1}` — so on the by-account fallback path *every*
-// field the verify code reads off the returned `solution` (userAccount,
-// dappAccount, headers, ipInfo, sessionId, ipAddress, behavioralDataPacked,
-// deviceCapability, coords) landed as `undefined` at the DM. In practice:
-//
-//   - `noCacheNoBdpRule` fires on every request that carries
-//     `cache-control: no-cache` because
-//     `hasBehaviouralData(undefined) === false` — so the guard denies
-//     legit users whose browser (e.g. Brave with "Disable cache" on)
-//     adds the header on captcha POSTs.
-//   - `syntheticMouseTimingRule`, `clickBeforeMoveRule`, and every
-//     other BDP-reading rule silently return `null` — no bot signal
-//     was ever caught on this path.
-//   - The by-account variant additionally strips `ipInfo`, `headers`,
-//     `userAccount`, ... so IP-category rules, header-shape rules, and
-//     the head-hash denylist all no-op there too.
+// Consequence: BDP-reading decide rules silently no-op'd on the by-id
+// path; on the by-account path virtually every decide rule sourced
+// `undefined` for headers / ipInfo / behavioural payload and either
+// no-op'd or tripped the wrong way.
 //
 // Fix: both methods now share `DAPP_USER_COMMITMENT_PROJECTION`, which
 // enumerates every field the DM input builder in
 // `imgCaptchaTasks.verifyImageCaptchaSolution` reads from `solution`.
 //
-// Guard: persist a full commitment (BDP + coords + deviceCapability +
-// ipInfo), fetch via both methods, assert each field round-trips. A future
-// projection narrowing that drops any of them re-introduces the silent
-// no-op / false-positive deny.
+// Guard: persist a full commitment, fetch via both methods, assert
+// each field round-trips. A future projection narrowing that drops
+// any of them re-introduces the silent no-op / false deny.
 
 const logger = getLogger(
 	LogLevel.enum.error,
@@ -78,7 +64,8 @@ const ipv4Composite = (lower: bigint): CompositeIpAddress => ({
 	type: IpAddressType.v4,
 });
 
-const commitmentIdOf = (suffix: string): string => `commitment-projection-${suffix}`;
+const commitmentIdOf = (suffix: string): string =>
+	`commitment-projection-${suffix}`;
 
 const c1Event = (t: number) => ({
 	x: 720 + t,
@@ -107,7 +94,7 @@ const buildCommitment = (id: string) => ({
 	datasetId: "dataset-projection",
 	result: { status: CaptchaStatus.approved },
 	userSignature: "sig-projection",
-	ipAddress: ipv4Composite(1_378_604_724n),
+	ipAddress: ipv4Composite(1n),
 	headers: {
 		host: "example.com",
 		"cache-control": "no-cache",
@@ -125,7 +112,7 @@ const buildCommitment = (id: string) => ({
 	threshold: 0.5,
 	sessionId: "session-projection",
 	ipInfo: {
-		ip: "82.43.214.180",
+		ip: "203.0.113.1",
 		isValid: true as const,
 		isVPN: false,
 		isTor: false,
@@ -136,7 +123,7 @@ const buildCommitment = (id: string) => ({
 		isSatellite: false,
 		isCrawler: false,
 		countryCode: "GB",
-		asnNumber: 2856,
+		asnNumber: 64500,
 		abuserScore: 0,
 		companyAbuserScore: 0,
 	},
@@ -173,8 +160,8 @@ describe("getDappUserCommitment{ById,ByAccount} projection", () => {
 		await mongod.stop();
 	});
 
-	// Core guard for the Twickets bug: BDP must survive the ById fetch.
-	it("returns behavioralDataPacked so noCacheNoBdpRule sees the real payload", async () => {
+	// Core guard: BDP must survive the ById fetch.
+	it("returns behavioralDataPacked so BDP-reading decide rules see the real payload", async () => {
 		const id = commitmentIdOf("bdp-by-id");
 		await db.tables.commitment.create(buildCommitment(id));
 
@@ -189,7 +176,7 @@ describe("getDappUserCommitment{ById,ByAccount} projection", () => {
 	});
 
 	// Every field the DM input builder in verifyImageCaptchaSolution reads
-	// off `solution`. A missing one here means whichever DM rule reads
+	// off `solution`. A missing one here means whichever decide rule reads
 	// `input.<field>` silently no-ops or trips the wrong way. Enumerated
 	// explicitly rather than deep-equal so a diff on any single field
 	// points straight at the projection line to add.
