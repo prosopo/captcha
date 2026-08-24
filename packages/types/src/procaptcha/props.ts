@@ -118,4 +118,15 @@ export interface ProcaptchaProps {
 	// `onSessionInvalidated` fires without asking the user to click the
 	// checkbox a second time.
 	startCoords?: { x: number; y: number };
+	// Called by the inner widget when the user presses the reload button on
+	// the challenge. The frictionless wrapper owns the response: the
+	// sessionId behind the current challenge has already been consumed by the
+	// provider, so a replacement challenge needs a replacement session. The
+	// wrapper re-runs the frictionless flow and re-mounts the widget with
+	// `autoStart`, so the user gets a new challenge rather than being dropped
+	// back to an unticked checkbox. Coords are the checkbox click position
+	// the user already made, preserved for the same reason as on
+	// `onSessionInvalidated`. When absent the widget falls back to the
+	// manager's own reload behaviour.
+	onReload?: (x?: number, y?: number) => void;
 }
