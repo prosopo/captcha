@@ -571,4 +571,21 @@ describe("the manager itself", () => {
 		render({ callbacks: undefined as unknown as ProcaptchaProps["callbacks"] });
 		expect(managerArgs[0]?.[3]).toEqual({});
 	});
+
+	test("hands reload back to the wrapper that offered to handle it", () => {
+		// Under frictionless the wrapper is the only thing that can mint the
+		// session a replacement challenge needs, so the manager must ask it
+		// rather than reloading itself.
+		const onReload = vi.fn<(x?: number, y?: number) => void>();
+		render({ onReload });
+		managerArgs[0]?.[6]?.(120, 340);
+		expect(onReload).toHaveBeenCalledWith(120, 340);
+	});
+
+	test("keeps reload to itself when no wrapper offered to handle it", () => {
+		// A delegate the host never supplied would leave reload with nothing
+		// to re-mint the challenge with — the modal would just close.
+		render();
+		expect(managerArgs[0]?.[6]).toBeUndefined();
+	});
 });

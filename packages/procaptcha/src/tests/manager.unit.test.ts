@@ -213,6 +213,7 @@ interface Harness {
 		onReload: Mock<() => void>;
 	};
 	restart: Mock<() => void>;
+	onReloadRequest: Mock<(x?: number, y?: number) => void>;
 }
 
 interface HarnessOptions {
@@ -221,6 +222,9 @@ interface HarnessOptions {
 	frictionlessState?: FrictionlessState;
 	withFrictionless?: boolean;
 	honeypot?: () => string | undefined;
+	/** Mirrors the widget only handing the manager a delegate when its
+	 * wrapper actually supplied one. */
+	delegateReload?: boolean;
 }
 
 const build = (options: HarnessOptions = {}): Harness => {
@@ -238,6 +242,7 @@ const build = (options: HarnessOptions = {}): Harness => {
 		onReload: vi.fn<() => void>(),
 	};
 	const restart = vi.fn<() => void>();
+	const onReloadRequest = vi.fn<(x?: number, y?: number) => void>();
 	const callbackInput: ProcaptchaCallbacks = callbacks(events);
 	const frictionlessState =
 		options.frictionlessState ??
@@ -253,8 +258,16 @@ const build = (options: HarnessOptions = {}): Harness => {
 		callbackInput,
 		frictionlessState,
 		options.honeypot,
+		options.delegateReload ? onReloadRequest : undefined,
 	);
-	return { manager, state: currentState, updates, events, restart };
+	return {
+		manager,
+		state: currentState,
+		updates,
+		events,
+		restart,
+		onReloadRequest,
+	};
 };
 
 /** The last value the manager pushed for a given state field. */
@@ -1107,5 +1120,55 @@ describe("reload", () => {
 		await harness.manager.reload();
 		expect(harness.events.onReload).toHaveBeenCalledTimes(1);
 		expect(mocks.getCaptchaChallenge).toHaveBeenCalledTimes(1);
+	});
+
+	test("re-opens the modal on the fresh challenge rather than leaving it closed", async () => {
+		// The bug this guards: reload used to leave the widget torn down, so
+		// pressing it read as "the reload button closes the captcha".
+		const harness = build({ withFrictionless: false });
+		await harness.manager.reload();
+		expect(lastUpdate(harness, "showModal")).toBe(true);
+		expect(lastUpdate(harness, "challenge")).toEqual(challengeResponse());
+	});
+
+	test("keeps the checkbox click position on the replacement challenge", async () => {
+		// Reloading used to re-start from (0, 0), so the replacement solve
+		// reported no entry point at all.
+		const harness = build({ withFrictionless: false });
+		await harness.manager.start(120, 340);
+		await harness.manager.reload();
+		Object.assign(harness.state, { solutions: [[["hash-1", 10, 20]]] });
+		await harness.manager.submit();
+		const solutions = mocks.submitCaptchaSolution.mock.calls[0]?.[2];
+		const first = solutions?.[0];
+		if (!first) throw new Error("no solution submitted");
+		expect(extractData(first.salt)).toEqual([120, 340, 10, 20]);
+	});
+
+	test("hands reload to the caller when one owns re-minting the challenge", async () => {
+		// Under frictionless the provider consumed this session when it issued
+		// the challenge, so only the wrapper can produce a new one.
+		const harness = build({ delegateReload: true });
+		await harness.manager.start(120, 340);
+		await harness.manager.reload();
+		expect(harness.events.onReload).toHaveBeenCalledTimes(1);
+		expect(harness.onReloadRequest).toHaveBeenCalledWith(120, 340);
+	});
+
+	test("does not restart frictionless when the caller owns reload", async () => {
+		// Restarting frictionless drops the user back to an unticked checkbox,
+		// which is what made reload look like a close button.
+		const harness = build({ delegateReload: true });
+		await harness.manager.reload();
+		expect(harness.restart).not.toHaveBeenCalled();
+		expect(mocks.getCaptchaChallenge).not.toHaveBeenCalled();
+	});
+
+	test("clears the spent challenge before handing reload over", async () => {
+		const harness = build({ delegateReload: true });
+		await harness.manager.start();
+		await harness.manager.reload();
+		expect(harness.events.onReset).toHaveBeenCalledTimes(1);
+		expect(lastUpdate(harness, "challenge")).toBeUndefined();
 	});
 });
