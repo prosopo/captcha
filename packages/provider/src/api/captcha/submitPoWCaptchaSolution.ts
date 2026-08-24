@@ -15,10 +15,12 @@ import { ProsopoApiError } from "@prosopo/common";
 import {
 	CaptchaType,
 	type FrictionlessReason,
+	type InteractiveCaptchaType,
 	type PowCaptchaSolutionEscalation,
 	type PowCaptchaSolutionResponse,
 	SubmitPowCaptchaSolutionBody,
 	type SubmitPowCaptchaSolutionBodyTypeOutput,
+	isInteractiveCaptchaType,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { flatten, getIPAddress } from "@prosopo/util";
@@ -263,7 +265,7 @@ export const buildEscalation = async (
 ): Promise<PowCaptchaSolutionEscalation | undefined> => {
 	if (!result.verified || !result.routingOutput) return undefined;
 	const routedType = result.routingOutput.captchaType;
-	if (routedType !== CaptchaType.image && routedType !== CaptchaType.puzzle) {
+	if (!isInteractiveCaptchaType(routedType)) {
 		return undefined;
 	}
 
@@ -276,7 +278,7 @@ export const buildEscalation = async (
 	if (!originSession) return undefined;
 
 	const routed = result.routingOutput as {
-		captchaType: CaptchaType.image | CaptchaType.puzzle;
+		captchaType: InteractiveCaptchaType;
 		solvedImagesCount?: number;
 		powDifficulty?: number;
 		reason?: string;

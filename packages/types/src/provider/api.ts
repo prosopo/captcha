@@ -40,8 +40,9 @@ import {
 	safeText,
 } from "../api/sanitise.js";
 import {
-	type CaptchaType,
-	DecisionMachineCaptchaTypeSchema,
+	type ChallengeCaptchaType,
+	ChallengeCaptchaTypeSchema,
+	type InteractiveCaptchaType,
 } from "../client/captchaType/captchaType.js";
 import { ClientSettingsSchema, Tier } from "../client/index.js";
 import { ModeEnum } from "../config/mode.js";
@@ -446,10 +447,7 @@ export interface PuzzleCaptchaSolutionResponse extends ApiResponse {
 }
 
 export interface GetFrictionlessCaptchaResponse extends ApiResponse {
-	[ApiParams.captchaType]:
-		| CaptchaType.pow
-		| CaptchaType.image
-		| CaptchaType.puzzle;
+	[ApiParams.captchaType]: ChallengeCaptchaType;
 	[ApiParams.sessionId]?: string;
 	// Encoded honeypot question. NOT serialised by the provider on the wire
 	// (it travels in the `x-prosopo-meta` response header so it doesn't sit
@@ -462,7 +460,7 @@ export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 }
 
 export interface PowCaptchaSolutionEscalation {
-	[ApiParams.captchaType]: CaptchaType.image | CaptchaType.puzzle;
+	[ApiParams.captchaType]: InteractiveCaptchaType;
 	[ApiParams.sessionId]: string;
 }
 
@@ -760,8 +758,7 @@ export const UpdateDecisionMachineBody = object({
 	).optional(),
 	[ApiParams.decisionMachineName]: safeLine(INPUT_LIMITS.NAME).optional(),
 	[ApiParams.decisionMachineVersion]: boundedString(INPUT_LIMITS.ID).optional(),
-	[ApiParams.decisionMachineCaptchaType]:
-		DecisionMachineCaptchaTypeSchema.optional(),
+	[ApiParams.decisionMachineCaptchaType]: ChallengeCaptchaTypeSchema.optional(),
 	[ApiParams.decisionMachineKind]: nativeEnum(DecisionMachineKind).optional(),
 	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID).optional(),
 });
@@ -803,7 +800,7 @@ export const DecisionMachineSummarySchema = object({
 	language: nativeEnum(DecisionMachineLanguage).nullish(),
 	name: string().nullish(),
 	version: string().nullish(),
-	captchaType: DecisionMachineCaptchaTypeSchema.nullish(),
+	captchaType: ChallengeCaptchaTypeSchema.nullish(),
 	createdAt: string(),
 	updatedAt: string(),
 });

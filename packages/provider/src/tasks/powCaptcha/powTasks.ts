@@ -21,6 +21,7 @@ import {
 	CaptchaType,
 	DecisionMachineDecision,
 	type DecisionMachineInput,
+	isInteractiveCaptchaType,
 } from "@prosopo/types";
 import {
 	ApiParams,
@@ -487,8 +488,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		// would keep anyway.
 		if (
 			escalateForMissingCoords &&
-			routingOutput?.captchaType !== CaptchaType.image &&
-			routingOutput?.captchaType !== CaptchaType.puzzle
+			!isInteractiveCaptchaType(routingOutput?.captchaType)
 		) {
 			routingOutput = {
 				captchaType: CaptchaType.image,

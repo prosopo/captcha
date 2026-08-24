@@ -18,6 +18,7 @@ import {
 	type IPInfoResponse,
 	type RequestHeaders,
 	type ScoreComponents,
+	isChallengeCaptchaType,
 } from "@prosopo/types";
 import type { ClientRecord } from "@prosopo/types-database";
 import {
@@ -26,6 +27,7 @@ import {
 	describeMatchedRule,
 } from "@prosopo/user-access-policy";
 import type { Response } from "express";
+import { sendChallenge } from "../../../tasks/frictionless/challengeDispatch.js";
 import { FrictionlessReason } from "../../../tasks/frictionless/frictionlessTasks.js";
 import type { Tasks } from "../../../tasks/index.js";
 import { attachHoneypot } from "./honeypotResponse.js";
@@ -109,7 +111,7 @@ export const handleAccessPolicy = async (
 				captchaType: CaptchaType.image,
 			},
 		}));
-		await tasks.frictionlessManager.registerBlockedSession({
+		await tasks.frictionlessManager.registerBlockedSession(CaptchaType.image, {
 			solvedImagesCount: clientRecord.settings.imageMaxRounds,
 			userSitekeyIpHash: input.userSitekeyIpHash,
 			reason: FrictionlessReason.ACCESS_POLICY_BLOCK,
@@ -140,14 +142,19 @@ export const handleAccessPolicy = async (
 				captchaType: userAccessPolicy.captchaType,
 			},
 		}));
-		await tasks.frictionlessManager.registerBlockedSession({
-			solvedImagesCount: clientRecord.settings.imageMaxRounds,
-			userSitekeyIpHash: input.userSitekeyIpHash,
-			reason: FrictionlessReason.AUTO_BAN_SCORE,
-			siteKey: input.dapp,
-			ipInfo: input.ipInfo,
-			headers: input.flatHeaders,
-		});
+		await tasks.frictionlessManager.registerBlockedSession(
+			isChallengeCaptchaType(userAccessPolicy.captchaType)
+				? userAccessPolicy.captchaType
+				: CaptchaType.image,
+			{
+				solvedImagesCount: clientRecord.settings.imageMaxRounds,
+				userSitekeyIpHash: input.userSitekeyIpHash,
+				reason: FrictionlessReason.AUTO_BAN_SCORE,
+				siteKey: input.dapp,
+				ipInfo: input.ipInfo,
+				headers: input.flatHeaders,
+			},
+		);
 		return {
 			handled: true,
 			response: res.status(401).json({ error: "Unauthorized" }),
@@ -162,62 +169,34 @@ export const handleAccessPolicy = async (
 		headers: input.flatHeaders,
 	};
 
-	if (userAccessPolicy.captchaType === CaptchaType.image) {
+	// A policy that pins a concrete challenge type serves it directly. The
+	// three per-type branches this replaces were identical apart from the
+	// image-only `solvedImagesCount`, which `sendCaptcha` discards for the
+	// other types — so passing it unconditionally is behaviour-preserving.
+	if (isChallengeCaptchaType(userAccessPolicy.captchaType)) {
 		logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {
 				decision: "user_access_policy",
-				captchaType: CaptchaType.image,
+				captchaType: userAccessPolicy.captchaType,
 			},
 		}));
 		attachHoneypot(res, clientRecord);
 		return {
 			handled: true,
 			response: res.json(
-				await tasks.frictionlessManager.sendImageCaptcha({
-					...captchaTypeBaseParams,
-					solvedImagesCount: userAccessPolicy.solvedImagesCount
-						? Math.min(
-								userAccessPolicy.solvedImagesCount,
-								clientRecord.settings.imageMaxRounds,
-							)
-						: clientRecord.settings.imageMaxRounds,
-				}),
-			),
-		};
-	}
-
-	if (userAccessPolicy.captchaType === CaptchaType.pow) {
-		logger.info(() => ({
-			msg: "Frictionless decision",
-			data: {
-				decision: "user_access_policy",
-				captchaType: CaptchaType.pow,
-			},
-		}));
-		attachHoneypot(res, clientRecord);
-		return {
-			handled: true,
-			response: res.json(
-				await tasks.frictionlessManager.sendPowCaptcha(captchaTypeBaseParams),
-			),
-		};
-	}
-
-	if (userAccessPolicy.captchaType === CaptchaType.puzzle) {
-		logger.info(() => ({
-			msg: "Frictionless decision",
-			data: {
-				decision: "user_access_policy",
-				captchaType: CaptchaType.puzzle,
-			},
-		}));
-		attachHoneypot(res, clientRecord);
-		return {
-			handled: true,
-			response: res.json(
-				await tasks.frictionlessManager.sendPuzzleCaptcha(
-					captchaTypeBaseParams,
+				await sendChallenge(
+					tasks.frictionlessManager,
+					userAccessPolicy.captchaType,
+					{
+						...captchaTypeBaseParams,
+						solvedImagesCount: userAccessPolicy.solvedImagesCount
+							? Math.min(
+									userAccessPolicy.solvedImagesCount,
+									clientRecord.settings.imageMaxRounds,
+								)
+							: clientRecord.settings.imageMaxRounds,
+					},
 				),
 			),
 		};

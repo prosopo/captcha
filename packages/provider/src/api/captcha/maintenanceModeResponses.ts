@@ -16,7 +16,7 @@ import { randomUUID } from "node:crypto";
 import {
 	ApiParams,
 	type CaptchaResponseBody,
-	type CaptchaType,
+	type ChallengeCaptchaType,
 	type GetFrictionlessCaptchaResponse,
 	type GetPowCaptchaResponse,
 	type GetPuzzleCaptchaResponse,
@@ -69,7 +69,7 @@ export const buildMaintenanceVerificationResponse = (
 });
 
 export const buildFrictionlessMaintenanceResponse = (
-	captchaType: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle,
+	captchaType: ChallengeCaptchaType,
 	host: string | undefined,
 ): GetFrictionlessCaptchaResponse => ({
 	[ApiParams.captchaType]: captchaType,

@@ -21,14 +21,28 @@ import type { KeyringPair } from "@prosopo/types";
 import {
 	type CaptchaTimeoutOutput,
 	CaptchaType,
+	type ChallengeCaptchaType,
 	ProcaptchaOutputSchema,
 	type ProcaptchaToken,
 	type ProsopoServerConfigOutput,
 	type VerificationResponse,
 	decodeProcaptchaOutput,
+	isChallengeCaptchaType,
 } from "@prosopo/types";
 import { u8aToHex } from "@prosopo/util";
 import i18n from "i18next";
+
+// Per-challenge recency window + the label used in the "not recent" log line.
+// Split out of the verify dispatch so both stay exhaustive over
+// ChallengeCaptchaType together.
+const VERIFY_RECENCY: Record<
+	ChallengeCaptchaType,
+	{ timeout: "image" | "pow" | "puzzle"; label: string }
+> = {
+	[CaptchaType.image]: { timeout: "image", label: "Image" },
+	[CaptchaType.pow]: { timeout: "pow", label: "PoW" },
+	[CaptchaType.puzzle]: { timeout: "puzzle", label: "Puzzle" },
+};
 
 export class ProsopoServer {
 	config: ProsopoServerConfigOutput;
@@ -100,47 +114,52 @@ export class ProsopoServer {
 		const signatureHex = u8aToHex(dappUserSignature);
 		const providerApi = this.getProviderApi(providerUrl);
 
-		if (captchaType === CaptchaType.puzzle) {
-			const puzzleTimeout = this.config.timeouts.puzzle.cachedTimeout;
-			if (!this.isRecent(timestamp, puzzleTimeout, "Puzzle")) {
-				return this.notRecentResponse();
-			}
-			return await providerApi.submitPuzzleCaptchaVerify(
-				token,
-				signatureHex,
-				user,
-				ip,
-				email,
-			);
-		}
+		// One dispatch table rather than three sequential `if`s, so a new
+		// challenge type is a compile error here instead of silently falling
+		// through into the legacy heuristic below.
+		const verifiers: Record<
+			ChallengeCaptchaType,
+			() => Promise<VerificationResponse>
+		> = {
+			[CaptchaType.puzzle]: () =>
+				providerApi.submitPuzzleCaptchaVerify(
+					token,
+					signatureHex,
+					user,
+					ip,
+					email,
+				),
+			[CaptchaType.pow]: () =>
+				providerApi.submitPowCaptchaVerify(
+					token,
+					signatureHex,
+					user,
+					ip,
+					email,
+				),
+			[CaptchaType.image]: () =>
+				providerApi.verifyDappUser(
+					token,
+					signatureHex,
+					user,
+					timeouts.image.cachedTimeout,
+					ip,
+					email,
+				),
+		};
 
-		if (captchaType === CaptchaType.pow) {
-			const powTimeout = this.config.timeouts.pow.cachedTimeout;
-			if (!this.isRecent(timestamp, powTimeout, "PoW")) {
+		if (isChallengeCaptchaType(captchaType)) {
+			const { timeout, label } = VERIFY_RECENCY[captchaType];
+			if (
+				!this.isRecent(
+					timestamp,
+					this.config.timeouts[timeout].cachedTimeout,
+					label,
+				)
+			) {
 				return this.notRecentResponse();
 			}
-			return await providerApi.submitPowCaptchaVerify(
-				token,
-				signatureHex,
-				user,
-				ip,
-				email,
-			);
-		}
-
-		if (captchaType === CaptchaType.image) {
-			const imageTimeout = this.config.timeouts.image.cachedTimeout;
-			if (!this.isRecent(timestamp, imageTimeout, "Image")) {
-				return this.notRecentResponse();
-			}
-			return await providerApi.verifyDappUser(
-				token,
-				signatureHex,
-				user,
-				timeouts.image.cachedTimeout,
-				ip,
-				email,
-			);
+			return await verifiers[captchaType]();
 		}
 
 		// Legacy path: no captchaType on the token. Preserve the historical
