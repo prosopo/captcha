@@ -36,7 +36,7 @@
 		"@prosopo/locale": "3.3.0",
 		"@prosopo/logger": "2.0.6",
 		"i18next": "24.1.0",
-		"zod": "4.4.3"
+		"zod": "3.23.8"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.3.11",

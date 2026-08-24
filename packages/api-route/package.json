@@ -27,7 +27,7 @@
 	},
 	"dependencies": {
 		"@prosopo/logger": "2.0.6",
-		"zod": "4.4.3"
+		"zod": "3.23.8"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.3.11",
