@@ -1,5 +1,39 @@
 # @prosopo/provider
 
+## 5.3.10
+### Patch Changes
+
+- 68a9b41: chore(deps): bump the npm-minor-and-patch group across 1 directory with 36 updates
+- f850d07: chore(deps): bump body-parser and express
+- 4cd6b04: Extend the failed image captcha integration test to assert the dapp verifies the challenge as disapproved, and add a test that a successful challenge still works after a failed one
+- Updated dependencies [a2f4b13]
+- Updated dependencies [68a9b41]
+- Updated dependencies [68a9b41]
+- Updated dependencies [f850d07]
+- Updated dependencies [ce5a3d7]
+- Updated dependencies [a9c0406]
+- Updated dependencies [179a2b0]
+- Updated dependencies [9bf4570]
+  - @prosopo/database@4.0.18
+  - @prosopo/locale@3.3.1
+  - @prosopo/types@5.2.6
+  - @prosopo/user-access-policy@3.12.25
+  - @prosopo/util@3.3.7
+  - @prosopo/ipinfo@0.3.15
+  - @prosopo/api-express-router@3.1.72
+  - @prosopo/puzzle-assets@0.1.3
+  - @prosopo/env@3.6.41
+  - @prosopo/api@4.0.14
+  - @prosopo/api-route@2.6.56
+  - @prosopo/common@3.1.51
+  - @prosopo/datasets@3.1.70
+  - @prosopo/keyring@2.9.77
+  - @prosopo/load-balancer@2.10.31
+  - @prosopo/logger@2.0.7
+  - @prosopo/redis-client@1.0.33
+  - @prosopo/types-database@5.1.11
+  - @prosopo/types-env@2.10.36
+
 ## 5.3.9
 ### Patch Changes
 

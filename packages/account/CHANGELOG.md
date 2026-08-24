@@ -1,5 +1,17 @@
 # @prosopo/account
 
+## 2.8.80
+### Patch Changes
+
+- 68a9b41: chore(deps): bump the npm-minor-and-patch group across 1 directory with 36 updates
+- Updated dependencies [68a9b41]
+- Updated dependencies [ce5a3d7]
+  - @prosopo/types@5.2.6
+  - @prosopo/util@3.3.7
+  - @prosopo/common@3.1.51
+  - @prosopo/fingerprint@2.7.34
+  - @prosopo/keyring@2.9.77
+
 ## 2.8.79
 ### Patch Changes
 

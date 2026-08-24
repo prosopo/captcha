@@ -1,5 +1,20 @@
 # @prosopo/procaptcha
 
+## 2.10.75
+### Patch Changes
+
+- ce5a3d7: Fix the reload button on the image captcha closing the challenge instead of loading a new one. Reload now asks the frictionless wrapper for a fresh session and re-mounts the widget so a new challenge opens straight away, and the checkbox click position is carried over to the replacement solve
+- Updated dependencies [68a9b41]
+- Updated dependencies [68a9b41]
+- Updated dependencies [ce5a3d7]
+  - @prosopo/procaptcha-common@2.11.34
+  - @prosopo/types@5.2.6
+  - @prosopo/util@3.3.7
+  - @prosopo/api@4.0.14
+  - @prosopo/common@3.1.51
+  - @prosopo/datasets@3.1.70
+  - @prosopo/load-balancer@2.10.31
+
 ## 2.10.74
 ### Patch Changes
 

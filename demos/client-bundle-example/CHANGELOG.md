@@ -1,5 +1,11 @@
 # @prosopo/client-bundle-example
 
+## 2.10.22
+### Patch Changes
+
+- 68a9b41: chore(deps): bump the npm-minor-and-patch group across 1 directory with 36 updates
+- 68a9b41: chore(deps): bump react and @types/react
+
 ## 2.10.21
 ### Patch Changes
 

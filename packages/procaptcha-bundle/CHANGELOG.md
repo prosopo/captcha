@@ -1,5 +1,20 @@
 # @prosopo/procaptcha-bundle
 
+## 4.1.60
+### Patch Changes
+
+- 68a9b41: chore(deps): bump the npm-minor-and-patch group across 1 directory with 36 updates
+- 68a9b41: chore(deps): bump react and @types/react
+- Updated dependencies [68a9b41]
+- Updated dependencies [68a9b41]
+- Updated dependencies [ce5a3d7]
+  - @prosopo/locale@3.3.1
+  - @prosopo/procaptcha-common@2.11.34
+  - @prosopo/types@5.2.6
+  - @prosopo/util@3.3.7
+  - @prosopo/procaptcha-frictionless@2.13.16
+  - @prosopo/dotenv@3.0.53
+
 ## 4.1.59
 ### Patch Changes
 

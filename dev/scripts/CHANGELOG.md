@@ -1,5 +1,26 @@
 # @prosopo/scripts
 
+## 3.1.166
+### Patch Changes
+
+- 68a9b41: chore(deps): bump the npm-minor-and-patch group across 1 directory with 36 updates
+- Updated dependencies [68a9b41]
+- Updated dependencies [f850d07]
+- Updated dependencies [ce5a3d7]
+- Updated dependencies [4cd6b04]
+  - @prosopo/cli@3.7.24
+  - @prosopo/locale@3.3.1
+  - @prosopo/provider@5.3.10
+  - @prosopo/types@5.2.6
+  - @prosopo/util@3.3.7
+  - @prosopo/env@3.6.41
+  - @prosopo/common@3.1.51
+  - @prosopo/datasets@3.1.70
+  - @prosopo/dotenv@3.0.53
+  - @prosopo/keyring@2.9.77
+  - @prosopo/logger@2.0.7
+  - @prosopo/types-env@2.10.36
+
 ## 3.1.165
 ### Patch Changes
 

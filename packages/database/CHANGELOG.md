@@ -1,5 +1,30 @@
 # @prosopo/database
 
+## 4.0.18
+### Patch Changes
+
+- a2f4b13: Extend `getDappUserCommitmentById` and `getDappUserCommitmentByAccount` projections to include every field that the downstream verify path (`verifyImageCaptchaSolution`) reads off the returned solution — `behavioralDataPacked`, `deviceCapability`, `coords`, plus (for the by-account fallback) `userAccount`, `dappAccount`, `headers`, `ipInfo`, `sessionId`, `serverChecked`, `ipAddress`, `submittedAtTimestamp`. Both methods now share `DAPP_USER_COMMITMENT_PROJECTION`.
+  
+  Root cause: same class as #3107 (`getSessionRecordBySessionId` missing tcp-probe fields). `getDappUserCommitmentById` had a 13-field projection that omitted `behavioralDataPacked`, `deviceCapability`, and `coords`. `getDappUserCommitmentByAccount` projected only `{_id: 0, result: 1}`, so on that branch every field beyond `result` landed as `undefined` at the caller. Any downstream code path that read a stripped field silently degraded.
+  
+  Guard: adds `commitmentRecordProjection.integration.test.ts` — persists a full commitment, fetches via both methods, asserts each field the verify path reads round-trips and that both methods return the same shape.
+- 179a2b0: Add reusable projection-contract test scaffold for `ProviderDatabase` mongo fetch methods.
+  
+  `packages/database/src/tests/integration/projectionContract.ts` exports `testProjectionContract`, a vitest helper that pins a (projection method, consumer) pair: insert a fully-populated fixture, fetch via the method under test, assert every field the consumer reads survives the projection. `packages/database/src/tests/integration/projectionContracts.integration.test.ts` wires initial contracts for `getPowCaptchaRecordByChallenge`, `getPuzzleCaptchaRecordByChallenge`, and `getClientRecord`.
+  
+  Motivation: same class of bug keeps landing (`getSessionRecordBySessionId` missing tcp-probe fields — #3107; `getDappUserCommitmentBy{Id,Account}` missing verify-path fields — #3116). Mongo projections narrow at write time and stay narrow, while downstream consumers add new field reads over time; TypeScript can't catch the mismatch because the return type is the full record, not the projected subset. This scaffold pins the contract per method and fails a targeted assertion the moment a projection stops covering what the consumer reads.
+  
+  Adding a new contract when a new projected fetch method lands, or extending the `consumerReads` manifest when a consumer starts reading a new field, is now the drift-prevention convention. `commitmentRecordProjection.integration.test.ts` and `sessionRecordProjection.integration.test.ts` remain as bespoke regression guards; the scaffold is additive, not a replacement.
+- Updated dependencies [68a9b41]
+- Updated dependencies [ce5a3d7]
+  - @prosopo/types@5.2.6
+  - @prosopo/user-access-policy@3.12.25
+  - @prosopo/util@3.3.7
+  - @prosopo/common@3.1.51
+  - @prosopo/logger@2.0.7
+  - @prosopo/redis-client@1.0.33
+  - @prosopo/types-database@5.1.11
+
 ## 4.0.17
 ### Patch Changes
 

@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/puzzle-assets",
-	"version": "0.1.2",
+	"version": "0.1.3",
 	"description": "Procedural imagery for the slider puzzle captcha",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -47,7 +47,7 @@
 		"sharp": "0.35.3"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.11",
+		"@prosopo/config": "3.3.12",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "4.1.10",
 		"del-cli": "6.0.0",

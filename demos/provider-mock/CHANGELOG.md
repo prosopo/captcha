@@ -1,5 +1,26 @@
 # @prosopo/provider-mock
 
+## 2.8.162
+### Patch Changes
+
+- 68a9b41: chore(deps): bump the npm-minor-and-patch group across 1 directory with 36 updates
+- f850d07: chore(deps): bump body-parser and express
+- Updated dependencies [a2f4b13]
+- Updated dependencies [68a9b41]
+- Updated dependencies [f850d07]
+- Updated dependencies [ce5a3d7]
+- Updated dependencies [179a2b0]
+- Updated dependencies [4cd6b04]
+  - @prosopo/database@4.0.18
+  - @prosopo/locale@3.3.1
+  - @prosopo/provider@5.3.10
+  - @prosopo/types@5.2.6
+  - @prosopo/api-express-router@3.1.72
+  - @prosopo/common@3.1.51
+  - @prosopo/dotenv@3.0.53
+  - @prosopo/logger@2.0.7
+  - @prosopo/types-database@5.1.11
+
 ## 2.8.161
 ### Patch Changes
 
