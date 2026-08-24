@@ -2349,6 +2349,47 @@ export class ProviderDatabase
 		});
 	}
 
+	// Shared projection for both commitment fetchers below. Every field a
+	// caller of `verifyImageCaptchaSolution` reads off the returned record
+	// must be listed here — the decision-machine input builder in
+	// `imgCaptchaTasks.verifyImageCaptchaSolution` forwards these onto
+	// `DecisionMachineInput`, so a missing projection field lands as
+	// `undefined` at the DM and silently no-ops (or trips) whichever
+	// decide rule reads it. Historical failure: `behavioralDataPacked`
+	// was omitted for months; every no-cache POST tripped
+	// `noCacheNoBdpRule` in the Twickets DM even though the record on
+	// disk had ~50 c1/c3 events. Same failure mode as the tcp-probe
+	// projection bug fixed in #3107 — extend both projections together
+	// whenever a new field is added to `DecisionMachineInput` on the
+	// solution side.
+	private static readonly DAPP_USER_COMMITMENT_PROJECTION = {
+		id: 1,
+		result: 1,
+		serverChecked: 1,
+		requestedAtTimestamp: 1,
+		submittedAtTimestamp: 1,
+		verifiedAtTimestamp: 1,
+		failedAtTimestamp: 1,
+		ipAddress: 1,
+		sessionId: 1,
+		userAccount: 1,
+		dappAccount: 1,
+		headers: 1,
+		ipInfo: 1,
+		// Decision-machine input: `noCacheNoBdpRule`,
+		// `syntheticMouseTimingRule`, `clickBeforeMoveRule`, and the
+		// Twickets suspect-BDP-shape rules all read
+		// `input.behavioralDataPacked`. Missing here → DM sees
+		// `undefined` → guarded rules silently return null AND
+		// `noCacheNoBdpRule` denies every no-cache POST regardless of
+		// real BDP presence on the record.
+		behavioralDataPacked: 1,
+		deviceCapability: 1,
+		// Decision-machine input: coords are forwarded so post-solve
+		// escalation / audit rules can inspect where the user clicked.
+		coords: 1,
+	} as { [key in keyof Partial<UserCommitmentRecord>]: 1 };
+
 	/**
 	 * @description Get dapp user commitment by user account
 	 * @param commitmentId
@@ -2358,21 +2399,7 @@ export class ProviderDatabase
 	): Promise<UserCommitmentRecord | undefined> {
 		const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
 		const commitmentCursor = this.tables?.commitment
-			?.findOne(filter, {
-				id: 1,
-				result: 1,
-				serverChecked: 1,
-				requestedAtTimestamp: 1,
-				submittedAtTimestamp: 1,
-				verifiedAtTimestamp: 1,
-				failedAtTimestamp: 1,
-				ipAddress: 1,
-				sessionId: 1,
-				userAccount: 1,
-				dappAccount: 1,
-				headers: 1,
-				ipInfo: 1,
-			} as { [key in keyof Partial<UserCommitmentRecord>]: 1 })
+			?.findOne(filter, ProviderDatabase.DAPP_USER_COMMITMENT_PROJECTION)
 			.lean<UserCommitmentRecord>();
 
 		const doc = await commitmentCursor;
@@ -2393,15 +2420,15 @@ export class ProviderDatabase
 			userAccount,
 			dappAccount,
 		};
-		const project = {
-			_id: 0,
-			result: 1,
-		};
 		const sort = { sort: { _id: -1 } };
 		const docs: UserCommitmentRecord[] | null | undefined =
 			await this.tables?.commitment
 				// sort by most recent first to avoid old solutions being used in development
-				?.find(filter, project, sort)
+				?.find(
+					filter,
+					ProviderDatabase.DAPP_USER_COMMITMENT_PROJECTION,
+					sort,
+				)
 				.lean<UserCommitmentRecord[]>();
 
 		return docs ? (docs as UserCommitmentRecord[]) : [];
