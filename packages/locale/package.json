@@ -40,7 +40,7 @@
 		"i18next-http-middleware": "3.9.8",
 		"i18next-resources-to-backend": "1.2.3",
 		"react-i18next": "15.4.0",
-		"zod": "3.23.8"
+		"zod": "4.4.3"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.3.11",
