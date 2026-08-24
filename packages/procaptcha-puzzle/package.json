@@ -41,11 +41,11 @@
 		"@prosopo/util": "3.3.6",
 		"@prosopo/util-crypto": "13.5.30",
 		"@prosopo/widget-skeleton": "2.8.6",
-		"react": "18.3.1"
+		"react": "19.2.8"
 	},
 	"devDependencies": {
-		"@emotion/react": "11.11.1",
-		"@emotion/styled": "11.11.0",
+		"@emotion/react": "11.14.0",
+		"@emotion/styled": "11.14.1",
 		"@prosopo/config": "3.3.11",
 		"@types/node": "22.5.5",
 		"@vitest/coverage-v8": "4.1.10",
@@ -53,7 +53,7 @@
 		"del-cli": "6.0.0",
 		"jsdom": "26.1.0",
 		"npm-run-all": "4.1.5",
-		"react-dom": "18.3.1",
+		"react-dom": "19.2.8",
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
