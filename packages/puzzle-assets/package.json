@@ -14,6 +14,11 @@
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js",
 			"require": "./dist/cjs/index.cjs"
+		},
+		"./browser": {
+			"types": "./dist/browser.d.ts",
+			"import": "./dist/browser.js",
+			"require": "./dist/cjs/browser.cjs"
 		}
 	},
 	"scripts": {
