@@ -1,5 +1,22 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.13.16
+### Patch Changes
+
+- 68a9b41: chore(deps): bump react and @types/react
+- ce5a3d7: Fix the reload button on the image captcha closing the challenge instead of loading a new one. Reload now asks the frictionless wrapper for a fresh session and re-mounts the widget so a new challenge opens straight away, and the checkbox click position is carried over to the replacement solve
+- Updated dependencies [68a9b41]
+- Updated dependencies [68a9b41]
+- Updated dependencies [ce5a3d7]
+  - @prosopo/locale@3.3.1
+  - @prosopo/procaptcha-common@2.11.34
+  - @prosopo/procaptcha-pow@2.10.41
+  - @prosopo/procaptcha-puzzle@2.10.57
+  - @prosopo/procaptcha-react@2.9.114
+  - @prosopo/types@5.2.6
+  - @prosopo/api@4.0.14
+  - @prosopo/common@3.1.51
+
 ## 2.13.15
 ### Patch Changes
 

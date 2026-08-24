@@ -1,5 +1,25 @@
 # @prosopo/cli
 
+## 3.7.24
+### Patch Changes
+
+- 68a9b41: chore(deps): bump the npm-minor-and-patch group across 1 directory with 36 updates
+- f850d07: chore(deps): bump body-parser and express
+- Updated dependencies [68a9b41]
+- Updated dependencies [f850d07]
+- Updated dependencies [ce5a3d7]
+- Updated dependencies [4cd6b04]
+  - @prosopo/locale@3.3.1
+  - @prosopo/provider@5.3.10
+  - @prosopo/types@5.2.6
+  - @prosopo/util@3.3.7
+  - @prosopo/env@3.6.41
+  - @prosopo/api@4.0.14
+  - @prosopo/common@3.1.51
+  - @prosopo/dotenv@3.0.53
+  - @prosopo/keyring@2.9.77
+  - @prosopo/logger@2.0.7
+
 ## 3.7.23
 ### Patch Changes
 

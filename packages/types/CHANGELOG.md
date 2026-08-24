@@ -1,5 +1,14 @@
 # @prosopo/types
 
+## 5.2.6
+### Patch Changes
+
+- 68a9b41: chore(deps): bump the npm-minor-and-patch group across 1 directory with 36 updates
+- ce5a3d7: Fix the reload button on the image captcha closing the challenge instead of loading a new one. Reload now asks the frictionless wrapper for a fresh session and re-mounts the widget so a new challenge opens straight away, and the checkbox click position is carried over to the replacement solve
+- Updated dependencies [68a9b41]
+  - @prosopo/locale@3.3.1
+  - @prosopo/util@3.3.7
+
 ## 5.2.5
 ### Patch Changes
 

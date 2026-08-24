@@ -1,5 +1,19 @@
 # @prosopo/api-express-router
 
+## 3.1.72
+### Patch Changes
+
+- f850d07: chore(deps): bump body-parser and express
+- Updated dependencies [68a9b41]
+- Updated dependencies [ce5a3d7]
+  - @prosopo/locale@3.3.1
+  - @prosopo/types@5.2.6
+  - @prosopo/util@3.3.7
+  - @prosopo/env@3.6.41
+  - @prosopo/api-route@2.6.56
+  - @prosopo/common@3.1.51
+  - @prosopo/logger@2.0.7
+
 ## 3.1.71
 ### Patch Changes
 

@@ -1,5 +1,19 @@
 # @prosopo/user-access-policy
 
+## 3.12.25
+### Patch Changes
+
+- 68a9b41: chore(deps): bump the npm-minor-and-patch group across 1 directory with 36 updates
+- Updated dependencies [68a9b41]
+- Updated dependencies [ce5a3d7]
+  - @prosopo/types@5.2.6
+  - @prosopo/util@3.3.7
+  - @prosopo/api@4.0.14
+  - @prosopo/api-route@2.6.56
+  - @prosopo/common@3.1.51
+  - @prosopo/logger@2.0.7
+  - @prosopo/redis-client@1.0.33
+
 ## 3.12.24
 ### Patch Changes
 

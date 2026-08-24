@@ -1,5 +1,23 @@
 # @prosopo/client-example-server
 
+## 2.7.144
+### Patch Changes
+
+- 68a9b41: chore(deps): bump the npm-minor-and-patch group across 1 directory with 36 updates
+- f850d07: chore(deps): bump body-parser and express
+- Updated dependencies [a2f4b13]
+- Updated dependencies [68a9b41]
+- Updated dependencies [ce5a3d7]
+- Updated dependencies [179a2b0]
+  - @prosopo/database@4.0.18
+  - @prosopo/types@5.2.6
+  - @prosopo/util@3.3.7
+  - @prosopo/common@3.1.51
+  - @prosopo/dotenv@3.0.53
+  - @prosopo/keyring@2.9.77
+  - @prosopo/logger@2.0.7
+  - @prosopo/server@2.10.58
+
 ## 2.7.143
 ### Patch Changes
 

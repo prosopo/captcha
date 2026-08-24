@@ -1,5 +1,11 @@
 # @prosopo/config
 
+## 3.3.12
+### Patch Changes
+
+- 68a9b41: chore(deps): bump the npm-minor-and-patch group across 1 directory with 36 updates
+- 68a9b41: chore(deps-dev): bump @babel/plugin-transform-object-rest-spread from 7.28.4 to 8.0.1
+
 ## 3.3.11
 ### Patch Changes
 

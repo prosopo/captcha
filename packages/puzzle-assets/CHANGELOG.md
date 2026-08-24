@@ -1,5 +1,11 @@
 # @prosopo/puzzle-assets
 
+## 0.1.3
+### Patch Changes
+
+- a9c0406: Add vite export path
+- 9bf4570: Export code for use in the portal
+
 ## 0.1.2
 ### Patch Changes
 

@@ -1,5 +1,14 @@
 # @prosopo/ipinfo
 
+## 0.3.15
+### Patch Changes
+
+- 68a9b41: chore(deps): bump @maxmind/geoip2-node from 5.0.0 to 7.1.0
+- Updated dependencies [68a9b41]
+- Updated dependencies [ce5a3d7]
+  - @prosopo/types@5.2.6
+  - @prosopo/logger@2.0.7
+
 ## 0.3.14
 ### Patch Changes
 
