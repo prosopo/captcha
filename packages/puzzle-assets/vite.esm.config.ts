@@ -15,6 +15,13 @@
 import path from "node:path";
 import { ViteEsmConfig } from "@prosopo/config";
 
+// Both `.` and `./browser` are advertised in package.json exports. Vite
+// only emits `dist/browser.js` if it's declared as an entry — otherwise
+// downstream browser consumers can't resolve @prosopo/puzzle-assets/browser
+// after the ESM build runs.
 export default function () {
-	return ViteEsmConfig(path.basename("."), path.resolve("./tsconfig.json"));
+	return ViteEsmConfig(path.basename("."), path.resolve("./tsconfig.json"), [
+		"src/index.ts",
+		"src/browser.ts",
+	]);
 }
