@@ -2407,11 +2407,7 @@ export class ProviderDatabase
 		const docs: UserCommitmentRecord[] | null | undefined =
 			await this.tables?.commitment
 				// sort by most recent first to avoid old solutions being used in development
-				?.find(
-					filter,
-					ProviderDatabase.DAPP_USER_COMMITMENT_PROJECTION,
-					sort,
-				)
+				?.find(filter, ProviderDatabase.DAPP_USER_COMMITMENT_PROJECTION, sort)
 				.lean<UserCommitmentRecord[]>();
 
 		return docs ? (docs as UserCommitmentRecord[]) : [];
