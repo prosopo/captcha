@@ -26,13 +26,10 @@ export type RetryCoords = { x: number; y: number };
 export type MutableRef<T> = { current: T };
 
 /**
- * Semantics of the outer recovery handler. Returns whether the caller
- * should proceed to re-run the frictionless flow (`start()`), and mutates
- * the passed refs to record the one-shot fire + pending coords.
+ * The checkbox click position a re-mounted widget should start from, or
+ * `null` when there isn't a real one to carry over.
  *
- * - Second calls are ignored (one-shot per outer widget lifetime) so a
- *   persistently broken session doesn't loop.
- * - Coords are recorded only for a real trusted checkbox click. A partial
+ * - Coords are kept only for a real trusted checkbox click. A partial
  *   pair (only x or only y numeric) is treated as "no coords" so we
  *   never accidentally embed `NaN` into the solution salt.
  * - `(0, 0)` is treated as "no coords" too — that's what the widgets
@@ -42,6 +39,23 @@ export type MutableRef<T> = { current: T };
  *   is identical; we discard the pair here so future readers can tell
  *   the two apart.
  */
+export const normaliseRetryCoords = (
+	x: number | undefined,
+	y: number | undefined,
+): RetryCoords | null => {
+	if (typeof x !== "number" || typeof y !== "number") return null;
+	if (x === 0 && y === 0) return null;
+	return { x, y };
+};
+
+/**
+ * Semantics of the outer recovery handler. Returns whether the caller
+ * should proceed to re-run the frictionless flow (`start()`), and mutates
+ * the passed refs to record the one-shot fire + pending coords.
+ *
+ * Second calls are ignored (one-shot per outer widget lifetime) so a
+ * persistently broken session doesn't loop.
+ */
 export const handleSessionInvalidated = (
 	x: number | undefined,
 	y: number | undefined,
@@ -50,9 +64,7 @@ export const handleSessionInvalidated = (
 ): { shouldRestart: boolean } => {
 	if (firedRef.current) return { shouldRestart: false };
 	firedRef.current = true;
-	const bothNumeric = typeof x === "number" && typeof y === "number";
-	const isRealClick = bothNumeric && (x !== 0 || y !== 0);
-	pendingCoordsRef.current = isRealClick ? { x, y } : null;
+	pendingCoordsRef.current = normaliseRetryCoords(x, y);
 	return { shouldRestart: true };
 };
 
