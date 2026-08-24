@@ -114,7 +114,11 @@ describe("what the grid renders", () => {
 
 	test("renders an item with no image url as an empty image", () => {
 		render({ items: [item("hash-1", "")] });
-		expect(tiles()[0]?.getAttribute("src")).toBe("");
+		// React 19 drops an empty src instead of rendering src="", which would
+		// make the browser re-request the current page. The tile still renders,
+		// it just has no image to show.
+		expect(tiles()).toHaveLength(1);
+		expect(tiles()[0]?.getAttribute("src")).toBeNull();
 	});
 
 	test("refuses to render an item with no hash", () => {

@@ -41,7 +41,7 @@
 		"@prosopo/provider": "5.3.9",
 		"@prosopo/types": "5.2.5",
 		"@prosopo/types-database": "5.1.10",
-		"cors": "2.8.5",
+		"cors": "2.8.6",
 		"express": "4.21.2",
 		"express-rate-limit": "7.4.0",
 		"mongoose": "8.24.1"
