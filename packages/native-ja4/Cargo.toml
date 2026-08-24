@@ -1,0 +1,30 @@
+[package]
+name = "prosopo-native-ja4"
+version = "0.0.1"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+napi = { version = "2.16", default-features = false, features = ["napi9"] }
+napi-derive = "2.16"
+# JA4 parser lives in a standalone crate maintained by Prosopo so this napi
+# module and the protect edge stack (bumblebee) share one implementation.
+prosopo-ja4 = "0.1"
+
+[build-dependencies]
+napi-build = "2.1"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = "symbols"
+
+# Debug symbols for our own crate only. Dependency debuginfo is the bulk of a
+# dev build and nobody steps through third-party code here; CI narrows our own
+# to line tables via CARGO_PROFILE_DEV_DEBUG.
+[profile.dev.package."*"]
+debug = false

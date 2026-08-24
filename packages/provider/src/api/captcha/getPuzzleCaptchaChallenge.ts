@@ -27,6 +27,11 @@ import type { NextFunction, Request, Response } from "express";
 import { getCompositeIpAddress } from "../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
+import {
+	renderPuzzleImages,
+	resolvePuzzlePieceSize,
+	resolvePuzzleRenderSettings,
+} from "../../tasks/puzzle/puzzleRenderer.js";
 import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 import { getRequestUserScope } from "../blacklistRequestInspector.js";
@@ -71,7 +76,7 @@ export default (
 				msg: "Maintenance mode active - returning dummy puzzle challenge",
 				data: { dapp, user, sessionId },
 			}));
-			return res.json(buildPuzzleMaintenanceResponse(user, dapp));
+			return res.json(await buildPuzzleMaintenanceResponse(user, dapp));
 		}
 
 		const tasks = new Tasks(env, req.logger);
@@ -177,23 +182,16 @@ export default (
 			}
 
 			// Evaluate the site's trafficFilter against the connecting IP.
-			// A matched `block` policy short-circuits with 401; a matched
-			// `challenge` policy contributes puzzleTolerance overrides
-			// (lower tolerance = stricter accuracy).
+			// Only `challenge` policies affect the request-time gate — they
+			// contribute puzzleTolerance overrides (lower tolerance =
+			// stricter accuracy). `block` policies are enforced at submit /
+			// verify time so the user still receives a captcha and produces
+			// a billable interaction.
 			const trafficVerdict = applyTrafficFilterAtRequestTime(
 				req.ipInfo,
 				clientSettings.settings?.trafficFilter,
 				req.logger,
 			);
-			if (trafficVerdict.kind === "block") {
-				return next(
-					new ProsopoApiError(trafficVerdict.reason, {
-						context: { code: 401, siteKey: dapp, user },
-						i18n: req.i18n,
-						logger: req.logger,
-					}),
-				);
-			}
 			const trafficPuzzleTolerance =
 				trafficVerdict.kind === "challenge"
 					? trafficVerdict.puzzleTolerance
@@ -201,6 +199,27 @@ export default (
 
 			const tolerance =
 				trafficPuzzleTolerance ?? clientSettings?.settings?.puzzleTolerance;
+
+			// Resolve per-render puzzle tunables the same way as tolerance:
+			// asset defaults <- clientSettings.puzzle <- trafficFilter category
+			// puzzle override. Missing sub-fields fall through to the layer
+			// beneath, so partial overrides work as expected.
+			const trafficPuzzleSettings =
+				trafficVerdict.kind === "challenge"
+					? trafficVerdict.puzzleSettings
+					: undefined;
+			const effectivePuzzleSettings = resolvePuzzleRenderSettings(
+				clientSettings?.settings?.puzzle,
+				trafficPuzzleSettings,
+			);
+			// Piece size is drawn per-challenge from the effective scale
+			// range so a solver can't hard-code the expected silhouette
+			// scale. Uses the same layered client / traffic-filter override
+			// order as the render settings above.
+			const effectivePieceSize = resolvePuzzlePieceSize(
+				clientSettings?.settings?.puzzle,
+				trafficPuzzleSettings,
+			);
 			const challenge =
 				await tasks.puzzleCaptchaManager.getPuzzleCaptchaChallenge(
 					user,
@@ -247,14 +266,27 @@ export default (
 				req.ipInfo,
 			);
 
+			// Render AFTER the record is stored: the target must be durable
+			// before it is expressed in pixels, so a crash between the two
+			// cannot leave a challenge the user can see but the server cannot
+			// score. Imagery is derived from the same target that was persisted.
+			const images = await renderPuzzleImages(
+				{
+					targetX: challenge.targetX,
+					targetY: challenge.targetY,
+				},
+				effectivePuzzleSettings,
+				effectivePieceSize,
+			);
+
 			const getPuzzleCaptchaResponse: GetPuzzleCaptchaResponse = {
 				[ApiParams.status]: "ok",
 				[ApiParams.challenge]: challenge.challenge,
-				[ApiParams.targetX]: challenge.targetX,
-				[ApiParams.targetY]: challenge.targetY,
+				[ApiParams.background]: images.background,
+				[ApiParams.piece]: images.piece,
+				[ApiParams.pieceSize]: images.pieceSize,
 				[ApiParams.originX]: challenge.originX,
 				[ApiParams.originY]: challenge.originY,
-				[ApiParams.tolerance]: challenge.tolerance,
 				[ApiParams.timestamp]: challenge.requestedAtTimestamp.toString(),
 				[ApiParams.signature]: {
 					[ApiParams.provider]: {

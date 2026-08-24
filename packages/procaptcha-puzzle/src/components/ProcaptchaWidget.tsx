@@ -241,8 +241,9 @@ const Procaptcha = (props: ProcaptchaProps) => {
 				<PuzzleCanvas
 					originX={challengeData.originX}
 					originY={challengeData.originY}
-					targetX={challengeData.targetX}
-					targetY={challengeData.targetY}
+					background={challengeData.background}
+					piece={challengeData.piece}
+					pieceSize={challengeData.pieceSize}
 					onComplete={handlePuzzleComplete}
 					showRetry={showRetry}
 					retryMessage={

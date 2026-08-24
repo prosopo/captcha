@@ -28,6 +28,27 @@ export const imageMaxRoundsDefault = 32;
 export const contextAwareThresholdDefault = 0.7;
 export const puzzleToleranceDefault = 15;
 
+// Puzzle render defaults, mirrored from `packages/puzzle-assets`'s
+// `DEFAULT_RENDER_SETTINGS`. Kept here so the schema layer owns the
+// authoritative bounds and defaults; the renderer just receives resolved
+// values from the provider.
+export const puzzleDecoyCountDefault = 5;
+export const puzzleDecoyEdgeDarknessDefault = 20;
+export const puzzleDecoyBodyBrightnessDefault = 4;
+export const puzzleHoleDarkenDefault = 0.55;
+// Multiplier on decoy pixels, mirroring `holeDarken` for the real cut.
+// Lower = darker decoys. Kept looser than `holeDarken` so the real hole is
+// still the deepest region on the frame; too close and humans can't tell,
+// too far and a solver keys on brightness alone.
+export const puzzleDecoyHoleDarkenDefault = 0.7;
+// Piece size as a fraction of the background width. The provider draws a
+// fresh value from [min, max] per challenge so a solver can't hard-code
+// the expected silhouette scale. Defaults preserve the historical 44px
+// minimum (44/300 ≈ 0.147) and open the top end to 90% of the frame; a
+// piece is allowed to overhang the background — the cut is clipped.
+export const puzzlePieceScaleMinDefault = 0.15;
+export const puzzlePieceScaleMaxDefault = 0.45;
+
 // Field-level schemas hoisted so `TrafficFilterSchema` per-category
 // challenge policies validate captcha parameters with the same bounds as
 // the site-wide defaults on `ClientSettingsSchema`. Do not redefine these
@@ -36,6 +57,45 @@ export const powDifficultyFieldSchema = number().positive().min(1).max(10);
 export const imageThresholdFieldSchema = number().min(0).max(1);
 export const imageMaxRoundsFieldSchema = number().int().min(2);
 export const puzzleToleranceFieldSchema = number().int().min(5).max(1000);
+export const puzzleDecoyCountFieldSchema = number().int().min(0).max(200);
+export const puzzleDecoyEdgeDarknessFieldSchema = number().int().min(0).max(40);
+export const puzzleDecoyBodyBrightnessFieldSchema = number()
+	.int()
+	.min(-20)
+	.max(20);
+export const puzzleHoleDarkenFieldSchema = number().min(0).max(1);
+export const puzzleDecoyHoleDarkenFieldSchema = number().min(0).max(1);
+// Bounds are wider than the defaults so operators can pin the piece to a
+// fixed size (min == max) or explore the full frame. Cross-field
+// `min <= max` is enforced on the containing object schema.
+export const puzzlePieceScaleFieldSchema = number().min(0.05).max(0.95);
+export const PuzzlePieceScaleSchema = object({
+	min: puzzlePieceScaleFieldSchema
+		.optional()
+		.default(puzzlePieceScaleMinDefault),
+	max: puzzlePieceScaleFieldSchema
+		.optional()
+		.default(puzzlePieceScaleMaxDefault),
+}).refine((v) => v.min <= v.max, {
+	message: "puzzle piece scale min must be <= max",
+});
+
+/**
+ * Per-render tunables for the puzzle captcha. Every field is optional so
+ * operators can override a subset from the portal without having to
+ * restate the defaults. The provider merges these on top of the asset
+ * package's `DEFAULT_RENDER_SETTINGS` before calling the renderer.
+ */
+export const PuzzleSettingsSchema = object({
+	decoyCount: puzzleDecoyCountFieldSchema.optional(),
+	decoyEdgeDarkness: puzzleDecoyEdgeDarknessFieldSchema.optional(),
+	decoyBodyBrightness: puzzleDecoyBodyBrightnessFieldSchema.optional(),
+	decoyHoleDarken: puzzleDecoyHoleDarkenFieldSchema.optional(),
+	holeDarken: puzzleHoleDarkenFieldSchema.optional(),
+	pieceScale: PuzzlePieceScaleSchema.optional(),
+});
+
+export type IPuzzleSettings = output<typeof PuzzleSettingsSchema>;
 
 // IP Validation Rules
 export enum IPValidationAction {
@@ -225,6 +285,10 @@ export const TrafficCategoryPolicySchema = object({
 	powDifficulty: powDifficultyFieldSchema.optional(),
 	solvedImagesCount: imageMaxRoundsFieldSchema.optional(),
 	puzzleTolerance: puzzleToleranceFieldSchema.optional(),
+	// Per-category overrides for puzzle rendering. Individual fields on
+	// the nested object are themselves optional, so a category can
+	// override, say, just `decoyCount` without restating the rest.
+	puzzle: PuzzleSettingsSchema.optional(),
 });
 
 export type ITrafficCategoryPolicy = output<typeof TrafficCategoryPolicySchema>;
@@ -343,6 +407,10 @@ export const ClientSettingsSchema = object({
 	puzzleTolerance: puzzleToleranceFieldSchema
 		.optional()
 		.default(puzzleToleranceDefault),
+	// Site-wide puzzle render settings. Fields not set here fall back to
+	// the asset package's defaults. Traffic-filter category policies may
+	// further override any of these on a per-request basis.
+	puzzle: PuzzleSettingsSchema.optional(),
 	ipValidationRules: IPValidationRulesSchema.optional(),
 	// The trailing `.optional()` that used to sit after `.default(false)` made
 	// the default unreachable, so this parsed to `undefined` rather than

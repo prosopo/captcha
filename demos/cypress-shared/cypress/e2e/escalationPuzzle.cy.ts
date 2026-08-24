@@ -1,0 +1,216 @@
+// Copyright 2021-2026 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+/// <reference types="cypress" />
+
+import "@cypress/xpath";
+import { ProsopoDatasetError } from "@prosopo/common";
+import { datasetWithSolutionHashes } from "@prosopo/datasets";
+import { CaptchaType } from "@prosopo/types";
+import { checkboxClass, getWidgetElement } from "../support/commands.js";
+
+// `route()`'s post-PoW phase only fires through the frictionless entry
+// point — that's the surface the production widget hits and the surface
+// the production bug surfaced on. Force the baseCaptchaType to
+// `frictionless` so the test doesn't depend on the CAPTCHA_TYPE env var
+// being right.
+const baseCaptchaType = CaptchaType.frictionless;
+
+// Routing machine source: escalate ONLY at the post-PoW phase. The same
+// `route()` export is consulted by `sendCaptcha` at frictionless time too;
+// returning image there would short-circuit the widget to /captcha/image
+// before any PoW challenge fires, defeating the whole test. Returning
+// undefined makes applyRouter fall back to the baseline (pow) at that
+// phase, then at postPow phase the machine escalates to image.
+// Hand-rolled string so the published machine source is exactly what the
+// runner `eval`s server-side; do not import from TS — runtime is `node`.
+const FORCE_PUZZLE_ROUTING_MACHINE = `
+	module.exports.route = function (input) {
+		if (input && input.phase !== 'postPow') return undefined;
+		return { captchaType: 'puzzle' };
+	};
+`;
+
+describe("Post-PoW route() escalation surfaces the puzzle captcha", () => {
+	// The frictionless siteKey from .env. Same one as other suites.
+	const siteKey: string = Cypress.env(
+		`PROSOPO_SITE_KEY_${CaptchaType.frictionless.toUpperCase()}`,
+	);
+
+	before(() => {
+		if (!siteKey) {
+			throw new Error(
+				"PROSOPO_SITE_KEY_FRICTIONLESS must be set for the escalation test.",
+			);
+		}
+		// Make sure no leftover routing machine from a previous (possibly
+		// crashed) run is still in place. This is a single global wipe;
+		// the siteKey we install onto in beforeEach is dapp-scoped.
+		cy.removeAllDecisionMachines();
+	});
+
+	beforeEach(() => {
+		// Register a fresh frictionless siteKey with powDifficulty=1 so the
+		// browser-side PoW solver can finish in test time (the production
+		// Twickets siteKey runs higher difficulty — that path is exercised
+		// in the unit/integration suites, not here).
+		cy.registerSiteKey(baseCaptchaType).then((response) => {
+			cy.task("log", `registerSiteKey status: ${response.status}`);
+			cy.task("log", `registerSiteKey body: ${JSON.stringify(response.body)}`);
+			expect(response.status).to.equal(200);
+		});
+
+		// Force `route()` to escalate to image for this siteKey only.
+		cy.installRoutingMachine(siteKey, FORCE_PUZZLE_ROUTING_MACHINE).then(
+			(response) => {
+				cy.task("log", `installRoutingMachine status: ${response.status}`);
+				expect(response.status).to.equal(200);
+			},
+		);
+
+		const solutions = datasetWithSolutionHashes.captchas.map((captcha) => ({
+			captchaContentId: captcha.captchaContentId,
+			solution: captcha.solution,
+		}));
+
+		if (!solutions) {
+			throw new ProsopoDatasetError(
+				"DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED",
+				{
+					context: { datasetWithSolutionHashes },
+				},
+			);
+		}
+		cy.intercept("/dummy").as("dummy");
+		// Intercepts must be installed BEFORE `cy.visit` — the widget
+		// (`bundleCaptcha` unconditionally mounts `ProcaptchaFrictionless`)
+		// fires `/frictionless` from a mount-effect the moment the page
+		// loads, and the later `.realClick()` doesn't re-fire it. If we
+		// set them up in the `it` block after `beforeEach`'s visit the
+		// aliases catch nothing and every wait times out.
+		cy.intercept("POST", "**/prosopo/provider/client/captcha/frictionless").as(
+			"frictionless",
+		);
+		cy.intercept("POST", "**/prosopo/provider/client/captcha/pow").as(
+			"powChallenge",
+		);
+		cy.intercept("POST", "**/prosopo/provider/client/pow/solution").as(
+			"powSubmit",
+		);
+		// `puzzleChallenge` only fires if the frictionless wrapper's
+		// onEscalate handler was actually invoked AND the freshly-loaded
+		// ProcaptchaPuzzle widget mounted and ran its autoStart effect.
+		cy.intercept("POST", "**/prosopo/provider/client/captcha/puzzle").as(
+			"puzzleChallenge",
+		);
+
+		// Hardcode the frictionless-explicit demo page — it embeds
+		// `PROSOPO_SITE_KEY_FRICTIONLESS`, the sitekey the routing
+		// machine above is scoped to. Under any config whose
+		// `default_page` env is set to a different demo page (e.g.
+		// the image config's `/`, which embeds
+		// `PROSOPO_SITE_KEY_IMAGE`) the routing machine would never
+		// apply and the escalation flow this suite drives would never
+		// happen.
+		return cy.visit("/frictionless-explicit.html").then(() => {
+			cy.waitForProcaptchaScript();
+			getWidgetElement(checkboxClass).should("be.visible");
+			cy.wrap(solutions).as("solutions");
+		});
+	});
+
+	after(() => {
+		// Clear the forced routing machine so this suite doesn't poison
+		// later runs that share the provider.
+		cy.removeAllDecisionMachines();
+		// Re-register the siteKey at the conventional image baseline so
+		// later parallel suites don't start with stale settings.
+		cy.registerSiteKey(CaptchaType.image).then((response) => {
+			if (response.status !== 200) {
+				cy.task(
+					"log",
+					`Warning: Could not re-register siteKey. Status: ${response.status}`,
+				);
+			}
+		});
+	});
+
+	it("displays the puzzle captcha after PoW is solved and route() escalates", () => {
+		// Intercepts + visit are set up in `beforeEach` above so the
+		// widget's mount-effect /frictionless call is caught.
+		// Kick the flow off.
+		getWidgetElement(checkboxClass, { timeout: 12000 }).first().realClick();
+
+		// Frictionless decide() returns default_pow at this threshold/score,
+		// so the widget moves to /captcha/pow next.
+		cy.wait("@frictionless", { timeout: 12000 })
+			.its("response")
+			.then((response) => {
+				expect(response?.statusCode).to.equal(200);
+			});
+
+		cy.wait("@powChallenge", { timeout: 12000 })
+			.its("response")
+			.then((response) => {
+				expect(response?.statusCode).to.equal(200);
+			});
+
+		// The widget runs the PoW solver in the page (difficulty=1, fast),
+		// then submits. The CRITICAL contract: the response carries
+		// `escalation: { captchaType: 'puzzle', sessionId: <newId> }`,
+		// because the routing machine we installed forces image. With
+		// `verified: false`, the wrapper's onEscalate handler mounts the
+		// image widget for the user.
+		cy.wait("@powSubmit", { timeout: 60000 })
+			.its("response")
+			.then((response) => {
+				expect(response?.statusCode).to.equal(200);
+				expect(response?.body).to.have.property("escalation");
+				expect(response?.body.escalation.captchaType).to.equal(
+					CaptchaType.puzzle,
+				);
+				expect(response?.body.escalation.sessionId).to.be.a("string");
+				// PoW alone is not enough when the router escalates — the user
+				// has to clear the follow-up image challenge before they get a
+				// token.
+				expect(response?.body.verified).to.equal(false);
+			});
+
+		// UI contract: once the wrapper receives the escalation envelope it
+		// must mount the image widget, whose autoStart effect kicks off
+		// /captcha/image. Asserting the request is the cheapest signal that
+		// the whole client-side handoff actually executed end-to-end. The
+		// real regression we're guarding here is a missing prop on the
+		// Suspense wrapper around ProcaptchaWidget swallowing `onEscalate`
+		// before it reaches Manager — in that case Manager.start silently
+		// no-ops onEscalate?.(), no further request fires, and the user
+		// stares at a spinning checkbox.
+		cy.wait("@puzzleChallenge", { timeout: 30000 })
+			.its("response")
+			.then((response) => {
+				expect(response?.statusCode).to.equal(200);
+				// Puzzle challenge body shape differs from image; assert the
+				// presence of a top-level puzzle payload rather than the
+				// image `captchas` list. Exact key is validated by the
+				// puzzle handler tests — here we just want confirmation
+				// the endpoint returned a real body.
+				expect(response?.body).to.be.an("object");
+			});
+
+		// And the puzzle modal should be visible to the user — same DOM
+		// surface the puzzle-flow tests reach.
+		getWidgetElement(".prosopo-modalInner p", { timeout: 15000 }).should(
+			"be.visible",
+		);
+	});
+});

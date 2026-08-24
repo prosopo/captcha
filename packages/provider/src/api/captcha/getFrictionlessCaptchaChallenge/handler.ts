@@ -43,6 +43,7 @@ import {
 	recordDetectorTriggered,
 	recordFrictionlessDecision,
 } from "../../metrics.js";
+import { rawTlsSignalsForSession } from "../../rawTlsSignalsMiddleware.js";
 import { isReservedTestSiteKey } from "../../testSiteKey.js";
 import { buildFrictionlessMaintenanceResponse } from "../maintenanceModeResponses.js";
 import {
@@ -118,8 +119,16 @@ export default (
 			const sessionToken = token || `notoken-${uuidv4()}`;
 
 			const normalizedIp = normalizeRequestIp(req.ip, req.logger);
-			const sessionMode =
-				mode === ModeEnum.invisible ? ModeEnum.invisible : undefined;
+			// Always persist a concrete mode on the session — the client only
+			// sends `mode` when it wants to opt into invisible; visible is the
+			// implicit default. Previously the visible path collapsed to
+			// `undefined` and never reached the record, so the DB had zero
+			// sessions with `mode` set, making it impossible to distinguish
+			// visible from invisible traffic in analytics or to correlate
+			// widget-bypass symptoms (empty checkbox coords, missing
+			// behaviouralData) with invisible-mode deployments.
+			const sessionMode: ModeEnum =
+				mode === ModeEnum.invisible ? ModeEnum.invisible : ModeEnum.visible;
 
 			req.logger.info(() => ({
 				msg: "Frictionless handler entry",
@@ -131,7 +140,7 @@ export default (
 					ja4: req.ja4,
 					path: req.path,
 					method: req.method,
-					...(sessionMode && { mode: sessionMode }),
+					mode: sessionMode,
 				},
 			}));
 
@@ -327,6 +336,17 @@ export default (
 									...(req.chelloToHandshakeUs !== undefined && {
 										chelloToHandshakeUs: req.chelloToHandshakeUs,
 									}),
+									...rawTlsSignalsForSession(req),
+									// req.ipInfo is the per-request ipapi lookup. Only
+									// surface it into `raw` when the lookup succeeded —
+									// an `isValid:false` payload just means the middleware
+									// errored and none of the threat flags are populated,
+									// so pushing it in would give the routing machine
+									// nothing to reason on and waste bytes across the
+									// wire.
+									...(req.ipInfo &&
+										"isValid" in req.ipInfo &&
+										req.ipInfo.isValid && { ipInfo: req.ipInfo }),
 									// currentUrl / iframeUrl use the cached session's
 									// values to match the rest of the dedup routing input
 									// (score, webView, captchaType are all pulled from
@@ -343,6 +363,41 @@ export default (
 					: { captchaType: cachedCaptchaType };
 				const dedupConflictsWithRouting =
 					dedupRouted.captchaType !== cachedCaptchaType;
+
+				// The reused session's `bundleId` is what the provider will
+				// use to decrypt every later behavioural / SIMD payload for
+				// this session (via resolveBundleBySessionId). But the client
+				// on this request just did a fresh /detector/assign that
+				// bound `detectorSessionId` to whichever bundle
+				// DetectorBundlePool.pickRandom returned — almost never the
+				// same one the cached session stored, because the pick is
+				// uniform-random across the pool. If we hand the client the
+				// cached sessionId, every later hop encrypts with the fresh
+				// detector's public key and the provider tries to decrypt
+				// with the cached bundle's private key, yielding
+				// ERR_OSSL_RSA_OAEP_DECODING_ERROR and an escalation via the
+				// DM's empty-BDP rule. Evict on mismatch so the fresh-session
+				// path below re-binds `bundleId` from the current
+				// detectorSessionId. When the incoming detectorSessionId
+				// binding has expired (Redis TTL) we cannot see the fresh
+				// bundleId; fall through to reuse rather than evict
+				// unconditionally — the widget will still be re-bootstrapped
+				// on the next retry.
+				let dedupConflictsWithBundle = false;
+				let dedupIncomingBundleId: string | undefined;
+				if (detectorSessionId && dedup.session.bundleId) {
+					const incoming =
+						await tasks.frictionlessManager.resolveBundleByDetectorSession(
+							detectorSessionId,
+						);
+					dedupIncomingBundleId = incoming?.bundleId;
+					if (
+						dedupIncomingBundleId !== undefined &&
+						dedupIncomingBundleId !== dedup.session.bundleId
+					) {
+						dedupConflictsWithBundle = true;
+					}
+				}
 
 				if (dedupConflictsWithPolicy || dedupConflictsWithRouting) {
 					req.logger.info(() => ({
@@ -372,6 +427,34 @@ export default (
 						) ?? Promise.resolve(),
 					]);
 				} else {
+					// Bundle-only mismatch: rebind the cached session's `bundleId`
+					// in-place rather than evicting and minting fresh. Evicting
+					// races concurrent /captcha/{type} + solution calls the widget
+					// already has in flight for `dedup.sessionId` — those calls
+					// look the session up mid-request and get `No session found`
+					// → `INCORRECT_CAPTCHA_TYPE` → 400. The rate reached ~21%
+					// of the heaviest sitekey's /captcha/pow post-hotfix
+					// (baseline 0.3%) until this branch was added. captchaType,
+					// score, threshold etc. are untouched — only the bundleId
+					// flips to the fresh detector's key so future SIMD /
+					// behavioural decrypts on this session work. Cache-first
+					// write-behind so the reuse response below already reflects
+					// the update for any same-request read.
+					if (dedupConflictsWithBundle && dedupIncomingBundleId) {
+						req.logger.info(() => ({
+							msg: "Rebinding reused session bundleId to match incoming detector",
+							data: {
+								userSitekeyIpHash,
+								sessionId: dedup.sessionId,
+								cachedBundleId: dedup.session.bundleId,
+								incomingBundleId: dedupIncomingBundleId,
+							},
+						}));
+						await tasks.frictionlessManager.updateSessionRecordWithCache(
+							dedup.sessionId,
+							{ bundleId: dedupIncomingBundleId },
+						);
+					}
 					req.logger.info(() => ({
 						msg: "Reusing existing session for user-IP-sitekey combination",
 						data: {
@@ -437,6 +520,7 @@ export default (
 				...(req.chelloToHandshakeUs !== undefined && {
 					chelloToHandshakeUs: req.chelloToHandshakeUs,
 				}),
+				...rawTlsSignalsForSession(req),
 			};
 
 			const shortCircuitResponse = await runConfiguredCaptchaTypeShortCircuit(
@@ -507,6 +591,10 @@ export default (
 				entropyWallClockOffsetMs,
 				entropyMathRandomFirst,
 				g,
+				sw,
+				md,
+				bn,
+				fs,
 				bundleId,
 			} = decryptedPayload;
 
@@ -611,12 +699,17 @@ export default (
 					entropyMathRandomFirst,
 				}),
 				...(g !== undefined && { g }),
+				...(sw !== undefined && { sw }),
+				...(md !== undefined && { md }),
+				...(bn !== undefined && { bn }),
+				...(fs !== undefined && { fs }),
 				...(req.tcpToChelloUs !== undefined && {
 					tcpToChelloUs: req.tcpToChelloUs,
 				}),
 				...(req.chelloToHandshakeUs !== undefined && {
 					chelloToHandshakeUs: req.chelloToHandshakeUs,
 				}),
+				...rawTlsSignalsForSession(req),
 			});
 
 			const ipInfoMobile =
@@ -643,6 +736,13 @@ export default (
 					...(req.chelloToHandshakeUs !== undefined && {
 						chelloToHandshakeUs: req.chelloToHandshakeUs,
 					}),
+					...rawTlsSignalsForSession(req),
+					// req.ipInfo is the per-request ipapi lookup; only surface
+					// on the successful branch of the discriminated union.
+					// See the dedup replay path above for the full comment.
+					...(req.ipInfo &&
+						"isValid" in req.ipInfo &&
+						req.ipInfo.isValid && { ipInfo: req.ipInfo }),
 					...(currentUrl && { currentUrl }),
 					...(iframeUrl && { iframeUrl }),
 				},

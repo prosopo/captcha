@@ -35,6 +35,7 @@ import type { IProviderDatabase } from "@prosopo/types-database";
 import type { AccessPolicy } from "@prosopo/user-access-policy";
 import { v4 as uuidv4 } from "uuid";
 import { buildDnsEventUrl } from "../../api/dnsEventUrl.js";
+import type { RawTlsSignals } from "../../api/rawTlsSignalsMiddleware.js";
 import { checkLangRules } from "../../rules/lang.js";
 import {
 	type UsageCounters,
@@ -43,6 +44,7 @@ import {
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { getBotScore } from "../detection/getBotScore.js";
+import { downgradePuzzleIfUnavailable } from "../puzzle/puzzleRenderer.js";
 import { type RoutingContext, applyRouter } from "./routingMachine.js";
 
 const DEFAULT_MAX_TIMESTAMP_AGE = 60 * 10 * 1000; // 10 minutes
@@ -148,11 +150,28 @@ export class FrictionlessManager extends CaptchaManager {
 			entropyMathRandomFingerprint: params.entropyMathRandomFingerprint,
 			entropyCryptoFingerprint: params.entropyCryptoFingerprint,
 			entropyWallClockOffsetMs: params.entropyWallClockOffsetMs,
+			sw: params.sw,
+			md: params.md,
+			bn: params.bn,
+			fs: params.fs,
 			entropyMathRandomFirst: params.entropyMathRandomFirst,
 			g: params.g,
 			i: params.i,
 			tcpToChelloUs: params.tcpToChelloUs,
 			chelloToHandshakeUs: params.chelloToHandshakeUs,
+			// Raw per-connection TCP-handshake signals forwarded by chaddy
+			// from its co-located tcp-probe eBPF sidecar. Passed through as
+			// a bag on createSession() below rather than expanded into 9
+			// positional args.
+			synNs: params.synNs,
+			synackNs: params.synackNs,
+			ackNs: params.ackNs,
+			observedTtl: params.observedTtl,
+			tcpMss: params.tcpMss,
+			tcpWscale: params.tcpWscale,
+			tcpOptsFlags: params.tcpOptsFlags,
+			tcpOptsOrder: params.tcpOptsOrder,
+			tcpWindow: params.tcpWindow,
 		};
 	}
 
@@ -220,6 +239,14 @@ export class FrictionlessManager extends CaptchaManager {
 		g?: Session["g"],
 		matchedRule?: Session["matchedRule"],
 		i?: Session["i"],
+		sw?: Session["sw"],
+		md?: Session["md"],
+		bn?: Session["bn"],
+		fs?: Session["fs"],
+		// Bag of raw per-connection TCP-handshake signals (chaddy → tcp-probe
+		// → provider). Kept as a bag rather than expanded into 9 positional
+		// params to avoid pushing createSession's arity past 40.
+		rawTlsSignals?: Partial<RawTlsSignals>,
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
@@ -271,8 +298,13 @@ export class FrictionlessManager extends CaptchaManager {
 			entropyMathRandomFirst,
 			g,
 			i,
+			sw,
+			md,
+			bn,
+			fs,
 			tcpToChelloUs,
 			chelloToHandshakeUs,
+			...(rawTlsSignals ?? {}),
 			// Only present when an access policy actually matched this
 			// request, so ordinary sessions stay slim.
 			...(matchedRule && { matchedRule }),
@@ -374,7 +406,15 @@ export class FrictionlessManager extends CaptchaManager {
 				)
 			: baseline;
 
-		const finalCaptchaType = routed.captchaType;
+		// A puzzle session this provider cannot render would strand the user:
+		// /captcha/puzzle answers with GetPuzzleCaptchaResponse and nothing
+		// else, so it cannot substitute another type at serve time, and the
+		// puzzle widget cannot render one either. Downgrade here, before the
+		// session is written, so every later hop sees a consistent type.
+		const finalCaptchaType = downgradePuzzleIfUnavailable(
+			routed.captchaType,
+			this.logger,
+		);
 		const finalSolvedImagesCount =
 			finalCaptchaType === CaptchaType.image
 				? (routed.solvedImagesCount ?? effectiveParams.solvedImagesCount)
@@ -424,6 +464,21 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.g,
 			effectiveParams.matchedRule,
 			effectiveParams.i,
+			effectiveParams.sw,
+			effectiveParams.md,
+			effectiveParams.bn,
+			effectiveParams.fs,
+			{
+				synNs: effectiveParams.synNs,
+				synackNs: effectiveParams.synackNs,
+				ackNs: effectiveParams.ackNs,
+				observedTtl: effectiveParams.observedTtl,
+				tcpMss: effectiveParams.tcpMss,
+				tcpWscale: effectiveParams.tcpWscale,
+				tcpOptsFlags: effectiveParams.tcpOptsFlags,
+				tcpOptsOrder: effectiveParams.tcpOptsOrder,
+				tcpWindow: effectiveParams.tcpWindow,
+			},
 		);
 
 		// Fire-and-forget served-counter writes. Skipped when there's no
@@ -503,6 +558,21 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.g,
 			effectiveParams.matchedRule,
 			effectiveParams.i,
+			effectiveParams.sw,
+			effectiveParams.md,
+			effectiveParams.bn,
+			effectiveParams.fs,
+			{
+				synNs: effectiveParams.synNs,
+				synackNs: effectiveParams.synackNs,
+				ackNs: effectiveParams.ackNs,
+				observedTtl: effectiveParams.observedTtl,
+				tcpMss: effectiveParams.tcpMss,
+				tcpWscale: effectiveParams.tcpWscale,
+				tcpOptsFlags: effectiveParams.tcpOptsFlags,
+				tcpOptsOrder: effectiveParams.tcpOptsOrder,
+				tcpWindow: effectiveParams.tcpWindow,
+			},
 		);
 	}
 
@@ -647,6 +717,10 @@ export class FrictionlessManager extends CaptchaManager {
 		let entropyMathRandomFirst: number | undefined;
 		let g: string | undefined;
 		let ii: boolean | undefined;
+		let sw: boolean | undefined;
+		let md: boolean | undefined;
+		let bn: boolean | undefined;
+		let fs: boolean | undefined;
 		for (const [keyIndex, attempt] of decryptKeys.entries()) {
 			try {
 				this.logger.info(() => ({
@@ -676,6 +750,10 @@ export class FrictionlessManager extends CaptchaManager {
 				const em = decrypted.entropyMathRandomFirst;
 				const gv = decrypted.g;
 				const iv = decrypted.i;
+				const swv = decrypted.sw;
+				const mdv = decrypted.md;
+				const bnv = decrypted.bn;
+				const fsv = decrypted.fs;
 				this.logger.debug(() => ({
 					msg: "Successfully decrypted score",
 					data: {
@@ -692,6 +770,10 @@ export class FrictionlessManager extends CaptchaManager {
 						entropyCryptoFingerprint: ec,
 						entropyWallClockOffsetMs: eo,
 						entropyMathRandomFirst: em,
+						sw: swv,
+						md: mdv,
+						bn: bnv,
+						fs: fsv,
 					},
 				}));
 				baseBotScore = s;
@@ -708,6 +790,10 @@ export class FrictionlessManager extends CaptchaManager {
 				entropyMathRandomFirst = em;
 				g = gv;
 				ii = iv;
+				sw = swv;
+				md = mdv;
+				bn = bnv;
+				fs = fsv;
 				break;
 			} catch (err) {
 				// check if the next index exists, if not, log an error
@@ -750,6 +836,10 @@ export class FrictionlessManager extends CaptchaManager {
 				decryptedHeadHash,
 				decryptionFailed,
 				shadowDomPenalty,
+				sw,
+				md,
+				bn,
+				fs,
 			},
 		}));
 
@@ -771,6 +861,10 @@ export class FrictionlessManager extends CaptchaManager {
 			entropyMathRandomFirst,
 			g,
 			i: ii,
+			sw,
+			md,
+			bn,
+			fs,
 			// The pool bundle used (if any) — promoted onto the session so the
 			// later behavioural-data hop can resolve the same keypair/inner cfg.
 			bundleId,

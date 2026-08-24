@@ -495,6 +495,19 @@ export const SessionSchema = object({
 	entropyMathRandomFirst: number().optional(),
 	g: string().optional(),
 	i: boolean().optional(),
+	// Raw iOS WKWebView-vs-Safari DOM signals that the client-side
+	// classifier folds into `webView`. Persisted per session so
+	// decision-machine rules can key off the individual signals
+	// without a catcher release. Undefined on non-iOS / non-WebKit
+	// clients and on catcher versions predating the fields.
+	//   sw = navigator.serviceWorker present
+	//   md = navigator.mediaDevices present
+	//   bn = window.browser namespace present (WebExtensions)
+	//   fs = document.fullscreenEnabled present
+	sw: boolean().optional(),
+	md: boolean().optional(),
+	bn: boolean().optional(),
+	fs: boolean().optional(),
 	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
 	// plugin (X-TLS-TCP-To-Chello-Us / X-TLS-Chello-To-Handshake-Us).
 	// Server-observed microsecond deltas across the TLS handshake
@@ -504,6 +517,24 @@ export const SessionSchema = object({
 	// write.
 	tcpToChelloUs: number().optional(),
 	chelloToHandshakeUs: number().optional(),
+	// Raw per-connection TCP-handshake signals forwarded by chaddy from
+	// its co-located tcp-probe eBPF sidecar. Wire-observed primitives
+	// (RFC-793 / RFC-9293) — kernel nanosecond timestamps of SYN /
+	// SYN-ACK / ACK, the SYN's TTL byte, and its TCP options. Deliberately
+	// stored raw with no derived latency / hop-count / stack-hash fields
+	// so consumers are free to compute any equivalent metric at query
+	// time. Undefined on sessions that came in without the tcp-probe
+	// pipeline (pre-rollout traffic, dev, or requests through a
+	// non-chaddy front).
+	synNs: number().optional(),
+	synackNs: number().optional(),
+	ackNs: number().optional(),
+	observedTtl: number().min(0).max(255).optional(),
+	tcpMss: number().min(0).max(65535).optional(),
+	tcpWscale: number().min(0).max(255).optional(),
+	tcpOptsFlags: number().min(0).max(255).optional(),
+	tcpOptsOrder: number().min(0).max(4_294_967_295).optional(),
+	tcpWindow: number().min(0).max(65535).optional(),
 	dnsEvent: object({
 		resolverIp: string().optional(),
 		peerIp: string().optional(),
@@ -600,12 +631,30 @@ export type Session = {
 	entropyMathRandomFirst?: number;
 	g?: string;
 	i?: boolean;
+	// Raw iOS WKWebView-vs-Safari DOM signals — see SessionSchema above.
+	sw?: boolean;
+	md?: boolean;
+	bn?: boolean;
+	fs?: boolean;
 	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
 	// plugin. See the SessionSchema block above for full semantics —
 	// elevated values indicate the client's ClientHello traversed a
 	// proxy chain before reaching Caddy.
 	tcpToChelloUs?: number;
 	chelloToHandshakeUs?: number;
+	// Raw per-connection TCP-handshake signals — see SessionSchema block
+	// above. Wire primitives from the tcp-probe eBPF sidecar; consumers
+	// derive whatever timing / hop / stack fingerprints they want at
+	// query time from these fields.
+	synNs?: number;
+	synackNs?: number;
+	ackNs?: number;
+	observedTtl?: number;
+	tcpMss?: number;
+	tcpWscale?: number;
+	tcpOptsFlags?: number;
+	tcpOptsOrder?: number;
+	tcpWindow?: number;
 	// DNS observation merge target — populated by the dns-event sidecar
 	// via POST /v1/prosopo/provider/admin/dns/event. At most one DNS
 	// event + one HTTP event per session under normal usage; the

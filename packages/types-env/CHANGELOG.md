@@ -1,5 +1,83 @@
 # @prosopo/types-env
 
+## 2.10.35
+### Patch Changes
+
+- Updated dependencies [dfc1fa6]
+  - @prosopo/types-database@5.1.10
+
+## 2.10.34
+### Patch Changes
+
+- Updated dependencies [1afe466]
+  - @prosopo/types-database@5.1.9
+
+## 2.10.33
+### Patch Changes
+
+- Updated dependencies [6411f64]
+  - @prosopo/types@5.2.5
+  - @prosopo/keyring@2.9.76
+  - @prosopo/types-database@5.1.8
+
+## 2.10.32
+### Patch Changes
+
+- Updated dependencies [c629c01]
+  - @prosopo/types@5.2.4
+  - @prosopo/keyring@2.9.75
+  - @prosopo/types-database@5.1.7
+
+## 2.10.31
+### Patch Changes
+
+- Updated dependencies [7faca4d]
+- Updated dependencies [c971ef7]
+- Updated dependencies [3c88239]
+  - @prosopo/types-database@5.1.6
+  - @prosopo/types@5.2.3
+  - @prosopo/keyring@2.9.74
+
+## 2.10.30
+### Patch Changes
+
+- Updated dependencies [ae475a5]
+  - @prosopo/types@5.2.2
+  - @prosopo/types-database@5.1.5
+  - @prosopo/keyring@2.9.73
+
+## 2.10.29
+### Patch Changes
+
+- Updated dependencies [35f640f]
+  - @prosopo/types@5.2.1
+  - @prosopo/keyring@2.9.72
+  - @prosopo/types-database@5.1.4
+
+## 2.10.28
+### Patch Changes
+
+- Updated dependencies [234c737]
+  - @prosopo/types@5.2.0
+  - @prosopo/keyring@2.9.71
+  - @prosopo/types-database@5.1.3
+
+## 2.10.27
+### Patch Changes
+
+- Updated dependencies [ee5d250]
+  - @prosopo/types@5.1.2
+  - @prosopo/keyring@2.9.70
+  - @prosopo/types-database@5.1.2
+
+## 2.10.26
+### Patch Changes
+
+- Updated dependencies [cec44bb]
+  - @prosopo/types@5.1.1
+  - @prosopo/types-database@5.1.1
+  - @prosopo/keyring@2.9.69
+
 ## 2.10.25
 ### Patch Changes
 

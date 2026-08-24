@@ -1,5 +1,70 @@
 # @prosopo/procaptcha-common
 
+## 2.11.33
+### Patch Changes
+
+- Updated dependencies [6411f64]
+  - @prosopo/types@5.2.5
+  - @prosopo/account@2.8.79
+  - @prosopo/load-balancer@2.10.30
+
+## 2.11.32
+### Patch Changes
+
+- Updated dependencies [c629c01]
+  - @prosopo/types@5.2.4
+  - @prosopo/account@2.8.78
+  - @prosopo/load-balancer@2.10.29
+
+## 2.11.31
+### Patch Changes
+
+- Updated dependencies [7faca4d]
+- Updated dependencies [c971ef7]
+  - @prosopo/types@5.2.3
+  - @prosopo/account@2.8.77
+  - @prosopo/load-balancer@2.10.28
+
+## 2.11.30
+### Patch Changes
+
+- Updated dependencies [ae475a5]
+  - @prosopo/types@5.2.2
+  - @prosopo/account@2.8.76
+  - @prosopo/load-balancer@2.10.27
+
+## 2.11.29
+### Patch Changes
+
+- Updated dependencies [35f640f]
+  - @prosopo/types@5.2.1
+  - @prosopo/account@2.8.75
+  - @prosopo/load-balancer@2.10.26
+
+## 2.11.28
+### Patch Changes
+
+- Updated dependencies [234c737]
+  - @prosopo/types@5.2.0
+  - @prosopo/account@2.8.74
+  - @prosopo/load-balancer@2.10.25
+
+## 2.11.27
+### Patch Changes
+
+- Updated dependencies [ee5d250]
+  - @prosopo/types@5.1.2
+  - @prosopo/account@2.8.73
+  - @prosopo/load-balancer@2.10.24
+
+## 2.11.26
+### Patch Changes
+
+- Updated dependencies [cec44bb]
+  - @prosopo/types@5.1.1
+  - @prosopo/account@2.8.72
+  - @prosopo/load-balancer@2.10.23
+
 ## 2.11.25
 ### Patch Changes
 

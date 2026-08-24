@@ -1,5 +1,141 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.13.15
+### Patch Changes
+
+- Updated dependencies [6411f64]
+  - @prosopo/types@5.2.5
+  - @prosopo/api@4.0.13
+  - @prosopo/procaptcha-common@2.11.33
+  - @prosopo/procaptcha-pow@2.10.40
+  - @prosopo/procaptcha-puzzle@2.10.56
+  - @prosopo/procaptcha-react@2.9.113
+
+## 2.13.14
+### Patch Changes
+
+- Updated dependencies [c629c01]
+  - @prosopo/types@5.2.4
+  - @prosopo/api@4.0.12
+  - @prosopo/procaptcha-common@2.11.32
+  - @prosopo/procaptcha-pow@2.10.39
+  - @prosopo/procaptcha-puzzle@2.10.55
+  - @prosopo/procaptcha-react@2.9.112
+
+## 2.13.13
+### Patch Changes
+
+- Updated dependencies [7faca4d]
+- Updated dependencies [c971ef7]
+  - @prosopo/types@5.2.3
+  - @prosopo/api@4.0.11
+  - @prosopo/procaptcha-common@2.11.31
+  - @prosopo/procaptcha-pow@2.10.38
+  - @prosopo/procaptcha-puzzle@2.10.54
+  - @prosopo/procaptcha-react@2.9.111
+
+## 2.13.12
+### Patch Changes
+
+- Updated dependencies [ae475a5]
+  - @prosopo/types@5.2.2
+  - @prosopo/api@4.0.10
+  - @prosopo/procaptcha-common@2.11.30
+  - @prosopo/procaptcha-pow@2.10.37
+  - @prosopo/procaptcha-puzzle@2.10.53
+  - @prosopo/procaptcha-react@2.9.110
+
+## 2.13.11
+### Patch Changes
+
+- Updated dependencies [35f640f]
+  - @prosopo/procaptcha-puzzle@2.10.52
+  - @prosopo/types@5.2.1
+  - @prosopo/api@4.0.9
+  - @prosopo/procaptcha-common@2.11.29
+  - @prosopo/procaptcha-pow@2.10.36
+  - @prosopo/procaptcha-react@2.9.109
+
+## 2.13.10
+### Patch Changes
+
+- Updated dependencies [234c737]
+  - @prosopo/types@5.2.0
+  - @prosopo/api@4.0.8
+  - @prosopo/procaptcha-common@2.11.28
+  - @prosopo/procaptcha-pow@2.10.35
+  - @prosopo/procaptcha-puzzle@2.10.51
+  - @prosopo/procaptcha-react@2.9.108
+
+## 2.13.9
+### Patch Changes
+
+- 1214dd3: Two related fixes for the residual `INCORRECT_CAPTCHA_TYPE` class of
+  400s on frictionless-configured sitekeys.
+  
+  **Server — request-time trafficFilter no longer blocks.** Move `block`
+  enforcement back to submit / verify time (via
+  `resolveTrafficFilterCheck` in the PoW / image / puzzle task classes).
+  `applyTrafficFilterAtRequestTime` now returns only `pass` or
+  `challenge` — a `challenge` match still overrides captchaType /
+  powDifficulty / solvedImagesCount / puzzleTolerance at request time,
+  but a `block` match never short-circuits with 401. This restores the
+  pre-#3045 behaviour that blocked interactions still complete a solve
+  so they bill. Without this the operator's own trafficFilter policies
+  became widget-mount failures that cascaded into
+  `INCORRECT_CAPTCHA_TYPE` (~865/hr fleet-wide, concentrated on a
+  handful of sitekeys whose trafficFilter blocks datacenter / proxy).
+  
+  **Widget — defensive guard for malformed `/frictionless` responses.**
+  Extract `evaluateFrictionlessResult` in `procaptcha-frictionless` and
+  halt when the response carries no `captchaType`. The previous flow
+  fell through into a default `ProcaptchaPow` mount with an undefined
+  `sessionId` on any bare-string 401 body (`{ "error": "Unauthorized" }`)
+  — the shape emitted by access-policy hard-block, decision-machine
+  autoBan, and domain / header middleware. `HttpClientBase` does not
+  throw on 4xx JSON so the widget receives these as valid-looking
+  `GetFrictionlessCaptchaResponse` and its `error.message` check misses.
+  The provider then rejects the fall-through `/captcha/pow` call as
+  `INCORRECT_CAPTCHA_TYPE` because the sitekey is
+  frictionless-configured.
+  
+  **Rate-limits config fix.** Adds the missing `AdminApiPaths.GetSession`
+  entry to `getRateLimitConfig()` in `@prosopo/cli` — introduced
+  alongside the `/admin/session/get` diagnostic endpoint but never wired
+  into the CLI's rate-limit table, which broke `npm run setup` under
+  `ProsopoConfigSchema.parse`.
+  
+  Unit and integration coverage: request-time `block` matches now
+  assert `pass` in `trafficFilterHierarchy.integration.test.ts` and
+  `trafficFilterRequestTime.unit.test.ts`; new unit coverage on
+  `captchaManager.resolveTrafficFilterCheck` locks in that datacenter
+  `block` still fires at verify (billing intact), datacenter `challenge`
+  doesn't (it's a request-time concern only), and the abuser default
+  still applies at verify for unconfigured sites. New
+  `evaluateFrictionlessResult` unit tests exercise the widget guard, and
+  a `frictionlessNoCaptchaTypeCascade.cy.ts` cypress spec forces the
+  bare-string 401 via `cy.intercept` and asserts no `/captcha/pow`
+  follows.
+- Updated dependencies [ee5d250]
+  - @prosopo/types@5.1.2
+  - @prosopo/api@4.0.7
+  - @prosopo/procaptcha-common@2.11.27
+  - @prosopo/procaptcha-pow@2.10.34
+  - @prosopo/procaptcha-puzzle@2.10.50
+  - @prosopo/procaptcha-react@2.9.107
+
+## 2.13.8
+### Patch Changes
+
+- Updated dependencies [2a07421]
+- Updated dependencies [cec44bb]
+  - @prosopo/procaptcha-puzzle@2.10.49
+  - @prosopo/types@5.1.1
+  - @prosopo/api@4.0.6
+  - @prosopo/procaptcha-common@2.11.26
+  - @prosopo/procaptcha-pow@2.10.33
+  - @prosopo/procaptcha-react@2.9.106
+
 ## 2.13.7
 ### Patch Changes
 

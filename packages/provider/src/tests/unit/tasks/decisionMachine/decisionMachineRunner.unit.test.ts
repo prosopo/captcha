@@ -26,7 +26,11 @@ import {
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { DecisionMachineRunner } from "../../../../tasks/decisionMachine/decisionMachineRunner.js";
+import {
+	DecisionMachineRunner,
+	invalidateAllDecisionMachineArtifactCaches,
+	invalidateDecisionMachineScriptCache,
+} from "../../../../tasks/decisionMachine/decisionMachineRunner.js";
 
 const stubLogger = (): Logger => {
 	const noop = (): void => {};
@@ -554,6 +558,162 @@ describe("DecisionMachineRunner", () => {
 
 			const result = await runner.getRequiredCounters(baseRouteInput());
 			expect(result).toEqual([]);
+		});
+	});
+
+	describe("script cache", () => {
+		beforeEach(() => {
+			// Clean slate for cache tests — leftover entries from other tests
+			// would let a runner service a call without invoking db.
+			invalidateDecisionMachineScriptCache();
+			invalidateAllDecisionMachineArtifactCaches();
+		});
+
+		it("compiles a given source at most once across many invocations", async () => {
+			// Use a source whose module.exports counter proves the top-level
+			// `runInContext` ran once — a fresh compile+run would reset the
+			// counter to 0 every call, so a growing counter is a cache hit.
+			const source = `
+				var invocations = 0;
+				module.exports.decide = function() {
+					invocations++;
+					return { decision: "allow", reason: "hit " + invocations };
+				};
+			`;
+			const artifact = buildArtifact(source, DecisionMachineScope.Global);
+			(
+				db.getDecisionMachineArtifact as unknown as ReturnType<typeof vi.fn>
+			).mockResolvedValue(artifact);
+
+			const first = await runner.decide({
+				userAccount: "user",
+				dappAccount: "dapp",
+				captchaResult: "passed",
+				headers: {},
+			});
+			const second = await runner.decide({
+				userAccount: "user",
+				dappAccount: "dapp",
+				captchaResult: "passed",
+				headers: {},
+			});
+			const third = await runner.decide({
+				userAccount: "user",
+				dappAccount: "dapp",
+				captchaResult: "passed",
+				headers: {},
+			});
+
+			expect(first.reason).toBe("hit 1");
+			expect(second.reason).toBe("hit 2");
+			expect(third.reason).toBe("hit 3");
+		});
+
+		it("shares compiled scripts across separate runner instances", async () => {
+			const source = `
+				var invocations = 0;
+				module.exports.decide = function() {
+					invocations++;
+					return { decision: "allow", reason: "hit " + invocations };
+				};
+			`;
+			const artifact = buildArtifact(source, DecisionMachineScope.Global);
+
+			const dbA = {
+				getDecisionMachineArtifact: vi
+					.fn()
+					.mockResolvedValueOnce(undefined)
+					.mockResolvedValueOnce(artifact),
+			} as unknown as IProviderDatabase;
+			const runnerA = new DecisionMachineRunner(dbA);
+			const first = await runnerA.decide({
+				userAccount: "user",
+				dappAccount: "dapp",
+				captchaResult: "passed",
+				headers: {},
+			});
+
+			const dbB = {
+				getDecisionMachineArtifact: vi
+					.fn()
+					.mockResolvedValueOnce(undefined)
+					.mockResolvedValueOnce(artifact),
+			} as unknown as IProviderDatabase;
+			const runnerB = new DecisionMachineRunner(dbB);
+			const second = await runnerB.decide({
+				userAccount: "user",
+				dappAccount: "dapp",
+				captchaResult: "passed",
+				headers: {},
+			});
+
+			expect(first.reason).toBe("hit 1");
+			expect(second.reason).toBe("hit 2");
+		});
+
+		it("invalidateDecisionMachineScriptCache forces a fresh compile", async () => {
+			const source = `
+				var invocations = 0;
+				module.exports.decide = function() {
+					invocations++;
+					return { decision: "allow", reason: "hit " + invocations };
+				};
+			`;
+			const artifact = buildArtifact(source, DecisionMachineScope.Global);
+			(
+				db.getDecisionMachineArtifact as unknown as ReturnType<typeof vi.fn>
+			).mockResolvedValue(artifact);
+
+			const first = await runner.decide({
+				userAccount: "user",
+				dappAccount: "dapp",
+				captchaResult: "passed",
+				headers: {},
+			});
+			invalidateDecisionMachineScriptCache();
+			const second = await runner.decide({
+				userAccount: "user",
+				dappAccount: "dapp",
+				captchaResult: "passed",
+				headers: {},
+			});
+
+			expect(first.reason).toBe("hit 1");
+			expect(second.reason).toBe("hit 1");
+		});
+
+		it("invalidateAllDecisionMachineArtifactCaches forces a re-fetch", async () => {
+			const artifactOld = buildArtifact(
+				'module.exports.decide = () => ({ decision: "allow", reason: "old" });',
+				DecisionMachineScope.Global,
+			);
+			const artifactNew = buildArtifact(
+				'module.exports.decide = () => ({ decision: "allow", reason: "new" });',
+				DecisionMachineScope.Global,
+			);
+			(db.getDecisionMachineArtifact as unknown as ReturnType<typeof vi.fn>)
+				.mockResolvedValueOnce(undefined) // dapp scope
+				.mockResolvedValueOnce(artifactOld) // global scope, first fetch
+				.mockResolvedValueOnce(undefined) // dapp scope after invalidate
+				.mockResolvedValueOnce(artifactNew); // global scope, second fetch
+
+			const first = await runner.decide({
+				userAccount: "user",
+				dappAccount: "dapp",
+				captchaResult: "passed",
+				headers: {},
+			});
+			invalidateAllDecisionMachineArtifactCaches();
+			const second = await runner.decide({
+				userAccount: "user",
+				dappAccount: "dapp",
+				captchaResult: "passed",
+				headers: {},
+			});
+
+			expect(first.reason).toBe("old");
+			expect(second.reason).toBe("new");
+			expect(db.getDecisionMachineArtifact).toHaveBeenCalledTimes(4);
 		});
 	});
 });

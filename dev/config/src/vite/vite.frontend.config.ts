@@ -102,7 +102,15 @@ export default async function (
 	const { dependencies: deps, optionalPeerDependencies } =
 		await getDependencies(packageName, isProduction);
 
-	// Get rid of any dependencies we don't want to bundle
+	// Get rid of any dependencies we don't want to bundle.
+	// The two i18next entries are server-only: the fs backend reads locale JSON
+	// off disk and the middleware is Express request handling. Neither can run
+	// in a browser — `i18nBackend.ts` also imports `node:path`, which is already
+	// external — so they are pure weight in a frontend bundle. The other
+	// i18next-* packages (http-backend, browser-languagedetector,
+	// chained-backend, resources-to-backend) ARE used in the browser and must
+	// stay bundled; these filters are substring matches, so they catch only
+	// themselves.
 	const { external, internal } = filterDependencies(deps, [
 		"pm2",
 		"nodejs-polars",
@@ -110,7 +118,24 @@ export default async function (
 		"webpack",
 		"vite",
 		"i18next-fs-backend",
+		"i18next-http-middleware",
 	]);
+
+	// `external` only ever matches a specifier exactly, so listing a package by
+	// name does nothing for a subpath import of it. `i18next-fs-backend` has
+	// been on the exclusion list above for a long time, but `i18nBackend.ts`
+	// imports `i18next-fs-backend/cjs` (see i18next/i18next-fs-backend#57) —
+	// a different string — so it was bundled anyway, dragging its YAML, JSON5
+	// and JSONC parsers into the browser artifact.
+	//
+	// Listed literally rather than by matching `pkg/*` against the whole
+	// exclusion list: that broader rule also catches
+	// `vite-plugin-node-polyfills/shims/process` (the `vite` filter is a
+	// substring match, so it selects the plugin package too). That specifier is
+	// injected into the served and IIFE bundles as a bare import, and
+	// externalising it leaves the browser unable to resolve it — the widget dies
+	// on load with "Failed to resolve module specifier".
+	const serverOnlySubpaths = ["i18next-fs-backend/cjs"];
 
 	// Add the node builtins (path, fs, os, etc.) to the external list
 	const allExternal = [
@@ -118,6 +143,7 @@ export default async function (
 		...builtinModules.map((m) => `node:${m}`),
 		...external,
 		...optionalPeerDependencies,
+		...serverOnlySubpaths,
 	];
 	console.debug(
 		`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`,

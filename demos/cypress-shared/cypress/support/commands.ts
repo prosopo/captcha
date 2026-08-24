@@ -125,6 +125,17 @@ declare global {
 			// — never call from production code paths.
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			deleteAllAccessRules(): Cypress.Chainable<Response<any>>;
+
+			// Read a single session from the provider's Mongo (authoritative)
+			// and Redis (cache) stores, returning both views. Used by the
+			// consistency suite to assert that captchaType / bundleId /
+			// originSessionId / deleted agree between the two stores at each
+			// stage of a captcha flow. Diagnostic-only endpoint — never used
+			// by the production widget.
+			getSessionState(
+				sessionId: string,
+				// biome-ignore lint/suspicious/noExplicitAny: tests
+			): Cypress.Chainable<Response<any>>;
 		}
 	}
 }
@@ -583,6 +594,24 @@ function deleteAllAccessRules() {
 	});
 }
 
+function getSessionState(sessionId: string) {
+	return cy.then(() => {
+		const { url, jwt } = adminJwtAndUrl(AdminApiPaths.GetSession);
+		return cy.request({
+			method: "POST",
+			url,
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${jwt}`,
+			},
+			body: { sessionId },
+			failOnStatusCode: false,
+			retryOnNetworkFailure: false,
+			timeout: 10000,
+		});
+	});
+}
+
 Cypress.Commands.add("clickIAmHuman", clickIAmHuman);
 Cypress.Commands.add("clickCheckbox", clickCheckbox);
 Cypress.Commands.add("captchaImages", captchaImages);
@@ -597,3 +626,4 @@ Cypress.Commands.add("installDecisionMachine", installDecisionMachine);
 Cypress.Commands.add("removeAllDecisionMachines", removeAllDecisionMachines);
 Cypress.Commands.add("addAccessRules", addAccessRules);
 Cypress.Commands.add("deleteAllAccessRules", deleteAllAccessRules);
+Cypress.Commands.add("getSessionState", getSessionState);

@@ -1,5 +1,84 @@
 # @prosopo/procaptcha-puzzle
 
+## 2.10.56
+### Patch Changes
+
+- Updated dependencies [6411f64]
+  - @prosopo/types@5.2.5
+  - @prosopo/api@4.0.13
+  - @prosopo/procaptcha-common@2.11.33
+
+## 2.10.55
+### Patch Changes
+
+- Updated dependencies [c629c01]
+  - @prosopo/types@5.2.4
+  - @prosopo/api@4.0.12
+  - @prosopo/procaptcha-common@2.11.32
+
+## 2.10.54
+### Patch Changes
+
+- Updated dependencies [7faca4d]
+- Updated dependencies [c971ef7]
+  - @prosopo/types@5.2.3
+  - @prosopo/api@4.0.11
+  - @prosopo/procaptcha-common@2.11.31
+
+## 2.10.53
+### Patch Changes
+
+- Updated dependencies [ae475a5]
+  - @prosopo/types@5.2.2
+  - @prosopo/api@4.0.10
+  - @prosopo/procaptcha-common@2.11.30
+
+## 2.10.52
+### Patch Changes
+
+- 35f640f: Render puzzle captcha imagery on the provider instead of sending the answer to the client.
+  
+  The challenge used to carry `targetX`/`targetY` and the widget drew the target box straight from them, so any HTTP client could echo the coordinates back as its solution and pass without a browser. The provider now synthesises a background procedurally, cuts the notch into the pixels, and returns the background and piece as data URIs; the target and the tolerance never leave the server.
+  
+  Backgrounds come from the new `@prosopo/puzzle-assets` package and are single-use — reusing one across two challenges would let an attacker diff the composites and recover both notch positions.
+- Updated dependencies [35f640f]
+  - @prosopo/types@5.2.1
+  - @prosopo/api@4.0.9
+  - @prosopo/procaptcha-common@2.11.29
+
+## 2.10.51
+### Patch Changes
+
+- Updated dependencies [234c737]
+  - @prosopo/types@5.2.0
+  - @prosopo/api@4.0.8
+  - @prosopo/procaptcha-common@2.11.28
+
+## 2.10.50
+### Patch Changes
+
+- Updated dependencies [ee5d250]
+  - @prosopo/types@5.1.2
+  - @prosopo/api@4.0.7
+  - @prosopo/procaptcha-common@2.11.27
+
+## 2.10.49
+### Patch Changes
+
+- 2a07421: Make the puzzle CAPTCHA usable on mobile.
+  
+  - `procaptcha-puzzle`: add `touch-action: none` to the puzzle piece. Without
+    it, on a zoomed-in mobile viewport the browser claims the touch as a pan
+    gesture before the `touchmove` handler runs, so the page scrolls instead
+    of the piece moving.
+  - `client-bundle-example`: inject a viewport meta tag on every demo page and
+    fix the collapsible page-picker nav on ≤480px screens (a media-query max
+    height was clamping the bar even when expanded).
+- Updated dependencies [cec44bb]
+  - @prosopo/types@5.1.1
+  - @prosopo/api@4.0.6
+  - @prosopo/procaptcha-common@2.11.26
+
 ## 2.10.48
 ### Patch Changes
 

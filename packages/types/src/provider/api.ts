@@ -151,6 +151,11 @@ export enum AdminApiPaths {
 	// Hot-swaps the in-memory detector bundle pool (emergency push channel,
 	// avoids a redeploy to rotate the pool).
 	ReplaceDetectorPool = "/v1/prosopo/provider/admin/detector/pool/replace",
+	// Read a single session's current state from both Redis and Mongo.
+	// Test / diagnostic surface only — used by the cypress consistency
+	// suite to assert Redis and Mongo agree on captchaType at each stage
+	// of a captcha flow. Not called from any client code path.
+	GetSession = "/v1/prosopo/provider/admin/session/get",
 }
 
 export type CombinedApiPaths = ClientApiPaths | AdminApiPaths;
@@ -194,6 +199,7 @@ export const ProviderDefaultRateLimits = {
 	[AdminApiPaths.GetDecisionMachine]: { windowMs: 60000, limit: 60 },
 	[AdminApiPaths.RemoveDecisionMachine]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.RemoveAllDecisionMachines]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.GetSession]: { windowMs: 60000, limit: 60 },
 	[AdminApiPaths.ClearAllCounters]: { windowMs: 60000, limit: 10 },
 	[AdminApiPaths.SiteKeyRemove]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.SiteKeysRemove]: { windowMs: 60000, limit: 5 },
@@ -407,13 +413,27 @@ export interface GetPowCaptchaResponse extends ApiResponse {
 	};
 }
 
+/**
+ * The puzzle challenge carries imagery, never coordinates.
+ *
+ * `targetX`/`targetY` used to be sent here and the widget drew the target box
+ * straight from them, which meant any client could echo the answer back and
+ * pass without a browser. The target now exists only on the challenge record;
+ * the client receives a background with the notch already cut into it and works
+ * the position out visually. `tolerance` is likewise server-side only — the
+ * client has no use for it and publishing it just tells an attacker how close
+ * a guess has to be.
+ */
 export interface GetPuzzleCaptchaResponse extends ApiResponse {
 	[ApiParams.challenge]: PoWChallengeId;
-	[ApiParams.targetX]: number;
-	[ApiParams.targetY]: number;
+	/** Background with the notch cut into it, as a data URI. */
+	[ApiParams.background]: string;
+	/** The draggable piece on transparency, as a data URI. */
+	[ApiParams.piece]: string;
+	/** Piece bounding-box size in px. */
+	[ApiParams.pieceSize]: number;
 	[ApiParams.originX]: number;
 	[ApiParams.originY]: number;
-	[ApiParams.tolerance]: number;
 	[ApiParams.timestamp]: string;
 	[ApiParams.signature]: {
 		[ApiParams.provider]: ChallengeSignature;
@@ -838,6 +858,21 @@ export const ToggleMaintenanceModeBody = object({
 export type ToggleMaintenanceModeBodyOutput = output<
 	typeof ToggleMaintenanceModeBody
 >;
+
+// Diagnostic-only. Reads a single session record from both the Mongo
+// authoritative store and the Redis cache and returns both views so
+// consumers (currently the cypress consistency suite) can assert that
+// captchaType / bundleId / originSessionId / deleted etc. agree between
+// stores at each stage of a captcha flow.
+export const GetSessionBody = object({
+	sessionId: boundedString(INPUT_LIMITS.ID),
+});
+export type GetSessionBodyOutput = output<typeof GetSessionBody>;
+
+export interface GetSessionResponse extends ApiResponse {
+	mongo: Record<string, unknown> | null;
+	redis: Record<string, unknown> | null;
+}
 
 export type UpdateDecisionMachineBodyTypeOutput = output<
 	typeof UpdateDecisionMachineBody

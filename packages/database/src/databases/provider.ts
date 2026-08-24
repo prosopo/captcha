@@ -28,7 +28,7 @@ import {
 	CaptchaStatus,
 	CaptchaType,
 	type CompositeIpAddress,
-	ContextType,
+	type ContextType,
 	type Dataset,
 	type DatasetBase,
 	type DatasetWithIds,
@@ -1391,22 +1391,44 @@ export class ProviderDatabase
 	/** @description Get Dapp User captcha commitments from the commitments table that have not been counted towards the
 	 * client's total.
 	 *
-	 * Served by the `pendingStage_partial` index. Records have
-	 * `pendingStage: true` set on insert and on every mutation (see
+	 * Served by the compound `pendingStage_partial` index
+	 * (`{pendingStage:1, _id:1}` partial where pendingStage:true). Records
+	 * have `pendingStage: true` set on insert and on every mutation (see
 	 * `updateDappUserCommitment`, `markDappUserCommitmentsChecked`,
 	 * `approveDappUserCommitment`, `disapproveDappUserCommitment`,
 	 * `storePendingImageCommitment`). `markDappUserCommitmentsStored` clears
 	 * the flag after a successful stage, guarded by `lastUpdatedTimestamp`
 	 * so an in-flight update isn't lost.
+	 *
+	 * Keyset pagination: pass the `_id` of the last row from the previous
+	 * page as `afterId` to resume. The old `skip(N)` shape walked N docs
+	 * per page even with the right index; under a 1M-row pending backlog
+	 * that hit multi-second query durations and thrashed the WT cache,
+	 * dragging every co-tenant query with it.
+	 *
+	 * `.hint("pendingStage_partial")` pins the compound index against a
+	 * planner regression seen in prod on 2026-08-21: on collections with
+	 * both a plain `_id` index and the compound `{pendingStage:1, _id:1}`
+	 * partial, the planner sometimes picks `_id` alone for
+	 * `find({pendingStage:true}).sort({_id:1})` and scans the entire
+	 * collection filtering in memory. Clearing the plan cache re-plans
+	 * once but doesn't prevent the regression re-appearing after future
+	 * catalog changes — the hint makes the choice explicit.
 	 */
 	async getUnstoredDappUserCommitments(
 		limit = 1000,
-		skip = 0,
+		afterId?: unknown,
 	): Promise<UserCommitmentRecord[]> {
+		const filter: { pendingStage: true; _id?: { $gt: unknown } } = {
+			pendingStage: true,
+		};
+		if (afterId !== undefined) {
+			filter._id = { $gt: afterId };
+		}
 		const docs = await this.tables?.commitment
-			.find({ pendingStage: true })
+			.find(filter)
+			.hint("pendingStage_partial")
 			.sort({ _id: 1 })
-			.skip(skip)
 			.limit(limit)
 			.lean<UserCommitmentRecord[]>();
 		return docs || [];
@@ -1534,14 +1556,21 @@ export class ProviderDatabase
 	 */
 	async getUnstoredDappUserPoWCommitments(
 		limit = 1000,
-		skip = 0,
+		afterId?: unknown,
 	): Promise<PoWCaptchaRecord[]> {
-		// Served by the `pendingStage_partial` index — see
-		// `getUnstoredDappUserCommitments` for the lifecycle of the flag.
+		// Served by the compound `pendingStage_partial` index — see
+		// `getUnstoredDappUserCommitments` for the lifecycle of the flag
+		// and the keyset-pagination contract.
+		const filter: { pendingStage: true; _id?: { $gt: unknown } } = {
+			pendingStage: true,
+		};
+		if (afterId !== undefined) {
+			filter._id = { $gt: afterId };
+		}
 		const docs = await this.tables?.powcaptcha
-			.find({ pendingStage: true })
+			.find(filter)
+			.hint("pendingStage_partial")
 			.sort({ _id: 1 })
-			.skip(skip)
 			.limit(limit)
 			.lean<PoWCaptchaRecord[]>();
 		return docs || [];
@@ -1739,6 +1768,25 @@ export class ProviderDatabase
 				// path too. Keep this projection in sync with whatever
 				// fields the read-only callers need.
 				captchaType: 1,
+				// Raw per-connection TCP-handshake signals populated by the
+				// tcp-probe eBPF sidecar (see @prosopo/types Session for the
+				// wire semantics). The verify-time DM input surface exposes
+				// these to decide rules (e.g. `tcp-stack-dc-linux-ts-off`,
+				// `tcp-ttl-windows-ua-linux-stack`); every one of the img /
+				// pow / puzzle verify paths forwards `sessionRecord?.tcpX`
+				// into the DecisionMachineInput. Missed on the original
+				// projection: the rules got `undefined` for every field and
+				// silently never fired against real traffic even though
+				// matching sessions were sitting in the DB.
+				synNs: 1,
+				synackNs: 1,
+				ackNs: 1,
+				observedTtl: 1,
+				tcpMss: 1,
+				tcpWscale: 1,
+				tcpOptsFlags: 1,
+				tcpOptsOrder: 1,
+				tcpWindow: 1,
 				"headers.user-agent": 1,
 				"headers.accept": 1,
 				"headers.accept-language": 1,
@@ -1976,20 +2024,28 @@ export class ProviderDatabase
 	/** Get unstored session records
 	 * @description Get session records that have not been stored yet.
 	 *
-	 * Served by the `pendingStage_partial` index — see
-	 * `getUnstoredDappUserCommitments` for the lifecycle of the flag.
-	 * `checkAndRemoveSession` also flips the flag so consumed sessions
-	 * propagate to the central DB via the next sweep.
-	 * @param limit
-	 * @param skip
+	 * Served by the compound `pendingStage_partial` index — see
+	 * `getUnstoredDappUserCommitments` for the lifecycle of the flag and
+	 * the keyset-pagination contract. `checkAndRemoveSession` also flips
+	 * the flag so consumed sessions propagate to the central DB via the
+	 * next sweep.
 	 */
-	getUnstoredSessionRecords(limit = 1000, skip = 0): Promise<SessionRecord[]> {
+	getUnstoredSessionRecords(
+		limit = 1000,
+		afterId?: unknown,
+	): Promise<SessionRecord[]> {
+		const filter: { pendingStage: true; _id?: { $gt: unknown } } = {
+			pendingStage: true,
+		};
+		if (afterId !== undefined) {
+			filter._id = { $gt: afterId };
+		}
 		return Promise.resolve(this.tables?.session)
 			.then((tbl) =>
 				tbl
-					?.find({ pendingStage: true })
+					?.find(filter)
+					.hint("pendingStage_partial")
 					.sort({ _id: 1 })
-					.skip(skip)
 					.limit(limit)
 					.lean<SessionRecord[]>(),
 			)
@@ -2789,24 +2845,14 @@ export class ProviderDatabase
 	}
 
 	/**
-	 * @description set client context-specific entropy
-	 */
-	async setClientContextEntropy(
-		account: string,
-		contextType: ContextType,
-		entropy: string,
-	): Promise<void> {
-		const filter: Pick<ClientContextEntropyRecord, "account" | "contextType"> =
-			{ account, contextType };
-		await this.tables?.clientContextEntropy.updateOne(
-			filter,
-			{ $set: { account, contextType, entropy } },
-			{ upsert: true },
-		);
-	}
-
-	/**
 	 * @description get client context-specific entropy
+	 *
+	 * Read-only. The `clientcontextentropies` collection is populated
+	 * externally by the job-runner sweep — the provider used to compute
+	 * entropy locally via `sampleContextEntropy` + `setClientContextEntropy`
+	 * on a scheduled task, but that path was pulled 2026-08-21 (the sweep
+	 * aggregation was ~36 minutes of DB time per 6h, and the same
+	 * computation now runs off-provider across the full record set).
 	 */
 	async getClientContextEntropy(
 		account: string,
@@ -2818,106 +2864,6 @@ export class ProviderDatabase
 			.findOne(filter)
 			.lean<ClientContextEntropyRecord>();
 		return doc ? doc.entropy : undefined;
-	}
-
-	/** Sample captcha records from the database for a specific context */
-	async sampleContextEntropy(
-		sampleSize: number,
-		siteKey: string,
-		contextType: ContextType,
-	): Promise<string[]> {
-		const size = sampleSize ? Math.abs(Math.trunc(sampleSize)) : 1;
-		const max = 10000;
-		if (size > max) {
-			throw new ProsopoDBError("DATABASE.CAPTCHA_SAMPLE_SIZE_EXCEEDED", {
-				context: {
-					failedFuncName: this.sampleContextEntropy.name,
-					sampleSize,
-				},
-			});
-		}
-
-		// Use aggregation to join with session records and filter by
-		// context. `$sample` runs *before* `$lookup` so the join only
-		// processes the bounded random pool (`max`) instead of every
-		// matched powcaptcha. The previous ordering let `$lookup` chew
-		// through the full match (>30K docs for the busiest dapp,
-		// ~4.7s per call) before the trailing `$limit` had any effect.
-		// A second `$sample` after the post-join filter trims down to
-		// the requested `size`.
-		// biome-ignore lint/suspicious/noExplicitAny: Dynamic pipeline construction requires flexible typing
-		const pipeline: any[] = [
-			{
-				$match: {
-					dappAccount: siteKey,
-					requestedAtTimestamp: {
-						$gt: new Date(new Date().getTime() - TWENTY_FOUR_HOURS_IN_MS),
-					},
-				},
-			},
-			{ $sample: { size: max } },
-			{
-				$lookup: {
-					from: "sessions",
-					localField: "sessionId",
-					foreignField: "sessionId",
-					as: "sessionData",
-				},
-			},
-			{
-				$unwind: {
-					path: "$sessionData",
-					preserveNullAndEmptyArrays: false,
-				},
-			},
-		];
-
-		// Add context-specific filter
-		if (contextType === ContextType.Webview) {
-			pipeline.push({
-				$match: {
-					"sessionData.webView": true,
-				},
-			});
-		} else if (contextType === ContextType.Default) {
-			pipeline.push({
-				$match: {
-					"sessionData.webView": false,
-				},
-			});
-		}
-
-		pipeline.push(
-			{ $sample: { size } },
-			{
-				$project: {
-					_id: 0,
-					sessionId: 1,
-				},
-			},
-		);
-
-		const cursor = this.tables?.powcaptcha.aggregate(pipeline);
-		const docs = await cursor;
-
-		if (docs?.length === 0) {
-			return [];
-		}
-
-		// Get the associated entropies from sessions
-		return (
-			await Promise.all(
-				docs.map(async (doc) => {
-					if (doc.sessionId) {
-						const tokenRecord = await this.getSessionRecordBySessionId(
-							doc.sessionId,
-						);
-						return tokenRecord?.decryptedHeadHash;
-					}
-					return undefined;
-				}),
-			)
-		).filter((headHash): headHash is string => headHash !== undefined);
 	}
 
 	async getSpamEmailDomain(

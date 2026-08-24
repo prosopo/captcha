@@ -24,9 +24,11 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import { flatten, getIPAddress } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../express.js";
+import { downgradePuzzleIfUnavailable } from "../../tasks/puzzle/puzzleRenderer.js";
 import { Tasks } from "../../tasks/tasks.js";
 import { derivePlatform } from "../../utils/devicePlatform.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
+import { rawTlsSignalsForSession } from "../rawTlsSignalsMiddleware.js";
 import { resolveTestSiteKeyVerdict } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 
@@ -146,6 +148,14 @@ export default (env: ProviderEnvironment) =>
 					...(req.chelloToHandshakeUs !== undefined && {
 						chelloToHandshakeUs: req.chelloToHandshakeUs,
 					}),
+					...rawTlsSignalsForSession(req),
+					// PoW-submit's ipInfo is looked up fresh on this request
+					// (per-connection, so it's the PoW submit hop's IP not
+					// the frictionless entry hop's). Only surface on the
+					// isValid:true branch of the discriminated union.
+					...(req.ipInfo &&
+						"isValid" in req.ipInfo &&
+						req.ipInfo.isValid && { ipInfo: req.ipInfo }),
 				},
 			});
 
@@ -190,6 +200,7 @@ export default (env: ProviderEnvironment) =>
 			const escalation = await buildEscalation(tasks, result, challenge, {
 				tcpToChelloUs: req.tcpToChelloUs,
 				chelloToHandshakeUs: req.chelloToHandshakeUs,
+				...rawTlsSignalsForSession(req),
 			});
 			const response: PowCaptchaSolutionResponse = {
 				status: "ok",
@@ -232,13 +243,22 @@ export const buildEscalation = async (
 	tasks: Tasks,
 	result: { verified: boolean; routingOutput?: { captchaType: CaptchaType } },
 	challenge: string,
-	// TLS handshake timings are per-connection: they must come from the
-	// current PoW-submit request, not from `originSession` (whose values
-	// belong to a different TCP connection made during the earlier
-	// frictionless request).
-	handshakeTiming?: {
+	// Per-connection signals (TLS handshake timings + raw TCP handshake
+	// signals) come from the CURRENT PoW-submit request, not from
+	// `originSession` — those values belong to a different TCP connection
+	// made during the earlier frictionless request.
+	perConnectionSignals?: {
 		tcpToChelloUs?: number;
 		chelloToHandshakeUs?: number;
+		synNs?: number;
+		synackNs?: number;
+		ackNs?: number;
+		observedTtl?: number;
+		tcpMss?: number;
+		tcpWscale?: number;
+		tcpOptsFlags?: number;
+		tcpOptsOrder?: number;
+		tcpWindow?: number;
 	},
 ): Promise<PowCaptchaSolutionEscalation | undefined> => {
 	if (!result.verified || !result.routingOutput) return undefined;
@@ -262,6 +282,11 @@ export const buildEscalation = async (
 		reason?: string;
 	};
 
+	// Second place a session's captchaType is decided (the other is
+	// sendCaptcha). Same reasoning: escalating into a puzzle this provider
+	// cannot render would leave the widget with a session it can never satisfy.
+	const escalatedType = downgradePuzzleIfUnavailable(routed.captchaType);
+
 	// Prefer the routing machine's own selection reason (e.g. an invalid
 	// fingerprint proof) for the escalated captcha record; fall back to the
 	// originating session's reason when the machine didn't supply one.
@@ -274,9 +299,9 @@ export const buildEscalation = async (
 		originSession.threshold,
 		originSession.scoreComponents,
 		originSession.ipAddress,
-		routed.captchaType,
+		escalatedType,
 		originSession.siteKey ?? powRecord.dappAccount,
-		routed.captchaType === CaptchaType.image
+		escalatedType === CaptchaType.image
 			? (routed.solvedImagesCount ?? originSession.solvedImagesCount)
 			: undefined,
 		undefined,
@@ -299,8 +324,8 @@ export const buildEscalation = async (
 		// solve can decrypt the (same-origin) behavioural payload.
 		originSession.bundleId,
 		originSession.currentUrl,
-		handshakeTiming?.tcpToChelloUs,
-		handshakeTiming?.chelloToHandshakeUs,
+		perConnectionSignals?.tcpToChelloUs,
+		perConnectionSignals?.chelloToHandshakeUs,
 		true,
 		originSession.iframeUrl,
 		originSession.isProtect,
@@ -314,6 +339,23 @@ export const buildEscalation = async (
 		originSession.g,
 		undefined,
 		originSession.i,
+		originSession.sw,
+		originSession.md,
+		originSession.bn,
+		originSession.fs,
+		// Raw signals for the current PoW-submit TCP connection — not the
+		// origin's. Escalation session belongs on this hop's fingerprint.
+		perConnectionSignals && {
+			synNs: perConnectionSignals.synNs,
+			synackNs: perConnectionSignals.synackNs,
+			ackNs: perConnectionSignals.ackNs,
+			observedTtl: perConnectionSignals.observedTtl,
+			tcpMss: perConnectionSignals.tcpMss,
+			tcpWscale: perConnectionSignals.tcpWscale,
+			tcpOptsFlags: perConnectionSignals.tcpOptsFlags,
+			tcpOptsOrder: perConnectionSignals.tcpOptsOrder,
+			tcpWindow: perConnectionSignals.tcpWindow,
+		},
 	);
 
 	// Record the origin → escalation sessionId mapping so a /captcha/*
@@ -330,7 +372,7 @@ export const buildEscalation = async (
 	}
 
 	return {
-		captchaType: routed.captchaType,
+		captchaType: escalatedType,
 		sessionId: newSession.sessionId,
 	};
 };

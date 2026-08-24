@@ -1,5 +1,98 @@
 # @prosopo/types
 
+## 5.2.5
+### Patch Changes
+
+- 6411f64: feat(provider,types): surface tcp-probe + ipInfo on routing raw
+  
+  `RoutingMachineRawSignals` gains the 9 raw TCP-handshake fields
+  (`synNs / synackNs / ackNs / observedTtl / tcpMss / tcpWscale /
+  tcpOptsFlags / tcpOptsOrder / tcpWindow`) and the per-request
+  `ipInfo` payload. Callsites that build a routing raw — the
+  frictionless entry, its dedup replay branch, and the PoW submit
+  post-pow hop — spread `req.ipInfo` alongside the existing
+  `rawTlsSignalsForSession(req)`, gated on the discriminated-union
+  success branch so the routing machine never sees an
+  `isValid:false` error payload.
+  
+  Route-time `ipInfo` is separate from the existing decide-kind
+  `input.ipInfo` (persisted on the Session record at verify time).
+  The DM helper is being updated in the captcha-private
+  decision-machines package to resolve both channels through one
+  matcher surface.
+
+## 5.2.4
+### Patch Changes
+
+- c629c01: Randomise puzzle piece size, silhouette family, and decoy depth. New per-client `puzzle.pieceScale.{min,max}` and `puzzle.decoyHoleDarken` settings on `ClientSettingsSchema`; defaults preserve behaviour where possible.
+
+## 5.2.3
+### Patch Changes
+
+- 7faca4d: Add TLS timings into session doc
+- c971ef7: fix(provider,types,types-database): drop the `s` field from `Session`,
+  `DetectorResult`, and the mongoose `SessionRecordSchema`. The client
+  no longer emits it, so the server-side wiring is redundant.
+  
+  Stop reading position 18 out of the decrypted client payload in
+  `getBotScore`. Prune every `s`/`ss`/`sv` local, log field, and
+  `createSession` argument in `frictionlessTasks.ts`, the origin-fallback
+  merger in `captchaManager.ts`, the frictionless handler, and
+  `submitPoWCaptchaSolution.ts`. Two `s`-focused unit tests removed.
+  
+  Backward-compatible: older clients still send position 18, the new
+  server just ignores it. Existing Mongo docs keep their `s` values;
+  mongoose stops projecting or writing the field. No migration needed.
+
+## 5.2.2
+### Patch Changes
+
+- ae475a5: Add optional `s` field on `Session`.
+
+## 5.2.1
+### Patch Changes
+
+- 35f640f: Render puzzle captcha imagery on the provider instead of sending the answer to the client.
+  
+  The challenge used to carry `targetX`/`targetY` and the widget drew the target box straight from them, so any HTTP client could echo the coordinates back as its solution and pass without a browser. The provider now synthesises a background procedurally, cuts the notch into the pixels, and returns the background and piece as data URIs; the target and the tolerance never leave the server.
+  
+  Backgrounds come from the new `@prosopo/puzzle-assets` package and are single-use — reusing one across two challenges would let an attacker diff the composites and recover both notch positions.
+
+## 5.2.0
+### Minor Changes
+
+- 234c737: Ship raw iOS WKWebView DOM signals (`sw`, `md`, `bn`, `fs`) alongside the classifier verdict `isWebView`.
+  
+  The four booleans that `classifyIosWebViewFromSignals` folds into `isWebView` are now decrypted off the client payload (positions 14-17) and surfaced individually on `DetectorResult` and in the "decryptPayload result" info log. Short-acronym keys match the existing `g`/`i` wire convention. Backwards-compatible: `isWebView` at position 4 is untouched; older catcher clients that don't emit positions 14-17 log the fields as `undefined`.
+  
+  Motivation: real iOS 17.7.x devices appear to expose one or more of these APIs even on stock WKWebView (unlike the iOS 18 Simulator the classifier was audited against), collapsing iOS Twickets `webView:true` from 97.6% to 0.2% post-v3.7.8. Shipping the raw signals lets server-side rules retune the aggregation from live traffic in OpenObserve without a catcher release.
+  
+  Note: `decodePayload.js` (obfuscated production build) still needs to be rebuilt to parse positions 14-17 out of the delimited payload and expose them as `result.sw`/`result.md`/`result.bn`/`result.fs`. Until that ships, the fields log as `undefined`.
+
+## 5.1.2
+### Patch Changes
+
+- ee5d250: Add a diagnostic admin endpoint `AdminApiPaths.GetSession` that returns
+  a session's current Mongo + Redis views verbatim, plus a cypress
+  consistency suite that walks a session through frictionless → pow →
+  pow-submit and asserts the two stores agree on `captchaType`,
+  `bundleId`, and `deleted` at each stage. Backs a class of prod bugs
+  where the two stores drifted (dedup evicting mid-flow, escalations not
+  propagating to Redis, etc.) surfacing as `INCORRECT_CAPTCHA_TYPE` 400s
+  on the client rather than as store-consistency errors.
+  
+  Also adds a frontend-error-path unit test covering the case where the
+  client sends a `detectorSessionId` whose bundleId is no longer in the
+  in-memory pool (rotation / TTL). Asserts the handler does NOT evict
+  and does NOT rebind — reuse response served with the cached sessionId
+  unchanged; any downstream OAEP failure surfaces cleanly via the DM's
+  empty-BDP path.
+
+## 5.1.1
+### Patch Changes
+
+- cec44bb: Add optional `i` field on `Session`.
+
 ## 5.1.0
 ### Minor Changes
 

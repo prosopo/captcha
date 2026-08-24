@@ -38,6 +38,8 @@ env:
   GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
   GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
   CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: "0"
+  CARGO_PROFILE_DEV_DEBUG: line-tables-only
   NODE_OPTIONS: "--max-old-space-size=4096"
   NODE_ENV: "test"
 
@@ -47,12 +49,15 @@ defaults:
 
 jobs:
   check:
-    # GH_RUNNER unset -> GitHub-hosted. Set to a JSON array (the self-hosted
-    # fleet) -> this job's capacity requirement is appended to it: cores, RAM,
-    # disk. Runners advertise one label per step up to their own size, so a job
-    # only lands on a host big enough for it. Set to a JSON string -> used as
-    # given, which is how a repo opts back out to a hosted runner.
-    runs-on: ${{ vars.GH_RUNNER && startsWith(vars.GH_RUNNER, '[') && fromJSON(format('["{0}","4c","8g","30d"]', join(fromJSON(vars.GH_RUNNER), '","'))) || fromJSON(vars.GH_RUNNER || '"ubuntu-latest"') }}
+    # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
+    # other repos: this repository is public, so a fork PR would run on the
+    # self-hosted fleet -- executing arbitrary contributor code on hardware we
+    # own, where it can also persist and poison later trusted jobs. Nothing is
+    # given up by staying hosted: standard GitHub-hosted runners are free and
+    # unlimited on public repos, macOS and Windows included. Only *larger*
+    # runners are billed, so do not "upgrade" a job to one.
+    # https://docs.github.com/en/billing/reference/actions-runner-pricing
+    runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     steps:
       - name: Print contexts
@@ -62,9 +67,6 @@ jobs:
           NEEDS_CONTEXT: ${{ toJson(needs) }}
           VARS_CONTEXT: ${{ toJson(vars) }}
           SECRETS_CONTEXT: ${{ toJson(secrets) }}
-
-      - name: Set NX_PARALLEL environment variable
-        run: echo "NX_PARALLEL=$(nproc)" >> $GITHUB_ENV
 
       - uses: actions/checkout@v7
         with:

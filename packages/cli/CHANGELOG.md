@@ -1,5 +1,188 @@
 # @prosopo/cli
 
+## 3.7.23
+### Patch Changes
+
+- dfc1fa6: Two provider-DB latency fixes.
+  
+  **Pin the pending-stage sweep to its compound partial index.** `getUnstoredDappUserCommitments`, `getUnstoredDappUserPoWCommitments`, and `getUnstoredSessionRecords` now call `.hint("pendingStage_partial")`. Observed post-index-fix on 2026-08-21: mongo's planner sometimes picked plain `IXSCAN {_id:1}` over the compound `{pendingStage:1, _id:1}` for `find({pendingStage:true}).sort({_id:1})`, scanning the whole collection and filtering in memory until the 30s socket timeout killed the connection. Clearing the plan cache re-planned once but didn't prevent recurrence after future catalog changes — the hint makes the choice explicit and permanent.
+  
+  **Remove local context-entropy computation.** Deletes `sampleContextEntropy` (the `$sample`-then-`$lookup` aggregation), `setClientContextEntropy`, `ClientTaskManager.calculateClientEntropy`, and the `setClientEntropy` scheduler + CLI registration. Was accounting for ~36 minutes of DB time every 6h against `powcaptchas` and `sessions` — the `$lookup` fanned out to 10 000 session reads per invocation to produce 75 sampled sessionIds. Same computation now runs off-provider in the external job-runner across the full record set; the provider keeps `getClientContextEntropy` for the DM's read path (the job-runner writes to the same `clientcontextentropies` collection).
+- Updated dependencies [dfc1fa6]
+  - @prosopo/provider@5.3.9
+  - @prosopo/env@3.6.40
+
+## 3.7.22
+### Patch Changes
+
+  - @prosopo/env@3.6.39
+  - @prosopo/provider@5.3.8
+
+## 3.7.21
+### Patch Changes
+
+- Updated dependencies [1afe466]
+  - @prosopo/provider@5.3.7
+  - @prosopo/env@3.6.38
+
+## 3.7.20
+### Patch Changes
+
+- Updated dependencies [6411f64]
+  - @prosopo/provider@5.3.6
+  - @prosopo/types@5.2.5
+  - @prosopo/api@4.0.13
+  - @prosopo/env@3.6.37
+  - @prosopo/keyring@2.9.76
+
+## 3.7.19
+### Patch Changes
+
+- Updated dependencies [c629c01]
+  - @prosopo/types@5.2.4
+  - @prosopo/provider@5.3.5
+  - @prosopo/api@4.0.12
+  - @prosopo/env@3.6.36
+  - @prosopo/keyring@2.9.75
+
+## 3.7.18
+### Patch Changes
+
+- Updated dependencies [620a96e]
+  - @prosopo/provider@5.3.4
+
+## 3.7.17
+### Patch Changes
+
+- Updated dependencies [7faca4d]
+- Updated dependencies [c971ef7]
+- Updated dependencies [c88c6a5]
+  - @prosopo/provider@5.3.3
+  - @prosopo/types@5.2.3
+  - @prosopo/api@4.0.11
+  - @prosopo/env@3.6.35
+  - @prosopo/keyring@2.9.74
+
+## 3.7.16
+### Patch Changes
+
+- 6db5d8b: Move image-captcha merkle tree computation and per-solution leaf hashing to a Rust napi module (@prosopo/native-merkle). ~4× faster on realistic 9-solution commits. Extends the cli bundle plugin so multiple native-* .node files can coexist without basename collision.
+- Updated dependencies [6db5d8b]
+- Updated dependencies [ae475a5]
+  - @prosopo/provider@5.3.2
+  - @prosopo/types@5.2.2
+  - @prosopo/api@4.0.10
+  - @prosopo/env@3.6.34
+  - @prosopo/keyring@2.9.73
+
+## 3.7.15
+### Patch Changes
+
+- 721c5ba: Move JA4 TLS fingerprint computation to a Rust napi module (@prosopo/native-ja4). Provider-side JA4 middleware is ~2.7× faster on realistic ClientHellos. The cli bundle plugin now copies the .node binary next to the bundle so it works in the container.
+- Updated dependencies [721c5ba]
+  - @prosopo/provider@5.3.1
+
+## 3.7.14
+### Patch Changes
+
+- Updated dependencies [35f640f]
+- Updated dependencies [9e53a48]
+  - @prosopo/provider@5.3.0
+  - @prosopo/types@5.2.1
+  - @prosopo/api@4.0.9
+  - @prosopo/env@3.6.33
+  - @prosopo/keyring@2.9.72
+
+## 3.7.13
+### Patch Changes
+
+- Updated dependencies [c2bfcb8]
+  - @prosopo/provider@5.2.1
+
+## 3.7.12
+### Patch Changes
+
+- Updated dependencies [234c737]
+  - @prosopo/types@5.2.0
+  - @prosopo/provider@5.2.0
+  - @prosopo/api@4.0.8
+  - @prosopo/env@3.6.32
+  - @prosopo/keyring@2.9.71
+
+## 3.7.11
+### Patch Changes
+
+- 1214dd3: Two related fixes for the residual `INCORRECT_CAPTCHA_TYPE` class of
+  400s on frictionless-configured sitekeys.
+  
+  **Server — request-time trafficFilter no longer blocks.** Move `block`
+  enforcement back to submit / verify time (via
+  `resolveTrafficFilterCheck` in the PoW / image / puzzle task classes).
+  `applyTrafficFilterAtRequestTime` now returns only `pass` or
+  `challenge` — a `challenge` match still overrides captchaType /
+  powDifficulty / solvedImagesCount / puzzleTolerance at request time,
+  but a `block` match never short-circuits with 401. This restores the
+  pre-#3045 behaviour that blocked interactions still complete a solve
+  so they bill. Without this the operator's own trafficFilter policies
+  became widget-mount failures that cascaded into
+  `INCORRECT_CAPTCHA_TYPE` (~865/hr fleet-wide, concentrated on a
+  handful of sitekeys whose trafficFilter blocks datacenter / proxy).
+  
+  **Widget — defensive guard for malformed `/frictionless` responses.**
+  Extract `evaluateFrictionlessResult` in `procaptcha-frictionless` and
+  halt when the response carries no `captchaType`. The previous flow
+  fell through into a default `ProcaptchaPow` mount with an undefined
+  `sessionId` on any bare-string 401 body (`{ "error": "Unauthorized" }`)
+  — the shape emitted by access-policy hard-block, decision-machine
+  autoBan, and domain / header middleware. `HttpClientBase` does not
+  throw on 4xx JSON so the widget receives these as valid-looking
+  `GetFrictionlessCaptchaResponse` and its `error.message` check misses.
+  The provider then rejects the fall-through `/captcha/pow` call as
+  `INCORRECT_CAPTCHA_TYPE` because the sitekey is
+  frictionless-configured.
+  
+  **Rate-limits config fix.** Adds the missing `AdminApiPaths.GetSession`
+  entry to `getRateLimitConfig()` in `@prosopo/cli` — introduced
+  alongside the `/admin/session/get` diagnostic endpoint but never wired
+  into the CLI's rate-limit table, which broke `npm run setup` under
+  `ProsopoConfigSchema.parse`.
+  
+  Unit and integration coverage: request-time `block` matches now
+  assert `pass` in `trafficFilterHierarchy.integration.test.ts` and
+  `trafficFilterRequestTime.unit.test.ts`; new unit coverage on
+  `captchaManager.resolveTrafficFilterCheck` locks in that datacenter
+  `block` still fires at verify (billing intact), datacenter `challenge`
+  doesn't (it's a request-time concern only), and the abuser default
+  still applies at verify for unconfigured sites. New
+  `evaluateFrictionlessResult` unit tests exercise the widget guard, and
+  a `frictionlessNoCaptchaTypeCascade.cy.ts` cypress spec forces the
+  bare-string 401 via `cy.intercept` and asserts no `/captcha/pow`
+  follows.
+- Updated dependencies [ee5d250]
+- Updated dependencies [1214dd3]
+  - @prosopo/provider@5.1.3
+  - @prosopo/types@5.1.2
+  - @prosopo/api@4.0.7
+  - @prosopo/env@3.6.31
+  - @prosopo/keyring@2.9.70
+
+## 3.7.10
+### Patch Changes
+
+- Updated dependencies [6e21eb5]
+  - @prosopo/provider@5.1.2
+
+## 3.7.9
+### Patch Changes
+
+- Updated dependencies [ec5fca9]
+- Updated dependencies [cec44bb]
+  - @prosopo/provider@5.1.1
+  - @prosopo/types@5.1.1
+  - @prosopo/api@4.0.6
+  - @prosopo/env@3.6.30
+  - @prosopo/keyring@2.9.69
+
 ## 3.7.8
 ### Patch Changes
 

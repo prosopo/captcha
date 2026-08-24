@@ -223,4 +223,224 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 		expect(env.spies.cacheSessionEscalation).not.toHaveBeenCalled();
 		expect(env.spies.createSession).not.toHaveBeenCalled();
 	});
+
+	// createSession positional signature — captured here so any reorder of
+	// its arguments (see the call in buildEscalation) forces these tests to
+	// be updated in lockstep. Indices match `newSession = await tasks
+	// .frictionlessManager.createSession(...)` in submitPoWCaptchaSolution.ts.
+	const CAPTCHA_TYPE_IDX = 5;
+	const SITE_KEY_IDX = 6;
+	const SIMD_READINGS_IDX = 19;
+	const BUNDLE_ID_IDX = 24;
+	const ORIGIN_SESSION_ID_IDX = 31;
+
+	it("passes captchaType=image and the origin sessionId when escalating to image", async () => {
+		env.spies.getPowCaptchaRecordByChallenge.mockResolvedValue({
+			sessionId: "origin-id",
+			dappAccount: "dapp",
+		});
+		env.spies.getSessionRecordBySessionId.mockResolvedValue(
+			makeOriginSession(),
+		);
+
+		await buildEscalation(
+			env.tasks,
+			{ verified: true, routingOutput: { captchaType: CaptchaType.image } },
+			"challenge",
+		);
+
+		expect(env.spies.createSession).toHaveBeenCalledTimes(1);
+		const args = env.spies.createSession.mock.calls[0];
+		if (!args) throw new Error("expected createSession to be called");
+		expect(args[CAPTCHA_TYPE_IDX]).toBe(CaptchaType.image);
+		expect(args[ORIGIN_SESSION_ID_IDX]).toBe("origin-id");
+		// siteKey resolves from the origin session, not from the pow record's
+		// dappAccount (the origin's siteKey is the source of truth if set).
+		expect(args[SITE_KEY_IDX]).toBe("site");
+	});
+
+	it("passes captchaType=puzzle and the origin sessionId when escalating to puzzle", async () => {
+		env.spies.getPowCaptchaRecordByChallenge.mockResolvedValue({
+			sessionId: "origin-id",
+			dappAccount: "dapp",
+		});
+		env.spies.getSessionRecordBySessionId.mockResolvedValue(
+			makeOriginSession(),
+		);
+
+		await buildEscalation(
+			env.tasks,
+			{ verified: true, routingOutput: { captchaType: CaptchaType.puzzle } },
+			"challenge",
+		);
+
+		expect(env.spies.createSession).toHaveBeenCalledTimes(1);
+		const args = env.spies.createSession.mock.calls[0];
+		if (!args) throw new Error("expected createSession to be called");
+		expect(args[CAPTCHA_TYPE_IDX]).toBe(CaptchaType.puzzle);
+		expect(args[ORIGIN_SESSION_ID_IDX]).toBe("origin-id");
+	});
+
+	it("carries the origin's simdReadings onto the image escalation at creation time (so the DM verify path doesn't have to lean on chain fallback for the common case)", async () => {
+		const originSimd = {
+			supported: true,
+			schema: 1,
+			timerResolutionMs: 0.005,
+			runsPerOp: 500,
+			durationMs: 42,
+			ops: [
+				{
+					name: "f32x4_add",
+					category: "arith",
+					bestNs: 1.1,
+					medianNs: 1.2,
+					iters: 100,
+					resultLane: 0,
+				},
+			],
+		};
+		const origin = {
+			...makeOriginSession(),
+			simdReadings: originSimd,
+		};
+		env.spies.getPowCaptchaRecordByChallenge.mockResolvedValue({
+			sessionId: "origin-id",
+			dappAccount: "dapp",
+		});
+		env.spies.getSessionRecordBySessionId.mockResolvedValue(origin);
+
+		await buildEscalation(
+			env.tasks,
+			{ verified: true, routingOutput: { captchaType: CaptchaType.image } },
+			"challenge",
+		);
+
+		const args = env.spies.createSession.mock.calls[0];
+		if (!args) throw new Error("expected createSession to be called");
+		expect(args[SIMD_READINGS_IDX]).toBe(originSimd);
+	});
+
+	it("carries the origin's simdReadings onto the puzzle escalation at creation time", async () => {
+		const originSimd = {
+			supported: true,
+			schema: 1,
+			timerResolutionMs: 0.005,
+			runsPerOp: 500,
+			durationMs: 42,
+			ops: [
+				{
+					name: "i32x4_add",
+					category: "arith",
+					bestNs: 0.9,
+					medianNs: 1.0,
+					iters: 100,
+					resultLane: 0,
+				},
+			],
+		};
+		const origin = {
+			...makeOriginSession(),
+			simdReadings: originSimd,
+		};
+		env.spies.getPowCaptchaRecordByChallenge.mockResolvedValue({
+			sessionId: "origin-id",
+			dappAccount: "dapp",
+		});
+		env.spies.getSessionRecordBySessionId.mockResolvedValue(origin);
+
+		await buildEscalation(
+			env.tasks,
+			{ verified: true, routingOutput: { captchaType: CaptchaType.puzzle } },
+			"challenge",
+		);
+
+		const args = env.spies.createSession.mock.calls[0];
+		if (!args) throw new Error("expected createSession to be called");
+		expect(args[SIMD_READINGS_IDX]).toBe(originSimd);
+	});
+
+	it("carries the origin's bundleId onto the image escalation so the (same-origin) behavioural payload can be decrypted at solve time", async () => {
+		const origin = {
+			...makeOriginSession(),
+			bundleId: "bundle-42",
+		};
+		env.spies.getPowCaptchaRecordByChallenge.mockResolvedValue({
+			sessionId: "origin-id",
+			dappAccount: "dapp",
+		});
+		env.spies.getSessionRecordBySessionId.mockResolvedValue(origin);
+
+		await buildEscalation(
+			env.tasks,
+			{ verified: true, routingOutput: { captchaType: CaptchaType.image } },
+			"challenge",
+		);
+
+		const args = env.spies.createSession.mock.calls[0];
+		if (!args) throw new Error("expected createSession to be called");
+		expect(args[BUNDLE_ID_IDX]).toBe("bundle-42");
+	});
+
+	it("carries the origin's bundleId onto the puzzle escalation for the same reason", async () => {
+		const origin = {
+			...makeOriginSession(),
+			bundleId: "bundle-17",
+		};
+		env.spies.getPowCaptchaRecordByChallenge.mockResolvedValue({
+			sessionId: "origin-id",
+			dappAccount: "dapp",
+		});
+		env.spies.getSessionRecordBySessionId.mockResolvedValue(origin);
+
+		await buildEscalation(
+			env.tasks,
+			{ verified: true, routingOutput: { captchaType: CaptchaType.puzzle } },
+			"challenge",
+		);
+
+		const args = env.spies.createSession.mock.calls[0];
+		if (!args) throw new Error("expected createSession to be called");
+		expect(args[BUNDLE_ID_IDX]).toBe("bundle-17");
+	});
+
+	// Behavioural data (the decrypted BDP struct produced from the pow-solve
+	// payload) is NOT persisted anywhere and consequently never appears on
+	// the escalation record. buildEscalation deliberately doesn't try to
+	// copy it forward — this test documents that so any future change that
+	// starts persisting BDP has to update this assertion in lockstep.
+	it("does NOT carry behavioural data (BDP) onto the escalation session — BDP lives only in the pow-solve request payload", async () => {
+		// Attach an off-schema behavioural field on origin to prove it
+		// doesn't leak into createSession's arguments.
+		const origin = {
+			...makeOriginSession(),
+			behavioralDataPacked: {
+				c1: [{ t: 1, x: 2, y: 3 }],
+				c2: [],
+				c3: [],
+			},
+		} as unknown as Session;
+		env.spies.getPowCaptchaRecordByChallenge.mockResolvedValue({
+			sessionId: "origin-id",
+			dappAccount: "dapp",
+		});
+		env.spies.getSessionRecordBySessionId.mockResolvedValue(origin);
+
+		await buildEscalation(
+			env.tasks,
+			{ verified: true, routingOutput: { captchaType: CaptchaType.image } },
+			"challenge",
+		);
+
+		const args = env.spies.createSession.mock.calls[0];
+		if (!args) throw new Error("expected createSession to be called");
+		// No positional arg equals the origin's BDP — nothing was copied.
+		expect(
+			args.some(
+				(a: unknown) =>
+					a ===
+					(origin as unknown as { behavioralDataPacked: unknown })
+						.behavioralDataPacked,
+			),
+		).toBe(false);
+	});
 });

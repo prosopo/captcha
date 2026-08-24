@@ -1,5 +1,102 @@
 # @prosopo/types-database
 
+## 5.1.10
+### Patch Changes
+
+- dfc1fa6: Two provider-DB latency fixes.
+  
+  **Pin the pending-stage sweep to its compound partial index.** `getUnstoredDappUserCommitments`, `getUnstoredDappUserPoWCommitments`, and `getUnstoredSessionRecords` now call `.hint("pendingStage_partial")`. Observed post-index-fix on 2026-08-21: mongo's planner sometimes picked plain `IXSCAN {_id:1}` over the compound `{pendingStage:1, _id:1}` for `find({pendingStage:true}).sort({_id:1})`, scanning the whole collection and filtering in memory until the 30s socket timeout killed the connection. Clearing the plan cache re-planned once but didn't prevent recurrence after future catalog changes — the hint makes the choice explicit and permanent.
+  
+  **Remove local context-entropy computation.** Deletes `sampleContextEntropy` (the `$sample`-then-`$lookup` aggregation), `setClientContextEntropy`, `ClientTaskManager.calculateClientEntropy`, and the `setClientEntropy` scheduler + CLI registration. Was accounting for ~36 minutes of DB time every 6h against `powcaptchas` and `sessions` — the `$lookup` fanned out to 10 000 session reads per invocation to produce 75 sampled sessionIds. Same computation now runs off-provider in the external job-runner across the full record set; the provider keeps `getClientContextEntropy` for the DM's read path (the job-runner writes to the same `clientcontextentropies` collection).
+
+## 5.1.9
+### Patch Changes
+
+- 1afe466: Cache compiled decision-machine sandboxes; keyset-paginate the pending-stage sweep.
+  
+  - `DecisionMachineRunner` now hits `vm.createContext` + `new vm.Script` at most once per source blob (keyed by SHA-256). Exports `invalidateDecisionMachineScriptCache` and `invalidateAllDecisionMachineArtifactCaches`, both called from `updateDecisionMachine` after any artifact upload.
+  - `getUnstoredDappUserCommitments` / `getUnstoredDappUserPoWCommitments` / `getUnstoredSessionRecords` switch from `skip(N)` pagination to keyset (`_id > afterId`). Compound partial index `{pendingStage:1, _id:1}` on all four collections so filter + sort ride one index. Fixes the sweep that was scanning 470k–1.2M docs per page under a large pending backlog.
+
+## 5.1.8
+### Patch Changes
+
+- Updated dependencies [6411f64]
+  - @prosopo/types@5.2.5
+  - @prosopo/user-access-policy@3.12.24
+
+## 5.1.7
+### Patch Changes
+
+- Updated dependencies [c629c01]
+  - @prosopo/types@5.2.4
+  - @prosopo/user-access-policy@3.12.23
+
+## 5.1.6
+### Patch Changes
+
+- 7faca4d: Add TLS timings into session doc
+- c971ef7: fix(provider,types,types-database): drop the `s` field from `Session`,
+  `DetectorResult`, and the mongoose `SessionRecordSchema`. The client
+  no longer emits it, so the server-side wiring is redundant.
+  
+  Stop reading position 18 out of the decrypted client payload in
+  `getBotScore`. Prune every `s`/`ss`/`sv` local, log field, and
+  `createSession` argument in `frictionlessTasks.ts`, the origin-fallback
+  merger in `captchaManager.ts`, the frictionless handler, and
+  `submitPoWCaptchaSolution.ts`. Two `s`-focused unit tests removed.
+  
+  Backward-compatible: older clients still send position 18, the new
+  server just ignores it. Existing Mongo docs keep their `s` values;
+  mongoose stops projecting or writing the field. No migration needed.
+- 3c88239: perf(types-database): add `{dappAccount, requestedAtTimestamp}` compound index to `UserCommitmentRecordSchema`
+  
+  The anomaly-detector top-level pipeline runs the same `{dappAccount: {$in: [...]}, requestedAtTimestamp: {$gte, $lt}}` match plus `{$sort: {requestedAtTimestamp: -1}}` against all three captcha collections. Pow and puzzle already carry the matching compound index; usercommitments only had `{requestedAtTimestamp: -1}` and `{dappAccount: 1}` separately, so mongo range-scanned by timestamp and FETCH-filtered every doc by dappAccount.
+  
+  Measured on the live detector query for a 1h Pimeyes window: `nReturned: 9149`, `totalDocsExamined: 24930` — 2.7× wasted docs. Scales linearly with window length and inversely with tenant share, so a small-share account on a 24h window would fetch millions of unrelated docs.
+  
+  Adding the compound brings image detector queries to parity with pow/puzzle. Mongo builds the index in the background so no downtime; on a hot 1M+ doc collection expect the index to be online within minutes to hours depending on size.
+- Updated dependencies [7faca4d]
+- Updated dependencies [c971ef7]
+  - @prosopo/types@5.2.3
+  - @prosopo/user-access-policy@3.12.22
+
+## 5.1.5
+### Patch Changes
+
+- ae475a5: Add optional `s` field on `Session`.
+- Updated dependencies [ae475a5]
+  - @prosopo/types@5.2.2
+  - @prosopo/user-access-policy@3.12.21
+
+## 5.1.4
+### Patch Changes
+
+- Updated dependencies [35f640f]
+  - @prosopo/types@5.2.1
+  - @prosopo/user-access-policy@3.12.20
+
+## 5.1.3
+### Patch Changes
+
+- Updated dependencies [234c737]
+  - @prosopo/types@5.2.0
+  - @prosopo/user-access-policy@3.12.19
+
+## 5.1.2
+### Patch Changes
+
+- Updated dependencies [ee5d250]
+  - @prosopo/types@5.1.2
+  - @prosopo/user-access-policy@3.12.18
+
+## 5.1.1
+### Patch Changes
+
+- cec44bb: Add optional `i` field on `Session`.
+- Updated dependencies [cec44bb]
+  - @prosopo/types@5.1.1
+  - @prosopo/user-access-policy@3.12.17
+
 ## 5.1.0
 ### Minor Changes
 

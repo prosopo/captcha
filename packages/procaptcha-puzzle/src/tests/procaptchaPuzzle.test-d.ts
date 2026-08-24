@@ -147,14 +147,15 @@ describe("PuzzleCanvas' types", () => {
 	): void => undefined;
 
 	test("every prop is required, since none has a sensible default", () => {
-		// @ts-expect-error - a board with no target cannot be solved.
+		// @ts-expect-error - a board with no imagery cannot be rendered.
 		PuzzleCanvas({ originX: 0, originY: 0 });
 		// @ts-expect-error - `submitting` gates the drag; omitting it unlocks it.
 		PuzzleCanvas({
 			originX: 0,
 			originY: 0,
-			targetX: 1,
-			targetY: 1,
+			background: "data:image/webp;base64,UklGRg==",
+			piece: "data:image/webp;base64,UklGRg==",
+			pieceSize: 44,
 			onComplete,
 			showRetry: false,
 			retryMessage: "Incorrect, please try again",
@@ -167,8 +168,9 @@ describe("PuzzleCanvas' types", () => {
 			PuzzleCanvas({
 				originX: 0,
 				originY: 0,
-				targetX: 1,
-				targetY: 1,
+				background: "data:image/webp;base64,UklGRg==",
+				piece: "data:image/webp;base64,UklGRg==",
+				pieceSize: 44,
 				onComplete,
 				showRetry: false,
 				retryMessage: "Incorrect, please try again",
