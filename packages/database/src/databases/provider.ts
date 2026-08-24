@@ -2349,6 +2349,30 @@ export class ProviderDatabase
 		});
 	}
 
+	// Shared projection for both commitment fetchers below. Must include
+	// every field the downstream verify path (`verifyImageCaptchaSolution`)
+	// reads off the returned record. Same failure mode as the projection
+	// bug fixed in #3107: extend this list whenever the verify path starts
+	// reading a new field off the solution.
+	private static readonly DAPP_USER_COMMITMENT_PROJECTION = {
+		id: 1,
+		result: 1,
+		serverChecked: 1,
+		requestedAtTimestamp: 1,
+		submittedAtTimestamp: 1,
+		verifiedAtTimestamp: 1,
+		failedAtTimestamp: 1,
+		ipAddress: 1,
+		sessionId: 1,
+		userAccount: 1,
+		dappAccount: 1,
+		headers: 1,
+		ipInfo: 1,
+		behavioralDataPacked: 1,
+		deviceCapability: 1,
+		coords: 1,
+	} as { [key in keyof Partial<UserCommitmentRecord>]: 1 };
+
 	/**
 	 * @description Get dapp user commitment by user account
 	 * @param commitmentId
@@ -2358,21 +2382,7 @@ export class ProviderDatabase
 	): Promise<UserCommitmentRecord | undefined> {
 		const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
 		const commitmentCursor = this.tables?.commitment
-			?.findOne(filter, {
-				id: 1,
-				result: 1,
-				serverChecked: 1,
-				requestedAtTimestamp: 1,
-				submittedAtTimestamp: 1,
-				verifiedAtTimestamp: 1,
-				failedAtTimestamp: 1,
-				ipAddress: 1,
-				sessionId: 1,
-				userAccount: 1,
-				dappAccount: 1,
-				headers: 1,
-				ipInfo: 1,
-			} as { [key in keyof Partial<UserCommitmentRecord>]: 1 })
+			?.findOne(filter, ProviderDatabase.DAPP_USER_COMMITMENT_PROJECTION)
 			.lean<UserCommitmentRecord>();
 
 		const doc = await commitmentCursor;
@@ -2393,15 +2403,11 @@ export class ProviderDatabase
 			userAccount,
 			dappAccount,
 		};
-		const project = {
-			_id: 0,
-			result: 1,
-		};
 		const sort = { sort: { _id: -1 } };
 		const docs: UserCommitmentRecord[] | null | undefined =
 			await this.tables?.commitment
 				// sort by most recent first to avoid old solutions being used in development
-				?.find(filter, project, sort)
+				?.find(filter, ProviderDatabase.DAPP_USER_COMMITMENT_PROJECTION, sort)
 				.lean<UserCommitmentRecord[]>();
 
 		return docs ? (docs as UserCommitmentRecord[]) : [];
