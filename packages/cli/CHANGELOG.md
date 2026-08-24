@@ -1,5 +1,40 @@
 # @prosopo/cli
 
+## 3.7.23
+### Patch Changes
+
+- dfc1fa6: Two provider-DB latency fixes.
+  
+  **Pin the pending-stage sweep to its compound partial index.** `getUnstoredDappUserCommitments`, `getUnstoredDappUserPoWCommitments`, and `getUnstoredSessionRecords` now call `.hint("pendingStage_partial")`. Observed post-index-fix on 2026-08-21: mongo's planner sometimes picked plain `IXSCAN {_id:1}` over the compound `{pendingStage:1, _id:1}` for `find({pendingStage:true}).sort({_id:1})`, scanning the whole collection and filtering in memory until the 30s socket timeout killed the connection. Clearing the plan cache re-planned once but didn't prevent recurrence after future catalog changes — the hint makes the choice explicit and permanent.
+  
+  **Remove local context-entropy computation.** Deletes `sampleContextEntropy` (the `$sample`-then-`$lookup` aggregation), `setClientContextEntropy`, `ClientTaskManager.calculateClientEntropy`, and the `setClientEntropy` scheduler + CLI registration. Was accounting for ~36 minutes of DB time every 6h against `powcaptchas` and `sessions` — the `$lookup` fanned out to 10 000 session reads per invocation to produce 75 sampled sessionIds. Same computation now runs off-provider in the external job-runner across the full record set; the provider keeps `getClientContextEntropy` for the DM's read path (the job-runner writes to the same `clientcontextentropies` collection).
+- Updated dependencies [dfc1fa6]
+  - @prosopo/provider@5.3.9
+  - @prosopo/env@3.6.40
+
+## 3.7.22
+### Patch Changes
+
+  - @prosopo/env@3.6.39
+  - @prosopo/provider@5.3.8
+
+## 3.7.21
+### Patch Changes
+
+- Updated dependencies [1afe466]
+  - @prosopo/provider@5.3.7
+  - @prosopo/env@3.6.38
+
+## 3.7.20
+### Patch Changes
+
+- Updated dependencies [6411f64]
+  - @prosopo/provider@5.3.6
+  - @prosopo/types@5.2.5
+  - @prosopo/api@4.0.13
+  - @prosopo/env@3.6.37
+  - @prosopo/keyring@2.9.76
+
 ## 3.7.19
 ### Patch Changes
 

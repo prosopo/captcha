@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-bundle",
-	"version": "4.1.58",
+	"version": "4.1.59",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "dist/index.js",
@@ -41,18 +41,18 @@
 	"dependencies": {
 		"@prosopo/dotenv": "3.0.52",
 		"@prosopo/locale": "3.3.0",
-		"@prosopo/procaptcha-common": "2.11.32",
-		"@prosopo/procaptcha-frictionless": "2.13.14",
-		"@prosopo/types": "5.2.4",
+		"@prosopo/procaptcha-common": "2.11.33",
+		"@prosopo/procaptcha-frictionless": "2.13.15",
+		"@prosopo/types": "5.2.5",
 		"@prosopo/util": "3.3.6",
 		"@prosopo/widget-skeleton": "2.8.6",
 		"dotenv": "16.4.5",
-		"fast-glob": "3.3.2",
+		"fast-glob": "3.3.3",
 		"jsdom": "25.0.0",
-		"react": "18.3.1",
-		"@emotion/cache": "11.11.0",
-		"@emotion/react": "11.11.1",
-		"react-dom": "18.3.1"
+		"react": "19.2.8",
+		"@emotion/cache": "11.14.0",
+		"@emotion/react": "11.14.0",
+		"react-dom": "19.2.8"
 	},
 	"repository": {
 		"type": "git",
@@ -71,8 +71,8 @@
 		"@prosopo/config": "3.3.11",
 		"@types/jsdom": "21.1.7",
 		"@types/node": "22.10.2",
-		"@types/react": "18.3.1",
-		"@types/react-dom": "18.3.1",
+		"@types/react": "19.2.18",
+		"@types/react-dom": "19.2.5",
 		"@vitest/coverage-v8": "4.1.10",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
@@ -84,6 +84,6 @@
 		"vitest": "4.1.10"
 	},
 	"overrides": {
-		"@types/react": "18.3.1"
+		"@types/react": "19.2.18"
 	}
 }

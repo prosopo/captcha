@@ -1,7 +1,7 @@
 {
 	"name": "@prosopo/captcha",
 	"packageManager": "npm@11.0.0",
-	"version": "3.7.19",
+	"version": "3.7.23",
 	"author": "Prosopo",
 	"type": "module",
 	"repository": {
@@ -57,6 +57,7 @@
 		"lint-fix:tsconfigIncludes": "npm run --silent lint:tsconfigIncludes -- --fix",
 		"lint:json": "npm run -w @prosopo/lint start -- json --pkg $(pwd)/package.json",
 		"depcheck": "npx --workspaces depcheck --ignores vite,vitest,@vitest/coverage-v8,del-cli,concurrently,npm-run-all,tslib,typescript,tsx",
+		"esbuild": "0.28.2",
 		"audit:fix": "npm audit fix --force",
 		"deps:status": "npm-check-updates --deep",
 		"deps:upgrade": "npm-check-updates --deep --interactive --format group",
@@ -82,6 +83,7 @@
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"depcheck": "1.4.7",
+		"esbuild": "0.28.2",
 		"husky": "9.1.7",
 		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",

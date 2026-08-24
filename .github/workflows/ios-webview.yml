@@ -37,7 +37,7 @@ jobs:
       run:
         working-directory: demos/ios-webview
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Toolchain versions
         run: xcodebuild -version

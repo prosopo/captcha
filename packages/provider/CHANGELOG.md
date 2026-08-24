@@ -1,5 +1,76 @@
 # @prosopo/provider
 
+## 5.3.9
+### Patch Changes
+
+- dfc1fa6: Two provider-DB latency fixes.
+  
+  **Pin the pending-stage sweep to its compound partial index.** `getUnstoredDappUserCommitments`, `getUnstoredDappUserPoWCommitments`, and `getUnstoredSessionRecords` now call `.hint("pendingStage_partial")`. Observed post-index-fix on 2026-08-21: mongo's planner sometimes picked plain `IXSCAN {_id:1}` over the compound `{pendingStage:1, _id:1}` for `find({pendingStage:true}).sort({_id:1})`, scanning the whole collection and filtering in memory until the 30s socket timeout killed the connection. Clearing the plan cache re-planned once but didn't prevent recurrence after future catalog changes — the hint makes the choice explicit and permanent.
+  
+  **Remove local context-entropy computation.** Deletes `sampleContextEntropy` (the `$sample`-then-`$lookup` aggregation), `setClientContextEntropy`, `ClientTaskManager.calculateClientEntropy`, and the `setClientEntropy` scheduler + CLI registration. Was accounting for ~36 minutes of DB time every 6h against `powcaptchas` and `sessions` — the `$lookup` fanned out to 10 000 session reads per invocation to produce 75 sampled sessionIds. Same computation now runs off-provider in the external job-runner across the full record set; the provider keeps `getClientContextEntropy` for the DM's read path (the job-runner writes to the same `clientcontextentropies` collection).
+- Updated dependencies [dfc1fa6]
+  - @prosopo/database@4.0.17
+  - @prosopo/types-database@5.1.10
+  - @prosopo/env@3.6.40
+  - @prosopo/types-env@2.10.35
+  - @prosopo/api-express-router@3.1.71
+
+## 5.3.8
+### Patch Changes
+
+- Updated dependencies [127985f]
+  - @prosopo/database@4.0.16
+  - @prosopo/env@3.6.39
+  - @prosopo/api-express-router@3.1.70
+
+## 5.3.7
+### Patch Changes
+
+- 1afe466: Cache compiled decision-machine sandboxes; keyset-paginate the pending-stage sweep.
+  
+  - `DecisionMachineRunner` now hits `vm.createContext` + `new vm.Script` at most once per source blob (keyed by SHA-256). Exports `invalidateDecisionMachineScriptCache` and `invalidateAllDecisionMachineArtifactCaches`, both called from `updateDecisionMachine` after any artifact upload.
+  - `getUnstoredDappUserCommitments` / `getUnstoredDappUserPoWCommitments` / `getUnstoredSessionRecords` switch from `skip(N)` pagination to keyset (`_id > afterId`). Compound partial index `{pendingStage:1, _id:1}` on all four collections so filter + sort ride one index. Fixes the sweep that was scanning 470k–1.2M docs per page under a large pending backlog.
+- Updated dependencies [1afe466]
+  - @prosopo/database@4.0.15
+  - @prosopo/types-database@5.1.9
+  - @prosopo/env@3.6.38
+  - @prosopo/types-env@2.10.34
+  - @prosopo/api-express-router@3.1.69
+
+## 5.3.6
+### Patch Changes
+
+- 6411f64: feat(provider,types): surface tcp-probe + ipInfo on routing raw
+  
+  `RoutingMachineRawSignals` gains the 9 raw TCP-handshake fields
+  (`synNs / synackNs / ackNs / observedTtl / tcpMss / tcpWscale /
+  tcpOptsFlags / tcpOptsOrder / tcpWindow`) and the per-request
+  `ipInfo` payload. Callsites that build a routing raw — the
+  frictionless entry, its dedup replay branch, and the PoW submit
+  post-pow hop — spread `req.ipInfo` alongside the existing
+  `rawTlsSignalsForSession(req)`, gated on the discriminated-union
+  success branch so the routing machine never sees an
+  `isValid:false` error payload.
+  
+  Route-time `ipInfo` is separate from the existing decide-kind
+  `input.ipInfo` (persisted on the Session record at verify time).
+  The DM helper is being updated in the captcha-private
+  decision-machines package to resolve both channels through one
+  matcher surface.
+- Updated dependencies [6411f64]
+  - @prosopo/types@5.2.5
+  - @prosopo/api@4.0.13
+  - @prosopo/api-express-router@3.1.68
+  - @prosopo/database@4.0.14
+  - @prosopo/datasets@3.1.69
+  - @prosopo/env@3.6.37
+  - @prosopo/ipinfo@0.3.14
+  - @prosopo/keyring@2.9.76
+  - @prosopo/load-balancer@2.10.30
+  - @prosopo/types-database@5.1.8
+  - @prosopo/types-env@2.10.33
+  - @prosopo/user-access-policy@3.12.24
+
 ## 5.3.5
 ### Patch Changes
 
