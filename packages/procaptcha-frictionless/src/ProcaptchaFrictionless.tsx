@@ -35,6 +35,7 @@ import {
 	type RetryCoords,
 	consumeRetryMountProps,
 	handleSessionInvalidated,
+	normaliseRetryCoords,
 } from "./sessionInvalidatedRecovery.js";
 
 // Each session uses exactly one solver — chosen by the /frictionless response.
@@ -105,6 +106,16 @@ export const ProcaptchaFrictionless = ({
 	// After we've retried once, a second NO_SESSION_FOUND falls back to the
 	// inner widget's own `frictionlessState.restart()` path.
 	const sessionInvalidatedFiredRef = useRef(false);
+	// Bumped on every mount so the replacement widget gets a fresh React
+	// `key`. Without it a re-render for the same captcha type reconciles onto
+	// the existing element, and the inner widget keeps the manager it built on
+	// first mount — still closed over the sessionId we've just replaced.
+	const mountCountRef = useRef(0);
+	// Set when the next mount must open its challenge without waiting for a
+	// checkbox click. Held in a ref rather than passed down through `start()`
+	// because `providerRetry` re-invokes `start` with no arguments, which would
+	// otherwise drop the flag on the first provider retry.
+	const nextMountAutoStartRef = useRef(false);
 
 	useEffect(() => {
 		if (!config.language) return;
@@ -215,6 +226,19 @@ export const ProcaptchaFrictionless = ({
 			void start();
 		};
 
+		// The user pressed reload on the challenge. The provider consumed this
+		// session when it issued the challenge, so there is no way to ask it
+		// for another one — mint a new session by re-running frictionless and
+		// re-mount the widget with `autoStart`, which is what makes a new
+		// challenge appear instead of the modal simply closing. Not one-shot:
+		// the user may keep asking for a different challenge.
+		const onReload = (x?: number, y?: number) => {
+			pendingRetryCoordsRef.current = normaliseRetryCoords(x, y);
+			nextMountAutoStartRef.current = true;
+			resetState(0);
+			void start();
+		};
+
 		// Consume any pending retry coords now — the resumed widget owns them
 		// for exactly one auto-fired `manager.start(x, y)`. Cleared so a
 		// subsequent escalation/re-render doesn't accidentally re-inject.
@@ -222,14 +246,22 @@ export const ProcaptchaFrictionless = ({
 		// over pending retry coords when both are present, because escalation
 		// is the current transition and the pending retry belongs to a prior
 		// widget instance that never got to consume them.
+		const forcedAutoStart = nextMountAutoStartRef.current;
+		nextMountAutoStartRef.current = false;
 		const { autoStart: resumedAutoStart, startCoords: retryStartCoords } =
-			consumeRetryMountProps(pendingRetryCoordsRef, autoStart);
+			consumeRetryMountProps(
+				pendingRetryCoordsRef,
+				autoStart || forcedAutoStart,
+			);
 		const startCoords = escalationCoords ?? retryStartCoords;
+		mountCountRef.current += 1;
+		const mountKey = mountCountRef.current;
 
 		if (captchaType === CaptchaType.image) {
 			const Procaptcha = await ProcaptchaLoader();
 			setComponentToRender(
 				<Procaptcha
+					key={mountKey}
 					config={config}
 					callbacks={callbacks}
 					frictionlessState={frictionlessState}
@@ -237,12 +269,14 @@ export const ProcaptchaFrictionless = ({
 					autoStart={resumedAutoStart}
 					startCoords={startCoords}
 					onSessionInvalidated={onSessionInvalidated}
+					onReload={onReload}
 				/>,
 			);
 		} else if (captchaType === CaptchaType.puzzle) {
 			const ProcaptchaPuzzle = await ProcaptchaPuzzleLoader();
 			setComponentToRender(
 				<ProcaptchaPuzzle
+					key={mountKey}
 					config={config}
 					callbacks={callbacks}
 					frictionlessState={frictionlessState}
@@ -256,6 +290,7 @@ export const ProcaptchaFrictionless = ({
 			const ProcaptchaPow = await ProcaptchaPowLoader();
 			setComponentToRender(
 				<ProcaptchaPow
+					key={mountKey}
 					config={config}
 					callbacks={callbacks}
 					frictionlessState={frictionlessState}

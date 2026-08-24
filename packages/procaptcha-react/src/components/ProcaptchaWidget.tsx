@@ -41,6 +41,14 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 	const [state, updateState] = useProcaptcha(useState, useRef);
 	const [loading, setLoading] = useState(false);
 	const hpRef = useRef<HTMLInputElement>(null);
+	// Read at call time rather than captured, so a wrapper that re-renders
+	// with a new handler is still the one the reload button reaches.
+	const onReloadRef = useRef(props.onReload);
+	onReloadRef.current = props.onReload;
+	// Whether the reload button is delegated is decided at mount: handing the
+	// manager a handler the wrapper never supplied would leave reload with
+	// nothing to re-mint the challenge with.
+	const delegatesReload = useRef(Boolean(props.onReload));
 	// Held in a ref so the closure variables that capture the checkbox
 	// click coords (set on start) survive across re-renders and are
 	// still in scope when submit() runs. PoW and Puzzle widgets do the
@@ -55,6 +63,9 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 			callbacks,
 			frictionlessState,
 			() => hpRef.current?.value || undefined,
+			delegatesReload.current
+				? (x?: number, y?: number) => onReloadRef.current?.(x, y)
+				: undefined,
 		),
 	);
 	// See procaptcha-pow ProcaptchaWidget — same session-invalidation

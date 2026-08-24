@@ -76,6 +76,12 @@ export function Manager(
 	// Reads the live honeypot input value at submit time. Returns undefined
 	// when the honeypot is disabled or the input hasn't been filled.
 	getHoneypotValue?: () => string | undefined,
+	// Hands the reload button back to the caller. Supplied when something
+	// above the manager owns re-minting the challenge — under frictionless the
+	// sessionId this challenge was issued against has already been consumed
+	// provider-side, so only the wrapper (which can run /frictionless again)
+	// can produce a fresh one. When absent the manager reloads itself.
+	onReloadRequest?: (x?: number, y?: number) => void,
 ) {
 	const events = getDefaultEvents(callbacks);
 
@@ -415,13 +421,25 @@ export function Manager(
 	const reload = async () => {
 		// disable the time limit
 		clearTimeout();
-		// trigger the onClose event
+		// trigger the onReload event
 		events.onReload();
+		if (onReloadRequest) {
+			// Drop the spent challenge but leave the frictionless flow alone:
+			// the caller re-runs it and re-mounts us against the new session.
+			// Restarting frictionless from here instead would tear the widget
+			// back down to an unticked checkbox, which is what made reload
+			// look like it merely closed the modal.
+			resetState();
+			onReloadRequest(checkboxClickX, checkboxClickY);
+			return;
+		}
 		// abandon the captcha process and restart frictionless, if it exists
 		resetState(frictionlessState?.restart);
 		if (!frictionlessState?.restart) {
-			// start the captcha process again unless we need a new session
-			await start();
+			// start the captcha process again unless we need a new session,
+			// keeping the checkbox click position so the replacement solution
+			// still carries the real entry point rather than (0, 0)
+			await start(checkboxClickX, checkboxClickY);
 		}
 	};
 

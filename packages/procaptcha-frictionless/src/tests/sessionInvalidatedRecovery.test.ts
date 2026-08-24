@@ -18,6 +18,7 @@ import {
 	type RetryCoords,
 	consumeRetryMountProps,
 	handleSessionInvalidated,
+	normaliseRetryCoords,
 } from "../sessionInvalidatedRecovery.js";
 
 const ref = <T>(initial: T): MutableRef<T> => ({ current: initial });
@@ -125,5 +126,28 @@ describe("consumeRetryMountProps", () => {
 		const mount = consumeRetryMountProps(coordsRef, false);
 
 		expect(mount).toEqual({ autoStart: false, startCoords: undefined });
+	});
+});
+
+describe("normaliseRetryCoords", () => {
+	it("keeps a real click", () => {
+		expect(normaliseRetryCoords(120, 340)).toEqual({ x: 120, y: 340 });
+	});
+
+	it("keeps a click that sits on one axis", () => {
+		expect(normaliseRetryCoords(0, 340)).toEqual({ x: 0, y: 340 });
+	});
+
+	it("drops (0, 0) — the autoStart / untrusted-event default, not a click", () => {
+		expect(normaliseRetryCoords(0, 0)).toBeNull();
+	});
+
+	it("drops a half-pair rather than letting NaN reach the salt", () => {
+		expect(normaliseRetryCoords(120, undefined)).toBeNull();
+		expect(normaliseRetryCoords(undefined, 340)).toBeNull();
+	});
+
+	it("drops a missing pair", () => {
+		expect(normaliseRetryCoords(undefined, undefined)).toBeNull();
 	});
 });
