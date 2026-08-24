@@ -60,6 +60,7 @@ export const state = (
 	attemptCount: 0,
 	error: undefined,
 	sessionId: undefined,
+	retryPrompt: false,
 	...overrides,
 });
 

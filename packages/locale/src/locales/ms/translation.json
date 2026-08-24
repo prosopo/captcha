@@ -376,7 +376,8 @@
 		"NO_ACCOUNTS_FOUND": "No accounts found",
 		"ACCOUNT_NOT_FOUND": "Account not found",
 		"NO_EXTENSION_FOUND": "No extension found",
-		"INSECURE_CONTEXT": "Procaptcha memerlukan sambungan selamat (HTTPS)"
+		"INSECURE_CONTEXT": "Procaptcha memerlukan sambungan selamat (HTTPS)",
+		"INCORRECT_TRY_AGAIN": "Salah, sila cuba lagi"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Failed to encode invalid address",

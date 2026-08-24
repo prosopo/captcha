@@ -213,6 +213,7 @@ interface Harness {
 		onReload: Mock<() => void>;
 	};
 	restart: Mock<() => void>;
+	onChallengeFailed: Mock<() => void>;
 }
 
 interface HarnessOptions {
@@ -221,6 +222,9 @@ interface HarnessOptions {
 	frictionlessState?: FrictionlessState;
 	withFrictionless?: boolean;
 	honeypot?: () => string | undefined;
+	// Mirrors the widget: supplied only when a frictionless wrapper is
+	// listening for the "wrong answer, mint me a new session" handoff.
+	withChallengeFailedHandler?: boolean;
 }
 
 const build = (options: HarnessOptions = {}): Harness => {
@@ -238,6 +242,7 @@ const build = (options: HarnessOptions = {}): Harness => {
 		onReload: vi.fn<() => void>(),
 	};
 	const restart = vi.fn<() => void>();
+	const onChallengeFailed = vi.fn<() => void>();
 	const callbackInput: ProcaptchaCallbacks = callbacks(events);
 	const frictionlessState =
 		options.frictionlessState ??
@@ -253,8 +258,16 @@ const build = (options: HarnessOptions = {}): Harness => {
 		callbackInput,
 		frictionlessState,
 		options.honeypot,
+		options.withChallengeFailedHandler ? onChallengeFailed : undefined,
 	);
-	return { manager, state: currentState, updates, events, restart };
+	return {
+		manager,
+		state: currentState,
+		updates,
+		events,
+		restart,
+		onChallengeFailed,
+	};
 };
 
 /** The last value the manager pushed for a given state field. */
@@ -769,16 +782,39 @@ describe("submit", () => {
 		expect(lastUpdate(harness, "isHuman")).toBe(false);
 	});
 
-	test("fails and restarts frictionless when the solution is rejected", async () => {
-		const harness = await started();
+	// A wrong answer hands back to the frictionless wrapper rather than
+	// retrying here: the provider consumed this session when it issued the
+	// challenge, so only the wrapper can mint one for a fresh challenge.
+	test("delegates to the wrapper when the solution is rejected", async () => {
+		const harness = await started({ withChallengeFailedHandler: true });
 		mocks.submitCaptchaSolution.mockResolvedValue([
 			solutionResponse({ verified: false }),
 			"0xcommitment",
 		]);
 		await harness.manager.submit();
 		expect(harness.events.onFailed).toHaveBeenCalledTimes(1);
+		expect(harness.onChallengeFailed).toHaveBeenCalledTimes(1);
+		// The wrapper re-mounts the widget, so resetting here would only make
+		// the modal flash shut on the way.
+		expect(harness.restart).not.toHaveBeenCalled();
+	});
+
+	// Without a wrapper the widget owns its own session, so it fetches the
+	// replacement challenge itself and raises the prompt over it.
+	test("fetches a fresh challenge in place when there is no wrapper", async () => {
+		const harness = await started({ withFrictionless: false });
+		mocks.submitCaptchaSolution.mockResolvedValue([
+			solutionResponse({ verified: false }),
+			"0xcommitment",
+		]);
+		mocks.getCaptchaChallenge.mockClear();
+		await harness.manager.submit();
+		expect(harness.events.onFailed).toHaveBeenCalledTimes(1);
 		expect(harness.events.onReset).toHaveBeenCalled();
-		expect(harness.restart).toHaveBeenCalledTimes(1);
+		expect(lastUpdate(harness, "retryPrompt")).toBe(true);
+		// The whole point: new images actually go on screen.
+		expect(mocks.getCaptchaChallenge).toHaveBeenCalled();
+		expect(lastUpdate(harness, "showModal")).toBe(true);
 	});
 
 	test("does not submit when no captcha api was ever built", async () => {

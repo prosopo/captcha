@@ -43,7 +43,10 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	const [puzzlePhase, setPuzzlePhase] = useState<PuzzlePhase>("checkbox");
 	const [challengeData, setChallengeData] =
 		useState<GetPuzzleCaptchaResponse | null>(null);
-	const [showRetry, setShowRetry] = useState(false);
+	// Mounted by the frictionless wrapper after a wrong answer: open with the
+	// prompt already up, so the replacement challenge doesn't just appear
+	// unexplained.
+	const [showRetry, setShowRetry] = useState(Boolean(props.showRetryPrompt));
 	// get the state update mechanism
 	const updateState = buildUpdateState(state, _updateState);
 	const hpRef = useRef<HTMLInputElement>(null);
@@ -80,7 +83,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	useEffect(() => {
 		if (!props.autoStart) return;
 		setLoading(true);
-		setShowRetry(false);
+		setShowRetry(Boolean(props.showRetryPrompt));
 		const coords = props.startCoords;
 		lastCoordsRef.current = coords ?? null;
 		manager.current.start(coords?.x ?? 0, coords?.y ?? 0).then(
@@ -93,7 +96,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 			},
 			() => setLoading(false),
 		);
-	}, [props.autoStart, props.startCoords]);
+	}, [props.autoStart, props.startCoords, props.showRetryPrompt]);
 
 	useEffect(() => {
 		if (!state.error) return undefined;
@@ -184,10 +187,23 @@ const Procaptcha = (props: ProcaptchaProps) => {
 				return;
 			}
 
-			// Failed — show retry message and fetch a new challenge
+			// Failed. Show the prompt straight away so the message is up while
+			// the replacement is fetched.
 			setShowRetry(true);
 			setPuzzlePhase("dragging");
 
+			// The provider consumed this session when it issued the challenge,
+			// so calling start() again here just earns a NO_SESSION_FOUND. Hand
+			// back to the frictionless wrapper, which mints a fresh session and
+			// re-mounts this widget with `showRetryPrompt` set.
+			if (props.onChallengeFailed) {
+				const coords = lastCoordsRef.current;
+				props.onChallengeFailed(coords?.x, coords?.y);
+				return;
+			}
+
+			// No frictionless wrapper (direct React embedding): the widget owns
+			// its own session, so fetching in place is the whole retry.
 			try {
 				const newChallenge = await manager.current.start();
 				if (newChallenge) {
@@ -205,7 +221,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 			}
 			setLoading(false);
 		},
-		[callbacks.onError],
+		[callbacks.onError, props.onChallengeFailed],
 	);
 
 	const isInvisible = config.mode === ModeEnum.invisible;
@@ -230,6 +246,11 @@ const Procaptcha = (props: ProcaptchaProps) => {
 					pieceSize={challengeData.pieceSize}
 					onComplete={handlePuzzleComplete}
 					showRetry={showRetry}
+					retryMessage={
+						isTranslationReady
+							? t("WIDGET.INCORRECT_TRY_AGAIN")
+							: "Incorrect, please try again"
+					}
 					submitting={puzzlePhase === "submitting"}
 					theme={theme}
 				/>

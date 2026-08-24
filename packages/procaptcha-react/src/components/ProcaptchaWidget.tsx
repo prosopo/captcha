@@ -38,9 +38,20 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 	const frictionlessState = props.frictionlessState; // Set up Session ID and Provider if they exist
 	const i18n = props.i18n;
 	const callbacks = props.callbacks || {};
-	const [state, updateState] = useProcaptcha(useState, useRef);
+	const [state, updateState] = useProcaptcha(useState, useRef, {
+		// Re-mounted by the frictionless wrapper after a wrong answer: the
+		// prompt has to be up on the first paint of the replacement challenge.
+		retryPrompt: Boolean(props.showRetryPrompt),
+	});
 	const [loading, setLoading] = useState(false);
 	const hpRef = useRef<HTMLInputElement>(null);
+	// Held in a ref so the Manager's failure callback (created once, below)
+	// always reaches the current prop rather than the one from first render.
+	const onChallengeFailedRef = useRef(props.onChallengeFailed);
+	onChallengeFailedRef.current = props.onChallengeFailed;
+	// See procaptcha-pow ProcaptchaWidget — same session-invalidation
+	// recovery contract with coords preservation across a re-mint.
+	const lastCoordsRef = useRef<{ x: number; y: number } | null>(null);
 	// Held in a ref so the closure variables that capture the checkbox
 	// click coords (set on start) survive across re-renders and are
 	// still in scope when submit() runs. PoW and Puzzle widgets do the
@@ -55,11 +66,16 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 			callbacks,
 			frictionlessState,
 			() => hpRef.current?.value || undefined,
+			// Only delegate when a wrapper is actually listening; without one
+			// the Manager retries in place using its own session.
+			props.onChallengeFailed
+				? () => {
+						const coords = lastCoordsRef.current;
+						onChallengeFailedRef.current?.(coords?.x, coords?.y);
+					}
+				: undefined,
 		),
 	);
-	// See procaptcha-pow ProcaptchaWidget — same session-invalidation
-	// recovery contract with coords preservation across a re-mint.
-	const lastCoordsRef = useRef<{ x: number; y: number } | null>(null);
 	const sessionInvalidatedFiredRef = useRef(false);
 	const theme = "light" === props.config.theme ? lightTheme : darkTheme;
 
@@ -179,6 +195,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 						onNext={manager.current.nextRound}
 						onReload={manager.current.reload}
 						themeColor={config.theme ?? "light"}
+						showRetryPrompt={state.retryPrompt}
 					/>
 				) : (
 					<div>No challenge set.</div>

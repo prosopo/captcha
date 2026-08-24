@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { RetryBanner } from "@prosopo/procaptcha-common";
 import type { PuzzleEvent } from "@prosopo/types";
 import type { Theme } from "@prosopo/widget-skeleton";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -31,6 +32,8 @@ interface PuzzleCanvasProps {
 		puzzleEvents: PuzzleEvent[],
 	) => void;
 	showRetry: boolean;
+	/** Translated copy for the retry banner, supplied by the widget. */
+	retryMessage: string;
 	submitting: boolean;
 	theme: Theme;
 }
@@ -54,6 +57,7 @@ export const PuzzleCanvas = ({
 	pieceSize,
 	onComplete,
 	showRetry,
+	retryMessage,
 	submitting,
 	theme,
 }: PuzzleCanvasProps) => {
@@ -222,17 +226,10 @@ export const PuzzleCanvas = ({
 		[getContainerOffset, posX, posY, submitting],
 	);
 
-	const instructionText = showRetry
-		? "Not quite \u2014 try again"
-		: "Drag the piece to the target";
-
-	const headerBorderColor = showRetry
-		? theme.palette.error.main
-		: "transparent";
-
-	const headerTextColor = showRetry
-		? theme.palette.error.main
-		: theme.palette.onSurface;
+	// The retry banner now carries the "you got it wrong" message, so the
+	// instruction line stays put and keeps telling the user what to do with
+	// the fresh puzzle underneath it.
+	const instructionText = "Drag the piece to the target";
 
 	// Material 3 purple tonal fallback shown before the server-rendered
 	// background image loads.
@@ -288,11 +285,33 @@ export const PuzzleCanvas = ({
 					animation: shaking ? "prosopo-puzzle-shake 0.5s ease" : "none",
 				}}
 			>
+				{/* Retry prompt. Sits above the instruction so the failure and the
+				    "here's what to do now" line read in that order, and takes over
+				    the rounded top corners while present. */}
+				{showRetry && (
+					<div
+						style={{
+							width: `${CONTAINER_WIDTH}px`,
+							boxSizing: "border-box",
+							borderRadius: "20px 20px 0 0",
+							overflow: "hidden",
+						}}
+					>
+						<RetryBanner
+							message={retryMessage}
+							theme={theme}
+							{...(process.env.NODE_ENV !== "production" && {
+								dataCy: "prosopo-retry-banner",
+							})}
+						/>
+					</div>
+				)}
+
 				{/* Instruction text */}
 				<div
 					style={{
 						backgroundColor: theme.palette.surface,
-						borderRadius: "20px 20px 0 0",
+						borderRadius: showRetry ? "0" : "20px 20px 0 0",
 						padding: "12px 20px",
 						width: `${CONTAINER_WIDTH}px`,
 						boxSizing: "border-box",
@@ -300,9 +319,8 @@ export const PuzzleCanvas = ({
 						fontFamily: theme.font.fontFamily,
 						fontSize: "14px",
 						fontWeight: 500,
-						color: headerTextColor,
-						borderBottom: `2px solid ${headerBorderColor}`,
-						transition: "color 0.3s ease, border-color 0.3s ease",
+						color: theme.palette.onSurface,
+						transition: "border-radius 0.3s ease",
 					}}
 				>
 					{instructionText}

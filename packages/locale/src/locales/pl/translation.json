@@ -376,7 +376,8 @@
 		"NO_ACCOUNTS_FOUND": "Nie znaleziono kont",
 		"ACCOUNT_NOT_FOUND": "Nie znaleziono konta",
 		"NO_EXTENSION_FOUND": "Nie znaleziono rozszerzenia",
-		"INSECURE_CONTEXT": "Procaptcha wymaga bezpiecznego połączenia (HTTPS)"
+		"INSECURE_CONTEXT": "Procaptcha wymaga bezpiecznego połączenia (HTTPS)",
+		"INCORRECT_TRY_AGAIN": "Niepoprawnie, spróbuj ponownie"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Nie udało się zakodować nieprawidłowego adresu",

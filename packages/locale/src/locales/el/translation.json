@@ -376,7 +376,8 @@
 		"NO_ACCOUNTS_FOUND": "Δεν βρέθηκαν λογαριασμοί",
 		"ACCOUNT_NOT_FOUND": "Δεν βρέθηκε λογαριασμός",
 		"NO_EXTENSION_FOUND": "Δε βρέθηκε επέκταση",
-		"INSECURE_CONTEXT": "Το Procaptcha απαιτεί ασφαλή σύνδεση (HTTPS)"
+		"INSECURE_CONTEXT": "Το Procaptcha απαιτεί ασφαλή σύνδεση (HTTPS)",
+		"INCORRECT_TRY_AGAIN": "Λάθος, δοκιμάστε ξανά"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Αποτυχία κωδικοποίησης μη έγκυρης διεύθυνσης",
