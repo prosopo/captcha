@@ -13,22 +13,57 @@
 // limitations under the License.
 
 import {
-	ContextType,
+	type ContextType,
 	type IUserSettings,
 	contextAwareThresholdDefault,
+	contextTypeFromSession,
+	expandContexts,
 } from "@prosopo/types";
 
 /**
- * Determines the context type based on the webView flag
+ * Determines the context a request belongs to — its device family crossed
+ * with whether it is running in a webview.
+ *
+ * `userAgent` is the raw header value, not the hashed one carried on the
+ * decrypted payload. The entropy sweep classifies stored sessions from the
+ * same header through the same function, so the two sides agree on which
+ * bucket a session lands in.
+ *
+ * @param userAgent - Raw `user-agent` request header
  * @param webView - Whether the request is from a WebView
- * @returns The context type (Webview or Default)
  */
-export function determineContextType(webView: boolean): ContextType {
-	return webView ? ContextType.Webview : ContextType.Default;
+export function determineContextType(
+	userAgent: string | undefined,
+	webView: boolean,
+): ContextType {
+	return contextTypeFromSession(userAgent, webView);
 }
 
 /**
- * Gets the threshold for a specific context type from client settings
+ * Whether the client has this context configured.
+ *
+ * A context the customer has not enabled is not validated at all — the
+ * request passes through this stage untouched. That is a change from the
+ * pre-device-type behaviour, where configuring a single context validated
+ * *every* request against it: with six contexts, applying a tablet baseline
+ * to desktop traffic would reject real users wholesale.
+ */
+export function isContextConfigured(
+	settings: IUserSettings,
+	contextType: ContextType,
+): boolean {
+	return (
+		expandContexts(settings.contextAware?.contexts)[contextType] !== undefined
+	);
+}
+
+/**
+ * Gets the threshold for a specific context type from client settings.
+ *
+ * Falls back to the global default when the context is unconfigured, so a
+ * caller that skipped `isContextConfigured` still gets a sane number rather
+ * than NaN.
+ *
  * @param settings - Client settings
  * @param contextType - The context type to get the threshold for
  * @returns The threshold for the context type, or the global threshold if not configured
@@ -37,21 +72,6 @@ export function getContextThreshold(
 	settings: IUserSettings,
 	contextType: ContextType,
 ): number {
-	const contextAware = settings.contextAware;
-	if (contextAware === undefined) {
-		return contextAwareThresholdDefault;
-	}
-
-	const contexts = contextAware.contexts;
-	let contextConfig: { type: ContextType; threshold: number } | undefined;
-
-	if (contexts !== undefined) {
-		contextConfig = (
-			contexts as Partial<
-				Record<ContextType, { type: ContextType; threshold: number }>
-			>
-		)[contextType];
-	}
-
-	return contextConfig?.threshold ?? contextAwareThresholdDefault;
+	const contexts = expandContexts(settings.contextAware?.contexts);
+	return contexts[contextType]?.threshold ?? contextAwareThresholdDefault;
 }

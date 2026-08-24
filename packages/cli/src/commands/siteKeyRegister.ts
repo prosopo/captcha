@@ -16,9 +16,9 @@ import { ProviderEnvironment } from "@prosopo/env";
 import { LogLevel, type Logger, getLogger } from "@prosopo/logger";
 import { Tasks } from "@prosopo/provider";
 import {
-	ContextType,
 	type KeyringPair,
 	contextAwareThresholdDefault,
+	deviceContextTypes,
 	imageMaxRoundsDefault,
 	puzzleToleranceDefault,
 } from "@prosopo/types";
@@ -126,12 +126,12 @@ export default (
 					disallowWebView: false,
 					contextAware: {
 						enabled: false,
-						contexts: {
-							[ContextType.Default]: {
-								type: ContextType.Default,
-								threshold: contextAwareThresholdDefault,
-							},
-						},
+						contexts: Object.fromEntries(
+							deviceContextTypes.map((type) => [
+								type,
+								{ type, threshold: contextAwareThresholdDefault },
+							]),
+						),
 					},
 					verifiedTimeout: 60000,
 					solutionTimeout: 60000,
