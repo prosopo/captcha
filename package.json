@@ -57,6 +57,7 @@
 		"lint-fix:tsconfigIncludes": "npm run --silent lint:tsconfigIncludes -- --fix",
 		"lint:json": "npm run -w @prosopo/lint start -- json --pkg $(pwd)/package.json",
 		"depcheck": "npx --workspaces depcheck --ignores vite,vitest,@vitest/coverage-v8,del-cli,concurrently,npm-run-all,tslib,typescript,tsx",
+		"esbuild": "0.28.2",
 		"audit:fix": "npm audit fix --force",
 		"deps:status": "npm-check-updates --deep",
 		"deps:upgrade": "npm-check-updates --deep --interactive --format group",
@@ -73,12 +74,7 @@
 		"node": "^24",
 		"npm": "^11"
 	},
-	"workspaces": [
-		"dev/*",
-		"packages/*",
-		"demos/*",
-		"integration/*"
-	],
+	"workspaces": ["dev/*", "packages/*", "demos/*", "integration/*"],
 	"devDependencies": {
 		"@biomejs/biome": "1.9.1",
 		"@changesets/cli": "2.29.7",
@@ -92,7 +88,7 @@
 		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
-		"turbo": "2.10.10",
+		"turbo": "2.9.14",
 		"typescript": "5.6.2",
 		"ua-parser-js": "0.7.41"
 	},
