@@ -37,18 +37,18 @@ jobs:
       run:
         working-directory: demos/android-webview
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # 17, not the app's own jvmTarget: that is the bytecode level the app
       # compiles *to*, while the Android Gradle Plugin itself needs a JDK 17.
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
 
       - name: Gradle build + unit tests
         run: ./gradlew --no-daemon --stacktrace testReleaseUnitTest assembleRelease
