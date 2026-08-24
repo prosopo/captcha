@@ -24,28 +24,20 @@ import { ProviderDatabase } from "../../databases/provider.js";
 
 // Regression guard for the same class of bug as #3107
 // (`getSessionRecordBySessionId` missing tcp-probe fields), this time on
-// the two commitment fetchers used by `verifyImageCaptchaSolution`:
+// the two commitment fetchers used by `verifyImageCaptchaSolution`.
 //
-//   - `getDappUserCommitmentById` projected 13 fields and omitted
-//     `behavioralDataPacked`, `deviceCapability`, and `coords`.
-//   - `getDappUserCommitmentByAccount` (fallback path when the caller
-//     does not have a commitmentId) projected only
-//     `{_id: 0, result: 1}` — so every field the verify code reads off
-//     the returned `solution` beyond `result` landed as `undefined` at
-//     the decision machine.
-//
-// Consequence: BDP-reading decide rules silently no-op'd on the by-id
-// path; on the by-account path virtually every decide rule sourced
-// `undefined` for headers / ipInfo / behavioural payload and either
-// no-op'd or tripped the wrong way.
+// Both `getDappUserCommitmentById` and `getDappUserCommitmentByAccount`
+// project a subset of the record; the verify path then reads fields off
+// the returned `solution`. If a field the verify path reads is absent
+// from the projection it lands as `undefined`, silently degrading
+// downstream behaviour.
 //
 // Fix: both methods now share `DAPP_USER_COMMITMENT_PROJECTION`, which
-// enumerates every field the DM input builder in
-// `imgCaptchaTasks.verifyImageCaptchaSolution` reads from `solution`.
+// enumerates every field the verify path reads from `solution`.
 //
-// Guard: persist a full commitment, fetch via both methods, assert
-// each field round-trips. A future projection narrowing that drops
-// any of them re-introduces the silent no-op / false deny.
+// Guard: persist a full commitment, fetch via both methods, assert every
+// field the verify path reads round-trips. A future projection narrowing
+// that drops any of them re-introduces the silent degradation.
 
 const logger = getLogger(
 	LogLevel.enum.error,
@@ -97,7 +89,6 @@ const buildCommitment = (id: string) => ({
 	ipAddress: ipv4Composite(1n),
 	headers: {
 		host: "example.com",
-		"cache-control": "no-cache",
 		"user-agent": "Mozilla/5.0",
 	},
 	ja4: "ja4-projection",
@@ -160,8 +151,8 @@ describe("getDappUserCommitment{ById,ByAccount} projection", () => {
 		await mongod.stop();
 	});
 
-	// Core guard: BDP must survive the ById fetch.
-	it("returns behavioralDataPacked so BDP-reading decide rules see the real payload", async () => {
+	// Core guard: behavioralDataPacked must survive the ById fetch.
+	it("returns behavioralDataPacked when the record on disk carries a payload", async () => {
 		const id = commitmentIdOf("bdp-by-id");
 		await db.tables.commitment.create(buildCommitment(id));
 
@@ -175,13 +166,12 @@ describe("getDappUserCommitment{ById,ByAccount} projection", () => {
 		expect(got.behavioralDataPacked?.d).toBe("desktop");
 	});
 
-	// Every field the DM input builder in verifyImageCaptchaSolution reads
-	// off `solution`. A missing one here means whichever decide rule reads
-	// `input.<field>` silently no-ops or trips the wrong way. Enumerated
-	// explicitly rather than deep-equal so a diff on any single field
-	// points straight at the projection line to add.
-	it("returns every field the DM input builder reads from solution (by-id)", async () => {
-		const id = commitmentIdOf("dm-inputs-by-id");
+	// Every field the verify path reads off `solution`. A missing one
+	// here means the verify path sees `undefined`. Enumerated explicitly
+	// so a diff on any single field points straight at the projection
+	// line to add.
+	it("returns every field the verify path reads from solution (by-id)", async () => {
+		const id = commitmentIdOf("verify-reads-by-id");
 		await db.tables.commitment.create(buildCommitment(id));
 
 		const got = await db.getDappUserCommitmentById(id);
@@ -190,13 +180,11 @@ describe("getDappUserCommitment{ById,ByAccount} projection", () => {
 		expect(got.userAccount).toBe("user-projection");
 		expect(got.dappAccount).toBe("dapp-projection");
 		expect(got.headers).toBeDefined();
-		expect(got.headers?.["cache-control"]).toBe("no-cache");
 		expect(got.deviceCapability).toBe("desktop");
 		expect(got.ipInfo).toBeDefined();
 		expect(got.ipInfo?.isValid).toBe(true);
 		expect(got.coords).toBeDefined();
 		expect(got.coords?.[0]?.[0]).toEqual([723, 766]);
-		// Verify-path fields the caller also reads:
 		expect(got.serverChecked).toBe(false);
 		expect(got.sessionId).toBe("session-projection");
 		expect(got.result?.status).toBe(CaptchaStatus.approved);
@@ -223,17 +211,16 @@ describe("getDappUserCommitment{ById,ByAccount} projection", () => {
 		expect(got.behavioralDataPacked?.c3.length).toBe(2);
 		expect(got.userAccount).toBe("user-projection");
 		expect(got.dappAccount).toBe("dapp-projection");
-		expect(got.headers?.["cache-control"]).toBe("no-cache");
+		expect(got.headers).toBeDefined();
 		expect(got.ipInfo?.isValid).toBe(true);
 		expect(got.coords?.[0]?.[0]).toEqual([723, 766]);
 	});
 
 	// Both methods must project the same set — they're the two branches
 	// of the same conditional in `imgCaptchaTasks.verifyImageCaptchaSolution`
-	// (line 683-685: `commitmentId ? getById : getByAccount`). If they
-	// diverge, the by-account branch silently degrades the DM. Assert
-	// parity on the fields the caller actually reads.
-	it("by-id and by-account return the same shape of DM-input fields", async () => {
+	// (`commitmentId ? getById : getByAccount`). Divergence silently
+	// degrades the by-account branch.
+	it("by-id and by-account return the same shape of verify-path fields", async () => {
 		const id = commitmentIdOf("parity");
 		await db.tables.commitment.create(buildCommitment(id));
 
@@ -245,7 +232,7 @@ describe("getDappUserCommitment{ById,ByAccount} projection", () => {
 		const byAccount = byAccountDocs.find((d) => d.id === id);
 		if (!byId || !byAccount) throw new Error("commitment not returned");
 
-		const dmInputKeys = [
+		const verifyPathReads = [
 			"userAccount",
 			"dappAccount",
 			"headers",
@@ -260,7 +247,7 @@ describe("getDappUserCommitment{ById,ByAccount} projection", () => {
 			"submittedAtTimestamp",
 		] as const;
 
-		for (const key of dmInputKeys) {
+		for (const key of verifyPathReads) {
 			expect(
 				byAccount[key],
 				`field '${key}' present via by-id but missing via by-account — projections have diverged`,

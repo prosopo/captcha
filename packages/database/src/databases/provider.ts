@@ -2349,15 +2349,11 @@ export class ProviderDatabase
 		});
 	}
 
-	// Shared projection for both commitment fetchers below. Every field a
-	// caller of `verifyImageCaptchaSolution` reads off the returned record
-	// must be listed here — the decision-machine input builder forwards
-	// these onto `DecisionMachineInput`, so a missing projection field
-	// lands as `undefined` at the DM and silently no-ops (or trips) any
-	// decide rule that reads it. Same failure mode as the tcp-probe
-	// projection bug fixed in #3107 — extend this projection together
-	// with any new `DecisionMachineInput` field sourced from the
-	// solution.
+	// Shared projection for both commitment fetchers below. Must include
+	// every field the downstream verify path (`verifyImageCaptchaSolution`)
+	// reads off the returned record. Same failure mode as the projection
+	// bug fixed in #3107: extend this list whenever the verify path starts
+	// reading a new field off the solution.
 	private static readonly DAPP_USER_COMMITMENT_PROJECTION = {
 		id: 1,
 		result: 1,
@@ -2372,14 +2368,8 @@ export class ProviderDatabase
 		dappAccount: 1,
 		headers: 1,
 		ipInfo: 1,
-		// Behavioural payload and device capability feed BDP-reading
-		// decide rules. Missing here → DM sees `undefined` → guarded
-		// rules silently return null and any no-cache-gated guard
-		// denies regardless of real BDP presence on the record.
 		behavioralDataPacked: 1,
 		deviceCapability: 1,
-		// Coords forwarded so post-solve escalation / audit rules can
-		// inspect where the user clicked.
 		coords: 1,
 	} as { [key in keyof Partial<UserCommitmentRecord>]: 1 };
 
