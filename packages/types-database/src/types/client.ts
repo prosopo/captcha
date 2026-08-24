@@ -14,7 +14,6 @@
 
 import {
 	CaptchaType,
-	ContextType,
 	DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
 	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
 	type IUserData,
@@ -27,6 +26,7 @@ import {
 	cityChangeActionDefault,
 	contextAwareThresholdDefault,
 	countryChangeActionDefault,
+	deviceContextTypes,
 	distanceExceedActionDefault,
 	distanceThresholdKmDefault,
 	domainsDefault,
@@ -179,16 +179,16 @@ export const UserSettingsSchema = new Schema({
 		enabled: { type: Boolean, default: false },
 		contexts: {
 			type: mongoose.Schema.Types.Mixed,
-			default: {
-				[ContextType.Default]: {
-					type: ContextType.Default,
-					threshold: contextAwareThresholdDefault,
-				},
-				[ContextType.Webview]: {
-					type: ContextType.Webview,
-					threshold: contextAwareThresholdDefault,
-				},
-			},
+			// One entry per device family x webview. Records written before
+			// device contexts existed carry `default`/`webview` instead; those
+			// keys still parse and `expandContexts` maps them onto these
+			// families, so nothing needs backfilling.
+			default: Object.fromEntries(
+				deviceContextTypes.map((type) => [
+					type,
+					{ type, threshold: contextAwareThresholdDefault },
+				]),
+			),
 		},
 	},
 	spamEmailDomainCheckEnabled: {

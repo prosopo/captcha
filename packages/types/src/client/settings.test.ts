@@ -22,6 +22,7 @@ import {
 	ClientSettingsSchema,
 	ContextConfigSchema,
 	ContextType,
+	DeviceType,
 	EmailSpamRulesSchema,
 	EncodingType,
 	HoneypotSettingsSchema,
@@ -32,7 +33,11 @@ import {
 	abuseScoreThresholdDefault,
 	captchaTypeDefault,
 	contextAwareThresholdDefault,
+	contextTypeFor,
+	deviceContextTypes,
+	deviceTypeFromUserAgent,
 	distanceThresholdKmDefault,
+	expandContexts,
 	frictionlessThresholdDefault,
 	honeypotEncodingTypeDefault,
 	imageMaxRoundsDefault,
@@ -311,6 +316,196 @@ describe("ContextConfigSchema", () => {
 		expect(
 			ContextConfigSchema.safeParse({ type: ContextType.Webview }).success,
 		).toBe(true);
+	});
+});
+
+describe("deviceTypeFromUserAgent", () => {
+	const cases: Array<[string, string, DeviceType]> = [
+		[
+			"macOS Chrome",
+			"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+			DeviceType.Desktop,
+		],
+		[
+			"Windows Firefox",
+			"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
+			DeviceType.Desktop,
+		],
+		[
+			"iPhone Safari",
+			"Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+			DeviceType.Mobile,
+		],
+		[
+			"Android phone Chrome",
+			"Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+			DeviceType.Mobile,
+		],
+		[
+			// Carries a `Mobile/<build>` token, so it must be matched as a
+			// tablet before the phone patterns get a look at it.
+			"iPad Safari",
+			"Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+			DeviceType.Tablet,
+		],
+		[
+			// "Android without Mobile" is the only thing separating this from
+			// the phone above.
+			"Android tablet Chrome",
+			"Mozilla/5.0 (Linux; Android 13; SM-X710) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+			DeviceType.Tablet,
+		],
+	];
+
+	for (const [name, userAgent, expected] of cases) {
+		it(`classifies ${name} as ${expected}`, () => {
+			expect(deviceTypeFromUserAgent(userAgent)).toBe(expected);
+		});
+	}
+
+	it("falls back to desktop for a missing or unrecognised user agent", () => {
+		expect(deviceTypeFromUserAgent(undefined)).toBe(DeviceType.Desktop);
+		expect(deviceTypeFromUserAgent("")).toBe(DeviceType.Desktop);
+		expect(deviceTypeFromUserAgent("curl/8.4.0")).toBe(DeviceType.Desktop);
+	});
+});
+
+describe("contextTypeFor", () => {
+	it("crosses each device family with the webview flag", () => {
+		expect(contextTypeFor(DeviceType.Desktop, false)).toBe(ContextType.Desktop);
+		expect(contextTypeFor(DeviceType.Desktop, true)).toBe(
+			ContextType.DesktopWebview,
+		);
+		expect(contextTypeFor(DeviceType.Mobile, false)).toBe(ContextType.Mobile);
+		expect(contextTypeFor(DeviceType.Mobile, true)).toBe(
+			ContextType.MobileWebview,
+		);
+		expect(contextTypeFor(DeviceType.Tablet, false)).toBe(ContextType.Tablet);
+		expect(contextTypeFor(DeviceType.Tablet, true)).toBe(
+			ContextType.TabletWebview,
+		);
+	});
+
+	it("covers every device context exactly once", () => {
+		const produced = Object.values(DeviceType).flatMap((device) => [
+			contextTypeFor(device, false),
+			contextTypeFor(device, true),
+		]);
+		expect(new Set(produced)).toEqual(new Set(deviceContextTypes));
+		expect(produced).toHaveLength(deviceContextTypes.length);
+	});
+});
+
+describe("expandContexts", () => {
+	const config = (type: ContextType, threshold: number) => ({
+		type,
+		threshold,
+	});
+
+	it("returns nothing for undefined or empty contexts", () => {
+		expect(expandContexts(undefined)).toEqual({});
+		expect(expandContexts({})).toEqual({});
+	});
+
+	it("passes device contexts through untouched", () => {
+		const expanded = expandContexts({
+			[ContextType.Mobile]: config(ContextType.Mobile, 0.8),
+		});
+
+		expect(expanded).toEqual({
+			[ContextType.Mobile]: config(ContextType.Mobile, 0.8),
+		});
+	});
+
+	it("spreads a legacy default across the non-webview families only", () => {
+		const expanded = expandContexts({
+			[ContextType.Default]: config(ContextType.Default, 0.75),
+		});
+
+		expect(Object.keys(expanded).sort()).toEqual(
+			[ContextType.Desktop, ContextType.Mobile, ContextType.Tablet].sort(),
+		);
+		expect(expanded[ContextType.Desktop]?.threshold).toBe(0.75);
+	});
+
+	it("spreads a legacy webview across the webview families only", () => {
+		const expanded = expandContexts({
+			[ContextType.Webview]: config(ContextType.Webview, 0.65),
+		});
+
+		expect(Object.keys(expanded).sort()).toEqual(
+			[
+				ContextType.DesktopWebview,
+				ContextType.MobileWebview,
+				ContextType.TabletWebview,
+			].sort(),
+		);
+		expect(expanded[ContextType.MobileWebview]?.threshold).toBe(0.65);
+	});
+
+	it("lets an explicit device context override the legacy entry covering it", () => {
+		const expanded = expandContexts({
+			[ContextType.Default]: config(ContextType.Default, 0.75),
+			[ContextType.Mobile]: config(ContextType.Mobile, 0.6),
+		});
+
+		expect(expanded[ContextType.Mobile]?.threshold).toBe(0.6);
+		expect(expanded[ContextType.Desktop]?.threshold).toBe(0.75);
+		expect(expanded[ContextType.Tablet]?.threshold).toBe(0.75);
+	});
+
+	it("never emits a legacy key", () => {
+		const expanded = expandContexts({
+			[ContextType.Default]: config(ContextType.Default, 0.75),
+			[ContextType.Webview]: config(ContextType.Webview, 0.65),
+		});
+
+		expect(expanded).not.toHaveProperty(ContextType.Default);
+		expect(expanded).not.toHaveProperty(ContextType.Webview);
+		expect(Object.keys(expanded)).toHaveLength(deviceContextTypes.length);
+	});
+});
+
+describe("ContextsSchema round-trip", () => {
+	it("accepts a legacy contexts map so stored settings keep parsing", () => {
+		const parsed = ClientSettingsSchema.safeParse({
+			...minimal,
+			contextAware: {
+				enabled: true,
+				contexts: {
+					[ContextType.Default]: { type: ContextType.Default, threshold: 0.7 },
+					[ContextType.Webview]: { type: ContextType.Webview, threshold: 0.7 },
+				},
+			},
+		});
+		expect(parsed.success).toBe(true);
+	});
+
+	it("accepts a device contexts map", () => {
+		const parsed = ClientSettingsSchema.safeParse({
+			...minimal,
+			contextAware: {
+				enabled: true,
+				contexts: {
+					[ContextType.MobileWebview]: {
+						type: ContextType.MobileWebview,
+						threshold: 0.7,
+					},
+				},
+			},
+		});
+		expect(parsed.success).toBe(true);
+	});
+
+	it("rejects a context key that is not a known context type", () => {
+		const parsed = ClientSettingsSchema.safeParse({
+			...minimal,
+			contextAware: {
+				enabled: true,
+				contexts: { smartfridge: { type: "smartfridge", threshold: 0.7 } },
+			},
+		});
+		expect(parsed.success).toBe(false);
 	});
 });
 
