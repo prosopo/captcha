@@ -16,6 +16,15 @@ import type { CaptchaType } from "@prosopo/types";
 export enum AccessPolicyType {
 	Block = "block",
 	Restrict = "restrict",
+	// Explicit allow-list: request that matches an Allow rule bypasses the
+	// challenge flow and gets an `authenticated` session (captchaType =
+	// authenticated on the frictionless response). Fires for any qualifying
+	// scope — verified Web Bot Auth agent, allow-listed IP, ja4/ja4_and_ip
+	// match, UA substring, ASN, country. IP-binding on the resulting
+	// session token defends against replay from a different IP. Opt-in per
+	// rule; the operator authors an Allow rule the same way they'd author
+	// a Block or Restrict rule.
+	Allow = "allow",
 }
 
 // Sentinel stamped on the Redis `clientId` field for rules that would
@@ -78,6 +87,13 @@ export type UserAttributes = {
 	// drop/limit requests from a given OS even when the client omits client
 	// hints.
 	os?: string;
+	// Canonical Web Bot Auth Signature-Agent URL — e.g.
+	// "https://signatures.openai.com/". Matched at runtime against the
+	// `Signature-Agent` header after RFC 9421 Ed25519 verification succeeds.
+	// Stored as-is like `countryCode` (exact equality after normalisation).
+	// Rules with this field only match requests carrying a valid Web Bot
+	// Auth signature; unverified traffic falls through.
+	webBotAuthAgent?: string;
 };
 
 export type UserScope = UserAttributes & UserIp;

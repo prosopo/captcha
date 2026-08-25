@@ -571,6 +571,115 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 		},
 	);
 
+	/**
+	 * Verify a Web Bot Auth authenticated session token. Enforces IP binding:
+	 * the operator MUST forward `ip` in the request body, and it must equal
+	 * the client IP captured on the session at frictionless issuance. Only
+	 * tokens minted with captchaType=authenticated are accepted here; a
+	 * regular image/pow/puzzle token routed to this endpoint fails with
+	 * INCORRECT_CAPTCHA_TYPE.
+	 */
+	router.post(
+		ClientApiPaths.VerifyAuthenticatedSession,
+		async (req, res, next) => {
+			if (getMaintenanceMode()) {
+				const verificationResponse: VerificationResponse =
+					buildMaintenanceVerificationResponse(req.i18n.t);
+				return res.json(verificationResponse);
+			}
+
+			let parsed: VerifySolutionBodyTypeOutput;
+			try {
+				parsed = VerifySolutionBody.parse(req.body);
+			} catch (err) {
+				return next(
+					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
+						context: { code: 400, error: err, body: req.body },
+						i18n: req.i18n,
+						logger: req.logger,
+					}),
+				);
+			}
+
+			const { dappSignature, token, ip } = parsed;
+			try {
+				const {
+					user,
+					dapp,
+					timestamp,
+					// commitmentId carries the authenticated session's sessionId
+					// (the widget encodes it there since the ProcaptchaToken schema
+					// has no dedicated sessionId slot). This is why we don't need
+					// a token codec change to ship the authenticated flow.
+					commitmentId: sessionId,
+					providerUrl,
+				} = decodeProcaptchaOutput(token);
+
+				const testVerdict = resolveTestSiteKeyVerdict(dapp, req.logger);
+				if (testVerdict !== null) {
+					return res.json({ status: "ok", verified: testVerdict });
+				}
+
+				const forwarded = await forwardVerifyIfNotIssuer({
+					env,
+					logger: req.logger,
+					path: ClientApiPaths.VerifyAuthenticatedSession,
+					providerUrl,
+					dapp,
+					user,
+					body: parsed,
+					alreadyForwarded: req.headers[VERIFY_FORWARDED_HEADER] !== undefined,
+				});
+				if (forwarded) return res.json(forwarded);
+
+				const tasks = new Tasks(env, req.logger);
+				validateAddress(dapp, false, 42);
+				validateAddress(user, false, 42);
+
+				const clientRecord = await tasks.db.getClientRecord(dapp);
+				if (!clientRecord) {
+					return next(
+						new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
+							context: { code: 400, siteKey: dapp, user },
+							i18n: req.i18n,
+							logger: req.logger,
+						}),
+					);
+				}
+
+				const keyPair = env.keyring.addFromAddress(dapp);
+				verifySignature(dappSignature, timestamp.toString(), keyPair);
+
+				if (!sessionId) {
+					return res.json({
+						status: "API.USER_NOT_VERIFIED_NO_SOLUTION",
+						verified: false,
+					});
+				}
+
+				const outcome =
+					await tasks.frictionlessManager.verifyAuthenticatedSession(
+						sessionId,
+						ip,
+					);
+				res.json(outcome);
+			} catch (err) {
+				req.logger.error(() => ({
+					err,
+					msg: "Error in verifyAuthenticatedSession",
+					data: { body: req.body },
+				}));
+				return next(
+					new ProsopoApiError("API.BAD_REQUEST", {
+						context: { code: 500, siteKey: req.body.dapp, user: req.body.user },
+						i18n: req.i18n,
+						logger: req.logger,
+					}),
+				);
+			}
+		},
+	);
+
 	// Your error handler should always be at the end of your application stack. Apparently it means not only after all
 	// app.use() but also after all your app.get() and app.post() calls.
 	// https://stackoverflow.com/a/62358794/1178971

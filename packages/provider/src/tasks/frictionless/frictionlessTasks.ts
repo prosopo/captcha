@@ -42,6 +42,7 @@ import {
 	buildAllWindowIncrements,
 } from "../../util/usageCounters.js";
 import { CaptchaManager } from "../captchaManager.js";
+import { ipMatchesSession } from "./ipMatch.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { getBotScore } from "../detection/getBotScore.js";
 import { downgradePuzzleIfUnavailable } from "../puzzle/puzzleRenderer.js";
@@ -340,6 +341,120 @@ export class FrictionlessManager extends CaptchaManager {
 		}
 
 		return sessionRecord;
+	}
+
+	/**
+	 * Dedicated issuance path for Web Bot Auth verified requests. The signature
+	 * verification already carried the trust decision; there is no captcha to
+	 * solve, no bot score to compute, no routing to run. The session is minted
+	 * with `captchaType: authenticated`, `agent: true`, `webBotAuthAgent` set to
+	 * the verified Signature-Agent URL, and `ipAddress` frozen for the verify-
+	 * time IP-binding check. Consumed only by `/client/authenticated/verify`.
+	 */
+	async createAuthenticatedSession(
+		token: string,
+		ipAddress: CompositeIpAddress,
+		webBotAuthAgent: string,
+		siteKey: string,
+		userSitekeyIpHash?: string,
+		headers?: RequestHeaders,
+		ipInfo?: IPInfoResponse,
+	): Promise<Session> {
+		const sessionRecord: Session = {
+			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
+			createdAt: new Date(),
+			token,
+			// score / threshold are meaningless for a pre-verified pass; zero
+			// them so downstream analytics never mistake the session for a
+			// scored one.
+			score: 0,
+			threshold: 0,
+			scoreComponents: { baseScore: 0 },
+			ipAddress,
+			captchaType: CaptchaType.authenticated,
+			userSitekeyIpHash,
+			webView: false,
+			iFrame: false,
+			decryptedHeadHash: "",
+			siteKey,
+			agent: true,
+			webBotAuthAgent,
+			...(ipInfo && { ipInfo }),
+			...(headers && { headers }),
+		};
+
+		await this.db.storeSessionRecord(sessionRecord);
+
+		if (this.writeQueue) {
+			const cacheData = sessionRecord as unknown as Record<string, unknown>;
+			const cachePromises: Promise<boolean>[] = [
+				this.writeQueue.cacheSession(sessionRecord.sessionId, cacheData),
+			];
+			if (userSitekeyIpHash) {
+				cachePromises.push(
+					this.writeQueue.cacheSessionByHash(
+						userSitekeyIpHash,
+						sessionRecord.sessionId,
+					),
+				);
+			}
+			await Promise.all(cachePromises).catch(() => {});
+		}
+
+		return sessionRecord;
+	}
+
+	/**
+	 * Verify an authenticated (Web Bot Auth) session. Called from
+	 * `/client/authenticated/verify` after the operator forwards their
+	 * dApp-signed token. Enforces the four properties that make replay
+	 * infeasible:
+	 *   1. session exists and was minted with captchaType=authenticated
+	 *      (so ordinary captcha tokens can't be redeemed here)
+	 *   2. session hasn't been consumed (serverChecked === false)
+	 *   3. operator forwarded the client IP (`ip` is required — silently
+	 *      dropping the check would nullify the whole binding)
+	 *   4. the forwarded IP matches the IP the session was issued to
+	 *
+	 * Marks serverChecked=true on success so subsequent verifies fail loudly.
+	 */
+	async verifyAuthenticatedSession(
+		sessionId: string,
+		ip: string | undefined,
+	): Promise<{ verified: boolean; status: string }> {
+		if (!ip) {
+			return {
+				verified: false,
+				status: "API.AUTHENTICATED_IP_REQUIRED",
+			};
+		}
+		const session = await this.db.getSessionRecordBySessionId(sessionId);
+		if (!session) {
+			return {
+				verified: false,
+				status: "API.USER_NOT_VERIFIED_NO_SOLUTION",
+			};
+		}
+		if (session.captchaType !== CaptchaType.authenticated) {
+			return {
+				verified: false,
+				status: "API.INCORRECT_CAPTCHA_TYPE",
+			};
+		}
+		if (session.serverChecked) {
+			return {
+				verified: false,
+				status: "API.USER_ALREADY_VERIFIED",
+			};
+		}
+		if (!ipMatchesSession(ip, session.ipAddress)) {
+			return {
+				verified: false,
+				status: "API.AUTHENTICATED_IP_MISMATCH",
+			};
+		}
+		await this.db.updateSessionRecord(sessionId, { serverChecked: true });
+		return { verified: true, status: "API.USER_VERIFIED" };
 	}
 
 	async sendImageCaptcha(

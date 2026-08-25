@@ -84,7 +84,10 @@ export default async function (
 					// package (e.g. catcher-demo importing @prosopo/util) dies with
 					// 'Module "node:module" has been externalized for browser
 					// compatibility' before React can mount. Rollup emitted no such
-					// runtime, so this only bites under Vite 8.
+					// runtime, so this only bites under Vite 8. The option is a
+					// Rolldown extension; Vite 8's re-exported Rollup types don't
+					// carry it yet.
+					// @ts-expect-error — Rolldown option, not in Rollup's OutputOptions
 					polyfillRequire: false,
 				},
 			},

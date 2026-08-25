@@ -32,6 +32,7 @@ const userAttributesSchema: SchemaDefinition<UserAttributesRecord> = {
 	countryCode: { type: String, required: false },
 	asn: { type: Number, required: false },
 	os: { type: String, required: false },
+	webBotAuthAgent: { type: String, required: false },
 } satisfies AllKeys<UserAttributesRecord>;
 
 const userIpSchema: SchemaDefinition<UserIpRecord> = {

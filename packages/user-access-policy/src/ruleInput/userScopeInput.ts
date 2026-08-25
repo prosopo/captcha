@@ -22,6 +22,18 @@ import type { UserAttributesRecord, UserIpRecord } from "#policy/ruleRecord.js";
 
 export type UserAttributesInput = UserAttributes & UserAttributesRecord;
 
+// Cloudflare's Web Bot Auth reference implementation compares Signature-Agent
+// values as URL objects, which are case-insensitive on scheme/host but
+// case-sensitive on path. Store the canonical form so runtime matcher can use
+// plain string equality.
+function normaliseSignatureAgentUrl(raw: string): string {
+	const url = new URL(raw);
+	url.hostname = url.hostname.toLowerCase();
+	url.protocol = url.protocol.toLowerCase();
+	if (url.pathname === "/") url.pathname = "";
+	return url.toString().replace(/\/$/, "");
+}
+
 const userAttributesSchema = z.object({
 	// coerce is used for safety, as e.g., incoming userId can be digital
 	userId: z.coerce.string().optional(),
@@ -36,6 +48,15 @@ const userAttributesSchema = z.object({
 	// countryCode: a stale/unknown value just never matches a request rather
 	// than failing the whole rule parse.
 	os: z.coerce.string().optional(),
+	// Web Bot Auth Signature-Agent URL. Normalised at parse time
+	// (lowercase scheme+host, no trailing slash) so the runtime matcher can
+	// use exact string equality against the verified `Signature-Agent`
+	// header value.
+	webBotAuthAgent: z.coerce
+		.string()
+		.url()
+		.transform(normaliseSignatureAgentUrl)
+		.optional(),
 } satisfies AllKeys<UserAttributes>) satisfies ZodType<UserAttributes>;
 
 const userAttributesInput = z

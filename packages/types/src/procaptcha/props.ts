@@ -81,6 +81,11 @@ export type FrictionlessState = {
 	// bot fills it, the value is sent back as `clientMetaData.hp` on
 	// solution submission. Undefined when honeypot is disabled for the site.
 	hp?: string;
+	// Canonical Signature-Agent URL from the /frictionless response when
+	// the request was Web Bot Auth verified. Only present when the response
+	// carried `captchaType: authenticated`; consumed by the badge widget so
+	// the operator can see which agent verified (e.g. "chatgpt.com").
+	agent?: string;
 };
 
 export type ProcaptchaCallbacks = Partial<Callbacks>;

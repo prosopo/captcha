@@ -116,6 +116,7 @@ describe("transformRule", () => {
 		countryCode: "US",
 		asn: 205016,
 		os: "macos",
+		webBotAuthAgent: "https://signatures.openai.com",
 	} satisfies AccessRule;
 
 	it("should transform access rule record into rule", () => {

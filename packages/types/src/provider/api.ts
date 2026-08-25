@@ -90,6 +90,11 @@ export enum ClientApiPaths {
 	GetPuzzleCaptchaChallenge = "/v1/prosopo/provider/client/captcha/puzzle",
 	SubmitPuzzleCaptchaSolution = "/v1/prosopo/provider/client/puzzle/solution",
 	VerifyPuzzleCaptchaSolution = "/v1/prosopo/provider/client/puzzle/verify",
+	// Verify path for Web Bot Auth authenticated sessions. Only accepts tokens
+	// minted with captchaType=authenticated. Requires the operator to forward
+	// the client IP so the session's `ipAddress` binding can be enforced;
+	// a leaked authenticated token cannot be replayed from a different IP.
+	VerifyAuthenticatedSession = "/v1/prosopo/provider/client/authenticated/verify",
 	GetProviderStatus = "/v1/prosopo/provider/client/status",
 	SubmitUserEvents = "/v1/prosopo/provider/client/events",
 	CheckSpamEmail = "/v1/prosopo/provider/client/spam/email",
@@ -183,6 +188,10 @@ export const ProviderDefaultRateLimits = {
 		limit: 15000,
 	},
 	[ClientApiPaths.VerifyImageCaptchaSolutionDapp]: {
+		windowMs: 60000,
+		limit: 15000,
+	},
+	[ClientApiPaths.VerifyAuthenticatedSession]: {
 		windowMs: 60000,
 		limit: 15000,
 	},
@@ -449,7 +458,8 @@ export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 	[ApiParams.captchaType]:
 		| CaptchaType.pow
 		| CaptchaType.image
-		| CaptchaType.puzzle;
+		| CaptchaType.puzzle
+		| CaptchaType.authenticated;
 	[ApiParams.sessionId]?: string;
 	// Encoded honeypot question. NOT serialised by the provider on the wire
 	// (it travels in the `x-prosopo-meta` response header so it doesn't sit
@@ -459,6 +469,10 @@ export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 	[ApiParams.hp]?: string;
 	// Per-session DNS observation URL; undefined when no dns sidecar.
 	dns_url?: string;
+	// Web Bot Auth: canonical Signature-Agent URL of the verified signer.
+	// Only present when captchaType === "authenticated". Rendered by the
+	// widget's badge so the operator can see WHICH agent verified.
+	agent?: string;
 }
 
 export interface PowCaptchaSolutionEscalation {
