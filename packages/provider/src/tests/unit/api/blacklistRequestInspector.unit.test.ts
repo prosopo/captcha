@@ -24,6 +24,7 @@ import {
 	type AccessRule,
 	type AccessRulesStorage,
 	type UserScope,
+	encodeHeaderValueList,
 } from "@prosopo/user-access-policy";
 import type { NextFunction, Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -1231,6 +1232,41 @@ describe("rankCandidateRules — header conditions", () => {
 			"x-secret": "nope",
 		});
 		expect(ranked).toEqual([allowEquals]);
+	});
+
+	// Multi-value allow-list: ONE rule holding every accepted value, because
+	// two single-value notEquals rules would each fire on the other's value and
+	// block everything.
+	const allowAnyApp: AccessRule = {
+		type: AccessPolicyType.Block,
+		headerMatch: "1",
+		headerName: "x-app",
+		headerOperator: "notEqualsAny",
+		headerValue: encodeHeaderValueList(["ios", "android"]),
+	};
+
+	it("multi-value allow-list lets through any of the accepted values", () => {
+		for (const app of ["ios", "android"]) {
+			expect(
+				rankCandidateRules([allowAnyApp], request, undefined, {
+					"x-app": app,
+				}),
+			).toEqual([]);
+		}
+	});
+
+	it("multi-value allow-list blocks a value that is not on the list", () => {
+		expect(
+			rankCandidateRules([allowAnyApp], request, undefined, {
+				"x-app": "desktop",
+			}),
+		).toEqual([allowAnyApp]);
+	});
+
+	it("multi-value allow-list blocks a request missing the header", () => {
+		expect(rankCandidateRules([allowAnyApp], request, undefined, {})).toEqual([
+			allowAnyApp,
+		]);
 	});
 
 	it("does not match a header rule when the request lacks the sentinel", () => {
