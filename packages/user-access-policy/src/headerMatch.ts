@@ -21,12 +21,23 @@
  * is absent), so an allow-list card that says "only let requests with header X
  * through" desugars to `notEquals` / `notContains` Block rules, exactly the way
  * the OS allow-list desugars to Block rules on the complement.
+ *
+ * `notEqualsAny` / `notContainsAny` are the multi-value form of those two: the
+ * rule's `headerValue` holds a list (see `encodeHeaderValueList`) and the rule
+ * blocks unless the request's header matches *one of* the listed values. They
+ * exist because an allow-list over several values of the SAME header cannot be
+ * expressed as several single-value rules — each rule fires independently, so
+ * `notEquals ios` + `notEquals android` blocks both an iOS and an Android
+ * request. One rule holding both values is the only way to get the "any of"
+ * semantics the allow-list needs.
  */
 export const HEADER_OPERATORS = [
 	"equals",
 	"contains",
 	"notEquals",
 	"notContains",
+	"notEqualsAny",
+	"notContainsAny",
 ] as const;
 
 export type HeaderOperator = (typeof HEADER_OPERATORS)[number];
@@ -49,6 +60,46 @@ export const isHeaderOperator = (
  * by `accessRuleHeaderMatches`.
  */
 export const HEADER_RULE_MARKER = "1";
+
+/**
+ * Encode the value list carried by a multi-value operator (`notEqualsAny` /
+ * `notContainsAny`) into the single `headerValue` string an access rule can
+ * store. JSON rather than a delimiter because header values are arbitrary
+ * text — any separator we picked could legitimately occur inside a value.
+ */
+export const encodeHeaderValueList = (values: ReadonlyArray<string>): string =>
+	JSON.stringify(values);
+
+/**
+ * Inverse of {@link encodeHeaderValueList}, tolerant of rules written by hand
+ * (e.g. via the access-policy CLI) that carry a single literal value instead of
+ * an encoded list.
+ *
+ * Returns `undefined` for a value that looks list-encoded but isn't usable — an
+ * empty list, a non-array, non-string members, or malformed JSON. Callers treat
+ * that as a malformed rule and decline to fire it, so a garbled list can't
+ * silently block all traffic.
+ */
+export const decodeHeaderValueList = (value: string): string[] | undefined => {
+	if (!value.trimStart().startsWith("[")) {
+		// Not list-encoded: treat the whole string as a one-value list.
+		return [value];
+	}
+	let parsed: unknown;
+	try {
+		parsed = JSON.parse(value);
+	} catch {
+		return undefined;
+	}
+	if (
+		!Array.isArray(parsed) ||
+		parsed.length === 0 ||
+		!parsed.every((entry): entry is string => typeof entry === "string")
+	) {
+		return undefined;
+	}
+	return parsed;
+};
 
 /**
  * Evaluate a single header condition against a request's headers. Returns
@@ -76,6 +127,23 @@ export const evaluateHeaderCondition = (
 			return actual === undefined || actual !== value;
 		case "notContains":
 			return actual === undefined || !actual.includes(value);
+		case "notEqualsAny": {
+			const values = decodeHeaderValueList(value);
+			if (values === undefined) {
+				return false;
+			}
+			return actual === undefined || !values.includes(actual);
+		}
+		case "notContainsAny": {
+			const values = decodeHeaderValueList(value);
+			if (values === undefined) {
+				return false;
+			}
+			return (
+				actual === undefined ||
+				!values.some((candidate) => actual.includes(candidate))
+			);
+		}
 	}
 };
 

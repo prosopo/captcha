@@ -45,6 +45,8 @@ export {
 	isHeaderOperator,
 	evaluateHeaderCondition,
 	accessRuleHeaderMatches,
+	encodeHeaderValueList,
+	decodeHeaderValueList,
 } from "./headerMatch.js";
 
 export {

@@ -16,13 +16,22 @@ import { describe, expect, it } from "vitest";
 import {
 	type HeaderOperator,
 	accessRuleHeaderMatches,
+	decodeHeaderValueList,
+	encodeHeaderValueList,
 	evaluateHeaderCondition,
 	isHeaderOperator,
 } from "#policy/headerMatch.js";
 
 describe("isHeaderOperator", () => {
-	it("accepts the four known operators", () => {
-		for (const op of ["equals", "contains", "notEquals", "notContains"]) {
+	it("accepts the six known operators", () => {
+		for (const op of [
+			"equals",
+			"contains",
+			"notEquals",
+			"notContains",
+			"notEqualsAny",
+			"notContainsAny",
+		]) {
 			expect(isHeaderOperator(op)).toBe(true);
 		}
 	});
@@ -188,6 +197,152 @@ describe("accessRuleHeaderMatches", () => {
 		expect(
 			accessRuleHeaderMatches(
 				{ headerName: "x-debug", headerOperator: "contains" },
+				headers,
+			),
+		).toBe(true);
+	});
+});
+
+describe("encode/decodeHeaderValueList", () => {
+	it("round-trips a list of values", () => {
+		const values = ["ios", "android", "web"];
+		expect(decodeHeaderValueList(encodeHeaderValueList(values))).toEqual(
+			values,
+		);
+	});
+
+	it("round-trips values containing the characters a delimiter would break on", () => {
+		const values = ["en-GB,en;q=0.9", 'a"b', "c\\d", "[bracketed]"];
+		expect(decodeHeaderValueList(encodeHeaderValueList(values))).toEqual(
+			values,
+		);
+	});
+
+	it("treats a plain (non list-encoded) value as a one-value list", () => {
+		expect(decodeHeaderValueList("ios")).toEqual(["ios"]);
+		expect(decodeHeaderValueList("")).toEqual([""]);
+	});
+
+	it("rejects a list-shaped value that is not a usable list", () => {
+		expect(decodeHeaderValueList("[")).toBeUndefined();
+		expect(decodeHeaderValueList("[not json]")).toBeUndefined();
+		expect(decodeHeaderValueList("[]")).toBeUndefined();
+		expect(decodeHeaderValueList("[1,2]")).toBeUndefined();
+		expect(decodeHeaderValueList('["ok", null]')).toBeUndefined();
+	});
+});
+
+describe("evaluateHeaderCondition — multi-value allow-list operators", () => {
+	const headers: Record<string, string> = {
+		"x-app": "android",
+		"user-agent": "Mozilla/5.0 (Linux; Android 14) Chrome/120",
+	};
+
+	const allowedApps = encodeHeaderValueList(["ios", "android"]);
+
+	it("does not block a request whose header is one of the allowed values", () => {
+		expect(
+			evaluateHeaderCondition("x-app", "notEqualsAny", allowedApps, headers),
+		).toBe(false);
+		expect(
+			evaluateHeaderCondition(
+				"x-app",
+				"notEqualsAny",
+				encodeHeaderValueList(["android"]),
+				headers,
+			),
+		).toBe(false);
+	});
+
+	it("blocks a request whose header matches none of the allowed values", () => {
+		expect(
+			evaluateHeaderCondition(
+				"x-app",
+				"notEqualsAny",
+				encodeHeaderValueList(["ios", "web"]),
+				headers,
+			),
+		).toBe(true);
+	});
+
+	it("blocks a request that omits the header entirely", () => {
+		expect(
+			evaluateHeaderCondition(
+				"x-missing",
+				"notEqualsAny",
+				allowedApps,
+				headers,
+			),
+		).toBe(true);
+		expect(
+			evaluateHeaderCondition(
+				"x-missing",
+				"notContainsAny",
+				allowedApps,
+				headers,
+			),
+		).toBe(true);
+	});
+
+	it("matches a substring of the header for notContainsAny", () => {
+		expect(
+			evaluateHeaderCondition(
+				"user-agent",
+				"notContainsAny",
+				encodeHeaderValueList(["Android", "iPhone"]),
+				headers,
+			),
+		).toBe(false);
+		expect(
+			evaluateHeaderCondition(
+				"user-agent",
+				"notContainsAny",
+				encodeHeaderValueList(["iPhone", "Windows"]),
+				headers,
+			),
+		).toBe(true);
+	});
+
+	it("is exact for notEqualsAny — a substring is not a match", () => {
+		expect(
+			evaluateHeaderCondition(
+				"x-app",
+				"notEqualsAny",
+				encodeHeaderValueList(["droid"]),
+				headers,
+			),
+		).toBe(true);
+	});
+
+	it("never fires on a malformed value list, rather than blocking everything", () => {
+		for (const operator of ["notEqualsAny", "notContainsAny"] as const) {
+			expect(evaluateHeaderCondition("x-app", operator, "[]", headers)).toBe(
+				false,
+			);
+			expect(
+				evaluateHeaderCondition("x-missing", operator, "[bad", headers),
+			).toBe(false);
+		}
+	});
+
+	it("is reachable through accessRuleHeaderMatches", () => {
+		expect(
+			accessRuleHeaderMatches(
+				{
+					headerName: "X-App",
+					headerOperator: "notEqualsAny",
+					headerValue: allowedApps,
+				},
+				headers,
+			),
+		).toBe(false);
+		expect(
+			accessRuleHeaderMatches(
+				{
+					headerName: "X-App",
+					headerOperator: "notEqualsAny",
+					headerValue: encodeHeaderValueList(["ios"]),
+				},
 				headers,
 			),
 		).toBe(true);
