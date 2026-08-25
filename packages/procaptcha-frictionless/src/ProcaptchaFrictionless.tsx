@@ -45,6 +45,8 @@ const ProcaptchaPuzzleLoader = async () =>
 	(await import("@prosopo/procaptcha-puzzle")).ProcaptchaPuzzle;
 const ProcaptchaPowLoader = async () =>
 	(await import("@prosopo/procaptcha-pow")).ProcaptchaPow;
+const ProcaptchaConnectLoader = async () =>
+	(await import("@prosopo/procaptcha-connect")).ProcaptchaConnect;
 
 const renderPlaceholder = (
 	theme: string | undefined,
@@ -190,7 +192,7 @@ export const ProcaptchaFrictionless = ({
 		escalationCoords?: RetryCoords,
 	) => {
 		const onEscalate = (
-			next: CaptchaType.image | CaptchaType.puzzle,
+			next: CaptchaType.image | CaptchaType.puzzle | CaptchaType.connect,
 			newSessionId: string,
 			coords?: RetryCoords,
 		) => {
@@ -242,7 +244,7 @@ export const ProcaptchaFrictionless = ({
 		// Consume any pending retry coords now — the resumed widget owns them
 		// for exactly one auto-fired `manager.start(x, y)`. Cleared so a
 		// subsequent escalation/re-render doesn't accidentally re-inject.
-		// Escalation coords (from a PoW→image/puzzle handoff) take precedence
+		// Escalation coords (from a PoW→image/puzzle/connect handoff) take precedence
 		// over pending retry coords when both are present, because escalation
 		// is the current transition and the pending retry belongs to a prior
 		// widget instance that never got to consume them.
@@ -276,6 +278,20 @@ export const ProcaptchaFrictionless = ({
 			const ProcaptchaPuzzle = await ProcaptchaPuzzleLoader();
 			setComponentToRender(
 				<ProcaptchaPuzzle
+					key={mountKey}
+					config={config}
+					callbacks={callbacks}
+					frictionlessState={frictionlessState}
+					i18n={i18n}
+					autoStart={resumedAutoStart}
+					startCoords={startCoords}
+					onSessionInvalidated={onSessionInvalidated}
+				/>,
+			);
+		} else if (captchaType === CaptchaType.connect) {
+			const ProcaptchaConnect = await ProcaptchaConnectLoader();
+			setComponentToRender(
+				<ProcaptchaConnect
 					key={mountKey}
 					config={config}
 					callbacks={callbacks}

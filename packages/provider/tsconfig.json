@@ -48,6 +48,9 @@
 			"path": "../load-balancer"
 		},
 		{
+			"path": "../connect-assets"
+		},
+		{
 			"path": "../puzzle-assets"
 		},
 		{

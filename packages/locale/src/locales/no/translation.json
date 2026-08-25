@@ -376,7 +376,9 @@
 		"NO_ACCOUNTS_FOUND": "Ingen kontoer funnet",
 		"ACCOUNT_NOT_FOUND": "Konto ikke funnet",
 		"NO_EXTENSION_FOUND": "Ingen tilleggsprogram funnet",
-		"INSECURE_CONTEXT": "Procaptcha krever en sikker (HTTPS) tilkobling"
+		"INSECURE_CONTEXT": "Procaptcha krever en sikker (HTTPS) tilkobling",
+		"CONNECT_INSTRUCTION": "Dra en brikke for å få {{length}} like brikker på rad",
+		"CONNECT_RETRY": "Ikke helt — prøv igjen"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Klarte ikke å kryptere ugyldig adresse",

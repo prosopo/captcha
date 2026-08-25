@@ -48,7 +48,7 @@ import type {
 	DecisionMachineRuntime,
 	DecisionMachineScope,
 } from "../decisionMachine/index.js";
-import type { PuzzleEvent, RequestHeaders } from "./api.js";
+import type { ConnectEvent, PuzzleEvent, RequestHeaders } from "./api.js";
 import type { SimdReadings } from "./detection.js";
 import {
 	type MatchedAccessRule,
@@ -756,6 +756,30 @@ export interface PuzzleCaptchaStored extends StoredCaptcha {
 	puzzleEvents?: PuzzleEvent[];
 }
 
+export interface ConnectCaptchaStored extends StoredCaptcha {
+	challenge: PoWChallengeId;
+	/**
+	 * The laid-out board, serialised one character per cell (`.` for an empty
+	 * cell, base-36 for an icon index). The provider replays the submitted move
+	 * against this rather than comparing it to a stored answer, so any move that
+	 * genuinely completes a line is accepted.
+	 */
+	board: string;
+	boardSize: number;
+	lineLength: number;
+	/** The move the generator laid the board out around, kept for analysis. */
+	solutionSourceIndex: number;
+	solutionTargetIndex: number;
+	/** The move the user actually submitted, once they have submitted one. */
+	submittedSourceIndex?: number;
+	submittedTargetIndex?: number;
+	providerSignature: string;
+	userSignature?: string;
+	userAccount: string;
+	dappAccount: string;
+	connectEvents?: ConnectEvent[];
+}
+
 export interface SolutionRecord extends CaptchaSolution {
 	datasetId: string;
 	datasetContentId: string;
@@ -799,7 +823,11 @@ export type DecisionMachineArtifact = {
 	source: string;
 	name?: string;
 	version?: string;
-	captchaType?: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle;
+	captchaType?:
+		| CaptchaType.pow
+		| CaptchaType.image
+		| CaptchaType.puzzle
+		| CaptchaType.connect;
 	createdAt: Date;
 	updatedAt: Date;
 };

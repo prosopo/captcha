@@ -48,6 +48,11 @@ const MINT_SITES: MintSite[] = [
 		expectedCaptchaType: "CaptchaType.puzzle",
 	},
 	{
+		packageName: "@prosopo/procaptcha-connect",
+		relativePath: "../../../procaptcha-connect/src/services/Manager.ts",
+		expectedCaptchaType: "CaptchaType.connect",
+	},
+	{
 		packageName: "@prosopo/procaptcha",
 		relativePath: "../../../procaptcha/src/modules/Manager.ts",
 		expectedCaptchaType: "CaptchaType.image",

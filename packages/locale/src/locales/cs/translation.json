@@ -376,7 +376,9 @@
 		"NO_ACCOUNTS_FOUND": "Nebyly nalezeny žádné účty",
 		"ACCOUNT_NOT_FOUND": "Účet nenalezen",
 		"NO_EXTENSION_FOUND": "Nenalezeno žádné rozšíření",
-		"INSECURE_CONTEXT": "Procaptcha vyžaduje zabezpečené připojení (HTTPS)"
+		"INSECURE_CONTEXT": "Procaptcha vyžaduje zabezpečené připojení (HTTPS)",
+		"CONNECT_INSTRUCTION": "Přetáhněte dlaždici tak, aby bylo v řadě {{length}} stejných dlaždic",
+		"CONNECT_RETRY": "Skoro — zkuste to znovu"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Nepodařilo se zakódovat neplatnou adresu",

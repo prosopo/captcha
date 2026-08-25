@@ -77,7 +77,9 @@
 		"NO_ACCOUNTS_FOUND": "Aucun compte trouvé",
 		"ACCOUNT_NOT_FOUND": "Compte non trouvé",
 		"NO_EXTENSION_FOUND": "Aucune extension trouvée",
-		"INSECURE_CONTEXT": "Procaptcha nécessite une connexion sécurisée (HTTPS)"
+		"INSECURE_CONTEXT": "Procaptcha nécessite une connexion sécurisée (HTTPS)",
+		"CONNECT_INSTRUCTION": "Faites glisser une tuile pour aligner {{length}} tuiles identiques",
+		"CONNECT_RETRY": "Presque — réessayez"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Échec de l'encodage de l'adresse invalide",

@@ -376,7 +376,9 @@
 		"NO_ACCOUNTS_FOUND": "Không tìm thấy tài khoản",
 		"ACCOUNT_NOT_FOUND": "Không tìm thấy tài khoản",
 		"NO_EXTENSION_FOUND": "Không tìm thấy tiện ích",
-		"INSECURE_CONTEXT": "Procaptcha yêu cầu kết nối an toàn (HTTPS)"
+		"INSECURE_CONTEXT": "Procaptcha yêu cầu kết nối an toàn (HTTPS)",
+		"CONNECT_INSTRUCTION": "Kéo một ô để xếp {{length}} ô giống nhau thành một hàng",
+		"CONNECT_RETRY": "Chưa đúng — hãy thử lại"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Không thể mã hóa địa chỉ không hợp lệ",

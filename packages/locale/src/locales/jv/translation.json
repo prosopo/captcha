@@ -376,7 +376,9 @@
 		"NO_ACCOUNTS_FOUND": "Tidak ada akun ditemukan",
 		"ACCOUNT_NOT_FOUND": "Akun tidak ditemukan",
 		"NO_EXTENSION_FOUND": "Tidak ada ekstensi ditemukan",
-		"INSECURE_CONTEXT": "Procaptcha mbutuhake sambungan sing aman (HTTPS)"
+		"INSECURE_CONTEXT": "Procaptcha mbutuhake sambungan sing aman (HTTPS)",
+		"CONNECT_INSTRUCTION": "Sèrèt ubin kanggo njajarake {{length}} ubin sing padha ing sabaris",
+		"CONNECT_RETRY": "Durung pas — coba manèh"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Gagal mengkodekan alamat yang tidak valid",

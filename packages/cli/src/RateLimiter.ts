@@ -119,6 +119,18 @@ export const getRateLimitConfig = () => {
 			windowMs: process.env.PROSOPO_VERIFY_PUZZLE_CAPTCHA_SOLUTION_WINDOW,
 			limit: process.env.PROSOPO_VERIFY_PUZZLE_CAPTCHA_SOLUTION_LIMIT,
 		},
+		[ClientApiPaths.GetConnectCaptchaChallenge]: {
+			windowMs: process.env.PROSOPO_GET_CONNECT_CAPTCHA_CHALLENGE_WINDOW,
+			limit: process.env.PROSOPO_GET_CONNECT_CAPTCHA_CHALLENGE_LIMIT,
+		},
+		[ClientApiPaths.SubmitConnectCaptchaSolution]: {
+			windowMs: process.env.PROSOPO_SUBMIT_CONNECT_CAPTCHA_SOLUTION_WINDOW,
+			limit: process.env.PROSOPO_SUBMIT_CONNECT_CAPTCHA_SOLUTION_LIMIT,
+		},
+		[ClientApiPaths.VerifyConnectCaptchaSolution]: {
+			windowMs: process.env.PROSOPO_VERIFY_CONNECT_CAPTCHA_SOLUTION_WINDOW,
+			limit: process.env.PROSOPO_VERIFY_CONNECT_CAPTCHA_SOLUTION_LIMIT,
+		},
 		[AdminApiPaths.DnsEvent]: {
 			windowMs: process.env.PROSOPO_DNS_EVENT_WINDOW,
 			limit: process.env.PROSOPO_DNS_EVENT_LIMIT,

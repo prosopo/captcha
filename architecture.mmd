@@ -24,6 +24,8 @@ graph TB
             Frictionless["Frictionless<br/>(procaptcha-frictionless)"]
             ImageCaptcha["Image Captcha<br/>select matching images"]
             PoW["Proof of Work<br/>compute hash puzzle"]
+            PuzzleCaptcha["Puzzle Captcha<br/>drag the piece to the notch"]
+            ConnectCaptcha["Connect Captcha<br/>drag a tile to complete a line"]
         end
     end
 
@@ -117,11 +119,13 @@ graph TB
     FrictionlessEP --> FrictionlessTasks
     FrictionlessTasks --> Redis
     FrictionlessTasks -->|"1. handleAccessPolicy<br/>(captchaType override)"| AccessPolicies
-    FrictionlessTasks -->|"2. handleFrictionlessTrafficFilter<br/>(block → 401, challenge →<br/>dispatch send{Image,Pow,Puzzle})"| TrafficFilter
+    FrictionlessTasks -->|"2. handleFrictionlessTrafficFilter<br/>(block → 401, challenge →<br/>dispatch send{Image,Pow,Puzzle,Connect})"| TrafficFilter
     FrictionlessTasks -->|"3. runDecisionMachine<br/>(score-based routing)"| DecisionMachine
     FrictionlessTasks -->|human detected| Manager
     FrictionlessTasks -->|bot suspected| ImageCaptcha
     FrictionlessTasks -->|bot suspected| PoW
+    FrictionlessTasks -->|bot suspected| PuzzleCaptcha
+    FrictionlessTasks -->|bot suspected| ConnectCaptcha
 
     %% ===== IMAGE CAPTCHA FLOW =====
     Manager -->|fallback: image| ImageCaptcha
@@ -154,8 +158,10 @@ graph TB
     PowTasks -->|"checkForHardBlock +<br/>deferToVerify block"| AccessPolicies
     PowTasks -->|"post-pow routing<br/>(re-evaluate with<br/>behavioural data)"| DecisionMachine
     PowTasks -->|signed token| Manager
-    PowTasks -->|escalate: image/puzzle<br/>+ new sessionId| PoW
+    PowTasks -->|escalate: image/puzzle/connect<br/>+ new sessionId| PoW
     PoW -->|escalation handoff| ImageCaptcha
+    PoW -->|escalation handoff| PuzzleCaptcha
+    PoW -->|escalation handoff| ConnectCaptcha
 
     %% ===== TOKEN TO BACKEND =====
     Manager -->|"ProcaptchaToken<br/>(hex-encoded)"| EndUser

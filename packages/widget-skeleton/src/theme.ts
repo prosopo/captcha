@@ -167,6 +167,19 @@ export const lightTheme = {
 			targetFill: withAlpha(purple[500], 0.1),
 			pieceGradient: `radial-gradient(circle at 40% 40%, ${purple[300]}, ${purple[500]})`,
 		},
+		// Connect board affordances: the recessed well an empty cell reads as,
+		// the ring on a cell that can accept the tile being carried, and the
+		// ring on the tile the user has picked up.
+		connect: {
+			boardBackground: lightSurfaceContainerHigh,
+			cellFill: withAlpha(purple[900], 0.05),
+			cellBorder: withAlpha(purple[900], 0.08),
+			dropRing: withAlpha(purple[500], 0.75),
+			dropFill: withAlpha(purple[500], 0.12),
+			selectedRing: purple[500],
+			solvedRing: "#1f8a4c",
+			solvedFill: withAlpha("#1f8a4c", 0.14),
+		},
 		border: purple[100],
 		error: {
 			main: "#b3261e",
@@ -224,6 +237,16 @@ export const darkTheme = {
 			targetBorder: withAlpha(purple[200], 0.6),
 			targetFill: withAlpha(purple[200], 0.12),
 			pieceGradient: `radial-gradient(circle at 40% 40%, ${purple[200]}, ${purple[400]})`,
+		},
+		connect: {
+			boardBackground: darkSurfaceContainerHigh,
+			cellFill: withAlpha("#ffffff", 0.045),
+			cellBorder: withAlpha("#ffffff", 0.07),
+			dropRing: withAlpha(purple[200], 0.8),
+			dropFill: withAlpha(purple[200], 0.14),
+			selectedRing: purple[200],
+			solvedRing: "#4ade80",
+			solvedFill: withAlpha("#4ade80", 0.16),
 		},
 		border: "#332c50",
 		error: {

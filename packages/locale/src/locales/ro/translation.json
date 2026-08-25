@@ -376,7 +376,9 @@
 		"NO_ACCOUNTS_FOUND": "Niciun cont gasit",
 		"ACCOUNT_NOT_FOUND": "Contul nu a fost gasit",
 		"NO_EXTENSION_FOUND": "Nicio extensie gasita",
-		"INSECURE_CONTEXT": "Procaptcha necesită o conexiune securizată (HTTPS)"
+		"INSECURE_CONTEXT": "Procaptcha necesită o conexiune securizată (HTTPS)",
+		"CONNECT_INSTRUCTION": "Trage o piesă pentru a alinia {{length}} piese identice pe un rând",
+		"CONNECT_RETRY": "Aproape — încearcă din nou"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Eroare la codificarea adresei invalide",

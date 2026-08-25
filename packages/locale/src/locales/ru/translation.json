@@ -376,7 +376,9 @@
 		"NO_ACCOUNTS_FOUND": "Учетные записи не найдены",
 		"ACCOUNT_NOT_FOUND": "Учетная запись не найдена",
 		"NO_EXTENSION_FOUND": "Расширение не найдено",
-		"INSECURE_CONTEXT": "Procaptcha требует безопасного соединения (HTTPS)"
+		"INSECURE_CONTEXT": "Procaptcha требует безопасного соединения (HTTPS)",
+		"CONNECT_INSTRUCTION": "Перетащите плитку, чтобы собрать {{length}} одинаковых плиток в ряд",
+		"CONNECT_RETRY": "Почти — попробуйте ещё раз"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Не удалось закодировать неверный адрес",

@@ -97,6 +97,51 @@ export const PuzzleSettingsSchema = object({
 
 export type IPuzzleSettings = output<typeof PuzzleSettingsSchema>;
 
+// Connect board defaults, mirrored from `packages/connect-assets`'s
+// `DEFAULT_GEOMETRY` / `DEFAULT_BOARD_SETTINGS`. As with the puzzle settings
+// above, the schema layer owns the authoritative bounds and defaults and the
+// generator just receives resolved values from the provider.
+export const connectBoardSizeDefault = 5;
+export const connectLineLengthDefault = 5;
+export const connectIconCountDefault = 4;
+export const connectDecoyCountDefault = 4;
+export const connectNearMissCountDefault = 1;
+
+// Upper bounds are set by legibility, not by the generator. Past 9 cells a
+// side the tiles are too small to tell apart on a phone, and past 6 icons the
+// glyph set runs out of pairwise-distinguishable silhouettes (see
+// `connect-assets/src/glyph.ts`) and starts leaning on colour alone.
+export const connectBoardSizeFieldSchema = number().int().min(4).max(9);
+export const connectLineLengthFieldSchema = number().int().min(3).max(9);
+export const connectIconCountFieldSchema = number().int().min(2).max(6);
+export const connectDecoyCountFieldSchema = number().int().min(0).max(20);
+export const connectNearMissCountFieldSchema = number().int().min(0).max(4);
+
+/**
+ * Per-challenge tunables for the connect captcha. Every field is optional so
+ * operators can override a subset from the portal without restating the
+ * defaults.
+ *
+ * `lineLength <= boardSize` is enforced here rather than left to the
+ * generator: the generator throws on an unsatisfiable geometry, and a config
+ * that only fails at challenge time would take the site's captcha down rather
+ * than being rejected at save time.
+ */
+export const ConnectSettingsSchema = object({
+	boardSize: connectBoardSizeFieldSchema.optional(),
+	lineLength: connectLineLengthFieldSchema.optional(),
+	iconCount: connectIconCountFieldSchema.optional(),
+	decoyCount: connectDecoyCountFieldSchema.optional(),
+	nearMissCount: connectNearMissCountFieldSchema.optional(),
+}).refine(
+	(v) =>
+		(v.lineLength ?? connectLineLengthDefault) <=
+		(v.boardSize ?? connectBoardSizeDefault),
+	{ message: "connect lineLength must be <= boardSize" },
+);
+
+export type IConnectSettings = output<typeof ConnectSettingsSchema>;
+
 // IP Validation Rules
 export enum IPValidationAction {
 	Allow = "allow",
@@ -289,6 +334,9 @@ export const TrafficCategoryPolicySchema = object({
 	// the nested object are themselves optional, so a category can
 	// override, say, just `decoyCount` without restating the rest.
 	puzzle: PuzzleSettingsSchema.optional(),
+	// Same, for the connect board — a category can be handed a bigger board
+	// or a longer line without restating the rest.
+	connect: ConnectSettingsSchema.optional(),
 });
 
 export type ITrafficCategoryPolicy = output<typeof TrafficCategoryPolicySchema>;
@@ -411,6 +459,9 @@ export const ClientSettingsSchema = object({
 	// the asset package's defaults. Traffic-filter category policies may
 	// further override any of these on a per-request basis.
 	puzzle: PuzzleSettingsSchema.optional(),
+	// Site-wide connect board settings. Fields not set here fall back to the
+	// asset package's defaults.
+	connect: ConnectSettingsSchema.optional(),
 	ipValidationRules: IPValidationRulesSchema.optional(),
 	// The trailing `.optional()` that used to sit after `.default(false)` made
 	// the default unreachable, so this parsed to `undefined` rather than

@@ -37,6 +37,7 @@
 		"@prosopo/logger": "2.0.7",
 		"@prosopo/native-ja4": "0.0.3",
 		"@prosopo/native-merkle": "0.0.3",
+		"@prosopo/connect-assets": "0.1.0",
 		"@prosopo/puzzle-assets": "0.1.3",
 		"@prosopo/redis-client": "1.0.33",
 		"@prosopo/types": "5.2.6",

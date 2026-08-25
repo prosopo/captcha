@@ -25,6 +25,9 @@
 			"path": "../procaptcha-pow"
 		},
 		{
+			"path": "../procaptcha-connect"
+		},
+		{
 			"path": "../procaptcha-puzzle"
 		},
 		{

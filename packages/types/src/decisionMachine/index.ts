@@ -18,7 +18,11 @@ import {
 	CaptchaType,
 	DecisionMachineCaptchaTypeSchema,
 } from "../client/captchaType/captchaType.js";
-import type { PuzzleEvent, RequestHeaders } from "../provider/api.js";
+import type {
+	ConnectEvent,
+	PuzzleEvent,
+	RequestHeaders,
+} from "../provider/api.js";
 import type { ScoreComponents } from "../provider/database.js";
 import type { SimdReadings } from "../provider/detection.js";
 import type { FrictionlessReason } from "../provider/reasons.js";
@@ -80,7 +84,11 @@ export type DecisionMachineInput = {
 	dappAccount: string;
 	captchaResult: "passed" | "failed";
 	headers: Record<string, string | string[] | undefined>;
-	captchaType?: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle;
+	captchaType?:
+		| CaptchaType.pow
+		| CaptchaType.image
+		| CaptchaType.puzzle
+		| CaptchaType.connect;
 	behavioralDataPacked?: DecisionMachineBehavioralDataPacked;
 	deviceCapability?: string;
 	countryCode?: string;
@@ -112,8 +120,12 @@ export type DecisionMachineInput = {
 	coords?: [number, number][][];
 	// Puzzle-only: per-event trail of the drag from origin to target,
 	// captured client-side and persisted on the puzzle captcha record.
-	// Always undefined on pow / image inputs.
+	// Always undefined on pow / image / connect inputs.
 	puzzleEvents?: PuzzleEvent[];
+	// Connect-only: per-event trail of the drag of a tile onto the cell that
+	// completes the line, in normalised board coordinates. Always undefined on
+	// pow / image / puzzle inputs.
+	connectEvents?: ConnectEvent[];
 	// Raw per-connection TCP-handshake signals persisted on the Session
 	// at frictionless entry (see rawTlsSignalsMiddleware). Surfaced here
 	// so verify-time decide rules can gate on the raw TCP fingerprint
@@ -141,7 +153,8 @@ export type DecisionMachineOutput = {
 export type DecisionMachineCaptchaType =
 	| CaptchaType.pow
 	| CaptchaType.image
-	| CaptchaType.puzzle;
+	| CaptchaType.puzzle
+	| CaptchaType.connect;
 
 // This is the API configuration type (used for uploads/API calls)
 // The database storage type is DecisionMachineArtifact in provider/database.ts
@@ -202,6 +215,7 @@ export type CounterCaptchaType =
 	| CaptchaType.pow
 	| CaptchaType.image
 	| CaptchaType.puzzle
+	| CaptchaType.connect
 	| typeof COUNTER_CAPTCHA_ANY;
 
 export interface CounterSpec {
@@ -217,6 +231,7 @@ export const CounterSpecSchema = z.object({
 		z.literal(CaptchaType.pow),
 		z.literal(CaptchaType.image),
 		z.literal(CaptchaType.puzzle),
+		z.literal(CaptchaType.connect),
 		z.literal(COUNTER_CAPTCHA_ANY),
 	]),
 	dimension: z.enum(COUNTER_DIMENSIONS),
@@ -231,7 +246,11 @@ export const encodeCounterKey = (
 	`cnt:${dappAccount}:${spec.kind}:${spec.captchaType}:${spec.dimension}:${value}:${spec.window}`;
 
 export interface RoutingMachineBaseline {
-	captchaType: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle;
+	captchaType:
+		| CaptchaType.pow
+		| CaptchaType.image
+		| CaptchaType.puzzle
+		| CaptchaType.connect;
 	solvedImagesCount?: number;
 	powDifficulty?: number;
 }
@@ -328,7 +347,11 @@ export interface RoutingMachineInput extends RoutingMachineInputBase {
 }
 
 export interface RoutingMachineOutput {
-	captchaType: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle;
+	captchaType:
+		| CaptchaType.pow
+		| CaptchaType.image
+		| CaptchaType.puzzle
+		| CaptchaType.connect;
 	solvedImagesCount?: number;
 	powDifficulty?: number;
 	// Optional selection reason the machine can attach to explain an escalation
@@ -342,6 +365,7 @@ export const RoutingMachineOutputSchema = z.object({
 		z.literal(CaptchaType.pow),
 		z.literal(CaptchaType.image),
 		z.literal(CaptchaType.puzzle),
+		z.literal(CaptchaType.connect),
 	]),
 	solvedImagesCount: z.number().int().positive().optional(),
 	powDifficulty: z.number().positive().optional(),

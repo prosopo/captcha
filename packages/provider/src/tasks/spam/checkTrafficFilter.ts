@@ -14,6 +14,7 @@
 
 import {
 	CaptchaType,
+	type IConnectSettings,
 	type IPInfoResponse,
 	type IPInfoResult,
 	type IPuzzleSettings,
@@ -299,11 +300,13 @@ export const checkTrafficFilter = (
 
 // Precedence for combining multiple `challenge` matches on the same
 // request. `block` outranks any challenge (short-circuited earlier in
-// `checkTrafficFilter`); among captcha types, image outranks puzzle
-// outranks pow — a stricter check is monotonically preferred so the
-// operator's hardest configured policy wins.
+// `checkTrafficFilter`); among captcha types, image outranks connect
+// outranks puzzle outranks pow — a stricter check is monotonically preferred
+// so the operator's hardest configured policy wins. Same ordering as
+// `CAPTCHA_TYPE_HARSHNESS` in blacklistRequestInspector.
 const CAPTCHA_TYPE_RANK: Record<CaptchaType, number> = {
-	[CaptchaType.image]: 4,
+	[CaptchaType.image]: 5,
+	[CaptchaType.connect]: 4,
 	[CaptchaType.puzzle]: 3,
 	[CaptchaType.pow]: 2,
 	[CaptchaType.frictionless]: 1,
@@ -323,6 +326,9 @@ export type ResolvedChallengePolicy = {
 	// object means "no policy specified any puzzle setting"; undefined
 	// means no challenge matches at all (already short-circuited above).
 	puzzleSettings?: IPuzzleSettings;
+	// Merged connect board overrides, same per-field composition rule as
+	// `puzzleSettings` above.
+	connectSettings?: IConnectSettings;
 	// Categories whose policies contributed to the resolved combination.
 	sourceCategories: TrafficCategory[];
 };
@@ -356,6 +362,7 @@ export const resolveChallengePolicy = (
 	let solvedImagesCount: number | undefined;
 	let puzzleTolerance: number | undefined;
 	let puzzleSettings: IPuzzleSettings | undefined;
+	let connectSettings: IConnectSettings | undefined;
 	for (const m of challenges) {
 		if (m.policy.powDifficulty !== undefined) {
 			powDifficulty =
@@ -382,6 +389,9 @@ export const resolveChallengePolicy = (
 		if (m.policy.puzzle) {
 			puzzleSettings = { ...(puzzleSettings ?? {}), ...m.policy.puzzle };
 		}
+		if (m.policy.connect) {
+			connectSettings = { ...(connectSettings ?? {}), ...m.policy.connect };
+		}
 	}
 
 	return {
@@ -390,6 +400,7 @@ export const resolveChallengePolicy = (
 		solvedImagesCount,
 		puzzleTolerance,
 		puzzleSettings,
+		connectSettings,
 		sourceCategories: challenges.map((m) => m.category),
 	};
 };

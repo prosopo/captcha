@@ -35,6 +35,13 @@ export const INPUT_LIMITS = {
 	LONG_TEXT: 65536,
 	/** Tokens, signatures, base64 payloads, behavioural/simd readings. */
 	TOKEN: 131072,
+	/**
+	 * Largest row-major cell index a connect board move may name. The biggest
+	 * configurable board is 9x9, so 80 is the real ceiling; the bound here just
+	 * keeps a hostile client from submitting an absurd integer. The provider
+	 * range-checks the move against the actual stored board either way.
+	 */
+	BOARD_INDEX: 4095,
 } as const;
 
 // Anchored negated character classes: a string is valid only if it contains

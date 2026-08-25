@@ -23,10 +23,12 @@ import express, {
 } from "express";
 import assignDetectorBundle from "./captcha/assignDetectorBundle.js";
 import checkSpamEmail from "./captcha/checkSpamEmail.js";
+import getConnectCaptchaChallenge from "./captcha/getConnectCaptchaChallenge.js";
 import getFrictionlessCaptchaChallenge from "./captcha/getFrictionlessCaptchaChallenge.js";
 import getImageCaptchaChallenge from "./captcha/getImageCaptchaChallenge.js";
 import getPoWCaptchaChallenge from "./captcha/getPoWCaptchaChallenge.js";
 import getPuzzleCaptchaChallenge from "./captcha/getPuzzleCaptchaChallenge.js";
+import submitConnectCaptchaSolution from "./captcha/submitConnectCaptchaSolution.js";
 import submitImageCaptchaSolution from "./captcha/submitImageCaptchaSolution.js";
 import submitPoWCaptchaSolution from "./captcha/submitPoWCaptchaSolution.js";
 import submitPuzzleCaptchaSolution from "./captcha/submitPuzzleCaptchaSolution.js";
@@ -137,6 +139,22 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	router.post(
 		ClientApiPaths.SubmitPuzzleCaptchaSolution,
 		asyncHandler(submitPuzzleCaptchaSolution(env)),
+	);
+
+	/**
+	 * Supplies a Connect board to a Dapp User
+	 */
+	router.post(
+		ClientApiPaths.GetConnectCaptchaChallenge,
+		asyncHandler(getConnectCaptchaChallenge(env, userAccessRulesStorage)),
+	);
+
+	/**
+	 * Verifies a user's Connect solution as being approved or not
+	 */
+	router.post(
+		ClientApiPaths.SubmitConnectCaptchaSolution,
+		asyncHandler(submitConnectCaptchaSolution(env)),
 	);
 
 	/**

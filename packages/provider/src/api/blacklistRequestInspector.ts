@@ -212,10 +212,15 @@ const ruleSpecificity = (
 // Per-captcha-type harshness ranks for Restrict rules. Used as the
 // equal-specificity tiebreaker (issue #3713). Gaps of 10 between tiers
 // leave room for `solvedImagesCount` to break ties within the image
-// tier without crossing into the puzzle tier — a 12-round image still
-// ranks above puzzle/pow, which is the intended ordering.
+// tier without crossing into the tier below — a 12-round image still
+// ranks above connect/puzzle/pow, which is the intended ordering.
+//
+// Connect sits between image and puzzle: like the puzzle it is one drag, but
+// the user has to read the whole board to find the cell first, so it is the
+// more demanding of the two.
 const CAPTCHA_TYPE_HARSHNESS: Record<CaptchaType, number> = {
-	[CaptchaType.image]: 30,
+	[CaptchaType.image]: 40,
+	[CaptchaType.connect]: 30,
 	[CaptchaType.puzzle]: 20,
 	[CaptchaType.pow]: 10,
 	// Frictionless isn't a routing target for Restrict rules but include it

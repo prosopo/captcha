@@ -19,6 +19,7 @@ import {
 	CaptchaType,
 	type ClientContextEntropy,
 	type CompositeIpAddress,
+	type ConnectCaptchaStored,
 	ContextType,
 	type DecisionMachineArtifact,
 	DecisionMachineKind,
@@ -155,6 +156,8 @@ export const CompositeIpAddressRecordSchemaObj = {
 export type PoWCaptchaRecord = mongoose.Document & PoWCaptchaStored;
 
 export type PuzzleCaptchaRecord = mongoose.Document & PuzzleCaptchaStored;
+
+export type ConnectCaptchaRecord = mongoose.Document & ConnectCaptchaStored;
 
 export type UserCommitmentRecord = mongoose.Document & UserCommitment;
 
@@ -468,6 +471,140 @@ PuzzleCaptchaRecordSchema.index(
 );
 // See `PoWCaptchaRecordSchema.blocked_partial`.
 PuzzleCaptchaRecordSchema.index(
+	{ blocked: 1 },
+	{
+		name: "blocked_partial",
+		partialFilterExpression: { blocked: true },
+	},
+);
+
+export const ConnectCaptchaRecordSchema = new Schema<ConnectCaptchaRecord>({
+	challenge: { type: String, required: true },
+	dappAccount: { type: String, required: true },
+	userAccount: { type: String, required: true },
+	requestedAtTimestamp: { type: Date, required: true },
+	submittedAtTimestamp: { type: Date, required: false },
+	verifiedAtTimestamp: { type: Date, required: false },
+	failedAtTimestamp: { type: Date, required: false },
+	lastUpdatedTimestamp: { type: Date, required: false },
+	result: {
+		status: { type: String, enum: CaptchaStatus, required: true },
+		reason: {
+			type: String,
+			enum: TranslationKeysSchema.options,
+			required: false,
+		},
+		error: { type: String, required: false },
+	},
+	// The laid-out board, one character per cell. The submitted move is
+	// replayed against this at verify time — see `ConnectCaptchaStored`.
+	board: { type: String, required: true },
+	boardSize: { type: Number, required: true },
+	lineLength: { type: Number, required: true },
+	solutionSourceIndex: { type: Number, required: true },
+	solutionTargetIndex: { type: Number, required: true },
+	submittedSourceIndex: { type: Number, required: false },
+	submittedTargetIndex: { type: Number, required: false },
+	connectEvents: {
+		type: [
+			new Schema<{ x: number; y: number; t: number }>(
+				{
+					x: { type: Number, required: true },
+					y: { type: Number, required: true },
+					t: { type: Number, required: true },
+				},
+				{ _id: false },
+			),
+		],
+		required: false,
+	},
+	ipAddress: CompositeIpAddressRecordSchemaObj,
+	providedIp: {
+		type: new Schema(CompositeIpAddressRecordSchemaObj, { _id: false }),
+		required: false,
+	},
+	metadata: {
+		type: new Schema(
+			{
+				email: { type: String, required: false },
+				emailNormalised: { type: String, required: false },
+			},
+			{ _id: false },
+		),
+		required: false,
+	},
+	clientMetaData: {
+		type: new Schema({ hp: { type: String, required: false } }, { _id: false }),
+		required: false,
+	},
+	headers: { type: Object, required: true },
+	ja4: { type: String, required: true },
+	userSignature: { type: String, required: false },
+	userSubmitted: { type: Boolean, required: true },
+	serverChecked: { type: Boolean, required: true },
+	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
+	// See `StoredCaptcha.pendingStage`.
+	pendingStage: { type: Boolean, required: false },
+	// Mirrors `Session.blocked`. See `StoredCaptcha.blocked`.
+	blocked: { type: Boolean, required: false },
+	// Full ipinfo payload. Replaces the flat `vpn`, `countryCode`,
+	// `geolocation` and other per-flag fields — consumers narrow on
+	// `ipInfo.isValid` and read whichever sub-field they need.
+	ipInfo: { type: Object, required: false },
+	parsedUserAgentInfo: { type: Object, required: false },
+	sessionId: {
+		type: String,
+		required: false,
+	},
+	coords: { type: [[[Number]]], required: false },
+	// Current behavioral data storage format (packed)
+	deviceCapability: { type: String, required: false },
+	behavioralDataPacked: {
+		type: {
+			c1: { type: [Schema.Types.Mixed], required: true },
+			c2: { type: [Schema.Types.Mixed], required: true },
+			c3: { type: [Schema.Types.Mixed], required: true },
+			d: { type: String, required: true },
+		},
+		required: false,
+	},
+	providerSignature: { type: String, required: true },
+});
+
+// Set an index on the challenge field, ascending
+ConnectCaptchaRecordSchema.index({ challenge: 1 });
+ConnectCaptchaRecordSchema.index({ lastUpdatedTimestamp: 1 });
+ConnectCaptchaRecordSchema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
+ConnectCaptchaRecordSchema.index({ "ipAddress.lower": 1 });
+ConnectCaptchaRecordSchema.index({ "ipAddress.upper": 1 });
+ConnectCaptchaRecordSchema.index({ "result.reason": 1 });
+ConnectCaptchaRecordSchema.index({ "ipInfo.countryCode": 1 });
+ConnectCaptchaRecordSchema.index({ "ipInfo.isVPN": 1 });
+ConnectCaptchaRecordSchema.index({ ipInfo: 1 });
+ConnectCaptchaRecordSchema.index({ parsedUserAgentInfo: 1 });
+// Compound `{pendingStage:1, _id:1}` partial — see PoWCaptchaRecordSchema's
+// pendingStage_partial for rationale.
+ConnectCaptchaRecordSchema.index(
+	{ pendingStage: 1, _id: 1 },
+	{
+		name: "pendingStage_partial",
+		partialFilterExpression: { pendingStage: true },
+	},
+);
+// See `PoWCaptchaRecordSchema.spamEmailCount_partial` — same purpose here
+// for connect captchas.
+ConnectCaptchaRecordSchema.index(
+	{ dappAccount: 1, "metadata.emailNormalised": 1, serverChecked: 1 },
+	{
+		name: "spamEmailCount_partial",
+		partialFilterExpression: {
+			"metadata.emailNormalised": { $exists: true },
+			serverChecked: true,
+		},
+	},
+);
+// See `PoWCaptchaRecordSchema.blocked_partial`.
+ConnectCaptchaRecordSchema.index(
 	{ blocked: 1 },
 	{
 		name: "blocked_partial",
@@ -932,7 +1069,12 @@ export const DecisionMachineArtifactRecordSchema =
 		version: { type: String, required: false },
 		captchaType: {
 			type: String,
-			enum: [CaptchaType.pow, CaptchaType.image, CaptchaType.puzzle],
+			enum: [
+				CaptchaType.pow,
+				CaptchaType.image,
+				CaptchaType.puzzle,
+				CaptchaType.connect,
+			],
 			required: false,
 		},
 		createdAt: { type: Date, required: true },
@@ -1204,6 +1346,41 @@ export interface IProviderDatabase extends IDatabase {
 	updatePuzzleCaptchaRecord(
 		challenge: PoWChallengeId,
 		updates: Partial<PuzzleCaptchaRecord>,
+	): Promise<void>;
+
+	storeConnectCaptchaRecord(
+		challenge: PoWChallengeId,
+		components: PoWChallengeComponents,
+		board: string,
+		boardSize: number,
+		lineLength: number,
+		solutionSourceIndex: number,
+		solutionTargetIndex: number,
+		providerSignature: string,
+		ipAddress: CompositeIpAddress,
+		headers: RequestHeaders,
+		ja4: string,
+		sessionId?: string,
+		ipInfo?: IPInfoResponse,
+	): Promise<void>;
+
+	getConnectCaptchaRecordByChallenge(
+		challenge: string,
+	): Promise<ConnectCaptchaRecord | null>;
+
+	updateConnectCaptchaRecordResult(
+		challenge: PoWChallengeId,
+		result: CaptchaResult,
+		serverChecked: boolean,
+		userSubmitted: boolean,
+		userSignature?: string,
+		coords?: [number, number][][],
+		lastUpdatedTimestamp?: Date,
+	): Promise<void>;
+
+	updateConnectCaptchaRecord(
+		challenge: PoWChallengeId,
+		updates: Partial<ConnectCaptchaRecord>,
 	): Promise<void>;
 
 	updateClientRecords(clientRecords: ClientRecord[]): Promise<void>;

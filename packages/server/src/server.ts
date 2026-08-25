@@ -60,6 +60,7 @@ export class ProsopoServer {
 	 * Verify a token with the issuing provider. Dispatches to the correct
 	 * verify endpoint by inspecting the token's declared captchaType:
 	 *  - puzzle  → submitPuzzleCaptchaVerify
+	 *  - connect → submitConnectCaptchaVerify
 	 *  - pow     → submitPowCaptchaVerify
 	 *  - image   → verifyDappUser
 	 * When captchaType is absent (a legacy token minted before the field was
@@ -106,6 +107,20 @@ export class ProsopoServer {
 				return this.notRecentResponse();
 			}
 			return await providerApi.submitPuzzleCaptchaVerify(
+				token,
+				signatureHex,
+				user,
+				ip,
+				email,
+			);
+		}
+
+		if (captchaType === CaptchaType.connect) {
+			const connectTimeout = this.config.timeouts.connect.cachedTimeout;
+			if (!this.isRecent(timestamp, connectTimeout, "Connect")) {
+				return this.notRecentResponse();
+			}
+			return await providerApi.submitConnectCaptchaVerify(
 				token,
 				signatureHex,
 				user,

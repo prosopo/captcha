@@ -296,7 +296,8 @@ export default (
 				const cachedCaptchaType = dedup.captchaType as
 					| CaptchaType.image
 					| CaptchaType.pow
-					| CaptchaType.puzzle;
+					| CaptchaType.puzzle
+					| CaptchaType.connect;
 				const dedupRouted = normalizedIp
 					? await tasks.frictionlessManager.applyRoutingMachine(
 							{
@@ -477,7 +478,8 @@ export default (
 						[ApiParams.captchaType]: dedup.captchaType as
 							| CaptchaType.image
 							| CaptchaType.pow
-							| CaptchaType.puzzle,
+							| CaptchaType.puzzle
+							| CaptchaType.connect,
 						[ApiParams.sessionId]: dedup.sessionId,
 						[ApiParams.status]: "ok",
 						dns_url: buildDnsEventUrl(dedup.sessionId),
@@ -682,7 +684,7 @@ export default (
 				headers: flatHeaders,
 				mode: sessionMode,
 				// Promote the resolved pool bundle onto the session so later hops
-				// (SIMD attach, PoW/puzzle/image solution submit) can resolve the
+				// (SIMD attach, PoW/puzzle/connect/image solution submit) can resolve the
 				// same keypair + inner cipher to decrypt their payloads.
 				...(bundleId && { bundleId }),
 				...(decodedSimdReadings && { simdReadings: decodedSimdReadings }),

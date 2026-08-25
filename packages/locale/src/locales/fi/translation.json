@@ -411,7 +411,9 @@
 		"NO_ACCOUNTS_FOUND": "Ei tilejä löytynyt",
 		"ACCOUNT_NOT_FOUND": "Tiliä ei löytynyt",
 		"NO_EXTENSION_FOUND": "Laajennusta ei löytynyt",
-		"INSECURE_CONTEXT": "Procaptcha vaatii suojatun (HTTPS) yhteyden"
+		"INSECURE_CONTEXT": "Procaptcha vaatii suojatun (HTTPS) yhteyden",
+		"CONNECT_INSTRUCTION": "Vedä laattaa niin, että rivissä on {{length}} samanlaista laattaa",
+		"CONNECT_RETRY": "Ei aivan — yritä uudelleen"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Epäonnistui koodata virheellinen osoite",

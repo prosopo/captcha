@@ -42,6 +42,7 @@ import {
 	buildAllWindowIncrements,
 } from "../../util/usageCounters.js";
 import { CaptchaManager } from "../captchaManager.js";
+import { downgradeConnectIfUnavailable } from "../connect/connectGenerator.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { getBotScore } from "../detection/getBotScore.js";
 import { downgradePuzzleIfUnavailable } from "../puzzle/puzzleRenderer.js";
@@ -62,6 +63,8 @@ export interface ImageCaptchaSessionParams extends Session {}
 export interface PowCaptchaSessionParams extends Session {}
 
 export interface PuzzleCaptchaSessionParams extends Session {}
+
+export interface ConnectCaptchaSessionParams extends Session {}
 
 export class FrictionlessManager extends CaptchaManager {
 	private sessionParams?: Omit<
@@ -360,11 +363,21 @@ export class FrictionlessManager extends CaptchaManager {
 		return this.sendCaptcha(CaptchaType.puzzle, params);
 	}
 
-	// Shared body for the three concrete `send*Captcha` helpers. Each helper is
-	// kept as its own thin wrapper so call-sites read clearly, but session
+	async sendConnectCaptcha(
+		params?: Partial<ConnectCaptchaSessionParams>,
+	): Promise<GetFrictionlessCaptchaResponse> {
+		return this.sendCaptcha(CaptchaType.connect, params);
+	}
+
+	// Shared body for the concrete `send*Captcha` helpers. Each helper is kept
+	// as its own thin wrapper so call-sites read clearly, but session
 	// validation and the createSession invocation only live in one place.
 	private async sendCaptcha(
-		captchaType: CaptchaType.image | CaptchaType.pow | CaptchaType.puzzle,
+		captchaType:
+			| CaptchaType.image
+			| CaptchaType.pow
+			| CaptchaType.puzzle
+			| CaptchaType.connect,
 		params?: Partial<Session>,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const effectiveParams = { ...this.sessionParams, ...params };
@@ -406,13 +419,14 @@ export class FrictionlessManager extends CaptchaManager {
 				)
 			: baseline;
 
-		// A puzzle session this provider cannot render would strand the user:
-		// /captcha/puzzle answers with GetPuzzleCaptchaResponse and nothing
-		// else, so it cannot substitute another type at serve time, and the
-		// puzzle widget cannot render one either. Downgrade here, before the
-		// session is written, so every later hop sees a consistent type.
-		const finalCaptchaType = downgradePuzzleIfUnavailable(
-			routed.captchaType,
+		// A puzzle or connect session this provider cannot render would strand
+		// the user: `/captcha/puzzle` answers with GetPuzzleCaptchaResponse and
+		// nothing else (same for `/captcha/connect`), so neither can substitute
+		// another type at serve time, and neither widget can render one either.
+		// Downgrade here, before the session is written, so every later hop
+		// sees a consistent type.
+		const finalCaptchaType = downgradeConnectIfUnavailable(
+			downgradePuzzleIfUnavailable(routed.captchaType, this.logger),
 			this.logger,
 		);
 		const finalSolvedImagesCount =

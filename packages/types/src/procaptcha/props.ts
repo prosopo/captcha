@@ -27,18 +27,18 @@ import type { Account, Callbacks } from "./manager.js";
 
 /**
  * Surface used by procaptcha-pow to hand off a verified-but-not-done user to
- * the frictionless wrapper, which then mounts the chosen image/puzzle widget
+ * the frictionless wrapper, which then mounts the chosen interactive widget
  * in place. Internal to the procaptcha-frictionless → procaptcha-pow flow —
  * dapps do not see this.
  *
  * `coords` are the trusted checkbox click position captured by the PoW widget
- * on its own checkbox tick. Forwarded so the escalated image/puzzle widget
- * can seed the same (x, y) into its salt — otherwise the escalation path
- * would silently record `coords[0] = [[0, 0]]` and drop the entry-point
- * telemetry the direct image/puzzle path preserves.
+ * on its own checkbox tick. Forwarded so the escalated widget can seed the
+ * same (x, y) into its salt — otherwise the escalation path would silently
+ * record `coords[0] = [[0, 0]]` and drop the entry-point telemetry the direct
+ * image/puzzle/connect path preserves.
  */
 export type ProcaptchaEscalationHandler = (
-	captchaType: CaptchaType.image | CaptchaType.puzzle,
+	captchaType: CaptchaType.image | CaptchaType.puzzle | CaptchaType.connect,
 	sessionId: string,
 	coords?: { x: number; y: number },
 ) => void;

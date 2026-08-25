@@ -16,6 +16,7 @@ import type { Logger } from "@prosopo/logger";
 import {
 	CaptchaType,
 	type GetFrictionlessCaptchaResponse,
+	type IConnectSettings,
 	type IPInfoResponse,
 	type IPuzzleSettings,
 	type ITrafficFilter,
@@ -44,6 +45,7 @@ export type RequestTimeTrafficVerdict =
 			// as the top of the override chain (asset default → client
 			// setting → this).
 			puzzleSettings?: IPuzzleSettings;
+			connectSettings?: IConnectSettings;
 			sourceCategories: ResolvedChallengePolicy["sourceCategories"];
 	  };
 
@@ -95,6 +97,7 @@ export const applyTrafficFilterAtRequestTime = (
 		solvedImagesCount: resolved.solvedImagesCount,
 		puzzleTolerance: resolved.puzzleTolerance,
 		puzzleSettings: resolved.puzzleSettings,
+		connectSettings: resolved.connectSettings,
 		sourceCategories: resolved.sourceCategories,
 	};
 };

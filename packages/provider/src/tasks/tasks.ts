@@ -25,6 +25,7 @@ import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { UsageCounters } from "../util/usageCounters.js";
 import { ClientTaskManager } from "./client/clientTasks.js";
+import { ConnectCaptchaManager } from "./connectCaptcha/connectTasks.js";
 import { DatasetManager } from "./dataset/datasetTasks.js";
 import { DecisionMachineRunner } from "./decisionMachine/decisionMachineRunner.js";
 import { FrictionlessManager } from "./frictionless/frictionlessTasks.js";
@@ -50,6 +51,7 @@ export class Tasks {
 	pair: KeyringPair;
 	powCaptchaManager: PowCaptchaManager;
 	puzzleCaptchaManager: PuzzleCaptchaManager;
+	connectCaptchaManager: ConnectCaptchaManager;
 	datasetManager: DatasetManager;
 	imgCaptchaManager: ImgCaptchaManager;
 	clientTaskManager: ClientTaskManager;
@@ -102,6 +104,13 @@ export class Tasks {
 			this.usageCounters,
 		);
 		this.puzzleCaptchaManager = new PuzzleCaptchaManager(
+			this.db,
+			this.pair,
+			this.config,
+			this.logger,
+			this.usageCounters,
+		);
+		this.connectCaptchaManager = new ConnectCaptchaManager(
 			this.db,
 			this.pair,
 			this.config,
@@ -226,6 +235,7 @@ export class Tasks {
 		this.logger = logger;
 		this.powCaptchaManager.logger = logger;
 		this.puzzleCaptchaManager.logger = logger;
+		this.connectCaptchaManager.logger = logger;
 		this.datasetManager.logger = logger;
 		this.imgCaptchaManager.logger = logger;
 		this.clientTaskManager.logger = logger;

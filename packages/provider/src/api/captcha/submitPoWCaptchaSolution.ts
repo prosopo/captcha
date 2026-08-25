@@ -24,6 +24,7 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import { flatten, getIPAddress } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../express.js";
+import { downgradeConnectIfUnavailable } from "../../tasks/connect/connectGenerator.js";
 import { downgradePuzzleIfUnavailable } from "../../tasks/puzzle/puzzleRenderer.js";
 import { Tasks } from "../../tasks/tasks.js";
 import { derivePlatform } from "../../utils/devicePlatform.js";
@@ -263,7 +264,11 @@ export const buildEscalation = async (
 ): Promise<PowCaptchaSolutionEscalation | undefined> => {
 	if (!result.verified || !result.routingOutput) return undefined;
 	const routedType = result.routingOutput.captchaType;
-	if (routedType !== CaptchaType.image && routedType !== CaptchaType.puzzle) {
+	if (
+		routedType !== CaptchaType.image &&
+		routedType !== CaptchaType.puzzle &&
+		routedType !== CaptchaType.connect
+	) {
 		return undefined;
 	}
 
@@ -276,16 +281,19 @@ export const buildEscalation = async (
 	if (!originSession) return undefined;
 
 	const routed = result.routingOutput as {
-		captchaType: CaptchaType.image | CaptchaType.puzzle;
+		captchaType: CaptchaType.image | CaptchaType.puzzle | CaptchaType.connect;
 		solvedImagesCount?: number;
 		powDifficulty?: number;
 		reason?: string;
 	};
 
 	// Second place a session's captchaType is decided (the other is
-	// sendCaptcha). Same reasoning: escalating into a puzzle this provider
-	// cannot render would leave the widget with a session it can never satisfy.
-	const escalatedType = downgradePuzzleIfUnavailable(routed.captchaType);
+	// sendCaptcha). Same reasoning: escalating into a puzzle or connect board
+	// this provider cannot render would leave the widget with a session it can
+	// never satisfy.
+	const escalatedType = downgradeConnectIfUnavailable(
+		downgradePuzzleIfUnavailable(routed.captchaType),
+	);
 
 	// Prefer the routing machine's own selection reason (e.g. an invalid
 	// fingerprint proof) for the escalated captcha record; fall back to the
@@ -320,8 +328,9 @@ export const buildEscalation = async (
 		originSession.entropyCryptoFingerprint,
 		originSession.entropyWallClockOffsetMs,
 		originSession.entropyMathRandomFirst,
-		// Carry the detector pool bundle forward so the escalated image/puzzle
-		// solve can decrypt the (same-origin) behavioural payload.
+		// Carry the detector pool bundle forward so the escalated
+		// image/puzzle/connect solve can decrypt the (same-origin) behavioural
+		// payload.
 		originSession.bundleId,
 		originSession.currentUrl,
 		perConnectionSignals?.tcpToChelloUs,

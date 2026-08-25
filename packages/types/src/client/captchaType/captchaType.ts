@@ -19,15 +19,18 @@ enum CaptchaType {
 	pow = "pow",
 	frictionless = "frictionless",
 	puzzle = "puzzle",
+	connect = "connect",
 }
 
 const CaptchaTypeSchema = z.nativeEnum(CaptchaType);
 
-// Decision machines only work with pow and image captcha types (not frictionless)
+// Decision machines route to solvable captcha types only — `frictionless` is
+// the wrapper that runs the routing machine, never one of its outcomes.
 const DecisionMachineCaptchaTypeSchema = z.union([
 	z.literal(CaptchaType.pow),
 	z.literal(CaptchaType.image),
 	z.literal(CaptchaType.puzzle),
+	z.literal(CaptchaType.connect),
 ]);
 
 export { CaptchaType, CaptchaTypeSchema, DecisionMachineCaptchaTypeSchema };

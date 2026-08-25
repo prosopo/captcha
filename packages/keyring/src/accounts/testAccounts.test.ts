@@ -31,6 +31,7 @@ describe("getDefaultSiteKeys", SLOW, () => {
 			CaptchaType.pow,
 			CaptchaType.frictionless,
 			CaptchaType.puzzle,
+			CaptchaType.connect,
 		]);
 	});
 
@@ -61,8 +62,11 @@ describe("getDefaultSiteKeys", SLOW, () => {
 		const first = getDefaultSiteKeys();
 		const second = getDefaultSiteKeys();
 		expect(first).not.toBe(second);
+		// Length taken from the call itself rather than hard-coded, so adding
+		// a captcha type doesn't fail an assertion that is about aliasing.
+		const count = first.length;
 		first.pop();
-		expect(second).toHaveLength(4);
+		expect(second).toHaveLength(count);
 	});
 });
 

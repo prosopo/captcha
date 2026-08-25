@@ -17,6 +17,7 @@ import {
 	ApiParams,
 	type CaptchaResponseBody,
 	type CaptchaType,
+	type GetConnectCaptchaResponse,
 	type GetFrictionlessCaptchaResponse,
 	type GetPowCaptchaResponse,
 	type GetPuzzleCaptchaResponse,
@@ -24,6 +25,11 @@ import {
 	type PoWChallengeId,
 	type VerificationResponse,
 } from "@prosopo/types";
+import {
+	generateConnectBoard,
+	renderConnectTiles,
+	resolveConnectSettings,
+} from "../../tasks/connect/connectGenerator.js";
 import { renderPuzzleImages } from "../../tasks/puzzle/puzzleRenderer.js";
 
 // Maintenance mode dummies. The matching submit/verify endpoints already
@@ -45,8 +51,8 @@ const buildChallenge = (user: string, dapp: string): PoWChallengeId =>
 // verify handler already synthesises when the provider call times out.
 export const MAINTENANCE_VERIFY_SCORE = 0;
 
-// Verify-side maintenance dummy, shared by the image / PoW / puzzle verify
-// routes. Mirrors what `getVerificationResponse` returns in normal operation
+// Verify-side maintenance dummy, shared by the image / PoW / puzzle / connect
+// verify routes. Mirrors what `getVerificationResponse` returns in normal operation
 // as closely as is possible without a DB:
 //
 //   - `status` is the localised "User verified" string, not a bare "ok". A real
@@ -69,7 +75,11 @@ export const buildMaintenanceVerificationResponse = (
 });
 
 export const buildFrictionlessMaintenanceResponse = (
-	captchaType: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle,
+	captchaType:
+		| CaptchaType.pow
+		| CaptchaType.image
+		| CaptchaType.puzzle
+		| CaptchaType.connect,
 	host: string | undefined,
 ): GetFrictionlessCaptchaResponse => ({
 	[ApiParams.captchaType]: captchaType,
@@ -126,6 +136,35 @@ export const buildPuzzleMaintenanceResponse = async (
 		[ApiParams.pieceSize]: images.pieceSize,
 		[ApiParams.originX]: 60,
 		[ApiParams.originY]: 100,
+		[ApiParams.timestamp]: timestamp.toString(),
+		[ApiParams.signature]: {
+			[ApiParams.provider]: { [ApiParams.challenge]: "" },
+		},
+	};
+};
+
+// Same rationale as the puzzle dummy above: the widget has nothing to render
+// without real tiles, generation is in-process and needs no database, and
+// /submit/connect doesn't validate in maintenance mode so any move resolves.
+export const buildConnectMaintenanceResponse = async (
+	user: string,
+	dapp: string,
+): Promise<GetConnectCaptchaResponse> => {
+	const timestamp = Date.now();
+	const settings = resolveConnectSettings();
+	const layout = generateConnectBoard(settings);
+	const rendered = await renderConnectTiles(
+		layout.board,
+		settings.geometry,
+		layout.iconCount,
+	);
+	return {
+		[ApiParams.status]: "ok",
+		[ApiParams.challenge]: buildChallenge(user, dapp),
+		[ApiParams.boardSize]: layout.boardSize,
+		[ApiParams.lineLength]: layout.lineLength,
+		[ApiParams.tileSize]: rendered.tileSize,
+		[ApiParams.tiles]: rendered.tiles,
 		[ApiParams.timestamp]: timestamp.toString(),
 		[ApiParams.signature]: {
 			[ApiParams.provider]: { [ApiParams.challenge]: "" },

@@ -26,10 +26,13 @@ import {
 	type CaptchaType,
 	ClientApiPaths,
 	type ClientMetaData,
+	type ConnectCaptchaSolutionResponse,
 	type DecisionMachineKind,
 	type DecisionMachineLanguage,
 	type DecisionMachineRuntime,
 	type DecisionMachineScope,
+	type GetConnectCaptchaChallengeRequestBodyType,
+	type GetConnectCaptchaResponse,
 	type GetFrictionlessCaptchaChallengeRequestBodyOutput,
 	type GetFrictionlessCaptchaResponse,
 	type GetPowCaptchaChallengeRequestBodyType,
@@ -52,9 +55,11 @@ import {
 	RemoveSitekeyBody,
 	RemoveSitekeysBody,
 	type RemoveSitekeysBodyTypeOutput,
+	type ServerConnectCaptchaVerifyRequestBodyType,
 	type ServerPowCaptchaVerifyRequestBodyType,
 	type ServerPuzzleCaptchaVerifyRequestBodyType,
 	type StoredEvents,
+	SubmitConnectCaptchaSolutionBody,
 	SubmitPowCaptchaSolutionBody,
 	SubmitPuzzleCaptchaSolutionBody,
 	type Tier,
@@ -366,6 +371,93 @@ export default class ProviderApi
 			body[ApiParams.email] = email;
 		}
 		return this.post(ClientApiPaths.VerifyPuzzleCaptchaSolution, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": user,
+			},
+		});
+	}
+
+	public getConnectCaptchaChallenge(
+		user: string,
+		dapp: string,
+		sessionId?: string,
+		simdReadings?: string,
+	): Promise<GetConnectCaptchaResponse> {
+		const body: GetConnectCaptchaChallengeRequestBodyType = {
+			[ApiParams.user]: user.toString(),
+			[ApiParams.dapp]: dapp.toString(),
+			...(sessionId && { [ApiParams.sessionId]: sessionId }),
+			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
+		};
+		return this.dedupedPost<
+			GetConnectCaptchaResponse,
+			GetConnectCaptchaChallengeRequestBodyType
+		>(ClientApiPaths.GetConnectCaptchaChallenge, sessionId, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": user,
+			},
+		});
+	}
+
+	public submitConnectCaptchaSolution(
+		challenge: GetConnectCaptchaResponse,
+		userAccount: string,
+		dappAccount: string,
+		sourceIndex: number,
+		targetIndex: number,
+		connectEvents: Array<{ x: number; y: number; t: number }>,
+		userTimestampSignature: string,
+		behavioralData?: string,
+		salt?: string,
+		simdReadings?: string,
+		clientMetaData?: ClientMetaData,
+	): Promise<ConnectCaptchaSolutionResponse> {
+		const body = SubmitConnectCaptchaSolutionBody.parse({
+			[ApiParams.challenge]: challenge.challenge,
+			[ApiParams.timestamp]: challenge.timestamp,
+			[ApiParams.user]: userAccount.toString(),
+			[ApiParams.dapp]: dappAccount.toString(),
+			[ApiParams.sourceIndex]: sourceIndex,
+			[ApiParams.targetIndex]: targetIndex,
+			[ApiParams.connectEvents]: connectEvents,
+			[ApiParams.signature]: {
+				[ApiParams.provider]:
+					challenge[ApiParams.signature][ApiParams.provider],
+				[ApiParams.user]: {
+					[ApiParams.timestamp]: userTimestampSignature,
+				},
+			},
+			...(behavioralData && { [ApiParams.behavioralData]: behavioralData }),
+			...(salt && { [ApiParams.salt]: salt }),
+			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
+			...(clientMetaData && { [ApiParams.clientMetaData]: clientMetaData }),
+		});
+		return this.post(ClientApiPaths.SubmitConnectCaptchaSolution, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": userAccount,
+			},
+		});
+	}
+
+	public submitConnectCaptchaVerify(
+		token: string,
+		signatureHex: string,
+		user: string,
+		ip?: string,
+		email?: string,
+	): Promise<VerificationResponse> {
+		const body: ServerConnectCaptchaVerifyRequestBodyType = {
+			[ApiParams.token]: token,
+			[ApiParams.dappSignature]: signatureHex,
+			[ApiParams.ip]: ip,
+		};
+		if (email) {
+			body[ApiParams.email] = email;
+		}
+		return this.post(ClientApiPaths.VerifyConnectCaptchaSolution, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": user,

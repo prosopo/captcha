@@ -1,0 +1,76 @@
+{
+	"name": "@prosopo/procaptcha-connect",
+	"version": "0.1.0",
+	"author": "PROSOPO LIMITED <info@prosopo.io>",
+	"license": "Apache-2.0",
+	"main": "dist/index.js",
+	"type": "module",
+	"sideEffects": false,
+	"engines": {
+		"node": "^24",
+		"npm": "^11"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
+		}
+	},
+	"types": "dist/index.d.ts",
+	"source": "./src/index.ts",
+	"scripts": {
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
+		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
+		"build:cross-env": "vite build --config vite.esm.config.ts",
+		"build:tsc": "tsc --build --verbose",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"typecheck": "tsc --project tsconfig.types.json",
+		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
+		"test:watch": "NODE_ENV=${NODE_ENV:-test}; npx vitest --config ./vite.test.config.ts",
+		"test:coverage": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --coverage --config ./vite.test.config.ts"
+	},
+	"browserslist": ["> 0.5%, last 2 versions, not dead"],
+	"dependencies": {
+		"@polkadot/util": "13.5.7",
+		"@prosopo/api": "4.0.14",
+		"@prosopo/common": "3.1.51",
+		"@prosopo/locale": "3.3.1",
+		"@prosopo/procaptcha-common": "2.11.34",
+		"@prosopo/types": "5.2.6",
+		"@prosopo/util": "3.3.7",
+		"@prosopo/util-crypto": "13.5.30",
+		"@prosopo/widget-skeleton": "2.8.6",
+		"react": "19.2.8"
+	},
+	"devDependencies": {
+		"@emotion/react": "11.14.0",
+		"@emotion/styled": "11.14.1",
+		"@prosopo/config": "3.3.12",
+		"@types/node": "22.5.5",
+		"@vitest/coverage-v8": "4.1.10",
+		"concurrently": "9.0.1",
+		"del-cli": "6.0.0",
+		"jsdom": "26.1.0",
+		"npm-run-all": "4.1.5",
+		"react-dom": "19.2.8",
+		"tslib": "2.7.0",
+		"tsx": "4.20.3",
+		"typescript": "5.6.2",
+		"vite": "8.1.5",
+		"vitest": "4.1.10"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "packages/procaptcha-connect"
+	},
+	"bugs": {
+		"url": "https://github.com/prosopo/captcha/issues"
+	},
+	"homepage": "https://github.com/prosopo/captcha#readme",
+	"description": "Connect-the-line captcha widget",
+	"publishConfig": {
+		"registry": "https://registry.npmjs.org"
+	}
+}

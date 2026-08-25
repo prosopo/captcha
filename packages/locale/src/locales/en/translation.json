@@ -12,7 +12,9 @@
 		"NO_ACCOUNTS_FOUND": "No accounts found",
 		"ACCOUNT_NOT_FOUND": "Account not found",
 		"NO_EXTENSION_FOUND": "No extension found",
-		"INSECURE_CONTEXT": "Procaptcha requires a secure (HTTPS) connection"
+		"INSECURE_CONTEXT": "Procaptcha requires a secure (HTTPS) connection",
+		"CONNECT_INSTRUCTION": "Drag a tile to line up {{length}} identical tiles in a row",
+		"CONNECT_RETRY": "Not quite — try again"
 	},
 	"GENERAL": {
 		"JSON_LOAD_FAILED": "Failed to load JSON file",

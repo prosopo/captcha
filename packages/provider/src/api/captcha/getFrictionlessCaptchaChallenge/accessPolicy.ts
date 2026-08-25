@@ -125,7 +125,7 @@ export const handleAccessPolicy = async (
 	}
 
 	// Defensive: re-evaluate autoBan after the access-policy bump so the
-	// non-block branches below can't dispatch to image/pow/puzzle when
+	// non-block branches below can't dispatch to image/pow/puzzle/connect when
 	// the bumped score now meets the threshold. The autoBan check added
 	// to runDecisionMachine (#2738) doesn't cover this path because
 	// handleAccessPolicy short-circuits before runDecisionMachine runs.
@@ -217,6 +217,25 @@ export const handleAccessPolicy = async (
 			handled: true,
 			response: res.json(
 				await tasks.frictionlessManager.sendPuzzleCaptcha(
+					captchaTypeBaseParams,
+				),
+			),
+		};
+	}
+
+	if (userAccessPolicy.captchaType === CaptchaType.connect) {
+		logger.info(() => ({
+			msg: "Frictionless decision",
+			data: {
+				decision: "user_access_policy",
+				captchaType: CaptchaType.connect,
+			},
+		}));
+		attachHoneypot(res, clientRecord);
+		return {
+			handled: true,
+			response: res.json(
+				await tasks.frictionlessManager.sendConnectCaptcha(
 					captchaTypeBaseParams,
 				),
 			),

@@ -376,7 +376,9 @@
 		"NO_ACCOUNTS_FOUND": "No accounts found",
 		"ACCOUNT_NOT_FOUND": "Account not found",
 		"NO_EXTENSION_FOUND": "No extension found",
-		"INSECURE_CONTEXT": "Procaptcha потребує безпечного з'єднання (HTTPS)"
+		"INSECURE_CONTEXT": "Procaptcha потребує безпечного з'єднання (HTTPS)",
+		"CONNECT_INSTRUCTION": "Перетягніть плитку, щоб зібрати {{length}} однакових плиток у ряд",
+		"CONNECT_RETRY": "Майже — спробуйте ще раз"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Failed to encode invalid address",

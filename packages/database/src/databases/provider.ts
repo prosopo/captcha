@@ -28,6 +28,7 @@ import {
 	CaptchaStatus,
 	CaptchaType,
 	type CompositeIpAddress,
+	type ConnectCaptchaStored,
 	type ContextType,
 	type Dataset,
 	type DatasetBase,
@@ -65,6 +66,8 @@ import {
 	ClientContextEntropyRecordSchema,
 	type ClientRecord,
 	ClientRecordSchema,
+	type ConnectCaptchaRecord,
+	ConnectCaptchaRecordSchema,
 	DatasetRecordSchema,
 	DecisionMachineArtifactRecordSchema,
 	type IProviderDatabase,
@@ -112,6 +115,7 @@ enum TableNames {
 	scheduler = "scheduler",
 	powcaptcha = "powcaptcha",
 	puzzlecaptcha = "puzzlecaptcha",
+	connectcaptcha = "connectcaptcha",
 	client = "client",
 	session = "session",
 	detector = "detector",
@@ -135,6 +139,11 @@ const PROVIDER_TABLES = [
 		collectionName: TableNames.puzzlecaptcha,
 		modelName: "PuzzleCaptcha",
 		schema: PuzzleCaptchaRecordSchema,
+	},
+	{
+		collectionName: TableNames.connectcaptcha,
+		modelName: "ConnectCaptcha",
+		schema: ConnectCaptchaRecordSchema,
 	},
 	{
 		collectionName: TableNames.dataset,
@@ -1365,6 +1374,307 @@ export class ProviderDatabase
 			() => this.getPuzzleCaptchaRecordByChallenge(challenge),
 			(ts) =>
 				this.tables.puzzlecaptcha
+					.updateOne(
+						{ challenge, lastUpdatedTimestamp: { $lte: ts } },
+						{
+							$set: { storedAtTimestamp: ts },
+							$unset: { pendingStage: 1 },
+						},
+					)
+					.then(() => {}),
+		);
+	}
+
+	async storeConnectCaptchaRecord(
+		challenge: PoWChallengeId,
+		components: PoWChallengeComponents,
+		board: string,
+		boardSize: number,
+		lineLength: number,
+		solutionSourceIndex: number,
+		solutionTargetIndex: number,
+		providerSignature: string,
+		ipAddress: CompositeIpAddress,
+		headers: RequestHeaders,
+		ja4: string,
+		sessionId?: string,
+		ipInfo?: IPInfoResponse,
+	): Promise<void> {
+		const tables = this.getTables();
+
+		const connectCaptchaRecord: ConnectCaptchaStored = {
+			challenge,
+			userAccount: components.userAccount,
+			dappAccount: components.dappAccount,
+			requestedAtTimestamp: new Date(components.requestedAtTimestamp),
+			ipAddress,
+			headers,
+			ja4,
+			result: { status: CaptchaStatus.pending },
+			userSubmitted: false,
+			serverChecked: false,
+			board,
+			boardSize,
+			lineLength,
+			solutionSourceIndex,
+			solutionTargetIndex,
+			providerSignature,
+			lastUpdatedTimestamp: new Date(),
+			pendingStage: true,
+			sessionId,
+			ipInfo,
+		};
+
+		try {
+			await tables.connectcaptcha.create(connectCaptchaRecord);
+			this.logger.info(() => ({
+				data: {
+					challenge,
+					countryCode: ipInfo?.isValid ? ipInfo.countryCode : undefined,
+				},
+				msg: "ConnectCaptcha record added successfully",
+			}));
+			this.centralStreamer?.streamConnectRecord(
+				connectCaptchaRecord as ConnectCaptchaRecord,
+				(ts) =>
+					this.tables.connectcaptcha
+						.updateOne(
+							{ challenge, lastUpdatedTimestamp: { $lte: ts } },
+							{
+								$set: { storedAtTimestamp: ts },
+								$unset: { pendingStage: 1 },
+							},
+						)
+						.then(() => {}),
+			);
+		} catch (error) {
+			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
+				context: {
+					error,
+					challenge,
+					ipInfo,
+				},
+				logger: this.logger,
+			});
+			this.logger.error(() => ({
+				err: error,
+				msg: "Failed to add ConnectCaptcha record",
+			}));
+			throw err;
+		}
+	}
+
+	/**
+	 * @description Retrieves a Connect Captcha record by its challenge string.
+	 * @param {string} challenge The challenge string to search for.
+	 * @returns {Promise<ConnectCaptchaRecord | null>} A promise that resolves with the found record or null if not found.
+	 */
+	async getConnectCaptchaRecordByChallenge(
+		challenge: string,
+	): Promise<ConnectCaptchaRecord | null> {
+		if (!this.tables) {
+			throw new ProsopoDBError("DATABASE.DATABASE_UNDEFINED", {
+				context: {
+					failedFuncName: this.getConnectCaptchaRecordByChallenge.name,
+				},
+				logger: this.logger,
+			});
+		}
+
+		try {
+			const filter: {
+				[key in keyof Pick<ConnectCaptchaRecord, "challenge">]: string;
+			} = { challenge };
+			const record: ConnectCaptchaRecord | null | undefined =
+				await this.tables.connectcaptcha
+					.findOne(filter, {
+						challenge: 1,
+						userAccount: 1,
+						dappAccount: 1,
+						requestedAtTimestamp: 1,
+						// submittedAtTimestamp gates the submit → verify
+						// recency check in serverVerifyConnectCaptchaSolution.
+						// Missing it here silently trips the "too old" path
+						// even on freshly-solved boards because the code
+						// treats a missing field as Number.POSITIVE_INFINITY.
+						submittedAtTimestamp: 1,
+						ipAddress: 1,
+						headers: 1,
+						ja4: 1,
+						result: 1,
+						board: 1,
+						boardSize: 1,
+						lineLength: 1,
+						solutionSourceIndex: 1,
+						solutionTargetIndex: 1,
+						submittedSourceIndex: 1,
+						submittedTargetIndex: 1,
+						connectEvents: 1,
+						sessionId: 1,
+						ipInfo: 1,
+						deviceCapability: 1,
+						behavioralDataPacked: 1,
+						serverChecked: 1,
+						userSubmitted: 1,
+						coords: 1,
+					} as { [key in keyof Partial<ConnectCaptchaRecord>]: 1 })
+					.lean<ConnectCaptchaRecord>();
+			if (record) {
+				this.logger.info(() => ({
+					data: { challenge },
+					msg: "ConnectCaptcha record retrieved successfully",
+				}));
+				return record;
+			}
+			this.logger.info(() => ({
+				data: { challenge },
+				msg: "No ConnectCaptcha record found",
+			}));
+			return null;
+		} catch (error) {
+			const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
+				context: { error, challenge },
+				logger: this.logger,
+			});
+			this.logger.error(() => ({
+				err: err,
+				msg: "Failed to retrieve ConnectCaptcha record",
+			}));
+			throw err;
+		}
+	}
+
+	/**
+	 * @description Updates a Connect Captcha record result in the database.
+	 * @param {string} challenge The challenge string of the captcha to be updated.
+	 * @param result
+	 * @param serverChecked
+	 * @param userSubmitted
+	 * @param userSignature
+	 * @param coords
+	 * @param lastUpdatedTimestamp
+	 * @returns {Promise<void>} A promise that resolves when the record is updated.
+	 */
+	async updateConnectCaptchaRecordResult(
+		challenge: PoWChallengeId,
+		result: CaptchaResult,
+		serverChecked = false,
+		userSubmitted = false,
+		userSignature?: string,
+		coords?: [number, number][][],
+		lastUpdatedTimestamp?: Date,
+	): Promise<void> {
+		const tables = this.getTables();
+		const timestamp = lastUpdatedTimestamp ?? new Date();
+		const isDisapproved = result.status === CaptchaStatus.disapproved;
+		// Defence-in-depth: validate coords before write.
+		assertCoordsSafe(coords, "coords");
+		// submittedAtTimestamp / failedAtTimestamp are direct writes rather
+		// than `$ifNull` pipeline exprs, for the same reason as the puzzle
+		// path: connect refuses re-submission (single-use challenge), so both
+		// fields are only ever written by the one submit that lands, and the
+		// pipeline-`$ifNull` variant silently drops them on the wire — which
+		// then trips the `submitToVerifyMs > timeout` disapproval branch in
+		// `serverVerifyConnectCaptchaSolution` on every solve.
+		const setStage: Record<string, unknown> = {
+			result,
+			serverChecked,
+			userSubmitted,
+			userSignature,
+			lastUpdatedTimestamp: timestamp,
+			pendingStage: true,
+			// See the matching comment on `updatePowCaptchaRecordResult` —
+			// mirrors the block classification onto the connect record so
+			// every captcha collection can be queried the same way.
+			blocked: isBlockingCaptchaResult(CaptchaType.connect, result),
+			...(coords && { coords }),
+			...(userSubmitted && { submittedAtTimestamp: timestamp }),
+			...(isDisapproved && { failedAtTimestamp: timestamp }),
+		};
+		try {
+			const updateResult = await tables.connectcaptcha.updateOne(
+				{ challenge },
+				{ $set: setStage },
+			);
+			if (updateResult.matchedCount === 0) {
+				const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
+					context: {
+						challenge,
+						...setStage,
+					},
+					logger: this.logger,
+				});
+				this.logger.info(() => ({
+					err: err,
+					msg: "No ConnectCaptcha record found to update",
+				}));
+				throw err;
+			}
+			this.logger.info(() => ({
+				data: {
+					challenge,
+					...setStage,
+				},
+				msg: "ConnectCaptcha record updated successfully",
+			}));
+			this.centralStreamer?.streamConnectUpdate(
+				() => this.getConnectCaptchaRecordByChallenge(challenge),
+				(ts) =>
+					this.tables.connectcaptcha
+						.updateOne(
+							{ challenge, lastUpdatedTimestamp: { $lte: ts } },
+							{
+								$set: { storedAtTimestamp: ts },
+								$unset: { pendingStage: 1 },
+							},
+						)
+						.then(() => {}),
+			);
+		} catch (error) {
+			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
+				context: {
+					error,
+					challenge,
+					...setStage,
+				},
+				logger: this.logger,
+			});
+			this.logger.error(() => ({
+				err: err,
+				msg: "Failed to update ConnectCaptcha record",
+			}));
+			throw err;
+		}
+	}
+
+	async updateConnectCaptchaRecord(
+		challenge: PoWChallengeId,
+		updates: Partial<ConnectCaptchaRecord>,
+	): Promise<void> {
+		const tables = this.getTables();
+		const timestamp = new Date();
+		// verifiedAtTimestamp / submittedAtTimestamp / failedAtTimestamp are
+		// direct writes, not `$ifNull` pipeline exprs — see the matching
+		// note on `updateConnectCaptchaRecordResult`. Connect challenges are
+		// single-use so each stamp only ever gets one write in its lifetime.
+		const baseSet: Record<string, unknown> = {
+			...updates,
+			pendingStage: true,
+			...(updates.serverChecked === true && {
+				verifiedAtTimestamp: timestamp,
+			}),
+			...(updates.userSubmitted === true && {
+				submittedAtTimestamp: timestamp,
+			}),
+			...(updates.result?.status === CaptchaStatus.disapproved && {
+				failedAtTimestamp: timestamp,
+			}),
+		};
+		await tables.connectcaptcha.updateOne({ challenge }, { $set: baseSet });
+		this.centralStreamer?.streamConnectUpdate(
+			() => this.getConnectCaptchaRecordByChallenge(challenge),
+			(ts) =>
+				this.tables.connectcaptcha
 					.updateOne(
 						{ challenge, lastUpdatedTimestamp: { $lte: ts } },
 						{

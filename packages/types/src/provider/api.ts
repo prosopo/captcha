@@ -90,6 +90,9 @@ export enum ClientApiPaths {
 	GetPuzzleCaptchaChallenge = "/v1/prosopo/provider/client/captcha/puzzle",
 	SubmitPuzzleCaptchaSolution = "/v1/prosopo/provider/client/puzzle/solution",
 	VerifyPuzzleCaptchaSolution = "/v1/prosopo/provider/client/puzzle/verify",
+	GetConnectCaptchaChallenge = "/v1/prosopo/provider/client/captcha/connect",
+	SubmitConnectCaptchaSolution = "/v1/prosopo/provider/client/connect/solution",
+	VerifyConnectCaptchaSolution = "/v1/prosopo/provider/client/connect/verify",
 	GetProviderStatus = "/v1/prosopo/provider/client/status",
 	SubmitUserEvents = "/v1/prosopo/provider/client/events",
 	CheckSpamEmail = "/v1/prosopo/provider/client/spam/email",
@@ -133,6 +136,12 @@ export type TGetPuzzleCaptchaChallengeURL =
 
 export type TSubmitPuzzleCaptchaSolutionURL =
 	`${string}${ClientApiPaths.SubmitPuzzleCaptchaSolution}`;
+
+export type TGetConnectCaptchaChallengeURL =
+	`${string}${ClientApiPaths.GetConnectCaptchaChallenge}`;
+
+export type TSubmitConnectCaptchaSolutionURL =
+	`${string}${ClientApiPaths.SubmitConnectCaptchaSolution}`;
 
 export enum AdminApiPaths {
 	SiteKeyRegister = "/v1/prosopo/provider/admin/sitekey/register",
@@ -179,6 +188,15 @@ export const ProviderDefaultRateLimits = {
 		limit: 300,
 	},
 	[ClientApiPaths.VerifyPuzzleCaptchaSolution]: {
+		windowMs: 60000,
+		limit: 15000,
+	},
+	[ClientApiPaths.GetConnectCaptchaChallenge]: { windowMs: 60000, limit: 300 },
+	[ClientApiPaths.SubmitConnectCaptchaSolution]: {
+		windowMs: 60000,
+		limit: 300,
+	},
+	[ClientApiPaths.VerifyConnectCaptchaSolution]: {
 		windowMs: 60000,
 		limit: 15000,
 	},
@@ -445,11 +463,54 @@ export interface PuzzleCaptchaSolutionResponse extends ApiResponse {
 	[ApiParams.error]?: ApiJsonError;
 }
 
+/** One occupied square of a connect board. Gaps are simply absent. */
+export interface ConnectTile {
+	/** Row-major index into a `boardSize * boardSize` grid. */
+	[ApiParams.index]: number;
+	/** The tile's imagery, as a data URI. */
+	[ApiParams.image]: string;
+}
+
+/**
+ * The connect challenge ships the board itself, because it has to — the user
+ * cannot line up five identical tiles without seeing them.
+ *
+ * That makes it structurally different from the slider puzzle, whose answer is
+ * withheld from the client. A connect board is solvable client-side by anything
+ * that can group the tiles by appearance, and the format cannot avoid that. What
+ * it does not ship is the *icon identity* of each tile: tiles are rendered
+ * per-cell with independent rotation, scale and hue jitter, so two tiles of the
+ * same icon are never byte-identical and grouping them needs real image
+ * comparison rather than a hash. The defensive weight sits on the drag telemetry
+ * and the behavioural payload submitted alongside the move, exactly as it does
+ * for the puzzle drag.
+ */
+export interface GetConnectCaptchaResponse extends ApiResponse {
+	[ApiParams.challenge]: PoWChallengeId;
+	/** Cells per side. The board is always square. */
+	[ApiParams.boardSize]: number;
+	/** How many identical tiles in a line the user has to make. */
+	[ApiParams.lineLength]: number;
+	/** Rendered tile edge in px, before the widget scales it to the cell. */
+	[ApiParams.tileSize]: number;
+	[ApiParams.tiles]: ConnectTile[];
+	[ApiParams.timestamp]: string;
+	[ApiParams.signature]: {
+		[ApiParams.provider]: ChallengeSignature;
+	};
+}
+
+export interface ConnectCaptchaSolutionResponse extends ApiResponse {
+	[ApiParams.verified]: boolean;
+	[ApiParams.error]?: ApiJsonError;
+}
+
 export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 	[ApiParams.captchaType]:
 		| CaptchaType.pow
 		| CaptchaType.image
-		| CaptchaType.puzzle;
+		| CaptchaType.puzzle
+		| CaptchaType.connect;
 	[ApiParams.sessionId]?: string;
 	// Encoded honeypot question. NOT serialised by the provider on the wire
 	// (it travels in the `x-prosopo-meta` response header so it doesn't sit
@@ -462,7 +523,10 @@ export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 }
 
 export interface PowCaptchaSolutionEscalation {
-	[ApiParams.captchaType]: CaptchaType.image | CaptchaType.puzzle;
+	[ApiParams.captchaType]:
+		| CaptchaType.image
+		| CaptchaType.puzzle
+		| CaptchaType.connect;
 	[ApiParams.sessionId]: string;
 }
 
@@ -717,6 +781,84 @@ export const ServerPuzzleCaptchaVerifyRequestBody = object({
 
 export type ServerPuzzleCaptchaVerifyRequestBodyType = zInfer<
 	typeof ServerPuzzleCaptchaVerifyRequestBody
+>;
+
+// Connect captcha schemas
+
+export const GetConnectCaptchaChallengeRequestBody = object({
+	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.sessionId]: boundedString(INPUT_LIMITS.ID).optional(),
+	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+});
+
+export type GetConnectCaptchaChallengeRequestBodyType = zInfer<
+	typeof GetConnectCaptchaChallengeRequestBody
+>;
+
+export type GetConnectCaptchaChallengeRequestBodyTypeOutput = output<
+	typeof GetConnectCaptchaChallengeRequestBody
+>;
+
+// Event captured while a tile is being dragged. `x`/`y` are in board
+// coordinates (0..1 across the board on each axis) so the trail survives the
+// widget being rendered at any size, and `t` is milliseconds since the drag
+// started rather than an absolute clock.
+export const ConnectEventSchema = object({
+	x: number(),
+	y: number(),
+	t: number(),
+});
+
+export type ConnectEvent = zInfer<typeof ConnectEventSchema>;
+
+export const SubmitConnectCaptchaSolutionBody = object({
+	[ApiParams.challenge]: PowChallengeIdSchema,
+	// The submitted move: pick up the tile at `sourceIndex`, drop it on the
+	// empty cell at `targetIndex`. Both are row-major board indices, bounded
+	// well above any configurable board so a hostile client cannot use them to
+	// index out of range — the provider range-checks them against the stored
+	// board regardless.
+	[ApiParams.sourceIndex]: number().int().min(0).max(INPUT_LIMITS.BOARD_INDEX),
+	[ApiParams.targetIndex]: number().int().min(0).max(INPUT_LIMITS.BOARD_INDEX),
+	[ApiParams.connectEvents]: array(ConnectEventSchema),
+	[ApiParams.signature]: object({
+		[ApiParams.user]: object({
+			[ApiParams.timestamp]: boundedString(INPUT_LIMITS.ID),
+		}),
+		[ApiParams.provider]: object({
+			[ApiParams.challenge]: boundedString(INPUT_LIMITS.TOKEN),
+		}),
+	}),
+	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.behavioralData]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	[ApiParams.salt]: boundedString(INPUT_LIMITS.ID).optional(),
+	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
+});
+
+export type SubmitConnectCaptchaSolutionBodyType = input<
+	typeof SubmitConnectCaptchaSolutionBody
+>;
+
+export type SubmitConnectCaptchaSolutionBodyTypeOutput = output<
+	typeof SubmitConnectCaptchaSolutionBody
+>;
+
+export const ServerConnectCaptchaVerifyRequestBody = object({
+	[ApiParams.token]: BoundedProcaptchaTokenSpec,
+	[ApiParams.dappSignature]: boundedString(INPUT_LIMITS.TOKEN),
+	[ApiParams.ip]: boundedString(INPUT_LIMITS.ID).optional(),
+	[ApiParams.email]: boundedString(INPUT_LIMITS.EMAIL).email().optional(),
+});
+
+export type ServerConnectCaptchaVerifyRequestBodyType = zInfer<
+	typeof ServerConnectCaptchaVerifyRequestBody
+>;
+
+export type ServerConnectCaptchaVerifyRequestBodyOutput = output<
+	typeof ServerConnectCaptchaVerifyRequestBody
 >;
 
 export type ServerPuzzleCaptchaVerifyRequestBodyOutput = output<

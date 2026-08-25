@@ -16,9 +16,11 @@ import { ProsopoDBError } from "@prosopo/common";
 import { type Logger, getLogger } from "@prosopo/logger";
 import {
 	type CaptchaProperties,
+	type ConnectCaptchaRecord,
 	type ICaptchaDatabase,
 	type PoWCaptchaRecord,
 	type PuzzleCaptchaRecord,
+	StoredConnectCaptchaRecordSchema,
 	StoredPoWCaptchaRecordSchema,
 	StoredPuzzleCaptchaRecordSchema,
 	type StoredSession,
@@ -50,6 +52,7 @@ enum TableNames {
 	commitment = "commitment",
 	powcaptcha = "powcaptcha",
 	puzzlecaptcha = "puzzlecaptcha",
+	connectcaptcha = "connectcaptcha",
 }
 
 const CAPTCHA_TABLES = [
@@ -72,6 +75,11 @@ const CAPTCHA_TABLES = [
 		collectionName: TableNames.puzzlecaptcha,
 		modelName: "PuzzleCaptcha",
 		schema: StoredPuzzleCaptchaRecordSchema,
+	},
+	{
+		collectionName: TableNames.connectcaptcha,
+		modelName: "ConnectCaptcha",
+		schema: StoredConnectCaptchaRecordSchema,
 	},
 ];
 
@@ -200,6 +208,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		imageCaptchaEvents: UserCommitmentRecord[],
 		powCaptchaEvents: PoWCaptchaRecord[],
 		puzzleCaptchaEvents: PuzzleCaptchaRecord[] = [],
+		connectCaptchaEvents: ConnectCaptchaRecord[] = [],
 	) {
 		await this.connect();
 		if (sessionEvents.length) {
@@ -327,6 +336,31 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 			}));
 		}
 
+		if (connectCaptchaEvents.length) {
+			const result = await this.tables.connectcaptcha.bulkWrite(
+				connectCaptchaEvents.map((doc) => {
+					const { _id, ...safeDoc } = doc;
+					const normalised = CaptchaDatabase.normaliseDocCompositeIps(safeDoc);
+					return {
+						updateOne: {
+							filter: { challenge: normalised.challenge },
+							update: { $set: normalised },
+							upsert: true,
+						},
+					};
+				}),
+			);
+			logger.info(() => ({
+				data: {
+					upsertedCount: result.upsertedCount,
+					matchedCount: result.matchedCount,
+					modifiedCount: result.modifiedCount,
+					totalProcessed: connectCaptchaEvents.length,
+				},
+				msg: "Mongo Saved Connect Events",
+			}));
+		}
+
 		await this.close();
 	}
 
@@ -337,6 +371,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		userCommitmentRecords: UserCommitmentRecord[];
 		powCaptchaRecords: PoWCaptchaRecord[];
 		puzzleCaptchaRecords: PuzzleCaptchaRecord[];
+		connectCaptchaRecords: ConnectCaptchaRecord[];
 	}> {
 		await this.connect();
 
@@ -356,10 +391,16 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 				.limit(limit)
 				.lean<PuzzleCaptchaRecord[]>();
 
+			const connectCaptchaResults = await this.tables.connectcaptcha
+				.find(filter)
+				.limit(limit)
+				.lean<ConnectCaptchaRecord[]>();
+
 			return {
 				userCommitmentRecords: commitmentResults,
 				powCaptchaRecords: powCaptchaResults,
 				puzzleCaptchaRecords: puzzleCaptchaResults,
+				connectCaptchaRecords: connectCaptchaResults,
 			};
 		} catch (error) {
 			throw new ProsopoDBError("DATABASE.QUERY_ERROR", {

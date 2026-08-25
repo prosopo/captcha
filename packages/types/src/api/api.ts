@@ -30,6 +30,8 @@ import type {
 	ApiResponse,
 	CaptchaResponseBody,
 	CaptchaSolutionResponse,
+	ConnectCaptchaSolutionResponse,
+	GetConnectCaptchaResponse,
 	GetPowCaptchaResponse,
 	GetPuzzleCaptchaResponse,
 	ImageVerificationResponse,
@@ -103,6 +105,32 @@ export interface ProviderApiInterface {
 		clientMetaData?: ClientMetaData,
 	): Promise<PuzzleCaptchaSolutionResponse>;
 	submitPuzzleCaptchaVerify(
+		token: string,
+		signatureHex: string,
+		user: string,
+		ip?: string,
+		email?: string,
+	): Promise<VerificationResponse>;
+	getConnectCaptchaChallenge(
+		userAccount: string,
+		dappAccount: string,
+		sessionId?: string,
+		simdReadings?: string,
+	): Promise<GetConnectCaptchaResponse>;
+	submitConnectCaptchaSolution(
+		challenge: GetConnectCaptchaResponse,
+		userAccount: string,
+		dappAccount: string,
+		sourceIndex: number,
+		targetIndex: number,
+		connectEvents: Array<{ x: number; y: number; t: number }>,
+		userTimestampSignature: string,
+		behavioralData?: string,
+		salt?: string,
+		simdReadings?: string,
+		clientMetaData?: ClientMetaData,
+	): Promise<ConnectCaptchaSolutionResponse>;
+	submitConnectCaptchaVerify(
 		token: string,
 		signatureHex: string,
 		user: string,
