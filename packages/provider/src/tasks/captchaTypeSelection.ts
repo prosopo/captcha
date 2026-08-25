@@ -20,11 +20,12 @@ import {
 } from "@prosopo/types";
 import { isPuzzleRenderAvailable } from "./puzzle/puzzleRenderer.js";
 
-/** The three concrete types a session can actually be minted as. */
+/** The concrete types a session can actually be minted as. */
 export type ConcreteCaptchaType =
 	| CaptchaType.pow
 	| CaptchaType.image
-	| CaptchaType.puzzle;
+	| CaptchaType.puzzle
+	| CaptchaType.audio;
 
 /**
  * Resolve a requested captcha type against what the site permits and what
@@ -66,6 +67,12 @@ export const coerceToEnabledCaptchaType = (
 				// Always available: no interaction requirement, and the terminal
 				// fallback for the two branches below.
 				return CaptchaType.pow;
+			case CaptchaType.audio:
+				// Nothing to coerce against. The synthesiser is pure TypeScript
+				// with no native dependency, so unlike puzzle rendering it cannot
+				// be unavailable on a provider that has the code, and audio is
+				// not one of the types `frictionlessTypes` gates.
+				return CaptchaType.audio;
 			case CaptchaType.puzzle:
 				if (puzzleAllowed) return CaptchaType.puzzle;
 				return imageAllowed ? CaptchaType.image : CaptchaType.pow;

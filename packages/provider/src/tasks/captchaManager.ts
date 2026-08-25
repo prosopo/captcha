@@ -32,6 +32,7 @@ import {
 	type UserCommitment,
 } from "@prosopo/types";
 import type {
+	AudioCaptchaRecord,
 	ClientRecord,
 	IProviderDatabase,
 	IUserDataSlim,
@@ -865,7 +866,11 @@ export class CaptchaManager {
 	 */
 	async checkForHardBlock(
 		userAccessRulesStorage: AccessRulesStorage,
-		challengeRecord: PoWCaptchaRecord | PuzzleCaptchaRecord | UserCommitment,
+		challengeRecord:
+			| PoWCaptchaRecord
+			| PuzzleCaptchaRecord
+			| AudioCaptchaRecord
+			| UserCommitment,
 		userAccount: string,
 		headers: RequestHeaders,
 		coords?: [number, number][][],

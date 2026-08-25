@@ -146,6 +146,23 @@ export const PuzzleRenderSettingsSchema = new Schema(
 	{ _id: false },
 );
 
+// Per-render audio tunables, mirroring `AudioSettingsSchema` in
+// @prosopo/types. Declared here for the same reason as the puzzle block
+// above: an undeclared path is dropped on write. Bounds mirror the zod
+// field schemas.
+export const AudioRenderSettingsSchema = new Schema(
+	{
+		digitCount: { type: Number, min: 3, max: 8, required: false },
+		noiseSnrDb: { type: Number, min: 3, max: 60, required: false },
+		babbleGain: { type: Number, min: 0, max: 0.6, required: false },
+		babbleVoices: { type: Number, min: 0, max: 4, required: false },
+		reverbMix: { type: Number, min: 0, max: 0.6, required: false },
+		gapMs: { type: Number, min: 0, max: 1500, required: false },
+	},
+	{ _id: false },
+);
+
+
 // Sub-schema for one trafficFilter category's policy. `_id: false` prevents
 // Mongoose from stamping an implicit ObjectId onto each subdoc.
 export const TrafficCategoryPolicySchema = new Schema(
@@ -163,9 +180,10 @@ export const TrafficCategoryPolicySchema = new Schema(
 		powDifficulty: { type: Number, required: false },
 		solvedImagesCount: { type: Number, required: false },
 		puzzleTolerance: { type: Number, required: false },
-		// Per-category puzzle render overrides, layered on top of the
-		// site-wide `puzzle` block by the traffic filter.
+		// Per-category render overrides, layered on top of the site-wide
+		// `puzzle` and `audio` blocks by the traffic filter.
 		puzzle: { type: PuzzleRenderSettingsSchema, required: false },
+		audio: { type: AudioRenderSettingsSchema, required: false },
 	},
 	{ _id: false },
 );
@@ -241,11 +259,20 @@ export const UserSettingsSchema = new Schema({
 		max: puzzleMaxDifficultyMax,
 		required: false,
 	},
-	// Site-wide puzzle render overrides. No default: an absent block means
-	// "use the provider defaults", and defaulting it would write an empty
-	// subdocument onto every site regardless of captcha type.
+	// Site-wide puzzle and audio render overrides. No default: an absent
+	// block means "use the provider defaults", and defaulting it would write
+	// an empty subdocument onto every site regardless of captcha type.
 	puzzle: {
 		type: PuzzleRenderSettingsSchema,
+		required: false,
+	},
+	audio: {
+		type: AudioRenderSettingsSchema,
+		required: false,
+	},
+	audioAccessibilityEnabled: {
+		type: Boolean,
+		default: false,
 		required: false,
 	},
 	ipValidationRules: IPValidationRulesSchema,

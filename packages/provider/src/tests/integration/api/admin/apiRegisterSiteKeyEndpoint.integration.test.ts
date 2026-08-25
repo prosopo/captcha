@@ -77,6 +77,7 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 				solutionTimeout: 60000,
 				puzzleTolerance: 15,
 				puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
+				audioAccessibilityEnabled: false,
 				disallowWebView: false,
 			},
 		};
@@ -114,6 +115,7 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 				solutionTimeout: 60000,
 				puzzleTolerance: 15,
 				puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
+				audioAccessibilityEnabled: false,
 				disallowWebView: false,
 			},
 		};

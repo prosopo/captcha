@@ -14,7 +14,12 @@
 
 import { loadI18next, useTranslation } from "@prosopo/locale";
 import { buildUpdateState, useProcaptcha } from "@prosopo/procaptcha-common";
-import { Checkbox, Honeypot, isEventTrusted } from "@prosopo/procaptcha-common";
+import {
+	AudioAlternativeButton,
+	Checkbox,
+	Honeypot,
+	isEventTrusted,
+} from "@prosopo/procaptcha-common";
 import {
 	type GetPuzzleCaptchaResponse,
 	ModeEnum,
@@ -245,6 +250,16 @@ const Procaptcha = (props: ProcaptchaProps) => {
 					placement={config.placement}
 					anchor={props.container}
 					onDismiss={handleDismiss}
+					audioAlternative={
+						props.audioAlternativeAvailable && props.onRequestAudioAlternative
+							? {
+									onRequestAudio: props.onRequestAudioAlternative,
+									label: isTranslationReady
+										? t("WIDGET.AUDIO_ALTERNATIVE")
+										: "",
+								}
+							: undefined
+					}
 				/>
 			)}
 

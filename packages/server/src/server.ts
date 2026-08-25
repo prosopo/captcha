@@ -92,6 +92,7 @@ export class ProsopoServer {
 	 * Verify a token with the issuing provider. Dispatches to the correct
 	 * verify endpoint by inspecting the token's declared captchaType:
 	 *  - puzzle        → submitPuzzleCaptchaVerify
+	 *  - audio         → submitAudioCaptchaVerify
 	 *  - pow           → submitPowCaptchaVerify
 	 *  - image         → verifyDappUser
 	 *  - authenticated → submitAuthenticatedCaptchaVerify (Web Bot Auth fast-path)
@@ -149,6 +150,20 @@ export class ProsopoServer {
 				ip,
 				email,
 				clientSessionId,
+			);
+		}
+
+		if (captchaType === CaptchaType.audio) {
+			const audioTimeout = this.config.timeouts.audio.cachedTimeout;
+			if (!this.isRecent(timestamp, audioTimeout, "Audio")) {
+				return this.notRecentResponse();
+			}
+			return await providerApi.submitAudioCaptchaVerify(
+				token,
+				signatureHex,
+				user,
+				ip,
+				email,
 			);
 		}
 

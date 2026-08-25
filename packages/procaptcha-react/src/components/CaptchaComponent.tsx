@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { useTranslation } from "@prosopo/locale";
-import { ReloadButton } from "@prosopo/procaptcha-common";
+import {
+	AudioAlternativeButton,
+	ReloadButton,
+} from "@prosopo/procaptcha-common";
 import type { CaptchaResponseBody } from "@prosopo/types";
 import { at } from "@prosopo/util";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
@@ -31,6 +34,14 @@ export interface CaptchaComponentProps {
 	onNext: () => void;
 	onReload: () => void;
 	themeColor: "light" | "dark";
+	/**
+	 * Renders a "use audio instead" control under the action row when the
+	 * site has the audio accessibility path enabled. Undefined hides it.
+	 */
+	audioAlternative?: {
+		onRequestAudio: () => void;
+		label: string;
+	};
 }
 
 const CaptchaComponent = ({
@@ -43,6 +54,7 @@ const CaptchaComponent = ({
 	onNext,
 	onReload,
 	themeColor,
+	audioAlternative,
 }: CaptchaComponentProps) => {
 	const { t } = useTranslation();
 	// `noWrap`, so an out-of-range round throws rather than wrapping round to a
@@ -229,6 +241,17 @@ const CaptchaComponent = ({
 								/>
 							</div>
 						</div>
+						{/* Below the action row so it reads as an alternative to
+						    the whole challenge, not as a fourth action on it. */}
+						{audioAlternative && (
+							<div style={{ textAlign: "center", paddingTop: fullSpacing }}>
+								<AudioAlternativeButton
+									themeColor={themeColor}
+									onRequestAudio={audioAlternative.onRequestAudio}
+									label={audioAlternative.label}
+								/>
+							</div>
+						)}
 					</div>
 				</div>
 			</div>

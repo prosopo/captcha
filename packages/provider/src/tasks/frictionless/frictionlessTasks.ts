@@ -66,6 +66,8 @@ export interface PowCaptchaSessionParams extends Session {}
 
 export interface PuzzleCaptchaSessionParams extends Session {}
 
+export interface AudioCaptchaSessionParams extends Session {}
+
 /**
  * Everything a caller supplies when minting a session. `sessionId` and
  * `createdAt` are assigned by `createSession` and `simdReadingsStage` is
@@ -92,6 +94,7 @@ export class FrictionlessManager extends CaptchaManager {
 		"sessionId" | "createdAt" | "captchaType"
 	>;
 	private routingContext?: RoutingContext;
+	private audioAlternativeAvailable = false;
 	private readonly decisionMachineRunner: DecisionMachineRunner;
 	private readonly usageCounters: UsageCounters | null;
 
@@ -118,6 +121,20 @@ export class FrictionlessManager extends CaptchaManager {
 	 */
 	setRoutingContext(ctx: RoutingContext): void {
 		this.routingContext = ctx;
+	}
+
+	/**
+	 * Whether this site offers the audio challenge as an accessibility
+	 * alternative from the image and puzzle widgets.
+	 *
+	 * Set once per request from the client record, before either the
+	 * short-circuit or the decision-machine dispatch path runs, so every
+	 * `send*Captcha` return carries it. Kept separate from
+	 * `setSessionParams` because the short-circuit path builds its own
+	 * params object and would otherwise miss it.
+	 */
+	setAudioAlternativeAvailable(available: boolean): void {
+		this.audioAlternativeAvailable = available;
 	}
 
 	/**
@@ -503,8 +520,18 @@ export class FrictionlessManager extends CaptchaManager {
 		return this.sendCaptcha(CaptchaType.puzzle, params);
 	}
 
+	async sendAudioCaptcha(
+		params?: Partial<AudioCaptchaSessionParams>,
+	): Promise<GetFrictionlessCaptchaResponse> {
+		return this.sendCaptcha(CaptchaType.audio, params);
+	}
+
 	private async sendCaptcha(
-		captchaType: CaptchaType.image | CaptchaType.pow | CaptchaType.puzzle,
+		captchaType:
+			| CaptchaType.image
+			| CaptchaType.pow
+			| CaptchaType.puzzle
+			| CaptchaType.audio,
 		params?: Partial<Session>,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const effectiveParams = { ...this.sessionParams, ...params };
@@ -673,6 +700,14 @@ export class FrictionlessManager extends CaptchaManager {
 			[ApiParams.sessionId]: sessionRecord.sessionId,
 			[ApiParams.status]: "ok",
 			dns_url: buildDnsEventUrl(sessionRecord.sessionId),
+			// Only advertised when the challenge actually has something to
+			// switch away from. Offering "listen instead" on an audio
+			// challenge is nonsense, and PoW has no UI to hang it off.
+			...((finalCaptchaType === CaptchaType.image ||
+				finalCaptchaType === CaptchaType.puzzle) &&
+				this.audioAlternativeAvailable && {
+					audioAlternativeAvailable: true,
+				}),
 		};
 	}
 
