@@ -55,9 +55,12 @@ export const isHeaderOperator = (
  * cannot evaluate — substring `contains` and per-rule operators aren't
  * expressible as a TAG query, and an allow-list rule must still fire on a
  * request that OMITS the target header, so candidate selection can't key off
- * header presence. The marker makes every header rule an unconditional
- * candidate for every request; the concrete condition is then checked in code
- * by `accessRuleHeaderMatches`.
+ * header presence. Redis returns header rules via the reader's
+ * `no-user-scope` fall-through probe (they constrain none of the indexed
+ * scope dimensions); this marker is what keeps them candidates through the
+ * JS-side `ruleApplies` scalar check, which would otherwise drop a rule
+ * carrying a scope field the request lacks. The concrete condition is then
+ * checked by `accessRuleHeaderMatches`.
  */
 export const HEADER_RULE_MARKER = "1";
 
