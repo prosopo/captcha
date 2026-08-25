@@ -42,10 +42,15 @@ export const userAttributesRedisSchema: RediSearchSchema = {
 	asn: { type: SCHEMA_FIELD_TYPE.NUMERIC, INDEXMISSING: true },
 	os: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 	browser: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
-	// Header-restriction fields. Only `headerMatch` (the sentinel) is used in
-	// the matching query; name/value/operator are indexed only to satisfy the
-	// schema exhaustiveness check — they are evaluated in code, so these index
-	// entries are never queried.
+	// Header-restriction fields. NONE of these are queried on the hot path:
+	// the split-query builder probes neither `headerMatch` nor the
+	// name/value/operator triple, and a header rule populates none of the
+	// fields that builder does probe, so it is returned by the `no-user-scope`
+	// fall-through probe (the same route `os` rules take) and the concrete
+	// condition is evaluated in code by `accessRuleHeaderMatches`. They are
+	// indexed to satisfy the schema exhaustiveness check, and `headerMatch`
+	// additionally gates candidacy JS-side in `ruleApplies` and scores one
+	// specificity point in the reader's SPECIFICITY_EXPR.
 	headerMatch: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 	headerName: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 	headerValue: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
