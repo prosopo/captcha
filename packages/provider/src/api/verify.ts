@@ -22,7 +22,9 @@ import {
 	type ImageVerificationResponse,
 	ServerPowCaptchaVerifyRequestBody,
 	type ServerPowCaptchaVerifyRequestBodyOutput,
+	ServerAudioCaptchaVerifyRequestBody,
 	ServerPuzzleCaptchaVerifyRequestBody,
+	type ServerAudioCaptchaVerifyRequestBodyOutput,
 	type ServerPuzzleCaptchaVerifyRequestBodyOutput,
 	type VerificationResponse,
 	VerifySolutionBody,
@@ -67,6 +69,7 @@ const VERIFY_PATH_TYPE: Partial<Record<ClientApiPaths, CaptchaType>> = {
 	[ClientApiPaths.VerifyImageCaptchaSolutionDapp]: CaptchaType.image,
 	[ClientApiPaths.VerifyPowCaptchaSolution]: CaptchaType.pow,
 	[ClientApiPaths.VerifyPuzzleCaptchaSolution]: CaptchaType.puzzle,
+	[ClientApiPaths.VerifyAudioCaptchaSolution]: CaptchaType.audio,
 };
 
 /**
@@ -557,6 +560,157 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			} catch (err) {
 				req.logger.error(() => ({
 					msg: "Error in verifyPuzzleCaptchaSolution",
+					err,
+					data: { body: req.body },
+				}));
+				return next(
+					new ProsopoApiError("API.BAD_REQUEST", {
+						context: { code: 500, error: err },
+						i18n: req.i18n,
+						logger: req.logger,
+					}),
+				);
+			}
+		},
+	);
+
+	/**
+	 * Verifies a dapp's audio captcha solution as being approved or not
+	 *
+	 * @param {string} token - Token containing dapp, blockNumber and challenge
+	 * @param {string} dappSignature - Signed token
+	 * @param {number} verifiedTimeout - The maximum time in milliseconds to be valid
+	 */
+	router.post(
+		ClientApiPaths.VerifyAudioCaptchaSolution,
+		async (req, res, next) => {
+			// Maintenance-mode short-circuit must run before `new Tasks(env, ...)`
+			// because the Tasks constructor calls `env.getDb()`, which throws when
+			// `env.db` is undefined (the maintenance-mode case).
+			if (getMaintenanceMode()) {
+				req.logger.info(() => ({
+					msg: "Maintenance mode active - returning verified for audio captcha verification",
+				}));
+				const verificationResponse: VerificationResponse =
+					buildMaintenanceVerificationResponse(req.i18n.t);
+				return res.json(verificationResponse);
+			}
+
+			let parsed: ServerAudioCaptchaVerifyRequestBodyOutput;
+
+			// We can be helpful and provide a more detailed error message when there are missing fields
+			try {
+				parsed = ServerAudioCaptchaVerifyRequestBody.parse(req.body);
+			} catch (err) {
+				return next(
+					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
+						context: { code: 400, error: err, body: req.body },
+						i18n: req.i18n,
+						logger: req.logger,
+					}),
+				);
+			}
+
+			// We don't want to expose any other errors to the client
+			try {
+				const { token, dappSignature, ip, email } = parsed;
+
+				// This can error if the token is invalid
+				const { dapp, user, timestamp, challenge, providerUrl } =
+					decodeProcaptchaOutput(token);
+
+				// Reserved CI test site keys force a deterministic verdict before
+				// the signature and registered-key checks, so the dapp server needs
+				// no real secret and the key works in every environment.
+				const testVerdict = resolveTestSiteKeyVerdict(dapp, req.logger);
+				if (testVerdict !== null) {
+					const verificationResponse: VerificationResponse = {
+						status: "ok",
+						verified: testVerdict,
+					};
+					return res.json(verificationResponse);
+				}
+
+				// A client can verify against any pronode: if this node did not
+				// issue the token, forward the request to the provider that did
+				// and return its result. Only this provider can verify its own
+				// challenge, so do this before any local lookup.
+				const forwarded = await forwardVerifyIfNotIssuer({
+					env,
+					logger: req.logger,
+					path: ClientApiPaths.VerifyAudioCaptchaSolution,
+					providerUrl,
+					dapp,
+					user,
+					body: parsed,
+					alreadyForwarded: req.headers[VERIFY_FORWARDED_HEADER] !== undefined,
+				});
+				if (forwarded) {
+					return res.json(forwarded);
+				}
+
+				// Only construct Tasks (which opens the DB) once we know this node
+				// is the issuer and must verify locally — non-issuer nodes forward
+				// above and never touch the DB.
+				const tasks = new Tasks(env, req.logger);
+
+				// Do this before checking the db
+				validateAddress(dapp, false, 42);
+				validateAddress(user, false, 42);
+
+				// Reject any unregistered site keys
+				const clientRecord = await tasks.db.getClientRecord(dapp);
+				if (!clientRecord) {
+					return next(
+						new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
+							context: { code: 400, siteKey: dapp },
+							i18n: req.i18n,
+							logger: req.logger,
+						}),
+					);
+				}
+
+				if (!challenge) {
+					const unverifiedResponse: VerificationResponse = {
+						status: req.i18n.t("API.USER_NOT_VERIFIED"),
+						[ApiParams.verified]: false,
+					};
+					return res.json(unverifiedResponse);
+				}
+
+				// Verify using the dapp pair passed in the request
+				const dappPair = env.keyring.addFromAddress(dapp);
+
+				// Will throw an error if the signature is invalid
+				verifySignature(dappSignature, timestamp.toString(), dappPair);
+
+				const { verified, score } =
+					await tasks.audioCaptchaManager.serverVerifyAudioCaptchaSolution(
+						dapp,
+						challenge,
+						clientRecord.settings.verifiedTimeout,
+						env,
+						ip,
+						userAccessRulesStorage,
+						email,
+						clientRecord.settings.spamEmailDomainCheckEnabled,
+						clientRecord.settings.spamFilter,
+						clientRecord.settings.trafficFilter,
+						clientRecord.settings.storeMetadata,
+					);
+
+				const verificationResponse: VerificationResponse =
+					tasks.audioCaptchaManager.getVerificationResponse(
+						verified,
+						clientRecord,
+						req.i18n.t,
+						score,
+					);
+
+				return res.json(verificationResponse);
+			} catch (err) {
+				req.logger.error(() => ({
+					msg: "Error in verifyAudioCaptchaSolution",
 					err,
 					data: { body: req.body },
 				}));

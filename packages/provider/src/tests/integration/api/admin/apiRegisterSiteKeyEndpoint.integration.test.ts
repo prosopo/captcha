@@ -72,6 +72,7 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 				verifiedTimeout: 120000,
 				solutionTimeout: 60000,
 				puzzleTolerance: 15,
+				audioAccessibilityEnabled: false,
 				disallowWebView: false,
 				contextAware: {
 					enabled: false,
@@ -112,6 +113,7 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 				verifiedTimeout: 120000,
 				solutionTimeout: 60000,
 				puzzleTolerance: 15,
+				audioAccessibilityEnabled: false,
 				disallowWebView: false,
 				contextAware: {
 					enabled: false,

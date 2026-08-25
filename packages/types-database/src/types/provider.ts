@@ -29,6 +29,7 @@ import {
 	ModeEnum,
 	type PendingImageCaptchaRequest,
 	type PoWCaptchaStored,
+	type AudioCaptchaStored,
 	type PuzzleCaptchaStored,
 	type Session,
 	type SimdReadingsStage,
@@ -155,6 +156,7 @@ export const CompositeIpAddressRecordSchemaObj = {
 export type PoWCaptchaRecord = mongoose.Document & PoWCaptchaStored;
 
 export type PuzzleCaptchaRecord = mongoose.Document & PuzzleCaptchaStored;
+export type AudioCaptchaRecord = mongoose.Document & AudioCaptchaStored;
 
 export type UserCommitmentRecord = mongoose.Document & UserCommitment;
 
@@ -468,6 +470,134 @@ PuzzleCaptchaRecordSchema.index(
 );
 // See `PoWCaptchaRecordSchema.blocked_partial`.
 PuzzleCaptchaRecordSchema.index(
+	{ blocked: 1 },
+	{
+		name: "blocked_partial",
+		partialFilterExpression: { blocked: true },
+	},
+);
+
+export const AudioCaptchaRecordSchema = new Schema<AudioCaptchaRecord>({
+	challenge: { type: String, required: true },
+	dappAccount: { type: String, required: true },
+	userAccount: { type: String, required: true },
+	requestedAtTimestamp: { type: Date, required: true },
+	submittedAtTimestamp: { type: Date, required: false },
+	verifiedAtTimestamp: { type: Date, required: false },
+	failedAtTimestamp: { type: Date, required: false },
+	lastUpdatedTimestamp: { type: Date, required: false },
+	result: {
+		status: { type: String, enum: CaptchaStatus, required: true },
+		reason: {
+			type: String,
+			enum: TranslationKeysSchema.options,
+			required: false,
+		},
+		error: { type: String, required: false },
+	},
+	// The spoken transcript. Required, because a record without it cannot
+	// be graded. Never serialised into any response — see
+	// `AudioCaptchaStored` and `GetAudioCaptchaResponse`.
+	answer: { type: String, required: true },
+	// What the user actually typed. Kept alongside `answer` so difficulty
+	// can be tuned against real failures: "users mishear 5 as 9" is a
+	// phoneme-table problem, and there is no way to see it without the
+	// wrong answers.
+	submittedAnswer: { type: String, required: false },
+	replays: { type: Number, required: false },
+	audioEvents: {
+		type: [
+			new Schema<{ kind: string; t: number }>(
+				{
+					kind: { type: String, required: true },
+					t: { type: Number, required: true },
+				},
+				{ _id: false },
+			),
+		],
+		required: false,
+	},
+	ipAddress: CompositeIpAddressRecordSchemaObj,
+	providedIp: {
+		type: new Schema(CompositeIpAddressRecordSchemaObj, { _id: false }),
+		required: false,
+	},
+	metadata: {
+		type: new Schema(
+			{
+				email: { type: String, required: false },
+				emailNormalised: { type: String, required: false },
+			},
+			{ _id: false },
+		),
+		required: false,
+	},
+	clientMetaData: {
+		type: new Schema({ hp: { type: String, required: false } }, { _id: false }),
+		required: false,
+	},
+	headers: { type: Object, required: true },
+	ja4: { type: String, required: true },
+	userSignature: { type: String, required: false },
+	userSubmitted: { type: Boolean, required: true },
+	serverChecked: { type: Boolean, required: true },
+	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
+	// See `StoredCaptcha.pendingStage`.
+	pendingStage: { type: Boolean, required: false },
+	// Mirrors `Session.blocked`. See `StoredCaptcha.blocked`.
+	blocked: { type: Boolean, required: false },
+	ipInfo: { type: Object, required: false },
+	parsedUserAgentInfo: { type: Object, required: false },
+	sessionId: {
+		type: String,
+		required: false,
+	},
+	coords: { type: [[[Number]]], required: false },
+	deviceCapability: { type: String, required: false },
+	behavioralDataPacked: {
+		type: {
+			c1: { type: [Schema.Types.Mixed], required: true },
+			c2: { type: [Schema.Types.Mixed], required: true },
+			c3: { type: [Schema.Types.Mixed], required: true },
+			d: { type: String, required: true },
+		},
+		required: false,
+	},
+	providerSignature: { type: String, required: true },
+});
+
+// Same index set as the puzzle and pow records — the audit, spam-count
+// and blocked-chart queries are shared code that filters on exactly
+// these fields, so an audio record missing one of them turns a covered
+// query into a collection scan.
+AudioCaptchaRecordSchema.index({ challenge: 1 });
+AudioCaptchaRecordSchema.index({ lastUpdatedTimestamp: 1 });
+AudioCaptchaRecordSchema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
+AudioCaptchaRecordSchema.index({ "ipAddress.lower": 1 });
+AudioCaptchaRecordSchema.index({ "ipAddress.upper": 1 });
+AudioCaptchaRecordSchema.index({ "result.reason": 1 });
+AudioCaptchaRecordSchema.index({ "ipInfo.countryCode": 1 });
+AudioCaptchaRecordSchema.index({ "ipInfo.isVPN": 1 });
+AudioCaptchaRecordSchema.index({ ipInfo: 1 });
+AudioCaptchaRecordSchema.index({ parsedUserAgentInfo: 1 });
+AudioCaptchaRecordSchema.index(
+	{ pendingStage: 1, _id: 1 },
+	{
+		name: "pendingStage_partial",
+		partialFilterExpression: { pendingStage: true },
+	},
+);
+AudioCaptchaRecordSchema.index(
+	{ dappAccount: 1, "metadata.emailNormalised": 1, serverChecked: 1 },
+	{
+		name: "spamEmailCount_partial",
+		partialFilterExpression: {
+			"metadata.emailNormalised": { $exists: true },
+			serverChecked: true,
+		},
+	},
+);
+AudioCaptchaRecordSchema.index(
 	{ blocked: 1 },
 	{
 		name: "blocked_partial",
@@ -1204,6 +1334,37 @@ export interface IProviderDatabase extends IDatabase {
 	updatePuzzleCaptchaRecord(
 		challenge: PoWChallengeId,
 		updates: Partial<PuzzleCaptchaRecord>,
+	): Promise<void>;
+
+	storeAudioCaptchaRecord(
+		challenge: PoWChallengeId,
+		components: PoWChallengeComponents,
+		answer: string,
+		providerSignature: string,
+		ipAddress: CompositeIpAddress,
+		headers: RequestHeaders,
+		ja4: string,
+		sessionId?: string,
+		ipInfo?: IPInfoResponse,
+	): Promise<void>;
+
+	getAudioCaptchaRecordByChallenge(
+		challenge: string,
+	): Promise<AudioCaptchaRecord | null>;
+
+	updateAudioCaptchaRecordResult(
+		challenge: PoWChallengeId,
+		result: CaptchaResult,
+		serverChecked: boolean,
+		userSubmitted: boolean,
+		userSignature?: string,
+		coords?: [number, number][][],
+		lastUpdatedTimestamp?: Date,
+	): Promise<void>;
+
+	updateAudioCaptchaRecord(
+		challenge: PoWChallengeId,
+		updates: Partial<AudioCaptchaRecord>,
 	): Promise<void>;
 
 	updateClientRecords(clientRecords: ClientRecord[]): Promise<void>;

@@ -49,6 +49,24 @@ export const puzzleDecoyHoleDarkenDefault = 0.7;
 export const puzzlePieceScaleMinDefault = 0.15;
 export const puzzlePieceScaleMaxDefault = 0.45;
 
+// Audio render defaults, mirrored from `packages/audio-assets`'s
+// `DEFAULT_RENDER_SETTINGS`. Same split of responsibility as the puzzle
+// settings above: the schema layer owns the authoritative bounds and
+// defaults, the renderer receives resolved values from the provider.
+//
+// These are tuned for intelligibility rather than for difficulty. The
+// audio challenge is the accessibility path, so its users are
+// disproportionately people for whom the visual challenge was not an
+// option; making it harder costs them more than it costs an attacker
+// with a speech recogniser. Difficulty is expected to come from varying
+// what the challenge *asks*, not from burying the answer in noise.
+export const audioDigitCountDefault = 5;
+export const audioNoiseSnrDbDefault = 14;
+export const audioBabbleGainDefault = 0.16;
+export const audioBabbleVoicesDefault = 2;
+export const audioReverbMixDefault = 0.12;
+export const audioGapMsDefault = 220;
+
 // Field-level schemas hoisted so `TrafficFilterSchema` per-category
 // challenge policies validate captcha parameters with the same bounds as
 // the site-wide defaults on `ClientSettingsSchema`. Do not redefine these
@@ -69,6 +87,43 @@ export const puzzleDecoyHoleDarkenFieldSchema = number().min(0).max(1);
 // fixed size (min == max) or explore the full frame. Cross-field
 // `min <= max` is enforced on the containing object schema.
 export const puzzlePieceScaleFieldSchema = number().min(0.05).max(0.95);
+// Field-level schemas, hoisted for the same reason as the puzzle ones:
+// `TrafficFilterSchema` per-category policies must validate with exactly
+// these bounds. Do not restate them elsewhere.
+//
+// The ceiling on digitCount is 8. Beyond that the answer outruns most
+// people's working memory for a spoken sequence, and the failure mode is
+// not "attacker blocked", it is "user replays the clip five times and
+// gives up".
+export const audioDigitCountFieldSchema = number().int().min(3).max(8);
+// Floor of 3 dB rather than 0: below roughly that the noise is louder
+// than the speech and human accuracy collapses while a recogniser is
+// still coping. There is no operating point where this knob is a good
+// security trade — it is here to be turned *down* for accessibility, not
+// up for difficulty.
+export const audioNoiseSnrDbFieldSchema = number().min(3).max(60);
+export const audioBabbleGainFieldSchema = number().min(0).max(0.6);
+export const audioBabbleVoicesFieldSchema = number().int().min(0).max(4);
+export const audioReverbMixFieldSchema = number().min(0).max(0.6);
+export const audioGapMsFieldSchema = number().int().min(0).max(1500);
+
+/**
+ * Per-render tunables for the audio captcha. Every field is optional so
+ * operators can override a subset from the portal without restating the
+ * defaults. The provider merges these on top of the asset package's
+ * `DEFAULT_RENDER_SETTINGS` before calling the renderer.
+ */
+export const AudioSettingsSchema = object({
+	digitCount: audioDigitCountFieldSchema.optional(),
+	noiseSnrDb: audioNoiseSnrDbFieldSchema.optional(),
+	babbleGain: audioBabbleGainFieldSchema.optional(),
+	babbleVoices: audioBabbleVoicesFieldSchema.optional(),
+	reverbMix: audioReverbMixFieldSchema.optional(),
+	gapMs: audioGapMsFieldSchema.optional(),
+});
+
+export type IAudioSettings = output<typeof AudioSettingsSchema>;
+
 export const PuzzlePieceScaleSchema = object({
 	min: puzzlePieceScaleFieldSchema
 		.optional()
@@ -289,6 +344,8 @@ export const TrafficCategoryPolicySchema = object({
 	// the nested object are themselves optional, so a category can
 	// override, say, just `decoyCount` without restating the rest.
 	puzzle: PuzzleSettingsSchema.optional(),
+	// Same, for audio rendering.
+	audio: AudioSettingsSchema.optional(),
 });
 
 export type ITrafficCategoryPolicy = output<typeof TrafficCategoryPolicySchema>;
@@ -411,6 +468,22 @@ export const ClientSettingsSchema = object({
 	// the asset package's defaults. Traffic-filter category policies may
 	// further override any of these on a per-request basis.
 	puzzle: PuzzleSettingsSchema.optional(),
+	// Site-wide audio render settings, same cascade as `puzzle`.
+	audio: AudioSettingsSchema.optional(),
+	// Offer the audio challenge as an accessibility alternative from the
+	// image and puzzle widgets.
+	//
+	// Distinct from `captchaType: "audio"`, which makes audio the primary
+	// challenge for every visitor. This flag leaves the primary challenge
+	// alone and adds an opt-in control the user reaches for themselves —
+	// the visual challenge stays the default, and someone who cannot use
+	// it has a route that does not involve contacting support.
+	//
+	// Off by default. An operator who has not thought about the audio
+	// challenge should not have it silently exposed on their site, and
+	// the accessibility win is only real if the operator has checked that
+	// the audio path works for their audience (it is English-only today).
+	audioAccessibilityEnabled: boolean().optional().default(false),
 	ipValidationRules: IPValidationRulesSchema.optional(),
 	// The trailing `.optional()` that used to sit after `.default(false)` made
 	// the default unreachable, so this parsed to `undefined` rather than

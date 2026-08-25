@@ -14,6 +14,7 @@
 
 import { type Logger, getLogger } from "@prosopo/logger";
 import type {
+	AudioCaptchaRecord,
 	PoWCaptchaRecord,
 	PuzzleCaptchaRecord,
 	StoredSession,
@@ -242,6 +243,54 @@ export class CentralDbStreamer {
 				this.logger.error(() => ({
 					err,
 					msg: "Failed to fetch puzzle record for central DB streaming",
+				}));
+			});
+	}
+
+	/**
+	 * Stream an audio captcha record (create or update) to the central DB.
+	 * Fire-and-forget: errors are logged, never thrown.
+	 */
+	streamAudioRecord(
+		record: AudioCaptchaRecord,
+		markStored?: MarkStoredCallback,
+	): void {
+		const timestamp = this.getRecordTimestamp(record);
+		this.ensureConnected()
+			.then(() => {
+				const { _id, ...safeDoc } = record;
+				return this.db.tables.audiocaptcha.updateOne(
+					{ challenge: safeDoc.challenge },
+					{ $set: safeDoc },
+					{ upsert: true },
+				);
+			})
+			.then(() => markStored?.(timestamp))
+			.catch((err: unknown) => {
+				this.logger.error(() => ({
+					err,
+					msg: "Failed to stream audio record to central DB",
+				}));
+			});
+	}
+
+	/**
+	 * Stream a partial audio update by fetching the full record first, then upserting.
+	 */
+	streamAudioUpdate(
+		getFullRecord: () => Promise<AudioCaptchaRecord | null>,
+		markStored?: MarkStoredCallback,
+	): void {
+		getFullRecord()
+			.then((record) => {
+				if (record) {
+					this.streamAudioRecord(record, markStored);
+				}
+			})
+			.catch((err: unknown) => {
+				this.logger.error(() => ({
+					err,
+					msg: "Failed to fetch audio record for central DB streaming",
 				}));
 			});
 	}

@@ -49,6 +49,7 @@ const defaultUserSettings: IUserSettings = {
 	frictionlessThreshold: 0.8,
 	domains: [],
 	captchaType: CaptchaType.frictionless,
+	audioAccessibilityEnabled: false,
 	powDifficulty: 4,
 	imageThreshold: 0.8,
 	imageMaxRounds: 3,

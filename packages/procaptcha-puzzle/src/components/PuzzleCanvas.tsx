@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { AudioAlternativeButton } from "@prosopo/procaptcha-common";
 import type { PuzzleEvent } from "@prosopo/types";
 import type { Theme } from "@prosopo/widget-skeleton";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -33,6 +34,17 @@ interface PuzzleCanvasProps {
 	showRetry: boolean;
 	submitting: boolean;
 	theme: Theme;
+	/**
+	 * Renders a "use audio instead" control below the puzzle when the site
+	 * has the audio accessibility path enabled. Undefined hides it — the
+	 * control must not appear on sites that have not opted in, because the
+	 * audio challenge is English-only and an operator who has not checked
+	 * that against their audience should not have it exposed.
+	 */
+	audioAlternative?: {
+		onRequestAudio: () => void;
+		label: string;
+	};
 }
 
 const CONTAINER_WIDTH = 300;
@@ -56,6 +68,7 @@ export const PuzzleCanvas = ({
 	showRetry,
 	submitting,
 	theme,
+	audioAlternative,
 }: PuzzleCanvasProps) => {
 	const [posX, setPosX] = useState<number>(originX);
 	const [posY, setPosY] = useState<number>(originY);
@@ -316,7 +329,10 @@ export const PuzzleCanvas = ({
 						width: `${CONTAINER_WIDTH}px`,
 						height: `${CONTAINER_HEIGHT}px`,
 						background: puzzleAreaBg,
-						borderRadius: "0 0 20px 20px",
+						// Square off the bottom when the audio-alternative
+						// footer sits below it, or two elements both round the
+						// same corner and the seam shows.
+						borderRadius: audioAlternative ? "0" : "0 0 20px 20px",
 						overflow: "hidden",
 						userSelect: "none",
 						opacity: submitting ? 0.6 : 1,
@@ -429,6 +445,27 @@ export const PuzzleCanvas = ({
 						}}
 					/>
 				</div>
+
+				{/* Audio alternative — below the puzzle area, so it reads as
+				    "or do this instead" rather than as part of the puzzle. */}
+				{audioAlternative && (
+					<div
+						style={{
+							backgroundColor: theme.palette.surface,
+							borderRadius: "0 0 20px 20px",
+							padding: "8px",
+							width: `${CONTAINER_WIDTH}px`,
+							boxSizing: "border-box",
+							textAlign: "center",
+						}}
+					>
+						<AudioAlternativeButton
+							themeColor={theme.palette.mode === "dark" ? "dark" : "light"}
+							onRequestAudio={audioAlternative.onRequestAudio}
+							label={audioAlternative.label}
+						/>
+					</div>
+				)}
 			</div>
 		</div>
 	);

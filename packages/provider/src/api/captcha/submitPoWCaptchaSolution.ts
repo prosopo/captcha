@@ -263,7 +263,11 @@ export const buildEscalation = async (
 ): Promise<PowCaptchaSolutionEscalation | undefined> => {
 	if (!result.verified || !result.routingOutput) return undefined;
 	const routedType = result.routingOutput.captchaType;
-	if (routedType !== CaptchaType.image && routedType !== CaptchaType.puzzle) {
+	if (
+		routedType !== CaptchaType.image &&
+		routedType !== CaptchaType.puzzle &&
+		routedType !== CaptchaType.audio
+	) {
 		return undefined;
 	}
 
@@ -276,7 +280,7 @@ export const buildEscalation = async (
 	if (!originSession) return undefined;
 
 	const routed = result.routingOutput as {
-		captchaType: CaptchaType.image | CaptchaType.puzzle;
+		captchaType: CaptchaType.image | CaptchaType.puzzle | CaptchaType.audio;
 		solvedImagesCount?: number;
 		powDifficulty?: number;
 		reason?: string;

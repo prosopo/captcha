@@ -113,6 +113,51 @@ export const IPValidationRulesSchema = new Schema({
 	},
 });
 
+// Per-render tunables for the puzzle and audio captchas.
+//
+// Mongoose silently drops any path it has not been told about, so a
+// settings key that exists in the zod schema but not here round-trips as
+// `undefined` — the write appears to succeed and the value is simply
+// gone. `puzzle` was in exactly that state: `getPuzzleCaptchaChallenge`
+// reads `clientSettings.settings.puzzle` and the portal offers a card to
+// set it, but there was no path here, so every operator override was
+// discarded on save and the renderer always fell back to defaults.
+//
+// `_id: false` stops Mongoose stamping an implicit ObjectId onto each
+// subdoc.
+export const PuzzleRenderSettingsSchema = new Schema(
+	{
+		decoyCount: { type: Number, required: false },
+		decoyEdgeDarkness: { type: Number, required: false },
+		decoyBodyBrightness: { type: Number, required: false },
+		decoyHoleDarken: { type: Number, required: false },
+		holeDarken: { type: Number, required: false },
+		pieceScale: {
+			type: new Schema(
+				{
+					min: { type: Number, required: false },
+					max: { type: Number, required: false },
+				},
+				{ _id: false },
+			),
+			required: false,
+		},
+	},
+	{ _id: false },
+);
+
+export const AudioRenderSettingsSchema = new Schema(
+	{
+		digitCount: { type: Number, required: false },
+		noiseSnrDb: { type: Number, required: false },
+		babbleGain: { type: Number, required: false },
+		babbleVoices: { type: Number, required: false },
+		reverbMix: { type: Number, required: false },
+		gapMs: { type: Number, required: false },
+	},
+	{ _id: false },
+);
+
 // Sub-schema for one trafficFilter category's policy. `_id: false` prevents
 // Mongoose from stamping an implicit ObjectId onto each subdoc.
 export const TrafficCategoryPolicySchema = new Schema(
@@ -130,6 +175,8 @@ export const TrafficCategoryPolicySchema = new Schema(
 		powDifficulty: { type: Number, required: false },
 		solvedImagesCount: { type: Number, required: false },
 		puzzleTolerance: { type: Number, required: false },
+		puzzle: { type: PuzzleRenderSettingsSchema, required: false },
+		audio: { type: AudioRenderSettingsSchema, required: false },
 	},
 	{ _id: false },
 );
@@ -164,6 +211,13 @@ export const UserSettingsSchema = new Schema({
 	},
 	puzzleTolerance: {
 		type: Number,
+		required: false,
+	},
+	puzzle: { type: PuzzleRenderSettingsSchema, required: false },
+	audio: { type: AudioRenderSettingsSchema, required: false },
+	audioAccessibilityEnabled: {
+		type: Boolean,
+		default: false,
 		required: false,
 	},
 	ipValidationRules: IPValidationRulesSchema,

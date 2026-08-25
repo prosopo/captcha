@@ -28,8 +28,11 @@ import type { ProcaptchaToken, StoredEvents } from "../procaptcha/index.js";
 import type { ClientMetaData } from "../provider/database.js";
 import type {
 	ApiResponse,
+	AudioCaptchaSolutionResponse,
+	AudioEvent,
 	CaptchaResponseBody,
 	CaptchaSolutionResponse,
+	GetAudioCaptchaResponse,
 	GetPowCaptchaResponse,
 	GetPuzzleCaptchaResponse,
 	ImageVerificationResponse,
@@ -103,6 +106,32 @@ export interface ProviderApiInterface {
 		clientMetaData?: ClientMetaData,
 	): Promise<PuzzleCaptchaSolutionResponse>;
 	submitPuzzleCaptchaVerify(
+		token: string,
+		signatureHex: string,
+		user: string,
+		ip?: string,
+		email?: string,
+	): Promise<VerificationResponse>;
+	getAudioCaptchaChallenge(
+		userAccount: string,
+		dappAccount: string,
+		sessionId?: string,
+		simdReadings?: string,
+	): Promise<GetAudioCaptchaResponse>;
+	submitAudioCaptchaSolution(
+		challenge: GetAudioCaptchaResponse,
+		userAccount: string,
+		dappAccount: string,
+		answer: string,
+		replays: number,
+		audioEvents: AudioEvent[],
+		userTimestampSignature: string,
+		behavioralData?: string,
+		salt?: string,
+		simdReadings?: string,
+		clientMetaData?: ClientMetaData,
+	): Promise<AudioCaptchaSolutionResponse>;
+	submitAudioCaptchaVerify(
 		token: string,
 		signatureHex: string,
 		user: string,

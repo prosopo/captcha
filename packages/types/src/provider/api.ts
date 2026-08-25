@@ -22,6 +22,7 @@ import {
 	boolean,
 	coerce,
 	type input,
+	literal,
 	nativeEnum,
 	number,
 	object,
@@ -90,6 +91,9 @@ export enum ClientApiPaths {
 	GetPuzzleCaptchaChallenge = "/v1/prosopo/provider/client/captcha/puzzle",
 	SubmitPuzzleCaptchaSolution = "/v1/prosopo/provider/client/puzzle/solution",
 	VerifyPuzzleCaptchaSolution = "/v1/prosopo/provider/client/puzzle/verify",
+	GetAudioCaptchaChallenge = "/v1/prosopo/provider/client/captcha/audio",
+	SubmitAudioCaptchaSolution = "/v1/prosopo/provider/client/audio/solution",
+	VerifyAudioCaptchaSolution = "/v1/prosopo/provider/client/audio/verify",
 	GetProviderStatus = "/v1/prosopo/provider/client/status",
 	SubmitUserEvents = "/v1/prosopo/provider/client/events",
 	CheckSpamEmail = "/v1/prosopo/provider/client/spam/email",
@@ -179,6 +183,20 @@ export const ProviderDefaultRateLimits = {
 		limit: 300,
 	},
 	[ClientApiPaths.VerifyPuzzleCaptchaSolution]: {
+		windowMs: 60000,
+		limit: 15000,
+	},
+	// Audio challenges are generated on demand rather than served from a
+	// pre-rendered buffer, so the challenge endpoint is the one place a
+	// caller can force real DSP work per request. The limit matches the
+	// other challenge endpoints; the buffer in the provider is what keeps
+	// the cost off the request path.
+	[ClientApiPaths.GetAudioCaptchaChallenge]: { windowMs: 60000, limit: 300 },
+	[ClientApiPaths.SubmitAudioCaptchaSolution]: {
+		windowMs: 60000,
+		limit: 300,
+	},
+	[ClientApiPaths.VerifyAudioCaptchaSolution]: {
 		windowMs: 60000,
 		limit: 15000,
 	},
@@ -445,11 +463,43 @@ export interface PuzzleCaptchaSolutionResponse extends ApiResponse {
 	[ApiParams.error]?: ApiJsonError;
 }
 
+/**
+ * The audio challenge carries the clip, never the transcript.
+ *
+ * The transcript is the answer and lives only on the challenge record.
+ * There is deliberately no field on this type it could be assigned to —
+ * the puzzle captcha originally shipped `targetX`/`targetY` here and any
+ * client could echo them straight back and pass without rendering
+ * anything. Same trap, different medium.
+ *
+ * `characterCount` is safe to publish and necessary: the widget needs it
+ * to size the input and to tell the user how many digits to expect. It
+ * reveals only the length, which the clip itself already makes obvious to
+ * anyone listening.
+ */
+export interface GetAudioCaptchaResponse extends ApiResponse {
+	[ApiParams.challenge]: PoWChallengeId;
+	/** RIFF/WAVE clip as a data URI. */
+	[ApiParams.clip]: string;
+	/** How many characters the user must type. */
+	[ApiParams.characterCount]: number;
+	[ApiParams.timestamp]: string;
+	[ApiParams.signature]: {
+		[ApiParams.provider]: ChallengeSignature;
+	};
+}
+
+export interface AudioCaptchaSolutionResponse extends ApiResponse {
+	[ApiParams.verified]: boolean;
+	[ApiParams.error]?: ApiJsonError;
+}
+
 export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 	[ApiParams.captchaType]:
 		| CaptchaType.pow
 		| CaptchaType.image
-		| CaptchaType.puzzle;
+		| CaptchaType.puzzle
+		| CaptchaType.audio;
 	[ApiParams.sessionId]?: string;
 	// Encoded honeypot question. NOT serialised by the provider on the wire
 	// (it travels in the `x-prosopo-meta` response header so it doesn't sit
@@ -459,10 +509,17 @@ export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 	[ApiParams.hp]?: string;
 	// Per-session DNS observation URL; undefined when no dns sidecar.
 	dns_url?: string;
+	// Mirrors the site's `audioAccessibilityEnabled` setting. When true the
+	// image and puzzle widgets render a control offering the audio
+	// challenge instead. Absent or false means no such control is shown.
+	audioAlternativeAvailable?: boolean;
 }
 
 export interface PowCaptchaSolutionEscalation {
-	[ApiParams.captchaType]: CaptchaType.image | CaptchaType.puzzle;
+	[ApiParams.captchaType]:
+		| CaptchaType.image
+		| CaptchaType.puzzle
+		| CaptchaType.audio;
 	[ApiParams.sessionId]: string;
 }
 
@@ -721,6 +778,98 @@ export type ServerPuzzleCaptchaVerifyRequestBodyType = zInfer<
 
 export type ServerPuzzleCaptchaVerifyRequestBodyOutput = output<
 	typeof ServerPuzzleCaptchaVerifyRequestBody
+>;
+
+// Audio captcha schemas
+
+export const GetAudioCaptchaChallengeRequestBody = object({
+	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.sessionId]: boundedString(INPUT_LIMITS.ID).optional(),
+	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+});
+
+export type GetAudioCaptchaChallengeRequestBodyType = zInfer<
+	typeof GetAudioCaptchaChallengeRequestBody
+>;
+
+export type GetAudioCaptchaChallengeRequestBodyTypeOutput = output<
+	typeof GetAudioCaptchaChallengeRequestBody
+>;
+
+/**
+ * One interaction during an audio challenge. `t` is milliseconds since
+ * the challenge was issued (not absolute), so the trail is
+ * replay-portable in the same way `PuzzleEventSchema` is.
+ *
+ * This is thinner telemetry than the puzzle's drag trail — there is no
+ * two-dimensional path to analyse, just playback control and typing. It
+ * is still the most useful signal the audio flow produces: a solver that
+ * types five correct digits in one burst having never replayed the clip
+ * looks nothing like a person.
+ */
+export const AudioEventSchema = object({
+	kind: union([
+		literal("play"),
+		literal("pause"),
+		literal("replay"),
+		literal("key"),
+	]),
+	t: number(),
+});
+
+export type AudioEvent = zInfer<typeof AudioEventSchema>;
+
+// Bound on the answer field. The longest challenge the settings schema
+// permits is 8 characters; the margin absorbs a user pasting whitespace
+// or a stray character before the grader normalises it.
+const MAX_AUDIO_ANSWER_LENGTH = 32;
+const MAX_AUDIO_EVENTS = 512;
+
+export const SubmitAudioCaptchaSolutionBody = object({
+	[ApiParams.challenge]: PowChallengeIdSchema,
+	[ApiParams.answer]: string().max(MAX_AUDIO_ANSWER_LENGTH),
+	[ApiParams.replays]: number().int().min(0).max(1000).optional(),
+	[ApiParams.audioEvents]: array(AudioEventSchema)
+		.max(MAX_AUDIO_EVENTS)
+		.optional(),
+	[ApiParams.signature]: object({
+		[ApiParams.user]: object({
+			[ApiParams.timestamp]: boundedString(INPUT_LIMITS.ID),
+		}),
+		[ApiParams.provider]: object({
+			[ApiParams.challenge]: boundedString(INPUT_LIMITS.TOKEN),
+		}),
+	}),
+	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.behavioralData]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	[ApiParams.salt]: boundedString(INPUT_LIMITS.ID).optional(),
+	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
+});
+
+export type SubmitAudioCaptchaSolutionBodyType = input<
+	typeof SubmitAudioCaptchaSolutionBody
+>;
+
+export type SubmitAudioCaptchaSolutionBodyTypeOutput = output<
+	typeof SubmitAudioCaptchaSolutionBody
+>;
+
+export const ServerAudioCaptchaVerifyRequestBody = object({
+	[ApiParams.token]: BoundedProcaptchaTokenSpec,
+	[ApiParams.dappSignature]: boundedString(INPUT_LIMITS.TOKEN),
+	[ApiParams.ip]: boundedString(INPUT_LIMITS.ID).optional(),
+	[ApiParams.email]: boundedString(INPUT_LIMITS.EMAIL).email().optional(),
+});
+
+export type ServerAudioCaptchaVerifyRequestBodyType = zInfer<
+	typeof ServerAudioCaptchaVerifyRequestBody
+>;
+
+export type ServerAudioCaptchaVerifyRequestBodyOutput = output<
+	typeof ServerAudioCaptchaVerifyRequestBody
 >;
 
 export const VerifyPowCaptchaSolutionBody = object({

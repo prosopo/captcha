@@ -20,6 +20,8 @@ import {
 	type PoWCaptchaRecord,
 	type PuzzleCaptchaRecord,
 	StoredPoWCaptchaRecordSchema,
+	type AudioCaptchaRecord,
+	StoredAudioCaptchaRecordSchema,
 	StoredPuzzleCaptchaRecordSchema,
 	type StoredSession,
 	StoredSessionRecordSchema,
@@ -50,6 +52,7 @@ enum TableNames {
 	commitment = "commitment",
 	powcaptcha = "powcaptcha",
 	puzzlecaptcha = "puzzlecaptcha",
+	audiocaptcha = "audiocaptcha",
 }
 
 const CAPTCHA_TABLES = [
@@ -72,6 +75,11 @@ const CAPTCHA_TABLES = [
 		collectionName: TableNames.puzzlecaptcha,
 		modelName: "PuzzleCaptcha",
 		schema: StoredPuzzleCaptchaRecordSchema,
+	},
+	{
+		collectionName: TableNames.audiocaptcha,
+		modelName: "AudioCaptcha",
+		schema: StoredAudioCaptchaRecordSchema,
 	},
 ];
 
@@ -200,6 +208,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		imageCaptchaEvents: UserCommitmentRecord[],
 		powCaptchaEvents: PoWCaptchaRecord[],
 		puzzleCaptchaEvents: PuzzleCaptchaRecord[] = [],
+		audioCaptchaEvents: AudioCaptchaRecord[] = [],
 	) {
 		await this.connect();
 		if (sessionEvents.length) {
@@ -327,6 +336,31 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 			}));
 		}
 
+		if (audioCaptchaEvents.length) {
+			const result = await this.tables.audiocaptcha.bulkWrite(
+				audioCaptchaEvents.map((doc) => {
+					const { _id, ...safeDoc } = doc;
+					const normalised = CaptchaDatabase.normaliseDocCompositeIps(safeDoc);
+					return {
+						updateOne: {
+							filter: { challenge: normalised.challenge },
+							update: { $set: normalised },
+							upsert: true,
+						},
+					};
+				}),
+			);
+			logger.info(() => ({
+				data: {
+					upsertedCount: result.upsertedCount,
+					matchedCount: result.matchedCount,
+					modifiedCount: result.modifiedCount,
+					totalProcessed: audioCaptchaEvents.length,
+				},
+				msg: "Mongo Saved Audio Events",
+			}));
+		}
+
 		await this.close();
 	}
 
@@ -337,6 +371,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		userCommitmentRecords: UserCommitmentRecord[];
 		powCaptchaRecords: PoWCaptchaRecord[];
 		puzzleCaptchaRecords: PuzzleCaptchaRecord[];
+		audioCaptchaRecords: AudioCaptchaRecord[];
 	}> {
 		await this.connect();
 
@@ -356,10 +391,16 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 				.limit(limit)
 				.lean<PuzzleCaptchaRecord[]>();
 
+			const audioCaptchaResults = await this.tables.audiocaptcha
+				.find(filter)
+				.limit(limit)
+				.lean<AudioCaptchaRecord[]>();
+
 			return {
 				userCommitmentRecords: commitmentResults,
 				powCaptchaRecords: powCaptchaResults,
 				puzzleCaptchaRecords: puzzleCaptchaResults,
+				audioCaptchaRecords: audioCaptchaResults,
 			};
 		} catch (error) {
 			throw new ProsopoDBError("DATABASE.QUERY_ERROR", {
