@@ -177,6 +177,10 @@ export const runConfiguredCaptchaTypeShortCircuit = async (
 			return res.json(
 				await input.tasks.frictionlessManager.sendPuzzleCaptcha(sessionParams),
 			);
+		case CaptchaType.audio:
+			return res.json(
+				await input.tasks.frictionlessManager.sendAudioCaptcha(sessionParams),
+			);
 		default:
 			throw new Error(
 				`Unhandled configured captchaType in /frictionless short-circuit: ${configuredType}`,

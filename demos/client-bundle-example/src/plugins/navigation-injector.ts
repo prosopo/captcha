@@ -52,6 +52,10 @@ export default function navigationInjector(): Plugin {
 				implicit: { path: "puzzle-implicit.html", exists: true },
 				explicit: { path: "puzzle-explicit.html", exists: true },
 			},
+			audio: {
+				implicit: { path: "audio-implicit.html", exists: true },
+				explicit: { path: "audio-explicit.html", exists: true },
+			},
 		},
 		invisible: {
 			image: {
@@ -75,6 +79,10 @@ export default function navigationInjector(): Plugin {
 			puzzle: {
 				implicit: { path: "invisible-puzzle-implicit.html", exists: true },
 				explicit: { path: "invisible-puzzle-explicit.html", exists: true },
+			},
+			audio: {
+				implicit: { path: "invisible-audio-implicit.html", exists: true },
+				explicit: { path: "invisible-audio-explicit.html", exists: true },
 			},
 		},
 	};

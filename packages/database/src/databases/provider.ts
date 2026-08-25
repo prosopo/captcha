@@ -43,6 +43,7 @@ import {
 	type PoWCaptchaStored,
 	type PoWChallengeComponents,
 	type PoWChallengeId,
+	type AudioCaptchaStored,
 	type PuzzleCaptchaStored,
 	type RequestHeaders,
 	type ResultReason,
@@ -71,7 +72,9 @@ import {
 	type IUserDataSlim,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
+	type AudioCaptchaRecord,
 	type PuzzleCaptchaRecord,
+	AudioCaptchaRecordSchema,
 	PuzzleCaptchaRecordSchema,
 	type ScheduledTask,
 	type ScheduledTaskRecord,
@@ -112,6 +115,7 @@ enum TableNames {
 	scheduler = "scheduler",
 	powcaptcha = "powcaptcha",
 	puzzlecaptcha = "puzzlecaptcha",
+	audiocaptcha = "audiocaptcha",
 	client = "client",
 	session = "session",
 	detector = "detector",
@@ -135,6 +139,11 @@ const PROVIDER_TABLES = [
 		collectionName: TableNames.puzzlecaptcha,
 		modelName: "PuzzleCaptcha",
 		schema: PuzzleCaptchaRecordSchema,
+	},
+	{
+		collectionName: TableNames.audiocaptcha,
+		modelName: "AudioCaptcha",
+		schema: AudioCaptchaRecordSchema,
 	},
 	{
 		collectionName: TableNames.dataset,
@@ -1365,6 +1374,281 @@ export class ProviderDatabase
 			() => this.getPuzzleCaptchaRecordByChallenge(challenge),
 			(ts) =>
 				this.tables.puzzlecaptcha
+					.updateOne(
+						{ challenge, lastUpdatedTimestamp: { $lte: ts } },
+						{
+							$set: { storedAtTimestamp: ts },
+							$unset: { pendingStage: 1 },
+						},
+					)
+					.then(() => {}),
+		);
+	}
+
+	async storeAudioCaptchaRecord(
+		challenge: PoWChallengeId,
+		components: PoWChallengeComponents,
+		answer: string,
+		providerSignature: string,
+		ipAddress: CompositeIpAddress,
+		headers: RequestHeaders,
+		ja4: string,
+		sessionId?: string,
+		ipInfo?: IPInfoResponse,
+	): Promise<void> {
+		const tables = this.getTables();
+
+		const audioCaptchaRecord: AudioCaptchaStored = {
+			challenge,
+			userAccount: components.userAccount,
+			dappAccount: components.dappAccount,
+			requestedAtTimestamp: new Date(components.requestedAtTimestamp),
+			ipAddress,
+			headers,
+			ja4,
+			result: { status: CaptchaStatus.pending },
+			userSubmitted: false,
+			serverChecked: false,
+			answer,
+			providerSignature,
+			lastUpdatedTimestamp: new Date(),
+			pendingStage: true,
+			sessionId,
+			ipInfo,
+		};
+
+		try {
+			await tables.audiocaptcha.create(audioCaptchaRecord);
+			this.logger.info(() => ({
+				data: {
+					challenge,
+					countryCode: ipInfo?.isValid ? ipInfo.countryCode : undefined,
+				},
+				// Deliberately no `answer` in the log line. It is the secret,
+				// and provider logs are shipped off-box.
+				msg: "AudioCaptcha record added successfully",
+			}));
+			this.centralStreamer?.streamAudioRecord(
+				audioCaptchaRecord as AudioCaptchaRecord,
+				(ts) =>
+					this.tables.audiocaptcha
+						.updateOne(
+							{ challenge, lastUpdatedTimestamp: { $lte: ts } },
+							{
+								$set: { storedAtTimestamp: ts },
+								$unset: { pendingStage: 1 },
+							},
+						)
+						.then(() => {}),
+			);
+		} catch (error) {
+			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
+				context: {
+					error,
+					challenge,
+					ipInfo,
+				},
+				logger: this.logger,
+			});
+			this.logger.error(() => ({
+				err: error,
+				msg: "Failed to add AudioCaptcha record",
+			}));
+			throw err;
+		}
+	}
+
+	/**
+	 * @description Retrieves an Audio Captcha record by its challenge string.
+	 * @param {string} challenge The challenge string to search for.
+	 * @returns {Promise<AudioCaptchaRecord | null>} A promise that resolves with the found record or null if not found.
+	 */
+	async getAudioCaptchaRecordByChallenge(
+		challenge: string,
+	): Promise<AudioCaptchaRecord | null> {
+		if (!this.tables) {
+			throw new ProsopoDBError("DATABASE.DATABASE_UNDEFINED", {
+				context: {
+					failedFuncName: this.getAudioCaptchaRecordByChallenge.name,
+				},
+				logger: this.logger,
+			});
+		}
+
+		try {
+			const filter: {
+				[key in keyof Pick<AudioCaptchaRecord, "challenge">]: string;
+			} = { challenge };
+			const record: AudioCaptchaRecord | null | undefined =
+				await this.tables.audiocaptcha
+					.findOne(filter, {
+						challenge: 1,
+						userAccount: 1,
+						dappAccount: 1,
+						requestedAtTimestamp: 1,
+						// Gates the submit → verify recency check in
+						// serverVerifyAudioCaptchaSolution. See the matching
+						// note on getPuzzleCaptchaRecordByChallenge: a missing
+						// field reads as Number.POSITIVE_INFINITY and trips
+						// the "too old" branch on every freshly-solved
+						// challenge.
+						submittedAtTimestamp: 1,
+						ipAddress: 1,
+						headers: 1,
+						ja4: 1,
+						result: 1,
+						// The grader needs this. It is the one projection
+						// field that must never be echoed back to a client.
+						answer: 1,
+						submittedAnswer: 1,
+						replays: 1,
+						audioEvents: 1,
+						sessionId: 1,
+						ipInfo: 1,
+						deviceCapability: 1,
+						behavioralDataPacked: 1,
+						serverChecked: 1,
+						userSubmitted: 1,
+						coords: 1,
+					} as { [key in keyof Partial<AudioCaptchaRecord>]: 1 })
+					.lean<AudioCaptchaRecord>();
+			if (record) {
+				this.logger.info(() => ({
+					data: { challenge },
+					msg: "AudioCaptcha record retrieved successfully",
+				}));
+				return record;
+			}
+			this.logger.info(() => ({
+				data: { challenge },
+				msg: "No AudioCaptcha record found",
+			}));
+			return null;
+		} catch (error) {
+			const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
+				context: { error, challenge },
+				logger: this.logger,
+			});
+			this.logger.error(() => ({
+				err: err,
+				msg: "Failed to retrieve AudioCaptcha record",
+			}));
+			throw err;
+		}
+	}
+
+	/**
+	 * @description Updates an Audio Captcha record result in the database.
+	 */
+	async updateAudioCaptchaRecordResult(
+		challenge: PoWChallengeId,
+		result: CaptchaResult,
+		serverChecked = false,
+		userSubmitted = false,
+		userSignature?: string,
+		coords?: [number, number][][],
+		lastUpdatedTimestamp?: Date,
+	): Promise<void> {
+		const tables = this.getTables();
+		const timestamp = lastUpdatedTimestamp ?? new Date();
+		const isDisapproved = result.status === CaptchaStatus.disapproved;
+		assertCoordsSafe(coords, "coords");
+		// Direct writes rather than `$ifNull` pipeline exprs, for the same
+		// reason spelled out on `updatePuzzleCaptchaRecordResult`: audio
+		// challenges are single-use, so each stamp is written exactly once,
+		// and the pipeline variant silently dropped them on the wire.
+		const setStage: Record<string, unknown> = {
+			result,
+			serverChecked,
+			userSubmitted,
+			userSignature,
+			lastUpdatedTimestamp: timestamp,
+			pendingStage: true,
+			blocked: isBlockingCaptchaResult(CaptchaType.audio, result),
+			...(coords && { coords }),
+			...(userSubmitted && { submittedAtTimestamp: timestamp }),
+			...(isDisapproved && { failedAtTimestamp: timestamp }),
+		};
+		try {
+			const updateResult = await tables.audiocaptcha.updateOne(
+				{ challenge },
+				{ $set: setStage },
+			);
+			if (updateResult.matchedCount === 0) {
+				const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
+					context: {
+						challenge,
+						...setStage,
+					},
+					logger: this.logger,
+				});
+				this.logger.info(() => ({
+					err: err,
+					msg: "No AudioCaptcha record found to update",
+				}));
+				throw err;
+			}
+			this.logger.info(() => ({
+				data: {
+					challenge,
+					...setStage,
+				},
+				msg: "AudioCaptcha record updated successfully",
+			}));
+			this.centralStreamer?.streamAudioUpdate(
+				() => this.getAudioCaptchaRecordByChallenge(challenge),
+				(ts) =>
+					this.tables.audiocaptcha
+						.updateOne(
+							{ challenge, lastUpdatedTimestamp: { $lte: ts } },
+							{
+								$set: { storedAtTimestamp: ts },
+								$unset: { pendingStage: 1 },
+							},
+						)
+						.then(() => {}),
+			);
+		} catch (error) {
+			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
+				context: {
+					error,
+					challenge,
+					...setStage,
+				},
+				logger: this.logger,
+			});
+			this.logger.error(() => ({
+				err: err,
+				msg: "Failed to update AudioCaptcha record",
+			}));
+			throw err;
+		}
+	}
+
+	async updateAudioCaptchaRecord(
+		challenge: PoWChallengeId,
+		updates: Partial<AudioCaptchaRecord>,
+	): Promise<void> {
+		const tables = this.getTables();
+		const timestamp = new Date();
+		const baseSet: Record<string, unknown> = {
+			...updates,
+			pendingStage: true,
+			...(updates.serverChecked === true && {
+				verifiedAtTimestamp: timestamp,
+			}),
+			...(updates.userSubmitted === true && {
+				submittedAtTimestamp: timestamp,
+			}),
+			...(updates.result?.status === CaptchaStatus.disapproved && {
+				failedAtTimestamp: timestamp,
+			}),
+		};
+		await tables.audiocaptcha.updateOne({ challenge }, { $set: baseSet });
+		this.centralStreamer?.streamAudioUpdate(
+			() => this.getAudioCaptchaRecordByChallenge(challenge),
+			(ts) =>
+				this.tables.audiocaptcha
 					.updateOne(
 						{ challenge, lastUpdatedTimestamp: { $lte: ts } },
 						{

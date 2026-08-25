@@ -226,6 +226,13 @@ export default (
 				);
 			}
 
+			// Surfaced on every frictionless response below, so it must be
+			// set before both the dedup fast-path and the short-circuit /
+			// decision-machine dispatch paths.
+			tasks.frictionlessManager.setAudioAlternativeAvailable(
+				clientRecord.settings?.audioAccessibilityEnabled === true,
+			);
+
 			if (dedup) {
 				// A reused session must still honour an active user access policy
 				// AND the configured routing machine. This fast-path returns
@@ -296,7 +303,8 @@ export default (
 				const cachedCaptchaType = dedup.captchaType as
 					| CaptchaType.image
 					| CaptchaType.pow
-					| CaptchaType.puzzle;
+					| CaptchaType.puzzle
+					| CaptchaType.audio;
 				const dedupRouted = normalizedIp
 					? await tasks.frictionlessManager.applyRoutingMachine(
 							{
@@ -477,10 +485,16 @@ export default (
 						[ApiParams.captchaType]: dedup.captchaType as
 							| CaptchaType.image
 							| CaptchaType.pow
-							| CaptchaType.puzzle,
+							| CaptchaType.puzzle
+							| CaptchaType.audio,
 						[ApiParams.sessionId]: dedup.sessionId,
 						[ApiParams.status]: "ok",
 						dns_url: buildDnsEventUrl(dedup.sessionId),
+						...((dedup.captchaType === CaptchaType.image ||
+							dedup.captchaType === CaptchaType.puzzle) &&
+							clientRecord.settings?.audioAccessibilityEnabled === true && {
+								audioAlternativeAvailable: true,
+							}),
 					});
 				}
 			}

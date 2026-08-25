@@ -56,6 +56,23 @@ const FULLY_POPULATED_SETTINGS = {
 	verifiedTimeout: 120000,
 	solutionTimeout: 60000,
 	puzzleTolerance: 20,
+	puzzle: {
+		decoyCount: 7,
+		decoyEdgeDarkness: 25,
+		decoyBodyBrightness: -3,
+		decoyHoleDarken: 0.62,
+		holeDarken: 0.48,
+		pieceScale: { min: 0.2, max: 0.5 },
+	},
+	audio: {
+		digitCount: 6,
+		noiseSnrDb: 18,
+		babbleGain: 0.22,
+		babbleVoices: 3,
+		reverbMix: 0.08,
+		gapMs: 300,
+	},
+	audioAccessibilityEnabled: true,
 	disallowWebView: true,
 	contextAware: {
 		enabled: true,
@@ -241,6 +258,9 @@ describe("Client settings Mongo persistence", () => {
 		expect(stored.puzzleTolerance).toBe(
 			FULLY_POPULATED_SETTINGS.puzzleTolerance,
 		);
+		expect(stored.audioAccessibilityEnabled).toBe(
+			FULLY_POPULATED_SETTINGS.audioAccessibilityEnabled,
+		);
 		expect(stored.disallowWebView).toBe(
 			FULLY_POPULATED_SETTINGS.disallowWebView,
 		);
@@ -320,6 +340,47 @@ describe("Client settings Mongo persistence", () => {
 		expect(trafficFilter.crawler).toEqual(
 			FULLY_POPULATED_SETTINGS.trafficFilter.crawler,
 		);
+
+		// Nested render settings. These are the fields most likely to be
+		// silently dropped: Mongoose discards any path its schema does not
+		// declare, so a settings key that exists in the zod schema but not
+		// in `UserSettingsSchema` round-trips as `undefined` while the
+		// write reports success. `puzzle` was in exactly that state — the
+		// provider read it and the portal offered a card to set it, but it
+		// had no mongoose path, so every operator override was thrown away
+		// on save. Assert per-field so a future drop fails loudly here.
+		const puzzle = stored.puzzle;
+		expect(puzzle).toBeDefined();
+		if (!puzzle) return;
+		expect(puzzle.decoyCount).toBe(FULLY_POPULATED_SETTINGS.puzzle.decoyCount);
+		expect(puzzle.decoyEdgeDarkness).toBe(
+			FULLY_POPULATED_SETTINGS.puzzle.decoyEdgeDarkness,
+		);
+		expect(puzzle.decoyBodyBrightness).toBe(
+			FULLY_POPULATED_SETTINGS.puzzle.decoyBodyBrightness,
+		);
+		expect(puzzle.decoyHoleDarken).toBe(
+			FULLY_POPULATED_SETTINGS.puzzle.decoyHoleDarken,
+		);
+		expect(puzzle.holeDarken).toBe(FULLY_POPULATED_SETTINGS.puzzle.holeDarken);
+		expect(puzzle.pieceScale?.min).toBe(
+			FULLY_POPULATED_SETTINGS.puzzle.pieceScale.min,
+		);
+		expect(puzzle.pieceScale?.max).toBe(
+			FULLY_POPULATED_SETTINGS.puzzle.pieceScale.max,
+		);
+
+		const audio = stored.audio;
+		expect(audio).toBeDefined();
+		if (!audio) return;
+		expect(audio.digitCount).toBe(FULLY_POPULATED_SETTINGS.audio.digitCount);
+		expect(audio.noiseSnrDb).toBe(FULLY_POPULATED_SETTINGS.audio.noiseSnrDb);
+		expect(audio.babbleGain).toBe(FULLY_POPULATED_SETTINGS.audio.babbleGain);
+		expect(audio.babbleVoices).toBe(
+			FULLY_POPULATED_SETTINGS.audio.babbleVoices,
+		);
+		expect(audio.reverbMix).toBe(FULLY_POPULATED_SETTINGS.audio.reverbMix);
+		expect(audio.gapMs).toBe(FULLY_POPULATED_SETTINGS.audio.gapMs);
 
 		// Honeypot — per-field, same rationale as trafficFilter.
 		const honeypot = stored.honeypot;

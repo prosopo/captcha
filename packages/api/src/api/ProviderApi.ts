@@ -34,6 +34,10 @@ import {
 	type GetFrictionlessCaptchaResponse,
 	type GetPowCaptchaChallengeRequestBodyType,
 	type GetPowCaptchaResponse,
+	type AudioCaptchaSolutionResponse,
+	type AudioEvent,
+	type GetAudioCaptchaChallengeRequestBodyType,
+	type GetAudioCaptchaResponse,
 	type GetPuzzleCaptchaChallengeRequestBodyType,
 	type GetPuzzleCaptchaResponse,
 	type IUserSettings,
@@ -53,9 +57,11 @@ import {
 	RemoveSitekeysBody,
 	type RemoveSitekeysBodyTypeOutput,
 	type ServerPowCaptchaVerifyRequestBodyType,
+	type ServerAudioCaptchaVerifyRequestBodyType,
 	type ServerPuzzleCaptchaVerifyRequestBodyType,
 	type StoredEvents,
 	SubmitPowCaptchaSolutionBody,
+	SubmitAudioCaptchaSolutionBody,
 	SubmitPuzzleCaptchaSolutionBody,
 	type Tier,
 	ToggleMaintenanceModeBody,
@@ -366,6 +372,93 @@ export default class ProviderApi
 			body[ApiParams.email] = email;
 		}
 		return this.post(ClientApiPaths.VerifyPuzzleCaptchaSolution, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": user,
+			},
+		});
+	}
+
+	public getAudioCaptchaChallenge(
+		user: string,
+		dapp: string,
+		sessionId?: string,
+		simdReadings?: string,
+	): Promise<GetAudioCaptchaResponse> {
+		const body: GetAudioCaptchaChallengeRequestBodyType = {
+			[ApiParams.user]: user.toString(),
+			[ApiParams.dapp]: dapp.toString(),
+			...(sessionId && { [ApiParams.sessionId]: sessionId }),
+			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
+		};
+		return this.dedupedPost<
+			GetAudioCaptchaResponse,
+			GetAudioCaptchaChallengeRequestBodyType
+		>(ClientApiPaths.GetAudioCaptchaChallenge, sessionId, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": user,
+			},
+		});
+	}
+
+	public submitAudioCaptchaSolution(
+		challenge: GetAudioCaptchaResponse,
+		userAccount: string,
+		dappAccount: string,
+		answer: string,
+		replays: number,
+		audioEvents: AudioEvent[],
+		userTimestampSignature: string,
+		behavioralData?: string,
+		salt?: string,
+		simdReadings?: string,
+		clientMetaData?: ClientMetaData,
+	): Promise<AudioCaptchaSolutionResponse> {
+		const body = SubmitAudioCaptchaSolutionBody.parse({
+			[ApiParams.challenge]: challenge.challenge,
+			[ApiParams.timestamp]: challenge.timestamp,
+			[ApiParams.user]: userAccount.toString(),
+			[ApiParams.dapp]: dappAccount.toString(),
+			[ApiParams.answer]: answer,
+			[ApiParams.replays]: replays,
+			[ApiParams.audioEvents]: audioEvents,
+			[ApiParams.signature]: {
+				[ApiParams.provider]:
+					challenge[ApiParams.signature][ApiParams.provider],
+				[ApiParams.user]: {
+					[ApiParams.timestamp]: userTimestampSignature,
+				},
+			},
+			...(behavioralData && { [ApiParams.behavioralData]: behavioralData }),
+			...(salt && { [ApiParams.salt]: salt }),
+			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
+			...(clientMetaData && { [ApiParams.clientMetaData]: clientMetaData }),
+		});
+		return this.post(ClientApiPaths.SubmitAudioCaptchaSolution, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": userAccount,
+			},
+		});
+	}
+
+	public submitAudioCaptchaVerify(
+		token: string,
+		signatureHex: string,
+		user: string,
+		ip?: string,
+		email?: string,
+	): Promise<VerificationResponse> {
+		const body: ServerAudioCaptchaVerifyRequestBodyType = {
+			[ApiParams.token]: token,
+			[ApiParams.dappSignature]: signatureHex,
+			[ApiParams.ip]: ip,
+		};
+		if (email) {
+			body[ApiParams.email] = email;
+		}
+		return this.post(ClientApiPaths.VerifyAudioCaptchaSolution, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": user,

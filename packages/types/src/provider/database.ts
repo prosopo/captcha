@@ -48,7 +48,7 @@ import type {
 	DecisionMachineRuntime,
 	DecisionMachineScope,
 } from "../decisionMachine/index.js";
-import type { PuzzleEvent, RequestHeaders } from "./api.js";
+import type { AudioEvent, PuzzleEvent, RequestHeaders } from "./api.js";
 import type { SimdReadings } from "./detection.js";
 import {
 	type MatchedAccessRule,
@@ -756,6 +756,30 @@ export interface PuzzleCaptchaStored extends StoredCaptcha {
 	puzzleEvents?: PuzzleEvent[];
 }
 
+/**
+ * An audio challenge as stored by the provider.
+ *
+ * `answer` is the spoken transcript. It is the secret: it never appears
+ * in any response body, and the audio-challenge response type has no
+ * field it could be written to. The puzzle captcha shipped its target
+ * coordinates to the client once, which let any caller echo them back
+ * and pass without rendering anything — this is the same secret in a
+ * different medium.
+ */
+export interface AudioCaptchaStored extends StoredCaptcha {
+	challenge: PoWChallengeId;
+	answer: string;
+	providerSignature: string;
+	userSignature?: string;
+	userAccount: string;
+	dappAccount: string;
+	/** What the user typed. Kept for audit and for tuning difficulty. */
+	submittedAnswer?: string;
+	/** How many times the clip was played before submitting. */
+	replays?: number;
+	audioEvents?: AudioEvent[];
+}
+
 export interface SolutionRecord extends CaptchaSolution {
 	datasetId: string;
 	datasetContentId: string;
@@ -799,7 +823,11 @@ export type DecisionMachineArtifact = {
 	source: string;
 	name?: string;
 	version?: string;
-	captchaType?: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle;
+	captchaType?:
+		| CaptchaType.pow
+		| CaptchaType.image
+		| CaptchaType.puzzle
+		| CaptchaType.audio;
 	createdAt: Date;
 	updatedAt: Date;
 };

@@ -17,6 +17,7 @@ import {
 	CaptchaType,
 	type GetFrictionlessCaptchaResponse,
 	type IPInfoResponse,
+	type IAudioSettings,
 	type IPuzzleSettings,
 	type ITrafficFilter,
 } from "@prosopo/types";
@@ -44,6 +45,9 @@ export type RequestTimeTrafficVerdict =
 			// as the top of the override chain (asset default → client
 			// setting → this).
 			puzzleSettings?: IPuzzleSettings;
+			// Merged audio render overrides, same cascade position as
+			// `puzzleSettings`.
+			audioSettings?: IAudioSettings;
 			sourceCategories: ResolvedChallengePolicy["sourceCategories"];
 	  };
 
@@ -95,6 +99,7 @@ export const applyTrafficFilterAtRequestTime = (
 		solvedImagesCount: resolved.solvedImagesCount,
 		puzzleTolerance: resolved.puzzleTolerance,
 		puzzleSettings: resolved.puzzleSettings,
+		audioSettings: resolved.audioSettings,
 		sourceCategories: resolved.sourceCategories,
 	};
 };

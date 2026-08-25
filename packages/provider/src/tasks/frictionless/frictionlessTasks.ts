@@ -63,12 +63,15 @@ export interface PowCaptchaSessionParams extends Session {}
 
 export interface PuzzleCaptchaSessionParams extends Session {}
 
+export interface AudioCaptchaSessionParams extends Session {}
+
 export class FrictionlessManager extends CaptchaManager {
 	private sessionParams?: Omit<
 		Session,
 		"sessionId" | "createdAt" | "captchaType"
 	>;
 	private routingContext?: RoutingContext;
+	private audioAlternativeAvailable = false;
 	private readonly decisionMachineRunner: DecisionMachineRunner;
 	private readonly usageCounters: UsageCounters | null;
 
@@ -99,6 +102,20 @@ export class FrictionlessManager extends CaptchaManager {
 	 */
 	setRoutingContext(ctx: RoutingContext): void {
 		this.routingContext = ctx;
+	}
+
+	/**
+	 * Whether this site offers the audio challenge as an accessibility
+	 * alternative from the image and puzzle widgets.
+	 *
+	 * Set once per request from the client record, before either the
+	 * short-circuit or the decision-machine dispatch path runs, so every
+	 * `send*Captcha` return carries it. Kept separate from
+	 * `setSessionParams` because the short-circuit path builds its own
+	 * params object and would otherwise miss it.
+	 */
+	setAudioAlternativeAvailable(available: boolean): void {
+		this.audioAlternativeAvailable = available;
 	}
 
 	/**
@@ -360,11 +377,21 @@ export class FrictionlessManager extends CaptchaManager {
 		return this.sendCaptcha(CaptchaType.puzzle, params);
 	}
 
-	// Shared body for the three concrete `send*Captcha` helpers. Each helper is
+	async sendAudioCaptcha(
+		params?: Partial<AudioCaptchaSessionParams>,
+	): Promise<GetFrictionlessCaptchaResponse> {
+		return this.sendCaptcha(CaptchaType.audio, params);
+	}
+
+	// Shared body for the concrete `send*Captcha` helpers. Each helper is
 	// kept as its own thin wrapper so call-sites read clearly, but session
 	// validation and the createSession invocation only live in one place.
 	private async sendCaptcha(
-		captchaType: CaptchaType.image | CaptchaType.pow | CaptchaType.puzzle,
+		captchaType:
+			| CaptchaType.image
+			| CaptchaType.pow
+			| CaptchaType.puzzle
+			| CaptchaType.audio,
 		params?: Partial<Session>,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const effectiveParams = { ...this.sessionParams, ...params };
@@ -411,6 +438,11 @@ export class FrictionlessManager extends CaptchaManager {
 		// else, so it cannot substitute another type at serve time, and the
 		// puzzle widget cannot render one either. Downgrade here, before the
 		// session is written, so every later hop sees a consistent type.
+		//
+		// Audio has no equivalent downgrade and needs none: the synthesiser
+		// is pure TypeScript with no native dependency, so unlike puzzle
+		// rendering (which needs `sharp`) it cannot be unavailable on a
+		// provider that has the code.
 		const finalCaptchaType = downgradePuzzleIfUnavailable(
 			routed.captchaType,
 			this.logger,
@@ -502,6 +534,14 @@ export class FrictionlessManager extends CaptchaManager {
 			[ApiParams.sessionId]: sessionRecord.sessionId,
 			[ApiParams.status]: "ok",
 			dns_url: buildDnsEventUrl(sessionRecord.sessionId),
+			// Only advertised when the challenge actually has something to
+			// switch away from. Offering "listen instead" on an audio
+			// challenge is nonsense, and PoW has no UI to hang it off.
+			...((finalCaptchaType === CaptchaType.image ||
+				finalCaptchaType === CaptchaType.puzzle) &&
+				this.audioAlternativeAvailable && {
+					audioAlternativeAvailable: true,
+				}),
 		};
 	}
 

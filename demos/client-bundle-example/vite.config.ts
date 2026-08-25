@@ -214,6 +214,22 @@ export default defineConfig(({ command, mode }) => {
 						__dirname,
 						"src/invisible-puzzle-explicit.html",
 					),
+					"audio-implicit": path.resolve(
+						__dirname,
+						"src/audio-implicit.html",
+					),
+					"audio-explicit": path.resolve(
+						__dirname,
+						"src/audio-explicit.html",
+					),
+					"invisible-audio-implicit": path.resolve(
+						__dirname,
+						"src/invisible-audio-implicit.html",
+					),
+					"invisible-audio-explicit": path.resolve(
+						__dirname,
+						"src/invisible-audio-explicit.html",
+					),
 				},
 			},
 		},

@@ -16,6 +16,7 @@ import {
 	CaptchaType,
 	type IPInfoResponse,
 	type IPInfoResult,
+	type IAudioSettings,
 	type IPuzzleSettings,
 	type ITrafficCategoryPolicy,
 	type ITrafficFilter,
@@ -299,12 +300,19 @@ export const checkTrafficFilter = (
 
 // Precedence for combining multiple `challenge` matches on the same
 // request. `block` outranks any challenge (short-circuited earlier in
-// `checkTrafficFilter`); among captcha types, image outranks puzzle
-// outranks pow — a stricter check is monotonically preferred so the
-// operator's hardest configured policy wins.
+// `checkTrafficFilter`); among captcha types, image outranks puzzle and
+// audio, which outrank pow — a stricter check is monotonically preferred
+// so the operator's hardest configured policy wins.
+//
+// Audio ties with puzzle deliberately. See the matching note on
+// `CAPTCHA_TYPE_HARSHNESS` in blacklistRequestInspector.ts: audio is a
+// different modality at comparable user effort, not a harsher challenge,
+// and ranking it top would let one traffic category quietly override
+// every other configured policy.
 const CAPTCHA_TYPE_RANK: Record<CaptchaType, number> = {
 	[CaptchaType.image]: 4,
 	[CaptchaType.puzzle]: 3,
+	[CaptchaType.audio]: 3,
 	[CaptchaType.pow]: 2,
 	[CaptchaType.frictionless]: 1,
 };
@@ -323,6 +331,7 @@ export type ResolvedChallengePolicy = {
 	// object means "no policy specified any puzzle setting"; undefined
 	// means no challenge matches at all (already short-circuited above).
 	puzzleSettings?: IPuzzleSettings;
+	audioSettings?: IAudioSettings;
 	// Categories whose policies contributed to the resolved combination.
 	sourceCategories: TrafficCategory[];
 };
@@ -356,6 +365,7 @@ export const resolveChallengePolicy = (
 	let solvedImagesCount: number | undefined;
 	let puzzleTolerance: number | undefined;
 	let puzzleSettings: IPuzzleSettings | undefined;
+	let audioSettings: IAudioSettings | undefined;
 	for (const m of challenges) {
 		if (m.policy.powDifficulty !== undefined) {
 			powDifficulty =
@@ -382,6 +392,12 @@ export const resolveChallengePolicy = (
 		if (m.policy.puzzle) {
 			puzzleSettings = { ...(puzzleSettings ?? {}), ...m.policy.puzzle };
 		}
+		if (m.policy.audio) {
+			// Shallow-merge across matched categories, same as puzzle: a
+			// later category overriding one field must not wipe the fields
+			// an earlier one set.
+			audioSettings = { ...(audioSettings ?? {}), ...m.policy.audio };
+		}
 	}
 
 	return {
@@ -390,6 +406,7 @@ export const resolveChallengePolicy = (
 		solvedImagesCount,
 		puzzleTolerance,
 		puzzleSettings,
+		audioSettings,
 		sourceCategories: challenges.map((m) => m.category),
 	};
 };

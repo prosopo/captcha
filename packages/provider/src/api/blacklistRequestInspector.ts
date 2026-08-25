@@ -256,6 +256,14 @@ const ruleSpecificity = (
 const CAPTCHA_TYPE_HARSHNESS: Record<CaptchaType, number> = {
 	[CaptchaType.image]: 30,
 	[CaptchaType.puzzle]: 20,
+	// Audio sits level with puzzle rather than above it. Harshness here
+	// ranks how demanding a challenge is on the user, and audio is not
+	// harsher than a puzzle — it is a different modality at comparable
+	// effort. Ranking it highest would make a Restrict-to-audio rule win
+	// every equal-specificity tiebreak, which would quietly turn an
+	// accessibility affordance into the default challenge for anyone
+	// matching two rules at once.
+	[CaptchaType.audio]: 20,
 	[CaptchaType.pow]: 10,
 	// Frictionless isn't a routing target for Restrict rules but include it
 	// so the Record is total over CaptchaType — keeps the type-checker honest

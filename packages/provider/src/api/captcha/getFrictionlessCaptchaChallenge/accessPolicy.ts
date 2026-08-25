@@ -223,5 +223,22 @@ export const handleAccessPolicy = async (
 		};
 	}
 
+	if (userAccessPolicy.captchaType === CaptchaType.audio) {
+		logger.info(() => ({
+			msg: "Frictionless decision",
+			data: {
+				decision: "user_access_policy",
+				captchaType: CaptchaType.audio,
+			},
+		}));
+		attachHoneypot(res, clientRecord);
+		return {
+			handled: true,
+			response: res.json(
+				await tasks.frictionlessManager.sendAudioCaptcha(captchaTypeBaseParams),
+			),
+		};
+	}
+
 	return { handled: false, botScore, scoreComponents };
 };

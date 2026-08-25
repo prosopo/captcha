@@ -123,6 +123,7 @@ export default (
 					imageThreshold: image_threshold as number,
 					imageMaxRounds: image_max_rounds as number,
 					puzzleTolerance: puzzleToleranceDefault,
+					audioAccessibilityEnabled: false,
 					disallowWebView: false,
 					contextAware: {
 						enabled: false,

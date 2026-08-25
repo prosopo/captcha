@@ -152,6 +152,17 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 		<Honeypot ref={hpRef} encodedQuestion={frictionlessState.hp} />
 	) : null;
 
+	// Built once and passed to both the invisible and visible branches, so
+	// the escape hatch cannot end up available in one mode and missing in
+	// the other.
+	const audioAlternative =
+		props.audioAlternativeAvailable && props.onRequestAudioAlternative
+			? {
+					onRequestAudio: props.onRequestAudioAlternative,
+					label: isTranslationReady ? t("WIDGET.AUDIO_ALTERNATIVE") : "",
+				}
+			: undefined;
+
 	if (config.mode === "invisible") {
 		return (
 			<>
@@ -168,6 +179,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 							onNext={manager.current.nextRound}
 							onReload={manager.current.reload}
 							themeColor={config.theme ?? "light"}
+							audioAlternative={audioAlternative}
 						/>
 					) : null}
 				</Modal>
@@ -190,6 +202,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 						onNext={manager.current.nextRound}
 						onReload={manager.current.reload}
 						themeColor={config.theme ?? "light"}
+						audioAlternative={audioAlternative}
 					/>
 				) : (
 					<div>No challenge set.</div>

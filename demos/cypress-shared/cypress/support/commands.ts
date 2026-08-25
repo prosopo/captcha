@@ -430,6 +430,7 @@ function registerSiteKey(
 			imageThreshold: 0.8,
 			imageMaxRounds: MAX_IMAGE_CAPTCHA_ROUNDS,
 			puzzleTolerance: puzzleToleranceDefault,
+			audioAccessibilityEnabled: false,
 			disallowWebView: false,
 			verifiedTimeout: 60000,
 			solutionTimeout: 60000,

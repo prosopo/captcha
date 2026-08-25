@@ -40,6 +40,7 @@ type MockTasks = {
 		checkLangRules: MockFn;
 		setSessionParams: MockFn;
 		setRoutingContext: MockFn;
+		setAudioAlternativeAvailable: MockFn;
 		applyRoutingMachine: MockFn;
 		getClientContextEntropy: MockFn;
 		sendImageCaptcha: MockFn;
@@ -173,6 +174,7 @@ vi.mock("../../../tasks/index.js", async () => {
 					checkLangRules: vi.fn().mockReturnValue(0),
 					setSessionParams: vi.fn(),
 					setRoutingContext: vi.fn(),
+					setAudioAlternativeAvailable: vi.fn(),
 					applyRoutingMachine: vi.fn(
 						async (baseline: { captchaType: CaptchaType }) => ({
 							captchaType: baseline.captchaType,
@@ -258,6 +260,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			checkLangRules: vi.fn().mockReturnValue(0),
 			setSessionParams: vi.fn(),
 			setRoutingContext: vi.fn(),
+			setAudioAlternativeAvailable: vi.fn(),
 			applyRoutingMachine: vi.fn(
 				async (baseline: { captchaType: CaptchaType }) => ({
 					captchaType: baseline.captchaType,

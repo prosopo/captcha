@@ -65,6 +65,7 @@ describe("ApiRegisterSiteKeyEndpoint", () => {
 			verifiedTimeout: 120000,
 			solutionTimeout: 60000,
 			puzzleTolerance: 15,
+			audioAccessibilityEnabled: false,
 			disallowWebView: false,
 		};
 

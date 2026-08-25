@@ -38,7 +38,7 @@ import type { Account, Callbacks } from "./manager.js";
  * telemetry the direct image/puzzle path preserves.
  */
 export type ProcaptchaEscalationHandler = (
-	captchaType: CaptchaType.image | CaptchaType.puzzle,
+	captchaType: CaptchaType.image | CaptchaType.puzzle | CaptchaType.audio,
 	sessionId: string,
 	coords?: { x: number; y: number },
 ) => void;
@@ -129,4 +129,18 @@ export interface ProcaptchaProps {
 	// `onSessionInvalidated`. When absent the widget falls back to the
 	// manager's own reload behaviour.
 	onReload?: (x?: number, y?: number) => void;
+	// True when the site has `audioAccessibilityEnabled` set, so the widget
+	// should offer the audio challenge as an alternative. Set by
+	// ProcaptchaFrictionless from the frictionless response.
+	audioAlternativeAvailable?: boolean;
+	// Called when the user asks for the audio alternative. Handled by
+	// ProcaptchaFrictionless, which mints a fresh session and mounts the
+	// audio widget in place.
+	//
+	// A fresh session is unavoidable rather than wasteful: the provider
+	// consumes the session when it issues a challenge, so the session
+	// behind the visual challenge the user is currently looking at cannot
+	// be reused to ask for an audio one. Same constraint `onReload`
+	// works under.
+	onRequestAudioAlternative?: () => void;
 }
