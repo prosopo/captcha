@@ -39,6 +39,15 @@ export {
 } from "./classifyBrowser.js";
 
 export {
+	HEADER_OPERATORS,
+	type HeaderOperator,
+	HEADER_RULE_MARKER,
+	isHeaderOperator,
+	evaluateHeaderCondition,
+	accessRuleHeaderMatches,
+} from "./headerMatch.js";
+
+export {
 	type AccessRulesFilter,
 	type AccessRulesStorage,
 	type AccessRuleEntry,

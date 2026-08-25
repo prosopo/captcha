@@ -51,6 +51,7 @@ import {
 import {
 	getPrioritisedAccessRule,
 	getRequestUserScope,
+	normalizeHeadersForMatching,
 } from "../api/blacklistRequestInspector.js";
 import { getIpAddressFromComposite } from "../compositeIpAddress.js";
 import { getDetectorBundlePool } from "./detection/bundlePool.js";
@@ -719,12 +720,14 @@ export class CaptchaManager {
 			// request collapses to zero extra Redis round-trips.
 			requestMemoHost?: object;
 		},
+		requestHeaders: Record<string, string> = {},
 	) {
 		return getPrioritisedAccessRule(
 			userAccessRulesStorage,
 			userScope,
 			clientId,
 			options,
+			requestHeaders,
 		);
 	}
 
@@ -913,6 +916,10 @@ export class CaptchaManager {
 			// below already accepts one (case c), but a Block-only pool
 			// meant a deferred Restrict was never fetched to be found.
 			{ blockOnly: true, includeDeferred: true },
+			// Raw headers for the in-code header-condition check. Available
+			// on the verify path too, so header rules fire there (e.g. an
+			// allow-list rule marked deferToVerify).
+			normalizeHeadersForMatching(headers),
 		);
 
 		return findHardBlockPolicy(accessPolicies);
