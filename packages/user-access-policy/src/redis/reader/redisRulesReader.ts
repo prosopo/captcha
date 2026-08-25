@@ -95,6 +95,9 @@ const SPECIFICITY_EXPR = [
 	"exists(@countryCode)",
 	"exists(@asn)",
 	"exists(@os)",
+	// A header rule is one logical dimension: only the sentinel counts toward
+	// specificity, not the name/value/operator triple it also carries.
+	"exists(@headerMatch)",
 	"exists(@numericIp)",
 	"exists(@numericIpMaskMin)",
 ].join(" + ");
@@ -135,6 +138,10 @@ const RULE_LOAD_FIELDS = [
 	"@countryCode",
 	"@asn",
 	"@os",
+	"@headerMatch",
+	"@headerName",
+	"@headerValue",
+	"@headerOperator",
 	"@numericIp",
 	"@numericIpMaskMin",
 	"@numericIpMaskMax",
