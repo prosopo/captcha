@@ -37,6 +37,13 @@ const userAttributesSchema = z.object({
 	// than failing the whole rule parse.
 	os: z.coerce.string().optional(),
 	browser: z.coerce.string().optional(),
+	// Arbitrary-header matching (see `headerMatch.ts`). `headerMatch` is the
+	// indexed sentinel; name/value/operator are rule data checked in code, not
+	// via the Redis query. Loose `string` like the other tags.
+	headerMatch: z.coerce.string().optional(),
+	headerName: z.coerce.string().optional(),
+	headerValue: z.coerce.string().optional(),
+	headerOperator: z.coerce.string().optional(),
 } satisfies AllKeys<UserAttributes>) satisfies ZodType<UserAttributes>;
 
 const userAttributesInput = z

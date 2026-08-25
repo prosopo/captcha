@@ -33,6 +33,10 @@ export const userAttributesRecordFields = [
 	"asn",
 	"os",
 	"browser",
+	"headerMatch",
+	"headerName",
+	"headerValue",
+	"headerOperator",
 ] as const satisfies (keyof UserAttributesRecord)[];
 
 export type UserIpRecord = {
