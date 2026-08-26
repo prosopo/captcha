@@ -19,6 +19,7 @@
 		"TIMESTAMP_TOO_OLD": "Timestamp too old",
 		"FAILED_IP_VALIDATION": "IP doğrulaması başarısız oldu",
 		"ACCESS_POLICY_BLOCK": "Erişim politika tarafından engellendi",
+		"CLIENT_SESSION_MISMATCH": "Oturum uyuşmuyor. Captcha bu oturumda tamamlanmadı.",
 		"FORBIDDEN": "Forbidden",
 		"PROVIDER_VERIFY_FAILED": "Provider verification failed",
 		"SPAM_EMAIL_DOMAIN": "E-posta alan adına izin verilmiyor",

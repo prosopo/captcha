@@ -9,6 +9,7 @@
 		"TIMESTAMP_TOO_OLD": "Πολύ παλιά χρονοσήμανση",
 		"FAILED_IP_VALIDATION": "Η επαλήθευση IP απέτυχε",
 		"ACCESS_POLICY_BLOCK": "Η πρόσβαση αποκλείστηκε από την πολιτική",
+		"CLIENT_SESSION_MISMATCH": "Αναντιστοιχία συνεδρίας. Το captcha δεν ολοκληρώθηκε σε αυτήν τη συνεδρία.",
 		"FORBIDDEN": "Απαγορεύεται",
 		"PROVIDER_VERIFY_FAILED": "Αποτυχία επαλήθευσης παρόχου",
 		"SPAM_EMAIL_DOMAIN": "Ο τομέας email δεν επιτρέπεται",

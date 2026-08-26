@@ -19,6 +19,7 @@
 		"TIMESTAMP_TOO_OLD": "Zbyt stary znacznik czasu",
 		"FAILED_IP_VALIDATION": "Walidacja IP nie powiodła się",
 		"ACCESS_POLICY_BLOCK": "Dostęp zablokowany przez zasady",
+		"CLIENT_SESSION_MISMATCH": "Niezgodność sesji. Captcha nie została ukończona w tej sesji.",
 		"FORBIDDEN": "Zabronione",
 		"PROVIDER_VERIFY_FAILED": "Weryfikacja dostawcy nie powiodła się",
 		"SPAM_EMAIL_DOMAIN": "Domena e-mail niedozwolona",

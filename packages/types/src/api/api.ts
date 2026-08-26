@@ -108,6 +108,7 @@ export interface ProviderApiInterface {
 		user: string,
 		ip?: string,
 		email?: string,
+		clientSessionId?: string,
 	): Promise<VerificationResponse>;
 	submitUserEvents(
 		events: StoredEvents,

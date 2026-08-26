@@ -318,6 +318,7 @@
 		"TIMESTAMP_TOO_OLD": "Timestamp too old",
 		"FAILED_IP_VALIDATION": "Pengesahan IP gagal",
 		"ACCESS_POLICY_BLOCK": "Akses disekat oleh dasar",
+		"CLIENT_SESSION_MISMATCH": "Sesi tidak sepadan. Captcha tidak diselesaikan dalam sesi ini.",
 		"FORBIDDEN": "Forbidden",
 		"PROVIDER_VERIFY_FAILED": "Provider verification failed",
 		"SPAM_EMAIL_DOMAIN": "Domain e-mel tidak dibenarkan",

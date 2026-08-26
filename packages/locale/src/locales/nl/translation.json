@@ -318,6 +318,7 @@
 		"TIMESTAMP_TOO_OLD": "Tijdstempel te oud",
 		"FAILED_IP_VALIDATION": "IP-validatie mislukt",
 		"ACCESS_POLICY_BLOCK": "Toegang geblokkeerd door beleid",
+		"CLIENT_SESSION_MISMATCH": "Sessie komt niet overeen. De captcha is niet in deze sessie voltooid.",
 		"FORBIDDEN": "Verboden",
 		"PROVIDER_VERIFY_FAILED": "Provider verificatie mislukt",
 		"SPAM_EMAIL_DOMAIN": "E-maildomein niet toegestaan",
