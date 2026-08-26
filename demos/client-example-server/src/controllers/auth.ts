@@ -313,6 +313,11 @@ const login = async (
 					token,
 					secret,
 					req.headers["x-client-ip"]?.toString() || NO_IP,
+					// login carries no email; the session id still has to reach
+					// the provider or a widget rendered with data-sessionid is
+					// silently unverified against its session.
+					undefined,
+					req.body[ApiParams.clientSessionId],
 				);
 
 				logger.info(() => ({
