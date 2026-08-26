@@ -703,6 +703,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			return {
 				status: "API.USER_ALREADY_VERIFIED",
 				verified: false,
+				...(solution.sessionId && { sessionId: solution.sessionId }),
 			};
 		}
 
@@ -714,6 +715,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			return {
 				status: solution.result.reason || "API.USER_NOT_VERIFIED",
 				verified: false,
+				...(solution.sessionId && { sessionId: solution.sessionId }),
 			};
 		}
 
@@ -734,6 +736,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			return {
 				status: "API.USER_NOT_VERIFIED_TIME_EXPIRED",
 				verified: false,
+				...(solution.sessionId && { sessionId: solution.sessionId }),
 			};
 		}
 
@@ -1185,6 +1188,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			verified: isApproved,
 			commitmentId: solution.id.toString(),
 			...(score && { score }),
+			...(solution.sessionId && { sessionId: solution.sessionId }),
 		};
 	}
 
@@ -1199,6 +1203,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		score?: number,
 		commitmentId?: Hash,
 		reason?: string,
+		sessionId?: string,
 	): ImageVerificationResponse {
 		return {
 			...super.getVerificationResponse(
@@ -1207,6 +1212,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				translateFn,
 				score,
 				reason,
+				sessionId,
 			),
 			...(commitmentId && {
 				[ApiParams.commitmentId]: commitmentId,

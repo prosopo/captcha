@@ -249,6 +249,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						response[ApiParams.score],
 						response[ApiParams.commitmentId],
 						response[ApiParams.status],
+						response[ApiParams.sessionId],
 					);
 				res.json(verificationResponse);
 			} catch (err) {
@@ -378,7 +379,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				// Will throw an error if the signature is invalid
 				verifySignature(dappSignature, timestamp.toString(), dappPair);
 
-				const { verified, score, reason } =
+				const { verified, score, reason, sessionId } =
 					await tasks.powCaptchaManager.serverVerifyPowCaptchaSolution(
 						dapp,
 						challenge,
@@ -400,6 +401,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						req.i18n.t,
 						score,
 						reason,
+						sessionId,
 					);
 
 				return res.json(verificationResponse);
@@ -530,7 +532,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				// Will throw an error if the signature is invalid
 				verifySignature(dappSignature, timestamp.toString(), dappPair);
 
-				const { verified, score } =
+				const { verified, score, sessionId } =
 					await tasks.puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
 						dapp,
 						challenge,
@@ -551,6 +553,8 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						clientRecord,
 						req.i18n.t,
 						score,
+						undefined,
+						sessionId,
 					);
 
 				return res.json(verificationResponse);
