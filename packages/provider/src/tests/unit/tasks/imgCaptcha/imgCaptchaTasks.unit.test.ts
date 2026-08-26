@@ -26,10 +26,12 @@ import {
 	type CaptchaSolution,
 	CaptchaStatus,
 	CaptchaType,
+	type ClientMetaData,
 	FrictionlessReason,
 	IpAddressType,
 	type PendingImageCaptchaRequest,
 	type RequestHeaders,
+	ResultReason,
 	type Session,
 	type UserCommitment,
 } from "@prosopo/types";
@@ -2085,6 +2087,108 @@ describe("ImgCaptchaManager", () => {
 
 			expect(result.verified).toBe(true);
 			expect(db.countCommitmentsByNormalisedEmail).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("verifyImageCaptchaSolution client session correlation", () => {
+		// clientSessionId is the last positional argument, after storeMetadata.
+		const invoke = async (
+			commitmentId: string,
+			clientSessionId: string | undefined,
+		) =>
+			imgCaptchaManager.verifyImageCaptchaSolution(
+				"userAccount",
+				"dappAccount",
+				commitmentId,
+				mockEnv,
+				undefined, // maxVerifiedTime
+				undefined, // ip
+				undefined, // disallowWebView
+				undefined, // contextAwareEnabled
+				undefined, // userAccessRulesStorage
+				undefined, // email
+				false, // spamEmailDomainCheckingEnabled
+				undefined, // spamFilter
+				undefined, // trafficFilter
+				false, // storeMetadata
+				clientSessionId,
+			);
+
+		const seedApprovedCommitment = (
+			commitmentId: string,
+			clientMetaData?: ClientMetaData,
+		) => {
+			const ipAddress = getIPAddress("1.1.1.1");
+			const commitment: Partial<UserCommitment> = {
+				id: commitmentId,
+				userAccount: "userAccount",
+				dappAccount: "dappAccount",
+				providerAccount: "providerAccount",
+				datasetId: "datasetId",
+				result: { status: CaptchaStatus.approved },
+				userSignature: "",
+				userSubmitted: true,
+				serverChecked: false,
+				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
+				ipAddress: {
+					lower: ipAddress.bigInt(),
+					upper: 0n,
+					type: IpAddressType.v4,
+				},
+				headers: { a: "1" },
+				ja4: "ja4",
+				lastUpdatedTimestamp: new Date(),
+				...(clientMetaData && { clientMetaData }),
+			};
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getDappUserCommitmentById as any).mockResolvedValue(commitment);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.markDappUserCommitmentsChecked as any).mockResolvedValue(undefined);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.approveDappUserCommitment as any).mockResolvedValue(undefined);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.updateDappUserCommitment as any).mockResolvedValue(undefined);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(imgCaptchaManager as any).decisionMachineRunner.decide = vi
+				.fn()
+				.mockResolvedValue({ decision: "allow" });
+		};
+
+		it("verifies when the recorded session id matches", async () => {
+			seedApprovedCommitment("cmt-match", { clientSessionId: "jti-1" });
+
+			const result = await invoke("cmt-match", "jti-1");
+
+			expect(result.verified).toBe(true);
+		});
+
+		it("rejects with CLIENT_SESSION_MISMATCH when the ids differ", async () => {
+			seedApprovedCommitment("cmt-differ", { clientSessionId: "jti-1" });
+
+			const result = await invoke("cmt-differ", "jti-2");
+
+			expect(result.verified).toBe(false);
+			expect(result.status).toBe(ResultReason.CLIENT_SESSION_MISMATCH);
+		});
+
+		it("rejects when the solve carries no session id at all", async () => {
+			seedApprovedCommitment("cmt-absent");
+
+			const result = await invoke("cmt-absent", "jti-1");
+
+			expect(result.verified).toBe(false);
+			expect(result.status).toBe(ResultReason.CLIENT_SESSION_MISMATCH);
+		});
+
+		it("does not correlate when the dapp server sends no session id", async () => {
+			seedApprovedCommitment("cmt-no-expectation", {
+				clientSessionId: "jti-1",
+			});
+
+			const result = await invoke("cmt-no-expectation", undefined);
+
+			expect(result.verified).toBe(true);
 		});
 	});
 });

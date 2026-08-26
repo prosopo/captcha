@@ -200,6 +200,7 @@ export default class ProviderApi
 		maxVerifiedTime?: number,
 		ip?: string,
 		email?: string,
+		clientSessionId?: string,
 	): Promise<ImageVerificationResponse> {
 		const payload: VerifySolutionBodyTypeInput = {
 			[ApiParams.token]: token,
@@ -211,6 +212,9 @@ export default class ProviderApi
 		}
 		if (email) {
 			payload[ApiParams.email] = email;
+		}
+		if (clientSessionId) {
+			payload[ApiParams.clientSessionId] = clientSessionId;
 		}
 
 		return this.post(ClientApiPaths.VerifyImageCaptchaSolutionDapp, payload, {
@@ -356,6 +360,7 @@ export default class ProviderApi
 		user: string,
 		ip?: string,
 		email?: string,
+		clientSessionId?: string,
 	): Promise<VerificationResponse> {
 		const body: ServerPuzzleCaptchaVerifyRequestBodyType = {
 			[ApiParams.token]: token,
@@ -364,6 +369,9 @@ export default class ProviderApi
 		};
 		if (email) {
 			body[ApiParams.email] = email;
+		}
+		if (clientSessionId) {
+			body[ApiParams.clientSessionId] = clientSessionId;
 		}
 		return this.post(ClientApiPaths.VerifyPuzzleCaptchaSolution, body, {
 			headers: {
@@ -489,6 +497,7 @@ export default class ProviderApi
 		user: string,
 		ip?: string,
 		email?: string,
+		clientSessionId?: string,
 	): Promise<VerificationResponse> {
 		const body: ServerPowCaptchaVerifyRequestBodyType = {
 			[ApiParams.token]: token,
@@ -497,6 +506,9 @@ export default class ProviderApi
 		};
 		if (email) {
 			body[ApiParams.email] = email;
+		}
+		if (clientSessionId) {
+			body[ApiParams.clientSessionId] = clientSessionId;
 		}
 		return this.post(ClientApiPaths.VerifyPowCaptchaSolution, body, {
 			headers: {

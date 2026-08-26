@@ -73,6 +73,10 @@ import {
 	type UsageCounters,
 	buildAllWindowIncrements,
 } from "../../util/usageCounters.js";
+import {
+	isClientSessionMismatch,
+	toStoredClientMetaData,
+} from "../../utils/clientMetaData.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import {
@@ -288,6 +292,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 			verified: false,
 		};
 
+		// Written to both the commitment and the linked session record so the
+		// clientSessionId the verify call correlates against lives on each.
+		const storedClientMetaData = toStoredClientMetaData(clientMetaData);
+
 		const pendingRecord = await this.db.getPendingImageCommitment(requestHash);
 
 		// The detector lives only in provider pool bundles; resolve THIS session's
@@ -421,8 +429,8 @@ export class ImgCaptchaManager extends CaptchaManager {
 				deadlineTimestamp: pendingRecord.deadlineTimestamp,
 				...(behavioralDataPacked && { behavioralDataPacked }),
 				...(deviceCapability && { deviceCapability }),
-				...(clientMetaData?.hp && {
-					clientMetaData: { hp: clientMetaData.hp },
+				...(storedClientMetaData && {
+					clientMetaData: storedClientMetaData,
 				}),
 			};
 			await this.db.storeUserImageCaptchaSolution(receivedCaptchas, commit);
@@ -460,6 +468,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 								status: CaptchaStatus.disapproved,
 								reason: ResultReason.CAPTCHA_INVALID_SOLUTION,
 							},
+							...(storedClientMetaData && {
+								clientMetaData: storedClientMetaData,
+							}),
 						}),
 					);
 					pushSimdAttachIfAny(pendingRecord.sessionId, writePromises);
@@ -499,6 +510,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 						this.updateSessionRecordWithCache(pendingRecord.sessionId, {
 							userSubmitted: true,
 							result: { status: CaptchaStatus.approved },
+							...(storedClientMetaData && {
+								clientMetaData: storedClientMetaData,
+							}),
 						}),
 					);
 					pushSimdAttachIfAny(pendingRecord.sessionId, writePromises);
@@ -521,6 +535,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 								status: CaptchaStatus.disapproved,
 								reason: ResultReason.CAPTCHA_INVALID_SOLUTION,
 							},
+							...(storedClientMetaData && {
+								clientMetaData: storedClientMetaData,
+							}),
 						}),
 					);
 					pushSimdAttachIfAny(pendingRecord.sessionId, writePromises);
@@ -675,6 +692,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 		spamFilter?: ISpamFilterRules,
 		trafficFilter?: ITrafficFilter,
 		storeMetadata = false,
+		// The session id the site rendered the widget with. When supplied, the
+		// solution must carry the same value in its `clientMetaData` or it is
+		// disapproved.
+		clientSessionId?: string,
 	): Promise<ImageVerificationResponse> {
 		// Bind the commitmentId/dapp context once so every log line in this
 		// method carries it without repeating the fields in each `data` block.
@@ -750,8 +771,33 @@ export class ImgCaptchaManager extends CaptchaManager {
 		// ACCESS_POLICY_BLOCK.
 		let matchedRule: Session["matchedRule"];
 
+		// The site rendered the widget with a session id, so the solve has to
+		// carry the same one — otherwise the token was earned in a different
+		// session (or outside the widget entirely) and is being replayed here.
+		// Cheap and purely local, so it runs before any I/O-bound check.
+		if (
+			isClientSessionMismatch(
+				clientSessionId,
+				solution.clientMetaData?.clientSessionId,
+			)
+		) {
+			logger.info(() => ({
+				msg: "Client session mismatch in server image verification",
+				data: {
+					hasRecordedClientSessionId: Boolean(
+						solution.clientMetaData?.clientSessionId,
+					),
+				},
+			}));
+			commitmentUpdates.result = {
+				status: CaptchaStatus.disapproved,
+				reason: ResultReason.CLIENT_SESSION_MISMATCH,
+			};
+			failStatus = ResultReason.CLIENT_SESSION_MISMATCH;
+		}
+
 		// Check user access policies for hard blocks
-		if (userAccessRulesStorage) {
+		if (!failStatus && userAccessRulesStorage) {
 			try {
 				const blockPolicy = await this.checkForHardBlock(
 					userAccessRulesStorage,

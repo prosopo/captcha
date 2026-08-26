@@ -70,6 +70,10 @@ import {
 	type UsageCounters,
 	buildAllWindowIncrements,
 } from "../../util/usageCounters.js";
+import {
+	isClientSessionMismatch,
+	toStoredClientMetaData,
+} from "../../utils/clientMetaData.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import {
@@ -412,8 +416,9 @@ export class PowCaptchaManager extends CaptchaManager {
 		// updatePowCaptchaRecordResult triggers centralStreamer.streamPowUpdate(),
 		// which reads back the full record.
 		const recordUpdates: Partial<PoWCaptchaRecord> = { ...behavioralUpdates };
-		if (clientMetaData?.hp) {
-			recordUpdates.clientMetaData = { hp: clientMetaData.hp };
+		const storedClientMetaData = toStoredClientMetaData(clientMetaData);
+		if (storedClientMetaData) {
+			recordUpdates.clientMetaData = storedClientMetaData;
 		}
 		if (Object.keys(recordUpdates).length > 0) {
 			await this.db.updatePowCaptchaRecord(challenge, recordUpdates);
@@ -439,6 +444,12 @@ export class PowCaptchaManager extends CaptchaManager {
 					result,
 					...(isBlockingCaptchaResult(CaptchaType.pow, result) && {
 						blocked: true,
+					}),
+					// Mirror the render-time metadata onto the session so the
+					// session row carries the same clientSessionId the verify
+					// call correlates against.
+					...(storedClientMetaData && {
+						clientMetaData: storedClientMetaData,
 					}),
 				}),
 			);
@@ -605,6 +616,9 @@ export class PowCaptchaManager extends CaptchaManager {
 	 * @param storeMetadata - when true, persists the dapp-server-provided
 	 *   `email` (and any future metadata fields) on the captcha record so
 	 *   it can be inspected for spam-rate analysis.
+	 * @param clientSessionId - the session id the site rendered the widget
+	 *   with. When supplied, the solve must carry the same value in its
+	 *   `clientMetaData` or it is disapproved.
 	 */
 	async serverVerifyPowCaptchaSolution(
 		dappAccount: string,
@@ -618,6 +632,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		spamFilter?: ISpamFilterRules,
 		trafficFilter?: ITrafficFilter,
 		storeMetadata = false,
+		clientSessionId?: string,
 	): Promise<{
 		verified: boolean;
 		score?: number;
@@ -709,6 +724,32 @@ export class PowCaptchaManager extends CaptchaManager {
 				reason: ResultReason.TIMESTAMP_TOO_OLD,
 			};
 			failReason = "API.TIMESTAMP_TOO_OLD";
+		}
+
+		// The site rendered the widget with a session id, so the solve has to
+		// carry the same one — otherwise the token was earned in a different
+		// session (or outside the widget entirely) and is being replayed here.
+		// Cheap and purely local, so it runs before any I/O-bound check.
+		if (
+			!failResult &&
+			isClientSessionMismatch(
+				clientSessionId,
+				challengeRecord.clientMetaData?.clientSessionId,
+			)
+		) {
+			logger.info(() => ({
+				msg: "Client session mismatch in server PoW verification",
+				data: {
+					hasRecordedClientSessionId: Boolean(
+						challengeRecord.clientMetaData?.clientSessionId,
+					),
+				},
+			}));
+			failResult = {
+				status: CaptchaStatus.disapproved,
+				reason: ResultReason.CLIENT_SESSION_MISMATCH,
+			};
+			failReason = "API.CLIENT_SESSION_MISMATCH";
 		}
 
 		// Check user access policies for hard blocks

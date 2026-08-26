@@ -19,6 +19,7 @@
 		"TIMESTAMP_TOO_OLD": "Příliš starý časový údaj",
 		"FAILED_IP_VALIDATION": "Ověření IP selhalo",
 		"ACCESS_POLICY_BLOCK": "Přístup blokován zásadami",
+		"CLIENT_SESSION_MISMATCH": "Neshoda relace. Captcha nebyla dokončena v této relaci.",
 		"FORBIDDEN": "Zakázáno",
 		"PROVIDER_VERIFY_FAILED": "Ověření poskytovatele selhalo",
 		"SPAM_EMAIL_DOMAIN": "E-mailová doména není povolena",

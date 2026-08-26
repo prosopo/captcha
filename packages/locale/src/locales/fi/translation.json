@@ -45,6 +45,7 @@
 		"TIMESTAMP_TOO_OLD": "Aikaleima liian vanha",
 		"FAILED_IP_VALIDATION": "IP-vahvistus epäonnistui",
 		"ACCESS_POLICY_BLOCK": "Pääsy estetty käytännön mukaan",
+		"CLIENT_SESSION_MISMATCH": "Istunto ei täsmää. Captchaa ei suoritettu tässä istunnossa.",
 		"FORBIDDEN": "Kielletty",
 		"PROVIDER_VERIFY_FAILED": "Palveluntarjoajan tarkistus epäonnistui",
 		"SPAM_EMAIL_DOMAIN": "Sähköpostiverkkotunnus ei ole sallittu",

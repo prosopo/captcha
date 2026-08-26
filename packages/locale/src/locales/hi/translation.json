@@ -318,6 +318,7 @@
 		"TIMESTAMP_TOO_OLD": "समय-चहन बहत परन ह",
 		"FAILED_IP_VALIDATION": "IP सत्यापन विफल",
 		"ACCESS_POLICY_BLOCK": "नीति द्वारा पहुंच अवरुद्ध",
+		"CLIENT_SESSION_MISMATCH": "सत्र मेल नहीं खाता। कैप्चा इस सत्र में पूरा नहीं किया गया था।",
 		"FORBIDDEN": "नषध",
 		"PROVIDER_VERIFY_FAILED": "परदत सतयपन वफल हआ",
 		"SPAM_EMAIL_DOMAIN": "ईमेल डोमेन की अनुमति नहीं है",

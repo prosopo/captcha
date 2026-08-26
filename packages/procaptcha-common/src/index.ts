@@ -13,6 +13,7 @@
 // limitations under the License.
 
 export * from "./providers.js";
+export * from "./clientMetaData.js";
 export * from "./events/trust.js";
 export * from "./state/builder.js";
 export * from "./callbacks/defaultCallbacks.js";

@@ -38,4 +38,10 @@ export interface ProcaptchaRenderOptions {
 	ipv4?: boolean;
 	// When true, restrict provider DNS resolution to AAAA records only.
 	ipv6?: boolean;
+	// The site's own session identifier for this user (Protect's JTI, or any
+	// per-session id the site already holds). Equivalent to the
+	// `data-sessionid` attribute. The widget attaches it to the captcha
+	// solution; pass the same value to the server-side verify call and the
+	// provider will reject the token unless the two agree.
+	sessionId?: string;
 }
