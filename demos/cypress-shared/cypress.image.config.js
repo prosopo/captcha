@@ -108,6 +108,12 @@ export default defineConfig({
 			// / CI step where it passes.
 			"cypress/e2e/**/sessionCaptchaTypeConsistency.cy.ts",
 			"cypress/e2e/**/escalationPuzzle.cy.ts",
+			// Drives pow-implicit-sessionid.html, which is the only page
+			// rendering the widget with data-sessionid. Under this catch-all
+			// it would mount the image page with no session id and fail
+			// before reaching the correlation it exists to test. Runs under
+			// cypress.clientSessionId.config.js.
+			"cypress/e2e/**/clientSessionId.cy.ts",
 		],
 	},
 	component: {
