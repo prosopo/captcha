@@ -311,6 +311,7 @@ describe("signup", () => {
 			"0xtoken",
 			"203.0.113.9",
 			"user@example.com",
+			undefined,
 		);
 	});
 
@@ -329,6 +330,7 @@ describe("signup", () => {
 			"0xtoken",
 			"127.0.0.1",
 			"user@example.com",
+			undefined,
 		);
 	});
 });
@@ -633,6 +635,7 @@ describe("login", () => {
 			"0xtoken",
 			"NO_IP",
 			undefined,
+			undefined,
 		);
 	});
 
@@ -654,6 +657,32 @@ describe("login", () => {
 			"0xtoken",
 			"203.0.113.9",
 			undefined,
+			undefined,
+		);
+	});
+
+	test("forwards the caller's clientSessionId to the provider", async () => {
+		const user = await storedUser();
+		const { connection } = connectionWith(userModel({ found: user }));
+		await login(
+			connection,
+			serverConfig(),
+			VERIFY_ENDPOINT,
+			"local",
+			request({
+				body: { ...signupBody(), clientSessionId: "bumblebee-abc" },
+				headers: { "x-client-ip": "203.0.113.9" },
+			}),
+			responseStub().response,
+		);
+		// Positional: isVerified(token, ip, email, clientSessionId). Without
+		// this the widget can be rendered with data-sessionid and the dapp
+		// server silently drops it at verify, so no correlation happens.
+		expect(mocks.isVerified).toHaveBeenLastCalledWith(
+			"0xtoken",
+			"203.0.113.9",
+			undefined,
+			"bumblebee-abc",
 		);
 	});
 
