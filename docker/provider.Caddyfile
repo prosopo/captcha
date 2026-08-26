@@ -298,7 +298,7 @@ http://:9090 {
 			header_up x-remote-host "{remote_host}"
 			header_up x-method "{method}"
 			header_up x-client-ip "{client_ip}"
-			header_up x-duration-ms "{http.request.duration}"
+			header_up x-duration-ms "{http.request.duration_ms}"
 			header_up x-tls-resumed "{http.request.tls.resumed}"
 			header_up x-tls-proto "{http.request.tls.proto}"
 			header_up x-tls-proto-mutual "{http.request.tls.proto_mutual}"
