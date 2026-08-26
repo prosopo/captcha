@@ -1,5 +1,17 @@
 # @prosopo/cli
 
+## 3.7.26
+### Patch Changes
+
+- Updated dependencies [4b1cb19]
+  - @prosopo/types@5.4.0
+  - @prosopo/locale@3.4.0
+  - @prosopo/api@4.1.0
+  - @prosopo/provider@5.5.0
+  - @prosopo/common@3.1.52
+  - @prosopo/env@3.6.43
+  - @prosopo/keyring@2.9.79
+
 ## 3.7.25
 ### Patch Changes
 
