@@ -19,6 +19,7 @@
 		"TIMESTAMP_TOO_OLD": "Az időbélyeg túl régi",
 		"FAILED_IP_VALIDATION": "Az IP-ellenőrzés sikertelen",
 		"ACCESS_POLICY_BLOCK": "A hozzáférést a szabályzat letiltotta",
+		"CLIENT_SESSION_MISMATCH": "Munkamenet-eltérés. A captcha nem ebben a munkamenetben lett kitöltve.",
 		"FORBIDDEN": "tiltott",
 		"PROVIDER_VERIFY_FAILED": "Szolgáltató ellenőrzése sikertelen",
 		"SPAM_EMAIL_DOMAIN": "Az e-mail domain nem engedélyezett",

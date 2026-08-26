@@ -75,6 +75,9 @@ export class ProsopoServer {
 	 * @param ip
 	 * @param email
 	 * @param captchaType
+	 * @param clientSessionId - the session id the widget was rendered with
+	 *   (`data-sessionid` / `renderOptions.sessionId`). When supplied, the
+	 *   provider only verifies the token if the solve carries the same value.
 	 */
 	public async verifyProvider(
 		token: string,
@@ -86,6 +89,7 @@ export class ProsopoServer {
 		ip?: string,
 		email?: string,
 		captchaType?: CaptchaType,
+		clientSessionId?: string,
 	): Promise<VerificationResponse> {
 		this.logger.info(() => ({
 			data: { providerUrl, captchaType: captchaType ?? "legacy" },
@@ -111,6 +115,7 @@ export class ProsopoServer {
 				user,
 				ip,
 				email,
+				clientSessionId,
 			);
 		}
 
@@ -125,6 +130,7 @@ export class ProsopoServer {
 				user,
 				ip,
 				email,
+				clientSessionId,
 			);
 		}
 
@@ -140,6 +146,7 @@ export class ProsopoServer {
 				timeouts.image.cachedTimeout,
 				ip,
 				email,
+				clientSessionId,
 			);
 		}
 
@@ -165,6 +172,7 @@ export class ProsopoServer {
 				user,
 				ip,
 				email,
+				clientSessionId,
 			);
 		}
 		const imageTimeout = this.config.timeouts.image.cachedTimeout;
@@ -178,6 +186,7 @@ export class ProsopoServer {
 			timeouts.image.cachedTimeout,
 			ip,
 			email,
+			clientSessionId,
 		);
 	}
 
@@ -208,11 +217,13 @@ export class ProsopoServer {
 	 * @param token
 	 * @param ip
 	 * @param email
+	 * @param clientSessionId - see `verifyProvider`
 	 */
 	public async isVerified(
 		token: ProcaptchaToken,
 		ip?: string,
 		email?: string,
+		clientSessionId?: string,
 	): Promise<VerificationResponse> {
 		try {
 			const payload = decodeProcaptchaOutput(token);
@@ -247,6 +258,7 @@ export class ProsopoServer {
 				ip,
 				email,
 				captchaType,
+				clientSessionId,
 			);
 
 			this.logger.info(() => ({

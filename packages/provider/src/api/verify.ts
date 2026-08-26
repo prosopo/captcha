@@ -159,7 +159,14 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			}
 
 			// We don't want to expose any other errors to the client except for specific situations
-			const { dappSignature, token, ip, maxVerifiedTime, email } = parsed;
+			const {
+				dappSignature,
+				token,
+				ip,
+				maxVerifiedTime,
+				email,
+				clientSessionId,
+			} = parsed;
 			try {
 				// This can error if the token is invalid
 				const { user, dapp, timestamp, commitmentId, providerUrl } =
@@ -238,6 +245,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						clientRecord.settings.spamFilter,
 						clientRecord.settings.trafficFilter,
 						clientRecord.settings.storeMetadata,
+						clientSessionId,
 					);
 
 				req.logger.debug(() => ({ data: { response } }));
@@ -308,7 +316,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 
 			// We don't want to expose any other errors to the client
 			try {
-				const { token, dappSignature, ip, email } = parsed;
+				const { token, dappSignature, ip, email, clientSessionId } = parsed;
 
 				// This can error if the token is invalid
 				const { dapp, user, timestamp, challenge, providerUrl } =
@@ -392,6 +400,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						clientRecord.settings.spamFilter,
 						clientRecord.settings.trafficFilter,
 						clientRecord.settings.storeMetadata,
+						clientSessionId,
 					);
 
 				const verificationResponse: VerificationResponse =
@@ -461,7 +470,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 
 			// We don't want to expose any other errors to the client
 			try {
-				const { token, dappSignature, ip, email } = parsed;
+				const { token, dappSignature, ip, email, clientSessionId } = parsed;
 
 				// This can error if the token is invalid
 				const { dapp, user, timestamp, challenge, providerUrl } =
@@ -545,6 +554,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						clientRecord.settings.spamFilter,
 						clientRecord.settings.trafficFilter,
 						clientRecord.settings.storeMetadata,
+						clientSessionId,
 					);
 
 				const verificationResponse: VerificationResponse =

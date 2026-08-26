@@ -19,6 +19,7 @@
 		"TIMESTAMP_TOO_OLD": "Zaman damgası çox köhnədir",
 		"FAILED_IP_VALIDATION": "IP yoxlanması uğursuz oldu",
 		"ACCESS_POLICY_BLOCK": "Siyasət tərəfindən giriş bloklandı",
+		"CLIENT_SESSION_MISMATCH": "Sessiya uyğunsuzluğu. Captcha bu sessiyada tamamlanmayıb.",
 		"FORBIDDEN": "Qadağan edilir",
 		"PROVIDER_VERIFY_FAILED": "Təchizatçı doğrulaması alınmadı",
 		"SPAM_EMAIL_DOMAIN": "E-poçt domeni icazə verilmir",

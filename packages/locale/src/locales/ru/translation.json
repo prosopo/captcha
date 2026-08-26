@@ -19,6 +19,7 @@
 		"TIMESTAMP_TOO_OLD": "Слишком старый временной штамп",
 		"FAILED_IP_VALIDATION": "Проверка IP не удалась",
 		"ACCESS_POLICY_BLOCK": "Доступ заблокирован политикой",
+		"CLIENT_SESSION_MISMATCH": "Несовпадение сессии. Капча не была пройдена в этой сессии.",
 		"FORBIDDEN": "Запрещено",
 		"PROVIDER_VERIFY_FAILED": "Ошибка проверки провайдера",
 		"SPAM_EMAIL_DOMAIN": "Домен электронной почты не разрешён",

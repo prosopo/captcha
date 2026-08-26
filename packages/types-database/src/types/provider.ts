@@ -152,6 +152,16 @@ export const CompositeIpAddressRecordSchemaObj = {
  * d: Device capability string
  */
 
+// Widget-controlled metadata (see `ClientMetaData` in @prosopo/types). Shared
+// by the three captcha-record schemas and the session record so a new field
+// only has to be added once. `clientSessionId` is the site's own session id,
+// supplied at render time via `data-sessionid`; the verify endpoints correlate
+// it against the value the dapp server sends.
+export const ClientMetaDataRecordSchemaObj = {
+	hp: { type: String, required: false },
+	clientSessionId: { type: String, required: false },
+};
+
 export type PoWCaptchaRecord = mongoose.Document & PoWCaptchaStored;
 
 export type PuzzleCaptchaRecord = mongoose.Document & PuzzleCaptchaStored;
@@ -238,7 +248,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 		required: false,
 	},
 	clientMetaData: {
-		type: new Schema({ hp: { type: String, required: false } }, { _id: false }),
+		type: new Schema(ClientMetaDataRecordSchemaObj, { _id: false }),
 		required: false,
 	},
 	headers: { type: Object, required: true },
@@ -397,7 +407,7 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 		required: false,
 	},
 	clientMetaData: {
-		type: new Schema({ hp: { type: String, required: false } }, { _id: false }),
+		type: new Schema(ClientMetaDataRecordSchemaObj, { _id: false }),
 		required: false,
 	},
 	headers: { type: Object, required: true },
@@ -506,7 +516,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 		required: false,
 	},
 	clientMetaData: {
-		type: new Schema({ hp: { type: String, required: false } }, { _id: false }),
+		type: new Schema(ClientMetaDataRecordSchemaObj, { _id: false }),
 		required: false,
 	},
 	headers: { type: Object, required: true },
@@ -843,6 +853,14 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 			},
 			{ _id: false },
 		),
+		required: false,
+	},
+	// Site-owner metadata the widget was rendered with — see
+	// `Session.clientMetaData`. Mirrored up from the captcha record so the
+	// session row carries the same `clientSessionId` the verify call
+	// correlates against.
+	clientMetaData: {
+		type: new Schema(ClientMetaDataRecordSchemaObj, { _id: false }),
 		required: false,
 	},
 } satisfies AllKeys<Session>);

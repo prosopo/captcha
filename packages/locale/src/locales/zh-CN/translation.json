@@ -19,6 +19,7 @@
 		"TIMESTAMP_TOO_OLD": "时间戳过旧",
 		"FAILED_IP_VALIDATION": "IP验证失败",
 		"ACCESS_POLICY_BLOCK": "访问被策略阻止",
+		"CLIENT_SESSION_MISMATCH": "会话不匹配。此验证码不是在本会话中完成的。",
 		"FORBIDDEN": "禁止",
 		"PROVIDER_VERIFY_FAILED": "提供商验证失败",
 		"SPAM_EMAIL_DOMAIN": "不允许此电子邮件域名",

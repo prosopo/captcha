@@ -19,6 +19,7 @@
 		"TIMESTAMP_TOO_OLD": "Tidspunkt for gammel",
 		"FAILED_IP_VALIDATION": "IP-validering mislyktes",
 		"ACCESS_POLICY_BLOCK": "Tilgang blokkert av policy",
+		"CLIENT_SESSION_MISMATCH": "Økten samsvarer ikke. Captchaen ble ikke fullført i denne økten.",
 		"FORBIDDEN": "Forbudt",
 		"PROVIDER_VERIFY_FAILED": "Utdypning bekreftelse mislyktes",
 		"SPAM_EMAIL_DOMAIN": "E-postdomene er ikke tillatt",

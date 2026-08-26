@@ -318,6 +318,7 @@
 		"TIMESTAMP_TOO_OLD": "タイムスタンプが古すぎます",
 		"FAILED_IP_VALIDATION": "IP検証に失敗しました",
 		"ACCESS_POLICY_BLOCK": "ポリシーによりアクセスがブロックされました",
+		"CLIENT_SESSION_MISMATCH": "セッションが一致しません。この CAPTCHA はこのセッションで完了されていません。",
 		"FORBIDDEN": "禁止されています",
 		"PROVIDER_VERIFY_FAILED": "プロバイダーの検証に失敗しました",
 		"SPAM_EMAIL_DOMAIN": "メールドメインは許可されていません",

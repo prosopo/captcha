@@ -19,6 +19,7 @@
 		"TIMESTAMP_TOO_OLD": "Mốc thời gian quá cũ",
 		"FAILED_IP_VALIDATION": "Xác thực IP thất bại",
 		"ACCESS_POLICY_BLOCK": "Truy cập bị chặn bởi chính sách",
+		"CLIENT_SESSION_MISMATCH": "Phiên không khớp. Captcha không được hoàn thành trong phiên này.",
 		"FORBIDDEN": "Bị cấm",
 		"PROVIDER_VERIFY_FAILED": "Xác thực nhà cung cấp không thành công",
 		"SPAM_EMAIL_DOMAIN": "Tên miền email không được phép",
