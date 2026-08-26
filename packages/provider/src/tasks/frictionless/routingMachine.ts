@@ -15,6 +15,7 @@
 import type { Logger } from "@prosopo/logger";
 import type {
 	CounterSpec,
+	ImageRoundsBounds,
 	RoutingMachineBaseline,
 	RoutingMachineInput,
 	RoutingMachineInputBase,
@@ -37,6 +38,11 @@ export interface RoutingContext {
 	score: number;
 	platform: RoutingMachinePlatform;
 	raw: RoutingMachineRawSignals;
+	// The sitekey's image-round bounds. A routing machine is a rule source
+	// like any other, so its `solvedImagesCount` is clamped into these before
+	// it reaches the session record. Optional so callers that don't have a
+	// client record (tests, internal replays) simply skip the clamp.
+	imageRounds?: ImageRoundsBounds;
 }
 
 /**

@@ -20,6 +20,7 @@ import {
 	type KeyringPair,
 	contextAwareThresholdDefault,
 	imageMaxRoundsDefault,
+	imageMinRoundsDefault,
 	puzzleToleranceDefault,
 } from "@prosopo/types";
 import {
@@ -45,6 +46,12 @@ export const SiteKeyRegisterCommandArgsSpec = z.object({
 		.positive()
 		.optional()
 		.default(imageMaxRoundsDefault),
+	image_min_rounds: z
+		.number()
+		.int()
+		.positive()
+		.optional()
+		.default(imageMinRoundsDefault),
 });
 
 export default (
@@ -99,6 +106,11 @@ export default (
 					type: "number" as const,
 					demandOption: false,
 					desc: "Image max rounds for settings",
+				} as const)
+				.option("image_min_rounds", {
+					type: "number" as const,
+					demandOption: false,
+					desc: "Image min rounds for settings",
 				} as const),
 		handler: async (argv: ArgumentsCamelCase) => {
 			try {
@@ -113,6 +125,7 @@ export default (
 					domains,
 					image_threshold,
 					image_max_rounds,
+					image_min_rounds,
 				} = SiteKeyRegisterCommandArgsSpec.parse(argv);
 				const tasks = new Tasks(env);
 				await tasks.clientTaskManager.registerSiteKey(sitekey, tier, {
@@ -122,6 +135,7 @@ export default (
 					powDifficulty: pow_difficulty as number,
 					imageThreshold: image_threshold as number,
 					imageMaxRounds: image_max_rounds as number,
+					imageMinRounds: image_min_rounds as number,
 					puzzleTolerance: puzzleToleranceDefault,
 					disallowWebView: false,
 					contextAware: {

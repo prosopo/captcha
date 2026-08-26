@@ -30,6 +30,7 @@ import {
 	type ScoreComponents,
 	type Session,
 	SimdReadingsStage,
+	clampImageRounds,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { AccessPolicy } from "@prosopo/user-access-policy";
@@ -415,9 +416,18 @@ export class FrictionlessManager extends CaptchaManager {
 			routed.captchaType,
 			this.logger,
 		);
+		// The routing machine is the one round-count source that isn't already
+		// clamped by its caller, and the count it produces is what lands on the
+		// session record (and so in billing and analytics). Bound it here so the
+		// record agrees with what `getImageCaptchaChallenge` will actually serve.
+		const routedSolvedImagesCount =
+			routed.solvedImagesCount ?? effectiveParams.solvedImagesCount;
+		const imageRoundsBounds = this.routingContext?.imageRounds;
 		const finalSolvedImagesCount =
 			finalCaptchaType === CaptchaType.image
-				? (routed.solvedImagesCount ?? effectiveParams.solvedImagesCount)
+				? imageRoundsBounds && routedSolvedImagesCount !== undefined
+					? clampImageRounds(routedSolvedImagesCount, imageRoundsBounds)
+					: routedSolvedImagesCount
 				: undefined;
 		const finalPowDifficulty =
 			finalCaptchaType === CaptchaType.pow

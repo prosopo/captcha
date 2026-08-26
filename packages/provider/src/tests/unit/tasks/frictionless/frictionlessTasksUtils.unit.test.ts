@@ -12,8 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { ImageRoundsBounds } from "@prosopo/types";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+	DECAY_CEILING_ROUNDS,
+	DECAY_FLOOR_ROUNDS,
+	DECAY_FULL_AGE_MS,
+	DECAY_START_AGE_MS,
 	computeFrictionlessScore,
 	timestampDecayFunction,
 } from "../../../../tasks/frictionless/frictionlessTasksUtils.js";
@@ -73,10 +78,12 @@ describe("frictionlessTasksUtils", () => {
 
 	describe("timestampDecayFunction", () => {
 		let mockNow: number;
+		// Wide enough not to bind the curve, so these cases exercise the
+		// staleness ramp rather than the site's clamp.
+		const wide: ImageRoundsBounds = { imageMinRounds: 2, imageMaxRounds: 32 };
 
 		beforeEach(() => {
-			// Mock Date.now to return a consistent value
-			mockNow = Date.now(); // Use current time for more realistic testing
+			mockNow = Date.now();
 			vi.spyOn(Date, "now").mockReturnValue(mockNow);
 		});
 
@@ -84,45 +91,110 @@ describe("frictionlessTasksUtils", () => {
 			vi.restoreAllMocks();
 		});
 
-		it("should return 12 when timestamp is more than 1 hour old", () => {
-			const oldTimestamp = mockNow - 3600001; // Just over 1 hour ago
-			const result = timestampDecayFunction(oldTimestamp, 12);
-			expect(result).toBe(12);
+		it("serves the floor for a session inside the tolerated age window", () => {
+			expect(timestampDecayFunction(mockNow, wide)).toBe(DECAY_FLOOR_ROUNDS);
+			expect(timestampDecayFunction(mockNow - 1000, wide)).toBe(
+				DECAY_FLOOR_ROUNDS,
+			);
+			expect(timestampDecayFunction(mockNow - DECAY_START_AGE_MS, wide)).toBe(
+				DECAY_FLOOR_ROUNDS,
+			);
 		});
 
-		it("should return a number for recent timestamps", () => {
-			const recentTimestamp = mockNow - 1000; // 1 second ago
-			const result = timestampDecayFunction(recentTimestamp, 12);
-			expect(typeof result).toBe("number");
-			expect(result).toBeGreaterThanOrEqual(2);
-			expect(result).toBeLessThanOrEqual(12);
+		it("serves the ceiling once the session is fully decayed", () => {
+			expect(timestampDecayFunction(mockNow - DECAY_FULL_AGE_MS, wide)).toBe(
+				DECAY_CEILING_ROUNDS,
+			);
+			expect(timestampDecayFunction(mockNow - 24 * 60 * 60 * 1000, wide)).toBe(
+				DECAY_CEILING_ROUNDS,
+			);
 		});
 
-		it("should return a number for older timestamps within 1 hour", () => {
-			const thirtyMinOld = mockNow - 1800000; // 30 minutes ago
-			const result = timestampDecayFunction(thirtyMinOld, 12);
-			expect(typeof result).toBe("number");
-			expect(result).toBeGreaterThanOrEqual(2);
-			expect(result).toBeLessThanOrEqual(12);
+		it("ramps between the floor and the ceiling across the decay window", () => {
+			// The bug this replaces: every age in this window returned 3.
+			const midpoint = mockNow - (DECAY_START_AGE_MS + DECAY_FULL_AGE_MS) / 2;
+			const mid = timestampDecayFunction(midpoint, wide);
+			expect(mid).toBeGreaterThan(DECAY_FLOOR_ROUNDS);
+			expect(mid).toBeLessThan(DECAY_CEILING_ROUNDS);
+			expect(mid).toBe(
+				Math.round((DECAY_FLOOR_ROUNDS + DECAY_CEILING_ROUNDS) / 2),
+			);
 		});
 
-		it("should handle very old timestamps", () => {
-			const veryOldTimestamp = mockNow - 24 * 60 * 60 * 1000; // 24 hours ago
-			const result = timestampDecayFunction(veryOldTimestamp, 12);
-			expect(result).toBe(12);
+		it("is monotonic in age", () => {
+			const ages = [0, 10, 20, 30, 40, 50, 60, 90].map(
+				(minutes) => minutes * 60 * 1000,
+			);
+			const rounds = ages.map((age) =>
+				timestampDecayFunction(mockNow - age, wide),
+			);
+			for (let i = 1; i < rounds.length; i++) {
+				expect(rounds[i]).toBeGreaterThanOrEqual(rounds[i - 1] as number);
+			}
 		});
 
-		it("should handle future timestamps", () => {
-			const futureTimestamp = mockNow + 10000; // 10 seconds in future
-			const result = timestampDecayFunction(futureTimestamp, 12);
-			expect(typeof result).toBe("number");
-			expect(result).toBeGreaterThanOrEqual(2);
-			expect(result).toBeLessThanOrEqual(12);
+		it("treats a future timestamp as fresh, not stale", () => {
+			expect(timestampDecayFunction(mockNow + 10000, wide)).toBe(
+				DECAY_FLOOR_ROUNDS,
+			);
 		});
 
-		it("should return NaN when timestamp is NaN", () => {
-			const result = timestampDecayFunction(Number.NaN, 12);
-			expect(result).toBeNaN();
+		it("treats an unreadable timestamp as fully decayed", () => {
+			// Previously returned NaN, which the caller wrote straight onto the
+			// session record.
+			expect(timestampDecayFunction(Number.NaN, wide)).toBe(
+				DECAY_CEILING_ROUNDS,
+			);
+		});
+
+		it("never exceeds the site's configured maximum", () => {
+			const capped: ImageRoundsBounds = {
+				imageMinRounds: 2,
+				imageMaxRounds: 4,
+			};
+			const ages = [
+				0,
+				DECAY_START_AGE_MS,
+				DECAY_FULL_AGE_MS,
+				10 * 60 * 60 * 1000,
+			];
+			for (const age of ages) {
+				expect(
+					timestampDecayFunction(mockNow - age, capped),
+				).toBeLessThanOrEqual(4);
+			}
+			expect(timestampDecayFunction(mockNow - DECAY_FULL_AGE_MS, capped)).toBe(
+				4,
+			);
+		});
+
+		it("never drops below the site's configured minimum", () => {
+			const floored: ImageRoundsBounds = {
+				imageMinRounds: 8,
+				imageMaxRounds: 32,
+			};
+			expect(timestampDecayFunction(mockNow, floored)).toBe(8);
+			expect(timestampDecayFunction(mockNow - DECAY_FULL_AGE_MS, floored)).toBe(
+				DECAY_CEILING_ROUNDS,
+			);
+		});
+
+		it("collapses to the max when the site pins min and max together", () => {
+			const pinned: ImageRoundsBounds = {
+				imageMinRounds: 5,
+				imageMaxRounds: 5,
+			};
+			expect(timestampDecayFunction(mockNow, pinned)).toBe(5);
+			expect(timestampDecayFunction(mockNow - DECAY_FULL_AGE_MS, pinned)).toBe(
+				5,
+			);
+		});
+
+		it("falls back to the schema defaults when neither bound is stored", () => {
+			expect(timestampDecayFunction(mockNow, {})).toBe(DECAY_FLOOR_ROUNDS);
+			expect(timestampDecayFunction(mockNow - DECAY_FULL_AGE_MS, {})).toBe(
+				DECAY_CEILING_ROUNDS,
+			);
 		});
 	});
 });

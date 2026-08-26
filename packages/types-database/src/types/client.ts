@@ -32,6 +32,7 @@ import {
 	domainsDefault,
 	frictionlessThresholdDefault,
 	imageMaxRoundsDefault,
+	imageMinRoundsDefault,
 	imageThresholdDefault,
 	ispChangeActionDefault,
 	powDifficultyDefault,
@@ -160,6 +161,11 @@ export const UserSettingsSchema = new Schema({
 	imageMaxRounds: {
 		type: Number,
 		default: imageMaxRoundsDefault,
+		required: false,
+	},
+	imageMinRounds: {
+		type: Number,
+		default: imageMinRoundsDefault,
 		required: false,
 	},
 	puzzleTolerance: {

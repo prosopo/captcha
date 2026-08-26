@@ -20,15 +20,15 @@ export const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
  * Deliberately short. A failed decrypt means we have no measurement of the
  * client — most often a benign cause (the session's Redis bundle binding
  * expired, the bundle left the pool on a rotation, a stale cached widget) — so
- * this is a "prove you're human quickly", not a punishment. Capped by the
- * sitekey's `imageMaxRounds` at the call site.
+ * this is a "prove you're human quickly", not a punishment. Clamped into the
+ * sitekey's `[imageMinRounds, imageMaxRounds]` at the call site.
  */
 export const DECRYPTION_FAILED_IMAGE_ROUNDS = 3;
 
 /**
  * Image rounds served when the client sent no detector token at all. It ran no
- * detection, so we know nothing about it and it must solve to proceed. Capped
- * by the sitekey's `imageMaxRounds` at the call site.
+ * detection, so we know nothing about it and it must solve to proceed. Clamped
+ * into the sitekey's `[imageMinRounds, imageMaxRounds]` at the call site.
  */
 export const MISSING_TOKEN_IMAGE_ROUNDS = 3;
 

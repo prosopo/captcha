@@ -52,6 +52,7 @@ const FULLY_POPULATED_SETTINGS = {
 	powDifficulty: 6,
 	imageThreshold: 0.81,
 	imageMaxRounds: 12,
+	imageMinRounds: 4,
 	autoBanScoreThreshold: 0.95,
 	verifiedTimeout: 120000,
 	solutionTimeout: 60000,
@@ -235,6 +236,7 @@ describe("Client settings Mongo persistence", () => {
 		expect(stored.powDifficulty).toBe(FULLY_POPULATED_SETTINGS.powDifficulty);
 		expect(stored.imageThreshold).toBe(FULLY_POPULATED_SETTINGS.imageThreshold);
 		expect(stored.imageMaxRounds).toBe(FULLY_POPULATED_SETTINGS.imageMaxRounds);
+		expect(stored.imageMinRounds).toBe(FULLY_POPULATED_SETTINGS.imageMinRounds);
 		expect(stored.autoBanScoreThreshold).toBe(
 			FULLY_POPULATED_SETTINGS.autoBanScoreThreshold,
 		);

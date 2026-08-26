@@ -18,6 +18,8 @@ import {
 	type IPInfoResponse,
 	type RequestHeaders,
 	type ScoreComponents,
+	clampImageRounds,
+	resolveImageRoundsBounds,
 } from "@prosopo/types";
 import type { ClientRecord } from "@prosopo/types-database";
 import {
@@ -110,7 +112,7 @@ export const handleAccessPolicy = async (
 			},
 		}));
 		await tasks.frictionlessManager.registerBlockedSession({
-			solvedImagesCount: clientRecord.settings.imageMaxRounds,
+			solvedImagesCount: resolveImageRoundsBounds(clientRecord.settings).max,
 			userSitekeyIpHash: input.userSitekeyIpHash,
 			reason: FrictionlessReason.ACCESS_POLICY_BLOCK,
 			siteKey: input.dapp,
@@ -141,7 +143,7 @@ export const handleAccessPolicy = async (
 			},
 		}));
 		await tasks.frictionlessManager.registerBlockedSession({
-			solvedImagesCount: clientRecord.settings.imageMaxRounds,
+			solvedImagesCount: resolveImageRoundsBounds(clientRecord.settings).max,
 			userSitekeyIpHash: input.userSitekeyIpHash,
 			reason: FrictionlessReason.AUTO_BAN_SCORE,
 			siteKey: input.dapp,
@@ -177,11 +179,11 @@ export const handleAccessPolicy = async (
 				await tasks.frictionlessManager.sendImageCaptcha({
 					...captchaTypeBaseParams,
 					solvedImagesCount: userAccessPolicy.solvedImagesCount
-						? Math.min(
+						? clampImageRounds(
 								userAccessPolicy.solvedImagesCount,
-								clientRecord.settings.imageMaxRounds,
+								clientRecord.settings,
 							)
-						: clientRecord.settings.imageMaxRounds,
+						: resolveImageRoundsBounds(clientRecord.settings).max,
 				}),
 			),
 		};

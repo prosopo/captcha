@@ -31,14 +31,17 @@ import {
 	TrafficFilterSchema,
 	abuseScoreThresholdDefault,
 	captchaTypeDefault,
+	clampImageRounds,
 	contextAwareThresholdDefault,
 	distanceThresholdKmDefault,
 	frictionlessThresholdDefault,
 	honeypotEncodingTypeDefault,
 	imageMaxRoundsDefault,
+	imageMinRoundsDefault,
 	imageThresholdDefault,
 	powDifficultyDefault,
 	puzzleToleranceDefault,
+	resolveImageRoundsBounds,
 	trafficFilterAbuserScoreThresholdDefault,
 } from "./settings.js";
 
@@ -165,6 +168,39 @@ describe("ClientSettingsSchema", () => {
 			ClientSettingsSchema.safeParse({ ...minimal, imageMaxRounds: 2.5 })
 				.success,
 		).toBe(false);
+		expect(
+			ClientSettingsSchema.safeParse({ ...minimal, imageMinRounds: 2.5 })
+				.success,
+		).toBe(false);
+	});
+
+	it("defaults imageMinRounds to the historical hard-coded floor", () => {
+		expect(parse(minimal).imageMinRounds).toBe(imageMinRoundsDefault);
+		expect(imageMinRoundsDefault).toBe(2);
+	});
+
+	it("allows a single-round floor but never a sub-2 cap", () => {
+		expect(parse({ ...minimal, imageMinRounds: 1 }).imageMinRounds).toBe(1);
+		expect(
+			ClientSettingsSchema.safeParse({ ...minimal, imageMinRounds: 0 }).success,
+		).toBe(false);
+	});
+
+	it("rejects a floor above the cap", () => {
+		expect(
+			ClientSettingsSchema.safeParse({
+				...minimal,
+				imageMinRounds: 9,
+				imageMaxRounds: 8,
+			}).success,
+		).toBe(false);
+		expect(
+			ClientSettingsSchema.safeParse({
+				...minimal,
+				imageMinRounds: 8,
+				imageMaxRounds: 8,
+			}).success,
+		).toBe(true);
 	});
 
 	it("bounds puzzleTolerance to [5, 1000]", () => {
@@ -486,5 +522,50 @@ describe("HoneypotSettingsSchema", () => {
 		expect(
 			HoneypotSettingsSchema.safeParse({ encodingType: "rot13" }).success,
 		).toBe(false);
+	});
+});
+
+describe("image round bounds", () => {
+	it("clamps a requested count into the configured bounds", () => {
+		const bounds = { imageMinRounds: 3, imageMaxRounds: 8 };
+		expect(clampImageRounds(1, bounds)).toBe(3);
+		expect(clampImageRounds(5, bounds)).toBe(5);
+		expect(clampImageRounds(99, bounds)).toBe(8);
+	});
+
+	it("rounds a fractional request to a whole number of rounds", () => {
+		expect(
+			clampImageRounds(4.4, { imageMinRounds: 2, imageMaxRounds: 8 }),
+		).toBe(4);
+		expect(
+			clampImageRounds(4.5, { imageMinRounds: 2, imageMaxRounds: 8 }),
+		).toBe(5);
+	});
+
+	it("falls back to the floor for a non-finite request", () => {
+		// A NaN here is an upstream bug, not a signal about the user — it must
+		// not hand a real user the maximum, nor reach the session record.
+		expect(
+			clampImageRounds(Number.NaN, { imageMinRounds: 3, imageMaxRounds: 8 }),
+		).toBe(3);
+	});
+
+	it("uses the schema defaults when a record stores neither bound", () => {
+		expect(resolveImageRoundsBounds({})).toEqual({
+			min: imageMinRoundsDefault,
+			max: imageMaxRoundsDefault,
+		});
+	});
+
+	it("lets the cap win when a legacy record's floor exceeds it", () => {
+		// `imageMinRounds` post-dates `imageMaxRounds`, so a stored record can
+		// carry a defaulted floor above a cap an operator has since lowered.
+		expect(resolveImageRoundsBounds({ imageMaxRounds: 1 })).toEqual({
+			min: 1,
+			max: 1,
+		});
+		expect(clampImageRounds(5, { imageMinRounds: 9, imageMaxRounds: 4 })).toBe(
+			4,
+		);
 	});
 });

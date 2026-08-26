@@ -19,6 +19,8 @@ import {
 	type IPInfoResponse,
 	type IPuzzleSettings,
 	type ITrafficFilter,
+	clampImageRounds,
+	resolveImageRoundsBounds,
 } from "@prosopo/types";
 import type { ClientRecord } from "@prosopo/types-database";
 import type { Response } from "express";
@@ -154,11 +156,11 @@ export const handleFrictionlessTrafficFilter = async (
 		response = await input.frictionlessManager.sendImageCaptcha({
 			...baseParams,
 			solvedImagesCount: verdict.solvedImagesCount
-				? Math.min(
+				? clampImageRounds(
 						verdict.solvedImagesCount,
-						input.clientRecord.settings.imageMaxRounds,
+						input.clientRecord.settings,
 					)
-				: input.clientRecord.settings.imageMaxRounds,
+				: resolveImageRoundsBounds(input.clientRecord.settings).max,
 		});
 	} else if (verdict.captchaType === CaptchaType.pow) {
 		logDispatch(CaptchaType.pow);

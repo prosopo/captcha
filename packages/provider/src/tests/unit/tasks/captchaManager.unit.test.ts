@@ -52,6 +52,7 @@ const defaultUserSettings: IUserSettings = {
 	powDifficulty: 4,
 	imageThreshold: 0.8,
 	imageMaxRounds: 3,
+	imageMinRounds: 2,
 	verifiedTimeout: 120000,
 	solutionTimeout: 60000,
 	puzzleTolerance: 15,
