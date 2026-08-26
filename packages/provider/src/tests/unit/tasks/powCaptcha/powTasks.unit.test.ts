@@ -570,6 +570,56 @@ describe("PowCaptchaManager", () => {
 			);
 		});
 
+		it("should return the record's sessionId, on both the verified and already-checked paths", async () => {
+			const dappAccount = "dappAccount";
+			const timestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
+			const timeout = 1000;
+			const challengeRecord: Partial<PoWCaptchaStored> = {
+				challenge,
+				dappAccount,
+				userAccount,
+				sessionId: "session-abc",
+				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
+				serverChecked: false,
+				result: { status: CaptchaStatus.approved },
+				ipAddress: getCompositeIpAddress(getIPAddress("1.1.1.1")),
+			};
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(verifyRecency as any).mockImplementation(() => true);
+
+			const verified = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				timeout,
+				mockEnv,
+			);
+			expect(verified.verified).toBe(true);
+			expect(verified.sessionId).toBe("session-abc");
+
+			// A replay exits before the session is ever loaded, but the record
+			// it read still carries the id.
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue({
+				...challengeRecord,
+				serverChecked: true,
+			});
+			const replayed = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				timeout,
+				mockEnv,
+			);
+			expect(replayed.verified).toBe(false);
+			expect(replayed.sessionId).toBe("session-abc");
+		});
+
 		it("should return verified:false if a challenge cannot be found", async () => {
 			const dappAccount = "dappAccount";
 			const timestamp = 123456678;

@@ -618,12 +618,19 @@ export class PowCaptchaManager extends CaptchaManager {
 		spamFilter?: ISpamFilterRules,
 		trafficFilter?: ITrafficFilter,
 		storeMetadata = false,
-	): Promise<{ verified: boolean; score?: number; reason?: string }> {
+	): Promise<{
+		verified: boolean;
+		score?: number;
+		reason?: string;
+		sessionId?: string;
+	}> {
 		const notVerified = (
 			reason: string,
-		): { verified: false; reason: string } => ({
+			sessionId?: string,
+		): { verified: false; reason: string; sessionId?: string } => ({
 			verified: false,
 			reason,
+			...(sessionId && { sessionId }),
 		});
 
 		// Bind the challenge/dappAccount context once so every log line in this
@@ -652,7 +659,10 @@ export class PowCaptchaManager extends CaptchaManager {
 		}
 
 		if (challengeRecord.serverChecked)
-			return notVerified("API.USER_ALREADY_VERIFIED");
+			return notVerified(
+				"API.USER_ALREADY_VERIFIED",
+				challengeRecord.sessionId,
+			);
 
 		const challengeDappAccount = challengeRecord.dappAccount;
 
@@ -1085,9 +1095,15 @@ export class PowCaptchaManager extends CaptchaManager {
 		}
 
 		if (failReason) {
-			return notVerified(failReason);
+			return notVerified(failReason, challengeRecord.sessionId);
 		}
 
-		return { verified: true, ...(score ? { score } : {}) };
+		return {
+			verified: true,
+			...(score ? { score } : {}),
+			...(challengeRecord.sessionId && {
+				sessionId: challengeRecord.sessionId,
+			}),
+		};
 	}
 }

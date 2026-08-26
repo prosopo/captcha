@@ -454,8 +454,13 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		spamFilter?: ISpamFilterRules,
 		trafficFilter?: ITrafficFilter,
 		storeMetadata = false,
-	): Promise<{ verified: boolean; score?: number }> {
-		const notVerifiedResponse = { verified: false };
+	): Promise<{ verified: boolean; score?: number; sessionId?: string }> {
+		// Shared by every not-verified exit; sessionId is stamped on below
+		// once the record is loaded, so each exit needn't repeat it.
+		const notVerifiedResponse: {
+			verified: false;
+			sessionId?: string;
+		} = { verified: false };
 
 		// Bind the challenge/dappAccount context once so every log line in this
 		// method carries it without repeating the fields in each `data` block.
@@ -471,6 +476,8 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 
 			return notVerifiedResponse;
 		}
+
+		notVerifiedResponse.sessionId = challengeRecord.sessionId;
 
 		if (challengeRecord.result.status !== CaptchaStatus.approved) {
 			throw new ProsopoApiError("CAPTCHA.INVALID_SOLUTION", {
@@ -916,6 +923,12 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 			});
 		}
 
-		return { verified: true, ...(score ? { score } : {}) };
+		return {
+			verified: true,
+			...(score ? { score } : {}),
+			...(challengeRecord.sessionId && {
+				sessionId: challengeRecord.sessionId,
+			}),
+		};
 	}
 }

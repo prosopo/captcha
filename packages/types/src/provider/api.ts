@@ -390,6 +390,9 @@ export interface VerificationResponse extends ApiResponse {
 	[ApiParams.verified]: boolean;
 	[ApiParams.score]?: number;
 	[ApiParams.reason]?: string;
+	// For log correlation only. Neither the token nor the verify request
+	// carries it, so the caller cannot know it without us echoing it back.
+	[ApiParams.sessionId]?: string;
 }
 
 export interface UpdateDecisionMachineResponse extends ApiResponse {
