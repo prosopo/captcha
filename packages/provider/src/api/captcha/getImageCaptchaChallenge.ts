@@ -34,6 +34,7 @@ import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 import { getRequestUserScope } from "../blacklistRequestInspector.js";
 import { recordCaptchaIssueError, recordCaptchaIssued } from "../metrics.js";
+import { isReservedTestSiteKey } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 import { buildImageMaintenanceResponse } from "./maintenanceModeResponses.js";
 import { applyTrafficFilterAtRequestTime } from "./trafficFilterRequestTime.js";
@@ -110,6 +111,18 @@ export default (
 		if (getMaintenanceMode()) {
 			req.logger.info(() => ({
 				msg: "Maintenance mode active - returning dummy image challenge",
+				data: { dapp, user, sessionId },
+			}));
+			return res.json(buildImageMaintenanceResponse());
+		}
+
+		// Reserved CI test site keys have no client record, so the lookup
+		// below would reject them as unregistered. Checked before
+		// `new Tasks(env, ...)` for the same reason as maintenance mode: the
+		// constructor calls `env.getDb()`.
+		if (isReservedTestSiteKey(dapp)) {
+			req.logger.warn(() => ({
+				msg: "Reserved TEST site key - returning dummy image challenge",
 				data: { dapp, user, sessionId },
 			}));
 			return res.json(buildImageMaintenanceResponse());
