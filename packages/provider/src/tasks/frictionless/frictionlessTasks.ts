@@ -415,9 +415,21 @@ export class FrictionlessManager extends CaptchaManager {
 			routed.captchaType,
 			this.logger,
 		);
+		// Every other path that sizes an image challenge clamps to the
+		// sitekey's `imageMaxRounds`; a router-supplied count was the one
+		// that didn't, and the routing-machine output schema only bounds it
+		// as a positive int. Clamp here so a router cannot hand a user more
+		// rounds than the site configured. The `effectiveParams` fallback is
+		// already clamped by its caller, so this only bites on `routed`.
+		const requestedSolvedImagesCount =
+			routed.solvedImagesCount ?? effectiveParams.solvedImagesCount;
+		const imageRoundsCeiling = this.routingContext?.imageMaxRounds;
 		const finalSolvedImagesCount =
 			finalCaptchaType === CaptchaType.image
-				? (routed.solvedImagesCount ?? effectiveParams.solvedImagesCount)
+				? requestedSolvedImagesCount !== undefined &&
+					imageRoundsCeiling !== undefined
+					? Math.min(requestedSolvedImagesCount, imageRoundsCeiling)
+					: requestedSolvedImagesCount
 				: undefined;
 		const finalPowDifficulty =
 			finalCaptchaType === CaptchaType.pow

@@ -726,6 +726,7 @@ export default (
 				ip: normalizedIp,
 				countryCode,
 				score: botScore,
+				imageMaxRounds: clientRecord.settings.imageMaxRounds,
 				platform: derivePlatform(safeUserAgent, webView, {
 					...(typeof ipInfoMobile === "boolean" && { isMobile: ipInfoMobile }),
 				}),
