@@ -919,6 +919,11 @@ export class ProviderDatabase
 						serverChecked: 1,
 						userSubmitted: 1,
 						coords: 1,
+						// Read by the verify path to correlate the site's
+						// session id against the one recorded at solve time.
+						// Omitting it made every clientSessionId-carrying token
+						// look like it was solved in another session.
+						clientMetaData: 1,
 					} as { [key in keyof Partial<PoWCaptchaRecord>]: 1 })
 					.lean<PoWCaptchaRecord>();
 			if (record) {
@@ -1202,6 +1207,8 @@ export class ProviderDatabase
 						serverChecked: 1,
 						userSubmitted: 1,
 						coords: 1,
+						// See the PoW projection above — same verify-time read.
+						clientMetaData: 1,
 					} as { [key in keyof Partial<PuzzleCaptchaRecord>]: 1 })
 					.lean<PuzzleCaptchaRecord>();
 			if (record) {
@@ -1761,6 +1768,10 @@ export class ProviderDatabase
 				originSessionId: 1,
 				currentUrl: 1,
 				iframeUrl: 1,
+				// Mirrored up from the captcha record at solve time. Projected
+				// so session-level readers see the same clientSessionId the
+				// captcha record carries.
+				clientMetaData: 1,
 				// captchaType is required by the peek-before-consume path
 				// in `CaptchaManager.isValidRequest` — without it, every
 				// escalation peek would compare `undefined !== <requested>`

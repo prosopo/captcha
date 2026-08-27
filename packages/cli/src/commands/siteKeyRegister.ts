@@ -19,6 +19,7 @@ import {
 	ContextType,
 	type KeyringPair,
 	contextAwareThresholdDefault,
+	frictionlessImageThresholdDefault,
 	imageMaxRoundsDefault,
 	puzzleToleranceDefault,
 } from "@prosopo/types";
@@ -36,6 +37,10 @@ export const SiteKeyRegisterCommandArgsSpec = z.object({
 	tier: z.nativeEnum(Tier),
 	captcha_type: CaptchaTypeSpec,
 	frictionless_threshold: z.number().max(1).min(0),
+	// Optional upper rung of the score ladder. Omit for the two-outcome
+	// ladder (pow below the threshold, image above it). Uncapped: the score
+	// it is compared against is post-penalty and routinely exceeds 1.
+	frictionless_image_threshold: z.number().min(0).optional(),
 	pow_difficulty: z.number(),
 	domains: z.array(z.string()),
 	image_threshold: z.number().max(1).min(0),
@@ -83,7 +88,12 @@ export default (
 				.option("frictionless_threshold", {
 					type: "number" as const,
 					demandOption: false,
-					desc: "Frictionless threshold for settings",
+					desc: "Score above which a puzzle is served (lower rung of the ladder)",
+				} as const)
+				.option("frictionless_image_threshold", {
+					type: "number" as const,
+					demandOption: false,
+					desc: "Score at or above which an image captcha is served (upper rung of the ladder)",
 				} as const)
 				.option("pow_difficulty", {
 					type: "number" as const,
@@ -109,6 +119,7 @@ export default (
 					tier,
 					captcha_type,
 					frictionless_threshold,
+					frictionless_image_threshold,
 					pow_difficulty,
 					domains,
 					image_threshold,
@@ -117,7 +128,11 @@ export default (
 				const tasks = new Tasks(env);
 				await tasks.clientTaskManager.registerSiteKey(sitekey, tier, {
 					captchaType: CaptchaTypeSpec.parse(captcha_type),
-					frictionlessThreshold: frictionless_threshold as number,
+					frictionlessThreshold: {
+						frictionlessPuzzleThreshold: frictionless_threshold as number,
+						frictionlessImageThreshold:
+							frictionless_image_threshold ?? frictionlessImageThresholdDefault,
+					},
 					domains: domains || [],
 					powDifficulty: pow_difficulty as number,
 					imageThreshold: image_threshold as number,
