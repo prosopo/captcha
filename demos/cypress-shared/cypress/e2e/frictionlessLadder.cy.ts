@@ -20,16 +20,21 @@
 // Driving a real score from a headless browser isn't possible — the detector
 // can't produce a server-decryptable payload, which is why the CI step sets
 // PROSOPO_TEST_FRICTIONLESS_DETECTOR_OVERRIDE and pins the base score to 0.
-// So the score is supplied from the other side instead: a Restrict access
-// rule carrying `frictionlessScore` adds a known amount to the base score and
-// then falls through to the decision machine (it has no `captchaType`, so it
-// pins nothing — see handleAccessPolicy's `handled: false` return). Score in,
-// captchaType out, with the ladder as the only thing in between.
+// The score is therefore supplied through the language-rule lever instead:
+// `L_RULES` maps a language tag to a score the provider adds to the base, and
+// the CI step configures two synthetic tags, one landing in each band. Each
+// test rewrites `accept-language` on the way through, the same way
+// routingFrictionless.cy.ts injects its routing header. Score in, captchaType
+// out, with the ladder as the only thing in between.
 //
-// The assertions read `/captcha/frictionless`'s own response body rather than
-// watching which follow-up endpoint the widget calls, matching
-// routingFrictionless.cy.ts — that is the value the ladder actually produced,
-// before any widget-side interpretation of it.
+// The tags are deliberately not real languages, so they cannot collide with
+// the `en-US,en;q=0.9` the browser sends by default — that default has to
+// score zero for the PoW case to mean anything.
+//
+// Assertions read `/captcha/frictionless`'s own response body rather than
+// watching which endpoint the widget calls next, matching
+// routingFrictionless.cy.ts — that is the value the ladder produced, before
+// any widget-side interpretation of it.
 
 import "@cypress/xpath";
 import { CaptchaType } from "@prosopo/types";
@@ -41,31 +46,16 @@ const siteKey: string = Cypress.env(
 	`PROSOPO_SITE_KEY_${baseCaptchaType.toUpperCase()}`,
 );
 
-// Rungs chosen with clear air either side of each band's boundary so the
-// assertions can't flip on a small scoring change: PoW below 0.5, puzzle
-// across 0.5-1.2, image at 1.2 and up.
+// Rungs with clear air either side of each boundary so the assertions can't
+// flip on a small scoring change: PoW below 0.5, puzzle across 0.5-1.2,
+// image at 1.2 and up.
 const PUZZLE_RUNG = 0.5;
 const IMAGE_RUNG = 1.2;
 
-// Scores aimed at the middle of each band rather than at its edges.
-const SCORE_IN_PUZZLE_BAND = 0.8;
-const SCORE_IN_IMAGE_BAND = 1.5;
-
-const buildScoreRule = (frictionlessScore: number) => [
-	{
-		accessPolicy: {
-			// Restrict, deliberately with no `captchaType`: the rule exists
-			// only to move the score. Pinning a type here would short-circuit
-			// the decision machine and test nothing about the ladder.
-			type: "restrict",
-			frictionlessScore,
-			description: `cypress-test-ladder-score-${frictionlessScore}`,
-		},
-		policyScopes: [{ clientId: siteKey }],
-		userScopes: [{}],
-		expiresUnixTimestamp: Math.floor(Date.now() / 1000) + 3600,
-	},
-];
+// Language tags the CI step maps to a score via L_RULES. Values are aimed at
+// the middle of each band, not at its edges. Keep in step with the workflow.
+const LANG_PUZZLE_BAND = "zz-puzzleband"; // scores 0.8
+const LANG_IMAGE_BAND = "zz-imageband"; // scores 1.5
 
 describe("Frictionless score ladder picks the captcha type by score", () => {
 	before(() => {
@@ -74,11 +64,9 @@ describe("Frictionless score ladder picks the captcha type by score", () => {
 				`PROSOPO_SITE_KEY_${baseCaptchaType.toUpperCase()} must be set for the score ladder test.`,
 			);
 		}
-		cy.deleteAllAccessRules();
 	});
 
 	beforeEach(() => {
-		cy.deleteAllAccessRules();
 		cy.registerSiteKey(baseCaptchaType, undefined, {
 			frictionlessThreshold: {
 				frictionlessPuzzleThreshold: PUZZLE_RUNG,
@@ -97,14 +85,21 @@ describe("Frictionless score ladder picks the captcha type by score", () => {
 	});
 
 	after(() => {
-		cy.deleteAllAccessRules();
 		cy.registerSiteKey(CaptchaType.image);
 	});
 
-	const primeAndVisit = () => {
-		cy.intercept("POST", "**/prosopo/provider/client/captcha/frictionless").as(
-			"frictionless",
-		);
+	// Mounts the widget from scratch with intercepts already primed. `lang`
+	// decides which band the session's score lands in.
+	const primeAndVisit = (lang?: string) => {
+		cy.intercept(
+			"POST",
+			"**/prosopo/provider/client/captcha/frictionless",
+			(req) => {
+				if (lang) {
+					req.headers["accept-language"] = lang;
+				}
+			},
+		).as("frictionless");
 		cy.intercept("POST", "**/prosopo/provider/client/captcha/pow").as("pow");
 		cy.intercept("POST", "**/prosopo/provider/client/captcha/image").as(
 			"image",
@@ -144,8 +139,8 @@ describe("Frictionless score ladder picks the captcha type by score", () => {
 	};
 
 	it("serves PoW for a score below the puzzle rung", () => {
-		// No score rule at all: the detector override pins the base score to
-		// 0, which is under every rung, so the session passes frictionlessly.
+		// No language override: the browser's own accept-language scores
+		// nothing, and the detector override pins the base score to 0.
 		primeAndVisit();
 		expectServedType(
 			CaptchaType.pow,
@@ -156,23 +151,15 @@ describe("Frictionless score ladder picks the captcha type by score", () => {
 	it("serves a puzzle for a score between the two rungs", () => {
 		// The band this whole change exists to create: previously anything
 		// over the single threshold went straight to an image captcha.
-		cy.addAccessRules(buildScoreRule(SCORE_IN_PUZZLE_BAND)).then((response) => {
-			expect(response.status).to.equal(200);
-		});
-
-		primeAndVisit();
+		primeAndVisit(LANG_PUZZLE_BAND);
 		expectServedType(
 			CaptchaType.puzzle,
 			"a score in the middle band must get a puzzle, not an image captcha",
 		);
 	});
 
-	it("serves an image captcha for a score at or above the image rung", () => {
-		cy.addAccessRules(buildScoreRule(SCORE_IN_IMAGE_BAND)).then((response) => {
-			expect(response.status).to.equal(200);
-		});
-
-		primeAndVisit();
+	it("serves an image captcha for a score above the image rung", () => {
+		primeAndVisit(LANG_IMAGE_BAND);
 		expectServedType(
 			CaptchaType.image,
 			"a score above the image rung must still get an image captcha",
@@ -191,11 +178,8 @@ describe("Frictionless score ladder picks the captcha type by score", () => {
 		}).then((response) => {
 			expect(response.status).to.equal(200);
 		});
-		cy.addAccessRules(buildScoreRule(SCORE_IN_PUZZLE_BAND)).then((response) => {
-			expect(response.status).to.equal(200);
-		});
 
-		primeAndVisit();
+		primeAndVisit(LANG_PUZZLE_BAND);
 		expectServedType(
 			CaptchaType.image,
 			"a collapsed band must send the same score to image, as it did before the ladder",
@@ -205,19 +189,16 @@ describe("Frictionless score ladder picks the captcha type by score", () => {
 	it("reads a pre-ladder bare threshold as the puzzle rung", () => {
 		// Client records are replicated to providers rather than migrated in
 		// lockstep, so a record still holding the old bare number has to keep
-		// routing — as the puzzle rung, which is what it always meant. With
-		// the image rung falling back to its default of 1, a 1.5 score is
-		// still an image captcha.
+		// routing — as the puzzle rung, which is what it always meant. The
+		// image rung falls back to its default of 1, so a 1.5 score is still
+		// an image captcha.
 		cy.registerSiteKey(baseCaptchaType, undefined, {
 			frictionlessThreshold: PUZZLE_RUNG,
 		}).then((response) => {
 			expect(response.status).to.equal(200);
 		});
-		cy.addAccessRules(buildScoreRule(SCORE_IN_IMAGE_BAND)).then((response) => {
-			expect(response.status).to.equal(200);
-		});
 
-		primeAndVisit();
+		primeAndVisit(LANG_IMAGE_BAND);
 		expectServedType(
 			CaptchaType.image,
 			"a legacy numeric threshold must keep routing rather than break the flow",
