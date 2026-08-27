@@ -131,9 +131,20 @@ const Procaptcha = (props: ProcaptchaProps) => {
 
 			document.addEventListener(PROCAPTCHA_EXECUTE_EVENT, handleExecuteEvent);
 
+			// A bound button dispatches a non-bubbling event on this widget's own
+			// container instead of on document, so only this widget reacts. The
+			// document listener stays for a bare execute(), which has always
+			// triggered every widget on the page.
+			const container = props.container;
+			container?.addEventListener(PROCAPTCHA_EXECUTE_EVENT, handleExecuteEvent);
+
 			// Cleanup function to remove event listener
 			return () => {
 				document.removeEventListener(
+					PROCAPTCHA_EXECUTE_EVENT,
+					handleExecuteEvent,
+				);
+				container?.removeEventListener(
 					PROCAPTCHA_EXECUTE_EVENT,
 					handleExecuteEvent,
 				);
@@ -142,7 +153,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 
 		// Return empty cleanup function when not in invisible mode
 		return () => {};
-	}, [config.mode]);
+	}, [config.mode, props.container]);
 
 	const honeypot = frictionlessState?.hp ? (
 		<Honeypot ref={hpRef} encodedQuestion={frictionlessState.hp} />

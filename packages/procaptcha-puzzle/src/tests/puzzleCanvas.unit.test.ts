@@ -77,8 +77,17 @@ const render = (canvasProps: CanvasProps): void => {
 	});
 };
 
+/**
+ * Queries the document, not the mount container.
+ *
+ * The canvas is presented on the shared ChallengeSurface, which portals to
+ * `document.body` so a host page's `overflow: hidden` — or any ancestor with a
+ * transform, which would otherwise re-root `position: fixed` — cannot clip the
+ * challenge. Nothing the user experiences changed; the nodes just no longer
+ * live under the React mount point.
+ */
 const piece = (): HTMLElement => {
-	const element = container.querySelector<HTMLElement>(
+	const element = document.querySelector<HTMLElement>(
 		'[data-cy="prosopo-puzzle-piece"]',
 	);
 	if (!element) throw new Error("expected the puzzle piece to be rendered");
@@ -189,12 +198,12 @@ describe("what it puts on screen", () => {
 
 	test("the first go asks the user to drag the piece", () => {
 		render(props());
-		expect(container.textContent).toContain("Drag the piece to the target");
+		expect(document.body.textContent).toContain("Drag the piece to the target");
 	});
 
 	test("a retry says so instead", () => {
 		render(props({ showRetry: true }));
-		expect(container.textContent).toContain("Not quite");
+		expect(document.body.textContent).toContain("Not quite");
 	});
 
 	test("the piece cannot be grabbed while a solution is in flight", () => {
@@ -238,7 +247,7 @@ describe("what it puts on screen", () => {
 			root = createRoot(container);
 		});
 		expect(
-			container.querySelector('[data-cy="prosopo-puzzle-piece"]'),
+			document.querySelector('[data-cy="prosopo-puzzle-piece"]'),
 		).toBeNull();
 	});
 });

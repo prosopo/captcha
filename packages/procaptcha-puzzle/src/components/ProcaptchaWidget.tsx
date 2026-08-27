@@ -147,9 +147,20 @@ const Procaptcha = (props: ProcaptchaProps) => {
 
 			document.addEventListener(PROCAPTCHA_EXECUTE_EVENT, handleExecuteEvent);
 
+			// A bound button dispatches a non-bubbling event on this widget's own
+			// container instead of on document, so only this widget reacts. The
+			// document listener stays for a bare execute(), which has always
+			// triggered every widget on the page.
+			const container = props.container;
+			container?.addEventListener(PROCAPTCHA_EXECUTE_EVENT, handleExecuteEvent);
+
 			// Cleanup function to remove event listener
 			return () => {
 				document.removeEventListener(
+					PROCAPTCHA_EXECUTE_EVENT,
+					handleExecuteEvent,
+				);
+				container?.removeEventListener(
 					PROCAPTCHA_EXECUTE_EVENT,
 					handleExecuteEvent,
 				);
@@ -158,7 +169,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 
 		// Return empty cleanup function when not in invisible mode
 		return () => {};
-	}, [config.mode, callbacks.onError, loading]);
+	}, [config.mode, callbacks.onError, loading, props.container]);
 
 	const handlePuzzleComplete = useCallback(
 		async (finalX: number, finalY: number, puzzleEvents: PuzzleEvent[]) => {
@@ -209,6 +220,16 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	);
 
 	const isInvisible = config.mode === ModeEnum.invisible;
+
+	// Dismissing a floating puzzle returns to the checkbox rather than failing
+	// the attempt: the user clicked away, which is not a wrong answer. Popup
+	// never calls this — it has no outside to click.
+	const handleDismiss = useCallback(() => {
+		setPuzzlePhase("checkbox");
+		setChallengeData(null);
+		setShowRetry(false);
+		setLoading(false);
+	}, []);
 	const showPuzzleOverlay =
 		(puzzlePhase === "dragging" || puzzlePhase === "submitting") &&
 		challengeData;
@@ -218,8 +239,9 @@ const Procaptcha = (props: ProcaptchaProps) => {
 			{frictionlessState?.hp && (
 				<Honeypot ref={hpRef} encodedQuestion={frictionlessState.hp} />
 			)}
-			{/* Puzzle overlay — rendered outside the shadow DOM flow via fixed
-			    positioning. Shown in both visible and invisible modes once a
+			{/* Puzzle overlay — presented on the shared ChallengeSurface, which
+			    decides between a centred popup and a panel floating next to the
+			    widget. Shown in both visible and invisible modes once a
 			    challenge has been fetched; puzzle is inherently interactive. */}
 			{showPuzzleOverlay && (
 				<PuzzleCanvas
@@ -232,6 +254,9 @@ const Procaptcha = (props: ProcaptchaProps) => {
 					showRetry={showRetry}
 					submitting={puzzlePhase === "submitting"}
 					theme={theme}
+					placement={config.placement}
+					anchor={props.container}
+					onDismiss={handleDismiss}
 				/>
 			)}
 

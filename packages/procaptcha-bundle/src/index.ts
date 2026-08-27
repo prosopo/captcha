@@ -39,6 +39,8 @@ interface WidgetEntry {
 	renderOptions: ProcaptchaRenderOptions;
 	isWeb2: boolean;
 	invisible: boolean;
+	/** Detaches a bound trigger button's click listener, when one was wired. */
+	unbindTrigger?: () => void;
 }
 
 const procaptchaWidgets = new Map<string, WidgetEntry>();
@@ -97,6 +99,30 @@ const startDetectorPrefetch = (
 		.catch(() => undefined);
 };
 
+/**
+ * Reads `data-placement` off an implicitly-rendered element.
+ *
+ * Returned as a spreadable partial so an absent attribute contributes no key
+ * at all — writing `placement: undefined` into the options would look
+ * deliberate to anything downstream that checks for the property's presence.
+ * Validation happens later, in the renderer, alongside the explicit path.
+ */
+const readPlacementAttribute = (
+	element: Element,
+): Pick<ProcaptchaRenderOptions, "placement"> | Record<string, never> => {
+	const value = element.getAttribute("data-placement");
+	if (value !== "popup" && value !== "float") return {};
+	return { placement: value };
+};
+
+/** Reads `data-bind`, the selector for a button that triggers this widget. */
+const readBindAttribute = (
+	element: Element,
+): Pick<ProcaptchaRenderOptions, "bind"> | Record<string, never> => {
+	const value = element.getAttribute("data-bind");
+	return value ? { bind: value } : {};
+};
+
 // Define a custom event name for procaptcha execution
 const PROCAPTCHA_EXECUTE_EVENT = "procaptcha:execute";
 
@@ -133,6 +159,11 @@ const implicitRender = async () => {
 			siteKey: siteKey,
 			ipv4,
 			ipv6,
+			// Implicitly-rendered widgets never see a render-options object, so
+			// these are the only way for a host page to set them without
+			// switching to explicit render.
+			...readPlacementAttribute(firstElement),
+			...readBindAttribute(firstElement),
 		};
 
 		const root = await widgetFactory.createWidgets(
@@ -169,6 +200,10 @@ const implicitRender = async () => {
 				callback: callback,
 				ipv4,
 				ipv6,
+				// A widget rendered into a button is invisible, so a float
+				// request has no anchor; `createConfig` resolves that back to
+				// popup rather than the attribute being silently ignored here.
+				...readPlacementAttribute(button),
 			};
 
 			const root = await widgetFactory.createWidgets(
@@ -230,7 +265,16 @@ export const render = async (
 
 	// Deliberately not `at()`: it throws on an empty array before it consults
 	// `optional`, and zero roots is a legitimate outcome here.
-	return ids[0];
+	const id = ids[0];
+
+	if (id && renderOptions.bind) {
+		const entry = procaptchaWidgets.get(id);
+		if (entry) {
+			entry.unbindTrigger = bindTriggerButton(renderOptions.bind, id);
+		}
+	}
+
+	return id;
 };
 
 export default function ready(fn: () => void) {
@@ -247,8 +291,25 @@ export default function ready(fn: () => void) {
 	}
 }
 
-export const execute = () => {
-	const containers = findProcaptchaContainers();
+/**
+ * Starts verification.
+ *
+ * Called without an argument this behaves as it always has: the event goes to
+ * `document` and every widget on the page responds. Pass a widget id — the one
+ * `render()` returns — and the event is dispatched on that widget's own
+ * element instead, so only it runs. That targeting is what lets two bound
+ * buttons drive two widgets on the same page independently.
+ */
+export const execute = (widgetId?: string) => {
+	const targeted =
+		undefined === widgetId ? undefined : procaptchaWidgets.get(widgetId);
+
+	if (undefined !== widgetId && !targeted) {
+		console.error(`No Procaptcha widget found with id ${widgetId}`);
+		return;
+	}
+
+	const containers = targeted ? [targeted.element] : findProcaptchaContainers();
 
 	if (containers.length === 0) {
 		console.error("No Procaptcha containers found for execution");
@@ -262,12 +323,53 @@ export const execute = () => {
 			containerCount: containers.length,
 			timestamp: Date.now(),
 		},
-		bubbles: true,
+		// A targeted event must not bubble: reaching `document` would wake the
+		// listener every other widget also has there, defeating the targeting.
+		bubbles: !targeted,
 		cancelable: true,
 	});
 
+	if (targeted) {
+		targeted.element.dispatchEvent(executeEvent);
+		return;
+	}
+
 	// Dispatch the event on the document
 	document.dispatchEvent(executeEvent);
+};
+
+/**
+ * Wires a host-page button to a specific widget.
+ *
+ * Rendering into a `<button>` already makes that button the trigger, but that
+ * forces the widget and the button to be the same element. A `bind` selector
+ * lets a widget sit in one place — or nowhere visible at all — and be driven
+ * by the form's own submit button.
+ *
+ * Returns a cleanup function so `remove()` can detach the listener; a bound
+ * button outliving its widget would fire execute() at an id that no longer
+ * resolves.
+ */
+const bindTriggerButton = (
+	selector: string,
+	widgetId: string,
+): (() => void) | undefined => {
+	const trigger = document.querySelector(selector);
+	if (!trigger) {
+		console.error(`Procaptcha: no element matches bind selector ${selector}`);
+		return undefined;
+	}
+
+	const onClick = (event: Event) => {
+		// The host page's own submit handler runs on its verified callback, so
+		// letting the default submit through here would post the form before a
+		// token exists.
+		event.preventDefault();
+		execute(widgetId);
+	};
+
+	trigger.addEventListener("click", onClick);
+	return () => trigger.removeEventListener("click", onClick);
 };
 
 function findProcaptchaContainers(): Element[] {
@@ -402,6 +504,9 @@ export const remove = (widgetId?: string): void => {
 	for (const id of ids) {
 		const entry = procaptchaWidgets.get(id);
 		if (!entry) continue;
+		// Detach first: a bound button left listening would call execute() with
+		// an id that no longer resolves to anything.
+		entry.unbindTrigger?.();
 		entry.root.unmount();
 		entry.element.innerHTML = "";
 		procaptchaWidgets.delete(id);

@@ -25,6 +25,9 @@ import z, { boolean } from "zod";
 import { Mode, ModeEnum } from "./mode.js";
 export { Mode, ModeEnum };
 export type { ModeType } from "./mode.js";
+import { Placement, PlacementEnum, resolvePlacement } from "./placement.js";
+export { Placement, PlacementEnum, resolvePlacement };
+export type { PlacementType } from "./placement.js";
 import {
 	ApiPathRateLimits,
 	DEFAULT_SOLVED_COUNT,
@@ -283,6 +286,9 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 		captchas: CaptchaTimeoutSchema.optional().default(defaultCaptchaTimeouts),
 		language: LanguageSchema.optional(),
 		mode: Mode.optional().default(ModeEnum.visible),
+		// Where a challenge opens. Defaults to popup, which is what every
+		// challenge did before this option existed.
+		placement: Placement.optional().default(PlacementEnum.popup),
 		// Restrict provider DNS resolution. When both are unset providers stay
 		// dual-stack. `ipv4` wins if both are true.
 		ipv4: boolean().optional(),

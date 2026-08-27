@@ -30,6 +30,15 @@ export interface ProcaptchaRenderOptions {
 	"reset-callback"?: string | (() => void);
 	language?: (typeof Languages)[keyof typeof Languages];
 	size?: "invisible";
+	// Where the challenge opens: "popup" (default) centres it over a scrim,
+	// "float" anchors it to the widget and leaves the page usable. A float
+	// request from an invisible widget falls back to popup — there is no
+	// on-page widget to anchor to.
+	placement?: "popup" | "float";
+	// CSS selector for a button that triggers verification, letting the widget
+	// be rendered in one place and bound to a submit control elsewhere.
+	// Rendering directly into a <button> still works and needs no selector.
+	bind?: string;
 	web3?: boolean;
 	userAccountAddress?: string;
 	// When true, restrict provider DNS resolution to A records only. Mutually

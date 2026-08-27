@@ -12,55 +12,61 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { css } from "@emotion/react";
-import React, { type CSSProperties } from "react";
-import { createPortal } from "react-dom";
+import { ChallengeSurface } from "@prosopo/procaptcha-common";
+import type { PlacementType } from "@prosopo/types";
+import React from "react";
+
 type ModalProps = {
 	show: boolean;
 	children: React.ReactNode;
+	placement?: PlacementType;
+	anchor?: HTMLElement | null;
+	onDismiss?: () => void;
 };
 
-const ModalInnerDivCSS = css`
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	max-width: 500px;
-	background-color: transparent;
-	border: none;
-	border-radius: 28px;
-	z-index: 2147483647;
-	align-self: center;
-	/* Shadowless — the dialog separates from the page via the scrim and its own
-	   surface role, not a drop shadow. */
-	box-sizing: border-box; /* Ensures border is part of width */
-	/* iOS only */
-    @supports (-webkit-touch-callout: none) { 
-		transform: translate(-50%, -100%);
-    }
-`;
-
+/**
+ * The image captcha's dialog frame.
+ *
+ * The scrim, z-index and positioning it used to own now live in
+ * `ChallengeSurface`, shared with the puzzle overlay, so a placement is
+ * implemented once rather than per challenge type. What is left here is the
+ * frame itself: the width cap and corner radius that make it a dialog.
+ *
+ * `popupIosLift` preserves the iOS-only upward shift this modal has always
+ * applied — Safari's bottom bar otherwise overlaps a centred dialog.
+ */
 const ModalComponent = React.memo((props: ModalProps) => {
-	const { show, children } = props;
-	const display = show ? "flex" : "none";
-	const ModalOuterDivCss: CSSProperties = {
-		position: "fixed",
-		zIndex: 2147483646,
-		inset: 0,
-		display,
-		alignItems: "center",
-		justifyContent: "center",
-		minHeight: "100vh",
-	};
+	const { show, children, placement, anchor, onDismiss } = props;
 
-	return createPortal(
-		<div className="prosopo-modalOuter" style={ModalOuterDivCss}>
-			<div className="prosopo-modalInner" css={ModalInnerDivCSS}>
+	return (
+		<ChallengeSurface
+			show={show}
+			placement={placement}
+			anchor={anchor}
+			onDismiss={onDismiss}
+			scrim="none"
+			popupIosLift
+			className="prosopo-modalOuter"
+		>
+			<div
+				className="prosopo-modalInner"
+				style={{
+					maxWidth: "500px",
+					backgroundColor: "transparent",
+					border: "none",
+					borderRadius: "28px",
+					alignSelf: "center",
+					// Shadowless — the dialog separates from the page via its own
+					// surface role, not a drop shadow.
+					boxSizing: "border-box",
+				}}
+			>
 				{children}
 			</div>
-		</div>,
-		document.body,
+		</ChallengeSurface>
 	);
 });
+
+ModalComponent.displayName = "ModalComponent";
 
 export default ModalComponent;
