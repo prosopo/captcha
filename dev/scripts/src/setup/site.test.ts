@@ -118,7 +118,10 @@ describe("registerSiteKey", () => {
 
 	it("lets the caller override the thresholds", async () => {
 		const { settings } = await register({
-			frictionlessThreshold: 0.1,
+			frictionlessThreshold: {
+				frictionlessPuzzleThreshold: 0.1,
+				frictionlessImageThreshold: 1,
+			},
 			imageThreshold: 0.2,
 			powDifficulty: 9,
 		});
@@ -132,7 +135,8 @@ describe("registerSiteKey", () => {
 	it("rejects settings that fail schema validation", async () => {
 		await expect(
 			registerSiteKey(env, "site-key", {
-				frictionlessThreshold: "high" as unknown as number,
+				frictionlessThreshold:
+					"high" as unknown as IUserSettings["frictionlessThreshold"],
 			}),
 		).rejects.toThrow();
 		expect(calls).toHaveLength(0);
