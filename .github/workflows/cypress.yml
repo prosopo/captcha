@@ -212,6 +212,21 @@ jobs:
         run: |
           npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:accessPolicyConflicts" --success "first" --kill-others
 
+      - name: Run the cypress tests for the frictionless score ladder (pow / puzzle / image bands)
+        env:
+          # Same reason as escalation and routingFrictionless: headless
+          # cypress can't produce a server-decryptable detector token, so
+          # without this the flow short-circuits to image before the score
+          # ladder is ever consulted. With it the base score is pinned to 0
+          # and the spec supplies the score itself via access-rule bumps.
+          PROSOPO_TEST_FRICTIONLESS_DETECTOR_OVERRIDE: "1"
+          # The empty-pool PoW fallback answers before the decision machine
+          # runs, which would make every case return PoW. The committed
+          # fixture pool keeps that fallback declined.
+          PROSOPO_DETECTOR_POOL_DIR: ${{ github.workspace }}/packages/provider/fixtures/detector-pool
+        run: |
+          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionlessLadder" --success "first" --kill-others
+
       - name: Run the cypress tests for the frictionless no-captchaType widget-cascade guard
         run: |
           npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionlessNoCaptchaTypeCascade" --success "first" --kill-others

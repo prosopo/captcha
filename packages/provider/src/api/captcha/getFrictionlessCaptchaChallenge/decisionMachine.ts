@@ -42,6 +42,7 @@ import {
 	MISSING_HEAD_HASH_IMAGE_ROUNDS,
 	MISSING_TOKEN_IMAGE_ROUNDS,
 	getRoundsFromSimScore,
+	getRoundsFromTriggeredDetectors,
 } from "./constants.js";
 import { attachHoneypot } from "./honeypotResponse.js";
 
@@ -67,7 +68,16 @@ export type DecisionMachineInput = {
 	// As received from the client, before decryption — the gates below read
 	// these to tell "sent nothing" apart from "sent something we can't open".
 	headHash: string;
+	// Lower rung of the score ladder: at or below this, the session passes
+	// frictionlessly to PoW.
 	botThreshold: number;
+	// Upper rung: at or above this the session gets an image captcha. Scores
+	// strictly between the two rungs get a puzzle. Collapsing the two onto the
+	// same value removes the middle band.
+	botImageThreshold: number;
+	// Signals that fired for this session. Sizes the image challenge — more
+	// corroborating signals, more rounds.
+	triggeredDetectors: number[] | undefined;
 	// Sanitised page URL the widget reported (origin + path, no query /
 	// fragment / credentials). Undefined when the client didn't report a
 	// usable page URL — see the missing-currentUrl gate below.
@@ -305,6 +315,57 @@ export const runDecisionMachine = async (
 		);
 	}
 
+	// Rounds an image challenge would carry from here on: the sitekey's
+	// baseline plus one per signal that fired, clamped to its ceiling.
+	// Computed once because the puzzle band uses it too — a puzzle session
+	// downgrades to image when this provider can't render puzzles, and the
+	// downgraded session should be sized like the image challenge it became.
+	const scoredImageRounds = Math.min(
+		getRoundsFromTriggeredDetectors(
+			env.config.captchas.solved.count,
+			input.triggeredDetectors,
+		),
+		clientRecord.settings.imageMaxRounds,
+	);
+
+	// Middle rung of the ladder: "not clean enough for a silent PoW" is split
+	// in two, so merely suspicious sessions drag a puzzle and only the ones
+	// past the upper rung are handed an image captcha. A sitekey that puts
+	// both rungs on the same value collapses the band and keeps the original
+	// two outcomes.
+	const botImageThreshold = input.botImageThreshold;
+	if (
+		botImageThreshold > input.botThreshold &&
+		Number(botScore) > input.botThreshold &&
+		Number(botScore) < botImageThreshold
+	) {
+		req.logger.info(() => ({
+			msg: "Frictionless decision",
+			data: {
+				decision: "bot_score_puzzle_band",
+				captchaType: CaptchaType.puzzle,
+				botScore,
+				botThreshold: input.botThreshold,
+				botImageThreshold,
+				token: input.token,
+			},
+		}));
+		recordFrictionlessDecision("bot_score_puzzle_band");
+		attachHoneypot(res, clientRecord);
+		return res.json(
+			await tasks.frictionlessManager.sendPuzzleCaptcha({
+				// Only read if the puzzle renderer is unavailable and the
+				// session is downgraded to image on the way out.
+				solvedImagesCount: scoredImageRounds,
+				userSitekeyIpHash,
+				reason: FrictionlessReason.BOT_SCORE_PUZZLE_BAND,
+				siteKey: dapp,
+				ipInfo,
+				headers: flatHeaders,
+			}),
+		);
+	}
+
 	if (Number(botScore) > input.botThreshold) {
 		req.logger.info(() => ({
 			msg: "Bot score is greater than threshold",
@@ -319,16 +380,15 @@ export const runDecisionMachine = async (
 			data: {
 				decision: "bot_score_above_threshold",
 				captchaType: CaptchaType.image,
+				solvedImagesCount: scoredImageRounds,
+				triggeredDetectorCount: input.triggeredDetectors?.length ?? 0,
 			},
 		}));
 		recordFrictionlessDecision("bot_score_above_threshold");
 		attachHoneypot(res, clientRecord);
 		return res.json(
 			await tasks.frictionlessManager.sendImageCaptcha({
-				solvedImagesCount: Math.min(
-					env.config.captchas.solved.count,
-					clientRecord.settings.imageMaxRounds,
-				),
+				solvedImagesCount: scoredImageRounds,
 				userSitekeyIpHash,
 				reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
 				siteKey: dapp,

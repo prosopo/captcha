@@ -23,6 +23,8 @@ export * from "./api/handshakeTimingMiddleware.js";
 export * from "./api/public.js";
 export * from "./api/domainMiddleware.js";
 export * from "./api/startProviderApi.js";
+// TEMPORARY - remove with the migration itself, one release after rollout.
+export * from "./migrations/frictionlessLadder.js";
 export * from "./schedulers/captchaScheduler.js";
 export * from "./schedulers/getClientList.js";
 export * from "./schedulers/updateSpamEmailDomains.js";

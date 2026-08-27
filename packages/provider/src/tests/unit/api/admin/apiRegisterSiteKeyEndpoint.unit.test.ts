@@ -58,7 +58,10 @@ describe("ApiRegisterSiteKeyEndpoint", () => {
 		const settings = {
 			domains: ["example.com"],
 			captchaType: CaptchaType.pow,
-			frictionlessThreshold: 0.5,
+			frictionlessThreshold: {
+				frictionlessPuzzleThreshold: 0.5,
+				frictionlessImageThreshold: 1,
+			},
 			powDifficulty: 100000,
 			imageThreshold: 0.5,
 			imageMaxRounds: 3,

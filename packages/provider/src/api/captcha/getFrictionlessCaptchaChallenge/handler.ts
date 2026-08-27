@@ -51,7 +51,7 @@ import {
 	handleFrictionlessTrafficFilter,
 } from "../trafficFilterRequestTime.js";
 import { handleAccessPolicy } from "./accessPolicy.js";
-import { DEFAULT_FRICTIONLESS_THRESHOLD } from "./constants.js";
+import { resolveScoreLadder } from "./constants.js";
 import { runDecisionMachine } from "./decisionMachine.js";
 import { decryptIncomingSimdReadings } from "./decryptSimdReadings.js";
 import { attachHoneypot } from "./honeypotResponse.js";
@@ -653,9 +653,12 @@ export default (
 				recordDetectorTriggered(triggeredDetectors);
 			}
 
-			const botThreshold =
-				clientRecord.settings?.frictionlessThreshold ||
-				DEFAULT_FRICTIONLESS_THRESHOLD;
+			// Both rungs of the score ladder. `resolveScoreLadder` tolerates the
+			// pre-ladder shape (a bare number) so a client record that predates
+			// the migration still routes rather than throwing.
+			const { botThreshold, botImageThreshold } = resolveScoreLadder(
+				clientRecord.settings?.frictionlessThreshold,
+			);
 
 			let scoreComponents: ScoreComponents = {
 				baseScore: baseBotScore,
@@ -822,6 +825,8 @@ export default (
 					token,
 					headHash,
 					botThreshold,
+					botImageThreshold,
+					triggeredDetectors,
 					currentUrl,
 					iframeUrl,
 				},

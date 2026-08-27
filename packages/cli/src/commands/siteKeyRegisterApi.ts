@@ -20,6 +20,7 @@ import {
 	CaptchaTypeSpec,
 	type ProsopoConfigOutput,
 	Tier,
+	frictionlessImageThresholdDefault,
 	puzzleToleranceDefault,
 } from "@prosopo/types";
 import type { ArgumentsCamelCase, Argv } from "yargs";
@@ -70,7 +71,12 @@ export default (
 				.option("frictionless_threshold", {
 					type: "number" as const,
 					demandOption: false,
-					desc: "Frictionless threshold for settings",
+					desc: "Score above which a puzzle is served (lower rung of the ladder)",
+				} as const)
+				.option("frictionless_image_threshold", {
+					type: "number" as const,
+					demandOption: false,
+					desc: "Score at or above which an image captcha is served (upper rung of the ladder)",
 				} as const)
 				.option("domains", {
 					type: "array" as const,
@@ -100,6 +106,7 @@ export default (
 					sitekey,
 					captcha_type,
 					frictionless_threshold,
+					frictionless_image_threshold,
 					url,
 					domains,
 					pow_difficulty,
@@ -113,7 +120,12 @@ export default (
 					argv.tier as Tier,
 					{
 						captchaType: CaptchaTypeSpec.parse(captcha_type),
-						frictionlessThreshold: frictionless_threshold as number,
+						frictionlessThreshold: {
+							frictionlessPuzzleThreshold: frictionless_threshold as number,
+							frictionlessImageThreshold:
+								frictionless_image_threshold ??
+								frictionlessImageThresholdDefault,
+						},
 						domains: domains || [],
 						powDifficulty: pow_difficulty as number,
 						imageThreshold: image_threshold as number,

@@ -83,7 +83,9 @@ describe("registerSiteKey", () => {
 
 	it("applies the default thresholds and difficulty", async () => {
 		const { settings } = await register();
-		expect(settings.frictionlessThreshold).toBe(0.8);
+		expect(settings.frictionlessThreshold.frictionlessPuzzleThreshold).toBe(
+			0.8,
+		);
 		expect(settings.imageThreshold).toBe(0.8);
 		expect(settings.powDifficulty).toBe(4);
 	});
@@ -120,7 +122,9 @@ describe("registerSiteKey", () => {
 			imageThreshold: 0.2,
 			powDifficulty: 9,
 		});
-		expect(settings.frictionlessThreshold).toBe(0.1);
+		expect(settings.frictionlessThreshold.frictionlessPuzzleThreshold).toBe(
+			0.1,
+		);
 		expect(settings.imageThreshold).toBe(0.2);
 		expect(settings.powDifficulty).toBe(9);
 	});
