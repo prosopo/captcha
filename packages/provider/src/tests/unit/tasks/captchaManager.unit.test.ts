@@ -46,7 +46,10 @@ vi.mock("../../../tasks/detection/decodeBehavior.js", () => ({
 const loggerOuter = getLogger("info", "test:captcha-manager");
 
 const defaultUserSettings: IUserSettings = {
-	frictionlessThreshold: 0.8,
+	frictionlessThreshold: {
+		frictionlessPuzzleThreshold: 0.8,
+		frictionlessImageThreshold: 1,
+	},
 	domains: [],
 	captchaType: CaptchaType.frictionless,
 	powDifficulty: 4,

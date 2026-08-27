@@ -26,6 +26,10 @@ export enum FrictionlessReason {
 	USER_AGENT_MISMATCH = "USER_AGENT_MISMATCH",
 	OLD_TIMESTAMP = "OLD_TIMESTAMP",
 	BOT_SCORE_ABOVE_THRESHOLD = "BOT_SCORE_ABOVE_THRESHOLD",
+	// Score landed in the middle band of the frictionless ladder: past the
+	// point where a silent PoW pass is warranted, but short of the image
+	// rung, so the user gets a puzzle instead.
+	BOT_SCORE_PUZZLE_BAND = "BOT_SCORE_PUZZLE_BAND",
 	WEBVIEW_DETECTED = "WEBVIEW_DETECTED",
 	AUTO_BAN_SCORE = "AUTO_BAN_SCORE",
 	FINGERPRINT_PROOF_INVALID = "FINGERPRINT_PROOF_INVALID",

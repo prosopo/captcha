@@ -21,7 +21,26 @@ import { CaptchaTypeSpec } from "./captchaType/captchaTypeSpec.js";
 
 export const captchaTypeDefault = CaptchaType.frictionless;
 export const domainsDefault: string[] = [];
-export const frictionlessThresholdDefault = 0.5;
+
+/**
+ * Lower rung of the frictionless score ladder: at or below this a session
+ * passes silently to PoW, above it the user is asked to drag a puzzle.
+ *
+ * Same value `frictionlessThreshold` carried when it was a bare number, so
+ * moving to the ladder is a shape change and not a routing change — nobody
+ * who passes frictionlessly today stops passing.
+ */
+export const frictionlessPuzzleThresholdDefault = 0.5;
+
+/**
+ * Upper rung: at or above this the user gets an image captcha instead.
+ *
+ * Deliberately allowed above 1 by the schema, unlike the lower rung: the
+ * score compared against it is a total that server-side penalties add to,
+ * and it is expected to exceed 1.
+ */
+export const frictionlessImageThresholdDefault = 1.0;
+
 export const powDifficultyDefault = 4;
 export const imageThresholdDefault = 0.8;
 export const imageMaxRoundsDefault = 32;
@@ -55,6 +74,77 @@ export const puzzlePieceScaleMaxDefault = 0.45;
 // bounds elsewhere — reuse the hoisted schemas.
 export const powDifficultyFieldSchema = number().positive().min(1).max(10);
 export const imageThresholdFieldSchema = number().min(0).max(1);
+
+/**
+ * The frictionless score ladder. Two rungs cutting the score line into three
+ * bands: PoW at or below the puzzle rung, puzzle between the two, image at or
+ * above the image rung.
+ *
+ * This replaces the bare `frictionlessThreshold: number`, which could only
+ * express "pass or image". A number is still accepted on the way in and lifted
+ * into the puzzle rung — see the preprocess below — because documents written
+ * before the migration are still out there, and a settings blob that fails to
+ * parse would take the whole site down rather than degrade.
+ */
+export const FrictionlessThresholdSchema = z.preprocess(
+	(raw) =>
+		typeof raw === "number" ? { frictionlessPuzzleThreshold: raw } : raw,
+	object({
+		frictionlessPuzzleThreshold: number()
+			.min(0)
+			.max(1)
+			.optional()
+			.default(frictionlessPuzzleThresholdDefault),
+		// Not capped at 1, unlike the rung below it — see the default's note.
+		frictionlessImageThreshold: number()
+			.min(0)
+			.optional()
+			.default(frictionlessImageThresholdDefault),
+	}).refine(
+		(t) => t.frictionlessImageThreshold >= t.frictionlessPuzzleThreshold,
+		{
+			message:
+				"frictionlessImageThreshold must be >= frictionlessPuzzleThreshold — the image band sits above the puzzle band",
+			path: ["frictionlessImageThreshold"],
+		},
+	),
+);
+
+export type IFrictionlessThreshold = output<typeof FrictionlessThresholdSchema>;
+
+/** The ladder every site gets when it has never configured one. */
+export const frictionlessThresholdDefault: IFrictionlessThreshold = {
+	frictionlessPuzzleThreshold: frictionlessPuzzleThresholdDefault,
+	frictionlessImageThreshold: frictionlessImageThresholdDefault,
+};
+
+/**
+ * Read a stored `frictionlessThreshold` into a complete ladder.
+ *
+ * The single place that knows how to interpret the pre-ladder shape. Records
+ * are migrated in the background rather than in lockstep with the deploy, so
+ * both the provider and the portal API can be handed a bare number; it means
+ * what it always meant, the puzzle rung, and the image rung falls back to its
+ * default. The image rung is never allowed below the puzzle rung, which would
+ * otherwise invert the ladder and puzzle the worst traffic.
+ */
+export const resolveFrictionlessThreshold = (
+	configured: IFrictionlessThreshold | number | null | undefined,
+): IFrictionlessThreshold => {
+	const raw: Partial<IFrictionlessThreshold> =
+		typeof configured === "number"
+			? { frictionlessPuzzleThreshold: configured }
+			: (configured ?? {});
+	const frictionlessPuzzleThreshold =
+		raw.frictionlessPuzzleThreshold ?? frictionlessPuzzleThresholdDefault;
+	return {
+		frictionlessPuzzleThreshold,
+		frictionlessImageThreshold: Math.max(
+			frictionlessPuzzleThreshold,
+			raw.frictionlessImageThreshold ?? frictionlessImageThresholdDefault,
+		),
+	};
+};
 export const imageMaxRoundsFieldSchema = number().int().min(2);
 export const puzzleToleranceFieldSchema = number().int().min(5).max(1000);
 export const puzzleDecoyCountFieldSchema = number().int().min(0).max(200);
@@ -381,11 +471,12 @@ export const ClientSettingsSchema = object({
 		.max(600000)
 		.optional()
 		.default(DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT),
-	frictionlessThreshold: number()
-		.min(0)
-		.max(1)
-		.optional()
-		.default(frictionlessThresholdDefault),
+	// The score ladder. Was a bare number meaning "above this, image captcha";
+	// now an object carrying both rungs so the flow can put the middle band on
+	// a puzzle. A legacy number is lifted into the puzzle rung on parse.
+	frictionlessThreshold: FrictionlessThresholdSchema.optional().default(
+		frictionlessThresholdDefault,
+	),
 	powDifficulty: powDifficultyFieldSchema
 		.optional()
 		.default(powDifficultyDefault),

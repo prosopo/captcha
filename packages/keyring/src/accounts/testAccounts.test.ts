@@ -53,7 +53,9 @@ describe("getDefaultSiteKeys", SLOW, () => {
 		for (const site of getDefaultSiteKeys()) {
 			expect(site.settings.domains).toEqual(["localhost"]);
 			expect(site.settings.imageMaxRounds).toBe(2);
-			expect(site.settings.frictionlessThreshold).toBe(0.8);
+			expect(
+				site.settings.frictionlessThreshold.frictionlessPuzzleThreshold,
+			).toBe(0.8);
 		}
 	});
 

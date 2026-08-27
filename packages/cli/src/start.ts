@@ -16,6 +16,7 @@ import { ProviderEnvironment } from "@prosopo/env";
 import { getPair } from "@prosopo/keyring";
 import {
 	getClientList,
+	runFrictionlessLadderMigration,
 	startProviderApi,
 	storeCaptchasExternally,
 	updateSpamEmailDomainsScheduler,
@@ -65,6 +66,15 @@ export async function start(
 	// which requires a connected DB, and would just log noise on every tick.
 	const maintenanceMode =
 		process.env.MAINTENANCE_MODE?.toLowerCase() === "true";
+
+	// TEMPORARY - one-shot rewrite of this provider's client records onto the
+	// two-rung frictionless score ladder. Client records are per-provider, so
+	// the central migration cannot reach them. Awaited so the records are
+	// tidy before the first request, but it never throws: the read path
+	// already understands the pre-ladder shape. Remove next release.
+	if (!maintenanceMode) {
+		await runFrictionlessLadderMigration(env.getDb(), env.logger);
+	}
 
 	// Start the scheduled jobs if they are defined
 	if (env.pair && !maintenanceMode) {
