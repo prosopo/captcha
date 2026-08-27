@@ -47,9 +47,7 @@ describe("buildSignatureBase", () => {
 			params,
 		);
 		const first = base.split("\n")[0];
-		expect(first).toBe(
-			'"signature-agent": g="https://agent.bot.goog"',
-		);
+		expect(first).toBe('"signature-agent": g="https://agent.bot.goog"');
 	});
 
 	it("throws on an unsupported covered component", () => {

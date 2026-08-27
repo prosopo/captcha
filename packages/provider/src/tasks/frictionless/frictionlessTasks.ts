@@ -41,12 +41,12 @@ import {
 	type UsageCounters,
 	buildAllWindowIncrements,
 } from "../../util/usageCounters.js";
-import { CaptchaManager } from "../captchaManager.js";
 import { isClientSessionMismatch } from "../../utils/clientMetaData.js";
-import { ipMatchesSession } from "./ipMatch.js";
+import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { getBotScore } from "../detection/getBotScore.js";
 import { downgradePuzzleIfUnavailable } from "../puzzle/puzzleRenderer.js";
+import { ipMatchesSession } from "./ipMatch.js";
 import { type RoutingContext, applyRouter } from "./routingMachine.js";
 
 const DEFAULT_MAX_TIMESTAMP_AGE = 60 * 10 * 1000; // 10 minutes

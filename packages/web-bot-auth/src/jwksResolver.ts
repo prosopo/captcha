@@ -64,9 +64,7 @@ export const resolveJwksFromSignatureAgent = async (
 	const directoryUrl = new URL(DIRECTORY_PATH, `${signerUrl}/`).toString();
 	const response = await fetchImpl(directoryUrl);
 	if (!response.ok) {
-		throw new Error(
-			`JWKS fetch ${response.status} at ${directoryUrl}`,
-		);
+		throw new Error(`JWKS fetch ${response.status} at ${directoryUrl}`);
 	}
 
 	const body = (await response.json()) as { keys?: Jwk[] };

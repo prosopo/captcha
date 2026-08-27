@@ -21,10 +21,7 @@ import {
 } from "./jwksResolver.js";
 import { parseSignatureAgentHeader } from "./parseSignatureAgent.js";
 import { buildSignatureBase } from "./signatureBase.js";
-import {
-	parseSignature,
-	parseSignatureInput,
-} from "./structuredFields.js";
+import { parseSignature, parseSignatureInput } from "./structuredFields.js";
 
 // Loose request shape — anything with method, url and header lookup works.
 // We don't couple to a specific HTTP framework's Request type.
@@ -57,9 +54,7 @@ const readHeader = (
 	headers: VerifiableRequest["headers"],
 	name: string,
 ): string | undefined => {
-	if (
-		typeof (headers as { get?: unknown }).get === "function"
-	) {
+	if (typeof (headers as { get?: unknown }).get === "function") {
 		const map = headers as { get: (n: string) => string | null };
 		return map.get(name) ?? map.get(name.toLowerCase()) ?? undefined;
 	}

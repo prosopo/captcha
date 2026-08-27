@@ -19,7 +19,7 @@
 
 import { ed25519 } from "@noble/curves/ed25519";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { clearJwksCache, type JwksFetch } from "../jwksResolver.js";
+import { type JwksFetch, clearJwksCache } from "../jwksResolver.js";
 import { buildSignatureBase } from "../signatureBase.js";
 import { verifyWebBotAuth } from "../verify.js";
 

@@ -25,8 +25,8 @@ import {
 	AccessPolicyType,
 	type AccessRulesStorage,
 } from "@prosopo/user-access-policy";
-import { verifyWebBotAuth } from "@prosopo/web-bot-auth";
 import { flatten, isProtectDeployment, sanitisePageUrl } from "@prosopo/util";
+import { verifyWebBotAuth } from "@prosopo/web-bot-auth";
 import type { NextFunction, Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { getCompositeIpAddress } from "../../../compositeIpAddress.js";

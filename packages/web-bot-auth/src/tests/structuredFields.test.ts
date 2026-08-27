@@ -22,10 +22,7 @@ describe("parseSignatureInput", () => {
 		const entry = parseSignatureInput(header);
 		expect(entry).not.toBeNull();
 		expect(entry?.label).toBe("sig1");
-		expect(entry?.coveredComponents).toEqual([
-			"@authority",
-			"signature-agent",
-		]);
+		expect(entry?.coveredComponents).toEqual(["@authority", "signature-agent"]);
 		expect(entry?.params.created).toBe(1735689600);
 		expect(entry?.params.expires).toBe(1735693200);
 		expect(entry?.params.keyid).toBe("abc");

@@ -105,6 +105,7 @@ export const AuthenticatedBadge: FC<AuthenticatedBadgeProps> = ({
 				fontSize: 13,
 				lineHeight: 1.4,
 			}}
+			// biome-ignore lint/a11y/useSemanticElements: doesn't make sense
 			role="status"
 			aria-label="Verified agent"
 		>
