@@ -105,10 +105,29 @@ describe("Frictionless score ladder picks the captcha type by score", () => {
 		cy.intercept("POST", "**/prosopo/provider/client/captcha/frictionless").as(
 			"frictionless",
 		);
+		cy.intercept("POST", "**/prosopo/provider/client/captcha/pow").as("pow");
+		cy.intercept("POST", "**/prosopo/provider/client/captcha/image").as(
+			"image",
+		);
+		cy.intercept("POST", "**/prosopo/provider/client/captcha/puzzle").as(
+			"puzzle",
+		);
 		cy.visit(Cypress.env("default_page"));
 		cy.waitForProcaptchaScript();
 	};
 
+	/**
+	 * Assert the type `/frictionless` chose, then drive the widget far enough
+	 * to consume the session it created.
+	 *
+	 * The consume step is not incidental. `/frictionless` deduplicates on
+	 * user + IP + sitekey and replays any live session for that triple, and
+	 * the widget's identity is derived from the browser fingerprint — so it
+	 * is the same for every test in the run. A session left alive here would
+	 * be handed straight back to the next test, which would then assert
+	 * against this test's band rather than its own. Fetching the challenge
+	 * removes the session (`checkAndRemoveSession`), leaving a clean slate.
+	 */
 	const expectServedType = (expected: CaptchaType, why: string) => {
 		cy.wait("@frictionless", { timeout: 15000 })
 			.its("response")
@@ -117,6 +136,11 @@ describe("Frictionless score ladder picks the captcha type by score", () => {
 				expect(response?.body).to.have.property("captchaType");
 				expect(response?.body.captchaType, why).to.equal(expected);
 			});
+
+		getWidgetElement(checkboxClass, { timeout: 15000 }).first().realClick();
+		cy.wait(`@${expected}`, { timeout: 20000 })
+			.its("response.statusCode")
+			.should("equal", 200);
 	};
 
 	it("serves PoW for a score below the puzzle rung", () => {
