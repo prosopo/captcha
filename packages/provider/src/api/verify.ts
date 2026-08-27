@@ -615,7 +615,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				);
 			}
 
-			const { dappSignature, token, ip } = parsed;
+			const { dappSignature, token, ip, clientSessionId } = parsed;
 			try {
 				const {
 					user,
@@ -675,6 +675,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					await tasks.frictionlessManager.verifyAuthenticatedSession(
 						sessionId,
 						ip,
+						clientSessionId,
 					);
 				res.json(outcome);
 			} catch (err) {

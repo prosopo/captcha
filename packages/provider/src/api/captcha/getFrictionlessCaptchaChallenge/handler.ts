@@ -93,6 +93,7 @@ export default (
 				detectorSessionId,
 				currentUrl: reportedCurrentUrl,
 				iframeUrl: reportedIframeUrl,
+				clientSessionId,
 			} = GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
 
 			// Re-sanitise whatever the client reported: keep only scheme + host
@@ -638,6 +639,7 @@ export default (
 						req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
 							? req.ipInfo
 							: undefined,
+						clientSessionId,
 					);
 				req.logger.info(() => ({
 					msg: "Frictionless decision",

@@ -620,6 +620,15 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	// server-side; not gated in the decision machine.
 	[ApiParams.currentUrl]: boundedString(INPUT_LIMITS.URL).optional(),
 	[ApiParams.iframeUrl]: boundedString(INPUT_LIMITS.URL).optional(),
+	// Same wire semantics as VerifySolutionBody.clientSessionId — a per-render
+	// session id the client (Bumblebee's JTI, a customer widget's `sessionId`,
+	// anything else the site owner supplies) uses to bind a captcha token to
+	// the render it was earned in. On the authenticated fast-path the value is
+	// persisted onto the session's clientMetaData; /authenticated/verify
+	// rejects with API.CLIENT_SESSION_MISMATCH when the forwarded value
+	// doesn't match, so a token exfiltrated to a different render is dead on
+	// arrival even if it clears the IP-binding check.
+	[ApiParams.clientSessionId]: boundedString(INPUT_LIMITS.ID).optional(),
 });
 
 export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<

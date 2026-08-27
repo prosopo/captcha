@@ -59,9 +59,10 @@ export class ProsopoServer {
 	/**
 	 * Verify a token with the issuing provider. Dispatches to the correct
 	 * verify endpoint by inspecting the token's declared captchaType:
-	 *  - puzzle  → submitPuzzleCaptchaVerify
-	 *  - pow     → submitPowCaptchaVerify
-	 *  - image   → verifyDappUser
+	 *  - puzzle        → submitPuzzleCaptchaVerify
+	 *  - pow           → submitPowCaptchaVerify
+	 *  - image         → verifyDappUser
+	 *  - authenticated → submitAuthenticatedCaptchaVerify (Web Bot Auth fast-path)
 	 * When captchaType is absent (a legacy token minted before the field was
 	 * added), fall back to the historical heuristic: presence of `challenge`
 	 * routes to PoW, absence routes to image. Legacy puzzle tokens follow the
@@ -125,6 +126,29 @@ export class ProsopoServer {
 				return this.notRecentResponse();
 			}
 			return await providerApi.submitPowCaptchaVerify(
+				token,
+				signatureHex,
+				user,
+				ip,
+				email,
+				clientSessionId,
+			);
+		}
+
+		if (captchaType === CaptchaType.authenticated) {
+			// Web Bot Auth fast-path — the token was minted for a request that
+			// already cleared cryptographic signer verification, so there is no
+			// captcha to solve and no bot score to reason about. Freshness
+			// piggybacks on the PoW timeout (same order of magnitude, no need
+			// for a separate config value). `ip` is mandatory server-side and
+			// enforced there; passed through here as-is so the provider can
+			// return API.AUTHENTICATED_IP_REQUIRED with a real error label
+			// rather than a generic "verify failed".
+			const authenticatedTimeout = this.config.timeouts.pow.cachedTimeout;
+			if (!this.isRecent(timestamp, authenticatedTimeout, "Authenticated")) {
+				return this.notRecentResponse();
+			}
+			return await providerApi.submitAuthenticatedCaptchaVerify(
 				token,
 				signatureHex,
 				user,

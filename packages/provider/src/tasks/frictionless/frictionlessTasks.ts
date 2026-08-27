@@ -42,6 +42,7 @@ import {
 	buildAllWindowIncrements,
 } from "../../util/usageCounters.js";
 import { CaptchaManager } from "../captchaManager.js";
+import { isClientSessionMismatch } from "../../utils/clientMetaData.js";
 import { ipMatchesSession } from "./ipMatch.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { getBotScore } from "../detection/getBotScore.js";
@@ -359,6 +360,7 @@ export class FrictionlessManager extends CaptchaManager {
 		userSitekeyIpHash?: string,
 		headers?: RequestHeaders,
 		ipInfo?: IPInfoResponse,
+		clientSessionId?: string,
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
@@ -381,6 +383,12 @@ export class FrictionlessManager extends CaptchaManager {
 			webBotAuthAgent,
 			...(ipInfo && { ipInfo }),
 			...(headers && { headers }),
+			// Same shape as pow/image/puzzle: the render-time session id lives
+			// on `clientMetaData.clientSessionId` so the verify-side comparison
+			// is a straight equality check on the identical field regardless of
+			// captcha type. Absent when the client didn't supply one, in which
+			// case the verify check is a no-op (matches pow/image/puzzle).
+			...(clientSessionId && { clientMetaData: { clientSessionId } }),
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);
@@ -421,6 +429,7 @@ export class FrictionlessManager extends CaptchaManager {
 	async verifyAuthenticatedSession(
 		sessionId: string,
 		ip: string | undefined,
+		clientSessionId: string | undefined,
 	): Promise<{ verified: boolean; status: string }> {
 		if (!ip) {
 			return {
@@ -451,6 +460,23 @@ export class FrictionlessManager extends CaptchaManager {
 			return {
 				verified: false,
 				status: "API.AUTHENTICATED_IP_MISMATCH",
+			};
+		}
+		// Same semantics as pow/image/puzzle: `expected` is the id the dapp
+		// server just supplied on the verify call, `recorded` is the id the
+		// session was minted with. A site that doesn't opt in to correlation
+		// (no `expected`) is a no-op; anything else — including "expected set
+		// but nothing recorded" — is a mismatch. Uses the shared helper so the
+		// authenticated flow can't drift from the other captcha types.
+		if (
+			isClientSessionMismatch(
+				clientSessionId,
+				session.clientMetaData?.clientSessionId,
+			)
+		) {
+			return {
+				verified: false,
+				status: "API.CLIENT_SESSION_MISMATCH",
 			};
 		}
 		await this.db.updateSessionRecord(sessionId, { serverChecked: true });
