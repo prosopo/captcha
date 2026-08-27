@@ -75,13 +75,14 @@ describe("Frictionless score ladder picks the captcha type by score", () => {
 		}).then((response) => {
 			expect(response.status).to.equal(200);
 		});
-		// Prime the page + widget script cache. Each `it` re-visits after its
-		// intercepts are primed, because the frictionless widget fires
-		// /frictionless on mount (same pattern as routingFrictionless.cy.ts).
-		return cy.visit(Cypress.env("default_page")).then(() => {
-			cy.waitForProcaptchaScript();
-			getWidgetElement(checkboxClass).should("be.visible");
-		});
+		// Deliberately no priming visit here. The frictionless widget fires
+		// `/frictionless` on mount, so a warm-up visit creates a real session
+		// for (user, ip, sitekey) — and `/frictionless` deduplicates on that
+		// triple and replays a live session rather than scoring again. The
+		// warm-up's score-0 session was therefore handed straight back to the
+		// request the test had just set its language header on, and every
+		// banded case came back `pow`. `primeAndVisit` is the only visit, and
+		// it registers the intercepts before it.
 	});
 
 	after(() => {
