@@ -139,6 +139,7 @@ describe("ProviderDatabase projection contracts", () => {
 				serverChecked: false,
 				userSubmitted: true,
 				coords: [[[300, 300]]] as [number, number][][],
+				clientMetaData: { clientSessionId: "bumblebee-pow-contract" },
 			};
 			await db.tables.powcaptcha.create(doc);
 			return doc as unknown as PoWCaptchaRecord;
@@ -148,6 +149,7 @@ describe("ProviderDatabase projection contracts", () => {
 		consumerReads: [
 			"behavioralDataPacked",
 			"challenge",
+			"clientMetaData",
 			"coords",
 			"dappAccount",
 			"deviceCapability",
@@ -202,6 +204,7 @@ describe("ProviderDatabase projection contracts", () => {
 				serverChecked: false,
 				userSubmitted: true,
 				coords: [[[100, 100]]] as [number, number][][],
+				clientMetaData: { clientSessionId: "bumblebee-puzzle-contract" },
 			};
 			await db.tables.puzzlecaptcha.create(doc);
 			return doc as unknown as PuzzleCaptchaRecord;
@@ -213,6 +216,7 @@ describe("ProviderDatabase projection contracts", () => {
 		consumerReads: [
 			"behavioralDataPacked",
 			"challenge",
+			"clientMetaData",
 			"coords",
 			"dappAccount",
 			"deviceCapability",
