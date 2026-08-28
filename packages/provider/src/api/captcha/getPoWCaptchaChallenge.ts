@@ -129,13 +129,20 @@ export default (
 			// getImageCaptchaChallenge for the full rationale (sanitiser
 			// strips captchaType from Block policies → INCORRECT_CAPTCHA_TYPE
 			// fires when a deferToVerify Block rule leaks into isValidRequest).
-			const userAccessPolicy = (
+			const accessPolicies =
 				await tasks.powCaptchaManager.getPrioritisedAccessPolicies(
 					userAccessRulesStorage,
 					dapp,
 					userScope,
-				)
-			).find((p) => !p.deferToVerify);
+				);
+			const userAccessPolicy = accessPolicies.find((p) => !p.deferToVerify);
+			// A deferred rule must never reject at request time, so it is
+			// kept out of the validation above — but it still carries the
+			// difficulty it wants imposed, applied below when no enforcing
+			// policy supplies one.
+			const deferredParamsPolicy = accessPolicies.find(
+				(p) => p.deferToVerify === true,
+			);
 
 			const {
 				valid,
@@ -201,6 +208,7 @@ export default (
 				trafficPowDifficulty ||
 				powDifficulty ||
 				userAccessPolicy?.powDifficulty ||
+				deferredParamsPolicy?.powDifficulty ||
 				clientSettings?.settings?.powDifficulty;
 			const challenge = await tasks.powCaptchaManager.getPowCaptchaChallenge(
 				user,

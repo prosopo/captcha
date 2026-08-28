@@ -168,13 +168,21 @@ export default (
 			// INCORRECT_CAPTCHA_TYPE — defeating the whole "solve normally,
 			// block at verify" pattern deferToVerify is meant to enable.
 			// Mirrors blockMiddleware's own deferToVerify filter.
-			const userAccessPolicy = (
+			const accessPolicies =
 				await tasks.imgCaptchaManager.getPrioritisedAccessPolicies(
 					userAccessRulesStorage,
 					dapp,
 					userScope,
-				)
-			).find((p) => !p.deferToVerify);
+				);
+			const userAccessPolicy = accessPolicies.find((p) => !p.deferToVerify);
+			// A deferred rule must never reject at request time, so it is
+			// kept out of `isValidRequest` above. It does still carry the
+			// challenge difficulty it wants imposed — that is the point of
+			// the compute-burn detectors — so its round counts are applied
+			// below when no enforcing policy supplies them.
+			const deferredParamsPolicy = accessPolicies.find(
+				(p) => p.deferToVerify === true,
+			);
 
 			const {
 				valid,
@@ -225,6 +233,7 @@ export default (
 						trafficSolvedImagesCount ||
 							solvedImagesCount ||
 							userAccessPolicy?.solvedImagesCount ||
+							deferredParamsPolicy?.solvedImagesCount ||
 							env.config.captchas.solved.count,
 						clientRecord.settings.imageMaxRounds ?? imageMaxRoundsDefault,
 					),
@@ -232,6 +241,7 @@ export default (
 				unsolved: {
 					count:
 						userAccessPolicy?.unsolvedImagesCount ||
+						deferredParamsPolicy?.unsolvedImagesCount ||
 						env.config.captchas.unsolved.count,
 				},
 			};
