@@ -208,11 +208,16 @@ const getPolicyScopeQuery = (
 // Rules with no `deferToVerify` field survive the negation (the field is
 // indexed INDEXMISSING).
 //
-// The union needs each side separately parenthesised —
-// `@a:{x} | @b:{y}` is a RediSearch syntax error across two fields.
+// The union must be wrapped as a single group. `|` binds looser than the
+// implicit intersection, so an unwrapped `(@a:{x})|(@b:{y}) @ip:[…]`
+// parses as `@a:{x} OR (@b:{y} AND @ip:[…])` — the left side escapes the
+// scope and IP filters and matches every Block rule in the index. Both
+// `(@a:{x} | @b:{y})` and `((@a:{x})|(@b:{y}))` group correctly; this
+// form is the shorter one. Requires DIALECT 2, which every caller uses
+// (see REDIS_QUERY_DIALECT).
 export const getBlockPoolClause = (includeDeferred: boolean): string =>
 	includeDeferred
-		? `(@type:{${AccessPolicyType.Block}})|(@deferToVerify:{true})`
+		? `(@type:{${AccessPolicyType.Block}} | @deferToVerify:{true})`
 		: `@type:{${AccessPolicyType.Block}} -@deferToVerify:{true}`;
 
 /*

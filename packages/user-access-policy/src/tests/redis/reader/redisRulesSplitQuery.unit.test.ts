@@ -177,7 +177,28 @@ describe("buildScopedRulesSubQueries", () => {
 		expect(subs.length).toBeGreaterThan(0);
 		for (const sub of subs) {
 			expect(sub.query).toContain(
-				"(@type:{block})|(@deferToVerify:{true})",
+				"(@type:{block} | @deferToVerify:{true})",
+			);
+		}
+	});
+
+	it("wraps the union in a single group so it can't escape the AND", () => {
+		// `|` binds looser than the implicit intersection. If the union is
+		// emitted as `(@a:{x})|(@b:{y})` the query parses as
+		// `@a:{x} OR (@b:{y} AND scope AND ip)` — the left side escapes
+		// the scope and IP filters and matches every Block rule in the
+		// index (measured: 18,800 hits instead of 1, and 7x slower).
+		const subs = buildScopedRulesSubQueries(
+			{ numericIp: 1376899398n },
+			"client-A",
+			{ blockOnly: true, includeDeferred: true },
+		);
+
+		for (const sub of subs) {
+			expect(sub.query).not.toContain("(@type:{block})|(");
+			// The union and both its operands live inside one group.
+			expect(sub.query).toMatch(
+				/\(@type:\{block\} \| @deferToVerify:\{true\}\)/,
 			);
 		}
 	});
