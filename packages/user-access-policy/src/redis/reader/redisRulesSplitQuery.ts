@@ -12,11 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {
-	GLOBAL_CLIENT_SCOPE_SENTINEL,
-	type UserScope,
-} from "#policy/rule.js";
 import { getBlockPoolClause } from "#policy/redis/reader/redisRulesQuery.js";
+import { GLOBAL_CLIENT_SCOPE_SENTINEL, type UserScope } from "#policy/rule.js";
 
 // Escapes special characters in Redis TAG queries. Mirrors the escape
 // function in redisRulesQuery.ts — kept local to avoid coupling the two

@@ -763,8 +763,7 @@ export default (
 			// verify via checkForHardBlock. Filtering it out here would
 			// mean the challenge type it names is silently ignored.
 			const userAccessPolicy = accessPolicies.find(
-				(p) =>
-					!(p.deferToVerify === true && p.type === AccessPolicyType.Block),
+				(p) => !(p.deferToVerify === true && p.type === AccessPolicyType.Block),
 			);
 
 			const accessPolicyOutcome = await handleAccessPolicy(

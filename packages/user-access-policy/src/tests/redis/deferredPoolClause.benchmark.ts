@@ -76,7 +76,10 @@ const ipv4CidrRange = (i: number): { min: bigint; max: bigint } => {
 };
 
 const percentile = (sorted: number[], p: number): number => {
-	const idx = Math.min(sorted.length - 1, Math.floor((p / 100) * sorted.length));
+	const idx = Math.min(
+		sorted.length - 1,
+		Math.floor((p / 100) * sorted.length),
+	);
 	return sorted[idx] ?? 0;
 };
 
@@ -166,10 +169,7 @@ const main = async (): Promise<void> => {
 	const total = n;
 	// Let RediSearch finish indexing.
 	for (;;) {
-		const info = (await client.sendCommand([
-			"FT.INFO",
-			INDEX,
-		])) as unknown[];
+		const info = (await client.sendCommand(["FT.INFO", INDEX])) as unknown[];
 		const idx = info.findIndex((v) => String(v) === "indexing");
 		if (idx === -1 || String(info[idx + 1]) === "0") break;
 		await new Promise((r) => setTimeout(r, 200));
