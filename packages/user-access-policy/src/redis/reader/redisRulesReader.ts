@@ -273,6 +273,7 @@ export class RedisRulesReader implements AccessRulesReader {
 
 		const subQueries = buildScopedRulesSubQueries(userScope, clientId, {
 			...(filter.blockOnly === true && { blockOnly: true }),
+			...(filter.includeDeferred === true && { includeDeferred: true }),
 		});
 
 		try {
