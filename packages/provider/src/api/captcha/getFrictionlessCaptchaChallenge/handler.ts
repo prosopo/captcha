@@ -752,13 +752,20 @@ export default (
 				},
 			});
 
-			// Skip deferToVerify policies at the frictionless entry — they
-			// enforce at verify time only. handleAccessPolicy treats a
-			// Block policy as a 401 short-circuit; a deferToVerify Block
-			// hitting here would 401 the frictionless response, defeating
-			// the "solve normally, block at verify" contract deferToVerify
-			// is meant to enable.
-			const userAccessPolicy = accessPolicies.find((p) => !p.deferToVerify);
+			// Skip deferred *Block* policies only. handleAccessPolicy
+			// treats a Block as a 401 short-circuit, so a deferred Block
+			// reaching here would reject at request time and defeat the
+			// "solve normally, block at verify" contract.
+			//
+			// A deferred Restrict is deliberately let through: it never
+			// takes the 401 branch, and it is how a deferred rule sets
+			// the captcha type it wants served. The rule then blocks at
+			// verify via checkForHardBlock. Filtering it out here would
+			// mean the challenge type it names is silently ignored.
+			const userAccessPolicy = accessPolicies.find(
+				(p) =>
+					!(p.deferToVerify === true && p.type === AccessPolicyType.Block),
+			);
 
 			const accessPolicyOutcome = await handleAccessPolicy(
 				{
