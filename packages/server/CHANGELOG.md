@@ -1,5 +1,12 @@
 # @prosopo/server
 
+## 2.11.2
+### Patch Changes
+
+- d7a0a64: Fix provider URL matcher
+- Updated dependencies [d7a0a64]
+  - @prosopo/load-balancer@2.10.35
+
 ## 2.11.1
 ### Patch Changes
 

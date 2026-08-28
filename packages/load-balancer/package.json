@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/load-balancer",
-	"version": "2.10.34",
+	"version": "2.10.35",
 	"description": "Provider load balancer",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",

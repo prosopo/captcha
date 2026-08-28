@@ -1,5 +1,10 @@
 # @prosopo/load-balancer
 
+## 2.10.35
+### Patch Changes
+
+- d7a0a64: Fix provider URL matcher
+
 ## 2.10.34
 ### Patch Changes
 
