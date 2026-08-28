@@ -129,12 +129,49 @@ export const buildScopedRulesSubQueries = (
 	clientId: string | undefined,
 	options: { blockOnly?: boolean; includeDeferred?: boolean } = {},
 ): SubQuery[] => {
-	const typeClause = options.blockOnly
-		? `${getBlockPoolClause(options.includeDeferred === true)} `
-		: "";
 	const scopeClause = buildScopeClause(clientId);
-	const prefix = `${typeClause}${scopeClause}`;
 
+	// `includeDeferred` emits the probe set twice — once for plain hard
+	// blocks, once for deferred rules — rather than widening one type
+	// clause to `(@type:{block} | @deferToVerify:{true})`.
+	//
+	// Widening merges both populations into a single probe, so they share
+	// one SPLIT_MAX_CANDIDATES_PER_SUB budget and a dense deferred cohort
+	// can truncate hard blocks out of the candidate set. Measured on a
+	// scope with 400 block + 400 deferred rules on one ja4Hash: the merged
+	// probe returns 800 against a cap of 500, so 300 candidates are
+	// dropped with no ordering guarantee about which. That is precisely
+	// the crowding `blockOnly` was introduced to prevent.
+	//
+	// Two disjoint probe sets each get their own budget, so a hard block
+	// is never displaced by a deferred rule. The pools are disjoint by
+	// construction (the block probe excludes deferred), so the union
+	// double-counts nothing.
+	// Probe `kind` is only namespaced when there are genuinely two pools;
+	// single-pool callers keep the original unprefixed labels.
+	const typePools: Array<{ tag: string; clause: string }> = options.blockOnly
+		? options.includeDeferred === true
+			? [
+					{ tag: "block", clause: `${getBlockPoolClause(false)} ` },
+					{ tag: "deferred", clause: "@deferToVerify:{true} " },
+				]
+			: [{ tag: "", clause: `${getBlockPoolClause(false)} ` }]
+		: [{ tag: "", clause: "" }];
+
+	const subQueries: SubQuery[] = [];
+	for (const pool of typePools) {
+		const prefix = `${pool.clause}${scopeClause}`;
+		const label = pool.tag === "" ? "" : `${pool.tag}:`;
+		subQueries.push(...buildProbes(userScope, prefix, label));
+	}
+	return subQueries;
+};
+
+const buildProbes = (
+	userScope: UserScope,
+	prefix: string,
+	label: string,
+): SubQuery[] => {
 	const subQueries: SubQuery[] = [];
 
 	// One probe per populated scalar user-scope field. Each uses that
@@ -146,7 +183,7 @@ export const buildScopedRulesSubQueries = (
 			continue;
 		}
 		subQueries.push({
-			kind: `field:${field}`,
+			kind: `${label}field:${field}`,
 			query: `${prefix} ${clause}`,
 		});
 	}
@@ -161,11 +198,11 @@ export const buildScopedRulesSubQueries = (
 	const requestIp = userScope.numericIp;
 	if (requestIp !== undefined) {
 		subQueries.push({
-			kind: "ip:exact",
+			kind: `${label}ip:exact`,
 			query: `${prefix} @numericIp:[${requestIp} ${requestIp}]`,
 		});
 		subQueries.push({
-			kind: "ip:mask",
+			kind: `${label}ip:mask`,
 			query: `${prefix} @numericIpMaskMin:[-inf ${requestIp}] @numericIpMaskMax:[${requestIp} +inf]`,
 		});
 	}
@@ -178,7 +215,7 @@ export const buildScopedRulesSubQueries = (
 		(field) => `ismissing(@${field})`,
 	).join(" ");
 	subQueries.push({
-		kind: "no-user-scope",
+		kind: `${label}no-user-scope`,
 		query: `${prefix} ${noScopeIsmissing}`,
 	});
 
