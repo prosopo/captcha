@@ -197,6 +197,24 @@ const getPolicyScopeQuery = (
 		: "";
 };
 
+// Candidate-pool clause for the two hard-block callers.
+//
+// Verify (`includeDeferred`): a deferToVerify rule is skipped at request
+// time and enforced at verify, so it is a valid hard block whatever its
+// type — the pool must admit deferred Restrict rules too.
+//
+// Request time (middleware): deferred rules are never enforceable there,
+// so exclude them server-side rather than fetching and discarding them.
+// Rules with no `deferToVerify` field survive the negation (the field is
+// indexed INDEXMISSING).
+//
+// The union needs each side separately parenthesised —
+// `@a:{x} | @b:{y}` is a RediSearch syntax error across two fields.
+export const getBlockPoolClause = (includeDeferred: boolean): string =>
+	includeDeferred
+		? `(@type:{${AccessPolicyType.Block}})|(@deferToVerify:{true})`
+		: `@type:{${AccessPolicyType.Block}} -@deferToVerify:{true}`;
+
 /*
  * Search command example:
  *
@@ -219,7 +237,7 @@ export const getRulesRedisQuery = (
 	}
 
 	if (filter.blockOnly) {
-		queryParts.push(`@type:{${AccessPolicyType.Block}}`);
+		queryParts.push(getBlockPoolClause(filter.includeDeferred === true));
 	}
 
 	const policyScopeQuery = getPolicyScopeQuery(

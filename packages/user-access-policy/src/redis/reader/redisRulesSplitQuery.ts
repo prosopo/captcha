@@ -13,10 +13,10 @@
 // limitations under the License.
 
 import {
-	AccessPolicyType,
 	GLOBAL_CLIENT_SCOPE_SENTINEL,
 	type UserScope,
 } from "#policy/rule.js";
+import { getBlockPoolClause } from "#policy/redis/reader/redisRulesQuery.js";
 
 // Escapes special characters in Redis TAG queries. Mirrors the escape
 // function in redisRulesQuery.ts — kept local to avoid coupling the two
@@ -113,6 +113,9 @@ type SubQuery = {
  *
  * `blockOnly` narrows the candidate set to rules with `type:{block}` —
  * used by the hard-block middleware which never needs Restrict rules.
+ * `includeDeferred` widens that pool back out to
+ * `(@type:{block} | @deferToVerify:{true})` for the verify-time
+ * hard-block lookup, where a deferred Restrict is a valid block.
  * Every other caller passes false so both Block and Restrict rules are
  * fetched; the JS-side ranker picks the right one via specificity +
  * severity. Merging the block and restrict paths behind one split-query
@@ -124,10 +127,10 @@ type SubQuery = {
 export const buildScopedRulesSubQueries = (
 	userScope: UserScope,
 	clientId: string | undefined,
-	options: { blockOnly?: boolean } = {},
+	options: { blockOnly?: boolean; includeDeferred?: boolean } = {},
 ): SubQuery[] => {
 	const typeClause = options.blockOnly
-		? `@type:{${AccessPolicyType.Block}} `
+		? `${getBlockPoolClause(options.includeDeferred === true)} `
 		: "";
 	const scopeClause = buildScopeClause(clientId);
 	const prefix = `${typeClause}${scopeClause}`;

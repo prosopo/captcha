@@ -162,6 +162,56 @@ describe("buildScopedRulesSubQueries", () => {
 		}
 	});
 
+	it("widens to include deferred rules when includeDeferred is true", () => {
+		// The verify-time hard-block lookup. A deferToVerify rule is
+		// skipped at request time and enforced at verify, so it is a
+		// valid hard block whatever its type — a Block-only pool would
+		// never fetch a deferred Restrict for findHardBlockPolicy to
+		// find.
+		const subs = buildScopedRulesSubQueries(
+			{ numericIp: 1376899398n },
+			"client-A",
+			{ blockOnly: true, includeDeferred: true },
+		);
+
+		expect(subs.length).toBeGreaterThan(0);
+		for (const sub of subs) {
+			expect(sub.query).toContain(
+				"(@type:{block})|(@deferToVerify:{true})",
+			);
+		}
+	});
+
+	it("excludes deferred rules from the request-time pool", () => {
+		// blockOnly without includeDeferred is the middleware. Deferred
+		// rules are never enforceable there, so they are filtered out in
+		// Redis rather than fetched and discarded in JS.
+		const subs = buildScopedRulesSubQueries(
+			{ numericIp: 1376899398n },
+			"client-A",
+			{ blockOnly: true },
+		);
+
+		for (const sub of subs) {
+			expect(sub.query).toContain("-@deferToVerify:{true}");
+		}
+	});
+
+	it("ignores includeDeferred when blockOnly is not set", () => {
+		// Without blockOnly there is no type clause to widen; every rule
+		// type is already in the pool.
+		const subs = buildScopedRulesSubQueries(
+			{ numericIp: 1376899398n },
+			"client-A",
+			{ includeDeferred: true },
+		);
+
+		for (const sub of subs) {
+			expect(sub.query).not.toContain("@deferToVerify");
+			expect(sub.query).not.toContain("@type:{block}");
+		}
+	});
+
 	it("emits the same probe kinds regardless of blockOnly", () => {
 		// The probe set is driven by populated request scope, not by
 		// rule-type filter. blockOnly only narrows what each probe

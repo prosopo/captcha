@@ -336,6 +336,10 @@ const getOrCreateRequestMemo = (
 
 export type GetPrioritisedAccessRuleOptions = {
 	blockOnly?: boolean;
+	// Widen a `blockOnly` pool to also admit deferred rules of any type.
+	// Only the verify-time hard-block lookup sets this — see
+	// AccessRulesFilter.includeDeferred.
+	includeDeferred?: boolean;
 	// When provided, results are memoised against this host object for
 	// the request lifetime. Callers pass `req` directly; middleware
 	// chains that share the same request object share one Redis
@@ -355,12 +359,18 @@ export const getPrioritisedAccessRule = async (
 ): Promise<AccessRule[]> => {
 	const parsedUserScope = userScopeInput.parse(userScope);
 	const blockOnly = options?.blockOnly ?? false;
+	const includeDeferred = options?.includeDeferred ?? false;
 	const skipCache = options?.skipCache ?? false;
 	const requestMemoHost = options?.requestMemoHost as
 		| RequestWithMemo
 		| undefined;
 
-	const cacheKey = hardBlockCacheKey(clientId, parsedUserScope, blockOnly);
+	const cacheKey = hardBlockCacheKey(
+		clientId,
+		parsedUserScope,
+		blockOnly,
+		includeDeferred,
+	);
 
 	// Request-scoped memo first — zero staleness, cheapest lookup.
 	const requestMemo = requestMemoHost
@@ -383,6 +393,7 @@ export const getPrioritisedAccessRule = async (
 		userScope: parsedUserScope,
 		userScopeMatch: FilterScopeMatch.Greedy,
 		...(blockOnly && { blockOnly: true }),
+		...(includeDeferred && { includeDeferred: true }),
 	};
 
 	// The compute closure defers work until the singleflight coordinator
