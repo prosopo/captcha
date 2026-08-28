@@ -1,5 +1,13 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.13.20
+### Patch Changes
+
+  - @prosopo/procaptcha-common@2.12.2
+  - @prosopo/procaptcha-react@2.9.118
+  - @prosopo/procaptcha-pow@2.11.2
+  - @prosopo/procaptcha-puzzle@2.11.2
+
 ## 2.13.19
 ### Patch Changes
 
