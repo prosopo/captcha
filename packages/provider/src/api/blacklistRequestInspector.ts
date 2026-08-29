@@ -54,6 +54,10 @@ export const getRequestUserScope = (
 	coords?: string,
 	countryCode?: string,
 	asn?: number,
+	// Present only when Web Bot Auth signature verification succeeded on the
+	// inbound request. Passed through to rule matching so `webBotAuthAgent`
+	// rules match the verified signer URL, never a spoofed header.
+	webBotAuthAgent?: string,
 ): Pick<
 	UserScopeRecord,
 	| "userId"
@@ -65,6 +69,7 @@ export const getRequestUserScope = (
 	| "countryCode"
 	| "asn"
 	| "os"
+	| "webBotAuthAgent"
 > => {
 	const userAgent = requestHeaders["user-agent"]
 		? requestHeaders["user-agent"].toString()
@@ -79,6 +84,7 @@ export const getRequestUserScope = (
 		...(coords && { coords }),
 		...(countryCode && { countryCode }),
 		...(typeof asn === "number" && { asn }),
+		...(webBotAuthAgent && { webBotAuthAgent }),
 		// Always populated (even "unknown") — derived from the request UA, not
 		// trusted from a client hint. Present unconditionally so an OS
 		// allow-list (block everything not on the list) still matches requests
@@ -100,6 +106,7 @@ const SCALAR_USER_SCOPE_FIELDS = [
 	"countryCode",
 	"asn",
 	"os",
+	"webBotAuthAgent",
 ] as const satisfies ReadonlyArray<keyof UserScope>;
 
 // Derive the populated-scope field list for a matched rule (the same shape
@@ -223,6 +230,9 @@ const CAPTCHA_TYPE_HARSHNESS: Record<CaptchaType, number> = {
 	// if the enum grows. Restrict-with-frictionless wouldn't make operational
 	// sense and ranks at the bottom of the captcha tiers if it ever appears.
 	[CaptchaType.frictionless]: 0,
+	// authenticated is a pre-verified pass-through — never a Restrict target.
+	// Rank at 0 alongside frictionless for the same "should never rank" reason.
+	[CaptchaType.authenticated]: 0,
 };
 
 // Harshness within an equal-specificity tier (issue #3713). On equal

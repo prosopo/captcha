@@ -800,6 +800,13 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	},
 	userSubmitted: { type: Boolean, required: false },
 	serverChecked: { type: Boolean, required: false },
+	// Web Bot Auth: true on sessions issued to a verified Ed25519 signer.
+	// Boolean shortcut; the full Signature-Agent URL is on webBotAuthAgent.
+	agent: { type: Boolean, required: false },
+	// Verified Signature-Agent URL (e.g. "https://chatgpt.com"). Presence
+	// on a session makes the `/verify` path require the operator to pass
+	// `ip` and enforces `session.ipAddress === ip` for replay defence.
+	webBotAuthAgent: { type: String, required: false },
 	// WASM SIMD CPU fingerprint readings collected by the catcher client.
 	// Stored as a free-form Mixed sub-document because the shape is a
 	// discriminated union and the dataset is still evolving — Zod validates

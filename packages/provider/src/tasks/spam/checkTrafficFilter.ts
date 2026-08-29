@@ -307,6 +307,9 @@ const CAPTCHA_TYPE_RANK: Record<CaptchaType, number> = {
 	[CaptchaType.puzzle]: 3,
 	[CaptchaType.pow]: 2,
 	[CaptchaType.frictionless]: 1,
+	// authenticated is Web Bot Auth pass-through, never a challenge outcome
+	// selected by traffic filtering — include for enum totality only.
+	[CaptchaType.authenticated]: 0,
 };
 
 const rankCaptchaType = (t: CaptchaType | undefined): number =>

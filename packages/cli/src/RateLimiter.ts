@@ -119,6 +119,10 @@ export const getRateLimitConfig = () => {
 			windowMs: process.env.PROSOPO_VERIFY_PUZZLE_CAPTCHA_SOLUTION_WINDOW,
 			limit: process.env.PROSOPO_VERIFY_PUZZLE_CAPTCHA_SOLUTION_LIMIT,
 		},
+		[ClientApiPaths.VerifyAuthenticatedSession]: {
+			windowMs: process.env.PROSOPO_VERIFY_AUTHENTICATED_SESSION_WINDOW,
+			limit: process.env.PROSOPO_VERIFY_AUTHENTICATED_SESSION_LIMIT,
+		},
 		[AdminApiPaths.DnsEvent]: {
 			windowMs: process.env.PROSOPO_DNS_EVENT_WINDOW,
 			limit: process.env.PROSOPO_DNS_EVENT_LIMIT,

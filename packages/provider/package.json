@@ -44,6 +44,7 @@
 		"@prosopo/types-env": "2.10.40",
 		"@prosopo/user-access-policy": "3.12.29",
 		"@prosopo/util": "3.3.7",
+		"@prosopo/web-bot-auth": "0.0.1",
 		"@prosopo/util-crypto": "13.5.30",
 		"cron": "3.1.7",
 		"express": "4.22.2",

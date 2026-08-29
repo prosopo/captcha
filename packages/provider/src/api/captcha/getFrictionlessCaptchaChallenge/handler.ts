@@ -26,6 +26,7 @@ import {
 	type AccessRulesStorage,
 } from "@prosopo/user-access-policy";
 import { flatten, isProtectDeployment, sanitisePageUrl } from "@prosopo/util";
+import { verifyWebBotAuth } from "@prosopo/web-bot-auth";
 import type { NextFunction, Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { getCompositeIpAddress } from "../../../compositeIpAddress.js";
@@ -92,6 +93,7 @@ export default (
 				detectorSessionId,
 				currentUrl: reportedCurrentUrl,
 				iframeUrl: reportedIframeUrl,
+				clientSessionId,
 			} = GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
 
 			// Re-sanitise whatever the client reported: keep only scheme + host
@@ -541,6 +543,22 @@ export default (
 				req.headers["accept-language"] || "",
 			);
 
+			// Web Bot Auth (RFC 9421): if the request carries a valid Ed25519
+			// signature and the signer's JWKS at /.well-known/http-message-
+			// signatures-directory verifies it, promote the canonical signer
+			// URL onto the userScope so `webBotAuthAgent` access rules can
+			// match on the verified identity. Unsigned traffic falls through
+			// with webBotAuthAgent=undefined and hits the normal detector
+			// stack.
+			const verified = await verifyWebBotAuth({
+				method: req.method,
+				url: `https://${req.headers.host ?? ""}${req.originalUrl ?? req.url}`,
+				headers: flatten(req.headers),
+			});
+			const verifiedSignerUrl = verified.verified
+				? verified.signerUrl
+				: undefined;
+
 			const userScope = getRequestUserScope(
 				flatten(req.headers),
 				req.ja4,
@@ -550,6 +568,7 @@ export default (
 				undefined,
 				countryCode,
 				asn,
+				verifiedSignerUrl,
 			);
 
 			// Fan out the three independent post-shortcircuit awaits:
@@ -574,6 +593,74 @@ export default (
 					userScope,
 				),
 			]);
+
+			// Authenticated fast-path. Fires when any non-deferToVerify Allow
+			// rule matches the userScope — the qualifier can be a verified
+			// Web Bot Auth agent, an IP CIDR, a JA4 fingerprint, a UA
+			// substring, an ASN, a country, or any combination. Web Bot Auth
+			// is one of the ways to qualify, not the only one.
+			//
+			// Skips decrypt/detect/decision-machine entirely, mints an
+			// authenticated session with `serverChecked: false`, and the
+			// operator's `/client/authenticated/verify` call is what marks
+			// it consumed. deferToVerify policies are ignored here for the
+			// same reason the ordinary flow ignores them at frictionless
+			// entry — they enforce at verify time only.
+			//
+			// A Block or Restrict policy on the same match set always wins
+			// (severity outranks Allow) so an operator who wrote both
+			// "allow /24" and "block 10.0.0.5" gets what they asked for.
+			// getPrioritisedAccessPolicies returns policies in matched-order,
+			// so the presence of a blocking policy short-circuits the check.
+			const blockingPolicy = accessPolicies.find(
+				(p) =>
+					!p.deferToVerify &&
+					(p.type === AccessPolicyType.Block ||
+						p.type === AccessPolicyType.Restrict),
+			);
+			const allowingPolicy = blockingPolicy
+				? undefined
+				: accessPolicies.find(
+						(p) => !p.deferToVerify && p.type === AccessPolicyType.Allow,
+					);
+			if (allowingPolicy) {
+				const authenticatedSession =
+					await tasks.frictionlessManager.createAuthenticatedSession(
+						token,
+						ipAddress,
+						// May be empty string when the Allow was matched by IP /
+						// JA4 / UA instead of webBotAuthAgent. The session field
+						// stays unset in that case so verify-side observability
+						// distinguishes "verified signer" from "trusted IP".
+						verifiedSignerUrl ?? "",
+						dapp,
+						userSitekeyIpHash,
+						flatHeaders,
+						req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
+							? req.ipInfo
+							: undefined,
+						clientSessionId,
+					);
+				req.logger.info(() => ({
+					msg: "Frictionless decision",
+					data: {
+						decision: "authenticated_allow_rule",
+						captchaType: CaptchaType.authenticated,
+						sessionId: authenticatedSession.sessionId,
+						webBotAuthAgent: verifiedSignerUrl,
+						ruleType: allowingPolicy.description,
+					},
+				}));
+				recordFrictionlessDecision("authenticated_allow_rule");
+				attachHoneypot(res, clientRecord);
+				return res.json({
+					[ApiParams.captchaType]: CaptchaType.authenticated,
+					[ApiParams.sessionId]: authenticatedSession.sessionId,
+					[ApiParams.status]: "ok",
+					dns_url: buildDnsEventUrl(authenticatedSession.sessionId),
+					...(verifiedSignerUrl && { agent: verifiedSignerUrl }),
+				});
+			}
 
 			const {
 				baseBotScore: rawBaseBotScore,

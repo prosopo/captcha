@@ -518,6 +518,17 @@ export const ClientSettingsSchema = object({
 	// whether the submitted emails are mostly spam).
 	storeMetadata: boolean().optional(),
 	honeypot: HoneypotSettingsSchema.optional(),
+	// Web Bot Auth (RFC 9421) verified-agent pass-through. When true, a
+	// request that carries a valid Ed25519 signature and matches no
+	// operator-authored Block/Restrict rule on its Signature-Agent URL
+	// gets an `authenticated` session — no captcha, no interaction. When
+	// false (default), verified agents are still identified on the userScope
+	// so per-agent access rules can act on them, but they follow the normal
+	// challenge flow like everyone else. Opt-in because the whole
+	// authenticated flow issues bearer tokens that skip the puzzle-solve
+	// cost, and the site operator should make that trust decision
+	// explicitly rather than get it as a default.
+	allowAgents: boolean().optional(),
 });
 
 export type IUserSettings = output<typeof ClientSettingsSchema>;

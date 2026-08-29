@@ -66,6 +66,9 @@
 			"path": "../user-access-policy/tsconfig.cjs.json"
 		},
 		{
+			"path": "../web-bot-auth/tsconfig.cjs.json"
+		},
+		{
 			"path": "../api/tsconfig.cjs.json"
 		},
 		{

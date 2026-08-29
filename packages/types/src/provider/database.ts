@@ -630,6 +630,17 @@ export type Session = {
 	};
 	userSubmitted?: boolean;
 	serverChecked?: boolean;
+	// True on sessions issued because the request was Web Bot Auth verified
+	// (captchaType === CaptchaType.authenticated). Boolean shortcut for the
+	// Traffic view's "pre-verified pass" filter; the full signer URL lives
+	// on `webBotAuthAgent`.
+	agent?: boolean;
+	// Canonical Signature-Agent URL (e.g. "https://chatgpt.com") captured
+	// from the verified Ed25519 signature at issuance. Read at
+	// `/verify` time to enforce IP binding: `ipAddress` on the session
+	// must equal the `ip` the operator forwards on the verify call, so a
+	// leaked authenticated token can't be replayed from a different IP.
+	webBotAuthAgent?: string;
 	// WASM SIMD CPU fingerprint readings forwarded by the catcher client.
 	simdReadings?: SimdReadings;
 	// Stage at which the readings first arrived.

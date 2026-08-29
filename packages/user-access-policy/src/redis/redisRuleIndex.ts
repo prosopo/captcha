@@ -41,6 +41,7 @@ export const userAttributesRedisSchema: RediSearchSchema = {
 	countryCode: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 	asn: { type: SCHEMA_FIELD_TYPE.NUMERIC, INDEXMISSING: true },
 	os: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
+	webBotAuthAgent: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 } satisfies AllKeys<UserAttributes>;
 
 export const userScopeRedisSchema: RediSearchSchema = {
