@@ -29,7 +29,7 @@
 		}
 	},
 	"dependencies": {
-		"@noble/curves": "1.9.2",
+		"@noble/curves": "2.4.0",
 		"@noble/hashes": "1.8.0",
 		"@polkadot/util": "13.5.7",
 		"@polkadot/x-randomvalues": "13.5.7",
