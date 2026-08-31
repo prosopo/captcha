@@ -205,22 +205,33 @@ describe("frictionlessTypes bounds what the ladder may serve", () => {
 	describe("both enabled", () => {
 		beforeEach(() => configure({ image: true, puzzle: true }));
 
-		it("leaves the ladder's choice alone across all three bands", () => {
-			// Regression guard: the coercion seam sits on the path every
-			// frictionless session takes, so it has to be a no-op when nothing
-			// is disabled.
+		// Regression guard: the coercion seam sits on the path every
+		// frictionless session takes, so it has to be a no-op when nothing is
+		// disabled.
+		//
+		// One band per test, deliberately. These were a single test calling
+		// `primeAndVisit` three times, which re-registers the same intercept
+		// aliases within one test — `cy.wait("@frictionless")` then resolves
+		// against the first registration rather than the current visit, and the
+		// third band asserted against the first band's response.
+
+		it("leaves the image band alone", () => {
 			primeAndVisit(LANG_IMAGE_BAND);
 			expectServedType(
 				CaptchaType.image,
 				"with both types enabled the image band must still reach image",
 			);
+		});
 
+		it("leaves the puzzle band alone", () => {
 			primeAndVisit(LANG_PUZZLE_BAND);
 			expectServedType(
 				CaptchaType.puzzle,
 				"with both types enabled the puzzle band must still reach puzzle",
 			);
+		});
 
+		it("leaves a clean score passing silently to PoW", () => {
 			primeAndVisit();
 			expectServedType(
 				CaptchaType.pow,
