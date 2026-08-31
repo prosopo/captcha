@@ -52,6 +52,7 @@ const FULLY_POPULATED_SETTINGS = {
 		frictionlessPuzzleThreshold: 0.42,
 		frictionlessImageThreshold: 1.3,
 	},
+	frictionlessTypes: { image: false, puzzle: true },
 	powDifficulty: 6,
 	imageThreshold: 0.81,
 	imageMaxRounds: 12,

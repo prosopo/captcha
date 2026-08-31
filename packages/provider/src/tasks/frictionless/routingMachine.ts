@@ -15,6 +15,7 @@
 import type { Logger } from "@prosopo/logger";
 import type {
 	CounterSpec,
+	IFrictionlessTypes,
 	RoutingMachineBaseline,
 	RoutingMachineInput,
 	RoutingMachineInputBase,
@@ -42,6 +43,17 @@ export interface RoutingContext {
 	// because the dedup replay only asks the router which captchaType it would
 	// pick and never creates a session from the answer.
 	imageMaxRounds?: number;
+	// Which challenge types this site permits. Carried here for the same
+	// reason as `imageMaxRounds`: `sendCaptcha` is the point a session's type
+	// is finalised and it has no other handle on the client record. Optional
+	// for the dedup replay; absent means "no constraint recorded", which
+	// `coerceToEnabledCaptchaType` reads as every type enabled.
+	frictionlessTypes?: IFrictionlessTypes;
+	// The site's ordinary image round count (`captchas.solved.count`). Used
+	// as the zero point when translating a requested round count into a
+	// puzzle difficulty level — severity is "rounds above normal", which
+	// means the same thing across sites where an absolute count does not.
+	baseImageRounds?: number;
 }
 
 /**

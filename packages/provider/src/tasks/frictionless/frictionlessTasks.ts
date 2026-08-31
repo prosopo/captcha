@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/logger";
+import { DEFAULT_RENDER_SETTINGS } from "@prosopo/puzzle-assets";
 import {
 	ApiParams,
 	CaptchaType,
@@ -30,6 +31,7 @@ import {
 	type ScoreComponents,
 	type Session,
 	SimdReadingsStage,
+	imageMaxRoundsDefault,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { AccessPolicy } from "@prosopo/user-access-policy";
@@ -42,9 +44,13 @@ import {
 	buildAllWindowIncrements,
 } from "../../util/usageCounters.js";
 import { CaptchaManager } from "../captchaManager.js";
+import { coerceToEnabledCaptchaType } from "../captchaTypeSelection.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { getBotScore } from "../detection/getBotScore.js";
-import { downgradePuzzleIfUnavailable } from "../puzzle/puzzleRenderer.js";
+import {
+	samplePuzzleDifficulty,
+	severityToPuzzleDifficulty,
+} from "../puzzle/puzzleDifficulty.js";
 import { type RoutingContext, applyRouter } from "./routingMachine.js";
 
 const DEFAULT_MAX_TIMESTAMP_AGE = 60 * 10 * 1000; // 10 minutes
@@ -415,13 +421,19 @@ export class FrictionlessManager extends CaptchaManager {
 				)
 			: baseline;
 
-		// A puzzle session this provider cannot render would strand the user:
-		// /captcha/puzzle answers with GetPuzzleCaptchaResponse and nothing
-		// else, so it cannot substitute another type at serve time, and the
-		// puzzle widget cannot render one either. Downgrade here, before the
-		// session is written, so every later hop sees a consistent type.
-		const finalCaptchaType = downgradePuzzleIfUnavailable(
+		// Resolve the routed type against what the site permits and what this
+		// provider can render, before the session is written, so every later
+		// hop sees a consistent type. A session minted as a type we cannot
+		// fulfil strands the user on INCORRECT_CAPTCHA_TYPE — /captcha/puzzle
+		// answers with GetPuzzleCaptchaResponse and nothing else, so it cannot
+		// substitute another type at serve time.
+		//
+		// This sits after the router deliberately: it is the last word on
+		// captchaType, so it constrains the score ladder, the access-policy
+		// and traffic-filter paths, and the routing machine alike.
+		const finalCaptchaType = coerceToEnabledCaptchaType(
 			routed.captchaType,
+			this.routingContext?.frictionlessTypes,
 			this.logger,
 		);
 		// Every other path that sizes an image challenge clamps to the
@@ -432,11 +444,16 @@ export class FrictionlessManager extends CaptchaManager {
 		// already clamped by its caller, so this only bites on `routed`.
 		const requestedSolvedImagesCount =
 			routed.solvedImagesCount ?? effectiveParams.solvedImagesCount;
-		const imageRoundsCeiling = this.routingContext?.imageMaxRounds;
+		// The ceiling is always supplied by the only `setRoutingContext` caller.
+		// Fall back to the schema default rather than skipping the clamp if it
+		// ever goes missing: an unbounded round count is a worse failure than a
+		// conservative one, and the previous conditional silently served
+		// whatever the router asked for when the ceiling was absent.
+		const imageRoundsCeiling =
+			this.routingContext?.imageMaxRounds ?? imageMaxRoundsDefault;
 		const finalSolvedImagesCount =
 			finalCaptchaType === CaptchaType.image
-				? requestedSolvedImagesCount !== undefined &&
-					imageRoundsCeiling !== undefined
+				? requestedSolvedImagesCount !== undefined
 					? Math.min(requestedSolvedImagesCount, imageRoundsCeiling)
 					: requestedSolvedImagesCount
 				: undefined;
@@ -444,20 +461,53 @@ export class FrictionlessManager extends CaptchaManager {
 			finalCaptchaType === CaptchaType.pow
 				? (routed.powDifficulty ?? effectiveParams.powDifficulty)
 				: undefined;
-		// Puzzle tunables the router asked for. Persisted on the session so
-		// getPuzzleCaptchaChallenge can layer them over the site defaults —
-		// that endpoint re-derives its overrides from a live trafficFilter
-		// verdict, and a router-chosen puzzle has no verdict to re-derive
-		// from. Dropped unless the resolved type actually is a puzzle, so a
-		// downgraded session never carries stale render settings.
+		// Puzzle tunables persisted on the session so getPuzzleCaptchaChallenge
+		// can layer them over the site defaults — that endpoint re-derives its
+		// overrides from a live trafficFilter verdict, and a router- or
+		// severity-chosen puzzle has no verdict to re-derive from. Dropped
+		// unless the resolved type actually is a puzzle, so a coerced session
+		// never carries stale render settings.
+		//
+		// Two sources, in precedence order:
+		//
+		//   1. The difficulty ladder, derived from the round count the caller
+		//      asked for. A puzzle has no rounds, so without this every
+		//      escalation on an image-disabled site would collapse into an
+		//      identical challenge and the graduated response would be lost.
+		//   2. Explicit router overrides, which win — an operator naming a
+		//      tolerance means it, and should not be second-guessed by a
+		//      severity heuristic.
 		const finalPuzzleOverrides: Pick<Session, "puzzleTolerance" | "puzzle"> =
 			finalCaptchaType === CaptchaType.puzzle
-				? {
-						...(routed.puzzleTolerance !== undefined && {
-							puzzleTolerance: routed.puzzleTolerance,
-						}),
-						...(routed.puzzle && { puzzle: routed.puzzle }),
-					}
+				? (() => {
+						const level = severityToPuzzleDifficulty(
+							requestedSolvedImagesCount,
+							this.routingContext?.baseImageRounds ??
+								this.config.captchas.solved.count,
+						);
+						// Level 0 means "nothing escalated this session". Sampling a
+						// band here would override the site's own configured
+						// puzzleTolerance / puzzle settings with ladder values, which
+						// is a silent config change, not an escalation. Leave the
+						// session bare so getPuzzleCaptchaChallenge falls back to the
+						// site defaults exactly as it did before the ladder existed.
+						const difficulty =
+							level > 0
+								? samplePuzzleDifficulty(
+										level,
+										DEFAULT_RENDER_SETTINGS.holeDarken,
+									)
+								: undefined;
+						const tolerance = routed.puzzleTolerance ?? difficulty?.tolerance;
+						const puzzle =
+							routed.puzzle || difficulty
+								? { ...(difficulty?.puzzle ?? {}), ...(routed.puzzle ?? {}) }
+								: undefined;
+						return {
+							...(tolerance !== undefined && { puzzleTolerance: tolerance }),
+							...(puzzle !== undefined && { puzzle }),
+						};
+					})()
 				: {};
 		// A router that overrode the captcha type is the more specific
 		// explanation of what was served, so its reason wins over the one the

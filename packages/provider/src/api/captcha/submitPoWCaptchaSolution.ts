@@ -12,19 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ProsopoApiError } from "@prosopo/common";
+import { DEFAULT_RENDER_SETTINGS } from "@prosopo/puzzle-assets";
 import {
 	CaptchaType,
 	type FrictionlessReason,
+	type IFrictionlessTypes,
+	type IPuzzleSettings,
 	type PowCaptchaSolutionEscalation,
 	type PowCaptchaSolutionResponse,
 	SubmitPowCaptchaSolutionBody,
 	type SubmitPowCaptchaSolutionBodyTypeOutput,
+	imageMaxRoundsDefault,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { flatten, getIPAddress } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../express.js";
-import { downgradePuzzleIfUnavailable } from "../../tasks/puzzle/puzzleRenderer.js";
+import { coerceToEnabledCaptchaType } from "../../tasks/captchaTypeSelection.js";
+import {
+	samplePuzzleDifficulty,
+	severityToPuzzleDifficulty,
+} from "../../tasks/puzzle/puzzleDifficulty.js";
 import { Tasks } from "../../tasks/tasks.js";
 import {
 	derivePlatform,
@@ -207,11 +215,20 @@ export default (env: ProviderEnvironment) =>
 				}));
 			}
 
-			const escalation = await buildEscalation(tasks, result, challenge, {
-				tcpToChelloUs: req.tcpToChelloUs,
-				chelloToHandshakeUs: req.chelloToHandshakeUs,
-				...rawTlsSignalsForSession(req),
-			});
+			const escalation = await buildEscalation(
+				tasks,
+				result,
+				challenge,
+				{
+					tcpToChelloUs: req.tcpToChelloUs,
+					chelloToHandshakeUs: req.chelloToHandshakeUs,
+					...rawTlsSignalsForSession(req),
+				},
+				{
+					frictionlessTypes: clientRecord.settings?.frictionlessTypes,
+					imageMaxRounds: clientRecord.settings?.imageMaxRounds,
+				},
+			);
 			const response: PowCaptchaSolutionResponse = {
 				status: "ok",
 				// On escalation the user is not done — they still need to clear
@@ -270,6 +287,15 @@ export const buildEscalation = async (
 		tcpOptsOrder?: number;
 		tcpWindow?: number;
 	},
+	// Site constraints on what an escalation may serve. Threaded from the
+	// handler, which already holds the client record, rather than re-read
+	// here. An absent `frictionlessTypes` means "no constraint recorded" and
+	// leaves every type enabled; an absent `imageMaxRounds` falls back to the
+	// schema default so the round count is bounded either way.
+	siteConstraints?: {
+		frictionlessTypes?: IFrictionlessTypes;
+		imageMaxRounds?: number;
+	},
 ): Promise<PowCaptchaSolutionEscalation | undefined> => {
 	if (!result.verified || !result.routingOutput) return undefined;
 	const routedType = result.routingOutput.captchaType;
@@ -293,9 +319,49 @@ export const buildEscalation = async (
 	};
 
 	// Second place a session's captchaType is decided (the other is
-	// sendCaptcha). Same reasoning: escalating into a puzzle this provider
-	// cannot render would leave the widget with a session it can never satisfy.
-	const escalatedType = downgradePuzzleIfUnavailable(routed.captchaType);
+	// sendCaptcha). Same reasoning: escalating into a type this provider
+	// cannot render — or the site has disabled — would leave the widget with a
+	// session it can never satisfy.
+	const escalatedType = coerceToEnabledCaptchaType(
+		routed.captchaType,
+		siteConstraints?.frictionlessTypes,
+	);
+
+	// Coercion bottoms out at PoW, which is not an escalation: the user has
+	// just solved a PoW challenge, so re-issuing one would either loop or hand
+	// them a free pass. A site with BOTH interactive types disabled therefore
+	// cannot escalate a verified PoW solve at all — the solve stands, which is
+	// the same outcome as no routing machine having fired.
+	if (escalatedType === CaptchaType.pow) return undefined;
+
+	const imageMaxRounds =
+		siteConstraints?.imageMaxRounds ?? imageMaxRoundsDefault;
+
+	// Size a puzzle escalation off the same severity currency the image path
+	// uses, so a site with image disabled keeps a graduated response instead
+	// of serving one identical puzzle for every escalation. `createSession`
+	// takes these as its trailing overrides; they are dropped for non-puzzle
+	// types by the same rule as in sendCaptcha.
+	const escalationPuzzleOverrides = (():
+		| { puzzleTolerance: number; puzzle: IPuzzleSettings }
+		| undefined => {
+		if (escalatedType !== CaptchaType.puzzle) return undefined;
+		const level = severityToPuzzleDifficulty(
+			routed.solvedImagesCount ?? originSession.solvedImagesCount,
+			tasks.config.captchas.solved.count,
+		);
+		// As in sendCaptcha: level 0 leaves the site's configured puzzle
+		// settings in force rather than overriding them with band values.
+		if (level === 0) return undefined;
+		const difficulty = samplePuzzleDifficulty(
+			level,
+			DEFAULT_RENDER_SETTINGS.holeDarken,
+		);
+		return {
+			puzzleTolerance: difficulty.tolerance,
+			puzzle: difficulty.puzzle,
+		};
+	})();
 
 	// Prefer the routing machine's own selection reason (e.g. an invalid
 	// fingerprint proof) for the escalated captcha record; fall back to the
@@ -311,8 +377,20 @@ export const buildEscalation = async (
 		originSession.ipAddress,
 		escalatedType,
 		originSession.siteKey ?? powRecord.dappAccount,
+		// Clamp to the sitekey's ceiling. This was the one image-issuing path
+		// that took a router-supplied round count unbounded — the routing
+		// machine's output schema only constrains it to a positive int, so an
+		// escalation could mint a session demanding far more rounds than the
+		// site permits. Every other path already clamps; serve-time in
+		// getImageCaptchaChallenge clamps too, so the visible effect was a
+		// session record that misreported the challenge it would produce.
 		escalatedType === CaptchaType.image
-			? (routed.solvedImagesCount ?? originSession.solvedImagesCount)
+			? Math.min(
+					routed.solvedImagesCount ??
+						originSession.solvedImagesCount ??
+						tasks.config.captchas.solved.count,
+					imageMaxRounds,
+				)
 			: undefined,
 		undefined,
 		originSession.userSitekeyIpHash,
@@ -366,6 +444,7 @@ export const buildEscalation = async (
 			tcpOptsOrder: perConnectionSignals.tcpOptsOrder,
 			tcpWindow: perConnectionSignals.tcpWindow,
 		},
+		escalationPuzzleOverrides,
 	);
 
 	// Record the origin → escalation sessionId mapping so a /captcha/*
