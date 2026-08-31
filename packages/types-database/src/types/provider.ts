@@ -882,6 +882,10 @@ SessionRecordSchema.index(
 );
 SessionRecordSchema.index({ token: 1 });
 SessionRecordSchema.index({ siteKey: 1 }, { background: true, sparse: true });
+// Per-IP session lookups. Already present in production, created by hand;
+// declaring it here so every environment gets it and the lookups stay index
+// point-lookups rather than dropping to a collection scan.
+SessionRecordSchema.index({ siteKey: 1, "ipInfo.ip": 1 }, { background: true });
 // Traffic-page aggregations group blocked-session records by rule. Sparse
 // so legit sessions (no rule fields) don't bloat the index.
 SessionRecordSchema.index(
