@@ -18,6 +18,12 @@ import {
 	CaptchaType,
 	DecisionMachineCaptchaTypeSchema,
 } from "../client/captchaType/captchaType.js";
+import {
+	type IPuzzleSettings,
+	type ITrafficCategoryPolicy,
+	PuzzleSettingsSchema,
+	puzzleToleranceFieldSchema,
+} from "../client/settings.js";
 import type { PuzzleEvent, RequestHeaders } from "../provider/api.js";
 import type { ScoreComponents } from "../provider/database.js";
 import type { SimdReadings } from "../provider/detection.js";
@@ -72,6 +78,45 @@ export type DecisionMachineBehavioralDataPacked = {
 	c2: unknown[];
 	c3: unknown[];
 	d: string;
+};
+
+/**
+ * The site's per-category `settings.trafficFilter` policies, projected down to
+ * just the egress categories (the filter's thresholds and name lists are left
+ * behind). Derived server-side by `deriveTrafficPolicies` and surfaced to
+ * routing / decision machines.
+ *
+ * Two distinct jobs:
+ *
+ * 1. **Consent gate.** A rule that reasons about middleboxes must know whether
+ *    the operator actually rejects that egress class. A VPN concentrator
+ *    legitimately terminates the client's TCP handshake, so on a site that
+ *    welcomes VPN users the observed stack says nothing and the check must not
+ *    run. `action === "block"` is the only value that counts as "not opted in".
+ *
+ * 2. **Policy inheritance.** A machine that classifies a connection as, say,
+ *    a VPN the IP-intel feed missed should act exactly as the operator
+ *    configured for VPNs — deny when they block, serve their nominated captcha
+ *    when they challenge — rather than invent its own escalation.
+ *
+ * An absent key means the operator left that category unconfigured. A missing
+ * bag entirely (no trafficFilter, or a provider that pre-dates the field) means
+ * nothing is configured, so machines must fall through to no extra friction.
+ *
+ * NB `puzzleTolerance` / `puzzle` render overrides on a challenge policy are
+ * not expressible in `RoutingMachineOutput`, so a machine inheriting a
+ * challenge policy can honour `captchaType`, `powDifficulty` and
+ * `solvedImagesCount` only.
+ */
+export type TrafficCategoryPolicies = {
+	vpn?: ITrafficCategoryPolicy;
+	proxy?: ITrafficCategoryPolicy;
+	tor?: ITrafficCategoryPolicy;
+	datacenter?: ITrafficCategoryPolicy;
+	abuser?: ITrafficCategoryPolicy;
+	mobile?: ITrafficCategoryPolicy;
+	satellite?: ITrafficCategoryPolicy;
+	crawler?: ITrafficCategoryPolicy;
 };
 
 export type DecisionMachineInput = {
@@ -129,6 +174,10 @@ export type DecisionMachineInput = {
 	tcpOptsFlags?: number;
 	tcpOptsOrder?: number;
 	tcpWindow?: number;
+	// The site's per-category traffic-filter policies. Gates the
+	// egress-sensitive TCP-stack rules and supplies the action they inherit —
+	// see TrafficCategoryPolicies.
+	trafficPolicies?: TrafficCategoryPolicies;
 };
 
 export type DecisionMachineOutput = {
@@ -307,6 +356,10 @@ export interface RoutingMachineRawSignals {
 	// client / persisted session pre-dates the field.
 	currentUrl?: string;
 	iframeUrl?: string;
+	// The site's per-category traffic-filter policies. Gates the
+	// egress-sensitive middlebox route rules and supplies the challenge
+	// policy they inherit — see TrafficCategoryPolicies.
+	trafficPolicies?: TrafficCategoryPolicies;
 }
 
 export type RoutingMachinePhase = "route" | "postPow";
@@ -335,6 +388,16 @@ export interface RoutingMachineOutput {
 	// (e.g. why it chose image over pow). Persisted to `session.reason` by the
 	// provider. Free-form string because machines are operator-authored.
 	reason?: string;
+	// Puzzle-only tunables, with the same override semantics as a
+	// trafficFilter `challenge` policy: lower tolerance = stricter accuracy,
+	// and `puzzle` carries per-render overrides (decoy count, scale range, …).
+	// Both are persisted on the Session and layered in by
+	// getPuzzleCaptchaChallenge, because that endpoint re-derives its
+	// overrides from the live trafficFilter verdict and a machine-chosen
+	// puzzle has no matching verdict to re-derive from.
+	// Ignored unless the resolved captchaType is `puzzle`.
+	puzzleTolerance?: number;
+	puzzle?: IPuzzleSettings;
 }
 
 export const RoutingMachineOutputSchema = z.object({
@@ -346,4 +409,9 @@ export const RoutingMachineOutputSchema = z.object({
 	solvedImagesCount: z.number().int().positive().optional(),
 	powDifficulty: z.number().positive().optional(),
 	reason: z.string().optional(),
+	// Bounded by the same validators the site-wide settings use, so a machine
+	// cannot hand the renderer a tolerance or decoy count the portal would
+	// reject.
+	puzzleTolerance: puzzleToleranceFieldSchema.optional(),
+	puzzle: PuzzleSettingsSchema.optional(),
 });

@@ -26,7 +26,10 @@ import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../express.js";
 import { downgradePuzzleIfUnavailable } from "../../tasks/puzzle/puzzleRenderer.js";
 import { Tasks } from "../../tasks/tasks.js";
-import { derivePlatform } from "../../utils/devicePlatform.js";
+import {
+	derivePlatform,
+	deriveTrafficPolicies,
+} from "../../utils/devicePlatform.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 import { rawTlsSignalsForSession } from "../rawTlsSignalsMiddleware.js";
 import { resolveTestSiteKeyVerdict } from "../testSiteKey.js";
@@ -131,6 +134,10 @@ export default (env: ProviderEnvironment) =>
 				},
 			}));
 
+			const trafficPolicies = deriveTrafficPolicies(
+				clientRecord.settings?.trafficFilter,
+			);
+
 			tasks.powCaptchaManager.setPostPowContext({
 				ip: req.ip || "",
 				countryCode,
@@ -156,6 +163,9 @@ export default (env: ProviderEnvironment) =>
 					...(req.ipInfo &&
 						"isValid" in req.ipInfo &&
 						req.ipInfo.isValid && { ipInfo: req.ipInfo }),
+					// Which egress categories this site blocks, so egress-sensitive
+					// route rules can skip sites that accept VPN / proxy / DC users.
+					...(trafficPolicies && { trafficPolicies }),
 				},
 			});
 
