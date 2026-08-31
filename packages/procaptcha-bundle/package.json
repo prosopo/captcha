@@ -69,7 +69,7 @@
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.3.12",
-		"@types/jsdom": "21.1.7",
+		"@types/jsdom": "30.0.0",
 		"@types/node": "22.10.2",
 		"@types/react": "19.2.18",
 		"@types/react-dom": "19.2.5",

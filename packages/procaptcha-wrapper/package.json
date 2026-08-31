@@ -32,7 +32,7 @@
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.3.12",
-		"@types/jsdom": "21.1.7",
+		"@types/jsdom": "30.0.0",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "4.1.10",
 		"del-cli": "6.0.0",
