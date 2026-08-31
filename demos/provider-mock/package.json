@@ -44,7 +44,7 @@
 		"cors": "2.8.6",
 		"express": "4.22.2",
 		"express-rate-limit": "7.4.0",
-		"mongoose": "8.24.1"
+		"mongoose": "9.9.4"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.3.12",
