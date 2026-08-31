@@ -21,6 +21,7 @@ import {
 	type ProsopoConfigOutput,
 	Tier,
 	frictionlessImageThresholdDefault,
+	frictionlessTypesDefault,
 	puzzleToleranceDefault,
 } from "@prosopo/types";
 import type { ArgumentsCamelCase, Argv } from "yargs";
@@ -126,6 +127,9 @@ export default (
 								frictionless_image_threshold ??
 								frictionlessImageThresholdDefault,
 						},
+						// Registering a sitekey leaves every challenge type
+						// available; narrowing is a portal-side decision.
+						frictionlessTypes: frictionlessTypesDefault,
 						domains: domains || [],
 						powDifficulty: pow_difficulty as number,
 						imageThreshold: image_threshold as number,
