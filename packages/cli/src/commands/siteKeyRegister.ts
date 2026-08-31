@@ -20,6 +20,7 @@ import {
 	type KeyringPair,
 	contextAwareThresholdDefault,
 	frictionlessImageThresholdDefault,
+	frictionlessTypesDefault,
 	imageMaxRoundsDefault,
 	puzzleToleranceDefault,
 } from "@prosopo/types";
@@ -133,6 +134,9 @@ export default (
 						frictionlessImageThreshold:
 							frictionless_image_threshold ?? frictionlessImageThresholdDefault,
 					},
+					// Registering a sitekey leaves every challenge type
+					// available; narrowing is a portal-side decision.
+					frictionlessTypes: frictionlessTypesDefault,
 					domains: domains || [],
 					powDifficulty: pow_difficulty as number,
 					imageThreshold: image_threshold as number,

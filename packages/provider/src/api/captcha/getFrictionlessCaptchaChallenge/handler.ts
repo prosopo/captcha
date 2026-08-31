@@ -739,6 +739,10 @@ export default (
 				countryCode,
 				score: botScore,
 				imageMaxRounds: clientRecord.settings.imageMaxRounds,
+				// Constrains what `sendCaptcha` may finally mint, and sizes a
+				// puzzle chosen in place of a disabled image challenge.
+				frictionlessTypes: clientRecord.settings.frictionlessTypes,
+				baseImageRounds: env.config.captchas.solved.count,
 				platform: derivePlatform(safeUserAgent, webView, {
 					...(typeof ipInfoMobile === "boolean" && { isMobile: ipInfoMobile }),
 				}),

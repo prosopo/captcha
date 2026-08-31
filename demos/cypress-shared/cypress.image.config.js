@@ -98,6 +98,12 @@ export default defineConfig({
 			// override, so every request short-circuits to image and only the
 			// image-band cases pass by accident.
 			"cypress/e2e/**/frictionlessLadder.cy.ts",
+			// Challenge-type toggles spec: needs the same banded-score env as
+			// the ladder (detector override + L_RULES) to get a session into
+			// the image and puzzle bands at all. Without it every case scores
+			// zero and lands on PoW, so it must not be pulled into this
+			// catch-all. Runs under cypress.frictionlessTypes.config.js.
+			"cypress/e2e/**/frictionlessTypes.cy.ts",
 			"cypress/e2e/**/postPowPuzzle.cy.ts",
 			"cypress/e2e/**/decisionMachineDeny.cy.ts",
 			"cypress/e2e/**/decisionMachineDenyPow.cy.ts",

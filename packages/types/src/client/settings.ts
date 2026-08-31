@@ -119,6 +119,50 @@ export const frictionlessThresholdDefault: IFrictionlessThreshold = {
 };
 
 /**
+ * Which challenge types the frictionless flow may serve on this site.
+ *
+ * PoW is deliberately absent and is always available: it is the terminal
+ * fallback of the decision machine and the only type with no interaction
+ * requirement, so a site with both of these off still has a way to challenge.
+ *
+ * This is a hard constraint on OUTPUT, not a hint. A site with `image: false`
+ * must never be served an image captcha by any path — score ladder, access
+ * policy, traffic filter, routing machine, detector rule or escalation. See
+ * `coerceToEnabledCaptchaType` in the provider, which is applied at the two
+ * points a session's captchaType is decided.
+ *
+ * Expressing "no image" here rather than as an unreachable
+ * `frictionlessImageThreshold` keeps the intent explicit: the rung is a score
+ * boundary, and a site that wants image off should not have to encode that as
+ * a threshold nobody can reach.
+ */
+export const FrictionlessTypesSchema = object({
+	image: boolean().optional().default(true),
+	puzzle: boolean().optional().default(true),
+});
+
+export type IFrictionlessTypes = output<typeof FrictionlessTypesSchema>;
+
+export const frictionlessTypesDefault: IFrictionlessTypes = {
+	image: true,
+	puzzle: true,
+};
+
+/**
+ * Read a stored `frictionlessTypes` into a complete set.
+ *
+ * Tolerates `undefined` (a client record written before the field existed)
+ * and a partial object, so a provider handed an older settings blob keeps
+ * serving every type rather than silently narrowing to PoW.
+ */
+export const resolveFrictionlessTypes = (
+	configured: Partial<IFrictionlessTypes> | undefined | null,
+): IFrictionlessTypes => ({
+	image: configured?.image ?? frictionlessTypesDefault.image,
+	puzzle: configured?.puzzle ?? frictionlessTypesDefault.puzzle,
+});
+
+/**
  * Read a stored `frictionlessThreshold` into a complete ladder.
  *
  * The single place that knows how to interpret the pre-ladder shape. Records
@@ -476,6 +520,12 @@ export const ClientSettingsSchema = object({
 	// a puzzle. A legacy number is lifted into the puzzle rung on parse.
 	frictionlessThreshold: FrictionlessThresholdSchema.optional().default(
 		frictionlessThresholdDefault,
+	),
+	// Which challenge types the ladder may actually serve. Independent of the
+	// rungs above: the rungs say where the score boundaries sit, this says
+	// which outcomes are permitted at all.
+	frictionlessTypes: FrictionlessTypesSchema.optional().default(
+		frictionlessTypesDefault,
 	),
 	powDifficulty: powDifficultyFieldSchema
 		.optional()

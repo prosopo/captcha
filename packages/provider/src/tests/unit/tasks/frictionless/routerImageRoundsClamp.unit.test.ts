@@ -25,6 +25,7 @@ import {
 	type ProsopoConfigOutput,
 	type RoutingMachineOutput,
 	type Session,
+	imageMaxRoundsDefault,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -149,10 +150,13 @@ describe("router-supplied image rounds are held to the sitekey's ceiling", () =>
 		expect(storedSession().solvedImagesCount).toBe(4);
 	});
 
-	it("leaves the count alone when the context carries no ceiling", async () => {
-		// The dedup replay builds a context without `imageMaxRounds` because it
-		// only asks the router which type it would pick. Nothing is created
-		// from that answer, so the absence must not be read as a ceiling of 0.
+	it("falls back to the schema default ceiling when the context carries none", async () => {
+		// The absence must not be read as a ceiling of 0, but nor may it mean
+		// "unbounded": the router's output schema only constrains
+		// solvedImagesCount to a positive int, so skipping the clamp let a
+		// router mint a session demanding arbitrarily many rounds. Every image
+		// path is now bounded, falling back to imageMaxRoundsDefault when the
+		// sitekey's own ceiling did not reach this far.
 		routerReturns({
 			captchaType: CaptchaType.image,
 			solvedImagesCount: 50,
@@ -161,7 +165,7 @@ describe("router-supplied image rounds are held to the sitekey's ceiling", () =>
 
 		await manager.sendImageCaptcha({ solvedImagesCount: 4 });
 
-		expect(storedSession().solvedImagesCount).toBe(50);
+		expect(storedSession().solvedImagesCount).toBe(imageMaxRoundsDefault);
 	});
 
 	it("does not put a round count on a session that stayed a puzzle", async () => {

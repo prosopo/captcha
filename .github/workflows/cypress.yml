@@ -240,6 +240,27 @@ jobs:
         run: |
           npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionlessLadder" --success "first" --kill-others
 
+      - name: Run the cypress tests for the frictionless challenge-type toggles (image / puzzle on / off)
+        env:
+          # Same three levers as the score-ladder step above, for the same
+          # reasons: without the detector override the flow short-circuits to
+          # image before the ladder is consulted, the fixture pool keeps the
+          # empty-pool PoW fallback declined, and L_RULES supplies the score
+          # the headless browser cannot earn.
+          #
+          # This spec asks a different question from the ladder's: not "which
+          # type does the score pick" but "which types is the site allowed to
+          # serve". It needs the same banded scores to get a session into the
+          # image and puzzle bands in the first place, then checks what comes
+          # back once a type has been switched off.
+          PROSOPO_TEST_FRICTIONLESS_DETECTOR_OVERRIDE: "1"
+          PROSOPO_DETECTOR_POOL_DIR: ${{ github.workspace }}/packages/provider/fixtures/detector-pool
+          # Keep in step with LANG_PUZZLE_BAND / LANG_IMAGE_BAND and the rungs
+          # in frictionlessTypes.cy.ts, which mirror frictionlessLadder.cy.ts.
+          L_RULES: '{"zz-puzzleband":0.8,"zz-imageband":1.5}'
+        run: |
+          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionlessTypes" --success "first" --kill-others
+
       - name: Run the cypress tests for the frictionless no-captchaType widget-cascade guard
         run: |
           npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionlessNoCaptchaTypeCascade" --success "first" --kill-others

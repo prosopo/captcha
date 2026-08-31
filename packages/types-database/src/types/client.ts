@@ -31,6 +31,7 @@ import {
 	distanceThresholdKmDefault,
 	domainsDefault,
 	frictionlessThresholdDefault,
+	frictionlessTypesDefault,
 	imageMaxRoundsDefault,
 	imageThresholdDefault,
 	ispChangeActionDefault,
@@ -156,6 +157,24 @@ export const UserSettingsSchema = new Schema({
 	frictionlessThreshold: {
 		type: MongooseSchema.Types.Mixed,
 		default: () => ({ ...frictionlessThresholdDefault }),
+	},
+	// Which challenge types the frictionless flow may serve. Declared here
+	// because mongoose is strict by default: a field absent from the schema is
+	// silently dropped on write, so without this the setting round-trips
+	// through zod, reaches the database, and vanishes — leaving the provider to
+	// read `undefined` and serve every type as though nothing were disabled.
+	//
+	// `_id: false` because this is a value object, not a document; mongoose
+	// would otherwise stamp an ObjectId into every site's settings.
+	frictionlessTypes: {
+		type: new Schema(
+			{
+				image: { type: Boolean, default: true },
+				puzzle: { type: Boolean, default: true },
+			},
+			{ _id: false },
+		),
+		default: () => ({ ...frictionlessTypesDefault }),
 	},
 	powDifficulty: { type: Number, default: powDifficultyDefault },
 	imageThreshold: {
@@ -320,6 +339,7 @@ export const AccountSchema = new Schema<AccountRecord>({
 				powDifficulty: Number,
 				captchaType: String,
 				frictionlessThreshold: MongooseSchema.Types.Mixed,
+				frictionlessTypes: MongooseSchema.Types.Mixed,
 				ipValidationRules: IPValidationRulesSchema,
 			},
 			createdAt: Number,

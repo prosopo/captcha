@@ -40,6 +40,13 @@ const makeTasks = () => {
 		writeQueue: {
 			cacheSessionEscalation,
 		},
+		// The site's ordinary image round count. Read as the zero point when
+		// translating a requested round count into a puzzle difficulty level,
+		// and as the fallback when neither the router nor the origin session
+		// named a count for an image escalation.
+		config: {
+			captchas: { solved: { count: 2 }, unsolved: { count: 0 } },
+		},
 	} as unknown as Parameters<typeof buildEscalation>[0];
 
 	return {
