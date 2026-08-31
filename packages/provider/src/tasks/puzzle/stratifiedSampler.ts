@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { randomBytes, randomInt } from "node:crypto";
+
 /**
  * Stratified, interleaved sampling over a numeric range.
  *
@@ -35,10 +37,33 @@
  */
 export const STRATIFIED_BUCKETS = 8;
 
+/**
+ * Uniform float in [0, 1), from the CSPRNG rather than `Math.random()`.
+ *
+ * V8 implements `Math.random()` as xorshift128+, whose internal state is
+ * recoverable from a short run of consecutive outputs. That matters here
+ * specifically: the point of sampling these knobs is that an automated solver
+ * cannot calibrate against a known render, and a predictable stream gives it
+ * exactly that — observe a few challenges, recover the state, and every
+ * subsequent draw is known in advance. The unpredictability IS the security
+ * property, so it has to come from a source built for it.
+ *
+ * 48 bits (6 bytes) is the most a float64 can hold without rounding, so the
+ * result is uniform with no modulo bias.
+ */
+const RANDOM_BYTES = 6;
+const RANDOM_DENOMINATOR = 2 ** (RANDOM_BYTES * 8);
+
+const secureUnitFloat = (): number =>
+	Number(randomBytes(RANDOM_BYTES).readUIntBE(0, RANDOM_BYTES)) /
+	RANDOM_DENOMINATOR;
+
 const shuffleArray = <T>(input: T[]): T[] => {
 	const out = [...input];
 	for (let i = out.length - 1; i > 0; i--) {
-		const j = Math.floor(Math.random() * (i + 1));
+		// randomInt's upper bound is exclusive, giving an unbiased index in
+		// [0, i] — the correct Fisher-Yates range.
+		const j = randomInt(0, i + 1);
 		const tmp = out[i] as T;
 		out[i] = out[j] as T;
 		out[j] = tmp;
@@ -82,7 +107,7 @@ export const createStratifiedSampler = (
 		// Randomise which half opens the cycle so the pattern is not always
 		// low-then-high across cycle boundaries.
 		const [first, second] =
-			Math.random() < 0.5 ? [lowHalf, highHalf] : [highHalf, lowHalf];
+			randomInt(0, 2) === 0 ? [lowHalf, highHalf] : [highHalf, lowHalf];
 		const next: number[] = [];
 		for (let i = 0; i < half; i++) {
 			next.push(first[i] as number);
@@ -101,7 +126,7 @@ export const createStratifiedSampler = (
 		cursor++;
 		// Uniform within the bucket → uniform overall across the range, with a
 		// guaranteed spread across any N consecutive samples where N >= buckets.
-		const u = (bucket + Math.random()) / bucketCount;
+		const u = (bucket + secureUnitFloat()) / bucketCount;
 		return min + u * (max - min);
 	};
 
