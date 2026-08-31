@@ -45,7 +45,7 @@
 		"@prosopo/types-database": "5.3.3",
 		"@prosopo/user-access-policy": "3.12.31",
 		"@prosopo/util": "3.3.7",
-		"bson": "6.10.4",
+		"bson": "7.3.2",
 		"make-dir": "3.1.0",
 		"mongodb": "6.20.0",
 		"mongodb-memory-server": "10.3.0",

@@ -42,7 +42,7 @@
 		"@prosopo/logger": "2.0.7",
 		"@prosopo/types": "5.5.2",
 		"@prosopo/user-access-policy": "3.12.31",
-		"bson": "6.10.4",
+		"bson": "7.3.2",
 		"mongoose": "8.24.1",
 		"zod": "3.23.8"
 	},
