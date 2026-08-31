@@ -56,7 +56,7 @@
 		"@prosopo/server": "2.11.4",
 		"@prosopo/types": "5.5.2",
 		"@prosopo/util": "3.3.7",
-		"@typegoose/auto-increment": "4.13.0",
+		"@typegoose/auto-increment": "5.0.1",
 		"cors": "2.8.6",
 		"express": "4.22.2",
 		"jsonwebtoken": "9.0.3",
