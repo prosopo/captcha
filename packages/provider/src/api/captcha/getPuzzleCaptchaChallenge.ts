@@ -210,8 +210,15 @@ export default (
 					? trafficVerdict.puzzleTolerance
 					: undefined;
 
+			// Overrides a routing machine asked for, persisted on the session.
+			// The router runs only where the live trafficFilter verdict did
+			// NOT match (it evaluates after the request-time filter), so in
+			// practice these are mutually exclusive; the live verdict wins if
+			// both are somehow present.
 			const tolerance =
-				trafficPuzzleTolerance ?? clientSettings?.settings?.puzzleTolerance;
+				trafficPuzzleTolerance ??
+				sessionRecord?.puzzleTolerance ??
+				clientSettings?.settings?.puzzleTolerance;
 
 			// Resolve per-render puzzle tunables the same way as tolerance:
 			// asset defaults <- clientSettings.puzzle <- trafficFilter category
@@ -221,9 +228,11 @@ export default (
 				trafficVerdict.kind === "challenge"
 					? trafficVerdict.puzzleSettings
 					: undefined;
+			const routedPuzzleSettings =
+				trafficPuzzleSettings ?? sessionRecord?.puzzle;
 			const effectivePuzzleSettings = resolvePuzzleRenderSettings(
 				clientSettings?.settings?.puzzle,
-				trafficPuzzleSettings,
+				routedPuzzleSettings,
 			);
 			// Piece size is drawn per-challenge from the effective scale
 			// range so a solver can't hard-code the expected silhouette
@@ -231,7 +240,7 @@ export default (
 			// order as the render settings above.
 			const effectivePieceSize = resolvePuzzlePieceSize(
 				clientSettings?.settings?.puzzle,
-				trafficPuzzleSettings,
+				routedPuzzleSettings,
 			);
 			const challenge =
 				await tasks.puzzleCaptchaManager.getPuzzleCaptchaChallenge(

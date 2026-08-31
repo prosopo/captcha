@@ -31,7 +31,10 @@ import { v4 as uuidv4 } from "uuid";
 import { getCompositeIpAddress } from "../../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../../express.js";
 import { Tasks } from "../../../tasks/index.js";
-import { derivePlatform } from "../../../utils/devicePlatform.js";
+import {
+	derivePlatform,
+	deriveTrafficPolicies,
+} from "../../../utils/devicePlatform.js";
 import { hashUserAgent } from "../../../utils/hashUserAgent.js";
 import { hashUserIp } from "../../../utils/hashUserIp.js";
 import { normalizeRequestIp } from "../../../utils/normalizeRequestIp.js";
@@ -254,6 +257,9 @@ export default (
 						: undefined;
 				const dedupFlatHeaders = flatten(req.headers);
 				const dedupUserAgent = String(req.headers["user-agent"] ?? "");
+				const dedupTrafficPolicies = deriveTrafficPolicies(
+					clientRecord.settings?.trafficFilter,
+				);
 				const dedupUserScope = getRequestUserScope(
 					dedupFlatHeaders,
 					req.ja4,
@@ -356,6 +362,9 @@ export default (
 									}),
 									...(dedup.session.iframeUrl && {
 										iframeUrl: dedup.session.iframeUrl,
+									}),
+									...(dedupTrafficPolicies && {
+										trafficPolicies: dedupTrafficPolicies,
 									}),
 								},
 							},
@@ -720,6 +729,9 @@ export default (
 					? req.ipInfo.isMobile
 					: undefined;
 			const safeUserAgent = userAgent ?? "";
+			const trafficPolicies = deriveTrafficPolicies(
+				clientRecord.settings?.trafficFilter,
+			);
 			tasks.frictionlessManager.setRoutingContext({
 				dappAccount: dapp,
 				userAccount: user,
@@ -749,6 +761,9 @@ export default (
 						req.ipInfo.isValid && { ipInfo: req.ipInfo }),
 					...(currentUrl && { currentUrl }),
 					...(iframeUrl && { iframeUrl }),
+					// Which egress categories this site blocks, so egress-sensitive
+					// route rules can skip sites that accept VPN / proxy / DC users.
+					...(trafficPolicies && { trafficPolicies }),
 				},
 			});
 
