@@ -203,17 +203,22 @@ describe("updateDappUserCommitment pipeline cast on providedIp.lower", () => {
 		const id = "commitment-pipeline-v6-negative-control";
 		await seedCommitment(id);
 
-		await CommitmentModel.updateOne({ id }, [
-			{
-				$set: {
-					providedIp: {
-						lower: IP_V6_LOWER_UNSAFE,
-						upper: IP_V6_LOWER_UNSAFE,
-						type: IpAddressType.v6,
+		await CommitmentModel.updateOne(
+			{ id },
+			[
+				{
+					$set: {
+						providedIp: {
+							lower: IP_V6_LOWER_UNSAFE,
+							upper: IP_V6_LOWER_UNSAFE,
+							type: IpAddressType.v6,
+						},
 					},
 				},
-			},
-		]);
+			],
+			// mongoose 9 refuses an array update without this opt-in.
+			{ updatePipeline: true },
+		);
 
 		const stored = await CommitmentModel.findOne({ id }).lean<
 			UserCommitmentRecord & ProvidedIpOnDisk
@@ -240,17 +245,22 @@ describe("updateDappUserCommitment pipeline cast on providedIp.lower", () => {
 		//    than the whole batch aborting on a CastError.
 		const id = "commitment-pipeline-v6-sweep";
 		await seedCommitment(id);
-		await CommitmentModel.updateOne({ id }, [
-			{
-				$set: {
-					providedIp: {
-						lower: IP_V6_LOWER_UNSAFE,
-						upper: IP_V6_LOWER_UNSAFE,
-						type: IpAddressType.v6,
+		await CommitmentModel.updateOne(
+			{ id },
+			[
+				{
+					$set: {
+						providedIp: {
+							lower: IP_V6_LOWER_UNSAFE,
+							upper: IP_V6_LOWER_UNSAFE,
+							type: IpAddressType.v6,
+						},
 					},
 				},
-			},
-		]);
+			],
+			// mongoose 9 refuses an array update without this opt-in.
+			{ updatePipeline: true },
+		);
 
 		const poisoned = await CommitmentModel.findOne({ id }).lean<
 			UserCommitmentRecord & ProvidedIpOnDisk

@@ -42,14 +42,14 @@
 		"@prosopo/logger": "2.0.7",
 		"@prosopo/types": "5.5.3",
 		"@prosopo/user-access-policy": "3.12.32",
-		"bson": "6.10.4",
-		"mongoose": "8.24.1",
+		"bson": "7.3.2",
+		"mongoose": "9.9.4",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.3.12",
 		"@types/node": "22.10.2",
-		"@vitest/coverage-v8": "4.1.10",
+		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"npm-run-all": "4.1.5",
@@ -57,7 +57,7 @@
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
 		"vite": "8.1.5",
-		"vitest": "4.1.10"
+		"vitest": "4.1.11"
 	},
 	"sideEffects": false
 }

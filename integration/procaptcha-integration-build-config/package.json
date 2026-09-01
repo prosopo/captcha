@@ -34,10 +34,10 @@
 	"devDependencies": {
 		"@prosopo/config": "3.3.12",
 		"@types/node": "22.10.2",
-		"@vitest/coverage-v8": "4.1.10",
+		"@vitest/coverage-v8": "4.1.11",
 		"del-cli": "6.0.0",
 		"typescript": "5.6.2",
-		"vitest": "4.1.10"
+		"vitest": "4.1.11"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",

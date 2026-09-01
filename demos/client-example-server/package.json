@@ -47,7 +47,7 @@
 	"dependencies": {
 		"@noble/hashes": "1.8.0",
 		"@polkadot/util": "13.5.7",
-		"@polkadot/util-crypto": "13.5.7",
+		"@polkadot/util-crypto": "14.0.3",
 		"@prosopo/common": "3.1.52",
 		"@prosopo/database": "4.0.26",
 		"@prosopo/logger": "2.0.7",
@@ -56,19 +56,19 @@
 		"@prosopo/server": "2.11.5",
 		"@prosopo/types": "5.5.3",
 		"@prosopo/util": "3.3.7",
-		"@typegoose/auto-increment": "4.13.0",
+		"@typegoose/auto-increment": "5.0.1",
 		"cors": "2.8.6",
 		"express": "4.22.2",
 		"jsonwebtoken": "9.0.3",
 		"mongodb-memory-server": "10.3.0",
-		"mongoose": "8.24.1",
+		"mongoose": "9.9.4",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.3.12",
 		"@types/jsonwebtoken": "9.0.10",
 		"@types/node": "22.10.2",
-		"@vitest/coverage-v8": "4.1.10",
+		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"npm-run-all": "4.1.5",
@@ -76,6 +76,6 @@
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
 		"vite": "8.1.5",
-		"vitest": "4.1.10"
+		"vitest": "4.1.11"
 	}
 }

@@ -1254,7 +1254,7 @@ export interface IProviderDatabase extends IDatabase {
 	markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void>;
 
 	updateDappUserCommitment(
-		commitmentId: Hash,
+		commitmentId: UserCommitment["id"],
 		updates: Partial<UserCommitment>,
 	): Promise<void>;
 
