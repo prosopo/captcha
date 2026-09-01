@@ -77,8 +77,15 @@ const render = (canvasProps: CanvasProps): void => {
 	});
 };
 
+/**
+ * The canvas portals itself onto the body — it has to escape the query
+ * container the widget skeleton wraps it in — so it is never inside the render
+ * container, and everything that reads the rendered output reads the body.
+ */
+const overlay = (): HTMLElement => document.body;
+
 const piece = (): HTMLElement => {
-	const element = container.querySelector<HTMLElement>(
+	const element = overlay().querySelector<HTMLElement>(
 		'[data-cy="prosopo-puzzle-piece"]',
 	);
 	if (!element) throw new Error("expected the puzzle piece to be rendered");
@@ -189,12 +196,12 @@ describe("what it puts on screen", () => {
 
 	test("the first go asks the user to drag the piece", () => {
 		render(props());
-		expect(container.textContent).toContain("Drag the piece to the target");
+		expect(overlay().textContent).toContain("Drag the piece to the target");
 	});
 
 	test("a retry says so instead", () => {
 		render(props({ showRetry: true }));
-		expect(container.textContent).toContain("Not quite");
+		expect(overlay().textContent).toContain("Not quite");
 	});
 
 	test("the piece cannot be grabbed while a solution is in flight", () => {
@@ -238,7 +245,7 @@ describe("what it puts on screen", () => {
 			root = createRoot(container);
 		});
 		expect(
-			container.querySelector('[data-cy="prosopo-puzzle-piece"]'),
+			overlay().querySelector('[data-cy="prosopo-puzzle-piece"]'),
 		).toBeNull();
 	});
 });

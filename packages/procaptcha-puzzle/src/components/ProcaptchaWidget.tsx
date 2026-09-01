@@ -218,9 +218,11 @@ const Procaptcha = (props: ProcaptchaProps) => {
 			{frictionlessState?.hp && (
 				<Honeypot ref={hpRef} encodedQuestion={frictionlessState.hp} />
 			)}
-			{/* Puzzle overlay — rendered outside the shadow DOM flow via fixed
-			    positioning. Shown in both visible and invisible modes once a
-			    challenge has been fetched; puzzle is inherently interactive. */}
+			{/* Puzzle overlay — portals itself onto document.body, so the
+			    widget skeleton's query container cannot trap its fixed
+			    positioning (see PuzzleCanvas). Shown in both visible and
+			    invisible modes once a challenge has been fetched; puzzle is
+			    inherently interactive. */}
 			{showPuzzleOverlay && (
 				<PuzzleCanvas
 					originX={challengeData.originX}
