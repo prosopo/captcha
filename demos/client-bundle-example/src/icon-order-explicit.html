@@ -112,11 +112,24 @@
             const email = document.getElementById('email').value;
 
             // Display result
+            // Built as nodes rather than innerHTML: `name` and `email` come
+            // straight off the form, so interpolating them into markup would
+            // let anything typed into those fields run as HTML.
             const resultElement = document.getElementById('result');
-            resultElement.innerHTML = `<strong>Form submitted with:</strong><br>
-- Name: ${name}<br>
-- Email: ${email}<br>
-- Procaptcha verified: Yes`;
+            resultElement.replaceChildren();
+            const heading = document.createElement('strong');
+            heading.textContent = 'Form submitted with:';
+            resultElement.append(heading, document.createElement('br'));
+            for (const line of [
+                `- Name: ${name}`,
+                `- Email: ${email}`,
+                '- Procaptcha verified: Yes',
+            ]) {
+                resultElement.append(
+                    document.createTextNode(line),
+                    document.createElement('br'),
+                );
+            }
             resultElement.style.display = 'block';
 
             window.updateCaptchaStatus('Form submission completed', 'success');
