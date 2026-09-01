@@ -8,6 +8,7 @@
 "@prosopo/procaptcha-frictionless": minor
 "@prosopo/procaptcha-icon-order": minor
 "@prosopo/keyring": patch
+"@prosopo/scripts": patch
 "@prosopo/cli": patch
 "@prosopo/client-bundle-example": patch
 ---
