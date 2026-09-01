@@ -959,9 +959,6 @@ describe("rankCandidateRules", () => {
 	});
 
 	it("blocks an unclassifiable browser under an allow-list", () => {
-		// An allow-list is stored as one Block rule per non-allowed browser,
-		// "unknown" included, so a UA we can't classify is dropped rather than
-		// silently let through.
 		const scope: UserScope = { ...request, browser: "unknown" };
 		const rule: AccessRule = {
 			type: AccessPolicyType.Block,

@@ -78,8 +78,6 @@ export type UserAttributes = {
 	// drop/limit requests from a given OS even when the client omits client
 	// hints.
 	os?: string;
-	// Browser classified server-side from the request User-Agent (see
-	// `classifyBrowser`), matched like `os`.
 	browser?: string;
 };
 

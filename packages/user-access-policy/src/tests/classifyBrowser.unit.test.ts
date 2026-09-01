@@ -102,7 +102,6 @@ describe("classifyBrowser", () => {
 	});
 
 	it("does not classify a Chrome UA as Safari", () => {
-		// Chromium UAs end in "Safari/537.36", so the chrome check must win.
 		expect(
 			classifyBrowser(
 				"Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",

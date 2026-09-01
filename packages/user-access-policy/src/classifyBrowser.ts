@@ -13,13 +13,9 @@
 // limitations under the License.
 
 /**
- * Duplicated from `@prosopo/decision-machines`' `uaClassify` — as `classifyOs`
- * is — because the provider / user-access-policy request path cannot depend on
- * that package. The two must agree, so a routing-rule `browserNameIn` and an
- * access-rule `browser` name the same thing.
- *
- * `unknown` is a first-class value so an allow-list ("only let Firefox
- * through") blocks unrecognised User-Agents instead of silently passing them.
+ * Kept in step with `@prosopo/decision-machines`' `uaClassify` — as `classifyOs`
+ * is — but defined here because the provider request path cannot depend on that
+ * package.
  */
 export const BROWSER_NAMES = [
 	"chrome",
@@ -38,17 +34,11 @@ export const BROWSER_NAMES = [
 export type BrowserName = (typeof BROWSER_NAMES)[number];
 
 /**
- * Classify the browser from a raw User-Agent string. Pure, so it is safe to
- * call on the provider's server-side request path.
+ * Branch order is load-bearing: every browser below Chrome also carries a
+ * `chrome/` token, and Safari's signature appears in nearly every WebKit UA.
  *
- * Test order is load-bearing: every branch below Chrome also carries a
- * `chrome/` token, and Safari's signature appears in nearly every WebKit UA, so
- * the specific engines and the in-app browsers have to be ruled out first.
- * Anything unrecognised returns `unknown` rather than guessing.
- *
- * Driven off the full User-Agent rather than the `sec-ch-ua` client hint on
- * purpose: a client can simply omit client hints, but stripping the User-Agent
- * breaks far more, so the UA is the harder signal to bypass.
+ * Reads the User-Agent rather than the `sec-ch-ua` client hint because a client
+ * can simply omit client hints, but stripping the UA breaks far more.
  */
 export const classifyBrowser = (userAgent: string | undefined): BrowserName => {
 	const ua = (userAgent || "").toLowerCase();
