@@ -17,5 +17,7 @@ the OS dimension landed, so an OS-only rule was reachable only via the
 `no-user-scope` fall-through, competing for that probe's candidate budget
 against genuine client-wide blocks.
 
-The Redis index gains a `browser` TAG field, so the access-rules index needs
-rebuilding on deploy.
+The Redis index gains a `browser` TAG field. `createRedisIndex` hashes the index
+definition and drops/recreates when the hash changes, so this needs no manual
+migration — verified locally: the index came back carrying `browser` and the
+stored hash moved to match.
