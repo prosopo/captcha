@@ -18,12 +18,14 @@ import {
 	type CaptchaResponseBody,
 	type CaptchaType,
 	type GetFrictionlessCaptchaResponse,
+	type GetIconOrderCaptchaResponse,
 	type GetPowCaptchaResponse,
 	type GetPuzzleCaptchaResponse,
 	POW_SEPARATOR,
 	type PoWChallengeId,
 	type VerificationResponse,
 } from "@prosopo/types";
+import { renderIconOrderImages } from "../../tasks/iconOrder/iconOrderRenderer.js";
 import { renderPuzzleImages } from "../../tasks/puzzle/puzzleRenderer.js";
 
 // Maintenance mode dummies. The matching submit/verify endpoints already
@@ -69,7 +71,11 @@ export const buildMaintenanceVerificationResponse = (
 });
 
 export const buildFrictionlessMaintenanceResponse = (
-	captchaType: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle,
+	captchaType:
+		| CaptchaType.pow
+		| CaptchaType.image
+		| CaptchaType.puzzle
+		| CaptchaType.iconOrder,
 	host: string | undefined,
 ): GetFrictionlessCaptchaResponse => ({
 	[ApiParams.captchaType]: captchaType,
@@ -126,6 +132,29 @@ export const buildPuzzleMaintenanceResponse = async (
 		[ApiParams.pieceSize]: images.pieceSize,
 		[ApiParams.originX]: 60,
 		[ApiParams.originY]: 100,
+		[ApiParams.timestamp]: timestamp.toString(),
+		[ApiParams.signature]: {
+			[ApiParams.provider]: { [ApiParams.challenge]: "" },
+		},
+	};
+};
+
+// Rendered for real, for the same reason as the puzzle response above: the
+// widget has nothing to show without imagery. The targets the renderer picks
+// are thrown away here — /submit/icon-order doesn't grade in maintenance mode,
+// so there is nothing to score them against.
+export const buildIconOrderMaintenanceResponse = async (
+	user: string,
+	dapp: string,
+): Promise<GetIconOrderCaptchaResponse> => {
+	const timestamp = Date.now();
+	const images = await renderIconOrderImages();
+	return {
+		[ApiParams.status]: "ok",
+		[ApiParams.challenge]: buildChallenge(user, dapp),
+		[ApiParams.background]: images.background,
+		[ApiParams.legend]: images.legend,
+		[ApiParams.legendIconSize]: images.legendIconSize,
 		[ApiParams.timestamp]: timestamp.toString(),
 		[ApiParams.signature]: {
 			[ApiParams.provider]: { [ApiParams.challenge]: "" },

@@ -38,7 +38,7 @@ import type { Account, Callbacks } from "./manager.js";
  * telemetry the direct image/puzzle path preserves.
  */
 export type ProcaptchaEscalationHandler = (
-	captchaType: CaptchaType.image | CaptchaType.puzzle,
+	captchaType: CaptchaType.image | CaptchaType.puzzle | CaptchaType.iconOrder,
 	sessionId: string,
 	coords?: { x: number; y: number },
 ) => void;

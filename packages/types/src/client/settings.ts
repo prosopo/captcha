@@ -73,6 +73,23 @@ export const puzzleDecoyHoleDarkenDefault = 0.7;
 export const puzzlePieceScaleMinDefault = 0.15;
 export const puzzlePieceScaleMaxDefault = 0.45;
 
+// Icon-order render defaults, mirrored from `packages/icon-order-assets`'s
+// `DEFAULT_RENDER_SETTINGS`, on the same principle as the puzzle defaults
+// above: the schema layer owns the authoritative bounds and the renderer
+// just receives resolved values.
+export const iconOrderTargetCountDefault = 3;
+export const iconOrderDecoyCountDefault = 4;
+export const iconOrderStrokeWidthDefault = 3;
+export const iconOrderIconOpacityDefault = 0.92;
+export const iconOrderHaloOpacityDefault = 0.55;
+// Hit radius as a multiple of the clicked icon's own size, NOT in pixels
+// like `puzzleTolerance`. The renderer jitters each icon's size, so a fixed
+// pixel radius would make the small end of that range disproportionately
+// harder to hit than the large end; scaling with the icon keeps every target
+// on a frame equally forgiving. 0.75 means a click anywhere within three
+// quarters of an icon's width of its centre counts.
+export const iconOrderToleranceDefault = 0.75;
+
 // Field-level schemas hoisted so `TrafficFilterSchema` per-category
 // challenge policies validate captcha parameters with the same bounds as
 // the site-wide defaults on `ClientSettingsSchema`. Do not redefine these
@@ -144,6 +161,11 @@ export const frictionlessThresholdDefault: IFrictionlessThreshold = {
 export const FrictionlessTypesSchema = object({
 	image: boolean().optional().default(true),
 	puzzle: boolean().optional().default(true),
+	// Defaults on, like the other two: the flag only bites once something
+	// explicitly selects icon-order (a site-wide `captchaType`, a Restrict
+	// rule, a traffic-filter policy or a routing machine). Defaulting it off
+	// would silently coerce away a type the operator had just asked for.
+	iconOrder: boolean().optional().default(true),
 });
 
 export type IFrictionlessTypes = output<typeof FrictionlessTypesSchema>;
@@ -151,6 +173,7 @@ export type IFrictionlessTypes = output<typeof FrictionlessTypesSchema>;
 export const frictionlessTypesDefault: IFrictionlessTypes = {
 	image: true,
 	puzzle: true,
+	iconOrder: true,
 };
 
 /**
@@ -165,6 +188,7 @@ export const resolveFrictionlessTypes = (
 ): IFrictionlessTypes => ({
 	image: configured?.image ?? frictionlessTypesDefault.image,
 	puzzle: configured?.puzzle ?? frictionlessTypesDefault.puzzle,
+	iconOrder: configured?.iconOrder ?? frictionlessTypesDefault.iconOrder,
 });
 
 /**
@@ -239,6 +263,54 @@ export const PuzzleSettingsSchema = object({
 });
 
 export type IPuzzleSettings = output<typeof PuzzleSettingsSchema>;
+
+// Ten distinct glyphs exist, and every icon on a frame must be a distinct
+// glyph so the legend is unambiguous — see `placeIcons`. That vocabulary
+// size is therefore the hard ceiling on targets plus decoys, enforced across
+// the pair by the refine on `IconOrderSettingsSchema`.
+export const ICON_ORDER_GLYPH_VOCABULARY = 10;
+
+export const iconOrderTargetCountFieldSchema = number().int().min(2).max(6);
+export const iconOrderDecoyCountFieldSchema = number()
+	.int()
+	.min(0)
+	.max(ICON_ORDER_GLYPH_VOCABULARY - 2);
+export const iconOrderStrokeWidthFieldSchema = number().min(1).max(10);
+export const iconOrderIconOpacityFieldSchema = number().min(0.1).max(1);
+export const iconOrderHaloOpacityFieldSchema = number().min(0).max(1);
+// Wider at the top than any real site needs, for the same reason as
+// `puzzleToleranceFieldSchema`: end-to-end tests raise it until a scripted
+// click anywhere near an icon passes.
+export const iconOrderToleranceFieldSchema = number().min(0.1).max(20);
+
+/**
+ * Per-render tunables for the icon-order captcha. Every field is optional so
+ * operators can override a subset from the portal without restating the
+ * defaults; the provider merges these on top of the asset package's
+ * `DEFAULT_RENDER_SETTINGS` before calling the renderer.
+ *
+ * The cross-field check rejects a targets+decoys total the glyph vocabulary
+ * cannot supply. Without it the combination parses, and the renderer throws
+ * per request at challenge time — a config error that only shows up as
+ * production 500s.
+ */
+export const IconOrderSettingsSchema = object({
+	targetCount: iconOrderTargetCountFieldSchema.optional(),
+	decoyCount: iconOrderDecoyCountFieldSchema.optional(),
+	strokeWidth: iconOrderStrokeWidthFieldSchema.optional(),
+	iconOpacity: iconOrderIconOpacityFieldSchema.optional(),
+	haloOpacity: iconOrderHaloOpacityFieldSchema.optional(),
+}).refine(
+	(v) =>
+		(v.targetCount ?? iconOrderTargetCountDefault) +
+			(v.decoyCount ?? iconOrderDecoyCountDefault) <=
+		ICON_ORDER_GLYPH_VOCABULARY,
+	{
+		message: `icon-order targetCount + decoyCount must be <= ${ICON_ORDER_GLYPH_VOCABULARY}, the number of distinct glyphs available`,
+	},
+);
+
+export type IIconOrderSettings = output<typeof IconOrderSettingsSchema>;
 
 // IP Validation Rules
 export enum IPValidationAction {
@@ -597,6 +669,10 @@ export const TrafficCategoryPolicySchema = object({
 	// the nested object are themselves optional, so a category can
 	// override, say, just `decoyCount` without restating the rest.
 	puzzle: PuzzleSettingsSchema.optional(),
+	iconOrderTolerance: iconOrderToleranceFieldSchema.optional(),
+	// Per-category overrides for icon-order rendering, same semantics as
+	// `puzzle` above.
+	iconOrder: IconOrderSettingsSchema.optional(),
 });
 
 export type ITrafficCategoryPolicy = output<typeof TrafficCategoryPolicySchema>;
@@ -734,6 +810,16 @@ export const ClientSettingsSchema = object({
 	// the asset package's defaults. Traffic-filter category policies may
 	// further override any of these on a per-request basis.
 	puzzle: PuzzleSettingsSchema.optional(),
+	// Hit radius for an icon-order click, as a multiple of the clicked
+	// icon's own size. See `iconOrderToleranceDefault` for why this is
+	// relative where `puzzleTolerance` is absolute.
+	iconOrderTolerance: iconOrderToleranceFieldSchema
+		.optional()
+		.default(iconOrderToleranceDefault),
+	// Site-wide icon-order render settings. Fields not set here fall back
+	// to the asset package's defaults; traffic-filter category policies may
+	// further override any of them per request.
+	iconOrder: IconOrderSettingsSchema.optional(),
 	ipValidationRules: IPValidationRulesSchema.optional(),
 	// The trailing `.optional()` that used to sit after `.default(false)` made
 	// the default unreachable, so this parsed to `undefined` rather than

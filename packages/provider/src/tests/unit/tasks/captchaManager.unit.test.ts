@@ -20,6 +20,7 @@ import {
 	type KeyringPair,
 	type Session,
 	contextAwareThresholdDefault,
+	iconOrderToleranceDefault,
 } from "@prosopo/types";
 import {
 	CaptchaType,
@@ -50,7 +51,7 @@ const defaultUserSettings: IUserSettings = {
 		frictionlessPuzzleThreshold: 0.8,
 		frictionlessImageThreshold: 1,
 	},
-	frictionlessTypes: { image: true, puzzle: true },
+	frictionlessTypes: { image: true, puzzle: true, iconOrder: true },
 	domains: [],
 	captchaType: CaptchaType.frictionless,
 	powDifficulty: 4,
@@ -60,6 +61,7 @@ const defaultUserSettings: IUserSettings = {
 	verifiedTimeout: 120000,
 	solutionTimeout: 60000,
 	puzzleTolerance: 15,
+	iconOrderTolerance: iconOrderToleranceDefault,
 	disallowWebView: false,
 	contextAware: {
 		enabled: false,

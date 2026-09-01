@@ -43,6 +43,9 @@ const ProcaptchaLoader = async () =>
 	(await import("@prosopo/procaptcha-react")).Procaptcha;
 const ProcaptchaPuzzleLoader = async () =>
 	(await import("@prosopo/procaptcha-puzzle")).ProcaptchaPuzzle;
+
+const ProcaptchaIconOrderLoader = async () =>
+	(await import("@prosopo/procaptcha-icon-order")).ProcaptchaIconOrder;
 const ProcaptchaPowLoader = async () =>
 	(await import("@prosopo/procaptcha-pow")).ProcaptchaPow;
 
@@ -190,7 +193,7 @@ export const ProcaptchaFrictionless = ({
 		escalationCoords?: RetryCoords,
 	) => {
 		const onEscalate = (
-			next: CaptchaType.image | CaptchaType.puzzle,
+			next: CaptchaType.image | CaptchaType.puzzle | CaptchaType.iconOrder,
 			newSessionId: string,
 			coords?: RetryCoords,
 		) => {
@@ -270,6 +273,20 @@ export const ProcaptchaFrictionless = ({
 					startCoords={startCoords}
 					onSessionInvalidated={onSessionInvalidated}
 					onReload={onReload}
+				/>,
+			);
+		} else if (captchaType === CaptchaType.iconOrder) {
+			const ProcaptchaIconOrder = await ProcaptchaIconOrderLoader();
+			setComponentToRender(
+				<ProcaptchaIconOrder
+					key={mountKey}
+					config={config}
+					callbacks={callbacks}
+					frictionlessState={frictionlessState}
+					i18n={i18n}
+					autoStart={resumedAutoStart}
+					startCoords={startCoords}
+					onSessionInvalidated={onSessionInvalidated}
 				/>,
 			);
 		} else if (captchaType === CaptchaType.puzzle) {

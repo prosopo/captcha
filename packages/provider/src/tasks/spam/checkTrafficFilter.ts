@@ -14,6 +14,7 @@
 
 import {
 	CaptchaType,
+	type IIconOrderSettings,
 	type IPInfoResponse,
 	type IPInfoResult,
 	type IPuzzleSettings,
@@ -303,7 +304,9 @@ export const checkTrafficFilter = (
 // outranks pow — a stricter check is monotonically preferred so the
 // operator's hardest configured policy wins.
 const CAPTCHA_TYPE_RANK: Record<CaptchaType, number> = {
-	[CaptchaType.image]: 4,
+	[CaptchaType.image]: 5,
+	// See `CAPTCHA_TYPE_HARSHNESS` for why icon-order ranks above puzzle.
+	[CaptchaType.iconOrder]: 4,
 	[CaptchaType.puzzle]: 3,
 	[CaptchaType.pow]: 2,
 	[CaptchaType.frictionless]: 1,
@@ -323,6 +326,9 @@ export type ResolvedChallengePolicy = {
 	// object means "no policy specified any puzzle setting"; undefined
 	// means no challenge matches at all (already short-circuited above).
 	puzzleSettings?: IPuzzleSettings;
+	// Icon-order equivalents of the two fields above, merged the same way.
+	iconOrderTolerance?: number;
+	iconOrderSettings?: IIconOrderSettings;
 	// Categories whose policies contributed to the resolved combination.
 	sourceCategories: TrafficCategory[];
 };
@@ -356,6 +362,8 @@ export const resolveChallengePolicy = (
 	let solvedImagesCount: number | undefined;
 	let puzzleTolerance: number | undefined;
 	let puzzleSettings: IPuzzleSettings | undefined;
+	let iconOrderTolerance: number | undefined;
+	let iconOrderSettings: IIconOrderSettings | undefined;
 	for (const m of challenges) {
 		if (m.policy.powDifficulty !== undefined) {
 			powDifficulty =
@@ -382,6 +390,20 @@ export const resolveChallengePolicy = (
 		if (m.policy.puzzle) {
 			puzzleSettings = { ...(puzzleSettings ?? {}), ...m.policy.puzzle };
 		}
+		// Lower tolerance is stricter for icon-order too — it shrinks the hit
+		// radius around each target — so the same `min` combination applies.
+		if (m.policy.iconOrderTolerance !== undefined) {
+			iconOrderTolerance =
+				iconOrderTolerance === undefined
+					? m.policy.iconOrderTolerance
+					: Math.min(iconOrderTolerance, m.policy.iconOrderTolerance);
+		}
+		if (m.policy.iconOrder) {
+			iconOrderSettings = {
+				...(iconOrderSettings ?? {}),
+				...m.policy.iconOrder,
+			};
+		}
 	}
 
 	return {
@@ -390,6 +412,8 @@ export const resolveChallengePolicy = (
 		solvedImagesCount,
 		puzzleTolerance,
 		puzzleSettings,
+		iconOrderTolerance,
+		iconOrderSettings,
 		sourceCategories: challenges.map((m) => m.category),
 	};
 };

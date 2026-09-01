@@ -90,6 +90,9 @@ export enum ClientApiPaths {
 	GetPuzzleCaptchaChallenge = "/v1/prosopo/provider/client/captcha/puzzle",
 	SubmitPuzzleCaptchaSolution = "/v1/prosopo/provider/client/puzzle/solution",
 	VerifyPuzzleCaptchaSolution = "/v1/prosopo/provider/client/puzzle/verify",
+	GetIconOrderCaptchaChallenge = "/v1/prosopo/provider/client/captcha/icon-order",
+	SubmitIconOrderCaptchaSolution = "/v1/prosopo/provider/client/icon-order/solution",
+	VerifyIconOrderCaptchaSolution = "/v1/prosopo/provider/client/icon-order/verify",
 	GetProviderStatus = "/v1/prosopo/provider/client/status",
 	SubmitUserEvents = "/v1/prosopo/provider/client/events",
 	CheckSpamEmail = "/v1/prosopo/provider/client/spam/email",
@@ -133,6 +136,12 @@ export type TGetPuzzleCaptchaChallengeURL =
 
 export type TSubmitPuzzleCaptchaSolutionURL =
 	`${string}${ClientApiPaths.SubmitPuzzleCaptchaSolution}`;
+
+export type TGetIconOrderCaptchaChallengeURL =
+	`${string}${ClientApiPaths.GetIconOrderCaptchaChallenge}`;
+
+export type TSubmitIconOrderCaptchaSolutionURL =
+	`${string}${ClientApiPaths.SubmitIconOrderCaptchaSolution}`;
 
 export enum AdminApiPaths {
 	SiteKeyRegister = "/v1/prosopo/provider/admin/sitekey/register",
@@ -179,6 +188,18 @@ export const ProviderDefaultRateLimits = {
 		limit: 300,
 	},
 	[ClientApiPaths.VerifyPuzzleCaptchaSolution]: {
+		windowMs: 60000,
+		limit: 15000,
+	},
+	[ClientApiPaths.GetIconOrderCaptchaChallenge]: {
+		windowMs: 60000,
+		limit: 300,
+	},
+	[ClientApiPaths.SubmitIconOrderCaptchaSolution]: {
+		windowMs: 60000,
+		limit: 300,
+	},
+	[ClientApiPaths.VerifyIconOrderCaptchaSolution]: {
 		windowMs: 60000,
 		limit: 15000,
 	},
@@ -455,11 +476,42 @@ export interface PuzzleCaptchaSolutionResponse extends ApiResponse {
 	[ApiParams.error]?: ApiJsonError;
 }
 
+/**
+ * The icon-order challenge carries imagery, never coordinates.
+ *
+ * Both the icon positions and the required click order live only on the
+ * challenge record. The widget gets a frame with every icon already
+ * composited into the pixels and a legend strip showing which icons to click,
+ * in order — enough for a human to solve visually and nothing a client can
+ * echo back. `tolerance` is server-side only for the same reason it is on the
+ * puzzle type: publishing it just tells an attacker how close a guess has to
+ * be.
+ */
+export interface GetIconOrderCaptchaResponse extends ApiResponse {
+	[ApiParams.challenge]: PoWChallengeId;
+	/** Frame with targets and decoys composited, as a data URI. */
+	[ApiParams.background]: string;
+	/** Ordered legend strip on transparency, as a data URI. */
+	[ApiParams.legend]: string;
+	/** Edge length of one legend chip in px; the widget lays the strip out. */
+	[ApiParams.legendIconSize]: number;
+	[ApiParams.timestamp]: string;
+	[ApiParams.signature]: {
+		[ApiParams.provider]: ChallengeSignature;
+	};
+}
+
+export interface IconOrderCaptchaSolutionResponse extends ApiResponse {
+	[ApiParams.verified]: boolean;
+	[ApiParams.error]?: ApiJsonError;
+}
+
 export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 	[ApiParams.captchaType]:
 		| CaptchaType.pow
 		| CaptchaType.image
-		| CaptchaType.puzzle;
+		| CaptchaType.puzzle
+		| CaptchaType.iconOrder;
 	[ApiParams.sessionId]?: string;
 	// Encoded honeypot question. NOT serialised by the provider on the wire
 	// (it travels in the `x-prosopo-meta` response header so it doesn't sit
@@ -472,7 +524,10 @@ export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 }
 
 export interface PowCaptchaSolutionEscalation {
-	[ApiParams.captchaType]: CaptchaType.image | CaptchaType.puzzle;
+	[ApiParams.captchaType]:
+		| CaptchaType.image
+		| CaptchaType.puzzle
+		| CaptchaType.iconOrder;
 	[ApiParams.sessionId]: string;
 }
 
@@ -735,6 +790,107 @@ export type ServerPuzzleCaptchaVerifyRequestBodyType = zInfer<
 
 export type ServerPuzzleCaptchaVerifyRequestBodyOutput = output<
 	typeof ServerPuzzleCaptchaVerifyRequestBody
+>;
+
+// Icon-order captcha schemas
+
+/**
+ * Hard ceiling on clicks per submission. Grading requires exactly one click
+ * per target, so anything above the largest workable `targetCount` is abuse:
+ * without a bound a client could submit a dense grid of points and let the
+ * hit test find the targets for it. The glyph vocabulary caps a frame at ten
+ * distinct icons, so ten clicks is already unreachable in practice.
+ */
+export const MAX_ICON_CLICKS = 10;
+
+export const GetIconOrderCaptchaChallengeRequestBody = object({
+	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.sessionId]: boundedString(INPUT_LIMITS.ID).optional(),
+	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+});
+
+export type GetIconOrderCaptchaChallengeRequestBodyType = zInfer<
+	typeof GetIconOrderCaptchaChallengeRequestBody
+>;
+
+export type GetIconOrderCaptchaChallengeRequestBodyTypeOutput = output<
+	typeof GetIconOrderCaptchaChallengeRequestBody
+>;
+
+/**
+ * One pointer sample on the frame. `t` is milliseconds since the challenge
+ * was rendered (not absolute), matching `PuzzleEventSchema` so behavioural
+ * analysis treats both types' trails the same way and they stay
+ * replay-portable.
+ */
+export const IconOrderEventSchema = object({
+	x: number(),
+	y: number(),
+	t: number(),
+});
+
+export type IconOrderEvent = zInfer<typeof IconOrderEventSchema>;
+
+/**
+ * One click, in background pixels. Ordered: the position in `clicks` is the
+ * order the user selected, and it has to match the legend.
+ */
+export const IconClickSchema = object({
+	x: number(),
+	y: number(),
+});
+
+export type IconClick = zInfer<typeof IconClickSchema>;
+
+/**
+ * `clicks` is bounded because it is graded against a stored target list; an
+ * unbounded array would let a client submit every point on the frame and
+ * brute-force the hit test in one request.
+ */
+export const SubmitIconOrderCaptchaSolutionBody = object({
+	[ApiParams.challenge]: PowChallengeIdSchema,
+	[ApiParams.clicks]: array(IconClickSchema).max(MAX_ICON_CLICKS),
+	[ApiParams.iconOrderEvents]: array(IconOrderEventSchema),
+	[ApiParams.signature]: object({
+		[ApiParams.user]: object({
+			[ApiParams.timestamp]: boundedString(INPUT_LIMITS.ID),
+		}),
+		[ApiParams.provider]: object({
+			[ApiParams.challenge]: boundedString(INPUT_LIMITS.TOKEN),
+		}),
+	}),
+	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.behavioralData]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	[ApiParams.salt]: boundedString(INPUT_LIMITS.ID).optional(),
+	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
+});
+
+export type SubmitIconOrderCaptchaSolutionBodyType = input<
+	typeof SubmitIconOrderCaptchaSolutionBody
+>;
+
+export type SubmitIconOrderCaptchaSolutionBodyTypeOutput = output<
+	typeof SubmitIconOrderCaptchaSolutionBody
+>;
+
+export const ServerIconOrderCaptchaVerifyRequestBody = object({
+	[ApiParams.token]: BoundedProcaptchaTokenSpec,
+	[ApiParams.dappSignature]: boundedString(INPUT_LIMITS.TOKEN),
+	[ApiParams.ip]: boundedString(INPUT_LIMITS.ID).optional(),
+	[ApiParams.email]: boundedString(INPUT_LIMITS.EMAIL).email().optional(),
+	// See `VerifySolutionBody.clientSessionId`.
+	[ApiParams.clientSessionId]: boundedString(INPUT_LIMITS.ID).optional(),
+});
+
+export type ServerIconOrderCaptchaVerifyRequestBodyType = zInfer<
+	typeof ServerIconOrderCaptchaVerifyRequestBody
+>;
+
+export type ServerIconOrderCaptchaVerifyRequestBodyOutput = output<
+	typeof ServerIconOrderCaptchaVerifyRequestBody
 >;
 
 export const VerifyPowCaptchaSolutionBody = object({

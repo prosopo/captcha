@@ -39,6 +39,7 @@ import {
 	type DecisionMachineScope,
 	type Hash,
 	type IPInfoResponse,
+	type IconOrderCaptchaStored,
 	type PendingImageCaptchaRequest,
 	type PoWCaptchaStored,
 	type PoWChallengeComponents,
@@ -53,6 +54,7 @@ import {
 	type SimdReadingsStage,
 	type SolutionRecord,
 	type StoredCaptcha,
+	type StoredIconTarget,
 	StoredStatusNames,
 	type UserCommitment,
 	UserCommitmentSchema,
@@ -69,6 +71,8 @@ import {
 	DecisionMachineArtifactRecordSchema,
 	type IProviderDatabase,
 	type IUserDataSlim,
+	type IconOrderCaptchaRecord,
+	IconOrderCaptchaRecordSchema,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
 	type ProjectedSession,
@@ -114,6 +118,7 @@ enum TableNames {
 	scheduler = "scheduler",
 	powcaptcha = "powcaptcha",
 	puzzlecaptcha = "puzzlecaptcha",
+	iconordercaptcha = "iconordercaptcha",
 	client = "client",
 	session = "session",
 	detector = "detector",
@@ -137,6 +142,11 @@ const PROVIDER_TABLES = [
 		collectionName: TableNames.puzzlecaptcha,
 		modelName: "PuzzleCaptcha",
 		schema: PuzzleCaptchaRecordSchema,
+	},
+	{
+		collectionName: TableNames.iconordercaptcha,
+		modelName: "IconOrderCaptcha",
+		schema: IconOrderCaptchaRecordSchema,
 	},
 	{
 		collectionName: TableNames.dataset,
@@ -1374,6 +1384,277 @@ export class ProviderDatabase
 			() => this.getPuzzleCaptchaRecordByChallenge(challenge),
 			(ts) =>
 				this.tables.puzzlecaptcha
+					.updateOne(
+						{ challenge, lastUpdatedTimestamp: { $lte: ts } },
+						{
+							$set: { storedAtTimestamp: ts },
+							$unset: { pendingStage: 1 },
+						},
+					)
+					.then(() => {}),
+		);
+	}
+
+	async storeIconOrderCaptchaRecord(
+		challenge: PoWChallengeId,
+		components: PoWChallengeComponents,
+		targets: StoredIconTarget[],
+		tolerance: number,
+		providerSignature: string,
+		ipAddress: CompositeIpAddress,
+		headers: RequestHeaders,
+		ja4: string,
+		sessionId?: string,
+		ipInfo?: IPInfoResponse,
+	): Promise<void> {
+		const tables = this.getTables();
+
+		const iconOrderCaptchaRecord: IconOrderCaptchaStored = {
+			challenge,
+			userAccount: components.userAccount,
+			dappAccount: components.dappAccount,
+			requestedAtTimestamp: new Date(components.requestedAtTimestamp),
+			ipAddress,
+			headers,
+			ja4,
+			result: { status: CaptchaStatus.pending },
+			userSubmitted: false,
+			serverChecked: false,
+			targets,
+			tolerance,
+			providerSignature,
+			lastUpdatedTimestamp: new Date(),
+			pendingStage: true,
+			sessionId,
+			ipInfo,
+		};
+
+		try {
+			await tables.iconordercaptcha.create(iconOrderCaptchaRecord);
+			this.logger.info(() => ({
+				data: {
+					challenge,
+					countryCode: ipInfo?.isValid ? ipInfo.countryCode : undefined,
+				},
+				msg: "IconOrderCaptcha record added successfully",
+			}));
+			this.centralStreamer?.streamIconOrderRecord(
+				iconOrderCaptchaRecord as IconOrderCaptchaRecord,
+				(ts) =>
+					this.tables.iconordercaptcha
+						.updateOne(
+							{ challenge, lastUpdatedTimestamp: { $lte: ts } },
+							{
+								$set: { storedAtTimestamp: ts },
+								$unset: { pendingStage: 1 },
+							},
+						)
+						.then(() => {}),
+			);
+		} catch (error) {
+			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
+				context: {
+					error,
+					challenge,
+					ipInfo,
+				},
+				logger: this.logger,
+			});
+			this.logger.error(() => ({
+				err: error,
+				msg: "Failed to add IconOrderCaptcha record",
+			}));
+			throw err;
+		}
+	}
+
+	/**
+	 * @description Retrieves an icon-order captcha record by its challenge string.
+	 * @param {string} challenge The challenge string to search for.
+	 * @returns {Promise<IconOrderCaptchaRecord | null>} A promise that resolves with the found record or null if not found.
+	 */
+	async getIconOrderCaptchaRecordByChallenge(
+		challenge: string,
+	): Promise<IconOrderCaptchaRecord | null> {
+		if (!this.tables) {
+			throw new ProsopoDBError("DATABASE.DATABASE_UNDEFINED", {
+				context: {
+					failedFuncName: this.getIconOrderCaptchaRecordByChallenge.name,
+				},
+				logger: this.logger,
+			});
+		}
+
+		try {
+			const filter: {
+				[key in keyof Pick<IconOrderCaptchaRecord, "challenge">]: string;
+			} = { challenge };
+			const record: IconOrderCaptchaRecord | null | undefined =
+				await this.tables.iconordercaptcha
+					.findOne(filter, {
+						challenge: 1,
+						userAccount: 1,
+						dappAccount: 1,
+						requestedAtTimestamp: 1,
+						// See the puzzle projection above — omitting this
+						// silently trips the "too old" branch on every
+						// freshly-solved challenge.
+						submittedAtTimestamp: 1,
+						ipAddress: 1,
+						headers: 1,
+						ja4: 1,
+						result: 1,
+						// The answer. Grading reads it straight back out of
+						// the record; it has no other source.
+						targets: 1,
+						tolerance: 1,
+						clicks: 1,
+						iconOrderEvents: 1,
+						sessionId: 1,
+						ipInfo: 1,
+						deviceCapability: 1,
+						behavioralDataPacked: 1,
+						serverChecked: 1,
+						userSubmitted: 1,
+						coords: 1,
+						clientMetaData: 1,
+					} as { [key in keyof Partial<IconOrderCaptchaRecord>]: 1 })
+					.lean<IconOrderCaptchaRecord>();
+			if (record) {
+				this.logger.info(() => ({
+					data: { challenge },
+					msg: "IconOrderCaptcha record retrieved successfully",
+				}));
+				return record;
+			}
+			this.logger.info(() => ({
+				data: { challenge },
+				msg: "No IconOrderCaptcha record found",
+			}));
+			return null;
+		} catch (error) {
+			const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
+				context: { error, challenge },
+				logger: this.logger,
+			});
+			this.logger.error(() => ({
+				err: err,
+				msg: "Failed to retrieve IconOrderCaptcha record",
+			}));
+			throw err;
+		}
+	}
+
+	async updateIconOrderCaptchaRecordResult(
+		challenge: PoWChallengeId,
+		result: CaptchaResult,
+		serverChecked = false,
+		userSubmitted = false,
+		userSignature?: string,
+		coords?: [number, number][][],
+		lastUpdatedTimestamp?: Date,
+	): Promise<void> {
+		const tables = this.getTables();
+		const timestamp = lastUpdatedTimestamp ?? new Date();
+		const isDisapproved = result.status === CaptchaStatus.disapproved;
+		assertCoordsSafe(coords, "coords");
+		// Direct writes rather than `$ifNull` pipeline exprs, for the reason
+		// documented at length on `updatePuzzleCaptchaRecordResult`: the
+		// challenge is single-use, so each stamp is only ever written once,
+		// and the pipeline variant silently dropped them on the wire.
+		const setStage: Record<string, unknown> = {
+			result,
+			serverChecked,
+			userSubmitted,
+			userSignature,
+			lastUpdatedTimestamp: timestamp,
+			pendingStage: true,
+			blocked: isBlockingCaptchaResult(CaptchaType.iconOrder, result),
+			...(coords && { coords }),
+			...(userSubmitted && { submittedAtTimestamp: timestamp }),
+			...(isDisapproved && { failedAtTimestamp: timestamp }),
+		};
+		try {
+			const updateResult = await tables.iconordercaptcha.updateOne(
+				{ challenge },
+				{ $set: setStage },
+			);
+			if (updateResult.matchedCount === 0) {
+				const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
+					context: {
+						challenge,
+						...setStage,
+					},
+					logger: this.logger,
+				});
+				this.logger.info(() => ({
+					err: err,
+					msg: "No IconOrderCaptcha record found to update",
+				}));
+				throw err;
+			}
+			this.logger.info(() => ({
+				data: {
+					challenge,
+					...setStage,
+				},
+				msg: "IconOrderCaptcha record updated successfully",
+			}));
+			this.centralStreamer?.streamIconOrderUpdate(
+				() => this.getIconOrderCaptchaRecordByChallenge(challenge),
+				(ts) =>
+					this.tables.iconordercaptcha
+						.updateOne(
+							{ challenge, lastUpdatedTimestamp: { $lte: ts } },
+							{
+								$set: { storedAtTimestamp: ts },
+								$unset: { pendingStage: 1 },
+							},
+						)
+						.then(() => {}),
+			);
+		} catch (error) {
+			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
+				context: {
+					error,
+					challenge,
+					...setStage,
+				},
+				logger: this.logger,
+			});
+			this.logger.error(() => ({
+				err: err,
+				msg: "Failed to update IconOrderCaptcha record",
+			}));
+			throw err;
+		}
+	}
+
+	async updateIconOrderCaptchaRecord(
+		challenge: PoWChallengeId,
+		updates: Partial<IconOrderCaptchaRecord>,
+	): Promise<void> {
+		const tables = this.getTables();
+		const timestamp = new Date();
+		// Direct writes — see `updatePuzzleCaptchaRecord`.
+		const baseSet: Record<string, unknown> = {
+			...updates,
+			pendingStage: true,
+			...(updates.serverChecked === true && {
+				verifiedAtTimestamp: timestamp,
+			}),
+			...(updates.userSubmitted === true && {
+				submittedAtTimestamp: timestamp,
+			}),
+			...(updates.result?.status === CaptchaStatus.disapproved && {
+				failedAtTimestamp: timestamp,
+			}),
+		};
+		await tables.iconordercaptcha.updateOne({ challenge }, { $set: baseSet });
+		this.centralStreamer?.streamIconOrderUpdate(
+			() => this.getIconOrderCaptchaRecordByChallenge(challenge),
+			(ts) =>
+				this.tables.iconordercaptcha
 					.updateOne(
 						{ challenge, lastUpdatedTimestamp: { $lte: ts } },
 						{

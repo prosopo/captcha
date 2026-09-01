@@ -19,6 +19,7 @@ enum CaptchaType {
 	pow = "pow",
 	frictionless = "frictionless",
 	puzzle = "puzzle",
+	iconOrder = "iconOrder",
 }
 
 const CaptchaTypeSchema = z.nativeEnum(CaptchaType);
@@ -28,6 +29,7 @@ const DecisionMachineCaptchaTypeSchema = z.union([
 	z.literal(CaptchaType.pow),
 	z.literal(CaptchaType.image),
 	z.literal(CaptchaType.puzzle),
+	z.literal(CaptchaType.iconOrder),
 ]);
 
 export { CaptchaType, CaptchaTypeSchema, DecisionMachineCaptchaTypeSchema };

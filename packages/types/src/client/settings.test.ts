@@ -28,6 +28,7 @@ import {
 	HoneypotSettingsSchema,
 	IPValidationAction,
 	IPValidationRulesSchema,
+	IconOrderSettingsSchema,
 	SpamFilterRulesSchema,
 	TrafficFilterSchema,
 	abuseScoreThresholdDefault,
@@ -43,6 +44,7 @@ import {
 	frictionlessPuzzleThresholdDefault,
 	frictionlessThresholdDefault,
 	honeypotEncodingTypeDefault,
+	iconOrderToleranceDefault,
 	imageMaxRoundsDefault,
 	imageMinRoundsDefault,
 	imageThresholdDefault,
@@ -862,5 +864,58 @@ describe("image round bounds", () => {
 		expect(clampImageRounds(5, { imageMinRounds: 9, imageMaxRounds: 4 })).toBe(
 			4,
 		);
+	});
+});
+
+describe("IconOrderSettingsSchema", () => {
+	it("accepts a partial override without restating the defaults", () => {
+		const parsed = IconOrderSettingsSchema.parse({ decoyCount: 2 });
+		expect(parsed.decoyCount).toBe(2);
+		expect(parsed.targetCount).toBeUndefined();
+	});
+
+	it("rejects a targets+decoys total the glyph vocabulary cannot supply", () => {
+		expect(() =>
+			IconOrderSettingsSchema.parse({ targetCount: 6, decoyCount: 6 }),
+		).toThrow();
+	});
+
+	it("counts the defaults when only one side of the pair is overridden", () => {
+		// decoyCount defaults to 4, so targetCount 6 lands exactly on the
+		// vocabulary limit, while decoyCount 8 against the default
+		// targetCount of 3 overflows it. Neither is caught by the individual
+		// field bounds — only the cross-field refine sees it.
+		expect(() =>
+			IconOrderSettingsSchema.parse({ targetCount: 6 }),
+		).not.toThrow();
+		expect(() => IconOrderSettingsSchema.parse({ decoyCount: 8 })).toThrow();
+	});
+
+	it("bounds the render tunables", () => {
+		expect(() => IconOrderSettingsSchema.parse({ targetCount: 1 })).toThrow();
+		expect(() => IconOrderSettingsSchema.parse({ iconOpacity: 0 })).toThrow();
+		expect(() => IconOrderSettingsSchema.parse({ strokeWidth: 0 })).toThrow();
+		expect(() => IconOrderSettingsSchema.parse({ haloOpacity: 1.5 })).toThrow();
+	});
+});
+
+describe("ClientSettingsSchema icon-order fields", () => {
+	it("defaults the tolerance to a size-relative radius", () => {
+		const parsed = parse(minimal);
+		expect(parsed.iconOrderTolerance).toBe(iconOrderToleranceDefault);
+		expect(parsed.iconOrder).toBeUndefined();
+	});
+
+	it("keeps a site-wide render override", () => {
+		const parsed = parse({
+			...minimal,
+			iconOrder: { targetCount: 4, decoyCount: 3 },
+		});
+		expect(parsed.iconOrder).toEqual({ targetCount: 4, decoyCount: 3 });
+	});
+
+	it("rejects a tolerance outside the field bounds", () => {
+		expect(() => parse({ ...minimal, iconOrderTolerance: 0 })).toThrow();
+		expect(() => parse({ ...minimal, iconOrderTolerance: 21 })).toThrow();
 	});
 });

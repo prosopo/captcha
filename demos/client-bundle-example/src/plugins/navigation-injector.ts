@@ -52,6 +52,10 @@ export default function navigationInjector(): Plugin {
 				implicit: { path: "puzzle-implicit.html", exists: true },
 				explicit: { path: "puzzle-explicit.html", exists: true },
 			},
+			iconOrder: {
+				implicit: { path: "icon-order-implicit.html", exists: true },
+				explicit: { path: "icon-order-explicit.html", exists: true },
+			},
 		},
 		invisible: {
 			image: {

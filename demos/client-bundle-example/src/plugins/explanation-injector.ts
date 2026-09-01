@@ -58,6 +58,11 @@ export default function explanationInjector(): Plugin {
 					explanationHtml = generateImageExplanation(isExplicit, isInvisible);
 				} else if (isPow) {
 					explanationHtml = generatePowExplanation(isExplicit, isInvisible);
+				} else if (pageName.includes("icon-order")) {
+					explanationHtml = generateIconOrderExplanation(
+						isExplicit,
+						isInvisible,
+					);
 				} else if (pageName.includes("puzzle")) {
 					explanationHtml = generatePuzzleExplanation(isExplicit, isInvisible);
 				}
@@ -287,6 +292,56 @@ const widgetId = render(document.getElementById('procaptcha-container'), {
 			<li>On page load, ${escapeHtml(isExplicit ? "the render function is called to initialize" : "Procaptcha scans for elements with the procaptcha class")}</li>
 			<li>A drag-to-target puzzle challenge is presented to the user</li>
 			<li>When the user completes the puzzle, the callback function is called</li>
+			<li>On successful verification, the form can be submitted with the token</li>
+		</ol>
+	</div>
+	`;
+}
+function generateIconOrderExplanation(
+	isExplicit: boolean,
+	isInvisible: boolean,
+): string {
+	const renderType = isExplicit ? "Explicit" : "Implicit";
+
+	const codeExample = isExplicit
+		? escapeHtml(`// Import the render function
+import { render } from "%VITE_BUNDLE_URL%"
+
+// Render CAPTCHA
+const widgetId = render(document.getElementById('procaptcha-container'), {
+    siteKey: import.meta.env.PROSOPO_SITE_KEY_ICON_ORDER,
+    callback: handleCaptchaResponse,
+    "failed-callback": handleCaptchaFailed${isInvisible ? ',\n    size: "invisible"' : ""}
+});`)
+		: escapeHtml(`<div
+    class="procaptcha"
+    data-theme="light"
+    data-sitekey="%PROSOPO_SITE_KEY_ICON_ORDER%"
+    data-failed-callback="onCaptchaFailed"
+    data-callback="onCaptchaVerified"${isInvisible ? '\n    data-size="invisible"' : ""}
+></div>`);
+
+	return `
+	<div class="explanation">
+		<h2>How ${isInvisible ? "Invisible " : ""}Icon Order CAPTCHA Works (${renderType} Rendering)</h2>
+
+		<h3>Implementation Details</h3>
+		<p>This example demonstrates how to use Procaptcha in icon-order mode with ${renderType.toLowerCase()} rendering:</p>
+		<ol>
+			<li>Import the Procaptcha ${isExplicit ? "render function" : "script"}</li>
+			<li>${escapeHtml(isExplicit ? "Create a container for the CAPTCHA" : "Add a div with the procaptcha class")}</li>
+			<li>${escapeHtml(isExplicit ? "Render the CAPTCHA explicitly" : "Set data-* attributes to configure the CAPTCHA")}</li>
+			<li>Handle the verification result in the callback function</li>
+		</ol>
+
+		<h3>Key Code Example</h3>
+		<pre>${codeExample}</pre>
+
+		<h3>Execution Flow</h3>
+		<ol>
+			<li>On page load, ${escapeHtml(isExplicit ? "the render function is called to initialize" : "Procaptcha scans for elements with the procaptcha class")}</li>
+			<li>A frame of icons is presented, with a legend naming which of them to click and in what order</li>
+			<li>When the user has clicked them in order and confirmed, the callback function is called</li>
 			<li>On successful verification, the form can be submitted with the token</li>
 		</ol>
 	</div>

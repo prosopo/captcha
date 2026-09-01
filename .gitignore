@@ -85,6 +85,10 @@ typings/
 .yarn-integrity
 
 # parcel-bundler cache (https://parceljs.org/)
+# Local output of the asset-generator preview scripts (see
+# packages/*-assets/scripts/preview.ts). Images for eyeballing only.
+packages/*-assets/preview
+
 .cache
 
 # next.js build output

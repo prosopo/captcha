@@ -18,6 +18,7 @@ import { type Logger, getLogger } from "@prosopo/logger";
 import {
 	ApiParams,
 	type CaptchaType,
+	type CompositeIpAddress,
 	type EnrichedDnsEvent,
 	type IPInfoResponse,
 	type ITrafficFilter,
@@ -29,15 +30,12 @@ import {
 	type SimdReadingsStage,
 	Tier,
 	TrafficFilterAction,
-	type UserCommitment,
 } from "@prosopo/types";
 import type {
 	ClientRecord,
 	IProviderDatabase,
 	IUserDataSlim,
-	PoWCaptchaRecord,
 	ProjectedSession,
-	PuzzleCaptchaRecord,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import {
@@ -106,6 +104,19 @@ const findHardBlockPolicy = (
 		return policy.type === AccessPolicyType.Block && !policy.captchaType;
 	});
 };
+
+/**
+ * What `checkForHardBlock` actually reads off a captcha record. Structural
+ * rather than a union of the concrete record types: every captcha record
+ * satisfies it, so a new captcha type does not have to be added to a union
+ * here to be able to consult access policies.
+ */
+export interface HardBlockRecordView {
+	dappAccount: string;
+	ipAddress: CompositeIpAddress;
+	ja4: string;
+	sessionId?: string;
+}
 
 export class CaptchaManager {
 	pair: KeyringPair;
@@ -860,7 +871,7 @@ export class CaptchaManager {
 	 */
 	async checkForHardBlock(
 		userAccessRulesStorage: AccessRulesStorage,
-		challengeRecord: PoWCaptchaRecord | PuzzleCaptchaRecord | UserCommitment,
+		challengeRecord: HardBlockRecordView,
 		userAccount: string,
 		headers: RequestHeaders,
 		coords?: [number, number][][],
