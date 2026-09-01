@@ -1,6 +1,11 @@
 services:
   provider1:
     container_name: provider1
+    # Pin provider1 to dedicated cores; leave the rest of the box on
+    # ${SHARED_CPUSET}. Under sustained load, sharing all cores lets sidecar
+    # containers preempt the provider1 event loop and inflate tail latency.
+    # Override per-host if the box has a different core count.
+    cpuset: "${PROVIDER1_CPUSET:-0-3}"
     profiles:
       - production
       - staging
@@ -44,6 +49,7 @@ services:
       - 208.67.222.222
   provider2:
     container_name: provider2
+    cpuset: "${SHARED_CPUSET:-4-5}"
     profiles:
       - production
       - staging
@@ -83,6 +89,7 @@ services:
       - 208.67.222.222
   database:
     container_name: database
+    cpuset: "${SHARED_CPUSET:-4-5}"
     profiles:
       - production
       - staging
@@ -125,6 +132,7 @@ services:
       - 208.67.222.222
   caddy:
     container_name: caddy
+    cpuset: "${SHARED_CPUSET:-4-5}"
     profiles:
       - production
       - staging
@@ -239,6 +247,7 @@ services:
         max-file: '1'
   redis-stack:
     container_name: redis-stack
+    cpuset: "${SHARED_CPUSET:-4-5}"
     # unlike "redis/redis-stack-server" this image includes Insights
     image: redis/redis-stack:${REDIS_IMAGE}
     restart: unless-stopped
@@ -261,6 +270,7 @@ services:
         max-file: '1'
   vector:
     container_name: vector
+    cpuset: "${SHARED_CPUSET:-4-5}"
     profiles:
       - production
       - staging
@@ -295,6 +305,7 @@ services:
   ipinfo:
     # IP metadata sidecar
     container_name: ipinfo
+    cpuset: "${SHARED_CPUSET:-4-5}"
     image: prosopo/ipinfo:${IPINFO_VERSION:-0.1.0}
     restart: unless-stopped
     # Pass the config path explicitly. The image bakes a default config.json
@@ -327,6 +338,7 @@ services:
     # DNS observation sidecar. Caddy fronts TLS for *.t.{CADDY_DOMAIN}
     # and reverse-proxies HTTP to this container — see provider.Caddyfile.
     container_name: dns
+    cpuset: "${SHARED_CPUSET:-4-5}"
     profiles:
       - production
       - staging
