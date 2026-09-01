@@ -314,114 +314,104 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		});
 	});
 
-	it("uses webview or default when both contexts exist", async () => {
-		// Arrange: both contexts present
-		const clientRecord = {
-			account: "site1",
-			settings: {
-				contextAware: {
-					enabled: true,
-					contexts: {
-						[ContextType.Default]: {
-							type: ContextType.Default,
-							threshold: 0.5,
-						},
-						[ContextType.Webview]: {
-							type: ContextType.Webview,
-							threshold: 0.5,
-						},
-					},
+	const IPHONE_UA =
+		"Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
+
+	const payload = (webView: boolean): Record<string, unknown> => ({
+		baseBotScore: 0,
+		timestamp: Date.now(),
+		userId: "u",
+		userAgent: "844bc172f032bdd2d0baae3536c1d66c",
+		webView,
+		iFrame: false,
+		decryptedHeadHash: "abc",
+		decryptionFailed: false,
+	});
+
+	const clientWithContexts = (
+		account: string,
+		contexts: Record<string, { type: ContextType; threshold: number }>,
+	): Record<string, unknown> => ({
+		account,
+		settings: {
+			contextAware: { enabled: true, contexts },
+			frictionlessThreshold: 0.5,
+			disallowWebView: false,
+		},
+	});
+
+	it("looks up the context for the request's device family and webview flag", async () => {
+		// Every device context configured, so the lookup is driven purely by
+		// the request rather than by which contexts happen to be enabled.
+		tasksInstance.db.getClientRecord.mockResolvedValue(
+			clientWithContexts("site1", {
+				[ContextType.Desktop]: { type: ContextType.Desktop, threshold: 0.5 },
+				[ContextType.DesktopWebview]: {
+					type: ContextType.DesktopWebview,
+					threshold: 0.5,
 				},
-				frictionlessThreshold: 0.5,
-				disallowWebView: false,
-			},
-		};
-
-		// stub db.getClientRecord
-		tasksInstance.db.getClientRecord.mockResolvedValue(clientRecord);
-
-		// decryptPayload returns webView true and a head hash
-		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue({
-			baseBotScore: 0,
-			timestamp: Date.now(),
-			userId: "u",
-			userAgent: "844bc172f032bdd2d0baae3536c1d66c",
-			webView: true,
-			iFrame: false,
-			decryptedHeadHash: "abc",
-			decryptionFailed: false,
-		});
-
-		// return entropy for Webview
-		tasksInstance.frictionlessManager.getClientContextEntropy.mockResolvedValueOnce(
-			"ent-web",
+				[ContextType.Mobile]: { type: ContextType.Mobile, threshold: 0.5 },
+				[ContextType.MobileWebview]: {
+					type: ContextType.MobileWebview,
+					threshold: 0.5,
+				},
+			}),
 		);
 
 		const body = { token: "t", headHash: "hh", dapp: "site1", user: "u" };
 		const { req, res, next } = buildReqRes(body);
 
-		// Act
-		// biome-ignore lint/suspicious/noExplicitAny: mock request
-		await handler(req as any, res as any, next);
-
-		// Get the instance created by the handler and assert
-		expect(
-			tasksInstance.frictionlessManager.getClientContextEntropy,
-		).toHaveBeenCalledWith("site1", ContextType.Webview);
-
-		// Now test webView=false -> default
-		tasksInstance.frictionlessManager.getClientContextEntropy.mockClear();
-		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValueOnce({
-			baseBotScore: 0,
-			timestamp: Date.now(),
-			userId: "u",
-			userAgent: "844bc172f032bdd2d0baae3536c1d66c",
-			webView: false,
-			iFrame: false,
-			decryptedHeadHash: "abc",
-			decryptionFailed: false,
-		});
+		// Desktop UA (the builder's default "ua" matches nothing) + webview.
+		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue(
+			payload(true),
+		);
 		tasksInstance.frictionlessManager.getClientContextEntropy.mockResolvedValueOnce(
-			"ent-def",
+			"ent-desktop-webview",
 		);
 		// biome-ignore lint/suspicious/noExplicitAny: mock request
 		await handler(req as any, res as any, next);
 		expect(
 			tasksInstance.frictionlessManager.getClientContextEntropy,
-		).toHaveBeenCalledWith("site1", ContextType.Default);
+		).toHaveBeenCalledWith("site1", ContextType.DesktopWebview);
+
+		// Same device, no webview.
+		tasksInstance.frictionlessManager.getClientContextEntropy.mockClear();
+		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue(
+			payload(false),
+		);
+		tasksInstance.frictionlessManager.getClientContextEntropy.mockResolvedValueOnce(
+			"ent-desktop",
+		);
+		// biome-ignore lint/suspicious/noExplicitAny: mock request
+		await handler(req as any, res as any, next);
+		expect(
+			tasksInstance.frictionlessManager.getClientContextEntropy,
+		).toHaveBeenCalledWith("site1", ContextType.Desktop);
+
+		// Phone UA on the same site moves the lookup to the mobile family.
+		tasksInstance.frictionlessManager.getClientContextEntropy.mockClear();
+		req.headers["user-agent"] = IPHONE_UA;
+		tasksInstance.frictionlessManager.getClientContextEntropy.mockResolvedValueOnce(
+			"ent-mobile",
+		);
+		// biome-ignore lint/suspicious/noExplicitAny: mock request
+		await handler(req as any, res as any, next);
+		expect(
+			tasksInstance.frictionlessManager.getClientContextEntropy,
+		).toHaveBeenCalledWith("site1", ContextType.Mobile);
 	});
 
-	it("uses default when only default exists", async () => {
-		const clientRecord = {
-			account: "site2",
-			settings: {
-				contextAware: {
-					enabled: true,
-					contexts: {
-						[ContextType.Default]: {
-							type: ContextType.Default,
-							threshold: 0.5,
-						},
-					},
-				},
-				frictionlessThreshold: 0.5,
-				disallowWebView: false,
-			},
-		};
-		tasksInstance.db.getClientRecord.mockResolvedValue(clientRecord);
-
-		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue({
-			baseBotScore: 0,
-			timestamp: Date.now(),
-			userId: "u",
-			userAgent: "844bc172f032bdd2d0baae3536c1d66c",
-			webView: true, // even if webView true
-			iFrame: false,
-			decryptedHeadHash: "abc",
-			decryptionFailed: false,
-		});
+	it("expands a legacy default context across the non-webview families", async () => {
+		tasksInstance.db.getClientRecord.mockResolvedValue(
+			clientWithContexts("site2", {
+				[ContextType.Default]: { type: ContextType.Default, threshold: 0.5 },
+			}),
+		);
+		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue(
+			payload(false),
+		);
 		tasksInstance.frictionlessManager.getClientContextEntropy.mockResolvedValueOnce(
-			"ent-def-only",
+			"ent-desktop",
 		);
 
 		const body = { token: "t2", headHash: "hh2", dapp: "site2", user: "u" };
@@ -431,40 +421,21 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 
 		expect(
 			tasksInstance.frictionlessManager.getClientContextEntropy,
-		).toHaveBeenCalledWith("site2", ContextType.Default);
+		).toHaveBeenCalledWith("site2", ContextType.Desktop);
 	});
 
-	it("uses webview when only webview exists", async () => {
-		const clientRecord = {
-			account: "site3",
-			settings: {
-				contextAware: {
-					enabled: true,
-					contexts: {
-						[ContextType.Webview]: {
-							type: ContextType.Webview,
-							threshold: 0.5,
-						},
-					},
-				},
-				frictionlessThreshold: 0.5,
-				disallowWebView: false,
-			},
-		};
-		tasksInstance.db.getClientRecord.mockResolvedValue(clientRecord);
-
-		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue({
-			baseBotScore: 0,
-			timestamp: Date.now(),
-			userId: "u",
-			userAgent: "844bc172f032bdd2d0baae3536c1d66c",
-			webView: false, // even if webView false
-			iFrame: false,
-			decryptedHeadHash: "abc",
-			decryptionFailed: false,
-		});
-		tasksInstance.frictionlessManager.getClientContextEntropy.mockResolvedValueOnce(
-			"ent-web-only",
+	it("skips context validation when the request's context is not configured", async () => {
+		// Only the non-webview families are covered, and this request is a
+		// webview. Previously a single configured context was applied to every
+		// request; with six contexts that would measure a webview against a
+		// browser baseline, so the stage is skipped instead.
+		tasksInstance.db.getClientRecord.mockResolvedValue(
+			clientWithContexts("site3", {
+				[ContextType.Default]: { type: ContextType.Default, threshold: 0.5 },
+			}),
+		);
+		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue(
+			payload(true),
 		);
 
 		const body = { token: "t3", headHash: "hh3", dapp: "site3", user: "u" };
@@ -474,7 +445,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 
 		expect(
 			tasksInstance.frictionlessManager.getClientContextEntropy,
-		).toHaveBeenCalledWith("site3", ContextType.Webview);
+		).not.toHaveBeenCalled();
 	});
 
 	it("returns 401 when blocked by access policy", async () => {

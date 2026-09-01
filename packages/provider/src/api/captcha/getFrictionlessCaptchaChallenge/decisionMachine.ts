@@ -15,7 +15,6 @@
 import { ProsopoApiError } from "@prosopo/common";
 import {
 	CaptchaType,
-	ContextType,
 	type IPInfoResponse,
 	type RequestHeaders,
 	type ScoreComponents,
@@ -36,6 +35,7 @@ import { recordFrictionlessDecision } from "../../metrics.js";
 import {
 	determineContextType,
 	getContextThreshold,
+	isContextConfigured,
 } from "../contextAwareValidation.js";
 import {
 	DECRYPTION_FAILED_IMAGE_ROUNDS,
@@ -507,20 +507,19 @@ const runContextAwareValidation = async (
 
 	if (!clientRecord.settings.contextAware?.enabled) return null;
 
-	const contexts = clientRecord.settings.contextAware?.contexts || {};
-	const hasDefault = contexts[ContextType.Default] !== undefined;
-	const hasWebview = contexts[ContextType.Webview] !== undefined;
+	// The request's own context: device family x webview. Classified from the
+	// raw header UA, which is what the off-provider entropy sweep reads off
+	// stored sessions — the two must agree or we look up a baseline nobody
+	// wrote.
+	const contextType = determineContextType(
+		req.headers["user-agent"],
+		input.webView,
+	);
 
-	let contextType: ContextType | undefined;
-	if (hasDefault && hasWebview) {
-		contextType = determineContextType(input.webView);
-	} else if (hasDefault) {
-		contextType = ContextType.Default;
-	} else if (hasWebview) {
-		contextType = ContextType.Webview;
-	}
-
-	if (!contextType) return null;
+	// Only validate contexts the customer has actually configured. Traffic
+	// from an unconfigured device family passes through: with six contexts,
+	// borrowing another family's baseline would reject real users.
+	if (!isContextConfigured(clientRecord.settings, contextType)) return null;
 
 	const clientEntropy = await tasks.frictionlessManager.getClientContextEntropy(
 		clientRecord.account,

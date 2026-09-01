@@ -306,14 +306,144 @@ export const IPValidationRulesSchema = object({
 	forceConsistentIp: boolean().optional().default(false),
 });
 
-// Context type enum for filtering entropy samples
+/**
+ * The device families a context-aware baseline is held per.
+ *
+ * Coarse on purpose. A site's `<head>` differs most between a phone-width
+ * responsive render, a tablet render and a desktop render; finer splits
+ * (vendor, OS version) fracture the sample without changing the DOM.
+ */
+export enum DeviceType {
+	Desktop = "desktop",
+	Mobile = "mobile",
+	Tablet = "tablet",
+}
+
+/**
+ * Context type — the bucket a session's head hash is averaged into, and the
+ * key a context-aware entropy record is stored under.
+ *
+ * The device family crossed with whether the page is running inside a
+ * webview. Both dimensions move the DOM independently: a phone renders
+ * different markup from a desktop, and an in-app webview injects and
+ * suppresses different things again from the same device's real browser.
+ *
+ * `Default` and `Webview` are the pre-device-type keys. They are retained so
+ * settings already stored against them keep parsing, and are expanded into
+ * their device families by `expandContexts` — nothing downstream of settings
+ * parsing should branch on them. See `isLegacyContextType`.
+ */
 export enum ContextType {
+	/** @deprecated Legacy pre-device-type key: every non-webview device. */
 	Default = "default",
+	/** @deprecated Legacy pre-device-type key: every webview device. */
 	Webview = "webview",
+	Desktop = "desktop",
+	DesktopWebview = "desktop-webview",
+	Mobile = "mobile",
+	MobileWebview = "mobile-webview",
+	Tablet = "tablet",
+	TabletWebview = "tablet-webview",
 }
 
 // Zod schema for context type
 export const ContextTypeSchema = z.nativeEnum(ContextType);
+
+/** The two keys that predate device-type contexts. */
+export const legacyContextTypes = [
+	ContextType.Default,
+	ContextType.Webview,
+] as const;
+
+export type LegacyContextType = (typeof legacyContextTypes)[number];
+
+export const isLegacyContextType = (
+	contextType: ContextType,
+): contextType is LegacyContextType =>
+	contextType === ContextType.Default || contextType === ContextType.Webview;
+
+/** Every device-type context, in a stable order. */
+export const deviceContextTypes = [
+	ContextType.Desktop,
+	ContextType.DesktopWebview,
+	ContextType.Mobile,
+	ContextType.MobileWebview,
+	ContextType.Tablet,
+	ContextType.TabletWebview,
+] as const;
+
+const contextTypeByDevice: Record<
+	DeviceType,
+	{ browser: ContextType; webview: ContextType }
+> = {
+	[DeviceType.Desktop]: {
+		browser: ContextType.Desktop,
+		webview: ContextType.DesktopWebview,
+	},
+	[DeviceType.Mobile]: {
+		browser: ContextType.Mobile,
+		webview: ContextType.MobileWebview,
+	},
+	[DeviceType.Tablet]: {
+		browser: ContextType.Tablet,
+		webview: ContextType.TabletWebview,
+	},
+};
+
+/** The context a (device family, webview) pair belongs to. */
+export const contextTypeFor = (
+	deviceType: DeviceType,
+	webView: boolean,
+): ContextType =>
+	webView
+		? contextTypeByDevice[deviceType].webview
+		: contextTypeByDevice[deviceType].browser;
+
+// Tablets are tested before phones because both tablet shapes collide with
+// the phone patterns: an iPad's UA carries a `Mobile/<build>` token, and an
+// Android tablet is exactly "Android without Mobile", which the bare
+// "Android" phone signal would otherwise claim.
+//
+// Known gap: an iPadOS 13+ Safari in its default desktop mode identifies as a
+// Mac, with no iPad token at all, and lands in Desktop. Nothing in a UA
+// distinguishes it from a real Mac, so it is left there deliberately — both
+// the decision machine and the sweep make the same call, which is what
+// matters for the lookup to line up.
+const TABLET_PATTERN =
+	/\b(iPad|Tablet|PlayBook|Silk)\b|Android(?!.*\bMobile\b)/i;
+const MOBILE_PATTERN =
+	/\b(Mobi|Mobile|iPhone|iPod|Windows Phone|IEMobile|BlackBerry|BB10|Opera Mini)\b/i;
+
+/**
+ * Classify a raw user-agent string into a device family.
+ *
+ * Deliberately hand-rolled rather than delegating to ua-parser-js: this
+ * module is imported by the browser widget bundles, and the entropy sweep on
+ * the server has to bucket sessions *identically* or it writes baselines the
+ * decision machine will never look up. One shared function with no runtime
+ * dependency is what keeps the two sides in lockstep.
+ *
+ * An absent or unrecognised UA is Desktop — the largest population, and the
+ * conservative landing spot for a bucket we can't identify.
+ *
+ * Note this reads a claimed UA. A spoofed one buckets the session by the
+ * claim, which is fine here: the head hash is compared against the baseline
+ * for whatever the client says it is, so a desktop harness claiming to be a
+ * phone is measured against real phones and stands out rather than blending
+ * into desktop traffic.
+ */
+export const deviceTypeFromUserAgent = (userAgent?: string): DeviceType => {
+	if (!userAgent) return DeviceType.Desktop;
+	if (TABLET_PATTERN.test(userAgent)) return DeviceType.Tablet;
+	if (MOBILE_PATTERN.test(userAgent)) return DeviceType.Mobile;
+	return DeviceType.Desktop;
+};
+
+/** The context a session belongs to, from its UA and webview flag. */
+export const contextTypeFromSession = (
+	userAgent: string | undefined,
+	webView: boolean,
+): ContextType => contextTypeFor(deviceTypeFromUserAgent(userAgent), webView);
 
 // Individual context configuration
 export const ContextConfigSchema = z.object({
@@ -327,12 +457,47 @@ export const ContextConfigSchema = z.object({
 
 export type IContextConfig = z.infer<typeof ContextConfigSchema>;
 
-const ContextsSchema = z.record(
-	z.enum([ContextType.Default, ContextType.Webview]),
-	ContextConfigSchema,
-);
+const ContextsSchema = z.record(ContextTypeSchema, ContextConfigSchema);
 
 export type IContexts = z.infer<typeof ContextsSchema>;
+
+/**
+ * Resolve a stored `contexts` map to device-type contexts only.
+ *
+ * A legacy `default` entry configures every non-webview device family and a
+ * legacy `webview` entry configures every webview family, both at the
+ * threshold they were saved with. An explicit device-type entry always wins
+ * over the legacy entry that would otherwise cover it, so a customer can
+ * tighten one family without restating the rest.
+ *
+ * Everything downstream — the decision machine's lookup, the entropy sweep,
+ * the portal — deals only in the six device contexts this returns.
+ */
+export const expandContexts = (
+	contexts: IContexts | undefined,
+): Partial<Record<ContextType, IContextConfig>> => {
+	const expanded: Partial<Record<ContextType, IContextConfig>> = {};
+	if (!contexts) return expanded;
+
+	const legacy = contexts as Partial<Record<ContextType, IContextConfig>>;
+
+	for (const deviceType of Object.values(DeviceType)) {
+		for (const webView of [false, true]) {
+			const contextType = contextTypeFor(deviceType, webView);
+			const legacyConfig =
+				legacy[webView ? ContextType.Webview : ContextType.Default];
+			const config = legacy[contextType] ?? legacyConfig;
+			if (config) {
+				expanded[contextType] = {
+					type: contextType,
+					threshold: config.threshold,
+				};
+			}
+		}
+	}
+
+	return expanded;
+};
 
 const ContextAwareSchema = object({
 	enabled: boolean().optional().default(false),
