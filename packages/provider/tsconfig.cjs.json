@@ -15,16 +15,16 @@
 			"path": "../../dev/config/tsconfig.cjs.json"
 		},
 		{
-			"path": "../api-route/tsconfig.cjs.json"
-		},
-		{
 			"path": "../api-express-router/tsconfig.cjs.json"
 		},
 		{
-			"path": "../common/tsconfig.cjs.json"
+			"path": "../api-route/tsconfig.cjs.json"
 		},
 		{
-			"path": "../logger/tsconfig.cjs.json"
+			"path": "../api/tsconfig.cjs.json"
+		},
+		{
+			"path": "../common/tsconfig.cjs.json"
 		},
 		{
 			"path": "../database/tsconfig.cjs.json"
@@ -36,19 +36,28 @@
 			"path": "../env/tsconfig.cjs.json"
 		},
 		{
+			"path": "../icon-order-assets"
+		},
+		{
 			"path": "../ipinfo/tsconfig.cjs.json"
-		},
-		{
-			"path": "../load-balancer/tsconfig.cjs.json"
-		},
-		{
-			"path": "../puzzle-assets/tsconfig.cjs.json"
 		},
 		{
 			"path": "../keyring/tsconfig.cjs.json"
 		},
 		{
-			"path": "../types/tsconfig.cjs.json"
+			"path": "../load-balancer/tsconfig.cjs.json"
+		},
+		{
+			"path": "../locale/tsconfig.cjs.json"
+		},
+		{
+			"path": "../logger/tsconfig.cjs.json"
+		},
+		{
+			"path": "../puzzle-assets/tsconfig.cjs.json"
+		},
+		{
+			"path": "../redis-client/tsconfig.cjs.json"
 		},
 		{
 			"path": "../types-database/tsconfig.cjs.json"
@@ -57,22 +66,16 @@
 			"path": "../types-env/tsconfig.cjs.json"
 		},
 		{
-			"path": "../util/tsconfig.cjs.json"
-		},
-		{
-			"path": "../util-crypto/tsconfig.cjs.json"
+			"path": "../types/tsconfig.cjs.json"
 		},
 		{
 			"path": "../user-access-policy/tsconfig.cjs.json"
 		},
 		{
-			"path": "../api/tsconfig.cjs.json"
+			"path": "../util-crypto/tsconfig.cjs.json"
 		},
 		{
-			"path": "../locale/tsconfig.cjs.json"
-		},
-		{
-			"path": "../redis-client/tsconfig.cjs.json"
+			"path": "../util/tsconfig.cjs.json"
 		}
 	]
 }

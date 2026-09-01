@@ -9,6 +9,9 @@
 	"references": [
 		{
 			"path": "../../dev/config/tsconfig.cjs.json"
+		},
+		{
+			"path": "../puzzle-assets"
 		}
 	]
 }
