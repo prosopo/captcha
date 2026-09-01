@@ -147,6 +147,50 @@ describe("handleAccessPolicy", () => {
 	// The snapshot goes onto the session bag once, so it reaches all of them —
 	// including the score-only Restrict whose session runDecisionMachine
 	// writes after this function returns handled=false.
+	describe("deferred policies", () => {
+		it("serves the captcha type named by a deferred Restrict", async () => {
+			// A deferred rule blocks at verify, not here — but the type
+			// and difficulty it names must still be applied, otherwise
+			// the challenge it asks for is silently ignored.
+			const { tasks, input } = buildInput();
+			input.userAccessPolicy = {
+				type: AccessPolicyType.Restrict,
+				captchaType: CaptchaType.image,
+				solvedImagesCount: 2,
+				deferToVerify: true,
+			};
+			const res = buildRes();
+
+			const r = await handleAccessPolicy(input as never, res as never);
+
+			expect(r.handled).toBe(true);
+			const args =
+				tasks.frictionlessManager.sendImageCaptcha.mock.calls[0]?.[0];
+			expect(args.solvedImagesCount).toBe(2);
+			// Served, not blocked.
+			expect(
+				tasks.frictionlessManager.registerBlockedSession,
+			).not.toHaveBeenCalled();
+			expect(res.status).not.toHaveBeenCalledWith(401);
+		});
+
+		it("does not 401 a deferred Restrict that names no captcha type", async () => {
+			const { tasks, input } = buildInput();
+			input.userAccessPolicy = {
+				type: AccessPolicyType.Restrict,
+				deferToVerify: true,
+			};
+			const res = buildRes();
+
+			const r = await handleAccessPolicy(input as never, res as never);
+
+			expect(r.handled).toBe(false);
+			expect(
+				tasks.frictionlessManager.registerBlockedSession,
+			).not.toHaveBeenCalled();
+		});
+	});
+
 	describe("matched-rule snapshot", () => {
 		it("records the rule and its conditions before blocking", async () => {
 			const { tasks, input } = buildInput();

@@ -162,6 +162,79 @@ describe("buildScopedRulesSubQueries", () => {
 		}
 	});
 
+	it("emits a separate probe set for deferred rules at verify", () => {
+		// Two disjoint pools, each with its own
+		// SPLIT_MAX_CANDIDATES_PER_SUB budget, so a dense deferred cohort
+		// cannot truncate hard blocks out of the candidate set.
+		const subs = buildScopedRulesSubQueries(
+			{ numericIp: 1376899398n },
+			"clientA",
+			{ blockOnly: true, includeDeferred: true },
+		);
+
+		const block = subs.filter((s) => s.kind.startsWith("block:"));
+		const deferred = subs.filter((s) => s.kind.startsWith("deferred:"));
+
+		expect(block.length).toBeGreaterThan(0);
+		expect(deferred.length).toBe(block.length);
+
+		// Hard-block probes exclude deferred rules...
+		for (const sub of block) {
+			expect(sub.query).toContain("@type:{block} -@deferToVerify:{true}");
+		}
+		// ...and the deferred probes carry no type constraint, so a
+		// deferred Restrict is fetched at verify.
+		for (const sub of deferred) {
+			expect(sub.query).toContain("@deferToVerify:{true}");
+			expect(sub.query).not.toContain("@type:{block}");
+		}
+	});
+
+	it("never merges the two pools into one probe", () => {
+		// A merged `(@type:{block} | @deferToVerify:{true})` probe shares
+		// one candidate budget between both populations — measured at 800
+		// candidates against a cap of 500 on a concentrated scope.
+		const subs = buildScopedRulesSubQueries(
+			{ numericIp: 1376899398n },
+			"clientA",
+			{ blockOnly: true, includeDeferred: true },
+		);
+
+		for (const sub of subs) {
+			expect(sub.query).not.toContain("| @deferToVerify:{true}");
+		}
+	});
+
+	it("excludes deferred rules from the request-time pool", () => {
+		// blockOnly without includeDeferred is the middleware. Deferred
+		// rules are never enforceable there, so they are filtered out in
+		// Redis rather than fetched and discarded in JS.
+		const subs = buildScopedRulesSubQueries(
+			{ numericIp: 1376899398n },
+			"clientA",
+			{ blockOnly: true },
+		);
+
+		for (const sub of subs) {
+			expect(sub.query).toContain("-@deferToVerify:{true}");
+		}
+	});
+
+	it("ignores includeDeferred when blockOnly is not set", () => {
+		// Without blockOnly there is no type clause to narrow; every rule
+		// type is already in the pool.
+		const subs = buildScopedRulesSubQueries(
+			{ numericIp: 1376899398n },
+			"clientA",
+			{ includeDeferred: true },
+		);
+
+		for (const sub of subs) {
+			expect(sub.query).not.toContain("@deferToVerify");
+			expect(sub.query).not.toContain("@type:{block}");
+		}
+	});
+
 	it("emits the same probe kinds regardless of blockOnly", () => {
 		// The probe set is driven by populated request scope, not by
 		// rule-type filter. blockOnly only narrows what each probe

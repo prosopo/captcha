@@ -71,8 +71,10 @@ import {
 	type IUserDataSlim,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
+	type ProjectedSession,
 	type PuzzleCaptchaRecord,
 	PuzzleCaptchaRecordSchema,
+	SESSION_PROJECTION,
 	type ScheduledTask,
 	type ScheduledTaskRecord,
 	ScheduledTaskRecordSchema,
@@ -919,6 +921,11 @@ export class ProviderDatabase
 						serverChecked: 1,
 						userSubmitted: 1,
 						coords: 1,
+						// Read by the verify path to correlate the site's
+						// session id against the one recorded at solve time.
+						// Omitting it made every clientSessionId-carrying token
+						// look like it was solved in another session.
+						clientMetaData: 1,
 					} as { [key in keyof Partial<PoWCaptchaRecord>]: 1 })
 					.lean<PoWCaptchaRecord>();
 			if (record) {
@@ -1202,6 +1209,8 @@ export class ProviderDatabase
 						serverChecked: 1,
 						userSubmitted: 1,
 						coords: 1,
+						// See the PoW projection above — same verify-time read.
+						clientMetaData: 1,
 					} as { [key in keyof Partial<PuzzleCaptchaRecord>]: 1 })
 					.lean<PuzzleCaptchaRecord>();
 			if (record) {
@@ -1724,89 +1733,12 @@ export class ProviderDatabase
 	 */
 	async getSessionRecordBySessionId(
 		sessionId: string,
-	): Promise<Session | undefined> {
+	): Promise<ProjectedSession | undefined> {
 		const filter: Pick<SessionRecord, "sessionId"> = { sessionId };
-		// Projection lists every field a caller of this function actually
-		// reads. `headers` is selected by individual key rather than as a
-		// whole blob: the flattened `req.headers` persisted at frictionless
-		// time can contain `x-tls-clienthello` (a base64-encoded full TLS
-		// ClientHello, multi-KB per session). That field is only consumed
-		// by `ja4Middleware` from the live `req.headers` at the entry
-		// point — never re-read off the persisted Session — so it just
-		// bloats every subsequent lookup. The enumerated list below covers
-		// the headers `buildEscalation` forwards onto the escalation
-		// session. New headers that need to round-trip must be added
-		// here explicitly.
+		// See SESSION_PROJECTION for what is selected and why.
 		const doc = await this.tables.session
-			.findOne(filter, {
-				sessionId: 1,
-				token: 1,
-				score: 1,
-				threshold: 1,
-				scoreComponents: 1,
-				ipAddress: 1,
-				ipInfo: 1,
-				webView: 1,
-				iFrame: 1,
-				isEscalation: 1,
-				decryptedHeadHash: 1,
-				siteKey: 1,
-				reason: 1,
-				mode: 1,
-				solvedImagesCount: 1,
-				userSitekeyIpHash: 1,
-				simdReadings: 1,
-				bundleId: 1,
-				dnsEvent: 1,
-				originSessionId: 1,
-				currentUrl: 1,
-				iframeUrl: 1,
-				// captchaType is required by the peek-before-consume path
-				// in `CaptchaManager.isValidRequest` — without it, every
-				// escalation peek would compare `undefined !== <requested>`
-				// and forcibly return INCORRECT_CAPTCHA_TYPE on the happy
-				// path too. Keep this projection in sync with whatever
-				// fields the read-only callers need.
-				captchaType: 1,
-				// Raw per-connection TCP-handshake signals populated by the
-				// tcp-probe eBPF sidecar (see @prosopo/types Session for the
-				// wire semantics). The verify-time DM input surface exposes
-				// these to decide rules (e.g. `tcp-stack-dc-linux-ts-off`,
-				// `tcp-ttl-windows-ua-linux-stack`); every one of the img /
-				// pow / puzzle verify paths forwards `sessionRecord?.tcpX`
-				// into the DecisionMachineInput. Missed on the original
-				// projection: the rules got `undefined` for every field and
-				// silently never fired against real traffic even though
-				// matching sessions were sitting in the DB.
-				synNs: 1,
-				synackNs: 1,
-				ackNs: 1,
-				observedTtl: 1,
-				tcpMss: 1,
-				tcpWscale: 1,
-				tcpOptsFlags: 1,
-				tcpOptsOrder: 1,
-				tcpWindow: 1,
-				"headers.user-agent": 1,
-				"headers.accept": 1,
-				"headers.accept-language": 1,
-				"headers.accept-encoding": 1,
-				"headers.sec-ch-ua": 1,
-				"headers.sec-ch-ua-mobile": 1,
-				"headers.sec-ch-ua-platform": 1,
-				"headers.sec-ch-ua-platform-version": 1,
-				"headers.sec-fetch-dest": 1,
-				"headers.sec-fetch-mode": 1,
-				"headers.sec-fetch-site": 1,
-				"headers.sec-fetch-user": 1,
-				"headers.referer": 1,
-				"headers.origin": 1,
-				"headers.prosopo-user": 1,
-				"headers.prosopo-site-key": 1,
-				"headers.prosopo-type": 1,
-				"headers.x-tls-version": 1,
-			})
-			.lean<Session>();
+			.findOne(filter, SESSION_PROJECTION)
+			.lean<ProjectedSession>();
 		return doc || undefined;
 	}
 

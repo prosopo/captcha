@@ -19,6 +19,7 @@
 		"TIMESTAMP_TOO_OLD": "Timestamp too old",
 		"FAILED_IP_VALIDATION": "Validasi IP gagal",
 		"ACCESS_POLICY_BLOCK": "Akses diblokir oleh kebijakan",
+		"CLIENT_SESSION_MISMATCH": "Sesi tidak cocok. Captcha tidak diselesaikan dalam sesi ini.",
 		"FORBIDDEN": "Forbidden",
 		"PROVIDER_VERIFY_FAILED": "Provider verification failed",
 		"SPAM_EMAIL_DOMAIN": "Domain email tidak diizinkan",

@@ -19,6 +19,7 @@
 		"TIMESTAMP_TOO_OLD": "Imestamptay ootay oldway",
 		"FAILED_IP_VALIDATION": "IP സാധൂകരണം പരാജയപ്പെട്ടു",
 		"ACCESS_POLICY_BLOCK": "നയം മൂലം പ്രവേശനം തടഞ്ഞു",
+		"CLIENT_SESSION_MISMATCH": "സെഷൻ പൊരുത്തപ്പെടുന്നില്ല. ഈ സെഷനിൽ ക്യാപ്ച പൂർത്തിയാക്കിയിട്ടില്ല.",
 		"FORBIDDEN": "Forbiddenway",
 		"PROVIDER_VERIFY_FAILED": "Oviderpray erificationvay ailedfay",
 		"SPAM_EMAIL_DOMAIN": "ഇമെയിൽ ഡൊമെയ്ൻ അനുവദനീയമല്ല",

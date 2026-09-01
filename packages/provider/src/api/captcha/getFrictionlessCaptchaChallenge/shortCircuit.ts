@@ -27,7 +27,7 @@ import { v4 as uuidv4 } from "uuid";
 import type { getCompositeIpAddress } from "../../../compositeIpAddress.js";
 import { getDetectorBundlePool } from "../../../tasks/detection/bundlePool.js";
 import type { Tasks } from "../../../tasks/index.js";
-import { DEFAULT_FRICTIONLESS_THRESHOLD } from "./constants.js";
+import { resolveScoreLadder } from "./constants.js";
 import { attachHoneypot } from "./honeypotResponse.js";
 
 export type ShortCircuitInput = {
@@ -77,9 +77,12 @@ const buildBypassSessionParams = async (input: ShortCircuitInput) => {
 		// synthesise one when the client had no detector to produce it.
 		token: input.token || `nodetector-${uuidv4()}`,
 		score: 0,
-		threshold:
-			input.clientRecord.settings?.frictionlessThreshold ??
-			DEFAULT_FRICTIONLESS_THRESHOLD,
+		// `Session.threshold` keeps its original meaning — the rung a silent
+		// pass has to stay under — so it records the puzzle rung, not the
+		// image one.
+		threshold: resolveScoreLadder(
+			input.clientRecord.settings?.frictionlessThreshold,
+		).botThreshold,
 		scoreComponents: { baseScore: 0 } as ScoreComponents,
 		ipAddress: input.ipAddress,
 		webView: false,

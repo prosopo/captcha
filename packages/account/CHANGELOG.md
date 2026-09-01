@@ -1,5 +1,58 @@
 # @prosopo/account
 
+## 2.8.85
+### Patch Changes
+
+- Updated dependencies [458cf17]
+  - @prosopo/types@5.5.2
+  - @prosopo/fingerprint@2.7.39
+  - @prosopo/keyring@2.9.82
+
+## 2.8.84
+### Patch Changes
+
+- Updated dependencies [0a88895]
+  - @prosopo/types@5.5.1
+  - @prosopo/fingerprint@2.7.38
+  - @prosopo/keyring@2.9.81
+
+## 2.8.83
+### Patch Changes
+
+- Updated dependencies [eb34de6]
+  - @prosopo/types@5.5.0
+  - @prosopo/fingerprint@2.7.37
+  - @prosopo/keyring@2.9.80
+
+## 2.8.82
+### Patch Changes
+
+- Updated dependencies [4b1cb19]
+  - @prosopo/types@5.4.0
+  - @prosopo/common@3.1.52
+  - @prosopo/fingerprint@2.7.36
+  - @prosopo/keyring@2.9.79
+
+## 2.8.81
+### Patch Changes
+
+- Updated dependencies [b30ad41]
+  - @prosopo/types@5.3.0
+  - @prosopo/fingerprint@2.7.35
+  - @prosopo/keyring@2.9.78
+
+## 2.8.80
+### Patch Changes
+
+- 68a9b41: chore(deps): bump the npm-minor-and-patch group across 1 directory with 36 updates
+- Updated dependencies [68a9b41]
+- Updated dependencies [ce5a3d7]
+  - @prosopo/types@5.2.6
+  - @prosopo/util@3.3.7
+  - @prosopo/common@3.1.51
+  - @prosopo/fingerprint@2.7.34
+  - @prosopo/keyring@2.9.77
+
 ## 2.8.79
 ### Patch Changes
 

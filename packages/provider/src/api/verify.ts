@@ -159,7 +159,14 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			}
 
 			// We don't want to expose any other errors to the client except for specific situations
-			const { dappSignature, token, ip, maxVerifiedTime, email } = parsed;
+			const {
+				dappSignature,
+				token,
+				ip,
+				maxVerifiedTime,
+				email,
+				clientSessionId,
+			} = parsed;
 			try {
 				// This can error if the token is invalid
 				const { user, dapp, timestamp, commitmentId, providerUrl } =
@@ -238,6 +245,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						clientRecord.settings.spamFilter,
 						clientRecord.settings.trafficFilter,
 						clientRecord.settings.storeMetadata,
+						clientSessionId,
 					);
 
 				req.logger.debug(() => ({ data: { response } }));
@@ -249,6 +257,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						response[ApiParams.score],
 						response[ApiParams.commitmentId],
 						response[ApiParams.status],
+						response[ApiParams.sessionId],
 					);
 				res.json(verificationResponse);
 			} catch (err) {
@@ -307,7 +316,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 
 			// We don't want to expose any other errors to the client
 			try {
-				const { token, dappSignature, ip, email } = parsed;
+				const { token, dappSignature, ip, email, clientSessionId } = parsed;
 
 				// This can error if the token is invalid
 				const { dapp, user, timestamp, challenge, providerUrl } =
@@ -378,7 +387,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				// Will throw an error if the signature is invalid
 				verifySignature(dappSignature, timestamp.toString(), dappPair);
 
-				const { verified, score, reason } =
+				const { verified, score, reason, sessionId } =
 					await tasks.powCaptchaManager.serverVerifyPowCaptchaSolution(
 						dapp,
 						challenge,
@@ -391,6 +400,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						clientRecord.settings.spamFilter,
 						clientRecord.settings.trafficFilter,
 						clientRecord.settings.storeMetadata,
+						clientSessionId,
 					);
 
 				const verificationResponse: VerificationResponse =
@@ -400,6 +410,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						req.i18n.t,
 						score,
 						reason,
+						sessionId,
 					);
 
 				return res.json(verificationResponse);
@@ -459,7 +470,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 
 			// We don't want to expose any other errors to the client
 			try {
-				const { token, dappSignature, ip, email } = parsed;
+				const { token, dappSignature, ip, email, clientSessionId } = parsed;
 
 				// This can error if the token is invalid
 				const { dapp, user, timestamp, challenge, providerUrl } =
@@ -530,7 +541,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				// Will throw an error if the signature is invalid
 				verifySignature(dappSignature, timestamp.toString(), dappPair);
 
-				const { verified, score } =
+				const { verified, score, sessionId } =
 					await tasks.puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
 						dapp,
 						challenge,
@@ -543,6 +554,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						clientRecord.settings.spamFilter,
 						clientRecord.settings.trafficFilter,
 						clientRecord.settings.storeMetadata,
+						clientSessionId,
 					);
 
 				const verificationResponse: VerificationResponse =
@@ -551,6 +563,8 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						clientRecord,
 						req.i18n.t,
 						score,
+						undefined,
+						sessionId,
 					);
 
 				return res.json(verificationResponse);

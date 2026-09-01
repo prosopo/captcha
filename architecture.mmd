@@ -98,7 +98,7 @@ graph TB
 
     %% ===== DEVELOPER FLOW =====
     Developer -->|"1. Sign up at prosopo.io<br/>get site key + secret"| DappBackend
-    Developer -->|"2. Add widget to frontend<br/>with site key"| Widget
+    Developer -->|"2. Add widget to frontend<br/>with site key<br/>(optional data-sessionid →<br/>clientMetaData.clientSessionId)"| Widget
 
     %% ===== USER FLOW =====
     EndUser -->|visits website| Widget
@@ -163,8 +163,8 @@ graph TB
 
     %% ===== SERVER VERIFICATION =====
     DappBackend --> ServerPkg
-    ServerPkg -->|verify image token| ImageVerifyEP
-    ServerPkg -->|verify pow token| PowVerifyEP
+    ServerPkg -->|"verify image token<br/>(+ optional clientSessionId)"| ImageVerifyEP
+    ServerPkg -->|"verify pow token<br/>(+ optional clientSessionId)"| PowVerifyEP
     ImageVerifyEP -->|decode token, check commitment| MongoDB
     PowVerifyEP -->|decode token, check proof| MongoDB
     ImageVerifyEP -->|"verified: true/false"| ServerPkg

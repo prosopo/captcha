@@ -38,6 +38,8 @@ import {
 	deviceTypeFromUserAgent,
 	distanceThresholdKmDefault,
 	expandContexts,
+	frictionlessImageThresholdDefault,
+	frictionlessPuzzleThresholdDefault,
 	frictionlessThresholdDefault,
 	honeypotEncodingTypeDefault,
 	imageMaxRoundsDefault,
@@ -64,7 +66,9 @@ describe("ClientSettingsSchema", () => {
 		expect(settings.captchaType).toBe(captchaTypeDefault);
 		expect(settings.verifiedTimeout).toBe(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT);
 		expect(settings.solutionTimeout).toBe(DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT);
-		expect(settings.frictionlessThreshold).toBe(frictionlessThresholdDefault);
+		expect(settings.frictionlessThreshold).toEqual(
+			frictionlessThresholdDefault,
+		);
 		expect(settings.powDifficulty).toBe(powDifficultyDefault);
 		expect(settings.imageThreshold).toBe(imageThresholdDefault);
 		expect(settings.imageMaxRounds).toBe(imageMaxRoundsDefault);
@@ -84,6 +88,100 @@ describe("ClientSettingsSchema", () => {
 		expect(settings.honeypot).toBeUndefined();
 		expect(settings.autoBanScoreThreshold).toBeUndefined();
 		expect(settings.storeMetadata).toBeUndefined();
+	});
+
+	describe("frictionlessThreshold ladder", () => {
+		it("lifts a legacy bare number into the puzzle rung", () => {
+			// Documents written before the ladder still carry a number. They
+			// must keep parsing, and keep meaning what they meant.
+			const settings = parse({ ...minimal, frictionlessThreshold: 0.35 });
+			expect(settings.frictionlessThreshold).toEqual({
+				frictionlessPuzzleThreshold: 0.35,
+				frictionlessImageThreshold: frictionlessImageThresholdDefault,
+			});
+		});
+
+		it("accepts both rungs explicitly", () => {
+			const settings = parse({
+				...minimal,
+				frictionlessThreshold: {
+					frictionlessPuzzleThreshold: 0.35,
+					frictionlessImageThreshold: 0.75,
+				},
+			});
+			expect(settings.frictionlessThreshold.frictionlessPuzzleThreshold).toBe(
+				0.35,
+			);
+			expect(settings.frictionlessThreshold.frictionlessImageThreshold).toBe(
+				0.75,
+			);
+		});
+
+		it("fills the missing rung from its default", () => {
+			expect(
+				parse({
+					...minimal,
+					frictionlessThreshold: { frictionlessPuzzleThreshold: 0.4 },
+				}).frictionlessThreshold.frictionlessImageThreshold,
+			).toBe(frictionlessImageThresholdDefault);
+			expect(
+				parse({
+					...minimal,
+					frictionlessThreshold: { frictionlessImageThreshold: 1.4 },
+				}).frictionlessThreshold.frictionlessPuzzleThreshold,
+			).toBe(frictionlessPuzzleThresholdDefault);
+		});
+
+		it("accepts rungs collapsed onto the same value", () => {
+			// A collapsed band is legal - it just means "no puzzle band".
+			expect(
+				ClientSettingsSchema.safeParse({
+					...minimal,
+					frictionlessThreshold: {
+						frictionlessPuzzleThreshold: 0.5,
+						frictionlessImageThreshold: 0.5,
+					},
+				}).success,
+			).toBe(true);
+		});
+
+		it("rejects an image rung below the puzzle rung", () => {
+			expect(
+				ClientSettingsSchema.safeParse({
+					...minimal,
+					frictionlessThreshold: {
+						frictionlessPuzzleThreshold: 0.8,
+						frictionlessImageThreshold: 0.4,
+					},
+				}).success,
+			).toBe(false);
+		});
+
+		it("allows an image rung above 1, unlike the puzzle rung", () => {
+			// The score it is compared against is a post-penalty total that is
+			// expected to exceed 1; the puzzle rung is a plain probability.
+			expect(
+				parse({
+					...minimal,
+					frictionlessThreshold: { frictionlessImageThreshold: 1.5 },
+				}).frictionlessThreshold.frictionlessImageThreshold,
+			).toBe(1.5);
+			expect(
+				ClientSettingsSchema.safeParse({
+					...minimal,
+					frictionlessThreshold: { frictionlessPuzzleThreshold: 1.5 },
+				}).success,
+			).toBe(false);
+		});
+
+		it("rejects a negative rung", () => {
+			expect(
+				ClientSettingsSchema.safeParse({
+					...minimal,
+					frictionlessThreshold: { frictionlessImageThreshold: -0.1 },
+				}).success,
+			).toBe(false);
+		});
 	});
 
 	it("accepts every captcha type", () => {
@@ -120,12 +218,14 @@ describe("ClientSettingsSchema", () => {
 		).toBe(false);
 	});
 
-	it("bounds frictionlessThreshold to a probability", () => {
+	it("bounds the puzzle rung to a probability", () => {
 		expect(
-			parse({ ...minimal, frictionlessThreshold: 0 }).frictionlessThreshold,
+			parse({ ...minimal, frictionlessThreshold: 0 }).frictionlessThreshold
+				.frictionlessPuzzleThreshold,
 		).toBe(0);
 		expect(
-			parse({ ...minimal, frictionlessThreshold: 1 }).frictionlessThreshold,
+			parse({ ...minimal, frictionlessThreshold: 1 }).frictionlessThreshold
+				.frictionlessPuzzleThreshold,
 		).toBe(1);
 		expect(
 			ClientSettingsSchema.safeParse({

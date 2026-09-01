@@ -180,17 +180,22 @@ export class HardBlockVerdictCache {
 	}
 }
 
-// A stable string key from (clientId, userScope, blockOnly). Any two
-// requests whose access-rule inputs are equal must hash to the same key,
-// so BigInts are serialised as strings and fields are enumerated in a
-// fixed order — do NOT change without also flushing all in-flight
-// caches on the deploy.
+// A stable string key from (clientId, userScope, blockOnly,
+// includeDeferred). Any two requests whose access-rule inputs are equal
+// must hash to the same key, so BigInts are serialised as strings and
+// fields are enumerated in a fixed order — do NOT change without also
+// flushing all in-flight caches on the deploy.
+//
+// `includeDeferred` is part of the key because it widens the candidate
+// pool: the middleware's blockOnly lookup and the verify-time lookup
+// share a scope but must not share a cached result.
 export const hardBlockCacheKey = (
 	clientId: string | undefined,
 	userScope: UserScope,
 	blockOnly: boolean,
+	includeDeferred = false,
 ): string => {
-	const bo = blockOnly ? "1" : "0";
+	const bo = `${blockOnly ? "1" : "0"}${includeDeferred ? "d" : ""}`;
 	const parts = [
 		clientId ?? "",
 		userScope.numericIp === undefined ? "" : userScope.numericIp.toString(),

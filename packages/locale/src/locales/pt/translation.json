@@ -19,6 +19,7 @@
 		"TIMESTAMP_TOO_OLD": "Timestamp muito antigo",
 		"FAILED_IP_VALIDATION": "Validação de IP falhou",
 		"ACCESS_POLICY_BLOCK": "Acesso bloqueado por política",
+		"CLIENT_SESSION_MISMATCH": "Sessão não corresponde. O captcha não foi concluído nesta sessão.",
 		"FORBIDDEN": "Proibido",
 		"PROVIDER_VERIFY_FAILED": "Falha na verificação do fornecedor",
 		"SPAM_EMAIL_DOMAIN": "Domínio de e-mail não permitido",

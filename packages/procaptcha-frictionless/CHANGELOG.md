@@ -1,5 +1,96 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.13.22
+### Patch Changes
+
+- Updated dependencies [458cf17]
+  - @prosopo/types@5.5.2
+  - @prosopo/api@4.1.3
+  - @prosopo/procaptcha-common@2.12.4
+  - @prosopo/procaptcha-pow@2.11.4
+  - @prosopo/procaptcha-puzzle@2.11.4
+  - @prosopo/procaptcha-react@2.9.120
+
+## 2.13.21
+### Patch Changes
+
+- Updated dependencies [0a88895]
+  - @prosopo/types@5.5.1
+  - @prosopo/api@4.1.2
+  - @prosopo/procaptcha-common@2.12.3
+  - @prosopo/procaptcha-pow@2.11.3
+  - @prosopo/procaptcha-puzzle@2.11.3
+  - @prosopo/procaptcha-react@2.9.119
+
+## 2.13.20
+### Patch Changes
+
+  - @prosopo/procaptcha-common@2.12.2
+  - @prosopo/procaptcha-react@2.9.118
+  - @prosopo/procaptcha-pow@2.11.2
+  - @prosopo/procaptcha-puzzle@2.11.2
+
+## 2.13.19
+### Patch Changes
+
+- Updated dependencies [eb34de6]
+  - @prosopo/types@5.5.0
+  - @prosopo/api@4.1.1
+  - @prosopo/procaptcha-common@2.12.1
+  - @prosopo/procaptcha-pow@2.11.1
+  - @prosopo/procaptcha-puzzle@2.11.1
+  - @prosopo/procaptcha-react@2.9.117
+
+## 2.13.18
+### Patch Changes
+
+- 4b1cb19: Correlate a site-supplied session id across render and verify.
+  
+  A site can now hand the widget its own session identifier — Protect's JTI, or any per-user session id it already holds — and have the provider confirm at verify time that the token was earned in that same session. Render it with `data-sessionid="..."` or `renderOptions.sessionId`, resolved the same way `mode` and `language` already are, so implicit, explicit and invisible-button renders all pick it up. Pass the same value as the new trailing `clientSessionId` argument to `ProsopoServer.isVerified`.
+  
+  The widget attaches it to the solution as `clientMetaData.clientSessionId`. It is persisted on the captcha record (PoW, puzzle and image alike) and mirrored to a new top-level `clientMetaData` key on the session record — an object rather than a flat field, because more render-time metadata is expected to land there. It survives the PoW→image/puzzle escalation handoff, since the escalated widget is mounted with the same config.
+  
+  At verify, when the value is supplied and the solve does not carry exactly that value — including carrying none at all, which is what a token minted outside the site's session looks like — the token is disapproved with the new `ResultReason.CLIENT_SESSION_MISMATCH` (`API.CLIENT_SESSION_MISMATCH`, translated in all 31 locales), recorded on both the captcha record and the session.
+  
+  Omitting the id preserves existing behaviour, so this is opt-in and backward compatible. The verify request field is `clientSessionId` rather than `sessionId` because `VerificationResponse.sessionId` already means the provider's own frictionless session; same-named request and response fields meaning different things would be a trap for integrators.
+- Updated dependencies [4b1cb19]
+  - @prosopo/types@5.4.0
+  - @prosopo/locale@3.4.0
+  - @prosopo/procaptcha-common@2.12.0
+  - @prosopo/procaptcha-pow@2.11.0
+  - @prosopo/procaptcha-puzzle@2.11.0
+  - @prosopo/api@4.1.0
+  - @prosopo/common@3.1.52
+  - @prosopo/procaptcha-react@2.9.116
+
+## 2.13.17
+### Patch Changes
+
+- Updated dependencies [b30ad41]
+  - @prosopo/types@5.3.0
+  - @prosopo/api@4.0.15
+  - @prosopo/procaptcha-common@2.11.35
+  - @prosopo/procaptcha-pow@2.10.42
+  - @prosopo/procaptcha-puzzle@2.10.58
+  - @prosopo/procaptcha-react@2.9.115
+
+## 2.13.16
+### Patch Changes
+
+- 68a9b41: chore(deps): bump react and @types/react
+- ce5a3d7: Fix the reload button on the image captcha closing the challenge instead of loading a new one. Reload now asks the frictionless wrapper for a fresh session and re-mounts the widget so a new challenge opens straight away, and the checkbox click position is carried over to the replacement solve
+- Updated dependencies [68a9b41]
+- Updated dependencies [68a9b41]
+- Updated dependencies [ce5a3d7]
+  - @prosopo/locale@3.3.1
+  - @prosopo/procaptcha-common@2.11.34
+  - @prosopo/procaptcha-pow@2.10.41
+  - @prosopo/procaptcha-puzzle@2.10.57
+  - @prosopo/procaptcha-react@2.9.114
+  - @prosopo/types@5.2.6
+  - @prosopo/api@4.0.14
+  - @prosopo/common@3.1.51
+
 ## 2.13.15
 ### Patch Changes
 

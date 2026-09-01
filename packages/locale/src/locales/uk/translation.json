@@ -19,6 +19,7 @@
 		"TIMESTAMP_TOO_OLD": "Timestamp too old",
 		"FAILED_IP_VALIDATION": "Перевірка IP не вдалася",
 		"ACCESS_POLICY_BLOCK": "Доступ заблоковано політикою",
+		"CLIENT_SESSION_MISMATCH": "Невідповідність сеансу. Капчу не було пройдено в цьому сеансі.",
 		"FORBIDDEN": "Forbidden",
 		"PROVIDER_VERIFY_FAILED": "Provider verification failed",
 		"SPAM_EMAIL_DOMAIN": "Домен електронної пошти не дозволено",

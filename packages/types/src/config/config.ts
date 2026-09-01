@@ -287,6 +287,12 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 		// dual-stack. `ipv4` wins if both are true.
 		ipv4: boolean().optional(),
 		ipv6: boolean().optional(),
+		// Session id the site rendered this widget with, via `data-sessionid` or
+		// `renderOptions.sessionId`. Travels to the provider as
+		// `clientMetaData.clientSessionId` on solution submission so the verify
+		// call can correlate it. Named `clientSessionId` here to keep it clear
+		// of the provider's own frictionless `sessionId`.
+		clientSessionId: string().optional(),
 	}),
 );
 

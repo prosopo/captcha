@@ -46,7 +46,11 @@ vi.mock("../../../tasks/detection/decodeBehavior.js", () => ({
 const loggerOuter = getLogger("info", "test:captcha-manager");
 
 const defaultUserSettings: IUserSettings = {
-	frictionlessThreshold: 0.8,
+	frictionlessThreshold: {
+		frictionlessPuzzleThreshold: 0.8,
+		frictionlessImageThreshold: 1,
+	},
+	frictionlessTypes: { image: true, puzzle: true },
 	domains: [],
 	captchaType: CaptchaType.frictionless,
 	powDifficulty: 4,
@@ -1729,6 +1733,38 @@ describe("CaptchaManager", () => {
 				verified: false,
 				score: 0.5,
 			});
+		});
+		it("should return the sessionId even on the free tier, which hides the score", () => {
+			const result = captchaManager.getVerificationResponse(
+				true,
+				{
+					account: "account",
+					tier: Tier.Free,
+				} as unknown as ClientRecord,
+				() => "translated",
+				0.5,
+				undefined,
+				"session-abc",
+			);
+			expect(result).toEqual({
+				status: "translated",
+				verified: true,
+				sessionId: "session-abc",
+			});
+		});
+		it("should omit the sessionId when there isn't one", () => {
+			const result = captchaManager.getVerificationResponse(
+				true,
+				{
+					account: "account",
+					tier: Tier.Professional,
+				} as unknown as ClientRecord,
+				() => "translated",
+				0.5,
+				undefined,
+				undefined,
+			);
+			expect(result).not.toHaveProperty("sessionId");
 		});
 	});
 

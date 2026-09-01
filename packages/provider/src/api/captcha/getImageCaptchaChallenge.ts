@@ -34,6 +34,7 @@ import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 import { getRequestUserScope } from "../blacklistRequestInspector.js";
 import { recordCaptchaIssueError, recordCaptchaIssued } from "../metrics.js";
+import { isReservedTestSiteKey } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 import { buildImageMaintenanceResponse } from "./maintenanceModeResponses.js";
 import { applyTrafficFilterAtRequestTime } from "./trafficFilterRequestTime.js";
@@ -115,6 +116,18 @@ export default (
 			return res.json(buildImageMaintenanceResponse());
 		}
 
+		// Reserved CI test site keys have no client record, so the lookup
+		// below would reject them as unregistered. Checked before
+		// `new Tasks(env, ...)` for the same reason as maintenance mode: the
+		// constructor calls `env.getDb()`.
+		if (isReservedTestSiteKey(dapp)) {
+			req.logger.warn(() => ({
+				msg: "Reserved TEST site key - returning dummy image challenge",
+				data: { dapp, user, sessionId },
+			}));
+			return res.json(buildImageMaintenanceResponse());
+		}
+
 		const tasks = new Tasks(env, req.logger);
 
 		try {
@@ -168,13 +181,21 @@ export default (
 			// INCORRECT_CAPTCHA_TYPE — defeating the whole "solve normally,
 			// block at verify" pattern deferToVerify is meant to enable.
 			// Mirrors blockMiddleware's own deferToVerify filter.
-			const userAccessPolicy = (
+			const accessPolicies =
 				await tasks.imgCaptchaManager.getPrioritisedAccessPolicies(
 					userAccessRulesStorage,
 					dapp,
 					userScope,
-				)
-			).find((p) => !p.deferToVerify);
+				);
+			const userAccessPolicy = accessPolicies.find((p) => !p.deferToVerify);
+			// A deferred rule must never reject at request time, so it is
+			// kept out of `isValidRequest` above. It does still carry the
+			// challenge difficulty it wants imposed — that is the point of
+			// the compute-burn detectors — so its round counts are applied
+			// below when no enforcing policy supplies them.
+			const deferredParamsPolicy = accessPolicies.find(
+				(p) => p.deferToVerify === true,
+			);
 
 			const {
 				valid,
@@ -225,6 +246,7 @@ export default (
 						trafficSolvedImagesCount ||
 							solvedImagesCount ||
 							userAccessPolicy?.solvedImagesCount ||
+							deferredParamsPolicy?.solvedImagesCount ||
 							env.config.captchas.solved.count,
 						clientRecord.settings.imageMaxRounds ?? imageMaxRoundsDefault,
 					),
@@ -232,6 +254,7 @@ export default (
 				unsolved: {
 					count:
 						userAccessPolicy?.unsolvedImagesCount ||
+						deferredParamsPolicy?.unsolvedImagesCount ||
 						env.config.captchas.unsolved.count,
 				},
 			};

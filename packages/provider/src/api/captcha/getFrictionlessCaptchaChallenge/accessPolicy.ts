@@ -216,9 +216,18 @@ export const handleAccessPolicy = async (
 		return {
 			handled: true,
 			response: res.json(
-				await tasks.frictionlessManager.sendPuzzleCaptcha(
-					captchaTypeBaseParams,
-				),
+				await tasks.frictionlessManager.sendPuzzleCaptcha({
+					...captchaTypeBaseParams,
+					// Carried so the rule's severity reaches the puzzle difficulty
+					// ladder. A puzzle has no rounds, and `sendCaptcha` drops the
+					// count from a puzzle session — it reads it only to decide how
+					// hard the puzzle should be. Without this a rule that asked for
+					// 8 rounds and one that asked for 2 would produce identical
+					// puzzles.
+					...(userAccessPolicy.solvedImagesCount !== undefined && {
+						solvedImagesCount: userAccessPolicy.solvedImagesCount,
+					}),
+				}),
 			),
 		};
 	}

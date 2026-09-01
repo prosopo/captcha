@@ -26,6 +26,10 @@ export enum FrictionlessReason {
 	USER_AGENT_MISMATCH = "USER_AGENT_MISMATCH",
 	OLD_TIMESTAMP = "OLD_TIMESTAMP",
 	BOT_SCORE_ABOVE_THRESHOLD = "BOT_SCORE_ABOVE_THRESHOLD",
+	// Score landed in the middle band of the frictionless ladder: past the
+	// point where a silent PoW pass is warranted, but short of the image
+	// rung, so the user gets a puzzle instead.
+	BOT_SCORE_PUZZLE_BAND = "BOT_SCORE_PUZZLE_BAND",
 	WEBVIEW_DETECTED = "WEBVIEW_DETECTED",
 	AUTO_BAN_SCORE = "AUTO_BAN_SCORE",
 	FINGERPRINT_PROOF_INVALID = "FINGERPRINT_PROOF_INVALID",
@@ -65,6 +69,10 @@ export enum ResultReason {
 	CAPTCHA_FAILED = "API.CAPTCHA_FAILED",
 	ABUSER_BLOCKED = "API.ABUSER_BLOCKED",
 	ACCESS_POLICY_BLOCK = "API.ACCESS_POLICY_BLOCK",
+	// The dapp server verified with a `clientSessionId` that does not match the
+	// one the widget was rendered with (or the solve carries none at all). Stops
+	// a token earned in one session being replayed against another.
+	CLIENT_SESSION_MISMATCH = "API.CLIENT_SESSION_MISMATCH",
 	CRAWLER_BLOCKED = "API.CRAWLER_BLOCKED",
 	DATACENTER_BLOCKED = "API.DATACENTER_BLOCKED",
 	FAILED_IP_VALIDATION = "API.FAILED_IP_VALIDATION",

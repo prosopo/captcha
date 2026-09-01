@@ -25,6 +25,8 @@ import {
 	DecisionMachineScope,
 	type IUserSettings,
 	Tier,
+	frictionlessImageThresholdDefault,
+	frictionlessPuzzleThresholdDefault,
 	puzzleToleranceDefault,
 } from "@prosopo/types";
 import Chainable = Cypress.Chainable;
@@ -81,7 +83,7 @@ declare global {
 			registerSiteKey(
 				baseCaptchaType: CaptchaType,
 				captchaType?: CaptchaType,
-				settingsOverrides?: Partial<IUserSettings>,
+				settingsOverrides?: RegisterSiteKeySettings,
 				// biome-ignore lint/suspicious/noExplicitAny: tests
 			): Cypress.Chainable<Response<any>>;
 
@@ -398,10 +400,26 @@ function elementExists(selector: string) {
 		.then(($window) => $window.document.querySelector(selector));
 }
 
+/**
+ * Settings a test may hand to `registerSiteKey`.
+ *
+ * Widened past `Partial<IUserSettings>` on one field only: the score ladder
+ * migration has to keep working for records still holding the pre-ladder bare
+ * number, and the ladder spec registers exactly that shape to prove it. Typed
+ * as an explicit union rather than cast at the call site, so the legacy shape
+ * is documented instead of smuggled through `unknown`.
+ */
+export type RegisterSiteKeySettings = Omit<
+	Partial<IUserSettings>,
+	"frictionlessThreshold"
+> & {
+	frictionlessThreshold?: IUserSettings["frictionlessThreshold"] | number;
+};
+
 function registerSiteKey(
 	baseCaptchaType: CaptchaType,
 	captchaType?: CaptchaType,
-	settingsOverrides?: Partial<IUserSettings>,
+	settingsOverrides?: RegisterSiteKeySettings,
 ) {
 	const siteKey = Cypress.env(
 		`PROSOPO_SITE_KEY_${baseCaptchaType.toUpperCase()}`,
@@ -422,10 +440,17 @@ function registerSiteKey(
 		const jwt = pair.jwtIssue();
 		const adminSiteKeyURL = `https://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
 
-		const settings: IUserSettings = {
+		// Typed as the widened shape, not `IUserSettings`, so the ladder spec
+		// can register a pre-ladder bare threshold. The admin endpoint parses
+		// it through `ClientSettingsSchema`, which lifts a number into the
+		// puzzle rung, so the server still only ever stores the ladder.
+		const settings: RegisterSiteKeySettings = {
 			captchaType: captchaType || baseCaptchaType,
 			domains: ["0.0.0.0", "localhost", "*"],
-			frictionlessThreshold: 0.5,
+			frictionlessThreshold: {
+				frictionlessPuzzleThreshold: frictionlessPuzzleThresholdDefault,
+				frictionlessImageThreshold: frictionlessImageThresholdDefault,
+			},
 			powDifficulty: 1,
 			imageThreshold: 0.8,
 			imageMaxRounds: MAX_IMAGE_CAPTCHA_ROUNDS,

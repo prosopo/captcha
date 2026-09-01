@@ -312,13 +312,16 @@ export interface CaptchaResponseBody extends ApiResponse {
 	};
 }
 
-// Widget-controlled metadata sent alongside the captcha solution. The widget
-// only populates this when the honeypot input has been filled in (which
-// should only happen for bots). Server-side: persisted on the StoredCaptcha
-// record, no automatic verdict. The TS shape (`ClientMetaData`) lives in
+// Widget-controlled metadata sent alongside the captcha solution. `hp` is only
+// populated when the honeypot input has been filled in (which should only
+// happen for bots); `clientSessionId` is only populated when the site owner
+// rendered the widget with a session id. Server-side: persisted on the
+// StoredCaptcha record, no automatic verdict at submit time — the session
+// alignment check happens at verify. The TS shape (`ClientMetaData`) lives in
 // ./database.ts — this schema is the wire-level zod for request bodies.
 export const ClientMetaDataSchema = object({
 	[ApiParams.hp]: safeText(INPUT_LIMITS.TEXT).optional(),
+	[ApiParams.clientSessionId]: boundedString(INPUT_LIMITS.ID).optional(),
 });
 
 // Request-body-level bounded variants of shared schemas. The shared schemas
@@ -368,6 +371,10 @@ export const VerifySolutionBody = object({
 		.default(DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED),
 	[ApiParams.ip]: boundedString(INPUT_LIMITS.ID).optional(),
 	[ApiParams.email]: boundedString(INPUT_LIMITS.EMAIL).optional(),
+	// The session id the site rendered the widget with. When supplied, the
+	// provider rejects the token unless the solved captcha carries the same
+	// value — see `ResultReason.CLIENT_SESSION_MISMATCH`.
+	[ApiParams.clientSessionId]: boundedString(INPUT_LIMITS.ID).optional(),
 });
 
 export type VerifySolutionBodyTypeInput = input<typeof VerifySolutionBody>;
@@ -390,6 +397,9 @@ export interface VerificationResponse extends ApiResponse {
 	[ApiParams.verified]: boolean;
 	[ApiParams.score]?: number;
 	[ApiParams.reason]?: string;
+	// For log correlation only. Neither the token nor the verify request
+	// carries it, so the caller cannot know it without us echoing it back.
+	[ApiParams.sessionId]?: string;
 }
 
 export interface UpdateDecisionMachineResponse extends ApiResponse {
@@ -480,6 +490,8 @@ export const ServerPowCaptchaVerifyRequestBody = object({
 	[ApiParams.dappSignature]: boundedString(INPUT_LIMITS.TOKEN),
 	[ApiParams.ip]: boundedString(INPUT_LIMITS.ID).optional(),
 	[ApiParams.email]: boundedString(INPUT_LIMITS.EMAIL).email().optional(),
+	// See `VerifySolutionBody.clientSessionId`.
+	[ApiParams.clientSessionId]: boundedString(INPUT_LIMITS.ID).optional(),
 });
 
 export type ServerPowCaptchaVerifyRequestBodyOutput = output<
@@ -713,6 +725,8 @@ export const ServerPuzzleCaptchaVerifyRequestBody = object({
 	[ApiParams.dappSignature]: boundedString(INPUT_LIMITS.TOKEN),
 	[ApiParams.ip]: boundedString(INPUT_LIMITS.ID).optional(),
 	[ApiParams.email]: boundedString(INPUT_LIMITS.EMAIL).email().optional(),
+	// See `VerifySolutionBody.clientSessionId`.
+	[ApiParams.clientSessionId]: boundedString(INPUT_LIMITS.ID).optional(),
 });
 
 export type ServerPuzzleCaptchaVerifyRequestBodyType = zInfer<

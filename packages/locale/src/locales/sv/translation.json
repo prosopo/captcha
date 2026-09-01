@@ -19,6 +19,7 @@
 		"TIMESTAMP_TOO_OLD": "Tidsstämpel för gammal",
 		"FAILED_IP_VALIDATION": "IP-validering misslyckades",
 		"ACCESS_POLICY_BLOCK": "Åtkomst blockerad av policy",
+		"CLIENT_SESSION_MISMATCH": "Sessionen matchar inte. Captchan slutfördes inte i den här sessionen.",
 		"FORBIDDEN": "Förbjuden",
 		"PROVIDER_VERIFY_FAILED": "Leverantörsverifiering misslyckades",
 		"SPAM_EMAIL_DOMAIN": "E-postdomänen är inte tillåten",

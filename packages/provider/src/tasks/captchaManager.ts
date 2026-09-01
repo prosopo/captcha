@@ -36,6 +36,7 @@ import type {
 	IProviderDatabase,
 	IUserDataSlim,
 	PoWCaptchaRecord,
+	ProjectedSession,
 	PuzzleCaptchaRecord,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -198,7 +199,7 @@ export class CaptchaManager {
 	 */
 	public async getSessionRecordWithOriginFallback(
 		sessionId: string,
-	): Promise<Session | undefined> {
+	): Promise<ProjectedSession | undefined> {
 		const session = await this.db.getSessionRecordBySessionId(sessionId);
 		if (!session) return undefined;
 		if (!session.originSessionId) return session;
@@ -683,6 +684,7 @@ export class CaptchaManager {
 		translateFn: (key: string) => string,
 		score?: number,
 		reason?: string,
+		sessionId?: string,
 	) {
 		return {
 			status: translateFn(
@@ -697,6 +699,8 @@ export class CaptchaManager {
 				reason && {
 					[ApiParams.reason]: reason,
 				}),
+			// Not tier-gated — a log correlation handle, not a scoring signal.
+			...(sessionId && { [ApiParams.sessionId]: sessionId }),
 		};
 	}
 
@@ -706,6 +710,9 @@ export class CaptchaManager {
 		userScope: UserScope | UserScopeRecord,
 		options?: {
 			blockOnly?: boolean;
+			// Widen a blockOnly pool to admit deferred rules of any type
+			// — see AccessRulesFilter.includeDeferred.
+			includeDeferred?: boolean;
 			// When a caller has an Express request in scope (e.g. the
 			// verify handler), passing it here shares the per-request memo
 			// with the block middleware — a duplicate lookup within one
@@ -895,10 +902,17 @@ export class CaptchaManager {
 			challengeRecord.dappAccount,
 			userScope,
 			// Hard-block lookup only — restrict the Redis-side candidate
-			// pool to Block rules so the SERVER_SIDE_RANK_TOP_N cap can't
-			// crowd a hard-block out of the top-N with Restrict or
-			// routing-Block (captchaType-scoped) entries.
-			{ blockOnly: true },
+			// pool so the SERVER_SIDE_RANK_TOP_N cap can't crowd a
+			// hard-block out of the top-N with routing-Block
+			// (captchaType-scoped) or plain Restrict entries.
+			//
+			// `includeDeferred` widens that pool to
+			// `(@type:{block} | @deferToVerify:{true})`. A deferred rule
+			// is skipped at request time and enforced here, so it is a
+			// valid hard block whatever its type — findHardBlockPolicy
+			// below already accepts one (case c), but a Block-only pool
+			// meant a deferred Restrict was never fetched to be found.
+			{ blockOnly: true, includeDeferred: true },
 		);
 
 		return findHardBlockPolicy(accessPolicies);

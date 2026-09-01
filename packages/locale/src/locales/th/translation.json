@@ -19,6 +19,7 @@
 		"TIMESTAMP_TOO_OLD": "ประทับเวลาเก่าเกินไป",
 		"FAILED_IP_VALIDATION": "การตรวจสอบ IP ล้มเหลว",
 		"ACCESS_POLICY_BLOCK": "การเข้าถึงถูกบล็อกโดยนโยบาย",
+		"CLIENT_SESSION_MISMATCH": "เซสชันไม่ตรงกัน แคปช่าไม่ได้ถูกทำในเซสชันนี้",
 		"FORBIDDEN": "ห้าม",
 		"PROVIDER_VERIFY_FAILED": "การตรวจสอบผู้ให้บริการล้มเหลว",
 		"SPAM_EMAIL_DOMAIN": "โดเมนอีเมลไม่ได้รับอนุญาต",

@@ -22,6 +22,7 @@ import {
 } from "@prosopo/fingerprint";
 import {
 	ExtensionLoader,
+	buildClientMetaData,
 	buildUpdateState,
 	getDefaultEvents,
 	getProcaptchaRandomActiveProvider,
@@ -341,8 +342,10 @@ export const Manager = (
 					// Wait 5 secs for ongoing SIMD, else submit without
 					const simdReadings =
 						await getSimdReadingsForSubmit(frictionlessState);
-					const hpValue = getHoneypotValue?.();
-					const clientMetaData = hpValue ? { hp: hpValue } : undefined;
+					const clientMetaData = buildClientMetaData(
+						getHoneypotValue?.(),
+						getConfig().clientSessionId,
+					);
 					// Best-effort proof of fingerprint; submission proceeds without it
 					// if a proof can't be produced (e.g. fingerprint unavailable).
 					// Only the validator-checked keys are disclosed to keep the

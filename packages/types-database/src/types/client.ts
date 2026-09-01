@@ -31,6 +31,7 @@ import {
 	distanceThresholdKmDefault,
 	domainsDefault,
 	frictionlessThresholdDefault,
+	frictionlessTypesDefault,
 	imageMaxRoundsDefault,
 	imageThresholdDefault,
 	ispChangeActionDefault,
@@ -38,7 +39,7 @@ import {
 	requireAllConditionsDefault,
 } from "@prosopo/types";
 import mongoose from "mongoose";
-import { Schema } from "mongoose";
+import { Schema as MongooseSchema, Schema } from "mongoose";
 import type { IDatabase } from "./mongo.js";
 import type { ClientRecord, Tables } from "./provider.js";
 
@@ -148,9 +149,32 @@ export const UserSettingsSchema = new Schema({
 		type: Number,
 		default: DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
 	},
+	// The score ladder. Declared `Mixed` rather than as a nested schema
+	// because the field used to hold a bare number and unmigrated documents
+	// still do: a typed sub-document would make mongoose cast-fail on read
+	// instead of letting `resolveScoreLadder` interpret it. Zod owns the
+	// shape; this just has to not throw the value away.
 	frictionlessThreshold: {
-		type: Number,
-		default: frictionlessThresholdDefault,
+		type: MongooseSchema.Types.Mixed,
+		default: () => ({ ...frictionlessThresholdDefault }),
+	},
+	// Which challenge types the frictionless flow may serve. Declared here
+	// because mongoose is strict by default: a field absent from the schema is
+	// silently dropped on write, so without this the setting round-trips
+	// through zod, reaches the database, and vanishes — leaving the provider to
+	// read `undefined` and serve every type as though nothing were disabled.
+	//
+	// `_id: false` because this is a value object, not a document; mongoose
+	// would otherwise stamp an ObjectId into every site's settings.
+	frictionlessTypes: {
+		type: new Schema(
+			{
+				image: { type: Boolean, default: true },
+				puzzle: { type: Boolean, default: true },
+			},
+			{ _id: false },
+		),
+		default: () => ({ ...frictionlessTypesDefault }),
 	},
 	powDifficulty: { type: Number, default: powDifficultyDefault },
 	imageThreshold: {
@@ -314,7 +338,8 @@ export const AccountSchema = new Schema<AccountRecord>({
 				domains: [String],
 				powDifficulty: Number,
 				captchaType: String,
-				frictionlessThreshold: Number,
+				frictionlessThreshold: MongooseSchema.Types.Mixed,
+				frictionlessTypes: MongooseSchema.Types.Mixed,
 				ipValidationRules: IPValidationRulesSchema,
 			},
 			createdAt: Number,
