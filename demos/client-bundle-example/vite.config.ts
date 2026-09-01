@@ -120,6 +120,9 @@ export default defineConfig(({ command, mode }) => {
 			"import.meta.env.PROSOPO_SITE_KEY_PUZZLE": JSON.stringify(
 				process.env.PROSOPO_SITE_KEY_PUZZLE,
 			),
+			"import.meta.env.PROSOPO_SITE_KEY_ICONORDER": JSON.stringify(
+				process.env.PROSOPO_SITE_KEY_ICONORDER,
+			),
 			"import.meta.env.PROSOPO_SITE_KEY_POW": JSON.stringify(
 				process.env.PROSOPO_SITE_KEY_POW,
 			),

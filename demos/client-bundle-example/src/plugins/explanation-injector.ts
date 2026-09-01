@@ -309,14 +309,14 @@ import { render } from "%VITE_BUNDLE_URL%"
 
 // Render CAPTCHA
 const widgetId = render(document.getElementById('procaptcha-container'), {
-    siteKey: import.meta.env.PROSOPO_SITE_KEY_ICON_ORDER,
+    siteKey: import.meta.env.PROSOPO_SITE_KEY_ICONORDER,
     callback: handleCaptchaResponse,
     "failed-callback": handleCaptchaFailed${isInvisible ? ',\n    size: "invisible"' : ""}
 });`)
 		: escapeHtml(`<div
     class="procaptcha"
     data-theme="light"
-    data-sitekey="%PROSOPO_SITE_KEY_ICON_ORDER%"
+    data-sitekey="%PROSOPO_SITE_KEY_ICONORDER%"
     data-failed-callback="onCaptchaFailed"
     data-callback="onCaptchaVerified"${isInvisible ? '\n    data-size="invisible"' : ""}
 ></div>`);
