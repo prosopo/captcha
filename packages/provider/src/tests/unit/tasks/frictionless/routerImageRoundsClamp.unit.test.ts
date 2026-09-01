@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Every path that sizes an image challenge clamps to the sitekey's
-// `imageMaxRounds`. A routing machine's `solvedImagesCount` was the exception:
-// `sendCaptcha` took it verbatim, and the routing-machine output schema only
-// bounds it as a positive integer. A router could therefore hand a user more
-// rounds than the site had configured.
+// Every path that sizes an image challenge clamps into the sitekey's
+// `[imageMinRounds, imageMaxRounds]`. A routing machine's `solvedImagesCount`
+// was the exception: `sendCaptcha` took it verbatim, and the routing-machine
+// output schema only bounds it as a positive integer. A router could
+// therefore hand a user more — or fewer — rounds than the site configured.
 
 import {
 	CaptchaType,
@@ -26,6 +26,7 @@ import {
 	type RoutingMachineOutput,
 	type Session,
 	imageMaxRoundsDefault,
+	imageMinRoundsDefault,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -44,12 +45,15 @@ import type { RoutingContext } from "../../../../tasks/frictionless/routingMachi
 
 const SITE_KEY = "5EjTA28bKSbFPPyMbUjNtArxyqjwq38r1BapVmLZShaqEedV";
 
-describe("router-supplied image rounds are held to the sitekey's ceiling", () => {
+describe("router-supplied image rounds are held to the sitekey's bounds", () => {
 	let db: IProviderDatabase;
 	let storeSessionRecord: ReturnType<typeof vi.fn>;
 	let manager: FrictionlessManager;
 
-	const buildContext = (imageMaxRounds?: number): RoutingContext => ({
+	const buildContext = (
+		imageMaxRounds?: number,
+		imageMinRounds?: number,
+	): RoutingContext => ({
 		dappAccount: SITE_KEY,
 		userAccount: "user",
 		ip: "1.2.3.4",
@@ -57,6 +61,7 @@ describe("router-supplied image rounds are held to the sitekey's ceiling", () =>
 		platform: { isMobile: false, isApple: false, isWebView: false },
 		raw: { headers: {}, userAgent: "ua" },
 		...(imageMaxRounds !== undefined && { imageMaxRounds }),
+		...(imageMinRounds !== undefined && { imageMinRounds }),
 	});
 
 	const storedSession = (): Session => {
@@ -166,6 +171,33 @@ describe("router-supplied image rounds are held to the sitekey's ceiling", () =>
 		await manager.sendImageCaptcha({ solvedImagesCount: 4 });
 
 		expect(storedSession().solvedImagesCount).toBe(imageMaxRoundsDefault);
+	});
+
+	it("lifts a router asking for fewer rounds than the sitekey's floor", async () => {
+		routerReturns({
+			captchaType: CaptchaType.image,
+			solvedImagesCount: 1,
+		});
+		manager.setRoutingContext(buildContext(8, 4));
+
+		await manager.sendImageCaptcha({ solvedImagesCount: 4 });
+
+		expect(storedSession().solvedImagesCount).toBe(4);
+	});
+
+	it("falls back to the schema default floor when the context carries none", async () => {
+		// A router naming a single round is the case the floor exists for:
+		// the sitekey's settings bound its rules in both directions, and an
+		// unset floor means the historical hard-coded 2, not "unbounded".
+		routerReturns({
+			captchaType: CaptchaType.image,
+			solvedImagesCount: 1,
+		});
+		manager.setRoutingContext(buildContext(8));
+
+		await manager.sendImageCaptcha({ solvedImagesCount: 4 });
+
+		expect(storedSession().solvedImagesCount).toBe(imageMinRoundsDefault);
 	});
 
 	it("does not put a round count on a session that stayed a puzzle", async () => {

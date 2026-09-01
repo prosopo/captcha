@@ -739,6 +739,7 @@ export default (
 				countryCode,
 				score: botScore,
 				imageMaxRounds: clientRecord.settings.imageMaxRounds,
+				imageMinRounds: clientRecord.settings.imageMinRounds,
 				// Constrains what `sendCaptcha` may finally mint, and sizes a
 				// puzzle chosen in place of a disabled image challenge.
 				frictionlessTypes: clientRecord.settings.frictionlessTypes,

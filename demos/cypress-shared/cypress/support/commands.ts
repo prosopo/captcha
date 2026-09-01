@@ -34,6 +34,7 @@ import { getPair } from "@prosopo/keyring";
 import type { CaptchaWithoutId } from "@prosopo/types";
 
 export const MAX_IMAGE_CAPTCHA_ROUNDS = 3;
+export const MIN_IMAGE_CAPTCHA_ROUNDS = 2;
 
 // Solution record keyed by item hashes + target for stable matching across
 // dataset rebuilds. We can't match by captchaContentId because buildDataset
@@ -259,6 +260,7 @@ function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
 					captchas.length,
 				);
 				expect(captchas).to.have.lengthOf.lte(MAX_IMAGE_CAPTCHA_ROUNDS);
+				expect(captchas).to.have.lengthOf.gte(MIN_IMAGE_CAPTCHA_ROUNDS);
 				expect(captchas[0]).to.have.property("items");
 				console.log(
 					"-----------------------------captchas[0].items",
@@ -454,6 +456,7 @@ function registerSiteKey(
 			powDifficulty: 1,
 			imageThreshold: 0.8,
 			imageMaxRounds: MAX_IMAGE_CAPTCHA_ROUNDS,
+			imageMinRounds: MIN_IMAGE_CAPTCHA_ROUNDS,
 			puzzleTolerance: puzzleToleranceDefault,
 			disallowWebView: false,
 			verifiedTimeout: 60000,

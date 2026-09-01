@@ -38,11 +38,13 @@ export interface RoutingContext {
 	score: number;
 	platform: RoutingMachinePlatform;
 	raw: RoutingMachineRawSignals;
-	// The sitekey's `imageMaxRounds`, so a router-supplied `solvedImagesCount`
-	// can be held to the same ceiling every other path respects. Optional
-	// because the dedup replay only asks the router which captchaType it would
-	// pick and never creates a session from the answer.
+	// The sitekey's image-round bounds, so a router-supplied
+	// `solvedImagesCount` can be held to the same floor and ceiling every
+	// other path respects. Optional because the dedup replay only asks the
+	// router which captchaType it would pick and never creates a session from
+	// the answer.
 	imageMaxRounds?: number;
+	imageMinRounds?: number;
 	// Which challenge types this site permits. Carried here for the same
 	// reason as `imageMaxRounds`: `sendCaptcha` is the point a session's type
 	// is finalised and it has no other handle on the client record. Optional
