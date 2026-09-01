@@ -44,6 +44,11 @@ export const frictionlessImageThresholdDefault = 1.0;
 export const powDifficultyDefault = 4;
 export const imageThresholdDefault = 0.8;
 export const imageMaxRoundsDefault = 32;
+// Floor on image rounds. Matches the floor that was previously only
+// hard-coded (the provider's `captchas.solved.count` default and the
+// `Math.max(2, …)` inside `timestampDecayFunction`), so leaving it unset
+// preserves existing behaviour.
+export const imageMinRoundsDefault = 2;
 export const contextAwareThresholdDefault = 0.7;
 export const puzzleToleranceDefault = 15;
 
@@ -190,6 +195,10 @@ export const resolveFrictionlessThreshold = (
 	};
 };
 export const imageMaxRoundsFieldSchema = number().int().min(2);
+// Deliberately looser than the max at the bottom end: a site may want to
+// serve a single round, but no site may cap itself below 2. `min <= max` is
+// enforced across the pair on `ClientSettingsSchema`.
+export const imageMinRoundsFieldSchema = number().int().min(1);
 export const puzzleToleranceFieldSchema = number().int().min(5).max(1000);
 export const puzzleDecoyCountFieldSchema = number().int().min(0).max(200);
 export const puzzleDecoyEdgeDarknessFieldSchema = number().int().min(0).max(40);
@@ -701,6 +710,14 @@ export const ClientSettingsSchema = object({
 	imageMaxRounds: imageMaxRoundsFieldSchema
 		.optional()
 		.default(imageMaxRoundsDefault),
+	// Floor on the same count. Every round-count source in the provider —
+	// access-policy rules, traffic-filter categories, routing machines, the
+	// staleness curve — is clamped into [imageMinRounds, imageMaxRounds], so
+	// this pair is how a site overrides its rules rather than the other way
+	// round. See `clampImageRounds`.
+	imageMinRounds: imageMinRoundsFieldSchema
+		.optional()
+		.default(imageMinRoundsDefault),
 	// Detector score at or above which the frictionless flow blocks the
 	// request outright instead of issuing a challenge. Undefined disables.
 	autoBanScoreThreshold: number().min(0).optional(),
@@ -733,8 +750,64 @@ export const ClientSettingsSchema = object({
 	// whether the submitted emails are mostly spam).
 	storeMetadata: boolean().optional(),
 	honeypot: HoneypotSettingsSchema.optional(),
+}).refine((v) => v.imageMinRounds <= v.imageMaxRounds, {
+	message: "imageMinRounds must be <= imageMaxRounds",
+	path: ["imageMinRounds"],
 });
 
 export type IUserSettings = output<typeof ClientSettingsSchema>;
+
+/**
+ * The subset of a client record's settings that bounds how many image rounds
+ * a challenge may carry. Accepts a whole `IUserSettings` — every call site
+ * has one — but is stated narrowly so tests and rule code can pass a literal.
+ */
+export interface ImageRoundsBounds {
+	imageMinRounds?: number;
+	imageMaxRounds?: number;
+}
+
+export interface ResolvedImageRounds {
+	min: number;
+	max: number;
+}
+
+/**
+ * Resolve a client record's image-round bounds, filling in defaults for
+ * records written before either field existed.
+ *
+ * The `min <= max` invariant is enforced by `ClientSettingsSchema`, but only
+ * on write: a record stored before `imageMinRounds` existed can end up with a
+ * min above its max the moment an operator lowers the max. The cap wins in
+ * that case — a site that asked for at most N rounds never gets more.
+ */
+export const resolveImageRoundsBounds = (
+	bounds: ImageRoundsBounds,
+): ResolvedImageRounds => {
+	const max = bounds.imageMaxRounds ?? imageMaxRoundsDefault;
+	return {
+		min: Math.min(bounds.imageMinRounds ?? imageMinRoundsDefault, max),
+		max,
+	};
+};
+
+/**
+ * Clamp a requested image-round count into the site's configured bounds.
+ *
+ * This is the single place the site settings win over every other source of a
+ * round count — access-policy rules, traffic-filter categories, routing
+ * machines, and the provider's own heuristics all pass through it.
+ */
+export const clampImageRounds = (
+	requested: number,
+	bounds: ImageRoundsBounds,
+): number => {
+	const { min, max } = resolveImageRoundsBounds(bounds);
+	// A non-finite request is a bug upstream, not a signal about the user.
+	// Fall back to the floor rather than propagating NaN into the session
+	// record or handing a real user the maximum.
+	if (!Number.isFinite(requested)) return min;
+	return Math.min(Math.max(Math.round(requested), min), max);
+};
 export type IIPValidationRules = output<typeof IPValidationRulesSchema>;
 export type IIPValidation = output<typeof IPValidationSchema>;

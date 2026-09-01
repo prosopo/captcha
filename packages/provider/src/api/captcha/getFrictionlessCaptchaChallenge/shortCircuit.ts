@@ -19,6 +19,7 @@ import {
 	type ModeEnum,
 	type RequestHeaders,
 	type ScoreComponents,
+	clampImageRounds,
 } from "@prosopo/types";
 import type { ClientRecord } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -166,9 +167,9 @@ export const runConfiguredCaptchaTypeShortCircuit = async (
 			return res.json(
 				await input.tasks.frictionlessManager.sendImageCaptcha({
 					...sessionParams,
-					solvedImagesCount: Math.min(
+					solvedImagesCount: clampImageRounds(
 						input.env.config.captchas.solved.count,
-						input.clientRecord.settings.imageMaxRounds,
+						input.clientRecord.settings,
 					),
 				}),
 			);

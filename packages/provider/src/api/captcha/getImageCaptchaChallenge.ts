@@ -22,7 +22,7 @@ import {
 	CaptchaType,
 	type ProsopoCaptchaCountConfigSchemaOutput,
 	SimdReadingsStage,
-	imageMaxRoundsDefault,
+	clampImageRounds,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
@@ -242,13 +242,16 @@ export default (
 
 			const captchaConfig: ProsopoCaptchaCountConfigSchemaOutput = {
 				solved: {
-					count: Math.min(
+					// Serve time is the last word on how many rounds the user
+					// actually sees, so the site's bounds are applied here
+					// regardless of which upstream source won.
+					count: clampImageRounds(
 						trafficSolvedImagesCount ||
 							solvedImagesCount ||
 							userAccessPolicy?.solvedImagesCount ||
 							deferredParamsPolicy?.solvedImagesCount ||
 							env.config.captchas.solved.count,
-						clientRecord.settings.imageMaxRounds ?? imageMaxRoundsDefault,
+						clientRecord.settings,
 					),
 				},
 				unsolved: {
