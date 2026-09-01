@@ -32,6 +32,7 @@ import {
 	FilterScopeMatch,
 	type UserScope,
 	type UserScopeRecord,
+	classifyBrowser,
 	classifyOs,
 	describeMatchedRule,
 	makeAccessRuleHash,
@@ -65,6 +66,7 @@ export const getRequestUserScope = (
 	| "countryCode"
 	| "asn"
 	| "os"
+	| "browser"
 > => {
 	const userAgent = requestHeaders["user-agent"]
 		? requestHeaders["user-agent"].toString()
@@ -79,11 +81,10 @@ export const getRequestUserScope = (
 		...(coords && { coords }),
 		...(countryCode && { countryCode }),
 		...(typeof asn === "number" && { asn }),
-		// Always populated (even "unknown") — derived from the request UA, not
-		// trusted from a client hint. Present unconditionally so an OS
-		// allow-list (block everything not on the list) still matches requests
-		// whose UA we can't classify.
+		// Unconditional, unlike the fields above: an allow-list has to match a
+		// request whose UA we can't classify, which lands on "unknown".
 		os: classifyOs(userAgent),
+		browser: classifyBrowser(userAgent),
 	};
 };
 
@@ -100,6 +101,7 @@ const SCALAR_USER_SCOPE_FIELDS = [
 	"countryCode",
 	"asn",
 	"os",
+	"browser",
 ] as const satisfies ReadonlyArray<keyof UserScope>;
 
 // Derive the populated-scope field list for a matched rule (the same shape
@@ -647,6 +649,7 @@ export class BlacklistRequestInspector {
 					countryCode: ctx.countryCode,
 					asn: ctx.asn,
 					os: classifyOs(userAgent),
+					browser: classifyBrowser(userAgent),
 				},
 			},
 		}));

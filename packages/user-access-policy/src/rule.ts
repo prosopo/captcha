@@ -78,6 +78,7 @@ export type UserAttributes = {
 	// drop/limit requests from a given OS even when the client omits client
 	// hints.
 	os?: string;
+	browser?: string;
 };
 
 export type UserScope = UserAttributes & UserIp;

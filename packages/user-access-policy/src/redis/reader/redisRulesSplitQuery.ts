@@ -41,6 +41,8 @@ const SCALAR_USER_SCOPE_FIELDS: ReadonlyArray<keyof UserScope> = [
 	"coords",
 	"countryCode",
 	"asn",
+	"os",
+	"browser",
 ];
 
 const ALL_USER_SCOPE_FIELDS: ReadonlyArray<keyof UserScope> = [
