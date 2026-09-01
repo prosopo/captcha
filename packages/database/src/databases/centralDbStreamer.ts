@@ -14,6 +14,7 @@
 
 import { type Logger, getLogger } from "@prosopo/logger";
 import type {
+	IconOrderCaptchaRecord,
 	PoWCaptchaRecord,
 	PuzzleCaptchaRecord,
 	StoredSession,
@@ -242,6 +243,55 @@ export class CentralDbStreamer {
 				this.logger.error(() => ({
 					err,
 					msg: "Failed to fetch puzzle record for central DB streaming",
+				}));
+			});
+	}
+
+	/**
+	 * Stream an icon-order captcha record (create or update) to the central DB.
+	 * Fire-and-forget: errors are logged, never thrown.
+	 */
+	streamIconOrderRecord(
+		record: IconOrderCaptchaRecord,
+		markStored?: MarkStoredCallback,
+	): void {
+		const timestamp = this.getRecordTimestamp(record);
+		this.ensureConnected()
+			.then(() => {
+				const { _id, ...safeDoc } = record;
+				return this.db.tables.iconordercaptcha.updateOne(
+					{ challenge: safeDoc.challenge },
+					{ $set: safeDoc },
+					{ upsert: true },
+				);
+			})
+			.then(() => markStored?.(timestamp))
+			.catch((err: unknown) => {
+				this.logger.error(() => ({
+					err,
+					msg: "Failed to stream icon-order record to central DB",
+				}));
+			});
+	}
+
+	/**
+	 * Stream a partial icon-order update by fetching the full record first,
+	 * then upserting.
+	 */
+	streamIconOrderUpdate(
+		getFullRecord: () => Promise<IconOrderCaptchaRecord | null>,
+		markStored?: MarkStoredCallback,
+	): void {
+		getFullRecord()
+			.then((record) => {
+				if (record) {
+					this.streamIconOrderRecord(record, markStored);
+				}
+			})
+			.catch((err: unknown) => {
+				this.logger.error(() => ({
+					err,
+					msg: "Failed to fetch icon-order record for central DB streaming",
 				}));
 			});
 	}

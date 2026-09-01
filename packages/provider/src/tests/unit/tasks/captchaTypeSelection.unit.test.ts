@@ -19,10 +19,22 @@ import {
 	coerceToEnabledCaptchaType,
 } from "../../../tasks/captchaTypeSelection.js";
 
-const BOTH: IFrictionlessTypes = { image: true, puzzle: true };
-const NO_IMAGE: IFrictionlessTypes = { image: false, puzzle: true };
-const NO_PUZZLE: IFrictionlessTypes = { image: true, puzzle: false };
-const NEITHER: IFrictionlessTypes = { image: false, puzzle: false };
+const BOTH: IFrictionlessTypes = { image: true, puzzle: true, iconOrder: true };
+const NO_IMAGE: IFrictionlessTypes = {
+	image: false,
+	puzzle: true,
+	iconOrder: true,
+};
+const NO_PUZZLE: IFrictionlessTypes = {
+	image: true,
+	puzzle: false,
+	iconOrder: false,
+};
+const NEITHER: IFrictionlessTypes = {
+	image: false,
+	puzzle: false,
+	iconOrder: false,
+};
 
 const ALL_TYPES: ConcreteCaptchaType[] = [
 	CaptchaType.pow,

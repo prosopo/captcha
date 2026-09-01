@@ -20,6 +20,7 @@ import {
 	type ProsopoConfigOutput,
 	Tier,
 	contextAwareThresholdDefault,
+	iconOrderToleranceDefault,
 } from "@prosopo/types";
 import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
 import { describe, expect, it, vi } from "vitest";
@@ -69,7 +70,7 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 					frictionlessPuzzleThreshold: 0.5,
 					frictionlessImageThreshold: 1,
 				},
-				frictionlessTypes: { image: true, puzzle: true },
+				frictionlessTypes: { image: true, puzzle: true, iconOrder: true },
 				imageThreshold: 0.5,
 				imageMaxRounds: 3,
 				imageMinRounds: 2,
@@ -77,6 +78,7 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 				verifiedTimeout: 120000,
 				solutionTimeout: 60000,
 				puzzleTolerance: 15,
+				iconOrderTolerance: iconOrderToleranceDefault,
 				disallowWebView: false,
 				contextAware: {
 					enabled: false,
@@ -114,7 +116,7 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 					frictionlessPuzzleThreshold: 0.5,
 					frictionlessImageThreshold: 1,
 				},
-				frictionlessTypes: { image: true, puzzle: true },
+				frictionlessTypes: { image: true, puzzle: true, iconOrder: true },
 				imageThreshold: 0.5,
 				imageMaxRounds: 3,
 				imageMinRounds: 2,
@@ -122,6 +124,7 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 				verifiedTimeout: 120000,
 				solutionTimeout: 60000,
 				puzzleTolerance: 15,
+				iconOrderTolerance: iconOrderToleranceDefault,
 				disallowWebView: false,
 				contextAware: {
 					enabled: false,

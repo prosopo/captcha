@@ -214,6 +214,14 @@ export default defineConfig(({ command, mode }) => {
 						__dirname,
 						"src/invisible-puzzle-explicit.html",
 					),
+					"icon-order-implicit": path.resolve(
+						__dirname,
+						"src/icon-order-implicit.html",
+					),
+					"icon-order-explicit": path.resolve(
+						__dirname,
+						"src/icon-order-explicit.html",
+					),
 				},
 			},
 		},

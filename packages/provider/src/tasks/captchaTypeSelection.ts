@@ -18,13 +18,15 @@ import {
 	type IFrictionlessTypes,
 	resolveFrictionlessTypes,
 } from "@prosopo/types";
+import { isIconOrderRenderAvailable } from "./iconOrder/iconOrderRenderer.js";
 import { isPuzzleRenderAvailable } from "./puzzle/puzzleRenderer.js";
 
-/** The three concrete types a session can actually be minted as. */
+/** The concrete types a session can actually be minted as. */
 export type ConcreteCaptchaType =
 	| CaptchaType.pow
 	| CaptchaType.image
-	| CaptchaType.puzzle;
+	| CaptchaType.puzzle
+	| CaptchaType.iconOrder;
 
 /**
  * Resolve a requested captcha type against what the site permits and what
@@ -59,6 +61,7 @@ export const coerceToEnabledCaptchaType = (
 	// separately — a site with image off would otherwise be handed an image.
 	const puzzleAllowed = types.puzzle && isPuzzleRenderAvailable();
 	const imageAllowed = types.image;
+	const iconOrderAllowed = types.iconOrder && isIconOrderRenderAvailable();
 
 	const resolved = ((): ConcreteCaptchaType => {
 		switch (requested) {
@@ -72,6 +75,15 @@ export const coerceToEnabledCaptchaType = (
 			case CaptchaType.image:
 				if (imageAllowed) return CaptchaType.image;
 				return puzzleAllowed ? CaptchaType.puzzle : CaptchaType.pow;
+			// Icon-order is the only case that reaches for icon-order. The
+			// puzzle and image branches above keep the fallbacks they always
+			// had: routing a site that disabled puzzle onto icon-order instead
+			// would silently change what its users see, and would hand them a
+			// harsher challenge than the one that was coerced away.
+			case CaptchaType.iconOrder:
+				if (iconOrderAllowed) return CaptchaType.iconOrder;
+				if (puzzleAllowed) return CaptchaType.puzzle;
+				return imageAllowed ? CaptchaType.image : CaptchaType.pow;
 		}
 	})();
 
@@ -84,6 +96,8 @@ export const coerceToEnabledCaptchaType = (
 				imageEnabled: types.image,
 				puzzleEnabled: types.puzzle,
 				puzzleRenderable: isPuzzleRenderAvailable(),
+				iconOrderEnabled: types.iconOrder,
+				iconOrderRenderable: isIconOrderRenderAvailable(),
 			},
 		}));
 	}

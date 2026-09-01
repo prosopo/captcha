@@ -25,6 +25,7 @@ import {
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
+	type IconOrderCaptchaStored,
 	IpAddressType,
 	ModeEnum,
 	type PendingImageCaptchaRequest,
@@ -33,6 +34,7 @@ import {
 	type Session,
 	type SimdReadingsStage,
 	type SolutionRecord,
+	type StoredIconTarget,
 	Tier,
 	type UserCommitment,
 	type UserSolutionSchema,
@@ -165,6 +167,8 @@ export const ClientMetaDataRecordSchemaObj = {
 export type PoWCaptchaRecord = mongoose.Document & PoWCaptchaStored;
 
 export type PuzzleCaptchaRecord = mongoose.Document & PuzzleCaptchaStored;
+
+export type IconOrderCaptchaRecord = mongoose.Document & IconOrderCaptchaStored;
 
 export type UserCommitmentRecord = mongoose.Document & UserCommitment;
 
@@ -355,7 +359,18 @@ PoWCaptchaRecordSchema.index(
 	},
 );
 
-export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
+/**
+ * Fields every interactive captcha record carries: identity, timings, result,
+ * network and device context, and the operational flags the portal and audit
+ * surfaces query on.
+ *
+ * Hoisted rather than restated per type because these are the fields the rest
+ * of the system reads generically — a new flag added for one interactive type
+ * and forgotten on another shows up as a silently empty column in the audit
+ * view, not as a compile error. The per-type answer fields are declared by
+ * each schema below.
+ */
+const interactiveCaptchaRecordFields = {
 	challenge: { type: String, required: true },
 	dappAccount: { type: String, required: true },
 	userAccount: { type: String, required: true },
@@ -372,24 +387,6 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 			required: false,
 		},
 		error: { type: String, required: false },
-	},
-	targetX: { type: Number, required: true },
-	targetY: { type: Number, required: true },
-	originX: { type: Number, required: true },
-	originY: { type: Number, required: true },
-	tolerance: { type: Number, required: true },
-	puzzleEvents: {
-		type: [
-			new Schema<{ x: number; y: number; t: number }>(
-				{
-					x: { type: Number, required: true },
-					y: { type: Number, required: true },
-					t: { type: Number, required: true },
-				},
-				{ _id: false },
-			),
-		],
-		required: false,
 	},
 	ipAddress: CompositeIpAddressRecordSchemaObj,
 	providedIp: {
@@ -442,6 +439,82 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 		required: false,
 	},
 	providerSignature: { type: String, required: true },
+};
+
+export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
+	...interactiveCaptchaRecordFields,
+	targetX: { type: Number, required: true },
+	targetY: { type: Number, required: true },
+	originX: { type: Number, required: true },
+	originY: { type: Number, required: true },
+	tolerance: { type: Number, required: true },
+	puzzleEvents: {
+		type: [
+			new Schema<{ x: number; y: number; t: number }>(
+				{
+					x: { type: Number, required: true },
+					y: { type: Number, required: true },
+					t: { type: Number, required: true },
+				},
+				{ _id: false },
+			),
+		],
+		required: false,
+	},
+});
+
+/**
+ * The icon-order answer at rest: the ordered target placements, plus the
+ * ordered clicks the user submitted against them.
+ *
+ * `targets` is required — a record without it cannot be graded — and is
+ * written before the imagery is rendered, so a crash between the two can
+ * never leave a challenge the user can see but the server cannot score.
+ */
+export const IconOrderCaptchaRecordSchema = new Schema<IconOrderCaptchaRecord>({
+	...interactiveCaptchaRecordFields,
+	// Hit radius as a multiple of each icon's own size, unlike the puzzle
+	// type's `tolerance`, which is in pixels.
+	tolerance: { type: Number, required: true },
+	targets: {
+		type: [
+			new Schema<StoredIconTarget>(
+				{
+					x: { type: Number, required: true },
+					y: { type: Number, required: true },
+					size: { type: Number, required: true },
+					kind: { type: String, required: true },
+				},
+				{ _id: false },
+			),
+		],
+		required: true,
+	},
+	clicks: {
+		type: [
+			new Schema<{ x: number; y: number }>(
+				{
+					x: { type: Number, required: true },
+					y: { type: Number, required: true },
+				},
+				{ _id: false },
+			),
+		],
+		required: false,
+	},
+	iconOrderEvents: {
+		type: [
+			new Schema<{ x: number; y: number; t: number }>(
+				{
+					x: { type: Number, required: true },
+					y: { type: Number, required: true },
+					t: { type: Number, required: true },
+				},
+				{ _id: false },
+			),
+		],
+		required: false,
+	},
 });
 
 // Set an index on the challenge field, ascending
@@ -478,6 +551,46 @@ PuzzleCaptchaRecordSchema.index(
 );
 // See `PoWCaptchaRecordSchema.blocked_partial`.
 PuzzleCaptchaRecordSchema.index(
+	{ blocked: 1 },
+	{
+		name: "blocked_partial",
+		partialFilterExpression: { blocked: true },
+	},
+);
+
+// The icon-order record is queried on the same axes as the puzzle record —
+// challenge lookup at submit time, and the dappAccount / ip / result / ipInfo
+// fan-out the portal and audit surfaces use — so it carries the same index
+// set. See the PuzzleCaptchaRecordSchema block above for the rationale behind
+// each partial.
+IconOrderCaptchaRecordSchema.index({ challenge: 1 });
+IconOrderCaptchaRecordSchema.index({ lastUpdatedTimestamp: 1 });
+IconOrderCaptchaRecordSchema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
+IconOrderCaptchaRecordSchema.index({ "ipAddress.lower": 1 });
+IconOrderCaptchaRecordSchema.index({ "ipAddress.upper": 1 });
+IconOrderCaptchaRecordSchema.index({ "result.reason": 1 });
+IconOrderCaptchaRecordSchema.index({ "ipInfo.countryCode": 1 });
+IconOrderCaptchaRecordSchema.index({ "ipInfo.isVPN": 1 });
+IconOrderCaptchaRecordSchema.index({ ipInfo: 1 });
+IconOrderCaptchaRecordSchema.index({ parsedUserAgentInfo: 1 });
+IconOrderCaptchaRecordSchema.index(
+	{ pendingStage: 1, _id: 1 },
+	{
+		name: "pendingStage_partial",
+		partialFilterExpression: { pendingStage: true },
+	},
+);
+IconOrderCaptchaRecordSchema.index(
+	{ dappAccount: 1, "metadata.emailNormalised": 1, serverChecked: 1 },
+	{
+		name: "spamEmailCount_partial",
+		partialFilterExpression: {
+			"metadata.emailNormalised": { $exists: true },
+			serverChecked: true,
+		},
+	},
+);
+IconOrderCaptchaRecordSchema.index(
 	{ blocked: 1 },
 	{
 		name: "blocked_partial",
@@ -733,6 +846,9 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	// already validated by RoutingMachineOutputSchema before it gets here.
 	puzzleTolerance: { type: Number, required: false },
 	puzzle: { type: Object, required: false },
+	// Icon-order equivalents, stored the same way and for the same reason.
+	iconOrderTolerance: { type: Number, required: false },
+	iconOrder: { type: Object, required: false },
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_DAY },
 	lastUpdatedTimestamp: { type: Date, required: false },
 	// See `StoredCaptcha.pendingStage` — same semantics on Session records.
@@ -960,7 +1076,12 @@ export const DecisionMachineArtifactRecordSchema =
 		version: { type: String, required: false },
 		captchaType: {
 			type: String,
-			enum: [CaptchaType.pow, CaptchaType.image, CaptchaType.puzzle],
+			enum: [
+				CaptchaType.pow,
+				CaptchaType.image,
+				CaptchaType.puzzle,
+				CaptchaType.iconOrder,
+			],
 			required: false,
 		},
 		createdAt: { type: Date, required: true },
@@ -1040,6 +1161,8 @@ export const SESSION_PROJECTION = {
 	// overrides silently never apply.
 	puzzleTolerance: 1,
 	puzzle: 1,
+	iconOrderTolerance: 1,
+	iconOrder: 1,
 	// Read by captchaManager.peek* to report the session's own
 	// difficulty alongside solvedImagesCount.
 	powDifficulty: 1,
@@ -1376,6 +1499,43 @@ export interface IProviderDatabase extends IDatabase {
 	updatePuzzleCaptchaRecord(
 		challenge: PoWChallengeId,
 		updates: Partial<PuzzleCaptchaRecord>,
+	): Promise<void>;
+
+	/**
+	 * `targets` is the answer, so it is written here — before the imagery is
+	 * rendered — and never leaves the provider. See
+	 * `IconOrderCaptchaStored.targets`.
+	 */
+	storeIconOrderCaptchaRecord(
+		challenge: PoWChallengeId,
+		components: PoWChallengeComponents,
+		targets: StoredIconTarget[],
+		tolerance: number,
+		providerSignature: string,
+		ipAddress: CompositeIpAddress,
+		headers: RequestHeaders,
+		ja4: string,
+		sessionId?: string,
+		ipInfo?: IPInfoResponse,
+	): Promise<void>;
+
+	getIconOrderCaptchaRecordByChallenge(
+		challenge: string,
+	): Promise<IconOrderCaptchaRecord | null>;
+
+	updateIconOrderCaptchaRecordResult(
+		challenge: PoWChallengeId,
+		result: CaptchaResult,
+		serverChecked: boolean,
+		userSubmitted: boolean,
+		userSignature?: string,
+		coords?: [number, number][][],
+		lastUpdatedTimestamp?: Date,
+	): Promise<void>;
+
+	updateIconOrderCaptchaRecord(
+		challenge: PoWChallengeId,
+		updates: Partial<IconOrderCaptchaRecord>,
 	): Promise<void>;
 
 	updateClientRecords(clientRecords: ClientRecord[]): Promise<void>;

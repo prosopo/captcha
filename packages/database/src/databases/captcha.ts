@@ -17,8 +17,10 @@ import { type Logger, getLogger } from "@prosopo/logger";
 import {
 	type CaptchaProperties,
 	type ICaptchaDatabase,
+	type IconOrderCaptchaRecord,
 	type PoWCaptchaRecord,
 	type PuzzleCaptchaRecord,
+	StoredIconOrderCaptchaRecordSchema,
 	StoredPoWCaptchaRecordSchema,
 	StoredPuzzleCaptchaRecordSchema,
 	type StoredSession,
@@ -50,6 +52,7 @@ enum TableNames {
 	commitment = "commitment",
 	powcaptcha = "powcaptcha",
 	puzzlecaptcha = "puzzlecaptcha",
+	iconordercaptcha = "iconordercaptcha",
 }
 
 const CAPTCHA_TABLES = [
@@ -72,6 +75,11 @@ const CAPTCHA_TABLES = [
 		collectionName: TableNames.puzzlecaptcha,
 		modelName: "PuzzleCaptcha",
 		schema: StoredPuzzleCaptchaRecordSchema,
+	},
+	{
+		collectionName: TableNames.iconordercaptcha,
+		modelName: "IconOrderCaptcha",
+		schema: StoredIconOrderCaptchaRecordSchema,
 	},
 ];
 
@@ -200,6 +208,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		imageCaptchaEvents: UserCommitmentRecord[],
 		powCaptchaEvents: PoWCaptchaRecord[],
 		puzzleCaptchaEvents: PuzzleCaptchaRecord[] = [],
+		iconOrderCaptchaEvents: IconOrderCaptchaRecord[] = [],
 	) {
 		await this.connect();
 		if (sessionEvents.length) {
@@ -327,6 +336,31 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 			}));
 		}
 
+		if (iconOrderCaptchaEvents.length) {
+			const result = await this.tables.iconordercaptcha.bulkWrite(
+				iconOrderCaptchaEvents.map((doc) => {
+					const { _id, ...safeDoc } = doc;
+					const normalised = CaptchaDatabase.normaliseDocCompositeIps(safeDoc);
+					return {
+						updateOne: {
+							filter: { challenge: normalised.challenge },
+							update: { $set: normalised },
+							upsert: true,
+						},
+					};
+				}),
+			);
+			logger.info(() => ({
+				data: {
+					upsertedCount: result.upsertedCount,
+					matchedCount: result.matchedCount,
+					modifiedCount: result.modifiedCount,
+					totalProcessed: iconOrderCaptchaEvents.length,
+				},
+				msg: "Mongo Saved Icon Order Events",
+			}));
+		}
+
 		await this.close();
 	}
 
@@ -337,6 +371,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		userCommitmentRecords: UserCommitmentRecord[];
 		powCaptchaRecords: PoWCaptchaRecord[];
 		puzzleCaptchaRecords: PuzzleCaptchaRecord[];
+		iconOrderCaptchaRecords: IconOrderCaptchaRecord[];
 	}> {
 		await this.connect();
 
@@ -356,10 +391,16 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 				.limit(limit)
 				.lean<PuzzleCaptchaRecord[]>();
 
+			const iconOrderCaptchaResults = await this.tables.iconordercaptcha
+				.find(filter)
+				.limit(limit)
+				.lean<IconOrderCaptchaRecord[]>();
+
 			return {
 				userCommitmentRecords: commitmentResults,
 				powCaptchaRecords: powCaptchaResults,
 				puzzleCaptchaRecords: puzzleCaptchaResults,
+				iconOrderCaptchaRecords: iconOrderCaptchaResults,
 			};
 		} catch (error) {
 			throw new ProsopoDBError("DATABASE.QUERY_ERROR", {

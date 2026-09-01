@@ -216,6 +216,11 @@ const ruleSpecificity = (
 // ranks above puzzle/pow, which is the intended ordering.
 const CAPTCHA_TYPE_HARSHNESS: Record<CaptchaType, number> = {
 	[CaptchaType.image]: 30,
+	// Icon-order sits above puzzle: it asks for several ordered clicks rather
+	// than one drag. Still below image, and the gap to image is wider than
+	// any `rounds` bonus can close from below, so image outranks it at every
+	// round count.
+	[CaptchaType.iconOrder]: 25,
 	[CaptchaType.puzzle]: 20,
 	[CaptchaType.pow]: 10,
 	// Frictionless isn't a routing target for Restrict rules but include it
