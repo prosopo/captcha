@@ -31,7 +31,7 @@
 		"@prosopo/config": "3.3.12",
 		"@prosopo/dotenv": "3.0.53",
 		"@prosopo/locale": "3.4.0",
-		"@prosopo/types": "5.5.2",
+		"@prosopo/types": "5.5.3",
 		"@types/node": "22.5.5",
 		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",
