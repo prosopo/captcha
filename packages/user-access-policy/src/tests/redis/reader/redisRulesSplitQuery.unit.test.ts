@@ -101,12 +101,30 @@ describe("buildScopedBlockSubQueries", () => {
 			"coords",
 			"countryCode",
 			"asn",
+			"os",
+			"browser",
 			"numericIp",
 			"numericIpMaskMin",
 			"numericIpMaskMax",
 		]) {
 			expect(fallThrough?.query).toContain(`ismissing(@${field})`);
 		}
+	});
+
+	it("emits field probes for the UA-derived os and browser scopes", () => {
+		const subs = buildScopedBlockSubQueries(
+			{ os: "windows", browser: "firefox" },
+			"client-A",
+		);
+
+		// Without these probes an os/browser-only rule is only reachable via
+		// the no-user-scope fall-through, where it competes for that probe's
+		// candidate budget against genuine client-wide blocks.
+		const osSub = subs.find((s) => s.kind === "field:os");
+		expect(osSub?.query).toContain("@os:{windows}");
+
+		const browserSub = subs.find((s) => s.kind === "field:browser");
+		expect(browserSub?.query).toContain("@browser:{firefox}");
 	});
 
 	it("uses NUMERIC range syntax for asn, not TAG syntax", () => {
