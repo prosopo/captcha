@@ -15,6 +15,7 @@
 import type { PuzzleEvent } from "@prosopo/types";
 import type { Theme } from "@prosopo/widget-skeleton";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 interface PuzzleCanvasProps {
 	originX: number;
@@ -259,7 +260,17 @@ export const PuzzleCanvas = ({
 	const bgFilter = `hue-rotate(${hueShift.toFixed(2)}deg) saturate(${satBoost.toFixed(3)}) brightness(${brightness.toFixed(3)})`;
 	const bgTransform = `translate(${bgTranslateX.toFixed(2)}px, ${bgTranslateY.toFixed(2)}px) scale(${bgScale.toFixed(3)})`;
 
-	return (
+	// Portalled to the body rather than left where the widget renders it.
+	// `position: fixed` only resolves against the viewport while no ancestor
+	// establishes a containing block, and the widget skeleton around us does:
+	// `.prosopo-widget__wrapper` carries `container-type: size` (it is the
+	// query container the checkbox sizes itself against), which contains
+	// layout and so captures fixed descendants. Left in place, the overlay
+	// resolves `inset: 0` against the 302x80 widget box and is then clipped by
+	// `.prosopo-widget__inner`'s `overflow: hidden`, so the puzzle renders as
+	// an unusable sliver inside the host page instead of over it. The image
+	// captcha's Modal escapes the same skeleton the same way.
+	return createPortal(
 		<div
 			style={{
 				position: "fixed",
@@ -430,6 +441,7 @@ export const PuzzleCanvas = ({
 					/>
 				</div>
 			</div>
-		</div>
+		</div>,
+		document.body,
 	);
 };
