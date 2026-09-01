@@ -14,6 +14,7 @@
 
 import { type Prng, type RgbaImage, hslToRgb } from "@prosopo/puzzle-assets";
 import sharp from "sharp";
+import { collageMarkup } from "./background.js";
 import { glyphPath } from "./glyphs.js";
 import type {
 	IconOrderGeometry,
@@ -96,7 +97,6 @@ const svgDocument = (width: number, height: number, body: string): Buffer =>
  */
 export const compositeIcons = async (
 	prng: Prng,
-	background: RgbaImage,
 	icons: readonly IconPlacement[],
 	geometry: IconOrderGeometry,
 	settings: IconOrderRenderSettings,
@@ -115,19 +115,42 @@ export const compositeIcons = async (
 	const body = order
 		.map((placement) => glyphMarkup(placement, settings))
 		.join("");
-	const { data, info } = await sharp(background.data, {
-		raw: {
-			width: background.width,
-			height: background.height,
-			channels: 4,
-		},
-	})
-		.composite([{ input: svgDocument(geometry.width, geometry.height, body) }])
+	// Collage and icons go into one SVG document, so librsvg rasterises the
+	// whole frame in a single pass and the icons antialias against the
+	// background they actually sit on rather than against a separate layer.
+	const document = svgDocument(
+		geometry.width,
+		geometry.height,
+		collageMarkup(prng, geometry, settings.backgroundClutter) + body,
+	);
+	const { data, info } = await sharp(document)
 		.ensureAlpha()
 		.raw()
 		.toBuffer({ resolveWithObject: true });
 
-	return { data, width: info.width, height: info.height };
+	return addGrain(prng, { data, width: info.width, height: info.height });
+};
+
+/**
+ * Per-pixel noise, applied after rasterisation.
+ *
+ * The collage is built from flat vector fills, so without this every region is
+ * uniform and its boundaries are perfectly clean — ideal input for an edge
+ * detector. Grain raises the noise floor those edges have to clear. Kept low
+ * enough to read as texture rather than static.
+ */
+const GRAIN_AMPLITUDE = 6;
+
+const addGrain = (prng: Prng, image: RgbaImage): RgbaImage => {
+	const { data } = image;
+	for (let i = 0; i < data.length; i += 4) {
+		const noise = Math.round((prng.next() - 0.5) * 2 * GRAIN_AMPLITUDE);
+		for (let channel = 0; channel < 3; channel++) {
+			const value = (data[i + channel] ?? 0) + noise;
+			data[i + channel] = value < 0 ? 0 : value > 255 ? 255 : value;
+		}
+	}
+	return image;
 };
 
 /**

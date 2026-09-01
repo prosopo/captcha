@@ -81,7 +81,10 @@ export const iconOrderTargetCountDefault = 3;
 export const iconOrderDecoyCountDefault = 4;
 export const iconOrderStrokeWidthDefault = 3;
 export const iconOrderIconOpacityDefault = 0.92;
-export const iconOrderHaloOpacityDefault = 0.55;
+export const iconOrderHaloOpacityDefault = 0.7;
+// Scales every family of background collage element at once. Higher is a
+// busier frame — more competing strokes and corners between the icons.
+export const iconOrderBackgroundClutterDefault = 8;
 // Hit radius as a multiple of the clicked icon's own size, NOT in pixels
 // like `puzzleTolerance`. The renderer jitters each icon's size, so a fixed
 // pixel radius would make the small end of that range disproportionately
@@ -278,6 +281,13 @@ export const iconOrderDecoyCountFieldSchema = number()
 export const iconOrderStrokeWidthFieldSchema = number().min(1).max(10);
 export const iconOrderIconOpacityFieldSchema = number().min(0.1).max(1);
 export const iconOrderHaloOpacityFieldSchema = number().min(0).max(1);
+// Zero renders a plain single-colour frame, which is the escape hatch for a
+// site that finds the collage too hostile; the top end is well past anything
+// legible, so operators can explore before settling.
+export const iconOrderBackgroundClutterFieldSchema = number()
+	.int()
+	.min(0)
+	.max(40);
 // Wider at the top than any real site needs, for the same reason as
 // `puzzleToleranceFieldSchema`: end-to-end tests raise it until a scripted
 // click anywhere near an icon passes.
@@ -300,6 +310,7 @@ export const IconOrderSettingsSchema = object({
 	strokeWidth: iconOrderStrokeWidthFieldSchema.optional(),
 	iconOpacity: iconOrderIconOpacityFieldSchema.optional(),
 	haloOpacity: iconOrderHaloOpacityFieldSchema.optional(),
+	backgroundClutter: iconOrderBackgroundClutterFieldSchema.optional(),
 }).refine(
 	(v) =>
 		(v.targetCount ?? iconOrderTargetCountDefault) +

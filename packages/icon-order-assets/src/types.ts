@@ -90,4 +90,11 @@ export interface IconOrderRenderSettings {
 	 * background; without it icons vanish over pale areas.
 	 */
 	haloOpacity: number;
+	/**
+	 * Scales every family of background collage element at once — panels,
+	 * ripple rings and bars. Higher is a busier frame: more competing strokes
+	 * and corners for a detector to sift through, and a harder search for the
+	 * user.
+	 */
+	backgroundClutter: number;
 }

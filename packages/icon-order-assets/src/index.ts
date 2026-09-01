@@ -13,12 +13,10 @@
 // limitations under the License.
 
 import {
-	type RgbaImage,
 	createPrng,
 	createSeed,
 	encodeBackground,
 	encodePiece,
-	generateBackground,
 } from "@prosopo/puzzle-assets";
 import { compositeIcons, renderLegend } from "./compose.js";
 import { placeIcons } from "./place.js";
@@ -61,7 +59,10 @@ export const DEFAULT_RENDER_SETTINGS: IconOrderRenderSettings = {
 	decoyCount: 4,
 	strokeWidth: 3,
 	iconOpacity: 0.92,
-	haloOpacity: 0.55,
+	// Raised alongside the collage background: a bright stroke needs a firmer
+	// outline to stay findable once the frame behind it has edges of its own.
+	haloOpacity: 0.7,
+	backgroundClutter: 8,
 };
 
 /**
@@ -72,22 +73,21 @@ export const DEFAULT_RENDER_SETTINGS: IconOrderRenderSettings = {
 export const LEGEND_ICON_SIZE = 26;
 
 /**
- * Stamp icons onto a caller-supplied background and encode both halves.
+ * Draw a challenge frame — collage background plus icons — and encode it with
+ * the ordered legend.
  *
- * Takes the background rather than generating one so the provider can serve
- * it from its pre-generated buffer, keeping mesh-gradient synthesis off the
- * request path. The background is consumed (mutated) by this call.
- *
- * Each background is single-use by contract, as in the puzzle type: serving
- * the same one twice with two different icon layouts would let an attacker
- * diff the composites and read both answers off the difference.
+ * The background is generated per call rather than drawn from a pre-rendered
+ * buffer: it is vector work rasterised natively, so it is cheap enough to sit
+ * on the request path, and generating it here keeps every frame unique. That
+ * uniqueness is the point — serving the same background twice with two
+ * different icon layouts would let an attacker diff the composites and read
+ * both answers off the difference.
  *
  * The returned `targets` are the answer. They are for the provider to persist
  * and must never be serialised into a response — the widget gets `background`
  * and `legend` and nothing else.
  */
 export const renderIconOrder = async (
-	background: RgbaImage,
 	geometry: IconOrderGeometry = DEFAULT_GEOMETRY,
 	settings: IconOrderRenderSettings = DEFAULT_RENDER_SETTINGS,
 ): Promise<RenderedIconOrder> => {
@@ -100,7 +100,6 @@ export const renderIconOrder = async (
 	);
 	const composited = await compositeIcons(
 		prng,
-		background,
 		[...targets, ...decoys],
 		geometry,
 		settings,
@@ -120,20 +119,10 @@ export const renderIconOrder = async (
 	};
 };
 
-/** Convenience: generate a background, stamp and encode in one call. */
-export const createIconOrderChallenge = async (
-	geometry: IconOrderGeometry = DEFAULT_GEOMETRY,
-	settings: IconOrderRenderSettings = DEFAULT_RENDER_SETTINGS,
-): Promise<RenderedIconOrder> =>
-	renderIconOrder(
-		generateBackground(
-			createPrng(createSeed()),
-			geometry.width,
-			geometry.height,
-		),
-		geometry,
-		settings,
-	);
+/**
+ * Alias kept for callers that read better naming the whole operation.
+ */
+export const createIconOrderChallenge = renderIconOrder;
 
 /**
  * Grade a click sequence against the stored targets.

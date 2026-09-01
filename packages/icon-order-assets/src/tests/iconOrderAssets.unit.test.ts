@@ -240,6 +240,56 @@ describe("gradeClicks", () => {
 	});
 });
 
+describe("the collage background", () => {
+	/** Mean absolute difference between neighbouring pixels, per channel. */
+	const edgeEnergy = async (webp: Buffer): Promise<number> => {
+		const { data, info } = await sharp(webp)
+			.raw()
+			.toBuffer({ resolveWithObject: true });
+		let total = 0;
+		let count = 0;
+		for (let y = 0; y < info.height; y++) {
+			for (let x = 1; x < info.width; x++) {
+				const i = (y * info.width + x) * info.channels;
+				const prev = i - info.channels;
+				for (let c = 0; c < 3; c++) {
+					total += Math.abs((data[i + c] ?? 0) - (data[prev + c] ?? 0));
+					count++;
+				}
+			}
+		}
+		return total / count;
+	};
+
+	it("puts more edges on the frame as clutter rises", async () => {
+		// The whole point of the collage: a frame with its own strokes and
+		// corners, so an icon stroke is not the only strong local signal.
+		const [plain, busy] = await Promise.all([
+			createIconOrderChallenge(DEFAULT_GEOMETRY, {
+				...DEFAULT_RENDER_SETTINGS,
+				backgroundClutter: 0,
+			}),
+			createIconOrderChallenge(DEFAULT_GEOMETRY, {
+				...DEFAULT_RENDER_SETTINGS,
+				backgroundClutter: 20,
+			}),
+		]);
+		expect(await edgeEnergy(busy.background)).toBeGreaterThan(
+			await edgeEnergy(plain.background),
+		);
+	});
+
+	it("still renders at zero clutter, as the operator escape hatch", async () => {
+		const challenge = await createIconOrderChallenge(DEFAULT_GEOMETRY, {
+			...DEFAULT_RENDER_SETTINGS,
+			backgroundClutter: 0,
+		});
+		const meta = await sharp(challenge.background).metadata();
+		expect(meta.width).toBe(DEFAULT_GEOMETRY.width);
+		expect(challenge.targets).toHaveLength(DEFAULT_RENDER_SETTINGS.targetCount);
+	});
+});
+
 describe("createIconOrderChallenge", () => {
 	it("renders a frame and a legend sized to the target count", async () => {
 		const challenge = await createIconOrderChallenge();

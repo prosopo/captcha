@@ -25,10 +25,6 @@ import {
 	type IIconOrderSettings,
 	type StoredIconTarget,
 } from "@prosopo/types";
-import {
-	getPuzzleBackgroundBuffer,
-	initPuzzleBackgroundBuffer,
-} from "../puzzle/backgroundBuffer.js";
 
 export interface RenderedIconOrderImages {
 	background: string;
@@ -64,6 +60,12 @@ export const resolveIconOrderRenderSettings = (
 		}
 		if (override.haloOpacity !== undefined) {
 			resolved = { ...resolved, haloOpacity: override.haloOpacity };
+		}
+		if (override.backgroundClutter !== undefined) {
+			resolved = {
+				...resolved,
+				backgroundClutter: override.backgroundClutter,
+			};
 		}
 	}
 	// Every icon on a frame needs a distinct glyph, so targets + decoys cannot
@@ -107,20 +109,13 @@ export const toStoredTargets = (
 export const renderIconOrderImages = async (
 	settings: IconOrderRenderSettings = DEFAULT_RENDER_SETTINGS,
 ): Promise<RenderedIconOrderImages> => {
-	// Shares the puzzle type's background buffer: the geometry matches and the
-	// consume-once contract is what both types need. A background handed to
-	// one type is never handed to the other.
-	const buffer = getPuzzleBackgroundBuffer() ?? initPuzzleBackgroundBuffer();
-	const background = buffer.take();
-	if (!background) {
-		throw new Error("icon-order renderer: no background available");
-	}
-
-	const rendered = await renderIconOrder(
-		background,
-		ICON_ORDER_GEOMETRY,
-		settings,
-	);
+	// No pre-generated background buffer here, unlike the puzzle type. That
+	// buffer exists because the puzzle's mesh gradient is per-pixel JS work
+	// too slow for the request path; the icon-order collage is vector work
+	// rasterised natively, so it is cheap enough to draw per request — which
+	// also means every frame is unique without a buffer having to guarantee
+	// consume-once.
+	const rendered = await renderIconOrder(ICON_ORDER_GEOMETRY, settings);
 
 	return {
 		background: toDataUri(rendered.background),
