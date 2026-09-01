@@ -61,7 +61,7 @@ jobs:
     if: github.event.pull_request.draft == false
     steps:
       - name: Print contexts
-        uses: prosopo/github_actions/.github/actions/print_contexts@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
+        uses: prosopo/github_actions/.github/actions/print_contexts@7c4a3922c80bd2b7ca90cdedebd226bd0439467e # main
         with:
           INPUTS_CONTEXT: ${{ toJson(inputs) }}
           NEEDS_CONTEXT: ${{ toJson(needs) }}
@@ -78,7 +78,7 @@ jobs:
           node-version: '24'
           cache: 'npm'
 
-      - uses: prosopo/github_actions/.github/actions/npm@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
+      - uses: prosopo/github_actions/.github/actions/npm@7c4a3922c80bd2b7ca90cdedebd226bd0439467e # main
         with:
           npm_ci_args: '--include=dev --no-audit --no-fund --prefer-offline'
 
