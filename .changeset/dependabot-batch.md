@@ -62,6 +62,19 @@ Code changes the majors forced:
   `id` on `Document`, which un-hid a mismatch between
   `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
   filters on.
+- mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+  call passes `updatePipeline: true`, so the six pipeline writes in
+  `ProviderDatabase` now opt in explicitly.
+- mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+  `storeUserImageCaptchaSolution` passed its record straight in as the
+  update, and mongoose's `moveImmutableProperties` mutates that object on
+  an upsert -- adding the very `$setOnInsert` key the record then carried
+  into `CentralDbStreamer.streamImageRecord`. Image records stopped
+  reaching the central DB (the streamer is fire-and-forget, so it only
+  logged) and signup verification returned 500. The update is now an
+  explicit `$set` over a shallow copy.
+- `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+  mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
 - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
   `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
   `@vitest/spy` and broke type inference in the provider test utils.
