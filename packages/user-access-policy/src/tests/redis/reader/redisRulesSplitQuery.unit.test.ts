@@ -117,9 +117,8 @@ describe("buildScopedBlockSubQueries", () => {
 			"client-A",
 		);
 
-		// Without these probes an os/browser-only rule is only reachable via
-		// the no-user-scope fall-through, where it competes for that probe's
-		// candidate budget against genuine client-wide blocks.
+		// Without its own probe a browser-only rule is reachable only via the
+		// no-user-scope fall-through, sharing that probe's candidate budget.
 		const osSub = subs.find((s) => s.kind === "field:os");
 		expect(osSub?.query).toContain("@os:{windows}");
 

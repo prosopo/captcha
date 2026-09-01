@@ -81,10 +81,8 @@ export const getRequestUserScope = (
 		...(coords && { coords }),
 		...(countryCode && { countryCode }),
 		...(typeof asn === "number" && { asn }),
-		// Always populated (even "unknown") — derived from the request UA, not
-		// trusted from a client hint. Present unconditionally so an allow-list
-		// (block everything not on the list) still matches requests whose UA we
-		// can't classify.
+		// Unconditional, unlike the fields above: an allow-list has to match a
+		// request whose UA we can't classify, which lands on "unknown".
 		os: classifyOs(userAgent),
 		browser: classifyBrowser(userAgent),
 	};
