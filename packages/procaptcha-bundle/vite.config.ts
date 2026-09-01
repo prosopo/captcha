@@ -181,6 +181,22 @@ export default defineConfig(async ({ command, mode }) => {
 						if (id.includes("packages/util-crypto/dist")) {
 							return sharedBrowserChunkName;
 						}
+						// Collapse the i18n stack into a single chunk. Left to split
+						// automatically it forms the longest serial chain in the
+						// graph — measured on a staging demo load, `translations`
+						// (751ms) -> `i18nFrontend` (877ms) -> `i18next` (919ms) ->
+						// `translation.json` (983ms) -> `captchaRenderer` (1029ms),
+						// each level costing a round trip because the browser cannot
+						// discover the next module until the previous one has parsed.
+						// One chunk is one round trip, and the widget needs all of it
+						// before it can render a label anyway.
+						if (
+							id.includes("i18next") ||
+							id.includes("packages/locale/dist") ||
+							id.includes("packages/i18n/dist")
+						) {
+							return "i18nChunk";
+						}
 						if (id.includes("@noble/hash") || id.includes("@noble/curves")) {
 							return "nobleChunk";
 						}
