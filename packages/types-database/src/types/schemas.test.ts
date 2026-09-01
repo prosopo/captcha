@@ -96,7 +96,7 @@ describe("BannedDomainRecordSchema", () => {
 		// made mongoose warn about a duplicate on every process start.
 		expect(BannedDomainRecordSchema.path("domain").options.unique).toBe(true);
 		expect(indexesOf(BannedDomainRecordSchema)).toEqual([
-			[{ domain: 1 }, { unique: true, background: true }],
+			[{ domain: 1 }, { unique: true }],
 		]);
 	});
 

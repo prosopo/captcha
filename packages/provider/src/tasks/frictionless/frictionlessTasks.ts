@@ -22,6 +22,7 @@ import {
 	FrictionlessReason,
 	type GetFrictionlessCaptchaResponse,
 	type IPInfoResponse,
+	type ImageRoundsBounds,
 	type KeyringPair,
 	type ModeEnum,
 	type ProsopoConfigOutput,
@@ -31,7 +32,7 @@ import {
 	type ScoreComponents,
 	type Session,
 	SimdReadingsStage,
-	imageMaxRoundsDefault,
+	clampImageRounds,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { AccessPolicy } from "@prosopo/user-access-policy";
@@ -437,24 +438,26 @@ export class FrictionlessManager extends CaptchaManager {
 			this.logger,
 		);
 		// Every other path that sizes an image challenge clamps to the
-		// sitekey's `imageMaxRounds`; a router-supplied count was the one
-		// that didn't, and the routing-machine output schema only bounds it
-		// as a positive int. Clamp here so a router cannot hand a user more
-		// rounds than the site configured. The `effectiveParams` fallback is
-		// already clamped by its caller, so this only bites on `routed`.
+		// sitekey's `[imageMinRounds, imageMaxRounds]`; a router-supplied count
+		// was the one that didn't, and the routing-machine output schema only
+		// bounds it as a positive int. Clamp here so a router cannot hand a
+		// user more or fewer rounds than the site configured. The
+		// `effectiveParams` fallback is already clamped by its caller, so this
+		// only bites on `routed`.
 		const requestedSolvedImagesCount =
 			routed.solvedImagesCount ?? effectiveParams.solvedImagesCount;
-		// The ceiling is always supplied by the only `setRoutingContext` caller.
-		// Fall back to the schema default rather than skipping the clamp if it
-		// ever goes missing: an unbounded round count is a worse failure than a
-		// conservative one, and the previous conditional silently served
-		// whatever the router asked for when the ceiling was absent.
-		const imageRoundsCeiling =
-			this.routingContext?.imageMaxRounds ?? imageMaxRoundsDefault;
+		// The bounds are always supplied by the only `setRoutingContext`
+		// caller. Fall back to the schema defaults rather than skipping the
+		// clamp if they ever go missing: an unbounded round count is a worse
+		// failure than a conservative one, and the previous conditional
+		// silently served whatever the router asked for when the ceiling was
+		// absent. `RoutingContext` carries both bounds as its own fields, so it
+		// satisfies `ImageRoundsBounds` directly.
+		const imageRoundsBounds: ImageRoundsBounds = this.routingContext ?? {};
 		const finalSolvedImagesCount =
 			finalCaptchaType === CaptchaType.image
 				? requestedSolvedImagesCount !== undefined
-					? Math.min(requestedSolvedImagesCount, imageRoundsCeiling)
+					? clampImageRounds(requestedSolvedImagesCount, imageRoundsBounds)
 					: requestedSolvedImagesCount
 				: undefined;
 		const finalPowDifficulty =

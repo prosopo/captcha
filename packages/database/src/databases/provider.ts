@@ -746,9 +746,17 @@ export class ProviderDatabase
 			const filter: Pick<UserCommitmentRecord, "id"> = {
 				id: commit.id,
 			};
-			await this.tables?.commitment.updateOne(filter, commitmentRecord, {
-				upsert: true,
-			});
+			// Wrap in an explicit `$set` over a shallow copy. Passing the
+			// record itself lets mongoose mutate it in place on an upsert:
+			// `moveImmutableProperties` hoists immutable paths into a
+			// `$setOnInsert` key it adds to the object you handed it. The
+			// same object is then streamed below, and mongoose 9 rejects a
+			// `$set` payload carrying a `$setOnInsert` key.
+			await this.tables?.commitment.updateOne(
+				filter,
+				{ $set: { ...commitmentRecord } },
+				{ upsert: true },
+			);
 
 			const ops = captchas.map((captcha: CaptchaSolution) => ({
 				updateOne: {
@@ -1000,9 +1008,13 @@ export class ProviderDatabase
 			};
 		}
 		try {
-			const updateResult = await tables.powcaptcha.updateOne({ challenge }, [
-				{ $set: setStage },
-			]);
+			const updateResult = await tables.powcaptcha.updateOne(
+				{ challenge },
+				[{ $set: setStage }],
+				// mongoose 9 refuses an array update unless the caller opts
+				// in, so every pipeline-form write below carries this flag.
+				{ updatePipeline: true },
+			);
 			if (updateResult.matchedCount === 0) {
 				const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
 					context: {
@@ -1472,27 +1484,31 @@ export class ProviderDatabase
 	 */
 	async markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void> {
 		const timestamp = new Date();
-		await this.tables?.commitment.updateMany({ id: { $in: commitmentIds } }, [
-			{
-				$set: {
-					serverChecked: true,
-					lastUpdatedTimestamp: timestamp,
-					pendingStage: true,
-					verifiedAtTimestamp: {
-						$ifNull: ["$verifiedAtTimestamp", timestamp],
+		await this.tables?.commitment.updateMany(
+			{ id: { $in: commitmentIds } },
+			[
+				{
+					$set: {
+						serverChecked: true,
+						lastUpdatedTimestamp: timestamp,
+						pendingStage: true,
+						verifiedAtTimestamp: {
+							$ifNull: ["$verifiedAtTimestamp", timestamp],
+						},
 					},
 				},
-			},
-		]);
+			],
+			{ updatePipeline: true },
+		);
 	}
 
 	/** @description Update an image captcha commitment
 	 */
 	async updateDappUserCommitment(
-		commitmentId: Hash,
+		commitmentId: UserCommitment["id"],
 		updates: Partial<UserCommitment>,
 	) {
-		const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
+		const filter: Pick<UserCommitment, "id"> = { id: commitmentId };
 		const timestamp = new Date();
 		const baseSet: Record<string, unknown> = {
 			...updates,
@@ -1524,9 +1540,11 @@ export class ProviderDatabase
 			await this.tables?.commitment.updateOne(filter, { $set: baseSet });
 			return;
 		}
-		await this.tables?.commitment.updateOne(filter, [
-			{ $set: { ...baseSet, ...pipelineExprs } },
-		]);
+		await this.tables?.commitment.updateOne(
+			filter,
+			[{ $set: { ...baseSet, ...pipelineExprs } }],
+			{ updatePipeline: true },
+		);
 	}
 
 	/**
@@ -1626,7 +1644,7 @@ export class ProviderDatabase
 					},
 				},
 			],
-			{ upsert: false },
+			{ upsert: false, updatePipeline: true },
 		);
 	}
 
@@ -1852,16 +1870,20 @@ export class ProviderDatabase
 		stage: SimdReadingsStage,
 	): Promise<void> {
 		try {
-			await this.tables.session.updateOne({ sessionId }, [
-				{
-					$set: {
-						simdReadings: { $ifNull: ["$simdReadings", readings] },
-						simdReadingsStage: { $ifNull: ["$simdReadingsStage", stage] },
-						lastUpdatedTimestamp: new Date(),
-						pendingStage: true,
+			await this.tables.session.updateOne(
+				{ sessionId },
+				[
+					{
+						$set: {
+							simdReadings: { $ifNull: ["$simdReadings", readings] },
+							simdReadingsStage: { $ifNull: ["$simdReadingsStage", stage] },
+							lastUpdatedTimestamp: new Date(),
+							pendingStage: true,
+						},
 					},
-				},
-			]);
+				],
+				{ updatePipeline: true },
+			);
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
 				context: { error: err, sessionId, stage },
@@ -1909,9 +1931,11 @@ export class ProviderDatabase
 			setStage["dnsEvent.pathValid"] = fields.pathValid;
 		}
 		try {
-			const result = await this.tables.session.updateOne({ sessionId }, [
-				{ $set: setStage },
-			]);
+			const result = await this.tables.session.updateOne(
+				{ sessionId },
+				[{ $set: setStage }],
+				{ updatePipeline: true },
+			);
 			return result.matchedCount > 0;
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
