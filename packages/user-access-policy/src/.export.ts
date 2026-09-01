@@ -33,6 +33,12 @@ export { describeMatchedRule } from "./matchedRule.js";
 export { classifyOs, OS_NAMES, type OsName } from "./classifyOs.js";
 
 export {
+	classifyBrowser,
+	BROWSER_NAMES,
+	type BrowserName,
+} from "./classifyBrowser.js";
+
+export {
 	type AccessRulesFilter,
 	type AccessRulesStorage,
 	type AccessRuleEntry,

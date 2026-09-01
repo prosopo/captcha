@@ -116,6 +116,7 @@ describe("transformRule", () => {
 		countryCode: "US",
 		asn: 205016,
 		os: "macos",
+		browser: "firefox",
 	} satisfies AccessRule;
 
 	it("should transform access rule record into rule", () => {
