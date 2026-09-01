@@ -73,6 +73,9 @@ export async function updateDemoHTMLFiles(
 	});
 }
 
+/** Variables naming a demo site key, one per captcha type. */
+const SITE_KEY_PREFIX = "PROSOPO_SITE_KEY";
+
 export async function updateEnvFiles(
 	varNames: string[],
 	varValue: string,
@@ -88,8 +91,21 @@ export async function updateEnvFiles(
 		// then saves the file
 		const filePath = path.resolve(cwd || process.cwd(), file);
 		const envConfig = dotenv.parse(fs.readFileSync(filePath));
+		// Whether this file tracks site keys at all. Replacing only variables
+		// that already exist means a newly added captcha type's key never
+		// reaches a developer's existing .env: `copyEnvFile` seeds from the
+		// template only when the file is absent, so a machine set up before
+		// the type existed keeps a file without the variable and its demo page
+		// renders with an undefined site key. Files that track no site keys
+		// are still left alone, so this doesn't scatter keys into unrelated
+		// env files.
+		const tracksSiteKeys = Object.keys(envConfig).some((key) =>
+			key.startsWith(SITE_KEY_PREFIX),
+		);
 		for (const varName of varNames) {
-			if (varName in envConfig) {
+			const isNewSiteKey =
+				tracksSiteKeys && varName.startsWith(SITE_KEY_PREFIX);
+			if (varName in envConfig || isNewSiteKey) {
 				envConfig[varName] = varValue;
 				write = true;
 			}
