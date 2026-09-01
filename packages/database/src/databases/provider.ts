@@ -1489,10 +1489,10 @@ export class ProviderDatabase
 	/** @description Update an image captcha commitment
 	 */
 	async updateDappUserCommitment(
-		commitmentId: Hash,
+		commitmentId: UserCommitment["id"],
 		updates: Partial<UserCommitment>,
 	) {
-		const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
+		const filter: Pick<UserCommitment, "id"> = { id: commitmentId };
 		const timestamp = new Date();
 		const baseSet: Record<string, unknown> = {
 			...updates,
