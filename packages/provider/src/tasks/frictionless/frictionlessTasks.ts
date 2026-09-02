@@ -19,7 +19,6 @@ import {
 	ApiParams,
 	CaptchaType,
 	type CompositeIpAddress,
-	type ContextType,
 	FrictionlessReason,
 	type GetFrictionlessCaptchaResponse,
 	type IPInfoResponse,
@@ -966,12 +965,5 @@ export class FrictionlessManager extends CaptchaManager {
 			// later behavioural-data hop can resolve the same keypair/inner cfg.
 			bundleId,
 		};
-	}
-
-	async getClientContextEntropy(
-		siteKey: string,
-		contextType: ContextType,
-	): Promise<string | undefined> {
-		return this.db.getClientContextEntropy(siteKey, contextType);
 	}
 }

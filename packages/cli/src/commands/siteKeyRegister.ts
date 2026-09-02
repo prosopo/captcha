@@ -17,8 +17,6 @@ import { LogLevel, type Logger, getLogger } from "@prosopo/logger";
 import { Tasks } from "@prosopo/provider";
 import {
 	type KeyringPair,
-	contextAwareThresholdDefault,
-	deviceContextTypes,
 	frictionlessImageThresholdDefault,
 	frictionlessTypesDefault,
 	imageMaxRoundsDefault,
@@ -157,15 +155,6 @@ export default (
 					imageMinRounds: image_min_rounds as number,
 					puzzleTolerance: puzzleToleranceDefault,
 					disallowWebView: false,
-					contextAware: {
-						enabled: false,
-						contexts: Object.fromEntries(
-							deviceContextTypes.map((type) => [
-								type,
-								{ type, threshold: contextAwareThresholdDefault },
-							]),
-						),
-					},
 					verifiedTimeout: 60000,
 					solutionTimeout: 60000,
 				});

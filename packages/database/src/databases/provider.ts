@@ -28,7 +28,6 @@ import {
 	CaptchaStatus,
 	CaptchaType,
 	type CompositeIpAddress,
-	type ContextType,
 	type Dataset,
 	type DatasetBase,
 	type DatasetWithIds,
@@ -61,8 +60,6 @@ import {
 import type { SessionRecord, StoredSession } from "@prosopo/types-database";
 import {
 	CaptchaRecordSchema,
-	type ClientContextEntropyRecord,
-	ClientContextEntropyRecordSchema,
 	type ClientRecord,
 	ClientRecordSchema,
 	DatasetRecordSchema,
@@ -118,7 +115,6 @@ enum TableNames {
 	session = "session",
 	detector = "detector",
 	decisionMachine = "decisionMachine",
-	clientContextEntropy = "clientContextEntropy",
 	spamEmailDomain = "spamEmailDomain",
 }
 
@@ -177,11 +173,6 @@ const PROVIDER_TABLES = [
 		collectionName: TableNames.decisionMachine,
 		modelName: "DecisionMachine",
 		schema: DecisionMachineArtifactRecordSchema,
-	},
-	{
-		collectionName: TableNames.clientContextEntropy,
-		modelName: "ClientContextEntropy",
-		schema: ClientContextEntropyRecordSchema,
 	},
 	{
 		collectionName: TableNames.spamEmailDomain,
@@ -2804,28 +2795,6 @@ export class ProviderDatabase
 	async removeAllDecisionMachineArtifacts(): Promise<number> {
 		const result = await this.tables?.decisionMachine.deleteMany({});
 		return result?.deletedCount ?? 0;
-	}
-
-	/**
-	 * @description get client context-specific entropy
-	 *
-	 * Read-only. The `clientcontextentropies` collection is populated
-	 * externally by the job-runner sweep — the provider used to compute
-	 * entropy locally via `sampleContextEntropy` + `setClientContextEntropy`
-	 * on a scheduled task, but that path was pulled 2026-08-21 (the sweep
-	 * aggregation was ~36 minutes of DB time per 6h, and the same
-	 * computation now runs off-provider across the full record set).
-	 */
-	async getClientContextEntropy(
-		account: string,
-		contextType: ContextType,
-	): Promise<string | undefined> {
-		const filter: Pick<ClientContextEntropyRecord, "account" | "contextType"> =
-			{ account, contextType };
-		const doc = await this.tables?.clientContextEntropy
-			.findOne(filter)
-			.lean<ClientContextEntropyRecord>();
-		return doc ? doc.entropy : undefined;
 	}
 
 	async getSpamEmailDomain(
