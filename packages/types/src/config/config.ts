@@ -23,6 +23,7 @@ import { union } from "zod";
 import type { infer as zInfer } from "zod";
 import z, { boolean } from "zod";
 import { Mode, ModeEnum } from "./mode.js";
+import { StartModeEnum, StartModeSchema } from "./startMode.js";
 export { Mode, ModeEnum };
 export type { ModeType } from "./mode.js";
 import {
@@ -293,6 +294,7 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 		// call can correlate it. Named `clientSessionId` here to keep it clear
 		// of the provider's own frictionless `sessionId`.
 		clientSessionId: string().optional(),
+		startMode: StartModeSchema.optional().default(StartModeEnum.auto),
 	}),
 );
 
