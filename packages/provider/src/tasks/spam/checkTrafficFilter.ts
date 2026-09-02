@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import {
-	CaptchaType,
+	type CaptchaType,
 	type IPInfoResponse,
 	type IPInfoResult,
 	type IPuzzleSettings,
@@ -21,6 +21,7 @@ import {
 	type ITrafficFilter,
 	ResultReason,
 	TrafficFilterAction,
+	isStricterCaptchaType,
 	trafficFilterAbuserScoreThresholdDefault,
 } from "@prosopo/types";
 
@@ -301,16 +302,10 @@ export const checkTrafficFilter = (
 // request. `block` outranks any challenge (short-circuited earlier in
 // `checkTrafficFilter`); among captcha types, image outranks puzzle
 // outranks pow — a stricter check is monotonically preferred so the
-// operator's hardest configured policy wins.
-const CAPTCHA_TYPE_RANK: Record<CaptchaType, number> = {
-	[CaptchaType.image]: 4,
-	[CaptchaType.puzzle]: 3,
-	[CaptchaType.pow]: 2,
-	[CaptchaType.frictionless]: 1,
-};
-
-const rankCaptchaType = (t: CaptchaType | undefined): number =>
-	t === undefined ? 0 : (CAPTCHA_TYPE_RANK[t] ?? 0);
+// operator's hardest configured policy wins. The ranking itself lives in
+// `@prosopo/types` (`isStricterCaptchaType`), shared with the decision
+// machines' `resolveMiddleboxPolicy`, which resolves the same "strictest of
+// the competing policies" question for undeclared middleboxes.
 
 export type ResolvedChallengePolicy = {
 	captchaType?: CaptchaType;
@@ -344,10 +339,7 @@ export const resolveChallengePolicy = (
 
 	let winningCaptchaType: CaptchaType | undefined;
 	for (const m of challenges) {
-		if (
-			rankCaptchaType(m.policy.captchaType) >
-			rankCaptchaType(winningCaptchaType)
-		) {
+		if (isStricterCaptchaType(m.policy.captchaType, winningCaptchaType)) {
 			winningCaptchaType = m.policy.captchaType;
 		}
 	}

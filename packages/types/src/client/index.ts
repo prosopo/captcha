@@ -15,4 +15,5 @@ export * from "./user.js";
 export * from "./settings.js";
 export * from "./testSiteKeys.js";
 export * from "./captchaType/captchaType.js";
+export * from "./captchaType/captchaTypeRank.js";
 export * from "./captchaType/captchaTypeSpec.js";
