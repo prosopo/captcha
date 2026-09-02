@@ -173,3 +173,8 @@ docker/dns-tenants.json
 # Android SDK location -- machine-specific, and if committed it overrides
 # ANDROID_HOME and breaks the build everywhere else, CI included.
 local.properties
+
+# napi builds only the linux target (see `napi.targets` in each native package),
+# and that artefact is committed. A local build on any other platform is not.
+packages/native-*/index.*.node
+!packages/native-*/index.linux-x64-gnu.node
