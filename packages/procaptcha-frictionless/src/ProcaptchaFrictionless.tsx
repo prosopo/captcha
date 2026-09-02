@@ -127,12 +127,9 @@ export const ProcaptchaFrictionless = ({
 	// because `providerRetry` re-invokes `start` with no arguments, which would
 	// otherwise drop the flag on the first provider retry.
 	const nextMountAutoStartRef = useRef(false);
-	// Manual start mode: nothing runs until a `procaptcha:start` event or a
-	// checkbox click, whichever comes first.
 	const manualStart = config.startMode === StartModeEnum.manual;
 	const manualStartedRef = useRef(false);
-	// The placeholder is built before `start()` exists in this scope, so its
-	// click handler goes through a ref filled in below.
+	// The placeholder is built before `start()` exists in this scope.
 	const manualCheckboxHandlerRef = useRef(noopCheckboxHandler);
 
 	useEffect(() => {
@@ -157,7 +154,6 @@ export const ProcaptchaFrictionless = ({
 			stateRef.current.errorMessage,
 			i18n.isInitialized,
 			i18n.t,
-			// Manual mode has nothing in flight, so it shows a live checkbox.
 			!manualStart,
 			manualStart
 				? (event: CheckboxEvent) => manualCheckboxHandlerRef.current(event)
@@ -396,8 +392,6 @@ export const ProcaptchaFrictionless = ({
 		});
 	};
 
-	// `autoStart` + `coords` make the widget the provider picks open on mount
-	// from the click that started it, so the user never clicks twice.
 	const startManually = async (
 		autoStart: boolean,
 		coords?: RetryCoords,
@@ -430,8 +424,6 @@ export const ProcaptchaFrictionless = ({
 		await startManually(true, normaliseRetryCoords(x, y) ?? undefined);
 	};
 
-	// `procaptcha:execute` has no inner widget to land on yet in manual mode,
-	// so it is honoured here with `autoStart`.
 	// biome-ignore lint/correctness/useExhaustiveDependencies: intentional — `startManually` captures the mount-time `start()`, as the auto-mode effect below does.
 	useEffect(() => {
 		if (!manualStart) return;

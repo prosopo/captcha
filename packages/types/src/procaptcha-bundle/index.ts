@@ -45,6 +45,5 @@ export interface ProcaptchaRenderOptions {
 	// solution; pass the same value to the server-side verify call and the
 	// provider will reject the token unless the two agree.
 	sessionId?: string;
-	// Equivalent to the `data-start-mode` attribute. Defaults to `auto`.
 	startMode?: StartMode;
 }
