@@ -26,6 +26,7 @@
 		"@prosopo/api": "4.1.4",
 		"@prosopo/api-express-router": "3.1.80",
 		"@prosopo/api-route": "2.6.56",
+		"@prosopo/captcha-severity": "1.0.0",
 		"@prosopo/common": "3.1.52",
 		"@prosopo/database": "4.0.26",
 		"@prosopo/datasets": "3.1.76",

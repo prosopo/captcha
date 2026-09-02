@@ -1,0 +1,46 @@
+{
+	"name": "@prosopo/captcha-severity",
+	"version": "1.0.0",
+	"description": "Relative severity of the captcha types, and the helpers for picking the strictest when policies compete",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"engines": {
+		"node": "^24",
+		"npm": "^11"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
+		}
+	},
+	"scripts": {
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
+		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
+		"build:cross-env": "vite build --config vite.esm.config.ts",
+		"build:tsc": "tsc --build --verbose",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
+		"typecheck": "tsc --project tsconfig.types.json"
+	},
+	"type": "module",
+	"sideEffects": false,
+	"dependencies": {},
+	"devDependencies": {
+		"@prosopo/config": "3.3.12",
+		"@types/node": "22.10.2",
+		"del-cli": "6.0.0",
+		"tslib": "2.7.0",
+		"typescript": "5.6.2",
+		"vite": "8.1.5",
+		"vitest": "4.1.10"
+	},
+	"author": "Prosopo Limited",
+	"license": "Apache-2.0",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "packages/captcha-severity"
+	}
+}
